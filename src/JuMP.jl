@@ -38,15 +38,15 @@ Base.@deprecate(linearterms,       JuMP.linear_terms)
 
 include("utils.jl")
 
-const MOIVAR = MOI.VariableIndex
-const MOICON{F,S} = MOI.ConstraintIndex{F,S}
-const MOILB = MOICON{MOI.SingleVariable,MOI.GreaterThan{Float64}}
-const MOIUB = MOICON{MOI.SingleVariable,MOI.LessThan{Float64}}
-const MOIFIX = MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
-const MOIINT = MOICON{MOI.SingleVariable,MOI.Integer}
-const MOIBIN = MOICON{MOI.SingleVariable,MOI.ZeroOne}
+const _MOIVAR = MOI.VariableIndex
+const _MOICON{F,S} = MOI.ConstraintIndex{F,S}
+const _MOILB = _MOICON{MOI.SingleVariable,MOI.GreaterThan{Float64}}
+const _MOIUB = _MOICON{MOI.SingleVariable,MOI.LessThan{Float64}}
+const _MOIFIX = _MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
+const _MOIINT = _MOICON{MOI.SingleVariable,MOI.Integer}
+const _MOIBIN = _MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
-MOIU.@model(JuMPMOIModel,
+MOIU.@model(_MOIModel,
             (MOI.ZeroOne, MOI.Integer),
             (MOI.EqualTo, MOI.GreaterThan, MOI.LessThan, MOI.Interval),
             (MOI.Zeros, MOI.Nonnegatives, MOI.Nonpositives, MOI.SecondOrderCone,
@@ -138,11 +138,11 @@ A mathematical model of an optimization problem.
 mutable struct Model <: AbstractModel
     # Special variablewise properties that we keep track of:
     # lower bound, upper bound, fixed, integrality, binary
-    variable_to_lower_bound::Dict{MOIVAR, MOILB}
-    variable_to_upper_bound::Dict{MOIVAR, MOIUB}
-    variable_to_fix::Dict{MOIVAR, MOIFIX}
-    variable_to_integrality::Dict{MOIVAR, MOIINT}
-    variable_to_zero_one::Dict{MOIVAR, MOIBIN}
+    variable_to_lower_bound::Dict{_MOIVAR, _MOILB}
+    variable_to_upper_bound::Dict{_MOIVAR, _MOIUB}
+    variable_to_fix::Dict{_MOIVAR, _MOIFIX}
+    variable_to_integrality::Dict{_MOIVAR, _MOIINT}
+    variable_to_zero_one::Dict{_MOIVAR, _MOIBIN}
     # In MANUAL and AUTOMATIC modes, CachingOptimizer.
     # In DIRECT mode, will hold an AbstractOptimizer.
     moi_backend::MOI.AbstractOptimizer
@@ -185,7 +185,7 @@ function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
               "later. See the JuMP documentation " *
               "(http://www.juliaopt.org/JuMP.jl/latest/) for latest syntax.")
     end
-    universal_fallback = MOIU.UniversalFallback(JuMPMOIModel{Float64}())
+    universal_fallback = MOIU.UniversalFallback(_MOIModel{Float64}())
     caching_opt = MOIU.CachingOptimizer(universal_fallback,
                                         caching_mode)
     return direct_model(caching_opt)
@@ -236,11 +236,11 @@ in mind the following implications of creating models using this *direct* mode:
 """
 function direct_model(backend::MOI.ModelLike)
     @assert MOI.is_empty(backend)
-    return Model(Dict{MOIVAR, MOILB}(),
-                 Dict{MOIVAR, MOIUB}(),
-                 Dict{MOIVAR, MOIFIX}(),
-                 Dict{MOIVAR, MOIINT}(),
-                 Dict{MOIVAR, MOIBIN}(),
+    return Model(Dict{_MOIVAR, _MOILB}(),
+                 Dict{_MOIVAR, _MOIUB}(),
+                 Dict{_MOIVAR, _MOIFIX}(),
+                 Dict{_MOIVAR, _MOIINT}(),
+                 Dict{_MOIVAR, _MOIBIN}(),
                  backend,
                  Set{Any}(),
                  nothing,
@@ -296,7 +296,7 @@ function moi_bridge_constraints(model::MOIU.CachingOptimizer)
 end
 
 # Internal function.
-function try_get_solver_name(model_like)
+function _try_get_solver_name(model_like)
     try
         return MOI.get(model_like, MOI.SolverName())
     catch ex
@@ -322,7 +322,7 @@ function solver_name(model::Model)
         MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
         return "No optimizer attached."
     else
-        return try_get_solver_name(backend(model))
+        return _try_get_solver_name(backend(model))
     end
 end
 
@@ -341,24 +341,24 @@ function bridge_constraints(model::Model)
     return moi_bridge_constraints(backend(model))
 end
 
-function moi_add_bridge(model::Nothing,
+function _moi_add_bridge(model::Nothing,
                         BridgeType::Type{<:MOI.Bridges.AbstractBridge})
     # No optimizer is attached, the bridge will be added when one is attached
     return
 end
-function moi_add_bridge(model::MOI.ModelLike,
+function _moi_add_bridge(model::MOI.ModelLike,
                         BridgeType::Type{<:MOI.Bridges.AbstractBridge})
     error("Cannot add bridge if `bridge_constraints` was set to `false` in the",
           " `Model` constructor.")
 end
-function moi_add_bridge(bridge_opt::MOI.Bridges.LazyBridgeOptimizer,
+function _moi_add_bridge(bridge_opt::MOI.Bridges.LazyBridgeOptimizer,
                         BridgeType::Type{<:MOI.Bridges.AbstractBridge})
     MOI.Bridges.add_bridge(bridge_opt, BridgeType{Float64})
     return
 end
-function moi_add_bridge(caching_opt::MOIU.CachingOptimizer,
+function _moi_add_bridge(caching_opt::MOIU.CachingOptimizer,
                         BridgeType::Type{<:MOI.Bridges.AbstractBridge})
-    moi_add_bridge(caching_opt.optimizer, BridgeType)
+    _moi_add_bridge(caching_opt.optimizer, BridgeType)
     return
 end
 
@@ -374,8 +374,8 @@ function add_bridge(model::Model,
                     BridgeType::Type{<:MOI.Bridges.AbstractBridge})
     push!(model.bridge_types, BridgeType)
     # The type of `backend(model)` is not type-stable, so we use a function
-    # barrier (`moi_add_bridge`) to improve performance.
-    moi_add_bridge(JuMP.backend(model), BridgeType)
+    # barrier (`_moi_add_bridge`) to improve performance.
+    _moi_add_bridge(JuMP.backend(model), BridgeType)
     return
 end
 
@@ -520,7 +520,7 @@ Get the dual value of this constraint in the result returned by a solver.
 Use `has_dual` to check if a result exists before asking for values.
 See also [`shadow_price`](@ref).
 """
-function dual(cr::ConstraintRef{Model, <:MOICON})
+function dual(cr::ConstraintRef{Model, <:_MOICON})
     return reshape_result(MOI.get(cr.model, MOI.ConstraintDual(), cr),
                           dual_shape(cr.shape))
 end
@@ -534,13 +534,13 @@ struct OptimizeNotCalled <: Exception end
 
 # Throws an error if `optimize!` has not been called, i.e., if there is no
 # optimizer attached or if the termination statis is `MOI.OPTIMIZE_NOT_CALLED`.
-function moi_get_result(model::MOI.ModelLike, args...)
+function _moi_get_result(model::MOI.ModelLike, args...)
     if MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED
         throw(OptimizeNotCalled())
     end
     return MOI.get(model, args...)
 end
-function moi_get_result(model::MOIU.CachingOptimizer, args...)
+function _moi_get_result(model::MOIU.CachingOptimizer, args...)
     if MOIU.state(model) == MOIU.NO_OPTIMIZER ||
        MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED
         throw(OptimizeNotCalled())
@@ -558,7 +558,7 @@ function MOI.get(model::Model, attr::MOI.AbstractModelAttribute)
        !(attr isa MOI.TerminationStatus) && # Before `optimize!` is called, the
        !(attr isa MOI.PrimalStatus) &&      # statuses are `OPTIMIZE_NOT_CALLED`
        !(attr isa MOI.DualStatus)           # and `NO_SOLUTION`
-        moi_get_result(backend(model), attr)
+        _moi_get_result(backend(model), attr)
     else
         MOI.get(backend(model), attr)
     end
@@ -567,7 +567,7 @@ function MOI.get(model::Model, attr::MOI.AbstractVariableAttribute,
                  v::VariableRef)
     check_belongs_to_model(v, model)
     if MOI.is_set_by_optimize(attr)
-        return moi_get_result(backend(model), attr, index(v))
+        return _moi_get_result(backend(model), attr, index(v))
     else
         return MOI.get(backend(model), attr, index(v))
     end
@@ -576,7 +576,7 @@ function MOI.get(model::Model, attr::MOI.AbstractConstraintAttribute,
                  cr::ConstraintRef)
     check_belongs_to_model(cr, model)
     if MOI.is_set_by_optimize(attr)
-        return moi_get_result(backend(model), attr, index(cr))
+        return _moi_get_result(backend(model), attr, index(cr))
     else
         return MOI.get(backend(model), attr, index(cr))
     end

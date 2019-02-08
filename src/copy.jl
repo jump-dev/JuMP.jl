@@ -14,16 +14,16 @@ function copy_extension_data end
 
 """
     _copy_single_variable_constraints(
-        dest::Dict{MOI.VariableIndex, MOICON{MOI.SingleVariable, S}},
-        src::Dict{MOI.VariableIndex, MOICON{MOI.SingleVariable, S}},
+        dest::Dict{MOI.VariableIndex, _MOICON{MOI.SingleVariable, S}},
+        src::Dict{MOI.VariableIndex, _MOICON{MOI.SingleVariable, S}},
         index_map) where S
 
 Copy the single variable constraint indices of `src` into `dest` mapping
 variable and constraint indices using `index_map`.
 """
 function _copy_single_variable_constraints(
-    dest::Dict{MOI.VariableIndex, MOICON{MOI.SingleVariable, S}},
-    src::Dict{MOI.VariableIndex, MOICON{MOI.SingleVariable, S}},
+    dest::Dict{MOI.VariableIndex, _MOICON{MOI.SingleVariable, S}},
+    src::Dict{MOI.VariableIndex, _MOICON{MOI.SingleVariable, S}},
     index_map) where S
     for (variable_index, constraint_index) in src
         dest[index_map[variable_index]] = index_map[constraint_index]

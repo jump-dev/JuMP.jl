@@ -46,12 +46,12 @@ function set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
                 error("Bridges in `MANUAL` mode with an optimizer not ",
                       "supporting `default_copy_to` is not supported yet")
             end
-            universal_fallback = MOIU.UniversalFallback(JuMPMOIModel{Float64}())
+            universal_fallback = MOIU.UniversalFallback(_MOIModel{Float64}())
             optimizer = MOIU.CachingOptimizer(universal_fallback, optimizer)
         end
         optimizer = MOI.Bridges.full_bridge_optimizer(optimizer, Float64)
         for bridge_type in model.bridge_types
-            moi_add_bridge(optimizer, bridge_type)
+            _moi_add_bridge(optimizer, bridge_type)
         end
     end
     MOIU.reset_optimizer(model, optimizer)

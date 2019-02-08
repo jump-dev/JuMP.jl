@@ -35,12 +35,12 @@
         c: x + y <= 1.0
         """
 
-        model = JuMP.JuMPMOIModel{Float64}()
+        model = JuMP._MOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y"], ["c", "xub", "ylb"])
 
         JuMP.optimize!(m, with_optimizer(MOIU.MockOptimizer,
-                                         JuMP.JuMPMOIModel{Float64}(),
+                                         JuMP._MOIModel{Float64}(),
                                          eval_objective_value=false))
 
         mockoptimizer = JuMP.backend(m).optimizer.model
@@ -74,7 +74,7 @@
     end
 
     @testset "LP (Direct mode)" begin
-        mockoptimizer = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(),
+        mockoptimizer = MOIU.MockOptimizer(JuMP._MOIModel{Float64}(),
                                            eval_objective_value=false)
 
         m = JuMP.direct_model(mockoptimizer)
@@ -118,7 +118,7 @@
     @testset "IP" begin
         # Tests the solver= keyword.
         m = Model(with_optimizer(MOIU.MockOptimizer,
-                                 JuMP.JuMPMOIModel{Float64}(),
+                                 JuMP._MOIModel{Float64}(),
                                  eval_objective_value=false),
                   caching_mode = MOIU.AUTOMATIC)
         @variable(m, x == 1.0, Int)
@@ -137,7 +137,7 @@
         ybin: y in ZeroOne()
         """
 
-        model = JuMP.JuMPMOIModel{Float64}()
+        model = JuMP._MOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y"], ["xfix", "xint", "ybin"])
 
@@ -185,12 +185,12 @@
         c3: 2x + 3*y*x >= 2.0
         """
 
-        model = JuMP.JuMPMOIModel{Float64}()
+        model = JuMP._MOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y"], ["c1", "c2", "c3"])
 
         JuMP.optimize!(m, with_optimizer(MOIU.MockOptimizer,
-                                         JuMP.JuMPMOIModel{Float64}(),
+                                         JuMP._MOIModel{Float64}(),
                                          eval_objective_value=false))
 
         mockoptimizer = JuMP.backend(m).optimizer.model
@@ -244,11 +244,11 @@
         rotsoc: [x+1,y,z] in RotatedSecondOrderCone(3)
         """
 
-        model = JuMP.JuMPMOIModel{Float64}()
+        model = JuMP._MOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y","z"], ["varsoc", "affsoc", "rotsoc"])
 
-        mockoptimizer = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(),
+        mockoptimizer = MOIU.MockOptimizer(JuMP._MOIModel{Float64}(),
                                            eval_objective_value=false,
                                            eval_variable_constraint_dual=false)
         MOIU.reset_optimizer(m, mockoptimizer)
@@ -303,13 +303,13 @@
         con_psd: [x11 + -1.0,x12,x12,x22 + -1.0] in PositiveSemidefiniteConeSquare(2)
         """
 
-        model = JuMP.JuMPMOIModel{Float64}()
+        model = JuMP._MOIModel{Float64}()
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model,
                                ["x11","x12","x22"],
                                ["var_psd", "sym_psd", "con_psd"])
 
-        mockoptimizer = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}(),
+        mockoptimizer = MOIU.MockOptimizer(JuMP._MOIModel{Float64}(),
                                            eval_objective_value=false,
                                            eval_variable_constraint_dual=false)
         MOIU.reset_optimizer(m, mockoptimizer)
@@ -354,13 +354,13 @@
     end
 
     @testset "Provide factory in `optimize` in Direct mode" begin
-        mockoptimizer = MOIU.MockOptimizer(JuMP.JuMPMOIModel{Float64}())
+        mockoptimizer = MOIU.MockOptimizer(JuMP._MOIModel{Float64}())
         model = JuMP.direct_model(mockoptimizer)
-        @test_throws ErrorException JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
+        @test_throws ErrorException JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer, JuMP._MOIModel{Float64}()))
     end
 
     @testset "Provide factory both in `Model` and `optimize`" begin
-        model = Model(with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
-        @test_throws ErrorException JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer, JuMP.JuMPMOIModel{Float64}()))
+        model = Model(with_optimizer(MOIU.MockOptimizer, JuMP._MOIModel{Float64}()))
+        @test_throws ErrorException JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer, JuMP._MOIModel{Float64}()))
     end
 end
