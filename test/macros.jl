@@ -346,7 +346,7 @@ end
     @testset "Duplicate variables are never created" begin
         model = Model()
         @variable(model, x)
-        @test_throws ErrorException @variables(model, x)
+        @test_throws ErrorException @variable(model, x)
         @test num_variables(model) == 1
     end
 
