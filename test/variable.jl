@@ -462,6 +462,7 @@ function test_variable_symmetric(ModelType)
     @variable model x[1:2, 1:2] Symmetric
     @test x isa Symmetric
     @test x[1, 2] === x[2, 1]
+    @test model[:x] === x
 
     y = @variable model [1:2, 1:2] Symmetric
     @test y isa Symmetric
