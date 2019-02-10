@@ -531,13 +531,13 @@ end
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
 function _constraint_primal(
     cref::ConstraintRef{Model, <:_MOICON{
-        <:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}})
-    return MOI.get(cref.model, MOI.ConstraintPrimal(), cref)::Float64
+        <:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}})::Float64
+    return MOI.get(cref.model, MOI.ConstraintPrimal(), cref)
 end
 function _constraint_primal(
     cref::ConstraintRef{Model, <:_MOICON{
-        <:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}})
-    return MOI.get(cref.model, MOI.ConstraintPrimal(), cref)::Vector{Float64}
+        <:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}})::Vector{Float64}
+    return MOI.get(cref.model, MOI.ConstraintPrimal(), cref)
 end
 
 """
@@ -564,13 +564,13 @@ end
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
 function _constraint_dual(
     cref::ConstraintRef{Model, <:_MOICON{
-        <:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}})
-    return MOI.get(cref.model, MOI.ConstraintDual(), cref)::Float64
+        <:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}})::Float64
+    return MOI.get(cref.model, MOI.ConstraintDual(), cref)
 end
 function _constraint_dual(
     cref::ConstraintRef{Model, <:_MOICON{
-        <:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}})
-    return MOI.get(cref.model, MOI.ConstraintDual(), cref)::Vector{Float64}
+        <:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}})::Vector{Float64}
+    return MOI.get(cref.model, MOI.ConstraintDual(), cref)
 end
 
 

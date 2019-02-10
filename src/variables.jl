@@ -687,9 +687,8 @@ end
 Return the start value (MOI attribute `VariablePrimalStart`) of the variable
 `v`. See also [`set_start_value`](@ref).
 """
-function start_value(v::VariableRef)
-    return MOI.get(
-        owner_model(v), MOI.VariablePrimalStart(), v)::Union{Nothing, Float64}
+function start_value(v::VariableRef)::Union{Nothing, Float64}
+    return MOI.get(owner_model(v), MOI.VariablePrimalStart(), v)
 end
 
 
@@ -710,8 +709,8 @@ end
 Get the value of this variable in the result returned by a solver. Use
 [`has_values`](@ref) to check if a result exists before asking for values.
 """
-function value(v::VariableRef)
-    return MOI.get(owner_model(v), MOI.VariablePrimal(), v)::Float64
+function value(v::VariableRef)::Float64
+    return MOI.get(owner_model(v), MOI.VariablePrimal(), v)
 end
 
 """
