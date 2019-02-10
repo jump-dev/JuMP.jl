@@ -1,5 +1,5 @@
 function test_constraint_name(constraint, name, F::Type, S::Type)
-    @test JuMP.name(constraint) == name
+    @test name == @inferred JuMP.name(constraint)
     model = constraint.model
     @test constraint.index == JuMP.constraint_by_name(model, name).index
     if !(model isa JuMPExtension.MyModel)
@@ -55,7 +55,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
             @variable(model, x)
 
             cref = @constraint(model, 2x <= 10)
-            @test JuMP.name(cref) == ""
+            @test "" == @inferred JuMP.name(cref)
             JuMP.set_name(cref, "c")
             test_constraint_name(cref, "c", JuMP.AffExpr, MOI.LessThan{Float64})
 
@@ -131,7 +131,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         @test c.set == MOI.Interval(0.0, 1.0)
 
         cref = @constraint(m, 2x - y + 2.0 ∈ MOI.Interval(-1.0, 1.0))
-        @test JuMP.name(cref) == ""
+        @test "" == @inferred JuMP.name(cref)
 
         c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, 2x - y)
@@ -146,7 +146,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         b = [4.0, 5.0]
 
         cref = @constraint(m, A*x .== b)
-        @test size(cref) == (2,)
+        @test (2,) == @inferred size(cref)
 
         c1 = JuMP.constraint_object(cref[1])
         @test JuMP.isequal_canonical(c1.func, x[1] + 2x[2])
@@ -163,7 +163,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         UB = [1.0 2.0; 3.0 4.0]
 
         cref = @constraint(m, x + 1 .<= UB)
-        @test size(cref) == (2,2)
+        @test (2,2) == @inferred size(cref)
         for i in 1:2
             for j in 1:2
                 c = JuMP.constraint_object(cref[i,j])
@@ -181,7 +181,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         u = [3.0, 4.0]
 
         cref = @constraint(m, l .<= x + y + 1 .<= u)
-        @test size(cref) == (2,)
+        @test (2,) == @inferred size(cref)
 
         for i in 1:2
             c = JuMP.constraint_object(cref[i])
@@ -380,7 +380,8 @@ end
     @testset "all_constraints (scalar)" begin
         model = Model()
         @variable(model, x >= 0)
-        ref = all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
+        ref = @inferred all_constraints(
+            model, VariableRef, MOI.GreaterThan{Float64})
         @test ref == [LowerBoundRef(x)]
         aff_constraints = all_constraints(model, AffExpr,
                                           MOI.GreaterThan{Float64})
@@ -402,7 +403,7 @@ end
         @constraint(model, [x, x] in SecondOrderCone())
         @constraint(model, [2x  1; 1 x] in PSDCone())
         @constraint(model, [x^2, x] in RotatedSecondOrderCone())
-        constraint_types = list_of_constraint_types(model)
+        constraint_types = @inferred list_of_constraint_types(model)
         @test Set(constraint_types) == Set([(VariableRef, MOI.ZeroOne),
             (VariableRef, MOI.GreaterThan{Float64}),
             (AffExpr, MOI.LessThan{Float64}),

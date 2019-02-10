@@ -14,6 +14,9 @@
 # that the plumbing works. This could change if JuMP gains the ability to verify
 # feasibility independently of a solver.
 
+using LinearAlgebra, Test
+using JuMP
+
 @testset "Generation and solve with fake solver" begin
     @testset "LP" begin
         m = Model()
@@ -58,19 +61,19 @@
         #@test JuMP.isattached(m)
         @test JuMP.has_values(m)
 
-        @test JuMP.termination_status(m) == MOI.OPTIMAL
-        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
+        @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
-        @test JuMP.value(x) == 1.0
-        @test JuMP.value(y) == 0.0
-        @test JuMP.value(x + y) == 1.0
-        @test JuMP.value(c) == 1.0
-        @test JuMP.objective_value(m) == -1.0
+        @test  1.0 == @inferred JuMP.value(x)
+        @test  0.0 == @inferred JuMP.value(y)
+        @test  1.0 == @inferred JuMP.value(x + y)
+        @test  1.0 == @inferred JuMP.value(c)
+        @test -1.0 == @inferred JuMP.objective_value(m)
 
-        @test JuMP.dual_status(m) == MOI.FEASIBLE_POINT
-        @test JuMP.dual(c) == -1
-        @test JuMP.dual(JuMP.UpperBoundRef(x)) == 0.0
-        @test JuMP.dual(JuMP.LowerBoundRef(y)) == 1.0
+        @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m)
+        @test -1.0 == @inferred JuMP.dual(c)
+        @test  0.0 == @inferred JuMP.dual(JuMP.UpperBoundRef(x))
+        @test  1.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(y))
     end
 
     @testset "LP (Direct mode)" begin
@@ -99,18 +102,18 @@
         #@test JuMP.isattached(m)
         @test JuMP.has_values(m)
 
-        @test JuMP.termination_status(m) == MOI.OPTIMAL
-        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
+        @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
-        @test JuMP.value(x) == 1.0
-        @test JuMP.value(y) == 0.0
-        @test JuMP.value(x + y) == 1.0
-        @test JuMP.objective_value(m) == -1.0
+        @test  1.0 == @inferred JuMP.value(x)
+        @test  0.0 == @inferred JuMP.value(y)
+        @test  1.0 == @inferred JuMP.value(x + y)
+        @test -1.0 == @inferred JuMP.objective_value(m)
 
-        @test JuMP.dual_status(m) == MOI.FEASIBLE_POINT
-        @test JuMP.dual(c) == -1
-        @test JuMP.dual(JuMP.UpperBoundRef(x)) == 0.0
-        @test JuMP.dual(JuMP.LowerBoundRef(y)) == 1.0
+        @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m)
+        @test -1.0 == @inferred JuMP.dual(c)
+        @test  0.0 == @inferred JuMP.dual(JuMP.UpperBoundRef(x))
+        @test  1.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(y))
     end
 
     # TODO: test Manual mode
@@ -157,12 +160,12 @@
         #@test JuMP.isattached(m)
         @test JuMP.has_values(m)
 
-        @test JuMP.termination_status(m) == MOI.OPTIMAL
-        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
+        @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
-        @test JuMP.value(x) == 1.0
-        @test JuMP.value(y) == 0.0
-        @test JuMP.objective_value(m) == 1.0
+        @test 1.0 == @inferred JuMP.value(x)
+        @test 0.0 == @inferred JuMP.value(y)
+        @test 1.0 == @inferred JuMP.objective_value(m)
 
         @test !JuMP.has_duals(m)
     end
@@ -208,19 +211,19 @@
         #@test JuMP.isattached(m)
         @test JuMP.has_values(m)
 
-        @test JuMP.termination_status(m) == MOI.OPTIMAL
-        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
+        @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
-        @test JuMP.value(x) == 1.0
-        @test JuMP.value(y) == 0.0
-        @test JuMP.objective_value(m) == -1.0
+        @test 1.0 == @inferred JuMP.value(x)
+        @test 0.0 == @inferred JuMP.value(y)
+        @test -1.0 == @inferred JuMP.objective_value(m)
 
-        @test JuMP.dual_status(m) == MOI.FEASIBLE_POINT
-        @test JuMP.dual(c1) == -1.0
-        @test JuMP.dual(c2) == 2.0
-        @test JuMP.dual(c3) == 3.0
+        @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m)
+        @test -1.0 == @inferred JuMP.dual(c1)
+        @test 2.0 == @inferred JuMP.dual(c2)
+        @test 3.0 == @inferred JuMP.dual(c3)
 
-        @test JuMP.value(2 * x + 3 * y * x) == 2.0
+        @test 2.0 == @inferred JuMP.value(2 * x + 3 * y * x)
     end
 
     @testset "SOC" begin
@@ -269,16 +272,16 @@
         #@test JuMP.isattached(m)
         @test JuMP.has_values(m)
 
-        @test JuMP.termination_status(m) == MOI.OPTIMAL
-        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
+        @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
-        @test JuMP.value(x) == 1.0
-        @test JuMP.value(y) == 0.0
-        @test JuMP.value(z) == 0.0
+        @test 1.0 == @inferred JuMP.value(x)
+        @test 0.0 == @inferred JuMP.value(y)
+        @test 0.0 == @inferred JuMP.value(z)
 
         @test JuMP.has_duals(m)
-        @test JuMP.dual(varsoc) == [-1.0, -2.0, -3.0]
-        @test JuMP.dual(affsoc) == [1.0, 2.0, 3.0]
+        @test [-1.0, -2.0, -3.0] == @inferred JuMP.dual(varsoc)
+        @test [ 1.0,  2.0,  3.0] == @inferred JuMP.dual(affsoc)
     end
 
     @testset "SDP" begin
@@ -331,25 +334,25 @@
 
         JuMP.optimize!(m)
 
-        @test JuMP.termination_status(m) == MOI.OPTIMAL
-        @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
+        @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
         @test JuMP.has_values(m)
-        @test JuMP.value.(x) == [1.0 2.0; 2.0 4.0]
+        @test [1.0 2.0; 2.0 4.0] == JuMP.value.(x)
         @test JuMP.value(var_psd) isa Symmetric
-        @test JuMP.value(var_psd) == [1.0 2.0; 2.0 4.0]
+        @test [1.0 2.0; 2.0 4.0] == @inferred JuMP.value(var_psd)
         @test JuMP.value(sym_psd) isa Symmetric
-        @test JuMP.value(sym_psd) == [0.0 2.0; 2.0 3.0]
+        @test [0.0 2.0; 2.0 3.0] == @inferred JuMP.value(sym_psd)
         @test JuMP.value(con_psd) isa Matrix
-        @test JuMP.value(con_psd) == [0.0 2.0; 2.0 3.0]
+        @test [0.0 2.0; 2.0 3.0] == @inferred JuMP.value(con_psd)
 
         @test JuMP.has_duals(m)
         @test JuMP.dual(var_psd) isa Symmetric
-        @test JuMP.dual(var_psd) == [1.0 2.0; 2.0 3.0]
+        @test [1.0 2.0; 2.0 3.0] == @inferred JuMP.dual(var_psd)
         @test JuMP.dual(sym_psd) isa Symmetric
-        @test JuMP.dual(sym_psd) == [4.0 5.0; 5.0 6.0]
+        @test [4.0 5.0; 5.0 6.0] == @inferred JuMP.dual(sym_psd)
         @test JuMP.dual(con_psd) isa Matrix
-        @test JuMP.dual(con_psd) == [7.0 9.0; 8.0 10.0]
+        @test [7.0 9.0; 8.0 10.0] == @inferred JuMP.dual(con_psd)
 
     end
 

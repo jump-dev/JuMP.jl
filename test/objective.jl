@@ -1,3 +1,6 @@
+using Test
+using JuMP
+
 struct DummyOptimizer <: MOI.AbstractOptimizer end
 MOI.is_empty(::DummyOptimizer) = true
 
@@ -22,7 +25,7 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
     @testset "objective_sense set and get" begin
         model = ModelType()
         JuMP.set_objective_sense(model, MOI.FEASIBILITY_SENSE)
-        @test JuMP.objective_sense(model) == MOI.FEASIBILITY_SENSE
+        @test MOI.FEASIBILITY_SENSE == @inferred JuMP.objective_sense(model)
     end
 
     @testset "SingleVariable objectives" begin
@@ -30,16 +33,16 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         @variable(m, x)
 
         @objective(m, Min, x)
-        @test JuMP.objective_sense(m) == MOI.MIN_SENSE
+        @test MOI.MIN_SENSE == @inferred JuMP.objective_sense(m)
         @test JuMP.objective_function_type(m) == VariableRefType
         @test JuMP.objective_function(m) == x
-        @test JuMP.objective_function(m, VariableRefType) == x
+        @test x == @inferred JuMP.objective_function(m, VariableRefType)
 
         @objective(m, Max, x)
-        @test JuMP.objective_sense(m) == MOI.MAX_SENSE
+        @test MOI.MAX_SENSE == @inferred JuMP.objective_sense(m)
         @test JuMP.objective_function_type(m) == VariableRefType
         @test JuMP.objective_function(m) == x
-        @test JuMP.objective_function(m, VariableRefType) == x
+        @test x == @inferred JuMP.objective_function(m, VariableRefType)
     end
 
     @testset "Linear objectives" begin
@@ -47,16 +50,18 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         @variable(m, x)
 
         @objective(m, Min, 2x)
-        @test JuMP.objective_sense(m) == MOI.MIN_SENSE
+        @test MOI.MIN_SENSE == @inferred JuMP.objective_sense(m)
         @test JuMP.objective_function_type(m) == AffExprType
         @test JuMP.isequal_canonical(JuMP.objective_function(m), 2x)
-        @test JuMP.isequal_canonical(JuMP.objective_function(m, AffExprType), 2x)
+        @test JuMP.isequal_canonical(
+            2x, @inferred JuMP.objective_function(m, AffExprType))
 
         @objective(m, Max, x + 3x + 1)
-        @test JuMP.objective_sense(m) == MOI.MAX_SENSE
+        @test MOI.MAX_SENSE == @inferred JuMP.objective_sense(m)
         @test JuMP.objective_function_type(m) == AffExprType
         @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x + 1)
-        @test JuMP.isequal_canonical(JuMP.objective_function(m, AffExprType), 4x + 1)
+        @test JuMP.isequal_canonical(
+            4x + 1, @inferred JuMP.objective_function(m, AffExprType))
     end
 
     @testset "Quadratic objectives" begin
@@ -64,10 +69,11 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         @variable(m, x)
 
         @objective(m, Min, x^2 + 2x)
-        @test JuMP.objective_sense(m) == MOI.MIN_SENSE
+        @test MOI.MIN_SENSE == @inferred JuMP.objective_sense(m)
         @test JuMP.objective_function_type(m) == QuadExprType
         @test JuMP.isequal_canonical(JuMP.objective_function(m), x^2 + 2x)
-        @test JuMP.isequal_canonical(JuMP.objective_function(m, QuadExprType), x^2 + 2x)
+        @test JuMP.isequal_canonical(
+            x^2 + 2x, @inferred JuMP.objective_function(m, QuadExprType))
         @test_throws InexactError JuMP.objective_function(m, AffExprType)
     end
 
@@ -84,8 +90,9 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
 
         sense = MOI.MIN_SENSE
         @objective(m, sense, 2x)
-        @test JuMP.objective_sense(m) == MOI.MIN_SENSE
-        @test JuMP.isequal_canonical(JuMP.objective_function(m, AffExprType), 2x)
+        @test MOI.MIN_SENSE == @inferred JuMP.objective_sense(m)
+        @test JuMP.isequal_canonical(
+            2x, @inferred JuMP.objective_function(m, AffExprType))
 
         sense = :Min
         @test_throws ErrorException @objective(m, sense, 2x)

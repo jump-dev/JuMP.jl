@@ -145,7 +145,9 @@ Base.broadcastable(cref::ConstraintRef) = Ref(cref)
 
 Get a constraint's name attribute.
 """
-name(cr::ConstraintRef{Model,<:_MOICON}) = MOI.get(cr.model, MOI.ConstraintName(), cr)
+function name(cr::ConstraintRef{Model,<:_MOICON})
+    return MOI.get(cr.model, MOI.ConstraintName(), cr)::String
+end
 
 """
     set_name(v::ConstraintRef, s::AbstractString)
@@ -523,9 +525,54 @@ evaluation of `2x + 3y`.
 ```
 """
 function value(cref::ConstraintRef{Model, <:_MOICON})
-    return reshape_result(MOI.get(cref.model, MOI.ConstraintPrimal(), cref),
-                          cref.shape)
+    return reshape_result(_constraint_primal(cref), cref.shape)
 end
+
+# Returns the value of MOI.ConstraintPrimal in a type-stable way
+function _constraint_primal(
+    cref::ConstraintRef{Model, <:_MOICON{
+        <:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}})
+    return MOI.get(cref.model, MOI.ConstraintPrimal(), cref)::Float64
+end
+function _constraint_primal(
+    cref::ConstraintRef{Model, <:_MOICON{
+        <:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}})
+    return MOI.get(cref.model, MOI.ConstraintPrimal(), cref)::Vector{Float64}
+end
+
+"""
+    has_duals(model::Model)
+
+Return true if the solver has a dual solution available to query, otherwise
+return false.
+
+See also [`dual`](@ref) and [`shadow_price`](@ref).
+"""
+has_duals(model::Model) = dual_status(model) != MOI.NO_SOLUTION
+
+"""
+    dual(cref::ConstraintRef)
+
+Get the dual value of this constraint in the result returned by a solver.
+Use `has_dual` to check if a result exists before asking for values.
+See also [`shadow_price`](@ref).
+"""
+function dual(cref::ConstraintRef{Model, <:_MOICON})
+    return reshape_result(_constraint_dual(cref), dual_shape(cref.shape))
+end
+
+# Returns the value of MOI.ConstraintPrimal in a type-stable way
+function _constraint_dual(
+    cref::ConstraintRef{Model, <:_MOICON{
+        <:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}})
+    return MOI.get(cref.model, MOI.ConstraintDual(), cref)::Float64
+end
+function _constraint_dual(
+    cref::ConstraintRef{Model, <:_MOICON{
+        <:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}})
+    return MOI.get(cref.model, MOI.ConstraintDual(), cref)::Vector{Float64}
+end
+
 
 """
     shadow_price(constraint::ConstraintRef)
@@ -700,6 +747,8 @@ julia> list_of_constraint_types(model)
  (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
 """
 function list_of_constraint_types(model::Model)
-    list = MOI.get(model, MOI.ListOfConstraints())
-    return [(jump_function_type(model, f), s) for (f,s) in list]
+    list = MOI.get(
+        model, MOI.ListOfConstraints())::Vector{Tuple{DataType, DataType}}
+    return Tuple{DataType, DataType}[(jump_function_type(model, f), s)
+                                     for (f,s) in list]
 end

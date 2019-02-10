@@ -298,7 +298,7 @@ end
 # Internal function.
 function _try_get_solver_name(model_like)
     try
-        return MOI.get(model_like, MOI.SolverName())
+        return MOI.get(model_like, MOI.SolverName())::String
     catch ex
         if isa(ex, ArgumentError)
             return "SolverName() attribute not implemented by the optimizer."
@@ -384,7 +384,7 @@ end
 
 Returns number of variables in `model`.
 """
-num_variables(model::Model) = MOI.get(model, MOI.NumberOfVariables())
+num_variables(model::Model) = MOI.get(model, MOI.NumberOfVariables())::Int64
 
 """
     num_nl_constraints(model::Model)
@@ -405,7 +405,7 @@ Return the reason why the solver stopped (i.e., the MathOptInterface model
 attribute `TerminationStatus`).
 """
 function termination_status(model::Model)
-    return MOI.get(model, MOI.TerminationStatus())
+    return MOI.get(model, MOI.TerminationStatus())::MOI.TerminationStatusCode
 end
 
 """
@@ -415,7 +415,7 @@ Return the status of the most recent primal solution of the solver (i.e., the
 MathOptInterface model attribute `PrimalStatus`).
 """
 function primal_status(model::Model)
-    return MOI.get(model, MOI.PrimalStatus())
+    return MOI.get(model, MOI.PrimalStatus())::MOI.ResultStatusCode
 end
 
 """
@@ -425,7 +425,7 @@ Return the status of the most recent dual solution of the solver (i.e., the
 MathOptInterface model attribute `DualStatus`).
 """
 function dual_status(model::Model)
-    return MOI.get(model, MOI.DualStatus())
+    return MOI.get(model, MOI.DualStatus())::MOI.ResultStatusCode
 end
 
 set_optimize_hook(model::Model, f) = (model.optimize_hook = f)
@@ -502,28 +502,6 @@ function optimizer_index(cr::ConstraintRef{Model})
 end
 
 index(cr::ConstraintRef) = cr.index
-
-"""
-    has_duals(model::Model)
-
-Return true if the solver has a dual solution available to query, otherwise
-return false.
-
-See also [`dual`](@ref) and [`shadow_price`](@ref).
-"""
-has_duals(model::Model) = dual_status(model) != MOI.NO_SOLUTION
-
-"""
-    dual(cr::ConstraintRef)
-
-Get the dual value of this constraint in the result returned by a solver.
-Use `has_dual` to check if a result exists before asking for values.
-See also [`shadow_price`](@ref).
-"""
-function dual(cr::ConstraintRef{Model, <:_MOICON})
-    return reshape_result(MOI.get(cr.model, MOI.ConstraintDual(), cr),
-                          dual_shape(cr.shape))
-end
 
 """
     struct OptimizeNotCalled <: Exception end

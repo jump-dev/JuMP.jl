@@ -347,7 +347,7 @@ end
         model = Model()
         @variable(model, x)
         @test_throws ErrorException @variable(model, x)
-        @test num_variables(model) == 1
+        @test 1 == @inferred num_variables(model)
     end
 
     @testset "Anonymous expressions aren't registered" begin
