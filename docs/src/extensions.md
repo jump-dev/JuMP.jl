@@ -54,8 +54,8 @@ Adding methods to these functions is the recommended way to extend the
 ### Adding `parse_constraint` methods
 
 ```@meta
-# TODO(Benoît): Details how `parse_constraint` works and shows how
-#               `sense_to_set` fit into the picture
+# TODO(Benoît): Detail how `parse_constraint` works and show how `sense_to_set`
+#               fits into the picture.
 ```
 
 ```@docs
