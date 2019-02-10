@@ -297,13 +297,15 @@ end
 function jump_function_type(::Model, ::Type{MOI.VectorOfVariables})
     return Vector{VariableRef}
 end
-function jump_function(model::AbstractModel, variables::MOI.VectorOfVariables)
+function jump_function(model::Model, variables::MOI.VectorOfVariables)
     return VariableRef[VariableRef(model, v) for v in variables.variables]
 end
 
-VariableRef(m::Model, f::MOI.SingleVariable) = VariableRef(m, f.variable)
-jump_function_type(::AbstractModel, ::Type{MOI.SingleVariable}) = VariableRef
-function jump_function(model::AbstractModel, variable::MOI.SingleVariable)
+function VariableRef(model::Model, f::MOI.SingleVariable)
+    return VariableRef(model, f.variable)
+end
+jump_function_type(::Model, ::Type{MOI.SingleVariable}) = VariableRef
+function jump_function(model::Model, variable::MOI.SingleVariable)
     return VariableRef(model, variable)
 end
 
