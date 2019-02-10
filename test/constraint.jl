@@ -399,10 +399,16 @@ end
         model = Model()
         @variable(model, x >= 0, Bin)
         @constraint(model, 2x <= 1)
+        @constraint(model, [x, x] in SecondOrderCone())
+        @constraint(model, [2x  1; 1 x] in PSDCone())
+        @constraint(model, [x^2, x] in RotatedSecondOrderCone())
         constraint_types = list_of_constraint_types(model)
         @test Set(constraint_types) == Set([(VariableRef, MOI.ZeroOne),
             (VariableRef, MOI.GreaterThan{Float64}),
-            (AffExpr, MOI.LessThan{Float64})])
+            (AffExpr, MOI.LessThan{Float64}),
+            (Vector{VariableRef}, MOI.SecondOrderCone),
+            (Vector{AffExpr}, MOI.PositiveSemidefiniteConeSquare),
+            (Vector{QuadExpr}, MOI.RotatedSecondOrderCone)])
     end
 end
 
