@@ -51,6 +51,17 @@ The [`@constraint`](@ref) macro always calls the same three functions:
 Adding methods to these functions is the recommended way to extend the
 [`@constraint`](@ref) macro.
 
+### Adding `parse_constraint` methods
+
+```@meta
+# TODO(Benoît): Detail how `parse_constraint` works and show how `sense_to_set`
+#               fits into the picture.
+```
+
+```@docs
+sense_to_set
+```
+
 ### Adding `build_constraint` methods
 
 There is typically two choices when creating a [`build_constraint`](@ref)
