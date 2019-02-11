@@ -291,15 +291,20 @@ function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
     aff.constant = f.constant
     return aff
 end
-function jump_function_type(::AbstractModel,
+function jump_function_type(::Model,
                             ::Type{MOI.ScalarAffineFunction{T}}) where T
     return GenericAffExpr{T, VariableRef}
 end
-function jump_function(model::AbstractModel, f::MOI.ScalarAffineFunction)
-    return AffExpr(model, f)
+function jump_function(model::Model, f::MOI.ScalarAffineFunction{T}) where T
+    return GenericAffExpr{T, VariableRef}(model, f)
 end
-function jump_function(model::AbstractModel, f::MOI.VectorAffineFunction)
-    return AffExpr[AffExpr(model, f) for f in MOIU.eachscalar(f)]
+function jump_function_type(::Model,
+                            ::Type{MOI.VectorAffineFunction{T}}) where T
+    return Vector{GenericAffExpr{T, VariableRef}}
+end
+function jump_function(model::Model, f::MOI.VectorAffineFunction{T}) where T
+    return GenericAffExpr{T, VariableRef}[
+        GenericAffExpr{T, VariableRef}(model, f) for f in MOIU.eachscalar(f)]
 end
 
 """

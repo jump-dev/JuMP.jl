@@ -243,15 +243,20 @@ function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
     end
     return quad
 end
-function jump_function_type(::AbstractModel,
+function jump_function_type(::Model,
                             ::Type{MOI.ScalarQuadraticFunction{T}}) where T
     return GenericQuadExpr{T, VariableRef}
 end
-function jump_function(model::AbstractModel, aff::MOI.ScalarQuadraticFunction)
-    return QuadExpr(model, aff)
+function jump_function(model::Model, f::MOI.ScalarQuadraticFunction{T}) where T
+    return GenericQuadExpr{T, VariableRef}(model, f)
 end
-function jump_function(model::AbstractModel, f::MOI.VectorQuadraticFunction)
-    return QuadExpr[QuadExpr(model, f) for f in MOIU.eachscalar(f)]
+function jump_function_type(::Model,
+                            ::Type{MOI.VectorQuadraticFunction{T}}) where T
+    return Vector{GenericQuadExpr{T, VariableRef}}
+end
+function jump_function(model::Model, f::MOI.VectorQuadraticFunction{T}) where T
+    return GenericQuadExpr{T, VariableRef}[
+        GenericQuadExpr{T, VariableRef}(model, f) for f in MOIU.eachscalar(f)]
 end
 
 """
