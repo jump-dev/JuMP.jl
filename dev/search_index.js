@@ -1745,6 +1745,22 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "extensions/#JuMP.sense_to_set",
+    "page": "Extensions",
+    "title": "JuMP.sense_to_set",
+    "category": "function",
+    "text": "sense_to_set(_error::Function, ::Val{sense_symbol})\n\nConverts a sense symbol to a set set such that @constraint(model, func sense_symbol 0) is equivalent to@constraint(model, func in set)for anyfunc::AbstractJuMPScalar`.\n\nExample\n\nOnce a custom set is defined you can directly create a JuMP constraint with it:\n\njulia> struct CustomSet{T} <: MOI.AbstractScalarSet\n           value::T\n       end\n\njulia> model = Model();\n\njulia> @variable(model, x)\nx\n\njulia> cref = @constraint(model, x in CustomSet(1.0))\nx ∈ CustomSet{Float64}(1.0)\n\nHowever, there might be an appropriate sign that could be used in order to provide a more convenient syntax:\n\njulia> JuMP.sense_to_set(::Function, ::Val{:⊰}) = CustomSet(0.0)\n\njulia> MOIU.shift_constant(set::CustomSet, value) = CustomSet(set.value + value)\n\njulia> cref = @constraint(model, x ⊰ 1)\nx ∈ CustomSet{Float64}(1.0)\n\nNote that the whole function is first moved to the right-hand side, then the sign is transformed into a set with zero constant and finally the constant is moved to the set with MOIU.shift_constant.\n\n\n\n\n\n"
+},
+
+{
+    "location": "extensions/#Adding-parse_constraint-methods-1",
+    "page": "Extensions",
+    "title": "Adding parse_constraint methods",
+    "category": "section",
+    "text": "# TODO(Benoît): Detail how `parse_constraint` works and show how `sense_to_set`\n#               fits into the picture.sense_to_set"
+},
+
+{
     "location": "extensions/#JuMP.build_constraint",
     "page": "Extensions",
     "title": "JuMP.build_constraint",
@@ -1849,7 +1865,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "extensions/#Adding-parse_constraint-methods-1",
+    "location": "extensions/#Adding-parse_constraint-methods-2",
     "page": "Extensions",
     "title": "Adding parse_constraint methods",
     "category": "section",
