@@ -31,8 +31,7 @@ function my_lazy_callback(cb_data)
     @assert primal_status(model) == MOI.FEASIBLE_POINT
     # Get the values of x and y.
     x_val, y_val = value(x), value(y)
-    # Add the lazy constraints using the `@lazy_constraint` macro that was
-    # loaded by `@load_extensions`.
+    # Add the lazy constraints using the `@lazy_constraint` macro.
     if y_val - x_val > 1.1 + 1e-6
         @lazy_constraint(model, cb_data, y <= 1.1 + x)
     elseif y_val + x_val > 3 + 1e-6
