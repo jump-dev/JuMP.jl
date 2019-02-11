@@ -270,6 +270,12 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test con[2].set == MOI.LessThan(2.0)
     end
 
+    @testset "@build_constraint error" begin
+        model = ModelType()
+        @variable(model, x)
+        @test_throws LoadError @macroexpand @build_constraint(2x + 1)
+    end
+
     build_constraint_keyword_test(ModelType)
 end
 
