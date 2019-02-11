@@ -380,11 +380,11 @@ function add_bridge(model::Model,
 end
 
 """
-    num_variables(model::Model)
+    num_variables(model::Model)::Int64
 
 Returns number of variables in `model`.
 """
-num_variables(model::Model) = MOI.get(model, MOI.NumberOfVariables())::Int64
+num_variables(model::Model)::Int64 = MOI.get(model, MOI.NumberOfVariables())
 
 """
     num_nl_constraints(model::Model)
