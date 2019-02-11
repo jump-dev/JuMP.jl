@@ -294,6 +294,9 @@ MOI.VectorOfVariables(vars::Vector{VariableRef}) = MOI.VectorOfVariables(index.(
 function moi_function(variables::Vector{<:AbstractVariableRef})
     return MOI.VectorOfVariables(variables)
 end
+function moi_function_type(::Type{<:Vector{<:AbstractVariableRef}})
+    return MOI.VectorOfVariables
+end
 function jump_function_type(::Model, ::Type{MOI.VectorOfVariables})
     return Vector{VariableRef}
 end

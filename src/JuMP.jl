@@ -117,6 +117,8 @@ function (optimizer_factory::OptimizerFactory)()
                                          optimizer_factory.kwargs...)
 end
 
+include("shapes.jl")
+
 # Model
 
 # Model has three modes:
@@ -146,6 +148,8 @@ mutable struct Model <: AbstractModel
     # In MANUAL and AUTOMATIC modes, CachingOptimizer.
     # In DIRECT mode, will hold an AbstractOptimizer.
     moi_backend::MOI.AbstractOptimizer
+    # List of shapes of constraints that are not `ScalarShape` or `VectorShape`.
+    shapes::Dict{_MOICON, AbstractShape}
     # List of bridges to add in addition to the ones added in
     # `MOI.Bridges.full_bridge_optimizer`. With `BridgeableConstraint`, the
     # same bridge may be added many times so we store them in a `Set` instead
@@ -242,6 +246,7 @@ function direct_model(backend::MOI.ModelLike)
                  Dict{_MOIVAR, _MOIINT}(),
                  Dict{_MOIVAR, _MOIBIN}(),
                  backend,
+                 Dict{_MOICON, AbstractShape}(),
                  Set{Any}(),
                  nothing,
                  nothing,

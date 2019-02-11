@@ -9,95 +9,6 @@
 #############################################################################
 
 """
-    AbstractShape
-
-Abstract vectorizable shape. Given a flat vector form of an object of shape
-`shape`, the original object can be obtained by [`reshape_result`](@ref).
-"""
-abstract type AbstractShape end
-
-"""
-    dual_shape(shape::AbstractShape)::AbstractShape
-
-Returns the shape of the dual space of the space of objects of shape `shape`. By
-default, the `dual_shape` of a shape is itself. See the examples section below
-for an example for which this is not the case.
-
-## Examples
-
-Consider polynomial constraints for which the dual is moment constraints and
-moment constraints for which the dual is polynomial constraints. Shapes for
-polynomials can be defined as follows:
-```julia
-struct Polynomial
-    coefficients::Vector{Float64}
-    monomials::Vector{Monomial}
-end
-struct PolynomialShape <: AbstractShape
-    monomials::Vector{Monomial}
-end
-JuMP.reshape_result(x::Vector, shape::PolynomialShape) = Polynomial(x, shape.monomials)
-```
-and a shape for moments can be defined as follows:
-```julia
-struct Moments
-    coefficients::Vector{Float64}
-    monomials::Vector{Monomial}
-end
-struct MomentsShape <: AbstractShape
-    monomials::Vector{Monomial}
-end
-JuMP.reshape_result(x::Vector, shape::MomentsShape) = Moments(x, shape.monomials)
-```
-The `dual_shape` allows to define the shape of the dual of polynomial and moment
-constraints:
-```julia
-dual_shape(shape::PolynomialShape) = MomentsShape(shape.monomials)
-dual_shape(shape::MomentsShape) = PolynomialShape(shape.monomials)
-```
-"""
-dual_shape(shape::AbstractShape) = shape
-
-"""
-    reshape_result(vectorized_form::Vector, shape::AbstractShape)
-
-Return an object in its original shape `shape` given its vectorized form
-`vectorized_form`.
-
-## Examples
-
-Given a [`SymmetricMatrixShape`](@ref) of vectorized form `[1, 2, 3]`, the
-following code returns the matrix `Symmetric(Matrix[1 2; 2 3])`:
-```julia
-reshape_result([1, 2, 3], SymmetricMatrixShape(2))
-```
-"""
-function reshape_result end
-
-"""
-    shape(c::AbstractConstraint)::AbstractShape
-
-Return the shape of the constraint `c`.
-"""
-function shape end
-
-"""
-    ScalarShape
-
-Shape of scalar constraints.
-"""
-struct ScalarShape <: AbstractShape end
-reshape_result(α, ::ScalarShape) = α
-
-"""
-    VectorShape
-
-Vector for which the vectorized form corresponds exactly to the vector given.
-"""
-struct VectorShape <: AbstractShape end
-reshape_result(vectorized_form, ::VectorShape) = vectorized_form
-
-"""
     ConstraintRef
 
 Holds a reference to the model and the corresponding MOI.ConstraintIndex.
@@ -235,15 +146,17 @@ function constraint_by_name(model::Model, name::String,
 end
 
 # Creates a ConstraintRef with default shape
-function constraint_ref_with_index(model::AbstractModel,
-                        index::MOI.ConstraintIndex{<:MOI.AbstractScalarFunction,
-                                                   <:MOI.AbstractScalarSet})
+function constraint_ref_with_index(
+    model::AbstractModel,
+    index::MOI.ConstraintIndex{<:MOI.AbstractScalarFunction,
+                               <:MOI.AbstractScalarSet})
     return ConstraintRef(model, index, ScalarShape())
 end
-function constraint_ref_with_index(model::AbstractModel,
-                        index::MOI.ConstraintIndex{<:MOI.AbstractVectorFunction,
-                                                   <:MOI.AbstractVectorSet})
-    return ConstraintRef(model, index, VectorShape())
+function constraint_ref_with_index(
+    model::AbstractModel,
+    index::MOI.ConstraintIndex{<:MOI.AbstractVectorFunction,
+                               <:MOI.AbstractVectorSet})
+    return ConstraintRef(model, index, get(model.shapes, index, VectorShape()))
 end
 
 """
@@ -468,7 +381,11 @@ function add_constraint(model::Model, c::AbstractConstraint, name::String="")
     # function.
     check_belongs_to_model(c, model)
     cindex = moi_add_constraint(backend(model), moi_function(c), moi_set(c))
-    cref = ConstraintRef(model, cindex, shape(c))
+    cshape = shape(c)
+    if !(cshape isa ScalarShape) && !(cshape isa VectorShape)
+        model.shapes[cindex] = cshape
+    end
+    cref = ConstraintRef(model, cindex, cshape)
     if !isempty(name)
         set_name(cref, name)
     end
@@ -675,15 +592,66 @@ function _error_if_not_concrete_type(t)
     end
     return
 end
+# `isconcretetype(Vector{Integer})` is `true`
+function _error_if_not_concrete_type(t::Type{Vector{ElT}}) where ElT
+    _error_if_not_concrete_type(ElT)
+end
 
 """
-    all_constraints(model::Model, function_type, set_type)::Vector{VariableRef}
+    num_constraints(model::Model, function_type, set_type)::Int64
+
+Return the number of constraints currently in the model where the function
+has type `function_type` and the set has type `set_type`.
+
+See also [`list_of_constraint_types`](@ref) and [`list_of_constraints`](@ref).
+
+# Example
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 0, Bin);
+
+julia> @variable(model, y);
+
+julia> @constraint(model, y in MOI.GreaterThan(1.0));
+
+julia> @constraint(model, y <= 1.0);
+
+julia> @constraint(model, 2x <= 1);
+
+julia> num_constraints(model, VariableRef, MOI.GreaterThan{Float64})
+2
+
+julia> all_constraints(model, VariableRef, MOI.ZeroOne)
+1
+
+julia> all_constraints(model, AffExpr, MOI.LessThan{Float64})
+2
+```
+"""
+function num_constraints(
+    model::Model,
+    function_type::Type{<:Union{AbstractJuMPScalar,
+                                Vector{<:AbstractJuMPScalar}}},
+    set_type::Type{<:MOI.AbstractSet})::Int64
+    _error_if_not_concrete_type(function_type)
+    _error_if_not_concrete_type(set_type)
+    # TODO: Support JuMP's set helpers like SecondOrderCone().
+    f_type = moi_function_type(function_type)
+    return MOI.get(model, MOI.NumberOfConstraints{f_type, set_type}())
+end
+
+
+"""
+    all_constraints(model::Model, function_type, set_type)::Vector{
+        ConstraintRef{Model,
+            MOI.ConstraintIndex{moi_function_type(function_type), set_type}}}
 
 Return a list of all constraints currently in the model where the function
 has type `function_type` and the set has type `set_type`. The constraints are
 ordered by creation time.
 
-See also [`list_of_constraint_types`](@ref).
+See also [`list_of_constraint_types`](@ref) and [`num_constraints`](@ref).
 
 # Example
 ```jldoctest
@@ -706,18 +674,19 @@ julia> all_constraints(model, AffExpr, MOI.LessThan{Float64})
  2 x ≤ 1.0
 ```
 """
-function all_constraints(model::Model,
-                         function_type::Type{<:AbstractJuMPScalar},
-                         set_type::Type{<:MOI.AbstractSet})
+function all_constraints(
+    model::Model,
+    function_type::Type{<:Union{AbstractJuMPScalar,
+                                Vector{<:AbstractJuMPScalar}}},
+    set_type::Type{<:MOI.AbstractSet})
     _error_if_not_concrete_type(function_type)
     _error_if_not_concrete_type(set_type)
     # TODO: Support JuMP's set helpers like SecondOrderCone().
     f_type = moi_function_type(function_type)
-    constraint_ref_type = ConstraintRef{Model, _MOICON{f_type, set_type},
-                                        ScalarShape}
+    constraint_ref_type = ConstraintRef{Model, _MOICON{f_type, set_type}}
     result = constraint_ref_type[]
     for idx in MOI.get(model, MOI.ListOfConstraintIndices{f_type, set_type}())
-        push!(result, ConstraintRef(model, idx, ScalarShape()))
+        push!(result, constraint_ref_with_index(model, idx))
     end
     return result
 end
