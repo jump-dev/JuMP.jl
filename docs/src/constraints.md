@@ -598,11 +598,11 @@ false
 
 You can query the types of constraints currently present in the model by calling
 [`list_of_constraint_types`](@ref). Then, given a function and set type, use
-[`all_constraints`](@ref) to access a list of constraint references for
-constraints of this type. Then use [`constraint_object`](@ref) to get an
-instance of an [`AbstractConstraint`](@ref) object, either
-[`ScalarConstraint`](@ref) or [`VectorConstraint`](@ref) that stores the
-constraint data.
+[`num_constraints`](@ref) to access the number of constraints of this type and
+[`all_constraints`](@ref) to access a list of their references. Then use
+[`constraint_object`](@ref) to get an instance of an
+[`AbstractConstraint`](@ref) object, either [`ScalarConstraint`](@ref) or
+[`VectorConstraint`](@ref) that stores the constraint data.
 
 ```jldoctest
 julia> model = Model();
@@ -617,15 +617,24 @@ julia> list_of_constraint_types(model)
  (VariableRef, MathOptInterface.GreaterThan{Float64})
  (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
 
+julia> num_constraints(model, VariableRef, MOI.Integer)
+2
+
 julia> all_constraints(model, VariableRef, MOI.Integer)
 2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.Integer},ScalarShape},1}:
  x[1] integer
  x[2] integer
 
+julia> num_constraints(model, VariableRef, MOI.GreaterThan{Float64})
+2
+
 julia> all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
 2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
  x[1] ≥ 1.0
  x[2] ≥ 2.0
+
+julia> num_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{Float64})
+1
 
 julia> less_than_constraints = all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{Float64})
 1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
@@ -660,6 +669,7 @@ FixRef
 ConstraintRef
 list_of_constraint_types
 all_constraints
+num_constraints
 constraint_object
 AbstractConstraint
 ScalarConstraint

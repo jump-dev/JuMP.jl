@@ -603,7 +603,7 @@ end
 Return the number of constraints currently in the model where the function
 has type `function_type` and the set has type `set_type`.
 
-See also [`list_of_constraint_types`](@ref) and [`list_of_constraints`](@ref).
+See also [`list_of_constraint_types`](@ref) and [`all_constraints`](@ref).
 
 # Example
 ```jldoctest
@@ -622,10 +622,10 @@ julia> @constraint(model, 2x <= 1);
 julia> num_constraints(model, VariableRef, MOI.GreaterThan{Float64})
 2
 
-julia> all_constraints(model, VariableRef, MOI.ZeroOne)
+julia> num_constraints(model, VariableRef, MOI.ZeroOne)
 1
 
-julia> all_constraints(model, AffExpr, MOI.LessThan{Float64})
+julia> num_constraints(model, AffExpr, MOI.LessThan{Float64})
 2
 ```
 """
@@ -643,9 +643,7 @@ end
 
 
 """
-    all_constraints(model::Model, function_type, set_type)::Vector{
-        ConstraintRef{Model,
-            MOI.ConstraintIndex{moi_function_type(function_type), set_type}}}
+    all_constraints(model::Model, function_type, set_type)::Vector{<:ConstraintRef}
 
 Return a list of all constraints currently in the model where the function
 has type `function_type` and the set has type `set_type`. The constraints are
@@ -683,7 +681,13 @@ function all_constraints(
     _error_if_not_concrete_type(set_type)
     # TODO: Support JuMP's set helpers like SecondOrderCone().
     f_type = moi_function_type(function_type)
-    constraint_ref_type = ConstraintRef{Model, _MOICON{f_type, set_type}}
+    if set_type <: MOI.AbstractScalarSet
+        shape_type = ScalarShape
+    else
+        shape_type = AbstractVectorShape
+    end
+    constraint_ref_type = ConstraintRef{Model, _MOICON{f_type, set_type},
+                                        shape_type}
     result = constraint_ref_type[]
     for idx in MOI.get(model, MOI.ListOfConstraintIndices{f_type, set_type}())
         push!(result, constraint_ref_with_index(model, idx))
