@@ -28,7 +28,7 @@ model = JuMP.direct_model(GLPK.Optimizer())
 # gets called.
 cb_calls = Symbol[]
 
-function my_lazy_callback(model, cb_data)
+function my_lazy_callback(cb_data)
     push!(cb_calls, :lazy)
     # Double check for sanity's sake that we have a feasible (given the
     # current constraints) point.
@@ -44,7 +44,7 @@ function my_lazy_callback(model, cb_data)
     end
 end
 
-function my_heuristic_callback(model, cb_data)
+function my_heuristic_callback(cb_data)
     push!(cb_calls, :heuristic)
     # Double check for sanity's sake that we have a feasible (given the
     # current constraints) point.

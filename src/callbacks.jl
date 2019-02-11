@@ -57,17 +57,17 @@ function set_callbacks(model::Model; lazy = nothing, heuristic = nothing)
     if JuMP.mode(model) != JuMP.DIRECT
         error("You must use a solver in DIRECT mode to use callbacks in JuMP.")
     end
-    _set_callbacks(model, JuMP.backend(model), lazy, heuristic)
+    _set_callbacks(JuMP.backend(model), lazy, heuristic)
 end
 
 """
-    _set_callbacks(model::Model, optimizer::MOI.ModelLike,
+    _set_callbacks(optimizer::MOI.ModelLike,
                    lazy::Union{Nothing, Function},
                    heuristic::Union{Nothing, Function})
 
 An internal JuMP function that should be overloaded by each solver.
 """
-function _set_callbacks(model, optimizer, lazy, heuristic)
+function _set_callbacks(optimizer, lazy, heuristic)
     error("The model $(typeof(optimizer)) does not support callbacks.")
 end
 
@@ -78,6 +78,10 @@ Add a lazy constraint `func`-in-`set` to `model`.
 
 This can be called only from a lazy callback set by `set_callbacks`.
 """
+function add_lazy_constraint(model::JuMP.Model, cb_data, func, set)
+    add_lazy_constraint(JuMP.backend(model), cb_data, func, set)
+end
+
 function add_lazy_constraint(model, cb_data, func, set)
     error("add_lazy_constraint not supported by this solver.")
 end
@@ -90,6 +94,10 @@ Provide the heuristic solution given by the variable-value mapping of `sol` to
 
 This can be called only from a heuristic callback set by `set_callbacks`.
 """
+function add_heuristic_solution(model::JuMP.Model, cb_data, sol)
+    add_heuristic_solution(JuMP.backend(model), cb_data, sol)
+end
+
 function add_heuristic_solution(model, cb_data, sol)
     error("add_heuristic_solution not supported by this solver.")
 end
