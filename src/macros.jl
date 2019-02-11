@@ -793,7 +793,7 @@ model = Model();
 ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
 """
 macro build_constraint(constraint_expr)
-    _error(str...) = _macro_error(:build_constraint, args, str...)
+    _error(str...) = _macro_error(:build_constraint, (constraint_expr,), str...)
 
     if isa(constraint_expr, Symbol)
         _error("Incomplete constraint specification $constraint_expr. " *
