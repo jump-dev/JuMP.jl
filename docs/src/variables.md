@@ -264,9 +264,9 @@ variable_by_name
 In the examples above, we have mostly created scalar variables. By scalar, we
 mean that the Julia variable is bound to exactly one JuMP variable. However, it
 is often useful to create collections of JuMP variables inside more complicated
-datastructures.
+data structures.
 
-JuMP provides a mechanism for creating three types of these datastructures,
+JuMP provides a mechanism for creating three types of these data structures,
 which we refer to as *containers*. The three types are `Array`s, `DenseAxisArray`s,
 and `SparseAxisArray`s. We explain each of these in the following.
 
