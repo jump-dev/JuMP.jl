@@ -213,7 +213,7 @@ register(model, :my_square, 1, my_square, autodiff=true)
 ```
 
 The above code creates a JuMP model with the objective function
-`(x[1] - 1)^2 + (x[2]^2 - 2)^2`. The first argument to `register` the
+`(x[1] - 1)^2 + (x[2]^2 - 2)^2`. The first argument to `register` is the
 model for which the functions are registered. The second argument is a Julia
 symbol object which serves as the name of the user-defined function in JuMP
 expressions; the JuMP name need not be the same as the name of the corresponding

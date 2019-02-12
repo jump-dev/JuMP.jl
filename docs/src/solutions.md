@@ -84,7 +84,7 @@ The container type (e.g., scalar, vector, or matrix) of the returned solution
 (primal or dual) depends on the type of the variable or constraint. See
 [`AbstractShape`](@ref) and [`dual_shape`](@ref) for details.
 
-To call [`value`](@ref) or [`dual`](@ref) on container of
+To call [`value`](@ref) or [`dual`](@ref) on containers of
 [`VariableRef`](@ref) or [`ConstraintRef`](@ref), use the broadcast syntax,
 e.g., `value.(x)`.
 
