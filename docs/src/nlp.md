@@ -383,8 +383,10 @@ julia> index(cons2)
 NonlinearConstraintIndex(2)
 ```
 
+```@meta
 TODO: Provide a link for how to access the linear and quadratic parts of the
 model.
+```
 
 Note that for one-sided nonlinear constraints, JuMP subtracts any values on the
 right-hand side when computing expressions. In other words, one-sided nonlinear
