@@ -77,7 +77,7 @@ function update_variable_info(vref::MyVariableRef, info::JuMP.VariableInfo)
 end
 
 JuMP.has_lower_bound(vref::MyVariableRef) = variable_info(vref).has_lb
-function JuMP.lower_bound(vref::MyVariableRef)
+function JuMP.lower_bound(vref::MyVariableRef)::Float64
     @assert !JuMP.is_fixed(vref)
     return variable_info(vref).lower_bound
 end
@@ -100,7 +100,7 @@ function JuMP.delete_lower_bound(vref::MyVariableRef)
                                            info.binary, info.integer))
 end
 JuMP.has_upper_bound(vref::MyVariableRef) = variable_info(vref).has_ub
-function JuMP.upper_bound(vref::MyVariableRef)
+function JuMP.upper_bound(vref::MyVariableRef)::Float64
     @assert !JuMP.is_fixed(vref)
     return variable_info(vref).upper_bound
 end
@@ -123,7 +123,9 @@ function JuMP.delete_upper_bound(vref::MyVariableRef)
                                            info.binary, info.integer))
 end
 JuMP.is_fixed(vref::MyVariableRef) = variable_info(vref).has_fix
-JuMP.fix_value(vref::MyVariableRef) = variable_info(vref).fixed_value
+function JuMP.fix_value(vref::MyVariableRef)::Float64
+    return variable_info(vref).fixed_value
+end
 function JuMP.fix(vref::MyVariableRef, value; force::Bool = false)
     info = variable_info(vref)
     if !force && (info.has_lb || info.has_ub)
@@ -144,7 +146,9 @@ function JuMP.unfix(vref::MyVariableRef)
                                            info.has_start, info.start,
                                            info.binary, info.integer))
 end
-JuMP.start_value(vref::MyVariableRef) = variable_info(vref).start
+function JuMP.start_value(vref::MyVariableRef)::Union{Nothing, Float64}
+    return variable_info(vref).start
+end
 function JuMP.set_start_value(vref::MyVariableRef, start)
     info = variable_info(vref)
     update_variable_info(vref,
@@ -238,7 +242,7 @@ function JuMP.objective_function(model::MyModel, FT::Type)
         throw(InexactError(:objective_function, FT,
                            typeof(model.objective_function)))
     end
-    model.objective_function
+    return model.objective_function::FT
 end
 
 # Names

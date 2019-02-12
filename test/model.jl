@@ -213,9 +213,9 @@ function test_model()
                     JuMP.add_bridge(model, NonnegativeBridge)
                     c = @constraint(model, x in Nonnegative())
                     JuMP.optimize!(model)
-                    @test JuMP.value(x) == 1.0
-                    @test JuMP.value(c) == 1.0
-                    @test JuMP.dual(c) == 2.0
+                    @test 1.0 == @inferred JuMP.value(x)
+                    @test 1.0 == @inferred JuMP.value(c)
+                    @test 2.0 == @inferred JuMP.dual(c)
                 end
                 @testset "with_optimizer at optimize!" begin
                     model = Model()
@@ -223,9 +223,9 @@ function test_model()
                     c = @constraint(model, x in Nonnegative())
                     JuMP.add_bridge(model, NonnegativeBridge)
                     JuMP.optimize!(model, factory)
-                    @test JuMP.value(x) == 1.0
-                    @test JuMP.value(c) == 1.0
-                    @test JuMP.dual(c) == 2.0
+                    @test 1.0 == @inferred JuMP.value(x)
+                    @test 1.0 == @inferred JuMP.value(c)
+                    @test 2.0 == @inferred JuMP.dual(c)
                 end
             end
             @testset "after loading the constraint to the optimizer" begin
@@ -240,9 +240,9 @@ function test_model()
                     JuMP.add_bridge(model, NonnegativeBridge)
                     c = @constraint(model, x in Nonnegative())
                     JuMP.optimize!(model)
-                    @test JuMP.value(x) == 1.0
-                    @test JuMP.value(c) == 1.0
-                    @test JuMP.dual(c) == 2.0
+                    @test 1.0 == @inferred JuMP.value(x)
+                    @test 1.0 == @inferred JuMP.value(c)
+                    @test 2.0 == @inferred JuMP.dual(c)
                 end
                 @testset "with_optimizer at optimize!" begin
                     err = MOI.UnsupportedConstraint{MOI.SingleVariable,
@@ -253,9 +253,9 @@ function test_model()
                     @test_throws err JuMP.optimize!(model, factory)
                     JuMP.add_bridge(model, NonnegativeBridge)
                     JuMP.optimize!(model)
-                    @test JuMP.value(x) == 1.0
-                    @test JuMP.value(c) == 1.0
-                    @test JuMP.dual(c) == 2.0
+                    @test 1.0 == @inferred JuMP.value(x)
+                    @test 1.0 == @inferred JuMP.value(c)
+                    @test 2.0 == @inferred JuMP.dual(c)
                 end
             end
             @testset "automatically with BridgeableConstraint" begin
@@ -266,9 +266,9 @@ function test_model()
                     bc = BridgeableConstraint(constraint, NonnegativeBridge)
                     c = add_constraint(model, bc)
                     JuMP.optimize!(model)
-                    @test JuMP.value(x) == 1.0
-                    @test JuMP.value(c) == 1.0
-                    @test JuMP.dual(c) == 2.0
+                    @test 1.0 == @inferred JuMP.value(x)
+                    @test 1.0 == @inferred JuMP.value(c)
+                    @test 2.0 == @inferred JuMP.dual(c)
                 end
                 @testset "with_optimizer at optimize!" begin
                     model = Model()
@@ -277,9 +277,9 @@ function test_model()
                     bc = BridgeableConstraint(constraint, NonnegativeBridge)
                     c = add_constraint(model, bc)
                     JuMP.optimize!(model, factory)
-                    @test JuMP.value(x) == 1.0
-                    @test JuMP.value(c) == 1.0
-                    @test JuMP.dual(c) == 2.0
+                    @test 1.0 == @inferred JuMP.value(x)
+                    @test 1.0 == @inferred JuMP.value(c)
+                    @test 2.0 == @inferred JuMP.dual(c)
                 end
             end
         end
@@ -306,13 +306,13 @@ function test_model()
     @testset "solver_name" begin
         @testset "Not attached" begin
             model = Model()
-            @test JuMP.solver_name(model) == "No optimizer attached."
+            @test "No optimizer attached." == @inferred JuMP.solver_name(model)
         end
 
         @testset "Mock" begin
             model = Model(with_optimizer(MOIU.MockOptimizer,
                                          SimpleLPModel{Float64}()))
-            @test JuMP.solver_name(model) == "Mock"
+            @test "Mock" == @inferred JuMP.solver_name(model)
         end
     end
 end
@@ -359,28 +359,28 @@ function dummy_optimizer_hook(::JuMP.AbstractModel) end
                         reference_map[z] = new_model[:z]
                         reference_map[cref] = new_model[:cref]
                     end
-                    @test MOIU.mode(JuMP.backend(new_model)) == caching_mode
+                    @test caching_mode == @inferred MOIU.mode(JuMP.backend(new_model))
                     @test new_model.optimize_hook === dummy_optimizer_hook
                     @test new_model.ext[:dummy].model === new_model
                     x_new = reference_map[x]
                     @test JuMP.owner_model(x_new) === new_model
-                    @test JuMP.name(x_new) == "x"
+                    @test "x" == @inferred JuMP.name(x_new)
                     y_new = reference_map[y]
                     @test JuMP.owner_model(y_new) === new_model
-                    @test JuMP.name(y_new) == "y"
+                    @test "y" == @inferred JuMP.name(y_new)
                     z_new = reference_map[z]
                     @test JuMP.owner_model(z_new) === new_model
-                    @test JuMP.name(z_new) == "z"
+                    @test "z" == @inferred JuMP.name(z_new)
                     if copy_model
-                        @test JuMP.LowerBoundRef(x_new) == reference_map[JuMP.LowerBoundRef(x)]
-                        @test JuMP.BinaryRef(x_new) == reference_map[JuMP.BinaryRef(x)]
-                        @test JuMP.UpperBoundRef(y_new) == reference_map[JuMP.UpperBoundRef(y)]
-                        @test JuMP.IntegerRef(y_new) == reference_map[JuMP.IntegerRef(y)]
-                        @test JuMP.FixRef(z_new) == reference_map[JuMP.FixRef(z)]
+                        @test reference_map[JuMP.LowerBoundRef(x)] == @inferred JuMP.LowerBoundRef(x_new)
+                        @test reference_map[JuMP.BinaryRef(x)] == @inferred JuMP.BinaryRef(x_new)
+                        @test reference_map[JuMP.UpperBoundRef(y)] == @inferred JuMP.UpperBoundRef(y_new)
+                        @test reference_map[JuMP.IntegerRef(y)] == @inferred JuMP.IntegerRef(y_new)
+                        @test reference_map[JuMP.FixRef(z)] == @inferred JuMP.FixRef(z_new)
                     end
                     cref_new = reference_map[cref]
                     @test cref_new.model === new_model
-                    @test JuMP.name(cref_new) == "cref"
+                    @test "cref" == @inferred JuMP.name(cref_new)
                 end
             end
         end

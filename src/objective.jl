@@ -15,14 +15,14 @@
 Return the best known bound on the optimal objective value after a call to
 `optimize!(model)`.
 """
-objective_bound(model::Model) = MOI.get(model, MOI.ObjectiveBound())
+objective_bound(model::Model)::Float64 = MOI.get(model, MOI.ObjectiveBound())
 
 """
     objective_value(model::Model)
 
 Return the objective value after a call to `optimize!(model)`.
 """
-objective_value(model::Model) = MOI.get(model, MOI.ObjectiveValue())
+objective_value(model::Model)::Float64 = MOI.get(model, MOI.ObjectiveValue())
 
 """
     objective_sense(model::Model)::MathOptInterface.OptimizationSense
@@ -30,7 +30,7 @@ objective_value(model::Model) = MOI.get(model, MOI.ObjectiveValue())
 Return the objective sense.
 """
 function objective_sense(model::Model)
-    return MOI.get(model, MOI.ObjectiveSense())
+    return MOI.get(model, MOI.ObjectiveSense())::MOI.OptimizationSense
 end
 
 """

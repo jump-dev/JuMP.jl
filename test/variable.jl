@@ -22,7 +22,7 @@ include("utilities.jl")
 end
 
 function test_variable_name(variable, name)
-    @test JuMP.name(variable) == name
+    @test name == @inferred JuMP.name(variable)
     @test variable == JuMP.variable_by_name(JuMP.owner_model(variable), name)
 end
 
@@ -65,7 +65,7 @@ function test_variable_lower_bound_rhs(ModelType)
     model = ModelType()
     @variable(model, lbonly >= 0, Bin)
     @test JuMP.has_lower_bound(lbonly)
-    @test JuMP.lower_bound(lbonly) == 0.0
+    @test 0.0 == @inferred JuMP.lower_bound(lbonly)
     @test !JuMP.has_upper_bound(lbonly)
     @test !JuMP.is_fixed(lbonly)
     @test JuMP.is_binary(lbonly)
@@ -81,7 +81,7 @@ function test_variable_lower_bound_lhs(ModelType)
     model = ModelType()
     @variable(model, 0 <= lblhs, Bin)
     @test JuMP.has_lower_bound(lblhs)
-    @test JuMP.lower_bound(lblhs) == 0.0
+    @test 0.0 == @inferred JuMP.lower_bound(lblhs)
     @test !JuMP.has_upper_bound(lblhs)
     @test !JuMP.is_fixed(lblhs)
     @test JuMP.is_binary(lblhs)
@@ -94,7 +94,7 @@ function test_variable_upper_bound_rhs(ModelType)
     @variable(model, ubonly <= 1, Int)
     @test !JuMP.has_lower_bound(ubonly)
     @test JuMP.has_upper_bound(ubonly)
-    @test JuMP.upper_bound(ubonly) == 1.0
+    @test 1.0 == @inferred JuMP.upper_bound(ubonly)
     @test !JuMP.is_fixed(ubonly)
     @test !JuMP.is_binary(ubonly)
     @test JuMP.is_integer(ubonly)
@@ -108,7 +108,7 @@ function test_variable_upper_bound_lhs(ModelType)
     @variable(model, 1 >= ublhs, Int)
     @test !JuMP.has_lower_bound(ublhs)
     @test JuMP.has_upper_bound(ublhs)
-    @test JuMP.upper_bound(ublhs) == 1.0
+    @test 1.0 == @inferred JuMP.upper_bound(ublhs)
     @test !JuMP.is_fixed(ublhs)
     @test !JuMP.is_binary(ublhs)
     @test JuMP.is_integer(ublhs)
@@ -118,9 +118,9 @@ end
 function test_variable_interval(ModelType)
     function has_bounds(var, lb, ub)
         @test JuMP.has_lower_bound(var)
-        @test JuMP.lower_bound(var) == lb
+        @test lb == @inferred JuMP.lower_bound(var)
         @test JuMP.has_upper_bound(var)
-        @test JuMP.upper_bound(var) == ub
+        @test ub == @inferred JuMP.upper_bound(var)
         @test !JuMP.is_fixed(var)
     end
     model = ModelType()
@@ -142,7 +142,7 @@ function test_variable_fix(ModelType)
     @test !JuMP.has_lower_bound(fixed)
     @test !JuMP.has_upper_bound(fixed)
     @test JuMP.is_fixed(fixed)
-    @test JuMP.fix_value(fixed) == 1.0
+    @test 1.0 == @inferred JuMP.fix_value(fixed)
     JuMP.unfix(fixed)
     @test !JuMP.is_fixed(fixed)
     JuMP.set_lower_bound(fixed, 0.0)
@@ -151,7 +151,7 @@ function test_variable_fix(ModelType)
     @test !JuMP.has_lower_bound(fixed)
     @test !JuMP.has_upper_bound(fixed)
     @test JuMP.is_fixed(fixed)
-    @test JuMP.fix_value(fixed) == 1.0
+    @test 1.0 == @inferred JuMP.fix_value(fixed)
 end
 
 function test_variable_custom_index_sets(ModelType)
@@ -159,16 +159,14 @@ function test_variable_custom_index_sets(ModelType)
     @variable(model, onerangeub[-7:1] <= 10, Int)
     @variable(model, manyrangelb[0:1, 10:20, 1:1] >= 2)
     @test JuMP.has_lower_bound(manyrangelb[0, 15, 1])
-    @test JuMP.lower_bound(manyrangelb[0, 15, 1]) == 2
+    @test 2 == @inferred JuMP.lower_bound(manyrangelb[0, 15, 1])
     @test !JuMP.has_upper_bound(manyrangelb[0, 15, 1])
 
     s = ["Green","Blue"]
     @variable(model, x[i=-10:10, s] <= 5.5, Int, start=i+1)
-    @test JuMP.upper_bound(x[-4, "Green"]) == 5.5
+    @test 5.5 == @inferred JuMP.upper_bound(x[-4, "Green"])
     test_variable_name(x[-10, "Green"], "x[-10,Green]")
-    # TODO: broken because of
-    #       https://github.com/JuliaOpt/MathOptInterface.jl/issues/302
-    # @test JuMP.start_value(x[-3, "Blue"]) == -2
+    @test JuMP.start_value(x[-3, "Blue"]) == -2
     @test isequal(model[:onerangeub][-7], onerangeub[-7])
     @test_throws KeyError model[:foo]
 end
@@ -177,8 +175,8 @@ function test_variable_anonymous(ModelType)
     model = ModelType()
     @test_throws ErrorException @variable(model, [(0, 0)])  # #922
     x = @variable(model, [(0, 2)])
-    @test JuMP.name(x[0]) == ""
-    @test JuMP.name(x[2]) == ""
+    @test "" == @inferred JuMP.name(x[0])
+    @test "" == @inferred JuMP.name(x[2])
 end
 
 function test_variable_is_valid_delete(ModelType)
@@ -194,24 +192,24 @@ end
 function test_variable_bounds_set_get(ModelType)
     model = ModelType()
     @variable(model, 0 <= x <= 2)
-    @test JuMP.lower_bound(x) == 0
-    @test JuMP.upper_bound(x) == 2
+    @test 0 == @inferred JuMP.lower_bound(x)
+    @test 2 == @inferred JuMP.upper_bound(x)
     set_lower_bound(x, 1)
-    @test JuMP.lower_bound(x) == 1
+    @test 1 == @inferred JuMP.lower_bound(x)
     set_upper_bound(x, 3)
-    @test JuMP.upper_bound(x) == 3
+    @test 3 == @inferred JuMP.upper_bound(x)
     @variable(model, q, Bin)
     @test !JuMP.has_lower_bound(q)
     @test !JuMP.has_upper_bound(q)
 
     @variable(model, 0 <= y <= 1, Bin)
-    @test JuMP.lower_bound(y) == 0
-    @test JuMP.upper_bound(y) == 1
+    @test 0 == @inferred JuMP.lower_bound(y)
+    @test 1 == @inferred JuMP.upper_bound(y)
 
     @variable(model, fixedvar == 2)
-    @test JuMP.fix_value(fixedvar) == 2.0
+    @test 2.0 == @inferred JuMP.fix_value(fixedvar)
     JuMP.fix(fixedvar, 5)
-    @test JuMP.fix_value(fixedvar) == 5
+    @test 5 == @inferred JuMP.fix_value(fixedvar)
     @test_throws Exception JuMP.lower_bound(fixedvar)
     @test_throws Exception JuMP.upper_bound(fixedvar)
 end
@@ -277,10 +275,10 @@ function test_variable_oneto_index_set(ModelType, VariableRefType)
     model = ModelType()
     auto_var = @variable(model, [Base.OneTo(3), 1:2], container=Auto)
     @test auto_var isa Matrix{VariableRefType}
-    @test size(auto_var) == (3, 2)
+    @test (3, 2) == @inferred size(auto_var)
     array_var = @variable(model, [Base.OneTo(3), 1:2], container=Array)
     @test array_var isa Matrix{VariableRefType}
-    @test size(array_var) == (3, 2)
+    @test (3, 2) == @inferred size(array_var)
     denseaxisarray_var = @variable(model, [Base.OneTo(3), 1:2], container=DenseAxisArray)
     @test denseaxisarray_var isa JuMP.Containers.DenseAxisArray{VariableRefType}
     @test length.(axes(denseaxisarray_var)) == (3, 2)
@@ -321,7 +319,7 @@ end
 
 function test_variable_condition_in_indexing(ModelType)
     function test_one_dim(x)
-        @test length(x) == 5
+        @test 5 == @inferred length(x)
         for i in 1:10
             if iseven(i)
                 @test haskey(x, i)
@@ -332,7 +330,7 @@ function test_variable_condition_in_indexing(ModelType)
     end
 
     function test_two_dim(y)
-        @test length(y) == 15
+        @test 15 == @inferred length(y)
         for j in 1:10, k in 3:2:9
             if isodd(j+k) && k <= 8
                 @test haskey(y, (j,k))
@@ -366,11 +364,11 @@ function test_variable_macro_return_type(ModelType, VariableRefType)
     @variable(model, y[1:0], start=0.0)
     @test typeof(y) == Vector{VariableRefType}
     # No type to infer for an empty collection.
-    @test typeof(JuMP.start_value.(y)) == Array{Any,1}
+    @test typeof(JuMP.start_value.(y)) == Vector{Union{Nothing, Float64}}
 
     @variable(model, z[1:4], start = 0.0)
     @test typeof(z) == Vector{VariableRefType}
-    @test typeof(JuMP.start_value.(z)) == Array{Float64,1}
+    @test typeof(JuMP.start_value.(z)) == Vector{Float64}
 end
 
 function test_variable_start_value_on_empty(ModelType)
@@ -453,7 +451,7 @@ function test_variable_unsigned_index(ModelType)
     model = ModelType()
     t = UInt(4)
     @variable(model, x[1:t])
-    @test JuMP.num_variables(model) == 4
+    @test 4 == @inferred num_variables(model)
 end
 
 function test_variable_symmetric(ModelType)
@@ -550,7 +548,7 @@ end
         model = Model()
         @variable(model, x)
         @variable(model, y)
-        @test JuMP.all_variables(model) == [x, y]
+        @test [x, y] == @inferred JuMP.all_variables(model)
     end
     @testset "@variables" begin
         model = Model()
@@ -561,35 +559,35 @@ end
             q, (Bin, start = 0.5)
         end
 
-        @test JuMP.name(x[1]) == "x[1]"
-        @test JuMP.lower_bound(x[1]) == 0
-        @test JuMP.upper_bound(x[1]) == 1
+        @test "x[1]" == @inferred JuMP.name(x[1])
+        @test 0 == @inferred JuMP.lower_bound(x[1])
+        @test 1 == @inferred JuMP.upper_bound(x[1])
         @test !JuMP.is_binary(x[1])
         @test !JuMP.is_integer(x[1])
         @test JuMP.start_value(x[1]) === nothing
 
-        @test JuMP.name(x[2]) == "x[2]"
-        @test JuMP.lower_bound(x[2]) == 0
-        @test JuMP.upper_bound(x[2]) == 2
+        @test "x[2]" == @inferred JuMP.name(x[2])
+        @test 0 == @inferred JuMP.lower_bound(x[2])
+        @test 2 == @inferred JuMP.upper_bound(x[2])
         @test !JuMP.is_binary(x[2])
         @test !JuMP.is_integer(x[2])
         @test JuMP.start_value(x[2]) === nothing
 
-        @test JuMP.name(y) == "y"
-        @test JuMP.lower_bound(y) == 2
+        @test "y" == @inferred JuMP.name(y)
+        @test 2 == @inferred JuMP.lower_bound(y)
         @test !JuMP.has_upper_bound(y)
         @test !JuMP.is_binary(y)
         @test JuMP.is_integer(y)
         @test JuMP.start_value(y) === 0.7
 
-        @test JuMP.name(z) == "z"
+        @test "z" == @inferred JuMP.name(z)
         @test !JuMP.has_lower_bound(z)
-        @test JuMP.upper_bound(z) == 3
+        @test 3 == @inferred JuMP.upper_bound(z)
         @test !JuMP.is_binary(z)
         @test !JuMP.is_integer(z)
-        @test JuMP.start_value(z) === 10
+        @test JuMP.start_value(z) === 10.0
 
-        @test JuMP.name(q) == "q"
+        @test "q" == @inferred JuMP.name(q)
         @test !JuMP.has_lower_bound(q)
         @test !JuMP.has_upper_bound(q)
         @test JuMP.is_binary(q)
