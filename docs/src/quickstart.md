@@ -122,8 +122,8 @@ end
 
 After the call to `JuMP.optimize!` has finished, we need to query what happened.
 The solve could terminate for a number of reasons. First, the solver might
-have found the optimal solution, or proved that the problem is infeasible.
-However, it might also have run into numerical difficulties, or terminated due
+have found the optimal solution or proved that the problem is infeasible.
+However, it might also have run into numerical difficulties or terminated due
 to a setting such as a time limit. We can ask the solver why it stopped using
 the `JuMP.termination_status` function:
 ```jldoctest quickstart_example

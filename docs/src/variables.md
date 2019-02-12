@@ -390,7 +390,7 @@ JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Any}} with 2 entries:
 
 When creating a container of JuMP variables, JuMP will attempt to choose the
 tightest container type that can store the JuMP variables. Thus, it will prefer
-to create an Array before a DenseAxisArray, and a DenseAxisArray before a
+to create an Array before a DenseAxisArray and a DenseAxisArray before a
 SparseAxisArray. However, because this happens at compile time, it does not
 always make the best choice. To illustrate this, consider the following example:
 ```jldoctest variable_force_container; setup=:(model=Model())
@@ -417,7 +417,7 @@ julia> @variable(model, y[A], container=Array)
  y[1]
  y[2]
 ```
-JuMP now creates a vector of JuMP variables, instead of a DenseAxisArray. Note
+JuMP now creates a vector of JuMP variables instead of a DenseAxisArray. Note
 that choosing an invalid container type will throw an error.
 
 ## Integrality shortcuts
