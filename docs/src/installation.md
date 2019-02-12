@@ -79,7 +79,7 @@ exceptions may exist. See the corresponding Julia package README for more
 details on how to use the solver.
 
 ```@meta
-TODO: Discuss setting solver options.
+# TODO: Discuss setting solver options.
 ```
 
 The following solvers were compatible with JuMP up to release 0.18 but are

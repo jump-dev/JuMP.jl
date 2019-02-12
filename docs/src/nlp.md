@@ -384,8 +384,8 @@ NonlinearConstraintIndex(2)
 ```
 
 ```@meta
-TODO: Provide a link for how to access the linear and quadratic parts of the
-model.
+# TODO: Provide a link for how to access the linear and quadratic parts of the
+# model.
 ```
 
 Note that for one-sided nonlinear constraints, JuMP subtracts any values on the

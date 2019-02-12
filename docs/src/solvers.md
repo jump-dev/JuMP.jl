@@ -80,7 +80,7 @@ Model(::JuMP.OptimizerFactory)
 ```
 
 ```@meta
-TODO: how to control the caching optimizer states
+# TODO: how to control the caching optimizer states
 ```
 
 ## Direct mode
