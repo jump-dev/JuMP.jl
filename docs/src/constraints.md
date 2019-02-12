@@ -380,7 +380,7 @@ JuMP also supports modeling semi-continuous variables, whose domain is ``\{0\} �
 julia> @constraint(model, x in MOI.Semicontinuous(1.5, 3.5))
 x in MathOptInterface.Semicontinuous{Float64}(1.5, 3.5)
 ```
-as well as semi-integer variables, whose domain is ``{0} ∪ {l, l+1, \dots, u}``,
+as well as semi-integer variables, whose domain is ``\{0\} ∪ \{l, l+1, \dots, u\}``,
 using the `MOI.Semiinteger` set:
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, x in MOI.Semiinteger(1.0, 3.0))

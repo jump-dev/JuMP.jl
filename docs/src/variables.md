@@ -428,7 +428,7 @@ JuMP supports two shortcuts for adding such constraints.
 
 #### Binary (ZeroOne) constraints
 
-Binary optimization variables are constrained to the set ``x \in {0, 1}``. (The
+Binary optimization variables are constrained to the set ``x \in \{0, 1\}``. (The
 `MOI.ZeroOne` set in MathOptInterface.) Binary optimization variables can be
 created in JuMP by passing `Bin` as an optional positional argument:
 ```jldoctest variables_binary; setup=:(model=Model())
