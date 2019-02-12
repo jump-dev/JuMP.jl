@@ -191,10 +191,10 @@ x² + 2 x*y + y² + x + y - 1
 ## Nonlinear expressions
 
 Nonlinear expressions can be constructed only using the [`@NLexpression`](@ref)
-macro, and nonlinear expressions can be used only in [`@NLobjective`](@ref),
-[`@NLconstraint`](@ref), and other [`@NLexpression`](@ref)s. Moreover, quadratic
-and affine expressions cannot be used in the nonlinear macros. For more details,
-see the [Nonlinear Modeling](@ref) section.
+macro and can be used only in [`@NLobjective`](@ref), [`@NLconstraint`](@ref),
+and other [`@NLexpression`](@ref)s. Moreover, quadratic and affine expressions
+cannot be used in the nonlinear macros. For more details, see the [Nonlinear
+Modeling](@ref) section. 
 
 ## Reference
 

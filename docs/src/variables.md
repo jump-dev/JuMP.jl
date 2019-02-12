@@ -366,7 +366,7 @@ And data, a 2×2 Array{Float64,2}:
 
 The third container type that JuMP natively supports is `SparseAxisArray`.
 These arrays are created when the indices do not form a rectangular set.
-An example where this applies is when indices have a dependence upon previous
+For example, this applies when indices have a dependence upon previous
 indices (called *triangular indexing*). JuMP supports this as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:2, j=i:2])
