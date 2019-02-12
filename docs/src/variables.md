@@ -54,13 +54,13 @@ julia> @variable(model, y, base_name="decision variable")
 decision variable
 ```
 This code does four things:
-1. it adds one *optimization* variable to `model`
-2. it creates one *JuMP* variable that acts as a reference to that optimization
-   variable
-3. it binds the JuMP variable to the Julia variable `y`
-4. it tells JuMP that the *name* attribute of this JuMP variable is "decision
 variable". JuMP uses the value of `base_name` when it has to print the variable
 as a string.
+1. It adds one *optimization* variable to `model`.
+2. It creates one *JuMP* variable that acts as a reference to that optimization
+   variable.
+3. It binds the JuMP variable to the Julia variable `y`.
+4. It tells JuMP that the *name* attribute of this JuMP variable is "decision
 
 For example, when we print `y` at the REPL we get:
 ```jldoctest variables
