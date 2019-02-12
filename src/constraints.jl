@@ -717,6 +717,7 @@ julia> list_of_constraint_types(model)
  (VariableRef, MathOptInterface.ZeroOne)
  (VariableRef, MathOptInterface.GreaterThan{Float64})
  (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
+```
 """
 function list_of_constraint_types(model::Model)
     list = MOI.get(

@@ -791,6 +791,7 @@ model = Model();
 
 # output
 ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
+```
 """
 macro build_constraint(constraint_expr)
     _error(str...) = _macro_error(:build_constraint, (constraint_expr,), str...)
