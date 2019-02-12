@@ -70,7 +70,7 @@ Common status situations are described in the
 
 ## Obtaining solutions
 
-Provided the primal status is not (`MOI.NO_SOLUTION`), the primal solution can
+Provided the primal status is not `MOI.NO_SOLUTION`, the primal solution can
 be obtained by calling [`value`](@ref). For the dual solution, the function
 is [`dual`](@ref). An equivalent way to check if the status is not
 `MOI.NO_SOLUTION` is by calling [`has_values`](@ref) for the primal status and
