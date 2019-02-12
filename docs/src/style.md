@@ -431,9 +431,10 @@ documentation for JuMP (and supporting packages).
 
 We can recommend the documentation style guides by [Divio](https://www.divio.com/blog/documentation/),
 [Google](https://developers.google.com/style/), and [Write the Docs](https://www.writethedocs.org/guide/)
-as general reading for those writing documentation. This guide delegates a 
-thorough handling of the topic to those guides and instead elaborates on the 
-more Julia-specific points.
+as general reading for those writing documentation. This guide delegates a
+thorough handling of the topic to those guides and instead elaborates on the
+more points more specific to Julia and documentation that uses
+[Documenter](https://github.com/JuliaDocs/Documenter.jl).
 
  - Be concise.
  - Use lists instead of long sentences.
@@ -442,11 +443,20 @@ more Julia-specific points.
  - Example code should be covered by doctests. (But it's [unclear what to do](https://github.com/JuliaOpt/JuMP.jl/issues/1175)
    if the code depends on a solver.)
  - When a word is a Julia symbol and not an English word, enclose it with
-   backticks. In addition, if it has a docstring in this doc add a link using 
+   backticks. In addition, if it has a docstring in this doc add a link using
    `@ref`. If it is a plural, add the "s" after the closing backtick. For example,
    ```
    [`VariableRef`](@ref)s
    ```
+ - Use [`@meta`](https://juliadocs.github.io/Documenter.jl/v0.21/man/syntax/#@meta-block-1)
+   blocks for TODOs and other comments that shouldn't be visible to readers.
+   For example,
+   ````@markdown
+   ```@meta
+   # TODO: Mention also X, Y, and Z.
+   ```
+   ````
+
 
 ## Design principles
 
