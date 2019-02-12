@@ -67,7 +67,6 @@ function solve(::Model)
           "and `dual_status`.")
 end
 
-
 """
     optimize!(model::Model,
               optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
@@ -122,6 +121,10 @@ function optimize!(model::Model,
     # that instead of solving the model ourselves
     if !ignore_optimize_hook
         return model.optimize_hook(model)
+    end
+
+    if MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
+        throw(NoOptimizer())
     end
 
     MOI.optimize!(backend(model))

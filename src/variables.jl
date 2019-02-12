@@ -189,6 +189,11 @@ function Base.isequal(v1::VariableRef, v2::VariableRef)
     return owner_model(v1) === owner_model(v2) && v1.index == v2.index
 end
 
+"""
+    index(v::VariableRef)::MOI.VariableIndex
+
+Return the index of the variable `v` for the MOI backend.
+"""
 index(v::VariableRef) = v.index
 
 function VariableRef(m::Model)
