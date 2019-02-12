@@ -48,7 +48,7 @@ example
 ```jldoctest
 model = Model()
 @variable(model, x[i = 1:3])
-@expression(model, expr[i=1:3], i * sum(x[j] for j in i:3))
+@expression(model, expr[i = 1:3], i * sum(x[j] for j in i:3))
 expr
 
 # output
