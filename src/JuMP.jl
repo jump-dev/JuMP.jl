@@ -229,9 +229,9 @@ outside of `backend` and no bridges are automatically applied to `backend`.
 The absence of cache reduces the memory footprint but it is important to bear
 in mind the following implications of creating models using this *direct* mode:
 
-* When `backend` does not support an operation such as adding
-  variables/constraints after solver or modifying constraints, an error is
-  thrown. With models created using the [`Model`](@ref) constructor, such
+* When `backend` does not support an operation, such as modifying
+  constraints or adding variables/constraints after solving, an error is
+  thrown. For models created using the [`Model`](@ref) constructor, such
   situations can be dealt with by storing the modifications in a cache and
   loading them into the optimizer when `optimize!` is called.
 * No constraint bridging is supported by default.

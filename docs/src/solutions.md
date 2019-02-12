@@ -92,8 +92,8 @@ The objective value of a solved problem can be obtained via
 [`objective_value`](@ref). The best known bound on the optimal objective
 value can be obtained via [`objective_bound`](@ref).
 
-A recommended workflow for solving a model and querying the solution is the
-following:
+The following is a recommended workflow for solving a model and querying the
+solution: 
 ```julia
 using JuMP
 model = Model()
