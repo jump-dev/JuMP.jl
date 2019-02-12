@@ -28,10 +28,10 @@ solver found an optimal solution, the problem was proven to be infeasible, or a
 user-provided limit such as a time limit was encountered. For more information,
 see the [Termination statuses](@ref) section below.
 
-Second, we can query the [`primal_status`](@ref) and [`dual_status`](@ref),
-which will tell us what kind of result we have for our primal and dual
-solution. This might be an optimal primal-dual pair, a primal solution without a
-corresponding dual solution, or a certificate of primal or dual infeasibility.
+Second, we can query the [`primal_status`](@ref) and the [`dual_status`](@ref),
+which will tell us what kind of results we have for our primal and dual
+solutions. This might be an optimal primal-dual pair, a primal solution without 
+a corresponding dual solution, or a certificate of primal or dual infeasibility.
 For more information, see the [Solution statuses](@ref) section below.
 
 Third, we can query [`value`](@ref) and [`dual`](@ref) to obtain the
