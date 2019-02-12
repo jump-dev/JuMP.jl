@@ -1325,7 +1325,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Query Solutions",
     "title": "JuMP.dual",
     "category": "function",
-    "text": "dual(cr::ConstraintRef)\n\nGet the dual value of this constraint in the result returned by a solver. Use has_dual to check if a result exists before asking for values. See also shadow_price.\n\n\n\n\n\n"
+    "text": "dual(cref::ConstraintRef)\n\nGet the dual value of this constraint in the result returned by a solver. Use has_dual to check if a result exists before asking for values. See also shadow_price.\n\n\n\n\n\n"
 },
 
 {
