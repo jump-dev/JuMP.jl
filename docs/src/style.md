@@ -433,7 +433,8 @@ We can recommend the documentation style guides by [Divio](https://www.divio.com
 [Google](https://developers.google.com/style/), and [Write the Docs](https://www.writethedocs.org/guide/)
 as general reading for those writing documentation. This guide delegates a
 thorough handling of the topic to those guides and instead elaborates on the
-more Julia-specific points.
+more points more specific to Julia and documentation that uses
+[Documenter](https://github.com/JuliaDocs/Documenter.jl).
 
  - Be concise.
  - Use lists instead of long sentences.
