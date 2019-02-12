@@ -76,8 +76,8 @@ is [`dual`](@ref). An equivalent way to check if the status is not
 `MOI.NO_SOLUTION` is by calling [`has_values`](@ref) for the primal status and
 [`has_duals`](@ref) for the dual solution.
 
-It is important to note that if [`has_values`](@ref) or [`has_duals`](@ref) 
-return false, calls to [`value`](@ref) and [`dual`](@ref) might throw an error 
+It is important to note that if [`has_values`](@ref) or [`has_duals`](@ref)
+return false, calls to [`value`](@ref) and [`dual`](@ref) might throw an error
 or return arbitrary values.
 
 The container type (e.g., scalar, vector, or matrix) of the returned solution
@@ -126,5 +126,6 @@ JuMP.value
 JuMP.dual_status
 JuMP.has_duals
 JuMP.dual
+OptimizeNotCalled
 MOI.optimize!
 ```
