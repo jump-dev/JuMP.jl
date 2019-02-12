@@ -363,7 +363,7 @@ constraints in the
 In [Variables](@ref), we saw how to modify the variable bounds, as well as add
 binary and integer restrictions to the domain of each variable. This can also be
 achieved using the [`@constraint`](@ref) macro. For example, `MOI.ZeroOne()`
-restricts the domain to ``\{0, 1\}:
+restricts the domain to ``\{0, 1\}``:
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, x in MOI.ZeroOne())
 x binary

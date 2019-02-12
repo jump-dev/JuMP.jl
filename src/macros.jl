@@ -1240,7 +1240,7 @@ x = @variable(model, base_name="x", lower_bound=0)
 ```
 
 The following are equivalent ways of creating a `DenseAxisArray` of index set
-`[:a, :b]` and with respective upper bounds 2 and 3 and names `x[a]` and `x[b].
+`[:a, :b]` and with respective upper bounds 2 and 3 and names `x[a]` and `x[b]`.
 ```julia
 ub = Dict(:a => 2, :b => 3)
 # Specify everything in `expr`
