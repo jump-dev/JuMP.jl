@@ -10,7 +10,7 @@ end
 So far we have seen all the elements and constructs related to writing a JuMP
 optimization model. In this section we reach the point of what to do with a
 solved problem. Suppose your model is named `model`. Right after the call to
-`optimize!(model)` it's natural to ask JuMP questions about the finished
+`optimize!(model)`, it's natural to ask JuMP questions about the finished
 optimization step. Typical questions include:
  - Why has the optimization process stopped? Did it hit the time limit or run
    into numerical issues?

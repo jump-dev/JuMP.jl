@@ -602,7 +602,7 @@ You can query the types of constraints currently present in the model by calling
 [`all_constraints`](@ref) to access a list of their references. Then use
 [`constraint_object`](@ref) to get an instance of an
 [`AbstractConstraint`](@ref) object, either [`ScalarConstraint`](@ref) or
-[`VectorConstraint`](@ref) that stores the constraint data.
+[`VectorConstraint`](@ref), that stores the constraint data.
 
 ```jldoctest
 julia> model = Model();

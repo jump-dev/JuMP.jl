@@ -7,7 +7,7 @@ problem and acts as the optimization solver. We call it an MOI *backend* and not
 optimizer as it can also be a wrapper around an optimization file format such as
 MPS that writes the JuMP model in a file. From JuMP, the MOI
 backend can be accessed using the [`backend`](@ref) function. JuMP can be
-viewed as a lightweight user-friendly layer on top of the MOI backend, in the
+viewed as a lightweight, user-friendly layer on top of the MOI backend, in the
 sense that:
 
 * JuMP does not maintain any copy of the model outside this MOI backend.
@@ -24,7 +24,7 @@ While this allows JuMP to be a thin wrapper on top of the solver API, as
 mentioned in the last point above, this seems rather demanding on the solver.
 Indeed, while some solvers support incremental building of the model and
 modifications before and after solve, other solvers only support the model being
-copied at once before solve. Moreover it seems to require all solvers to
+copied at once before solve. Moreover, it seems to require all solvers to
 implement all possible reformulations independently which seems both very
 ambitious and might generate a lot of duplicated code.
 
