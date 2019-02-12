@@ -1198,7 +1198,7 @@ The expression `varexpr` can either be
 
 * of the form `varname` creating a scalar real variable of name `varname`;
 * of the form `varname[...]` or `[...]` creating a container of variables (see
-  [Containers in macros](@ref).
+  [Containers in macros](@ref)).
 
 The recognized positional arguments in `args` are the following:
 
