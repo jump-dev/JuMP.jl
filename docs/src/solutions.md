@@ -72,9 +72,9 @@ Common status situations are described in the
 
 Provided the primal status is not `MOI.NO_SOLUTION`, the primal solution can
 be obtained by calling [`value`](@ref). For the dual solution, the function
-is [`dual`](@ref). An equivalent way to check if the status is not
-`MOI.NO_SOLUTION` is by calling [`has_values`](@ref) for the primal status and
-[`has_duals`](@ref) for the dual solution.
+is [`dual`](@ref). Calling [`has_values`](@ref) for the primal status and
+[`has_duals`](@ref) for the dual solution is an equivalent way to check whether
+the status is `MOI.NO_SOLUTION`. 
 
 It is important to note that if [`has_values`](@ref) or [`has_duals`](@ref) 
 return false, calls to [`value`](@ref) and [`dual`](@ref) might throw an error 
