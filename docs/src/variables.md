@@ -38,11 +38,11 @@ julia> @variable(model, x[1:2])
  x[2]
 ```
 This code does three things:
-1. it adds two *optimization* variables to `model`
-2. it creates two *JuMP* variables that act as references to those optimization
-   variables
-3. it binds those JuMP variables as a vector with two elements to the *Julia*
-   variable `x`
+1. It adds two *optimization* variables to `model`.
+2. It creates two *JuMP* variables that act as references to those optimization
+   variables.
+3. It binds those JuMP variables as a vector with two elements to the *Julia*
+   variable `x`.
 
 To reduce confusion, we will attempt, where possible, to always refer to
 variables with their corresponding prefix.
