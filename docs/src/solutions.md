@@ -54,7 +54,7 @@ MOI.TerminationStatusCode
 ## Solution statuses
 
 These statuses indicate what kind of result is available to be queried
-with [`value`](@ref) and [`dual`](@ref). Its possible that no result
+with [`value`](@ref) and [`dual`](@ref). It's possible that no result
 is available to be queried.
 
 We can obtain these statuses by calling [`primal_status`](@ref) for the
