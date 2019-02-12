@@ -125,7 +125,7 @@ function optimize!(model::Model,
         return model.optimize_hook(model)
     end
 
-    if MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
+    if model(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
         throw(NoOptimizer())
     end
 
