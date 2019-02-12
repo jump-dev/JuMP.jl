@@ -400,14 +400,14 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     Maximization problem with:
     Variables: 13
     Objective function type: GenericAffExpr{Float64,$VariableType}
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.ZeroOne`: 4 constraints
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.Integer`: 4 constraints
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.EqualTo{Float64}`: 1 constraint
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.GreaterThan{Float64}`: 4 constraints
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.LessThan{Float64}`: 4 constraints
-    `MathOptInterface.ScalarAffineFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-    `MathOptInterface.ScalarQuadraticFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-    `MathOptInterface.VectorAffineFunction{Float64}`-in-`MathOptInterface.SecondOrderCone`: 1 constraint
+    `$VariableType`-in-`MathOptInterface.ZeroOne`: 4 constraints
+    `$VariableType`-in-`MathOptInterface.Integer`: 4 constraints
+    `$VariableType`-in-`MathOptInterface.EqualTo{Float64}`: 1 constraint
+    `$VariableType`-in-`MathOptInterface.GreaterThan{Float64}`: 4 constraints
+    `$VariableType`-in-`MathOptInterface.LessThan{Float64}`: 4 constraints
+    `GenericAffExpr{Float64,$VariableType}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+    `GenericQuadExpr{Float64,$VariableType}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+    `Array{GenericAffExpr{Float64,$VariableType},1}`-in-`MathOptInterface.SecondOrderCone`: 1 constraint
     Model mode: AUTOMATIC
     CachingOptimizer state: NO_OPTIMIZER
     Solver name: No optimizer attached.
@@ -449,9 +449,9 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     A JuMP Model
     Feasibility problem with:
     Variables: 2
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.ZeroOne`: 1 constraint
-    `MathOptInterface.SingleVariable`-in-`MathOptInterface.Integer`: 1 constraint
-    `MathOptInterface.ScalarQuadraticFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+    `$VariableType`-in-`MathOptInterface.ZeroOne`: 1 constraint
+    `$VariableType`-in-`MathOptInterface.Integer`: 1 constraint
+    `GenericQuadExpr{Float64,$VariableType}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
     Model mode: AUTOMATIC
     CachingOptimizer state: NO_OPTIMIZER
     Solver name: No optimizer attached.
@@ -465,7 +465,7 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     A JuMP Model
     Feasibility problem with:
     Variable: 1
-    `MathOptInterface.ScalarAffineFunction{Float64}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+    `GenericAffExpr{Float64,$VariableType}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
     Model mode: AUTOMATIC
     CachingOptimizer state: NO_OPTIMIZER
     Solver name: No optimizer attached.

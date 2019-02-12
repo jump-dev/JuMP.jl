@@ -380,22 +380,68 @@ end
     @testset "all_constraints (scalar)" begin
         model = Model()
         @variable(model, x >= 0)
+        @test 1 == @inferred num_constraints(model, VariableRef,
+                                             MOI.GreaterThan{Float64})
         ref = @inferred all_constraints(
             model, VariableRef, MOI.GreaterThan{Float64})
         @test ref == [LowerBoundRef(x)]
+        @test 0 == @inferred num_constraints(model, AffExpr,
+                                             MOI.GreaterThan{Float64})
         aff_constraints = all_constraints(model, AffExpr,
                                           MOI.GreaterThan{Float64})
         @test isempty(aff_constraints)
         err = ErrorException("`MathOptInterface.GreaterThan` is not a " *
                              "concrete type. Did you miss a type parameter?")
+        @test_throws err num_constraints(model, AffExpr,
+                                         MOI.GreaterThan)
         @test_throws err all_constraints(model, AffExpr,
-                                                    MOI.GreaterThan)
+                                         MOI.GreaterThan)
         err = ErrorException("`GenericAffExpr` is not a concrete type. " *
                              "Did you miss a type parameter?")
+        @test_throws err num_constraints(model, GenericAffExpr,
+                                         MOI.ZeroOne)
         @test_throws err all_constraints(model, GenericAffExpr,
-                                                    MOI.ZeroOne)
+                                         MOI.ZeroOne)
     end
-    # TODO: all_constraints (vector)
+    @testset "all_constraints (vector)" begin
+        model = Model()
+        @variable(model, x[1:2, 1:2], Symmetric)
+        csdp = @constraint(model, x in PSDCone())
+        csoc = @constraint(model, [x[1], 1] in SecondOrderCone())
+        csos = @constraint(model, [x[2]^2, 1] in MOI.SOS1([1.0, 2.0]))
+        @test 1 == @inferred num_constraints(
+            model, Vector{VariableRef}, MOI.PositiveSemidefiniteConeTriangle)
+        ref = all_constraints(model, Vector{VariableRef},
+                              MOI.PositiveSemidefiniteConeTriangle)
+        @test ref == [csdp]
+        @test 1 == @inferred num_constraints(
+            model, Vector{AffExpr}, MOI.SecondOrderCone)
+        ref = all_constraints(model, Vector{AffExpr}, MOI.SecondOrderCone)
+        @test ref == [csoc]
+        @test 1 == @inferred num_constraints(
+             model, Vector{QuadExpr}, MOI.SOS1{Float64})
+        ref = all_constraints(model, Vector{QuadExpr}, MOI.SOS1{Float64})
+        @test ref == [csos]
+        @test 0 == @inferred num_constraints(
+            model, Vector{AffExpr}, MOI.PositiveSemidefiniteConeTriangle)
+        aff_constraints = all_constraints(
+            model, Vector{AffExpr}, MOI.PositiveSemidefiniteConeTriangle)
+        @test isempty(aff_constraints)
+        err = ErrorException("`GenericAffExpr{Float64,VarType} where VarType`" *
+                             " is not a concrete type. Did you miss a type " *
+                             "parameter?")
+        @test_throws err num_constraints(
+            model, Vector{GenericAffExpr{Float64}},
+            MOI.PositiveSemidefiniteConeTriangle)
+        @test_throws err all_constraints(
+            model, Vector{GenericAffExpr{Float64}},
+            MOI.SecondOrderCone)
+        err = ErrorException("`MathOptInterface.SOS1` is not a " *
+                             "concrete type. Did you miss a type parameter?")
+        @test_throws err all_constraints(
+            model, Vector{GenericQuadExpr{Float64,VariableRef}},
+            MOI.SOS1)
+    end
     @testset "list_of_constraint_types" begin
         model = Model()
         @variable(model, x >= 0, Bin)

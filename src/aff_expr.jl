@@ -337,7 +337,7 @@ function MOI.VectorAffineFunction(affs::Vector{AffExpr})
     MOI.VectorAffineFunction(terms, constant)
 end
 moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
-function moi_function_type(::Type{Vector{Aff}}) where {T, Aff <: GenericAffExpr{T}}
+function moi_function_type(::Type{<:Vector{<:GenericAffExpr{T}}}) where {T}
     return MOI.VectorAffineFunction{T}
 end
 

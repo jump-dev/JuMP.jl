@@ -295,7 +295,7 @@ function MOI.VectorQuadraticFunction(quads::Vector{QuadExpr})
     MOI.VectorQuadraticFunction(lin_terms, quadratic_terms, constants)
 end
 moi_function(a::Vector{<:GenericQuadExpr}) = MOI.VectorQuadraticFunction(a)
-function moi_function_type(::Type{Vector{Quad}}) where {T, Quad <: GenericQuadExpr{T}}
+function moi_function_type(::Type{<:Vector{<:GenericQuadExpr{T}}}) where {T}
     return MOI.VectorQuadraticFunction{T}
 end
 

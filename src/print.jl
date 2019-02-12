@@ -386,11 +386,10 @@ end
 Write to `io` a summary of the number of constraints.
 """
 function show_constraints_summary(io::IO, model::Model)
-    for (F, S) in MOI.get(model, MOI.ListOfConstraints())
-        num_constraints = MOI.get(model, MOI.NumberOfConstraints{F, S}())
-        # TODO: Print jump_function_type(model, F) instead of F.
-        println(io, "`$F`-in-`$S`: $num_constraints constraint",
-                _plural(num_constraints))
+    for (F, S) in list_of_constraint_types(model)
+        n_constraints = num_constraints(model, F, S)
+        println(io, "`$F`-in-`$S`: $n_constraints constraint",
+                _plural(n_constraints))
     end
     if !iszero(num_nl_constraints(model))
         println(io, "Nonlinear: ", num_nl_constraints(model), " constraint",
@@ -406,11 +405,8 @@ starting with `sep` and ending with `eol` (which already contains `\n`).
 """
 function constraints_string(print_mode, model::Model, sep, eol)
     str = ""
-    for (F, S) in MOI.get(model, MOI.ListOfConstraints())
-        for idx in MOI.get(model, MOI.ListOfConstraintIndices{F, S}())
-            # FIXME the shape may be incorrect here
-            shape = S <: MOI.AbstractScalarSet ? ScalarShape() : VectorShape()
-            cref = ConstraintRef(model, idx, shape)
+    for (F, S) in list_of_constraint_types(model)
+        for cref in all_constraints(model, F, S)
             con = constraint_object(cref)
             str *= sep * constraint_string(print_mode, con) * eol
         end
