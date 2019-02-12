@@ -1273,7 +1273,7 @@ extra_kw_args...))` where
 
 ## Examples
 
-The following creates a variable `x` of name `x` with lower_bound 0 as with the first
+The following creates a variable `x` of name `x` with `lower_bound` 0 as with the first
 example above but does it without using the `@variable` macro
 ```julia
 info = VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)
