@@ -319,14 +319,14 @@ function JuMP.show_constraints_summary(io::IO, model::MyModel)
     n = length(model.constraints)
     print(io, "Constraint", _plural(n), ": ", n)
 end
-function JuMP.constraints_string(print_mode, model::MyModel, sep, eol)
-    str = ""
+function JuMP.constraints_string(print_mode, model::MyModel)
+    strings = String[]
     # Sort by creation order, i.e. ConstraintIndex value
     constraints = sort(collect(model.constraints), by = c -> c.first.value)
     for (index, constraint) in constraints
-        str *= sep * JuMP.constraint_string(print_mode, constraint) * eol
+        push!(strings, JuMP.constraint_string(print_mode, constraint))
     end
-    return str
+    return strings
 end
 
 end
