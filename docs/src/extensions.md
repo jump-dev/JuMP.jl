@@ -13,7 +13,7 @@ Extending JuMP
 ## Extending MOI
 
 ```@meta
-TODO: Create new MOI function/sets, how to use it in JuMP
+# TODO: Create new MOI function/sets, how to use it in JuMP
 ```
 
 ### Adding a bridge
