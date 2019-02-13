@@ -397,11 +397,11 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
      a + b - 10 c - 2 x + c1 $le 1.0
      a*b $le 2.0
       a  b
-      b  x ∈ PSDCone()
-     [a, b, c] ∈ MathOptInterface.PositiveSemidefiniteConeTriangle(2)
+      b  x $inset PSDCone()
+     [a, b, c] $inset MathOptInterface.PositiveSemidefiniteConeTriangle(2)
       a  b
-      c  x ∈ PSDCone()
-     [a, b, c, x] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)
+      c  x $inset PSDCone()
+     [a, b, c, x] $inset MathOptInterface.PositiveSemidefiniteConeSquare(2)
      [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
     """, repl=:print)
 
