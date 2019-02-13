@@ -192,7 +192,7 @@ end
 """
     index(v::VariableRef)::MOI.VariableIndex
 
-Return the index of the variable `v` for the MOI backend.
+Return the index of the variable that corresponds to `v` in the MOI backend.
 """
 index(v::VariableRef) = v.index
 

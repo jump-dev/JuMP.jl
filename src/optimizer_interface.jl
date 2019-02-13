@@ -74,7 +74,7 @@ end
 
 Optimize the model. If `optimizer_factory` is not `nothing`, it first sets the
 optimizer to a new one created using the optimizer factory. The factory can be
-created using the [`with_optimizer`](@ref) function. If `optimizer_factor` is
+created using the [`with_optimizer`](@ref) function. If `optimizer_factory` is
 `nothing` and no optimizer was set to `model` before calling this function, a
 [`NoOptimizer`](@ref) error is thrown.
 

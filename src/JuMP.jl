@@ -505,8 +505,8 @@ function _moi_optimizer_index(model::MOI.Bridges.LazyBridgeOptimizer,
                               index::MOI.Index)
     if index isa MOI.ConstraintIndex &&
         MOI.Bridges.is_bridged(model, typeof(index))
-        error("There is not `optimizer_index` for $(typeof(index)) constraints",
-              " as they are bridged.")
+        error("There is no `optimizer_index` for $(typeof(index)) constraints",
+              " because they are bridged.")
     else
         return _moi_optimizer_index(model.model, index)
     end
@@ -516,9 +516,9 @@ end
 """
     optimizer_index(v::VariableRef)::MOI.VariableIndex
 
-Return the index of the variable `v` for the optimizer. It throws
-[`NoOptimizer`](@ref) if no optimizer is set and throws an `ErrorException` if
-the optimizer is set but is not attached.
+Return the index of the variable that corresponds to `v` in the optimizer model.
+It throws [`NoOptimizer`](@ref) if no optimizer is set and throws an
+`ErrorException` if the optimizer is set but is not attached.
 """
 function optimizer_index(v::VariableRef)
     model = owner_model(v)
@@ -532,9 +532,10 @@ end
 """
     optimizer_index(cr::ConstraintRef{Model})::MOI.ConstraintIndex
 
-Return the index of the constraint `cr` for the optimizer. It throws
-[`NoOptimizer`](@ref) if no optimizer is set and throws an `ErrorException` if
-the optimizer is set but is not attached or if the constraint is bridged.
+Return the index of the constraint that corresponds to `cr` in the optimizer
+model. It throws [`NoOptimizer`](@ref) if no optimizer is set and throws an
+`ErrorException` if the optimizer is set but is not attached or if the
+constraint is bridged.
 """
 function optimizer_index(cr::ConstraintRef{Model})
     if mode(cr.model) == DIRECT
@@ -547,7 +548,7 @@ end
 """
     index(cr::ConstraintRef)::MOI.ConstraintIndex
 
-Return the index of the constraint `cr` for the MOI backend.
+Return the index of the constraint that corresponds to `cr` in the MOI backend.
 """
 index(cr::ConstraintRef) = cr.index
 
