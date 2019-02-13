@@ -92,7 +92,8 @@ used to reshape the result computed in [`value`](@ref) and [`dual`](@ref).
 ```@docs
 AbstractShape
 shape
-reshape_result
+reshape_vector
+reshape_set
 dual_shape
 ScalarShape
 VectorShape

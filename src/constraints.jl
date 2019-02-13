@@ -305,6 +305,7 @@ end
 
 jump_function(constraint::ScalarConstraint) = constraint.func
 moi_set(constraint::ScalarConstraint) = constraint.set
+reshape_set(set::MOI.AbstractScalarSet, ::ScalarShape) = set
 shape(::ScalarConstraint) = ScalarShape()
 
 function constraint_object(ref::ConstraintRef{Model, _MOICON{FuncType, SetType}}) where
@@ -342,6 +343,7 @@ end
 
 jump_function(constraint::VectorConstraint) = constraint.func
 moi_set(constraint::VectorConstraint) = constraint.set
+reshape_set(set::MOI.AbstractVectorSet, ::VectorShape) = set
 shape(c::VectorConstraint) = c.shape
 function constraint_object(ref::ConstraintRef{Model, _MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.AbstractVectorFunction, SetType <: MOI.AbstractVectorSet}
@@ -442,7 +444,7 @@ evaluation of `2x + 3y`.
 ```
 """
 function value(cref::ConstraintRef{Model, <:_MOICON})
-    return reshape_result(_constraint_primal(cref), cref.shape)
+    return reshape_vector(_constraint_primal(cref), cref.shape)
 end
 
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
@@ -475,7 +477,7 @@ Use `has_dual` to check if a result exists before asking for values.
 See also [`shadow_price`](@ref).
 """
 function dual(cref::ConstraintRef{Model, <:_MOICON})
-    return reshape_result(_constraint_dual(cref), dual_shape(cref.shape))
+    return reshape_vector(_constraint_dual(cref), dual_shape(cref.shape))
 end
 
 # Returns the value of MOI.ConstraintPrimal in a type-stable way

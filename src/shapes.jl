@@ -12,7 +12,7 @@
     AbstractShape
 
 Abstract vectorizable shape. Given a flat vector form of an object of shape
-`shape`, the original object can be obtained by [`reshape_result`](@ref).
+`shape`, the original object can be obtained by [`reshape_vector`](@ref).
 """
 abstract type AbstractShape end
 
@@ -36,7 +36,7 @@ end
 struct PolynomialShape <: AbstractShape
     monomials::Vector{Monomial}
 end
-JuMP.reshape_result(x::Vector, shape::PolynomialShape) = Polynomial(x, shape.monomials)
+JuMP.reshape_vector(x::Vector, shape::PolynomialShape) = Polynomial(x, shape.monomials)
 ```
 and a shape for moments can be defined as follows:
 ```julia
@@ -47,7 +47,7 @@ end
 struct MomentsShape <: AbstractShape
     monomials::Vector{Monomial}
 end
-JuMP.reshape_result(x::Vector, shape::MomentsShape) = Moments(x, shape.monomials)
+JuMP.reshape_vector(x::Vector, shape::MomentsShape) = Moments(x, shape.monomials)
 ```
 The `dual_shape` allows to define the shape of the dual of polynomial and moment
 constraints:
@@ -59,7 +59,26 @@ dual_shape(shape::MomentsShape) = PolynomialShape(shape.monomials)
 dual_shape(shape::AbstractShape) = shape
 
 """
-    reshape_result(vectorized_form::Vector, shape::AbstractShape)
+    reshape_set(vectorized_set::MOI.AbstractSet, shape::AbstractShape)
+
+Return a set in its original shape `shape` given its vectorized form
+`vectorized_form`.
+
+## Examples
+
+Given a [`SymmetricMatrixShape`](@ref) of vectorized form
+`[1, 2, 3] in MOI.PositiveSemidefinieConeTriangle(2)`, the
+following code returns the set of the original constraint
+`Symmetric(Matrix[1 2; 2 3]) in PSDCone()`:
+```jldoctest; setup = :(using JuMP)
+julia> reshape_set(MOI.PositiveSemidefiniteConeTriangle(2), SymmetricMatrixShape(2))
+PSDCone()
+```
+"""
+function reshape_set end
+
+"""
+    reshape_vector(vectorized_form::Vector, shape::AbstractShape)
 
 Return an object in its original shape `shape` given its vectorized form
 `vectorized_form`.
@@ -68,11 +87,14 @@ Return an object in its original shape `shape` given its vectorized form
 
 Given a [`SymmetricMatrixShape`](@ref) of vectorized form `[1, 2, 3]`, the
 following code returns the matrix `Symmetric(Matrix[1 2; 2 3])`:
-```julia
-reshape_result([1, 2, 3], SymmetricMatrixShape(2))
+```jldoctest; setup = :(using JuMP)
+julia> reshape_vector([1, 2, 3], SymmetricMatrixShape(2))
+2×2 LinearAlgebra.Symmetric{Int64,Array{Int64,2}}:
+ 1  2
+ 2  3
 ```
 """
-function reshape_result end
+function reshape_vector end
 
 """
     shape(c::AbstractConstraint)::AbstractShape
@@ -87,7 +109,7 @@ function shape end
 Shape of scalar constraints.
 """
 struct ScalarShape <: AbstractShape end
-reshape_result(α, ::ScalarShape) = α
+reshape_vector(α, ::ScalarShape) = α
 
 """
     VectorShape
@@ -95,4 +117,4 @@ reshape_result(α, ::ScalarShape) = α
 Vector for which the vectorized form corresponds exactly to the vector given.
 """
 struct VectorShape <: AbstractShape end
-reshape_result(vectorized_form, ::VectorShape) = vectorized_form
+reshape_vector(vectorized_form, ::VectorShape) = vectorized_form
