@@ -197,8 +197,8 @@ function test_model()
             JuMP.optimize!(model)
             @test optimizer_index(x) === MOI.get(JuMP.backend(model).optimizer.model.optimizer, MOI.ListOfVariableIndices())[1]
             err = ErrorException(
-                "There is not `optimizer_index` for $(typeof(index(cref))) " *
-                "constraints as they are bridged.")
+                "There is no `optimizer_index` for $(typeof(index(cref))) " *
+                "constraints because they are bridged.")
             @test_throws err optimizer_index(cref)
         end
         @testset "Automatic bridging disabled with `bridge_constraints` keyword" begin
