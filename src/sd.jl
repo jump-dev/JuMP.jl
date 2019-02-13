@@ -24,8 +24,19 @@ julia> a = [ x 2x
 julia> b = [1 2
             2 4];
 
-julia> @SDconstraint(model, a ⪰ b)
-[x - 1, 2 x - 2, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)
+julia> cref = @SDconstraint(model, a ⪰ b)
+ x - 1    2 x - 2
+ 2 x - 2  x - 4   ∈ PSDCone()
+
+julia> jump_function(constraint_object(cref))
+4-element Array{GenericAffExpr{Float64,VariableRef},1}:
+ x - 1
+ 2 x - 2
+ 2 x - 2
+ x - 4
+
+julia> moi_set(constraint_object(cref))
+MathOptInterface.PositiveSemidefiniteConeSquare(2)
 ```
 We see in the output of the last command that the matrix the vectorization of the
 matrix is constrained to belong to the `PositiveSemidefiniteConeSquare`.
@@ -33,8 +44,18 @@ matrix is constrained to belong to the `PositiveSemidefiniteConeSquare`.
 ```jldoctest PSDCone
 julia> using LinearAlgebra # For Symmetric
 
-julia> @constraint(model, Symmetric(a - b) in PSDCone())
-[x - 1, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeTriangle(2)
+julia> cref = @constraint(model, Symmetric(a - b) in PSDCone())
+ x - 1    2 x - 2
+ 2 x - 2  x - 4   ∈ PSDCone()
+
+julia> jump_function(constraint_object(cref))
+3-element Array{GenericAffExpr{Float64,VariableRef},1}:
+ x - 1
+ 2 x - 2
+ x - 4
+
+julia> moi_set(constraint_object(cref))
+MathOptInterface.PositiveSemidefiniteConeTriangle(2)
 ```
 As we see in the output of the last command, the vectorization of only the upper
 triangular part of the matrix is constrained to belong to the
