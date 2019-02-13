@@ -10,7 +10,7 @@ end
 So far we have seen all the elements and constructs related to writing a JuMP
 optimization model. In this section we reach the point of what to do with a
 solved problem. Suppose your model is named `model`. Right after the call to
-`optimize!(model)` it's natural to ask JuMP questions about the finished
+`optimize!(model)`, it's natural to ask JuMP questions about the finished
 optimization step. Typical questions include:
  - Why has the optimization process stopped? Did it hit the time limit or run
    into numerical issues?
@@ -28,10 +28,10 @@ solver found an optimal solution, the problem was proven to be infeasible, or a
 user-provided limit such as a time limit was encountered. For more information,
 see the [Termination statuses](@ref) section below.
 
-Second, we can query the [`primal_status`](@ref) and [`dual_status`](@ref),
-which will tell us what kind of result we have for our primal and dual
-solution. This might be an optimal primal-dual pair, a primal solution without a
-corresponding dual solution, or a certificate of primal or dual infeasibility.
+Second, we can query the [`primal_status`](@ref) and the [`dual_status`](@ref),
+which will tell us what kind of results we have for our primal and dual
+solutions. This might be an optimal primal-dual pair, a primal solution without 
+a corresponding dual solution, or a certificate of primal or dual infeasibility.
 For more information, see the [Solution statuses](@ref) section below.
 
 Third, we can query [`value`](@ref) and [`dual`](@ref) to obtain the
@@ -54,7 +54,7 @@ MOI.TerminationStatusCode
 ## Solution statuses
 
 These statuses indicate what kind of result is available to be queried
-with [`value`](@ref) and [`dual`](@ref). Its possible that no result
+with [`value`](@ref) and [`dual`](@ref). It's possible that no result
 is available to be queried.
 
 We can obtain these statuses by calling [`primal_status`](@ref) for the
@@ -70,11 +70,11 @@ Common status situations are described in the
 
 ## Obtaining solutions
 
-Provided the primal status is not (`MOI.NO_SOLUTION`), the primal solution can
+Provided the primal status is not `MOI.NO_SOLUTION`, the primal solution can
 be obtained by calling [`value`](@ref). For the dual solution, the function
-is [`dual`](@ref). An equivalent way to check if the status is not
-`MOI.NO_SOLUTION` is by calling [`has_values`](@ref) for the primal status and
-[`has_duals`](@ref) for the dual solution.
+is [`dual`](@ref). Calling [`has_values`](@ref) for the primal status and
+[`has_duals`](@ref) for the dual solution is an equivalent way to check whether
+the status is `MOI.NO_SOLUTION`. 
 
 It is important to note that if [`has_values`](@ref) or [`has_duals`](@ref) 
 return false, calls to [`value`](@ref) and [`dual`](@ref) might throw an error 
@@ -84,7 +84,7 @@ The container type (e.g., scalar, vector, or matrix) of the returned solution
 (primal or dual) depends on the type of the variable or constraint. See
 [`AbstractShape`](@ref) and [`dual_shape`](@ref) for details.
 
-To call [`value`](@ref) or [`dual`](@ref) on container of
+To call [`value`](@ref) or [`dual`](@ref) on containers of
 [`VariableRef`](@ref) or [`ConstraintRef`](@ref), use the broadcast syntax,
 e.g., `value.(x)`.
 
@@ -92,8 +92,8 @@ The objective value of a solved problem can be obtained via
 [`objective_value`](@ref). The best known bound on the optimal objective
 value can be obtained via [`objective_bound`](@ref).
 
-A recommended workflow for solving a model and querying the solution is the
-following:
+The following is a recommended workflow for solving a model and querying the
+solution: 
 ```julia
 using JuMP
 model = Model()

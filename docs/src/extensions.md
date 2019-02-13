@@ -5,16 +5,22 @@ CurrentModule = JuMP
 Extending JuMP
 ==============
 
-TODO: How to extend JuMP: discussion on different ways to build on top of JuMP.
-How to extend JuMP's macros and how to avoid doing this.
+```@meta
+# TODO: How to extend JuMP: discussion on different ways to build on top of JuMP.
+# How to extend JuMP's macros and how to avoid doing this.
+```
 
 ## Extending MOI
 
-TODO: Create new MOI function/sets, how to use it in JuMP
+```@meta
+# TODO: Create new MOI function/sets, how to use it in JuMP
+```
 
 ### Adding a bridge
 
-TODO: create new bridge
+```@meta
+# TODO: create new bridge
+```
 
 See the [bridge section in the MOI manual](http://www.juliaopt.org/MathOptInterface.jl/v0.8/apimanual/#Constraint-bridges-1).
 
@@ -35,7 +41,9 @@ provide a more consistent interface to the user.
 
 ## Extending the `@variable` macro
 
-TODO: parse/build/add
+```@meta
+# TODO: parse/build/add
+```
 
 ## Extending the `@constraint` macro
 

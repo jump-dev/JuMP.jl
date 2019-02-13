@@ -78,7 +78,9 @@ Most packages follow the `ModuleName.Optimizer` naming convention, but
 exceptions may exist. See the corresponding Julia package README for more
 details on how to use the solver.
 
-TODO: Discuss setting solver options.
+```@meta
+# TODO: Discuss setting solver options.
+```
 
 The following solvers were compatible with JuMP up to release 0.18 but are
 not yet compatible with the latest version because they do not implement the

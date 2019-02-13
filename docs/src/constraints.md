@@ -363,7 +363,7 @@ constraints in the
 In [Variables](@ref), we saw how to modify the variable bounds, as well as add
 binary and integer restrictions to the domain of each variable. This can also be
 achieved using the [`@constraint`](@ref) macro. For example, `MOI.ZeroOne()`
-restricts the domain to ``\{0, 1\}:
+restricts the domain to ``\{0, 1\}``:
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, x in MOI.ZeroOne())
 x binary
@@ -380,7 +380,7 @@ JuMP also supports modeling semi-continuous variables, whose domain is ``\{0\} �
 julia> @constraint(model, x in MOI.Semicontinuous(1.5, 3.5))
 x in MathOptInterface.Semicontinuous{Float64}(1.5, 3.5)
 ```
-as well as semi-integer variables, whose domain is ``{0} ∪ {l, l+1, \dots, u}``,
+as well as semi-integer variables, whose domain is ``\{0\} ∪ \{l, l+1, \dots, u\}``,
 using the `MOI.Semiinteger` set:
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, x in MOI.Semiinteger(1.0, 3.0))
@@ -602,7 +602,7 @@ You can query the types of constraints currently present in the model by calling
 [`all_constraints`](@ref) to access a list of their references. Then use
 [`constraint_object`](@ref) to get an instance of an
 [`AbstractConstraint`](@ref) object, either [`ScalarConstraint`](@ref) or
-[`VectorConstraint`](@ref) that stores the constraint data.
+[`VectorConstraint`](@ref), that stores the constraint data.
 
 ```jldoctest
 julia> model = Model();

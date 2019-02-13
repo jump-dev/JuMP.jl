@@ -791,6 +791,7 @@ model = Model();
 
 # output
 ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
+```
 """
 macro build_constraint(constraint_expr)
     _error(str...) = _macro_error(:build_constraint, (constraint_expr,), str...)
@@ -1198,7 +1199,7 @@ The expression `varexpr` can either be
 
 * of the form `varname` creating a scalar real variable of name `varname`;
 * of the form `varname[...]` or `[...]` creating a container of variables (see
-  [Containers in macros](@ref).
+  [Containers in macros](@ref)).
 
 The recognized positional arguments in `args` are the following:
 
@@ -1240,7 +1241,7 @@ x = @variable(model, base_name="x", lower_bound=0)
 ```
 
 The following are equivalent ways of creating a `DenseAxisArray` of index set
-`[:a, :b]` and with respective upper bounds 2 and 3 and names `x[a]` and `x[b].
+`[:a, :b]` and with respective upper bounds 2 and 3 and names `x[a]` and `x[b]`.
 ```julia
 ub = Dict(:a => 2, :b => 3)
 # Specify everything in `expr`
@@ -1273,7 +1274,7 @@ extra_kw_args...))` where
 
 ## Examples
 
-The following creates a variable `x` of name `x` with lower_bound 0 as with the first
+The following creates a variable `x` of name `x` with `lower_bound` 0 as with the first
 example above but does it without using the `@variable` macro
 ```julia
 info = VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)

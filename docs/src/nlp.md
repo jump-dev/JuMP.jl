@@ -213,7 +213,7 @@ register(model, :my_square, 1, my_square, autodiff=true)
 ```
 
 The above code creates a JuMP model with the objective function
-`(x[1] - 1)^2 + (x[2]^2 - 2)^2`. The first argument to `register` the
+`(x[1] - 1)^2 + (x[2]^2 - 2)^2`. The first argument to `register` is the
 model for which the functions are registered. The second argument is a Julia
 symbol object which serves as the name of the user-defined function in JuMP
 expressions; the JuMP name need not be the same as the name of the corresponding
@@ -235,15 +235,15 @@ JuMP.register(model::Model, s::Symbol, dimension::Integer, f::Function,
               ∇f::Function, ∇²f::Function)
 ```
 
-The input differs for functions which take a single input argument and functions
-which take more than one. For univariate functions, the derivative evaluation
-routines should return a number which represents the first and second-order
-derivatives respectively. For multivariate functions, the derivative evaluation
-routines will be passed a gradient vector which they must explicitly fill.
-Second-order derivatives of multivariate functions are not currently supported;
-this argument should be omitted. The following example sets up the same
-optimization problem as before, but now we explicitly provide evaluation
-routines for the user-defined functions:
+The input differs between functions which take a single input argument and
+functions which take more than one. For univariate functions, the derivative
+evaluation routines should return a number which represents the first and
+second-order derivatives respectively. For multivariate functions, the
+derivative evaluation routines will be passed a gradient vector which they must
+explicitly fill. Second-order derivatives of multivariate functions are not
+currently supported; this argument should be omitted. The following example sets
+up the same optimization problem as before, but now we explicitly provide
+evaluation routines for the user-defined functions:
 
 ```julia
 my_square(x) = x^2
@@ -383,8 +383,10 @@ julia> index(cons2)
 NonlinearConstraintIndex(2)
 ```
 
-TODO: Provide a link for how to access the linear and quadratic parts of the
-model.
+```@meta
+# TODO: Provide a link for how to access the linear and quadratic parts of the
+# model.
+```
 
 Note that for one-sided nonlinear constraints, JuMP subtracts any values on the
 right-hand side when computing expressions. In other words, one-sided nonlinear

@@ -38,10 +38,10 @@ julia> @variable(model, x[1:2])
  x[2]
 ```
 This code does three things:
-1. it adds two *optimization* variables to `model`
-2. it creates two *JuMP* variables that act as references to those optimization
-   variables
-3. it binds those JuMP variables as a vector with two elements to the *Julia*
+1. It adds two *optimization* variables to `model`.
+2. It creates two *JuMP* variables that act as references to those optimization
+   variables.
+3. It binds those JuMP variables as a vector with two elements to the *Julia*
    variable `x`.
 
 To reduce confusion, we will attempt, where possible, to always refer to
@@ -54,13 +54,13 @@ julia> @variable(model, y, base_name="decision variable")
 decision variable
 ```
 This code does four things:
-1. it adds one *optimization* variable to `model`
-2. it creates one *JuMP* variable that acts as a reference to that optimization
-   variable
-3. it binds the JuMP variable to the Julia variable `y`
-4. it tells JuMP that the *name* attribute of this JuMP variable is "decision
-variable". JuMP uses the value of `base_name` when it has to print the variable
-as a string.
+1. It adds one *optimization* variable to `model`.
+2. It creates one *JuMP* variable that acts as a reference to that optimization
+   variable.
+3. It binds the JuMP variable to the Julia variable `y`.
+4. It tells JuMP that the *name* attribute of this JuMP variable is "decision
+   variable". JuMP uses the value of `base_name` when it has to print the variable
+   as a string.
 
 For example, when we print `y` at the REPL we get:
 ```jldoctest variables
@@ -264,9 +264,9 @@ variable_by_name
 In the examples above, we have mostly created scalar variables. By scalar, we
 mean that the Julia variable is bound to exactly one JuMP variable. However, it
 is often useful to create collections of JuMP variables inside more complicated
-datastructures.
+data structures.
 
-JuMP provides a mechanism for creating three types of these datastructures,
+JuMP provides a mechanism for creating three types of these data structures,
 which we refer to as *containers*. The three types are `Array`s, `DenseAxisArray`s,
 and `SparseAxisArray`s. We explain each of these in the following.
 
@@ -366,7 +366,7 @@ And data, a 2×2 Array{Float64,2}:
 
 The third container type that JuMP natively supports is `SparseAxisArray`.
 These arrays are created when the indices do not form a rectangular set.
-An example where this applies is when indices have a dependence upon previous
+For example, this applies when indices have a dependence upon previous
 indices (called *triangular indexing*). JuMP supports this as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:2, j=i:2])
@@ -390,7 +390,7 @@ JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Any}} with 2 entries:
 
 When creating a container of JuMP variables, JuMP will attempt to choose the
 tightest container type that can store the JuMP variables. Thus, it will prefer
-to create an Array before a DenseAxisArray, and a DenseAxisArray before a
+to create an Array before a DenseAxisArray and a DenseAxisArray before a
 SparseAxisArray. However, because this happens at compile time, it does not
 always make the best choice. To illustrate this, consider the following example:
 ```jldoctest variable_force_container; setup=:(model=Model())
@@ -417,7 +417,7 @@ julia> @variable(model, y[A], container=Array)
  y[1]
  y[2]
 ```
-JuMP now creates a vector of JuMP variables, instead of a DenseAxisArray. Note
+JuMP now creates a vector of JuMP variables instead of a DenseAxisArray. Note
 that choosing an invalid container type will throw an error.
 
 ## Integrality shortcuts
@@ -428,7 +428,7 @@ JuMP supports two shortcuts for adding such constraints.
 
 #### Binary (ZeroOne) constraints
 
-Binary optimization variables are constrained to the set ``x \in {0, 1}``. (The
+Binary optimization variables are constrained to the set ``x \in \{0, 1\}``. (The
 `MOI.ZeroOne` set in MathOptInterface.) Binary optimization variables can be
 created in JuMP by passing `Bin` as an optional positional argument:
 ```jldoctest variables_binary; setup=:(model=Model())
