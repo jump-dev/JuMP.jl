@@ -160,11 +160,23 @@ julia&gt; @constraint(model, x in MOI.SOS1([1.0, 2.0, 3.0]))
 x
 
 julia&gt; @SDconstraint(model, [x 2x; 3x 4x] &gt;= ones(2, 2))
-[x - 1, 3 x - 1, 2 x - 1, 4 x - 1] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)</code></pre><p>Solvers supporting such constraints usually expect to be given a matrix that is <em>symbolically</em> symmetric, that is, for which the expression in corresponding off-diagonal entries are the same. In our example, the expressions of entries <code>(1, 2)</code> and <code>(2, 1)</code> are respectively <code>2x - 1</code> and <code>3x - 1</code> which are different. To bridge the gap between the constraint modeled and what the solver expects, JuMP creates an equality constraint <code>3x - 1 == 2x - 1</code> and constrains the symmetric matrix <code>[x - 1, 2 x - 1, 2 x - 1, 4 x - 1]</code> to be positive semidefinite.</p><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>If the matrix provided is already symbolically symmetric, the equality constrains are equivalent to <code>0 = 0</code> and are not added. In practice, if all coefficients are smaller than <code>1e-10</code>, the constraint is ignored, if all coefficients are smaller than <code>1e-8</code> but some are larger than <code>1e-10</code>, it is ignored but a warning is displayed, otherwise if at least one coefficient is larger than <code>1e-8</code>, the constraint is added.</p></div></div><p>If the matrix is known to be symmetric, the PSD constraint can be added as follows:</p><pre><code class="language-julia-repl">julia&gt; using LinearAlgebra
+[x - 1    2 x - 1;
+ 3 x - 1  4 x - 1] ∈ PSDCone()</code></pre><p>Solvers supporting such constraints usually expect to be given a matrix that is <em>symbolically</em> symmetric, that is, for which the expression in corresponding off-diagonal entries are the same. In our example, the expressions of entries <code>(1, 2)</code> and <code>(2, 1)</code> are respectively <code>2x - 1</code> and <code>3x - 1</code> which are different. To bridge the gap between the constraint modeled and what the solver expects, JuMP creates an equality constraint <code>3x - 1 == 2x - 1</code> and constrains the symmetric matrix <code>[x - 1, 2 x - 1, 2 x - 1, 4 x - 1]</code> to be positive semidefinite.</p><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>If the matrix provided is already symbolically symmetric, the equality constrains are equivalent to <code>0 = 0</code> and are not added. In practice, if all coefficients are smaller than <code>1e-10</code>, the constraint is ignored, if all coefficients are smaller than <code>1e-8</code> but some are larger than <code>1e-10</code>, it is ignored but a warning is displayed, otherwise if at least one coefficient is larger than <code>1e-8</code>, the constraint is added.</p></div></div><p>If the matrix is known to be symmetric, the PSD constraint can be added as follows:</p><pre><code class="language-julia-repl">julia&gt; using LinearAlgebra
 
 julia&gt; @constraint(model, Symmetric([x 2x; 2x 4x] - ones(2, 2)) in PSDCone())
-[x - 1, 2 x - 1, 4 x - 1] ∈ MathOptInterface.PositiveSemidefiniteConeTriangle(2)</code></pre><p>Note that the lower triangular entries are silently ignored even if they are different so use it with caution:</p><pre><code class="language-julia-repl">julia&gt; @constraint(model, Symmetric([x 2x; 3x 4x]) in PSDCone())
-[x, 2 x, 4 x] ∈ MathOptInterface.PositiveSemidefiniteConeTriangle(2)</code></pre><h2><a class="nav-anchor" id="Constraint-modifications-1" href="#Constraint-modifications-1">Constraint modifications</a></h2><p>A common paradigm, especially in linear programming, is to repeatedly solve a model with different coefficients.</p><h3><a class="nav-anchor" id="Modifying-a-constant-term-1" href="#Modifying-a-constant-term-1">Modifying a constant term</a></h3><p>Most often, modifications involve changing the &quot;right-hand side&quot; of a linear constraint. This presents a challenge for JuMP because it leads to ambiguities. For example, what is the right-hand side term of <code>@constraint(model, 2x + 1 &lt;= x - 3)</code>? This applies more generally to any constant term in a function appearing in the objective or a constraint.</p><p>To avoid these ambiguities, JuMP includes the ability to <em>fix</em> variables to a value using the <a href="../variables/#JuMP.fix"><code>fix</code></a> function. Fixing a variable sets its lower and upper bound to the same value. Thus, changes in a constant term can be simulated by adding a dummy variable and fixing it to different values. Here is an example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, const_term)
+[x - 1    2 x - 1;
+ 2 x - 1  4 x - 1] ∈ PSDCone()</code></pre><p>Note that the lower triangular entries are silently ignored even if they are different so use it with caution:</p><pre><code class="language-julia-repl">julia&gt; cref = @constraint(model, Symmetric([x 2x; 3x 4x]) in PSDCone())
+[x    2 x;
+ 2 x  4 x] ∈ PSDCone()
+
+julia&gt; jump_function(constraint_object(cref))
+3-element Array{GenericAffExpr{Float64,VariableRef},1}:
+ x
+ 2 x
+ 4 x
+
+julia&gt; moi_set(constraint_object(cref))
+MathOptInterface.PositiveSemidefiniteConeTriangle(2)</code></pre><h2><a class="nav-anchor" id="Constraint-modifications-1" href="#Constraint-modifications-1">Constraint modifications</a></h2><p>A common paradigm, especially in linear programming, is to repeatedly solve a model with different coefficients.</p><h3><a class="nav-anchor" id="Modifying-a-constant-term-1" href="#Modifying-a-constant-term-1">Modifying a constant term</a></h3><p>Most often, modifications involve changing the &quot;right-hand side&quot; of a linear constraint. This presents a challenge for JuMP because it leads to ambiguities. For example, what is the right-hand side term of <code>@constraint(model, 2x + 1 &lt;= x - 3)</code>? This applies more generally to any constant term in a function appearing in the objective or a constraint.</p><p>To avoid these ambiguities, JuMP includes the ability to <em>fix</em> variables to a value using the <a href="../variables/#JuMP.fix"><code>fix</code></a> function. Fixing a variable sets its lower and upper bound to the same value. Thus, changes in a constant term can be simulated by adding a dummy variable and fixing it to different values. Here is an example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, const_term)
 const_term
 
 julia&gt; @constraint(model, con, 2x &lt;= const_term)
@@ -238,8 +250,19 @@ julia&gt; a = [x 2x
 julia&gt; b = [1 2
             3 4];
 
-julia&gt; @SDconstraint(model, a ⪰ b)
-[x - 1, -3, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)</code></pre><p>In the set <code>PositiveSemidefiniteConeSquare(2)</code> in the last output, <code>Square</code> means that the matrix is passed as a square matrix as the corresponding off-diagonal entries need to be constrained to be equal. A similar set <code>PositiveSemidefiniteConeTriangle</code> exists which only uses the upper triangular part of the matrix assuming that it is symmetric, see <a href="#JuMP.PSDCone"><code>PSDCone</code></a> to see how to use it.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.SecondOrderCone" href="#JuMP.SecondOrderCone"><code>JuMP.SecondOrderCone</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-none">SecondOrderCone</code></pre><p>Second order cone object that can be used to constrain the euclidean norm of a vector <code>x</code> to be less than or equal to a nonnegative scalar <code>t</code>. This is a shortcut for the <code>MathOptInterface.SecondOrderCone</code>.</p><p><strong>Examples</strong></p><p>The following constrains <span>$\|(x-1, x-2)\|_2 \le t$</span> and <span>$t \ge 0$</span>:</p><pre><code class="language-julia-repl">julia&gt; model = Model();
+julia&gt; cref = @SDconstraint(model, a ⪰ b)
+[x - 1  2 x - 2;
+ -3     x - 4  ] ∈ PSDCone()
+
+julia&gt; jump_function(constraint_object(cref))
+4-element Array{GenericAffExpr{Float64,VariableRef},1}:
+ x - 1
+ -3
+ 2 x - 2
+ x - 4
+
+julia&gt; moi_set(constraint_object(cref))
+MathOptInterface.PositiveSemidefiniteConeSquare(2)</code></pre><p>In the set <code>PositiveSemidefiniteConeSquare(2)</code> in the last output, <code>Square</code> means that the matrix is passed as a square matrix as the corresponding off-diagonal entries need to be constrained to be equal. A similar set <code>PositiveSemidefiniteConeTriangle</code> exists which only uses the upper triangular part of the matrix assuming that it is symmetric, see <a href="#JuMP.PSDCone"><code>PSDCone</code></a> to see how to use it.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.SecondOrderCone" href="#JuMP.SecondOrderCone"><code>JuMP.SecondOrderCone</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-none">SecondOrderCone</code></pre><p>Second order cone object that can be used to constrain the euclidean norm of a vector <code>x</code> to be less than or equal to a nonnegative scalar <code>t</code>. This is a shortcut for the <code>MathOptInterface.SecondOrderCone</code>.</p><p><strong>Examples</strong></p><p>The following constrains <span>$\|(x-1, x-2)\|_2 \le t$</span> and <span>$t \ge 0$</span>:</p><pre><code class="language-julia-repl">julia&gt; model = Model();
 
 julia&gt; @variable(model, x)
 x
@@ -268,11 +291,32 @@ julia&gt; a = [ x 2x
 julia&gt; b = [1 2
             2 4];
 
-julia&gt; @SDconstraint(model, a ⪰ b)
-[x - 1, 2 x - 2, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)</code></pre><p>We see in the output of the last command that the matrix the vectorization of the matrix is constrained to belong to the <code>PositiveSemidefiniteConeSquare</code>.</p><pre><code class="language-julia-repl">julia&gt; using LinearAlgebra # For Symmetric
+julia&gt; cref = @SDconstraint(model, a ⪰ b)
+[x - 1    2 x - 2;
+ 2 x - 2  x - 4  ] ∈ PSDCone()
 
-julia&gt; @constraint(model, Symmetric(a - b) in PSDCone())
-[x - 1, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeTriangle(2)</code></pre><p>As we see in the output of the last command, the vectorization of only the upper triangular part of the matrix is constrained to belong to the <code>PositiveSemidefiniteConeSquare</code>.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.shadow_price" href="#JuMP.shadow_price"><code>JuMP.shadow_price</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">shadow_price(constraint::ConstraintRef)</code></pre><p>The change in the objective from an infinitesimal relaxation of the constraint. This value is computed from <a href="../solutions/#JuMP.dual"><code>dual</code></a> and can be queried only when <code>has_duals</code> is <code>true</code> and the objective sense is <code>MIN_SENSE</code> or <code>MAX_SENSE</code> (not <code>FEASIBILITY_SENSE</code>). For linear constraints, the shadow prices differ at most in sign from the <code>dual</code> value depending on the objective sense.</p><p><strong>Notes</strong></p><ul><li>The function simply translates signs from <code>dual</code> and does not validate the conditions needed to guarantee the sensitivity interpretation of the shadow price. The caller is responsible, e.g., for checking whether the solver converged to an optimal primal-dual pair or a proof of infeasibility.</li><li>The computation is based on the current objective sense of the model. If this has changed since the last solve, the results will be incorrect.</li><li>Relaxation of equality constraints (and hence the shadow price) is defined based on which sense of the equality constraint is active.</li></ul></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.set_coefficient" href="#JuMP.set_coefficient"><code>JuMP.set_coefficient</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">set_coefficient(constraint::ConstraintRef, variable::VariableRef, value)</code></pre><p>Set the coefficient of <code>variable</code> in the constraint <code>constraint</code> to <code>value</code>.</p><p>Note that prior to this step, JuMP will aggregate multiple terms containing the same variable. For example, given a constraint <code>2x + 3x &lt;= 2</code>, <code>set_coefficient(c, x, 4)</code> will create the constraint <code>4x &lt;= 2</code>.</p><pre><code class="language-julia">model = Model()
+julia&gt; jump_function(constraint_object(cref))
+4-element Array{GenericAffExpr{Float64,VariableRef},1}:
+ x - 1
+ 2 x - 2
+ 2 x - 2
+ x - 4
+
+julia&gt; moi_set(constraint_object(cref))
+MathOptInterface.PositiveSemidefiniteConeSquare(2)</code></pre><p>We see in the output of the last command that the matrix the vectorization of the matrix is constrained to belong to the <code>PositiveSemidefiniteConeSquare</code>.</p><pre><code class="language-julia-repl">julia&gt; using LinearAlgebra # For Symmetric
+
+julia&gt; cref = @constraint(model, Symmetric(a - b) in PSDCone())
+[x - 1    2 x - 2;
+ 2 x - 2  x - 4  ] ∈ PSDCone()
+
+julia&gt; jump_function(constraint_object(cref))
+3-element Array{GenericAffExpr{Float64,VariableRef},1}:
+ x - 1
+ 2 x - 2
+ x - 4
+
+julia&gt; moi_set(constraint_object(cref))
+MathOptInterface.PositiveSemidefiniteConeTriangle(2)</code></pre><p>As we see in the output of the last command, the vectorization of only the upper triangular part of the matrix is constrained to belong to the <code>PositiveSemidefiniteConeSquare</code>.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.shadow_price" href="#JuMP.shadow_price"><code>JuMP.shadow_price</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">shadow_price(constraint::ConstraintRef)</code></pre><p>The change in the objective from an infinitesimal relaxation of the constraint. This value is computed from <a href="../solutions/#JuMP.dual"><code>dual</code></a> and can be queried only when <code>has_duals</code> is <code>true</code> and the objective sense is <code>MIN_SENSE</code> or <code>MAX_SENSE</code> (not <code>FEASIBILITY_SENSE</code>). For linear constraints, the shadow prices differ at most in sign from the <code>dual</code> value depending on the objective sense.</p><p><strong>Notes</strong></p><ul><li>The function simply translates signs from <code>dual</code> and does not validate the conditions needed to guarantee the sensitivity interpretation of the shadow price. The caller is responsible, e.g., for checking whether the solver converged to an optimal primal-dual pair or a proof of infeasibility.</li><li>The computation is based on the current objective sense of the model. If this has changed since the last solve, the results will be incorrect.</li><li>Relaxation of equality constraints (and hence the shadow price) is defined based on which sense of the equality constraint is active.</li></ul></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.set_coefficient" href="#JuMP.set_coefficient"><code>JuMP.set_coefficient</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">set_coefficient(constraint::ConstraintRef, variable::VariableRef, value)</code></pre><p>Set the coefficient of <code>variable</code> in the constraint <code>constraint</code> to <code>value</code>.</p><p>Note that prior to this step, JuMP will aggregate multiple terms containing the same variable. For example, given a constraint <code>2x + 3x &lt;= 2</code>, <code>set_coefficient(c, x, 4)</code> will create the constraint <code>4x &lt;= 2</code>.</p><pre><code class="language-julia">model = Model()
 @variable(model, x)
 @constraint(model, con, 2x + 3x &lt;= 2)
 set_coefficient(con, x, 4)
