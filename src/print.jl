@@ -458,8 +458,15 @@ end
 function function_string(::Type{REPLMode},
                          A::AbstractMatrix{<:AbstractJuMPScalar})
     str = sprint(show, MIME"text/plain"(), A)
+    lines = split(str, '\n')
     # We drop the first line with the signature "m×n Array{...}:"
-    return str[(findfirst(isequal('\n'), str) + 1):end]
+    lines = lines[2:end]
+    # We replace the first space by an opening `[`
+    lines[1] = '[' * lines[1][2:end]
+    for i in 1:length(lines)
+        lines[i] = lines[i] * (i == length(lines) ? ']' : ';')
+    end
+    return join(lines, '\n')
 end
 
 function function_string(print_mode::Type{IJuliaMode},
