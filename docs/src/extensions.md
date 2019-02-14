@@ -39,9 +39,9 @@ It is recommended to first check whether it is possible to extend one of these
 three macros before creating a new one so as to leverage all their features and
 provide a more consistent interface to the user.
 
+```@meta
 ## Extending the `@variable` macro
 
-```@meta
 # TODO: parse/build/add
 ```
 
@@ -102,11 +102,15 @@ SymmetricMatrixShape
 
 ### Adding `add_constraint` methods
 
-TODO
+```@meta
+# TODO: Introduce `add_constraint`
+```
 
 ```@docs
 add_constraint
 ```
+
+```@meta
 
 ### Adding `parse_constraint` methods
 
@@ -119,3 +123,4 @@ TODO
 ## Defining new JuMP models
 
 TODO
+```
