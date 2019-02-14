@@ -760,8 +760,8 @@ julia> b = [1 2
             3 4];
 
 julia> cref = @SDconstraint(model, a ⪰ b)
- x - 1  2 x - 2
- -3     x - 4   ∈ PSDCone()
+[x - 1  2 x - 2;
+ -3     x - 4  ] ∈ PSDCone()
 
 julia> jump_function(constraint_object(cref))
 4-element Array{GenericAffExpr{Float64,VariableRef},1}:

@@ -25,8 +25,8 @@ julia> b = [1 2
             2 4];
 
 julia> cref = @SDconstraint(model, a ⪰ b)
- x - 1    2 x - 2
- 2 x - 2  x - 4   ∈ PSDCone()
+[x - 1    2 x - 2;
+ 2 x - 2  x - 4  ] ∈ PSDCone()
 
 julia> jump_function(constraint_object(cref))
 4-element Array{GenericAffExpr{Float64,VariableRef},1}:
@@ -45,8 +45,8 @@ matrix is constrained to belong to the `PositiveSemidefiniteConeSquare`.
 julia> using LinearAlgebra # For Symmetric
 
 julia> cref = @constraint(model, Symmetric(a - b) in PSDCone())
- x - 1    2 x - 2
- 2 x - 2  x - 4   ∈ PSDCone()
+[x - 1    2 x - 2;
+ 2 x - 2  x - 4  ] ∈ PSDCone()
 
 julia> jump_function(constraint_object(cref))
 3-element Array{GenericAffExpr{Float64,VariableRef},1}:
