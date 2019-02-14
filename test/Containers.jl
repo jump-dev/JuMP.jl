@@ -1,4 +1,3 @@
-using Compat
 using Test
 using JuMP
 using JuMP.Containers
