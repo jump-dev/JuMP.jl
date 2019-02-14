@@ -2,15 +2,10 @@
     function sparse_test(d, sum_d, d2, d3, dsqr, d_bads)
         sqr(x) = x^2
         @testset "Colon indexing" begin
-            if VERSION < v"0.7-"
-                @test_throws ArgumentError d[:, 1]
-                @test_throws ArgumentError d[:a, :]
-            else
-                err = ArgumentError("Indexing with `:` is not supported by" *
-                                    " Containers.SparseAxisArray")
-                @test_throws err d[:, 1]
-                @test_throws err d[:a, :]
-            end
+            err = ArgumentError("Indexing with `:` is not supported by" *
+                                " Containers.SparseAxisArray")
+            @test_throws err d[:, 1]
+            @test_throws err d[:a, :]
         end
         @testset "Map" begin
             @test d == @inferred map(identity, d)
@@ -29,30 +24,19 @@
             @test d == identity.(d)
             @test dsqr == sqr.(d)
             @testset "Different array" begin
-                if VERSION < v"0.7-"
-                    @test_throws ArgumentError [1, 2] .+ d
-                    @test_throws ArgumentError d .* [1, 2]
-                else
-                    err = ArgumentError("Cannot broadcast" *
-                                        " Containers.SparseAxisArray with" *
-                                        " another array of different type")
-                    @test_throws err [1, 2] .+ d
-                    @test_throws err d .* [1, 2]
-                end
+                err = ArgumentError("Cannot broadcast" *
+                                    " Containers.SparseAxisArray with" *
+                                    " another array of different type")
+                @test_throws err [1, 2] .+ d
+                @test_throws err d .* [1, 2]
             end
             @testset "Different indices" begin
-                if VERSION < v"0.7-"
-                    for d_bad in d_bads
-                        @test_throws ArgumentError d_bad .+ d
-                        @test_throws ArgumentError d .+ d_bad
-                    end
-                else
-                    err = ArgumentError("Cannot broadcast" *
-                        " Containers.SparseAxisArray with different indices")
-                    for d_bad in d_bads
-                        @test_throws err d_bad .+ d
-                        @test_throws err d .+ d_bad
-                    end
+                err = ArgumentError("Cannot broadcast" *
+                                    " Containers.SparseAxisArray with " *
+                                    "different indices")
+                for d_bad in d_bads
+                    @test_throws err d_bad .+ d
+                    @test_throws err d .+ d_bad
                 end
             end
         end

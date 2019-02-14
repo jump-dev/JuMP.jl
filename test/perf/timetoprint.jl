@@ -56,7 +56,7 @@ test4_time = @elapsed begin
     @variable(m, x5[[:a,:b,:c],[:d,"e",4]])
     @constraint(m,
         sum(i*x1[i] for i=1:N) +
-        sum(i*f*x2[i,f] for i=1:N,f=1:N) + 
+        sum(i*f*x2[i,f] for i=1:N,f=1:N) +
         sum(i*f*x3[i,f] for i=1:N,f=1:2:N) +
         sum(x4) >= N)
     @time sprint(print, m)"""

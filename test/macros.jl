@@ -36,14 +36,12 @@ end
     @test ex.head == :typed_vcat
     @test ex.args == [:x, 12, 3]
 
-    if VERSION >= v"1.0-"
-        ex = :(x[i=1:3, j=S; isodd(i) && i + j >= 2])
-        @test ex.head == :ref
-        @test ex.args == [:x,
-                      Expr(:parameters, Expr(:&&, :(isodd(i)), :(i + j >= 2))),
-                      Expr(:kw, :i, :(1:3)),
-                      Expr(:kw, :j, :S)]
-    end
+    ex = :(x[i=1:3, j=S; isodd(i) && i + j >= 2])
+    @test ex.head == :ref
+    @test ex.args == [:x,
+                  Expr(:parameters, Expr(:&&, :(isodd(i)), :(i + j >= 2))),
+                  Expr(:kw, :i, :(1:3)),
+                  Expr(:kw, :j, :S)]
 end
 
 mutable struct MyVariable
@@ -298,15 +296,9 @@ end
     @testset "Warn on unexpected assignment" begin
         m = Model()
         @variable(m, x)
-        @static if VERSION >= v"1.0"
-            # function getindex does not accept keyword arguments
-            @test_throws ErrorException x[i=1]
-            @test_throws ErrorException @constraint(m, x[i=1] <= 1)
-        else
-            # https://github.com/JuliaLang/julia/issues/25612
-            @test_logs((:warn, r"Unexpected assignment"),
-                       macroexpand(JuMP, :(@constraint(m, x[i=1] <= 1))))
-        end
+        # function getindex does not accept keyword arguments
+        @test_throws ErrorException x[i=1]
+        @test_throws ErrorException @constraint(m, x[i=1] <= 1)
     end
 
     @testset "Lookup in model scope: @variable" begin
