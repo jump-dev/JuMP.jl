@@ -4,7 +4,8 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 function _try_parse_idx_set(arg::Expr)
-    # [i=1] and x[i=1] parse as :(=) and :kw, respectively.
+    # [i=1] and x[i=1] parse as Expr(:vect, Expr(:(=), :i, 1)) and
+    # Expr(:ref, :x, Expr(:kw, :i, 1)) respectively.
     if arg.head === :kw || arg.head === :(=)
         @assert length(arg.args) == 2
         return true, arg.args[1], arg.args[2]
