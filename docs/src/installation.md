@@ -14,14 +14,6 @@ import Pkg
 Pkg.add("JuMP")
 ```
 
-!!! note
-    The installation instructions above assume that JuMP 0.19 has already been
-    released. Until that time, see the JuMP
-    [README](https://github.com/JuliaOpt/JuMP.jl/blob/master/README.md) for
-    instructions on installing a development release that's compatible with
-    Julia 1.0.
-
-
 Getting Solvers
 ---------------
 

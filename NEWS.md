@@ -6,13 +6,8 @@ Version 0.19 (unreleased)
 
 **JuMP 0.19 contains significant breaking changes.**
 
-We will tag alpha and beta versions of 0.19 as appropriate to make it easier to
-test JuMP 0.19 before the final release. These are preview releases for early
-adopters. Additional breaking changes may occur between development tags.
-The documentation has known gaps. When using a development tag, be prepared to
-peek into the JuMP source code and tests for examples of how things work.
-
-Latest development tag: `v0.19-beta2` (`] add JuMP#v0.19-beta2`).
+We invite earlier adopters to try out the `v0.19-beta2` release
+(`] add JuMP#v0.19-beta2`).
 
 Breaking changes:
 
@@ -25,11 +20,11 @@ Breaking changes:
   updated for MOI. See the
   [installation guide](http://www.juliaopt.org/JuMP.jl/dev/installation/)
   for a list of solvers that have and have not yet been updated.
-  
-- Most solvers have been renamed to `PackageName.Optimizer`. For example, 
+
+- Most solvers have been renamed to `PackageName.Optimizer`. For example,
   `GurobiSolver()` is now `Gurobi.Optimizer`.
 
-- Solvers are no longer added to a model via `Model(solver = XXX(kwargs...))`. 
+- Solvers are no longer added to a model via `Model(solver = XXX(kwargs...))`.
   Instead use `Model(with_optimizer(XXX, kwargs...))`. For example, `Model(with_optimizer(Gurobi.Optimizer, OutputFlag=0))`.
 
 - JuMP containers (e.g., the objects returned by `@variable`) have been
@@ -138,9 +133,6 @@ New features:
   model are stored and/or regenerated. See the corresponding
   [documentation](http://www.juliaopt.org/JuMP.jl/dev/solvers/).
 
-For known issues blocking the 0.19 release, see the
-[0.19 issue milestone](https://github.com/JuliaOpt/JuMP.jl/issues?q=is%3Aopen+is%3Aissue+milestone%3A0.19).
-
 There are known regressions from JuMP 0.18 that will be addressed in a future
 release (0.19.x or later):
 
@@ -156,10 +148,10 @@ release (0.19.x or later):
 - We do not yet have an implementation of solver-specific callbacks.
 
 - The column generation syntax in `@variable` has been removed (i.e., the
-  `objective`, `coefficients`, and `inconstraints` keyword arguments). Support 
+  `objective`, `coefficients`, and `inconstraints` keyword arguments). Support
   for column generation will be re-introduced in a future release.
 
-- The ability to solve the continuous relaxation (i.e. via 
+- The ability to solve the continuous relaxation (i.e. via
   `solve(model; relaxation = true)`) is not yet reimplemented ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1611)).
 
 Version 0.18.5 (December 1, 2018)
