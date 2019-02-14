@@ -669,7 +669,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Objective",
     "title": "Objective",
     "category": "section",
-    "text": "# TODO: Describe how the objective is represented (link to MOI docs)"
+    "text": "This page describes macros and functions related to linear and quadratic objective functions only, unless otherwise indicated. For nonlinear objective functions, see Nonlinear Modeling.Use the @objective macro to set linear and quadratic objective functions in a JuMP model. The functions set_objective_sense and set_objective_function provide an equivalent lower-level interface.To query the objective function from a model, see objective_sense, objective_function, and objective_function_type.To query the optimal objective value or best known bound after a solve, see objective_value and objective_bound. These two functions apply to nonlinear objectives also."
 },
 
 {
@@ -677,7 +677,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Objective",
     "title": "JuMP.@objective",
     "category": "macro",
-    "text": "@objective(model::Model, sense, func)\n\nSet the objective sense to sense and objective function to func. The objective sense can be either Min, Max, MathOptInterface.MIN_SENSE, MathOptInterface.MAX_SENSE or MathOptInterface.FEASIBILITY_SENSE; see MathOptInterface.ObjectiveSense. In order to set the sense programatically, i.e., when sense is a Julia variable whose value is the sense, one of the three MathOptInterface.ObjectiveSense should be used. Using the symbols :Min or :Max is not supported anymore (it was supported up to JuMP v0.18). The function can either be a single JuMP variable, an affine expression of JuMP variables or a quadratic expression of JuMP variables.\n\nExamples\n\nTo minimize the value of the variable x, do as follows:\n\njulia> model = Model()\nA JuMP Model\nFeasibility problem with:\nVariables: 0\nModel mode: AUTOMATIC\nCachingOptimizer state: NO_OPTIMIZER\nSolver name: No optimizer attached.\n\njulia> @variable(model, x)\nx\n\njulia> @objective(model, Min, x)\nx\n\nTo maximize the value of the affine expression 2x - 1, do as follows:\n\njulia> @objective(model, Max, 2x - 1)\n2 x - 1\n\nTo set a quadratic objective and set the objective sense programatically, do as follows:\n\njulia> sense = MOI.MIN_SENSE\nMIN_SENSE::OptimizationSense = 0\n\njulia> @objective(model, sense, x^2 - 2x + 1)\nx² - 2 x + 1\n\n\n\n\n\n"
+    "text": "@objective(model::Model, sense, func)\n\nSet the objective sense to sense and objective function to func. The objective sense can be either Min, Max, MathOptInterface.MIN_SENSE, MathOptInterface.MAX_SENSE or MathOptInterface.FEASIBILITY_SENSE; see MathOptInterface.ObjectiveSense. In order to set the sense programatically, i.e., when sense is a Julia variable whose value is the sense, one of the three MathOptInterface.ObjectiveSense values should be used. The function func can be a single JuMP variable, an affine expression of JuMP variables or a quadratic expression of JuMP variables.\n\nExamples\n\nTo minimize the value of the variable x, do as follows:\n\njulia> model = Model()\nA JuMP Model\nFeasibility problem with:\nVariables: 0\nModel mode: AUTOMATIC\nCachingOptimizer state: NO_OPTIMIZER\nSolver name: No optimizer attached.\n\njulia> @variable(model, x)\nx\n\njulia> @objective(model, Min, x)\nx\n\nTo maximize the value of the affine expression 2x - 1, do as follows:\n\njulia> @objective(model, Max, 2x - 1)\n2 x - 1\n\nTo set a quadratic objective and set the objective sense programatically, do as follows:\n\njulia> sense = MOI.MIN_SENSE\nMIN_SENSE::OptimizationSense = 0\n\njulia> @objective(model, sense, x^2 - 2x + 1)\nx² - 2 x + 1\n\n\n\n\n\n"
 },
 
 {
@@ -737,11 +737,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "objective/#Objective-functions-1",
+    "location": "objective/#Reference-1",
     "page": "Objective",
-    "title": "Objective functions",
+    "title": "Reference",
     "category": "section",
-    "text": "# TODO: Describe how JuMP expressions relate to MOI functions. How to set, query,\n# and modify an objective function.Setting the objective function and objective sense:@objective\nJuMP.set_objective_sense\nJuMP.set_objective_functionQuerying the objective function and objective sense:JuMP.objective_sense\nJuMP.objective_function\nJuMP.objective_function_typeQuerying the objective value and bound:JuMP.objective_bound\nJuMP.objective_value"
+    "text": "@objective\nJuMP.set_objective_sense\nJuMP.set_objective_function\n\nJuMP.objective_sense\nJuMP.objective_function\nJuMP.objective_function_type\n\nJuMP.objective_bound\nJuMP.objective_value"
 },
 
 {
