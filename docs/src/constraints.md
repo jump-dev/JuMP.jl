@@ -674,6 +674,8 @@ constraint_object
 AbstractConstraint
 ScalarConstraint
 VectorConstraint
+index(::ConstraintRef)
+optimizer_index(::ConstraintRef{Model})
 ```
 
 ## Constructing constraints without adding them to the model

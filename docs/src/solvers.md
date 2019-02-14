@@ -70,6 +70,7 @@ with_optimizer
 The factory can be provided either at model construction time or at
 [`optimize!`](@ref) time:
 ```@docs
+NoOptimizer
 JuMP.optimize!
 ```
 

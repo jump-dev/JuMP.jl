@@ -67,7 +67,6 @@ function solve(::Model)
           "and `dual_status`.")
 end
 
-
 """
     optimize!(model::Model,
               optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
@@ -75,7 +74,9 @@ end
 
 Optimize the model. If `optimizer_factory` is not `nothing`, it first sets the
 optimizer to a new one created using the optimizer factory. The factory can be
-created using the [`with_optimizer`](@ref) function.
+created using the [`with_optimizer`](@ref) function. If `optimizer_factory` is
+`nothing` and no optimizer was set to `model` before calling this function, a
+[`NoOptimizer`](@ref) error is thrown.
 
 ## Examples
 
@@ -122,6 +123,10 @@ function optimize!(model::Model,
     # that instead of solving the model ourselves
     if !ignore_optimize_hook
         return model.optimize_hook(model)
+    end
+
+    if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
+        throw(NoOptimizer())
     end
 
     MOI.optimize!(backend(model))

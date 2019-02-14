@@ -42,9 +42,23 @@ end
 include("nonnegative_bridge.jl")
 
 function test_model()
+    @testset "NoOptimizer" begin
+        err = NoOptimizer()
+        model = Model()
+        @variable(model, x)
+        @test_throws err optimizer_index(x)
+        cref = @constraint(model, x == 1)
+        @test_throws err JuMP.optimizer_index(cref)
+        @test_throws err JuMP.optimize!(model)
+        @test_throws err JuMP.value(x)
+        @test_throws err JuMP.value(cref)
+        @test_throws err JuMP.dual(cref)
+    end
+
     @testset "Result attributes" begin
         err = JuMP.OptimizeNotCalled()
-        model = Model()
+        model = Model(with_optimizer(MOIU.MockOptimizer,
+                                     SimpleLPModel{Float64}()))
         @variable(model, x)
         c = @constraint(model, x ≤ 0)
         @objective(model, Max, x)
@@ -172,9 +186,20 @@ function test_model()
             @test JuMP.backend(model).optimizer.model isa MOIU.CachingOptimizer
             @test JuMP.backend(model).optimizer.model.optimizer isa MOIU.MockOptimizer
             @variable model x
+            err = ErrorException(
+                "There is no `optimizer_index` as the optimizer is not " *
+                "synchronized with the cached model. Call " *
+                "`MOIU.attach_optimizer(model)` to synchronize it.")
+            @test_throws err optimizer_index(x)
             cref = @constraint model 0 <= x + 1 <= 1
             @test cref isa JuMP.ConstraintRef{JuMP.Model,MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64},MOI.Interval{Float64}}}
+            @test_throws err optimizer_index(cref)
             JuMP.optimize!(model)
+            @test optimizer_index(x) === MOI.get(JuMP.backend(model).optimizer.model.optimizer, MOI.ListOfVariableIndices())[1]
+            err = ErrorException(
+                "There is no `optimizer_index` for $(typeof(index(cref))) " *
+                "constraints because they are bridged.")
+            @test_throws err optimizer_index(cref)
         end
         @testset "Automatic bridging disabled with `bridge_constraints` keyword" begin
             model = Model(with_optimizer(MOIU.MockOptimizer,

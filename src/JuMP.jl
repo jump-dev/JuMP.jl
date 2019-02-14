@@ -487,25 +487,69 @@ function Base.copy(v::AbstractArray{VariableRef}, new_model::AbstractModel)
     return (var -> VariableRef(new_model, var.index)).(v)
 end
 
+_moi_optimizer_index(model::MOI.AbstractOptimizer, index::MOI.Index) = index
+function _moi_optimizer_index(model::MOIU.CachingOptimizer, index::MOI.Index)
+    if MOIU.state(model) == MOIU.NO_OPTIMIZER
+        throw(NoOptimizer())
+    elseif MOIU.state(model) == MOIU.EMPTY_OPTIMIZER
+        error("There is no `optimizer_index` as the optimizer is not ",
+              "synchronized with the cached model. Call ",
+              "`MOIU.attach_optimizer(model)` to synchronize it.")
+    else
+        @assert MOIU.state(model) == MOIU.ATTACHED_OPTIMIZER
+        return _moi_optimizer_index(model.optimizer,
+                                    model.model_to_optimizer_map[index])
+    end
+end
+function _moi_optimizer_index(model::MOI.Bridges.LazyBridgeOptimizer,
+                              index::MOI.Index)
+    if index isa MOI.ConstraintIndex &&
+        MOI.Bridges.is_bridged(model, typeof(index))
+        error("There is no `optimizer_index` for $(typeof(index)) constraints",
+              " because they are bridged.")
+    else
+        return _moi_optimizer_index(model.model, index)
+    end
+end
+
+
+"""
+    optimizer_index(v::VariableRef)::MOI.VariableIndex
+
+Return the index of the variable that corresponds to `v` in the optimizer model.
+It throws [`NoOptimizer`](@ref) if no optimizer is set and throws an
+`ErrorException` if the optimizer is set but is not attached.
+"""
 function optimizer_index(v::VariableRef)
     model = owner_model(v)
     if mode(model) == DIRECT
         return index(v)
     else
-        @assert backend(model).state == MOIU.ATTACHED_OPTIMIZER
-        return backend(model).model_to_optimizer_map[index(v)]
+        return _moi_optimizer_index(backend(model), index(v))
     end
 end
 
+"""
+    optimizer_index(cr::ConstraintRef{Model})::MOI.ConstraintIndex
+
+Return the index of the constraint that corresponds to `cr` in the optimizer
+model. It throws [`NoOptimizer`](@ref) if no optimizer is set and throws an
+`ErrorException` if the optimizer is set but is not attached or if the
+constraint is bridged.
+"""
 function optimizer_index(cr::ConstraintRef{Model})
     if mode(cr.model) == DIRECT
         return index(cr)
     else
-        @assert backend(cr.model).state == MOIU.ATTACHED_OPTIMIZER
-        return backend(cr.model).model_to_optimizer_map[index(cr)]
+        return _moi_optimizer_index(backend(cr.model), index(cr))
     end
 end
 
+"""
+    index(cr::ConstraintRef)::MOI.ConstraintIndex
+
+Return the index of the constraint that corresponds to `cr` in the MOI backend.
+"""
 index(cr::ConstraintRef) = cr.index
 
 """
@@ -515,8 +559,16 @@ A result attribute cannot be queried before [`optimize!`](@ref) is called.
 """
 struct OptimizeNotCalled <: Exception end
 
+"""
+    struct NoOptimizer <: Exception end
+
+No optimizer is set. The optimizer can be provided at the [`Model`](@ref)
+constructor or at the [`optimize!`](@ref) call with [`with_optimizer`](@ref).
+"""
+struct NoOptimizer <: Exception end
+
 # Throws an error if `optimize!` has not been called, i.e., if there is no
-# optimizer attached or if the termination statis is `MOI.OPTIMIZE_NOT_CALLED`.
+# optimizer attached or if the termination status is `MOI.OPTIMIZE_NOT_CALLED`.
 function _moi_get_result(model::MOI.ModelLike, args...)
     if MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED
         throw(OptimizeNotCalled())
@@ -524,8 +576,9 @@ function _moi_get_result(model::MOI.ModelLike, args...)
     return MOI.get(model, args...)
 end
 function _moi_get_result(model::MOIU.CachingOptimizer, args...)
-    if MOIU.state(model) == MOIU.NO_OPTIMIZER ||
-       MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED
+    if MOIU.state(model) == MOIU.NO_OPTIMIZER
+        throw(NoOptimizer())
+    elseif MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED
         throw(OptimizeNotCalled())
     end
     return MOI.get(model, args...)

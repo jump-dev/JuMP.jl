@@ -631,4 +631,7 @@ is_binary
 set_binary
 unset_binary
 BinaryRef
+
+index(::VariableRef)
+optimizer_index(::VariableRef)
 ```
