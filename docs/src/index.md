@@ -9,15 +9,13 @@
 ```
 
 !!! warning
-    This documentation is for the development branch of JuMP. JuMP is undergoing
-    a [major transition](https://discourse.julialang.org/t/mathoptinterface-and-upcoming-breaking-changes-in-jump-0-19)
-    to MathOptInterface. The development version is beta quality and the
-    documentation has TODOs remaining before the release. Please provide
-    feedback and file issues if you use this branch.
-
-    The [NEWS.md](https://github.com/JuliaOpt/JuMP.jl/blob/master/NEWS.md) file
-    contains a comprehensive list of the changes between JuMP 0.18 and JuMP 0.19
-    to aid users updating their existing models.
+    Between versions 0.18 and 0.19, JuMP underwent a major transition in its
+    underlying solver abstraction API (from MathProgBase to MathOptInterface).
+    See [NEWS.md](https://github.com/JuliaOpt/JuMP.jl/blob/master/NEWS.md) for
+    a comprehensive list of changes between the two versions, many of which
+    are breaking. This documentation is for JuMP/MathOptInterface.
+    For the documentation of JuMP 0.18, see
+    [here](http://www.juliaopt.org/JuMP.jl/0.18/).
 
 [JuMP](https://github.com/JuliaOpt/JuMP.jl) is a domain-specific modeling
 language for [mathematical
