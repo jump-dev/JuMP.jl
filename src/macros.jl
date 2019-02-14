@@ -906,13 +906,12 @@ end
 Set the objective sense to `sense` and objective function to `func`. The
 objective sense can be either `Min`, `Max`, `MathOptInterface.MIN_SENSE`,
 `MathOptInterface.MAX_SENSE` or `MathOptInterface.FEASIBILITY_SENSE`; see
-[`MathOptInterface.ObjectiveSense`](http://www.juliaopt.org/MathOptInterface.jl/v0.6/apireference.html#MathOptInterface.ObjectiveSense).
+[`MathOptInterface.ObjectiveSense`](http://www.juliaopt.org/MathOptInterface.jl/v0.8/apireference.html#MathOptInterface.ObjectiveSense).
 In order to set the sense programatically, i.e., when `sense` is a Julia
 variable whose value is the sense, one of the three
-`MathOptInterface.ObjectiveSense` should be used. Using the symbols `:Min` or
-`:Max` is not supported anymore (it was supported up to JuMP v0.18). The
-function can either be a single JuMP variable, an affine expression of JuMP
-variables or a quadratic expression of JuMP variables.
+`MathOptInterface.ObjectiveSense` values should be used. The function `func` can
+be a single JuMP variable, an affine expression of JuMP variables or a quadratic
+expression of JuMP variables.
 
 ## Examples
 
