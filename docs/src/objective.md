@@ -2,7 +2,7 @@ Objective
 =========
 
 This page describes macros and functions related to linear and quadratic
-objective functions, unless otherwise indicated. For nonlinear objective
+objective functions only, unless otherwise indicated. For nonlinear objective
 functions, see [Nonlinear Modeling](@ref).
 
 Use the [`@objective`](@ref) macro to set linear and quadratic objective
