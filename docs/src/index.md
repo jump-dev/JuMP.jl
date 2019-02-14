@@ -10,7 +10,9 @@
 
 !!! warning
     Between versions 0.18 and 0.19, JuMP underwent a major transition in its
-    underlying solver abstraction API (from MathProgBase to MathOptInterface).
+    underlying solver abstraction API, from
+    [MathProgBase](https://github.com/JuliaOpt/MathProgBase.jl) to
+    [MathOptInterface](https://github.com/JuliaOpt/MathOptInterface.jl).
     See [NEWS.md](https://github.com/JuliaOpt/JuMP.jl/blob/master/NEWS.md) for
     a comprehensive list of changes between the two versions, many of which
     are breaking. This documentation is for JuMP/MathOptInterface.
