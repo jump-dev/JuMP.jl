@@ -220,7 +220,17 @@ function model_string(print_mode, model::AbstractModel)
     end
     str *= eol
     str *= ijl ? "\\text{Subject to} \\quad" : "Subject to" * eol
-    str *= constraints_string(print_mode, model, sep, eol)
+    constraints = constraints_string(print_mode, model)
+    if print_mode == REPLMode
+        constraints = map(str -> replace(str, '\n' => eol * sep), constraints)
+    end
+    if !isempty(constraints)
+        str *= sep
+    end
+    str *= join(constraints, eol * sep)
+    if !isempty(constraints)
+        str *= eol
+    end
     if ijl
         str = "\\begin{alignat*}{1}" * str * "\\end{alignat*}\n"
     end
@@ -259,12 +269,7 @@ end
 #------------------------------------------------------------------------
 ## VariableRef
 #------------------------------------------------------------------------
-function Base.show(io::IO, v::AbstractVariableRef)
-    print(io, function_string(REPLMode, v))
-end
-function Base.show(io::IO, ::MIME"text/latex", v::AbstractVariableRef)
-    print(io, _wrap_in_math_mode(function_string(IJuliaMode, v)))
-end
+
 function function_string(::Type{REPLMode}, v::AbstractVariableRef)
     var_name = name(v)
     if !isempty(var_name)
@@ -283,10 +288,9 @@ function function_string(::Type{IJuliaMode}, v::AbstractVariableRef)
     end
 end
 
-Base.show(io::IO, a::GenericAffExpr) = print(io, function_string(REPLMode, a))
-function Base.show(io::IO, ::MIME"text/latex", a::GenericAffExpr)
-    print(io, _wrap_in_math_mode(function_string(IJuliaMode, a)))
-end
+#------------------------------------------------------------------------
+## GenericAffExpr
+#------------------------------------------------------------------------
 
 function function_string(mode, a::GenericAffExpr, show_constant=true)
     # If the expression is empty, return the constant (or 0)
@@ -326,10 +330,6 @@ end
 #------------------------------------------------------------------------
 ## GenericQuadExpr
 #------------------------------------------------------------------------
-Base.show(io::IO, q::GenericQuadExpr) = print(io, function_string(REPLMode, q))
-function Base.show(io::IO, ::MIME"text/latex", q::GenericQuadExpr)
-    print(io, _wrap_in_math_mode(function_string(IJuliaMode, q)))
-end
 
 function function_string(mode, q::GenericQuadExpr)
     length(quad_terms(q)) == 0 && return function_string(mode, q.aff)
@@ -398,26 +398,25 @@ function show_constraints_summary(io::IO, model::Model)
 end
 
 """
-    constraints_string(print_mode, model::AbstractModel, sep, eol)::String
+    constraints_string(print_mode, model::AbstractModel)::Vector{String}
 
-Return a `String` describing the constraints of the model, each on a line
-starting with `sep` and ending with `eol` (which already contains `\n`).
+Return a list of `String`s describing each constraint of the model.
 """
-function constraints_string(print_mode, model::Model, sep, eol)
-    str = ""
+function constraints_string(print_mode, model::Model)
+    strings = String[]
     for (F, S) in list_of_constraint_types(model)
         for cref in all_constraints(model, F, S)
             con = constraint_object(cref)
-            str *= sep * constraint_string(print_mode, con) * eol
+            push!(strings, constraint_string(print_mode, con))
         end
     end
     if model.nlp_data !== nothing
         for nl_constraint in model.nlp_data.nlconstr
-            str *= sep * nl_constraint_string(model, print_mode, nl_constraint)
-            str *= eol
+            push!(strings,
+                  nl_constraint_string(model, print_mode, nl_constraint))
         end
     end
-    return str
+    return strings
 end
 
 ## Notes for extensions
@@ -445,8 +444,50 @@ Return a `String` representing the function `func` using print mode
 """
 function function_string end
 
+function Base.show(io::IO, f::AbstractJuMPScalar)
+    print(io, function_string(REPLMode, f))
+end
+function Base.show(io::IO, ::MIME"text/latex", f::AbstractJuMPScalar)
+    print(io, _wrap_in_math_mode(function_string(IJuliaMode, f)))
+end
+
 function function_string(print_mode, vector::Vector{<:AbstractJuMPScalar})
     return "[" * join(function_string.(print_mode, vector), ", ") * "]"
+end
+
+function function_string(::Type{REPLMode},
+                         A::AbstractMatrix{<:AbstractJuMPScalar})
+    str = sprint(show, MIME"text/plain"(), A)
+    lines = split(str, '\n')
+    # We drop the first line with the signature "m×n Array{...}:"
+    lines = lines[2:end]
+    # We replace the first space by an opening `[`
+    lines[1] = '[' * lines[1][2:end]
+    for i in 1:length(lines)
+        lines[i] = lines[i] * (i == length(lines) ? ']' : ';')
+    end
+    return join(lines, '\n')
+end
+
+function function_string(print_mode::Type{IJuliaMode},
+                         A::AbstractMatrix{<:AbstractJuMPScalar})
+    str = sprint(show, MIME"text/plain"(), A)
+    str = "\\begin{bmatrix}\n"
+    for i in 1:size(A, 1)
+        line = ""
+        for j in 1:size(A, 2)
+            if j != 1
+                line *= " & "
+            end
+            if A isa Symmetric && i > j
+                line *= "\\cdot"
+            else
+                line *= function_string(print_mode, A[i, j])
+            end
+        end
+        str *= line * "\\\\\n"
+    end
+    return str * "\\end{bmatrix}"
 end
 
 """
@@ -457,7 +498,8 @@ Return a `String` representing the function of the constraint `constraint`
 using print mode `print_mode`.
 """
 function function_string(print_mode, constraint::AbstractConstraint)
-    return function_string(print_mode, jump_function(constraint))
+    f = reshape_vector(jump_function(constraint), shape(constraint))
+    return function_string(print_mode, f)
 end
 
 function in_set_string(print_mode, set::MOI.LessThan)
@@ -486,13 +528,12 @@ in_set_string(print_mode, ::MOI.Integer) = "integer"
 # regular text in math mode which looks a bit awkward.
 """
     in_set_string(print_mode::Type{<:JuMP.PrintMode},
-                  set::Union{JuMP.AbstractJuMPScalar,
-                             Vector{<:JuMP.AbstractJuMPScalar}})
+                  set::Union{PSDCone, MOI.AbstractSet})
 
 Return a `String` representing the membership to the set `set` using print mode
 `print_mode`.
 """
-function in_set_string(print_mode, set::MOI.AbstractSet)
+function in_set_string(print_mode, set::Union{PSDCone, MOI.AbstractSet})
     return string(_math_symbol(print_mode, :in), " ", set)
 end
 
@@ -504,13 +545,20 @@ Return a `String` representing the membership to the set of the constraint
 `constraint` using print mode `print_mode`.
 """
 function in_set_string(print_mode, constraint::AbstractConstraint)
-    return in_set_string(print_mode, moi_set(constraint))
+    set = reshape_set(moi_set(constraint), shape(constraint))
+    return in_set_string(print_mode, set)
 end
 
 function constraint_string(print_mode, constraint_object::AbstractConstraint)
     func_str = function_string(print_mode, constraint_object)
     in_set_str = in_set_string(print_mode, constraint_object)
-    return func_str * " " * in_set_str
+    if print_mode == REPLMode
+        lines = split(func_str, '\n')
+        lines[1 + div(length(lines), 2)] *= " " * in_set_str
+        return join(lines, '\n')
+    else
+        return func_str * " " * in_set_str
+    end
 end
 function constraint_string(print_mode, constraint_name,
                            constraint_object::AbstractConstraint)

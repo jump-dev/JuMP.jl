@@ -759,8 +759,19 @@ julia> a = [x 2x
 julia> b = [1 2
             3 4];
 
-julia> @SDconstraint(model, a ⪰ b)
-[x - 1, -3, 2 x - 2, x - 4] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)
+julia> cref = @SDconstraint(model, a ⪰ b)
+[x - 1  2 x - 2;
+ -3     x - 4  ] ∈ PSDCone()
+
+julia> jump_function(constraint_object(cref))
+4-element Array{GenericAffExpr{Float64,VariableRef},1}:
+ x - 1
+ -3
+ 2 x - 2
+ x - 4
+
+julia> moi_set(constraint_object(cref))
+MathOptInterface.PositiveSemidefiniteConeSquare(2)
 ```
 In the set `PositiveSemidefiniteConeSquare(2)` in the last output, `Square`
 means that the matrix is passed as a square matrix as the corresponding

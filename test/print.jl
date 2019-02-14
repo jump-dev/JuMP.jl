@@ -12,7 +12,7 @@
 #############################################################################
 using MathOptInterface
 using JuMP
-using Test
+using LinearAlgebra, Test
 import JuMP.REPLMode, JuMP.IJuliaMode
 
 # Helper function to test IO methods work correctly
@@ -367,6 +367,10 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @constraint(model_1, a + b - 10c - 2x + c1 <= 1)
         @constraint(model_1, a*b <= 2)
         @constraint(model_1, [1 - a; u] in SecondOrderCone())
+        @constraint(model_1, [a b; c x] in PSDCone())
+        @constraint(model_1, Symmetric([a b; b x]) in PSDCone())
+        @constraint(model_1, [a, b, c] in MOI.PositiveSemidefiniteConeTriangle(2))
+        @constraint(model_1, [a, b, c, x] in MOI.PositiveSemidefiniteConeSquare(2))
 
         VariableType = typeof(a)
 
@@ -392,6 +396,12 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
      c1 $le 1.0
      a + b - 10 c - 2 x + c1 $le 1.0
      a*b $le 2.0
+     [a  b;
+      b  x] $inset PSDCone()
+     [a, b, c] $inset MathOptInterface.PositiveSemidefiniteConeTriangle(2)
+     [a  b;
+      c  x] $inset PSDCone()
+     [a, b, c, x] $inset MathOptInterface.PositiveSemidefiniteConeSquare(2)
      [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
     """, repl=:print)
 
@@ -407,6 +417,8 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     `$VariableType`-in-`MathOptInterface.LessThan{Float64}`: 4 constraints
     `GenericAffExpr{Float64,$VariableType}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
     `GenericQuadExpr{Float64,$VariableType}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+    `Array{$VariableType,1}`-in-`MathOptInterface.PositiveSemidefiniteConeTriangle`: 2 constraints
+    `Array{$VariableType,1}`-in-`MathOptInterface.PositiveSemidefiniteConeSquare`: 2 constraints
     `Array{GenericAffExpr{Float64,$VariableType},1}`-in-`MathOptInterface.SecondOrderCone`: 1 constraint
     Model mode: AUTOMATIC
     CachingOptimizer state: NO_OPTIMIZER
@@ -434,6 +446,16 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
      & c1 \\leq 1.0\\\\
      & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\
      & a\\times b \\leq 2.0\\\\
+     & \\begin{bmatrix}
+    a & b\\\\
+    \\cdot & x\\\\
+    \\end{bmatrix} \\in PSDCone()\\\\
+     & [a, b, c] \\in MathOptInterface.PositiveSemidefiniteConeTriangle(2)\\\\
+     & \\begin{bmatrix}
+    a & b\\\\
+    c & x\\\\
+    \\end{bmatrix} \\in PSDCone()\\\\
+     & [a, b, c, x] \\in MathOptInterface.PositiveSemidefiniteConeSquare(2)\\\\
      & [-a + 1, u_{1}, u_{2}, u_{3}] \\in MathOptInterface.SecondOrderCone(4)\\\\
     \\end{alignat*}
     """)

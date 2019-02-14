@@ -492,7 +492,8 @@ julia> @variable(model, x)
 x
 
 julia> @SDconstraint(model, [x 2x; 3x 4x] >= ones(2, 2))
-[x - 1, 3 x - 1, 2 x - 1, 4 x - 1] ∈ MathOptInterface.PositiveSemidefiniteConeSquare(2)
+[x - 1    2 x - 1;
+ 3 x - 1  4 x - 1] ∈ PSDCone()
 ```
 
 Solvers supporting such constraints usually expect to be given a matrix that
@@ -518,14 +519,25 @@ follows:
 julia> using LinearAlgebra
 
 julia> @constraint(model, Symmetric([x 2x; 2x 4x] - ones(2, 2)) in PSDCone())
-[x - 1, 2 x - 1, 4 x - 1] ∈ MathOptInterface.PositiveSemidefiniteConeTriangle(2)
+[x - 1    2 x - 1;
+ 2 x - 1  4 x - 1] ∈ PSDCone()
 ```
 
 Note that the lower triangular entries are silently ignored even if they are
 different so use it with caution:
 ```jldoctest con_psd
-julia> @constraint(model, Symmetric([x 2x; 3x 4x]) in PSDCone())
-[x, 2 x, 4 x] ∈ MathOptInterface.PositiveSemidefiniteConeTriangle(2)
+julia> cref = @constraint(model, Symmetric([x 2x; 3x 4x]) in PSDCone())
+[x    2 x;
+ 2 x  4 x] ∈ PSDCone()
+
+julia> jump_function(constraint_object(cref))
+3-element Array{GenericAffExpr{Float64,VariableRef},1}:
+ x
+ 2 x
+ 4 x
+
+julia> moi_set(constraint_object(cref))
+MathOptInterface.PositiveSemidefiniteConeTriangle(2)
 ```
 
 ## Constraint modifications
