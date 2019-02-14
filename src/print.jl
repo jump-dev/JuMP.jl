@@ -400,7 +400,7 @@ end
 """
     constraints_string(print_mode, model::AbstractModel)::Vector{String}
 
-Return a list of `String`s describing each constraints of the model.
+Return a list of `String`s describing each constraint of the model.
 """
 function constraints_string(print_mode, model::Model)
     strings = String[]
