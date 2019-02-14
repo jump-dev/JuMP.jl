@@ -41,7 +41,7 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 **See [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md) for
 a list of the significant breaking changes in the upcoming JuMP 0.19 release
-and instructions on how to try the beta version.**
+and for instructions on how to try the beta version.**
 
 **Latest Release**: 0.18.4 (`release-0.18` branch)
   * [Documentation](http://www.juliaopt.org/JuMP.jl/0.18/)
