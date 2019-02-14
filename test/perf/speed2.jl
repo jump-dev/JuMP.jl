@@ -13,12 +13,9 @@ include("../solvers.jl")
 
 using JuMP
 using Random
-@static if VERSION >= v"0.7.0-DEV.3406"
-    srand(seed) = Random.seed!(seed)
-end
 
 function pMedian(solver, numFacility::Int,numCustomer::Int,numLocation::Int)
-    srand(10)
+    Random.seed!(10)
     customerLocations = [rand(1:numLocation) for a = 1:numCustomer ]
 
     buildTime = @elasped begin
