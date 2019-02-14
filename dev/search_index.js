@@ -505,11 +505,27 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "variables/#JuMP.index-Tuple{VariableRef}",
+    "page": "Variables",
+    "title": "JuMP.index",
+    "category": "method",
+    "text": "index(v::VariableRef)::MOI.VariableIndex\n\nReturn the index of the variable that corresponds to v in the MOI backend.\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.optimizer_index-Tuple{VariableRef}",
+    "page": "Variables",
+    "title": "JuMP.optimizer_index",
+    "category": "method",
+    "text": "optimizer_index(v::VariableRef)::MOI.VariableIndex\n\nReturn the index of the variable that corresponds to v in the optimizer model. It throws NoOptimizer if no optimizer is set and throws an ErrorException if the optimizer is set but is not attached.\n\n\n\n\n\n"
+},
+
+{
     "location": "variables/#Reference-1",
     "page": "Variables",
     "title": "Reference",
     "category": "section",
-    "text": "@variable\nowner_model\nVariableRef\nall_variables\n\nhas_lower_bound\nlower_bound\nset_lower_bound\ndelete_lower_bound\n\nhas_upper_bound\nupper_bound\nset_upper_bound\ndelete_upper_bound\n\nis_fixed\nfix_value\nfix\nunfix\n\nis_integer\nset_integer\nunset_integer\nIntegerRef\n\nis_binary\nset_binary\nunset_binary\nBinaryRef"
+    "text": "@variable\nowner_model\nVariableRef\nall_variables\n\nhas_lower_bound\nlower_bound\nset_lower_bound\ndelete_lower_bound\n\nhas_upper_bound\nupper_bound\nset_upper_bound\ndelete_upper_bound\n\nis_fixed\nfix_value\nfix\nunfix\n\nis_integer\nset_integer\nunset_integer\nIntegerRef\n\nis_binary\nset_binary\nunset_binary\nBinaryRef\n\nindex(::VariableRef)\noptimizer_index(::VariableRef)"
 },
 
 {
@@ -1073,11 +1089,27 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "constraints/#JuMP.index-Tuple{ConstraintRef}",
+    "page": "Constraints",
+    "title": "JuMP.index",
+    "category": "method",
+    "text": "index(cr::ConstraintRef)::MOI.ConstraintIndex\n\nReturn the index of the constraint that corresponds to cr in the MOI backend.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.optimizer_index-Tuple{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape where C}",
+    "page": "Constraints",
+    "title": "JuMP.optimizer_index",
+    "category": "method",
+    "text": "optimizer_index(cr::ConstraintRef{Model})::MOI.ConstraintIndex\n\nReturn the index of the constraint that corresponds to cr in the optimizer model. It throws NoOptimizer if no optimizer is set and throws an ErrorException if the optimizer is set but is not attached or if the constraint is bridged.\n\n\n\n\n\n"
+},
+
+{
     "location": "constraints/#Reference-1",
     "page": "Constraints",
     "title": "Reference",
     "category": "section",
-    "text": "@constraint\n@SDconstraint\nSecondOrderCone\nRotatedSecondOrderCone\nPSDCone\nshadow_price\nset_coefficient\nis_valid\nJuMP.delete\nLowerBoundRef\nUpperBoundRef\nFixRef\nConstraintRef\nlist_of_constraint_types\nall_constraints\nnum_constraints\nconstraint_object\nAbstractConstraint\nScalarConstraint\nVectorConstraint"
+    "text": "@constraint\n@SDconstraint\nSecondOrderCone\nRotatedSecondOrderCone\nPSDCone\nshadow_price\nset_coefficient\nis_valid\nJuMP.delete\nLowerBoundRef\nUpperBoundRef\nFixRef\nConstraintRef\nlist_of_constraint_types\nall_constraints\nnum_constraints\nconstraint_object\nAbstractConstraint\nScalarConstraint\nVectorConstraint\nindex(::ConstraintRef)\noptimizer_index(::ConstraintRef{Model})"
 },
 
 {
@@ -1169,11 +1201,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "solvers/#JuMP.NoOptimizer",
+    "page": "Solvers",
+    "title": "JuMP.NoOptimizer",
+    "category": "type",
+    "text": "struct NoOptimizer <: Exception end\n\nNo optimizer is set. The optimizer can be provided at the Model constructor or at the optimize! call with with_optimizer.\n\n\n\n\n\n"
+},
+
+{
     "location": "solvers/#JuMP.optimize!",
     "page": "Solvers",
     "title": "JuMP.optimize!",
     "category": "function",
-    "text": "optimize!(model::Model,\n          optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;\n          ignore_optimize_hook=(model.optimize_hook === nothing))\n\nOptimize the model. If optimizer_factory is not nothing, it first sets the optimizer to a new one created using the optimizer factory. The factory can be created using the with_optimizer function.\n\nExamples\n\nThe optimizer factory can either be given in the Model constructor as follows:\n\nmodel = Model(with_optimizer(GLPK.Optimizer))\n# ...fill model with variables, constraints and objectives...\n# Solve the model with GLPK\noptimize!(model)\n\nor in the optimize! call as follows:\n\nmodel = Model()\n# ...fill model with variables, constraints and objectives...\n# Solve the model with GLPK\noptimize!(model, with_optimizer(GLPK.Optimizer))\n\n\n\n\n\n"
+    "text": "optimize!(model::Model,\n          optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;\n          ignore_optimize_hook=(model.optimize_hook === nothing))\n\nOptimize the model. If optimizer_factory is not nothing, it first sets the optimizer to a new one created using the optimizer factory. The factory can be created using the with_optimizer function. If optimizer_factory is nothing and no optimizer was set to model before calling this function, a NoOptimizer error is thrown.\n\nExamples\n\nThe optimizer factory can either be given in the Model constructor as follows:\n\nmodel = Model(with_optimizer(GLPK.Optimizer))\n# ...fill model with variables, constraints and objectives...\n# Solve the model with GLPK\noptimize!(model)\n\nor in the optimize! call as follows:\n\nmodel = Model()\n# ...fill model with variables, constraints and objectives...\n# Solve the model with GLPK\noptimize!(model, with_optimizer(GLPK.Optimizer))\n\n\n\n\n\n"
 },
 
 {
@@ -1197,7 +1237,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Solvers",
     "title": "Automatic and Manual modes",
     "category": "section",
-    "text": "In AUTOMATIC and MANUAL modes, two MOI layers are automatically applied to the optimizer:CachingOptimizer: maintains a cache of the model so that when the optimizer does not support an incremental change to the model, the optimizer\'s internal model can be discarded and restored from the cache just before optimization. The CachingOptimizer has two different modes: AUTOMATIC and MANUAL corresponding to the two JuMP modes with the same names.\nLazyBridgeOptimizer (this can be disabled using the bridge_constraints keyword argument to Model constructor): when a constraint added is not supported by the optimizer, it attempts to transform the constraint into an equivalent form, possibly adding new variables and constraints that are supported by the optimizer. The applied transformations are selected among known recipes which are called bridges. A few default bridges are defined in MOI but new ones can be defined and added to the LazyBridgeOptimizer used by JuMP.See the MOI documentation for more details on these two MOI layers.To attach an optimizer to a JuMP model, JuMP needs to create a new empty optimizer instance. New optimizer instances can be obtained using an OptimizerFactory that can be created using the with_optimizer function:with_optimizerThe factory can be provided either at model construction time or at optimize! time:JuMP.optimize!New JuMP models are created using the Model constructor:Model()\nModel(::JuMP.OptimizerFactory)# TODO: how to control the caching optimizer states"
+    "text": "In AUTOMATIC and MANUAL modes, two MOI layers are automatically applied to the optimizer:CachingOptimizer: maintains a cache of the model so that when the optimizer does not support an incremental change to the model, the optimizer\'s internal model can be discarded and restored from the cache just before optimization. The CachingOptimizer has two different modes: AUTOMATIC and MANUAL corresponding to the two JuMP modes with the same names.\nLazyBridgeOptimizer (this can be disabled using the bridge_constraints keyword argument to Model constructor): when a constraint added is not supported by the optimizer, it attempts to transform the constraint into an equivalent form, possibly adding new variables and constraints that are supported by the optimizer. The applied transformations are selected among known recipes which are called bridges. A few default bridges are defined in MOI but new ones can be defined and added to the LazyBridgeOptimizer used by JuMP.See the MOI documentation for more details on these two MOI layers.To attach an optimizer to a JuMP model, JuMP needs to create a new empty optimizer instance. New optimizer instances can be obtained using an OptimizerFactory that can be created using the with_optimizer function:with_optimizerThe factory can be provided either at model construction time or at optimize! time:NoOptimizer\nJuMP.optimize!New JuMP models are created using the Model constructor:Model()\nModel(::JuMP.OptimizerFactory)# TODO: how to control the caching optimizer states"
 },
 
 {
@@ -1277,7 +1317,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Query Solutions",
     "title": "Obtaining solutions",
     "category": "section",
-    "text": "Provided the primal status is not MOI.NO_SOLUTION, the primal solution can be obtained by calling value. For the dual solution, the function is dual. Calling has_values for the primal status and has_duals for the dual solution is an equivalent way to check whether the status is MOI.NO_SOLUTION. It is important to note that if has_values or has_duals  return false, calls to value and dual might throw an error  or return arbitrary values.The container type (e.g., scalar, vector, or matrix) of the returned solution (primal or dual) depends on the type of the variable or constraint. See AbstractShape and dual_shape for details.To call value or dual on containers of VariableRef or ConstraintRef, use the broadcast syntax, e.g., value.(x).The objective value of a solved problem can be obtained via objective_value. The best known bound on the optimal objective value can be obtained via objective_bound.The following is a recommended workflow for solving a model and querying the solution: using JuMP\nmodel = Model()\n@variable(model, x[1:10] >= 0)\n# ... other constraints ...\noptimize!(model)\n\nif termination_status(model) == MOI.OPTIMAL\n    optimal_solution = value.(x)\n    optimal_objective = objective_value(model)\nelseif termination_status(model) == MOI.TIME_LIMIT && has_values(model)\n    suboptimal_solution = value.(x)\n    suboptimal_objective = objective_value(model)\nelse\n    error(\"The model was not solved correctly.\")\nend# TODO: How to accurately measure the solve time."
+    "text": "Provided the primal status is not MOI.NO_SOLUTION, the primal solution can be obtained by calling value. For the dual solution, the function is dual. Calling has_values for the primal status and has_duals for the dual solution is an equivalent way to check whether the status is MOI.NO_SOLUTION. It is important to note that if has_values or has_duals return false, calls to value and dual might throw an error or return arbitrary values.The container type (e.g., scalar, vector, or matrix) of the returned solution (primal or dual) depends on the type of the variable or constraint. See AbstractShape and dual_shape for details.To call value or dual on containers of VariableRef or ConstraintRef, use the broadcast syntax, e.g., value.(x).The objective value of a solved problem can be obtained via objective_value. The best known bound on the optimal objective value can be obtained via objective_bound.The following is a recommended workflow for solving a model and querying the solution: using JuMP\nmodel = Model()\n@variable(model, x[1:10] >= 0)\n# ... other constraints ...\noptimize!(model)\n\nif termination_status(model) == MOI.OPTIMAL\n    optimal_solution = value.(x)\n    optimal_objective = objective_value(model)\nelseif termination_status(model) == MOI.TIME_LIMIT && has_values(model)\n    suboptimal_solution = value.(x)\n    suboptimal_objective = objective_value(model)\nelse\n    error(\"The model was not solved correctly.\")\nend# TODO: How to accurately measure the solve time."
 },
 
 {
@@ -1337,6 +1377,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "solutions/#JuMP.OptimizeNotCalled",
+    "page": "Query Solutions",
+    "title": "JuMP.OptimizeNotCalled",
+    "category": "type",
+    "text": "struct OptimizeNotCalled <: Exception end\n\nA result attribute cannot be queried before optimize! is called.\n\n\n\n\n\n"
+},
+
+{
     "location": "solutions/#MathOptInterface.optimize!",
     "page": "Query Solutions",
     "title": "MathOptInterface.optimize!",
@@ -1349,7 +1397,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Query Solutions",
     "title": "Reference",
     "category": "section",
-    "text": "JuMP.termination_status\nJuMP.primal_status\nJuMP.has_values\nJuMP.value\nJuMP.dual_status\nJuMP.has_duals\nJuMP.dual\nMOI.optimize!"
+    "text": "JuMP.termination_status\nJuMP.primal_status\nJuMP.has_values\nJuMP.value\nJuMP.dual_status\nJuMP.has_duals\nJuMP.dual\nOptimizeNotCalled\nMOI.optimize!"
 },
 
 {
