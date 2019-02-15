@@ -39,13 +39,13 @@ It is recommended to first check whether it is possible to extend one of these
 three macros before creating a new one so as to leverage all their features and
 provide a more consistent interface to the user.
 
-## Extending the `@variable` macro
-
 ```@meta
+### Extending the `@variable` macro
+
 # TODO: parse/build/add
 ```
 
-## Extending the `@constraint` macro
+### Extending the `@constraint` macro
 
 The [`@constraint`](@ref) macro always calls the same three functions:
 * `parse_constraint`: is called at parsing time, it parses the constraint
@@ -59,7 +59,7 @@ The [`@constraint`](@ref) macro always calls the same three functions:
 Adding methods to these functions is the recommended way to extend the
 [`@constraint`](@ref) macro.
 
-### Adding `parse_constraint` methods
+#### Adding `parse_constraint` methods
 
 ```@meta
 # TODO(Benoît): Detail how `parse_constraint` works and show how `sense_to_set`
@@ -70,7 +70,7 @@ Adding methods to these functions is the recommended way to extend the
 sense_to_set
 ```
 
-### Adding `build_constraint` methods
+#### Adding `build_constraint` methods
 
 There is typically two choices when creating a [`build_constraint`](@ref)
 method, either return an `AbstractConstraint` already supported by the
@@ -82,7 +82,7 @@ model, i.e. `ScalarConstraint` or `VectorConstraint`, or a custom
 build_constraint
 ```
 
-#### Shapes
+##### Shapes
 
 Shapes allow vector constraints, which are represented as flat vectors in MOI,
 to retain a matrix shape at the JuMP level. There is a `shape` field in
@@ -101,22 +101,22 @@ SquareMatrixShape
 SymmetricMatrixShape
 ```
 
-### Adding `add_constraint` methods
+#### Adding `add_constraint` methods
 
-TODO
+```@meta
+# TODO: Introduce `add_constraint`
+```
 
 ```@docs
 add_constraint
 ```
 
-### Adding `parse_constraint` methods
+```@meta
+### Extending the [`@objective`](@ref) macro
 
-TODO
-
-## Extending the [`@objective`](@ref) macro
-
-TODO
+# TODO: Describe how to `@objective` macro by implementing new `JuMP.set_objective_function` methods
 
 ## Defining new JuMP models
 
-TODO
+# TODO: Describe how to create a new JuMP model (similar to `test/JuMPExtension.jl` and StructJuMP).
+```
