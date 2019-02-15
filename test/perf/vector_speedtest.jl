@@ -1,36 +1,37 @@
+using LinearAlgebra
 using JuMP
 
 function test(n::Int)
-    m = Model()
-    a = rand(n,n)
-    @variable(m,x[1:n,1:n])
-    b = rand(n,n,n)
-    @variable(m,y[1:n,1:n,1:n])
+    model = Model()
+    a = rand(n, n)
+    @variable(model, x[1:n, 1:n])
+    b = rand(n, n, n)
+    @variable(model, y[1:n, 1:n, 1:n])
     c = rand(n)
-    @variable(m,z[1:n])
+    @variable(model, z[1:n])
 
     #initialize
-    @constraint(m,sum(c[i]*z[i] for i=1:n)<=0)
+    @constraint(model, sum(c[i] * z[i] for i=1:n) <= 0)
 
     #Vector
-    elapsed = @elapsed @constraint(m,sum(c[i]*z[i] for i=1:n)<=1)
+    elapsed = @elapsed @constraint(model, sum(c[i] * z[i] for i=1:n) <= 1)
     println("Vector with sum(): $(elapsed)")
 
-    elapsed = @elapsed @constraint(m,dot(c,z) <= 1)
+    elapsed = @elapsed @constraint(model, dot(c, z) <= 1)
     println("Vector with vecdot() : $(elapsed)")
 
     #2D Matrix
-    elapsed = @elapsed @constraint(m,sum(a[i,j]*x[i,j] for i=1:n,j=1:n)<=1)
+    elapsed = @elapsed @constraint(model, sum(a[i, j] * x[i, j] for i=1:n, j=1:n) <= 1)
     println("2D Matrix with sum(): $(elapsed)")
 
-    elapsed = @elapsed @constraint(m,dot(a,x)<=1)
+    elapsed = @elapsed @constraint(model, dot(a, x) <= 1)
     println("2D Matrix with bigvecdot(): $(elapsed)")
 
     #3D Matrix
-    elapsed = @elapsed @constraint(m,sum(b[i,j,k]*y[i,j,k] for i=1:n,j=1:n,k=1:n)<=1)
+    elapsed = @elapsed @constraint(model, sum(b[i, j, k] * y[i, j, k] for i=1:n, j=1:n, k=1:n) <= 1)
     println("3D Matrix with sum(): $(elapsed)")
 
-    elapsed = @elapsed @constraint(m,dot(b,y)<=1)
+    elapsed = @elapsed @constraint(model, dot(b, y) <= 1)
     println("3D Matrix with vecdot(): $(elapsed)")
     return 0
 end
