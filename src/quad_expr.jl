@@ -126,18 +126,10 @@ function Base.eltype(qti::QuadTermIterator{GenericQuadExpr{C, V}}
     return Tuple{C, V, V}
 end
 
-function add_to_expression!(quad::GenericQuadExpr{C,V}, new_coef::C, new_var1::V, new_var2::V) where {C,V}
-    # Node: OrderedDict updates the *key* as well. That is, if there was a
-    # previous value for UnorderedPair(new_var2, new_var1), it's key will now be
-    # UnorderedPair(new_var1, new_var2) (because these are defined as equal).
-    key = UnorderedPair(new_var1, new_var2)
-    _add_or_set!(quad.terms, key, new_coef)
-    return quad
-end
+# With one factor
 
-function add_to_expression!(quad::GenericQuadExpr{C, V}, new_coef::C, new_var::V) where {C,V}
-    add_to_expression!(quad.aff, new_coef, new_var)
-    return quad
+function add_to_expression!(quad::GenericQuadExpr{C}, other::C) where C
+    return add_to_expression!(quad.aff, other)
 end
 
 function add_to_expression!(q::GenericQuadExpr{T,S}, other::GenericAffExpr{T,S}) where {T,S}
@@ -151,8 +143,110 @@ function add_to_expression!(q::GenericQuadExpr{T,S}, other::GenericQuadExpr{T,S}
     return q
 end
 
-function add_to_expression!(quad::GenericQuadExpr{C}, other::C) where C
-    return add_to_expression!(quad.aff, other)
+# With two factors
+
+function add_to_expression!(quad::GenericQuadExpr{C, V},
+                            new_coef::Union{C, Real},
+                            new_aff::Union{V, GenericAffExpr{C,V}}) where {C,V}
+    add_to_expression!(quad.aff, new_coef, new_aff)
+    return quad
+end
+
+function add_to_expression!(quad::GenericQuadExpr{C, V},
+                            new_aff::Union{V, GenericAffExpr{C,V}},
+                            new_coef::Union{C, Real}) where {C,V}
+    add_to_expression!(quad.aff, new_aff, new_coef)
+    return quad
+end
+
+function add_to_expression!(quad::GenericQuadExpr{C,V}, coef::Union{C, Real},
+                            other::GenericQuadExpr{C,V}) where {C,V}
+    for (key, term_coef) in other.terms
+        _add_or_set!(quad.terms, key, coef * term_coef)
+    end
+    return add_to_expression!(quad, coef, other.aff)
+end
+
+function add_to_expression!(quad::GenericQuadExpr{C,V},
+                            other::GenericQuadExpr{C,V},
+                            coef::Union{C, Real}) where {C,V}
+    return add_to_expression!(quad, coef, other)
+end
+
+function add_to_expression!(quad::GenericQuadExpr{C,V},
+                            var_1::V, var_2::V) where {C,V}
+    return add_to_expression!(quad, one(C), var_1, var_2)
+end
+
+function add_to_expression!(quad::GenericQuadExpr{C,V},
+                            var::V,
+                            aff::GenericAffExpr{C,V}) where {C,V}
+    for (coef, term_var) in linear_terms(aff)
+        key = UnorderedPair(var, term_var)
+        _add_or_set!(quad.terms, key, coef)
+    end
+    return add_to_expression!(quad, var, aff.constant)
+end
+
+function add_to_expression!(quad::GenericQuadExpr{C,V},
+                            aff::GenericAffExpr{C,V},
+                            var::V) where {C,V}
+    return add_to_expression!(quad, var, aff)
+end
+
+function add_to_expression!(quad::GenericQuadExpr{C,V},
+                            lhs::GenericAffExpr{C,V},
+                            rhs::GenericAffExpr{C,V}) where {C,V}
+    lhs_length = length(linear_terms(lhs))
+    rhs_length = length(linear_terms(rhs))
+
+    # Quadratic terms
+    for (lhscoef, lhsvar) in linear_terms(lhs)
+        for (rhscoef, rhsvar) in linear_terms(rhs)
+            add_to_expression!(quad, lhscoef*rhscoef, lhsvar, rhsvar)
+        end
+    end
+
+    # Try to preallocate space for aff
+    cur = length(linear_terms(quad))
+    if !iszero(lhs.constant) && !iszero(rhs.constant)
+        sizehint!(quad.aff, cur + lhs_length + rhs_length)
+    elseif !iszero(lhs.constant)
+        sizehint!(quad.aff, cur + rhs_length)
+    elseif !iszero(rhs.constant)
+        sizehint!(quad.aff, cur + lhs_length)
+    end
+
+    # [LHS constant] * [RHS linear terms]
+    if !iszero(lhs.constant)
+        c = lhs.constant
+        for (rhscoef, rhsvar) in linear_terms(rhs)
+            add_to_expression!(quad.aff, c*rhscoef, rhsvar)
+        end
+    end
+
+    # [RHS constant] * [LHS linear terms]
+    if !iszero(rhs.constant)
+        c = rhs.constant
+        for (lhscoef, lhsvar) in linear_terms(lhs)
+            add_to_expression!(quad.aff, c*lhscoef, lhsvar)
+        end
+    end
+
+    quad.aff.constant += lhs.constant * rhs.constant
+
+    return quad
+end
+
+# With three factor
+
+function add_to_expression!(quad::GenericQuadExpr{C,V}, new_coef::C, new_var1::V, new_var2::V) where {C,V}
+    # Node: OrderedDict updates the *key* as well. That is, if there was a
+    # previous value for UnorderedPair(new_var2, new_var1), it's key will now be
+    # UnorderedPair(new_var1, new_var2) (because these are defined as equal).
+    key = UnorderedPair(new_var1, new_var2)
+    _add_or_set!(quad.terms, key, new_coef)
+    return quad
 end
 
 
