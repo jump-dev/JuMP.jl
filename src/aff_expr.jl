@@ -185,10 +185,10 @@ function add_to_expression! end
 
 # TODO: add deprecations for Base.push! and Base.append!
 
-# With one factor
+# With one factor.
 
 function add_to_expression!(aff::GenericAffExpr{C,V},
-                            other::Union{C, Real}) where {C,V}
+                            other::Real) where {C,V}
     aff.constant += other
     return aff
 end
@@ -206,20 +206,20 @@ function add_to_expression!(aff::GenericAffExpr{C,V},
     return aff
 end
 
-# With two factors
+# With two factors.
 
-function add_to_expression!(aff::GenericAffExpr{C,V}, new_coef::Union{C, Real},
+function add_to_expression!(aff::GenericAffExpr{C,V}, new_coef::Real,
                             new_var::V) where {C,V}
     _add_or_set!(aff.terms, new_var, convert(C, new_coef))
     return aff
 end
 
 function add_to_expression!(aff::GenericAffExpr{C,V}, new_var::V,
-                            new_coef::Union{C, Real}) where {C,V}
+                            new_coef::Real) where {C,V}
     return add_to_expression!(aff, new_coef, new_var)
 end
 
-function add_to_expression!(aff::GenericAffExpr{C,V}, coef::Union{C, Real},
+function add_to_expression!(aff::GenericAffExpr{C,V}, coef::Real,
                             other::GenericAffExpr{C,V}) where {C,V}
     sizehint!(aff, length(linear_terms(aff)) + length(linear_terms(other)))
     for (term_coef, var) in linear_terms(other)
@@ -231,7 +231,7 @@ end
 
 function add_to_expression!(aff::GenericAffExpr{C,V},
                             other::GenericAffExpr{C,V},
-                            coef::Union{C, Real}) where {C,V}
+                            coef::Real) where {C,V}
     return add_to_expression!(aff, coef, other)
 end
 
