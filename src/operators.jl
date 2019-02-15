@@ -156,11 +156,7 @@ function Base.:+(lhs::GenericAffExpr{C, V}, rhs::GenericAffExpr{C, V}) where {C,
             operator_warn(owner_model(first(linear_terms(lhs))[2]))
         end
     end
-    result_terms = copy(lhs.terms)
-    # merge() returns a Dict(), so we need to call merge!() instead.
-    # Note: merge!() doesn't appear to call sizehint!(). Is this important?
-    merge!(+, result_terms, rhs.terms)
-    return GenericAffExpr(lhs.constant + rhs.constant, result_terms)
+    return add_to_expression!(copy(lhs), rhs)
 end
 
 function Base.:-(lhs::GenericAffExpr{C, V}, rhs::GenericAffExpr{C, V}) where {C, V<:_JuMPTypes}
@@ -175,44 +171,7 @@ end
 
 function Base.:*(lhs::GenericAffExpr{C, V}, rhs::GenericAffExpr{C, V}) where {C, V<:_JuMPTypes}
     result = zero(GenericQuadExpr{C, V})
-
-    lhs_length = length(linear_terms(lhs))
-    rhs_length = length(linear_terms(rhs))
-
-    # Quadratic terms
-    for (lhscoef, lhsvar) in linear_terms(lhs)
-        for (rhscoef, rhsvar) in linear_terms(rhs)
-            add_to_expression!(result, lhscoef*rhscoef, lhsvar, rhsvar)
-        end
-    end
-
-    # Try to preallocate space for aff
-    if !iszero(lhs.constant) && !iszero(rhs.constant)
-        sizehint!(result.aff, lhs_length + rhs_length)
-    elseif !iszero(lhs.constant)
-        sizehint!(result.aff, rhs_length)
-    elseif !iszero(rhs.constant)
-        sizehint!(result.aff, lhs_length)
-    end
-
-    # [LHS constant] * [RHS linear terms]
-    if !iszero(lhs.constant)
-        c = lhs.constant
-        for (rhscoef, rhsvar) in linear_terms(rhs)
-            add_to_expression!(result.aff, c*rhscoef, rhsvar)
-        end
-    end
-
-    # [RHS constant] * [LHS linear terms]
-    if !iszero(rhs.constant)
-        c = rhs.constant
-        for (lhscoef, lhsvar) in linear_terms(lhs)
-            add_to_expression!(result.aff, c*lhscoef, lhsvar)
-        end
-    end
-
-    result.aff.constant = lhs.constant * rhs.constant
-
+    add_to_expression!(result, lhs, rhs)
     return result
 end
 # GenericAffExpr--GenericQuadExpr
@@ -413,11 +372,10 @@ function _A_mul_B!(ret::AbstractArray{T}, A, B) where {T <: _JuMPTypes}
         q = ret[i, j]
         _sizehint_expr!(q, size(A, 2))
         for k ∈ 1:size(A, 2)
-            tmp = convert(T, A[i, k] * B[k, j])
-            add_to_expression!(q, tmp)
+            add_to_expression!(q, A[i, k], B[k, j])
         end
     end
-    ret
+    return ret
 end
 
 function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B)
@@ -426,11 +384,11 @@ function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCS
     for col ∈ 1:size(A, 2)
         for k ∈ 1:size(ret, 2)
             for j ∈ nzrange(A, col)
-                add_to_expression!(ret[rv[j], k], nzv[j] * B[col, k])
+                add_to_expression!(ret[rv[j], k], nzv[j], B[col, k])
             end
         end
     end
-    ret
+    return ret
 end
 
 function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::AbstractMatrix, B::SparseMatrixCSC)
@@ -442,11 +400,11 @@ function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::AbstractMatrix
             q = ret[multivec_row, col]
             _sizehint_expr!(q, length(idxset))
             for k ∈ idxset
-                add_to_expression!(q, A[multivec_row, rowval[k]] * nzval[k])
+                add_to_expression!(q, A[multivec_row, rowval[k]], nzval[k])
             end
         end
     end
-    ret
+    return ret
 end
 
 # TODO: Implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul).
@@ -471,8 +429,7 @@ function _At_mul_B!(ret::AbstractArray{T}, A, B) where {T <: _JuMPTypes}
         q = ret[i, j]
         _sizehint_expr!(q, size(A, 1))
         for k ∈ 1:size(A, 1)
-            tmp = convert(T, A[k, i] * B[k, j]) # transpose
-            add_to_expression!(q, tmp)
+            add_to_expression!(q, A[k, i], B[k, j]) # transpose
         end
     end
     ret
@@ -517,23 +474,23 @@ function _At_mul_B!(ret::StridedVecOrMat{<:GenericAffOrQuadExpr}, A::SparseMatri
     size(B, 2) == size(ret, 2) || throw(DimensionMismatch())
     nzv = A.nzval
     rv = A.rowval
-    # ret is already filled with zeros by _return_arrayt.
+    # `ret` is already filled with zeros by `_return_arrayt`.
     for k = 1:size(ret, 2)
         @inbounds for col = 1:A.n
             tmp = zero(eltype(ret))
             for j = A.colptr[col]:(A.colptr[col + 1] - 1)
-                tmp += adjoint(nzv[j]) * B[rv[j],k]
+                add_to_expression!(tmp, adjoint(nzv[j]), B[rv[j],k])
             end
-            ret[col,k] += tmp
+            ret[col, k] += tmp
         end
     end
-    ret
+    return ret
 end
 function _At_mul_B(A, B)
     size(A, 1) == size(B, 1) || error("Incompatible sizes")
     ret = _A_mul_B_ret(transpose(A), B)
     _At_mul_B!(ret, A, B)
-    ret
+    return ret
 end
 
 # TODO: Implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul).
@@ -617,7 +574,7 @@ function Base.:-(x::AbstractArray{T}) where {T <: _JuMPTypes}
     for I in eachindex(ret)
         ret[I] = -x[I]
     end
-    ret
+    return ret
 end
 
 ###############################################################################

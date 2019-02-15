@@ -185,8 +185,11 @@ function add_to_expression! end
 
 # TODO: add deprecations for Base.push! and Base.append!
 
-function add_to_expression!(aff::GenericAffExpr{C,V}, new_coef::C, new_var::V) where {C,V}
-    _add_or_set!(aff.terms, new_var, new_coef)
+# With one factor.
+
+function add_to_expression!(aff::GenericAffExpr{C,V},
+                            other::Real) where {C,V}
+    aff.constant += other
     return aff
 end
 
@@ -195,23 +198,48 @@ function add_to_expression!(aff::GenericAffExpr{C,V}, new_var::V) where {C,V}
     return aff
 end
 
-function add_to_expression!(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V}) where {C,V}
+function add_to_expression!(aff::GenericAffExpr{C,V},
+                            other::GenericAffExpr{C,V}) where {C,V}
+    # Note: merge!() doesn't appear to call sizehint!(). Is this important?
     merge!(+, aff.terms, other.terms)
     aff.constant += other.constant
     return aff
 end
 
-function add_to_expression!(aff::GenericAffExpr{C,V}, other::C) where {C,V}
-    aff.constant += other
-    return aff
-end
-function add_to_expression!(aff::GenericAffExpr{C,V}, other::Real) where {C,V}
-    aff.constant += other
+# With two factors.
+
+function add_to_expression!(aff::GenericAffExpr{C,V}, new_coef::Real,
+                            new_var::V) where {C,V}
+    _add_or_set!(aff.terms, new_var, convert(C, new_coef))
     return aff
 end
 
-function Base.isequal(aff::GenericAffExpr{C,V},other::GenericAffExpr{C,V}) where {C,V}
-    return isequal(aff.constant, other.constant) && isequal(aff.terms, other.terms)
+function add_to_expression!(aff::GenericAffExpr{C,V}, new_var::V,
+                            new_coef::Real) where {C,V}
+    return add_to_expression!(aff, new_coef, new_var)
+end
+
+function add_to_expression!(aff::GenericAffExpr{C,V}, coef::Real,
+                            other::GenericAffExpr{C,V}) where {C,V}
+    sizehint!(aff, length(linear_terms(aff)) + length(linear_terms(other)))
+    for (term_coef, var) in linear_terms(other)
+        _add_or_set!(aff.terms, var, coef * term_coef)
+    end
+    aff.constant += coef * other.constant
+    return aff
+end
+
+function add_to_expression!(aff::GenericAffExpr{C,V},
+                            other::GenericAffExpr{C,V},
+                            coef::Real) where {C,V}
+    return add_to_expression!(aff, coef, other)
+end
+
+
+function Base.isequal(aff::GenericAffExpr{C,V},
+                      other::GenericAffExpr{C,V}) where {C,V}
+    return isequal(aff.constant, other.constant) &&
+        isequal(aff.terms, other.terms)
 end
 
 Base.hash(aff::GenericAffExpr, h::UInt) = hash(aff.constant, hash(aff.terms, h))
