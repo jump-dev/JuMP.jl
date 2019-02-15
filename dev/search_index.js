@@ -1781,15 +1781,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Extensions",
     "title": "Extending JuMP macros",
     "category": "section",
-    "text": "In order to provide a convenient syntax for the user to create variables, constraints or set the objective of a JuMP extension, it might be required to use macros similar to @variable, @constraint and @objective. It is recommended to first check whether it is possible to extend one of these three macros before creating a new one so as to leverage all their features and provide a more consistent interface to the user."
-},
-
-{
-    "location": "extensions/#Extending-the-@variable-macro-1",
-    "page": "Extensions",
-    "title": "Extending the @variable macro",
-    "category": "section",
-    "text": "# TODO: parse/build/add"
+    "text": "In order to provide a convenient syntax for the user to create variables, constraints or set the objective of a JuMP extension, it might be required to use macros similar to @variable, @constraint and @objective. It is recommended to first check whether it is possible to extend one of these three macros before creating a new one so as to leverage all their features and provide a more consistent interface to the user.### Extending the `@variable` macro\n\n# TODO: parse/build/add"
 },
 
 {
@@ -1925,31 +1917,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Extensions",
     "title": "Adding add_constraint methods",
     "category": "section",
-    "text": "TODOadd_constraint"
-},
-
-{
-    "location": "extensions/#Adding-parse_constraint-methods-2",
-    "page": "Extensions",
-    "title": "Adding parse_constraint methods",
-    "category": "section",
-    "text": "TODO"
-},
-
-{
-    "location": "extensions/#Extending-the-[@objective](@ref)-macro-1",
-    "page": "Extensions",
-    "title": "Extending the @objective macro",
-    "category": "section",
-    "text": "TODO"
-},
-
-{
-    "location": "extensions/#Defining-new-JuMP-models-1",
-    "page": "Extensions",
-    "title": "Defining new JuMP models",
-    "category": "section",
-    "text": "TODO"
+    "text": "# TODO: Introduce `add_constraint`add_constraint### Extending the [`@objective`](@ref) macro\n\n# TODO: Describe how to `@objective` macro by implementing new `JuMP.set_objective_function` methods\n\n## Defining new JuMP models\n\n# TODO: Describe how to create a new JuMP model (similar to `test/JuMPExtension.jl` and StructJuMP)."
 },
 
 ]}
