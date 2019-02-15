@@ -1,13 +1,10 @@
 JuMP release notes
 ==================
 
-Version 0.19 (unreleased)
--------------------------
+Version 0.19.0 (February 15, 2019)
+----------------------------------
 
 **JuMP 0.19 contains significant breaking changes.**
-
-We invite earlier adopters to try out the `v0.19-beta2` release
-(`] add JuMP#v0.19-beta2`).
 
 Breaking changes:
 
