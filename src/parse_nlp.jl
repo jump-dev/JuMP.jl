@@ -199,13 +199,13 @@ end
 function _parse_NL_expr_runtime(m::Model, x::GenericQuadExpr, tape, parent, values)
     error("Unexpected quadratic expression $x in nonlinear expression. " *
           "Quadratic expressions (e.g., created using @expression) and " *
-          "nonlinear expression cannot be mixed.")
+          "nonlinear expressions cannot be mixed.")
 end
 
 function _parse_NL_expr_runtime(m::Model, x::GenericAffExpr, tape, parent, values)
     error("Unexpected affine expression $x in nonlinear expression. " *
           "Affine expressions (e.g., created using @expression) and " *
-          "nonlinear expression cannot be mixed.")
+          "nonlinear expressions cannot be mixed.")
 end
 
 function _parse_NL_expr_runtime(m::Model, x, tape, parent, values)
