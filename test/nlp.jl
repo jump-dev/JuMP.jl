@@ -630,7 +630,7 @@
             "Affine expressions (e.g., created using @expression) and " *
             "nonlinear expressions cannot be mixed."
         )
-        @test_throws expected_exception @NLexpression(m, A)
+        @test_throws expected_exception @NLexpression(model, A)
     end
     
     @testset "Error on using QuadExpr in NLexpression" begin
@@ -643,6 +643,6 @@
             "Quadratic expressions (e.g., created using @expression) and " *
             "nonlinear expressions cannot be mixed."
         )
-        @test_throws expected_exception @NLexpression(m, A)
+        @test_throws expected_exception @NLexpression(model, A)
     end
 end
