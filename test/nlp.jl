@@ -619,4 +619,30 @@
         evaluator = JuMP.NLPEvaluator(model)
         @test !(:Hess in MOI.features_available(evaluator))
     end
+    
+    @testset "Error on using AffExpr in NLexpression" begin
+        model = Model()
+        @variable(model, x)
+        @variable(model, y)
+        A = x + y
+        expected_exception = ErrorException(
+            "Unexpected affine expression x + y in nonlinear expression. " *
+            "Affine expressions (e.g., created using @expression) and " *
+            "nonlinear expressions cannot be mixed."
+        )
+        @test_throws expected_exception @NLexpression(model, A)
+    end
+    
+    @testset "Error on using QuadExpr in NLexpression" begin
+        model = Model()
+        @variable(model, x)
+        @variable(model, y)
+        A = x*y
+        expected_exception = ErrorException(
+            "Unexpected quadratic expression x*y in nonlinear expression. " *
+            "Quadratic expressions (e.g., created using @expression) and " *
+            "nonlinear expressions cannot be mixed."
+        )
+        @test_throws expected_exception @NLexpression(model, A)
+    end
 end
