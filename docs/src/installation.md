@@ -43,6 +43,7 @@ is often more complex. We list below the currently available solvers.
 | [MOSEK](http://www.mosek.com/)                                                 | [MathOptInterfaceMosek.jl](https://github.com/JuliaOpt/MathOptInterfaceMosek.jl) | Comm.   | LP, MILP, SOCP, MISOCP, SDP |
 | [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              | Apache  | LP, QP                      |
 | [SCS](https://github.com/cvxgrp/scs)                                           | [SCS.jl](https://github.com/JuliaOpt/SCS.jl)                                     | MIT     | LP, SOCP, SDP               |
+| [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/JuliaOpt/SDPA.jl)                                   | GPL     | LP, SDP                     |
 | [SeDuMi](http://sedumi.ie.lehigh.edu/)                                         | [SeDuMi.jl](https://github.com/JuliaOpt/SeDuMi.jl)                               | GPL     | LP, SOCP, SDP               |
 
 
