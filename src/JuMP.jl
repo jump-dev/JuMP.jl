@@ -59,7 +59,7 @@ MOIU.@model(_MOIModel,
             (MOI.SingleVariable,),
             (MOI.ScalarAffineFunction, MOI.ScalarQuadraticFunction),
             (MOI.VectorOfVariables,),
-            (MOI.VectorAffineFunction,))
+            (MOI.VectorAffineFunction, MOI.VectorQuadraticFunction))
 
 """
     OptimizerFactory
