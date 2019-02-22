@@ -5,8 +5,7 @@ JuMP is a package for [Julia](https://julialang.org). To use JuMP, first
 [download and install](https://julialang.org/downloads/) Julia or open up
 a remote notebook at [JuliaBox](https://www.juliabox.com/) or similar services.
 
-This version of JuMP is compatible with Julia 0.7 and later.
-The following instructions are based on Julia 1.0.
+This version of JuMP is compatible with Julia 1.0 and later.
 
 From Julia, JuMP is installed by using the built-in package manager:
 ```julia
