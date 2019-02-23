@@ -60,6 +60,9 @@ Where:
 
 You may also use [AmplNLWriter](https://github.com/JuliaOpt/AmplNLWriter.jl) to
 access solvers that support the [nl format](https://en.wikipedia.org/wiki/Nl_(format)).
+Such solvers include [Bonmin](https://projects.coin-or.org/Bonmin) and
+[Couenne](https://projects.coin-or.org/Couenne). See a more complete list
+[here](https://ampl.com/products/solvers/all-solvers-for-ampl/).
 
 To install Gurobi, for example, and use it with a JuMP model `model`, run:
 
