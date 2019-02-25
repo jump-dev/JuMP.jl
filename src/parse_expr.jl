@@ -351,11 +351,7 @@ function _parse_gen(ex, atleaf)
             push!(idxvars, idxvar)
         end
     end
-    b = Expr(:block)
-    for idxvar in idxvars
-        push!(b.args, localvar(esc(idxvar)))
-    end
-    return :(let; $b; $loop; end)
+    return loop
 end
 
 function _parse_generator(x::Expr, aff::Symbol, lcoeffs, rcoeffs, newaff=gensym())
