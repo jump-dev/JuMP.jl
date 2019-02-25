@@ -439,6 +439,17 @@ end
          y[1] + y[3] $ge 3.0
         """
     end
+
+    @testset "Index variables don't leak out of macros" begin
+        model = Model()
+        i = 10
+        j = 10
+        @expression(model, ex[j = 2:3], sum(i for i in 1:j))
+        @test ex[2] == AffExpr(3)
+        @test ex[3] == AffExpr(6)
+        @test i == 10
+        @test j == 10
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
