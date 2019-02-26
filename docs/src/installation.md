@@ -135,8 +135,16 @@ Supports SOCP and "SOS" constraints.
 
 ### MOSEK
 
-Requires a license (free for academic use). The Mosek interface is maintained by
+Requires a license (free for academic use).
+The [Mosek interface](https://github.com/JuliaOpt/Mosek.jl) is maintained by
 the Mosek team. (Thanks!)
+Note that even if the package implementing MathOptInterface is `MosekTools`,
+for consistency the MOI optimizer is called `Mosek.Optimizer` so do the
+following to create a model with the Mosek solver:
+```julia
+julia> using MosekTools
+julia> model = Model(with_optimizer(Mosek.Optimizer))
+```
 
 ### SCS
 
