@@ -40,7 +40,7 @@ is often more complex. We list below the currently available solvers.
 | [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK.jl](https://github.com/JuliaOpt/GLPK.jl)                                   | GPL     | LP, MILP                           |
 | [Gurobi](http://gurobi.com)                                                    | [Gurobi.jl](https://github.com/JuliaOpt/Gurobi.jl)                               | Comm.   | LP, MILP, SOCP, MISOCP             |
 | [Ipopt](https://projects.coin-or.org/Ipopt)                                    | [Ipopt.jl](https://github.com/JuliaOpt/Ipopt.jl)                                 | EPL     | LP, QP, NLP                        |
-| [MOSEK](http://www.mosek.com/)                                                 | [MathOptInterfaceMosek.jl](https://github.com/JuliaOpt/MathOptInterfaceMosek.jl) | Comm.   | LP, MILP, SOCP, MISOCP, SDP        |
+| [MOSEK](http://www.mosek.com/)                                                 | [MosekTools.jl](https://github.com/JuliaOpt/MosekTools.jl)                       | Comm.   | LP, MILP, SOCP, MISOCP, SDP        |
 | [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              | Apache  | LP, QP                             |
 | [SCS](https://github.com/cvxgrp/scs)                                           | [SCS.jl](https://github.com/JuliaOpt/SCS.jl)                                     | MIT     | LP, SOCP, SDP                      |
 | [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/JuliaOpt/SDPA.jl)                                   | GPL     | LP, SDP                            |
@@ -135,8 +135,16 @@ Supports SOCP and "SOS" constraints.
 
 ### MOSEK
 
-Requires a license (free for academic use). The Mosek interface is maintained by
+Requires a license (free for academic use).
+The [Mosek interface](https://github.com/JuliaOpt/Mosek.jl) is maintained by
 the Mosek team. (Thanks!)
+Note that even if the package implementing MathOptInterface is `MosekTools`,
+for consistency the MOI optimizer is called `Mosek.Optimizer` so do the
+following to create a model with the Mosek solver:
+```julia
+julia> using MosekTools
+julia> model = Model(with_optimizer(Mosek.Optimizer))
+```
 
 ### SCS
 
