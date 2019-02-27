@@ -47,4 +47,13 @@ JuMP.@NLobjective(model, Max, sum( y[j] for j=r if j == 4))
 
 # TODO: Add tests for the content of the model.
 
+model = JuMP.Model()
+i = 10
+j = 10
+JuMP.@expression(model, ex[j = 2:3], sum(i for i in 1:j))
+@test ex[2] == JuMP.AffExpr(3)
+@test ex[3] == JuMP.AffExpr(6)
+@test i == 10
+@test j == 10
+
 end

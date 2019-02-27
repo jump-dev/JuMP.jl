@@ -138,15 +138,11 @@ function _get_looped_code(varname, code, condition, idxvars, idxsets, sym, reque
         tmp = gensym()
         expr.args[1] = tmp
         code = quote
-            let
-                $(localvar(i))
-                $(localvar(j))
-                for $i in $(idxsets[1]), $j in $(idxsets[2])
-                    $i <= $j || continue
-                    $expr
-                    $vname[$i,$j] = $tmp
-                    $vname[$j,$i] = $tmp
-                end
+            for $i in $(idxsets[1]), $j in $(idxsets[2])
+                $i <= $j || continue
+                $expr
+                $vname[$i,$j] = $tmp
+                $vname[$j,$i] = $tmp
             end
         end
     else
@@ -171,11 +167,8 @@ function _get_looped_code(varname, code, condition, idxvars, idxsets, sym, reque
         end
         for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
             code = quote
-                let
-                    $(localvar(esc(idxvar)))
-                    for $(esc(idxvar)) in $idxset
-                        $code
-                    end
+                for $(esc(idxvar)) in $idxset
+                    $code
                 end
             end
         end
@@ -187,29 +180,6 @@ function _get_looped_code(varname, code, condition, idxvars, idxsets, sym, reque
         $code
         nothing
     end
-end
-
-# TODO: Remove all localvar calls for Julia 0.7. The scope of loop variables
-# has changed to match the behavior we enforce here.
-localvar(x::Symbol) = _localvar(x)
-localvar(x::Expr) = Expr(:block, _localvar(x)...)
-_localvar(x::Symbol) = :(local $(esc(x)))
-function _localvar(x::Expr)
-    @assert x.head in (:escape, :tuple)
-    args = Any[]
-    for t in x.args
-        if isa(t, Symbol)
-            push!(args, :(local $(esc(t))))
-        else
-            @assert isa(t, Expr)
-            if t.head == :tuple
-                append!(args, map(_localvar, t.args))
-            else
-                error("Internal error defining local variables in macros; please file an issue at https://github.com/JuliaOpt/JuMP.jl/issues/new")
-            end
-        end
-    end
-    args
 end
 
 """
