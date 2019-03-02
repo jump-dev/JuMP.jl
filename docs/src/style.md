@@ -284,6 +284,10 @@ some_local_variable = ...
 some_file.jl # Except for ModuleName.jl.
 ```
 
+#### Don’t use m for model
+
+Models should be named `model` instead of `m` as the variable name is more representative with `model`.
+
 #### Exported and non-exported names
 
 Begin private module level functions and constants with an underscore. All other
