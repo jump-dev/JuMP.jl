@@ -20,7 +20,7 @@ function _add_or_set!(expr_terms::OrderedDict{K,V}, k::K, v::V) where {K,V}
     # TODO: Decide if we want to drop zeros here after understanding the
     # performance implications.
     v0 = get!(expr_terms, k, v)
-    # This makes sure only one hash lookup is need when inserting a value
+    # This makes sure only one hash lookup is need when inserting a value.
     if v0 !== v
         expr_terms[k] = v0 + v
     end
