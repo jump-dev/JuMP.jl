@@ -16,12 +16,13 @@
 #############################################################################
 
 # Utilities for OrderedDict
-function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
-    # TODO: This unnecessarily requires two lookups for k.
+function _add_or_set!(exprterms::OrderedDict{K,V}, k::K, v::V) where {K,V}
     # TODO: Decide if we want to drop zeros here after understanding the
     # performance implications.
-    dict[k] = get!(dict, k, zero(V)) + v
-    return dict
+    v0 = get!(exprterms, k, v)
+    # This short circuit makes sure only one hash lookup is need when inserting a value
+    v0 == v || (exprterms[k] = v0 + v)
+    return exprterms
 end
 
 function _new_ordered_dict(::Type{K}, ::Type{V}, kv::AbstractArray{<:Pair}) where {K,V}
