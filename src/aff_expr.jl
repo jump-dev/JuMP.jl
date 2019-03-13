@@ -15,45 +15,38 @@
 # Operator overloads in src/operators.jl
 #############################################################################
 
+const ExprTerms{K,V} = OrderedDict{K,V} where {K, V}
+
 # Utilities for OrderedDict
-function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
-    # TODO: This unnecessarily requires two lookups for k.
+@inline function _add_to_terms!(exprterms::ExprTerms{K,V}, k::K, v::V) where {K,V}
     # TODO: Decide if we want to drop zeros here after understanding the
     # performance implications.
-    dict[k] = get!(dict, k, zero(V)) + v
-    return dict
+    # Get the current value of the term or insert it
+    v0 = get!(exprterms, k, v)
+    # This short circuit makes sure only one hash lookup is need when inserting a value
+    v0 == v || (exprterms[k] = v0 + v)
+    return exprterms
 end
 
-function _new_ordered_dict(::Type{K}, ::Type{V}, kv::AbstractArray{<:Pair}) where {K,V}
-    dict = OrderedDict{K,V}()
-    sizehint!(dict, length(kv))
-    for pair in kv
-        _add_or_set!(dict, convert(K, pair.first), convert(V, pair.second))
+# This is a mixed case name becuase it is essentially a constructor
+function _new_ExprTerms(::Type{K}, ::Type{V}, kv_iter) where {K, V}
+    exprterms = ExprTerms{K,V}()
+    sizehint!(exprterms, length(kv_iter))
+    for pair in kv_iter
+        _add_to_terms!(exprterms, convert(K, pair.first), convert(V, pair.second))
     end
     return dict
 end
 
-function _new_ordered_dict(::Type{K}, ::Type{V}, kv::Pair...) where {K,V}
-    dict = OrderedDict{K,V}()
-    sizehint!(dict, length(kv))
-    for pair in kv
-        _add_or_set!(dict, convert(K, pair.first), convert(V, pair.second))
-    end
-    return dict
-end
+# Is use of slurping valid syntax?  How can kv be of type Pair in this case
+@inline _new_ExprTerms(::Type{K}, ::Type{V}, kv::Pair...) where {K,V} = _new_ExprTerms( K, V, kv)
+
 # Shortcut for one and two arguments to avoid creating an empty dict and add
 # elements one by one with `JuMP._add_or_set!`
-function _new_ordered_dict(::Type{K}, ::Type{V}, kv::Pair) where {K, V}
-    return OrderedDict{K, V}(kv)
-end
-function _new_ordered_dict(::Type{K}, ::Type{V}, kv1::Pair, kv2::Pair) where {K, V}
-    if isequal(kv1.first, kv2.first)
-        return OrderedDict{K, V}(kv1.first => kv1.second + kv2.second)
-    else
-        return OrderedDict{K, V}(kv1, kv2)
-    end
-end
+@inline _new_ExprTerms(::Type{K}, ::Type{V}, kv::Pair) where {K, V} = ExprTerms{K, V}(kv)
 
+@inline _new_ExprTerms(::Type{K}, ::Type{V}, kv1::Pair, kv2::Pair) where {K, V} = (
+    isequal(kv1.first, kv2.first) ? ExprTerms{K, V}(kv1.first => kv1.second + kv2.second) : ExprTerms{K, V}(kv1, kv2) )
 
 
 #############################################################################
@@ -61,30 +54,30 @@ end
 # ∑ aᵢ xᵢ  +  c
 mutable struct GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
     constant::CoefType
-    terms::OrderedDict{VarType,CoefType}
+    terms::ExprTerms{VarType,CoefType}
 end
 
 variable_ref_type(::GenericAffExpr{C, V}) where {C, V} = V
 
 function GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
-    return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv))
+    return GenericAffExpr{V,K}(constant, _new_ExprTerms(K, V, kv))
 end
 
 function GenericAffExpr(constant::V, kv::Pair{K,V}...) where {K,V}
-    return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv...))
+    return GenericAffExpr{V,K}(constant, _new_ExprTerms(K, V, kv...))
 end
 
 function GenericAffExpr{V,K}(constant, kv::AbstractArray{<:Pair}) where {K,V}
-    return GenericAffExpr{V,K}(convert(V, constant), _new_ordered_dict(K, V, kv))
+    return GenericAffExpr{V,K}(convert(V, constant), _new_ExprTerms(K, V, kv))
 end
 
 function GenericAffExpr{V,K}(constant, kv::Pair...) where {K,V}
-    return GenericAffExpr{V,K}(convert(V, constant), _new_ordered_dict(K, V, kv...))
+    return GenericAffExpr{V,K}(convert(V, constant), _new_ExprTerms(K, V, kv...))
 end
 
 Base.iszero(a::GenericAffExpr) = isempty(a.terms) && iszero(a.constant)
-Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(zero(C), OrderedDict{V,C}())
-Base.one(::Type{GenericAffExpr{C,V}}) where {C,V}  = GenericAffExpr{C,V}(one(C), OrderedDict{V,C}())
+Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(zero(C), ExprTerms{V,C}())
+Base.one(::Type{GenericAffExpr{C,V}}) where {C,V}  = GenericAffExpr{C,V}(one(C), ExprTerms{V,C}())
 Base.zero(a::GenericAffExpr) = zero(typeof(a))
 Base.one( a::GenericAffExpr) =  one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
@@ -194,7 +187,7 @@ function add_to_expression!(aff::GenericAffExpr{C,V},
 end
 
 function add_to_expression!(aff::GenericAffExpr{C,V}, new_var::V) where {C,V}
-    _add_or_set!(aff.terms, new_var, one(C))
+    _add_to_terms!(aff.terms, new_var, one(C))
     return aff
 end
 
@@ -210,7 +203,7 @@ end
 
 function add_to_expression!(aff::GenericAffExpr{C,V}, new_coef::Real,
                             new_var::V) where {C,V}
-    _add_or_set!(aff.terms, new_var, convert(C, new_coef))
+    _add_to_terms!(aff.terms, new_var, convert(C, new_coef))
     return aff
 end
 
@@ -223,7 +216,7 @@ function add_to_expression!(aff::GenericAffExpr{C,V}, coef::Real,
                             other::GenericAffExpr{C,V}) where {C,V}
     sizehint!(aff, length(linear_terms(aff)) + length(linear_terms(other)))
     for (term_coef, var) in linear_terms(other)
-        _add_or_set!(aff.terms, var, coef * term_coef)
+        _add_to_terms!(aff.terms, var, coef * term_coef)
     end
     aff.constant += coef * other.constant
     return aff

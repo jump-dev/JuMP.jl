@@ -30,31 +30,31 @@ end
 # ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c
 mutable struct GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
     aff::GenericAffExpr{CoefType,VarType}
-    terms::OrderedDict{UnorderedPair{VarType}, CoefType}
+    terms::ExprTerms{UnorderedPair{VarType}, CoefType}
 end
 
 function GenericQuadExpr(aff::GenericAffExpr{V,K}, kv::AbstractArray{Pair{UnorderedPair{K},V}}) where {K,V}
-    return GenericQuadExpr{V,K}(aff, _new_ordered_dict(UnorderedPair{K}, V, kv))
+    return GenericQuadExpr{V,K}(aff, _new_ExprTerms(UnorderedPair{K}, V, kv))
 end
 
 function GenericQuadExpr(aff::GenericAffExpr{V,K}, kv::Pair{UnorderedPair{K},V}...) where {K,V}
-    return GenericQuadExpr{V,K}(aff, _new_ordered_dict(UnorderedPair{K}, V, kv...))
+    return GenericQuadExpr{V,K}(aff, _new_ExprTerms(UnorderedPair{K}, V, kv...))
 end
 
 function GenericAffExpr{V,K}(aff::GenericAffExpr{V,K}, kv::AbstractArray{<:Pair}) where {K,V}
-    return GenericQuadExpr{V,K}(aff, _new_ordered_dict(UnorderedPair{K}, V, kv))
+    return GenericQuadExpr{V,K}(aff, _new_ExprTerms(UnorderedPair{K}, V, kv))
 end
 
 function GenericQuadExpr{V,K}(aff::GenericAffExpr{V,K}, kv::Pair...) where {K,V}
-    return GenericQuadExpr{V,K}(aff, _new_ordered_dict(UnorderedPair{K}, V, kv...))
+    return GenericQuadExpr{V,K}(aff, _new_ExprTerms(UnorderedPair{K}, V, kv...))
 end
 
 Base.iszero(q::GenericQuadExpr) = isempty(q.terms) && iszero(q.aff)
 function Base.zero(::Type{GenericQuadExpr{C,V}}) where {C,V}
-    return GenericQuadExpr(zero(GenericAffExpr{C,V}), OrderedDict{UnorderedPair{V}, C}())
+    return GenericQuadExpr(zero(GenericAffExpr{C,V}), ExprTerms{UnorderedPair{V}, C}())
 end
 function Base.one(::Type{GenericQuadExpr{C,V}}) where {C,V}
-    return GenericQuadExpr(one(GenericAffExpr{C,V}), OrderedDict{UnorderedPair{V}, C}())
+    return GenericQuadExpr(one(GenericAffExpr{C,V}), ExprTerms{UnorderedPair{V}, C}())
 end
 Base.zero(q::GenericQuadExpr) = zero(typeof(q))
 Base.one(q::GenericQuadExpr)  = one(typeof(q))
@@ -170,7 +170,7 @@ end
 function add_to_expression!(quad::GenericQuadExpr{C, V}, coef::Real,
                             other::GenericQuadExpr{C, V}) where {C, V}
     for (key, term_coef) in other.terms
-        _add_or_set!(quad.terms, key, coef * term_coef)
+        _add_to_terms!(quad.terms, key, coef * term_coef)
     end
     return add_to_expression!(quad, coef, other.aff)
 end
@@ -192,7 +192,7 @@ function add_to_expression!(quad::GenericQuadExpr{C,V},
                             aff::GenericAffExpr{C,V}) where {C,V}
     for (coef, term_var) in linear_terms(aff)
         key = UnorderedPair(var, term_var)
-        _add_or_set!(quad.terms, key, coef)
+        _add_to_terms!(quad.terms, key, coef)
     end
     return add_to_expression!(quad, var, aff.constant)
 end
@@ -255,7 +255,7 @@ function add_to_expression!(quad::GenericQuadExpr{C,V}, new_coef::C,
     # previous value for UnorderedPair(new_var2, new_var1), it's key will now be
     # UnorderedPair(new_var1, new_var2) (because these are defined as equal).
     key = UnorderedPair(new_var1, new_var2)
-    _add_or_set!(quad.terms, key, new_coef)
+    _add_to_terms!(quad.terms, key, new_coef)
     return quad
 end
 
