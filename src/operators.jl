@@ -260,7 +260,7 @@ function Base.sum(array::AbstractArray{<:AbstractVariableRef})
     return result_expression
 end
 # TODO: Specialize for iterables.
-function Base.sum(affs::AbstractArray{T}) where {T <: GenericAffExpr}
+function Base.sum(affs::AbstractArray{T}) where {T <: AbstractJuMPScalar}
     new_aff = zero(T)
     for aff in affs
         add_to_expression!(new_aff, aff)
