@@ -251,7 +251,7 @@ _sizehint_expr!(q, n) = nothing
 #############################################################################
 
 # TODO: specialize sum for DenseAxisArray and SparseAxisArray of JuMP objects?
-Base.sum(vars::Array{<:AbstractVariableRef}) = GenericAffExpr(0.0, [v => 1.0 for v in vars])
+Base.sum(vars::AbstractArray{<:AbstractVariableRef}) = GenericAffExpr(0.0, [v => 1.0 for v in vars])
 function Base.sum(array::AbstractArray{<:AbstractVariableRef})
     result_expression = zero(eltype(array))
     for variable in array
