@@ -227,7 +227,7 @@ function MathProgBase.numconstr(m::Model)
 end
 
 for f in MathProgBase.SolverInterface.methods_by_tag[:rewrap]
-    eval(Expr(:import,:MathProgBase,f))
+    eval(Expr(:import,Expr(:.,:MathProgBase,f)))
     @eval function $f(m::Model)
         # check internal model exists
         if !m.internalModelLoaded
