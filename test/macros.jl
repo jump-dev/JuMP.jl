@@ -279,7 +279,7 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @variable(model, x[1:3])
         c_sos1 = @build_constraint(x in MOI.SOS1([1, 2, 3]))
         @test c_sos1.set == MOI.SOS1([1.0, 2.0, 3.0])
-        c_sos2 = @build_constraint(sx in MOI.SOS2([6, 5, 4]))
+        c_sos2 = @build_constraint(x in MOI.SOS2([6, 5, 4]))
         @test c_sos2.set == MOI.SOS2([6.0, 5.0, 4.0])
     end
 
