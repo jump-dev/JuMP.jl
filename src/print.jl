@@ -638,9 +638,3 @@ end
 function Base.show(io::IO, evaluator::NLPEvaluator)
     Base.show(io, "A JuMP.NLPEvaluator")
 end
-
-#------------------------------------------------------------------------
-## Deprecated functions to export a model
-#------------------------------------------------------------------------
-writeLP(_...) = error("writeLP is no more provided by JuMP; instead, you can check https://github.com/odow/MathOptFormat.jl")
-writeMPS(_...) = error("writeMPS is no more provided by JuMP; instead, you can check https://github.com/odow/MathOptFormat.jl")
