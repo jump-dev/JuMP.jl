@@ -939,15 +939,26 @@ end
 Returns the optimal reduced costs for the variables of the problem in standard form, c.f. `_std_matrix(model)`
 """
 function _std_reduced_costs(model::Model, constraints::Vector{ConstraintRef})
+    con_types = list_of_constraint_types(model)
     vars = all_variables(model)
-    y = [zeros(length(vars)); dual.(constraints)]
+    var2idx = Dict{VariableRef, Int64}()
     for (j, var) in pairs(vars)
-        if has_lower_bound(var) && MOI.get(model, MOI.ConstraintBasisStatus(), LowerBoundRef(var)) != MOI.BASIC
-            y[j] = dual(LowerBoundRef(var))
-        elseif has_upper_bound(var) && MOI.get(model, MOI.ConstraintBasisStatus(), UpperBoundRef(var)) != MOI.BASIC
-            y[j] = dual(UpperBoundRef(var))
+        var2idx[var] = j
+    end
+    y = [zeros(length(vars)); dual.(constraints)]
+
+    for (F, S) in con_types
+        if F <: VariableRef
+            constraints = all_constraints(model, F, S)
+            for (i, constr) in pairs(constraints)
+                constr_obj = constraint_object(constr)
+                j = var2idx[constr_obj.func]
+                y[j] += dual(constr)
+            end
+            #issue 1892 makes is hard to know how to handle variable constraints, atm. assume unique variable constraints
         end
     end
+
     if objective_sense(model) == MOI.MAX_SENSE
         y .*= -1.0
     end
@@ -973,22 +984,11 @@ function perturbation_range_of_optimality(var)
     if objective_sense(model) == MOI.FEASIBILITY_SENSE
         error("The optimality range is not applicable on feasibility problems.")
     end
-    # This throw the error: ... do not support accessing ... ConstraintBasisStatus(), if its not implemented by the solver.
-    if has_lower_bound(var) && MOI.get(model, MOI.ConstraintBasisStatus(), LowerBoundRef(var)) != MOI.BASIC
-        if objective_sense(model) == MOI.MAX_SENSE
-            return (-Inf, -dual(LowerBoundRef(var)))
-        end
-        return (-dual(LowerBoundRef(var)), Inf)
-    end
-    if has_upper_bound(var) && MOI.get(model, MOI.ConstraintBasisStatus(), UpperBoundRef(var)) != MOI.BASIC
-        if objective_sense(model) == MOI.MAX_SENSE
-            return (-dual(UpperBoundRef(var)), Inf)
-        end
-        return (-Inf, -dual(UpperBoundRef(var)))
-    end
-    if is_fixed(var)
-        return (-Inf, Inf)
-    end
+
+    # Optimization possible: since the has_upper_bound(var) and has_lower_bound(var)
+    # Do not capture all variable bounds (issue 1892), it's har to directly
+    # access the reduced cost of a variable, for now the complete matrix is always built
+
     # The variable is in the basis for a minimization problem with no variable upper bounds we need:
     # c_N - N^T B^-T (c_B + Δ e_j ) >= 0
     # c_red - Δ N^T (B^-T e_j) = c_red - Δ N^T ρ = c_red - Δ N_red >= 0
@@ -998,15 +998,29 @@ function perturbation_range_of_optimality(var)
     # If upper bounds are present (and active), those inequalities are flipped
     # If the problem is a maximization problem all inequalities are flipped
     vars = all_variables(model)
-    # can be optimized, variable boounds not needed
+    j = findfirst(vars .== var)
+
     A, L, U, constraints = _std_matrix(model)
     var_basis_status = _std_basis_status(model)
+    c_red = _std_reduced_costs(model, constraints)
+
+    if var_basis_status[j] != MOI.BASIC
+        if L[j] == U[j]
+            return (-Inf, Inf)
+        end
+        if (var_basis_status[j] == MOI.NONBASIC_AT_LOWER && objective_sense(model) == MOI.MIN_SENSE) ||
+            (var_basis_status[j] == MOI.NONBASIC_AT_UPPER && objective_sense(model) == MOI.MAX_SENSE)
+            return (-c_red[j], Inf)
+        end
+        return (-Inf, -c_red[j])        
+    end
+
     basic = [var_basis_status[i] == MOI.BASIC for i in 1:length(var_basis_status)] # .== throws ERROR: MethodError: no method matching length(::MathOptInterface.BasisStatusCode)
     upper = [var_basis_status[.!basic][i] == MOI.NONBASIC_AT_UPPER for i in 1:length(var_basis_status[.!basic])] # .== throws ERROR: MethodError: no method matching length(::MathOptInterface.BasisStatusCode)
     ej = zeros(size(A)[1])
     ej[findfirst(vars[basic[1:length(vars)]] .== var)] = 1.0
     N_red = A[:, .!basic]'*(A[:, basic]'\ej)
-    c_red = _std_reduced_costs(model, constraints)[.!basic]
+    c_red = c_red[.!basic]
     pos = N_red .> 1e-7
     neg = N_red .< -1e-7
     in_lb = (neg .& .!upper) .| (pos .& upper)
