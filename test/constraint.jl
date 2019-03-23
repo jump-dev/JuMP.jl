@@ -668,6 +668,7 @@ function test_perturbation_range_of_optimality(model_string, dual_solution, basi
                                          eval_variable_constraint_dual=true))
     mock_optimizer = JuMP.backend(model).optimizer.model
     MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
 
     JuMP.optimize!(model)
     for (constraint_name, value) in dual_solution

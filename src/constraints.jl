@@ -736,7 +736,7 @@ Gives the range by which the rhs coefficient can change and the current lp-basis
 remains feasible, i.e., where the shadow prices apply.
 
 ## Notes
-- The range denote vaild changes, e.g., for a*x <= b + Δ, the lp-basis remains feasible for all Δ in [l, u]
+- The range denote valid changes, e.g., for a*x <= b + Δ, the lp-basis remains feasible for all Δ in [l, u].
 
 """
 function perturbation_range_of_feasibility(constraint::ConstraintRef{Model, <:_MOICON})
@@ -745,9 +745,9 @@ function perturbation_range_of_feasibility(constraint::ConstraintRef{Model, <:_M
 end
 
 """
-Builds the standard form constraint matrix, varaible bounds (rhs := 0, by choice of slack bounds), and a vector of constraint reference one for each row
+Builds the standard form constraint matrix, varaible bounds (rhs := 0, by choice of slack bounds), and a vector of constraint reference one for each row.
 i.e., the LP-problem feasible set on the form
-st  Ax == 0
+s.t.  Ax == 0
 L <= x <= U
 """
 function _std_matrix(model::Model)
@@ -761,13 +761,13 @@ function _std_matrix(model::Model)
     for (j, var) in pairs(vars)
         var2idx[var] = j
     end
-    col_j = Vector{Int64}()
-    row_i = Vector{Int64}()
-    coeffs = Vector{Float64}()
+    col_j = Int64[]
+    row_i = Int64[]
+    coeffs = Float64[]
 
     var_lower = fill(-Inf, length(vars))
     var_upper = fill(Inf, length(vars))
-    affine_constraints = Vector{ConstraintRef}()
+    affine_constraints = ConstraintRef[]
 
     m = 0
     n = length(vars)
@@ -830,7 +830,7 @@ function _std_matrix(model::Model)
     return A, var_lower, var_upper, affine_constraints
 end
 """
-Returns the optimal primal values for the problem in standard form, c.f. `_std_matrix(model)`
+Returns the optimal primal values for the problem in standard form, c.f. `_std_matrix(model)`.
 """
 function _std_primal_solution(model::Model, constraints::Vector{ConstraintRef})
     vars = all_variables(model)
@@ -840,7 +840,7 @@ end
 
 
 """
-Returns the basis status of all variables of the problem in standard form, c.f. `_std_matrix(model)`
+Returns the basis status of all variables of the problem in standard form, c.f. `_std_matrix(model)`.
 """
 function _std_basis_status(model::Model)::Vector{MOI.BasisStatusCode}
     con_types = list_of_constraint_types(model)
@@ -864,7 +864,7 @@ function _std_basis_status(model::Model)::Vector{MOI.BasisStatusCode}
                     basis_status[j] = MOI.NONBASIC_AT_LOWER
                 end
             end
-            #issue 1892 makes is hard to know how to handle variable constraints, atm. assume unique variable constraints
+            #issue 1892 makes is hard to know how to handle variable constraints, atm. assume unique variable constraints.
             continue
         end
         for constr in constraints
@@ -900,7 +900,7 @@ function perturbation_range_of_feasibility(constraint::ConstraintRef{Model, _MOI
         end
         return (0.0, 0.0)
     end
-    # The constraint is acitve.
+    # The constraint is active.
 
     # Optimization possible, only basic columns needed
     A, L, U, constraints = _std_matrix(model)
@@ -920,7 +920,7 @@ function perturbation_range_of_feasibility(constraint::ConstraintRef{Model, _MOI
     if F <: MOI.SingleVariable
         var = constraint_object(constraint).func
         j = findfirst(all_variables(model) .== var)
-        rho = -B \ Vector(A[:,j])
+        rho = -B \ Vector(A[:, j])
     else
         i = findfirst(constraints .== constraint)
         ei = zeros(size(A)[1])
@@ -972,7 +972,7 @@ Gives the range by which the cost coefficient can change and the current lp-basi
 remains optimal, i.e., the reduced costs remain valid.
 
 ## Notes
-- The range denote vaild changes, e.g., for c[var] += Δ, the lp-basis remains optimal for all Δ in [l, u]
+- The range denote valid changes, Δ in [l, u], for which c[var] += Δ do not violate the current optimality conditions.
 
 """
 function perturbation_range_of_optimality(var)
@@ -984,10 +984,13 @@ function perturbation_range_of_optimality(var)
     if objective_sense(model) == MOI.FEASIBILITY_SENSE
         error("The optimality range is not applicable on feasibility problems.")
     end
-
+    if !has_duals(model)
+        error("The optimality range is not available because no dual result is " *
+              "available.")
+    end
     # Optimization possible: since the has_upper_bound(var) and has_lower_bound(var)
-    # Do not capture all variable bounds (issue 1892), it's har to directly
-    # access the reduced cost of a variable, for now the complete matrix is always built
+    # Do not capture all variable bounds (issue 1892), it's hard to directly
+    # access the reduced cost of a variable, now the complete matrix is always built.
 
     # The variable is in the basis for a minimization problem with no variable upper bounds we need:
     # c_N - N^T B^-T (c_B + Δ e_j ) >= 0
@@ -995,8 +998,8 @@ function perturbation_range_of_optimality(var)
     # c_red >= Δ N_red
     # c_red >= Δ N_red
     # maximum( c_red_- ./ N_red_- ) <= Δ <= minimum( c_red_+ ./ N_red_+ )
-    # If upper bounds are present (and active), those inequalities are flipped
-    # If the problem is a maximization problem all inequalities are flipped
+    # If upper bounds are present (and active), those inequalities are flipped.
+    # If the problem is a maximization problem all inequalities are flipped.
     vars = all_variables(model)
     j = findfirst(vars .== var)
 
@@ -1012,14 +1015,14 @@ function perturbation_range_of_optimality(var)
             (var_basis_status[j] == MOI.NONBASIC_AT_UPPER && objective_sense(model) == MOI.MAX_SENSE)
             return (-c_red[j], Inf)
         end
-        return (-Inf, -c_red[j])        
+        return (-Inf, -c_red[j])
     end
 
     basic = [var_basis_status[i] == MOI.BASIC for i in 1:length(var_basis_status)] # .== throws ERROR: MethodError: no method matching length(::MathOptInterface.BasisStatusCode)
     upper = [var_basis_status[.!basic][i] == MOI.NONBASIC_AT_UPPER for i in 1:length(var_basis_status[.!basic])] # .== throws ERROR: MethodError: no method matching length(::MathOptInterface.BasisStatusCode)
     ej = zeros(size(A)[1])
     ej[findfirst(vars[basic[1:length(vars)]] .== var)] = 1.0
-    N_red = A[:, .!basic]'*(A[:, basic]'\ej)
+    N_red = A[:, .!basic]' * (A[:, basic]' \ ej)
     c_red = c_red[.!basic]
     pos = N_red .> 1e-7
     neg = N_red .< -1e-7
