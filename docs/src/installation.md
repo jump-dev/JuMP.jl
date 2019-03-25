@@ -42,6 +42,7 @@ is often more complex. We list below the currently available solvers.
 | [Ipopt](https://projects.coin-or.org/Ipopt)                                    | [Ipopt.jl](https://github.com/JuliaOpt/Ipopt.jl)                                 | EPL     | LP, QP, NLP                        |
 | [MOSEK](http://www.mosek.com/)                                                 | [MosekTools.jl](https://github.com/JuliaOpt/MosekTools.jl)                       | Comm.   | LP, MILP, SOCP, MISOCP, SDP        |
 | [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              | Apache  | LP, QP                             |
+| [ProxSDP](https://github.com/mariohsouto/ProxSDP.jl)                                | [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)                     | MIT     | LP, SOCP, SDP                      |
 | [SCS](https://github.com/cvxgrp/scs)                                           | [SCS.jl](https://github.com/JuliaOpt/SCS.jl)                                     | MIT     | LP, SOCP, SDP                      |
 | [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/JuliaOpt/SDPA.jl)                                   | GPL     | LP, SDP                            |
 | [SeDuMi](http://sedumi.ie.lehigh.edu/)                                         | [SeDuMi.jl](https://github.com/JuliaOpt/SeDuMi.jl)                               | GPL     | LP, SOCP, SDP                      |
@@ -145,6 +146,13 @@ following to create a model with the Mosek solver:
 julia> using MosekTools
 julia> model = Model(with_optimizer(Mosek.Optimizer))
 ```
+
+### ProxSDP
+
+ProxSDP solves general SDP problems by means of a first order proximal algorithm
+based on the primal-dual hybrid gradient, also known as Chambolle-Pock method.
+The main advantage of ProxSDP over other state-of-the-art solvers is the ability 
+of exploit the low-rank property inherent to several SDP problems.
 
 ### SCS
 
