@@ -152,7 +152,9 @@ julia> model = Model(with_optimizer(Mosek.Optimizer))
 ProxSDP solves general SDP problems by means of a first order proximal algorithm
 based on the primal-dual hybrid gradient, also known as Chambolle-Pock method.
 The main advantage of ProxSDP over other state-of-the-art solvers is the ability 
-of exploit the low-rank property inherent to several SDP problems.
+of exploit the low-rank property inherent to several SDP problems. ProxSDP is a first order
+solver and has low accuracy (``10^{−4}``) by default; see the ProxSDP.jl
+documentation for more information.
 
 ### SCS
 
