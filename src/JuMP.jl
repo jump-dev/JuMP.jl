@@ -36,6 +36,9 @@ Base.@deprecate(setlowerbound,     JuMP.set_lower_bound)
 Base.@deprecate(setupperbound,     JuMP.set_upper_bound)
 Base.@deprecate(linearterms,       JuMP.linear_terms)
 
+writeLP(args...; kargs...) = error("writeLP has been removed from JuMP. Use `MathOptFormat.jl` instead.")
+writeMPS(args...; kargs...) = error("writeMPS has been removed from JuMP. Use `MathOptFormat.jl` instead.")
+
 include("utils.jl")
 
 const _MOIVAR = MOI.VariableIndex
