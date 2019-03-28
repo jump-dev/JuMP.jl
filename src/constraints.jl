@@ -777,19 +777,9 @@ function _std_matrix(model::Model)
             for (i, constr) in pairs(constraints)
                 constr_obj = constraint_object(constr)
                 j = var2idx[constr_obj.func]
-                if S <: MOI.EqualTo
-                    var_lower[j] = var_upper[j] = constr_obj.set.value
-                end
-                if S <: MOI.Interval
-                    var_lower[j] = constr_obj.set.lower
-                    var_upper[j] = constr_obj.set.upper
-                end
-                if S <: MOI.LessThan
-                    var_upper[j] = constr_obj.set.upper
-                end
-                if S <: MOI.GreaterThan
-                    var_lower[j] = constr_obj.set.lower
-                end
+                range = MOI.Interval(constr_obj.set)
+                var_lower[j] = range.lower
+                var_upper[j] = range.upper
             end
             continue
         end
@@ -807,22 +797,10 @@ function _std_matrix(model::Model)
             push!(col_j, n)
             push!(row_i, m)
             push!(coeffs, -1.0)
-            if S <: MOI.EqualTo
-                push!(var_lower, constr_obj.set.value)
-                push!(var_upper, constr_obj.set.value)
-            end
-            if S <: MOI.Interval
-                push!(var_lower, constr_obj.set.lower)
-                push!(var_upper, constr_obj.set.upper)
-            end
-            if S <: MOI.LessThan
-                push!(var_lower, -Inf)
-                push!(var_upper, constr_obj.set.upper)
-            end
-            if S <: MOI.GreaterThan
-                push!(var_lower, constr_obj.set.lower)
-                push!(var_upper, Inf)
-            end
+
+            range = MOI.Interval(constr_obj.set)
+            push!(var_lower, range.lower)
+            push!(var_upper, range.upper)
         end
     end
 
