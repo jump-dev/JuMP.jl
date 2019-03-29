@@ -42,9 +42,10 @@ julia&gt; @variable(model, 2 &lt;= x_interval &lt;= 3)
 x_interval
 
 julia&gt; @variable(model, x_fixed == 4)
-x_fixed</code></pre><p>In the above examples, <code>x_free</code> represents an unbounded optimization variable, <code>x_lower</code> represents an optimization variable with a lower bound and so forth.</p><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>When creating a variable with only a lower-bound or an upper-bound, and the value of the bound is not a numeric literal, the name must appear on the left-hand side. Putting the name on the right-hand side will result in an error. For example:</p><pre><code class="language-julia">@variable(model, 1 &lt;= x)  # works
+x_fixed</code></pre><p>In the above examples, <code>x_free</code> represents an unbounded optimization variable, <code>x_lower</code> represents an optimization variable with a lower bound and so forth.</p><div class="admonition note"><div class="admonition-title">Note</div><div class="admonition-text"><p>When creating a variable with only a lower-bound or an upper-bound, and the value of the bound is not a numeric literal, the name of the variable must appear on the left-hand side. Putting the name on the right-hand side will result in an error. For example:</p><pre><code class="language-julia">@variable(model, 1 &lt;= x)  # works
 a = 1
-@variable(model, a &lt;= x)  # errors</code></pre></div></div><p>We can query whether an optimization variable has a lower- or upper-bound via the <a href="#JuMP.has_lower_bound"><code>has_lower_bound</code></a> and <a href="#JuMP.has_upper_bound"><code>has_upper_bound</code></a> functions. For example:</p><pre><code class="language-julia-repl">julia&gt; has_lower_bound(x_free)
+@variable(model, a &lt;= x)  # errors
+@variable(model, x &gt;= a)  # works</code></pre></div></div><p>We can query whether an optimization variable has a lower- or upper-bound via the <a href="#JuMP.has_lower_bound"><code>has_lower_bound</code></a> and <a href="#JuMP.has_upper_bound"><code>has_upper_bound</code></a> functions. For example:</p><pre><code class="language-julia-repl">julia&gt; has_lower_bound(x_free)
 false
 
 julia&gt; has_upper_bound(x_upper)
