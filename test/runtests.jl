@@ -38,5 +38,6 @@ include("generate_and_solve.jl")
 include("print.jl")
 include("operator.jl")
 include("macros.jl")
+include("lp_sensitivity.jl")
 # TODO: The hygiene test should run in a separate Julia instance where JuMP hasn't been loaded via `using`.
 include("hygiene.jl")
