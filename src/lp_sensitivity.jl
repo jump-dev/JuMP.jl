@@ -62,8 +62,8 @@ function _std_matrix(model::Model)
     var_upper = fill(Inf, length(vars))
     affine_constraints = ConstraintRef[]
 
-    m = 0
-    n = length(vars)
+    cur_row_idx = 0
+
     for (F, S) in con_types
         constraints = all_constraints(model, F, S)
         if F <: VariableRef
@@ -71,24 +71,24 @@ function _std_matrix(model::Model)
                 con_obj = constraint_object(constraint)
                 j = var_to_idx[con_obj.func]
                 range = MOI.Interval(con_obj.set)
-                var_lower[j] = range.lower
-                var_upper[j] = range.upper
+                var_lower[j] = max(var_lower[j], range.lower)
+                var_upper[j] = min(var_upper[j], range.upper)
             end
+            #issue 1892 makes is hard to know how to handle variable constraints, atm. assume unique variable constraints.
             continue
         end
         for constraint in constraints
+            cur_row_idx += 1
             con_obj = constraint_object(constraint)
             con_terms = con_obj.func.terms
-            m += 1
-            n += 1
             push!(affine_constraints, constraint)
             for (var, coeff) in con_terms
                 push!(col_j, var_to_idx[var])
-                push!(row_i, m)
+                push!(row_i, cur_row_idx)
                 push!(coeffs, coeff)
             end
-            push!(col_j, n)
-            push!(row_i, m)
+            push!(col_j, cur_row_idx + length(vars))
+            push!(row_i, cur_row_idx)
             push!(coeffs, -1.0)
 
             range = MOI.Interval(con_obj.set)
@@ -97,7 +97,7 @@ function _std_matrix(model::Model)
         end
     end
 
-    A = sparse(row_i, col_j, coeffs, m, n)
+    A = sparse(row_i, col_j, coeffs, cur_row_idx, cur_row_idx + length(vars))
     return A, var_lower, var_upper, affine_constraints
 end
 
