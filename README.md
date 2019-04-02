@@ -146,7 +146,7 @@ nonprofit dedicated to supporting the open source scientific computing
 community.
 
 You can support JuMP by
-[donating](https://www.flipcause.com/secure/cause_pdetails/MzkxMDU=). JuMP's
+[donating](https://numfocus.salsalabs.org/donate-to-jump/index.html). JuMP's
 largest expense is the
 [annual JuMP-dev workshop](http://www.juliaopt.org/meetings/santiago2019/).
 Donations will help us provide travel support for JuMP-dev attendees and take

@@ -191,7 +191,7 @@ julia> shadow_price(con)
 2.0
 ```
 
-To query the dual variables associated a variable bound, first obtain a
+To query the dual variables associated with a variable bound, first obtain a
 constraint reference using one of [`UpperBoundRef`](@ref),
 [`LowerBoundRef`](@ref), or [`FixRef`](@ref), and then call [`dual`](@ref) on
 the returned constraint reference. Note that in linear programming,
