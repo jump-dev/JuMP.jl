@@ -518,6 +518,16 @@ function build_constraint(_error::Function, expr, lb, ub)
     end
 end
 
+function build_constraint(
+        ::Function, x::Vector{<:AbstractJuMPScalar}, set::MOI.SOS1)
+    return VectorConstraint(x, MOI.SOS1{Float64}(set.weights))
+end
+
+function build_constraint(
+        ::Function, x::Vector{<:AbstractJuMPScalar}, set::MOI.SOS2)
+    return VectorConstraint(x, MOI.SOS2{Float64}(set.weights))
+end
+
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
 """
