@@ -25,6 +25,7 @@ Some but not all of these tasks are summarized in the
   - Checking feasibility of solutions ([#693](https://github.com/JuliaOpt/JuMP.jl/issues/693))
   - Accessing IIS ([#1053](https://github.com/JuliaOpt/JuMP.jl/issues/1035))
   - Accessing multiple results from solvers
+  - Dual warm-starts (e.g., [Ipopt.jl #164](https://github.com/JuliaOpt/Ipopt.jl/issues/164))
 - Address “easy” usability issues
   - Line numbers in error messages ([#1174](https://github.com/JuliaOpt/JuMP.jl/issues/1174))
   - LP sensitivity summary ([#1332](https://github.com/JuliaOpt/JuMP.jl/issues/1332))
