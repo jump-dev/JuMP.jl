@@ -1,7 +1,7 @@
 # Development roadmap
 
-This page is not JuMP documentation *per se* but are notes for JuMP developers,
-and contributors. The JuMP developers have compiled this roadmap document to
+This page is not JuMP documentation *per se* but are notes for the JuMP
+community. The JuMP developers have compiled this roadmap document to
 share their plans and goals. Contributions to roadmap issues are especially
 invited.
 
@@ -43,7 +43,7 @@ Some but not all of these tasks are summarized in the
 ## MOI 1.0
 
 ```@meta
-# TODO: List MOI 1.0 items either here or in the MOI documentation.
+# TODO: List MOI 1.0 items here.
 ```
 
 ## Beyond JuMP 1.0
