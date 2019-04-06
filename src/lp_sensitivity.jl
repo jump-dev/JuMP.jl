@@ -204,10 +204,21 @@ function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, _MOICON{F, S
     end
     UmX_B = U[basic] - x_B
     LmX_B = L[basic] - x_B
-    pos = rho .> 1e-7
-    neg = rho .< -1e-7
-    return maximum([-Inf; UmX_B[neg] ./ rho[neg]; LmX_B[pos] ./ rho[pos]]),
-            minimum([Inf; UmX_B[pos] ./ rho[pos]; LmX_B[neg] ./ rho[neg]])
+    pos = rho .> 0.0
+    neg = rho .< 0.0
+    # Find the first basic variable bound that is strictly violated.
+    # Use the vanilla 1e-8 tolerance (c.f. "Computational Techniques of the Simplex Method" by István Maros section 9.3.4.)
+    # to determine this strict violation.
+    tol = 1e-8
+    lower_bounds_delta = [-Inf; UmX_B[neg]  ./ rho[neg]; LmX_B[pos] ./ rho[pos]]
+    lower_bounds_delta_strict = lower_bounds_delta + [0.0; tol ./ rho[neg]; -tol ./ rho[pos]]
+    upper_bounds_delta = [Inf; UmX_B[pos] ./ rho[pos]; LmX_B[neg] ./ rho[neg]]
+    upper_bounds_delta_strict = upper_bounds_delta + [0.0; tol ./ rho[pos]; -tol ./ rho[neg]]
+
+    lower_max_idx = last(findmax(lower_bounds_delta_strict))
+    upper_min_idx = last(findmin(upper_bounds_delta_strict))
+    # Return the unperturbed values
+    return lower_bounds_delta[lower_max_idx], upper_bounds_delta[upper_min_idx]
 end
 
 """
@@ -305,8 +316,8 @@ function lp_objective_perturbation_range(var::VariableRef)::Tuple{Float64, Float
     ej[findfirst(isequal(var), vars[basic[1:length(vars)]])] = 1.0
     N_red = A[:, .!basic]' * (A[:, basic]' \ ej)
     c_red = c_red[.!basic]
-    pos = N_red .> 1e-7
-    neg = N_red .< -1e-7
+    pos = N_red .> 0.0
+    neg = N_red .< 0.0
 
     in_lb = (neg .& .!upper) .| (pos .& upper)
     in_ub = (pos .& .!upper) .| (neg .& upper)
@@ -317,6 +328,16 @@ function lp_objective_perturbation_range(var::VariableRef)::Tuple{Float64, Float
     unfixed_vars = (var_lower .< var_upper)[.!basic]
     in_lb .&= unfixed_vars
     in_ub .&= unfixed_vars
-    return maximum([-Inf; c_red[in_lb] ./ N_red[in_lb]]),
-            minimum([Inf; c_red[in_ub] ./ N_red[in_ub]])
+    # Find the first reduced cost that is strictly violated
+    # Use the vanilla 1e-8 tolerance (c.f. "Computational Techniques of the Simplex Method" by István Maros section 9.3.4.)
+    # to determine this strict violation.
+    tol = 1e-8
+    lower_bounds_delta = [-Inf; c_red[in_lb] ./ N_red[in_lb]]
+    lower_bounds_delta_strict = lower_bounds_delta - [0.0; tol ./ abs.(N_red[in_lb])]
+    upper_bounds_delta = [Inf; c_red[in_ub] ./ N_red[in_ub]]
+    upper_bounds_delta_strict = upper_bounds_delta + [0.0; tol ./ abs.(N_red[in_ub])]
+
+    lower_max_idx = last(findmax(lower_bounds_delta_strict))
+    upper_min_idx = last(findmin(upper_bounds_delta_strict))
+    return lower_bounds_delta[lower_max_idx], upper_bounds_delta[upper_min_idx]
 end
