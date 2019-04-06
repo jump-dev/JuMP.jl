@@ -316,30 +316,6 @@ function _try_get_solver_name(model_like)
     end
 end
 
-function _try_set_silent(model_like)
-    try
-        return MOI.set(model_like, MOI.Silent(), true)
-    catch ex
-        if isa(ex, ArgumentError)
-            return "Silent() attribute not implemented by the optimizer."
-        else
-            rethrow(ex)
-        end
-    end
-end
-
-function _try_unset_silent(model_like)
-    try
-        return MOI.set(model_like, MOI.Silent(), false)
-    catch ex
-        if isa(ex, ArgumentError)
-            return "Silent() attribute not implemented by the optimizer."
-        else
-            rethrow(ex)
-        end
-    end
-end
-
 """
     solver_name(model::Model)
 
@@ -469,12 +445,7 @@ Takes precedence over any other attribute controlling verbosity
 and requires the solver to produce no output.
 """
 function set_silent(model::Model)
-    if mode(model) != DIRECT &&
-        MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
-        return "No optimizer attached."
-    else
-        return _try_set_silent(backend(model))
-    end
+    return MOI.set(model, MOI.Silent(), true)
 end
 
 """
@@ -484,12 +455,7 @@ Neutralize the effect of the `set_silent` method and let the solver
 attributes control the verbosity.
 """
 function unset_silent(model::Model)
-    if mode(model) != DIRECT &&
-        MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
-        return "No optimizer attached."
-    else
-        return _try_unset_silent(backend(model))
-    end
+    return MOI.set(model, MOI.Silent(), false)
 end
 
 # Abstract base type for all scalar types
@@ -674,6 +640,7 @@ function MOI.get(model::Model, attr::MOI.AbstractConstraintAttribute,
     end
 end
 
+MOI.set(m::Model, attr::MOI.AbstractOptimizerAttribute, value) = MOI.set(backend(m), attr, value)
 MOI.set(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set(backend(m), attr, value)
 function MOI.set(model::Model, attr::MOI.AbstractVariableAttribute,
                  v::VariableRef, value)

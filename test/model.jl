@@ -341,19 +341,12 @@ function test_model()
         end
     end
     @testset "set_silent and unset_silent" begin
-        @testset "Not attached" begin
-            model = Model()
-            @test "No optimizer attached." == JuMP.set_silent(model)
-            @test "No optimizer attached." == JuMP.unset_silent(model)
-        end
-        @testset "Mock" begin
-            mock = MOIU.UniversalFallback(JuMP._MOIModel{Float64}())
-            model = Model(with_optimizer(MOIU.MockOptimizer, mock))
-            @test JuMP.set_silent(model)
-            @test MOI.get(backend(model), MOI.Silent())
-            @test !JuMP.unset_silent(model)
-            @test !MOI.get(backend(model), MOI.Silent())
-        end
+        mock = MOIU.UniversalFallback(JuMP._MOIModel{Float64}())
+        model = Model(with_optimizer(MOIU.MockOptimizer, mock))
+        @test JuMP.set_silent(model)
+        @test MOI.get(backend(model), MOI.Silent())
+        @test !JuMP.unset_silent(model)
+        @test !MOI.get(backend(model), MOI.Silent())
     end
 end
 
