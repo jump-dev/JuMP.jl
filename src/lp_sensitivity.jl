@@ -11,12 +11,12 @@
 """
     lp_rhs_perturbation_range(constraint::ConstraintRef)::Tuple{Float64, Float64}
 
-Gives the range by which the rhs coefficient can change and the current lp-basis
+Gives the range by which the rhs coefficient can change and the current LP basis
 remains feasible, i.e., where the shadow prices apply.
 
 ## Notes
-- The rhs coefficient is the value right of the relation, i.e., b for the constraint when on the form a*x □ b, where □ is ≤, =, or ≥.
-- The range denote valid changes, e.g., for a*x <= b + Δ, the lp-basis remains feasible for all Δ ∈ [l, u].
+- The rhs coefficient is the value right of the relation, i.e., b for the constraint when of the form a*x □ b, where □ is ≤, =, or ≥.
+- The range denotes valid changes, e.g., for a*x <= b + Δ, the LP basis remains feasible for all Δ ∈ [l, u].
 """
 function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, <:_MOICON})
     error("The perturbation range of rhs is not defined or not implemented for this type " *
@@ -25,17 +25,17 @@ end
 
 """
 Builds the standard form constraint matrix, variable bounds, and a vector of constraint reference, one for each row.
-If A' is the current constraint matrix, and the corresponding feasible set is on the form
-s.t. Row_L <= A'x <= Row_U,
-     Var_L <=   x <= Var_U.
+If Ã is the current constraint matrix, and the corresponding feasible set is of the form
+s.t. Row_L <= Ãx <= Row_U,
+     Var_L <=  x <= Var_U.
 (Equality constraint is interpreted as, e.g., Row_L_i == Row_U_i,
 and single sided constraints with an infinite value in the free directions)
 Then the function returns a tuple with
-    A = [A' -I]
+    A = [Ã -I]
     var_lower = [Var_L, Row_L]
     var_upper = [Var_U, Row_U]
-    affine_constraints::Vector{ConstraintRef} - references corresponding to Row_L <= A'x <= Row_U
-This represents the LP-problem feasible set on the form
+    affine_constraints::Vector{ConstraintRef} - references corresponding to Row_L <= Ãx <= Row_U
+This represents the LP problem feasible set of the form
 s.t.            Ax == 0
   var_lower <=   x <= var_upper
 """
@@ -43,19 +43,19 @@ function _std_matrix(model::Model)
     con_types = list_of_constraint_types(model)
     con_func_type = first.(con_types)
     if !all(broadcast(<:, AffExpr, con_func_type) .| broadcast(<:, VariableRef, con_func_type))
-        error("Perturbation range of rhs and objective require all constraints functions to be affine (the problem to be linear).")
+        error("The requested operation is not supported because the problem is not a linear optimization problem.")
     end
     con_set_type = last.(con_types)
     if !all(broadcast(<:, con_set_type, Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo, MOI.Interval}))
-        error("Perturbation range of rhs and objective only allows the constraints sets less than, greater than, equal to, and interval.")
+        error("The requested operation is not supported because the problem is not a linear optimization problem.")
     end
     vars = all_variables(model)
-    var_to_idx = Dict{VariableRef, Int64}()
+    var_to_idx = Dict{VariableRef, Int}()
     for (j, var) in enumerate(vars)
         var_to_idx[var] = j
     end
-    col_j = Int64[]
-    row_i = Int64[]
+    col_j = Int[]
+    row_i = Int[]
     coeffs = Float64[]
 
     var_lower = fill(-Inf, length(vars))
@@ -74,26 +74,26 @@ function _std_matrix(model::Model)
                 var_lower[j] = max(var_lower[j], range.lower)
                 var_upper[j] = min(var_upper[j], range.upper)
             end
-            #issue 1892 makes is hard to know how to handle variable constraints, atm. assume unique variable constraints.
-            continue
-        end
-        for constraint in constraints
-            cur_row_idx += 1
-            con_obj = constraint_object(constraint)
-            con_terms = con_obj.func.terms
-            push!(affine_constraints, constraint)
-            for (var, coeff) in con_terms
-                push!(col_j, var_to_idx[var])
+            #issue 1892 makes it hard to know how to handle variable constraints, atm. assume unique variable constraints.
+        else
+            for constraint in constraints
+                cur_row_idx += 1
+                con_obj = constraint_object(constraint)
+                con_terms = con_obj.func.terms
+                push!(affine_constraints, constraint)
+                for (var, coeff) in con_terms
+                    push!(col_j, var_to_idx[var])
+                    push!(row_i, cur_row_idx)
+                    push!(coeffs, coeff)
+                end
+                push!(col_j, cur_row_idx + length(vars))
                 push!(row_i, cur_row_idx)
-                push!(coeffs, coeff)
-            end
-            push!(col_j, cur_row_idx + length(vars))
-            push!(row_i, cur_row_idx)
-            push!(coeffs, -1.0)
+                push!(coeffs, -1.0)
 
-            range = MOI.Interval(con_obj.set)
-            push!(var_lower, range.lower)
-            push!(var_upper, range.upper)
+                range = MOI.Interval(con_obj.set)
+                push!(var_lower, range.lower)
+                push!(var_upper, range.upper)
+            end
         end
     end
 
@@ -106,8 +106,7 @@ Returns the optimal primal values for the problem in standard form, c.f. `_std_m
 """
 function _std_primal_solution(model::Model, constraints::Vector{ConstraintRef})
     vars = all_variables(model)
-    x = [value.(vars); value.(constraints)]
-    return x
+    return [value.(vars); value.(constraints)]
 end
 
 """
@@ -116,7 +115,7 @@ Returns the basis status of all variables of the problem in standard form, c.f. 
 function _std_basis_status(model::Model)::Vector{MOI.BasisStatusCode}
     con_types = list_of_constraint_types(model)
     vars = all_variables(model)
-    var_to_idx = Dict{VariableRef, Int64}()
+    var_to_idx = Dict{VariableRef, Int}()
     for (j, var) in enumerate(vars)
         var_to_idx[var] = j
     end
@@ -128,24 +127,30 @@ function _std_basis_status(model::Model)::Vector{MOI.BasisStatusCode}
             for constraint in constraints
                 con_obj = constraint_object(constraint)
                 j = var_to_idx[con_obj.func]
-                basis_status[j] = MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
+                try
+                    basis_status[j] = MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
+                catch e
+                    error("The perturbation range of rhs is not available because the solver doesn't "*
+                          "support ´ConstraintBasisStatus´.")
+                end
                 if S <: MOI.LessThan && basis_status[j] == MOI.NONBASIC
                     basis_status[j] = MOI.NONBASIC_AT_UPPER
                 elseif S <: MOI.GreaterThan && basis_status[j] == MOI.NONBASIC
                     basis_status[j] = MOI.NONBASIC_AT_LOWER
                 end
+                # ´_std_matrix´ checks that no invalid sets are used.
             end
-            #issue 1892 makes is hard to know how to handle variable constraints, atm. assume unique variable constraints.
-            continue
-        end
-        for constraint in constraints
-            con_basis_status = MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
-            if S <: MOI.LessThan && con_basis_status == MOI.NONBASIC
-                con_basis_status = MOI.NONBASIC_AT_UPPER
-            elseif S <: MOI.GreaterThan && con_basis_status == MOI.NONBASIC
-                con_basis_status = MOI.NONBASIC_AT_LOWER
+            #issue 1892 makes it hard to know how to handle variable constraints, atm. assume unique variable constraints.
+        else
+            for constraint in constraints
+                con_basis_status = MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
+                if S <: MOI.LessThan && con_basis_status == MOI.NONBASIC
+                    con_basis_status = MOI.NONBASIC_AT_UPPER
+                elseif S <: MOI.GreaterThan && con_basis_status == MOI.NONBASIC
+                    con_basis_status = MOI.NONBASIC_AT_LOWER
+                end
+                push!(basis_status, con_basis_status)
             end
-            push!(basis_status, con_basis_status)
         end
     end
     return basis_status
@@ -176,8 +181,7 @@ function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, _MOICON{F, S
               "support ´ConstraintBasisStatus´.")
     end
     # The constraint is active.
-
-    # Optimization possible, only basic columns needed
+    # TODO: This could be made more efficient because actually we only need the basic columns.
     A, L, U, constraints = _std_matrix(model)
     var_basis_status = _std_basis_status(model)
     x = _std_primal_solution(model, constraints)
@@ -227,7 +231,7 @@ Returns the optimal reduced costs for the variables of the problem in standard f
 function _std_reduced_costs(model::Model, constraints::Vector{ConstraintRef})
     con_types = list_of_constraint_types(model)
     vars = all_variables(model)
-    var_to_idx = Dict{VariableRef, Int64}()
+    var_to_idx = Dict{VariableRef, Int}()
     for (j, var) in enumerate(vars)
         var_to_idx[var] = j
     end
@@ -254,11 +258,11 @@ end
 """
     lp_objective_perturbation_range(var::VariableRef)::Tuple{Float64, Float64}
 
-Gives the range by which the cost coefficient can change and the current lp-basis
+Gives the range by which the cost coefficient can change and the current LP basis
 remains optimal, i.e., the reduced costs remain valid.
 
 ## Notes
-- The range denote valid changes, Δ in [l, u], for which c[var] += Δ do not violate the current optimality conditions.
+- The range denotes valid changes, Δ in [l, u], for which cost[var] += Δ do not violate the current optimality conditions.
 
 """
 function lp_objective_perturbation_range(var::VariableRef)::Tuple{Float64, Float64}
@@ -274,14 +278,13 @@ function lp_objective_perturbation_range(var::VariableRef)::Tuple{Float64, Float
         error("The perturbation range of the objective is not available because no dual result is " *
               "available.")
     end
-    # Optimization possible: since the has_upper_bound(var) and has_lower_bound(var)
-    # Do not capture all variable bounds (issue 1892), it's hard to directly
-    # access the reduced cost of a variable, now the complete matrix is always built.
+#    TODO: This could be made more efficient for non-basic variables by checking them
+#          before building calling ´_std_matrix´ and ´_std_reduced_costs´ and only check
+#          the reduced cost of that variable. (issue 1892 makes this somewhat non-trivial)
 
-    # The variable is in the basis for a minimization problem with no variable upper bounds we need:
+    # The variable is in the basis, for a minimization problem without variable upper bounds we need:
     # c_N - N^T B^-T (c_B + Δ e_j ) >= 0
     # c_red - Δ N^T (B^-T e_j) = c_red - Δ N^T ρ = c_red - Δ N_red >= 0
-    # c_red >= Δ N_red
     # c_red >= Δ N_red
     # maximum( c_red_- ./ N_red_- ) <= Δ <= minimum( c_red_+ ./ N_red_+ )
     # If upper bounds are present (and active), those inequalities are flipped.
@@ -290,13 +293,7 @@ function lp_objective_perturbation_range(var::VariableRef)::Tuple{Float64, Float
     j = findfirst(isequal(var), vars)
 
     A, var_lower, var_upper, constraints = _std_matrix(model)
-    local var_basis_status::Vector{MOI.BasisStatusCode}
-    try
-        var_basis_status = _std_basis_status(model)
-    catch e
-        error("The perturbation range of objective is not available because the solver doesn't "*
-              "support ´ConstraintBasisStatus´.")
-    end
+    var_basis_status = _std_basis_status(model)
     c_red = _std_reduced_costs(model, constraints)
 
     if var_basis_status[j] != MOI.BASIC
