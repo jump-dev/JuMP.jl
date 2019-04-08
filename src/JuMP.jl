@@ -451,7 +451,7 @@ end
 """
     unset_silent(model::Model)
 
-Neutralize the effect of the `set_silent` method and let the solver
+Neutralize the effect of the `set_silent` function and let the solver
 attributes control the verbosity.
 """
 function unset_silent(model::Model)
