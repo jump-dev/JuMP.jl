@@ -462,10 +462,10 @@ end
 
     @testset "Plural failures" begin
         model = Model()
-        @test_macro_throws MethodError("no method matching @variables(::LineNumberNode, ::Module, ::Symbol)") @variables(model)
+        @test_macro_throws MethodError @variables(model)
         @test_macro_throws ErrorException("Invalid syntax for @variables") @variables(model, x)
         @test_macro_throws ErrorException("Invalid syntax for @variables") @variables(model, x >= 0)
-        @test_macro_throws MethodError("no method matching @variables(::LineNumberNode, ::Module, ::Symbol, ::Expr, ::Symbol)") @variables(model, x >= 0, Bin)
+        @test_macro_throws MethodError @variables(model, x >= 0, Bin)
     end
 end
 
