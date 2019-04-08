@@ -77,8 +77,13 @@ function set_objective_function(model::Model, func::AbstractJuMPScalar)
     set_objective_function(model, moi_function(func))
 end
 
+function set_objective_function(model::Model, func::Real)
+    set_objective_function(model, MOI.ScalarAffineFunction(
+        MOI.ScalarAffineTerm{Float64}[], Float64(func)))
+end
+
 function set_objective(model::Model, sense::MOI.OptimizationSense,
-                       func::AbstractJuMPScalar)
+                       func::Union{AbstractJuMPScalar, Real})
     set_objective_sense(model, sense)
     set_objective_function(model, func)
 end
