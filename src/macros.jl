@@ -813,7 +813,11 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                   (:NLexpressions, Symbol("@NLexpression"))]
     @eval begin
         macro $mac(m, x)
-            x.head == :block || error("Invalid syntax for @",$(string(mac)))
+            if typeof(x) != Expr || x.head != :block
+                # We do a weird string interpolation here so that it gets
+                # interpolated at compile time, not run-time.
+                error("Invalid syntax for @" * $(string(mac)))
+            end
             @assert isa(x.args[1], LineNumberNode)
             lastline = x.args[1]
             code = quote end
