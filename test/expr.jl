@@ -28,6 +28,7 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         @test !iszero(x + 1)
         @test !iszero(x + 0)
         @test iszero(0 * x + 0)
+        @test iszero(x - x)
     end
 
     @testset "isequal(::GenericQuadExpr)" begin
@@ -49,6 +50,7 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         @test !iszero(x^2 + 0)
         @test !iszero(x^2 + 0 * x + 0)
         @test iszero(0 * x^2 + 0 * x + 0)
+        @test iszero(x^2 - x^2)
     end
 
     @testset "value for GenericAffExpr" begin
