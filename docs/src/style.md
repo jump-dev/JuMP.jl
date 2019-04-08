@@ -162,6 +162,10 @@ The "readability" of a line is subjective. In this section we give suggestions
 of good and bad style of how to break a line. These suggestions are inspired by
 Google's [Python style guide](https://google.github.io/styleguide/pyguide.html).
 
+!!! note
+    If you're unsure about how format your code, you can experiment (in Python)
+    using [YAPF](https://yapf.now.sh/).
+
 When defining functions, align arguments vertically after the opening
 parenthesis, or list all arguments on a new (indented) line.
 
