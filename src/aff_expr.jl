@@ -90,6 +90,20 @@ Base.one( a::GenericAffExpr) =  one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
 Base.broadcastable(a::GenericAffExpr) = Ref(a)
 
+"""
+    drop_zeros(expr::GenericAffExpr)
+
+Remove terms in the affine expression with `0` coefficients.
+"""
+function drop_zeros(expr::GenericAffExpr)
+    for (key, coef) in expr.terms
+        if iszero(coef)
+            delete!(expr.terms, key)
+        end
+    end
+    return
+end
+
 GenericAffExpr{C, V}() where {C, V} = zero(GenericAffExpr{C, V})
 
 function map_coefficients_inplace!(f::Function, a::GenericAffExpr)
