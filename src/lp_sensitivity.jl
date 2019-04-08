@@ -9,7 +9,7 @@
 #############################################################################
 
 """
-    lp_rhs_perturbation_range(constraint::ConstraintRef)::Tuple{Float64, Float64}
+    lp_rhs_perturbation_range(constraint::ConstraintRef; feasibility_tolerance::Float64)::Tuple{Float64, Float64}
 
 Gives the range by which the rhs coefficient can change and the current LP basis
 remains feasible, i.e., where the shadow prices apply.
@@ -17,8 +17,9 @@ remains feasible, i.e., where the shadow prices apply.
 ## Notes
 - The rhs coefficient is the value right of the relation, i.e., b for the constraint when of the form a*x □ b, where □ is ≤, =, or ≥.
 - The range denotes valid changes, e.g., for a*x <= b + Δ, the LP basis remains feasible for all Δ ∈ [l, u].
+- `feasibility_tolerance` is the primal feasibility tolerance.
 """
-function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, <:_MOICON})
+function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, <:_MOICON}; feasibility_tolerance::Float64 = 1e-8)
     error("The perturbation range of rhs is not defined or not implemented for this type " *
           "of constraint.")
 end
@@ -156,7 +157,7 @@ function _std_basis_status(model::Model)::Vector{MOI.BasisStatusCode}
     return basis_status
 end
 
-function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, _MOICON{F, S}}
+function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, _MOICON{F, S}}; feasibility_tolerance::Float64 = 1e-8
                       )::Tuple{Float64, Float64} where {S <: Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo}, T, F <: Union{MOI.ScalarAffineFunction{T}, MOI.SingleVariable}}
     model = owner_model(constraint)
     if termination_status(model) != MOI.OPTIMAL
@@ -213,11 +214,10 @@ function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, _MOICON{F, S
     # Find the first basic variable bound that is strictly violated.
     # Use the vanilla 1e-8 tolerance (c.f. "Computational Techniques of the Simplex Method" by István Maros section 9.3.4.)
     # to determine this strict violation.
-    tol = 1e-8
     lower_bounds_delta = [-Inf; UmX_B[neg]  ./ rho[neg]; LmX_B[pos] ./ rho[pos]]
-    lower_bounds_delta_strict = lower_bounds_delta + [0.0; tol ./ rho[neg]; -tol ./ rho[pos]]
+    lower_bounds_delta_strict = lower_bounds_delta + [0.0; feasibility_tolerance ./ rho[neg]; -feasibility_tolerance ./ rho[pos]]
     upper_bounds_delta = [Inf; UmX_B[pos] ./ rho[pos]; LmX_B[neg] ./ rho[neg]]
-    upper_bounds_delta_strict = upper_bounds_delta + [0.0; tol ./ rho[pos]; -tol ./ rho[neg]]
+    upper_bounds_delta_strict = upper_bounds_delta + [0.0; feasibility_tolerance ./ rho[pos]; -feasibility_tolerance ./ rho[neg]]
 
     lower_max_idx = last(findmax(lower_bounds_delta_strict))
     upper_min_idx = last(findmin(upper_bounds_delta_strict))
@@ -263,9 +263,10 @@ remains optimal, i.e., the reduced costs remain valid.
 
 ## Notes
 - The range denotes valid changes, Δ in [l, u], for which cost[var] += Δ do not violate the current optimality conditions.
+- `optimality_tolerance` is the dual feasibility tolerance.
 
 """
-function lp_objective_perturbation_range(var::VariableRef)::Tuple{Float64, Float64}
+function lp_objective_perturbation_range(var::VariableRef; optimality_tolerance::Float64 = 1e-8)::Tuple{Float64, Float64}
     model = owner_model(var)
     if termination_status(model) != MOI.OPTIMAL
         error("The perturbation range of the objective is not available because the current solution "*
@@ -278,9 +279,9 @@ function lp_objective_perturbation_range(var::VariableRef)::Tuple{Float64, Float
         error("The perturbation range of the objective is not available because no dual result is " *
               "available.")
     end
-#    TODO: This could be made more efficient for non-basic variables by checking them
-#          before building calling ´_std_matrix´ and ´_std_reduced_costs´ and only check
-#          the reduced cost of that variable. (issue 1892 makes this somewhat non-trivial)
+    # TODO: This could be made more efficient for non-basic variables by checking them
+    #       before building calling ´_std_matrix´ and ´_std_reduced_costs´ and only check
+    #       the reduced cost of that variable. (issue 1892 makes this somewhat non-trivial)
 
     # The variable is in the basis, for a minimization problem without variable upper bounds we need:
     # c_N - N^T B^-T (c_B + Δ e_j ) >= 0
@@ -328,11 +329,10 @@ function lp_objective_perturbation_range(var::VariableRef)::Tuple{Float64, Float
     # Find the first reduced cost that is strictly violated
     # Use the vanilla 1e-8 tolerance (c.f. "Computational Techniques of the Simplex Method" by István Maros section 9.3.4.)
     # to determine this strict violation.
-    tol = 1e-8
     lower_bounds_delta = [-Inf; c_red[in_lb] ./ N_red[in_lb]]
-    lower_bounds_delta_strict = lower_bounds_delta - [0.0; tol ./ abs.(N_red[in_lb])]
+    lower_bounds_delta_strict = lower_bounds_delta - [0.0; optimality_tolerance ./ abs.(N_red[in_lb])]
     upper_bounds_delta = [Inf; c_red[in_ub] ./ N_red[in_ub]]
-    upper_bounds_delta_strict = upper_bounds_delta + [0.0; tol ./ abs.(N_red[in_ub])]
+    upper_bounds_delta_strict = upper_bounds_delta + [0.0; optimality_tolerance ./ abs.(N_red[in_ub])]
 
     lower_max_idx = last(findmax(lower_bounds_delta_strict))
     upper_min_idx = last(findmin(upper_bounds_delta_strict))
