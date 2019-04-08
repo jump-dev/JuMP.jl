@@ -24,6 +24,7 @@
         @test isassigned(A, 1)
         @test !isassigned(A, 2)
         @test !isassigned(A, 3)
+        @test !isassigned(A, 1, 2)
     end
 
     @testset "Range index set" begin
