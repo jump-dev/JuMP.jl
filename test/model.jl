@@ -335,7 +335,7 @@ function test_model()
             @test_throws err solve_time(model)
         end
 
-        @testset "NoOptimizer()" begin
+        @testset "OptimizeNotCalled()" begin
             err = OptimizeNotCalled()
             model = Model(with_optimizer(MOIU.MockOptimizer,
                                          SimpleLPModel{Float64}()))
