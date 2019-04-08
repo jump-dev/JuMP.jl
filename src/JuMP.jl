@@ -439,6 +439,15 @@ end
 set_optimize_hook(model::Model, f) = (model.optimize_hook = f)
 
 
+"""
+    solve_time(model::Model)
+
+If available, returns the solve time reported by the solver.
+"""
+function solve_time(model::Model)
+    return MOI.get(model, MOI.SolveTime())
+end
+
 # Abstract base type for all scalar types
 abstract type AbstractJuMPScalar end
 

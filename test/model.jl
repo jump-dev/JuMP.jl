@@ -328,6 +328,21 @@ function test_model()
         @test optimizer.b == 2
     end
 
+    @testset "solve_time" begin
+        @testset "NoOptimizer()" begin
+            err = NoOptimizer()
+            model = Model()
+            @test_throws err solve_time(model)
+        end
+
+        @testset "NoOptimizer()" begin
+            err = OptimizeNotCalled()
+            model = Model(with_optimizer(MOIU.MockOptimizer,
+                                         SimpleLPModel{Float64}()))
+            @test_throws err solve_time(model)
+        end
+    end
+
     @testset "solver_name" begin
         @testset "Not attached" begin
             model = Model()
