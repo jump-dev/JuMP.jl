@@ -84,9 +84,10 @@ The container type (e.g., scalar, vector, or matrix) of the returned solution
 (primal or dual) depends on the type of the variable or constraint. See
 [`AbstractShape`](@ref) and [`dual_shape`](@ref) for details.
 
-To call [`value`](@ref) or [`dual`](@ref) on containers of
-[`VariableRef`](@ref) or [`ConstraintRef`](@ref), use the broadcast syntax,
-e.g., `value.(x)`.
+!!! info
+    To call [`value`](@ref) or [`dual`](@ref) on containers of
+    [`VariableRef`](@ref) or [`ConstraintRef`](@ref), use the broadcast syntax,
+    e.g., `value.(x)`.
 
 The objective value of a solved problem can be obtained via
 [`objective_value`](@ref). The best known bound on the optimal objective
