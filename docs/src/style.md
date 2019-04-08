@@ -156,17 +156,11 @@ Therefore, aim to keep line lengths under 80 characters by breaking lines
 for maximum readability (examples are given in the [Line breaks](@ref) section),
 but don't treat this as a hard rule.
 
-We make exceptions for
-
- - URLs
- - path names
- - long string constants not containing whitespace
- - lines for which breaking over multiple lines worsens readability
-
 #### Line breaks
 
 The "readability" of a line is subjective. In this section we give suggestions
-of good and bad style of how to break a line.
+of good and bad style of how to break a line. These suggestions are inspired by
+Google's [Python style guide](https://google.github.io/styleguide/pyguide.html).
 
 When defining functions, align arguments vertically after the opening
 parenthesis, or list all arguments on a new (indented) line.
@@ -208,24 +202,6 @@ Better:
 ```julia
 a_very_long_variable_name = a_long_variable_name_with_arguments(
     first_argument, second_argument)
-```
-
-Only use vertical alignment for function arguments. Don't use it in any other
-situation.
-
-Bad:
-```julia
-# Vertical alignment used in a non-function context. Also, indent is not a
-# multiple of 4 spaces.
-comprehension = [(first, second) for (first, second) in list_of_things
-                 if isodd(first)]
-```
-
-Better
-```julia
-comprehension = [
-    (first, second) for (first, second) in list_of_things if isodd(first)
-]
 ```
 
 Don't use vertical alignment if it would be more readable to place all arguments
@@ -270,21 +246,6 @@ f(x) = 1 + x +
 Better:
 ```julia
 f(x) = 1 + x + x^2 + x^3 + x^3
-```
-
-Drop trailing parentheses onto a new line if it improves readability.
-
-Good:
-```julia
-con_index = MOI.add_constraint(
-    backend(owner_model(variable)), MOI.SingleVariable(index(variable)), set)
-```
-
-Also good:
-```julia
-con_index = MOI.add_constraint(
-    backend(owner_model(variable)), MOI.SingleVariable(index(variable)), set
-)
 ```
 
 ### Syntax
