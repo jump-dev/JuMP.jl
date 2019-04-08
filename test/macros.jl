@@ -459,6 +459,14 @@ end
         @test i == 10
         @test j == 10
     end
+
+    @testset "Plural failures" begin
+        model = Model()
+        @test_macro_throws MethodError @variables(model)
+        @test_macro_throws ErrorException("Invalid syntax for @variables") @variables(model, x)
+        @test_macro_throws ErrorException("Invalid syntax for @variables") @variables(model, x >= 0)
+        @test_macro_throws MethodError @variables(model, x >= 0, Bin)
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
