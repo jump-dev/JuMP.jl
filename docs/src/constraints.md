@@ -547,13 +547,41 @@ model with different coefficients.
 
 ### Modifying a constant term
 
-Most often, modifications involve changing the "right-hand side" of a linear
-constraint. This presents a challenge for JuMP because it leads to ambiguities.
-For example, what is the right-hand side term of
-`@constraint(model, 2x + 1 <= x - 3)`? This applies more generally to any
-constant term in a function appearing in the objective or a constraint.
+Use [`set_standard_form_rhs`](@ref) to modify the right-hand side (constant)
+term of a constraint. Use [`standard_form_rhs`](@ref) to query the right-hand
+side term.
 
-To avoid these ambiguities, JuMP includes the ability to *fix* variables to a
+```jldoctest con_fix; setup = :(model = Model(); @variable(model, x))
+julia> @constraint(model, con, 2x <= 1)
+con : 2 x <= 1.0
+
+julia> set_standard_form_rhs(con, 3)
+
+julia> con
+con : 2 x <= 3.0
+
+julia> standard_form_rhs(con)
+3.0
+```
+
+!!! note
+    JuMP normalizes constraints into a standard form by moving all constant terms
+    onto the right-hand side of the constraint.
+    ```julia
+    @constraint(model, 2x - 1 <= 2)
+    ```
+    will be normalized to
+    ```julia
+    @constraint(model, 2x <= 3)
+    ```
+    [`set_standard_form_rhs`](@ref) sets the right-hand side term of the
+    normalized constraint.
+
+If constraints are complicated, e.g., they are composed of a number of
+components, each of which has a constant term, then it may be difficult to
+calculate what the right-hand side term should be in the standard form.
+
+For this situation, JuMP includes the ability to *fix* variables to a
 value using the [`fix`](@ref) function. Fixing a variable sets its lower
 and upper bound to the same value. Thus, changes in a constant term can be
 simulated by adding a dummy variable and fixing it to different values. Here is
@@ -563,11 +591,13 @@ an example:
 julia> @variable(model, const_term)
 const_term
 
-julia> @constraint(model, con, 2x <= const_term)
-con : 2 x - const_term <= 0.0
+julia> @constraint(model, con, 2x <= const_term + 1)
+con : 2 x - const_term <= 1.0
 
 julia> fix(const_term, 1.0)
 ```
+The constraint `con` is now equivalent to `2x <= 2`.
+
 !!! note
     Even though `const_term` is fixed, it is still a decision variable. Thus,
     `const_term * x` is bilinear. Fixed variables are not replaced with
@@ -575,18 +605,34 @@ julia> fix(const_term, 1.0)
 
 ### Modifying a variable coefficient
 
-It is also possible to modify the scalar coefficients (but notably *not yet* the
-quadratic coefficients) using the [`set_coefficient`](@ref) function. Here
-is an example:
+To modify the scalar coefficients of a cosntraint (but notably *not yet* the
+quadratic coefficients), use [`set_standard_form_coefficient`](@ref). To query
+the current coefficient, use [`standard_form_coefficient`](@ref).
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, con, 2x <= 1)
 con : 2 x <= 1.0
 
-julia> set_coefficient(con, x, 3)
+julia> set_standard_form_coefficient(con, x, 3)
 
 julia> con
 con : 3 x <= 1.0
+
+julia> standard_form_coefficient(con, x)
+3.0
 ```
+
+!!! note
+    JuMP normalizes constraints into a standard form by moving all terms
+    involving variables onto the left-hand side of the constraint.
+    ```julia
+    @constraint(model, 2x <= 1 - x)
+    ```
+    will be normalized to
+    ```julia
+    @constraint(model, 3x <= 1)
+    ```
+    [`set_standard_form_coefficient`](@ref) sets the coefficient of the
+    normalized constraint.
 
 ## Constraint deletion
 
@@ -672,7 +718,10 @@ SecondOrderCone
 RotatedSecondOrderCone
 PSDCone
 shadow_price
-set_coefficient
+standard_form_coefficient
+set_standard_form_coefficient
+standard_form_rhs
+set_standard_form_rhs
 is_valid
 JuMP.delete
 LowerBoundRef
