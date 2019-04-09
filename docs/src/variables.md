@@ -629,6 +629,13 @@ julia> start_value(y)
 2.0
 ```
 
+Prior to JuMP 0.19, the previous solution to a solve was automatically set as
+the new starting value. JuMP 0.19 no longer does this automatically. To
+reproduce the functionality, use:
+```julia
+set_start_value.(all_variables(model), value.(all_variables(model)))
+```
+
 ## Reference
 
 ```@docs
