@@ -957,7 +957,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "Modifying a constant term",
     "category": "section",
-    "text": "Most often, modifications involve changing the \"right-hand side\" of a linear constraint. This presents a challenge for JuMP because it leads to ambiguities. For example, what is the right-hand side term of @constraint(model, 2x + 1 <= x - 3)? This applies more generally to any constant term in a function appearing in the objective or a constraint.To avoid these ambiguities, JuMP includes the ability to fix variables to a value using the fix function. Fixing a variable sets its lower and upper bound to the same value. Thus, changes in a constant term can be simulated by adding a dummy variable and fixing it to different values. Here is an example:julia> @variable(model, const_term)\nconst_term\n\njulia> @constraint(model, con, 2x <= const_term)\ncon : 2 x - const_term <= 0.0\n\njulia> fix(const_term, 1.0)note: Note\nEven though const_term is fixed, it is still a decision variable. Thus, const_term * x is bilinear. Fixed variables are not replaced with constants when communicating the problem to a solver."
+    "text": "Use set_standard_form_rhs to modify the right-hand side (constant) term of a constraint. Use standard_form_rhs to query the right-hand side term.julia> @constraint(model, con, 2x <= 1)\ncon : 2 x <= 1.0\n\njulia> set_standard_form_rhs(con, 3)\n\njulia> con\ncon : 2 x <= 3.0\n\njulia> standard_form_rhs(con)\n3.0note: Note\nJuMP normalizes constraints into a standard form by moving all constant terms onto the right-hand side of the constraint.@constraint(model, 2x - 1 <= 2)will be normalized to@constraint(model, 2x <= 3)set_standard_form_rhs sets the right-hand side term of the normalized constraint.If constraints are complicated, e.g., they are composed of a number of components, each of which has a constant term, then it may be difficult to calculate what the right-hand side term should be in the standard form.For this situation, JuMP includes the ability to fix variables to a value using the fix function. Fixing a variable sets its lower and upper bound to the same value. Thus, changes in a constant term can be simulated by adding a dummy variable and fixing it to different values. Here is an example:julia> @variable(model, const_term)\nconst_term\n\njulia> @constraint(model, con, 2x <= const_term + 1)\ncon : 2 x - const_term <= 1.0\n\njulia> fix(const_term, 1.0)The constraint con is now equivalent to 2x <= 2.note: Note\nEven though const_term is fixed, it is still a decision variable. Thus, const_term * x is bilinear. Fixed variables are not replaced with constants when communicating the problem to a solver."
 },
 
 {
@@ -965,7 +965,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "Modifying a variable coefficient",
     "category": "section",
-    "text": "It is also possible to modify the scalar coefficients (but notably not yet the quadratic coefficients) using the set_coefficient function. Here is an example:julia> @constraint(model, con, 2x <= 1)\ncon : 2 x <= 1.0\n\njulia> set_coefficient(con, x, 3)\n\njulia> con\ncon : 3 x <= 1.0"
+    "text": "To modify the scalar coefficients of a cosntraint (but notably not yet the quadratic coefficients), use set_standard_form_coefficient. To query the current coefficient, use standard_form_coefficient.julia> @constraint(model, con, 2x <= 1)\ncon : 2 x <= 1.0\n\njulia> set_standard_form_coefficient(con, x, 3)\n\njulia> con\ncon : 3 x <= 1.0\n\njulia> standard_form_coefficient(con, x)\n3.0note: Note\nJuMP normalizes constraints into a standard form by moving all terms involving variables onto the left-hand side of the constraint.@constraint(model, 2x <= 1 - x)will be normalized to@constraint(model, 3x <= 1)set_standard_form_coefficient sets the coefficient of the normalized constraint."
 },
 
 {
@@ -1033,11 +1033,35 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "constraints/#JuMP.set_coefficient",
+    "location": "constraints/#JuMP.standard_form_coefficient",
     "page": "Constraints",
-    "title": "JuMP.set_coefficient",
+    "title": "JuMP.standard_form_coefficient",
     "category": "function",
-    "text": "set_coefficient(constraint::ConstraintRef, variable::VariableRef, value)\n\nSet the coefficient of variable in the constraint constraint to value.\n\nNote that prior to this step, JuMP will aggregate multiple terms containing the same variable. For example, given a constraint 2x + 3x <= 2, set_coefficient(c, x, 4) will create the constraint 4x <= 2.\n\nmodel = Model()\n@variable(model, x)\n@constraint(model, con, 2x + 3x <= 2)\nset_coefficient(con, x, 4)\ncon\n\n# output\n\ncon : 4 x <= 2.0\n\n\n\n\n\n"
+    "text": "standard_form_coefficient(constraint::ConstraintRef, variable::VariableRef)\n\nReturn the coefficient associated with variable in constraint after JuMP has normalized the constraint into its standard form. See also set_standard_form_coefficient.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.set_standard_form_coefficient",
+    "page": "Constraints",
+    "title": "JuMP.set_standard_form_coefficient",
+    "category": "function",
+    "text": "set_standard_form_coefficient(constraint::ConstraintRef, variable::VariableRef, value)\n\nSet the coefficient of variable in the constraint constraint to value.\n\nNote that prior to this step, JuMP will aggregate multiple terms containing the same variable. For example, given a constraint 2x + 3x <= 2, set_standard_form_coefficient(c, x, 4) will create the constraint 4x <= 2.\n\nmodel = Model()\n@variable(model, x)\n@constraint(model, con, 2x + 3x <= 2)\nset_standard_form_coefficient(con, x, 4)\ncon\n\n# output\n\ncon : 4 x <= 2.0\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.standard_form_rhs",
+    "page": "Constraints",
+    "title": "JuMP.standard_form_rhs",
+    "category": "function",
+    "text": "standard_form_rhs(constraint::ConstraintRef)\n\nReturn the right-hand side term of constraint after JuMP has converted the constraint into its standard form. See also set_standard_form_rhs.\n\n\n\n\n\n"
+},
+
+{
+    "location": "constraints/#JuMP.set_standard_form_rhs",
+    "page": "Constraints",
+    "title": "JuMP.set_standard_form_rhs",
+    "category": "function",
+    "text": "set_standard_form_rhs(constraint::ConstraintRef, value)\n\nSet the right-hand side term of constraint to value.\n\nNote that prior to this step, JuMP will aggregate all constant terms onto the right-hand side of the constraint. For example, given a constraint 2x + 1 <= 2, set_standard_form_rhs(c, 4) will create the constraint 2x <= 4, not 2x + 1 <= 4.\n\njulia> @constraint(model, con, 2x + 1 <= 2)\ncon : 2 x <= 1.0\n\njulia> set_standard_form_rhs(con, 4)\n\njulia> con\ncon : 2 x <= 4.0\n\n\n\n\n\n"
 },
 
 {
@@ -1165,7 +1189,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "Reference",
     "category": "section",
-    "text": "@constraint\n@SDconstraint\nSecondOrderCone\nRotatedSecondOrderCone\nPSDCone\nshadow_price\nset_coefficient\nis_valid\nJuMP.delete\nLowerBoundRef\nUpperBoundRef\nFixRef\nConstraintRef\nlist_of_constraint_types\nall_constraints\nnum_constraints\nconstraint_object\nAbstractConstraint\nScalarConstraint\nVectorConstraint\nindex(::ConstraintRef)\noptimizer_index(::ConstraintRef{Model})"
+    "text": "@constraint\n@SDconstraint\nSecondOrderCone\nRotatedSecondOrderCone\nPSDCone\nshadow_price\nstandard_form_coefficient\nset_standard_form_coefficient\nstandard_form_rhs\nset_standard_form_rhs\nis_valid\nJuMP.delete\nLowerBoundRef\nUpperBoundRef\nFixRef\nConstraintRef\nlist_of_constraint_types\nall_constraints\nnum_constraints\nconstraint_object\nAbstractConstraint\nScalarConstraint\nVectorConstraint\nindex(::ConstraintRef)\noptimizer_index(::ConstraintRef{Model})"
 },
 
 {
