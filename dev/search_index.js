@@ -361,6 +361,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "variables/#JuMP.num_variables",
+    "page": "Variables",
+    "title": "JuMP.num_variables",
+    "category": "function",
+    "text": "num_variables(model::Model)::Int64\n\nReturns number of variables in model.\n\n\n\n\n\n"
+},
+
+{
     "location": "variables/#JuMP.has_lower_bound",
     "page": "Variables",
     "title": "JuMP.has_lower_bound",
@@ -557,7 +565,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Variables",
     "title": "Reference",
     "category": "section",
-    "text": "@variable\nowner_model\nVariableRef\nall_variables\n\nhas_lower_bound\nlower_bound\nset_lower_bound\ndelete_lower_bound\n\nhas_upper_bound\nupper_bound\nset_upper_bound\ndelete_upper_bound\n\nis_fixed\nfix_value\nfix\nunfix\n\nis_integer\nset_integer\nunset_integer\nIntegerRef\n\nis_binary\nset_binary\nunset_binary\nBinaryRef\n\nindex(::VariableRef)\noptimizer_index(::VariableRef)\n\nset_start_value\nstart_value"
+    "text": "@variable\nowner_model\nVariableRef\nall_variables\nnum_variables\n\nhas_lower_bound\nlower_bound\nset_lower_bound\ndelete_lower_bound\n\nhas_upper_bound\nupper_bound\nset_upper_bound\ndelete_upper_bound\n\nis_fixed\nfix_value\nfix\nunfix\n\nis_integer\nset_integer\nunset_integer\nIntegerRef\n\nis_binary\nset_binary\nunset_binary\nBinaryRef\n\nindex(::VariableRef)\noptimizer_index(::VariableRef)\n\nset_start_value\nstart_value"
 },
 
 {
@@ -1342,6 +1350,46 @@ var documenterSearchIndex = {"docs": [
     "title": "Direct mode",
     "category": "section",
     "text": "JuMP models can be created in DIRECT mode using the JuMP.direct_model function.JuMP.direct_modelJuMP.backend"
+},
+
+{
+    "location": "solvers/#JuMP.solver_name",
+    "page": "Solvers",
+    "title": "JuMP.solver_name",
+    "category": "function",
+    "text": "solver_name(model::Model)\n\nIf available, returns the SolverName property of the underlying optimizer. Returns \"No optimizer attached\" in AUTOMATIC or MANUAL modes when no optimizer is attached. Returns \"SolverName() attribute not implemented by the optimizer.\" if the attribute is not implemented.\n\n\n\n\n\n"
+},
+
+{
+    "location": "solvers/#JuMP.bridge_constraints",
+    "page": "Solvers",
+    "title": "JuMP.bridge_constraints",
+    "category": "function",
+    "text": "bridge_constraints(model::Model)\n\nWhen in direct mode, return false. When in manual or automatic mode, return a Bool indicating whether the optimizer is set and unsupported constraints are automatically bridged to equivalent supported constraints when an appropriate transformation is available.\n\n\n\n\n\n"
+},
+
+{
+    "location": "solvers/#JuMP.set_silent",
+    "page": "Solvers",
+    "title": "JuMP.set_silent",
+    "category": "function",
+    "text": "set_silent(model::Model)\n\nTakes precedence over any other attribute controlling verbosity  and requires the solver to produce no output.\n\n\n\n\n\n"
+},
+
+{
+    "location": "solvers/#JuMP.unset_silent",
+    "page": "Solvers",
+    "title": "JuMP.unset_silent",
+    "category": "function",
+    "text": "unset_silent(model::Model)\n\nNeutralize the effect of the set_silent function and let the solver attributes control the verbosity.\n\n\n\n\n\n"
+},
+
+{
+    "location": "solvers/#Solver-attributes-1",
+    "page": "Solvers",
+    "title": "Solver attributes",
+    "category": "section",
+    "text": "Some solver attributes can be queried and set through JuMP models.solver_name\n\nbridge_constraints\n\nset_silent\nunset_silent"
 },
 
 {
