@@ -552,12 +552,12 @@ term of a constraint.
 
 ```jldoctest con_fix; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, con, 2x <= 1)
-con : 2 x <= 1
+con : 2 x <= 1.0
 
 julia> set_standard_form_rhs(con, 3)
 
 julia> con
-con : 2 x <= 3
+con : 2 x <= 3.0
 ```
 
 !!! note
