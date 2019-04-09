@@ -63,6 +63,21 @@ Base.one(q::GenericQuadExpr)  = one(typeof(q))
 Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
 Base.broadcastable(q::GenericQuadExpr) = Ref(q)
 
+"""
+    drop_zeros!(expr::GenericQuadExpr)
+
+Remove terms in the quadratic expression with `0` coefficients.
+"""
+function drop_zeros!(expr::GenericQuadExpr)
+    drop_zeros!(expr.aff)
+    for (key, coef) in expr.terms
+        if iszero(coef)
+            delete!(expr.terms, key)
+        end
+    end
+    return
+end
+
 function map_coefficients_inplace!(f::Function, q::GenericQuadExpr)
     # The iterator remains valid if existing elements are updated.
     for (key, value) in q.terms

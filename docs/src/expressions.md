@@ -112,6 +112,26 @@ add_to_expression!(ex, 1.0, y)
 2 x + y - 1
 ```
 
+### Removing zero terms
+
+Use [`drop_zeros!`](@ref) to remove terms from an affine expression with a `0`
+coefficient.
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @expression(model, ex, 0 * x + 1)
+0 x + 1
+
+julia> drop_zeros!(ex)
+
+julia> ex
+1
+```
+
 ## Quadratic expressions
 
 Like affine expressions, there are four ways of constructing a quadratic
@@ -188,17 +208,38 @@ add_to_expression!(ex, 1.0, y, y)
 x² + 2 x*y + y² + x + y - 1
 ```
 
+### Removing zero terms
+
+Use [`drop_zeros!`](@ref) to remove terms from a quadratic expression with a `0`
+coefficient.
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @expression(model, ex, 0 * x^2 + x + 1)
+0 x² + x + 1
+
+julia> drop_zeros!(ex)
+
+julia> ex
+x + 1
+```
+
 ## Nonlinear expressions
 
 Nonlinear expressions can be constructed only using the [`@NLexpression`](@ref)
 macro and can be used only in [`@NLobjective`](@ref), [`@NLconstraint`](@ref),
 and other [`@NLexpression`](@ref)s. Moreover, quadratic and affine expressions
 cannot be used in the nonlinear macros. For more details, see the [Nonlinear
-Modeling](@ref) section. 
+Modeling](@ref) section.
 
 ## Reference
 
 ```@docs
 @expression
-JuMP.add_to_expression!
+add_to_expression!
+drop_zeros!
 ```
