@@ -725,7 +725,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Objective",
     "title": "JuMP.set_objective_function",
     "category": "function",
-    "text": "set_objective_function(model::Model,\n                       func::Union{AbstractJuMPScalar,\n                                   MathOptInterface.AbstractScalarFunction})\n\nSets the objective function of the model to the given function. See set_objective_sense to set the objective sense. These are low-level functions; the recommended way to set the objective is with the @objective macro.\n\n\n\n\n\n"
+    "text": "set_objective_function(\n    model::Model,\n    func::Union{AbstractJuMPScalar, MathOptInterface.AbstractScalarFunction})\n\nSets the objective function of the model to the given function. See set_objective_sense to set the objective sense. These are low-level functions; the recommended way to set the objective is with the @objective macro.\n\n\n\n\n\n"
 },
 
 {
