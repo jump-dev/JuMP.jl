@@ -797,3 +797,8 @@ function dual(vref::VariableRef)
           "or `FixRef`, and then call `dual` on the returned constraint reference.\nFor " *
           "example, if `x <= 1`, instead of `dual(x)`, call `dual(UpperBoundRef(x))`.")
 end
+
+function value(::AbstractArray{<:AbstractJuMPScalar})
+    error("`JuMP.value` is not defined for collections of JuMP types. Use" *
+          " Julia's broadcast syntax instead: `JuMP.value.(x)`.")
+end
