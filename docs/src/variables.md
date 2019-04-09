@@ -600,6 +600,43 @@ in the model. This is useful for performing operations like:
 - relaxing all integrality constraints in the model
 - setting the starting values for variables to the result of the last solve
 
+## Start values
+
+There are two ways to provide a primal starting solution (also called MIP-start
+or a warmstart) for each variable:
+
+ - using the `start` keyword in the [`@variable`](@ref) macro
+ - using [`set_start_value`](@ref)
+
+The starting value of a variable can be queried using [`start_value`](@ref). If
+no start value has been set, [`start_value`](@ref) will return `nothing`.
+
+```jldoctest variables_start; setup=:(model=Model())
+julia> @variable(model, x)
+x
+
+julia> start_value(x)
+
+julia> @variable(model, y, start = 1)
+y
+
+julia> start_value(y)
+1.0
+
+julia> set_start_value(y, 2)
+
+julia> start_value(y)
+2.0
+```
+
+!!! note
+    Prior to JuMP 0.19, the previous solution to a solve was automatically set
+    as the new starting value. JuMP 0.19 no longer does this automatically. To
+    reproduce the functionality, use:
+    ```julia
+    set_start_value.(all_variables(model), value.(all_variables(model)))
+    ```
+
 ## Reference
 
 ```@docs
@@ -635,4 +672,7 @@ BinaryRef
 
 index(::VariableRef)
 optimizer_index(::VariableRef)
+
+set_start_value
+start_value
 ```
