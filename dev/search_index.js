@@ -617,6 +617,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "expressions/#Removing-zero-terms-1",
+    "page": "Expressions",
+    "title": "Removing zero terms",
+    "category": "section",
+    "text": "Use drop_zeros! to remove terms from an affine expression with a 0 coefficient.julia> model = Model();\n\njulia> @variable(model, x)\nx\n\njulia> @expression(model, ex, 0 * x + 1)\n0 x + 1\n\njulia> drop_zeros!(ex)\n\njulia> ex\n1"
+},
+
+{
     "location": "expressions/#Quadratic-expressions-1",
     "page": "Expressions",
     "title": "Quadratic expressions",
@@ -657,11 +665,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "expressions/#Removing-zero-terms-2",
+    "page": "Expressions",
+    "title": "Removing zero terms",
+    "category": "section",
+    "text": "Use drop_zeros! to remove terms from a quadratic expression with a 0 coefficient.julia> model = Model();\n\njulia> @variable(model, x)\nx\n\njulia> @expression(model, ex, 0 * x^2 + x + 1)\n0 x² + x + 1\n\njulia> drop_zeros!(ex)\n\njulia> ex\nx + 1"
+},
+
+{
     "location": "expressions/#Nonlinear-expressions-1",
     "page": "Expressions",
     "title": "Nonlinear expressions",
     "category": "section",
-    "text": "Nonlinear expressions can be constructed only using the @NLexpression macro and can be used only in @NLobjective, @NLconstraint, and other @NLexpressions. Moreover, quadratic and affine expressions cannot be used in the nonlinear macros. For more details, see the Nonlinear Modeling section. "
+    "text": "Nonlinear expressions can be constructed only using the @NLexpression macro and can be used only in @NLobjective, @NLconstraint, and other @NLexpressions. Moreover, quadratic and affine expressions cannot be used in the nonlinear macros. For more details, see the Nonlinear Modeling section."
 },
 
 {
@@ -681,11 +697,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "expressions/#JuMP.drop_zeros!",
+    "page": "Expressions",
+    "title": "JuMP.drop_zeros!",
+    "category": "function",
+    "text": "drop_zeros!(expr::GenericAffExpr)\n\nRemove terms in the affine expression with 0 coefficients.\n\n\n\n\n\ndrop_zeros!(expr::GenericQuadExpr)\n\nRemove terms in the quadratic expression with 0 coefficients.\n\n\n\n\n\n"
+},
+
+{
     "location": "expressions/#Reference-1",
     "page": "Expressions",
     "title": "Reference",
     "category": "section",
-    "text": "@expression\nJuMP.add_to_expression!"
+    "text": "@expression\nadd_to_expression!\ndrop_zeros!"
 },
 
 {
