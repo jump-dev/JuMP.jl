@@ -422,9 +422,7 @@ function set_standard_form_coefficient(
                MOI.ScalarCoefficientChange(index(variable), convert(T, value)))
     return
 end
-
 @deprecate set_coefficient set_standard_form_coefficient
-
 
 """
     set_standard_form_rhs(constraint::ConstraintRef, value)
@@ -451,7 +449,7 @@ function set_standard_form_rhs(
         T,
         S <: Union{MOI.LessThan{T}, MOI.GreaterThan{T}, MOI.EqualTo{T}},
         F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
-    MOI.set(owner_model(constraint), MOI.ConstraintSet(), index(constraint),
+    MOI.set(owner_model(constraint), MOI.ConstraintSet(), constraint,
             S(convert(T, value)))
     return
 end
