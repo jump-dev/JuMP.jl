@@ -644,6 +644,7 @@ julia> start_value(y)
 owner_model
 VariableRef
 all_variables
+num_variables
 
 has_lower_bound
 lower_bound

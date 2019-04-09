@@ -438,6 +438,25 @@ end
 
 set_optimize_hook(model::Model, f) = (model.optimize_hook = f)
 
+"""
+    set_silent(model::Model)
+
+Takes precedence over any other attribute controlling verbosity 
+and requires the solver to produce no output.
+"""
+function set_silent(model::Model)
+    return MOI.set(model, MOI.Silent(), true)
+end
+
+"""
+    unset_silent(model::Model)
+
+Neutralize the effect of the `set_silent` function and let the solver
+attributes control the verbosity.
+"""
+function unset_silent(model::Model)
+    return MOI.set(model, MOI.Silent(), false)
+end
 
 # Abstract base type for all scalar types
 abstract type AbstractJuMPScalar end
@@ -621,6 +640,7 @@ function MOI.get(model::Model, attr::MOI.AbstractConstraintAttribute,
     end
 end
 
+MOI.set(m::Model, attr::MOI.AbstractOptimizerAttribute, value) = MOI.set(backend(m), attr, value)
 MOI.set(m::Model, attr::MOI.AbstractModelAttribute, value) = MOI.set(backend(m), attr, value)
 function MOI.set(model::Model, attr::MOI.AbstractVariableAttribute,
                  v::VariableRef, value)
