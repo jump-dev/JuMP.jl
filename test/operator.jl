@@ -254,6 +254,9 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @testset "sum(affs::Array{AffExpr})" begin
                 @test_expression_with_string sum([2*matrix[i,j] for i in 1:3, j in 1:3]) "2 matrix[1,1] + 2 matrix[2,1] + 2 matrix[3,1] + 2 matrix[1,2] + 2 matrix[2,2] + 2 matrix[3,2] + 2 matrix[1,3] + 2 matrix[2,3] + 2 matrix[3,3]"
             end
+            @testset "sum(quads::Array{QuadExpr})" begin
+                @test_expression_with_string sum([2*matrix[i,j]^2 for i in 1:3, j in 1:3]) "2 matrix[1,1]² + 2 matrix[2,1]² + 2 matrix[3,1]² + 2 matrix[1,2]² + 2 matrix[2,2]² + 2 matrix[3,2]² + 2 matrix[1,3]² + 2 matrix[2,3]² + 2 matrix[3,3]²"
+            end
 
             S = [1,3]
             @variable(sum_m, x[S], start=1)

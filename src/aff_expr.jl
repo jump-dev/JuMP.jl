@@ -82,7 +82,9 @@ function GenericAffExpr{V,K}(constant, kv::Pair...) where {K,V}
     return GenericAffExpr{V,K}(convert(V, constant), _new_ordered_dict(K, V, kv...))
 end
 
-Base.iszero(a::GenericAffExpr) = isempty(a.terms) && iszero(a.constant)
+function Base.iszero(expr::GenericAffExpr)
+    return iszero(expr.constant) && all(iszero, values(expr.terms))
+end
 Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(zero(C), OrderedDict{V,C}())
 Base.one(::Type{GenericAffExpr{C,V}}) where {C,V}  = GenericAffExpr{C,V}(one(C), OrderedDict{V,C}())
 Base.zero(a::GenericAffExpr) = zero(typeof(a))

@@ -30,6 +30,15 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         JuMP.drop_zeros!(expr)
         @test isequal(expr, x[1] + 1)
     end
+  
+    @testset "iszero(::GenericAffExpr)" begin
+        m = ModelType()
+        @variable(m, x)
+        @test !iszero(x + 1)
+        @test !iszero(x + 0)
+        @test iszero(0 * x + 0)
+        @test iszero(x - x)
+    end
 
     @testset "isequal(::GenericQuadExpr)" begin
         m = ModelType()
@@ -50,6 +59,16 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         @test !isequal(expr, x[1]^2 + x[1] + 1)
         JuMP.drop_zeros!(expr)
         @test isequal(expr, x[1]^2 + x[1] + 1)
+    end
+  
+    @testset "iszero(::GenericQuadExpr)" begin
+        m = ModelType()
+        @variable(m, x)
+        @test !iszero(x^2 + 1)
+        @test !iszero(x^2 + 0)
+        @test !iszero(x^2 + 0 * x + 0)
+        @test iszero(0 * x^2 + 0 * x + 0)
+        @test iszero(x^2 - x^2)
     end
 
     @testset "value for GenericAffExpr" begin
