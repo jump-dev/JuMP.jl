@@ -97,8 +97,16 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         sense = :Min
         @test_throws ErrorException @objective(m, sense, 2x)
     end
-end
 
+    @testset "Constant objective" begin
+        model = ModelType()
+        @objective(model, Min, 3)
+        @test JuMP.objective_sense(model) == MOI.MIN_SENSE
+        @test JuMP.isequal_canonical(
+            AffExprType(3.0),
+            JuMP.objective_function(model, AffExprType))
+    end
+end
 
 @testset "Objectives for JuMP.Model" begin
     objectives_test(Model, VariableRef)
