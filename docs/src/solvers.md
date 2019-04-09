@@ -98,25 +98,13 @@ JuMP.backend
 
 ## Solver attributes
 
-Some solvers attributes can be queried through JuMP Models. Some solver attributes can setted through JuMP Models.
+Some solver attributes can be queried and set through JuMP models.
 
 ```@docs
 solver_name
-```
 
-```@docs
 bridge_constraints
-```
 
-```@docs
-num_variables
-```
-
-```@docs
 set_silent
-```
-
-
-```@docs
 unset_silent
 ```

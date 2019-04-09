@@ -607,6 +607,7 @@ in the model. This is useful for performing operations like:
 owner_model
 VariableRef
 all_variables
+num_variables
 
 has_lower_bound
 lower_bound
