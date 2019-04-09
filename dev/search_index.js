@@ -321,6 +321,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "variables/#Start-values-1",
+    "page": "Variables",
+    "title": "Start values",
+    "category": "section",
+    "text": "There are two ways to provide a primal starting solution (also called MIP-start or a warmstart) for each variable:using the start keyword in the @variable macro\nusing set_start_valueThe starting value of a variable can be queried using start_value. If no start value has been set, start_value will return nothing.julia> @variable(model, x)\nx\n\njulia> start_value(x)\n\njulia> @variable(model, y, start = 1)\ny\n\njulia> start_value(y)\n1.0\n\njulia> set_start_value(y, 2)\n\njulia> start_value(y)\n2.0note: Note\nPrior to JuMP 0.19, the previous solution to a solve was automatically set as the new starting value. JuMP 0.19 no longer does this automatically. To reproduce the functionality, use:set_start_value.(all_variables(model), value.(all_variables(model)))"
+},
+
+{
     "location": "variables/#JuMP.@variable",
     "page": "Variables",
     "title": "JuMP.@variable",
@@ -529,11 +537,27 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "variables/#JuMP.set_start_value",
+    "page": "Variables",
+    "title": "JuMP.set_start_value",
+    "category": "function",
+    "text": "set_start_value(variable::VariableRef, value::Number)\n\nSet the start value (MOI attribute VariablePrimalStart) of the variable v to value. See also start_value.\n\nNote: VariablePrimalStarts are sometimes called \"MIP-starts\" or \"warmstarts\".\n\n\n\n\n\n"
+},
+
+{
+    "location": "variables/#JuMP.start_value",
+    "page": "Variables",
+    "title": "JuMP.start_value",
+    "category": "function",
+    "text": "start_value(v::VariableRef)\n\nReturn the start value (MOI attribute VariablePrimalStart) of the variable v. See also set_start_value.\n\nNote: VariablePrimalStarts are sometimes called \"MIP-starts\" or \"warmstarts\".\n\n\n\n\n\n"
+},
+
+{
     "location": "variables/#Reference-1",
     "page": "Variables",
     "title": "Reference",
     "category": "section",
-    "text": "@variable\nowner_model\nVariableRef\nall_variables\n\nhas_lower_bound\nlower_bound\nset_lower_bound\ndelete_lower_bound\n\nhas_upper_bound\nupper_bound\nset_upper_bound\ndelete_upper_bound\n\nis_fixed\nfix_value\nfix\nunfix\n\nis_integer\nset_integer\nunset_integer\nIntegerRef\n\nis_binary\nset_binary\nunset_binary\nBinaryRef\n\nindex(::VariableRef)\noptimizer_index(::VariableRef)"
+    "text": "@variable\nowner_model\nVariableRef\nall_variables\n\nhas_lower_bound\nlower_bound\nset_lower_bound\ndelete_lower_bound\n\nhas_upper_bound\nupper_bound\nset_upper_bound\ndelete_upper_bound\n\nis_fixed\nfix_value\nfix\nunfix\n\nis_integer\nset_integer\nunset_integer\nIntegerRef\n\nis_binary\nset_binary\nunset_binary\nBinaryRef\n\nindex(::VariableRef)\noptimizer_index(::VariableRef)\n\nset_start_value\nstart_value"
 },
 
 {
