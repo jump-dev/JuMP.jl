@@ -468,31 +468,24 @@ end
         model = JuMP.Model()
         x = @variable(model)
         con_ref = @constraint(model, 2 * x == -1)
-        con_obj = JuMP.constraint_object(con_ref)
-        @test con_obj.func == 2 * x
+        @test JuMP.standard_form_coefficient(con_ref, x) == 2.0
         JuMP.set_standard_form_coefficient(con_ref, x, 1.0)
-        con_obj = JuMP.constraint_object(con_ref)
-        @test con_obj.func == 1 * x
+        @test JuMP.standard_form_coefficient(con_ref, x) == 1.0
         JuMP.set_standard_form_coefficient(con_ref, x, 3)  # Check type promotion.
-        con_obj = JuMP.constraint_object(con_ref)
-        @test con_obj.func == 3 * x
+        @test JuMP.standard_form_coefficient(con_ref, x) == 3.0
     end
 
     @testset "Change rhs" begin
         model = JuMP.Model()
         x = @variable(model)
         con_ref = @constraint(model, 2 * x <= 1)
-        con_obj = JuMP.constraint_object(con_ref)
-        @test con_obj.set == MOI.LessThan(1.0)
+        @test JuMP.standard_form_rhs(con_ref) == 1.0
         JuMP.set_standard_form_rhs(con_ref, 2.0)
-        con_obj = JuMP.constraint_object(con_ref)
-        @test con_obj.set == MOI.LessThan(2.0)
+        @test JuMP.standard_form_rhs(con_ref) == 2.0
         con_ref = @constraint(model, 2 * x - 1 == 1)
-        con_obj = JuMP.constraint_object(con_ref)
-        @test con_obj.set == MOI.EqualTo(2.0)
+        @test JuMP.standard_form_rhs(con_ref) == 2.0
         JuMP.set_standard_form_rhs(con_ref, 3)
-        con_obj = JuMP.constraint_object(con_ref)
-        @test con_obj.set == MOI.EqualTo(3.0)
+        @test JuMP.standard_form_rhs(con_ref) == 3.0
         con_ref = @constraint(model, 0 <= 2 * x <= 1)
         @test_throws MethodError JuMP.set_standard_form_rhs(con_ref, 3)
     end

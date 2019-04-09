@@ -548,7 +548,8 @@ model with different coefficients.
 ### Modifying a constant term
 
 Use [`set_standard_form_rhs`](@ref) to modify the right-hand side (constant)
-term of a constraint.
+term of a constraint. Use [`standard_form_rhs`](@ref) to query the right-hand
+side term.
 
 ```jldoctest con_fix; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, con, 2x <= 1)
@@ -558,6 +559,9 @@ julia> set_standard_form_rhs(con, 3)
 
 julia> con
 con : 2 x <= 3.0
+
+julia> standard_form_rhs(con)
+3.0
 ```
 
 !!! note
@@ -601,9 +605,9 @@ The constraint `con` is now equivalent to `2x <= 2`.
 
 ### Modifying a variable coefficient
 
-It is also possible to modify the scalar coefficients (but notably *not yet* the
-quadratic coefficients) using the [`set_standard_form_coefficient`](@ref)
-function. Here is an example:
+To modify the scalar coefficients of a cosntraint (but notably *not yet* the
+quadratic coefficients), use [`set_standard_form_coefficient`](@ref). To query
+the current coefficient, use [`standard_form_coefficient`](@ref).
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, con, 2x <= 1)
 con : 2 x <= 1.0
@@ -612,6 +616,9 @@ julia> set_standard_form_coefficient(con, x, 3)
 
 julia> con
 con : 3 x <= 1.0
+
+julia> standard_form_coefficient(con, x)
+3.0
 ```
 
 !!! note
@@ -711,7 +718,9 @@ SecondOrderCone
 RotatedSecondOrderCone
 PSDCone
 shadow_price
+standard_form_coefficient
 set_standard_form_coefficient
+standard_form_rhs
 set_standard_form_rhs
 is_valid
 JuMP.delete

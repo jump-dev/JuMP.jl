@@ -425,6 +425,20 @@ end
 @deprecate set_coefficient set_standard_form_coefficient
 
 """
+    standard_form_coefficient(constraint::ConstraintRef, variable::VariableRef)
+
+Return the coefficient associated with `variable` in `cosntraint` after JuMP has
+normalized the constraint into its standard form. See also
+[`set_standard_form_coefficient`](@ref).
+"""
+function standard_form_coefficient(
+    constraint::ConstraintRef{Model, _MOICON{F, S}}, variable
+    ) where {S, T, F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
+    con = JuMP.constraint_object(constraint)
+    return get(con.func, variable, zero(T))
+end
+
+"""
     set_standard_form_rhs(constraint::ConstraintRef, value)
 
 Set the right-hand side term of `constraint` to `value`.
@@ -452,6 +466,21 @@ function set_standard_form_rhs(
     MOI.set(owner_model(constraint), MOI.ConstraintSet(), constraint,
             S(convert(T, value)))
     return
+end
+
+"""
+    standard_form_rhs(constraint::ConstraintRef)
+
+Return the right-hand side term of `constraint` after JuMP has converted the
+constraint into its standard form. See also [`set_standard_form_rhs`](@ref).
+"""
+function standard_form_rhs(
+    constraint::ConstraintRef{Model, _MOICON{F, S}}) where {
+        T,
+        S <: Union{MOI.LessThan{T}, MOI.GreaterThan{T}, MOI.EqualTo{T}},
+        F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
+    con = constraint_object(constraint)
+    return MOIU.getconstant(con.set)
 end
 
 """
