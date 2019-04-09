@@ -427,7 +427,7 @@ end
 """
     standard_form_coefficient(constraint::ConstraintRef, variable::VariableRef)
 
-Return the coefficient associated with `variable` in `cosntraint` after JuMP has
+Return the coefficient associated with `variable` in `constraint` after JuMP has
 normalized the constraint into its standard form. See also
 [`set_standard_form_coefficient`](@ref).
 """
@@ -435,7 +435,7 @@ function standard_form_coefficient(
     constraint::ConstraintRef{Model, _MOICON{F, S}}, variable
     ) where {S, T, F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
     con = JuMP.constraint_object(constraint)
-    return get(con.func, variable, zero(T))
+    return _affine_coefficient(con.func, variable)
 end
 
 """
@@ -444,7 +444,7 @@ end
 Set the right-hand side term of `constraint` to `value`.
 
 Note that prior to this step, JuMP will aggregate all constant terms onto the
-right-hand side of the cosntraint. For example, given a constraint `2x + 1 <=
+right-hand side of the constraint. For example, given a constraint `2x + 1 <=
 2`, `set_standard_form_rhs(c, 4)` will create the constraint `2x <= 4`, not `2x +
 1 <= 4`.
 

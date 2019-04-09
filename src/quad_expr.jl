@@ -74,6 +74,10 @@ function map_coefficients(f::Function, q::GenericQuadExpr)
     return map_coefficients_inplace!(f, copy(q))
 end
 
+function _affine_coefficient(f::GenericQuadExpr{C, V}, variable::V) where {C, V}
+    return _affine_coefficient(f.aff, variable)
+end
+
 """
     constant(aff::GenericQuadExpr{C, V})::C
 

@@ -92,6 +92,10 @@ Base.broadcastable(a::GenericAffExpr) = Ref(a)
 
 GenericAffExpr{C, V}() where {C, V} = zero(GenericAffExpr{C, V})
 
+function _affine_coefficient(f::GenericAffExpr{C, V}, variable::V) where {C, V}
+    return get(f.terms, variable, zero(C))
+end
+
 function map_coefficients_inplace!(f::Function, a::GenericAffExpr)
     # The iterator remains valid if existing elements are updated.
     for (coef, var) in linear_terms(a)
