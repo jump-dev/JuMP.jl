@@ -610,3 +610,12 @@ end
         "example, if `x <= 1`, instead of `dual(x)`, call `dual(UpperBoundRef(x))`.")
     @test_throws exception JuMP.dual(x)
 end
+
+@testset "value on containers" begin
+    model = Model()
+    @variable(model, x[1:2])
+    exception = ErrorException(
+        "`JuMP.value` is not defined for collections of JuMP types. Use " *
+        "Julia's broadcast syntax instead: `JuMP.value.(x)`.")
+    @test_throws exception JuMP.value(x)
+end
