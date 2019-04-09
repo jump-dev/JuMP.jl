@@ -10,7 +10,7 @@
 # test/print.jl
 # Testing $fa pretty-printing-related functionality
 #############################################################################
-using MathOptInterface
+
 using JuMP
 using LinearAlgebra, Test
 import JuMP.REPLMode, JuMP.IJuliaMode
@@ -116,6 +116,11 @@ end
         ex = @expression(mod, -z*x[1] - x[1]*z + x[1]*x[2] + 0*z^2)
         io_test(REPLMode, ex, "-2 x[1]*z + x[1]*x[2]")
         io_test(IJuliaMode, ex, "-2 x_{1}\\times z + x_{1}\\times x_{2}")
+
+        ex = 0 * z^2 + 0 * x[1]
+        io_test(REPLMode, ex, "0 z² + 0 x[1]")
+        io_test(IJuliaMode, ex, "0 z$ijulia_sq + 0 x_{1}")
+
     end
 
     # See https://github.com/JuliaOpt/JuMP.jl/pull/1352
@@ -125,6 +130,9 @@ end
         @variable m y
         u = UnitNumber(2.0)
         aff = JuMP.GenericAffExpr(zero(u), x => u, y => zero(u))
+        io_test(REPLMode,   aff, "UnitNumber(2.0) x + UnitNumber(0.0) y")
+        io_test(IJuliaMode, aff, "UnitNumber(2.0) x + UnitNumber(0.0) y")
+        drop_zeros!(aff)
         io_test(REPLMode,   aff, "UnitNumber(2.0) x")
         io_test(IJuliaMode, aff, "UnitNumber(2.0) x")
         quad = aff * x
@@ -272,7 +280,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         model = ModelType()
         @variable(model, x)
         @variable(model, y)
-        zero_constr = @constraint(model, [x, y] in MathOptInterface.Zeros(2))
+        zero_constr = @constraint(model, [x, y] in MOI.Zeros(2))
 
         io_test(REPLMode, zero_constr,
                 "[x, y] $in_sym MathOptInterface.Zeros(2)")
@@ -619,7 +627,7 @@ end
         in_sym = JuMP._math_symbol(REPLMode, :in)
         model = Model()
         @variable(model, x >= 10)
-        zero_one = @constraint(model, x in MathOptInterface.ZeroOne())
+        zero_one = @constraint(model, x in MOI.ZeroOne())
 
         io_test(REPLMode, JuMP.LowerBoundRef(x), "x $ge 10.0")
         io_test(REPLMode, zero_one, "x binary")

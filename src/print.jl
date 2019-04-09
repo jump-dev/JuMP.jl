@@ -300,10 +300,8 @@ function function_string(mode, a::GenericAffExpr, show_constant=true)
 
     term_str = Array{String}(undef, 2 * length(linear_terms(a)))
     elm = 1
-    # For each non-zero for this model
-    for (coef, var) in linear_terms(a)
-        _is_zero_for_printing(coef) && continue  # e.g. x - x
 
+    for (coef, var) in linear_terms(a)
         pre = _is_one_for_printing(coef) ? "" : _string_round(abs(coef)) * " "
 
         term_str[2 * elm - 1] = _sign_string(coef)
@@ -339,8 +337,6 @@ function function_string(mode, q::GenericQuadExpr)
     elm = 1
     if length(term_str) > 0
         for (coef, var1, var2) in quad_terms(q)
-            _is_zero_for_printing(coef) && continue  # e.g. x - x
-
             pre = _is_one_for_printing(coef) ? "" : _string_round(abs(coef)) * " "
 
             x = function_string(mode, var1)
