@@ -111,7 +111,7 @@ Base.CartesianIndices(a::DenseAxisArray) = CartesianIndices(a.data)
 # Indexing #
 ############
 
-function _is_assigned(A::DenseAxisArray{T,N}, idx...) where {T,N}
+function _is_assigned(A::DenseAxisArray{T, N}, idx...) where {T, N}
     if length(idx) == N
         keys = zeros(Int, N)
         for (i, v) in enumerate(idx)
@@ -123,11 +123,11 @@ function _is_assigned(A::DenseAxisArray{T,N}, idx...) where {T,N}
     end
     return false
 end
-function Base.isassigned(A::DenseAxisArray{T,N}, idx...) where {T,N}
+function Base.isassigned(A::DenseAxisArray{T, N}, idx...) where {T, N}
     return _is_assigned(A, idx...)
 end
 # For ambiguity
-function Base.isassigned(A::DenseAxisArray{T,N}, idx::Int...) where {T,N}
+function Base.isassigned(A::DenseAxisArray{T, N}, idx::Int...) where {T, N}
     return _is_assigned(A, idx...)
 end
 
