@@ -49,7 +49,9 @@ function GenericQuadExpr{V,K}(aff::GenericAffExpr{V,K}, kv::Pair...) where {K,V}
     return GenericQuadExpr{V,K}(aff, _new_ordered_dict(UnorderedPair{K}, V, kv...))
 end
 
-Base.iszero(q::GenericQuadExpr) = isempty(q.terms) && iszero(q.aff)
+function Base.iszero(expr::GenericQuadExpr)
+    return iszero(expr.aff) && all(iszero, values(expr.terms))
+end
 function Base.zero(::Type{GenericQuadExpr{C,V}}) where {C,V}
     return GenericQuadExpr(zero(GenericAffExpr{C,V}), OrderedDict{UnorderedPair{V}, C}())
 end
