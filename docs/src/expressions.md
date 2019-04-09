@@ -114,7 +114,7 @@ add_to_expression!(ex, 1.0, y)
 
 ### Removing zero terms
 
-Use [`drop_zeros`](@ref) to remove terms from an affine expression with a `0`
+Use [`drop_zeros!`](@ref) to remove terms from an affine expression with a `0`
 coefficient.
 
 ```jldoctest
@@ -126,7 +126,7 @@ x
 julia> @expression(model, ex, 0 * x + 1)
 0 x + 1
 
-julia> drop_zeros(ex)
+julia> drop_zeros!(ex)
 
 julia> ex
 1
@@ -210,7 +210,7 @@ x² + 2 x*y + y² + x + y - 1
 
 ### Removing zero terms
 
-Use [`drop_zeros`](@ref) to remove terms from a quadratic expression with a `0`
+Use [`drop_zeros!`](@ref) to remove terms from a quadratic expression with a `0`
 coefficient.
 
 ```jldoctest
@@ -222,7 +222,7 @@ x
 julia> @expression(model, ex, 0 * x^2 + x + 1)
 0 x² + x + 1
 
-julia> drop_zeros(ex)
+julia> drop_zeros!(ex)
 
 julia> ex
 x + 1
@@ -241,5 +241,5 @@ Modeling](@ref) section.
 ```@docs
 @expression
 add_to_expression!
-drop_zeros
+drop_zeros!
 ```

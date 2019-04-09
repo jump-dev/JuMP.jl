@@ -91,11 +91,11 @@ Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
 Base.broadcastable(a::GenericAffExpr) = Ref(a)
 
 """
-    drop_zeros(expr::GenericAffExpr)
+    drop_zeros!(expr::GenericAffExpr)
 
 Remove terms in the affine expression with `0` coefficients.
 """
-function drop_zeros(expr::GenericAffExpr)
+function drop_zeros!(expr::GenericAffExpr)
     for (key, coef) in expr.terms
         if iszero(coef)
             delete!(expr.terms, key)

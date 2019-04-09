@@ -62,12 +62,12 @@ Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
 Base.broadcastable(q::GenericQuadExpr) = Ref(q)
 
 """
-    drop_zeros(expr::GenericQuadExpr)
+    drop_zeros!(expr::GenericQuadExpr)
 
 Remove terms in the quadratic expression with `0` coefficients.
 """
-function drop_zeros(expr::GenericQuadExpr)
-    drop_zeros(expr.aff)
+function drop_zeros!(expr::GenericQuadExpr)
+    drop_zeros!(expr.aff)
     for (key, coef) in expr.terms
         if iszero(coef)
             delete!(expr.terms, key)

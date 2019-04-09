@@ -132,7 +132,7 @@ end
         aff = JuMP.GenericAffExpr(zero(u), x => u, y => zero(u))
         io_test(REPLMode,   aff, "UnitNumber(2.0) x + UnitNumber(0.0) y")
         io_test(IJuliaMode, aff, "UnitNumber(2.0) x + UnitNumber(0.0) y")
-        drop_zeros(aff)
+        drop_zeros!(aff)
         io_test(REPLMode,   aff, "UnitNumber(2.0) x")
         io_test(IJuliaMode, aff, "UnitNumber(2.0) x")
         quad = aff * x
