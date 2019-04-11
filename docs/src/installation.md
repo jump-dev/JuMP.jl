@@ -33,6 +33,7 @@ is often more complex. We list below the currently available solvers.
 | [Artelys Knitro](https://www.artelys.com/knitro)                               | [KNITRO.jl](https://github.com/JuliaOpt/KNITRO.jl)                               | Comm.   | LP, MILP, SOCP, MISOCP, NLP, MINLP |
 | [Cbc](https://projects.coin-or.org/Cbc)                                        | [Cbc.jl](https://github.com/JuliaOpt/Cbc.jl)                                     | EPL     | MILP                               |
 | [Clp](https://projects.coin-or.org/Clp)                                        | [Clp.jl](https://github.com/JuliaOpt/Clp.jl)                                     | EPL     | LP                                 |
+| [COSMO](https://github.com/oxfordcontrol/COSMO.jl)                             | [COSMO.jl](https://github.com/oxfordcontrol/COSMO.jl)                            | Apache  | LP, QP, SOCP, SDP                  |
 | [CPLEX](http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/) | [CPLEX.jl](https://github.com/JuliaOpt/CPLEX.jl)                                 | Comm.   | LP, MILP, SOCP, MISOCP             |
 | [CSDP](https://projects.coin-or.org/Csdp/)                                     | [CSDP.jl](https://github.com/JuliaOpt/CSDP.jl)                                   | EPL     | LP, SDP                            |
 | [ECOS](https://github.com/ifa-ethz/ecos)                                       | [ECOS.jl](https://github.com/JuliaOpt/ECOS.jl)                                   | GPL     | LP, SOCP                           |
@@ -109,6 +110,15 @@ Requires a license. A trial version is available for small problem instances.
 
 Cbc supports "SOS" constraints.
 
+### COSMO
+
+COSMO can solve LPs, QPs, SOCPs and SDPs. It can handle SDPs with
+ quadratic objective functions and supports chordal decomposition of large structured
+PSD constraints. COSMO is a first order method that performs well on large problems
+but has a low accuracy by default (``10^{−4}``).
+See the [COSMO.jl](https://oxfordcontrol.github.io/COSMO.jl/stable/)
+documentation for more information.
+
 ### CPLEX
 
 Requires a working installation of CPLEX with a license (free for faculty
@@ -151,8 +161,8 @@ julia> model = Model(with_optimizer(Mosek.Optimizer))
 
 ProxSDP solves general SDP problems by means of a first order proximal algorithm
 based on the primal-dual hybrid gradient, also known as Chambolle-Pock method.
-The main advantage of ProxSDP over other state-of-the-art solvers is the ability 
-to exploit the low-rank property inherent to several SDP problems. ProxSDP 
+The main advantage of ProxSDP over other state-of-the-art solvers is the ability
+to exploit the low-rank property inherent to several SDP problems. ProxSDP
 is a first order solver and has low accuracy. See the [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)
 documentation for more information.
 
