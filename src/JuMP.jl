@@ -439,13 +439,27 @@ end
 set_optimize_hook(model::Model, f) = (model.optimize_hook = f)
 
 
+function _try_get_solve_time(model_like)
+    try
+        return MOI.get(model_like, MOI.SolveTime())
+    catch ex
+        if isa(ex, ArgumentError)
+            return "SolveTime() attribute not implemented by the optimizer."
+        else
+            rethrow(ex)
+        end
+    end
+end
+
 """
     solve_time(model::Model)
 
 If available, returns the solve time reported by the solver.
+Returns "SolveTime() attribute not implemented by the optimizer." if the attribute is
+not implemented.
 """
 function solve_time(model::Model)
-    return MOI.get(model, MOI.SolveTime())
+    return _try_get_solve_time(model)
 end
 
 # Abstract base type for all scalar types

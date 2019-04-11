@@ -341,6 +341,10 @@ function test_model()
                                          SimpleLPModel{Float64}()))
             @test_throws err solve_time(model)
         end
+
+        @testset "Solved model" begin
+            # TODO
+        end
     end
 
     @testset "solver_name" begin
