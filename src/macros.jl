@@ -518,6 +518,16 @@ function build_constraint(_error::Function, expr, lb, ub)
     end
 end
 
+function build_constraint(
+        ::Function, x::Vector{<:AbstractJuMPScalar}, set::MOI.SOS1)
+    return VectorConstraint(x, MOI.SOS1{Float64}(set.weights))
+end
+
+function build_constraint(
+        ::Function, x::Vector{<:AbstractJuMPScalar}, set::MOI.SOS2)
+    return VectorConstraint(x, MOI.SOS2{Float64}(set.weights))
+end
+
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
 """
@@ -803,7 +813,11 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                   (:NLexpressions, Symbol("@NLexpression"))]
     @eval begin
         macro $mac(m, x)
-            x.head == :block || error("Invalid syntax for @",$(string(mac)))
+            if typeof(x) != Expr || x.head != :block
+                # We do a weird string interpolation here so that it gets
+                # interpolated at compile time, not run-time.
+                error("Invalid syntax for @" * $(string(mac)))
+            end
             @assert isa(x.args[1], LineNumberNode)
             lastline = x.args[1]
             code = quote end

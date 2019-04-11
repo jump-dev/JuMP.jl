@@ -82,7 +82,9 @@ function GenericAffExpr{V,K}(constant, kv::Pair...) where {K,V}
     return GenericAffExpr{V,K}(convert(V, constant), _new_ordered_dict(K, V, kv...))
 end
 
-Base.iszero(a::GenericAffExpr) = isempty(a.terms) && iszero(a.constant)
+function Base.iszero(expr::GenericAffExpr)
+    return iszero(expr.constant) && all(iszero, values(expr.terms))
+end
 Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(zero(C), OrderedDict{V,C}())
 Base.one(::Type{GenericAffExpr{C,V}}) where {C,V}  = GenericAffExpr{C,V}(one(C), OrderedDict{V,C}())
 Base.zero(a::GenericAffExpr) = zero(typeof(a))
@@ -90,7 +92,25 @@ Base.one( a::GenericAffExpr) =  one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
 Base.broadcastable(a::GenericAffExpr) = Ref(a)
 
+"""
+    drop_zeros!(expr::GenericAffExpr)
+
+Remove terms in the affine expression with `0` coefficients.
+"""
+function drop_zeros!(expr::GenericAffExpr)
+    for (key, coef) in expr.terms
+        if iszero(coef)
+            delete!(expr.terms, key)
+        end
+    end
+    return
+end
+
 GenericAffExpr{C, V}() where {C, V} = zero(GenericAffExpr{C, V})
+
+function _affine_coefficient(f::GenericAffExpr{C, V}, variable::V) where {C, V}
+    return get(f.terms, variable, zero(C))
+end
 
 function map_coefficients_inplace!(f::Function, a::GenericAffExpr)
     # The iterator remains valid if existing elements are updated.

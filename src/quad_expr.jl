@@ -49,7 +49,9 @@ function GenericQuadExpr{V,K}(aff::GenericAffExpr{V,K}, kv::Pair...) where {K,V}
     return GenericQuadExpr{V,K}(aff, _new_ordered_dict(UnorderedPair{K}, V, kv...))
 end
 
-Base.iszero(q::GenericQuadExpr) = isempty(q.terms) && iszero(q.aff)
+function Base.iszero(expr::GenericQuadExpr)
+    return iszero(expr.aff) && all(iszero, values(expr.terms))
+end
 function Base.zero(::Type{GenericQuadExpr{C,V}}) where {C,V}
     return GenericQuadExpr(zero(GenericAffExpr{C,V}), OrderedDict{UnorderedPair{V}, C}())
 end
@@ -60,6 +62,21 @@ Base.zero(q::GenericQuadExpr) = zero(typeof(q))
 Base.one(q::GenericQuadExpr)  = one(typeof(q))
 Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
 Base.broadcastable(q::GenericQuadExpr) = Ref(q)
+
+"""
+    drop_zeros!(expr::GenericQuadExpr)
+
+Remove terms in the quadratic expression with `0` coefficients.
+"""
+function drop_zeros!(expr::GenericQuadExpr)
+    drop_zeros!(expr.aff)
+    for (key, coef) in expr.terms
+        if iszero(coef)
+            delete!(expr.terms, key)
+        end
+    end
+    return
+end
 
 function map_coefficients_inplace!(f::Function, q::GenericQuadExpr)
     # The iterator remains valid if existing elements are updated.
@@ -72,6 +89,10 @@ end
 
 function map_coefficients(f::Function, q::GenericQuadExpr)
     return map_coefficients_inplace!(f, copy(q))
+end
+
+function _affine_coefficient(f::GenericQuadExpr{C, V}, variable::V) where {C, V}
+    return _affine_coefficient(f.aff, variable)
 end
 
 """

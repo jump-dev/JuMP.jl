@@ -694,6 +694,8 @@ end
 
 Return the start value (MOI attribute `VariablePrimalStart`) of the variable
 `v`. See also [`set_start_value`](@ref).
+
+Note: `VariablePrimalStart`s are sometimes called "MIP-starts" or "warmstarts".
 """
 function start_value(v::VariableRef)::Union{Nothing, Float64}
     return MOI.get(owner_model(v), MOI.VariablePrimalStart(), v)
@@ -704,11 +706,14 @@ end
     set_start_value(variable::VariableRef, value::Number)
 
 Set the start value (MOI attribute `VariablePrimalStart`) of the variable `v` to
-`value`.
+`value`. See also [`start_value`](@ref).
+
+Note: `VariablePrimalStart`s are sometimes called "MIP-starts" or "warmstarts".
 """
 function set_start_value(variable::VariableRef, value::Number)
-    return MOI.set(owner_model(variable), MOI.VariablePrimalStart(), variable,
-                   convert(Float64, value))
+    MOI.set(owner_model(variable), MOI.VariablePrimalStart(), variable,
+            Float64(value))
+    return
 end
 
 """
@@ -796,4 +801,9 @@ function dual(vref::VariableRef)
           "obtain a constraint reference using one of `UpperBoundRef`, `LowerBoundRef`, " *
           "or `FixRef`, and then call `dual` on the returned constraint reference.\nFor " *
           "example, if `x <= 1`, instead of `dual(x)`, call `dual(UpperBoundRef(x))`.")
+end
+
+function value(::AbstractArray{<:AbstractJuMPScalar})
+    error("`JuMP.value` is not defined for collections of JuMP types. Use" *
+          " Julia's broadcast syntax instead: `JuMP.value.(x)`.")
 end

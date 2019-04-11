@@ -161,8 +161,117 @@ function foo(x)
 end
 ```
 
+#### Line length
 
-#### TODO: Line breaks
+Line lengths are a contentious issue. Our foremost goal is to maximize code
+readability. Very long line lengths can be hard to easily comprehend. However,
+arbitrarily enforcing a maximum line length (like 80 characters) inevitably
+leads to cases in which slightly longer lines (e.g. 81 characters) might be more
+readable.
+
+Therefore, aim to keep line lengths under 80 characters by breaking lines
+for maximum readability (examples are given in the [Line breaks](@ref) section),
+but don't treat this as a hard rule.
+
+We make exceptions for
+ - URLs
+ - pathnames
+
+#### Line breaks
+
+The "readability" of a line is subjective. In this section we give suggestions
+of good and bad style of how to break a line. These suggestions are inspired by
+Google's [Python style guide](https://google.github.io/styleguide/pyguide.html).
+
+!!! note
+    If you're unsure about how format your code, you can experiment (in Python)
+    using [YAPF](https://yapf.now.sh/).
+
+When defining functions, align arguments vertically after the opening
+parenthesis, or list all arguments on a new (indented) line.
+
+Good:
+```julia
+# Arguments to the function are aligned vertically.
+function my_very_long_function_name(with_lots_of_long_arguments_1,
+                                    and_another_long_one)
+    # First line of the function begins here.
+end
+
+# Arguments to the function are listed on a new line and indented.
+function my_very_long_function_name(
+    with_lots_of_long_arguments_1, and_another_long_one)
+    # First line of the function begins here.
+end
+```
+
+Bad:
+```julia
+# When defining functions, if vertical alignment is not used, then the arguments
+# should not begin on the first line.
+function my_very_long_function_name(with_lots_of_long_arguments_1,
+    and_another_long_one)
+    # First line of the function begins here.
+end
+```
+
+Don't use vertical alignment if all of the arguments are very far to the right.
+
+Bad:
+```julia
+a_very_long_variable_name = a_long_variable_name_with_arguments(first_argument,
+                                                                second_argument)
+```
+
+Better:
+```julia
+a_very_long_variable_name = a_long_variable_name_with_arguments(
+    first_argument, second_argument)
+```
+
+Don't use vertical alignment if it would be more readable to place all arguments
+on a new indented line.
+
+Bad:
+```julia
+con_index = MOI.add_constraint(backend(owner_model(variable)),
+                               MOI.SingleVariable(index(variable)), set)
+```
+
+Better:
+```julia
+con_index = MOI.add_constraint(
+    backend(owner_model(variable)), MOI.SingleVariable(index(variable)), set)
+```
+
+Don't break lines at an inner-level of function nesting.
+
+Bad:
+```julia
+con_index = MOI.add_constraint(
+    backend(owner_model(variable)), MOI.SingleVariable(
+    index(variable)), new_set)
+```
+
+Better:
+```julia
+con_index = MOI.add_constraint(
+    backend(owner_model(variable)),
+    MOI.SingleVariable(index(variable)), new_set)
+```
+
+For readability, don't split a one-line function over multiple lines.
+
+Bad:
+```julia
+f(x) = 1 + x +
+    x^2 + x^3
+```
+
+Better:
+```julia
+f(x) = 1 + x + x^2 + x^3 + x^3
+```
 
 ### Syntax
 

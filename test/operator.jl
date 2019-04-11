@@ -142,17 +142,16 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_expression_with_string w + x "w + x"
             @test_expression_with_string w - x "w - x"
             @test_expression_with_string w * x "w*x"
-            @test_expression_with_string x - x "0"
+            @test_expression_with_string x - x "0 x"
             @test_throws ErrorException w / x
             @test_expression_with_string y*z - x "y*z - x"
-            @test_expression_with_string x - x "0"
             # 2-3 Variable--AffExpr
             @test_expression_with_string z + aff "z + 7.1 x + 2.5"
             @test_expression_with_string z - aff "z - 7.1 x - 2.5"
             @test_expression_with_string z * aff "7.1 z*x + 2.5 z"
             @test_throws ErrorException z / aff
             @test_throws MethodError z ≤ aff
-            @test_expression_with_string 7.1 * x - aff "-2.5"
+            @test_expression_with_string 7.1 * x - aff "0 x - 2.5"
             # 2-4 Variable--QuadExpr
             @test_expression_with_string w + q "2.5 y*z + w + 7.1 x + 2.5"
             @test_expression_with_string w - q "-2.5 y*z + w - 7.1 x - 2.5"
@@ -189,14 +188,14 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_expression_with_string aff - z "7.1 x - z + 2.5"
             @test_expression_with_string aff * z "7.1 x*z + 2.5 z"
             @test_throws ErrorException aff/z
-            @test_expression_with_string aff - 7.1 * x "2.5"
+            @test_expression_with_string aff - 7.1 * x "0 x + 2.5"
             # 3-3 AffExpr--AffExpr
             @test_expression_with_string aff + aff2 "7.1 x + 1.2 y + 3.7"
             @test_expression_with_string aff - aff2 "7.1 x - 1.2 y + 1.3"
             @test_expression_with_string aff * aff2 "8.52 x*y + 3 y + 8.52 x + 3"
             @test string((x+x)*(x+3)) == string((x+3)*(x+x))  # Issue #288
             @test_throws ErrorException aff/aff2
-            @test_expression_with_string aff-aff "0"
+            @test_expression_with_string aff-aff "0 x"
             # 4-4 AffExpr--QuadExpr
             @test_expression_with_string aff2 + q "2.5 y*z + 1.2 y + 7.1 x + 3.7"
             @test_expression_with_string aff2 - q "-2.5 y*z + 1.2 y - 7.1 x - 1.3"
@@ -254,6 +253,9 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             end
             @testset "sum(affs::Array{AffExpr})" begin
                 @test_expression_with_string sum([2*matrix[i,j] for i in 1:3, j in 1:3]) "2 matrix[1,1] + 2 matrix[2,1] + 2 matrix[3,1] + 2 matrix[1,2] + 2 matrix[2,2] + 2 matrix[3,2] + 2 matrix[1,3] + 2 matrix[2,3] + 2 matrix[3,3]"
+            end
+            @testset "sum(quads::Array{QuadExpr})" begin
+                @test_expression_with_string sum([2*matrix[i,j]^2 for i in 1:3, j in 1:3]) "2 matrix[1,1]² + 2 matrix[2,1]² + 2 matrix[3,1]² + 2 matrix[1,2]² + 2 matrix[2,2]² + 2 matrix[3,2]² + 2 matrix[1,3]² + 2 matrix[2,3]² + 2 matrix[3,3]²"
             end
 
             S = [1,3]

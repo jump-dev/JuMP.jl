@@ -395,20 +395,19 @@ function add_constraint(model::Model, c::AbstractConstraint, name::String="")
 end
 
 """
-    set_coefficient(constraint::ConstraintRef, variable::VariableRef, value)
+    set_standard_form_coefficient(constraint::ConstraintRef, variable::VariableRef, value)
 
 Set the coefficient of `variable` in the constraint `constraint` to `value`.
 
 Note that prior to this step, JuMP will aggregate multiple terms containing the
 same variable. For example, given a constraint `2x + 3x <= 2`,
-`set_coefficient(c, x, 4)` will create the constraint `4x <= 2`.
-
+`set_standard_form_coefficient(c, x, 4)` will create the constraint `4x <= 2`.
 
 ```jldoctest; setup = :(using JuMP), filter=r"≤|<="
 model = Model()
 @variable(model, x)
 @constraint(model, con, 2x + 3x <= 2)
-set_coefficient(con, x, 4)
+set_standard_form_coefficient(con, x, 4)
 con
 
 # output
@@ -416,13 +415,72 @@ con
 con : 4 x <= 2.0
 ```
 """
-function set_coefficient(constraint::ConstraintRef{Model, _MOICON{F, S}},
-                         variable, value) where {S, T, F <: Union{
-                             MOI.ScalarAffineFunction{T},
-                             MOI.ScalarQuadraticFunction{T}}}
-    MOI.modify(backend(constraint.model), index(constraint),
-        MOI.ScalarCoefficientChange(index(variable), convert(T, value)))
+function set_standard_form_coefficient(
+    constraint::ConstraintRef{Model, _MOICON{F, S}}, variable, value
+    ) where {S, T, F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
+    MOI.modify(backend(owner_model(constraint)), index(constraint),
+               MOI.ScalarCoefficientChange(index(variable), convert(T, value)))
     return
+end
+@deprecate set_coefficient set_standard_form_coefficient
+
+"""
+    standard_form_coefficient(constraint::ConstraintRef, variable::VariableRef)
+
+Return the coefficient associated with `variable` in `constraint` after JuMP has
+normalized the constraint into its standard form. See also
+[`set_standard_form_coefficient`](@ref).
+"""
+function standard_form_coefficient(
+    constraint::ConstraintRef{Model, _MOICON{F, S}}, variable
+    ) where {S, T, F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
+    con = JuMP.constraint_object(constraint)
+    return _affine_coefficient(con.func, variable)
+end
+
+"""
+    set_standard_form_rhs(constraint::ConstraintRef, value)
+
+Set the right-hand side term of `constraint` to `value`.
+
+Note that prior to this step, JuMP will aggregate all constant terms onto the
+right-hand side of the constraint. For example, given a constraint `2x + 1 <=
+2`, `set_standard_form_rhs(c, 4)` will create the constraint `2x <= 4`, not `2x +
+1 <= 4`.
+
+```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x)), filter=r"≤|<="
+julia> @constraint(model, con, 2x + 1 <= 2)
+con : 2 x <= 1.0
+
+julia> set_standard_form_rhs(con, 4)
+
+julia> con
+con : 2 x <= 4.0
+```
+"""
+function set_standard_form_rhs(
+    constraint::ConstraintRef{Model, _MOICON{F, S}}, value) where {
+        T,
+        S <: Union{MOI.LessThan{T}, MOI.GreaterThan{T}, MOI.EqualTo{T}},
+        F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
+    MOI.set(owner_model(constraint), MOI.ConstraintSet(), constraint,
+            S(convert(T, value)))
+    return
+end
+
+"""
+    standard_form_rhs(constraint::ConstraintRef)
+
+Return the right-hand side term of `constraint` after JuMP has converted the
+constraint into its standard form. See also [`set_standard_form_rhs`](@ref).
+"""
+function standard_form_rhs(
+    constraint::ConstraintRef{Model, _MOICON{F, S}}) where {
+        T,
+        S <: Union{MOI.LessThan{T}, MOI.GreaterThan{T}, MOI.EqualTo{T}},
+        F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
+    con = constraint_object(constraint)
+    return MOIU.getconstant(con.set)
 end
 
 """

@@ -111,9 +111,25 @@ Base.CartesianIndices(a::DenseAxisArray) = CartesianIndices(a.data)
 # Indexing #
 ############
 
-Base.isassigned(A::DenseAxisArray{T,N}, idx...) where {T,N} = length(idx) == N && all(t -> haskey(A.lookup[t[1]], t[2]), enumerate(idx))
+function _is_assigned(A::DenseAxisArray{T, N}, idx...) where {T, N}
+    if length(idx) == N
+        keys = zeros(Int, N)
+        for (i, v) in enumerate(idx)
+            key = get(A.lookup[i], v, nothing)
+            key === nothing && return false
+            keys[i] = key
+        end
+        return isassigned(A.data, keys...)
+    end
+    return false
+end
+function Base.isassigned(A::DenseAxisArray{T, N}, idx...) where {T, N}
+    return _is_assigned(A, idx...)
+end
 # For ambiguity
-Base.isassigned(A::DenseAxisArray{T,N}, idx::Int...) where {T,N} = length(idx) == N && all(t -> haskey(A.lookup[t[1]], t[2]), enumerate(idx))
+function Base.isassigned(A::DenseAxisArray{T, N}, idx::Int...) where {T, N}
+    return _is_assigned(A, idx...)
+end
 
 Base.eachindex(A::DenseAxisArray) = CartesianIndices(size(A.data))
 

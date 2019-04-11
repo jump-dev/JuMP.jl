@@ -95,3 +95,16 @@ JuMP.direct_model
 ```@docs
 JuMP.backend
 ```
+
+## Solver attributes
+
+Some solver attributes can be queried and set through JuMP models.
+
+```@docs
+solver_name
+
+bridge_constraints
+
+set_silent
+unset_silent
+```
