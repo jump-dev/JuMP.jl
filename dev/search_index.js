@@ -53,7 +53,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation Guide",
     "title": "Getting Solvers",
     "category": "section",
-    "text": "JuMP depends on solvers to solve optimization problems. Most solvers are not written in Julia, and some require commercial licenses to use, so installation is often more complex. We list below the currently available solvers.note: Note\nThis list is open for new contributions. See also Interacting with solvers and the MathOptInterface docs for more details on how JuMP interacts with solvers. Please get in touch with any questions about connecting new solvers with JuMP.Solver Julia Package License Supports\nArtelys Knitro KNITRO.jl Comm. LP, MILP, SOCP, MISOCP, NLP, MINLP\nCbc Cbc.jl EPL MILP\nClp Clp.jl EPL LP\nCPLEX CPLEX.jl Comm. LP, MILP, SOCP, MISOCP\nCSDP CSDP.jl EPL LP, SDP\nECOS ECOS.jl GPL LP, SOCP\nFICO Xpress Xpress.jl Comm. LP, MILP, SOCP, MISOCP\nGLPK GLPK.jl GPL LP, MILP\nGurobi Gurobi.jl Comm. LP, MILP, SOCP, MISOCP\nIpopt Ipopt.jl EPL LP, QP, NLP\nMOSEK MosekTools.jl Comm. LP, MILP, SOCP, MISOCP, SDP\nOSQP OSQP.jl Apache LP, QP\nProxSDP ProxSDP.jl MIT LP, SOCP, SDP\nSCS SCS.jl MIT LP, SOCP, SDP\nSDPA SDPA.jl GPL LP, SDP\nSeDuMi SeDuMi.jl GPL LP, SOCP, SDPWhere:LP = Linear programming\nQP = Quadratic programming\nSOCP = Second-order conic programming (including problems with convex quadratic constraints and/or objective)\nMILP = Mixed-integer linear programming\nNLP = Nonlinear programming\nMINLP = Mixed-integer nonlinear programming\nSDP = Semidefinite programming\nMISDP = Mixed-integer semidefinite programmingYou may also use AmplNLWriter to access solvers that support the nl format. Such solvers include Bonmin and Couenne. See a more complete list here.To install Gurobi, for example, and use it with a JuMP model model, run:import Pkg\nPkg.add(\"Gurobi\")\nusing JuMP\nusing Gurobi\nmodel = Model(with_optimizer(Gurobi.Optimizer))Most packages follow the ModuleName.Optimizer naming convention, but exceptions may exist. See the corresponding Julia package README for more details on how to use the solver.# TODO: Discuss setting solver options.The following solvers were compatible with JuMP up to release 0.18 but are not yet compatible with the latest version because they do not implement the new MathOptInterface API:Alpine\nBARON\nCDD\nNLopt\nPavito\nPajarito\nSCIPSolver-specific notes follow below."
+    "text": "JuMP depends on solvers to solve optimization problems. Most solvers are not written in Julia, and some require commercial licenses to use, so installation is often more complex. We list below the currently available solvers.note: Note\nThis list is open for new contributions. See also Interacting with solvers and the MathOptInterface docs for more details on how JuMP interacts with solvers. Please get in touch with any questions about connecting new solvers with JuMP.Solver Julia Package License Supports\nArtelys Knitro KNITRO.jl Comm. LP, MILP, SOCP, MISOCP, NLP, MINLP\nCbc Cbc.jl EPL MILP\nClp Clp.jl EPL LP\nCOSMO COSMO.jl Apache LP, QP, SOCP, SDP\nCPLEX CPLEX.jl Comm. LP, MILP, SOCP, MISOCP\nCSDP CSDP.jl EPL LP, SDP\nECOS ECOS.jl GPL LP, SOCP\nFICO Xpress Xpress.jl Comm. LP, MILP, SOCP, MISOCP\nGLPK GLPK.jl GPL LP, MILP\nGurobi Gurobi.jl Comm. LP, MILP, SOCP, MISOCP\nIpopt Ipopt.jl EPL LP, QP, NLP\nMOSEK MosekTools.jl Comm. LP, MILP, SOCP, MISOCP, SDP\nOSQP OSQP.jl Apache LP, QP\nProxSDP ProxSDP.jl MIT LP, SOCP, SDP\nSCS SCS.jl MIT LP, SOCP, SDP\nSDPA SDPA.jl GPL LP, SDP\nSeDuMi SeDuMi.jl GPL LP, SOCP, SDPWhere:LP = Linear programming\nQP = Quadratic programming\nSOCP = Second-order conic programming (including problems with convex quadratic constraints and/or objective)\nMILP = Mixed-integer linear programming\nNLP = Nonlinear programming\nMINLP = Mixed-integer nonlinear programming\nSDP = Semidefinite programming\nMISDP = Mixed-integer semidefinite programmingYou may also use AmplNLWriter to access solvers that support the nl format. Such solvers include Bonmin and Couenne. See a more complete list here.To install Gurobi, for example, and use it with a JuMP model model, run:import Pkg\nPkg.add(\"Gurobi\")\nusing JuMP\nusing Gurobi\nmodel = Model(with_optimizer(Gurobi.Optimizer))Most packages follow the ModuleName.Optimizer naming convention, but exceptions may exist. See the corresponding Julia package README for more details on how to use the solver.# TODO: Discuss setting solver options.The following solvers were compatible with JuMP up to release 0.18 but are not yet compatible with the latest version because they do not implement the new MathOptInterface API:Alpine\nBARON\nCDD\nNLopt\nPavito\nPajarito\nSCIPSolver-specific notes follow below."
 },
 
 {
@@ -78,6 +78,14 @@ var documenterSearchIndex = {"docs": [
     "title": "COIN-OR Cbc",
     "category": "section",
     "text": "Cbc supports \"SOS\" constraints."
+},
+
+{
+    "location": "installation/#COSMO-1",
+    "page": "Installation Guide",
+    "title": "COSMO",
+    "category": "section",
+    "text": "COSMO can solve LPs, QPs, SOCPs and SDPs. It can handle SDPs with  quadratic objective functions and supports chordal decomposition of large structured PSD constraints. COSMO is a first order method that performs well on large problems but has a low accuracy by default (10^4). See the COSMO.jl documentation for more information."
 },
 
 {
@@ -125,7 +133,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation Guide",
     "title": "ProxSDP",
     "category": "section",
-    "text": "ProxSDP solves general SDP problems by means of a first order proximal algorithm based on the primal-dual hybrid gradient, also known as Chambolle-Pock method. The main advantage of ProxSDP over other state-of-the-art solvers is the ability  to exploit the low-rank property inherent to several SDP problems. ProxSDP  is a first order solver and has low accuracy. See the ProxSDP.jl documentation for more information."
+    "text": "ProxSDP solves general SDP problems by means of a first order proximal algorithm based on the primal-dual hybrid gradient, also known as Chambolle-Pock method. The main advantage of ProxSDP over other state-of-the-art solvers is the ability to exploit the low-rank property inherent to several SDP problems. ProxSDP is a first order solver and has low accuracy. See the ProxSDP.jl documentation for more information."
 },
 
 {
