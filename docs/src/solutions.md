@@ -127,6 +127,7 @@ JuMP.value
 JuMP.dual_status
 JuMP.has_duals
 JuMP.dual
+JuMP.solve_time
 OptimizeNotCalled
 MOI.optimize!
 ```

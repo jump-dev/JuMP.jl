@@ -439,6 +439,18 @@ end
 set_optimize_hook(model::Model, f) = (model.optimize_hook = f)
 
 """
+    solve_time(model::Model)
+
+If available, returns the solve time reported by the solver.
+Returns "ArgumentError: ModelLike of type `Solver.Optimizer` does not support accessing
+the attribute MathOptInterface.SolveTime()" if the attribute is
+not implemented.
+"""
+function solve_time(model::Model)
+    return MOI.get(model, MOI.SolveTime())
+end
+
+"""
     set_silent(model::Model)
 
 Takes precedence over any other attribute controlling verbosity 
