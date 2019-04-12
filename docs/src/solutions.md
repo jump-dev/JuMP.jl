@@ -17,6 +17,7 @@ optimization step. Typical questions include:
  - Do I have a solution to my problem?
  - Is it optimal?
  - Do I have a dual solution?
+ - How sensitive is the solution to data uncertainty?
 
 JuMP follows closely the concepts defined in [MathOptInterface (MOI)](https://github.com/JuliaOpt/MathOptInterface.jl)
 to answer user questions about a finished call to `optimize!(model)`. There
@@ -114,6 +115,84 @@ end
 
 ```@meta
 # TODO: How to accurately measure the solve time.
+```
+
+## Sensitivity analysis
+
+Given an LP problem and an optimal solution corresponding to a basis, we can
+question how much an objective coefficient or standard form rhs coefficient
+(c.f., [`standard_form_rhs`](@ref)) can change without violating primal or dual
+feasibility of the basic solution.
+
+Given an LP optimal solution (and both [`has_values`](@ref) and
+[`has_duals`](@ref) returns `true`) [`lp_objective_perturbation_range`](@ref)
+returns a range of the allowed perturbation of the cost coefficient
+corresponding to the input variable. Note that the current primal solution
+remains optimal within this range, however the corresponding dual solution might
+change since a cost coefficient is perturbed. Similarly,
+[`lp_rhs_perturbation_range`](@ref) returns a range of the allowed perturbation
+of the rhs coefficient corresponding to the input constraint. And in this range
+the current dual solution remains optimal but the primal solution might change
+since a rhs coefficient is perturbed.
+
+As an example, we could analyze the sensitivity of the optimal solution to the
+following LP problem:
+
+```julia
+julia> model = Model();
+julia> @variable(model, x[1:2]);
+julia> @constraint(model, c1, x[1] + x[2] <= 1);
+julia> @constraint(model, c2, x[1] - x[2] <= 1);
+julia> @constraint(model, c3, -0.5 <= x[2] <= 0.5);
+julia> @objective(model, Max, x[1]);
+```
+
+```@meta
+DocTestSetup = quote
+    using JuMP
+    model = Model(with_optimizer(MOIU.MockOptimizer, JuMP._MOIModel{Float64}(),
+                  eval_variable_constraint_dual=true));
+    @variable(model, x[1:2]);
+    @constraint(model, c1, x[1] + x[2] <= 1);
+    @constraint(model, c2, x[1] - x[2] <= 1);
+    @constraint(model, c3, -0.5 <= x[2] <= 0.5);
+    @objective(model, Max, x[1]);
+    optimize!(model);
+    mock = backend(model).optimizer.model;
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL);
+    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT);
+    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x[1]), 1.0);
+    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x[2]), 0.0);
+    MOI.set(mock, MOI.ConstraintBasisStatus(), JuMP.optimizer_index(c1), MOI.NONBASIC);
+    MOI.set(mock, MOI.ConstraintBasisStatus(), JuMP.optimizer_index(c2), MOI.NONBASIC);
+    MOI.set(mock, MOI.ConstraintBasisStatus(), JuMP.optimizer_index(c3), MOI.BASIC);
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c1), -0.5);
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c2), -0.5);
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c3), 0.0);
+end
+```
+
+To analyze the sensitivity of the problem we could check the allowed
+perturbation ranges of, e.g., the cost coefficients and the rhs coefficient of
+constraint `c1` as follows:
+```jldoctest
+julia> optimize!(model);
+
+julia> value.(x)
+2-element Array{Float64,1}:
+ 1.0
+ 0.0
+julia> lp_objective_perturbation_range(x[1])
+(-1.0, Inf)
+julia> lp_objective_perturbation_range(x[2])
+(-1.0, 1.0)
+julia> lp_rhs_perturbation_range(c1)
+(-1.0, 1.0)
+```
+
+```@docs
+lp_objective_perturbation_range
+lp_rhs_perturbation_range
 ```
 
 ## Reference
