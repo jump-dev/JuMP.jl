@@ -9,7 +9,9 @@
 #############################################################################
 
 """
-    lp_rhs_perturbation_range(constraint::ConstraintRef; feasibility_tolerance::Float64)::Tuple{Float64, Float64}
+    lp_rhs_perturbation_range(constraint::ConstraintRef;
+                              feasibility_tolerance::Float64)
+                              ::Tuple{Float64, Float64}
 
 Gives the range by which the rhs coefficient can change and the current LP basis
 remains feasible, i.e., where the shadow prices apply.
@@ -17,7 +19,10 @@ remains feasible, i.e., where the shadow prices apply.
 ## Notes
 - The rhs coefficient is the value right of the relation, i.e., b for the constraint when of the form a*x □ b, where □ is ≤, =, or ≥.
 - The range denotes valid changes, e.g., for a*x <= b + Δ, the LP basis remains feasible for all Δ ∈ [l, u].
-- `feasibility_tolerance` is the primal feasibility tolerance.
+- `feasibility_tolerance` is the primal feasibility tolerance, this should
+  preferably match the tolerance used by the solver. The defualt tolerance should
+  however apply in most situations (c.f. "Computational Techniques of the
+  Simplex Method" by István Maros, section 9.3.4).
 """
 function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, <:_MOICON}; feasibility_tolerance::Float64 = 1e-8)
     error("The perturbation range of rhs is not defined or not implemented for this type " *
@@ -212,8 +217,6 @@ function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, _MOICON{F, S
     pos = rho .> 0.0
     neg = rho .< 0.0
     # Find the first basic variable bound that is strictly violated.
-    # Use the vanilla 1e-8 tolerance (c.f. "Computational Techniques of the Simplex Method" by István Maros section 9.3.4.)
-    # to determine this strict violation.
     lower_bounds_delta = [-Inf; UmX_B[neg]  ./ rho[neg]; LmX_B[pos] ./ rho[pos]]
     lower_bounds_delta_strict = lower_bounds_delta + [0.0; feasibility_tolerance ./ rho[neg]; -feasibility_tolerance ./ rho[pos]]
     upper_bounds_delta = [Inf; UmX_B[pos] ./ rho[pos]; LmX_B[neg] ./ rho[neg]]
@@ -256,15 +259,20 @@ function _std_reduced_costs(model::Model, constraints::Vector{ConstraintRef})
 end
 
 """
-    lp_objective_perturbation_range(var::VariableRef)::Tuple{Float64, Float64}
+    lp_objective_perturbation_range(var::VariableRef;
+                                    optimality_tolerance::Float64)
+                                    ::Tuple{Float64, Float64}
 
 Gives the range by which the cost coefficient can change and the current LP basis
 remains optimal, i.e., the reduced costs remain valid.
 
 ## Notes
-- The range denotes valid changes, Δ in [l, u], for which cost[var] += Δ do not violate the current optimality conditions.
-- `optimality_tolerance` is the dual feasibility tolerance.
-
+- The range denotes valid changes, Δ ∈ [l, u], for which cost[var] += Δ do not
+  violate the current optimality conditions.
+- `optimality_tolerance` is the dual feasibility tolerance, this should
+  preferably match the tolerance used by the solver. The defualt tolerance should
+  however apply in most situations (c.f. "Computational Techniques of the
+  Simplex Method" by István Maros, section 9.3.4).
 """
 function lp_objective_perturbation_range(var::VariableRef; optimality_tolerance::Float64 = 1e-8)::Tuple{Float64, Float64}
     model = owner_model(var)
@@ -327,8 +335,6 @@ function lp_objective_perturbation_range(var::VariableRef; optimality_tolerance:
     in_lb .&= unfixed_vars
     in_ub .&= unfixed_vars
     # Find the first reduced cost that is strictly violated
-    # Use the vanilla 1e-8 tolerance (c.f. "Computational Techniques of the Simplex Method" by István Maros section 9.3.4.)
-    # to determine this strict violation.
     lower_bounds_delta = [-Inf; c_red[in_lb] ./ N_red[in_lb]]
     lower_bounds_delta_strict = lower_bounds_delta - [0.0; optimality_tolerance ./ abs.(N_red[in_lb])]
     upper_bounds_delta = [Inf; c_red[in_ub] ./ N_red[in_ub]]
