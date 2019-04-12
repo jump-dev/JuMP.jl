@@ -1513,6 +1513,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "solutions/#JuMP.solve_time",
+    "page": "Query Solutions",
+    "title": "JuMP.solve_time",
+    "category": "function",
+    "text": "solve_time(model::Model)\n\nIf available, returns the solve time reported by the solver. Returns \"ArgumentError: ModelLike of type Solver.Optimizer does not support accessing the attribute MathOptInterface.SolveTime()\" if the attribute is not implemented.\n\n\n\n\n\n"
+},
+
+{
     "location": "solutions/#JuMP.OptimizeNotCalled",
     "page": "Query Solutions",
     "title": "JuMP.OptimizeNotCalled",
@@ -1533,7 +1541,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Query Solutions",
     "title": "Reference",
     "category": "section",
-    "text": "JuMP.termination_status\nJuMP.primal_status\nJuMP.has_values\nJuMP.value\nJuMP.dual_status\nJuMP.has_duals\nJuMP.dual\nOptimizeNotCalled\nMOI.optimize!"
+    "text": "JuMP.termination_status\nJuMP.primal_status\nJuMP.has_values\nJuMP.value\nJuMP.dual_status\nJuMP.has_duals\nJuMP.dual\nJuMP.solve_time\nOptimizeNotCalled\nMOI.optimize!"
 },
 
 {
