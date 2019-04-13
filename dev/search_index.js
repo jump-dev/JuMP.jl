@@ -21,7 +21,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Introduction",
     "title": "Contents",
     "category": "section",
-    "text": "Pages = [\n    \"installation.md\",\n    \"quickstart.md\",\n    \"variables.md\",\n    \"expressions.md\",\n    \"objective.md\",\n    \"constraints.md\",\n    \"containers.md\",\n    \"solvers.md\",\n    \"solutions.md\",\n    \"nlp.md\",\n    \"style.md\",\n    \"extensions.md\"\n]\nDepth = 2"
+    "text": "Pages = [\n    \"installation.md\",\n    \"quickstart.md\",\n    \"variables.md\",\n    \"expressions.md\",\n    \"objective.md\",\n    \"constraints.md\",\n    \"containers.md\",\n    \"solvers.md\",\n    \"solutions.md\",\n    \"nlp.md\",\n    \"style.md\",\n    \"extensions.md\",\n    \"roadmap.md\"\n]\nDepth = 2"
 },
 
 {
@@ -2070,6 +2070,46 @@ var documenterSearchIndex = {"docs": [
     "title": "Adding add_constraint methods",
     "category": "section",
     "text": "# TODO: Introduce `add_constraint`add_constraint### Extending the [`@objective`](@ref) macro\n\n# TODO: Describe how to `@objective` macro by implementing new `JuMP.set_objective_function` methods\n\n## Defining new JuMP models\n\n# TODO: Describe how to create a new JuMP model (similar to `test/JuMPExtension.jl` and StructJuMP)."
+},
+
+{
+    "location": "roadmap/#",
+    "page": "Development Roadmap",
+    "title": "Development Roadmap",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "roadmap/#Development-roadmap-1",
+    "page": "Development Roadmap",
+    "title": "Development roadmap",
+    "category": "section",
+    "text": "This page is not JuMP documentation per se but are notes for the JuMP community. The JuMP developers have compiled this roadmap document to share their plans and goals. Contributions to roadmap issues are especially invited."
+},
+
+{
+    "location": "roadmap/#JuMP-1.0-1",
+    "page": "Development Roadmap",
+    "title": "JuMP 1.0",
+    "category": "section",
+    "text": "JuMP 1.0 will be ready to release roughly when all of these tasks are completed. Some but not all of these tasks are summarized in the JuMP 1.0 milestone.Create a website for JuMP.\nDeprecate the JuliaOpt organization and move repositories to the JuMP-dev organization.\nAddress major regressions from JuMP 0.18.\nPerformance (#1403,              #1654,              #1607)\nCallbacks\nColumn generation syntax\nSupport for second-order cones in Gurobi, CPLEX, and Xpress.\nFix issues that we promised MOI would fix.\nChecking feasibility of solutions (#693)\nAccessing IIS (#1053)\nAccessing multiple results from solvers\nDual warm-starts (e.g., Ipopt.jl #164)\nAddress “easy” usability issues\nLine numbers in error messages (#1174)\nLP sensitivity summary (#1332)\nInferred element types for collections in macros (#525)\nExpose solver-independent options from JuMP\nImprove the documentation (#1062)\nSeparate how-to, concept explanation, and technical reference following the Divio recommendations\nDeveloper experience\nGet JuMP’s unit tests running in less than two minutes. See #1745.\nAll solvers should complete the transition to MOI.\nProvide packages for installing Bonmin and Couenne.\nMathOptFormat 1.0"
+},
+
+{
+    "location": "roadmap/#MOI-1.0-1",
+    "page": "Development Roadmap",
+    "title": "MOI 1.0",
+    "category": "section",
+    "text": "# TODO: List MOI 1.0 items here."
+},
+
+{
+    "location": "roadmap/#Beyond-JuMP-1.0-1",
+    "page": "Development Roadmap",
+    "title": "Beyond JuMP 1.0",
+    "category": "section",
+    "text": "# TODO: Copy over list of items not tied to JuMP 1.0. These should have more\n# elaborate explanations so that potential contributors know what we mean,\n# i.e., a few sentences each or a link to a document/issue."
 },
 
 ]}
