@@ -28,7 +28,8 @@ makedocs(
         "Query Solutions" => "solutions.md",
         "Nonlinear Modeling" => "nlp.md",
         "Style Guide" => "style.md",
-        "Extensions" => "extensions.md"
+        "Extensions" => "extensions.md",
+        "Development Roadmap" => "roadmap.md"
     ],
     assets = [
         "assets/jump-logo-with-text.svg",
