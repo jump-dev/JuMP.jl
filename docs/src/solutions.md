@@ -17,7 +17,7 @@ optimization step. Typical questions include:
  - Do I have a solution to my problem?
  - Is it optimal?
  - Do I have a dual solution?
- - How sensitive is the solution to data uncertainty?
+ - How sensitive is the solution to data perturbations?
 
 JuMP follows closely the concepts defined in [MathOptInterface (MOI)](https://github.com/JuliaOpt/MathOptInterface.jl)
 to answer user questions about a finished call to `optimize!(model)`. There
@@ -117,12 +117,14 @@ end
 # TODO: How to accurately measure the solve time.
 ```
 
-## Sensitivity analysis
+## Sensitivity analysis for LP
 
 Given an LP problem and an optimal solution corresponding to a basis, we can
 question how much an objective coefficient or standard form rhs coefficient
 (c.f., [`standard_form_rhs`](@ref)) can change without violating primal or dual
-feasibility of the basic solution.
+feasibility of the basic solution. Note that not all solvers computes the basis
+and the sensitivity analysis requires that the solver interface implements
+`MOI.ConstraintBasisStatus`.
 
 Given an LP optimal solution (and both [`has_values`](@ref) and
 [`has_duals`](@ref) returns `true`) [`lp_objective_perturbation_range`](@ref)
@@ -135,8 +137,19 @@ of the rhs coefficient corresponding to the input constraint. And in this range
 the current dual solution remains optimal but the primal solution might change
 since a rhs coefficient is perturbed.
 
-As an example, we could analyze the sensitivity of the optimal solution to the
-following LP problem:
+However, if the problem is degenerate, there are multiple optimal bases and
+hence these ranges might not be as intuitive and seem too narrow. E.g., a larger
+cost coefficient perturbation might not invalidate the optimality of the current
+primal solution. Moreover, if a problem is degenerate, due to finite precision,
+it can happen that, e.g., a perturbation seems to invalidate a basis even though
+it doesn't (again providing too narrow ranges). To prevent this
+`feasibility_tolerance` and `optimality_tolerance` is introduced, which in turn,
+might make the ranges too wide for numerically challenging instances. Thus do not
+blindly trust these ranges, especially not for highly degenerate or numerically
+unstable instances.
+
+To give a simple example, we could analyze the sensitivity of the optimal
+solution to the following (non-degenerate) LP problem:
 
 ```julia
 julia> model = Model();
