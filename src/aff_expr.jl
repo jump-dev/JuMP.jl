@@ -17,10 +17,12 @@
 
 # Utilities for OrderedDict
 function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
-    # TODO: This unnecessarily requires two lookups for k.
-    # TODO: Decide if we want to drop zeros here after understanding the
-    # performance implications.
-    dict[k] = get!(dict, k, zero(V)) + v
+    # Adding zero terms to this dictionary leads to unacceptable performance
+    # degradations. See, e.g., https://github.com/JuliaOpt/JuMP.jl/issues/1946.
+    if !iszero(v)
+        # TODO: This unnecessarily requires two lookups for k.
+        dict[k] = get!(dict, k, zero(V)) + v
+    end
     return dict
 end
 
