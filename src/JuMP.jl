@@ -751,6 +751,8 @@ include("macros.jl")
 include("optimizer_interface.jl")
 include("nlp.jl")
 include("print.jl")
+include("lp_sensitivity.jl")
+
 
 # JuMP exports everything except internal symbols, which are defined as those
 # whose name starts with an underscore. If you don't want all of these symbols
