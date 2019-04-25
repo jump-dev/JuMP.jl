@@ -52,6 +52,12 @@ This function will return a `MOI.TerminationStatusCode` `enum`.
 MOI.TerminationStatusCode
 ```
 
+Additionally, we can receive a solver specific string explaning why the
+optimization stopped with
+```julia
+raw_status(model)
+```
+
 ## Solution statuses
 
 These statuses indicate what kind of result is available to be queried
