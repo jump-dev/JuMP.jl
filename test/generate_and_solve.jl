@@ -48,6 +48,7 @@ using JuMP
 
         mockoptimizer = JuMP.backend(m).optimizer.model
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
@@ -62,6 +63,7 @@ using JuMP
         @test JuMP.has_values(m)
 
         @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test "solver specific string" == JuMP.raw_status(m)
         @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
         @test  1.0 == @inferred JuMP.value(x)
@@ -87,6 +89,7 @@ using JuMP
 
         c = @constraint(m, x + y <= 1)
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
@@ -103,6 +106,7 @@ using JuMP
         @test JuMP.has_values(m)
 
         @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test "solver specific string" == JuMP.raw_status(m)
         @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
         @test  1.0 == @inferred JuMP.value(x)
@@ -148,6 +152,7 @@ using JuMP
 
         mockoptimizer = JuMP.backend(m).optimizer.model
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), 1.0)
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
@@ -161,6 +166,7 @@ using JuMP
         @test JuMP.has_values(m)
 
         @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test "solver specific string" == JuMP.raw_status(m)
         @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
         @test 1.0 == @inferred JuMP.value(x)
@@ -198,6 +204,7 @@ using JuMP
 
         mockoptimizer = JuMP.backend(m).optimizer.model
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
@@ -212,6 +219,7 @@ using JuMP
         @test JuMP.has_values(m)
 
         @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test "solver specific string" == JuMP.raw_status(m)
         @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
         @test 1.0 == @inferred JuMP.value(x)
@@ -258,6 +266,7 @@ using JuMP
         MOIU.attach_optimizer(m)
 
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
         MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
@@ -273,6 +282,7 @@ using JuMP
         @test JuMP.has_values(m)
 
         @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test "solver specific string" == JuMP.raw_status(m)
         @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
         @test 1.0 == @inferred JuMP.value(x)
@@ -319,6 +329,7 @@ using JuMP
         MOIU.attach_optimizer(m)
 
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
         MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
@@ -335,6 +346,7 @@ using JuMP
         JuMP.optimize!(m)
 
         @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test "solver specific string" == JuMP.raw_status(m)
         @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
         @test JuMP.has_values(m)
