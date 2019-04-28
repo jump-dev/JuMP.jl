@@ -53,10 +53,7 @@ MOI.TerminationStatusCode
 ```
 
 Additionally, we can receive a solver specific string explaning why the
-optimization stopped with
-```julia
-raw_status(model)
-```
+optimization stopped with [`raw_status`](@ref).
 
 ## Solution statuses
 
@@ -219,6 +216,7 @@ lp_rhs_perturbation_range
 
 ```@docs
 JuMP.termination_status
+JuMP.raw_status
 JuMP.primal_status
 JuMP.has_values
 JuMP.value
