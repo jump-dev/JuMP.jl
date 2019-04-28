@@ -8,20 +8,14 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 
-
-#=
-julia> VERSION
-v"1.1.0"
-
-pkg> status JuMP Cbc GLPK
-  [9961bab8] Cbc v0.6.0
-  [60bf3e95] GLPK v0.9.1
-  [4076af6c] JuMP v0.19.0
-=#
-
 """
+      example_factory_schedule()
+
 This is a Julia translation of part 5 from "Introduction to to Linear Programming with Python" 
 available at https://github.com/benalexkeen/Introduction-to-linear-programming
+
+For 2 factories (A,B), minimize the cost of production over the course of 12 months
+while meeting monthly demand. Factory B has a planned outage during month 5.
 
 """
 
@@ -181,16 +175,16 @@ function example_factory_schedule()
       d_fixed_cost[m,f] * status[m,f] + d_var_cost[m,f] * production[m,f] 
       for m in months, f in factories))
 
-   optimize!(model)
+   JuMP.optimize!(model)
 
    @test JuMP.termination_status(model) == MOI.OPTIMAL
    @test JuMP.objective_value(model) == 12906400.0
 
    #spot check individual values 
-   @test value.(production)[1,:A] == 70000
-   @test value.(status)[1,:A] == 1
-   @test value.(status)[5,:B] == 0
-   @test value.(production)[5,:B] == 0
+   @test JuMP.value.(production)[1,:A] == 70000
+   @test JuMP.value.(status)[1,:A] == 1
+   @test JuMP.value.(status)[5,:B] == 0
+   @test JuMP.value.(production)[5,:B] == 0
 end
 
 example_factory_schedule()
