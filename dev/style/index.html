@@ -81,7 +81,9 @@ end)</code></pre><p>Bad:</p><pre><code class="language-julia">@variable(model, x
 end)</code></pre><h3><a class="nav-anchor" id="Naming-1" href="#Naming-1">Naming</a></h3><pre><code class="language-julia">module SomeModule end
 function some_function end
 const SOME_CONSTANT = ...
-struct SomeStruct end
+struct SomeStruct 
+  some_field::SomeType
+end
 @enum SomeEnum ENUM_VALUE_A ENUM_VALUE_B
 some_local_variable = ...
 some_file.jl # Except for ModuleName.jl.</code></pre><h4><a class="nav-anchor" id="Exported-and-non-exported-names-1" href="#Exported-and-non-exported-names-1">Exported and non-exported names</a></h4><p>Begin private module level functions and constants with an underscore. All other objects in the scope of a module should be exported. (See JuMP.jl for an example of how to do this.)</p><p>Names beginning with an underscore should only be used for distinguishing between exported (public) and non-exported (private) objects. Therefore, never begin the name of a local variable with an underscore.</p><pre><code class="language-julia">module MyModule
