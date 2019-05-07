@@ -474,6 +474,13 @@ end
         c = @constraint(model, x == sum(1.0 for i in 1:0))
         @test isa(constraint_object(c).func, GenericAffExpr{Float64, VariableRef})
     end
+
+    @testset "Empty summation in @NLconstraints" begin
+        model = Model()
+        @variable(model, x)
+        c = @NLconstraint(model, x == sum(1.0 for i in 1:0))
+        @test sprint(show, c) == "x - 0 = 0"
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
