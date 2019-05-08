@@ -479,7 +479,7 @@ end
         model = Model()
         @variable(model, x)
         c = @NLconstraint(model, x == sum(1.0 for i in 1:0))
-        @test sprint(show, c) == "x - 0 = 0"
+        @test sprint(show, c) == "x - 0 = 0" || sprint(show, c) == "x - 0 == 0"
     end
 end
 
