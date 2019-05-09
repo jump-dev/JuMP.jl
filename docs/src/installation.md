@@ -41,6 +41,7 @@ is often more complex. We list below the currently available solvers.
 | [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK.jl](https://github.com/JuliaOpt/GLPK.jl)                                   | GPL     | LP, MILP                           |
 | [Gurobi](http://gurobi.com)                                                    | [Gurobi.jl](https://github.com/JuliaOpt/Gurobi.jl)                               | Comm.   | LP, MILP, SOCP, MISOCP             |
 | [Ipopt](https://projects.coin-or.org/Ipopt)                                    | [Ipopt.jl](https://github.com/JuliaOpt/Ipopt.jl)                                 | EPL     | LP, QP, NLP                        |
+| [Juniper](https://github.com/lanl-ansi/Juniper.jl)                                    | [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl)                                 | MIT     | MISOCP, MINLP                      |
 | [MOSEK](http://www.mosek.com/)                                                 | [MosekTools.jl](https://github.com/JuliaOpt/MosekTools.jl)                       | Comm.   | LP, MILP, SOCP, MISOCP, SDP        |
 | [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              | Apache  | LP, QP                             |
 | [ProxSDP](https://github.com/mariohsouto/ProxSDP.jl)                                | [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)                     | MIT     | LP, SOCP, SDP                      |
