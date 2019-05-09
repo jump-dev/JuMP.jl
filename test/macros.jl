@@ -467,6 +467,20 @@ end
         @test_macro_throws ErrorException("Invalid syntax for @variables") @variables(model, x >= 0)
         @test_macro_throws MethodError @variables(model, x >= 0, Bin)
     end
+
+    @testset "Empty summation in @constraints" begin
+        model = Model()
+        @variable(model, x)
+        c = @constraint(model, x == sum(1.0 for i in 1:0))
+        @test isa(constraint_object(c).func, GenericAffExpr{Float64, VariableRef})
+    end
+
+    @testset "Empty summation in @NLconstraints" begin
+        model = Model()
+        @variable(model, x)
+        c = @NLconstraint(model, x == sum(1.0 for i in 1:0))
+        @test sprint(show, c) == "x - 0 = 0" || sprint(show, c) == "x - 0 == 0"
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin

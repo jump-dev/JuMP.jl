@@ -387,8 +387,13 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool,
 end
 
 function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
-    # Simple comparison - move everything to the LHS
-    aff = :($lhs - $rhs)
+    # Simple comparison - move everything to the LHS.
+    #
+    # Note: We add the +0 to this term to account for the pathological case that
+    # the `lhs` is a `VariableRef` and the `rhs` is a summation with no terms.
+    # Without the `+0` term, `aff` would evaluate to a `VariableRef` when we
+    # really want it to be a `GenericAffExpr`.
+    aff = :($lhs - $rhs + 0)
     set = sense_to_set(_error, sense)
     parse_one_operator_constraint(_error, vectorized, Val(:in), aff, set)
 end
