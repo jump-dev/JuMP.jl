@@ -1,0 +1,33 @@
+name = "JuMP"
+uuid = "4076af6c-e467-56ae-b986-b466b2749572"
+repo = "https://github.com/JuliaOpt/JuMP.jl.git"
+version = "0.19.0"
+
+[deps]
+Calculus = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[compat]
+ForwardDiff = "~0.5.0, ~0.6, ~0.7, ~0.8, ~0.9, ~0.10"
+MathOptInterface = "~0.8.1"
+NaNMath = "≥ 0.2.1"
+OffsetArrays = "≥ 0.2.13"
+julia = "1"
+
+[extras]
+DualNumbers = "fa6b7ba4-c1ee-5f82-b5fc-ecf0adba8f74"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["OffsetArrays", "LinearAlgebra", "DualNumbers", "Random", "SparseArrays", "Test"]
