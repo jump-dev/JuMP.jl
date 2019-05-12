@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Version 0.19.1 (May 12, 2019)
+-----------------------------
+
+- Usability and performance improvements.
+- Bug fixes.
+
 Version 0.19.0 (February 15, 2019)
 ----------------------------------
 
