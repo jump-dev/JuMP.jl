@@ -17,9 +17,12 @@
 
 # Utilities for OrderedDict
 function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
+    # Adding zero terms to this dictionary leads to unacceptable performance
+    # degradations. See, e.g., https://github.com/JuliaOpt/JuMP.jl/issues/1946.
+    if iszero(v)
+        return dict  # No-op.
+    end
     # TODO: This unnecessarily requires two lookups for k.
-    # TODO: Decide if we want to drop zeros here after understanding the
-    # performance implications.
     dict[k] = get!(dict, k, zero(V)) + v
     return dict
 end
@@ -82,13 +85,29 @@ function GenericAffExpr{V,K}(constant, kv::Pair...) where {K,V}
     return GenericAffExpr{V,K}(convert(V, constant), _new_ordered_dict(K, V, kv...))
 end
 
-Base.iszero(a::GenericAffExpr) = isempty(a.terms) && iszero(a.constant)
+function Base.iszero(expr::GenericAffExpr)
+    return iszero(expr.constant) && all(iszero, values(expr.terms))
+end
 Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(zero(C), OrderedDict{V,C}())
 Base.one(::Type{GenericAffExpr{C,V}}) where {C,V}  = GenericAffExpr{C,V}(one(C), OrderedDict{V,C}())
 Base.zero(a::GenericAffExpr) = zero(typeof(a))
 Base.one( a::GenericAffExpr) =  one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
 Base.broadcastable(a::GenericAffExpr) = Ref(a)
+
+"""
+    drop_zeros!(expr::GenericAffExpr)
+
+Remove terms in the affine expression with `0` coefficients.
+"""
+function drop_zeros!(expr::GenericAffExpr)
+    for (key, coef) in expr.terms
+        if iszero(coef)
+            delete!(expr.terms, key)
+        end
+    end
+    return
+end
 
 GenericAffExpr{C, V}() where {C, V} = zero(GenericAffExpr{C, V})
 

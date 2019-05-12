@@ -1,6 +1,9 @@
 @testset "DenseAxisArray" begin
     @testset "undef constructor" begin
         A = @inferred DenseAxisArray{Int}(undef, [:a, :b], 1:2)
+        @test isassigned(A, :a, 1)  # Because the eltype is Int, isassigned=true.
+        @test !isassigned(A, :c, 1)
+        @test !isassigned(A, :c, 1, :d)
         A[:a, 1] = 1
         A[:b, 1] = 2
         A[:a, 2] = 3
@@ -9,6 +12,20 @@
         @test A[:b, 1] == 2
         @test A[:a, 2] == 3
         @test A[:b, 2] == 4
+        @test isassigned(A, :a, 1)
+        @test !isassigned(A, :c, 1)
+    end
+
+    @testset "undef constructor (ii)" begin
+        A = @inferred DenseAxisArray{String}(undef, 1:2)
+        @test !isassigned(A, 1)
+        @test !isassigned(A, 2)
+        @test !isassigned(A, 3)
+        A[1] = "abc"
+        @test isassigned(A, 1)
+        @test !isassigned(A, 2)
+        @test !isassigned(A, 3)
+        @test !isassigned(A, 2, 2)
     end
 
     @testset "Range index set" begin

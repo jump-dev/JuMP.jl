@@ -274,6 +274,15 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test_macro_throws ErrorException @build_constraint(2x + 1)
     end
 
+    @testset "Promotion of SOS sets" begin
+        model = Model()
+        @variable(model, x[1:3])
+        c_sos1 = @build_constraint(x in MOI.SOS1([1, 2, 3]))
+        @test c_sos1.set == MOI.SOS1([1.0, 2.0, 3.0])
+        c_sos2 = @build_constraint(x in MOI.SOS2([6, 5, 4]))
+        @test c_sos2.set == MOI.SOS2([6.0, 5.0, 4.0])
+    end
+
     build_constraint_keyword_test(ModelType)
 end
 
@@ -438,6 +447,39 @@ end
          y[1] + y[2] $ge 2.0
          y[1] + y[3] $ge 3.0
         """
+    end
+
+    @testset "Index variables don't leak out of macros" begin
+        model = Model()
+        i = 10
+        j = 10
+        @expression(model, ex[j = 2:3], sum(i for i in 1:j))
+        @test ex[2] == AffExpr(3)
+        @test ex[3] == AffExpr(6)
+        @test i == 10
+        @test j == 10
+    end
+
+    @testset "Plural failures" begin
+        model = Model()
+        @test_macro_throws MethodError @variables(model)
+        @test_macro_throws ErrorException("Invalid syntax for @variables") @variables(model, x)
+        @test_macro_throws ErrorException("Invalid syntax for @variables") @variables(model, x >= 0)
+        @test_macro_throws MethodError @variables(model, x >= 0, Bin)
+    end
+
+    @testset "Empty summation in @constraints" begin
+        model = Model()
+        @variable(model, x)
+        c = @constraint(model, x == sum(1.0 for i in 1:0))
+        @test isa(constraint_object(c).func, GenericAffExpr{Float64, VariableRef})
+    end
+
+    @testset "Empty summation in @NLconstraints" begin
+        model = Model()
+        @variable(model, x)
+        c = @NLconstraint(model, x == sum(1.0 for i in 1:0))
+        @test sprint(show, c) == "x - 0 = 0" || sprint(show, c) == "x - 0 == 0"
     end
 end
 

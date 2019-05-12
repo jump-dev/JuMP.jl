@@ -599,3 +599,23 @@ end
 @testset "Variables for JuMPExtension.MyModel" begin
     variables_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end
+
+@testset "Dual from Variable" begin
+    model = Model()
+    @variable(model, x == 0)
+    exception = ErrorException(
+        "To query the dual variables associated with a variable bound, first " *
+        "obtain a constraint reference using one of `UpperBoundRef`, `LowerBoundRef`, " *
+        "or `FixRef`, and then call `dual` on the returned constraint reference.\nFor " *
+        "example, if `x <= 1`, instead of `dual(x)`, call `dual(UpperBoundRef(x))`.")
+    @test_throws exception JuMP.dual(x)
+end
+
+@testset "value on containers" begin
+    model = Model()
+    @variable(model, x[1:2])
+    exception = ErrorException(
+        "`JuMP.value` is not defined for collections of JuMP types. Use " *
+        "Julia's broadcast syntax instead: `JuMP.value.(x)`.")
+    @test_throws exception JuMP.value(x)
+end

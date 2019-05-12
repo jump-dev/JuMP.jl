@@ -790,3 +790,15 @@ function all_variables(model::Model)
         model, MOI.ListOfVariableIndices())::Vector{MOI.VariableIndex}
     return VariableRef[VariableRef(model, idx) for idx in all_indices]
 end
+
+function dual(vref::VariableRef)
+    error("To query the dual variables associated with a variable bound, first " *
+          "obtain a constraint reference using one of `UpperBoundRef`, `LowerBoundRef`, " *
+          "or `FixRef`, and then call `dual` on the returned constraint reference.\nFor " *
+          "example, if `x <= 1`, instead of `dual(x)`, call `dual(UpperBoundRef(x))`.")
+end
+
+function value(::AbstractArray{<:AbstractJuMPScalar})
+    error("`JuMP.value` is not defined for collections of JuMP types. Use" *
+          " Julia's broadcast syntax instead: `JuMP.value.(x)`.")
+end

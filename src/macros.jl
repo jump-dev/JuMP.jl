@@ -417,8 +417,13 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool,
 end
 
 function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
-    # Simple comparison - move everything to the LHS
-    aff = :($lhs - $rhs)
+    # Simple comparison - move everything to the LHS.
+    #
+    # Note: We add the +0 to this term to account for the pathological case that
+    # the `lhs` is a `VariableRef` and the `rhs` is a summation with no terms.
+    # Without the `+0` term, `aff` would evaluate to a `VariableRef` when we
+    # really want it to be a `GenericAffExpr`.
+    aff = :($lhs - $rhs + 0)
     set = sense_to_set(_error, sense)
     parse_one_operator_constraint(_error, vectorized, Val(:in), aff, set)
 end
@@ -546,6 +551,16 @@ function build_constraint(_error::Function, expr, lb, ub)
     if lb isa Number && ub isa Number
         _error("Range constraint is not supported for $expr.")
     end
+end
+
+function build_constraint(
+        ::Function, x::Vector{<:AbstractJuMPScalar}, set::MOI.SOS1)
+    return VectorConstraint(x, MOI.SOS1{Float64}(set.weights))
+end
+
+function build_constraint(
+        ::Function, x::Vector{<:AbstractJuMPScalar}, set::MOI.SOS2)
+    return VectorConstraint(x, MOI.SOS2{Float64}(set.weights))
 end
 
 # TODO: update 3-argument @constraint macro to pass through names like @variable
@@ -833,7 +848,11 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
                   (:NLexpressions, Symbol("@NLexpression"))]
     @eval begin
         macro $mac(m, x)
-            x.head == :block || error("Invalid syntax for @",$(string(mac)))
+            if typeof(x) != Expr || x.head != :block
+                # We do a weird string interpolation here so that it gets
+                # interpolated at compile time, not run-time.
+                error("Invalid syntax for @" * $(string(mac)))
+            end
             @assert isa(x.args[1], LineNumberNode)
             lastline = x.args[1]
             code = quote end
