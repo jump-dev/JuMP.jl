@@ -451,6 +451,15 @@ function solve_time(model::Model)
 end
 
 """
+    set_parameter(model::Model, name, value)
+
+Sets solver-specific parameter identified by `name` to `value`.
+"""
+function set_parameter(model::Model, name, value)
+    return MOI.set(model, MOI.RawParameter(name), value)
+end
+
+"""
     set_silent(model::Model)
 
 Takes precedence over any other attribute controlling verbosity 
