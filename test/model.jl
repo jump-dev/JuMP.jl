@@ -373,6 +373,7 @@ function test_model()
         model = Model(with_optimizer(MOIU.MockOptimizer, mock))
         @test JuMP.set_parameter(model, "aaa", "bbb") == "bbb"
         @test MOI.get(backend(model), MOI.RawParameter("aaa")) == "bbb"
+        @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
     end
 end
 

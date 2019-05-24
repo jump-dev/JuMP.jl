@@ -642,6 +642,21 @@ function MOI.get(model::Model, attr::MOI.AbstractModelAttribute)
         MOI.get(backend(model), attr)
     end
 end
+"""
+    get(model::Model, attr::MathOptInterface.AbstractOptimizerAttribute)
+
+Return the value of the attribute `attr` from the model's MOI backend.
+"""
+function MOI.get(model::Model, attr::MOI.AbstractOptimizerAttribute)
+    if MOI.is_set_by_optimize(attr) &&
+       !(attr isa MOI.TerminationStatus) && # Before `optimize!` is called, the
+       !(attr isa MOI.PrimalStatus) &&      # statuses are `OPTIMIZE_NOT_CALLED`
+       !(attr isa MOI.DualStatus)           # and `NO_SOLUTION`
+        _moi_get_result(backend(model), attr)
+    else
+        MOI.get(backend(model), attr)
+    end
+end
 function MOI.get(model::Model, attr::MOI.AbstractVariableAttribute,
                  v::VariableRef)
     check_belongs_to_model(v, model)
