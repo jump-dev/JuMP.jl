@@ -364,8 +364,10 @@ function test_model()
         model = Model(with_optimizer(MOIU.MockOptimizer, mock))
         @test JuMP.set_silent(model)
         @test MOI.get(backend(model), MOI.Silent())
+        @test MOI.get(model, MOI.Silent())
         @test !JuMP.unset_silent(model)
         @test !MOI.get(backend(model), MOI.Silent())
+        @test !MOI.get(model, MOI.Silent())
     end
 
     @testset "set_parameter" begin
