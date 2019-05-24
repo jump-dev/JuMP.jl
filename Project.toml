@@ -16,7 +16,7 @@ ForwardDiff = "~0.5.0, ~0.6, ~0.7, ~0.8, ~0.9, ~0.10"
 MathProgBase = "~0.6.0, ~0.7"
 OffsetArrays = "≥ 0.2.13"
 ReverseDiffSparse = "~0.8.0"
-julia = "0.6, 0.7, 1"
+julia = "0.7, 1"
 
 [extras]
 ECOS = "e2685f51-7e38-5353-a97d-a921fd2c8199"
