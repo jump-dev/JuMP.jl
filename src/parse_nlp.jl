@@ -167,6 +167,10 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
 
 end
 
+function _parse_NL_expr_runtime(m::Model, x::Complex, tape, parent, values)
+    error("Complex numbers are not supported in nonlinear expressions")
+end
+
 function _parse_NL_expr_runtime(m::Model, x::Number, tape, parent, values)
     push!(values, x)
     push!(tape, NodeData(VALUE, length(values), parent))
