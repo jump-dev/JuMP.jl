@@ -1042,7 +1042,6 @@ macro expression(args...)
     variable = gensym()
 
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-
     newaff, parsecode = _parse_expr_toplevel(x, :q)
     code = quote
         q = Val{false}()
@@ -1415,7 +1414,6 @@ macro variable(args...)
         # We now build the code to generate the variables (and possibly the
         # SparseAxisArray to contain them)
         refcall, idxvars, idxsets, condition = _build_ref_sets(var, variable)
-
         clear_dependencies(i) = (Containers.is_dependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
         # Code to be used to create each variable of the container.
@@ -1533,7 +1531,6 @@ macro NLconstraint(m, x, extra...)
     # Strategy: build up the code for non-macro add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-
     # Build the constraint
     if isexpr(x, :call) # one-sided constraint
         # Simple comparison - move everything to the LHS
@@ -1633,7 +1630,6 @@ macro NLexpression(args...)
     variable = gensym()
 
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-
     code = quote
         $(refcall) = NonlinearExpression($(esc(m)), $(_process_NL_expr(m, x)))
     end
@@ -1702,7 +1698,6 @@ macro NLparameter(m, ex, extra...)
     variable = gensym()
 
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-
     code = quote
         if !isa($(esc(x)), Number)
             error(string("in @NLparameter (", $(string(ex)), "): expected ",
