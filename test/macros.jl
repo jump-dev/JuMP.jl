@@ -481,6 +481,33 @@ end
         c = @NLconstraint(model, x == sum(1.0 for i in 1:0))
         @test sprint(show, c) == "x - 0 = 0" || sprint(show, c) == "x - 0 == 0"
     end
+
+    @testset "Splatting error" begin
+        model = Model()
+        A = [1 0; 0 1]
+        @variable(model, x)
+
+        @test_macro_throws ErrorException(
+            "In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...`."
+        ) @variable(model, y[axes(A)...])
+
+        @test_macro_throws ErrorException(
+            "In `@constraint(model, [i = [axes(A)...]], x >= i)`: cannot use splatting operator `...`."
+        ) @constraint(model, [i=[axes(A)...]], x >= i)
+
+        @test_macro_throws ErrorException(
+            "@NLconstraint: cannot use splatting operator `...`."
+        ) @NLconstraint(model, [i=[axes(A)...]], x >= i)
+
+        @test_macro_throws ErrorException(
+            "In `@expression(model, [i = [axes(A)...]], i * x)`: cannot use splatting operator `...`."
+        ) @expression(model, [i=[axes(A)...]], i * x)
+
+        @test_macro_throws ErrorException(
+            "@NLexpression: cannot use splatting operator `...`."
+        ) @NLexpression(model, [i=[axes(A)...]], i * x)
+    end
+
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
