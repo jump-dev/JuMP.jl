@@ -584,6 +584,10 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
     c = length(extra) == 1 ? x        : gensym()
     x = length(extra) == 1 ? extra[1] : x
 
+    if _expr_contains_splat(c)
+        _error("cannot use splatting operator `...`.")
+    end
+
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
     variable = gensym()
     name = _get_name(c)
@@ -600,10 +604,6 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
     # Strategy: build up the code for add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-
-    if any(_expr_contains_splat.(idxsets))
-        _error("cannot use splatting operator `...`.")
-    end
 
     vectorized, parsecode, buildcall = parsefun(_error, x.args...)
     _add_kw_args(buildcall, kw_args)
@@ -1034,15 +1034,14 @@ macro expression(args...)
         macro_error("needs at least two arguments.")
     end
     length(kw_args) == 0 || macro_error("unrecognized keyword argument")
+    if _expr_contains_splat(c)
+        macro_error("cannot use splatting operator `...`.")
+    end
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-
-    if any(_expr_contains_splat.(idxsets))
-        macro_error("cannot use splatting operator `...`.")
-    end
 
     newaff, parsecode = _parse_expr_toplevel(x, :q)
     code = quote
@@ -1410,13 +1409,12 @@ macro variable(args...)
         final_variable = variable
     else
         isa(var,Expr) || _error("Expected $var to be a variable name")
-
+        if _expr_contains_splat(var)
+            _error("cannot use splatting operator `...`.")
+        end
         # We now build the code to generate the variables (and possibly the
         # SparseAxisArray to contain them)
         refcall, idxvars, idxsets, condition = _build_ref_sets(var, variable)
-        if any(_expr_contains_splat.(idxsets))
-            _error("cannot use splatting operator `...`.")
-        end
 
         clear_dependencies(i) = (Containers.is_dependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
@@ -1525,15 +1523,16 @@ macro NLconstraint(m, x, extra...)
     c = length(extra) == 1 ? x        : gensym()
     x = length(extra) == 1 ? extra[1] : x
 
+    if _expr_contains_splat(c)
+        error("@NLconstraint: cannot use splatting operator `...`.")
+    end
+
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
     variable = gensym()
 
     # Strategy: build up the code for non-macro add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-    if any(_expr_contains_splat.(idxsets))
-        error("@NLconstraint: cannot use splatting operator `...`.")
-    end
 
     # Build the constraint
     if isexpr(x, :call) # one-sided constraint
@@ -1626,14 +1625,14 @@ macro NLexpression(args...)
     if length(args) > 3 || length(kw_args) > 0
         error("in @NLexpression: To many arguments ($(length(args))).")
     end
+    if _expr_contains_splat(c)
+        error("@NLexpression: cannot use splatting operator `...`.")
+    end
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-    if any(_expr_contains_splat.(idxsets))
-        error("@NLexpression: cannot use splatting operator `...`.")
-    end
 
     code = quote
         $(refcall) = NonlinearExpression($(esc(m)), $(_process_NL_expr(m, x)))
@@ -1692,7 +1691,9 @@ macro NLparameter(m, ex, extra...)
     end
     c = ex.args[2]
     x = ex.args[3]
-
+    if _expr_contains_splat(c)
+        error("@NLparameter: cannot use splatting operator `...`.")
+    end
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
     if anonvar
         error("In @NLparameter($m, $ex): Anonymous nonlinear parameter syntax is not currently supported")
@@ -1701,9 +1702,6 @@ macro NLparameter(m, ex, extra...)
     variable = gensym()
 
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-    if any(_expr_contains_splat.(idxsets))
-        error("@NLparameter: cannot use splatting operator `...`.")
-    end
 
     code = quote
         if !isa($(esc(x)), Number)
