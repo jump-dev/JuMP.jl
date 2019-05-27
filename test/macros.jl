@@ -491,21 +491,25 @@ end
             "In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...`."
         ) @variable(model, y[axes(A)...])
 
+        f(a, b) = [a, b]
+        @variable(model, z[f((1, 2)...)])
+        @test length(z) == 2
+
         @test_macro_throws ErrorException(
             "In `@constraint(model, [i = [axes(A)...]], x >= i)`: cannot use splatting operator `...`."
-        ) @constraint(model, [i=[axes(A)...]], x >= i)
+        ) @constraint(model, [axes(A)...], x >= 1)
 
         @test_macro_throws ErrorException(
             "@NLconstraint: cannot use splatting operator `...`."
-        ) @NLconstraint(model, [i=[axes(A)...]], x >= i)
+        ) @NLconstraint(model, [axes(A)...], x >= i)
 
         @test_macro_throws ErrorException(
             "In `@expression(model, [i = [axes(A)...]], i * x)`: cannot use splatting operator `...`."
-        ) @expression(model, [i=[axes(A)...]], i * x)
+        ) @expression(model, [axes(A)...], i * x)
 
         @test_macro_throws ErrorException(
             "@NLexpression: cannot use splatting operator `...`."
-        ) @NLexpression(model, [i=[axes(A)...]], i * x)
+        ) @NLexpression(model, [axes(A)...], i * x)
     end
 
 end
