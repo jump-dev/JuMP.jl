@@ -648,10 +648,10 @@
     @testset "Error on complex values" begin
         model = Model()
         @variable(model, x)
-        expected_exception = ErrorException(
-            "Complex numbers are not supported in nonlinear expressions"
-        )
         c = sqrt(Complex(-1))
+        expected_exception = ErrorException(
+            "Unexpected object $c (of type $(typeof(c)) in nonlinear expression."
+        )
         @test_throws expected_exception @NLobjective(model, Min, c * x)
     end
 end
