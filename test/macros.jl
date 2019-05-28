@@ -504,12 +504,12 @@ end
         ) @NLconstraint(model, [axes(A)...], x >= 1)
 
         @test_macro_throws ErrorException(
-            "In `@expression(model, [axes(A)...], 1 * x)`: cannot use splatting operator `...`."
-        ) @expression(model, [axes(A)...], 1 * x)
+            "In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...`."
+        ) @expression(model, [axes(A)...], x)
 
         @test_macro_throws ErrorException(
             "@NLexpression: cannot use splatting operator `...`."
-        ) @NLexpression(model, [axes(A)...], 1 * x)
+        ) @NLexpression(model, [axes(A)...], x)
     end
 
 end
