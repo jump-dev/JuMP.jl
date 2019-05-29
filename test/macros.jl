@@ -488,7 +488,7 @@ end
         @variable(model, x)
 
         @test_macro_throws ErrorException(
-            "In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...`."
+            "In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...` in the definition of an index set."
         ) @variable(model, y[axes(A)...])
 
         f(a, b) = [a, b]
@@ -496,20 +496,24 @@ end
         @test length(z) == 2
 
         @test_macro_throws ErrorException(
-            "In `@constraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...`."
+            "In `@constraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
         ) @constraint(model, [axes(A)...], x >= 1)
 
         @test_macro_throws ErrorException(
-            "@NLconstraint: cannot use splatting operator `...`."
+            "@NLconstraint: cannot use splatting operator `...` in the definition of an index set."
         ) @NLconstraint(model, [axes(A)...], x >= 1)
 
         @test_macro_throws ErrorException(
-            "In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...`."
+            "In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
         ) @expression(model, [axes(A)...], x)
 
         @test_macro_throws ErrorException(
-            "@NLexpression: cannot use splatting operator `...`."
+            "@NLexpression: cannot use splatting operator `...`. in the definition of an index set"
         ) @NLexpression(model, [axes(A)...], x)
+
+        @test_macro_throws ErrorException(
+            "@NLparameter: cannot use splatting operator `...`. in the definition of an index set"
+        ) @NLparameter(model, p[axes(A)...] == x)
     end
 
 end

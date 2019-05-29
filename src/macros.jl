@@ -603,7 +603,7 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
     if any(_expr_is_splat.(idxsets))
-        _error("cannot use splatting operator `...`.")
+        _error("cannot use splatting operator `...` in the definition of an index set.")
     end
 
     vectorized, parsecode, buildcall = parsefun(_error, x.args...)
@@ -1041,7 +1041,7 @@ macro expression(args...)
 
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
     if any(_expr_is_splat.(idxsets))
-        macro_error("cannot use splatting operator `...`.")
+        macro_error("cannot use splatting operator `...` in the definition of an index set.")
     end
     newaff, parsecode = _parse_expr_toplevel(x, :q)
     code = quote
@@ -1413,7 +1413,7 @@ macro variable(args...)
         # SparseAxisArray to contain them)
         refcall, idxvars, idxsets, condition = _build_ref_sets(var, variable)
         if any(_expr_is_splat.(idxsets))
-            _error("cannot use splatting operator `...`.")
+            _error("cannot use splatting operator `...` in the definition of an index set.")
         end
         clear_dependencies(i) = (Containers.is_dependent(idxvars,idxsets[i],i) ? () : idxsets[i])
 
@@ -1529,7 +1529,7 @@ macro NLconstraint(m, x, extra...)
     # we will wrap in loops to assign to the ConstraintRefs
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
     if any(_expr_is_splat.(idxsets))
-        error("@NLconstraint: cannot use splatting operator `...`.")
+        error("@NLconstraint: cannot use splatting operator `...` in the definition of an index set.")
     end
     # Build the constraint
     if isexpr(x, :call) # one-sided constraint
@@ -1628,7 +1628,7 @@ macro NLexpression(args...)
 
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
     if any(_expr_is_splat.(idxsets))
-        error("@NLexpression: cannot use splatting operator `...`.")
+        error("@NLexpression: cannot use splatting operator `...` in the definition of an index set.")
     end
     code = quote
         $(refcall) = NonlinearExpression($(esc(m)), $(_process_NL_expr(m, x)))
@@ -1696,7 +1696,7 @@ macro NLparameter(m, ex, extra...)
 
     refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
     if any(_expr_is_splat.(idxsets))
-        error("@NLparameter: cannot use splatting operator `...`.")
+        error("@NLparameter: cannot use splatting operator `...` in the definition of an index set.")
     end
     code = quote
         if !isa($(esc(x)), Number)
