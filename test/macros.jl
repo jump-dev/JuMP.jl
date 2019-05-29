@@ -508,11 +508,11 @@ end
         ) @expression(model, [axes(A)...], x)
 
         @test_macro_throws ErrorException(
-            "@NLexpression: cannot use splatting operator `...`. in the definition of an index set"
+            "@NLexpression: cannot use splatting operator `...` in the definition of an index set."
         ) @NLexpression(model, [axes(A)...], x)
 
         @test_macro_throws ErrorException(
-            "@NLparameter: cannot use splatting operator `...`. in the definition of an index set"
+            "@NLparameter: cannot use splatting operator `...` in the definition of an index set."
         ) @NLparameter(model, p[axes(A)...] == x)
     end
 
