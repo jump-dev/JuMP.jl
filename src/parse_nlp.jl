@@ -167,7 +167,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
 
 end
 
-function _parse_NL_expr_runtime(m::Model, x::Number, tape, parent, values)
+function _parse_NL_expr_runtime(m::Model, x::Real, tape, parent, values)
     push!(values, x)
     push!(tape, NodeData(VALUE, length(values), parent))
     nothing
