@@ -68,6 +68,16 @@ li,li_individual = order_subexpressions(Vector{NodeData}[nd_outer2], Vector{Node
 @test li == [1,2]
 @test li_individual[1] == [1,2]
 
+@testset "order_subexpressions with nested subexpressions" begin
+    expr_order, expr_order_individual = order_subexpressions(
+        [[NodeData(SUBEXPRESSION, 1, -1)], [NodeData(SUBEXPRESSION, 1, -1)]],
+        [[NodeData(SUBEXPRESSION, 2, -1)], NodeData[]])
+    @test expr_order == [2, 1]
+    @test expr_order_individual[1] == [2, 1]
+    @test expr_order_individual[2] == [2, 1]
+end
+
+
 adj_outer = adjmat(nd_outer)
 outer_storage = zeros(1)
 outer_storage_partials = zeros(1)
