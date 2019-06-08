@@ -1,6 +1,12 @@
 JuMP release notes
 ==================
 
+Version 0.19.2 (June 8, 2019)
+-----------------------------
+
+- Fix a bug in derivatives that could arise in models with nested nonlinear
+  subexpressions.
+
 Version 0.19.1 (May 12, 2019)
 -----------------------------
 

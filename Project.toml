@@ -1,7 +1,7 @@
 name = "JuMP"
 uuid = "4076af6c-e467-56ae-b986-b466b2749572"
 repo = "https://github.com/JuliaOpt/JuMP.jl.git"
-version = "0.19.1"
+version = "0.19.2"
 
 [deps]
 Calculus = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
