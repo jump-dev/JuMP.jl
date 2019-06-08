@@ -42,7 +42,7 @@ Our documentation includes an installation guide, quick-start guide, and referen
 **See [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md) for
 a list of the significant breaking changes in the JuMP 0.19 release.**
 
-**Latest Release**: 0.19.1 (`release-0.19` branch)
+**Latest Release**: 0.19.2 (`release-0.19` branch)
   * [Documentation](http://www.juliaopt.org/JuMP.jl/v0.19.1/)
   * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.19/examples)
   * Testing status:
