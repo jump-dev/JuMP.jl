@@ -153,6 +153,11 @@ function test_model()
         @test !called
         optimize!(m)
         @test called
+
+        m = Model()
+        JuMP.set_optimize_hook(m, (m ; kwargs=nothing) -> kwargs)
+        @test optimize!(m) === nothing
+        @test optimize!(m, kwargs = 1) == 1
     end
 
     @testset "UniversalFallback" begin
