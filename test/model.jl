@@ -155,9 +155,11 @@ function test_model()
         @test called
 
         m = Model()
-        JuMP.set_optimize_hook(m, (m ; kwargs=nothing) -> kwargs)
+        err = ErrorException("Unrecognized keyword arguments: unexpected_arg")
+        @test_throws err optimize!(m, unexpected_arg=1)
+        JuMP.set_optimize_hook(m, (m ; my_new_arg=nothing) -> my_new_arg)
         @test optimize!(m) === nothing
-        @test optimize!(m, kwargs = 1) == 1
+        @test optimize!(m, my_new_arg = 1) == 1
     end
 
     @testset "UniversalFallback" begin
