@@ -251,13 +251,13 @@ _sizehint_expr!(q, n) = nothing
 #############################################################################
 
 # TODO: specialize sum for DenseAxisArray and SparseAxisArray of JuMP objects?
-function Base.sum(array::AbstractArray{<:AbstractVariableRef}) 
-    result_expression = zero(eltype(array)) 
-    for variable in array 
-        add_to_expression!(result_expression, variable) 
-    end 
-    return result_expression 
-end 
+function Base.sum(array::AbstractArray{<:AbstractVariableRef})
+    result_expression = zero(eltype(array))
+    for variable in array
+        add_to_expression!(result_expression, variable)
+    end
+    return result_expression
+end
 # TODO: Specialize for iterables.
 function Base.sum(affs::AbstractArray{T}) where {T <: AbstractJuMPScalar}
     new_aff = zero(T)
