@@ -734,6 +734,49 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test m.operator_counter == 1
         end
     end
+
+    @testset "Symmetric Matrix" begin
+        m = ModelType()
+        Q = @variable(m, [1:2, 1:2], Symmetric)
+        @test_expression 2Q
+        # See https://github.com/JuliaLang/julia/issues/32374
+        @test_expression -Q
+    end
+
+    @testset "UniformScaling" begin
+        m = ModelType()
+        @testset "Scalar" begin
+            @variable(m, x)
+            @test_expression_with_string x + 2I "x + 2"
+            @test_expression_with_string (x + 1) + I "x + 2"
+            @test_expression_with_string x - 2I "x - 2"
+            @test_expression_with_string (x - 1) - I "x - 2"
+            @test_expression_with_string 2I + x "x + 2"
+            @test_expression_with_string I + (x + 1) "x + 2"
+            @test_expression_with_string 2I - x "-x + 2"
+            @test_expression_with_string I - (x - 1) "-x + 2"
+            @test_expression_with_string I * x "x"
+            @test_expression_with_string I * (x + 1) "x + 1"
+            @test_expression_with_string (x + 1) * I "x + 1"
+        end
+        @testset "Matrix $(typeof(x))" for x in [@variable(m, [1:2, 1:2]),
+                                                 @variable(m, [1:2, 1:2], Symmetric)]
+            @test_expression x + 2I
+            @test_expression (x .+ 1) + I
+            @test_expression x - 2I
+            @test_expression (x .- 1) - I
+            @test_expression 2I + x
+            @test_expression I + (x .+ 1)
+            @test_expression 2I - x
+            @test_expression I - (x .- 1)
+            @test_expression I * x
+            @test_expression I * (x .+ 1)
+            @test_expression (x .+ 1) * I
+            @test_expression (x .+ 1) + I * I
+            @test_expression (x .+ 1) + 2 * I
+            @test_expression (x .+ 1) + I * 2
+        end
+    end
 end
 
 @testset "Operators for JuMP.Model" begin
