@@ -80,6 +80,9 @@ created using the [`with_optimizer`](@ref) function. If `optimizer_factory` is
 `nothing` and no optimizer was set to `model` before calling this function, a
 [`NoOptimizer`](@ref) error is thrown.
 
+Keyword arguments `kwargs` are passed to the `optimize_hook`. An error is
+thrown if `optimize_hook` is `nothing` and keyword arguments are provided.
+
 ## Examples
 
 The optimizer factory can either be given in the [`Model`](@ref) constructor
