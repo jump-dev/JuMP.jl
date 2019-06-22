@@ -128,7 +128,7 @@ function optimize!(model::Model,
     # If the user or an extension has provided an optimize hook, call
     # that instead of solving the model ourselves
     if !ignore_optimize_hook
-        return model.optimize_hook(model ; kwargs...)
+        return model.optimize_hook(model; kwargs...)
     end
 
     isempty(kwargs) || error("Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))")
