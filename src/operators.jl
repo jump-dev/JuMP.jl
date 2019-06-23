@@ -360,12 +360,6 @@ function _mul!(ret::AbstractVecOrMat{<:GenericAffOrQuadExpr}, A, B)
     return ret
 end
 
-#function LinearAlgebra.mul!(ret::AbstractMatrix{<:GenericAffOrQuadExpr}, A::TrAdj{<:GenericAffOrQuadExpr, <:SparseMatrixCSC}, B)
-#    return mul!(ret, copy(transpose(A)), B) # TODO fully implement
-#end
-#function LinearAlgebra.mul!(ret::AbstractMatrix{<:GenericAffOrQuadExpr}, A::TrAdj{<:GenericAffOrQuadExpr}, B::SparseMatrixCSC)
-#    return mul!(ret, transpose(A), B)
-#end
 # This method of `mul!` is adapted from upstream Julia. Note that we
 # confuse transpose with adjoint because they're the same for all JuMP types.
 #=
@@ -394,10 +388,10 @@ end
 > WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =#
 
-const TrAdj{T<:Union{GenericAffOrQuadExpr, Real}, MT} = Union{Transpose{T, MT}, Adjoint{T, MT}}
+const TransposeOrAdjoint{T<:Union{GenericAffOrQuadExpr, Real}, MT} = Union{Transpose{T, MT}, Adjoint{T, MT}}
 
 function _mul!(ret::AbstractVecOrMat{<:GenericAffOrQuadExpr},
-               adjA::TrAdj{<:Any, <:SparseMatrixCSC},
+               adjA::TransposeOrAdjoint{<:Any, <:SparseMatrixCSC},
                B::AbstractVecOrMat,
                α_expr=one(eltype(ret)),
                β=zero(eltype(ret)))
@@ -480,7 +474,7 @@ end
 
 # TODO: Implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul).
 function _mul!(ret::AbstractArray{<:GenericAffOrQuadExpr},
-               A::TrAdj{<:GenericAffOrQuadExpr, <:SparseMatrixCSC},
+               A::TransposeOrAdjoint{<:GenericAffOrQuadExpr, <:SparseMatrixCSC},
                B::SparseMatrixCSC)
     return mul!(ret, A, _densify_with_jump_eltype(B))
 end
