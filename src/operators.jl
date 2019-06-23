@@ -335,11 +335,12 @@ function _fill_with_zeros!(A)
     return A
 end
 
-###############################################################################
-# `_mul!(ret, A, B)` adds the result of `A*B` into the buffer `ret`. We roll our own
-# matmul here (instead of using Julia's generic fallbacks) because doing so allows us to
-# accumulate the expressions for the inner loops in-place. Additionally, Julia's generic
-# fallbacks can be finnicky when your array elements aren't `<:Number`.
+################################################################################
+# `_mul!(ret, A, B)` sets the result of `A*B` into the buffer `ret`. We roll our
+# own matmul here (instead of using Julia's generic fallbacks) because doing so
+# allows us to accumulate the expressions for the inner loops in-place.
+# Additionally, Julia's generic fallbacks can be finnicky when your array
+# elements aren't `<:Number`.
 
 const GenericAffOrQuadExpr{C, V} = Union{GenericAffExpr{C, V}, GenericQuadExpr{C, V}}
 
