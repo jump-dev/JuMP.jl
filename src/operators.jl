@@ -405,8 +405,8 @@ function _mul!(ret::AbstractVecOrMat{<:GenericAffOrQuadExpr},
     size(A, 2) == size(ret, 1) || throw(DimensionMismatch())
     size(A, 1) == size(B, 1) || throw(DimensionMismatch())
     size(B, 2) == size(ret, 2) || throw(DimensionMismatch())
-    nzv = nonzeros(A)
-    rv = rowvals(A)
+    A_nonzeros = nonzeros(A)
+    A_rowvals = rowvals(A)
     # See SparseArrays/src/linalg.jl
     if !isone(β)
         !iszero(β) ? rmul!(ret, β) : _fill_with_zeros!(ret)
@@ -416,7 +416,7 @@ function _mul!(ret::AbstractVecOrMat{<:GenericAffOrQuadExpr},
         @inbounds for col ∈ 1:A.n
             tmp = zero(eltype(ret))
             for j ∈ A.colptr[col]:(A.colptr[col + 1] - 1)
-                add_to_expression!(tmp, adjoint(nzv[j]), B[rv[j], k])
+                add_to_expression!(tmp, adjoint(A_nonzeros[j]), B[A_rowvals[j], k])
             end
             add_to_expression!(ret[col, k], α, tmp)
         end
@@ -430,8 +430,8 @@ function _mul!(ret::AbstractVecOrMat{<:GenericAffOrQuadExpr},
     size(A, 2) == size(B, 1) || throw(DimensionMismatch())
     size(A, 1) == size(ret, 1) || throw(DimensionMismatch())
     size(B, 2) == size(ret, 2) || throw(DimensionMismatch())
-    nzv = nonzeros(A)
-    rv = rowvals(A)
+    A_nonzeros = nonzeros(A)
+    A_rowvals = rowvals(A)
     # See SparseArrays/src/linalg.jl
     if !isone(β)
         !iszero(β) ? rmul!(ret, β) : _fill_with_zeros!(ret)
@@ -441,7 +441,7 @@ function _mul!(ret::AbstractVecOrMat{<:GenericAffOrQuadExpr},
         for k ∈ 1:size(ret, 2)
             αxj = α * B[col,k]
             for j ∈ nzrange(A, col)
-                add_to_expression!(ret[rv[j], k], nzv[j], αxj)
+                add_to_expression!(ret[A_rowvals[j], k], A_nonzeros[j], αxj)
             end
         end
     end
@@ -452,14 +452,14 @@ function _mul!(ret::AbstractMatrix{<:GenericAffOrQuadExpr},
                A::AbstractMatrix, B::SparseMatrixCSC)
     _fill_with_zeros!(ret)
     rowval = rowvals(B)
-    nzval = nonzeros(B)
+    A_nonzeros = nonzeros(B)
     for multivec_row in 1:size(A, 1)
         for col ∈ 1:size(B, 2)
             idxset = nzrange(B, col)
             q = ret[multivec_row, col]
             _sizehint_expr!(q, length(idxset))
             for k ∈ idxset
-                add_to_expression!(q, A[multivec_row, rowval[k]], nzval[k])
+                add_to_expression!(q, A[multivec_row, rowval[k]], A_nonzeros[k])
             end
         end
     end
@@ -581,23 +581,23 @@ Base.:*(A::Adjoint{<:AbstractJuMPScalar, <:SparseMatrixCSC}, B::StridedMatrix{<:
 # elements here.
 
 function Base.:*(A::Number, B::SparseMatrixCSC{T}) where {T <: _JuMPTypes}
-    return SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(B.rowval), A .* B.nzval)
+    return SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(rowvals(B)), A .* nonzeros(B))
 end
 
 function Base.:*(A::SparseMatrixCSC{T}, B::Number) where {T <: _JuMPTypes}
-    return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval .* B)
+    return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(rowvals(A)), nonzeros(A) .* B)
 end
 
 function Base.:*(A::_JuMPTypes, B::SparseMatrixCSC)
-    return SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(B.rowval), A .* B.nzval)
+    return SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(rowvals(B)), A .* nonzeros(B))
 end
 
 function Base.:*(A::SparseMatrixCSC, B::_JuMPTypes)
-    return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval .* B)
+    return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(rowvals(A)), nonzeros(A) .* B)
 end
 
 function Base.:/(A::SparseMatrixCSC{T}, B::Number) where {T <: _JuMPTypes}
-    return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval ./ B)
+    return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(rowvals(A)), nonzeros(A) ./ B)
 end
 
 Base.:*(x::AbstractArray{T}) where {T <: _JuMPTypes} = x
