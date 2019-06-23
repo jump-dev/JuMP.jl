@@ -546,7 +546,7 @@ function _mul(A::AbstractVecOrMat, B::AbstractVecOrMat)
     return mul!(ret, A, B)
 end
 
-# A few a overwritten below but many more need to be redirected to `_mul` in
+# A few are overwritten below but many more need to be redirected to `_mul` in
 # `linalg.jl`.
 Base.:*(A::SparseMatrixCSC{<:AbstractJuMPScalar}, B::SparseMatrixCSC{<:AbstractJuMPScalar}) = _mul(A, B)
 Base.:*(A::SparseMatrixCSC{<:Any}, B::SparseMatrixCSC{<:AbstractJuMPScalar}) = _mul(A, B)
