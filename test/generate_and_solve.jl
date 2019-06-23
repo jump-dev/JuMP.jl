@@ -366,4 +366,14 @@ using JuMP
         model = Model(with_optimizer(MOIU.MockOptimizer, JuMP._MOIModel{Float64}()))
         @test_throws ErrorException JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer, JuMP._MOIModel{Float64}()))
     end
+
+    @testset "Solver doesn't support nonlinear constraints" begin
+        model = Model(with_optimizer(MOIU.MockOptimizer,
+                                     JuMP._MOIModel{Float64}()))
+        @variable(model, x)
+        @NLobjective(model, Min, sin(x))
+        err = ErrorException("The solver does not support nonlinear problems " *
+                             "(i.e., NLobjective and NLconstraint).")
+        @test_throws err JuMP.optimize!(model)
+    end
 end

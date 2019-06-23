@@ -137,7 +137,19 @@ function optimize!(model::Model,
         throw(NoOptimizer())
     end
 
-    MOI.optimize!(backend(model))
+    try
+        MOI.optimize!(backend(model))
+    catch err
+        # TODO: This error also be thrown also in MOI.set() if the solver is
+        # attached. Currently we catch only the more common case. More generally
+        # JuMP is missing a translation layer from MOI errors to JuMP errors.
+        if err isa MOI.UnsupportedAttribute{MOI.NLPBlock}
+            error("The solver does not support nonlinear problems " *
+                  "(i.e., NLobjective and NLconstraint).")
+        else
+            rethrow(err)
+        end
+    end
 
     return
 end
