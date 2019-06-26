@@ -196,11 +196,13 @@ for a description of how to write a function suitable for automatic
 differentiation.
 
 !!! note
-    The general guideline for writing ForwardDiff-compatible code is is to write
-    code that is generic with respect to the number type; don't assume that the 
-    input to the function is `Float64`.
+    If you see method errors with `ForwardDiff.Duals`, see the guidelines at 
+    [ForwardDiff.jl](http://www.juliadiff.org/ForwardDiff.jl/release-0.10/user/limitations.html).
+    The most common error is that your user-defined function is not generic with
+    respect to the number type, i.e., don't assume that the input to the function 
+    is `Float64`.
     ```julia
-    f(x::Float64) = 2 * x  # Don't do this.
+    f(x::Float64) = 2 * x  # This will not work.
     f(x::Real)    = 2 * x  # This is good.
     f(x)          = 2 * x  # This is also good.
     ```
