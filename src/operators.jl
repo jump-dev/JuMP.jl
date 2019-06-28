@@ -577,14 +577,14 @@ Base.:*(A::Adjoint{<:AbstractJuMPScalar, <:SparseMatrixCSC}, B::StridedMatrix{<:
 # https://github.com/jrevels/Cassette.jl.
 
 # Base doesn't define efficient fallbacks for sparse array arithmetic involving
-# non-`<:Constant` scalar elements, so we define some of these for `<:JuMPType` scalar
+# non-`<:Number` scalar elements, so we define some of these for `<:JuMPType` scalar
 # elements here.
 
-function Base.:*(A::Constant, B::SparseMatrixCSC{T}) where {T <: _JuMPTypes}
+function Base.:*(A::Number, B::SparseMatrixCSC{T}) where {T <: _JuMPTypes}
     return SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(rowvals(B)), A .* nonzeros(B))
 end
 
-function Base.:*(A::SparseMatrixCSC{T}, B::Constant) where {T <: _JuMPTypes}
+function Base.:*(A::SparseMatrixCSC{T}, B::Number) where {T <: _JuMPTypes}
     return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(rowvals(A)), nonzeros(A) .* B)
 end
 
@@ -596,7 +596,7 @@ function Base.:*(A::SparseMatrixCSC, B::_JuMPTypes)
     return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(rowvals(A)), nonzeros(A) .* B)
 end
 
-function Base.:/(A::SparseMatrixCSC{T}, B::Constant) where {T <: _JuMPTypes}
+function Base.:/(A::SparseMatrixCSC{T}, B::Number) where {T <: _JuMPTypes}
     return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(rowvals(A)), nonzeros(A) ./ B)
 end
 
