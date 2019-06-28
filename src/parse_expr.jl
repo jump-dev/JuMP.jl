@@ -36,11 +36,11 @@ Note: Discarding the result of `destructive_add!` suggests an improper usage.
 """
 function destructive_add! end
 
-destructive_add!(ex::Number, c::Number, x::Number) = ex + c*x
+destructive_add!(ex::Constant, c::Constant, x::Constant) = ex + c*x
 
-destructive_add!(ex::Number, c::Number, x::VariableRef) = AffExpr(ex, x => c)
+destructive_add!(ex::Constant, c::Constant, x::AbstractVariableRef) = GenericAffExpr(_float(ex), x => _float(c))
 
-function destructive_add!(ex::Number, c::Number, x::T) where T<:GenericAffExpr
+function destructive_add!(ex::Constant, c::Constant, x::T) where T<:GenericAffExpr
     # It's only safe to mutate the first argument.
     if iszero(c)
         convert(T, ex)
@@ -51,7 +51,7 @@ function destructive_add!(ex::Number, c::Number, x::T) where T<:GenericAffExpr
     end
 end
 
-function destructive_add!(ex::Number, c::Number, x::T) where T<:GenericQuadExpr
+function destructive_add!(ex::Constant, c::Constant, x::T) where T<:GenericQuadExpr
     # It's only safe to mutate the first argument.
     if iszero(c)
         convert(T, ex)
@@ -62,25 +62,25 @@ function destructive_add!(ex::Number, c::Number, x::T) where T<:GenericQuadExpr
     end
 end
 
-function destructive_add!(ex::Number, c::AbstractVariableRef, x::AbstractVariableRef)
+function destructive_add!(ex::Constant, c::AbstractVariableRef, x::AbstractVariableRef)
     result = c*x
     result.aff.constant += ex
     result
 end
 
-function destructive_add!(ex::Number, c::T, x::T) where T<:GenericAffExpr
+function destructive_add!(ex::Constant, c::T, x::T) where T<:GenericAffExpr
     q = c*x
     q.aff.constant += ex
     q
 end
 
-function destructive_add!(ex::Number, c::GenericAffExpr{C,V}, x::V) where {C,V}
+function destructive_add!(ex::Constant, c::GenericAffExpr{C,V}, x::V) where {C,V}
     q = c*x
     q.aff.constant += ex
     q
 end
 
-function destructive_add!(ex::Number, c::T, x::Number) where T<:GenericQuadExpr
+function destructive_add!(ex::Constant, c::T, x::Constant) where T<:GenericQuadExpr
     if iszero(x)
         convert(T, ex)
     else
@@ -90,21 +90,24 @@ function destructive_add!(ex::Number, c::T, x::Number) where T<:GenericQuadExpr
     end
 end
 
-function destructive_add!(ex::VariableRef, c::Number, x::VariableRef)
-    return GenericAffExpr(0.0, ex => 1.0, x => convert(Float64, c))
+function destructive_add!(ex::AbstractVariableRef, c::Constant, x::AbstractVariableRef)
+    return GenericAffExpr(0.0, ex => 1.0, x => _float(c))
+end
+function destructive_add!(ex::AbstractVariableRef, c::Constant, x::Constant)
+    return GenericAffExpr(_float(c * x), ex => 1.0)
 end
 
-function destructive_add!(aff::GenericAffExpr, c::Number, x::Number)
+function destructive_add!(aff::GenericAffExpr, c::Constant, x::Constant)
     aff.constant += c*x
     aff
 end
 
-function destructive_add!(aff::GenericAffExpr{C,V}, c::Number, x::V) where {C,V}
+function destructive_add!(aff::GenericAffExpr{C,V}, c::Constant, x::V) where {C,V}
     add_to_expression!(aff, convert(C, c), x)
     aff
 end
 
-function destructive_add!(aff::GenericAffExpr{C,V},c::Number,x::GenericAffExpr{C,V}) where {C,V}
+function destructive_add!(aff::GenericAffExpr{C,V},c::Constant,x::GenericAffExpr{C,V}) where {C,V}
     if !iszero(c)
         sizehint!(aff, length(linear_terms(aff)) + length(linear_terms(x)))
         for (coef, var) in linear_terms(x)
@@ -116,9 +119,9 @@ function destructive_add!(aff::GenericAffExpr{C,V},c::Number,x::GenericAffExpr{C
 end
 
 # help w/ ambiguity
-destructive_add!(aff::GenericAffExpr{C,V}, c::Number, x::Number) where {C,V<:Number} = aff + c*x
+destructive_add!(aff::GenericAffExpr{C,V}, c::Constant, x::Constant) where {C,V<:Constant} = aff + c*x
 
-function destructive_add!(aff::GenericAffExpr{C,V}, c::V, x::Number) where {C,V}
+function destructive_add!(aff::GenericAffExpr{C,V}, c::V, x::Constant) where {C,V}
     if !iszero(x)
         add_to_expression!(aff, convert(C, x), c)
     end
@@ -129,13 +132,13 @@ destructive_add!(aff::GenericAffExpr{C,V},c::V,x::V) where {C,V} =
     GenericQuadExpr{C,V}(aff, UnorderedPair(c,x) => 1.0)
 
 # TODO: add generic versions of following two methods
-function destructive_add!(aff::AffExpr,c::AffExpr,x::VariableRef)
+function destructive_add!(aff::GenericAffExpr, c::GenericAffExpr, x::AbstractVariableRef)
     quad = c*x
     quad.aff = destructive_add!(quad.aff, 1.0, aff)
     quad
 end
 
-function destructive_add!(aff::AffExpr,c::VariableRef,x::AffExpr)
+function destructive_add!(aff::GenericAffExpr, c::AbstractVariableRef, x::GenericAffExpr)
     quad = c*x
     # TODO: Consider implementing the add_to_expression! method for cases like
     # this and below.
@@ -143,11 +146,11 @@ function destructive_add!(aff::AffExpr,c::VariableRef,x::AffExpr)
     quad
 end
 
-function destructive_add!(aff::GenericAffExpr{C,V},c::GenericAffExpr{C,V},x::Number) where {C,V}
+function destructive_add!(aff::GenericAffExpr{C,V},c::GenericAffExpr{C,V},x::Constant) where {C,V}
     destructive_add!(aff, x, c)
 end
 
-function destructive_add!(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Number) where {C,V}
+function destructive_add!(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Constant) where {C,V}
     if iszero(x)
         GenericQuadExpr{C,V}(aff)
     else
@@ -157,7 +160,7 @@ function destructive_add!(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::
     end
 end
 
-function destructive_add!(aff::GenericAffExpr{C,V}, c::Number, x::GenericQuadExpr{C,V}) where {C,V}
+function destructive_add!(aff::GenericAffExpr{C,V}, c::Constant, x::GenericQuadExpr{C,V}) where {C,V}
     if iszero(c)
         GenericQuadExpr{C,V}(aff)
     else
@@ -172,14 +175,14 @@ function destructive_add!(ex::GenericAffExpr{C,V}, c::GenericAffExpr{C,V}, x::Ge
     destructive_add!(q, one(C), c*x)
 end
 
-function destructive_add!(quad::GenericQuadExpr{C,V},c::Number,x::V) where {C,V}
+function destructive_add!(quad::GenericQuadExpr{C,V},c::Constant,x::V) where {C,V}
     if !iszero(c)
         add_to_expression!(quad.aff, convert(C, c), x)
     end
     quad
 end
 
-function destructive_add!(quad::GenericQuadExpr,c::Number,x::Number)
+function destructive_add!(quad::GenericQuadExpr,c::Constant,x::Constant)
     quad.aff.constant += c*x
     quad
 end
@@ -189,12 +192,12 @@ function destructive_add!(quad::GenericQuadExpr{C,V},x::V,y::V) where {C,V}
     quad
 end
 
-function destructive_add!(quad::GenericQuadExpr{C,V},c::Number,x::GenericAffExpr{C,V}) where {C,V}
+function destructive_add!(quad::GenericQuadExpr{C,V},c::Constant,x::GenericAffExpr{C,V}) where {C,V}
     quad.aff = destructive_add!(quad.aff, c, x)
     quad
 end
 
-function destructive_add!(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::Number) where {C,V}
+function destructive_add!(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::Constant) where {C,V}
     quad.aff = destructive_add!(quad.aff,c,x)
     quad
 end
@@ -219,7 +222,7 @@ function destructive_add!(quad::GenericQuadExpr{C,V},c::V,x::GenericAffExpr{C,V}
     quad
 end
 
-function destructive_add!(quad::GenericQuadExpr{C,V},c::GenericQuadExpr{C,V},x::Number) where {C,V}
+function destructive_add!(quad::GenericQuadExpr{C,V},c::GenericQuadExpr{C,V},x::Constant) where {C,V}
     if !iszero(x)
         for (coef, var1, var2) in quad_terms(c)
             add_to_expression!(quad, x*coef, var1, var2)
@@ -229,7 +232,7 @@ function destructive_add!(quad::GenericQuadExpr{C,V},c::GenericQuadExpr{C,V},x::
     quad
 end
 
-function destructive_add!(quad::GenericQuadExpr{C,V},c::Number,x::GenericQuadExpr{C,V}) where {C,V}
+function destructive_add!(quad::GenericQuadExpr{C,V},c::Constant,x::GenericQuadExpr{C,V}) where {C,V}
     if !iszero(c)
         for (coef, var1, var2) in quad_terms(x)
             add_to_expression!(quad, c*coef, var1, var2)
@@ -250,9 +253,9 @@ _nl_expr_err() = error("""Cannot use nonlinear expression or parameter in @const
                           Use @NLconstraint or @NLobjective instead.""")
 # Following three definitions avoid ambiguity warnings
 destructive_add!(expr::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::V) where {C,V<:_NLExpr} = _nl_expr_err()
-destructive_add!(expr::GenericQuadExpr{C,V}, c::Number, x::V) where {C,V<:_NLExpr} = _nl_expr_err()
+destructive_add!(expr::GenericQuadExpr{C,V}, c::Constant, x::V) where {C,V<:_NLExpr} = _nl_expr_err()
 destructive_add!(expr::GenericQuadExpr{C,V}, c::V, x::GenericAffExpr{C,V}) where {C,V<:_NLExpr} = _nl_expr_err()
-for T1 in (GenericAffExpr,GenericQuadExpr), T2 in (Number,VariableRef,GenericAffExpr,GenericQuadExpr)
+for T1 in (GenericAffExpr,GenericQuadExpr), T2 in (Constant,VariableRef,GenericAffExpr,GenericQuadExpr)
     @eval destructive_add!(::$T1, ::$T2, ::_NLExpr) = _nl_expr_err()
     @eval destructive_add!(::$T1, ::_NLExpr, ::$T2) = _nl_expr_err()
 end
@@ -260,21 +263,40 @@ end
 function destructive_add!(ex::AbstractArray{T}, c::AbstractArray, x::AbstractArray) where {T<:GenericAffExpr}
     add_to_expression!.(ex, c*x)
 end
-function destructive_add!(ex::AbstractArray{T}, c::AbstractArray, x::Number) where {T<:GenericAffExpr}
+function destructive_add!(ex::AbstractArray{T}, c::AbstractArray, x::Constant) where {T<:GenericAffExpr}
     add_to_expression!.(ex, c*x)
 end
-function destructive_add!(ex::AbstractArray{T}, c::Number, x::AbstractArray) where {T<:GenericAffExpr}
+function destructive_add!(ex::AbstractArray{T}, c::Constant, x::AbstractArray) where {T<:GenericAffExpr}
     add_to_expression!.(ex, c*x)
+end
+function destructive_add!(ex::AbstractArray{T}, c::Number, x::Number) where {T<:GenericAffExpr}
+    add_to_expression!.(ex, c*x)
+end
+
+function destructive_add!(ex::AbstractArray{<:AbstractJuMPScalar}, c::Number, x::UniformScaling)
+    return ex + c*x
+end
+function destructive_add!(ex::AbstractArray{<:AbstractJuMPScalar}, c::UniformScaling, x::Number)
+    return ex + c*x
+end
+function destructive_add!(ex::AbstractArray{<:AbstractJuMPScalar}, c::UniformScaling, x::UniformScaling)
+    return ex + c*x
+end
+function destructive_add!(c::Number, x::UniformScaling, ex::AbstractArray{<:AbstractJuMPScalar})
+    add_to_expression!.(x * ex, c)
+end
+function destructive_add!(c::UniformScaling, x::Constant, ex::AbstractArray{<:AbstractJuMPScalar})
+    return c + x * ex
 end
 
 function destructive_add!(ex::AbstractArray{<:GenericAffExpr},
                           c::AbstractArray{<:GenericQuadExpr},
-                          x::Number)
+                          x::Constant)
     result = c*x
     add_to_expression!.(result, ex)
     return result
 end
-function destructive_add!(ex::AbstractArray{<:GenericAffExpr}, c::Number,
+function destructive_add!(ex::AbstractArray{<:GenericAffExpr}, c::Constant,
                           x::AbstractArray{<:GenericQuadExpr})
     result = c*x
     add_to_expression!.(result, ex)
@@ -298,7 +320,7 @@ _destructive_add_with_reorder!(ex::Val{false}, args...) = (*)(args...)
 
 
 @generated function _destructive_add_with_reorder!(ex, x, y)
-    if x <: Union{AbstractVariableRef,GenericAffExpr} && y <: Number
+    if x <: Union{AbstractVariableRef,GenericAffExpr} && y <: Constant
         :(destructive_add!(ex, y, x))
     else
         :(destructive_add!(ex, x, y))
@@ -309,7 +331,7 @@ end
     n = length(args)
     @assert n ≥ 3
     varidx = findall(t -> (t <: AbstractVariableRef || t <: GenericAffExpr), collect(args))
-    allscalar = all(t -> (t <: Number), args[setdiff(1:n, varidx)])
+    allscalar = all(t -> (t <: Constant), args[setdiff(1:n, varidx)])
     idx = (allscalar && length(varidx) == 1) ? varidx[1] : n
     coef = Expr(:call, :*, [:(args[$i]) for i in setdiff(1:n,idx)]...)
     :(destructive_add!(ex, $coef, args[$idx]))
