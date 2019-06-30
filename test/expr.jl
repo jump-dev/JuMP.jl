@@ -154,119 +154,119 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
     end
 
     @testset "destructive_add!(ex::Number, c::VariableRef, x::VariableRef)" begin
-        m = ModelType()
-        @variable(m, x)
-        @variable(m, y)
+        model = ModelType()
+        @variable(model, x)
+        @variable(model, y)
         @test_expression_with_string JuMP.destructive_add!(5.0, x, y) "x*y + 5"
     end
 
     @testset "destructive_add!(ex::Number, c::T, x::T) where T<:GenericAffExpr" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(1.0, 2x, x+1) "2 x² + 2 x + 1"
     end
 
     @testset "destructive_add!(ex::Number, c::GenericAffExpr{C,V}, x::V) where {C,V}" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(1.0, 2x, x) "2 x² + 1"
     end
 
     @testset "destructive_add!(ex::Number, c::GenericQuadExpr, x::Number)" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(0.0, x^2, 1.0) "x²"
     end
 
     @testset "destructive_add!(ex::Number, c::GenericQuadExpr, x::Number) with c == 0" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(0.0, x^2, 0.0) "0"
     end
 
     @testset "destructive_add!(aff::AffExpr,c::VariableRef,x::AffExpr)" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(2x, x, x + 1) "x² + 3 x"
     end
 
     @testset "destructive_add!(aff::GenericAffExpr{C,V},c::GenericAffExpr{C,V},x::Number) where {C,V}" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(2x, x, 1) "3 x"
     end
 
     @testset "destructive_add!(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Number) where {C,V}" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(2x, x^2, 1) "x² + 2 x"
     end
 
     @testset "destructive_add!(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Number) where {C,V} with x == 0" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(2x, x^2, 0) "2 x"
     end
 
     @testset "destructive_add!(aff::GenericAffExpr{C,V}, c::Number, x::GenericQuadExpr{C,V}) where {C,V} with c == 0" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(2x, 0, x^2) "2 x"
     end
 
     @testset "destructive_add!(ex::GenericAffExpr{C,V}, c::GenericAffExpr{C,V}, x::GenericAffExpr{C,V}) where {C,V}" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(2x, x + 1, x + 0) "x² + 3 x"
     end
 
     @testset "destructive_add!(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::Number) where {C,V}" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(x^2, x + 1, 1) "x² + x + 1"
     end
 
     @testset "destructive_add!(quad::GenericQuadExpr{C,V},c::V,x::GenericAffExpr{C,V}) where {C,V}" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(x^2, x, x+1) "2 x² + x"
     end
 
     @testset "destructive_add!(quad::GenericQuadExpr{C,V},c::GenericQuadExpr{C,V},x::Number) where {C,V}" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(x^2 + x, x^2 + x, 2.0) "3 x² + 3 x"
     end
 
     @testset "destructive_add!(ex::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::GenericAffExpr{C,V}) where {C,V}" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string JuMP.destructive_add!(x^2 + x, x + 0, x + 1) "2 x² + 2 x"
     end
 
     @testset "(+)(::AffExpr)" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string (+)(x + 1) "x + 1"
     end
 
     @testset "(+)(::QuadExpr)" begin
-        m = ModelType()
-        @variable(m, x)
+        model = ModelType()
+        @variable(model, x)
         @test_expression_with_string (+)(x^2 + 1) "x² + 1"
     end
 
     @testset "sum(::Vector{VariableRef})" begin
-        m = ModelType()
-        @variable(m, x[1:2])
+        model = ModelType()
+        @variable(model, x[1:2])
         @test_expression_with_string sum(x) "x[1] + x[2]"
     end
 
     @testset "expression^3 and unary*" begin
-        m = ModelType()
+        model = ModelType()
         x = PowVariable(1)
         # Calls (*)((x*x)^6)
-        y = @expression m (x*x)^3
+        y = @expression model (x*x)^3
         @test y.pow == 6
         z = @inferred (x*x)^3
         @test z.pow == 6

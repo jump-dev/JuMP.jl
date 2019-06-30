@@ -57,11 +57,11 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
     end
 
     @testset "Basic operator overloads" begin
-        m = ModelType()
-        @variable(m, w)
-        @variable(m, x)
-        @variable(m, y)
-        @variable(m, z)
+        model = ModelType()
+        @variable(model, w)
+        @variable(model, x)
+        @variable(model, y)
+        @variable(model, z)
 
         aff = @inferred 7.1 * x + 2.5
         @test_expression_with_string 7.1 * x + 2.5 "7.1 x + 2.5"
@@ -246,7 +246,7 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
     end
 
     @testset "Higher-level operators" begin
-        m = ModelType()
+        model = ModelType()
         @testset "sum" begin
             sum_m = ModelType()
             @variable(sum_m, 0 ≤ matrix[1:3,1:3] ≤ 1, start = 1)
@@ -370,17 +370,17 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         end
 
         @testset "Vectorized arithmetic" begin
-            m = ModelType()
-            @variable(m, x[1:3])
+            model = ModelType()
+            @variable(model, x[1:3])
             A = [2 1 0
                  1 2 1
                  0 1 2]
             B = sparse(A)
-            @variable(m, X11)
-            @variable(m, X23)
+            @variable(model, X11)
+            @variable(model, X23)
             X = sparse([1, 2], [1, 3], [X11, X23], 3, 3) # for testing Variable
             @test JuMP.isequal_canonical([X11 0. 0.; 0. 0. X23; 0. 0. 0.], @inferred JuMP._densify_with_jump_eltype(X))
-            @variable(m, Xd[1:3, 1:3])
+            @variable(model, Xd[1:3, 1:3])
             Y = sparse([1, 2], [1, 3], [2X11, 4X23], 3, 3) # for testing GenericAffExpr
             Yd = [2X11 0    0
                   0    0 4X23
@@ -675,8 +675,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
 
     @testset "Custom types" begin
         ElemT = MySumType{AffExprType}
-        m = ModelType()
-        @variable m Q[1:3, 1:3] PSD
+        model = ModelType()
+        @variable model Q[1:3, 1:3] PSD
 
         @testset "DimensionMismatch when performing vector-matrix multiplication #988" begin
             x = [MyType(1), MyType(2), MyType(3)]
@@ -721,32 +721,32 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
     end
 
     @testset "operator_warn" begin
-        m = ModelType()
-        @variable m x[1:51]
+        model = ModelType()
+        @variable model x[1:51]
         # JuMPExtension does not have the `operator_counter` field
         if ModelType <: Model
-            @test m.operator_counter == 0
+            @test model.operator_counter == 0
         end
         # Triggers the increment of operator_counter since sum(x) has more than 50 terms
         @test_expression(sum(x) + 2x[1])
         if ModelType <: Model
             # The following check verifies that this test covers the code incrementing `operator_counter`
-            @test m.operator_counter == 1
+            @test model.operator_counter == 1
         end
     end
 
     @testset "Symmetric Matrix" begin
-        m = ModelType()
-        Q = @variable(m, [1:2, 1:2], Symmetric)
+        model = ModelType()
+        Q = @variable(model, [1:2, 1:2], Symmetric)
         @test_expression 2Q
         # See https://github.com/JuliaLang/julia/issues/32374
         @test_expression -Q
     end
 
     @testset "UniformScaling" begin
-        m = ModelType()
+        model = ModelType()
         @testset "Scalar" begin
-            @variable(m, x)
+            @variable(model, x)
             @test_expression_with_string x + 2I "x + 2"
             @test_expression_with_string (x + 1) + I "x + 2"
             @test_expression_with_string x - 2I "x - 2"
@@ -759,8 +759,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_expression_with_string I * (x + 1) "x + 1"
             @test_expression_with_string (x + 1) * I "x + 1"
         end
-        @testset "Matrix $(typeof(x))" for x in [@variable(m, [1:2, 1:2]),
-                                                 @variable(m, [1:2, 1:2], Symmetric)]
+        @testset "Matrix $(typeof(x))" for x in [@variable(model, [1:2, 1:2]),
+                                                 @variable(model, [1:2, 1:2], Symmetric)]
             @test_expression x + 2I
             @test_expression (x .+ 1) + I
             @test_expression x - 2I
