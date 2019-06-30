@@ -57,11 +57,11 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
     end
 
     @testset "Basic operator overloads" begin
-        m = ModelType()
-        @variable(m, w)
-        @variable(m, x)
-        @variable(m, y)
-        @variable(m, z)
+        model = ModelType()
+        @variable(model, w)
+        @variable(model, x)
+        @variable(model, y)
+        @variable(model, z)
 
         aff = @inferred 7.1 * x + 2.5
         @test_expression_with_string 7.1 * x + 2.5 "7.1 x + 2.5"
