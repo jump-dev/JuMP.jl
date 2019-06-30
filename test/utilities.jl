@@ -13,7 +13,7 @@
 
 macro test_expression(expr)
     esc(quote
-            @test JuMP.isequal_canonical(@expression(m, $expr), $expr)
+            @test JuMP.isequal_canonical(@expression(model, $expr), $expr)
     end)
 end
 
