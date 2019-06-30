@@ -358,8 +358,8 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
 
     @testset "[macros] sum(generator)" begin
         model = ModelType()
-        @variable(m, x[1:3,1:3])
-        @variable(m, y)
+        @variable(model, x[1:3,1:3])
+        @variable(model, y)
         C = [1 2 3; 4 5 6; 7 8 9]
 
         @test_expression sum( C[i,j]*x[i,j] for i in 1:2, j = 2:3 )
