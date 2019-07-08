@@ -16,7 +16,7 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 ForwardDiff = "~0.5.0, ~0.6, ~0.7, ~0.8, ~0.9, ~0.10"
-MathOptInterface = "~0.8.1"
+MathOptInterface = "~0.9"
 NaNMath = "≥ 0.2.1"
 OffsetArrays = "≥ 0.2.13"
 julia = "1"
