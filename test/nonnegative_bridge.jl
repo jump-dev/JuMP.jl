@@ -30,7 +30,11 @@ The `NonnegativeBridge` replaces a constraint `func`-in-`Nonnegative` into
 struct NonnegativeBridge{T, F<:MOI.AbstractScalarFunction} <: MOIBC.AbstractBridge
     constraint_index::MOI.ConstraintIndex{F, MOI.GreaterThan{T}}
 end
-function NonnegativeBridge{T, F}(model, f::F, s::Nonnegative) where {T, F}
+
+function MOIBC.bridge_constraint(::Type{NonnegativeBridge{T, F}},
+                                 model,
+                                 f::F,
+                                 s::Nonnegative) where {T, F}
     ci = MOIU.add_scalar_constraint(model, f, MOI.GreaterThan(zero(T)))
     return NonnegativeBridge{T, F}(ci)
 end
