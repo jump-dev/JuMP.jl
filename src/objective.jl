@@ -140,9 +140,10 @@ as it is convertible to a quadratic function, it can be queried as a quadratic
 function and the result is quadratic.
 
 However, it is not convertible to a variable.
-```jldoctest objective_function; filter = r"Stacktrace:.*"s
+```jldoctest objective_function; filter = r"MathOptInterface\\."s
 julia> objective_function(model, VariableRef)
-ERROR: InexactError: convert(MathOptInterface.SingleVariable,MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[MathOptInterface.ScalarAffineTerm{Float64}(2.0, MathOptInterface.VariableIndex(1))], 1.0))
+ERROR: InexactError: convert(MathOptInterface.SingleVariable, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[MathOptInterface.ScalarAffineTerm{Float64}(2.0, MathOptInterface.VariableIndex(1))], 1.0))
+[...]
 ```
 """
 function objective_function(model::Model,
