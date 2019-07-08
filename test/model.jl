@@ -25,7 +25,7 @@ const MOIU = MOI.Utilities
             (MOI.EqualTo, MOI.GreaterThan, MOI.LessThan),
             (),
             (),
-            (MOI.SingleVariable,),
+            (),
             (MOI.ScalarAffineFunction,),
             (),
             ())

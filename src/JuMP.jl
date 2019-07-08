@@ -60,7 +60,7 @@ MOIU.@model(_MOIModel,
              MOI.RootDetConeTriangle, MOI.RootDetConeSquare,
              MOI.LogDetConeTriangle, MOI.LogDetConeSquare),
             (),
-            (MOI.SingleVariable,),
+            (),
             (MOI.ScalarAffineFunction, MOI.ScalarQuadraticFunction),
             (MOI.VectorOfVariables,),
             (MOI.VectorAffineFunction, MOI.VectorQuadraticFunction))
