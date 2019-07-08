@@ -480,7 +480,7 @@ function standard_form_rhs(
         S <: Union{MOI.LessThan{T}, MOI.GreaterThan{T}, MOI.EqualTo{T}},
         F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
     con = constraint_object(con_ref)
-    return MOIU.getconstant(con.set)
+    return MOI.constant(con.set)
 end
 
 """
