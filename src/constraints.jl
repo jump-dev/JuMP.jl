@@ -774,9 +774,9 @@ julia> @constraint(model, 2x <= 1);
 
 julia> list_of_constraint_types(model)
 3-element Array{Tuple{DataType,DataType},1}:
- (VariableRef, MathOptInterface.ZeroOne)
- (VariableRef, MathOptInterface.GreaterThan{Float64})
  (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
+ (VariableRef, MathOptInterface.GreaterThan{Float64})
+ (VariableRef, MathOptInterface.ZeroOne)
 ```
 """
 function list_of_constraint_types(model::Model)
