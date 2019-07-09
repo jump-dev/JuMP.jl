@@ -95,7 +95,7 @@ function example_diet(; verbose = true)
     @constraint(model, buy["milk"] + buy["ice cream"] <= 6)
     verbose && println("Solving dairy-limited problem...")
     JuMP.optimize!(model)
-    @test JuMP.termination_status(model) == MOI.INFEASIBLE_OR_UNBOUNDED
+    @test JuMP.termination_status(model) == MOI.INFEASIBLE
     @test JuMP.primal_status(model) == MOI.NO_SOLUTION
     verbose && print_solution(false, foods, buy)
 end
