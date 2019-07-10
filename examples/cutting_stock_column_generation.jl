@@ -200,4 +200,4 @@ function example_cutting_stock(maxwidth::Float64, widths::Vector{Float64},
 end
 
 # Actually run the code.
-θ_final = solve_cutting_stock(maxwidth, widths, rollcost, demand, prices)
+θ_final = example_cutting_stock(maxwidth, widths, rollcost, demand, prices)
