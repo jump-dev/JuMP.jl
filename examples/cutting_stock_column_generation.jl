@@ -1,16 +1,7 @@
 # Based on https://matbesancon.github.io/post/2018-05-25-colgen2/
 # and https://github.com/matbesancon/column_generation_jump
 
-using JuMP, GLPK
-using SparseArrays
-const MOI = JuMP.MathOptInterface
-
-maxwidth = 100
-rollcost = 500
-prices = Float64[167.0, 197.0, 281.0, 212.0, 225.0, 111.0, 93.0, 129.0, 108.0, 106.0, 55.0, 85.0, 66.0, 44.0, 47.0, 15.0, 24.0, 13.0, 16.0, 14.0]
-widths = Float64[75.0, 75.0, 75.0, 75.0, 75.0, 53.8, 53.0, 51.0, 50.2, 32.2, 30.8, 29.8, 20.1, 16.2, 14.5, 11.0, 8.6, 8.2, 6.6, 5.1]
-demand = Int[38, 44, 30, 41, 36, 33, 36, 41, 35, 37, 44, 49, 37, 36, 42, 33, 47, 35, 49, 42]
-nwidths = length(prices)
+using JuMP, GLPK, SparseArrays, Test
 
 """
     solve_pricing(dual_demand_satisfaction, maxwidth, widths, rollcost, demand, prices)
@@ -36,7 +27,6 @@ function solve_pricing(dual_demand_satisfaction, maxwidth, widths, rollcost, dem
     new_pattern = round.(Int, value.(xs))
     net_cost = rollcost - sum(new_pattern .* (dual_demand_satisfaction .+ prices))
 
-    println(net_cost)
     if net_cost >= 0 # No new pattern to add.
         return nothing
     else
@@ -111,9 +101,14 @@ stock problem, you can see:
     [part 1](https://matbesancon.github.io/post/2018-05-23-colgen/) and
     [part 2](https://matbesancon.github.io/post/2018-05-25-colgen2/)
 """
-function example_cutting_stock(maxwidth::Float64, widths::Vector{Float64},
-                               rollcost::Float64, demand::Vector{Int},
-                               prices::Vector{Float64}; max_gen_cols::Int=5000)
+function example_cutting_stock(; max_gen_cols::Int=5000)
+    maxwidth = 100.0
+    rollcost = 500.0
+    prices = Float64[167.0, 197.0, 281.0, 212.0, 225.0, 111.0, 93.0, 129.0, 108.0, 106.0, 55.0, 85.0, 66.0, 44.0, 47.0, 15.0, 24.0, 13.0, 16.0, 14.0]
+    widths = Float64[75.0, 75.0, 75.0, 75.0, 75.0, 53.8, 53.0, 51.0, 50.2, 32.2, 30.8, 29.8, 20.1, 16.2, 14.5, 11.0, 8.6, 8.2, 6.6, 5.1]
+    demand = Int[38, 44, 30, 41, 36, 33, 36, 41, 35, 37, 44, 49, 37, 36, 42, 33, 47, 35, 49, 42]
+    nwidths = length(prices)
+
     n = length(widths)
     ncols = length(widths)
 
@@ -196,8 +191,7 @@ function example_cutting_stock(maxwidth::Float64, widths::Vector{Float64},
         warn("Final master not optimal ($ncols patterns)")
     end
 
-    return value.(θ)
+    @test JuMP.objective_value(m) ≈ 78599.0 atol = 1e-3
 end
 
-# Actually run the code.
-θ_final = example_cutting_stock(maxwidth, widths, rollcost, demand, prices)
+example_cutting_stock()
