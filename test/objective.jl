@@ -64,6 +64,20 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
             4x + 1, @inferred JuMP.objective_function(m, AffExprType))
     end
 
+    @testset "Linear objective changes" begin
+        m = ModelType()
+        @variable(m, x)
+
+        # No change possible for a single variable.
+        @objective(m, Max, x)
+        @test_throws MethodError set_objective_coefficient(m, x, 4.0)
+
+        @variable(m, y)
+        @objective(m, Max, x + y)
+        set_objective_coefficient(m, x, 4.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x + y)
+    end
+
     @testset "Quadratic objectives" begin
         m = ModelType()
         @variable(m, x)

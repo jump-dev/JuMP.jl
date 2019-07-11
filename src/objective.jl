@@ -160,3 +160,26 @@ function objective_function(model::Model,
                    MOI.ObjectiveFunction{MOIFunType}())::MOIFunType
     return jump_function(model, func)
 end
+
+"""
+    set_objective_coefficient(model::Model, term, coeff)
+
+Updates the objective function to change the coefficient of the given term.
+If the objective does not have the right type, an error will be thrown:
+changing a variable coefficient for a constant objective, changing the
+coefficient of a quadratic term where there is only a linear objective.
+"""
+function set_objective_coefficient end
+
+function set_objective_coefficient(model::Model, variable::VariableRef, coeff)
+    MOI.modify(backend(model),
+            MOI.ObjectiveFunction{moi_function_type(objective_function_type(model))}(),
+            MOI.ScalarCoefficientChange(index(variable), coeff)
+    )
+    # Nonlinear objectives override regular objectives, so if there was a
+    # nonlinear objective set, we must clear it.
+    if model.nlp_data !== nothing
+        model.nlp_data.nlobj = nothing
+    end
+    return
+end
