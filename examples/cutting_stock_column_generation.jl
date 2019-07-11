@@ -1,5 +1,4 @@
-# Based on https://matbesancon.github.io/post/2018-05-25-colgen2/
-# and https://github.com/matbesancon/column_generation_jump
+# Based on http://doi.org/10.5281/zenodo.3329388
 
 using JuMP, GLPK, SparseArrays, Test
 
@@ -97,9 +96,7 @@ stock problem, you can see:
 
   * [Integer programming column generation strategies forthe cutting stock
     problem and its variants](https://tel.archives-ouvertes.fr/tel-00011657/document)
-  * Tackling the cutting stock problem,
-    [part 1](https://matbesancon.github.io/post/2018-05-23-colgen/) and
-    [part 2](https://matbesancon.github.io/post/2018-05-25-colgen2/)
+  * [Tackling the cutting stock problem](http://doi.org/10.5281/zenodo.3329388)
 """
 function example_cutting_stock(; max_gen_cols::Int=5000)
     maxwidth = 100.0
