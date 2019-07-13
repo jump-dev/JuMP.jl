@@ -76,6 +76,10 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         @objective(m, Max, x + y)
         set_objective_coefficient(m, x, 4.0)
         @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x + y)
+
+        @objective(m, Min, x)
+        set_objective_coefficient(m, y, 2.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), x + 2.0 * y)
     end
 
     @testset "Quadratic objectives" begin

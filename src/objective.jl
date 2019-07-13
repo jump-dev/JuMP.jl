@@ -176,7 +176,12 @@ function set_objective_coefficient(model::Model, variable::VariableRef, coeff::R
     obj_fct_type = moi_function_type(objective_function_type(model))
     if obj_fct_type == MOI.SingleVariable
         # Promote the objective function to be an affine expression.
-        set_objective_function(model, coeff * variable)
+        current_obj = objective_function(model)
+        if index(current_obj) == index(variable)
+            set_objective_function(model, coeff * variable)
+        else
+            set_objective_function(model, current_obj + coeff * variable)
+        end
     elseif obj_fct_type == MOI.ScalarAffineFunction{Float64} || obj_fct_type == MOI.ScalarQuadraticFunction{Float64}
         MOI.modify(backend(model),
                 MOI.ObjectiveFunction{moi_function_type(objective_function_type(model))}(),
