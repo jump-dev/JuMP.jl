@@ -68,9 +68,9 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         m = ModelType()
         @variable(m, x)
 
-        # No change possible for a single variable.
         @objective(m, Max, x)
-        @test_throws MethodError set_objective_coefficient(m, x, 4.0)
+        set_objective_coefficient(m, x, 4.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x)
 
         @variable(m, y)
         @objective(m, Max, x + y)
@@ -89,6 +89,15 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         @test JuMP.isequal_canonical(
             x^2 + 2x, @inferred JuMP.objective_function(m, QuadExprType))
         @test_throws InexactError JuMP.objective_function(m, AffExprType)
+    end
+
+    @testset "Quadratic objective changes" begin
+        m = ModelType()
+        @variable(m, x)
+
+        @objective(m, Max, x^2 + x)
+        set_objective_coefficient(m, x, 4.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), x^2 + 4x)
     end
 
     @testset "Sense as symbol" begin
