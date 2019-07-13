@@ -172,14 +172,13 @@ coefficient of a quadratic term where there is only a linear objective.
 function set_objective_coefficient end
 
 function set_objective_coefficient(model::Model, variable::VariableRef, coeff)
+    if model.nlp_data !== nothing && model.nlp_data.nlobj !== nothing
+        error("A nonlinear objective is already set in the model")
+    end
+
     MOI.modify(backend(model),
             MOI.ObjectiveFunction{moi_function_type(objective_function_type(model))}(),
             MOI.ScalarCoefficientChange(index(variable), coeff)
     )
-    # Nonlinear objectives override regular objectives, so if there was a
-    # nonlinear objective set, we must clear it.
-    if model.nlp_data !== nothing
-        model.nlp_data.nlobj = nothing
-    end
     return
 end
