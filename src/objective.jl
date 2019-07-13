@@ -169,7 +169,7 @@ Set the linear objective coefficient associated with `Variable` to `coefficient`
 Note: this function will throw an error if a nonlinear objective is set.
 """
 function set_objective_coefficient(model::Model, variable::VariableRef, coeff::Real)
-    if model.nlp_data !== nothing && model.nlp_data.nlobj !== nothing
+    if model.nlp_data !== nothing && _nlp_objective_function(model) !== nothing
         error("A nonlinear objective is already set in the model")
     end
 
