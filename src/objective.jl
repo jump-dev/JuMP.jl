@@ -162,16 +162,13 @@ function objective_function(model::Model,
 end
 
 """
-    set_objective_coefficient(model::Model, term, coeff)
+    set_objective_coefficient(model::Model, variable::VariableRef, coefficient::Real)
 
-Updates the objective function to change the coefficient of the given term.
-If the objective does not have the right type, an error will be thrown:
-changing a variable coefficient for a constant objective, changing the
-coefficient of a quadratic term where there is only a linear objective.
+Set the linear objective coefficient associated with `Variable` to `coefficient`.
+
+Note: this function will throw an error if a nonlinear objective is set.
 """
-function set_objective_coefficient end
-
-function set_objective_coefficient(model::Model, variable::VariableRef, coeff)
+function set_objective_coefficient(model::Model, variable::VariableRef, coeff::Real)
     if model.nlp_data !== nothing && model.nlp_data.nlobj !== nothing
         error("A nonlinear objective is already set in the model")
     end
