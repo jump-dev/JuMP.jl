@@ -180,7 +180,8 @@ function set_objective_coefficient(model::Model, variable::VariableRef, coeff::R
         if index(current_obj) == index(variable)
             set_objective_function(model, coeff * variable)
         else
-            set_objective_function(model, current_obj + coeff * variable)
+            obj_expr = objective_function(model)
+            add_to_expression!(coeff * variable, obj_expr)
         end
     elseif obj_fct_type == MOI.ScalarAffineFunction{Float64} || obj_fct_type == MOI.ScalarQuadraticFunction{Float64}
         MOI.modify(backend(model),

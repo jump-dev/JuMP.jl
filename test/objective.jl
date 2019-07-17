@@ -64,6 +64,26 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
             4x + 1, @inferred JuMP.objective_function(m, AffExprType))
     end
 
+    @testset "Linear objective changes" begin
+        m = ModelType()
+        @variable(m, x)
+
+        if JuMP.objective_function_type(m) == VariableRef
+            @objective(m, Max, x)
+            set_objective_coefficient(m, x, 4.0)
+            @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x)
+
+            @variable(m, y)
+            @objective(m, Max, x + y)
+            set_objective_coefficient(m, x, 4.0)
+            @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x + y)
+
+            @objective(m, Min, x)
+            set_objective_coefficient(m, y, 2.0)
+            @test JuMP.isequal_canonical(JuMP.objective_function(m), x + 2.0 * y)
+        end
+    end
+
     @testset "Quadratic objectives" begin
         m = ModelType()
         @variable(m, x)
@@ -75,6 +95,17 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         @test JuMP.isequal_canonical(
             x^2 + 2x, @inferred JuMP.objective_function(m, QuadExprType))
         @test_throws InexactError JuMP.objective_function(m, AffExprType)
+    end
+
+    @testset "Quadratic objective changes" begin
+        m = ModelType()
+        @variable(m, x)
+
+        if JuMP.objective_function_type(m) == VariableRef
+            @objective(m, Max, x^2 + x)
+            set_objective_coefficient(m, x, 4.0)
+            @test JuMP.isequal_canonical(JuMP.objective_function(m), x^2 + 4x)
+        end
     end
 
     @testset "Sense as symbol" begin
@@ -108,38 +139,8 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
     end
 end
 
-function objective_coeff_update_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
-    @testset "Linear objective changes" begin
-        m = ModelType()
-        @variable(m, x)
-
-        @objective(m, Max, x)
-        set_objective_coefficient(m, x, 4.0)
-        @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x)
-
-        @variable(m, y)
-        @objective(m, Max, x + y)
-        set_objective_coefficient(m, x, 4.0)
-        @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x + y)
-
-        @objective(m, Min, x)
-        set_objective_coefficient(m, y, 2.0)
-        @test JuMP.isequal_canonical(JuMP.objective_function(m), x + 2.0 * y)
-    end
-
-    @testset "Quadratic objective changes" begin
-        m = ModelType()
-        @variable(m, x)
-
-        @objective(m, Max, x^2 + x)
-        set_objective_coefficient(m, x, 4.0)
-        @test JuMP.isequal_canonical(JuMP.objective_function(m), x^2 + 4x)
-    end
-end
-
 @testset "Objectives for JuMP.Model" begin
     objectives_test(Model, VariableRef)
-    objective_coeff_update_test(Model, VariableRef)
 end
 
 @testset "Objectives for JuMPExtension.MyModel" begin
