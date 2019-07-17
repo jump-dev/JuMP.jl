@@ -65,23 +65,22 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
     end
 
     @testset "Linear objective changes" begin
-        m = ModelType()
+        # Only works with JuMP model, not extensions.
+        m = Model()
         @variable(m, x)
 
-        if JuMP.objective_function_type(m) == VariableRef
-            @objective(m, Max, x)
-            set_objective_coefficient(m, x, 4.0)
-            @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x)
+        @objective(m, Max, x)
+        set_objective_coefficient(m, x, 4.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x)
 
-            @variable(m, y)
-            @objective(m, Max, x + y)
-            set_objective_coefficient(m, x, 4.0)
-            @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x + y)
+        @variable(m, y)
+        @objective(m, Max, x + y)
+        set_objective_coefficient(m, x, 4.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x + y)
 
-            @objective(m, Min, x)
-            set_objective_coefficient(m, y, 2.0)
-            @test JuMP.isequal_canonical(JuMP.objective_function(m), x + 2.0 * y)
-        end
+        @objective(m, Min, x)
+        set_objective_coefficient(m, y, 2.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), x + 2.0 * y)
     end
 
     @testset "Quadratic objectives" begin
@@ -98,14 +97,13 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
     end
 
     @testset "Quadratic objective changes" begin
-        m = ModelType()
+        # Only works with JuMP model, not extensions.
+        m = Model()
         @variable(m, x)
 
-        if JuMP.objective_function_type(m) == VariableRef
-            @objective(m, Max, x^2 + x)
-            set_objective_coefficient(m, x, 4.0)
-            @test JuMP.isequal_canonical(JuMP.objective_function(m), x^2 + 4x)
-        end
+        @objective(m, Max, x^2 + x)
+        set_objective_coefficient(m, x, 4.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), x^2 + 4x)
     end
 
     @testset "Sense as symbol" begin

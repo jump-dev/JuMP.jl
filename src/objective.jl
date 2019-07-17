@@ -180,13 +180,12 @@ function set_objective_coefficient(model::Model, variable::VariableRef, coeff::R
         if index(current_obj) == index(variable)
             set_objective_function(model, coeff * variable)
         else
-            obj_expr = objective_function(model)
-            add_to_expression!(coeff * variable, obj_expr)
+            set_objective_function(model, add_to_expression!(coeff * variable, current_obj))
         end
     elseif obj_fct_type == MOI.ScalarAffineFunction{Float64} || obj_fct_type == MOI.ScalarQuadraticFunction{Float64}
         MOI.modify(backend(model),
-                MOI.ObjectiveFunction{moi_function_type(objective_function_type(model))}(),
-                MOI.ScalarCoefficientChange(index(variable), coeff)
+            MOI.ObjectiveFunction{moi_function_type(objective_function_type(model))}(),
+            MOI.ScalarCoefficientChange(index(variable), coeff)
         )
     else
         error("Objective function type not supported: $(obj_fct_type)")
