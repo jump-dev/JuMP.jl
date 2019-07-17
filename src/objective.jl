@@ -173,8 +173,8 @@ function set_objective_coefficient(model::Model, variable::VariableRef, coeff::R
         error("A nonlinear objective is already set in the model")
     end
 
-    obj_fct_type = moi_function_type(objective_function_type(model))
-    if obj_fct_type == MOI.SingleVariable
+    obj_fct_type = objective_function_type(model)
+    if obj_fct_type == VariableRef
         # Promote the objective function to be an affine expression.
         current_obj = objective_function(model)
         if index(current_obj) == index(variable)
@@ -182,7 +182,7 @@ function set_objective_coefficient(model::Model, variable::VariableRef, coeff::R
         else
             set_objective_function(model, add_to_expression!(coeff * variable, current_obj))
         end
-    elseif obj_fct_type == MOI.ScalarAffineFunction{Float64} || obj_fct_type == MOI.ScalarQuadraticFunction{Float64}
+    elseif obj_fct_type == AffExpr || obj_fct_type == QuadExpr
         MOI.modify(backend(model),
             MOI.ObjectiveFunction{moi_function_type(objective_function_type(model))}(),
             MOI.ScalarCoefficientChange(index(variable), coeff)
