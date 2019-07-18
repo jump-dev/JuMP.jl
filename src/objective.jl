@@ -184,7 +184,7 @@ function set_objective_coefficient(model::Model, variable::VariableRef, coeff::R
         end
     elseif obj_fct_type == AffExpr || obj_fct_type == QuadExpr
         MOI.modify(backend(model),
-            MOI.ObjectiveFunction{moi_function_type(objective_function_type(model))}(),
+            MOI.ObjectiveFunction{moi_function_type(obj_fct_type)}(),
             MOI.ScalarCoefficientChange(index(variable), coeff)
         )
     else
