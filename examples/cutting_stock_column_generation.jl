@@ -145,9 +145,7 @@ function example_cutting_stock(; max_gen_cols::Int=5000)
         push!(θ, new_var[ncols])
 
         # Update the objective function.
-        set_objective_function(m, objective_function(m)
-            + θ[ncols] * (rollcost - sum(patterns[j, ncols] * prices[j] for j=1:n))
-        )
+        set_objective_coefficient(m, θ[ncols], rollcost - sum(patterns[j, ncols] * prices[j] for j=1:n))
 
         # Update the constraint number j if the new pattern impacts this production.
         for j in 1:n
