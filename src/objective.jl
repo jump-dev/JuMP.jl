@@ -160,3 +160,36 @@ function objective_function(model::Model,
                    MOI.ObjectiveFunction{MOIFunType}())::MOIFunType
     return jump_function(model, func)
 end
+
+"""
+    set_objective_coefficient(model::Model, variable::VariableRef, coefficient::Real)
+
+Set the linear objective coefficient associated with `Variable` to `coefficient`.
+
+Note: this function will throw an error if a nonlinear objective is set.
+"""
+function set_objective_coefficient(model::Model, variable::VariableRef, coeff::Real)
+    if model.nlp_data !== nothing && _nlp_objective_function(model) !== nothing
+        error("A nonlinear objective is already set in the model")
+    end
+
+    obj_fct_type = objective_function_type(model)
+    if obj_fct_type == VariableRef
+        # Promote the objective function to be an affine expression.
+        current_obj = objective_function(model)
+        if index(current_obj) == index(variable)
+            set_objective_function(model, coeff * variable)
+        else
+            set_objective_function(model, add_to_expression!(coeff * variable, current_obj))
+        end
+    elseif obj_fct_type == AffExpr || obj_fct_type == QuadExpr
+        MOI.modify(backend(model),
+            MOI.ObjectiveFunction{moi_function_type(obj_fct_type)}(),
+            MOI.ScalarCoefficientChange(index(variable), coeff)
+        )
+    else
+        error("Objective function type not supported: $(obj_fct_type)")
+    end
+
+    return
+end
