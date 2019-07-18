@@ -741,7 +741,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Objective",
     "title": "Objective",
     "category": "section",
-    "text": "This page describes macros and functions related to linear and quadratic objective functions only, unless otherwise indicated. For nonlinear objective functions, see Nonlinear Modeling.Use the @objective macro to set linear and quadratic objective functions in a JuMP model. The functions set_objective_sense and set_objective_function provide an equivalent lower-level interface.To query the objective function from a model, see objective_sense, objective_function, and objective_function_type.To query the optimal objective value or best known bound after a solve, see objective_value and objective_bound. These two functions apply to nonlinear objectives also."
+    "text": "This page describes macros and functions related to linear and quadratic objective functions only, unless otherwise indicated. For nonlinear objective functions, see Nonlinear Modeling.Use the @objective macro to set linear and quadratic objective functions in a JuMP model. The functions set_objective_sense and set_objective_function provide an equivalent lower-level interface.To update a term in the objective function, see set_objective_coefficient. To query the objective function from a model, see objective_sense, objective_function, and objective_function_type.To query the optimal objective value or best known bound after a solve, see objective_value and objective_bound. These two functions apply to nonlinear objectives also."
 },
 
 {
@@ -766,6 +766,14 @@ var documenterSearchIndex = {"docs": [
     "title": "JuMP.set_objective_function",
     "category": "function",
     "text": "set_objective_function(\n    model::Model,\n    func::Union{AbstractJuMPScalar, MathOptInterface.AbstractScalarFunction})\n\nSets the objective function of the model to the given function. See set_objective_sense to set the objective sense. These are low-level functions; the recommended way to set the objective is with the @objective macro.\n\n\n\n\n\n"
+},
+
+{
+    "location": "objective/#JuMP.set_objective_coefficient",
+    "page": "Objective",
+    "title": "JuMP.set_objective_coefficient",
+    "category": "function",
+    "text": "set_objective_coefficient(model::Model, variable::VariableRef, coefficient::Real)\n\nSet the linear objective coefficient associated with Variable to coefficient.\n\nNote: this function will throw an error if a nonlinear objective is set.\n\n\n\n\n\n"
 },
 
 {
@@ -813,7 +821,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Objective",
     "title": "Reference",
     "category": "section",
-    "text": "@objective\nJuMP.set_objective_sense\nJuMP.set_objective_function\n\nJuMP.objective_sense\nJuMP.objective_function\nJuMP.objective_function_type\n\nJuMP.objective_bound\nJuMP.objective_value"
+    "text": "@objective\nJuMP.set_objective_sense\nJuMP.set_objective_function\nJuMP.set_objective_coefficient\n\nJuMP.objective_sense\nJuMP.objective_function\nJuMP.objective_function_type\n\nJuMP.objective_bound\nJuMP.objective_value"
 },
 
 {
