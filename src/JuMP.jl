@@ -74,9 +74,9 @@ optimizer factory `optimizer_factory` with `optimizer_factory()`.
 ## Examples
 
 The following construct an optimizer factory and then use it to create two
-independent `IpoptOptimizer`s:
+independent `Ipopt.Optimizer`s:
 ```julia
-optimizer_factory = with_optimizer(IpoptOptimizer, print_level=0)
+optimizer_factory = with_optimizer(Ipopt.Optimizer, print_level=0)
 optimizer1 = optimizer_factory()
 optimizer2 = optimizer_factory()
 ```
@@ -99,10 +99,10 @@ Return an `OptimizerFactory` that creates optimizers using the constructor
 
 ## Examples
 
-The following returns an optimizer factory that creates `IpoptOptimizer`s using
-the constructor call `IpoptOptimizer(print_level=0)`:
+The following returns an optimizer factory that creates `Ipopt.Optimizer`s using
+the constructor call `Ipopt.Optimizer(print_level=0)`:
 ```julia
-with_optimizer(IpoptOptimizer, print_level=0)
+with_optimizer(Ipopt.Optimizer, print_level=0)
 ```
 """
 function with_optimizer(constructor,
@@ -210,7 +210,7 @@ create the optimizer. The optimizer factory can be created by the
 ## Examples
 
 The following creates a model using the optimizer
-`IpoptOptimizer(print_level=0)`:
+`Ipopt.Optimizer(print_level=0)`:
 ```julia
 model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
 ```
