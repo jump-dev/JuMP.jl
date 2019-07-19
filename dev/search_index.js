@@ -1301,7 +1301,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Solvers",
     "title": "JuMP.with_optimizer",
     "category": "function",
-    "text": "with_optimizer(constructor, args...; kwargs...)\n\nReturn an OptimizerFactory that creates optimizers using the constructor constructor with positional arguments args and keyword arguments kwargs.\n\nExamples\n\nThe following returns an optimizer factory that creates IpoptOptimizers using the constructor call IpoptOptimizer(print_level=0):\n\nwith_optimizer(IpoptOptimizer, print_level=0)\n\n\n\n\n\n"
+    "text": "with_optimizer(constructor, args...; kwargs...)\n\nReturn an OptimizerFactory that creates optimizers using the constructor constructor with positional arguments args and keyword arguments kwargs.\n\nExamples\n\nThe following returns an optimizer factory that creates Ipopt.Optimizers using the constructor call Ipopt.Optimizer(print_level=0):\n\nwith_optimizer(Ipopt.Optimizer, print_level=0)\n\n\n\n\n\n"
 },
 
 {
@@ -1333,7 +1333,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Solvers",
     "title": "JuMP.Model",
     "category": "method",
-    "text": "Model(optimizer_factory::OptimizerFactory;\n      caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,\n      bridge_constraints::Bool=true)\n\nReturn a new JuMP model using the optimizer factory optimizer_factory to create the optimizer. The optimizer factory can be created by the with_optimizer function.\n\nExamples\n\nThe following creates a model using the optimizer IpoptOptimizer(print_level=0):\n\nmodel = Model(with_optimizer(Ipopt.Optimizer, print_level=0))\n\n\n\n\n\n"
+    "text": "Model(optimizer_factory::OptimizerFactory;\n      caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,\n      bridge_constraints::Bool=true)\n\nReturn a new JuMP model using the optimizer factory optimizer_factory to create the optimizer. The optimizer factory can be created by the with_optimizer function.\n\nExamples\n\nThe following creates a model using the optimizer Ipopt.Optimizer(print_level=0):\n\nmodel = Model(with_optimizer(Ipopt.Optimizer, print_level=0))\n\n\n\n\n\n"
 },
 
 {
