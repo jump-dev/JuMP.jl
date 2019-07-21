@@ -133,12 +133,7 @@ function example_cutting_stock(; max_gen_cols::Int=5000)
             break
         end
 
-        new_pattern = try
-            solve_pricing(dual.(demand_satisfaction), maxwidth, widths, rollcost, demand, prices)
-        catch
-            # At the final iteration, GLPK has dual values, but at least one of them is 0.0, and thus GLPK crashes.
-            break
-        end
+        new_pattern = solve_pricing(dual.(demand_satisfaction), maxwidth, widths, rollcost, demand, prices)
 
         # No new pattern to add to the formulation: done!
         if new_pattern === nothing
@@ -182,7 +177,7 @@ function example_cutting_stock(; max_gen_cols::Int=5000)
         warn("Final master not optimal ($ncols patterns)")
     end
 
-    @test JuMP.objective_value(m) ≈ 78599.0 atol = 1e-3
+    @test JuMP.objective_value(m) ≈ 78374.0 atol = 1e-3
 end
 
 example_cutting_stock()
