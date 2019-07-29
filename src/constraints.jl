@@ -52,20 +52,20 @@ end
 Base.broadcastable(cref::ConstraintRef) = Ref(cref)
 
 """
-    name(v::ConstraintRef)
+    name(cref::ConstraintRef)
 
 Get a constraint's name attribute.
 """
-function name(cr::ConstraintRef{Model,<:_MOICON})
-    return MOI.get(cr.model, MOI.ConstraintName(), cr)::String
+function name(cref::ConstraintRef{Model,<:_MOICON})
+    return MOI.get(cref.model, MOI.ConstraintName(), cref)::String
 end
 
 """
-    set_name(v::ConstraintRef, s::AbstractString)
+    set_name(cref::ConstraintRef, s::AbstractString)
 
 Set a constraint's name attribute.
 """
-set_name(cr::ConstraintRef{Model,<:_MOICON}, s::String) = MOI.set(cr.model, MOI.ConstraintName(), cr, s)
+set_name(cref::ConstraintRef{Model,<:_MOICON}, s::String) = MOI.set(cref.model, MOI.ConstraintName(), cref, s)
 
 """
     constraint_by_name(model::AbstractModel,
@@ -160,26 +160,26 @@ function constraint_ref_with_index(
 end
 
 """
-    delete(model::Model, constraint_ref::ConstraintRef)
+    delete(model::Model, cref::ConstraintRef)
 
 Delete the constraint associated with `constraint_ref` from the model `model`.
 """
-function delete(model::Model, constraint_ref::ConstraintRef{Model})
-    if model !== constraint_ref.model
+function delete(model::Model, cref::ConstraintRef{Model})
+    if model !== cref.model
         error("The constraint reference you are trying to delete does not " *
               "belong to the model.")
     end
-    MOI.delete(backend(model), index(constraint_ref))
+    MOI.delete(backend(model), index(cref))
 end
 
 """
-    is_valid(model::Model, constraint_ref::ConstraintRef{Model})
+    is_valid(model::Model, cref::ConstraintRef{Model})
 
 Return `true` if `constraint_ref` refers to a valid constraint in `model`.
 """
-function is_valid(model::Model, constraint_ref::ConstraintRef{Model})
-    return (model === constraint_ref.model &&
-            MOI.is_valid(backend(model), constraint_ref.index))
+function is_valid(model::Model, cref::ConstraintRef{Model})
+    return (model === cref.model &&
+            MOI.is_valid(backend(model), cref.index))
 end
 
 #############################################################################
@@ -283,7 +283,7 @@ Returns the MOI set of dimension `dim` corresponding to the JuMP set `s`.
 function moi_set end
 
 """
-    constraint_object(ref::ConstraintRef)
+    constraint_object(cref::ConstraintRef)
 
 Return the underlying constraint data for the constraint referenced by `ref`.
 """
@@ -308,11 +308,11 @@ moi_set(constraint::ScalarConstraint) = constraint.set
 reshape_set(set::MOI.AbstractScalarSet, ::ScalarShape) = set
 shape(::ScalarConstraint) = ScalarShape()
 
-function constraint_object(ref::ConstraintRef{Model, _MOICON{FuncType, SetType}}) where
+function constraint_object(cref::ConstraintRef{Model, _MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.AbstractScalarFunction, SetType <: MOI.AbstractScalarSet}
-    model = ref.model
-    f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
-    s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
+    model = cref.model
+    f = MOI.get(model, MOI.ConstraintFunction(), cref)::FuncType
+    s = MOI.get(model, MOI.ConstraintSet(), cref)::SetType
     return ScalarConstraint(jump_function(model, f), s)
 end
 function check_belongs_to_model(c::ScalarConstraint, model)
@@ -345,11 +345,11 @@ jump_function(constraint::VectorConstraint) = constraint.func
 moi_set(constraint::VectorConstraint) = constraint.set
 reshape_set(set::MOI.AbstractVectorSet, ::VectorShape) = set
 shape(c::VectorConstraint) = c.shape
-function constraint_object(ref::ConstraintRef{Model, _MOICON{FuncType, SetType}}) where
+function constraint_object(cref::ConstraintRef{Model, _MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.AbstractVectorFunction, SetType <: MOI.AbstractVectorSet}
     model = ref.model
-    f = MOI.get(model, MOI.ConstraintFunction(), ref)::FuncType
-    s = MOI.get(model, MOI.ConstraintSet(), ref)::SetType
+    f = MOI.get(model, MOI.ConstraintFunction(), cref)::FuncType
+    s = MOI.get(model, MOI.ConstraintSet(), cref)::SetType
     return VectorConstraint(jump_function(model, f), s, ref.shape)
 end
 function check_belongs_to_model(c::VectorConstraint, model)
@@ -395,7 +395,7 @@ function add_constraint(model::Model, c::AbstractConstraint, name::String="")
 end
 
 """
-    set_standard_form_coefficient(constraint::ConstraintRef, variable::VariableRef, value)
+    set_standard_form_coefficient(cref::ConstraintRef, variable::VariableRef, value)
 
 Set the coefficient of `variable` in the constraint `constraint` to `value`.
 
@@ -416,30 +416,30 @@ con : 4 x <= 2.0
 ```
 """
 function set_standard_form_coefficient(
-    constraint::ConstraintRef{Model, _MOICON{F, S}}, variable, value
+    cref::ConstraintRef{Model, _MOICON{F, S}}, variable, value
     ) where {S, T, F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
-    MOI.modify(backend(owner_model(constraint)), index(constraint),
+    MOI.modify(backend(owner_model(cref)), index(cref),
                MOI.ScalarCoefficientChange(index(variable), convert(T, value)))
     return
 end
 @deprecate set_coefficient set_standard_form_coefficient
 
 """
-    standard_form_coefficient(constraint::ConstraintRef, variable::VariableRef)
+    standard_form_coefficient(cref::ConstraintRef, variable::VariableRef)
 
 Return the coefficient associated with `variable` in `constraint` after JuMP has
 normalized the constraint into its standard form. See also
 [`set_standard_form_coefficient`](@ref).
 """
 function standard_form_coefficient(
-    constraint::ConstraintRef{Model, _MOICON{F, S}}, variable
+    cref::ConstraintRef{Model, _MOICON{F, S}}, variable
     ) where {S, T, F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
-    con = JuMP.constraint_object(constraint)
+    con = JuMP.constraint_object(cref)
     return _affine_coefficient(con.func, variable)
 end
 
 """
-    set_standard_form_rhs(constraint::ConstraintRef, value)
+    set_standard_form_rhs(cref::ConstraintRef, value)
 
 Set the right-hand side term of `constraint` to `value`.
 
@@ -459,27 +459,27 @@ con : 2 x <= 4.0
 ```
 """
 function set_standard_form_rhs(
-    constraint::ConstraintRef{Model, _MOICON{F, S}}, value) where {
+    cref::ConstraintRef{Model, _MOICON{F, S}}, value) where {
         T,
         S <: Union{MOI.LessThan{T}, MOI.GreaterThan{T}, MOI.EqualTo{T}},
         F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
-    MOI.set(owner_model(constraint), MOI.ConstraintSet(), constraint,
+    MOI.set(owner_model(cref), MOI.ConstraintSet(), cref,
             S(convert(T, value)))
     return
 end
 
 """
-    standard_form_rhs(constraint::ConstraintRef)
+    standard_form_rhs(cref::ConstraintRef)
 
 Return the right-hand side term of `constraint` after JuMP has converted the
 constraint into its standard form. See also [`set_standard_form_rhs`](@ref).
 """
 function standard_form_rhs(
-    constraint::ConstraintRef{Model, _MOICON{F, S}}) where {
+    cref::ConstraintRef{Model, _MOICON{F, S}}) where {
         T,
         S <: Union{MOI.LessThan{T}, MOI.GreaterThan{T}, MOI.EqualTo{T}},
         F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
-    con = constraint_object(constraint)
+    con = constraint_object(cref)
     return MOIU.getconstant(con.set)
 end
 
@@ -552,7 +552,7 @@ end
 
 
 """
-    shadow_price(constraint::ConstraintRef)
+    shadow_price(cref::ConstraintRef)
 
 The change in the objective from an infinitesimal relaxation of the constraint.
 This value is computed from [`dual`](@ref) and can be queried only when
@@ -571,7 +571,7 @@ most in sign from the `dual` value depending on the objective sense.
 - Relaxation of equality constraints (and hence the shadow price) is defined
   based on which sense of the equality constraint is active.
 """
-function shadow_price(constraint::ConstraintRef{Model, <:_MOICON})
+function shadow_price(cref::ConstraintRef{Model, <:_MOICON})
     error("The shadow price is not defined or not implemented for this type " *
           "of constraint.")
 end
@@ -606,37 +606,37 @@ function shadow_price_greater_than_(dual_value, sense::MOI.OptimizationSense)
     end
 end
 
-function shadow_price(constraint::ConstraintRef{Model, _MOICON{F, S}}
+function shadow_price(cref::ConstraintRef{Model, _MOICON{F, S}}
                       ) where {S <: MOI.LessThan, F}
-    model = constraint.model
+    model = cref.model
     if !has_duals(model)
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
-    return shadow_price_less_than_(dual(constraint),
+    return shadow_price_less_than_(dual(cref),
                                    objective_sense(model))
 end
 
-function shadow_price(constraint::ConstraintRef{Model, _MOICON{F, S}}
+function shadow_price(cref::ConstraintRef{Model, _MOICON{F, S}}
                       ) where {S <: MOI.GreaterThan, F}
-    model = constraint.model
+    model = cref.model
     if !has_duals(model)
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
-    return shadow_price_greater_than_(dual(constraint),
+    return shadow_price_greater_than_(dual(cref),
                                       objective_sense(model))
 end
 
-function shadow_price(constraint::ConstraintRef{Model, _MOICON{F, S}}
+function shadow_price(cref::ConstraintRef{Model, _MOICON{F, S}}
                       ) where {S <: MOI.EqualTo, F}
-    model = constraint.model
+    model = cref.model
     if !has_duals(model)
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
     sense = objective_sense(model)
-    dual_val = dual(constraint)
+    dual_val = dual(cref)
     if dual_val > 0
         # Treat the equality constraint as if it were a GreaterThan constraint.
         return shadow_price_greater_than_(dual_val, sense)
