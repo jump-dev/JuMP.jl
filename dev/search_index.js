@@ -861,7 +861,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.name",
     "category": "method",
-    "text": "name(v::ConstraintRef)\n\nGet a constraint\'s name attribute.\n\n\n\n\n\n"
+    "text": "name(con_ref::ConstraintRef)\n\nGet a constraint\'s name attribute.\n\n\n\n\n\n"
 },
 
 {
@@ -869,7 +869,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.set_name",
     "category": "method",
-    "text": "set_name(v::ConstraintRef, s::AbstractString)\n\nSet a constraint\'s name attribute.\n\n\n\n\n\n"
+    "text": "set_name(con_ref::ConstraintRef, s::AbstractString)\n\nSet a constraint\'s name attribute.\n\n\n\n\n\n"
 },
 
 {
@@ -1053,7 +1053,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.shadow_price",
     "category": "function",
-    "text": "shadow_price(constraint::ConstraintRef)\n\nThe change in the objective from an infinitesimal relaxation of the constraint. This value is computed from dual and can be queried only when has_duals is true and the objective sense is MIN_SENSE or MAX_SENSE (not FEASIBILITY_SENSE). For linear constraints, the shadow prices differ at most in sign from the dual value depending on the objective sense.\n\nNotes\n\nThe function simply translates signs from dual and does not validate the conditions needed to guarantee the sensitivity interpretation of the shadow price. The caller is responsible, e.g., for checking whether the solver converged to an optimal primal-dual pair or a proof of infeasibility.\nThe computation is based on the current objective sense of the model. If this has changed since the last solve, the results will be incorrect.\nRelaxation of equality constraints (and hence the shadow price) is defined based on which sense of the equality constraint is active.\n\n\n\n\n\n"
+    "text": "shadow_price(con_ref::ConstraintRef)\n\nThe change in the objective from an infinitesimal relaxation of the constraint. This value is computed from dual and can be queried only when has_duals is true and the objective sense is MIN_SENSE or MAX_SENSE (not FEASIBILITY_SENSE). For linear constraints, the shadow prices differ at most in sign from the dual value depending on the objective sense.\n\nNotes\n\nThe function simply translates signs from dual and does not validate the conditions needed to guarantee the sensitivity interpretation of the shadow price. The caller is responsible, e.g., for checking whether the solver converged to an optimal primal-dual pair or a proof of infeasibility.\nThe computation is based on the current objective sense of the model. If this has changed since the last solve, the results will be incorrect.\nRelaxation of equality constraints (and hence the shadow price) is defined based on which sense of the equality constraint is active.\n\n\n\n\n\n"
 },
 
 {
@@ -1061,7 +1061,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.standard_form_coefficient",
     "category": "function",
-    "text": "standard_form_coefficient(constraint::ConstraintRef, variable::VariableRef)\n\nReturn the coefficient associated with variable in constraint after JuMP has normalized the constraint into its standard form. See also set_standard_form_coefficient.\n\n\n\n\n\n"
+    "text": "standard_form_coefficient(con_ref::ConstraintRef, variable::VariableRef)\n\nReturn the coefficient associated with variable in constraint after JuMP has normalized the constraint into its standard form. See also set_standard_form_coefficient.\n\n\n\n\n\n"
 },
 
 {
@@ -1069,7 +1069,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.set_standard_form_coefficient",
     "category": "function",
-    "text": "set_standard_form_coefficient(constraint::ConstraintRef, variable::VariableRef, value)\n\nSet the coefficient of variable in the constraint constraint to value.\n\nNote that prior to this step, JuMP will aggregate multiple terms containing the same variable. For example, given a constraint 2x + 3x <= 2, set_standard_form_coefficient(c, x, 4) will create the constraint 4x <= 2.\n\nmodel = Model()\n@variable(model, x)\n@constraint(model, con, 2x + 3x <= 2)\nset_standard_form_coefficient(con, x, 4)\ncon\n\n# output\n\ncon : 4 x <= 2.0\n\n\n\n\n\n"
+    "text": "set_standard_form_coefficient(con_ref::ConstraintRef, variable::VariableRef, value)\n\nSet the coefficient of variable in the constraint constraint to value.\n\nNote that prior to this step, JuMP will aggregate multiple terms containing the same variable. For example, given a constraint 2x + 3x <= 2, set_standard_form_coefficient(con, x, 4) will create the constraint 4x <= 2.\n\nmodel = Model()\n@variable(model, x)\n@constraint(model, con, 2x + 3x <= 2)\nset_standard_form_coefficient(con, x, 4)\ncon\n\n# output\n\ncon : 4 x <= 2.0\n\n\n\n\n\n"
 },
 
 {
@@ -1077,7 +1077,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.standard_form_rhs",
     "category": "function",
-    "text": "standard_form_rhs(constraint::ConstraintRef)\n\nReturn the right-hand side term of constraint after JuMP has converted the constraint into its standard form. See also set_standard_form_rhs.\n\n\n\n\n\n"
+    "text": "standard_form_rhs(con_ref::ConstraintRef)\n\nReturn the right-hand side term of the constraint after JuMP has converted it into its standard form. See also set_standard_form_rhs.\n\n\n\n\n\n"
 },
 
 {
@@ -1085,7 +1085,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.set_standard_form_rhs",
     "category": "function",
-    "text": "set_standard_form_rhs(constraint::ConstraintRef, value)\n\nSet the right-hand side term of constraint to value.\n\nNote that prior to this step, JuMP will aggregate all constant terms onto the right-hand side of the constraint. For example, given a constraint 2x + 1 <= 2, set_standard_form_rhs(c, 4) will create the constraint 2x <= 4, not 2x + 1 <= 4.\n\njulia> @constraint(model, con, 2x + 1 <= 2)\ncon : 2 x <= 1.0\n\njulia> set_standard_form_rhs(con, 4)\n\njulia> con\ncon : 2 x <= 4.0\n\n\n\n\n\n"
+    "text": "set_standard_form_rhs(con_ref::ConstraintRef, value)\n\nSet the right-hand side term of constraint to value.\n\nNote that prior to this step, JuMP will aggregate all constant terms onto the right-hand side of the constraint. For example, given a constraint 2x + 1 <= 2, set_standard_form_rhs(con, 4) will create the constraint 2x <= 4, not 2x + 1 <= 4.\n\njulia> @constraint(model, con, 2x + 1 <= 2)\ncon : 2 x <= 1.0\n\njulia> set_standard_form_rhs(con, 4)\n\njulia> con\ncon : 2 x <= 4.0\n\n\n\n\n\n"
 },
 
 {
@@ -1093,7 +1093,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.is_valid",
     "category": "function",
-    "text": "is_valid(model::Model, constraint_ref::ConstraintRef{Model})\n\nReturn true if constraint_ref refers to a valid constraint in model.\n\n\n\n\n\nis_valid(model::Model, variable_ref::VariableRef)\n\nReturn true if variable refers to a valid variable in model.\n\n\n\n\n\n"
+    "text": "is_valid(model::Model, con_ref::ConstraintRef{Model})\n\nReturn true if constraint_ref refers to a valid constraint in model.\n\n\n\n\n\nis_valid(model::Model, variable_ref::VariableRef)\n\nReturn true if variable refers to a valid variable in model.\n\n\n\n\n\n"
 },
 
 {
@@ -1101,7 +1101,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.delete",
     "category": "function",
-    "text": "delete(model::Model, constraint_ref::ConstraintRef)\n\nDelete the constraint associated with constraint_ref from the model model.\n\n\n\n\n\ndelete(model::Model, variable_ref::VariableRef)\n\nDelete the variable associated with variable_ref from the model model.\n\n\n\n\n\n"
+    "text": "delete(model::Model, con_ref::ConstraintRef)\n\nDelete the constraint associated with constraint_ref from the model model.\n\n\n\n\n\ndelete(model::Model, variable_ref::VariableRef)\n\nDelete the variable associated with variable_ref from the model model.\n\n\n\n\n\n"
 },
 
 {
@@ -1165,7 +1165,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "JuMP.constraint_object",
     "category": "function",
-    "text": "constraint_object(ref::ConstraintRef)\n\nReturn the underlying constraint data for the constraint referenced by ref.\n\n\n\n\n\n"
+    "text": "constraint_object(con_ref::ConstraintRef)\n\nReturn the underlying constraint data for the constraint referenced by ref.\n\n\n\n\n\n"
 },
 
 {
@@ -1517,7 +1517,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Query Solutions",
     "title": "JuMP.value",
     "category": "function",
-    "text": "value(cref::ConstraintRef)\n\nGet the primal value of this constraint in the result returned by a solver. That is, if cref is the reference of a constraint func-in-set, it returns the value of func evaluated at the value of the variables (given by value(::VariableRef)). Use has_values to check if a result exists before asking for values.\n\nNote\n\nFor scalar contraints, the constant is moved to the set so it is not taken into account in the primal value of the constraint. For instance, the constraint @constraint(model, 2x + 3y + 1 == 5) is transformed into 2x + 3y-in-MOI.EqualTo(4) so the value returned by this function is the evaluation of 2x + 3y. ```\n\n\n\n\n\nvalue(v::VariableRef)\n\nGet the value of this variable in the result returned by a solver. Use has_values to check if a result exists before asking for values.\n\n\n\n\n\nvalue(ex::GenericAffExpr, var_value::Function)\n\nEvaluate ex using var_value(v) as the value for each variable v.\n\n\n\n\n\nvalue(v::GenericAffExpr)\n\nEvaluate an GenericAffExpr given the result returned by a solver. Replaces getvalue for most use cases.\n\n\n\n\n\nvalue(p::NonlinearParameter)\n\nReturn the current value stored in the nonlinear parameter p.\n\nExample\n\nmodel = Model()\n@NLparameter(model, p == 10)\nvalue(p)\n\n# output\n10.0\n\n\n\n\n\nvalue(ex::NonlinearExpression, var_value::Function)\n\nEvaluate ex using var_value(v) as the value for each variable v.\n\n\n\n\n\nvalue(ex::NonlinearExpression)\n\nEvaluate ex using value as the value for each variable v.\n\n\n\n\n\n"
+    "text": "value(con_ref::ConstraintRef)\n\nGet the primal value of this constraint in the result returned by a solver. That is, if con_ref is the reference of a constraint func-in-set, it returns the value of func evaluated at the value of the variables (given by value(::VariableRef)). Use has_values to check if a result exists before asking for values.\n\nNote\n\nFor scalar contraints, the constant is moved to the set so it is not taken into account in the primal value of the constraint. For instance, the constraint @constraint(model, 2x + 3y + 1 == 5) is transformed into 2x + 3y-in-MOI.EqualTo(4) so the value returned by this function is the evaluation of 2x + 3y. ```\n\n\n\n\n\nvalue(v::VariableRef)\n\nGet the value of this variable in the result returned by a solver. Use has_values to check if a result exists before asking for values.\n\n\n\n\n\nvalue(ex::GenericAffExpr, var_value::Function)\n\nEvaluate ex using var_value(v) as the value for each variable v.\n\n\n\n\n\nvalue(v::GenericAffExpr)\n\nEvaluate an GenericAffExpr given the result returned by a solver. Replaces getvalue for most use cases.\n\n\n\n\n\nvalue(p::NonlinearParameter)\n\nReturn the current value stored in the nonlinear parameter p.\n\nExample\n\nmodel = Model()\n@NLparameter(model, p == 10)\nvalue(p)\n\n# output\n10.0\n\n\n\n\n\nvalue(ex::NonlinearExpression, var_value::Function)\n\nEvaluate ex using var_value(v) as the value for each variable v.\n\n\n\n\n\nvalue(ex::NonlinearExpression)\n\nEvaluate ex using value as the value for each variable v.\n\n\n\n\n\n"
 },
 
 {
@@ -1541,7 +1541,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Query Solutions",
     "title": "JuMP.dual",
     "category": "function",
-    "text": "dual(cref::ConstraintRef)\n\nGet the dual value of this constraint in the result returned by a solver. Use has_dual to check if a result exists before asking for values. See also shadow_price.\n\n\n\n\n\n"
+    "text": "dual(con_ref::ConstraintRef)\n\nGet the dual value of this constraint in the result returned by a solver. Use has_dual to check if a result exists before asking for values. See also shadow_price.\n\n\n\n\n\n"
 },
 
 {
@@ -1829,7 +1829,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Style Guide",
     "title": "Naming",
     "category": "section",
-    "text": "module SomeModule end\nfunction some_function end\nconst SOME_CONSTANT = ...\nstruct SomeStruct \n  some_field::SomeType\nend\n@enum SomeEnum ENUM_VALUE_A ENUM_VALUE_B\nsome_local_variable = ...\nsome_file.jl # Except for ModuleName.jl."
+    "text": "module SomeModule end\nfunction some_function end\nconst SOME_CONSTANT = ...\nstruct SomeStruct\n  some_field::SomeType\nend\n@enum SomeEnum ENUM_VALUE_A ENUM_VALUE_B\nsome_local_variable = ...\nsome_file.jl # Except for ModuleName.jl."
 },
 
 {
@@ -1861,7 +1861,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Style Guide",
     "title": "Abbreviations",
     "category": "section",
-    "text": "Abbreviate names to make the code more readable, not to save typing. Don\'t arbitrarily delete letters from a word to abbreviate it (e.g., indx). Use abbreviations consistently within a body of code (e.g., do not mix con and constr, idx and indx).Common abbreviations:num for numberTODO: add more"
+    "text": "Abbreviate names to make the code more readable, not to save typing. Don\'t arbitrarily delete letters from a word to abbreviate it (e.g., indx). Use abbreviations consistently within a body of code (e.g., do not mix con and constr, idx and indx).Common abbreviations:num for number\ncon for constraintTODO: add more"
 },
 
 {
@@ -2093,7 +2093,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Extensions",
     "title": "JuMP.add_constraint",
     "category": "function",
-    "text": "add_constraint(model::Model, c::AbstractConstraint, name::String=\"\")\n\nAdd a constraint c to Model model and sets its name.\n\n\n\n\n\n"
+    "text": "add_constraint(model::Model, con::AbstractConstraint, name::String=\"\")\n\nAdd a constraint con to Model model and sets its name.\n\n\n\n\n\n"
 },
 
 {
