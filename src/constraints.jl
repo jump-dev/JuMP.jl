@@ -347,7 +347,7 @@ reshape_set(set::MOI.AbstractVectorSet, ::VectorShape) = set
 shape(c::VectorConstraint) = c.shape
 function constraint_object(cref::ConstraintRef{Model, _MOICON{FuncType, SetType}}) where
         {FuncType <: MOI.AbstractVectorFunction, SetType <: MOI.AbstractVectorSet}
-    model = ref.model
+    model = cref.model
     f = MOI.get(model, MOI.ConstraintFunction(), cref)::FuncType
     s = MOI.get(model, MOI.ConstraintSet(), cref)::SetType
     return VectorConstraint(jump_function(model, f), s, ref.shape)
