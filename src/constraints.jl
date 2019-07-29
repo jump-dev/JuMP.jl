@@ -472,7 +472,7 @@ end
     standard_form_rhs(con_ref::ConstraintRef)
 
 Return the right-hand side term of the constraint after JuMP has converted it
-its standard form. See also [`set_standard_form_rhs`](@ref).
+into its standard form. See also [`set_standard_form_rhs`](@ref).
 """
 function standard_form_rhs(
     con_ref::ConstraintRef{Model, _MOICON{F, S}}) where {
