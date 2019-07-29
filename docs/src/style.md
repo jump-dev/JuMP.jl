@@ -387,7 +387,7 @@ end)
 module SomeModule end
 function some_function end
 const SOME_CONSTANT = ...
-struct SomeStruct 
+struct SomeStruct
   some_field::SomeType
 end
 @enum SomeEnum ENUM_VALUE_A ENUM_VALUE_B
@@ -463,6 +463,7 @@ Use abbreviations consistently within a body of code (e.g., do not mix
 Common abbreviations:
 
 - `num` for `number`
+- `con` for `constraint`
 
 TODO: add more
 
