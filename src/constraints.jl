@@ -350,7 +350,7 @@ function constraint_object(con_ref::ConstraintRef{Model, _MOICON{FuncType, SetTy
     model = con_ref.model
     f = MOI.get(model, MOI.ConstraintFunction(), con_ref)::FuncType
     s = MOI.get(model, MOI.ConstraintSet(), con_ref)::SetType
-    return VectorConstraint(jump_function(model, f), s, ref.shape)
+    return VectorConstraint(jump_function(model, f), s, con_ref.shape)
 end
 function check_belongs_to_model(con::VectorConstraint, model)
     for func in con.func
