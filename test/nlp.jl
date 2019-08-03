@@ -154,6 +154,13 @@
         @test_macro_throws ErrorException @NLexpression(model, x...)
     end
 
+    @testset "Error on x.f(y) in NL expression" begin
+        model = Model()
+        @variable(model, x[1:2])
+        @test_macro_throws(ErrorException,
+            @NLexpression(model, sum(foo.bar(i) * x[i] for i = 1:2)))
+    end
+
     @testset "Error on sum(x)" begin
         m = Model()
         x = [1,2,3]
