@@ -8,20 +8,18 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 
+using JuMP, GLPK, Test
+const MOI = JuMP.MathOptInterface
+
 """
-      example_factory_schedule()
+    example_factory_schedule()
 
 This is a Julia translation of part 5 from "Introduction to to Linear Programming with Python" 
 available at https://github.com/benalexkeen/Introduction-to-linear-programming
 
 For 2 factories (A, B), minimize the cost of production over the course of 12 months
 while meeting monthly demand. Factory B has a planned outage during month 5.
-
 """
-
-using JuMP, GLPK, Test
-const MOI = JuMP.MathOptInterface
-
 function example_factory_schedule()
 
    d_max_cap = Dict(
