@@ -989,7 +989,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Constraints",
     "title": "Modifying a variable coefficient",
     "category": "section",
-    "text": "To modify the scalar coefficients of a cosntraint (but notably not yet the quadratic coefficients), use set_standard_form_coefficient. To query the current coefficient, use standard_form_coefficient.julia> @constraint(model, con, 2x <= 1)\ncon : 2 x <= 1.0\n\njulia> set_standard_form_coefficient(con, x, 3)\n\njulia> con\ncon : 3 x <= 1.0\n\njulia> standard_form_coefficient(con, x)\n3.0note: Note\nJuMP normalizes constraints into a standard form by moving all terms involving variables onto the left-hand side of the constraint.@constraint(model, 2x <= 1 - x)will be normalized to@constraint(model, 3x <= 1)set_standard_form_coefficient sets the coefficient of the normalized constraint."
+    "text": "To modify the coefficients for a linear term in a constraint (but notably not yet the coefficients on a quadratic term), use set_standard_form_coefficient. To query the current coefficient, use standard_form_coefficient.julia> @constraint(model, con, 2x[1] + x[2] <= 1)\ncon : 2 x[1] + x[2] ≤ 1.0\n\njulia> set_standard_form_coefficient(con, x[2], 0)\n\njulia> con\ncon : 2 x[1] ≤ 1.0\n\njulia> standard_form_coefficient(con, x[2])\n0.0note: Note\nJuMP normalizes constraints into a standard form by moving all terms involving variables onto the left-hand side of the constraint.@constraint(model, 2x <= 1 - x)will be normalized to@constraint(model, 3x <= 1)set_standard_form_coefficient sets the coefficient of the normalized constraint."
 },
 
 {
