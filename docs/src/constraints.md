@@ -605,8 +605,9 @@ The constraint `con` is now equivalent to `2x <= 2`.
 
 ### Modifying a variable coefficient
 
-To modify the scalar coefficients of a cosntraint (but notably *not yet* the
-quadratic coefficients), use [`set_standard_form_coefficient`](@ref). To query
+To modify the coefficients for a linear term in a constraint (but
+notably not yet the coefficients on a quadratic term), use
+[`set_standard_form_coefficient`](@ref). To query
 the current coefficient, use [`standard_form_coefficient`](@ref).
 ```jldoctest; setup = :(model = Model(); @variable(model, x[1:2]))
 julia> @constraint(model, con, 2x[1] + x[2] <= 1)
