@@ -139,7 +139,7 @@ A preprint of this paper is [freely available](http://arxiv.org/abs/1312.1431).
 
 ---
 
-![NumFOCUS logo](assets/numfocus-logo.png)
+![NumFOCUS logo](http://www.juliaopt.org/JuMP.jl/dev/assets/numfocus-logo.png)
 
 JuMP is a Sponsored Project of NumFOCUS, a 501(c)(3) nonprofit charity in the 
 United States. NumFOCUS provides JuMP with fiscal, legal, and administrative 
