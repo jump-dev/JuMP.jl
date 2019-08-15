@@ -67,3 +67,18 @@ function LinearAlgebra.norm(::AbstractVector{<:AbstractJuMPScalar})
           "`@constraint(model, norm(x) <= t)` should now be written as ",
           "`@constraint(model, [t; x] in SecondOrderCone())`")
 end
+
+"""
+    Bin
+
+Binary variable category, used in the `@variable` macro.
+"""
+Bin
+
+"""
+    PSD
+
+Postitive semi-definite variable category, used in the `@variable` macro,
+only valid for square matrix variables.
+"""
+PSD
