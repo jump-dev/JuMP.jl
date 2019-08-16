@@ -12,6 +12,7 @@
 
 using MathOptInterface
 const MOI = MathOptInterface
+const MOIB = MOI.Bridges
 const MOIBC = MOI.Bridges.Constraint
 
 """
@@ -44,7 +45,7 @@ function MOI.supports_constraint(::Type{NonnegativeBridge{T}},
                                  ::Type{Nonnegative}) where T
     return true
 end
-function MOIBC.added_constraint_types(::Type{NonnegativeBridge{T, F}}) where {T, F}
+function MOIB.added_constraint_types(::Type{NonnegativeBridge{T, F}}) where {T, F}
     return [(F, MOI.GreaterThan{T})]
 end
 function MOIBC.concrete_bridge_type(::Type{NonnegativeBridge{T}},
