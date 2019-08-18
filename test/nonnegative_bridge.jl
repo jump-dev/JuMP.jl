@@ -46,8 +46,8 @@ function MOI.supports_constraint(::Type{NonnegativeBridge{T}},
     return true
 end
 
-function MOIB.added_constrained_variable_types(::Type{NonnegativeBridge{T, F}}) where {T, F}
-    return []
+function MOIB.added_constrained_variable_types(::Type{<:NonnegativeBridge})
+    return Tuple{DataType}[]
 end
 function MOIB.added_constraint_types(::Type{NonnegativeBridge{T, F}}) where {T, F}
     return [(F, MOI.GreaterThan{T})]
