@@ -5,4 +5,4 @@ MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 SCS = "c946c3f1-0d1f-5ce8-9dea-7daa1f7e2d13"
 
 [compat]
-MathOptInterface = "~0.8.1"
+MathOptInterface = "~0.9"
