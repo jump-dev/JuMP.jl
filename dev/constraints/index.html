@@ -217,9 +217,9 @@ julia&gt; @constraint(model, x[1] + x[2] &lt;= 1);
 
 julia&gt; list_of_constraint_types(model)
 3-element Array{Tuple{DataType,DataType},1}:
- (VariableRef, MathOptInterface.Integer)
- (VariableRef, MathOptInterface.GreaterThan{Float64})
  (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
+ (VariableRef, MathOptInterface.GreaterThan{Float64})
+ (VariableRef, MathOptInterface.Integer)
 
 julia&gt; num_constraints(model, VariableRef, MOI.Integer)
 2
@@ -350,9 +350,9 @@ julia&gt; @constraint(model, 2x &lt;= 1);
 
 julia&gt; list_of_constraint_types(model)
 3-element Array{Tuple{DataType,DataType},1}:
- (VariableRef, MathOptInterface.ZeroOne)
+ (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
  (VariableRef, MathOptInterface.GreaterThan{Float64})
- (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.all_constraints" href="#JuMP.all_constraints"><code>JuMP.all_constraints</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">all_constraints(model::Model, function_type, set_type)::Vector{&lt;:ConstraintRef}</code></pre><p>Return a list of all constraints currently in the model where the function has type <code>function_type</code> and the set has type <code>set_type</code>. The constraints are ordered by creation time.</p><p>See also <a href="#JuMP.list_of_constraint_types"><code>list_of_constraint_types</code></a> and <a href="#JuMP.num_constraints"><code>num_constraints</code></a>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; model = Model();
+ (VariableRef, MathOptInterface.ZeroOne)</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.all_constraints" href="#JuMP.all_constraints"><code>JuMP.all_constraints</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">all_constraints(model::Model, function_type, set_type)::Vector{&lt;:ConstraintRef}</code></pre><p>Return a list of all constraints currently in the model where the function has type <code>function_type</code> and the set has type <code>set_type</code>. The constraints are ordered by creation time.</p><p>See also <a href="#JuMP.list_of_constraint_types"><code>list_of_constraint_types</code></a> and <a href="#JuMP.num_constraints"><code>num_constraints</code></a>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; model = Model();
 
 julia&gt; @variable(model, x &gt;= 0, Bin);
 
