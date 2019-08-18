@@ -524,7 +524,7 @@ end
 function _moi_optimizer_index(model::MOI.Bridges.LazyBridgeOptimizer,
                               index::MOI.Index)
     if index isa MOI.ConstraintIndex &&
-        MOI.Bridges.is_bridged(model, typeof(index))
+        MOI.Bridges.is_bridged(model, index)
         error("There is no `optimizer_index` for $(typeof(index)) constraints",
               " because they are bridged.")
     else

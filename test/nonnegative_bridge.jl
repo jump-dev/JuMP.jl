@@ -36,7 +36,7 @@ function MOIBC.bridge_constraint(::Type{NonnegativeBridge{T, F}},
                                  model,
                                  f::F,
                                  s::Nonnegative) where {T, F}
-    ci = MOIU.add_scalar_constraint(model, f, MOI.GreaterThan(zero(T)))
+    ci = MOIU.normalize_and_add_constraint(model, f, MOI.GreaterThan(zero(T)))
     return NonnegativeBridge{T, F}(ci)
 end
 
@@ -45,6 +45,10 @@ function MOI.supports_constraint(::Type{NonnegativeBridge{T}},
                                  ::Type{Nonnegative}) where T
     return true
 end
+
+function MOIB.added_constrained_variable_types(::Type{NonnegativeBridge{T, F}}) where {T, F}
+    return []
+end
 function MOIB.added_constraint_types(::Type{NonnegativeBridge{T, F}}) where {T, F}
     return [(F, MOI.GreaterThan{T})]
 end
@@ -52,7 +56,7 @@ function MOIBC.concrete_bridge_type(::Type{NonnegativeBridge{T}},
                                     F::Type{<:MOI.AbstractScalarFunction},
                                     ::Type{Nonnegative}) where T
     # In the constructor, the function `f` of type `F` is passed to
-    # `MOIU.add_scalar_constraint` which removes the constrant from `f` but
+    # `MOIU.normalize_and_add_constraint` which removes the constrant from `f` but
     # does not change its type so the type of the function in `MOI.GreaterThan`
     # will also be `F`.
     return NonnegativeBridge{T, F}
