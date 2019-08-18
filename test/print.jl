@@ -385,23 +385,6 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(REPLMode, model_1, """
     Max a - b + 2 a1 - 10 x
     Subject to
-     x binary
-     u[1] binary
-     u[2] binary
-     u[3] binary
-     a1 integer
-     b1 integer
-     c1 integer
-     z integer
-     fi $eq 9.0
-     a $ge 1.0
-     c $ge -1.0
-     a1 $ge 1.0
-     c1 $ge -1.0
-     b $le 1.0
-     c $le 1.0
-     b1 $le 1.0
-     c1 $le 1.0
      a + b - 10 c - 2 x + c1 $le 1.0
      a*b $le 2.0
      [a  b;
@@ -411,6 +394,23 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
       c  x] $inset PSDCone()
      [a, b, c, x] $inset MathOptInterface.PositiveSemidefiniteConeSquare(2)
      [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
+     fi $eq 9.0
+     a $ge 1.0
+     c $ge -1.0
+     a1 $ge 1.0
+     c1 $ge -1.0
+     b $le 1.0
+     c $le 1.0
+     b1 $le 1.0
+     c1 $le 1.0
+     a1 integer
+     b1 integer
+     c1 integer
+     z integer
+     x binary
+     u[1] binary
+     u[2] binary
+     u[3] binary
     """, repl=:print)
 
         io_test(REPLMode, model_1, """
@@ -418,16 +418,16 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     Maximization problem with:
     Variables: 13
     Objective function type: GenericAffExpr{Float64,$VariableType}
-    `$VariableType`-in-`MathOptInterface.ZeroOne`: 4 constraints
-    `$VariableType`-in-`MathOptInterface.Integer`: 4 constraints
-    `$VariableType`-in-`MathOptInterface.EqualTo{Float64}`: 1 constraint
-    `$VariableType`-in-`MathOptInterface.GreaterThan{Float64}`: 4 constraints
-    `$VariableType`-in-`MathOptInterface.LessThan{Float64}`: 4 constraints
     `GenericAffExpr{Float64,$VariableType}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
     `GenericQuadExpr{Float64,$VariableType}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
     `Array{$VariableType,1}`-in-`MathOptInterface.PositiveSemidefiniteConeTriangle`: 2 constraints
     `Array{$VariableType,1}`-in-`MathOptInterface.PositiveSemidefiniteConeSquare`: 2 constraints
     `Array{GenericAffExpr{Float64,$VariableType},1}`-in-`MathOptInterface.SecondOrderCone`: 1 constraint
+    `$VariableType`-in-`MathOptInterface.EqualTo{Float64}`: 1 constraint
+    `$VariableType`-in-`MathOptInterface.GreaterThan{Float64}`: 4 constraints
+    `$VariableType`-in-`MathOptInterface.LessThan{Float64}`: 4 constraints
+    `$VariableType`-in-`MathOptInterface.Integer`: 4 constraints
+    `$VariableType`-in-`MathOptInterface.ZeroOne`: 4 constraints
     Model mode: AUTOMATIC
     CachingOptimizer state: NO_OPTIMIZER
     Solver name: No optimizer attached.
@@ -435,24 +435,7 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
 
         io_test(IJuliaMode, model_1, """
     \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
-    \\text{Subject to} \\quad & x binary\\\\
-     & u_{1} binary\\\\
-     & u_{2} binary\\\\
-     & u_{3} binary\\\\
-     & a1 integer\\\\
-     & b1 integer\\\\
-     & c1 integer\\\\
-     & z integer\\\\
-     & fi = 9.0\\\\
-     & a \\geq 1.0\\\\
-     & c \\geq -1.0\\\\
-     & a1 \\geq 1.0\\\\
-     & c1 \\geq -1.0\\\\
-     & b \\leq 1.0\\\\
-     & c \\leq 1.0\\\\
-     & b1 \\leq 1.0\\\\
-     & c1 \\leq 1.0\\\\
-     & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\
+    \\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\
      & a\\times b \\leq 2.0\\\\
      & \\begin{bmatrix}
     a & b\\\\
@@ -465,6 +448,23 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     \\end{bmatrix} \\in PSDCone()\\\\
      & [a, b, c, x] \\in MathOptInterface.PositiveSemidefiniteConeSquare(2)\\\\
      & [-a + 1, u_{1}, u_{2}, u_{3}] \\in MathOptInterface.SecondOrderCone(4)\\\\
+     & fi = 9.0\\\\
+     & a \\geq 1.0\\\\
+     & c \\geq -1.0\\\\
+     & a1 \\geq 1.0\\\\
+     & c1 \\geq -1.0\\\\
+     & b \\leq 1.0\\\\
+     & c \\leq 1.0\\\\
+     & b1 \\leq 1.0\\\\
+     & c1 \\leq 1.0\\\\
+     & a1 integer\\\\
+     & b1 integer\\\\
+     & c1 integer\\\\
+     & z integer\\\\
+     & x binary\\\\
+     & u_{1} binary\\\\
+     & u_{2} binary\\\\
+     & u_{3} binary\\\\
     \\end{alignat*}
     """)
 
@@ -479,9 +479,9 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     A JuMP Model
     Feasibility problem with:
     Variables: 2
-    `$VariableType`-in-`MathOptInterface.ZeroOne`: 1 constraint
-    `$VariableType`-in-`MathOptInterface.Integer`: 1 constraint
     `GenericQuadExpr{Float64,$VariableType}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+    `$VariableType`-in-`MathOptInterface.Integer`: 1 constraint
+    `$VariableType`-in-`MathOptInterface.ZeroOne`: 1 constraint
     Model mode: AUTOMATIC
     CachingOptimizer state: NO_OPTIMIZER
     Solver name: No optimizer attached.

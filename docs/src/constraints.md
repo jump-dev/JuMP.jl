@@ -141,7 +141,7 @@ DocTestSetup = quote
     model = Model(
         with_optimizer(
             MOI.Utilities.MockOptimizer,
-            JuMP._MOIModel{Float64}(),
+            MOIU.Model{Float64}(),
             eval_objective_value = false,
             eval_variable_constraint_dual = false));
     @variable(model, x);
@@ -672,9 +672,9 @@ julia> @constraint(model, x[1] + x[2] <= 1);
 
 julia> list_of_constraint_types(model)
 3-element Array{Tuple{DataType,DataType},1}:
- (VariableRef, MathOptInterface.Integer)
- (VariableRef, MathOptInterface.GreaterThan{Float64})
  (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
+ (VariableRef, MathOptInterface.GreaterThan{Float64})
+ (VariableRef, MathOptInterface.Integer)
 
 julia> num_constraints(model, VariableRef, MOI.Integer)
 2
