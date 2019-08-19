@@ -318,6 +318,13 @@ function Base.convert(::Type{GenericQuadExpr{C, V}}, v::Union{Real,AbstractVaria
     return GenericQuadExpr(convert(GenericAffExpr{C, V}, v))
 end
 GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})
+# Used in `JuMP._mul!`.
+function Base.convert(::Type{T}, quad::GenericQuadExpr{T}) where T
+    if !isempty(quad.terms)
+        throw(InexactError(:convert, T, quad))
+    end
+    return convert(T, quad.aff)
+end
 
 function check_belongs_to_model(q::GenericQuadExpr, model::AbstractModel)
     check_belongs_to_model(q.aff, model)

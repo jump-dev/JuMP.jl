@@ -37,6 +37,13 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
     end
 
     if isexpr(x, :call)
+        if isexpr(x.args[1], :.)
+            # Functions like foo.bar cannot possibly be registered, because you
+            # can register only with a symbol name.
+            errorstring = "Unexpected function $(x.args[1]). See the " *
+            "documentation on how to register a function."
+            return :(error($errorstring))
+        end
         if _is_sum(x.args[1]) || _is_prod(x.args[1])
             opname = x.args[1]
             errorstring = "$opname() can appear in nonlinear expressions " *
@@ -167,7 +174,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
 
 end
 
-function _parse_NL_expr_runtime(m::Model, x::Number, tape, parent, values)
+function _parse_NL_expr_runtime(m::Model, x::Real, tape, parent, values)
     push!(values, x)
     push!(tape, NodeData(VALUE, length(values), parent))
     nothing

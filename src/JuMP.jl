@@ -16,6 +16,7 @@ using SparseArrays
 import MathOptInterface
 const MOI = MathOptInterface
 const MOIU = MOI.Utilities
+const MOIBC = MOI.Bridges.Constraint
 
 import Calculus
 import DataStructures.OrderedDict
@@ -49,21 +50,6 @@ const _MOIFIX = _MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
 const _MOIINT = _MOICON{MOI.SingleVariable,MOI.Integer}
 const _MOIBIN = _MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
-MOIU.@model(_MOIModel,
-            (MOI.ZeroOne, MOI.Integer),
-            (MOI.EqualTo, MOI.GreaterThan, MOI.LessThan, MOI.Interval),
-            (MOI.Zeros, MOI.Nonnegatives, MOI.Nonpositives, MOI.SecondOrderCone,
-             MOI.RotatedSecondOrderCone, MOI.GeometricMeanCone,
-             MOI.PositiveSemidefiniteConeTriangle,
-             MOI.PositiveSemidefiniteConeSquare,
-             MOI.RootDetConeTriangle, MOI.RootDetConeSquare,
-             MOI.LogDetConeTriangle, MOI.LogDetConeSquare),
-            (),
-            (MOI.SingleVariable,),
-            (MOI.ScalarAffineFunction, MOI.ScalarQuadraticFunction),
-            (MOI.VectorOfVariables,),
-            (MOI.VectorAffineFunction, MOI.VectorQuadraticFunction))
-
 """
     OptimizerFactory
 
@@ -74,9 +60,9 @@ optimizer factory `optimizer_factory` with `optimizer_factory()`.
 ## Examples
 
 The following construct an optimizer factory and then use it to create two
-independent `IpoptOptimizer`s:
+independent `Ipopt.Optimizer`s:
 ```julia
-optimizer_factory = with_optimizer(IpoptOptimizer, print_level=0)
+optimizer_factory = with_optimizer(Ipopt.Optimizer, print_level=0)
 optimizer1 = optimizer_factory()
 optimizer2 = optimizer_factory()
 ```
@@ -99,10 +85,10 @@ Return an `OptimizerFactory` that creates optimizers using the constructor
 
 ## Examples
 
-The following returns an optimizer factory that creates `IpoptOptimizer`s using
-the constructor call `IpoptOptimizer(print_level=0)`:
+The following returns an optimizer factory that creates `Ipopt.Optimizer`s using
+the constructor call `Ipopt.Optimizer(print_level=0)`:
 ```julia
-with_optimizer(IpoptOptimizer, print_level=0)
+with_optimizer(Ipopt.Optimizer, print_level=0)
 ```
 """
 function with_optimizer(constructor,
@@ -192,7 +178,7 @@ function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
               "later. See the JuMP documentation " *
               "(http://www.juliaopt.org/JuMP.jl/latest/) for latest syntax.")
     end
-    universal_fallback = MOIU.UniversalFallback(_MOIModel{Float64}())
+    universal_fallback = MOIU.UniversalFallback(MOIU.Model{Float64}())
     caching_opt = MOIU.CachingOptimizer(universal_fallback,
                                         caching_mode)
     return direct_model(caching_opt)
@@ -210,7 +196,7 @@ create the optimizer. The optimizer factory can be created by the
 ## Examples
 
 The following creates a model using the optimizer
-`IpoptOptimizer(print_level=0)`:
+`Ipopt.Optimizer(print_level=0)`:
 ```julia
 model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
 ```
@@ -350,36 +336,36 @@ function bridge_constraints(model::Model)
 end
 
 function _moi_add_bridge(model::Nothing,
-                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+                        BridgeType::Type{<:MOIBC.AbstractBridge})
     # No optimizer is attached, the bridge will be added when one is attached
     return
 end
 function _moi_add_bridge(model::MOI.ModelLike,
-                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+                        BridgeType::Type{<:MOIBC.AbstractBridge})
     error("Cannot add bridge if `bridge_constraints` was set to `false` in the",
           " `Model` constructor.")
 end
 function _moi_add_bridge(bridge_opt::MOI.Bridges.LazyBridgeOptimizer,
-                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+                        BridgeType::Type{<:MOIBC.AbstractBridge})
     MOI.Bridges.add_bridge(bridge_opt, BridgeType{Float64})
     return
 end
 function _moi_add_bridge(caching_opt::MOIU.CachingOptimizer,
-                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+                        BridgeType::Type{<:MOIBC.AbstractBridge})
     _moi_add_bridge(caching_opt.optimizer, BridgeType)
     return
 end
 
 """
      add_bridge(model::Model,
-                BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+                BridgeType::Type{<:MOIBC.AbstractBridge})
 
 Add `BridgeType` to the list of bridges that can be used to transform
 unsupported constraints into an equivalent formulation using only constraints
 supported by the optimizer.
 """
 function add_bridge(model::Model,
-                    BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+                    BridgeType::Type{<:MOIBC.AbstractBridge})
     push!(model.bridge_types, BridgeType)
     # The type of `backend(model)` is not type-stable, so we use a function
     # barrier (`_moi_add_bridge`) to improve performance.
@@ -547,7 +533,7 @@ end
 function _moi_optimizer_index(model::MOI.Bridges.LazyBridgeOptimizer,
                               index::MOI.Index)
     if index isa MOI.ConstraintIndex &&
-        MOI.Bridges.is_bridged(model, typeof(index))
+        MOI.Bridges.is_bridged(model, index)
         error("There is no `optimizer_index` for $(typeof(index)) constraints",
               " because they are bridged.")
     else

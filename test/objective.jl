@@ -108,8 +108,38 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
     end
 end
 
+function objective_coeff_update_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
+    @testset "Linear objective changes" begin
+        m = ModelType()
+        @variable(m, x)
+
+        @objective(m, Max, x)
+        set_objective_coefficient(m, x, 4.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x)
+
+        @variable(m, y)
+        @objective(m, Max, x + y)
+        set_objective_coefficient(m, x, 4.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x + y)
+
+        @objective(m, Min, x)
+        set_objective_coefficient(m, y, 2.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), x + 2.0 * y)
+    end
+
+    @testset "Quadratic objective changes" begin
+        m = ModelType()
+        @variable(m, x)
+
+        @objective(m, Max, x^2 + x)
+        set_objective_coefficient(m, x, 4.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), x^2 + 4x)
+    end
+end
+
 @testset "Objectives for JuMP.Model" begin
     objectives_test(Model, VariableRef)
+    objective_coeff_update_test(Model, VariableRef)
 end
 
 @testset "Objectives for JuMPExtension.MyModel" begin

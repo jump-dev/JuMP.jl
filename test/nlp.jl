@@ -154,6 +154,13 @@
         @test_macro_throws ErrorException @NLexpression(model, x...)
     end
 
+    @testset "Error on x.f(y) in NL expression" begin
+        model = Model()
+        @variable(model, x[1:2])
+        @test_macro_throws(ErrorException,
+            @NLexpression(model, sum(foo.bar(i) * x[i] for i = 1:2)))
+    end
+
     @testset "Error on sum(x)" begin
         m = Model()
         x = [1,2,3]
@@ -619,7 +626,7 @@
         evaluator = JuMP.NLPEvaluator(model)
         @test !(:Hess in MOI.features_available(evaluator))
     end
-    
+
     @testset "Error on using AffExpr in NLexpression" begin
         model = Model()
         @variable(model, x)
@@ -632,7 +639,7 @@
         )
         @test_throws expected_exception @NLexpression(model, A)
     end
-    
+
     @testset "Error on using QuadExpr in NLexpression" begin
         model = Model()
         @variable(model, x)
@@ -644,5 +651,14 @@
             "nonlinear expressions cannot be mixed."
         )
         @test_throws expected_exception @NLexpression(model, A)
+    end
+    @testset "Error on complex values" begin
+        model = Model()
+        @variable(model, x)
+        c = sqrt(Complex(-1))
+        expected_exception = ErrorException(
+            "Unexpected object $c (of type $(typeof(c)) in nonlinear expression."
+        )
+        @test_throws expected_exception @NLobjective(model, Min, c * x)
     end
 end

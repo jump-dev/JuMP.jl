@@ -3,6 +3,9 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# TODO remove once we require MOI v0.9.1, see https://github.com/JuliaOpt/MathOptInterface.jl/issues/844
+MOIU.map_indices(::Function, block::MOI.NLPBlockData) = block
+MOIU.substitute_variables(::Function, block::MOI.NLPBlockData) = block
 
 mutable struct _NonlinearExprData
     nd::Vector{NodeData}
@@ -749,7 +752,7 @@ function MOI.eval_hessian_lagrangian(
     return
 end
 
-function _hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) where CHUNK
+function _hessian_slice_inner(d, ex, input_ϵ, output_ϵ, ::Type{Val{CHUNK}}) where CHUNK
 
     subexpr_forward_values_ϵ = _reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},d.subexpression_forward_values_ϵ)
     subexpr_reverse_values_ϵ = _reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64},d.subexpression_reverse_values_ϵ)
@@ -822,7 +825,7 @@ function _hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type
             @inbounds output_ϵ[idx] = zero_ϵ
         end
 
-        _hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, Val{CHUNK})
+        _hessian_slice_inner(d, ex, input_ϵ, output_ϵ, Val{CHUNK})
 
         # collect directional derivatives
         for r in 1:length(local_to_global_idx)
@@ -851,7 +854,7 @@ function _hessian_slice(d, ex, x, H, scale, nzcount, recovery_tmp_storage,::Type
             @inbounds output_ϵ[idx] = zero_ϵ
         end
 
-        _hessian_slice_inner(d, ex, R, input_ϵ, output_ϵ, Val{CHUNK})
+        _hessian_slice_inner(d, ex, input_ϵ, output_ϵ, Val{CHUNK})
 
         # collect directional derivatives
         for r in 1:length(local_to_global_idx)

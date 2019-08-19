@@ -357,14 +357,14 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
     end
 
     @testset "[macros] sum(generator)" begin
-        m = ModelType()
-        @variable(m, x[1:3,1:3])
-        @variable(m, y)
+        model = ModelType()
+        @variable(model, x[1:3,1:3])
+        @variable(model, y)
         C = [1 2 3; 4 5 6; 7 8 9]
 
         @test_expression sum( C[i,j]*x[i,j] for i in 1:2, j = 2:3 )
         @test_expression sum( C[i,j]*x[i,j] for i = 1:3, j in 1:3 if i != j) - y
-        @test JuMP.isequal_canonical(@expression(m, sum( C[i,j]*x[i,j] for i = 1:3, j = 1:i)),
+        @test JuMP.isequal_canonical(@expression(model, sum( C[i,j]*x[i,j] for i = 1:3, j = 1:i)),
                                                     sum( C[i,j]*x[i,j] for i = 1:3 for j = 1:i))
         @test_expression sum( C[i,j]*x[i,j] for i = 1:3 for j = 1:i)
         @test_expression sum( C[i,j]*x[i,j] for i = 1:3 if true for j = 1:i)
@@ -501,7 +501,7 @@ function test_shadow_price(model_string, constraint_dual, constraint_shadow)
     model = JuMP.Model()
     MOIU.loadfromstring!(JuMP.backend(model), model_string)
     JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer,
-                                         JuMP._MOIModel{Float64}(),
+                                         MOIU.Model{Float64}(),
                                          eval_objective_value=false,
                                          eval_variable_constraint_dual=false))
     mock_optimizer = JuMP.backend(model).optimizer.model

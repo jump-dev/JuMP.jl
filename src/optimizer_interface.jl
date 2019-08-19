@@ -46,7 +46,7 @@ function set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
                 error("Bridges in `MANUAL` mode with an optimizer not ",
                       "supporting `default_copy_to` is not supported yet")
             end
-            universal_fallback = MOIU.UniversalFallback(_MOIModel{Float64}())
+            universal_fallback = MOIU.UniversalFallback(MOIU.Model{Float64}())
             optimizer = MOIU.CachingOptimizer(universal_fallback, optimizer)
         end
         optimizer = MOI.Bridges.full_bridge_optimizer(optimizer, Float64)
@@ -70,13 +70,18 @@ end
 """
     optimize!(model::Model,
               optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
-              ignore_optimize_hook=(model.optimize_hook === nothing))
+              bridge_constraints::Bool=true,
+              ignore_optimize_hook=(model.optimize_hook === nothing),
+              kwargs...)
 
 Optimize the model. If `optimizer_factory` is not `nothing`, it first sets the
 optimizer to a new one created using the optimizer factory. The factory can be
 created using the [`with_optimizer`](@ref) function. If `optimizer_factory` is
 `nothing` and no optimizer was set to `model` before calling this function, a
 [`NoOptimizer`](@ref) error is thrown.
+
+Keyword arguments `kwargs` are passed to the `optimize_hook`. An error is
+thrown if `optimize_hook` is `nothing` and keyword arguments are provided.
 
 ## Examples
 
@@ -99,7 +104,8 @@ optimize!(model, with_optimizer(GLPK.Optimizer))
 function optimize!(model::Model,
                    optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
                    bridge_constraints::Bool=true,
-                   ignore_optimize_hook=(model.optimize_hook === nothing))
+                   ignore_optimize_hook=(model.optimize_hook === nothing),
+                   kwargs...)
     # The nlp_data is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
     if model.nlp_data !== nothing
@@ -122,14 +128,28 @@ function optimize!(model::Model,
     # If the user or an extension has provided an optimize hook, call
     # that instead of solving the model ourselves
     if !ignore_optimize_hook
-        return model.optimize_hook(model)
+        return model.optimize_hook(model; kwargs...)
     end
+
+    isempty(kwargs) || error("Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))")
 
     if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
         throw(NoOptimizer())
     end
 
-    MOI.optimize!(backend(model))
+    try
+        MOI.optimize!(backend(model))
+    catch err
+        # TODO: This error also be thrown also in MOI.set() if the solver is
+        # attached. Currently we catch only the more common case. More generally
+        # JuMP is missing a translation layer from MOI errors to JuMP errors.
+        if err isa MOI.UnsupportedAttribute{MOI.NLPBlock}
+            error("The solver does not support nonlinear problems " *
+                  "(i.e., NLobjective and NLconstraint).")
+        else
+            rethrow(err)
+        end
+    end
 
     return
 end

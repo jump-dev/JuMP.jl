@@ -140,17 +140,10 @@ as it is convertible to a quadratic function, it can be queried as a quadratic
 function and the result is quadratic.
 
 However, it is not convertible to a variable.
-```jldoctest objective_function; filter = r"Stacktrace:.*"s
+```jldoctest objective_function; filter = r"MathOptInterface\\."s
 julia> objective_function(model, VariableRef)
-ERROR: InexactError: convert(MathOptInterface.SingleVariable, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[ScalarAffineTerm{Float64}(2.0, VariableIndex(1))], 1.0))
-Stacktrace:
- [1] convert at /home/blegat/.julia/dev/MathOptInterface/src/functions.jl:398 [inlined]
- [2] get(::JuMP.JuMPMOIModel{Float64}, ::MathOptInterface.ObjectiveFunction{MathOptInterface.SingleVariable}) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/model.jl:290
- [3] get at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/universalfallback.jl:114 [inlined]
- [4] get at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/cachingoptimizer.jl:439 [inlined]
- [5] get(::MathOptInterface.Bridges.LazyBridgeOptimizer{MathOptInterface.Utilities.CachingOptimizer{MathOptInterface.AbstractOptimizer,MathOptInterface.Utilities.UniversalFallback{JuMP.JuMPMOIModel{Float64}}},MathOptInterface.Bridges.AllBridgedConstraints{Float64}}, ::MathOptInterface.ObjectiveFunction{MathOptInterface.SingleVariable}) at /home/blegat/.julia/dev/MathOptInterface/src/Bridges/bridgeoptimizer.jl:172
- [6] objective_function(::Model, ::Type{VariableRef}) at /home/blegat/.julia/dev/JuMP/src/objective.jl:129
- [7] top-level scope at none:0
+ERROR: InexactError: convert(MathOptInterface.SingleVariable, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[MathOptInterface.ScalarAffineTerm{Float64}(2.0, MathOptInterface.VariableIndex(1))], 1.0))
+[...]
 ```
 """
 function objective_function(model::Model,
@@ -159,4 +152,37 @@ function objective_function(model::Model,
     func = MOI.get(backend(model),
                    MOI.ObjectiveFunction{MOIFunType}())::MOIFunType
     return jump_function(model, func)
+end
+
+"""
+    set_objective_coefficient(model::Model, variable::VariableRef, coefficient::Real)
+
+Set the linear objective coefficient associated with `Variable` to `coefficient`.
+
+Note: this function will throw an error if a nonlinear objective is set.
+"""
+function set_objective_coefficient(model::Model, variable::VariableRef, coeff::Real)
+    if model.nlp_data !== nothing && _nlp_objective_function(model) !== nothing
+        error("A nonlinear objective is already set in the model")
+    end
+
+    obj_fct_type = objective_function_type(model)
+    if obj_fct_type == VariableRef
+        # Promote the objective function to be an affine expression.
+        current_obj = objective_function(model)
+        if index(current_obj) == index(variable)
+            set_objective_function(model, coeff * variable)
+        else
+            set_objective_function(model, add_to_expression!(coeff * variable, current_obj))
+        end
+    elseif obj_fct_type == AffExpr || obj_fct_type == QuadExpr
+        MOI.modify(backend(model),
+            MOI.ObjectiveFunction{moi_function_type(obj_fct_type)}(),
+            MOI.ScalarCoefficientChange(index(variable), coeff)
+        )
+    else
+        error("Objective function type not supported: $(obj_fct_type)")
+    end
+
+    return
 end

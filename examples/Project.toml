@@ -1,4 +1,8 @@
 [deps]
 GLPK = "60bf3e95-4087-53dc-ae20-288a0d20c6a6"
 Ipopt = "b6b21f68-93f8-5de0-b562-5493be1d77c9"
+MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 SCS = "c946c3f1-0d1f-5ce8-9dea-7daa1f7e2d13"
+
+[compat]
+MathOptInterface = "~0.9"
