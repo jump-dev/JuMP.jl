@@ -371,8 +371,18 @@ function test_model()
         model = Model(with_optimizer(MOIU.MockOptimizer, mock))
         @test JuMP.set_silent(model)
         @test MOI.get(backend(model), MOI.Silent())
+        @test MOI.get(model, MOI.Silent())
         @test !JuMP.unset_silent(model)
         @test !MOI.get(backend(model), MOI.Silent())
+        @test !MOI.get(model, MOI.Silent())
+    end
+
+    @testset "set_parameter" begin
+        mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+        model = Model(with_optimizer(MOIU.MockOptimizer, mock))
+        @test JuMP.set_parameter(model, "aaa", "bbb") == "bbb"
+        @test MOI.get(backend(model), MOI.RawParameter("aaa")) == "bbb"
+        @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
     end
 end
 
