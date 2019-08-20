@@ -52,6 +52,9 @@ This function will return a `MOI.TerminationStatusCode` `enum`.
 MOI.TerminationStatusCode
 ```
 
+Additionally, we can receive a solver specific string explaning why the
+optimization stopped with [`raw_status`](@ref).
+
 ## Solution statuses
 
 These statuses indicate what kind of result is available to be queried
@@ -213,6 +216,7 @@ lp_rhs_perturbation_range
 
 ```@docs
 JuMP.termination_status
+JuMP.raw_status
 JuMP.primal_status
 JuMP.has_values
 JuMP.value

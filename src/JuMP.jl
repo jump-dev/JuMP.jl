@@ -403,6 +403,16 @@ function termination_status(model::Model)
 end
 
 """
+    raw_status(model::Model)
+
+Return the reason why the solver stopped in its own words (i.e., the
+MathOptInterface model attribute `RawStatusString`).
+"""
+function raw_status(model::Model)
+    return MOI.get(model, MOI.RawStatusString())
+end
+
+"""
     primal_status(model::Model)
 
 Return the status of the most recent primal solution of the solver (i.e., the
