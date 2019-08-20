@@ -8,6 +8,7 @@ os:
 julia:
     - 1.0
     - 1.1
+    - 1.2
 # This is left as an example for the next big version switch.
 # matrix:
 #     allow_failures:
