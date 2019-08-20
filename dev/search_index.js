@@ -1389,7 +1389,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Solvers",
     "title": "JuMP.set_silent",
     "category": "function",
-    "text": "set_silent(model::Model)\n\nTakes precedence over any other attribute controlling verbosity  and requires the solver to produce no output.\n\n\n\n\n\n"
+    "text": "set_silent(model::Model)\n\nTakes precedence over any other attribute controlling verbosity and requires the solver to produce no output.\n\n\n\n\n\n"
 },
 
 {
