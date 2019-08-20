@@ -1401,11 +1401,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "solvers/#JuMP.set_parameter",
+    "page": "Solvers",
+    "title": "JuMP.set_parameter",
+    "category": "function",
+    "text": "set_parameter(model::Model, name, value)\n\nSets solver-specific parameter identified by name to value.\n\n\n\n\n\n"
+},
+
+{
     "location": "solvers/#Solver-attributes-1",
     "page": "Solvers",
     "title": "Solver attributes",
     "category": "section",
-    "text": "Some solver attributes can be queried and set through JuMP models.solver_name\n\nbridge_constraints\n\nset_silent\nunset_silent"
+    "text": "Some solver attributes can be queried and set through JuMP models.solver_name\n\nbridge_constraints\n\nset_silent\nunset_silent\n\nset_parameter"
 },
 
 {
