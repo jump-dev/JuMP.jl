@@ -3,7 +3,7 @@ CurrentModule = JuMP
 DocTestSetup = quote
     using JuMP
 end
-DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in "]
+DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
 # Constraints
@@ -603,6 +603,22 @@ The constraint `con` is now equivalent to `2x <= 2`.
     `const_term * x` is bilinear. Fixed variables are not replaced with
     constants when communicating the problem to a solver.
 
+Another option is to use [`add_to_function_constant`](@ref). The constant given
+is added to the function of a `func`-in-`set` constraint. As the constant is
+*added* and not *set*, the user should not worry about whether the constant is
+stored in the set or the function in the normalized form. Moreover, this
+function also works for interval constraints.
+
+```jldoctest con_fix; setup = :(model = Model(); @variable(model, x))
+julia> @constraint(model, con, 0 <= 2x + 1 <= 2)
+con : 2 x ∈ [-1.0, 1.0]
+
+julia> add_to_function_constant(con, 3)
+
+julia> con
+con : 2 x ∈ [-4.0, -2.0]
+```
+
 ### Modifying a variable coefficient
 
 To modify the coefficients for a linear term in a constraint (but
@@ -723,6 +739,7 @@ normalized_coefficient
 set_normalized_coefficient
 normalized_rhs
 set_normalized_rhs
+add_to_function_constant
 is_valid
 JuMP.delete
 LowerBoundRef

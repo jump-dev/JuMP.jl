@@ -488,7 +488,7 @@ function moi_add_to_function_constant(
     value)
     set = MOI.get(model, MOI.ConstraintSet(), ci)
     new_set = MOIU.shift_constant(set, -value)
-    MOI.set(model, MOI.ConstraintSet(), new_set)
+    MOI.set(model, MOI.ConstraintSet(), ci, new_set)
 end
 function moi_add_to_function_constant(
     model::MOI.ModelLike,
@@ -497,7 +497,7 @@ function moi_add_to_function_constant(
                             <:MOI.AbstractVectorSet},
     value)
     func = MOI.get(model, MOI.ConstraintFunction(), ci)
-    new_constant = value + func.constant
+    new_constant = value + MOI.constant(func)
     MOI.modify(model, ci, MOI.VectorConstantChange(new_constant))
 end
 
@@ -511,15 +511,30 @@ right-hand side of the constraint so instead of modifying the function, the set
 will be translated by `-value`. For example, given a constraint `2x <=
 3`, `add_to_function_constant(c, 4)` will modify it to `2x <= -1`.
 
-```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x)), filter=r"≤|<="
-julia> @constraint(model, con, 2x + 1 <= 2)
-con : 2 x <= 1.0
+## Examples
 
-julia> set_normalized_rhs(con, 4)
+For scalar constraints, the set is translated by `-value`:
+```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x)), filter=r"≤|<="
+julia> @constraint(model, con, 0 <= 2x - 1 <= 2)
+con : 2 x ∈ [1.0, 3.0]
+
+julia> add_to_function_constant(con, 4)
 
 julia> con
-con : 2 x <= 4.0
+con : 2 x ∈ [-3.0, -1.0]
 ```
+
+For vector constraints, the constant is added to the function:
+```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x); @variable(model, y)), filter=r"≤|<="
+julia> @constraint(model, con, [x + y, x, y] in SecondOrderCone())
+con : [x + y, x, y] in MOI.SecondOrderCone(3)
+
+julia> add_to_function_constant(con, [1, 2, 2])
+
+julia> con
+con : [x + y + 1, x + 2, y + 2] in MOI.SecondOrderCone(3)
+```
+
 """
 function add_to_function_constant(constraint::ConstraintRef{Model}, value)
     # The type of `backend(model)` is not type-stable, so we use a function

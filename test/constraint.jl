@@ -495,6 +495,32 @@ end
         con_ref = @constraint(model, 0 <= 2 * x <= 1)
         @test_throws MethodError JuMP.set_normalized_rhs(con_ref, 3)
     end
+
+    @testset "Add to function constant" begin
+        model = JuMP.Model()
+        x = @variable(model)
+        @testset "Scalar" begin
+            con_ref = @constraint(model, 2 <= 2 * x <= 3)
+            con = constraint_object(con_ref)
+            @test JuMP.isequal_canonical(JuMP.jump_function(con), 2x)
+            @test JuMP.moi_set(con) == MOI.Interval(2.0, 3.0)
+            JuMP.add_to_function_constant(con_ref, 1.0)
+            con = constraint_object(con_ref)
+            @test JuMP.isequal_canonical(JuMP.jump_function(con), 2x)
+            @test JuMP.moi_set(con) == MOI.Interval(1.0, 2.0)
+        end
+        @testset "Vector" begin
+            con_ref = @constraint(model, [x + 1, x - 1] in MOI.Nonnegatives(2))
+            con = constraint_object(con_ref)
+            @test JuMP.isequal_canonical(JuMP.jump_function(con), [x + 1, x - 1])
+            @test JuMP.moi_set(con) == MOI.Nonnegatives(2)
+            JuMP.add_to_function_constant(con_ref, [2, 3])
+            con = constraint_object(con_ref)
+            @test JuMP.isequal_canonical(JuMP.jump_function(con), [x + 3, x + 2])
+            @test JuMP.moi_set(con) == MOI.Nonnegatives(2)
+        end
+    end
+
 end
 
 function test_shadow_price(model_string, constraint_dual, constraint_shadow)
