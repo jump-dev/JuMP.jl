@@ -1445,7 +1445,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Query Solutions",
     "title": "Termination statuses",
     "category": "section",
-    "text": "The reason why the optimization of model was finished is given bytermination_status(model)This function will return a MOI.TerminationStatusCode enum.MOI.TerminationStatusCode"
+    "text": "The reason why the optimization of model was finished is given bytermination_status(model)This function will return a MOI.TerminationStatusCode enum.MOI.TerminationStatusCodeAdditionally, we can receive a solver specific string explaning why the optimization stopped with raw_status."
 },
 
 {
@@ -1502,6 +1502,14 @@ var documenterSearchIndex = {"docs": [
     "title": "JuMP.termination_status",
     "category": "function",
     "text": "termination_status(model::Model)\n\nReturn the reason why the solver stopped (i.e., the MathOptInterface model attribute TerminationStatus).\n\n\n\n\n\n"
+},
+
+{
+    "location": "solutions/#JuMP.raw_status",
+    "page": "Query Solutions",
+    "title": "JuMP.raw_status",
+    "category": "function",
+    "text": "raw_status(model::Model)\n\nReturn the reason why the solver stopped in its own words (i.e., the MathOptInterface model attribute RawStatusString).\n\n\n\n\n\n"
 },
 
 {
@@ -1581,7 +1589,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Query Solutions",
     "title": "Reference",
     "category": "section",
-    "text": "JuMP.termination_status\nJuMP.primal_status\nJuMP.has_values\nJuMP.value\nJuMP.dual_status\nJuMP.has_duals\nJuMP.dual\nJuMP.solve_time\nOptimizeNotCalled\nMOI.optimize!"
+    "text": "JuMP.termination_status\nJuMP.raw_status\nJuMP.primal_status\nJuMP.has_values\nJuMP.value\nJuMP.dual_status\nJuMP.has_duals\nJuMP.dual\nJuMP.solve_time\nOptimizeNotCalled\nMOI.optimize!"
 },
 
 {
