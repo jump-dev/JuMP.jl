@@ -44,11 +44,6 @@ include("utils.jl")
 
 const _MOIVAR = MOI.VariableIndex
 const _MOICON{F,S} = MOI.ConstraintIndex{F,S}
-const _MOILB = _MOICON{MOI.SingleVariable,MOI.GreaterThan{Float64}}
-const _MOIUB = _MOICON{MOI.SingleVariable,MOI.LessThan{Float64}}
-const _MOIFIX = _MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
-const _MOIINT = _MOICON{MOI.SingleVariable,MOI.Integer}
-const _MOIBIN = _MOICON{MOI.SingleVariable,MOI.ZeroOne}
 
 """
     OptimizerFactory
@@ -127,13 +122,6 @@ abstract type AbstractModel end
 A mathematical model of an optimization problem.
 """
 mutable struct Model <: AbstractModel
-    # Special variablewise properties that we keep track of:
-    # lower bound, upper bound, fixed, integrality, binary
-    variable_to_lower_bound::Dict{_MOIVAR, _MOILB}
-    variable_to_upper_bound::Dict{_MOIVAR, _MOIUB}
-    variable_to_fix::Dict{_MOIVAR, _MOIFIX}
-    variable_to_integrality::Dict{_MOIVAR, _MOIINT}
-    variable_to_zero_one::Dict{_MOIVAR, _MOIBIN}
     # In MANUAL and AUTOMATIC modes, CachingOptimizer.
     # In DIRECT mode, will hold an AbstractOptimizer.
     moi_backend::MOI.AbstractOptimizer
@@ -229,12 +217,7 @@ in mind the following implications of creating models using this *direct* mode:
 """
 function direct_model(backend::MOI.ModelLike)
     @assert MOI.is_empty(backend)
-    return Model(Dict{_MOIVAR, _MOILB}(),
-                 Dict{_MOIVAR, _MOIUB}(),
-                 Dict{_MOIVAR, _MOIFIX}(),
-                 Dict{_MOIVAR, _MOIINT}(),
-                 Dict{_MOIVAR, _MOIBIN}(),
-                 backend,
+    return Model(backend,
                  Dict{_MOICON, AbstractShape}(),
                  Set{Any}(),
                  nothing,
@@ -458,7 +441,7 @@ end
 """
     set_silent(model::Model)
 
-Takes precedence over any other attribute controlling verbosity 
+Takes precedence over any other attribute controlling verbosity
 and requires the solver to produce no output.
 """
 function set_silent(model::Model)
