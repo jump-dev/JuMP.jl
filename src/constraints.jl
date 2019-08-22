@@ -487,7 +487,7 @@ function moi_add_to_function_constant(
                             <:MOI.AbstractScalarSet},
     value)
     set = MOI.get(model, MOI.ConstraintSet(), ci)
-    new_set = MOIU.shift_constant(set, -value)
+    new_set = MOIU.shift_constant(set, convert(Float64, -value))
     MOI.set(model, MOI.ConstraintSet(), ci, new_set)
 end
 function moi_add_to_function_constant(

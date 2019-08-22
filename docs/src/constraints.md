@@ -617,7 +617,7 @@ julia> con
 con : 2 x <= -1.0
 
 julia> normalized_rhs(con)
-3.0
+-1.0
 ```
 
 In the case of interval constraints, the constant is removed in each bounds.
