@@ -547,20 +547,20 @@ model with different coefficients.
 
 ### Modifying a constant term
 
-Use [`set_standard_form_rhs`](@ref) to modify the right-hand side (constant)
-term of a constraint. Use [`standard_form_rhs`](@ref) to query the right-hand
+Use [`set_normalized_rhs`](@ref) to modify the right-hand side (constant)
+term of a constraint. Use [`normalized_rhs`](@ref) to query the right-hand
 side term.
 
 ```jldoctest con_fix; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, con, 2x <= 1)
 con : 2 x <= 1.0
 
-julia> set_standard_form_rhs(con, 3)
+julia> set_normalized_rhs(con, 3)
 
 julia> con
 con : 2 x <= 3.0
 
-julia> standard_form_rhs(con)
+julia> normalized_rhs(con)
 3.0
 ```
 
@@ -574,7 +574,7 @@ julia> standard_form_rhs(con)
     ```julia
     @constraint(model, 2x <= 3)
     ```
-    [`set_standard_form_rhs`](@ref) sets the right-hand side term of the
+    [`set_normalized_rhs`](@ref) sets the right-hand side term of the
     normalized constraint.
 
 If constraints are complicated, e.g., they are composed of a number of
@@ -607,18 +607,18 @@ The constraint `con` is now equivalent to `2x <= 2`.
 
 To modify the coefficients for a linear term in a constraint (but
 notably not yet the coefficients on a quadratic term), use
-[`set_standard_form_coefficient`](@ref). To query
-the current coefficient, use [`standard_form_coefficient`](@ref).
+[`set_normalized_coefficient`](@ref). To query
+the current coefficient, use [`normalized_coefficient`](@ref).
 ```jldoctest; setup = :(model = Model(); @variable(model, x[1:2]))
 julia> @constraint(model, con, 2x[1] + x[2] <= 1)
 con : 2 x[1] + x[2] ≤ 1.0
 
-julia> set_standard_form_coefficient(con, x[2], 0)
+julia> set_normalized_coefficient(con, x[2], 0)
 
 julia> con
 con : 2 x[1] ≤ 1.0
 
-julia> standard_form_coefficient(con, x[2])
+julia> normalized_coefficient(con, x[2])
 0.0
 ```
 
@@ -632,7 +632,7 @@ julia> standard_form_coefficient(con, x[2])
     ```julia
     @constraint(model, 3x <= 1)
     ```
-    [`set_standard_form_coefficient`](@ref) sets the coefficient of the
+    [`set_normalized_coefficient`](@ref) sets the coefficient of the
     normalized constraint.
 
 ## Constraint deletion
@@ -719,10 +719,10 @@ SecondOrderCone
 RotatedSecondOrderCone
 PSDCone
 shadow_price
-standard_form_coefficient
-set_standard_form_coefficient
-standard_form_rhs
-set_standard_form_rhs
+normalized_coefficient
+set_normalized_coefficient
+normalized_rhs
+set_normalized_rhs
 is_valid
 JuMP.delete
 LowerBoundRef
