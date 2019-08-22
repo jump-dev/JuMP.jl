@@ -604,12 +604,24 @@ The constraint `con` is now equivalent to `2x <= 2`.
     constants when communicating the problem to a solver.
 
 Another option is to use [`add_to_function_constant`](@ref). The constant given
-is added to the function of a `func`-in-`set` constraint. As the constant is
-*added* and not *set*, the user should not worry about whether the constant is
-stored in the set or the function in the normalized form. Moreover, this
-function also works for interval constraints.
+is added to the function of a `func`-in-`set` constraint. In the following
+example, adding `2` to the function has the effect of removing `2` to the
+right-hand side:
+```jldoctest con_add; setup = :(model = Model(); @variable(model, x))
+julia> @constraint(model, con, 2x <= 1)
+con : 2 x <= 1.0
 
-```jldoctest con_fix; setup = :(model = Model(); @variable(model, x))
+julia> add_to_function_constant(con, 2)
+
+julia> con
+con : 2 x <= -1.0
+
+julia> normalized_rhs(con)
+3.0
+```
+
+In the case of interval constraints, the constant is removed in each bounds.
+```jldoctest con_add_interval; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, con, 0 <= 2x + 1 <= 2)
 con : 2 x ∈ [-1.0, 1.0]
 
