@@ -46,7 +46,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
         end
         if _is_sum(x.args[1]) || _is_prod(x.args[1])
             opname = x.args[1]
-            errorstring = "$opname() can appear in nonlinear expressions " *
+            errorstring = "$(opname)() can appear in nonlinear expressions " *
             " only if the argument is a generator statement, for example, " *
             "$(opname)(x[i] for i in 1:N)."
             return :(error($errorstring))
