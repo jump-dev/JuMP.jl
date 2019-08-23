@@ -296,6 +296,21 @@ because it is more easily distinguished from the integer constant `1`.
 Moreover, as recommended by the [Julia style guide](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-using-floats-for-numeric-literals-in-generic-code-when-possible-1),
 never use `1.0` when `1` is okay.
 
+#### String interpolations
+
+Use parentheses in string interpolations to avoid ambiguities on where
+the expression stops.
+
+Bad:
+```julia
+errorstring = "$opname(i) can appear in nonlinear expressions"
+```
+
+Good:
+```julia
+errorstring = "$(opname)(i) can appear in nonlinear expressions"
+```
+
 #### Comments
 
 For non-native speakers and for general clarity, comments in code must be proper
