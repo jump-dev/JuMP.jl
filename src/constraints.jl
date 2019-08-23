@@ -709,7 +709,7 @@ end
 
 function _error_if_not_concrete_type(t)
     if !isconcretetype(t)
-        error("`$t` is not a concrete type. Did you miss a type parameter?")
+        error("`$(t)` is not a concrete type. Did you miss a type parameter?")
     end
     return
 end

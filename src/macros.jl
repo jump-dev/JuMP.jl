@@ -9,7 +9,7 @@ _is_sum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
 _is_prod(s::Symbol) = (s == :prod) || (s == :∏)
 
 function _error_curly(x)
-    Base.error("The curly syntax (sum{},prod{},norm2{}) is no longer supported. Expression: $x.")
+    Base.error("The curly syntax (sum{},prod{},norm2{}) is no longer supported. Expression: $(x).")
 end
 
 include("parse_expr.jl")
@@ -29,7 +29,7 @@ function _build_ref_sets(expr::Expr, cname)
     if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
         # Parameters appear as plain args at the end.
         if length(c.args) > 2
-            error("Unsupported syntax $c.")
+            error("Unsupported syntax $(c).")
         elseif length(c.args) == 2
             condition = pop!(c.args)
         end # else no condition.
@@ -37,7 +37,7 @@ function _build_ref_sets(expr::Expr, cname)
         # Parameters appear at the front.
         if isexpr(c.args[1], :parameters)
             if length(c.args[1].args) != 1
-                error("Invalid syntax: $c. Multiple semicolons are not " *
+                error("Invalid syntax: $(c). Multiple semicolons are not " *
                       "supported.")
             end
             condition = popfirst!(c.args).args[1]
@@ -250,7 +250,7 @@ function _get_name(c::Expr)
 end
 
 _valid_model(m::AbstractModel, name) = nothing
-_valid_model(m, name) = error("Expected $name to be a JuMP model, but it has type ", typeof(m))
+_valid_model(m, name) = error("Expected $(name) to be a JuMP model, but it has type ", typeof(m))
 
 function _assert_valid_model(m, macrocode)
     # assumes m is already escaped
@@ -295,7 +295,7 @@ function _error_if_cannot_register(model::AbstractModel, name::Symbol)
 end
 
 function _error_if_cannot_register(model::AbstractModel, name)
-    error("Invalid name $name.")
+    error("Invalid name $(name).")
 end
 
 """
@@ -382,7 +382,7 @@ function sense_to_set end
 sense_to_set(_error::Function, ::Union{Val{:(<=)}, Val{:(≤)}}) = MOI.LessThan(0.0)
 sense_to_set(_error::Function, ::Union{Val{:(>=)}, Val{:(≥)}}) = MOI.GreaterThan(0.0)
 sense_to_set(_error::Function, ::Val{:(==)}) = MOI.EqualTo(0.0)
-sense_to_set(_error::Function, ::Val{S}) where S = _error("Unrecognized sense $S")
+sense_to_set(_error::Function, ::Val{S}) where S = _error("Unrecognized sense $(S)")
 
 function parse_one_operator_constraint(_error::Function, vectorized::Bool,
                                         ::Union{Val{:in}, Val{:∈}}, aff, set)
@@ -526,10 +526,10 @@ function build_constraint(_error::Function, func::AbstractVariableRef,
 end
 
 function build_constraint(_error::Function, expr, lb, ub)
-    lb isa Number || _error(string("Expected $lb to be a number."))
-    ub isa Number || _error(string("Expected $ub to be a number."))
+    lb isa Number || _error(string("Expected $(lb) to be a number."))
+    ub isa Number || _error(string("Expected $(ub) to be a number."))
     if lb isa Number && ub isa Number
-        _error("Range constraint is not supported for $expr.")
+        _error("Range constraint is not supported for $(expr).")
     end
 end
 
@@ -593,7 +593,7 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
     # TODO: support the base_name keyword argument
 
     if isa(x, Symbol)
-        _error("Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?")
+        _error("Incomplete constraint specification $(x). Are you missing a comparison (<=, >=, or ==)?")
     end
 
     (x.head == :block) &&
@@ -905,7 +905,7 @@ function _moi_sense(_error::Function, sense)
 end
 
 function _throw_error_for_invalid_sense(_error::Function, sense)
-    _error("Unexpected sense `$value`. The sense must be an",
+    _error("Unexpected sense `$(value)`. The sense must be an",
            " `MOI.OptimizatonSense`, `Min` or `Max`.")
 end
 function _throw_error_for_invalid_sense(
@@ -1138,7 +1138,7 @@ function parse_one_operator_variable(
 end
 function parse_one_operator_variable(
     _error::Function, infoexpr::_VariableInfoExpr, ::Val{S}, value) where S
-    _error("Unknown sense $S.")
+    _error("Unknown sense $(S).")
 end
 
 # There is not way to determine at parsing time which of lhs or rhs is the
@@ -1338,7 +1338,7 @@ macro variable(args...)
     else
         x = popfirst!(extra)
         if x in [:Int,:Bin,:PSD]
-            _error("Ambiguous variable name $x detected. Use the \"category\" keyword argument to specify a category for an anonymous variable.")
+            _error("Ambiguous variable name $(x) detected. Use the \"category\" keyword argument to specify a category for an anonymous variable.")
         end
         anon_singleton = false
     end
@@ -1376,7 +1376,7 @@ macro variable(args...)
     end
 
     if !isa(name, Symbol) && !anonvar
-        Base.error("Expression $name should not be used as a variable name. Use the \"anonymous\" syntax $name = @variable(model, ...) instead.")
+        Base.error("Expression $(name) should not be used as a variable name. Use the \"anonymous\" syntax $name = @variable(model, ...) instead.")
     end
 
     # process keyword arguments
@@ -1408,7 +1408,7 @@ macro variable(args...)
         creationcode = :($variable = $variablecall)
         final_variable = variable
     else
-        isa(var,Expr) || _error("Expected $var to be a variable name")
+        isa(var,Expr) || _error("Expected $(var) to be a variable name")
         # We now build the code to generate the variables (and possibly the
         # SparseAxisArray to contain them)
         refcall, idxvars, idxsets, condition = _build_ref_sets(var, variable)
@@ -1689,7 +1689,7 @@ macro NLparameter(m, ex, extra...)
     x = ex.args[3]
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
     if anonvar
-        error("In @NLparameter($m, $ex): Anonymous nonlinear parameter syntax is not currently supported")
+        error("In @NLparameter($(m), $(ex)): Anonymous nonlinear parameter syntax is not currently supported")
     end
     m = esc(m)
     variable = gensym()
