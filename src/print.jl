@@ -89,7 +89,7 @@ function _math_symbol(::Type{REPLMode}, name::Symbol)
     elseif name == :sub2
         return Sys.iswindows() ? "_2" : "₂"
     else
-        error("Internal error: Unrecognized symbol $name.")
+        error("Internal error: Unrecognized symbol $(name).")
     end
 end
 
@@ -136,7 +136,7 @@ function _math_symbol(::Type{IJuliaMode}, name::Symbol)
     elseif name == :sub2
         return "_2"
     else
-        error("Internal error: Unrecognized symbol $name.")
+        error("Internal error: Unrecognized symbol $(name).")
     end
 end
 
@@ -343,7 +343,7 @@ function function_string(mode, q::GenericQuadExpr)
             y = function_string(mode, var2)
 
             term_str[2 * elm - 1] = _sign_string(coef)
-            term_str[2 * elm] = "$pre$x"
+            term_str[2 * elm] = "$(pre)$(x)"
             if x == y
                 term_str[2 * elm] *= _math_symbol(mode, :sq)
             else
@@ -384,7 +384,7 @@ Write to `io` a summary of the number of constraints.
 function show_constraints_summary(io::IO, model::Model)
     for (F, S) in list_of_constraint_types(model)
         n_constraints = num_constraints(model, F, S)
-        println(io, "`$F`-in-`$S`: $n_constraints constraint",
+        println(io, "`$(F)`-in-`$(S)`: $n_constraints constraint",
                 _plural(n_constraints))
     end
     if !iszero(num_nl_constraints(model))
@@ -604,7 +604,7 @@ function nl_constraint_string(model::Model, mode, c::_NonlinearConstraint)
     nl = nl_expr_string(model, mode, c.terms)
     if s == :range
         out_str = "$(_string_round(c.lb)) " * _math_symbol(mode, :leq) *
-                  " $nl " * _math_symbol(mode, :leq) * " " * _string_round(c.ub)
+                  " $(nl) " * _math_symbol(mode, :leq) * " " * _string_round(c.ub)
     else
         if s == :<=
             rel = _math_symbol(mode, :leq)

@@ -22,7 +22,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
         elseif _is_prod(header)
             operatorid = operator_to_id[:*]
         else
-            error("Unrecognized expression $header(...)")
+            error("Unrecognized expression $(header...)")
         end
         codeblock = :(let; end)
         block = _let_code_block(codeblock)
@@ -48,7 +48,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
             opname = x.args[1]
             errorstring = "$opname() can appear in nonlinear expressions " *
             " only if the argument is a generator statement, for example, " *
-            "$opname(x[i] for i in 1:N)."
+            "$(opname(x[i] for i in 1:N))."
             return :(error($errorstring))
         end
         if length(x.args) == 2 && !isexpr(x.args[2], :...) # univariate
@@ -116,7 +116,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                 arg = x.args[i + 1]
                 if isexpr(arg, :...)
                     if !isa(arg.args[1], Symbol)
-                        error("Unexpected expression in $x. JuMP supports " *
+                        error("Unexpected expression in $(x). JuMP supports " *
                               "splatting only symbols. For example, x... is " *
                               "ok, but (x + 1)..., [x; y]... and g(f(y)...) " *
                               "are not.")
@@ -167,7 +167,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
         _error_curly(x)
     end
     if isexpr(x, :...)
-        error("Unexpected splatting expression $x.")
+        error("Unexpected splatting expression $(x).")
     end
     # at the lowest level?
     return :( _parse_NL_expr_runtime($(esc(m)),$(esc(x)), $tapevar, $parent, $values) )
@@ -200,23 +200,23 @@ function _parse_NL_expr_runtime(m::Model, x::NonlinearParameter, tape, parent, v
 end
 
 function _parse_NL_expr_runtime(m::Model, x::AbstractArray, tape, parent, values)
-    error("Unexpected array $x in nonlinear expression. Nonlinear expressions may contain only scalar expressions.")
+    error("Unexpected array $(x) in nonlinear expression. Nonlinear expressions may contain only scalar expressions.")
 end
 
 function _parse_NL_expr_runtime(m::Model, x::GenericQuadExpr, tape, parent, values)
-    error("Unexpected quadratic expression $x in nonlinear expression. " *
+    error("Unexpected quadratic expression $(x) in nonlinear expression. " *
           "Quadratic expressions (e.g., created using @expression) and " *
           "nonlinear expressions cannot be mixed.")
 end
 
 function _parse_NL_expr_runtime(m::Model, x::GenericAffExpr, tape, parent, values)
-    error("Unexpected affine expression $x in nonlinear expression. " *
+    error("Unexpected affine expression $(x) in nonlinear expression. " *
           "Affine expressions (e.g., created using @expression) and " *
           "nonlinear expressions cannot be mixed.")
 end
 
 function _parse_NL_expr_runtime(m::Model, x, tape, parent, values)
-    error("Unexpected object $x (of type $(typeof(x)) in nonlinear expression.")
+    error("Unexpected object $(x) (of type $(typeof(x)) in nonlinear expression.")
 end
 
 function _expression_complexity(ex::Expr)
@@ -288,7 +288,7 @@ _NonlinearExprData(m::Model, ex) = _NonlinearExprData(m, :($ex + 0))
 # 2) VariableRef doesn't match the model
 function _check_expr(m::Model, ex::Expr)
     if ex.head == :ref # if we have x[1] already in there, something is wrong
-        error("Unrecognized expression $ex. JuMP variable objects and input coefficients should be spliced directly into expressions.")
+        error("Unrecognized expression $(ex). JuMP variable objects and input coefficients should be spliced directly into expressions.")
     end
     for e in ex.args
         _check_expr(m, e)
@@ -296,7 +296,7 @@ function _check_expr(m::Model, ex::Expr)
     return
 end
 function _check_expr(m::Model, v::VariableRef)
-    owner_model(v) === m || error("Variable $v does not belong to this model.")
+    owner_model(v) === m || error("Variable $(v) does not belong to this model.")
     return
 end
 _check_expr(m::Model, ex) = nothing
