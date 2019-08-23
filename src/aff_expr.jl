@@ -307,7 +307,7 @@ const AffExpr = GenericAffExpr{Float64,VariableRef}
 # Check all coefficients are finite, i.e. not NaN, not Inf, not -Inf
 function _assert_isfinite(a::AffExpr)
     for (coef, var) in linear_terms(a)
-        isfinite(coef) || error("Invalid coefficient $coef on variable $var.")
+        isfinite(coef) || error("Invalid coefficient $coef on variable $(var).")
     end
 end
 
