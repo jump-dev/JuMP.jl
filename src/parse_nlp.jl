@@ -22,7 +22,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
         elseif _is_prod(header)
             operatorid = operator_to_id[:*]
         else
-            error("Unrecognized expression $(header...)")
+            error("Unrecognized expression $(header)(...)")
         end
         codeblock = :(let; end)
         block = _let_code_block(codeblock)
@@ -48,7 +48,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
             opname = x.args[1]
             errorstring = "$opname() can appear in nonlinear expressions " *
             " only if the argument is a generator statement, for example, " *
-            "$(opname(x[i] for i in 1:N))."
+            "$(opname)(x[i] for i in 1:N)."
             return :(error($errorstring))
         end
         if length(x.args) == 2 && !isexpr(x.args[2], :...) # univariate
