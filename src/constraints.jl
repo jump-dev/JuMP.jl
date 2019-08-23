@@ -395,19 +395,19 @@ function add_constraint(model::Model, con::AbstractConstraint, name::String="")
 end
 
 """
-    set_standard_form_coefficient(con_ref::ConstraintRef, variable::VariableRef, value)
+    set_normalized_coefficient(con_ref::ConstraintRef, variable::VariableRef, value)
 
 Set the coefficient of `variable` in the constraint `constraint` to `value`.
 
 Note that prior to this step, JuMP will aggregate multiple terms containing the
 same variable. For example, given a constraint `2x + 3x <= 2`,
-`set_standard_form_coefficient(con, x, 4)` will create the constraint `4x <= 2`.
+`set_normalized_coefficient(con, x, 4)` will create the constraint `4x <= 2`.
 
 ```jldoctest; setup = :(using JuMP), filter=r"≤|<="
 model = Model()
 @variable(model, x)
 @constraint(model, con, 2x + 3x <= 2)
-set_standard_form_coefficient(con, x, 4)
+set_normalized_coefficient(con, x, 4)
 con
 
 # output
@@ -415,23 +415,23 @@ con
 con : 4 x <= 2.0
 ```
 """
-function set_standard_form_coefficient(
+function set_normalized_coefficient(
     con_ref::ConstraintRef{Model, _MOICON{F, S}}, variable, value
     ) where {S, T, F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
     MOI.modify(backend(owner_model(con_ref)), index(con_ref),
                MOI.ScalarCoefficientChange(index(variable), convert(T, value)))
     return
 end
-@deprecate set_coefficient set_standard_form_coefficient
+@deprecate set_coefficient set_normalized_coefficient
 
 """
-    standard_form_coefficient(con_ref::ConstraintRef, variable::VariableRef)
+    normalized_coefficient(con_ref::ConstraintRef, variable::VariableRef)
 
 Return the coefficient associated with `variable` in `constraint` after JuMP has
 normalized the constraint into its standard form. See also
-[`set_standard_form_coefficient`](@ref).
+[`set_normalized_coefficient`](@ref).
 """
-function standard_form_coefficient(
+function normalized_coefficient(
     con_ref::ConstraintRef{Model, _MOICON{F, S}}, variable
     ) where {S, T, F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
     con = JuMP.constraint_object(con_ref)
@@ -439,26 +439,26 @@ function standard_form_coefficient(
 end
 
 """
-    set_standard_form_rhs(con_ref::ConstraintRef, value)
+    set_normalized_rhs(con_ref::ConstraintRef, value)
 
 Set the right-hand side term of `constraint` to `value`.
 
 Note that prior to this step, JuMP will aggregate all constant terms onto the
 right-hand side of the constraint. For example, given a constraint `2x + 1 <=
-2`, `set_standard_form_rhs(con, 4)` will create the constraint `2x <= 4`, not `2x +
+2`, `set_normalized_rhs(con, 4)` will create the constraint `2x <= 4`, not `2x +
 1 <= 4`.
 
 ```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x)), filter=r"≤|<="
 julia> @constraint(model, con, 2x + 1 <= 2)
 con : 2 x <= 1.0
 
-julia> set_standard_form_rhs(con, 4)
+julia> set_normalized_rhs(con, 4)
 
 julia> con
 con : 2 x <= 4.0
 ```
 """
-function set_standard_form_rhs(
+function set_normalized_rhs(
     con_ref::ConstraintRef{Model, _MOICON{F, S}}, value) where {
         T,
         S <: Union{MOI.LessThan{T}, MOI.GreaterThan{T}, MOI.EqualTo{T}},
@@ -469,18 +469,79 @@ function set_standard_form_rhs(
 end
 
 """
-    standard_form_rhs(con_ref::ConstraintRef)
+    normalized_rhs(con_ref::ConstraintRef)
 
-Return the right-hand side term of the constraint after JuMP has converted it
-into its standard form. See also [`set_standard_form_rhs`](@ref).
+Return the right-hand side term of `con_ref` after JuMP has converted the
+constraint into its normalized form. See also [`set_normalized_rhs`](@ref).
 """
-function standard_form_rhs(
-    con_ref::ConstraintRef{Model, _MOICON{F, S}}) where {
-        T,
-        S <: Union{MOI.LessThan{T}, MOI.GreaterThan{T}, MOI.EqualTo{T}},
+function normalized_rhs(con_ref::ConstraintRef{Model, _MOICON{F, S}}) where {
+        T, S <: Union{MOI.LessThan{T}, MOI.GreaterThan{T}, MOI.EqualTo{T}},
         F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
     con = constraint_object(con_ref)
     return MOI.constant(con.set)
+end
+
+function moi_add_to_function_constant(
+    model::MOI.ModelLike,
+    ci::MOI.ConstraintIndex{<:MOI.AbstractScalarFunction,
+                            <:MOI.AbstractScalarSet},
+    value)
+    set = MOI.get(model, MOI.ConstraintSet(), ci)
+    new_set = MOIU.shift_constant(set, convert(Float64, -value))
+    MOI.set(model, MOI.ConstraintSet(), ci, new_set)
+end
+function moi_add_to_function_constant(
+    model::MOI.ModelLike,
+    ci::MOI.ConstraintIndex{<:Union{MOI.VectorAffineFunction,
+                                    MOI.VectorQuadraticFunction},
+                            <:MOI.AbstractVectorSet},
+    value)
+    func = MOI.get(model, MOI.ConstraintFunction(), ci)
+    new_constant = value + MOI.constant(func)
+    MOI.modify(model, ci, MOI.VectorConstantChange(new_constant))
+end
+
+"""
+    add_to_function_constant(constraint::ConstraintRef, value)
+
+Add `value` to the function constant term.
+
+Note that for scalar constraints, JuMP will aggregate all constant terms onto the
+right-hand side of the constraint so instead of modifying the function, the set
+will be translated by `-value`. For example, given a constraint `2x <=
+3`, `add_to_function_constant(c, 4)` will modify it to `2x <= -1`.
+
+## Examples
+
+For scalar constraints, the set is translated by `-value`:
+```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x)), filter=r"≤|<="
+julia> @constraint(model, con, 0 <= 2x - 1 <= 2)
+con : 2 x ∈ [1.0, 3.0]
+
+julia> add_to_function_constant(con, 4)
+
+julia> con
+con : 2 x ∈ [-3.0, -1.0]
+```
+
+For vector constraints, the constant is added to the function:
+```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x); @variable(model, y)), filter=r"≤|<="
+julia> @constraint(model, con, [x + y, x, y] in SecondOrderCone())
+con : [x + y, x, y] in MOI.SecondOrderCone(3)
+
+julia> add_to_function_constant(con, [1, 2, 2])
+
+julia> con
+con : [x + y + 1, x + 2, y + 2] in MOI.SecondOrderCone(3)
+```
+
+"""
+function add_to_function_constant(constraint::ConstraintRef{Model}, value)
+    # The type of `backend(model)` is not type-stable, so we use a function
+    # barrier (`moi_add_to_function_constant`) to improve performance.
+    moi_add_to_function_constant(backend(owner_model(constraint)),
+                                 index(constraint), value)
+    return
 end
 
 """

@@ -468,15 +468,15 @@ end
         model = JuMP.Model()
         x = @variable(model)
         con_ref = @constraint(model, 2 * x == -1)
-        @test JuMP.standard_form_coefficient(con_ref, x) == 2.0
-        JuMP.set_standard_form_coefficient(con_ref, x, 1.0)
-        @test JuMP.standard_form_coefficient(con_ref, x) == 1.0
-        JuMP.set_standard_form_coefficient(con_ref, x, 3)  # Check type promotion.
-        @test JuMP.standard_form_coefficient(con_ref, x) == 3.0
+        @test JuMP.normalized_coefficient(con_ref, x) == 2.0
+        JuMP.set_normalized_coefficient(con_ref, x, 1.0)
+        @test JuMP.normalized_coefficient(con_ref, x) == 1.0
+        JuMP.set_normalized_coefficient(con_ref, x, 3)  # Check type promotion.
+        @test JuMP.normalized_coefficient(con_ref, x) == 3.0
         quad_con = @constraint(model, x^2 == 0)
-        @test JuMP.standard_form_coefficient(quad_con, x) == 0.0
-        JuMP.set_standard_form_coefficient(quad_con, x, 2)
-        @test JuMP.standard_form_coefficient(quad_con, x) == 2.0
+        @test JuMP.normalized_coefficient(quad_con, x) == 0.0
+        JuMP.set_normalized_coefficient(quad_con, x, 2)
+        @test JuMP.normalized_coefficient(quad_con, x) == 2.0
         @test JuMP.isequal_canonical(
             JuMP.constraint_object(quad_con).func, x^2 + 2x)
     end
@@ -485,16 +485,42 @@ end
         model = JuMP.Model()
         x = @variable(model)
         con_ref = @constraint(model, 2 * x <= 1)
-        @test JuMP.standard_form_rhs(con_ref) == 1.0
-        JuMP.set_standard_form_rhs(con_ref, 2.0)
-        @test JuMP.standard_form_rhs(con_ref) == 2.0
+        @test JuMP.normalized_rhs(con_ref) == 1.0
+        JuMP.set_normalized_rhs(con_ref, 2.0)
+        @test JuMP.normalized_rhs(con_ref) == 2.0
         con_ref = @constraint(model, 2 * x - 1 == 1)
-        @test JuMP.standard_form_rhs(con_ref) == 2.0
-        JuMP.set_standard_form_rhs(con_ref, 3)
-        @test JuMP.standard_form_rhs(con_ref) == 3.0
+        @test JuMP.normalized_rhs(con_ref) == 2.0
+        JuMP.set_normalized_rhs(con_ref, 3)
+        @test JuMP.normalized_rhs(con_ref) == 3.0
         con_ref = @constraint(model, 0 <= 2 * x <= 1)
-        @test_throws MethodError JuMP.set_standard_form_rhs(con_ref, 3)
+        @test_throws MethodError JuMP.set_normalized_rhs(con_ref, 3)
     end
+
+    @testset "Add to function constant" begin
+        model = JuMP.Model()
+        x = @variable(model)
+        @testset "Scalar" begin
+            con_ref = @constraint(model, 2 <= 2 * x <= 3)
+            con = constraint_object(con_ref)
+            @test JuMP.isequal_canonical(JuMP.jump_function(con), 2x)
+            @test JuMP.moi_set(con) == MOI.Interval(2.0, 3.0)
+            JuMP.add_to_function_constant(con_ref, 1.0)
+            con = constraint_object(con_ref)
+            @test JuMP.isequal_canonical(JuMP.jump_function(con), 2x)
+            @test JuMP.moi_set(con) == MOI.Interval(1.0, 2.0)
+        end
+        @testset "Vector" begin
+            con_ref = @constraint(model, [x + 1, x - 1] in MOI.Nonnegatives(2))
+            con = constraint_object(con_ref)
+            @test JuMP.isequal_canonical(JuMP.jump_function(con), [x + 1, x - 1])
+            @test JuMP.moi_set(con) == MOI.Nonnegatives(2)
+            JuMP.add_to_function_constant(con_ref, [2, 3])
+            con = constraint_object(con_ref)
+            @test JuMP.isequal_canonical(JuMP.jump_function(con), [x + 3, x + 2])
+            @test JuMP.moi_set(con) == MOI.Nonnegatives(2)
+        end
+    end
+
 end
 
 function test_shadow_price(model_string, constraint_dual, constraint_shadow)
