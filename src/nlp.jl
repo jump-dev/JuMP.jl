@@ -3,10 +3,6 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# TODO remove once we require MOI v0.9.1, see https://github.com/JuliaOpt/MathOptInterface.jl/issues/844
-MOIU.map_indices(::Function, block::MOI.NLPBlockData) = block
-MOIU.substitute_variables(::Function, block::MOI.NLPBlockData) = block
-
 mutable struct _NonlinearExprData
     nd::Vector{NodeData}
     const_values::Vector{Float64}
