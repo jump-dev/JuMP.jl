@@ -14,21 +14,12 @@ using JuMP
 
 using Test
 
-using MathOptInterface
-const MOI = MathOptInterface
-const MOIT = MOI.Test
-const MOIU = MOI.Utilities
-
 # Simple LP model not supporting Interval
-@MOIU.model(SimpleLPModel,
-            (),
-            (MOI.EqualTo, MOI.GreaterThan, MOI.LessThan),
-            (),
-            (),
-            (),
-            (MOI.ScalarAffineFunction,),
-            (),
-            ())
+MOIU.@model(
+    SimpleLPModel,
+    (), (MOI.EqualTo, MOI.GreaterThan, MOI.LessThan), (), (),
+    (), (MOI.ScalarAffineFunction,), (), ()
+)
 
 struct Optimizer
     a::Int
@@ -63,6 +54,7 @@ function test_model()
         c = @constraint(model, x ≤ 0)
         @objective(model, Max, x)
         @test_throws err JuMP.objective_value(model)
+        @test_throws err JuMP.dual_objective_value(model)
         @test_throws err JuMP.objective_bound(model)
         @test_throws err JuMP.value(x)
         @test_throws err JuMP.value(c)
@@ -164,8 +156,8 @@ function test_model()
 
     @testset "UniversalFallback" begin
         m = Model()
-        MOI.set(m, MOIT.UnknownModelAttribute(), 1)
-        @test MOI.get(m, MOIT.UnknownModelAttribute()) == 1
+        MOI.set(m, MOI.Test.UnknownModelAttribute(), 1)
+        @test MOI.get(m, MOI.Test.UnknownModelAttribute()) == 1
     end
 
     @testset "Bridges" begin

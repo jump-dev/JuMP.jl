@@ -71,6 +71,7 @@ using JuMP
         @test  1.0 == @inferred JuMP.value(x + y)
         @test  1.0 == @inferred JuMP.value(c)
         @test -1.0 == @inferred JuMP.objective_value(m)
+        @test -1.0 == @inferred JuMP.dual_objective_value(m)
 
         @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m)
         @test -1.0 == @inferred JuMP.dual(c)
@@ -225,6 +226,7 @@ using JuMP
         @test 1.0 == @inferred JuMP.value(x)
         @test 0.0 == @inferred JuMP.value(y)
         @test -1.0 == @inferred JuMP.objective_value(m)
+        @test 5.0 == @inferred JuMP.dual_objective_value(m)
 
         @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m)
         @test -1.0 == @inferred JuMP.dual(c1)

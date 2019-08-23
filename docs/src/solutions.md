@@ -31,7 +31,7 @@ see the [Termination statuses](@ref) section below.
 
 Second, we can query the [`primal_status`](@ref) and the [`dual_status`](@ref),
 which will tell us what kind of results we have for our primal and dual
-solutions. This might be an optimal primal-dual pair, a primal solution without 
+solutions. This might be an optimal primal-dual pair, a primal solution without
 a corresponding dual solution, or a certificate of primal or dual infeasibility.
 For more information, see the [Solution statuses](@ref) section below.
 
@@ -70,7 +70,7 @@ MOI.ResultStatusCode
 ```
 
 Common status situations are described in the
-[MOI docs](http://www.juliaopt.org/MathOptInterface.jl/v0.8/apimanual/#Common-status-situations-1).
+[MOI docs](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apimanual/#Common-status-situations-1).
 
 ## Obtaining solutions
 
@@ -78,7 +78,7 @@ Provided the primal status is not `MOI.NO_SOLUTION`, the primal solution can
 be obtained by calling [`value`](@ref). For the dual solution, the function
 is [`dual`](@ref). Calling [`has_values`](@ref) for the primal status and
 [`has_duals`](@ref) for the dual solution is an equivalent way to check whether
-the status is `MOI.NO_SOLUTION`. 
+the status is `MOI.NO_SOLUTION`.
 
 It is important to note that if [`has_values`](@ref) or [`has_duals`](@ref)
 return false, calls to [`value`](@ref) and [`dual`](@ref) might throw an error
@@ -95,10 +95,12 @@ The container type (e.g., scalar, vector, or matrix) of the returned solution
 
 The objective value of a solved problem can be obtained via
 [`objective_value`](@ref). The best known bound on the optimal objective
-value can be obtained via [`objective_bound`](@ref).
+value can be obtained via [`objective_bound`](@ref). If dual values are
+available, the value of the dual objective can be obtained via
+[`dual_objective_value`](@ref).
 
 The following is a recommended workflow for solving a model and querying the
-solution: 
+solution:
 ```julia
 using JuMP
 model = Model()
