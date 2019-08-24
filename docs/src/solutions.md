@@ -95,8 +95,8 @@ The container type (e.g., scalar, vector, or matrix) of the returned solution
 
 The objective value of a solved problem can be obtained via
 [`objective_value`](@ref). The best known bound on the optimal objective
-value can be obtained via [`objective_bound`](@ref). If dual values are
-available, the value of the dual objective can be obtained via
+value can be obtained via [`objective_bound`](@ref). If the solver supports it,
+the value of the dual objective can be obtained via
 [`dual_objective_value`](@ref).
 
 The following is a recommended workflow for solving a model and querying the

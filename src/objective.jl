@@ -28,7 +28,8 @@ objective_value(model::Model)::Float64 = MOI.get(model, MOI.ObjectiveValue())
     dual_objective_value(model::Model)
 
 Return the value of the objective of the dual problem after a call to
-`optimize!(model)`.
+`optimize!(model)`. Throws `MOI.UnsupportedAttribute{MOI.DualObjectiveValue}` if
+the solver does not support this attribute.
 """
 dual_objective_value(model::Model)::Float64 = MOI.get(model, MOI.DualObjectiveValue())
 
