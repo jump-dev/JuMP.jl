@@ -1,6 +1,25 @@
 JuMP release notes
 ==================
 
+Version 0.20.0 (Aug 24, 2019)
+-----------------------------
+
+- Documentation updates.
+- Lots of bug fixes.
+- Better error messages (#2017).
+- Performance improvements (#2032).
+- Added LP sensitivity summary functions `lp_objective_perturbation_range`
+  and `lp_rhs_perturbation_range` (#1917).
+- Added functions `dual_objective_value`, `raw_status` and `set_parameter`.
+- Added function `set_objective_coefficient` to modify the coefficient of
+  a linear terms coefficient of the objective (#2008).
+- Added functions `set_normalized_rhs`, `normalized_rhs`,
+  `set_normalized_coefficient`, `normalized_coefficient`, and
+  `add_to_function_constant` to modify the constant part
+  of constraints (#1935, #1960).
+- Lots of other improvements in MOI 0.9, see the `NEWS.md` file of MOI for more
+  details.
+
 Version 0.19.2 (June 8, 2019)
 -----------------------------
 
