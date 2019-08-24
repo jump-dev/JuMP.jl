@@ -17,7 +17,9 @@ To query the objective function from a model, see [`objective_sense`](@ref),
 
 To query the optimal objective value or best known bound after a solve, see
 [`objective_value`](@ref) and [`objective_bound`](@ref). These two functions
-apply to nonlinear objectives also.
+apply to nonlinear objectives also. The optimal value of the
+[dual](@ref constraint_duality) objective can be obtained via
+[`dual_objective_value`](@ref).
 
 
 ## Reference
@@ -34,4 +36,5 @@ JuMP.objective_function_type
 
 JuMP.objective_bound
 JuMP.objective_value
+JuMP.dual_objective_value
 ```

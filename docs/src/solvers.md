@@ -56,7 +56,7 @@ the optimizer:
   MOI but new ones can be defined and added to the `LazyBridgeOptimizer` used by
   JuMP.
 
-See the [MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.8.1/)
+See the [MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/)
 for more details on these two MOI layers.
 
 To attach an optimizer to a JuMP model, JuMP needs to create a new empty

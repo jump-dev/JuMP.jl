@@ -23,7 +23,7 @@ is often more complex. We list below the currently available solvers.
 !!! note
     This list is open for new contributions. See also
     [Interacting with solvers](@ref) and the
-    [MathOptInterface docs](http://www.juliaopt.org/MathOptInterface.jl/v0.6.1/)
+    [MathOptInterface docs](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/)
     for more details on how JuMP interacts with solvers. Please get in touch
     with any questions about connecting new solvers with JuMP.
 

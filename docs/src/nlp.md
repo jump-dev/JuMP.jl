@@ -333,7 +333,7 @@ may be expected to be within a factor of 5 of AMPL's.
 For some advanced use cases, one may want to directly query the derivatives of a
 JuMP model instead of handing the problem off to a solver.
 Internally, JuMP implements the `AbstractNLPEvaluator` interface from
-[MathOptInterface](http://www.juliaopt.org/MathOptInterface.jl/v0.6.1/apireference.html#NLP-evaluator-methods-1).
+[MathOptInterface](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apireference/#NLP-evaluator-methods-1).
 To obtain an NLP evaluator object from a JuMP model, use `JuMP.NLPEvaluator`.
 `JuMP.index` returns the `MOI.VariableIndex` corresponding to a JuMP variable.
 `MOI.VariableIndex` itself is a type-safe wrapper for `Int64` (stored in the
