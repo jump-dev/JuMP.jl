@@ -1973,7 +1973,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Extensions",
     "title": "JuMP.add_bridge",
     "category": "function",
-    "text": " add_bridge(model::Model,\n            BridgeType::Type{<:MOIBC.AbstractBridge})\n\nAdd BridgeType to the list of bridges that can be used to transform unsupported constraints into an equivalent formulation using only constraints supported by the optimizer.\n\n\n\n\n\n"
+    "text": " add_bridge(model::Model,\n            BridgeType::Type{<:MOI.Bridges.AbstractBridge})\n\nAdd BridgeType to the list of bridges that can be used to transform unsupported constraints into an equivalent formulation using only constraints supported by the optimizer.\n\n\n\n\n\n"
 },
 
 {
