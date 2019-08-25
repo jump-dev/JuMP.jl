@@ -318,36 +318,36 @@ function bridge_constraints(model::Model)
 end
 
 function _moi_add_bridge(model::Nothing,
-                        BridgeType::Type{<:MOIB.AbstractBridge})
+                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
     # No optimizer is attached, the bridge will be added when one is attached
     return
 end
 function _moi_add_bridge(model::MOI.ModelLike,
-                        BridgeType::Type{<:MOIB.AbstractBridge})
+                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
     error("Cannot add bridge if `bridge_constraints` was set to `false` in the",
           " `Model` constructor.")
 end
 function _moi_add_bridge(bridge_opt::MOI.Bridges.LazyBridgeOptimizer,
-                        BridgeType::Type{<:MOIB.AbstractBridge})
+                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
     MOI.Bridges.add_bridge(bridge_opt, BridgeType{Float64})
     return
 end
 function _moi_add_bridge(caching_opt::MOIU.CachingOptimizer,
-                        BridgeType::Type{<:MOIB.AbstractBridge})
+                        BridgeType::Type{<:MOI.Bridges.AbstractBridge})
     _moi_add_bridge(caching_opt.optimizer, BridgeType)
     return
 end
 
 """
      add_bridge(model::Model,
-                BridgeType::Type{<:MOIB.AbstractBridge})
+                BridgeType::Type{<:MOI.Bridges.AbstractBridge})
 
 Add `BridgeType` to the list of bridges that can be used to transform
 unsupported constraints into an equivalent formulation using only constraints
 supported by the optimizer.
 """
 function add_bridge(model::Model,
-                    BridgeType::Type{<:MOIB.AbstractBridge})
+                    BridgeType::Type{<:MOI.Bridges.AbstractBridge})
     push!(model.bridge_types, BridgeType)
     # The type of `backend(model)` is not type-stable, so we use a function
     # barrier (`_moi_add_bridge`) to improve performance.
