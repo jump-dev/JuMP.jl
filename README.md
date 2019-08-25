@@ -42,11 +42,11 @@ Our documentation includes an installation guide, quick-start guide, and referen
 **See [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md) for
 a list of the significant breaking changes in the JuMP 0.19 release.**
 
-**Latest Release**: 0.19.2 (`release-0.19` branch)
-  * [Documentation](http://www.juliaopt.org/JuMP.jl/v0.19.2/)
-  * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.19/examples)
+**Latest Release**: 0.20.0 (`release-0.20` branch)
+  * [Documentation](http://www.juliaopt.org/JuMP.jl/v0.20.0/)
+  * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.20/examples)
   * Testing status:
-    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.19)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.20)](https://travis-ci.org/JuliaOpt/JuMP.jl)
 
 
 **Development version** (`master` branch):
