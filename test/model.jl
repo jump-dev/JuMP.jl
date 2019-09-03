@@ -380,13 +380,13 @@ function test_model()
     @testset "set and retrieve time limit" begin
         mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
         model = Model(with_optimizer(MOIU.MockOptimizer, mock))
-        JuMP.set_time_limit(model, 12.0)
-        @test JuMP.time_limit(model) == 12.0
-        JuMP.set_time_limit(model, nothing)
-        @test JuMP.time_limit(model) === nothing
-        JuMP.set_time_limit(model, 12.0)
-        JuMP.unset_time_limit(model)
-        @test JuMP.time_limit(model) === nothing
+        JuMP.set_time_limit_sec(model, 12.0)
+        @test JuMP.time_limit_sec(model) == 12.0
+        JuMP.set_time_limit_sec(model, nothing)
+        @test JuMP.time_limit_sec(model) === nothing
+        JuMP.set_time_limit_sec(model, 12.0)
+        JuMP.unset_time_limit_sec(model)
+        @test JuMP.time_limit_sec(model) === nothing
     end
 end
 
