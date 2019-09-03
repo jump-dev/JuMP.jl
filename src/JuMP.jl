@@ -457,6 +457,24 @@ function unset_silent(model::Model)
     return MOI.set(model, MOI.Silent(), false)
 end
 
+"""
+    set_time_limit(model::Model, limit)
+
+Sets the time limit (in seconds) of the solver.
+"""
+function set_time_limit(model::Model, limit)
+    return MOI.set(model, MOI.TimeLimitSec(), limit)
+end
+
+"""
+    time_limit(model::Model)
+
+Gets the time limit (in seconds) of the model (`nothing` if undefined).
+"""
+function time_limit(model::Model)
+    return MOI.get(model, MOI.TimeLimitSec())
+end
+
 # Abstract base type for all scalar types
 abstract type AbstractJuMPScalar end
 

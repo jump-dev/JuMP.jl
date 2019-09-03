@@ -376,6 +376,13 @@ function test_model()
         @test MOI.get(backend(model), MOI.RawParameter("aaa")) == "bbb"
         @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
     end
+
+    @testset "set and retrieve time limit" begin
+        mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+        model = Model(with_optimizer(MOIU.MockOptimizer, mock))
+        JuMP.set_time_limit(model, 12.0)
+        @test JuMP.time_limit(model) == 12.0
+    end
 end
 
 @testset "Model" begin
