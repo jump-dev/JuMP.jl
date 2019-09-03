@@ -460,10 +460,19 @@ end
 """
     set_time_limit(model::Model, limit)
 
-Sets the time limit (in seconds) of the solver.
+Sets the time limit (in seconds) of the solver. Can be unset using `unset_time_limit`.
 """
 function set_time_limit(model::Model, limit)
     return MOI.set(model, MOI.TimeLimitSec(), limit)
+end
+
+"""
+    unset_time_limit(model::Model)
+
+Unsets the time limit of the solver. Can be set using `set_time_limit`.
+"""
+function unset_time_limit(model::Model)
+    return MOI.set(model, MOI.TimeLimitSec(), nothing)
 end
 
 """

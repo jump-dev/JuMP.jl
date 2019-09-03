@@ -382,6 +382,11 @@ function test_model()
         model = Model(with_optimizer(MOIU.MockOptimizer, mock))
         JuMP.set_time_limit(model, 12.0)
         @test JuMP.time_limit(model) == 12.0
+        JuMP.set_time_limit(model, nothing)
+        @test JuMP.time_limit(model) === nothing
+        JuMP.set_time_limit(model, 12.0)
+        JuMP.unset_time_limit(model)
+        @test JuMP.time_limit(model) === nothing
     end
 end
 
