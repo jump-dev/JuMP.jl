@@ -110,6 +110,7 @@ unset_silent
 
 set_parameter
 
-set_time_limit
-time_limit
+set_time_limit_sec
+unset_time_limit_sec
+time_limit_sec
 ```
