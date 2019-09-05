@@ -191,6 +191,8 @@ julia> shadow_price(con)
 2.0
 ```
 
+One more clarification, in terms of Lagrange multipliers: if you are solving a convex program, minimize ``f(x)`` with ``x \in R^m`` subject to equality constraints ``g_i(x)=a_i`` and inequality constraints ``h_j(x)\le b_j``, where the ``g_i`` are linear and the ``h_j`` convex, then the multipliers ``\lambda_i,\mu_j`` appearing in the Lagrangian ``f(x) + \sum_i \lambda_i (g_i(x) - a_i) + \sum_j \mu_j (h_j(x) - b_j)`` are returned by ``dual()``. If you are dealing with a concave program with Lagrangian ``f(x) - \sum_i \lambda_i (g_i(x)-a_i) - \sum_j \mu_j (h_j(x)-b_j)``, then the ``\lambda_i,\mu_j`` are returned by ``-dual()``. In both cases the vector ``\mu`` will be ``\ge 0``.
+
 To query the dual variables associated with a variable bound, first obtain a
 constraint reference using one of [`UpperBoundRef`](@ref),
 [`LowerBoundRef`](@ref), or [`FixRef`](@ref), and then call [`dual`](@ref) on
