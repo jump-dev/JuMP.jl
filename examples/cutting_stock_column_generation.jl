@@ -155,7 +155,7 @@ function example_cutting_stock(; max_gen_cols::Int=5000)
         # Update the constraint number j if the new pattern impacts this production.
         for j in 1:n
             if new_pattern[j] > 0
-                set_standard_form_coefficient(demand_satisfaction[j], new_var[ncols], new_pattern[j])
+                set_normalized_coefficient(demand_satisfaction[j], new_var[ncols], new_pattern[j])
             end
         end
 
