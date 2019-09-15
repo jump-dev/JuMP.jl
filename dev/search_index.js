@@ -1425,11 +1425,35 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "solvers/#JuMP.set_time_limit_sec",
+    "page": "Solvers",
+    "title": "JuMP.set_time_limit_sec",
+    "category": "function",
+    "text": "set_time_limit_sec(model::Model, limit)\n\nSets the time limit (in seconds) of the solver.  Can be unset using unset_time_limit_sec or with limit set to nothing.\n\n\n\n\n\n"
+},
+
+{
+    "location": "solvers/#JuMP.unset_time_limit_sec",
+    "page": "Solvers",
+    "title": "JuMP.unset_time_limit_sec",
+    "category": "function",
+    "text": "unset_time_limit_sec(model::Model)\n\nUnsets the time limit of the solver. Can be set using set_time_limit_sec.\n\n\n\n\n\n"
+},
+
+{
+    "location": "solvers/#JuMP.time_limit_sec",
+    "page": "Solvers",
+    "title": "JuMP.time_limit_sec",
+    "category": "function",
+    "text": "time_limit_sec(model::Model)\n\nGets the time limit (in seconds) of the model (nothing if unset). Can be set using set_time_limit_sec.\n\n\n\n\n\n"
+},
+
+{
     "location": "solvers/#Solver-attributes-1",
     "page": "Solvers",
     "title": "Solver attributes",
     "category": "section",
-    "text": "Some solver attributes can be queried and set through JuMP models.solver_name\n\nbridge_constraints\n\nset_silent\nunset_silent\n\nset_parameter"
+    "text": "Some solver attributes can be queried and set through JuMP models.solver_name\n\nbridge_constraints\n\nset_silent\nunset_silent\n\nset_parameter\n\nset_time_limit_sec\nunset_time_limit_sec\ntime_limit_sec"
 },
 
 {
