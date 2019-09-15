@@ -194,7 +194,6 @@ function test_model()
             @test cref isa JuMP.ConstraintRef{JuMP.Model,MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64},MOI.Interval{Float64}}}
             @test_throws err optimizer_index(cref)
             JuMP.optimize!(model)
-            @test optimizer_index(x) === MOI.get(JuMP.backend(model).optimizer.model.optimizer, MOI.ListOfVariableIndices())[1]
             err = ErrorException(
                 "There is no `optimizer_index` for $(typeof(index(cref))) " *
                 "constraints because they are bridged.")
