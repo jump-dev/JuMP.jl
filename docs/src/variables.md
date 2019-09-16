@@ -658,7 +658,8 @@ Subject to
 ```
 
 !!! note
-    Keyword arguments must be contained within parentheses.
+    Keyword arguments must be contained within parentheses. (See the example
+    above.)
 
 ## Reference
 

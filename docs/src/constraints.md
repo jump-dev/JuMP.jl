@@ -106,8 +106,8 @@ julia> @constraint(model, 2x + 1 <= 4x + 4)
 
 ## The `@constraints` macro
 
-Like [`@variables`](@ref variables), there is a plural version of the [`@constraint`](@ref)
-macro:
+Like [`@variables`](@ref variables), there is a "plural" version of the
+[`@constraint`](@ref) macro:
 ```jldoctest; setup=:(model=Model(); @variable(model, x))
 julia> @constraints(model, begin
            2x <=  1
