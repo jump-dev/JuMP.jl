@@ -337,6 +337,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "variables/#variables-1",
+    "page": "Variables",
+    "title": "The @variables macro",
+    "category": "section",
+    "text": "If you have many @variable calls, JuMP provides the macro @variables that can improve readability:julia> @variables(model, begin\n           x\n           y[i=1:2] >= i, (start = i, base_name = \"Y_$i\")\n           z, Bin\n       end)\n\njulia> print(model)\nFeasibility\nSubject to\n Y_1[1] ≥ 1.0\n Y_2[2] ≥ 2.0\n z binarynote: Note\nKeyword arguments must be contained within parentheses. (See the example above.)"
+},
+
+{
     "location": "variables/#JuMP.@variable",
     "page": "Variables",
     "title": "JuMP.@variable",
@@ -854,6 +862,14 @@ var documenterSearchIndex = {"docs": [
     "title": "The @constraint macro",
     "category": "section",
     "text": "Constraints are added to a JuMP model using the @constraint macro. Here is an example of how to add the constraint 2x le 1 to a JuMP model:julia> @constraint(model, con, 2x <= 1)\ncon : 2 x <= 1.0Wasn\'t that easy! Let\'s unpack what happened, because just like @variable there are a few subtle things going on.The mathematical constraint 2x le 1 was added to the model.\nA Julia variable called con was created that is a reference to the constraint.\nThis Julia variable was stored in model and can be accessed by model[:con].\nJuMP set the name attribute (the one that is shown when printing) of the constraint to \"con\".Just like the Julia variables created in @variable, con can be bound to a different value. For example:julia> con\ncon : 2 x <= 1.0\n\njulia> con = 1\n1\n\njulia> con\n1However, the reference can be retrieved by querying the model using the symbolic name:julia> con = model[:con]\ncon : 2 x <= 1.0\n\njulia> con\ncon : 2 x <= 1.0Because the named variables and constraints are stored in the same namespace, creating a constraint with the same name as a variable or an existing constraint will result in an error. To overcome this limitation, it is possible to create anonymous constraints, just like it is possible to create Anonymous JuMP variables. This is done by dropping the second argument to @constraint:julia> con = @constraint(model, 2x <= 1)\n2 x <= 1.0It is also possible use different comparison operators (e.g., >= and ==) to create the following types of constraints:julia> @constraint(model, 2x >= 1)\n2 x >= 1.0\n\njulia> @constraint(model, 2x == 1)\n2 x = 1.0\n\njulia> @constraint(model, 1 <= 2x <= 3)\n2 x ∈ [1.0, 3.0]Note that JuMP normalizes the constraints by moving all of the terms containing variables to the left-hand side, and all of the constant terms to the right-hand side. Thus, we get:julia> @constraint(model, 2x + 1 <= 4x + 4)\n-2 x <= 3.0"
+},
+
+{
+    "location": "constraints/#The-@constraints-macro-1",
+    "page": "Constraints",
+    "title": "The @constraints macro",
+    "category": "section",
+    "text": "Like @variables, there is a \"plural\" version of the @constraint macro:julia> @constraints(model, begin\n           2x <=  1\n            x >= -1\n       end)\n\njulia> print(model)\nFeasibility\nSubject to\n x ≥ -1.0\n 2 x ≤ 1.0"
 },
 
 {
