@@ -637,6 +637,30 @@ julia> start_value(y)
     set_start_value.(all_variables(model), value.(all_variables(model)))
     ```
 
+## [The `@variables` macro](@id variables)
+
+If you have many [`@variable`](@ref) calls, JuMP provides the macro `@variables`
+that can improve readability:
+
+```jldoctest; setup=:(model=Model())
+julia> @variables(model, begin
+           x
+           y[i=1:2] >= i, (start = i, base_name = "Y_$i")
+           z, Bin
+       end)
+
+julia> print(model)
+Feasibility
+Subject to
+ Y_1[1] ≥ 1.0
+ Y_2[2] ≥ 2.0
+ z binary
+```
+
+!!! note
+    Keyword arguments must be contained within parentheses. (See the example
+    above.)
+
 ## Reference
 
 ```@docs

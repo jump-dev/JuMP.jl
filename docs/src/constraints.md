@@ -104,6 +104,23 @@ julia> @constraint(model, 2x + 1 <= 4x + 4)
 -2 x <= 3.0
 ```
 
+## The `@constraints` macro
+
+Like [`@variables`](@ref variables), there is a "plural" version of the
+[`@constraint`](@ref) macro:
+```jldoctest; setup=:(model=Model(); @variable(model, x))
+julia> @constraints(model, begin
+           2x <=  1
+            x >= -1
+       end)
+
+julia> print(model)
+Feasibility
+Subject to
+ x ≥ -1.0
+ 2 x ≤ 1.0
+```
+
 ## [Duality](@id constraint_duality)
 
 JuMP adopts the notion of [conic duality from MOI](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apimanual/#Duals-1).
