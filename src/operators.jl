@@ -395,6 +395,8 @@ end
 =#
 
 const TransposeOrAdjoint{T<:Union{GenericAffOrQuadExpr, Real}, MT} = Union{Transpose{T, MT}, Adjoint{T, MT}}
+_mirror_transpose_or_adjoint(x, ::Transpose) = transpose(x)
+_mirror_transpose_or_adjoint(x, ::Adjoint) = adjoint(x)
 
 function _mul!(ret::AbstractVecOrMat{<:GenericAffOrQuadExpr},
                adjA::TransposeOrAdjoint{<:Any, <:SparseMatrixCSC},
@@ -416,7 +418,8 @@ function _mul!(ret::AbstractVecOrMat{<:GenericAffOrQuadExpr},
         @inbounds for col ∈ 1:A.n
             tmp = zero(eltype(ret))
             for j ∈ A.colptr[col]:(A.colptr[col + 1] - 1)
-                add_to_expression!(tmp, adjoint(A_nonzeros[j]), B[A_rowvals[j], k])
+                A_val = _mirror_transpose_or_adjoint(A_nonzeros[j], adjA)
+                add_to_expression!(tmp, A_val, B[A_rowvals[j], k])
             end
             add_to_expression!(ret[col, k], α, tmp)
         end
@@ -449,22 +452,53 @@ function _mul!(ret::AbstractVecOrMat{<:GenericAffOrQuadExpr},
 end
 
 function _mul!(ret::AbstractMatrix{<:GenericAffOrQuadExpr},
-               A::AbstractMatrix, B::SparseMatrixCSC)
-    _fill_with_zeros!(ret)
+               A::AbstractMatrix, B::SparseMatrixCSC,
+               α_expr=one(eltype(ret)),
+               β=zero(eltype(ret)))
     rowval = rowvals(B)
-    A_nonzeros = nonzeros(B)
+    B_nonzeros = nonzeros(B)
+    # See SparseArrays/src/linalg.jl
+    if !isone(β)
+        !iszero(β) ? rmul!(ret, β) : _fill_with_zeros!(ret)
+    end
+    α = convert(Float64, α_expr)
     for multivec_row in 1:size(A, 1)
         for col ∈ 1:size(B, 2)
             idxset = nzrange(B, col)
-            q = ret[multivec_row, col]
-            _sizehint_expr!(q, length(idxset))
+            tmp = zero(eltype(ret))
+            _sizehint_expr!(tmp, length(idxset))
             for k ∈ idxset
-                add_to_expression!(q, A[multivec_row, rowval[k]], A_nonzeros[k])
+                add_to_expression!(tmp, A[multivec_row, rowval[k]], B_nonzeros[k])
             end
+            add_to_expression!(ret[multivec_row, col], α, tmp)
         end
     end
     return ret
 end
+function _mul!(ret::AbstractMatrix{<:GenericAffOrQuadExpr},
+               A::AbstractMatrix,
+               adjB::TransposeOrAdjoint{<:Any, <:SparseMatrixCSC},
+               α_expr=one(eltype(ret)),
+               β=zero(eltype(ret)))
+    B = parent(adjB)
+    B_rowvals = rowvals(B)
+    B_nonzeros = nonzeros(B)
+    # See SparseArrays/src/linalg.jl
+    if !isone(β)
+        !iszero(β) ? rmul!(ret, β) : _fill_with_zeros!(ret)
+    end
+    α = convert(Float64, α_expr)
+    for B_col ∈ 1:size(B, 2), k ∈ nzrange(B, B_col)
+        B_row = B_rowvals[k]
+        B_val = _mirror_transpose_or_adjoint(B_nonzeros[k], adjB)
+        αB_val = α * B_val
+        for A_row in 1:size(A, 1)
+            add_to_expression!(ret[A_row, B_row], A[A_row, B_col], αB_val)
+        end
+    end
+    return ret
+end
+
 
 function _densify_with_jump_eltype(x::SparseMatrixCSC{V}) where {V <: AbstractVariableRef}
     return convert(Matrix{GenericAffExpr{Float64, V}}, x)
@@ -479,10 +513,17 @@ function _mul!(ret::AbstractMatrix{<:GenericAffOrQuadExpr},
 end
 
 # TODO: Implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul).
-function _mul!(ret::AbstractArray{<:GenericAffOrQuadExpr},
-               A::TransposeOrAdjoint{<:GenericAffOrQuadExpr, <:SparseMatrixCSC},
+function _mul!(ret::AbstractMatrix{<:GenericAffOrQuadExpr},
+               A::TransposeOrAdjoint{<:Any, <:SparseMatrixCSC},
                B::SparseMatrixCSC)
     return mul!(ret, A, _densify_with_jump_eltype(B))
+end
+
+# TODO: Implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul).
+function _mul!(ret::AbstractMatrix{<:GenericAffOrQuadExpr},
+               A::SparseMatrixCSC,
+               B::TransposeOrAdjoint{<:Any, <:SparseMatrixCSC})
+    return mul!(ret, _densify_with_jump_eltype(A), B)
 end
 
 ###############################################################################
@@ -557,6 +598,14 @@ end
 Base.:*(A::SparseMatrixCSC{<:AbstractJuMPScalar}, B::SparseMatrixCSC{<:AbstractJuMPScalar}) = _mul(A, B)
 Base.:*(A::SparseMatrixCSC{<:Any}, B::SparseMatrixCSC{<:AbstractJuMPScalar}) = _mul(A, B)
 Base.:*(A::SparseMatrixCSC{<:AbstractJuMPScalar}, B::SparseMatrixCSC{<:Any}) = _mul(A, B)
+
+Base.:*(A::SparseMatrixCSC{<:AbstractJuMPScalar}, B::Adjoint{<:AbstractJuMPScalar, <:SparseMatrixCSC}) = _mul(A, B)
+Base.:*(A::SparseMatrixCSC{<:Any}, B::Adjoint{<:AbstractJuMPScalar, <:SparseMatrixCSC}) = _mul(A, B)
+Base.:*(A::SparseMatrixCSC{<:AbstractJuMPScalar}, B::Adjoint{<:Any, <:SparseMatrixCSC}) = _mul(A, B)
+
+Base.:*(A::Adjoint{<:AbstractJuMPScalar, <:SparseMatrixCSC}, B::SparseMatrixCSC{<:AbstractJuMPScalar}) = _mul(A, B)
+Base.:*(A::Adjoint{<:Any, <:SparseMatrixCSC}, B::SparseMatrixCSC{<:AbstractJuMPScalar}) = _mul(A, B)
+Base.:*(A::Adjoint{<:AbstractJuMPScalar, <:SparseMatrixCSC}, B::SparseMatrixCSC{<:Any}) = _mul(A, B)
 
 Base.:*(A::StridedMatrix{<:AbstractJuMPScalar}, B::SparseMatrixCSC{<:AbstractJuMPScalar}) = _mul(A, B)
 Base.:*(A::StridedMatrix{<:Any}, B::SparseMatrixCSC{<:AbstractJuMPScalar}) = _mul(A, B)

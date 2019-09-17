@@ -506,9 +506,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test JuMP.isequal_canonical(Y'*Xd, copy(transpose(Y))*Xd)
             @test JuMP.isequal_canonical(Xd'*Xd, copy(transpose(Xd))*Xd)
             @test JuMP.isequal_canonical(A*X, B*X)
-            @test_broken JuMP.isequal_canonical(A*X', B*X') # See https://github.com/JuliaOpt/JuMP.jl/issues/1276
-            # TODO: Sparse matrix multiplication of JuMP objects doesn't work
-            # yet.
+            @test JuMP.isequal_canonical(A*X', B*X')
+            @test JuMP.isequal_canonical(A'*X, B'*X)
         end
 
         @testset "Dot-ops" begin
