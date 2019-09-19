@@ -5,28 +5,40 @@
 
 JuMP is a domain-specific modeling language for **[mathematical optimization]**
 embedded in **[Julia]**. It currently supports a number of open-source and
-commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [Clp], [Couenne], [CPLEX], [ECOS], [FICO Xpress], [GLPK],
-[Gurobi], [Ipopt], [MOSEK], [NLopt], [SCS]) for a variety of problem classes, including
+commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [CDCS], [CDD],
+[Clp], [COSMO], [Couenne], [CPLEX], [CSDP], [ECOS], [FICO Xpress], [GLPK],
+[Gurobi], [Ipopt], [Juniper], [MOSEK], [NLopt], [OSQP], [ProxSDP], [SCIP],
+[SCS], [SDPA], [SeDuMi]) for a variety of problem classes, including
 **[linear programming]**, **[(mixed) integer programming]**,
 **[second-order conic programming]**, **[semidefinite programming]**, and **[nonlinear programming]**.
 
 [mathematical optimization]: http://en.wikipedia.org/wiki/Mathematical_optimization
 [Julia]: http://julialang.org/
+[Artelys Knitro]: http://artelys.com/en/optimization-tools/knitro
+[BARON]: http://archimedes.cheme.cmu.edu/?q=baron
 [Bonmin]: https://projects.coin-or.org/Bonmin
-[Couenne]: https://projects.coin-or.org/Couenne
-[Clp]: https://projects.coin-or.org/Clp
 [Cbc]: https://projects.coin-or.org/Cbc
+[CDCS]: https://github.com/oxfordcontrol/CDCS
+[CDD]: https://github.com/cddlib/cddlib
+[Clp]: https://projects.coin-or.org/Clp
+[COSMO]: https://github.com/oxfordcontrol/COSMO.jl
+[Couenne]: https://projects.coin-or.org/Couenne
+[CPLEX]: http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/
+[CSDP]: https://projects.coin-or.org/Csdp/
 [ECOS]: https://github.com/ifa-ethz/ecos
 [FICO Xpress]: http://www.fico.com/en/products/fico-xpress-optimization-suite
 [GLPK]: http://www.gnu.org/software/glpk/
 [Gurobi]: http://www.gurobi.com/
-[MOSEK]: http://mosek.com/
-[CPLEX]: http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/
 [Ipopt]: https://projects.coin-or.org/Ipopt
-[Artelys Knitro]: http://artelys.com/en/optimization-tools/knitro
+[Juniper]: https://github.com/lanl-ansi/Juniper.jl
+[MOSEK]: http://mosek.com/
 [NLopt]: http://ab-initio.mit.edu/wiki/index.php/NLopt
+[OSQP]: https://osqp.org/
+[ProxSDP]: https://github.com/mariohsouto/ProxSDP.jl
+[SCIP]: https://scip.zib.de/
 [SCS]: https://github.com/cvxgrp/scs
-[BARON]: http://archimedes.cheme.cmu.edu/?q=baron
+[SDPA]: http://sdpa.sourceforge.net/
+[SeDuMi]: http://sedumi.ie.lehigh.edu/
 [linear programming]: http://en.wikipedia.org/wiki/Linear_programming
 [(mixed) integer programming]: http://en.wikipedia.org/wiki/Integer_programming
 [second-order conic programming]: http://en.wikipedia.org/wiki/Second-order_cone_programming
