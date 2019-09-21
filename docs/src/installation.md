@@ -33,6 +33,7 @@ is often more complex. We list below the currently available solvers.
 | [Artelys Knitro](https://www.artelys.com/knitro)                               | [KNITRO.jl](https://github.com/JuliaOpt/KNITRO.jl)                               | Comm.   | LP, MILP, SOCP, MISOCP, NLP, MINLP |
 | [Cbc](https://projects.coin-or.org/Cbc)                                        | [Cbc.jl](https://github.com/JuliaOpt/Cbc.jl)                                     | EPL     | MILP                               |
 | [CDCS](https://github.com/oxfordcontrol/CDCS)                                  | [CDCS.jl](https://github.com/oxfordcontrol/CDCS.jl)                              | GPL     | LP, SOCP, SDP                      |
+| [CDD](https://github.com/cddlib/cddlib)                                        | [CDDLib.jl](https://github.com/JuliaPolyhedra/CDDLib.jl)                         | GPL     | LP                                 |
 | [Clp](https://projects.coin-or.org/Clp)                                        | [Clp.jl](https://github.com/JuliaOpt/Clp.jl)                                     | EPL     | LP                                 |
 | [COSMO](https://github.com/oxfordcontrol/COSMO.jl)                             | [COSMO.jl](https://github.com/oxfordcontrol/COSMO.jl)                            | Apache  | LP, QP, SOCP, SDP                  |
 | [CPLEX](http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/) | [CPLEX.jl](https://github.com/JuliaOpt/CPLEX.jl)                                 | Comm.   | LP, MILP, SOCP, MISOCP             |
@@ -108,6 +109,14 @@ Requires a license.
 ### BARON
 
 Requires a license. A trial version is available for small problem instances.
+
+### CDD
+
+CDD can solve the problem both using `Float64` and `Rational{BigInt}`
+arithmetics. The arithmetic used the type `T` given in `CDDLib.Optimizer{T}`.
+Only `CDDLib.Optimizer{Float64}` can be used with JuMP as JuMP inputs the
+problem in `Float64` arithmetics. Use [MOI](https://github.com/JuliaOpt/MathOptInterface.jl)
+directly for `CDDLib.Optimizer{Rational{BigInt}}`.
 
 ### COIN-OR Cbc
 
