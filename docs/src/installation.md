@@ -97,7 +97,6 @@ new MathOptInterface API:
 - [NLopt](https://github.com/JuliaOpt/NLopt.jl)
 - [Pavito](https://github.com/JuliaOpt/Pavito.jl)
 - [Pajarito](https://github.com/JuliaOpt/Pajarito.jl)
-- [SCIP](https://github.com/SCIP-Interfaces/SCIP.jl)
 
 Solver-specific notes follow below.
 
