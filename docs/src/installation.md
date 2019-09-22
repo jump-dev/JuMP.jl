@@ -94,7 +94,6 @@ new MathOptInterface API:
 
 - [Alpine](https://github.com/lanl-ansi/Alpine.jl)
 - [BARON](https://github.com/joehuchette/BARON.jl)
-- [CDD](https://github.com/JuliaPolyhedra/CDDLib.jl)
 - [NLopt](https://github.com/JuliaOpt/NLopt.jl)
 - [Pavito](https://github.com/JuliaOpt/Pavito.jl)
 - [Pajarito](https://github.com/JuliaOpt/Pajarito.jl)
