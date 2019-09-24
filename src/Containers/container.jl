@@ -1,4 +1,4 @@
-const ArrayIndices{N} = Iterators.ProductIterator{NTuple{N, Base.OneTo{Int}}}
+const ArrayIndices{N} = VectorizedProductIterator{NTuple{N, Base.OneTo{Int}}}
 container(f::Function, indices) = container(f, indices, default_container(indices))
 default_container(::ArrayIndices) = Array
 function container(f::Function, indices::ArrayIndices, ::Type{Array})
@@ -10,14 +10,14 @@ function _oneto(indices)
     end
     error("Index set for array is not one-based interval.")
 end
-function container(f::Function, indices::Iterators.ProductIterator,
+function container(f::Function, indices::VectorizedProductIterator,
                    ::Type{Array})
-    container(f, Iterators.ProductIterator(_oneto.(indices.iterators)), Array)
+    container(f, vectorized_product(_oneto.(indices.prod.iterators)...), Array)
 end
-default_container(::Iterators.ProductIterator) = DenseAxisArray
-function container(f::Function, indices::Iterators.ProductIterator,
+default_container(::VectorizedProductIterator) = DenseAxisArray
+function container(f::Function, indices::VectorizedProductIterator,
                    ::Type{DenseAxisArray})
-    return DenseAxisArray(map(I -> f(I...), indices), indices.iterators...)
+    return DenseAxisArray(map(I -> f(I...), indices), indices.prod.iterators...)
 end
 default_container(::NestedIterator) = SparseAxisArray
 function container(f::Function, indices,

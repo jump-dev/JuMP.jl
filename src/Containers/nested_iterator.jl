@@ -23,7 +23,9 @@ struct NestedIterator{T}
     iterators::T # Tuple of functions
     condition::Function
 end
-NestedIterator(iterator) = NestedIterator(iterator, (args...) -> true)
+function nested(iterators...; condition = (args...) -> true)
+    return NestedIterator(iterators, condition)
+end
 Base.IteratorSize(::Type{<:NestedIterator}) = Base.SizeUnknown()
 Base.IteratorEltype(::Type{<:NestedIterator}) = Base.EltypeUnknown()
 function next_iterate(it::NestedIterator, i, elems, states, iterator, elem_state)

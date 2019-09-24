@@ -135,13 +135,13 @@ function _build_ref_sets(_error::Function, expr)
         esc_idxvars = esc.(idxvars)
         idxfuns = [:(($(esc_idxvars[1:(i - 1)]...),) -> $(idxsets[i])) for i in 1:length(idxvars)]
         if condition == :()
-            indices = :(Containers.NestedIterator(($(idxfuns...),)))
+            indices = :(Containers.nested($(idxfuns...)))
         else
             condition_fun = :(($(esc_idxvars...),) -> $(esc(condition)))
-            indices = :(Containers.NestedIterator(($(idxfuns...),), $condition_fun))
+            indices = :(Containers.nested($(idxfuns...); condition = $condition_fun))
         end
     else
-        indices = :(Base.Iterators.product(($(_explicit_oneto.(idxsets)...))))
+        indices = :(Containers.vectorized_product($(_explicit_oneto.(idxsets)...)))
     end
     return idxvars, indices
 end

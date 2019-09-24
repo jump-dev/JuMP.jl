@@ -14,6 +14,12 @@ using JuMP.Containers
         @test x isa Containers.DenseAxisArray{Int, 1}
         Containers.@container(x[i = 2:3, j = 1:2], i + j)
         @test x isa Containers.DenseAxisArray{Int, 2}
+        Containers.@container(x[4], 0.0)
+        @test x isa Containers.DenseAxisArray{Float64, 1}
+        Containers.@container(x[4, 5], 0)
+        @test x isa Containers.DenseAxisArray{Int, 2}
+        Containers.@container(x[4, 1:3, 5], 0)
+        @test x isa Containers.DenseAxisArray{Int, 3}
     end
     @testset "SparseAxisArray" begin
         Containers.@container(x[i = 1:3, j = 1:i], i + j)

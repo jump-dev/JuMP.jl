@@ -1098,7 +1098,7 @@ above but does it without using the `@variable` macro
 x = JuMP.Containers.container(i -> begin
         info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
         x[i] = JuMP.add_variable(model, JuMP.build_variable(error, info), "x[\$i]")
-    end, Base.Iterators.product(keys(ub)))
+    end, JuMP.Containers.vectorized_product(keys(ub)))
 
 # output
 1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
