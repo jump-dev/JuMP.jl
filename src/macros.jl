@@ -864,13 +864,6 @@ function build_variable(_error::Function, info::VariableInfo; extra_kw_args...)
     end
     return ScalarVariable(info)
 end
-function build_variable(_error::Function, infos::Vector{<:VariableInfo},
-                        set::AbstractVectorSet; extra_kw_args...)
-    for (kwarg, _) in extra_kw_args
-        _error("Unrecognized keyword argument $kwarg")
-    end
-    return ConstrainedVariables(infos, moi_set(set, length(infos)))
-end
 
 function _macro_error(macroname, args, str...)
     error("In `@$macroname($(join(args, ", ")))`: ", str...)
@@ -1042,12 +1035,28 @@ x = @variable(model, base_name="x", lower_bound=0)
 
 The following are equivalent ways of creating a `DenseAxisArray` of index set
 `[:a, :b]` and with respective upper bounds 2 and 3 and names `x[a]` and `x[b]`.
-```julia
+The upper bound can either be specified in `expr`:
+```jldoctest variable_macro; setup = :(using JuMP; model = Model())
 ub = Dict(:a => 2, :b => 3)
-# Specify everything in `expr`
 @variable(model, x[i=keys(ub)] <= ub[i])
-# Specify the upper bound using a keyword argument
-@variable(model, x[i=keys(ub)], upper_bound=ub[i])
+
+# output
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{VariableRef,1}:
+ x[a]
+ x[b]
+```
+or it can be specified with the `upper_bound` keyword argument:
+```jldoctest variable_macro
+@variable(model, y[i=keys(ub)], upper_bound=ub[i])
+
+# output
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{VariableRef,1}:
+ y[a]
+ y[b]
 ```
 
 ## Note for extending the variable macro
@@ -1084,12 +1093,19 @@ JuMP.add_variable(model, JuMP.build_variable(error, info), "x")
 The following creates a `DenseAxisArray` of index set `[:a, :b]` and with respective
 upper bounds 2 and 3 and names `x[a]` and `x[b]` as with the second example
 above but does it without using the `@variable` macro
-```jldoctest; setup = :(using JuMP; model = Model())
+```jldoctest variable_macro
 # Without the `@variable` macro
 x = JuMP.Containers.container(i -> begin
         info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
         x[i] = JuMP.add_variable(model, JuMP.build_variable(error, info), "x[\$i]")
-    end, Base.Iterators.product(keys(ub))
+    end, Base.Iterators.product(keys(ub)))
+
+# output
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{VariableRef,1}:
+ x[a]
+ x[b]
 ```
 
 The following are equivalent ways of creating a `Matrix` of size

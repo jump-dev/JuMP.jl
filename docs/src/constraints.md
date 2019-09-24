@@ -251,7 +251,7 @@ following.
 One way of adding a group of constraints compactly is the following:
 ```jldoctest constraint_arrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:3], i * x <= i + 1)
-3-element Array{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape where C,1}:
+3-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
  con[1] : x <= 2.0
  con[2] : 2 x <= 3.0
  con[3] : 3 x <= 4.0
@@ -264,7 +264,7 @@ julia> con[1]
 con[1] : x <= 2.0
 
 julia> con[2:3]
-2-element Array{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape where C,1}:
+2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
  con[2] : 2 x <= 3.0
  con[3] : 3 x <= 4.0
 ```
@@ -273,7 +273,7 @@ Anonymous containers can also be constructed by dropping the name (e.g. `con`)
 before the square brackets:
 ```jldoctest constraint_arrays
 julia> @constraint(model, [i = 1:2], i * x <= i + 1)
-2-element Array{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape where C,1}:
+2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
  x <= 2.0
  2 x <= 3.0
 ```
@@ -294,10 +294,10 @@ variables.
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:2, j = 2:3], i * x <= j + 1)
-2-dimensional DenseAxisArray{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape where C,2,...} with index sets:
-    Dimension 1, 1:2
+2-dimensional DenseAxisArray{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},2,...} with index sets:
+    Dimension 1, Base.OneTo(2)
     Dimension 2, 2:3
-And data, a 2×2 Array{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape where C,2}:
+And data, a 2×2 Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},2}:
  con[1,2] : x <= 3.0    con[1,3] : x <= 4.0
  con[2,2] : 2 x <= 3.0  con[2,3] : 2 x <= 4.0
 ```
@@ -311,7 +311,7 @@ similar to the [syntax for constructing](@ref variable_sparseaxisarrays) a
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x <= j + 1)
-JuMP.Containers.SparseAxisArray{ConstraintRef{Model,C,Shape} where Shape<:AbstractShape where C,2,Tuple{Any,Any}} with 2 entries:
+JuMP.Containers.SparseAxisArray{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},2,Tuple{Int64,Int64}} with 2 entries:
   [1, 2]  =  con[1,2] : x <= 3.0
   [2, 1]  =  con[2,1] : 2 x <= 2.0
 ```

@@ -144,12 +144,36 @@ function _vectorize_variables(_error::Function, matrix::Matrix)
     return vectorize(matrix, SymmetricMatrixShape(n))
 end
 
+"""
+    build_constraint(_error::Function, variables, ::SymMatrixSpace)
+
+Return a `ConstrainedVariables` of shape [`SymmetricMatrixShape`](@ref)
+creating variables in `MOI.Reals`, i.e. "free" variables unless they are
+constrained after their creation.
+
+This function is used by the [`@variable`](@ref) macro as follows:
+```julia
+@variable(model, Q[1:2, 1:2], Symmetric)
+```
+"""
 function build_variable(_error::Function, variables, ::SymMatrixSpace)
     n = _square_side(_error, variables)
     set = MOI.Reals(MOI.dimension(MOI.PositiveSemidefiniteConeTriangle(n)))
     shape = SymmetricMatrixShape(n)
     return ConstrainedVariables(_vectorize_variables(_error, variables), set, shape)
 end
+
+"""
+    build_constraint(_error::Function, variables, ::PSDCone)
+
+Return a `ConstrainedVariables` of shape [`SymmetricMatrixShape`](@ref)
+constraining the variables to be positive semidefinite.
+
+This function is used by the [`@variable`](@ref) macro as follows:
+```julia
+@variable(model, Q[1:2, 1:2], PSD)
+```
+"""
 function build_variable(_error::Function, variables, ::PSDCone)
     n = _square_side(_error, variables)
     set = MOI.PositiveSemidefiniteConeTriangle(n)
@@ -158,16 +182,14 @@ function build_variable(_error::Function, variables, ::PSDCone)
 end
 
 """
-    function build_constraint(_error::Function, Q::Symmetric{V, M},
-                              ::PSDCone) where {V <: AbstractJuMPScalar,
-                                                M <: AbstractMatrix{V}}
+    build_constraint(_error::Function, Q::Symmetric{V, M},
+                     ::PSDCone) where {V <: AbstractJuMPScalar,
+                                       M <: AbstractMatrix{V}}
 
 Return a `VectorConstraint` of shape [`SymmetricMatrixShape`](@ref) constraining
 the matrix `Q` to be positive semidefinite.
 
-This function is used by the [`@variable`](@ref) macro to create a symmetric
-semidefinite matrix of variables and by the [`@constraint`](@ref) macros as
-follows:
+This function is used by the [`@constraint`](@ref) macros as follows:
 ```julia
 @constraint(model, Symmetric(Q) in PSDCone())
 ```
@@ -192,9 +214,9 @@ function build_constraint(_error::Function, Q::Symmetric{V, M},
 end
 
 """
-    function build_constraint(_error::Function,
-                              Q::AbstractMatrix{<:AbstractJuMPScalar},
-                              ::PSDCone)
+    build_constraint(_error::Function,
+                     Q::AbstractMatrix{<:AbstractJuMPScalar},
+                     ::PSDCone)
 
 Return a `VectorConstraint` of shape [`SquareMatrixShape`](@ref) constraining
 the matrix `Q` to be symmetric and positive semidefinite.

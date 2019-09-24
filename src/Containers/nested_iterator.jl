@@ -1,3 +1,24 @@
+"""
+    struct NestedIterator{T}
+        iterators::T # Tuple of functions
+        condition::Function
+    end
+
+Iterators over the tuples that are produced by a nested for loop.
+For instance, if `length(iterators) == 3` , this corresponds to the tuples
+`(i1, i2, i3)` produced by:
+```
+for i1 in iterators[1]()
+    for i2 in iterator[2](i1)
+        for i3 in iterator[3](i1, i2)
+            if condition(i1, i2, i3)
+                # produces (i1, i2, i3)
+            end
+        end
+    end
+end
+```
+"""
 struct NestedIterator{T}
     iterators::T # Tuple of functions
     condition::Function

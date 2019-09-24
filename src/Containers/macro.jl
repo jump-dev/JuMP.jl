@@ -54,7 +54,7 @@ _expr_is_splat(::Any) = false
     _parse_ref_sets(expr::Expr)
 
 Helper function for macros to construct container objects. Takes an `Expr` that
-specifies the container, e.g. `:(x[i=1:3,[:red,:blue]],k=S; i+k <= 6)`, and
+specifies the container, e.g. `:(x[i=1:3,[:red,:blue],k=S; i+k <= 6])`, and
 returns:
 
     1. `idxvars`: Names for the index variables, e.g. `[:i, gensym(), :k]`
@@ -118,12 +118,12 @@ _parse_ref_sets(_error::Function, expr) = (Any[], Any[], :())
     _build_ref_sets(_error::Function, expr)
 
 Helper function for macros to construct container objects. Takes an `Expr` that
-specifies the container, e.g. `:(x[i=1:3,[:red,:blue]],k=S; i+k <= 6)`, and
+specifies the container, e.g. `:(x[i=1:3,[:red,:blue],k=S; i+k <= 6])`, and
 returns:
 
     1. `idxvars`: Names for the index variables, e.g. `[:i, gensym(), :k]`
-    2. `idxsets`: Sets used for indexing, e.g. `[1:3, [:red,:blue], S]`
-    3. `condition`: Expr containing any conditional imposed on indexing, or `:()` if none is present
+    2. `indices`: Iterators over the indices indexing, e.g.
+       `Constainers.NestedIterators((1:3, [:red,:blue], S), (i, ##..., k) -> i + k <= 6)`.
 """
 function _build_ref_sets(_error::Function, expr)
     idxvars, idxsets, condition = _parse_ref_sets(_error, expr)
