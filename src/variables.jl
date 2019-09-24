@@ -764,7 +764,14 @@ end
 function _moi_add_variable(backend, model, v::ScalarVariable, name::String)
     index = MOI.add_variable(backend)
     var_ref = VariableRef(model, index)
-    info = v.info
+    _moi_constrain_variable(backend, index, v.info)
+    if !isempty(name)
+        set_name(var_ref, name)
+    end
+    return var_ref
+end
+
+function _moi_constrain_variable(backend::MOI.ModelLike, index, info)
     # We don't call the _moi* versions (e.g., _moi_set_lower_bound) because they
     # have extra checks that are not necessary for newly created variables.
     if info.has_lb
@@ -787,12 +794,45 @@ function _moi_add_variable(backend, model, v::ScalarVariable, name::String)
         MOI.add_constraint(backend, MOI.SingleVariable(index), MOI.Integer())
     end
     if info.has_start
-        set_start_value(var_ref, info.start)
+        MOI.set(backend, MOI.VariablePrimalStart(), index,
+                Float64(info.start))
     end
-    if !isempty(name)
-        set_name(var_ref, name)
+end
+
+struct ConstrainedVariables{S <: MOI.AbstractVectorSet, Shape <: AbstractShape,
+                            ScalarVarType <: AbstractVariable} <: AbstractVariable
+    scalar_variables::Vector{ScalarVarType}
+    set::S
+    shape::Shape
+end
+function ConstrainedVariables(variables::Vector{<:AbstractVariable}, set::MOI.AbstractVectorSet)
+    return ConstrainedVariables(variables, set, VectorShape())
+end
+
+function add_variable(model::Model, variable::ConstrainedVariables, names)
+    var_indices = _moi_add_constrained_variables(
+        backend(model), variable.scalar_variables, variable.set, vectorize(names, variable.shape))
+    var_refs = [VariableRef(model, var_index) for var_index in var_indices]
+    return reshape_vector(var_refs, variable.shape)
+end
+
+function _moi_add_constrained_variables(
+    backend::MOI.ModelLike, scalar_variables::Vector{<:ScalarVariable},
+    set::MOI.AbstractVectorSet, names::Vector{String})
+    if set isa MOI.Reals
+        var_indices = MOI.add_variables(backend, MOI.dimension(set))
+    else
+        var_indices, con_index = MOI.add_constrained_variables(backend, set)
     end
-    return var_ref
+    for (index, variable) in zip(var_indices, scalar_variables)
+        _moi_constrain_variable(backend, index, variable.info)
+    end
+    if names !== nothing
+        for (var_index, name) in zip(var_indices, names)
+            MOI.set(backend, MOI.VariableName(), var_index, name)
+        end
+    end
+    return var_indices
 end
 
 """

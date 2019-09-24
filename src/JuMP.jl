@@ -23,6 +23,8 @@ import ForwardDiff
 include("_Derivatives/_Derivatives.jl")
 using ._Derivatives
 
+include("Containers/Containers.jl")
+
 # Exports are at the end of the file.
 
 # Deprecations for JuMP v0.18 -> JuMP v0.19 transition
@@ -460,7 +462,7 @@ end
 """
     set_time_limit_sec(model::Model, limit)
 
-Sets the time limit (in seconds) of the solver. 
+Sets the time limit (in seconds) of the solver.
 Can be unset using `unset_time_limit_sec` or with `limit` set to `nothing`.
 """
 function set_time_limit_sec(model::Model, limit)
@@ -768,7 +770,6 @@ struct NonlinearParameter <: AbstractJuMPScalar
 end
 
 include("copy.jl")
-include("Containers/Containers.jl")
 include("operators.jl")
 include("macros.jl")
 include("optimizer_interface.jl")

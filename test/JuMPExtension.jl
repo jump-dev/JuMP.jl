@@ -59,6 +59,12 @@ function JuMP.add_variable(m::MyModel, v::JuMP.AbstractVariable, name::String=""
     JuMP.set_name(vref, name)
     vref
 end
+function JuMP.add_variable(model::MyModel, variable::JuMP.ConstrainedVariables, names)
+    var_refs = JuMP.add_variable.(model, variable.scalar_variables,
+                                  JuMP.vectorize(names, variable.shape))
+    JuMP.add_constraint(model, JuMP.VectorConstraint(var_refs, variable.set))
+    return JuMP.reshape_vector(var_refs, variable.shape)
+end
 function JuMP.delete(model::MyModel, vref::MyVariableRef)
     @assert JuMP.is_valid(model, vref)
     delete!(model.variables, vref.idx)
