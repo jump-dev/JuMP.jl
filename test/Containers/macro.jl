@@ -6,7 +6,7 @@ using JuMP.Containers
     @testset "Array" begin
         Containers.@container(x[i = 1:3], i^2)
         @test x isa Vector{Int}
-        Containers.@container(x[i = 1:3, j = 1:3], i^2)
+        x = Containers.@container([i = 1:3, j = 1:3], i^2)
         @test x isa Matrix{Int}
     end
     @testset "DenseAxisArray" begin

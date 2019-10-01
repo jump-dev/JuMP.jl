@@ -41,17 +41,6 @@ function _add_kw_args(call, kw_args)
     end
 end
 
-_get_name(c::Symbol) = c
-_get_name(c::Nothing) = ()
-_get_name(c::AbstractString) = c
-function _get_name(c::Expr)
-    if c.head == :string
-        return c
-    else
-        return c.args[1]
-    end
-end
-
 _valid_model(m::AbstractModel, name) = nothing
 _valid_model(m, name) = error("Expected $name to be a JuMP model, but it has type ", typeof(m))
 
@@ -383,7 +372,7 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
     variable = gensym()
-    name = _get_name(c)
+    name = Containers._get_name(c)
     base_name = anonvar ? "" : string(name)
     # TODO: support the base_name keyword argument
 
@@ -841,7 +830,7 @@ macro expression(args...)
     if anonvar
         macro_code = _macro_return(code)
     else
-        macro_code = _macro_assign_and_return(code, variable, _get_name(c),
+        macro_code = _macro_assign_and_return(code, variable, Containers._get_name(c),
                                               model_for_registering = m)
     end
     return _assert_valid_model(m, macro_code)
@@ -1167,7 +1156,7 @@ macro variable(args...)
     anonvar && explicit_comparison && _error("Cannot use explicit bounds via >=, <= with an anonymous variable")
     variable = gensym()
     # TODO: Should we generate non-empty default names for variables?
-    name = _get_name(var)
+    name = Containers._get_name(var)
     if isempty(base_name_kw_args)
         base_name = anonvar ? "" : string(name)
     else
@@ -1348,7 +1337,7 @@ macro NLconstraint(m, x, args...)
         macro_code = _macro_return(creation_code)
     else
         macro_code = _macro_assign_and_return(creation_code, variable,
-                                              _get_name(c),
+                                              Containers._get_name(c),
                                               model_for_registering = esc_m)
     end
     return _assert_valid_model(esc_m, macro_code)
@@ -1397,7 +1386,7 @@ macro NLexpression(args...)
         macro_code = _macro_return(creation_code)
     else
         macro_code = _macro_assign_and_return(creation_code, variable,
-                                              _get_name(c),
+                                              Containers._get_name(c),
                                               model_for_registering = esc(m))
     end
     return _assert_valid_model(esc(m), macro_code)
@@ -1466,6 +1455,6 @@ macro NLparameter(m, ex, extra...)
     # TODO: NLparameters are not registered in the model because we don't yet
     # have an anonymous version.
     macro_code = _macro_assign_and_return(creation_code, variable,
-                                          _get_name(c))
+                                          Containers._get_name(c))
     return _assert_valid_model(esc_m, macro_code)
 end

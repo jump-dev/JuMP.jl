@@ -1,10 +1,16 @@
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 """
     struct VectorizedProductIterator{T}
         prod::Iterators.ProductIterator{T}
     end
 
-Same as `Base.Iterators.ProductIterator` except that it is independent
-on the `IteratorSize` of the elements of `prod.iterators`.
+Cartesian product of the iterators `prod.iterators`. It is the same iterator as
+`Base.Iterators.ProductIterator` except that it is independent of the
+`IteratorSize` of the elements of `prod.iterators`.
 For instance:
 * `size(Iterators.product(1, 2))` is `tuple()` while
   `size(VectorizedProductIterator(1, 2))` is `(1, 1)`.

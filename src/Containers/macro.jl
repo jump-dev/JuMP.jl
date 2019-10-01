@@ -1,4 +1,20 @@
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 using Base.Meta
+
+_get_name(c::Symbol) = c
+_get_name(c::Nothing) = ()
+_get_name(c::AbstractString) = c
+function _get_name(c::Expr)
+    if c.head == :string
+        return c
+    else
+        return c.args[1]
+    end
+end
 
 """
     _extract_kw_args(args)
@@ -65,8 +81,8 @@ function _parse_ref_sets(_error::Function, expr::Expr)
     c = copy(expr)
     idxvars = Any[]
     idxsets = Any[]
-    # On 0.7, :(t[i;j]) is a :ref, while t[i,j;j] is a :typed_vcat.
-    # In both cases :t is the first arg.
+    # `:(t[i,j;k])` is a :ref, while `:(t[i;j])` is a :typed_vcat.
+    # In both cases `:t` is the first arg.
     if isexpr(c, :typed_vcat) || isexpr(c, :ref)
         popfirst!(c.args)
     end
@@ -176,12 +192,71 @@ function parse_container(_error, var, value, requested_container)
     return container_code(idxvars, indices, value, requested_container)
 end
 
+"""
+    @container([i=..., j=..., ...], expr)
+
+Create a container with indices `i`, `j`, ... and values given by `expr` that
+may depend on the value of the indices.
+
+    @container(ref[i=..., j=..., ...], expr)
+
+Same as above but the container is assigned to the variable of name `ref`.
+
+The type of container can be controlled by the `container` keyword. See
+[Containers in macros](@ref). Note that when the index set is explicitly
+given as `1:n` for any expression `n`, it is transformed to `Base.OneTo(n)`
+before being given to [`container`](@ref).
+
+## Examples
+
+```jldoctest
+julia> Containers.@container([i = 1:3, j = 1:3], i + j)
+3×3 Array{Int64,2}:
+ 2  3  4
+ 3  4  5
+ 4  5  6
+
+julia> I = 1:3
+1:3
+
+julia> Containers.@container([i = I, j = I], i + j)
+2-dimensional DenseAxisArray{Int64,2,...} with index sets:
+    Dimension 1, 1:3
+    Dimension 2, 1:3
+And data, a 3×3 Array{Int64,2}:
+ 2  3  4
+ 3  4  5
+ 4  5  6
+
+julia> Containers.@container([i = 2:3, j = 1:3], i + j)
+2-dimensional DenseAxisArray{Int64,2,...} with index sets:
+    Dimension 1, 2:3
+    Dimension 2, Base.OneTo(3)
+And data, a 2×3 Array{Int64,2}:
+ 3  4  5
+ 4  5  6
+
+julia> Containers.@container([i = 1:3, j = 1:3; i <= j], i + j)
+JuMP.Containers.SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 6 entries:
+  [1, 2]  =  3
+  [2, 3]  =  5
+  [3, 3]  =  6
+  [2, 2]  =  4
+  [1, 1]  =  2
+  [1, 3]  =  4
+```
+"""
 macro container(args...)
     args, kw_args, requested_container = _extract_kw_args(args)
     @assert length(args) == 2
     @assert isempty(kw_args)
     var, value = args
-    name = var.args[1]
     code = parse_container(error, var, esc(value), requested_container)
-    return :($(esc(name)) = $code)
+    anonvar = isexpr(var, :vect) || isexpr(var, :vcat)
+    if anonvar
+        return code
+    else
+        name = Containers._get_name(var)
+        return :($(esc(name)) = $code)
+    end
 end
