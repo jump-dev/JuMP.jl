@@ -87,19 +87,9 @@ end
 default_container(::NestedIterator) = SparseAxisArray
 function container(f::Function, indices,
                    ::Type{SparseAxisArray})
-    mappings = map(I -> I => f(I...), indices)
-    data = Dict(mappings)
-    if length(mappings) != length(data)
-        unique_indices = Set()
-        duplicate = nothing
-        for index in indices
-            if index in unique_indices
-                duplicate = index
-                break
-            end
-            push!(unique_indices, index)
-        end
-        error("Repeated index ", duplicate, ". Index sets must have unique elements.")
-    end
-    return SparseAxisArray(Dict(data))
+    # Same as `map` but does not allocate the resulting vector.
+    mappings = Base.Generator(I -> I => f(I...), indices)
+    # Same as `Dict(mapping)` but it will error if two indices are the same.
+    data = NoDuplicateDict(mappings)
+    return SparseAxisArray(data.dict)
 end
