@@ -3,6 +3,30 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# With `Iterators.ProductIterator`, everything works except when the
+# `IteratorSize` of an iterator is not `Base.HasShape{1}` or `Base.HasLength`
+# which is notably the case for scalars for it is `Base.HasShape{0}` and
+# multidimensional arrays for which it is `Base.HasShape{N}` where `N` is the
+# dimension. For instance:
+# ```julia
+# julia> collect(Iterators.product(2, 3))
+# 0-dimensional Array{Tuple{Int64,Int64},0}:
+# (2, 3)
+# ```
+# while we could like it to be a `3`-dimensional array of size `(1, 1)`.
+# When the user does `@container([2, 3], 1)`, a `DenseAxisArray` of size
+# `(1, 1)`. Another example:
+# ```julia
+# julia> collect(Iterators.product([1 2; 3 4]))
+# 2×2 Array{Tuple{Int64},2}:
+# (1,)  (2,)
+# (3,)  (4,)
+# ```
+# while we need the size to be `(4,)`, not `(2, 2)` when the user does
+# `@container([i = [1, 2; 3 4]], i^2)`.
+# Long story short, we want to tried everything as a interator without shape
+# while `Iterators.ProductIterator` does care about preserving the shape
+# when doing the cartesian product.
 """
     struct VectorizedProductIterator{T}
         prod::Iterators.ProductIterator{T}
