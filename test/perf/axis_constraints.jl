@@ -28,7 +28,7 @@ function dense_axis_constraints(n)
 
     @variable(model, x[1:n])
     set = MOI.EqualTo(0.0)
-    @time @constraint(model, con_refs[i = 2:n], x[i] in set)
+    con_refs = @time @constraint(model, [i = 2:n], x[i] in set)
     optimize!(model)
     @assert sum_iterate(con_refs) == n - 1
     @btime sum_iterate($con_refs)
@@ -47,7 +47,7 @@ function sparse_axis_constraints(n)
 
     @variable(model, x[1:n])
     set = MOI.EqualTo(0.0)
-    @time @constraint(model, con_refs[i = 1:n; iseven(i)], x[i] in set)
+    con_refs = @time @constraint(model, [i = 1:n; iseven(i)], x[i] in set)
     optimize!(model)
     @assert sum_iterate(con_refs) == div(n, 2)
     @btime sum_iterate($con_refs)
