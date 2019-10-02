@@ -99,7 +99,6 @@ function container(f::Function, indices,
             end
             push!(unique_indices, index)
         end
-        # TODO compute idx
         error("Repeated index ", duplicate, ". Index sets must have unique elements.")
     end
     return SparseAxisArray(Dict(data))
