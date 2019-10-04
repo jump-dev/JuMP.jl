@@ -1,3 +1,5 @@
+struct SymMatrixSpace end
+
 """
     PSDCone
 
@@ -89,6 +91,10 @@ function reshape_set(::MOI.PositiveSemidefiniteConeTriangle,
                      ::SymmetricMatrixShape)
     return PSDCone()
 end
+function vectorize(matrix, ::SymmetricMatrixShape)
+    n = LinearAlgebra.checksquare(matrix)
+    return [matrix[i, j] for j in 1:n for i in 1:j]
+end
 
 """
     SquareMatrixShape
@@ -107,18 +113,83 @@ end
 function reshape_set(::MOI.PositiveSemidefiniteConeSquare, ::SquareMatrixShape)
     return PSDCone()
 end
+vectorize(matrix, ::SquareMatrixShape) = vec(matrix)
+
+function _square_side(_error::Function, ::Containers.SparseAxisArray)
+    _error("Cannot have index dependencies in symmetric variables.")
+end
+function _square_side(_error::Function, ::Containers.DenseAxisArray)
+    _error("Index sets for symmetric variables must be ranges of the form 1:N.")
+end
+function _square_side(_error::Function, ::Array)
+    _error("Symmetric variables must be 2-dimensional.")
+end
+function _square_side(_error::Function, variables::Matrix)
+    n, m = size(variables)
+    if n != m
+        _error("Symmetric variables must be 2-dimensional.")
+    end
+    return n
+end
+
+function _vectorize_variables(_error::Function, matrix::Matrix)
+    n = LinearAlgebra.checksquare(matrix)
+    for j in 1:n
+        for i in 1:j
+            if matrix[i, j] != matrix[j, i]
+                _error("Non-symmetric bounds, integrality or starting values for symmetric variable.")
+            end
+        end
+    end
+    return vectorize(matrix, SymmetricMatrixShape(n))
+end
 
 """
-    function build_constraint(_error::Function, Q::Symmetric{V, M},
-                              ::PSDCone) where {V <: AbstractJuMPScalar,
-                                                M <: AbstractMatrix{V}}
+    build_constraint(_error::Function, variables, ::SymMatrixSpace)
+
+Return a `ConstrainedVariables` of shape [`SymmetricMatrixShape`](@ref)
+creating variables in `MOI.Reals`, i.e. "free" variables unless they are
+constrained after their creation.
+
+This function is used by the [`@variable`](@ref) macro as follows:
+```julia
+@variable(model, Q[1:2, 1:2], Symmetric)
+```
+"""
+function build_variable(_error::Function, variables, ::SymMatrixSpace)
+    n = _square_side(_error, variables)
+    set = MOI.Reals(MOI.dimension(MOI.PositiveSemidefiniteConeTriangle(n)))
+    shape = SymmetricMatrixShape(n)
+    return ConstrainedVariables(_vectorize_variables(_error, variables), set, shape)
+end
+
+"""
+    build_constraint(_error::Function, variables, ::PSDCone)
+
+Return a `ConstrainedVariables` of shape [`SymmetricMatrixShape`](@ref)
+constraining the variables to be positive semidefinite.
+
+This function is used by the [`@variable`](@ref) macro as follows:
+```julia
+@variable(model, Q[1:2, 1:2], PSD)
+```
+"""
+function build_variable(_error::Function, variables, ::PSDCone)
+    n = _square_side(_error, variables)
+    set = MOI.PositiveSemidefiniteConeTriangle(n)
+    shape = SymmetricMatrixShape(n)
+    return ConstrainedVariables(_vectorize_variables(_error, variables), set, shape)
+end
+
+"""
+    build_constraint(_error::Function, Q::Symmetric{V, M},
+                     ::PSDCone) where {V <: AbstractJuMPScalar,
+                                       M <: AbstractMatrix{V}}
 
 Return a `VectorConstraint` of shape [`SymmetricMatrixShape`](@ref) constraining
 the matrix `Q` to be positive semidefinite.
 
-This function is used by the [`@variable`](@ref) macro to create a symmetric
-semidefinite matrix of variables and by the [`@constraint`](@ref) macros as
-follows:
+This function is used by the [`@constraint`](@ref) macros as follows:
 ```julia
 @constraint(model, Symmetric(Q) in PSDCone())
 ```
@@ -136,15 +207,16 @@ function build_constraint(_error::Function, Q::Symmetric{V, M},
                           ::PSDCone) where {V <: AbstractJuMPScalar,
                                             M <: AbstractMatrix{V}}
     n = LinearAlgebra.checksquare(Q)
-    VectorConstraint([Q[i, j] for j in 1:n for i in 1:j],
+    shape = SymmetricMatrixShape(n)
+    VectorConstraint(vectorize(Q, shape),
                      MOI.PositiveSemidefiniteConeTriangle(n),
-                     SymmetricMatrixShape(n))
+                     shape)
 end
 
 """
-    function build_constraint(_error::Function,
-                              Q::AbstractMatrix{<:AbstractJuMPScalar},
-                              ::PSDCone)
+    build_constraint(_error::Function,
+                     Q::AbstractMatrix{<:AbstractJuMPScalar},
+                     ::PSDCone)
 
 Return a `VectorConstraint` of shape [`SquareMatrixShape`](@ref) constraining
 the matrix `Q` to be symmetric and positive semidefinite.
@@ -169,7 +241,8 @@ function build_constraint(_error::Function,
                           Q::AbstractMatrix{<:AbstractJuMPScalar},
                           ::PSDCone)
     n = LinearAlgebra.checksquare(Q)
-    VectorConstraint(vec(Q),
+    shape = SquareMatrixShape(n)
+    VectorConstraint(vectorize(Q, shape),
                      MOI.PositiveSemidefiniteConeSquare(n),
-                     SquareMatrixShape(n))
+                     shape)
 end

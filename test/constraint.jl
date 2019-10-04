@@ -195,12 +195,14 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         @variable m x[1:2]
         @constraint m cref1[i=2:4] x .== [i, i+1]
         ConstraintRefType = eltype(cref1[2])
-        @test cref1 isa JuMP.Containers.DenseAxisArray{AbstractArray{ConstraintRefType}}
+        @test cref1 isa JuMP.Containers.DenseAxisArray{Vector{ConstraintRefType}}
         @constraint m cref2[i=1:3, j=1:4] x .≤ [i+j, i-j]
-        @test cref2 isa Matrix{AbstractArray{ConstraintRefType}}
+        ConstraintRefType = eltype(cref2[1])
+        @test cref2 isa Matrix{Vector{ConstraintRefType}}
         @variable m y[1:2, 1:2]
-        @constraint m cref3[i=1:2] x[i,:] .== 1
-        @test cref3 isa Vector{AbstractArray{ConstraintRefType}}
+        @constraint m cref3[i=1:2] y[i,:] .== 1
+        ConstraintRefType = eltype(cref3[1])
+        @test cref3 isa Vector{Vector{ConstraintRefType}}
     end
 
     @testset "QuadExpr constraints" begin

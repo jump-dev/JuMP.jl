@@ -50,19 +50,18 @@ mutable struct MyVariable
 end
 
 @testset "Extension of @variable with build_variable #1029" begin
-    local MyVariable = Tuple{JuMP.VariableInfo, Int, Int}
-    JuMP.variable_type(m::Model, ::Type{MyVariable}) = MyVariable
+    local MyVariable{S, T, U, V} = Tuple{JuMP.VariableInfo{S, T, U, V}, Int, Int}
     names = Dict{MyVariable, String}()
-    function JuMP.add_variable(m::Model, v::MyVariable, name::String="")
+    function JuMP.add_variable(::Model, v::MyVariable, name::String="")
         names[v] = name
-        v
+        return v
     end
     # Since `VariableInfo` is an immutable struct, two objects with the same
     # fields have the same hash hence we need to add an id to distinguish
     # variables in the `names` dictionary.
     id = 0
     function JuMP.build_variable(_error::Function, info::JuMP.VariableInfo, ::Type{MyVariable}; test_kw::Int = 0)
-        (info, test_kw, id += 1)
+        return (info, test_kw, id += 1)
     end
     m = Model()
     @variable(m, 1 <= x <= 2, MyVariable, binary = true, test_kw = 1, start = 3)
@@ -83,7 +82,7 @@ end
     @test test_kw == 1
 
     @variable(m, y[1:3] >= 0, MyVariable, test_kw = 2)
-    @test isa(y, Vector{MyVariable})
+    @test isa(y, Vector{<:MyVariable})
     for i in 1:3
         info = y[i][1]
         test_kw = y[i][2]
@@ -454,8 +453,8 @@ end
         i = 10
         j = 10
         @expression(model, ex[j = 2:3], sum(i for i in 1:j))
-        @test ex[2] == AffExpr(3)
-        @test ex[3] == AffExpr(6)
+        @test ex[2] == 3
+        @test ex[3] == 6
         @test i == 10
         @test j == 10
     end
@@ -500,7 +499,7 @@ end
         ) @constraint(model, [axes(A)...], x >= 1)
 
         @test_macro_throws ErrorException(
-            "@NLconstraint: cannot use splatting operator `...` in the definition of an index set."
+            "In `@NLconstraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
         ) @NLconstraint(model, [axes(A)...], x >= 1)
 
         @test_macro_throws ErrorException(
@@ -508,11 +507,11 @@ end
         ) @expression(model, [axes(A)...], x)
 
         @test_macro_throws ErrorException(
-            "@NLexpression: cannot use splatting operator `...` in the definition of an index set."
+            "In `@NLexpression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
         ) @NLexpression(model, [axes(A)...], x)
 
         @test_macro_throws ErrorException(
-            "@NLparameter: cannot use splatting operator `...` in the definition of an index set."
+            "In `@NLparameter(model, p[axes(A)...] == x)`: cannot use splatting operator `...` in the definition of an index set."
         ) @NLparameter(model, p[axes(A)...] == x)
     end
 

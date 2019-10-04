@@ -118,3 +118,4 @@ Vector for which the vectorized form corresponds exactly to the vector given.
 """
 struct VectorShape <: AbstractShape end
 reshape_vector(vectorized_form, ::VectorShape) = vectorized_form
+vectorize(x, ::VectorShape) = x

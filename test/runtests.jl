@@ -21,7 +21,7 @@ const MOI = MathOptInterface
 const MOIT = MOI.Test
 const MOIU = MOI.Utilities
 
-include("Containers.jl")
+include("Containers/Containers.jl")
 
 include("utilities.jl")
 include("JuMPExtension.jl")

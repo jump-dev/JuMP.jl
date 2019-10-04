@@ -14,210 +14,13 @@ end
 
 include("parse_expr.jl")
 
-function _build_ref_sets(expr::Expr, cname)
-    c = copy(expr)
-    idxvars = Any[]
-    idxsets = Any[]
-    # Creating an indexed set of refs
-    refcall = Expr(:ref, cname)
-    # On 0.7, :(t[i;j]) is a :ref, while t[i,j;j] is a :typed_vcat.
-    # In both cases :t is the first arg.
-    if isexpr(c, :typed_vcat) || isexpr(c, :ref)
-        popfirst!(c.args)
-    end
-    condition = :()
-    if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
-        # Parameters appear as plain args at the end.
-        if length(c.args) > 2
-            error("Unsupported syntax $c.")
-        elseif length(c.args) == 2
-            condition = pop!(c.args)
-        end # else no condition.
-    elseif isexpr(c, :ref) || isexpr(c, :vect)
-        # Parameters appear at the front.
-        if isexpr(c.args[1], :parameters)
-            if length(c.args[1].args) != 1
-                error("Invalid syntax: $c. Multiple semicolons are not " *
-                      "supported.")
-            end
-            condition = popfirst!(c.args).args[1]
-        end
-    end
-    if isexpr(c, :vcat) || isexpr(c, :typed_vcat) || isexpr(c, :ref)
-        if isexpr(c.args[1], :parameters)
-            @assert length(c.args[1].args) == 1
-            condition = popfirst!(c.args).args[1]
-        end # else no condition.
-    end
-
-    for s in c.args
-        parse_done = false
-        if isa(s, Expr)
-            parse_done, idxvar, _idxset = _try_parse_idx_set(s::Expr)
-            if parse_done
-                idxset = esc(_idxset)
-            end
-        end
-        if !parse_done # No index variable specified
-            idxvar = gensym()
-            idxset = esc(s)
-        end
-        push!(idxvars, idxvar)
-        push!(idxsets, idxset)
-        push!(refcall.args, esc(idxvar))
-    end
-    return refcall, idxvars, idxsets, condition
-end
-
-_build_ref_sets(c, cname)  = (cname, Any[], Any[], :())
-
-"""
-    JuMP._build_ref_sets(expr::Expr)
-
-Helper function for macros to construct container objects. Takes an `Expr` that specifies the container, e.g. `:(x[i=1:3,[:red,:blue]],k=S; i+k <= 6)`, and returns:
-
-    1. `refcall`: Expr to reference a particular element in the container, e.g. `:(x[i,red,s])`
-    2. `idxvars`: Names for the index variables, e.g. `[:i, gensym(), :k]`
-    3. `idxsets`: Sets used for indexing, e.g. `[1:3, [:red,:blue], S]`
-    4. `condition`: Expr containing any conditional imposed on indexing, or `:()` if none is present
-"""
-_build_ref_sets(c) = _build_ref_sets(c, _get_name(c))
-
-function _expr_is_splat(ex::Expr)
-    if ex.head == :(...)
-        return true
-    elseif ex.head == :escape
-        return _expr_is_splat(ex.args[1])
-    end
-    return false
-end
-_expr_is_splat(::Any) = false
-
-"""
-    JuMP._get_looped_code(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
-
-Helper function for macros to transform expression objects containing kernel code, index sets, conditionals, etc. to an expression that performs the desired loops that iterate over the kernel code. Arguments to the function are:
-
-    1. `varname`: name and appropriate indexing sets (if any) for container that is assigned to in the kernel code, e.g. `:myvar` or `:(x[i=1:3,[:red,:blue]])`
-    2. `code`: `Expr` containing kernel code
-    3. `condition`: `Expr` that is evaluated immediately before kernel code in each iteration. If none, pass `:()`.
-    4. `idxvars`: Names for the index variables for each loop, e.g. `[:i, gensym(), :k]`
-    5. `idxsets`: Sets used to define iteration for each loop, e.g. `[1:3, [:red,:blue], S]`
-    6. `sym`: A `Symbol`/`Expr` containing the element type of the container that is being iterated over, e.g. `:AffExpr` or `:VariableRef`
-    7. `requestedcontainer`: Argument that is passed through to `generate_container`. Either `:Auto`, `:Array`, `:DenseAxisArray`, or `:SparseAxisArray`.
-    8. `lowertri`: `Bool` keyword argument that is `true` if the iteration is over a cartesian array and should only iterate over the lower triangular entries, filling upper triangular entries with copies, e.g. `x[1,3] === x[3,1]`, and `false` otherwise.
-"""
-function _get_looped_code(varname, code, condition, idxvars, idxsets, sym, requestedcontainer::Symbol; lowertri=false)
-
-    # if we don't have indexing, just return to avoid allocating stuff
-    if isempty(idxsets)
-        return code
-    end
-
-    hascond = (condition != :())
-
-    if !(requestedcontainer in [:Auto, :Array, :DenseAxisArray, :SparseAxisArray])
-        # We do this two-step interpolation, first into the string, and then
-        # into the expression because interpolating into a string inside an
-        # expression has scoping issues.
-        error_message = "Invalid container type $requestedcontainer. Must be " *
-                        "Auto, Array, DenseAxisArray, or SparseAxisArray."
-        return :(error($error_message))
-    end
-
-    if hascond
-        if requestedcontainer == :Auto
-            requestedcontainer = :SparseAxisArray
-        elseif requestedcontainer == :Array || requestedcontainer == :DenseAxisArray
-            return :(error("Requested container type is incompatible with ",
-                           "conditional indexing. Use :SparseAxisArray or ",
-                           ":Auto instead."))
-        end
-    end
-    containercode, autoduplicatecheck = Containers.generate_container(sym,
-                                           idxvars, idxsets, requestedcontainer)
-
-    if lowertri
-        @assert !hascond
-        @assert length(idxvars)  == 2
-        @assert !Containers.has_dependent_sets(idxvars, idxsets)
-
-        i, j = esc(idxvars[1]), esc(idxvars[2])
-        expr = copy(code)
-        vname = expr.args[1].args[1]
-        tmp = gensym()
-        expr.args[1] = tmp
-        code = quote
-            for $i in $(idxsets[1]), $j in $(idxsets[2])
-                $i <= $j || continue
-                $expr
-                $vname[$i,$j] = $tmp
-                $vname[$j,$i] = $tmp
-            end
-        end
-    else
-        if !autoduplicatecheck # we need to check for duplicate keys in the index set
-            if length(idxvars) > 1
-                keytuple = Expr(:tuple, esc.(idxvars)...)
-            else
-                keytuple = esc(idxvars[1])
-            end
-            code = quote
-                if haskey($varname, $keytuple)
-                    error(string("Repeated index ", $keytuple,". Index sets must have unique elements."))
-                end
-                $code
-            end
-        end
-        if hascond
-            code = quote
-                $(esc(condition)) || continue
-                $code
-            end
-        end
-        for (idxvar, idxset) in zip(reverse(idxvars),reverse(idxsets))
-            code = quote
-                for $(esc(idxvar)) in $idxset
-                    $code
-                end
-            end
-        end
-    end
-
-
-    return quote
-        $varname = $containercode
-        $code
-        nothing
-    end
-end
-
-"""
-    _extract_kw_args(args)
-
-Process the arguments to a macro, separating out the keyword arguments.
-Return a tuple of (flat_arguments, keyword arguments, and requestedcontainer),
-where `requestedcontainer` is a symbol to be passed to `_get_looped_code`.
-"""
-function _extract_kw_args(args)
-    kw_args = filter(x -> isexpr(x, :(=)) && x.args[1] != :container , collect(args))
-    flat_args = filter(x->!isexpr(x, :(=)), collect(args))
-    requestedcontainer = :Auto
-    for kw in args
-        if isexpr(kw, :(=)) && kw.args[1] == :container
-            requestedcontainer = kw.args[2]
-        end
-    end
-    return flat_args, kw_args, requestedcontainer
-end
-
 """
     _add_kw_args(call, kw_args)
 
 Add the keyword arguments `kw_args` to the function call expression `call`,
 escaping the expressions. The elements of `kw_args` should be expressions of the
 form `:(key = value)`. The `kw_args` vector can be extracted from the arguments
-of a macro with [`_extract_kw_args`](@ref).
+of a macro with [`Containers._extract_kw_args`](@ref).
 
 ## Examples
 
@@ -238,17 +41,6 @@ function _add_kw_args(call, kw_args)
     end
 end
 
-_get_name(c::Symbol) = c
-_get_name(c::Nothing) = ()
-_get_name(c::AbstractString) = c
-function _get_name(c::Expr)
-    if c.head == :string
-        return c
-    else
-        return c.args[1]
-    end
-end
-
 _valid_model(m::AbstractModel, name) = nothing
 _valid_model(m, name) = error("Expected $name to be a JuMP model, but it has type ", typeof(m))
 
@@ -261,26 +53,20 @@ function _assert_valid_model(m, macrocode)
 end
 
 """
-    _macro_return(model, code, variable)
+    _macro_return(code)
 
 Return a block of code that
 
 1. runs the code block `code` in a local scope and
-2. returns the value of a local variable named `variable`. `variable` must
-   reference a variable defined by `code`.
+2. returns the value of the `code`.
 """
-function _macro_return(code, variable)
-    return quote
-        let
-            # The let block ensures that all variables created behave like
-            # local variables, see
-            # https://github.com/JuliaOpt/JuMP.jl/issues/1496.
-            # To make $variable accessible from outside we need to return it at
-            # the end of the block.
-            $code
-            $variable
-        end
-    end
+function _macro_return(code)
+    # The let block ensures that all variables created behave like
+    # local variables, see
+    # https://github.com/JuliaOpt/JuMP.jl/issues/1496.
+    # This is needed as `sum` are transformed into `for` loops in
+    # `parse_expr`.
+    return :( let; $code; end )
 end
 
 function _error_if_cannot_register(model::AbstractModel, name::Symbol)
@@ -300,18 +86,16 @@ end
 
 """
     _macro_assign_and_return(code, variable, name;
-                             final_variable=variable,
                              model_for_registering=nothing)
 
 Return runs `code` in a local scope which returns the value of `variable`
-and then assign `final_variable` to `name`.
+and then assign `variable` to `name`.
 If `model_for_registering` is given, the generated code assigns the resulting
 object to the model dictionary.
 """
 function _macro_assign_and_return(code, variable, name;
-                                  final_variable=variable,
                                   model_for_registering=nothing)
-    macro_code = _macro_return(code, variable)
+    macro_code = _macro_return(code)
     return quote
         $(if model_for_registering !== nothing
             :(_error_if_cannot_register($model_for_registering,
@@ -320,10 +104,10 @@ function _macro_assign_and_return(code, variable, name;
         $variable = $macro_code
         $(if model_for_registering !== nothing
             :(object_dictionary($model_for_registering)[$(quot(name))] =
-              $final_variable)
+              $variable)
           end)
         # This assignment should be in the scope calling the macro
-        $(esc(name)) = $final_variable
+        $(esc(name)) = $variable
     end
 end
 
@@ -564,7 +348,7 @@ constraint reference.
 function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
     _error(str...) = _macro_error(macro_name, args, str...)
 
-    args, kw_args, requestedcontainer = _extract_kw_args(args)
+    args, kw_args, requestedcontainer = Containers._extract_kw_args(args)
 
     if length(args) < 2
         if length(kw_args) > 0
@@ -588,7 +372,7 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
     variable = gensym()
-    name = _get_name(c)
+    name = Containers._get_name(c)
     base_name = anonvar ? "" : string(name)
     # TODO: support the base_name keyword argument
 
@@ -599,12 +383,9 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
     (x.head == :block) &&
         _error("Code block passed as constraint. Perhaps you meant to use @constraints instead?")
 
-    # Strategy: build up the code for add_constraint, and if needed
-    # we will wrap in loops to assign to the ConstraintRefs
-    refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-    if any(_expr_is_splat.(idxsets))
-        _error("cannot use splatting operator `...` in the definition of an index set.")
-    end
+    # Strategy: build up the code for add_constraint, and if needed we will wrap
+    # in a function returning `ConstraintRef`s and give it to `Containers.container`.
+    idxvars, indices = Containers._build_ref_sets(_error, c)
 
     vectorized, parsecode, buildcall = parsefun(_error, x.args...)
     _add_kw_args(buildcall, kw_args)
@@ -616,22 +397,16 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
     end
     code = quote
         $parsecode
-        $(refcall) = $constraintcall
+        $constraintcall
     end
 
-    # Determine the return type of add_constraint. This is needed for JuMP extensions for which this is different than ConstraintRef
-    if vectorized
-        contype = :( AbstractArray{constraint_type($m)} ) # TODO use a concrete type instead of AbstractArray, see #525, #1310
-    else
-        contype = :( constraint_type($m) )
-    end
-    creationcode = _get_looped_code(variable, code, condition, idxvars, idxsets, contype, requestedcontainer)
+    creationcode = Containers.container_code(idxvars, indices, code, requestedcontainer)
 
     if anonvar
         # Anonymous constraint, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
         # We simply return the constraint reference
-        macro_code = _macro_return(creationcode, variable)
+        macro_code = _macro_return(creationcode)
     else
         # We register the constraint reference to its name and
         # we assign it to a variable in the local scope of this name
@@ -818,7 +593,7 @@ macro build_constraint(constraint_expr)
         $result_variable = $build_call
     end
 
-    return _macro_return(code, result_variable)
+    return _macro_return(code)
 end
 
 _add_JuMP_prefix(s::Symbol) = Expr(:., JuMP, :($(QuoteNode(s))))
@@ -977,8 +752,9 @@ macro objective(model, args...)
         q = Val{false}()
         $parsecode
         set_objective($esc_model, $sense_expr, $newaff)
+        $newaff
     end
-    return _assert_valid_model(esc_model, _macro_return(code, newaff))
+    return _assert_valid_model(esc_model, _macro_return(code))
 end
 
 # Return a standalone, unnamed expression
@@ -990,7 +766,7 @@ macro _build_expression(x)
         q = Val{false}()
         $parsecode
     end
-    return _macro_return(code, newaff)
+    return _macro_return(code)
 end
 
 
@@ -1021,8 +797,8 @@ expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
 ```
 """
 macro expression(args...)
-    macro_error(str...) = _macro_error(:expression, args, str...)
-    args, kw_args, requestedcontainer = _extract_kw_args(args)
+    _error(str...) = _macro_error(:expression, args, str...)
+    args, kw_args, requestedcontainer = Containers._extract_kw_args(args)
     if length(args) == 3
         m = esc(args[1])
         c = args[2]
@@ -1032,38 +808,29 @@ macro expression(args...)
         c = gensym()
         x = args[2]
     else
-        macro_error("needs at least two arguments.")
+        _error("needs at least two arguments.")
     end
-    length(kw_args) == 0 || macro_error("unrecognized keyword argument")
+    length(kw_args) == 0 || _error("unrecognized keyword argument")
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
-    refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-    if any(_expr_is_splat.(idxsets))
-        macro_error("cannot use splatting operator `...` in the definition of an index set.")
-    end
+    idxvars, indices = Containers._build_ref_sets(_error, c)
     newaff, parsecode = _parse_expr_toplevel(x, :q)
     code = quote
         q = Val{false}()
         $parsecode
     end
-    if isa(c,Expr)
-        code = quote
-            $code
-            (isa($newaff,AffExpr) || isa($newaff,Number) || isa($newaff,VariableRef)) || error("Collection of expressions with @expression must be linear. For quadratic expressions, use your own array.")
-        end
-    end
     code = quote
         $code
-        $(refcall) = $newaff
+        $newaff
     end
-    code = _get_looped_code(variable, code, condition, idxvars, idxsets, :AffExpr, requestedcontainer)
+    code = Containers.container_code(idxvars, indices, code, requestedcontainer)
     # don't do anything with the model, but check that it's valid anyway
     if anonvar
-        macro_code = _macro_return(code, variable)
+        macro_code = _macro_return(code)
     else
-        macro_code = _macro_assign_and_return(code, variable, _get_name(c),
+        macro_code = _macro_assign_and_return(code, variable, Containers._get_name(c),
                                               model_for_registering = m)
     end
     return _assert_valid_model(m, macro_code)
@@ -1257,12 +1024,28 @@ x = @variable(model, base_name="x", lower_bound=0)
 
 The following are equivalent ways of creating a `DenseAxisArray` of index set
 `[:a, :b]` and with respective upper bounds 2 and 3 and names `x[a]` and `x[b]`.
-```julia
+The upper bound can either be specified in `expr`:
+```jldoctest variable_macro; setup = :(using JuMP; model = Model())
 ub = Dict(:a => 2, :b => 3)
-# Specify everything in `expr`
 @variable(model, x[i=keys(ub)] <= ub[i])
-# Specify the upper bound using a keyword argument
-@variable(model, x[i=keys(ub)], upper_bound=ub[i])
+
+# output
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{VariableRef,1}:
+ x[a]
+ x[b]
+```
+or it can be specified with the `upper_bound` keyword argument:
+```jldoctest variable_macro
+@variable(model, y[i=keys(ub)], upper_bound=ub[i])
+
+# output
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{VariableRef,1}:
+ y[a]
+ y[b]
 ```
 
 ## Note for extending the variable macro
@@ -1299,14 +1082,19 @@ JuMP.add_variable(model, JuMP.build_variable(error, info), "x")
 The following creates a `DenseAxisArray` of index set `[:a, :b]` and with respective
 upper bounds 2 and 3 and names `x[a]` and `x[b]` as with the second example
 above but does it without using the `@variable` macro
-```julia
+```jldoctest variable_macro
 # Without the `@variable` macro
-data = Vector{JuMP.variable_type(model)}(undef, length(keys(ub)))
-x = JuMP.Containers.DenseAxisArray(data, keys(ub))
-for i in keys(ub)
-    info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
-    x[i] = JuMP.add_variable(model, JuMP.build_variable(error, info), "x[\$i]")
-end
+x = JuMP.Containers.container(i -> begin
+        info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
+        x[i] = JuMP.add_variable(model, JuMP.build_variable(error, info), "x[\$i]")
+    end, JuMP.Containers.vectorized_product(keys(ub)))
+
+# output
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{VariableRef,1}:
+ x[a]
+ x[b]
 ```
 
 The following are equivalent ways of creating a `Matrix` of size
@@ -1328,7 +1116,7 @@ macro variable(args...)
 
     model = esc(args[1])
 
-    extra, kw_args, requestedcontainer = _extract_kw_args(args[2:end])
+    extra, kw_args, requestedcontainer = Containers._extract_kw_args(args[2:end])
 
     # if there is only a single non-keyword argument, this is an anonymous
     # variable spec and the one non-kwarg is the model
@@ -1365,10 +1153,10 @@ macro variable(args...)
     end
 
     anonvar = isexpr(var, :vect) || isexpr(var, :vcat) || anon_singleton
-    anonvar && explicit_comparison && error("Cannot use explicit bounds via >=, <= with an anonymous variable")
+    anonvar && explicit_comparison && _error("Cannot use explicit bounds via >=, <= with an anonymous variable")
     variable = gensym()
     # TODO: Should we generate non-empty default names for variables?
-    name = _get_name(var)
+    name = Containers._get_name(var)
     if isempty(base_name_kw_args)
         base_name = anonvar ? "" : string(name)
     else
@@ -1382,8 +1170,13 @@ macro variable(args...)
     # process keyword arguments
     obj = nothing
 
-    sdp = any(t -> (t == :PSD), extra)
-    symmetric = (sdp || any(t -> (t == :Symmetric), extra))
+    set = nothing
+    if any(t -> (t == :PSD), extra)
+        set = :(JuMP.PSDCone())
+    end
+    if any(t -> (t == :Symmetric), extra)
+        set = :(JuMP.SymMatrixSpace())
+    end
     extra = filter(x -> (x != :PSD && x != :Symmetric), extra) # filter out PSD and sym tag
     for ex in extra
         if ex == :Int
@@ -1392,88 +1185,49 @@ macro variable(args...)
             _set_binary_or_error(_error, infoexpr)
         end
     end
-    extra = esc.(filter(ex -> !(ex in [:Int,:Bin]), extra))
+    extra = esc.(filter(ex -> !(ex in [:Int, :Bin]), extra))
     if !isempty(variable_type_kw_args)
         push!(extra, esc(variable_type_kw_args[1].args[2]))
     end
 
     info = _constructor_expr(infoexpr)
-    if isa(var,Symbol)
+    if isa(var, Symbol)
         # Easy case - a single variable
-        sdp && _error("Cannot add a semidefinite scalar variable")
+        set === nothing || _error("Cannot add a scalar constrained variable in $set.")
         buildcall = :( build_variable($_error, $info, $(extra...)) )
         _add_kw_args(buildcall, extra_kw_args)
         variablecall = :( add_variable($model, $buildcall, $base_name) )
         # The looped code is trivial here since there is a single variable
         creationcode = :($variable = $variablecall)
-        final_variable = variable
     else
-        isa(var,Expr) || _error("Expected $var to be a variable name")
+        isa(var, Expr) || _error("Expected $var to be a variable name")
         # We now build the code to generate the variables (and possibly the
         # SparseAxisArray to contain them)
-        refcall, idxvars, idxsets, condition = _build_ref_sets(var, variable)
-        if any(_expr_is_splat.(idxsets))
-            _error("cannot use splatting operator `...` in the definition of an index set.")
-        end
-        clear_dependencies(i) = (Containers.is_dependent(idxvars,idxsets[i],i) ? () : idxsets[i])
+        idxvars, indices = Containers._build_ref_sets(_error, var)
 
         # Code to be used to create each variable of the container.
         buildcall = :( build_variable($_error, $info, $(extra...)) )
         _add_kw_args(buildcall, extra_kw_args)
-        variablecall = :( add_variable($model, $buildcall, $(_name_call(base_name, idxvars))) )
-        code = :( $(refcall) = $variablecall )
-        # Determine the return type of add_variable. This is needed to create the container holding them.
-        vartype = :( variable_type($model, $(extra...)) )
-
-        if symmetric
-            # Sanity checks on PSD input stuff
-            condition == :() ||
-                _error("Cannot have conditional indexing for PSD variables")
-            length(idxvars) == length(idxsets) == 2 ||
-                _error("PSD variables must be 2-dimensional")
-            !symmetric || (length(idxvars) == length(idxsets) == 2) ||
-                _error("Symmetric variables must be 2-dimensional")
-            Containers.has_dependent_sets(idxvars, idxsets) &&
-                _error("Cannot have index dependencies in symmetric variables")
-            for _rng in idxsets
-                isexpr(_rng, :escape) ||
-                    _error("Internal error 1")
-                rng = _rng.args[1] # undo escaping
-                (isexpr(rng,:call) && length(rng.args) == 3 && rng.args[1] == :(:) && rng.args[2] == 1) ||
-                    _error("Index sets for SDP variables must be ranges of the form 1:N")
-            end
-
-            if infoexpr.has_lb || infoexpr.has_ub
-                _error("Semidefinite or symmetric variables cannot be provided bounds")
-            end
-            # 1:3 is parsed as (:call, :, 1, 3)
-            dimension_check = :($(esc(idxsets[1].args[1].args[3])) ==
-                                $(esc(idxsets[2].args[1].args[3])))
-            creationcode = quote
-                $dimension_check || error("Cannot construct symmetric variables with nonsquare dimensions.")
-                $(_get_looped_code(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer; lowertri=symmetric))
-                $(if sdp
-                    quote
-                        JuMP.add_constraint($model, JuMP.build_constraint($_error, Symmetric($variable), JuMP.PSDCone()))
-                    end
-                end)
-            end
-            final_variable = :(Symmetric($variable))
+        name_code = _name_call(base_name, idxvars)
+        if set === nothing
+            variablecall = :( add_variable($model, $buildcall, $name_code) )
+            creationcode = Containers.container_code(idxvars, indices, variablecall, requestedcontainer)
         else
-            creationcode = _get_looped_code(variable, code, condition, idxvars, idxsets, vartype, requestedcontainer)
-            final_variable = variable
+            scalar_variables = Containers.container_code(idxvars, indices, buildcall, requestedcontainer)
+            names = Containers.container_code(idxvars, indices, name_code, requestedcontainer)
+            buildcall = :( build_variable($_error, $scalar_variables, $set, $(extra...)) )
+            creationcode = :( add_variable($model, $buildcall, $names) )
         end
     end
     if anonvar
         # Anonymous variable, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
         # We simply return the variable
-        macro_code = _macro_return(creationcode, final_variable)
+        macro_code = _macro_return(creationcode)
     else
         # We register the variable reference to its name and
         # we assign it to a variable in the local scope of this name
         macro_code = _macro_assign_and_return(creationcode, variable, name,
-                                              final_variable=final_variable,
                                               model_for_registering = model)
     end
     return _assert_valid_model(model, macro_code)
@@ -1497,7 +1251,7 @@ macro NLobjective(model, sense, x)
         $ex = $(_process_NL_expr(model, x))
         set_objective($(esc(model)), $sense_expr, $ex)
     end
-    return _assert_valid_model(esc(model), _macro_return(code, nothing))
+    return _assert_valid_model(esc(model), _macro_return(code))
 end
 
 """
@@ -1511,30 +1265,28 @@ Add a constraint described by the nonlinear expression `expr`. See also
 @NLconstraint(model, [i = 1:3], sin(i * x) <= 1 / i)
 ```
 """
-macro NLconstraint(m, x, extra...)
+macro NLconstraint(m, x, args...)
+    _error(str...) = _macro_error(:NLconstraint, (m, x, args...), str...)
     esc_m = esc(m)
     # Two formats:
     # - @NLconstraint(m, a*x <= 5)
     # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
-    extra, kw_args, requestedcontainer = _extract_kw_args(extra)
-    (length(extra) > 1 || length(kw_args) > 0) && error("in @NLconstraint: too many arguments.")
+    extra, kw_args, requestedcontainer = Containers._extract_kw_args(args)
+    (length(extra) > 1 || length(kw_args) > 0) && _error("too many arguments.")
     # Canonicalize the arguments
-    c = length(extra) == 1 ? x        : gensym()
-    x = length(extra) == 1 ? extra[1] : x
+    c   = length(extra) == 1 ? x        : gensym()
+    con = length(extra) == 1 ? extra[1] : x
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
     variable = gensym()
 
     # Strategy: build up the code for non-macro add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
-    refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-    if any(_expr_is_splat.(idxsets))
-        error("@NLconstraint: cannot use splatting operator `...` in the definition of an index set.")
-    end
+    idxvars, indices = Containers._build_ref_sets(_error, c)
     # Build the constraint
-    if isexpr(x, :call) # one-sided constraint
+    if isexpr(con, :call) # one-sided constraint
         # Simple comparison - move everything to the LHS
-        op = x.args[1]
+        op = con.args[1]
         if op == :(==)
             lb = 0.0
             ub = 0.0
@@ -1545,47 +1297,47 @@ macro NLconstraint(m, x, extra...)
             lb = 0.0
             ub = Inf
         else
-            error("in @NLconstraint ($(string(x))): expected comparison operator (<=, >=, or ==).")
+            _error("expected comparison operator (<=, >=, or ==).")
         end
-        lhs = :($(x.args[2]) - $(x.args[3]))
+        lhs = :($(con.args[2]) - $(con.args[3]))
         code = quote
             c = _NonlinearConstraint($(_process_NL_expr(m, lhs)), $lb, $ub)
             push!($esc_m.nlp_data.nlconstr, c)
-            $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlp_data.nlconstr)), ScalarShape())
+            ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlp_data.nlconstr)), ScalarShape())
         end
-    elseif isexpr(x, :comparison)
+    elseif isexpr(con, :comparison)
         # ranged row
-        if (x.args[2] != :<= && x.args[2] != :≤) || (x.args[4] != :<= && x.args[4] != :≤)
-            error("in @NLconstraint ($(string(x))): only ranged rows of the form lb <= expr <= ub are supported.")
+        if (con.args[2] != :<= && con.args[2] != :≤) || (con.args[4] != :<= && con.args[4] != :≤)
+            _error("only ranged rows of the form lb <= expr <= ub are supported.")
         end
-        lb = x.args[1]
-        ub = x.args[5]
+        lb = con.args[1]
+        ub = con.args[5]
         code = quote
             if !isa($(esc(lb)),Number)
-                error(string("in @NLconstraint (",$(string(x)),"): expected ",$(string(lb))," to be a number."))
+                _error("expected ", $(string(lb)), " to be a number.")
             elseif !isa($(esc(ub)),Number)
-                error(string("in @NLconstraint (",$(string(x)),"): expected ",$(string(ub))," to be a number."))
+                _error("expected ", $(string(ub)), " to be a number.")
             end
-            c = _NonlinearConstraint($(_process_NL_expr(m, x.args[3])), $(esc(lb)), $(esc(ub)))
+            c = _NonlinearConstraint($(_process_NL_expr(m, con.args[3])), $(esc(lb)), $(esc(ub)))
             push!($esc_m.nlp_data.nlconstr, c)
-            $(refcall) = ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlp_data.nlconstr)), ScalarShape())
+            ConstraintRef($esc_m, NonlinearConstraintIndex(length($esc_m.nlp_data.nlconstr)), ScalarShape())
         end
     else
         # Unknown
-        error("in @NLconstraint ($(string(x))): constraints must be in one of the following forms:\n" *
-              "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
-              "       expr1 == expr2")
+        _error("constraints must be in one of the following forms:\n" *
+            "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
+            "       expr1 == expr2")
     end
-    looped = _get_looped_code(variable, code, condition, idxvars, idxsets, :(ConstraintRef{Model,NonlinearConstraintIndex}), requestedcontainer)
+    looped = Containers.container_code(idxvars, indices, code, requestedcontainer)
     creation_code = quote
         _init_NLP($esc_m)
         $looped
     end
     if anonvar
-        macro_code = _macro_return(creation_code, variable)
+        macro_code = _macro_return(creation_code)
     else
         macro_code = _macro_assign_and_return(creation_code, variable,
-                                              _get_name(c),
+                                              Containers._get_name(c),
                                               model_for_registering = esc_m)
     end
     return _assert_valid_model(esc_m, macro_code)
@@ -1610,9 +1362,10 @@ my_expr_2 = @NLexpression(m, log(1 + sum(exp(x[i])) for i in 1:2))
 ```
 """
 macro NLexpression(args...)
-    args, kw_args, requestedcontainer = _extract_kw_args(args)
+    _error(str...) = _macro_error(:NLexpression, args, str...)
+    args, kw_args, requestedcontainer = Containers._extract_kw_args(args)
     if length(args) <= 1
-        error("in @NLexpression: To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.")
+        _error("To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.")
     elseif length(args) == 2
         m, x = args
         c = gensym()
@@ -1620,25 +1373,20 @@ macro NLexpression(args...)
         m, c, x = args
     end
     if length(args) > 3 || length(kw_args) > 0
-        error("in @NLexpression: To many arguments ($(length(args))).")
+        _error("To many arguments ($(length(args))).")
     end
 
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
-    refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-    if any(_expr_is_splat.(idxsets))
-        error("@NLexpression: cannot use splatting operator `...` in the definition of an index set.")
-    end
-    code = quote
-        $(refcall) = NonlinearExpression($(esc(m)), $(_process_NL_expr(m, x)))
-    end
-    creation_code = _get_looped_code(variable, code, condition, idxvars, idxsets, :NonlinearExpression, requestedcontainer)
+    idxvars, indices = Containers._build_ref_sets(_error, c)
+    code = :( NonlinearExpression($(esc(m)), $(_process_NL_expr(m, x))) )
+    creation_code = Containers.container_code(idxvars, indices, code, requestedcontainer)
     if anonvar
-        macro_code = _macro_return(creation_code, variable)
+        macro_code = _macro_return(creation_code)
     else
         macro_code = _macro_assign_and_return(creation_code, variable,
-                                              _get_name(c),
+                                              Containers._get_name(c),
                                               model_for_registering = esc(m))
     end
     return _assert_valid_model(esc(m), macro_code)
@@ -1679,37 +1427,34 @@ value(y[9])
 ```
 """
 macro NLparameter(m, ex, extra...)
+    _error(str...) = _macro_error(:NLparameter, (m, ex, extra...), str...)
 
-    extra, kw_args, requestedcontainer = _extract_kw_args(extra)
-    (length(extra) == 0 && length(kw_args) == 0) || error("in @NLperameter: too many arguments.")
+    extra, kw_args, requestedcontainer = Containers._extract_kw_args(extra)
+    (length(extra) == 0 && length(kw_args) == 0) || _error("Too many arguments.")
     if !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
-        error("In @NLparameter($m, $ex): syntax error.")
+        _error("Syntax error.")
     end
     c = ex.args[2]
     x = ex.args[3]
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
     if anonvar
-        error("In @NLparameter($m, $ex): Anonymous nonlinear parameter syntax is not currently supported")
+        _error("Anonymous nonlinear parameter syntax is not currently supported.")
     end
-    m = esc(m)
+    esc_m = esc(m)
     variable = gensym()
 
-    refcall, idxvars, idxsets, condition = _build_ref_sets(c, variable)
-    if any(_expr_is_splat.(idxsets))
-        error("@NLparameter: cannot use splatting operator `...` in the definition of an index set.")
-    end
+    idxvars, indices = Containers._build_ref_sets(_error, c)
     code = quote
         if !isa($(esc(x)), Number)
-            error(string("in @NLparameter (", $(string(ex)), "): expected ",
-                         $(string(x))," to be a number."))
+            _error("Expected ", $(string(x)), " to be a number.")
         end
-        $(refcall) = _new_parameter($m, $(esc(x)))
+        _new_parameter($esc_m, $(esc(x)))
     end
-    creation_code = _get_looped_code(variable, code, condition, idxvars, idxsets, :NonlinearParameter, :Auto)
+    creation_code = Containers.container_code(idxvars, indices, code, :Auto)
 
     # TODO: NLparameters are not registered in the model because we don't yet
     # have an anonymous version.
     macro_code = _macro_assign_and_return(creation_code, variable,
-                                          _get_name(c))
-    return _assert_valid_model(m, macro_code)
+                                          Containers._get_name(c))
+    return _assert_valid_model(esc_m, macro_code)
 end
