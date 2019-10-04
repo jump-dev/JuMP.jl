@@ -52,18 +52,79 @@ JuMP.Containers.SparseAxisArray{Float64,2,Tuple{Symbol,Int64}} with 3 entries:
   [a, 3]  =  2.0
 
 julia&gt; array[:b, 3]
-3.0</code></pre></div></div></section><h2><a class="nav-anchor" id="Containers-in-macros-1" href="#Containers-in-macros-1">Containers in macros</a></h2><p>The <code>generate_container</code> function encodes the logic for how containers are constructed in JuMP&#39;s macros.</p><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.Containers.generate_container" href="#JuMP.Containers.generate_container"><code>JuMP.Containers.generate_container</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">generate_container(T, indexvars, indexsets, requestedtype)</code></pre><p>Return a tuple, the first element of which is <em>code</em> that generates a container for objects of type <code>T</code> given the index variables, index sets, and <code>requestedtype</code>. <code>requestedtype</code> may be one of <code>:Array</code>, <code>:DenseAxisArray</code>, <code>:SparseAxisArray</code>, or <code>:Auto</code>. Return error-producing code if requested type is incompatible. For the case of <code>:Auto</code>, the following rules are used to determine the appropriate container:</p><ol><li><p>If all index sets are either explicit <code>1:B</code> objects for any <code>B</code> or symbols which refer to objects of type <code>Base.OneTo</code>, then an <code>Array</code> is generated of the appropriate size. Types of symbols/expressions are not known at compile time, so we defer to type-safe functions to check the <code>Base.OneTo</code> condition.</p></li><li><p>If condition (1) does not hold, and the index sets are independent (the index variable for one set does not appear in the definition of another), then an <code>DenseAxisArray</code> is generated of the appropriate size.</p></li><li><p>Otherwise, generate an empty <code>SparseAxisArray{T,N,NTuple{N,Any}}</code>.</p></li></ol><p>The second element of the return tuple is a <code>Bool</code>, <code>true</code> if the container type automatically checks for duplicate terms in the index sets and <code>false</code> otherwise.</p><p><strong>Examples</strong></p><pre><code class="language-none">generate_container(VariableRef, [:i,:j], [:(1:N), :(1:T)], :Auto)
-# Returns code equivalent to:
-# :(Array{VariableRef}(length(1:N), length(1:T))
+3.0</code></pre></div></div></section><h2><a class="nav-anchor" id="Containers-in-macros-1" href="#Containers-in-macros-1">Containers in macros</a></h2><p>The <code>container</code> function encodes the logic for how containers are constructed in JuMP&#39;s macros. The <code>@container</code> macro is available to create containers independently of any JuMP model.</p><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.Containers.container" href="#JuMP.Containers.container"><code>JuMP.Containers.container</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">container(f::Function, indices, ::Type{C})</code></pre><p>Create a container of type <code>C</code> with indices <code>indices</code> and values at given indices given by <code>f</code>.</p><pre><code class="language-none">container(f::Function, indices)</code></pre><p>Create a container with indices <code>indices</code> and values at given indices given by <code>f</code>. The type of container used is determined by <a href="#JuMP.Containers.default_container"><code>default_container</code></a>.</p><p><strong>Examples</strong></p><pre><code class="language-">julia&gt; Containers.container((i, j) -&gt; i + j, Containers.vectorized_product(Base.OneTo(3), Base.OneTo(3)))
+3×3 Array{Int64,2}:
+ 2  3  4
+ 3  4  5
+ 4  5  6
 
-generate_container(VariableRef, [:i,:j], [:(1:N), :(2:T)], :Auto)
-# Returns code equivalent to:
-# :(JuMP.Containers.DenseAxisArray(undef, 1:N, 2:T))
+julia&gt; Containers.container((i, j) -&gt; i + j, Containers.vectorized_product(1:3, 1:3))
+2-dimensional DenseAxisArray{Int64,2,...} with index sets:
+    Dimension 1, 1:3
+    Dimension 2, 1:3
+And data, a 3×3 Array{Int64,2}:
+ 2  3  4
+ 3  4  5
+ 4  5  6
 
-generate_container(VariableRef, [:i,:j], [:(1:N), :(S)], :Auto)
-# Returns code that generates an Array if S is of type Base.OneTo,
-# otherwise an DenseAxisArray.
+julia&gt; Containers.container((i, j) -&gt; i + j, Containers.vectorized_product(2:3, Base.OneTo(3)))
+2-dimensional DenseAxisArray{Int64,2,...} with index sets:
+    Dimension 1, 2:3
+    Dimension 2, Base.OneTo(3)
+And data, a 2×3 Array{Int64,2}:
+ 3  4  5
+ 4  5  6
 
-generate_container(VariableRef, [:i,:j], [:(1:N), :(1:j)], :Auto)
-# Returns code equivalent to:
-# :(Containers.SparseAxisArray(Dict{NTuple{N,Any},VariableRef}()))</code></pre></div></div></section><p>In the <a href="../variables/#JuMP.@variable"><code>@variable</code></a> (resp. <a href="../constraints/#JuMP.@constraint"><code>@constraint</code></a>) macro, containers of variables (resp. constraints) can be created with the following syntax:</p><ul><li><code>name[index_set_1, index_set_2, ..., index_set_n]</code> creating an <code>n</code>-dimensional container of name <code>name</code>; or</li><li><code>[index_set_1, index_set_2, ..., index_set_n]</code> creating an <em>anonymous</em> <code>n</code>-dimensional container.</li></ul><p>Each expression <code>index_set_i</code> can either be</p><ul><li>of the form <code>index_set</code> specifying that the <code>i</code>th index set of the container is <code>index_set</code>; or</li><li>of the form <code>index_name=index_set</code> specifying that the <code>i</code>th index set of the container is <code>index_set</code> and allowing values used in the macro expression and keyword arguments to be expressions depending on the <code>index_name</code>.</li></ul><p>The macro then creates the container using the <a href="#JuMP.Containers.generate_container"><code>JuMP.Containers.generate_container</code></a> function with the following arguments:</p><ol><li><code>VariableRef</code> for the <a href="../variables/#JuMP.@variable"><code>@variable</code></a> macro and <code>ConstraintRef</code> for the <a href="../constraints/#JuMP.@constraint"><code>@constraint</code></a> macro.</li><li>The index variables and arbitrary symbols for dimensions for which no variable index is specified.</li><li>The index sets specified.</li><li>The value of the <code>keyword</code> argument if given or <code>:Auto</code>.</li></ol><footer><hr/><a class="previous" href="../constraints/"><span class="direction">Previous</span><span class="title">Constraints</span></a><a class="next" href="../solvers/"><span class="direction">Next</span><span class="title">Solvers</span></a></footer></article></body></html>
+julia&gt; Containers.container((i, j) -&gt; i + j, Containers.nested(() -&gt; 1:3, i -&gt; i:3, condition = (i, j) -&gt; isodd(i) || isodd(j)))
+SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 5 entries:
+  [1, 2]  =  3
+  [2, 3]  =  5
+  [3, 3]  =  6
+  [1, 1]  =  2
+  [1, 3]  =  4</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.Containers.default_container" href="#JuMP.Containers.default_container"><code>JuMP.Containers.default_container</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-none">default_container(indices)</code></pre><p>If <code>indices</code> is a <a href="#JuMP.Containers.NestedIterator"><code>NestedIterator</code></a>, return a <a href="#JuMP.Containers.SparseAxisArray"><code>SparseAxisArray</code></a>. Otherwise, <code>indices</code> should be a <code>VectorizedProductIterator</code> and the function returns <code>Array</code> if all iterators of the product are <code>Base.OneTo</code> and retunrs <a href="#JuMP.Containers.DenseAxisArray"><code>DenseAxisArray</code></a> otherwise.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.Containers.VectorizedProductIterator" href="#JuMP.Containers.VectorizedProductIterator"><code>JuMP.Containers.VectorizedProductIterator</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-none">struct VectorizedProductIterator{T}
+    prod::Iterators.ProductIterator{T}
+end</code></pre><p>Cartesian product of the iterators <code>prod.iterators</code>. It is the same iterator as <code>Base.Iterators.ProductIterator</code> except that it is independent of the <code>IteratorSize</code> of the elements of <code>prod.iterators</code>. For instance:</p><ul><li><code>size(Iterators.product(1, 2))</code> is <code>tuple()</code> while <code>size(VectorizedProductIterator(1, 2))</code> is <code>(1, 1)</code>.</li><li><code>size(Iterators.product(ones(2, 3)))</code> is <code>(2, 3)</code> while <code>size(VectorizedProductIterator(ones(2, 3)))</code> is <code>(1, 1)</code>.</li></ul></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.Containers.NestedIterator" href="#JuMP.Containers.NestedIterator"><code>JuMP.Containers.NestedIterator</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-none">struct NestedIterator{T}
+    iterators::T # Tuple of functions
+    condition::Function
+end</code></pre><p>Iterators over the tuples that are produced by a nested for loop. For instance, if <code>length(iterators) == 3</code> , this corresponds to the tuples <code>(i1, i2, i3)</code> produced by:</p><pre><code class="language-none">for i1 in iterators[1]()
+    for i2 in iterator[2](i1)
+        for i3 in iterator[3](i1, i2)
+            if condition(i1, i2, i3)
+                # produces (i1, i2, i3)
+            end
+        end
+    end
+end</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="JuMP.Containers.@container" href="#JuMP.Containers.@container"><code>JuMP.Containers.@container</code></a> — <span class="docstring-category">Macro</span>.</div><div><div><pre><code class="language-none">@container([i=..., j=..., ...], expr)</code></pre><p>Create a container with indices <code>i</code>, <code>j</code>, ... and values given by <code>expr</code> that may depend on the value of the indices.</p><pre><code class="language-none">@container(ref[i=..., j=..., ...], expr)</code></pre><p>Same as above but the container is assigned to the variable of name <code>ref</code>.</p><p>The type of container can be controlled by the <code>container</code> keyword. See <a href="#Containers-in-macros-1">Containers in macros</a>. Note that when the index set is explicitly given as <code>1:n</code> for any expression <code>n</code>, it is transformed to <code>Base.OneTo(n)</code> before being given to <a href="#JuMP.Containers.container"><code>container</code></a>.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; Containers.@container([i = 1:3, j = 1:3], i + j)
+3×3 Array{Int64,2}:
+ 2  3  4
+ 3  4  5
+ 4  5  6
+
+julia&gt; I = 1:3
+1:3
+
+julia&gt; Containers.@container([i = I, j = I], i + j)
+2-dimensional DenseAxisArray{Int64,2,...} with index sets:
+    Dimension 1, 1:3
+    Dimension 2, 1:3
+And data, a 3×3 Array{Int64,2}:
+ 2  3  4
+ 3  4  5
+ 4  5  6
+
+julia&gt; Containers.@container([i = 2:3, j = 1:3], i + j)
+2-dimensional DenseAxisArray{Int64,2,...} with index sets:
+    Dimension 1, 2:3
+    Dimension 2, Base.OneTo(3)
+And data, a 2×3 Array{Int64,2}:
+ 3  4  5
+ 4  5  6
+
+julia&gt; Containers.@container([i = 1:3, j = 1:3; i &lt;= j], i + j)
+JuMP.Containers.SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 6 entries:
+  [1, 2]  =  3
+  [2, 3]  =  5
+  [3, 3]  =  6
+  [2, 2]  =  4
+  [1, 1]  =  2
+  [1, 3]  =  4</code></pre></div></div></section><p>In the <a href="../variables/#JuMP.@variable"><code>@variable</code></a> (resp. <a href="../constraints/#JuMP.@constraint"><code>@constraint</code></a>) macro, containers of variables (resp. constraints) can be created with the following syntax:</p><ul><li><code>name[index_set_1, index_set_2, ..., index_set_n]</code> creating an <code>n</code>-dimensional container of name <code>name</code>; or</li><li><code>[index_set_1, index_set_2, ..., index_set_n]</code> creating an <em>anonymous</em> <code>n</code>-dimensional container.</li></ul><p>Each expression <code>index_set_i</code> can either be</p><ul><li>of the form <code>index_set</code> specifying that the <code>i</code>th index set of the container is <code>index_set</code>; or</li><li>of the form <code>index_name=index_set</code> specifying that the <code>i</code>th index set of the container is <code>index_set</code> and allowing values used in the macro expression and keyword arguments to be expressions depending on the <code>index_name</code>.</li></ul><p>The macro then creates the container using the <a href="#JuMP.Containers.container"><code>JuMP.Containers.container</code></a> function with the following arguments:</p><ol><li>A function taking as argument the value of the indices and returning the value to be stored in the container, e.g. a variable for the <a href="../variables/#JuMP.@variable"><code>@variable</code></a> macro and a constraint for the <a href="../constraints/#JuMP.@constraint"><code>@constraint</code></a> macro.</li><li>An iterator over the indices of the container.</li><li>The value of the <code>container</code> keyword argument if given.</li></ol><footer><hr/><a class="previous" href="../constraints/"><span class="direction">Previous</span><span class="title">Constraints</span></a><a class="next" href="../solvers/"><span class="direction">Next</span><span class="title">Solvers</span></a></footer></article></body></html>

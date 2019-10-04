@@ -171,7 +171,7 @@ julia&gt; lower_bound.(x)
  3.0  4.0
  5.0  6.0</code></pre><p>JuMP will form an <code>Array</code> of JuMP variables when it can determine at compile time that the indices are one-based integer ranges. Therefore <code>x[1:b]</code> will create an <code>Array</code> of JuMP variables, but <code>x[a:b]</code> will not. If JuMP cannot determine that the indices are one-based integer ranges (e.g., in the case of <code>x[a:b]</code>), JuMP will create a <code>DenseAxisArray</code> instead.</p><h3><a class="nav-anchor" id="variable_jump_arrays-1" href="#variable_jump_arrays-1">DenseAxisArrays</a></h3><p>We often want to create arrays where the indices are not one-based integer ranges. For example, we may want to create a variable indexed by the name of a product or a location. The syntax is the same as that above, except with an arbitrary vector as an index as opposed to a one-based range. The biggest difference is that instead of returning an <code>Array</code> of JuMP variables, JuMP will return a <code>DenseAxisArray</code>. For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[1:2, [:A,:B]])
 2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
-    Dimension 1, 1:2
+    Dimension 1, Base.OneTo(2)
     Dimension 2, Symbol[:A, :B]
 And data, a 2×2 Array{VariableRef,2}:
  x[1,A]  x[1,B]
@@ -198,11 +198,11 @@ julia&gt; lower_bound.(x)
 And data, a 2×2 Array{Float64,2}:
  2.0  4.0
  2.5  4.5</code></pre><h3><a class="nav-anchor" id="variable_sparseaxisarrays-1" href="#variable_sparseaxisarrays-1">SparseAxisArrays</a></h3><p>The third container type that JuMP natively supports is <code>SparseAxisArray</code>. These arrays are created when the indices do not form a rectangular set. For example, this applies when indices have a dependence upon previous indices (called <em>triangular indexing</em>). JuMP supports this as follows:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[i=1:2, j=i:2])
-JuMP.Containers.SparseAxisArray{VariableRef,2,Tuple{Any,Any}} with 3 entries:
+JuMP.Containers.SparseAxisArray{VariableRef,2,Tuple{Int64,Int64}} with 3 entries:
   [1, 2]  =  x[1,2]
   [2, 2]  =  x[2,2]
   [1, 1]  =  x[1,1]</code></pre><p>We can also conditionally create variables via a JuMP-specific syntax. This syntax appends a comparison check that depends upon the named indices and is separated from the indices by a semi-colon (<code>;</code>). For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[i=1:4; mod(i, 2)==0])
-JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Any}} with 2 entries:
+JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Int64}} with 2 entries:
   [4]  =  x[4]
   [2]  =  x[2]</code></pre><h3><a class="nav-anchor" id="variable_forcing-1" href="#variable_forcing-1">Forcing the container type</a></h3><p>When creating a container of JuMP variables, JuMP will attempt to choose the tightest container type that can store the JuMP variables. Thus, it will prefer to create an Array before a DenseAxisArray and a DenseAxisArray before a SparseAxisArray. However, because this happens at compile time, it does not always make the best choice. To illustrate this, consider the following example:</p><pre><code class="language-julia-repl">julia&gt; A = 1:2
 1:2
@@ -294,18 +294,34 @@ Subject to
 # Specify the lower bound using a keyword argument
 @variable(model, x, lower_bound=0)
 # Specify everything in `kw_args`
-x = @variable(model, base_name=&quot;x&quot;, lower_bound=0)</code></pre><p>The following are equivalent ways of creating a <code>DenseAxisArray</code> of index set <code>[:a, :b]</code> and with respective upper bounds 2 and 3 and names <code>x[a]</code> and <code>x[b]</code>.</p><pre><code class="language-julia">ub = Dict(:a =&gt; 2, :b =&gt; 3)
-# Specify everything in `expr`
+x = @variable(model, base_name=&quot;x&quot;, lower_bound=0)</code></pre><p>The following are equivalent ways of creating a <code>DenseAxisArray</code> of index set <code>[:a, :b]</code> and with respective upper bounds 2 and 3 and names <code>x[a]</code> and <code>x[b]</code>. The upper bound can either be specified in <code>expr</code>:</p><pre><code class="language-julia">ub = Dict(:a =&gt; 2, :b =&gt; 3)
 @variable(model, x[i=keys(ub)] &lt;= ub[i])
-# Specify the upper bound using a keyword argument
-@variable(model, x[i=keys(ub)], upper_bound=ub[i])</code></pre><p><strong>Note for extending the variable macro</strong></p><p>The single scalar variable or each scalar variable of the container are created using <code>add_variable(model, build_variable(_error, info, extra_args...; extra_kw_args...))</code> where</p><ul><li><code>model</code> is the model passed to the <code>@variable</code> macro;</li><li><code>_error</code> is an error function with a single <code>String</code> argument showing the <code>@variable</code> call in addition to the error message given as argument;</li><li><code>info</code> is the <code>VariableInfo</code> struct containing the information gathered in <code>expr</code>, the recognized keyword arguments (except <code>base_name</code> and <code>variable_type</code>) and the recognized positional arguments (except <code>Symmetric</code> and <code>PSD</code>);</li><li><code>extra_args</code> are the unrecognized positional arguments of <code>args</code> plus the value of the <code>variable_type</code> keyword argument if present. The <code>variable_type</code> keyword argument allows the user to pass a position argument to <code>build_variable</code> without the need to give a positional argument to <code>@variable</code>. In particular, this allows the user to give a positional argument to the <code>build_variable</code> call when using the anonymous single variable syntax <code>@variable(model, kw_args...)</code>; and</li><li><code>extra_kw_args</code> are the unrecognized keyword argument of <code>kw_args</code>.</li></ul><p><strong>Examples</strong></p><p>The following creates a variable <code>x</code> of name <code>x</code> with <code>lower_bound</code> 0 as with the first example above but does it without using the <code>@variable</code> macro</p><pre><code class="language-julia">info = VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)
+
+# output
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{VariableRef,1}:
+ x[a]
+ x[b]</code></pre><p>or it can be specified with the <code>upper_bound</code> keyword argument:</p><pre><code class="language-julia">@variable(model, y[i=keys(ub)], upper_bound=ub[i])
+
+# output
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{VariableRef,1}:
+ y[a]
+ y[b]</code></pre><p><strong>Note for extending the variable macro</strong></p><p>The single scalar variable or each scalar variable of the container are created using <code>add_variable(model, build_variable(_error, info, extra_args...; extra_kw_args...))</code> where</p><ul><li><code>model</code> is the model passed to the <code>@variable</code> macro;</li><li><code>_error</code> is an error function with a single <code>String</code> argument showing the <code>@variable</code> call in addition to the error message given as argument;</li><li><code>info</code> is the <code>VariableInfo</code> struct containing the information gathered in <code>expr</code>, the recognized keyword arguments (except <code>base_name</code> and <code>variable_type</code>) and the recognized positional arguments (except <code>Symmetric</code> and <code>PSD</code>);</li><li><code>extra_args</code> are the unrecognized positional arguments of <code>args</code> plus the value of the <code>variable_type</code> keyword argument if present. The <code>variable_type</code> keyword argument allows the user to pass a position argument to <code>build_variable</code> without the need to give a positional argument to <code>@variable</code>. In particular, this allows the user to give a positional argument to the <code>build_variable</code> call when using the anonymous single variable syntax <code>@variable(model, kw_args...)</code>; and</li><li><code>extra_kw_args</code> are the unrecognized keyword argument of <code>kw_args</code>.</li></ul><p><strong>Examples</strong></p><p>The following creates a variable <code>x</code> of name <code>x</code> with <code>lower_bound</code> 0 as with the first example above but does it without using the <code>@variable</code> macro</p><pre><code class="language-julia">info = VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)
 JuMP.add_variable(model, JuMP.build_variable(error, info), &quot;x&quot;)</code></pre><p>The following creates a <code>DenseAxisArray</code> of index set <code>[:a, :b]</code> and with respective upper bounds 2 and 3 and names <code>x[a]</code> and <code>x[b]</code> as with the second example above but does it without using the <code>@variable</code> macro</p><pre><code class="language-julia"># Without the `@variable` macro
-data = Vector{JuMP.variable_type(model)}(undef, length(keys(ub)))
-x = JuMP.Containers.DenseAxisArray(data, keys(ub))
-for i in keys(ub)
-    info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
-    x[i] = JuMP.add_variable(model, JuMP.build_variable(error, info), &quot;x[$i]&quot;)
-end</code></pre><p>The following are equivalent ways of creating a <code>Matrix</code> of size <code>N x N</code> with variables custom variables created with a JuMP extension using the <code>Poly(X)</code> positional argument to specify its variables:</p><pre><code class="language-julia"># Using the `@variable` macro
+x = JuMP.Containers.container(i -&gt; begin
+        info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
+        x[i] = JuMP.add_variable(model, JuMP.build_variable(error, info), &quot;x[$i]&quot;)
+    end, JuMP.Containers.vectorized_product(keys(ub)))
+
+# output
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{VariableRef,1}:
+ x[a]
+ x[b]</code></pre><p>The following are equivalent ways of creating a <code>Matrix</code> of size <code>N x N</code> with variables custom variables created with a JuMP extension using the <code>Poly(X)</code> positional argument to specify its variables:</p><pre><code class="language-julia"># Using the `@variable` macro
 @variable(model, x[1:N,1:N], Symmetric, Poly(X))
 # Without the `@variable` macro
 x = Matrix{JuMP.variable_type(model, Poly(X))}(N, N)
