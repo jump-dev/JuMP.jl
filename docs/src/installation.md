@@ -13,6 +13,10 @@ import Pkg
 Pkg.add("JuMP")
 ```
 
+!!! note
+    Earlier version will be installed if you have uncompatible solvers.
+
+
 Getting Solvers
 ---------------
 
