@@ -119,6 +119,39 @@ else
 end
 ```
 
+If a solved model is modified, then querying the solution is undefined behaviour.
+This is important to note because it may seem to work with some solver but then
+it will not work with another solver (you cannot just test if it works).
+For an example, see the code below:
+
+```julia
+using JuMP, Gurobi #, GLPK
+model = Model(with_optimizer(Gurobi.Optimizer)) # (GLPK.Optimizer))
+@variable(model, x[1:3], Bin)
+@constraint(model, sum(all_variables(model)) <= 2)
+@objective(model, Max, sum(model[:x] .* [10, 5, 2]))
+optimize!(model)
+@show value.(x)
+delete(model, x[2])
+@show value.((x[1], x[3]))
+```
+
+As of JuMP@0.20.0, Gurobi@0.7.2, and GLPK@0.11.4, using GLPK as solver returns:
+```
+value.(x) = [1.0, 1.0, 0.0]
+value.((x[1], x[3])) = (1.0, 0.0)
+```
+The value of unmodified variables was kept as it was. However, if Gurobi is used:
+```
+value.(x) = [1.0, 1.0, 0.0]
+value.((x[1], x[3])) = (1.0, 1.0)
+```
+Consequently, querying any information of a solved model solution after
+modifying the model is considered undefined behaviour. If information on the
+solution need to be queried after, or during, model modification, then the
+suggested solution is to save it in an auxiliar data structure before starting
+to modify the model.
+
 ```@meta
 # TODO: How to accurately measure the solve time.
 ```
