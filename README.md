@@ -38,7 +38,7 @@ commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [CDCS], [CDD],
 [SCIP]: https://scip.zib.de/
 [SCS]: https://github.com/cvxgrp/scs
 [SDPA]: http://sdpa.sourceforge.net/
-[SDPT3]: http://www.math.nus.edu.sg/~mattohkc/SDPT3.html
+[SDPT3]: https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/
 [SeDuMi]: http://sedumi.ie.lehigh.edu/
 [linear programming]: http://en.wikipedia.org/wiki/Linear_programming
 [(mixed) integer programming]: http://en.wikipedia.org/wiki/Integer_programming
