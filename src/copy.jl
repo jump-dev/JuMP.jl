@@ -138,14 +138,10 @@ function Base.copy(model::AbstractModel)
     return new_model
 end
 
-"""
-    deepcopy(_::AbstractModel)
-
-Calls error. Calling `deepcopy` over a JuMP model is not supported, nor
-planned to be supported, because it would involve making a deep copy of
-the underlying solver (behind a C pointer). Check [`copy`](@ref) instead.
-"""
-function Base.deepcopy(_::AbstractModel)
-    error("JuMP.AbstractModel does not support deepcopy, see documentation")
+# Calling `deepcopy` over a JuMP model is not supported, nor planned to be
+# supported, because it would involve making a deep copy of the underlying
+# solver (behind a C pointer).
+function Base.deepcopy(_::Model)
+    error("JuMP.AbstractModel does not support deepcopy as the reference to the underlying solver cannot be deep copied, use copy instead.")
 end
 
