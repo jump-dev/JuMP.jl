@@ -52,7 +52,7 @@ is often more complex. We list below the currently available solvers.
 | [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/JuliaOpt/SDPA.jl)                                   | GPL     | LP, SDP                            |
 | [SDPT3](https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/)                     | [SDPT3.jl](https://github.com/JuliaOpt/SDPT3.jl)                                 | GPL     | LP, SOCP, SDP                      |
 | [SeDuMi](http://sedumi.ie.lehigh.edu/)                                         | [SeDuMi.jl](https://github.com/JuliaOpt/SeDuMi.jl)                               | GPL     | LP, SOCP, SDP                      |
-
+| [Tulip](https://github.com/ds4dm/Tulip.jl)                                     | [Tulip.jl](https://github.com/ds4dm/Tulip.jl)                                    | MPL-2   | LP                                 |
 
 Where:
 
