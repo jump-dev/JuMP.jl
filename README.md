@@ -8,7 +8,7 @@ embedded in **[Julia]**. It currently supports a number of open-source and
 commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [CDCS], [CDD],
 [Clp], [COSMO], [Couenne], [CPLEX], [CSDP], [ECOS], [FICO Xpress], [GLPK],
 [Gurobi], [Ipopt], [Juniper], [MOSEK], [NLopt], [OSQP], [ProxSDP], [SCIP],
-[SCS], [SDPA], [SDPT3], [SeDuMi]) for a variety of problem classes, including
+[SCS], [SDPA], [SDPT3], [SeDuMi], [Tulip]) for a variety of problem classes, including
 **[linear programming]**, **[(mixed) integer programming]**,
 **[second-order conic programming]**, **[semidefinite programming]**, and **[nonlinear programming]**.
 
@@ -40,6 +40,7 @@ commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [CDCS], [CDD],
 [SDPA]: http://sdpa.sourceforge.net/
 [SDPT3]: https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/
 [SeDuMi]: http://sedumi.ie.lehigh.edu/
+[Tulip]: https://github.com/ds4dm/Tulip.jl
 [linear programming]: http://en.wikipedia.org/wiki/Linear_programming
 [(mixed) integer programming]: http://en.wikipedia.org/wiki/Integer_programming
 [second-order conic programming]: http://en.wikipedia.org/wiki/Second-order_cone_programming
