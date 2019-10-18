@@ -194,7 +194,6 @@ function test_model()
             @test cref isa JuMP.ConstraintRef{JuMP.Model,MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64},MOI.Interval{Float64}}}
             @test_throws err optimizer_index(cref)
             JuMP.optimize!(model)
-            @test optimizer_index(x) === MOI.get(JuMP.backend(model).optimizer.model.optimizer, MOI.ListOfVariableIndices())[1]
             err = ErrorException(
                 "There is no `optimizer_index` for $(typeof(index(cref))) " *
                 "constraints because they are bridged.")
@@ -375,6 +374,18 @@ function test_model()
         @test JuMP.set_parameter(model, "aaa", "bbb") == "bbb"
         @test MOI.get(backend(model), MOI.RawParameter("aaa")) == "bbb"
         @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
+    end
+
+    @testset "set and retrieve time limit" begin
+        mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+        model = Model(with_optimizer(MOIU.MockOptimizer, mock))
+        JuMP.set_time_limit_sec(model, 12.0)
+        @test JuMP.time_limit_sec(model) == 12.0
+        JuMP.set_time_limit_sec(model, nothing)
+        @test JuMP.time_limit_sec(model) === nothing
+        JuMP.set_time_limit_sec(model, 12.0)
+        JuMP.unset_time_limit_sec(model)
+        @test JuMP.time_limit_sec(model) === nothing
     end
 end
 
