@@ -1,6 +1,16 @@
 JuMP release notes
 ==================
 
+Version 0.20.1 (Oct 18, 2019)
+-----------------------------
+
+- Add sections on `@variables` and `@constraints` in the documentation (#2062).
+- Fixed product of sparse matrices for Julia v1.3 (#2063).
+- Added `set_objective_coefficient` to modify the coefficient of a linear term
+  of the objective function (#2008).
+- Added `set_time_limit_sec`, `unset_time_limit_sec` and `time_limit_sec` to set
+  and query the time limit for the solver in seconds (#2053).
+
 Version 0.20.0 (Aug 24, 2019)
 -----------------------------
 
