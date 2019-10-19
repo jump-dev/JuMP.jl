@@ -240,12 +240,13 @@ function test_model()
                     @test 1.0 == @inferred JuMP.value(c)
                     @test 2.0 == @inferred JuMP.dual(c)
                 end
-                @testset "with_optimizer at optimize!" begin
+                @testset "with_optimizer with set_optimizer" begin
                     model = Model()
                     @variable(model, x)
                     c = @constraint(model, x in Nonnegative())
                     JuMP.add_bridge(model, NonnegativeBridge)
-                    JuMP.optimize!(model, factory)
+                    set_optimizer(model, factory)
+                    JuMP.optimize!(model)
                     @test 1.0 == @inferred JuMP.value(x)
                     @test 1.0 == @inferred JuMP.value(c)
                     @test 2.0 == @inferred JuMP.dual(c)
@@ -267,13 +268,14 @@ function test_model()
                     @test 1.0 == @inferred JuMP.value(c)
                     @test 2.0 == @inferred JuMP.dual(c)
                 end
-                @testset "with_optimizer at optimize!" begin
+                @testset "with_optimizer with set_optimizer" begin
                     err = MOI.UnsupportedConstraint{MOI.SingleVariable,
                                                     Nonnegative}()
                     model = Model()
                     @variable(model, x)
                     c = @constraint(model, x in Nonnegative())
-                    @test_throws err JuMP.optimize!(model, factory)
+                    set_optimizer(model, factory)
+                    @test_throws err JuMP.optimize!(model)
                     JuMP.add_bridge(model, NonnegativeBridge)
                     JuMP.optimize!(model)
                     @test 1.0 == @inferred JuMP.value(x)
@@ -293,13 +295,14 @@ function test_model()
                     @test 1.0 == @inferred JuMP.value(c)
                     @test 2.0 == @inferred JuMP.dual(c)
                 end
-                @testset "with_optimizer at optimize!" begin
+                @testset "with_optimizer with set_optimizer" begin
                     model = Model()
                     @variable(model, x)
                     constraint = ScalarConstraint(x, Nonnegative())
                     bc = BridgeableConstraint(constraint, NonnegativeBridge)
                     c = add_constraint(model, bc)
-                    JuMP.optimize!(model, factory)
+                    set_optimizer(model, factory)
+                    JuMP.optimize!(model)
                     @test 1.0 == @inferred JuMP.value(x)
                     @test 1.0 == @inferred JuMP.value(c)
                     @test 2.0 == @inferred JuMP.dual(c)

@@ -67,9 +67,11 @@ function:
 with_optimizer
 ```
 
-The factory can be provided either at model construction time or at
-[`optimize!`](@ref) time:
+The factory can be provided either at model construction time by calling
+[`set_optimizer`](@ref). An optimizer must be set before a call to
+[`optimize!`](@ref).
 ```@docs
+set_optimizer
 NoOptimizer
 JuMP.optimize!
 ```
