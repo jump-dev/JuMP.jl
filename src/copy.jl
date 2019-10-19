@@ -142,5 +142,5 @@ end
 # supported, because it would involve making a deep copy of the underlying
 # solver (behind a C pointer).
 function Base.deepcopy(::Model)
-    error("`JuMP.AbstractModel` does not support `deepcopy` as the reference to the underlying solver cannot be deep copied, use `copy` instead.")
+    error("`JuMP.Model` does not support `deepcopy` as the reference to the underlying solver cannot be deep copied, use `copy` instead.")
 end
