@@ -1377,11 +1377,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "solvers/#JuMP.set_optimizer",
+    "page": "Solvers",
+    "title": "JuMP.set_optimizer",
+    "category": "function",
+    "text": "set_optimizer(model::Model, optimizer_factory::OptimizerFactory;\n              bridge_constraints::Bool=true)\n\nCreates a new MathOptInterface.AbstractOptimizer instance using the optimizer factory and sets it as the optimizer of model.\n\nIf bridge_constraints is true, constraints that are not supported by the optimizer are automatically bridged to equivalent supported constraints when an appropriate transformation is defined in the MathOptInterface.Bridges module or is defined in another module and is explicitly added.\n\nExamples\n\nmodel = Model()\nset_optimizer(model, with_optimizer(GLPK.Optimizer))\n\n\n\n\n\n"
+},
+
+{
     "location": "solvers/#JuMP.NoOptimizer",
     "page": "Solvers",
     "title": "JuMP.NoOptimizer",
     "category": "type",
-    "text": "struct NoOptimizer <: Exception end\n\nNo optimizer is set. The optimizer can be provided at the Model constructor or at the optimize! call with with_optimizer.\n\n\n\n\n\n"
+    "text": "struct NoOptimizer <: Exception end\n\nNo optimizer is set. The optimizer can be provided to the Model constructor or by calling set_optimizer.\n\n\n\n\n\n"
 },
 
 {
@@ -1389,7 +1397,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Solvers",
     "title": "JuMP.optimize!",
     "category": "function",
-    "text": "optimize!(model::Model,\n          optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;\n          bridge_constraints::Bool=true,\n          ignore_optimize_hook=(model.optimize_hook === nothing),\n          kwargs...)\n\nOptimize the model. If optimizer_factory is not nothing, it first sets the optimizer to a new one created using the optimizer factory. The factory can be created using the with_optimizer function. If optimizer_factory is nothing and no optimizer was set to model before calling this function, a NoOptimizer error is thrown.\n\nKeyword arguments kwargs are passed to the optimize_hook. An error is thrown if optimize_hook is nothing and keyword arguments are provided.\n\nExamples\n\nThe optimizer factory can either be given in the Model constructor as follows:\n\nmodel = Model(with_optimizer(GLPK.Optimizer))\n# ...fill model with variables, constraints and objectives...\n# Solve the model with GLPK\noptimize!(model)\n\nor in the optimize! call as follows:\n\nmodel = Model()\n# ...fill model with variables, constraints and objectives...\n# Solve the model with GLPK\noptimize!(model, with_optimizer(GLPK.Optimizer))\n\n\n\n\n\n"
+    "text": "optimize!(model::Model;\n          ignore_optimize_hook=(model.optimize_hook === nothing),\n          kwargs...)\n\nOptimize the model. If an optimizer has not been set yet (see set_optimizer), a NoOptimizer error is thrown.\n\nKeyword arguments kwargs are passed to the optimize_hook. An error is thrown if optimize_hook is nothing and keyword arguments are provided. ```\n\n\n\n\n\n"
 },
 
 {
@@ -1397,7 +1405,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Solvers",
     "title": "JuMP.Model",
     "category": "method",
-    "text": "Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,\n        bridge_constraints::Bool=true)\n\nReturn a new JuMP model without any optimizer; the model is stored the model in a cache. The mode of the CachingOptimizer storing this cache is caching_mode. The optimizer can be set later in the optimize! call. If bridge_constraints is true, constraints that are not supported by the optimizer are automatically bridged to equivalent supported constraints when an appropriate transformation is defined in the MathOptInterface.Bridges module or is defined in another module and is explicitely added.\n\n\n\n\n\n"
+    "text": "Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC)\n\nReturn a new JuMP model without any optimizer; the model is stored the model in a cache. The mode of the CachingOptimizer storing this cache is caching_mode. Use set_optimizer to set the optimizer before calling optimize!.\n\n\n\n\n\n"
 },
 
 {
@@ -1405,7 +1413,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Solvers",
     "title": "JuMP.Model",
     "category": "method",
-    "text": "Model(optimizer_factory::OptimizerFactory;\n      caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,\n      bridge_constraints::Bool=true)\n\nReturn a new JuMP model using the optimizer factory optimizer_factory to create the optimizer. The optimizer factory can be created by the with_optimizer function.\n\nExamples\n\nThe following creates a model using the optimizer Ipopt.Optimizer(print_level=0):\n\nmodel = Model(with_optimizer(Ipopt.Optimizer, print_level=0))\n\n\n\n\n\n"
+    "text": "Model(optimizer_factory::OptimizerFactory;\n      caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,\n      bridge_constraints::Bool=true)\n\nReturn a new JuMP model using the optimizer factory optimizer_factory to create the optimizer. The optimizer factory can be created by the with_optimizer function. See set_optimizer for the description of the bridge_constraints argument.\n\nExamples\n\nThe following creates a model using the optimizer Ipopt.Optimizer(print_level=0):\n\nmodel = Model(with_optimizer(Ipopt.Optimizer, print_level=0))\n\n\n\n\n\n"
 },
 
 {
@@ -1413,7 +1421,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Solvers",
     "title": "Automatic and Manual modes",
     "category": "section",
-    "text": "In AUTOMATIC and MANUAL modes, two MOI layers are automatically applied to the optimizer:CachingOptimizer: maintains a cache of the model so that when the optimizer does not support an incremental change to the model, the optimizer\'s internal model can be discarded and restored from the cache just before optimization. The CachingOptimizer has two different modes: AUTOMATIC and MANUAL corresponding to the two JuMP modes with the same names.\nLazyBridgeOptimizer (this can be disabled using the bridge_constraints keyword argument to Model constructor): when a constraint added is not supported by the optimizer, it attempts to transform the constraint into an equivalent form, possibly adding new variables and constraints that are supported by the optimizer. The applied transformations are selected among known recipes which are called bridges. A few default bridges are defined in MOI but new ones can be defined and added to the LazyBridgeOptimizer used by JuMP.See the MOI documentation for more details on these two MOI layers.To attach an optimizer to a JuMP model, JuMP needs to create a new empty optimizer instance. New optimizer instances can be obtained using an OptimizerFactory that can be created using the with_optimizer function:with_optimizerThe factory can be provided either at model construction time or at optimize! time:NoOptimizer\nJuMP.optimize!New JuMP models are created using the Model constructor:Model()\nModel(::JuMP.OptimizerFactory)# TODO: how to control the caching optimizer states"
+    "text": "In AUTOMATIC and MANUAL modes, two MOI layers are automatically applied to the optimizer:CachingOptimizer: maintains a cache of the model so that when the optimizer does not support an incremental change to the model, the optimizer\'s internal model can be discarded and restored from the cache just before optimization. The CachingOptimizer has two different modes: AUTOMATIC and MANUAL corresponding to the two JuMP modes with the same names.\nLazyBridgeOptimizer (this can be disabled using the bridge_constraints keyword argument to Model constructor): when a constraint added is not supported by the optimizer, it attempts to transform the constraint into an equivalent form, possibly adding new variables and constraints that are supported by the optimizer. The applied transformations are selected among known recipes which are called bridges. A few default bridges are defined in MOI but new ones can be defined and added to the LazyBridgeOptimizer used by JuMP.See the MOI documentation for more details on these two MOI layers.To attach an optimizer to a JuMP model, JuMP needs to create a new empty optimizer instance. New optimizer instances can be obtained using an OptimizerFactory that can be created using the with_optimizer function:with_optimizerThe factory can be provided either at model construction time by calling set_optimizer. An optimizer must be set before a call to optimize!.set_optimizer\nNoOptimizer\nJuMP.optimize!New JuMP models are created using the Model constructor:Model()\nModel(::JuMP.OptimizerFactory)# TODO: how to control the caching optimizer states"
 },
 
 {
