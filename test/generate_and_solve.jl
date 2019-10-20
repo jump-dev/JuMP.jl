@@ -42,9 +42,10 @@ using JuMP
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y"], ["c", "xub", "ylb"])
 
-        JuMP.optimize!(m, with_optimizer(MOIU.MockOptimizer,
-                                         MOIU.Model{Float64}(),
-                                         eval_objective_value=false))
+        set_optimizer(m, with_optimizer(MOIU.MockOptimizer,
+                                        MOIU.Model{Float64}(),
+                                        eval_objective_value=false))
+        JuMP.optimize!(m)
 
         mockoptimizer = JuMP.backend(m).optimizer.model
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
@@ -199,9 +200,10 @@ using JuMP
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y"], ["c1", "c2", "c3"])
 
-        JuMP.optimize!(m, with_optimizer(MOIU.MockOptimizer,
-                                         MOIU.Model{Float64}(),
-                                         eval_objective_value=false))
+        set_optimizer(m, with_optimizer(MOIU.MockOptimizer,
+                                        MOIU.Model{Float64}(),
+                                        eval_objective_value=false))
+        JuMP.optimize!(m)
 
         mockoptimizer = JuMP.backend(m).optimizer.model
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
@@ -368,17 +370,6 @@ using JuMP
         @test JuMP.dual(con_psd) isa Matrix
         @test [7.0 9.0; 8.0 10.0] == @inferred JuMP.dual(con_psd)
 
-    end
-
-    @testset "Provide factory in `optimize` in Direct mode" begin
-        mockoptimizer = MOIU.MockOptimizer(MOIU.Model{Float64}())
-        model = JuMP.direct_model(mockoptimizer)
-        @test_throws ErrorException JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer, MOIU.Model{Float64}()))
-    end
-
-    @testset "Provide factory both in `Model` and `optimize`" begin
-        model = Model(with_optimizer(MOIU.MockOptimizer, MOIU.Model{Float64}()))
-        @test_throws ErrorException JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer, MOIU.Model{Float64}()))
     end
 
     @testset "Solver doesn't support nonlinear constraints" begin

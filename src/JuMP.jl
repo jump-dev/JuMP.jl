@@ -149,16 +149,12 @@ mutable struct Model <: AbstractModel
 end
 
 """
-    Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
-            bridge_constraints::Bool=true)
+    Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC)
 
 Return a new JuMP model without any optimizer; the model is stored the model in
 a cache. The mode of the `CachingOptimizer` storing this cache is
-`caching_mode`. The optimizer can be set later in the [`optimize!`](@ref)
-call. If `bridge_constraints` is true, constraints that are not supported by the
-optimizer are automatically bridged to equivalent supported constraints when
-an appropriate transformation is defined in the `MathOptInterface.Bridges`
-module or is defined in another module and is explicitely added.
+`caching_mode`. Use [`set_optimizer`](@ref) to set the optimizer before
+calling [`optimize!`](@ref).
 """
 function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
                  solver=nothing)
@@ -180,7 +176,8 @@ end
 
 Return a new JuMP model using the optimizer factory `optimizer_factory` to
 create the optimizer. The optimizer factory can be created by the
-[`with_optimizer`](@ref) function.
+[`with_optimizer`](@ref) function. See [`set_optimizer`](@ref) for the
+description of the `bridge_constraints` argument.
 
 ## Examples
 
@@ -613,8 +610,8 @@ struct OptimizeNotCalled <: Exception end
 """
     struct NoOptimizer <: Exception end
 
-No optimizer is set. The optimizer can be provided at the [`Model`](@ref)
-constructor or at the [`optimize!`](@ref) call with [`with_optimizer`](@ref).
+No optimizer is set. The optimizer can be provided to the [`Model`](@ref)
+constructor or by calling [`set_optimizer`](@ref).
 """
 struct NoOptimizer <: Exception end
 

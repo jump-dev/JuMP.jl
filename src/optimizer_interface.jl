@@ -32,6 +32,24 @@ function MOIU.attach_optimizer(model::Model)
     MOIU.attach_optimizer(backend(model))
 end
 
+"""
+    set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
+                  bridge_constraints::Bool=true)
+
+Creates a new `MathOptInterface.AbstractOptimizer` instance using the optimizer
+factory and sets it as the optimizer of `model`.
+
+If `bridge_constraints` is true, constraints that are not supported by the
+optimizer are automatically bridged to equivalent supported constraints when
+an appropriate transformation is defined in the `MathOptInterface.Bridges`
+module or is defined in another module and is explicitly added.
+
+## Examples
+```julia
+model = Model()
+set_optimizer(model, with_optimizer(GLPK.Optimizer))
+```
+"""
 function set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
                        bridge_constraints::Bool=true)
     error_if_direct_mode(model, :set_optimizer)
@@ -68,40 +86,20 @@ function solve(::Model)
 end
 
 """
-    optimize!(model::Model,
-              optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
-              bridge_constraints::Bool=true,
+    optimize!(model::Model;
               ignore_optimize_hook=(model.optimize_hook === nothing),
               kwargs...)
 
-Optimize the model. If `optimizer_factory` is not `nothing`, it first sets the
-optimizer to a new one created using the optimizer factory. The factory can be
-created using the [`with_optimizer`](@ref) function. If `optimizer_factory` is
-`nothing` and no optimizer was set to `model` before calling this function, a
-[`NoOptimizer`](@ref) error is thrown.
+Optimize the model. If an optimizer has not been set yet (see
+[`set_optimizer`](@ref)), a [`NoOptimizer`](@ref) error is thrown.
 
 Keyword arguments `kwargs` are passed to the `optimize_hook`. An error is
 thrown if `optimize_hook` is `nothing` and keyword arguments are provided.
-
-## Examples
-
-The optimizer factory can either be given in the [`Model`](@ref) constructor
-as follows:
-```julia
-model = Model(with_optimizer(GLPK.Optimizer))
-# ...fill model with variables, constraints and objectives...
-# Solve the model with GLPK
-optimize!(model)
-```
-or in the `optimize!` call as follows:
-```julia
-model = Model()
-# ...fill model with variables, constraints and objectives...
-# Solve the model with GLPK
-optimize!(model, with_optimizer(GLPK.Optimizer))
 ```
 """
 function optimize!(model::Model,
+                   # TODO: Remove the optimizer_factory and bridge_constraints
+                   # arguments when the deprecation error below is removed.
                    optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
                    bridge_constraints::Bool=true,
                    ignore_optimize_hook=(model.optimize_hook === nothing),
@@ -114,15 +112,9 @@ function optimize!(model::Model,
     end
 
     if optimizer_factory !== nothing
-        if mode(model) == DIRECT
-            error("An optimizer factory cannot be provided at the `optimize` call in DIRECT mode.")
-        end
-        if MOIU.state(backend(model)) != MOIU.NO_OPTIMIZER
-            error("An optimizer factory cannot both be provided in the `Model` constructor and at the `optimize` call.")
-        end
-        set_optimizer(model, optimizer_factory,
-                      bridge_constraints=bridge_constraints)
-        MOIU.attach_optimizer(model)
+        # This argument was deprecated in JuMP 0.21.
+        error("The optimizer factory argument is no longer accepted by " *
+              "`optimize!`. Call `set_optimizer` before `optimize!`.")
     end
 
     # If the user or an extension has provided an optimize hook, call

@@ -10,9 +10,10 @@
 function test_lp_rhs_perturbation_range(model_string, primal_solution, basis_status, feasibility_ranges)
     model = JuMP.Model()
     MOIU.loadfromstring!(JuMP.backend(model), model_string)
-    JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer,
-                                         MOIU.Model{Float64}(),
-                                         eval_variable_constraint_dual=false))
+    set_optimizer(model, with_optimizer(MOIU.MockOptimizer,
+                                        MOIU.Model{Float64}(),
+                                        eval_variable_constraint_dual=false))
+    JuMP.optimize!(model)
     mock_optimizer = JuMP.backend(model).optimizer.model
     MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
 
@@ -106,9 +107,10 @@ end
 function test_lp_objective_perturbation_range(model_string, dual_solution, basis_status, optimality_ranges)
     model = JuMP.Model()
     MOIU.loadfromstring!(JuMP.backend(model), model_string)
-    JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer,
-                                         MOIU.Model{Float64}(),
-                                         eval_variable_constraint_dual=true))
+    set_optimizer(model, with_optimizer(MOIU.MockOptimizer,
+                                        MOIU.Model{Float64}(),
+                                        eval_variable_constraint_dual=true))
+    JuMP.optimize!(model)
     mock_optimizer = JuMP.backend(model).optimizer.model
     MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
