@@ -49,7 +49,7 @@ is often more complex. We list below the currently available solvers.
 | [ProxSDP](https://github.com/mariohsouto/ProxSDP.jl)                           | [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)                          | MIT     | LP, SOCP, SDP                      |
 | [SCIP](https://scip.zib.de/)                                                   | [SCIP.jl](https://github.com/SCIP-Interfaces/SCIP.jl)                            | ZIB     | MILP, MINLP                        |
 | [SCS](https://github.com/cvxgrp/scs)                                           | [SCS.jl](https://github.com/JuliaOpt/SCS.jl)                                     | MIT     | LP, SOCP, SDP                      |
-| [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/JuliaOpt/SDPA.jl)                                   | GPL     | LP, SDP                            |
+| [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/JuliaOpt/SDPA.jl), [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl)                                   | GPL     | LP, SDP                            |
 | [SDPT3](https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/)                     | [SDPT3.jl](https://github.com/JuliaOpt/SDPT3.jl)                                 | GPL     | LP, SOCP, SDP                      |
 | [SeDuMi](http://sedumi.ie.lehigh.edu/)                                         | [SeDuMi.jl](https://github.com/JuliaOpt/SeDuMi.jl)                               | GPL     | LP, SOCP, SDP                      |
 | [Tulip](https://github.com/ds4dm/Tulip.jl)                                     | [Tulip.jl](https://github.com/ds4dm/Tulip.jl)                                    | MPL-2   | LP                                 |
@@ -182,3 +182,7 @@ documentation for more information.
 SCS can be used by JuMP to solve LPs and SOCPs, and SDPs. SCS is a first order
 solver and has low accuracy (``10^{−4}``) by default; see the SCS.jl
 documentation for more information.
+
+### SDPA
+
+SDPA is a second order solver which comes in several variants. The main version has a C++ interface which [SDPA.jl](https://github.com/JuliaOpt/SDPA.jl) uses for efficiently communicating the problem instance to the solver. The three high-precision variants, SDPA-GMP (arbitrary precision), SDPA-QD ("quad-double" precision) and SDPA-DD ("double-double" precision) do not expose a library interface, but can used via [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl) which writes and reads files to interact with the solver binary.
