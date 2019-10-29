@@ -119,6 +119,11 @@ else
 end
 ```
 
+!!! warning "Querying after modification"
+    If a solved model is modified, then querying the solution is undefined
+    behavior. Adding, deleting, or modifying a constraint (or variable)
+    may invalidate any part of the solution.
+
 ```@meta
 # TODO: How to accurately measure the solve time.
 ```
