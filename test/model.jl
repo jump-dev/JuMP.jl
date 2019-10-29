@@ -374,7 +374,7 @@ function test_model()
         err = ErrorException("The provided optimizer_factory returned an " *
             "object of type Int64. Expected a " *
             "MathOptInterface.AbstractOptimizer.")
-        @test_throws err set_optimizer(model, () -> 10)
+        @test_throws err set_optimizer(model, () -> Int64(10))
         # TODO: A factory that returns a non-empty optimizer.
     end
 end
