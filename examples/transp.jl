@@ -36,7 +36,7 @@ function example_transp()
 		24   14   17   13   28   99   20
 	]
 
-	model = Model(with_optimizer(GLPK.Optimizer))
+	model = Model(GLPK.Optimizer)
 
 	@variable(model, trans[1:length(ORIG), 1:length(DEST)] >= 0)
 	@objective(model, Min, sum(cost[i, j] * trans[i, j] for i in 1:length(ORIG), j in 1:length(DEST)))

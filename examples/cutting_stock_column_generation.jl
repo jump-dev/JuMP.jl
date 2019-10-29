@@ -24,7 +24,7 @@ function solve_pricing(dual_demand_satisfaction, maxwidth, widths, rollcost, dem
     n = length(reduced_costs)
 
     # The actual pricing model.
-    submodel = Model(with_optimizer(GLPK.Optimizer))
+    submodel = Model(GLPK.Optimizer)
     @variable(submodel, xs[1:n] >= 0, Int)
     @constraint(submodel, sum(xs .* widths) <= maxwidth)
     @objective(submodel, Max, sum(xs .* reduced_costs))
@@ -114,7 +114,7 @@ function example_cutting_stock(; max_gen_cols::Int=5000)
     # Write the master problem with this "reduced" set of patterns.
     # Not yet integer variables: otherwise, the dual values may make no sense
     # (actually, GLPK will yell at you if you're trying to get duals for integer problems)
-    m = Model(with_optimizer(GLPK.Optimizer))
+    m = Model(GLPK.Optimizer)
     @variable(m, θ[1:ncols] >= 0)
     @objective(m, Min,
         sum(θ[p] * (rollcost - sum(patterns[j, p] * prices[j] for j in 1:n)) for p in 1:ncols)

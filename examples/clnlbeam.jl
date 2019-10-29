@@ -30,7 +30,8 @@ function example_clnlbeam()
     N = 1000
     h = 1/N
     alpha = 350
-    model = Model(with_optimizer(Ipopt.Optimizer, print_level = 0))
+    model = Model(Ipopt.Optimizer)
+    set_silent(model)
     @variables(model, begin
         -1 <= t[1:(N + 1)] <= 1
         -0.05 <= x[1:(N + 1)] <= 0.05

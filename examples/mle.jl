@@ -20,7 +20,8 @@ function example_mle(; verbose = true)
     n = 1_000
     Random.seed!(1234)
     data = randn(n)
-    model = Model(with_optimizer(Ipopt.Optimizer, print_level = 0))
+    model = Model(Ipopt.Optimizer)
+    set_silent(model)
     @variable(model, μ, start = 0.0)
     @variable(model, σ >= 0.0, start = 1.0)
     @NLobjective(model, Max, n / 2 * log(1 / (2 * π * σ^2)) -

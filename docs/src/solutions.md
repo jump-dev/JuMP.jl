@@ -169,8 +169,8 @@ julia> @objective(model, Max, x[1]);
 ```@meta
 DocTestSetup = quote
     using JuMP
-    model = Model(with_optimizer(MOIU.MockOptimizer, MOIU.Model{Float64}(),
-                  eval_variable_constraint_dual=true));
+    model = Model(() -> MOIU.MockOptimizer(MOIU.Model{Float64}(),
+                          eval_variable_constraint_dual=true));
     @variable(model, x[1:2]);
     @constraint(model, c1, x[1] + x[2] <= 1);
     @constraint(model, c2, x[1] - x[2] <= 1);

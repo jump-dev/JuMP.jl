@@ -528,10 +528,10 @@ end
 function test_shadow_price(model_string, constraint_dual, constraint_shadow)
     model = JuMP.Model()
     MOIU.loadfromstring!(JuMP.backend(model), model_string)
-    set_optimizer(model, with_optimizer(MOIU.MockOptimizer,
-                                        MOIU.Model{Float64}(),
-                                        eval_objective_value=false,
-                                        eval_variable_constraint_dual=false))
+    set_optimizer(model, () -> MOIU.MockOptimizer(
+                                MOIU.Model{Float64}(),
+                                eval_objective_value=false,
+                                eval_variable_constraint_dual=false))
     JuMP.optimize!(model)
     mock_optimizer = JuMP.backend(model).optimizer.model
     MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)

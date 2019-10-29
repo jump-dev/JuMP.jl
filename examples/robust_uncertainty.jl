@@ -33,7 +33,8 @@ function example_robust_uncertainty()
     Γ1(𝛿, N) = R / sqrt(N) * (2 + sqrt(2 * log(1 / 𝛿)))
     Γ2(𝛿, N) = 2 * R^2 / sqrt(N) * (2 + sqrt(2 * log(2 / 𝛿)))
 
-    model = Model(with_optimizer(SCS.Optimizer, verbose = 0))
+    model = Model(SCS.Optimizer)
+    set_silent(model)
 
     @variable(model, Σ[1:d, 1:d], PSD)
     @variable(model, u[1:d])

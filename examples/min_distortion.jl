@@ -41,7 +41,8 @@ For more detail, see "Lectures on discrete geometry" by J. Matoušek, Springer,
 2002, pp. 378-379.
 """
 function example_min_distortion()
-    model = Model(with_optimizer(SCS.Optimizer, verbose = 0))
+    model = Model(SCS.Optimizer)
+    set_silent(model)
     D = [0.0 1.0 1.0 1.0;
          1.0 0.0 2.0 2.0;
          1.0 2.0 0.0 2.0;

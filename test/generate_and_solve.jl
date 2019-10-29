@@ -42,9 +42,9 @@ using JuMP
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y"], ["c", "xub", "ylb"])
 
-        set_optimizer(m, with_optimizer(MOIU.MockOptimizer,
-                                        MOIU.Model{Float64}(),
-                                        eval_objective_value=false))
+        set_optimizer(m, () -> MOIU.MockOptimizer(
+                                 MOIU.Model{Float64}(),
+                                 eval_objective_value=false))
         JuMP.optimize!(m)
 
         mockoptimizer = JuMP.backend(m).optimizer.model
@@ -126,9 +126,9 @@ using JuMP
 
     @testset "IP" begin
         # Tests the solver= keyword.
-        m = Model(with_optimizer(MOIU.MockOptimizer,
-                                 MOIU.Model{Float64}(),
-                                 eval_objective_value=false),
+        m = Model(() -> MOIU.MockOptimizer(
+                            MOIU.Model{Float64}(),
+                            eval_objective_value=false),
                   caching_mode = MOIU.AUTOMATIC)
         @variable(m, x == 1.0, Int)
         @variable(m, y, Bin)
@@ -200,9 +200,9 @@ using JuMP
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y"], ["c1", "c2", "c3"])
 
-        set_optimizer(m, with_optimizer(MOIU.MockOptimizer,
-                                        MOIU.Model{Float64}(),
-                                        eval_objective_value=false))
+        set_optimizer(m, () -> MOIU.MockOptimizer(
+                                 MOIU.Model{Float64}(),
+                                 eval_objective_value=false))
         JuMP.optimize!(m)
 
         mockoptimizer = JuMP.backend(m).optimizer.model
@@ -373,8 +373,7 @@ using JuMP
     end
 
     @testset "Solver doesn't support nonlinear constraints" begin
-        model = Model(with_optimizer(MOIU.MockOptimizer,
-                                     MOIU.Model{Float64}()))
+        model = Model(() -> MOIU.MockOptimizer(MOIU.Model{Float64}()))
         @variable(model, x)
         @NLobjective(model, Min, sin(x))
         err = ErrorException("The solver does not support nonlinear problems " *
