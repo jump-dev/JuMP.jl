@@ -121,7 +121,7 @@ end
 
 !!! warning "Querying after modification"
     If a solved model is modified, then querying the solution is undefined
-    behaviour. Adding, deleting, or modifying a constraint (or variable)
+    behavior. Adding, deleting, or modifying a constraint (or variable)
     may invalidate any part of the solution.
 
 ```@meta
