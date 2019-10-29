@@ -1,5 +1,8 @@
-"List of accepted export formats. `Automatic` corresponds to a detection from the file name."
-@enum(FileFormat, CBF, LP, MOF, MPS, Automatic)
+"""
+List of accepted export formats. `AUTOMATIC_FILE_FORMAT` corresponds to
+a detection from the file name.
+"""
+@enum(FileFormat, CBF, LP, MOF, MPS, AUTOMATIC_FILE_FORMAT)
 
 function _filename_to_format(filename::String)
     return if endswith(filename, ".mof.json.gz") || endswith(filename, ".mof.json")
@@ -15,31 +18,34 @@ function _filename_to_format(filename::String)
     end
 end
 
-"List of accepted export compression formats. `Automatic` corresponds to a detection from the file name."
-@enum(FileCompression, None, GZip, Automatic)
+"""
+List of accepted export compression formats. `AUTOMATIC_FILE_COMPRESSION`
+corresponds to a detection from the file name.
+"""
+@enum(FileCompression, NO_FILE_COMPRESSION, GZIP, AUTOMATIC_FILE_COMPRESSION)
 
 function _filename_to_compression(filename::String)
     return if endswith(filename, ".gz")
-        GZip
+        GZIP
     else
-        None
+        NO_FILE_COMPRESSION
     end
 end
 
-function _open(f::Function, filename::String, mode::String; compression::FileCompression=Automatic)
-    if compression == Automatic
+function _open(f::Function, filename::String, mode::String; compression::FileCompression=AUTOMATIC_FILE_COMPRESSION)
+    if compression == AUTOMATIC_FILE_COMPRESSION
         compression = _filename_to_compression(filename)
     end
 
-    open_f = if compression == GZip
-        GZip.open
+    if compression == GZIP
+        stream = (mode == "r") ? CodecZlib.GzipDecompressorStream : CodecZlib.GzipCompressorStream
+        return open(f, stream, filename, mode)
     else
-        open
+        return open(f, filename, mode)
     end
-    return open_f(f, filename, mode)
 end
 
-function write_to_file(model::Model, io::IO, format::FileFormat=MPS; kwargs...)
+function write_to_file(model::Model, io::IO, format::FileFormat; kwargs...)
     dest = if format == CBF
         MathOptFormat.CBF.Model(; kwargs...)
     elseif format == LP
@@ -57,7 +63,7 @@ function write_to_file(model::Model, io::IO, format::FileFormat=MPS; kwargs...)
 end
 
 """
-    write_to_file(model::Model, filename::String; format::FileFormat=Automatic, compression::FileCompression=Automatic, kwargs...)
+    write_to_file(model::Model, filename::String; format::FileFormat=AUTOMATIC_FILE_FORMAT, compression::FileCompression=AUTOMATIC_FILE_COMPRESSION, kwargs...)
 
 Write `model` to the file called `filename` using the format `format`.
 
@@ -66,12 +72,14 @@ are given by the enum [`FileCompression`](@ref).
 
 For keyword options, see [MathOptFormat.jl](https://github.com/odow/MathOptFormat.jl).
 """
-function write_to_file(model::Model, filename::String; format::FileFormat=Automatic, compression::FileCompression=Automatic, kwargs...)
-    if format == Automatic
+function write_to_file(model::Model, filename::String; format::FileFormat=AUTOMATIC_FILE_FORMAT, compression::FileCompression=AUTOMATIC_FILE_COMPRESSION, kwargs...)
+    if format == AUTOMATIC_FILE_FORMAT
         format = _filename_to_format(filename)
     end
 
-    _open(filename, "w", compression) do io
+    # println((filename, "w", compression))
+
+    _open(filename, "w", compression=compression) do io
         write_to_file(model, io, format; kwargs...)
     end
     return

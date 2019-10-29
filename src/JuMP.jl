@@ -17,6 +17,7 @@ import MathOptInterface
 const MOI = MathOptInterface
 const MOIU = MOI.Utilities
 using MathOptFormat
+import CodecZlib
 
 import Calculus
 import DataStructures.OrderedDict
@@ -789,6 +790,7 @@ include("print.jl")
 include("lp_sensitivity.jl")
 include("callbacks.jl")
 include("export.jl")
+include("file_formats.jl")
 
 # JuMP exports everything except internal symbols, which are defined as those
 # whose name starts with an underscore. If you don't want all of these symbols

@@ -5,6 +5,7 @@ version = "0.20.0"
 
 [deps]
 Calculus = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
+CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
