@@ -39,8 +39,8 @@ Base.@deprecate(setlowerbound,     JuMP.set_lower_bound)
 Base.@deprecate(setupperbound,     JuMP.set_upper_bound)
 Base.@deprecate(linearterms,       JuMP.linear_terms)
 
-writeLP(args...; kargs...) = error("writeLP has been renamed to write_LP and its arguments have changed.")
-writeMPS(args...; kargs...) = error("writeMPS has been renamed to write_MPS and its arguments have changed.")
+writeLP(args...; kargs...) = error("writeLP has been merged into write_to_file and its arguments have changed.")
+writeMPS(args...; kargs...) = error("writeMPS has been merged into write_to_file and its arguments have changed.")
 
 include("utils.jl")
 
@@ -788,6 +788,7 @@ include("nlp.jl")
 include("print.jl")
 include("lp_sensitivity.jl")
 include("callbacks.jl")
+include("export.jl")
 
 # JuMP exports everything except internal symbols, which are defined as those
 # whose name starts with an underscore. If you don't want all of these symbols
