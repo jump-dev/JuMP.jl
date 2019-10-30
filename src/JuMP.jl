@@ -17,6 +17,8 @@ import MathOptInterface
 const MOI = MathOptInterface
 const MOIU = MOI.Utilities
 using MathOptFormat
+import CodecBzip2
+import CodecXz
 import CodecZlib
 
 import Calculus

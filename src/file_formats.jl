@@ -22,11 +22,15 @@ end
 List of accepted export compression formats. `AUTOMATIC_FILE_COMPRESSION`
 corresponds to a detection from the file name.
 """
-@enum(FileCompression, NO_FILE_COMPRESSION, GZIP, AUTOMATIC_FILE_COMPRESSION)
+@enum(FileCompression, NO_FILE_COMPRESSION, BZIP2, GZIP, XZ, AUTOMATIC_FILE_COMPRESSION)
 
 function _filename_to_compression(filename::String)
-    return if endswith(filename, ".gz")
+    return if endswith(filename, ".bz2")
+        BZIP2
+    elseif endswith(filename, ".gz")
         GZIP
+    elseif endswith(filename, ".xz")
+        XZ
     else
         NO_FILE_COMPRESSION
     end
@@ -37,8 +41,14 @@ function _open(f::Function, filename::String, mode::String; compression::FileCom
         compression = _filename_to_compression(filename)
     end
 
-    if compression == GZIP
-        stream = (mode == "r") ? CodecZlib.GzipDecompressorStream : CodecZlib.GzipCompressorStream
+    if compression == BZIP2 || compression == GZIP || compression == XZ
+        stream = if compression == BZIP2
+            (mode == "r") ? CodecBzip2.Bzip2DecompressorStream : CodecBzip2.Bzip2CompressorStream
+        elseif compression == GZIP
+            (mode == "r") ? CodecZlib.GzipDecompressorStream : CodecZlib.GzipCompressorStream
+        else # compression == XZ
+            (mode == "r") ? CodecXz.XzDecompressorStream : CodecXz.XzCompressorStream
+        end
         return open(f, stream, filename, mode)
     else
         return open(f, filename, mode)
@@ -76,8 +86,6 @@ function write_to_file(model::Model, filename::String; format::FileFormat=AUTOMA
     if format == AUTOMATIC_FILE_FORMAT
         format = _filename_to_format(filename)
     end
-
-    # println((filename, "w", compression))
 
     _open(filename, "w", compression=compression) do io
         write_to_file(model, io, format; kwargs...)
