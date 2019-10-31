@@ -20,7 +20,7 @@ remains feasible, i.e., where the shadow prices apply.
 - The rhs coefficient is the value right of the relation, i.e., b for the constraint when of the form a*x □ b, where □ is ≤, =, or ≥.
 - The range denotes valid changes, e.g., for a*x <= b + Δ, the LP basis remains feasible for all Δ ∈ [l, u].
 - `feasibility_tolerance` is the primal feasibility tolerance, this should
-  preferably match the tolerance used by the solver. The defualt tolerance should
+  preferably match the tolerance used by the solver. The default tolerance should
   however apply in most situations (c.f. "Computational Techniques of the
   Simplex Method" by István Maros, section 9.3.4).
 """
