@@ -696,6 +696,8 @@ include("quad_expr.jl")
 
 include("sets.jl")
 
+# Indicator constraint
+include("indicator.jl")
 # SDConstraint
 include("sd.jl")
 

@@ -497,6 +497,32 @@ julia> @constraint(model, x in MOI.SOS2([3.0, 1.0, 2.0]))
 [x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
 ```
 
+## Indicator constraints
+
+JuMP provides a special syntax for creating indicator constraints, that is,
+enforce a constraint to hold depending on the value of a binary variable.
+In order to constrain the constraint `x + y <= 1` to hold when a binary
+variable `a` is one, use the following syntax:
+```jldoctest indicator; setup=:(model = Model())
+julia> @variable(model, x)
+x
+
+julia> @variable(model, y)
+y
+
+julia> @variable(model, a, Bin)
+a
+
+julia> @constraint(model, a => x + y <= 1)
+[a, x + y] ∈ MathOptInterface.IndicatorSet{MathOptInterface.ACTIVATE_ON_ONE,MathOptInterface.LessThan{Float64}}(MathOptInterface.LessThan{Float64}(1.0))
+```
+If instead the constraint should hold when `a` is zero, simply add a `!` before
+the binary variable.
+```jldoctest indicator
+julia> @constraint(model, !a => x + y <= 1)
+[a, x + y] ∈ MathOptInterface.IndicatorSet{MathOptInterface.ACTIVATE_ON_ZERO,MathOptInterface.LessThan{Float64}}(MathOptInterface.LessThan{Float64}(1.0))
+```
+
 ## Semidefinite constraints
 
 JuMP provides a special syntax for constraining a matrix to be symmetric
