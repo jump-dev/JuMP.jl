@@ -19,21 +19,23 @@ Some but not all of these tasks are summarized in the
                  [#1654](https://github.com/JuliaOpt/JuMP.jl/issues/1654),
                  [#1607](https://github.com/JuliaOpt/JuMP.jl/issues/1607))
   - Callbacks
-  - Column generation syntax
+  - Column generation syntax (**Done**: see `examples/cutting_stock_column_generation.jl`)
   - Support for second-order cones in Gurobi, CPLEX, and Xpress.
 - Fix issues that we promised MOI would fix.
   - Checking feasibility of solutions ([#693](https://github.com/JuliaOpt/JuMP.jl/issues/693))
   - Accessing IIS ([#1053](https://github.com/JuliaOpt/JuMP.jl/issues/1035))
   - Accessing multiple results from solvers
-  - Dual warm-starts (e.g., [Ipopt.jl #164](https://github.com/JuliaOpt/Ipopt.jl/issues/164))
+  - Dual warm-starts ([#2094](https://github.com/JuliaOpt/JuMP.jl/issues/2094))
 - Address “easy” usability issues
   - Line numbers in error messages ([#1174](https://github.com/JuliaOpt/JuMP.jl/issues/1174))
-  - LP sensitivity summary ([#1332](https://github.com/JuliaOpt/JuMP.jl/issues/1332))
-  - Inferred element types for collections in macros ([#525](https://github.com/JuliaOpt/JuMP.jl/issues/525))
-  - Expose solver-independent options from JuMP
+  - LP sensitivity summary (**Done**: see [Sensitivity analysis for LP](@ref))
+  - Inferred element types for collections in macros (**Done**: [#2070](https://github.com/JuliaOpt/JuMP.jl/pull/2070))
+  - Expose solver-independent options from JuMP (**Done**: see [`set_silent`](@ref) etc.)
 - Improve the documentation ([#1062](https://github.com/JuliaOpt/JuMP.jl/issues/1062))
   - Separate how-to, concept explanation, and technical reference following the
     [Divio recommendations](https://www.divio.com/blog/documentation/)
+  - Fully integrate [JuMPTutorials](https://github.com/JuliaOpt/JuMPTutorials.jl)
+    with JuMP's documentation.
 - Developer experience
   - Get JuMP’s unit tests running in less than two minutes. See [#1745](https://github.com/JuliaOpt/JuMP.jl/pull/1745).
 - All solvers should complete the transition to MOI.
