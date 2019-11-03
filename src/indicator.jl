@@ -1,3 +1,11 @@
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file extends JuMP to indicator constraints. It is a good example of how
+# JuMP can be extended.
+
 function build_indicator_constraint(
     _error::Function, variable::JuMP.AbstractVariableRef, constraint::JuMP.ScalarConstraint, ::Type{MOI.IndicatorSet{A}}) where A
 
@@ -34,4 +42,15 @@ function parse_one_operator_constraint(
         buildcall = :(build_indicator_constraint($_error, $(esc(variable)), $rhs_buildcall, $S))
     end
     return rhs_parsecode, buildcall
+end
+
+function constraint_string(
+    print_mode, constraint::VectorConstraint{F, <:MOI.IndicatorSet{A}}) where {F, A}
+    var_str = function_string(print_mode, constraint.func[1])
+    if A == MOI.ACTIVATE_ON_ZERO
+        var_str = "!" * var_str
+    end
+    con = ScalarConstraint(constraint.func[2], constraint.set.set)
+    con_str = constraint_string(print_mode, con)
+    return var_str * " => " * con_str
 end

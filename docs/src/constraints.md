@@ -514,13 +514,13 @@ julia> @variable(model, a, Bin)
 a
 
 julia> @constraint(model, a => x + y <= 1)
-[a, x + y] ∈ MathOptInterface.IndicatorSet{MathOptInterface.ACTIVATE_ON_ONE,MathOptInterface.LessThan{Float64}}(MathOptInterface.LessThan{Float64}(1.0))
+a => x + y ≤ 1.0
 ```
 If instead the constraint should hold when `a` is zero, simply add a `!` before
 the binary variable.
 ```jldoctest indicator
 julia> @constraint(model, !a => x + y <= 1)
-[a, x + y] ∈ MathOptInterface.IndicatorSet{MathOptInterface.ACTIVATE_ON_ZERO,MathOptInterface.LessThan{Float64}}(MathOptInterface.LessThan{Float64}(1.0))
+!a => x + y ≤ 1.0
 ```
 
 ## Semidefinite constraints
