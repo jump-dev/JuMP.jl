@@ -63,7 +63,7 @@ function with_optimizer(constructor,
     deprecation_message = """
 with_optimizer is deprecated. The examples below demonstrate how to update to the new syntax:
 - 'with_optimizer(Ipopt.Optimizer)' becomes 'Ipopt.Optimizer'.
-- 'set_optimizer(model, with_optimizer(Ipopt.Optimizer, print_level=1))' becomes 'set_optimizer(model, Ipopt.Optimizer); set_parameter(model, \"print_level\", 1)'. Each parameter should be set with a separate call to set_parameter.
+- 'set_optimizer(model, with_optimizer(Ipopt.Optimizer, print_level=1, tol=1e-5))' becomes 'set_optimizer(model, Ipopt.Optimizer); set_parameters(model, \"print_level\" => 1, \"tol\" => 1e-5)'.
 - In rare cases where an argument must be passed to the constructor, use an anonymous function. For example, 'env = Gurobi.Env(); set_optimizer(model, with_optimizer(Gurobi.Optimizer, env))' becomes 'env = Gurobi.Env(); set_optimizer(model, () -> Gurobi.Optimizer(env))'.
     """
     Base.depwarn(deprecation_message, :with_optimizer)
@@ -417,6 +417,25 @@ Sets solver-specific parameter identified by `name` to `value`.
 """
 function set_parameter(model::Model, name, value)
     return MOI.set(model, MOI.RawParameter(name), value)
+end
+
+"""
+    set_parameters(model::Model, pairs::Pair...)
+
+Given a list of `parameter_name => value` pairs, calls
+`set_parameters(model, parameter_name, value)` for each pair. This is a
+convenience function only. See [`set_parameter`](@ref).
+
+## Example
+```julia
+model = Model(Ipopt.Optimizer)
+set_parameters(model, "tol" => 1e-4, "max_iter" => 100)
+```
+"""
+function set_parameters(model::Model, pairs::Pair...)
+    for (name, value) in pairs
+        set_parameter(model, name, value)
+    end
 end
 
 """

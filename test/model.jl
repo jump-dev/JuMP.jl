@@ -354,6 +354,14 @@ function test_model()
         @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
     end
 
+    @testset "set_parameters" begin
+        mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+        model = Model(() -> MOIU.MockOptimizer(mock))
+        JuMP.set_parameters(model, "aaa" => "bbb", "abc" => 10)
+        @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
+        @test MOI.get(model, MOI.RawParameter("abc")) == 10
+    end
+
     @testset "set and retrieve time limit" begin
         mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
         model = Model(() -> MOIU.MockOptimizer(mock))

@@ -85,12 +85,16 @@ Most packages follow the `ModuleName.Optimizer` naming convention, but
 exceptions may exist. See the corresponding Julia package README for more
 details on how to use the solver.
 
-Use [`set_parameter`](@ref) to set solver-specific options. Continuing the
+Use [`set_parameters`](@ref) to set solver-specific options. Continuing the
 example from above,
 ```julia
-set_parameter(model, "Presolve", 0)
+set_parameters(model, "Presolve" => 0, "Heuristics" => 0.01)
 ```
-sets Gurobi's `Presolve` parameter to zero.
+sets Gurobi's
+[`Presolve`](https://www.gurobi.com/documentation/8.1/refman/presolve.html#parameter:Presolve)
+parameter to zero and
+[`Heuristics`](https://www.gurobi.com/documentation/8.1/refman/heuristics.html#parameter:Heuristics)
+to 0.01.
 
 The following solvers were compatible with JuMP up to release 0.18 but are
 not yet compatible with the latest version because they do not implement the
