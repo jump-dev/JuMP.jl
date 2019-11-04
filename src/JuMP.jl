@@ -423,13 +423,16 @@ end
     set_parameters(model::Model, pairs::Pair...)
 
 Given a list of `parameter_name => value` pairs, calls
-`set_parameters(model, parameter_name, value)` for each pair. This is a
-convenience function only. See [`set_parameter`](@ref).
+`set_parameter(model, parameter_name, value)` for each pair. See
+[`set_parameter`](@ref).
 
 ## Example
 ```julia
 model = Model(Ipopt.Optimizer)
 set_parameters(model, "tol" => 1e-4, "max_iter" => 100)
+# The above call is equivalent to:
+set_parameter(model, "tol", 1e-4)
+set_parameter(model, "max_iter", 100)
 ```
 """
 function set_parameters(model::Model, pairs::Pair...)
