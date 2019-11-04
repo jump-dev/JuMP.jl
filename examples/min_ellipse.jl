@@ -34,7 +34,8 @@ function example_min_ellipse()
     ]
     # We change the weights to see different solutions, if they exist
     weights = [1.0 0.0; 0.0 1.0]
-    model = Model(with_optimizer(SCS.Optimizer, verbose = 0))
+    model = Model(SCS.Optimizer)
+    set_silent(model)
     @variable(model, X[i=1:2, j=1:2], PSD, start = [2.0 0.0; 0.0 3.0][i, j])
     @objective(model, Min, tr(weights * X))
     for As_i in As

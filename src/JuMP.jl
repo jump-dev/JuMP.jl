@@ -46,23 +46,8 @@ include("utils.jl")
 const _MOIVAR = MOI.VariableIndex
 const _MOICON{F,S} = MOI.ConstraintIndex{F,S}
 
-"""
-    OptimizerFactory
-
-User-friendly closure that creates new MOI models. New `OptimizerFactory`s are
-created with [`with_optimizer`](@ref) and new models are created from the
-optimizer factory `optimizer_factory` with `optimizer_factory()`.
-
-## Examples
-
-The following construct an optimizer factory and then use it to create two
-independent `Ipopt.Optimizer`s:
-```julia
-optimizer_factory = with_optimizer(Ipopt.Optimizer, print_level=0)
-optimizer1 = optimizer_factory()
-optimizer2 = optimizer_factory()
-```
-"""
+# OptimizerFactory was deprecated in JuMP 0.21 and should be removed when
+# with_optimizer is removed.
 struct OptimizerFactory
     # The constructor can be
     # * `Function`: a function, or
@@ -73,22 +58,15 @@ struct OptimizerFactory
     kwargs # type changes from Julia v0.6 to v0.7 so we leave it untyped for now
 end
 
-"""
-    with_optimizer(constructor, args...; kwargs...)
-
-Return an `OptimizerFactory` that creates optimizers using the constructor
-`constructor` with positional arguments `args` and keyword arguments `kwargs`.
-
-## Examples
-
-The following returns an optimizer factory that creates `Ipopt.Optimizer`s using
-the constructor call `Ipopt.Optimizer(print_level=0)`:
-```julia
-with_optimizer(Ipopt.Optimizer, print_level=0)
-```
-"""
 function with_optimizer(constructor,
                         args...; kwargs...)
+    deprecation_message = """
+with_optimizer is deprecated. The examples below demonstrate how to update to the new syntax:
+- 'with_optimizer(Ipopt.Optimizer)' becomes 'Ipopt.Optimizer'.
+- 'set_optimizer(model, with_optimizer(Ipopt.Optimizer, print_level=1, tol=1e-5))' becomes 'set_optimizer(model, Ipopt.Optimizer); set_parameters(model, \"print_level\" => 1, \"tol\" => 1e-5)'.
+- In rare cases where an argument must be passed to the constructor, use an anonymous function. For example, 'env = Gurobi.Env(); set_optimizer(model, with_optimizer(Gurobi.Optimizer, env))' becomes 'env = Gurobi.Env(); set_optimizer(model, () -> Gurobi.Optimizer(env))'.
+    """
+    Base.depwarn(deprecation_message, :with_optimizer)
     if !applicable(constructor, args...)
         error("$constructor does not have any method with arguments $args.",
               "The first argument of `with_optimizer` should be callable with",
@@ -170,24 +148,29 @@ function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
 end
 
 """
-    Model(optimizer_factory::OptimizerFactory;
+    Model(optimizer_factory;
           caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
           bridge_constraints::Bool=true)
 
-Return a new JuMP model using the optimizer factory `optimizer_factory` to
-create the optimizer. The optimizer factory can be created by the
-[`with_optimizer`](@ref) function. See [`set_optimizer`](@ref) for the
-description of the `bridge_constraints` argument.
+Return a new JuMP model with the provided optimizer and bridge settings. This
+function is equivalent to:
+```julia
+    model = Model()
+    set_optimizer(model, optimizer_factory,
+                  bridge_constraints=bridge_constraints)
+    return model
+```
+See [`set_optimizer`](@ref) for the description of the `optimizer_factory` and
+`bridge_constraints` arguments.
 
 ## Examples
 
-The following creates a model using the optimizer
-`Ipopt.Optimizer(print_level=0)`:
+The following creates a model with the optimizer set to `Ipopt`:
 ```julia
-model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+model = Model(Ipopt.Optimizer)
 ```
 """
-function Model(optimizer_factory::OptimizerFactory;
+function Model(optimizer_factory;
                bridge_constraints::Bool=true, kwargs...)
     model = Model(; kwargs...)
     set_optimizer(model, optimizer_factory,
@@ -434,6 +417,28 @@ Sets solver-specific parameter identified by `name` to `value`.
 """
 function set_parameter(model::Model, name, value)
     return MOI.set(model, MOI.RawParameter(name), value)
+end
+
+"""
+    set_parameters(model::Model, pairs::Pair...)
+
+Given a list of `parameter_name => value` pairs, calls
+`set_parameter(model, parameter_name, value)` for each pair. See
+[`set_parameter`](@ref).
+
+## Example
+```julia
+model = Model(Ipopt.Optimizer)
+set_parameters(model, "tol" => 1e-4, "max_iter" => 100)
+# The above call is equivalent to:
+set_parameter(model, "tol", 1e-4)
+set_parameter(model, "max_iter", 100)
+```
+"""
+function set_parameters(model::Model, pairs::Pair...)
+    for (name, value) in pairs
+        set_parameter(model, name, value)
+    end
 end
 
 """

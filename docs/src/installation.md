@@ -78,16 +78,23 @@ import Pkg
 Pkg.add("Gurobi")
 using JuMP
 using Gurobi
-model = Model(with_optimizer(Gurobi.Optimizer))
+model = Model(Gurobi.Optimizer)
 ```
 
 Most packages follow the `ModuleName.Optimizer` naming convention, but
 exceptions may exist. See the corresponding Julia package README for more
 details on how to use the solver.
 
-```@meta
-# TODO: Discuss setting solver options.
+Use [`set_parameters`](@ref) to set solver-specific options. Continuing the
+example from above,
+```julia
+set_parameters(model, "Presolve" => 0, "Heuristics" => 0.01)
 ```
+sets Gurobi's
+[`Presolve`](https://www.gurobi.com/documentation/8.1/refman/presolve.html#parameter:Presolve)
+parameter to zero and
+[`Heuristics`](https://www.gurobi.com/documentation/8.1/refman/heuristics.html#parameter:Heuristics)
+to 0.01.
 
 The following solvers were compatible with JuMP up to release 0.18 but are
 not yet compatible with the latest version because they do not implement the
@@ -165,7 +172,7 @@ for consistency the MOI optimizer is called `Mosek.Optimizer` so do the
 following to create a model with the Mosek solver:
 ```julia
 julia> using MosekTools
-julia> model = Model(with_optimizer(Mosek.Optimizer))
+julia> model = Model(Mosek.Optimizer)
 ```
 
 ### ProxSDP

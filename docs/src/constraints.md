@@ -155,12 +155,10 @@ false
 ```@meta
 DocTestSetup = quote
     using JuMP
-    model = Model(
-        with_optimizer(
-            MOI.Utilities.MockOptimizer,
-            MOIU.Model{Float64}(),
-            eval_objective_value = false,
-            eval_variable_constraint_dual = false));
+    model = Model(() -> MOIU.MockOptimizer(
+                            MOIU.Model{Float64}(),
+                            eval_objective_value = false,
+                            eval_variable_constraint_dual = false));
     @variable(model, x);
     @constraint(model, con, x <= 1);
     @objective(model, Max, -2x);

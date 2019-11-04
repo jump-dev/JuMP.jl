@@ -25,7 +25,8 @@ We can use the following property of the correlations to determine bounds on
     | ρ_AC  ρ_BC   1   |
 """
 function example_corr_sdp()
-    model = Model(with_optimizer(SCS.Optimizer, verbose = 0))
+    model = Model(SCS.Optimizer)
+    set_silent(model)
     @variable(model, X[1:3, 1:3], PSD)
 
     # Diagonal is 1s

@@ -32,28 +32,52 @@ function MOIU.attach_optimizer(model::Model)
     MOIU.attach_optimizer(backend(model))
 end
 
+const _set_optimizer_not_callable_message =
+    "The provided optimizer_factory is invalid. It must be callable with zero" *
+    "arguments. For example, \"Ipopt.Optimizer\" or" *
+    "\"() -> ECOS.Optimizer()\". It should not be an instantiated optimizer " *
+    "like \"Ipopt.Optimizer()\" or \"ECOS.Optimizer()\"." *
+    "(Note the difference in parentheses!)"
+
 """
-    set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
+    set_optimizer(model::Model, optimizer_factory;
                   bridge_constraints::Bool=true)
 
-Creates a new `MathOptInterface.AbstractOptimizer` instance using the optimizer
-factory and sets it as the optimizer of `model`.
+
+Creates an empty `MathOptInterface.AbstractOptimizer` instance by calling
+`optimizer_factory()` and sets it as the optimizer of `model`. Specifically,
+`optimizer_factory` must be callable with zero arguments and return an empty
+`MathOptInterface.AbstractOptimizer`.
 
 If `bridge_constraints` is true, constraints that are not supported by the
 optimizer are automatically bridged to equivalent supported constraints when
 an appropriate transformation is defined in the `MathOptInterface.Bridges`
 module or is defined in another module and is explicitly added.
 
+See [`set_parameters`](@ref) and [`set_parameter`](@ref) for setting
+solver-specific parameters of the optimizer.
+
 ## Examples
 ```julia
 model = Model()
-set_optimizer(model, with_optimizer(GLPK.Optimizer))
+set_optimizer(model, GLPK.Optimizer)
 ```
 """
-function set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
+function set_optimizer(model::Model, optimizer_factory;
                        bridge_constraints::Bool=true)
     error_if_direct_mode(model, :set_optimizer)
+    if !applicable(optimizer_factory)
+        error(_set_optimizer_not_callable_message)
+    end
     optimizer = optimizer_factory()
+    if !isa(optimizer, MOI.AbstractOptimizer)
+        error("The provided optimizer_factory returned an object of type " *
+              "$(typeof(optimizer)). Expected a " *
+              "MathOptInterface.AbstractOptimizer.")
+    end
+    if !MOI.is_empty(optimizer)
+        error("The provided optimizer_factory returned a non-empty optimizer.")
+    end
     if bridge_constraints
         # The names are handled by the first caching optimizer.
         # If default_copy_to without names is supported, no need for a second

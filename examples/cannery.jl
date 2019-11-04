@@ -37,7 +37,7 @@ function example_cannery(; verbose = true)
     num_plants = length(plants)
     num_markets = length(markets)
 
-    cannery = Model(with_optimizer(GLPK.Optimizer))
+    cannery = Model(GLPK.Optimizer)
 
     @variable(cannery, ship[1:num_plants, 1:num_markets] >= 0)
 

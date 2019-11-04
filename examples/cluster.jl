@@ -33,7 +33,8 @@ function example_cluster(; verbose = true)
         end
     end
 
-    model = Model(with_optimizer(SCS.Optimizer, verbose = 0))
+    model = Model(SCS.Optimizer)
+    set_silent(model)
     # Z >= 0, PSD
     @variable(model, Z[1:m, 1:m], PSD)
     @constraint(model, Z .>= 0)

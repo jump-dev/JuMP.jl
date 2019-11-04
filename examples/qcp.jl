@@ -18,7 +18,8 @@ A simple quadratically constrained program based on
 http://www.gurobi.com/documentation/5.5/example-tour/node25
 """
 function example_qcp(; verbose = true)
-    model = Model(with_optimizer(Ipopt.Optimizer, print_level = 0))
+    model = Model(Ipopt.Optimizer)
+    set_silent(model)
     @variable(model, x)
     @variable(model, y >= 0)
     @variable(model, z >= 0)

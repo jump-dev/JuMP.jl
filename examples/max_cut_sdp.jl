@@ -31,7 +31,7 @@ function solve_max_cut_sdp(num_vertex, weights)
     laplacian = diagm(0 => weights * ones(num_vertex)) - weights
 
     # Solve the SDP relaxation
-    model = Model(with_optimizer(SCS.Optimizer))
+    model = Model(SCS.Optimizer)
     @variable(model, X[1:num_vertex, 1:num_vertex], PSD)
     @objective(model, Max, 1 / 4 * dot(laplacian, X))
     @constraint(model, diag(X) .== 1)
