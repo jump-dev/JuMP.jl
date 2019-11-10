@@ -350,9 +350,9 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         model = ModelType()
         @variable(model, x, Bin)
         @variable(model, y)
-        ind_constr = @constraint(model, !x => y <= 1)
+        ind_constr = @constraint(model, !x => {y <= 1})
 
-        io_test(REPLMode, ind_constr, "!x => y $le 1.0")
+        io_test(REPLMode, ind_constr, "!x => {y $le 1.0}")
         # TODO: Test in IJulia mode.
     end
 end

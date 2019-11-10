@@ -29,10 +29,11 @@ function parse_one_operator_constraint(
     _error::Function, vectorized::Bool, ::Union{Val{:(=>)}, Val{:⇒}}, lhs, rhs)
 
     variable, S = _indicator_variable_set(_error, lhs)
-    if !(rhs isa Expr)
-        _error("Invalid right-hand side `$(rhs)`.")
+    if !(rhs isa Expr) || rhs.head != :braces || length(rhs.args) != 1
+        _error("Invalid right-hand side `$(rhs)` of indicator constraint. Expected constraint surrounded by `{` and `}`.")
     end
-    rhs_vectorized, rhs_parsecode, rhs_buildcall = parse_constraint(_error, rhs.args...)
+    rhs_con = rhs.args[1]
+    rhs_vectorized, rhs_parsecode, rhs_buildcall = parse_constraint(_error, rhs_con.args...)
     if vectorized != rhs_vectorized
         _error("Inconsistent use of `.` in symbols to indicate vectorization.")
     end
@@ -52,5 +53,5 @@ function constraint_string(
     end
     con = ScalarConstraint(constraint.func[2], constraint.set.set)
     con_str = constraint_string(print_mode, con)
-    return var_str * " => " * con_str
+    return var_str * " => {" * con_str * "}"
 end
