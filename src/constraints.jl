@@ -589,26 +589,35 @@ See also [`dual`](@ref) and [`shadow_price`](@ref).
 has_duals(model::Model) = dual_status(model) != MOI.NO_SOLUTION
 
 """
-    dual(con_ref::ConstraintRef)
+    dual(con_ref::ConstraintRef; result::Int = 1)
 
 Get the dual value of this constraint in the result returned by a solver.
 Use `has_dual` to check if a result exists before asking for values.
 See also [`shadow_price`](@ref).
 """
-function dual(con_ref::ConstraintRef{Model, <:_MOICON})
-    return reshape_vector(_constraint_dual(con_ref), dual_shape(con_ref.shape))
+function dual(con_ref::ConstraintRef{Model, <:_MOICON}; result::Int = 1)
+    return reshape_vector(
+        _constraint_dual(con_ref, result),
+        dual_shape(con_ref.shape)
+    )
 end
 
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
 function _constraint_dual(
-    con_ref::ConstraintRef{Model, <:_MOICON{
-        <:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}})::Float64
-    return MOI.get(con_ref.model, MOI.ConstraintDual(), con_ref)
+    con_ref::ConstraintRef{
+        Model, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}
+    },
+    result::Int
+)::Float64
+    return MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref)
 end
 function _constraint_dual(
-    con_ref::ConstraintRef{Model, <:_MOICON{
-        <:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}})::Vector{Float64}
-    return MOI.get(con_ref.model, MOI.ConstraintDual(), con_ref)
+    con_ref::ConstraintRef{
+        Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}
+    },
+    result::Int
+)::Vector{Float64}
+    return MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref)
 end
 
 

@@ -15,14 +15,19 @@
 Return the best known bound on the optimal objective value after a call to
 `optimize!(model)`.
 """
-objective_bound(model::Model)::Float64 = MOI.get(model, MOI.ObjectiveBound())
+function objective_bound(model::Model)::Union{Float64, Vector{Float64}}
+    return MOI.get(model, MOI.ObjectiveBound(result))
+end
 
 """
-    objective_value(model::Model)
+    objective_value(model::Model; result::Int = 1)
 
-Return the objective value after a call to `optimize!(model)`.
+Return the objective value corresponding to the result `result` after a call to
+`optimize!(model)`.
 """
-objective_value(model::Model)::Float64 = MOI.get(model, MOI.ObjectiveValue())
+function objective_value(model::Model; result::Int = 1)::Union{Float64, Vector{Float64}}
+    return MOI.get(model, MOI.ObjectiveValue(result))
+end
 
 """
     dual_objective_value(model::Model)
@@ -31,7 +36,9 @@ Return the value of the objective of the dual problem after a call to
 `optimize!(model)`. Throws `MOI.UnsupportedAttribute{MOI.DualObjectiveValue}` if
 the solver does not support this attribute.
 """
-dual_objective_value(model::Model)::Float64 = MOI.get(model, MOI.DualObjectiveValue())
+function dual_objective_value(model::Model)::Union{Float64, Vector{Float64}}
+    return MOI.get(model, MOI.DualObjectiveValue())
+end
 
 """
     objective_sense(model::Model)::MathOptInterface.OptimizationSense
@@ -66,7 +73,7 @@ functions; the recommended way to set the objective is with the
 """
 function set_objective_function end
 
-function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
+function set_objective_function(model::Model, func::MOI.AbstractFunction)
     attr = MOI.ObjectiveFunction{typeof(func)}()
     if !MOI.supports(backend(model), attr)
         error("The solver does not support an objective function of type ",
@@ -81,7 +88,10 @@ function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
     return
 end
 
-function set_objective_function(model::Model, func::AbstractJuMPScalar)
+function set_objective_function(
+    model::Model,
+    func::Union{AbstractJuMPScalar, Vector{<:AbstractJuMPScalar}}
+)
     check_belongs_to_model(func, model)
     set_objective_function(model, moi_function(func))
 end
@@ -91,8 +101,23 @@ function set_objective_function(model::Model, func::Real)
         MOI.ScalarAffineTerm{Float64}[], Float64(func)))
 end
 
-function set_objective(model::Model, sense::MOI.OptimizationSense,
-                       func::Union{AbstractJuMPScalar, Real})
+function set_objective_function(model::Model, func::Vector{<:Real})
+    set_objective_function(
+        model,
+        MOI.VectorAffineFunction(MOI.VectorAffineTerm{Float64}[], Float64.(func))
+    )
+end
+
+function set_objective(
+    model::Model,
+    sense::MOI.OptimizationSense,
+    func::Union{
+        AbstractJuMPScalar,
+        Real,
+        Vector{<:AbstractJuMPScalar},
+        Vector{<:Real}
+    }
+)
     set_objective_sense(model, sense)
     set_objective_function(model, func)
 end

@@ -145,3 +145,14 @@ end
 @testset "Objectives for JuMPExtension.MyModel" begin
     objectives_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end
+
+@testset "Multiobjective support" begin
+    model = Model()
+    @variable(model, x[1:2])
+    @objective(model, Min, x)
+    @test objective_function(model) == x
+    @test objective_function_type(model) == Vector{VariableRef}
+    @objective(model, Min, [1.0x[1], 2.0x[2]])
+    @test objective_function(model) == [1.0x[1], 2.0x[2]]
+    @test objective_function_type(model) == Vector{GenericAffExpr{Float64, VariableRef}}
+end

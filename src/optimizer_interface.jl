@@ -169,3 +169,13 @@ function optimize!(model::Model,
 
     return
 end
+
+"""
+    result_count(model::Model)
+
+Return the number of results available to query after a call to
+[`optimize!`](@ref).
+"""
+function result_count(model::Model)::Int
+    return MOI.get(model, MOI.ResultCount())
+end

@@ -142,7 +142,11 @@ function `func` is not `model`.
 Throw `VariableNotOwned` if the `owner_model` of one of the variables of the
 constraint `constraint` is not `model`.
 """
-function check_belongs_to_model end
+function check_belongs_to_model(v::Vector, model::AbstractModel)
+    for vi in v
+        check_belongs_to_model(vi, model)
+    end
+end
 
 function check_belongs_to_model(v::AbstractVariableRef, model::AbstractModel)
     if owner_model(v) !== model
@@ -731,13 +735,13 @@ function set_start_value(variable::VariableRef, value::Number)
 end
 
 """
-    value(v::VariableRef)
+    value(v::VariableRef; result = 1)
 
-Get the value of this variable in the result returned by a solver. Use
+Get the value of this variable in the result `result` returned by a solver. Use
 [`has_values`](@ref) to check if a result exists before asking for values.
 """
-function value(v::VariableRef)::Float64
-    return MOI.get(owner_model(v), MOI.VariablePrimal(), v)
+function value(v::VariableRef; result = 1)::Float64
+    return MOI.get(owner_model(v), MOI.VariablePrimal(result), v)
 end
 
 """
