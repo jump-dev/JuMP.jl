@@ -117,3 +117,39 @@ function example_heuristic_solution()
 end
 
 example_heuristic_solution()
+
+"""
+    example_solver_dependent_callback()
+
+An example using a solver_dependent callback.
+"""
+function example_solver_dependent_callback()
+    model = direct_model(GLPK.Optimizer())
+    @variable(model, 0 <= x <= 2.5, Int)
+    @variable(model, 0 <= y <= 2.5, Int)
+    @objective(model, Max, y)
+    lazy_called = false
+    function my_callback_function(cb_data)
+        lazy_called = true
+        reason = GLPK.ios_reason(cb_data.tree)
+        if reason != GLPK.IROWGEN
+            return
+        end
+        if y_val - x_val > 1 + 1e-6
+            con = @build_constraint(y - x <= 1)
+            MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+        elseif y_val + x_val > 3 + 1e-6
+            con = @build_constraint(y - x <= 1)
+            MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+        end
+    end
+    MOI.set(model, GLPK.CallbackFunction(), my_callback_function)
+    optimize!(model)
+    @test termination_status(model) == MOI.OPTIMAL
+    @test primal_status(model) == MOI.FEASIBLE_POINT
+    @test lazy_called
+    @test value(x) == 1
+    @test value(y) == 2
+end
+
+example_solver_dependent_callback()
