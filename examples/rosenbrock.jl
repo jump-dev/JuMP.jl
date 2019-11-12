@@ -9,7 +9,6 @@
 #############################################################################
 
 using JuMP, Ipopt, Test
-const MOI = JuMP.MathOptInterface
 
 function example_rosenbrock()
     model = Model(Ipopt.Optimizer)

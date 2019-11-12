@@ -9,7 +9,6 @@
 #############################################################################
 
 using JuMP, SCS, LinearAlgebra, Test
-const MOI = JuMP.MathOptInterface
 
 """
     example_min_ellipse()

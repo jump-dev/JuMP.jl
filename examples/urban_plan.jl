@@ -9,7 +9,6 @@
 #############################################################################
 
 using JuMP, GLPK, Test
-const MOI = JuMP.MathOptInterface
 
 """
     example_urban_plan()
