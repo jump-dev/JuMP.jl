@@ -17,11 +17,7 @@ Return the primal solution of a variable inside a callback.
 the solver.
 """
 function callback_value(cb_data, x::VariableRef)
-    return MOI.get(
-        backend(owner_model(x)),
-        MOI.CallbackVariablePrimal(cb_data),
-        index(x)
-    )
+    return MOI.get(owner_model(x), MOI.CallbackVariablePrimal(cb_data), x)
 end
 
 function MOI.submit(model::Model, cb::MOI.LazyConstraint, con::ScalarConstraint)
