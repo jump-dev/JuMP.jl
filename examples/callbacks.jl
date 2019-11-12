@@ -24,7 +24,7 @@ function example_lazy_constraint()
     @variable(model, 0 <= y <= 2.5, Int)
     @objective(model, Max, y)
     lazy_called = false
-    MOI.set(model, MOI.LazyConstraintCallback(), (cb_data) -> begin
+    function my_callback_function(cb_data)
         lazy_called = true
         x_val = callback_value(cb_data, x)
         y_val = callback_value(cb_data, y)
@@ -35,7 +35,8 @@ function example_lazy_constraint()
             con = @build_constraint(y - x <= 1)
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         end
-    end)
+    end
+    MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
     optimize!(model)
     @test termination_status(model) == MOI.OPTIMAL
     @test primal_status(model) == MOI.FEASIBLE_POINT
@@ -62,7 +63,7 @@ function example_user_cut_constraint()
     @objective(model, Max, sum(item_values[i] * x[i] for i = 1:N))
 
     callback_called = false
-    MOI.set(model, MOI.UserCutCallback(), (cb_data) -> begin
+    function my_callback_function(cb_data)
         callback_called = true
         # TODO(odow): remove Ref once GLPK supports broadcasting over cb_data.
         x_vals = callback_value.(Ref(cb_data), x)
@@ -74,8 +75,8 @@ function example_user_cut_constraint()
             )
             MOI.submit(model, MOI.UserCut(cb_data), con)
         end
-    end)
-
+    end
+    MOI.set(model, MOI.UserCutCallback(), my_callback_function)
     optimize!(model)
     @test termination_status(model) == MOI.OPTIMAL
     @test primal_status(model) == MOI.FEASIBLE_POINT
@@ -100,15 +101,15 @@ function example_heuristic_solution()
     @objective(model, Max, sum(item_values[i] * x[i] for i = 1:N))
 
     callback_called = false
-    MOI.set(model, MOI.HeuristicCallback(), (cb_data) -> begin
+    function my_callback_function(cb_data)
         callback_called = true
         # TODO(odow): remove Ref once GLPK supports broadcasting over cb_data.
         x_vals = callback_value.(Ref(cb_data), x)
         @test MOI.submit(
             model, MOI.HeuristicSolution(cb_data), x, floor.(x_vals)
         ) in (MOI.HEURISTIC_SOLUTION_ACCEPTED, MOI.HEURISTIC_SOLUTION_REJECTED)
-    end)
-
+    end
+    MOI.set(model, MOI.HeuristicCallback(), my_callback_function)
     optimize!(model)
     @test termination_status(model) == MOI.OPTIMAL
     @test primal_status(model) == MOI.FEASIBLE_POINT
