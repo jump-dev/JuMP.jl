@@ -256,6 +256,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         for cref in [
             @constraint(model, !b => {2x + y <= 1});
             @constraint(model, ¬b ⇒  {2x + y ≤ 1});
+            # This returns a vector of constraints that is concatenated.
             @constraint(model, ![b, b] .=> {[2x + y, 2x + y] .≤ 1});
         ]
             c = JuMP.constraint_object(cref)

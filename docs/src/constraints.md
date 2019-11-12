@@ -516,8 +516,8 @@ a
 julia> @constraint(model, a => {x + y <= 1})
 a => {x + y ≤ 1.0}
 ```
-If instead the constraint should hold when `a` is zero, simply add a `!` before
-the binary variable.
+If instead the constraint should hold when `a` is zero, simply add a `!` or `¬`
+before the binary variable.
 ```jldoctest indicator
 julia> @constraint(model, !a => {x + y <= 1})
 !a => {x + y ≤ 1.0}

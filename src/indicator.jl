@@ -7,7 +7,8 @@
 # JuMP can be extended.
 
 function build_indicator_constraint(
-    _error::Function, variable::JuMP.AbstractVariableRef, constraint::JuMP.ScalarConstraint, ::Type{MOI.IndicatorSet{A}}) where A
+    _error::Function, variable::JuMP.AbstractVariableRef,
+    constraint::JuMP.ScalarConstraint, ::Type{MOI.IndicatorSet{A}}) where A
 
     set = MOI.IndicatorSet{A}(moi_set(constraint))
     return VectorConstraint([variable, jump_function(constraint)], set)
@@ -29,7 +30,7 @@ function parse_one_operator_constraint(
     _error::Function, vectorized::Bool, ::Union{Val{:(=>)}, Val{:⇒}}, lhs, rhs)
 
     variable, S = _indicator_variable_set(_error, lhs)
-    if !(rhs isa Expr) || rhs.head != :braces || length(rhs.args) != 1
+    if !isexpr(rhs, :braces) || length(rhs.args) != 1
         _error("Invalid right-hand side `$(rhs)` of indicator constraint. Expected constraint surrounded by `{` and `}`.")
     end
     rhs_con = rhs.args[1]
@@ -47,6 +48,7 @@ end
 
 function constraint_string(
     print_mode, constraint::VectorConstraint{F, <:MOI.IndicatorSet{A}}) where {F, A}
+    # TODO Implement pretty IJulia printing
     var_str = function_string(print_mode, constraint.func[1])
     if A == MOI.ACTIVATE_ON_ZERO
         var_str = "!" * var_str

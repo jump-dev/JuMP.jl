@@ -344,7 +344,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(REPLMode, quad_constr, "2 x$sq $le 1.0")
         # TODO: Test in IJulia mode.
     end
-    @testset "Scalar QuadExpr constraints" begin
+    @testset "Scalar Indicator constraints" begin
         le = JuMP._math_symbol(REPLMode, :leq)
 
         model = ModelType()
