@@ -15,7 +15,9 @@ struct DummyCallbackData end
     model = direct_model(mock)
     @variable(model, 0 <= x <= 2.5, Int)
     con = @build_constraint(x <= 2)
-    c = MOI.submit(model, MOI.LazyConstraint(DummyCallbackData()), con)
+    MOI.submit(model, MOI.LazyConstraint(DummyCallbackData()), con)
+    @test length(mock.submitted) == 1
+    c = mock.submitted[MOI.LazyConstraint(DummyCallbackData())]
     @test length(c) == 1
     @test c[1][1] ≈ moi_function(1.0 * x)
     @test c[1][2] == MOI.LessThan(2.0)
@@ -28,7 +30,9 @@ end
     model = direct_model(mock)
     @variable(model, 0 <= x <= 2.5, Int)
     con = @build_constraint(x <= 2)
-    c = MOI.submit(model, MOI.UserCut(DummyCallbackData()), con)
+    MOI.submit(model, MOI.UserCut(DummyCallbackData()), con)
+    @test length(mock.submitted) == 1
+    c = mock.submitted[MOI.UserCut(DummyCallbackData())]
     @test length(c) == 1
     @test c[1][1] ≈ moi_function(1.0 * x)
     @test c[1][2] == MOI.LessThan(2.0)
@@ -41,7 +45,9 @@ end
     model = direct_model(mock)
     @variable(model, 0 <= x <= 2.5, Int)
     con = @build_constraint(x <= 2)
-    c = MOI.submit(model, MOI.HeuristicSolution(DummyCallbackData()), [x], [0.0])
+    MOI.submit(model, MOI.HeuristicSolution(DummyCallbackData()), [x], [0.0])
+    @test length(mock.submitted) == 1
+    c = mock.submitted[MOI.HeuristicSolution(DummyCallbackData())]
     @test length(c) == 1
     @test c[1][1] == [index(x)]
     @test c[1][2] == [0.0]
