@@ -17,7 +17,18 @@ Return the primal solution of a variable inside a callback.
 the solver.
 """
 function callback_value(cb_data, x::VariableRef)
-    return MOI.get(owner_model(x), MOI.CallbackVariablePrimal(cb_data), x)
+    # TODO(odow):
+    # MOI defines `is_set_by_optimize(::CallbackVariablePrimal) = true`.
+    # This causes problems for JuMP because it checks the termination_status to
+    # see if optimize! has been called. Solutions are:
+    # 1) defining is_set_by_optimize = false
+    # 2) adding a flag to JuMP to store whether it is in a callback
+    # 3) adding IN_OPTIMIZE to termination_status for callbacks
+    # Once this is resolved, we can replace the current function with:
+    #     MOI.get(owner_model(x), MOI.CallbackVariablePrimal(cb_data), x)
+    return MOI.get(
+        backend(owner_model(x)), MOI.CallbackVariablePrimal(cb_data), index(x)
+    )
 end
 
 function MOI.submit(model::Model, cb::MOI.LazyConstraint, con::ScalarConstraint)

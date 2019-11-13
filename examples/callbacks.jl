@@ -135,6 +135,8 @@ function example_solver_dependent_callback()
         if reason != GLPK.IROWGEN
             return
         end
+        x_val = callback_value(cb_data, x)
+        y_val = callback_value(cb_data, y)
         if y_val - x_val > 1 + 1e-6
             con = @build_constraint(y - x <= 1)
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
