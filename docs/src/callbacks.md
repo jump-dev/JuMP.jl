@@ -23,6 +23,10 @@ callbacks:
  2. user-cuts
  3. heuristic solutions
 
+!!! warning
+    Using callbacks requires a solver in [Direct mode](@ref). A direct-mode
+    model is created using [`JuMP.direct_model`](@ref).
+
 ## Available solvers
 
 Callback support is limited to a few solvers. This includes
@@ -31,10 +35,12 @@ Callback support is limited to a few solvers. This includes
 [Gurobi](https://github.com/JuliaOpt/Gurobi.jl).
 
 !!! warning
-    While JuMP provides a solver-independent way of accessing callbacks, the
-    particular implementations are dependent on the solver. You should not use
-    the callbacks without understanding how your particular solver handles
-    each callback.
+    While JuMP provides a solver-independent way of accessing callbacks, you
+    should not assume that you will see identical behavior when running the same
+    code on different solvers. For example, some solvers may ignore user-cuts
+    for various reasons, while other solvers may add every user-cut. Read the
+    underlying solver's callback documentation to understand details specific to
+    each solver.
 
 ## Information that can be queried during callbacks
 
@@ -42,6 +48,11 @@ In a callback, the only thing you may query is the primal value of the
 variables using [`callback_value`](@ref).
 
 If you need any other information, use a solver-dependent callback instead.
+
+!!! info
+    Solver-dependent callbacks are mostly un-documented. Using them will require
+    you to read and understand the source-code of solver's Julia wrapper (i.e.,
+    the `Solver.jl` package).
 
 ## Lazy constraints
 
