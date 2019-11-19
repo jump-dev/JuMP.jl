@@ -239,6 +239,42 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         @test_throws err @constraint(model, [3, x] in SecondOrderCone())
     end
 
+    @testset "Indicator constraint" begin
+        model = ModelType()
+        @variable(model, a, Bin)
+        @variable(model, b, Bin)
+        @variable(model, x)
+        @variable(model, y)
+        for cref in [
+            @constraint(model, a => {x + 2y <= 1}),
+            @constraint(model, a ⇒  {x + 2y ≤ 1})
+        ]
+            c = JuMP.constraint_object(cref)
+            @test c.func == [a, x + 2y]
+            @test c.set == MOI.IndicatorSet{MOI.ACTIVATE_ON_ONE}(MOI.LessThan(1.0))
+        end
+        for cref in [
+            @constraint(model, !b => {2x + y <= 1});
+            @constraint(model, ¬b ⇒  {2x + y ≤ 1});
+            # This returns a vector of constraints that is concatenated.
+            @constraint(model, ![b, b] .=> {[2x + y, 2x + y] .≤ 1});
+        ]
+            c = JuMP.constraint_object(cref)
+            @test c.func == [b, 2x + y]
+            @test c.set == MOI.IndicatorSet{MOI.ACTIVATE_ON_ZERO}(MOI.LessThan(1.0))
+        end
+        err = ErrorException("In `@constraint(model, !(a, b) => {x <= 1})`: Invalid binary variable expression `!(a, b)` for indicator constraint.")
+        @test_macro_throws err @constraint(model, !(a, b) => {x <= 1})
+        err = ErrorException("In `@constraint(model, a => x)`: Invalid right-hand side `x` of indicator constraint. Expected constraint surrounded by `{` and `}`.")
+        @test_macro_throws err @constraint(model, a => x)
+        err = ErrorException("In `@constraint(model, a => x <= 1)`: Invalid right-hand side `x <= 1` of indicator constraint. Expected constraint surrounded by `{` and `}`.")
+        @test_macro_throws err @constraint(model, a => x <= 1)
+        err = ErrorException("In `@constraint(model, a => {x <= 1, x >= 0})`: Invalid right-hand side `{x <= 1, x >= 0}` of indicator constraint. Expected constraint surrounded by `{` and `}`.")
+        @test_macro_throws err @constraint(model, a => {x <= 1, x >= 0})
+        err = ErrorException("In `@constraint(model, [a, b] .=> {x + y <= 1})`: Inconsistent use of `.` in symbols to indicate vectorization.")
+        @test_macro_throws err @constraint(model, [a, b] .=> {x + y <= 1})
+    end
+
     @testset "SDP constraint" begin
         m = ModelType()
         @variable(m, x)

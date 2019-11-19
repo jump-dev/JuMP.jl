@@ -344,6 +344,17 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(REPLMode, quad_constr, "2 x$sq $le 1.0")
         # TODO: Test in IJulia mode.
     end
+    @testset "Scalar Indicator constraints" begin
+        le = JuMP._math_symbol(REPLMode, :leq)
+
+        model = ModelType()
+        @variable(model, x, Bin)
+        @variable(model, y)
+        ind_constr = @constraint(model, !x => {y <= 1})
+
+        io_test(REPLMode, ind_constr, "!x => {y $le 1.0}")
+        # TODO: Test in IJulia mode.
+    end
 end
 
 # Test printing of models of type `ModelType` for which the model is stored in
