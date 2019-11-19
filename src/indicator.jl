@@ -6,7 +6,7 @@
 # This file extends JuMP to indicator constraints. It is a good example of how
 # JuMP can be extended.
 
-function build_indicator_constraint(
+function _build_indicator_constraint(
     _error::Function, variable::JuMP.AbstractVariableRef,
     constraint::JuMP.ScalarConstraint, ::Type{MOI.IndicatorSet{A}}) where A
 
@@ -39,9 +39,9 @@ function parse_one_operator_constraint(
         _error("Inconsistent use of `.` in symbols to indicate vectorization.")
     end
     if vectorized
-        buildcall = :(build_indicator_constraint.($_error, $(esc(variable)), $rhs_buildcall, $S))
+        buildcall = :(_build_indicator_constraint.($_error, $(esc(variable)), $rhs_buildcall, $S))
     else
-        buildcall = :(build_indicator_constraint($_error, $(esc(variable)), $rhs_buildcall, $S))
+        buildcall = :(_build_indicator_constraint($_error, $(esc(variable)), $rhs_buildcall, $S))
     end
     return rhs_parsecode, buildcall
 end
