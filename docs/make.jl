@@ -27,6 +27,7 @@ makedocs(
         "Solvers" => "solvers.md",
         "Query Solutions" => "solutions.md",
         "Nonlinear Modeling" => "nlp.md",
+        "Callbacks" => "callbacks.md",
         "Style Guide" => "style.md",
         "Extensions" => "extensions.md",
         "Development Roadmap" => "roadmap.md"

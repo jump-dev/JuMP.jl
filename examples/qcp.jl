@@ -9,7 +9,6 @@
 #############################################################################
 
 using JuMP, Ipopt, Test
-const MOI = JuMP.MathOptInterface
 
 """
     example_qcp(; verbose = true)
