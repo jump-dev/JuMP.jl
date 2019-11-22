@@ -16,11 +16,6 @@ using LinearAlgebra  # for dot and tr
 using SparseArrays # for sparse
 using Test
 
-using MathOptInterface
-const MOI = MathOptInterface
-const MOIT = MOI.Test
-const MOIU = MOI.Utilities
-
 include("Containers/Containers.jl")
 
 include("utilities.jl")

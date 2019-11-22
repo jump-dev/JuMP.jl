@@ -13,6 +13,9 @@ module JuMP
 using LinearAlgebra
 using SparseArrays
 
+import MutableArithmetics
+const MA = MutableArithmetics
+
 import MathOptInterface
 const MOI = MathOptInterface
 const MOIU = MOI.Utilities
@@ -502,7 +505,6 @@ end
 # Abstract base type for all scalar types
 abstract type AbstractJuMPScalar end
 
-
 # These are required to create symmetric containers of AbstractJuMPScalars.
 LinearAlgebra.symmetric_type(::Type{T}) where T <: AbstractJuMPScalar = T
 LinearAlgebra.symmetric(scalar::AbstractJuMPScalar, ::Symbol) = scalar
@@ -702,12 +704,18 @@ function MOI.set(model::Model, attr::MOI.AbstractConstraintAttribute,
     MOI.set(backend(model), attr, index(cr), value)
 end
 
+const Constant = Union{Number, UniformScaling}
+scaling(x::Number) = x
+scaling(J::UniformScaling) = J.λ
+
 # GenericAffineExpression, AffExpr, AffExprConstraint
 include("aff_expr.jl")
 
 # GenericQuadExpr, QuadExpr
 # GenericQuadConstraint, QuadConstraint
 include("quad_expr.jl")
+
+include("mutable_arithmetics.jl")
 
 include("sets.jl")
 

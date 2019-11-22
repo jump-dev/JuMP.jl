@@ -83,7 +83,8 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
             model = ModelType()
             @variable(model, x)
 
-            @test_throws ErrorException @constraint(model, [x, 2x] == [1-x, 3])
+            err = ErrorException("In `@constraint(model, [x, 2x] == [1 - x, 3])`: Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
+            @test_throws err @constraint(model, [x, 2x] == [1-x, 3])
             @test_macro_throws ErrorException begin
                 @constraint(model, [x == 1-x, 2x == 3])
             end
@@ -162,7 +163,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
 
         UB = [1.0 2.0; 3.0 4.0]
 
-        cref = @constraint(m, x + 1 .<= UB)
+        cref = @constraint(m, x .+ 1 .<= UB)
         @test (2,2) == @inferred size(cref)
         for i in 1:2
             for j in 1:2
@@ -180,7 +181,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         l = [1.0, 2.0]
         u = [3.0, 4.0]
 
-        cref = @constraint(m, l .<= x + y + 1 .<= u)
+        cref = @constraint(m, l .<= x + y .+ 1 .<= u)
         @test (2,) == @inferred size(cref)
 
         for i in 1:2

@@ -9,7 +9,6 @@
 #############################################################################
 
 const _JuMPTypes = Union{AbstractJuMPScalar, NonlinearExpression}
-const Constant = Union{Number, UniformScaling}
 _float(x::Number) = convert(Float64, x)
 _float(J::UniformScaling) = _float(J.λ)
 
@@ -26,30 +25,32 @@ _float(J::UniformScaling) = _float(J.λ)
 # Constant--VariableRef
 Base.:+(lhs::Constant, rhs::AbstractVariableRef) = GenericAffExpr(_float(lhs), rhs => 1.0)
 Base.:-(lhs::Constant, rhs::AbstractVariableRef) = GenericAffExpr(_float(lhs), rhs => -1.0)
-Base.:*(lhs::Constant, rhs::AbstractVariableRef) = GenericAffExpr(0.0, rhs => _float(lhs))
-# Constant--GenericAffExpr
-function Base.:+(lhs::Constant, rhs::GenericAffExpr)
-    result = copy(rhs)
-    result.constant += lhs
+function Base.:*(lhs::Constant, rhs::AbstractVariableRef)
+    if iszero(lhs)
+        return zero(GenericAffExpr{Float64, typeof(rhs)})
+    else
+        return GenericAffExpr(0.0, rhs => _float(lhs))
+    end
+end
+# Constant--GenericAffOrQuadExpr
+function Base.:+(lhs::Constant, rhs::GenericAffOrQuadExpr)
+    result = MA.mutable_copy(rhs)
+    add_to_expression!(result, lhs)
     return result
 end
-function Base.:-(lhs::Constant, rhs::GenericAffExpr)
+function Base.:-(lhs::Constant, rhs::GenericAffOrQuadExpr)
     result = -rhs
-    result.constant += lhs
+    add_to_expression!(result, lhs)
     return result
 end
-function Base.:*(lhs::Constant, rhs::GenericAffExpr)
-    f = _float(lhs)
-    return map_coefficients(c -> f * c, rhs)
+function Base.:*(lhs::Constant, rhs::GenericAffOrQuadExpr)
+    if iszero(lhs)
+        return zero(rhs)
+    else
+        α = scaling(lhs)
+        return map_coefficients(c -> α * c, rhs)
+    end
 end
-# Constant--QuadExpr
-Base.:+(lhs::Constant, rhs::GenericQuadExpr) = GenericQuadExpr(lhs+rhs.aff, copy(rhs.terms))
-function Base.:-(lhs::Constant, rhs::GenericQuadExpr)
-    result = -rhs
-    result.aff.constant += lhs
-    return result
-end
-Base.:*(lhs::Constant, rhs::GenericQuadExpr) = map_coefficients(c -> lhs * c, rhs)
 
 # AbstractVariableRef (or, AbstractJuMPScalar)
 # TODO: What is the role of AbstractJuMPScalar??
@@ -292,7 +293,7 @@ function _dot(lhs::AbstractArray{T}, rhs::AbstractArray{S}) where {T, S}
     size(lhs) == size(rhs) || error("Incompatible dimensions")
     ret = zero(one(T)*one(S))
     for (x,y) in zip(lhs,rhs)
-        ret = destructive_add!(ret, x, y)
+        ret = MA.add_mul!(ret, x, y)
     end
     ret
 end
@@ -347,8 +348,6 @@ end
 # allows us to accumulate the expressions for the inner loops in-place.
 # Additionally, Julia's generic fallbacks can be finnicky when your array
 # elements aren't `<:Number`.
-
-const GenericAffOrQuadExpr{C, V} = Union{GenericAffExpr{C, V}, GenericQuadExpr{C, V}}
 
 function _mul!(ret::AbstractVecOrMat{<:GenericAffOrQuadExpr}, A, B)
     size(A, 2) == size(B, 1) || throw(DimensionMismatch())

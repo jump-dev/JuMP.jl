@@ -12,7 +12,7 @@ function _error_curly(x)
     Base.error("The curly syntax (sum{},prod{},norm2{}) is no longer supported. Expression: $x.")
 end
 
-include("parse_expr.jl")
+#include("parse_expr.jl")
 
 """
     _add_kw_args(call, kw_args)
@@ -168,18 +168,22 @@ sense_to_set(_error::Function, ::Union{Val{:(>=)}, Val{:(≥)}}) = MOI.GreaterTh
 sense_to_set(_error::Function, ::Val{:(==)}) = MOI.EqualTo(0.0)
 sense_to_set(_error::Function, ::Val{S}) where S = _error("Unrecognized sense $S")
 
-function parse_one_operator_constraint(_error::Function, vectorized::Bool,
-                                        ::Union{Val{:in}, Val{:∈}}, aff, set)
-    newaff, parseaff = _parse_expr_toplevel(aff, :q)
-    parsecode = :(q = Val{false}(); $parseaff)
-    if vectorized
-        buildcall = :(build_constraint.($_error, $newaff, Ref($(esc(set)))))
+function _build_call(_error::Function, vectorized::Bool, func, set)
+    return if vectorized
+        :(build_constraint.($_error, $func, Ref($(esc(set)))))
     else
-        buildcall = :(build_constraint($_error, $newaff, $(esc(set))))
+        :(build_constraint($_error, $func, $(esc(set))))
     end
-    parsecode, buildcall
+end
+function parse_one_operator_constraint(_error::Function, vectorized::Bool,
+                                        ::Union{Val{:in}, Val{:∈}}, func, set)
+    variable, parse_code = MA.rewrite(func)
+    return parse_code, _build_call(_error, vectorized, variable, set)
 end
 
+_functionize(v::VariableRef) = convert(AffExpr, v)
+_functionize(v::AbstractArray{VariableRef}) = _functionize.(v)
+_functionize(x) = x
 function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
     # Simple comparison - move everything to the LHS.
     #
@@ -187,9 +191,18 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense
     # the `lhs` is a `VariableRef` and the `rhs` is a summation with no terms.
     # Without the `+0` term, `aff` would evaluate to a `VariableRef` when we
     # really want it to be a `GenericAffExpr`.
-    aff = :($lhs - $rhs + 0)
+    if vectorized
+        #aff = :(JuMP._functionize($lhs .- $rhs))
+        #aff = :($lhs .- $rhs .- 0)
+        func = :($lhs .- $rhs)
+    else
+        #aff = :(JuMP._functionize($lhs - $rhs))
+        #aff = :($lhs - $rhs - 0)
+        func = :($lhs - $rhs)
+    end
     set = sense_to_set(_error, sense)
-    parse_one_operator_constraint(_error, vectorized, Val(:in), aff, set)
+    variable, parse_code = MA.rewrite(func)
+    return parse_code, _build_call(_error, vectorized, :(_functionize($variable)), set)
 end
 
 function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
@@ -198,9 +211,9 @@ function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
 end
 
 function parse_ternary_constraint(_error::Function, vectorized::Bool, lb, ::Union{Val{:(<=)}, Val{:(≤)}}, aff, rsign::Union{Val{:(<=)}, Val{:(≤)}}, ub)
-    newaff, parseaff = _parse_expr_toplevel(aff, :aff)
-    newlb, parselb = _parse_expr_toplevel(lb, :lb)
-    newub, parseub = _parse_expr_toplevel(ub, :ub)
+    newaff, parseaff = MA.rewrite_to(aff, :aff)
+    newlb, parselb = MA.rewrite_to(lb, :lb)
+    newub, parseub = MA.rewrite_to(ub, :ub)
     if vectorized
         buildcall = :(build_constraint.($_error, $newaff, $newlb, $newub))
     else
@@ -223,11 +236,11 @@ function parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbo
     ((vectorized = lvectorized) == rvectorized) || _error("Signs are inconsistently vectorized")
     parseaff, parselb, parseub, buildcall = parse_ternary_constraint(_error, vectorized, lb, Val(lsign), aff, Val(rsign), ub)
     parsecode = quote
-        aff = Val{false}()
+        aff = MutableArithmetics.Zero()
         $parseaff
-        lb = 0.0
+        lb = MutableArithmetics.Zero()
         $parselb
-        ub = 0.0
+        ub = MutableArithmetics.Zero()
         $parseub
     end
     vectorized, parsecode, buildcall
@@ -295,7 +308,7 @@ end
 # three-argument build_constraint is used for two-sided constraints.
 function build_constraint(_error::Function, func::AbstractJuMPScalar,
                           lb::Real, ub::Real)
-    return build_constraint(_error, func, MOI.Interval(lb, ub))
+    return build_constraint(_error, func, MOI.Interval(Float64(lb), Float64(ub)))
 end
 
 # This method intercepts `@constraint(model, lb <= var <= ub)` and promotes
@@ -477,11 +490,20 @@ function parse_SD_constraint(_error::Function, sense::Symbol, lhs, rhs)
     # Simple comparison - move everything to the LHS
     aff = :()
     if sense == :⪰ || sense == :(≥) || sense == :(>=)
-        aff = :($lhs - $rhs)
+        succ = lhs
+        prec = rhs
     elseif sense == :⪯ || sense == :(≤) || sense == :(<=)
-        aff = :($rhs - $lhs)
+        succ = rhs
+        prec = lhs
     else
         _error("Invalid sense $sense in SDP constraint")
+    end
+    if prec == 0
+        aff = succ
+    elseif succ == 0
+        aff = :(-$prec)
+    else
+        aff = :($succ - $prec)
     end
     vectorized = false
     parsecode, buildcall = parse_one_operator_constraint(_error, false, Val(:in), aff, :(JuMP.PSDCone()))
@@ -747,9 +769,9 @@ macro objective(model, args...)
     end
     sense, x = args
     sense_expr = _moi_sense(_error, sense)
-    newaff, parsecode = _parse_expr_toplevel(x, :q)
+    newaff, parsecode = MA.rewrite_to(x, :q)
     code = quote
-        q = Val{false}()
+        q = MutableArithmetics.Zero()
         $parsecode
         set_objective($esc_model, $sense_expr, $newaff)
         $newaff
@@ -761,9 +783,9 @@ end
 # ex = @_build_expression(2x + 3y)
 # Currently for internal use only.
 macro _build_expression(x)
-    newaff, parsecode = _parse_expr_toplevel(x, :q)
+    newaff, parsecode = MA.rewrite_to(x, :q)
     code = quote
-        q = Val{false}()
+        q = MutableArithmetics.Zero()
         $parsecode
     end
     return _macro_return(code)
@@ -816,9 +838,9 @@ macro expression(args...)
     variable = gensym()
 
     idxvars, indices = Containers._build_ref_sets(_error, c)
-    newaff, parsecode = _parse_expr_toplevel(x, :q)
+    newaff, parsecode = MA.rewrite_to(x, :q)
     code = quote
-        q = Val{false}()
+        q = MutableArithmetics.Zero()
         $parsecode
     end
     code = quote

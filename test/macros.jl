@@ -130,9 +130,9 @@ function build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
         model = ModelType()
         @variable(model, x)
         cref1 = @constraint(model, [1, x, x] in PowerCone(0.5))
-        @test JuMP.constraint_object(cref1).set isa MathOptInterface.PowerCone{Float64}
+        @test JuMP.constraint_object(cref1).set isa MOI.PowerCone{Float64}
         cref2 = @constraint(model, [1, x, x] in PowerCone(0.5), dual = true)
-        @test JuMP.constraint_object(cref2).set isa MathOptInterface.DualPowerCone{Float64}
+        @test JuMP.constraint_object(cref2).set isa MOI.DualPowerCone{Float64}
     end
 end
 
@@ -388,7 +388,7 @@ end
         @test JuMP.isequal_canonical(c.func, x[1]^2 + 2 * x[1] * x[2] + x[2]^2)
         @test c.set == MOI.LessThan(1.0)
         @test JuMP.isequal_canonical(
-            JuMP.destructive_add!(0.0, x', ones(2, 2)), x' * ones(2, 2)
+            JuMP.MA.add_mul!(JuMP.MA.Zero(), x', ones(2, 2)), x' * ones(2, 2)
         )
     end
 

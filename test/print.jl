@@ -117,7 +117,7 @@ end
         io_test(REPLMode, ex, "-2 x[1]*z + x[1]*x[2]")
         io_test(IJuliaMode, ex, "-2 x_{1}\\times z + x_{1}\\times x_{2}")
 
-        ex = 0 * z^2 + 0 * x[1]
+        ex = z^2 + x[1] - z^2 - x[1]
         io_test(REPLMode, ex, "0 z² + 0 x[1]")
         io_test(IJuliaMode, ex, "0 z$ijulia_sq + 0 x_{1}")
 

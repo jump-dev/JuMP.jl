@@ -11,6 +11,66 @@ function _let_code_block(ex::Expr)
     return ex.args[2]
 end
 
+function _try_parse_idx_set(arg::Expr)
+    # [i=1] and x[i=1] parse as Expr(:vect, Expr(:(=), :i, 1)) and
+    # Expr(:ref, :x, Expr(:kw, :i, 1)) respectively.
+    if arg.head === :kw || arg.head === :(=)
+        @assert length(arg.args) == 2
+        return true, arg.args[1], arg.args[2]
+    elseif isexpr(arg, :call) && arg.args[1] === :in
+        return true, arg.args[2], arg.args[3]
+    else
+        return false, nothing, nothing
+    end
+end
+
+function _parse_idx_set(arg::Expr)
+    parse_done, idxvar, idxset = _try_parse_idx_set(arg)
+    if parse_done
+        return idxvar, idxset
+    end
+    error("Invalid syntax: $arg")
+end
+
+# takes a generator statement and returns a properly nested for loop
+# with nested filters as specified
+function _parse_gen(ex, atleaf)
+    if isexpr(ex, :flatten)
+        return _parse_gen(ex.args[1], atleaf)
+    end
+    if !isexpr(ex, :generator)
+        return atleaf(ex)
+    end
+    function itrsets(sets)
+        if isa(sets, Expr)
+            return sets
+        elseif length(sets) == 1
+            return sets[1]
+        else
+            return Expr(:block, sets...)
+        end
+    end
+
+    idxvars = []
+    if isexpr(ex.args[2], :filter) # if condition
+        loop = Expr(:for, esc(itrsets(ex.args[2].args[2:end])),
+                    Expr(:if, esc(ex.args[2].args[1]),
+                          _parse_gen(ex.args[1], atleaf)))
+        for idxset in ex.args[2].args[2:end]
+            idxvar, s = _parse_idx_set(idxset)
+            push!(idxvars, idxvar)
+        end
+    else
+        loop = Expr(:for, esc(itrsets(ex.args[2:end])),
+                         _parse_gen(ex.args[1], atleaf))
+        for idxset in ex.args[2:end]
+            idxvar, s = _parse_idx_set(idxset)
+            push!(idxvars, idxvar)
+        end
+    end
+    return loop
+end
+
 # generates code which converts an expression into a NodeData array (tape)
 # parent is the index of the parent expression
 # values is the name of the list of constants which appear in the expression
