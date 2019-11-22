@@ -737,20 +737,28 @@ end
 """
     value(v::VariableRef; result = 1)
 
-Get the value of this variable in the result `result` returned by a solver. Use
-[`has_values`](@ref) to check if a result exists before asking for values.
+Return the value of variable `v` associated with result index `result` of the
+most-recent returned by the solver.
+
+Use[`has_values`](@ref) to check if a result exists before asking for values.
+
+See also: [`result_count`](@ref).
 """
-function value(v::VariableRef; result = 1)::Float64
+function value(v::VariableRef; result::Int = 1)::Float64
     return MOI.get(owner_model(v), MOI.VariablePrimal(result), v)
 end
 
 """
-    has_values(model::Model)
+    has_values(model::Model; result::Int = 1)
 
-Return `true` if the solver has a primal solution available to query, otherwise
-return `false`. See also [`value`](@ref).
+Return `true` if the solver has a primal solution in result index `result`
+available to query, otherwise return `false`.
+
+See also [`value`](@ref) and [`result_count`](@ref).
 """
-has_values(model::Model) = primal_status(model) != MOI.NO_SOLUTION
+function has_values(model::Model; result::Int = 1)
+    return primal_status(model; result = result) != MOI.NO_SOLUTION
+end
 
 @Base.deprecate setvalue(v::VariableRef, val::Number) set_start_value(v, val)
 

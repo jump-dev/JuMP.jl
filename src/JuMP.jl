@@ -377,23 +377,29 @@ function raw_status(model::Model)
 end
 
 """
-    primal_status(model::Model)
+    primal_status(model::Model; result::Int = 1)
 
 Return the status of the most recent primal solution of the solver (i.e., the
-MathOptInterface model attribute `PrimalStatus`).
+MathOptInterface model attribute `PrimalStatus`) associated with the result
+index `result`.
+
+See also: [`result_count`](@ref).
 """
-function primal_status(model::Model)
-    return MOI.get(model, MOI.PrimalStatus())::MOI.ResultStatusCode
+function primal_status(model::Model; result::Int = 1)
+    return MOI.get(model, MOI.PrimalStatus(result))::MOI.ResultStatusCode
 end
 
 """
-    dual_status(model::Model)
+    dual_status(model::Model; result::Int = 1)
 
 Return the status of the most recent dual solution of the solver (i.e., the
-MathOptInterface model attribute `DualStatus`).
+MathOptInterface model attribute `DualStatus`) associated with the result
+index `result`.
+
+See also: [`result_count`](@ref).
 """
-function dual_status(model::Model)
-    return MOI.get(model, MOI.DualStatus())::MOI.ResultStatusCode
+function dual_status(model::Model; result::Int = 1)
+    return MOI.get(model, MOI.DualStatus(result))::MOI.ResultStatusCode
 end
 
 set_optimize_hook(model::Model, f) = (model.optimize_hook = f)
