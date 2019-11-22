@@ -219,6 +219,32 @@ lp_objective_perturbation_range
 lp_rhs_perturbation_range
 ```
 
+## Multiple solutions
+
+Some solvers support returning multiple solutions. You can check how many
+solutions are available to query using [`result_count`](@ref).
+
+Then, functions for querying the solutions, e.g., [`primal_status`](@ref) and
+[`value`](@ref), all take an additional keyword argument `result` which can be
+used to specify which result to return.
+
+```julia
+using JuMP
+model = Model()
+@variable(model, x[1:10] >= 0)
+# ... other constraints ...
+optimize!(model)
+
+if termination_status(model) != MOI.OPTIMAL
+    error("The model was not solved correctly.")
+end
+
+num_results = result_count(model)
+@assert has_values(model; result = num_results)
+an_optimal_solution = value.(x; result = num_results)
+an_optimal_objective = objective_value(model; result = num_results)
+```
+
 ## Reference
 
 ```@docs
@@ -233,4 +259,5 @@ JuMP.dual
 JuMP.solve_time
 OptimizeNotCalled
 MOI.optimize!
+JuMP.result_count
 ```
