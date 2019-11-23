@@ -442,9 +442,9 @@ end
         Feasibility
         Subject to
          x + y[1] $eq 1.0
-         2 y[1] $ge 1.0
-         y[1] + y[2] $ge 2.0
-         y[1] + y[3] $ge 3.0
+         ref[1] : 2 y[1] $ge 1.0
+         ref[2] : y[1] + y[2] $ge 2.0
+         ref[3] : y[1] + y[3] $ge 3.0
         """
     end
 

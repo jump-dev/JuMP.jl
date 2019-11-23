@@ -383,9 +383,9 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(model_1, u[1:3], Bin)
         @variable(model_1, fi == 9)
         @objective(model_1, Max, a - b + 2a1 - 10x)
-        @constraint(model_1, a + b - 10c - 2x + c1 <= 1)
+        @constraint(model_1, con, a + b - 10c - 2x + c1 <= 1)
         @constraint(model_1, a*b <= 2)
-        @constraint(model_1, [1 - a; u] in SecondOrderCone())
+        @constraint(model_1, soc, [1 - a; u] in SecondOrderCone())
         @constraint(model_1, [a b; c x] in PSDCone())
         @constraint(model_1, Symmetric([a b; b x]) in PSDCone())
         @constraint(model_1, [a, b, c] in MOI.PositiveSemidefiniteConeTriangle(2))
@@ -396,7 +396,7 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(REPLMode, model_1, """
     Max a - b + 2 a1 - 10 x
     Subject to
-     a + b - 10 c - 2 x + c1 $le 1.0
+     con : a + b - 10 c - 2 x + c1 $le 1.0
      a*b $le 2.0
      [a  b;
       b  x] $inset PSDCone()
@@ -404,7 +404,7 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
      [a  b;
       c  x] $inset PSDCone()
      [a, b, c, x] $inset MathOptInterface.PositiveSemidefiniteConeSquare(2)
-     [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
+     soc : [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
      fi $eq 9.0
      a $ge 1.0
      c $ge -1.0
@@ -442,7 +442,7 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     Model mode: AUTOMATIC
     CachingOptimizer state: NO_OPTIMIZER
     Solver name: No optimizer attached.
-    Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""", repl=:show)
+    Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""", repl=:show)
 
         io_test(IJuliaMode, model_1, """
     \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
