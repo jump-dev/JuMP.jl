@@ -402,8 +402,7 @@ function constraints_string(print_mode, model::Model)
     strings = String[]
     for (F, S) in list_of_constraint_types(model)
         for cref in all_constraints(model, F, S)
-            con = constraint_object(cref)
-            push!(strings, constraint_string(print_mode, con))
+            push!(strings, constraint_string(print_mode, cref, in_math_mode = true))
         end
     end
     if model.nlp_data !== nothing
@@ -557,19 +556,21 @@ function constraint_string(print_mode, constraint_object::AbstractConstraint)
     end
 end
 function constraint_string(print_mode, constraint_name,
-                           constraint_object::AbstractConstraint)
+                           constraint_object::AbstractConstraint;
+                           in_math_mode = false)
     constraint_without_name = constraint_string(print_mode, constraint_object)
-    if print_mode == IJuliaMode
+    if print_mode == IJuliaMode && !in_math_mode
         constraint_without_name = _wrap_in_inline_math_mode(constraint_without_name)
     end
-    if isempty(constraint_name)
+    # Names don't print well in LaTeX math mode
+    if isempty(constraint_name) || (print_mode == IJuliaMode && in_math_mode)
         return constraint_without_name
     else
         return constraint_name * " : " * constraint_without_name
     end
 end
-function constraint_string(print_mode, ref::ConstraintRef)
-    return constraint_string(print_mode, name(ref), constraint_object(ref))
+function constraint_string(print_mode, ref::ConstraintRef; in_math_mode = false)
+    return constraint_string(print_mode, name(ref), constraint_object(ref), in_math_mode = in_math_mode)
 end
 
 #------------------------------------------------------------------------
