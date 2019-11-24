@@ -548,7 +548,7 @@ end
     value(con_ref::ConstraintRef; result::Int = 1)
 
 Return the primal value of constraint `con_ref` associated with result index
-`result` of the most-recent returned by the solver.
+`result` of the most-recent solution returned by the solver.
 
 That is, if `con_ref` is the reference of a constraint `func`-in-`set`, it
 returns the value of `func` evaluated at the value of the variables (given by
@@ -604,7 +604,7 @@ end
 """
     dual(con_ref::ConstraintRef; result::Int = 1)
 
-Return the dual value of constriant `con_ref` associated with result index
+Return the dual value of constraint `con_ref` associated with result index
 `result` of the most-recent solution returned by the solver.
 
 Use `has_dual` to check if a result exists before asking for values.
@@ -638,7 +638,7 @@ end
 
 
 """
-    shadow_price(con_ref::ConstraintRef; result::Int = 1)
+    shadow_price(con_ref::ConstraintRef)
 
 Return the change in the objective from an infinitesimal relaxation of the
 constraint.
@@ -659,7 +659,7 @@ most in sign from the `dual` value depending on the objective sense.
 - Relaxation of equality constraints (and hence the shadow price) is defined
   based on which sense of the equality constraint is active.
 """
-function shadow_price(con_ref::ConstraintRef{Model, <:_MOICON}; result::Int = 1)
+function shadow_price(con_ref::ConstraintRef{Model, <:_MOICON})
     error("The shadow price is not defined or not implemented for this type " *
           "of constraint.")
 end
@@ -695,41 +695,41 @@ function shadow_price_greater_than_(dual_value, sense::MOI.OptimizationSense)
 end
 
 function shadow_price(
-    con_ref::ConstraintRef{Model, _MOICON{F, S}}; result::Int = 1
+    con_ref::ConstraintRef{Model, _MOICON{F, S}}
 ) where {S <: MOI.LessThan, F}
     model = con_ref.model
-    if !has_duals(model; result = result)
+    if !has_duals(model; result = 1)
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
     return shadow_price_less_than_(
-        dual(con_ref; result = result), objective_sense(model)
+        dual(con_ref; result = 1), objective_sense(model)
     )
 end
 
 function shadow_price(
-    con_ref::ConstraintRef{Model, _MOICON{F, S}}; result::Int = 1
+    con_ref::ConstraintRef{Model, _MOICON{F, S}}
 ) where {S <: MOI.GreaterThan, F}
     model = con_ref.model
-    if !has_duals(model; result = result)
+    if !has_duals(model; result = 1)
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
     return shadow_price_greater_than_(
-        dual(con_ref; result = result), objective_sense(model)
+        dual(con_ref; result = 1), objective_sense(model)
     )
 end
 
 function shadow_price(
-    con_ref::ConstraintRef{Model, _MOICON{F, S}}; result::Int = 1
+    con_ref::ConstraintRef{Model, _MOICON{F, S}}
 ) where {S <: MOI.EqualTo, F}
     model = con_ref.model
-    if !has_duals(model; result = result)
+    if !has_duals(model; result = 1)
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
     sense = objective_sense(model)
-    dual_val = dual(con_ref; result = result)
+    dual_val = dual(con_ref; result = 1)
     if dual_val > 0
         # Treat the equality constraint as if it were a GreaterThan constraint.
         return shadow_price_greater_than_(dual_val, sense)

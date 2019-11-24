@@ -224,7 +224,7 @@ lp_rhs_perturbation_range
 Some solvers support returning multiple solutions. You can check how many
 solutions are available to query using [`result_count`](@ref).
 
-Then, functions for querying the solutions, e.g., [`primal_status`](@ref) and
+Functions for querying the solutions, e.g., [`primal_status`](@ref) and
 [`value`](@ref), all take an additional keyword argument `result` which can be
 used to specify which result to return.
 
