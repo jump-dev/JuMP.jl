@@ -142,11 +142,7 @@ function `func` is not `model`.
 Throw `VariableNotOwned` if the `owner_model` of one of the variables of the
 constraint `constraint` is not `model`.
 """
-function check_belongs_to_model(v::Vector, model::AbstractModel)
-    for vi in v
-        check_belongs_to_model(vi, model)
-    end
-end
+function check_belongs_to_model end
 
 function check_belongs_to_model(v::AbstractVariableRef, model::AbstractModel)
     if owner_model(v) !== model
