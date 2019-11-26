@@ -312,12 +312,18 @@ function _assert_isfinite(a::AffExpr)
 end
 
 """
-    value(v::GenericAffExpr)
+    value(v::GenericAffExpr; result::Int = 1)
 
-Evaluate an `GenericAffExpr` given the result returned by a solver.
+Return the value of the `GenericAffExpr` `v` associated with result index
+`result` of the most-recent solution returned by the solver.
+
 Replaces `getvalue` for most use cases.
+
+See also: [`result_count`](@ref).
 """
-value(a::GenericAffExpr) = value(a, value)
+function value(a::GenericAffExpr; result::Int = 1)
+    return value(a, (x) -> value(x; result = result))
+end
 
 function check_belongs_to_model(a::GenericAffExpr, model::AbstractModel)
     for variable in keys(a.terms)

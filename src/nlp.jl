@@ -1118,11 +1118,18 @@ function value(ex::NonlinearExpression, var_value::Function)
 end
 
 """
-    value(ex::NonlinearExpression)
+    value(ex::NonlinearExpression; result::Int = 1)
 
-Evaluate `ex` using `value` as the value for each variable `v`.
+Return the value of the `NonlinearExpression` `ex` associated with result index
+`result` of the most-recent solution returned by the solver.
+
+Replaces `getvalue` for most use cases.
+
+See also: [`result_count`](@ref).
 """
-value(ex::NonlinearExpression) = value(ex, value)
+function value(ex::NonlinearExpression; result::Int = 1)
+    return value(ex, (x) -> value(x; result = result))
+end
 
 mutable struct _UserFunctionEvaluator <: MOI.AbstractNLPEvaluator
     f

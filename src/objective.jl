@@ -15,23 +15,36 @@
 Return the best known bound on the optimal objective value after a call to
 `optimize!(model)`.
 """
-objective_bound(model::Model)::Float64 = MOI.get(model, MOI.ObjectiveBound())
+function objective_bound(model::Model)::Float64
+    return MOI.get(model, MOI.ObjectiveBound())
+end
 
 """
-    objective_value(model::Model)
+    objective_value(model::Model; result::Int = 1)
 
-Return the objective value after a call to `optimize!(model)`.
+Return the objective value associated with result index `result` of the
+most-recent solution returned by the solver.
+
+See also: [`result_count`](@ref).
 """
-objective_value(model::Model)::Float64 = MOI.get(model, MOI.ObjectiveValue())
+function objective_value(model::Model; result::Int = 1)::Float64
+    return MOI.get(model, MOI.ObjectiveValue(result))
+end
 
 """
-    dual_objective_value(model::Model)
+    dual_objective_value(model::Model; result::Int = 1)
 
-Return the value of the objective of the dual problem after a call to
-`optimize!(model)`. Throws `MOI.UnsupportedAttribute{MOI.DualObjectiveValue}` if
-the solver does not support this attribute.
+Return the value of the objective of the dual problem associated with result
+index `result` of the most-recent solution returned by the solver.
+
+Throws `MOI.UnsupportedAttribute{MOI.DualObjectiveValue}` if the solver does
+not support this attribute.
+
+See also: [`result_count`](@ref).
 """
-dual_objective_value(model::Model)::Float64 = MOI.get(model, MOI.DualObjectiveValue())
+function dual_objective_value(model::Model; result::Int = 1)::Float64
+    return MOI.get(model, MOI.DualObjectiveValue(result))
+end
 
 """
     objective_sense(model::Model)::MathOptInterface.OptimizationSense
@@ -91,8 +104,11 @@ function set_objective_function(model::Model, func::Real)
         MOI.ScalarAffineTerm{Float64}[], Float64(func)))
 end
 
-function set_objective(model::Model, sense::MOI.OptimizationSense,
-                       func::Union{AbstractJuMPScalar, Real})
+function set_objective(
+    model::Model,
+    sense::MOI.OptimizationSense,
+    func::Union{AbstractJuMPScalar, Real}
+)
     set_objective_sense(model, sense)
     set_objective_function(model, func)
 end
