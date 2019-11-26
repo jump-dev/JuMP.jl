@@ -788,7 +788,6 @@ include("nlp.jl")
 include("print.jl")
 include("lp_sensitivity.jl")
 include("callbacks.jl")
-include("export.jl")
 include("file_formats.jl")
 
 # JuMP exports everything except internal symbols, which are defined as those
