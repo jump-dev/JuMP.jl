@@ -17,10 +17,10 @@ commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [CDCS], [CDD],
 [Artelys Knitro]: http://artelys.com/en/optimization-tools/knitro
 [BARON]: http://archimedes.cheme.cmu.edu/?q=baron
 [Bonmin]: https://projects.coin-or.org/Bonmin
-[Cbc]: https://projects.coin-or.org/Cbc
+[Cbc]: https://github.com/coin-or/Cbc
 [CDCS]: https://github.com/oxfordcontrol/CDCS
 [CDD]: https://github.com/cddlib/cddlib
-[Clp]: https://projects.coin-or.org/Clp
+[Clp]: https://github.com/coin-or/Clp
 [COSMO]: https://github.com/oxfordcontrol/COSMO.jl
 [Couenne]: https://projects.coin-or.org/Couenne
 [CPLEX]: http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/
@@ -29,7 +29,7 @@ commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [CDCS], [CDD],
 [FICO Xpress]: http://www.fico.com/en/products/fico-xpress-optimization-suite
 [GLPK]: http://www.gnu.org/software/glpk/
 [Gurobi]: http://www.gurobi.com/
-[Ipopt]: https://projects.coin-or.org/Ipopt
+[Ipopt]: https://github.com/coin-or/Ipopt
 [Juniper]: https://github.com/lanl-ansi/Juniper.jl
 [MOSEK]: http://mosek.com/
 [NLopt]: http://ab-initio.mit.edu/wiki/index.php/NLopt
