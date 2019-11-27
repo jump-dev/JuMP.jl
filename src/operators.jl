@@ -47,7 +47,7 @@ function Base.:*(lhs::Constant, rhs::GenericAffOrQuadExpr)
     if iszero(lhs)
         return zero(rhs)
     else
-        α = scaling(lhs)
+        α = _constant_to_number(lhs)
         return map_coefficients(c -> α * c, rhs)
     end
 end

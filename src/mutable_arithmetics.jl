@@ -20,13 +20,13 @@ function MA.scaling(aff::GenericAffExpr{C}) where C
     if !isempty(aff.terms)
         throw(InexactError("Cannot convert `$aff` to `$C`."))
     end
-    return scaling(aff.constant)
+    return MA.scaling(aff.constant)
 end
 function MA.scaling(quad::GenericQuadExpr{C}) where C
     if !isempty(quad.terms)
         throw(InexactError("Cannot convert `$quad` to `$C`."))
     end
-    return scaling(quad.aff)
+    return MA.scaling(quad.aff)
 end
 
 MA.mutability(::Type{<:GenericAffOrQuadExpr}) = MA.IsMutable()

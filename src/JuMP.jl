@@ -709,8 +709,8 @@ function MOI.set(model::Model, attr::MOI.AbstractConstraintAttribute,
 end
 
 const Constant = Union{Number, UniformScaling}
-scaling(x::Number) = x
-scaling(J::UniformScaling) = J.λ
+_constant_to_number(x::Number) = x
+_constant_to_number(J::UniformScaling) = J.λ
 
 # GenericAffineExpression, AffExpr, AffExprConstraint
 include("aff_expr.jl")

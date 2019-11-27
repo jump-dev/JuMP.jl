@@ -212,7 +212,7 @@ function add_to_expression! end
 
 function add_to_expression!(aff::GenericAffExpr,
                             other::Constant)
-    aff.constant += scaling(other)
+    aff.constant += _constant_to_number(other)
     return aff
 end
 
@@ -233,7 +233,7 @@ end
 
 function add_to_expression!(aff::GenericAffExpr{C,V}, new_coef::Constant,
                             new_var::V) where {C,V}
-    _add_or_set!(aff.terms, new_var, convert(C, scaling(new_coef)))
+    _add_or_set!(aff.terms, new_var, convert(C, _constant_to_number(new_coef)))
     return aff
 end
 
@@ -292,7 +292,7 @@ function isequal_canonical(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
 end
 
 Base.convert(::Type{GenericAffExpr{T,V}}, v::V)    where {T,V} = GenericAffExpr(zero(T), v => one(T))
-Base.convert(::Type{GenericAffExpr{T,V}}, v::Constant) where {T,V} = GenericAffExpr{T,V}(convert(T, scaling(v)))
+Base.convert(::Type{GenericAffExpr{T,V}}, v::Constant) where {T,V} = GenericAffExpr{T,V}(convert(T, _constant_to_number(v)))
 # Used in `JuMP._mul!`.
 function Base.convert(::Type{T}, aff::GenericAffExpr{T}) where T
     if !isempty(aff.terms)
