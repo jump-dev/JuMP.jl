@@ -157,90 +157,105 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         model = ModelType()
         @variable(model, x)
         @variable(model, y)
+        @test_expression_with_string JuMP.MA.add_mul(5.0, x, y) "x*y + 5"
         @test_expression_with_string JuMP.MA.add_mul!(5.0, x, y) "x*y + 5"
     end
 
     @testset "MA.add_mul!(ex::Number, c::T, x::T) where T<:GenericAffExpr" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(1.0, 2x, x+1) "2 x² + 2 x + 1"
         @test_expression_with_string JuMP.MA.add_mul!(1.0, 2x, x+1) "2 x² + 2 x + 1"
     end
 
     @testset "MA.add_mul!(ex::Number, c::GenericAffExpr{C,V}, x::V) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(1.0, 2x, x) "2 x² + 1"
         @test_expression_with_string JuMP.MA.add_mul!(1.0, 2x, x) "2 x² + 1"
     end
 
     @testset "MA.add_mul!(ex::Number, c::GenericQuadExpr, x::Number)" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(0.0, x^2, 1.0) "x²"
         @test_expression_with_string JuMP.MA.add_mul!(0.0, x^2, 1.0) "x²"
     end
 
     @testset "MA.add_mul!(ex::Number, c::GenericQuadExpr, x::Number) with c == 0" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(0.0, x^2, 0.0) "0"
         @test_expression_with_string JuMP.MA.add_mul!(0.0, x^2, 0.0) "0"
     end
 
     @testset "MA.add_mul!(aff::AffExpr,c::VariableRef,x::AffExpr)" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(2x, x, x + 1) "x² + 3 x"
         @test_expression_with_string JuMP.MA.add_mul!(2x, x, x + 1) "x² + 3 x"
     end
 
     @testset "MA.add_mul!(aff::GenericAffExpr{C,V},c::GenericAffExpr{C,V},x::Number) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(2x, x, 1) "3 x"
         @test_expression_with_string JuMP.MA.add_mul!(2x, x, 1) "3 x"
     end
 
     @testset "MA.add_mul!(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Number) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(2x, x^2, 1) "x² + 2 x"
         @test_expression_with_string JuMP.MA.add_mul!(2x, x^2, 1) "x² + 2 x"
     end
 
     @testset "MA.add_mul!(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Number) where {C,V} with x == 0" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(2x, x^2, 0) "2 x"
         @test_expression_with_string JuMP.MA.add_mul!(2x, x^2, 0) "2 x"
     end
 
     @testset "MA.add_mul!(aff::GenericAffExpr{C,V}, c::Number, x::GenericQuadExpr{C,V}) where {C,V} with c == 0" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(2x, 0, x^2) "2 x"
         @test_expression_with_string JuMP.MA.add_mul!(2x, 0, x^2) "2 x"
     end
 
     @testset "MA.add_mul!(ex::GenericAffExpr{C,V}, c::GenericAffExpr{C,V}, x::GenericAffExpr{C,V}) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(2x, x + 1, x + 0) "x² + 3 x"
         @test_expression_with_string JuMP.MA.add_mul!(2x, x + 1, x + 0) "x² + 3 x"
     end
 
     @testset "MA.add_mul!(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::Number) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(x^2, x + 1, 1) "x² + x + 1"
         @test_expression_with_string JuMP.MA.add_mul!(x^2, x + 1, 1) "x² + x + 1"
     end
 
     @testset "MA.add_mul!(quad::GenericQuadExpr{C,V},c::V,x::GenericAffExpr{C,V}) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(x^2, x, x+1) "2 x² + x"
         @test_expression_with_string JuMP.MA.add_mul!(x^2, x, x+1) "2 x² + x"
     end
 
     @testset "MA.add_mul!(quad::GenericQuadExpr{C,V},c::GenericQuadExpr{C,V},x::Number) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(x^2 + x, x^2 + x, 2.0) "3 x² + 3 x"
         @test_expression_with_string JuMP.MA.add_mul!(x^2 + x, x^2 + x, 2.0) "3 x² + 3 x"
     end
 
     @testset "MA.add_mul!(ex::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::GenericAffExpr{C,V}) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
+        @test_expression_with_string JuMP.MA.add_mul(x^2 + x, x + 0, x + 1) "2 x² + 2 x"
         @test_expression_with_string JuMP.MA.add_mul!(x^2 + x, x + 0, x + 1) "2 x² + 2 x"
     end
 
