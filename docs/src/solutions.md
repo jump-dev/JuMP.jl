@@ -133,8 +133,8 @@ end
 Given an LP problem and an optimal solution corresponding to a basis, we can
 question how much an objective coefficient or standard form rhs coefficient
 (c.f., [`normalized_rhs`](@ref)) can change without violating primal or dual
-feasibility of the basic solution. Note that not all solvers computes the basis
-and the sensitivity analysis requires that the solver interface implements
+feasibility of the basic solution. Note that not all solvers compute the basis,
+and for sensitivity analysis, the solver interface must implement
 `MOI.ConstraintBasisStatus`.
 
 Given an LP optimal solution (and both [`has_values`](@ref) and
