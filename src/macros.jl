@@ -8,12 +8,6 @@ using Base.Meta
 _is_sum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
 _is_prod(s::Symbol) = (s == :prod) || (s == :∏)
 
-function _error_curly(x)
-    Base.error("The curly syntax (sum{},prod{},norm2{}) is no longer supported. Expression: $x.")
-end
-
-#include("parse_expr.jl")
-
 """
     _add_kw_args(call, kw_args)
 

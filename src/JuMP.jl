@@ -503,7 +503,11 @@ function time_limit_sec(model::Model)
 end
 
 # Abstract base type for all scalar types
-abstract type AbstractJuMPScalar end
+# The subtyping of `AbstractMutable` will allow calls of some `Base` functions
+# to be redirected to a method in MA that handles type promotion more carefuly
+# (e.g. the promotion in sparse matrix products in SparseArrays usually does not
+# work for JuMP types) and exploits the mutability of `AffExpr` and `QuadExpr`.
+abstract type AbstractJuMPScalar <: MA.AbstractMutable end
 
 # These are required to create symmetric containers of AbstractJuMPScalars.
 LinearAlgebra.symmetric_type(::Type{T}) where T <: AbstractJuMPScalar = T

@@ -14,6 +14,21 @@
 
 const GenericAffOrQuadExpr{C, V} = Union{GenericAffExpr{C, V}, GenericQuadExpr{C, V}}
 
+# `SparseArrays/src/linalg.jl` convert numbers to JuMP expressions. MA calls
+# `scaling` to convert them back to numbers.
+function MA.scaling(aff::GenericAffExpr{C}) where C
+    if !isempty(aff.terms)
+        throw(InexactError("Cannot convert `$aff` to `$C`."))
+    end
+    return scaling(aff.constant)
+end
+function MA.scaling(quad::GenericQuadExpr{C}) where C
+    if !isempty(quad.terms)
+        throw(InexactError("Cannot convert `$quad` to `$C`."))
+    end
+    return scaling(quad.aff)
+end
+
 MA.mutability(::Type{<:GenericAffOrQuadExpr}) = MA.IsMutable()
 function MA.mutable_copy(expr::GenericAffOrQuadExpr)
     return map_coefficients(MA.copy_if_mutable, expr)
@@ -90,3 +105,19 @@ function _add_mul_to_type(::Type{T}, lhs, factors::Vararg{Any, N}) where {T, N}
     MA.mutable_operate!(+, expr, lhs)
     return MA.mutable_operate!(MA.add_mul, expr, factors...)
 end
+
+#############################################################################
+# Helpers to initialize memory for GenericAffExpr/GenericQuadExpr
+#############################################################################
+
+# TODO Add it to MA API to allow linear algebra generic implementation to exploit this
+
+#_sizehint_expr!(a::GenericAffExpr, n::Int) = sizehint!(a, n)
+#
+## TODO: Why do we allocate the same size for the quadratic and affine parts?
+#function _sizehint_expr!(q::GenericQuadExpr, n::Int)
+#        sizehint!(q.terms,  length(q.terms) + n)
+#        _sizehint_expr!(q.aff, n)
+#        nothing
+#end
+#_sizehint_expr!(q, n) = nothing
