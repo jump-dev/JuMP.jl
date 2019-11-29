@@ -46,23 +46,6 @@ function _assert_valid_model(m, macrocode)
     end
 end
 
-"""
-    _macro_return(code)
-
-Return a block of code that
-
-1. runs the code block `code` in a local scope and
-2. returns the value of the `code`.
-"""
-function _macro_return(code)
-    # The let block ensures that all variables created behave like
-    # local variables, see
-    # https://github.com/JuliaOpt/JuMP.jl/issues/1496.
-    # This is needed as `sum` are transformed into `for` loops in
-    # `parse_expr`.
-    return :( let; $code; end )
-end
-
 function _error_if_cannot_register(model::AbstractModel, name::Symbol)
     obj_dict = object_dictionary(model)
     if haskey(obj_dict, name)
@@ -82,20 +65,18 @@ end
     _macro_assign_and_return(code, variable, name;
                              model_for_registering=nothing)
 
-Return runs `code` in a local scope which returns the value of `variable`
-and then assign `variable` to `name`.
-If `model_for_registering` is given, the generated code assigns the resulting
-object to the model dictionary.
+Return runs `code` which returns the value of `variable` and then assign
+`variable` to `name`. If `model_for_registering` is given, the generated code
+assigns the resulting object to the model dictionary.
 """
 function _macro_assign_and_return(code, variable, name;
                                   model_for_registering=nothing)
-    macro_code = _macro_return(code)
     return quote
         $(if model_for_registering !== nothing
             :(_error_if_cannot_register($model_for_registering,
                                         $(quot(name))))
           end)
-        $variable = $macro_code
+        $variable = $code
         $(if model_for_registering !== nothing
             :(object_dictionary($model_for_registering)[$(quot(name))] =
               $variable)
@@ -205,9 +186,9 @@ function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
 end
 
 function parse_ternary_constraint(_error::Function, vectorized::Bool, lb, ::Union{Val{:(<=)}, Val{:(≤)}}, aff, rsign::Union{Val{:(<=)}, Val{:(≤)}}, ub)
-    newaff, parseaff = MA.rewrite_to(aff, :aff)
-    newlb, parselb = MA.rewrite_to(lb, :lb)
-    newub, parseub = MA.rewrite_to(ub, :ub)
+    newaff, parseaff = MA.rewrite(aff)
+    newlb, parselb = MA.rewrite(lb)
+    newub, parseub = MA.rewrite(ub)
     if vectorized
         buildcall = :(build_constraint.($_error, $newaff, $newlb, $newub))
     else
@@ -230,11 +211,8 @@ function parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbo
     ((vectorized = lvectorized) == rvectorized) || _error("Signs are inconsistently vectorized")
     parseaff, parselb, parseub, buildcall = parse_ternary_constraint(_error, vectorized, lb, Val(lsign), aff, Val(rsign), ub)
     parsecode = quote
-        aff = MutableArithmetics.Zero()
         $parseaff
-        lb = MutableArithmetics.Zero()
         $parselb
-        ub = MutableArithmetics.Zero()
         $parseub
     end
     vectorized, parsecode, buildcall
@@ -413,7 +391,7 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
         # Anonymous constraint, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
         # We simply return the constraint reference
-        macro_code = _macro_return(creationcode)
+        macro_code = creationcode
     else
         # We register the constraint reference to its name and
         # we assign it to a variable in the local scope of this name
@@ -609,7 +587,7 @@ macro build_constraint(constraint_expr)
         $result_variable = $build_call
     end
 
-    return _macro_return(code)
+    return code
 end
 
 _add_JuMP_prefix(s::Symbol) = Expr(:., JuMP, :($(QuoteNode(s))))
@@ -763,28 +741,14 @@ macro objective(model, args...)
     end
     sense, x = args
     sense_expr = _moi_sense(_error, sense)
-    newaff, parsecode = MA.rewrite_to(x, :q)
+    newaff, parsecode = MA.rewrite(x)
     code = quote
-        q = MutableArithmetics.Zero()
         $parsecode
         set_objective($esc_model, $sense_expr, $newaff)
         $newaff
     end
-    return _assert_valid_model(esc_model, _macro_return(code))
+    return _assert_valid_model(esc_model, code)
 end
-
-# Return a standalone, unnamed expression
-# ex = @_build_expression(2x + 3y)
-# Currently for internal use only.
-macro _build_expression(x)
-    newaff, parsecode = MA.rewrite_to(x, :q)
-    code = quote
-        q = MutableArithmetics.Zero()
-        $parsecode
-    end
-    return _macro_return(code)
-end
-
 
 """
     @expression(args...)
@@ -832,19 +796,11 @@ macro expression(args...)
     variable = gensym()
 
     idxvars, indices = Containers._build_ref_sets(_error, c)
-    newaff, parsecode = MA.rewrite_to(x, :q)
-    code = quote
-        q = MutableArithmetics.Zero()
-        $parsecode
-    end
-    code = quote
-        $code
-        $newaff
-    end
+    code = MA.rewrite_and_return(x)
     code = Containers.container_code(idxvars, indices, code, requestedcontainer)
     # don't do anything with the model, but check that it's valid anyway
     if anonvar
-        macro_code = _macro_return(code)
+        macro_code = code
     else
         macro_code = _macro_assign_and_return(code, variable, Containers._get_name(c),
                                               model_for_registering = m)
@@ -1239,7 +1195,7 @@ macro variable(args...)
         # Anonymous variable, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
         # We simply return the variable
-        macro_code = _macro_return(creationcode)
+        macro_code = creationcode
     else
         # We register the variable reference to its name and
         # we assign it to a variable in the local scope of this name
@@ -1267,7 +1223,7 @@ macro NLobjective(model, sense, x)
         $ex = $(_process_NL_expr(model, x))
         set_objective($(esc(model)), $sense_expr, $ex)
     end
-    return _assert_valid_model(esc(model), _macro_return(code))
+    return _assert_valid_model(esc(model), code)
 end
 
 """
@@ -1350,7 +1306,7 @@ macro NLconstraint(m, x, args...)
         $looped
     end
     if anonvar
-        macro_code = _macro_return(creation_code)
+        macro_code = creation_code
     else
         macro_code = _macro_assign_and_return(creation_code, variable,
                                               Containers._get_name(c),
@@ -1399,7 +1355,7 @@ macro NLexpression(args...)
     code = :( NonlinearExpression($(esc(m)), $(_process_NL_expr(m, x))) )
     creation_code = Containers.container_code(idxvars, indices, code, requestedcontainer)
     if anonvar
-        macro_code = _macro_return(creation_code)
+        macro_code = creation_code
     else
         macro_code = _macro_assign_and_return(creation_code, variable,
                                               Containers._get_name(c),
