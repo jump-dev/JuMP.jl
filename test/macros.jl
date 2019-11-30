@@ -306,7 +306,8 @@ end
         @variable(m, x)
         # function getindex does not accept keyword arguments
         @test_throws ErrorException x[i=1]
-        @test_throws ErrorException @constraint(m, x[i=1] <= 1)
+        err = ErrorException("Unexpected assignment in expression `x[i=1]`.")
+        @test_macro_throws ErrorException @constraint(m, x[i=1] <= 1)
     end
 
     @testset "Lookup in model scope: @variable" begin
@@ -388,7 +389,7 @@ end
         @test JuMP.isequal_canonical(c.func, x[1]^2 + 2 * x[1] * x[2] + x[2]^2)
         @test c.set == MOI.LessThan(1.0)
         @test JuMP.isequal_canonical(
-            JuMP.MA.add_mul!(JuMP.MA.Zero(), x', ones(2, 2)), x' * ones(2, 2)
+            JuMP.MA.@rewrite(x' * ones(2, 2)), x' * ones(2, 2)
         )
     end
 
