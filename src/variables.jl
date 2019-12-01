@@ -51,9 +51,11 @@ end
 function _keywordify(kw::Expr)
     (kw.args[1], _esc_non_constant(kw.args[2]))
 end
+_is_nan_expr(expr::Number) = isnan(expr)
+_is_nan_expr(expr::Symbol) = expr == :NaN
+_is_nan_expr(expr) = isexpr(expr, :escape) && length(expr.args) == 1 && _is_nan_expr(expr.args[1])
 function _VariableInfoExpr(; lower_bound=NaN, upper_bound=NaN, start=NaN, binary=false, integer=false)
-    # isnan(::Expr) is not defined so we need to do !== NaN
-    _VariableInfoExpr(lower_bound !== NaN, lower_bound, upper_bound !== NaN, upper_bound, false, NaN, start !== NaN, start, binary, integer)
+    _VariableInfoExpr(!_is_nan_expr(lower_bound), lower_bound, !_is_nan_expr(upper_bound), upper_bound, false, NaN, !_is_nan_expr(start), start, binary, integer)
 end
 
 struct VariableInfo{S, T, U, V}
