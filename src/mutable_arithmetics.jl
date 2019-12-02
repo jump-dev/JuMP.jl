@@ -14,6 +14,8 @@
 
 const GenericAffOrQuadExpr{C, V} = Union{GenericAffExpr{C, V}, GenericQuadExpr{C, V}}
 
+MA.isequal_canonical(x::T, y::T) where {T<:AbstractJuMPScalar} = isequal_canonical(x, y)
+
 # `SparseArrays/src/linalg.jl` convert numbers to JuMP expressions. MA calls
 # `scaling` to convert them back to numbers.
 function MA.scaling(aff::GenericAffExpr{C}) where C

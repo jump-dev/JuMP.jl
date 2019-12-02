@@ -64,7 +64,13 @@ Base.:*(lhs::AbstractVariableRef, rhs::Constant) = (*)(rhs,lhs)
 Base.:/(lhs::AbstractVariableRef, rhs::Constant) = (*)(1.0/rhs,lhs)
 # AbstractVariableRef--AbstractVariableRef
 Base.:+(lhs::V, rhs::V) where {V <: AbstractVariableRef} = GenericAffExpr(0.0, lhs => 1.0, rhs => 1.0)
-Base.:-(lhs::V, rhs::V) where {V <: AbstractVariableRef} = GenericAffExpr(0.0, lhs => 1.0, rhs => -1.0)
+function Base.:-(lhs::V, rhs::V) where {V <: AbstractVariableRef}
+    if lhs == rhs
+        return zero(GenericAffExpr{Float64, V})
+    else
+        return GenericAffExpr(0.0, lhs => 1.0, rhs => -1.0)
+    end
+end
 function Base.:*(lhs::V, rhs::V) where {V <: AbstractVariableRef}
     GenericQuadExpr(GenericAffExpr{Float64, V}(), UnorderedPair(lhs, rhs) => 1.0)
 end
@@ -195,10 +201,11 @@ end
 Base.:+(lhs::GenericQuadExpr) = lhs
 Base.:-(lhs::GenericQuadExpr) = map_coefficients(-, lhs)
 # GenericQuadExpr--Constant
-Base.:+(lhs::GenericQuadExpr, rhs::Constant) = (+)(+rhs,lhs)
-Base.:-(lhs::GenericQuadExpr, rhs::Constant) = (+)(-rhs,lhs)
-Base.:*(lhs::GenericQuadExpr, rhs::Constant) = (*)(rhs,lhs)
-Base.:/(lhs::GenericQuadExpr, rhs::Constant) = (*)(inv(rhs),lhs)
+# We don't do `+rhs` as `UniformScaling` does not support unary `+`
+Base.:+(lhs::GenericQuadExpr, rhs::Constant) = (+)(rhs, lhs)
+Base.:-(lhs::GenericQuadExpr, rhs::Constant) = (+)(-rhs, lhs)
+Base.:*(lhs::GenericQuadExpr, rhs::Constant) = (*)(rhs, lhs)
+Base.:/(lhs::GenericQuadExpr, rhs::Constant) = (*)(inv(rhs), lhs)
 # GenericQuadExpr--AbstractVariableRef
 Base.:+(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff+v, copy(q.terms))
 Base.:-(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff-v, copy(q.terms))
@@ -260,15 +267,6 @@ function LinearAlgebra.issymmetric(x::Matrix{T}) where {T <: _JuMPTypes}
         isequal(x[i,j], x[j,i]) || return false
     end
     true
-end
-Base.:*(x::AbstractArray{T}) where {T <: _JuMPTypes} = x
-
-function Base.:-(x::AbstractArray{T}) where {T <: _JuMPTypes}
-    ret = similar(x, typeof(-one(T)))
-    for I in eachindex(ret)
-        ret[I] = -x[I]
-    end
-    return ret
 end
 
 ###############################################################################

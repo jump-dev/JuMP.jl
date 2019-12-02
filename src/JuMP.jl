@@ -508,6 +508,7 @@ end
 # (e.g. the promotion in sparse matrix products in SparseArrays usually does not
 # work for JuMP types) and exploits the mutability of `AffExpr` and `QuadExpr`.
 abstract type AbstractJuMPScalar <: MA.AbstractMutable end
+Base.ndims(::Type{<:AbstractJuMPScalar}) = 0
 
 # These are required to create symmetric containers of AbstractJuMPScalars.
 LinearAlgebra.symmetric_type(::Type{T}) where T <: AbstractJuMPScalar = T
