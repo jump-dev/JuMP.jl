@@ -20,6 +20,7 @@ const MOIU = MOI.Utilities
 import Calculus
 import DataStructures.OrderedDict
 import ForwardDiff
+import MathOptFormat
 include("_Derivatives/_Derivatives.jl")
 using ._Derivatives
 
@@ -38,8 +39,12 @@ Base.@deprecate(setlowerbound,     JuMP.set_lower_bound)
 Base.@deprecate(setupperbound,     JuMP.set_upper_bound)
 Base.@deprecate(linearterms,       JuMP.linear_terms)
 
-writeLP(args...; kargs...) = error("writeLP has been removed from JuMP. Use `MathOptFormat.jl` instead.")
-writeMPS(args...; kargs...) = error("writeMPS has been removed from JuMP. Use `MathOptFormat.jl` instead.")
+function writeLP(args...; kargs...)
+    error("writeLP has been removed from JuMP. Use `write_to_file` instead.")
+end
+function writeMPS(args...; kargs...)
+    error("writeMPS has been removed from JuMP. Use `write_to_file` instead.")
+end
 
 include("utils.jl")
 
@@ -787,6 +792,7 @@ include("nlp.jl")
 include("print.jl")
 include("lp_sensitivity.jl")
 include("callbacks.jl")
+include("file_formats.jl")
 
 # JuMP exports everything except internal symbols, which are defined as those
 # whose name starts with an underscore. If you don't want all of these symbols

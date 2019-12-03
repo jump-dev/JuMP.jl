@@ -112,3 +112,15 @@ set_time_limit_sec
 unset_time_limit_sec
 time_limit_sec
 ```
+
+## File formats
+
+JuMP can write models to a variety of file-formats using [`write_to_file`](@ref).
+```@docs
+write_to_file
+```
+
+JuMP models can be created from file formats using [`read_from_file`](@ref).
+```@docs
+read_from_file
+```
