@@ -53,10 +53,10 @@ end
 Write the JuMP model `model` to `io` in the format `format`.
 
 Supported formats include:
- - `format = MOF.FORMAT_CBF`. Inferred if filename ends in `.cbf`.
- - `format = MOF.FORMAT_MOF`. Inferred if filename ends in `.mof.json`.
- - `format = MOF.FORMAT_MPS`. Inferred if filename ends in `.mps`.
- - `format = MOF.FORMAT_LP`. Inferred if filename ends in `.lp`.
+ - `format = MOF.FORMAT_CBF`
+ - `format = MOF.FORMAT_MOF`
+ - `format = MOF.FORMAT_MPS`
+ - `format = MOF.FORMAT_LP`
 
 See `MathOptFormat.FileFormat` for all supported formats.
 """
@@ -115,10 +115,10 @@ end
 Return a JuMP model read from `io` in the format `format`.
 
 Supported formats include:
- - `format = MOF.FORMAT_CBF`. Inferred if filename ends in `.cbf`.
- - `format = MOF.FORMAT_MOF`. Inferred if filename ends in `.mof.json`.
- - `format = MOF.FORMAT_MPS`. Inferred if filename ends in `.mps`.
- - `format = MOF.FORMAT_LP`. Inferred if filename ends in `.lp`.
+ - `format = MOF.FORMAT_CBF`
+ - `format = MOF.FORMAT_MOF`
+ - `format = MOF.FORMAT_MPS`
+ - `format = MOF.FORMAT_LP`
 
  See `MathOptFormat.FileFormat` for all supported formats.
 """
