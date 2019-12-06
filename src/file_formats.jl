@@ -4,110 +4,70 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
-    FileFormat
-
-A list of supported file formats for reading and writing JuMP models.
-"""
-@enum(
-    FileFormat,
-    FILE_FORMAT_AUTOMATIC,
-    FILE_FORMAT_CBF,
-    FILE_FORMAT_MOF,
-    FILE_FORMAT_MPS,
-    FILE_FORMAT_LP,
-)
-
-const _FORMAT_MAPPING = Dict(
-    FILE_FORMAT_AUTOMATIC => MathOptFormat.AUTOMATIC_FILE_FORMAT,
-    FILE_FORMAT_CBF => MathOptFormat.FORMAT_CBF,
-    FILE_FORMAT_MOF => MathOptFormat.FORMAT_MOF,
-    FILE_FORMAT_MPS => MathOptFormat.FORMAT_MPS,
-    FILE_FORMAT_LP => MathOptFormat.FORMAT_LP,
-)
-
-"""
     write_to_file(
         model::Model,
         filename::String;
-        format::FileFormat = FILE_FORMAT_AUTOMATIC,
-        compression::MathOptFormat.AbstractCompressionScheme =
-            MathOptFormat.AutomaticCompression(),
+        format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_AUTOMATIC
     )
 
-Write the JuMP model `model` to `filename` in the format `format` and compress
-the file using the compression scheme `compression`.
+Write the JuMP model `model` to `filename` in the format `format`.
 
-Supported compression formats include:
- - `compression = MathOptFormat.NoCompression()`
- - `compression = MathOptFormat.Gzip()`. Inferred if filename ends in `.gz`.
- - `compression = MathOptFormat.Bzip2()`. Inferred if filename ends in `.bz2`.
-
-Default arguments will infer the compression type and format from the filename.
+If the filename ends in `.gz`, it will be compressed using Gzip.
+If the filename ends in `.bz2`, it will be compressed using BZip2.
 """
 function write_to_file(
     model::Model,
     filename::String;
-    format::FileFormat = FILE_FORMAT_AUTOMATIC,
-    compression::MathOptFormat.AbstractCompressionScheme =
-        MathOptFormat.AutomaticCompression()
+    format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_AUTOMATIC
 )
-    if format == FILE_FORMAT_AUTOMATIC
-        format = MathOptFormat._detect_file_format(filename)
-    else
-        format = _FORMAT_MAPPING[format]
-    end
-    dest = MathOptFormat._FILE_FORMATS[format][2]()
+    dest = MathOptFormat.Model(format = format, filename = filename)
     bridged_dest = MOI.Bridges.full_bridge_optimizer(dest, Float64)
     MOI.copy_to(bridged_dest, backend(model))
-    MOI.write_to_file(dest, filename; compression = compression)
+    MOI.write_to_file(dest, filename)
     return
 end
 
 """
-    Base.write(io::IO, model::Model; format::FileFormat)
+    Base.write(
+        io::IO,
+        model::Model;
+        format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_MOF
+    )
 
 Write the JuMP model `model` to `io` in the format `format`.
 """
-function Base.write(io::IO, model::Model; format::FileFormat)
-    if format == FILE_FORMAT_AUTOMATIC
+function Base.write(
+    io::IO,
+    model::Model;
+    format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_MOF
+)
+    if format == MathOptFormat.FORMAT_AUTOMATIC
         error("Unable to infer the file format from an IO stream.")
     end
-    dest = MathOptFormat._FILE_FORMATS[_FORMAT_MAPPING[format]][2]()
+    dest = MathOptFormat.Model(format = format)
     bridged_dest = MOI.Bridges.full_bridge_optimizer(dest, Float64)
     MOI.copy_to(bridged_dest, backend(model))
-    MOI.write_to_file(dest, io)
+    write(io, dest)
     return
 end
 
 """
     read_from_file(
         filename::String;
-        format::FileFormat = FILE_FORMAT_AUTOMATIC,
-        compression::MathOptFormat.AbstractCompressionScheme =
-            MathOptFormat.AutomaticCompression(),
+        format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_AUTOMATIC
     )
 
-Return a JuMP model read from `filename` in the format `format` and de-compress
-the file using the compression scheme `compression`.
+Return a JuMP model read from `filename` in the format `format`.
 
-Supported compression formats include:
- - `compression = MathOptFormat.NoCompression()`
- - `compression = MathOptFormat.Gzip()`. Inferred if filename ends in `.gz`.
- - `compression = MathOptFormat.Bzip2()`. Inferred if filename ends in `.bz2`.
-
-Default arguments will infer the compression type and format from the filename.
+If the filename ends in `.gz`, it will be uncompressed using Gzip.
+If the filename ends in `.bz2`, it will be uncompressed using BZip2.
 """
 function read_from_file(
     filename::String;
-    format::FileFormat = FILE_FORMAT_AUTOMATIC,
-    compression::MathOptFormat.AbstractCompressionScheme =
-        MathOptFormat.AutomaticCompression(),
+    format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_AUTOMATIC
 )
-    src = MathOptFormat.read_from_file(
-        filename;
-        file_format = _FORMAT_MAPPING[format],
-        compression = compression
-    )
+    src = MathOptFormat.Model(format = format, filename = filename)
+    MOI.read_from_file(src, filename)
     model = Model()
     MOI.copy_to(backend(model), src)
     return model
@@ -119,11 +79,11 @@ end
 Return a JuMP model read from `io` in the format `format`.
 """
 function Base.read(io::IO, ::Type{Model}; format::FileFormat)
-    if format == FILE_FORMAT_AUTOMATIC
+    if format == MathOptFormat.FORMAT_AUTOMATIC
         error("Unable to infer the file format from an IO stream.")
     end
-    src = MathOptFormat._FILE_FORMATS[_FORMAT_MAPPING[format]][2]()
-    MOI.read_from_file(src, io)
+    src = MathOptFormat.Model(format = format)
+    read!(io, src)
     model = Model()
     MOI.copy_to(backend(model), src)
     return model

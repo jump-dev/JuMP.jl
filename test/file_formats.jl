@@ -3,6 +3,10 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+using JuMP
+using MathOptFormat
+using Test
+
 @testset "File formats" begin
     @testset "MOF" begin
         model = Model()
@@ -61,16 +65,16 @@
         io = IOBuffer()
         @test_throws(
             ErrorException("Unable to infer the file format from an IO stream."),
-            write(io, model; format = FILE_FORMAT_AUTOMATIC)
+            write(io, model; format = MathOptFormat.FORMAT_AUTOMATIC)
         )
-        write(io, model; format = FILE_FORMAT_MOF)
+        write(io, model; format = MathOptFormat.FORMAT_MOF)
         seekstart(io)
         @test_throws(
             ErrorException("Unable to infer the file format from an IO stream."),
-            read(io, Model; format = FILE_FORMAT_AUTOMATIC)
+            read(io, Model; format = MathOptFormat.FORMAT_AUTOMATIC)
         )
         seekstart(io)
-        model_2 = read(io, Model; format = FILE_FORMAT_MOF)
+        model_2 = read(io, Model; format = MathOptFormat.FORMAT_MOF)
         @test sprint(print, model) == sprint(print, model_2)
     end
 end
