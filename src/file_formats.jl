@@ -21,8 +21,7 @@ function write_to_file(
     format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_AUTOMATIC
 )
     dest = MathOptFormat.Model(format = format, filename = filename)
-    bridged_dest = MOI.Bridges.full_bridge_optimizer(dest, Float64)
-    MOI.copy_to(bridged_dest, backend(model))
+    MOI.copy_to(dest, model)
     MOI.write_to_file(dest, filename)
     return
 end
@@ -45,8 +44,7 @@ function Base.write(
         error("Unable to infer the file format from an IO stream.")
     end
     dest = MathOptFormat.Model(format = format)
-    bridged_dest = MOI.Bridges.full_bridge_optimizer(dest, Float64)
-    MOI.copy_to(bridged_dest, backend(model))
+    MOI.copy_to(dest, model)
     write(io, dest)
     return
 end
@@ -69,22 +67,22 @@ function read_from_file(
     src = MathOptFormat.Model(format = format, filename = filename)
     MOI.read_from_file(src, filename)
     model = Model()
-    MOI.copy_to(backend(model), src)
+    MOI.copy_to(model, src)
     return model
 end
 
 """
-    Base.read(io::IO, ::Type{Model}; format::FileFormat)
+    Base.read(io::IO, ::Type{Model}; format::MathOptFormat.FileFormat)
 
 Return a JuMP model read from `io` in the format `format`.
 """
-function Base.read(io::IO, ::Type{Model}; format::FileFormat)
+function Base.read(io::IO, ::Type{Model}; format::MathOptFormat.FileFormat)
     if format == MathOptFormat.FORMAT_AUTOMATIC
         error("Unable to infer the file format from an IO stream.")
     end
     src = MathOptFormat.Model(format = format)
     read!(io, src)
     model = Model()
-    MOI.copy_to(backend(model), src)
+    MOI.copy_to(model, src)
     return model
 end

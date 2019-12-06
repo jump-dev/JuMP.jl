@@ -37,7 +37,7 @@ using Test
         @test read("my_model.lp", String) ==
             "minimize\nobj: 2 x\nsubject to\nmy_c: 3 x >= 1\nBounds\nx >= 0\nEnd\n"
         @test_throws(
-            ErrorException("Read from file is not implemented for LP files."),
+            ErrorException("read! is not implemented for LP files."),
             read_from_file("my_model.lp")
         )
         rm("my_model.lp")

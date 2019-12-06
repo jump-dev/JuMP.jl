@@ -144,3 +144,12 @@ end
 function Base.deepcopy(::Model)
     error("`JuMP.Model` does not support `deepcopy` as the reference to the underlying solver cannot be deep copied, use `copy` instead.")
 end
+
+function MOI.copy_to(dest::MOI.ModelLike, src::Model)
+    bridged_dest = MOI.Bridges.full_bridge_optimizer(dest, Float64)
+    return MOI.copy_to(bridged_dest, backend(src))
+end
+
+function MOI.copy_to(dest::Model, src::MOI.ModelLike)
+    return MOI.copy_to(backend(dest), src)
+end
