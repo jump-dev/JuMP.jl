@@ -53,7 +53,7 @@
             "Min noname + 2 noname + noname\nSubject to\n [noname + 2 noname + noname - 1] ∈ MathOptInterface.Nonnegatives(1)\n [noname, noname, noname] ∈ MathOptInterface.PositiveSemidefiniteConeTriangle(2)\n"
         rm("my_model.cbf")
     end
-    @testset "MOF io" begin
+    @testset "Base read/write via io" begin
         model = Model()
         @variable(model, x)
         @constraint(model, my_c, 3 * x >= 1)
@@ -61,16 +61,16 @@
         io = IOBuffer()
         @test_throws(
             ErrorException("Unable to infer the file format from an IO stream."),
-            write_to_file(model, io; format = MOF.AUTOMATIC_FILE_FORMAT)
+            write(io, model; format = FILE_FORMAT_AUTOMATIC)
         )
-        write_to_file(model, io; format = MOF.FORMAT_MOF)
+        write(io, model; format = FILE_FORMAT_MOF)
         seekstart(io)
         @test_throws(
             ErrorException("Unable to infer the file format from an IO stream."),
-            read_from_file(io; format = MOF.AUTOMATIC_FILE_FORMAT)
+            read(io, Model; format = FILE_FORMAT_AUTOMATIC)
         )
         seekstart(io)
-        model_2 = read_from_file(io; format = MOF.FORMAT_MOF)
+        model_2 = read(io, Model; format = FILE_FORMAT_MOF)
         @test sprint(print, model) == sprint(print, model_2)
     end
 end
