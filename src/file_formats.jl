@@ -21,7 +21,12 @@ function write_to_file(
     format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_AUTOMATIC
 )
     dest = MathOptFormat.Model(format = format, filename = filename)
-    MOI.copy_to(dest, model)
+    # We add a `full_bridge_optimizer` here because MathOptFormat models may not
+    # support all constraint types in a JuMP model.
+    bridged_dest = MOI.Bridges.full_bridge_optimizer(dest, Float64)
+    MOI.copy_to(bridged_dest, model)
+    # `dest` will contain the underlying model, with constraints bridged if
+    # necessary.
     MOI.write_to_file(dest, filename)
     return
 end
@@ -44,7 +49,12 @@ function Base.write(
         error("Unable to infer the file format from an IO stream.")
     end
     dest = MathOptFormat.Model(format = format)
-    MOI.copy_to(dest, model)
+    # We add a `full_bridge_optimizer` here because MathOptFormat models may not
+    # support all constraint types in a JuMP model.
+    bridged_dest = MOI.Bridges.full_bridge_optimizer(dest, Float64)
+    MOI.copy_to(bridged_dest, model)
+    # `dest` will contain the underlying model, with constraints bridged if
+    # necessary.
     write(io, dest)
     return
 end

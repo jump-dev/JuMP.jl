@@ -146,8 +146,7 @@ function Base.deepcopy(::Model)
 end
 
 function MOI.copy_to(dest::MOI.ModelLike, src::Model)
-    bridged_dest = MOI.Bridges.full_bridge_optimizer(dest, Float64)
-    return MOI.copy_to(bridged_dest, backend(src))
+    return MOI.copy_to(dest, backend(src))
 end
 
 function MOI.copy_to(dest::Model, src::MOI.ModelLike)

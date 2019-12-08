@@ -115,12 +115,16 @@ time_limit_sec
 
 ## File formats
 
-JuMP can write models to a variety of file-formats using [`write_to_file`](@ref).
+JuMP can write models to a variety of file-formats using [`write_to_file`](@ref)
+and [`Base.write`](@ref).
 ```@docs
 write_to_file
+Base.write(::IO, ::Model; ::JuMP.MathOptFormat.FileFormat)
 ```
 
-JuMP models can be created from file formats using [`read_from_file`](@ref).
+JuMP models can be created from file formats using [`read_from_file`](@ref) and
+[`Base.read`](@ref).
 ```@docs
 read_from_file
+Base.read(::IO, ::Type{Model}; ::JuMP.MathOptFormat.FileFormat)
 ```
