@@ -40,5 +40,6 @@ include("operator.jl")
 include("macros.jl")
 include("lp_sensitivity.jl")
 include("callbacks.jl")
+include("file_formats.jl")
 # TODO: The hygiene test should run in a separate Julia instance where JuMP hasn't been loaded via `using`.
 include("hygiene.jl")
