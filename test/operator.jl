@@ -468,6 +468,17 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         end
     end
 
+    @testset "Int" begin
+        model = ModelType()
+        @variable(model, x)
+        @testset "Affine" begin
+            MA.Test.int_test(typeof(1x), exclude = ["int_mul", "int_add", "int_add_mul"])
+        end
+        @testset "Quadratic" begin
+            MA.Test.int_test(typeof(1x^2), exclude = ["int_mul", "int_add", "int_add_mul"])
+        end
+    end
+
     @testset "Scalar" begin
         model = ModelType()
         @variable(model, x)
