@@ -323,6 +323,58 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
             @test c.shape isa JuMP.SquareMatrixShape
         end
 
+        @SDconstraint(m, con_d, 0 ⪯ Diagonal([x, y]))
+        c = JuMP.constraint_object(con_d)
+        @test c.func isa Vector{AffExprType}
+        @test JuMP.isequal_canonical(c.func[1], 1x)
+        @test iszero(c.func[2])
+        @test iszero(c.func[3])
+        @test JuMP.isequal_canonical(c.func[4], 1y)
+        @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
+
+        @SDconstraint(m, con_d_sym, 0 ⪯ Symmetric(Diagonal([x, y])))
+        c = JuMP.constraint_object(con_d_sym)
+        @test c.func isa Vector{AffExprType}
+        @test JuMP.isequal_canonical(c.func[1], 1x)
+        @test iszero(c.func[2])
+        @test JuMP.isequal_canonical(c.func[3], 1y)
+        @test c.set == MOI.PositiveSemidefiniteConeTriangle(2)
+
+        @SDconstraint(m, con_td, Tridiagonal([z], [x, y], [w]) ⪰ 0)
+        c = JuMP.constraint_object(con_td)
+        @test c.func isa Vector{AffExprType}
+        @test JuMP.isequal_canonical(c.func[1], 1x)
+        @test JuMP.isequal_canonical(c.func[2], 1z)
+        @test JuMP.isequal_canonical(c.func[3], 1w)
+        @test JuMP.isequal_canonical(c.func[4], 1y)
+        @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
+
+        @SDconstraint(m, con_td_sym, Symmetric(Tridiagonal([z], [x, y], [w])) ⪰ 0)
+        c = JuMP.constraint_object(con_td_sym)
+        @test c.func isa Vector{AffExprType}
+        @test JuMP.isequal_canonical(c.func[1], 1x)
+        @test JuMP.isequal_canonical(c.func[2], 1w)
+        @test JuMP.isequal_canonical(c.func[3], 1y)
+        @test c.set == MOI.PositiveSemidefiniteConeTriangle(2)
+
+        @SDconstraint(m, con_ut, UpperTriangular([x y; z w]) ⪰ 0)
+        c = JuMP.constraint_object(con_ut)
+        @test c.func isa Vector{AffExprType}
+        @test JuMP.isequal_canonical(c.func[1], 1x)
+        @test iszero(c.func[2])
+        @test JuMP.isequal_canonical(c.func[3], 1y)
+        @test JuMP.isequal_canonical(c.func[4], 1w)
+        @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
+
+        @SDconstraint(m, con_lt, 0 ⪯ LowerTriangular([x y; z w]))
+        c = JuMP.constraint_object(con_lt)
+        @test c.func isa Vector{AffExprType}
+        @test JuMP.isequal_canonical(c.func[1], 1x)
+        @test JuMP.isequal_canonical(c.func[2], 1z)
+        @test iszero(c.func[3])
+        @test JuMP.isequal_canonical(c.func[4], 1w)
+        @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
+
         # Should throw "ERROR: function JuMP.add_constraint does not accept keyword arguments"
         # This tests that the keyword arguments are passed to add_constraint
         @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw=1)

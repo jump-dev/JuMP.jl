@@ -91,7 +91,7 @@ function reshape_set(::MOI.PositiveSemidefiniteConeTriangle,
                      ::SymmetricMatrixShape)
     return PSDCone()
 end
-function vectorize(matrix, ::SymmetricMatrixShape)
+function vectorize(matrix::Matrix, ::SymmetricMatrixShape)
     n = LinearAlgebra.checksquare(matrix)
     return [matrix[i, j] for j in 1:n for i in 1:j]
 end
@@ -113,7 +113,11 @@ end
 function reshape_set(::MOI.PositiveSemidefiniteConeSquare, ::SquareMatrixShape)
     return PSDCone()
 end
-vectorize(matrix, ::SquareMatrixShape) = vec(matrix)
+vectorize(matrix::Matrix, ::SquareMatrixShape) = vec(matrix)
+
+function vectorize(matrix, shape::Union{SymmetricMatrixShape, SquareMatrixShape})
+    return vectorize(Matrix(matrix), shape)
+end
 
 function _square_side(_error::Function, ::Containers.SparseAxisArray)
     _error("Cannot have index dependencies in symmetric variables.")
