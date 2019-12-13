@@ -149,7 +149,7 @@ end
 
 # With one factor.
 
-function add_to_expression!(quad::GenericQuadExpr, other::Constant)
+function add_to_expression!(quad::GenericQuadExpr, other::_Constant)
     add_to_expression!(quad.aff, other)
     return quad
 end
@@ -175,7 +175,7 @@ end
 # With two factors.
 
 function add_to_expression!(quad::GenericQuadExpr{C, V},
-                            new_coef::Constant,
+                            new_coef::_Constant,
                             new_var::V) where {C,V}
     add_to_expression!(quad.aff, new_coef, new_var)
     return quad
@@ -183,18 +183,18 @@ end
 
 function add_to_expression!(quad::GenericQuadExpr{C, V},
                             new_var::Union{V, GenericAffExpr{C, V}},
-                            new_coef::Constant) where {C,V}
+                            new_coef::_Constant) where {C,V}
     return add_to_expression!(quad, new_coef, new_var)
 end
 
 function add_to_expression!(quad::GenericQuadExpr{C},
-                            new_coef::Constant,
+                            new_coef::_Constant,
                             new_aff::GenericAffExpr{C}) where {C}
     add_to_expression!(quad.aff, new_coef, new_aff)
     return quad
 end
 
-function add_to_expression!(quad::GenericQuadExpr{C, V}, coef::Constant,
+function add_to_expression!(quad::GenericQuadExpr{C, V}, coef::_Constant,
                             other::GenericQuadExpr{C, V}) where {C, V}
     for (key, term_coef) in other.terms
         _add_or_set!(quad.terms, key, coef * term_coef)
@@ -204,7 +204,7 @@ end
 
 function add_to_expression!(quad::GenericQuadExpr{C, V},
                             other::GenericQuadExpr{C, V},
-                            coef::Constant) where {C, V}
+                            coef::_Constant) where {C, V}
     return add_to_expression!(quad, coef, other)
 end
 
@@ -320,7 +320,7 @@ end
 
 # Alias for (Float64, VariableRef)
 const QuadExpr = GenericQuadExpr{Float64,VariableRef}
-function Base.convert(::Type{GenericQuadExpr{C, V}}, v::Union{Constant,AbstractVariableRef,GenericAffExpr}) where {C, V}
+function Base.convert(::Type{GenericQuadExpr{C, V}}, v::Union{_Constant,AbstractVariableRef,GenericAffExpr}) where {C, V}
     return GenericQuadExpr(convert(GenericAffExpr{C, V}, v))
 end
 GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})

@@ -211,7 +211,7 @@ function add_to_expression! end
 # With one factor.
 
 function add_to_expression!(aff::GenericAffExpr,
-                            other::Constant)
+                            other::_Constant)
     aff.constant += _constant_to_number(other)
     return aff
 end
@@ -231,18 +231,18 @@ end
 
 # With two factors.
 
-function add_to_expression!(aff::GenericAffExpr{C,V}, new_coef::Constant,
+function add_to_expression!(aff::GenericAffExpr{C,V}, new_coef::_Constant,
                             new_var::V) where {C,V}
     _add_or_set!(aff.terms, new_var, convert(C, _constant_to_number(new_coef)))
     return aff
 end
 
 function add_to_expression!(aff::GenericAffExpr{C,V}, new_var::V,
-                            new_coef::Constant) where {C,V}
+                            new_coef::_Constant) where {C,V}
     return add_to_expression!(aff, new_coef, new_var)
 end
 
-function add_to_expression!(aff::GenericAffExpr{C,V}, coef::Constant,
+function add_to_expression!(aff::GenericAffExpr{C,V}, coef::_Constant,
                             other::GenericAffExpr{C,V}) where {C,V}
     sizehint!(aff, length(linear_terms(aff)) + length(linear_terms(other)))
     for (term_coef, var) in linear_terms(other)
@@ -254,7 +254,7 @@ end
 
 function add_to_expression!(aff::GenericAffExpr{C,V},
                             other::GenericAffExpr{C,V},
-                            coef::Constant) where {C,V}
+                            coef::_Constant) where {C,V}
     return add_to_expression!(aff, coef, other)
 end
 
@@ -292,7 +292,7 @@ function isequal_canonical(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
 end
 
 Base.convert(::Type{GenericAffExpr{T,V}}, v::V)    where {T,V} = GenericAffExpr(zero(T), v => one(T))
-Base.convert(::Type{GenericAffExpr{T,V}}, v::Constant) where {T,V} = GenericAffExpr{T,V}(convert(T, _constant_to_number(v)))
+Base.convert(::Type{GenericAffExpr{T,V}}, v::_Constant) where {T,V} = GenericAffExpr{T,V}(convert(T, _constant_to_number(v)))
 # Used in `JuMP._mul!`.
 function Base.convert(::Type{T}, aff::GenericAffExpr{T}) where T
     if !isempty(aff.terms)

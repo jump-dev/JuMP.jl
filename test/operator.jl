@@ -1,4 +1,8 @@
 using LinearAlgebra, Test
+
+import MutableArithmetics
+const MA = MutableArithmetics
+
 using JuMP
 
 # For "DimensionMismatch when performing vector-matrix multiplication with custom types #988"
@@ -354,10 +358,10 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
         @test JuMP.isequal_canonical((x'A)' + 2A*x, (x'A)' + 2B*x)
         @test JuMP.isequal_canonical((x'A)' + 2A*x, (x'B)' + 2A*x)
         @test JuMP.isequal_canonical((x'A)' + 2A*x, (x'B)' + 2B*x)
-        @test JuMP.isequal_canonical((x'A)' + 2A*x, JuMP.MA.@rewrite((x'A)' + 2A*x))
-        @test JuMP.isequal_canonical((x'A)' + 2A*x, JuMP.MA.@rewrite((x'B)' + 2A*x))
-        @test JuMP.isequal_canonical((x'A)' + 2A*x, JuMP.MA.@rewrite((x'A)' + 2B*x))
-        @test JuMP.isequal_canonical((x'A)' + 2A*x, JuMP.MA.@rewrite((x'B)' + 2B*x))
+        @test JuMP.isequal_canonical((x'A)' + 2A*x, MA.@rewrite((x'A)' + 2A*x))
+        @test JuMP.isequal_canonical((x'A)' + 2A*x, MA.@rewrite((x'B)' + 2A*x))
+        @test JuMP.isequal_canonical((x'A)' + 2A*x, MA.@rewrite((x'A)' + 2B*x))
+        @test JuMP.isequal_canonical((x'A)' + 2A*x, MA.@rewrite((x'B)' + 2B*x))
 
         cref4 = @constraint(m, -1 .<= (x'A)' + 2A*x .<= 1)
         c4 = JuMP.constraint_object.(cref4)

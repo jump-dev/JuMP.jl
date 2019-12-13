@@ -15,35 +15,35 @@ _float(J::UniformScaling) = _float(J.λ)
 # Overloads
 #
 # Different objects that must all interact:
-# 1. Constant
+# 1. _Constant
 # 2. AbstractVariableRef
 # 4. GenericAffExpr
 # 5. GenericQuadExpr
 
-# Constant
-# Constant--Constant obviously already taken care of!
-# Constant--VariableRef
-Base.:+(lhs::Constant, rhs::AbstractVariableRef) = GenericAffExpr(_float(lhs), rhs => 1.0)
-Base.:-(lhs::Constant, rhs::AbstractVariableRef) = GenericAffExpr(_float(lhs), rhs => -1.0)
-function Base.:*(lhs::Constant, rhs::AbstractVariableRef)
+# _Constant
+# _Constant--_Constant obviously already taken care of!
+# _Constant--VariableRef
+Base.:+(lhs::_Constant, rhs::AbstractVariableRef) = GenericAffExpr(_float(lhs), rhs => 1.0)
+Base.:-(lhs::_Constant, rhs::AbstractVariableRef) = GenericAffExpr(_float(lhs), rhs => -1.0)
+function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
     if iszero(lhs)
         return zero(GenericAffExpr{Float64, typeof(rhs)})
     else
         return GenericAffExpr(0.0, rhs => _float(lhs))
     end
 end
-# Constant--GenericAffOrQuadExpr
-function Base.:+(lhs::Constant, rhs::GenericAffOrQuadExpr)
-    result = MA.mutable_copy(rhs)
+# _Constant--_GenericAffOrQuadExpr
+function Base.:+(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
+    result = _MA.mutable_copy(rhs)
     add_to_expression!(result, lhs)
     return result
 end
-function Base.:-(lhs::Constant, rhs::GenericAffOrQuadExpr)
+function Base.:-(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     result = -rhs
     add_to_expression!(result, lhs)
     return result
 end
-function Base.:*(lhs::Constant, rhs::GenericAffOrQuadExpr)
+function Base.:*(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     if iszero(lhs)
         return zero(rhs)
     else
@@ -57,11 +57,11 @@ end
 Base.:+(lhs::AbstractJuMPScalar) = lhs
 Base.:-(lhs::AbstractVariableRef) = GenericAffExpr(0.0, lhs => -1.0)
 Base.:*(lhs::AbstractJuMPScalar) = lhs # make this more generic so extensions don't have to define unary multiplication for our macros
-# AbstractVariableRef--Constant
-Base.:+(lhs::AbstractVariableRef, rhs::Constant) = (+)( rhs,lhs)
-Base.:-(lhs::AbstractVariableRef, rhs::Constant) = (+)(-rhs,lhs)
-Base.:*(lhs::AbstractVariableRef, rhs::Constant) = (*)(rhs,lhs)
-Base.:/(lhs::AbstractVariableRef, rhs::Constant) = (*)(1.0/rhs,lhs)
+# AbstractVariableRef--_Constant
+Base.:+(lhs::AbstractVariableRef, rhs::_Constant) = (+)( rhs,lhs)
+Base.:-(lhs::AbstractVariableRef, rhs::_Constant) = (+)(-rhs,lhs)
+Base.:*(lhs::AbstractVariableRef, rhs::_Constant) = (*)(rhs,lhs)
+Base.:/(lhs::AbstractVariableRef, rhs::_Constant) = (*)(1.0/rhs,lhs)
 # AbstractVariableRef--AbstractVariableRef
 Base.:+(lhs::V, rhs::V) where {V <: AbstractVariableRef} = GenericAffExpr(0.0, lhs => 1.0, rhs => 1.0)
 function Base.:-(lhs::V, rhs::V) where {V <: AbstractVariableRef}
@@ -124,11 +124,11 @@ end
 # GenericAffExpr
 Base.:+(lhs::GenericAffExpr) = lhs
 Base.:-(lhs::GenericAffExpr) = map_coefficients(-, lhs)
-# GenericAffExpr--Constant
-Base.:+(lhs::GenericAffExpr, rhs::Constant) = (+)(rhs,lhs)
-Base.:-(lhs::GenericAffExpr, rhs::Constant) = (+)(-rhs,lhs)
-Base.:*(lhs::GenericAffExpr, rhs::Constant) = (*)(rhs,lhs)
-Base.:/(lhs::GenericAffExpr, rhs::Constant) = map_coefficients(c -> c/rhs, lhs)
+# GenericAffExpr--_Constant
+Base.:+(lhs::GenericAffExpr, rhs::_Constant) = (+)(rhs,lhs)
+Base.:-(lhs::GenericAffExpr, rhs::_Constant) = (+)(-rhs,lhs)
+Base.:*(lhs::GenericAffExpr, rhs::_Constant) = (*)(rhs,lhs)
+Base.:/(lhs::GenericAffExpr, rhs::_Constant) = map_coefficients(c -> c/rhs, lhs)
 function Base.:^(lhs::Union{AbstractVariableRef, GenericAffExpr}, rhs::Integer)
     if rhs == 2
         return lhs*lhs
@@ -140,7 +140,7 @@ function Base.:^(lhs::Union{AbstractVariableRef, GenericAffExpr}, rhs::Integer)
         error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
     end
 end
-Base.:^(lhs::Union{AbstractVariableRef, GenericAffExpr}, rhs::Constant) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
+Base.:^(lhs::Union{AbstractVariableRef, GenericAffExpr}, rhs::_Constant) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
 # GenericAffExpr--AbstractVariableRef
 function Base.:+(lhs::GenericAffExpr{C, V}, rhs::V) where {C, V <: AbstractVariableRef}
     return add_to_expression!(copy(lhs), one(C), rhs)
@@ -200,12 +200,12 @@ end
 # GenericQuadExpr
 Base.:+(lhs::GenericQuadExpr) = lhs
 Base.:-(lhs::GenericQuadExpr) = map_coefficients(-, lhs)
-# GenericQuadExpr--Constant
+# GenericQuadExpr--_Constant
 # We don't do `+rhs` as `UniformScaling` does not support unary `+`
-Base.:+(lhs::GenericQuadExpr, rhs::Constant) = (+)(rhs, lhs)
-Base.:-(lhs::GenericQuadExpr, rhs::Constant) = (+)(-rhs, lhs)
-Base.:*(lhs::GenericQuadExpr, rhs::Constant) = (*)(rhs, lhs)
-Base.:/(lhs::GenericQuadExpr, rhs::Constant) = (*)(inv(rhs), lhs)
+Base.:+(lhs::GenericQuadExpr, rhs::_Constant) = (+)(rhs, lhs)
+Base.:-(lhs::GenericQuadExpr, rhs::_Constant) = (+)(-rhs, lhs)
+Base.:*(lhs::GenericQuadExpr, rhs::_Constant) = (*)(rhs, lhs)
+Base.:/(lhs::GenericQuadExpr, rhs::_Constant) = (*)(inv(rhs), lhs)
 # GenericQuadExpr--AbstractVariableRef
 Base.:+(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff+v, copy(q.terms))
 Base.:-(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff-v, copy(q.terms))
@@ -247,8 +247,8 @@ Base.:(==)(lhs::GenericQuadExpr, rhs::GenericQuadExpr) = (lhs.terms == rhs.terms
 # for scalars, so instead of defining them one-by-one, we will
 # fallback to the multiplication operator
 LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_JuMPTypes) = lhs*rhs
-LinearAlgebra.dot(lhs::_JuMPTypes, rhs::Constant) = lhs*rhs
-LinearAlgebra.dot(lhs::Constant, rhs::_JuMPTypes) = lhs*rhs
+LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_Constant) = lhs*rhs
+LinearAlgebra.dot(lhs::_Constant, rhs::_JuMPTypes) = lhs*rhs
 
 Base.promote_rule(V::Type{<:AbstractVariableRef}, R::Type{<:Real}) = GenericAffExpr{Float64, V}
 Base.promote_rule(V::Type{<:AbstractVariableRef}, ::Type{<:GenericAffExpr{T}}) where {T} = GenericAffExpr{T, V}
@@ -288,6 +288,6 @@ Base.:*(lhs::GenericQuadExpr, rhs::GenericQuadExpr) =
 Base.:*(::S, ::T) where {T <: GenericQuadExpr,
                          S <: Union{AbstractVariableRef, GenericAffExpr, GenericQuadExpr}} =
     error( "*(::$S,::$T) is not defined. $op_hint")
-Base.:/(::S, ::T) where {S <: Union{Constant, AbstractVariableRef, GenericAffExpr, GenericQuadExpr},
+Base.:/(::S, ::T) where {S <: Union{_Constant, AbstractVariableRef, GenericAffExpr, GenericQuadExpr},
                          T <: Union{AbstractVariableRef, GenericAffExpr, GenericQuadExpr}} =
     error( "/(::$S,::$T) is not defined. $op_hint")

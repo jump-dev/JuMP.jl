@@ -11,6 +11,9 @@
 # Testing for macros
 #############################################################################
 
+import MutableArithmetics
+const MA = MutableArithmetics
+
 @testset "Check Julia generator expression parsing" begin
     sumexpr = :(sum(x[i,j] * y[i,j] for i = 1:N, j in 1:M if i != j))
     @test sumexpr.head == :call
@@ -389,7 +392,7 @@ end
         @test JuMP.isequal_canonical(c.func, x[1]^2 + 2 * x[1] * x[2] + x[2]^2)
         @test c.set == MOI.LessThan(1.0)
         @test JuMP.isequal_canonical(
-            JuMP.MA.@rewrite(x' * ones(2, 2)), x' * ones(2, 2)
+            MA.@rewrite(x' * ones(2, 2)), x' * ones(2, 2)
         )
     end
 

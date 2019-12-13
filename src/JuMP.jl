@@ -14,7 +14,7 @@ using LinearAlgebra
 using SparseArrays
 
 import MutableArithmetics
-const MA = MutableArithmetics
+const _MA = MutableArithmetics
 
 import MathOptInterface
 const MOI = MathOptInterface
@@ -507,7 +507,7 @@ end
 # to be redirected to a method in MA that handles type promotion more carefuly
 # (e.g. the promotion in sparse matrix products in SparseArrays usually does not
 # work for JuMP types) and exploits the mutability of `AffExpr` and `QuadExpr`.
-abstract type AbstractJuMPScalar <: MA.AbstractMutable end
+abstract type AbstractJuMPScalar <: _MA.AbstractMutable end
 Base.ndims(::Type{<:AbstractJuMPScalar}) = 0
 
 # These are required to create symmetric containers of AbstractJuMPScalars.
@@ -709,7 +709,7 @@ function MOI.set(model::Model, attr::MOI.AbstractConstraintAttribute,
     MOI.set(backend(model), attr, index(cr), value)
 end
 
-const Constant = Union{Number, UniformScaling}
+const _Constant = Union{Number, UniformScaling}
 _constant_to_number(x::Number) = x
 _constant_to_number(J::UniformScaling) = J.λ
 

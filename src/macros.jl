@@ -152,7 +152,7 @@ function _build_call(_error::Function, vectorized::Bool, func, set)
 end
 function parse_one_operator_constraint(_error::Function, vectorized::Bool,
                                         ::Union{Val{:in}, Val{:∈}}, func, set)
-    variable, parse_code = MA.rewrite(func)
+    variable, parse_code = _MA.rewrite(func)
     return parse_code, _build_call(_error, vectorized, variable, set)
 end
 
@@ -176,7 +176,7 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense
         func = :($lhs - $rhs)
     end
     set = sense_to_set(_error, sense)
-    variable, parse_code = MA.rewrite(func)
+    variable, parse_code = _MA.rewrite(func)
     return parse_code, _build_call(_error, vectorized, :(_functionize($variable)), set)
 end
 
@@ -186,9 +186,9 @@ function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
 end
 
 function parse_ternary_constraint(_error::Function, vectorized::Bool, lb, ::Union{Val{:(<=)}, Val{:(≤)}}, aff, rsign::Union{Val{:(<=)}, Val{:(≤)}}, ub)
-    newaff, parseaff = MA.rewrite(aff)
-    newlb, parselb = MA.rewrite(lb)
-    newub, parseub = MA.rewrite(ub)
+    newaff, parseaff = _MA.rewrite(aff)
+    newlb, parselb = _MA.rewrite(lb)
+    newub, parseub = _MA.rewrite(ub)
     if vectorized
         buildcall = :(build_constraint.($_error, $newaff, $newlb, $newub))
     else
@@ -741,7 +741,7 @@ macro objective(model, args...)
     end
     sense, x = args
     sense_expr = _moi_sense(_error, sense)
-    newaff, parsecode = MA.rewrite(x)
+    newaff, parsecode = _MA.rewrite(x)
     code = quote
         $parsecode
         set_objective($esc_model, $sense_expr, $newaff)
@@ -796,7 +796,7 @@ macro expression(args...)
     variable = gensym()
 
     idxvars, indices = Containers._build_ref_sets(_error, c)
-    code = MA.rewrite_and_return(x)
+    code = _MA.rewrite_and_return(x)
     code = Containers.container_code(idxvars, indices, code, requestedcontainer)
     # don't do anything with the model, but check that it's valid anyway
     if anonvar
