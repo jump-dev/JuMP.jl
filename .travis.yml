@@ -17,8 +17,6 @@ julia:
 notifications:
     email: false
 sudo: false
-before_script:
-    - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaOpt/MutableArithmetics.jl", rev="master"))'
 addons:
     apt_packages:
         - gfortran
