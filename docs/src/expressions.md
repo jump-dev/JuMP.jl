@@ -123,7 +123,7 @@ julia> model = Model();
 julia> @variable(model, x)
 x
 
-julia> @expression(model, ex, 0 * x + 1)
+julia> @expression(model, ex, x + 1 - x)
 0 x + 1
 
 julia> drop_zeros!(ex)
@@ -219,7 +219,7 @@ julia> model = Model();
 julia> @variable(model, x)
 x
 
-julia> @expression(model, ex, 0 * x^2 + x + 1)
+julia> @expression(model, ex, x^2 + x + 1 - x^2)
 0 x² + x + 1
 
 julia> drop_zeros!(ex)
