@@ -167,12 +167,8 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense
     # Without the `+0` term, `aff` would evaluate to a `VariableRef` when we
     # really want it to be a `GenericAffExpr`.
     if vectorized
-        #aff = :(JuMP._functionize($lhs .- $rhs))
-        #aff = :($lhs .- $rhs .- 0)
         func = :($lhs .- $rhs)
     else
-        #aff = :(JuMP._functionize($lhs - $rhs))
-        #aff = :($lhs - $rhs - 0)
         func = :($lhs - $rhs)
     end
     set = sense_to_set(_error, sense)
@@ -499,9 +495,13 @@ Add a group of semidefinite constraints described by the expression `expr`
 parametrized by `i`, `j`, ...
 
 The expression `expr` needs to be of the form `a sign b` where `sign` is `⪰`,
-`≥`, `>=`, `⪯`, `≤` or `<=` and `a` and `b` are `square` matrices. It
-constrains the matrix `x = a - b` (or `x = b - a` if the sign is `⪯`, `≤` or
-`<=`) to be symmetric and positive semidefinite.
+`≥`, `>=`, `⪯`, `≤` or `<=` and `a` and `b` are `square` matrices. It constrains
+the square matrix `x` (or `-x` if the sign is `⪯`, `≤` or `<=`) to be symmetric
+and positive semidefinite where
+
+* if `b` is the symbol `0`, `x = a`,
+* if `a` is the symbol `0`, `x = -b`,
+* otherwise, `x = a - b`.
 
 By default, we check numerical symmetry of the matrix `x`, and if symmetry is
 violated by some arbitrary amount, we add explicit equality constraints.
