@@ -75,9 +75,25 @@ end
 function _MA.mutable_operate!(::typeof(_MA.add_mul), expr::_GenericAffOrQuadExpr, x, y)
     return add_to_expression!(expr, x, y)
 end
-# If there are more arguments, we multiply the rest to make the number of argument drop.
-function _MA.mutable_operate!(op::typeof(_MA.add_mul), expr::_GenericAffOrQuadExpr, x, y, z, args::Vararg{Any, N}) where N
-    return _MA.mutable_operate!(op, expr, x, *(y, z, args...))
+# If there are more arguments, we multiply the constants together.
+#function _MA.mutable_operate!(op::typeof(_MA.add_mul), expr::_GenericAffOrQuadExpr, x, y, z, args::Vararg{Any, N}) where N
+#    return _MA.mutable_operate!(op, expr, x, *(y, z, args...))
+#end
+@generated function _add_mul_reorder!(expr::_GenericAffOrQuadExpr, args::Vararg{Any, N}) where N
+    n = length(args)
+    @assert n ≥ 3
+    varidx = findall(t -> (t <: AbstractJuMPScalar), collect(args))
+    allscalar = all(t -> (t <: _Constant), args[setdiff(1:n, varidx)])
+    # We need to get down to only two factors
+    # If there are only constants and one JuMP expressions, then we multiply
+    # the constants together. Otherwise we multiply all factors except the
+    # last one, there may be a better thing to do here.
+    idx = (allscalar && length(varidx) == 1) ? varidx[1] : n
+    coef = Expr(:call, :*, [:(args[$i]) for i in setdiff(1:n, idx)]...)
+    return :(_MA.mutable_operate!(_MA.add_mul, expr, $coef, args[$idx]))
+end
+function _MA.mutable_operate!(::typeof(_MA.add_mul), expr::_GenericAffOrQuadExpr, x, y, z, other_args::Vararg{Any, N}) where N
+    return _add_mul_reorder!(expr, x, y, z, other_args...)
 end
 # This method is missing for both affine and quadratic expressions.
 function add_to_expression!(expr::_GenericAffOrQuadExpr, α::_Constant, β::_Constant)
