@@ -471,60 +471,6 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_expression_with_string (x + 1) * I "x + 1"
         end
     end
-
-    @testset "Int" begin
-        model = ModelType()
-        @variable(model, x)
-        @testset "Affine" begin
-            MA.Test.int_test(typeof(1x), exclude = ["int_mul", "int_add", "int_add_mul"])
-        end
-        @testset "Quadratic" begin
-            MA.Test.int_test(typeof(1x^2), exclude = ["int_mul", "int_add", "int_add_mul"])
-        end
-    end
-
-    @testset "Scalar" begin
-        model = ModelType()
-        @variable(model, x)
-        exclude = ["cube"]
-        MA.Test.scalar_test(x, exclude = exclude)
-        MA.Test.scalar_test(2x + 3, exclude = exclude)
-        MA.Test.scalar_test(2x^2 + 4x + 1, exclude = exclude)
-    end
-    @testset "Quadratic" begin
-        model = ModelType()
-        @variable(model, w)
-        @variable(model, x)
-        @variable(model, y)
-        @variable(model, z)
-        MA.Test.quadratic_test(w, x, y, z)
-    end
-    @testset "Sparse" begin
-        model = ModelType()
-        @variable(model, X11)
-        @variable(model, X23)
-        @variable(model, Xd[1:3, 1:3])
-        MA.Test.sparse_test(X11, X23, Xd)
-    end
-    @testset "Vector" begin
-        model = ModelType()
-        @variable(model, x[1:3])
-        MA.Test.array_test(x)
-    end
-    @testset "Matrix" begin
-        model = ModelType()
-        @variable(model, x[1:2, 1:2])
-        MA.Test.array_test(x)
-        @variable(model, y[1:2, 1:2], Symmetric)
-        MA.Test.array_test(y)
-        @variable(model, z[1:2, 1:3])
-        MA.Test.array_test(z)
-    end
-    @testset "DenseAxisVector" begin
-        model = ModelType()
-        @variable(model, y[2:5])
-        MA.Test.array_test(y, exclude = ["matrix_vector", "non_array"])
-    end
 end
 
 @testset "Operators for JuMP.Model" begin

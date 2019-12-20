@@ -14,6 +14,25 @@
 
 const _GenericAffOrQuadExpr{C, V} = Union{GenericAffExpr{C, V}, GenericQuadExpr{C, V}}
 
+# The default fallbacks to calling `op(zero(x), zero(y))` which produces allocations.
+# The compiler could avoid these allocations at runtime with constant propagation as the types
+# `x` and `y` are known at compile time but apparently it does not.
+_MA.promote_operation(::Union{typeof(+), typeof(-), typeof(*)}, ::Type{<:_Constant}, V::Type{<:AbstractVariableRef}) = GenericAffExpr{Float64, V}
+_MA.promote_operation(::Union{typeof(+), typeof(-), typeof(*)}, V::Type{<:AbstractVariableRef}, ::Type{<:_Constant}) = GenericAffExpr{Float64, V}
+_MA.promote_operation(::Union{typeof(+), typeof(-), typeof(*)}, ::Type{<:_Constant}, S::Type{<:_GenericAffOrQuadExpr}) = S
+_MA.promote_operation(::Union{typeof(+), typeof(-), typeof(*)}, S::Type{<:_GenericAffOrQuadExpr}, ::Type{<:_Constant}) = S
+
+_MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{V}, ::Type{V}) where {V <: AbstractVariableRef} = GenericAffExpr{Float64, V}
+_MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{<:AbstractVariableRef}, S::Type{<:_GenericAffOrQuadExpr}) = S
+_MA.promote_operation(::Union{typeof(+), typeof(-)}, S::Type{<:_GenericAffOrQuadExpr}, ::Type{<:AbstractVariableRef}) = S
+_MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{A}, ::Type{A}) where {A <: _GenericAffOrQuadExpr} = A
+_MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{<:GenericAffExpr{T, V}}, ::Type{<:GenericQuadExpr{T, V}}) where {T, V} = GenericQuadExpr{T, V}
+_MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{<:GenericQuadExpr{T, V}}, ::Type{<:GenericAffExpr{T, V}}) where {T, V} = GenericQuadExpr{T, V}
+
+_MA.promote_operation(::typeof(*), ::Type{V}, ::Type{V}) where {V <: AbstractVariableRef} = GenericQuadExpr{Float64, V}
+_MA.promote_operation(::typeof(*), ::Type{V}, ::Type{GenericAffExpr{T, V}}) where {T, V <: AbstractVariableRef} = GenericQuadExpr{T, V}
+_MA.promote_operation(::typeof(*), ::Type{GenericAffExpr{T, V}}, ::Type{V}) where {T, V <: AbstractVariableRef} = GenericQuadExpr{T, V}
+
 _MA.isequal_canonical(x::T, y::T) where {T<:AbstractJuMPScalar} = isequal_canonical(x, y)
 
 # `SparseArrays/src/linalg.jl` convert numbers to JuMP expressions. MA calls
