@@ -387,10 +387,33 @@ JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Int64}} with 2 entries:
   [2]  =  x[2]
 ```
 
-Note that with many indices and large amount of sparcity, variable construction may take more time than expected, as JuMP is effectively iterating over all indices and evaluating the conditional for each combination. The recommended work-around in such cases is to work directly with a list of tuples. For example:
+Note that with many indices and large amount of sparsity, variable construction
+ may take more time than expected, as JuMP iterates over all indices and 
+ evaluates the conditional for each combination. The recommended work-around
+  in such cases is to work directly with a list of tuples or create a 
+  dictionary. Consider the following examples:
 
 ```jldoctest; setup=:(model=Model())
-S = [(1,1,1),(10,10,10)]
+N = 10
+S = [(1,1,1),(N,N,N)]
+# slow as it evaluates conditional N^3 times:
+@variable(model, x1[i=1:N,j=1:N,k=1:N; (i,j,k) in S]) 
+# fast (linear in dimension of S):
+@variable(model, x2[S])
+# avoid using tuples by constructing dictionary (also fast):
+x3 = Dict()
+for (i,j,k) in S
+    x3[i,j,k]  = @variable(model)
+    # Optional, if you care about pretty printing:
+    set_name(x3[i,j,k], "x[$i,$j,$k]")
+end
+
+```
+
+
+```jldoctest; setup=:(model=Model())
+N = 10
+S = [(1,1,1),(N,N,N)]
 @variable(model, x[S]) 
 ```
 ### [Forcing the container type](@id variable_forcing)
