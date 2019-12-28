@@ -28,12 +28,14 @@ function example_lazy_constraint()
         lazy_called = true
         x_val = callback_value(cb_data, x)
         y_val = callback_value(cb_data, y)
-        if y_val - x_val > 1 + 1e-6
-            con = @build_constraint(y - x <= 1)
-            MOI.submit(model, MOI.LazyConstraint(cb_data), con)
-        elseif y_val + x_val > 3 + 1e-6
-            con = @build_constraint(y - x <= 1)
-            MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+        if (isinteger.(x_val) == true) && (isinteger.(y_val) == true) # Add the cut only on integral solutions
+            if y_val - x_val > 1 + 1e-6
+                con = @build_constraint(y - x <= 1)
+                MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+            elseif y_val + x_val > 3 + 1e-6
+                con = @build_constraint(y - x <= 1)
+                MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+            end
         end
     end
     MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
