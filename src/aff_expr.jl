@@ -36,7 +36,7 @@ function _new_ordered_dict(::Type{K}, ::Type{V}, kv::AbstractArray{<:Pair}) wher
     return dict
 end
 
-function _new_ordered_dict(::Type{K}, ::Type{V}, kv::Pair...) where {K,V}
+function _new_ordered_dict(::Type{K}, ::Type{V}, kv::Vararg{Pair,N}) where {K,V,N}
     dict = OrderedDict{K,V}()
     sizehint!(dict, length(kv))
     for pair in kv
@@ -73,7 +73,7 @@ function GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
     return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv))
 end
 
-function GenericAffExpr(constant::V, kv::Pair{K,V}...) where {K,V}
+function GenericAffExpr(constant::V, kv::Vararg{Pair{K,V},N}) where {K,V,N}
     return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv...))
 end
 
@@ -81,7 +81,7 @@ function GenericAffExpr{V,K}(constant, kv::AbstractArray{<:Pair}) where {K,V}
     return GenericAffExpr{V,K}(convert(V, constant), _new_ordered_dict(K, V, kv))
 end
 
-function GenericAffExpr{V,K}(constant, kv::Pair...) where {K,V}
+function GenericAffExpr{V,K}(constant, kv::Vararg{Pair, N}) where {K,V,N}
     return GenericAffExpr{V,K}(convert(V, constant), _new_ordered_dict(K, V, kv...))
 end
 

@@ -94,11 +94,21 @@ end
 function _MA.mutable_operate!(::typeof(_MA.add_mul), expr::_GenericAffOrQuadExpr, x, y)
     return add_to_expression!(expr, x, y)
 end
+function _MA.mutable_operate!(::typeof(_MA.sub_mul), expr::_GenericAffOrQuadExpr, x)
+    return add_to_expression!(expr, -1.0, x)
+end
+function _MA.mutable_operate!(::typeof(_MA.sub_mul), expr::_GenericAffOrQuadExpr, x, y)
+    return add_to_expression!(expr, -x, y)
+end
+# It is less costly to negate a constant than a JuMP scalar
+function _MA.mutable_operate!(::typeof(_MA.sub_mul), expr::_GenericAffOrQuadExpr, x::AbstractJuMPScalar, y::_Constant)
+    return add_to_expression!(expr, x, -y)
+end
 # If there are more arguments, we multiply the constants together.
 #function _MA.mutable_operate!(op::typeof(_MA.add_mul), expr::_GenericAffOrQuadExpr, x, y, z, args::Vararg{Any, N}) where N
 #    return _MA.mutable_operate!(op, expr, x, *(y, z, args...))
 #end
-@generated function _add_mul_reorder!(expr::_GenericAffOrQuadExpr, args::Vararg{Any, N}) where N
+@generated function _add_sub_mul_reorder!(op::_MA.AddSubMul, expr::_GenericAffOrQuadExpr, args::Vararg{Any, N}) where N
     n = length(args)
     @assert n ≥ 3
     varidx = findall(t -> (t <: AbstractJuMPScalar), collect(args))
@@ -109,10 +119,10 @@ end
     # last one, there may be a better thing to do here.
     idx = (allscalar && length(varidx) == 1) ? varidx[1] : n
     coef = Expr(:call, :*, [:(args[$i]) for i in setdiff(1:n, idx)]...)
-    return :(_MA.mutable_operate!(_MA.add_mul, expr, $coef, args[$idx]))
+    return :(_MA.mutable_operate!(op, expr, $coef, args[$idx]))
 end
-function _MA.mutable_operate!(::typeof(_MA.add_mul), expr::_GenericAffOrQuadExpr, x, y, z, other_args::Vararg{Any, N}) where N
-    return _add_mul_reorder!(expr, x, y, z, other_args...)
+function _MA.mutable_operate!(op::_MA.AddSubMul, expr::_GenericAffOrQuadExpr, x, y, z, other_args::Vararg{Any, N}) where N
+    return _add_sub_mul_reorder!(op, expr, x, y, z, other_args...)
 end
 # This method is missing for both affine and quadratic expressions.
 function add_to_expression!(expr::_GenericAffOrQuadExpr, α::_Constant, β::_Constant)
@@ -128,19 +138,23 @@ const _Scalar = Union{AbstractJuMPScalar, _Constant}
 # The following implementation avoids this issue and is also more efficient.
 function _MA.add_mul(lhs::AbstractJuMPScalar, x::_Scalar, y::_Scalar)
     T = _MA.promote_operation(_MA.add_mul, typeof(lhs), typeof(x), typeof(y))
-    return _add_mul_to_type(T, lhs, x, y)
+    expr = _MA.operate(convert, T, lhs)
+    return _MA.mutable_operate!(_MA.add_mul, expr, x, y)
 end
 function _MA.add_mul(lhs::AbstractJuMPScalar, x::_Scalar, y::_Scalar, args::Vararg{_Scalar, N}) where N
     T = _MA.promote_operation(_MA.add_mul, typeof(lhs), typeof(x), typeof(y), typeof.(args)...)
-    return _add_mul_to_type(T, lhs, x, y, args...)
+    expr = _MA.operate(convert, T, lhs)
+    return _MA.mutable_operate!(_MA.add_mul, expr, x, y, args...)
 end
-function _add_mul_to_type(::Type{T}, expr::T, factors::Vararg{Any, N}) where {T, N}
-    return _MA.mutable_operate!(_MA.add_mul, expr, factors...)
+function _MA.sub_mul(lhs::AbstractJuMPScalar, x::_Scalar, y::_Scalar)
+    T = _MA.promote_operation(_MA.sub_mul, typeof(lhs), typeof(x), typeof(y))
+    expr = _MA.operate(convert, T, lhs)
+    return _MA.mutable_operate!(_MA.sub_mul, expr, x, y)
 end
-function _add_mul_to_type(::Type{T}, lhs, factors::Vararg{Any, N}) where {T, N}
-    expr = zero(T)
-    _MA.mutable_operate!(+, expr, lhs)
-    return _MA.mutable_operate!(_MA.add_mul, expr, factors...)
+function _MA.sub_mul(lhs::AbstractJuMPScalar, x::_Scalar, y::_Scalar, args::Vararg{_Scalar, N}) where N
+    T = _MA.promote_operation(_MA.sub_mul, typeof(lhs), typeof(x), typeof(y), typeof.(args)...)
+    expr = _MA.operate(convert, T, lhs)
+    return _MA.mutable_operate!(_MA.sub_mul, expr, x, y, args...)
 end
 
 #############################################################################

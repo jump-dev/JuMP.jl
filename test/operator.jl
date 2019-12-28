@@ -14,6 +14,7 @@ struct MySumType{T}
     a::T
 end
 Base.copy(t::MyType) = t
+Base.zero(::Type{MyType{T}}) where {T} = MyType(zero(T))
 Base.one(::Type{MyType{T}}) where {T} = MyType(one(T))
 Base.zero(::Type{MySumType{T}}) where {T} = MySumType(zero(T))
 Base.zero(::MySumType{T}) where {T} = MySumType(zero(T))
