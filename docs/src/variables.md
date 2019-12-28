@@ -389,7 +389,7 @@ JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Int64}} with 2 entries:
 
 Note that with many indices and large amount of sparcity, variable construction may take more time than expected, as JuMP is effectively iterating over all indices and evaluating the conditional for each combination. The recommended work-around in such cases is to work directly with a list of tuples. For example:
 
-```jldictest; setup=:(model=Model())
+```jldoctest; setup=:(model=Model())
 S = [(1,1,1),(10,10,10)]
 @variable(model, x[S]) 
 ```
