@@ -4,7 +4,6 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 using JuMP
-using MathOptFormat
 using Test
 
 @testset "File formats" begin
@@ -65,16 +64,16 @@ using Test
         io = IOBuffer()
         @test_throws(
             ErrorException("Unable to infer the file format from an IO stream."),
-            write(io, model; format = MathOptFormat.FORMAT_AUTOMATIC)
+            write(io, model; format = MOI.FileFormats.FORMAT_AUTOMATIC)
         )
-        write(io, model; format = MathOptFormat.FORMAT_MOF)
+        write(io, model; format = MOI.FileFormats.FORMAT_MOF)
         seekstart(io)
         @test_throws(
             ErrorException("Unable to infer the file format from an IO stream."),
-            read(io, Model; format = MathOptFormat.FORMAT_AUTOMATIC)
+            read(io, Model; format = MOI.FileFormats.FORMAT_AUTOMATIC)
         )
         seekstart(io)
-        model_2 = read(io, Model; format = MathOptFormat.FORMAT_MOF)
+        model_2 = read(io, Model; format = MOI.FileFormats.FORMAT_MOF)
         @test sprint(print, model) == sprint(print, model_2)
     end
 end

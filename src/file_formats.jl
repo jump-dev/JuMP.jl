@@ -7,7 +7,7 @@
     write_to_file(
         model::Model,
         filename::String;
-        format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_AUTOMATIC
+        format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC
     )
 
 Write the JuMP model `model` to `filename` in the format `format`.
@@ -18,10 +18,10 @@ If the filename ends in `.bz2`, it will be compressed using BZip2.
 function write_to_file(
     model::Model,
     filename::String;
-    format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_AUTOMATIC
+    format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC
 )
-    dest = MathOptFormat.Model(format = format, filename = filename)
-    # We add a `full_bridge_optimizer` here because MathOptFormat models may not
+    dest = MOI.FileFormats.Model(format = format, filename = filename)
+    # We add a `full_bridge_optimizer` here because MOI.FileFormats models may not
     # support all constraint types in a JuMP model.
     bridged_dest = MOI.Bridges.full_bridge_optimizer(dest, Float64)
     MOI.copy_to(bridged_dest, model)
@@ -35,7 +35,7 @@ end
     Base.write(
         io::IO,
         model::Model;
-        format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_MOF
+        format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_MOF
     )
 
 Write the JuMP model `model` to `io` in the format `format`.
@@ -43,13 +43,13 @@ Write the JuMP model `model` to `io` in the format `format`.
 function Base.write(
     io::IO,
     model::Model;
-    format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_MOF
+    format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_MOF
 )
-    if format == MathOptFormat.FORMAT_AUTOMATIC
+    if format == MOI.FileFormats.FORMAT_AUTOMATIC
         error("Unable to infer the file format from an IO stream.")
     end
-    dest = MathOptFormat.Model(format = format)
-    # We add a `full_bridge_optimizer` here because MathOptFormat models may not
+    dest = MOI.FileFormats.Model(format = format)
+    # We add a `full_bridge_optimizer` here because MOI.FileFormats models may not
     # support all constraint types in a JuMP model.
     bridged_dest = MOI.Bridges.full_bridge_optimizer(dest, Float64)
     MOI.copy_to(bridged_dest, model)
@@ -62,7 +62,7 @@ end
 """
     read_from_file(
         filename::String;
-        format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_AUTOMATIC
+        format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC
     )
 
 Return a JuMP model read from `filename` in the format `format`.
@@ -72,9 +72,9 @@ If the filename ends in `.bz2`, it will be uncompressed using BZip2.
 """
 function read_from_file(
     filename::String;
-    format::MathOptFormat.FileFormat = MathOptFormat.FORMAT_AUTOMATIC
+    format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC
 )
-    src = MathOptFormat.Model(format = format, filename = filename)
+    src = MOI.FileFormats.Model(format = format, filename = filename)
     MOI.read_from_file(src, filename)
     model = Model()
     MOI.copy_to(model, src)
@@ -82,15 +82,15 @@ function read_from_file(
 end
 
 """
-    Base.read(io::IO, ::Type{Model}; format::MathOptFormat.FileFormat)
+    Base.read(io::IO, ::Type{Model}; format::MOI.FileFormats.FileFormat)
 
 Return a JuMP model read from `io` in the format `format`.
 """
-function Base.read(io::IO, ::Type{Model}; format::MathOptFormat.FileFormat)
-    if format == MathOptFormat.FORMAT_AUTOMATIC
+function Base.read(io::IO, ::Type{Model}; format::MOI.FileFormats.FileFormat)
+    if format == MOI.FileFormats.FORMAT_AUTOMATIC
         error("Unable to infer the file format from an IO stream.")
     end
-    src = MathOptFormat.Model(format = format)
+    src = MOI.FileFormats.Model(format = format)
     read!(io, src)
     model = Model()
     MOI.copy_to(model, src)
