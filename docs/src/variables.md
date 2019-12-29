@@ -388,10 +388,10 @@ JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Int64}} with 2 entries:
 ```
 
 Note that with many indices and large amount of sparsity, variable construction
- may take more time than expected, as JuMP iterates over all indices and 
- evaluates the conditional for each combination. The recommended work-around
-  in such cases is to work directly with a list of tuples or create a 
-  dictionary. Consider the following examples:
+may take more time than expected, as JuMP iterates over all indices and 
+evaluates the conditional for each combination. The recommended work-around
+in such cases is to work directly with a list of tuples or create a 
+dictionary. Consider the following examples:
 
 ```jldoctest; setup=:(model=Model())
 N = 10
