@@ -810,6 +810,46 @@ end
 """
     ConstrainedVariables <: AbstractVariable
 
+Variable `scalar_variables` constrained to belong to `set`.
+Adding this variable can be thought as doing:
+```julia
+function JuMP.add_variable(model::Model, variable::JuMP.ConstrainedVariable, names)
+    var_ref = JuMP.add_variable(model, variable.scalar_variable, name)
+    JuMP.add_constraint(model, JuMP.VectorConstraint(var_ref, variable.set))
+    return var_ref
+end
+```
+but adds the variables with `MOI.add_constrained_variable(model, variable.set)`
+instead. See [the MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
+for the difference between adding the variables with `MOI.add_constrained_variable`
+and adding them with `MOI.add_variable` and adding the constraint separately.
+"""
+struct ConstrainedVariable{S <: MOI.AbstractScalarSet,
+                           ScalarVarType <: AbstractVariable} <: AbstractVariable
+    scalar_variable::ScalarVarType
+    set::S
+end
+
+function add_variable(model::Model, variable::ConstrainedVariable, name::String)
+    var_index = _moi_add_constrained_variable(
+        backend(model), variable.scalar_variable, variable.set, name)
+    return VariableRef(model, var_index)
+end
+
+function _moi_add_constrained_variable(
+    backend::MOI.ModelLike, scalar_variable::ScalarVariable,
+    set::MOI.AbstractScalarSet, name::String)
+    var_index, con_index = MOI.add_constrained_variable(backend, set)
+    _moi_constrain_variable(backend, var_index, scalar_variable.info)
+    if !isempty(name)
+        MOI.set(backend, MOI.VariableName(), var_index, name)
+    end
+    return var_index
+end
+
+"""
+    ConstrainedVariables <: AbstractVariable
+
 Vector of variables `scalar_variables` constrained to belong to `set`.
 Adding this variable can be thought as doing:
 ```julia
@@ -854,8 +894,8 @@ function _moi_add_constrained_variables(
     for (index, variable) in zip(var_indices, scalar_variables)
         _moi_constrain_variable(backend, index, variable.info)
     end
-    if names !== nothing
-        for (var_index, name) in zip(var_indices, names)
+    for (var_index, name) in zip(var_indices, names)
+        if !isempty(name)
             MOI.set(backend, MOI.VariableName(), var_index, name)
         end
     end

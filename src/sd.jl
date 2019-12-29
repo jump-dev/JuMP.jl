@@ -160,7 +160,7 @@ This function is used by the [`@variable`](@ref) macro as follows:
 @variable(model, Q[1:2, 1:2], Symmetric)
 ```
 """
-function build_variable(_error::Function, variables, ::SymMatrixSpace)
+function build_variable(_error::Function, variables::Matrix{<:ScalarVariable}, ::SymMatrixSpace)
     n = _square_side(_error, variables)
     set = MOI.Reals(MOI.dimension(MOI.PositiveSemidefiniteConeTriangle(n)))
     shape = SymmetricMatrixShape(n)
@@ -178,7 +178,7 @@ This function is used by the [`@variable`](@ref) macro as follows:
 @variable(model, Q[1:2, 1:2], PSD)
 ```
 """
-function build_variable(_error::Function, variables, ::PSDCone)
+function build_variable(_error::Function, variables::Matrix{<:ScalarVariable}, ::PSDCone)
     n = _square_side(_error, variables)
     set = MOI.PositiveSemidefiniteConeTriangle(n)
     shape = SymmetricMatrixShape(n)
