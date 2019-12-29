@@ -204,7 +204,19 @@ JuMP.Containers.SparseAxisArray{VariableRef,2,Tuple{Int64,Int64}} with 3 entries
   [1, 1]  =  x[1,1]</code></pre><p>We can also conditionally create variables via a JuMP-specific syntax. This syntax appends a comparison check that depends upon the named indices and is separated from the indices by a semi-colon (<code>;</code>). For example:</p><pre><code class="language-julia-repl">julia&gt; @variable(model, x[i=1:4; mod(i, 2)==0])
 JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Int64}} with 2 entries:
   [4]  =  x[4]
-  [2]  =  x[2]</code></pre><h3><a class="nav-anchor" id="variable_forcing-1" href="#variable_forcing-1">Forcing the container type</a></h3><p>When creating a container of JuMP variables, JuMP will attempt to choose the tightest container type that can store the JuMP variables. Thus, it will prefer to create an Array before a DenseAxisArray and a DenseAxisArray before a SparseAxisArray. However, because this happens at compile time, it does not always make the best choice. To illustrate this, consider the following example:</p><pre><code class="language-julia-repl">julia&gt; A = 1:2
+  [2]  =  x[2]</code></pre><p>Note that with many index dimensions and a large amount of sparsity, variable construction may be unnecessarily slow if the semi-colon syntax is naively applied. When using the semi-colon as a filter, JuMP iterates over <em>all</em> indices and evaluates the conditional for each combination. When this is undesired, the recommended work-around is to work directly with a list of tuples or create a dictionary. Consider the following examples:</p><pre><code class="language-jl">N = 10
+S = [(1, 1, 1),(N, N, N)]
+# Slow. It evaluates conditional N^3 times.
+@variable(model, x1[i=1:N, j=1:N, k=1:N; (i, j, k) in S]) 
+# Fast.
+@variable(model, x2[S])
+# Fast. Manually constructs a dictionary and fills it.
+x3 = Dict()
+for (i, j, k) in S
+    x3[i, j, k] = @variable(model)
+    # Optional, if you care about pretty printing:
+    set_name(x3[i, j, k], &quot;x[$i,$j,$k]&quot;)
+end</code></pre><h3><a class="nav-anchor" id="variable_forcing-1" href="#variable_forcing-1">Forcing the container type</a></h3><p>When creating a container of JuMP variables, JuMP will attempt to choose the tightest container type that can store the JuMP variables. Thus, it will prefer to create an Array before a DenseAxisArray and a DenseAxisArray before a SparseAxisArray. However, because this happens at compile time, it does not always make the best choice. To illustrate this, consider the following example:</p><pre><code class="language-julia-repl">julia&gt; A = 1:2
 1:2
 
 julia&gt; @variable(model, x[A])
