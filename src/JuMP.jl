@@ -20,7 +20,6 @@ const MOIU = MOI.Utilities
 import Calculus
 import DataStructures.OrderedDict
 import ForwardDiff
-import MathOptFormat
 include("_Derivatives/_Derivatives.jl")
 using ._Derivatives
 
