@@ -395,10 +395,10 @@ is undesired, the recommended work-around is to work directly with a list
 of tuples or create a dictionary. Consider the following examples:
 
 ```@meta
-# TODO: Reformat the code below as a proper doctest.
+# TODO: Reformat the code below as a doctest.
 ```
 
-```jldoctest; setup=:(model=Model())
+```jl
 N = 10
 S = [(1, 1, 1),(N, N, N)]
 # Slow. It evaluates conditional N^3 times.
