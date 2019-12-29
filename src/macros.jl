@@ -1122,9 +1122,10 @@ macro variable(args...)
     end
 
     info_kw_args = filter(_is_info_keyword, kw_args)
-    extra_kw_args = filter(kw -> kw.args[1] != :base_name && kw.args[1] != :variable_type && !_is_info_keyword(kw), kw_args)
+    extra_kw_args = filter(kw -> kw.args[1] != :base_name && kw.args[1] != :variable_type && kw.args[1] != :set && !_is_info_keyword(kw), kw_args)
     base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
     variable_type_kw_args = filter(kw -> kw.args[1] == :variable_type, kw_args)
+    set_kw_args = filter(kw -> kw.args[1] == :set, kw_args)
     infoexpr = _VariableInfoExpr(; _keywordify.(info_kw_args)...)
 
     # There are four cases to consider:
@@ -1157,6 +1158,16 @@ macro variable(args...)
 
     if !isa(name, Symbol) && !anonvar
         Base.error("Expression $name should not be used as a variable name. Use the \"anonymous\" syntax $name = @variable(model, ...) instead.")
+    end
+
+    if !isempty(set_kw_args)
+        if length(set_kw_args) > 1
+            _error("`set` keyword argument was given $(length(set_kw_args)) times.")
+        end
+        if set !== nothing
+            _error("Cannot specify set of constrained variable twice, it was already set to `$set` so the `set` keyword argument is not allowed.")
+        end
+        set = esc(set_kw_args[1].args[2])
     end
 
     # process keyword arguments
