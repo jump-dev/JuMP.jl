@@ -387,6 +387,33 @@ JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Int64}} with 2 entries:
   [2]  =  x[2]
 ```
 
+Note that with many index dimensions and a large amount of sparsity,
+variable construction may be unnecessarily slow if the semi-colon syntax is
+naively applied. When using the semi-colon as a filter, JuMP iterates over
+*all* indices and evaluates the conditional for each combination. When this
+is undesired, the recommended work-around is to work directly with a list
+of tuples or create a dictionary. Consider the following examples:
+
+```@meta
+# TODO: Reformat the code below as a doctest.
+```
+
+```jl
+N = 10
+S = [(1, 1, 1),(N, N, N)]
+# Slow. It evaluates conditional N^3 times.
+@variable(model, x1[i=1:N, j=1:N, k=1:N; (i, j, k) in S]) 
+# Fast.
+@variable(model, x2[S])
+# Fast. Manually constructs a dictionary and fills it.
+x3 = Dict()
+for (i, j, k) in S
+    x3[i, j, k] = @variable(model)
+    # Optional, if you care about pretty printing:
+    set_name(x3[i, j, k], "x[$i,$j,$k]")
+end
+```
+
 ### [Forcing the container type](@id variable_forcing)
 
 When creating a container of JuMP variables, JuMP will attempt to choose the
