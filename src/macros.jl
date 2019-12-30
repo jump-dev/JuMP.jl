@@ -966,6 +966,8 @@ instead of `≤` and the symbol `>=`can be used instead of `≥`)
 * of the form `lb ≤ varexpr ≤ ub` or `ub ≥ varexpr ≥ lb` creating variables
   described by `varexpr` with lower bounds given by `lb` and upper bounds given
   by `ub`.
+* of the form `varexpr in set` creating variables described by
+  `varexpr` constrained to belong to `set`, see [Constrained variables](@ref).
 
 The expression `varexpr` can either be
 
@@ -981,9 +983,11 @@ The recognized positional arguments in `args` are the following:
   when `varexpr` is of the form `varname[1:n,1:n]` or `varname[i=1:n,j=1:n]`.
   It creates a symmetric matrix of variable, that is, it only creates a
   new variable for `varname[i,j]` with `i ≤ j` and sets `varname[j,i]` to the
-  same variable as `varname[i,j]`.
+  same variable as `varname[i,j]`. It is equivalent to using
+  `varexpr in SymMatrixSpace()` as `expr`.
 * `PSD`: The square matrix of variable is both `Symmetric` and constrained to be
-  positive semidefinite.
+  positive semidefinite. It is equivalent to using `varexpr in PSDCone()` as
+  `expr`.
 
 The recognized keyword arguments in `kw_args` are the following:
 
@@ -997,6 +1001,8 @@ The recognized keyword arguments in `kw_args` are the following:
 * `binary`: Sets whether the variable is binary or not.
 * `integer`: Sets whether the variable is integer or not.
 * `variable_type`: See the "Note for extending the variable macro" section below.
+* `set`: Equivalent to using `varexpr in value` as `expr` where `value` is the
+  value of the keyword argument.
 * `container`: Specify the container type, see [Containers in macros](@ref).
 
 ## Examples

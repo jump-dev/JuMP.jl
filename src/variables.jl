@@ -3,6 +3,13 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+"""
+    AbstractVariable
+
+Variable returned by [`build_variable`](@ref). It represent a variable that has
+not been added yet to any model, it can be added to a given `model` with
+[`add_variable`](@ref).
+"""
 abstract type AbstractVariable end
 
 # Any fields can usually be either a number or an expression
