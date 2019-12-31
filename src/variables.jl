@@ -6,8 +6,8 @@
 """
     AbstractVariable
 
-Variable returned by [`build_variable`](@ref). It represent a variable that has
-not been added yet to any model, it can be added to a given `model` with
+Variable returned by [`build_variable`](@ref). It represents a variable that has
+not been added yet to any model. It can be added to a given `model` with
 [`add_variable`](@ref).
 """
 abstract type AbstractVariable end
@@ -818,7 +818,7 @@ end
     ConstrainedVariables <: AbstractVariable
 
 Variable `scalar_variables` constrained to belong to `set`.
-Adding this variable can be thought as doing:
+Adding this variable can be understood as doing:
 ```julia
 function JuMP.add_variable(model::Model, variable::JuMP.ConstrainedVariable, names)
     var_ref = JuMP.add_variable(model, variable.scalar_variable, name)
