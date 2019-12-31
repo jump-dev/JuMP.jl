@@ -57,6 +57,22 @@ function _new_ordered_dict(::Type{K}, ::Type{V}, kv1::Pair, kv2::Pair) where {K,
     end
 end
 
+# As `!isbits(VariableRef)`, creating a pair allocates, with this API, we avoid
+# this allocation.
+function build_aff_expr(constant::V, coef::V, var::K) where {V,K}
+    terms = OrderedDict{K, V}()
+    terms[var] = coef
+    return GenericAffExpr{V, K}(constant, terms)
+end
+function build_aff_expr(constant::V, coef1::V, var1::K, coef2::V, var2::K) where {V,K}
+    if isequal(var1, var2)
+        return build_aff_expr(constant, coef1 + coef2, var1)
+    end
+    terms = OrderedDict{K, V}()
+    terms[var1] = coef1
+    terms[var2] = coef2
+    return GenericAffExpr{V, K}(constant, terms)
+end
 
 
 #############################################################################
