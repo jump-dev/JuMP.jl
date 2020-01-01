@@ -607,7 +607,10 @@ julia> @variable(model, y[1:3])
 julia> @constraint(model, y in SecondOrderCone())
 [y[1], y[2], y[3]] ∈ MathOptInterface.SecondOrderCone(3)
 ```
-The variables `x` are called *constrained variables*.
+The variables `x` in the example above are called *constrained variables* in
+contrast which the variables `y` which are called *free variables* because
+the constraint added on the variables is added after their creation as free
+variables.
 
 !!! warn
     When using JuMP in [Direct mode](@ref), it may be required to create
