@@ -7,8 +7,8 @@
 # JuMP can be extended.
 
 function _build_indicator_constraint(
-    _error::Function, variable::JuMP.AbstractVariableRef,
-    constraint::JuMP.ScalarConstraint, ::Type{MOI.IndicatorSet{A}}) where A
+    _error::Function, variable::AbstractVariableRef,
+    constraint::ScalarConstraint, ::Type{MOI.IndicatorSet{A}}) where A
 
     set = MOI.IndicatorSet{A}(moi_set(constraint))
     return VectorConstraint([variable, jump_function(constraint)], set)
