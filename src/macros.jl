@@ -967,7 +967,7 @@ instead of `≤` and the symbol `>=`can be used instead of `≥`)
   described by `varexpr` with lower bounds given by `lb` and upper bounds given
   by `ub`.
 * of the form `varexpr in set` creating variables described by
-  `varexpr` constrained to belong to `set`, see [Constrained variables](@ref).
+  `varexpr` constrained to belong to `set`, see [Variables constrained on creation](@ref).
 
 The expression `varexpr` can either be
 
@@ -1176,7 +1176,7 @@ macro variable(args...)
             _error("`set` keyword argument was given $(length(set_kw_args)) times.")
         end
         if set !== nothing
-            _error("Cannot specify set of constrained variable twice, it was already set to `$set` so the `set` keyword argument is not allowed.")
+            _error("Cannot specify set twice, it was already set to `$set` so the `set` keyword argument is not allowed.")
         end
         set = esc(set_kw_args[1].args[2])
     end
@@ -1184,13 +1184,13 @@ macro variable(args...)
     # process keyword arguments
     if any(t -> (t == :PSD), extra)
         if set !== nothing
-            _error("Cannot specify set of constrained variable twice, it was already set to `$set` so the `PSD` argument is not allowed.")
+            _error("Cannot specify set twice, it was already set to `$set` so the `PSD` argument is not allowed.")
         end
         set = :(JuMP.PSDCone())
     end
     if any(t -> (t == :Symmetric), extra)
         if set !== nothing
-            _error("Cannot specify `Symmetric` on a constrained variable, the variable is constrained to belong to `$set`.")
+            _error("Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `$set`.")
         end
         set = :(JuMP.SymMatrixSpace())
     end

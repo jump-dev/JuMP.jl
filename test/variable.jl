@@ -467,14 +467,14 @@ function test_variable_symmetric(ModelType)
     @test y[1, 2] === y[2, 1]
 end
 
-function test_constrained_variables(ModelType)
+function test_variables_constrained_on_creation(ModelType)
     model = ModelType()
 
-    err = ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: Cannot specify set of constrained variable twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `set` keyword argument is not allowed.")
+    err = ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `set` keyword argument is not allowed.")
     @test_macro_throws err @variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())
-    err = ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`: Cannot specify set of constrained variable twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `PSD` argument is not allowed.")
+    err = ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `PSD` argument is not allowed.")
     @test_macro_throws err @variable(model, x[1:2] in SecondOrderCone(), PSD)
-    err = ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), Symmetric)`: Cannot specify `Symmetric` on a constrained variable, the variable is constrained to belong to `\$(Expr(:escape, :(SecondOrderCone())))`.")
+    err = ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), Symmetric)`: Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `\$(Expr(:escape, :(SecondOrderCone())))`.")
     @test_macro_throws err @variable(model, x[1:2] in SecondOrderCone(), Symmetric)
     err = ErrorException("In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`: `set` keyword argument was given 2 times.")
     @test_macro_throws err @variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())
@@ -574,8 +574,8 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel},
         test_variable_symmetric(ModelType)
     end
 
-    @testset "Constrained variables" begin
-        test_constrained_variables(ModelType)
+    @testset "Variables constrained on creation" begin
+        test_variables_constrained_on_creation(ModelType)
     end
 end
 

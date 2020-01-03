@@ -521,7 +521,7 @@ julia> @variable(model, x[1:2, 1:2], PSD)
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
 ```
-or using the [Constrained variables](@ref) syntax:
+or using the syntax for [Variables constrained on creation](@ref):
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2] in PSDCone())
 2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
@@ -587,56 +587,66 @@ julia> x = @variable(model, [i=1:2], base_name="x", lower_bound=i, integer=true)
     Creating two named JuMP variables with the same name results in an error at
     runtime. Use anonymous variables as an alternative.
 
-## Constrained variables
+## Variables constrained on creation
 
-To create variables constrained to belong to the [`SecondOrderCone`](@ref) either
-of the following two methods can be used:
+By default, `@variable(model, x)` creates a _free_ variable that belongs to the
+set of real numbers.
+
+If you add constraints, such as `@variable(model, x >= 0, Int)`, then the
+`@variable` macro is equivalent to:
+```julia
+@variable(model, x)
+@constraint(model, x in MOI.GreaterThan(0.0))
+@constraint(model, x in MOI.Integer())
+```
+Importantly, the bound and integrality constraints are added _after_ the
+variable has been created.
+
+However, in some cases, it is necessary to supply a constraining set _at
+creation time_. We call these variables _variables constrained on creation_ to
+differentiate them from _variables free on creation_.
+
+For example, one way to create a vector of variables constrained to the second
+order cone is as follows:
 ```jldoctest constrained_variables; setup=:(model=Model())
-julia> @variable(model, x[1:3] in SecondOrderCone())
+julia> @variable(model, x[1:3])
 3-element Array{VariableRef,1}:
  x[1]
  x[2]
  x[3]
 
-julia> @variable(model, y[1:3])
+julia> @constraint(model, x in SecondOrderCone())
+[x[1], x[2], x[3]] ∈ MathOptInterface.SecondOrderCone(3)
+```
+
+An alternative approach, creating a vector of variables constrained on creation
+to belong to the [`SecondOrderCone`](@ref) is:
+```jldoctest constrained_variables
+julia> @variable(model, y[1:3] in SecondOrderCone())
 3-element Array{VariableRef,1}:
  y[1]
  y[2]
  y[3]
-
-julia> @constraint(model, y in SecondOrderCone())
-[y[1], y[2], y[3]] ∈ MathOptInterface.SecondOrderCone(3)
 ```
-The variables `x` in the example above are called *constrained variables* in
-contrast which the variables `y` which are called *free variables* because
-the constraint added on the variables is added after their creation as free
-variables.
+Importantly, in [Direct mode](@ref) and for some solver, the second-order
+constraint cannot be deleted without deleting the variables `y`.
 
-!!! note
-    Variable bounds and integrality constraints are specified when variables
-    are created, but they don't involve constrained variables, unless you
-    explicitly use the `in` syntax or the `set` keyword. For instance,
-    `@variable(model, z <= 1, Int)` and `@variable(model, upper_bound = 1,
-    integer = true)` are not constrained variables but `@variable(model,
-    z in MOI.LessThan(1.0), Int)` is a constrained variable in
-    `MOI.LessThan(1.0)` and `@variable(model, lower_bound = 1.0,
-    set = MOI.Integer())` is a constrained variable in `MOI.Integer()`.
+### The `set` keyword
 
-!!! warn
-    When using JuMP in [Direct mode](@ref), it may be required to create
-    constrained variables instead of constraining free variables as the solver
-    may only support constrained variables. In [Automatic and Manual modes](@ref),
-    both ways of adding constraints on variables are equivalent. Indeed, during
-    the copy of the cache to the optimizer, the choice of the constraints on
-    variables that are copied as constrained variables does not depend on
-    how it was added to the cache.
-
-Additionally to the `in` syntax, the set can be specified with the `set` keyword
-argument. This is useful when creating anonymous scalar variables:
-```jldoctest constrained_variables
-julia> z = @variable(model, set = MOI.Semiinteger(1.0, 2.0))
-noname
+An alternate syntax to `x in Set` is to use the `set` keyword of
+[`@variable`](@ref). This is most useful when creating anonymous variables:
+```julia
+x = @variable(model, [1:2, 1:2], set = PSDCone())
 ```
+
+!!! info
+    When using JuMP in [Direct mode](@ref), it may be required to constrain
+    variables on creation instead of constraining free variables as the solver
+    may only support variables constrained on creation. In [Automatic and Manual
+    modes](@ref), both ways of adding constraints on variables are equivalent.
+    Indeed, during the copy of the cache to the optimizer, the choice of the
+    constraints on variables that are copied as variables constrained on creation
+    does not depend on how it was added to the cache.
 
 ## User-defined containers
 
