@@ -123,7 +123,7 @@ julia> model = Model();
 julia> @variable(model, x)
 x
 
-julia> @expression(model, ex, 0 * x + 1)
+julia> @expression(model, ex, x + 1 - x)
 0 x + 1
 
 julia> drop_zeros!(ex)
@@ -151,7 +151,7 @@ ex = @expression(model, x^2 + 2 * x * y + y^2 + x + y - 1)
 
 # output
 
-x² + 2 x*y + y² + x + y - 1
+x² + 2 y*x + y² + x + y - 1
 ```
 
 ### Operator overloading
@@ -219,7 +219,7 @@ julia> model = Model();
 julia> @variable(model, x)
 x
 
-julia> @expression(model, ex, 0 * x^2 + x + 1)
+julia> @expression(model, ex, x^2 + x + 1 - x^2)
 0 x² + x + 1
 
 julia> drop_zeros!(ex)

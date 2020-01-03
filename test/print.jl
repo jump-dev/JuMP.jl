@@ -114,10 +114,10 @@ end
         io_test(IJuliaMode, ex, "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + z$ijulia_sq + 3 x_{1} + 3 x_{2} - 1")
 
         ex = @expression(mod, -z*x[1] - x[1]*z + x[1]*x[2] + 0*z^2)
-        io_test(REPLMode, ex, "-2 x[1]*z + x[1]*x[2]")
-        io_test(IJuliaMode, ex, "-2 x_{1}\\times z + x_{1}\\times x_{2}")
+        io_test(REPLMode, ex, "-2 z*x[1] + x[1]*x[2]")
+        io_test(IJuliaMode, ex, "-2 z\\times x_{1} + x_{1}\\times x_{2}")
 
-        ex = 0 * z^2 + 0 * x[1]
+        ex = z^2 + x[1] - z^2 - x[1]
         io_test(REPLMode, ex, "0 z² + 0 x[1]")
         io_test(IJuliaMode, ex, "0 z$ijulia_sq + 0 x_{1}")
 

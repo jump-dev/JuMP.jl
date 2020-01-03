@@ -11,6 +11,9 @@
 # Testing for macros
 #############################################################################
 
+import MutableArithmetics
+const MA = MutableArithmetics
+
 @testset "Check Julia generator expression parsing" begin
     sumexpr = :(sum(x[i,j] * y[i,j] for i = 1:N, j in 1:M if i != j))
     @test sumexpr.head == :call
@@ -130,9 +133,9 @@ function build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
         model = ModelType()
         @variable(model, x)
         cref1 = @constraint(model, [1, x, x] in PowerCone(0.5))
-        @test JuMP.constraint_object(cref1).set isa MathOptInterface.PowerCone{Float64}
+        @test JuMP.constraint_object(cref1).set isa MOI.PowerCone{Float64}
         cref2 = @constraint(model, [1, x, x] in PowerCone(0.5), dual = true)
-        @test JuMP.constraint_object(cref2).set isa MathOptInterface.DualPowerCone{Float64}
+        @test JuMP.constraint_object(cref2).set isa MOI.DualPowerCone{Float64}
     end
 end
 
@@ -306,7 +309,8 @@ end
         @variable(m, x)
         # function getindex does not accept keyword arguments
         @test_throws ErrorException x[i=1]
-        @test_throws ErrorException @constraint(m, x[i=1] <= 1)
+        err = ErrorException("Unexpected assignment in expression `x[i=1]`.")
+        @test_macro_throws ErrorException @constraint(m, x[i=1] <= 1)
     end
 
     @testset "Lookup in model scope: @variable" begin
@@ -388,7 +392,7 @@ end
         @test JuMP.isequal_canonical(c.func, x[1]^2 + 2 * x[1] * x[2] + x[2]^2)
         @test c.set == MOI.LessThan(1.0)
         @test JuMP.isequal_canonical(
-            JuMP.destructive_add!(0.0, x', ones(2, 2)), x' * ones(2, 2)
+            MA.@rewrite(x' * ones(2, 2)), x' * ones(2, 2)
         )
     end
 

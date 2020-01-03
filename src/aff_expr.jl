@@ -36,7 +36,7 @@ function _new_ordered_dict(::Type{K}, ::Type{V}, kv::AbstractArray{<:Pair}) wher
     return dict
 end
 
-function _new_ordered_dict(::Type{K}, ::Type{V}, kv::Pair...) where {K,V}
+function _new_ordered_dict(::Type{K}, ::Type{V}, kv::Vararg{Pair,N}) where {K,V,N}
     dict = OrderedDict{K,V}()
     sizehint!(dict, length(kv))
     for pair in kv
@@ -57,6 +57,22 @@ function _new_ordered_dict(::Type{K}, ::Type{V}, kv1::Pair, kv2::Pair) where {K,
     end
 end
 
+# As `!isbits(VariableRef)`, creating a pair allocates, with this API, we avoid
+# this allocation.
+function _build_aff_expr(constant::V, coef::V, var::K) where {V,K}
+    terms = OrderedDict{K, V}()
+    terms[var] = coef
+    return GenericAffExpr{V, K}(constant, terms)
+end
+function _build_aff_expr(constant::V, coef1::V, var1::K, coef2::V, var2::K) where {V,K}
+    if isequal(var1, var2)
+        return _build_aff_expr(constant, coef1 + coef2, var1)
+    end
+    terms = OrderedDict{K, V}()
+    terms[var1] = coef1
+    terms[var2] = coef2
+    return GenericAffExpr{V, K}(constant, terms)
+end
 
 
 #############################################################################
@@ -73,7 +89,7 @@ function GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
     return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv))
 end
 
-function GenericAffExpr(constant::V, kv::Pair{K,V}...) where {K,V}
+function GenericAffExpr(constant::V, kv::Vararg{Pair{K,V},N}) where {K,V,N}
     return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv...))
 end
 
@@ -81,7 +97,7 @@ function GenericAffExpr{V,K}(constant, kv::AbstractArray{<:Pair}) where {K,V}
     return GenericAffExpr{V,K}(convert(V, constant), _new_ordered_dict(K, V, kv))
 end
 
-function GenericAffExpr{V,K}(constant, kv::Pair...) where {K,V}
+function GenericAffExpr{V,K}(constant, kv::Vararg{Pair, N}) where {K,V,N}
     return GenericAffExpr{V,K}(convert(V, constant), _new_ordered_dict(K, V, kv...))
 end
 
@@ -210,9 +226,9 @@ function add_to_expression! end
 
 # With one factor.
 
-function add_to_expression!(aff::GenericAffExpr{C,V},
-                            other::Real) where {C,V}
-    aff.constant += other
+function add_to_expression!(aff::GenericAffExpr,
+                            other::_Constant)
+    aff.constant += _constant_to_number(other)
     return aff
 end
 
@@ -231,18 +247,18 @@ end
 
 # With two factors.
 
-function add_to_expression!(aff::GenericAffExpr{C,V}, new_coef::Real,
+function add_to_expression!(aff::GenericAffExpr{C,V}, new_coef::_Constant,
                             new_var::V) where {C,V}
-    _add_or_set!(aff.terms, new_var, convert(C, new_coef))
+    _add_or_set!(aff.terms, new_var, convert(C, _constant_to_number(new_coef)))
     return aff
 end
 
 function add_to_expression!(aff::GenericAffExpr{C,V}, new_var::V,
-                            new_coef::Real) where {C,V}
+                            new_coef::_Constant) where {C,V}
     return add_to_expression!(aff, new_coef, new_var)
 end
 
-function add_to_expression!(aff::GenericAffExpr{C,V}, coef::Real,
+function add_to_expression!(aff::GenericAffExpr{C,V}, coef::_Constant,
                             other::GenericAffExpr{C,V}) where {C,V}
     sizehint!(aff, length(linear_terms(aff)) + length(linear_terms(other)))
     for (term_coef, var) in linear_terms(other)
@@ -254,7 +270,7 @@ end
 
 function add_to_expression!(aff::GenericAffExpr{C,V},
                             other::GenericAffExpr{C,V},
-                            coef::Real) where {C,V}
+                            coef::_Constant) where {C,V}
     return add_to_expression!(aff, coef, other)
 end
 
@@ -291,8 +307,12 @@ function isequal_canonical(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
     return isequal(aff_nozeros, other_nozeros)
 end
 
-Base.convert(::Type{GenericAffExpr{T,V}}, v::V)    where {T,V} = GenericAffExpr(zero(T), v => one(T))
-Base.convert(::Type{GenericAffExpr{T,V}}, v::Real) where {T,V} = GenericAffExpr{T,V}(convert(T, v))
+function Base.convert(::Type{GenericAffExpr{T,V}}, v::V) where {T,V}
+    return GenericAffExpr(zero(T), v => one(T))
+end
+function Base.convert(::Type{GenericAffExpr{T,V}}, v::_Constant) where {T,V}
+    return GenericAffExpr{T,V}(convert(T, _constant_to_number(v)))
+end
 # Used in `JuMP._mul!`.
 function Base.convert(::Type{T}, aff::GenericAffExpr{T}) where T
     if !isempty(aff.terms)

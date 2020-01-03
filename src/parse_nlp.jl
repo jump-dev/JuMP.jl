@@ -11,6 +11,10 @@ function _let_code_block(ex::Expr)
     return ex.args[2]
 end
 
+function _error_curly(x)
+    Base.error("The curly syntax (sum{},prod{},norm2{}) is no longer supported. Expression: $x.")
+end
+
 # generates code which converts an expression into a NodeData array (tape)
 # parent is the index of the parent expression
 # values is the name of the list of constants which appear in the expression
@@ -31,7 +35,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
         push!(block.args, :($parentvar = length($tapevar)))
 
 
-        code = _parse_gen(x.args[2], t -> _parse_NL_expr(m, t, tapevar, parentvar, values))
+        code = _MA.rewrite_generator(x.args[2], t -> _parse_NL_expr(m, t, tapevar, parentvar, values))
         push!(block.args, code)
         return codeblock
     end

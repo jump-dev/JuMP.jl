@@ -36,7 +36,7 @@ function test(n::Int)
     return 0
 end
 
-for n in [10, 50, 100, 200, 300, 400]
+for n in [10, 50, 100, 200, 300]
     println("n = $n")
     test(n)
 end

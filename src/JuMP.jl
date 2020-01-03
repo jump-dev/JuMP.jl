@@ -13,6 +13,9 @@ module JuMP
 using LinearAlgebra
 using SparseArrays
 
+import MutableArithmetics
+const _MA = MutableArithmetics
+
 import MathOptInterface
 const MOI = MathOptInterface
 const MOIU = MOI.Utilities
@@ -500,8 +503,12 @@ function time_limit_sec(model::Model)
 end
 
 # Abstract base type for all scalar types
-abstract type AbstractJuMPScalar end
-
+# The subtyping of `AbstractMutable` will allow calls of some `Base` functions
+# to be redirected to a method in MA that handles type promotion more carefuly
+# (e.g. the promotion in sparse matrix products in SparseArrays usually does not
+# work for JuMP types) and exploits the mutability of `AffExpr` and `QuadExpr`.
+abstract type AbstractJuMPScalar <: _MA.AbstractMutable end
+Base.ndims(::Type{<:AbstractJuMPScalar}) = 0
 
 # These are required to create symmetric containers of AbstractJuMPScalars.
 LinearAlgebra.symmetric_type(::Type{T}) where T <: AbstractJuMPScalar = T
@@ -702,12 +709,18 @@ function MOI.set(model::Model, attr::MOI.AbstractConstraintAttribute,
     MOI.set(backend(model), attr, index(cr), value)
 end
 
+const _Constant = Union{Number, UniformScaling}
+_constant_to_number(x::Number) = x
+_constant_to_number(J::UniformScaling) = J.λ
+
 # GenericAffineExpression, AffExpr, AffExprConstraint
 include("aff_expr.jl")
 
 # GenericQuadExpr, QuadExpr
 # GenericQuadConstraint, QuadConstraint
 include("quad_expr.jl")
+
+include("mutable_arithmetics.jl")
 
 include("sets.jl")
 

@@ -581,6 +581,45 @@ julia> moi_set(constraint_object(cref))
 MathOptInterface.PositiveSemidefiniteConeTriangle(2)
 ```
 
+Note that as `@SDconstraint(model, A >= B)` constrains `A - B` to be symmetric
+positive semidefinite, even if `A` is a matrix of variables and `B` is a matrix
+of zeros, `A - B` will be a matrix of affine expressions. For instance, in the
+example below, the function is `VectorAffineFunction` instead of
+`VectorOfVariables`.
+```jldoctest con_psd
+julia> typeof(@SDconstraint(model, [x x; x x] >= zeros(2, 2)))
+ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64},MathOptInterface.PositiveSemidefiniteConeSquare},SquareMatrixShape}
+```
+Moreover, the `Symmetric` structure can be lost in the operation `A - B`. For
+instance, in the example below, the set is `PositiveSemidefiniteConeSquare`
+instead of `PositiveSemidefiniteConeTriangle`.
+```jldoctest con_psd
+julia> typeof(@SDconstraint(model, Symmetric([x x; x x]) >= zeros(2, 2)))
+ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64},MathOptInterface.PositiveSemidefiniteConeSquare},SquareMatrixShape}
+```
+To create a constraint on the vector of variables with the [`@SDconstraint`](@ref)
+macro, use the `0` symbol. The following three syntax are equivalent:
+* `@SDconstraint(model, A >= 0)`,
+* `@SDconstraint(model, 0 <= A)` and
+* `@constraint(model, A in PSDCone())`.
+```jldoctest con_psd
+julia> typeof(@SDconstraint(model, [x x; x x] >= 0))
+ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables,MathOptInterface.PositiveSemidefiniteConeSquare},SquareMatrixShape}
+
+julia> typeof(@SDconstraint(model, 0 <= Symmetric([x x; x x])))
+ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables,MathOptInterface.PositiveSemidefiniteConeTriangle},SymmetricMatrixShape}
+```
+As the syntax is recognized at parse time, using a variable with value zero does not work:
+```jldoctest con_psd
+julia> a = 0
+0
+
+julia> @SDconstraint(model, [x x; x x] >= a)
+ERROR: Operation `-` between `Array{VariableRef,2}` and `Int64` is not allowed. You should use broadcast.
+[...]
+```
+
+
 ## Constraint modifications
 
 A common paradigm, especially in linear programming, is to repeatedly solve a
