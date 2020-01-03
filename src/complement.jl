@@ -7,8 +7,8 @@
 # JuMP can be extended.
 
 function _build_complements_constraint(
-    _error::Function, variables::Vector{<:AbstractVariableRef},
-    funcs::Vector{<:AbstractJuMPScalar})
+    _error::Function, funcs::Vector{<:AbstractJuMPScalar},
+    variables::Vector{<:AbstractVariableRef})
     n = length(variables)
     if length(funcs) != n
         _error("Number of variables ($n) does not match number of constraints ($(length(funcs))).")
@@ -16,33 +16,14 @@ function _build_complements_constraint(
     return VectorConstraint([variables; funcs], MOI.Complements(n))
 end
 function _build_complements_constraint(
-    _error::Function, variable::AbstractVariableRef,
-    func::AbstractJuMPScalar)
+    _error::Function, func::AbstractJuMPScalar,
+    variable::AbstractVariableRef)
     return VectorConstraint([variable, func], MOI.Complements(1))
 end
 
-function _is_inequality(expr)
-    return isexpr(expr, :call) && length(expr.args) == 3 && expr.args[1] in [:<=, :≤, :>=, :≥, :(.<=), :.≤, :(.>=), :.≥]
-end
 function parse_one_operator_constraint(_error::Function, _::Bool,
                                        s::Union{Val{:complements}, Val{:⟂}},
-                                       lhs, rhs)
-    if _is_inequality(lhs) && !_is_inequality(rhs)
-        return parse_one_operator_constraint(_error, vectorized, s, rhs, lhs)
-    end
-    if !_is_inequality(rhs)
-        _error("Expected one of the two sides of the complements to be an inequality.")
-    end
-    sense, vectorized = _check_vectorized(rhs.args[1])
-    if sense in [:<=, :≤]
-        l, r = rhs.args[3], rhs.args[2]
-    else
-        l, r = rhs.args[2], rhs.args[3]
-    end
-    sense = vectorized ? :.≥ : :≥
-    _, rhs_parsecode, _build_call = parse_constraint(_error, sense, l, r)
-    @assert length(_build_call.args) == 4
-    @assert _build_call.args[1] == :build_constraint
-    func = _build_call.args[3]
-    return rhs_parsecode, :(_build_complements_constraint($_error, $(esc(lhs)), $func))
+                                       func_expr, variable)
+    func, parse_code = _MA.rewrite(func_expr)
+    return parse_code, :(_build_complements_constraint($_error, $func, $(esc(variable))))
 end
