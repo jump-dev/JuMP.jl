@@ -17,21 +17,61 @@ const _GenericAffOrQuadExpr{C, V} = Union{GenericAffExpr{C, V}, GenericQuadExpr{
 # The default fallbacks to calling `op(zero(x), zero(y))` which produces allocations.
 # The compiler could avoid these allocations at runtime with constant propagation as the types
 # `x` and `y` are known at compile time but apparently it does not.
-_MA.promote_operation(::Union{typeof(+), typeof(-), typeof(*)}, ::Type{<:_Constant}, V::Type{<:AbstractVariableRef}) = GenericAffExpr{Float64, V}
-_MA.promote_operation(::Union{typeof(+), typeof(-), typeof(*)}, V::Type{<:AbstractVariableRef}, ::Type{<:_Constant}) = GenericAffExpr{Float64, V}
-_MA.promote_operation(::Union{typeof(+), typeof(-), typeof(*)}, ::Type{<:_Constant}, S::Type{<:_GenericAffOrQuadExpr}) = S
-_MA.promote_operation(::Union{typeof(+), typeof(-), typeof(*)}, S::Type{<:_GenericAffOrQuadExpr}, ::Type{<:_Constant}) = S
+function _MA.promote_operation(::Union{typeof(+), typeof(-), typeof(*)},
+                               ::Type{<:_Constant}, V::Type{<:AbstractVariableRef})
+    return GenericAffExpr{Float64, V}
+end
+function _MA.promote_operation(::Union{typeof(+), typeof(-), typeof(*)},
+                               V::Type{<:AbstractVariableRef}, ::Type{<:_Constant})
+    return GenericAffExpr{Float64, V}
+end
+function _MA.promote_operation(::Union{typeof(+), typeof(-), typeof(*)},
+                               ::Type{<:_Constant}, S::Type{<:_GenericAffOrQuadExpr})
+    return S
+end
+function _MA.promote_operation(::Union{typeof(+), typeof(-), typeof(*)},
+                               S::Type{<:_GenericAffOrQuadExpr}, ::Type{<:_Constant})
+    return S
+end
 
-_MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{V}, ::Type{V}) where {V <: AbstractVariableRef} = GenericAffExpr{Float64, V}
-_MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{<:AbstractVariableRef}, S::Type{<:_GenericAffOrQuadExpr}) = S
-_MA.promote_operation(::Union{typeof(+), typeof(-)}, S::Type{<:_GenericAffOrQuadExpr}, ::Type{<:AbstractVariableRef}) = S
-_MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{A}, ::Type{A}) where {A <: _GenericAffOrQuadExpr} = A
-_MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{<:GenericAffExpr{T, V}}, ::Type{<:GenericQuadExpr{T, V}}) where {T, V} = GenericQuadExpr{T, V}
-_MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{<:GenericQuadExpr{T, V}}, ::Type{<:GenericAffExpr{T, V}}) where {T, V} = GenericQuadExpr{T, V}
+function _MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{V},
+                               ::Type{V}) where {V <: AbstractVariableRef}
+    return GenericAffExpr{Float64, V}
+end
+function _MA.promote_operation(::Union{typeof(+), typeof(-)},
+                               ::Type{<:AbstractVariableRef},
+                               S::Type{<:_GenericAffOrQuadExpr})
+    return S
+end
+function _MA.promote_operation(::Union{typeof(+), typeof(-)},
+                               S::Type{<:_GenericAffOrQuadExpr},
+                               ::Type{<:AbstractVariableRef})
+    return S
+end
+function _MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{A},
+                               ::Type{A}) where {A <: _GenericAffOrQuadExpr}
+    return A
+end
+function _MA.promote_operation(::Union{typeof(+), typeof(-)},
+                               ::Type{<:GenericAffExpr{T, V}},
+                               ::Type{<:GenericQuadExpr{T, V}}) where {T, V}
+    return GenericQuadExpr{T, V}
+end
+function _MA.promote_operation(::Union{typeof(+), typeof(-)},
+                               ::Type{<:GenericQuadExpr{T, V}},
+                               ::Type{<:GenericAffExpr{T, V}}) where {T, V}
+    return GenericQuadExpr{T, V}
+end
 
-_MA.promote_operation(::typeof(*), ::Type{V}, ::Type{V}) where {V <: AbstractVariableRef} = GenericQuadExpr{Float64, V}
-_MA.promote_operation(::typeof(*), ::Type{V}, ::Type{GenericAffExpr{T, V}}) where {T, V <: AbstractVariableRef} = GenericQuadExpr{T, V}
-_MA.promote_operation(::typeof(*), ::Type{GenericAffExpr{T, V}}, ::Type{V}) where {T, V <: AbstractVariableRef} = GenericQuadExpr{T, V}
+function _MA.promote_operation(::typeof(*), ::Type{V}, ::Type{V}) where {V <: AbstractVariableRef}
+    return GenericQuadExpr{Float64, V}
+end
+function _MA.promote_operation(::typeof(*), ::Type{V}, ::Type{GenericAffExpr{T, V}}) where {T, V <: AbstractVariableRef}
+    return GenericQuadExpr{T, V}
+end
+function _MA.promote_operation(::typeof(*), ::Type{GenericAffExpr{T, V}}, ::Type{V}) where {T, V <: AbstractVariableRef}
+    return GenericQuadExpr{T, V}
+end
 
 _MA.isequal_canonical(x::T, y::T) where {T<:AbstractJuMPScalar} = isequal_canonical(x, y)
 
@@ -105,9 +145,6 @@ function _MA.mutable_operate!(::typeof(_MA.sub_mul), expr::_GenericAffOrQuadExpr
     return add_to_expression!(expr, x, -y)
 end
 # If there are more arguments, we multiply the constants together.
-#function _MA.mutable_operate!(op::typeof(_MA.add_mul), expr::_GenericAffOrQuadExpr, x, y, z, args::Vararg{Any, N}) where N
-#    return _MA.mutable_operate!(op, expr, x, *(y, z, args...))
-#end
 @generated function _add_sub_mul_reorder!(op::_MA.AddSubMul, expr::_GenericAffOrQuadExpr, args::Vararg{Any, N}) where N
     n = length(args)
     @assert n ≥ 3
@@ -156,19 +193,3 @@ function _MA.sub_mul(lhs::AbstractJuMPScalar, x::_Scalar, y::_Scalar, args::Vara
     expr = _MA.operate(convert, T, lhs)
     return _MA.mutable_operate!(_MA.sub_mul, expr, x, y, args...)
 end
-
-#############################################################################
-# Helpers to initialize memory for GenericAffExpr/GenericQuadExpr
-#############################################################################
-
-# TODO Add it to MA API to allow linear algebra generic implementation to exploit this
-
-#_sizehint_expr!(a::GenericAffExpr, n::Int) = sizehint!(a, n)
-#
-## TODO: Why do we allocate the same size for the quadratic and affine parts?
-#function _sizehint_expr!(q::GenericQuadExpr, n::Int)
-#        sizehint!(q.terms,  length(q.terms) + n)
-#        _sizehint_expr!(q.aff, n)
-#        nothing
-#end
-#_sizehint_expr!(q, n) = nothing

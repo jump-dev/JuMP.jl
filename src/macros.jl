@@ -65,7 +65,7 @@ end
     _macro_assign_and_return(code, variable, name;
                              model_for_registering=nothing)
 
-Return runs `code` which returns the value of `variable` and then assign
+Return `code` which returns the value of `variable` and then assigns
 `variable` to `name`. If `model_for_registering` is given, the generated code
 assigns the resulting object to the model dictionary.
 """
@@ -499,8 +499,8 @@ The expression `expr` needs to be of the form `a sign b` where `sign` is `⪰`,
 the square matrix `x` (or `-x` if the sign is `⪯`, `≤` or `<=`) to be symmetric
 and positive semidefinite where
 
-* if `b` is the symbol `0`, `x = a`,
-* if `a` is the symbol `0`, `x = -b`,
+* `x = a`, if `b` is the symbol `0`,
+* `x = -b`, if `a` is the symbol `0`,
 * otherwise, `x = a - b`.
 
 By default, we check numerical symmetry of the matrix `x`, and if symmetry is

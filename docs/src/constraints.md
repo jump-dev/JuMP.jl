@@ -581,7 +581,7 @@ julia> moi_set(constraint_object(cref))
 MathOptInterface.PositiveSemidefiniteConeTriangle(2)
 ```
 
-Note that as `@SDconstraint(model, A >= B)` constraints `A - B` to be symmetric
+Note that as `@SDconstraint(model, A >= B)` constrains `A - B` to be symmetric
 positive semidefinite, even if `A` is a matrix of variables and `B` is a matrix
 of zeros, `A - B` will be a matrix of affine expressions. For instance, in the
 example below, the function is `VectorAffineFunction` instead of

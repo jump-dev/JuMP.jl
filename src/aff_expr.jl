@@ -59,14 +59,14 @@ end
 
 # As `!isbits(VariableRef)`, creating a pair allocates, with this API, we avoid
 # this allocation.
-function build_aff_expr(constant::V, coef::V, var::K) where {V,K}
+function _build_aff_expr(constant::V, coef::V, var::K) where {V,K}
     terms = OrderedDict{K, V}()
     terms[var] = coef
     return GenericAffExpr{V, K}(constant, terms)
 end
-function build_aff_expr(constant::V, coef1::V, var1::K, coef2::V, var2::K) where {V,K}
+function _build_aff_expr(constant::V, coef1::V, var1::K, coef2::V, var2::K) where {V,K}
     if isequal(var1, var2)
-        return build_aff_expr(constant, coef1 + coef2, var1)
+        return _build_aff_expr(constant, coef1 + coef2, var1)
     end
     terms = OrderedDict{K, V}()
     terms[var1] = coef1
@@ -307,8 +307,12 @@ function isequal_canonical(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V})
     return isequal(aff_nozeros, other_nozeros)
 end
 
-Base.convert(::Type{GenericAffExpr{T,V}}, v::V)    where {T,V} = GenericAffExpr(zero(T), v => one(T))
-Base.convert(::Type{GenericAffExpr{T,V}}, v::_Constant) where {T,V} = GenericAffExpr{T,V}(convert(T, _constant_to_number(v)))
+function Base.convert(::Type{GenericAffExpr{T,V}}, v::V) where {T,V}
+    return GenericAffExpr(zero(T), v => one(T))
+end
+function Base.convert(::Type{GenericAffExpr{T,V}}, v::_Constant) where {T,V}
+    return GenericAffExpr{T,V}(convert(T, _constant_to_number(v)))
+end
 # Used in `JuMP._mul!`.
 function Base.convert(::Type{T}, aff::GenericAffExpr{T}) where T
     if !isempty(aff.terms)

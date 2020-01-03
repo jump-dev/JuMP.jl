@@ -23,13 +23,13 @@ _float(J::UniformScaling) = _float(J.λ)
 # _Constant
 # _Constant--_Constant obviously already taken care of!
 # _Constant--VariableRef
-Base.:+(lhs::_Constant, rhs::AbstractVariableRef) = build_aff_expr(_float(lhs), 1.0, rhs)
-Base.:-(lhs::_Constant, rhs::AbstractVariableRef) = build_aff_expr(_float(lhs), -1.0, rhs)
+Base.:+(lhs::_Constant, rhs::AbstractVariableRef) = _build_aff_expr(_float(lhs), 1.0, rhs)
+Base.:-(lhs::_Constant, rhs::AbstractVariableRef) = _build_aff_expr(_float(lhs), -1.0, rhs)
 function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
     if iszero(lhs)
         return zero(GenericAffExpr{Float64, typeof(rhs)})
     else
-        return build_aff_expr(0.0, _float(lhs), rhs)
+        return _build_aff_expr(0.0, _float(lhs), rhs)
     end
 end
 # _Constant--_GenericAffOrQuadExpr
@@ -55,7 +55,7 @@ end
 # AbstractVariableRef (or, AbstractJuMPScalar)
 # TODO: What is the role of AbstractJuMPScalar??
 Base.:+(lhs::AbstractJuMPScalar) = lhs
-Base.:-(lhs::AbstractVariableRef) = build_aff_expr(0.0, -1.0, lhs)
+Base.:-(lhs::AbstractVariableRef) = _build_aff_expr(0.0, -1.0, lhs)
 Base.:*(lhs::AbstractJuMPScalar) = lhs # make this more generic so extensions don't have to define unary multiplication for our macros
 # AbstractVariableRef--_Constant
 Base.:+(lhs::AbstractVariableRef, rhs::_Constant) = (+)( rhs,lhs)
@@ -63,12 +63,12 @@ Base.:-(lhs::AbstractVariableRef, rhs::_Constant) = (+)(-rhs,lhs)
 Base.:*(lhs::AbstractVariableRef, rhs::_Constant) = (*)(rhs,lhs)
 Base.:/(lhs::AbstractVariableRef, rhs::_Constant) = (*)(1.0/rhs,lhs)
 # AbstractVariableRef--AbstractVariableRef
-Base.:+(lhs::V, rhs::V) where {V <: AbstractVariableRef} = build_aff_expr(0.0, 1.0, lhs, 1.0, rhs)
+Base.:+(lhs::V, rhs::V) where {V <: AbstractVariableRef} = _build_aff_expr(0.0, 1.0, lhs, 1.0, rhs)
 function Base.:-(lhs::V, rhs::V) where {V <: AbstractVariableRef}
     if lhs == rhs
         return zero(GenericAffExpr{Float64, V})
     else
-        return build_aff_expr(0.0, 1.0, lhs, -1.0, rhs)
+        return _build_aff_expr(0.0, 1.0, lhs, -1.0, rhs)
     end
 end
 function Base.:*(lhs::V, rhs::V) where {V <: AbstractVariableRef}
