@@ -56,7 +56,7 @@ add_to_expression!(ex, 1.0, y)
 julia&gt; @variable(model, x)
 x
 
-julia&gt; @expression(model, ex, 0 * x + 1)
+julia&gt; @expression(model, ex, x + 1 - x)
 0 x + 1
 
 julia&gt; drop_zeros!(ex)
@@ -69,7 +69,7 @@ ex = @expression(model, x^2 + 2 * x * y + y^2 + x + y - 1)
 
 # output
 
-x² + 2 x*y + y² + x + y - 1</code></pre><h3><a class="nav-anchor" id="Operator-overloading-2" href="#Operator-overloading-2">Operator overloading</a></h3><p>Operator overloading can also be used to create quadratic expressions. The same performance warning (discussed in the affine expression section) applies.</p><pre><code class="language-julia">model = Model()
+x² + 2 y*x + y² + x + y - 1</code></pre><h3><a class="nav-anchor" id="Operator-overloading-2" href="#Operator-overloading-2">Operator overloading</a></h3><p>Operator overloading can also be used to create quadratic expressions. The same performance warning (discussed in the affine expression section) applies.</p><pre><code class="language-julia">model = Model()
 @variable(model, x)
 @variable(model, y)
 ex = x^2 + 2 * x * y + y^2 + x + y - 1
@@ -100,7 +100,7 @@ x² + 2 x*y + y² + x + y - 1</code></pre><h3><a class="nav-anchor" id="Removing
 julia&gt; @variable(model, x)
 x
 
-julia&gt; @expression(model, ex, 0 * x^2 + x + 1)
+julia&gt; @expression(model, ex, x^2 + x + 1 - x^2)
 0 x² + x + 1
 
 julia&gt; drop_zeros!(ex)
