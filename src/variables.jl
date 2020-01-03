@@ -249,9 +249,9 @@ julia> variable_by_name(model, "x")
 ERROR: Multiple variables have the name x.
 Stacktrace:
  [1] error(::String) at ./error.jl:33
- [2] get(::JuMP._MOIModel{Float64}, ::Type{MathOptInterface.VariableIndex}, ::String) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/model.jl:222
+ [2] get(::MOIU.Model{Float64}, ::Type{MathOptInterface.VariableIndex}, ::String) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/model.jl:222
  [3] get at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/universalfallback.jl:201 [inlined]
- [4] get(::MathOptInterface.Utilities.CachingOptimizer{MathOptInterface.AbstractOptimizer,MathOptInterface.Utilities.UniversalFallback{JuMP._MOIModel{Float64}}}, ::Type{MathOptInterface.VariableIndex}, ::String) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/cachingoptimizer.jl:490
+ [4] get(::MathOptInterface.Utilities.CachingOptimizer{MathOptInterface.AbstractOptimizer,MathOptInterface.Utilities.UniversalFallback{MOIU.Model{Float64}}}, ::Type{MathOptInterface.VariableIndex}, ::String) at /home/blegat/.julia/dev/MathOptInterface/src/Utilities/cachingoptimizer.jl:490
  [5] variable_by_name(::Model, ::String) at /home/blegat/.julia/dev/JuMP/src/variables.jl:268
  [6] top-level scope at none:0
 
@@ -328,18 +328,20 @@ Return `true` if `v` has a lower bound. If `true`, the lower bound can be
 queried with [`lower_bound`](@ref). See also [`LowerBoundRef`](@ref).
 """
 function has_lower_bound(v::VariableRef)
-    return haskey(owner_model(v).variable_to_lower_bound, index(v))
+    return _moi_has_lower_bound(backend(owner_model(v)), v)
 end
 
-function lower_bound_index(v::VariableRef)
-    if !has_lower_bound(v)
-        error("Variable $(v) does not have a lower bound.")
-    end
-    return owner_model(v).variable_to_lower_bound[index(v)]
+# _moi_* methods allow us to work around the type instability of the backend of
+# a model.
+function _moi_has_lower_bound(backend, v::VariableRef)
+    return MOI.is_valid(backend, _lower_bound_index(v))
 end
-function set_lower_bound_index(v::VariableRef, cindex::_MOILB)
-    owner_model(v).variable_to_lower_bound[index(v)] = cindex
+
+function _lower_bound_index(v::VariableRef)
+    return _MOICON{MOI.SingleVariable, MOI.GreaterThan{Float64}}(index(v).value)
 end
+
+
 
 """
     set_lower_bound(v::VariableRef, lower::Number)
@@ -348,16 +350,17 @@ Set the lower bound of a variable. If one does not exist, create a new lower
 bound constraint. See also [`delete_lower_bound`](@ref).
 """
 function set_lower_bound(v::VariableRef, lower::Number)
-    newset = MOI.GreaterThan(convert(Float64, lower))
-    # do we have a lower bound already?
-    if has_lower_bound(v)
-        cindex = lower_bound_index(v)
-        MOI.set(backend(owner_model(v)), MOI.ConstraintSet(), cindex, newset)
+    return _moi_set_lower_bound(backend(owner_model(v)), v, lower)
+end
+
+function _moi_set_lower_bound(backend, v::VariableRef, lower::Number)
+    new_set = MOI.GreaterThan(convert(Float64, lower))
+    if _moi_has_lower_bound(backend, v)
+        cindex = _lower_bound_index(v)
+        MOI.set(backend, MOI.ConstraintSet(), cindex, new_set)
     else
-        @assert !is_fixed(v)
-        cindex = MOI.add_constraint(
-            backend(owner_model(v)), MOI.SingleVariable(index(v)), newset)
-        set_lower_bound_index(v, cindex)
+        @assert !_moi_is_fixed(backend, v)
+        MOI.add_constraint(backend, MOI.SingleVariable(index(v)), new_set)
     end
     return
 end
@@ -369,8 +372,9 @@ Return a constraint reference to the lower bound constraint of `v`. Errors if
 one does not exist.
 """
 function LowerBoundRef(v::VariableRef)
-    return ConstraintRef{Model, _MOILB, ScalarShape}(owner_model(v),
-                                                     lower_bound_index(v),
+    moi_lb = _MOICON{MOI.SingleVariable, MOI.GreaterThan{Float64}}
+    return ConstraintRef{Model, moi_lb, ScalarShape}(owner_model(v),
+                                                     _lower_bound_index(v),
                                                      ScalarShape())
 end
 
@@ -381,8 +385,6 @@ Delete the lower bound constraint of a variable.
 """
 function delete_lower_bound(variable_ref::VariableRef)
     JuMP.delete(owner_model(variable_ref), LowerBoundRef(variable_ref))
-    delete!(owner_model(variable_ref).variable_to_lower_bound,
-            index(variable_ref))
     return
 end
 
@@ -393,6 +395,9 @@ Return the lower bound of a variable. Error if one does not exist. See also
 [`has_lower_bound`](@ref).
 """
 function lower_bound(v::VariableRef)
+    if !has_lower_bound(v)
+        error("Variable $(v) does not have a lower bound.")
+    end
     cset = MOI.get(owner_model(v), MOI.ConstraintSet(),
                    LowerBoundRef(v))::MOI.GreaterThan{Float64}
     return cset.lower
@@ -407,17 +412,15 @@ Return `true` if `v` has a upper bound. If `true`, the upper bound can be
 queried with [`upper_bound`](@ref). See also [`UpperBoundRef`](@ref).
 """
 function has_upper_bound(v::VariableRef)
-    return haskey(owner_model(v).variable_to_upper_bound, index(v))
+    return _moi_has_upper_bound(backend(owner_model(v)), v)
 end
 
-function upper_bound_index(v::VariableRef)
-    if !has_upper_bound(v)
-        error("Variable $(v) does not have an upper bound.")
-    end
-    return owner_model(v).variable_to_upper_bound[index(v)]
+function _moi_has_upper_bound(backend, v::VariableRef)
+    return MOI.is_valid(backend, _upper_bound_index(v))
 end
-function set_upper_bound_index(v::VariableRef, cindex::_MOIUB)
-    owner_model(v).variable_to_upper_bound[index(v)] = cindex
+
+function _upper_bound_index(v::VariableRef)
+    return _MOICON{MOI.SingleVariable, MOI.LessThan{Float64}}(index(v).value)
 end
 
 """
@@ -427,16 +430,17 @@ Set the upper bound of a variable. If one does not exist, create an upper bound
 constraint. See also [`delete_upper_bound`](@ref).
 """
 function set_upper_bound(v::VariableRef, upper::Number)
-    newset = MOI.LessThan(convert(Float64,upper))
-    # do we have an upper bound already?
-    if has_upper_bound(v)
-        cindex = upper_bound_index(v)
-        MOI.set(backend(owner_model(v)), MOI.ConstraintSet(), cindex, newset)
+    return _moi_set_upper_bound(backend(owner_model(v)), v, upper)
+end
+
+function _moi_set_upper_bound(backend, v::VariableRef, upper::Number)
+    new_set = MOI.LessThan(convert(Float64,upper))
+    if _moi_has_upper_bound(backend, v)
+        cindex = _upper_bound_index(v)
+        MOI.set(backend, MOI.ConstraintSet(), cindex, new_set)
     else
-        @assert !is_fixed(v)
-        cindex = MOI.add_constraint(backend(owner_model(v)),
-                                    MOI.SingleVariable(index(v)), newset)
-        set_upper_bound_index(v, cindex)
+        @assert !_moi_is_fixed(backend, v)
+        MOI.add_constraint(backend, MOI.SingleVariable(index(v)), new_set)
     end
     return
 end
@@ -448,8 +452,9 @@ Return a constraint reference to the upper bound constraint of `v`. Errors if
 one does not exist.
 """
 function UpperBoundRef(v::VariableRef)
-    return ConstraintRef{Model, _MOIUB, ScalarShape}(owner_model(v),
-                                                     upper_bound_index(v),
+    moi_ub = _MOICON{MOI.SingleVariable, MOI.LessThan{Float64}}
+    return ConstraintRef{Model, moi_ub, ScalarShape}(owner_model(v),
+                                                     _upper_bound_index(v),
                                                      ScalarShape())
 end
 
@@ -460,8 +465,6 @@ Delete the upper bound constraint of a variable.
 """
 function delete_upper_bound(variable_ref::VariableRef)
     JuMP.delete(owner_model(variable_ref), UpperBoundRef(variable_ref))
-    delete!(owner_model(variable_ref).variable_to_upper_bound,
-            index(variable_ref))
     return
 end
 
@@ -472,6 +475,9 @@ Return the upper bound of a variable. Error if one does not exist. See also
 [`has_upper_bound`](@ref).
 """
 function upper_bound(v::VariableRef)
+    if !has_upper_bound(v)
+        error("Variable $(v) does not have an upper bound.")
+    end
     cset = MOI.get(owner_model(v), MOI.ConstraintSet(),
                    UpperBoundRef(v))::MOI.LessThan{Float64}
     return cset.upper
@@ -485,14 +491,16 @@ end
 Return `true` if `v` is a fixed variable. If `true`, the fixed value can be
 queried with [`fix_value`](@ref). See also [`FixRef`](@ref).
 """
-is_fixed(v::VariableRef) = haskey(owner_model(v).variable_to_fix, index(v))
-
-function fix_index(v::VariableRef)
-    @assert is_fixed(v) # TODO error message
-    return owner_model(v).variable_to_fix[index(v)]
+function is_fixed(v::VariableRef)
+    return _moi_is_fixed(backend(owner_model(v)), v)
 end
-function set_fix_index(v::VariableRef, cindex::_MOIFIX)
-    owner_model(v).variable_to_fix[index(v)] = cindex
+
+function _moi_is_fixed(backend, v::VariableRef)
+    return MOI.is_valid(backend, _fix_index(v))
+end
+
+function _fix_index(v::VariableRef)
+    return _MOICON{MOI.SingleVariable, MOI.EqualTo{Float64}}(index(v).value)
 end
 
 """
@@ -507,29 +515,32 @@ and the fixing constraint will be added. Note a variable will have no bounds
 after a call to [`unfix`](@ref).
 """
 function fix(variable::VariableRef, value::Number; force::Bool = false)
+    return _moi_fix(backend(owner_model(variable)), variable, value, force)
+end
+
+function _moi_fix(backend, variable::VariableRef, value::Number, force::Bool)
     new_set = MOI.EqualTo(convert(Float64, value))
-    model = backend(owner_model(variable))
-    if is_fixed(variable)  # Update existing fixing constraint.
-        c_index = fix_index(variable)
-        MOI.set(model, MOI.ConstraintSet(), c_index, new_set)
+    if _moi_is_fixed(backend, variable)  # Update existing fixing constraint.
+        c_index = _fix_index(variable)
+        MOI.set(backend, MOI.ConstraintSet(), c_index, new_set)
     else  # Add a new fixing constraint.
-        if has_upper_bound(variable) || has_lower_bound(variable)
+        if _moi_has_upper_bound(backend, variable) ||
+            _moi_has_lower_bound(backend, variable)
             if !force
                 error("Unable to fix $(variable) to $(value) because it has " *
                       "existing variable bounds. Consider calling " *
                       "`JuMP.fix(variable, value; force=true)` which will " *
                       "delete existing bounds before fixing the variable.")
             end
-            if has_upper_bound(variable)
+            if _moi_has_upper_bound(backend, variable)
                 delete_upper_bound(variable)
             end
-            if has_lower_bound(variable)
+            if _moi_has_lower_bound(backend, variable)
                 delete_lower_bound(variable)
             end
         end
-        c_index = MOI.add_constraint(
-            model, MOI.SingleVariable(index(variable)), new_set)
-        set_fix_index(variable, c_index)
+        MOI.add_constraint(backend, MOI.SingleVariable(index(variable)),
+                           new_set)
     end
     return
 end
@@ -541,7 +552,6 @@ Delete the fixing constraint of a variable.
 """
 function unfix(variable_ref::VariableRef)
     JuMP.delete(owner_model(variable_ref), FixRef(variable_ref))
-    delete!(owner_model(variable_ref).variable_to_fix, index(variable_ref))
     return
 end
 
@@ -564,8 +574,9 @@ Return a constraint reference to the constraint fixing the value of `v`. Errors
 if one does not exist.
 """
 function FixRef(v::VariableRef)
-    return ConstraintRef{Model, _MOIFIX, ScalarShape}(owner_model(v),
-                                                      fix_index(v),
+    moi_fix = _MOICON{MOI.SingleVariable, MOI.EqualTo{Float64}}
+    return ConstraintRef{Model, moi_fix, ScalarShape}(owner_model(v),
+                                                      _fix_index(v),
                                                       ScalarShape())
 end
 
@@ -576,15 +587,15 @@ Return `true` if `v` is constrained to be integer. See also
 [`IntegerRef`](@ref).
 """
 function is_integer(v::VariableRef)
-    return haskey(owner_model(v).variable_to_integrality, index(v))
+    return _moi_is_integer(backend(owner_model(v)), v)
 end
 
-function integer_index(v::VariableRef)
-    @assert is_integer(v) # TODO error message
-    return owner_model(v).variable_to_integrality[index(v)]
+function _moi_is_integer(backend, v::VariableRef)
+    return MOI.is_valid(backend, _integer_index(v))
 end
-function set_integer_index(v::VariableRef, cindex::_MOIINT)
-    owner_model(v).variable_to_integrality[index(v)] = cindex
+
+function _integer_index(v::VariableRef)
+    return _MOICON{MOI.SingleVariable, MOI.Integer}(index(v).value)
 end
 
 """
@@ -594,16 +605,18 @@ Add an integrality constraint on the variable `variable_ref`. See also
 [`unset_integer`](@ref).
 """
 function set_integer(variable_ref::VariableRef)
-    if is_integer(variable_ref)
+    return _moi_set_integer(backend(owner_model(variable_ref)), variable_ref)
+end
+
+function _moi_set_integer(backend, variable_ref::VariableRef)
+    if _moi_is_integer(backend, variable_ref)
         return
-    elseif is_binary(variable_ref)
+    elseif _moi_is_binary(backend, variable_ref)
         error("Cannot set the variable_ref $(variable_ref) to integer as it " *
               "is already binary.")
     end
-    constraint_ref = MOI.add_constraint(backend(owner_model(variable_ref)),
-                                        MOI.SingleVariable(index(variable_ref)),
-                                        MOI.Integer())
-    set_integer_index(variable_ref, constraint_ref)
+    MOI.add_constraint(backend, MOI.SingleVariable(index(variable_ref)),
+                       MOI.Integer())
     return
 end
 
@@ -614,8 +627,6 @@ Remove the integrality constraint on the variable `variable_ref`.
 """
 function unset_integer(variable_ref::VariableRef)
     JuMP.delete(owner_model(variable_ref), IntegerRef(variable_ref))
-    delete!(owner_model(variable_ref).variable_to_integrality,
-            index(variable_ref))
     return
 end
 
@@ -626,8 +637,9 @@ Return a constraint reference to the constraint constrainting `v` to be integer.
 Errors if one does not exist.
 """
 function IntegerRef(v::VariableRef)
-    return ConstraintRef{Model, _MOIINT, ScalarShape}(
-        owner_model(v), integer_index(v), ScalarShape())
+    moi_int = _MOICON{MOI.SingleVariable, MOI.Integer}
+    return ConstraintRef{Model, moi_int, ScalarShape}(
+        owner_model(v), _integer_index(v), ScalarShape())
 end
 
 """
@@ -636,15 +648,15 @@ end
 Return `true` if `v` is constrained to be binary. See also [`BinaryRef`](@ref).
 """
 function is_binary(v::VariableRef)
-    return haskey(owner_model(v).variable_to_zero_one, index(v))
+    return _moi_is_binary(backend(owner_model(v)), v)
 end
 
-function binary_index(v::VariableRef)
-    @assert is_binary(v) # TODO error message
-    return owner_model(v).variable_to_zero_one[index(v)]
+function _moi_is_binary(backend, v::VariableRef)
+    return MOI.is_valid(backend, _binary_index(v))
 end
-function set_binary_index(v::VariableRef, cindex::_MOIBIN)
-    owner_model(v).variable_to_zero_one[index(v)] = cindex
+
+function _binary_index(v::VariableRef)
+    return _MOICON{MOI.SingleVariable, MOI.ZeroOne}(index(v).value)
 end
 
 """
@@ -654,16 +666,18 @@ Add a constraint on the variable `v` that it must take values in the set
 ``\\{0,1\\}``. See also [`unset_binary`](@ref).
 """
 function set_binary(variable_ref::VariableRef)
-    if is_binary(variable_ref)
+    return _moi_set_binary(backend(owner_model(variable_ref)), variable_ref)
+end
+
+function _moi_set_binary(backend, variable_ref)
+    if _moi_is_binary(backend, variable_ref)
         return
-    elseif is_integer(variable_ref)
+    elseif _moi_is_integer(backend, variable_ref)
         error("Cannot set the variable_ref $(variable_ref) to binary as it " *
               "is already integer.")
     end
-    constraint_ref = MOI.add_constraint(backend(owner_model(variable_ref)),
-                                        MOI.SingleVariable(index(variable_ref)),
-                                        MOI.ZeroOne())
-    set_binary_index(variable_ref, constraint_ref)
+    MOI.add_constraint(backend, MOI.SingleVariable(index(variable_ref)),
+                       MOI.ZeroOne())
     return
 end
 
@@ -674,7 +688,6 @@ Remove the binary constraint on the variable `variable_ref`.
 """
 function unset_binary(variable_ref::VariableRef)
     JuMP.delete(owner_model(variable_ref), BinaryRef(variable_ref))
-    delete!(owner_model(variable_ref).variable_to_zero_one, index(variable_ref))
     return
 end
 
@@ -685,8 +698,9 @@ Return a constraint reference to the constraint constrainting `v` to be binary.
 Errors if one does not exist.
 """
 function BinaryRef(v::VariableRef)
-    return ConstraintRef{Model, _MOIBIN, ScalarShape}(
-        owner_model(v), binary_index(v), ScalarShape())
+    moi_bin = _MOICON{MOI.SingleVariable, MOI.ZeroOne}
+    return ConstraintRef{Model, moi_bin, ScalarShape}(
+        owner_model(v), _binary_index(v), ScalarShape())
 end
 
 """
@@ -694,6 +708,8 @@ end
 
 Return the start value (MOI attribute `VariablePrimalStart`) of the variable
 `v`. See also [`set_start_value`](@ref).
+
+Note: `VariablePrimalStart`s are sometimes called "MIP-starts" or "warmstarts".
 """
 function start_value(v::VariableRef)::Union{Nothing, Float64}
     return MOI.get(owner_model(v), MOI.VariablePrimalStart(), v)
@@ -704,30 +720,41 @@ end
     set_start_value(variable::VariableRef, value::Number)
 
 Set the start value (MOI attribute `VariablePrimalStart`) of the variable `v` to
-`value`.
+`value`. See also [`start_value`](@ref).
+
+Note: `VariablePrimalStart`s are sometimes called "MIP-starts" or "warmstarts".
 """
 function set_start_value(variable::VariableRef, value::Number)
-    return MOI.set(owner_model(variable), MOI.VariablePrimalStart(), variable,
-                   convert(Float64, value))
+    MOI.set(owner_model(variable), MOI.VariablePrimalStart(), variable,
+            Float64(value))
+    return
 end
 
 """
-    value(v::VariableRef)
+    value(v::VariableRef; result = 1)
 
-Get the value of this variable in the result returned by a solver. Use
-[`has_values`](@ref) to check if a result exists before asking for values.
+Return the value of variable `v` associated with result index `result` of the
+most-recent returned by the solver.
+
+Use[`has_values`](@ref) to check if a result exists before asking for values.
+
+See also: [`result_count`](@ref).
 """
-function value(v::VariableRef)::Float64
-    return MOI.get(owner_model(v), MOI.VariablePrimal(), v)
+function value(v::VariableRef; result::Int = 1)::Float64
+    return MOI.get(owner_model(v), MOI.VariablePrimal(result), v)
 end
 
 """
-    has_values(model::Model)
+    has_values(model::Model; result::Int = 1)
 
-Return `true` if the solver has a primal solution available to query, otherwise
-return `false`. See also [`value`](@ref).
+Return `true` if the solver has a primal solution in result index `result`
+available to query, otherwise return `false`.
+
+See also [`value`](@ref) and [`result_count`](@ref).
 """
-has_values(model::Model) = primal_status(model) != MOI.NO_SOLUTION
+function has_values(model::Model; result::Int = 1)
+    return primal_status(model; result = result) != MOI.NO_SOLUTION
+end
 
 @Base.deprecate setvalue(v::VariableRef, val::Number) set_start_value(v, val)
 
@@ -738,31 +765,101 @@ Add a variable `v` to `Model m` and sets its name.
 """
 function add_variable end
 
-function add_variable(m::Model, v::ScalarVariable, name::String="")
-    info = v.info
-    vref = VariableRef(m)
+function add_variable(model::Model, v::ScalarVariable, name::String="")
+    return _moi_add_variable(backend(model), model, v, name)
+end
+
+function _moi_add_variable(backend, model, v::ScalarVariable, name::String)
+    index = MOI.add_variable(backend)
+    var_ref = VariableRef(model, index)
+    _moi_constrain_variable(backend, index, v.info)
+    if !isempty(name)
+        set_name(var_ref, name)
+    end
+    return var_ref
+end
+
+function _moi_constrain_variable(backend::MOI.ModelLike, index, info)
+    # We don't call the _moi* versions (e.g., _moi_set_lower_bound) because they
+    # have extra checks that are not necessary for newly created variables.
     if info.has_lb
-        set_lower_bound(vref, info.lower_bound)
+        MOI.add_constraint(backend, MOI.SingleVariable(index),
+                           MOI.GreaterThan{Float64}(info.lower_bound))
     end
     if info.has_ub
-        set_upper_bound(vref, info.upper_bound)
+        MOI.add_constraint(backend, MOI.SingleVariable(index),
+                           MOI.LessThan{Float64}(info.upper_bound))
     end
     if info.has_fix
-        fix(vref, info.fixed_value)
+        MOI.add_constraint(backend, MOI.SingleVariable(index),
+                           MOI.EqualTo{Float64}(info.fixed_value))
     end
     if info.binary
-        set_binary(vref)
+        MOI.add_constraint(backend, MOI.SingleVariable(index),
+                           MOI.ZeroOne())
     end
     if info.integer
-        set_integer(vref)
+        MOI.add_constraint(backend, MOI.SingleVariable(index), MOI.Integer())
     end
     if info.has_start
-        set_start_value(vref, info.start)
+        MOI.set(backend, MOI.VariablePrimalStart(), index,
+                Float64(info.start))
     end
-    if !isempty(name)
-        set_name(vref, name)
+end
+
+"""
+    ConstrainedVariables <: AbstractVariable
+
+Vector of variables `scalar_variables` constrained to belong to `set`.
+Adding this variable can be thought as doing:
+```julia
+function JuMP.add_variable(model::Model, variable::JuMP.ConstrainedVariables, names)
+    var_refs = JuMP.add_variable.(model, variable.scalar_variables,
+                                  JuMP.vectorize(names, variable.shape))
+    JuMP.add_constraint(model, JuMP.VectorConstraint(var_refs, variable.set))
+    return JuMP.reshape_vector(var_refs, variable.shape)
+end
+```
+but adds the variables with `MOI.add_constrained_variables(model, variable.set)`
+instead. See [the MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
+for the difference between adding the variables with `MOI.add_constrained_variables`
+and adding them with `MOI.add_variables` and adding the constraint separately.
+"""
+struct ConstrainedVariables{S <: MOI.AbstractVectorSet, Shape <: AbstractShape,
+                            ScalarVarType <: AbstractVariable} <: AbstractVariable
+    scalar_variables::Vector{ScalarVarType}
+    set::S
+    shape::Shape
+end
+
+function ConstrainedVariables(variables::Vector{<:AbstractVariable}, set::MOI.AbstractVectorSet)
+    return ConstrainedVariables(variables, set, VectorShape())
+end
+
+function add_variable(model::Model, variable::ConstrainedVariables, names)
+    var_indices = _moi_add_constrained_variables(
+        backend(model), variable.scalar_variables, variable.set, vectorize(names, variable.shape))
+    var_refs = [VariableRef(model, var_index) for var_index in var_indices]
+    return reshape_vector(var_refs, variable.shape)
+end
+
+function _moi_add_constrained_variables(
+    backend::MOI.ModelLike, scalar_variables::Vector{<:ScalarVariable},
+    set::MOI.AbstractVectorSet, names::Vector{String})
+    if set isa MOI.Reals
+        var_indices = MOI.add_variables(backend, MOI.dimension(set))
+    else
+        var_indices, con_index = MOI.add_constrained_variables(backend, set)
     end
-    return vref
+    for (index, variable) in zip(var_indices, scalar_variables)
+        _moi_constrain_variable(backend, index, variable.info)
+    end
+    if names !== nothing
+        for (var_index, name) in zip(var_indices, names)
+            MOI.set(backend, MOI.VariableName(), var_index, name)
+        end
+    end
+    return var_indices
 end
 
 """
@@ -796,4 +893,9 @@ function dual(vref::VariableRef)
           "obtain a constraint reference using one of `UpperBoundRef`, `LowerBoundRef`, " *
           "or `FixRef`, and then call `dual` on the returned constraint reference.\nFor " *
           "example, if `x <= 1`, instead of `dual(x)`, call `dual(UpperBoundRef(x))`.")
+end
+
+function value(::AbstractArray{<:AbstractJuMPScalar})
+    error("`JuMP.value` is not defined for collections of JuMP types. Use" *
+          " Julia's broadcast syntax instead: `JuMP.value.(x)`.")
 end

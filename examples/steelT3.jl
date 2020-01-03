@@ -9,7 +9,6 @@
 #############################################################################
 
 using JuMP, GLPK, Test
-const MOI = JuMP.MathOptInterface
 
 """
     example_steelT3(; verbose = true)
@@ -52,7 +51,7 @@ function example_steelT3(; verbose = true)
     )
 
     # Model
-    model = Model(with_optimizer(GLPK.Optimizer))
+    model = Model(GLPK.Optimizer)
 
     # Decision Variables
     @variables(model, begin

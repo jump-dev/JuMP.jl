@@ -38,16 +38,18 @@ using JuMP
         c: x + y <= 1.0
         """
 
-        model = JuMP._MOIModel{Float64}()
+        model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y"], ["c", "xub", "ylb"])
 
-        JuMP.optimize!(m, with_optimizer(MOIU.MockOptimizer,
-                                         JuMP._MOIModel{Float64}(),
-                                         eval_objective_value=false))
+        set_optimizer(m, () -> MOIU.MockOptimizer(
+                                 MOIU.Model{Float64}(),
+                                 eval_objective_value=false))
+        JuMP.optimize!(m)
 
         mockoptimizer = JuMP.backend(m).optimizer.model
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
@@ -62,6 +64,7 @@ using JuMP
         @test JuMP.has_values(m)
 
         @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test "solver specific string" == JuMP.raw_status(m)
         @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
         @test  1.0 == @inferred JuMP.value(x)
@@ -69,6 +72,7 @@ using JuMP
         @test  1.0 == @inferred JuMP.value(x + y)
         @test  1.0 == @inferred JuMP.value(c)
         @test -1.0 == @inferred JuMP.objective_value(m)
+        @test -1.0 == @inferred JuMP.dual_objective_value(m)
 
         @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m)
         @test -1.0 == @inferred JuMP.dual(c)
@@ -77,7 +81,7 @@ using JuMP
     end
 
     @testset "LP (Direct mode)" begin
-        mockoptimizer = MOIU.MockOptimizer(JuMP._MOIModel{Float64}(),
+        mockoptimizer = MOIU.MockOptimizer(MOIU.Model{Float64}(),
                                            eval_objective_value=false)
 
         m = JuMP.direct_model(mockoptimizer)
@@ -87,6 +91,7 @@ using JuMP
 
         c = @constraint(m, x + y <= 1)
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
@@ -103,6 +108,7 @@ using JuMP
         @test JuMP.has_values(m)
 
         @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test "solver specific string" == JuMP.raw_status(m)
         @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
         @test  1.0 == @inferred JuMP.value(x)
@@ -120,9 +126,9 @@ using JuMP
 
     @testset "IP" begin
         # Tests the solver= keyword.
-        m = Model(with_optimizer(MOIU.MockOptimizer,
-                                 JuMP._MOIModel{Float64}(),
-                                 eval_objective_value=false),
+        m = Model(() -> MOIU.MockOptimizer(
+                            MOIU.Model{Float64}(),
+                            eval_objective_value=false),
                   caching_mode = MOIU.AUTOMATIC)
         @variable(m, x == 1.0, Int)
         @variable(m, y, Bin)
@@ -140,7 +146,7 @@ using JuMP
         ybin: y in ZeroOne()
         """
 
-        model = JuMP._MOIModel{Float64}()
+        model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y"], ["xfix", "xint", "ybin"])
 
@@ -148,6 +154,7 @@ using JuMP
 
         mockoptimizer = JuMP.backend(m).optimizer.model
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), 1.0)
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
@@ -161,6 +168,7 @@ using JuMP
         @test JuMP.has_values(m)
 
         @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test "solver specific string" == JuMP.raw_status(m)
         @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
         @test 1.0 == @inferred JuMP.value(x)
@@ -188,16 +196,18 @@ using JuMP
         c3: 2x + 3*y*x >= 2.0
         """
 
-        model = JuMP._MOIModel{Float64}()
+        model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y"], ["c1", "c2", "c3"])
 
-        JuMP.optimize!(m, with_optimizer(MOIU.MockOptimizer,
-                                         JuMP._MOIModel{Float64}(),
-                                         eval_objective_value=false))
+        set_optimizer(m, () -> MOIU.MockOptimizer(
+                                 MOIU.Model{Float64}(),
+                                 eval_objective_value=false))
+        JuMP.optimize!(m)
 
         mockoptimizer = JuMP.backend(m).optimizer.model
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
@@ -212,11 +222,13 @@ using JuMP
         @test JuMP.has_values(m)
 
         @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test "solver specific string" == JuMP.raw_status(m)
         @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
         @test 1.0 == @inferred JuMP.value(x)
         @test 0.0 == @inferred JuMP.value(y)
         @test -1.0 == @inferred JuMP.objective_value(m)
+        @test 5.0 == @inferred JuMP.dual_objective_value(m)
 
         @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m)
         @test -1.0 == @inferred JuMP.dual(c1)
@@ -247,17 +259,18 @@ using JuMP
         rotsoc: [x+1,y,z] in RotatedSecondOrderCone(3)
         """
 
-        model = JuMP._MOIModel{Float64}()
+        model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model, ["x","y","z"], ["varsoc", "affsoc", "rotsoc"])
 
-        mockoptimizer = MOIU.MockOptimizer(JuMP._MOIModel{Float64}(),
+        mockoptimizer = MOIU.MockOptimizer(MOIU.Model{Float64}(),
                                            eval_objective_value=false,
                                            eval_variable_constraint_dual=false)
         MOIU.reset_optimizer(m, mockoptimizer)
         MOIU.attach_optimizer(m)
 
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
         MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
@@ -273,6 +286,7 @@ using JuMP
         @test JuMP.has_values(m)
 
         @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test "solver specific string" == JuMP.raw_status(m)
         @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
         @test 1.0 == @inferred JuMP.value(x)
@@ -306,19 +320,20 @@ using JuMP
         con_psd: [x11 + -1.0,x12,x12,x22 + -1.0] in PositiveSemidefiniteConeSquare(2)
         """
 
-        model = JuMP._MOIModel{Float64}()
+        model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
         MOIU.test_models_equal(JuMP.backend(m).model_cache, model,
                                ["x11","x12","x22"],
                                ["var_psd", "sym_psd", "con_psd"])
 
-        mockoptimizer = MOIU.MockOptimizer(JuMP._MOIModel{Float64}(),
+        mockoptimizer = MOIU.MockOptimizer(MOIU.Model{Float64}(),
                                            eval_objective_value=false,
                                            eval_variable_constraint_dual=false)
         MOIU.reset_optimizer(m, mockoptimizer)
         MOIU.attach_optimizer(m)
 
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ResultCount(), 1)
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
         MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
@@ -335,6 +350,7 @@ using JuMP
         JuMP.optimize!(m)
 
         @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test "solver specific string" == JuMP.raw_status(m)
         @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
 
         @test JuMP.has_values(m)
@@ -356,14 +372,111 @@ using JuMP
 
     end
 
-    @testset "Provide factory in `optimize` in Direct mode" begin
-        mockoptimizer = MOIU.MockOptimizer(JuMP._MOIModel{Float64}())
-        model = JuMP.direct_model(mockoptimizer)
-        @test_throws ErrorException JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer, JuMP._MOIModel{Float64}()))
+    @testset "Solver doesn't support nonlinear constraints" begin
+        model = Model(() -> MOIU.MockOptimizer(MOIU.Model{Float64}()))
+        @variable(model, x)
+        @NLobjective(model, Min, sin(x))
+        err = ErrorException("The solver does not support nonlinear problems " *
+                             "(i.e., NLobjective and NLconstraint).")
+        @test_throws err JuMP.optimize!(model)
     end
 
-    @testset "Provide factory both in `Model` and `optimize`" begin
-        model = Model(with_optimizer(MOIU.MockOptimizer, JuMP._MOIModel{Float64}()))
-        @test_throws ErrorException JuMP.optimize!(model, with_optimizer(MOIU.MockOptimizer, JuMP._MOIModel{Float64}()))
+    @testset "ResultCount" begin
+        m = Model()
+        @variable(m, x >= 0.0)
+        @variable(m, y >= 0.0)
+        @objective(m, Max, x + y)
+        @constraint(m, c1, x <= 2)
+        @constraint(m, c2, x + y <= 1)
+
+        model = MOIU.Model{Float64}()
+        MOIU.loadfromstring!(model, """
+        variables: x, y
+        maxobjective: x + y
+        xub: x >= 0.0
+        ylb: y >= 0.0
+        c1: x <= 2.0
+        c2: x + y <= 1.0
+        """)
+        set_optimizer(
+            m,
+            () -> MOIU.MockOptimizer(
+                MOIU.Model{Float64}(), eval_objective_value = false
+            )
+        )
+        JuMP.optimize!(m)
+
+        mock = JuMP.backend(m).optimizer.model
+        MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mock, MOI.ResultCount(), 2)
+
+        aff_expr = @expression(m, x + y)
+        quad_expr = @expression(m, x * y)
+        nl_expr = @NLexpression(m, log(x + y))
+
+        @test JuMP.result_count(m) == 2
+
+        MOI.set(mock, MOI.PrimalStatus(1), MOI.FEASIBLE_POINT)
+        MOI.set(mock, MOI.DualStatus(1), MOI.FEASIBLE_POINT)
+        MOI.set(mock, MOI.ObjectiveValue(1), 1.0)
+        MOI.set(mock, MOI.DualObjectiveValue(1), 1.0)
+        MOI.set(mock, MOI.VariablePrimal(1), JuMP.optimizer_index(x), 1.0)
+        MOI.set(mock, MOI.VariablePrimal(1), JuMP.optimizer_index(y), 0.0)
+        MOI.set(mock, MOI.ConstraintDual(1), JuMP.optimizer_index(c1), 0.0)
+        MOI.set(mock, MOI.ConstraintDual(1), JuMP.optimizer_index(c2), -1.0)
+
+        @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
+        @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m, result = 1)
+        @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m, result = 1)
+        @test 1.0 == @inferred JuMP.objective_value(m, result = 1)
+        @test 1.0 == @inferred JuMP.dual_objective_value(m, result = 1)
+        @test 1.0 == @inferred JuMP.value(x, result = 1)
+        @test 0.0 == @inferred JuMP.value(y, result = 1)
+        @test 1.0 == @inferred JuMP.value(aff_expr, result = 1)
+        @test 0.0 == @inferred JuMP.value(quad_expr, result = 1)
+        @test 0.0 == @inferred JuMP.value(nl_expr, result = 1)
+        @test 1.0 == @inferred JuMP.value(c2, result = 1)
+        @test 0.0 == @inferred JuMP.dual(c1, result = 1)
+        @test -1.0 == @inferred JuMP.dual(c2, result = 1)
+        @test 0.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(x), result = 1)
+        @test 0.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(y), result = 1)
+
+        MOI.set(mock, MOI.PrimalStatus(2), MOI.FEASIBLE_POINT)
+        MOI.set(mock, MOI.DualStatus(2), MOI.FEASIBLE_POINT)
+        MOI.set(mock, MOI.ObjectiveValue(2), 1.0)
+        MOI.set(mock, MOI.DualObjectiveValue(2), 1.0)
+        MOI.set(mock, MOI.VariablePrimal(2), JuMP.optimizer_index(x), 0.0)
+        MOI.set(mock, MOI.VariablePrimal(2), JuMP.optimizer_index(y), 1.0)
+        MOI.set(mock, MOI.ConstraintDual(2), JuMP.optimizer_index(c1), 0.0)
+        MOI.set(mock, MOI.ConstraintDual(2), JuMP.optimizer_index(c2), -1.0)
+
+        @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m, result = 2)
+        @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m, result = 2)
+        @test 1.0 == @inferred JuMP.objective_value(m, result = 2)
+        @test 1.0 == @inferred JuMP.dual_objective_value(m, result = 2)
+        @test 0.0 == @inferred JuMP.value(x, result = 2)
+        @test 1.0 == @inferred JuMP.value(y, result = 2)
+        @test 1.0 == @inferred JuMP.value(aff_expr, result = 2)
+        @test 0.0 == @inferred JuMP.value(quad_expr, result = 2)
+        @test 0.0 == @inferred JuMP.value(nl_expr, result = 2)
+        @test 1.0 == @inferred JuMP.value(c2, result = 2)
+        @test 0.0 == @inferred JuMP.dual(c1, result = 2)
+        @test -1.0 == @inferred JuMP.dual(c2, result = 2)
+        @test 0.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(x), result = 2)
+        @test 0.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(y), result = 2)
+
+        @test MOI.NO_SOLUTION == @inferred JuMP.primal_status(m, result = 3)
+        @test MOI.NO_SOLUTION == @inferred JuMP.dual_status(m, result = 3)
+        @test_throws MOI.ResultIndexBoundsError JuMP.objective_value(m, result = 3)
+        @test_throws MOI.ResultIndexBoundsError JuMP.dual_objective_value(m, result = 3)
+        @test_throws MOI.ResultIndexBoundsError JuMP.value(x, result = 3)
+        @test_throws MOI.ResultIndexBoundsError JuMP.value(aff_expr, result = 3)
+        @test_throws MOI.ResultIndexBoundsError JuMP.value(quad_expr, result = 3)
+        @test_throws MOI.ResultIndexBoundsError JuMP.value(nl_expr, result = 3)
+        @test_throws MOI.ResultIndexBoundsError JuMP.value(c2, result = 3)
+        @test_throws MOI.ResultIndexBoundsError JuMP.dual(c1, result = 3)
+        @test_throws MOI.ResultIndexBoundsError JuMP.dual(c2, result = 3)
+        @test_throws MOI.ResultIndexBoundsError JuMP.dual(JuMP.LowerBoundRef(x), result = 3)
+        @test_throws MOI.ResultIndexBoundsError JuMP.dual(JuMP.LowerBoundRef(y), result = 3)
     end
 end

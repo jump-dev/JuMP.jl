@@ -13,24 +13,6 @@ extension storing data in the `ext` field.
 function copy_extension_data end
 
 """
-    _copy_single_variable_constraints(
-        dest::Dict{MOI.VariableIndex, _MOICON{MOI.SingleVariable, S}},
-        src::Dict{MOI.VariableIndex, _MOICON{MOI.SingleVariable, S}},
-        index_map) where S
-
-Copy the single variable constraint indices of `src` into `dest` mapping
-variable and constraint indices using `index_map`.
-"""
-function _copy_single_variable_constraints(
-    dest::Dict{MOI.VariableIndex, _MOICON{MOI.SingleVariable, S}},
-    src::Dict{MOI.VariableIndex, _MOICON{MOI.SingleVariable, S}},
-    index_map) where S
-    for (variable_index, constraint_index) in src
-        dest[index_map[variable_index]] = index_map[constraint_index]
-    end
-end
-
-"""
     ReferenceMap
 
 Mapping between variable and constraint reference of a model and its copy. The
@@ -100,20 +82,6 @@ function copy_model(model::Model)
     index_map = MOI.copy_to(backend(new_model), backend(model),
                             copy_names = true)
 
-    _copy_single_variable_constraints(
-        new_model.variable_to_lower_bound, model.variable_to_lower_bound,
-        index_map)
-    _copy_single_variable_constraints(
-        new_model.variable_to_upper_bound, model.variable_to_upper_bound,
-        index_map)
-    _copy_single_variable_constraints(
-        new_model.variable_to_fix, model.variable_to_fix, index_map)
-    _copy_single_variable_constraints(
-        new_model.variable_to_integrality, model.variable_to_integrality,
-        index_map)
-    _copy_single_variable_constraints(
-        new_model.variable_to_zero_one, model.variable_to_zero_one, index_map)
-
     new_model.optimize_hook = model.optimize_hook
 
     # TODO copy NLP data
@@ -168,4 +136,19 @@ cref_new = model[:cref]
 function Base.copy(model::AbstractModel)
     new_model, _ = copy_model(model)
     return new_model
+end
+
+# Calling `deepcopy` over a JuMP model is not supported, nor planned to be
+# supported, because it would involve making a deep copy of the underlying
+# solver (behind a C pointer).
+function Base.deepcopy(::Model)
+    error("`JuMP.Model` does not support `deepcopy` as the reference to the underlying solver cannot be deep copied, use `copy` instead.")
+end
+
+function MOI.copy_to(dest::MOI.ModelLike, src::Model)
+    return MOI.copy_to(dest, backend(src))
+end
+
+function MOI.copy_to(dest::Model, src::MOI.ModelLike)
+    return MOI.copy_to(backend(dest), src)
 end

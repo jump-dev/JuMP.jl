@@ -16,12 +16,7 @@ using LinearAlgebra  # for dot and tr
 using SparseArrays # for sparse
 using Test
 
-using MathOptInterface
-const MOI = MathOptInterface
-const MOIT = MOI.Test
-const MOIU = MOI.Utilities
-
-include("Containers.jl")
+include("Containers/Containers.jl")
 
 include("utilities.jl")
 include("JuMPExtension.jl")
@@ -37,6 +32,10 @@ include("nlp.jl")
 include("generate_and_solve.jl")
 include("print.jl")
 include("operator.jl")
+include("mutable_arithmetics.jl")
 include("macros.jl")
+include("lp_sensitivity.jl")
+include("callbacks.jl")
+include("file_formats.jl")
 # TODO: The hygiene test should run in a separate Julia instance where JuMP hasn't been loaded via `using`.
 include("hygiene.jl")

@@ -51,8 +51,8 @@ model = JuMP.Model()
 i = 10
 j = 10
 JuMP.@expression(model, ex[j = 2:3], sum(i for i in 1:j))
-@test ex[2] == JuMP.AffExpr(3)
-@test ex[3] == JuMP.AffExpr(6)
+@test ex[2] == 3
+@test ex[3] == 6
 @test i == 10
 @test j == 10
 

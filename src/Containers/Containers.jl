@@ -26,5 +26,10 @@ export DenseAxisArray, SparseAxisArray
 include("DenseAxisArray.jl")
 include("SparseAxisArray.jl")
 include("generate_container.jl")
+include("vectorized_product_iterator.jl")
+include("nested_iterator.jl")
+include("no_duplicate_dict.jl")
+include("container.jl")
+include("macro.jl")
 
 end

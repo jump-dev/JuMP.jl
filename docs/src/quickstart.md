@@ -23,32 +23,43 @@ julia> using GLPK
 ```
 See [Installation Guide](@ref) for a list of other solvers you can use.
 
-Models are created with the `Model()` function. The `with_optimizer` syntax is
-used to specify the optimizer to be used:
+Models are created with the [`Model`](@ref) function. The optimizer can be set
+either in `Model()` or by calling [`set_optimizer`](@ref):
 ```julia
-julia> model = Model(with_optimizer(GLPK.Optimizer))
+julia> model = Model(GLPK.Optimizer)
 A JuMP Model
 Feasibility problem with:
 Variables: 0
 Model mode: AUTOMATIC
 CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+Solver name: GLPK
+```
+equivalently,
+```julia
+julia> model = Model();
+julia> set_optimizer(model, GLPK.Optimizer);
+julia> model
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: GLPK
 ```
 
 !!! note
     The term "solver" is used as a synonym for "optimizer". The convention in
-    code, however, is to always use "optimizer", e.g., `with_optimizer` and
-    `GLPK.Optimizer`.
+    code, however, is to always use "optimizer", e.g., `GLPK.Optimizer`.
 
 ```@meta
 DocTestSetup = quote
     # Using a mock optimizer removes the need to load a solver such as GLPK for
     # building the documentation.
     const MOI = JuMP.MathOptInterface
-    model = Model(with_optimizer(MOI.Utilities.MockOptimizer,
-                                 JuMP._MOIModel{Float64}(),
-                                 eval_objective_value = false,
-                                 eval_variable_constraint_dual = false))
+    model = Model(() -> MOI.Utilities.MockOptimizer(
+                            MOIU.Model{Float64}(),
+                            eval_objective_value = false,
+                            eval_variable_constraint_dual = false))
 end
 ```
 !!! note

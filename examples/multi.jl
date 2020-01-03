@@ -9,7 +9,6 @@
 #############################################################################
 
 using JuMP, GLPK, Test
-const MOI = JuMP.MathOptInterface
 
 """
 Author: Louis Luangkesorn
@@ -65,7 +64,7 @@ function example_multi(; verbose = true)
 
 
     #  DECLARE MODEL
-    multi = Model(with_optimizer(GLPK.Optimizer))
+    multi = Model(GLPK.Optimizer)
 
     #  VARIABLES
     @variable(multi, trans[1:numorig, 1:numdest, 1:numprod] >= 0)

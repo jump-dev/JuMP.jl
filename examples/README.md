@@ -1,10 +1,5 @@
+> :warning: If you are viewing the examples on GitHub, make sure that they match the version of JuMP that you have installed. The JuMP examples for version 0.xx will be on the `release-0.xx` branch. You can also follow the links to examples in the main JuMP readme.
+
 # JuMP Examples
 
 This folder contains a number of examples using JuMP.
-
-## Note
-
-These examples are for the latest JuMP master branch. 
-
-If you're using JuMP 0.18 (or if you get an error about `MathOptInterface` not defined), you're probably after
-[the examples for the `release-0.18` branch](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.18/examples).

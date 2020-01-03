@@ -14,21 +14,12 @@ using JuMP
 
 using Test
 
-using MathOptInterface
-const MOI = MathOptInterface
-const MOIT = MOI.Test
-const MOIU = MOI.Utilities
-
 # Simple LP model not supporting Interval
-@MOIU.model(SimpleLPModel,
-            (),
-            (MOI.EqualTo, MOI.GreaterThan, MOI.LessThan),
-            (),
-            (),
-            (MOI.SingleVariable,),
-            (MOI.ScalarAffineFunction,),
-            (),
-            ())
+MOIU.@model(
+    SimpleLPModel,
+    (), (MOI.EqualTo, MOI.GreaterThan, MOI.LessThan), (), (),
+    (), (MOI.ScalarAffineFunction,), (), ()
+)
 
 struct Optimizer
     a::Int
@@ -57,12 +48,12 @@ function test_model()
 
     @testset "Result attributes" begin
         err = JuMP.OptimizeNotCalled()
-        model = Model(with_optimizer(MOIU.MockOptimizer,
-                                     SimpleLPModel{Float64}()))
+        model = Model(() -> MOIU.MockOptimizer(SimpleLPModel{Float64}()))
         @variable(model, x)
         c = @constraint(model, x ≤ 0)
         @objective(model, Max, x)
         @test_throws err JuMP.objective_value(model)
+        @test_throws err JuMP.dual_objective_value(model)
         @test_throws err JuMP.objective_bound(model)
         @test_throws err JuMP.value(x)
         @test_throws err JuMP.value(c)
@@ -153,19 +144,25 @@ function test_model()
         @test !called
         optimize!(m)
         @test called
+
+        m = Model()
+        err = ErrorException("Unrecognized keyword arguments: unexpected_arg")
+        @test_throws err optimize!(m, unexpected_arg=1)
+        JuMP.set_optimize_hook(m, (m ; my_new_arg=nothing) -> my_new_arg)
+        @test optimize!(m) === nothing
+        @test optimize!(m, my_new_arg = 1) == 1
     end
 
     @testset "UniversalFallback" begin
         m = Model()
-        MOI.set(m, MOIT.UnknownModelAttribute(), 1)
-        @test MOI.get(m, MOIT.UnknownModelAttribute()) == 1
+        MOI.set(m, MOI.Test.UnknownModelAttribute(), 1)
+        @test MOI.get(m, MOI.Test.UnknownModelAttribute()) == 1
     end
 
     @testset "Bridges" begin
         @testset "Automatic bridging" begin
             # optimizer not supporting Interval
-            model = Model(with_optimizer(MOIU.MockOptimizer,
-                                         SimpleLPModel{Float64}()))
+            model = Model(() -> MOIU.MockOptimizer(SimpleLPModel{Float64}()))
             @test JuMP.bridge_constraints(model)
             @test JuMP.backend(model) isa MOIU.CachingOptimizer
             @test JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer
@@ -177,9 +174,8 @@ function test_model()
         end
         @testset "Automatic bridging with cache for bridged model" begin
             # optimizer not supporting Interval and not supporting `default_copy_to`
-            model = Model(with_optimizer(MOIU.MockOptimizer,
-                                         SimpleLPModel{Float64}(),
-                                         needs_allocate_load=true))
+            model = Model(() -> MOIU.MockOptimizer(SimpleLPModel{Float64}(),
+                                                   needs_allocate_load=true))
             @test JuMP.bridge_constraints(model)
             @test JuMP.backend(model) isa MOIU.CachingOptimizer
             @test JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer
@@ -195,15 +191,13 @@ function test_model()
             @test cref isa JuMP.ConstraintRef{JuMP.Model,MOI.ConstraintIndex{MOI.ScalarAffineFunction{Float64},MOI.Interval{Float64}}}
             @test_throws err optimizer_index(cref)
             JuMP.optimize!(model)
-            @test optimizer_index(x) === MOI.get(JuMP.backend(model).optimizer.model.optimizer, MOI.ListOfVariableIndices())[1]
             err = ErrorException(
                 "There is no `optimizer_index` for $(typeof(index(cref))) " *
                 "constraints because they are bridged.")
             @test_throws err optimizer_index(cref)
         end
         @testset "Automatic bridging disabled with `bridge_constraints` keyword" begin
-            model = Model(with_optimizer(MOIU.MockOptimizer,
-                                         SimpleLPModel{Float64}()),
+            model = Model(() -> MOIU.MockOptimizer(SimpleLPModel{Float64}()),
                           bridge_constraints=false)
             @test !JuMP.bridge_constraints(model)
             @test JuMP.backend(model) isa MOIU.CachingOptimizer
@@ -222,18 +216,17 @@ function test_model()
         end
 
         @testset "Add bridge" begin
-            function mock()
-                mock = MOIU.MockOptimizer(JuMP._MOIModel{Float64}(),
+            function mock_factory()
+                mock = MOIU.MockOptimizer(MOIU.Model{Float64}(),
                                           eval_variable_constraint_dual=false)
                 optimize!(mock) = MOIU.mock_optimize!(mock, [1.0],
                         (MOI.SingleVariable, MOI.GreaterThan{Float64}) => [2.0])
                 MOIU.set_mock_optimize!(mock, optimize!)
                 return mock
             end
-            factory = with_optimizer(mock)
             @testset "before loading the constraint to the optimizer" begin
-                @testset "with_optimizer at Model" begin
-                    model = Model(factory)
+                @testset "optimizer set at Model" begin
+                    model = Model(mock_factory)
                     @variable(model, x)
                     JuMP.add_bridge(model, NonnegativeBridge)
                     c = @constraint(model, x in Nonnegative())
@@ -242,24 +235,25 @@ function test_model()
                     @test 1.0 == @inferred JuMP.value(c)
                     @test 2.0 == @inferred JuMP.dual(c)
                 end
-                @testset "with_optimizer at optimize!" begin
+                @testset "optimizer set with set_optimizer" begin
                     model = Model()
                     @variable(model, x)
                     c = @constraint(model, x in Nonnegative())
                     JuMP.add_bridge(model, NonnegativeBridge)
-                    JuMP.optimize!(model, factory)
+                    set_optimizer(model, mock_factory)
+                    JuMP.optimize!(model)
                     @test 1.0 == @inferred JuMP.value(x)
                     @test 1.0 == @inferred JuMP.value(c)
                     @test 2.0 == @inferred JuMP.dual(c)
                 end
             end
             @testset "after loading the constraint to the optimizer" begin
-                @testset "with_optimizer at Model" begin
+                @testset "optimizer set at Model" begin
                     err = ErrorException(string("Constraints of type ",
                     "MathOptInterface.SingleVariable-in-Nonnegative are not ",
                     "supported by the solver and there are no bridges that ",
                     "can reformulate it into supported constraints."))
-                    model = Model(factory)
+                    model = Model(mock_factory)
                     @variable(model, x)
                     @test_throws err @constraint(model, x in Nonnegative())
                     JuMP.add_bridge(model, NonnegativeBridge)
@@ -269,13 +263,14 @@ function test_model()
                     @test 1.0 == @inferred JuMP.value(c)
                     @test 2.0 == @inferred JuMP.dual(c)
                 end
-                @testset "with_optimizer at optimize!" begin
+                @testset "optimizer set with set_optimizer" begin
                     err = MOI.UnsupportedConstraint{MOI.SingleVariable,
                                                     Nonnegative}()
                     model = Model()
                     @variable(model, x)
                     c = @constraint(model, x in Nonnegative())
-                    @test_throws err JuMP.optimize!(model, factory)
+                    set_optimizer(model, mock_factory)
+                    @test_throws err JuMP.optimize!(model)
                     JuMP.add_bridge(model, NonnegativeBridge)
                     JuMP.optimize!(model)
                     @test 1.0 == @inferred JuMP.value(x)
@@ -284,8 +279,8 @@ function test_model()
                 end
             end
             @testset "automatically with BridgeableConstraint" begin
-                @testset "with_optimizer at Model" begin
-                    model = Model(factory)
+                @testset "optimizer set at Model" begin
+                    model = Model(mock_factory)
                     @variable(model, x)
                     constraint = ScalarConstraint(x, Nonnegative())
                     bc = BridgeableConstraint(constraint, NonnegativeBridge)
@@ -295,13 +290,14 @@ function test_model()
                     @test 1.0 == @inferred JuMP.value(c)
                     @test 2.0 == @inferred JuMP.dual(c)
                 end
-                @testset "with_optimizer at optimize!" begin
+                @testset "optimizer set with set_optimizer" begin
                     model = Model()
                     @variable(model, x)
                     constraint = ScalarConstraint(x, Nonnegative())
                     bc = BridgeableConstraint(constraint, NonnegativeBridge)
                     c = add_constraint(model, bc)
-                    JuMP.optimize!(model, factory)
+                    set_optimizer(model, mock_factory)
+                    JuMP.optimize!(model)
                     @test 1.0 == @inferred JuMP.value(x)
                     @test 1.0 == @inferred JuMP.value(c)
                     @test 2.0 == @inferred JuMP.dual(c)
@@ -310,22 +306,22 @@ function test_model()
         end
     end
 
-    @testset "Factories" begin
-        factory = with_optimizer(Optimizer, 1, 2)
-        @test factory.constructor == Optimizer
-        @test factory.args == (1, 2)
-        optimizer = factory()
-        @test optimizer isa Optimizer
-        @test optimizer.a == 1
-        @test optimizer.b == 2
-        @test_throws ErrorException factory = with_optimizer(opt_build, 1, 2)
-        factory = with_optimizer(opt_build, 1, b = 2)
-        @test factory.constructor == opt_build
-        @test factory.args == (1,)
-        optimizer = factory()
-        @test optimizer isa Optimizer
-        @test optimizer.a == 1
-        @test optimizer.b == 2
+    @testset "solve_time" begin
+        @testset "NoOptimizer()" begin
+            err = NoOptimizer()
+            model = Model()
+            @test_throws err solve_time(model)
+        end
+
+        @testset "OptimizeNotCalled()" begin
+            err = OptimizeNotCalled()
+            model = Model(() -> MOIU.MockOptimizer(SimpleLPModel{Float64}()))
+            @test_throws err solve_time(model)
+        end
+
+        @testset "Solved model" begin
+            # TODO
+        end
     end
 
     @testset "solver_name" begin
@@ -335,10 +331,59 @@ function test_model()
         end
 
         @testset "Mock" begin
-            model = Model(with_optimizer(MOIU.MockOptimizer,
-                                         SimpleLPModel{Float64}()))
+            model = Model(() -> MOIU.MockOptimizer(SimpleLPModel{Float64}()))
             @test "Mock" == @inferred JuMP.solver_name(model)
         end
+    end
+    @testset "set_silent and unset_silent" begin
+        mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+        model = Model(() -> MOIU.MockOptimizer(mock))
+        @test JuMP.set_silent(model)
+        @test MOI.get(backend(model), MOI.Silent())
+        @test MOI.get(model, MOI.Silent())
+        @test !JuMP.unset_silent(model)
+        @test !MOI.get(backend(model), MOI.Silent())
+        @test !MOI.get(model, MOI.Silent())
+    end
+
+    @testset "set_parameter" begin
+        mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+        model = Model(() -> MOIU.MockOptimizer(mock))
+        @test JuMP.set_parameter(model, "aaa", "bbb") == "bbb"
+        @test MOI.get(backend(model), MOI.RawParameter("aaa")) == "bbb"
+        @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
+    end
+
+    @testset "set_parameters" begin
+        mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+        model = Model(() -> MOIU.MockOptimizer(mock))
+        JuMP.set_parameters(model, "aaa" => "bbb", "abc" => 10)
+        @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
+        @test MOI.get(model, MOI.RawParameter("abc")) == 10
+    end
+
+    @testset "set and retrieve time limit" begin
+        mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+        model = Model(() -> MOIU.MockOptimizer(mock))
+        JuMP.set_time_limit_sec(model, 12.0)
+        @test JuMP.time_limit_sec(model) == 12.0
+        JuMP.set_time_limit_sec(model, nothing)
+        @test JuMP.time_limit_sec(model) === nothing
+        JuMP.set_time_limit_sec(model, 12.0)
+        JuMP.unset_time_limit_sec(model)
+        @test JuMP.time_limit_sec(model) === nothing
+    end
+
+    @testset "set_optimizer error cases" begin
+        model = Model()
+        @test_throws(ErrorException(JuMP._set_optimizer_not_callable_message),
+                     set_optimizer(model,
+                                   MOIU.MockOptimizer(MOIU.Model{Float64}())))
+        err = ErrorException("The provided optimizer_factory returned an " *
+            "object of type Int64. Expected a " *
+            "MathOptInterface.AbstractOptimizer.")
+        @test_throws err set_optimizer(model, () -> Int64(10))
+        # TODO: A factory that returns a non-empty optimizer.
     end
 end
 
@@ -411,7 +456,7 @@ function dummy_optimizer_hook(::JuMP.AbstractModel) end
         end
     end
     @testset "In Direct mode" begin
-        mock = MOIU.MockOptimizer(JuMP._MOIModel{Float64}())
+        mock = MOIU.MockOptimizer(MOIU.Model{Float64}())
         model = JuMP.direct_model(mock)
         @test_throws ErrorException JuMP.copy(model)
     end

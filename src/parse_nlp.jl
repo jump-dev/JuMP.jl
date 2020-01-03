@@ -11,6 +11,10 @@ function _let_code_block(ex::Expr)
     return ex.args[2]
 end
 
+function _error_curly(x)
+    Base.error("The curly syntax (sum{},prod{},norm2{}) is no longer supported. Expression: $x.")
+end
+
 # generates code which converts an expression into a NodeData array (tape)
 # parent is the index of the parent expression
 # values is the name of the list of constants which appear in the expression
@@ -31,12 +35,19 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
         push!(block.args, :($parentvar = length($tapevar)))
 
 
-        code = _parse_gen(x.args[2], t -> _parse_NL_expr(m, t, tapevar, parentvar, values))
+        code = _MA.rewrite_generator(x.args[2], t -> _parse_NL_expr(m, t, tapevar, parentvar, values))
         push!(block.args, code)
         return codeblock
     end
 
     if isexpr(x, :call)
+        if isexpr(x.args[1], :.)
+            # Functions like foo.bar cannot possibly be registered, because you
+            # can register only with a symbol name.
+            errorstring = "Unexpected function $(x.args[1]). See the " *
+            "documentation on how to register a function."
+            return :(error($errorstring))
+        end
         if _is_sum(x.args[1]) || _is_prod(x.args[1])
             opname = x.args[1]
             errorstring = "$opname() can appear in nonlinear expressions " *
@@ -167,7 +178,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
 
 end
 
-function _parse_NL_expr_runtime(m::Model, x::Number, tape, parent, values)
+function _parse_NL_expr_runtime(m::Model, x::Real, tape, parent, values)
     push!(values, x)
     push!(tape, NodeData(VALUE, length(values), parent))
     nothing

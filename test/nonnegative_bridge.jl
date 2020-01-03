@@ -10,9 +10,9 @@
 
 # This file contains an example bridge used for tests.
 
-using MathOptInterface
-const MOI = MathOptInterface
+using JuMP
 const MOIB = MOI.Bridges
+const MOIBC = MOI.Bridges.Constraint
 
 """
     Nonnegative <: MOI.AbstractScalarSet
@@ -27,11 +27,15 @@ struct Nonnegative <: MOI.AbstractScalarSet end
 The `NonnegativeBridge` replaces a constraint `func`-in-`Nonnegative` into
 `func`-in-`GreaterThan{T}`.
 """
-struct NonnegativeBridge{T, F<:MOI.AbstractScalarFunction} <: MOIB.AbstractBridge
+struct NonnegativeBridge{T, F<:MOI.AbstractScalarFunction} <: MOIBC.AbstractBridge
     constraint_index::MOI.ConstraintIndex{F, MOI.GreaterThan{T}}
 end
-function NonnegativeBridge{T, F}(model, f::F, s::Nonnegative) where {T, F}
-    ci = MOIU.add_scalar_constraint(model, f, MOI.GreaterThan(zero(T)))
+
+function MOIBC.bridge_constraint(::Type{NonnegativeBridge{T, F}},
+                                 model,
+                                 f::F,
+                                 s::Nonnegative) where {T, F}
+    ci = MOIU.normalize_and_add_constraint(model, f, MOI.GreaterThan(zero(T)))
     return NonnegativeBridge{T, F}(ci)
 end
 
@@ -40,14 +44,18 @@ function MOI.supports_constraint(::Type{NonnegativeBridge{T}},
                                  ::Type{Nonnegative}) where T
     return true
 end
+
+function MOIB.added_constrained_variable_types(::Type{<:NonnegativeBridge})
+    return Tuple{DataType}[]
+end
 function MOIB.added_constraint_types(::Type{NonnegativeBridge{T, F}}) where {T, F}
     return [(F, MOI.GreaterThan{T})]
 end
-function MOIB.concrete_bridge_type(::Type{NonnegativeBridge{T}},
-                                   F::Type{<:MOI.AbstractScalarFunction},
-                                   ::Type{Nonnegative}) where T
+function MOIBC.concrete_bridge_type(::Type{NonnegativeBridge{T}},
+                                    F::Type{<:MOI.AbstractScalarFunction},
+                                    ::Type{Nonnegative}) where T
     # In the constructor, the function `f` of type `F` is passed to
-    # `MOIU.add_scalar_constraint` which removes the constrant from `f` but
+    # `MOIU.normalize_and_add_constraint` which removes the constrant from `f` but
     # does not change its type so the type of the function in `MOI.GreaterThan`
     # will also be `F`.
     return NonnegativeBridge{T, F}

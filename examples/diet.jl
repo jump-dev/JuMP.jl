@@ -9,7 +9,6 @@
 #############################################################################
 
 using JuMP, GLPK, Test
-const MOI = JuMP.MathOptInterface
 
 """
     example_diet()
@@ -65,7 +64,7 @@ function example_diet(; verbose = true)
     @test food_data["milk", "fat"] == 2.5
 
     # Build model
-    model = Model(with_optimizer(GLPK.Optimizer))
+    model = Model(GLPK.Optimizer)
 
     @variables(model, begin
         # Variables for nutrition info
@@ -95,7 +94,7 @@ function example_diet(; verbose = true)
     @constraint(model, buy["milk"] + buy["ice cream"] <= 6)
     verbose && println("Solving dairy-limited problem...")
     JuMP.optimize!(model)
-    @test JuMP.termination_status(model) == MOI.INFEASIBLE_OR_UNBOUNDED
+    @test JuMP.termination_status(model) == MOI.INFEASIBLE
     @test JuMP.primal_status(model) == MOI.NO_SOLUTION
     verbose && print_solution(false, foods, buy)
 end

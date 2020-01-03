@@ -56,20 +56,19 @@ the optimizer:
   MOI but new ones can be defined and added to the `LazyBridgeOptimizer` used by
   JuMP.
 
-See the [MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.8.1/)
+See the [MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/)
 for more details on these two MOI layers.
 
-To attach an optimizer to a JuMP model, JuMP needs to create a new empty
-optimizer instance. New optimizer instances can be obtained using an
-`OptimizerFactory` that can be created using the [`with_optimizer`](@ref)
-function:
-```@docs
-with_optimizer
-```
+To attach an optimizer to a JuMP model, JuMP needs to be able to create a new
+empty optimizer instance. For this reason, we provide JuMP with a function
+that creates a new optimizer (i.e., an optimizer factory), instead of a concrete
+optimizer object.
 
-The factory can be provided either at model construction time or at
-[`optimize!`](@ref) time:
+The factory can be provided either at model construction time by calling
+[`set_optimizer`](@ref). An optimizer must be set before a call to
+[`optimize!`](@ref).
 ```@docs
+set_optimizer
 NoOptimizer
 JuMP.optimize!
 ```
@@ -77,7 +76,7 @@ JuMP.optimize!
 New JuMP models are created using the [`Model`](@ref) constructor:
 ```@docs
 Model()
-Model(::JuMP.OptimizerFactory)
+Model(::Any)
 ```
 
 ```@meta
@@ -94,4 +93,38 @@ JuMP.direct_model
 
 ```@docs
 JuMP.backend
+```
+
+## Solver attributes
+
+Some solver attributes can be queried and set through JuMP models.
+
+```@docs
+solver_name
+
+bridge_constraints
+
+set_parameter
+set_parameters
+set_silent
+unset_silent
+set_time_limit_sec
+unset_time_limit_sec
+time_limit_sec
+```
+
+## File formats
+
+JuMP can write models to a variety of file-formats using [`write_to_file`](@ref)
+and [`Base.write`](@ref).
+```@docs
+write_to_file
+Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)
+```
+
+JuMP models can be created from file formats using [`read_from_file`](@ref) and
+[`Base.read`](@ref).
+```@docs
+read_from_file
+Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)
 ```

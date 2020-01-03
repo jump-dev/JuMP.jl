@@ -1,6 +1,49 @@
 JuMP release notes
 ==================
 
+Version 0.20.1 (Oct 18, 2019)
+-----------------------------
+
+- Add sections on `@variables` and `@constraints` in the documentation (#2062).
+- Fixed product of sparse matrices for Julia v1.3 (#2063).
+- Added `set_objective_coefficient` to modify the coefficient of a linear term
+  of the objective function (#2008).
+- Added `set_time_limit_sec`, `unset_time_limit_sec` and `time_limit_sec` to set
+  and query the time limit for the solver in seconds (#2053).
+
+Version 0.20.0 (Aug 24, 2019)
+-----------------------------
+
+- Documentation updates.
+- Numerous bug fixes.
+- Better error messages (#1977, #1978, #1997, #2017).
+- Performance improvements (#1947, #2032).
+- Added LP sensitivity summary functions `lp_objective_perturbation_range`
+  and `lp_rhs_perturbation_range` (#1917).
+- Added functions `dual_objective_value`, `raw_status` and `set_parameter`.
+- Added function `set_objective_coefficient` to modify the coefficient of
+  a linear term of the objective (#2008).
+- Added functions `set_normalized_rhs`, `normalized_rhs`, and
+  `add_to_function_constant` to modify and get the constant part
+  of a constraint (#1935, #1960).
+- Added functions `set_normalized_coefficient` and `normalized_coefficient`
+  to modify and get the coefficient of a linear term of a constraint
+  (#1935, #1960).
+- Numerous other improvements in MOI 0.9, see the `NEWS.md` file of MOI for more
+  details.
+
+Version 0.19.2 (June 8, 2019)
+-----------------------------
+
+- Fix a bug in derivatives that could arise in models with nested nonlinear
+  subexpressions.
+
+Version 0.19.1 (May 12, 2019)
+-----------------------------
+
+- Usability and performance improvements.
+- Bug fixes.
+
 Version 0.19.0 (February 15, 2019)
 ----------------------------------
 

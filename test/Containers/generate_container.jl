@@ -9,7 +9,7 @@ using JuMP.Containers
 
 macro dummycontainer(expr, requestedtype)
     name = gensym()
-    refcall, indexvars, indexsets, condition = JuMP._build_ref_sets(expr, name)
+    indexvars, indexsets, condition = JuMP.Containers._parse_ref_sets(error, expr)
     if condition == :()
         return Containers.generate_container(Bool, indexvars, indexsets,
                                              requestedtype)[1]

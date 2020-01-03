@@ -9,55 +9,68 @@
 #############################################################################
 
 const _JuMPTypes = Union{AbstractJuMPScalar, NonlinearExpression}
+_float(x::Number) = convert(Float64, x)
+_float(J::UniformScaling) = _float(J.λ)
 
 # Overloads
 #
 # Different objects that must all interact:
-# 1. Number
+# 1. _Constant
 # 2. AbstractVariableRef
 # 4. GenericAffExpr
 # 5. GenericQuadExpr
 
-# Number
-# Number--Number obviously already taken care of!
-# Number--VariableRef
-Base.:+(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr(convert(Float64, lhs), rhs => 1.0)
-Base.:-(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr(convert(Float64, lhs), rhs => -1.0)
-Base.:*(lhs::Number, rhs::AbstractVariableRef) = GenericAffExpr(0.0, rhs => convert(Float64,lhs))
-# Number--GenericAffExpr
-function Base.:+(lhs::Number, rhs::GenericAffExpr)
-    result = copy(rhs)
-    result.constant += lhs
+# _Constant
+# _Constant--_Constant obviously already taken care of!
+# _Constant--VariableRef
+Base.:+(lhs::_Constant, rhs::AbstractVariableRef) = _build_aff_expr(_float(lhs), 1.0, rhs)
+Base.:-(lhs::_Constant, rhs::AbstractVariableRef) = _build_aff_expr(_float(lhs), -1.0, rhs)
+function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
+    if iszero(lhs)
+        return zero(GenericAffExpr{Float64, typeof(rhs)})
+    else
+        return _build_aff_expr(0.0, _float(lhs), rhs)
+    end
+end
+# _Constant--_GenericAffOrQuadExpr
+function Base.:+(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
+    result = _MA.mutable_copy(rhs)
+    add_to_expression!(result, lhs)
     return result
 end
-function Base.:-(lhs::Number, rhs::GenericAffExpr)
+function Base.:-(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     result = -rhs
-    result.constant += lhs
+    add_to_expression!(result, lhs)
     return result
 end
-Base.:*(lhs::Number, rhs::GenericAffExpr) = map_coefficients(c -> lhs * c, rhs)
-# Number--QuadExpr
-Base.:+(lhs::Number, rhs::GenericQuadExpr) = GenericQuadExpr(lhs+rhs.aff, copy(rhs.terms))
-function Base.:-(lhs::Number, rhs::GenericQuadExpr)
-    result = -rhs
-    result.aff.constant += lhs
-    return result
+function Base.:*(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
+    if iszero(lhs)
+        return zero(rhs)
+    else
+        α = _constant_to_number(lhs)
+        return map_coefficients(c -> α * c, rhs)
+    end
 end
-Base.:*(lhs::Number, rhs::GenericQuadExpr) = map_coefficients(c -> lhs * c, rhs)
 
 # AbstractVariableRef (or, AbstractJuMPScalar)
 # TODO: What is the role of AbstractJuMPScalar??
 Base.:+(lhs::AbstractJuMPScalar) = lhs
-Base.:-(lhs::AbstractVariableRef) = GenericAffExpr(0.0, lhs => -1.0)
+Base.:-(lhs::AbstractVariableRef) = _build_aff_expr(0.0, -1.0, lhs)
 Base.:*(lhs::AbstractJuMPScalar) = lhs # make this more generic so extensions don't have to define unary multiplication for our macros
-# AbstractVariableRef--Number
-Base.:+(lhs::AbstractVariableRef, rhs::Number) = (+)( rhs,lhs)
-Base.:-(lhs::AbstractVariableRef, rhs::Number) = (+)(-rhs,lhs)
-Base.:*(lhs::AbstractVariableRef, rhs::Number) = (*)(rhs,lhs)
-Base.:/(lhs::AbstractVariableRef, rhs::Number) = (*)(1.0/rhs,lhs)
+# AbstractVariableRef--_Constant
+Base.:+(lhs::AbstractVariableRef, rhs::_Constant) = (+)( rhs,lhs)
+Base.:-(lhs::AbstractVariableRef, rhs::_Constant) = (+)(-rhs,lhs)
+Base.:*(lhs::AbstractVariableRef, rhs::_Constant) = (*)(rhs,lhs)
+Base.:/(lhs::AbstractVariableRef, rhs::_Constant) = (*)(1.0/rhs,lhs)
 # AbstractVariableRef--AbstractVariableRef
-Base.:+(lhs::V, rhs::V) where {V <: AbstractVariableRef} = GenericAffExpr(0.0, lhs => 1.0, rhs => 1.0)
-Base.:-(lhs::V, rhs::V) where {V <: AbstractVariableRef} = GenericAffExpr(0.0, lhs => 1.0, rhs => -1.0)
+Base.:+(lhs::V, rhs::V) where {V <: AbstractVariableRef} = _build_aff_expr(0.0, 1.0, lhs, 1.0, rhs)
+function Base.:-(lhs::V, rhs::V) where {V <: AbstractVariableRef}
+    if lhs == rhs
+        return zero(GenericAffExpr{Float64, V})
+    else
+        return _build_aff_expr(0.0, 1.0, lhs, -1.0, rhs)
+    end
+end
 function Base.:*(lhs::V, rhs::V) where {V <: AbstractVariableRef}
     GenericQuadExpr(GenericAffExpr{Float64, V}(), UnorderedPair(lhs, rhs) => 1.0)
 end
@@ -111,11 +124,11 @@ end
 # GenericAffExpr
 Base.:+(lhs::GenericAffExpr) = lhs
 Base.:-(lhs::GenericAffExpr) = map_coefficients(-, lhs)
-# GenericAffExpr--Number
-Base.:+(lhs::GenericAffExpr, rhs::Number) = (+)(+rhs,lhs)
-Base.:-(lhs::GenericAffExpr, rhs::Number) = (+)(-rhs,lhs)
-Base.:*(lhs::GenericAffExpr, rhs::Number) = (*)(rhs,lhs)
-Base.:/(lhs::GenericAffExpr, rhs::Number) = map_coefficients(c -> c/rhs, lhs)
+# GenericAffExpr--_Constant
+Base.:+(lhs::GenericAffExpr, rhs::_Constant) = (+)(rhs,lhs)
+Base.:-(lhs::GenericAffExpr, rhs::_Constant) = (+)(-rhs,lhs)
+Base.:*(lhs::GenericAffExpr, rhs::_Constant) = (*)(rhs,lhs)
+Base.:/(lhs::GenericAffExpr, rhs::_Constant) = map_coefficients(c -> c/rhs, lhs)
 function Base.:^(lhs::Union{AbstractVariableRef, GenericAffExpr}, rhs::Integer)
     if rhs == 2
         return lhs*lhs
@@ -127,7 +140,7 @@ function Base.:^(lhs::Union{AbstractVariableRef, GenericAffExpr}, rhs::Integer)
         error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
     end
 end
-Base.:^(lhs::Union{AbstractVariableRef, GenericAffExpr}, rhs::Number) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
+Base.:^(lhs::Union{AbstractVariableRef, GenericAffExpr}, rhs::_Constant) = error("Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.")
 # GenericAffExpr--AbstractVariableRef
 function Base.:+(lhs::GenericAffExpr{C, V}, rhs::V) where {C, V <: AbstractVariableRef}
     return add_to_expression!(copy(lhs), one(C), rhs)
@@ -187,11 +200,12 @@ end
 # GenericQuadExpr
 Base.:+(lhs::GenericQuadExpr) = lhs
 Base.:-(lhs::GenericQuadExpr) = map_coefficients(-, lhs)
-# GenericQuadExpr--Number
-Base.:+(lhs::GenericQuadExpr, rhs::Number) = (+)(+rhs,lhs)
-Base.:-(lhs::GenericQuadExpr, rhs::Number) = (+)(-rhs,lhs)
-Base.:*(lhs::GenericQuadExpr, rhs::Number) = (*)(rhs,lhs)
-Base.:/(lhs::GenericQuadExpr, rhs::Number) = (*)(inv(rhs),lhs)
+# GenericQuadExpr--_Constant
+# We don't do `+rhs` as `UniformScaling` does not support unary `+`
+Base.:+(lhs::GenericQuadExpr, rhs::_Constant) = (+)(rhs, lhs)
+Base.:-(lhs::GenericQuadExpr, rhs::_Constant) = (+)(-rhs, lhs)
+Base.:*(lhs::GenericQuadExpr, rhs::_Constant) = (*)(rhs, lhs)
+Base.:/(lhs::GenericQuadExpr, rhs::_Constant) = (*)(inv(rhs), lhs)
 # GenericQuadExpr--AbstractVariableRef
 Base.:+(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff+v, copy(q.terms))
 Base.:-(q::GenericQuadExpr, v::AbstractVariableRef) = GenericQuadExpr(q.aff-v, copy(q.terms))
@@ -229,72 +243,12 @@ end
 Base.:(==)(lhs::GenericAffExpr, rhs::GenericAffExpr) = (lhs.terms == rhs.terms) && (lhs.constant == rhs.constant)
 Base.:(==)(lhs::GenericQuadExpr, rhs::GenericQuadExpr) = (lhs.terms == rhs.terms) && (lhs.aff == rhs.aff)
 
-#############################################################################
-# Helpers to initialize memory for GenericAffExpr/GenericQuadExpr
-#############################################################################
-
-_sizehint_expr!(a::GenericAffExpr, n::Int) = sizehint!(a, n)
-
-# TODO: Why do we allocate the same size for the quadratic and affine parts?
-function _sizehint_expr!(q::GenericQuadExpr, n::Int)
-        sizehint!(q.terms,  length(q.terms) + n)
-        _sizehint_expr!(q.aff, n)
-        nothing
-end
-_sizehint_expr!(q, n) = nothing
-
-#############################################################################
-# High-level operators
-# Currently supported
-#  - sum
-#  - dot
-#############################################################################
-
-# TODO: specialize sum for DenseAxisArray and SparseAxisArray of JuMP objects?
-Base.sum(vars::Array{<:AbstractVariableRef}) = GenericAffExpr(0.0, [v => 1.0 for v in vars])
-function Base.sum(array::AbstractArray{<:AbstractVariableRef})
-    result_expression = zero(eltype(array))
-    for variable in array
-        add_to_expression!(result_expression, variable)
-    end
-    return result_expression
-end
-# TODO: Specialize for iterables.
-function Base.sum(affs::AbstractArray{T}) where {T <: GenericAffExpr}
-    new_aff = zero(T)
-    for aff in affs
-        add_to_expression!(new_aff, aff)
-    end
-    return new_aff
-end
-
 # Base Julia's generic fallback vecdot, aka dot, requires that dot, aka LinearAlgebra.dot, be defined
 # for scalars, so instead of defining them one-by-one, we will
 # fallback to the multiplication operator
 LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_JuMPTypes) = lhs*rhs
-LinearAlgebra.dot(lhs::_JuMPTypes, rhs::Number) = lhs*rhs
-LinearAlgebra.dot(lhs::Number, rhs::_JuMPTypes) = lhs*rhs
-
-LinearAlgebra.dot(lhs::AbstractVector{T}, rhs::AbstractVector{S}) where {T <: _JuMPTypes, S <: _JuMPTypes} = _dot(lhs,rhs)
-LinearAlgebra.dot(lhs::AbstractVector{T}, rhs::AbstractVector{S}) where {T <: _JuMPTypes, S} = _dot(lhs,rhs)
-LinearAlgebra.dot(lhs::AbstractVector{T}, rhs::AbstractVector{S}) where {T, S <: _JuMPTypes} = _dot(lhs,rhs)
-
-LinearAlgebra.dot(lhs::AbstractArray{T, N}, rhs::AbstractArray{S, N}) where {T <: _JuMPTypes, S, N} = _dot(lhs,rhs)
-LinearAlgebra.dot(lhs::AbstractArray{T, N}, rhs::AbstractArray{S, N}) where {T <: _JuMPTypes, S <: _JuMPTypes, N} = _dot(lhs,rhs)
-LinearAlgebra.dot(lhs::AbstractArray{T, N}, rhs::AbstractArray{S, N}) where {T, S <: _JuMPTypes, N} = _dot(lhs,rhs)
-
-function _dot(lhs::AbstractArray{T}, rhs::AbstractArray{S}) where {T, S}
-    size(lhs) == size(rhs) || error("Incompatible dimensions")
-    ret = zero(one(T)*one(S))
-    for (x,y) in zip(lhs,rhs)
-        ret = destructive_add!(ret, x, y)
-    end
-    ret
-end
-
-###############################################################################
-# A bunch of operator junk to make matrix multiplication and friends act
-# reasonably sane with JuMP types
+LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_Constant) = lhs*rhs
+LinearAlgebra.dot(lhs::_Constant, rhs::_JuMPTypes) = lhs*rhs
 
 Base.promote_rule(V::Type{<:AbstractVariableRef}, R::Type{<:Real}) = GenericAffExpr{Float64, V}
 Base.promote_rule(V::Type{<:AbstractVariableRef}, ::Type{<:GenericAffExpr{T}}) where {T} = GenericAffExpr{T, V}
@@ -313,268 +267,6 @@ function LinearAlgebra.issymmetric(x::Matrix{T}) where {T <: _JuMPTypes}
         isequal(x[i,j], x[j,i]) || return false
     end
     true
-end
-
-# Special-case because the the base version wants to do fill!(::Array{AbstractVariableRef}, zero(GenericAffExpr{Float64,eltype(x)}))
-_one_indexed(A) = all(x -> isa(x, Base.OneTo), axes(A))
-function LinearAlgebra.diagm(x::AbstractVector{<:AbstractVariableRef})
-    @assert _one_indexed(x) # Base.diagm doesn't work for non-one-indexed arrays in general.
-    diagm(0=>copyto!(similar(x, GenericAffExpr{Float64, eltype(x)}), x))
-end
-
-###############################################################################
-# Matrix/Vector Arithmetic with JuMP eltypes
-###############################################################################
-
-###############################################################################
-# convenience/utility definitions
-
-const GenericAffOrQuadExpr = Union{GenericAffExpr, GenericQuadExpr}
-
-_densify_with_jump_eltype(x::AbstractMatrix) = convert(Matrix, x)
-
-function _densify_with_jump_eltype(x::SparseMatrixCSC{V}) where {V <: AbstractVariableRef}
-    return convert(Matrix{GenericAffExpr{Float64, V}}, x)
-end
-
-# See https://github.com/JuliaLang/julia/pull/18218.
-_A_mul_B_eltype(::Type{R}, ::Type{S}) where {R, S} = typeof(one(R) * one(S) + one(R) * one(S))
-
-_A_mul_B_ret_dims(A::AbstractMatrix, B::AbstractVector) = (size(A, 1),)
-_A_mul_B_ret_dims(A::AbstractMatrix, B::AbstractMatrix) = (size(A, 1), size(B, 2))
-
-# Don't do size checks here; defer that to `_A_mul_B(A, B)`.
-function _A_mul_B_ret(A, B, dims...)
-    T = _A_mul_B_eltype(eltype(A), eltype(B))
-    ret = Array{T}(undef, _A_mul_B_ret_dims(A, B))
-    return _fill_with_zeros!(ret, T)
-end
-
-function _fill_with_zeros!(A, ::Type{T}) where {T}
-    for I in eachindex(A)
-        A[I] = zero(T)
-    end
-    return A
-end
-
-###############################################################################
-# `_A_mul_B!(ret, A, B)` adds the result of `A*B` into the buffer `ret`. We roll our own
-# matmul here (instead of using Julia's generic fallbacks) because doing so allows us to
-# accumulate the expressions for the inner loops in-place. Additionally, Julia's generic
-# fallbacks can be finnicky when your array elements aren't `<:Number`.
-#
-# No bounds/size checks are performed; it is expected that the caller has done this, has
-# ensured that the eltype of `ret` is appropriate, and has zeroed the elements of `ret` (if
-# desired).
-
-function _A_mul_B!(ret::AbstractArray{T}, A, B) where {T <: _JuMPTypes}
-    for i ∈ 1:size(A, 1), j ∈ 1:size(B, 2)
-        q = ret[i, j]
-        _sizehint_expr!(q, size(A, 2))
-        for k ∈ 1:size(A, 2)
-            add_to_expression!(q, A[i, k], B[k, j])
-        end
-    end
-    return ret
-end
-
-function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B)
-    nzv = nonzeros(A)
-    rv = rowvals(A)
-    for col ∈ 1:size(A, 2)
-        for k ∈ 1:size(ret, 2)
-            for j ∈ nzrange(A, col)
-                add_to_expression!(ret[rv[j], k], nzv[j], B[col, k])
-            end
-        end
-    end
-    return ret
-end
-
-function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::AbstractMatrix, B::SparseMatrixCSC)
-    rowval = rowvals(B)
-    nzval = nonzeros(B)
-    for multivec_row in 1:size(A, 1)
-        for col ∈ 1:size(B, 2)
-            idxset = nzrange(B, col)
-            q = ret[multivec_row, col]
-            _sizehint_expr!(q, length(idxset))
-            for k ∈ idxset
-                add_to_expression!(q, A[multivec_row, rowval[k]], nzval[k])
-            end
-        end
-    end
-    return ret
-end
-
-# TODO: Implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul).
-function _A_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B::SparseMatrixCSC)
-    return _A_mul_B!(ret, A, _densify_with_jump_eltype(B))
-end
-
-function _A_mul_B(A, B)
-    size(A, 2) == size(B, 1) || error("Incompatible sizes")
-    ret = _A_mul_B_ret(A, B)
-    _A_mul_B!(ret, A, B)
-    ret
-end
-
-###############################################################################
-# `_At_mul_B!(ret, A, B)` stores the result of `Aᵀ * B` into the buffer `ret`. We roll our
-# own version here (instead of working with Julia's generic fallbacks) for the same reasons
-# as above.
-
-function _At_mul_B!(ret::AbstractArray{T}, A, B) where {T <: _JuMPTypes}
-    for i ∈ 1:size(A, 2), j ∈ 1:size(B, 2)
-        q = ret[i, j]
-        _sizehint_expr!(q, size(A, 1))
-        for k ∈ 1:size(A, 1)
-            add_to_expression!(q, A[k, i], B[k, j]) # transpose
-        end
-    end
-    ret
-end
-
-function _At_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B)
-    _A_mul_B!(ret, copy(transpose(A)), B) # TODO fully implement
-end
-function _At_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::AbstractMatrix, B::SparseMatrixCSC)
-    _A_mul_B!(ret, transpose(A), B)
-end
-# This method of `_At_mul_B!` is adapted from upstream Julia. Note that we
-# confuse transpose with adjoint because they're the same for all JuMP types.
-#=
-> Copyright (c) 2009-2018: Jeff Bezanson, Stefan Karpinski, Viral B. Shah,
-> and other contributors:
->
-> https://github.com/JuliaLang/julia/contributors
->
-> Permission is hereby granted, free of charge, to any person obtaining
-> a copy of this software and associated documentation files (the
-> "Software"), to deal in the Software without restriction, including
-> without limitation the rights to use, copy, modify, merge, publish,
-> distribute, sublicense, and/or sell copies of the Software, and to
-> permit persons to whom the Software is furnished to do so, subject to
-> the following conditions:
->
-> The above copyright notice and this permission notice shall be
-> included in all copies or substantial portions of the Software.
->
-> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-> EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-> MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-> NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-> LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-> OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-> WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-=#
-function _At_mul_B!(ret::StridedVecOrMat{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B::StridedVecOrMat)
-    A.n == size(ret, 1) || throw(DimensionMismatch())
-    A.m == size(B, 1) || throw(DimensionMismatch())
-    size(B, 2) == size(ret, 2) || throw(DimensionMismatch())
-    nzv = A.nzval
-    rv = A.rowval
-    # `ret` is already filled with zeros by `_return_arrayt`.
-    for k = 1:size(ret, 2)
-        @inbounds for col = 1:A.n
-            tmp = zero(eltype(ret))
-            for j = A.colptr[col]:(A.colptr[col + 1] - 1)
-                add_to_expression!(tmp, adjoint(nzv[j]), B[rv[j],k])
-            end
-            ret[col, k] += tmp
-        end
-    end
-    return ret
-end
-function _At_mul_B(A, B)
-    size(A, 1) == size(B, 1) || error("Incompatible sizes")
-    ret = _A_mul_B_ret(transpose(A), B)
-    _At_mul_B!(ret, A, B)
-    return ret
-end
-
-# TODO: Implement sparse * sparse code as in base/sparse/linalg.jl (spmatmul).
-function _At_mul_B!(ret::AbstractArray{<:GenericAffOrQuadExpr}, A::SparseMatrixCSC, B::SparseMatrixCSC)
-    return _At_mul_B!(ret, A, _densify_with_jump_eltype(B))
-end
-
-###############################################################################
-# Interception of Base's matrix/vector arithmetic machinery
-
-# TODO: Intercepting "externally owned" method calls by dispatching on type parameters
-# (rather than outermost wrapper type) is generally bad practice, but refactoring this code
-# to use a different mechanism would be a lot of work. In the future, this interception code
-# would be more easily/robustly replaced by using a tool like
-# https://github.com/jrevels/Cassette.jl.
-
-function Base.:*(A::Union{Matrix{<:_JuMPTypes}, SparseMatrixCSC{<:_JuMPTypes}},
-                 B::Union{Matrix, Vector, SparseMatrixCSC})
-    return _A_mul_B(A, B)
-end
-
-function Base.:*(A::Union{Matrix{<:_JuMPTypes}, SparseMatrixCSC{<:_JuMPTypes}},
-                 B::Union{Matrix{<:_JuMPTypes}, Vector{<:_JuMPTypes}, SparseMatrixCSC{<:_JuMPTypes}})
-    return _A_mul_B(A, B)
-end
-
-function Base.:*(A::Union{Matrix, SparseMatrixCSC},
-                 B::Union{Matrix{<:_JuMPTypes}, Vector{<:_JuMPTypes}, SparseMatrixCSC{<:_JuMPTypes}})
-    return _A_mul_B(A, B)
-end
-
-# TODO: This is a stopgap solution to get (most) tests passing on Julia 0.7. A lot of
-# cases probably still don't work. (Like A * A where A is a sparse matrix of a JuMP
-# type). This code needs a big refactor.
-Base.:*(A::Adjoint{<:_JuMPTypes, <:SparseMatrixCSC}, B::Vector) = _At_mul_B(parent(A), B)
-Base.:*(A::Adjoint{<:Any, <:SparseMatrixCSC}, B::Vector{<:_JuMPTypes}) = _At_mul_B(parent(A), B)
-Base.:*(A::Adjoint{<:_JuMPTypes, <:SparseMatrixCSC}, B::Vector{<:_JuMPTypes}) = _At_mul_B(parent(A), B)
-
-Base.:*(A::Transpose{<:_JuMPTypes, <:SparseMatrixCSC}, B::Vector) = _At_mul_B(parent(A), B)
-Base.:*(A::Transpose{<:Any, <:SparseMatrixCSC}, B::Vector{<:_JuMPTypes}) = _At_mul_B(parent(A), B)
-Base.:*(A::Transpose{<:_JuMPTypes, <:SparseMatrixCSC}, B::Vector{<:_JuMPTypes}) = _At_mul_B(parent(A), B)
-
-Base.:*(A::Adjoint{<:_JuMPTypes, <:SparseMatrixCSC}, B::Matrix) = _At_mul_B(parent(A), B)
-Base.:*(A::Adjoint{<:Any, <:SparseMatrixCSC}, B::Matrix{<:_JuMPTypes}) = _At_mul_B(parent(A), B)
-Base.:*(A::Adjoint{<:_JuMPTypes, <:SparseMatrixCSC}, B::Matrix{<:_JuMPTypes}) = _At_mul_B(parent(A), B)
-
-Base.:*(A::Transpose{<:_JuMPTypes, <:SparseMatrixCSC}, B::Matrix) = _At_mul_B(parent(A), B)
-Base.:*(A::Transpose{<:Any, <:SparseMatrixCSC}, B::Matrix{<:_JuMPTypes}) = _At_mul_B(parent(A), B)
-Base.:*(A::Transpose{<:_JuMPTypes, <:SparseMatrixCSC}, B::Matrix{<:_JuMPTypes}) = _At_mul_B(parent(A), B)
-
-# Base doesn't define efficient fallbacks for sparse array arithmetic involving
-# non-`<:Number` scalar elements, so we define some of these for `<:JuMPType` scalar
-# elements here.
-
-function Base.:*(A::Number, B::SparseMatrixCSC{T}) where {T <: _JuMPTypes}
-    return SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(B.rowval), A .* B.nzval)
-end
-
-function Base.:*(A::SparseMatrixCSC{T}, B::Number) where {T <: _JuMPTypes}
-    return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval .* B)
-end
-
-function Base.:*(A::_JuMPTypes, B::SparseMatrixCSC)
-    return SparseMatrixCSC(B.m, B.n, copy(B.colptr), copy(B.rowval), A .* B.nzval)
-end
-
-function Base.:*(A::SparseMatrixCSC, B::_JuMPTypes)
-    return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval .* B)
-end
-
-function Base.:/(A::SparseMatrixCSC{T}, B::Number) where {T <: _JuMPTypes}
-    return SparseMatrixCSC(A.m, A.n, copy(A.colptr), copy(A.rowval), A.nzval ./ B)
-end
-
-Base.:*(x::AbstractArray{T}) where {T <: _JuMPTypes} = x
-
-Base.:+(x::AbstractArray{T}) where {T <: _JuMPTypes} = x
-
-function Base.:-(x::AbstractArray{T}) where {T <: _JuMPTypes}
-    ret = similar(x, typeof(-one(T)))
-    for I in eachindex(ret)
-        ret[I] = -x[I]
-    end
-    return ret
 end
 
 ###############################################################################
@@ -596,6 +288,6 @@ Base.:*(lhs::GenericQuadExpr, rhs::GenericQuadExpr) =
 Base.:*(::S, ::T) where {T <: GenericQuadExpr,
                          S <: Union{AbstractVariableRef, GenericAffExpr, GenericQuadExpr}} =
     error( "*(::$S,::$T) is not defined. $op_hint")
-Base.:/(::S, ::T) where {S <: Union{Number, AbstractVariableRef, GenericAffExpr, GenericQuadExpr},
+Base.:/(::S, ::T) where {S <: Union{_Constant, AbstractVariableRef, GenericAffExpr, GenericQuadExpr},
                          T <: Union{AbstractVariableRef, GenericAffExpr, GenericQuadExpr}} =
     error( "/(::$S,::$T) is not defined. $op_hint")

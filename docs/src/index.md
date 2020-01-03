@@ -95,7 +95,8 @@ Pages = [
     "solutions.md",
     "nlp.md",
     "style.md",
-    "extensions.md"
+    "extensions.md",
+    "roadmap.md"
 ]
 Depth = 2
 ```
@@ -140,12 +141,17 @@ A preprint of this paper is [freely available](http://arxiv.org/abs/1312.1431).
 
 ![NumFOCUS logo](assets/numfocus-logo.png)
 
-JuMP is a fiscally sponsored project of [NumFOCUS](https://numfocus.org), a
-nonprofit dedicated to supporting the open source scientific computing
-community.
+JuMP is a Sponsored Project of NumFOCUS, a 501(c)(3) nonprofit charity in the 
+United States. NumFOCUS provides JuMP with fiscal, legal, and administrative 
+support to help ensure the health and sustainability of the project. Visit 
+[numfocus.org](https://numfocus.org) for more information.
 
-You can support JuMP by
-[donating](https://numfocus.salsalabs.org/donate-to-jump/index.html). JuMP's
-largest expense is the annual JuMP-dev workshop. Donations will help us provide
-travel support for JuMP-dev attendees and take advantage of other opportunities
-that arise to support JuMP development.
+You can support JuMP by [donating](https://numfocus.salsalabs.org/donate-to-jump/index.html). 
+
+Donations to JuMP are managed by NumFOCUS. For donors in the United States, 
+your gift is tax-deductible to the extent provided by law. As with any donation, 
+you should consult with your tax adviser about your particular tax situation.
+
+JuMP's largest expense is the annual JuMP-dev workshop. Donations will help us 
+provide travel support for JuMP-dev attendees and take advantage of other 
+opportunities that arise to support JuMP development.

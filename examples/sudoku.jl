@@ -9,7 +9,6 @@
 #############################################################################
 
 using JuMP, GLPK, Test
-const MOI = JuMP.MathOptInterface
 
 """
     example_sudoku(filepath)
@@ -33,7 +32,7 @@ function example_sudoku(filepath)
         end
     end
 
-    model = Model(with_optimizer(GLPK.Optimizer))
+    model = Model(GLPK.Optimizer)
 
     @variable(model, x[1:9, 1:9, 1:9], Bin)
 

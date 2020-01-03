@@ -5,28 +5,42 @@
 
 JuMP is a domain-specific modeling language for **[mathematical optimization]**
 embedded in **[Julia]**. It currently supports a number of open-source and
-commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [Clp], [Couenne], [CPLEX], [ECOS], [FICO Xpress], [GLPK],
-[Gurobi], [Ipopt], [MOSEK], [NLopt], [SCS]) for a variety of problem classes, including
+commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [CDCS], [CDD],
+[Clp], [COSMO], [Couenne], [CPLEX], [CSDP], [ECOS], [FICO Xpress], [GLPK],
+[Gurobi], [Ipopt], [Juniper], [MOSEK], [NLopt], [OSQP], [ProxSDP], [SCIP],
+[SCS], [SDPA], [SDPT3], [SeDuMi], [Tulip]) for a variety of problem classes, including
 **[linear programming]**, **[(mixed) integer programming]**,
 **[second-order conic programming]**, **[semidefinite programming]**, and **[nonlinear programming]**.
 
 [mathematical optimization]: http://en.wikipedia.org/wiki/Mathematical_optimization
 [Julia]: http://julialang.org/
+[Artelys Knitro]: http://artelys.com/en/optimization-tools/knitro
+[BARON]: http://archimedes.cheme.cmu.edu/?q=baron
 [Bonmin]: https://projects.coin-or.org/Bonmin
+[Cbc]: https://github.com/coin-or/Cbc
+[CDCS]: https://github.com/oxfordcontrol/CDCS
+[CDD]: https://github.com/cddlib/cddlib
+[Clp]: https://github.com/coin-or/Clp
+[COSMO]: https://github.com/oxfordcontrol/COSMO.jl
 [Couenne]: https://projects.coin-or.org/Couenne
-[Clp]: https://projects.coin-or.org/Clp
-[Cbc]: https://projects.coin-or.org/Cbc
+[CPLEX]: http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/
+[CSDP]: https://projects.coin-or.org/Csdp/
 [ECOS]: https://github.com/ifa-ethz/ecos
 [FICO Xpress]: http://www.fico.com/en/products/fico-xpress-optimization-suite
 [GLPK]: http://www.gnu.org/software/glpk/
 [Gurobi]: http://www.gurobi.com/
+[Ipopt]: https://github.com/coin-or/Ipopt
+[Juniper]: https://github.com/lanl-ansi/Juniper.jl
 [MOSEK]: http://mosek.com/
-[CPLEX]: http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/
-[Ipopt]: https://projects.coin-or.org/Ipopt
-[Artelys Knitro]: http://artelys.com/en/optimization-tools/knitro
 [NLopt]: http://ab-initio.mit.edu/wiki/index.php/NLopt
+[OSQP]: https://osqp.org/
+[ProxSDP]: https://github.com/mariohsouto/ProxSDP.jl
+[SCIP]: https://scip.zib.de/
 [SCS]: https://github.com/cvxgrp/scs
-[BARON]: http://archimedes.cheme.cmu.edu/?q=baron
+[SDPA]: http://sdpa.sourceforge.net/
+[SDPT3]: https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/
+[SeDuMi]: http://sedumi.ie.lehigh.edu/
+[Tulip]: https://github.com/ds4dm/Tulip.jl
 [linear programming]: http://en.wikipedia.org/wiki/Linear_programming
 [(mixed) integer programming]: http://en.wikipedia.org/wiki/Integer_programming
 [second-order conic programming]: http://en.wikipedia.org/wiki/Second-order_cone_programming
@@ -42,11 +56,11 @@ Our documentation includes an installation guide, quick-start guide, and referen
 **See [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md) for
 a list of the significant breaking changes in the JuMP 0.19 release.**
 
-**Latest Release**: 0.19.0 (`release-0.19` branch)
-  * [Documentation](http://www.juliaopt.org/JuMP.jl/v0.19.0/)
-  * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.19/examples)
+**Latest Release**: 0.20.0 (`release-0.20` branch)
+  * [Documentation](http://www.juliaopt.org/JuMP.jl/v0.20.0/)
+  * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.20/examples)
   * Testing status:
-    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.19)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.20)](https://travis-ci.org/JuliaOpt/JuMP.jl)
 
 
 **Development version** (`master` branch):
@@ -141,13 +155,17 @@ A preprint of this paper is [freely available](http://arxiv.org/abs/1312.1431).
 
 ![NumFOCUS logo](http://www.juliaopt.org/JuMP.jl/dev/assets/numfocus-logo.png)
 
-JuMP is a fiscally sponsored project of [NumFOCUS](https://numfocus.org), a
-nonprofit dedicated to supporting the open source scientific computing
-community.
+JuMP is a Sponsored Project of NumFOCUS, a 501(c)(3) nonprofit charity in the
+United States. NumFOCUS provides JuMP with fiscal, legal, and administrative
+support to help ensure the health and sustainability of the project. Visit
+[numfocus.org](https://numfocus.org) for more information.
 
-You can support JuMP by
-[donating](https://numfocus.salsalabs.org/donate-to-jump/index.html). JuMP's
-largest expense is the
-[annual JuMP-dev workshop](http://www.juliaopt.org/meetings/santiago2019/).
-Donations will help us provide travel support for JuMP-dev attendees and take
-advantage of other opportunities that arise to support JuMP development.
+You can support JuMP by [donating](https://numfocus.salsalabs.org/donate-to-jump/index.html).
+
+Donations to JuMP are managed by NumFOCUS. For donors in the United States,
+your gift is tax-deductible to the extent provided by law. As with any donation,
+you should consult with your tax adviser about your particular tax situation.
+
+JuMP's largest expense is the annual JuMP-dev workshop. Donations will help us
+provide travel support for JuMP-dev attendees and take advantage of other
+opportunities that arise to support JuMP development.

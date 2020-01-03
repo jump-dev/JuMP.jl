@@ -5,7 +5,7 @@ struct DummyOptimizer <: MOI.AbstractOptimizer end
 MOI.is_empty(::DummyOptimizer) = true
 
 @testset "Unsupported objective_function" begin
-    model = Model(with_optimizer(DummyOptimizer))
+    model = Model(DummyOptimizer)
     func = MOI.SingleVariable(MOI.VariableIndex(1))
     @test_throws ErrorException JuMP.set_objective_function(model, func)
 end
@@ -97,11 +97,49 @@ function objectives_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType:
         sense = :Min
         @test_throws ErrorException @objective(m, sense, 2x)
     end
+
+    @testset "Constant objective" begin
+        model = ModelType()
+        @objective(model, Min, 3)
+        @test JuMP.objective_sense(model) == MOI.MIN_SENSE
+        @test JuMP.isequal_canonical(
+            AffExprType(3.0),
+            JuMP.objective_function(model, AffExprType))
+    end
 end
 
+function objective_coeff_update_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
+    @testset "Linear objective changes" begin
+        m = ModelType()
+        @variable(m, x)
+
+        @objective(m, Max, x)
+        set_objective_coefficient(m, x, 4.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x)
+
+        @variable(m, y)
+        @objective(m, Max, x + y)
+        set_objective_coefficient(m, x, 4.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), 4x + y)
+
+        @objective(m, Min, x)
+        set_objective_coefficient(m, y, 2.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), x + 2.0 * y)
+    end
+
+    @testset "Quadratic objective changes" begin
+        m = ModelType()
+        @variable(m, x)
+
+        @objective(m, Max, x^2 + x)
+        set_objective_coefficient(m, x, 4.0)
+        @test JuMP.isequal_canonical(JuMP.objective_function(m), x^2 + 4x)
+    end
+end
 
 @testset "Objectives for JuMP.Model" begin
     objectives_test(Model, VariableRef)
+    objective_coeff_update_test(Model, VariableRef)
 end
 
 @testset "Objectives for JuMPExtension.MyModel" begin

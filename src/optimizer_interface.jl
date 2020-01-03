@@ -32,10 +32,52 @@ function MOIU.attach_optimizer(model::Model)
     MOIU.attach_optimizer(backend(model))
 end
 
-function set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
+const _set_optimizer_not_callable_message =
+    "The provided optimizer_factory is invalid. It must be callable with zero" *
+    "arguments. For example, \"Ipopt.Optimizer\" or" *
+    "\"() -> ECOS.Optimizer()\". It should not be an instantiated optimizer " *
+    "like \"Ipopt.Optimizer()\" or \"ECOS.Optimizer()\"." *
+    "(Note the difference in parentheses!)"
+
+"""
+    set_optimizer(model::Model, optimizer_factory;
+                  bridge_constraints::Bool=true)
+
+
+Creates an empty `MathOptInterface.AbstractOptimizer` instance by calling
+`optimizer_factory()` and sets it as the optimizer of `model`. Specifically,
+`optimizer_factory` must be callable with zero arguments and return an empty
+`MathOptInterface.AbstractOptimizer`.
+
+If `bridge_constraints` is true, constraints that are not supported by the
+optimizer are automatically bridged to equivalent supported constraints when
+an appropriate transformation is defined in the `MathOptInterface.Bridges`
+module or is defined in another module and is explicitly added.
+
+See [`set_parameters`](@ref) and [`set_parameter`](@ref) for setting
+solver-specific parameters of the optimizer.
+
+## Examples
+```julia
+model = Model()
+set_optimizer(model, GLPK.Optimizer)
+```
+"""
+function set_optimizer(model::Model, optimizer_factory;
                        bridge_constraints::Bool=true)
     error_if_direct_mode(model, :set_optimizer)
+    if !applicable(optimizer_factory)
+        error(_set_optimizer_not_callable_message)
+    end
     optimizer = optimizer_factory()
+    if !isa(optimizer, MOI.AbstractOptimizer)
+        error("The provided optimizer_factory returned an object of type " *
+              "$(typeof(optimizer)). Expected a " *
+              "MathOptInterface.AbstractOptimizer.")
+    end
+    if !MOI.is_empty(optimizer)
+        error("The provided optimizer_factory returned a non-empty optimizer.")
+    end
     if bridge_constraints
         # The names are handled by the first caching optimizer.
         # If default_copy_to without names is supported, no need for a second
@@ -46,7 +88,7 @@ function set_optimizer(model::Model, optimizer_factory::OptimizerFactory;
                 error("Bridges in `MANUAL` mode with an optimizer not ",
                       "supporting `default_copy_to` is not supported yet")
             end
-            universal_fallback = MOIU.UniversalFallback(_MOIModel{Float64}())
+            universal_fallback = MOIU.UniversalFallback(MOIU.Model{Float64}())
             optimizer = MOIU.CachingOptimizer(universal_fallback, optimizer)
         end
         optimizer = MOI.Bridges.full_bridge_optimizer(optimizer, Float64)
@@ -68,38 +110,24 @@ function solve(::Model)
 end
 
 """
-    optimize!(model::Model,
-              optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
-              ignore_optimize_hook=(model.optimize_hook === nothing))
+    optimize!(model::Model;
+              ignore_optimize_hook=(model.optimize_hook === nothing),
+              kwargs...)
 
-Optimize the model. If `optimizer_factory` is not `nothing`, it first sets the
-optimizer to a new one created using the optimizer factory. The factory can be
-created using the [`with_optimizer`](@ref) function. If `optimizer_factory` is
-`nothing` and no optimizer was set to `model` before calling this function, a
-[`NoOptimizer`](@ref) error is thrown.
+Optimize the model. If an optimizer has not been set yet (see
+[`set_optimizer`](@ref)), a [`NoOptimizer`](@ref) error is thrown.
 
-## Examples
-
-The optimizer factory can either be given in the [`Model`](@ref) constructor
-as follows:
-```julia
-model = Model(with_optimizer(GLPK.Optimizer))
-# ...fill model with variables, constraints and objectives...
-# Solve the model with GLPK
-optimize!(model)
-```
-or in the `optimize!` call as follows:
-```julia
-model = Model()
-# ...fill model with variables, constraints and objectives...
-# Solve the model with GLPK
-optimize!(model, with_optimizer(GLPK.Optimizer))
+Keyword arguments `kwargs` are passed to the `optimize_hook`. An error is
+thrown if `optimize_hook` is `nothing` and keyword arguments are provided.
 ```
 """
 function optimize!(model::Model,
+                   # TODO: Remove the optimizer_factory and bridge_constraints
+                   # arguments when the deprecation error below is removed.
                    optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
                    bridge_constraints::Bool=true,
-                   ignore_optimize_hook=(model.optimize_hook === nothing))
+                   ignore_optimize_hook=(model.optimize_hook === nothing),
+                   kwargs...)
     # The nlp_data is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
     if model.nlp_data !== nothing
@@ -108,28 +136,46 @@ function optimize!(model::Model,
     end
 
     if optimizer_factory !== nothing
-        if mode(model) == DIRECT
-            error("An optimizer factory cannot be provided at the `optimize` call in DIRECT mode.")
-        end
-        if MOIU.state(backend(model)) != MOIU.NO_OPTIMIZER
-            error("An optimizer factory cannot both be provided in the `Model` constructor and at the `optimize` call.")
-        end
-        set_optimizer(model, optimizer_factory,
-                      bridge_constraints=bridge_constraints)
-        MOIU.attach_optimizer(model)
+        # This argument was deprecated in JuMP 0.21.
+        error("The optimizer factory argument is no longer accepted by " *
+              "`optimize!`. Call `set_optimizer` before `optimize!`.")
     end
 
     # If the user or an extension has provided an optimize hook, call
     # that instead of solving the model ourselves
     if !ignore_optimize_hook
-        return model.optimize_hook(model)
+        return model.optimize_hook(model; kwargs...)
     end
+
+    isempty(kwargs) || error("Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))")
 
     if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
         throw(NoOptimizer())
     end
 
-    MOI.optimize!(backend(model))
+    try
+        MOI.optimize!(backend(model))
+    catch err
+        # TODO: This error also be thrown also in MOI.set() if the solver is
+        # attached. Currently we catch only the more common case. More generally
+        # JuMP is missing a translation layer from MOI errors to JuMP errors.
+        if err isa MOI.UnsupportedAttribute{MOI.NLPBlock}
+            error("The solver does not support nonlinear problems " *
+                  "(i.e., NLobjective and NLconstraint).")
+        else
+            rethrow(err)
+        end
+    end
 
     return
+end
+
+"""
+    result_count(model::Model)
+
+Return the number of results available to query after a call to
+[`optimize!`](@ref).
+"""
+function result_count(model::Model)::Int
+    return MOI.get(model, MOI.ResultCount())
 end

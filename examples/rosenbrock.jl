@@ -9,10 +9,10 @@
 #############################################################################
 
 using JuMP, Ipopt, Test
-const MOI = JuMP.MathOptInterface
 
 function example_rosenbrock()
-    model = Model(with_optimizer(Ipopt.Optimizer, print_level=0))
+    model = Model(Ipopt.Optimizer)
+    set_silent(model)
     @variable(model, x)
     @variable(model, y)
     @NLobjective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)

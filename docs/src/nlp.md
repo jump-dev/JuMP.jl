@@ -26,7 +26,7 @@ follows:
 
 ```julia
 using Ipopt
-model = Model(with_optimizer(Ipopt.Optimizer))
+model = Model(Ipopt.Optimizer)
 @variable(model, x, start = 0.0)
 @variable(model, y, start = 0.0)
 
@@ -154,7 +154,7 @@ Nonlinear parameters are useful when solving nonlinear models in a sequence:
 
 ```julia
 using Ipopt
-model = Model(with_optimizer(Ipopt.Optimizer))
+model = Model(Ipopt.Optimizer)
 @variable(model, z)
 @NLparameter(model, x == 1.0)
 @NLobjective(model, Min, (z - x)^2)
@@ -193,9 +193,21 @@ JuMP uses [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) to
 perform automatic differentiation; see the ForwardDiff.jl
 [documentation](http://www.juliadiff.org/ForwardDiff.jl/v0.10.2/user/limitations.html)
 for a description of how to write a function suitable for automatic
-differentiation. The general guideline is to write code that is generic with
-respect to the number type; don't assume that the input to the function is
-`Float64`. To register a user-defined function with derivatives computed by
+differentiation.
+
+!!! note
+    If you see method errors with `ForwardDiff.Duals`, see the guidelines at
+    [ForwardDiff.jl](http://www.juliadiff.org/ForwardDiff.jl/release-0.10/user/limitations.html).
+    The most common error is that your user-defined function is not generic with
+    respect to the number type, i.e., don't assume that the input to the function
+    is `Float64`.
+    ```julia
+    f(x::Float64) = 2 * x  # This will not work.
+    f(x::Real)    = 2 * x  # This is good.
+    f(x)          = 2 * x  # This is also good.
+    ```
+
+To register a user-defined function with derivatives computed by
 automatic differentiation, use the `register` method as in the following
 example:
 
@@ -321,7 +333,7 @@ may be expected to be within a factor of 5 of AMPL's.
 For some advanced use cases, one may want to directly query the derivatives of a
 JuMP model instead of handing the problem off to a solver.
 Internally, JuMP implements the `AbstractNLPEvaluator` interface from
-[MathOptInterface](http://www.juliaopt.org/MathOptInterface.jl/v0.6.1/apireference.html#NLP-evaluator-methods-1).
+[MathOptInterface](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apireference/#NLP-evaluator-methods-1).
 To obtain an NLP evaluator object from a JuMP model, use `JuMP.NLPEvaluator`.
 `JuMP.index` returns the `MOI.VariableIndex` corresponding to a JuMP variable.
 `MOI.VariableIndex` itself is a type-safe wrapper for `Int64` (stored in the

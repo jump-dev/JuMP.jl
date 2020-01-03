@@ -324,7 +324,7 @@ return a `DenseAxisArray`. For example:
 ```jldoctest variables_jump_arrays; setup=:(model=Model())
 julia> @variable(model, x[1:2, [:A,:B]])
 2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
-    Dimension 1, 1:2
+    Dimension 1, Base.OneTo(2)
     Dimension 2, Symbol[:A, :B]
 And data, a 2×2 Array{VariableRef,2}:
  x[1,A]  x[1,B]
@@ -371,7 +371,7 @@ For example, this applies when indices have a dependence upon previous
 indices (called *triangular indexing*). JuMP supports this as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:2, j=i:2])
-JuMP.Containers.SparseAxisArray{VariableRef,2,Tuple{Any,Any}} with 3 entries:
+JuMP.Containers.SparseAxisArray{VariableRef,2,Tuple{Int64,Int64}} with 3 entries:
   [1, 2]  =  x[1,2]
   [2, 2]  =  x[2,2]
   [1, 1]  =  x[1,1]
@@ -382,9 +382,36 @@ syntax appends a comparison check that depends upon the named indices and is
 separated from the indices by a semi-colon (`;`). For example:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:4; mod(i, 2)==0])
-JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Any}} with 2 entries:
+JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Int64}} with 2 entries:
   [4]  =  x[4]
   [2]  =  x[2]
+```
+
+Note that with many index dimensions and a large amount of sparsity,
+variable construction may be unnecessarily slow if the semi-colon syntax is
+naively applied. When using the semi-colon as a filter, JuMP iterates over
+*all* indices and evaluates the conditional for each combination. When this
+is undesired, the recommended work-around is to work directly with a list
+of tuples or create a dictionary. Consider the following examples:
+
+```@meta
+# TODO: Reformat the code below as a doctest.
+```
+
+```jl
+N = 10
+S = [(1, 1, 1),(N, N, N)]
+# Slow. It evaluates conditional N^3 times.
+@variable(model, x1[i=1:N, j=1:N, k=1:N; (i, j, k) in S]) 
+# Fast.
+@variable(model, x2[S])
+# Fast. Manually constructs a dictionary and fills it.
+x3 = Dict()
+for (i, j, k) in S
+    x3[i, j, k] = @variable(model)
+    # Optional, if you care about pretty printing:
+    set_name(x3[i, j, k], "x[$i,$j,$k]")
+end
 ```
 
 ### [Forcing the container type](@id variable_forcing)
@@ -600,6 +627,67 @@ in the model. This is useful for performing operations like:
 - relaxing all integrality constraints in the model
 - setting the starting values for variables to the result of the last solve
 
+## Start values
+
+There are two ways to provide a primal starting solution (also called MIP-start
+or a warmstart) for each variable:
+
+ - using the `start` keyword in the [`@variable`](@ref) macro
+ - using [`set_start_value`](@ref)
+
+The starting value of a variable can be queried using [`start_value`](@ref). If
+no start value has been set, [`start_value`](@ref) will return `nothing`.
+
+```jldoctest variables_start; setup=:(model=Model())
+julia> @variable(model, x)
+x
+
+julia> start_value(x)
+
+julia> @variable(model, y, start = 1)
+y
+
+julia> start_value(y)
+1.0
+
+julia> set_start_value(y, 2)
+
+julia> start_value(y)
+2.0
+```
+
+!!! note
+    Prior to JuMP 0.19, the previous solution to a solve was automatically set
+    as the new starting value. JuMP 0.19 no longer does this automatically. To
+    reproduce the functionality, use:
+    ```julia
+    set_start_value.(all_variables(model), value.(all_variables(model)))
+    ```
+
+## [The `@variables` macro](@id variables)
+
+If you have many [`@variable`](@ref) calls, JuMP provides the macro `@variables`
+that can improve readability:
+
+```jldoctest; setup=:(model=Model())
+julia> @variables(model, begin
+           x
+           y[i=1:2] >= i, (start = i, base_name = "Y_$i")
+           z, Bin
+       end)
+
+julia> print(model)
+Feasibility
+Subject to
+ Y_1[1] ≥ 1.0
+ Y_2[2] ≥ 2.0
+ z binary
+```
+
+!!! note
+    Keyword arguments must be contained within parentheses. (See the example
+    above.)
+
 ## Reference
 
 ```@docs
@@ -607,6 +695,7 @@ in the model. This is useful for performing operations like:
 owner_model
 VariableRef
 all_variables
+num_variables
 
 has_lower_bound
 lower_bound
@@ -635,4 +724,7 @@ BinaryRef
 
 index(::VariableRef)
 optimizer_index(::VariableRef)
+
+set_start_value
+start_value
 ```

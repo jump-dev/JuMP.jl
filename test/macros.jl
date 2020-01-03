@@ -11,6 +11,9 @@
 # Testing for macros
 #############################################################################
 
+import MutableArithmetics
+const MA = MutableArithmetics
+
 @testset "Check Julia generator expression parsing" begin
     sumexpr = :(sum(x[i,j] * y[i,j] for i = 1:N, j in 1:M if i != j))
     @test sumexpr.head == :call
@@ -50,19 +53,18 @@ mutable struct MyVariable
 end
 
 @testset "Extension of @variable with build_variable #1029" begin
-    local MyVariable = Tuple{JuMP.VariableInfo, Int, Int}
-    JuMP.variable_type(m::Model, ::Type{MyVariable}) = MyVariable
+    local MyVariable{S, T, U, V} = Tuple{JuMP.VariableInfo{S, T, U, V}, Int, Int}
     names = Dict{MyVariable, String}()
-    function JuMP.add_variable(m::Model, v::MyVariable, name::String="")
+    function JuMP.add_variable(::Model, v::MyVariable, name::String="")
         names[v] = name
-        v
+        return v
     end
     # Since `VariableInfo` is an immutable struct, two objects with the same
     # fields have the same hash hence we need to add an id to distinguish
     # variables in the `names` dictionary.
     id = 0
     function JuMP.build_variable(_error::Function, info::JuMP.VariableInfo, ::Type{MyVariable}; test_kw::Int = 0)
-        (info, test_kw, id += 1)
+        return (info, test_kw, id += 1)
     end
     m = Model()
     @variable(m, 1 <= x <= 2, MyVariable, binary = true, test_kw = 1, start = 3)
@@ -83,7 +85,7 @@ end
     @test test_kw == 1
 
     @variable(m, y[1:3] >= 0, MyVariable, test_kw = 2)
-    @test isa(y, Vector{MyVariable})
+    @test isa(y, Vector{<:MyVariable})
     for i in 1:3
         info = y[i][1]
         test_kw = y[i][2]
@@ -131,9 +133,9 @@ function build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
         model = ModelType()
         @variable(model, x)
         cref1 = @constraint(model, [1, x, x] in PowerCone(0.5))
-        @test JuMP.constraint_object(cref1).set isa MathOptInterface.PowerCone{Float64}
+        @test JuMP.constraint_object(cref1).set isa MOI.PowerCone{Float64}
         cref2 = @constraint(model, [1, x, x] in PowerCone(0.5), dual = true)
-        @test JuMP.constraint_object(cref2).set isa MathOptInterface.DualPowerCone{Float64}
+        @test JuMP.constraint_object(cref2).set isa MOI.DualPowerCone{Float64}
     end
 end
 
@@ -274,6 +276,15 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test_macro_throws ErrorException @build_constraint(2x + 1)
     end
 
+    @testset "Promotion of SOS sets" begin
+        model = Model()
+        @variable(model, x[1:3])
+        c_sos1 = @build_constraint(x in MOI.SOS1([1, 2, 3]))
+        @test c_sos1.set == MOI.SOS1([1.0, 2.0, 3.0])
+        c_sos2 = @build_constraint(x in MOI.SOS2([6, 5, 4]))
+        @test c_sos2.set == MOI.SOS2([6.0, 5.0, 4.0])
+    end
+
     build_constraint_keyword_test(ModelType)
 end
 
@@ -298,7 +309,8 @@ end
         @variable(m, x)
         # function getindex does not accept keyword arguments
         @test_throws ErrorException x[i=1]
-        @test_throws ErrorException @constraint(m, x[i=1] <= 1)
+        err = ErrorException("Unexpected assignment in expression `x[i=1]`.")
+        @test_macro_throws ErrorException @constraint(m, x[i=1] <= 1)
     end
 
     @testset "Lookup in model scope: @variable" begin
@@ -380,7 +392,7 @@ end
         @test JuMP.isequal_canonical(c.func, x[1]^2 + 2 * x[1] * x[2] + x[2]^2)
         @test c.set == MOI.LessThan(1.0)
         @test JuMP.isequal_canonical(
-            JuMP.destructive_add!(0.0, x', ones(2, 2)), x' * ones(2, 2)
+            MA.@rewrite(x' * ones(2, 2)), x' * ones(2, 2)
         )
     end
 
@@ -434,9 +446,9 @@ end
         Feasibility
         Subject to
          x + y[1] $eq 1.0
-         2 y[1] $ge 1.0
-         y[1] + y[2] $ge 2.0
-         y[1] + y[3] $ge 3.0
+         ref[1] : 2 y[1] $ge 1.0
+         ref[2] : y[1] + y[2] $ge 2.0
+         ref[3] : y[1] + y[3] $ge 3.0
         """
     end
 
@@ -445,11 +457,68 @@ end
         i = 10
         j = 10
         @expression(model, ex[j = 2:3], sum(i for i in 1:j))
-        @test ex[2] == AffExpr(3)
-        @test ex[3] == AffExpr(6)
+        @test ex[2] == 3
+        @test ex[3] == 6
         @test i == 10
         @test j == 10
     end
+
+    @testset "Plural failures" begin
+        model = Model()
+        @test_macro_throws MethodError @variables(model)
+        @test_macro_throws ErrorException("Invalid syntax for @variables") @variables(model, x)
+        @test_macro_throws ErrorException("Invalid syntax for @variables") @variables(model, x >= 0)
+        @test_macro_throws MethodError @variables(model, x >= 0, Bin)
+    end
+
+    @testset "Empty summation in @constraints" begin
+        model = Model()
+        @variable(model, x)
+        c = @constraint(model, x == sum(1.0 for i in 1:0))
+        @test isa(constraint_object(c).func, GenericAffExpr{Float64, VariableRef})
+    end
+
+    @testset "Empty summation in @NLconstraints" begin
+        model = Model()
+        @variable(model, x)
+        c = @NLconstraint(model, x == sum(1.0 for i in 1:0))
+        @test sprint(show, c) == "x - 0 = 0" || sprint(show, c) == "x - 0 == 0"
+    end
+
+    @testset "Splatting error" begin
+        model = Model()
+        A = [1 0; 0 1]
+        @variable(model, x)
+
+        @test_macro_throws ErrorException(
+            "In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...` in the definition of an index set."
+        ) @variable(model, y[axes(A)...])
+
+        f(a, b) = [a, b]
+        @variable(model, z[f((1, 2)...)])
+        @test length(z) == 2
+
+        @test_macro_throws ErrorException(
+            "In `@constraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
+        ) @constraint(model, [axes(A)...], x >= 1)
+
+        @test_macro_throws ErrorException(
+            "In `@NLconstraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
+        ) @NLconstraint(model, [axes(A)...], x >= 1)
+
+        @test_macro_throws ErrorException(
+            "In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
+        ) @expression(model, [axes(A)...], x)
+
+        @test_macro_throws ErrorException(
+            "In `@NLexpression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
+        ) @NLexpression(model, [axes(A)...], x)
+
+        @test_macro_throws ErrorException(
+            "In `@NLparameter(model, p[axes(A)...] == x)`: cannot use splatting operator `...` in the definition of an index set."
+        ) @NLparameter(model, p[axes(A)...] == x)
+    end
+
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
