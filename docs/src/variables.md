@@ -402,7 +402,7 @@ of tuples or create a dictionary. Consider the following examples:
 N = 10
 S = [(1, 1, 1),(N, N, N)]
 # Slow. It evaluates conditional N^3 times.
-@variable(model, x1[i=1:N, j=1:N, k=1:N; (i, j, k) in S]) 
+@variable(model, x1[i=1:N, j=1:N, k=1:N; (i, j, k) in S])
 # Fast.
 @variable(model, x2[S])
 # Fast. Manually constructs a dictionary and fills it.
@@ -611,6 +611,16 @@ The variables `x` in the example above are called *constrained variables* in
 contrast which the variables `y` which are called *free variables* because
 the constraint added on the variables is added after their creation as free
 variables.
+
+!!! note
+    Variable bounds and integrality constraints are specified when variables
+    are created, but they don't involve constrained variables, unless you
+    explicitly use the `in` syntax or the `set` keyword. For instance,
+    `@variable(model, z <= 1, Int)` and `@variable(model, upper_bound = 1,
+    integer = true)` are not constrained variables but `@variable(model,
+    z in MOI.LessThan(1.0), Int)` is a constrained variable in
+    `MOI.LessThan(1.0)` and `@variable(model, lower_bound = 1.0,
+    set = MOI.Integer())` is a constrained variable in `MOI.Integer()`.
 
 !!! warn
     When using JuMP in [Direct mode](@ref), it may be required to create

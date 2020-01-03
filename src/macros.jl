@@ -1128,7 +1128,10 @@ macro variable(args...)
     end
 
     info_kw_args = filter(_is_info_keyword, kw_args)
-    extra_kw_args = filter(kw -> kw.args[1] != :base_name && kw.args[1] != :variable_type && kw.args[1] != :set && !_is_info_keyword(kw), kw_args)
+    extra_kw_args = filter(kw -> begin
+        kw.args[1] != :base_name && kw.args[1] != :variable_type &&
+        kw.args[1] != :set && !_is_info_keyword(kw)
+    end, kw_args)
     base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
     variable_type_kw_args = filter(kw -> kw.args[1] == :variable_type, kw_args)
     set_kw_args = filter(kw -> kw.args[1] == :set, kw_args)
@@ -1152,7 +1155,9 @@ macro variable(args...)
     end
 
     anonvar = isexpr(var, :vect) || isexpr(var, :vcat) || anon_singleton
-    anonvar && explicit_comparison && set === nothing && _error("Cannot use explicit bounds via >=, <= with an anonymous variable")
+    if anonvar && explicit_comparison && set === nothing
+        _error("Cannot use explicit bounds via >=, <= with an anonymous variable")
+    end
     variable = gensym()
     # TODO: Should we generate non-empty default names for variables?
     name = Containers._get_name(var)
