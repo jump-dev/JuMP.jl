@@ -815,12 +815,12 @@ function _moi_constrain_variable(backend::MOI.ModelLike, index, info)
 end
 
 """
-    ConstrainedVariables <: AbstractVariable
+    VariablesConstrainedOnCreation <: AbstractVariable
 
 Variable `scalar_variables` constrained to belong to `set`.
 Adding this variable can be understood as doing:
 ```julia
-function JuMP.add_variable(model::Model, variable::JuMP.ConstrainedVariable, names)
+function JuMP.add_variable(model::Model, variable::JuMP.VariableConstrainedOnCreation, names)
     var_ref = JuMP.add_variable(model, variable.scalar_variable, name)
     JuMP.add_constraint(model, JuMP.VectorConstraint(var_ref, variable.set))
     return var_ref
@@ -831,13 +831,13 @@ instead. See [the MOI documentation](http://www.juliaopt.org/MathOptInterface.jl
 for the difference between adding the variables with `MOI.add_constrained_variable`
 and adding them with `MOI.add_variable` and adding the constraint separately.
 """
-struct ConstrainedVariable{S <: MOI.AbstractScalarSet,
+struct VariableConstrainedOnCreation{S <: MOI.AbstractScalarSet,
                            ScalarVarType <: AbstractVariable} <: AbstractVariable
     scalar_variable::ScalarVarType
     set::S
 end
 
-function add_variable(model::Model, variable::ConstrainedVariable, name::String)
+function add_variable(model::Model, variable::VariableConstrainedOnCreation, name::String)
     var_index = _moi_add_constrained_variable(
         backend(model), variable.scalar_variable, variable.set, name)
     return VariableRef(model, var_index)
@@ -855,12 +855,12 @@ function _moi_add_constrained_variable(
 end
 
 """
-    ConstrainedVariables <: AbstractVariable
+    VariablesConstrainedOnCreation <: AbstractVariable
 
 Vector of variables `scalar_variables` constrained to belong to `set`.
 Adding this variable can be thought as doing:
 ```julia
-function JuMP.add_variable(model::Model, variable::JuMP.ConstrainedVariables, names)
+function JuMP.add_variable(model::Model, variable::JuMP.VariablesConstrainedOnCreation, names)
     var_refs = JuMP.add_variable.(model, variable.scalar_variables,
                                   JuMP.vectorize(names, variable.shape))
     JuMP.add_constraint(model, JuMP.VectorConstraint(var_refs, variable.set))
@@ -872,18 +872,18 @@ instead. See [the MOI documentation](http://www.juliaopt.org/MathOptInterface.jl
 for the difference between adding the variables with `MOI.add_constrained_variables`
 and adding them with `MOI.add_variables` and adding the constraint separately.
 """
-struct ConstrainedVariables{S <: MOI.AbstractVectorSet, Shape <: AbstractShape,
+struct VariablesConstrainedOnCreation{S <: MOI.AbstractVectorSet, Shape <: AbstractShape,
                             ScalarVarType <: AbstractVariable} <: AbstractVariable
     scalar_variables::Vector{ScalarVarType}
     set::S
     shape::Shape
 end
 
-function ConstrainedVariables(variables::Vector{<:AbstractVariable}, set::MOI.AbstractVectorSet)
-    return ConstrainedVariables(variables, set, VectorShape())
+function VariablesConstrainedOnCreation(variables::Vector{<:AbstractVariable}, set::MOI.AbstractVectorSet)
+    return VariablesConstrainedOnCreation(variables, set, VectorShape())
 end
 
-function add_variable(model::Model, variable::ConstrainedVariables, names)
+function add_variable(model::Model, variable::VariablesConstrainedOnCreation, names)
     var_indices = _moi_add_constrained_variables(
         backend(model), variable.scalar_variables, variable.set, vectorize(names, variable.shape))
     var_refs = [VariableRef(model, var_index) for var_index in var_indices]

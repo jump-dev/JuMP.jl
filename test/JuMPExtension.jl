@@ -59,12 +59,12 @@ function JuMP.add_variable(m::MyModel, v::JuMP.AbstractVariable, name::String=""
     JuMP.set_name(vref, name)
     vref
 end
-function JuMP.add_variable(model::MyModel, variable::JuMP.ConstrainedVariable, name::String)
+function JuMP.add_variable(model::MyModel, variable::JuMP.VariableConstrainedOnCreation, name::String)
     var_ref = JuMP.add_variable(model, variable.scalar_variable, name)
     JuMP.add_constraint(model, JuMP.ScalarConstraint(var_ref, variable.set))
     return var_ref
 end
-function JuMP.add_variable(model::MyModel, variable::JuMP.ConstrainedVariables, names)
+function JuMP.add_variable(model::MyModel, variable::JuMP.VariablesConstrainedOnCreation, names)
     var_refs = JuMP.add_variable.(model, variable.scalar_variables,
                                   JuMP.vectorize(names, variable.shape))
     JuMP.add_constraint(model, JuMP.VectorConstraint(var_refs, variable.set))

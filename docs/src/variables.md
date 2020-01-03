@@ -589,6 +589,15 @@ julia> x = @variable(model, [i=1:2], base_name="x", lower_bound=i, integer=true)
 
 ## Variables constrained on creation
 
+!!! info
+    When using JuMP in [Direct mode](@ref), it may be required to constrain
+    variables on creation instead of constraining free variables as the solver
+    may only support variables constrained on creation. In [Automatic and Manual
+    modes](@ref), both ways of adding constraints on variables are equivalent.
+    Indeed, during the copy of the cache to the optimizer, the choice of the
+    constraints on variables that are copied as variables constrained on creation
+    does not depend on how it was added to the cache.
+
 By default, `@variable(model, x)` creates a _free_ variable that belongs to the
 set of real numbers.
 
@@ -628,7 +637,7 @@ julia> @variable(model, y[1:3] in SecondOrderCone())
  y[2]
  y[3]
 ```
-Importantly, in [Direct mode](@ref) and for some solver, the second-order
+Importantly, in [Direct mode](@ref) and for some solvers, the second-order
 constraint cannot be deleted without deleting the variables `y`.
 
 ### The `set` keyword
@@ -638,15 +647,6 @@ An alternate syntax to `x in Set` is to use the `set` keyword of
 ```julia
 x = @variable(model, [1:2, 1:2], set = PSDCone())
 ```
-
-!!! info
-    When using JuMP in [Direct mode](@ref), it may be required to constrain
-    variables on creation instead of constraining free variables as the solver
-    may only support variables constrained on creation. In [Automatic and Manual
-    modes](@ref), both ways of adding constraints on variables are equivalent.
-    Indeed, during the copy of the cache to the optimizer, the choice of the
-    constraints on variables that are copied as variables constrained on creation
-    does not depend on how it was added to the cache.
 
 ## User-defined containers
 

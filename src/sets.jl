@@ -3,7 +3,7 @@ abstract type AbstractVectorSet end
 # Used in `@constraint(model, [1:n] in s)`
 function build_variable(_error::Function, variables::Vector{<:ScalarVariable},
                         set::AbstractVectorSet)
-    return ConstrainedVariables(variables, moi_set(set, length(variables)))
+    return VariablesConstrainedOnCreation(variables, moi_set(set, length(variables)))
 end
 
 # Used in `@constraint(model, func in set)`
