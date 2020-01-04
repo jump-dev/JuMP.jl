@@ -10,26 +10,41 @@
 # @constraint(model, 2x - 1 ⟂ x)
 
 function _build_complements_constraint(
-    _error::Function,
-    F::Vector{<:AbstractJuMPScalar},
-    x::Vector{<:AbstractVariableRef}
+    errorf::Function,
+    F::AbstractArray{<:AbstractJuMPScalar},
+    x::AbstractArray{<:AbstractVariableRef}
 )
-    n = length(x)
-    if length(F) != n
-        _error(
-            "Length of mapping ($(length(F))) is not equal to number of " *
-            "matching variables ($(n))."
+    if size(F) != size(x)
+        errorf(
+            "size of mapping does not match size of variables: " *
+            "$(size(F)) != $(size(x))."
         )
     end
-    return VectorConstraint([F; x], MOI.Complements(n))
+    return VectorConstraint(vec([F x]), MOI.Complements(length(F)))
 end
 
 function _build_complements_constraint(
-    _error::Function,
-    ::Vector{<:AbstractJuMPScalar},
-    ::Vector{<:AbstractJuMPScalar},
+    errorf::Function,
+    F::Containers.SparseAxisArray{<:AbstractJuMPScalar},
+    x::Containers.SparseAxisArray{<:AbstractVariableRef},
 )
-    _error("second term must be a vector of variables.")
+    elements = [F[i] for i in eachindex(F)]
+    for i in eachindex(F)
+        if haskey(x, i)
+            push!(elements, x[i])
+        else
+            errorf("keys of the SparseAxisArray's do not match.")
+        end
+    end
+    return VectorConstraint(elements, MOI.Complements(length(F)))
+end
+
+function _build_complements_constraint(
+    errorf::Function,
+    ::AbstractArray{<:AbstractJuMPScalar},
+    ::AbstractArray{<:AbstractJuMPScalar},
+)
+    errorf("second term must be an array of variables.")
 end
 
 function _build_complements_constraint(
@@ -39,18 +54,18 @@ function _build_complements_constraint(
 end
 
 function _build_complements_constraint(
-    _error::Function, ::AbstractJuMPScalar, ::AbstractJuMPScalar
+    errorf::Function, ::AbstractJuMPScalar, ::AbstractJuMPScalar
 )
-    _error("second term must be a variable.")
+    errorf("second term must be a variable.")
 end
 
 function parse_one_operator_constraint(
-    _error::Function,
+    errorf::Function,
     ::Bool,
     ::Union{Val{:complements}, Val{:⟂}},
     F,
     x
 )
     f, parse_code = _MA.rewrite(F)
-    return parse_code, :(_build_complements_constraint($_error, $f, $(esc(x))))
+    return parse_code, :(_build_complements_constraint($errorf, $f, $(esc(x))))
 end
