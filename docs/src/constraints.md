@@ -819,7 +819,7 @@ MathOptInterface.LessThan{Float64}(1.0)
 
 ## Complementarity constraints
 
-A mixed complementarity problem `F(x) ⟂ x` consists of finding `x` in the
+A mixed complementarity constraint `F(x) ⟂ x` consists of finding `x` in the
 interval `[lb, ub]`, such that the following holds:
 
 - `F(x) == 0` if `lb < x < ub`
@@ -829,19 +829,31 @@ interval `[lb, ub]`, such that the following holds:
 For more information, see the [`MOI.Complements` documentation](https://www.juliaopt.org/MathOptInterface.jl/v0.9/apireference/#MathOptInterface.Complements).
 
 JuMP supports mixed complementarity constraints via `complements(F(x), x)` or
-`F(x) ⟂ x` in the [`@constraint`](@ref) macro. For example:
+`F(x) ⟂ x` in the [`@constraint`](@ref) macro. The interval set `[lb, ub]` is
+obtained from the variable bounds on `x`.
 
+For example, to define the problem `2x - 1 ⟂ x` with `x ∈ [0, ∞)`, do:
 ```jldoctest complementarity; setup=:(model=Model())
 julia> @variable(model, x >= 0)
 x
-
-julia> @constraint(model, complements(2x - 1, x))
-[2 x - 1, x] ∈ MathOptInterface.Complements(1)
 
 julia> @constraint(model, 2x - 1 ⟂ x)
 [2 x - 1, x] ∈ MathOptInterface.Complements(1)
 ```
 This problem has one solution at `x = 0.5`.
+
+The perp operators `⟂` can be entered in most editors (and the Julia REPL) by
+typing `\perp<tab>`.
+
+An alternative approach that does not require the `⟂` symbol uses the
+`complements` function as follows:
+```jldoctest complementarity
+julia> @constraint(model, complements(2x - 1, x))
+[2 x - 1, x] ∈ MathOptInterface.Complements(1)
+```
+
+In both cases, the mapping `F(x)` is supplied as the first argument, and the
+matching variable `x` is supplied as the second.
 
 Vector-valued complementarity constraints are also supported:
 ```jldoctest complementarity
