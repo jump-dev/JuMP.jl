@@ -840,9 +840,9 @@ x
 julia> @constraint(model, 2x - 1 ⟂ x)
 [2 x - 1, x] ∈ MathOptInterface.Complements(1)
 ```
-This problem has one solution at `x = 0.5`.
+This problem has a unique solution at `x = 0.5`.
 
-The perp operators `⟂` can be entered in most editors (and the Julia REPL) by
+The perp operator `⟂` can be entered in most editors (and the Julia REPL) by
 typing `\perp<tab>`.
 
 An alternative approach that does not require the `⟂` symbol uses the
