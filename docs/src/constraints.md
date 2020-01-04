@@ -817,6 +817,52 @@ julia> con.set
 MathOptInterface.LessThan{Float64}(1.0)
 ```
 
+## Complementarity constraints
+
+A mixed complementarity problem `F(x) ⟂ x` consists of finding `x` in the
+interval `[lb, ub]`, such that the following holds:
+
+- `F(x) == 0` if `lb < x < ub`
+- `F(x) >= 0` if `lb == x`
+- `F(x) <= 0` if `x == ub`
+
+For more information, see the [`MOI.Complements` documentation](https://www.juliaopt.org/MathOptInterface.jl/v0.9/apireference/#MathOptInterface.Complements).
+
+JuMP supports mixed complementarity constraints via `complements(F(x), x)` or
+`F(x) ⟂ x` in the [`@constraint`](@ref) macro. For example:
+
+```jldoctest complementarity; setup=:(model=Model())
+julia> @variable(model, x >= 0)
+x
+
+julia> @constraint(model, complements(2x - 1, x))
+[2 x - 1, x] ∈ MathOptInterface.Complements(1)
+
+julia> @constraint(model, 2x - 1 ⟂ x)
+[2 x - 1, x] ∈ MathOptInterface.Complements(1)
+```
+This problem has one solution at `x = 0.5`.
+
+Vector-valued complementarity constraints are also supported:
+```jldoctest complementarity
+julia> @variable(model, -2 <= y[1:2] <= 2)
+2-element Array{VariableRef,1}:
+ y[1]
+ y[2]
+
+julia> M = [1 2; 3 4]
+2×2 Array{Int64,2}:
+ 1  2
+ 3  4
+
+julia> q = [5, 6]
+2-element Array{Int64,1}:
+ 5
+ 6
+
+julia> @constraint(model, M * y + q ⟂ y)
+[y[1] + 2 y[2] + 5, 3 y[1] + 4 y[2] + 6, y[1], y[2]] ∈ MathOptInterface.Complements(2)
+```
 
 ## Reference
 
