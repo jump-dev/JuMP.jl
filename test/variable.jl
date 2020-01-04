@@ -467,6 +467,39 @@ function test_variable_symmetric(ModelType)
     @test y[1, 2] === y[2, 1]
 end
 
+function test_variables_constrained_on_creation(ModelType)
+    model = ModelType()
+
+    err = ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `set` keyword argument is not allowed.")
+    @test_macro_throws err @variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())
+    err = ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `PSD` argument is not allowed.")
+    @test_macro_throws err @variable(model, x[1:2] in SecondOrderCone(), PSD)
+    err = ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), Symmetric)`: Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `\$(Expr(:escape, :(SecondOrderCone())))`.")
+    @test_macro_throws err @variable(model, x[1:2] in SecondOrderCone(), Symmetric)
+    err = ErrorException("In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`: `set` keyword argument was given 2 times.")
+    @test_macro_throws err @variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())
+
+    @variable(model, x[1:2] in SecondOrderCone())
+    @test num_constraints(model, typeof(x), MOI.SecondOrderCone) == 1
+    @test name(x[1]) ==  "x[1]"
+    @test name(x[2]) ==  "x[2]"
+
+    @variable(model, [1:2] in SecondOrderCone())
+    @test num_constraints(model, typeof(x), MOI.SecondOrderCone) == 2
+
+    @variable(model, [1:3] in MOI.SecondOrderCone(3))
+    @test num_constraints(model, typeof(x), MOI.SecondOrderCone) == 3
+
+    z = @variable(model, z in MOI.Semiinteger(1.0, 2.0))
+    @test num_constraints(model, typeof(z), MOI.Semiinteger{Float64}) == 1
+
+    @variable(model, set = MOI.Semiinteger(1.0, 2.0))
+    @test num_constraints(model, typeof(z), MOI.Semiinteger{Float64}) == 2
+
+    @variable(model, [1:3, 1:3] in PSDCone())
+    @test num_constraints(model, typeof(x), MOI.PositiveSemidefiniteConeTriangle) == 1
+end
+
 function variables_test(ModelType::Type{<:JuMP.AbstractModel},
                         VariableRefType::Type{<:JuMP.AbstractVariableRef})
     @testset "Variable name" begin
@@ -539,6 +572,10 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel},
 
     @testset "Symmetric variable" begin
         test_variable_symmetric(ModelType)
+    end
+
+    @testset "Variables constrained on creation" begin
+        test_variables_constrained_on_creation(ModelType)
     end
 end
 

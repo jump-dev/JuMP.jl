@@ -1,9 +1,15 @@
 abstract type AbstractVectorSet end
 
-# Used in `@constraint model f in s`
-function build_constraint(_error::Function, f::AbstractVector,
-                         s::AbstractVectorSet)
-    return build_constraint(_error, f, moi_set(s, length(f)))
+# Used in `@constraint(model, [1:n] in s)`
+function build_variable(_error::Function, variables::Vector{<:ScalarVariable},
+                        set::AbstractVectorSet)
+    return VariablesConstrainedOnCreation(variables, moi_set(set, length(variables)))
+end
+
+# Used in `@constraint(model, func in set)`
+function build_constraint(_error::Function, func::AbstractVector,
+                          set::AbstractVectorSet)
+    return build_constraint(_error, func, moi_set(set, length(func)))
 end
 
 """

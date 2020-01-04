@@ -151,7 +151,7 @@ end
 """
     build_constraint(_error::Function, variables, ::SymMatrixSpace)
 
-Return a `ConstrainedVariables` of shape [`SymmetricMatrixShape`](@ref)
+Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
 creating variables in `MOI.Reals`, i.e. "free" variables unless they are
 constrained after their creation.
 
@@ -160,17 +160,17 @@ This function is used by the [`@variable`](@ref) macro as follows:
 @variable(model, Q[1:2, 1:2], Symmetric)
 ```
 """
-function build_variable(_error::Function, variables, ::SymMatrixSpace)
+function build_variable(_error::Function, variables::Matrix{<:ScalarVariable}, ::SymMatrixSpace)
     n = _square_side(_error, variables)
     set = MOI.Reals(MOI.dimension(MOI.PositiveSemidefiniteConeTriangle(n)))
     shape = SymmetricMatrixShape(n)
-    return ConstrainedVariables(_vectorize_variables(_error, variables), set, shape)
+    return VariablesConstrainedOnCreation(_vectorize_variables(_error, variables), set, shape)
 end
 
 """
     build_constraint(_error::Function, variables, ::PSDCone)
 
-Return a `ConstrainedVariables` of shape [`SymmetricMatrixShape`](@ref)
+Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
 constraining the variables to be positive semidefinite.
 
 This function is used by the [`@variable`](@ref) macro as follows:
@@ -178,11 +178,11 @@ This function is used by the [`@variable`](@ref) macro as follows:
 @variable(model, Q[1:2, 1:2], PSD)
 ```
 """
-function build_variable(_error::Function, variables, ::PSDCone)
+function build_variable(_error::Function, variables::Matrix{<:ScalarVariable}, ::PSDCone)
     n = _square_side(_error, variables)
     set = MOI.PositiveSemidefiniteConeTriangle(n)
     shape = SymmetricMatrixShape(n)
-    return ConstrainedVariables(_vectorize_variables(_error, variables), set, shape)
+    return VariablesConstrainedOnCreation(_vectorize_variables(_error, variables), set, shape)
 end
 
 """

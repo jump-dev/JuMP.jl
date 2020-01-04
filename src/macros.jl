@@ -381,17 +381,17 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
         $constraintcall
     end
 
-    creationcode = Containers.container_code(idxvars, indices, code, requestedcontainer)
+    creation_code = Containers.container_code(idxvars, indices, code, requestedcontainer)
 
     if anonvar
         # Anonymous constraint, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
         # We simply return the constraint reference
-        macro_code = creationcode
+        macro_code = creation_code
     else
         # We register the constraint reference to its name and
         # we assign it to a variable in the local scope of this name
-        macro_code = _macro_assign_and_return(creationcode, variable, name,
+        macro_code = _macro_assign_and_return(creation_code, variable, name,
                                               model_for_registering = m)
     end
     return _assert_valid_model(m, macro_code)
@@ -826,6 +826,16 @@ function build_variable(_error::Function, info::VariableInfo; extra_kw_args...)
     return ScalarVariable(info)
 end
 
+function build_variable(_error::Function, variable::ScalarVariable,
+                        set::MOI.AbstractScalarSet)
+    return VariableConstrainedOnCreation(variable, set)
+end
+function build_variable(_error::Function, variables::Vector{<:ScalarVariable},
+                        set::MOI.AbstractVectorSet)
+    return VariablesConstrainedOnCreation(variables, set)
+end
+
+
 function _macro_error(macroname, args, str...)
     error("In `@$macroname($(join(args, ", ")))`: ", str...)
 end
@@ -862,18 +872,25 @@ Update `infoexr` for a variable expression in the `@variable` macro of the form 
 function parse_one_operator_variable end
 
 function parse_one_operator_variable(
+    _error::Function, infoexpr::_VariableInfoExpr, ::Val{:in}, set)
+    return set
+end
+function parse_one_operator_variable(
     _error::Function, infoexpr::_VariableInfoExpr, ::Union{Val{:<=}, Val{:≤}},
     upper)
     _set_upper_bound_or_error(_error, infoexpr, upper)
+    return
 end
 function parse_one_operator_variable(
     _error::Function, infoexpr::_VariableInfoExpr, ::Union{Val{:>=}, Val{:≥}},
     lower)
     _set_lower_bound_or_error(_error, infoexpr, lower)
+    return
 end
 function parse_one_operator_variable(
     _error::Function, infoexpr::_VariableInfoExpr, ::Val{:(==)}, value)
     _fix_or_error(_error, infoexpr, value)
+    return
 end
 function parse_one_operator_variable(
     _error::Function, infoexpr::_VariableInfoExpr, ::Val{S}, value) where S
@@ -889,18 +906,18 @@ end
 # In that case we assume the variable is the lhs.
 function parse_variable(_error::Function, infoexpr::_VariableInfoExpr,
                         sense::Symbol, var, value)
-    parse_one_operator_variable(_error, infoexpr, Val(sense),
-                                _esc_non_constant(value))
-    return var
+    set = parse_one_operator_variable(_error, infoexpr, Val(sense),
+                                      _esc_non_constant(value))
+    return var, set
 end
 
 # If the lhs is a number and not the rhs, we can deduce that the rhs is
 # the variable.
 function parse_variable(_error::Function, infoexpr::_VariableInfoExpr,
                         sense::Symbol, value::Number, var)
-    parse_one_operator_variable(_error, infoexpr, reverse_sense(Val(sense)),
-                                _esc_non_constant(value))
-    return var
+    set = parse_one_operator_variable(_error, infoexpr, reverse_sense(Val(sense)),
+                                      _esc_non_constant(value))
+    return var, set
 end
 
 function parse_ternary_variable(_error::Function, infoexpr::_VariableInfoExpr,
@@ -908,6 +925,7 @@ function parse_ternary_variable(_error::Function, infoexpr::_VariableInfoExpr,
                                  ::Union{Val{:<=}, Val{:≤}}, upper)
     _set_lower_bound_or_error(_error, infoexpr, lower)
     _set_upper_bound_or_error(_error, infoexpr, upper)
+    return
 end
 function parse_ternary_variable(_error::Function, infoexpr::_VariableInfoExpr,
                                  ::Union{Val{:>=}, Val{:≥}}, upper,
@@ -921,10 +939,10 @@ end
 function parse_variable(_error::Function, infoexpr::_VariableInfoExpr, lvalue,
                         lsign::Symbol, var, rsign::Symbol, rvalue)
     # lvalue lsign var rsign rvalue
-    parse_ternary_variable(_error, infoexpr, Val(lsign),
-                           _esc_non_constant(lvalue), Val(rsign),
-                           _esc_non_constant(rvalue))
-    return var
+    set = parse_ternary_variable(_error, infoexpr, Val(lsign),
+                                 _esc_non_constant(lvalue), Val(rsign),
+                                 _esc_non_constant(rvalue))
+    return var, set
 end
 
 """
@@ -948,6 +966,8 @@ instead of `≤` and the symbol `>=`can be used instead of `≥`)
 * of the form `lb ≤ varexpr ≤ ub` or `ub ≥ varexpr ≥ lb` creating variables
   described by `varexpr` with lower bounds given by `lb` and upper bounds given
   by `ub`.
+* of the form `varexpr in set` creating variables described by
+  `varexpr` constrained to belong to `set`, see [Variables constrained on creation](@ref).
 
 The expression `varexpr` can either be
 
@@ -963,9 +983,11 @@ The recognized positional arguments in `args` are the following:
   when `varexpr` is of the form `varname[1:n,1:n]` or `varname[i=1:n,j=1:n]`.
   It creates a symmetric matrix of variable, that is, it only creates a
   new variable for `varname[i,j]` with `i ≤ j` and sets `varname[j,i]` to the
-  same variable as `varname[i,j]`.
+  same variable as `varname[i,j]`. It is equivalent to using
+  `varexpr in SymMatrixSpace()` as `expr`.
 * `PSD`: The square matrix of variable is both `Symmetric` and constrained to be
-  positive semidefinite.
+  positive semidefinite. It is equivalent to using `varexpr in PSDCone()` as
+  `expr`.
 
 The recognized keyword arguments in `kw_args` are the following:
 
@@ -979,6 +1001,8 @@ The recognized keyword arguments in `kw_args` are the following:
 * `binary`: Sets whether the variable is binary or not.
 * `integer`: Sets whether the variable is integer or not.
 * `variable_type`: See the "Note for extending the variable macro" section below.
+* `set`: Equivalent to using `varexpr in value` as `expr` where `value` is the
+  value of the keyword argument.
 * `container`: Specify the container type, see [Containers in macros](@ref).
 
 ## Examples
@@ -1104,9 +1128,13 @@ macro variable(args...)
     end
 
     info_kw_args = filter(_is_info_keyword, kw_args)
-    extra_kw_args = filter(kw -> kw.args[1] != :base_name && kw.args[1] != :variable_type && !_is_info_keyword(kw), kw_args)
+    extra_kw_args = filter(kw -> begin
+        kw.args[1] != :base_name && kw.args[1] != :variable_type &&
+        kw.args[1] != :set && !_is_info_keyword(kw)
+    end, kw_args)
     base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
     variable_type_kw_args = filter(kw -> kw.args[1] == :variable_type, kw_args)
+    set_kw_args = filter(kw -> kw.args[1] == :set, kw_args)
     infoexpr = _VariableInfoExpr(; _keywordify.(info_kw_args)...)
 
     # There are four cases to consider:
@@ -1115,17 +1143,21 @@ macro variable(args...)
     # var                                     | Symbol    | NA
     # var[1:2]                                | Expr      | :ref
     # var <= ub or var[1:2] <= ub             | Expr      | :call
+    # var in set or var[1:2] in set           | Expr      | :call
     # lb <= var <= ub or lb <= var[1:2] <= ub | Expr      | :comparison
-    # In the two last cases, we call parse_variable
+    # In the three last cases, we call parse_variable
     explicit_comparison = isexpr(x, :comparison) || isexpr(x, :call)
     if explicit_comparison
-        var = parse_variable(_error, infoexpr, x.args...)
+        var, set = parse_variable(_error, infoexpr, x.args...)
     else
         var = x
+        set = nothing
     end
 
     anonvar = isexpr(var, :vect) || isexpr(var, :vcat) || anon_singleton
-    anonvar && explicit_comparison && _error("Cannot use explicit bounds via >=, <= with an anonymous variable")
+    if anonvar && explicit_comparison && set === nothing
+        _error("Cannot use explicit bounds via >=, <= with an anonymous variable")
+    end
     variable = gensym()
     # TODO: Should we generate non-empty default names for variables?
     name = Containers._get_name(var)
@@ -1139,14 +1171,27 @@ macro variable(args...)
         Base.error("Expression $name should not be used as a variable name. Use the \"anonymous\" syntax $name = @variable(model, ...) instead.")
     end
 
-    # process keyword arguments
-    obj = nothing
+    if !isempty(set_kw_args)
+        if length(set_kw_args) > 1
+            _error("`set` keyword argument was given $(length(set_kw_args)) times.")
+        end
+        if set !== nothing
+            _error("Cannot specify set twice, it was already set to `$set` so the `set` keyword argument is not allowed.")
+        end
+        set = esc(set_kw_args[1].args[2])
+    end
 
-    set = nothing
+    # process keyword arguments
     if any(t -> (t == :PSD), extra)
+        if set !== nothing
+            _error("Cannot specify set twice, it was already set to `$set` so the `PSD` argument is not allowed.")
+        end
         set = :(JuMP.PSDCone())
     end
     if any(t -> (t == :Symmetric), extra)
+        if set !== nothing
+            _error("Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `$set`.")
+        end
         set = :(JuMP.SymMatrixSpace())
     end
     extra = filter(x -> (x != :PSD && x != :Symmetric), extra) # filter out PSD and sym tag
@@ -1165,41 +1210,47 @@ macro variable(args...)
     info = _constructor_expr(infoexpr)
     if isa(var, Symbol)
         # Easy case - a single variable
-        set === nothing || _error("Cannot add a scalar constrained variable in $set.")
-        buildcall = :( build_variable($_error, $info, $(extra...)) )
-        _add_kw_args(buildcall, extra_kw_args)
-        variablecall = :( add_variable($model, $buildcall, $base_name) )
-        # The looped code is trivial here since there is a single variable
-        creationcode = :($variable = $variablecall)
+        name_code = base_name
     else
         isa(var, Expr) || _error("Expected $var to be a variable name")
         # We now build the code to generate the variables (and possibly the
         # SparseAxisArray to contain them)
         idxvars, indices = Containers._build_ref_sets(_error, var)
-
-        # Code to be used to create each variable of the container.
-        buildcall = :( build_variable($_error, $info, $(extra...)) )
-        _add_kw_args(buildcall, extra_kw_args)
         name_code = _name_call(base_name, idxvars)
-        if set === nothing
-            variablecall = :( add_variable($model, $buildcall, $name_code) )
-            creationcode = Containers.container_code(idxvars, indices, variablecall, requestedcontainer)
-        else
-            scalar_variables = Containers.container_code(idxvars, indices, buildcall, requestedcontainer)
-            names = Containers.container_code(idxvars, indices, name_code, requestedcontainer)
-            buildcall = :( build_variable($_error, $scalar_variables, $set, $(extra...)) )
-            creationcode = :( add_variable($model, $buildcall, $names) )
+        if set !== nothing
+            name_code = Containers.container_code(idxvars, indices, name_code, requestedcontainer)
         end
     end
+
+    # Code to be used to create each variable of the container.
+    buildcall = :( build_variable($_error, $info, $(extra...)) )
+    _add_kw_args(buildcall, extra_kw_args)
+    if set !== nothing
+        if isa(var, Symbol)
+            scalar_variables = buildcall
+        else
+            scalar_variables = Containers.container_code(idxvars, indices, buildcall, requestedcontainer)
+        end
+        buildcall = :( build_variable($_error, $scalar_variables, $set) )
+    end
+
+    variablecall = :( add_variable($model, $buildcall, $name_code) )
+    if isa(var, Symbol) || set !== nothing
+        # The looped code is trivial here since there is a single variable
+        creation_code = variablecall
+    else
+        creation_code = Containers.container_code(idxvars, indices, variablecall, requestedcontainer)
+    end
+
     if anonvar
         # Anonymous variable, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
         # We simply return the variable
-        macro_code = creationcode
+        macro_code = creation_code
     else
         # We register the variable reference to its name and
         # we assign it to a variable in the local scope of this name
-        macro_code = _macro_assign_and_return(creationcode, variable, name,
+        macro_code = _macro_assign_and_return(creation_code, variable, name,
                                               model_for_registering = model)
     end
     return _assert_valid_model(model, macro_code)
