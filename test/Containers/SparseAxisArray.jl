@@ -71,6 +71,10 @@ SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries:
             @test fd isa SparseAxisArray{Real,1,Tuple{Symbol}}
             @test fd == SparseAxisArray(Dict((:a,) => 2, (:b,) => 1.5))
         end
+        @testset "Operation with scalar" begin
+            @test 3 * (d2 / 2) == d3
+            @test (d2 / 2) * 3 == d3
+        end
     end
     @testset "2-dimensional" begin
         SA = SparseAxisArray

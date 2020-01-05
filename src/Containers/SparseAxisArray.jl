@@ -202,6 +202,22 @@ function Base.copyto!(dest::SparseAxisArray{T, N, K},
     return dest
 end
 
+@static if VERSION >= v"1.3"
+    # `broadcast_preserving_zero_d` calls `axes(A)` which calls `size(A)` which
+    # is not defined. When at least one argument is a `SparseAxisArray`, we can
+    # simply redirect `broadcast_preserving_zero_d` to `broadcast` since we know
+    # the result won't be zero dimensional.
+
+    # Called by `A * 2`
+    function Base.Broadcast.broadcast_preserving_zero_d(f, A::SparseAxisArray, As...)
+        broadcast(f, A, As...)
+    end
+    # Called by `2 * A`
+    function Base.Broadcast.broadcast_preserving_zero_d(f, x, A::SparseAxisArray, As...)
+        broadcast(f, x, A, As...)
+    end
+end
+
 ########
 # Show #
 ########

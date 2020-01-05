@@ -29,7 +29,7 @@
     end
 
     @testset "Range index set" begin
-        A = @inferred DenseAxisArray([1.0,2.0], 2:3)
+        A = @inferred DenseAxisArray([1.0, 2.0], 2:3)
         @test size(A) == (2,)
         @test size(A, 1) == 2
         @test @inferred A[2] == 1.0
@@ -39,6 +39,7 @@
         @test isassigned(A, 2)
         @test !isassigned(A, 1)
         @test length.(axes(A)) == (2,)
+
         correct_answer = DenseAxisArray([2.0, 3.0], 2:3)
         @test sprint(show, correct_answer) == """
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
@@ -46,10 +47,21 @@
 And data, a 2-element Array{Float64,1}:
  2.0
  3.0"""
-        plus1(x) = x + 1
-        @test plus1.(A) == correct_answer
-        @test A .+ 1 == correct_answer
-        @test 1 .+ A == correct_answer
+
+        @testset "Broadcasting" begin
+            plus1(x) = x + 1
+            @test plus1.(A) == correct_answer
+            @test A .+ 1 == correct_answer
+            @test 1 .+ A == correct_answer
+        end
+
+        @testset "Operation with scalar" begin
+            correct_answer = DenseAxisArray([2.0, 4.0], 2:3)
+            @test 2 * A == correct_answer
+            @test A * 2 == correct_answer
+            @test A / (1 / 2) == correct_answer
+        end
+
     end
 
     @testset "Symbol index set" begin
