@@ -12,14 +12,21 @@ struct DummyCallbackData end
     mock = MOI.Utilities.MockOptimizer(
         MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}())
     )
-    model = direct_model(mock)
+    model = Model(() -> mock)
     @variable(model, 0 <= x <= 2.5, Int)
+    # We attach optimizer here, because when submitting the lazy constraint
+    # in reality, we will be in `optimize!`, so the optimizer will be
+    # attached.
+    MOIU.attach_optimizer(model)
     con = @build_constraint(x <= 2)
     MOI.submit(model, MOI.LazyConstraint(DummyCallbackData()), con)
     @test length(mock.submitted) == 1
     c = mock.submitted[MOI.LazyConstraint(DummyCallbackData())]
     @test length(c) == 1
-    @test c[1][1] ≈ moi_function(1.0 * x)
+    @test c[1][1] isa MOI.ScalarAffineFunction{Float64}
+    @test c[1][1].constant == 0.0
+    @test length(c[1][1].terms) == 1
+    @test c[1][1].terms[1].coefficient == 1.0
     @test c[1][2] == MOI.LessThan(2.0)
 end
 

@@ -23,10 +23,6 @@ callbacks:
  2. user-cuts
  3. heuristic solutions
 
-!!! warning
-    Using callbacks requires a solver in [Direct mode](@ref). A direct-mode
-    model is created using [`JuMP.direct_model`](@ref).
-
 ## Available solvers
 
 Callback support is limited to a few solvers. This includes
@@ -66,7 +62,7 @@ information about lazy constraints, see this [blog post by Paul Rubin](http://or
 A lazy constraint callback can be set using the following syntax:
 
 ```julia
-model = direct_model(GLPK.Optimizer)
+model = Model(GLPK.Optimizer)
 @variable(model, x <= 10, Int)
 @objective(model, Max, x)
 function my_callback_function(cb_data)
@@ -98,7 +94,7 @@ aforementioned [blog post](http://orinanobworld.blogspot.com/2012/08/user-cuts-v
 A user-cut callback can be set using the following syntax:
 
 ```julia
-model = direct_model(GLPK.Optimizer)
+model = Model(GLPK.Optimizer)
 @variable(model, x <= 10.5, Int)
 @objective(model, Max, x)
 function my_callback_function(cb_data)
@@ -140,7 +136,7 @@ solutions from them.
 A heuristic solution callback can be set using the following syntax:
 
 ```julia
-model = direct_model(GLPK.Optimizer)
+model = Model(GLPK.Optimizer)
 @variable(model, x <= 10.5, Int)
 @objective(model, Max, x)
 function my_callback_function(cb_data)
