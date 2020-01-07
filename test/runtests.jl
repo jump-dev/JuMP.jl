@@ -21,21 +21,19 @@ include("Containers/Containers.jl")
 include("utilities.jl")
 include("JuMPExtension.jl")
 
-include("derivatives.jl")
-include("derivatives_coloring.jl")
-include("model.jl")
-include("variable.jl")
-include("expr.jl")
-include("objective.jl")
-include("constraint.jl")
-include("nlp.jl")
-include("generate_and_solve.jl")
-include("print.jl")
-include("operator.jl")
-include("mutable_arithmetics.jl")
-include("macros.jl")
-include("lp_sensitivity.jl")
-include("callbacks.jl")
-include("file_formats.jl")
-# TODO: The hygiene test should run in a separate Julia instance where JuMP hasn't been loaded via `using`.
+@testset "$(file)" for file in filter(f -> endswith(f, ".jl"), readdir(@__DIR__))
+    if file in [
+        "runtests.jl",
+        "utilities.jl",
+        "JuMPExtension.jl",
+        "nlp_solver.jl",
+        "hygiene.jl",
+    ]
+        continue
+    end
+    include(file)
+end
+
+# TODO: The hygiene test should run in a separate Julia instance where JuMP
+# hasn't been loaded via `using`.
 include("hygiene.jl")

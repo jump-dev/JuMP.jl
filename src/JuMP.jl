@@ -726,6 +726,8 @@ include("sets.jl")
 
 # Indicator constraint
 include("indicator.jl")
+# Complementarity constraint
+include("complement.jl")
 # SDConstraint
 include("sd.jl")
 
