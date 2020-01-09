@@ -230,6 +230,9 @@ function JuMP.delete(model::MyModel, constraint_ref::MyConstraintRef)
     delete!(model.constraints, constraint_ref.index)
     delete!(model.con_to_name, constraint_ref.index)
 end
+function JuMP.delete(model::MyModel, con_refs::Vector{<:MyConstraintRef})
+    JuMP.delete.(model, con_refs)
+end
 function JuMP.is_valid(model::MyModel, constraint_ref::MyConstraintRef)
     return (model === constraint_ref.model &&
             constraint_ref.index in keys(model.constraints))
