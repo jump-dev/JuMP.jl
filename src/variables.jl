@@ -180,8 +180,8 @@ end
     delete(model::Model, variable_refs::Vector{VariableRef})
 
 Delete the variables associated with `variable_refs` from the model `model`.
-The Solvers may implement methods for deleting multiple variables that are
-more efficient than repeatedely calling the single variable delete method.
+Solvers may implement methods for deleting multiple variables that are
+more efficient than repeatedly calling the single variable delete method.
 """
 function delete(model::Model, variable_refs::Vector{VariableRef})
     if any(model !== owner_model(v) for v in variable_refs)
