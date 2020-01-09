@@ -633,6 +633,16 @@ end
     end
 end
 
+@testset "Deletion of a batch of variables" begin
+    model = Model()
+    @variable(model, x[1:3] >= 1)
+    @objective(model, Min, sum([1, 2, 3] .* x))
+    @test all(is_valid.(model, x))
+    delete(model, x[[1, 3]])
+    @test all((!is_valid).(model, x[[1, 3]]))
+    @test is_valid(model, x[2])
+end
+
 @testset "Variables for JuMPExtension.MyModel" begin
     variables_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end
