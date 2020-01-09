@@ -75,6 +75,13 @@ function JuMP.delete(model::MyModel, vref::MyVariableRef)
     delete!(model.variables, vref.idx)
     delete!(model.var_to_name, vref.idx)
 end
+function JuMP.delete(model::MyModel, vrefs::Vector{MyVariableRef})
+    @assert all(JuMP.is_valid.(model, vrefs))
+    for idx in [vref.idx for vref in vrefs]
+        delete!(model.variables, idx)
+        delete!(model.var_to_name, idx)
+    end
+end
 function JuMP.is_valid(model::MyModel, vref::MyVariableRef)
     return (model === vref.model &&
             vref.idx in keys(model.variables))
