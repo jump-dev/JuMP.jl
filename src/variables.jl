@@ -177,10 +177,10 @@ function delete(model::Model, variable_ref::VariableRef)
 end
 
 """
-    delete(model::Model, variable_refs::VariableRef)
+    delete(model::Model, variable_refs::Vector{VariableRef})
 
 Delete the variables associated with `variable_refs` from the model `model`.
-The solvers may implement methods for deleting multiple variables that are
+The Solvers may implement methods for deleting multiple variables that are
 more efficient than repeatedely calling the single variable delete method.
 """
 function delete(model::Model, variable_refs::Vector{VariableRef})
