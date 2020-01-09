@@ -180,12 +180,12 @@ Solvers may implement methods for deleting multiple constraints that are
 more efficient than repeatedly calling the single constraint delete method.
 """
 function delete(model::Model, con_refs::Vector{<:ConstraintRef{Model}})
-    # This is just a fallback of the fallback. To be really useful,
-    # instead of calling JuMP.delete repeatedly it needs to call a
-    # (currently unimplemented) fallback in MOI like the one for
-    # batch variable deletion: https://github.com/JuliaOpt/MathOptInterface.jl/blob/78c15baee/src/indextypes.jl#L119
-    # Then the solvers may reimplement the fallback in MOI level.
-    delete.(model, con_refs)
+    if any(c -> model !== c.model, con_refs)
+        error("A constraint reference you are trying to delete does not" * "
+            belong to the model.")
+    end
+    MOI.delete(backend(model), index.(con_refs))
+    return
 end
 
 """
