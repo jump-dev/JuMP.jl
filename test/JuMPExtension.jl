@@ -75,6 +75,9 @@ function JuMP.delete(model::MyModel, vref::MyVariableRef)
     delete!(model.variables, vref.idx)
     delete!(model.var_to_name, vref.idx)
 end
+function JuMP.delete(model::MyModel, vrefs::Vector{MyVariableRef})
+    JuMP.delete.(model, vrefs)
+end
 function JuMP.is_valid(model::MyModel, vref::MyVariableRef)
     return (model === vref.model &&
             vref.idx in keys(model.variables))
@@ -226,6 +229,9 @@ function JuMP.delete(model::MyModel, constraint_ref::MyConstraintRef)
     @assert JuMP.is_valid(model, constraint_ref)
     delete!(model.constraints, constraint_ref.index)
     delete!(model.con_to_name, constraint_ref.index)
+end
+function JuMP.delete(model::MyModel, con_refs::Vector{<:MyConstraintRef})
+    JuMP.delete.(model, con_refs)
 end
 function JuMP.is_valid(model::MyModel, constraint_ref::MyConstraintRef)
     return (model === constraint_ref.model &&

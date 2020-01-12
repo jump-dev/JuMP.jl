@@ -177,6 +177,22 @@ function delete(model::Model, variable_ref::VariableRef)
 end
 
 """
+    delete(model::Model, variable_refs::Vector{VariableRef})
+
+Delete the variables associated with `variable_refs` from the model `model`.
+Solvers may implement methods for deleting multiple variables that are
+more efficient than repeatedly calling the single variable delete method.
+"""
+function delete(model::Model, variable_refs::Vector{VariableRef})
+    if any(model !== owner_model(v) for v in variable_refs)
+        error("A variable reference you are trying to delete does not " *
+              "belong to the model.")
+    end
+    MOI.delete(backend(model), index.(variable_refs))
+    return
+end
+
+"""
     is_valid(model::Model, variable_ref::VariableRef)
 
 Return `true` if `variable` refers to a valid variable in `model`.

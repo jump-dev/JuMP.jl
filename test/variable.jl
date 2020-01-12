@@ -500,6 +500,19 @@ function test_variables_constrained_on_creation(ModelType)
     @test num_constraints(model, typeof(x), MOI.PositiveSemidefiniteConeTriangle) == 1
 end
 
+function test_batch_delete_variables(ModelType)
+    model = ModelType()
+    @variable(model, x[1:3] >= 1)
+    @objective(model, Min, sum([1, 2, 3] .* x))
+    @test all(is_valid.(model, x))
+    delete(model, x[[1, 3]])
+    @test all((!is_valid).(model, x[[1, 3]]))
+    @test is_valid(model, x[2])
+    second_model = ModelType()
+    @test_throws Exception JuMP.delete(second_model, x[2])
+    @test_throws Exception JuMP.delete(second_model, x[[1, 3]])
+end
+
 function variables_test(ModelType::Type{<:JuMP.AbstractModel},
                         VariableRefType::Type{<:JuMP.AbstractVariableRef})
     @testset "Variable name" begin
@@ -576,6 +589,10 @@ function variables_test(ModelType::Type{<:JuMP.AbstractModel},
 
     @testset "Variables constrained on creation" begin
         test_variables_constrained_on_creation(ModelType)
+    end
+
+    @testset "Batch deletion of variables" begin
+        test_batch_delete_variables(ModelType)
     end
 end
 

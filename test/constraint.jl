@@ -119,6 +119,21 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         @test_throws Exception JuMP.delete(second_model, constraint_ref)
     end
 
+    @testset "batch delete / is_valid constraints" begin
+        model = ModelType()
+        @variable(model, x[1:9])
+        cons = [@constraint(model, sum(x[1:2:9]) <= 3)]
+        push!(cons, @constraint(model, sum(x[2:2:8]) <= 2))
+        push!(cons, @constraint(model, sum(x[1:3:9]) <= 1))
+        @test all(JuMP.is_valid.(model, cons))
+        JuMP.delete(model, cons[[1, 3]])
+        @test all((!JuMP.is_valid).(model, cons[[1, 3]]))
+        @test JuMP.is_valid(model, cons[2])
+        second_model = ModelType()
+        @test_throws Exception JuMP.delete(second_model, cons[[1, 3]])
+        @test_throws Exception JuMP.delete(second_model, [cons[2]])
+    end
+
     @testset "Two-sided constraints" begin
         m = ModelType()
         @variable(m, x)
