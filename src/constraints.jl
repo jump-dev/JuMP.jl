@@ -164,7 +164,7 @@ end
 
 Delete the constraint associated with `constraint_ref` from the model `model`.
 """
-function delete(model::Model, con_ref::ConstraintRef{Model})
+function delete(model::Model, con_ref::ConstraintRef)
     if model !== con_ref.model
         error("The constraint reference you are trying to delete does not " *
               "belong to the model.")
@@ -173,11 +173,12 @@ function delete(model::Model, con_ref::ConstraintRef{Model})
 end
 
 """
-    delete(model::Model, con_refs::Vector{ConstraintRef})
+    delete(model::Model, con_refs::Vector{<:ConstraintRef})
 
 Delete the constraints associated with `con_refs` from the model `model`.
-Solvers may implement methods for deleting multiple constraints that are
-more efficient than repeatedly calling the single constraint delete method.
+Solvers may implement specialized methods for deleting multiple constraints of
+the same concrete type. These may be more efficient than repeatedly calling the
+single constraint delete method.
 """
 function delete(model::Model, con_refs::Vector{<:ConstraintRef{Model}})
     if any(c -> model !== c.model, con_refs)
