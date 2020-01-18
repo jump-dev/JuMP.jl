@@ -614,8 +614,8 @@ However, some solvers require a constraining set _at creation time_.
 We say that these variables are _constrained on creation_.
 
 Use `in` within `@variable` to access the special syntax for constraining
-variables on creation. For example, the following create a vector of variables
-constrained on creation to belong to the [`SecondOrderCone`](@ref) is:
+variables on creation. For example, the following creates a vector of variables
+constrained on creation to belong to the [`SecondOrderCone`](@ref):
 ```jldoctest constrained_variables; setup=:(model=Model())
 julia> @variable(model, y[1:3] in SecondOrderCone())
 3-element Array{VariableRef,1}:
