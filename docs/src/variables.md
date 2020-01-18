@@ -598,26 +598,34 @@ julia> x = @variable(model, [i=1:2], base_name="x", lower_bound=i, integer=true)
     constraints on variables that are copied as variables constrained on creation
     does not depend on how it was added to the cache.
 
-By default, `@variable(model, x)` creates a _free_ variable that belongs to the
-set of real numbers.
+All uses of the `@variable` macro documented so far translate to a separate
+call for variable creation and adding of constraints.
 
-If you add constraints, such as `@variable(model, x >= 0, Int)`, then the
-`@variable` macro is equivalent to:
+For example, `@variable(model, x >= 0, Int)`, is equivalent to:
 ```julia
 @variable(model, x)
-@constraint(model, x in MOI.GreaterThan(0.0))
+set_lower_bound(x, 0.0)
 @constraint(model, x in MOI.Integer())
 ```
 Importantly, the bound and integrality constraints are added _after_ the
 variable has been created.
 
-However, in some cases, it is necessary to supply a constraining set _at
-creation time_. We call these variables _variables constrained on creation_ to
-differentiate them from _variables free on creation_.
+However, some solvers require a constraining set _at creation time_.
+We say that these variables are _constrained on creation_.
 
-For example, one way to create a vector of variables constrained to the second
-order cone is as follows:
+Use `in` within `@variable` to access the special syntax for constraining
+variables on creation. For example, the following creates a vector of variables
+constrained on creation to belong to the [`SecondOrderCone`](@ref):
 ```jldoctest constrained_variables; setup=:(model=Model())
+julia> @variable(model, y[1:3] in SecondOrderCone())
+3-element Array{VariableRef,1}:
+ y[1]
+ y[2]
+ y[3]
+```
+
+For contrast, the more standard approach is as follows:
+```jldoctest constrained_variables
 julia> @variable(model, x[1:3])
 3-element Array{VariableRef,1}:
  x[1]
@@ -628,17 +636,13 @@ julia> @constraint(model, x in SecondOrderCone())
 [x[1], x[2], x[3]] ∈ MathOptInterface.SecondOrderCone(3)
 ```
 
-An alternative approach, creating a vector of variables constrained on creation
-to belong to the [`SecondOrderCone`](@ref) is:
-```jldoctest constrained_variables
-julia> @variable(model, y[1:3] in SecondOrderCone())
-3-element Array{VariableRef,1}:
- y[1]
- y[2]
- y[3]
-```
-Importantly, in [Direct mode](@ref) and for some solvers, the second-order
-constraint cannot be deleted without deleting the variables `y`.
+The technical difference between the former and the latter is that the former
+calls `MOI.add_constrained_variables` while the latter calls `MOI.add_variables`
+and then `MOI.add_constraint`. This distinction is important only in
+[Direct mode](@ref), depending on the solver being used. It's often not
+possible to delete the [`SecondOrderCone`](@ref) constraint if it was specified
+at variable creation time.
+
 
 ### The `set` keyword
 
