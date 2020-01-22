@@ -32,13 +32,6 @@ function MOIU.attach_optimizer(model::Model)
     MOIU.attach_optimizer(backend(model))
 end
 
-const _set_optimizer_not_callable_message =
-    "The provided optimizer_factory is invalid. It must be callable with zero" *
-    "arguments. For example, \"Ipopt.Optimizer\" or" *
-    "\"() -> ECOS.Optimizer()\". It should not be an instantiated optimizer " *
-    "like \"Ipopt.Optimizer()\" or \"ECOS.Optimizer()\"." *
-    "(Note the difference in parentheses!)"
-
 """
     set_optimizer(model::Model, optimizer_factory;
                   bridge_constraints::Bool=true)
@@ -63,38 +56,24 @@ model = Model()
 set_optimizer(model, GLPK.Optimizer)
 ```
 """
-function set_optimizer(model::Model, optimizer_factory;
+function set_optimizer(model::Model, optimizer_constructor;
                        bridge_constraints::Bool=true)
     error_if_direct_mode(model, :set_optimizer)
-    if !applicable(optimizer_factory)
-        error(_set_optimizer_not_callable_message)
-    end
-    optimizer = optimizer_factory()
-    if !isa(optimizer, MOI.AbstractOptimizer)
-        error("The provided optimizer_factory returned an object of type " *
-              "$(typeof(optimizer)). Expected a " *
-              "MathOptInterface.AbstractOptimizer.")
-    end
-    if !MOI.is_empty(optimizer)
-        error("The provided optimizer_factory returned a non-empty optimizer.")
-    end
     if bridge_constraints
         # The names are handled by the first caching optimizer.
         # If default_copy_to without names is supported, no need for a second
         # cache.
-        if !MOIU.supports_default_copy_to(optimizer, false)
-            if mode(model) == MANUAL
-                # TODO figure out what to do in manual mode with the two caches
-                error("Bridges in `MANUAL` mode with an optimizer not ",
-                      "supporting `default_copy_to` is not supported yet")
-            end
-            universal_fallback = MOIU.UniversalFallback(MOIU.Model{Float64}())
-            optimizer = MOIU.CachingOptimizer(universal_fallback, optimizer)
+        if !MOIU.supports_default_copy_to(optimizer, false) && mode(model) == MANUAL
+            # TODO figure out what to do in manual mode with the two caches
+            error("Bridges in `MANUAL` mode with an optimizer not ",
+                  "supporting `default_copy_to` is not supported yet")
         end
-        optimizer = MOI.Bridges.full_bridge_optimizer(optimizer, Float64)
+        optimizer = MOI.instantiate(optimizer_constructor, with_bridge_type=Float64, with_names=false)
         for bridge_type in model.bridge_types
             _moi_add_bridge(optimizer, bridge_type)
         end
+    else
+        optimizer = MOI.instantiate(optimizer_constructor)
     end
     MOIU.reset_optimizer(model, optimizer)
 end
