@@ -53,38 +53,34 @@ include("utils.jl")
 const _MOIVAR = MOI.VariableIndex
 const _MOICON{F,S} = MOI.ConstraintIndex{F,S}
 
-# OptimizerFactory was deprecated in JuMP 0.21 and should be removed when
-# with_optimizer is removed.
-struct OptimizerFactory
-    # The constructor can be
-    # * `Function`: a function, or
-    # * `DataType`: a type, or
-    # * `UnionAll`: a type with missing parameters.
-    constructor
-    args::Tuple
-    kwargs # type changes from Julia v0.6 to v0.7 so we leave it untyped for now
+function with_optimizer(constructor; kwargs...)
+    if isempty(kwargs)
+        deprecation_message = """
+with_optimizer is deprecated, replace `with_optimizer(Ipopt.Optimizer)` by `Ipopt.Optimizer`.
+"""
+        Base.depwarn(deprecation_message, :with_optimizer)
+        return constructor
+    else
+        deprecation_message = """
+`with_optimizer` is deprecated, replace `with_optimizer(Ipopt.Optimizer, max_cpu_time=60.0)`
+by `MOI.OptimizerWithAttributes(Ipopt.Optimizer, "max_cpu_time" => 60.0)`.
+"""
+        Base.depwarn(deprecation_message, :with_optimizer_kw)
+        params = [MOI.RawParameter(string(kw.first)) => kw.second for kw in kwargs]
+        return MOI.OptimizerWithAttributes(constructor, params)
+    end
 end
-
-function with_optimizer(constructor,
-                        args...; kwargs...)
+function with_optimizer(constructor, args...; kwargs...)
     deprecation_message = """
-with_optimizer is deprecated. The examples below demonstrate how to update to the new syntax:
-- 'with_optimizer(Ipopt.Optimizer)' becomes 'Ipopt.Optimizer'.
-- 'set_optimizer(model, with_optimizer(Ipopt.Optimizer, print_level=1, tol=1e-5))' becomes 'set_optimizer(model, Ipopt.Optimizer); set_parameters(model, \"print_level\" => 1, \"tol\" => 1e-5)'.
-- In rare cases where an argument must be passed to the constructor, use an anonymous function. For example, 'env = Gurobi.Env(); set_optimizer(model, with_optimizer(Gurobi.Optimizer, env))' becomes 'env = Gurobi.Env(); set_optimizer(model, () -> Gurobi.Optimizer(env))'.
-    """
-    Base.depwarn(deprecation_message, :with_optimizer)
+`with_optimizer` is deprecated, replace `with_optimizer(Ipopt.Optimizer, args...)` by `() -> Ipopt.Optimizer(args...)`.
+"""
+    Base.depwarn(deprecation_message, :with_optimizer_args)
     if !applicable(constructor, args...)
         error("$constructor does not have any method with arguments $args.",
-              "The first argument of `with_optimizer` should be callable with",
+              " The first argument of `with_optimizer` should be callable with",
               " the other argument of `with_optimizer`.")
     end
-    return OptimizerFactory(constructor, args, kwargs)
-end
-
-function (optimizer_factory::OptimizerFactory)()
-    return optimizer_factory.constructor(optimizer_factory.args...;
-                                         optimizer_factory.kwargs...)
+    return with_optimizer(() -> constructor(args...); kwargs...)
 end
 
 include("shapes.jl")

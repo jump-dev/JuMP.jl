@@ -63,11 +63,6 @@ function set_optimizer(model::Model, optimizer_constructor;
         # The names are handled by the first caching optimizer.
         # If default_copy_to without names is supported, no need for a second
         # cache.
-        if !MOIU.supports_default_copy_to(optimizer, false) && mode(model) == MANUAL
-            # TODO figure out what to do in manual mode with the two caches
-            error("Bridges in `MANUAL` mode with an optimizer not ",
-                  "supporting `default_copy_to` is not supported yet")
-        end
         optimizer = MOI.instantiate(optimizer_constructor, with_bridge_type=Float64, with_names=false)
         for bridge_type in model.bridge_types
             _moi_add_bridge(optimizer, bridge_type)
@@ -103,7 +98,7 @@ thrown if `optimize_hook` is `nothing` and keyword arguments are provided.
 function optimize!(model::Model,
                    # TODO: Remove the optimizer_factory and bridge_constraints
                    # arguments when the deprecation error below is removed.
-                   optimizer_factory::Union{Nothing, OptimizerFactory}=nothing;
+                   optimizer_factory=nothing;
                    bridge_constraints::Bool=true,
                    ignore_optimize_hook=(model.optimize_hook === nothing),
                    kwargs...)
