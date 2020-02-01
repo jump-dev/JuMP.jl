@@ -53,6 +53,16 @@ include("utils.jl")
 const _MOIVAR = MOI.VariableIndex
 const _MOICON{F,S} = MOI.ConstraintIndex{F,S}
 
+"""
+    optimizer_with_attributes(optimizer_constructor, params::Pair...)
+
+Create an `MOI.OptimizerWithAttributes` grouping an optimizer constructor with
+the list of parameters `params`.
+"""
+function optimizer_with_attributes(optimizer_constructor, args::Pair...)
+    return MOI.OptimizerWithAttributes(optimizer_with_attributes, args...)
+end
+
 function with_optimizer(constructor; kwargs...)
     if isempty(kwargs)
         deprecation_message = """
@@ -63,7 +73,7 @@ with_optimizer is deprecated, replace `with_optimizer(Ipopt.Optimizer)` by `Ipop
     else
         deprecation_message = """
 `with_optimizer` is deprecated, replace `with_optimizer(Ipopt.Optimizer, max_cpu_time=60.0)`
-by `MOI.OptimizerWithAttributes(Ipopt.Optimizer, "max_cpu_time" => 60.0)`.
+by `optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time" => 60.0)`.
 """
         Base.depwarn(deprecation_message, :with_optimizer_kw)
         params = [MOI.RawParameter(string(kw.first)) => kw.second for kw in kwargs]
@@ -71,16 +81,31 @@ by `MOI.OptimizerWithAttributes(Ipopt.Optimizer, "max_cpu_time" => 60.0)`.
     end
 end
 function with_optimizer(constructor, args...; kwargs...)
-    deprecation_message = """
+    if isempty(kwargs)
+        deprecation_message = """
 `with_optimizer` is deprecated, replace `with_optimizer(Ipopt.Optimizer, args...)` by `() -> Ipopt.Optimizer(args...)`.
 """
-    Base.depwarn(deprecation_message, :with_optimizer_args)
-    if !applicable(constructor, args...)
-        error("$constructor does not have any method with arguments $args.",
-              " The first argument of `with_optimizer` should be callable with",
-              " the other argument of `with_optimizer`.")
+        Base.depwarn(deprecation_message, :with_optimizer_args)
+        if !applicable(constructor, args...)
+            error("$constructor does not have any method with arguments $args.",
+                  " The first argument of `with_optimizer` should be callable with",
+                  " the other argument of `with_optimizer`.")
+        end
+        return with_optimizer(() -> constructor(args...); kwargs...)
+    else
+        deprecation_message = """
+`with_optimizer` is deprecated, replace `with_optimizer(Gurobi.Optimizer, env, Presolve=0)`
+by `optimizer_with_attributes(() -> Gurobi.Optimizer(env), "Presolve" => 0)`.
+"""
+        Base.depwarn(deprecation_message, :with_optimizer_args_kw)
+        if !applicable(constructor, args...)
+            error("$constructor does not have any method with arguments $args.",
+                  " The first argument of `with_optimizer` should be callable with",
+                  " the other argument of `with_optimizer`.")
+        end
+        params = [MOI.RawParameter(string(kw.first)) => kw.second for kw in kwargs]
+        return MOI.OptimizerWithAttributes(() -> constructor(args...), params)
     end
-    return with_optimizer(() -> constructor(args...); kwargs...)
 end
 
 include("shapes.jl")
