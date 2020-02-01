@@ -482,6 +482,17 @@ function test_variable_symmetric(ModelType, ::Any)
     @test y[1, 2] === y[2, 1]
 end
 
+function test_variable_skewsymmetric(ModelType, ::Any)
+    model = ModelType()
+    @variable model x[1:2, 1:2] in SkewSymMatrixSpace()
+    @test x[1, 2] == -x[2, 1]
+    @test x[1, 1] == 0
+    @test x[2, 2] == 0
+    @test model[:x] === x
+    y = @variable model [1:2, 1:2] in SkewSymMatrixSpace()
+    @test y[1, 2] == -y[2, 1]
+end
+
 function test_variables_constrained_on_creation(ModelType, ::Any)
     model = ModelType()
 
