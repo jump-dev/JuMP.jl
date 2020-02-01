@@ -56,8 +56,15 @@ const _MOICON{F,S} = MOI.ConstraintIndex{F,S}
 """
     optimizer_with_attributes(optimizer_constructor, params::Pair...)
 
-Create an `MOI.OptimizerWithAttributes` grouping an optimizer constructor with
-the list of parameters `params`.
+Groups an optimizer constructor with the list of parameters `params`. Note that
+it is equivalent to `MOI.OptimizerWithAttributes`.
+
+## Examples
+
+The call `optimizer_with_attributes(Gurobi.Optimizer, "Presolve" => 0)` groups
+a Gurobi optimizer with the parameter `Presolve` with value `0`. When
+instantiated, it creates a Gurobi optimizer and then set the `Presolve`
+parameter to value `0`.
 """
 function optimizer_with_attributes(optimizer_constructor, args::Pair...)
     return MOI.OptimizerWithAttributes(optimizer_with_attributes, args...)
