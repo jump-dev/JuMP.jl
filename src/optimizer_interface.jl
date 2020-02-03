@@ -54,7 +54,7 @@ optimizer are automatically bridged to equivalent supported constraints when
 an appropriate transformation is defined in the `MathOptInterface.Bridges`
 module or is defined in another module and is explicitly added.
 
-See [`set_parameters`](@ref) and [`set_parameter`](@ref) for setting
+See [`set_optimizer_attributes`](@ref) and [`set_optimizer_attribute`](@ref) for setting
 solver-specific parameters of the optimizer.
 
 ## Examples
