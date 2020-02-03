@@ -101,10 +101,11 @@ end
 """
     SkewSymmetricMatrixShape
 
-Shape object for a skew symmetric square matrix of `side_dimension` rows and columns.
-The vectorized form contains the entries of the upper-right triangular part of
-the matrix (without the diagonal) given column by column (or equivalently, the
-entries of the lower-left triangular part given row by row). The diagonal is zero.
+Shape object for a skew symmetric square matrix of `side_dimension` rows and
+columns. The vectorized form contains the entries of the upper-right triangular
+part of the matrix (without the diagonal) given column by column (or
+equivalently, the entries of the lower-left triangular part given row by row).
+The diagonal is zero.
 """
 struct SkewSymmetricMatrixShape <: AbstractShape
     side_dimension::Int
@@ -120,7 +121,7 @@ function reshape_vector(vectorized_form::Vector{T}, shape::SkewSymmetricMatrixSh
         end
     end
     for j in 1:shape.side_dimension
-        matrix[j, j] =  zero(T)
+        matrix[j, j] = zero(T)
     end
 
     return matrix
@@ -205,7 +206,7 @@ end
 """
     build_constraint(_error::Function, variables, ::SkewSymMatrixSpace)
 
-Return a `VariablesConstrainedOnCreation` of shape [`SkewSymMatrixSpace`](@ref)
+Return a `VariablesConstrainedOnCreation` of shape [`SkewSymMatrixShape`](@ref)
 creating variables in `MOI.Reals`, i.e. "free" variables unless they are
 constrained after their creation.
 
