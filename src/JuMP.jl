@@ -61,14 +61,18 @@ it is equivalent to `MOI.OptimizerWithAttributes`.
 
 ## Examples
 
-The call `optimizer_with_attributes(Gurobi.Optimizer, "Presolve" => 0)` groups
-a Gurobi optimizer with the parameter `Presolve` with value `0`. When
-provided to the `Model` constructor or to [`set_optimizer`](@ref), it creates a
-Gurobi optimizer and then set the `Presolve` parameter to value `0`:
+The call `optimizer_with_attributes(Gurobi.Optimizer, "Presolve" => 0, "OutputFlag" => 0)`
+groups a Gurobi optimizer with the parameters `Presolve` with value `0` and
+`OutputFlag` with value `0`. When provided to the `Model` constructor or to
+[`set_optimizer`](@ref), it creates a Gurobi optimizer and then set the
+`Presolve` parameter to value `0` and the `OutputFlag` parameter to value `0`:
 ```julia
-julia> model = Model(optimizer_with_attributes(Gurobi.Optimizer, "Presolve" => 0));
+julia> model = Model(optimizer_with_attributes(Gurobi.Optimizer, "Presolve" => 0, "OutputFlag" => 0));
 
 julia> MOI.get(model, MOI.RawParameter("Presolve"))
+0
+
+julia> MOI.get(model, MOI.RawParameter("OutputFlag"))
 0
 ```
 Alternatively, the parameter can be provided separately with either
@@ -81,14 +85,23 @@ julia> set_parameter(model, "Presolve", 0)
 
 julia> MOI.get(model, MOI.RawParameter("Presolve"))
 0
+
+julia> set_parameter(model, "OutputFlag", 0)
+0
+
+julia> MOI.get(model, MOI.RawParameter("OutputFlag"))
+0
 ```
 or [`set_parameters`](@ref):
 ```julia
 julia> model = Model(Gurobi.Optimizer);
 
-julia> set_parameters(model, "Presolve" => 0)
+julia> set_parameters(model, "Presolve" => 0, "OutputFlag" => 0)
 
 julia> MOI.get(model, MOI.RawParameter("Presolve"))
+0
+
+julia> MOI.get(model, MOI.RawParameter("OutputFlag"))
 0
 ```
 """
