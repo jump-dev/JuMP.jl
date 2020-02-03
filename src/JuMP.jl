@@ -70,7 +70,7 @@ function with_optimizer(constructor,
     deprecation_message = """
 with_optimizer is deprecated. The examples below demonstrate how to update to the new syntax:
 - 'with_optimizer(Ipopt.Optimizer)' becomes 'Ipopt.Optimizer'.
-- 'set_optimizer(model, with_optimizer(Ipopt.Optimizer, print_level=1, tol=1e-5))' becomes 'set_optimizer(model, Ipopt.Optimizer); set_parameters(model, \"print_level\" => 1, \"tol\" => 1e-5)'.
+- 'set_optimizer(model, with_optimizer(Ipopt.Optimizer, print_level=1, tol=1e-5))' becomes 'set_optimizer(model, Ipopt.Optimizer); set_optimizer_attribute(model, \"print_level\" => 1, \"tol\" => 1e-5)'.
 - In rare cases where an argument must be passed to the constructor, use an anonymous function. For example, 'env = Gurobi.Env(); set_optimizer(model, with_optimizer(Gurobi.Optimizer, env))' becomes 'env = Gurobi.Env(); set_optimizer(model, () -> Gurobi.Optimizer(env))'.
     """
     Base.depwarn(deprecation_message, :with_optimizer)
@@ -424,34 +424,77 @@ function solve_time(model::Model)
 end
 
 """
-    set_parameter(model::Model, name, value)
+    set_optimizer_attribute(model::Model, name::String, value)
 
-Sets solver-specific parameter identified by `name` to `value`.
+Sets solver-specific attribute identified by `name` to `value`.
+
+This is equivalent to `set_optimizer_attribute(model, MOI.RawParameter(name), value)`.
 """
-function set_parameter(model::Model, name, value)
-    return MOI.set(model, MOI.RawParameter(name), value)
+function set_optimizer_attribute(model::Model, name::String, value)
+    return set_optimizer_attribute(model, MOI.RawParameter(name), value)
 end
 
 """
-    set_parameters(model::Model, pairs::Pair...)
+    set_optimizer_attribute(
+        model::Model, attr::MOI.AbstractOptimizerAttribute, value
+    )
+
+Set the solver-specific attribute `attr` in `model` to `value`.
+"""
+function set_optimizer_attribute(
+    model::Model, attr::MOI.AbstractOptimizerAttribute, value
+)
+    return MOI.set(model, attr, value)
+end
+
+@deprecate set_parameter set_optimizer_attribute
+
+"""
+    set_optimizer_attributes(model::Model, pairs::Pair...)
 
 Given a list of `parameter_name => value` pairs, calls
-`set_parameter(model, parameter_name, value)` for each pair. See
-[`set_parameter`](@ref).
+`set_optimizer_attribute(model, parameter_name, value)` for each pair. See
+[`set_optimizer_attribute`](@ref).
 
 ## Example
 ```julia
 model = Model(Ipopt.Optimizer)
-set_parameters(model, "tol" => 1e-4, "max_iter" => 100)
+set_optimizer_attributes(model, "tol" => 1e-4, "max_iter" => 100)
 # The above call is equivalent to:
-set_parameter(model, "tol", 1e-4)
-set_parameter(model, "max_iter", 100)
+set_optimizer_attribute(model, "tol", 1e-4)
+set_optimizer_attribute(model, "max_iter", 100)
 ```
 """
-function set_parameters(model::Model, pairs::Pair...)
+function set_optimizer_attributes(model::Model, pairs::Pair...)
     for (name, value) in pairs
-        set_parameter(model, name, value)
+        set_optimizer_attribute(model, name, value)
     end
+end
+
+@deprecate set_parameters set_optimizer_attributes
+
+"""
+    get_optimizer_attribute(model, name::String)
+
+Return the value associated with the solver-specific attribute named `name`.
+
+This is equivalent to `get_optimizer_attribute(model, MOI.RawParameter(name))`.
+"""
+function get_optimizer_attribute(model::Model, name::String)
+    return get_optimizer_attribute(model, MOI.RawParameter(name))
+end
+
+"""
+    get_optimizer_attribute(
+        model::Model, attr::MOI.AbstractOptimizerAttribute
+    )
+
+Return the value of the solver-specific attribute `attr` in `model`.
+"""
+function get_optimizer_attribute(
+    model::Model, attr::MOI.AbstractOptimizerAttribute
+)
+    return MOI.get(model, attr)
 end
 
 """
