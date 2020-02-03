@@ -219,7 +219,7 @@ function build_variable(_error::Function, variables::Matrix{<:ScalarVariable}, :
     n = _square_side(_error, variables)
     set = MOI.Reals(div(n^2 - n, 2))
     shape = SkewSymmetricMatrixShape(n)
-    return VariablesConstrainedOnCreation(_vectorize_variables(_error, variables), set, shape)
+    return VariablesConstrainedOnCreation(vectorize(variables, SkewSymmetricMatrixShape(n)), set, shape)
 end
 
 """
