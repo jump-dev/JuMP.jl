@@ -63,11 +63,37 @@ it is equivalent to `MOI.OptimizerWithAttributes`.
 
 The call `optimizer_with_attributes(Gurobi.Optimizer, "Presolve" => 0)` groups
 a Gurobi optimizer with the parameter `Presolve` with value `0`. When
-instantiated, it creates a Gurobi optimizer and then set the `Presolve`
-parameter to value `0`.
+provided to to `Model` constructor, it creates a Gurobi optimizer and then set
+the `Presolve` parameter to value `0`:
+```julia
+julia> model = Model(optimizer_with_attributes(Gurobi.Optimizer, "Presolve" => 0));
+
+julia> MOI.get(model, MOI.RawParameter("Presolve"))
+0
+```
+Alternatively, the parameter can be provided separately with either
+[`set_parameter`](@ref):
+```julia
+julia> model = Model(Gurobi.Optimizer);
+
+julia> set_parameter(model, "Presolve", 0)
+0
+
+julia> MOI.get(model, MOI.RawParameter("Presolve"))
+0
+```
+or [`set_parameters`](@ref):
+```julia
+julia> model = Model(Gurobi.Optimizer);
+
+julia> set_parameters(model, "Presolve" => 0)
+
+julia> MOI.get(model, MOI.RawParameter("Presolve"))
+0
+```
 """
 function optimizer_with_attributes(optimizer_constructor, args::Pair...)
-    return MOI.OptimizerWithAttributes(optimizer_with_attributes, args...)
+    return MOI.OptimizerWithAttributes(optimizer_constructor, args...)
 end
 
 function with_optimizer(constructor; kwargs...)
