@@ -59,51 +59,33 @@ const _MOICON{F,S} = MOI.ConstraintIndex{F,S}
 Groups an optimizer constructor with the list of attributes `attrs`. Note that
 it is equivalent to `MOI.OptimizerWithAttributes`.
 
-## Examples
+When provided to the `Model` constructor or to [`set_optimizer`](@ref), it
+creates an optimizer by calling `optimizer_constructor()`, and then sets the
+attributes using [`set_optimizer_attribute`](@ref).
 
-The call `optimizer_with_attributes(Gurobi.Optimizer, "Presolve" => 0, "OutputFlag" => 0)`
-groups a Gurobi optimizer with the attributes `Presolve` with value `0` and
-`OutputFlag` with value `0`. When provided to the `Model` constructor or to
-[`set_optimizer`](@ref), it creates a Gurobi optimizer and then set the
-`Presolve` attribute to value `0` and the `OutputFlag` attribute to value `0`:
+## Example
+
 ```julia
-julia> model = Model(optimizer_with_attributes(Gurobi.Optimizer, "Presolve" => 0, "OutputFlag" => 0));
-
-julia> get_optimizer_attribute(model, "Presolve")
-0
-
-julia> get_optimizer_attribute(model, "OutputFlag")
-0
-```
-Alternatively, the attribute can be provided separately with either
-[`set_optimizer_attribute`](@ref):
+model = Model(
+    optimizer_with_attributes(
+        Gurobi.Optimizer, "Presolve" => 0, "OutputFlag" => 1
+    )
+)
+````
+is equivalent to:
 ```julia
-julia> model = Model(Gurobi.Optimizer);
+model = Model(Gurobi.Optimizer)
+set_optimizer_attribute(model, "Presolve", 0)
+set_optimizer_attribute(model, "OutputFlag", 1)
+````
 
-julia> set_optimizer_attribute(model, "Presolve", 0)
-0
+## Note
 
-julia> get_optimizer_attribute(model, "Presolve")
-0
+The string names of the attributes are specific to each solver. One should
+consult the solver's documentation to find the attributes of interest.
 
-julia> set_optimizer_attribute(model, "OutputFlag", 0)
-0
-
-julia> get_optimizer_attribute(model, "OutputFlag")
-0
-```
-or [`set_optimizer_attributes`](@ref):
-```julia
-julia> model = Model(Gurobi.Optimizer);
-
-julia> set_optimizer_attributes(model, "Presolve" => 0, "OutputFlag" => 0)
-
-julia> get_optimizer_attribute(model, "Presolve")
-0
-
-julia> get_optimizer_attribute(model, "OutputFlag")
-0
-```
+See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref),
+[`get_optimizer_attribute`](@ref).
 """
 function optimizer_with_attributes(optimizer_constructor, args::Pair...)
     return MOI.OptimizerWithAttributes(optimizer_constructor, args...)
@@ -495,7 +477,16 @@ end
 
 Sets solver-specific attribute identified by `name` to `value`.
 
-This is equivalent to `set_optimizer_attribute(model, MOI.RawParameter(name), value)`.
+Note that this is equivalent to
+`set_optimizer_attribute(model, MOI.RawParameter(name), value)`.
+
+## Example
+
+```julia
+set_optimizer_attribute(model, "SolverSpecificAttributeName", true)
+```
+
+See also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
 """
 function set_optimizer_attribute(model::Model, name::String, value)
     return set_optimizer_attribute(model, MOI.RawParameter(name), value)
@@ -508,8 +499,13 @@ end
 
 Set the solver-specific attribute `attr` in `model` to `value`.
 
-For example, `set_silent(model)` is equivalent to
-`set_optimizer_attribute(model, MOI.Silent(), true)`.
+## Example
+
+```julia
+set_optimizer_attribute(model, MOI.Silent(), true)
+```
+
+See also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
 """
 function set_optimizer_attribute(
     model::Model, attr::MOI.AbstractOptimizerAttribute, value
@@ -522,18 +518,23 @@ end
 """
     set_optimizer_attributes(model::Model, pairs::Pair...)
 
-Given a list of `parameter_name => value` pairs, calls
-`set_optimizer_attribute(model, parameter_name, value)` for each pair. See
-[`set_optimizer_attribute`](@ref).
+Given a list of `attribute => value` pairs, calls
+`set_optimizer_attribute(model, attribute, value)` for each pair.
 
 ## Example
+
 ```julia
 model = Model(Ipopt.Optimizer)
 set_optimizer_attributes(model, "tol" => 1e-4, "max_iter" => 100)
-# The above call is equivalent to:
+```
+is equivalent to:
+```julia
+model = Model(Ipopt.Optimizer)
 set_optimizer_attribute(model, "tol", 1e-4)
 set_optimizer_attribute(model, "max_iter", 100)
 ```
+
+See also: [`set_optimizer_attribute`](@ref), [`get_optimizer_attribute`](@ref).
 """
 function set_optimizer_attributes(model::Model, pairs::Pair...)
     for (name, value) in pairs
@@ -548,7 +549,16 @@ end
 
 Return the value associated with the solver-specific attribute named `name`.
 
-This is equivalent to `get_optimizer_attribute(model, MOI.RawParameter(name))`.
+Note that this is equivalent to
+`get_optimizer_attribute(model, MOI.RawParameter(name))`.
+
+## Example
+
+```julia
+get_optimizer_attribute(model, "SolverSpecificAttributeName")
+````
+
+See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
 """
 function get_optimizer_attribute(model::Model, name::String)
     return get_optimizer_attribute(model, MOI.RawParameter(name))
@@ -560,6 +570,14 @@ end
     )
 
 Return the value of the solver-specific attribute `attr` in `model`.
+
+## Example
+
+```julia
+get_optimizer_attribute(model, MOI.Silent())
+````
+
+See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
 """
 function get_optimizer_attribute(
     model::Model, attr::MOI.AbstractOptimizerAttribute
