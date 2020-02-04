@@ -106,6 +106,7 @@ solver_name
 
 bridge_constraints
 
+get_optimizer_attribute
 set_optimizer_attribute
 set_optimizer_attributes
 set_silent
