@@ -346,20 +346,27 @@ function test_model()
         @test !MOI.get(model, MOI.Silent())
     end
 
-    @testset "set_parameter" begin
+    @testset "set_optimizer_attribute" begin
         mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
         model = Model(() -> MOIU.MockOptimizer(mock))
-        @test JuMP.set_parameter(model, "aaa", "bbb") == "bbb"
+        @test JuMP.set_optimizer_attribute(model, "aaa", "bbb") == "bbb"
         @test MOI.get(backend(model), MOI.RawParameter("aaa")) == "bbb"
         @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
     end
 
-    @testset "set_parameters" begin
+    @testset "set_optimizer_attributes" begin
         mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
         model = Model(() -> MOIU.MockOptimizer(mock))
-        JuMP.set_parameters(model, "aaa" => "bbb", "abc" => 10)
+        JuMP.set_optimizer_attributes(model, "aaa" => "bbb", "abc" => 10)
         @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
         @test MOI.get(model, MOI.RawParameter("abc")) == 10
+    end
+
+    @testset "get_optimizer_attribute" begin
+        mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+        model = Model(() -> MOIU.MockOptimizer(mock))
+        @test JuMP.set_optimizer_attribute(model, "aaa", "bbb") == "bbb"
+        @test JuMP.get_optimizer_attribute(model, "aaa") == "bbb"
     end
 
     @testset "set and retrieve time limit" begin

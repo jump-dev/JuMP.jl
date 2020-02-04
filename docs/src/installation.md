@@ -86,10 +86,10 @@ Most packages follow the `ModuleName.Optimizer` naming convention, but
 exceptions may exist. See the corresponding Julia package README for more
 details on how to use the solver.
 
-Use [`set_parameters`](@ref) to set solver-specific options. Continuing the
+Use [`set_optimizer_attributes`](@ref) to set solver-specific options. Continuing the
 example from above,
 ```julia
-set_parameters(model, "Presolve" => 0, "Heuristics" => 0.01)
+set_optimizer_attributes(model, "Presolve" => 0, "Heuristics" => 0.01)
 ```
 sets Gurobi's
 [`Presolve`](https://www.gurobi.com/documentation/8.1/refman/presolve.html#parameter:Presolve)
