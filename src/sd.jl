@@ -111,7 +111,9 @@ struct SkewSymmetricMatrixShape <: AbstractShape
     side_dimension::Int
 end
 function reshape_vector(vectorized_form::Vector{T}, shape::SkewSymmetricMatrixShape) where T
-    matrix = Matrix{Base.promote_type(T, _MA.promote_operation(-, T), _MA.promote_operation(zero, T))}(undef, shape.side_dimension, shape.side_dimension)
+    matrix = Matrix{Base.promote_type(T, _MA.promote_operation(-, T),
+            _MA.promote_operation(zero, T))}(undef, shape.side_dimension,
+            shape.side_dimension)
     k = 0
     for j in 1:shape.side_dimension
         for i in 1:j-1
