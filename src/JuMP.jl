@@ -440,6 +440,9 @@ end
     )
 
 Set the solver-specific attribute `attr` in `model` to `value`.
+
+For example, `set_silent(model)` is equivalent to
+`set_optimizer_attribute(model, MOI.Silent(), true)`.
 """
 function set_optimizer_attribute(
     model::Model, attr::MOI.AbstractOptimizerAttribute, value
