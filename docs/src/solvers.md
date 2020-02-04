@@ -66,9 +66,11 @@ optimizer object.
 
 The factory can be provided either at model construction time by calling
 [`set_optimizer`](@ref). An optimizer must be set before a call to
-[`optimize!`](@ref).
+[`optimize!`](@ref). The optimizer can be grouped with attributes to be
+set before optimization with [`optimizer_with_attributes`](@ref).
 ```@docs
 set_optimizer
+optimizer_with_attributes
 NoOptimizer
 JuMP.optimize!
 ```

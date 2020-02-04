@@ -380,18 +380,6 @@ function test_model()
         JuMP.unset_time_limit_sec(model)
         @test JuMP.time_limit_sec(model) === nothing
     end
-
-    @testset "set_optimizer error cases" begin
-        model = Model()
-        @test_throws(ErrorException(JuMP._set_optimizer_not_callable_message),
-                     set_optimizer(model,
-                                   MOIU.MockOptimizer(MOIU.Model{Float64}())))
-        err = ErrorException("The provided optimizer_factory returned an " *
-            "object of type Int64. Expected a " *
-            "MathOptInterface.AbstractOptimizer.")
-        @test_throws err set_optimizer(model, () -> Int64(10))
-        # TODO: A factory that returns a non-empty optimizer.
-    end
 end
 
 @testset "Model" begin
