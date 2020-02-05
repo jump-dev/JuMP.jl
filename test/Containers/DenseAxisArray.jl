@@ -74,7 +74,7 @@ And data, a 2-element Array{Float64,1}:
         correct_answer = DenseAxisArray([2.0, 3.0], [:a, :b])
         @test sprint(show, correct_answer) == """
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
-    Dimension 1, Symbol[:a, :b]
+    Dimension 1, $([:a, :b])
 And data, a 2-element Array{Float64,1}:
  2.0
  3.0"""
@@ -102,7 +102,7 @@ And data, a 2-element Array{Float64,1}:
         @test sprint(show, A) == """
 2-dimensional DenseAxisArray{$Int,2,...} with index sets:
     Dimension 1, 2:3
-    Dimension 2, Symbol[:a, :b]
+    Dimension 2, $([:a, :b])
 And data, a 2×2 Array{$Int,2}:
  1  2
  3  4"""
@@ -128,7 +128,7 @@ And data, a 2×2 Array{$Int,2}:
         @test sprint(show, A) == """
 4-dimensional DenseAxisArray{Float64,4,...} with index sets:
     Dimension 1, 2:3
-    Dimension 2, Symbol[:a, :b]
+    Dimension 2, $([:a, :b])
     Dimension 3, -1:0
     Dimension 4, ["a", "b"]
 And data, a 2×2×2×2 Array{Float64,4}:

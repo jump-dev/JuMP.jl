@@ -307,8 +307,11 @@ end
     @testset "Warn on unexpected assignment" begin
         m = Model()
         @variable(m, x)
-        # function getindex does not accept keyword arguments
-        @test_throws ErrorException x[i=1]
+        # Julia v1.0 -> v1.3
+        # ERROR: function getindex does not accept keyword arguments
+        # Julia v1.3 onwards
+        # ERROR: MethodError: no method matching getindex(::VariableRef; i=1)
+        @test_throws Union{ErrorException, MethodError} x[i=1]
         err = ErrorException("Unexpected assignment in expression `x[i=1]`.")
         @test_macro_throws ErrorException @constraint(m, x[i=1] <= 1)
     end
