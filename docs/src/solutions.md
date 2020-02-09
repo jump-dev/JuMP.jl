@@ -128,6 +128,22 @@ end
 # TODO: How to accurately measure the solve time.
 ```
 
+## Accessing MathOptInterface attributes
+
+[MathOptInterface](https://www.juliaopt.org/MathOptInterface.jl/stable/) defines a large
+number of model attributes that can be queried. Examples include
+[`MOI.RelativeGap`](https://www.juliaopt.org/MathOptInterface.jl/stable/apireference/#MathOptInterface.RelativeGap) and
+[`MOI.SimplexIterations`](https://www.juliaopt.org/MathOptInterface.jl/stable/apireference/#MathOptInterface.SimplexIterations).
+
+To query these attributes, use:
+```julia
+using JuMP
+model = Model()
+# ...
+optimize!(model)
+MOI.get(model, MOI.RelativeGap())
+```
+
 ## Sensitivity analysis for LP
 
 Given an LP problem and an optimal solution corresponding to a basis, we can
