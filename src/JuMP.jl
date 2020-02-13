@@ -94,7 +94,7 @@ end
 function with_optimizer(constructor; kwargs...)
     if isempty(kwargs)
         deprecation_message = """
-with_optimizer is deprecated, replace `with_optimizer(Ipopt.Optimizer)` by `Ipopt.Optimizer`.
+`with_optimizer` is deprecated, replace `with_optimizer(Ipopt.Optimizer)` by `Ipopt.Optimizer`.
 """
         Base.depwarn(deprecation_message, :with_optimizer)
         return constructor
@@ -111,7 +111,7 @@ end
 function with_optimizer(constructor, args...; kwargs...)
     if isempty(kwargs)
         deprecation_message = """
-`with_optimizer` is deprecated, replace `with_optimizer(Ipopt.Optimizer, args...)` by `() -> Ipopt.Optimizer(args...)`.
+`with_optimizer` is deprecated, replace `with_optimizer(Gurobi.Optimizer, env)` by `() -> Gurobi.Optimizer(env)`.
 """
         Base.depwarn(deprecation_message, :with_optimizer_args)
         if !applicable(constructor, args...)
