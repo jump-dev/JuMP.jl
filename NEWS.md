@@ -32,7 +32,7 @@ Breaking changes:
 
 New features:
 
-- Added support for solver-independent and solver-specific (#2101).
+- Added support for solver-independent and solver-specific callbacks (#2101).
 - Added `write_to_file` and `read_from_file` (#2114).
 - Added support for complementarity constraints (#2132).
 - Added support for indicator @constraints (#2092).
