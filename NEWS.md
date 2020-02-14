@@ -17,25 +17,29 @@ Breaking changes:
 
   alternatively to `optimizer_with_attributes`, you can also set the attributes
   separately with `set_optimizer_attribute`.
-- Renamed `set_parameter` to `set_optimizer_attribute` (#2150).
-- Broadcast should now be explicit inside macros. `SDconstraint(model, x >= 1)`
+- Renamed `set_parameter` and `set_parameters` to `set_optimizer_attribute` and
+  `set_optimizer_attributes` (#2150).
+- Broadcast should now be explicit inside macros. `@SDconstraint(model, x >= 1)`
   and `@constraint(model, x + 1 in SecondOrderCone())` now throw an error
   instead of broadcasting `1` along the dimension of `x` (#2107).
-- `SDconstraint(model, x >= 0)` is now equivalent to `constraint(model, x in PSDCone())`
-  instead of `constraint(model, (x .- 0) in PSDCone())` (#2107).
+- `@SDconstraint(model, x >= 0)` is now equivalent to `@constraint(model, x in PSDCone())`
+  instead of `@constraint(model, (x .- 0) in PSDCone())` (#2107).
 - The macros now create the containers with `map` instead of `for` loops,
   as a consequence, containers created by `@expression` can now have any element
   type and containers of constraint references now have concrete element types
-  when possible (#2070).
+  when possible. This fixes a long-standing issue where `@expression` could
+  only be used to generate a collection of linear expressions. Now it works for
+  quadratic expressions as well (#2070).
 - Calling `deepcopy(::AbstractModel)` now throws an error.
 - The constraint name is now printed in the model string (#2108).
 
 New features:
 
 - Added support for solver-independent and solver-specific callbacks (#2101).
-- Added `write_to_file` and `read_from_file` (#2114).
+- Added `write_to_file` and `read_from_file`, supported formats are CBF, LP,
+  MathOptFormat, MPS and SDPA (#2114).
 - Added support for complementarity constraints (#2132).
-- Added support for indicator @constraints (#2092).
+- Added support for indicator constraints (#2092).
 - Added support for querying multiple solutions with the `result` keyword (#2100).
 - Added support for constraining variables on creation (#2128).
 - Added method `delete` that deletes a vector of variables at once if it is
