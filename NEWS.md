@@ -1,6 +1,54 @@
 JuMP release notes
 ==================
 
+Version 0.21 (Feb 13, 2020)
+-----------------------------
+
+Breaking changes:
+
+- Deprecated `with_optimizer` (#2090, #2084, #2141). You can replace
+  `with_optimizer` by either nothing, `optimizer_with_attributes` or a closure:
+  * replace `with_optimizer(Ipopt.Optimizer)` by `Ipopt.Optimizer`.
+  * replace `with_optimizer(Ipopt.Optimizer, max_cpu_time=60.0)`
+    by `optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time" => 60.0)`.
+  * replace `with_optimizer(Gurobi.Optimizer, env)` by `() -> Gurobi.Optimizer(env)`.
+  * replace `with_optimizer(Gurobi.Optimizer, env, Presolve=0)`
+    by `optimizer_with_attributes(() -> Gurobi.Optimizer(env), "Presolve" => 0)`.
+
+  alternatively to `optimizer_with_attributes`, you can also set the attributes
+  separately with `set_optimizer_attribute`.
+- Renamed `set_parameter` and `set_parameters` to `set_optimizer_attribute` and
+  `set_optimizer_attributes` (#2150).
+- Broadcast should now be explicit inside macros. `@SDconstraint(model, x >= 1)`
+  and `@constraint(model, x + 1 in SecondOrderCone())` now throw an error
+  instead of broadcasting `1` along the dimension of `x` (#2107).
+- `@SDconstraint(model, x >= 0)` is now equivalent to `@constraint(model, x in PSDCone())`
+  instead of `@constraint(model, (x .- 0) in PSDCone())` (#2107).
+- The macros now create the containers with `map` instead of `for` loops,
+  as a consequence, containers created by `@expression` can now have any element
+  type and containers of constraint references now have concrete element types
+  when possible. This fixes a long-standing issue where `@expression` could
+  only be used to generate a collection of linear expressions. Now it works for
+  quadratic expressions as well (#2070).
+- Calling `deepcopy(::AbstractModel)` now throws an error.
+- The constraint name is now printed in the model string (#2108).
+
+New features:
+
+- Added support for solver-independent and solver-specific callbacks (#2101).
+- Added `write_to_file` and `read_from_file`, supported formats are CBF, LP,
+  MathOptFormat, MPS and SDPA (#2114).
+- Added support for complementarity constraints (#2132).
+- Added support for indicator constraints (#2092).
+- Added support for querying multiple solutions with the `result` keyword (#2100).
+- Added support for constraining variables on creation (#2128).
+- Added method `delete` that deletes a vector of variables at once if it is
+  supported by the underlying solver (#2135).
+- The arithmetic between JuMP expression has be refactored into the
+  MutableArithmetics package (#2107).
+- Improved error on complex values in NLP (#1978).
+- Added an example of column generation (#2010).
+
 Version 0.20.1 (Oct 18, 2019)
 -----------------------------
 
