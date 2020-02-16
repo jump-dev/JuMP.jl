@@ -1,7 +1,7 @@
 JuMP release notes
 ==================
 
-Version 0.21 (Feb 13, 2020)
+Version 0.21 (Feb 16, 2020)
 -----------------------------
 
 Breaking changes:
@@ -48,6 +48,10 @@ New features:
   MutableArithmetics package (#2107).
 - Improved error on complex values in NLP (#1978).
 - Added an example of column generation (#2010).
+
+Bug fixes:
+
+- Incorrect coefficients generated when using Symmetric variables (#2102)
 
 Version 0.20.1 (Oct 18, 2019)
 -----------------------------
