@@ -5,6 +5,14 @@ const MA = MutableArithmetics
 
 using JuMP
 
+struct DummyVariableRef <: JuMP.AbstractVariableRef end
+JuMP.name(::DummyVariableRef) = "dummy"
+struct DummyExpr end
+Base.:(+)(::GenericAffExpr{Float64,DummyVariableRef}, ::JuMP.AbstractJuMPScalar) = DummyExpr()
+Base.:(+)(::JuMP.AbstractJuMPScalar, ::JuMP.GenericAffExpr{Float64,DummyVariableRef}) = DummyExpr()
+Base.:(-)(::GenericAffExpr{Float64,DummyVariableRef}, ::JuMP.AbstractJuMPScalar) = DummyExpr()
+Base.:(-)(::JuMP.AbstractJuMPScalar, ::JuMP.GenericAffExpr{Float64,DummyVariableRef}) = DummyExpr()
+
 function promote_operation_test(op::Function, x::Type, y::Type)
     f() = JuMP._MA.promote_operation(op, x, y)
     @test typeof(op(zero(x), zero(y))) == f()
@@ -90,6 +98,22 @@ function mutable_arithmetics_test(ModelType::Type{<:JuMP.AbstractModel},
         model = ModelType()
         @variable(model, y[2:5])
         MA.Test.array_test(y, exclude = ["matrix_vector", "non_array"])
+    end
+    @testset "Mix different variables" begin
+        model = ModelType()
+        x = @variable(model)
+        y = DummyVariableRef()
+        aff = x + 1
+        function _promote_test(a, b)
+            A = typeof(a)
+            B = typeof(b)
+            @test MA.promote_operation(+, A, B) == DummyExpr
+            @test MA.promote_operation(-, A, B) == DummyExpr
+            @test MA.promote_operation(+, B, A) == DummyExpr
+            @test MA.promote_operation(-, B, A) == DummyExpr
+        end
+        _promote_test(x, y)
+        _promote_test(aff, y)
     end
 
 end

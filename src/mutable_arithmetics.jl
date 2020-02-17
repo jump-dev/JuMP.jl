@@ -38,14 +38,16 @@ function _MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{V},
                                ::Type{V}) where {V <: AbstractVariableRef}
     return GenericAffExpr{Float64, V}
 end
-function _MA.promote_operation(::Union{typeof(+), typeof(-)},
-                               ::Type{<:AbstractVariableRef},
-                               S::Type{<:_GenericAffOrQuadExpr})
+function _MA.promote_operation(
+    ::Union{typeof(+), typeof(-)}, ::Type{V},
+    S::Type{<:_GenericAffOrQuadExpr{C,V}}) where {C,V<:AbstractVariableRef}
+
     return S
 end
-function _MA.promote_operation(::Union{typeof(+), typeof(-)},
-                               S::Type{<:_GenericAffOrQuadExpr},
-                               ::Type{<:AbstractVariableRef})
+function _MA.promote_operation(
+    ::Union{typeof(+), typeof(-)}, S::Type{<:_GenericAffOrQuadExpr{C,V}},
+    ::Type{V}) where {C,V<:AbstractVariableRef}
+
     return S
 end
 function _MA.promote_operation(::Union{typeof(+), typeof(-)}, ::Type{A},
