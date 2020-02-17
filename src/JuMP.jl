@@ -94,14 +94,15 @@ end
 function with_optimizer(constructor; kwargs...)
     if isempty(kwargs)
         deprecation_message = """
-`with_optimizer` is deprecated, replace `with_optimizer(Ipopt.Optimizer)` by `Ipopt.Optimizer`.
+`with_optimizer` is deprecated. Adapt the following example to update your code:
+`with_optimizer(Ipopt.Optimizer)` becomes `Ipopt.Optimizer`.
 """
         Base.depwarn(deprecation_message, :with_optimizer)
         return constructor
     else
         deprecation_message = """
-`with_optimizer` is deprecated, replace `with_optimizer(Ipopt.Optimizer, max_cpu_time=60.0)`
-by `optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time" => 60.0)`.
+`with_optimizer` is deprecated. Adapt the following example to update your code:
+`with_optimizer(Ipopt.Optimizer, max_cpu_time=60.0)` becomes `optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time" => 60.0)`.
 """
         Base.depwarn(deprecation_message, :with_optimizer_kw)
         params = [MOI.RawParameter(string(kw.first)) => kw.second for kw in kwargs]
@@ -111,7 +112,8 @@ end
 function with_optimizer(constructor, args...; kwargs...)
     if isempty(kwargs)
         deprecation_message = """
-`with_optimizer` is deprecated, replace `with_optimizer(Gurobi.Optimizer, env)` by `() -> Gurobi.Optimizer(env)`.
+`with_optimizer` is deprecated. Adapt the following example to update your code:
+`with_optimizer(Gurobi.Optimizer, env)` becomes `() -> Gurobi.Optimizer(env)`.
 """
         Base.depwarn(deprecation_message, :with_optimizer_args)
         if !applicable(constructor, args...)
@@ -122,8 +124,8 @@ function with_optimizer(constructor, args...; kwargs...)
         return with_optimizer(() -> constructor(args...); kwargs...)
     else
         deprecation_message = """
-`with_optimizer` is deprecated, replace `with_optimizer(Gurobi.Optimizer, env, Presolve=0)`
-by `optimizer_with_attributes(() -> Gurobi.Optimizer(env), "Presolve" => 0)`.
+`with_optimizer` is deprecated. Adapt the following example to update your code:
+`with_optimizer(Gurobi.Optimizer, env, Presolve=0)` becomes `optimizer_with_attributes(() -> Gurobi.Optimizer(env), "Presolve" => 0)`.
 """
         Base.depwarn(deprecation_message, :with_optimizer_args_kw)
         if !applicable(constructor, args...)
