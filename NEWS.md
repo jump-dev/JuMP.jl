@@ -1,6 +1,11 @@
 JuMP release notes
 ==================
 
+Version 0.21.1 (Feb 18, 2020)
+-----------------------------
+
+- Improved the clarity of the `with_optimizer` deprecation warning.
+
 Version 0.21 (Feb 16, 2020)
 -----------------------------
 
