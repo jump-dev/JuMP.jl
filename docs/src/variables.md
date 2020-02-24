@@ -553,7 +553,7 @@ being created. For example:
 julia> x = @variable(model)
 noname
 ```
-This shows how `(model, x)` is really short for:
+This shows how `@variable(model, x)` is really short for:
 ```jldoctest anon_variables; setup=:(model=Model())
 julia> x = model[:x] = @variable(model, base_name="x")
 x
