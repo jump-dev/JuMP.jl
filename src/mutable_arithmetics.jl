@@ -152,7 +152,7 @@ end
 # If `x` could be a transposed vector and `y` a vector, they are not subtypes
 # of `_Scalar` but their product is.
 function _MA.mutable_operate!(op::_MA.AddSubMul, expr::_GenericAffOrQuadExpr, x, y)
-    return MA.mutable_operate!(op, expr, x * y)
+    return _MA.mutable_operate!(op, expr, x * y)
 end
 
 # If there are more arguments, we multiply the constants together.
