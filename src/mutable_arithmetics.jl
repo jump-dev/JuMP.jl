@@ -128,24 +128,33 @@ function _MA.mutable_operate!(::typeof(-), expr::_GenericAffOrQuadExpr, x)
     return add_to_expression!(expr, -1, x)
 end
 
+const _Scalar = Union{AbstractJuMPScalar, _Constant}
+
 # `add_to_expression!` is responsible to implement all methods of up to 3 arguments.
 # in addition to `add_to_expression(::GenericQuadExpr, ::Real, ::AbstractVariableRef, ::AbstractVariableRef)`.
-function _MA.mutable_operate!(::typeof(_MA.add_mul), expr::_GenericAffOrQuadExpr, x)
+function _MA.mutable_operate!(::typeof(_MA.add_mul), expr::_GenericAffOrQuadExpr, x::_Scalar)
     return add_to_expression!(expr, x)
 end
-function _MA.mutable_operate!(::typeof(_MA.add_mul), expr::_GenericAffOrQuadExpr, x, y)
+function _MA.mutable_operate!(::typeof(_MA.add_mul), expr::_GenericAffOrQuadExpr, x::_Scalar, y::_Scalar)
     return add_to_expression!(expr, x, y)
 end
-function _MA.mutable_operate!(::typeof(_MA.sub_mul), expr::_GenericAffOrQuadExpr, x)
+function _MA.mutable_operate!(::typeof(_MA.sub_mul), expr::_GenericAffOrQuadExpr, x::_Scalar)
     return add_to_expression!(expr, -1.0, x)
 end
-function _MA.mutable_operate!(::typeof(_MA.sub_mul), expr::_GenericAffOrQuadExpr, x, y)
+function _MA.mutable_operate!(::typeof(_MA.sub_mul), expr::_GenericAffOrQuadExpr, x::_Scalar, y::_Scalar)
     return add_to_expression!(expr, -x, y)
 end
 # It is less costly to negate a constant than a JuMP scalar
 function _MA.mutable_operate!(::typeof(_MA.sub_mul), expr::_GenericAffOrQuadExpr, x::AbstractJuMPScalar, y::_Constant)
     return add_to_expression!(expr, x, -y)
 end
+
+# If `x` could be a transposed vector and `y` a vector, they are not subtypes
+# of `_Scalar` but their product is.
+function _MA.mutable_operate!(op::_MA.AddSubMul, expr::_GenericAffOrQuadExpr, x, y)
+    return MA.mutable_operate!(op, expr, x * y)
+end
+
 # If there are more arguments, we multiply the constants together.
 @generated function _add_sub_mul_reorder!(op::_MA.AddSubMul, expr::_GenericAffOrQuadExpr, args::Vararg{Any, N}) where N
     n = length(args)
@@ -169,8 +178,6 @@ function add_to_expression!(expr::_GenericAffOrQuadExpr, α::_Constant, β::_Con
 end
 
 const _AffineLike = Union{AbstractVariableRef, GenericAffExpr, _Constant}
-
-const _Scalar = Union{AbstractJuMPScalar, _Constant}
 
 # `add_mul(expr, args...)` defaults to `muladd(args..., expr)` which gives
 # `*(args...) + expr`. If `expr isa AbstractJuMPScalar`, this reorders the terms.
