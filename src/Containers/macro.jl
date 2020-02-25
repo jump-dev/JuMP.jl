@@ -175,9 +175,9 @@ function container_code(idxvars, indices, code, requested_container)
         return :(error($error_message))
     end
     if requested_container == :DenseAxisArray
-        requested_container = :(JuMP.Containers.DenseAxisArray)
+        requested_container = :(DenseAxisArray)
     elseif requested_container == :SparseAxisArray
-        requested_container = :(JuMP.Containers.SparseAxisArray)
+        requested_container = :(SparseAxisArray)
     end
     esc_idxvars = esc.(idxvars)
     func = :(($(esc_idxvars...),) -> $code)

@@ -85,11 +85,16 @@ function container(f::Function, indices::VectorizedProductIterator,
     return DenseAxisArray(map(I -> f(I...), indices), indices.prod.iterators...)
 end
 default_container(::NestedIterator) = SparseAxisArray
+_eltype_or_any(indices::Array) = eltype(indices)
 function container(f::Function, indices,
                    ::Type{SparseAxisArray})
     # Same as `map` but does not allocate the resulting vector.
     mappings = Base.Generator(I -> I => f(I...), indices)
     # Same as `Dict(mapping)` but it will error if two indices are the same.
     data = NoDuplicateDict(mappings)
-    return SparseAxisArray(data.dict)
+    dict = data.dict
+    if isempty(dict)
+        dict = Dict{_eltype_or_any(indices), Any}()
+    end
+    return SparseAxisArray(dict)
 end
