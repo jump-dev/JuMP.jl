@@ -146,6 +146,16 @@ function Base.deepcopy(::Model)
 end
 
 function MOI.copy_to(dest::MOI.ModelLike, src::Model)
+    if src.nlp_data !== nothing
+        try
+            MOI.get(src, MOI.NLPBlock())
+        catch e
+            if !(e isa KeyError)
+                rethrow(e)
+            end
+            MOI.set(src, MOI.NLPBlock(), _create_nlp_block_data(src))
+        end
+    end
     return MOI.copy_to(dest, backend(src))
 end
 
