@@ -71,13 +71,13 @@ model = Model(
         Gurobi.Optimizer, "Presolve" => 0, "OutputFlag" => 1
     )
 )
-````
+```
 is equivalent to:
 ```julia
 model = Model(Gurobi.Optimizer)
 set_optimizer_attribute(model, "Presolve", 0)
 set_optimizer_attribute(model, "OutputFlag", 1)
-````
+```
 
 ## Note
 
@@ -558,7 +558,7 @@ Note that this is equivalent to
 
 ```julia
 get_optimizer_attribute(model, "SolverSpecificAttributeName")
-````
+```
 
 See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
 """
@@ -577,7 +577,7 @@ Return the value of the solver-specific attribute `attr` in `model`.
 
 ```julia
 get_optimizer_attribute(model, MOI.Silent())
-````
+```
 
 See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
 """
