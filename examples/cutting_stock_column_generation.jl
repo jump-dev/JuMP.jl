@@ -90,7 +90,7 @@ generated, and the master can take its optimal decision. In the implementation,
 the variables deciding how many times a pattern is chosen are called `θ`.
 For more information on column-generation techniques applied on the cutting
 stock problem, you can see:
-  * [Integer programming column generation strategies forthe cutting stock
+  * [Integer programming column generation strategies for the cutting stock
     problem and its variants](https://tel.archives-ouvertes.fr/tel-00011657/document)
   * [Tackling the cutting stock problem](http://doi.org/10.5281/zenodo.3329388)
 """
