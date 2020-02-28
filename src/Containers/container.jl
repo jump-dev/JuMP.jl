@@ -85,6 +85,8 @@ function container(f::Function, indices::VectorizedProductIterator,
     return DenseAxisArray(map(I -> f(I...), indices), indices.prod.iterators...)
 end
 default_container(::NestedIterator) = SparseAxisArray
+# Returns the element type. If it is unknown but it is known to be `N`-tuples,
+# returns `NTuple{N, Any}`.
 _eltype_or_any(indices::Array) = eltype(indices)
 function container(f::Function, indices,
                    ::Type{SparseAxisArray})
@@ -94,6 +96,10 @@ function container(f::Function, indices,
     data = NoDuplicateDict(mappings)
     dict = data.dict
     if isempty(dict)
+        # If `dict` is empty, it was not able to determine the type
+        # of the key hence the type of `dict` is `Dict{Any, Any}`.
+        # This is an issue since `SparseAxisArray` needs the key
+        # type to be a tuple.
         dict = Dict{_eltype_or_any(indices), Any}()
     end
     return SparseAxisArray(dict)
