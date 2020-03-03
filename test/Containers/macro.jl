@@ -31,8 +31,8 @@ using JuMP.Containers
         Containers.@container(x[i=1:2, j=1:2; false], i)
         @test x isa SparseAxisArray{Any,2,Tuple{Any,Any}}
         Containers.@container(x[i=1:0, j=2:1], i, container = SparseAxisArray)
-        @test x isa SparseAxisArray{Any,2,Tuple{Int64,Int64}}
+        @test x isa SparseAxisArray{Any,2,Tuple{Int,Int}}
         Containers.@container(x[i=1:0, j=1:0], i, container = SparseAxisArray)
-        @test x isa SparseAxisArray{Any,2,Tuple{Int64,Int64}}
+        @test x isa SparseAxisArray{Any,2,Tuple{Int,Int}}
     end
 end
