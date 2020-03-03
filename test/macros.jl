@@ -47,6 +47,13 @@ end
                   Expr(:kw, :j, :S)]
 end
 
+@testset "MutableArithmetics.Zero (Issue #2187)" begin
+    model = Model()
+    c = @constraint(model, sum(1 for _ in 1:0) == sum(1 for _ in 1:0))
+    @test constraint_object(c).func == AffExpr(0.0)
+    @test  constraint_object(c).set == MOI.EqualTo(0.0)
+end
+
 mutable struct MyVariable
     test_kw::Int
     info::JuMP.VariableInfo
