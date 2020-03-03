@@ -253,7 +253,7 @@ false</code></pre><h2><a class="nav-anchor" id="Semidefinite-variables-1" href="
 2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]</code></pre><h2><a class="nav-anchor" id="Anonymous-JuMP-variables-1" href="#Anonymous-JuMP-variables-1">Anonymous JuMP variables</a></h2><p>In all of the above examples, we have created <em>named</em> JuMP variables. However, it is also possible to create so called <em>anonymous</em> JuMP variables. To create an anonymous JuMP variable, we drop the name of the variable from the macro call. This means dropping the second positional argument if the JuMP variable is a scalar, or dropping the name before the square bracket (<code>[</code>) if a container is being created. For example:</p><pre><code class="language-julia-repl">julia&gt; x = @variable(model)
-noname</code></pre><p>This shows how <code>(model, x)</code> is really short for:</p><pre><code class="language-julia-repl">julia&gt; x = model[:x] = @variable(model, base_name=&quot;x&quot;)
+noname</code></pre><p>This shows how <code>@variable(model, x)</code> is really short for:</p><pre><code class="language-julia-repl">julia&gt; x = model[:x] = @variable(model, base_name=&quot;x&quot;)
 x</code></pre><p>An <code>Array</code> of anonymous JuMP variables can be created as follows:</p><pre><code class="language-julia-repl">julia&gt; y = @variable(model, [i=1:2])
 2-element Array{VariableRef,1}:
  noname
