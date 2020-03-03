@@ -76,4 +76,17 @@ using Test
         model_2 = read(io, Model; format = MOI.FileFormats.FORMAT_MOF)
         @test sprint(print, model) == sprint(print, model_2)
     end
+    @testset "NLP MOF" begin
+        model = Model()
+        @variable(model, x)
+        @variable(model, y)
+        @NLobjective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
+        @NLconstraint(model, x^2 + y^2 <= 100.0)
+        @constraint(model, x + y == 10)
+        io = IOBuffer()
+        write(io, model; format = MOI.FileFormats.FORMAT_MOF)
+        seekstart(io)
+        @test read(io, String) ==
+            read(joinpath(@__DIR__, "data", "nlp_model.mof.json"), String)
+    end
 end
