@@ -68,3 +68,4 @@ function tail_iterate(iterators, condition, elems, states, prev_states)
 end
 Base.iterate(it::NestedIterator) = first_iterate(it.iterators, it.condition, tuple(), tuple())
 Base.iterate(it::NestedIterator, states) = tail_iterate(it.iterators, it.condition, tuple(), states, tuple())
+_eltype_or_any(::NestedIterator{<:Tuple{Vararg{Any,N}}}) where N = NTuple{N, Any}
