@@ -20,7 +20,7 @@ Some but not all of these tasks are summarized in the
                  [#1607](https://github.com/JuliaOpt/JuMP.jl/issues/1607))
   - Callbacks
   - Column generation syntax (**Done**: see `examples/cutting_stock_column_generation.jl`)
-  - Support for second-order cones in Gurobi, CPLEX, and Xpress.
+  - Support for second-order cones in Gurobi, CPLEX, and Xpress (**Done**)
 - Fix issues that we promised MOI would fix.
   - Checking feasibility of solutions ([#693](https://github.com/JuliaOpt/JuMP.jl/issues/693))
   - Accessing IIS ([#1053](https://github.com/JuliaOpt/JuMP.jl/issues/1035))
