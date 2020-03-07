@@ -314,8 +314,6 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     for feat in requested_features
         if !(feat in MOI.features_available(d))
             error("Unsupported feature $feat")
-            # TODO: implement Jac-vec products
-            # for solvers that need them
         end
     end
     if d.eval_objective_timer != 0
@@ -475,7 +473,7 @@ end
 
 function MOI.features_available(d::NLPEvaluator)
     _recompute_disable_2ndorder(d)
-    features = [:Grad, :Jac, :ExprGraph]
+    features = [:Grad, :Jac, :JacVec, :ExprGraph]
     if !d.disable_2ndorder
         push!(features, :Hess)
         push!(features, :HessVec)
@@ -619,7 +617,39 @@ function MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
     return
 end
 
+function MOI.eval_constraint_jacobian_product(d::NLPEvaluator,
+                                              Jv::AbstractVector{Float64},
+                                              x::AbstractVector{Float64},
+                                              v::AbstractVector{Float64})
+    fill!(Jv, 0.0)
+    jac_struct = MOI.jacobian_structure(d)
+    nnzj = length(jac_struct)
+    J = zeros(Float64, nnzj)
+    MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
+    for k = 1 : nnzj
+        i = jac_struct[k][1]
+        j = jac_struct[k][2]
+        Jv[i] += J[k] * v[j]
+    end
+    return Jv
+end
 
+function MOI.eval_constraint_jacobian_transpose_product(d::NLPEvaluator,
+                                                        Jtv::AbstractVector{Float64},
+                                                        x::AbstractVector{Float64},
+                                                        v::AbstractVector{Float64})
+    fill!(Jtv, 0.0)
+    jac_struct = MOI.jacobian_structure(d)
+    nnzj = length(jac_struct)
+    J = zeros(Float64, nnzj)
+    MOI.eval_constraint_jacobian(d, J, x)
+    for k = 1 : nnzj
+        i = jac_struct[k][1]
+        j = jac_struct[k][2]
+        Jtv[j] += J[k] * v[i]
+    end
+    return Jtv
+end
 
 function MOI.eval_hessian_lagrangian_product(
     d::NLPEvaluator,
