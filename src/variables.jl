@@ -926,6 +926,42 @@ function _moi_add_constrained_variables(
 end
 
 """
+    reduced_cost(x::VariableRef)::Float64
+
+Concerning an optimally solved linear model, the reduced cost of a variable
+is how much the objective function coefficient of that variable has to change
+for the variable appear in an optimal solution (i.e., have a positive value,
+become a basic variable).
+
+Querying the reduced cost of a variable that is neither fixed nor has upper
+or lower bounds will always return zero.
+
+The pitfalls and restrictions to the usage of
+[`shadow_price`](@ref JuMP.shadow_price) are also applicable to this method
+(which uses it internally).
+
+# Notes
+
+Follows the definition given above that:
+
+* If a variable has value zero and a reduced cost that is also zero, then
+  there is another optimal solution in which the variable has a non-zero value.
+* If a variable has a positive value, its reduced cost is always zero.
+
+"""
+function reduced_cost(x::VariableRef)::Float64
+    !has_duals(owner_model(x)) && error(
+        "The reduced cost is not available because no dual result is" *
+        " available."
+		)
+    is_fixed(x) && return shadow_price(FixRef(x))
+    rc = 0.0
+    has_upper_bound(x) && (rc += shadow_price(UpperBoundRef(x)))
+    has_lower_bound(x) && (rc += shadow_price(LowerBoundRef(x)))
+    return rc
+end
+
+"""
     all_variables(model::Model)::Vector{VariableRef}
 
 Returns a list of all variables currently in the model. The variables are

@@ -799,4 +799,6 @@ optimizer_index(::VariableRef)
 
 set_start_value
 start_value
+
+reduced_cost
 ```
