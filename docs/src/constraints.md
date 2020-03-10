@@ -210,8 +210,7 @@ To query the dual variables associated with a variable bound, first obtain a
 constraint reference using one of [`UpperBoundRef`](@ref),
 [`LowerBoundRef`](@ref), or [`FixRef`](@ref), and then call [`dual`](@ref) on
 the returned constraint reference. Note that in linear programming,
-the duals on variable bounds are also called the reduced costs
-(although the sign might differ from the one you expect).
+the duals on variable bounds are also called [`reduced_cost`](@ref).
 
 ```@meta
 DocTestSetup = quote

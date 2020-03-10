@@ -712,3 +712,31 @@ end
     # Expected shadow prices
     Dict("xeq" => -1.0))
 end
+
+function test_reduced_cost(model_string, var, var_cons_and_duals, reduced_cost)
+    model = JuMP.Model()
+    MOIU.loadfromstring!(JuMP.backend(model), model_string)
+    set_optimizer(model, () -> MOIU.MockOptimizer(
+                                MOIU.Model{Float64}(),
+                                eval_objective_value=false,
+                                eval_variable_constraint_dual=false))
+    JuMP.optimize!(model)
+    mock_optimizer = JuMP.backend(model).optimizer.model
+    MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    JuMP.optimize!(model)
+
+		#=
+    @testset "reduced_cost of $(name(var))" for (con_key, con_dual_val) in keys(var_cons_and_duals)
+        ci = MOI.get(JuMP.backend(model), MOI.ConstraintIndex,
+                     con_key)
+        constraint_ref = JuMP.ConstraintRef(model, ci, JuMP.ScalarShape())
+        MOI.set(mock_optimizer, MOI.ConstraintDual(),
+                JuMP.optimizer_index(constraint_ref),
+                con_dual_val)
+        @test JuMP.dual(constraint_ref) == con_dual_val
+        @test JuMP.reduced_cost(var) == constraint_shadow[constraint_name]
+    end
+    =#
+end
+
