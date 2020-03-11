@@ -161,6 +161,7 @@ using JuMP
         MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
         MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
         MOI.set(mockoptimizer, MOI.DualStatus(), MOI.NO_SOLUTION)
+        MOI.set(mockoptimizer, MOI.RelativeGap(), 0.0)
 
         JuMP.optimize!(m)
 
@@ -174,6 +175,7 @@ using JuMP
         @test 1.0 == @inferred JuMP.value(x)
         @test 0.0 == @inferred JuMP.value(y)
         @test 1.0 == @inferred JuMP.objective_value(m)
+        @test 0.0 == @inferred JuMP.relative_gap(m)
 
         @test !JuMP.has_duals(m)
     end
