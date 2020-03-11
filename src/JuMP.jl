@@ -405,14 +405,16 @@ Note: removes extensions data.
 """
 function Base.empty!(model::Model)::Model
     # The method changes the Model object to, basically, the state it was when
-    # created (if the optimizer was already pre-configured). The two exceptions
-    # are: optimize_hook and operator_counter. One is left alone because it is
-    # related to optimizer attributes and the other is just a counter for a
-    # single-time warning message (so keeping it helps to discover
-    # inneficiencies).
+    # created (if the optimizer was already pre-configured). The exceptions
+    # are:
+    # * optimize_hook: it is basically an optimizer attribute and we promise
+    #   to leave them alone (as do MOI.empty!).
+    # * bridge_types: for consistency with MOI.empty! for
+    #   MOI.Bridges.LazyBridgeOptimizer.
+    # * operator_counter: it is just a counter for a single-time warning
+    #   message (so keeping it helps to discover inneficiencies).
     MOI.empty!(model.moi_backend)
     empty!(model.shapes)
-    empty!(model.bridge_types)
     model.nlp_data = nothing
     empty!(model.obj_dict)
     empty!(model.ext)
