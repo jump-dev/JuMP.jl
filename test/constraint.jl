@@ -713,7 +713,7 @@ end
     Dict("xeq" => -1.0))
 end
 
-function test_reduced_cost(model_string, var, var_cons_and_duals, reduced_cost)
+function test_reduced_cost(model_string, vars_bounds_duals_costs)
     model = JuMP.Model()
     MOIU.loadfromstring!(JuMP.backend(model), model_string)
     set_optimizer(model, () -> MOIU.MockOptimizer(
@@ -726,17 +726,17 @@ function test_reduced_cost(model_string, var, var_cons_and_duals, reduced_cost)
     MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     JuMP.optimize!(model)
 
-		#=
-    @testset "reduced_cost of $(name(var))" for (con_key, con_dual_val) in keys(var_cons_and_duals)
-        ci = MOI.get(JuMP.backend(model), MOI.ConstraintIndex,
-                     con_key)
-        constraint_ref = JuMP.ConstraintRef(model, ci, JuMP.ScalarShape())
-        MOI.set(mock_optimizer, MOI.ConstraintDual(),
-                JuMP.optimizer_index(constraint_ref),
-                con_dual_val)
-        @test JuMP.dual(constraint_ref) == con_dual_val
-        @test JuMP.reduced_cost(var) == constraint_shadow[constraint_name]
+    @testset "reduced_cost of $(name(var))" for (var, bounds, duals, cost) in vars_bounds_duals_costs
+				@assert length(bounds) == length(duals)
+        for (bound, dual) in zip(bounds, duals)
+						ci = MOI.get(JuMP.backend(model), MOI.ConstraintIndex, bound)
+						constraint_ref = JuMP.ConstraintRef(model, ci, JuMP.ScalarShape())
+						MOI.set(mock_optimizer, MOI.ConstraintDual(),
+										JuMP.optimizer_index(constraint_ref),
+										dual)
+						@test JuMP.dual(constraint_ref) == dual
+				end
+        @test JuMP.reduced_cost(var) == cost
     end
-    =#
 end
 
