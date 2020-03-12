@@ -635,6 +635,37 @@ function time_limit_sec(model::Model)
     return MOI.get(model, MOI.TimeLimitSec())
 end
 
+"""
+    simplex_iterations(model::Model)
+
+Gets the cumulative number of simplex iterations during the optimization process after a call to `optimize!(model)`.
+Returns the total simplex iterations for all nodes in case of a mixed-integer program (MIP). Solver must implement
+MathOptInterface.SimplexIterations() to use this function.
+"""
+function simplex_iterations(model::Model)::Int64
+    return MOI.get(model, MOI.SimplexIterations())
+end
+
+"""
+    barrier_iterations(model::Model)
+
+Gets the cumulative number of barrier iterations while solving a problem after a call to `optimize!(model)`.Solver must
+implement MathOptInterface.BarrierIterations() to use this function.
+"""
+function barrier_iterations(model::Model)::Int64
+    return MOI.get(model, MOI.BarrierIterations())
+end
+
+"""
+    node_count(model::Model)
+
+Gets the total number of branch-and-bound nodes explored while solving a mixed-integer program (MIP) after a call
+to `optimize!(model)`.Solver must implement MathOptInterface.NodeCount() to use this function.
+"""
+function node_count(model::Model)::Int64
+    return MOI.get(model, MOI.NodeCount())
+end
+
 # Abstract base type for all scalar types
 # The subtyping of `AbstractMutable` will allow calls of some `Base` functions
 # to be redirected to a method in MA that handles type promotion more carefuly

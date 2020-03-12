@@ -59,6 +59,10 @@ using JuMP
         MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c), -1.0)
         MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.UpperBoundRef(x)), 0.0)
         MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.LowerBoundRef(y)), 1.0)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
+        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+
 
         #@test JuMP.isattached(m)
         @test JuMP.has_values(m)
@@ -78,6 +82,9 @@ using JuMP
         @test -1.0 == @inferred JuMP.dual(c)
         @test  0.0 == @inferred JuMP.dual(JuMP.UpperBoundRef(x))
         @test  1.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(y))
+        @test  Int64(1) == @inferred JuMP.simplex_iterations(m)
+        @test  Int64(1) == @inferred JuMP.barrier_iterations(m)
+        @test  Int64(1) == @inferred JuMP.node_count(m)
     end
 
     @testset "LP (Direct mode)" begin
@@ -101,6 +108,9 @@ using JuMP
         MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c), -1.0)
         MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.UpperBoundRef(x)), 0.0)
         MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(JuMP.LowerBoundRef(y)), 1.0)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
+        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
 
         JuMP.optimize!(m)
 
@@ -120,6 +130,9 @@ using JuMP
         @test -1.0 == @inferred JuMP.dual(c)
         @test  0.0 == @inferred JuMP.dual(JuMP.UpperBoundRef(x))
         @test  1.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(y))
+        @test  Int64(1) == @inferred JuMP.simplex_iterations(m)
+        @test  Int64(1) == @inferred JuMP.barrier_iterations(m)
+        @test  Int64(1) == @inferred JuMP.node_count(m)
     end
 
     # TODO: test Manual mode
@@ -161,6 +174,9 @@ using JuMP
         MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
         MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
         MOI.set(mockoptimizer, MOI.DualStatus(), MOI.NO_SOLUTION)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
+        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
 
         JuMP.optimize!(m)
 
@@ -174,6 +190,9 @@ using JuMP
         @test 1.0 == @inferred JuMP.value(x)
         @test 0.0 == @inferred JuMP.value(y)
         @test 1.0 == @inferred JuMP.objective_value(m)
+        @test  Int64(1) == @inferred JuMP.simplex_iterations(m)
+        @test  Int64(1) == @inferred JuMP.barrier_iterations(m)
+        @test  Int64(1) == @inferred JuMP.node_count(m)
 
         @test !JuMP.has_duals(m)
     end
@@ -217,6 +236,9 @@ using JuMP
         MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c1), -1.0)
         MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c2), 2.0)
         MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c3), 3.0)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
+        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
 
         #@test JuMP.isattached(m)
         @test JuMP.has_values(m)
@@ -236,6 +258,9 @@ using JuMP
         @test 3.0 == @inferred JuMP.dual(c3)
 
         @test 2.0 == @inferred JuMP.value(2 * x + 3 * y * x)
+        @test  Int64(1) == @inferred JuMP.simplex_iterations(m)
+        @test  Int64(1) == @inferred JuMP.barrier_iterations(m)
+        @test  Int64(1) == @inferred JuMP.node_count(m)
     end
 
     @testset "SOC" begin
@@ -279,6 +304,9 @@ using JuMP
         MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(z), 0.0)
         MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(varsoc), [-1.0,-2.0,-3.0])
         MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(affsoc), [1.0,2.0,3.0])
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
+        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
 
         JuMP.optimize!(m)
 
@@ -296,6 +324,9 @@ using JuMP
         @test JuMP.has_duals(m)
         @test [-1.0, -2.0, -3.0] == @inferred JuMP.dual(varsoc)
         @test [ 1.0,  2.0,  3.0] == @inferred JuMP.dual(affsoc)
+        @test  Int64(1) == @inferred JuMP.simplex_iterations(m)
+        @test  Int64(1) == @inferred JuMP.barrier_iterations(m)
+        @test  Int64(1) == @inferred JuMP.node_count(m)
     end
 
     @testset "SDP" begin
@@ -346,6 +377,9 @@ using JuMP
                 JuMP.optimizer_index(sym_psd), [4.0, 5.0, 6.0])
         MOI.set(mockoptimizer, MOI.ConstraintDual(),
                 JuMP.optimizer_index(con_psd), [7.0, 8.0, 9.0, 10.0])
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
+        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
 
         JuMP.optimize!(m)
 
@@ -369,6 +403,9 @@ using JuMP
         @test [4.0 5.0; 5.0 6.0] == @inferred JuMP.dual(sym_psd)
         @test JuMP.dual(con_psd) isa Matrix
         @test [7.0 9.0; 8.0 10.0] == @inferred JuMP.dual(con_psd)
+        @test  Int64(1) == @inferred JuMP.simplex_iterations(m)
+        @test  Int64(1) == @inferred JuMP.barrier_iterations(m)
+        @test  Int64(1) == @inferred JuMP.node_count(m)
 
     end
 
