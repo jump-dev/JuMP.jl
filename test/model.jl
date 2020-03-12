@@ -107,7 +107,6 @@ function test_hygiene_variable()
     model_y = Model()
     @variable(model_y, y)
     err = JuMP.VariableNotOwned(y)
-
     @test_throws err @constraint(model_x, y in MOI.EqualTo(1.0))
     @test_throws err @constraint(model_x, [x, y] in MOI.Zeros(2))
     @test_throws err @objective(model_x, Min, y)
@@ -337,6 +336,48 @@ function test_bridges_add_bridgeable_con_set_optimizer()
     @test 1.0 == @inferred JuMP.value(x)
     @test 1.0 == @inferred JuMP.value(c)
     @test 2.0 == @inferred JuMP.dual(c)
+end
+
+function test_bridge_graph_false()
+    model = Model(mock_factory, bridge_constraints = false)
+    @variable(model, x)
+    @test_throws(
+        ErrorException(
+            "Cannot add bridge if `bridge_constraints` was set to `false` in " *
+            "the `Model` constructor."
+        ),
+        add_bridge(model, NonnegativeBridge)
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot print bridge graph if `bridge_constraints` was set to " *
+            "`false` in the `Model` constructor."
+        ),
+        print_bridge_graph(model)
+    )
+    optimize!(model)
+    @test 1.0 == @inferred value(x)
+end
+
+function test_bridge_graph_true()
+    model = Model(mock_factory)
+    @variable(model, x)
+    add_bridge(model, NonnegativeBridge)
+    @test sprint(print_bridge_graph, model) ==
+        "Bridge graph with 0 variable nodes, 0 constraint nodes and 0 objective nodes.\n"
+    c = @constraint(model, x in Nonnegative())
+    @test sprint(print_bridge_graph, model) ==
+        replace(
+            "Bridge graph with 1 variable nodes, 2 constraint nodes and 0 objective nodes.\n"*
+            " [1] constrained variables in `Nonnegative` are supported (distance 2) by adding free variables and then constrain them, see (1).\n" *
+            " (1) `MOI.SingleVariable`-in-`Nonnegative` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.SingleVariable}).\n"*
+            " (2) `MOI.ScalarAffineFunction{Float64}`-in-`Nonnegative` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.ScalarAffineFunction{Float64}}).\n",
+            "MathOptInterface." => "MOI.",
+        )
+    optimize!(model)
+    @test 1.0 == @inferred value(x)
+    @test 1.0 == @inferred value(c)
+    @test 2.0 == @inferred dual(c)
 end
 
 function test_solve_time()

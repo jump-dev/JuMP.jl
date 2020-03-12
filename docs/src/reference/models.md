@@ -30,6 +30,7 @@ set_optimizer_attribute
 set_optimizer_attributes
 
 bridge_constraints
+print_bridge_graph
 
 write_to_file
 Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)

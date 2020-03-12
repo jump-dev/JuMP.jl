@@ -379,6 +379,7 @@ function _moi_add_bridge(caching_opt::MOIU.CachingOptimizer,
     return
 end
 
+
 """
      add_bridge(model::Model,
                 BridgeType::Type{<:MOI.Bridges.AbstractBridge})
@@ -394,6 +395,37 @@ function add_bridge(model::Model,
     # barrier (`_moi_add_bridge`) to improve performance.
     _moi_add_bridge(JuMP.backend(model), BridgeType)
     return
+end
+
+"""
+     print_bridge_graph(model::Model)
+
+Print out the bridge graph explaining which bridges are used (and in what order
+thay are used) to bridge relevant constraints.
+"""
+print_bridge_graph(model::Model) = print_bridge_graph(Base.stdout, model)
+
+function print_bridge_graph(io::IO, model::Model)
+    # The type of `backend(model)` is not type-stable, so we use a function
+    # barrier (`_moi_print_bridge_graph`) to improve performance.
+    return _moi_print_bridge_graph(io, backend(model))
+end
+
+function _moi_print_bridge_graph(
+    io::IO, model::MOI.Bridges.LazyBridgeOptimizer
+)
+    return MOI.Bridges.print_graph(io, model)
+end
+
+function _moi_print_bridge_graph(io::IO, model::MOIU.CachingOptimizer)
+    return _moi_print_bridge_graph(io, model.optimizer)
+end
+
+function _moi_print_bridge_graph(::IO, ::MOI.ModelLike)
+    error(
+        "Cannot print bridge graph if `bridge_constraints` was set to " *
+        "`false` in the `Model` constructor."
+    )
 end
 
 """
