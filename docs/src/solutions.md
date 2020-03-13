@@ -133,7 +133,7 @@ end
 [MathOptInterface](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/) defines a large
 number of model attributes that can be queried. Examples include
 [`MOI.RelativeGap`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.RelativeGap) and
-[`MOI.SimplexIterations`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.SimplexIterations). Some attributes can be directly accessed by getter functions like [`objective_bound()`](@ref) and [`relative_gap()`](@ref).
+[`MOI.SimplexIterations`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.SimplexIterations). Some attributes can be directly accessed by getter functions like [`objective_bound`](@ref) and [`relative_gap`](@ref).
 
 To query these attributes, use:
 ```julia
