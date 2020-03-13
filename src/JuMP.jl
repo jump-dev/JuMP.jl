@@ -396,6 +396,32 @@ function add_bridge(model::Model,
 end
 
 """
+    empty!(model::Model) -> model
+
+Empty the model, that is, remove all variables, constraints and model
+attributes but not optimizer attributes. Always return the argument.
+
+Note: removes extensions data.
+"""
+function Base.empty!(model::Model)::Model
+    # The method changes the Model object to, basically, the state it was when
+    # created (if the optimizer was already pre-configured). The exceptions
+    # are:
+    # * optimize_hook: it is basically an optimizer attribute and we promise
+    #   to leave them alone (as do MOI.empty!).
+    # * bridge_types: for consistency with MOI.empty! for
+    #   MOI.Bridges.LazyBridgeOptimizer.
+    # * operator_counter: it is just a counter for a single-time warning
+    #   message (so keeping it helps to discover inneficiencies).
+    MOI.empty!(model.moi_backend)
+    empty!(model.shapes)
+    model.nlp_data = nothing
+    empty!(model.obj_dict)
+    empty!(model.ext)
+    return model
+end
+
+"""
     num_variables(model::Model)::Int64
 
 Returns number of variables in `model`.

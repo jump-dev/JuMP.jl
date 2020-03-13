@@ -32,6 +32,38 @@ end
 # Custom set Nonnegative with bridge NonnegativeBridge
 include("nonnegative_bridge.jl")
 
+function test_result_attributes(; test_empty = false)
+    err = JuMP.OptimizeNotCalled()
+    model = Model(() -> MOIU.MockOptimizer(SimpleLPModel{Float64}()))
+    @variable(model, x)
+    c = @constraint(model, x ≤ 0)
+    @objective(model, Max, x)
+    if test_empty
+        optimize!(model)
+        empty!(model)
+    end
+    @test_throws err JuMP.objective_value(model)
+    @test_throws err JuMP.dual_objective_value(model)
+    @test_throws err JuMP.objective_bound(model)
+    @test_throws err JuMP.value(x)
+    @test_throws err JuMP.value(c)
+    @test_throws err JuMP.dual(c)
+end
+
+function fill_small_test_model!(model)
+    # The model does not need to make sense, just use many different features.
+    @variable(model, a[1:5] >= 0, Int)
+    @variable(model, b[6:10], Bin)
+    @variable(model, c[1:3] == 0)
+    @variable(model, 10 <= d[1:3] <= 20)
+    @constraint(model, con1, sum(a) + sum(b) <= 5)
+    @constraint(model, con2, sum(b) >= 3)
+    @constraint(model, con3, sum(d[1:2]) >= 5)
+    @constraint(model, con4, sum(d) <= (sum(c) + 10))
+    @objective(model, Max, sum(a) - sum(b) + sum(d))
+    return model
+end
+
 function test_model()
     @testset "NoOptimizer" begin
         err = NoOptimizer()
@@ -47,17 +79,26 @@ function test_model()
     end
 
     @testset "Result attributes" begin
-        err = JuMP.OptimizeNotCalled()
-        model = Model(() -> MOIU.MockOptimizer(SimpleLPModel{Float64}()))
-        @variable(model, x)
-        c = @constraint(model, x ≤ 0)
-        @objective(model, Max, x)
-        @test_throws err JuMP.objective_value(model)
-        @test_throws err JuMP.dual_objective_value(model)
-        @test_throws err JuMP.objective_bound(model)
-        @test_throws err JuMP.value(x)
-        @test_throws err JuMP.value(c)
-        @test_throws err JuMP.dual(c)
+        test_result_attributes()
+    end
+
+    @testset "Result attributes after empty!" begin
+        test_result_attributes(test_empty = true)
+    end
+
+    @testset "empty!(model)" begin
+        model = Model()
+        backend_type = typeof(backend(model))
+        model.optimize_hook === nothing
+        hook(m) = nothing
+        JuMP.set_optimize_hook(model, hook)
+        @test model.optimize_hook === hook
+        @test fill_small_test_model!(model) === model
+        @test_throws ErrorException fill_small_test_model!(model)
+        @test empty!(model) === model
+        @test model.optimize_hook === hook # empty! does not touch the hook
+        @test isa(backend(model), backend_type)
+        @test fill_small_test_model!(model) === model
     end
 
     @testset "Test variable/model 'hygiene'" begin
