@@ -12,6 +12,7 @@ module JuMP
 
 using LinearAlgebra
 using SparseArrays
+using PrettyTables
 
 import MutableArithmetics
 const _MA = MutableArithmetics
@@ -474,6 +475,38 @@ function solve_time(model::Model)
     return MOI.get(model, MOI.SolveTime())
 end
 
+
+function result!(model::Model; dual_query::Bool = false)
+    data = ["termination status" termination_status(model)]
+
+    if data[2] != MOI.OPTIMIZE_NOT_CALLED
+
+        data = [data; ["primal status" primal_status(model)]]
+
+        if data[4] != MOI.NO_SOLUTION
+            for var_ref in all_variables(model::Model)
+                data = [data; ["value of "*name(var_ref) value(var_ref)]]
+            end
+        end
+
+        data = [data; ["objective value" objective_value(model)]]
+
+        if dual_query
+            data = [data; ["dual staus" dual_status(model)]]
+            if has_duals(model)
+                for (f, s) in list_of_constraint_types(model)
+                    for constraint in all_constraints(model, f, s)
+                        str = replace(string(index(constraint)), "MathOptInterface" => "MOI")
+                        data = [data; ["dual value of constraint index: "*str dual(constraint)]]
+                    end
+                end
+                data = [data; ["dual objective value" dual_objective_value(model)]]
+            end
+        end
+
+    end
+    return pretty_table(data)
+end
 """
     set_optimizer_attribute(model::Model, name::String, value)
 
