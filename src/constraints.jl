@@ -382,7 +382,8 @@ function moi_add_constraint(model::MOI.ModelLike, f::MOI.AbstractFunction,
         if moi_mode(model) == DIRECT
             bridge_message = "."
         elseif moi_bridge_constraints(model)
-            bridge_message = " and there are no bridges that can reformulate it into supported constraints."
+            MOI.Bridges.debug_supports_constraint(model.optimizer, f, s)
+            return 
         else
             bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
         end
