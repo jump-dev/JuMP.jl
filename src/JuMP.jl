@@ -639,7 +639,8 @@ end
     simplex_iterations(model::Model)
 
 Gets the cumulative number of simplex iterations during the most-recent optimization.
-Solver must implement `MOI.SimplexIterations()` to use this function.
+
+Solvers must implement `MOI.SimplexIterations()` to use this function.
 """
 function simplex_iterations(model::Model)
     return MOI.get(model, MOI.SimplexIterations())
@@ -649,7 +650,8 @@ end
     barrier_iterations(model::Model)
 
 Gets the cumulative number of barrier iterations during the most recent optimization.
-Solver must implement `MOI.BarrierIterations()` to use this function.
+
+Solvers must implement `MOI.BarrierIterations()` to use this function.
 """
 function barrier_iterations(model::Model)
     return MOI.get(model, MOI.BarrierIterations())
@@ -659,8 +661,9 @@ end
     node_count(model::Model)
 
 Gets the total number of branch-and-bound nodes explored during the most recent
-optimization in a Mixed Integer Program.Solver must implement `MOI.NodeCount()`
-to use this function.
+optimization in a Mixed Integer Program.
+
+Solvers must implement `MOI.NodeCount()` to use this function.
 """
 function node_count(model::Model)
     return MOI.get(model, MOI.NodeCount())
