@@ -134,6 +134,7 @@ end
 number of model attributes that can be queried. Examples include
 [`MOI.RelativeGap`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.RelativeGap) and
 [`MOI.SimplexIterations`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.SimplexIterations).
+Some attributes can be directly accessed by getter functions like [`objective_bound`](@ref) and [`relative_gap`](@ref).
 
 To query these attributes, use:
 ```julia
@@ -141,7 +142,8 @@ using JuMP
 model = Model()
 # ...
 optimize!(model)
-MOI.get(model, MOI.RelativeGap())
+JuMP.relative_gap(model)
+JuMP.simplex_iterations(model)
 ```
 
 ## Sensitivity analysis for LP
