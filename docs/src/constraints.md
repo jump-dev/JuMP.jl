@@ -209,8 +209,9 @@ julia> shadow_price(con)
 To query the dual variables associated with a variable bound, first obtain a
 constraint reference using one of [`UpperBoundRef`](@ref),
 [`LowerBoundRef`](@ref), or [`FixRef`](@ref), and then call [`dual`](@ref) on
-the returned constraint reference. Note that in linear programming,
-the duals on variable bounds are also called [`reduced_cost`](@ref).
+the returned constraint reference. The [`reduced_cost`](@ref) function may
+simplify this process as it returns the shadow price of an active bound of
+a variable (or zero, if no active bound exists).
 
 ```@meta
 DocTestSetup = quote

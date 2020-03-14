@@ -673,3 +673,26 @@ end
         "Julia's broadcast syntax instead: `JuMP.value.(x)`.")
     @test_throws exception JuMP.value(x)
 end
+
+#= What to mock:
+struct MockVariable <: JuMP.AbstractVariableRef
+end
+has_upper_bound
+has_lower_bound
+is_fixed
+UpperBoundRef
+LowerBoundRef
+FixRef
+owner_model
+
+struct MockModel <: JuMP.AbstractModel
+    has_dual::Bool
+end
+has_duals
+objective_sense
+
+struct MockConstraint <: JuMP.AbstractConstraint
+end
+dual
+=#
+
