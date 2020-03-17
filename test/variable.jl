@@ -13,8 +13,6 @@
 
 using JuMP
 
-import MathOptInterface
-const MOI = MathOptInterface
 import LinearAlgebra: Symmetric
 using Test
 
