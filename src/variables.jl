@@ -926,7 +926,7 @@ function _moi_add_constrained_variables(
 end
 
 """
-    reduced_cost(x::VariableRef)::Float64
+    reduced_cost(x::AbstractVariableRef)::Float64
 
 Return the reduced cost associated with variable `x`.
 
