@@ -13,6 +13,7 @@
 
 using JuMP
 
+import MathOptInterface
 import LinearAlgebra: Symmetric
 using Test
 
@@ -674,25 +675,96 @@ end
     @test_throws exception JuMP.value(x)
 end
 
-#= What to mock:
-struct MockVariable <: JuMP.AbstractVariableRef
-end
-has_upper_bound
-has_lower_bound
-is_fixed
-UpperBoundRef
-LowerBoundRef
-FixRef
-owner_model
-
 struct MockModel <: JuMP.AbstractModel
-    has_dual::Bool
+    has_duals::Bool
+    obj_sense::MathOptInterface.OptimizationSense
 end
-has_duals
-objective_sense
+JuMP.has_duals(m::MockModel) = m.has_duals
+JuMP.objective_sense(m::MockModel) = m.obj_sense
 
-struct MockConstraint <: JuMP.AbstractConstraint
+struct MockConstraintRef
+    dual::Float64
 end
-dual
-=#
+JuMP.dual(c::MockConstraintRef) = c.dual
+con_ref(; dual = 0.0) = MockConstraintRef(dual)
 
+struct MockVariable <: JuMP.AbstractVariableRef
+    om::MockModel
+    fb::Union{Nothing, MockConstraintRef}
+    ub::Union{Nothing, MockConstraintRef}
+    lb::Union{Nothing, MockConstraintRef}
+end
+function MockVariable(model; fb = nothing, ub = nothing, lb = nothing)
+    return MockVariable(model, fb, ub, lb)
+end
+
+JuMP.is_fixed(v::MockVariable) = v.fb !== nothing
+JuMP.has_lower_bound(v::MockVariable) = v.lb !== nothing
+JuMP.has_upper_bound(v::MockVariable) = v.ub !== nothing
+
+JuMP.FixRef(v::MockVariable) = v.fb
+JuMP.LowerBoundRef(v::MockVariable) = v.lb
+JuMP.UpperBoundRef(v::MockVariable) = v.ub
+
+JuMP.owner_model(v::MockVariable) = v.om
+
+@testset "reduced_cost" begin
+    no_dual_model = MockModel(false, MOI.MIN_SENSE)
+    feas_model  = MockModel(true, MOI.FEASIBILITY_SENSE)
+    min_model = MockModel(true, MOI.MIN_SENSE)
+    max_model = MockModel(true, MOI.MAX_SENSE)
+
+    # The method should always fail if duals are not available.
+    x = MockVariable(no_dual_model)
+    @test_throws ErrorException reduced_cost(x)
+    x = MockVariable(no_dual_model; fb = con_ref())
+    @test_throws ErrorException reduced_cost(x)
+    x = MockVariable(no_dual_model; lb = con_ref(), ub = con_ref())
+    @test_throws ErrorException reduced_cost(x)
+    # I am not sure if a feasibility sense model may have duals, but the
+    # sense may be changed after solving and having an error message help
+    # to discover this mistake.
+    x = MockVariable(feas_model)
+    @test_throws ErrorException reduced_cost(x)
+    x = MockVariable(feas_model; fb = con_ref())
+    @test_throws ErrorException reduced_cost(x)
+    x = MockVariable(feas_model; lb = con_ref(), ub = con_ref())
+    @test_throws ErrorException reduced_cost(x)
+
+    # My reimplementation of the tests suggested by @odow.
+    # Note that the floating point values are compared by equality because
+    # there is no risk of the solver messing this up (mocks are being used).
+    # First the fixed variable tests.
+    x = MockVariable(min_model; fb = con_ref(dual = 0.0)) # free variable
+    @test reduced_cost(x) == 0.0
+    x = MockVariable(min_model; fb = con_ref(dual = 1.0)) # min x, x == 10
+    @test reduced_cost(x) == 1.0
+    x = MockVariable(max_model; fb = con_ref(dual = -1.0)) # max x, x == 10
+    @test reduced_cost(x) == 1.0
+    x = MockVariable(min_model; fb = con_ref(dual = -1.0)) # min -x, x == 10
+    @test reduced_cost(x) == -1.0
+    x = MockVariable(max_model; fb = con_ref(dual = 1.0)) # max -x, x == 10
+    @test reduced_cost(x) == -1.0
+    # Then the double bounded variables.
+    x = MockVariable(min_model; # min x, 0 <= x <= 10
+        lb = con_ref(dual = 0.0), ub = con_ref(dual = 1.0)
+    )
+    @test reduced_cost(x) == 1.0
+    x = MockVariable(max_model; # max x, 0 <= x <= 10
+        lb = con_ref(dual = -1.0), ub = con_ref(dual = 0.0)
+    )
+    @test reduced_cost(x) == 1.0
+    x = MockVariable(min_model; # min -x, 0 <= x <= 10
+        lb = con_ref(dual = -1.0), ub = con_ref(dual = 0.0)
+    )
+    @test reduced_cost(x) == -1.0
+    x = MockVariable(max_model; # max -x, 0 <= x <= 10
+        lb = con_ref(dual = 0.0), ub = con_ref(dual = 1.0)
+    )
+    @test reduced_cost(x) == -1.0
+    # Test for a single upper bound and a single lower bound.
+    x = MockVariable(min_model; lb = con_ref(dual = 1.0)) # min x, 0 <= x
+    @test reduced_cost(x) == 1.0
+    x = MockVariable(max_model; ub = con_ref(dual = -1.0)) # max x, x <= 10
+    @test reduced_cost(x) == 1.0
+end

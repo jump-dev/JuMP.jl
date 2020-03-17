@@ -21,7 +21,6 @@ include("Containers/Containers.jl")
 include("utilities.jl")
 include("JuMPExtension.jl")
 
-#=
 @testset "$(file)" for file in filter(f -> endswith(f, ".jl"), readdir(@__DIR__))
     if file in [
         "runtests.jl",
@@ -34,9 +33,6 @@ include("JuMPExtension.jl")
     end
     include(file)
 end
-=#
-
-@testset "constraint.jl" begin include("constraint.jl") end
 
 # TODO: The hygiene test should run in a separate Julia instance where JuMP
 # hasn't been loaded via `using`.

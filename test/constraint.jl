@@ -712,4 +712,3 @@ end
     # Expected shadow prices
     Dict("xeq" => -1.0))
 end
-

@@ -935,17 +935,20 @@ Equivalent to querying the shadow price of the active variable bound
 
 See also: [`shadow_price`](@ref).
 """
-function reduced_cost(x::VariableRef)::Float64
+function reduced_cost(x::AbstractVariableRef)::Float64
     model = owner_model(x)
     if !has_duals(model)
-        error("Unable to query reduced cost of $(x) because duals are not" *
-              " available.")
+        error("Unable to query reduced cost of variable because model does" *
+              " not have duals available.")
     end
-		obj_sense = objective_sense(model)
-		if obj_sense != MOI.MIN_SENSE && obj_sense != MOI.MAX_SENSE
+    # I am not sure if a feasibility sense model may have duals, but the
+    # sense may be changed after solving and having an error message help
+    # to discover this mistake.
+    obj_sense = objective_sense(model)
+    if obj_sense != MOI.MIN_SENSE && obj_sense != MOI.MAX_SENSE
         error("The reduced cost is not available because the objective" *
-              " sense $sense is not minimization or maximization.")
-		end
+              " sense $obj_sense is not minimization or maximization.")
+    end
     sign = objective_sense(model) == MOI.MIN_SENSE ? 1.0 : -1.0
     if is_fixed(x)
         return sign * dual(FixRef(x))
