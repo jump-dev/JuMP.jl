@@ -377,17 +377,18 @@ function check_belongs_to_model(con::VectorConstraint, model)
 end
 
 function moi_add_constraint(model::MOI.ModelLike, f::MOI.AbstractFunction,
-                            s::MOI.AbstractSet)
+                            s::MOI.AbstractSet; io::IO = Base.stdout)
     if !MOI.supports_constraint(model, typeof(f), typeof(s))
+        error_message = "Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver"
         if moi_mode(model) == DIRECT
             bridge_message = "."
         elseif moi_bridge_constraints(model)
-            bridge_message = " and there are no bridges that can reformulate it into supported constraints."
-            MOI.Bridges.debug_supports_constraint(model.optimizer, f, s)
+            MOI.Bridges.debug_unsupported(Base.stdout, model.optimizer, MOI.Bridges.node(model.optimizer, typeof(f), typeof(s))))
+            error(error_message * " and cannot be bridged into supported constrained variables and constraints. See complete details above:")
         else
             bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
         end
-        error("Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver" * bridge_message)
+        error(error_message * bridge_message)
     end
     return MOI.add_constraint(model, f, s)
 end
