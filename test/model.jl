@@ -249,10 +249,11 @@ function test_model()
             end
             @testset "after loading the constraint to the optimizer" begin
                 @testset "optimizer set at Model" begin
-                    err = ErrorException(string("Constraints of type ",
-                    "MathOptInterface.SingleVariable-in-Nonnegative are not ",
-                    "supported by the solver and there are no bridges that ",
-                    "can reformulate it into supported constraints."))
+                    err = ErrorException("Constrained variables in `Nonnegative` are not supported" *
+                     " and cannot be bridged into supported constrained variables and constraints." *
+                      " See details below:\n[3] constrained variables in `Nonnegative` are not supported because no added bridge supports bridging it.\n"*
+                       "  Cannot add free variables and then constrain them because free variables are bridged but no functionize bridge was added.\n")
+
                     model = Model(mock_factory)
                     @variable(model, x)
                     @test_throws err @constraint(model, x in Nonnegative())

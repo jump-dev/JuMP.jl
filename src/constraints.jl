@@ -376,19 +376,24 @@ function check_belongs_to_model(con::VectorConstraint, model)
     end
 end
 
+function debug_string(b::MOIB.LazyBridgeOptimizer, F::Type{<:MOI.AbstractFunction}, S::Type{<:MOI.AbstractSet})
+    io = IOBuffer()
+    MOIB.debug(b, F, S; io = io)
+    return String(resize!(io.data, io.size))
+end
+
 function moi_add_constraint(model::MOI.ModelLike, f::MOI.AbstractFunction,
-                            s::MOI.AbstractSet; io::IO = Base.stdout)
+                            s::MOI.AbstractSet)
     if !MOI.supports_constraint(model, typeof(f), typeof(s))
-        error_message = "Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver"
         if moi_mode(model) == DIRECT
             bridge_message = "."
         elseif moi_bridge_constraints(model)
-            MOI.Bridges.debug_unsupported(Base.stdout, model.optimizer, MOI.Bridges.node(model.optimizer, typeof(f), typeof(s))))
-            error(error_message * " and cannot be bridged into supported constrained variables and constraints. See complete details above:")
+            error_string = debug_string(model.optimizer, typeof(f), typeof(s))
+            error(error_string)
         else
             bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
         end
-        error(error_message * bridge_message)
+        error("Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver" * bridge_message)
     end
     return MOI.add_constraint(model, f, s)
 end
