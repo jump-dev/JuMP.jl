@@ -259,6 +259,9 @@ Base.promote_rule(::Type{GenericQuadExpr{S, V}}, R::Type{<:Real}) where {S, V} =
 
 Base.transpose(x::AbstractJuMPScalar) = x
 
+# only real scalars are supported
+Base.conj(x::AbstractJuMPScalar) = x
+
 # Can remove the following code once == overloading is removed
 
 function LinearAlgebra.issymmetric(x::Matrix{T}) where {T <: _JuMPTypes}
