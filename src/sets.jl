@@ -73,3 +73,64 @@ function LinearAlgebra.norm(::AbstractVector{<:AbstractJuMPScalar})
           "`@constraint(model, norm(x) <= t)` should now be written as ",
           "`@constraint(model, [t; x] in SecondOrderCone())`")
 end
+
+"""
+    SOS1
+
+SOS1 (Special Ordered Sets type 1) object than can be used to constrain a 
+vector `x` to a set where at most 1 variable can take a non-zero value, all
+others being at 0. 
+
+The `weights`, when specified, induce an ordering of the variables; as such, 
+they should be unique values. The *k*th element in the set corresponds to the
+*k*th weight in `weights`. See [here](http://lpsolve.sourceforge.net/5.5/SOS.htm)
+for a description of SOS constraints and their potential uses.
+
+This is a shortcut for the `MathOptInterface.SOS1`
+
+"""
+struct SOS1 <: AbstractVectorSet 
+    weights::Vector{Float64}
+    function SOS1(weights::AbstractVector = Float64[])
+        new(convert(Vector{Float64}, weights))
+    end
+end
+function moi_set(set::SOS1, dim::Int)
+    if length(set.weights) == 0
+        return MOI.SOS1(collect(1:1.0:dim))
+    elseif length(weights) == dim
+        return MOI.SOS1(weights)
+    else
+        error("Weight vector in SOS1 is not of length($dim)")
+    end
+end
+
+"""
+    SOS2
+
+SOS1 (Special Ordered Sets type 2) object than can be used to constrain a 
+vector `x` to a set where at most 2 variables can take a non-zero value, all
+others being at 0. In addition, if two are non-zero these must be consecutive
+in their ordering. 
+
+The `weights` induce an ordering of the variables; as such, they should be unique
+values. The *k*th element in the set corresponds to the *k*th weight in `weights`.
+See [here](http://lpsolve.sourceforge.net/5.5/SOS.htm) for a description of SOS
+constraints and their potential uses. This is a shortcut for the `MathOptInterface.SOS2`
+
+"""
+struct SOS2 <: AbstractVectorSet 
+    weights::Vector{Float64}
+    function SOS2(weights::AbstractVector = Float64[])
+        new(convert(Vector{Float64}, weights))
+    end
+end
+function moi_set(set::SOS2, dim::Int)
+    if length(set.weights) == 0
+        return MOI.SOS2(collect(1:1.0:dim))
+    elseif length(weights) == dim
+        return MOI.SOS2(weights)
+    else
+        error("Weight vector in SOS2 is not of length($dim)")
+    end
+end

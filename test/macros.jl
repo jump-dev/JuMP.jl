@@ -265,6 +265,24 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test con.set == MOI.SecondOrderCone(2)
     end
 
+    @testset "@build_constraint (SOS1)" begin 
+        model = ModelType() 
+        @variable(model, x[1:3]) 
+        con = @build_constraint(x in JuMP.SOS1()) 
+        @test con isa JuMP.VectorConstraint 
+        @test con.func == x 
+        @test con.set == MOI.SOS1([1.0, 2.0, 3.0]) 
+    end 
+
+    @testset "@build_constraint (SOS2)" begin 
+        model = ModelType() 
+        @variable(model, x[1:3]) 
+        con = @build_constraint(x in JuMP.SOS2()) 
+        @test con isa JuMP.VectorConstraint 
+        @test con.func == x 
+        @test con.set == MOI.SOS2([1.0, 2.0, 3.0]) 
+    end
+
     @testset "@build_constraint (broadcast)" begin
         model = ModelType()
         @variable(model, x[1:2])
