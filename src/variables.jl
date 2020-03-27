@@ -157,6 +157,18 @@ function check_belongs_to_model(v::AbstractVariableRef, model::AbstractModel)
     end
 end
 
+# Used in the batch methods.
+function _check_share_model(variables::Vector{VariableRef}, method_name)
+    common_owner = owner_model(first(variables))
+    if any(var -> owner_model(var) != common_owner, variables)
+        error(
+            "Applying `$(method_name)` to variables from distinct models" *
+            " is not supported."
+        )
+    end
+    return
+end
+
 Base.iszero(::VariableRef) = false
 Base.copy(v::VariableRef) = VariableRef(v.model, v.index)
 Base.broadcastable(v::VariableRef) = Ref(v)
@@ -412,6 +424,23 @@ function delete_lower_bound(variable_ref::VariableRef)
 end
 
 """
+    delete_lower_bound(v::Vector{VariableRef})
+
+Delete the lower bound constraints of a set of variables.
+Depending on the solver implementation, this may be more efficient than
+broadcasting the method taking a single variable.
+"""
+function delete_lower_bound(variable_refs::Vector{VariableRef})
+    isempty(variable_refs) && return
+    _check_share_model(variable_refs, "delete_lower_bound")
+    MOI.delete(
+        backend(first(variable_refs)), index.(LowerBoundRef.(variable_refs))
+    )
+    return
+end
+
+
+"""
     lower_bound(v::VariableRef)
 
 Return the lower bound of a variable. Error if one does not exist. See also
@@ -492,6 +521,22 @@ function delete_upper_bound(variable_ref::VariableRef)
 end
 
 """
+    delete_upper_bound(v::Vector{VariableRef})
+
+Delete the upper bound constraints of a set of variables.
+Depending on the solver implementation, this may be more efficient than
+broadcasting the method taking a single variable.
+"""
+function delete_upper_bound(variable_refs::Vector{VariableRef})
+    isempty(variable_refs) && return
+    _check_share_model(variable_refs, "delete_upper_bound")
+    MOI.delete(
+        backend(first(variable_refs)), index.(UpperBoundRef.(variable_refs))
+    )
+    return
+end
+
+"""
     upper_bound(v::VariableRef)
 
 Return the upper bound of a variable. Error if one does not exist. See also
@@ -568,6 +613,37 @@ function _moi_fix(backend, variable::VariableRef, value::Number, force::Bool)
     return
 end
 
+function _moi_fix(
+    backend, variables::Vector{VariableRef}, values::Vector{<:Number},
+    force::Bool
+)
+    fixed_bitarr = _moi_is_fixed.(backend, variables)
+    # Deal first with previously fixed variables.
+    fixed_values = values[fixed_bitarr]
+    fixed_variables = variables[fixed_bitarr]
+    updated_cons = MOI.EqualTo.(convert.(Float64, fixed_values))
+    fixed_indexes = _fix_index.(fixed_variables)
+    MOI.set(backend, MOI.ConstraintSet(), fixed_indexes, updated_cons)
+    # Deal then with variables that were not fixed.
+    unfixed_bitarr = .!fixed_bitarr
+    unfixed_values = values[unfixed_bitarr]
+    unfixed_variables = variables[unfixed_bitarr]
+    has_ub = _moi_has_upper_bound.(backend, unfixed_variables)
+    has_lb = _moi_has_lower_bound.(backend, unfixed_variables)
+    !force && any(has_ub + has_lb) && error(
+        "Unable to fix a variable because it has existing" *
+        " variable bounds. Consider calling `JuMP.fix(variable, value;" *
+        " force=true)` which will delete existing bounds before fixing the" *
+        " variable."
+    )
+    delete_upper_bound(unfixed_variables[has_ub])
+    delete_lower_bound(unfixed_variables[has_lb])
+    unfixed_indexes = MOI.SingleVariable.(index.(unfixed_variables))
+    new_fix_cons = MOI.EqualTo.(convert.(Float64, unfixed_variables))
+    MOI.add_constraint(backend, unfixed_indexes, new_fix_cons)
+    return
+end
+
 """
     unfix(v::VariableRef)
 
@@ -575,6 +651,21 @@ Delete the fixing constraint of a variable.
 """
 function unfix(variable_ref::VariableRef)
     JuMP.delete(owner_model(variable_ref), FixRef(variable_ref))
+    return
+end
+
+"""
+    unfix(v::VariableRef)
+
+Delete the fixing constraints of a set of variables.
+Depending on the solver implementation, this may be more efficient than
+broadcasting the method taking a single variable.
+"""
+function unfix(variable_refs::Vector{VariableRef})
+    _check_share_model(variable_refs, "unfix")
+    MOI.delete(
+        backend(first(variable_refs)), index.(FixRef.(variable_refs))
+    )
     return
 end
 
