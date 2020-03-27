@@ -133,6 +133,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_expression_with_string w - q "-2.5 y*z + w - 7.1 x - 2.5"
             @test_throws ErrorException w*q
             @test_throws ErrorException w/q
+            @test transpose(x) === x
+            @test conj(x) === x
         end
 
         # 3. AffExpr tests
@@ -177,6 +179,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_expression_with_string aff2 - q "-2.5 y*z + 1.2 y - 7.1 x - 1.3"
             @test_throws ErrorException aff2 * q
             @test_throws ErrorException aff2 / q
+            @test transpose(aff) === aff
+            @test conj(aff) === aff
         end
 
         # 4. QuadExpr
@@ -209,6 +213,8 @@ function operators_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::
             @test_expression_with_string q - q2 "2.5 y*z - 8 x*z + 7.1 x - 1.2 y + 1.3"
             @test_throws ErrorException q * q2
             @test_throws ErrorException q / q2
+            @test transpose(q) === q
+            @test conj(q) === q
         end
     end
 
