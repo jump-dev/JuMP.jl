@@ -119,15 +119,6 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         @test_throws Exception JuMP.delete(second_model, constraint_ref)
     end
 
-    @testset "get and set dual start" begin
-        model = ModelType()
-        @variable(model, x)
-        constraint_ref = @constraint(model, 2x <= 1)
-	con_val = 2.0
-	set_dual_start_value(constraint_ref, con_val)
-        @test dual_start_value(model, constraint_ref) == con_val
-    end
-
     @testset "batch delete / is_valid constraints" begin
         model = ModelType()
         @variable(model, x[1:9])
