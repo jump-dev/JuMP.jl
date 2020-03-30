@@ -138,9 +138,9 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         model = ModelType()
         @variable(model, x)
         constraint_ref = @constraint(model, 2x <= 1)
-	con_val = 2.0
-	JuMP.set_dual_start_value(constraint_ref, con_val)
-        @test JuMP.dual_start_value(model, constraint_ref) == con_val
+	    con_val = 2.0
+	    JuMP.set_dual_start_value(constraint_ref, con_val)
+        @test JuMP.dual_start_value(constraint_ref) == con_val
     end
 
     @testset "Two-sided constraints" begin
