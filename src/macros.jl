@@ -650,6 +650,17 @@ adds groups of constraints at once, in the same fashion as @constraint. The mode
     end)
 """ :(@constraints)
 
+@doc """
+    @variables(m, args...)
+
+Adds multiple variables to model at once, in the same fashion as `@variable` macro. The model must be the first argument, and multiple variables can be added on multiple lines wrapped in a `begin ... end` block. For example:
+
+    @variables(m, begin
+      x
+      y
+    end)
+""" :(@variables)
+
 """
     _moi_sense(_error::Function, sense)
 
