@@ -252,7 +252,6 @@ con : x ≥ 10.0
 julia> dual_start_value(con)
 
 julia> set_dual_start_value(con, 2)
-2.0
 
 julia> dual_start_value(con)
 2.0
