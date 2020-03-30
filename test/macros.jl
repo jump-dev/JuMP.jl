@@ -271,7 +271,11 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         con = @build_constraint(x in JuMP.SOS1()) 
         @test con isa JuMP.VectorConstraint 
         @test con.func == x 
-        @test con.set == MOI.SOS1([1.0, 2.0, 3.0]) 
+        @test con.set == MOI.SOS1([1.0, 2.0, 3.0])
+        @test_throws(
+            ErrorException("Weight vector in SOS1 is not of length 3."),
+            @build_constraint(x in JuMP.SOS1([1.0]))
+            ) 
     end 
 
     @testset "@build_constraint (SOS2)" begin 
@@ -280,7 +284,11 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         con = @build_constraint(x in JuMP.SOS2()) 
         @test con isa JuMP.VectorConstraint 
         @test con.func == x 
-        @test con.set == MOI.SOS2([1.0, 2.0, 3.0]) 
+        @test con.set == MOI.SOS2([1.0, 2.0, 3.0])
+        @test_throws(
+            ErrorException("Weight vector in SOS2 is not of length 3."),
+            @build_constraint(x in JuMP.SOS2([1.0]))
+        ) 
     end
 
     @testset "@build_constraint (broadcast)" begin
