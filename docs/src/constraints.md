@@ -927,6 +927,9 @@ ScalarConstraint
 VectorConstraint
 index(::ConstraintRef)
 optimizer_index(::ConstraintRef{Model})
+
+set_dual_start_value
+dual_start_value
 ```
 
 ## Constructing constraints without adding them to the model
