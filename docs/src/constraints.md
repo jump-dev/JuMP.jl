@@ -235,6 +235,29 @@ The constraint can also be retrieved from its name using
 constraint_by_name
 ```
 
+## Start Values
+
+There is a way to assign a starting value to some constraint's dual (for warmstarting the optimizer) for each constraint: using [`set_dual_start_value`](@ref).
+
+The start value of a constraint's dual can be queried using [`dual_start_value`](@ref). If
+no start value has been set, [`dual_start_value`](@ref) will return `Nothing`.
+
+```jldoctest constraint_dual_start; setup=:(model=Model())
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, con, x >= 10)
+con : x ≥ 10.0
+
+julia> dual_start_value(con)
+
+julia> set_dual_start_value(con, 2)
+2.0
+
+julia> dual_start_value(con)
+2.0
+```
+
 ## Constraint containers
 
 So far, we've added constraints one-by-one. However, just like

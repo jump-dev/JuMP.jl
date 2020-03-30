@@ -52,6 +52,28 @@ end
 Base.broadcastable(con_ref::ConstraintRef) = Ref(con_ref)
 
 """
+    dual_start_value(con_ref::ConstraintRef)
+
+Return the dual start value (MOI attribute `ConstraintDualStart`) of the constraint `con_ref`. See also [`set_dual_start_value`](@ref).
+
+Note: If no dual start value has been set, `dual_start_value` will return `Nothing`
+"""
+function dual_start_value(con_ref::ConstraintRef)::Union{Nothing, Float64}
+    return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
+end
+
+"""
+    set_dual_start_value(con_ref::ConstraintRef, value::Number)
+
+Set the dual start value (MOI attribute `ConstraintDualStart`) of the constraint `con_ref` to `value`. See also [`dual_start_value`](@ref).
+"""
+function set_dual_start_value(con_ref::ConstraintRef, value::Number)
+    MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref,
+            Float64(value))
+    return
+end
+
+"""
     name(con_ref::ConstraintRef)
 
 Get a constraint's name attribute.
