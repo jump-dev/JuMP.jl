@@ -269,7 +269,7 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         model = ModelType() 
         @variable(model, x[1:3]) 
         con = @build_constraint(x in JuMP.SOS1())
-        con2 = @build_constraint(x in JuMP.SOS1([1,2,3])) 
+        con2 = @build_constraint(x in JuMP.SOS1([4.0,6.0,1.0])) 
         @test con isa JuMP.VectorConstraint 
         @test con.func == x 
         @test con.set == MOI.SOS1([1.0, 2.0, 3.0])
@@ -279,14 +279,14 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
             )
         @test con2 isa JuMP.VectorConstraint
         @test con2.func == x
-        @test con2.set == MOI.SOS1([1.0, 2.0, 3.0])
+        @test con2.set == MOI.SOS1([4.0,6.0,1.0])
     end 
 
     @testset "@build_constraint (SOS2)" begin 
         model = ModelType() 
         @variable(model, x[1:3]) 
         con = @build_constraint(x in JuMP.SOS2())
-        con2 = @build_constraint(x in JuMP.SOS2([1,2,3]))  
+        con2 = @build_constraint(x in JuMP.SOS2([4.0,6.0,1.0]))  
         @test con isa JuMP.VectorConstraint 
         @test con.func == x 
         @test con.set == MOI.SOS2([1.0, 2.0, 3.0])
@@ -296,7 +296,7 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         )
         @test con2 isa JuMP.VectorConstraint
         @test con2.func == x
-        @test con2.set == MOI.SOS2([1.0, 2.0, 3.0]) 
+        @test con2.set == MOI.SOS2([4.0,6.0,1.0]) 
     end
 
     @testset "@build_constraint (broadcast)" begin
