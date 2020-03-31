@@ -656,13 +656,13 @@ adds groups of constraints at once, in the same fashion as @constraint. The mode
 Adds multiple variables to model at once, in the same fashion as `@variable` macro. The model must be the first argument, and multiple variables can be added on multiple lines wrapped in a `begin ... end` block. For example:
 
     @variables(m, begin
-      	x
+        x
         y[1:2] >= 0
         z, Bin, (start = 0)
     end)
 
 !!! note
-    Keyword arguments must be contained within parentheses (refer the example above). 
+    Keyword arguments must be contained within parentheses (refer to the example above). 
 """ :(@variables)
 
 """
