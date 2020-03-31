@@ -225,14 +225,6 @@ function JuMP.add_constraint(model::MyModel, c::JuMP.AbstractConstraint,
     JuMP.set_name(cref, name)
     return cref
 end
-
-function JuMP.dual_start_value(constraint_ref::MyConstraintRef)::Union{Nothing, Float64}
-    return dual_start_value(constraint_ref)
-end
-function JuMP.set_dual_start_value(constraint_ref::MyConstraintRef, value::Float64)
-    set_dual_start_value(constraint_ref, value)
-end
-
 function JuMP.delete(model::MyModel, constraint_ref::MyConstraintRef)
     @assert JuMP.is_valid(model, constraint_ref)
     delete!(model.constraints, constraint_ref.index)

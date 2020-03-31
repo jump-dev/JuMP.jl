@@ -134,15 +134,6 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         @test_throws Exception JuMP.delete(second_model, [cons[2]])
     end
 
-    @testset "get and set dual start" begin
-        model = ModelType()
-        @variable(model, x)
-        constraint_ref = @constraint(model, 2x <= 1)
-	    con_val = 2.0
-	    JuMP.set_dual_start_value(constraint_ref, con_val)
-        @test JuMP.dual_start_value(constraint_ref) == con_val
-    end
-
     @testset "Two-sided constraints" begin
         m = ModelType()
         @variable(m, x)
@@ -571,6 +562,13 @@ end
             (Vector{VariableRef}, MOI.SecondOrderCone),
             (Vector{AffExpr}, MOI.PositiveSemidefiniteConeSquare),
             (Vector{QuadExpr}, MOI.RotatedSecondOrderCone)])
+    end
+    @testset "get and set dual start" begin
+	model = Model()
+	@variable(model, x)
+        con = @constraint(model, 2x <= 1)
+	set_dual_start_value(con, 2)
+	@test dual_start_value(con) == 2.0
     end
 end
 
