@@ -9,7 +9,7 @@
 #############################################################################
 
 module JuMP
-@show("oi")
+
 using LinearAlgebra
 using SparseArrays
 
