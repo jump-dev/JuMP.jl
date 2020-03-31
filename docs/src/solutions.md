@@ -141,8 +141,8 @@ using JuMP
 model = Model()
 # ...
 optimize!(model)
-JuMP.relative_gap(model)
-MOI.get(model, MOI.SimplexIterations())
+@show relative_gap(model)
+@show MOI.get(model, MOI.SimplexIterations())
 ```
 
 ## Sensitivity analysis for LP
