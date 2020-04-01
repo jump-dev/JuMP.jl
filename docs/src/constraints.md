@@ -923,8 +923,8 @@ julia> @variable(model, x[1:3])
  x[2]
  x[3]
 
-julia> @constraint(model x in SOS2([3,7,2]))
-[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([3.0, 7.0, 2.0])
+julia> @constraint(model x in SOS2([3,5,2]))
+[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([3.0, 5.0, 2.0])
 ```
 
 In the case above, `x[3]` is the first variable and `x[2]` the last variable under the
