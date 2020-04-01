@@ -876,6 +876,60 @@ julia> @constraint(model, M * y + q ⟂ y)
 [y[1] + 2 y[2] + 5, 3 y[1] + 4 y[2] + 6, y[1], y[2]] ∈ MathOptInterface.Complements(2)
 ```
 
+## Special Ordered Sets (SOS1 and SOS2)
+
+A Special Ordered Set (SOS) is an ordered set of variables with particular characteristics.
+
+If a vector `x` is in a Special Ordered Set type 1 (SOS1), at most one element (or variable) of `x`
+can take a non-zero value, all others being zero, in a feasible solution. To induce ordering,
+`weights` can be provided; as such, they should be unique values. The `k`th element in the set
+corresponds to the `k`th weight in `weights`. 
+
+A SOS1 constraint is equivalent to:
+
+- `x[(i)] >= 0` for some `i`, where `(i)` is the induced ordering *i*th element
+- `x[(j)] == 0` for all `j != i`
+
+If a vector is in a Special Ordered Set type 2 (SOS2), no more than two adjacent elements may
+be non-zero in a feasibles solution. To induce ordering,
+`weights` can be provided; as such, they should be unique values. The `k`th element in the set
+corresponds to the `k`th weight in `weights`. 
+
+A SOS2 constraint is equivalent to:
+
+- `x[(i)] >= 0`, `x[(i+1)] >= 0`  for some `i`, where `(i)` is the induced ordering *i*th element
+- `x[(j)] == 0` for all `j != i`, `j != i+1`
+
+To create a SOS constraint, one can do the following:
+
+```jldoctest SOS
+julia> @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> @constraint(model x in SOS2())
+[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([1.0, 2.0, 3.0])
+```
+
+When no ordering vector is provided, JuMP induces an ordering from `1:length(x)`. If the desired 
+ordering is different, one can do the following:
+
+```jldoctest SOS
+julia> @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> @constraint(model x in SOS2([3,7,2]))
+[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([3.0, 7.0, 2.0])
+```
+
+In the case above, `x[3]` is the first variable and `x[2]` the last variable under the
+induced ordering.
+
 ## Reference
 
 ```@docs
