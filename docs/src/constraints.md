@@ -908,7 +908,7 @@ A SOS2 constraint is equivalent to:
 
 Create an SOS constraint as follows:
 
-```jldoctest SOS
+```jldoctest SOS; setup=:(model=Model())
 julia> @variable(model, x[1:3])
 3-element Array{VariableRef,1}:
  x[1]
@@ -922,7 +922,7 @@ julia> @constraint(model, x in SOS2([3,5,2]))
 In the case above, `x[3]` is the first variable and `x[2]` the last variable under the
 induced ordering. When no ordering vector is provided, JuMP induces an ordering from `1:length(x)`.
 
-```jldoctest SOS
+```jldoctest SOS; setup=:(model=Model())
 julia> @variable(model, x[1:3])
 3-element Array{VariableRef,1}:
  x[1]
