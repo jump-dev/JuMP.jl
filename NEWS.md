@@ -4,6 +4,7 @@ JuMP release notes
 Version 0.21.2 (April 2, 2020)
 -----------------------------
 
+- Added `relative_gap()` to access `MOI.RelativeGap()` attribute (#2199).
 - Documentation fixes:
   * Added link to source for docstrings in the documentation (#2207).
   * Added docstring for `@variables` macro (#2216).
