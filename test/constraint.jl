@@ -566,7 +566,7 @@ end
     @testset "get and set dual start" begin
 	    model = Model()
 	    @variable(model, x)
-        con = @constraint(model, 2x <= 1)
+	    con = @constraint(model, 2x <= 1)
 	    set_dual_start_value(con, 2)
 	    @test dual_start_value(con) == 2.0
     end
