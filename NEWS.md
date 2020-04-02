@@ -1,6 +1,22 @@
 JuMP release notes
 ==================
 
+Version 0.21.2 (April 2, 2020)
+-----------------------------
+
+- Documentation fixes:
+  * Added link to source for docstrings in the documentation (#2207).
+  * Added docstring for `@variables` macro (#2216).
+  * Typo fixes (#2177, #2184, #2182).
+- Implementation of methods for Base functions:
+  * Implemented `Base.empty!` for `JuMP.Model` (#2198).
+  * Implemented `Base.conj` for JuMP scalar types (#2209).
+- Bug fixes:
+  * Fixed sum of expression with scalar product in macro (#2178).
+  * Fixed writing of nonlinear models to MathOptFormat (#2181).
+  * Fixed construction of empty SparseAxisArray (#2179).
+  * Fixed constraint with zero function (#2188).
+
 Version 0.21.1 (Feb 18, 2020)
 -----------------------------
 
