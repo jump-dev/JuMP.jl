@@ -738,8 +738,7 @@ julia> start_value(y)
 
 ## [The `@variables` macro](@id variables)
 
-If you have many [`@variable`](@ref) calls, JuMP provides the macro `@variables`
-that can improve readability:
+If you have many [`@variable`](@ref) calls, JuMP provides the macro [`@variables`](@ref) that can improve readability:
 
 ```jldoctest; setup=:(model=Model())
 julia> @variables(model, begin
@@ -764,6 +763,7 @@ Subject to
 
 ```@docs
 @variable
+@variables
 owner_model
 VariableRef
 all_variables
