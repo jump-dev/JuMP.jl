@@ -13,8 +13,8 @@
     relative_gap(model::Model)
 
 Return the final relative optimality gap after a call to `optimize!(model)`.
-Exact value depends upon implementation of MathOptInterface.RelativeGap() 
-by the particular solver used for optimization. 
+Exact value depends upon implementation of MathOptInterface.RelativeGap()
+by the particular solver used for optimization.
 """
 function relative_gap(model::Model)::Float64
     return MOI.get(model, MOI.RelativeGap())
@@ -122,6 +122,12 @@ function set_objective(
 )
     set_objective_sense(model, sense)
     set_objective_function(model, func)
+end
+
+function set_objective(
+    model::Model, sense::MOI.OptimizationSense, ::MutableArithmetics.Zero
+)
+    set_objective(model, sense, 0.0)
 end
 
 function set_objective(model::Model, sense::MOI.OptimizationSense, func)

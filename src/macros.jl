@@ -245,6 +245,11 @@ function build_constraint(_error::Function, α::Number,
                           set::MOI.AbstractScalarSet)
     return build_constraint(_error, convert(AffExpr, α), set)
 end
+function build_constraint(
+    _error::Function, ::MutableArithmetics.Zero, set::MOI.AbstractScalarSet
+)
+    return build_constraint(_error, AffExpr(0.0), set)
+end
 
 function build_constraint(_error::Function, x::Vector{<:AbstractJuMPScalar},
                           set::MOI.AbstractVectorSet)
@@ -662,7 +667,7 @@ Adds multiple variables to model at once, in the same fashion as `@variable` mac
     end)
 
 !!! note
-    Keyword arguments must be contained within parentheses (refer to the example above). 
+    Keyword arguments must be contained within parentheses (refer to the example above).
 """ :(@variables)
 
 """
