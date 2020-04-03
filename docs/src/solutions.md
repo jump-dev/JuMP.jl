@@ -139,7 +139,7 @@ Some attributes can be directly accessed by getter functions. These include
 - [`objective_bound`](@ref)
 - [`relative_gap`](@ref)
 - [`simplex_iterations`](@ref)
-- [`barrier_iteration`](@ref)
+- [`barrier_iterations`](@ref)
 - [`node_count`](@ref)
 
 To query these attributes, use:
