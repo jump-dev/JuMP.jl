@@ -644,11 +644,26 @@ end
 adds groups of constraints at once, in the same fashion as @constraint. The model must be the first argument, and multiple constraints can be added on multiple lines wrapped in a `begin ... end` block. For example:
 
     @constraints(m, begin
-      x >= 1
-      y - w <= 2
-      sum_to_one[i=1:3], z[i] + y == 1
+        x >= 1
+        y - w <= 2
+        sum_to_one[i=1:3], z[i] + y == 1
     end)
 """ :(@constraints)
+
+@doc """
+    @variables(m, args...)
+
+Adds multiple variables to model at once, in the same fashion as `@variable` macro. The model must be the first argument, and multiple variables can be added on multiple lines wrapped in a `begin ... end` block. For example:
+
+    @variables(m, begin
+        x
+        y[1:2] >= 0
+        z, Bin, (start = 0)
+    end)
+
+!!! note
+    Keyword arguments must be contained within parentheses (refer to the example above). 
+""" :(@variables)
 
 """
     _moi_sense(_error::Function, sense)

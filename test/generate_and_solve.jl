@@ -177,6 +177,7 @@ using JuMP
         MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
         MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
         MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+        MOI.set(mockoptimizer, MOI.RelativeGap(), 0.0)
 
         JuMP.optimize!(m)
 
@@ -190,9 +191,11 @@ using JuMP
         @test 1.0 == @inferred JuMP.value(x)
         @test 0.0 == @inferred JuMP.value(y)
         @test 1.0 == @inferred JuMP.objective_value(m)
+
         @test  1 == JuMP.simplex_iterations(m)
         @test  1 == JuMP.barrier_iterations(m)
         @test  1 == JuMP.node_count(m)
+        @test 0.0 == @inferred JuMP.relative_gap(m)
 
         @test !JuMP.has_duals(m)
     end
