@@ -64,7 +64,7 @@ function example_multi(; verbose = true)
 
 
     #  DECLARE MODEL
-    multi = Model(GLPK.Optimizer)
+    multi = Model(with_optimizer(GLPK.Optimizer))
 
     #  VARIABLES
     @variable(multi, trans[1:numorig, 1:numdest, 1:numprod] >= 0)

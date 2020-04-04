@@ -51,7 +51,7 @@ function example_steelT3(; verbose = true)
     )
 
     # Model
-    model = Model(GLPK.Optimizer)
+    model = Model(with_optimizer(GLPK.Optimizer))
 
     # Decision Variables
     @variables(model, begin

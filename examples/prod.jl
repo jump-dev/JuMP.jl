@@ -120,7 +120,7 @@ function example_prod(; verbose = true)
     minv = [[dem[p][t+1] * checkpro(p,t, pro, pir, rir) for t in numperiods] for p in 1:numprd]
     # Lower limit on inventory at end of period t
 
-    prod = Model(GLPK.Optimizer)
+    prod = Model(with_optimizer(GLPK.Optimizer))
 
     ###  VARIABLES  ###
     @variable(prod, Crews[0:lastperiod] >= 0)

@@ -64,7 +64,7 @@ function example_diet(; verbose = true)
     @test food_data["milk", "fat"] == 2.5
 
     # Build model
-    model = Model(GLPK.Optimizer)
+    model = Model(with_optimizer(GLPK.Optimizer))
 
     @variables(model, begin
         # Variables for nutrition info

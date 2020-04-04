@@ -32,7 +32,7 @@ function example_sudoku(filepath)
         end
     end
 
-    model = Model(GLPK.Optimizer)
+    model = Model(with_optimizer(GLPK.Optimizer))
 
     @variable(model, x[1:9, 1:9, 1:9], Bin)
 

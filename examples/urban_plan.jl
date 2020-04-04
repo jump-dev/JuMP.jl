@@ -17,7 +17,7 @@ An "urban planning" problem. Based on
 http://www.puzzlor.com/2013-08_UrbanPlanning.html
 """
 function example_urban_plan()
-    model = Model(GLPK.Optimizer)
+    model = Model(with_optimizer(GLPK.Optimizer))
 
     # x is indexed by row and column
     @variable(model, 0 <= x[1:5, 1:5] <= 1, Int)
