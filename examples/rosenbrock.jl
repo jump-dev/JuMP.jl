@@ -11,7 +11,7 @@
 using JuMP, Ipopt, Test
 
 function example_rosenbrock()
-    model = Model(Ipopt.Optimizer)
+  model = Model(with_optimizer(Ipopt.Optimizer))
     set_silent(model)
     @variable(model, x)
     @variable(model, y)
