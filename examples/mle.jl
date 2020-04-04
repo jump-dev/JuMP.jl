@@ -20,7 +20,7 @@ function example_mle(; verbose = true)
     n = 1_000
     Random.seed!(1234)
     data = randn(n)
-    model = Model(Ipopt.Optimizer)
+    model = Model(with_optimizer(Ipopt.Optimizer))
     set_silent(model)
     @variable(model, μ, start = 0.0)
     @variable(model, σ >= 0.0, start = 1.0)

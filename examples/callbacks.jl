@@ -19,7 +19,7 @@ using Test
 An example using a lazy constraint callback.
 """
 function example_lazy_constraint()
-    model = Model(GLPK.Optimizer)
+    model = Model(with_optimizer(GLPK.Optimizer))
     @variable(model, 0 <= x <= 2.5, Int)
     @variable(model, 0 <= y <= 2.5, Int)
     @objective(model, Max, y)
@@ -57,7 +57,7 @@ function example_user_cut_constraint()
     N = 30
     item_weights, item_values = rand(N), rand(N)
 
-    model = Model(GLPK.Optimizer)
+    model = Model(with_optimizer(GLPK.Optimizer))
     @variable(model, x[1:N], Bin)
     @constraint(model, sum(item_weights[i] * x[i] for i = 1:N) <= 10)
     @objective(model, Max, sum(item_values[i] * x[i] for i = 1:N))
@@ -95,7 +95,7 @@ function example_heuristic_solution()
     N = 30
     item_weights, item_values = rand(N), rand(N)
 
-    model = Model(GLPK.Optimizer)
+    model = Model(with_optimizer(GLPK.Optimizer))
     @variable(model, x[1:N], Bin)
     @constraint(model, sum(item_weights[i] * x[i] for i = 1:N) <= 10)
     @objective(model, Max, sum(item_values[i] * x[i] for i = 1:N))
@@ -124,7 +124,7 @@ example_heuristic_solution()
 An example using a solver_dependent callback.
 """
 function example_solver_dependent_callback()
-    model = Model(GLPK.Optimizer)
+    model = Model(with_optimizer(GLPK.Optimizer))
     @variable(model, 0 <= x <= 2.5, Int)
     @variable(model, 0 <= y <= 2.5, Int)
     @objective(model, Max, y)
