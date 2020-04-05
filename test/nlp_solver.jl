@@ -45,6 +45,8 @@ const MOI = MathOptInterface
         @NLconstraint(m, sum(x[i]^2 for i=1:4) == 40)
 
         set_silent(m)
+        @test JuMP.result!(m) == DataFrame(status = ["termination status"], values = [MOI.OPTIMIZE_NOT_CALLED])
+
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
@@ -52,6 +54,36 @@ const MOI = MathOptInterface
         @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
 
         @test JuMP.value.(x) ≈ [1.000000, 4.742999, 3.821150, 1.379408] atol=1e-3
+
+        result = JuMP.result!(m)
+
+        @test result.status[1:2] == ["termination status", "primal status"]
+        @test result.values[1:2] == [MOI.LOCALLY_SOLVED, MOI.FEASIBLE_POINT]
+
+        @test result.status[3] == "objective value"
+        @test result.values[3] ≈ 17.014 atol = 1e-3
+
+        for i in 1:4
+            @test result.status[i+3] == "value of x[$i]"
+        end
+        @test result.values[4:7] ≈ [1.000000, 4.742999, 3.821150, 1.379408] atol=1e-3
+
+
+        result = JuMP.result!(m, dual_query = true)
+
+        @test result.status[8] == "dual status"
+        @test result.values[8] == MOI.FEASIBLE_POINT
+
+        for i in 1:4
+            result.status[i+8] == "dual value of constraint index: MOI.ConstraintIndex{MOI.SingleVariable,MOI.GreaterThan{Float64}}($i)"
+        end
+        @test Float64.(result.values[9:12]) ≈ [1.08787 , 6.69317e-10, 8.88766e-10, 6.57088e-9] atol = 1e-3
+
+        for i in 1:4
+            result.status[i+12] == "dual value of constraint index: MOI.ConstraintIndex{MOI.SingleVariable,MOI.LessThan{Float64}}($i)"
+        end
+        @test Float64.(result.values[13:16]) ≈ [-6.26265e-10 , -9.78884e-9, -2.12285e-9, -6.9252e-10] atol = 1e-3
+
     end
 
     @testset "HS071 (no macros)" begin
