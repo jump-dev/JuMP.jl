@@ -10,8 +10,9 @@
 # This file contains objective-related functions
 """
     simplex_iterations(model::Model)
+
 Return the cumulative number of simplex iterations after a call to `optimize!(model)`.
-Exact value depends upon implementation of MathOptInterface.SimplexIterations()
+Exact value depends upon implementation of [`MathOptInterface.SimplexIterations()`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.SimplexIterations)
 by the particular solver used for optimization.
 """
 function simplex_iterations(m::Model)::Int
@@ -20,8 +21,9 @@ end
 
 """
     barrier_iterations(model::Model)
+
 Return the cumulative number of barrier iterations after a call to `optimize!(model)`.
-Exact value depends upon implementation of MathOptInterface.BarrierIterations()
+Exact value depends upon implementation of [`MathOptInterface.BarrierIterations()`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.BarrierIterations)
 by the particular solver used for optimization.
 """
 function barrier_iterations(m::Model)::Int
@@ -30,8 +32,9 @@ end
 
 """
     node_count(model::Model)
+
 Return the total number of branch-and-bound nodes explored after a call to `optimize!(model)`.
-Exact value depends upon implementation of MathOptInterface.BarrierIterations()
+Exact value depends upon implementation of [`MathOptInterface.NodeCount()`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.NodeCount)
 by the particular solver used for optimization.
 """
 function node_count(m::Model)::Int
@@ -42,8 +45,8 @@ end
     relative_gap(model::Model)
 
 Return the final relative optimality gap after a call to `optimize!(model)`.
-Exact value depends upon implementation of MathOptInterface.RelativeGap() 
-by the particular solver used for optimization. 
+Exact value depends upon implementation of [`MathOptInterface.RelativeGap()`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.RelativeGap)
+by the particular solver used for optimization.
 """
 function relative_gap(model::Model)::Float64
     return MOI.get(model, MOI.RelativeGap())
