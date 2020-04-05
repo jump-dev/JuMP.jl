@@ -8,6 +8,35 @@
 # See http://github.com/JuliaOpt/JuMP.jl
 #############################################################################
 # This file contains objective-related functions
+"""
+    simplex_iterations(model::Model)
+Return the cumulative number of simplex iterations after a call to `optimize!(model)`.
+Exact value depends upon implementation of MathOptInterface.SimplexIterations()
+by the particular solver used for optimization.
+"""
+function simplex_iterations(m::Model)::Int
+    return MOI.get(m, MOI.SimplexIterations())
+end
+
+"""
+    barrier_iterations(model::Model)
+Return the cumulative number of barrier iterations after a call to `optimize!(model)`.
+Exact value depends upon implementation of MathOptInterface.BarrierIterations()
+by the particular solver used for optimization.
+"""
+function barrier_iterations(m::Model)::Int
+    return MOI.get(m, MOI.BarrierIterations())
+end
+
+"""
+    node_count(model::Model)
+Return the total number of branch-and-bound nodes explored after a call to `optimize!(model)`.
+Exact value depends upon implementation of MathOptInterface.BarrierIterations()
+by the particular solver used for optimization.
+"""
+function node_count(m::Model)::Int
+    return MOI.get(m, MOI.NodeCount())
+end
 
 """
     objective_bound(model::Model)

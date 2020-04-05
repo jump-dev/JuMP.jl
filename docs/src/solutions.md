@@ -132,8 +132,10 @@ end
 
 [MathOptInterface](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/) defines a large
 number of model attributes that can be queried. Examples include
-[`MOI.RelativeGap`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.RelativeGap) and
-[`MOI.SimplexIterations`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.SimplexIterations).
+[`MOI.RelativeGap`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.RelativeGap)
+[`MOI.SimplexIterations`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.SimplexIterations)
+[`MOI.BarrierIterations`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.BarrierIterations)and
+[`MOI.NodeCount`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.NodeCount).
 
 To query these attributes, use:
 ```julia
@@ -142,6 +144,9 @@ model = Model()
 # ...
 optimize!(model)
 MOI.get(model, MOI.RelativeGap())
+@show simplex_iterations(model)
+@show barrier_iterations(model)
+@show node_count(model)
 ```
 
 ## Sensitivity analysis for LP
