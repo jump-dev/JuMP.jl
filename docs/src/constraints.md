@@ -876,6 +876,63 @@ julia> @constraint(model, M * y + q ⟂ y)
 [y[1] + 2 y[2] + 5, 3 y[1] + 4 y[2] + 6, y[1], y[2]] ∈ MathOptInterface.Complements(2)
 ```
 
+## Special Ordered Sets (SOS1 and SOS2)
+
+A Special Ordered Set (SOS) is an ordered set of variables with the following characteristics.
+
+If a vector of variables `x` is in a Special Ordered Set of Type I (SOS1), then at most one
+element of `x` can take a non-zero value, and all other elements must be zero.
+
+Although not required for feasibility, solvers can benefit from an ordering of the variables
+(e.g., the variables represent different factories to build, at most one factory can be built,
+and the factories can be ordered according to cost). To induce an ordering, `weights` can be provided;
+as such, they should be unique values. The `k`th element in the ordered set corresponds to 
+the `k`th weight in `weights` when the weights are sorted.
+
+A SOS1 constraint is equivalent to:
+
+- `x[i] >= 0` for some `i`
+- `x[j] == 0` for all `j != i`
+
+If a vector of variables `x` is in a Special Ordered Set of Type II (SOS2), then at most two 
+elements can be non-zero, and if two elements are non-zero, they must be adjacent.
+
+Because of the adjacency requirement, you should supply a weight vector (with unique elements)
+to induce an ordering of the variables. The `k`th element in the ordered set corresponds to
+the `k`th weight in `weights` when the weights are sorted.
+
+A SOS2 constraint is equivalent to:
+
+- `x[i] >= 0`, `x[i+1] >= 0`  for some `i`
+- `x[j] == 0` for all `j != i`, `j != i+1`
+
+Create an SOS constraint as follows:
+
+```jldoctest SOS; setup=:(model=Model())
+julia> @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> @constraint(model, x in SOS2([3,5,2]))
+[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([3.0, 5.0, 2.0])
+```
+
+In the case above, `x[3]` is the first variable and `x[2]` the last variable under the
+induced ordering. When no ordering vector is provided, JuMP induces an ordering from `1:length(x)`.
+
+```jldoctest SOS; setup=:(model=Model())
+julia> @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> @constraint(model, x in SOS2())
+[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([1.0, 2.0, 3.0])
+```
+
 ## Reference
 
 ```@docs
