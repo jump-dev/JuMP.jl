@@ -248,7 +248,7 @@ end
 function build_constraint(
     _error::Function, ::MutableArithmetics.Zero, set::MOI.AbstractScalarSet
 )
-    return build_constraint(_error, AffExpr(0.0), set)
+    return build_constraint(_error, zero(AffExpr), set)
 end
 
 function build_constraint(_error::Function, x::Vector{<:AbstractJuMPScalar},
