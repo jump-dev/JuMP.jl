@@ -81,6 +81,11 @@ Model()
 Model(::Any)
 ```
 
+A JuMP model may be reused by emptying it first:
+```@docs
+Base.empty!(::Model)
+```
+
 ```@meta
 # TODO: how to control the caching optimizer states
 ```

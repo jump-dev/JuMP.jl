@@ -143,7 +143,7 @@ using JuMP
 model = Model()
 # ...
 optimize!(model)
-MOI.get(model, MOI.RelativeGap())
+@show relative_gap(model)
 @show simplex_iterations(model)
 @show barrier_iterations(model)
 @show node_count(model)
@@ -281,4 +281,5 @@ JuMP.solve_time
 OptimizeNotCalled
 MOI.optimize!
 JuMP.result_count
+JuMP.relative_gap
 ```

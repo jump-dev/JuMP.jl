@@ -39,6 +39,17 @@ function node_count(m::Model)::Int
 end
 
 """
+    relative_gap(model::Model)
+
+Return the final relative optimality gap after a call to `optimize!(model)`.
+Exact value depends upon implementation of MathOptInterface.RelativeGap() 
+by the particular solver used for optimization. 
+"""
+function relative_gap(model::Model)::Float64
+    return MOI.get(model, MOI.RelativeGap())
+end
+
+"""
     objective_bound(model::Model)
 
 Return the best known bound on the optimal objective value after a call to
