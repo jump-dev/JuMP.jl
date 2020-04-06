@@ -1123,7 +1123,7 @@ macro variable(args...)
     else
         x = popfirst!(extra)
         if x in [:Int,:Bin,:PSD]
-            _error("Ambiguous variable name $x detected. Use the \"category\" keyword argument to specify a category for an anonymous variable.")
+            _error("Ambiguous variable name $x detected. To specify category of an anonymous variable use proper keyword argument or use appropiate function to add the required constraint on the variable.")
         end
         anon_singleton = false
     end
