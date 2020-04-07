@@ -54,6 +54,15 @@ end
     @test constraint_object(c).set == MOI.EqualTo(0.0)
 end
 
+@testset "MutableArithmetics.Zero (Issue #2087)" begin
+    model = Model()
+    @objective(model, Min, sum(1 for _ in 1:0))
+    @test objective_function(model) == AffExpr(0.0)
+    c = @constraint(model, sum(1 for _ in 1:0) in MOI.EqualTo(0.0))
+    @test constraint_object(c).func == AffExpr(0.0)
+    @test constraint_object(c).set == MOI.EqualTo(0.0)
+end
+
 mutable struct MyVariable
     test_kw::Int
     info::JuMP.VariableInfo
