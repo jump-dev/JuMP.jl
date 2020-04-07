@@ -376,23 +376,13 @@ function check_belongs_to_model(con::VectorConstraint, model)
     end
 end
 
-#function debug_string(b::MOIB.LazyBridgeOptimizer, F::Type{<:MOI.AbstractFunction}, S::Type{<:MOI.AbstractSet})
-#    io = IOBuffer()
-#    MOIB.debug(b, F, S; io = io)
-#    return String(resize!(io.data, io.size))
-#end
-
 function moi_add_constraint(model::MOI.ModelLike, f::MOI.AbstractFunction,
                             s::MOI.AbstractSet)
     if !MOI.supports_constraint(model, typeof(f), typeof(s))
         if moi_mode(model) == DIRECT
             bridge_message = "."
         elseif moi_bridge_constraints(model)
-            b = model.optimizer
-            F = typeof(f)
-            S = typeof(s)
-            error_string = sprint(io -> MOI.Bridges.debug(b, F, S; io = io))
-            error(error_string)
+            error(sprint(io -> MOI.Bridges.debug(model.optimizer, typeof(f), typeof(s); io = io)))
         else
             bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
         end

@@ -249,10 +249,19 @@ function test_model()
             end
             @testset "after loading the constraint to the optimizer" begin
                 @testset "optimizer set at Model" begin
-                    err = ErrorException("Constrained variables in `Nonnegative` are not supported" *
-                     " and cannot be bridged into supported constrained variables and constraints." *
-                      " See details below:\n[3] constrained variables in `Nonnegative` are not supported because no added bridge supports bridging it.\n"*
-                       "  Cannot add free variables and then constrain them because free variables are bridged but no functionize bridge was added.\n")
+                    error_string = """
+Constrained variables in `Nonnegative` are not supported and cannot be bridged into supported constrained variables and constraints. See details below:
+[1] constrained variables in `Nonnegative` are not supported because no added bridge supports bridging it.
+  Cannot add free variables and then constrain them because:
+  (1) `MOI.SingleVariable`-in-`Nonnegative` constraints are not supported
+(1) `MOI.SingleVariable`-in-`Nonnegative` constraints are not supported because:
+  Cannot use `MOIB.Constraint.ScalarFunctionizeBridge{Float64,Nonnegative}` because:
+  (2) `MOI.ScalarAffineFunction{Float64}`-in-`Nonnegative` constraints are not supported
+(2) `MOI.ScalarAffineFunction{Float64}`-in-`Nonnegative` constraints are not supported because:
+  Cannot use `MOIB.Constraint.ScalarSlackBridge{Float64,MOI.ScalarAffineFunction{Float64},Nonnegative}` because:
+  [1] constrained variables in `Nonnegative` are not supported
+"""
+                    err = ErrorException(error_string)
 
                     model = Model(mock_factory)
                     @variable(model, x)
