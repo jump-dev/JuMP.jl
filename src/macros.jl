@@ -1122,8 +1122,15 @@ macro variable(args...)
         anon_singleton = true
     else
         x = popfirst!(extra)
-        if x in [:Int,:Bin,:PSD]
-            _error("Ambiguous variable name $x detected. To specify category of an anonymous variable use proper keyword argument or use appropiate function to add the required constraint on the variable.")
+        if x == :Int
+            _error("Ambiguous variable name $x detected. To specify an anonymous integer " *
+                "variable, use `@variable(model, integer = true)` instead.")
+        elseif x == :Bin
+            _error("Ambiguous variable name $x detected. To specify an anonymous binary " *
+                "variable, use `@variable(model, binary = true)` instead.")
+        elseif x == :PSD
+            _error("Size of anonymous square matrix of positive semidefinite anonymous variables is not specified. To specify size of square matrix " * 
+                "use `@variable(model, [1:n, 1:n], PSD)` instead.")
         end
         anon_singleton = false
     end
