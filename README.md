@@ -49,9 +49,9 @@ commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [CDCS], [CDD],
 
 JuMP makes it easy to specify and **solve optimization problems without expert knowledge**, yet at the same time allows experts to implement advanced algorithmic techniques such as exploiting efficient hot-starts in linear programming or using callbacks to interact with branch-and-bound solvers. JuMP is also **fast** - benchmarking has shown that it can create problems at similar speeds to special-purpose commercial tools such as AMPL while maintaining the expressiveness of a generic high-level programming language. JuMP can be easily embedded in complex work flows including simulations and web servers.
 
-Our documentation includes an installation guide, quick-start guide, and reference manual. The **[juliaopt-notebooks]** repository contains a small but growing collection of contributed examples. Submissions are welcome!
+Our documentation includes an installation guide, quick-start guide, and reference manual. The **[JuMPTutorials.jl]** repository contains a small but growing collection of contributed examples. Submissions are welcome!
 
-[juliaopt-notebooks]: https://github.com/JuliaOpt/juliaopt-notebooks
+[JuMPTutorials.jl]: https://github.com/JuliaOpt/JuMPTutorials.jl
 
 **See [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md) for
 a list of the significant breaking changes in the JuMP 0.19 release.**
