@@ -926,6 +926,36 @@ function _moi_add_constrained_variables(
 end
 
 """
+    reduced_cost(x::VariableRef)::Float64
+
+Return the reduced cost associated with variable `x`.
+
+Equivalent to querying the shadow price of the active variable bound
+(if one exists and is active).
+
+See also: [`shadow_price`](@ref).
+"""
+function reduced_cost(x::VariableRef)::Float64
+    model = owner_model(x)
+    if !has_duals(model)
+        error("Unable to query reduced cost of variable because model does" *
+              " not have duals available.")
+    end
+    sign = objective_sense(model) == MOI.MIN_SENSE ? 1.0 : -1.0
+    if is_fixed(x)
+        return sign * dual(FixRef(x))
+    end
+    rc = 0.0
+    if has_upper_bound(x)
+        rc += dual(UpperBoundRef(x))
+    end
+    if has_lower_bound(x)
+        rc += dual(LowerBoundRef(x))
+    end
+    return sign * rc
+end
+
+"""
     all_variables(model::Model)::Vector{VariableRef}
 
 Returns a list of all variables currently in the model. The variables are

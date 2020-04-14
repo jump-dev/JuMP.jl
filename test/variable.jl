@@ -673,3 +673,121 @@ end
         "Julia's broadcast syntax instead: `JuMP.value.(x)`.")
     @test_throws exception JuMP.value(x)
 end
+
+function mock_var_for_RC(
+    obj_sense::MOI.OptimizationSense,
+    #obj_value::Float64,
+    var_obj_coeff::Float64,
+    #var_value,
+    var_bound_type::Symbol,
+    var_bounds_dual = nothing,
+    has_duals::Bool = var_bounds_dual !== nothing
+)
+    mockoptimizer = MOIU.MockOptimizer(
+        MOIU.Model{Float64}(), eval_objective_value = false
+    )
+    m = JuMP.direct_model(mockoptimizer)
+    if var_bound_type === :lower
+        @variable(m, x >= 0)
+        if has_duals
+            @assert isa(var_bounds_dual, Float64)
+            has_duals && MOI.set(
+                mockoptimizer, MOI.ConstraintDual(),
+                JuMP.optimizer_index(JuMP.LowerBoundRef(x)), var_bounds_dual
+            )
+        end
+    elseif var_bound_type === :upper
+        @variable(m, x <= 10)
+        if has_duals
+            @assert isa(var_bounds_dual, Float64)
+            has_duals && MOI.set(
+                mockoptimizer, MOI.ConstraintDual(),
+                JuMP.optimizer_index(JuMP.UpperBoundRef(x)), var_bounds_dual
+            )
+        end
+    elseif var_bound_type === :fixed
+        @variable(m, x == 10)
+        if has_duals
+            @assert isa(var_bounds_dual, Float64)
+            MOI.set(
+                mockoptimizer, MOI.ConstraintDual(),
+                JuMP.optimizer_index(JuMP.FixRef(x)), var_bounds_dual
+            )
+        end
+    elseif var_bound_type === :both
+        @variable(m, 0 <= x <= 10)
+        if has_duals
+            @assert length(var_bounds_dual) == 2
+            @assert eltype(var_bounds_dual) == Float64
+            lb_dual, ub_dual = var_bounds_dual
+            MOI.set(
+                mockoptimizer, MOI.ConstraintDual(),
+                JuMP.optimizer_index(JuMP.LowerBoundRef(x)), lb_dual
+            )
+            MOI.set(
+                mockoptimizer, MOI.ConstraintDual(),
+                JuMP.optimizer_index(JuMP.UpperBoundRef(x)), ub_dual
+            )
+        end
+    elseif var_bound_type === :none
+        @variable(m, x)
+        @assert var_bounds_dual === nothing
+    else
+        error("unrecognized bound type")
+    end
+
+    @objective(m, obj_sense, var_obj_coeff * x)
+
+    if has_duals
+        MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mockoptimizer, MOI.ResultCount(), 1)
+        MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+        MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    end
+
+    return x
+end
+
+@testset "reduced_cost" begin
+    Min = MOI.MIN_SENSE
+    Max = MOI.MAX_SENSE
+    # The method should always fail if duals are not available.
+    x = mock_var_for_RC(Min, 1.0, :none)
+    @test_throws ErrorException reduced_cost(x)
+    x = mock_var_for_RC(Min, 1.0, :fixed)
+    @test_throws ErrorException reduced_cost(x)
+    x = mock_var_for_RC(Min, 1.0, :lower)
+    @test_throws ErrorException reduced_cost(x)
+    x = mock_var_for_RC(Min, 1.0, :upper)
+    @test_throws ErrorException reduced_cost(x)
+    x = mock_var_for_RC(Min, 1.0, :both)
+    @test_throws ErrorException reduced_cost(x)
+    # My reimplementation of the tests suggested by @odow.
+    # Note that the floating point values are compared by equality because
+    # there is no risk of the solver messing this up (mocks are being used).
+    # First the fixed variable tests.
+    x = mock_var_for_RC(Min, 1.0, :none, nothing, true) # free var
+    @test reduced_cost(x) == 0.0
+    x = mock_var_for_RC(Min, 1.0, :fixed, 1.0) # min x, x == 10
+    @test reduced_cost(x) == 1.0
+    x = mock_var_for_RC(Max, 1.0, :fixed, -1.0) # max x, x == 10
+    @test reduced_cost(x) == 1.0
+    x = mock_var_for_RC(Min, -1.0, :fixed, -1.0) # min -x, x == 10
+    @test reduced_cost(x) == -1.0
+    x = mock_var_for_RC(Max, -1.0, :fixed, 1.0) # max -x, x == 10
+    @test reduced_cost(x) == -1.0
+    # Then the double bounded variables.
+    #x = mock_var_for_RC(Min, 1.0, :both, (0.0, 1.0)) # min x, 0 <= x <= 10
+    #@test reduced_cost(x) == 1.0
+    #x = mock_var_for_RC(Max, 1.0, :both, (-1.0, 0.0)) # max x, 0 <= x <= 10
+    #@test reduced_cost(x) == 1.0
+    #x = mock_var_for_RC(Min, -1.0, :both, (-1.0, 0.0)) # min -x, 0 <= x <= 10
+    #@test reduced_cost(x) == -1.0
+    #x = mock_var_for_RC(Max, -1.0, :both, (0.0, 1.0)) # max -x, 0 <= x <= 10
+    #@test reduced_cost(x) == -1.0
+    # Test for a single upper bound and a single lower bound.
+    x = mock_var_for_RC(Min, 1.0, :lower, 1.0) # min x, 0 <= x
+    @test reduced_cost(x) == 1.0
+    x = mock_var_for_RC(Max, 1.0, :upper, 1.0) # max x, x <= 10
+    @test reduced_cost(x) == 1.0
+end

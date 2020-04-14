@@ -666,6 +666,8 @@ This value is computed from [`dual`](@ref) and can be queried only when
 (not `FEASIBILITY_SENSE`). For linear constraints, the shadow prices differ at
 most in sign from the `dual` value depending on the objective sense.
 
+See also [`reduced_cost`](@ref JuMP.reduced_cost).
+
 ## Notes
 
 - The function simply translates signs from `dual` and does not validate
