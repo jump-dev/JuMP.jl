@@ -114,6 +114,9 @@ Base.IndexStyle(::Type{<:SparseAxisArray}) = IndexAnyCartesian()
 # eachindex redirect to keys
 Base.keys(::IndexAnyCartesian, d::SparseAxisArray) = keys(d)
 
+# Redirect Base.keys to the underlying dictionary
+Base.keys(d::SparseAxisArray) = keys(d.data)
+
 ################
 # Broadcasting #
 ################

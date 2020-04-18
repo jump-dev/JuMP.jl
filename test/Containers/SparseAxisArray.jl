@@ -75,6 +75,9 @@ SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries:
             @test 3 * (d2 / 2) == d3
             @test (d2 / 2) * 3 == d3
         end
+        @testset "Keys" begin
+            @test sort([d[k] for k in keys(d)]) == [1, 2]
+        end
     end
     @testset "2-dimensional" begin
         SA = SparseAxisArray
@@ -94,5 +97,8 @@ SparseAxisArray{Float64,2,Tuple{Symbol,Char}} with 2 entries:
         dc = @inferred SA(Dict((:a, 'u') => 1.0, (:b, 'v') => 2.0,
                                (:c, 'w') => 3.0))
         sparse_test(d, 2.5, d2, d3, dsqr, [da, db, dc])
+        @testset "Keys" begin
+            @test sort([d[k] for k in keys(d)]) == [0.5, 2.0]
+        end
     end
 end
