@@ -156,25 +156,43 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool,
     return parse_code, _build_call(_error, vectorized, variable, set)
 end
 
+function rewrite_call_expression(_error::Function, head::Val{F}, args...) where F
+    _error("function $F not implemented.")
+end
+
 _functionize(v::VariableRef) = convert(AffExpr, v)
 _functionize(v::AbstractArray{VariableRef}) = _functionize.(v)
 _functionize(x) = x
 _functionize(::MutableArithmetics.Zero) = 0.0
 function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
+    parse_code_rhs, build_code_rhs, new_rhs = :(), :(), rhs
+    if isexpr(rhs, :call) && applicable(rewrite_call_expression, Val(rhs.args[1]), rhs.args[2:end]...)
+        parse_code_rhs, build_code_rhs, new_rhs = rewrite_call_expression(_error, Val(rhs.args[1]), rhs.args[2:end]...)
+    end
+
     # Simple comparison - move everything to the LHS.
     #
     # `_functionize` deals with the pathological case where the `lhs` is a `VariableRef`
     # and the `rhs` is a summation with no terms. `_build_call` should be passed a
     # `GenericAffExpr` or a `GenericQuadExpr`, and not a `VariableRef` as would be the case
     # without `_functionize`.
-    if vectorized
-        func = :($lhs .- $rhs)
+    # TODO: bug in MutableArithmetics? The returned code does not find $new_rhs (ERROR: UndefVarError: #642###976 not defined).
+
+    if rhs == new_rhs
+        if vectorized
+            func = :($lhs .- $rhs)
+        else
+            func = :($lhs - $rhs)
+        end
+        variable, parse_code = _MA.rewrite(func)
     else
-        func = :($lhs - $rhs)
+        variable, parse_code = _MA.rewrite(lhs)
+        build_code = _build_call(_error, vectorized, :(_functionize($variable)), set)
+        parse_code = :($parse_code; $variable = _MA.mutable_operate!(-, convert(AffExpr, $variable), $new_rhs))
     end
+
     set = sense_to_set(_error, sense)
-    variable, parse_code = _MA.rewrite(func)
-    return parse_code, _build_call(_error, vectorized, :(_functionize($variable)), set)
+    return :($parse_code_rhs; $parse_code), :($build_code_rhs; $build_code)
 end
 
 function parse_constraint_expr(_error::Function, expr::Expr)
