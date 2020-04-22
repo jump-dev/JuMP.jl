@@ -169,8 +169,12 @@ _functionize(x) = x
 _functionize(::MutableArithmetics.Zero) = 0.0
 function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
     parse_code_rhs, build_code_rhs, new_rhs = :(), :(), rhs
+    parse_code_lhs, build_code_lhs, new_lhs = :(), :(), lhs
     if isexpr(rhs, :call) && applicable(rewrite_call_expression, Val(rhs.args[1]), rhs.args[2:end]...)
         parse_code_rhs, build_code_rhs, new_rhs = rewrite_call_expression(_error, Val(rhs.args[1]), rhs.args[2:end]...)
+    end
+    if isexpr(lhs, :call) && applicable(rewrite_call_expression, Val(lhs.args[1]), lhs.args[2:end]...)
+        parse_code_lhs, build_code_lhs, new_lhs = rewrite_call_expression(_error, Val(lhs.args[1]), lhs.args[2:end]...)
     end
 
     # Simple comparison - move everything to the LHS.
@@ -180,22 +184,29 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense
     # `GenericAffExpr` or a `GenericQuadExpr`, and not a `VariableRef` as would be the case
     # without `_functionize`.
 
-    if rhs == new_rhs
     # TODO: bug in MutableArithmetics? The returned code does not find $new_rhs (ERROR: UndefVarError: #642###976 not defined) when only using the first code path.
+    if rhs == new_rhs && lhs == new_lhs
         if vectorized
             func = :($lhs .- $rhs)
         else
             func = :($lhs - $rhs)
         end
         variable, parse_code = _MA.rewrite(func)
-    else
+    elseif rhs != new_rhs && lhs == new_lhs
         variable, parse_code = _MA.rewrite(lhs)
         parse_code = :($parse_code; $variable = _MA.mutable_operate!(-, convert(AffExpr, $variable), $new_rhs))
+    elseif lhs != new_lhs && rhs == new_rhs
+        variable, parse_code = _MA.rewrite(rhs)
+        parse_code = :($parse_code; $variable = _MA.mutable_operate!(-, $new_lhs, convert(AffExpr, $variable)))
+    else
+        @assert rhs != new_rhs
+        @assert lhs != new_lhs
+        error("Not yet implemented: expression rewriting in both members")
     end
 
     set = sense_to_set(_error, sense)
-    return :($parse_code_rhs; $parse_code), :($build_code_rhs; $build_code)
     build_code = _build_call(_error, vectorized, :(_functionize($variable)), set)
+    return :($parse_code_lhs; $parse_code_rhs; $parse_code), :($build_code_lhs; $build_code_rhs; $build_code)
 end
 
 function parse_constraint_expr(_error::Function, expr::Expr)
