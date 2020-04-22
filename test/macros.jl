@@ -176,6 +176,47 @@ function custom_expression_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 end
 
+function JuMP.rewrite_call_expression(errorf::Function, head::Val{:donothing}, var)
+    m = gensym()
+    vi = gensym()
+    nvar = gensym()
+
+    parse_code_var = quote
+      $m = owner_model($(esc(index)))
+      $vi = VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)
+      $nvar = add_variable($m, build_variable($errorf, $vi), "")
+    end
+
+    idx, parse_code_index = JuMP._MA.rewrite(index)
+    build_code_con = quote
+      add_constraint($m, build_constraint($errorf, _MA.mutable_operate!(-, $var, $nvar), MOI.EqualTo(0.0)))
+    end
+
+    return :($parse_code_var; $parse_code_index), build_code_con, var
+end
+function build_constraint_test(ModelType::Type{<:JuMP.AbstractModel})
+    @testset "Extension of @constraint with rewrite_call_expression #2229" begin
+        # RHS
+        model = ModelType()
+        @variable(model, x)
+        @variable(model, y)
+        cref = @constraint(model, y == donothing(x))
+
+        # LHS
+        model = ModelType()
+        @variable(model, x)
+        @variable(model, y)
+        cref = @constraint(model, donothing(x) == y)
+
+        # Both sides.
+        # TODO.
+        # model = ModelType()
+        # @variable(model, x)
+        # @variable(model, y)
+        # cref = @constraint(model, donothing(x) == donothing(y))
+    end
+end
+
 function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
     @testset "build_constraint on variable" begin
         m = ModelType()
