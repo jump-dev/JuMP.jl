@@ -216,11 +216,10 @@ function build_constraint_test(ModelType::Type{<:JuMP.AbstractModel})
         cref = @constraint(model, donothing(x) == y)
 
         # Both sides.
-        # TODO.
-        # model = ModelType()
-        # @variable(model, x)
-        # @variable(model, y)
-        # cref = @constraint(model, donothing(x) == donothing(y))
+        model = ModelType()
+        @variable(model, x)
+        @variable(model, y)
+        cref = @constraint(model, donothing(x) == donothing(y))
     end
 end
 

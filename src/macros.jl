@@ -159,7 +159,15 @@ function parse_one_operator_constraint(_error::Function, args...)
     _unknown_constraint_expr(_error)
 end
 
+# To be defined if such a function must be rewritten; otherwise,
+# rewrite_call_expression will never be called.
 expression_to_rewrite(head::Val{F}, args...) where F = false
+
+# When `expression_to_rewrite` called with the same arguments save the first one,
+# returns three things:
+# - code for parsing (which must be called first), if needed; otherwise, :().
+# - code for building the required constraints, if needed; otherwise, :().
+# - the symbol of the variable that replaces the expression (<: VariableRef).
 function rewrite_call_expression(_error::Function, head::Val{F}, args...) where F
     _error("function $F not implemented.")
 end
@@ -186,6 +194,7 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense
     # without `_functionize`.
 
     # TODO: bug in MutableArithmetics? The returned code does not find $new_rhs (ERROR: UndefVarError: #642###976 not defined) when only using the first code path.
+    parse_code, variable = nothing, nothing
     if rhs == new_rhs && lhs == new_lhs
         if vectorized
             func = :($lhs .- $rhs)
@@ -195,14 +204,15 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense
         variable, parse_code = _MA.rewrite(func)
     elseif rhs != new_rhs && lhs == new_lhs
         variable, parse_code = _MA.rewrite(lhs)
-        parse_code = :($parse_code; $variable = _MA.mutable_operate!(-, convert(AffExpr, $variable), $new_rhs))
+        parse_code = :($parse_code; $variable = _MA.operate!(-, $variable, $new_rhs))
     elseif lhs != new_lhs && rhs == new_rhs
         variable, parse_code = _MA.rewrite(rhs)
-        parse_code = :($parse_code; $variable = _MA.mutable_operate!(-, convert(AffExpr, $new_lhs), $variable))
+        parse_code = :($parse_code; $variable = _MA.operate!(-, $variable, $new_lhs))
     else
         @assert rhs != new_rhs
         @assert lhs != new_lhs
-        error("Not yet implemented: expression rewriting in both members")
+        variable = gensym()
+        parse_code = :($parse_code; $variable = _MA.operate!(-, $new_lhs, $new_rhs))
     end
 
     set = sense_to_set(_error, sense)
