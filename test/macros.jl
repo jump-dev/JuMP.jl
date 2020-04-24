@@ -207,7 +207,11 @@ function build_constraint_test(ModelType::Type{<:JuMP.AbstractModel})
         model = ModelType()
         @variable(model, x)
         @variable(model, y)
-        cref = @constraint(model, y == donothing(x))
+        cref = @constraint(model, x == donothing(y))
+
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, x - y)
+        @test c.set == MOI.EqualTo(0.0)
 
         # LHS
         model = ModelType()
@@ -215,11 +219,19 @@ function build_constraint_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(model, y)
         cref = @constraint(model, donothing(x) == y)
 
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, x - y)
+        @test c.set == MOI.EqualTo(0.0)
+
         # Both sides.
         model = ModelType()
         @variable(model, x)
         @variable(model, y)
         cref = @constraint(model, donothing(x) == donothing(y))
+
+        c = JuMP.constraint_object(cref)
+        @test JuMP.isequal_canonical(c.func, x - y)
+        @test c.set == MOI.EqualTo(0.0)
     end
 end
 
