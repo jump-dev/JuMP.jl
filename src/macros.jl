@@ -158,7 +158,7 @@ end
 
 # To be defined if such a function must be rewritten; otherwise,
 # rewrite_call_expression will never be called.
-expression_to_rewrite(head::Val{F}, args...) where F = false
+expression_to_rewrite(head::Val, args...) = false
 
 # When `expression_to_rewrite` called with the same arguments save the first one,
 # returns three things:
@@ -204,7 +204,7 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense
         parse_code = :($parse_code; $variable = _MA.operate!(-, $variable, $new_rhs))
     elseif lhs != new_lhs && rhs == new_rhs
         variable, parse_code = _MA.rewrite(rhs)
-        parse_code = :($parse_code; $variable = _MA.operate!(-, $variable, $new_lhs))
+        parse_code = :($parse_code; $variable = _MA.operate!(-, $new_lhs, $variable))
     else
         @assert rhs != new_rhs
         @assert lhs != new_lhs
