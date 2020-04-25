@@ -41,7 +41,7 @@ the value for each variable appearing in the expression.
 the solver.
 """
 function callback_value(cb_data, expr::GenericAffExpr)
-    return expr.constant + sum(callback_value(cb_data, var) * coeff for (var, coeff) in expr.terms)
+    return value(expr, v -> callback_value(cb_data, v))
 end
 
 """
@@ -54,7 +54,7 @@ the value for each variable appearing in the expression.
 the solver.
 """
 function callback_value(cb_data, expr::GenericQuadExpr)
-    return callback_value(cb_data, expr.aff) + sum(callback_value(cb_data, var.first) * callback_value(cb_data, var.second) * coeff for (var, coeff) in expr.terms)
+    return value(expr, v -> callback_value(cb_data, v))
 end
 
 function MOI.submit(model::Model, cb::MOI.LazyConstraint, con::ScalarConstraint)
