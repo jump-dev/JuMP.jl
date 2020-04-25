@@ -31,6 +31,19 @@ function callback_value(cb_data, x::VariableRef)
     )
 end
 
+"""
+    callback_value(cb_data, expr::GenericAffExpr)
+
+Return the primal solution of an affine expression inside a callback by getting
+the value for each variable appearing in the expression.
+
+`cb_data` is the argument to the callback function, and the type is dependent on
+the solver.
+"""
+function callback_value(cb_data, expr::GenericAffExpr)
+    return expr.constant + sum(callback_value(cb_data, var) * coeff for (var, coeff) in expr.terms)
+end
+
 function MOI.submit(model::Model, cb::MOI.LazyConstraint, con::ScalarConstraint)
     return MOI.submit(backend(model), cb, moi_function(con.func), con.set)
 end
