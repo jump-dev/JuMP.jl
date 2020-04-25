@@ -75,4 +75,6 @@ end
     @test callback_value(cb, x) == 1
     expr = x + 1
     @test callback_value(cb, expr) == 2
+    quad_expr = expr^2
+    @test callback_value(cb, quad_expr) == 4
 end
