@@ -90,7 +90,7 @@ function _macro_assign_and_return(code, variable, name;
           end)
         $variable = $code
         $(if model_for_registering !== nothing
-            :(object_dictionary($model_for_registering)[$(quot(name))] =
+            :($model_for_registering[$(quot(name))] =
               $variable)
           end)
         # This assignment should be in the scope calling the macro

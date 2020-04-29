@@ -122,6 +122,23 @@ function test_delete_constraints(ModelType, ::Any)
     @test_throws Exception JuMP.delete(second_model, constraint_ref)
 end
 
+function test_delete_constraints_with_names(ModelType)
+    model = ModelType()
+    @variable(model, x)
+    @constraint(model, con_ref, 2x <= 1)
+    @test JuMP.is_valid(model, con_ref)
+    @test model[:con_ref] === con_ref
+    JuMP.delete(model, con_ref)
+    @test !JuMP.is_valid(model, con_ref)
+    @test_throws KeyError(:con_ref) model[:con_ref]
+    @constraint(model, con_ref, 3x >= 2)
+    @test JuMP.is_valid(model, con_ref)
+    @test model[:con_ref] === con_ref
+    con = constraint_object(con_ref)
+    @test isequal_canonical(jump_function(con), 3x)
+    @test moi_set(con) == MOI.GreaterThan(2.0)
+end
+
 function test_batch_delete_constraints(ModelType, ::Any)
     model = ModelType()
     @variable(model, x[1:9])

@@ -177,6 +177,8 @@ mutable struct Model <: AbstractModel
     nlp_data
     # Dictionary from variable and constraint names to objects.
     obj_dict::Dict{Symbol, Any}
+    # Dictionary from object to the `Symbol` at which they are registered in `obj_dict`.
+    registered_symbol::Dict{Any, Symbol}
     # Number of times we add large expressions. Incremented and checked by
     # the `operator_warn` method.
     operator_counter::Int
@@ -263,6 +265,7 @@ function direct_model(backend::MOI.ModelLike)
                  nothing,
                  nothing,
                  Dict{Symbol, Any}(),
+                 Dict{Any, Symbol}(),
                  0,
                  Dict{Symbol, Any}())
 end
@@ -943,15 +946,26 @@ function Base.getindex(m::JuMP.AbstractModel, name::Symbol)
 end
 
 """
-    Base.setindex!(m::JuMP.Model, value, name::Symbol)
+    Base.setindex!(model::JuMP.Model, value, name::Symbol)
 
-stores the object `value` in the model `m` using so that it can be accessed via `getindex`.  Can be called with `[]` syntax.
+stores the object `value` in the model `model` using so that it can be accessed
+via `getindex`.  Can be called with `[]` syntax.
 """
-function Base.setindex!(m::JuMP.Model, value, name::Symbol)
+function Base.setindex!(model::JuMP.Model, value, name::Symbol)
     # if haskey(m.obj_dict, name)
     #     warn("Overwriting the object $name stored in the model. Consider using anonymous variables and constraints instead")
     # end
-    m.obj_dict[name] = value
+    model.registered_symbol[value] = name
+    model.obj_dict[name] = value
+end
+
+function unregister(model::JuMP.Model, value)
+    name = get(model.registered_symbol, value, nothing)
+    if name !== nothing
+        delete!(model.registered_symbol, value)
+        delete!(model.obj_dict, name)
+    end
+    return
 end
 
 """
