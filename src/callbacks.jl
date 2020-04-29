@@ -31,6 +31,19 @@ function callback_value(cb_data, x::VariableRef)
     )
 end
 
+"""
+    callback_value(cb_data, expr::Union{GenericAffExpr, GenericQuadExpr})
+
+Return the primal solution of an affine or quadratic expression inside a callback by getting
+the value for each variable appearing in the expression.
+
+`cb_data` is the argument to the callback function, and the type is dependent on
+the solver.
+"""
+function callback_value(cb_data, expr::Union{GenericAffExpr, GenericQuadExpr})
+    return value(expr, v -> callback_value(cb_data, v))
+end
+
 function MOI.submit(model::Model, cb::MOI.LazyConstraint, con::ScalarConstraint)
     return MOI.submit(backend(model), cb, moi_function(con.func), con.set)
 end
