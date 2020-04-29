@@ -163,9 +163,9 @@ _functionize(::MutableArithmetics.Zero) = 0.0
 function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
     # Simple comparison - move everything to the LHS.
     #
-    # `_functionize` deals with the pathological case where the `lhs` is a `VariableRef` 
-    # and the `rhs` is a summation with no terms. `_build_call` should be passed a 
-    # `GenericAffExpr` or a `GenericQuadExpr`, and not a `VariableRef` as would be the case 
+    # `_functionize` deals with the pathological case where the `lhs` is a `VariableRef`
+    # and the `rhs` is a summation with no terms. `_build_call` should be passed a
+    # `GenericAffExpr` or a `GenericQuadExpr`, and not a `VariableRef` as would be the case
     # without `_functionize`.
     if vectorized
         func = :($lhs .- $rhs)
