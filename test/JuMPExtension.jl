@@ -25,7 +25,7 @@ mutable struct MyModel <: JuMP.AbstractModel
     objectivesense::MOI.OptimizationSense
     objective_function::JuMP.AbstractJuMPScalar
     obj_dict::Dict{Symbol, Any}                     # Same that JuMP.Model's field `obj_dict`
-    registered_symbol::Dict{UInt, Symbol}           # Same that JuMP.Model's field `registered_symbol`
+    registered_symbol::IdDict{Any, Symbol}           # Same that JuMP.Model's field `registered_symbol`
     function MyModel()
         new(0, Dict{Int, JuMP.AbstractVariable}(),
             Dict{Int, String}(), nothing,                        # Variables
@@ -33,7 +33,7 @@ mutable struct MyModel <: JuMP.AbstractModel
             Dict{ConstraintIndex, String}(), nothing,            # Constraints
             MOI.FEASIBILITY_SENSE,
             zero(JuMP.GenericAffExpr{Float64, MyVariableRef}),
-            Dict{Symbol, Any}(), Dict{UInt, Symbol}())
+            Dict{Symbol, Any}(), IdDict{Any, Symbol}())
     end
 end
 Base.broadcastable(model::MyModel) = Ref(model)

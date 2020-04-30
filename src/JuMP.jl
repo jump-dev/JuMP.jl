@@ -177,10 +177,11 @@ mutable struct Model <: AbstractModel
     nlp_data
     # Dictionary from variable and constraint names to objects.
     obj_dict::Dict{Symbol, Any}
-    # Dictionary from object id to the `Symbol` at which they are registered in `obj_dict`.
-    # They key is the object id (obtained with `objectid`) as hashing large containers of
+    # Dictionary from object to the `Symbol` at which they are registered in `obj_dict`.
+    # With `IdDict`, the key is the object id (obtained with `objectid`) instead
+    # of the hash of the object. This is preferable here as hashing large containers of
     # variables can be computationally expensive.
-    registered_symbol::Dict{UInt, Symbol}
+    registered_symbol::IdDict{Any, Symbol}
     # Number of times we add large expressions. Incremented and checked by
     # the `operator_warn` method.
     operator_counter::Int
@@ -267,7 +268,7 @@ function direct_model(backend::MOI.ModelLike)
                  nothing,
                  nothing,
                  Dict{Symbol, Any}(),
-                 Dict{Any, Symbol}(),
+                 IdDict{Any, Symbol}(),
                  0,
                  Dict{Symbol, Any}())
 end
@@ -449,8 +450,14 @@ end
 Returns a dictionary mapping symbols to objects. This dictionary is used
 to retrieve the object corresponding to the symbol `symbol::Symbol` in
 `model[symbol]`. Objects are registered to a specific symbol in the macros.
-For instance, `@variable(model, x[1:2, 1:2])` registeres the array of variables
+For instance, `@variable(model, x[1:2, 1:2])` registers the array of variables
 `x` to the symbol `:x`.
+
+Use `setindex!` (resp. [`unregister`](@ref)) on `model` instead of
+`setindex!` (resp. `delete!`) on this dictionary as the former keeps
+updates the reverse mapping given by [`registered_symbol`](@ref) accordingly.
+
+A method should be defined for any subtype of `AbstractModel`.
 """
 object_dictionary(model::Model) = model.obj_dict
 
@@ -462,6 +469,11 @@ symbols. This is the reverse mapping of the dictionary obtained
 with [`object_dictionary`](@ref). It is used to delete the `symbol => object`
 pair from the object dictionary when `object` is deleted with
 `delete(model, object)`.
+
+This function should not be used as this dictionary is automatically
+synced when calling `setindex!` on `model`.
+
+A method should be defined for any subtype of `AbstractModel`.
 """
 registered_symbol(model::Model) = model.registered_symbol
 # TODO To avoid breaking `AbstractModel`'s we have this fallback,
@@ -970,21 +982,18 @@ function Base.getindex(m::JuMP.AbstractModel, name::Symbol)
 end
 
 """
-    Base.setindex!(model::JuMP.Model, value, name::Symbol)
+    Base.setindex!(model::JuMP.AbstractModel, value, name::Symbol)
 
 stores the object `value` in the model `model` using so that it can be accessed
 via `getindex`.  Can be called with `[]` syntax.
 """
 function Base.setindex!(model::AbstractModel, value, name::Symbol)
-    # if haskey(m.obj_dict, name)
-    #     warn("Overwriting the object $name stored in the model. Consider using anonymous variables and constraints instead")
-    # end
     symbols = registered_symbol(model)
     if symbols !== nothing
-        symbols[objectid(value)] = name
+        symbols[value] = name
     end
     # TODO In JuMP v0.22, replace with
-    # registered_symbol(model)[objectid(value)] = name
+    # registered_symbol(model)[value] = name
     object_dictionary(model)[name] = value
 end
 
@@ -993,13 +1002,13 @@ function unregister(model::AbstractModel, value)
     if symbols === nothing
         return
     end
-    name = get(symbols, objectid(value), nothing)
+    name = get(symbols, value, nothing)
     # TODO In JuMP v0.22, replace with
-    # name = get(registered_symbol(model), objectid(value), nothing)
+    # name = get(registered_symbol(model), value, nothing)
     if name !== nothing
-        delete!(symbols, objectid(value))
+        delete!(symbols, value)
         # TODO In JuMP v0.22, replace with
-        # delete!(registered_symbol(model), objectid(value))
+        # delete!(registered_symbol(model), value)
         delete!(model.obj_dict, name)
     end
     return
