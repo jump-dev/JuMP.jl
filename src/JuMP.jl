@@ -177,8 +177,10 @@ mutable struct Model <: AbstractModel
     nlp_data
     # Dictionary from variable and constraint names to objects.
     obj_dict::Dict{Symbol, Any}
-    # Dictionary from object to the `Symbol` at which they are registered in `obj_dict`.
-    registered_symbol::Dict{Any, Symbol}
+    # Dictionary from object id to the `Symbol` at which they are registered in `obj_dict`.
+    # They key is the object id (obtained with `objectid`) as hashing large containers of
+    # variables can be computationally expensive.
+    registered_symbol::Dict{UInt, Symbol}
     # Number of times we add large expressions. Incremented and checked by
     # the `operator_warn` method.
     operator_counter::Int
@@ -441,8 +443,30 @@ function num_nl_constraints(model::Model)
     return model.nlp_data !== nothing ? length(model.nlp_data.nlconstr) : 0
 end
 
-# TODO(IainNZ): Document these too.
+"""
+    object_dictionary(model::Model)
+
+Returns a dictionary mapping symbols to objects. This dictionary is used
+to retrieve the object corresponding to the symbol `symbol::Symbol` in
+`model[symbol]`. Objects are registered to a specific symbol in the macros.
+For instance, `@variable(model, x[1:2, 1:2])` registeres the array of variables
+`x` to the symbol `:x`.
+"""
 object_dictionary(model::Model) = model.obj_dict
+
+"""
+    registered_symbol(model::Model)
+
+Returns a dictionary mapping object ids (obtained with `objectid`) to
+symbols. This is the reverse mapping of the dictionary obtained
+with [`object_dictionary`](@ref). It is used to delete the `symbol => object`
+pair from the object dictionary when `object` is deleted with
+`delete(model, object)`.
+"""
+registered_symbol(model::Model) = model.registered_symbol
+# TODO To avoid breaking `AbstractModel`'s we have this fallback,
+#      that should be removed in JuMP v0.22
+registered_symbol(model::AbstractModel) = nothing
 
 """
     termination_status(model::Model)
@@ -951,18 +975,31 @@ end
 stores the object `value` in the model `model` using so that it can be accessed
 via `getindex`.  Can be called with `[]` syntax.
 """
-function Base.setindex!(model::JuMP.Model, value, name::Symbol)
+function Base.setindex!(model::AbstractModel, value, name::Symbol)
     # if haskey(m.obj_dict, name)
     #     warn("Overwriting the object $name stored in the model. Consider using anonymous variables and constraints instead")
     # end
-    model.registered_symbol[value] = name
-    model.obj_dict[name] = value
+    symbols = registered_symbol(model)
+    if symbols !== nothing
+        symbols[objectid(value)] = name
+    end
+    # TODO In JuMP v0.22, replace with
+    # registered_symbol(model)[objectid(value)] = name
+    object_dictionary(model)[name] = value
 end
 
-function unregister(model::JuMP.Model, value)
-    name = get(model.registered_symbol, value, nothing)
+function unregister(model::AbstractModel, value)
+    symbols = registered_symbol(model)
+    if symbols === nothing
+        return
+    end
+    name = get(symbols, objectid(value), nothing)
+    # TODO In JuMP v0.22, replace with
+    # name = get(registered_symbol(model), objectid(value), nothing)
     if name !== nothing
-        delete!(model.registered_symbol, value)
+        delete!(symbols, objectid(value))
+        # TODO In JuMP v0.22, replace with
+        # delete!(registered_symbol(model), objectid(value))
         delete!(model.obj_dict, name)
     end
     return

@@ -182,6 +182,21 @@ function test_variable_is_valid_delete(ModelType, ::Any)
     model = ModelType()
     @variable(model, x)
     @test JuMP.is_valid(model, x)
+    @test model[:x] === x
+    JuMP.delete(model, x)
+    @test !JuMP.is_valid(model, x)
+    @test_throws KeyError(:x) model[:x]
+    @variable(model, x)
+    @test JuMP.is_valid(model, x)
+    @test model[:x] === x
+    second_model = ModelType()
+    @test_throws Exception JuMP.delete(second_model, x)
+end
+
+function test_variable_delete_registered(ModelType)
+    model = ModelType()
+    @variable(model, x)
+    @test JuMP.is_valid(model, x)
     JuMP.delete(model, x)
     @test !JuMP.is_valid(model, x)
     second_model = ModelType()

@@ -25,6 +25,7 @@ mutable struct MyModel <: JuMP.AbstractModel
     objectivesense::MOI.OptimizationSense
     objective_function::JuMP.AbstractJuMPScalar
     obj_dict::Dict{Symbol, Any}                     # Same that JuMP.Model's field `obj_dict`
+    registered_symbol::Dict{UInt, Symbol}           # Same that JuMP.Model's field `registered_symbol`
     function MyModel()
         new(0, Dict{Int, JuMP.AbstractVariable}(),
             Dict{Int, String}(), nothing,                        # Variables
@@ -32,12 +33,13 @@ mutable struct MyModel <: JuMP.AbstractModel
             Dict{ConstraintIndex, String}(), nothing,            # Constraints
             MOI.FEASIBILITY_SENSE,
             zero(JuMP.GenericAffExpr{Float64, MyVariableRef}),
-            Dict{Symbol, Any}())
+            Dict{Symbol, Any}(), Dict{UInt, Symbol}())
     end
 end
 Base.broadcastable(model::MyModel) = Ref(model)
 
 JuMP.object_dictionary(model::MyModel) = model.obj_dict
+JuMP.registered_symbol(model::MyModel) = model.registered_symbol
 
 # Variables
 struct MyVariableRef <: JuMP.AbstractVariableRef
@@ -69,13 +71,19 @@ function JuMP.add_variable(model::MyModel, variable::JuMP.VariablesConstrainedOn
     JuMP.add_constraint(model, JuMP.VectorConstraint(var_refs, variable.set))
     return JuMP.reshape_vector(var_refs, variable.shape)
 end
-function JuMP.delete(model::MyModel, vref::MyVariableRef)
+function _delete(model::MyModel, vref::MyVariableRef)
     @assert JuMP.is_valid(model, vref)
     delete!(model.variables, vref.idx)
     delete!(model.var_to_name, vref.idx)
+    return
 end
-function JuMP.delete(model::MyModel, vrefs::Vector{MyVariableRef})
-    JuMP.delete.(model, vrefs)
+function JuMP.delete(model::MyModel, ref)
+    JuMP.unregister(model, ref)
+    _delete(model, ref)
+end
+function JuMP.delete(model::MyModel, ref::AbstractArray)
+    JuMP.unregister(model, ref)
+    _delete.(model, ref)
 end
 function JuMP.is_valid(model::MyModel, vref::MyVariableRef)
     return (model === vref.model &&
@@ -224,13 +232,10 @@ function JuMP.add_constraint(model::MyModel, c::JuMP.AbstractConstraint,
     JuMP.set_name(cref, name)
     return cref
 end
-function JuMP.delete(model::MyModel, constraint_ref::MyConstraintRef)
+function _delete(model::MyModel, constraint_ref::MyConstraintRef)
     @assert JuMP.is_valid(model, constraint_ref)
     delete!(model.constraints, constraint_ref.index)
     delete!(model.con_to_name, constraint_ref.index)
-end
-function JuMP.delete(model::MyModel, con_refs::Vector{<:MyConstraintRef})
-    JuMP.delete.(model, con_refs)
 end
 function JuMP.is_valid(model::MyModel, constraint_ref::MyConstraintRef)
     return (model === constraint_ref.model &&
