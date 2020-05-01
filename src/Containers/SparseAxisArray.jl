@@ -54,17 +54,6 @@ function Base.similar(sa::SparseAxisArray{S,N,K}, ::Type{T},
     end
     return SparseAxisArray(d)
 end
-# The generic implementation uses `LinearIndices`
-function Base.collect_to_with_first!(dest::SparseAxisArray, first_value, iterator,
-                                     state)
-    indices = eachindex(iterator)
-    dest[first(indices)] = first_value
-    for index in Iterators.drop(indices, 1)
-        element, state = iterate(iterator, state)
-        dest[index] = element
-    end
-    return dest
-end
 
 function Base.mapreduce(f, op, sa::SparseAxisArray)
     mapreduce(f, op, values(sa.data))
@@ -79,8 +68,6 @@ Base.haskey(sa::SparseAxisArray, idx) = haskey(sa.data, idx)
 function Base.haskey(sa::SparseAxisArray{T,1,Tuple{I}}, idx::I) where {T, I}
     return haskey(sa.data, (idx,))
 end
-
-Base.eachindex(g::Base.Generator{<:SparseAxisArray}) = eachindex(g.iter)
 
 # Error for sa[..., :, ...]
 function _colon_error() end

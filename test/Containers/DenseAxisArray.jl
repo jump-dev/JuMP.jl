@@ -51,17 +51,22 @@ And data, a 2-element Array{Float64,1}:
         @testset "Broadcasting" begin
             plus1(x) = x + 1
             @test plus1.(A) == correct_answer
+            @test correct_answer == @inferred map(plus1, A)
             @test A .+ 1 == correct_answer
+            @test correct_answer == @inferred map(x -> x + 1, A)
             @test 1 .+ A == correct_answer
+            @test correct_answer == @inferred map(x -> 1 + x, A)
         end
 
         @testset "Operation with scalar" begin
             correct_answer = DenseAxisArray([2.0, 4.0], 2:3)
             @test 2 * A == correct_answer
+            @test correct_answer == @inferred map(x -> 2 * x, A)
             @test A * 2 == correct_answer
+            @test correct_answer == @inferred map(x -> x * 2, A)
             @test A / (1 / 2) == correct_answer
+            @test correct_answer == @inferred map(x -> x / (1 / 2), A)
         end
-
     end
 
     @testset "Symbol index set" begin

@@ -98,7 +98,9 @@ end
 
 Base.isempty(A::DenseAxisArray) = isempty(A.data)
 
-# TODO: similar
+function Base.similar(A::DenseAxisArray, ::Type{T}, axes::Tuple) where T
+    return construct_undef_array(T, axes)
+end
 
 # AbstractArray interface
 
