@@ -155,7 +155,6 @@ function build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 end
 
-<<<<<<< HEAD
 struct CustomType
 end
 function JuMP.parse_constraint_head(_error::Function, ::Val{:(:=)}, lhs, rhs)
@@ -177,9 +176,7 @@ function custom_expression_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 end
 
-=======
 JuMP.expression_to_rewrite(head::Val{:donothing}, var) = true
->>>>>>> 00c7836c... Make the tests pass.
 function JuMP.rewrite_call_expression(errorf::Function, head::Val{:donothing}, var)
     return :(), :(), esc(var)
 end
