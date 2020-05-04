@@ -177,6 +177,13 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense
     return parse_code, _build_call(_error, vectorized, :(_functionize($variable)), set)
 end
 
+function parse_constraint_expr(_error::Function, expr::Expr)
+    return parse_constraint_head(_error, Val(expr.head), expr.args...)
+end
+function parse_constraint_head(_error::Function, ::Val{:call}, args...)
+    return parse_constraint(_error, args...)
+end
+
 function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
     (sense, vectorized) = _check_vectorized(sense)
     vectorized, parse_one_operator_constraint(_error, vectorized, Val(sense), lhs, rhs)...
@@ -202,6 +209,10 @@ function parse_ternary_constraint(_error::Function, args...)
     _error("Only two-sided rows of the form lb <= expr <= ub or ub >= expr >= lb are supported.")
 end
 
+function parse_constraint_head(_error::Function, ::Val{:comparison}, lb, lsign::Symbol, aff, rsign::Symbol, ub)
+    return parse_constraint(_error, lb, lsign, aff, rsign, ub)
+end
+
 function parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol, ub)
     (lsign, lvectorized) = _check_vectorized(lsign)
     (rsign, rvectorized) = _check_vectorized(rsign)
@@ -215,11 +226,18 @@ function parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbo
     vectorized, parsecode, buildcall
 end
 
-function parse_constraint(_error::Function, args...)
+function _unknown_constraint_expr(_error::Function)
     # Unknown
     _error("Constraints must be in one of the following forms:\n" *
           "       expr1 <= expr2\n" * "       expr1 >= expr2\n" *
           "       expr1 == expr2\n" * "       lb <= expr <= ub")
+end
+
+function parse_constraint_head(_error::Function, ::Val, args...)
+    _unknown_constraint_expr(_error)
+end
+function parse_constraint(_error::Function, args...)
+    _unknown_constraint_expr(_error)
 end
 
 # Generic fallback.
@@ -374,7 +392,7 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
     # in a function returning `ConstraintRef`s and give it to `Containers.container`.
     idxvars, indices = Containers._build_ref_sets(_error, c)
 
-    vectorized, parsecode, buildcall = parsefun(_error, x.args...)
+    vectorized, parsecode, buildcall = parsefun(_error, x)
     _add_kw_args(buildcall, kw_args)
     if vectorized
         # TODO: Pass through names here.
@@ -457,9 +475,12 @@ that either `func` or `set` will be some custom type, rather than e.g. a
 set appearing in the constraint.
 """
 macro constraint(args...)
-    _constraint_macro(args, :constraint, parse_constraint)
+    _constraint_macro(args, :constraint, parse_constraint_expr)
 end
 
+function parse_SD_constraint_expr(_error::Function, expr::Expr)
+    return parse_SD_constraint(_error, expr.args...)
+end
 function parse_SD_constraint(_error::Function, sense::Symbol, lhs, rhs)
     # Simple comparison - move everything to the LHS
     aff = :()
@@ -554,7 +575,7 @@ part of the matrix assuming that it is symmetric, see [`PSDCone`](@ref) to see
 how to use it.
 """
 macro SDconstraint(args...)
-    _constraint_macro(args, :SDconstraint, parse_SD_constraint)
+    _constraint_macro(args, :SDconstraint, parse_SD_constraint_expr)
 end
 
 """
@@ -585,8 +606,8 @@ macro build_constraint(constraint_expr)
                "Are you missing a comparison (<=, >=, or ==)?")
     end
 
-    is_vectorized, parse_code, build_call = parse_constraint(
-        _error, constraint_expr.args...)
+    is_vectorized, parse_code, build_call = parse_constraint_expr(
+        _error, constraint_expr)
     result_variable = gensym()
     code = quote
         $parse_code
