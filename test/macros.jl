@@ -155,7 +155,6 @@ function build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 end
 
-<<<<<<< HEAD
 struct CustomType
 end
 function JuMP.parse_constraint_head(_error::Function, ::Val{:(:=)}, lhs, rhs)
@@ -177,7 +176,6 @@ function custom_expression_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 end
 
-<<<<<<< HEAD
 function JuMP.parse_one_operator_constraint(_error::Function, ::Bool, ::Val{:f}, x)
     return :(), :(build_constraint($_error, $(esc(x)), $(esc(CustomType()))))
 end
@@ -193,14 +191,13 @@ function custom_function_test(ModelType::Type{<:JuMP.AbstractModel})
         @test_macro_throws ErrorException @constraint(model, g(x))
     end
 end
-=======
-=======
+
 JuMP.expression_to_rewrite(head::Val{:donothing}, var) = true
->>>>>>> 00c7836c... Make the tests pass.
->>>>>>> e8726d59... Make the tests pass.
+JuMP.expression_to_rewrite(head::Val{:donothing}, var) = true
 function JuMP.rewrite_call_expression(errorf::Function, head::Val{:donothing}, var)
     return :(), :(), esc(var)
 end
+
 function build_constraint_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Extension of @constraint with rewrite_call_expression #2229" begin
         # RHS
