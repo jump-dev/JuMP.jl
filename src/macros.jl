@@ -181,18 +181,13 @@ function parse_constraint_expr(_error::Function, expr::Expr)
     return parse_constraint_head(_error, Val(expr.head), expr.args...)
 end
 function parse_constraint_head(_error::Function, ::Val{:call}, args...)
-    return parse_constraint(_error, args...)
+    return parse_constraint_call(_error, Val(args[1]), args[2:end]...)
+end
+function parse_constraint(_error::Function, args...)
+    return parse_constraint_call(_error, Val(args[1]), args[2:end]...)
 end
 
-function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
-    (sense, vectorized) = _check_vectorized(sense)
-    vectorized, parse_one_operator_constraint(_error, vectorized, Val(sense), lhs, rhs)...
-end
-function parse_constraint(_error::Function, ::Val{:call}, args...)
-    return parse_constraint(_error, Val(args[1]), args[2:end]...)
-end
-
-function parse_constraint(_error::Function, sense::Val, F...)
+function parse_constraint_call(_error::Function, sense::Val, F...)
     sense_symbol = typeof(sense).parameters[1]
     (sense, vectorized) = _check_vectorized(sense_symbol)
     vectorized, parse_one_operator_constraint(_error, vectorized, Val(sense), F...)...
@@ -245,7 +240,7 @@ end
 function parse_constraint_head(_error::Function, ::Val, args...)
     _unknown_constraint_expr(_error)
 end
-function parse_constraint(_error::Function, args...)
+function parse_constraint_call(_error::Function, args...)
     _unknown_constraint_expr(_error)
 end
 
