@@ -98,7 +98,10 @@ end
 
 Base.isempty(A::DenseAxisArray) = isempty(A.data)
 
-# TODO: similar
+# We specify `Ax` for the type of `axes` to avoid conflict where `axes` has type `Tuple{Vararg{Int,N}}`.
+function Base.similar(A::DenseAxisArray{T, N, Ax}, ::Type{S}, axes::Ax) where {T, N, Ax, S}
+    return construct_undef_array(S, axes)
+end
 
 # AbstractArray interface
 
