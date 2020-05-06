@@ -158,7 +158,7 @@ end
 
 # To be defined if such a function must be rewritten; otherwise,
 # rewrite_call_expression will never be called.
-expression_to_rewrite(head::Val, args...) = false
+expression_to_rewrite(head::Val, args...) = true # false
 
 # When `expression_to_rewrite` called with the same arguments save the first one,
 # returns three things:
@@ -166,7 +166,7 @@ expression_to_rewrite(head::Val, args...) = false
 # - code for building the required constraints, if needed; otherwise, :().
 # - the symbol of the variable that replaces the expression (<: VariableRef).
 function rewrite_call_expression(_error::Function, head::Val{F}, args...) where F
-    _error("function $F not implemented.")
+    return :(), :(), Expr(:call, [F, args...])
 end
 
 _functionize(v::VariableRef) = convert(AffExpr, v)
