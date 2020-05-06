@@ -200,35 +200,69 @@ end
 
 function build_constraint_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Extension of @constraint with rewrite_call_expression #2229" begin
-        # RHS
-        model = ModelType()
-        @variable(model, x)
-        @variable(model, y)
-        cref = @constraint(model, x == donothing(y))
+        @testset "Simple: only the function in rhs/lhs" begin
+            # RHS
+            model = ModelType()
+            @variable(model, x)
+            @variable(model, y)
+            cref = @constraint(model, x == donothing(y))
 
-        c = JuMP.constraint_object(cref)
-        @test JuMP.isequal_canonical(c.func, x - y)
-        @test c.set == MOI.EqualTo(0.0)
+            c = JuMP.constraint_object(cref)
+            @test JuMP.isequal_canonical(c.func, x - y)
+            @test c.set == MOI.EqualTo(0.0)
 
-        # LHS
-        model = ModelType()
-        @variable(model, x)
-        @variable(model, y)
-        cref = @constraint(model, donothing(x) == y)
+            # LHS
+            model = ModelType()
+            @variable(model, x)
+            @variable(model, y)
+            cref = @constraint(model, donothing(x) == y)
 
-        c = JuMP.constraint_object(cref)
-        @test JuMP.isequal_canonical(c.func, x - y)
-        @test c.set == MOI.EqualTo(0.0)
+            c = JuMP.constraint_object(cref)
+            @test JuMP.isequal_canonical(c.func, x - y)
+            @test c.set == MOI.EqualTo(0.0)
 
-        # Both sides.
-        model = ModelType()
-        @variable(model, x)
-        @variable(model, y)
-        cref = @constraint(model, donothing(x) == donothing(y))
+            # Both sides.
+            model = ModelType()
+            @variable(model, x)
+            @variable(model, y)
+            cref = @constraint(model, donothing(x) == donothing(y))
 
-        c = JuMP.constraint_object(cref)
-        @test JuMP.isequal_canonical(c.func, x - y)
-        @test c.set == MOI.EqualTo(0.0)
+            c = JuMP.constraint_object(cref)
+            @test JuMP.isequal_canonical(c.func, x - y)
+            @test c.set == MOI.EqualTo(0.0)
+        end
+
+        @testset "Complex: rewrite within the rhs/lhs expressions" begin
+            # RHS
+            model = ModelType()
+            @variable(model, x)
+            @variable(model, y)
+            cref = @constraint(model, x == 1 + donothing(y))
+
+            c = JuMP.constraint_object(cref)
+            @test JuMP.isequal_canonical(c.func, x - y - 1)
+            @test c.set == MOI.EqualTo(0.0)
+
+            # LHS
+            model = ModelType()
+            @variable(model, x)
+            @variable(model, y)
+            cref = @constraint(model, donothing(x) - 1 == y)
+
+            c = JuMP.constraint_object(cref)
+            @test JuMP.isequal_canonical(c.func, x - y - 1)
+            @test c.set == MOI.EqualTo(0.0)
+
+            # Both sides.
+            model = ModelType()
+            @variable(model, x)
+            @variable(model, y)
+            cref = @constraint(model, donothing(x) - 0.5 == donothing(y) + 0.5)
+
+            c = JuMP.constraint_object(cref)
+            @test JuMP.isequal_canonical(c.func, x - y - 1)
+            @test c.set == MOI.EqualTo(0.0)
+        end
     end
 end
 
