@@ -176,8 +176,8 @@ function custom_expression_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 end
 
-function JuMP.parse_constraint_head(_error::Function, ::Val{:call}, ::Val{:f}, x)
-    return false, :(), :(build_constraint($_error, $(esc(x)), $(esc(CustomType()))))
+function JuMP.parse_one_operator_constraint(_error::Function, ::Bool, ::Val{:f}, x)
+    return :(), :(build_constraint($_error, $(esc(x)), $(esc(CustomType()))))
 end
 function custom_function_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Custom function" begin

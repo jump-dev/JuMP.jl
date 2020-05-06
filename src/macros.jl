@@ -246,7 +246,16 @@ function parse_constraint_head(_error::Function, ::Val, args...)
     _unknown_constraint_expr(_error)
 end
 function parse_constraint(_error::Function, args...)
-    _unknown_constraint_expr(_error)
+    # Define this as the last fallback: either this is a function call that may
+    # be overridden by extensions, or a syntax that is not recognised.
+    # Multiple dispatch does not work here, due to ambiguity with:
+    #     parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol, ub)
+    if args[1] isa Symbol
+        (sense, vectorized) = _check_vectorized(args[1])
+        vectorized, parse_one_operator_constraint(_error, vectorized, Val(sense), args[2:end]...)...
+    else
+        _unknown_constraint_expr(_error)
+    end
 end
 
 # Generic fallback.
