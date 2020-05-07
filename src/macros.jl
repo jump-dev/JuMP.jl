@@ -191,9 +191,6 @@ function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
     (sense, vectorized) = _check_vectorized(sense)
     vectorized, parse_one_operator_constraint(_error, vectorized, Val(sense), lhs, rhs)...
 end
-function parse_constraint(_error::Function, ::Val{:call}, args...)
-    return parse_constraint(_error, Val(args[1]), args[2:end]...)
-end
 
 function parse_constraint(_error::Function, sense::Val, F...)
     sense_symbol = typeof(sense).parameters[1]
