@@ -159,18 +159,27 @@ function parse_one_operator_constraint(_error::Function, args...)
     _unknown_constraint_expr(_error)
 end
 
-# To be defined if such a function must be rewritten; otherwise,
-# rewrite_call_expression will never be called.
-expression_to_rewrite(head::Val, args...) = false # true
-
-# When `expression_to_rewrite` called with the same arguments save the first one,
-# returns three things:
+# When `_rewrite_expr` is called with an expression, it returns three things:
 # - code for parsing (which must be called first), if needed; otherwise, :().
 # - code for building the required constraints, if needed; otherwise, :().
 # - the symbol of the variable that replaces the expression (<: VariableRef).
-function rewrite_call_expression(_error::Function, head::Val{F}, args...) where F
-    _error("function $F not implemented.")
-    # return :(), :(), Expr(:call, [F, args...])
+_rewrite_expr(_error, ::Val{:call}, op::Val, args...) = :(), :(), Expr(:call, op, args...)
+_rewrite_expr(_error::Function, head::Val, args...) = :(), :(), Expr(head, args...)
+
+_rewrite_expr(_error::Function, e::Expr) = _rewrite_expr(_error, Val(e.head), e.args...)
+_rewrite_expr(_error::Function, head::Val{:call}, args...) =
+    _rewrite_expr(_error, Val(:call), Val(args[1]), args[2:end]...)
+function _rewrite_expr(_error::Function, ::Val{:call}, op::Union{Val{:+}, Val{:-}, Val{:*}, Val{:/}}, args...)
+    parse_code = :()
+    build_code = :()
+    new_args = []
+    for arg in args
+        p, b, a = _rewrite_expr(a)
+        parse_code = :($parse_code; $p)
+        build_code = :($build_code; $b)
+        push!(new_args, a)
+    end
+    return parse_code, build_code, Expr(:call, op, new_args...)
 end
 
 _functionize(v::VariableRef) = convert(AffExpr, v)
@@ -178,14 +187,8 @@ _functionize(v::AbstractArray{VariableRef}) = _functionize.(v)
 _functionize(x) = x
 _functionize(::MutableArithmetics.Zero) = 0.0
 function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
-    parse_code_rhs, build_code_rhs, new_rhs = :(), :(), rhs
-    parse_code_lhs, build_code_lhs, new_lhs = :(), :(), lhs
-    if isexpr(rhs, :call) && expression_to_rewrite(Val(rhs.args[1]), rhs.args[2:end]...)
-        parse_code_rhs, build_code_rhs, new_rhs = rewrite_call_expression(_error, Val(rhs.args[1]), rhs.args[2:end]...)
-    end
-    if isexpr(lhs, :call) && expression_to_rewrite(Val(lhs.args[1]), lhs.args[2:end]...)
-        parse_code_lhs, build_code_lhs, new_lhs = rewrite_call_expression(_error, Val(lhs.args[1]), lhs.args[2:end]...)
-    end
+    parse_code_rhs, build_code_rhs, new_rhs = _rewrite_expr(_error, lhs)
+    parse_code_lhs, build_code_lhs, new_lhs = _rewrite_expr(_error, rhs)
 
     # Simple comparison - move everything to the LHS.
     #
