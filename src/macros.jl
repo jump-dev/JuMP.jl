@@ -156,12 +156,7 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool,
     return parse_code, _build_call(_error, vectorized, variable, set)
 end
 
-# To be defined if such a function must be rewritten; otherwise,
-# rewrite_call_expression will never be called.
-expression_to_rewrite(head::Val, args...) = true # false
-
-# When `expression_to_rewrite` called with the same arguments save the first one,
-# returns three things:
+# Returns three things:
 # - code for parsing (which must be called first), if needed; otherwise, :().
 # - code for building the required constraints, if needed; otherwise, :().
 # - the symbol of the variable that replaces the expression (<: VariableRef).
@@ -176,10 +171,10 @@ _functionize(::MutableArithmetics.Zero) = 0.0
 function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense::Val, lhs, rhs)
     parse_code_rhs, build_code_rhs, new_rhs = :(), :(), rhs
     parse_code_lhs, build_code_lhs, new_lhs = :(), :(), lhs
-    if isexpr(rhs, :call) && expression_to_rewrite(Val(rhs.args[1]), rhs.args[2:end]...)
+    if isexpr(rhs, :call)
         parse_code_rhs, build_code_rhs, new_rhs = rewrite_call_expression(_error, Val(rhs.args[1]), rhs.args[2:end]...)
     end
-    if isexpr(lhs, :call) && expression_to_rewrite(Val(lhs.args[1]), lhs.args[2:end]...)
+    if isexpr(lhs, :call)
         parse_code_lhs, build_code_lhs, new_lhs = rewrite_call_expression(_error, Val(lhs.args[1]), lhs.args[2:end]...)
     end
 
