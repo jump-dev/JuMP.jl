@@ -192,12 +192,7 @@ function custom_function_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 end
 
-JuMP.expression_to_rewrite(head::Val{:donothing}, var) = true
-JuMP.expression_to_rewrite(head::Val{:donothing}, var) = true
-function JuMP.rewrite_call_expression(errorf::Function, head::Val{:donothing}, var)
-    return :(), :(), esc(var)
-end
-
+JuMP._rewrite_expr(_error::Function, ::Val{:call}, ::Val{:donothing}, arg) = :(), :(), arg
 function build_constraint_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Extension of @constraint with rewrite_call_expression #2229" begin
         @testset "Simple: only the function in rhs/lhs" begin
@@ -240,8 +235,8 @@ function build_constraint_test(ModelType::Type{<:JuMP.AbstractModel})
             cref = @constraint(model, x == 1 + donothing(y))
 
             c = JuMP.constraint_object(cref)
-            @test JuMP.isequal_canonical(c.func, x - y - 1)
-            @test c.set == MOI.EqualTo(0.0)
+            @test JuMP.isequal_canonical(c.func, x - y)
+            @test c.set == MOI.EqualTo(1.0)
 
             # LHS
             model = ModelType()
@@ -250,8 +245,8 @@ function build_constraint_test(ModelType::Type{<:JuMP.AbstractModel})
             cref = @constraint(model, donothing(x) - 1 == y)
 
             c = JuMP.constraint_object(cref)
-            @test JuMP.isequal_canonical(c.func, x - y - 1)
-            @test c.set == MOI.EqualTo(0.0)
+            @test JuMP.isequal_canonical(c.func, x - y)
+            @test c.set == MOI.EqualTo(1.0)
 
             # Both sides.
             model = ModelType()
@@ -260,8 +255,8 @@ function build_constraint_test(ModelType::Type{<:JuMP.AbstractModel})
             cref = @constraint(model, donothing(x) - 0.5 == donothing(y) + 0.5)
 
             c = JuMP.constraint_object(cref)
-            @test JuMP.isequal_canonical(c.func, x - y - 1)
-            @test c.set == MOI.EqualTo(0.0)
+            @test JuMP.isequal_canonical(c.func, x - y)
+            @test c.set == MOI.EqualTo(1.0)
         end
     end
 end
