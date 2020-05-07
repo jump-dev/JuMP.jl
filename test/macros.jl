@@ -176,7 +176,6 @@ function custom_expression_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 end
 
-JuMP.expression_to_rewrite(head::Val{:donothing}, var) = true
 function JuMP.rewrite_call_expression(errorf::Function, head::Val{:donothing}, var)
     return :(), :(), esc(var)
 end
