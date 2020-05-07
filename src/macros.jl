@@ -155,6 +155,9 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool,
     variable, parse_code = _MA.rewrite(func)
     return parse_code, _build_call(_error, vectorized, variable, set)
 end
+function parse_one_operator_constraint(_error::Function, args...)
+    _unknown_constraint_expr(_error)
+end
 
 _functionize(v::VariableRef) = convert(AffExpr, v)
 _functionize(v::AbstractArray{VariableRef}) = _functionize.(v)
