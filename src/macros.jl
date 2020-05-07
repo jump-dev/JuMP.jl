@@ -184,28 +184,8 @@ function parse_one_operator_constraint(_error::Function, vectorized::Bool, sense
     # and the `rhs` is a summation with no terms. `_build_call` should be passed a
     # `GenericAffExpr` or a `GenericQuadExpr`, and not a `VariableRef` as would be the case
     # without `_functionize`.
-
-    # TODO: bug in MutableArithmetics? The returned code does not find $new_rhs (ERROR: UndefVarError: #642###976 not defined) when only using the first code path.
-    parse_code, variable = nothing, nothing
-    if rhs == new_rhs && lhs == new_lhs
-        if vectorized
-            func = :($lhs .- $rhs)
-        else
-            func = :($lhs - $rhs)
-        end
-        variable, parse_code = _MA.rewrite(func)
-    elseif rhs != new_rhs && lhs == new_lhs
-        variable, parse_code = _MA.rewrite(lhs)
-        parse_code = :($parse_code; $variable = _MA.operate!(-, $variable, $new_rhs))
-    elseif lhs != new_lhs && rhs == new_rhs
-        variable, parse_code = _MA.rewrite(rhs)
-        parse_code = :($parse_code; $variable = _MA.operate!(-, $new_lhs, $variable))
-    else
-        @assert rhs != new_rhs
-        @assert lhs != new_lhs
-        variable = gensym()
-        parse_code = :($parse_code; $variable = _MA.operate!(-, $new_lhs, $new_rhs))
-    end
+    variable = gensym()
+    parse_code = :($variable = _MA.operate!(-, $new_lhs, $new_rhs))
 
     set = sense_to_set(_error, sense)
     build_code = _build_call(_error, vectorized, :(_functionize($variable)), set)
