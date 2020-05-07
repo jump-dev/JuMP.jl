@@ -166,7 +166,7 @@ expression_to_rewrite(head::Val, args...) = true # false
 # - code for building the required constraints, if needed; otherwise, :().
 # - the symbol of the variable that replaces the expression (<: VariableRef).
 function rewrite_call_expression(_error::Function, head::Val{F}, args...) where F
-    return :(), :(), Expr(:call, [F, args...])
+    return :(), :(), Expr(:call, F, args...)
 end
 
 _functionize(v::VariableRef) = convert(AffExpr, v)
