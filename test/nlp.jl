@@ -182,8 +182,7 @@
         return Matrix(raw + raw' - sparse(diagm(0=>diag(raw))))
     end
 
-    # Converts the sparse Jacobian in MOI format into a dense
-    # matrix.
+    # Converts the sparse Jacobian in MOI format into a dense matrix.
     function dense_jacobian(jacobian_sparsity, V, m, n)
         I = [i for (i,j) in jacobian_sparsity]
         J = [j for (i,j) in jacobian_sparsity]
@@ -354,17 +353,17 @@
         V = zeros(length(jacobian_sparsity))
         MOI.eval_constraint_jacobian(d, V, values)
         correct_jacobian = [0.0 3.0 2.0; 1.0 0.0 0.0]
-        @test isapprox(dense_jacobian(jacobian_sparsity, V, 2, 3), correct_jacobian)
+        @test dense_jacobian(jacobian_sparsity, V, 2, 3) ≈ correct_jacobian
 
         v = [2.4, 3.5, 1.2]
-        Jv = zeros(2)
-        MOI.eval_constraint_jacobian_product(d, Jv, values, v)
-        @test isapprox(Jv, correct_jacobian * v)
+        product_storage = zeros(2)
+        MOI.eval_constraint_jacobian_product(d, product_storage, values, v)
+        @test product_storage ≈ correct_jacobian * v
 
         w = [0.6, 4.3]
-        Jᵀw = zeros(3)
-        MOI.eval_constraint_jacobian_transpose_product(d, Jᵀw, values, w)
-        @test isapprox(Jᵀw, correct_jacobian' * w)
+        product_storage = zeros(3)
+        MOI.eval_constraint_jacobian_transpose_product(d, product_storage, values, w)
+        @test product_storage ≈ correct_jacobian' * w
     end
 
     @testset "Jacobians and Jac-vec with subexpressions" begin
@@ -385,17 +384,17 @@
         V = zeros(length(jacobian_sparsity))
         MOI.eval_constraint_jacobian(d, V, values)
         correct_jacobian = [0.0 3.0 2.0; 1.0 0.0 0.0]
-        @test isapprox(dense_jacobian(jacobian_sparsity, V, 2, 3), correct_jacobian)
+        @test dense_jacobian(jacobian_sparsity, V, 2, 3) ≈ correct_jacobian
 
         v = [2.4, 3.5, 1.2]
-        Jv = zeros(2)
-        MOI.eval_constraint_jacobian_product(d, Jv, values, v)
-        @test isapprox(Jv, correct_jacobian * v)
+        product_storage = zeros(2)
+        MOI.eval_constraint_jacobian_product(d, product_storage, values, v)
+        @test product_storage ≈ correct_jacobian * v
 
         w = [0.6, 4.3]
-        Jᵀw = zeros(3)
-        MOI.eval_constraint_jacobian_transpose_product(d, Jᵀw, values, w)
-        @test isapprox(Jᵀw, correct_jacobian' * w)
+        product_storage = zeros(3)
+        MOI.eval_constraint_jacobian_transpose_product(d, product_storage, values, w)
+        @test product_storage ≈ correct_jacobian' * w
     end
 
     @testset "Expression graphs" begin

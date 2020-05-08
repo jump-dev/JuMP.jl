@@ -618,37 +618,35 @@ function MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
 end
 
 function MOI.eval_constraint_jacobian_product(d::NLPEvaluator,
-                                              Jv::AbstractVector{Float64},
+                                              y::AbstractVector{Float64},
                                               x::AbstractVector{Float64},
-                                              v::AbstractVector{Float64})
-    fill!(Jv, 0.0)
+                                              w::AbstractVector{Float64})
+    fill!(y, 0.0)
     jac_struct = MOI.jacobian_structure(d)
-    nnzj = length(jac_struct)
-    J = zeros(Float64, nnzj)
-    MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
-    for k = 1 : nnzj
-        i = jac_struct[k][1]
-        j = jac_struct[k][2]
-        Jv[i] += J[k] * v[j]
+    nnz_jac = length(jac_struct)
+    J = zeros(Float64, nnz_jac)
+    MOI.eval_constraint_jacobian(d, J, x)
+    for k in 1:nnz_jac
+        i, j = jac_struct[k]
+        y[i] += J[k] * w[j]
     end
-    return Jv
+    return y
 end
 
 function MOI.eval_constraint_jacobian_transpose_product(d::NLPEvaluator,
-                                                        Jtv::AbstractVector{Float64},
+                                                        y::AbstractVector{Float64},
                                                         x::AbstractVector{Float64},
-                                                        v::AbstractVector{Float64})
-    fill!(Jtv, 0.0)
+                                                        w::AbstractVector{Float64})
+    fill!(y, 0.0)
     jac_struct = MOI.jacobian_structure(d)
-    nnzj = length(jac_struct)
-    J = zeros(Float64, nnzj)
+    nnz_jac = length(jac_struct)
+    J = zeros(Float64, nnz_jac)
     MOI.eval_constraint_jacobian(d, J, x)
-    for k = 1 : nnzj
-        i = jac_struct[k][1]
-        j = jac_struct[k][2]
-        Jtv[j] += J[k] * v[i]
+    for k in 1:nnz_jac
+        i, j = jac_struct[k]
+        y[j] += J[k] * w[i]
     end
-    return Jtv
+    return y
 end
 
 function MOI.eval_hessian_lagrangian_product(
