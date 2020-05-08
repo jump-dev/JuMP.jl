@@ -314,8 +314,6 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     for feat in requested_features
         if !(feat in MOI.features_available(d))
             error("Unsupported feature $feat")
-            # TODO: implement Jac-vec products
-            # for solvers that need them
         end
     end
     if d.eval_objective_timer != 0
@@ -475,7 +473,7 @@ end
 
 function MOI.features_available(d::NLPEvaluator)
     _recompute_disable_2ndorder(d)
-    features = [:Grad, :Jac, :ExprGraph]
+    features = [:Grad, :Jac, :JacVec, :ExprGraph]
     if !d.disable_2ndorder
         push!(features, :Hess)
         push!(features, :HessVec)
@@ -619,7 +617,37 @@ function MOI.eval_constraint_jacobian(d::NLPEvaluator, J, x)
     return
 end
 
+function MOI.eval_constraint_jacobian_product(d::NLPEvaluator,
+                                              y::AbstractVector{Float64},
+                                              x::AbstractVector{Float64},
+                                              w::AbstractVector{Float64})
+    fill!(y, 0.0)
+    jac_struct = MOI.jacobian_structure(d)
+    nnz_jac = length(jac_struct)
+    J = zeros(Float64, nnz_jac)
+    MOI.eval_constraint_jacobian(d, J, x)
+    for k in 1:nnz_jac
+        i, j = jac_struct[k]
+        y[i] += J[k] * w[j]
+    end
+    return y
+end
 
+function MOI.eval_constraint_jacobian_transpose_product(d::NLPEvaluator,
+                                                        y::AbstractVector{Float64},
+                                                        x::AbstractVector{Float64},
+                                                        w::AbstractVector{Float64})
+    fill!(y, 0.0)
+    jac_struct = MOI.jacobian_structure(d)
+    nnz_jac = length(jac_struct)
+    J = zeros(Float64, nnz_jac)
+    MOI.eval_constraint_jacobian(d, J, x)
+    for k in 1:nnz_jac
+        i, j = jac_struct[k]
+        y[j] += J[k] * w[i]
+    end
+    return y
+end
 
 function MOI.eval_hessian_lagrangian_product(
     d::NLPEvaluator,

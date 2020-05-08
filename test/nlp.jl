@@ -182,6 +182,14 @@
         return Matrix(raw + raw' - sparse(diagm(0=>diag(raw))))
     end
 
+    # Converts the sparse Jacobian in MOI format into a dense matrix.
+    function dense_jacobian(jacobian_sparsity, V, m, n)
+        I = [i for (i,j) in jacobian_sparsity]
+        J = [j for (i,j) in jacobian_sparsity]
+        raw = sparse(I, J, V, m, n)
+        return Matrix(raw)
+    end
+
     @testset "Hessian evaluation (Issue #435)" begin
         m = Model()
         @variable(m, a)
@@ -326,6 +334,67 @@
         v = [2.4,3.5,1.2]
         MOI.eval_hessian_lagrangian_product(d, h, values, v, 1.0, [2.0,3.0])
         @test h ≈ correct_hessian*v
+    end
+
+    @testset "Jacobians and Jac-vec" begin
+        m = Model()
+        @variable(m, a)
+        @variable(m, b)
+        @variable(m, c)
+
+        @NLobjective(m, Min, a*b + c^2)
+        @NLconstraint(m, c*b <= 1)
+        @NLconstraint(m, a^2/2 <= 1)
+        d = JuMP.NLPEvaluator(m)
+        MOI.initialize(d, [:JacVec, :Jac])
+
+        values = [1.0, 2.0, 3.0] # For a, b, c.
+        jacobian_sparsity = MOI.jacobian_structure(d)
+        V = zeros(length(jacobian_sparsity))
+        MOI.eval_constraint_jacobian(d, V, values)
+        correct_jacobian = [0.0 3.0 2.0; 1.0 0.0 0.0]
+        @test dense_jacobian(jacobian_sparsity, V, 2, 3) ≈ correct_jacobian
+
+        v = [2.4, 3.5, 1.2]
+        product_storage = zeros(2)
+        MOI.eval_constraint_jacobian_product(d, product_storage, values, v)
+        @test product_storage ≈ correct_jacobian * v
+
+        w = [0.6, 4.3]
+        product_storage = zeros(3)
+        MOI.eval_constraint_jacobian_transpose_product(d, product_storage, values, w)
+        @test product_storage ≈ correct_jacobian' * w
+    end
+
+    @testset "Jacobians and Jac-vec with subexpressions" begin
+        m = Model()
+        @variable(m, a)
+        @variable(m, b)
+        @variable(m, c)
+
+        @NLexpression(m, bc, b*c)
+        @NLobjective(m, Min, a*b + c^2)
+        @NLconstraint(m, bc <= 1)
+        @NLconstraint(m, a^2/2 <= 1)
+        d = JuMP.NLPEvaluator(m)
+        MOI.initialize(d, [:JacVec, :Jac])
+
+        values = [1.0, 2.0, 3.0] # For a, b, c.
+        jacobian_sparsity = MOI.jacobian_structure(d)
+        V = zeros(length(jacobian_sparsity))
+        MOI.eval_constraint_jacobian(d, V, values)
+        correct_jacobian = [0.0 3.0 2.0; 1.0 0.0 0.0]
+        @test dense_jacobian(jacobian_sparsity, V, 2, 3) ≈ correct_jacobian
+
+        v = [2.4, 3.5, 1.2]
+        product_storage = zeros(2)
+        MOI.eval_constraint_jacobian_product(d, product_storage, values, v)
+        @test product_storage ≈ correct_jacobian * v
+
+        w = [0.6, 4.3]
+        product_storage = zeros(3)
+        MOI.eval_constraint_jacobian_transpose_product(d, product_storage, values, w)
+        @test product_storage ≈ correct_jacobian' * w
     end
 
     @testset "Expression graphs" begin
