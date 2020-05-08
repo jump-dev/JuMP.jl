@@ -409,7 +409,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
 
     max_chunk = min(max_chunk, 10) # 10 is hardcoded upper bound to avoid excess memory allocation
 
-    if d.want_hess || want_hess_storage # storage for Hess or HessVec
+    if (:JacVec in requested_features) || d.want_hess || want_hess_storage # storage for Hess or HessVec or JacVec
         d.input_ϵ = Array{Float64}(undef,max_chunk*num_variables_)
         d.output_ϵ = Array{Float64}(undef,max_chunk*num_variables_)
         d.forward_storage_ϵ = Array{Float64}(undef,max_chunk*max_expr_length)
@@ -621,14 +621,30 @@ function MOI.eval_constraint_jacobian_product(d::NLPEvaluator,
                                               y::AbstractVector{Float64},
                                               x::AbstractVector{Float64},
                                               w::AbstractVector{Float64})
+    nldata = d.m.nlp_data::_NLPData
+    if d.last_x != x
+        _forward_eval_all(d,x)
+    end
     fill!(y, 0.0)
-    jac_struct = MOI.jacobian_structure(d)
-    nnz_jac = length(jac_struct)
-    J = zeros(Float64, nnz_jac)
-    MOI.eval_constraint_jacobian(d, J, x)
-    for k in 1:nnz_jac
-        i, j = jac_struct[k]
-        y[i] += J[k] * w[j]
+
+    input_ϵ = reinterpret(ForwardDiff.Partials{1,Float64}, d.input_ϵ)
+    for i in 1:length(x)
+        input_ϵ[i] = ForwardDiff.Partials((w[i],))
+    end
+    subexpr_forward_values_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},d.subexpression_forward_values_ϵ)
+    forward_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},d.forward_storage_ϵ)
+    partials_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},d.partials_storage_ϵ)
+
+    for expridx in d.subexpression_order
+        subexpr = d.subexpressions[expridx]
+        sub_forward_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.forward_storage_ϵ)
+        sub_partials_storage_ϵ = reinterpret(ForwardDiff.Partials{1,Float64},subexpr.partials_storage_ϵ)
+        subexpr_forward_values_ϵ[expridx] = forward_eval_ϵ(subexpr.forward_storage, sub_forward_storage_ϵ, subexpr.partials_storage, sub_partials_storage_ϵ, subexpr.nd, subexpr.adj, input_ϵ, subexpr_forward_values_ϵ, nldata.user_operators)
+    end
+
+    for (i, ex) in enumerate(d.constraints)
+        y[i] += forward_eval_ϵ(ex.forward_storage, forward_storage_ϵ, ex.partials_storage, partials_storage_ϵ,
+                       ex.nd, ex.adj, input_ϵ, subexpr_forward_values_ϵ, nldata.user_operators).values[1]
     end
     return y
 end
