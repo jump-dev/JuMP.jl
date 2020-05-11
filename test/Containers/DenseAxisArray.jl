@@ -94,6 +94,7 @@ And data, a 2-element Array{Float64,1}:
         @test size(A) == (2, 2)
         @test size(A, 1) == 2
         @test size(A, 2) == 2
+        @test_throws BoundsError(A, (2,)) A[2]
         @test length.(axes(A)) == (2,2)
         @test @inferred A[2,:a] == 1
         @test A[3,:a] == 3
@@ -121,6 +122,9 @@ And data, a 2×2 Array{$Int,2}:
         @test size(A, 2) == 2
         @test size(A, 3) == 2
         @test size(A, 4) == 2
+        @test_throws BoundsError(A, (2,)) A[2]
+        @test_throws BoundsError(A, (2, :a)) A[2, :a]
+        @test_throws BoundsError(A, (2, :a, 0)) A[2, :a, 0]
         A[2,:a,-1,"a"] = 1.0
         f = 0.0
         for I in eachindex(A)
@@ -130,6 +134,13 @@ And data, a 2×2 Array{$Int,2}:
         @test isassigned(A, 2, :a, -1, "a")
         @test A[:,:,-1,"a"] == DenseAxisArray([1.0 0.0; 0.0 0.0], 2:3, [:a,:b])
         @test_throws KeyError A[2,:a,-1,:a]
+        @test sprint(summary, A) == """
+4-dimensional DenseAxisArray{Float64,4,...} with index sets:
+    Dimension 1, 2:3
+    Dimension 2, $([:a, :b])
+    Dimension 3, -1:0
+    Dimension 4, ["a", "b"]
+And data, a 2×2×2×2 Array{Float64,4}"""
         @test sprint(show, A) == """
 4-dimensional DenseAxisArray{Float64,4,...} with index sets:
     Dimension 1, 2:3
