@@ -188,7 +188,7 @@ function custom_function_test(ModelType::Type{<:JuMP.AbstractModel})
         @test jump_function(con) == x
         @test moi_set(con) isa CustomSet
 
-        @test_throws LoadError eval(:(@constraint(model, g(x))))
+        @test_macro_throws LoadError @constraint(model, g(x))
     end
 end
 
