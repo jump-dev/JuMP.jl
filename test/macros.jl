@@ -176,6 +176,22 @@ function custom_expression_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 end
 
+function JuMP.parse_one_operator_constraint(_error::Function, ::Bool, ::Val{:f}, x)
+    return :(), :(build_constraint($_error, $(esc(x)), $(esc(CustomType()))))
+end
+function custom_function_test(ModelType::Type{<:JuMP.AbstractModel})
+    @testset "Custom function" begin
+        model = ModelType()
+        @variable(model, x)
+        @constraint(model, con_ref, f(x))
+        con = JuMP.constraint_object(con_ref)
+        @test jump_function(con) == x
+        @test moi_set(con) isa CustomSet
+
+        @test_macro_throws ErrorException @constraint(model, g(x))
+    end
+end
+
 function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
     @testset "build_constraint on variable" begin
         m = ModelType()
@@ -357,8 +373,8 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
     end
 
     build_constraint_keyword_test(ModelType)
-
     custom_expression_test(ModelType)
+    custom_function_test(ModelType)
 end
 
 @testset "Macros for JuMP.Model" begin
