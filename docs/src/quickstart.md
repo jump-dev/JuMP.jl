@@ -142,7 +142,7 @@ the `JuMP.termination_status` function:
 julia> termination_status(model)
 OPTIMAL::TerminationStatusCode = 1
 ```
-In this case, `GLPK` returned `OPTIMAL`, this mean that it has found the optimal
+In this case, `GLPK` returned `OPTIMAL`, this means that it has found the optimal
 solution.
 
 ```@meta

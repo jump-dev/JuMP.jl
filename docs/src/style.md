@@ -120,7 +120,7 @@ symbol.
 Good:
 ```julia
 2x  # Acceptable if there are space constraints.
-2 * x  # This preferred if space is not an issue.
+2 * x  # This is preferred if space is not an issue.
 2 * (x + 1)
 ```
 
@@ -480,29 +480,29 @@ the call chain. Avoid this situation or handle it with a helpful error message.
 
 Bad:
 ```julia
-internal_function(x::Integer) = x + 1
-# The user sees a MethodError for internal_function when calling
+_internal_function(x::Integer) = x + 1
+# The user sees a MethodError for _internal_function when calling
 # public_function("a string"). This is not very helpful.
-public_function(x) = internal_function(x)
+public_function(x) = _internal_function(x)
 ```
 
 Good:
 ```julia
-internal_function(x::Integer) = x + 1
+_internal_function(x::Integer) = x + 1
 # The user sees a MethodError for public_function when calling
 # public_function("a string"). This is easy to understand.
-public_function(x::Integer) = internal_function(x)
+public_function(x::Integer) = _internal_function(x)
 ```
 
 If it is hard to provide an error message at the top of the call chain,
 then the following pattern is also ok:
 ```julia
-internal_function(x::Integer) = x + 1
-function internal_function(x)
+_internal_function(x::Integer) = x + 1
+function _internal_function(x)
     error("Internal error. This probably means that you called " *
           "public_function() with the wrong type.")
 end
-public_function(x) = internal_function(x)
+public_function(x) = _internal_function(x)
 ```
 
 #### `@enum` vs. `Symbol`
@@ -545,7 +545,7 @@ We can recommend the documentation style guides by [Divio](https://www.divio.com
 [Google](https://developers.google.com/style/), and [Write the Docs](https://www.writethedocs.org/guide/)
 as general reading for those writing documentation. This guide delegates a
 thorough handling of the topic to those guides and instead elaborates on the
-more points more specific to Julia and documentation that uses
+points more specific to Julia and documentation that uses
 [Documenter](https://github.com/JuliaDocs/Documenter.jl).
 
  - Be concise.
