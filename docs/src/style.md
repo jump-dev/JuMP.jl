@@ -480,29 +480,29 @@ the call chain. Avoid this situation or handle it with a helpful error message.
 
 Bad:
 ```julia
-internal_function(x::Integer) = x + 1
-# The user sees a MethodError for internal_function when calling
+_internal_function(x::Integer) = x + 1
+# The user sees a MethodError for _internal_function when calling
 # public_function("a string"). This is not very helpful.
-public_function(x) = internal_function(x)
+public_function(x) = _internal_function(x)
 ```
 
 Good:
 ```julia
-internal_function(x::Integer) = x + 1
+_internal_function(x::Integer) = x + 1
 # The user sees a MethodError for public_function when calling
 # public_function("a string"). This is easy to understand.
-public_function(x::Integer) = internal_function(x)
+public_function(x::Integer) = _internal_function(x)
 ```
 
 If it is hard to provide an error message at the top of the call chain,
 then the following pattern is also ok:
 ```julia
-internal_function(x::Integer) = x + 1
-function internal_function(x)
+_internal_function(x::Integer) = x + 1
+function _internal_function(x)
     error("Internal error. This probably means that you called " *
           "public_function() with the wrong type.")
 end
-public_function(x) = internal_function(x)
+public_function(x) = _internal_function(x)
 ```
 
 #### `@enum` vs. `Symbol`
