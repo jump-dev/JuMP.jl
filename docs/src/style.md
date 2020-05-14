@@ -120,7 +120,7 @@ symbol.
 Good:
 ```julia
 2x  # Acceptable if there are space constraints.
-2 * x  # This preferred if space is not an issue.
+2 * x  # This is preferred if space is not an issue.
 2 * (x + 1)
 ```
 
@@ -545,7 +545,7 @@ We can recommend the documentation style guides by [Divio](https://www.divio.com
 [Google](https://developers.google.com/style/), and [Write the Docs](https://www.writethedocs.org/guide/)
 as general reading for those writing documentation. This guide delegates a
 thorough handling of the topic to those guides and instead elaborates on the
-more points more specific to Julia and documentation that uses
+points more specific to Julia and documentation that uses
 [Documenter](https://github.com/JuliaDocs/Documenter.jl).
 
  - Be concise.
