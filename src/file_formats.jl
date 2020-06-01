@@ -60,6 +60,26 @@ function Base.write(
 end
 
 """
+    model_from(moi_model::MOI.ModelLike; kws...)
+
+Create a new JuMP model `model = Model(; kws...)` and copies `moi_model` to
+`model`. The function return `model`.
+
+## Examples
+
+Given an MOI model `moi_model`, the following lines creates a JuMP model
+in MANUAL mode from this model.
+```julia
+model_from(moi_model, caching_mode = MOIU.MANUAL)
+```
+"""
+function model_from(moi_model::MOI.ModelLike; kws...)
+    model = Model(; kws...)
+    MOI.copy_to(model, moi_model)
+    return model
+end
+
+"""
     read_from_file(
         filename::String;
         format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC
@@ -76,9 +96,7 @@ function read_from_file(
 )
     src = MOI.FileFormats.Model(format = format, filename = filename)
     MOI.read_from_file(src, filename)
-    model = Model()
-    MOI.copy_to(model, src)
-    return model
+    return model_from(src)
 end
 
 """
@@ -92,7 +110,5 @@ function Base.read(io::IO, ::Type{Model}; format::MOI.FileFormats.FileFormat)
     end
     src = MOI.FileFormats.Model(format = format)
     read!(io, src)
-    model = Model()
-    MOI.copy_to(model, src)
-    return model
+    return model_from(src)
 end
