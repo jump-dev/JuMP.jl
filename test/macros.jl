@@ -193,6 +193,8 @@ function custom_function_test(ModelType::Type{<:JuMP.AbstractModel})
 end
 
 JuMP._rewrite_expr(_error::Function, ::Val{:call}, ::Val{:donothing}, arg) = :(), :(), arg
+JuMP._rewrite_expr(_error::Function, ::Val{:call}, ::Val{:&}, arg1, arg2) = :(), :(), arg1
+JuMP._rewrite_expr(_error::Function, ::Val{:call}, ::Val{:|}, arg1, arg2) = :(), :(), arg2
 function build_constraint_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Extension of @constraint with rewrite_call_expression #2229" begin
         @testset "Simple: only the function in rhs/lhs" begin
@@ -257,6 +259,36 @@ function build_constraint_test(ModelType::Type{<:JuMP.AbstractModel})
             c = JuMP.constraint_object(cref)
             @test JuMP.isequal_canonical(c.func, x - y)
             @test c.set == MOI.EqualTo(1.0)
+        end
+
+        @testset "Binary logical operators" begin
+            # Simple case.
+            model = ModelType()
+            @variable(model, x)
+            @variable(model, y)
+            cref = @constraint(model, x & y == x | y)
+            #                         \ x /    \ y /
+
+            c = JuMP.constraint_object(cref)
+            @test JuMP.isequal_canonical(c.func, x - y)
+            @test c.set == MOI.EqualTo(0.0)
+
+            # Complex case. Not for custom models because of _functionize does
+            # not return a GenericAffExpr for MyVariableRef arguments.
+            if ModelType == JuMP.Model
+                model = ModelType()
+                @variable(model, w)
+                @variable(model, x)
+                @variable(model, y)
+                @variable(model, z)
+                cref = @constraint(model, (w & x & y) | z == true)
+                #                         \___ w ___/   /
+                #                          \____ z ____/
+
+                c = JuMP.constraint_object(cref)
+                @test JuMP.isequal_canonical(c.func, JuMP._functionize(z))
+                @test c.set == MOI.EqualTo(1.0)
+            end
         end
     end
 end
