@@ -116,7 +116,7 @@ function set_objective_function(model::Model, func::Real)
 end
 
 function set_objective(
-    model::Model,
+    model::AbstractModel,
     sense::MOI.OptimizationSense,
     func::Union{AbstractJuMPScalar, Real}
 )

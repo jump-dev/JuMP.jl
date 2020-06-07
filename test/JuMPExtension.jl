@@ -253,13 +253,10 @@ end
 
 
 # Objective
-function JuMP.set_objective(m::MyModel, sense::MOI.OptimizationSense,
-                            f::JuMP.AbstractJuMPScalar)
-    m.objectivesense = sense
+function JuMP.set_objective_function(m::MyModel, f::JuMP.AbstractJuMPScalar)
     m.objective_function = f
 end
-function JuMP.set_objective(m::MyModel, sense::MOI.OptimizationSense, f::Real)
-    m.objectivesense = sense
+function JuMP.set_objective_function(m::MyModel, f::Real)
     m.objective_function = JuMP.GenericAffExpr{Float64, MyVariableRef}(f)
 end
 JuMP.objective_sense(model::MyModel) = model.objectivesense
