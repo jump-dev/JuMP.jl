@@ -47,4 +47,6 @@ MOI.ConflictParticipationStatusCode
 
 lp_objective_perturbation_range
 lp_rhs_perturbation_range
+lp_sensitivity_report
+SensitivityReport
 ```
