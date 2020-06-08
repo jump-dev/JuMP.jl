@@ -123,7 +123,7 @@ Subject to
 
 ## [Duality](@id constraint_duality)
 
-JuMP adopts the notion of [conic duality from MOI](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apimanual/#Duals-1).
+JuMP adopts the notion of [conic duality from MOI](http://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Duals-1).
 For linear programs, a feasible dual on a `>=` constraint is nonnegative and a
 feasible dual on a `<=` constraint is nonpositive. If the constraint is an
 equality constraint, it depends on which direction is binding.
@@ -365,13 +365,13 @@ julia> @constraint(model, A * x - b in MOI.Nonnegatives(2))
 
 In addition to the `Nonnegatives` set, MOI defines a number of
 other vector-valued sets such as `Nonpositives`. See the
-[MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apireference/#Sets-1)
+[MOI documentation](http://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#Sets-1)
 for more information.
 
 Note also that for the first time we have used an explicit *function-in-set*
 description of the constraint. Read more about this representation for
 constraints in the
-[MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apimanual/#Constraints-by-function-set-pairs-1).
+[MOI documentation](http://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Constraints-by-function-set-pairs-1).
 
 ## Constraints on a single variable
 
@@ -455,7 +455,7 @@ julia> @constraint(model, [t, u, x[1], x[2]] in RotatedSecondOrderCone())
 
 In addition to the second order cone and rotated second order cone,
 MOI defines a number of other conic sets such as the exponential
-and power cones. See the [MathOptInterface documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apireference/#Sets-1)
+and power cones. See the [MathOptInterface documentation](http://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#Sets-1)
 for more information.
 
 ## Constraints on a collection of variables
@@ -826,7 +826,7 @@ interval `[lb, ub]`, such that the following holds:
 - `F(x) >= 0` if `lb == x`
 - `F(x) <= 0` if `x == ub`
 
-For more information, see the [`MOI.Complements` documentation](https://www.juliaopt.org/MathOptInterface.jl/v0.9/apireference/#MathOptInterface.Complements).
+For more information, see the [`MOI.Complements` documentation](https://jump.dev/MathOptInterface.jl/v0.9/apireference/#MathOptInterface.Complements).
 
 JuMP supports mixed complementarity constraints via `complements(F(x), x)` or
 `F(x) ⟂ x` in the [`@constraint`](@ref) macro. The interval set `[lb, ub]` is

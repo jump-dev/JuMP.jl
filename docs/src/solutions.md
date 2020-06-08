@@ -70,7 +70,7 @@ MOI.ResultStatusCode
 ```
 
 Common status situations are described in the
-[MOI docs](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apimanual/#Common-status-situations-1).
+[MOI docs](http://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Common-status-situations-1).
 
 ## Obtaining solutions
 
@@ -130,10 +130,10 @@ end
 
 ## Accessing MathOptInterface attributes
 
-[MathOptInterface](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/) defines a large
+[MathOptInterface](https://jump.dev/MathOptInterface.jl/v0.9.10/) defines a large
 number of model attributes that can be queried. Examples include
-[`MOI.RelativeGap`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.RelativeGap) and
-[`MOI.SimplexIterations`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.SimplexIterations).
+[`MOI.RelativeGap`](https://jump.dev/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.RelativeGap) and
+[`MOI.SimplexIterations`](https://jump.dev/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.SimplexIterations).
 
 Some attributes can be directly accessed by getter functions. These include
 - [`objective_bound`](@ref)
