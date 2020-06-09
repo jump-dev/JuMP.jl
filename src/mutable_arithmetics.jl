@@ -5,7 +5,7 @@
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See http://github.com/jump-dev/JuMP.jl
 #############################################################################
 # src/mutable_arithmetics.jl
 # Implements the mutable arithmetics api defined in MutableArithmetics.jl for

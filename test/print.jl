@@ -5,7 +5,7 @@
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See http://github.com/jump-dev/JuMP.jl
 #############################################################################
 # test/print.jl
 # Testing $fa pretty-printing-related functionality
@@ -123,7 +123,7 @@ end
 
     end
 
-    # See https://github.com/JuliaOpt/JuMP.jl/pull/1352
+    # See https://github.com/jump-dev/JuMP.jl/pull/1352
     @testset "Expression of coefficient type with unit" begin
         m = Model()
         @variable m x
@@ -517,7 +517,7 @@ end
 # Test printing of models of type `ModelType` for which the model is stored in
 # its JuMP form, e.g., as `AbstractVariable`s and `AbstractConstraint`s.
 # This is used by `JuMPExtension` but can also be used by external packages such
-# as `StructJuMP`, see https://github.com/JuliaOpt/JuMP.jl/issues/1711
+# as `StructJuMP`, see https://github.com/jump-dev/JuMP.jl/issues/1711
 function model_extension_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Model" begin
         repl(s) = JuMP._math_symbol(REPLMode, s)

@@ -5,7 +5,7 @@ Welcome! This document explains some of the ways you can contribute to JuMP.
 ## Code of Conduct
 
 This project and everyone participating in it is governed by the
-[JuMP Code of Conduct](https://github.com/JuliaOpt/JuMP.jl/blob/master/CODE_OF_CONDUCT.md).
+[JuMP Code of Conduct](https://github.com/jump-dev/JuMP.jl/blob/master/CODE_OF_CONDUCT.md).
 By participating, you are expected to uphold this code.
 
 ## Join the Discourse forum
@@ -22,12 +22,12 @@ help answer questions on Discourse!
 ## Improve the documentation
 
 Chances are, if you asked (or answered) a question on Discourse, then it is
-usually a sign that the [documentation](https://www.juliaopt.org/JuMP.jl/dev/)
+usually a sign that the [documentation](https://jump.dev/JuMP.jl/dev/)
 could be improved. Moreover, since it is your question, you are probably the
 best-placed person to improve it!
 
 The docs are written in Markdown and are built using [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl).
-You can find the source of all the docs [here](https://github.com/JuliaOpt/JuMP.jl/tree/master/docs).
+You can find the source of all the docs [here](https://github.com/jump-dev/JuMP.jl/tree/master/docs).
 
 If your change is small (like fixing typos, or one or two sentence corrections),
 the easiest way to do this is via Github's online editor. (Github has
@@ -43,10 +43,10 @@ channel and we will walk you through the process.
 
 ## File a bug report
 
-A third way to contribute to JuMP is to file [bug reports](https://github.com/JuliaOpt/JuMP.jl/issues/new?template=bug_report.md).
+A third way to contribute to JuMP is to file [bug reports](https://github.com/jump-dev/JuMP.jl/issues/new?template=bug_report.md).
 
 Make sure you read the info in the box where you write the body of the issue
-before posting. You can also find a copy of that info [here](https://github.com/JuliaOpt/JuMP.jl/blob/master/.github/ISSUE_TEMPLATE/bug_report.md).
+before posting. You can also find a copy of that info [here](https://github.com/jump-dev/JuMP.jl/blob/master/.github/ISSUE_TEMPLATE/bug_report.md).
 
 ## Contribute code to JuMP
 
@@ -61,14 +61,14 @@ channel and we will walk you through the process.
 
 Once you are familiar with Git, the workflow for contributing code to JuMP is
 along the lines of the following:
-1. Find an [open issue](https://github.com/JuliaOpt/JuMP.jl/issues) (or open a
+1. Find an [open issue](https://github.com/jump-dev/JuMP.jl/issues) (or open a
     new one) for the problem you want to solve
 2. Discuss (in the issue, or on [Gitter](https://gitter.im/JuliaOpt/JuMP-dev))
     _before_ spending too much time on it to test the waters first and see if
     other contributors are fine with your proposed changes
 3. Make your changes locally. (The Julia manual has a [guide](https://docs.julialang.org/en/v1/stdlib/Pkg/#Developing-packages-1)
     on how to do this.) Make sure you:
-    - Follow the [style guide](https://www.juliaopt.org/JuMP.jl/dev/style/)
+    - Follow the [style guide](https://jump.dev/JuMP.jl/dev/style/)
     - Add tests and documentation for any changes or new features
 4. Submit a pull request to Github
 5. Update your pull request, responding to any comments

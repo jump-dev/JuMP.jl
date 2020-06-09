@@ -552,7 +552,7 @@ points more specific to Julia and documentation that uses
  - Use lists instead of long sentences.
  - Use numbered lists when describing a sequence, e.g., (1) do X, (2) then Y.
  - Use bullet points when the items are not ordered.
- - Example code should be covered by doctests. (But it's [unclear what to do](https://github.com/JuliaOpt/JuMP.jl/issues/1175)
+ - Example code should be covered by doctests. (But it's [unclear what to do](https://github.com/jump-dev/JuMP.jl/issues/1175)
    if the code depends on a solver.)
  - When a word is a Julia symbol and not an English word, enclose it with
    backticks. In addition, if it has a docstring in this doc add a link using

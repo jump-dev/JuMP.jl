@@ -1,7 +1,7 @@
 Interacting with solvers
 ========================
 
-A JuMP model keeps a [MathOptInterface (MOI)](https://github.com/JuliaOpt/MathOptInterface.jl)
+A JuMP model keeps a [MathOptInterface (MOI)](https://github.com/jump-dev/MathOptInterface.jl)
 *backend* of type `MOI.ModelLike` that stores the optimization
 problem and acts as the optimization solver. We call it an MOI *backend* and not
 optimizer as it can also be a wrapper around an optimization file format such as
