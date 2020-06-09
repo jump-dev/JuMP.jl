@@ -53,25 +53,25 @@ Our documentation includes an installation guide, quick-start guide, and referen
 
 [JuMPTutorials.jl]: https://github.com/JuliaOpt/JuMPTutorials.jl
 
-**See [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md) for
+**See [NEWS](https://github.com/jump-dev/JuMP.jl/tree/master/NEWS.md) for
 a list of the significant breaking changes in the JuMP 0.19 release.**
 
 **Latest Release**: 0.21.1 (`release-0.21` branch)
-  * [Documentation](http://www.juliaopt.org/JuMP.jl/v0.21.1/)
-  * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/release-0.21/examples)
+  * [Documentation](http://jump.dev/JuMP.jl/v0.21.1/)
+  * [Examples](https://github.com/jump-dev/JuMP.jl/tree/release-0.21/examples)
   * Testing status:
-    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=release-0.21)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * TravisCI: [![Build Status](https://travis-ci.org/jump-dev/JuMP.jl.svg?branch=release-0.21)](https://travis-ci.org/JuliaOpt/JuMP.jl)
 
 
 **Development version** (`master` branch):
-  * [Documentation](http://www.juliaopt.org/JuMP.jl/dev/)
-  * [Examples](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples)
+  * [Documentation](http://jump.dev/JuMP.jl/dev/)
+  * [Examples](https://github.com/jump-dev/JuMP.jl/tree/master/examples)
   * Testing status:
-    * TravisCI: [![Build Status](https://travis-ci.org/JuliaOpt/JuMP.jl.svg?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * TravisCI: [![Build Status](https://travis-ci.org/jump-dev/JuMP.jl.svg?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
     * Test coverage:
-      [![Coverage Status](https://coveralls.io/repos/JuliaOpt/JuMP.jl/badge.svg?branch=master)](https://coveralls.io/r/JuliaOpt/JuMP.jl?branch=master)
-      [![codecov](https://codecov.io/gh/JuliaOpt/JuMP.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaOpt/JuMP.jl)
-  * Changes: see [NEWS](https://github.com/JuliaOpt/JuMP.jl/tree/master/NEWS.md)
+      [![Coverage Status](https://coveralls.io/repos/jump-dev/JuMP.jl/badge.svg?branch=master)](https://coveralls.io/r/jump-dev/JuMP.jl?branch=master)
+      [![codecov](https://codecov.io/gh/jump-dev/JuMP.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaOpt/JuMP.jl)
+  * Changes: see [NEWS](https://github.com/jump-dev/JuMP.jl/tree/master/NEWS.md)
   * [Developer chatroom](https://gitter.im/JuliaOpt/JuMP-dev)
 
 
@@ -117,7 +117,7 @@ We list below what is currently supported. See the documentation for more inform
 
 Please report any issues via the Github **[issue tracker]**. All types of issues are welcome and encouraged; this includes bug reports, documentation typos, feature requests, etc. The **[Optimization (Mathematical)]** category on Discourse is appropriate for general discussion, including "how do I do this?" questions.
 
-[issue tracker]: https://github.com/JuliaOpt/JuMP.jl/issues
+[issue tracker]: https://github.com/jump-dev/JuMP.jl/issues
 [Optimization (Mathematical)]: https://discourse.julialang.org/c/domain/opt
 
 
@@ -153,7 +153,7 @@ A preprint of this paper is [freely available](http://arxiv.org/abs/1312.1431).
 
 ---
 
-![NumFOCUS logo](http://www.juliaopt.org/JuMP.jl/dev/assets/numfocus-logo.png)
+![NumFOCUS logo](http://jump.dev/JuMP.jl/dev/assets/numfocus-logo.png)
 
 JuMP is a Sponsored Project of NumFOCUS, a 501(c)(3) nonprofit charity in the
 United States. NumFOCUS provides JuMP with fiscal, legal, and administrative
