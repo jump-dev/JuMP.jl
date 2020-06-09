@@ -122,7 +122,7 @@ Requires a license. A trial version is available for small problem instances.
 CDD can solve the problem both using `Float64` and `Rational{BigInt}`
 arithmetics. The arithmetic used the type `T` given in `CDDLib.Optimizer{T}`.
 Only `CDDLib.Optimizer{Float64}` can be used with JuMP as JuMP inputs the
-problem in `Float64` arithmetics. Use [MOI](https://github.com/JuliaOpt/MathOptInterface.jl)
+problem in `Float64` arithmetics. Use [MOI](https://github.com/jump-dev/MathOptInterface.jl)
 directly for `CDDLib.Optimizer{Rational{BigInt}}`.
 
 ### COIN-OR Cbc

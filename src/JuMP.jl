@@ -5,7 +5,7 @@
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See http://github.com/jump-dev/JuMP.jl
 #############################################################################
 
 module JuMP
@@ -197,7 +197,7 @@ function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
     if solver !== nothing
         error("The solver= keyword is no longer available in JuMP 0.19 and " *
               "later. See the JuMP documentation " *
-              "(http://www.juliaopt.org/JuMP.jl/latest/) for latest syntax.")
+              "(http://jump.dev/JuMP.jl/latest/) for latest syntax.")
     end
     universal_fallback = MOIU.UniversalFallback(MOIU.Model{Float64}())
     caching_opt = MOIU.CachingOptimizer(universal_fallback,

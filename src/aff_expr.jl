@@ -5,7 +5,7 @@
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See http://github.com/jump-dev/JuMP.jl
 #############################################################################
 # src/aff_expr.jl
 # Defines all types relating to affine expressions
@@ -18,7 +18,7 @@
 # Utilities for OrderedDict
 function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     # Adding zero terms to this dictionary leads to unacceptable performance
-    # degradations. See, e.g., https://github.com/JuliaOpt/JuMP.jl/issues/1946.
+    # degradations. See, e.g., https://github.com/jump-dev/JuMP.jl/issues/1946.
     if iszero(v)
         return dict  # No-op.
     end

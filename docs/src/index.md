@@ -12,14 +12,14 @@
     Between versions 0.18 and 0.19, JuMP underwent a major transition in its
     underlying solver abstraction API, from
     [MathProgBase](https://github.com/JuliaOpt/MathProgBase.jl) to
-    [MathOptInterface](https://github.com/JuliaOpt/MathOptInterface.jl).
-    See [NEWS.md](https://github.com/JuliaOpt/JuMP.jl/blob/master/NEWS.md) for
+    [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl).
+    See [NEWS.md](https://github.com/jump-dev/JuMP.jl/blob/master/NEWS.md) for
     a comprehensive list of changes between the two versions, many of which
     are breaking. This documentation is for JuMP/MathOptInterface.
     For the documentation of JuMP 0.18, see
-    [here](http://www.juliaopt.org/JuMP.jl/0.18/).
+    [here](http://jump.dev/JuMP.jl/0.18/).
 
-[JuMP](https://github.com/JuliaOpt/JuMP.jl) is a domain-specific modeling
+[JuMP](https://github.com/jump-dev/JuMP.jl) is a domain-specific modeling
 language for [mathematical
 optimization](http://en.wikipedia.org/wiki/Mathematical_optimization) embedded
 in [Julia](http://julialang.org/). It currently supports a number of open-source
@@ -39,7 +39,7 @@ JuMP's features include:
         write intermediary files.
 -   Solver independence
     -   JuMP uses a generic solver-independent interface provided by the
-        [MathOptInterface](https://github.com/JuliaOpt/MathOptInterface.jl)
+        [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl)
         package, making it easy to change between a number of open-source and
         commercial optimization software packages ("solvers").
     -   Currently supported solvers include

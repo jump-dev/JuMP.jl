@@ -212,7 +212,7 @@ reverse_eval(reverse_storage,partials_storage,nd,adj)
 reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
 @test grad[1] == -1.0
 
-# https://github.com/JuliaOpt/JuMP.jl/issues/855
+# https://github.com/jump-dev/JuMP.jl/issues/855
 ex = :(ifelse(x[1]<=3.0, (x[1]-2.0)^2, 2*log(x[1]-2.0)+1.0))
 
 nd,const_values = expr_to_nodedata(ex)

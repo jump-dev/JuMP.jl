@@ -1082,7 +1082,7 @@ function MOI.constraint_expr(d::NLPEvaluator,i::Integer)
 end
 
 # NOTE: This is a slow approach that does *a lot* of setup work on each call.
-# See https://github.com/JuliaOpt/JuMP.jl/issues/746.
+# See https://github.com/jump-dev/JuMP.jl/issues/746.
 """
     value(ex::NonlinearExpression, var_value::Function)
 

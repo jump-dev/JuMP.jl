@@ -19,7 +19,7 @@ optimization step. Typical questions include:
  - Do I have a dual solution?
  - How sensitive is the solution to data perturbations?
 
-JuMP follows closely the concepts defined in [MathOptInterface (MOI)](https://github.com/JuliaOpt/MathOptInterface.jl)
+JuMP follows closely the concepts defined in [MathOptInterface (MOI)](https://github.com/jump-dev/MathOptInterface.jl)
 to answer user questions about a finished call to `optimize!(model)`. There
 are three main steps in querying a solution:
 

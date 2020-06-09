@@ -5,7 +5,7 @@
 #############################################################################
 # JuMP
 # An algebraic modelling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See http://github.com/jump-dev/JuMP.jl
 #############################################################################
 # Hock-Schittkowski Nonlinear Test Suite
 # These tests include JuMP implementations of the models described in

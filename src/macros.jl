@@ -449,7 +449,7 @@ Add a group of constraints described by the expression `expr` parametrized by
 The expression `expr` can either be
 
 * of the form `func in set` constraining the function `func` to belong to the
-  set `set` which is either a [`MathOptInterface.AbstractSet`](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1)
+  set `set` which is either a [`MathOptInterface.AbstractSet`](http://jump.dev/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1)
   or one of the JuMP shortcuts [`SecondOrderCone`](@ref),
   [`RotatedSecondOrderCone`](@ref) and [`PSDCone`](@ref), e.g.
   `@constraint(model, [1, x-1, y-2] in SecondOrderCone())` constrains the norm
@@ -742,7 +742,7 @@ end
 Set the objective sense to `sense` and objective function to `func`. The
 objective sense can be either `Min`, `Max`, `MathOptInterface.MIN_SENSE`,
 `MathOptInterface.MAX_SENSE` or `MathOptInterface.FEASIBILITY_SENSE`; see
-[`MathOptInterface.ObjectiveSense`](http://www.juliaopt.org/MathOptInterface.jl/v0.8/apireference.html#MathOptInterface.ObjectiveSense).
+[`MathOptInterface.ObjectiveSense`](http://jump.dev/MathOptInterface.jl/v0.8/apireference.html#MathOptInterface.ObjectiveSense).
 In order to set the sense programatically, i.e., when `sense` is a Julia
 variable whose value is the sense, one of the three
 `MathOptInterface.ObjectiveSense` values should be used. The function `func` can

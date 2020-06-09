@@ -12,7 +12,7 @@ makedocs(
         ],
         analytics = "UA-44252521-1",
     ),
-    # See https://github.com/JuliaOpt/JuMP.jl/issues/1576
+    # See https://github.com/jump-dev/JuMP.jl/issues/1576
     strict = true,
     authors = "Miles Lubin, Iain Dunning, and Joey Huchette",
     pages = [
@@ -35,5 +35,5 @@ makedocs(
 )
 
 deploydocs(
-    repo   = "github.com/JuliaOpt/JuMP.jl.git",
+    repo   = "github.com/jump-dev/JuMP.jl.git",
 )

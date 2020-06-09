@@ -204,7 +204,7 @@ end
 
 # The default hash is slow. It's important for the performance of AffExpr to
 # define our own.
-# https://github.com/JuliaOpt/MathOptInterface.jl/issues/234#issuecomment-366868878
+# https://github.com/jump-dev/MathOptInterface.jl/issues/234#issuecomment-366868878
 function Base.hash(v::VariableRef, h::UInt)
     return hash(objectid(owner_model(v)), hash(v.index.value, h))
 end
@@ -843,7 +843,7 @@ function JuMP.add_variable(model::Model, variable::JuMP.VariableConstrainedOnCre
 end
 ```
 but adds the variables with `MOI.add_constrained_variable(model, variable.set)`
-instead. See [the MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
+instead. See [the MOI documentation](http://jump.dev/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
 for the difference between adding the variables with `MOI.add_constrained_variable`
 and adding them with `MOI.add_variable` and adding the constraint separately.
 """
@@ -884,7 +884,7 @@ function JuMP.add_variable(model::Model, variable::JuMP.VariablesConstrainedOnCr
 end
 ```
 but adds the variables with `MOI.add_constrained_variables(model, variable.set)`
-instead. See [the MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
+instead. See [the MOI documentation](http://jump.dev/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
 for the difference between adding the variables with `MOI.add_constrained_variables`
 and adding them with `MOI.add_variables` and adding the constraint separately.
 """
