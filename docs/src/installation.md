@@ -66,11 +66,13 @@ Where:
 -   SDP = Semidefinite programming
 -   MISDP = Mixed-integer semidefinite programming
 
-You may also use [AmplNLWriter](https://github.com/JuliaOpt/AmplNLWriter.jl) to
-access solvers that support the [nl format](https://en.wikipedia.org/wiki/Nl_(format)).
-Such solvers include [Bonmin](https://github.com/coin-or/Bonmin) and
-[Couenne](https://github.com/coin-or/Couenne). See a more complete list
-[here](https://ampl.com/products/solvers/all-solvers-for-ampl/).
+You may also use [AmplNLWriter](https://github.com/JuliaOpt/AmplNLWriter.jl) or
+[GAMS](https://github.com/GAMS-dev/gams.jl) to access additional solvers.
+Such solvers include for example [Antigone](https://www.gams.com/latest/docs/S_ANTIGONE.html),
+[Bonmin](https://github.com/coin-or/Bonmin), [CONOPT](http://www.conopt.com/) and
+[Couenne](https://github.com/coin-or/Couenne). See a more complete list of AMPL
+solvers [here](https://ampl.com/products/solvers/all-solvers-for-ampl/) and of
+GAMS solvers [here](https://www.gams.com/latest/docs/S_MAIN.html).
 
 To install Gurobi, for example, and use it with a JuMP model `model`, run:
 
