@@ -125,6 +125,9 @@ time_limit_sec
 
 JuMP can write models to a variety of file-formats using [`write_to_file`](@ref)
 and [`Base.write`](@ref).
+
+The file formats are defined [within MathOptInterface in the FileFormats enumeration](https://jump.dev/MathOptInterface.jl/v0.9/apireference/#MathOptInterface.FileFormats.FileFormat).
+
 ```@docs
 write_to_file
 Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)
