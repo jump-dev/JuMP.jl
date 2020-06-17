@@ -4,8 +4,8 @@
         @testset "Colon indexing" begin
             err = ArgumentError("Indexing with `:` is not supported by" *
                                 " Containers.SparseAxisArray")
-            @test_throws err d[:, 1]
-            @test_throws err d[:a, :]
+            @test_throws err d[:, ntuple(one, ndims(d) - 1)...]
+            @test_throws err d[ntuple(i -> :a, ndims(d) - 1)..., :]
         end
         @testset "Map" begin
             @test d == @inferred map(identity, d)
@@ -45,6 +45,8 @@
         SA = SparseAxisArray
         d = @inferred SA(Dict((:a,) => 1, (:b,) => 2))
         @testset "Printing" begin
+            @test sprint(summary, d) == """
+SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries"""
             @test sprint(show, "text/plain", d) == """
 SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries:
   [a]  =  1
@@ -80,7 +82,10 @@ SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries:
         SA = SparseAxisArray
         d = @inferred SA(Dict((:a, 'u') => 2.0, (:b, 'v') => 0.5))
         @test d isa SA{Float64, 2, Tuple{Symbol, Char}}
+        @test_throws BoundsError(d, (:a,)) d[:a]
         @testset "Printing" begin
+            @test sprint(summary, d) == """
+SparseAxisArray{Float64,2,Tuple{Symbol,Char}} with 2 entries"""
             @test sprint(show, "text/plain", d) == """
 SparseAxisArray{Float64,2,Tuple{Symbol,Char}} with 2 entries:
   [b, v]  =  0.5
@@ -93,6 +98,21 @@ SparseAxisArray{Float64,2,Tuple{Symbol,Char}} with 2 entries:
         db = @inferred SA(Dict((:a, 'u') => 1.0, (:b, 'u') => 2.0))
         dc = @inferred SA(Dict((:a, 'u') => 1.0, (:b, 'v') => 2.0,
                                (:c, 'w') => 3.0))
+        sparse_test(d, 2.5, d2, d3, dsqr, [da, db, dc])
+    end
+    @testset "3-dimensional" begin
+        SA = SparseAxisArray
+        d = @inferred SA(Dict((:a, 'u', 2) => 2.0, (:b, 'v', 3) => 0.5))
+        @test d isa SA{Float64, 3, Tuple{Symbol, Char, Int}}
+        @test_throws BoundsError(d, (:a,)) d[:a]
+        @test_throws BoundsError(d, (:a, 'u')) d[:a, 'u']
+        d2 = @inferred SA(Dict((:b, 'v', 3) => 1.0, (:a, 'u', 2) => 4.0))
+        d3 = @inferred SA(Dict((:a, 'u', 2) => 6.0, (:b, 'v', 3) => 1.5))
+        dsqr = @inferred SA(Dict((:a, 'u', 2) => 4.0, (:b, 'v', 3) => 0.25))
+        da = @inferred SA(Dict((:b, 'v', 3) => 2.0))
+        db = @inferred SA(Dict((:a, 'u', 3) => 1.0, (:b, 'u', 2) => 2.0))
+        dc = @inferred SA(Dict((:a, 'u', 2) => 1.0, (:b, 'v', 3) => 2.0,
+                               (:c, 'w', 4) => 3.0))
         sparse_test(d, 2.5, d2, d3, dsqr, [da, db, dc])
     end
 end

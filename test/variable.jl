@@ -443,7 +443,7 @@ function test_variable_end_indexing(ModelType)
     @test z[end] == z[2]
     # TODO: It is redirected to x[11] as it is the 11th element but linear
     #       indexing is not supported
-    @test_throws KeyError x[end-1]
+    @test_throws BoundsError x[end-1]
 end
 
 function test_variable_unsigned_index(ModelType)
