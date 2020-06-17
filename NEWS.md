@@ -1,6 +1,31 @@
 JuMP release notes
 ==================
 
+Version 0.21.3 (June 18, 2020)
+-----------------------------
+
+- Added Special Order Sets (SOS1 and SOS2) to JuMP with default weights to ease
+  the creation of such constraints (#2212).
+- Added functions `simplex_iterations`, `barrier_iterations` and `node_count`
+  (#2201).
+- Added function `reduced_cost` (#2205).
+- Implemented `callback_value` for affine and quadratic expressions (#2231).
+- Support `MutableArithmetics.Zero` in objective and constraints (#2219).
+- Documentation improvements:
+  * Mention tutorials in the docs (#2223).
+  * Update COIN-OR links (#2242).
+  * Explicit link to the documentation of `MOI.FileFormats` (#2253).
+  * Typo fixes (#2261).
+- Containers improvements:
+  * Fix `Base.map` for `DenseAxisArray` (#2235).
+  * Throw `BoundsError` if number of indices is incorrect for `DenseAxisArray`
+    and `SparseAxisArray` (#2240).
+- Extensibility improvements:
+  * Implement a `set_objective` method fallback that redirects to
+    `set_objective_sense` and `set_objective_function` (#2247).
+  * Add `parse_constraint` method with arbitrary number of arguments (#2051).
+  * Add `parse_constraint_expr` and `parse_constraint_head` (#2228).
+
 Version 0.21.2 (April 2, 2020)
 -----------------------------
 
