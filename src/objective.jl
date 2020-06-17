@@ -115,23 +115,17 @@ function set_objective_function(model::Model, func::Real)
         MOI.ScalarAffineTerm{Float64}[], Float64(func)))
 end
 
-function set_objective(
-    model::AbstractModel,
-    sense::MOI.OptimizationSense,
-    func::Union{AbstractJuMPScalar, Real}
-)
+function set_objective_function(model::AbstractModel, ::MutableArithmetics.Zero)
+    set_objective_function(model, 0.0)
+end
+
+function set_objective_function(model::AbstractModel, func)
+    error("The objective function `$(func)` is not supported by JuMP.")
+end
+
+function set_objective(model::AbstractModel, sense::MOI.OptimizationSense, func)
     set_objective_sense(model, sense)
     set_objective_function(model, func)
-end
-
-function set_objective(
-    model::Model, sense::MOI.OptimizationSense, ::MutableArithmetics.Zero
-)
-    set_objective(model, sense, 0.0)
-end
-
-function set_objective(model::Model, sense::MOI.OptimizationSense, func)
-    error("The objective function `$(func)` is not supported by JuMP.")
 end
 
 """
