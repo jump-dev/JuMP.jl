@@ -198,7 +198,7 @@ This function is used by the [`@constraint`](@ref) macros as follows:
 @constraint(model, Symmetric(Q) in PSDCone())
 ```
 The form above is usually used when the entries of `Q` are affine or quadratic
-expressions but it can also be used when the entries are variables to get the
+expressions, but it can also be used when the entries are variables to get the
 reference of the semidefinite constraint, e.g.,
 ```julia
 @variable model Q[1:2,1:2] Symmetric
@@ -232,7 +232,7 @@ macros as follows:
 @SDconstraint(model, P ⪰ Q)
 ```
 The [`@constraint`](@ref) call above is usually used when the entries of `Q` are
-affine or quadratic expressions but it can also be used when the entries are
+affine or quadratic expressions, but it can also be used when the entries are
 variables to get the reference of the semidefinite constraint, e.g.,
 ```julia
 @variable model Q[1:2,1:2]

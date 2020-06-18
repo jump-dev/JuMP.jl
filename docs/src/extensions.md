@@ -72,7 +72,7 @@ sense_to_set
 
 #### Adding `build_constraint` methods
 
-There is typically two choices when creating a [`build_constraint`](@ref)
+There are typically two choices when creating a [`build_constraint`](@ref)
 method, either return an `AbstractConstraint` already supported by the
 model, i.e. `ScalarConstraint` or `VectorConstraint`, or a custom
 `AbstractConstraint` with a corresponding [`add_constraint`](@ref) method (see

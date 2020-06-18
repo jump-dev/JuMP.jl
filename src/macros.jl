@@ -102,7 +102,7 @@ end
     sense_to_set(_error::Function, ::Val{sense_symbol})
 
 Converts a sense symbol to a set `set` such that
-`@constraint(model, func sense_symbol 0) is equivalent to
+`@constraint(model, func sense_symbol 0)` is equivalent to
 `@constraint(model, func in set)` for any `func::AbstractJuMPScalar`.
 
 ## Example

@@ -49,8 +49,8 @@ struct MomentsShape <: AbstractShape
 end
 JuMP.reshape_vector(x::Vector, shape::MomentsShape) = Moments(x, shape.monomials)
 ```
-The `dual_shape` allows to define the shape of the dual of polynomial and moment
-constraints:
+Then `dual_shape` allows the definition of the shape of the dual of polynomial
+and moment constraints:
 ```julia
 dual_shape(shape::PolynomialShape) = MomentsShape(shape.monomials)
 dual_shape(shape::MomentsShape) = PolynomialShape(shape.monomials)
