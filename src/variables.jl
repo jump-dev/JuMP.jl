@@ -992,3 +992,6 @@ function value(::AbstractArray{<:AbstractJuMPScalar})
     error("`JuMP.value` is not defined for collections of JuMP types. Use" *
           " Julia's broadcast syntax instead: `JuMP.value.(x)`.")
 end
+
+value(::_MA.Zero) = 0.0
+value(x::Number) = x

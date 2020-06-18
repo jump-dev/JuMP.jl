@@ -791,3 +791,9 @@ end
     x = mock_var_for_RC(Max, 1.0, :upper, 1.0) # max x, x <= 10
     @test reduced_cost(x) == 1.0
 end
+
+@testset "value(::Number)" begin
+    @test value(1) === 1
+    @test value(1.0) === 1.0
+    @test value(JuMP._MA.Zero()) === 0.0
+end
