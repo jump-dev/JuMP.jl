@@ -17,7 +17,7 @@ end
 
 Second order cone object that can be used to constrain the euclidean norm of a
 vector `x` to be less than or equal to a nonnegative scalar `t`. This is a
-shortcut for the `MathOptInterface.SecondOrderCone`.
+shortcut for the `MOI.SecondOrderCone`.
 
 ## Examples
 
@@ -44,7 +44,7 @@ moi_set(::SecondOrderCone, dim::Int) = MOI.SecondOrderCone(dim)
 Rotated second order cone object that can be used to constrain the square of the
 euclidean norm of a vector `x` to be less than or equal to ``2tu`` where `t` and
 `u` are nonnegative scalars. This is a shortcut for the
-`MathOptInterface.RotatedSecondOrderCone`.
+`MOI.RotatedSecondOrderCone`.
 
 ## Examples
 
@@ -77,16 +77,16 @@ end
 """
     SOS1
 
-SOS1 (Special Ordered Sets type 1) object than can be used to constrain a 
+SOS1 (Special Ordered Sets type 1) object than can be used to constrain a
 vector `x` to a set where at most 1 variable can take a non-zero value, all
-others being at 0. 
-The `weights`, when specified, induce an ordering of the variables; as such, 
+others being at 0.
+The `weights`, when specified, induce an ordering of the variables; as such,
 they should be unique values. The *k*th element in the set corresponds to the
 *k*th weight in `weights`. See [here](http://lpsolve.sourceforge.net/5.5/SOS.htm)
 for a description of SOS constraints and their potential uses.
 This is a shortcut for the `MathOptInterface.SOS1` set.
 """
-struct SOS1 <: AbstractVectorSet 
+struct SOS1 <: AbstractVectorSet
     weights::Vector{Float64}
     function SOS1(weights::AbstractVector = Float64[])
         new(convert(Vector{Float64}, weights))
@@ -105,17 +105,17 @@ end
 """
     SOS2
 
-SOS1 (Special Ordered Sets type 2) object than can be used to constrain a 
+SOS1 (Special Ordered Sets type 2) object than can be used to constrain a
 vector `x` to a set where at most 2 variables can take a non-zero value, all
 others being at 0. In addition, if two are non-zero these must be consecutive
-in their ordering. 
+in their ordering.
 The `weights` induce an ordering of the variables; as such, they should be unique
 values. The *k*th element in the set corresponds to the *k*th weight in `weights`.
 See [here](http://lpsolve.sourceforge.net/5.5/SOS.htm) for a description of SOS
 constraints and their potential uses.
 This is a shortcut for the `MathOptInterface.SOS2` set.
 """
-struct SOS2 <: AbstractVectorSet 
+struct SOS2 <: AbstractVectorSet
     weights::Vector{Float64}
     function SOS2(weights::AbstractVector = Float64[])
         new(convert(Vector{Float64}, weights))
