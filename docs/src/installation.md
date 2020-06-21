@@ -72,7 +72,8 @@ Such solvers include [Bonmin](https://github.com/coin-or/Bonmin) and
 [Couenne](https://github.com/coin-or/Couenne). See a more complete list
 [here](https://ampl.com/products/solvers/all-solvers-for-ampl/).
 
-Additionally, you may use [GAMS](https://github.com/GAMS-dev/gams.jl) to access additional solvers. Among them are 
+Additionally, you may use [GAMS](https://www.gams.com) (Julia package:
+[GAMS.jl](https://github.com/GAMS-dev/gams.jl)) to access additional solvers. Among them are 
 [AlphaECP](https://www.gams.com/latest/docs/S_ALPHAECP.html), 
 [Antigone](https://www.gams.com/latest/docs/S_ANTIGONE.html), 
 [BARON](https://www.gams.com/latest/docs/S_BARON.html), 
@@ -83,7 +84,11 @@ Additionally, you may use [GAMS](https://github.com/GAMS-dev/gams.jl) to access 
 [SHOT](https://www.gams.com/latest/docs/S_SHOT.html), 
 [SNOPT](https://www.gams.com/latest/docs/S_SNOPT.html), 
 [SoPlex](https://www.gams.com/latest/docs/S_SOPLEX.html). 
-See a complete list [here](https://www.gams.com/latest/docs/S_MAIN.html).
+See a complete list [here](https://www.gams.com/latest/docs/S_MAIN.html). Note, 
+that [GAMS.jl](https://github.com/GAMS-dev/gams.jl) requires an installation of 
+the commercial software [GAMS](https://www.gams.com) for which a 
+[free community license](https://www.gams.com/latest/docs/UG_License.html#GAMS_Community_Licenses) 
+exists.
 
 To install Gurobi, for example, and use it with a JuMP model `model`, run:
 
