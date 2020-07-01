@@ -19,6 +19,7 @@ const _MA = MutableArithmetics
 import MathOptInterface
 const MOI = MathOptInterface
 const MOIU = MOI.Utilities
+const MOIB = MOI.Bridges
 
 import Calculus
 import DataStructures.OrderedDict
