@@ -380,6 +380,26 @@ end
 @testset "Macros for JuMP.Model" begin
     macros_test(Model, VariableRef)
 
+    @testset "Adding anonymous variable and specify required constraint on it" begin
+        model = Model()
+        @test_macro_throws ErrorException("In `@variable(m, Int)`: Ambiguous variable name Int detected." *
+            " To specify an anonymous integer variable, use `@variable(model, integer = true)` instead.") @variable(m, Int)
+        v = @variable(model, integer = true)
+        @test name(v) == ""
+        @test is_integer(v)
+
+        @test_macro_throws ErrorException("In `@variable(m, Bin)`: Ambiguous variable name Bin detected." *
+            " To specify an anonymous binary variable, use `@variable(model, binary = true)` instead.") @variable(m, Bin)
+        v = @variable(model, binary = true)
+        @test name(v) == ""
+        @test is_binary(v)
+
+        @test_macro_throws ErrorException("In `@variable(m, PSD)`: Size of anonymous square matrix of positive semidefinite anonymous variables is not specified." *
+            " To specify size of square matrix use `@variable(model, [1:n, 1:n], PSD)` instead.") @variable(m, PSD)
+        v = @variable(model, [1:1, 1:1], PSD)
+        @test name(v[1]) == ""
+    end
+
     @testset "Nested tuple destructuring" begin
         m = Model()
         d = Dict((1,2) => 3)
