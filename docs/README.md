@@ -16,7 +16,6 @@ Building the documentation
 If you are hacking on JuMP, and want to build the documentation, do the following:
 
 ```julia
-
 (base) Oscars-MBP:JuMP oscar$ julia --project=docs
                _
    _       _ _(_)_     |  Documentation: https://docs.julialang.org
