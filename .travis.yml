@@ -15,6 +15,10 @@ julia:
 # matrix:
 #     allow_failures:
 #         - julia: 0.7
+branches:
+  only:
+    - master
+    - /^release-.*$/
 notifications:
     email: false
 sudo: false
