@@ -136,7 +136,8 @@ end
 
 Base.eachindex(A::DenseAxisArray) = CartesianIndices(size(A.data))
 
-lookup_index(i, lookup::Dict) = isa(i, Colon) ? Colon() : lookup[i]
+lookup_index(i::Colon, lookup) = Colon()
+lookup_index(i, lookup) = lookup[i]
 
 # Lisp-y tuple recursion trick to handle indexing in a nice type-
 # stable way. The idea here is that `_to_index_tuple(idx, lookup)`
@@ -188,7 +189,6 @@ function Base.setindex!(A::DenseAxisArray{T, N}, v, idx...) where {T, N}
     return A.data[to_index(A,idx...)...] = v
 end
 Base.setindex!(A::DenseAxisArray, v, idx::CartesianIndex) = A.data[idx] = v
-
 Base.IndexStyle(::Type{DenseAxisArray{T,N,Ax}}) where {T,N,Ax} = IndexAnyCartesian()
 
 ########
@@ -205,10 +205,15 @@ struct DenseAxisArrayKey{T<:Tuple}
 end
 Base.getindex(k::DenseAxisArrayKey, args...) = getindex(k.I, args...)
 
-struct DenseAxisArrayKeys{T<:Tuple}
+struct DenseAxisArrayKeys{T<:Tuple, S<:Tuple, N} <: AbstractArray{S, N}
     product_iter::Base.Iterators.ProductIterator{T}
+    function DenseAxisArrayKeys(a::DenseAxisArray{TT,N}) where {TT,N}
+        product_iter = Base.Iterators.product(a.axes...)
+        f(::Base.Iterators.ProductIterator{T}) where {T} = T
+        return new{f(product_iter), eltype(product_iter), N}(product_iter)
+    end
 end
-Base.length(iter::DenseAxisArrayKeys) = length(iter.product_iter)
+Base.size(iter::DenseAxisArrayKeys) = size(iter.product_iter)
 function Base.eltype(iter::DenseAxisArrayKeys)
     return DenseAxisArrayKey{eltype(iter.product_iter)}
 end
@@ -221,9 +226,13 @@ function Base.iterate(iter::DenseAxisArrayKeys, state)
     return next == nothing ? nothing : (DenseAxisArrayKey(next[1]), next[2])
 end
 function Base.keys(a::DenseAxisArray)
-    return DenseAxisArrayKeys(Base.Iterators.product(a.axes...))
+    return DenseAxisArrayKeys(a)
 end
 Base.getindex(a::DenseAxisArray, k::DenseAxisArrayKey) = a[k.I...]
+function Base.getindex(a::DenseAxisArrayKeys, args...)
+    return DenseAxisArrayKey(_to_index_tuple(args, a.product_iter.iterators))
+end
+Base.IndexStyle(::Type{DenseAxisArrayKeys{T,N,Ax}}) where {T,N,Ax} = IndexAnyCartesian()
 
 ################
 # Broadcasting #
