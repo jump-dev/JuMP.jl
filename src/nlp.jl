@@ -279,9 +279,6 @@ function _FunctionStorage(nd::Vector{NodeData}, const_values, num_variables, col
         edgelist = compute_hessian_sparsity(nd, adj, linearity, coloring_storage, subexpression_edgelist, subexpression_variables)
         hess_I, hess_J, rinfo = Coloring.hessian_color_preprocess(edgelist, num_variables, coloring_storage)
         seed_matrix = Coloring.seed_matrix(rinfo)
-        if linearity[1] == NONLINEAR
-            @assert length(hess_I) > 0
-        end
     else
         hess_I = hess_J = Int[]
         rinfo = Coloring.RecoveryInfo()
