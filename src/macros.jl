@@ -312,6 +312,9 @@ end
 # three-argument build_constraint is used for two-sided constraints.
 function build_constraint(_error::Function, func::AbstractJuMPScalar,
                           lb::Real, ub::Real)
+    if isnan(lb) || isnan(ub)
+        _error("Invalid bounds, cannot contain NaN: [$(lb), $(ub)].")
+    end
     return build_constraint(_error, func, MOI.Interval(Float64(lb), Float64(ub)))
 end
 
@@ -1182,7 +1185,7 @@ macro variable(args...)
             _error("Ambiguous variable name $x detected. To specify an anonymous binary " *
                 "variable, use `@variable(model, binary = true)` instead.")
         elseif x == :PSD
-            _error("Size of anonymous square matrix of positive semidefinite anonymous variables is not specified. To specify size of square matrix " * 
+            _error("Size of anonymous square matrix of positive semidefinite anonymous variables is not specified. To specify size of square matrix " *
                 "use `@variable(model, [1:n, 1:n], PSD)` instead.")
         end
         anon_singleton = false

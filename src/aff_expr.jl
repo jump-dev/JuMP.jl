@@ -329,6 +329,12 @@ function _assert_isfinite(a::AffExpr)
     for (coef, var) in linear_terms(a)
         isfinite(coef) || error("Invalid coefficient $coef on variable $var.")
     end
+    if isnan(a.constant)
+        error(
+            "Expression contains an invalid NaN constant. This could be " *
+            "produced by `Inf - Inf`."
+        )
+    end
 end
 
 """

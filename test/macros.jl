@@ -631,6 +631,25 @@ end
         ) @NLparameter(model, p[axes(A)...] == x)
     end
 
+    @testset "NaN in constraints" begin
+        model = Model()
+        @variable(model, x >= 0)
+        @test_throws(
+            ErrorException(
+                "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`."
+            ),
+            @constraint(model, x >= NaN)
+        )
+        @test_throws ErrorException(
+            "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`."
+        ) @constraint(model, 1 <= x + NaN <= 2)
+        @test_throws ErrorException(
+            "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`."
+        ) @constraint(model, 1 <= x + Inf <= 2)
+        @test_throws ErrorException(
+            "In `@constraint(model, 1 <= x <= NaN)`: Invalid bounds, cannot contain NaN: [1, NaN]."
+        ) @constraint(model, 1 <= x <= NaN)
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
