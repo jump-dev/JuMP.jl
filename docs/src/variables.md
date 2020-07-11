@@ -513,7 +513,7 @@ false
 ### Relaxing integrality
 
 The [`relax_integrality`](@ref) function relaxes all integrality constraints in
-the model, returning an function that can be called to undo the operation later
+the model, returning a function that can be called to undo the operation later
 on.
 
 ## Semidefinite variables
