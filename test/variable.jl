@@ -797,3 +797,55 @@ end
     @test value(1.0) === 1.0
     @test value(JuMP._MA.Zero()) === 0.0
 end
+
+@testset "relax_integrality" begin
+    model = Model()
+    @variable(model, x, Bin)
+    @variable(model, -1 <= y <= 2, Bin)
+    @variable(model, 0.1 <= z <= 0.6, Bin)
+    @variable(model, a, Int)
+    @variable(model, -1 <= b <= 2, Int)
+    unrelax = relax_integrality(model)
+
+    @test !is_binary(x)
+    @test lower_bound(x) == 0.0
+    @test upper_bound(x) == 1.0
+
+    @test !is_binary(y)
+    @test lower_bound(y) == 0.0
+    @test upper_bound(y) == 1.0
+
+    @test !is_binary(z)
+    @test lower_bound(z) == 0.1
+    @test upper_bound(z) == 0.6
+
+    @test !is_integer(a)
+    @test !has_lower_bound(a)
+    @test !has_upper_bound(a)
+
+    @test !is_integer(b)
+    @test lower_bound(b) == -1.0
+    @test upper_bound(b) == 2.0
+
+    unrelax()
+
+    @test is_binary(x)
+    @test !has_lower_bound(x)
+    @test !has_upper_bound(x)
+
+    @test is_binary(y)
+    @test lower_bound(y) == -1.0
+    @test upper_bound(y) == 2.0
+
+    @test is_binary(z)
+    @test lower_bound(z) == 0.1
+    @test upper_bound(z) == 0.6
+
+    @test is_integer(a)
+    @test !has_lower_bound(a)
+    @test !has_upper_bound(a)
+
+    @test is_integer(b)
+    @test lower_bound(b) == -1.0
+    @test upper_bound(b) == 2.0
+end
