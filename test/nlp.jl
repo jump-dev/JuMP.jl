@@ -285,6 +285,17 @@
         @test V == [0.0, 0.0, 1.0]
     end
 
+    @testset "Constant ifelse (Issue #2115)" begin
+        model = Model()
+        @variable(model, x)
+        @NLobjective(model, Min, ifelse(x >= 1, 1, 0))
+
+        d = JuMP.NLPEvaluator(model)
+        MOI.initialize(d, [:Hess])
+        hessian_sparsity = MOI.hessian_lagrangian_structure(d)
+        @test length(hessian_sparsity) == 0
+    end
+
     @testset "Hessians and Hess-vec" begin
         m = Model()
         @variable(m, a)
