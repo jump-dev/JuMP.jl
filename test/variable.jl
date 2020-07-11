@@ -849,3 +849,19 @@ end
     @test lower_bound(b) == -1.0
     @test upper_bound(b) == 2.0
 end
+
+@testset "relax_integrality error cases" begin
+    model = Model()
+    @variable(model, x)
+    @constraint(model, x in MOI.Semicontinuous(1.0, 2.0))
+    err = ErrorException("Support for relaxing semicontinuous constraints " *
+                         "is not yet implemented.")
+    @test_throws err relax_integrality(model)
+
+    model = Model()
+    @variable(model, x)
+    @constraint(model, x in MOI.Semiinteger(1.0, 2.0))
+    err = ErrorException("Support for relaxing semi-integer constraints " *
+                         "is not yet implemented.")
+    @test_throws err relax_integrality(model)
+end

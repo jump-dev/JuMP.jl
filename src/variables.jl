@@ -1022,7 +1022,10 @@ variables. Specifically,
 - Binary constraints are deleted, and variable bounds are tightened if
   necessary to ensure the variable is constrained to the interval ``[0, 1]``.
 - Integrality constraints are deleted without modifying variable bounds.
-- Semi-continuous and semi-integer constraints are ignored (left in place).
+- An error is thrown if semi-continuous or semi-integer constraints are
+  present (support may be added for these in the future).
+- All other constraints are ignored (left in place). This includes discrete
+  constraints like SOS and indicator constraints.
 
 Returns a function that can be called without any arguments to restore the
 original model. The behavior of this function is undefined if additional
@@ -1060,6 +1063,18 @@ Subject to
 ```
 """
 function relax_integrality(model::Model)
+    semicont_type = _MOICON{MOI.SingleVariable, MOI.Semicontinuous{Float64}}
+    semiint_type = _MOICON{MOI.SingleVariable, MOI.Semiinteger{Float64}}
+    for v in all_variables(model)
+        if MOI.is_valid(backend(model), semicont_type(index(v).value))
+            error("Support for relaxing semicontinuous constraints is not " *
+                  "yet implemented.")
+        elseif MOI.is_valid(backend(model), semiint_type(index(v).value))
+            error("Support for relaxing semi-integer constraints is not " *
+                  "yet implemented.")
+        end
+    end
+
     info_pre_relaxation = map(v -> (v, _info_from_variable(v)),
         all_variables(model))
     # We gather the info first because some solvers perform poorly when you
