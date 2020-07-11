@@ -1003,7 +1003,8 @@ include("callbacks.jl")
 include("file_formats.jl")
 
 # JuMP exports everything except internal symbols, which are defined as those
-# whose name starts with an underscore. If you don't want all of these symbols
+# whose name starts with an underscore. Macros whose names start with
+# underscores are internal as well. If you don't want all of these symbols
 # in your environment, then use `import JuMP` instead of `using JuMP`.
 
 # Do not add JuMP-defined symbols to this exclude list. Instead, rename them
@@ -1012,7 +1013,8 @@ const _EXCLUDE_SYMBOLS = [Symbol(@__MODULE__), :eval, :include]
 
 for sym in names(@__MODULE__, all=true)
     sym_string = string(sym)
-    if sym in _EXCLUDE_SYMBOLS || startswith(sym_string, "_")
+    if sym in _EXCLUDE_SYMBOLS || startswith(sym_string, "_") ||
+         startswith(sym_string, "@_")
         continue
     end
     if !(Base.isidentifier(sym) || (startswith(sym_string, "@") &&
