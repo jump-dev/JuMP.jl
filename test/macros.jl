@@ -382,20 +382,35 @@ end
 
     @testset "Adding anonymous variable and specify required constraint on it" begin
         model = Model()
-        @test_macro_throws ErrorException("In `@variable(m, Int)`: Ambiguous variable name Int detected." *
-            " To specify an anonymous integer variable, use `@variable(model, integer = true)` instead.") @variable(m, Int)
+        @test_macro_throws(
+            ErrorException(
+                "In `@variable(m, Int)`: Ambiguous variable name Int detected." *
+                " To specify an anonymous integer variable, use `@variable(model, integer = true)` instead."
+            ),
+            @variable(m, Int)
+        )
         v = @variable(model, integer = true)
         @test name(v) == ""
         @test is_integer(v)
 
-        @test_macro_throws ErrorException("In `@variable(m, Bin)`: Ambiguous variable name Bin detected." *
-            " To specify an anonymous binary variable, use `@variable(model, binary = true)` instead.") @variable(m, Bin)
+        @test_macro_throws(
+            ErrorException(
+                "In `@variable(m, Bin)`: Ambiguous variable name Bin detected." *
+                " To specify an anonymous binary variable, use `@variable(model, binary = true)` instead."
+            ),
+            @variable(m, Bin)
+        )
         v = @variable(model, binary = true)
         @test name(v) == ""
         @test is_binary(v)
 
-        @test_macro_throws ErrorException("In `@variable(m, PSD)`: Size of anonymous square matrix of positive semidefinite anonymous variables is not specified." *
-            " To specify size of square matrix use `@variable(model, [1:n, 1:n], PSD)` instead.") @variable(m, PSD)
+        @test_macro_throws(
+            ErrorException(
+                "In `@variable(m, PSD)`: Size of anonymous square matrix of positive semidefinite anonymous variables is not specified." *
+                " To specify size of square matrix use `@variable(model, [1:n, 1:n], PSD)` instead."
+            ),
+            @variable(m, PSD)
+        )
         v = @variable(model, [1:1, 1:1], PSD)
         @test name(v[1]) == ""
     end
@@ -602,33 +617,51 @@ end
         A = [1 0; 0 1]
         @variable(model, x)
 
-        @test_macro_throws ErrorException(
-            "In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...` in the definition of an index set."
-        ) @variable(model, y[axes(A)...])
+        @test_macro_throws(
+            ErrorException(
+                "In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...` in the definition of an index set."
+            ),
+            @variable(model, y[axes(A)...])
+        )
 
         f(a, b) = [a, b]
         @variable(model, z[f((1, 2)...)])
         @test length(z) == 2
 
-        @test_macro_throws ErrorException(
-            "In `@constraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @constraint(model, [axes(A)...], x >= 1)
+        @test_macro_throws(
+            ErrorException(
+                "In `@constraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
+            ),
+            @constraint(model, [axes(A)...], x >= 1)
+        )
 
-        @test_macro_throws ErrorException(
-            "In `@NLconstraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @NLconstraint(model, [axes(A)...], x >= 1)
+        @test_macro_throws(
+            ErrorException(
+                "In `@NLconstraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
+            ),
+            @NLconstraint(model, [axes(A)...], x >= 1)
+        )
 
-        @test_macro_throws ErrorException(
-            "In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @expression(model, [axes(A)...], x)
+        @test_macro_throws(
+            ErrorException(
+                "In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
+            ),
+            @expression(model, [axes(A)...], x)
+        )
 
-        @test_macro_throws ErrorException(
-            "In `@NLexpression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @NLexpression(model, [axes(A)...], x)
+        @test_macro_throws(
+            ErrorException(
+                "In `@NLexpression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
+            ),
+            @NLexpression(model, [axes(A)...], x)
+        )
 
-        @test_macro_throws ErrorException(
-            "In `@NLparameter(model, p[axes(A)...] == x)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @NLparameter(model, p[axes(A)...] == x)
+        @test_macro_throws(
+            ErrorException(
+                "In `@NLparameter(model, p[axes(A)...] == x)`: cannot use splatting operator `...` in the definition of an index set."
+            ),
+            @NLparameter(model, p[axes(A)...] == x)
+        )
     end
 
     @testset "NaN in constraints" begin
@@ -646,9 +679,12 @@ end
         @test_throws ErrorException(
             "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`."
         ) @constraint(model, 1 <= x + Inf <= 2)
-        @test_throws ErrorException(
-            "In `@constraint(model, 1 <= x <= NaN)`: Invalid bounds, cannot contain NaN: [1, NaN]."
-        ) @constraint(model, 1 <= x <= NaN)
+        @test_macro_throws(
+            ErrorException(
+                "In `@constraint(model, 1 <= x <= NaN)`: Invalid bounds, cannot contain NaN: [1, NaN]."
+            ),
+            @constraint(model, 1 <= x <= NaN)
+        )
     end
 end
 

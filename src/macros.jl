@@ -38,12 +38,14 @@ end
 _valid_model(m::AbstractModel, name) = nothing
 _valid_model(m, name) = error("Expected $name to be a JuMP model, but it has type ", typeof(m))
 
-function _assert_valid_model(m, macrocode)
+function _assert_valid_model(m, macrocode, source)
     # assumes m is already escaped
-    quote
-        _valid_model($m, $(quot(m.args[1])))
-        $macrocode
-    end
+    return Expr(
+        :block,
+        source,
+        :(_valid_model($m, $(quot(m.args[1])))),
+        macrocode
+    )
 end
 
 function _error_if_cannot_register(model::AbstractModel, name::Symbol)
@@ -365,8 +367,8 @@ determine the container type) are added to the `build_constraint` call. The
 returned value of this call is passed to `add_constraint` which returns a
 constraint reference.
 """
-function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
-    _error(str...) = _macro_error(macro_name, args, str...)
+function _constraint_macro(args, macro_name::Symbol, parsefun::Function, source)
+    _error(str...) = _macro_error(macro_name, args, source, str...)
 
     args, kw_args, requestedcontainer = Containers._extract_kw_args(args)
 
@@ -433,7 +435,7 @@ function _constraint_macro(args, macro_name::Symbol, parsefun::Function)
         macro_code = _macro_assign_and_return(creation_code, variable, name,
                                               model_for_registering = m)
     end
-    return _assert_valid_model(m, macro_code)
+    return _assert_valid_model(m, macro_code, source)
 end
 
 # This function needs to be implemented by all `AbstractModel`s
@@ -490,7 +492,11 @@ that either `func` or `set` will be some custom type, rather than e.g. a
 set appearing in the constraint.
 """
 macro constraint(args...)
-    _constraint_macro(args, :constraint, parse_constraint_expr)
+    return Expr(
+        :block,
+        __source__,
+        _constraint_macro(args, :constraint, parse_constraint_expr, __source__)
+    )
 end
 
 function parse_SD_constraint_expr(_error::Function, expr::Expr)
@@ -590,7 +596,7 @@ part of the matrix assuming that it is symmetric, see [`PSDCone`](@ref) to see
 how to use it.
 """
 macro SDconstraint(args...)
-    _constraint_macro(args, :SDconstraint, parse_SD_constraint_expr)
+    _constraint_macro(args, :SDconstraint, parse_SD_constraint_expr, __source__)
 end
 
 """
@@ -614,7 +620,9 @@ ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.GreaterTha
 ```
 """
 macro build_constraint(constraint_expr)
-    _error(str...) = _macro_error(:build_constraint, (constraint_expr,), str...)
+    function _error(str...)
+        _macro_error(:build_constraint, (constraint_expr,), __source__, str...)
+    end
 
     if isa(constraint_expr, Symbol)
         _error("Incomplete constraint specification $constraint_expr. " *
@@ -649,7 +657,7 @@ for (mac,sym) in [(:constraints,  Symbol("@constraint")),
             end
             @assert isa(x.args[1], LineNumberNode)
             lastline = x.args[1]
-            code = quote end
+            code = Expr(:block)
             for it in x.args
                 if isa(it, LineNumberNode)
                     lastline = it
@@ -788,7 +796,7 @@ x² - 2 x + 1
 ```
 """
 macro objective(model, args...)
-    _error(str...) = _macro_error(:objective, (model, args...), str...)
+    _error(str...) = _macro_error(:objective, (model, args...), __source__, str...)
 
     # We don't overwrite `model` as it is used in `_error`
     esc_model = esc(model)
@@ -804,7 +812,7 @@ macro objective(model, args...)
         set_objective($esc_model, $sense_expr, $newaff)
         $newaff
     end
-    return _assert_valid_model(esc_model, code)
+    return _assert_valid_model(esc_model, code, __source__)
 end
 
 """
@@ -834,7 +842,7 @@ expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
 ```
 """
 macro expression(args...)
-    _error(str...) = _macro_error(:expression, args, str...)
+    _error(str...) = _macro_error(:expression, args, __source__, str...)
     args, kw_args, requestedcontainer = Containers._extract_kw_args(args)
     if length(args) == 3
         m = esc(args[1])
@@ -862,7 +870,7 @@ macro expression(args...)
         macro_code = _macro_assign_and_return(code, variable, Containers._get_name(c),
                                               model_for_registering = m)
     end
-    return _assert_valid_model(m, macro_code)
+    return _assert_valid_model(m, macro_code, __source__)
 end
 
 _esc_non_constant(x::Number) = x
@@ -893,8 +901,11 @@ function build_variable(_error::Function, variables::Vector{<:ScalarVariable},
 end
 
 
-function _macro_error(macroname, args, str...)
-    error("In `@$macroname($(join(args, ", ")))`: ", str...)
+function _macro_error(macroname, args, source, str...)
+    error(
+        "At $(source.file):$(source.line): " *
+        "`@$macroname($(join(args, ", ")))`: ", str...
+    )
 end
 
 # Given a base_name and idxvars, returns an expression that constructs the name
@@ -1165,7 +1176,7 @@ end
 ```
 """
 macro variable(args...)
-    _error(str...) = _macro_error(:variable, args, str...)
+    _error(str...) = _macro_error(:variable, args, __source__, str...)
 
     model = esc(args[1])
 
@@ -1317,7 +1328,7 @@ macro variable(args...)
         macro_code = _macro_assign_and_return(creation_code, variable, name,
                                               model_for_registering = model)
     end
-    return _assert_valid_model(model, macro_code)
+    return _assert_valid_model(model, macro_code, __source__)
 end
 
 """
@@ -1331,14 +1342,14 @@ Add a nonlinear objective to `model` with optimization sense `sense`.
     @NLobjective(model, Max, 2x + 1 + sin(x))
 """
 macro NLobjective(model, sense, x)
-    _error(str...) = _macro_error(:NLobjective, (model, sense, x), str...)
+    _error(str...) = _macro_error(:NLobjective, (model, sense, x), __source__, str...)
     sense_expr = _moi_sense(_error, sense)
     ex = gensym()
     code = quote
         $ex = $(_process_NL_expr(model, x))
         set_objective($(esc(model)), $sense_expr, $ex)
     end
-    return _assert_valid_model(esc(model), code)
+    return _assert_valid_model(esc(model), code, __source__)
 end
 
 """
@@ -1353,7 +1364,7 @@ Add a constraint described by the nonlinear expression `expr`. See also
 ```
 """
 macro NLconstraint(m, x, args...)
-    _error(str...) = _macro_error(:NLconstraint, (m, x, args...), str...)
+    _error(str...) = _macro_error(:NLconstraint, (m, x, args...), __source__, str...)
     esc_m = esc(m)
     # Two formats:
     # - @NLconstraint(m, a*x <= 5)
@@ -1427,7 +1438,7 @@ macro NLconstraint(m, x, args...)
                                               Containers._get_name(c),
                                               model_for_registering = esc_m)
     end
-    return _assert_valid_model(esc_m, macro_code)
+    return _assert_valid_model(esc_m, macro_code, __source__)
 end
 
 """
@@ -1449,7 +1460,7 @@ my_expr_2 = @NLexpression(m, log(1 + sum(exp(x[i])) for i in 1:2))
 ```
 """
 macro NLexpression(args...)
-    _error(str...) = _macro_error(:NLexpression, args, str...)
+    _error(str...) = _macro_error(:NLexpression, args, __source__, str...)
     args, kw_args, requestedcontainer = Containers._extract_kw_args(args)
     if length(args) <= 1
         _error("To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.")
@@ -1476,7 +1487,7 @@ macro NLexpression(args...)
                                               Containers._get_name(c),
                                               model_for_registering = esc(m))
     end
-    return _assert_valid_model(esc(m), macro_code)
+    return _assert_valid_model(esc(m), macro_code, __source__)
 end
 
 """
@@ -1514,7 +1525,7 @@ value(y[9])
 ```
 """
 macro NLparameter(m, ex, extra...)
-    _error(str...) = _macro_error(:NLparameter, (m, ex, extra...), str...)
+    _error(str...) = _macro_error(:NLparameter, (m, ex, extra...), __source__, str...)
 
     extra, kw_args, requestedcontainer = Containers._extract_kw_args(extra)
     (length(extra) == 0 && length(kw_args) == 0) || _error("Too many arguments.")
@@ -1543,5 +1554,5 @@ macro NLparameter(m, ex, extra...)
     # have an anonymous version.
     macro_code = _macro_assign_and_return(creation_code, variable,
                                           Containers._get_name(c))
-    return _assert_valid_model(esc_m, macro_code)
+    return _assert_valid_model(esc_m, macro_code, __source__)
 end

@@ -84,7 +84,11 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
             @variable(model, x)
 
             err = ErrorException("In `@constraint(model, [x, 2x] == [1 - x, 3])`: Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
-            @test_throws err @constraint(model, [x, 2x] == [1-x, 3])
+            @test_throws err try
+                @constraint(model, [x, 2x] == [1-x, 3])
+            catch e
+                throw(_strip_line_from_error(e))
+            end
             @test_macro_throws ErrorException begin
                 @constraint(model, [x == 1-x, 2x == 3])
             end
@@ -252,7 +256,11 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
             "add the constraint because we don't recognize $([3, x]) as a " *
             "valid JuMP function."
         )
-        @test_throws err @constraint(model, [3, x] in SecondOrderCone())
+        @test_throws err try
+            @constraint(model, [3, x] in SecondOrderCone())
+        catch e
+            throw(_strip_line_from_error(e))
+        end
     end
 
     @testset "Indicator constraint" begin
@@ -428,12 +436,20 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
             "In `@constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))`:" *
             " instead of `MathOptInterface.PositiveSemidefiniteConeSquare(2)`," *
             " use `JuMP.PSDCone()`.")
-        @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))
+        @test_throws err try
+            @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))
+        catch e
+            throw(_strip_line_from_error(e))
+        end
         err = ErrorException(
             "In `@constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))`:" *
             " instead of `MathOptInterface.PositiveSemidefiniteConeTriangle(2)`," *
             " use `JuMP.PSDCone()`.")
-        @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))
+        @test_throws err try
+            @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))
+        catch e
+            throw(_strip_line_from_error(e))
+        end
     end
 
     @testset "Useful Matrix error message" begin
@@ -445,7 +461,11 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
             "into a vector using `vec()`?")
         # Note: this should apply to any MOI.AbstractVectorSet. We just pick
         # SecondOrderCone for convenience.
-        @test_throws err @constraint(model, X in MOI.SecondOrderCone(4))
+        @test_throws err try
+            @constraint(model, X in MOI.SecondOrderCone(4))
+        catch e
+            throw(_strip_line_from_error(e))
+        end
     end
 
     @testset "Nonsensical SDPs" begin
