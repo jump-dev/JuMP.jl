@@ -390,11 +390,20 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
         @test JuMP.isequal_canonical(c.func[4], 1w)
         @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
 
-        # Should throw "ERROR: function JuMP.add_constraint does not accept keyword arguments"
-        # This tests that the keyword arguments are passed to add_constraint
-        @test_throws ErrorException @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw=1)
+        # Julia changed how it reports keyword arguments between 1.3 and 1.4!
+        err = if VERSION < v"1.4"
+            ErrorException("function build_constraint does not accept keyword arguments")
+        else
+            MethodError
+        end
+        @test_throws(
+            err, @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw=1)
+        )
         # Invalid sense == in SDP constraint
-        @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] == [1 x; x -2])
+        @test_macro_throws(
+            ErrorException("In `@SDconstraint(m, [x 1; 1 -y] == [1 x; x -2])`: Invalid sense == in SDP constraint"),
+            @SDconstraint(m, [x 1; 1 -y] == [1 x; x -2])
+        )
     end
 
     @testset "Constraint name" begin
