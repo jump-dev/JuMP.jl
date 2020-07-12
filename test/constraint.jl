@@ -84,11 +84,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
             @variable(model, x)
 
             err = ErrorException("In `@constraint(model, [x, 2x] == [1 - x, 3])`: Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
-            @test_throws err try
-                @constraint(model, [x, 2x] == [1-x, 3])
-            catch e
-                throw(_strip_line_from_error(e))
-            end
+            @test_throws_strip(err, @constraint(model, [x, 2x] == [1-x, 3]))
             @test_macro_throws ErrorException begin
                 @constraint(model, [x == 1-x, 2x == 3])
             end
@@ -256,11 +252,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
             "add the constraint because we don't recognize $([3, x]) as a " *
             "valid JuMP function."
         )
-        @test_throws err try
-            @constraint(model, [3, x] in SecondOrderCone())
-        catch e
-            throw(_strip_line_from_error(e))
-        end
+        @test_throws_strip(err, @constraint(model, [3, x] in SecondOrderCone()))
     end
 
     @testset "Indicator constraint" begin
@@ -400,7 +392,7 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
 
         # Should throw "ERROR: function JuMP.add_constraint does not accept keyword arguments"
         # This tests that the keyword arguments are passed to add_constraint
-        @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw=1)
+        @test_throws ErrorException @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw=1)
         # Invalid sense == in SDP constraint
         @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] == [1 x; x -2])
     end
@@ -436,20 +428,16 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
             "In `@constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))`:" *
             " instead of `MathOptInterface.PositiveSemidefiniteConeSquare(2)`," *
             " use `JuMP.PSDCone()`.")
-        @test_throws err try
-            @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))
-        catch e
-            throw(_strip_line_from_error(e))
-        end
+        @test_throws_strip(
+            err, @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))
+        )
         err = ErrorException(
             "In `@constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))`:" *
             " instead of `MathOptInterface.PositiveSemidefiniteConeTriangle(2)`," *
             " use `JuMP.PSDCone()`.")
-        @test_throws err try
-            @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))
-        catch e
-            throw(_strip_line_from_error(e))
-        end
+        @test_throws_strip(
+            err, @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))
+        )
     end
 
     @testset "Useful Matrix error message" begin
@@ -461,25 +449,37 @@ function constraints_test(ModelType::Type{<:JuMP.AbstractModel},
             "into a vector using `vec()`?")
         # Note: this should apply to any MOI.AbstractVectorSet. We just pick
         # SecondOrderCone for convenience.
-        @test_throws err try
-            @constraint(model, X in MOI.SecondOrderCone(4))
-        catch e
-            throw(_strip_line_from_error(e))
-        end
+        @test_throws_strip(err, @constraint(model, X in MOI.SecondOrderCone(4)))
     end
 
     @testset "Nonsensical SDPs" begin
         m = ModelType()
-        @test_throws ErrorException @variable(m, unequal[1:5,1:6], PSD)
+        @test_throws_strip(
+            ErrorException("In `@variable(m, unequal[1:5, 1:6], PSD)`: Symmetric variables must be 2-dimensional."),
+            @variable(m, unequal[1:5,1:6], PSD)
+        )
         # Some of these errors happen at compile time, so we can't use @test_throws
-        @test_macro_throws ErrorException @variable(m, notone[1:5,2:6], PSD)
-        @test_macro_throws ErrorException @variable(m, oneD[1:5], PSD)
-        @test_macro_throws ErrorException @variable(m, threeD[1:5,1:5,1:5], PSD)
-        @test_macro_throws ErrorException @variable(m, psd[2] <= rand(2,2), PSD)
-        @test_macro_throws ErrorException @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), PSD)
-        @test_macro_throws ErrorException @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), Symmetric)
-        @test_macro_throws ErrorException @variable(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric)
-        @test_macro_throws ErrorException @variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric)
+        @test_throws MethodError @variable(m, notone[1:5,2:6], PSD)
+        @test_throws MethodError @variable(m, oneD[1:5], PSD)
+        @test_throws MethodError @variable(m, threeD[1:5,1:5,1:5], PSD)
+        @test_throws MethodError @variable(m, psd[2] <= rand(2,2), PSD)
+
+        @test_throws_strip(
+            ErrorException("In `@variable(m, -(ones(3, 4)) <= foo[1:4, 1:4] <= ones(4, 4), PSD)`: Non-symmetric bounds, integrality or starting values for symmetric variable."),
+            @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), PSD)
+        )
+        @test_throws_strip(
+            ErrorException("In `@variable(m, -(ones(3, 4)) <= foo[1:4, 1:4] <= ones(4, 4), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable."),
+            @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), Symmetric)
+        )
+        @test_throws_strip(
+            ErrorException("In `@variable(m, -(ones(4, 4)) <= foo[1:4, 1:4] <= ones(4, 5), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable."),
+            @variable(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric)
+        )
+        @test_throws_strip(
+          ErrorException("In `@variable(m, -(rand(5, 5)) <= nonsymmetric[1:5, 1:5] <= rand(5, 5), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable."),
+          @variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric)
+        )
     end
 
     @testset "[macros] sum(generator)" begin

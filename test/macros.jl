@@ -679,7 +679,7 @@ end
         @test_throws ErrorException(
             "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`."
         ) @constraint(model, 1 <= x + Inf <= 2)
-        @test_macro_throws(
+        @test_throws_strip(
             ErrorException(
                 "In `@constraint(model, 1 <= x <= NaN)`: Invalid bounds, cannot contain NaN: [1, NaN]."
             ),

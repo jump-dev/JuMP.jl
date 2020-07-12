@@ -29,7 +29,7 @@ using Test
     @testset "error: x--F" begin
         model = Model()
         @variable(model, x >= 0)
-        @test_macro_throws(
+        @test_throws_strip(
             ErrorException(
                 "In `@constraint(model, x ⟂ 2x - 1)`: second term must be a " *
                 "variable."
@@ -41,7 +41,7 @@ using Test
     @testset "error: F--F" begin
         model = Model()
         @variable(model, x >= 0)
-        @test_macro_throws(
+        @test_throws_strip(
             ErrorException(
                 "In `@constraint(model, x + 1 ⟂ 2x - 1)`: second term must " *
                 "be a variable."
@@ -74,7 +74,7 @@ end
     @testset "error: length mismatch" begin
         model = Model()
         @variable(model, x[1:2] >= 0)
-        @test_macro_throws(
+        @test_throws_strip(
             ErrorException(
                 "In `@constraint(model, x ⟂ [x[1]])`: size of mapping does " *
                 "not match size of variables: (2,) != (1,)."
@@ -86,7 +86,7 @@ end
     @testset "error: x--F" begin
         model = Model()
         @variable(model, x[1:2] >= 0)
-        @test_macro_throws(
+        @test_throws_strip(
             ErrorException(
                 "In `@constraint(model, x ⟂ 2x .- 1)`: second term must be an " *
                 "array of variables."
@@ -98,7 +98,7 @@ end
     @testset "error: F--F" begin
         model = Model()
         @variable(model, x[1:2] >= 0)
-        @test_macro_throws(
+        @test_throws_strip(
             ErrorException(
                 "In `@constraint(model, x .+ 1 ⟂ 2x .- 1)`: second term must " *
                 "be an array of variables."
