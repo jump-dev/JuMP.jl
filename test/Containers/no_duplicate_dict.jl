@@ -1,3 +1,6 @@
+using JuMP.Containers
+using Test
+
 @testset "Iterator with constant eltype" begin
     f(ij) = ij => sum(ij)
     g = Base.Generator(f, Iterators.product(1:2, 1:2))

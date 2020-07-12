@@ -1,8 +1,11 @@
+using JuMP
 using JuMP._Derivatives
+using LinearAlgebra
 using Test
-using MathOptInterface
 
-struct ΦEvaluator <: MathOptInterface.AbstractNLPEvaluator
+const ForwardDiff = JuMP.ForwardDiff
+
+struct ΦEvaluator <: MOI.AbstractNLPEvaluator
 end
 
 @testset "Derivatives" begin
@@ -282,18 +285,18 @@ test_linearity(:(1/ifelse(x[1] < 1, x[1],0)), NONLINEAR, Set([(1,1)]))
 #Φ(x,y) = 1/3(y)^3 - 2x^2
 # c(x) = cos(x)
 
-function MathOptInterface.eval_objective(::ΦEvaluator,x)
+function MOI.eval_objective(::ΦEvaluator,x)
     @assert length(x) == 2
     return (1/3)*x[2]^3-2x[1]^2
 end
-function MathOptInterface.eval_objective_gradient(::ΦEvaluator,grad,x)
+function MOI.eval_objective_gradient(::ΦEvaluator,grad,x)
     grad[1] = -4x[1]
     grad[2] = x[2]^2
 end
 r = _Derivatives.UserOperatorRegistry()
 register_multivariate_operator!(r,:Φ,ΦEvaluator())
 register_univariate_operator!(r,:c,cos,x->-sin(x),x->-cos(x))
-Φ(x,y) = MathOptInterface.eval_objective(ΦEvaluator(),[x,y])
+Φ(x,y) = MOI.eval_objective(ΦEvaluator(),[x,y])
 ex = :(Φ(x[2],x[1]-1)*c(x[3]))
 nd,const_values = expr_to_nodedata(ex,r)
 @test _Derivatives.has_user_multivariate_operators(nd)
@@ -312,11 +315,6 @@ reverse_extract(grad,reverse_storage,nd,adj,[],1.0)
 
 true_grad = [cos(x[3])*(x[1]-1)^2, -4cos(x[3])*x[2], -sin(x[3])*Φ(x[2],x[1]-1)]
 @test isapprox(grad,true_grad)
-
-
-
-using DualNumbers
-using ForwardDiff
 
 # dual forward test
 function dualforward(ex, x; ignore_nan=false)
@@ -345,31 +343,34 @@ function dualforward(ex, x; ignore_nan=false)
     @test isapprox(fval_ϵ[1], dot(grad,ones(length(x))))
 
     # compare with running dual numbers
-    forward_dual_storage = zeros(DualNumbers.Dual{Float64},length(nd))
-    partials_dual_storage = zeros(DualNumbers.Dual{Float64},length(nd))
-    output_dual_storage = zeros(DualNumbers.Dual{Float64},length(x))
-    reverse_dual_storage = zeros(DualNumbers.Dual{Float64},length(nd))
-    x_dual = [DualNumbers.Dual(x[i],1.0) for i in 1:length(x)]
+    _epsilon(x::ForwardDiff.Dual{Nothing, Float64, 1}) = x.partials[1]
+
+    forward_dual_storage = zeros(ForwardDiff.Dual{Nothing, Float64, 1},length(nd))
+    partials_dual_storage = zeros(ForwardDiff.Dual{Nothing, Float64, 1},length(nd))
+    output_dual_storage = zeros(ForwardDiff.Dual{Nothing, Float64, 1},length(x))
+    reverse_dual_storage = zeros(ForwardDiff.Dual{Nothing, Float64, 1},length(nd))
+
+    x_dual = [ForwardDiff.Dual(x[i],1.0) for i in 1:length(x)]
     fval = forward_eval(forward_dual_storage, partials_dual_storage, nd, adj,
                         const_values, [], x_dual, [], [], [], NO_USER_OPS)
     reverse_eval(reverse_dual_storage,partials_dual_storage,nd,adj)
-    reverse_extract(output_dual_storage,reverse_dual_storage,nd,adj,[],DualNumbers.Dual(2.0))
+    reverse_extract(output_dual_storage,reverse_dual_storage,nd,adj,[],ForwardDiff.Dual(2.0, 0.0))
     for k in 1:length(nd)
-        @test isapprox(epsilon(forward_dual_storage[k]), forward_storage_ϵ[k][1])
-        if !(isnan(epsilon(partials_dual_storage[k])) && ignore_nan)
-            @test isapprox(epsilon(partials_dual_storage[k]), partials_storage_ϵ[k][1])
+        @test isapprox(_epsilon(forward_dual_storage[k]), forward_storage_ϵ[k][1])
+        if !(isnan(_epsilon(partials_dual_storage[k])) && ignore_nan)
+            @test isapprox(_epsilon(partials_dual_storage[k]), partials_storage_ϵ[k][1])
         else
             @test !isnan(forward_storage_ϵ[k][1])
         end
-        if !(isnan(epsilon(reverse_dual_storage[k])) && ignore_nan)
-            @test isapprox(epsilon(reverse_dual_storage[k]), reverse_storage_ϵ[k][1]/2)
+        if !(isnan(_epsilon(reverse_dual_storage[k])) && ignore_nan)
+            @test isapprox(_epsilon(reverse_dual_storage[k]), reverse_storage_ϵ[k][1]/2)
         else
             @test !isnan(reverse_storage_ϵ[k][1])
         end
     end
     for k in 1:length(x)
-        if !(isnan(epsilon(output_dual_storage[k])) && ignore_nan)
-            @test isapprox(epsilon(output_dual_storage[k]), output_ϵ[k][1])
+        if !(isnan(_epsilon(output_dual_storage[k])) && ignore_nan)
+            @test isapprox(_epsilon(output_dual_storage[k]), output_ϵ[k][1])
         else
             @test !isnan(output_ϵ[k][1])
         end

@@ -11,8 +11,16 @@
 # Testing for macros
 #############################################################################
 
-import MutableArithmetics
-const MA = MutableArithmetics
+using JuMP
+using Test
+
+const MA = JuMP._MA
+
+include(joinpath(@__DIR__, "utilities.jl"))
+
+@static if !(:JuMPExtension in names(Main))
+    include(joinpath(@__DIR__, "JuMPExtension.jl"))
+end
 
 @testset "Check Julia generator expression parsing" begin
     sumexpr = :(sum(x[i,j] * y[i,j] for i = 1:N, j in 1:M if i != j))

@@ -11,6 +11,7 @@
 # This file contains an example bridge used for tests.
 
 using JuMP
+
 const MOIB = MOI.Bridges
 const MOIBC = MOI.Bridges.Constraint
 

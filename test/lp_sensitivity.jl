@@ -7,6 +7,10 @@
 # An algebraic modeling language for Julia
 # See http://github.com/jump-dev/JuMP.jl
 #############################################################################
+
+using JuMP
+using Test
+
 function test_lp_rhs_perturbation_range(model_string, primal_solution, basis_status, feasibility_ranges)
     model = JuMP.Model()
     MOIU.loadfromstring!(JuMP.backend(model), model_string)
