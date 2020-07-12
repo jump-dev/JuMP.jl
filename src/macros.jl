@@ -492,10 +492,8 @@ that either `func` or `set` will be some custom type, rather than e.g. a
 set appearing in the constraint.
 """
 macro constraint(args...)
-    return Expr(
-        :block,
-        __source__,
-        _constraint_macro(args, :constraint, parse_constraint_expr, __source__)
+    return _constraint_macro(
+        args, :constraint, parse_constraint_expr, __source__
     )
 end
 
