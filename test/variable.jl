@@ -12,13 +12,13 @@
 #############################################################################
 
 using JuMP
-
 import LinearAlgebra: Symmetric
 using Test
 
-include("utilities.jl")
+include(joinpath(@__DIR__, "utilities.jl"))
+
 @static if !(:JuMPExtension in names(Main))
-    include("JuMPExtension.jl")
+    include(joinpath(@__DIR__, "JuMPExtension.jl"))
 end
 
 function test_variable_name(variable, name)

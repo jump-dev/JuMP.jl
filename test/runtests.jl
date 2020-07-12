@@ -10,16 +10,9 @@
 # test/runtests.jl
 #############################################################################
 
-using JuMP
-
-using LinearAlgebra  # for dot and tr
-using SparseArrays # for sparse
 using Test
 
 include("Containers/Containers.jl")
-
-include("utilities.jl")
-include("JuMPExtension.jl")
 
 @testset "$(file)" for file in filter(f -> endswith(f, ".jl"), readdir(@__DIR__))
     if file in [
@@ -31,7 +24,9 @@ include("JuMPExtension.jl")
     ]
         continue
     end
+    t = time()
     include(file)
+    println("$(file) took $(round(time() - t; digits = 1)) seconds.")
 end
 
 # TODO: The hygiene test should run in a separate Julia instance where JuMP

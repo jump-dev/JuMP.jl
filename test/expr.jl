@@ -1,5 +1,13 @@
-import MutableArithmetics
-const MA = MutableArithmetics
+using JuMP
+using Test
+
+const MA = JuMP._MA
+
+include(joinpath(@__DIR__, "utilities.jl"))
+
+@static if !(:JuMPExtension in names(Main))
+    include(joinpath(@__DIR__, "JuMPExtension.jl"))
+end
 
 # For "expression^3 and unary*"
 struct PowVariable <: JuMP.AbstractVariableRef

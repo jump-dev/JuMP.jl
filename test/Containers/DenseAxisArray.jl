@@ -1,3 +1,6 @@
+using JuMP.Containers
+using Test
+
 @testset "DenseAxisArray" begin
     @testset "undef constructor" begin
         A = @inferred DenseAxisArray{Int}(undef, [:a, :b], 1:2)

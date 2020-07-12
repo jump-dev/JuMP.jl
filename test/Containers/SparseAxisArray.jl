@@ -1,3 +1,6 @@
+using JuMP.Containers
+using Test
+
 @testset "SparseAxisArray" begin
     function sparse_test(d, sum_d, d2, d3, dsqr, d_bads)
         sqr(x) = x^2

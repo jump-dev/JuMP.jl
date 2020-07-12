@@ -1,6 +1,6 @@
-using Test
 using JuMP
 using JuMP.Containers
+using Test
 
 @testset "Macro" begin
     @testset "Array" begin

@@ -1,9 +1,12 @@
-using LinearAlgebra, Test
-
-import MutableArithmetics
-const MA = MutableArithmetics
-
+using LinearAlgebra
 using JuMP
+using Test
+
+const MA = JuMP._MA
+
+@static if !(:JuMPExtension in names(Main))
+    include(joinpath(@__DIR__, "JuMPExtension.jl"))
+end
 
 struct DummyVariableRef <: JuMP.AbstractVariableRef end
 JuMP.name(::DummyVariableRef) = "dummy"
