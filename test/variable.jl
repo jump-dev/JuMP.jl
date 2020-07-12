@@ -11,24 +11,23 @@
 # Testing for VariableRef
 #############################################################################
 
+module TestVariable
+
 using JuMP
 import LinearAlgebra: Symmetric
 using Test
 
 include(joinpath(@__DIR__, "utilities.jl"))
+include(joinpath(@__DIR__, "JuMPExtension.jl"))
 
-@static if !(:JuMPExtension in names(Main))
-    include(joinpath(@__DIR__, "JuMPExtension.jl"))
-end
-
-function test_variable_name(variable, name)
+function _test_variable_name_util(variable, name)
     @test name == @inferred JuMP.name(variable)
     @test variable == JuMP.variable_by_name(JuMP.owner_model(variable), name)
 end
 
 # Slices three-dimensional DenseAxisArray x[I,J,K]
 # I,J,K can be singletons, ranges, colons, etc.
-function sliceof(VariableRefType, x, I, J, K)
+function _sliceof_util(VariableRefType, x, I, J, K)
     y = Array{VariableRefType}(undef, length(I), length(J), length(K))
 
     ii = 1
@@ -56,12 +55,12 @@ function test_variable_no_bound(ModelType, VariableRefType)
     @test !JuMP.has_lower_bound(nobounds)
     @test !JuMP.has_upper_bound(nobounds)
     @test !JuMP.is_fixed(nobounds)
-    test_variable_name(nobounds, "nobounds")
+    _test_variable_name_util(nobounds, "nobounds")
     @test zero(nobounds) isa JuMP.GenericAffExpr{Float64, VariableRefType}
     @test one(nobounds) isa JuMP.GenericAffExpr{Float64, VariableRefType}
 end
 
-function test_variable_lower_bound_rhs(ModelType)
+function test_variable_lower_bound_rhs(ModelType, ::Any)
     model = ModelType()
     @variable(model, lbonly >= 0, Bin)
     @test JuMP.has_lower_bound(lbonly)
@@ -77,7 +76,7 @@ function test_variable_lower_bound_rhs(ModelType)
     @test_throws ErrorException @variable(model, lbonly)
 end
 
-function test_variable_lower_bound_lhs(ModelType)
+function test_variable_lower_bound_lhs(ModelType, ::Any)
     model = ModelType()
     @variable(model, 0 <= lblhs, Bin)
     @test JuMP.has_lower_bound(lblhs)
@@ -89,7 +88,7 @@ function test_variable_lower_bound_lhs(ModelType)
     @test isequal(model[:lblhs], lblhs)
 end
 
-function test_variable_upper_bound_rhs(ModelType)
+function test_variable_upper_bound_rhs(ModelType, ::Any)
     model = ModelType()
     @variable(model, ubonly <= 1, Int)
     @test !JuMP.has_lower_bound(ubonly)
@@ -103,7 +102,7 @@ function test_variable_upper_bound_rhs(ModelType)
     @test !JuMP.has_upper_bound(ubonly)
 end
 
-function test_variable_upper_bound_lhs(ModelType)
+function test_variable_upper_bound_lhs(ModelType, ::Any)
     model = ModelType()
     @variable(model, 1 >= ublhs, Int)
     @test !JuMP.has_lower_bound(ublhs)
@@ -115,7 +114,7 @@ function test_variable_upper_bound_lhs(ModelType)
     @test isequal(model[:ublhs],ublhs)
 end
 
-function test_variable_interval(ModelType)
+function test_variable_interval(ModelType, ::Any)
     function has_bounds(var, lb, ub)
         @test JuMP.has_lower_bound(var)
         @test lb == @inferred JuMP.lower_bound(var)
@@ -136,7 +135,7 @@ function test_variable_interval(ModelType)
     @test_macro_throws ErrorException @variable(model, 1 ≤ bothb6 ≥ 0)
 end
 
-function test_variable_fix(ModelType)
+function test_variable_fix(ModelType, ::Any)
     model = ModelType()
     @variable(model, fixed == 1.0)
     @test !JuMP.has_lower_bound(fixed)
@@ -154,7 +153,7 @@ function test_variable_fix(ModelType)
     @test 1.0 == @inferred JuMP.fix_value(fixed)
 end
 
-function test_variable_custom_index_sets(ModelType)
+function test_variable_custom_index_sets(ModelType, ::Any)
     model = ModelType()
     @variable(model, onerangeub[-7:1] <= 10, Int)
     @variable(model, manyrangelb[0:1, 10:20, 1:1] >= 2)
@@ -165,13 +164,13 @@ function test_variable_custom_index_sets(ModelType)
     s = ["Green","Blue"]
     @variable(model, x[i=-10:10, s] <= 5.5, Int, start=i+1)
     @test 5.5 == @inferred JuMP.upper_bound(x[-4, "Green"])
-    test_variable_name(x[-10, "Green"], "x[-10,Green]")
+    _test_variable_name_util(x[-10, "Green"], "x[-10,Green]")
     @test JuMP.start_value(x[-3, "Blue"]) == -2
     @test isequal(model[:onerangeub][-7], onerangeub[-7])
     @test_throws KeyError model[:foo]
 end
 
-function test_variable_anonymous(ModelType)
+function test_variable_anonymous(ModelType, ::Any)
     model = ModelType()
     @test_throws ErrorException @variable(model, [(0, 0)])  # #922
     x = @variable(model, [(0, 2)])
@@ -179,7 +178,7 @@ function test_variable_anonymous(ModelType)
     @test "" == @inferred JuMP.name(x[2])
 end
 
-function test_variable_is_valid_delete(ModelType)
+function test_variable_is_valid_delete(ModelType, ::Any)
     model = ModelType()
     @variable(model, x)
     @test JuMP.is_valid(model, x)
@@ -189,7 +188,7 @@ function test_variable_is_valid_delete(ModelType)
     @test_throws Exception JuMP.delete(second_model, x)
 end
 
-function test_variable_bounds_set_get(ModelType)
+function test_variable_bounds_set_get(ModelType, ::Any)
     model = ModelType()
     @variable(model, 0 <= x <= 2)
     @test 0 == @inferred JuMP.lower_bound(x)
@@ -214,7 +213,7 @@ function test_variable_bounds_set_get(ModelType)
     @test_throws Exception JuMP.upper_bound(fixedvar)
 end
 
-function test_variable_starts_set_get(ModelType)
+function test_variable_starts_set_get(ModelType, ::Any)
     model = ModelType()
     @variable(model, x[1:3])
     x0 = collect(1:3)
@@ -226,7 +225,7 @@ function test_variable_starts_set_get(ModelType)
     @test_throws DimensionMismatch JuMP.set_start_value.(y, collect(1:6))
 end
 
-function test_variable_integrality_set_get(ModelType)
+function test_variable_integrality_set_get(ModelType, ::Any)
     model = ModelType()
     @variable(model, x[1:3])
 
@@ -256,7 +255,7 @@ function test_variable_integrality_set_get(ModelType)
     @test !JuMP.is_integer(z)
 end
 
-function test_variable_repeated_elements(ModelType)
+function test_variable_repeated_elements(ModelType, ::Any)
     # Tests repeated elements in index set throw error (JuMP issue #199).
     model = ModelType()
     index_set = [:x,:x,:y]
@@ -284,40 +283,40 @@ function test_variable_oneto_index_set(ModelType, VariableRefType)
     @test length.(axes(denseaxisarray_var)) == (3, 2)
 end
 
-function test_variable_base_name_in_macro(ModelType)
+function test_variable_base_name_in_macro(ModelType, ::Any)
     model = ModelType()
     @variable(model, normal_var)
-    test_variable_name(normal_var, "normal_var")
+    _test_variable_name_util(normal_var, "normal_var")
     no_indices = @variable(model, base_name="foo")
-    test_variable_name(no_indices, "foo")
+    _test_variable_name_util(no_indices, "foo")
     # Note that `z` will be ignored in name.
     indices = @variable(model, z[i=2:3], base_name="t")
-    test_variable_name(indices[2], "t[2]")
-    test_variable_name(indices[3], "t[3]")
+    _test_variable_name_util(indices[2], "t[2]")
+    _test_variable_name_util(indices[3], "t[3]")
 end
 
-function test_variable_name(ModelType)
+function test_variable_name(ModelType, ::Any)
     model = ModelType()
     @variable(model, x)
-    test_variable_name(x, "x")
+    _test_variable_name_util(x, "x")
     JuMP.set_name(x, "y")
     @test JuMP.variable_by_name(model, "x") isa Nothing
-    test_variable_name(x, "y")
+    _test_variable_name_util(x, "y")
     y = @variable(model, base_name="y")
     err(name) = ErrorException("Multiple variables have the name $name.")
     @test_throws err("y") JuMP.variable_by_name(model, "y")
     JuMP.set_name(y, "x")
-    test_variable_name(x, "y")
-    test_variable_name(y, "x")
+    _test_variable_name_util(x, "y")
+    _test_variable_name_util(y, "x")
     JuMP.set_name(x, "x")
     @test_throws err("x") JuMP.variable_by_name(model, "x")
     @test JuMP.variable_by_name(model, "y") isa Nothing
     JuMP.set_name(y, "y")
-    test_variable_name(x, "x")
-    test_variable_name(y, "y")
+    _test_variable_name_util(x, "x")
+    _test_variable_name_util(y, "y")
 end
 
-function test_variable_condition_in_indexing(ModelType)
+function test_variable_condition_in_indexing(ModelType, ::Any)
     function test_one_dim(x)
         @test 5 == @inferred length(x)
         for i in 1:10
@@ -371,7 +370,7 @@ function test_variable_macro_return_type(ModelType, VariableRefType)
     @test typeof(JuMP.start_value.(z)) == Vector{Float64}
 end
 
-function test_variable_start_value_on_empty(ModelType)
+function test_variable_start_value_on_empty(ModelType, ::Any)
     model = ModelType()
     @variable(model, x[1:4,  1:0,1:3], start = 0)  # Array{VariableRef}
     @variable(model, y[1:4,  2:1,1:3], start = 0)  # DenseAxisArray
@@ -395,46 +394,46 @@ function test_variable_denseaxisarray_slices(ModelType, VariableRefType)
     @variable(model, z[1:3, -1:2:4, 3:4])
     @variable(model, w[1:3, -1:2,[:red, "blue"]])
 
-    #@test x[:] == vec(sliceof(VariableRefType, x, 1:3, 1:4, 1:2))
+    #@test x[:] == vec(_sliceof_util(VariableRefType, x, 1:3, 1:4, 1:2))
     @test x isa JuMP.Containers.DenseAxisArray
-    @test x[:, :, :].data == sliceof(VariableRefType, x, 1:3, 1:4, 1:2)
-    @test x[1, :, :].data == sliceof(VariableRefType, x, 1, 1:4, 1:2)
-    @test x[1, :, 2].data == sliceof(VariableRefType, x, 1, 1:4, 2)
+    @test x[:, :, :].data == _sliceof_util(VariableRefType, x, 1:3, 1:4, 1:2)
+    @test x[1, :, :].data == _sliceof_util(VariableRefType, x, 1, 1:4, 1:2)
+    @test x[1, :, 2].data == _sliceof_util(VariableRefType, x, 1, 1:4, 2)
     @test_throws KeyError x[1, :, 3]
-    #@test x[1:2,:,:].data == sliceof(VariableRefType, x, 1:2, 1:4, 1:2)
-    #@test x[1:2,:,2].data == sliceof(VariableRefType, x, 1:2, 1:4, 2)
-    #@test x[1:2,:,1:2].data == sliceof(VariableRefType, x, 1:2, 1:4, 1:2)
+    #@test x[1:2,:,:].data == _sliceof_util(VariableRefType, x, 1:2, 1:4, 1:2)
+    #@test x[1:2,:,2].data == _sliceof_util(VariableRefType, x, 1:2, 1:4, 2)
+    #@test x[1:2,:,1:2].data == _sliceof_util(VariableRefType, x, 1:2, 1:4, 1:2)
     @test_throws KeyError x[1:2, :, 1:3]
 
-    #@test y[:] == vec(sliceof(VariableRefType, y, 1:3, -1:2, 3:4))
-    @test y[:, :, :].data == sliceof(VariableRefType, y, 1:3, -1:2, 3:4)
-    @test y[1, :, :].data == sliceof(VariableRefType, y, 1, -1:2, 3:4)
-    @test y[1, :, 4].data == sliceof(VariableRefType, y, 1, -1:2, 4)
+    #@test y[:] == vec(_sliceof_util(VariableRefType, y, 1:3, -1:2, 3:4))
+    @test y[:, :, :].data == _sliceof_util(VariableRefType, y, 1:3, -1:2, 3:4)
+    @test y[1, :, :].data == _sliceof_util(VariableRefType, y, 1, -1:2, 3:4)
+    @test y[1, :, 4].data == _sliceof_util(VariableRefType, y, 1, -1:2, 4)
     @test_throws KeyError y[1, :, 5]
-    # @test y[1:2,:,:] == sliceof(VariableRefType, y, 1:2, -1:2, 3:4)
-    # @test y[1:2,:,4] == sliceof(VariableRefType, y, 1:2, -1:2, 4)
-    # @test y[1:2,:,3:4] == sliceof(VariableRefType, y, 1:2, -1:2, 3:4)
+    # @test y[1:2,:,:] == _sliceof_util(VariableRefType, y, 1:2, -1:2, 3:4)
+    # @test y[1:2,:,4] == _sliceof_util(VariableRefType, y, 1:2, -1:2, 4)
+    # @test y[1:2,:,3:4] == _sliceof_util(VariableRefType, y, 1:2, -1:2, 3:4)
     # @test_throws BoundsError y[1:2,:,1:3]
 
-    #@test z[:] == vec(sliceof(VariableRefType, z, 1:3, -1:2:4, 3:4))
-    @test z[:, 1, :].data == sliceof(VariableRefType, z, 1:3, 1, 3:4)
-    @test z[1, 1, :].data == sliceof(VariableRefType, z, 1, 1, 3:4)
+    #@test z[:] == vec(_sliceof_util(VariableRefType, z, 1:3, -1:2:4, 3:4))
+    @test z[:, 1, :].data == _sliceof_util(VariableRefType, z, 1:3, 1, 3:4)
+    @test z[1, 1, :].data == _sliceof_util(VariableRefType, z, 1, 1, 3:4)
     @test_throws KeyError z[:, 5, 3]
-    # @test z[1:2,1,:] == sliceof(VariableRefType, z, 1:2, 1, 3:4)
-    # @test z[1:2,1,4] == sliceof(VariableRefType, z, 1:2, 1, 4)
-    # @test z[1:2,1,3:4] == sliceof(VariableRefType, z, 1:2, 1, 3:4)
+    # @test z[1:2,1,:] == _sliceof_util(VariableRefType, z, 1:2, 1, 3:4)
+    # @test z[1:2,1,4] == _sliceof_util(VariableRefType, z, 1:2, 1, 4)
+    # @test z[1:2,1,3:4] == _sliceof_util(VariableRefType, z, 1:2, 1, 3:4)
     # @test_throws BoundsError z[1:2,1,1:3]
 
-    #@test w[:] == vec(sliceof(VariableRefType, w, 1:3, -1:2, [:red,"blue"]))
+    #@test w[:] == vec(_sliceof_util(VariableRefType, w, 1:3, -1:2, [:red,"blue"]))
     @test w[:, :, :] == w
-    @test w[1, :, "blue"].data == sliceof(VariableRefType, w, 1, -1:2, ["blue"])
-    @test w[1, :, :red].data == sliceof(VariableRefType, w, 1, -1:2, [:red])
+    @test w[1, :, "blue"].data == _sliceof_util(VariableRefType, w, 1, -1:2, ["blue"])
+    @test w[1, :, :red].data == _sliceof_util(VariableRefType, w, 1, -1:2, [:red])
     @test_throws KeyError w[1, :, "green"]
-    # @test w[1:2,:,"blue"] == sliceof(VariableRefType, w, 1:2, -1:2, ["blue"])
+    # @test w[1:2,:,"blue"] == _sliceof_util(VariableRefType, w, 1:2, -1:2, ["blue"])
     # @test_throws ErrorException w[1:2,:,[:red,"blue"]]
 end
 
-function test_variable_end_indexing(ModelType)
+function test_variable_end_indexing(ModelType, ::Any)
     model = ModelType()
     @variable(model, x[0:2, 1:4])
     @variable(model, z[0:2])
@@ -446,7 +445,7 @@ function test_variable_end_indexing(ModelType)
     @test_throws BoundsError x[end-1]
 end
 
-function test_variable_unsigned_index(ModelType)
+function test_variable_unsigned_index(ModelType, ::Any)
     # Tests unsigned int can be used to construct index set (JuMP issue #857).
     model = ModelType()
     t = UInt(4)
@@ -454,7 +453,7 @@ function test_variable_unsigned_index(ModelType)
     @test 4 == @inferred num_variables(model)
 end
 
-function test_variable_symmetric(ModelType)
+function test_variable_symmetric(ModelType, ::Any)
     model = ModelType()
 
     @variable model x[1:2, 1:2] Symmetric
@@ -467,7 +466,7 @@ function test_variable_symmetric(ModelType)
     @test y[1, 2] === y[2, 1]
 end
 
-function test_variables_constrained_on_creation(ModelType)
+function test_variables_constrained_on_creation(ModelType, ::Any)
     model = ModelType()
 
     err = ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `set` keyword argument is not allowed.")
@@ -500,7 +499,7 @@ function test_variables_constrained_on_creation(ModelType)
     @test num_constraints(model, typeof(x), MOI.PositiveSemidefiniteConeTriangle) == 1
 end
 
-function test_batch_delete_variables(ModelType)
+function test_batch_delete_variables(ModelType, ::Any)
     model = ModelType()
     @variable(model, x[1:3] >= 1)
     @objective(model, Min, sum([1, 2, 3] .* x))
@@ -513,148 +512,64 @@ function test_batch_delete_variables(ModelType)
     @test_throws Exception JuMP.delete(second_model, x[[1, 3]])
 end
 
-function variables_test(ModelType::Type{<:JuMP.AbstractModel},
-                        VariableRefType::Type{<:JuMP.AbstractVariableRef})
-    @testset "Variable name" begin
-        test_variable_name(ModelType)
-    end
-
-    @testset "Constructors" begin
-        test_variable_no_bound(ModelType, VariableRefType)
-        test_variable_lower_bound_rhs(ModelType)
-        test_variable_lower_bound_lhs(ModelType)
-        test_variable_upper_bound_rhs(ModelType)
-        test_variable_upper_bound_lhs(ModelType)
-        test_variable_interval(ModelType)
-        test_variable_fix(ModelType)
-        test_variable_custom_index_sets(ModelType)
-        test_variable_anonymous(ModelType)
-    end
-
-    @testset "isvalid and delete variable" begin
-        test_variable_is_valid_delete(ModelType)
-    end
-
-    @testset "get and set bounds" begin
-        test_variable_bounds_set_get(ModelType)
-    end
-
-    @testset "get and set start" begin
-        test_variable_starts_set_get(ModelType)
-    end
-
-    @testset "get and set integer/binary" begin
-        test_variable_integrality_set_get(ModelType)
-    end
-
-    @testset "repeated elements in index set (issue #199)" begin
-        test_variable_repeated_elements(ModelType)
-    end
-
-    @testset "Base.OneTo as index set (#933)" begin
-        test_variable_oneto_index_set(ModelType, VariableRefType)
-    end
-
-    @testset "base_name= in @variable" begin
-        test_variable_base_name_in_macro(ModelType)
-    end
-
-    @testset "condition in indexing" begin
-        test_variable_condition_in_indexing(ModelType)
-    end
-
-    @testset "@variable returning Array{VariableRef}" begin
-        test_variable_macro_return_type(ModelType, VariableRefType)
-    end
-
-    @testset "start_value on empty things" begin
-        test_variable_start_value_on_empty(ModelType)
-    end
-
-    @testset "Slices of DenseAxisArray (#684)" begin
-        test_variable_denseaxisarray_slices(ModelType, VariableRefType)
-    end
-
-    @testset "end for indexing a DenseAxisArray" begin
-        test_variable_end_indexing(ModelType)
-    end
-
-    @testset "Unsigned dimension lengths (#857)" begin
-        test_variable_unsigned_index(ModelType)
-    end
-
-    @testset "Symmetric variable" begin
-        test_variable_symmetric(ModelType)
-    end
-
-    @testset "Variables constrained on creation" begin
-        test_variables_constrained_on_creation(ModelType)
-    end
-
-    @testset "Batch deletion of variables" begin
-        test_batch_delete_variables(ModelType)
-    end
+function test_Model_all_variable(::Any, ::Any)
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    @test [x, y] == @inferred JuMP.all_variables(model)
 end
 
-@testset "Variables for JuMP.Model" begin
-    variables_test(Model, VariableRef)
-    @testset "all_variables" begin
-        model = Model()
-        @variable(model, x)
-        @variable(model, y)
-        @test [x, y] == @inferred JuMP.all_variables(model)
+function test_Model_macro_variables(::Any, ::Any)
+    model = Model()
+    @variables model begin
+        0 ≤ x[i=1:2] ≤ i
+        y ≥ 2, Int, (start = 0.7)
+        z ≤ 3, (start = 10)
+        q, (Bin, start = 0.5)
     end
-    @testset "@variables" begin
-        model = Model()
-        @variables model begin
-            0 ≤ x[i=1:2] ≤ i
-            y ≥ 2, Int, (start = 0.7)
-            z ≤ 3, (start = 10)
-            q, (Bin, start = 0.5)
-        end
 
-        @test "x[1]" == @inferred JuMP.name(x[1])
-        @test 0 == @inferred JuMP.lower_bound(x[1])
-        @test 1 == @inferred JuMP.upper_bound(x[1])
-        @test !JuMP.is_binary(x[1])
-        @test !JuMP.is_integer(x[1])
-        @test JuMP.start_value(x[1]) === nothing
+    @test "x[1]" == @inferred JuMP.name(x[1])
+    @test 0 == @inferred JuMP.lower_bound(x[1])
+    @test 1 == @inferred JuMP.upper_bound(x[1])
+    @test !JuMP.is_binary(x[1])
+    @test !JuMP.is_integer(x[1])
+    @test JuMP.start_value(x[1]) === nothing
 
-        @test "x[2]" == @inferred JuMP.name(x[2])
-        @test 0 == @inferred JuMP.lower_bound(x[2])
-        @test 2 == @inferred JuMP.upper_bound(x[2])
-        @test !JuMP.is_binary(x[2])
-        @test !JuMP.is_integer(x[2])
-        @test JuMP.start_value(x[2]) === nothing
+    @test "x[2]" == @inferred JuMP.name(x[2])
+    @test 0 == @inferred JuMP.lower_bound(x[2])
+    @test 2 == @inferred JuMP.upper_bound(x[2])
+    @test !JuMP.is_binary(x[2])
+    @test !JuMP.is_integer(x[2])
+    @test JuMP.start_value(x[2]) === nothing
 
-        @test "y" == @inferred JuMP.name(y)
-        @test 2 == @inferred JuMP.lower_bound(y)
-        @test !JuMP.has_upper_bound(y)
-        @test !JuMP.is_binary(y)
-        @test JuMP.is_integer(y)
-        @test JuMP.start_value(y) === 0.7
+    @test "y" == @inferred JuMP.name(y)
+    @test 2 == @inferred JuMP.lower_bound(y)
+    @test !JuMP.has_upper_bound(y)
+    @test !JuMP.is_binary(y)
+    @test JuMP.is_integer(y)
+    @test JuMP.start_value(y) === 0.7
 
-        @test "z" == @inferred JuMP.name(z)
-        @test !JuMP.has_lower_bound(z)
-        @test 3 == @inferred JuMP.upper_bound(z)
-        @test !JuMP.is_binary(z)
-        @test !JuMP.is_integer(z)
-        @test JuMP.start_value(z) === 10.0
+    @test "z" == @inferred JuMP.name(z)
+    @test !JuMP.has_lower_bound(z)
+    @test 3 == @inferred JuMP.upper_bound(z)
+    @test !JuMP.is_binary(z)
+    @test !JuMP.is_integer(z)
+    @test JuMP.start_value(z) === 10.0
 
-        @test "q" == @inferred JuMP.name(q)
-        @test !JuMP.has_lower_bound(q)
-        @test !JuMP.has_upper_bound(q)
-        @test JuMP.is_binary(q)
-        @test !JuMP.is_integer(q)
-        @test JuMP.start_value(q) === 0.5
-    end
+    @test "q" == @inferred JuMP.name(q)
+    @test !JuMP.has_lower_bound(q)
+    @test !JuMP.has_upper_bound(q)
+    @test JuMP.is_binary(q)
+    @test !JuMP.is_integer(q)
+    @test JuMP.start_value(q) === 0.5
 end
 
-@testset "Variables for JuMPExtension.MyModel" begin
-    variables_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
-end
 
-@testset "Dual from Variable" begin
+# @testset "Variables for JuMPExtension.MyModel" begin
+#     variables_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
+# end
+
+function test_Model_dual_variable(::Any, ::Any)
     model = Model()
     @variable(model, x == 0)
     exception = ErrorException(
@@ -665,7 +580,7 @@ end
     @test_throws exception JuMP.dual(x)
 end
 
-@testset "value on containers" begin
+function test_Model_value_containers(::Any, ::Any)
     model = Model()
     @variable(model, x[1:2])
     exception = ErrorException(
@@ -674,7 +589,7 @@ end
     @test_throws exception JuMP.value(x)
 end
 
-function mock_var_for_RC(
+function _mock_reduced_cost_util(
     obj_sense::MOI.OptimizationSense,
     #obj_value::Float64,
     var_obj_coeff::Float64,
@@ -748,52 +663,73 @@ function mock_var_for_RC(
     return x
 end
 
-@testset "reduced_cost" begin
+function test_Model_reduced_cost(::Any, ::Any)
     Min = MOI.MIN_SENSE
     Max = MOI.MAX_SENSE
     # The method should always fail if duals are not available.
-    x = mock_var_for_RC(Min, 1.0, :none)
+    x = _mock_reduced_cost_util(Min, 1.0, :none)
     @test_throws ErrorException reduced_cost(x)
-    x = mock_var_for_RC(Min, 1.0, :fixed)
+    x = _mock_reduced_cost_util(Min, 1.0, :fixed)
     @test_throws ErrorException reduced_cost(x)
-    x = mock_var_for_RC(Min, 1.0, :lower)
+    x = _mock_reduced_cost_util(Min, 1.0, :lower)
     @test_throws ErrorException reduced_cost(x)
-    x = mock_var_for_RC(Min, 1.0, :upper)
+    x = _mock_reduced_cost_util(Min, 1.0, :upper)
     @test_throws ErrorException reduced_cost(x)
-    x = mock_var_for_RC(Min, 1.0, :both)
+    x = _mock_reduced_cost_util(Min, 1.0, :both)
     @test_throws ErrorException reduced_cost(x)
     # My reimplementation of the tests suggested by @odow.
     # Note that the floating point values are compared by equality because
     # there is no risk of the solver messing this up (mocks are being used).
     # First the fixed variable tests.
-    x = mock_var_for_RC(Min, 1.0, :none, nothing, true) # free var
+    x = _mock_reduced_cost_util(Min, 1.0, :none, nothing, true) # free var
     @test reduced_cost(x) == 0.0
-    x = mock_var_for_RC(Min, 1.0, :fixed, 1.0) # min x, x == 10
+    x = _mock_reduced_cost_util(Min, 1.0, :fixed, 1.0) # min x, x == 10
     @test reduced_cost(x) == 1.0
-    x = mock_var_for_RC(Max, 1.0, :fixed, -1.0) # max x, x == 10
+    x = _mock_reduced_cost_util(Max, 1.0, :fixed, -1.0) # max x, x == 10
     @test reduced_cost(x) == 1.0
-    x = mock_var_for_RC(Min, -1.0, :fixed, -1.0) # min -x, x == 10
+    x = _mock_reduced_cost_util(Min, -1.0, :fixed, -1.0) # min -x, x == 10
     @test reduced_cost(x) == -1.0
-    x = mock_var_for_RC(Max, -1.0, :fixed, 1.0) # max -x, x == 10
+    x = _mock_reduced_cost_util(Max, -1.0, :fixed, 1.0) # max -x, x == 10
     @test reduced_cost(x) == -1.0
     # Then the double bounded variables.
-    #x = mock_var_for_RC(Min, 1.0, :both, (0.0, 1.0)) # min x, 0 <= x <= 10
+    #x = _mock_reduced_cost_util(Min, 1.0, :both, (0.0, 1.0)) # min x, 0 <= x <= 10
     #@test reduced_cost(x) == 1.0
-    #x = mock_var_for_RC(Max, 1.0, :both, (-1.0, 0.0)) # max x, 0 <= x <= 10
+    #x = _mock_reduced_cost_util(Max, 1.0, :both, (-1.0, 0.0)) # max x, 0 <= x <= 10
     #@test reduced_cost(x) == 1.0
-    #x = mock_var_for_RC(Min, -1.0, :both, (-1.0, 0.0)) # min -x, 0 <= x <= 10
+    #x = _mock_reduced_cost_util(Min, -1.0, :both, (-1.0, 0.0)) # min -x, 0 <= x <= 10
     #@test reduced_cost(x) == -1.0
-    #x = mock_var_for_RC(Max, -1.0, :both, (0.0, 1.0)) # max -x, 0 <= x <= 10
+    #x = _mock_reduced_cost_util(Max, -1.0, :both, (0.0, 1.0)) # max -x, 0 <= x <= 10
     #@test reduced_cost(x) == -1.0
     # Test for a single upper bound and a single lower bound.
-    x = mock_var_for_RC(Min, 1.0, :lower, 1.0) # min x, 0 <= x
+    x = _mock_reduced_cost_util(Min, 1.0, :lower, 1.0) # min x, 0 <= x
     @test reduced_cost(x) == 1.0
-    x = mock_var_for_RC(Max, 1.0, :upper, 1.0) # max x, x <= 10
+    x = _mock_reduced_cost_util(Max, 1.0, :upper, 1.0) # max x, x <= 10
     @test reduced_cost(x) == 1.0
 end
 
-@testset "value(::Number)" begin
+function test_Model_value(::Any, ::Any)
     @test value(1) === 1
     @test value(1.0) === 1.0
     @test value(JuMP._MA.Zero()) === 0.0
 end
+
+function runtests()
+    for name in names(@__MODULE__; all = true)
+        if !startswith("$(name)", "test_")
+            continue
+        end
+        f = getfield(@__MODULE__, name)
+        @testset "$(name)" begin
+            f(Model, VariableRef)
+        end
+        if !startswith("$(name)", "test_Model_")
+            @testset "$(name)-JuMPExtension" begin
+                f(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
+            end
+        end
+    end
+end
+
+end
+
+TestVariable.runtests()
