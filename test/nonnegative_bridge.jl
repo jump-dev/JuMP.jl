@@ -8,7 +8,7 @@
 # See http://github.com/jump-dev/JuMP.jl
 #############################################################################
 
-# This file contains an example bridge used for tests.
+# This file contains an example bridge used in test/model.jl.
 
 using JuMP
 
