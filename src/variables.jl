@@ -995,3 +995,119 @@ end
 
 value(::_MA.Zero) = 0.0
 value(x::Number) = x
+
+function _info_from_variable(v::VariableRef)
+    has_lb = has_lower_bound(v)
+    lb = has_lb ? lower_bound(v) : -Inf
+    has_ub = has_upper_bound(v)
+    ub = has_ub ? upper_bound(v) : Inf
+    has_fix = is_fixed(v)
+    fixed_value = has_fix ? fix_value(v) : NaN
+    start_or_nothing = start_value(v)
+    has_start = !(start_or_nothing isa Nothing)
+    start = has_start ? start_or_nothing : NaN
+    has_start = start !== Nothing
+    binary = is_binary(v)
+    integer = is_integer(v)
+    return VariableInfo(has_lb, lb, has_ub, ub, has_fix, fixed_value,
+                        has_start, start, binary, integer)
+end
+
+"""
+    relax_integrality(model::Model)
+
+Modifies `model` to "relax" all binary and integrality constraints on
+variables. Specifically,
+
+- Binary constraints are deleted, and variable bounds are tightened if
+  necessary to ensure the variable is constrained to the interval ``[0, 1]``.
+- Integrality constraints are deleted without modifying variable bounds.
+- An error is thrown if semi-continuous or semi-integer constraints are
+  present (support may be added for these in the future).
+- All other constraints are ignored (left in place). This includes discrete
+  constraints like SOS and indicator constraints.
+
+Returns a function that can be called without any arguments to restore the
+original model. The behavior of this function is undefined if additional
+changes are made to the affected variables in the meantime.
+
+# Example
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, Bin);
+
+julia> @variable(model, 1 <= y <= 10, Int);
+
+julia> @objective(model, Min, x + y);
+
+julia> undo_relax = relax_integrality(model);
+
+julia> print(model)
+Min x + y
+Subject to
+ x ≥ 0.0
+ y ≥ 1.0
+ x ≤ 1.0
+ y ≤ 10.0
+
+julia> undo_relax()
+
+julia> print(model)
+Min x + y
+Subject to
+ y ≥ 1.0
+ y ≤ 10.0
+ y integer
+ x binary
+```
+"""
+function relax_integrality(model::Model)
+    semicont_type = _MOICON{MOI.SingleVariable, MOI.Semicontinuous{Float64}}
+    semiint_type = _MOICON{MOI.SingleVariable, MOI.Semiinteger{Float64}}
+    for v in all_variables(model)
+        if MOI.is_valid(backend(model), semicont_type(index(v).value))
+            error("Support for relaxing semicontinuous constraints is not " *
+                  "yet implemented.")
+        elseif MOI.is_valid(backend(model), semiint_type(index(v).value))
+            error("Support for relaxing semi-integer constraints is not " *
+                  "yet implemented.")
+        end
+    end
+
+    info_pre_relaxation = map(v -> (v, _info_from_variable(v)),
+        all_variables(model))
+    # We gather the info first because some solvers perform poorly when you
+    # interleave queries and changes. See, e.g.,
+    # https://github.com/jump-dev/Gurobi.jl/pull/301.
+    for (v, info) in info_pre_relaxation
+        if info.integer
+            unset_integer(v)
+        elseif info.binary
+            unset_binary(v)
+            set_lower_bound(v, max(0.0, info.lower_bound))
+            set_upper_bound(v, min(1.0, info.upper_bound))
+        end
+    end
+    function unrelax()
+        for (v, info) in info_pre_relaxation
+            if info.integer
+                set_integer(v)
+            elseif info.binary
+                set_binary(v)
+                if info.has_lb
+                    set_lower_bound(v, info.lower_bound)
+                else
+                    delete_lower_bound(v)
+                end
+                if info.has_ub
+                    set_upper_bound(v, info.upper_bound)
+                else
+                    delete_upper_bound(v)
+                end
+            end
+        end
+        return
+    end
+    return unrelax
+end

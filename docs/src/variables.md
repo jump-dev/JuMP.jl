@@ -448,13 +448,13 @@ julia> @variable(model, y[A], container=Array)
 JuMP now creates a vector of JuMP variables instead of a DenseAxisArray. Note
 that choosing an invalid container type will throw an error.
 
-## Integrality shortcuts
+## Integrality utilities
 
 Adding integrality constraints to a model such as `@constraint(model, x in MOI.ZeroOne())`
 and `@constraint(model, x in MOI.Integer())` is a common operation. Therefore,
 JuMP supports two shortcuts for adding such constraints.
 
-#### Binary (ZeroOne) constraints
+### Binary (ZeroOne) constraints
 
 Binary optimization variables are constrained to the set ``x \in \{0, 1\}``. (The
 `MOI.ZeroOne` set in MathOptInterface.) Binary optimization variables can be
@@ -482,7 +482,7 @@ keyword to `true`.
 julia> @variable(model, x, binary=true)
 x
 ```
-#### Integer constraints
+### Integer constraints
 
 Integer optimization variables are constrained to the set ``x \in \mathbb{Z}``.
 (The `MOI.Integer` set in MathOptInterface.) Integer optimization variables can
@@ -509,6 +509,12 @@ julia> unset_integer(x)
 julia> is_integer(x)
 false
 ```
+
+### Relaxing integrality
+
+The [`relax_integrality`](@ref) function relaxes all integrality constraints in
+the model, returning a function that can be called to undo the operation later
+on.
 
 ## Semidefinite variables
 
@@ -793,6 +799,8 @@ is_binary
 set_binary
 unset_binary
 BinaryRef
+
+relax_integrality
 
 index(::VariableRef)
 optimizer_index(::VariableRef)
