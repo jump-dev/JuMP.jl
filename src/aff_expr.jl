@@ -311,13 +311,6 @@ end
 function Base.convert(::Type{GenericAffExpr{T,V}}, v::_Constant) where {T,V}
     return GenericAffExpr{T,V}(convert(T, _constant_to_number(v)))
 end
-# Used in `JuMP._mul!`.
-function Base.convert(::Type{T}, aff::GenericAffExpr{T}) where T
-    if !isempty(aff.terms)
-        throw(InexactError(:convert, T, aff))
-    end
-    return convert(T, aff.constant)
-end
 
 # Alias for (Float64, VariableRef), the specific GenericAffExpr used by JuMP
 const AffExpr = GenericAffExpr{Float64,VariableRef}
