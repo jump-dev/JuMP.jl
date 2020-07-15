@@ -17,6 +17,7 @@ using Test
         @test A[:b, 2] == 4
         @test isassigned(A, :a, 1)
         @test !isassigned(A, :c, 1)
+        @test 10 == @inferred sum(A)
     end
 
     @testset "undef constructor (ii)" begin

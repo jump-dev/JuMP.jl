@@ -189,7 +189,7 @@ function Base.setindex!(A::DenseAxisArray{T, N}, v, idx...) where {T, N}
     return A.data[to_index(A,idx...)...] = v
 end
 Base.setindex!(A::DenseAxisArray, v, idx::CartesianIndex) = A.data[idx] = v
-Base.IndexStyle(::Type{<:DenseAxisArray}) = IndexAnyCartesian()
+Base.IndexStyle(::Type{DenseAxisArray{T,N,Ax}}) where {T,N,Ax} = IndexAnyCartesian()
 
 ########
 # Keys #
@@ -232,7 +232,7 @@ Base.getindex(a::DenseAxisArrayKeys, idx::CartesianIndex) = a[idx.I...]
 function Base.getindex(a::DenseAxisArrayKeys{T, S, N}, args::Vararg{Int, N}) where {T, S, N}
     return DenseAxisArrayKey(_to_index_tuple(args, a.product_iter.iterators))
 end
-Base.IndexStyle(::Type{<:DenseAxisArrayKeys}) = IndexCartesian()
+Base.IndexStyle(::Type{DenseAxisArrayKeys{T,N,Ax}}) where {T,N,Ax} = IndexCartesian()
 
 ################
 # Broadcasting #
