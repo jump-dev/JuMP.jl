@@ -12,8 +12,15 @@
 #############################################################################
 
 using JuMP
-using LinearAlgebra, Test
-import JuMP.REPLMode, JuMP.IJuliaMode
+using LinearAlgebra
+using Test
+
+import JuMP.IJuliaMode
+import JuMP.REPLMode
+
+@static if !(:JuMPExtension in names(Main))
+    include(joinpath(@__DIR__, "JuMPExtension.jl"))
+end
 
 # Helper function to test IO methods work correctly
 function io_test(mode, obj, exp_str; repl=:both)

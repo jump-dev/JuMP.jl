@@ -1,3 +1,6 @@
+using JuMP.Containers
+using Test
+
 @testset "Nested Iterator" begin
     iterators = (() -> 1:3, i -> 1:i)
     condition(i, j) = j > i

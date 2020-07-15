@@ -1,9 +1,15 @@
-using LinearAlgebra, Test
-
-import MutableArithmetics
-const MA = MutableArithmetics
-
 using JuMP
+using LinearAlgebra
+using SparseArrays
+using Test
+
+const MA = JuMP._MA
+
+include(joinpath(@__DIR__, "utilities.jl"))
+
+@static if !(:JuMPExtension in names(Main))
+    include(joinpath(@__DIR__, "JuMPExtension.jl"))
+end
 
 # For "DimensionMismatch when performing vector-matrix multiplication with custom types #988"
 import Base: +, *

@@ -1,3 +1,13 @@
+using JuMP
+using LinearAlgebra
+using Test
+
+include(joinpath(@__DIR__, "utilities.jl"))
+
+@static if !(:JuMPExtension in names(Main))
+    include(joinpath(@__DIR__, "JuMPExtension.jl"))
+end
+
 function test_constraint_name(constraint, name, F::Type, S::Type)
     @test name == @inferred JuMP.name(constraint)
     model = constraint.model

@@ -1,4 +1,12 @@
 # TODO: Replace isapprox with ≈ everywhere.
+
+using JuMP
+using LinearAlgebra
+using SparseArrays
+using Test
+
+include(joinpath(@__DIR__, "utilities.jl"))
+
 @testset "Nonlinear" begin
 
     import JuMP: _NonlinearExprData
