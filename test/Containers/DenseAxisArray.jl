@@ -197,5 +197,13 @@ And data, a 0-dimensional Array{$Int,0}:
         @test Containers.DenseAxisArrayKey((2, :b)) in B_keys
         @test Containers.DenseAxisArrayKey((3, :a)) in B_keys
         @test Containers.DenseAxisArrayKey((3, :b)) in B_keys
+
+        # See https://github.com/jump-dev/JuMP.jl/issues/1988
+        @testset "filter" begin
+            k = filter(k -> 6 <= A[k] <= 7, keys(A))
+            @test k isa Vector{Containers.DenseAxisArrayKey{Tuple{Int, Symbol}}}
+            @test k[1] == Containers.DenseAxisArrayKey((3, :a))
+            @test k[2] == Containers.DenseAxisArrayKey((2, :b))
+        end
     end
 end

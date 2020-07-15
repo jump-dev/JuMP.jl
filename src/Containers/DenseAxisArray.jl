@@ -189,7 +189,7 @@ function Base.setindex!(A::DenseAxisArray{T, N}, v, idx...) where {T, N}
     return A.data[to_index(A,idx...)...] = v
 end
 Base.setindex!(A::DenseAxisArray, v, idx::CartesianIndex) = A.data[idx] = v
-Base.IndexStyle(::Type{DenseAxisArray{T,N,Ax}}) where {T,N,Ax} = IndexAnyCartesian()
+Base.IndexStyle(::Type{<:DenseAxisArray}) = IndexAnyCartesian()
 
 ########
 # Keys #
@@ -204,13 +204,13 @@ struct DenseAxisArrayKey{T<:Tuple}
     I::T
 end
 Base.getindex(k::DenseAxisArrayKey, args...) = getindex(k.I, args...)
+Base.getindex(a::DenseAxisArray, k::DenseAxisArrayKey) = a[k.I...]
 
-struct DenseAxisArrayKeys{T<:Tuple, S<:Tuple, N} <: AbstractArray{S, N}
+struct DenseAxisArrayKeys{T<:Tuple, S<:DenseAxisArrayKey, N} <: AbstractArray{S, N}
     product_iter::Base.Iterators.ProductIterator{T}
-    function DenseAxisArrayKeys(a::DenseAxisArray{TT,N}) where {TT,N}
+    function DenseAxisArrayKeys(a::DenseAxisArray{TT,N,Ax}) where {TT,N,Ax}
         product_iter = Base.Iterators.product(a.axes...)
-        f(::Base.Iterators.ProductIterator{T}) where {T} = T
-        return new{f(product_iter), eltype(product_iter), N}(product_iter)
+        return new{Ax, DenseAxisArrayKey{eltype(product_iter)}, N}(product_iter)
     end
 end
 Base.size(iter::DenseAxisArrayKeys) = size(iter.product_iter)
@@ -228,11 +228,11 @@ end
 function Base.keys(a::DenseAxisArray)
     return DenseAxisArrayKeys(a)
 end
-Base.getindex(a::DenseAxisArray, k::DenseAxisArrayKey) = a[k.I...]
-function Base.getindex(a::DenseAxisArrayKeys, args...)
+Base.getindex(a::DenseAxisArrayKeys, idx::CartesianIndex) = a[idx.I...]
+function Base.getindex(a::DenseAxisArrayKeys{T, S, N}, args::Vararg{Int, N}) where {T, S, N}
     return DenseAxisArrayKey(_to_index_tuple(args, a.product_iter.iterators))
 end
-Base.IndexStyle(::Type{DenseAxisArrayKeys{T,N,Ax}}) where {T,N,Ax} = IndexAnyCartesian()
+Base.IndexStyle(::Type{<:DenseAxisArrayKeys}) = IndexCartesian()
 
 ################
 # Broadcasting #
