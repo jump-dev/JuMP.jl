@@ -6,6 +6,8 @@
 using JuMP
 using Test
 
+include(joinpath(@__DIR__, "utilities.jl"))
+
 @testset "Scalar Complementarity" begin
     @testset "complements" begin
         model = Model()
