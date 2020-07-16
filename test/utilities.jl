@@ -19,8 +19,9 @@ end
 
 macro test_expression_with_string(expr, str)
     esc(quote
-            @test string(@inferred $expr) == $str
-            @test_expression $expr
+            realized_expr = @inferred $expr
+            @test string(realized_expr) == $str
+            @test JuMP.isequal_canonical(@expression(model, $expr), realized_expr)
     end)
 end
 
