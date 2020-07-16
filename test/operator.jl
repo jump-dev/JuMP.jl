@@ -58,15 +58,12 @@ function test_promotion(ModelType, VariableRefType)
     @test promote_type(A, Q) == Q
     @test promote_type(Q, V) == Q
     @test promote_type(V, Q) == Q
-    @test promote_type(Q, A) == Q
-    @test promote_type(A, Q) == Q
 end
 
 function test_broadcast_division_error(ModelType, ::Any)
     model = ModelType()
     @variable(model, x[1:2, 1:2])
-    A = [1 2;
-            3 4]
+    A = [1 2; 3 4]
     B = sparse(A)
     y = SparseMatrixCSC(2, 2, copy(B.colptr), copy(B.rowval), vec(x))
     @test_throws ErrorException A ./ x
