@@ -6,8 +6,7 @@ using Test
 
 const MA = JuMP._MA
 
-# Exclude the JuMPExtension tests because they take too long.
-# include(joinpath(@__DIR__, "JuMPExtension.jl"))
+include(joinpath(@__DIR__, "JuMPExtension.jl"))
 
 struct DummyVariableRef <: JuMP.AbstractVariableRef end
 JuMP.name(::DummyVariableRef) = "dummy"
@@ -137,6 +136,11 @@ function runtests()
         # @testset "$(name)-JuMPExtension" begin
         #     f(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
         # end
+    end
+    @testset "test_promote_operation-JuMPExtension" begin
+        test_promote_operation(
+            JuMPExtension.MyModel, JuMPExtension.MyVariableRef
+        )
     end
 end
 
