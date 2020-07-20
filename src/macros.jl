@@ -163,16 +163,14 @@ end
 # - code for parsing (which must be called first), if needed; otherwise, :().
 # - code for building the required constraints, if needed; otherwise, :().
 # - the symbol of the variable that replaces the expression (<: VariableRef).
-_rewrite_expr(_error::Function, ::Val{:call}, ::Val{OP}, args...) where OP = :(), :(), Expr(:call, OP, args...)
+_rewrite_expr(_error::Function, e::Union{Symbol, Number}) = :(), :(), e
 _rewrite_expr(_error::Function, ::Val{HEAD}, args...) where HEAD = :(), :(), Expr(HEAD, args...)
-_rewrite_expr(_error::Function, e::Symbol) = :(), :(), e
-_rewrite_expr(_error::Function, e::Number) = :(), :(), e
 
 _rewrite_expr(_error::Function, e::Expr) = _rewrite_expr(_error, Val(e.head), e.args...)
 _rewrite_expr(_error::Function, head::Val{:call}, args...) =
     _rewrite_expr(_error, Val(:call), Val(args[1]), args[2:end]...)
 
-function _rewrite_expr(_error::Function, ::Val{:call}, op::Union{Val{:+}, Val{:-}, Val{:*}, Val{:/}}, args...)
+function _rewrite_expr(_error::Function, ::Val{:call}, op::Val, args...) # ::Union{Val{:+}, Val{:-}, Val{:*}, Val{:/}}
     parse_code = :()
     build_code = :()
     new_args = []
