@@ -861,8 +861,8 @@ function MOI.eval_hessian_lagrangian_product(
     x::AbstractVector{Float64}, # current solution
     v::AbstractVector{Float64}, # rhs vector
     σ::Float64,                 # multiplier for objective
-    μ::AbstractVector{Float64},
-) # multipliers for each constraint
+    μ::AbstractVector{Float64}, # multipliers for each constraint
+)
 
     nldata = d.m.nlp_data::_NLPData
 
