@@ -1017,8 +1017,8 @@ function MOI.eval_hessian_lagrangian(
     H::AbstractVector{Float64},      # Sparse hessian entry vector
     x::AbstractVector{Float64},      # Current solution
     obj_factor::Float64,             # Lagrangian multiplier for objective
-    lambda::AbstractVector{Float64},
-) # Multipliers for each constraint
+    lambda::AbstractVector{Float64}, # Multipliers for each constraint
+)
 
     nldata = d.m.nlp_data::_NLPData
 
