@@ -615,7 +615,8 @@ end
         model = Model()
         @variable(model, x)
         @NLobjective(model, Max, sin(x))
-        @NLconstraint(model, cos(x) == 0)
+        c = @NLexpression(model, cos(x))
+        @NLconstraint(model, c == 0)
 
         io_test(REPLMode, model, """
     A JuMP Model
@@ -631,12 +632,15 @@ end
         io_test(REPLMode, model, """
     Max sin(x)
     Subject to
-     cos(x) - 0.0 $eq 0
+     subexpression[1] - 0.0 $eq 0
+    With NL expressions
+     subexpression[1]: cos(x)
     """, repl=:print)
 
         io_test(IJuliaMode, model, """
     \\begin{alignat*}{1}\\max\\quad & sin(x)\\\\
-    \\text{Subject to} \\quad & cos(x) - 0.0 = 0\\\\
+    \\text{Subject to} \\quad & subexpression_{1} - 0.0 = 0\\\\
+    \\text{With NL expressions} \\quad & subexpression_{1}: cos(x)\\\\
     \\end{alignat*}
     """)
     end
