@@ -52,7 +52,7 @@ This function will return a `MOI.TerminationStatusCode` `enum`.
 MOI.TerminationStatusCode
 ```
 
-Additionally, we can receive a solver specific string explaning why the
+Additionally, we can receive a solver specific string explaining why the
 optimization stopped with [`raw_status`](@ref).
 
 ## Solution statuses
@@ -249,6 +249,28 @@ lp_objective_perturbation_range
 lp_rhs_perturbation_range
 ```
 
+## Conflicts
+
+Sometimes, the model you input is infeasible, and some solvers can help you
+find the cause of this infeasibility by offering a conflict, i.e. a subset of
+the constraints that create this infeasibility.
+
+The function [`compute_conflict!`](@ref) is used to start the computation of
+a conflict. Once this process is finished, the attribute `MOI.ConflictStatus`
+returns a `MOI.ConflictStatusCode` `enum`.
+
+```@docs
+MOI.ConflictStatusCode
+```
+
+If there is a conflict, you can query each constraint whether it participates
+in the conflict or not using the attribute `MOI.ConstraintConflictStatus`.
+It returns a `MOI.ConstraintConflictStatus` `enum`.
+
+```@docs
+MOI.ConflictParticipationStatusCode
+```
+
 ## Multiple solutions
 
 Some solvers support returning multiple solutions. You can check how many
@@ -289,6 +311,7 @@ JuMP.dual
 JuMP.solve_time
 OptimizeNotCalled
 MOI.optimize!
+JuMP.compute_conflict!
 JuMP.result_count
 JuMP.relative_gap
 JuMP.simplex_iterations
