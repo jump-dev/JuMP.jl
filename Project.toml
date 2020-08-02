@@ -26,6 +26,7 @@ julia = "1"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Pukeko = "8cf91db1-0219-5b69-b551-5a0ff3c32cce"
 
 [targets]
-test = ["Test"]
+test = ["Test", "Pukeko"]

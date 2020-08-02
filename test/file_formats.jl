@@ -6,7 +6,7 @@
 module TestFileFormats
 
 using JuMP
-using Test
+using Pukeko
 
 function test_mof_file()
     model = Model()
@@ -54,17 +54,7 @@ function test_mof_nlp()
         read(joinpath(@__DIR__, "data", "nlp_model.mof.json"), String)
 end
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if !startswith("$(name)", "test_")
-            continue
-        end
-        @testset "$(name)" begin
-            getfield(@__MODULE__, name)()
-        end
-    end
 end
 
-end
-
-TestFileFormats.runtests()
+import Pukeko
+Pukeko.run_tests(TestFileFormats)
