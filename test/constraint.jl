@@ -86,7 +86,7 @@ function test_AffExpr_vectorized_constraints(ModelType, ::Any)
     model = ModelType()
     @variable(model, x)
     err = ErrorException("In `@constraint(model, [x, 2x] == [1 - x, 3])`: Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
-    @test_throws err @constraint(model, [x, 2x] == [1-x, 3])
+    @test_throws_strip err @constraint(model, [x, 2x] == [1-x, 3])
     @test_macro_throws ErrorException begin
         @constraint(model, [x == 1-x, 2x == 3])
     end
@@ -252,7 +252,7 @@ function test_syntax_error_constraint(ModelType, ::Any)
         "add the constraint because we don't recognize $([3, x]) as a " *
         "valid JuMP function."
     )
-    @test_throws err @constraint(model, [3, x] in SecondOrderCone())
+    @test_throws_strip err @constraint(model, [3, x] in SecondOrderCone())
 end
 
 function test_indicator_constraint(ModelType, ::Any)
@@ -390,9 +390,13 @@ function test_SDP_constraint(ModelType, VariableRefType)
     @test JuMP.isequal_canonical(c.func[4], 1w)
     @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
 
-    # Should throw "ERROR: function JuMP.add_constraint does not accept keyword arguments"
-    # This tests that the keyword arguments are passed to add_constraint
-    @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw=1)
+    # Julia changed how it reports keyword arguments between 1.3 and 1.4!
+    err = if VERSION < v"1.4"
+        ErrorException("function build_constraint does not accept keyword arguments")
+    else
+        MethodError
+    end
+    @test_throws(err, @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw=1))
     # Invalid sense == in SDP constraint
     @test_macro_throws ErrorException @SDconstraint(m, [x 1; 1 -y] == [1 x; x -2])
 end
@@ -428,12 +432,16 @@ function test_PSD_constraint_errors(ModelType, ::Any)
         "In `@constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))`:" *
         " instead of `MathOptInterface.PositiveSemidefiniteConeSquare(2)`," *
         " use `JuMP.PSDCone()`.")
-    @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))
+    @test_throws_strip(
+        err, @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))
+    )
     err = ErrorException(
         "In `@constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))`:" *
         " instead of `MathOptInterface.PositiveSemidefiniteConeTriangle(2)`," *
         " use `JuMP.PSDCone()`.")
-    @test_throws err @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))
+    @test_throws_strip(
+        err, @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))
+    )
 end
 
 function test_matrix_constraint_errors(ModelType, VariableRefType)
@@ -445,21 +453,37 @@ function test_matrix_constraint_errors(ModelType, VariableRefType)
         "into a vector using `vec()`?")
     # Note: this should apply to any MOI.AbstractVectorSet. We just pick
     # SecondOrderCone for convenience.
-    @test_throws err @constraint(model, X in MOI.SecondOrderCone(4))
+    @test_throws_strip(err, @constraint(model, X in MOI.SecondOrderCone(4)))
 end
 
 function test_nonsensical_SDP_constraint(ModelType, ::Any)
     m = ModelType()
-    @test_throws ErrorException @variable(m, unequal[1:5,1:6], PSD)
+    @test_throws_strip(
+        ErrorException("In `@variable(m, unequal[1:5, 1:6], PSD)`: Symmetric variables must be 2-dimensional."),
+        @variable(m, unequal[1:5,1:6], PSD)
+    )
     # Some of these errors happen at compile time, so we can't use @test_throws
-    @test_macro_throws ErrorException @variable(m, notone[1:5,2:6], PSD)
-    @test_macro_throws ErrorException @variable(m, oneD[1:5], PSD)
-    @test_macro_throws ErrorException @variable(m, threeD[1:5,1:5,1:5], PSD)
-    @test_macro_throws ErrorException @variable(m, psd[2] <= rand(2,2), PSD)
-    @test_macro_throws ErrorException @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), PSD)
-    @test_macro_throws ErrorException @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), Symmetric)
-    @test_macro_throws ErrorException @variable(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric)
-    @test_macro_throws ErrorException @variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric)
+    @test_throws MethodError @variable(m, notone[1:5,2:6], PSD)
+    @test_throws MethodError @variable(m, oneD[1:5], PSD)
+    @test_throws MethodError @variable(m, threeD[1:5,1:5,1:5], PSD)
+    @test_throws MethodError @variable(m, psd[2] <= rand(2,2), PSD)
+
+    @test_throws_strip(
+        ErrorException("In `@variable(m, -(ones(3, 4)) <= foo[1:4, 1:4] <= ones(4, 4), PSD)`: Non-symmetric bounds, integrality or starting values for symmetric variable."),
+        @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), PSD)
+    )
+    @test_throws_strip(
+        ErrorException("In `@variable(m, -(ones(3, 4)) <= foo[1:4, 1:4] <= ones(4, 4), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable."),
+        @variable(m, -ones(3,4) <= foo[1:4,1:4] <= ones(4,4), Symmetric)
+    )
+    @test_throws_strip(
+        ErrorException("In `@variable(m, -(ones(4, 4)) <= foo[1:4, 1:4] <= ones(4, 5), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable."),
+        @variable(m, -ones(4,4) <= foo[1:4,1:4] <= ones(4,5), Symmetric)
+    )
+    @test_throws_strip(
+      ErrorException("In `@variable(m, -(rand(5, 5)) <= nonsymmetric[1:5, 1:5] <= rand(5, 5), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable."),
+      @variable(m, -rand(5,5) <= nonsymmetric[1:5,1:5] <= rand(5,5), Symmetric)
+    )
 end
 
 function test_sum_constraint(ModelType, ::Any)
