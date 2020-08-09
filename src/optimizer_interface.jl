@@ -93,7 +93,6 @@ Optimize the model. If an optimizer has not been set yet (see
 
 Keyword arguments `kwargs` are passed to the `optimize_hook`. An error is
 thrown if `optimize_hook` is `nothing` and keyword arguments are provided.
-```
 """
 function optimize!(model::Model,
                    # TODO: Remove the optimizer_factory and bridge_constraints
