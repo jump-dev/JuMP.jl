@@ -72,7 +72,6 @@ set before optimization with [`optimizer_with_attributes`](@ref).
 set_optimizer
 optimizer_with_attributes
 NoOptimizer
-JuMP.optimize!
 ```
 
 New JuMP models are created using the [`Model`](@ref) constructor:

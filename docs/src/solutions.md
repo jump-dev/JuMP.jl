@@ -310,7 +310,7 @@ JuMP.has_duals
 JuMP.dual
 JuMP.solve_time
 OptimizeNotCalled
-MOI.optimize!
+JuMP.optimize!
 JuMP.compute_conflict!
 JuMP.result_count
 JuMP.relative_gap
