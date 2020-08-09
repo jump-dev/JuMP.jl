@@ -255,11 +255,12 @@ Sometimes, the model you input is infeasible, and some solvers can help you
 find the cause of this infeasibility by offering a conflict, i.e. a subset of
 the constraints that create this infeasibility.
 
-The function [`compute_conflict!`](@ref) is used to start the computation of
+The function [`JuMP.compute_conflict!`](@ref) is used to start the computation of
 a conflict. Once this process is finished, the attribute `MOI.ConflictStatus`
 returns a `MOI.ConflictStatusCode` `enum`.
 
 ```@docs
+MOI.ConflictStatus
 MOI.ConflictStatusCode
 ```
 
@@ -268,6 +269,7 @@ in the conflict or not using the attribute `MOI.ConstraintConflictStatus`.
 It returns a `MOI.ConstraintConflictStatus` `enum`.
 
 ```@docs
+MOI.ConstraintConflictStatus
 MOI.ConflictParticipationStatusCode
 ```
 
@@ -310,8 +312,6 @@ JuMP.has_duals
 JuMP.dual
 JuMP.solve_time
 OptimizeNotCalled
-JuMP.optimize!
-JuMP.compute_conflict!
 JuMP.result_count
 JuMP.relative_gap
 JuMP.simplex_iterations

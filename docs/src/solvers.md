@@ -72,6 +72,8 @@ set before optimization with [`optimizer_with_attributes`](@ref).
 set_optimizer
 optimizer_with_attributes
 NoOptimizer
+JuMP.optimize!
+JuMP.compute_conflict!
 ```
 
 New JuMP models are created using the [`Model`](@ref) constructor:
