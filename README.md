@@ -125,7 +125,8 @@ Please report any issues via the Github **[issue tracker]**. All types of issues
 
 If you find JuMP useful in your work, we kindly request that you cite the following paper ([pdf](https://mlubin.github.io/pdf/jump-sirev.pdf)):
 
-    @article{DunningHuchetteLubin2017,
+```bibtex
+@article{DunningHuchetteLubin2017,
     author = {Iain Dunning and Joey Huchette and Miles Lubin},
     title = {JuMP: A Modeling Language for Mathematical Optimization},
     journal = {SIAM Review},
@@ -134,11 +135,13 @@ If you find JuMP useful in your work, we kindly request that you cite the follow
     pages = {295-320},
     year = {2017},
     doi = {10.1137/15M1020575},
-    }
+}
+```
 
 For an earlier work where we presented a prototype implementation of JuMP, see [here](http://dx.doi.org/10.1287/ijoc.2014.0623):
 
-    @article{LubinDunningIJOC,
+```bibtex
+@article{LubinDunningIJOC,
     author = {Miles Lubin and Iain Dunning},
     title = {Computing in Operations Research Using Julia},
     journal = {INFORMS Journal on Computing},
@@ -147,7 +150,8 @@ For an earlier work where we presented a prototype implementation of JuMP, see [
     pages = {238-248},
     year = {2015},
     doi = {10.1287/ijoc.2014.0623},
-    }
+}
+```
 
 A preprint of this paper is [freely available](http://arxiv.org/abs/1312.1431).
 
