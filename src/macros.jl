@@ -725,8 +725,8 @@ on multiple lines wrapped in a `begin ... end` block. For example:
 
     @variables(m, begin
         x
-        y[i = 1:2] >= 0, (start = i, base_name = "Y_$i")
-        z, Bin, (start = 0)
+        y[i = 1:2] >= 0, (start = i)
+        z, Bin, (start = 0, base_name = "Z")
     end)
 
 !!! note
