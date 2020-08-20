@@ -255,23 +255,14 @@ Sometimes, the model you input is infeasible, and some solvers can help you
 find the cause of this infeasibility by offering a conflict, i.e. a subset of
 the constraints that create this infeasibility.
 
-The function [`JuMP.compute_conflict!`](@ref) is used to start the computation of
-a conflict. Once this process is finished, the attribute `MOI.ConflictStatus`
-returns a `MOI.ConflictStatusCode` `enum`.
-
-```@docs
-MOI.ConflictStatus
-MOI.ConflictStatusCode
-```
+The function [`compute_conflict!`](@ref) is used to start the computation of
+a conflict. Once this process is finished, the attribute
+[`MOI.ConflictStatus`](@ref) returns a [`MOI.ConflictStatusCode`](@ref).
 
 If there is a conflict, you can query each constraint whether it participates
-in the conflict or not using the attribute `MOI.ConstraintConflictStatus`.
-It returns a `MOI.ConstraintConflictStatus` `enum`.
-
-```@docs
-MOI.ConstraintConflictStatus
-MOI.ConflictParticipationStatusCode
-```
+in the conflict or not using the attribute
+[`MOI.ConstraintConflictStatus`](@ref), which returns a
+[`MOI.ConflictParticipationStatusCode`](@ref).
 
 ## Multiple solutions
 
@@ -312,9 +303,19 @@ JuMP.has_duals
 JuMP.dual
 JuMP.solve_time
 OptimizeNotCalled
+MOI.optimize!
 JuMP.result_count
 JuMP.relative_gap
 JuMP.simplex_iterations
 JuMP.barrier_iterations
 JuMP.node_count
+```
+
+```@docs
+JuMP.compute_conflict!
+MOI.compute_conflict!
+MOI.ConflictStatus
+MOI.ConflictStatusCode
+MOI.ConstraintConflictStatus
+MOI.ConflictParticipationStatusCode
 ```

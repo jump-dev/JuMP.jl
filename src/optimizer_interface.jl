@@ -158,9 +158,7 @@ function compute_conflict!(model::Model)
     if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
         throw(NoOptimizer())
     end
-
     MOI.compute_conflict!(backend(model))
-
     return
 end
 
