@@ -56,16 +56,7 @@ function MOI.submit(
     model::Model,
     cb::MOI.HeuristicSolution,
     variables::Vector{VariableRef},
-    values::Vector{Float64}
-)
-    return MOI.submit(backend(model), cb, index.(variables), values)
-end
-
-function MOI.submit(
-    model::Model,
-    cb::MOI.HeuristicSolution,
-    variables::Vector{VariableRef},
     values::Vector{<:Real}
 )
-    return MOI.submit(backend(model), cb, index.(variables), Float64.(values))
+    return MOI.submit(backend(model), cb, index.(variables), convert(Vector{Float64}, values))
 end
