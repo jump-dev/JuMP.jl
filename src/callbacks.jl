@@ -60,3 +60,12 @@ function MOI.submit(
 )
     return MOI.submit(backend(model), cb, index.(variables), values)
 end
+
+function MOI.submit(
+    model::Model,
+    cb::MOI.HeuristicSolution,
+    variables::Vector{VariableRef},
+    values::Vector{<:Real}
+)
+    return MOI.submit(backend(model), cb, index.(variables), Float64.(values))
+end
