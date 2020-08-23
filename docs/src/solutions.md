@@ -251,11 +251,11 @@ lp_rhs_perturbation_range
 
 ## Conflicts
 
-Sometimes, the model you input is infeasible, and some solvers can help you
-find the cause of this infeasibility by offering a conflict, i.e. a subset of
-the constraints that create this infeasibility.
+When the model you input is infeasible, some solvers can help you find the 
+cause of this infeasibility by offering a conflict, i.e. a subset of the 
+constraints that create this infeasibility.
 
-The function [`compute_conflict!`](@ref) is used to start the computation of
+The function [`compute_conflict!`](@ref) is used to trigger the computation of
 a conflict. Once this process is finished, the attribute
 [`MOI.ConflictStatus`](@ref) returns a [`MOI.ConflictStatusCode`](@ref).
 
