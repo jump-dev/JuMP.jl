@@ -264,6 +264,29 @@ in the conflict or not using the attribute
 [`MOI.ConstraintConflictStatus`](@ref), which returns a
 [`MOI.ConflictParticipationStatusCode`](@ref).
 
+For instance, this is how you can use this functionality: 
+
+```julia
+using JuMP
+model = Model()
+@variable(model, x >= 0)
+@constraint(model, c1, x >= 2)
+@constraint(model, c2, x <= 1)
+optimize!(model)
+
+# termination_status(model) will likely be MOI.INFEASIBLE, 
+# depending on the solver
+
+compute_conflict!(model)
+if MOI.get(model, MOI.ConflictStatus()) != MOI.CONFLICT_FOUND
+    error("No conflict could be found for an infeasible model.")
+end
+
+# Both constraints should participate in the conflict.
+MOI.get(model, MOI.ConstraintConflictStatus(), c1)
+MOI.get(model, MOI.ConstraintConflictStatus(), c2)
+```
+
 ## Multiple solutions
 
 Some solvers support returning multiple solutions. You can check how many
