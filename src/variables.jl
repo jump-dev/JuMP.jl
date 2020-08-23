@@ -768,7 +768,7 @@ function value(v::VariableRef; result::Int = 1)::Float64
 end
 
 function JuMP.value(v::VariableRef, var_value::Function)
-  return var_value(v)
+    return var_value(v)
 end
 
 """
