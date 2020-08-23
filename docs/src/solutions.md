@@ -252,15 +252,15 @@ lp_rhs_perturbation_range
 ## Conflicts
 
 When the model you input is infeasible, some solvers can help you find the 
-cause of this infeasibility by offering a conflict, i.e. a subset of the 
+cause of this infeasibility by offering a conflict, i.e., a subset of the 
 constraints that create this infeasibility.
 
 The function [`compute_conflict!`](@ref) is used to trigger the computation of
 a conflict. Once this process is finished, the attribute
 [`MOI.ConflictStatus`](@ref) returns a [`MOI.ConflictStatusCode`](@ref).
 
-If there is a conflict, you can query each constraint whether it participates
-in the conflict or not using the attribute
+If there is a conflict, you can query from each constraint whether it 
+participates in the conflict or not using the attribute
 [`MOI.ConstraintConflictStatus`](@ref), which returns a
 [`MOI.ConflictParticipationStatusCode`](@ref).
 
