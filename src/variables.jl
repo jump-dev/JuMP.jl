@@ -767,6 +767,10 @@ function value(v::VariableRef; result::Int = 1)::Float64
     return MOI.get(owner_model(v), MOI.VariablePrimal(result), v)
 end
 
+function JuMP.value(v::VariableRef, var_value::Function)
+  return var_value(v)
+end
+
 """
     has_values(model::Model; result::Int = 1)
 
