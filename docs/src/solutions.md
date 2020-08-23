@@ -269,7 +269,7 @@ For instance, this is how you can use this functionality:
 
 ```julia
 using JuMP
-model = Model() # With a solver that supports conflicts, like CPLEX or Gurobi
+model = Model() # You must use a solver that supports conflict refining/IIS computation, like CPLEX or Gurobi
 @variable(model, x >= 0)
 @constraint(model, c1, x >= 2)
 @constraint(model, c2, x <= 1)
