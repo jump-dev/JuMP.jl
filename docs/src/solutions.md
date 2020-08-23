@@ -253,7 +253,8 @@ lp_rhs_perturbation_range
 
 When the model you input is infeasible, some solvers can help you find the 
 cause of this infeasibility by offering a conflict, i.e., a subset of the 
-constraints that create this infeasibility.
+constraints that create this infeasibility. Depending on the solver, 
+this can also be called an IIS (irreducible inconsistent subsystem). 
 
 The function [`compute_conflict!`](@ref) is used to trigger the computation of
 a conflict. Once this process is finished, the attribute
@@ -268,7 +269,7 @@ For instance, this is how you can use this functionality:
 
 ```julia
 using JuMP
-model = Model()
+model = Model() # With a solver that supports conflicts, like CPLEX or Gurobi
 @variable(model, x >= 0)
 @constraint(model, c1, x >= 2)
 @constraint(model, c2, x <= 1)
