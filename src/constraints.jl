@@ -589,7 +589,7 @@ function value(con_ref::ConstraintRef{Model, <:_MOICON}; result::Int = 1)
 end
 
 function value(con_ref::ConstraintRef{Model, <:_MOICON}, var_value::Function)
-  return value(jump_function(constraint_object(con_ref)), var_value)
+    return value(jump_function(constraint_object(con_ref)), var_value)
 end
 
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
