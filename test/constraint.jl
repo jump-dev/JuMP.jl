@@ -663,6 +663,21 @@ function test_Model_add_to_function_constant_vector(::Any, ::Any)
     @test JuMP.moi_set(con) == MOI.Nonnegatives(2)
 end
 
+function test_Model_value_constraint_var(ModelType, ::Any)
+    model = ModelType()
+    @variable(model, x[1:2])
+    @constraint(model, c1, x[1] + x[2] <= 3.0)
+    @constraint(model, c2, x[1]^2 + x[2]^2 <= 3.0)
+    @constraint(model, c3, [1.0, x[1], x[2]] in SecondOrderCone())
+
+    vals = Dict(x[1] => 1.0, x[2] => 2.0)
+    f = vidx -> vals[vidx]
+
+    @test value(c1, f) === 3.0 # Affine expression
+    @test value(c2, f) === 5.0 # Quadratic expression
+    @test value(c3, f) == [1.0, 1.0, 2.0] # Vector expression
+end
+
 function _test_shadow_price_util(model_string, constraint_dual, constraint_shadow)
     model = Model()
     MOIU.loadfromstring!(backend(model), model_string)

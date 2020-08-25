@@ -716,6 +716,7 @@ end
 function test_Model_value_var(ModelType, ::Any)
     model = ModelType()
     @variable(model, x[1:2])
+
     vals = Dict(x[1] => 1.0, x[2] => 2.0)
     f = vidx -> vals[vidx]
 
