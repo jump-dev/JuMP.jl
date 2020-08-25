@@ -713,6 +713,16 @@ function test_Model_value(::Any, ::Any)
     @test value(JuMP._MA.Zero()) === 0.0
 end
 
+function test_Model_value_var(ModelType, ::Any)
+    model = ModelType()
+    @variable(model, x[1:2])
+    vals = Dict(x[1] => 1.0, x[2] => 2.0)
+    f = vidx -> vals[vidx]
+
+    @test value(x[1], f) === 1.0
+    @test value(x[2], f) === 2.0
+end
+
 function test_Model_relax_integrality(::Any, ::Any)
     model = Model()
     @variable(model, x, Bin)
