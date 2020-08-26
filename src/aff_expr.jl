@@ -161,10 +161,6 @@ function value(ex::GenericAffExpr{T, V}, var_value::Function) where {T, V}
     ret
 end
 
-function value(ex::Vector{GenericAffExpr{T, V}}, var_value::Function) where {T, V}
-    return value.(ex, var_value)
-end
-
 """
     constant(aff::GenericAffExpr{C, V})::C
 
