@@ -588,6 +588,12 @@ function value(con_ref::ConstraintRef{Model, <:_MOICON}; result::Int = 1)
     return reshape_vector(_constraint_primal(con_ref, result), con_ref.shape)
 end
 
+"""
+    value(con_ref::ConstraintRef, var_value::Function)
+
+Evaluate the primal value of the constraint `con_ref` using `var_value(v)` 
+as the value for each variable `v`.
+"""
 function value(con_ref::ConstraintRef{Model, <:_MOICON}, var_value::Function)
     f = jump_function(constraint_object(con_ref))
     return reshape_vector(value.(f, Ref(var_value)), con_ref.shape)
