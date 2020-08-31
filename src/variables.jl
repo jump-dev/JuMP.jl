@@ -768,6 +768,15 @@ function value(v::VariableRef; result::Int = 1)::Float64
 end
 
 """
+    value(v::VariableRef, var_value::Function)
+
+Evaluate the value of the variable `v` as `var_value(v)`.
+"""
+function value(v::VariableRef, var_value::Function)
+    return var_value(v)
+end
+
+"""
     has_values(model::Model; result::Int = 1)
 
 Return `true` if the solver has a primal solution in result index `result`
