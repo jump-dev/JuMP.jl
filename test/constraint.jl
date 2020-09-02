@@ -547,10 +547,12 @@ function test_Model_all_constraints_vector(::Any, ::Any)
     csdp = @constraint(model, x in PSDCone())
     csoc = @constraint(model, [x[1], 1] in SecondOrderCone())
     csos = @constraint(model, [x[2]^2, 1] in MOI.SOS1([1.0, 2.0]))
-    @test_throws DimensionMismatch @constraint(model, [x[2]^2, 1] in
-        MOI.SOS1([1.0, 2.0, 3.0]))
-    @test_throws DimensionMismatch @constraint(model, [x[2]^2, 1] in
-        MOI.SOS2([1.0, 2.0, 3.0]))
+    @test_throws(DimensionMismatch,
+        @constraint(model, [x[2]^2, 1] in MOI.SOS1([1.0, 2.0, 3.0]))
+    )
+    @test_throws(DimensionMismatch,
+        @constraint(model, [x[2]^2, 1] in MOI.SOS2([1.0, 2.0, 3.0]))
+    )
     @test 1 == @inferred num_constraints(
         model, Vector{VariableRef}, MOI.PositiveSemidefiniteConeTriangle)
     ref = all_constraints(model, Vector{VariableRef},
