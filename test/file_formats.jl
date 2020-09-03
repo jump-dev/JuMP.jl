@@ -5,6 +5,7 @@
 
 module TestFileFormats
 
+import JSON
 using JuMP
 using Test
 
@@ -50,8 +51,9 @@ function test_mof_nlp()
     io = IOBuffer()
     write(io, model; format = MOI.FileFormats.FORMAT_MOF)
     seekstart(io)
-    @test read(io, String) ==
-        read(joinpath(@__DIR__, "data", "nlp_model.mof.json"), String)
+    file = JSON.parse(io)
+    @test file["name"] == "MathOptFormat Model"
+    @test length(file["constraints"]) == 2
 end
 
 function runtests()
