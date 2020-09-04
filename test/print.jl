@@ -390,7 +390,7 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(model_1, u[1:3], Bin)
         @variable(model_1, fi == 9)
         @objective(model_1, Max, a - b + 2a1 - 10x)
-        @constraint(model_1, con, a + b - 10c - 2x + c1 <= 1)
+        @constraint(model_1, con, a + b - 10c + c1 - 2x <= 1)
         @constraint(model_1, a*b <= 2)
         @constraint(model_1, soc, [1 - a; u] in SecondOrderCone())
         @constraint(model_1, [a b; c x] in PSDCone())
@@ -403,7 +403,7 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(REPLMode, model_1, """
     Max a - b + 2 a1 - 10 x
     Subject to
-     con : a + b - 10 c - 2 x + c1 $le 1.0
+     con : a + b - 10 c + c1 - 2 x $le 1.0
      a*b $le 2.0
      [a  b;
       b  x] $inset PSDCone()
@@ -453,7 +453,7 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
 
         io_test(IJuliaMode, model_1, """
     \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
-    \\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\
+    \\text{Subject to} \\quad & a + b - 10 c + c1 - 2 x \\leq 1.0\\\\
      & a\\times b \\leq 2.0\\\\
      & \\begin{bmatrix}
     a & b\\\\

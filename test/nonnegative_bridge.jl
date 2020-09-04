@@ -22,6 +22,8 @@ Scalar set of nonnegative numbers.
 """
 struct Nonnegative <: MOI.AbstractScalarSet end
 
+MOI.copy(set::Nonnegative) = set
+
 """
     NonnegativeBridge{T}
 
