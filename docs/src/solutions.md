@@ -52,7 +52,7 @@ This function will return a `MOI.TerminationStatusCode` `enum`.
 MOI.TerminationStatusCode
 ```
 
-Additionally, we can receive a solver specific string explaning why the
+Additionally, we can receive a solver specific string explaining why the
 optimization stopped with [`raw_status`](@ref).
 
 ## Solution statuses
@@ -249,6 +249,45 @@ lp_objective_perturbation_range
 lp_rhs_perturbation_range
 ```
 
+## Conflicts
+
+When the model you input is infeasible, some solvers can help you find the 
+cause of this infeasibility by offering a conflict, i.e., a subset of the 
+constraints that create this infeasibility. Depending on the solver, 
+this can also be called an IIS (irreducible inconsistent subsystem). 
+
+The function [`compute_conflict!`](@ref) is used to trigger the computation of
+a conflict. Once this process is finished, the attribute
+[`MOI.ConflictStatus`](@ref) returns a [`MOI.ConflictStatusCode`](@ref).
+
+If there is a conflict, you can query from each constraint whether it 
+participates in the conflict or not using the attribute
+[`MOI.ConstraintConflictStatus`](@ref), which returns a
+[`MOI.ConflictParticipationStatusCode`](@ref).
+
+For instance, this is how you can use this functionality: 
+
+```julia
+using JuMP
+model = Model() # You must use a solver that supports conflict refining/IIS computation, like CPLEX or Gurobi
+@variable(model, x >= 0)
+@constraint(model, c1, x >= 2)
+@constraint(model, c2, x <= 1)
+optimize!(model)
+
+# termination_status(model) will likely be MOI.INFEASIBLE, 
+# depending on the solver
+
+compute_conflict!(model)
+if MOI.get(model, MOI.ConflictStatus()) != MOI.CONFLICT_FOUND
+    error("No conflict could be found for an infeasible model.")
+end
+
+# Both constraints should participate in the conflict.
+MOI.get(model, MOI.ConstraintConflictStatus(), c1)
+MOI.get(model, MOI.ConstraintConflictStatus(), c2)
+```
+
 ## Multiple solutions
 
 Some solvers support returning multiple solutions. You can check how many
@@ -294,4 +333,13 @@ JuMP.relative_gap
 JuMP.simplex_iterations
 JuMP.barrier_iterations
 JuMP.node_count
+```
+
+```@docs
+JuMP.compute_conflict!
+MOI.compute_conflict!
+MOI.ConflictStatus
+MOI.ConflictStatusCode
+MOI.ConstraintConflictStatus
+MOI.ConflictParticipationStatusCode
 ```
