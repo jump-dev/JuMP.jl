@@ -11,14 +11,14 @@ JuMP 1.0 will be ready to release roughly when all of these tasks are completed.
 Some but not all of these tasks are summarized in the
 [JuMP 1.0 milestone](https://github.com/jump-dev/JuMP.jl/milestone/12).
 
-- Create a website for JuMP.
+- Create a website for JuMP. (**Done**: https://jump.dev)
 - Deprecate the JuliaOpt organization and move repositories to the
-  [JuMP-dev](https://github.com/JuMP-dev) organization.
+  [JuMP-dev](https://github.com/JuMP-dev) organization. (**Done**)
 - Address major regressions from JuMP 0.18.
   - Performance ([#1403](https://github.com/jump-dev/JuMP.jl/issues/1403),
                  [#1654](https://github.com/jump-dev/JuMP.jl/issues/1654),
                  [#1607](https://github.com/jump-dev/JuMP.jl/issues/1607))
-  - Callbacks
+  - Callbacks (**Done**: see `examples/callbacks.jl`)
   - Column generation syntax (**Done**: see `examples/cutting_stock_column_generation.jl`)
   - Support for second-order cones in Gurobi, CPLEX, and Xpress (**Done**)
 - Fix issues that we promised MOI would fix.
@@ -40,7 +40,7 @@ Some but not all of these tasks are summarized in the
   - Get JuMP’s unit tests running in less than two minutes. See [#1745](https://github.com/jump-dev/JuMP.jl/pull/1745).
 - All solvers should complete the transition to MOI.
 - Provide packages for installing Bonmin and Couenne.
-- [MathOptFormat](https://github.com/odow/MathOptFormat.jl) 1.0
+- [MathOptFormat](https://github.com/odow/MathOptFormat.jl) 1.0 (**Done**)
 
 ## MOI 1.0
 
