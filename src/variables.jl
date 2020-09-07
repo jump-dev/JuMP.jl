@@ -759,12 +759,21 @@ end
 Return the value of variable `v` associated with result index `result` of the
 most-recent returned by the solver.
 
-Use[`has_values`](@ref) to check if a result exists before asking for values.
+Use [`has_values`](@ref) to check if a result exists before asking for values.
 
 See also: [`result_count`](@ref).
 """
 function value(v::VariableRef; result::Int = 1)::Float64
     return MOI.get(owner_model(v), MOI.VariablePrimal(result), v)
+end
+
+"""
+    value(v::VariableRef, var_value::Function)
+
+Evaluate the value of the variable `v` as `var_value(v)`.
+"""
+function value(v::VariableRef, var_value::Function)
+    return var_value(v)
 end
 
 """

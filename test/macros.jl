@@ -170,6 +170,7 @@ function JuMP.parse_constraint_head(_error::Function, ::Val{:(:=)}, lhs, rhs)
 end
 struct CustomSet <: MOI.AbstractScalarSet
 end
+Base.copy(set::CustomSet) = set
 function JuMP.build_constraint(_error::Function, func, ::CustomType)
     JuMP.build_constraint(_error, func, CustomSet())
 end

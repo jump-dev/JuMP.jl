@@ -107,7 +107,7 @@ function test_hygiene_variable()
     model_y = Model()
     @variable(model_y, y)
     err = JuMP.VariableNotOwned(y)
-    
+
     @test_throws err @constraint(model_x, y in MOI.EqualTo(1.0))
     @test_throws err @constraint(model_x, [x, y] in MOI.Zeros(2))
     @test_throws err @objective(model_x, Min, y)
@@ -152,7 +152,7 @@ function test_hygiene_attribute()
 
     cy = @constraint(model_y, y in MOI.EqualTo(1.0))
     cerr = JuMP.ConstraintNotOwned(cy)
-    
+
     @test_throws err MOI.get(model_x, MOI.VariablePrimalStart(), y)
     @test_throws cerr MOI.get(model_x, MOI.ConstraintPrimalStart(), cy)
     @test_throws err MOI.set(model_x, MOI.VariablePrimalStart(), y, 1.0)
@@ -277,24 +277,21 @@ function test_bridges_add_before_con_set_optimizer()
 end
 
 function test_bridges_add_after_con_model_optimizer()
-    error_string = """
-    Constrained variables in `Nonnegative` are not supported and cannot be bridged into supported constrained variables and constraints. See details below:
-    [1] constrained variables in `Nonnegative` are not supported because no added bridge supports bridging it.
-      Cannot add free variables and then constrain them because:
-      (1) `MOI.SingleVariable`-in-`Nonnegative` constraints are not supported
-    (1) `MOI.SingleVariable`-in-`Nonnegative` constraints are not supported because:
-      Cannot use `MOIB.Constraint.ScalarFunctionizeBridge{Float64,Nonnegative}` because:
-      (2) `MOI.ScalarAffineFunction{Float64}`-in-`Nonnegative` constraints are not supported
-    (2) `MOI.ScalarAffineFunction{Float64}`-in-`Nonnegative` constraints are not supported because:
-      Cannot use `MOIB.Constraint.ScalarSlackBridge{Float64,MOI.ScalarAffineFunction{Float64},Nonnegative}` because:
-      [1] constrained variables in `Nonnegative` are not supported
-    """
-    error_string = replace(error_string, "Nonnegative" => "Main.TestModels.Nonnegative")
-    err = ErrorException(error_string)
-
     model = Model(mock_factory)
     @variable(model, x)
-    @test_throws err @constraint(model, x in Nonnegative())
+    flag = true
+    try
+        @constraint(model, x in Nonnegative())
+        flag = false
+    catch err
+        @test err isa ErrorException
+        # Rather than test a particular bridging error, just check that the
+        # bridge explanation has been called. The sequence of errors could vary
+        # between MOI versions.
+        @test occursin("Nonnegative", err.msg)
+        @test occursin("are not supported and cannot be bridged", err.msg)
+    end
+    @test flag
     JuMP.add_bridge(model, NonnegativeBridge)
     c = @constraint(model, x in Nonnegative())
     JuMP.optimize!(model)

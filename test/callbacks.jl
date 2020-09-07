@@ -58,6 +58,13 @@ end
     @test length(c) == 1
     @test c[1][1] == [index(x)]
     @test c[1][2] == [0.0]
+    # Non-Float64 case
+    MOI.submit(model, MOI.HeuristicSolution(DummyCallbackData()), [x], [1])
+    @test length(mock.submitted) == 1
+    c = mock.submitted[MOI.HeuristicSolution(DummyCallbackData())]
+    @test length(c) == 2
+    @test c[2][1] == [index(x)]
+    @test c[2][2] == [1.0]
 end
 
 @testset "callback_value" begin
