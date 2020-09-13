@@ -11,7 +11,7 @@ JuMP 1.0 will be ready to release roughly when all of these tasks are completed.
 Some but not all of these tasks are summarized in the
 [JuMP 1.0 milestone](https://github.com/jump-dev/JuMP.jl/milestone/12).
 
-- Create a website for JuMP. (**Done**: https://jump.dev)
+- Create a website for JuMP. (**Done**: [jump.dev](https://jump.dev))
 - Deprecate the JuliaOpt organization and move repositories to the
   [JuMP-dev](https://github.com/JuMP-dev) organization. (**Done**)
 - Address major regressions from JuMP 0.18.
@@ -23,11 +23,11 @@ Some but not all of these tasks are summarized in the
   - Support for second-order cones in Gurobi, CPLEX, and Xpress (**Done**)
 - Fix issues that we promised MOI would fix.
   - Checking feasibility of solutions ([#693](https://github.com/jump-dev/JuMP.jl/issues/693))
-  - Accessing IIS ([#1053](https://github.com/jump-dev/JuMP.jl/issues/1035))
+  - Accessing IIS (**Done**: see [Conflicts](@ref))
   - Accessing multiple results from solvers
   - Dual warm-starts ([#2094](https://github.com/jump-dev/JuMP.jl/issues/2094))
 - Address “easy” usability issues
-  - Line numbers in error messages ([#1174](https://github.com/jump-dev/JuMP.jl/issues/1174))
+  - Line numbers in error messages (**Done**: [#2276](https://github.com/jump-dev/JuMP.jl/pull/2276))
   - LP sensitivity summary (**Done**: see [Sensitivity analysis for LP](@ref))
   - Inferred element types for collections in macros (**Done**: [#2070](https://github.com/jump-dev/JuMP.jl/pull/2070))
   - Expose solver-independent options from JuMP (**Done**: see [`set_silent`](@ref) etc.)
