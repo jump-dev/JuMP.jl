@@ -1,7 +1,7 @@
 JuMP release notes
 ==================
 
-Version 0.21.4 (September 10, 2020)
+Version 0.21.4 (September 14, 2020)
 -----------------------------------
 
 For a detailed list of the closed issues and pull requests from this release,
@@ -24,7 +24,7 @@ A summary of changes are as follows:
 - Print nonlinear subexpressions
 - Various documentation updates
 - Dependency updates:
-  * Datastructures 0.18(#2315)
+  * Datastructures 0.18
   * MathOptFormat v0.5
   * Prep for MathOptInterface 0.9.15
 
