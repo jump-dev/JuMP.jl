@@ -56,8 +56,8 @@ Our documentation includes an installation guide, quick-start guide, and referen
 **See [NEWS](https://github.com/jump-dev/JuMP.jl/tree/master/NEWS.md) for
 a list of the significant breaking changes in the JuMP 0.19 release.**
 
-**Latest Release**: 0.21.3 (`release-0.21` branch)
-  * [Documentation](http://jump.dev/JuMP.jl/v0.21.3/)
+**Latest Release**: 0.21.4 (`release-0.21` branch)
+  * [Documentation](http://jump.dev/JuMP.jl/v0.21.4/)
   * [Examples](https://github.com/jump-dev/JuMP.jl/tree/release-0.21/examples)
   * Testing status:
     * TravisCI: [![Build Status](https://travis-ci.org/jump-dev/JuMP.jl.svg?branch=release-0.21)](https://travis-ci.org/JuliaOpt/JuMP.jl)

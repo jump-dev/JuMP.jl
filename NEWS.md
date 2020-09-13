@@ -1,6 +1,33 @@
 JuMP release notes
 ==================
 
+Version 0.21.4 (September 14, 2020)
+-----------------------------------
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.4).
+A summary of changes are as follows:
+
+- New features:
+  * Add debug info when adding unsupported constraints
+  * Add `relax_integrality` for solving continuous relaxation
+  * Allow querying constraint conflicts
+- Bug fixes:
+  * Dispatch on `Real` for `MOI.submit`
+  * Implement `copy` for `CustomSet` in tests
+  * Don't export private macros
+  * Fix invalid assertion in nonlinear
+- Error if constraint has `NaN` right-hand side
+- Improve speed of tests
+  * Lots of work modularizing files in `/test`
+- Improve line numbers in macro error messages
+- Print nonlinear subexpressions
+- Various documentation updates
+- Dependency updates:
+  * Datastructures 0.18
+  * MathOptFormat v0.5
+  * Prep for MathOptInterface 0.9.15
+
 Version 0.21.3 (June 18, 2020)
 -----------------------------
 
