@@ -7,7 +7,7 @@ os:
           # with osx and linux should be similar.
 julia:
     - 1.0
-    - 1.4
+    - 1  # The latest 1.x release
 # This is left as an example for the next big version switch.
 # matrix:
 #     allow_failures:
