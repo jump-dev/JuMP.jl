@@ -133,7 +133,7 @@ macro colored(i)
 end
 
 function prevent_cycle(v,w,x,e_idx1,e_idx2,S,firstVisitToTree,forbiddenColors,color)
-    er = DataStructures.find_root(S, e_idx2)
+    er = DataStructures.find_root!(S, e_idx2)
     @inbounds first = firstVisitToTree[er]
     p = first.source # but this depends on the order?
     q = first.target
@@ -158,8 +158,8 @@ function grow_star(v,w,e_idx,firstNeighbor,color,S)
 end
 
 function merge_trees(eg,eg1,S)
-    e1 = DataStructures.find_root(S, eg)
-    e2 = DataStructures.find_root(S, eg1)
+    e1 = DataStructures.find_root!(S, eg)
+    e2 = DataStructures.find_root!(S, eg1)
     if e1 != e2
         union!(S, eg, eg1)
     end
