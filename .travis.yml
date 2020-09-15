@@ -26,7 +26,7 @@ addons:
 # Override the default test script by making deprecation warnings an error.
 script:
   - julia --project -e 'import Pkg; Pkg.build();'
-  - julia --project --check-bounds=yes --depwarn=error -e 'Pkg.test(; coverage=true)'
+  - julia --project --check-bounds=yes --depwarn=error -e 'import Pkg; Pkg.test(; coverage=true)'
 jobs:
   include:
     - stage: "Documentation"
