@@ -51,6 +51,8 @@ function test_VectorOfVariables_constraints(ModelType, ::Any)
     c = JuMP.constraint_object(cref)
     @test c.func == [x[2],x[1]]
     @test c.set == MOI.Zeros(2)
+
+    @test_throws DimensionMismatch @constraint(m, [x[2],x[1]] in MOI.Zeros(3))
 end
 
 function test_AffExpr_scalar_constraints(ModelType, ::Any)
@@ -106,6 +108,7 @@ function test_AffExpr_vector_constraints(ModelType, ::Any)
     @test JuMP.isequal_canonical(c.func[2], zero(JuMP.AffExpr) + 2)
     @test c.set == MOI.Zeros(2)
     @test c.shape isa JuMP.VectorShape
+    @test_throws DimensionMismatch @constraint(model, [1, 2] in MOI.Zeros(3))
 end
 
 function test_delete_constraints(ModelType, ::Any)
@@ -544,6 +547,12 @@ function test_Model_all_constraints_vector(::Any, ::Any)
     csdp = @constraint(model, x in PSDCone())
     csoc = @constraint(model, [x[1], 1] in SecondOrderCone())
     csos = @constraint(model, [x[2]^2, 1] in MOI.SOS1([1.0, 2.0]))
+    @test_throws(DimensionMismatch,
+        @constraint(model, [x[2]^2, 1] in MOI.SOS1([1.0, 2.0, 3.0]))
+    )
+    @test_throws(DimensionMismatch,
+        @constraint(model, [x[2]^2, 1] in MOI.SOS2([1.0, 2.0, 3.0]))
+    )
     @test 1 == @inferred num_constraints(
         model, Vector{VariableRef}, MOI.PositiveSemidefiniteConeTriangle)
     ref = all_constraints(model, Vector{VariableRef},
