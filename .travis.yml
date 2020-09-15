@@ -16,7 +16,7 @@ branches:
   only:
     - master
     - /^release-.*$/
-    # Regex to allow building Documentation
+    # Matches tags (needed to build documentation)
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 notifications:
     email: false
