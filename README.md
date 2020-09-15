@@ -60,14 +60,14 @@ a list of the significant breaking changes in the JuMP 0.19 release.**
   * [Documentation](http://jump.dev/JuMP.jl/v0.21.4/)
   * [Examples](https://github.com/jump-dev/JuMP.jl/tree/release-0.21/examples)
   * Testing status:
-    * TravisCI: [![Build Status](https://travis-ci.org/jump-dev/JuMP.jl.svg?branch=release-0.21)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * TravisCI: [![Build Status](https://travis-ci.com/jump-dev/JuMP.jl.svg?branch=release-0.21)](https://travis-ci.org/JuliaOpt/JuMP.jl)
 
 
 **Development version** (`master` branch):
   * [Documentation](http://jump.dev/JuMP.jl/dev/)
   * [Examples](https://github.com/jump-dev/JuMP.jl/tree/master/examples)
   * Testing status:
-    * TravisCI: [![Build Status](https://travis-ci.org/jump-dev/JuMP.jl.svg?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * TravisCI: [![Build Status](https://travis-ci.com/jump-dev/JuMP.jl.svg?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
     * Test coverage:
       [![Coverage Status](https://coveralls.io/repos/jump-dev/JuMP.jl/badge.svg?branch=master)](https://coveralls.io/r/jump-dev/JuMP.jl?branch=master)
       [![codecov](https://codecov.io/gh/jump-dev/JuMP.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaOpt/JuMP.jl)
