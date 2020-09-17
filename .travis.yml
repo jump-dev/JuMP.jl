@@ -6,11 +6,8 @@ os:
 #   - osx # Disable to speed up CI. JuMP has no binary dependency so the result
           # with osx and linux should be similar.
 julia:
-    - 1.0
-    # - 1.1 # Disabled to speed up CI
-    # - 1.2
-    # - 1.3
-    - 1.4
+    - 1.0  # The latest LTS 
+    - 1    # The latest minor release
 # This is left as an example for the next big version switch.
 # matrix:
 #     allow_failures:
@@ -19,14 +16,19 @@ branches:
   only:
     - master
     - /^release-.*$/
+    # Matches tags (needed to build documentation)
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 notifications:
     email: false
-sudo: false
 addons:
     apt_packages:
         - gfortran
         - liblapack-dev
         - libblas-dev
+# Override the default test script by making deprecation warnings an error.
+script:
+  - julia --project -e 'import Pkg; Pkg.build()'
+  - julia --project --check-bounds=yes --depwarn=error -e 'import Pkg; Pkg.test(; coverage=true)'
 jobs:
   include:
     - stage: "Documentation"
