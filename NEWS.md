@@ -1,7 +1,7 @@
 JuMP release notes
 ==================
 
-Version 0.21.5 (September 17, 2020)
+Version 0.21.5 (September 18, 2020)
 -----------------------------------
 
 For a detailed list of the closed issues and pull requests from this release,
