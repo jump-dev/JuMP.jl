@@ -1,6 +1,16 @@
 JuMP release notes
 ==================
 
+Version 0.21.5 (September 17, 2020)
+-----------------------------------
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.5).
+A summary of changes are as follows:
+
+- Fix deprecation warnings
+- Throw `DimensionMismatch` for incompatibly sized functions and sets
+
 Version 0.21.4 (September 14, 2020)
 -----------------------------------
 
