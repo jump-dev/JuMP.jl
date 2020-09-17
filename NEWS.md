@@ -10,6 +10,7 @@ A summary of changes are as follows:
 
 - Fix deprecation warnings
 - Throw `DimensionMismatch` for incompatibly sized functions and sets
+- Unify treatment of `keys(x)` on JuMP containers
 
 Version 0.21.4 (September 14, 2020)
 -----------------------------------
