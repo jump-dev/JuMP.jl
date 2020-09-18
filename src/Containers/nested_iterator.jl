@@ -34,17 +34,20 @@ end
 Base.IteratorSize(::Type{<:NestedIterator}) = Base.SizeUnknown()
 Base.IteratorEltype(::Type{<:NestedIterator}) = Base.EltypeUnknown()
 function next_iterate(iterators, condition, elems, states, iterator, elem_state)
-    if elem_state === nothing
-        return nothing
+    while true
+        elem_state === nothing && return nothing
+        elem, state = elem_state
+        elems_states = first_iterate(
+            Base.tail(iterators), condition, (elems..., elem),
+            (states..., (iterator, state, elem)))
+        elems_states !== nothing && return elems_states
+        # This could be written as a recursive function where we call `next_iterate`
+        # here with this new value of `next_iterate` instead of the `while` loop`.
+        # However, if there are too many consecutive elements for which `condition`
+        # is `false` for the last iterator, this will result in a `StackOverflow`.
+        # See https://github.com/jump-dev/JuMP.jl/issues/2335
+        elem_state = iterate(iterator, state)
     end
-    elem, state = elem_state
-    elems_states = first_iterate(
-        Base.tail(iterators), condition, (elems..., elem),
-        (states..., (iterator, state, elem)))
-    if elems_states !== nothing
-        return elems_states
-    end
-    return next_iterate(iterators, condition, elems, states, iterator, iterate(iterator, state))
 end
 function first_iterate(::Tuple{}, condition, elems, states)
     if condition(elems...)
