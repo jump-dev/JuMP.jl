@@ -60,6 +60,7 @@ MOI.ConflictStatus
 MOI.ConflictStatusCode
 MOI.ConstraintConflictStatus
 MOI.ConflictParticipationStatusCode
+JuMP.copy_conflict
 ```
 
 ## Sensitivity

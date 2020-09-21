@@ -369,11 +369,16 @@ participates in the conflict or not using the attribute
 [`MOI.ConstraintConflictStatus`](@ref), which returns a
 [`MOI.ConflictParticipationStatusCode`](@ref).
 
+To create a new model containing only the constraints that participate in the
+conflict, use [`copy_conflict`](@ref). It may be helpful to write this model
+to a file for easier debugging using [`write_to_file`](@ref).
+
 For instance, this is how you can use this functionality:
 
 ```julia
 using JuMP
-model = Model() # You must use a solver that supports conflict refining/IIS computation, like CPLEX or Gurobi
+model = Model() # You must use a solver that supports conflict refining/IIS 
+# computation, like CPLEX or Gurobi
 @variable(model, x >= 0)
 @constraint(model, c1, x >= 2)
 @constraint(model, c2, x <= 1)
@@ -390,6 +395,9 @@ end
 # Both constraints should participate in the conflict.
 MOI.get(model, MOI.ConstraintConflictStatus(), c1)
 MOI.get(model, MOI.ConstraintConflictStatus(), c2)
+
+# Get a copy of the model with only the constraints in the conflict.
+new_model, reference_map = copy_conflict(model)
 ```
 
 ## Multiple solutions
