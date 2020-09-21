@@ -281,9 +281,18 @@ test_linearity(:(ifelse(x[1] <= 1,x[1]^2,x[2])), NONLINEAR, Set([(1,1)]))
 test_linearity(:(ifelse(1 <= 1,2,3)), CONSTANT)
 test_linearity(:(1/ifelse(x[1] < 1, x[1],0)), NONLINEAR, Set([(1,1)]))
 
-# user-defined functions
-#Φ(x,y) = 1/3(y)^3 - 2x^2
-# c(x) = cos(x)
+function test_registered_function_linearity()
+    # See issue https://github.com/jump-dev/JuMP.jl/issues/2340
+    foo(x, y) = x + y
+    r = JuMP._Derivatives.UserOperatorRegistry()
+    register_multivariate_operator!(
+        r, :foo, JuMP._UserFunctionEvaluator(2, foo)
+    )
+    nd, _ = expr_to_nodedata(:(foo(x[1], x[1]^2)), r)
+    linearity = classify_linearity(nd, adjmat(nd), Any[])
+    @test linearity == [NONLINEAR, LINEAR, NONLINEAR, LINEAR, CONSTANT]
+end
+test_registered_function_linearity()
 
 function MOI.eval_objective(::ΦEvaluator,x)
     @assert length(x) == 2
