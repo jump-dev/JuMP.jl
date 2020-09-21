@@ -222,8 +222,6 @@ product of two variables.
 """
 function add_to_expression! end
 
-# TODO: add deprecations for Base.push! and Base.append!
-
 # With one factor.
 
 function add_to_expression!(aff::GenericAffExpr,
