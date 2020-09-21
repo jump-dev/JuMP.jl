@@ -14,4 +14,7 @@ using Test
         (3, 2)
         (3, 3)
     ]
+    @testset "StackOverflow #2335" begin
+        @test iterate(JuMP.Containers.nested(() -> 1:100_000, condition = _ -> false)) === nothing
+    end
 end
