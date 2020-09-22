@@ -39,9 +39,8 @@ function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
                 # if any children are nonlinear, then we're nonlinear
                 linearity[k] = NONLINEAR
                 # except in the case of ifelse. If the operands are linear then
-                # we're piecewise linear. `nod.index` may be larger than
-                # `operators`, so we use `get`.
-                if nod.nodetype == CALL && get(operators, nod.index, :not_ifelse) == :ifelse
+                # we're piecewise linear.
+                if nod.nodetype == CALL && nod.index < USER_OPERATOR_ID_START && operators[nod.index] == :ifelse
                     if linearity[children_arr[children_idx[2]]] == LINEAR && linearity[children_arr[children_idx[3]]] == LINEAR
                         linearity[k] = PIECEWISE_LINEAR
                     end
