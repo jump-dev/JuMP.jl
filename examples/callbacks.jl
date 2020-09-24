@@ -131,8 +131,8 @@ function example_solver_dependent_callback()
     lazy_called = false
     function my_callback_function(cb_data)
         lazy_called = true
-        reason = GLPK.ios_reason(cb_data.tree)
-        if reason != GLPK.IROWGEN
+        reason = GLPK.glp_ios_reason(cb_data.tree)
+        if reason != GLPK.GLP_IROWGEN
             return
         end
         x_val = callback_value(cb_data, x)
