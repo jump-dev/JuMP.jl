@@ -173,7 +173,6 @@ function delete(model::Model, variable_ref::VariableRef)
         error("The variable reference you are trying to delete does not " *
               "belong to the model.")
     end
-    unregister(model, variable_ref)
     MOI.delete(backend(model), variable_ref.index)
 end
 
@@ -189,7 +188,6 @@ function delete(model::Model, variable_refs::Vector{VariableRef})
         error("A variable reference you are trying to delete does not " *
               "belong to the model.")
     end
-    unregister(model, variable_refs)
     MOI.delete(backend(model), index.(variable_refs))
     return
 end

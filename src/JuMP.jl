@@ -177,11 +177,6 @@ mutable struct Model <: AbstractModel
     nlp_data
     # Dictionary from variable and constraint names to objects.
     obj_dict::Dict{Symbol, Any}
-    # Dictionary from object to the `Symbol` at which they are registered in `obj_dict`.
-    # With `IdDict`, the key is the object id (obtained with `objectid`) instead
-    # of the hash of the object. This is preferable here as hashing large containers of
-    # variables can be computationally expensive.
-    registered_symbol::IdDict{Any, Symbol}
     # Number of times we add large expressions. Incremented and checked by
     # the `operator_warn` method.
     operator_counter::Int
@@ -268,7 +263,6 @@ function direct_model(backend::MOI.ModelLike)
                  nothing,
                  nothing,
                  Dict{Symbol, Any}(),
-                 IdDict{Any, Symbol}(),
                  0,
                  Dict{Symbol, Any}())
 end
@@ -453,32 +447,9 @@ to retrieve the object corresponding to the symbol `symbol::Symbol` in
 For instance, `@variable(model, x[1:2, 1:2])` registers the array of variables
 `x` to the symbol `:x`.
 
-Use `setindex!` (resp. [`unregister`](@ref)) on `model` instead of
-`setindex!` (resp. `delete!`) on this dictionary as the former keeps
-updates the reverse mapping given by [`registered_symbol`](@ref) accordingly.
-
 A method should be defined for any subtype of `AbstractModel`.
 """
 object_dictionary(model::Model) = model.obj_dict
-
-"""
-    registered_symbol(model::Model)
-
-Returns a dictionary mapping object ids (obtained with `objectid`) to
-symbols. This is the reverse mapping of the dictionary obtained
-with [`object_dictionary`](@ref). It is used to delete the `symbol => object`
-pair from the object dictionary when `object` is deleted with
-`delete(model, object)`.
-
-This function should not be used as this dictionary is automatically
-synced when calling `setindex!` on `model`.
-
-A method should be defined for any subtype of `AbstractModel`.
-"""
-registered_symbol(model::Model) = model.registered_symbol
-# TODO To avoid breaking `AbstractModel`'s we have this fallback,
-#      that should be removed in JuMP v0.22
-registered_symbol(model::AbstractModel) = nothing
 
 """
     termination_status(model::Model)
@@ -988,29 +959,56 @@ stores the object `value` in the model `model` using so that it can be accessed
 via `getindex`.  Can be called with `[]` syntax.
 """
 function Base.setindex!(model::AbstractModel, value, name::Symbol)
-    symbols = registered_symbol(model)
-    if symbols !== nothing
-        symbols[value] = name
-    end
-    # TODO In JuMP v0.22, replace with
-    # registered_symbol(model)[value] = name
     object_dictionary(model)[name] = value
 end
 
-function unregister(model::AbstractModel, value)
-    symbols = registered_symbol(model)
-    if symbols === nothing
-        return
-    end
-    name = get(symbols, value, nothing)
-    # TODO In JuMP v0.22, replace with
-    # name = get(registered_symbol(model), value, nothing)
-    if name !== nothing
-        delete!(symbols, value)
-        # TODO In JuMP v0.22, replace with
-        # delete!(registered_symbol(model), value)
-        delete!(model.obj_dict, name)
-    end
+"""
+    delete(model::JuMP.AbstractModel, name::Symbol)
+
+Delete the variable(s) or constraint(s) associated with the given name which
+were added to the model. It also removes its association with `name` so that
+new variable(s) or constraint(s) can be associated with this name.
+
+### Example
+
+Using `delete(model, x)`, the variable is deleted from the model but the name
+`:x` is still associated to the variable `x`, even if it is not valid anymore.
+```jldoctest delete_bad; setup = :(using JuMP; model = Model()), filter = r"Stacktrace:.*"s
+julia> @variable(model, x)
+x
+
+julia> delete(model, x)
+
+julia> is_valid(model, x)
+false
+
+julia> @variable(model, x[1:2])
+ERROR: An object of name x is already attached to this model. If this is intended, consider using the anonymous construction syntax, e.g., x = @variable(model, [1:N], ...) where the name of the object does not appear inside the macro.
+Stacktrace:
+ [1] error(::String) at ./error.jl:33
+ [2] _error_if_cannot_register(::Model, ::Symbol) at /home/blegat/.julia/dev/JuMP/src/macros.jl:52
+ [3] top-level scope at /home/blegat/.julia/dev/JuMP/src/macros.jl:75
+```
+To delete the association as well, use `delete(model, :x)` instead.
+```jldoctest delete_good; setup = :(using JuMP; model = Model())
+julia> @variable(model, x)
+x
+
+julia> delete(model, :x)
+
+julia> is_valid(model, x)
+false
+
+julia> @variable(model, x[1:2])
+2-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+```
+"""
+function delete(model::AbstractModel, name::Symbol)
+    value = model[name]
+    delete.(model, value)
+    delete!(object_dictionary(model), name)
     return
 end
 

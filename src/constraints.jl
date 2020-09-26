@@ -169,7 +169,6 @@ function delete(model::Model, con_ref::ConstraintRef)
         error("The constraint reference you are trying to delete does not " *
               "belong to the model.")
     end
-    unregister(model, con_ref)
     MOI.delete(backend(model), index(con_ref))
 end
 
@@ -187,7 +186,6 @@ function delete(model::Model, con_refs::Vector{<:ConstraintRef{Model}})
         error("A constraint reference you are trying to delete does not" * "
             belong to the model.")
     end
-    unregister(model, con_refs)
     MOI.delete(backend(model), index.(con_refs))
     return
 end

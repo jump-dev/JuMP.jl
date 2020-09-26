@@ -178,22 +178,27 @@ function test_variable_anonymous(ModelType, ::Any)
     @test "" == @inferred JuMP.name(x[2])
 end
 
-function test_variable_is_valid_delete(ModelType, ::Any)
+function test_variable_delete_name(ModelType, ::Any)
     model = ModelType()
     @variable(model, x)
     @test JuMP.is_valid(model, x)
     @test model[:x] === x
-    JuMP.delete(model, x)
+    JuMP.delete(model, :x)
     @test !JuMP.is_valid(model, x)
     @test_throws KeyError(:x) model[:x]
-    @variable(model, x)
-    @test JuMP.is_valid(model, x)
+    @variable(model, x[i = 1:10; iseven(i)])
+    for i in 2:2:10
+        @test JuMP.is_valid(model, x[i])
+    end
     @test model[:x] === x
-    second_model = ModelType()
-    @test_throws Exception JuMP.delete(second_model, x)
+    JuMP.delete(model, :x)
+    for i in 2:2:10
+        @test !JuMP.is_valid(model, x[i])
+    end
+    @test_throws KeyError(:x) model[:x]
 end
 
-function test_variable_delete_registered(ModelType)
+function test_variable_is_valid_delete(ModelType, ::Any)
     model = ModelType()
     @variable(model, x)
     @test JuMP.is_valid(model, x)
