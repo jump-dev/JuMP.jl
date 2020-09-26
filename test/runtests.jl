@@ -16,7 +16,7 @@ t = time()
 include("Containers/Containers.jl")
 println("Containers.jl took $(round(time() - t; digits = 1)) seconds.")
 
-@testset "$(file)" for file in filter(f -> endswith(f, ".jl"), readdir(@__DIR__))
+for file in filter(f -> endswith(f, ".jl"), readdir(@__DIR__))
     if file in [
         "runtests.jl",
         "utilities.jl",
@@ -26,9 +26,12 @@ println("Containers.jl took $(round(time() - t; digits = 1)) seconds.")
     ]
         continue
     end
-    t = time()
-    include(file)
-    println("$(file) took $(round(time() - t; digits = 1)) seconds.")
+
+    @testset "$(file)" begin
+        t = time()
+        include(file)
+        println("$(file) took $(round(time() - t; digits = 1)) seconds.")
+    end
 end
 
 # TODO: The hygiene test should run in a separate Julia instance where JuMP
