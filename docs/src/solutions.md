@@ -70,7 +70,7 @@ MOI.ResultStatusCode
 ```
 
 Common status situations are described in the
-[MOI docs](http://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Common-status-situations-1).
+[MOI docs](https://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Common-status-situations-1).
 
 ## Obtaining solutions
 

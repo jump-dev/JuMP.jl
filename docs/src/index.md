@@ -1,7 +1,7 @@
 ![JuMP logo](assets/jump-logo-with-text.svg)
 ===
 
-[![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](http://numfocus.org)
+[![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org)
 
 ```@meta
 # These comments do not display in the HTML output.
@@ -17,12 +17,12 @@
     a comprehensive list of changes between the two versions, many of which
     are breaking. This documentation is for JuMP/MathOptInterface.
     For the documentation of JuMP 0.18, see
-    [here](http://jump.dev/JuMP.jl/0.18/).
+    [here](https://jump.dev/JuMP.jl/0.18/).
 
 [JuMP](https://github.com/jump-dev/JuMP.jl) is a domain-specific modeling
 language for [mathematical
-optimization](http://en.wikipedia.org/wiki/Mathematical_optimization) embedded
-in [Julia](http://julialang.org/). It currently supports a number of open-source
+optimization](https://en.wikipedia.org/wiki/Mathematical_optimization) embedded
+in [Julia](https://julialang.org/). It currently supports a number of open-source
 and commercial solvers (see below) for a variety of problem classes, including
 **linear programming**, **mixed-integer programming**, **second-order conic
 programming**, **semidefinite programming**, and **nonlinear programming**.
@@ -34,7 +34,7 @@ JuMP's features include:
 -   Speed
     -   Benchmarking has shown that JuMP can create problems at similar speeds
         to special-purpose modeling languages such as
-        [AMPL](http://www.ampl.com/).
+        [AMPL](https://ampl.com/).
     -   JuMP communicates with most solvers in memory, avoiding the need to
         write intermediary files.
 -   Solver independence
@@ -43,19 +43,19 @@ JuMP's features include:
         package, making it easy to change between a number of open-source and
         commercial optimization software packages ("solvers").
     -   Currently supported solvers include
-        [Artelys Knitro](http://artelys.com/en/optimization-tools/knitro),
+        [Artelys Knitro](https://artelys.com/en/optimization-tools/knitro),
         [Bonmin](https://projects.coin-or.org/Bonmin),
         [Cbc](https://projects.coin-or.org/Cbc),
         [Clp](https://projects.coin-or.org/Clp),
         [Couenne](https://projects.coin-or.org/Couenne),
-        [CPLEX](http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/),
+        [CPLEX](https://www.ibm.com/analytics/cplex-optimizer),
         [ECOS](https://github.com/ifa-ethz/ecos),
-        [FICO Xpress](http://www.fico.com/en/products/fico-xpress-optimization-suite),
+        [FICO Xpress](https://www.fico.com/en/products/fico-xpress-optimization-suite),
         [GLPK](http://www.gnu.org/software/glpk/),
-        [Gurobi](http://www.gurobi.com),
+        [Gurobi](https://www.gurobi.com),
         [Ipopt](https://projects.coin-or.org/Ipopt),
-        [MOSEK](http://www.mosek.com/),
-        [NLopt](http://ab-initio.mit.edu/wiki/index.php/NLopt), and
+        [MOSEK](https://www.mosek.com/),
+        [NLopt](https://nlopt.readthedocs.io/en/latest/), and
         [SCS](https://github.com/cvxgrp/scs).
 -   Access to advanced algorithmic techniques
     -   Including efficient LP re-solves which previously required using
@@ -120,7 +120,7 @@ doi = {10.1137/15M1020575},
 ```
 
 For an earlier work where we presented a prototype implementation of JuMP, see
-[here](http://dx.doi.org/10.1287/ijoc.2014.0623):
+[here](https://dx.doi.org/10.1287/ijoc.2014.0623):
 
 ``` sourceCode
 @article{LubinDunningIJOC,
@@ -135,23 +135,23 @@ doi = {10.1287/ijoc.2014.0623},
 }
 ```
 
-A preprint of this paper is [freely available](http://arxiv.org/abs/1312.1431).
+A preprint of this paper is [freely available](https://arxiv.org/abs/1312.1431).
 
 ---
 
 ![NumFOCUS logo](assets/numfocus-logo.png)
 
-JuMP is a Sponsored Project of NumFOCUS, a 501(c)(3) nonprofit charity in the 
-United States. NumFOCUS provides JuMP with fiscal, legal, and administrative 
-support to help ensure the health and sustainability of the project. Visit 
+JuMP is a Sponsored Project of NumFOCUS, a 501(c)(3) nonprofit charity in the
+United States. NumFOCUS provides JuMP with fiscal, legal, and administrative
+support to help ensure the health and sustainability of the project. Visit
 [numfocus.org](https://numfocus.org) for more information.
 
-You can support JuMP by [donating](https://numfocus.salsalabs.org/donate-to-jump/index.html). 
+You can support JuMP by [donating](https://numfocus.salsalabs.org/donate-to-jump/index.html).
 
-Donations to JuMP are managed by NumFOCUS. For donors in the United States, 
-your gift is tax-deductible to the extent provided by law. As with any donation, 
+Donations to JuMP are managed by NumFOCUS. For donors in the United States,
+your gift is tax-deductible to the extent provided by law. As with any donation,
 you should consult with your tax adviser about your particular tax situation.
 
-JuMP's largest expense is the annual JuMP-dev workshop. Donations will help us 
-provide travel support for JuMP-dev attendees and take advantage of other 
+JuMP's largest expense is the annual JuMP-dev workshop. Donations will help us
+provide travel support for JuMP-dev attendees and take advantage of other
 opportunities that arise to support JuMP development.

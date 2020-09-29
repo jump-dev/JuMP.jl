@@ -1,7 +1,7 @@
 ![JuMP logo](https://www.juliaopt.org/images/jump-logo-with-text.svg "JuMP logo")
 ---
 
-[![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](http://numfocus.org)
+[![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org)
 
 JuMP is a domain-specific modeling language for **[mathematical optimization]**
 embedded in **[Julia]**. It currently supports a number of open-source and
@@ -12,9 +12,9 @@ commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [CDCS], [CDD],
 **[linear programming]**, **[(mixed) integer programming]**,
 **[second-order conic programming]**, **[semidefinite programming]**, and **[nonlinear programming]**.
 
-[mathematical optimization]: http://en.wikipedia.org/wiki/Mathematical_optimization
-[Julia]: http://julialang.org/
-[Artelys Knitro]: http://artelys.com/en/optimization-tools/knitro
+[mathematical optimization]: https://en.wikipedia.org/wiki/Mathematical_optimization
+[Julia]: https://julialang.org/
+[Artelys Knitro]: https://artelys.com/en/optimization-tools/knitro
 [BARON]: http://archimedes.cheme.cmu.edu/?q=baron
 [Bonmin]: https://projects.coin-or.org/Bonmin
 [Cbc]: https://github.com/coin-or/Cbc
@@ -23,16 +23,16 @@ commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [CDCS], [CDD],
 [Clp]: https://github.com/coin-or/Clp
 [COSMO]: https://github.com/oxfordcontrol/COSMO.jl
 [Couenne]: https://projects.coin-or.org/Couenne
-[CPLEX]: http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/
+[CPLEX]: https://www.ibm.com/analytics/cplex-optimizer
 [CSDP]: https://projects.coin-or.org/Csdp/
 [ECOS]: https://github.com/ifa-ethz/ecos
-[FICO Xpress]: http://www.fico.com/en/products/fico-xpress-optimization-suite
+[FICO Xpress]: https://www.fico.com/en/products/fico-xpress-optimization-suite
 [GLPK]: http://www.gnu.org/software/glpk/
-[Gurobi]: http://www.gurobi.com/
+[Gurobi]: https://www.gurobi.com/
 [Ipopt]: https://github.com/coin-or/Ipopt
 [Juniper]: https://github.com/lanl-ansi/Juniper.jl
-[MOSEK]: http://mosek.com/
-[NLopt]: http://ab-initio.mit.edu/wiki/index.php/NLopt
+[MOSEK]: https://mosek.com/
+[NLopt]: https://nlopt.readthedocs.io/en/latest/
 [OSQP]: https://osqp.org/
 [ProxSDP]: https://github.com/mariohsouto/ProxSDP.jl
 [SCIP]: https://scip.zib.de/
@@ -41,11 +41,11 @@ commercial solvers ([Artelys Knitro], [BARON], [Bonmin], [Cbc], [CDCS], [CDD],
 [SDPT3]: https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/
 [SeDuMi]: http://sedumi.ie.lehigh.edu/
 [Tulip]: https://github.com/ds4dm/Tulip.jl
-[linear programming]: http://en.wikipedia.org/wiki/Linear_programming
-[(mixed) integer programming]: http://en.wikipedia.org/wiki/Integer_programming
-[second-order conic programming]: http://en.wikipedia.org/wiki/Second-order_cone_programming
+[linear programming]: https://en.wikipedia.org/wiki/Linear_programming
+[(mixed) integer programming]: https://en.wikipedia.org/wiki/Integer_programming
+[second-order conic programming]: https://en.wikipedia.org/wiki/Second-order_cone_programming
 [semidefinite programming]: https://en.wikipedia.org/wiki/Semidefinite_programming
-[nonlinear programming]: http://en.wikipedia.org/wiki/Nonlinear_programming
+[nonlinear programming]: https://en.wikipedia.org/wiki/Nonlinear_programming
 
 JuMP makes it easy to specify and **solve optimization problems without expert knowledge**, yet at the same time allows experts to implement advanced algorithmic techniques such as exploiting efficient hot-starts in linear programming or using callbacks to interact with branch-and-bound solvers. JuMP is also **fast** - benchmarking has shown that it can create problems at similar speeds to special-purpose commercial tools such as AMPL while maintaining the expressiveness of a generic high-level programming language. JuMP can be easily embedded in complex work flows including simulations and web servers.
 
@@ -57,14 +57,14 @@ Our documentation includes an installation guide, quick-start guide, and referen
 a list of the significant breaking changes in the JuMP 0.19 release.**
 
 **Latest Release**: 0.21.5 (`release-0.21` branch)
-  * [Documentation](http://jump.dev/JuMP.jl/v0.21.5/)
+  * [Documentation](https://jump.dev/JuMP.jl/v0.21.5/)
   * [Examples](https://github.com/jump-dev/JuMP.jl/tree/release-0.21/examples)
   * Testing status:
     * TravisCI: [![Build Status](https://travis-ci.com/jump-dev/JuMP.jl.svg?branch=release-0.21)](https://travis-ci.org/JuliaOpt/JuMP.jl)
 
 
 **Development version** (`master` branch):
-  * [Documentation](http://jump.dev/JuMP.jl/dev/)
+  * [Documentation](https://jump.dev/JuMP.jl/dev/)
   * [Examples](https://github.com/jump-dev/JuMP.jl/tree/master/examples)
   * Testing status:
     * TravisCI: [![Build Status](https://travis-ci.com/jump-dev/JuMP.jl.svg?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
@@ -138,7 +138,7 @@ If you find JuMP useful in your work, we kindly request that you cite the follow
 }
 ```
 
-For an earlier work where we presented a prototype implementation of JuMP, see [here](http://dx.doi.org/10.1287/ijoc.2014.0623):
+For an earlier work where we presented a prototype implementation of JuMP, see [here](https://dx.doi.org/10.1287/ijoc.2014.0623):
 
 ```bibtex
 @article{LubinDunningIJOC,
@@ -153,11 +153,11 @@ For an earlier work where we presented a prototype implementation of JuMP, see [
 }
 ```
 
-A preprint of this paper is [freely available](http://arxiv.org/abs/1312.1431).
+A preprint of this paper is [freely available](https://arxiv.org/abs/1312.1431).
 
 ---
 
-![NumFOCUS logo](http://jump.dev/JuMP.jl/dev/assets/numfocus-logo.png)
+![NumFOCUS logo](https://jump.dev/JuMP.jl/dev/assets/numfocus-logo.png)
 
 JuMP is a Sponsored Project of NumFOCUS, a 501(c)(3) nonprofit charity in the
 United States. NumFOCUS provides JuMP with fiscal, legal, and administrative

@@ -1,4 +1,4 @@
-The ``noswot.mps`` example is from the [MIPLIB 3.0 benchmark collection](http://www.caam.rice.edu/~bixby/miplib/miplib.html). License information:
+The ``noswot.mps`` example is from the [MIPLIB 3.0 benchmark collection](https://www.caam.rice.edu/~bixby/miplib/miplib.html). License information:
 
 Copyright Notice
 1991 Rice University
@@ -14,4 +14,4 @@ Copyright Notice
 
 6. IN NO EVENT WILL RICE UNIVERSITY BE LIABLE FOR ANY DAMAGES, INCLUDING DIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES RESULTING FROM EXERCISE OF THIS LICENSE AGREEMENT OR THE USE OF THE LICENSED SOFTWARE.
 
-The ``bnatt350.mps`` example is from the [MIPLIB 2010 benchmark collection](http://miplib.zib.de/miplib2010/bnatt350.php). It derives from "Integer programming-based methods for attractor detection and control of Boolean networks" (T. Akutsu and M. Hayashida and T. Tamura, Proceedings of The combined 48th IEEE Conference on Decision and Control and 28th Chinese Control Conference, 2009), and is distributed with permission of the author. The ``bnatt350.sol`` solution file is distributed with permission of the MIPLIB 2010 maintainers.
+The ``bnatt350.mps`` example is from the [MIPLIB 2010 benchmark collection](http://miplib2010.zib.de/miplib2010/bnatt350.php). It derives from "Integer programming-based methods for attractor detection and control of Boolean networks" (T. Akutsu and M. Hayashida and T. Tamura, Proceedings of The combined 48th IEEE Conference on Decision and Control and 28th Chinese Control Conference, 2009), and is distributed with permission of the author. The ``bnatt350.sol`` solution file is distributed with permission of the MIPLIB 2010 maintainers.

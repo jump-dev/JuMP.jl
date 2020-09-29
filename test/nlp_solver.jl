@@ -1,11 +1,11 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modelling language for Julia
-# See http://github.com/jump-dev/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 # Hock-Schittkowski Nonlinear Test Suite
 # These tests include JuMP implementations of the models described in
@@ -13,7 +13,7 @@
 #  Codes, Lecture Notes in Economics and Mathematical Systems,
 #  Springer, No, 187, 1981
 # More information, including original model descriptions, is available at
-# http://www.ai7.uni-bayreuth.de/downloads.htm
+# http://www.klaus-schittkowski.de/downloads.htm
 #############################################################################
 
 # These tests are not executed as part of runtests because they depend on an

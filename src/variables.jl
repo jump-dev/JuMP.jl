@@ -1,7 +1,7 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 """
     AbstractVariable
@@ -852,7 +852,7 @@ function JuMP.add_variable(model::Model, variable::JuMP.VariableConstrainedOnCre
 end
 ```
 but adds the variables with `MOI.add_constrained_variable(model, variable.set)`
-instead. See [the MOI documentation](http://jump.dev/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
+instead. See [the MOI documentation](https://jump.dev/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
 for the difference between adding the variables with `MOI.add_constrained_variable`
 and adding them with `MOI.add_variable` and adding the constraint separately.
 """
@@ -893,7 +893,7 @@ function JuMP.add_variable(model::Model, variable::JuMP.VariablesConstrainedOnCr
 end
 ```
 but adds the variables with `MOI.add_constrained_variables(model, variable.set)`
-instead. See [the MOI documentation](http://jump.dev/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
+instead. See [the MOI documentation](https://jump.dev/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
 for the difference between adding the variables with `MOI.add_constrained_variables`
 and adding them with `MOI.add_variables` and adding the constraint separately.
 """

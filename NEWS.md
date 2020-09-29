@@ -192,10 +192,10 @@ Breaking changes:
   [MathProgBase](https://github.com/JuliaOpt/MathProgBase.jl) (MPB) to
   [MathOptInterface](https://github.com/JuliaOpt/MathOptInterface.jl)
   (MOI). MOI addresses many longstanding design issues. (See @mlubin's
-  [slides](http://www.juliaopt.org/meetings/bordeaux2018/lubin.pdf) from
+  [slides](https://www.juliaopt.org/meetings/bordeaux2018/lubin.pdf) from
   JuMP-dev 2018.) JuMP 0.19 is compatible only with solvers that have been
   updated for MOI. See the
-  [installation guide](http://www.juliaopt.org/JuMP.jl/dev/installation/)
+  [installation guide](https://www.juliaopt.org/JuMP.jl/dev/installation/)
   for a list of solvers that have and have not yet been updated.
 
 - Most solvers have been renamed to `PackageName.Optimizer`. For example,
@@ -209,12 +209,12 @@ Breaking changes:
   rewritten (inspired by `AxisArrays`) and renamed `Containers.DenseAxisArray`,
   and you can now request a container type with the `container=` keyword to the
   macros. See the corresponding
-  [documentation](http://www.juliaopt.org/JuMP.jl/dev/variables/#Variable-containers-1)
+  [documentation](https://www.juliaopt.org/JuMP.jl/dev/variables/#Variable-containers-1)
   for more details.
 
 - The statuses returned by solvers have changed. See the possible status
   values
-  [here](http://www.juliaopt.org/MathOptInterface.jl/stable/apireference.html#Termination-Status-1).
+  [here](https://www.juliaopt.org/MathOptInterface.jl/stable/apireference.html#Termination-Status-1).
   The MOI statuses are much richer than the MPB statuses and can be used to
   distinguish between previously indistinguishable cases (e.g. did the solver
   have a feasible solution when it stopped because of the time limit?).
@@ -253,7 +253,7 @@ Breaking changes:
 
 - The sign conventions for duals has changed in some cases for consistency with
   conic duality (see the
-  [documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apimanual.html#Duals-1)).
+  [documentation](https://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apimanual.html#Duals-1)).
   The `shadow_price` helper method returns duals with signs that match
   conventional LP interpretations of dual values as sensitivities of the
   objective value to relaxations of constraints.
@@ -270,7 +270,7 @@ Breaking changes:
 - The `lowerbound`, `upperbound`, and `basename` keyword arguments to the `@variable`
   macro have been renamed to `lower_bound`, `upper_bound`, and `base_name`,
   for consistency with JuMP's new
-  [style recommendations](http://www.juliaopt.org/JuMP.jl/dev/style/).
+  [style recommendations](https://www.juliaopt.org/JuMP.jl/dev/style/).
 
 - We rely on broadcasting syntax to apply accessors to collections of
   variables, e.g., `value.(x)` instead of `getvalue(x)` for collections. (Use
@@ -308,7 +308,7 @@ New features:
 
 - Direct mode and manual mode provide explicit control over when copies of a
   model are stored and/or regenerated. See the corresponding
-  [documentation](http://www.juliaopt.org/JuMP.jl/dev/solvers/).
+  [documentation](https://www.juliaopt.org/JuMP.jl/dev/solvers/).
 
 There are known regressions from JuMP 0.18 that will be addressed in a future
 release (0.19.x or later):
