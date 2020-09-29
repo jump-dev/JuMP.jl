@@ -191,13 +191,13 @@ knowledge not available in any comparable modeling systems.
 
 JuMP uses [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) to
 perform automatic differentiation; see the ForwardDiff.jl
-[documentation](http://www.juliadiff.org/ForwardDiff.jl/v0.10.2/user/limitations.html)
+[documentation](https://www.juliadiff.org/ForwardDiff.jl/v0.10.2/user/limitations.html)
 for a description of how to write a function suitable for automatic
 differentiation.
 
 !!! note
     If you see method errors with `ForwardDiff.Duals`, see the guidelines at
-    [ForwardDiff.jl](http://www.juliadiff.org/ForwardDiff.jl/release-0.10/user/limitations.html).
+    [ForwardDiff.jl](https://www.juliadiff.org/ForwardDiff.jl/release-0.10/user/limitations.html).
     The most common error is that your user-defined function is not generic with
     respect to the number type, i.e., don't assume that the input to the function
     is `Float64`.
@@ -333,7 +333,7 @@ may be expected to be within a factor of 5 of AMPL's.
 For some advanced use cases, one may want to directly query the derivatives of a
 JuMP model instead of handing the problem off to a solver.
 Internally, JuMP implements the `AbstractNLPEvaluator` interface from
-[MathOptInterface](http://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#NLP-evaluator-methods-1).
+[MathOptInterface](https://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#NLP-evaluator-methods-1).
 To obtain an NLP evaluator object from a JuMP model, use `JuMP.NLPEvaluator`.
 `JuMP.index` returns the `MOI.VariableIndex` corresponding to a JuMP variable.
 `MOI.VariableIndex` itself is a type-safe wrapper for `Int64` (stored in the

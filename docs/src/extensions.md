@@ -22,7 +22,7 @@ Extending JuMP
 # TODO: create new bridge
 ```
 
-See the [bridge section in the MOI manual](http://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Automatic-reformulation-1).
+See the [bridge section in the MOI manual](https://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Automatic-reformulation-1).
 
 ```@docs
 add_bridge

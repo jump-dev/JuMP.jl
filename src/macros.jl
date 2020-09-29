@@ -1,7 +1,7 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 using Base.Meta
 
@@ -473,7 +473,7 @@ Add a group of constraints described by the expression `expr` parametrized by
 The expression `expr` can either be
 
 * of the form `func in set` constraining the function `func` to belong to the
-  set `set` which is either a [`MOI.AbstractSet`](http://jump.dev/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1)
+  set `set` which is either a [`MOI.AbstractSet`](https://jump.dev/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1)
   or one of the JuMP shortcuts [`SecondOrderCone`](@ref),
   [`RotatedSecondOrderCone`](@ref) and [`PSDCone`](@ref), e.g.
   `@constraint(model, [1, x-1, y-2] in SecondOrderCone())` constrains the norm
@@ -772,7 +772,7 @@ end
 Set the objective sense to `sense` and objective function to `func`. The
 objective sense can be either `Min`, `Max`, `MathOptInterface.MIN_SENSE`,
 `MathOptInterface.MAX_SENSE` or `MathOptInterface.FEASIBILITY_SENSE`; see
-[`MathOptInterface.ObjectiveSense`](http://jump.dev/MathOptInterface.jl/v0.8/apireference.html#MathOptInterface.ObjectiveSense).
+[`MathOptInterface.ObjectiveSense`](https://jump.dev/MathOptInterface.jl/v0.8/apireference.html#MathOptInterface.ObjectiveSense).
 In order to set the sense programatically, i.e., when `sense` is a Julia
 variable whose value is the sense, one of the three
 `MathOptInterface.ObjectiveSense` values should be used. The function `func` can

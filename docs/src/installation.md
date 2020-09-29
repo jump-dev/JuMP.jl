@@ -23,7 +23,7 @@ is often more complex. We list below the currently available solvers.
 !!! note
     This list is open for new contributions. See also
     [Interacting with solvers](@ref) and the
-    [MathOptInterface docs](http://jump.dev/MathOptInterface.jl/v0.9.1/)
+    [MathOptInterface docs](https://jump.dev/MathOptInterface.jl/v0.9.1/)
     for more details on how JuMP interacts with solvers. Please get in touch
     with any questions about connecting new solvers with JuMP.
 
@@ -36,15 +36,15 @@ is often more complex. We list below the currently available solvers.
 | [CDD](https://github.com/cddlib/cddlib)                                        | [CDDLib.jl](https://github.com/JuliaPolyhedra/CDDLib.jl)                         | GPL      | LP                                 |
 | [Clp](https://github.com/coin-or/Clp)                                          | [Clp.jl](https://github.com/JuliaOpt/Clp.jl)                                     | EPL      | LP                                 |
 | [COSMO](https://github.com/oxfordcontrol/COSMO.jl)                             | [COSMO.jl](https://github.com/oxfordcontrol/COSMO.jl)                            | Apache   | LP, QP, SOCP, SDP                  |
-| [CPLEX](http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/) | [CPLEX.jl](https://github.com/JuliaOpt/CPLEX.jl)                                 | Comm.    | LP, MILP, SOCP, MISOCP             |
+| [CPLEX](https://www.ibm.com/analytics/cplex-optimizer/)                        | [CPLEX.jl](https://github.com/JuliaOpt/CPLEX.jl)                                 | Comm.    | LP, MILP, SOCP, MISOCP             |
 | [CSDP](https://github.com/coin-or/Csdp)                                        | [CSDP.jl](https://github.com/JuliaOpt/CSDP.jl)                                   | EPL      | LP, SDP                            |
 | [ECOS](https://github.com/ifa-ethz/ecos)                                       | [ECOS.jl](https://github.com/JuliaOpt/ECOS.jl)                                   | GPL      | LP, SOCP                           |
-| [FICO Xpress](http://www.fico.com/en/products/fico-xpress-optimization-suite)  | [Xpress.jl](https://github.com/JuliaOpt/Xpress.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP             |
+| [FICO Xpress](https://www.fico.com/en/products/fico-xpress-optimization-suite) | [Xpress.jl](https://github.com/JuliaOpt/Xpress.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP             |
 | [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK.jl](https://github.com/JuliaOpt/GLPK.jl)                                   | GPL      | LP, MILP                           |
-| [Gurobi](http://gurobi.com)                                                    | [Gurobi.jl](https://github.com/JuliaOpt/Gurobi.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP             |
+| [Gurobi](https://gurobi.com)                                                   | [Gurobi.jl](https://github.com/JuliaOpt/Gurobi.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP             |
 | [Ipopt](https://github.com/coin-or/Ipopt)                                      | [Ipopt.jl](https://github.com/JuliaOpt/Ipopt.jl)                                 | EPL      | LP, QP, NLP                        |
 | [Juniper](https://github.com/lanl-ansi/Juniper.jl)                             | [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl)                            | MIT      | MISOCP, MINLP                      |
-| [MOSEK](http://www.mosek.com/)                                                 | [MosekTools.jl](https://github.com/JuliaOpt/MosekTools.jl)                       | Comm.    | LP, MILP, SOCP, MISOCP, SDP        |
+| [MOSEK](https://www.mosek.com/)                                                | [MosekTools.jl](https://github.com/JuliaOpt/MosekTools.jl)                       | Comm.    | LP, MILP, SOCP, MISOCP, SDP        |
 | [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              | Apache   | LP, QP                             |
 | [ProxSDP](https://github.com/mariohsouto/ProxSDP.jl)                           | [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)                          | MIT      | LP, SOCP, SDP                      |
 | [SCIP](https://scip.zib.de/)                                                   | [SCIP.jl](https://github.com/SCIP-Interfaces/SCIP.jl)                            | ZIB      | MILP, MINLP                        |
@@ -73,21 +73,21 @@ Such solvers include [Bonmin](https://github.com/coin-or/Bonmin) and
 [here](https://ampl.com/products/solvers/all-solvers-for-ampl/).
 
 Additionally, you may use [GAMS](https://www.gams.com) (Julia package:
-[GAMS.jl](https://github.com/GAMS-dev/gams.jl)) to access additional solvers. Among them are 
-[AlphaECP](https://www.gams.com/latest/docs/S_ALPHAECP.html), 
-[Antigone](https://www.gams.com/latest/docs/S_ANTIGONE.html), 
-[BARON](https://www.gams.com/latest/docs/S_BARON.html), 
-[CONOPT](https://www.gams.com/latest/docs/S_CONOPT.html), 
-[Couenne](https://www.gams.com/latest/docs/S_COUENNE.html), 
-[LocalSolver](https://www.gams.com/latest/docs/S_LOCALSOLVER.html), 
+[GAMS.jl](https://github.com/GAMS-dev/gams.jl)) to access additional solvers. Among them are
+[AlphaECP](https://www.gams.com/latest/docs/S_ALPHAECP.html),
+[Antigone](https://www.gams.com/latest/docs/S_ANTIGONE.html),
+[BARON](https://www.gams.com/latest/docs/S_BARON.html),
+[CONOPT](https://www.gams.com/latest/docs/S_CONOPT.html),
+[Couenne](https://www.gams.com/latest/docs/S_COUENNE.html),
+[LocalSolver](https://www.gams.com/latest/docs/S_LOCALSOLVER.html),
 [PATHNLP](https://www.gams.com/latest/docs/S_PATHNLP.html),
-[SHOT](https://www.gams.com/latest/docs/S_SHOT.html), 
-[SNOPT](https://www.gams.com/latest/docs/S_SNOPT.html), 
-[SoPlex](https://www.gams.com/latest/docs/S_SOPLEX.html). 
-See a complete list [here](https://www.gams.com/latest/docs/S_MAIN.html). Note, 
-that [GAMS.jl](https://github.com/GAMS-dev/gams.jl) requires an installation of 
-the commercial software [GAMS](https://www.gams.com) for which a 
-[free community license](https://www.gams.com/latest/docs/UG_License.html#GAMS_Community_Licenses) 
+[SHOT](https://www.gams.com/latest/docs/S_SHOT.html),
+[SNOPT](https://www.gams.com/latest/docs/S_SNOPT.html),
+[SoPlex](https://www.gams.com/latest/docs/S_SOPLEX.html).
+See a complete list [here](https://www.gams.com/latest/docs/S_MAIN.html). Note,
+that [GAMS.jl](https://github.com/GAMS-dev/gams.jl) requires an installation of
+the commercial software [GAMS](https://www.gams.com) for which a
+[free community license](https://www.gams.com/latest/docs/UG_License.html#GAMS_Community_Licenses)
 exists.
 
 To install Gurobi, for example, and use it with a JuMP model `model`, run:
@@ -178,7 +178,7 @@ academic use). Gurobi supports "SOS" constraints.
 
 Requires a working installation of Xpress with an active license (it is possible
 to get a license for academic use, see
-[FICO Academic Partner Program](http://subscribe.fico.com/Academic-Partner-Program)).
+[FICO Academic Partner Program](https://fico.com/en/xpress-academic-license)).
 Supports SOCP and "SOS" constraints.
 
 ### MOSEK
