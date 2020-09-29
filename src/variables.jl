@@ -1094,8 +1094,10 @@ function relax_integrality(model::Model)
             unset_integer(v)
         elseif info.binary
             unset_binary(v)
-            set_lower_bound(v, max(0.0, info.lower_bound))
-            set_upper_bound(v, min(1.0, info.upper_bound))
+            if !info.has_fix
+                set_lower_bound(v, max(0.0, info.lower_bound))
+                set_upper_bound(v, min(1.0, info.upper_bound))
+            end
         end
     end
     function unrelax()
@@ -1104,15 +1106,17 @@ function relax_integrality(model::Model)
                 set_integer(v)
             elseif info.binary
                 set_binary(v)
-                if info.has_lb
-                    set_lower_bound(v, info.lower_bound)
-                else
-                    delete_lower_bound(v)
-                end
-                if info.has_ub
-                    set_upper_bound(v, info.upper_bound)
-                else
-                    delete_upper_bound(v)
+                if !info.has_fix
+                    if info.has_lb
+                        set_lower_bound(v, info.lower_bound)
+                    else
+                        delete_lower_bound(v)
+                    end
+                    if info.has_ub
+                        set_upper_bound(v, info.upper_bound)
+                    else
+                        delete_upper_bound(v)
+                    end
                 end
             end
         end
