@@ -774,6 +774,30 @@ function test_Model_relax_integrality(::Any, ::Any)
     @test is_integer(b)
     @test lower_bound(b) == -1.0
     @test upper_bound(b) == 2.0
+
+    fix(x, 1)
+    unrelax = relax_integrality(model)
+    @test !is_binary(x)
+    @test is_fixed(x)
+    unrelax()
+    @test is_binary(x)
+    @test is_fixed(x)
+
+    fix(x, 0)
+    unrelax = relax_integrality(model)
+    @test !is_binary(x)
+    @test is_fixed(x)
+    unrelax()
+    @test is_binary(x)
+    @test is_fixed(x)
+
+    fix(a, 1)
+    unrelax = relax_integrality(model)
+    @test !is_integer(a)
+    @test is_fixed(a)
+    unrelax()
+    @test is_integer(a)
+    @test is_fixed(a)
 end
 
 function test_Model_relax_integrality_error_cases(::Any, ::Any)
