@@ -1097,6 +1097,10 @@ function relax_integrality(model::Model)
             if !info.has_fix
                 set_lower_bound(v, max(0.0, info.lower_bound))
                 set_upper_bound(v, min(1.0, info.upper_bound))
+            else
+                unfix(v)
+                set_lower_bound(v, max(0.0, info.fixed_value))
+                set_upper_bound(v, min(1.0, info.fixed_value))
             end
         end
     end
@@ -1117,6 +1121,10 @@ function relax_integrality(model::Model)
                     else
                         delete_upper_bound(v)
                     end
+                else
+                    delete_lower_bound(v)
+                    delete_upper_bound(v)
+                    fix(v, info.fixed_value)
                 end
             end
         end
