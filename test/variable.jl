@@ -814,6 +814,20 @@ function test_Model_relax_integrality_error_cases(::Any, ::Any)
     err = ErrorException("Support for relaxing semi-integer constraints " *
                          "is not yet implemented.")
     @test_throws err relax_integrality(model)
+
+    model = Model()
+    @variable(model, x, Bin)
+    fix(x, 2)
+    err = ErrorException("The model has no valid relaxation: binary variable " *
+                         "fixed out of bounds.")
+    @test_throws err relax_integrality(model)
+
+    model = Model()
+    @variable(model, x, Bin)
+    fix(x, -1)
+    err = ErrorException("The model has no valid relaxation: binary variable " *
+                         "fixed out of bounds.")
+    @test_throws err relax_integrality(model)
 end
 
 function runtests()
