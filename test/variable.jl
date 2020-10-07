@@ -774,6 +774,30 @@ function test_Model_relax_integrality(::Any, ::Any)
     @test is_integer(b)
     @test lower_bound(b) == -1.0
     @test upper_bound(b) == 2.0
+
+    fix(x, 1)
+    unrelax = relax_integrality(model)
+    @test !is_binary(x)
+    @test is_fixed(x)
+    unrelax()
+    @test is_binary(x)
+    @test is_fixed(x)
+
+    fix(x, 0)
+    unrelax = relax_integrality(model)
+    @test !is_binary(x)
+    @test is_fixed(x)
+    unrelax()
+    @test is_binary(x)
+    @test is_fixed(x)
+
+    fix(a, 1)
+    unrelax = relax_integrality(model)
+    @test !is_integer(a)
+    @test is_fixed(a)
+    unrelax()
+    @test is_integer(a)
+    @test is_fixed(a)
 end
 
 function test_Model_relax_integrality_error_cases(::Any, ::Any)
@@ -789,6 +813,20 @@ function test_Model_relax_integrality_error_cases(::Any, ::Any)
     @constraint(model, x in MOI.Semiinteger(1.0, 2.0))
     err = ErrorException("Support for relaxing semi-integer constraints " *
                          "is not yet implemented.")
+    @test_throws err relax_integrality(model)
+
+    model = Model()
+    @variable(model, x, Bin)
+    fix(x, 2)
+    err = ErrorException("The model has no valid relaxation: binary variable " *
+                         "fixed out of bounds.")
+    @test_throws err relax_integrality(model)
+
+    model = Model()
+    @variable(model, x, Bin)
+    fix(x, -1)
+    err = ErrorException("The model has no valid relaxation: binary variable " *
+                         "fixed out of bounds.")
     @test_throws err relax_integrality(model)
 end
 
