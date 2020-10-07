@@ -1098,9 +1098,8 @@ function relax_integrality(model::Model)
                 set_lower_bound(v, max(0.0, info.lower_bound))
                 set_upper_bound(v, min(1.0, info.upper_bound))
             elseif info.fixed_value < 0 || info.fixed_value > 1
-                unfix(v)
-                set_lower_bound(v, max(0.0, info.fixed_value))
-                set_upper_bound(v, min(1.0, info.fixed_value))
+                error("The model has no valid relaxation: binary variable " *
+                      "fixed out of bounds.")
             end
         end
     end
@@ -1121,10 +1120,6 @@ function relax_integrality(model::Model)
                     else
                         delete_upper_bound(v)
                     end
-                elseif info.fixed_value < 0 || info.fixed_value > 1
-                    delete_lower_bound(v)
-                    delete_upper_bound(v)
-                    fix(v, info.fixed_value)
                 end
             end
         end
