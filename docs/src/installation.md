@@ -45,6 +45,7 @@ is often more complex. We list below the currently available solvers.
 | [Ipopt](https://github.com/coin-or/Ipopt)                                      | [Ipopt.jl](https://github.com/JuliaOpt/Ipopt.jl)                                 | EPL      | LP, QP, NLP                        |
 | [Juniper](https://github.com/lanl-ansi/Juniper.jl)                             | [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl)                            | MIT      | MISOCP, MINLP                      |
 | [MOSEK](https://www.mosek.com/)                                                | [MosekTools.jl](https://github.com/JuliaOpt/MosekTools.jl)                       | Comm.    | LP, MILP, SOCP, MISOCP, SDP        |
+| [NLopt](https://github.com/stevengj/nlopt)                                     | [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)                                 | GPL      | LP, QP, NLP                        |
 | [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              | Apache   | LP, QP                             |
 | [ProxSDP](https://github.com/mariohsouto/ProxSDP.jl)                           | [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)                          | MIT      | LP, SOCP, SDP                      |
 | [SCIP](https://scip.zib.de/)                                                   | [SCIP.jl](https://github.com/SCIP-Interfaces/SCIP.jl)                            | ZIB      | MILP, MINLP                        |
@@ -121,7 +122,6 @@ new MathOptInterface API:
 
 - [Alpine](https://github.com/lanl-ansi/Alpine.jl)
 - [BARON](https://github.com/joehuchette/BARON.jl)
-- [NLopt](https://github.com/JuliaOpt/NLopt.jl)
 - [Pavito](https://github.com/JuliaOpt/Pavito.jl)
 - [Pajarito](https://github.com/JuliaOpt/Pajarito.jl)
 
