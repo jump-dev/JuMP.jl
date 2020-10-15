@@ -700,8 +700,7 @@ function shadow_price(con_ref::ConstraintRef{Model, <:_MOICON})
           "of constraint.")
 end
 
-# Internal function.
-function shadow_price_less_than_(dual_value, sense::MOI.OptimizationSense)
+function _shadow_price_less_than(dual_value, sense::MOI.OptimizationSense)
     # When minimizing, the shadow price is nonpositive and when maximizing the
     # shadow price is nonnegative (because relaxing a constraint can only
     # improve the objective). By MOI convention, a feasible dual on a LessThan
@@ -716,8 +715,7 @@ function shadow_price_less_than_(dual_value, sense::MOI.OptimizationSense)
     end
 end
 
-# Internal function.
-function shadow_price_greater_than_(dual_value, sense::MOI.OptimizationSense)
+function _shadow_price_greater_than(dual_value, sense::MOI.OptimizationSense)
     # By MOI convention, a feasible dual on a GreaterThan set is nonnegative,
     # so we flip the sign when minimizing. (See comment in the method above).
     if sense == MOI.MAX_SENSE
@@ -738,7 +736,7 @@ function shadow_price(
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
-    return shadow_price_less_than_(
+    return _shadow_price_less_than(
         dual(con_ref), objective_sense(model)
     )
 end
@@ -751,7 +749,7 @@ function shadow_price(
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
-    return shadow_price_greater_than_(
+    return _shadow_price_greater_than(
         dual(con_ref), objective_sense(model)
     )
 end
@@ -768,10 +766,10 @@ function shadow_price(
     dual_val = dual(con_ref)
     if dual_val > 0
         # Treat the equality constraint as if it were a GreaterThan constraint.
-        return shadow_price_greater_than_(dual_val, sense)
+        return _shadow_price_greater_than(dual_val, sense)
     else
         # Treat the equality constraint as if it were a LessThan constraint.
-        return shadow_price_less_than_(dual_val, sense)
+        return _shadow_price_less_than(dual_val, sense)
     end
 end
 
