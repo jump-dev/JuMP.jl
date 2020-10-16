@@ -31,6 +31,7 @@ is often more complex. We list below the currently available solvers.
 | Solver                                                                         | Julia Package                                                                    | License  | Supports                           |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | -------- | ---------------------------------- |
 | [Artelys Knitro](https://www.artelys.com/knitro)                               | [KNITRO.jl](https://github.com/jump-dev/KNITRO.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP, NLP, MINLP |
+| [BARON](http://minlp.com/baron)                                                | [BARON.jl](https://github.com/joehuchette/BARON.jl)                              | Comm.    | MINLP                              |
 | [Cbc](https://github.com/coin-or/Cbc)                                          | [Cbc.jl](https://github.com/jump-dev/Cbc.jl)                                     | EPL      | MILP                               |
 | [CDCS](https://github.com/oxfordcontrol/CDCS)                                  | [CDCS.jl](https://github.com/oxfordcontrol/CDCS.jl)                              | GPL      | LP, SOCP, SDP                      |
 | [CDD](https://github.com/cddlib/cddlib)                                        | [CDDLib.jl](https://github.com/JuliaPolyhedra/CDDLib.jl)                         | GPL      | LP                                 |
@@ -122,7 +123,6 @@ not yet compatible with the latest version because they do not implement the
 new MathOptInterface API:
 
 - [Alpine](https://github.com/lanl-ansi/Alpine.jl)
-- [BARON](https://github.com/joehuchette/BARON.jl)
 - [Pajarito](https://github.com/JuliaOpt/Pajarito.jl)
 
 Solver-specific notes follow below.
