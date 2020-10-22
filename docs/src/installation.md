@@ -30,6 +30,7 @@ is often more complex. We list below the currently available solvers.
 
 | Solver                                                                         | Julia Package                                                                    | License  | Supports                           |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | -------- | ---------------------------------- |
+| [Alpine](https://github.com/lanl-ansi/Alpine.jl)                               | [Alpine.jl](https://github.com/lanl-ansi/Alpine.jl)                              | Triad NS | MINLP                              |
 | [Artelys Knitro](https://www.artelys.com/knitro)                               | [KNITRO.jl](https://github.com/jump-dev/KNITRO.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP, NLP, MINLP |
 | [BARON](http://minlp.com/baron)                                                | [BARON.jl](https://github.com/joehuchette/BARON.jl)                              | Comm.    | MINLP                              |
 | [Cbc](https://github.com/coin-or/Cbc)                                          | [Cbc.jl](https://github.com/jump-dev/Cbc.jl)                                     | EPL      | MILP                               |
@@ -122,7 +123,6 @@ The following solvers were compatible with JuMP up to release 0.18 but are
 not yet compatible with the latest version because they do not implement the
 new MathOptInterface API:
 
-- [Alpine](https://github.com/lanl-ansi/Alpine.jl)
 - [Pajarito](https://github.com/JuliaOpt/Pajarito.jl)
 
 Solver-specific notes follow below.
