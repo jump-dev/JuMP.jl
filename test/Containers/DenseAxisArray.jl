@@ -1,3 +1,6 @@
+using JuMP.Containers
+using Test
+
 @testset "DenseAxisArray" begin
     @testset "undef constructor" begin
         A = @inferred DenseAxisArray{Int}(undef, [:a, :b], 1:2)
@@ -14,6 +17,7 @@
         @test A[:b, 2] == 4
         @test isassigned(A, :a, 1)
         @test !isassigned(A, :c, 1)
+        @test 10 == @inferred sum(A)
     end
 
     @testset "undef constructor (ii)" begin
@@ -51,17 +55,22 @@ And data, a 2-element Array{Float64,1}:
         @testset "Broadcasting" begin
             plus1(x) = x + 1
             @test plus1.(A) == correct_answer
+            @test correct_answer == @inferred map(plus1, A)
             @test A .+ 1 == correct_answer
+            @test correct_answer == @inferred map(x -> x + 1, A)
             @test 1 .+ A == correct_answer
+            @test correct_answer == @inferred map(x -> 1 + x, A)
         end
 
         @testset "Operation with scalar" begin
             correct_answer = DenseAxisArray([2.0, 4.0], 2:3)
             @test 2 * A == correct_answer
+            @test correct_answer == @inferred map(x -> 2 * x, A)
             @test A * 2 == correct_answer
+            @test correct_answer == @inferred map(x -> x * 2, A)
             @test A / (1 / 2) == correct_answer
+            @test correct_answer == @inferred map(x -> x / (1 / 2), A)
         end
-
     end
 
     @testset "Symbol index set" begin
@@ -89,6 +98,7 @@ And data, a 2-element Array{Float64,1}:
         @test size(A) == (2, 2)
         @test size(A, 1) == 2
         @test size(A, 2) == 2
+        @test_throws BoundsError(A, (2,)) A[2]
         @test length.(axes(A)) == (2,2)
         @test @inferred A[2,:a] == 1
         @test A[3,:a] == 3
@@ -116,6 +126,9 @@ And data, a 2×2 Array{$Int,2}:
         @test size(A, 2) == 2
         @test size(A, 3) == 2
         @test size(A, 4) == 2
+        @test_throws BoundsError(A, (2,)) A[2]
+        @test_throws BoundsError(A, (2, :a)) A[2, :a]
+        @test_throws BoundsError(A, (2, :a, 0)) A[2, :a, 0]
         A[2,:a,-1,"a"] = 1.0
         f = 0.0
         for I in eachindex(A)
@@ -125,6 +138,13 @@ And data, a 2×2 Array{$Int,2}:
         @test isassigned(A, 2, :a, -1, "a")
         @test A[:,:,-1,"a"] == DenseAxisArray([1.0 0.0; 0.0 0.0], 2:3, [:a,:b])
         @test_throws KeyError A[2,:a,-1,:a]
+        @test sprint(summary, A) == """
+4-dimensional DenseAxisArray{Float64,4,...} with index sets:
+    Dimension 1, 2:3
+    Dimension 2, $([:a, :b])
+    Dimension 3, -1:0
+    Dimension 4, ["a", "b"]
+And data, a 2×2×2×2 Array{Float64,4}"""
         @test sprint(show, A) == """
 4-dimensional DenseAxisArray{Float64,4,...} with index sets:
     Dimension 1, 2:3
@@ -178,5 +198,13 @@ And data, a 0-dimensional Array{$Int,0}:
         @test Containers.DenseAxisArrayKey((2, :b)) in B_keys
         @test Containers.DenseAxisArrayKey((3, :a)) in B_keys
         @test Containers.DenseAxisArrayKey((3, :b)) in B_keys
+
+        # See https://github.com/jump-dev/JuMP.jl/issues/1988
+        @testset "filter" begin
+            k = filter(k -> 6 <= A[k] <= 7, keys(A))
+            @test k isa Vector{Containers.DenseAxisArrayKey{Tuple{Int, Symbol}}}
+            @test k[1] == Containers.DenseAxisArrayKey((3, :a))
+            @test k[2] == Containers.DenseAxisArrayKey((2, :b))
+        end
     end
 end

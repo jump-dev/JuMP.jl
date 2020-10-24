@@ -1,13 +1,24 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 # This file contains objective-related functions
+
+"""
+    relative_gap(model::Model)
+
+Return the final relative optimality gap after a call to `optimize!(model)`.
+Exact value depends upon implementation of MathOptInterface.RelativeGap()
+by the particular solver used for optimization.
+"""
+function relative_gap(model::Model)::Float64
+    return MOI.get(model, MOI.RelativeGap())
+end
 
 """
     objective_bound(model::Model)
@@ -104,17 +115,17 @@ function set_objective_function(model::Model, func::Real)
         MOI.ScalarAffineTerm{Float64}[], Float64(func)))
 end
 
-function set_objective(
-    model::Model,
-    sense::MOI.OptimizationSense,
-    func::Union{AbstractJuMPScalar, Real}
-)
-    set_objective_sense(model, sense)
-    set_objective_function(model, func)
+function set_objective_function(model::AbstractModel, ::MutableArithmetics.Zero)
+    set_objective_function(model, 0.0)
 end
 
-function set_objective(model::Model, sense::MOI.OptimizationSense, func)
+function set_objective_function(model::AbstractModel, func)
     error("The objective function `$(func)` is not supported by JuMP.")
+end
+
+function set_objective(model::AbstractModel, sense::MOI.OptimizationSense, func)
+    set_objective_sense(model, sense)
+    set_objective_function(model, func)
 end
 
 """

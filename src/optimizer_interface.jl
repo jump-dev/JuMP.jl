@@ -1,7 +1,7 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 function error_if_direct_mode(model::Model, func::Symbol)
     if mode(model) == DIRECT
@@ -93,7 +93,6 @@ Optimize the model. If an optimizer has not been set yet (see
 
 Keyword arguments `kwargs` are passed to the `optimize_hook`. An error is
 thrown if `optimize_hook` is `nothing` and keyword arguments are provided.
-```
 """
 function optimize!(model::Model,
                    # TODO: Remove the optimizer_factory and bridge_constraints
@@ -141,6 +140,25 @@ function optimize!(model::Model,
         end
     end
 
+    return
+end
+
+"""
+    compute_conflict!(model::Model)
+
+Compute a conflict if the model is infeasible. If an optimizer has not
+been set yet (see [`set_optimizer`](@ref)), a [`NoOptimizer`](@ref)
+error is thrown.
+
+The status of the conflict can be checked with the `MOI.ConflictStatus`
+model attribute. Then, the status for each constraint can be queried with
+the `MOI.ConstraintConflictStatus` attribute.
+"""
+function compute_conflict!(model::Model)
+    if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
+        throw(NoOptimizer())
+    end
+    MOI.compute_conflict!(backend(model))
     return
 end
 

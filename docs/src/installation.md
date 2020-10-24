@@ -23,36 +23,40 @@ is often more complex. We list below the currently available solvers.
 !!! note
     This list is open for new contributions. See also
     [Interacting with solvers](@ref) and the
-    [MathOptInterface docs](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/)
+    [MathOptInterface docs](https://jump.dev/MathOptInterface.jl/v0.9.1/)
     for more details on how JuMP interacts with solvers. Please get in touch
     with any questions about connecting new solvers with JuMP.
 
 
 | Solver                                                                         | Julia Package                                                                    | License  | Supports                           |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | -------- | ---------------------------------- |
-| [Artelys Knitro](https://www.artelys.com/knitro)                               | [KNITRO.jl](https://github.com/JuliaOpt/KNITRO.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP, NLP, MINLP |
-| [Cbc](https://projects.coin-or.org/Cbc)                                        | [Cbc.jl](https://github.com/JuliaOpt/Cbc.jl)                                     | EPL      | MILP                               |
+| [Alpine](https://github.com/lanl-ansi/Alpine.jl)                               | [Alpine.jl](https://github.com/lanl-ansi/Alpine.jl)                              | Triad NS | MINLP                              |
+| [Artelys Knitro](https://www.artelys.com/knitro)                               | [KNITRO.jl](https://github.com/jump-dev/KNITRO.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP, NLP, MINLP |
+| [BARON](http://minlp.com/baron)                                                | [BARON.jl](https://github.com/joehuchette/BARON.jl)                              | Comm.    | MINLP                              |
+| [Cbc](https://github.com/coin-or/Cbc)                                          | [Cbc.jl](https://github.com/jump-dev/Cbc.jl)                                     | EPL      | MILP                               |
 | [CDCS](https://github.com/oxfordcontrol/CDCS)                                  | [CDCS.jl](https://github.com/oxfordcontrol/CDCS.jl)                              | GPL      | LP, SOCP, SDP                      |
 | [CDD](https://github.com/cddlib/cddlib)                                        | [CDDLib.jl](https://github.com/JuliaPolyhedra/CDDLib.jl)                         | GPL      | LP                                 |
-| [Clp](https://projects.coin-or.org/Clp)                                        | [Clp.jl](https://github.com/JuliaOpt/Clp.jl)                                     | EPL      | LP                                 |
+| [Clp](https://github.com/coin-or/Clp)                                          | [Clp.jl](https://github.com/jump-dev/Clp.jl)                                     | EPL      | LP                                 |
 | [COSMO](https://github.com/oxfordcontrol/COSMO.jl)                             | [COSMO.jl](https://github.com/oxfordcontrol/COSMO.jl)                            | Apache   | LP, QP, SOCP, SDP                  |
-| [CPLEX](http://www-01.ibm.com/software/commerce/optimization/cplex-optimizer/) | [CPLEX.jl](https://github.com/JuliaOpt/CPLEX.jl)                                 | Comm.    | LP, MILP, SOCP, MISOCP             |
-| [CSDP](https://projects.coin-or.org/Csdp/)                                     | [CSDP.jl](https://github.com/JuliaOpt/CSDP.jl)                                   | EPL      | LP, SDP                            |
-| [ECOS](https://github.com/ifa-ethz/ecos)                                       | [ECOS.jl](https://github.com/JuliaOpt/ECOS.jl)                                   | GPL      | LP, SOCP                           |
-| [FICO Xpress](http://www.fico.com/en/products/fico-xpress-optimization-suite)  | [Xpress.jl](https://github.com/JuliaOpt/Xpress.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP             |
-| [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK.jl](https://github.com/JuliaOpt/GLPK.jl)                                   | GPL      | LP, MILP                           |
-| [Gurobi](http://gurobi.com)                                                    | [Gurobi.jl](https://github.com/JuliaOpt/Gurobi.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP             |
-| [Ipopt](https://projects.coin-or.org/Ipopt)                                    | [Ipopt.jl](https://github.com/JuliaOpt/Ipopt.jl)                                 | EPL      | LP, QP, NLP                        |
+| [CPLEX](https://www.ibm.com/analytics/cplex-optimizer/)                        | [CPLEX.jl](https://github.com/jump-dev/CPLEX.jl)                                 | Comm.    | LP, MILP, SOCP, MISOCP             |
+| [CSDP](https://github.com/coin-or/Csdp)                                        | [CSDP.jl](https://github.com/jump-dev/CSDP.jl)                                   | EPL      | LP, SDP                            |
+| [ECOS](https://github.com/ifa-ethz/ecos)                                       | [ECOS.jl](https://github.com/jump-dev/ECOS.jl)                                   | GPL      | LP, SOCP                           |
+| [FICO Xpress](https://www.fico.com/en/products/fico-xpress-optimization-suite) | [Xpress.jl](https://github.com/jump-dev/Xpress.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP             |
+| [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK.jl](https://github.com/jump-dev/GLPK.jl)                                   | GPL      | LP, MILP                           |
+| [Gurobi](https://gurobi.com)                                                   | [Gurobi.jl](https://github.com/jump-dev/Gurobi.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP             |
+| [Ipopt](https://github.com/coin-or/Ipopt)                                      | [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl)                                 | EPL      | LP, QP, NLP                        |
 | [Juniper](https://github.com/lanl-ansi/Juniper.jl)                             | [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl)                            | MIT      | MISOCP, MINLP                      |
-| [MOSEK](http://www.mosek.com/)                                                 | [MosekTools.jl](https://github.com/JuliaOpt/MosekTools.jl)                       | Comm.    | LP, MILP, SOCP, MISOCP, SDP        |
+| [MOSEK](https://www.mosek.com/)                                                | [MosekTools.jl](https://github.com/jump-dev/MosekTools.jl)                       | Comm.    | LP, MILP, SOCP, MISOCP, SDP        |
+| [NLopt](https://github.com/stevengj/nlopt)                                     | [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)                                 | GPL      | LP, QP, NLP                        |
 | [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              | Apache   | LP, QP                             |
+| [Pavito](https://github.com/jump-dev/Pavito.jl)                                | [Pavito.jl](https://github.com/jump-dev/Pavito.jl)                               | MPL-2    | MICP                               |
 | [ProxSDP](https://github.com/mariohsouto/ProxSDP.jl)                           | [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)                          | MIT      | LP, SOCP, SDP                      |
 | [SCIP](https://scip.zib.de/)                                                   | [SCIP.jl](https://github.com/SCIP-Interfaces/SCIP.jl)                            | ZIB      | MILP, MINLP                        |
-| [SCS](https://github.com/cvxgrp/scs)                                           | [SCS.jl](https://github.com/JuliaOpt/SCS.jl)                                     | MIT      | LP, SOCP, SDP                      |
-| [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/JuliaOpt/SDPA.jl), [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl)                                   | GPL      | LP, SDP                            |
-| [SDPNAL](https://blog.nus.edu.sg/mattohkc/softwares/sdpnalplus/)               | [SDPNAL.jl](https://github.com/JuliaOpt/SDPNAL.jl)                               | CC BY-SA | LP, SDP                            |
-| [SDPT3](https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/)                     | [SDPT3.jl](https://github.com/JuliaOpt/SDPT3.jl)                                 | GPL      | LP, SOCP, SDP                      |
-| [SeDuMi](http://sedumi.ie.lehigh.edu/)                                         | [SeDuMi.jl](https://github.com/JuliaOpt/SeDuMi.jl)                               | GPL      | LP, SOCP, SDP                      |
+| [SCS](https://github.com/cvxgrp/scs)                                           | [SCS.jl](https://github.com/jump-dev/SCS.jl)                                     | MIT      | LP, SOCP, SDP                      |
+| [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/jump-dev/SDPA.jl), [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl)                                   | GPL      | LP, SDP                            |
+| [SDPNAL](https://blog.nus.edu.sg/mattohkc/softwares/sdpnalplus/)               | [SDPNAL.jl](https://github.com/jump-dev/SDPNAL.jl)                               | CC BY-SA | LP, SDP                            |
+| [SDPT3](https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/)                     | [SDPT3.jl](https://github.com/jump-dev/SDPT3.jl)                                 | GPL      | LP, SOCP, SDP                      |
+| [SeDuMi](http://sedumi.ie.lehigh.edu/)                                         | [SeDuMi.jl](https://github.com/jump-dev/SeDuMi.jl)                               | GPL      | LP, SOCP, SDP                      |
 | [Tulip](https://github.com/ds4dm/Tulip.jl)                                     | [Tulip.jl](https://github.com/ds4dm/Tulip.jl)                                    | MPL-2    | LP                                 |
 
 Where:
@@ -66,11 +70,29 @@ Where:
 -   SDP = Semidefinite programming
 -   MISDP = Mixed-integer semidefinite programming
 
-You may also use [AmplNLWriter](https://github.com/JuliaOpt/AmplNLWriter.jl) to
+You may also use [AmplNLWriter](https://github.com/jump-dev/AmplNLWriter.jl) to
 access solvers that support the [nl format](https://en.wikipedia.org/wiki/Nl_(format)).
-Such solvers include [Bonmin](https://projects.coin-or.org/Bonmin) and
-[Couenne](https://projects.coin-or.org/Couenne). See a more complete list
+Such solvers include [Bonmin](https://github.com/coin-or/Bonmin) and
+[Couenne](https://github.com/coin-or/Couenne). See a more complete list
 [here](https://ampl.com/products/solvers/all-solvers-for-ampl/).
+
+Additionally, you may use [GAMS](https://www.gams.com) (Julia package:
+[GAMS.jl](https://github.com/GAMS-dev/gams.jl)) to access additional solvers. Among them are
+[AlphaECP](https://www.gams.com/latest/docs/S_ALPHAECP.html),
+[Antigone](https://www.gams.com/latest/docs/S_ANTIGONE.html),
+[BARON](https://www.gams.com/latest/docs/S_BARON.html),
+[CONOPT](https://www.gams.com/latest/docs/S_CONOPT.html),
+[Couenne](https://www.gams.com/latest/docs/S_COUENNE.html),
+[LocalSolver](https://www.gams.com/latest/docs/S_LOCALSOLVER.html),
+[PATHNLP](https://www.gams.com/latest/docs/S_PATHNLP.html),
+[SHOT](https://www.gams.com/latest/docs/S_SHOT.html),
+[SNOPT](https://www.gams.com/latest/docs/S_SNOPT.html),
+[SoPlex](https://www.gams.com/latest/docs/S_SOPLEX.html).
+See a complete list [here](https://www.gams.com/latest/docs/S_MAIN.html). Note,
+that [GAMS.jl](https://github.com/GAMS-dev/gams.jl) requires an installation of
+the commercial software [GAMS](https://www.gams.com) for which a
+[free community license](https://www.gams.com/latest/docs/UG_License.html#GAMS_Community_Licenses)
+exists.
 
 To install Gurobi, for example, and use it with a JuMP model `model`, run:
 
@@ -101,10 +123,6 @@ The following solvers were compatible with JuMP up to release 0.18 but are
 not yet compatible with the latest version because they do not implement the
 new MathOptInterface API:
 
-- [Alpine](https://github.com/lanl-ansi/Alpine.jl)
-- [BARON](https://github.com/joehuchette/BARON.jl)
-- [NLopt](https://github.com/JuliaOpt/NLopt.jl)
-- [Pavito](https://github.com/JuliaOpt/Pavito.jl)
 - [Pajarito](https://github.com/JuliaOpt/Pajarito.jl)
 
 Solver-specific notes follow below.
@@ -122,7 +140,7 @@ Requires a license. A trial version is available for small problem instances.
 CDD can solve the problem both using `Float64` and `Rational{BigInt}`
 arithmetics. The arithmetic used the type `T` given in `CDDLib.Optimizer{T}`.
 Only `CDDLib.Optimizer{Float64}` can be used with JuMP as JuMP inputs the
-problem in `Float64` arithmetics. Use [MOI](https://github.com/JuliaOpt/MathOptInterface.jl)
+problem in `Float64` arithmetics. Use [MOI](https://github.com/jump-dev/MathOptInterface.jl)
 directly for `CDDLib.Optimizer{Rational{BigInt}}`.
 
 ### COIN-OR Cbc
@@ -160,13 +178,13 @@ academic use). Gurobi supports "SOS" constraints.
 
 Requires a working installation of Xpress with an active license (it is possible
 to get a license for academic use, see
-[FICO Academic Partner Program](http://subscribe.fico.com/Academic-Partner-Program)).
+[FICO Academic Partner Program](https://fico.com/en/xpress-academic-license)).
 Supports SOCP and "SOS" constraints.
 
 ### MOSEK
 
 Requires a license (free for academic use).
-The [Mosek interface](https://github.com/JuliaOpt/Mosek.jl) is maintained by
+The [Mosek interface](https://github.com/MOSEK/Mosek.jl) is maintained by
 the Mosek team. (Thanks!)
 Note that even if the package implementing MathOptInterface is `MosekTools`,
 for consistency the MOI optimizer is called `Mosek.Optimizer` so do the
@@ -193,4 +211,4 @@ documentation for more information.
 
 ### SDPA
 
-SDPA is a second order solver which comes in several variants. The main version has a C++ interface which [SDPA.jl](https://github.com/JuliaOpt/SDPA.jl) uses for efficiently communicating the problem instance to the solver. The three high-precision variants, SDPA-GMP (arbitrary precision), SDPA-QD ("quad-double" precision) and SDPA-DD ("double-double" precision) do not expose a library interface, but can used via [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl) which writes and reads files to interact with the solver binary.
+SDPA is a second order solver which comes in several variants. The main version has a C++ interface which [SDPA.jl](https://github.com/jump-dev/SDPA.jl) uses for efficiently communicating the problem instance to the solver. The three high-precision variants, SDPA-GMP (arbitrary precision), SDPA-QD ("quad-double" precision) and SDPA-DD ("double-double" precision) do not expose a library interface, but can used via [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl) which writes and reads files to interact with the solver binary.

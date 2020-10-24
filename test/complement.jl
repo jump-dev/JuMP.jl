@@ -1,10 +1,12 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 using JuMP
 using Test
+
+include(joinpath(@__DIR__, "utilities.jl"))
 
 @testset "Scalar Complementarity" begin
     @testset "complements" begin
@@ -29,7 +31,7 @@ using Test
     @testset "error: x--F" begin
         model = Model()
         @variable(model, x >= 0)
-        @test_throws(
+        @test_throws_strip(
             ErrorException(
                 "In `@constraint(model, x ⟂ 2x - 1)`: second term must be a " *
                 "variable."
@@ -41,7 +43,7 @@ using Test
     @testset "error: F--F" begin
         model = Model()
         @variable(model, x >= 0)
-        @test_throws(
+        @test_throws_strip(
             ErrorException(
                 "In `@constraint(model, x + 1 ⟂ 2x - 1)`: second term must " *
                 "be a variable."
@@ -74,7 +76,7 @@ end
     @testset "error: length mismatch" begin
         model = Model()
         @variable(model, x[1:2] >= 0)
-        @test_throws(
+        @test_throws_strip(
             ErrorException(
                 "In `@constraint(model, x ⟂ [x[1]])`: size of mapping does " *
                 "not match size of variables: (2,) != (1,)."
@@ -86,7 +88,7 @@ end
     @testset "error: x--F" begin
         model = Model()
         @variable(model, x[1:2] >= 0)
-        @test_throws(
+        @test_throws_strip(
             ErrorException(
                 "In `@constraint(model, x ⟂ 2x .- 1)`: second term must be an " *
                 "array of variables."
@@ -98,7 +100,7 @@ end
     @testset "error: F--F" begin
         model = Model()
         @variable(model, x[1:2] >= 0)
-        @test_throws(
+        @test_throws_strip(
             ErrorException(
                 "In `@constraint(model, x .+ 1 ⟂ 2x .- 1)`: second term must " *
                 "be an array of variables."

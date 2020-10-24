@@ -1,16 +1,17 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
 # This file contains an example bridge used for tests.
 
 using JuMP
+
 const MOIB = MOI.Bridges
 const MOIBC = MOI.Bridges.Constraint
 
@@ -20,6 +21,8 @@ const MOIBC = MOI.Bridges.Constraint
 Scalar set of nonnegative numbers.
 """
 struct Nonnegative <: MOI.AbstractScalarSet end
+
+MOI.copy(set::Nonnegative) = set
 
 """
     NonnegativeBridge{T}

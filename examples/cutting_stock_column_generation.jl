@@ -1,14 +1,14 @@
 #  Copyright 2019, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
-# Based on http://doi.org/10.5281/zenodo.3329388
+# Based on https://doi.org/10.5281/zenodo.3329388
 
 using JuMP, GLPK, SparseArrays, Test
 
@@ -92,7 +92,7 @@ For more information on column-generation techniques applied on the cutting
 stock problem, you can see:
   * [Integer programming column generation strategies for the cutting stock
     problem and its variants](https://tel.archives-ouvertes.fr/tel-00011657/document)
-  * [Tackling the cutting stock problem](http://doi.org/10.5281/zenodo.3329388)
+  * [Tackling the cutting stock problem](https://doi.org/10.5281/zenodo.3329388)
 """
 function example_cutting_stock(; max_gen_cols::Int=5000)
     maxwidth = 100.0

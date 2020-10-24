@@ -1,12 +1,11 @@
 module JuMPExtension
+
 # Simple example of JuMP extension used in the tests to check that JuMP works well with extensions
 # The main difference between `JuMP.Model` and `JuMPExtension.MyModel` is the fact that in `add_variable` (resp. `add_constraint`),
 # `JuMP.Model` applies the modification to its `moi_backend` field while
 # `JuMPExtension.MyModel` stores the `AbstractVariable` (resp. `AbstractConstraint`) in a list.
 
-using MathOptInterface
-const MOI = MathOptInterface
-import JuMP
+using JuMP
 
 struct ConstraintIndex
     value::Int # Index in `model.constraints`
@@ -253,13 +252,10 @@ end
 
 
 # Objective
-function JuMP.set_objective(m::MyModel, sense::MOI.OptimizationSense,
-                            f::JuMP.AbstractJuMPScalar)
-    m.objectivesense = sense
+function JuMP.set_objective_function(m::MyModel, f::JuMP.AbstractJuMPScalar)
     m.objective_function = f
 end
-function JuMP.set_objective(m::MyModel, sense::MOI.OptimizationSense, f::Real)
-    m.objectivesense = sense
+function JuMP.set_objective_function(m::MyModel, f::Real)
     m.objective_function = JuMP.GenericAffExpr{Float64, MyVariableRef}(f)
 end
 JuMP.objective_sense(model::MyModel) = model.objectivesense

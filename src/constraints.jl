@@ -1,11 +1,11 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
 """
@@ -298,7 +298,7 @@ model = Model()
 optimize!(model)
 ```
 with an optimizer that does not support `F`-in-`CustomSet` constraints, the
-constraint will not be bridge unless he manually calls `add_bridge(model,
+constraint will not be bridged unless he manually calls `add_bridge(model,
 CustomBridge)`. In order to automatically add the `CustomBridge` to any model to
 which an `F`-in-`CustomSet` is added, simply add the following method:
 ```julia
@@ -320,7 +320,6 @@ reasons:
 3. Defining a method where neither the function nor any of the argument types
    are defined in the package is called [*type piracy*](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-type-piracy-1)
    and is discouraged in the Julia style guide.
-```
 """
 struct BridgeableConstraint{C, B} <: AbstractConstraint
     constraint::C
@@ -418,6 +417,12 @@ struct VectorConstraint{F <: AbstractJuMPScalar,
 end
 function VectorConstraint(func::Vector{<:AbstractJuMPScalar},
                           set::MOI.AbstractVectorSet)
+  if length(func) != MOI.dimension(set)
+      throw(DimensionMismatch(
+          "Dimension of the function $(length(func)) does not match the " *
+          "dimension of the set $(set)."
+      ))
+  end
     VectorConstraint(func, set, VectorShape())
 end
 
@@ -444,7 +449,7 @@ function moi_add_constraint(model::MOI.ModelLike, f::MOI.AbstractFunction,
         if moi_mode(model) == DIRECT
             bridge_message = "."
         elseif moi_bridge_constraints(model)
-            bridge_message = " and there are no bridges that can reformulate it into supported constraints."
+            error(sprint(io -> MOI.Bridges.debug(model.optimizer, typeof(f), typeof(s); io = io)))
         else
             bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
         end
@@ -651,6 +656,17 @@ function value(con_ref::ConstraintRef{Model, <:_MOICON}; result::Int = 1)
     return reshape_vector(_constraint_primal(con_ref, result), con_ref.shape)
 end
 
+"""
+    value(con_ref::ConstraintRef, var_value::Function)
+
+Evaluate the primal value of the constraint `con_ref` using `var_value(v)`
+as the value for each variable `v`.
+"""
+function value(con_ref::ConstraintRef{Model, <:_MOICON}, var_value::Function)
+    f = jump_function(constraint_object(con_ref))
+    return reshape_vector(value.(f, var_value), con_ref.shape)
+end
+
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
 function _constraint_primal(
     con_ref::ConstraintRef{
@@ -728,6 +744,8 @@ This value is computed from [`dual`](@ref) and can be queried only when
 (not `FEASIBILITY_SENSE`). For linear constraints, the shadow prices differ at
 most in sign from the `dual` value depending on the objective sense.
 
+See also [`reduced_cost`](@ref JuMP.reduced_cost).
+
 ## Notes
 
 - The function simply translates signs from `dual` and does not validate
@@ -744,8 +762,7 @@ function shadow_price(con_ref::ConstraintRef{Model, <:_MOICON})
           "of constraint.")
 end
 
-# Internal function.
-function shadow_price_less_than_(dual_value, sense::MOI.OptimizationSense)
+function _shadow_price_less_than(dual_value, sense::MOI.OptimizationSense)
     # When minimizing, the shadow price is nonpositive and when maximizing the
     # shadow price is nonnegative (because relaxing a constraint can only
     # improve the objective). By MOI convention, a feasible dual on a LessThan
@@ -760,8 +777,7 @@ function shadow_price_less_than_(dual_value, sense::MOI.OptimizationSense)
     end
 end
 
-# Internal function.
-function shadow_price_greater_than_(dual_value, sense::MOI.OptimizationSense)
+function _shadow_price_greater_than(dual_value, sense::MOI.OptimizationSense)
     # By MOI convention, a feasible dual on a GreaterThan set is nonnegative,
     # so we flip the sign when minimizing. (See comment in the method above).
     if sense == MOI.MAX_SENSE
@@ -782,7 +798,7 @@ function shadow_price(
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
-    return shadow_price_less_than_(
+    return _shadow_price_less_than(
         dual(con_ref), objective_sense(model)
     )
 end
@@ -795,7 +811,7 @@ function shadow_price(
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
-    return shadow_price_greater_than_(
+    return _shadow_price_greater_than(
         dual(con_ref), objective_sense(model)
     )
 end
@@ -812,10 +828,10 @@ function shadow_price(
     dual_val = dual(con_ref)
     if dual_val > 0
         # Treat the equality constraint as if it were a GreaterThan constraint.
-        return shadow_price_greater_than_(dual_val, sense)
+        return _shadow_price_greater_than(dual_val, sense)
     else
         # Treat the equality constraint as if it were a LessThan constraint.
-        return shadow_price_less_than_(dual_val, sense)
+        return _shadow_price_less_than(dual_val, sense)
     end
 end
 

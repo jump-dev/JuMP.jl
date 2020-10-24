@@ -1,11 +1,11 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
 """
@@ -31,6 +31,19 @@ function callback_value(cb_data, x::VariableRef)
     )
 end
 
+"""
+    callback_value(cb_data, expr::Union{GenericAffExpr, GenericQuadExpr})
+
+Return the primal solution of an affine or quadratic expression inside a callback by getting
+the value for each variable appearing in the expression.
+
+`cb_data` is the argument to the callback function, and the type is dependent on
+the solver.
+"""
+function callback_value(cb_data, expr::Union{GenericAffExpr, GenericQuadExpr})
+    return value(expr, v -> callback_value(cb_data, v))
+end
+
 function MOI.submit(model::Model, cb::MOI.LazyConstraint, con::ScalarConstraint)
     return MOI.submit(backend(model), cb, moi_function(con.func), con.set)
 end
@@ -43,7 +56,7 @@ function MOI.submit(
     model::Model,
     cb::MOI.HeuristicSolution,
     variables::Vector{VariableRef},
-    values::Vector{Float64}
+    values::Vector{<:Real}
 )
-    return MOI.submit(backend(model), cb, index.(variables), values)
+    return MOI.submit(backend(model), cb, index.(variables), convert(Vector{Float64}, values))
 end

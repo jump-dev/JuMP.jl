@@ -1,11 +1,11 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 # print.jl
 # All "pretty printers" for JuMP types.
@@ -231,10 +231,51 @@ function model_string(print_mode, model::AbstractModel)
     if !isempty(constraints)
         str *= eol
     end
+    # TODO: Generalize this when similar functionality is needed for
+    # AbstractModel.
+    nl_subexpressions = _nl_subexpression_string(print_mode, model)
+    if !isempty(nl_subexpressions)
+        str *= ijl ? "\\text{With NL expressions} \\quad" :
+            "With NL expressions" * eol
+        str *= sep * join(nl_subexpressions, eol * sep)
+        str *= eol
+    end
     if ijl
         str = "\\begin{alignat*}{1}" * str * "\\end{alignat*}\n"
     end
     return str
+end
+
+_nl_subexpression_string(print_mode, ::AbstractModel) = String[]
+
+function _nl_subexpression_string(print_mode, model::Model)
+    strings = String[]
+    if model.nlp_data !== nothing
+        num_subexpressions = length(model.nlp_data.nlexpr)::Int
+        for k in 1:num_subexpressions
+            ex = model.nlp_data.nlexpr[k]
+            expr_string = _tape_to_expr(
+                model,
+                1, # start index in the expression
+                ex.nd,
+                adjmat(ex.nd),
+                ex.const_values,
+                [], # parameter_values (not used)
+                [], # subexpressions (not needed because !splat_subexpressions)
+                model.nlp_data.user_operators,
+                false, # generic_variable_names
+                false, # splat_subexpressions
+                print_mode,
+            )
+            if print_mode == IJuliaMode
+                expr_name = "subexpression_{$k}"
+            else
+                expr_name = "subexpression[$k]"
+            end
+            push!(strings, "$expr_name: $expr_string")
+        end
+    end
+    return strings
 end
 
 """

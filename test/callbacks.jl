@@ -1,7 +1,7 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 using JuMP
 using Test
@@ -58,6 +58,13 @@ end
     @test length(c) == 1
     @test c[1][1] == [index(x)]
     @test c[1][2] == [0.0]
+    # Non-Float64 case
+    MOI.submit(model, MOI.HeuristicSolution(DummyCallbackData()), [x], [1])
+    @test length(mock.submitted) == 1
+    c = mock.submitted[MOI.HeuristicSolution(DummyCallbackData())]
+    @test length(c) == 2
+    @test c[2][1] == [index(x)]
+    @test c[2][2] == [1.0]
 end
 
 @testset "callback_value" begin
@@ -73,4 +80,8 @@ end
     end)
     optimize!(model)
     @test callback_value(cb, x) == 1
+    expr = x + 1
+    @test callback_value(cb, expr) == 2
+    quad_expr = expr^2
+    @test callback_value(cb, quad_expr) == 4
 end

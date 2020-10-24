@@ -57,7 +57,7 @@ explicitly include in the initial formulation. When a MIP solver reaches a new
 solution, for example with a heuristic or by solving a problem at a node in
 the branch-and-bound tree, it will give the user the chance to provide
 constraint(s) that would make the current solution infeasible. For some more
-information about lazy constraints, see this [blog post by Paul Rubin](http://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html).
+information about lazy constraints, see this [blog post by Paul Rubin](https://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html).
 
 A lazy constraint callback can be set using the following syntax:
 
@@ -89,7 +89,7 @@ solver reaches a new node in the branch-and-bound tree, it will give the user
 the chance to provide cuts to make the current relaxed (fractional) solution
 infeasible in the hopes of obtaining an integer solution. For more details
 about the difference between user cuts and lazy constraints see the
-aforementioned [blog post](http://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html).
+aforementioned [blog post](https://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html).
 
 A user-cut callback can be set using the following syntax:
 

@@ -1,11 +1,11 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 # src/aff_expr.jl
 # Defines all types relating to affine expressions
@@ -18,7 +18,7 @@
 # Utilities for OrderedDict
 function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     # Adding zero terms to this dictionary leads to unacceptable performance
-    # degradations. See, e.g., https://github.com/JuliaOpt/JuMP.jl/issues/1946.
+    # degradations. See, e.g., https://github.com/jump-dev/JuMP.jl/issues/1946.
     if iszero(v)
         return dict  # No-op.
     end
@@ -222,8 +222,6 @@ product of two variables.
 """
 function add_to_expression! end
 
-# TODO: add deprecations for Base.push! and Base.append!
-
 # With one factor.
 
 function add_to_expression!(aff::GenericAffExpr,
@@ -328,6 +326,12 @@ const AffExpr = GenericAffExpr{Float64,VariableRef}
 function _assert_isfinite(a::AffExpr)
     for (coef, var) in linear_terms(a)
         isfinite(coef) || error("Invalid coefficient $coef on variable $var.")
+    end
+    if isnan(a.constant)
+        error(
+            "Expression contains an invalid NaN constant. This could be " *
+            "produced by `Inf - Inf`."
+        )
     end
 end
 

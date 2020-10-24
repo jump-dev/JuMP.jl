@@ -19,7 +19,7 @@ optimization step. Typical questions include:
  - Do I have a dual solution?
  - How sensitive is the solution to data perturbations?
 
-JuMP follows closely the concepts defined in [MathOptInterface (MOI)](https://github.com/JuliaOpt/MathOptInterface.jl)
+JuMP follows closely the concepts defined in [MathOptInterface (MOI)](https://github.com/jump-dev/MathOptInterface.jl)
 to answer user questions about a finished call to `optimize!(model)`. There
 are three main steps in querying a solution:
 
@@ -52,7 +52,7 @@ This function will return a `MOI.TerminationStatusCode` `enum`.
 MOI.TerminationStatusCode
 ```
 
-Additionally, we can receive a solver specific string explaning why the
+Additionally, we can receive a solver specific string explaining why the
 optimization stopped with [`raw_status`](@ref).
 
 ## Solution statuses
@@ -70,7 +70,7 @@ MOI.ResultStatusCode
 ```
 
 Common status situations are described in the
-[MOI docs](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apimanual/#Common-status-situations-1).
+[MOI docs](https://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Common-status-situations-1).
 
 ## Obtaining solutions
 
@@ -130,10 +130,17 @@ end
 
 ## Accessing MathOptInterface attributes
 
-[MathOptInterface](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/) defines a large
+[MathOptInterface](https://jump.dev/MathOptInterface.jl/v0.9.10/) defines a large
 number of model attributes that can be queried. Examples include
-[`MOI.RelativeGap`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.RelativeGap) and
-[`MOI.SimplexIterations`](https://www.juliaopt.org/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.SimplexIterations).
+[`MOI.RelativeGap`](https://jump.dev/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.RelativeGap) and
+[`MOI.SimplexIterations`](https://jump.dev/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.SimplexIterations).
+
+Some attributes can be directly accessed by getter functions. These include
+- [`objective_bound`](@ref)
+- [`relative_gap`](@ref)
+- [`simplex_iterations`](@ref)
+- [`barrier_iterations`](@ref)
+- [`node_count`](@ref)
 
 To query these attributes, use:
 ```julia
@@ -141,7 +148,14 @@ using JuMP
 model = Model()
 # ...
 optimize!(model)
-MOI.get(model, MOI.RelativeGap())
+
+@show relative_gap(model)
+# or
+@show MOI.get(model, MOI.RelativeGap())
+
+@show simplex_iterations(model)
+# or
+@show MOI.get(model, MOI.SimplexIterations())
 ```
 
 ## Sensitivity analysis for LP
@@ -235,6 +249,45 @@ lp_objective_perturbation_range
 lp_rhs_perturbation_range
 ```
 
+## Conflicts
+
+When the model you input is infeasible, some solvers can help you find the 
+cause of this infeasibility by offering a conflict, i.e., a subset of the 
+constraints that create this infeasibility. Depending on the solver, 
+this can also be called an IIS (irreducible inconsistent subsystem). 
+
+The function [`compute_conflict!`](@ref) is used to trigger the computation of
+a conflict. Once this process is finished, the attribute
+[`MOI.ConflictStatus`](@ref) returns a [`MOI.ConflictStatusCode`](@ref).
+
+If there is a conflict, you can query from each constraint whether it 
+participates in the conflict or not using the attribute
+[`MOI.ConstraintConflictStatus`](@ref), which returns a
+[`MOI.ConflictParticipationStatusCode`](@ref).
+
+For instance, this is how you can use this functionality: 
+
+```julia
+using JuMP
+model = Model() # You must use a solver that supports conflict refining/IIS computation, like CPLEX or Gurobi
+@variable(model, x >= 0)
+@constraint(model, c1, x >= 2)
+@constraint(model, c2, x <= 1)
+optimize!(model)
+
+# termination_status(model) will likely be MOI.INFEASIBLE, 
+# depending on the solver
+
+compute_conflict!(model)
+if MOI.get(model, MOI.ConflictStatus()) != MOI.CONFLICT_FOUND
+    error("No conflict could be found for an infeasible model.")
+end
+
+# Both constraints should participate in the conflict.
+MOI.get(model, MOI.ConstraintConflictStatus(), c1)
+MOI.get(model, MOI.ConstraintConflictStatus(), c2)
+```
+
 ## Multiple solutions
 
 Some solvers support returning multiple solutions. You can check how many
@@ -276,4 +329,17 @@ JuMP.solve_time
 OptimizeNotCalled
 MOI.optimize!
 JuMP.result_count
+JuMP.relative_gap
+JuMP.simplex_iterations
+JuMP.barrier_iterations
+JuMP.node_count
+```
+
+```@docs
+JuMP.compute_conflict!
+MOI.compute_conflict!
+MOI.ConflictStatus
+MOI.ConflictStatusCode
+MOI.ConstraintConflictStatus
+MOI.ConflictParticipationStatusCode
 ```

@@ -1,7 +1,7 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 """
     struct SparseAxisArray{T,N,K<:NTuple{N, Any}} <: AbstractArray{T,N}
@@ -54,17 +54,6 @@ function Base.similar(sa::SparseAxisArray{S,N,K}, ::Type{T},
     end
     return SparseAxisArray(d)
 end
-# The generic implementation uses `LinearIndices`
-function Base.collect_to_with_first!(dest::SparseAxisArray, first_value, iterator,
-                                     state)
-    indices = eachindex(iterator)
-    dest[first(indices)] = first_value
-    for index in Iterators.drop(indices, 1)
-        element, state = iterate(iterator, state)
-        dest[index] = element
-    end
-    return dest
-end
 
 function Base.mapreduce(f, op, sa::SparseAxisArray)
     mapreduce(f, op, values(sa.data))
@@ -80,8 +69,6 @@ function Base.haskey(sa::SparseAxisArray{T,1,Tuple{I}}, idx::I) where {T, I}
     return haskey(sa.data, (idx,))
 end
 
-Base.eachindex(g::Base.Generator{<:SparseAxisArray}) = eachindex(g.iter)
-
 # Error for sa[..., :, ...]
 function _colon_error() end
 function _colon_error(::Colon, args...)
@@ -89,22 +76,27 @@ function _colon_error(::Colon, args...)
                         " Containers.SparseAxisArray"))
 end
 _colon_error(arg, args...) = _colon_error(args...)
+
 function Base.setindex!(d::SparseAxisArray{T, N, K}, value,
                         idx::K) where {T, N, K<:NTuple{N, Any}}
     setindex!(d, value, idx...)
 end
-function Base.setindex!(d::SparseAxisArray, value, idx...)
+function Base.setindex!(d::SparseAxisArray{T, N}, value, idx...) where {T, N}
+    length(idx) < N && throw(BoundsError(d, idx))
     _colon_error(idx...)
     setindex!(d.data, value, idx)
 end
+
 function Base.getindex(d::SparseAxisArray{T, N, K},
                        idx::K) where {T, N, K<:NTuple{N, Any}}
     getindex(d, idx...)
 end
-function Base.getindex(d::SparseAxisArray, idx...)
+function Base.getindex(d::SparseAxisArray{T, N}, idx...) where {T, N}
+    length(idx) < N && throw(BoundsError(d, idx))
     _colon_error(idx...)
     getindex(d.data, idx)
 end
+
 Base.eachindex(d::SparseAxisArray) = keys(d.data)
 
 # Need to define it as indices may be non-integers
@@ -223,11 +215,15 @@ end
 ########
 
 # Inspired from Julia SparseArrays stdlib package
-function Base.show(io::IO, ::MIME"text/plain", sa::SparseAxisArray)
+# `Base.summary` is also called from `showerror` on `BoundsError`.
+function Base.summary(io::IO, sa::SparseAxisArray)
     num_entries = length(sa.data)
     print(io, typeof(sa), " with ", num_entries,
-              isone(num_entries) ? " entry" : " entries")
-    if !iszero(num_entries)
+          isone(num_entries) ? " entry" : " entries")
+end
+function Base.show(io::IO, ::MIME"text/plain", sa::SparseAxisArray)
+    summary(io, sa)
+    if !iszero(length(sa.data))
         println(io, ":")
         show(io, sa)
     end

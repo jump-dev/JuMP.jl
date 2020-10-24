@@ -1,11 +1,11 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
 using JuMP, GLPK, Test
@@ -14,7 +14,7 @@ using JuMP, GLPK, Test
     example_diet()
 
 Solve the classic "diet problem". Based on
-http://www.gurobi.com/documentation/5.6/example-tour/diet_cpp_cpp
+https://www.gurobi.com/documentation/9.0/examples/diet_cpp_cpp.html
 """
 function example_diet(; verbose = true)
     function print_solution(is_optimal, foods, buy)

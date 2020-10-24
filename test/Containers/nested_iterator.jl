@@ -1,3 +1,6 @@
+using JuMP.Containers
+using Test
+
 @testset "Nested Iterator" begin
     iterators = (() -> 1:3, i -> 1:i)
     condition(i, j) = j > i
@@ -11,4 +14,7 @@
         (3, 2)
         (3, 3)
     ]
+    @testset "StackOverflow #2335" begin
+        @test iterate(JuMP.Containers.nested(() -> 1:100_000, condition = _ -> false)) === nothing
+    end
 end

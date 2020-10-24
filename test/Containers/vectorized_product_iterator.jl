@@ -1,3 +1,6 @@
+using JuMP.Containers
+using Test
+
 @testset "Vectorized Product Iterator" begin
     I = [1 2
          3 4]

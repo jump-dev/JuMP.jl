@@ -1,19 +1,26 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 # test/print.jl
 # Testing $fa pretty-printing-related functionality
 #############################################################################
 
 using JuMP
-using LinearAlgebra, Test
-import JuMP.REPLMode, JuMP.IJuliaMode
+using LinearAlgebra
+using Test
+
+import JuMP.IJuliaMode
+import JuMP.REPLMode
+
+@static if !(:JuMPExtension in names(Main))
+    include(joinpath(@__DIR__, "JuMPExtension.jl"))
+end
 
 # Helper function to test IO methods work correctly
 function io_test(mode, obj, exp_str; repl=:both)
@@ -123,7 +130,7 @@ end
 
     end
 
-    # See https://github.com/JuliaOpt/JuMP.jl/pull/1352
+    # See https://github.com/jump-dev/JuMP.jl/pull/1352
     @testset "Expression of coefficient type with unit" begin
         m = Model()
         @variable m x
@@ -383,7 +390,7 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(model_1, u[1:3], Bin)
         @variable(model_1, fi == 9)
         @objective(model_1, Max, a - b + 2a1 - 10x)
-        @constraint(model_1, con, a + b - 10c - 2x + c1 <= 1)
+        @constraint(model_1, con, a + b - 10c + c1 - 2x <= 1)
         @constraint(model_1, a*b <= 2)
         @constraint(model_1, soc, [1 - a; u] in SecondOrderCone())
         @constraint(model_1, [a b; c x] in PSDCone())
@@ -396,7 +403,7 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(REPLMode, model_1, """
     Max a - b + 2 a1 - 10 x
     Subject to
-     con : a + b - 10 c - 2 x + c1 $le 1.0
+     con : a + b - 10 c + c1 - 2 x $le 1.0
      a*b $le 2.0
      [a  b;
       b  x] $inset PSDCone()
@@ -446,7 +453,7 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
 
         io_test(IJuliaMode, model_1, """
     \\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
-    \\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\
+    \\text{Subject to} \\quad & a + b - 10 c + c1 - 2 x \\leq 1.0\\\\
      & a\\times b \\leq 2.0\\\\
      & \\begin{bmatrix}
     a & b\\\\
@@ -517,7 +524,7 @@ end
 # Test printing of models of type `ModelType` for which the model is stored in
 # its JuMP form, e.g., as `AbstractVariable`s and `AbstractConstraint`s.
 # This is used by `JuMPExtension` but can also be used by external packages such
-# as `StructJuMP`, see https://github.com/JuliaOpt/JuMP.jl/issues/1711
+# as `StructJuMP`, see https://github.com/jump-dev/JuMP.jl/issues/1711
 function model_extension_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Model" begin
         repl(s) = JuMP._math_symbol(REPLMode, s)
@@ -608,7 +615,8 @@ end
         model = Model()
         @variable(model, x)
         @NLobjective(model, Max, sin(x))
-        @NLconstraint(model, cos(x) == 0)
+        c = @NLexpression(model, cos(x))
+        @NLconstraint(model, c == 0)
 
         io_test(REPLMode, model, """
     A JuMP Model
@@ -624,12 +632,15 @@ end
         io_test(REPLMode, model, """
     Max sin(x)
     Subject to
-     cos(x) - 0.0 $eq 0
+     subexpression[1] - 0.0 $eq 0
+    With NL expressions
+     subexpression[1]: cos(x)
     """, repl=:print)
 
         io_test(IJuliaMode, model, """
     \\begin{alignat*}{1}\\max\\quad & sin(x)\\\\
-    \\text{Subject to} \\quad & cos(x) - 0.0 = 0\\\\
+    \\text{Subject to} \\quad & subexpression_{1} - 0.0 = 0\\\\
+    \\text{With NL expressions} \\quad & subexpression_{1}: cos(x)\\\\
     \\end{alignat*}
     """)
     end

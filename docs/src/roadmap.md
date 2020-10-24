@@ -9,38 +9,38 @@ invited.
 
 JuMP 1.0 will be ready to release roughly when all of these tasks are completed.
 Some but not all of these tasks are summarized in the
-[JuMP 1.0 milestone](https://github.com/JuliaOpt/JuMP.jl/milestone/12).
+[JuMP 1.0 milestone](https://github.com/jump-dev/JuMP.jl/milestone/12).
 
-- Create a website for JuMP.
+- Create a website for JuMP. (**Done**: [jump.dev](https://jump.dev))
 - Deprecate the JuliaOpt organization and move repositories to the
-  [JuMP-dev](https://github.com/JuMP-dev) organization.
+  [JuMP-dev](https://github.com/JuMP-dev) organization. (**Done**)
 - Address major regressions from JuMP 0.18.
-  - Performance ([#1403](https://github.com/JuliaOpt/JuMP.jl/issues/1403),
-                 [#1654](https://github.com/JuliaOpt/JuMP.jl/issues/1654),
-                 [#1607](https://github.com/JuliaOpt/JuMP.jl/issues/1607))
-  - Callbacks
+  - Performance ([#1403](https://github.com/jump-dev/JuMP.jl/issues/1403),
+                 [#1654](https://github.com/jump-dev/JuMP.jl/issues/1654),
+                 [#1607](https://github.com/jump-dev/JuMP.jl/issues/1607))
+  - Callbacks (**Done**: see `examples/callbacks.jl`)
   - Column generation syntax (**Done**: see `examples/cutting_stock_column_generation.jl`)
   - Support for second-order cones in Gurobi, CPLEX, and Xpress (**Done**)
 - Fix issues that we promised MOI would fix.
-  - Checking feasibility of solutions ([#693](https://github.com/JuliaOpt/JuMP.jl/issues/693))
-  - Accessing IIS ([#1053](https://github.com/JuliaOpt/JuMP.jl/issues/1035))
+  - Checking feasibility of solutions ([#693](https://github.com/jump-dev/JuMP.jl/issues/693))
+  - Accessing IIS (**Done**: see [Conflicts](@ref))
   - Accessing multiple results from solvers
-  - Dual warm-starts ([#2094](https://github.com/JuliaOpt/JuMP.jl/issues/2094))
+  - Dual warm-starts ([#2094](https://github.com/jump-dev/JuMP.jl/issues/2094))
 - Address “easy” usability issues
-  - Line numbers in error messages ([#1174](https://github.com/JuliaOpt/JuMP.jl/issues/1174))
+  - Line numbers in error messages (**Done**: [#2276](https://github.com/jump-dev/JuMP.jl/pull/2276))
   - LP sensitivity summary (**Done**: see [Sensitivity analysis for LP](@ref))
-  - Inferred element types for collections in macros (**Done**: [#2070](https://github.com/JuliaOpt/JuMP.jl/pull/2070))
+  - Inferred element types for collections in macros (**Done**: [#2070](https://github.com/jump-dev/JuMP.jl/pull/2070))
   - Expose solver-independent options from JuMP (**Done**: see [`set_silent`](@ref) etc.)
-- Improve the documentation ([#1062](https://github.com/JuliaOpt/JuMP.jl/issues/1062))
+- Improve the documentation ([#1062](https://github.com/jump-dev/JuMP.jl/issues/1062))
   - Separate how-to, concept explanation, and technical reference following the
     [Divio recommendations](https://www.divio.com/blog/documentation/)
-  - Fully integrate [JuMPTutorials](https://github.com/JuliaOpt/JuMPTutorials.jl)
+  - Fully integrate [JuMPTutorials](https://github.com/jump-dev/JuMPTutorials.jl)
     with JuMP's documentation.
 - Developer experience
-  - Get JuMP’s unit tests running in less than two minutes. See [#1745](https://github.com/JuliaOpt/JuMP.jl/pull/1745).
+  - Get JuMP’s unit tests running in less than two minutes. See [#1745](https://github.com/jump-dev/JuMP.jl/pull/1745).
 - All solvers should complete the transition to MOI.
 - Provide packages for installing Bonmin and Couenne.
-- [MathOptFormat](https://github.com/odow/MathOptFormat.jl) 1.0
+- [MathOptFormat](https://github.com/odow/MathOptFormat.jl) 1.0 (**Done**)
 
 ## MOI 1.0
 

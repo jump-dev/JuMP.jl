@@ -1,11 +1,11 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
 module JuMP
@@ -19,6 +19,7 @@ const _MA = MutableArithmetics
 import MathOptInterface
 const MOI = MathOptInterface
 const MOIU = MOI.Utilities
+const MOIB = MOI.Bridges
 
 import Calculus
 import DataStructures.OrderedDict
@@ -197,7 +198,7 @@ function Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
     if solver !== nothing
         error("The solver= keyword is no longer available in JuMP 0.19 and " *
               "later. See the JuMP documentation " *
-              "(http://www.juliaopt.org/JuMP.jl/latest/) for latest syntax.")
+              "(https://jump.dev/JuMP.jl/latest/) for latest syntax.")
     end
     universal_fallback = MOIU.UniversalFallback(MOIU.Model{Float64}())
     caching_opt = MOIU.CachingOptimizer(universal_fallback,
@@ -661,6 +662,40 @@ function time_limit_sec(model::Model)
     return MOI.get(model, MOI.TimeLimitSec())
 end
 
+"""
+    simplex_iterations(model::Model)
+
+Gets the cumulative number of simplex iterations during the most-recent optimization.
+
+Solvers must implement `MOI.SimplexIterations()` to use this function.
+"""
+function simplex_iterations(model::Model)
+    return MOI.get(model, MOI.SimplexIterations())
+end
+
+"""
+    barrier_iterations(model::Model)
+
+Gets the cumulative number of barrier iterations during the most recent optimization.
+
+Solvers must implement `MOI.BarrierIterations()` to use this function.
+"""
+function barrier_iterations(model::Model)
+    return MOI.get(model, MOI.BarrierIterations())
+end
+
+"""
+    node_count(model::Model)
+
+Gets the total number of branch-and-bound nodes explored during the most recent
+optimization in a Mixed Integer Program.
+
+Solvers must implement `MOI.NodeCount()` to use this function.
+"""
+function node_count(model::Model)
+    return MOI.get(model, MOI.NodeCount())
+end
+
 # Abstract base type for all scalar types
 # The subtyping of `AbstractMutable` will allow calls of some `Base` functions
 # to be redirected to a method in MA that handles type promotion more carefuly
@@ -968,7 +1003,8 @@ include("callbacks.jl")
 include("file_formats.jl")
 
 # JuMP exports everything except internal symbols, which are defined as those
-# whose name starts with an underscore. If you don't want all of these symbols
+# whose name starts with an underscore. Macros whose names start with
+# underscores are internal as well. If you don't want all of these symbols
 # in your environment, then use `import JuMP` instead of `using JuMP`.
 
 # Do not add JuMP-defined symbols to this exclude list. Instead, rename them
@@ -977,7 +1013,8 @@ const _EXCLUDE_SYMBOLS = [Symbol(@__MODULE__), :eval, :include]
 
 for sym in names(@__MODULE__, all=true)
     sym_string = string(sym)
-    if sym in _EXCLUDE_SYMBOLS || startswith(sym_string, "_")
+    if sym in _EXCLUDE_SYMBOLS || startswith(sym_string, "_") ||
+         startswith(sym_string, "@_")
         continue
     end
     if !(Base.isidentifier(sym) || (startswith(sym_string, "@") &&

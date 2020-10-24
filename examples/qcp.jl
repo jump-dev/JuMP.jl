@@ -1,11 +1,11 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
 using JuMP, Ipopt, Test
@@ -14,7 +14,7 @@ using JuMP, Ipopt, Test
     example_qcp(; verbose = true)
 
 A simple quadratically constrained program based on
-http://www.gurobi.com/documentation/5.5/example-tour/node25
+https://www.gurobi.com/documentation/9.0/examples/qcp_c_c.html
 """
 function example_qcp(; verbose = true)
     model = Model(Ipopt.Optimizer)

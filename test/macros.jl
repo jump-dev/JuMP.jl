@@ -1,18 +1,26 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 # test/macros.jl
 # Testing for macros
 #############################################################################
 
-import MutableArithmetics
-const MA = MutableArithmetics
+using JuMP
+using Test
+
+const MA = JuMP._MA
+
+include(joinpath(@__DIR__, "utilities.jl"))
+
+@static if !(:JuMPExtension in names(Main))
+    include(joinpath(@__DIR__, "JuMPExtension.jl"))
+end
 
 @testset "Check Julia generator expression parsing" begin
     sumexpr = :(sum(x[i,j] * y[i,j] for i = 1:N, j in 1:M if i != j))
@@ -50,6 +58,15 @@ end
 @testset "MutableArithmetics.Zero (Issue #2187)" begin
     model = Model()
     c = @constraint(model, sum(1 for _ in 1:0) == sum(1 for _ in 1:0))
+    @test constraint_object(c).func == AffExpr(0.0)
+    @test constraint_object(c).set == MOI.EqualTo(0.0)
+end
+
+@testset "MutableArithmetics.Zero (Issue #2087)" begin
+    model = Model()
+    @objective(model, Min, sum(1 for _ in 1:0))
+    @test objective_function(model) == AffExpr(0.0)
+    c = @constraint(model, sum(1 for _ in 1:0) in MOI.EqualTo(0.0))
     @test constraint_object(c).func == AffExpr(0.0)
     @test constraint_object(c).set == MOI.EqualTo(0.0)
 end
@@ -143,6 +160,44 @@ function build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
         @test JuMP.constraint_object(cref1).set isa MOI.PowerCone{Float64}
         cref2 = @constraint(model, [1, x, x] in PowerCone(0.5), dual = true)
         @test JuMP.constraint_object(cref2).set isa MOI.DualPowerCone{Float64}
+    end
+end
+
+struct CustomType
+end
+function JuMP.parse_constraint_head(_error::Function, ::Val{:(:=)}, lhs, rhs)
+    return false, :(), :(build_constraint($_error, $(esc(lhs)), $(esc(rhs))))
+end
+struct CustomSet <: MOI.AbstractScalarSet
+end
+Base.copy(set::CustomSet) = set
+function JuMP.build_constraint(_error::Function, func, ::CustomType)
+    JuMP.build_constraint(_error, func, CustomSet())
+end
+function custom_expression_test(ModelType::Type{<:JuMP.AbstractModel})
+    @testset "Custom expression" begin
+        model = ModelType()
+        @variable(model, x)
+        @constraint(model, con_ref, x := CustomType())
+        con = JuMP.constraint_object(con_ref)
+        @test jump_function(con) == x
+        @test moi_set(con) isa CustomSet
+    end
+end
+
+function JuMP.parse_one_operator_constraint(_error::Function, ::Bool, ::Val{:f}, x)
+    return :(), :(build_constraint($_error, $(esc(x)), $(esc(CustomType()))))
+end
+function custom_function_test(ModelType::Type{<:JuMP.AbstractModel})
+    @testset "Custom function" begin
+        model = ModelType()
+        @variable(model, x)
+        @constraint(model, con_ref, f(x))
+        con = JuMP.constraint_object(con_ref)
+        @test jump_function(con) == x
+        @test moi_set(con) isa CustomSet
+
+        @test_macro_throws ErrorException @constraint(model, g(x))
     end
 end
 
@@ -265,6 +320,40 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test con.set == MOI.SecondOrderCone(2)
     end
 
+    @testset "@build_constraint (SOS1)" begin
+        model = ModelType()
+        @variable(model, x[1:3])
+        con = @build_constraint(x in JuMP.SOS1())
+        con2 = @build_constraint(x in JuMP.SOS1([4.0,6.0,1.0]))
+        @test con isa JuMP.VectorConstraint
+        @test con.func == x
+        @test con.set == MOI.SOS1([1.0, 2.0, 3.0])
+        @test_throws(
+            ErrorException("Weight vector in SOS1 is not of length 3."),
+            @build_constraint(x in JuMP.SOS1([1.0]))
+            )
+        @test con2 isa JuMP.VectorConstraint
+        @test con2.func == x
+        @test con2.set == MOI.SOS1([4.0,6.0,1.0])
+    end
+
+    @testset "@build_constraint (SOS2)" begin
+        model = ModelType()
+        @variable(model, x[1:3])
+        con = @build_constraint(x in JuMP.SOS2())
+        con2 = @build_constraint(x in JuMP.SOS2([4.0,6.0,1.0]))
+        @test con isa JuMP.VectorConstraint
+        @test con.func == x
+        @test con.set == MOI.SOS2([1.0, 2.0, 3.0])
+        @test_throws(
+            ErrorException("Weight vector in SOS2 is not of length 3."),
+            @build_constraint(x in JuMP.SOS2([1.0]))
+        )
+        @test con2 isa JuMP.VectorConstraint
+        @test con2.func == x
+        @test con2.set == MOI.SOS2([4.0,6.0,1.0])
+    end
+
     @testset "@build_constraint (broadcast)" begin
         model = ModelType()
         @variable(model, x[1:2])
@@ -293,10 +382,47 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
     end
 
     build_constraint_keyword_test(ModelType)
+    custom_expression_test(ModelType)
+    custom_function_test(ModelType)
 end
 
 @testset "Macros for JuMP.Model" begin
     macros_test(Model, VariableRef)
+
+    @testset "Adding anonymous variable and specify required constraint on it" begin
+        model = Model()
+        @test_macro_throws(
+            ErrorException(
+                "In `@variable(m, Int)`: Ambiguous variable name Int detected." *
+                " To specify an anonymous integer variable, use `@variable(model, integer = true)` instead."
+            ),
+            @variable(m, Int)
+        )
+        v = @variable(model, integer = true)
+        @test name(v) == ""
+        @test is_integer(v)
+
+        @test_macro_throws(
+            ErrorException(
+                "In `@variable(m, Bin)`: Ambiguous variable name Bin detected." *
+                " To specify an anonymous binary variable, use `@variable(model, binary = true)` instead."
+            ),
+            @variable(m, Bin)
+        )
+        v = @variable(model, binary = true)
+        @test name(v) == ""
+        @test is_binary(v)
+
+        @test_macro_throws(
+            ErrorException(
+                "In `@variable(m, PSD)`: Size of anonymous square matrix of positive semidefinite anonymous variables is not specified." *
+                " To specify size of square matrix use `@variable(model, [1:n, 1:n], PSD)` instead."
+            ),
+            @variable(m, PSD)
+        )
+        v = @variable(model, [1:1, 1:1], PSD)
+        @test name(v[1]) == ""
+    end
 
     @testset "Nested tuple destructuring" begin
         m = Model()
@@ -500,35 +626,75 @@ end
         A = [1 0; 0 1]
         @variable(model, x)
 
-        @test_macro_throws ErrorException(
-            "In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...` in the definition of an index set."
-        ) @variable(model, y[axes(A)...])
+        @test_macro_throws(
+            ErrorException(
+                "In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...` in the definition of an index set."
+            ),
+            @variable(model, y[axes(A)...])
+        )
 
         f(a, b) = [a, b]
         @variable(model, z[f((1, 2)...)])
         @test length(z) == 2
 
-        @test_macro_throws ErrorException(
-            "In `@constraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @constraint(model, [axes(A)...], x >= 1)
+        @test_macro_throws(
+            ErrorException(
+                "In `@constraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
+            ),
+            @constraint(model, [axes(A)...], x >= 1)
+        )
 
-        @test_macro_throws ErrorException(
-            "In `@NLconstraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @NLconstraint(model, [axes(A)...], x >= 1)
+        @test_macro_throws(
+            ErrorException(
+                "In `@NLconstraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
+            ),
+            @NLconstraint(model, [axes(A)...], x >= 1)
+        )
 
-        @test_macro_throws ErrorException(
-            "In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @expression(model, [axes(A)...], x)
+        @test_macro_throws(
+            ErrorException(
+                "In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
+            ),
+            @expression(model, [axes(A)...], x)
+        )
 
-        @test_macro_throws ErrorException(
-            "In `@NLexpression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @NLexpression(model, [axes(A)...], x)
+        @test_macro_throws(
+            ErrorException(
+                "In `@NLexpression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
+            ),
+            @NLexpression(model, [axes(A)...], x)
+        )
 
-        @test_macro_throws ErrorException(
-            "In `@NLparameter(model, p[axes(A)...] == x)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @NLparameter(model, p[axes(A)...] == x)
+        @test_macro_throws(
+            ErrorException(
+                "In `@NLparameter(model, p[axes(A)...] == x)`: cannot use splatting operator `...` in the definition of an index set."
+            ),
+            @NLparameter(model, p[axes(A)...] == x)
+        )
     end
 
+    @testset "NaN in constraints" begin
+        model = Model()
+        @variable(model, x >= 0)
+        @test_throws(
+            ErrorException(
+                "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`."
+            ),
+            @constraint(model, x >= NaN)
+        )
+        @test_throws ErrorException(
+            "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`."
+        ) @constraint(model, 1 <= x + NaN <= 2)
+        @test_throws ErrorException(
+            "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`."
+        ) @constraint(model, 1 <= x + Inf <= 2)
+        @test_throws_strip(
+            ErrorException(
+                "In `@constraint(model, 1 <= x <= NaN)`: Invalid bounds, cannot contain NaN: [1, NaN]."
+            ),
+            @constraint(model, 1 <= x <= NaN)
+        )
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
