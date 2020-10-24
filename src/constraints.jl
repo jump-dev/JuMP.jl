@@ -54,26 +54,60 @@ Base.broadcastable(con_ref::ConstraintRef) = Ref(con_ref)
 """
     dual_start_value(con_ref::ConstraintRef)
 
-Return the dual start value (MOI attribute `ConstraintDualStart`) of the constraint `con_ref`. 
+Return the dual start value (MOI attribute `ConstraintDualStart`) of the
+constraint `con_ref`. 
 
-Note: If no dual start value has been set, `dual_start_value` will return `Nothing`
+Note: If no dual start value has been set, `dual_start_value` will return
+`nothing`
 
 See also [`set_dual_start_value`](@ref).
 """
-function dual_start_value(con_ref::ConstraintRef)::Union{Nothing, Float64}
+function dual_start_value(con_ref::ConstraintRef{Model, <:_MOICON})
+    return reshape_vector(_dual_start(con_ref), dual_shape(con_ref.shape))
+end
+
+# Returns the value of MOI.ConstraintDualStart in a type-stable way
+function _dual_start(
+    con_ref::ConstraintRef{
+        Model, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}
+    },
+)::Union{Nothing, Float64}
+    return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
+end
+function _dual_start(
+    con_ref::ConstraintRef{
+        Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}
+    },
+)::Union{Nothing, Vector{Float64}}
     return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
 end
 
 """
-    set_dual_start_value(con_ref::ConstraintRef, value::Number)
+    set_dual_start_value(con_ref::ConstraintRef, value)
 
-Set the dual start value (MOI attribute `ConstraintDualStart`) of the constraint `con_ref` to `value`. 
+Set the dual start value (MOI attribute `ConstraintDualStart`) of the constraint
+`con_ref` to `value`. To remove a dual start value set it to `nothing`.
 
 See also [`dual_start_value`](@ref).
 """
-function set_dual_start_value(con_ref::ConstraintRef, value::Number)
+function set_dual_start_value(con_ref::ConstraintRef{
+    Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}},
+    value)
+    vectorized_value = vectorize(value, dual_shape(con_ref.shape))
     MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref,
-            Float64(value))
+        vectorized_value)
+    return
+end
+function set_dual_start_value(con_ref::ConstraintRef{
+    Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}},
+    ::Nothing)
+    MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, nothing)
+    return
+end
+function set_dual_start_value(con_ref::ConstraintRef{
+    Model, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}},
+    value)
+    MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, value)
     return
 end
 
@@ -91,7 +125,9 @@ end
 
 Set a constraint's name attribute.
 """
-set_name(con_ref::ConstraintRef{Model,<:_MOICON}, s::String) = MOI.set(con_ref.model, MOI.ConstraintName(), con_ref, s)
+function set_name(con_ref::ConstraintRef{Model,<:_MOICON}, s::String)
+    return MOI.set(con_ref.model, MOI.ConstraintName(), con_ref, s)
+end
 
 """
     constraint_by_name(model::AbstractModel,

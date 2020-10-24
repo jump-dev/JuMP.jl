@@ -567,9 +567,19 @@ end
         model = Model()
         @variable(model, x)
         con = @constraint(model, 2x <= 1)
+        # scalar
         @test dual_start_value(con) === nothing
         set_dual_start_value(con, 2)
         @test dual_start_value(con) == 2.0
+        set_dual_start_value(con, nothing)
+        @test dual_start_value(con) === nothing
+        # vector
+        con_vec = @constraint(model, [x, x] in SecondOrderCone())
+        @test dual_start_value(con_vec) === nothing
+        set_dual_start_value(con_vec, [1.0, 3.0])
+        @test dual_start_value(con_vec) == [1.0, 3.0]
+        set_dual_start_value(con_vec, nothing)
+        @test dual_start_value(con_vec) === nothing
     end
 end
 
