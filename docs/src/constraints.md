@@ -261,19 +261,23 @@ julia> dual_start_value(con)
 A vector constraint will require a vector warmstart:
 
 ```jldoctest constraint_dual_start_vector; setup=:(model=Model())
-julia> @variable(model, x)
-x
+julia> @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
 
-julia> @constraint(model, con, [x, x] in SecondOrderCone())
-con : [x, x] in MathOptInterface.SecondOrderCone(2)
+julia> @constraint(model, con, x in SecondOrderCone())
+con : [x[1], x[2], x[3]] in MathOptInterface.SecondOrderCone(3)
 
 julia> dual_start_value(con)
 
-julia> set_dual_start_value(con, [1.0, 3.0])
+julia> set_dual_start_value(con, [1.0, 2.0, 3.0])
 
 julia> dual_start_value(con)
-2-element Array{Float64,1}:
+3-element Array{Float64,1}:
  1.0
+ 2.0
  3.0
 ```
 
@@ -287,6 +291,10 @@ for (F, S) in list_of_constraint_types(model)
     end
 end
 ```
+
+!!! note
+    Some constraints might not have well defined duals, hence one might need to
+    filter `(F, S)` pairs.
 
 ## Constraint containers
 
