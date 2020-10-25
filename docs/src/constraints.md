@@ -277,7 +277,8 @@ julia> dual_start_value(con)
  3.0
 ```
 
-To set the previous solution to a new solve, use:
+To take the dual solution from the last solve and use it as the starting point
+for a new solve, use:
 
 ```julia
 for (F, S) in list_of_constraint_types(model)
