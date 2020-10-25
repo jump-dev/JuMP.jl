@@ -618,13 +618,16 @@ function test_Model_dual_start(::Any, ::Any)
     model = Model()
     @variable(model, x)
     con = @constraint(model, 2x <= 1)
-    # scalar
     @test dual_start_value(con) === nothing
     set_dual_start_value(con, 2)
     @test dual_start_value(con) == 2.0
     set_dual_start_value(con, nothing)
     @test dual_start_value(con) === nothing
-    # vector
+end
+
+function test_Model_dual_start_vector(::Any, ::Any)
+    model = Model()
+    @variable(model, x)
     con_vec = @constraint(model, [x, x] in SecondOrderCone())
     @test dual_start_value(con_vec) === nothing
     set_dual_start_value(con_vec, [1.0, 3.0])

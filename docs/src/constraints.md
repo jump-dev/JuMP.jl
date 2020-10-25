@@ -237,10 +237,11 @@ constraint_by_name
 
 ## Start Values
 
-There is a way to assign a starting value to some constraint's dual (for warmstarting the optimizer) for each constraint: using [`set_dual_start_value`](@ref).
+Provide a starting value (also called warmstart) for a constraint's dual using
+[`set_dual_start_value`](@ref).
 
-The start value of a constraint's dual can be queried using [`dual_start_value`](@ref). If
-no start value has been set, [`dual_start_value`](@ref) will return `Nothing`.
+The start value of a constraint's dual can be queried using [`dual_start_value`](@ref).
+If no start value has been set, [`dual_start_value`](@ref) will return `nothing`.
 
 ```jldoctest constraint_dual_start; setup=:(model=Model())
 julia> @variable(model, x)
@@ -255,6 +256,35 @@ julia> set_dual_start_value(con, 2)
 
 julia> dual_start_value(con)
 2.0
+```
+
+A vector constraint will require a vector warmstart:
+
+```jldoctest constraint_dual_start_vector; setup=:(model=Model())
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, con, [x, x] in SecondOrderCone())
+con : [x, x] in MathOptInterface.SecondOrderCone(2)
+
+julia> dual_start_value(con)
+
+julia> set_dual_start_value(con, [1.0, 3.0])
+
+julia> dual_start_value(con)
+2-element Array{Float64,1}:
+ 1.0
+ 3.0
+```
+
+To set the previous solution to a new solve, use:
+
+```julia
+for (F, S) in list_of_constraint_types(model)
+    for con in all_constraints(model, F, S)
+        set_dual_start_value(con, dual(con))
+    end
+end
 ```
 
 ## Constraint containers
