@@ -41,7 +41,7 @@ function _try_parse_idx_set(arg::Expr)
     if arg.head === :kw || arg.head === :(=)
         @assert length(arg.args) == 2
         return true, arg.args[1], arg.args[2]
-    elseif isexpr(arg, :call) && arg.args[1] === :in
+    elseif isexpr(arg, :call) && (arg.args[1] === :in || arg.args[1] === :∈)
         return true, arg.args[2], arg.args[3]
     else
         return false, nothing, nothing
