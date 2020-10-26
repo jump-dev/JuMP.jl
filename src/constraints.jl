@@ -93,7 +93,7 @@ See also [`dual_start_value`](@ref).
 function set_dual_start_value(con_ref::ConstraintRef{
     Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}},
     value
-    )
+)
     vectorized_value = vectorize(value, dual_shape(con_ref.shape))
     MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref,
         vectorized_value)
@@ -102,14 +102,14 @@ end
 function set_dual_start_value(con_ref::ConstraintRef{
     Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}},
     ::Nothing
-    )
+)
     MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, nothing)
     return
 end
 function set_dual_start_value(con_ref::ConstraintRef{
     Model, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}},
     value
-    )
+)
     MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, value)
     return
 end
