@@ -955,8 +955,9 @@ function Base.setindex!(m::JuMP.Model, value, name::Symbol)
 end
 
 """
+    Base.haskey(m::JuMP.AbstractModel, name::Symbol)
 
-
+To allow easy verification if a key is present in a JuMP model.
 """
 function Base.haskey(m::JuMP.AbstractModel, name::Symbol)
     haskey(object_dictionary(m), name)
