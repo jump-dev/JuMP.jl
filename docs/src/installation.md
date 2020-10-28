@@ -44,6 +44,7 @@ is often more complex. We list below the currently available solvers.
 | [FICO Xpress](https://www.fico.com/en/products/fico-xpress-optimization-suite) | [Xpress.jl](https://github.com/jump-dev/Xpress.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP             |
 | [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK.jl](https://github.com/jump-dev/GLPK.jl)                                   | GPL      | LP, MILP                           |
 | [Gurobi](https://gurobi.com)                                                   | [Gurobi.jl](https://github.com/jump-dev/Gurobi.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP             |
+| [Hypatia](https://github.com/chriscoey/Hypatia.jl)                             | [Hypatia.jl](https://github.com/chriscoey/Hypatia.jl)                            | MIT      | LP, SOCP, SDP                      |
 | [Ipopt](https://github.com/coin-or/Ipopt)                                      | [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl)                                 | EPL      | LP, QP, NLP                        |
 | [Juniper](https://github.com/lanl-ansi/Juniper.jl)                             | [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl)                            | MIT      | MISOCP, MINLP                      |
 | [MOSEK](https://www.mosek.com/)                                                | [MosekTools.jl](https://github.com/jump-dev/MosekTools.jl)                       | Comm.    | LP, MILP, SOCP, MISOCP, SDP        |
