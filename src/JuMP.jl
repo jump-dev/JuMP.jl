@@ -960,7 +960,7 @@ end
 Determine whether the model has a mapping for a given name.
 """
 function Base.haskey(model::JuMP.AbstractModel, name::Symbol)
-    haskey(object_dictionary(model), name)
+    return haskey(object_dictionary(model), name)
 end
 
 """
