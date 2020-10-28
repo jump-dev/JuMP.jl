@@ -955,6 +955,14 @@ function Base.setindex!(m::JuMP.Model, value, name::Symbol)
 end
 
 """
+
+
+"""
+function Base.haskey(m::JuMP.AbstractModel, name::Symbol)
+    haskey(object_dictionary(m), name)
+end
+
+"""
     operator_warn(model::AbstractModel)
     operator_warn(model::Model)
 

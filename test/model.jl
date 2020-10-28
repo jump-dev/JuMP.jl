@@ -492,6 +492,13 @@ function test_copy_direct_mode()
     @test_throws ErrorException JuMP.copy(model)
 end
 
+function test_haskey()
+    m = Model()
+    @variable(m, p[i=1:10] >=  0)
+    @test haskey(m, :p)
+    @test !haskey(m, :i)
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
