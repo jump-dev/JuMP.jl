@@ -928,7 +928,7 @@ include("sd.jl")
 """
     Base.getindex(m::JuMP.AbstractModel, name::Symbol)
 
-To allow easy accessing of JuMP tVariables and Constraints via `[]` syntax.
+To allow easy accessing of JuMP Variables and Constraints via `[]` syntax.
 Returns the variable, or group of variables, or constraint, or group of constraints, of the given name which were added to the model. This errors if multiple variables or constraints share the same name.
 """
 function Base.getindex(m::JuMP.AbstractModel, name::Symbol)
