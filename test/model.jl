@@ -493,10 +493,10 @@ function test_copy_direct_mode()
 end
 
 function test_haskey()
-    m = Model()
-    @variable(m, p[i=1:10] >=  0)
-    @test haskey(m, :p)
-    @test !haskey(m, :i)
+    model = Model()
+    @variable(model, p[i=1:10] >=  0)
+    @test haskey(model, :p)
+    @test !haskey(model, :i)
 end
 
 function runtests()
