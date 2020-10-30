@@ -40,6 +40,7 @@ is often more complex. We list below the currently available solvers.
 | [COSMO](https://github.com/oxfordcontrol/COSMO.jl)                             | [COSMO.jl](https://github.com/oxfordcontrol/COSMO.jl)                            | Apache   | LP, QP, SOCP, SDP                  |
 | [CPLEX](https://www.ibm.com/analytics/cplex-optimizer/)                        | [CPLEX.jl](https://github.com/jump-dev/CPLEX.jl)                                 | Comm.    | LP, MILP, SOCP, MISOCP             |
 | [CSDP](https://github.com/coin-or/Csdp)                                        | [CSDP.jl](https://github.com/jump-dev/CSDP.jl)                                   | EPL      | LP, SDP                            |
+| [EAGO](https://github.com/psorlab/EAGO.jl)                                     | [EAGO.jl](https://github.com/psorlab/EAGO.jl)                                    | CC BY-NC-SA | NLP                              |
 | [ECOS](https://github.com/ifa-ethz/ecos)                                       | [ECOS.jl](https://github.com/jump-dev/ECOS.jl)                                   | GPL      | LP, SOCP                           |
 | [FICO Xpress](https://www.fico.com/en/products/fico-xpress-optimization-suite) | [Xpress.jl](https://github.com/jump-dev/Xpress.jl)                               | Comm.    | LP, MILP, SOCP, MISOCP             |
 | [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK.jl](https://github.com/jump-dev/GLPK.jl)                                   | GPL      | LP, MILP                           |
