@@ -751,4 +751,14 @@ include(joinpath(@__DIR__, "utilities.jl"))
         )
         @test_throws expected_exception @NLobjective(model, Min, c * x)
     end
+    @testset "Special functions" begin
+        model = Model()
+        @variable(model, x)
+        @NLconstraint(model, c1, erf(x) <= 0.0)
+        d = NLPEvaluator(model)
+        MOI.initialize(d, Symbol[:Grad])
+        out = zeros(1)
+        MOI.eval_constraint(d, out, [2.0])
+        @test out[1] ≈ 0.9953222 atol = 1e-6
+    end
 end
