@@ -1,0 +1,20 @@
+name: Examples
+on:
+  push:
+    branches: [master]
+    tags: '*'
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          # Only test examples on Julia 1.0
+          version: '1.0'
+      - name: Install dependencies
+        run: julia --project=examples -e 'using Pkg; Pkg.instantiate(); Pkg.develop(PackageSpec(path=pwd()))'
+      - name: Run examples
+        run: julia --project=examples --color=yes examples/run_examples.jl
