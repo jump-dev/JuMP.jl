@@ -51,7 +51,7 @@ JuMP makes it easy to specify and **solve optimization problems without expert k
 
 Our documentation includes an installation guide, quick-start guide, and reference manual. The **[JuMPTutorials.jl]** repository contains a small but growing collection of contributed examples. Submissions are welcome!
 
-[JuMPTutorials.jl]: https://github.com/JuliaOpt/JuMPTutorials.jl
+[JuMPTutorials.jl]: https://github.com/jump-dev/JuMPTutorials.jl
 
 **See [NEWS](https://github.com/jump-dev/JuMP.jl/tree/master/NEWS.md) for
 a list of the significant breaking changes in the JuMP 0.19 release.**
@@ -60,17 +60,15 @@ a list of the significant breaking changes in the JuMP 0.19 release.**
   * [Documentation](https://jump.dev/JuMP.jl/v0.21.5/)
   * [Examples](https://github.com/jump-dev/JuMP.jl/tree/release-0.21/examples)
   * Testing status:
-    * TravisCI: [![Build Status](https://travis-ci.com/jump-dev/JuMP.jl.svg?branch=release-0.21)](https://travis-ci.org/JuliaOpt/JuMP.jl)
+    * Github Actions: [![Build Status](https://github.com/jump-dev/JuMP.jl/workflows/CI/badge.svg?branch=release-0.21)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI)
 
 
 **Development version** (`master` branch):
   * [Documentation](https://jump.dev/JuMP.jl/dev/)
   * [Examples](https://github.com/jump-dev/JuMP.jl/tree/master/examples)
   * Testing status:
-    * TravisCI: [![Build Status](https://travis-ci.com/jump-dev/JuMP.jl.svg?branch=master)](https://travis-ci.org/JuliaOpt/JuMP.jl)
-    * Test coverage:
-      [![Coverage Status](https://coveralls.io/repos/jump-dev/JuMP.jl/badge.svg?branch=master)](https://coveralls.io/r/jump-dev/JuMP.jl?branch=master)
-      [![codecov](https://codecov.io/gh/jump-dev/JuMP.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaOpt/JuMP.jl)
+    * Github Actions: [![Build Status](https://github.com/jump-dev/JuMP.jl/workflows/CI/badge.svg?branch=master)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI)
+    * Test coverage: [![codecov](https://codecov.io/gh/jump-dev/JuMP.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/jump-dev/JuMP.jl)
   * Changes: see [NEWS](https://github.com/jump-dev/JuMP.jl/tree/master/NEWS.md)
   * [Developer chatroom](https://gitter.im/JuliaOpt/JuMP-dev)
 
