@@ -955,6 +955,15 @@ function Base.setindex!(m::JuMP.Model, value, name::Symbol)
 end
 
 """
+    haskey(model::AbstractModel, name::Symbol)
+
+Determine whether the model has a mapping for a given name.
+"""
+function Base.haskey(model::AbstractModel, name::Symbol)
+    return haskey(object_dictionary(model), name)
+end
+
+"""
     operator_warn(model::AbstractModel)
     operator_warn(model::Model)
 
