@@ -2,14 +2,9 @@ using Documenter, JuMP
 
 makedocs(
     sitename = "JuMP",
-
     format = Documenter.HTML(
         # See https://github.com/JuliaDocs/Documenter.jl/issues/868
         prettyurls = get(ENV, "CI", nothing) == "true",
-        assets = [
-            "assets/jump-logo-with-text.svg",
-            "assets/numfocus-logo.png"
-        ],
         analytics = "UA-44252521-1",
     ),
     # See https://github.com/jump-dev/JuMP.jl/issues/1576
