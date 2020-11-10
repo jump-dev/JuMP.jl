@@ -25,7 +25,7 @@ Some but not all of these tasks are summarized in the
   - Checking feasibility of solutions ([#693](https://github.com/jump-dev/JuMP.jl/issues/693))
   - Accessing IIS (**Done**: see [Conflicts](@ref))
   - Accessing multiple results from solvers
-  - Dual warm-starts ([#2094](https://github.com/jump-dev/JuMP.jl/issues/2094))
+  - Dual warm-starts (**Done**: [#2124](https://github.com/jump-dev/JuMP.jl/pull/2214))
 - Address “easy” usability issues
   - Line numbers in error messages (**Done**: [#2276](https://github.com/jump-dev/JuMP.jl/pull/2276))
   - LP sensitivity summary (**Done**: see [Sensitivity analysis for LP](@ref))
