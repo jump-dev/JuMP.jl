@@ -1,23 +1,14 @@
-#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
-#  This Source Code Form is subject to the terms of the Mozilla Public
-#  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-#############################################################################
-# JuMP
-# An algebraic modeling language for Julia
-# See https://github.com/jump-dev/JuMP.jl
-#############################################################################
+# # Callbacks
 
 using GLPK
 using JuMP
 using Random
 using Test
 
-"""
-    example_lazy_constraint()
+# ## Lazy constraints
 
-An example using a lazy constraint callback.
-"""
+# An example using a lazy constraint callback.
+
 function example_lazy_constraint()
     model = Model(GLPK.Optimizer)
     @variable(model, 0 <= x <= 2.5, Int)
@@ -47,25 +38,21 @@ end
 
 example_lazy_constraint()
 
-"""
-    example_user_cut_constraint()
+# ## User-cut
 
-An example using a user-cut callback.
-"""
+# An example using a user-cut callback.
+
 function example_user_cut_constraint()
     Random.seed!(1)
     N = 30
     item_weights, item_values = rand(N), rand(N)
-
     model = Model(GLPK.Optimizer)
     @variable(model, x[1:N], Bin)
     @constraint(model, sum(item_weights[i] * x[i] for i = 1:N) <= 10)
     @objective(model, Max, sum(item_values[i] * x[i] for i = 1:N))
-
     callback_called = false
     function my_callback_function(cb_data)
         callback_called = true
-        # TODO(odow): remove Ref once GLPK supports broadcasting over cb_data.
         x_vals = callback_value.(Ref(cb_data), x)
         accumulated = sum(item_weights[i] for i=1:N if x_vals[i] > 1e-4)
         n_terms = sum(1 for i=1:N if x_vals[i] > 1e-4)
@@ -85,25 +72,21 @@ end
 
 example_user_cut_constraint()
 
-"""
-    example_heuristic_solution()
+# ## HeuristicCallback
 
-An example using a heuristic solution callback.
-"""
+# An example using a heuristic solution callback.
+
 function example_heuristic_solution()
     Random.seed!(1)
     N = 30
     item_weights, item_values = rand(N), rand(N)
-
     model = Model(GLPK.Optimizer)
     @variable(model, x[1:N], Bin)
     @constraint(model, sum(item_weights[i] * x[i] for i = 1:N) <= 10)
     @objective(model, Max, sum(item_values[i] * x[i] for i = 1:N))
-
     callback_called = false
     function my_callback_function(cb_data)
         callback_called = true
-        # TODO(odow): remove Ref once GLPK supports broadcasting over cb_data.
         x_vals = callback_value.(Ref(cb_data), x)
         @test MOI.submit(
             model, MOI.HeuristicSolution(cb_data), x, floor.(x_vals)
@@ -118,11 +101,10 @@ end
 
 example_heuristic_solution()
 
-"""
-    example_solver_dependent_callback()
+# ## GLPK solver-dependent callback
 
-An example using a solver_dependent callback.
-"""
+# An example using GLPK's solver-dependent callback.
+
 function example_solver_dependent_callback()
     model = Model(GLPK.Optimizer)
     @variable(model, 0 <= x <= 2.5, Int)

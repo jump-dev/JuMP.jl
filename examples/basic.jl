@@ -1,54 +1,44 @@
-#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
-#  This Source Code Form is subject to the terms of the Mozilla Public
-#  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-#############################################################################
-# JuMP
-# An algebraic modeling language for Julia
-# See https://github.com/jump-dev/JuMP.jl
-#############################################################################
+# # A basic example
 
-using JuMP, GLPK, Test
+# Load some packages:
 
-"""
-    example_basic([; verbose = true])
+using JuMP
+using GLPK
 
-Formulate and solve a simple LP:
-    max 5x + 3y
-     st 1x + 5y <= 3
-         0 <= x <= 2
-         0 <= y <= 30
+using Test  #src
 
-If `verbose = true`, print the model and the solution.
-"""
-function example_basic(; verbose = true)
-    model = Model(GLPK.Optimizer)
+# Build the model:
 
-    @variable(model, 0 <= x <= 2)
-    @variable(model, 0 <= y <= 30)
+model = Model(GLPK.Optimizer)
 
-    @objective(model, Max, 5x + 3y)
-    @constraint(model, 1x + 5y <= 3.0)
+@variable(model, 0 <= x <= 2)
+@variable(model, 0 <= y <= 30)
 
-    if verbose
-        print(model)
-    end
+@objective(model, Max, 5x + 3y)
 
-    JuMP.optimize!(model)
+@constraint(model, 1x + 5y <= 3.0)
 
-    obj_value = JuMP.objective_value(model)
-    x_value = JuMP.value(x)
-    y_value = JuMP.value(y)
+print(model)
 
-    if verbose
-        println("Objective value: ", obj_value)
-        println("x = ", x_value)
-        println("y = ", y_value)
-    end
+# Optimize the model:
 
-    @test obj_value ≈ 10.6
-    @test x_value ≈ 2
-    @test y_value ≈ 0.2
-end
+optimize!(model)
 
-example_basic(verbose = false)
+# Check the termination and primal status to see if we have a solution:
+
+println("Termination status : ", termination_status(model))
+println("Primal status      : ", primal_status(model))
+
+# Print the solution:
+
+obj_value = objective_value(model)
+x_value = value(x)
+y_value = value(y)
+
+println("Objective value : ", obj_value)
+println("x value         : ", x_value)
+println("y value         : ", y_value)
+
+@test obj_value ≈ 10.6  #src
+@test x_value ≈ 2       #src
+@test y_value ≈ 0.2     #src
