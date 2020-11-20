@@ -85,10 +85,10 @@ function example_multi(; verbose = true)
     @test objective_value(multi) == 225700.0
     if verbose
         println("RESULTS:")
-        for i in 1:length(ORIG)
-            for j in 1:length(DEST)
-                for p in 1:length(PROD)
-                    print(" $(PROD[p]) $(ORIG[i]) $(DEST[j]) = $(value(trans[i, j, p]))\t")
+        for i in 1:length(orig)
+            for j in 1:length(dest)
+                for p in 1:length(prod)
+                    print(" $(prod[p]) $(orig[i]) $(dest[j]) = $(value(trans[i, j, p]))\t")
                 end
                 println()
             end
