@@ -1,74 +1,59 @@
-#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
-#  This Source Code Form is subject to the terms of the Mozilla Public
-#  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-#############################################################################
-# JuMP
-# An algebraic modeling language for Julia
-# See https://github.com/jump-dev/JuMP.jl
-#############################################################################
+# # Cannery
 
-using JuMP, GLPK, Test
+# A JuMP implementation of the cannery problem from Dantzig, Linear Programming
+# and Extensions, Princeton University Press, Princeton, NJ, 1963.
+#
+# It was originally contributed by Louis Luangkesorn, January 30, 2015.
 
-"""
-    example_cannery(; verbose = true)
+using JuMP
+import GLPK
+import Test  #src
 
-JuMP implementation of the cannery problem from Dantzig, Linear Programming and
-Extensions, Princeton University Press, Princeton, NJ, 1963.
-
-Author: Louis Luangkesorn
-Date: January 30, 2015
-"""
-function example_cannery(; verbose = true)
+function example_cannery()
+    ## Origin plants.
     plants = ["Seattle", "San-Diego"]
+    num_plants = length(plants)
+    ## Destination markets.
     markets = ["New-York", "Chicago", "Topeka"]
-
-    # Capacity and demand in cases.
+    num_markets = length(markets)
+    ## Capacity and demand in cases.
     capacity = [350, 600]
     demand = [300, 300, 300]
-
-    # Distance in thousand miles.
+    ## Distance in thousand miles.
     distance = [2.5 1.7 1.8; 2.5 1.8 1.4]
-
-    # Cost per case per thousand miles.
+    ## Cost per case per thousand miles.
     freight = 90
-
-    num_plants = length(plants)
-    num_markets = length(markets)
-
-    cannery = Model(GLPK.Optimizer)
-
+    cannery = Model()
+    set_optimizer(cannery, GLPK.Optimizer)
+    ## Create decision variables.
     @variable(cannery, ship[1:num_plants, 1:num_markets] >= 0)
-
-    # Ship no more than plant capacity
-    @constraint(cannery, capacity_con[i in 1:num_plants],
-        sum(ship[i,j] for j in 1:num_markets) <= capacity[i]
+    ## Ship no more than plant capacity
+    @constraint(
+        cannery, capacity_con[i = 1:num_plants], sum(ship[i, :]) <= capacity[i]
     )
-
-    # Ship at least market demand
-    @constraint(cannery, demand_con[j in 1:num_markets],
-        sum(ship[i,j] for i in 1:num_plants) >= demand[j]
+    ## Ship at least market demand
+    @constraint(
+        cannery, demand_con[j = 1:num_markets], sum(ship[:, j]) >= demand[j]
     )
-
-    # Minimize transporatation cost
-    @objective(cannery, Min, sum(distance[i, j] * freight * ship[i, j]
-        for i in 1:num_plants, j in 1:num_markets)
+    ## Minimize transporatation cost
+    @objective(
+        cannery,
+        Min,
+        sum(
+            distance[i, j] * freight * ship[i, j]
+            for i = 1:num_plants, j = 1:num_markets
+        )
     )
-
-    JuMP.optimize!(cannery)
-
-    if verbose
-        println("RESULTS:")
-        for i in 1:num_plants
-            for j in 1:num_markets
-                println("  $(plants[i]) $(markets[j]) = $(JuMP.value(ship[i, j]))")
-            end
+    optimize!(cannery)
+    println("RESULTS:")
+    for i = 1:num_plants
+        for j = 1:num_markets
+            println("  $(plants[i]) $(markets[j]) = $(value(ship[i, j]))")
         end
     end
-
-    @test JuMP.termination_status(cannery) == MOI.OPTIMAL
-    @test JuMP.primal_status(cannery) == MOI.FEASIBLE_POINT
-    @test JuMP.objective_value(cannery) == 151200.0
+    Test.@test termination_status(cannery) == MOI.OPTIMAL    #src
+    Test.@test primal_status(cannery) == MOI.FEASIBLE_POINT  #src
+    Test.@test objective_value(cannery) == 151_200.0         #src
 end
 
-example_cannery(verbose = false)
+example_cannery()

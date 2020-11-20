@@ -1,9 +1,9 @@
 # # Callbacks
 
-using GLPK
 using JuMP
-using Random
-using Test
+import GLPK
+import Random
+import Test
 
 # ## Lazy constraints
 
@@ -29,11 +29,11 @@ function example_lazy_constraint()
     end
     MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
     optimize!(model)
-    @test termination_status(model) == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test lazy_called
-    @test value(x) == 1
-    @test value(y) == 2
+    Test.@test termination_status(model) == MOI.OPTIMAL
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test lazy_called
+    Test.@test value(x) == 1
+    Test.@test value(y) == 2
 end
 
 example_lazy_constraint()
@@ -65,9 +65,9 @@ function example_user_cut_constraint()
     end
     MOI.set(model, MOI.UserCutCallback(), my_callback_function)
     optimize!(model)
-    @test termination_status(model) == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test callback_called
+    Test.@test termination_status(model) == MOI.OPTIMAL
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test callback_called
 end
 
 example_user_cut_constraint()
@@ -88,15 +88,15 @@ function example_heuristic_solution()
     function my_callback_function(cb_data)
         callback_called = true
         x_vals = callback_value.(Ref(cb_data), x)
-        @test MOI.submit(
+        Test.@test MOI.submit(
             model, MOI.HeuristicSolution(cb_data), x, floor.(x_vals)
         ) in (MOI.HEURISTIC_SOLUTION_ACCEPTED, MOI.HEURISTIC_SOLUTION_REJECTED)
     end
     MOI.set(model, MOI.HeuristicCallback(), my_callback_function)
     optimize!(model)
-    @test termination_status(model) == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test callback_called
+    Test.@test termination_status(model) == MOI.OPTIMAL
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test callback_called
 end
 
 example_heuristic_solution()
@@ -129,11 +129,11 @@ function example_solver_dependent_callback()
     end
     MOI.set(model, GLPK.CallbackFunction(), my_callback_function)
     optimize!(model)
-    @test termination_status(model) == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test lazy_called
-    @test value(x) == 1
-    @test value(y) == 2
+    Test.@test termination_status(model) == MOI.OPTIMAL
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test lazy_called
+    Test.@test value(x) == 1
+    Test.@test value(y) == 2
 end
 
 example_solver_dependent_callback()

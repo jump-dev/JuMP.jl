@@ -6,10 +6,22 @@ const _EXAMPLE_INPUT_DIR = joinpath(dirname(@__DIR__), "examples")
 const _EXAMPLE_OUTPUT_DIR = joinpath(@__DIR__, "src", "examples")
 
 # Delete all files in the output directory to make way for fresh versions.
-rm.(joinpath.(_EXAMPLE_OUTPUT_DIR, readdir(_EXAMPLE_OUTPUT_DIR)))
+for file in readdir(_EXAMPLE_OUTPUT_DIR)
+    if file == ".gitkeep"
+        continue
+    end
+    rm(joinpath(_EXAMPLE_OUTPUT_DIR, file))
+end
 
+# Replace with this for-loop once all examples are migrated.
 # for file in sort(readdir(_EXAMPLE_INPUT_DIR))
-for file in ["basic.jl", "callbacks.jl"]
+for file in [
+    "basic.jl",
+    "callbacks.jl",
+    "cannery.jl",
+    "clnlbeam.jl",
+    "mle.jl"
+]
     if !endswith(file, ".jl")
         continue
     end
@@ -17,6 +29,7 @@ for file in ["basic.jl", "callbacks.jl"]
         joinpath(_EXAMPLE_INPUT_DIR, file),
         _EXAMPLE_OUTPUT_DIR;
         documenter = true,
+        execute = true,
     )
 end
 
