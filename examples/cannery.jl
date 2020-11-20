@@ -1,7 +1,9 @@
-# # Cannery
+# # LP: Cannery
 
-# A JuMP implementation of the cannery problem from Dantzig, Linear Programming
-# and Extensions, Princeton University Press, Princeton, NJ, 1963.
+# A JuMP implementation of the cannery problem from:
+#
+# Dantzig, Linear Programming and Extensions, Princeton University Press,
+# Princeton, NJ, 1963.
 #
 # It was originally contributed by Louis Luangkesorn, January 30, 2015.
 

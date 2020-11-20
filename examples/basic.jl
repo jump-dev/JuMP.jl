@@ -1,4 +1,4 @@
-# # A basic example
+# # LP: A basic example
 
 # Load some packages:
 
@@ -40,5 +40,5 @@ println("x value         : ", x_value)
 println("y value         : ", y_value)
 
 Test.@test obj_value ≈ 10.6  #src
-Test.@test x_value ≈ 1       #src
+Test.@test x_value ≈ 2       #src
 Test.@test y_value ≈ 0.2     #src

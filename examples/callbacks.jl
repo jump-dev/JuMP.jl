@@ -1,4 +1,4 @@
-# # Callbacks
+# # MIP: Callbacks
 
 using JuMP
 import GLPK

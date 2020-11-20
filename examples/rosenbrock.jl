@@ -1,4 +1,4 @@
-# # Nonlinear: Rosenbrock
+# # NLP: Rosenbrock
 
 # A nonlinear example of the classical Rosenbrock function.
 

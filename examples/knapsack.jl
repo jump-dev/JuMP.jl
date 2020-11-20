@@ -1,46 +1,36 @@
-#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
-#  This Source Code Form is subject to the terms of the Mozilla Public
-#  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-#############################################################################
-# JuMP
-# An algebraic modeling language for Julia
-# See https://github.com/jump-dev/JuMP.jl
-#############################################################################
+# # MIP: knapsack
+
+# Formulate and solve a simple knapsack problem:
+#
+#     max sum(p_j x_j)
+#      st sum(w_j x_j) <= C
+#         x binary
 
 using JuMP, GLPK, Test
 
-"""
-    example_knapsack(; verbose = true)
-
-Formulate and solve a simple knapsack problem:
-    max sum(p_j x_j)
-     st sum(w_j x_j) <= C
-        x binary
-"""
 function example_knapsack(; verbose = true)
     profit = [5, 3, 2, 7, 4]
     weight = [2, 8, 4, 2, 5]
     capacity = 10
     model = Model(GLPK.Optimizer)
     @variable(model, x[1:5], Bin)
-    # Objective: maximize profit
+    ## Objective: maximize profit
     @objective(model, Max, profit' * x)
-    # Constraint: can carry all
+    ## Constraint: can carry all
     @constraint(model, weight' * x <= capacity)
-    # Solve problem using MIP solver
-    JuMP.optimize!(model)
+    ## Solve problem using MIP solver
+    optimize!(model)
     if verbose
-        println("Objective is: ", JuMP.objective_value(model))
+        println("Objective is: ", objective_value(model))
         println("Solution is:")
         for i in 1:5
-            print("x[$i] = ", JuMP.value(x[i]))
+            print("x[$i] = ", value(x[i]))
             println(", p[$i]/w[$i] = ", profit[i] / weight[i])
         end
     end
-    @test JuMP.termination_status(model) == MOI.OPTIMAL
-    @test JuMP.primal_status(model) == MOI.FEASIBLE_POINT
-    @test JuMP.objective_value(model) == 16.0
+    @test termination_status(model) == MOI.OPTIMAL
+    @test primal_status(model) == MOI.FEASIBLE_POINT
+    @test objective_value(model) == 16.0
 end
 
-example_knapsack(verbose = false)
+example_knapsack()

@@ -1,4 +1,4 @@
-# # Nonlinear: clnlbeam
+# # NLP: clnlbeam
 
 # Based on an AMPL model by Hande Y. Benson
 #

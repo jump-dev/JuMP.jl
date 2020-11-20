@@ -14,15 +14,13 @@ for file in readdir(_EXAMPLE_OUTPUT_DIR)
 end
 
 # Replace with this for-loop once all examples are migrated.
-# for file in sort(readdir(_EXAMPLE_INPUT_DIR))
-for file in [
-    "basic.jl",
-    "callbacks.jl",
-    "cannery.jl",
-    "clnlbeam.jl",
-    "mle.jl"
-]
+for file in readdir(_EXAMPLE_INPUT_DIR)
     if !endswith(file, ".jl")
+        continue
+    elseif file in [
+        "run_examples.jl",
+        "cutting_stock_column_generation.jl",
+    ]
         continue
     end
     Literate.markdown(
@@ -60,8 +58,11 @@ makedocs(
         "Extensions" => "extensions.md",
         "Development Roadmap" => "roadmap.md",
         "Examples" => map(
-           file -> joinpath("examples", file),
-           sort(readdir(_EXAMPLE_OUTPUT_DIR)),
+            file -> joinpath("examples", file),
+            filter(
+                file -> endswith(file, ".md"),
+                sort(readdir(_EXAMPLE_OUTPUT_DIR)),
+            )
         ),
     ],
 )
