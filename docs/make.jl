@@ -24,26 +24,27 @@ makedocs(
         # See https://github.com/JuliaDocs/Documenter.jl/issues/868
         prettyurls = get(ENV, "CI", nothing) == "true",
         analytics = "UA-44252521-1",
+        collapselevel = 1,
     ),
     # See https://github.com/jump-dev/JuMP.jl/issues/1576
     strict = true,
     authors = "Miles Lubin, Iain Dunning, and Joey Huchette",
     pages = [
         "Introduction" => "index.md",
-        "Installation Guide" => "installation.md",
-        "Quick Start Guide" => "quickstart.md",
-        "Variables" => "variables.md",
-        "Expressions" => "expressions.md",
-        "Objective" => "objective.md",
-        "Constraints" => "constraints.md",
-        "Containers" => "containers.md",
-        "Solvers" => "solvers.md",
-        "Query Solutions" => "solutions.md",
-        "Nonlinear Modeling" => "nlp.md",
-        "Callbacks" => "callbacks.md",
-        "Style Guide" => "style.md",
-        "Extensions" => "extensions.md",
-        "Development Roadmap" => "roadmap.md",
+        "Manual" => [
+            "installation.md",
+            "quickstart.md",
+            "variables.md",
+            "expressions.md",
+            "objective.md",
+            "constraints.md",
+            "containers.md",
+            "solvers.md",
+            "solutions.md",
+            "nlp.md",
+            "callbacks.md",
+            "Extensions" => "extensions.md",
+        ],
         "Examples" => map(
             file -> joinpath("examples", file),
             filter(
@@ -51,6 +52,8 @@ makedocs(
                 sort(readdir(_EXAMPLE_DIR)),
             )
         ),
+        "Style Guide" => "style.md",
+        "Development Roadmap" => "roadmap.md",
     ],
 )
 
