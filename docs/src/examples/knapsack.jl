@@ -1,4 +1,4 @@
-# # MIP: knapsack
+# # The knapsack problem
 
 # Formulate and solve a simple knapsack problem:
 #
@@ -6,7 +6,9 @@
 #      st sum(w_j x_j) <= C
 #         x binary
 
-using JuMP, GLPK, Test
+using JuMP
+import GLPK
+import Test
 
 function example_knapsack(; verbose = true)
     profit = [5, 3, 2, 7, 4]
@@ -28,9 +30,9 @@ function example_knapsack(; verbose = true)
             println(", p[$i]/w[$i] = ", profit[i] / weight[i])
         end
     end
-    @test termination_status(model) == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test objective_value(model) == 16.0
+    Test.@test termination_status(model) == MOI.OPTIMAL
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test objective_value(model) == 16.0
     return
 end
 

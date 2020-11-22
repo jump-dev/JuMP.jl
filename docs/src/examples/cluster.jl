@@ -1,14 +1,13 @@
-# # SDP: clustering
+# # K-means clustering via SSDP
 
 # From "Approximating K-means-type clustering via semidefinite programming" By
 # Jiming Peng and Yu Wei.
-
+#
 # Given a set of points $a_1, \ldots, a_m$  in $R_n$, allocate them to k clusters.
 
 using JuMP
-import SCS
 import LinearAlgebra
-
+import SCS
 import Test  #src
 
 function example_cluster(; verbose = true)
@@ -55,7 +54,7 @@ function example_cluster(; verbose = true)
             end
         end
     end
-    @test which_cluster == [1, 1, 2, 1, 2, 2]  #src
+    Test.@test which_cluster == [1, 1, 2, 1, 2, 2]  #src
     if verbose
         ## Print results
         for cluster in 1:k

@@ -1,4 +1,4 @@
-# # SDP: correlations
+# # The correlation problem
 
 # Given three random variables A, B, C and given bounds on two of the three
 # correlation coefficients:
@@ -13,10 +13,10 @@
 #     | ρ_AB   1    ρ_BC |  ≽ 0
 #     | ρ_AC  ρ_BC   1   |
 
+
 using JuMP
 import SCS
-
-using Test  #src
+import Test  #src
 
 function example_corr_sdp()
     model = Model(SCS.Optimizer)
@@ -35,12 +35,12 @@ function example_corr_sdp()
     @objective(model, Max, X[1, 3])
     optimize!(model)
     println("An upper bound for X[1, 3] is $(value(X[1, 3]))")
-    @test value(X[1, 3]) ≈ 0.87195 atol = 1e-4  #src
+    Test.@test value(X[1, 3]) ≈ 0.87195 atol = 1e-4  #src
     ## Find lower bound
     @objective(model, Min, X[1, 3])
     optimize!(model)
     println("A lower bound for X[1, 3] is $(value(X[1, 3]))")
-    @test value(X[1, 3]) ≈ -0.978 atol = 1e-3  #src
+    Test.@test value(X[1, 3]) ≈ -0.978 atol = 1e-3  #src
     return
 end
 

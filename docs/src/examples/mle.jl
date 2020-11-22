@@ -1,4 +1,4 @@
-# # NLP: maximum likelihood
+# # Maximum likelihood estimation
 
 # Use nonlinear optimization to compute the maximum likelihood estimate (MLE) of
 # the parameters of a normal distribution, a.k.a., the sample mean and variance.

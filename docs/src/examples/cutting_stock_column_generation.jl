@@ -1,9 +1,8 @@
 # # Cutting stock
 
-# This example is based on [https://doi.org/10.5281/zenodo.3329388](https://doi.org/10.5281/zenodo.3329388).
-
 # This example solves the cutting stock problem (sometimes also called the
-# cutting rod problem) using a column-generation technique.
+# cutting rod problem) using a column-generation technique. It is based on
+# [https://doi.org/10.5281/zenodo.3329388](https://doi.org/10.5281/zenodo.3329388).
 
 # Intuitively, this problem is about cutting large rolls of paper into smaller
 # pieces. There is an exact demand of pieces to meet, and all rolls have the
@@ -71,10 +70,12 @@
 #     problem and its variants](https://tel.archives-ouvertes.fr/tel-00011657/document)
 #   * [Tackling the cutting stock problem](https://doi.org/10.5281/zenodo.3329388)
 
+# This example uses the following packages:
+
 using JuMP
 import GLPK
 import SparseArrays
-import Test
+import Test  #src
 
 # The function `solve_pricing` implements the pricing problem for the function
 # `example_cutting_stock`.
@@ -92,6 +93,7 @@ function solve_pricing(
     n = length(reduced_costs)
     ## The actual pricing model.
     submodel = Model(GLPK.Optimizer)
+    set_silent(submodel)
     @variable(submodel, xs[1:n] >= 0, Int)
     @constraint(submodel, sum(xs .* widths) <= maxwidth)
     @objective(submodel, Max, sum(xs .* reduced_costs))
@@ -133,6 +135,7 @@ function example_cutting_stock(; max_gen_cols::Int = 5_000)
     ## (actually, GLPK will yell at you if you're trying to get duals for
     ## integer problems).
     m = Model(GLPK.Optimizer)
+    set_silent(m)
     @variable(m, θ[1:ncols] >= 0)
     @objective(
         m,
@@ -205,8 +208,16 @@ function example_cutting_stock(; max_gen_cols::Int = 5_000)
     optimize!(m)
     if termination_status(m) != MOI.OPTIMAL
         @warn("Final master not optimal ($ncols patterns)")
+        return
     end
-    Test.@test objective_value(m) ≈ 78374.0 atol = 1e-3
+    Test.@test objective_value(m) ≈ 78374.0 atol = 1e-3  #src
+    println("Final solution:")
+    for i = 1:length(θ)
+        if value(θ[i]) > 0.5
+            println("$(round(Int, value(θ[i]))) units of pattern $(i)")
+        end
+    end
+    return
 end
 
 example_cutting_stock()

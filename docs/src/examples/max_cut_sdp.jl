@@ -1,4 +1,4 @@
-# # SDP: max-cut
+# # SDP relaxations: max-cut
 
 # Solves a semidefinite programming relaxation of the MAXCUT graph problem:
 #
@@ -14,10 +14,10 @@
 # Journal of the ACM (JACM), 42(6), 1115-1145.
 
 using JuMP
-using Test
 import LinearAlgebra
-import SCS
 import Random
+import SCS
+import Test
 
 function solve_max_cut_sdp(num_vertex, weights)
     ## Calculate the (weighted) Lapacian of the graph: L = D - W.
@@ -58,7 +58,7 @@ function example_max_cut_sdp()
     ## Solution:
     ##  (S, S′)  = ({1}, {2})
     cut, cutval = solve_max_cut_sdp(2, [0.0 5.0; 5.0 0.0])
-    @test cut[1] != cut[2]
+    Test.@test cut[1] != cut[2]
     ##   [1] --- 5 --- [2]
     ##    |  \          |
     ##    |    \        |
@@ -74,8 +74,8 @@ function example_max_cut_sdp()
          7.0 0.0 0.0 1.0;
          6.0 1.0 1.0 0.0]
     cut, cutval = solve_max_cut_sdp(4, W)
-    @test cut[1] != cut[2]
-    @test cut[2] == cut[3] == cut[4]
+    Test.@test cut[1] != cut[2]
+    Test.@test cut[2] == cut[3] == cut[4]
     ##   [1] --- 1 --- [2]
     ##    |             |
     ##    |             |
@@ -91,9 +91,9 @@ function example_max_cut_sdp()
          5.0 0.0 0.0 2.0;
          0.0 9.0 2.0 0.0]
     cut, cutval = solve_max_cut_sdp(4, W)
-    @test cut[1] == cut[4]
-    @test cut[2] == cut[3]
-    @test cut[1] != cut[2]
+    Test.@test cut[1] == cut[4]
+    Test.@test cut[2] == cut[3]
+    Test.@test cut[1] != cut[2]
     return
 end
 

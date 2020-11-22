@@ -1,8 +1,10 @@
-# # MILP: Urban planning
+# # The urban planning problem
 
 # An "urban planning" problem based on an [example from puzzlor](http://www.puzzlor.com/2013-08_UrbanPlanning.html).
 
-using JuMP, GLPK, Test
+using JuMP
+import GLPK
+import Test
 
 function example_urban_plan()
     model = Model(GLPK.Optimizer)
@@ -46,9 +48,9 @@ function example_urban_plan()
     end
     ## Solve it
     optimize!(model)
-    @test termination_status(model) == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test objective_value(model) ≈ 14.0
+    Test.@test termination_status(model) == MOI.OPTIMAL
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test objective_value(model) ≈ 14.0
     return
 end
 

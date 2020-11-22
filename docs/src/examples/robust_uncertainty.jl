@@ -1,10 +1,13 @@
-# # SDP: robust uncertainty
+# # Robust uncertainty sets
 
 # Computes the Value at Risk for a data-driven uncertainty set; see "Data-Driven
 # Robust Optimization" (Bertsimas 2013), section 6.1 for details. Closed-form
 # expressions for the optimal value are available.
 
-using JuMP, SCS, LinearAlgebra, Test
+using JuMP
+import SCS
+import LinearAlgebra
+import Test
 
 function example_robust_uncertainty()
     R = 1
@@ -26,11 +29,14 @@ function example_robust_uncertainty()
     @constraint(model, [Γ1(𝛿 / 2, N); μ - μhat] in SecondOrderCone())
     @constraint(model, [Γ2(𝛿 / 2, N); vec(Σ - Σhat)] in SecondOrderCone())
     @SDconstraint(model, [((1 - ɛ) / ɛ) (u - μ)'; (u - μ) Σ] >= 0)
-    @objective(model, Max, dot(c, u))
+    @objective(model, Max, LinearAlgebra.dot(c, u))
     optimize!(model)
-    exact = dot(μhat, c) + Γ1(𝛿 / 2, N) * norm(c) + sqrt((1 - ɛ) / ɛ) *
-        sqrt(dot(c, (Σhat + Γ2(𝛿 / 2, N) * Matrix(1.0I, d, d)) * c))
-    @test objective_value(model) ≈ exact atol = 1e-3
+    I = Matrix(1.0 * LinearAlgebra.I, d, d)
+    exact =
+        LinearAlgebra.dot(μhat, c) +
+        Γ1(𝛿 / 2, N) * LinearAlgebra.norm(c) +
+        sqrt((1 - ɛ) / ɛ) * sqrt(LinearAlgebra.dot(c, (Σhat + Γ2(𝛿 / 2, N) * I) * c))
+    Test.@test objective_value(model) ≈ exact atol = 1e-3
     return
 end
 

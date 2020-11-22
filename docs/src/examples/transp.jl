@@ -1,4 +1,4 @@
-# # LP: transportation
+# # The transportation problem
 
 # Allocation of passenger cars to trains to minimize cars required or car-miles
 # run. Based on:
@@ -8,14 +8,16 @@
 #
 # Originally contributed by Louis Luangkesorn, January 30, 2015.
 
-using JuMP, GLPK, Test
+using JuMP
+import GLPK
+import Test
 
 function example_transp()
 	ORIG = ["GARY", "CLEV", "PITT"]
 	DEST = ["FRA", "DET", "LAN", "WIN", "STL", "FRE", "LAF"]
 	supply = [1_400, 2_600, 2_900]
 	demand = [900, 1_200, 600, 400, 1_700, 1_100, 1_000]
-	@assert sum(supply) == sum(demand)
+	Test.@test sum(supply) == sum(demand)
 	cost = [
 		39   14   11   14   16   82    8;
 		27    9   12    9   26   95   17;
@@ -36,9 +38,9 @@ function example_transp()
 		[j in 1:length(DEST)], sum(trans[:, j]) == demand[j]
 	end)
 	optimize!(model)
-	@test termination_status(model) == MOI.OPTIMAL
-	@test primal_status(model) == MOI.FEASIBLE_POINT
-	@test objective_value(model) == 196200.0
+	Test.@test termination_status(model) == MOI.OPTIMAL
+	Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+	Test.@test objective_value(model) == 196200.0
 	return
 end
 

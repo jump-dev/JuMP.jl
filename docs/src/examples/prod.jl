@@ -1,4 +1,4 @@
-# # LP: workforce scheduling
+# # The workforce scheduling problem
 #
 # This model determines a set of workforce levels that will most economically
 # meet demands and inventory requirements over time. The formulation is
@@ -10,7 +10,9 @@
 #
 # Originally contributed by Louis Luangkesorn, February 26, 2015.
 
-using JuMP, GLPK, Test
+using JuMP
+import GLPK
+import Test
 
 function example_prod(; verbose = true)
     ## PRODUCTION SETS AND PARAMETERS
@@ -211,9 +213,9 @@ function example_prod(; verbose = true)
     )
     ## Obtain solution
     optimize!(prod)
-    @test termination_status(prod) == MOI.OPTIMAL
-    @test primal_status(prod) == MOI.FEASIBLE_POINT
-    @test objective_value(prod) ≈ 4_426_822.89 atol = 1e-2
+    Test.@test termination_status(prod) == MOI.OPTIMAL
+    Test.@test primal_status(prod) == MOI.FEASIBLE_POINT
+    Test.@test objective_value(prod) ≈ 4_426_822.89 atol = 1e-2
     if verbose
         println("RESULTS:")
         println("Crews")

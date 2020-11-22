@@ -1,4 +1,4 @@
-# # NLP: clnlbeam
+# # The clnlbeam problem
 
 # Based on an AMPL model by Hande Y. Benson
 #
@@ -16,8 +16,7 @@
 
 using JuMP
 import Ipopt
-
-using Test  #src
+import Test  #src
 
 function example_clnlbeam()
     N = 1000
@@ -54,9 +53,9 @@ function example_clnlbeam()
     primal_status      = $(primal_status(model))
     objective_value    = $(objective_value(model))
     """)
-    @test termination_status(model) == MOI.LOCALLY_SOLVED  #src
-    @test primal_status(model) == MOI.FEASIBLE_POINT  #src
-    @test objective_value(model) ≈ 350.0  #src
+    Test.@test termination_status(model) == MOI.LOCALLY_SOLVED  #src
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT  #src
+    Test.@test objective_value(model) ≈ 350.0  #src
     return
 end
 

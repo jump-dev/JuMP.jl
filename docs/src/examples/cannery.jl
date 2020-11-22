@@ -1,4 +1,4 @@
-# # LP: Cannery
+# # The cannery problem
 
 # A JuMP implementation of the cannery problem from:
 #

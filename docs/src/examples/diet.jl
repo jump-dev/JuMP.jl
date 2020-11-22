@@ -1,11 +1,11 @@
-# # LP: the diet problem
+# # The diet problem
 
 # Solve the classic "diet problem".
 # Based on an [example from Gurobi](https://www.gurobi.com/documentation/9.0/examples/diet_cpp_cpp.html).
 
 using JuMP
-using Test
 import GLPK
+import Test
 
 function print_solution(is_optimal, foods, buy)
     println("RESULTS:")
@@ -28,8 +28,8 @@ function example_diet(; verbose = true)
         0    1779
         ], categories, ["min", "max"]
     )
-    @test category_data["protein", "min"] == 91.0
-    @test category_data["sodium", "max"] == 1779.0
+    Test.@test category_data["protein", "min"] == 91.0
+    Test.@test category_data["sodium", "max"] == 1779.0
     ## Foods
     foods = [
         "hamburger", "chicken", "hot dog", "fries", "macaroni", "pizza",
@@ -52,8 +52,8 @@ function example_diet(; verbose = true)
             330  8 10 180
         ], foods, categories
     )
-    @test food_data["hamburger", "calories"] == 410.0
-    @test food_data["milk", "fat"] == 2.5
+    Test.@test food_data["hamburger", "calories"] == 410.0
+    Test.@test food_data["milk", "fat"] == 2.5
     ## Build model
     model = Model(GLPK.Optimizer)
     @variables(model, begin
@@ -75,8 +75,8 @@ function example_diet(; verbose = true)
     optimize!(model)
     term_status = termination_status(model)
     is_optimal = term_status == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test objective_value(model) ≈ 11.8288 atol = 1e-4
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test objective_value(model) ≈ 11.8288 atol = 1e-4
     if verbose
         print_solution(is_optimal, foods, buy)
     end
@@ -86,8 +86,8 @@ function example_diet(; verbose = true)
         println("Solving dairy-limited problem...")
     end
     optimize!(model)
-    @test termination_status(model) == MOI.INFEASIBLE
-    @test primal_status(model) == MOI.NO_SOLUTION
+    Test.@test termination_status(model) == MOI.INFEASIBLE
+    Test.@test primal_status(model) == MOI.NO_SOLUTION
     if verbose
         print_solution(false, foods, buy)
     end

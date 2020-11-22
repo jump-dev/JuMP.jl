@@ -1,11 +1,13 @@
-# # LP: SteelT3
+# # The SteelT3 problem
 
 # The steelT3 model from AMPL: A Modeling Language for Mathematical Programming,
 # 2nd ed by Robert Fourer, David Gay, and Brian W. Kernighan.
 #
 # Originally contribute by Louis Luangkesorn, April 3, 2015.
 
-using JuMP, GLPK, Test
+using JuMP
+import GLPK
+import Test
 
 function example_steelT3(; verbose = true)
     T = 4
@@ -73,9 +75,9 @@ function example_steelT3(; verbose = true)
         )
     )
     optimize!(model)
-    @test termination_status(model) == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test objective_value(model) == 172850.0
+    Test.@test termination_status(model) == MOI.OPTIMAL
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test objective_value(model) == 172850.0
     if verbose
         println("RESULTS:")
         for p in prod

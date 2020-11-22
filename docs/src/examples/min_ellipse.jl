@@ -1,4 +1,4 @@
-# # SDP: minimum ellipse
+# # Minimum ellipses
 
 # This example is from the Boyd & Vandenberghe book "Convex Optimization". Given
 # a set of ellipses centered on the origin
@@ -15,7 +15,10 @@
 #
 # where W is a PD matrix of weights to choose between different solutions.
 
-using JuMP, SCS, LinearAlgebra, Test
+using JuMP
+import LinearAlgebra
+import SCS
+import Test
 
 function example_min_ellipse()
     ## We will use three ellipses: two "simple" ones, and a random one.
@@ -28,16 +31,16 @@ function example_min_ellipse()
     weights = [1.0 0.0; 0.0 1.0]
     model = Model(SCS.Optimizer)
     set_silent(model)
-    @variable(model, X[i=1:2, j=1:2], PSD, start = [2.0 0.0; 0.0 3.0][i, j])
-    @objective(model, Min, tr(weights * X))
+    @variable(model, X[i=1:2, j=1:2], PSD)
+    @objective(model, Min, LinearAlgebra.tr(weights * X))
     for As_i in As
         @SDconstraint(model, X >= As_i)
     end
     optimize!(model)
-    @test termination_status(model) == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test objective_value(model) ≈ 6.46233 atol = 1e-5
-    @test value.(X) ≈ [3.1651 0.8022; 0.8022 3.2972] atol = 1e-4
+    Test.@test termination_status(model) == MOI.OPTIMAL
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test objective_value(model) ≈ 6.46233 atol = 1e-5
+    Test.@test value.(X) ≈ [3.1651 0.8022; 0.8022 3.2972] atol = 1e-4
     return
 end
 

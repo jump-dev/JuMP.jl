@@ -1,4 +1,4 @@
-# # MIP: Sudoku
+# # Solving Sudokus with MIP
 
 # A sudoku solver that uses a MIP to find solutions.
 
@@ -10,7 +10,9 @@
 #  4 - Each 3x3 subgrid contains each number exactly once
 # We will take the initial grid as a CSV file at `filepath`, where 0s are blanks.
 
-using JuMP, GLPK, Test
+using JuMP
+import GLPK
+import Test
 
 function example_sudoku(filepath::String)
     initial_grid = zeros(Int, 9, 9)
@@ -78,7 +80,7 @@ end
 
 solution = example_sudoku("sudoku.csv")
 
-@test solution == [
+Test.@test solution == [
     3 1 7 9 5 8 2 6 4;
     4 6 9 3 2 7 8 1 5;
     8 2 5 1 6 4 7 9 3;

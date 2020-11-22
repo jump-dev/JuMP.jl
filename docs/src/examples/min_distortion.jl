@@ -1,4 +1,4 @@
-# # SDP: minimum distortion
+# # The minimum distortion problem
 
 # This example arises from computational geometry, in particular the problem of
 # embedding a general finite metric space into a euclidean space.
@@ -34,7 +34,9 @@
 # For more detail, see "Lectures on discrete geometry" by J. Matoušek, Springer,
 # 2002, pp. 378-379.
 
-using JuMP, SCS, Test
+using JuMP
+import SCS
+import Test
 
 function example_min_distortion()
     model = Model(SCS.Optimizer)
@@ -55,9 +57,9 @@ function example_min_distortion()
     end
     @objective(model, Min, c²)
     optimize!(model)
-    @test termination_status(model) == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test objective_value(model) ≈ 4/3 atol = 1e-4
+    Test.@test termination_status(model) == MOI.OPTIMAL
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test objective_value(model) ≈ 4/3 atol = 1e-4
     return
 end
 

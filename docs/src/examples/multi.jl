@@ -1,4 +1,4 @@
-# # LP: multi-commodity flow
+# # The multi-commodity flow problem
 
 # JuMP implementation of the multicommodity transportation model AMPL: A Modeling
 # Language for Mathematical Programming, 2nd ed by Robert Fourer, David Gay, and
@@ -6,7 +6,9 @@
 #
 # Originally contributed by Louis Luangkesorn, February 26, 2015.
 
-using JuMP, GLPK, Test
+using JuMP
+import GLPK
+import Test
 
 function example_multi(; verbose = true)
     orig = ["GARY", "CLEV", "PITT"]
@@ -80,9 +82,9 @@ function example_multi(; verbose = true)
         sum(trans[i, j, p] for p in 1:numprod) - limit[i, j] <= 0
     )
     optimize!(multi)
-    @test termination_status(multi) == MOI.OPTIMAL
-    @test primal_status(multi) == MOI.FEASIBLE_POINT
-    @test objective_value(multi) == 225700.0
+    Test.@test termination_status(multi) == MOI.OPTIMAL
+    Test.@test primal_status(multi) == MOI.FEASIBLE_POINT
+    Test.@test objective_value(multi) == 225_700.0
     if verbose
         println("RESULTS:")
         for i in 1:length(orig)
