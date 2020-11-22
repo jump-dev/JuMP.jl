@@ -1,4 +1,4 @@
-# # K-means clustering via SSDP
+# # K-means clustering via SDP
 
 # From "Approximating K-means-type clustering via semidefinite programming" By
 # Jiming Peng and Yu Wei.

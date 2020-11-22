@@ -99,7 +99,7 @@ function example_prod(; verbose = true)
         else
             return regularrate
         end
-  end
+    end
     minv = [
         [dem[p][t + 1] * checkpro(p, t, pro, pir, rir) for t in numperiods]
         for p in 1:numprd
