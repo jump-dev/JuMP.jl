@@ -1,33 +1,21 @@
 using Documenter
 using Literate
 using JuMP
+using Test
 
-const _EXAMPLE_INPUT_DIR = joinpath(dirname(@__DIR__), "examples")
-const _EXAMPLE_OUTPUT_DIR = joinpath(@__DIR__, "src", "examples")
+const _EXAMPLE_DIR = joinpath(@__DIR__, "src", "examples")
 
-# Delete all files in the output directory to make way for fresh versions.
-for file in readdir(_EXAMPLE_OUTPUT_DIR)
-    if file == ".gitkeep"
-        continue
-    end
-    rm(joinpath(_EXAMPLE_OUTPUT_DIR, file))
-end
-
-# Replace with this for-loop once all examples are migrated.
-for file in readdir(_EXAMPLE_INPUT_DIR)
+for file in readdir(_EXAMPLE_DIR)
     if !endswith(file, ".jl")
         continue
-    elseif file in [
-        "run_examples.jl",
-    ]
-        continue
     end
-    Literate.markdown(
-        joinpath(_EXAMPLE_INPUT_DIR, file),
-        _EXAMPLE_OUTPUT_DIR;
-        documenter = true,
-        # execute = true,
-    )
+    filename = joinpath(_EXAMPLE_DIR, file)
+    # `include` the file to test it before `#src` lines are removed. It is in a
+    # testset to isolate local variables between files.
+    @testset "$(file)" begin
+        include(filename)
+    end
+    Literate.markdown(filename, _EXAMPLE_DIR; documenter = true)
 end
 
 makedocs(
@@ -60,7 +48,7 @@ makedocs(
             file -> joinpath("examples", file),
             filter(
                 file -> endswith(file, ".md"),
-                sort(readdir(_EXAMPLE_OUTPUT_DIR)),
+                sort(readdir(_EXAMPLE_DIR)),
             )
         ),
     ],

@@ -5,7 +5,7 @@
 using JuMP
 import GLPK
 
-import Test  #src
+using Test  #src
 
 # Build the model:
 
@@ -39,6 +39,6 @@ println("Objective value : ", obj_value)
 println("x value         : ", x_value)
 println("y value         : ", y_value)
 
-Test.@test obj_value ≈ 10.6  #src
-Test.@test x_value ≈ 2       #src
-Test.@test y_value ≈ 0.2     #src
+@test obj_value ≈ 10.6  #src
+@test x_value ≈ 2       #src
+@test y_value ≈ 0.2     #src

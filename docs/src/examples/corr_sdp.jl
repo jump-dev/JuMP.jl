@@ -13,7 +13,10 @@
 #     | ρ_AB   1    ρ_BC |  ≽ 0
 #     | ρ_AC  ρ_BC   1   |
 
-using JuMP, SCS, Test
+using JuMP
+import SCS
+
+using Test  #src
 
 function example_corr_sdp()
     model = Model(SCS.Optimizer)
@@ -31,11 +34,13 @@ function example_corr_sdp()
     ## Find upper bound
     @objective(model, Max, X[1, 3])
     optimize!(model)
-    @test value(X[1, 3]) ≈ 0.87195 atol = 1e-4
+    println("An upper bound for X[1, 3] is $(value(X[1, 3]))")
+    @test value(X[1, 3]) ≈ 0.87195 atol = 1e-4  #src
     ## Find lower bound
     @objective(model, Min, X[1, 3])
     optimize!(model)
-    @test value(X[1, 3]) ≈ -0.978 atol = 1e-3
+    println("A lower bound for X[1, 3] is $(value(X[1, 3]))")
+    @test value(X[1, 3]) ≈ -0.978 atol = 1e-3  #src
     return
 end
 

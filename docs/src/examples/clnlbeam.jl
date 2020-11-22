@@ -16,14 +16,14 @@
 
 using JuMP
 import Ipopt
-import Test
+
+using Test  #src
 
 function example_clnlbeam()
     N = 1000
     h = 1/N
     alpha = 350
     model = Model(Ipopt.Optimizer)
-    set_silent(model)
     @variables(model, begin
            -1 <= t[1:(N + 1)] <= 1
         -0.05 <= x[1:(N + 1)] <= 0.05
@@ -49,10 +49,14 @@ function example_clnlbeam()
         t[i + 1] - t[i] - 0.5 * h * u[i + 1] - 0.5 * h * u[i] == 0,
     )
     optimize!(model)
-
-    Test.@test termination_status(model) == MOI.LOCALLY_SOLVED
-    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
-    Test.@test objective_value(model) ≈ 350.0
+    println("""
+    termination_status = $(termination_status(model))
+    primal_status      = $(primal_status(model))
+    objective_value    = $(objective_value(model))
+    """)
+    @test termination_status(model) == MOI.LOCALLY_SOLVED  #src
+    @test primal_status(model) == MOI.FEASIBLE_POINT  #src
+    @test objective_value(model) ≈ 350.0  #src
     return
 end
 

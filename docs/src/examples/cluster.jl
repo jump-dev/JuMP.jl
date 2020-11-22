@@ -5,7 +5,11 @@
 
 # Given a set of points $a_1, \ldots, a_m$  in $R_n$, allocate them to k clusters.
 
-using JuMP, SCS, LinearAlgebra, Test
+using JuMP
+import SCS
+import LinearAlgebra
+
+import Test  #src
 
 function example_cluster(; verbose = true)
     ## Data points
@@ -19,7 +23,7 @@ function example_cluster(; verbose = true)
     W = zeros(m, m)
     for i in 1:m
         for j in i + 1:m
-            W[i, j] = W[j, i] = exp(-norm(a[i] - a[j]) / 1.0)
+            W[i, j] = W[j, i] = exp(-LinearAlgebra.norm(a[i] - a[j]) / 1.0)
         end
     end
     model = Model(SCS.Optimizer)
@@ -28,11 +32,12 @@ function example_cluster(; verbose = true)
     @variable(model, Z[1:m, 1:m], PSD)
     @constraint(model, Z .>= 0)
     ## min Tr(W(I-Z))
-    @objective(model, Min, tr(W * (Matrix(1.0I, m, m) - Z)))
+    I = Matrix(1.0 * LinearAlgebra.I, m, m)
+    @objective(model, Min, LinearAlgebra.tr(W * (I - Z)))
     ## Z e = e
     @constraint(model, Z * ones(m) .== ones(m))
     ## Tr(Z) = k
-    @constraint(model, tr(Z) == k)
+    @constraint(model, LinearAlgebra.tr(Z) == k)
     optimize!(model)
     Z_val = value.(Z)
     ## A simple rounding scheme
@@ -44,13 +49,13 @@ function example_cluster(; verbose = true)
             num_clusters += 1
             which_cluster[i] = num_clusters
             for j in i + 1:m
-                if norm(Z_val[i, j] - Z_val[i, i]) <= 1e-6
+                if LinearAlgebra.norm(Z_val[i, j] - Z_val[i, i]) <= 1e-6
                     which_cluster[j] = num_clusters
                 end
             end
         end
     end
-    @test which_cluster == [1, 1, 2, 1, 2, 2]
+    @test which_cluster == [1, 1, 2, 1, 2, 2]  #src
     if verbose
         ## Print results
         for cluster in 1:k
