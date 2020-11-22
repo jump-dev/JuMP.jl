@@ -35,6 +35,7 @@ function example_mle(; verbose = true)
     ## You can even do constrained MLE!
     @NLconstraint(model, μ == σ^2)
     optimize!(model)
+    Test.@test value(μ) ≈ value(σ)^2
     if verbose
         println()
         println("With constraint μ == σ^2:")
@@ -42,7 +43,7 @@ function example_mle(; verbose = true)
         println("σ^2                       = ", value(σ)^2)
         println("Constrained MLE objective = ", objective_value(model))
     end
-    Test.@test value(μ) ≈ value(σ)^2
+    return
 end
 
 example_mle()

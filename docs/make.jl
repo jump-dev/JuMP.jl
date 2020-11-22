@@ -19,7 +19,6 @@ for file in readdir(_EXAMPLE_INPUT_DIR)
         continue
     elseif file in [
         "run_examples.jl",
-        "cutting_stock_column_generation.jl",
     ]
         continue
     end
@@ -27,7 +26,7 @@ for file in readdir(_EXAMPLE_INPUT_DIR)
         joinpath(_EXAMPLE_INPUT_DIR, file),
         _EXAMPLE_OUTPUT_DIR;
         documenter = true,
-        execute = true,
+        # execute = true,
     )
 end
 

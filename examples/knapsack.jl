@@ -31,6 +31,7 @@ function example_knapsack(; verbose = true)
     @test termination_status(model) == MOI.OPTIMAL
     @test primal_status(model) == MOI.FEASIBLE_POINT
     @test objective_value(model) == 16.0
+    return
 end
 
 example_knapsack()

@@ -36,6 +36,7 @@ function example_corr_sdp()
     @objective(model, Min, X[1, 3])
     optimize!(model)
     @test value(X[1, 3]) ≈ -0.978 atol = 1e-3
+    return
 end
 
 example_corr_sdp()

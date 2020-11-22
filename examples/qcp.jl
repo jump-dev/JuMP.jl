@@ -26,6 +26,7 @@ function example_qcp(; verbose = true)
     @test objective_value(model) ≈ 0.32699 atol = 1e-5
     @test value(x) ≈ 0.32699 atol = 1e-5
     @test value(y) ≈ 0.25707 atol = 1e-5
+    return
 end
 
-example_qcp(verbose = false)
+example_qcp()

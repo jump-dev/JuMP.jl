@@ -232,6 +232,7 @@ function example_prod(; verbose = true)
         end
         println()
     end
+    return
 end
 
 example_prod()

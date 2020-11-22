@@ -98,6 +98,7 @@ function example_steelT3(; verbose = true)
             end
         end
     end
+    return
 end
 
 example_steelT3()

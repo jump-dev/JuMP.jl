@@ -91,6 +91,7 @@ function example_diet(; verbose = true)
     if verbose
         print_solution(false, foods, buy)
     end
+    return
 end
 
 example_diet()

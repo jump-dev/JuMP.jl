@@ -53,6 +53,7 @@ function example_clnlbeam()
     Test.@test termination_status(model) == MOI.LOCALLY_SOLVED
     Test.@test primal_status(model) == MOI.FEASIBLE_POINT
     Test.@test objective_value(model) ≈ 350.0
+    return
 end
 
 example_clnlbeam()

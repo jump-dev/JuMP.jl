@@ -49,6 +49,7 @@ function example_urban_plan()
     @test termination_status(model) == MOI.OPTIMAL
     @test primal_status(model) == MOI.FEASIBLE_POINT
     @test objective_value(model) ≈ 14.0
+    return
 end
 
 example_urban_plan()

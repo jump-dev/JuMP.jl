@@ -58,6 +58,7 @@ function example_min_distortion()
     @test termination_status(model) == MOI.OPTIMAL
     @test primal_status(model) == MOI.FEASIBLE_POINT
     @test objective_value(model) ≈ 4/3 atol = 1e-4
+    return
 end
 
 example_min_distortion()

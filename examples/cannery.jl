@@ -56,6 +56,7 @@ function example_cannery()
     Test.@test termination_status(cannery) == MOI.OPTIMAL    #src
     Test.@test primal_status(cannery) == MOI.FEASIBLE_POINT  #src
     Test.@test objective_value(cannery) == 151_200.0         #src
+    return
 end
 
 example_cannery()

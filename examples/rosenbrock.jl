@@ -17,6 +17,7 @@ function example_rosenbrock()
     @test objective_value(model) ≈ 0.0 atol = 1e-10
     @test value(x) ≈ 1.0
     @test value(y) ≈ 1.0
+    return
 end
 
 example_rosenbrock()

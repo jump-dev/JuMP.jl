@@ -34,6 +34,7 @@ function example_lazy_constraint()
     Test.@test lazy_called
     Test.@test value(x) == 1
     Test.@test value(y) == 2
+    return
 end
 
 example_lazy_constraint()
@@ -68,6 +69,7 @@ function example_user_cut_constraint()
     Test.@test termination_status(model) == MOI.OPTIMAL
     Test.@test primal_status(model) == MOI.FEASIBLE_POINT
     Test.@test callback_called
+    return
 end
 
 example_user_cut_constraint()
@@ -97,6 +99,7 @@ function example_heuristic_solution()
     Test.@test termination_status(model) == MOI.OPTIMAL
     Test.@test primal_status(model) == MOI.FEASIBLE_POINT
     Test.@test callback_called
+    return
 end
 
 example_heuristic_solution()
@@ -134,6 +137,7 @@ function example_solver_dependent_callback()
     Test.@test lazy_called
     Test.@test value(x) == 1
     Test.@test value(y) == 2
+    return
 end
 
 example_solver_dependent_callback()

@@ -94,6 +94,7 @@ function example_multi(; verbose = true)
             end
         end
     end
+    return
 end
 
 

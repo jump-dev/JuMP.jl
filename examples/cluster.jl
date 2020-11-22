@@ -62,6 +62,7 @@ function example_cluster(; verbose = true)
             end
         end
     end
+    return
 end
 
 example_cluster()

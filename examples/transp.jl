@@ -39,6 +39,7 @@ function example_transp()
 	@test termination_status(model) == MOI.OPTIMAL
 	@test primal_status(model) == MOI.FEASIBLE_POINT
 	@test objective_value(model) == 196200.0
+	return
 end
 
 example_transp()
