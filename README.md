@@ -58,14 +58,12 @@ a list of the significant breaking changes in the JuMP 0.19 release.**
 
 **Latest Release**: 0.21.5 (`release-0.21` branch)
   * [Documentation](https://jump.dev/JuMP.jl/v0.21.5/)
-  * [Examples](https://github.com/jump-dev/JuMP.jl/tree/release-0.21/examples)
   * Testing status:
     * Github Actions: [![Build Status](https://github.com/jump-dev/JuMP.jl/workflows/CI/badge.svg?branch=release-0.21)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI)
 
 
 **Development version** (`master` branch):
   * [Documentation](https://jump.dev/JuMP.jl/dev/)
-  * [Examples](https://github.com/jump-dev/JuMP.jl/tree/master/examples)
   * Testing status:
     * Github Actions: [![Build Status](https://github.com/jump-dev/JuMP.jl/workflows/CI/badge.svg?branch=master)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI)
     * Test coverage: [![codecov](https://codecov.io/gh/jump-dev/JuMP.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/jump-dev/JuMP.jl)
