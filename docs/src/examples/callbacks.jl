@@ -1,23 +1,21 @@
-#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
-#  This Source Code Form is subject to the terms of the Mozilla Public
-#  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-#############################################################################
-# JuMP
-# An algebraic modeling language for Julia
-# See https://github.com/jump-dev/JuMP.jl
-#############################################################################
+# Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors    #src
+# This Source Code Form is subject to the terms of the Mozilla Public License   #src
+# v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
+# obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-using GLPK
+# # Callbacks
+
+# This example uses the following packages:
+
 using JuMP
-using Random
-using Test
+import GLPK
+import Random
+import Test  #src
 
-"""
-    example_lazy_constraint()
+# ## Lazy constraints
 
-An example using a lazy constraint callback.
-"""
+# An example using a lazy constraint callback.
+
 function example_lazy_constraint()
     model = Model(GLPK.Optimizer)
     @variable(model, 0 <= x <= 2.5, Int)
@@ -28,101 +26,104 @@ function example_lazy_constraint()
         lazy_called = true
         x_val = callback_value(cb_data, x)
         y_val = callback_value(cb_data, y)
+        println("Called from (x, y) = ($x_val, $y_val)")
         if y_val - x_val > 1 + 1e-6
             con = @build_constraint(y - x <= 1)
+            println("Adding $(con)")
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         elseif y_val + x_val > 3 + 1e-6
             con = @build_constraint(y - x <= 1)
+            println("Adding $(con)")
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         end
     end
     MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
     optimize!(model)
-    @test termination_status(model) == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test lazy_called
-    @test value(x) == 1
-    @test value(y) == 2
+    Test.@test termination_status(model) == MOI.OPTIMAL    #src
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT  #src
+    Test.@test lazy_called    #src
+    Test.@test value(x) == 1  #src
+    Test.@test value(y) == 2  #src
+    println("Optimal solution (x, y) = ($(value(x)), $(value(y)))")
+    return
 end
 
 example_lazy_constraint()
 
-"""
-    example_user_cut_constraint()
+# ## User-cut
 
-An example using a user-cut callback.
-"""
+# An example using a user-cut callback.
+
 function example_user_cut_constraint()
     Random.seed!(1)
     N = 30
     item_weights, item_values = rand(N), rand(N)
-
     model = Model(GLPK.Optimizer)
     @variable(model, x[1:N], Bin)
     @constraint(model, sum(item_weights[i] * x[i] for i = 1:N) <= 10)
     @objective(model, Max, sum(item_values[i] * x[i] for i = 1:N))
-
     callback_called = false
     function my_callback_function(cb_data)
         callback_called = true
-        # TODO(odow): remove Ref once GLPK supports broadcasting over cb_data.
         x_vals = callback_value.(Ref(cb_data), x)
-        accumulated = sum(item_weights[i] for i=1:N if x_vals[i] > 1e-4)
-        n_terms = sum(1 for i=1:N if x_vals[i] > 1e-4)
+        accumulated = sum(item_weights[i] for i = 1:N if x_vals[i] > 1e-4)
+        println("Called with accumulated = $(accumulated)")
+        n_terms = sum(1 for i = 1:N if x_vals[i] > 1e-4)
         if accumulated > 10
             con = @build_constraint(
                 sum(x[i] for i = 1:N if x_vals[i] > 0.5) <= n_terms - 1
             )
+            println("Adding $(con)")
             MOI.submit(model, MOI.UserCut(cb_data), con)
         end
     end
     MOI.set(model, MOI.UserCutCallback(), my_callback_function)
     optimize!(model)
-    @test termination_status(model) == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test callback_called
+    Test.@test termination_status(model) == MOI.OPTIMAL  #src
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT  #src
+    Test.@test callback_called  #src
+    @show callback_called
+    return
 end
 
 example_user_cut_constraint()
 
-"""
-    example_heuristic_solution()
+# ## HeuristicCallback
 
-An example using a heuristic solution callback.
-"""
+# An example using a heuristic solution callback.
+
 function example_heuristic_solution()
     Random.seed!(1)
     N = 30
     item_weights, item_values = rand(N), rand(N)
-
     model = Model(GLPK.Optimizer)
     @variable(model, x[1:N], Bin)
     @constraint(model, sum(item_weights[i] * x[i] for i = 1:N) <= 10)
     @objective(model, Max, sum(item_values[i] * x[i] for i = 1:N))
-
     callback_called = false
     function my_callback_function(cb_data)
         callback_called = true
-        # TODO(odow): remove Ref once GLPK supports broadcasting over cb_data.
         x_vals = callback_value.(Ref(cb_data), x)
-        @test MOI.submit(
+        ret = MOI.submit(
             model, MOI.HeuristicSolution(cb_data), x, floor.(x_vals)
-        ) in (MOI.HEURISTIC_SOLUTION_ACCEPTED, MOI.HEURISTIC_SOLUTION_REJECTED)
+        )
+        println("Heuristic solution status = $(ret)")
+        Test.@test ret in (MOI.HEURISTIC_SOLUTION_ACCEPTED, MOI.HEURISTIC_SOLUTION_REJECTED)  #src
     end
     MOI.set(model, MOI.HeuristicCallback(), my_callback_function)
     optimize!(model)
-    @test termination_status(model) == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test callback_called
+    Test.@test termination_status(model) == MOI.OPTIMAL  #src
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT  #src
+    Test.@test callback_called  #src
+    return
 end
 
 example_heuristic_solution()
 
-"""
-    example_solver_dependent_callback()
+# ## GLPK solver-dependent callback
 
-An example using a solver_dependent callback.
-"""
+# An example using GLPK's solver-dependent callback.
+
 function example_solver_dependent_callback()
     model = Model(GLPK.Optimizer)
     @variable(model, 0 <= x <= 2.5, Int)
@@ -132,6 +133,7 @@ function example_solver_dependent_callback()
     function my_callback_function(cb_data)
         lazy_called = true
         reason = GLPK.glp_ios_reason(cb_data.tree)
+        println("Called from reason = $(reason)")
         if reason != GLPK.GLP_IROWGEN
             return
         end
@@ -139,19 +141,22 @@ function example_solver_dependent_callback()
         y_val = callback_value(cb_data, y)
         if y_val - x_val > 1 + 1e-6
             con = @build_constraint(y - x <= 1)
+            println("Adding $(con)")
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         elseif y_val + x_val > 3 + 1e-6
             con = @build_constraint(y - x <= 1)
+            println("Adding $(con)")
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         end
     end
     MOI.set(model, GLPK.CallbackFunction(), my_callback_function)
     optimize!(model)
-    @test termination_status(model) == MOI.OPTIMAL
-    @test primal_status(model) == MOI.FEASIBLE_POINT
-    @test lazy_called
-    @test value(x) == 1
-    @test value(y) == 2
+    Test.@test termination_status(model) == MOI.OPTIMAL  #src
+    Test.@test primal_status(model) == MOI.FEASIBLE_POINT  #src
+    Test.@test lazy_called  #src
+    Test.@test value(x) == 1  #src
+    Test.@test value(y) == 2  #src
+    return
 end
 
 example_solver_dependent_callback()
