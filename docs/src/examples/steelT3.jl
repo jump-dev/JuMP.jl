@@ -8,7 +8,7 @@
 # The steelT3 model from AMPL: A Modeling Language for Mathematical Programming,
 # 2nd ed by Robert Fourer, David Gay, and Brian W. Kernighan.
 #
-# Originally contribute by Louis Luangkesorn, April 3, 2015.
+# Originally contributed by Louis Luangkesorn, April 3, 2015.
 
 using JuMP
 import GLPK
