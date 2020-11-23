@@ -5,6 +5,15 @@ using Test
 
 const _EXAMPLE_DIR = joinpath(@__DIR__, "src", "examples")
 
+function link_example(content)
+    edit_url = match(r"EditURL = \"(.+?)\"", content)[1]
+    footer = match(r"^(---\n\n\*This page was generated using)"m, content)[1]
+    content = replace(
+        content, footer => "[View this file on Github]($(edit_url)).\n\n" * footer
+    )
+    return content
+end
+
 for file in readdir(_EXAMPLE_DIR)
     if !endswith(file, ".jl")
         continue
@@ -15,7 +24,9 @@ for file in readdir(_EXAMPLE_DIR)
     @testset "$(file)" begin
         include(filename)
     end
-    Literate.markdown(filename, _EXAMPLE_DIR; documenter = true)
+    Literate.markdown(
+        filename, _EXAMPLE_DIR; documenter = true, postprocess = link_example
+    )
 end
 
 makedocs(
