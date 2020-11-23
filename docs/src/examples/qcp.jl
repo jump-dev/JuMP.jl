@@ -1,3 +1,8 @@
+# Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors    #src
+# This Source Code Form is subject to the terms of the Mozilla Public License   #src
+# v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
+# obtain one at https://mozilla.org/MPL/2.0/.                                   #src
+
 # # Quadratically constrained programs
 
 # A simple quadratically constrained program based on an [example from Gurobi](https://www.gurobi.com/documentation/9.0/examples/qcp_c_c.html).

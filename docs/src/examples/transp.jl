@@ -1,3 +1,8 @@
+# Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors    #src
+# This Source Code Form is subject to the terms of the Mozilla Public License   #src
+# v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
+# obtain one at https://mozilla.org/MPL/2.0/.                                   #src
+
 # # The transportation problem
 
 # Allocation of passenger cars to trains to minimize cars required or car-miles
