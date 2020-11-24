@@ -61,29 +61,30 @@ println("Naive approach: function calls = $(function_calls)")
 # follows:
 
 """
-    memoize(foo::Function, n_outputs::Int; max_cache_size::Int = 50)
+    memoize(foo::Function, n_outputs::Int)
 
 Take a function `foo` and return a vector of length `n_outputs`, where each
 element is a function that returns the `i`'th output of `foo`.
 
-To avoid duplication of work, cache the evaluations of `foo`. `max_cache_size`
-controls the maximum number of solutions in the cache. A larger value may result
-in less function evaluations, at the cost of higher memory usage.
-
-Because `foo_i` is auto-differentiated with ForwardDiff, it needs to work when
-`x` is a `Float64` and a `ForwardDiff.Dual`.
+To avoid duplication of work, cache the evaluations of `foo`. Because `foo_i` is
+auto-differentiated with ForwardDiff, our cache needs to work when `x` is a
+`Float64` and a `ForwardDiff.Dual`.
 """
-function memoize(foo::Function, n_outputs::Int; max_cache_size::Int = 50)
-    cache = Dict{UInt, Any}()
+function memoize(foo::Function, n_outputs::Int)
+    last_x, last_f = nothing, nothing
+    last_dx, last_dfdx = nothing, nothing
     function foo_i(i, x::T...) where {T <: Real}
-        if length(cache) >= max_cache_size
-            empty!(cache)
+        if T == Float64
+            if x != last_x
+                last_x, last_f = x, foo(x...)
+            end
+            return last_f[i]::T
+        else
+            if x != last_dx
+                last_dx, last_dfdx = x, foo(x...)
+            end
+            return last_dfdx[i]::T
         end
-        h = hash((x, typeof(x)))
-        if !haskey(cache, h)
-            cache[h] = foo(x...)
-        end
-        return cache[h][i]::T
     end
     return [(x...) -> foo_i(i, x...) for i = 1:n_outputs]
 end
@@ -124,7 +125,3 @@ println("Memoized approach: function_calls = $(function_calls)")
 
 # Compared to the naive approach, the memoized approach requires half as many
 # function evaluations!
-
-# It is important to note that you should only use the `memoize` approach if the
-# time spent caching the solutions is less than the time spent evaluating the
-# function. In this example, it probably isn't worth the effort.
