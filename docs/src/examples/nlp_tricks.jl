@@ -61,22 +61,31 @@ println("Naive approach: function calls = $(function_calls)")
 # follows:
 
 """
-    memoize(foo::Function, n_outputs::Int)
+    memoize(foo::Function, n_outputs::Int; max_cache_size::Int = 50)
 
 Take a function `foo` and return a vector of length `n_outputs`, where each
-element is a function that returns the `i`'th output of `foo`. To avoid
-duplication of work, cache the evaluations of `foo`.
+element is a function that returns the `i`'th output of `foo`.
+
+To avoid duplication of work, cache the evaluations of `foo`. `max_cache_size`
+controls the maximum number of solutions in the cache. A larger value may result
+in less function evaluations, at the cost of higher memory usage.
+
+Because `foo_i` is auto-differentiated with ForwardDiff, it needs to work when
+`x` is a `Float64` and a `ForwardDiff.Dual`.
 """
-function memoize(foo::Function, n_outputs::Int)
+function memoize(foo::Function, n_outputs::Int; max_cache_size::Int = 50)
     cache = Dict{UInt, Any}()
-    function foo_i(i, x)
+    function foo_i(i, x::T...) where {T <: Real}
+        if length(cache) >= max_cache_size
+            empty!(cache)
+        end
         h = hash((x, typeof(x)))
         if !haskey(cache, h)
             cache[h] = foo(x...)
         end
-        return cache[h][i]
+        return cache[h][i]::T
     end
-    return [(x...) -> foo_i(i, x) for i = 1:n_outputs]
+    return [(x...) -> foo_i(i, x...) for i = 1:n_outputs]
 end
 
 # Let's see how it works. First, construct the memoized versions of `foo`:
@@ -86,7 +95,7 @@ memoized_foo = memoize(foo, 2)
 # Now try evaluating the first element of `memoized_foo`.
 
 function_calls = 0
-memoized_foo[1](1, 1)
+memoized_foo[1](1.0, 1.0)
 Test.@test function_calls == 1  #src
 println("function_calls = ", function_calls)
 
@@ -94,7 +103,7 @@ println("function_calls = ", function_calls)
 # function again, we hit the cache instead of needing to re-compute `foo` and
 # `function_calls` is still `1`!
 
-memoized_foo[1](1, 1)
+memoized_foo[1](1.0, 1.0)
 Test.@test function_calls == 1  #src
 println("function_calls = ", function_calls)
 
@@ -119,6 +128,3 @@ println("Memoized approach: function_calls = $(function_calls)")
 # It is important to note that you should only use the `memoize` approach if the
 # time spent caching the solutions is less than the time spent evaluating the
 # function. In this example, it probably isn't worth the effort.
-
-# You may also run into memory issues if you need to memoize a large number of
-# iterations, or if the input dimension is very large.
