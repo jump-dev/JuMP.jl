@@ -235,11 +235,3 @@ macro and can be used only in [`@NLobjective`](@ref), [`@NLconstraint`](@ref),
 and other [`@NLexpression`](@ref)s. Moreover, quadratic and affine expressions
 cannot be used in the nonlinear macros. For more details, see the [Nonlinear
 Modeling](@ref) section.
-
-## Reference
-
-```@docs
-@expression
-add_to_expression!
-drop_zeros!
-```

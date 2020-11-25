@@ -56,6 +56,10 @@ makedocs(
             "callbacks.md",
             "Extensions" => "extensions.md",
         ],
+        "API Reference" => map(
+            file -> joinpath("reference", file),
+            sort(readdir(joinpath(@__DIR__, "src", "reference"))),
+        ),
         "Examples" => map(
             file -> joinpath("examples", file),
             filter(

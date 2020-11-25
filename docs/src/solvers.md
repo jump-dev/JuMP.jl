@@ -68,23 +68,10 @@ The factory can be provided either at model construction time by calling
 [`set_optimizer`](@ref). An optimizer must be set before a call to
 [`optimize!`](@ref). The optimizer can be grouped with attributes to be
 set before optimization with [`optimizer_with_attributes`](@ref).
-```@docs
-set_optimizer
-optimizer_with_attributes
-NoOptimizer
-JuMP.optimize!
-```
 
 New JuMP models are created using the [`Model`](@ref) constructor:
-```@docs
-Model()
-Model(::Any)
-```
 
-A JuMP model may be reused by emptying it first:
-```@docs
-Base.empty!(::Model)
-```
+A JuMP model may be reused by emptying it first with `empty!(model)`.
 
 ```@meta
 # TODO: how to control the caching optimizer states
@@ -92,34 +79,17 @@ Base.empty!(::Model)
 
 ## Direct mode
 
-JuMP models can be created in `DIRECT` mode using the
-[`JuMP.direct_model`](@ref) function.
-```@docs
-JuMP.direct_model
-```
-
-```@docs
-JuMP.backend
-```
+JuMP models can be created in `MOI.DIRECT` mode using the [`JuMP.direct_model`](@ref)
+function.
 
 ## Solver attributes
 
 Some solver attributes can be queried and set through JuMP models.
 
-```@docs
-solver_name
+Examples include:
 
-bridge_constraints
-
-get_optimizer_attribute
-set_optimizer_attribute
-set_optimizer_attributes
-set_silent
-unset_silent
-set_time_limit_sec
-unset_time_limit_sec
-time_limit_sec
-```
+- [`set_silent`](@ref) and [`unset_silent`](@ref)
+- [`set_time_limit_sec`](@ref) and [`unset_time_limit_sec`](@ref)
 
 ## File formats
 
@@ -128,14 +98,5 @@ and [`Base.write`](@ref).
 
 The file formats are defined [within MathOptInterface in the FileFormats enumeration](https://jump.dev/MathOptInterface.jl/v0.9/apireference/#MathOptInterface.FileFormats.FileFormat).
 
-```@docs
-write_to_file
-Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)
-```
-
 JuMP models can be created from file formats using [`read_from_file`](@ref) and
 [`Base.read`](@ref).
-```@docs
-read_from_file
-Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)
-```

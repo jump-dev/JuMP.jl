@@ -130,15 +130,27 @@ expressions. The initial value of the parameter must be provided on the
 right-hand side of the `==` sign. There is no anonymous syntax for creating
 parameters.
 
-```@docs
-@NLparameter
+You may use `value` and `set_value` to query or update the value of a parameter.
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @NLparameter(model, p[i = 1:2] == i);
+
+julia> value.(p)
+2-element Array{Float64,1}:
+ 1.0
+ 2.0
+
+julia> set_value(p[2], 3.0)
+3.0
+
+julia> value.(p)
+2-element Array{Float64,1}:
+ 1.0
+ 3.0
 ```
 
-You may use `value` and `set_value` to query or update the value of a parameter.
-```@docs
-value(::JuMP.NonlinearParameter)
-set_value(::JuMP.NonlinearParameter, ::Number)
-```
 Nonlinear parameters can be used *within nonlinear expressions* only:
 
 ```julia
@@ -430,13 +442,5 @@ add_NL_constraint(model, :($(x[1])*$(x[2])*$(x[3])*$(x[4]) >= 25))
 
 See the Julia documentation for more examples and description of Julia
 expressions.
-
-## Reference
-
-```@docs
-@NLconstraint
-@NLexpression
-@NLobjective
-```
 
 [^1]: Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", SIAM Review, [PDF](https://mlubin.github.io/pdf/jump-sirev.pdf).

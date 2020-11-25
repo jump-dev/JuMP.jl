@@ -249,16 +249,8 @@ julia> fix_value(x)
 The name, i.e. the value of the `MOI.VariableName` attribute, of a variable can
 be obtained by [`JuMP.name(::JuMP.VariableRef)`](@ref) and set by
 [`JuMP.set_name(::JuMP.VariableRef, ::String)`](@ref).
-```@docs
-name(::JuMP.VariableRef)
-set_name(::JuMP.VariableRef, ::String)
-```
 
-The variable can also be retrieved from its name using
-[`JuMP.variable_by_name`](@ref).
-```@docs
-variable_by_name
-```
+The variable can also be retrieved from its name using [`JuMP.variable_by_name`](@ref).
 
 ## Variable containers
 
@@ -764,49 +756,3 @@ Subject to
 !!! note
     Keyword arguments must be contained within parentheses. (See the example
     above.)
-
-## Reference
-
-```@docs
-@variable
-@variables
-owner_model
-VariableRef
-all_variables
-num_variables
-
-has_lower_bound
-lower_bound
-set_lower_bound
-delete_lower_bound
-
-has_upper_bound
-upper_bound
-set_upper_bound
-delete_upper_bound
-
-is_fixed
-fix_value
-fix
-unfix
-
-is_integer
-set_integer
-unset_integer
-IntegerRef
-
-is_binary
-set_binary
-unset_binary
-BinaryRef
-
-relax_integrality
-
-index(::VariableRef)
-optimizer_index(::VariableRef)
-
-set_start_value
-start_value
-
-reduced_cost
-```
