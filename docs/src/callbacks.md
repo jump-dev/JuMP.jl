@@ -41,7 +41,8 @@ Callback support is limited to a few solvers. This includes
 ## Things you can and cannot do during callbacks
 
 There is a very limited range of things you can do during a callback. Only use 
-the functions and macros explicitly stated in this portion of the documentation.
+the functions and macros explicitly stated in this page of the documentation, or
+in the [Callbacks example](/examples/callbacks).
 
 Using any other part of the JuMP API (e.g., adding a constraint with [`@constraint`](@ref)
 or modifying a variable bound with [`set_lower_bound`](@ref)) is undefined
