@@ -1,5 +1,7 @@
 # Constraint API
 
+More information can be found in the [Constraints](@ref) section of the manual.
+
 ```@docs
 @constraint
 @SDconstraint

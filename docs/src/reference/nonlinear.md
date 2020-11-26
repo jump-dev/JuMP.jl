@@ -1,5 +1,8 @@
 # Nonlinear API
 
+More information can be found in the [Nonlinear Modeling](@ref) section of the
+manual.
+
 ```@docs
 @NLconstraint
 @NLexpression

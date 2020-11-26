@@ -1,5 +1,7 @@
 # Expression API
 
+More information can be found in the [Expressions](@ref) section of the manual.
+
 ```@docs
 @expression
 

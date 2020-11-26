@@ -6,7 +6,7 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Callbacks
+# [Callbacks](@id callbacks_manual)
 
 Many mixed-integer (linear, conic, and nonlinear) programming solvers offer
 the ability to modify the solve process. Examples include changing branching

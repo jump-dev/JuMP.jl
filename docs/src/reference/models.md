@@ -1,5 +1,8 @@
 # Model API
 
+More information can be found in the [Interacting with solvers](@ref) section of
+the manual.
+
 ```@docs
 Model()
 Model(::Any)

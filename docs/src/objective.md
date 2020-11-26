@@ -1,5 +1,4 @@
-Objective
-=========
+# Objectives
 
 This page describes macros and functions related to linear and quadratic
 objective functions only, unless otherwise indicated. For nonlinear objective

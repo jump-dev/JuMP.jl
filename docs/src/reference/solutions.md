@@ -1,5 +1,8 @@
 # Solution API
 
+More information can be found in the [Querying Solutions](@ref) section of the
+manual.
+
 ```@docs
 JuMP.optimize!
 NoOptimizer
