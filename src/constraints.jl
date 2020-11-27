@@ -972,8 +972,8 @@ julia> list_of_constraint_types(model)
 ```
 """
 function list_of_constraint_types(model::Model)
-    list = MOI.get(
-        model, MOI.ListOfConstraints())::Vector{Tuple{DataType, DataType}}
-    return Tuple{DataType, DataType}[(jump_function_type(model, f), s)
-                                     for (f,s) in list]
+    return Tuple{DataType, DataType}[
+        (jump_function_type(model, f), s) 
+        for (f, s) in MOI.get(model, MOI.ListOfConstraints())
+    ]
 end
