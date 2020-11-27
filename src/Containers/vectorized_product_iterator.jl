@@ -58,8 +58,9 @@ _prod_size(::Tuple{}) = ()
 _prod_size(t::Tuple) = (length(t[1]), _prod_size(Base.tail(t))...)
 Base.axes(it::VectorizedProductIterator) = _prod_indices(it.prod.iterators)
 _prod_indices(::Tuple{}) = ()
-_prod_indices(t::Tuple) =
-    (Base.OneTo(length(t[1])), _prod_indices(Base.tail(t))...)
+function _prod_indices(t::Tuple)
+    return (Base.OneTo(length(t[1])), _prod_indices(Base.tail(t))...)
+end
 Base.ndims(it::VectorizedProductIterator) = length(axes(it))
 Base.length(it::VectorizedProductIterator) = prod(size(it))
 Base.iterate(it::VectorizedProductIterator, args...) = iterate(it.prod, args...)

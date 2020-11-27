@@ -109,8 +109,9 @@ end
 # AbstractArray interface
 
 Base.size(A::DenseAxisArray) = size(A.data)
-Base.LinearIndices(A::DenseAxisArray) =
-    error("DenseAxisArray does not support this operation.")
+function Base.LinearIndices(A::DenseAxisArray)
+    return error("DenseAxisArray does not support this operation.")
+end
 Base.axes(A::DenseAxisArray) = A.axes
 Base.CartesianIndices(a::DenseAxisArray) = CartesianIndices(a.data)
 
@@ -198,8 +199,9 @@ function Base.setindex!(A::DenseAxisArray{T,N}, v, idx...) where {T,N}
     return A.data[to_index(A, idx...)...] = v
 end
 Base.setindex!(A::DenseAxisArray, v, idx::CartesianIndex) = A.data[idx] = v
-Base.IndexStyle(::Type{DenseAxisArray{T,N,Ax}}) where {T,N,Ax} =
-    IndexAnyCartesian()
+function Base.IndexStyle(::Type{DenseAxisArray{T,N,Ax}}) where {T,N,Ax}
+    return IndexAnyCartesian()
+end
 
 ########
 # Keys #
@@ -245,8 +247,9 @@ function Base.getindex(
 ) where {T,S,N}
     return DenseAxisArrayKey(_to_index_tuple(args, a.product_iter.iterators))
 end
-Base.IndexStyle(::Type{DenseAxisArrayKeys{T,N,Ax}}) where {T,N,Ax} =
-    IndexCartesian()
+function Base.IndexStyle(::Type{DenseAxisArrayKeys{T,N,Ax}}) where {T,N,Ax}
+    return IndexCartesian()
+end
 
 ################
 # Broadcasting #
@@ -331,14 +334,20 @@ function Base.summary(io::IO, A::DenseAxisArray)
     end
     return print(io, "And data, a ", summary(A.data))
 end
-_summary(io, A::DenseAxisArray{T,N}) where {T,N} =
-    println(io, "$N-dimensional DenseAxisArray{$T,$N,...} with index sets:")
+function _summary(io, A::DenseAxisArray{T,N}) where {T,N}
+    return println(
+        io,
+        "$N-dimensional DenseAxisArray{$T,$N,...} with index sets:",
+    )
+end
 
 if isdefined(Base, :print_array) # 0.7 and later
-    Base.print_array(io::IO, X::DenseAxisArray{T,1}) where {T} =
-        Base.print_matrix(io, X.data)
-    Base.print_array(io::IO, X::DenseAxisArray{T,2}) where {T} =
-        Base.print_matrix(io, X.data)
+    function Base.print_array(io::IO, X::DenseAxisArray{T,1}) where {T}
+        return Base.print_matrix(io, X.data)
+    end
+    function Base.print_array(io::IO, X::DenseAxisArray{T,2}) where {T}
+        return Base.print_matrix(io, X.data)
+    end
 end
 
 # n-dimensional arrays

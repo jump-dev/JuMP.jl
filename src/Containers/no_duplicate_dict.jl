@@ -17,8 +17,9 @@ struct NoDuplicateDict{K,V} <: AbstractDict{K,V}
 end
 
 # Implementation of the `AbstractDict` API.
-Base.empty(::NoDuplicateDict, ::Type{K}, ::Type{V}) where {K,V} =
-    NoDuplicateDict{K,V}()
+function Base.empty(::NoDuplicateDict, ::Type{K}, ::Type{V}) where {K,V}
+    return NoDuplicateDict{K,V}()
+end
 Base.iterate(d::NoDuplicateDict, args...) = iterate(d.dict, args...)
 Base.length(d::NoDuplicateDict) = length(d.dict)
 Base.haskey(dict::NoDuplicateDict, key) = haskey(dict.dict, key)
