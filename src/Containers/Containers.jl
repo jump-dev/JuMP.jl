@@ -26,13 +26,16 @@ export DenseAxisArray, SparseAxisArray
 include("DenseAxisArray.jl")
 include("SparseAxisArray.jl")
 
-Base.eachindex(g::Base.Generator{<:Union{DenseAxisArray, SparseAxisArray}}) = eachindex(g.iter)
+Base.eachindex(g::Base.Generator{<:Union{DenseAxisArray,SparseAxisArray}}) =
+    eachindex(g.iter)
 
 # The generic implementation uses `LinearIndices` which is not supported by
 # `DenseAxisArray` and `SparseAxisArray`.
 function Base.collect_to_with_first!(
-    dest::Union{DenseAxisArray, SparseAxisArray},
-    first_value, iterator, state
+    dest::Union{DenseAxisArray,SparseAxisArray},
+    first_value,
+    iterator,
+    state,
 )
     indices = eachindex(iterator)
     dest[first(indices)] = first_value

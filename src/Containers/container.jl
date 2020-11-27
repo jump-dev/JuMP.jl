@@ -62,9 +62,10 @@ SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 5 entries:
 """
 function container end
 
-container(f::Function, indices) = container(f, indices, default_container(indices))
+container(f::Function, indices) =
+    container(f, indices, default_container(indices))
 
-const ArrayIndices{N} = VectorizedProductIterator{NTuple{N, Base.OneTo{Int}}}
+const ArrayIndices{N} = VectorizedProductIterator{NTuple{N,Base.OneTo{Int}}}
 default_container(::ArrayIndices) = Array
 function container(f::Function, indices::ArrayIndices, ::Type{Array})
     return map(I -> f(I...), indices)
@@ -73,23 +74,32 @@ function _oneto(indices)
     if indices isa UnitRange{Int} && indices == 1:length(indices)
         return Base.OneTo(length(indices))
     end
-    error("Index set for array is not one-based interval.")
+    return error("Index set for array is not one-based interval.")
 end
-function container(f::Function, indices::VectorizedProductIterator,
-                   ::Type{Array})
-    container(f, vectorized_product(_oneto.(indices.prod.iterators)...), Array)
+function container(
+    f::Function,
+    indices::VectorizedProductIterator,
+    ::Type{Array},
+)
+    return container(
+        f,
+        vectorized_product(_oneto.(indices.prod.iterators)...),
+        Array,
+    )
 end
 default_container(::VectorizedProductIterator) = DenseAxisArray
-function container(f::Function, indices::VectorizedProductIterator,
-                   ::Type{DenseAxisArray})
+function container(
+    f::Function,
+    indices::VectorizedProductIterator,
+    ::Type{DenseAxisArray},
+)
     return DenseAxisArray(map(I -> f(I...), indices), indices.prod.iterators...)
 end
 default_container(::NestedIterator) = SparseAxisArray
 # Returns the element type. If it is unknown but it is known to be `N`-tuples,
 # returns `NTuple{N, Any}`.
 _eltype_or_any(indices::Array) = eltype(indices)
-function container(f::Function, indices,
-                   ::Type{SparseAxisArray})
+function container(f::Function, indices, ::Type{SparseAxisArray})
     # Same as `map` but does not allocate the resulting vector.
     mappings = Base.Generator(I -> I => f(I...), indices)
     # Same as `Dict(mapping)` but it will error if two indices are the same.
@@ -100,7 +110,7 @@ function container(f::Function, indices,
         # of the key hence the type of `dict` is `Dict{Any, Any}`.
         # This is an issue since `SparseAxisArray` needs the key
         # type to be a tuple.
-        dict = Dict{_eltype_or_any(indices), Any}()
+        dict = Dict{_eltype_or_any(indices),Any}()
     end
     return SparseAxisArray(dict)
 end
