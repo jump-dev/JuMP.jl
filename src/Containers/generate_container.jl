@@ -126,7 +126,8 @@ function generate_container(T, indexvars, indexsets, requestedtype)
             end
             return :(
                 $condition ||
-                    error("Index set for array is not one-based interval."); $arrayexpr
+                    error("Index set for array is not one-based interval.");
+                $arrayexpr
             ),
             true
         end

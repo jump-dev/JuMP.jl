@@ -1,0 +1,4 @@
+margin = 80
+always_for_in = true
+remove_extra_newlines = true
+always_use_return = true
