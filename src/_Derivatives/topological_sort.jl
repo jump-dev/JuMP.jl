@@ -33,7 +33,7 @@ mutable struct TopologicalSortVisitor
     function TopologicalSortVisitor(n::Int)
         vs = Int[]
         sizehint!(vs, n)
-        new(vs, zeros(Int, n))
+        return new(vs, zeros(Int, n))
     end
 end
 
@@ -44,8 +44,7 @@ function depth_first_visit_impl!(
     index_stack,                    # stack with out edge indices
     vertexcolormap::Vector{Int},    # an (initialized) color-map to indicate status of vertices
     visitor::TopologicalSortVisitor,
-)  # the visitor
-
+)
     while !isempty(vertex_stack)
         u = pop!(vertex_stack)
         out_idx = pop!(index_stack)
@@ -86,7 +85,6 @@ function traverse_graph(
     vertex_stack,
     index_stack,
 )
-
     vertexcolormap[s] = 1
 
     resize!(vertex_stack, 1)
@@ -94,7 +92,7 @@ function traverse_graph(
     resize!(index_stack, 1)
     index_stack[1] = 1
 
-    depth_first_visit_impl!(
+    return depth_first_visit_impl!(
         adjlist,
         offsets,
         vertex_stack,
@@ -104,10 +102,8 @@ function traverse_graph(
     )
 end
 
-
-
 function close_vertex!(visitor::TopologicalSortVisitor, v::Int)
-    push!(visitor.vertices, v)
+    return push!(visitor.vertices, v)
 end
 
 function reverse_topological_sort_by_dfs(
@@ -118,7 +114,6 @@ function reverse_topological_sort_by_dfs(
     vertex_stack::Vector{Int} = Int[],
     index_stack::Vector{Int} = Int[],
 )
-
     @assert length(cmap) == num_vertices
     fill!(cmap, 0)
     visitor = TopologicalSortVisitor(num_vertices)
@@ -137,5 +132,5 @@ function reverse_topological_sort_by_dfs(
         end
     end
 
-    visitor.vertices, visitor.parents
+    return visitor.vertices, visitor.parents
 end

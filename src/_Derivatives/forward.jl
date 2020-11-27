@@ -42,7 +42,6 @@ function forward_eval(
     user_output_buffer,
     user_operators::UserOperatorRegistry,
 ) where {T}
-
     @assert length(storage) >= length(nd)
     @assert length(partials_storage) >= length(nd)
 
@@ -251,7 +250,6 @@ function forward_eval(
     #@show storage
 
     return storage[1]
-
 end
 
 export forward_eval
@@ -273,7 +271,6 @@ function forward_eval_ϵ(
     subexpression_values_ϵ,
     user_operators::UserOperatorRegistry,
 ) where {N,T}
-
     @assert length(storage_ϵ) >= length(nd)
     @assert length(partials_storage_ϵ) >= length(nd)
 
@@ -428,7 +425,6 @@ end
 
 export forward_eval_ϵ
 
-
 exprs = Expr[]
 for i in 1:length(univariate_operators)
     op = univariate_operators[i]
@@ -458,7 +454,7 @@ switchexpr = binaryswitch(1:length(exprs), exprs)
 
 @eval @inline function eval_univariate(operator_id, x::T) where {T}
     $switchexpr
-    error("No match for operator_id")
+    return error("No match for operator_id")
 end
 
 # TODO: optimize sin/cos/exp
@@ -496,5 +492,5 @@ switchexpr = binaryswitch(ids, exprs)
     fval::T,
 ) where {T}
     $switchexpr
-    error("No match for operator_id")
+    return error("No match for operator_id")
 end

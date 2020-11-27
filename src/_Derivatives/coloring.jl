@@ -36,7 +36,7 @@ function Base.empty!(v::IndexedSet)
     for i in 1:v.nnz
         empty[nzidx[i]] = true
     end
-    v.nnz = 0
+    return v.nnz = 0
 end
 
 Base.length(v::IndexedSet) = length(v.nzidx)
@@ -54,9 +54,8 @@ function Base.union!(v::IndexedSet, s)
     for x in s
         push!(v, x)
     end
-    nothing
+    return nothing
 end
-
 
 # compact storage for an undirected graph
 # neighbors of vertex i start at adjlist[offsets[i]]
@@ -112,7 +111,6 @@ function gen_adjlist(I, J, nel)
     @assert edge_count == n_edges
 
     return UndirectedGraph(adjlist, edgeindex, offsets, edges)
-
 end
 
 export gen_adjlist
@@ -130,7 +128,7 @@ normalize_p(p::MyPair) =
 normalize_p(i, j) = normalize_p(MyPair(i, j))
 
 macro colored(i)
-    esc(:((color[$i] != 0)))
+    return esc(:((color[$i] != 0)))
 end
 
 function prevent_cycle(
@@ -153,7 +151,7 @@ function prevent_cycle(
     elseif q != w
         forbiddenColors[color[x]] = v
     end
-    nothing
+    return nothing
 end
 
 function grow_star(v, w, e_idx, firstNeighbor, color, S)
@@ -165,7 +163,7 @@ function grow_star(v, w, e_idx, firstNeighbor, color, S)
     else
         union!(S, e_idx, e.index)
     end
-    nothing
+    return nothing
 end
 
 function merge_trees(eg, eg1, S)
@@ -174,14 +172,13 @@ function merge_trees(eg, eg1, S)
     if e1 != e2
         union!(S, eg, eg1)
     end
-    nothing
+    return nothing
 end
 
 # acyclic coloring algorithm of Gebremdehin, Tarafdar, Manne, and Pothen
 # "New Acyclic and Star Coloring Algorithms with Application to Computing Hessians"
 # SIAM J. Sci. Comput. 2007
 function acyclic_coloring(g::UndirectedGraph)
-
     if num_edges(g) == 0
         return fill(1, num_vertices(g)), 1
     end
@@ -298,7 +295,6 @@ function recovery_preprocess(
     # represent two-color subgraph as:
     # list of vertices (with map to global indices)
     # adjacency list in a single vector (with list of offsets)
-
 
     # linear index of pair of colors
     twocolorindex = zeros(Int32, num_colors, num_colors)
@@ -425,7 +421,6 @@ function recovery_preprocess(
         num_edges(g),
         local_indices,
     )
-
 end
 
 function indirect_recover_structure(rinfo::RecoveryInfo)
@@ -459,7 +454,6 @@ function indirect_recover_structure(rinfo::RecoveryInfo)
             I[k] = i
             J[k] = j
         end
-
     end
 
     @assert k == nnz + N
@@ -473,7 +467,6 @@ function hessian_color_preprocess(
     num_total_var,
     seen_idx = IndexedSet(0),
 )
-
     resize!(seen_idx, num_total_var)
     I = Int[]
     J = Int[]
@@ -524,7 +517,6 @@ seed_matrix(rinfo::RecoveryInfo) =
 export seed_matrix
 
 function prepare_seed_matrix!(R, rinfo::RecoveryInfo)
-
     N = length(rinfo.color) # number of local variables
     @assert N == length(rinfo.local_indices)
     @assert size(R, 1) == N
@@ -584,7 +576,6 @@ function recover_from_matmat!(V, R, rinfo::RecoveryInfo, stored_values)
     @assert k == nnz + N
 
     return
-
 end
 
 export recover_from_matmat!

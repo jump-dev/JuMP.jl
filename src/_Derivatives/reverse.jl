@@ -1,5 +1,4 @@
 
-
 # reverse-mode evaluation of an expression tree
 
 # assumes partials_storage is already updated
@@ -11,7 +10,6 @@ function reverse_eval(
     nd::Vector{NodeData},
     adj,
 ) where {T}
-
     @assert length(reverse_storage) >= length(nd)
     @assert length(partials_storage) >= length(nd)
 
@@ -41,8 +39,7 @@ function reverse_eval(
     end
     #@show storage
 
-    nothing
-
+    return nothing
 end
 
 export reverse_eval
@@ -57,7 +54,6 @@ function reverse_extract(
     subexpression_output,
     scale_value::T,
 ) where {T}
-
     @assert length(reverse_storage) >= length(nd)
 
     for k in 1:length(nd)
@@ -71,8 +67,7 @@ function reverse_extract(
     end
     #@show storage
 
-    nothing
-
+    return nothing
 end
 
 export reverse_extract
@@ -92,7 +87,6 @@ function reverse_eval_ϵ(
     scale_value::T,
     scale_value_ϵ::ForwardDiff.Partials{N,T},
 ) where {N,T}
-
     @assert length(reverse_storage_ϵ) >= length(nd)
     @assert length(partials_storage_ϵ) >= length(nd)
 
@@ -144,8 +138,7 @@ function reverse_eval_ϵ(
     end
     #@show storage
 
-    nothing
-
+    return nothing
 end
 
 export reverse_eval_ϵ

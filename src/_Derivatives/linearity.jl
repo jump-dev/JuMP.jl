@@ -1,5 +1,4 @@
 
-
 # classify the nodes in a tree as constant, linear, or nonlinear with respect to the input
 
 @enum Linearity CONSTANT LINEAR PIECEWISE_LINEAR NONLINEAR
@@ -7,7 +6,6 @@
 export CONSTANT, LINEAR, PIECEWISE_LINEAR, NONLINEAR
 
 function classify_linearity(nd::Vector{NodeData}, adj, subexpression_linearity)
-
     linearity = Array{Linearity}(undef, length(nd))
 
     # do a forward pass through the graph, which is reverse order of nd
@@ -95,7 +93,6 @@ function classify_linearity(nd::Vector{NodeData}, adj, subexpression_linearity)
     end
 
     return linearity
-
 end
 
 export Linearity, classify_linearity

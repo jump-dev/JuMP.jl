@@ -68,7 +68,6 @@ for i in 1:length(comparison_operators)
 end
 export comparison_operator_to_id, comparison_operators
 
-
 # user-provided operators
 struct UserOperatorRegistry
     multivariate_operator_to_id::Dict{Symbol,Int}
@@ -127,7 +126,6 @@ function register_univariate_operator!(
 end
 
 export register_univariate_operator!
-
 
 function has_user_multivariate_operators(nd::Vector{NodeData})
     for k in 1:length(nd)

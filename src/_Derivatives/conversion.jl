@@ -1,7 +1,6 @@
 
 # convert from Julia expression into NodeData form
 
-
 function expr_to_nodedata(
     ex::Expr,
     r::UserOperatorRegistry = UserOperatorRegistry(),
@@ -19,7 +18,6 @@ function expr_to_nodedata(
     parentid,
     r::UserOperatorRegistry,
 )
-
     myid = length(nd) + 1
     if isexpr(ex, :call)
         op = ex.args[1]
@@ -67,7 +65,7 @@ function expr_to_nodedata(
     else
         error("Unrecognized expression $ex: $(ex.head)")
     end
-    nothing
+    return nothing
 end
 
 function expr_to_nodedata(
@@ -80,7 +78,7 @@ function expr_to_nodedata(
     valueidx = length(values) + 1
     push!(values, ex)
     push!(nd, NodeData(VALUE, valueidx, parentid))
-    nothing
+    return nothing
 end
 
 export expr_to_nodedata

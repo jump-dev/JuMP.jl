@@ -16,7 +16,6 @@ function compute_gradient_sparsity(nd::Vector{NodeData})
     return indices
 end
 
-
 function compute_gradient_sparsity!(
     indices::Coloring.IndexedSet,
     nd::Vector{NodeData},
@@ -29,7 +28,7 @@ function compute_gradient_sparsity!(
             error("Internal error: Invalid to compute sparsity if MOIVARIABLE nodes are present.")
         end
     end
-    nothing
+    return nothing
 end
 
 export compute_gradient_sparsity, compute_gradient_sparsity!
@@ -174,7 +173,6 @@ function compute_hessian_sparsity(
                 push!(edgelist, (i, j))
             end
         end
-
     end
 
     return edgelist
