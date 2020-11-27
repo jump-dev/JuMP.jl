@@ -55,7 +55,7 @@ Base.broadcastable(con_ref::ConstraintRef) = Ref(con_ref)
     dual_start_value(con_ref::ConstraintRef)
 
 Return the dual start value (MOI attribute `ConstraintDualStart`) of the
-constraint `con_ref`. 
+constraint `con_ref`.
 
 Note: If no dual start value has been set, `dual_start_value` will return
 `nothing`.
@@ -950,7 +950,7 @@ end
 # information available.
 
 """
-    list_of_constraint_types(model::Model)
+    list_of_constraint_types(model::Model)::Vector{Tuple{DataType, DataType}}
 
 Return a list of tuples of the form `(F, S)` where `F` is a JuMP function type
 and `S` is an MOI set type such that `all_constraints(model, F, S)` returns
@@ -971,9 +971,11 @@ julia> list_of_constraint_types(model)
  (VariableRef, MathOptInterface.ZeroOne)
 ```
 """
-function list_of_constraint_types(model::Model)
+function list_of_constraint_types(model::Model)::Vector{Tuple{DataType, DataType}}
+    # We include an annotated return type here because Julia fails terribly at
+    # inferring it, even though we annotate the type of the return vector.
     return Tuple{DataType, DataType}[
-        (jump_function_type(model, f), s) 
-        for (f, s) in MOI.get(model, MOI.ListOfConstraints())
+        (jump_function_type(model, F), S)
+        for (F, S) in MOI.get(model, MOI.ListOfConstraints())
     ]
 end
