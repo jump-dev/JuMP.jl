@@ -1,4 +1,7 @@
-margin = 80
+# Configuration file for JuliaFormatter.jl
+# For more information, see: https://domluna.github.io/JuliaFormatter.jl/stable/config/
+
 always_for_in = true
-remove_extra_newlines = true
 always_use_return = true
+margin = 80
+remove_extra_newlines = true
