@@ -6,7 +6,7 @@
 
 export CONSTANT, LINEAR, PIECEWISE_LINEAR, NONLINEAR
 
-function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
+function classify_linearity(nd::Vector{NodeData}, adj, subexpression_linearity)
 
     linearity = Array{Linearity}(undef, length(nd))
 
@@ -24,7 +24,7 @@ function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
         elseif nod.nodetype == SUBEXPRESSION
             linearity[k] = subexpression_linearity[nod.index]
         else
-            children_idx = nzrange(adj,k)
+            children_idx = nzrange(adj, k)
             num_constant_children = 0
             any_nonlinear = false
             for r in children_idx
@@ -40,8 +40,11 @@ function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
                 linearity[k] = NONLINEAR
                 # except in the case of ifelse. If the operands are linear then
                 # we're piecewise linear.
-                if nod.nodetype == CALL && nod.index < USER_OPERATOR_ID_START && operators[nod.index] == :ifelse
-                    if linearity[children_arr[children_idx[2]]] == LINEAR && linearity[children_arr[children_idx[3]]] == LINEAR
+                if nod.nodetype == CALL &&
+                   nod.index < USER_OPERATOR_ID_START &&
+                   operators[nod.index] == :ifelse
+                    if linearity[children_arr[children_idx[2]]] == LINEAR &&
+                       linearity[children_arr[children_idx[3]]] == LINEAR
                         linearity[k] = PIECEWISE_LINEAR
                     end
                 end
@@ -55,7 +58,10 @@ function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
             # if operator is nonlinear, then we're nonlinear
             op = nod.index
             if nod.nodetype == CALLUNIVAR
-                if op < USER_UNIVAR_OPERATOR_ID_START && (univariate_operators[op] == :+ || univariate_operators[op] == :-)
+                if op < USER_UNIVAR_OPERATOR_ID_START && (
+                    univariate_operators[op] == :+ ||
+                    univariate_operators[op] == :-
+                )
                     linearity[k] = LINEAR
                 else
                     linearity[k] = NONLINEAR
@@ -66,7 +72,8 @@ function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
                     linearity[k] = NONLINEAR
                 elseif operators[op] == :+ || operators[op] == :-
                     linearity[k] = LINEAR
-                elseif operators[op] == :* && num_constant_children == length(children_idx) - 1
+                elseif operators[op] == :* &&
+                       num_constant_children == length(children_idx) - 1
                     linearity[k] = LINEAR
                 elseif operators[op] == :/
                     if linearity[children_arr[last(children_idx)]] == CONSTANT
@@ -91,4 +98,4 @@ function classify_linearity(nd::Vector{NodeData},adj,subexpression_linearity)
 
 end
 
-export Linearity,classify_linearity
+export Linearity, classify_linearity

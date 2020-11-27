@@ -17,12 +17,14 @@ end
 
 # Order the subexpressions which main_expressions depend on such that we can
 # run forward mode in this order.
-function order_subexpressions(main_expressions::Vector{Vector{NodeData}},
-                              subexpressions::Vector{Vector{NodeData}})
+function order_subexpressions(
+    main_expressions::Vector{Vector{NodeData}},
+    subexpressions::Vector{Vector{NodeData}},
+)
     num_sub = length(subexpressions)
     computed = falses(num_sub)
     dependencies = Dict{Int,Vector{Int}}()
-    to_visit = collect(num_sub + 1 : num_sub + length(main_expressions))
+    to_visit = collect(num_sub+1:num_sub+length(main_expressions))
     # For each subexpression k, the indices of the main expressions that depend
     # on k, possibly transitively.
     depended_on_by = [Set{Int}() for i in 1:num_sub]
@@ -30,7 +32,7 @@ function order_subexpressions(main_expressions::Vector{Vector{NodeData}},
     while !isempty(to_visit)
         idx = pop!(to_visit)
         if idx > num_sub
-            subexpr = list_subexpressions(main_expressions[idx - num_sub])
+            subexpr = list_subexpressions(main_expressions[idx-num_sub])
         else
             computed[idx] && continue
             subexpr = list_subexpressions(subexpressions[idx])
@@ -57,9 +59,12 @@ function order_subexpressions(main_expressions::Vector{Vector{NodeData}},
     N = num_sub + length(main_expressions)
     sp = sparse(I, J, ones(length(I)), N, N)
     cmap = Vector{Int}(undef, N)
-    order = reverse(Coloring.reverse_topological_sort_by_dfs(sp.rowval,
-                                                             sp.colptr, N,
-                                                             cmap)[1])
+    order = reverse(Coloring.reverse_topological_sort_by_dfs(
+        sp.rowval,
+        sp.colptr,
+        N,
+        cmap,
+    )[1])
     # Remove the subexpressions which never appear anywhere and the indices of
     # the main expressions.
     condition(idx) = idx <= num_sub && computed[idx]
@@ -80,7 +85,7 @@ function order_subexpressions(main_expressions::Vector{Vector{NodeData}},
             push!(individual_order[i], o)
         end
     end
-    
+
     return order_filtered, individual_order
 end
 

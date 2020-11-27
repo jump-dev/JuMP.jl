@@ -2,33 +2,51 @@
 # convert from Julia expression into NodeData form
 
 
-function expr_to_nodedata(ex::Expr,r::UserOperatorRegistry=UserOperatorRegistry())
+function expr_to_nodedata(
+    ex::Expr,
+    r::UserOperatorRegistry = UserOperatorRegistry(),
+)
     nd = NodeData[]
     values = Float64[]
-    expr_to_nodedata(ex,nd,values,-1,r)
-    return nd,values
+    expr_to_nodedata(ex, nd, values, -1, r)
+    return nd, values
 end
 
-function expr_to_nodedata(ex::Expr,nd::Vector{NodeData},values::Vector{Float64},parentid,r::UserOperatorRegistry)
+function expr_to_nodedata(
+    ex::Expr,
+    nd::Vector{NodeData},
+    values::Vector{Float64},
+    parentid,
+    r::UserOperatorRegistry,
+)
 
     myid = length(nd) + 1
-    if isexpr(ex,:call)
+    if isexpr(ex, :call)
         op = ex.args[1]
         if length(ex.args) == 2
-            id = haskey(univariate_operator_to_id,op) ? univariate_operator_to_id[op] : r.univariate_operator_to_id[op] + USER_UNIVAR_OPERATOR_ID_START - 1
-            push!(nd,NodeData(CALLUNIVAR, id, parentid))
+            id =
+                haskey(univariate_operator_to_id, op) ?
+                univariate_operator_to_id[op] :
+                r.univariate_operator_to_id[op] +
+                USER_UNIVAR_OPERATOR_ID_START - 1
+            push!(nd, NodeData(CALLUNIVAR, id, parentid))
         elseif op in comparison_operators
-            push!(nd,NodeData(COMPARISON, comparison_operator_to_id[op], parentid))
+            push!(
+                nd,
+                NodeData(COMPARISON, comparison_operator_to_id[op], parentid),
+            )
         else
-            id = haskey(operator_to_id,op) ? operator_to_id[op] : r.multivariate_operator_to_id[op] + USER_OPERATOR_ID_START - 1
-            push!(nd,NodeData(CALL, id, parentid))
+            id =
+                haskey(operator_to_id, op) ? operator_to_id[op] :
+                r.multivariate_operator_to_id[op] + USER_OPERATOR_ID_START - 1
+            push!(nd, NodeData(CALL, id, parentid))
         end
         for k in 2:length(ex.args)
-            expr_to_nodedata(ex.args[k],nd,values,myid,r)
+            expr_to_nodedata(ex.args[k], nd, values, myid, r)
         end
     elseif isexpr(ex, :ref)
         @assert ex.args[1] == :x
-        push!(nd,NodeData(VARIABLE, ex.args[2], parentid))
+        push!(nd, NodeData(VARIABLE, ex.args[2], parentid))
     elseif isexpr(ex, :comparison)
         op = ex.args[2]
         opid = comparison_operator_to_id[op]
@@ -37,24 +55,30 @@ function expr_to_nodedata(ex::Expr,nd::Vector{NodeData},values::Vector{Float64},
         end
         push!(nd, NodeData(COMPARISON, opid, parentid))
         for k in 1:2:length(ex.args)
-            expr_to_nodedata(ex.args[k],nd,values,myid,r)
+            expr_to_nodedata(ex.args[k], nd, values, myid, r)
         end
-    elseif isexpr(ex,:&&) || isexpr(ex,:||)
+    elseif isexpr(ex, :&&) || isexpr(ex, :||)
         @assert length(ex.args) == 2
         op = ex.head
         opid = logic_operator_to_id[op]
         push!(nd, NodeData(LOGIC, opid, parentid))
-        expr_to_nodedata(ex.args[1],nd,values,myid,r)
-        expr_to_nodedata(ex.args[2],nd,values,myid,r)
+        expr_to_nodedata(ex.args[1], nd, values, myid, r)
+        expr_to_nodedata(ex.args[2], nd, values, myid, r)
     else
         error("Unrecognized expression $ex: $(ex.head)")
     end
     nothing
 end
 
-function expr_to_nodedata(ex::Number,nd::Vector{NodeData},values::Vector{Float64},parentid,r::UserOperatorRegistry)
-    valueidx = length(values)+1
-    push!(values,ex)
+function expr_to_nodedata(
+    ex::Number,
+    nd::Vector{NodeData},
+    values::Vector{Float64},
+    parentid,
+    r::UserOperatorRegistry,
+)
+    valueidx = length(values) + 1
+    push!(values, ex)
     push!(nd, NodeData(VALUE, valueidx, parentid))
     nothing
 end
@@ -76,9 +100,9 @@ function adjmat(nd::Vector{NodeData})
         I[realnz] = nz
         J[realnz] = par
     end
-    resize!(I,realnz)
-    resize!(J,realnz)
-    return sparse(I,J,ones(Bool,realnz),len,len)
+    resize!(I, realnz)
+    resize!(J, realnz)
+    return sparse(I, J, ones(Bool, realnz), len, len)
 end
 
 export adjmat

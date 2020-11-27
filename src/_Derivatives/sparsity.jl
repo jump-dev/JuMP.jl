@@ -17,7 +17,10 @@ function compute_gradient_sparsity(nd::Vector{NodeData})
 end
 
 
-function compute_gradient_sparsity!(indices::Coloring.IndexedSet,nd::Vector{NodeData})
+function compute_gradient_sparsity!(
+    indices::Coloring.IndexedSet,
+    nd::Vector{NodeData},
+)
     for k in 1:length(nd)
         nod = nd[k]
         if nod.nodetype == VARIABLE
@@ -38,7 +41,14 @@ export compute_gradient_sparsity, compute_gradient_sparsity!
 # subexpression_edgelist is the edgelist of each subexpression
 # subexpression_variables is the list of all variables which appear in
 # a subexpression (including recursively)
-function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vector{Linearity},indexedset::Coloring.IndexedSet,subexpression_edgelist::Vector{Set{Tuple{Int,Int}}},subexpression_variables::Vector{Vector{Int}})
+function compute_hessian_sparsity(
+    nd::Vector{NodeData},
+    adj,
+    input_linearity::Vector{Linearity},
+    indexedset::Coloring.IndexedSet,
+    subexpression_edgelist::Vector{Set{Tuple{Int,Int}}},
+    subexpression_variables::Vector{Vector{Int}},
+)
 
     # idea: consider the linearity/nonlinearity of a node *with respect to the output*
     # The children of any node which is nonlinear with respect to the output
@@ -54,7 +64,7 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
     # Add a nonlinear interaction between all children of a nonlinear node.
 
     edgelist = Set{Tuple{Int,Int}}()
-    nonlinear_wrt_output = fill(false,length(nd))
+    nonlinear_wrt_output = fill(false, length(nd))
 
     children_arr = rowvals(adj)
 
@@ -64,7 +74,7 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
     if length(nd) == 1 && nd[1].nodetype == SUBEXPRESSION
         # subexpression comes in linearly, so append edgelist
         for ij in subexpression_edgelist[nd[1].index]
-            push!(edgelist,ij)
+            push!(edgelist, ij)
         end
     end
 
@@ -81,25 +91,33 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
         par = nd[nod.parent]
         if par.nodetype == CALLUNIVAR
             op = par.index
-            if op >= USER_UNIVAR_OPERATOR_ID_START || univariate_operators[op] != :+ && univariate_operators[op] != :-
+            if op >= USER_UNIVAR_OPERATOR_ID_START ||
+               univariate_operators[op] != :+ && univariate_operators[op] != :-
                 nonlinear_wrt_output[k] = true
             end
         elseif par.nodetype == CALL
             op = par.index
             if op >= USER_OPERATOR_ID_START
                 nonlinear_wrt_output[k] = true
-            elseif operators[op] == :+ || operators[op] == :- || operators[op] == :ifelse
+            elseif operators[op] == :+ ||
+                   operators[op] == :- ||
+                   operators[op] == :ifelse
                 # pass
             elseif operators[op] == :*
                 # check if all siblings are constant
-                sibling_idx = nzrange(adj,nod.parent)
-                if !all(i -> input_linearity[children_arr[i]] == CONSTANT || children_arr[i] == k, sibling_idx)
+                sibling_idx = nzrange(adj, nod.parent)
+                if !all(
+                    i ->
+                        input_linearity[children_arr[i]] == CONSTANT ||
+                            children_arr[i] == k,
+                    sibling_idx,
+                )
                     # at least one sibling isn't constant
                     nonlinear_wrt_output[k] = true
                 end
             elseif operators[op] == :/
                 # check if denominator is nonconstant
-                sibling_idx = nzrange(adj,nod.parent)
+                sibling_idx = nzrange(adj, nod.parent)
                 if input_linearity[children_arr[last(sibling_idx)]] != CONSTANT
                     nonlinear_wrt_output[k] = true
                 end
@@ -111,7 +129,7 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
         if nod.nodetype == SUBEXPRESSION && !nonlinear_wrt_output[k]
             # subexpression comes in linearly, so append edgelist
             for ij in subexpression_edgelist[nod.index]
-                push!(edgelist,ij)
+                push!(edgelist, ij)
             end
         end
 
@@ -120,7 +138,7 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
         # do a DFS from here, including all children
         @assert isempty(stack)
         @assert isempty(stack_ignore)
-        sibling_idx = nzrange(adj,nod.parent)
+        sibling_idx = nzrange(adj, nod.parent)
         for sidx in sibling_idx
             push!(stack, children_arr[sidx])
             push!(stack_ignore, false)
@@ -135,7 +153,7 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
                 # logical conditions or comparisons
                 should_ignore = true
             end
-            children_idx = nzrange(adj,r)
+            children_idx = nzrange(adj, r)
             for cidx in children_idx
                 push!(stack, children_arr[cidx])
                 push!(stack_ignore, should_ignore)
@@ -153,7 +171,7 @@ function compute_hessian_sparsity(nd::Vector{NodeData},adj,input_linearity::Vect
             for j_ in 1:nonlinear_group.nnz
                 j = nonlinear_group.nzidx[j_]
                 j <= i || continue # only lower triangle
-                push!(edgelist,(i,j))
+                push!(edgelist, (i, j))
             end
         end
 

@@ -16,7 +16,21 @@ const TAG = :jump_tag
 # This is what NLP solvers expect, and
 # sometimes the results aren't needed anyway,
 # because the code may compute derivatives wrt constants.
-import NaNMath: sin, cos, tan, asin, acos, acosh, atanh, log, log2, log10, lgamma, log1p, pow, sqrt
+import NaNMath:
+    sin,
+    cos,
+    tan,
+    asin,
+    acos,
+    acosh,
+    atanh,
+    log,
+    log2,
+    log10,
+    lgamma,
+    log1p,
+    pow,
+    sqrt
 
 include("types.jl")
 include("conversion.jl")

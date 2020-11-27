@@ -33,7 +33,7 @@ mutable struct TopologicalSortVisitor
     function TopologicalSortVisitor(n::Int)
         vs = Int[]
         sizehint!(vs, n)
-        new(vs, zeros(Int,n))
+        new(vs, zeros(Int, n))
     end
 end
 
@@ -43,13 +43,14 @@ function depth_first_visit_impl!(
     vertex_stack,                   # an (initialized) stack of vertex
     index_stack,                    # stack with out edge indices
     vertexcolormap::Vector{Int},    # an (initialized) color-map to indicate status of vertices
-    visitor::TopologicalSortVisitor)  # the visitor
+    visitor::TopologicalSortVisitor,
+)  # the visitor
 
     while !isempty(vertex_stack)
         u = pop!(vertex_stack)
         out_idx = pop!(index_stack)
         #uegs = out_edges(u,graph)
-        len_uegs = offsets[u+1]-offsets[u]
+        len_uegs = offsets[u+1] - offsets[u]
         found_new_vertex = false
 
         while out_idx <= len_uegs && !found_new_vertex
@@ -83,16 +84,24 @@ function traverse_graph(
     visitor::TopologicalSortVisitor,
     vertexcolormap,
     vertex_stack,
-    index_stack)
+    index_stack,
+)
 
     vertexcolormap[s] = 1
 
-    resize!(vertex_stack,1)
+    resize!(vertex_stack, 1)
     vertex_stack[1] = s
-    resize!(index_stack,1)
+    resize!(index_stack, 1)
     index_stack[1] = 1
 
-    depth_first_visit_impl!(adjlist, offsets, vertex_stack, index_stack, vertexcolormap, visitor)
+    depth_first_visit_impl!(
+        adjlist,
+        offsets,
+        vertex_stack,
+        index_stack,
+        vertexcolormap,
+        visitor,
+    )
 end
 
 
@@ -101,17 +110,32 @@ function close_vertex!(visitor::TopologicalSortVisitor, v::Int)
     push!(visitor.vertices, v)
 end
 
-function reverse_topological_sort_by_dfs(adjlist,offsets,num_vertices, cmap::Vector{Int}, vertex_stack::Vector{Int}=Int[], index_stack::Vector{Int}=Int[])
+function reverse_topological_sort_by_dfs(
+    adjlist,
+    offsets,
+    num_vertices,
+    cmap::Vector{Int},
+    vertex_stack::Vector{Int} = Int[],
+    index_stack::Vector{Int} = Int[],
+)
 
     @assert length(cmap) == num_vertices
-    fill!(cmap,0)
+    fill!(cmap, 0)
     visitor = TopologicalSortVisitor(num_vertices)
 
     for s in 1:num_vertices
         if cmap[s] == 0
-            traverse_graph(adjlist, offsets, s, visitor, cmap, vertex_stack, index_stack)
+            traverse_graph(
+                adjlist,
+                offsets,
+                s,
+                visitor,
+                cmap,
+                vertex_stack,
+                index_stack,
+            )
         end
     end
 
-    visitor.vertices,visitor.parents
+    visitor.vertices, visitor.parents
 end
