@@ -4,17 +4,17 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # TODO add doc
-depends_on(ex::Expr,s::Symbol) = any(a->depends_on(a,s), ex.args)
-depends_on(ex::Symbol,s::Symbol) = (ex == s)
-depends_on(ex,s::Symbol) = false
-function depends_on(ex1,ex2)
+depends_on(ex::Expr, s::Symbol) = any(a -> depends_on(a, s), ex.args)
+depends_on(ex::Symbol, s::Symbol) = (ex == s)
+depends_on(ex, s::Symbol) = false
+function depends_on(ex1, ex2)
     @assert isa(ex2, Expr)
     @assert ex2.head == :tuple
-    any(s->depends_on(ex1,s), ex2.args)
+    return any(s -> depends_on(ex1, s), ex2.args)
 end
 
-function is_dependent(idxvars,idxset,i)
-    for (it,idx) in enumerate(idxvars)
+function is_dependent(idxvars, idxset, i)
+    for (it, idx) in enumerate(idxvars)
         it == i && continue
         depends_on(idxset, idx) && return true
     end
@@ -25,7 +25,7 @@ function has_dependent_sets(idxvars, idxsets)
     # check if any index set depends on a previous index var
     for i in 2:length(idxsets)
         for v in idxvars[1:(i-1)]
-            if depends_on(idxsets[i],v)
+            if depends_on(idxsets[i], v)
                 return true
             end
         end
@@ -80,40 +80,55 @@ automatically checks for duplicate terms in the index sets and `false` otherwise
     # :(Containers.SparseAxisArray(Dict{NTuple{N,Any},VariableRef}()))
 """
 function generate_container(T, indexvars, indexsets, requestedtype)
-    has_dependent = has_dependent_sets(indexvars,indexsets)
+    has_dependent = has_dependent_sets(indexvars, indexsets)
     onetosets = falses(length(indexsets))
-    for (i,indexset) in enumerate(indexsets)
-        s = Meta.isexpr(indexset,:escape) ? indexset.args[1] : indexset
-        if Meta.isexpr(s,:call) && length(s.args) == 3 && s.args[1] == :(:) && s.args[2] == 1
+    for (i, indexset) in enumerate(indexsets)
+        s = Meta.isexpr(indexset, :escape) ? indexset.args[1] : indexset
+        if Meta.isexpr(s, :call) &&
+           length(s.args) == 3 &&
+           s.args[1] == :(:) &&
+           s.args[2] == 1
             onetosets[i] = true
         end
     end
 
-    if requestedtype == :SparseAxisArray || (requestedtype == :Auto &&
-                                             has_dependent)
+    if requestedtype == :SparseAxisArray ||
+       (requestedtype == :Auto && has_dependent)
         N = length(indexvars)
         @assert N == length(indexsets)
-        return :(JuMP.Containers.SparseAxisArray(Dict{NTuple{$N,Any},$T}())), false
+        return :(JuMP.Containers.SparseAxisArray(Dict{NTuple{$N,Any},$T}())),
+        false
     end
 
     sizes = Expr(:tuple, [:(length($rng)) for rng in indexsets]...)
     arrayexpr = :(Array{$T}(undef, $sizes...))
 
     if requestedtype == :Array
-        has_dependent && return :(error("Unable to create requested Array because index sets are dependent.")), true
+        has_dependent &&
+            return :(error("Unable to create requested Array because index sets are dependent.")),
+            true
         if all(onetosets)
             return arrayexpr, true
         else
             # all sets must be one-based intervals
             condition = Expr(:&&)
-            for (i,indexset) in enumerate(indexsets)
+            for (i, indexset) in enumerate(indexsets)
                 if !onetosets[i]
-                    push!(condition.args,
-                          Expr(:call, :(JuMP.Containers.valid_array_index_set),
-                               indexset))
+                    push!(
+                        condition.args,
+                        Expr(
+                            :call,
+                            :(JuMP.Containers.valid_array_index_set),
+                            indexset,
+                        ),
+                    )
                 end
             end
-            return :($condition || error("Index set for array is not one-based interval."); $arrayexpr), true
+            return :(
+                $condition ||
+                    error("Index set for array is not one-based interval."); $arrayexpr
+            ),
+            true
         end
     end
 
@@ -121,7 +136,9 @@ function generate_container(T, indexvars, indexsets, requestedtype)
     append!(axisexpr.args, indexsets)
 
     if requestedtype == :DenseAxisArray
-        has_dependent && return :(error("Unable to create requested DenseAxisArray because index sets are dependent.")), true
+        has_dependent &&
+            return :(error("Unable to create requested DenseAxisArray because index sets are dependent.")),
+            true
         return axisexpr, true
     end
 
@@ -132,12 +149,18 @@ function generate_container(T, indexvars, indexsets, requestedtype)
 
     # Fallback, we have to decide once we know the types of the symbolic sets
     condition = Expr(:&&)
-    for (i,indexset) in enumerate(indexsets)
+    for (i, indexset) in enumerate(indexsets)
         if !onetosets[i]
             push!(condition.args, Expr(:call, :isa, indexset, :(Base.OneTo)))
         end
     end
 
     # TODO: check type stability
-    return :(if $condition; $arrayexpr; else $axisexpr; end), true
+    return :(
+        if $condition
+            $arrayexpr
+        else
+            $axisexpr
+        end
+    ), true
 end

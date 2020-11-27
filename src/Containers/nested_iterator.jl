@@ -24,7 +24,7 @@ for i1 in iterators[1]()
 end
 ```
 """
-struct NestedIterator{T, C}
+struct NestedIterator{T,C}
     iterators::T # Tuple of functions
     condition::C
 end
@@ -38,8 +38,11 @@ function next_iterate(iterators, condition, elems, states, iterator, elem_state)
         elem_state === nothing && return nothing
         elem, state = elem_state
         elems_states = first_iterate(
-            Base.tail(iterators), condition, (elems..., elem),
-            (states..., (iterator, state, elem)))
+            Base.tail(iterators),
+            condition,
+            (elems..., elem),
+            (states..., (iterator, state, elem)),
+        )
         elems_states !== nothing && return elems_states
         # This could be written as a recursive function where we call `next_iterate`
         # here with this new value of `next_iterate` instead of the `while` loop`.
@@ -58,17 +61,40 @@ function first_iterate(::Tuple{}, condition, elems, states)
 end
 function first_iterate(iterators, condition, elems, states)
     iterator = iterators[1](elems...)
-    return next_iterate(iterators, condition, elems, states, iterator, iterate(iterator))
+    return next_iterate(
+        iterators,
+        condition,
+        elems,
+        states,
+        iterator,
+        iterate(iterator),
+    )
 end
 tail_iterate(::Tuple{}, condition, elems, states, prev_states) = nothing
 function tail_iterate(iterators, condition, elems, states, prev_states)
-    next = tail_iterate(Base.tail(iterators), condition, (elems..., states[1][3]), Base.tail(states), (prev_states..., states[1]))
+    next = tail_iterate(
+        Base.tail(iterators),
+        condition,
+        (elems..., states[1][3]),
+        Base.tail(states),
+        (prev_states..., states[1]),
+    )
     if next !== nothing
         return next
     end
     iterator = states[1][1]
-    next_iterate(iterators, condition, elems, prev_states, iterator, iterate(iterator, states[1][2]))
+    return next_iterate(
+        iterators,
+        condition,
+        elems,
+        prev_states,
+        iterator,
+        iterate(iterator, states[1][2]),
+    )
 end
-Base.iterate(it::NestedIterator) = first_iterate(it.iterators, it.condition, tuple(), tuple())
-Base.iterate(it::NestedIterator, states) = tail_iterate(it.iterators, it.condition, tuple(), states, tuple())
-_eltype_or_any(::NestedIterator{<:Tuple{Vararg{Any,N}}}) where N = NTuple{N, Any}
+Base.iterate(it::NestedIterator) =
+    first_iterate(it.iterators, it.condition, tuple(), tuple())
+Base.iterate(it::NestedIterator, states) =
+    tail_iterate(it.iterators, it.condition, tuple(), states, tuple())
+_eltype_or_any(::NestedIterator{<:Tuple{Vararg{Any,N}}}) where {N} =
+    NTuple{N,Any}
