@@ -60,6 +60,7 @@ is often more complex. We list below the currently available solvers.
 | [SDPT3](https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/)                     | [SDPT3.jl](https://github.com/jump-dev/SDPT3.jl)                                 | GPL      | LP, SOCP, SDP                      |
 | [SeDuMi](http://sedumi.ie.lehigh.edu/)                                         | [SeDuMi.jl](https://github.com/jump-dev/SeDuMi.jl)                               | GPL      | LP, SOCP, SDP                      |
 | [Tulip](https://github.com/ds4dm/Tulip.jl)                                     | [Tulip.jl](https://github.com/ds4dm/Tulip.jl)                                    | MPL-2    | LP                                 |
+| [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl)                    | [vOptGeneric.jl](https://github.com/vOptSolver/vOptGeneric.jl) | MIT | Multi-Objective LP |
 
 Where:
 
