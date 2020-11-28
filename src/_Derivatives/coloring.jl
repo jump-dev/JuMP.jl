@@ -123,8 +123,10 @@ end
 
 # convert to lower triangular indices, using Pairs
 normalize(i, j) = (j > i) ? (j, i) : (i, j)
-normalize_p(p::MyPair) =
-    (p.second > p.first) ? MyPair(p.second, p.first) : MyPair(p.first, p.second)
+function normalize_p(p::MyPair)
+    return (p.second > p.first) ? MyPair(p.second, p.first) :
+           MyPair(p.first, p.second)
+end
 normalize_p(i, j) = normalize_p(MyPair(i, j))
 
 macro colored(i)
@@ -276,15 +278,17 @@ struct RecoveryInfo
     local_indices::Vector{Int} # map back to global indices
 end
 
-RecoveryInfo() = RecoveryInfo(
-    Vector{Vector{Int}}(undef, 0),
-    Vector{Vector{Int}}(undef, 0),
-    Vector{Vector{Int}}(undef, 0),
-    Vector{Int}(undef, 0),
-    0,
-    0,
-    Vector{Int}(undef, 0),
-)
+function RecoveryInfo()
+    return RecoveryInfo(
+        Vector{Vector{Int}}(undef, 0),
+        Vector{Vector{Int}}(undef, 0),
+        Vector{Vector{Int}}(undef, 0),
+        Vector{Int}(undef, 0),
+        0,
+        0,
+        Vector{Int}(undef, 0),
+    )
+end
 
 function recovery_preprocess(
     g::UndirectedGraph,
@@ -511,8 +515,9 @@ end
 export hessian_color_preprocess
 
 # allocate a seed matrix
-seed_matrix(rinfo::RecoveryInfo) =
-    Array{Float64}(undef, length(rinfo.local_indices), rinfo.num_colors)
+function seed_matrix(rinfo::RecoveryInfo)
+    return Array{Float64}(undef, length(rinfo.local_indices), rinfo.num_colors)
+end
 
 export seed_matrix
 

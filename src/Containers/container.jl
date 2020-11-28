@@ -62,8 +62,9 @@ SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 5 entries:
 """
 function container end
 
-container(f::Function, indices) =
-    container(f, indices, default_container(indices))
+function container(f::Function, indices)
+    return container(f, indices, default_container(indices))
+end
 
 const ArrayIndices{N} = VectorizedProductIterator{NTuple{N,Base.OneTo{Int}}}
 default_container(::ArrayIndices) = Array

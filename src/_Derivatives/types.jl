@@ -78,14 +78,16 @@ struct UserOperatorRegistry
     univariate_operator_fprimeprime::Vector{Any}
 end
 
-UserOperatorRegistry() = UserOperatorRegistry(
-    Dict{Symbol,Int}(),
-    MOI.AbstractNLPEvaluator[],
-    Dict{Symbol,Int}(),
-    [],
-    [],
-    [],
-)
+function UserOperatorRegistry()
+    return UserOperatorRegistry(
+        Dict{Symbol,Int}(),
+        MOI.AbstractNLPEvaluator[],
+        Dict{Symbol,Int}(),
+        [],
+        [],
+        [],
+    )
+end
 
 # we use the MathOptInterface NLPEvaluator interface, where the
 # operator takes the place of the objective function.

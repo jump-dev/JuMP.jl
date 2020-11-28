@@ -166,8 +166,9 @@ end
 # Check that all `SparseAxisArray`s involved have the same indices. The other
 # arguments are scalars
 function check_same_eachindex(each_index) end
-check_same_eachindex(each_index, not_sa, args...) =
-    check_same_eachindex(eachindex, args...)
+function check_same_eachindex(each_index, not_sa, args...)
+    return check_same_eachindex(eachindex, args...)
+end
 function check_same_eachindex(each_index, sa::SparseAxisArray, args...)
     if Set(each_index) != Set(eachindex(sa))
         throw(ArgumentError(
@@ -190,8 +191,11 @@ end
 
 # The fallback uses `axes` but recommend in the docstring to create a custom
 # method for custom style if needed.
-Base.Broadcast.instantiate(bc::Base.Broadcast.Broadcasted{<:BroadcastStyle}) =
-    bc
+function Base.Broadcast.instantiate(
+    bc::Base.Broadcast.Broadcasted{<:BroadcastStyle},
+)
+    return bc
+end
 
 # The generic method in `Base` is `getindex(::Broadcasted, ::Union{Integer, CartesianIndex})`
 # which is not applicable here since the index is not integer
