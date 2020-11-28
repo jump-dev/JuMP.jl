@@ -13,13 +13,16 @@ end
 struct PowVariable <: JuMP.AbstractVariableRef
     pow::Int
 end
-Base.:^(x::PowVariable, i::Int) = PowVariable(x.pow*i)
+Base.:^(x::PowVariable, i::Int) = PowVariable(x.pow * i)
 Base.:*(x::PowVariable, y::PowVariable) = PowVariable(x.pow + y.pow)
 Base.copy(x::PowVariable) = x
 
-function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
-    AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
-    QuadExprType = JuMP.GenericQuadExpr{Float64, VariableRefType}
+function expressions_test(
+    ModelType::Type{<:JuMP.AbstractModel},
+    VariableRefType::Type{<:JuMP.AbstractVariableRef},
+)
+    AffExprType = JuMP.GenericAffExpr{Float64,VariableRefType}
+    QuadExprType = JuMP.GenericQuadExpr{Float64,VariableRefType}
 
     @testset "isequal(::GenericAffExpr)" begin
         m = ModelType()
@@ -94,10 +97,12 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         # 1 + 2x(1) + 3x(2)
         affine_term = JuMP.GenericAffExpr(1.0, 1 => 2.0, 2 => 3.0)
         # 1 + 2x(1) + 3x(2) + 4x(1)^2 + 5x(1)*x(2) + 6x(2)^2
-        expr = JuMP.GenericQuadExpr(affine_term,
+        expr = JuMP.GenericQuadExpr(
+            affine_term,
             JuMP.UnorderedPair(1, 1) => 4.0,
             JuMP.UnorderedPair(1, 2) => 5.0,
-            JuMP.UnorderedPair(2, 2) => 6.0)
+            JuMP.UnorderedPair(2, 2) => 6.0,
+        )
         @test typeof(@inferred(JuMP.value(expr, i -> 1.0))) == Float64
         @test @inferred(JuMP.value(expr, i -> 1.0)) == 21
         @test @inferred(JuMP.value(expr, i -> 2.0)) == 71
@@ -105,21 +110,25 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
 
     @testset "add_to_expression!(::GenericAffExpr{C,V}, ::V)" begin
         aff = JuMP.GenericAffExpr(1.0, :a => 2.0)
-        @test JuMP.isequal_canonical(JuMP.add_to_expression!(aff, :b),
-                                     JuMP.GenericAffExpr(1.0, :a => 2.0, :b => 1.0))
+        @test JuMP.isequal_canonical(
+            JuMP.add_to_expression!(aff, :b),
+            JuMP.GenericAffExpr(1.0, :a => 2.0, :b => 1.0),
+        )
     end
 
     @testset "add_to_expression!(::GenericAffExpr{C,V}, ::C)" begin
         aff = JuMP.GenericAffExpr(1.0, :a => 2.0)
-        @test JuMP.isequal_canonical(JuMP.add_to_expression!(aff, 1.0),
-                                     JuMP.GenericAffExpr(2.0, :a => 2.0))
+        @test JuMP.isequal_canonical(
+            JuMP.add_to_expression!(aff, 1.0),
+            JuMP.GenericAffExpr(2.0, :a => 2.0),
+        )
     end
 
     @testset "linear_terms(::AffExpr)" begin
         m = ModelType()
         @variable(m, x[1:10])
 
-        aff = 1*x[1] + 2*x[2]
+        aff = 1 * x[1] + 2 * x[2]
         k = 0
         @test length(linear_terms(aff)) == 2
         for (coeff, var) in linear_terms(aff)
@@ -150,7 +159,7 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         @variable(m, x)
         m2 = ModelType()
         aff = copy(2x + 1, m2)
-        aff_expected = 2*copy(x, m2) + 1
+        aff_expected = 2 * copy(x, m2) + 1
         @test JuMP.isequal_canonical(aff, aff_expected)
     end
 
@@ -175,8 +184,8 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
     @testset "MA.add_mul!(ex::Number, c::T, x::T) where T<:GenericAffExpr" begin
         model = ModelType()
         @variable(model, x)
-        @test_expression_with_string MA.add_mul(1.0, 2x, x+1) "2 x² + 2 x + 1"
-        @test_expression_with_string MA.add_mul!(1.0, 2x, x+1) "2 x² + 2 x + 1"
+        @test_expression_with_string MA.add_mul(1.0, 2x, x + 1) "2 x² + 2 x + 1"
+        @test_expression_with_string MA.add_mul!(1.0, 2x, x + 1) "2 x² + 2 x + 1"
     end
 
     @testset "MA.add_mul!(ex::Number, c::GenericAffExpr{C,V}, x::V) where {C,V}" begin
@@ -252,8 +261,8 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
     @testset "MA.add_mul!(quad::GenericQuadExpr{C,V},c::V,x::GenericAffExpr{C,V}) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
-        @test_expression_with_string MA.add_mul(x^2, x, x+1) "2 x² + x"
-        @test_expression_with_string MA.add_mul!(x^2, x, x+1) "2 x² + x"
+        @test_expression_with_string MA.add_mul(x^2, x, x + 1) "2 x² + x"
+        @test_expression_with_string MA.add_mul!(x^2, x, x + 1) "2 x² + x"
     end
 
     @testset "MA.add_mul!(quad::GenericQuadExpr{C,V},c::GenericQuadExpr{C,V},x::Number) where {C,V}" begin
@@ -292,9 +301,9 @@ function expressions_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType
         model = ModelType()
         x = PowVariable(1)
         # Calls (*)((x*x)^6)
-        y = @expression model (x*x)^3
+        y = @expression model (x * x)^3
         @test y.pow == 6
-        z = @inferred (x*x)^3
+        z = @inferred (x * x)^3
         @test z.pow == 6
     end
 end

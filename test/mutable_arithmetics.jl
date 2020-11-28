@@ -11,10 +11,30 @@ include(joinpath(@__DIR__, "JuMPExtension.jl"))
 struct DummyVariableRef <: JuMP.AbstractVariableRef end
 JuMP.name(::DummyVariableRef) = "dummy"
 struct DummyExpr end
-Base.:(+)(::GenericAffExpr{Float64,DummyVariableRef}, ::JuMP.AbstractJuMPScalar) = DummyExpr()
-Base.:(+)(::JuMP.AbstractJuMPScalar, ::JuMP.GenericAffExpr{Float64,DummyVariableRef}) = DummyExpr()
-Base.:(-)(::GenericAffExpr{Float64,DummyVariableRef}, ::JuMP.AbstractJuMPScalar) = DummyExpr()
-Base.:(-)(::JuMP.AbstractJuMPScalar, ::JuMP.GenericAffExpr{Float64,DummyVariableRef}) = DummyExpr()
+function Base.:(+)(
+    ::GenericAffExpr{Float64,DummyVariableRef},
+    ::JuMP.AbstractJuMPScalar,
+)
+    return DummyExpr()
+end
+function Base.:(+)(
+    ::JuMP.AbstractJuMPScalar,
+    ::JuMP.GenericAffExpr{Float64,DummyVariableRef},
+)
+    return DummyExpr()
+end
+function Base.:(-)(
+    ::GenericAffExpr{Float64,DummyVariableRef},
+    ::JuMP.AbstractJuMPScalar,
+)
+    return DummyExpr()
+end
+function Base.:(-)(
+    ::JuMP.AbstractJuMPScalar,
+    ::JuMP.GenericAffExpr{Float64,DummyVariableRef},
+)
+    return DummyExpr()
+end
 
 function promote_operation_test(op::Function, x::Type, y::Type)
     f() = JuMP._MA.promote_operation(op, x, y)
@@ -23,8 +43,8 @@ function promote_operation_test(op::Function, x::Type, y::Type)
 end
 
 function test_promote_operation(ModelType, VariableRefType)
-    AffExprType = JuMP.GenericAffExpr{Float64, VariableRefType}
-    QuadExprType = JuMP.GenericQuadExpr{Float64, VariableRefType}
+    AffExprType = JuMP.GenericAffExpr{Float64,VariableRefType}
+    QuadExprType = JuMP.GenericQuadExpr{Float64,VariableRefType}
     for op in [+, -, *]
         for T in [Int, Float64]
             promote_operation_test(op, T, VariableRefType)
@@ -49,8 +69,14 @@ end
 function test_int(ModelType, ::Any)
     model = ModelType()
     @variable(model, x)
-    MA.Test.int_test(typeof(1x), exclude = ["int_mul", "int_add", "int_add_mul"])
-    MA.Test.int_test(typeof(1x^2), exclude = ["int_mul", "int_add", "int_add_mul"])
+    MA.Test.int_test(
+        typeof(1x),
+        exclude = ["int_mul", "int_add", "int_add_mul"],
+    )
+    return MA.Test.int_test(
+        typeof(1x^2),
+        exclude = ["int_mul", "int_add", "int_add_mul"],
+    )
 end
 
 function test_scalar(ModelType, ::Any)
@@ -59,7 +85,7 @@ function test_scalar(ModelType, ::Any)
     exclude = ["cube"]
     MA.Test.scalar_test(x, exclude = exclude)
     MA.Test.scalar_test(2x + 3, exclude = exclude)
-    MA.Test.scalar_test(2x^2 + 4x + 1, exclude = exclude)
+    return MA.Test.scalar_test(2x^2 + 4x + 1, exclude = exclude)
 end
 
 function test_quadratic(ModelType, ::Any)
@@ -68,7 +94,7 @@ function test_quadratic(ModelType, ::Any)
     @variable(model, x)
     @variable(model, y)
     @variable(model, z)
-    MA.Test.quadratic_test(w, x, y, z)
+    return MA.Test.quadratic_test(w, x, y, z)
 end
 
 function test_sparse(ModelType, ::Any)
@@ -76,31 +102,31 @@ function test_sparse(ModelType, ::Any)
     @variable(model, X11)
     @variable(model, X23)
     @variable(model, Xd[1:3, 1:3])
-    MA.Test.sparse_test(X11, X23, Xd)
+    return MA.Test.sparse_test(X11, X23, Xd)
 end
 
 function test_vector(ModelType, ::Any)
     model = ModelType()
     @variable(model, x[1:3])
-    MA.Test.array_test(x)
+    return MA.Test.array_test(x)
 end
 
 function test_symmetric_matrix(ModelType, ::Any)
     model = ModelType()
     @variable(model, y[1:2, 1:2], Symmetric)
-    MA.Test.array_test(y)
+    return MA.Test.array_test(y)
 end
 
 function test_nonsquare_matrix(ModelType, ::Any)
     model = ModelType()
     @variable(model, z[1:2, 1:3])
-    MA.Test.array_test(z)
+    return MA.Test.array_test(z)
 end
 
 function test_DenseAxisVector(ModelType, ::Any)
     model = ModelType()
     @variable(model, y[2:5])
-    MA.Test.array_test(y, exclude = ["matrix_vector", "non_array"])
+    return MA.Test.array_test(y, exclude = ["matrix_vector", "non_array"])
 end
 
 function test_different_variables(ModelType, ::Any)
@@ -117,7 +143,7 @@ function test_different_variables(ModelType, ::Any)
         @test MA.promote_operation(-, B, A) == DummyExpr
     end
     _promote_test(x, y)
-    _promote_test(aff, y)
+    return _promote_test(aff, y)
 end
 
 function runtests()
@@ -139,7 +165,8 @@ function runtests()
     end
     @testset "test_promote_operation-JuMPExtension" begin
         test_promote_operation(
-            JuMPExtension.MyModel, JuMPExtension.MyVariableRef
+            JuMPExtension.MyModel,
+            JuMPExtension.MyVariableRef,
         )
     end
 end

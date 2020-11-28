@@ -1,7 +1,8 @@
 using Test
 
 import JuMP._Derivatives.Coloring:
-    acyclic_coloring, recovery_preprocess,
+    acyclic_coloring,
+    recovery_preprocess,
     reverse_topological_sort_by_dfs,
     gen_adjlist,
     hessian_color_preprocess,
@@ -11,7 +12,7 @@ import JuMP._Derivatives.Coloring:
 
 struct Graph
     num_vertices::Int
-    edges::Vector{Tuple{Int, Int}}
+    edges::Vector{Tuple{Int,Int}}
 end
 
 function to_adjlist(graph::Graph)
@@ -22,7 +23,6 @@ end
 
 # tests for acyclic coloring
 @testset "Derivatives (coloring)" begin
-
     @testset "Edge-free graph" begin
         graph = Graph(10, [])
         color, numcolors = acyclic_coloring(to_adjlist(graph))
@@ -74,7 +74,7 @@ end
     end
 
     @testset "End-to-end hessian coloring and recovery" begin
-        I, J, rinfo = hessian_color_preprocess(Set([(1,2)]),2)
+        I, J, rinfo = hessian_color_preprocess(Set([(1, 2)]), 2)
         num_colors = rinfo.num_colors
         N = length(rinfo.color)
         R = seed_matrix(rinfo)

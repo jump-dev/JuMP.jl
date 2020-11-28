@@ -12,17 +12,24 @@
 #############################################################################
 
 macro test_expression(expr)
-    esc(quote
+    return esc(
+        quote
             @test JuMP.isequal_canonical(@expression(model, $expr), $expr)
-    end)
+        end,
+    )
 end
 
 macro test_expression_with_string(expr, str)
-    esc(quote
+    return esc(
+        quote
             realized_expr = @inferred $expr
             @test string(realized_expr) == $str
-            @test JuMP.isequal_canonical(@expression(model, $expr), realized_expr)
-    end)
+            @test JuMP.isequal_canonical(
+                @expression(model, $expr),
+                realized_expr,
+            )
+        end,
+    )
 end
 
 function _strip_line_from_error(err::ErrorException)

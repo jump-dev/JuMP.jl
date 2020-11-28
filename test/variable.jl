@@ -36,7 +36,7 @@ function _sliceof_util(VariableRefType, x, I, J, K)
     for i in I
         for j in J
             for k in K
-                y[ii,jj,kk] = x[i,j,k]
+                y[ii, jj, kk] = x[i, j, k]
                 kk += 1
             end
             jj += 1
@@ -45,8 +45,8 @@ function _sliceof_util(VariableRefType, x, I, J, K)
         ii += 1
         jj = 1
     end
-    idx = [length(I)==1, length(J)==1, length(K)==1]
-    dropdims(y, dims=tuple(findall(idx)...))
+    idx = [length(I) == 1, length(J) == 1, length(K) == 1]
+    return dropdims(y, dims = tuple(findall(idx)...))
 end
 
 function test_variable_no_bound(ModelType, VariableRefType)
@@ -56,8 +56,8 @@ function test_variable_no_bound(ModelType, VariableRefType)
     @test !JuMP.has_upper_bound(nobounds)
     @test !JuMP.is_fixed(nobounds)
     _test_variable_name_util(nobounds, "nobounds")
-    @test zero(nobounds) isa JuMP.GenericAffExpr{Float64, VariableRefType}
-    @test one(nobounds) isa JuMP.GenericAffExpr{Float64, VariableRefType}
+    @test zero(nobounds) isa JuMP.GenericAffExpr{Float64,VariableRefType}
+    @test one(nobounds) isa JuMP.GenericAffExpr{Float64,VariableRefType}
 end
 
 function test_variable_lower_bound_rhs(ModelType, ::Any)
@@ -111,7 +111,7 @@ function test_variable_upper_bound_lhs(ModelType, ::Any)
     @test !JuMP.is_fixed(ublhs)
     @test !JuMP.is_binary(ublhs)
     @test JuMP.is_integer(ublhs)
-    @test isequal(model[:ublhs],ublhs)
+    @test isequal(model[:ublhs], ublhs)
 end
 
 function test_variable_interval(ModelType, ::Any)
@@ -125,11 +125,11 @@ function test_variable_interval(ModelType, ::Any)
     model = ModelType()
     @variable(model, 0 <= bothb1 <= 1)
     has_bounds(bothb1, 0.0, 1.0)
-    @variable(model, 0 ≤  bothb2 ≤  1)
+    @variable(model, 0 ≤ bothb2 ≤ 1)
     has_bounds(bothb2, 0.0, 1.0)
     @variable(model, 1 >= bothb3 >= 0)
     has_bounds(bothb3, 0.0, 1.0)
-    @variable(model, 1 ≥  bothb4 ≥  0)
+    @variable(model, 1 ≥ bothb4 ≥ 0)
     has_bounds(bothb4, 0.0, 1.0)
     @test_macro_throws ErrorException @variable(model, 1 ≥ bothb5 ≤ 0)
     @test_macro_throws ErrorException @variable(model, 1 ≤ bothb6 ≥ 0)
@@ -161,8 +161,8 @@ function test_variable_custom_index_sets(ModelType, ::Any)
     @test 2 == @inferred JuMP.lower_bound(manyrangelb[0, 15, 1])
     @test !JuMP.has_upper_bound(manyrangelb[0, 15, 1])
 
-    s = ["Green","Blue"]
-    @variable(model, x[i=-10:10, s] <= 5.5, Int, start=i+1)
+    s = ["Green", "Blue"]
+    @variable(model, x[i = -10:10, s] <= 5.5, Int, start = i + 1)
     @test 5.5 == @inferred JuMP.upper_bound(x[-4, "Green"])
     _test_variable_name_util(x[-10, "Green"], "x[-10,Green]")
     @test JuMP.start_value(x[-3, "Blue"]) == -2
@@ -219,9 +219,9 @@ function test_variable_starts_set_get(ModelType, ::Any)
     x0 = collect(1:3)
     JuMP.set_start_value.(x, x0)
     @test JuMP.start_value.(x) == x0
-    @test JuMP.start_value.([x[1],x[2],x[3]]) == x0
+    @test JuMP.start_value.([x[1], x[2], x[3]]) == x0
 
-    @variable(model, y[1:3,1:2])
+    @variable(model, y[1:3, 1:2])
     @test_throws DimensionMismatch JuMP.set_start_value.(y, collect(1:6))
 end
 
@@ -258,27 +258,40 @@ end
 function test_variable_repeated_elements(ModelType, ::Any)
     # Tests repeated elements in index set throw error (JuMP issue #199).
     model = ModelType()
-    index_set = [:x,:x,:y]
-    @test_throws ErrorException (
-        @variable(model, unused_variable[index_set], container=DenseAxisArray))
-    @test_throws ErrorException (
-        @variable(model, unused_variable[index_set], container=SparseAxisArray))
-    @test_throws ErrorException (
-        @variable(model, unused_variable[index_set, [1]], container=DenseAxisArray))
-    @test_throws ErrorException (
-        @variable(model, unused_variable[index_set, [1]], container=SparseAxisArray))
+    index_set = [:x, :x, :y]
+    @test_throws ErrorException (@variable(
+        model,
+        unused_variable[index_set],
+        container = DenseAxisArray
+    ))
+    @test_throws ErrorException (@variable(
+        model,
+        unused_variable[index_set],
+        container = SparseAxisArray
+    ))
+    @test_throws ErrorException (@variable(
+        model,
+        unused_variable[index_set, [1]],
+        container = DenseAxisArray
+    ))
+    @test_throws ErrorException (@variable(
+        model,
+        unused_variable[index_set, [1]],
+        container = SparseAxisArray
+    ))
 end
 
 function test_variable_oneto_index_set(ModelType, VariableRefType)
     # Tests that Base.OneTo can be used in index set (JuMP issue #933).
     model = ModelType()
-    auto_var = @variable(model, [Base.OneTo(3), 1:2], container=Auto)
+    auto_var = @variable(model, [Base.OneTo(3), 1:2], container = Auto)
     @test auto_var isa Matrix{VariableRefType}
     @test (3, 2) == @inferred size(auto_var)
-    array_var = @variable(model, [Base.OneTo(3), 1:2], container=Array)
+    array_var = @variable(model, [Base.OneTo(3), 1:2], container = Array)
     @test array_var isa Matrix{VariableRefType}
     @test (3, 2) == @inferred size(array_var)
-    denseaxisarray_var = @variable(model, [Base.OneTo(3), 1:2], container=DenseAxisArray)
+    denseaxisarray_var =
+        @variable(model, [Base.OneTo(3), 1:2], container = DenseAxisArray)
     @test denseaxisarray_var isa JuMP.Containers.DenseAxisArray{VariableRefType}
     @test length.(axes(denseaxisarray_var)) == (3, 2)
 end
@@ -287,12 +300,12 @@ function test_variable_base_name_in_macro(ModelType, ::Any)
     model = ModelType()
     @variable(model, normal_var)
     _test_variable_name_util(normal_var, "normal_var")
-    no_indices = @variable(model, base_name="foo")
+    no_indices = @variable(model, base_name = "foo")
     _test_variable_name_util(no_indices, "foo")
     # Note that `z` will be ignored in name.
-    indices = @variable(model, z[i=2:3], base_name="t")
+    indices = @variable(model, z[i = 2:3], base_name = "t")
     _test_variable_name_util(indices[2], "t[2]")
-    _test_variable_name_util(indices[3], "t[3]")
+    return _test_variable_name_util(indices[3], "t[3]")
 end
 
 function test_variable_name(ModelType, ::Any)
@@ -302,7 +315,7 @@ function test_variable_name(ModelType, ::Any)
     JuMP.set_name(x, "y")
     @test JuMP.variable_by_name(model, "x") isa Nothing
     _test_variable_name_util(x, "y")
-    y = @variable(model, base_name="y")
+    y = @variable(model, base_name = "y")
     err(name) = ErrorException("Multiple variables have the name $name.")
     @test_throws err("y") JuMP.variable_by_name(model, "y")
     JuMP.set_name(y, "x")
@@ -313,7 +326,7 @@ function test_variable_name(ModelType, ::Any)
     @test JuMP.variable_by_name(model, "y") isa Nothing
     JuMP.set_name(y, "y")
     _test_variable_name_util(x, "x")
-    _test_variable_name_util(y, "y")
+    return _test_variable_name_util(y, "y")
 end
 
 function test_variable_condition_in_indexing(ModelType, ::Any)
@@ -331,39 +344,40 @@ function test_variable_condition_in_indexing(ModelType, ::Any)
     function test_two_dim(y)
         @test 15 == @inferred length(y)
         for j in 1:10, k in 3:2:9
-            if isodd(j+k) && k <= 8
-                @test haskey(y, (j,k))
+            if isodd(j + k) && k <= 8
+                @test haskey(y, (j, k))
             else
-                @test !haskey(y, (j,k))
+                @test !haskey(y, (j, k))
             end
         end
     end
 
     model = ModelType()
     # Parses as ref on 0.7.
-    @variable(model, named_one_dim[i=1:10; iseven(i)])
+    @variable(model, named_one_dim[i = 1:10; iseven(i)])
     test_one_dim(named_one_dim)
     # Parses as vcat on 0.7.
-    anon_one_dim = @variable(model, [i=1:10; iseven(i)])
+    anon_one_dim = @variable(model, [i = 1:10; iseven(i)])
     test_one_dim(anon_one_dim)
     # Parses as typed_vcat on 0.7.
-    @variable(model, named_two_dim[j=1:10, k=3:2:9; isodd(j + k) && k <= 8])
+    @variable(model, named_two_dim[j = 1:10, k = 3:2:9; isodd(j + k) && k <= 8])
     test_two_dim(named_two_dim)
     # Parses as vect on 0.7.
-    anon_two_dim = @variable(model, [j=1:10, k=3:2:9; isodd(j + k) && k <= 8])
-    test_two_dim(anon_two_dim)
+    anon_two_dim =
+        @variable(model, [j = 1:10, k = 3:2:9; isodd(j + k) && k <= 8])
+    return test_two_dim(anon_two_dim)
 end
 
 function test_variable_macro_return_type(ModelType, VariableRefType)
     model = ModelType()
-    @variable(model, x[1:3, 1:4, 1:2], start=0.0)
+    @variable(model, x[1:3, 1:4, 1:2], start = 0.0)
     @test typeof(x) == Array{VariableRefType,3}
     @test typeof(JuMP.start_value.(x)) == Array{Float64,3}
 
-    @variable(model, y[1:0], start=0.0)
+    @variable(model, y[1:0], start = 0.0)
     @test typeof(y) == Vector{VariableRefType}
     # No type to infer for an empty collection.
-    @test typeof(JuMP.start_value.(y)) == Vector{Union{Nothing, Float64}}
+    @test typeof(JuMP.start_value.(y)) == Vector{Union{Nothing,Float64}}
 
     @variable(model, z[1:4], start = 0.0)
     @test typeof(z) == Vector{VariableRefType}
@@ -372,9 +386,9 @@ end
 
 function test_variable_start_value_on_empty(ModelType, ::Any)
     model = ModelType()
-    @variable(model, x[1:4,  1:0,1:3], start = 0)  # Array{VariableRef}
-    @variable(model, y[1:4,  2:1,1:3], start = 0)  # DenseAxisArray
-    @variable(model, z[1:4,Set(),1:3], start = 0)  # SparseAxisArray
+    @variable(model, x[1:4, 1:0, 1:3], start = 0)  # Array{VariableRef}
+    @variable(model, y[1:4, 2:1, 1:3], start = 0)  # DenseAxisArray
+    @variable(model, z[1:4, Set(), 1:3], start = 0)  # SparseAxisArray
 
     @test JuMP.start_value.(x) == Array{Float64}(undef, 4, 0, 3)
     # TODO: Decide what to do here. I don't know if we still need to test this
@@ -389,10 +403,10 @@ end
 function test_variable_denseaxisarray_slices(ModelType, VariableRefType)
     # Test slicing DenseAxisArrays (JuMP issue #684).
     model = ModelType()
-    @variable(model, x[1:3, 1:4, 1:2], container=DenseAxisArray)
+    @variable(model, x[1:3, 1:4, 1:2], container = DenseAxisArray)
     @variable(model, y[1:3, -1:2, 3:4])
     @variable(model, z[1:3, -1:2:4, 3:4])
-    @variable(model, w[1:3, -1:2,[:red, "blue"]])
+    @variable(model, w[1:3, -1:2, [:red, "blue"]])
 
     #@test x[:] == vec(_sliceof_util(VariableRefType, x, 1:3, 1:4, 1:2))
     @test x isa JuMP.Containers.DenseAxisArray
@@ -426,8 +440,10 @@ function test_variable_denseaxisarray_slices(ModelType, VariableRefType)
 
     #@test w[:] == vec(_sliceof_util(VariableRefType, w, 1:3, -1:2, [:red,"blue"]))
     @test w[:, :, :] == w
-    @test w[1, :, "blue"].data == _sliceof_util(VariableRefType, w, 1, -1:2, ["blue"])
-    @test w[1, :, :red].data == _sliceof_util(VariableRefType, w, 1, -1:2, [:red])
+    @test w[1, :, "blue"].data ==
+          _sliceof_util(VariableRefType, w, 1, -1:2, ["blue"])
+    @test w[1, :, :red].data ==
+          _sliceof_util(VariableRefType, w, 1, -1:2, [:red])
     @test_throws KeyError w[1, :, "green"]
     # @test w[1:2,:,"blue"] == _sliceof_util(VariableRefType, w, 1:2, -1:2, ["blue"])
     # @test_throws ErrorException w[1:2,:,[:red,"blue"]]
@@ -437,7 +453,7 @@ function test_variable_end_indexing(ModelType, ::Any)
     model = ModelType()
     @variable(model, x[0:2, 1:4])
     @variable(model, z[0:2])
-    @test x[end,1] == x[2, 1]
+    @test x[end, 1] == x[2, 1]
     @test x[0, end-1] == x[0, 3]
     @test z[end] == z[2]
     # TODO: It is redirected to x[11] as it is the 11th element but linear
@@ -469,19 +485,36 @@ end
 function test_variables_constrained_on_creation(ModelType, ::Any)
     model = ModelType()
 
-    err = ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `set` keyword argument is not allowed.")
-    @test_macro_throws err @variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())
-    err = ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `PSD` argument is not allowed.")
+    err =
+        ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `set` keyword argument is not allowed.")
+    @test_macro_throws err @variable(
+        model,
+        x[1:2] in SecondOrderCone(),
+        set = PSDCone()
+    )
+    err =
+        ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `PSD` argument is not allowed.")
     @test_macro_throws err @variable(model, x[1:2] in SecondOrderCone(), PSD)
-    err = ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), Symmetric)`: Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `\$(Expr(:escape, :(SecondOrderCone())))`.")
-    @test_macro_throws err @variable(model, x[1:2] in SecondOrderCone(), Symmetric)
-    err = ErrorException("In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`: `set` keyword argument was given 2 times.")
-    @test_macro_throws err @variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())
+    err =
+        ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), Symmetric)`: Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `\$(Expr(:escape, :(SecondOrderCone())))`.")
+    @test_macro_throws err @variable(
+        model,
+        x[1:2] in SecondOrderCone(),
+        Symmetric
+    )
+    err =
+        ErrorException("In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`: `set` keyword argument was given 2 times.")
+    @test_macro_throws err @variable(
+        model,
+        x[1:2],
+        set = SecondOrderCone(),
+        set = PSDCone()
+    )
 
     @variable(model, x[1:2] in SecondOrderCone())
     @test num_constraints(model, typeof(x), MOI.SecondOrderCone) == 1
-    @test name(x[1]) ==  "x[1]"
-    @test name(x[2]) ==  "x[2]"
+    @test name(x[1]) == "x[1]"
+    @test name(x[2]) == "x[2]"
 
     @variable(model, [1:2] in SecondOrderCone())
     @test num_constraints(model, typeof(x), MOI.SecondOrderCone) == 2
@@ -496,7 +529,11 @@ function test_variables_constrained_on_creation(ModelType, ::Any)
     @test num_constraints(model, typeof(z), MOI.Semiinteger{Float64}) == 2
 
     @variable(model, [1:3, 1:3] in PSDCone())
-    @test num_constraints(model, typeof(x), MOI.PositiveSemidefiniteConeTriangle) == 1
+    @test num_constraints(
+        model,
+        typeof(x),
+        MOI.PositiveSemidefiniteConeTriangle,
+    ) == 1
 end
 
 function test_batch_delete_variables(ModelType, ::Any)
@@ -522,7 +559,7 @@ end
 function test_Model_macro_variables(::Any, ::Any)
     model = Model()
     @variables model begin
-        0 ≤ x[i=1:2] ≤ i
+        0 ≤ x[i = 1:2] ≤ i
         y ≥ 2, Int, (start = 0.7)
         z ≤ 3, (start = 10)
         q, (Bin, start = 0.5)
@@ -564,7 +601,6 @@ function test_Model_macro_variables(::Any, ::Any)
     @test JuMP.start_value(q) === 0.5
 end
 
-
 # @testset "Variables for JuMPExtension.MyModel" begin
 #     variables_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 # end
@@ -576,7 +612,8 @@ function test_Model_dual_variable(::Any, ::Any)
         "To query the dual variables associated with a variable bound, first " *
         "obtain a constraint reference using one of `UpperBoundRef`, `LowerBoundRef`, " *
         "or `FixRef`, and then call `dual` on the returned constraint reference.\nFor " *
-        "example, if `x <= 1`, instead of `dual(x)`, call `dual(UpperBoundRef(x))`.")
+        "example, if `x <= 1`, instead of `dual(x)`, call `dual(UpperBoundRef(x))`.",
+    )
     @test_throws exception JuMP.dual(x)
 end
 
@@ -585,7 +622,8 @@ function test_Model_value_containers(::Any, ::Any)
     @variable(model, x[1:2])
     exception = ErrorException(
         "`JuMP.value` is not defined for collections of JuMP types. Use " *
-        "Julia's broadcast syntax instead: `JuMP.value.(x)`.")
+        "Julia's broadcast syntax instead: `JuMP.value.(x)`.",
+    )
     @test_throws exception JuMP.value(x)
 end
 
@@ -596,19 +634,20 @@ function _mock_reduced_cost_util(
     #var_value,
     var_bound_type::Symbol,
     var_bounds_dual = nothing,
-    has_duals::Bool = var_bounds_dual !== nothing
+    has_duals::Bool = var_bounds_dual !== nothing,
 )
-    mockoptimizer = MOIU.MockOptimizer(
-        MOIU.Model{Float64}(), eval_objective_value = false
-    )
+    mockoptimizer =
+        MOIU.MockOptimizer(MOIU.Model{Float64}(), eval_objective_value = false)
     m = JuMP.direct_model(mockoptimizer)
     if var_bound_type === :lower
         @variable(m, x >= 0)
         if has_duals
             @assert isa(var_bounds_dual, Float64)
             has_duals && MOI.set(
-                mockoptimizer, MOI.ConstraintDual(),
-                JuMP.optimizer_index(JuMP.LowerBoundRef(x)), var_bounds_dual
+                mockoptimizer,
+                MOI.ConstraintDual(),
+                JuMP.optimizer_index(JuMP.LowerBoundRef(x)),
+                var_bounds_dual,
             )
         end
     elseif var_bound_type === :upper
@@ -616,8 +655,10 @@ function _mock_reduced_cost_util(
         if has_duals
             @assert isa(var_bounds_dual, Float64)
             has_duals && MOI.set(
-                mockoptimizer, MOI.ConstraintDual(),
-                JuMP.optimizer_index(JuMP.UpperBoundRef(x)), var_bounds_dual
+                mockoptimizer,
+                MOI.ConstraintDual(),
+                JuMP.optimizer_index(JuMP.UpperBoundRef(x)),
+                var_bounds_dual,
             )
         end
     elseif var_bound_type === :fixed
@@ -625,8 +666,10 @@ function _mock_reduced_cost_util(
         if has_duals
             @assert isa(var_bounds_dual, Float64)
             MOI.set(
-                mockoptimizer, MOI.ConstraintDual(),
-                JuMP.optimizer_index(JuMP.FixRef(x)), var_bounds_dual
+                mockoptimizer,
+                MOI.ConstraintDual(),
+                JuMP.optimizer_index(JuMP.FixRef(x)),
+                var_bounds_dual,
             )
         end
     elseif var_bound_type === :both
@@ -636,12 +679,16 @@ function _mock_reduced_cost_util(
             @assert eltype(var_bounds_dual) == Float64
             lb_dual, ub_dual = var_bounds_dual
             MOI.set(
-                mockoptimizer, MOI.ConstraintDual(),
-                JuMP.optimizer_index(JuMP.LowerBoundRef(x)), lb_dual
+                mockoptimizer,
+                MOI.ConstraintDual(),
+                JuMP.optimizer_index(JuMP.LowerBoundRef(x)),
+                lb_dual,
             )
             MOI.set(
-                mockoptimizer, MOI.ConstraintDual(),
-                JuMP.optimizer_index(JuMP.UpperBoundRef(x)), ub_dual
+                mockoptimizer,
+                MOI.ConstraintDual(),
+                JuMP.optimizer_index(JuMP.UpperBoundRef(x)),
+                ub_dual,
             )
         end
     elseif var_bound_type === :none
@@ -804,29 +851,37 @@ function test_Model_relax_integrality_error_cases(::Any, ::Any)
     model = Model()
     @variable(model, x)
     @constraint(model, x in MOI.Semicontinuous(1.0, 2.0))
-    err = ErrorException("Support for relaxing semicontinuous constraints " *
-                         "is not yet implemented.")
+    err = ErrorException(
+        "Support for relaxing semicontinuous constraints " *
+        "is not yet implemented.",
+    )
     @test_throws err relax_integrality(model)
 
     model = Model()
     @variable(model, x)
     @constraint(model, x in MOI.Semiinteger(1.0, 2.0))
-    err = ErrorException("Support for relaxing semi-integer constraints " *
-                         "is not yet implemented.")
+    err = ErrorException(
+        "Support for relaxing semi-integer constraints " *
+        "is not yet implemented.",
+    )
     @test_throws err relax_integrality(model)
 
     model = Model()
     @variable(model, x, Bin)
     fix(x, 2)
-    err = ErrorException("The model has no valid relaxation: binary variable " *
-                         "fixed out of bounds.")
+    err = ErrorException(
+        "The model has no valid relaxation: binary variable " *
+        "fixed out of bounds.",
+    )
     @test_throws err relax_integrality(model)
 
     model = Model()
     @variable(model, x, Bin)
     fix(x, -1)
-    err = ErrorException("The model has no valid relaxation: binary variable " *
-                         "fixed out of bounds.")
+    err = ErrorException(
+        "The model has no valid relaxation: binary variable " *
+        "fixed out of bounds.",
+    )
     @test_throws err relax_integrality(model)
 end
 
