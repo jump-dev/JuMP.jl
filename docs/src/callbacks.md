@@ -6,7 +6,7 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Callbacks
+# [Callbacks](@id callbacks_manual)
 
 Many mixed-integer (linear, conic, and nonlinear) programming solvers offer
 the ability to modify the solve process. Examples include changing branching
@@ -167,9 +167,3 @@ solution. The possible return codes are:
     The heuristic solution callback _may_ be called at fractional nodes in the
     branch-and-bound tree. There is no guarantee that the callback is called
     at _every_ fractional primal solution.
-
-## Reference
-
-```@docs
-callback_value
-```
