@@ -27,7 +27,7 @@ MutableArithmetics = "0.2"
 NaNMath = "0.3"
 # This restriction on StaticArrays is needed to avoid excessive memory 
 # usage on Julia 1.0.x. See JuMP#2390, JuliaArrays/StaticArrays#857, or 
-# JuliaLang/julia#38634. In can be removed when the minimum Julia version
+# JuliaLang/julia#38634. It can be removed when the minimum Julia version
 # is changed to the new LTS (julia = "1.6").
 StaticArrays = "0.12"
 julia = "1"
