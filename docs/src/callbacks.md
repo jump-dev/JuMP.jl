@@ -98,11 +98,18 @@ MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
     model = Model(GLPK.Optimizer)
     @variable(model, x <= 10, Int)
     @objective(model, Max, x)
-    function my_callback_function(cb_data)
+    function bad_callback_function(cb_data)
+        # Don't do this!
         con = @build_constraint(x <= 2)
         MOI.submit(model, MOI.LazyConstraint(cb_data), con)
     end
-    MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
+    function good_callback_function(cb_data)
+        if callback_value(x) > 2
+            con = @build_constraint(x <= 2)
+            MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+        end
+    end
+    MOI.set(model, MOI.LazyConstraintCallback(), good_callback_function)
     ```
 
 ## User cuts
