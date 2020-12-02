@@ -49,7 +49,7 @@ or modifying a variable bound with [`set_lower_bound`](@ref)) is undefined
 behavior, and your solver may throw an error, return an incorrect solution, or 
 result in a segfault that aborts Julia.
 
-In each of the three solver-dependent callbacks, the only thing you may query is 
+In each of the three solver-independent callbacks, the only thing you may query is 
 the primal value of the variables using [`callback_value`](@ref).
 
 If you need to query any other information, use a solver-dependent callback 
