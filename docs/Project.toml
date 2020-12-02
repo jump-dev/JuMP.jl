@@ -1,4 +1,5 @@
 [deps]
+ComplexOptInterface = "25c3070e-1275-41b5-afef-2f982c87090a"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
@@ -18,6 +19,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [compat]
+ComplexOptInterface = "0.0.3"
 CSV = "0.8"
 DataFrames = "1"
 Documenter = "0.27.9"

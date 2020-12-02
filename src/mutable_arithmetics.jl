@@ -20,17 +20,17 @@ const _GenericAffOrQuadExpr{C,V} =
 # `x` and `y` are known at compile time but apparently it does not.
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
-    ::Type{<:_Constant},
+    C::Type{<:_Constant},
     V::Type{<:AbstractVariableRef},
 )
-    return GenericAffExpr{Float64,V}
+    return GenericAffExpr{_float_type(C),V}
 end
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
     V::Type{<:AbstractVariableRef},
-    ::Type{<:_Constant},
+    C::Type{<:_Constant},
 )
-    return GenericAffExpr{Float64,V}
+    return GenericAffExpr{_float_type(C),V}
 end
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
@@ -52,7 +52,7 @@ function _MA.promote_operation(
     ::Type{V},
     ::Type{V},
 ) where {V<:AbstractVariableRef}
-    return GenericAffExpr{Float64,V}
+    return _aff_type(V)
 end
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-)},
@@ -95,7 +95,7 @@ function _MA.promote_operation(
     ::Type{V},
     ::Type{V},
 ) where {V<:AbstractVariableRef}
-    return GenericQuadExpr{Float64,V}
+    return _quad_type(V)
 end
 function _MA.promote_operation(
     ::typeof(*),

@@ -157,6 +157,7 @@ const _PAGES = [
             "tutorials/algorithms/tsp_lazy_constraints.md",
         ],
         "Applications" => ["tutorials/applications/power_systems.md"],
+        "Complex" => ["tutorials/complex/complex.md"],
     ],
     "Manual" => [
         "manual/models.md",

@@ -481,6 +481,21 @@ end
 function Base.convert(::Type{GenericAffExpr{T,V}}, v::_Constant) where {T,V}
     return GenericAffExpr{T,V}(convert(T, _constant_to_number(v)))
 end
+function Base.convert(
+    ::Type{GenericAffExpr{T,V}},
+    aff::GenericAffExpr{T,V},
+) where {T,V}
+    return aff
+end
+function Base.convert(
+    ::Type{GenericAffExpr{T,V}},
+    aff::GenericAffExpr{S,V},
+) where {S,T,V}
+    return GenericAffExpr{T,V}(
+        aff.constant,
+        convert(OrderedDict{V,T}, aff.terms),
+    )
+end
 
 """
     AffExpr
@@ -491,7 +506,7 @@ Alias for `GenericAffExpr{Float64,VariableRef}`, the specific
 const AffExpr = GenericAffExpr{Float64,VariableRef}
 
 # Check all coefficients are finite, i.e. not NaN, not Inf, not -Inf
-function _assert_isfinite(a::AffExpr)
+function _assert_isfinite(a::GenericAffExpr)
     for (coef, var) in linear_terms(a)
         if !isfinite(coef)
             error("Invalid coefficient $coef on variable $var.")
@@ -530,9 +545,9 @@ end
 # Note: No validation is performed that the variables in the AffExpr belong to
 # the same model. The verification is done in `check_belongs_to_model` which
 # should be called before calling `MOI.ScalarAffineFunction`.
-function MOI.ScalarAffineFunction(a::AffExpr)
+function MOI.ScalarAffineFunction(a::GenericAffExpr{C,VariableRef}) where {C}
     _assert_isfinite(a)
-    terms = MOI.ScalarAffineTerm{Float64}[
+    terms = MOI.ScalarAffineTerm{C}[
         MOI.ScalarAffineTerm(t[1], index(t[2])) for t in linear_terms(a)
     ]
     return MOI.ScalarAffineFunction(terms, a.constant)
@@ -641,13 +656,13 @@ function _fill_vaf!(
     return offset + length(linear_terms(aff))
 end
 
-function MOI.VectorAffineFunction(affs::Vector{AffExpr})
+function MOI.VectorAffineFunction(affs::Vector{GenericAffExpr{C,V}}) where {C,V}
     len = 0
     for aff in affs
         len += length(linear_terms(aff))
     end
-    terms = Vector{MOI.VectorAffineTerm{Float64}}(undef, len)
-    constant = Vector{Float64}(undef, length(affs))
+    terms = Vector{MOI.VectorAffineTerm{C}}(undef, len)
+    constant = Vector{C}(undef, length(affs))
     offset = 0
     for (i, aff) in enumerate(affs)
         constant[i] = aff.constant
