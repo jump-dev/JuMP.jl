@@ -224,7 +224,7 @@ before being given to [`container`](@ref).
 
 ## Examples
 
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 julia> Containers.@container([i = 1:3, j = 1:3], i + j)
 3×3 Array{Int64,2}:
  2  3  4

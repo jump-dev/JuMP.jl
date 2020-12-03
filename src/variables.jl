@@ -115,10 +115,11 @@ end
 Returns the model to which `v` belongs.
 
 # Example
-```jldoctest
-julia> model = Model()
+```jldoctest; setup=:(using JuMP)
+julia> model = Model();
 
 julia> x = @variable(model)
+noname
 
 julia> owner_model(x) === model
 true
@@ -251,13 +252,7 @@ no variable has this name attribute. Throws an error if several variables have
 `name` as their name attribute.
 
 ```jldoctest objective_function; setup = :(using JuMP), filter = r"Stacktrace:.*"s
-julia> model = Model()
-A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+julia> model = Model();
 
 julia> @variable(model, x)
 x
@@ -971,7 +966,7 @@ Returns a list of all variables currently in the model. The variables are
 ordered by creation time.
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 model = Model()
 @variable(model, x)
 @variable(model, y)
@@ -1041,7 +1036,7 @@ original model. The behavior of this function is undefined if additional
 changes are made to the affected variables in the meantime.
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
 julia> @variable(model, x, Bin);

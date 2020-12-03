@@ -125,6 +125,8 @@ julia> struct CustomSet{T} <: MOI.AbstractScalarSet
            value::T
        end
 
+julia> Base.copy(x::CustomSet) = CustomSet(x.value)
+
 julia> model = Model();
 
 julia> @variable(model, x)
@@ -1517,7 +1519,7 @@ with initial value set to `value`. Nonlinear parameters may be used only in
 nonlinear expressions.
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 model = Model()
 @NLparameter(model, x == 10)
 value(x)
@@ -1534,7 +1536,7 @@ depend on index sets).
 Uses the same syntax for specifying index sets as [`@variable`](@ref).
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 model = Model()
 @NLparameter(model, y[i = 1:10] == 2 * i)
 value(y[9])

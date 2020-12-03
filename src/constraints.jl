@@ -615,12 +615,12 @@ con : 2 x ∈ [-3.0, -1.0]
 For vector constraints, the constant is added to the function:
 ```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x); @variable(model, y)), filter=r"≤|<="
 julia> @constraint(model, con, [x + y, x, y] in SecondOrderCone())
-con : [x + y, x, y] in MOI.SecondOrderCone(3)
+con : [x + y, x, y] ∈ MathOptInterface.SecondOrderCone(3)
 
 julia> add_to_function_constant(con, [1, 2, 2])
 
 julia> con
-con : [x + y + 1, x + 2, y + 2] in MOI.SecondOrderCone(3)
+con : [x + y + 1, x + 2, y + 2] ∈ MathOptInterface.SecondOrderCone(3)
 ```
 
 """
@@ -858,7 +858,7 @@ has type `function_type` and the set has type `set_type`.
 See also [`list_of_constraint_types`](@ref) and [`all_constraints`](@ref).
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
 julia> @variable(model, x >= 0, Bin);
@@ -904,7 +904,7 @@ ordered by creation time.
 See also [`list_of_constraint_types`](@ref) and [`num_constraints`](@ref).
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
 julia> @variable(model, x >= 0, Bin);
@@ -957,7 +957,7 @@ and `S` is an MOI set type such that `all_constraints(model, F, S)` returns
 a nonempty list.
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
 julia> @variable(model, x >= 0, Bin);

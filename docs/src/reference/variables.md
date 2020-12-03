@@ -49,4 +49,15 @@ num_variables
 VariableRef
 index(::VariableRef)
 optimizer_index(::VariableRef)
+
+add_variable
+check_belongs_to_model
+build_variable
+parse_one_operator_variable
+
+AbstractVariable
+AbstractVariableRef
+VariableNotOwned
+VariableConstrainedOnCreation
+VariablesConstrainedOnCreation
 ```

@@ -10,4 +10,6 @@ manual.
 @NLparameter
 value(::JuMP.NonlinearParameter)
 set_value(::JuMP.NonlinearParameter, ::Number)
+
+num_nl_constraints
 ```
