@@ -17,11 +17,6 @@ JuMP depends on solvers to solve optimization problems, and you will need to
 install one before you can solve problems with JuMP. The table below lists the
 currently available solvers.
 
-Common choices of solvers are [Clp.jl](https://github.com/jump-dev/Clp.jl) for
-linear programs, [Cbc.jl](https://github.com/jump-dev/Clp.jl) for mixed-integer
-linear programs, and [Ipopt.jl](https://github.com/jump-dev/Clp.jl) for
-non-linear programs.
-
 Install a solver using the Julia package manager, replacing `"Clp"` by the
 Julia package name as appropriate.
 ```julia
@@ -57,8 +52,8 @@ use, so installation is often more complex.
     Julia package will download and install any relevant solver binaries
     automatically, and you shouldn't need to do anything other than `Pkg.add`.
 
-Solvers with a missing entry in the `Julia Package` column are written in
-Julia. The link in the `Solver` column is the corresponding Julia package.
+Solvers with a missing entry in the `Julia Package` column are written in Julia.
+The link in the `Solver` column is the corresponding Julia package.
 
 | Solver                                                                         | Julia Package                                                                    | Manual Installation | License  | Supports        |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------------------- | -------- | ----------------|
@@ -88,27 +83,28 @@ Julia. The link in the `Solver` column is the corresponding Julia package.
 | [SCIP](https://scip.zib.de/)                                                   | [SCIP.jl](https://github.com/SCIP-Interfaces/SCIP.jl)                            | Yes | ZIB      | (MI)LP, (MI)NLP                 |
 | [SCS](https://github.com/cvxgrp/scs)                                           | [SCS.jl](https://github.com/jump-dev/SCS.jl)                                     |     | MIT      | LP, SOCP, SDP                   |
 | [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/jump-dev/SDPA.jl), [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl) |     | GPL | LP, SDP |
-| [SDPNAL](https://blog.nus.edu.sg/mattohkc/softwares/sdpnalplus/)               | [SDPNAL.jl](https://github.com/jump-dev/SDPNAL.jl)                               | Yesᴹ | CC BY-SA | LP, SDP                         |
-| [SDPT3](https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/)                     | [SDPT3.jl](https://github.com/jump-dev/SDPT3.jl)                                 | Yesᴹ | GPL      | LP, SOCP, SDP                   |
-| [SeDuMi](http://sedumi.ie.lehigh.edu/)                                         | [SeDuMi.jl](https://github.com/jump-dev/SeDuMi.jl)                               | Yesᴹ | GPL      | LP, SOCP, SDP                   |
-| [Tulip.jl](https://github.com/ds4dm/Tulip.jl)                                  |                                                                                  |     | MPL-2     | LP                              |
+| [SDPNAL](https://blog.nus.edu.sg/mattohkc/softwares/sdpnalplus/)               | [SDPNAL.jl](https://github.com/jump-dev/SDPNAL.jl)                               | Yesᴹ | CC BY-SA | LP, SDP                        |
+| [SDPT3](https://blog.nus.edu.sg/mattohkc/softwares/sdpt3/)                     | [SDPT3.jl](https://github.com/jump-dev/SDPT3.jl)                                 | Yesᴹ | GPL      | LP, SOCP, SDP                  |
+| [SeDuMi](http://sedumi.ie.lehigh.edu/)                                         | [SeDuMi.jl](https://github.com/jump-dev/SeDuMi.jl)                               | Yesᴹ | GPL      | LP, SOCP, SDP                  |
+| [Tulip.jl](https://github.com/ds4dm/Tulip.jl)                                  |                                                                                  |     | MPL-2     | LP                             |
 
 Where:
 - LP = Linear programming
 - QP = Quadratic programming
-- SOCP = Second-order conic programming (including problems with convex quadratic constraints and/or objective)
+- SOCP = Second-order conic programming (including problems with convex
+  quadratic constraints and/or objective)
 - NLP = Nonlinear programming
 - SDP = Semidefinite programming
 - (MI)XXX = Mixed-integer equivalent of problem type `XXX`
 
 !!! note
-    Developed a solver? This table is open for new contributions! Start by
-    making a pull request to edit the [installation.md](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/installation.md)
+    Developed a solver or solver wrapper? This table is open for new
+    contributions! Start by making a pull request to edit the [installation.md](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/installation.md)
     file.
 
 !!! note
-    Developing a solver? See [Interacting with solvers](@ref) and the
-    [MathOptInterface docs](https://jump.dev/MathOptInterface.jl/stable/)
+    Developing a solver or solver wrapper? See [Interacting with solvers](@ref)
+    and the [MathOptInterface docs](https://jump.dev/MathOptInterface.jl/stable/)
     for more details on how JuMP interacts with solvers. Please get in touch
     via the [Developer Chatroom](https://jump.dev/pages/governance/#developer-chatroom)
     with any questions about connecting new solvers with JuMP.
@@ -121,8 +117,8 @@ Such solvers include [Bonmin](https://github.com/coin-or/Bonmin) and
 [Couenne](https://github.com/coin-or/Couenne). See a more complete list
 [here](https://ampl.com/products/solvers/all-solvers-for-ampl/).
 
-Use [GAMS.jl](https://github.com/GAMS-dev/gams.jl) to access solvers via an
-installation of [GAMS](https://www.gams.com). Among them are:
+Use [GAMS.jl](https://github.com/GAMS-dev/gams.jl) to access solvers available
+through [GAMS](https://www.gams.com). Such solvers include:
 [AlphaECP](https://www.gams.com/latest/docs/S_ALPHAECP.html),
 [Antigone](https://www.gams.com/latest/docs/S_ANTIGONE.html),
 [BARON](https://www.gams.com/latest/docs/S_BARON.html),
