@@ -25,7 +25,7 @@ function build_lookup(ax)
         d[el] = cnt
         cnt += 1
     end
-    d
+    return d
 end
 
 """
@@ -87,26 +87,31 @@ And data, a 2×2 Array{Float64,2}:
  1.0  1.0
 ```
 """
-function DenseAxisArray{T}(::UndefInitializer, axs...) where T
+function DenseAxisArray{T}(::UndefInitializer, axs...) where {T}
     return construct_undef_array(T, axs)
 end
 
-function construct_undef_array(::Type{T}, axs::Tuple{Vararg{Any, N}}
-                               ) where {T, N}
-    return DenseAxisArray(Array{T, N}(undef, length.(axs)...), axs...)
+function construct_undef_array(::Type{T}, axs::Tuple{Vararg{Any,N}}) where {T,N}
+    return DenseAxisArray(Array{T,N}(undef, length.(axs)...), axs...)
 end
 
 Base.isempty(A::DenseAxisArray) = isempty(A.data)
 
 # We specify `Ax` for the type of `axes` to avoid conflict where `axes` has type `Tuple{Vararg{Int,N}}`.
-function Base.similar(A::DenseAxisArray{T, N, Ax}, ::Type{S}, axes::Ax) where {T, N, Ax, S}
+function Base.similar(
+    A::DenseAxisArray{T,N,Ax},
+    ::Type{S},
+    axes::Ax,
+) where {T,N,Ax,S}
     return construct_undef_array(S, axes)
 end
 
 # AbstractArray interface
 
 Base.size(A::DenseAxisArray) = size(A.data)
-Base.LinearIndices(A::DenseAxisArray) = error("DenseAxisArray does not support this operation.")
+function Base.LinearIndices(A::DenseAxisArray)
+    return error("DenseAxisArray does not support this operation.")
+end
 Base.axes(A::DenseAxisArray) = A.axes
 Base.CartesianIndices(a::DenseAxisArray) = CartesianIndices(a.data)
 
@@ -114,7 +119,7 @@ Base.CartesianIndices(a::DenseAxisArray) = CartesianIndices(a.data)
 # Indexing #
 ############
 
-function _is_assigned(A::DenseAxisArray{T, N}, idx...) where {T, N}
+function _is_assigned(A::DenseAxisArray{T,N}, idx...) where {T,N}
     if length(idx) == N
         keys = zeros(Int, N)
         for (i, v) in enumerate(idx)
@@ -126,11 +131,11 @@ function _is_assigned(A::DenseAxisArray{T, N}, idx...) where {T, N}
     end
     return false
 end
-function Base.isassigned(A::DenseAxisArray{T, N}, idx...) where {T, N}
+function Base.isassigned(A::DenseAxisArray{T,N}, idx...) where {T,N}
     return _is_assigned(A, idx...)
 end
 # For ambiguity
-function Base.isassigned(A::DenseAxisArray{T, N}, idx::Int...) where {T, N}
+function Base.isassigned(A::DenseAxisArray{T,N}, idx::Int...) where {T,N}
     return _is_assigned(A, idx...)
 end
 
@@ -146,13 +151,15 @@ lookup_index(i, lookup) = lookup[i]
 # The compiler knows the lengths and types of each tuple, so
 # all of the types are inferable.
 function _to_index_tuple(idx::Tuple, lookup::Tuple)
-    tuple(lookup_index(first(idx), first(lookup)),
-          _to_index_tuple(Base.tail(idx), Base.tail(lookup))...)
+    return tuple(
+        lookup_index(first(idx), first(lookup)),
+        _to_index_tuple(Base.tail(idx), Base.tail(lookup))...,
+    )
 end
 
 # Handle the base case when we have more indices than lookups:
 function _to_index_tuple(idx::NTuple{N}, ::NTuple{0}) where {N}
-    ntuple(k -> begin
+    return ntuple(k -> begin
         i = idx[k]
         (i == 1) ? 1 : error("invalid index $i")
     end, Val(N))
@@ -174,22 +181,27 @@ has_colon(idx::Tuple) = isa(first(idx), Colon) || has_colon(Base.tail(idx))
 
 # TODO: better error (or just handle correctly) when user tries to index with a range like a:b
 # The only kind of slicing we support is dropping a dimension with colons
-function Base.getindex(A::DenseAxisArray{T, N}, idx...) where {T, N}
+function Base.getindex(A::DenseAxisArray{T,N}, idx...) where {T,N}
     length(idx) < N && throw(BoundsError(A, idx))
     if has_colon(idx)
-        DenseAxisArray(A.data[to_index(A,idx...)...], (ax for (i,ax) in enumerate(A.axes) if idx[i] == Colon())...)
+        DenseAxisArray(
+            A.data[to_index(A, idx...)...],
+            (ax for (i, ax) in enumerate(A.axes) if idx[i] == Colon())...,
+        )
     else
-        return A.data[to_index(A,idx...)...]
+        return A.data[to_index(A, idx...)...]
     end
 end
 Base.getindex(A::DenseAxisArray, idx::CartesianIndex) = A.data[idx]
 
-function Base.setindex!(A::DenseAxisArray{T, N}, v, idx...) where {T, N}
+function Base.setindex!(A::DenseAxisArray{T,N}, v, idx...) where {T,N}
     length(idx) < N && throw(BoundsError(A, idx))
-    return A.data[to_index(A,idx...)...] = v
+    return A.data[to_index(A, idx...)...] = v
 end
 Base.setindex!(A::DenseAxisArray, v, idx::CartesianIndex) = A.data[idx] = v
-Base.IndexStyle(::Type{DenseAxisArray{T,N,Ax}}) where {T,N,Ax} = IndexAnyCartesian()
+function Base.IndexStyle(::Type{DenseAxisArray{T,N,Ax}}) where {T,N,Ax}
+    return IndexAnyCartesian()
+end
 
 ########
 # Keys #
@@ -206,11 +218,11 @@ end
 Base.getindex(k::DenseAxisArrayKey, args...) = getindex(k.I, args...)
 Base.getindex(a::DenseAxisArray, k::DenseAxisArrayKey) = a[k.I...]
 
-struct DenseAxisArrayKeys{T<:Tuple, S<:DenseAxisArrayKey, N} <: AbstractArray{S, N}
+struct DenseAxisArrayKeys{T<:Tuple,S<:DenseAxisArrayKey,N} <: AbstractArray{S,N}
     product_iter::Base.Iterators.ProductIterator{T}
     function DenseAxisArrayKeys(a::DenseAxisArray{TT,N,Ax}) where {TT,N,Ax}
         product_iter = Base.Iterators.product(a.axes...)
-        return new{Ax, DenseAxisArrayKey{eltype(product_iter)}, N}(product_iter)
+        return new{Ax,DenseAxisArrayKey{eltype(product_iter)},N}(product_iter)
     end
 end
 Base.size(iter::DenseAxisArrayKeys) = size(iter.product_iter)
@@ -229,10 +241,15 @@ function Base.keys(a::DenseAxisArray)
     return DenseAxisArrayKeys(a)
 end
 Base.getindex(a::DenseAxisArrayKeys, idx::CartesianIndex) = a[idx.I...]
-function Base.getindex(a::DenseAxisArrayKeys{T, S, N}, args::Vararg{Int, N}) where {T, S, N}
+function Base.getindex(
+    a::DenseAxisArrayKeys{T,S,N},
+    args::Vararg{Int,N},
+) where {T,S,N}
     return DenseAxisArrayKey(_to_index_tuple(args, a.product_iter.iterators))
 end
-Base.IndexStyle(::Type{DenseAxisArrayKeys{T,N,Ax}}) where {T,N,Ax} = IndexCartesian()
+function Base.IndexStyle(::Type{DenseAxisArrayKeys{T,N,Ax}}) where {T,N,Ax}
+    return IndexCartesian()
+end
 
 ################
 # Broadcasting #
@@ -247,16 +264,20 @@ Base.IndexStyle(::Type{DenseAxisArrayKeys{T,N,Ax}}) where {T,N,Ax} = IndexCartes
 # passing on Julia 0.7 and leaves lots of room for improvement.
 struct DenseAxisArrayBroadcastStyle <: Broadcast.BroadcastStyle end
 # Scalars can be used with DenseAxisArray in broadcast
-function Base.BroadcastStyle(::DenseAxisArrayBroadcastStyle,
-                             ::Base.Broadcast.DefaultArrayStyle{0})
+function Base.BroadcastStyle(
+    ::DenseAxisArrayBroadcastStyle,
+    ::Base.Broadcast.DefaultArrayStyle{0},
+)
     return DenseAxisArrayBroadcastStyle()
 end
 Base.BroadcastStyle(::Type{<:DenseAxisArray}) = DenseAxisArrayBroadcastStyle()
 function Base.Broadcast.broadcasted(::DenseAxisArrayBroadcastStyle, f, args...)
     array = find_jump_array(args)
     if sum(arg isa DenseAxisArray for arg in args) > 1
-        error("Broadcast operations with multiple DenseAxisArrays are not yet " *
-              "supported.")
+        error(
+            "Broadcast operations with multiple DenseAxisArrays are not yet " *
+            "supported.",
+        )
     end
     result_data = broadcast(f, unpack_jump_array(args)...)
     return DenseAxisArray(result_data, array.axes, array.lookup)
@@ -267,8 +288,10 @@ end
 find_jump_array(array::DenseAxisArray, rest) = array
 find_jump_array(::Any, rest) = find_jump_array(rest)
 function find_jump_array(broadcasted::Broadcast.Broadcasted)
-    error("Unsupported nested broadcast operation. DenseAxisArray supports " *
-          "only simple broadcast operations like f.(A) but not f.(A .+ 1).")
+    return error(
+        "Unsupported nested broadcast operation. DenseAxisArray supports " *
+        "only simple broadcast operations like f.(A) but not f.(A .+ 1).",
+    )
 end
 
 function unpack_jump_array(args::Tuple)
@@ -304,40 +327,56 @@ unpack_jump_array(other::Any, rest) = (other, unpack_jump_array(rest)...)
 
 function Base.summary(io::IO, A::DenseAxisArray)
     _summary(io, A)
-    for (k,ax) in enumerate(A.axes)
+    for (k, ax) in enumerate(A.axes)
         print(io, "    Dimension $k, ")
-        show(IOContext(io, :limit=>true), ax)
+        show(IOContext(io, :limit => true), ax)
         println(io)
     end
-    print(io, "And data, a ", summary(A.data))
+    return print(io, "And data, a ", summary(A.data))
 end
-_summary(io, A::DenseAxisArray{T,N}) where {T,N} = println(io, "$N-dimensional DenseAxisArray{$T,$N,...} with index sets:")
+function _summary(io, A::DenseAxisArray{T,N}) where {T,N}
+    return println(
+        io,
+        "$N-dimensional DenseAxisArray{$T,$N,...} with index sets:",
+    )
+end
 
 if isdefined(Base, :print_array) # 0.7 and later
-    Base.print_array(io::IO, X::DenseAxisArray{T,1}) where {T} = Base.print_matrix(io, X.data)
-    Base.print_array(io::IO, X::DenseAxisArray{T,2}) where {T} = Base.print_matrix(io, X.data)
+    function Base.print_array(io::IO, X::DenseAxisArray{T,1}) where {T}
+        return Base.print_matrix(io, X.data)
+    end
+    function Base.print_array(io::IO, X::DenseAxisArray{T,2}) where {T}
+        return Base.print_matrix(io, X.data)
+    end
 end
 
 # n-dimensional arrays
-function Base.show_nd(io::IO, a::DenseAxisArray, print_matrix::Function, label_slices::Bool)
+function Base.show_nd(
+    io::IO,
+    a::DenseAxisArray,
+    print_matrix::Function,
+    label_slices::Bool,
+)
     limit::Bool = get(io, :limit, false)
     if isempty(a)
         return
     end
     tailinds = Base.tail(Base.tail(axes(a.data)))
-    nd = ndims(a)-2
+    nd = ndims(a) - 2
     for I in CartesianIndices(tailinds)
         idxs = I.I
         if limit
-            for i = 1:nd
+            for i in 1:nd
                 ii = idxs[i]
                 ind = tailinds[i]
                 if length(ind) > 10
-                    if ii == ind[4] && all(d->idxs[d]==first(tailinds[d]),1:i-1)
-                        for j=i+1:nd
-                            szj = size(a.data,j+2)
+                    if ii == ind[4] &&
+                       all(d -> idxs[d] == first(tailinds[d]), 1:i-1)
+                        for j in i+1:nd
+                            szj = size(a.data, j + 2)
                             indj = tailinds[j]
-                            if szj>10 && first(indj)+2 < idxs[j] <= last(indj)-3
+                            if szj > 10 &&
+                               first(indj) + 2 < idxs[j] <= last(indj) - 3
                                 @goto skip
                             end
                         end
@@ -353,14 +392,16 @@ function Base.show_nd(io::IO, a::DenseAxisArray, print_matrix::Function, label_s
         end
         if label_slices
             print(io, "[:, :, ")
-            for i = 1:(nd-1); show(io, a.axes[i+2][idxs[i]]); print(io,", "); end
+            for i in 1:(nd-1)
+                show(io, a.axes[i+2][idxs[i]])
+                print(io, ", ")
+            end
             show(io, a.axes[end][idxs[end]])
             println(io, "] =")
         end
-        slice = view(a.data, axes(a.data,1), axes(a.data,2),
-                     idxs...)
+        slice = view(a.data, axes(a.data, 1), axes(a.data, 2), idxs...)
         Base.print_matrix(io, slice)
-        print(io, idxs == map(last,tailinds) ? "" : "\n\n")
+        print(io, idxs == map(last, tailinds) ? "" : "\n\n")
         @label skip
     end
 end
@@ -369,5 +410,5 @@ function Base.show(io::IO, array::DenseAxisArray)
     summary(io, array)
     isempty(array) && return
     println(io, ":")
-    Base.print_array(io, array)
+    return Base.print_array(io, array)
 end

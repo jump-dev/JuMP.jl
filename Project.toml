@@ -15,6 +15,7 @@ NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
@@ -25,6 +26,12 @@ JSON = "0.21"
 MathOptInterface = "~0.9.14"
 MutableArithmetics = "0.2"
 NaNMath = "0.3"
+SpecialFunctions = "0.8, 1"
+# This restriction on StaticArrays is needed to avoid excessive memory 
+# usage on Julia 1.0.x. See JuMP#2390, JuliaArrays/StaticArrays#857, or 
+# JuliaLang/julia#38634. It can be removed when the minimum Julia version
+# is changed to the new LTS (julia = "1.6").
+StaticArrays = "0.12"
 julia = "1"
 
 [extras]

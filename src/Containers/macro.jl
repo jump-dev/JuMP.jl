@@ -24,8 +24,9 @@ Return a tuple of (flat_arguments, keyword arguments, and requested_container),
 where `requested_container` is a symbol to be passed to `parse_container`.
 """
 function _extract_kw_args(args)
-    kw_args = filter(x -> isexpr(x, :(=)) && x.args[1] != :container , collect(args))
-    flat_args = filter(x->!isexpr(x, :(=)), collect(args))
+    kw_args =
+        filter(x -> isexpr(x, :(=)) && x.args[1] != :container, collect(args))
+    flat_args = filter(x -> !isexpr(x, :(=)), collect(args))
     requested_container = :Auto
     for kw in args
         if isexpr(kw, :(=)) && kw.args[1] == :container
@@ -48,8 +49,11 @@ function _try_parse_idx_set(arg::Expr)
     end
 end
 function _explicit_oneto(index_set)
-    s = Meta.isexpr(index_set,:escape) ? index_set.args[1] : index_set
-    if Meta.isexpr(s,:call) && length(s.args) == 3 && s.args[1] == :(:) && s.args[2] == 1
+    s = Meta.isexpr(index_set, :escape) ? index_set.args[1] : index_set
+    if Meta.isexpr(s, :call) &&
+       length(s.args) == 3 &&
+       s.args[1] == :(:) &&
+       s.args[2] == 1
         return :(Base.OneTo($index_set))
     else
         return index_set
@@ -98,8 +102,10 @@ function _parse_ref_sets(_error::Function, expr::Expr)
         # Parameters appear at the front.
         if isexpr(c.args[1], :parameters)
             if length(c.args[1].args) != 1
-                _error("Invalid syntax: $c. Multiple semicolons are not " *
-                       "supported.")
+                _error(
+                    "Invalid syntax: $c. Multiple semicolons are not " *
+                    "supported.",
+                )
             end
             condition = popfirst!(c.args).args[1]
         end
@@ -149,15 +155,20 @@ function _build_ref_sets(_error::Function, expr)
     has_dependent = has_dependent_sets(idxvars, idxsets)
     if has_dependent || condition != :()
         esc_idxvars = esc.(idxvars)
-        idxfuns = [:(($(esc_idxvars[1:(i - 1)]...),) -> $(idxsets[i])) for i in 1:length(idxvars)]
+        idxfuns = [
+            :(($(esc_idxvars[1:(i-1)]...),) -> $(idxsets[i]))
+            for i in 1:length(idxvars)
+        ]
         if condition == :()
             indices = :(Containers.nested($(idxfuns...)))
         else
             condition_fun = :(($(esc_idxvars...),) -> $(esc(condition)))
-            indices = :(Containers.nested($(idxfuns...); condition = $condition_fun))
+            indices =
+                :(Containers.nested($(idxfuns...); condition = $condition_fun))
         end
     else
-        indices = :(Containers.vectorized_product($(_explicit_oneto.(idxsets)...)))
+        indices =
+            :(Containers.vectorized_product($(_explicit_oneto.(idxsets)...)))
     end
     return idxvars, indices
 end
@@ -166,12 +177,16 @@ function container_code(idxvars, indices, code, requested_container)
     if isempty(idxvars)
         return code
     end
-    if !(requested_container in [:Auto, :Array, :DenseAxisArray, :SparseAxisArray])
+    if !(
+        requested_container in
+        [:Auto, :Array, :DenseAxisArray, :SparseAxisArray]
+    )
         # We do this two-step interpolation, first into the string, and then
         # into the expression because interpolating into a string inside an
         # expression has scoping issues.
-        error_message = "Invalid container type $requested_container. Must be " *
-                        "Auto, Array, DenseAxisArray, or SparseAxisArray."
+        error_message =
+            "Invalid container type $requested_container. Must be " *
+            "Auto, Array, DenseAxisArray, or SparseAxisArray."
         return :(error($error_message))
     end
     if requested_container == :DenseAxisArray

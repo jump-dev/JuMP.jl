@@ -46,14 +46,16 @@ The reason why the optimization of `model` was finished is given by
 termination_status(model)
 ```
 
-This function will return a `MOI.TerminationStatusCode` `enum`.
+This function will return a `MOI.TerminationStatusCode` `enum`. Common return
+values include `MOI.OPTIMAL`, `MOI.INFEASIBLE`, `MOI.DUAL_INFEASIBLE`, and
+`MOI.TIME_LIMIT`.
 
-```@docs
-MOI.TerminationStatusCode
-```
+Note that a return status of `MOI.DUAL_INFEASIBLE` does not guarantee that the
+primal is unbounded. When the dual is infeasible, the primal is unbounded if
+there exists a feasible primal solution.
 
-Additionally, we can receive a solver specific string explaining why the
-optimization stopped with [`raw_status`](@ref).
+We can receive a solver specific string explaining why the optimization stopped
+with [`raw_status`](@ref).
 
 ## Solution statuses
 
@@ -64,10 +66,6 @@ is available to be queried.
 We can obtain these statuses by calling [`primal_status`](@ref) for the
 primal status, and [`dual_status`](@ref) for the dual status. Both will
 return a `MOI.ResultStatusCode` `enum`.
-
-```@docs
-MOI.ResultStatusCode
-```
 
 Common status situations are described in the
 [MOI docs](https://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Common-status-situations-1).
@@ -244,28 +242,23 @@ julia> lp_rhs_perturbation_range(c1)
 (-1.0, 1.0)
 ```
 
-```@docs
-lp_objective_perturbation_range
-lp_rhs_perturbation_range
-```
-
 ## Conflicts
 
-When the model you input is infeasible, some solvers can help you find the 
-cause of this infeasibility by offering a conflict, i.e., a subset of the 
-constraints that create this infeasibility. Depending on the solver, 
-this can also be called an IIS (irreducible inconsistent subsystem). 
+When the model you input is infeasible, some solvers can help you find the
+cause of this infeasibility by offering a conflict, i.e., a subset of the
+constraints that create this infeasibility. Depending on the solver,
+this can also be called an IIS (irreducible inconsistent subsystem).
 
 The function [`compute_conflict!`](@ref) is used to trigger the computation of
 a conflict. Once this process is finished, the attribute
 [`MOI.ConflictStatus`](@ref) returns a [`MOI.ConflictStatusCode`](@ref).
 
-If there is a conflict, you can query from each constraint whether it 
+If there is a conflict, you can query from each constraint whether it
 participates in the conflict or not using the attribute
 [`MOI.ConstraintConflictStatus`](@ref), which returns a
 [`MOI.ConflictParticipationStatusCode`](@ref).
 
-For instance, this is how you can use this functionality: 
+For instance, this is how you can use this functionality:
 
 ```julia
 using JuMP
@@ -275,7 +268,7 @@ model = Model() # You must use a solver that supports conflict refining/IIS comp
 @constraint(model, c2, x <= 1)
 optimize!(model)
 
-# termination_status(model) will likely be MOI.INFEASIBLE, 
+# termination_status(model) will likely be MOI.INFEASIBLE,
 # depending on the solver
 
 compute_conflict!(model)
@@ -312,34 +305,4 @@ num_results = result_count(model)
 @assert has_values(model; result = num_results)
 an_optimal_solution = value.(x; result = num_results)
 an_optimal_objective = objective_value(model; result = num_results)
-```
-
-## Reference
-
-```@docs
-JuMP.termination_status
-JuMP.raw_status
-JuMP.primal_status
-JuMP.has_values
-JuMP.value
-JuMP.dual_status
-JuMP.has_duals
-JuMP.dual
-JuMP.solve_time
-OptimizeNotCalled
-MOI.optimize!
-JuMP.result_count
-JuMP.relative_gap
-JuMP.simplex_iterations
-JuMP.barrier_iterations
-JuMP.node_count
-```
-
-```@docs
-JuMP.compute_conflict!
-MOI.compute_conflict!
-MOI.ConflictStatus
-MOI.ConflictStatusCode
-MOI.ConstraintConflictStatus
-MOI.ConflictParticipationStatusCode
 ```

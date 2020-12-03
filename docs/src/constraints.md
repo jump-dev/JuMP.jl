@@ -224,16 +224,9 @@ end
 The name, i.e. the value of the `MOI.ConstraintName` attribute, of a constraint
 can be obtained by [`name(::JuMP.ConstraintRef)`](@ref) and set by
 [`set_name(::JuMP.ConstraintRef, ::String)`](@ref).
-```@docs
-name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex})
-set_name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex}, ::String)
-```
 
 The constraint can also be retrieved from its name using
 [`constraint_by_name`](@ref).
-```@docs
-constraint_by_name
-```
 
 ## Start Values
 
@@ -947,7 +940,7 @@ element of `x` can take a non-zero value, and all other elements must be zero.
 Although not required for feasibility, solvers can benefit from an ordering of the variables
 (e.g., the variables represent different factories to build, at most one factory can be built,
 and the factories can be ordered according to cost). To induce an ordering, `weights` can be provided;
-as such, they should be unique values. The `k`th element in the ordered set corresponds to 
+as such, they should be unique values. The `k`th element in the ordered set corresponds to
 the `k`th weight in `weights` when the weights are sorted.
 
 A SOS1 constraint is equivalent to:
@@ -955,7 +948,7 @@ A SOS1 constraint is equivalent to:
 - `x[i] >= 0` for some `i`
 - `x[j] == 0` for all `j != i`
 
-If a vector of variables `x` is in a Special Ordered Set of Type II (SOS2), then at most two 
+If a vector of variables `x` is in a Special Ordered Set of Type II (SOS2), then at most two
 elements can be non-zero, and if two elements are non-zero, they must be adjacent.
 
 Because of the adjacency requirement, you should supply a weight vector (with unique elements)
@@ -992,46 +985,4 @@ julia> @variable(model, x[1:3])
 
 julia> @constraint(model, x in SOS2())
 [x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([1.0, 2.0, 3.0])
-```
-
-## Reference
-
-```@docs
-@constraint
-@SDconstraint
-SecondOrderCone
-RotatedSecondOrderCone
-PSDCone
-shadow_price
-normalized_coefficient
-set_normalized_coefficient
-normalized_rhs
-set_normalized_rhs
-add_to_function_constant
-is_valid
-JuMP.delete
-LowerBoundRef
-UpperBoundRef
-FixRef
-ConstraintRef
-list_of_constraint_types
-all_constraints
-num_constraints
-constraint_object
-AbstractConstraint
-ScalarConstraint
-VectorConstraint
-index(::ConstraintRef)
-optimizer_index(::ConstraintRef{Model})
-
-set_dual_start_value
-dual_start_value
-```
-
-## Constructing constraints without adding them to the model
-
-For advanced use cases.
-
-```@docs
-@build_constraint
 ```
