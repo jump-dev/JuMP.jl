@@ -38,17 +38,26 @@ Callback support is limited to a few solvers. This includes
     underlying solver's callback documentation to understand details specific to
     each solver.
 
-## Information that can be queried during callbacks
+## Things you can and cannot do during callbacks
 
-In a callback, the only thing you may query is the primal value of the
-variables using [`callback_value`](@ref).
+There is a very limited range of things you can do during a callback. Only use 
+the functions and macros explicitly stated in this page of the documentation, or
+in the [Callbacks example](/examples/callbacks).
 
-If you need any other information, use a solver-dependent callback instead.
+Using any other part of the JuMP API (e.g., adding a constraint with [`@constraint`](@ref)
+or modifying a variable bound with [`set_lower_bound`](@ref)) is undefined
+behavior, and your solver may throw an error, return an incorrect solution, or 
+result in a segfault that aborts Julia.
 
-!!! info
-    Solver-dependent callbacks are mostly un-documented. Using them will require
-    you to read and understand the source-code of solver's Julia wrapper (i.e.,
-    the `Solver.jl` package).
+In each of the three solver-independent callbacks, the only thing you may query is 
+the primal value of the variables using [`callback_value`](@ref).
+
+If you need to query any other information, use a solver-dependent callback 
+instead. Each solver supporting a solver-dependent callback has information on 
+how to use it in the README of their Github repository.
+
+If you want to modify the problem in a callback, you _must_ use a lazy 
+constraint.
 
 ## Lazy constraints
 
@@ -78,7 +87,30 @@ MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
 !!! info
     The lazy constraint callback _may_ be called at fractional or integer
     nodes in the branch-and-bound tree. There is no guarantee that the
-    callback is called at _every_ feasible primal solution.
+    callback is called at _every_ primal solution.
+    
+!!! warn
+    Only add a lazy constraint if your primal solution violates the constraint.
+    Adding the lazy constraint irrespective of feasibility may result in the 
+    solver returning an incorrect solution, or lead to a large number of 
+    constraints being added, slowing down the solution process.
+    ```julia
+    model = Model(GLPK.Optimizer)
+    @variable(model, x <= 10, Int)
+    @objective(model, Max, x)
+    function bad_callback_function(cb_data)
+        # Don't do this!
+        con = @build_constraint(x <= 2)
+        MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+    end
+    function good_callback_function(cb_data)
+        if callback_value(x) > 2
+            con = @build_constraint(x <= 2)
+            MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+        end
+    end
+    MOI.set(model, MOI.LazyConstraintCallback(), good_callback_function)
+    ```
 
 ## User cuts
 
