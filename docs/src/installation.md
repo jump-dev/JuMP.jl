@@ -46,21 +46,19 @@ set_optimizer_attributes(model, "LogLevel" => 1, "PrimalTolerance" => 1e-7)
 
 ### Supported solvers
 
-!!! note
-    Most solvers are not written in Julia, and some require commercial licenses
-    to use, so installation is often more complex.
-    * If a solver has a `Yes` in the `Manual Installation` column, the solver
-      requires a manual installation step, such as downloading and installing a
-      binary, or obtaining a commercial license. Consult the README of the
-      relevant Julia package for more information.
-    * If the solver has `Yesᴹ`, the solver requires an installation of [MATLAB](https://www.mathworks.com/products/matlab.html).
-    * If the `Manual Installation` column is missing an entry, installing the
-      Julia package will download and install any relevant solver binaries
-      automatically, and you shouldn't need to do anything other than `Pkg.add`.
+Most solvers are not written in Julia, and some require commercial licenses to
+use, so installation is often more complex.
+  * If a solver has a `Yes` in the `Manual Installation` column, the solver
+    requires a manual installation step, such as downloading and installing a
+    binary, or obtaining a commercial license. Consult the README of the
+    relevant Julia package for more information.
+  * If the solver has `Yesᴹ`, the solver requires an installation of [MATLAB](https://www.mathworks.com/products/matlab.html).
+  * If the `Manual Installation` column is missing an entry, installing the
+    Julia package will download and install any relevant solver binaries
+    automatically, and you shouldn't need to do anything other than `Pkg.add`.
 
-!!! note
-    Solvers with a missing entry in the `Julia Package` column are written in
-    Julia. The link in the `Solver` column is the corresponding Julia package.
+Solvers with a missing entry in the `Julia Package` column are written in
+Julia. The link in the `Solver` column is the corresponding Julia package.
 
 | Solver                                                                         | Julia Package                                                                    | Manual Installation | License  | Supports        |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------------------- | -------- | ----------------|
