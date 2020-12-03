@@ -55,6 +55,7 @@ optimize!(model)
 Test.@test objective_value(model) ≈ √3 atol=1e-4
 Test.@test value.(x) ≈ [1.0, 1.0] atol=1e-4
 println("Naive approach: function calls = $(function_calls)")
+naive_approach = function_calls  #src
 
 # An alternative approach is to use _memoization_, which uses a cache to store
 # the result of function evaluations. We can write a memoization function as
@@ -66,9 +67,9 @@ println("Naive approach: function calls = $(function_calls)")
 Take a function `foo` and return a vector of length `n_outputs`, where each
 element is a function that returns the `i`'th output of `foo`.
 
-To avoid duplication of work, cache the evaluations of `foo`. Because `foo_i` is
-auto-differentiated with ForwardDiff, our cache needs to work when `x` is a
-`Float64` and a `ForwardDiff.Dual`.
+To avoid duplication of work, cache the most-recent evaluations of `foo`. 
+Because `foo_i` is auto-differentiated with ForwardDiff, our cache needs to 
+work when `x` is a `Float64` and a `ForwardDiff.Dual`.
 """
 function memoize(foo::Function, n_outputs::Int)
     last_x, last_f = nothing, nothing
@@ -122,6 +123,7 @@ optimize!(model)
 Test.@test objective_value(model) ≈ √3 atol=1e-4
 Test.@test value.(x) ≈ [1.0, 1.0] atol=1e-4
 println("Memoized approach: function_calls = $(function_calls)")
+Test.@test function_calls <= naive_approach / 2 + 1  #src
 
 # Compared to the naive approach, the memoized approach requires half as many
 # function evaluations!
