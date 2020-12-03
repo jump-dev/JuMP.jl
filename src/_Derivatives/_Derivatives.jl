@@ -6,6 +6,7 @@ using SparseArrays
 using Base.Meta
 using ForwardDiff
 import Calculus
+using SpecialFunctions  # Needed for some of the derivatives in Calculus.
 import MathOptInterface
 const MOI = MathOptInterface
 using ..JuMP
