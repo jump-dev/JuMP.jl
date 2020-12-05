@@ -19,13 +19,30 @@
     For the documentation of JuMP 0.18, see
     [here](https://jump.dev/JuMP.jl/0.18/).
 
+## What is JuMP?
+
 [JuMP](https://github.com/jump-dev/JuMP.jl) is a domain-specific modeling
-language for [mathematical
-optimization](https://en.wikipedia.org/wiki/Mathematical_optimization) embedded
-in [Julia](https://julialang.org/). It currently supports a number of open-source
-and commercial solvers (see below) for a variety of problem classes, including
-**linear programming**, **mixed-integer programming**, **second-order conic
-programming**, **semidefinite programming**, and **nonlinear programming**.
+language for [mathematical optimization](https://en.wikipedia.org/wiki/Mathematical_optimization)
+embedded in [Julia](https://julialang.org/). It currently supports a number of
+open-source and commercial solvers for a variety of problem classes, including
+linear, mixed-integer, second-order conic, semidefinite, and nonlinear
+programming.
+
+## Resources for getting started
+
+* Checkout the [Installation Guide](@ref).
+* Read the [Quick Start Guide](@ref).
+* Browse some of our examples, including classics such as [The diet problem](@ref),
+  or the [Maximum likelihood estimation](@ref) problem using nonlinear
+  programming.
+* Work through more in-depth tutorials at [JuMPTutorials.jl](https://github.com/jump-dev/JuMPTutorials.jl)
+* Join the [community forum](https://discourse.julialang.org/c/domain/opt/13) to
+  search for questions to commonly asked questions.
+  - Before asking a question, make sure to read [PSA: make it easier to help you](https://discourse.julialang.org/t/psa-make-it-easier-to-help-you/14757),
+    which contains a number of tips on how to ask a good question.
+
+## Key features
+
 JuMP's features include:
 
 -   User friendliness
@@ -41,22 +58,8 @@ JuMP's features include:
     -   JuMP uses a generic solver-independent interface provided by the
         [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl)
         package, making it easy to change between a number of open-source and
-        commercial optimization software packages ("solvers").
-    -   Currently supported solvers include
-        [Artelys Knitro](https://artelys.com/en/optimization-tools/knitro),
-        [Bonmin](https://projects.coin-or.org/Bonmin),
-        [Cbc](https://projects.coin-or.org/Cbc),
-        [Clp](https://projects.coin-or.org/Clp),
-        [Couenne](https://projects.coin-or.org/Couenne),
-        [CPLEX](https://www.ibm.com/analytics/cplex-optimizer),
-        [ECOS](https://github.com/ifa-ethz/ecos),
-        [FICO Xpress](https://www.fico.com/en/products/fico-xpress-optimization-suite),
-        [GLPK](http://www.gnu.org/software/glpk/),
-        [Gurobi](https://www.gurobi.com),
-        [Ipopt](https://projects.coin-or.org/Ipopt),
-        [MOSEK](https://www.mosek.com/),
-        [NLopt](https://nlopt.readthedocs.io/en/latest/), and
-        [SCS](https://github.com/cvxgrp/scs).
+        commercial optimization software packages ("solvers"). The [Getting Solvers](@ref)
+        section contains a table of the currently supported solvers.
 -   Access to advanced algorithmic techniques
     -   Including efficient LP re-solves which previously required using
         solver-specific and/or low-level C++ libraries.
@@ -72,34 +75,6 @@ JuMP's features include:
     -   JuMP is [MPL](https://www.mozilla.org/MPL/2.0/) licensed, meaning that
         it can be embedded in commercial software that complies with the terms
         of the license.
-
-Although JuMP has not reached version 1.0 yet, the releases are
-stable enough for everyday use and are being used in a number of research
-projects and neat applications by a growing community of users who are early
-adopters. JuMP remains under active development, and we welcome your feedback,
-suggestions, and bug reports.
-
-Contents
---------
-
-```@contents
-Pages = [
-    "installation.md",
-    "quickstart.md",
-    "variables.md",
-    "expressions.md",
-    "objective.md",
-    "constraints.md",
-    "containers.md",
-    "solvers.md",
-    "solutions.md",
-    "nlp.md",
-    "style.md",
-    "extensions.md",
-    "roadmap.md"
-]
-Depth = 2
-```
 
 ### Citing JuMP
 
