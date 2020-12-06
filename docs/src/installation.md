@@ -261,14 +261,17 @@ if you have interest in reviving a previously supported solver.
 
 ### Check the version of your packages
 
-Each package is versionsed with a [three-part number](https://semver.org) like
-`vX.Y.Z`. You can check which versions you have installed with
+Each package is versioned with a [three-part number](https://semver.org) of the 
+form `vX.Y.Z`. You can check which versions you have installed with
 `import Pkg; Pkg.status()`.
 
 This should almost always be the most-recent release. You can check the releases
 of a package by going to the relevant Github page, and navigating to the
 "releases" page. For example, the list of JuMP releases is available at:
 [https://github.com/jump-dev/JuMP.jl/releases](https://github.com/jump-dev/JuMP.jl/releases).
+
+If you post on the [community forum](https://discourse.julialang.org/c/domain/opt/13),
+please include the output of `Pkg.status()`!
 
 ### Unsatisfiable requirements detected
 
