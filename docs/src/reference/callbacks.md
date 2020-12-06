@@ -5,5 +5,7 @@ of the manual.
 
 ```@docs
 @build_constraint
+callback_node_status
 callback_value
+MOI.CallbackNodeStatusCode
 ```
