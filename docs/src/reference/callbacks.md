@@ -7,5 +7,4 @@ of the manual.
 @build_constraint
 callback_node_status
 callback_value
-MOI.CallbackNodeStatusCode
 ```
