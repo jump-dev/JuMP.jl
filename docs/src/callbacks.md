@@ -51,7 +51,7 @@ result in a segfault that aborts Julia.
 
 In each of the three solver-independent callbacks, there are two things you may
 query:
- - [`callback_node_status](@ref) returns an [`MOI.CallbackNodeStatusCode`](@ref)
+ - [`callback_node_status`](@ref) returns an [`MOI.CallbackNodeStatusCode`](@ref)
    enum indicating if the current primal solution is integer feasible.
  - [`callback_value`](@ref) returns the current primal solution of a variable.
 
