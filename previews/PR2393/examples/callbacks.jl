@@ -27,6 +27,15 @@ function example_lazy_constraint()
         x_val = callback_value(cb_data, x)
         y_val = callback_value(cb_data, y)
         println("Called from (x, y) = ($x_val, $y_val)")
+        status = callback_node_status(cb_data, model)
+        if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL
+            println(" - Solution is integer infeasible!")
+        elseif status == MOI.CALLBACK_NODE_STATUS_INTEGER
+            println(" - Solution is integer feasible!")
+        else
+            @assert status == MOI.CALLBACK_NODE_STATUS_UNKNOWN
+            println(" - I don't know if the solution is integer feasible :(")
+        end
         if y_val - x_val > 1 + 1e-6
             con = @build_constraint(y - x <= 1)
             println("Adding $(con)")
