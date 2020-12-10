@@ -11,7 +11,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 Documenter = "~0.25"
-GLPK = "0.14"
+GLPK = "0.14.4"
 Ipopt = "0.6"
 MathOptInterface = "~0.9"
 SCS = "0.7"

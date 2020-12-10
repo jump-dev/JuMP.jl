@@ -40,23 +40,26 @@ Callback support is limited to a few solvers. This includes
 
 ## Things you can and cannot do during callbacks
 
-There is a very limited range of things you can do during a callback. Only use 
+There is a very limited range of things you can do during a callback. Only use
 the functions and macros explicitly stated in this page of the documentation, or
 in the [Callbacks example](/examples/callbacks).
 
 Using any other part of the JuMP API (e.g., adding a constraint with [`@constraint`](@ref)
 or modifying a variable bound with [`set_lower_bound`](@ref)) is undefined
-behavior, and your solver may throw an error, return an incorrect solution, or 
+behavior, and your solver may throw an error, return an incorrect solution, or
 result in a segfault that aborts Julia.
 
-In each of the three solver-independent callbacks, the only thing you may query is 
-the primal value of the variables using [`callback_value`](@ref).
+In each of the three solver-independent callbacks, there are two things you may
+query:
+ - [`callback_node_status`](@ref) returns an [`MOI.CallbackNodeStatusCode`](@ref)
+   enum indicating if the current primal solution is integer feasible.
+ - [`callback_value`](@ref) returns the current primal solution of a variable.
 
-If you need to query any other information, use a solver-dependent callback 
-instead. Each solver supporting a solver-dependent callback has information on 
+If you need to query any other information, use a solver-dependent callback
+instead. Each solver supporting a solver-dependent callback has information on
 how to use it in the README of their Github repository.
 
-If you want to modify the problem in a callback, you _must_ use a lazy 
+If you want to modify the problem in a callback, you _must_ use a lazy
 constraint.
 
 ## Lazy constraints
@@ -75,6 +78,18 @@ model = Model(GLPK.Optimizer)
 @variable(model, x <= 10, Int)
 @objective(model, Max, x)
 function my_callback_function(cb_data)
+    status = callback_node_status(cb_data, model)
+    if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL
+        # `callback_value(cb_data, x)` is not integer (to some tolerance).
+        # If, for example, your lazy constraint generator requires an
+        # integer-feasible primal solution, you can add a `return` here.
+        return
+    elseif status == MOI.CALLBACK_NODE_STATUS_INTEGER
+        # `callback_value(cb_data, x)` is integer (to some tolerance).
+    else
+        @assert status == MOI.CALLBACK_NODE_STATUS_UNKNOWN
+        # `callback_value(cb_data, x)` might be fractional or integer.
+    end
     x_val = callback_value(cb_data, x)
     if x_val > 2 + 1e-6
         con = @build_constraint(x <= 2)
@@ -88,11 +103,11 @@ MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
     The lazy constraint callback _may_ be called at fractional or integer
     nodes in the branch-and-bound tree. There is no guarantee that the
     callback is called at _every_ primal solution.
-    
+
 !!! warn
     Only add a lazy constraint if your primal solution violates the constraint.
-    Adding the lazy constraint irrespective of feasibility may result in the 
-    solver returning an incorrect solution, or lead to a large number of 
+    Adding the lazy constraint irrespective of feasibility may result in the
+    solver returning an incorrect solution, or lead to a large number of
     constraints being added, slowing down the solution process.
     ```julia
     model = Model(GLPK.Optimizer)

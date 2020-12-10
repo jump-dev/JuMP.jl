@@ -85,3 +85,18 @@ end
     quad_expr = expr^2
     @test callback_value(cb, quad_expr) == 4
 end
+
+@testset "callback_node_status" begin
+    mock = MOI.Utilities.MockOptimizer(
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}())
+    )
+    cb = DummyCallbackData()
+    model = direct_model(mock)
+    @variable(model, 0 <= x <= 2.5, Int)
+    MOIU.set_mock_optimize!(mock, mock -> begin
+        MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+        MOI.set(mock, MOI.CallbackNodeStatus(cb), MOI.CALLBACK_NODE_STATUS_INTEGER)
+    end)
+    optimize!(model)
+    @test callback_node_status(cb, model) == MOI.CALLBACK_NODE_STATUS_INTEGER
+end
