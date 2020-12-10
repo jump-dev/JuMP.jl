@@ -6,7 +6,7 @@ using Test
 # Pass --fast as an argument to skip rebuilding the examples and running
 # doctests. Only use this argument to rapidly test small changes to the
 # Markdown. _Never_ set it in production.
-const _FAST = get(ARGS, 1, "") == "--fast"
+const _FAST = findfirst(isequal("--fast"), ARGS) !== nothing
 
 const _EXAMPLE_DIR = joinpath(@__DIR__, "src", "examples")
 
