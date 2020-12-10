@@ -379,6 +379,7 @@ function _moi_add_bridge(caching_opt::MOIU.CachingOptimizer,
     return
 end
 
+
 """
      add_bridge(model::Model,
                 BridgeType::Type{<:MOI.Bridges.AbstractBridge})
@@ -394,6 +395,54 @@ function add_bridge(model::Model,
     # barrier (`_moi_add_bridge`) to improve performance.
     _moi_add_bridge(JuMP.backend(model), BridgeType)
     return
+end
+
+"""
+     print_bridge_graph([io::IO,] model::Model)
+
+Print the hyper-graph containing all variable, constraint, and objective types 
+that could be obtained by bridging the variables, constraints, and objectives 
+that are present in the model.
+
+Each node in the hyper-graph corresponds to a variable, constraint, or objective 
+type.
+  * Variable nodes are indicated by `[ ]`
+  * Constraint nodes are indicated by `( )`
+  * Objective nodes are indicated by `| |`
+The number inside each pair of brackets is an index of the node in the 
+hyper-graph.
+
+Note that this hyper-graph is the full list of possible transformations. When 
+the bridged model is created, we select the shortest hyper-path(s) from this 
+graph, so many nodes may be un-used.
+
+For more information, see Legat, B., Dowson, O., Garcia, J., and Lubin, M. 
+(2020).  "MathOptInterface: a data structure for mathematical optimization 
+problems." URL: https://arxiv.org/abs/2002.03447
+"""
+print_bridge_graph(model::Model) = print_bridge_graph(Base.stdout, model)
+
+function print_bridge_graph(io::IO, model::Model)
+    # The type of `backend(model)` is not type-stable, so we use a function
+    # barrier (`_moi_print_bridge_graph`) to improve performance.
+    return _moi_print_bridge_graph(io, backend(model))
+end
+
+function _moi_print_bridge_graph(
+    io::IO, model::MOI.Bridges.LazyBridgeOptimizer
+)
+    return MOI.Bridges.print_graph(io, model)
+end
+
+function _moi_print_bridge_graph(io::IO, model::MOIU.CachingOptimizer)
+    return _moi_print_bridge_graph(io, model.optimizer)
+end
+
+function _moi_print_bridge_graph(::IO, ::MOI.ModelLike)
+    error(
+        "Cannot print bridge graph if `bridge_constraints` was set to " *
+        "`false` in the `Model` constructor."
+    )
 end
 
 """
