@@ -23,7 +23,7 @@ function callback_node_status(cb_data, model::Model)
     # 2) adding a flag to JuMP to store whether it is in a callback
     # 3) adding IN_OPTIMIZE to termination_status for callbacks
     # Once this is resolved, we can replace the current function with:
-    #     MOI.get(owner_model(x), MOI.CallbackVariablePrimal(cb_data), x)
+    #     MOI.get(model, MOI.CallbackNodeStatus(cb_data))
     return MOI.get(backend(model), MOI.CallbackNodeStatus(cb_data))
 end
 
