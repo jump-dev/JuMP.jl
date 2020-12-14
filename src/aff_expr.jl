@@ -422,17 +422,6 @@ function moi_function_type(::Type{<:Vector{<:GenericAffExpr{T}}}) where {T}
     return MOI.VectorAffineFunction{T}
 end
 
-# Copy an affine expression to a new model by converting all the
-# variables to the new model's variables
-function Base.copy(a::GenericAffExpr, new_model::AbstractModel)
-    result = zero(a)
-    for (coef, var) in linear_terms(a)
-        add_to_expression!(result, coef, copy(var, new_model))
-    end
-    result.constant = a.constant
-    return result
-end
-
 # TODO: Find somewhere to put this error message.
 #add_constraint(m::Model, c::Array{AffExprConstraint}) =
 #    error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")

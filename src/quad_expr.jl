@@ -430,14 +430,6 @@ function moi_function_type(::Type{<:Vector{<:GenericQuadExpr{T}}}) where {T}
     return MOI.VectorQuadraticFunction{T}
 end
 
-
-# Copy a quadratic expression to a new model by converting all the
-# variables to the new model's variables
-function Base.copy(q::GenericQuadExpr, new_model::Model)
-    GenericQuadExpr(copy(q.qvars1, new_model), copy(q.qvars2, new_model),
-                    copy(q.qcoeffs), copy(q.aff, new_model))
-end
-
 # Requires that value_func(::VarType) is defined.
 function value(ex::GenericQuadExpr{CoefType, VarType},
                value_func::Function) where {CoefType, VarType}

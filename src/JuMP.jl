@@ -400,24 +400,24 @@ end
 """
      print_bridge_graph([io::IO,] model::Model)
 
-Print the hyper-graph containing all variable, constraint, and objective types 
-that could be obtained by bridging the variables, constraints, and objectives 
+Print the hyper-graph containing all variable, constraint, and objective types
+that could be obtained by bridging the variables, constraints, and objectives
 that are present in the model.
 
-Each node in the hyper-graph corresponds to a variable, constraint, or objective 
+Each node in the hyper-graph corresponds to a variable, constraint, or objective
 type.
   * Variable nodes are indicated by `[ ]`
   * Constraint nodes are indicated by `( )`
   * Objective nodes are indicated by `| |`
-The number inside each pair of brackets is an index of the node in the 
+The number inside each pair of brackets is an index of the node in the
 hyper-graph.
 
-Note that this hyper-graph is the full list of possible transformations. When 
-the bridged model is created, we select the shortest hyper-path(s) from this 
+Note that this hyper-graph is the full list of possible transformations. When
+the bridged model is created, we select the shortest hyper-path(s) from this
 graph, so many nodes may be un-used.
 
-For more information, see Legat, B., Dowson, O., Garcia, J., and Lubin, M. 
-(2020).  "MathOptInterface: a data structure for mathematical optimization 
+For more information, see Legat, B., Dowson, O., Garcia, J., and Lubin, M.
+(2020).  "MathOptInterface: a data structure for mathematical optimization
 problems." URL: https://arxiv.org/abs/2002.03447
 """
 print_bridge_graph(model::Model) = print_bridge_graph(Base.stdout, model)
@@ -790,14 +790,6 @@ mutable struct VariableNotOwnedError <: Exception
 end
 function Base.showerror(io::IO, ex::VariableNotOwnedError)
     print(io, "VariableNotOwnedError: Variable not owned by model present in $(ex.context)")
-end
-
-
-Base.copy(v::VariableRef, new_model::Model) = VariableRef(new_model, v.index)
-Base.copy(x::Nothing, new_model::AbstractModel) = nothing
-# TODO: Replace with vectorized copy?
-function Base.copy(v::AbstractArray{VariableRef}, new_model::AbstractModel)
-    return (var -> VariableRef(new_model, var.index)).(v)
 end
 
 _moi_optimizer_index(model::MOI.AbstractOptimizer, index::MOI.Index) = index
