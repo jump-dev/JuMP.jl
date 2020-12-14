@@ -7,6 +7,10 @@ using Test
 
 include(joinpath(@__DIR__, "utilities.jl"))
 
+@static if !(:JuMPExtension in names(Main))
+    include(joinpath(@__DIR__, "JuMPExtension.jl"))
+end
+
 @testset "Nonlinear" begin
     import JuMP: _NonlinearExprData
 
@@ -844,5 +848,16 @@ include(joinpath(@__DIR__, "utilities.jl"))
         out = zeros(1)
         MOI.eval_constraint(d, out, [2.0])
         @test out[1] ≈ 0.9953222 atol = 1e-6
+    end
+
+    @testset "JuMP_extensions" begin
+        model = JuMPExtension.MyModel()
+        @variable(model, x)
+        err = ErrorException(
+            "Encountered an error parsing nonlinear expression: we don't support " *
+            "models of type $(typeof(model)). In general, JuMP's nonlinear features " *
+            "don't work with JuMP-extensions."
+        )
+        @test_throws(err, @NLexpression(model, sqrt(x)))
     end
 end
