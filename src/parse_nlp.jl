@@ -223,6 +223,14 @@ function _parse_NL_expr_runtime(m::Model, x, tape, parent, values)
     error("Unexpected object $x (of type $(typeof(x)) in nonlinear expression.")
 end
 
+function _parse_NL_expr_runtime(m, x, tape, parent, values)
+    error(
+        "Encountered an error parsing nonlinear expression: we don't support " *
+        "models of type $(typeof(m)). In general, JuMP's nonlinear features " *
+        "don't work with JuMP-extensions."
+    )
+end
+
 function _expression_complexity(ex::Expr)
     return isempty(ex.args) ? 1 : sum(_expression_complexity, ex.args)
 end
