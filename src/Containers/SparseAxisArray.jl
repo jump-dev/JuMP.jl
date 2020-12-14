@@ -17,7 +17,7 @@ entries are defined. The entries with indices `idx = (i1, i2, ..., iN)` in
 structure than `sa` even if `f(zero(T))` is not zero.
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 julia> dict = Dict((:a, 2) => 1.0, (:a, 3) => 2.0, (:b, 3) => 3.0)
 Dict{Tuple{Symbol,Int64},Float64} with 3 entries:
   (:b, 3) => 3.0

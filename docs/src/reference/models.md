@@ -4,10 +4,11 @@ More information can be found in the [Interacting with solvers](@ref) section of
 the manual.
 
 ```@docs
-Model()
-Model(::Any)
+Model
 
 direct_model
+
+mode
 
 set_optimizer
 optimizer_with_attributes
@@ -37,4 +38,11 @@ Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)
 
 read_from_file
 Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)
+
+ReferenceMap
+copy_model
+copy_extension_data
+Base.copy(::AbstractModel)
+
+operator_warn
 ```

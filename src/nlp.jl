@@ -119,7 +119,7 @@ end
 Return the current value stored in the nonlinear parameter `p`.
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 model = Model()
 @NLparameter(model, p == 10)
 value(p)
@@ -136,7 +136,7 @@ value(p::NonlinearParameter) = p.m.nlp_data.nlparamvalues[p.index]::Float64
 Store the value `v` in the nonlinear parameter `p`.
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 model = Model()
 @NLparameter(model, p == 0)
 set_value(p, 5)

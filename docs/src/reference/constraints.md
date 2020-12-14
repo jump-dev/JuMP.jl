@@ -4,10 +4,11 @@ More information can be found in the [Constraints](@ref) section of the manual.
 
 ```@docs
 @constraint
+@constraints
 @SDconstraint
 
-name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex})
-set_name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex}, ::String)
+name(::ConstraintRef{Model,<:JuMP._MOICON})
+set_name(::ConstraintRef{Model,<:JuMP._MOICON}, ::String)
 constraint_by_name
 
 normalized_coefficient
@@ -27,8 +28,6 @@ all_constraints
 
 num_constraints
 
-constraint_object
-
 set_dual_start_value
 dual_start_value
 
@@ -37,6 +36,8 @@ ConstraintRef
 SecondOrderCone
 RotatedSecondOrderCone
 PSDCone
+SOS1
+SOS2
 
 AbstractConstraint
 ScalarConstraint
@@ -44,4 +45,16 @@ VectorConstraint
 
 index(::ConstraintRef)
 optimizer_index(::ConstraintRef{Model})
+
+constraint_object
+jump_function
+moi_function
+moi_set
+
+function_string
+constraints_string
+in_set_string
+show_constraints_summary
+
+ConstraintNotOwned
 ```

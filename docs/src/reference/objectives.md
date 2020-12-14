@@ -13,4 +13,7 @@ objective_function_type
 set_objective_function
 
 set_objective_coefficient
+
+objective_function_string
+show_objective_function_summary
 ```
