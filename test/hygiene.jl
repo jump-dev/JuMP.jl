@@ -15,35 +15,35 @@ model = JuMP.Model()
 sense = JuMP.MathOptInterface.MIN_SENSE
 JuMP.@variable(model, x >= 0)
 r = 3:5
-JuMP.@variable(model, y[i=r] <= i)
-JuMP.@variable(model, z[i=1:2, j=1:2], Symmetric)
+JuMP.@variable(model, y[i = r] <= i)
+JuMP.@variable(model, z[i = 1:2, j = 1:2], Symmetric)
 @test z isa LinearAlgebra.Symmetric
 
-JuMP.@constraint(model, x + sum( j*y[j] for j=r ) <= 1)
-JuMP.@constraint(model, sum( y[j] for j=r if j == 4) <= 1)
+JuMP.@constraint(model, x + sum(j * y[j] for j in r) <= 1)
+JuMP.@constraint(model, sum(y[j] for j = r if j == 4) <= 1)
 JuMP.@constraint(model, -1 <= x + y[3] <= 1)
 JuMP.@constraints(model, begin
-    x + sum( j*y[j] for j=r ) <= 1
-    sum( y[j] for j=r if j == 4) <= 1
+    x + sum(j * y[j] for j in r) <= 1
+    sum(y[j] for j = r if j == 4) <= 1
 end)
 
 JuMP.@SDconstraint(model, [x x; -x x] ⪰ 0)
 
 JuMP.@objective(model, sense, y[4])
-JuMP.@objective(model, Min, x + sum( j*y[j] for j=r ))
-JuMP.@objective(model, Max, sum( y[j] for j=r if j == 4))
+JuMP.@objective(model, Min, x + sum(j * y[j] for j in r))
+JuMP.@objective(model, Max, sum(y[j] for j = r if j == 4))
 
 JuMP.@NLconstraint(model, y[3] == 1)
-JuMP.@NLconstraint(model, x + sum( j*y[j] for j=r ) <= 1)
-JuMP.@NLconstraint(model, sum( y[j] for j=r if j == 4) <= 1)
+JuMP.@NLconstraint(model, x + sum(j * y[j] for j in r) <= 1)
+JuMP.@NLconstraint(model, sum(y[j] for j = r if j == 4) <= 1)
 JuMP.@NLconstraints(model, begin
-    x + sum( j*y[j] for j=r ) <= 1
-    sum( y[j] for j=r if j == 4) <= 1
+    x + sum(j * y[j] for j in r) <= 1
+    sum(y[j] for j = r if j == 4) <= 1
 end)
 
 JuMP.@NLobjective(model, sense, y[4])
-JuMP.@NLobjective(model, Min, x + sum( j*y[j] for j=r ))
-JuMP.@NLobjective(model, Max, sum( y[j] for j=r if j == 4))
+JuMP.@NLobjective(model, Min, x + sum(j * y[j] for j in r))
+JuMP.@NLobjective(model, Max, sum(y[j] for j = r if j == 4))
 
 # TODO: Add tests for the content of the model.
 

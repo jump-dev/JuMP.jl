@@ -17,7 +17,7 @@ function test_mof_file()
     write_to_file(model, "my_model.mof.json")
     model_2 = read_from_file("my_model.mof.json")
     @test sprint(print, model) == sprint(print, model_2)
-    rm("my_model.mof.json")
+    return rm("my_model.mof.json")
 end
 
 function test_mof_io()

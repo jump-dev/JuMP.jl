@@ -41,20 +41,30 @@ function p_median(num_facilities, num_customers, num_locations)
     has_facility = @variable(model, [1:num_locations], Bin)
     is_closest = @variable(model, [1:num_locations, 1:num_customers], Bin)
 
-    @objective(model, Min,
-        sum(abs(customer_locations[customer] - location)
-            * is_closest[location, customer]
-            for customer in 1:num_customers, location in 1:num_locations))
+    @objective(
+        model,
+        Min,
+        sum(
+            abs(customer_locations[customer] - location) *
+            is_closest[location, customer]
+            for customer in 1:num_customers, location in 1:num_locations
+        )
+    )
 
     for customer in 1:num_customers
         # `location` can't be closest for `customer` if there is no facility.
-        @constraint(model,
+        @constraint(
+            model,
             [location in 1:num_locations],
-            is_closest[location, customer] <= has_facility[location])
+            is_closest[location, customer] <= has_facility[location]
+        )
         # One facility must be the closest for `customer`.
-        @constraint(model,
-            sum(is_closest[location, customer]
-                for location in 1:num_locations) == 1)
+        @constraint(
+            model,
+            sum(
+                is_closest[location, customer] for location in 1:num_locations
+            ) == 1
+        )
     end
 
     # Must place all facilities.
@@ -65,7 +75,6 @@ println("P-Median(100 facilities, 100 customers, 5000 locations) benchmark:")
 result = @benchmark p_median(100, 100, 5000)
 display(result)
 println()
-
 
 """
     cont5(n)
@@ -78,42 +87,50 @@ benchmark.
 """
 function cont5(n)
     m = n
-    n1 = n-1
-    m1 = m-1
-    dx = 1/n
+    n1 = n - 1
+    m1 = m - 1
+    dx = 1 / n
     T = 1.58
-    dt = T/m
+    dt = T / m
     h2 = dx^2
     a = 0.001
-    yt = [0.5*(1 - (j*dx)^2) for j in 0:n]
+    yt = [0.5 * (1 - (j * dx)^2) for j in 0:n]
 
     model = Model()
-    y = @variable(model, [0:m,0:n], lower_bound=0, upper_bound=1)
-    u = @variable(model, [1:m], lower_bound=-1, upper_bound=1)
+    y = @variable(model, [0:m, 0:n], lower_bound = 0, upper_bound = 1)
+    u = @variable(model, [1:m], lower_bound = -1, upper_bound = 1)
 
-    @objective(model, Min, y[0,0])
+    @objective(model, Min, y[0, 0])
 
     # PDE
     for i in 0:m1
         for j in 1:n1
-            @constraint(model,
-                h2*(y[i+1,j] - y[i,j])
-                == 0.5*dt*(y[i,j-1] - 2*y[i,j] +
-                    y[i,j+1] + y[i+1,j-1] - 2*y[i+1,j] + y[i+1,j+1]) )
+            @constraint(
+                model,
+                h2 * (y[i+1, j] - y[i, j]) ==
+                0.5 *
+                dt *
+                (
+                    y[i, j-1] - 2 * y[i, j] + y[i, j+1] + y[i+1, j-1] -
+                    2 * y[i+1, j] + y[i+1, j+1]
+                )
+            )
         end
     end
 
     # Initial conditions.
     for j in 0:n
-        @constraint(model, y[0,j] == 0)
+        @constraint(model, y[0, j] == 0)
     end
 
     # Boundary conditions.
     for i in 1:m
-        @constraint(model,
-            y[i,2]   - 4*y[i,1]  + 3*y[i,0] == 0)
-        @constraint(model,
-            y[i,n-2] - 4*y[i,n1] + 3*y[i,n]== (2*dx)*(u[i] - y[i,n]))
+        @constraint(model, y[i, 2] - 4 * y[i, 1] + 3 * y[i, 0] == 0)
+        @constraint(
+            model,
+            y[i, n-2] - 4 * y[i, n1] + 3 * y[i, n] ==
+            (2 * dx) * (u[i] - y[i, n])
+        )
     end
 end
 
