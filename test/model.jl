@@ -551,12 +551,10 @@ function test_copy_model_jump_auto()
     return copy_model_style_mode(true, MOIU.AUTOMATIC)
 end
 
-@testset "Conflict computation" begin
-    @testset "NoOptimizer()" begin
-        err = NoOptimizer()
-        model = Model()
-        @test_throws err compute_conflict!(model)
-    end
+function test_compute_conflict()
+    err = NoOptimizer()
+    model = Model()
+    @test_throws err compute_conflict!(model)
 end
 
 function test_copy_model_base_auto()
