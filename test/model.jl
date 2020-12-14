@@ -588,7 +588,7 @@ function test_copy_expr_quad()
     @variable(model, x)
     @expression(model, ex, 2 * x^2 + x + 1)
     new_model, _ = copy_model(model)
-    @test new_model[:ex] == 2 * new_model[:x]^2 + x + 1
+    @test new_model[:ex] == 2 * new_model[:x]^2 + new_model[:x] + 1
 end
 
 function test_haskey()
