@@ -23,15 +23,33 @@ struct ReferenceMap
     model::Model
     index_map::MOIU.IndexMap
 end
-function Base.getindex(reference_map::ReferenceMap, vref::VariableRef)
-    return VariableRef(reference_map.model,
-                       reference_map.index_map[index(vref)])
+
+function Base.getindex(map::ReferenceMap, vref::VariableRef)
+    return VariableRef(map.model, map.index_map[index(vref)])
 end
-function Base.getindex(reference_map::ReferenceMap, cref::ConstraintRef)
-    return ConstraintRef(reference_map.model,
-                         reference_map.index_map[index(cref)],
-                         cref.shape)
+
+function Base.getindex(map::ReferenceMap, cref::ConstraintRef)
+    return ConstraintRef(map.model, map.index_map[index(cref)], cref.shape)
 end
+
+function Base.getindex(map::ReferenceMap, expr::GenericAffExpr)
+    result = zero(expr)
+    for (coef, var) in linear_terms(expr)
+        add_to_expression!(result, coef, map[var])
+    end
+    result.constant = expr.constant
+    return result
+end
+
+function Base.getindex(map::ReferenceMap, expr::GenericQuadExpr)
+    aff = map[expr.aff]
+    terms = [
+        UnorderedPair(map[key.a], map[key.b]) => val
+        for (key, val) in expr.terms
+    ]
+    return GenericQuadExpr(aff, terms)
+end
+
 Base.broadcastable(reference_map::ReferenceMap) = Ref(reference_map)
 
 

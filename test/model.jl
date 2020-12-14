@@ -573,6 +573,24 @@ function test_copy_direct_mode()
     @test_throws ErrorException JuMP.copy(model)
 end
 
+function test_copy_expr_aff()
+    model = Model()
+    @variable(model, x)
+    @expression(model, ex, 2 * x + 1)
+    new_model, ref_map = copy_model(model)
+    @test ref_map[ex] == new_model[:ex]
+    @test new_model[:ex] == 2 * new_model[:x] + 1
+end
+
+function test_copy_expr_quad()
+    model = Model()
+    @variable(model, x)
+    @expression(model, ex, 2 * x^2 + x + 1)
+    new_model, ref_map = copy_model(model)
+    @test ref_map[ex] == new_model[:ex]
+    @test new_model[:ex] == 2 * new_model[:x]^2 + new_model[:x] + 1
+end
+
 function test_haskey()
     model = Model()
     @variable(model, p[i = 1:10] >= 0)
