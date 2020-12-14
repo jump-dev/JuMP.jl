@@ -8,7 +8,6 @@ embedded in [Julia](https://julialang.org/). You can find out more about us by
 visiting [jump.dev](https://jump.dev).
 
 **Latest Release**: 0.21.5 (`release-0.21` branch):
-  * Use this version if you are using JuMP to solve problems.
   * Installation via the Julia package manager:
     * `import Pkg; Pkg.add("JuMP")`
   * Get help:
@@ -19,7 +18,6 @@ visiting [jump.dev](https://jump.dev).
     * Github Actions: [![Build Status](https://github.com/jump-dev/JuMP.jl/workflows/CI/badge.svg?branch=release-0.21)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI)
 
 **Development version** (`master` branch):
-  * Use this version if you are hacking on JuMP or related projects.
   * Installation via the Julia package manager:
     * `import Pkg; Pkg.add(Pkg.PackageSpec(name="JuMP", rev="master"))`
   * Get help:
@@ -35,15 +33,14 @@ visiting [jump.dev](https://jump.dev).
 Use the [Community forum] to search for answers to previously asked questions, 
 or ask a new question. 
 
-Before asking a question, you can help us by reading [PSA: make it easier to help you](https://discourse.julialang.org/t/psa-make-it-easier-to-help-you/14757),
-and following the suggestions. In particular, _simplify_ your problem and make
-it reproducible. 
+The post [PSA: make it easier to help you](https://discourse.julialang.org/t/psa-make-it-easier-to-help-you/14757),
+describes the best practices for asking a question.
 
 [Community forum]: https://discourse.julialang.org/c/domain/opt
 
 ## Bug reports
 
-Please report any issues via the Github **[issue tracker]**. All types of issues 
+Please report any issues via the Github [issue tracker]. All types of issues 
 are welcome and encouraged; this includes bug reports, documentation typos, 
 feature requests, etc.
 
