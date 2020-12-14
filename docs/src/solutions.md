@@ -117,10 +117,24 @@ else
 end
 ```
 
-!!! warning "Querying after modification"
-    If a solved model is modified, then querying the solution is undefined
-    behavior. Adding, deleting, or modifying a constraint (or variable)
-    may invalidate any part of the solution.
+!!! warning
+    Querying solution information after modifying a solved model is undefined 
+    behavior, and solvers may throw an error or return incorrect results.
+    Modifications include adding, deleting, or modifying any variable, 
+    objective, or constraint. Instead of modify then query, query the results 
+    first, then modify the problem. For example:
+    ```julia
+    model = Model(GLPK.Optimizer)
+    @variable(model, x >= 0)
+    optimize!(model)
+    # Bad:
+    set_lower_bound(x, 1)
+    @show value(x)
+    # Good:
+    x_val = value(x)
+    set_lower_bound(x, 1)
+    @show x_val
+    ```
 
 ```@meta
 # TODO: How to accurately measure the solve time.
