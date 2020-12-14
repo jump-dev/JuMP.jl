@@ -579,7 +579,8 @@ function test_copy_expr_aff()
     model = Model()
     @variable(model, x)
     @expression(model, ex, 2 * x + 1)
-    new_model, _ = copy_model(model)
+    new_model, ref_map = copy_model(model)
+    @test ref_map[ex] == new_model[:ex]
     @test new_model[:ex] == 2 * new_model[:x] + 1
 end
 
@@ -587,7 +588,8 @@ function test_copy_expr_quad()
     model = Model()
     @variable(model, x)
     @expression(model, ex, 2 * x^2 + x + 1)
-    new_model, _ = copy_model(model)
+    new_model, ref_map = copy_model(model)
+    @test ref_map[ex] == new_model[:ex]
     @test new_model[:ex] == 2 * new_model[:x]^2 + new_model[:x] + 1
 end
 
