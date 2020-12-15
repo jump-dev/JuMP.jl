@@ -1,7 +1,7 @@
 struct SymMatrixSpace end
 
 """
-    SkewSymMatrixSpace()
+    SkewSymmetricMatrixSpace()
 
 Use in the [`@variable`](@ref) macro to constrain a matrix of variables to be
 skew-symmetric.
@@ -9,10 +9,10 @@ skew-symmetric.
 ## Examples
 
 ```jldoctest; setup=:(model = Model())
-@variable(model, Q[1:2, 1:2] in SkewSymMatrixSpace())
+@variable(model, Q[1:2, 1:2] in SkewSymmetricMatrixSpace())
 ```
 """
-struct SkewSymMatrixSpace end
+struct SkewSymmetricMatrixSpace end
 
 """
     PSDCone
@@ -185,7 +185,7 @@ end
 function _square_side(_error::Function, variables::Matrix)
     n, m = size(variables)
     if n != m
-        _error("Symmetric variables must be 2-dimensional.")
+        _error("Symmetric variables must be square. Got size ($n, $m).")
     end
     return n
 end
@@ -222,21 +222,21 @@ function build_variable(_error::Function, variables::Matrix{<:ScalarVariable}, :
 end
 
 """
-    build_variable(_error::Function, variables, ::SkewSymMatrixSpace)
+    build_variable(_error::Function, variables, ::SkewSymmetricMatrixSpace)
 
-Return a `VariablesConstrainedOnCreation` of shape [`SkewSymMatrixShape`](@ref)
+Return a `VariablesConstrainedOnCreation` of shape [`SkewSymmetricMatrixShape`](@ref)
 creating variables in `MOI.Reals`, i.e. "free" variables unless they are
 constrained after their creation.
 
 This function is used by the [`@variable`](@ref) macro as follows:
 ```julia
-@variable(model, Q[1:2, 1:2] in SkewSymMatrixSpace())
+@variable(model, Q[1:2, 1:2] in SkewSymmetricMatrixSpace())
 ```
 """
 function build_variable(
     _error::Function,
     variables::Matrix{<:ScalarVariable},
-    ::SkewSymMatrixSpace,
+    ::SkewSymmetricMatrixSpace,
 )
     n = _square_side(_error, variables)
     set = MOI.Reals(div(n^2 - n, 2))
