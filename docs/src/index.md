@@ -58,7 +58,7 @@ JuMP's features include:
     -   JuMP uses a generic solver-independent interface provided by the
         [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl)
         package, making it easy to change between a number of open-source and
-        commercial optimization software packages ("solvers"). The [Getting Solvers](@ref)
+        commercial optimization software packages ("solvers"). The [Supported solvers](@ref)
         section contains a table of the currently supported solvers.
 -   Access to advanced algorithmic techniques
     -   Including efficient LP re-solves which previously required using
