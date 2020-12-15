@@ -83,7 +83,7 @@ end
         terms::OrderedDict{VarType,CoefType}
     end
 
-An expression type representing an quadratic expression of the form:
+An expression type representing an affine expression of the form:
 ``\\sum a_i x_i + c``.
 
 ## Fields
@@ -108,7 +108,7 @@ variable_ref_type(::GenericAffExpr{C, V}) where {C, V} = V
 """
     GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
 
-Create a [`GenericAffExpr`](@Ref) by passing a constant and a vector of pairs.
+Create a [`GenericAffExpr`](@ref) by passing a constant and a vector of pairs.
 
 ## Examples
 
