@@ -3,6 +3,15 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+"""
+    error_if_direct_mode(model::Model, func::Symbol)
+
+Errors if `model` is in direct mode during a call from the function named
+`func`.
+
+Used internally within JuMP, or by JuMP extensions who do not want to support
+models in direct mode.
+"""
 function error_if_direct_mode(model::Model, func::Symbol)
     if mode(model) == DIRECT
         error("The `$func` function is not supported in DIRECT mode.")

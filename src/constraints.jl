@@ -340,7 +340,7 @@ end
 Return the function of the constraint `constraint` in the function-in-set form
 as a `AbstractJuMPScalar` or `Vector{AbstractJuMPScalar}`.
 """
-function jump_function end
+jump_function(constraint::AbstractConstraint) = constraint.func
 
 """
     moi_function(constraint::AbstractConstraint)
@@ -362,7 +362,7 @@ Return the set of the constraint `constraint` in the function-in-set form as a
 
 Returns the MOI set of dimension `dim` corresponding to the JuMP set `s`.
 """
-function moi_set end
+moi_set(constraint::AbstractConstraint) = constraint.set
 
 """
     constraint_object(con_ref::ConstraintRef)
@@ -385,8 +385,6 @@ struct ScalarConstraint{F <: AbstractJuMPScalar,
     set::S
 end
 
-jump_function(constraint::ScalarConstraint) = constraint.func
-moi_set(constraint::ScalarConstraint) = constraint.set
 reshape_set(set::MOI.AbstractScalarSet, ::ScalarShape) = set
 shape(::ScalarConstraint) = ScalarShape()
 
@@ -429,8 +427,6 @@ function VectorConstraint(func::Vector{<:AbstractJuMPScalar},
     VectorConstraint(func, set, VectorShape())
 end
 
-jump_function(constraint::VectorConstraint) = constraint.func
-moi_set(constraint::VectorConstraint) = constraint.set
 reshape_set(set::MOI.AbstractVectorSet, ::VectorShape) = set
 shape(con::VectorConstraint) = con.shape
 function constraint_object(con_ref::ConstraintRef{Model, _MOICON{FuncType, SetType}}) where

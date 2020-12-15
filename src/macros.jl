@@ -818,10 +818,12 @@ multiple lines wrapped in a `begin ... end` block.
 
 # Examples
 
-    @NLexpressions(model, begin
-        my_expr, sqrt(x^2 + y^2)
-        my_expr_1[i = 1:2], log(a[i]) - z[i]
-    end)
+```julia
+@NLexpressions(model, begin
+    my_expr, sqrt(x^2 + y^2)
+    my_expr_1[i = 1:2], log(a[i]) - z[i]
+end)
+```
 """ :(@NLexpressions)
 
 """

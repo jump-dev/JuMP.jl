@@ -48,8 +48,6 @@ index(::ConstraintRef)
 optimizer_index(::ConstraintRef{Model})
 
 constraint_object
-jump_function
-moi_function
 moi_set
 
 function_string
