@@ -1049,6 +1049,7 @@ include("optimizer_interface.jl")
 include("nlp.jl")
 include("print.jl")
 include("lp_sensitivity.jl")
+include("lp_sensitivity2.jl")
 include("callbacks.jl")
 include("file_formats.jl")
 
