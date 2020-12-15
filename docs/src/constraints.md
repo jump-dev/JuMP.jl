@@ -133,7 +133,9 @@ equality constraint, it depends on which direction is binding.
     the sign of feasible duals associated with a constraint depends on the
     direction of the constraint and not whether the problem is maximization or
     minimization. **This is a different convention from linear programming
-    duality in some common textbooks.**
+    duality in some common textbooks.** If you have a linear program, and you
+    want the textbook definition, you probably want to use [`shadow_price`](@ref)
+    and [`reduced_cost`](@ref) instead.
 
 The dual value associated with a constraint in the most recent solution can be
 accessed using the [`dual`](@ref) function. You can use the [`has_duals`](@ref)
