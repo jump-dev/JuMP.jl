@@ -6,6 +6,7 @@ More information can be found in the [Constraints](@ref) section of the manual.
 @constraint
 @constraints
 @SDconstraint
+@SDconstraints
 
 name(::ConstraintRef{Model,<:JuMP._MOICON})
 set_name(::ConstraintRef{Model,<:JuMP._MOICON}, ::String)
@@ -47,8 +48,6 @@ index(::ConstraintRef)
 optimizer_index(::ConstraintRef{Model})
 
 constraint_object
-jump_function
-moi_function
 moi_set
 
 function_string

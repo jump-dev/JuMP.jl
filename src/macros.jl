@@ -707,33 +707,124 @@ end
 
 # Doc strings for the auto-generated macro pluralizations
 @doc """
-    @constraints(m, args...)
+    @constraints(model, args...)
 
-adds groups of constraints at once, in the same fashion as @constraint. The model must be the first argument, and multiple constraints can be added on multiple lines wrapped in a `begin ... end` block. For example:
+Adds groups of constraints at once, in the same fashion as the
+[`@constraint`](@ref) macro.
 
-    @constraints(m, begin
-        x >= 1
-        y - w <= 2
-        sum_to_one[i=1:3], z[i] + y == 1
-    end)
+The model must be the first argument, and multiple constraints can be added on
+multiple lines wrapped in a `begin ... end` block.
+
+# Examples
+
+```julia
+@constraints(model, begin
+    x >= 1
+    y - w <= 2
+    sum_to_one[i=1:3], z[i] + y == 1
+end)
+```
 """ :(@constraints)
 
 @doc """
-    @variables(m, args...)
+    @variables(model, args...)
 
-Adds multiple variables to model at once, in the same fashion as `@variable`
-macro. The model must be the first argument, and multiple variables can be added
-on multiple lines wrapped in a `begin ... end` block. For example:
+Adds multiple variables to model at once, in the same fashion as the
+[`@variable`](@ref) macro.
 
-    @variables(m, begin
-        x
-        y[i = 1:2] >= 0, (start = i)
-        z, Bin, (start = 0, base_name = "Z")
-    end)
+The model must be the first argument, and multiple variables can be added on
+multiple lines wrapped in a `begin ... end` block.
+
+# Examples
+
+```julia
+@variables(model, begin
+    x
+    y[i = 1:2] >= 0, (start = i)
+    z, Bin, (start = 0, base_name = "Z")
+end)
+```
 
 !!! note
-    Keyword arguments must be contained within parentheses (refer to the example above).
+    Keyword arguments must be contained within parentheses (refer to the example
+    above).
 """ :(@variables)
+
+@doc """
+    @expressions(model, args...)
+
+Adds multiple expressions to model at once, in the same fashion as the
+[`@expression`](@ref) macro.
+
+The model must be the first argument, and multiple variables can be added on
+multiple lines wrapped in a `begin ... end` block.
+
+# Examples
+
+```julia
+@expressions(model, begin
+    my_expr, x^2 + y^2
+    my_expr_1[i = 1:2], a[i] - z[i]
+end)
+```
+""" :(@expressions)
+
+@doc """
+    @SDconstraints(model, args...)
+
+Adds multiple semi-definite constraints to model at once, in the same fashion as
+the [`@SDconstraint`](@ref) macro.
+
+The model must be the first argument, and multiple constraints can be added on
+multiple lines wrapped in a `begin ... end` block.
+
+# Examples
+
+```julia
+@SDconstraints(model, begin
+    A * x >= b
+    b - C * y >= 0
+end)
+```
+""" :(@SDconstraints)
+
+@doc """
+    @NLconstraints(model, args...)
+
+Adds multiple nonlinear constraints to model at once, in the same fashion as
+the [`@NLconstraint`](@ref) macro.
+
+The model must be the first argument, and multiple variables can be added on
+multiple lines wrapped in a `begin ... end` block.
+
+# Examples
+
+```julia
+@NLconstraints(model, begin
+    t >= sqrt(x^2 + y^2)
+    [i = 1:2], z[i] <= log(a[i])
+end)
+```
+""" :(@NLconstraints)
+
+@doc """
+    @NLexpressions(model, args...)
+
+Adds multiple nonlinear expressions to model at once, in the same fashion as the
+[`@NLexpression`](@ref) macro.
+
+The model must be the first argument, and multiple variables can be added on
+multiple lines wrapped in a `begin ... end` block.
+
+# Examples
+
+```julia
+@NLexpressions(model, begin
+    my_expr, sqrt(x^2 + y^2)
+    my_expr_1[i = 1:2], log(a[i]) - z[i]
+end)
+```
+""" :(@NLexpressions)
 
 """
     _moi_sense(_error::Function, sense)

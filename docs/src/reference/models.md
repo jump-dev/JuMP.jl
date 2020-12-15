@@ -45,4 +45,5 @@ copy_extension_data
 Base.copy(::AbstractModel)
 
 operator_warn
+error_if_direct_mode
 ```

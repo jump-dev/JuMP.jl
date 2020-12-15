@@ -5,7 +5,9 @@ manual.
 
 ```@docs
 @NLconstraint
+@NLconstraints
 @NLexpression
+@NLexpressions
 @NLobjective
 @NLparameter
 value(::JuMP.NonlinearParameter)
