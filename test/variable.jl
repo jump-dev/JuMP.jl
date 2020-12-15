@@ -484,12 +484,13 @@ end
 
 function test_variable_skewsymmetric(ModelType, ::Any)
     model = ModelType()
-    @variable model x[1:2, 1:2] in SkewSymMatrixSpace()
+    @variable(model, x[1:2, 1:2] in SkewSymMatrixSpace())
     @test x[1, 2] == -x[2, 1]
     @test iszero(x[1, 1])
     @test iszero(x[2, 2])
     @test model[:x] === x
-    @variable model z[1:3, 1:3] in SkewSymMatrixSpace()
+    @test num_variables(model) == 1
+    @variable(model, z[1:3, 1:3] in SkewSymMatrixSpace())
     @test z[1, 2] == -z[2, 1]
     @test z[1, 3] == -z[3, 1]
     @test z[2, 3] == -z[3, 2]
@@ -497,11 +498,12 @@ function test_variable_skewsymmetric(ModelType, ::Any)
     @test iszero(z[2, 2])
     @test iszero(z[3, 3])
     @test model[:z] === z
-
-    y = @variable model [1:3, 1:3] in SkewSymMatrixSpace()
+    @test num_variables(model) == 4
+    y = @variable(model, [1:3, 1:3] in SkewSymMatrixSpace())
     @test y[1, 2] == -y[2, 1]
     @test y[2, 3] == -y[3, 2]
     @test iszero(y[3, 3])
+    @test num_variables(model) == 7
 end
 
 function test_variables_constrained_on_creation(ModelType, ::Any)
