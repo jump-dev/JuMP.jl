@@ -49,9 +49,6 @@ struct MyVariableRef <: JuMP.AbstractVariableRef
     idx::Int       # Index in `model.variables`
 end
 Base.copy(v::MyVariableRef) = v
-function Base.copy(v::MyVariableRef, new_model::MyModel)
-    return MyVariableRef(new_model, v.idx)
-end
 
 function Base.:(==)(v::MyVariableRef, w::MyVariableRef)
     return v.model === w.model && v.idx == w.idx

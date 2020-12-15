@@ -154,15 +154,6 @@ function expressions_test(
         @test k == 0
     end
 
-    @testset "Copy AffExpr between models" begin
-        m = ModelType()
-        @variable(m, x)
-        m2 = ModelType()
-        aff = copy(2x + 1, m2)
-        aff_expected = 2 * copy(x, m2) + 1
-        @test JuMP.isequal_canonical(aff, aff_expected)
-    end
-
     @testset "MA.add_mul!(ex::Number, c::Number, x::GenericAffExpr)" begin
         aff = MA.add_mul!(1.0, 2.0, JuMP.GenericAffExpr(1.0, :a => 1.0))
         @test JuMP.isequal_canonical(aff, JuMP.GenericAffExpr(3.0, :a => 2.0))
