@@ -38,6 +38,7 @@ RotatedSecondOrderCone
 PSDCone
 SOS1
 SOS2
+SkewSymMatrixSpace
 
 AbstractConstraint
 ScalarConstraint

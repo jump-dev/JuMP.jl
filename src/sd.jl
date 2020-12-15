@@ -1,4 +1,17 @@
 struct SymMatrixSpace end
+
+"""
+    SkewSymMatrixSpace()
+
+Use in the [`@variable`](@ref) macro to constrain a matrix of variables to be
+skew-symmetric.
+
+## Examples
+
+```jldoctest; setup=:(model = Model())
+@variable(model, Q[1:2, 1:2] in SkewSymMatrixSpace())
+```
+"""
 struct SkewSymMatrixSpace end
 
 """
@@ -110,22 +123,25 @@ The diagonal is zero.
 struct SkewSymmetricMatrixShape <: AbstractShape
     side_dimension::Int
 end
-function reshape_vector(vectorized_form::Vector{T}, shape::SkewSymmetricMatrixShape) where T
-    matrix = Matrix{Base.promote_type(T, _MA.promote_operation(-, T),
-            _MA.promote_operation(zero, T))}(undef, shape.side_dimension,
-            shape.side_dimension)
+function reshape_vector(
+    vectorized_form::Vector{T},
+    shape::SkewSymmetricMatrixShape,
+) where {T}
+    NewType = Base.promote_type(
+        T,
+        _MA.promote_operation(-, T),
+        _MA.promote_operation(zero, T),
+    )
+    matrix = Matrix{NewType}(undef, shape.side_dimension, shape.side_dimension)
     k = 0
     for j in 1:shape.side_dimension
-        for i in 1:j-1
+        for i in 1:(j - 1)
             k += 1
             matrix[i, j] =  vectorized_form[k]
             matrix[j, i] = -vectorized_form[k]
         end
+        matrix[j, j] = zero(NewType)
     end
-    for j in 1:shape.side_dimension
-        matrix[j, j] = zero(T)
-    end
-
     return matrix
 end
 
@@ -206,7 +222,7 @@ function build_variable(_error::Function, variables::Matrix{<:ScalarVariable}, :
 end
 
 """
-    build_constraint(_error::Function, variables, ::SkewSymMatrixSpace)
+    build_variable(_error::Function, variables, ::SkewSymMatrixSpace)
 
 Return a `VariablesConstrainedOnCreation` of shape [`SkewSymMatrixShape`](@ref)
 creating variables in `MOI.Reals`, i.e. "free" variables unless they are
@@ -217,11 +233,19 @@ This function is used by the [`@variable`](@ref) macro as follows:
 @variable(model, Q[1:2, 1:2] in SkewSymMatrixSpace())
 ```
 """
-function build_variable(_error::Function, variables::Matrix{<:ScalarVariable}, ::SkewSymMatrixSpace)
+function build_variable(
+    _error::Function,
+    variables::Matrix{<:ScalarVariable},
+    ::SkewSymMatrixSpace,
+)
     n = _square_side(_error, variables)
     set = MOI.Reals(div(n^2 - n, 2))
     shape = SkewSymmetricMatrixShape(n)
-    return VariablesConstrainedOnCreation(vectorize(variables, SkewSymmetricMatrixShape(n)), set, shape)
+    return VariablesConstrainedOnCreation(
+        vectorize(variables, SkewSymmetricMatrixShape(n)),
+        set,
+        shape,
+    )
 end
 
 """
