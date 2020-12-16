@@ -228,6 +228,8 @@ end
     delete(model::Model, con_ref::ConstraintRef)
 
 Delete the constraint associated with `constraint_ref` from the model `model`.
+
+See also: [`unregister`](@ref)
 """
 function delete(model::Model, con_ref::ConstraintRef)
     if model !== con_ref.model
@@ -245,6 +247,8 @@ Solvers may implement specialized methods for deleting multiple constraints of
 the same concrete type, i.e., when `isconcretetype(eltype(con_refs))`. These
 may be more efficient than repeatedly calling the single constraint delete
 method.
+
+See also: [`unregister`](@ref)
 """
 function delete(model::Model, con_refs::Vector{<:ConstraintRef{Model}})
     if any(c -> model !== c.model, con_refs)

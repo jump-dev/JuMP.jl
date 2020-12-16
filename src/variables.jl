@@ -168,6 +168,8 @@ isequal_canonical(v::VariableRef, other::VariableRef) = isequal(v, other)
     delete(model::Model, variable_ref::VariableRef)
 
 Delete the variable associated with `variable_ref` from the model `model`.
+
+See also: [`unregister`](@ref)
 """
 function delete(model::Model, variable_ref::VariableRef)
     if model !== owner_model(variable_ref)
@@ -183,6 +185,8 @@ end
 Delete the variables associated with `variable_refs` from the model `model`.
 Solvers may implement methods for deleting multiple variables that are
 more efficient than repeatedly calling the single variable delete method.
+
+See also: [`unregister`](@ref)
 """
 function delete(model::Model, variable_refs::Vector{VariableRef})
     if any(model !== owner_model(v) for v in variable_refs)

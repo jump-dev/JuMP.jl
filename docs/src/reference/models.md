@@ -13,6 +13,9 @@ mode
 set_optimizer
 optimizer_with_attributes
 
+object_dictionary
+unregister
+
 set_silent
 unset_silent
 
