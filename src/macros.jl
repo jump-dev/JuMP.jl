@@ -68,7 +68,7 @@ function _error_if_cannot_register(model::AbstractModel, name::Symbol)
 
             Alternatively, use `unregister(model, :$(name))` to first unregister
             the existing name from the model. Note that this will not delete the
-            object, it will just remove the reference at `model[:$(name)]`.
+            object; it will just remove the reference at `model[:$(name)]`.
         """)
     end
     return

@@ -487,7 +487,6 @@ function num_nl_constraints(model::Model)
     return model.nlp_data !== nothing ? length(model.nlp_data.nlconstr) : 0
 end
 
-
 """
     object_dictionary(model::Model)
 
@@ -508,7 +507,7 @@ object_dictionary(model::Model) = model.obj_dict
 Unregister the name `key` from `model` so that a new variable, constraint, or
 expression can be created with the same key.
 
-Note that this will not delete the object `model[key]`, it will just remove the
+Note that this will not delete the object `model[key]`; it will just remove the
 reference at `model[key]`. To delete the object, use
 ```julia
 delete(model, model[key])
@@ -528,7 +527,7 @@ e.g., `x = @variable(model, [1:N], ...)` where the name of the object
 does not appear inside the macro.
 
 Alternatively, use `unregister(model, :x)` to first unregister the
-existing name from the model. Note that this will not delete the object,
+existing name from the model. Note that this will not delete the object;
 it will just remove the reference at `model[:x]`.
 [...]
 
@@ -548,13 +547,6 @@ function unregister(model::AbstractModel, key::Symbol)
     return
 end
 
-function unregister(::AbstractModel, key)
-    error(
-        "Invalid name $(key). The second argument to `unregister` must be a " *
-        "symbol."
-    )
-    return
-end
 """
     termination_status(model::Model)
 
