@@ -720,6 +720,21 @@ end
             @constraint(model, 1 <= x <= NaN)
         )
     end
+
+    @testset "unregister" begin
+        model = Model()
+        @variable(model, x)
+        @test num_variables(model) == 1
+        @test_throws ErrorException @variable(model, x)
+        unregister(model, :x)
+        err = ErrorException(
+            "Invalid name $(x). The second argument to `unregister` must be " *
+            "a symbol."
+        )
+        @test_throws(err, unregister(model, x))
+        @variable(model, x)
+        @test num_variables(model) == 2
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin

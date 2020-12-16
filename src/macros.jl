@@ -61,10 +61,15 @@ end
 function _error_if_cannot_register(model::AbstractModel, name::Symbol)
     obj_dict = object_dictionary(model)
     if haskey(obj_dict, name)
-        error("An object of name $name is already attached to this model. " *
-              "If this is intended, consider using the anonymous construction" *
-              " syntax, e.g., x = @variable(model, [1:N], ...) where the " *
-              "name of the object does not appear inside the macro.")
+        error("""An object of name $name is already attached to this model. If this
+            is intended, consider using the anonymous construction syntax, e.g.,
+            `x = @variable(model, [1:N], ...)` where the name of the object does
+            not appear inside the macro.
+
+            Alternatively, use `unregister(model, :$(name))` to first unregister
+            the existing name from the model. Note that this will not delete the
+            object, it will just remove the reference at `model[:$(name)]`.
+        """)
     end
     return
 end

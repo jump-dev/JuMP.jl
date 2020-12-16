@@ -487,9 +487,74 @@ function num_nl_constraints(model::Model)
     return model.nlp_data !== nothing ? length(model.nlp_data.nlconstr) : 0
 end
 
-# TODO(IainNZ): Document these too.
+
+"""
+    object_dictionary(model::Model)
+
+Return the dictionary that maps the symbol name of a variable, constraint, or
+expression to the corresponding object.
+
+Objects are registered to a specific symbol in the macros.
+For example, `@variable(model, x[1:2, 1:2])` registers the array of variables
+`x` to the symbol `:x`.
+
+This method should be defined for any subtype of `AbstractModel`.
+"""
 object_dictionary(model::Model) = model.obj_dict
 
+"""
+    unregister(model::Model, key::Symbol)
+
+Unregister the name `key` from `model` so that a new variable, constraint, or
+expression can be created with the same key.
+
+Note that this will not delete the object `model[key]`, it will just remove the
+reference at `model[key]`. To delete the object, use
+```julia
+delete(model, model[key])
+unregister(model, key)
+```
+
+## Examples
+
+```jldoctest; setup=:(model = Model())
+julia> @variable(model, x)
+x
+
+julia> @variable(model, x)
+ERROR: An object of name x is already attached to this model. If
+this is intended, consider using the anonymous construction syntax,
+e.g., `x = @variable(model, [1:N], ...)` where the name of the object
+does not appear inside the macro.
+
+Alternatively, use `unregister(model, :x)` to first unregister the
+existing name from the model. Note that this will not delete the object,
+it will just remove the reference at `model[:x]`.
+[...]
+
+julia> num_variables(model)
+1
+
+julia> unregister(model, :x)
+
+julia> @variable(model, x)
+x
+
+julia> num_variables(model)
+2
+"""
+function unregister(model::AbstractModel, key::Symbol)
+    delete!(object_dictionary(model), key)
+    return
+end
+
+function unregister(::AbstractModel, key)
+    error(
+        "Invalid name $(key). The second argument to `unregister` must be a " *
+        "symbol."
+    )
+    return
+end
 """
     termination_status(model::Model)
 
