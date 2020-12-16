@@ -535,7 +535,7 @@ end
 function test_nonsensical_SDP_constraint(ModelType, ::Any)
     m = ModelType()
     @test_throws_strip(
-        ErrorException("In `@variable(m, unequal[1:5, 1:6], PSD)`: Symmetric variables must be 2-dimensional."),
+        ErrorException("In `@variable(m, unequal[1:5, 1:6], PSD)`: Symmetric variables must be square. Got size (5, 6)."),
         @variable(m, unequal[1:5, 1:6], PSD)
     )
     # Some of these errors happen at compile time, so we can't use @test_throws
