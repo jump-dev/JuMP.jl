@@ -984,15 +984,15 @@ function Base.getindex(m::JuMP.AbstractModel, name::Symbol)
 end
 
 """
-    Base.setindex!(m::JuMP.Model, value, name::Symbol)
+    Base.setindex!(m::JuMP.AbstractModel, value, name::Symbol)
 
 stores the object `value` in the model `m` using so that it can be accessed via `getindex`.  Can be called with `[]` syntax.
 """
-function Base.setindex!(m::JuMP.Model, value, name::Symbol)
-    # if haskey(m.obj_dict, name)
+function Base.setindex!(model::AbstractModel, value, name::Symbol)
+    # if haskey(object_dictionary(model), name)
     #     warn("Overwriting the object $name stored in the model. Consider using anonymous variables and constraints instead")
     # end
-    m.obj_dict[name] = value
+    object_dictionary(model)[name] = value
 end
 
 """
