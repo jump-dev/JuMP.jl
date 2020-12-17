@@ -111,7 +111,7 @@ function copy_model(model::Model)
     reference_map = ReferenceMap(new_model, index_map)
 
     for (name, value) in object_dictionary(model)
-        new_model.obj_dict[name] = getindex.(reference_map, value)
+        new_model[name] = getindex.(reference_map, value)
     end
 
     for (key, data) in model.ext
