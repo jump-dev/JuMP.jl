@@ -482,6 +482,30 @@ function test_variable_symmetric(ModelType, ::Any)
     @test y[1, 2] === y[2, 1]
 end
 
+function test_variable_skewsymmetric(ModelType, ::Any)
+    model = ModelType()
+    @variable(model, x[1:2, 1:2] in SkewSymmetricMatrixSpace())
+    @test x[1, 2] == -x[2, 1]
+    @test iszero(x[1, 1])
+    @test iszero(x[2, 2])
+    @test model[:x] === x
+    @test num_variables(model) == 1
+    @variable(model, z[1:3, 1:3] in SkewSymmetricMatrixSpace())
+    @test z[1, 2] == -z[2, 1]
+    @test z[1, 3] == -z[3, 1]
+    @test z[2, 3] == -z[3, 2]
+    @test iszero(z[1, 1])
+    @test iszero(z[2, 2])
+    @test iszero(z[3, 3])
+    @test model[:z] === z
+    @test num_variables(model) == 4
+    y = @variable(model, [1:3, 1:3] in SkewSymmetricMatrixSpace())
+    @test y[1, 2] == -y[2, 1]
+    @test y[2, 3] == -y[3, 2]
+    @test iszero(y[3, 3])
+    @test num_variables(model) == 7
+end
+
 function test_variables_constrained_on_creation(ModelType, ::Any)
     model = ModelType()
 
@@ -763,10 +787,8 @@ end
 function test_Model_value_var(ModelType, ::Any)
     model = ModelType()
     @variable(model, x[1:2])
-
     vals = Dict(x[1] => 1.0, x[2] => 2.0)
     f = vidx -> vals[vidx]
-
     @test value(x[1], f) === 1.0
     @test value(x[2], f) === 2.0
 end

@@ -1,6 +1,20 @@
 struct SymMatrixSpace end
 
 """
+    SkewSymmetricMatrixSpace()
+
+Use in the [`@variable`](@ref) macro to constrain a matrix of variables to be
+skew-symmetric.
+
+## Examples
+
+```jldoctest; setup=:(model = Model())
+@variable(model, Q[1:2, 1:2] in SkewSymmetricMatrixSpace())
+```
+"""
+struct SkewSymmetricMatrixSpace end
+
+"""
     PSDCone
 
 Positive semidefinite cone object that can be used to constrain a square matrix
@@ -96,6 +110,46 @@ function vectorize(matrix::Matrix, ::SymmetricMatrixShape)
     return [matrix[i, j] for j in 1:n for i in 1:j]
 end
 
+
+"""
+    SkewSymmetricMatrixShape
+
+Shape object for a skew symmetric square matrix of `side_dimension` rows and
+columns. The vectorized form contains the entries of the upper-right triangular
+part of the matrix (without the diagonal) given column by column (or
+equivalently, the entries of the lower-left triangular part given row by row).
+The diagonal is zero.
+"""
+struct SkewSymmetricMatrixShape <: AbstractShape
+    side_dimension::Int
+end
+function reshape_vector(
+    vectorized_form::Vector{T},
+    shape::SkewSymmetricMatrixShape,
+) where {T}
+    NewType = Base.promote_type(
+        T,
+        _MA.promote_operation(-, T),
+        _MA.promote_operation(zero, T),
+    )
+    matrix = Matrix{NewType}(undef, shape.side_dimension, shape.side_dimension)
+    k = 0
+    for j in 1:shape.side_dimension
+        for i in 1:(j - 1)
+            k += 1
+            matrix[i, j] =  vectorized_form[k]
+            matrix[j, i] = -vectorized_form[k]
+        end
+        matrix[j, j] = zero(NewType)
+    end
+    return matrix
+end
+
+function vectorize(matrix::Matrix, ::SkewSymmetricMatrixShape)
+    n = LinearAlgebra.checksquare(matrix)
+    return [matrix[i, j] for j in 1:n for i in 1:j-1]
+end
+
 """
     SquareMatrixShape
 
@@ -131,7 +185,7 @@ end
 function _square_side(_error::Function, variables::Matrix)
     n, m = size(variables)
     if n != m
-        _error("Symmetric variables must be 2-dimensional.")
+        _error("Symmetric variables must be square. Got size ($n, $m).")
     end
     return n
 end
@@ -165,6 +219,33 @@ function build_variable(_error::Function, variables::Matrix{<:ScalarVariable}, :
     set = MOI.Reals(MOI.dimension(MOI.PositiveSemidefiniteConeTriangle(n)))
     shape = SymmetricMatrixShape(n)
     return VariablesConstrainedOnCreation(_vectorize_variables(_error, variables), set, shape)
+end
+
+"""
+    build_variable(_error::Function, variables, ::SkewSymmetricMatrixSpace)
+
+Return a `VariablesConstrainedOnCreation` of shape [`SkewSymmetricMatrixShape`](@ref)
+creating variables in `MOI.Reals`, i.e. "free" variables unless they are
+constrained after their creation.
+
+This function is used by the [`@variable`](@ref) macro as follows:
+```julia
+@variable(model, Q[1:2, 1:2] in SkewSymmetricMatrixSpace())
+```
+"""
+function build_variable(
+    _error::Function,
+    variables::Matrix{<:ScalarVariable},
+    ::SkewSymmetricMatrixSpace,
+)
+    n = _square_side(_error, variables)
+    set = MOI.Reals(div(n^2 - n, 2))
+    shape = SkewSymmetricMatrixShape(n)
+    return VariablesConstrainedOnCreation(
+        vectorize(variables, SkewSymmetricMatrixShape(n)),
+        set,
+        shape,
+    )
 end
 
 """

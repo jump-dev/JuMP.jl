@@ -539,6 +539,16 @@ julia> @variable(model, x[1:2, 1:2], Symmetric)
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
 ```
+
+You can impose a constraint that the square matrix is skew symmetric with
+[`SkewSymmetricMatrixSpace`](@ref):
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, x[1:2, 1:2] in SkewSymmetricMatrixSpace())
+2×2 Array{GenericAffExpr{Float64,VariableRef},2}:
+ 0        x[1,2]
+ -x[1,2]  0
+```
+
 ## Anonymous JuMP variables
 
 In all of the above examples, we have created *named* JuMP variables. However,
