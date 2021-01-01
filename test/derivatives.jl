@@ -423,7 +423,7 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
     reverse_extract(grad, reverse_storage, nd, adj, [], 1.0)
     @test grad[1] == 0.0
 
-    function test_linearity(ex, testval, IJ=[], indices=[])
+    function test_linearity(ex, testval, IJ = [], indices = [])
         nd, const_values = expr_to_nodedata(ex)
         adj = adjmat(nd)
         linearity = classify_linearity(nd, adj, [])
@@ -551,7 +551,7 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
     @test grad ≈ true_grad
 
     # dual forward test
-    function dualforward(ex, x; ignore_nan=false)
+    function dualforward(ex, x; ignore_nan = false)
         nd, const_values = expr_to_nodedata(ex)
         adj = adjmat(nd)
         forward_storage = zeros(length(nd))
@@ -643,18 +643,17 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
             ForwardDiff.Dual(2.0, 0.0),
         )
         for k in 1:length(nd)
-            @test _epsilon(forward_dual_storage[k]) ≈
-                forward_storage_ϵ[k][1]
+            @test _epsilon(forward_dual_storage[k]) ≈ forward_storage_ϵ[k][1]
 
             if !(isnan(_epsilon(partials_dual_storage[k])) && ignore_nan)
                 @test _epsilon(partials_dual_storage[k]) ≈
-                    partials_storage_ϵ[k][1]
+                      partials_storage_ϵ[k][1]
             else
                 @test !isnan(forward_storage_ϵ[k][1])
             end
             if !(isnan(_epsilon(reverse_dual_storage[k])) && ignore_nan)
-                @test _epsilon(reverse_dual_storage[k]) ≈ 
-                    reverse_storage_ϵ[k][1] / 2
+                @test _epsilon(reverse_dual_storage[k]) ≈
+                      reverse_storage_ϵ[k][1] / 2
             else
                 @test !isnan(reverse_storage_ϵ[k][1])
             end
@@ -674,6 +673,6 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
     dualforward(
         :(x[1] * x[2]),
         [3.427139283036299e-206, 1.0],
-        ignore_nan=true,
+        ignore_nan = true,
     )
 end

@@ -146,7 +146,7 @@ end
         model = Model()
         @variable(model, x)
         user_function = x -> x
-        JuMP.register(model, :f, 1, user_function, autodiff=true)
+        JuMP.register(model, :f, 1, user_function, autodiff = true)
         @test expressions_equal(
             JuMP.@_process_NL_expr(model, f(x)),
             _NonlinearExprData(model, :(f($x))),
@@ -158,7 +158,7 @@ end
         @variable(model, x)
         @variable(model, y)
         user_function = (x, y) -> x
-        JuMP.register(model, :f, 2, user_function, autodiff=true)
+        JuMP.register(model, :f, 2, user_function, autodiff = true)
         @test expressions_equal(
             JuMP.@_process_NL_expr(model, f(x, y)),
             _NonlinearExprData(model, :(f($x, $y))),
@@ -169,7 +169,7 @@ end
         model = Model()
         @variable(model, x[1:2])
         user_function = (x, y) -> x
-        JuMP.register(model, :f, 2, user_function, autodiff=true)
+        JuMP.register(model, :f, 2, user_function, autodiff = true)
         @test expressions_equal(
             JuMP.@_process_NL_expr(model, f(x...)),
             _NonlinearExprData(model, :(f($(x[1]), $(x[2])))),
@@ -253,7 +253,7 @@ end
         values = [1.0, 2.0, 3.0] # Values for a, b, and c, respectively.
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
         @test dense_hessian(hessian_sparsity, V, 3) ≈
-            [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0]
+              [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 2.0]
 
         # make sure we don't get NaNs in this case
         @NLobjective(m, Min, a * b + 3 * c^2)
@@ -263,14 +263,14 @@ end
         V = zeros(length(hessian_sparsity))
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
         @test dense_hessian(hessian_sparsity, V, 3) ≈
-            [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0]
+              [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0]
 
         # Initialize again
         MOI.initialize(d, [:Hess])
         V = zeros(length(hessian_sparsity))
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
         @test dense_hessian(hessian_sparsity, V, 3) ≈
-            [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0]
+              [0.0 1.0 0.0; 1.0 0.0 0.0; 0.0 0.0 6.0]
     end
 
     @testset "NaN corner case (Issue #695)" begin
@@ -288,7 +288,7 @@ end
         v = [2.4, 3.5]
         values = [1.0, 2.0] # For x and y.
         MOI.eval_hessian_lagrangian_product(d, h, values, v, 1.0, Float64[])
-        correct = [0.0 -1 / (2 * 2^(3 / 2)); -1 / (2 * 2^(3 / 2)) 3 / (4 * 2^(5 / 2))] * v
+        correct = [0.0 -1/(2*2^(3/2)); -1/(2*2^(3/2)) 3/(4*2^(5/2))] * v
         @test h ≈ correct
     end
 
@@ -494,12 +494,12 @@ end
 
         ψ(x) = 1
         t(x, y) = 2
-        JuMP.register(m, :ψ, 1, ψ, autodiff=true)
-        JuMP.register(m, :t, 2, t, autodiff=true)
+        JuMP.register(m, :ψ, 1, ψ, autodiff = true)
+        JuMP.register(m, :t, 2, t, autodiff = true)
 
         @NLobjective(m, Min, x^y)
         @NLconstraint(m, sin(x) * cos(y) == 5)
-        @NLconstraint(m, nlconstr[i=1:2], i * x^2 == i)
+        @NLconstraint(m, nlconstr[i = 1:2], i * x^2 == i)
         @NLconstraint(m, -0.5 <= sin(x) <= 0.5)
         @NLconstraint(m, ψ(x) + t(x, y) <= 3)
 
@@ -558,7 +558,7 @@ end
         @objective(model, Max, x)
 
         @NLconstraints(model, begin
-            ref[i=1:3], y[i] == 0
+            ref[i = 1:3], y[i] == 0
             x + y[1] * y[2] * y[3] <= 0.5
         end)
 
@@ -592,15 +592,14 @@ end
         values = ones(18)
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
         @test dense_hessian(hessian_sparsity, V, 18) ≈
-            ones(18, 18) - diagm(0 => ones(18))
+              ones(18, 18) - diagm(0 => ones(18))
 
         values[1] = 0.5
         MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-        @test dense_hessian(hessian_sparsity, V, 18) ≈
-            [
-                0 ones(17)'
-                ones(17) (ones(17, 17) - diagm(0 => ones(17))) / 2
-            ]
+        @test dense_hessian(hessian_sparsity, V, 18) ≈ [
+            0 ones(17)'
+            ones(17) (ones(17, 17)-diagm(0 => ones(17)))/2
+        ]
     end
 
     @testset "eval_objective and eval_objective_gradient" begin
@@ -611,15 +610,15 @@ end
 
         ψ(x) = sin(x)
         t(x, y) = x + 3y
-        JuMP.register(m, :ψ, 1, ψ, autodiff=true)
-        JuMP.register(m, :t, 2, t, autodiff=true)
+        JuMP.register(m, :ψ, 1, ψ, autodiff = true)
+        JuMP.register(m, :t, 2, t, autodiff = true)
 
         @NLobjective(m, Min, ex / 2 + sin(x[2]) / ψ(x[2]) + t(x[3], x[4]))
         d = JuMP.NLPEvaluator(m)
         MOI.initialize(d, [:Grad])
         variable_values = fill(2.0, (4,))
         @test MOI.eval_objective(d, variable_values) ≈
-            variable_values[1] + 1 + variable_values[3] + 3variable_values[4]
+              variable_values[1] + 1 + variable_values[3] + 3variable_values[4]
         grad = zeros(4)
         MOI.eval_objective_gradient(d, grad, variable_values)
         @test grad ≈ [1.0, 0.0, 1.0, 3.0]
@@ -633,8 +632,8 @@ end
 
         ψ(x) = sin(x)
         t(x, y) = x + 3y
-        JuMP.register(m, :ψ, 1, ψ, autodiff=true)
-        JuMP.register(m, :t, 2, t, autodiff=true)
+        JuMP.register(m, :ψ, 1, ψ, autodiff = true)
+        JuMP.register(m, :t, 2, t, autodiff = true)
 
         @NLconstraint(
             m,
@@ -647,7 +646,7 @@ end
         constraint_value = zeros(1)
         MOI.eval_constraint(d, constraint_value, variable_values)
         @test constraint_value[1] ≈
-            variable_values[1] + 1 + variable_values[3] + 3variable_values[4]
+              variable_values[1] + 1 + variable_values[3] + 3variable_values[4]
         jacobian_sparsity = MOI.jacobian_structure(d)
         I = [i for (i, j) in jacobian_sparsity]
         J = [j for (i, j) in jacobian_sparsity]
@@ -740,7 +739,7 @@ end
         model = Model()
         @variable(model, x[1:2])
         f(x1) = x1 + x[2]
-        JuMP.register(model, :f, 1, f; autodiff=true)
+        JuMP.register(model, :f, 1, f; autodiff = true)
         @NLobjective(model, Min, f(x[1]))
         d = JuMP.NLPEvaluator(model)
         MOI.initialize(d, [:Grad])
@@ -757,7 +756,7 @@ end
         model = Model()
         @variable(model, x)
         f(x) = string(x)
-        JuMP.register(model, :f, 1, f; autodiff=true)
+        JuMP.register(model, :f, 1, f; autodiff = true)
         @NLobjective(model, Min, f(x))
         d = JuMP.NLPEvaluator(model)
         MOI.initialize(d, [:Grad])
@@ -783,7 +782,7 @@ end
     @testset "Hessians disabled with user-defined multivariate functions" begin
         model = Model()
         my_f(x, y) = (x - 1)^2 + (y - 2)^2
-        JuMP.register(model, :my_f, 2, my_f, autodiff=true)
+        JuMP.register(model, :my_f, 2, my_f, autodiff = true)
         @variable(model, x[1:2])
         @NLobjective(model, Min, my_f(x[1], x[2]))
         evaluator = JuMP.NLPEvaluator(model)
@@ -840,7 +839,7 @@ end
         err = ErrorException(
             "Encountered an error parsing nonlinear expression: we don't support " *
             "models of type $(typeof(model)). In general, JuMP's nonlinear features " *
-            "don't work with JuMP-extensions."
+            "don't work with JuMP-extensions.",
         )
         @test_throws(err, @NLexpression(model, sqrt(x)))
     end
