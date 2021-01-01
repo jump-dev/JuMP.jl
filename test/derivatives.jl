@@ -15,14 +15,14 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
     nd, const_values = expr_to_nodedata(ex)
     adj = adjmat(nd)
 
-    #@show nd
+    # @show nd
 
     storage = zeros(length(nd))
     partials_storage = zeros(length(nd))
     reverse_storage = zeros(length(nd))
 
     x = [2.0, 3.0]
-    #@show x
+    # @show x
     fval = forward_eval(
         storage,
         partials_storage,
@@ -37,14 +37,14 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
         NO_USER_OPS,
     )
     true_val = sin(x[1]^2) + cos(x[2] * 4) / 5 - 2.0
-    @test isapprox(fval, true_val)
+    @test fval ≈ true_val
 
     grad = zeros(2)
     reverse_eval(reverse_storage, partials_storage, nd, adj)
     reverse_extract(grad, reverse_storage, nd, adj, [], 1.0)
 
     true_grad = [2 * x[1] * cos(x[1]^2), -4 * sin(x[2] * 4) / 5]
-    @test isapprox(grad, true_grad)
+    @test grad ≈ true_grad
 
     # Testing view
     xx = [1.0, 2.0, 3.0, 4.0, 5.0]
@@ -128,7 +128,7 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
         [],
         NO_USER_OPS,
     )
-    @test isapprox(fval, true_val)
+    @test fval ≈ true_val
 
     outer_reverse_storage = zeros(1)
     fill!(grad, 0.0)
@@ -150,7 +150,7 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
     @assert subexpr_output[1] == 1.0
     reverse_eval(reverse_storage, partials_storage, nd, adj)
     reverse_extract(grad, reverse_storage, nd, adj, [], subexpr_output[1])
-    @test isapprox(grad, true_grad)
+    @test grad ≈ true_grad
 
     ex = :((1 / x[1])^x[2] - x[3])
 
@@ -162,7 +162,7 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
     reverse_storage = zeros(length(nd))
 
     x = [2.5, 3.5, 1.0]
-    #@show x
+    # @show x
     fval = forward_eval(
         storage,
         partials_storage,
@@ -177,14 +177,14 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
         NO_USER_OPS,
     )
     true_val = (1 / x[1])^x[2] - x[3]
-    @test isapprox(fval, true_val)
+    @test fval ≈ true_val
 
     grad = zeros(3)
     reverse_eval(reverse_storage, partials_storage, nd, adj)
     reverse_extract(grad, reverse_storage, nd, adj, [], 1.0)
 
     true_grad = [-x[2] * x[1]^(-x[2] - 1), -((1 / x[1])^x[2]) * log(x[1]), -1]
-    @test isapprox(grad, true_grad)
+    @test grad ≈ true_grad
 
     # logical expressions
     ex = :(x[1] > 0.5 && x[1] < 0.9)
@@ -423,7 +423,7 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
     reverse_extract(grad, reverse_storage, nd, adj, [], 1.0)
     @test grad[1] == 0.0
 
-    function test_linearity(ex, testval, IJ = [], indices = [])
+    function test_linearity(ex, testval, IJ=[], indices=[])
         nd, const_values = expr_to_nodedata(ex)
         adj = adjmat(nd)
         linearity = classify_linearity(nd, adj, [])
@@ -538,7 +538,7 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
         r,
     )
     true_val = Φ(x[2], x[1] - 1) * cos(x[3])
-    @test isapprox(fval, true_val)
+    @test fval ≈ true_val
     grad = zeros(3)
     reverse_eval(reverse_storage, partials_storage, nd, adj)
     reverse_extract(grad, reverse_storage, nd, adj, [], 1.0)
@@ -548,10 +548,10 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
         -4cos(x[3]) * x[2],
         -sin(x[3]) * Φ(x[2], x[1] - 1),
     ]
-    @test isapprox(grad, true_grad)
+    @test grad ≈ true_grad
 
     # dual forward test
-    function dualforward(ex, x; ignore_nan = false)
+    function dualforward(ex, x; ignore_nan=false)
         nd, const_values = expr_to_nodedata(ex)
         adj = adjmat(nd)
         forward_storage = zeros(length(nd))
@@ -605,7 +605,7 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
             2.0,
             zero_ϵ,
         )
-        @test isapprox(fval_ϵ[1], dot(grad, ones(length(x))))
+        @test fval_ϵ[1] ≈ dot(grad, ones(length(x)))
 
         # compare with running dual numbers
         _epsilon(x::ForwardDiff.Dual{Nothing,Float64,1}) = x.partials[1]
@@ -643,30 +643,25 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
             ForwardDiff.Dual(2.0, 0.0),
         )
         for k in 1:length(nd)
-            @test isapprox(
-                _epsilon(forward_dual_storage[k]),
-                forward_storage_ϵ[k][1],
-            )
+            @test _epsilon(forward_dual_storage[k]) ≈
+                forward_storage_ϵ[k][1]
+
             if !(isnan(_epsilon(partials_dual_storage[k])) && ignore_nan)
-                @test isapprox(
-                    _epsilon(partials_dual_storage[k]),
-                    partials_storage_ϵ[k][1],
-                )
+                @test _epsilon(partials_dual_storage[k]) ≈
+                    partials_storage_ϵ[k][1]
             else
                 @test !isnan(forward_storage_ϵ[k][1])
             end
             if !(isnan(_epsilon(reverse_dual_storage[k])) && ignore_nan)
-                @test isapprox(
-                    _epsilon(reverse_dual_storage[k]),
-                    reverse_storage_ϵ[k][1] / 2,
-                )
+                @test _epsilon(reverse_dual_storage[k]) ≈ 
+                    reverse_storage_ϵ[k][1] / 2
             else
                 @test !isnan(reverse_storage_ϵ[k][1])
             end
         end
         for k in 1:length(x)
             if !(isnan(_epsilon(output_dual_storage[k])) && ignore_nan)
-                @test isapprox(_epsilon(output_dual_storage[k]), output_ϵ[k][1])
+                @test _epsilon(output_dual_storage[k]) ≈ output_ϵ[k][1]
             else
                 @test !isnan(output_ϵ[k][1])
             end
@@ -679,6 +674,6 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
     dualforward(
         :(x[1] * x[2]),
         [3.427139283036299e-206, 1.0],
-        ignore_nan = true,
+        ignore_nan=true,
     )
 end
