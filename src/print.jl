@@ -617,10 +617,15 @@ end
 #------------------------------------------------------------------------
 ## _NonlinearExprData
 #------------------------------------------------------------------------
-function nl_expr_string(model::Model, mode, c::_NonlinearExprData)
-    return string(_tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values,
-                                [], [], model.nlp_data.user_operators, false,
-                                false, mode))
+function nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
+    nl = string(_tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values,
+                              [], [], model.nlp_data.user_operators, false,
+                              false, print_mode))
+    # Replace exponents x ^ 4.0 for x ^ {4.0}
+    if print_mode == IJuliaMode
+        nl = replace(nl, r"(\^) (?<exponent>\d+\.\d+)" => s"^ {\g<exponent>}")
+    end
+    return nl
 end
 
 #------------------------------------------------------------------------
