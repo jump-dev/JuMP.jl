@@ -249,16 +249,8 @@ julia> fix_value(x)
 The name, i.e. the value of the `MOI.VariableName` attribute, of a variable can
 be obtained by [`JuMP.name(::JuMP.VariableRef)`](@ref) and set by
 [`JuMP.set_name(::JuMP.VariableRef, ::String)`](@ref).
-```@docs
-name(::JuMP.VariableRef)
-set_name(::JuMP.VariableRef, ::String)
-```
 
-The variable can also be retrieved from its name using
-[`JuMP.variable_by_name`](@ref).
-```@docs
-variable_by_name
-```
+The variable can also be retrieved from its name using [`JuMP.variable_by_name`](@ref).
 
 ## Variable containers
 
@@ -402,7 +394,7 @@ of tuples or create a dictionary. Consider the following examples:
 N = 10
 S = [(1, 1, 1),(N, N, N)]
 # Slow. It evaluates conditional N^3 times.
-@variable(model, x1[i=1:N, j=1:N, k=1:N; (i, j, k) in S]) 
+@variable(model, x1[i=1:N, j=1:N, k=1:N; (i, j, k) in S])
 # Fast.
 @variable(model, x2[S])
 # Fast. Manually constructs a dictionary and fills it.
@@ -448,13 +440,13 @@ julia> @variable(model, y[A], container=Array)
 JuMP now creates a vector of JuMP variables instead of a DenseAxisArray. Note
 that choosing an invalid container type will throw an error.
 
-## Integrality shortcuts
+## Integrality utilities
 
 Adding integrality constraints to a model such as `@constraint(model, x in MOI.ZeroOne())`
 and `@constraint(model, x in MOI.Integer())` is a common operation. Therefore,
 JuMP supports two shortcuts for adding such constraints.
 
-#### Binary (ZeroOne) constraints
+### Binary (ZeroOne) constraints
 
 Binary optimization variables are constrained to the set ``x \in \{0, 1\}``. (The
 `MOI.ZeroOne` set in MathOptInterface.) Binary optimization variables can be
@@ -482,7 +474,7 @@ keyword to `true`.
 julia> @variable(model, x, binary=true)
 x
 ```
-#### Integer constraints
+### Integer constraints
 
 Integer optimization variables are constrained to the set ``x \in \mathbb{Z}``.
 (The `MOI.Integer` set in MathOptInterface.) Integer optimization variables can
@@ -510,6 +502,12 @@ julia> is_integer(x)
 false
 ```
 
+### Relaxing integrality
+
+The [`relax_integrality`](@ref) function relaxes all integrality constraints in
+the model, returning a function that can be called to undo the operation later
+on.
+
 ## Semidefinite variables
 
 JuMP also supports modeling with semidefinite variables. A square symmetric
@@ -517,6 +515,13 @@ matrix ``X`` is positive semidefinite if all eigenvalues are nonnegative. We can
 declare a matrix of JuMP variables to be positive semidefinite as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2], PSD)
+2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+```
+or using the syntax for [Variables constrained on creation](@ref):
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, x[1:2, 1:2] in PSDCone())
 2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
@@ -534,6 +539,16 @@ julia> @variable(model, x[1:2, 1:2], Symmetric)
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
 ```
+
+You can impose a constraint that the square matrix is skew symmetric with
+[`SkewSymmetricMatrixSpace`](@ref):
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, x[1:2, 1:2] in SkewSymmetricMatrixSpace())
+2×2 Array{GenericAffExpr{Float64,VariableRef},2}:
+ 0        x[1,2]
+ -x[1,2]  0
+```
+
 ## Anonymous JuMP variables
 
 In all of the above examples, we have created *named* JuMP variables. However,
@@ -546,7 +561,7 @@ being created. For example:
 julia> x = @variable(model)
 noname
 ```
-This shows how `(model, x)` is really short for:
+This shows how `@variable(model, x)` is really short for:
 ```jldoctest anon_variables; setup=:(model=Model())
 julia> x = model[:x] = @variable(model, base_name="x")
 x
@@ -579,6 +594,71 @@ julia> x = @variable(model, [i=1:2], base_name="x", lower_bound=i, integer=true)
 !!! warn
     Creating two named JuMP variables with the same name results in an error at
     runtime. Use anonymous variables as an alternative.
+
+## Variables constrained on creation
+
+!!! info
+    When using JuMP in [Direct mode](@ref), it may be required to constrain
+    variables on creation instead of constraining free variables as the solver
+    may only support variables constrained on creation. In [Automatic and Manual
+    modes](@ref), both ways of adding constraints on variables are equivalent.
+    Indeed, during the copy of the cache to the optimizer, the choice of the
+    constraints on variables that are copied as variables constrained on creation
+    does not depend on how it was added to the cache.
+
+All uses of the `@variable` macro documented so far translate to a separate
+call for variable creation and adding of constraints.
+
+For example, `@variable(model, x >= 0, Int)`, is equivalent to:
+```julia
+@variable(model, x)
+set_lower_bound(x, 0.0)
+@constraint(model, x in MOI.Integer())
+```
+Importantly, the bound and integrality constraints are added _after_ the
+variable has been created.
+
+However, some solvers require a constraining set _at creation time_.
+We say that these variables are _constrained on creation_.
+
+Use `in` within `@variable` to access the special syntax for constraining
+variables on creation. For example, the following creates a vector of variables
+constrained on creation to belong to the [`SecondOrderCone`](@ref):
+```jldoctest constrained_variables; setup=:(model=Model())
+julia> @variable(model, y[1:3] in SecondOrderCone())
+3-element Array{VariableRef,1}:
+ y[1]
+ y[2]
+ y[3]
+```
+
+For contrast, the more standard approach is as follows:
+```jldoctest constrained_variables
+julia> @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> @constraint(model, x in SecondOrderCone())
+[x[1], x[2], x[3]] ∈ MathOptInterface.SecondOrderCone(3)
+```
+
+The technical difference between the former and the latter is that the former
+calls `MOI.add_constrained_variables` while the latter calls `MOI.add_variables`
+and then `MOI.add_constraint`. This distinction is important only in
+[Direct mode](@ref), depending on the solver being used. It's often not
+possible to delete the [`SecondOrderCone`](@ref) constraint if it was specified
+at variable creation time.
+
+
+### The `set` keyword
+
+An alternate syntax to `x in Set` is to use the `set` keyword of
+[`@variable`](@ref). This is most useful when creating anonymous variables:
+```julia
+x = @variable(model, [1:2, 1:2], set = PSDCone())
+```
 
 ## User-defined containers
 
@@ -666,8 +746,7 @@ julia> start_value(y)
 
 ## [The `@variables` macro](@id variables)
 
-If you have many [`@variable`](@ref) calls, JuMP provides the macro `@variables`
-that can improve readability:
+If you have many [`@variable`](@ref) calls, JuMP provides the macro [`@variables`](@ref) that can improve readability:
 
 ```jldoctest; setup=:(model=Model())
 julia> @variables(model, begin
@@ -687,44 +766,3 @@ Subject to
 !!! note
     Keyword arguments must be contained within parentheses. (See the example
     above.)
-
-## Reference
-
-```@docs
-@variable
-owner_model
-VariableRef
-all_variables
-num_variables
-
-has_lower_bound
-lower_bound
-set_lower_bound
-delete_lower_bound
-
-has_upper_bound
-upper_bound
-set_upper_bound
-delete_upper_bound
-
-is_fixed
-fix_value
-fix
-unfix
-
-is_integer
-set_integer
-unset_integer
-IntegerRef
-
-is_binary
-set_binary
-unset_binary
-BinaryRef
-
-index(::VariableRef)
-optimizer_index(::VariableRef)
-
-set_start_value
-start_value
-```

@@ -1,7 +1,7 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # This file extends JuMP to indicator constraints. It is a good example of how
 # JuMP can be extended.
@@ -34,7 +34,7 @@ function parse_one_operator_constraint(
         _error("Invalid right-hand side `$(rhs)` of indicator constraint. Expected constraint surrounded by `{` and `}`.")
     end
     rhs_con = rhs.args[1]
-    rhs_vectorized, rhs_parsecode, rhs_buildcall = parse_constraint(_error, rhs_con.args...)
+    rhs_vectorized, rhs_parsecode, rhs_buildcall = parse_constraint_expr(_error, rhs_con)
     if vectorized != rhs_vectorized
         _error("Inconsistent use of `.` in symbols to indicate vectorization.")
     end

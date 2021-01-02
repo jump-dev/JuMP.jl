@@ -41,10 +41,10 @@ optimize!(model)
 println("x = ", value(x), " y = ", value(y))
 ```
 
-See the JuMP [examples directory](https://github.com/JuliaOpt/JuMP.jl/tree/bff0916a2025df64e4a0be8933b58ea7bdc5eb0b/examples)
+See the JuMP [examples directory](https://github.com/jump-dev/JuMP.jl/tree/bff0916a2025df64e4a0be8933b58ea7bdc5eb0b/examples)
 for more examples (which include `mle.jl`, `rosenbrock.jl`, and `clnlbeam.jl`).
 
-The [NLP solver tests](https://github.com/JuliaOpt/JuMP.jl/blob/bff0916a2025df64e4a0be8933b58ea7bdc5eb0b/test/nlp_solver.jl)
+The [NLP solver tests](https://github.com/jump-dev/JuMP.jl/blob/bff0916a2025df64e4a0be8933b58ea7bdc5eb0b/test/nlp_solver.jl)
 contain additional examples.
 
 ## Syntax notes
@@ -130,15 +130,27 @@ expressions. The initial value of the parameter must be provided on the
 right-hand side of the `==` sign. There is no anonymous syntax for creating
 parameters.
 
-```@docs
-@NLparameter
+You may use `value` and `set_value` to query or update the value of a parameter.
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @NLparameter(model, p[i = 1:2] == i);
+
+julia> value.(p)
+2-element Array{Float64,1}:
+ 1.0
+ 2.0
+
+julia> set_value(p[2], 3.0)
+3.0
+
+julia> value.(p)
+2-element Array{Float64,1}:
+ 1.0
+ 3.0
 ```
 
-You may use `value` and `set_value` to query or update the value of a parameter.
-```@docs
-value(::JuMP.NonlinearParameter)
-set_value(::JuMP.NonlinearParameter, ::Number)
-```
 Nonlinear parameters can be used *within nonlinear expressions* only:
 
 ```julia
@@ -191,13 +203,13 @@ knowledge not available in any comparable modeling systems.
 
 JuMP uses [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) to
 perform automatic differentiation; see the ForwardDiff.jl
-[documentation](http://www.juliadiff.org/ForwardDiff.jl/v0.10.2/user/limitations.html)
+[documentation](https://www.juliadiff.org/ForwardDiff.jl/v0.10.2/user/limitations.html)
 for a description of how to write a function suitable for automatic
 differentiation.
 
 !!! note
     If you see method errors with `ForwardDiff.Duals`, see the guidelines at
-    [ForwardDiff.jl](http://www.juliadiff.org/ForwardDiff.jl/release-0.10/user/limitations.html).
+    [ForwardDiff.jl](https://www.juliadiff.org/ForwardDiff.jl/release-0.10/user/limitations.html).
     The most common error is that your user-defined function is not generic with
     respect to the number type, i.e., don't assume that the input to the function
     is `Float64`.
@@ -333,7 +345,7 @@ may be expected to be within a factor of 5 of AMPL's.
 For some advanced use cases, one may want to directly query the derivatives of a
 JuMP model instead of handing the problem off to a solver.
 Internally, JuMP implements the `AbstractNLPEvaluator` interface from
-[MathOptInterface](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apireference/#NLP-evaluator-methods-1).
+[MathOptInterface](https://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#NLP-evaluator-methods-1).
 To obtain an NLP evaluator object from a JuMP model, use `JuMP.NLPEvaluator`.
 `JuMP.index` returns the `MOI.VariableIndex` corresponding to a JuMP variable.
 `MOI.VariableIndex` itself is a type-safe wrapper for `Int64` (stored in the
@@ -430,13 +442,5 @@ add_NL_constraint(model, :($(x[1])*$(x[2])*$(x[3])*$(x[4]) >= 25))
 
 See the Julia documentation for more examples and description of Julia
 expressions.
-
-## Reference
-
-```@docs
-@NLconstraint
-@NLexpression
-@NLobjective
-```
 
 [^1]: Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", SIAM Review, [PDF](https://mlubin.github.io/pdf/jump-sirev.pdf).

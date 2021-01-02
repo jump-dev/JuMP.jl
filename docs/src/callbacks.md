@@ -6,7 +6,7 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Callbacks
+# [Callbacks](@id callbacks_manual)
 
 Many mixed-integer (linear, conic, and nonlinear) programming solvers offer
 the ability to modify the solve process. Examples include changing branching
@@ -23,10 +23,6 @@ callbacks:
  2. user-cuts
  3. heuristic solutions
 
-!!! warning
-    Using callbacks requires a solver in [Direct mode](@ref). A direct-mode
-    model is created using [`JuMP.direct_model`](@ref).
-
 ## Available solvers
 
 Callback support is limited to a few solvers. This includes
@@ -42,17 +38,29 @@ Callback support is limited to a few solvers. This includes
     underlying solver's callback documentation to understand details specific to
     each solver.
 
-## Information that can be queried during callbacks
+## Things you can and cannot do during callbacks
 
-In a callback, the only thing you may query is the primal value of the
-variables using [`callback_value`](@ref).
+There is a very limited range of things you can do during a callback. Only use
+the functions and macros explicitly stated in this page of the documentation, or
+in the [Callbacks example](/examples/callbacks).
 
-If you need any other information, use a solver-dependent callback instead.
+Using any other part of the JuMP API (e.g., adding a constraint with [`@constraint`](@ref)
+or modifying a variable bound with [`set_lower_bound`](@ref)) is undefined
+behavior, and your solver may throw an error, return an incorrect solution, or
+result in a segfault that aborts Julia.
 
-!!! info
-    Solver-dependent callbacks are mostly un-documented. Using them will require
-    you to read and understand the source-code of solver's Julia wrapper (i.e.,
-    the `Solver.jl` package).
+In each of the three solver-independent callbacks, there are two things you may
+query:
+ - [`callback_node_status`](@ref) returns an [`MOI.CallbackNodeStatusCode`](@ref)
+   enum indicating if the current primal solution is integer feasible.
+ - [`callback_value`](@ref) returns the current primal solution of a variable.
+
+If you need to query any other information, use a solver-dependent callback
+instead. Each solver supporting a solver-dependent callback has information on
+how to use it in the README of their Github repository.
+
+If you want to modify the problem in a callback, you _must_ use a lazy
+constraint.
 
 ## Lazy constraints
 
@@ -61,15 +69,27 @@ explicitly include in the initial formulation. When a MIP solver reaches a new
 solution, for example with a heuristic or by solving a problem at a node in
 the branch-and-bound tree, it will give the user the chance to provide
 constraint(s) that would make the current solution infeasible. For some more
-information about lazy constraints, see this [blog post by Paul Rubin](http://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html).
+information about lazy constraints, see this [blog post by Paul Rubin](https://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html).
 
 A lazy constraint callback can be set using the following syntax:
 
 ```julia
-model = direct_model(GLPK.Optimizer)
+model = Model(GLPK.Optimizer)
 @variable(model, x <= 10, Int)
 @objective(model, Max, x)
 function my_callback_function(cb_data)
+    status = callback_node_status(cb_data, model)
+    if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL
+        # `callback_value(cb_data, x)` is not integer (to some tolerance).
+        # If, for example, your lazy constraint generator requires an
+        # integer-feasible primal solution, you can add a `return` here.
+        return
+    elseif status == MOI.CALLBACK_NODE_STATUS_INTEGER
+        # `callback_value(cb_data, x)` is integer (to some tolerance).
+    else
+        @assert status == MOI.CALLBACK_NODE_STATUS_UNKNOWN
+        # `callback_value(cb_data, x)` might be fractional or integer.
+    end
     x_val = callback_value(cb_data, x)
     if x_val > 2 + 1e-6
         con = @build_constraint(x <= 2)
@@ -82,7 +102,30 @@ MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
 !!! info
     The lazy constraint callback _may_ be called at fractional or integer
     nodes in the branch-and-bound tree. There is no guarantee that the
-    callback is called at _every_ feasible primal solution.
+    callback is called at _every_ primal solution.
+
+!!! warn
+    Only add a lazy constraint if your primal solution violates the constraint.
+    Adding the lazy constraint irrespective of feasibility may result in the
+    solver returning an incorrect solution, or lead to a large number of
+    constraints being added, slowing down the solution process.
+    ```julia
+    model = Model(GLPK.Optimizer)
+    @variable(model, x <= 10, Int)
+    @objective(model, Max, x)
+    function bad_callback_function(cb_data)
+        # Don't do this!
+        con = @build_constraint(x <= 2)
+        MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+    end
+    function good_callback_function(cb_data)
+        if callback_value(x) > 2
+            con = @build_constraint(x <= 2)
+            MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+        end
+    end
+    MOI.set(model, MOI.LazyConstraintCallback(), good_callback_function)
+    ```
 
 ## User cuts
 
@@ -93,12 +136,12 @@ solver reaches a new node in the branch-and-bound tree, it will give the user
 the chance to provide cuts to make the current relaxed (fractional) solution
 infeasible in the hopes of obtaining an integer solution. For more details
 about the difference between user cuts and lazy constraints see the
-aforementioned [blog post](http://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html).
+aforementioned [blog post](https://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html).
 
 A user-cut callback can be set using the following syntax:
 
 ```julia
-model = direct_model(GLPK.Optimizer)
+model = Model(GLPK.Optimizer)
 @variable(model, x <= 10.5, Int)
 @objective(model, Max, x)
 function my_callback_function(cb_data)
@@ -140,7 +183,7 @@ solutions from them.
 A heuristic solution callback can be set using the following syntax:
 
 ```julia
-model = direct_model(GLPK.Optimizer)
+model = Model(GLPK.Optimizer)
 @variable(model, x <= 10.5, Int)
 @objective(model, Max, x)
 function my_callback_function(cb_data)
@@ -171,9 +214,3 @@ solution. The possible return codes are:
     The heuristic solution callback _may_ be called at fractional nodes in the
     branch-and-bound tree. There is no guarantee that the callback is called
     at _every_ fractional primal solution.
-
-## Reference
-
-```@docs
-callback_value
-```

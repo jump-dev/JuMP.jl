@@ -1,7 +1,7 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 """
     copy_extension_data(data, new_model::AbstractModel, model::AbstractModel)
@@ -23,15 +23,33 @@ struct ReferenceMap
     model::Model
     index_map::MOIU.IndexMap
 end
-function Base.getindex(reference_map::ReferenceMap, vref::VariableRef)
-    return VariableRef(reference_map.model,
-                       reference_map.index_map[index(vref)])
+
+function Base.getindex(map::ReferenceMap, vref::VariableRef)
+    return VariableRef(map.model, map.index_map[index(vref)])
 end
-function Base.getindex(reference_map::ReferenceMap, cref::ConstraintRef)
-    return ConstraintRef(reference_map.model,
-                         reference_map.index_map[index(cref)],
-                         cref.shape)
+
+function Base.getindex(map::ReferenceMap, cref::ConstraintRef)
+    return ConstraintRef(map.model, map.index_map[index(cref)], cref.shape)
 end
+
+function Base.getindex(map::ReferenceMap, expr::GenericAffExpr)
+    result = zero(expr)
+    for (coef, var) in linear_terms(expr)
+        add_to_expression!(result, coef, map[var])
+    end
+    result.constant = expr.constant
+    return result
+end
+
+function Base.getindex(map::ReferenceMap, expr::GenericQuadExpr)
+    aff = map[expr.aff]
+    terms = [
+        UnorderedPair(map[key.a], map[key.b]) => val
+        for (key, val) in expr.terms
+    ]
+    return GenericQuadExpr(aff, terms)
+end
+
 Base.broadcastable(reference_map::ReferenceMap) = Ref(reference_map)
 
 
@@ -93,7 +111,7 @@ function copy_model(model::Model)
     reference_map = ReferenceMap(new_model, index_map)
 
     for (name, value) in object_dictionary(model)
-        new_model.obj_dict[name] = getindex.(reference_map, value)
+        new_model[name] = getindex.(reference_map, value)
     end
 
     for (key, data) in model.ext
@@ -146,6 +164,11 @@ function Base.deepcopy(::Model)
 end
 
 function MOI.copy_to(dest::MOI.ModelLike, src::Model)
+    if src.nlp_data !== nothing
+        # Re-set the NLP block in-case things have changed since last
+        # solve.
+        MOI.set(src, MOI.NLPBlock(), _create_nlp_block_data(src))
+    end
     return MOI.copy_to(dest, backend(src))
 end
 

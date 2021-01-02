@@ -1,11 +1,11 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
 """
@@ -49,8 +49,8 @@ struct MomentsShape <: AbstractShape
 end
 JuMP.reshape_vector(x::Vector, shape::MomentsShape) = Moments(x, shape.monomials)
 ```
-The `dual_shape` allows to define the shape of the dual of polynomial and moment
-constraints:
+Then `dual_shape` allows the definition of the shape of the dual of polynomial
+and moment constraints:
 ```julia
 dual_shape(shape::PolynomialShape) = MomentsShape(shape.monomials)
 dual_shape(shape::MomentsShape) = PolynomialShape(shape.monomials)

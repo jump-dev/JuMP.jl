@@ -1,0 +1,8 @@
+# Configuration file for JuliaFormatter.jl
+# For more information, see: https://domluna.github.io/JuliaFormatter.jl/stable/config/
+
+always_for_in = true
+always_use_return = true
+margin = 80
+remove_extra_newlines = true
+short_to_long_function_def = true

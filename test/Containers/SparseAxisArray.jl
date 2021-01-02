@@ -1,11 +1,16 @@
+using JuMP.Containers
+using Test
+
 @testset "SparseAxisArray" begin
     function sparse_test(d, sum_d, d2, d3, dsqr, d_bads)
         sqr(x) = x^2
         @testset "Colon indexing" begin
-            err = ArgumentError("Indexing with `:` is not supported by" *
-                                " Containers.SparseAxisArray")
-            @test_throws err d[:, 1]
-            @test_throws err d[:a, :]
+            err = ArgumentError(
+                "Indexing with `:` is not supported by" *
+                " Containers.SparseAxisArray",
+            )
+            @test_throws err d[:, ntuple(one, ndims(d) - 1)...]
+            @test_throws err d[ntuple(i -> :a, ndims(d) - 1)..., :]
         end
         @testset "Map" begin
             @test d == @inferred map(identity, d)
@@ -24,16 +29,20 @@
             @test d == identity.(d)
             @test dsqr == sqr.(d)
             @testset "Different array" begin
-                err = ArgumentError("Cannot broadcast" *
-                                    " Containers.SparseAxisArray with" *
-                                    " another array of different type")
+                err = ArgumentError(
+                    "Cannot broadcast" *
+                    " Containers.SparseAxisArray with" *
+                    " another array of different type",
+                )
                 @test_throws err [1, 2] .+ d
                 @test_throws err d .* [1, 2]
             end
             @testset "Different indices" begin
-                err = ArgumentError("Cannot broadcast" *
-                                    " Containers.SparseAxisArray with " *
-                                    "different indices")
+                err = ArgumentError(
+                    "Cannot broadcast" *
+                    " Containers.SparseAxisArray with " *
+                    "different indices",
+                )
                 for d_bad in d_bads
                     @test_throws err d_bad .+ d
                     @test_throws err d .+ d_bad
@@ -45,12 +54,14 @@
         SA = SparseAxisArray
         d = @inferred SA(Dict((:a,) => 1, (:b,) => 2))
         @testset "Printing" begin
+            @test sprint(summary, d) == """
+SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries"""
             @test sprint(show, "text/plain", d) == """
 SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries:
   [a]  =  1
   [b]  =  2"""
         end
-        @test d isa SA{Int, 1, Tuple{Symbol}}
+        @test d isa SA{Int,1,Tuple{Symbol}}
         d2 = @inferred SA(Dict((:a,) => 2, (:b,) => 4))
         d3 = @inferred SA(Dict((:a,) => 3, (:b,) => 6))
         dsqr = @inferred SA(Dict((:a,) => 1, (:b,) => 4))
@@ -71,12 +82,19 @@ SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries:
             @test fd isa SparseAxisArray{Real,1,Tuple{Symbol}}
             @test fd == SparseAxisArray(Dict((:a,) => 2, (:b,) => 1.5))
         end
+        @testset "Operation with scalar" begin
+            @test 3 * (d2 / 2) == d3
+            @test (d2 / 2) * 3 == d3
+        end
     end
     @testset "2-dimensional" begin
         SA = SparseAxisArray
         d = @inferred SA(Dict((:a, 'u') => 2.0, (:b, 'v') => 0.5))
-        @test d isa SA{Float64, 2, Tuple{Symbol, Char}}
+        @test d isa SA{Float64,2,Tuple{Symbol,Char}}
+        @test_throws BoundsError(d, (:a,)) d[:a]
         @testset "Printing" begin
+            @test sprint(summary, d) == """
+SparseAxisArray{Float64,2,Tuple{Symbol,Char}} with 2 entries"""
             @test sprint(show, "text/plain", d) == """
 SparseAxisArray{Float64,2,Tuple{Symbol,Char}} with 2 entries:
   [b, v]  =  0.5
@@ -87,8 +105,29 @@ SparseAxisArray{Float64,2,Tuple{Symbol,Char}} with 2 entries:
         dsqr = @inferred SA(Dict((:a, 'u') => 4.0, (:b, 'v') => 0.25))
         da = @inferred SA(Dict((:b, 'v') => 2.0))
         db = @inferred SA(Dict((:a, 'u') => 1.0, (:b, 'u') => 2.0))
-        dc = @inferred SA(Dict((:a, 'u') => 1.0, (:b, 'v') => 2.0,
-                               (:c, 'w') => 3.0))
+        dc = @inferred SA(Dict(
+            (:a, 'u') => 1.0,
+            (:b, 'v') => 2.0,
+            (:c, 'w') => 3.0,
+        ))
+        sparse_test(d, 2.5, d2, d3, dsqr, [da, db, dc])
+    end
+    @testset "3-dimensional" begin
+        SA = SparseAxisArray
+        d = @inferred SA(Dict((:a, 'u', 2) => 2.0, (:b, 'v', 3) => 0.5))
+        @test d isa SA{Float64,3,Tuple{Symbol,Char,Int}}
+        @test_throws BoundsError(d, (:a,)) d[:a]
+        @test_throws BoundsError(d, (:a, 'u')) d[:a, 'u']
+        d2 = @inferred SA(Dict((:b, 'v', 3) => 1.0, (:a, 'u', 2) => 4.0))
+        d3 = @inferred SA(Dict((:a, 'u', 2) => 6.0, (:b, 'v', 3) => 1.5))
+        dsqr = @inferred SA(Dict((:a, 'u', 2) => 4.0, (:b, 'v', 3) => 0.25))
+        da = @inferred SA(Dict((:b, 'v', 3) => 2.0))
+        db = @inferred SA(Dict((:a, 'u', 3) => 1.0, (:b, 'u', 2) => 2.0))
+        dc = @inferred SA(Dict(
+            (:a, 'u', 2) => 1.0,
+            (:b, 'v', 3) => 2.0,
+            (:c, 'w', 4) => 3.0,
+        ))
         sparse_test(d, 2.5, d2, d3, dsqr, [da, db, dc])
     end
 end

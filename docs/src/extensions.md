@@ -22,7 +22,7 @@ Extending JuMP
 # TODO: create new bridge
 ```
 
-See the [bridge section in the MOI manual](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apimanual/#Automatic-reformulation-1).
+See the [bridge section in the MOI manual](https://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Automatic-reformulation-1).
 
 ```@docs
 add_bridge
@@ -72,7 +72,7 @@ sense_to_set
 
 #### Adding `build_constraint` methods
 
-There is typically two choices when creating a [`build_constraint`](@ref)
+There are typically two choices when creating a [`build_constraint`](@ref)
 method, either return an `AbstractConstraint` already supported by the
 model, i.e. `ScalarConstraint` or `VectorConstraint`, or a custom
 `AbstractConstraint` with a corresponding [`add_constraint`](@ref) method (see

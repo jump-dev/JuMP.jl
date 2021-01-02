@@ -8,7 +8,7 @@ familiar. If you are coming from an AMPL or similar background, you may find
 some of the concepts novel but the general appearance will still be familiar.
 
 The example in this guide is deliberately kept simple. There are more complex
-examples in the [`JuMP/examples/` folder](https://github.com/JuliaOpt/JuMP.jl/tree/master/examples).
+examples in Jupyter notebook form at [JuMPTutorials.jl](https://github.com/JuliaOpt/JuMPTutorials.jl).
 
 Once JuMP is installed, to use JuMP in your programs, you just need to say:
 ```jldoctest quickstart_example
@@ -141,7 +141,7 @@ the `JuMP.termination_status` function:
 julia> termination_status(model)
 OPTIMAL::TerminationStatusCode = 1
 ```
-In this case, `GLPK` returned `OPTIMAL`, this mean that it has found the optimal
+In this case, `GLPK` returned `OPTIMAL`, this means that it has found the optimal
 solution.
 
 ```@meta

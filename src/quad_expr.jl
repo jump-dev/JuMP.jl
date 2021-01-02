@@ -1,11 +1,11 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 # src/quad_expr.jl
 # Defines all types relating to expressions with a quadratic and affine part
@@ -16,6 +16,11 @@
 #############################################################################
 
 
+"""
+    UnorderedPair(a::T, b::T)
+
+A wrapper type used by [`GenericQuadExpr`](@ref) with fields `.a` and `.b`.
+"""
 struct UnorderedPair{T}
     a::T
     b::T
@@ -26,14 +31,47 @@ function Base.isequal(p1::UnorderedPair, p2::UnorderedPair)
     return (p1.a == p2.a && p1.b == p2.b) || (p1.a == p2.b && p1.b == p2.a)
 end
 
-# GenericQuadExpr
-# ∑qᵢⱼ xᵢⱼ  +  ∑ aᵢ xᵢ  +  c
+"""
+    mutable struct GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
+        aff::GenericAffExpr{CoefType,VarType}
+        terms::OrderedDict{UnorderedPair{VarType}, CoefType}
+    end
+
+An expression type representing an quadratic expression of the form:
+``\\sum q_{i,j} x_i x_j + \\sum a_i x_i + c``.
+
+## Fields
+
+ * `.aff`: an [`GenericAffExpr`](@ref) representing the affine portion of the
+   expression.
+ * `.terms`: an `OrderedDict`, with keys of `UnorderedPair{VarType}` and
+   values of `CoefType`, describing the sparse list of terms `q`.
+"""
 mutable struct GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
     aff::GenericAffExpr{CoefType,VarType}
     terms::OrderedDict{UnorderedPair{VarType}, CoefType}
 end
 
-function GenericQuadExpr(aff::GenericAffExpr{V,K}, kv::AbstractArray{Pair{UnorderedPair{K},V}}) where {K,V}
+"""
+    GenericQuadExpr(
+        aff::GenericAffExpr{V,K},
+        kv::AbstractArray{Pair{UnorderedPair{K},V}}
+    ) where {K,V}
+
+Create a [`GenericQuadExpr`](@ref) by passing a [`GenericAffExpr`](@ref) and a
+vector of ([`UnorderedPair`](@ref), coefficient) pairs.
+
+## Example
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> GenericQuadExpr(GenericAffExpr(1.0, x => 2.0), [UnorderedPair(x, x) => 3.0])
+3 x² + 2 x + 1
+```
+"""
+function GenericQuadExpr(
+    aff::GenericAffExpr{V,K},
+    kv::AbstractArray{Pair{UnorderedPair{K},V}}
+) where {K,V}
     return GenericQuadExpr{V,K}(aff, _new_ordered_dict(UnorderedPair{K}, V, kv))
 end
 
@@ -78,6 +116,27 @@ function drop_zeros!(expr::GenericQuadExpr)
     return
 end
 
+"""
+    map_coefficients_inplace!(f::Function, a::GenericQuadExpr)
+
+Apply `f` to the coefficients and constant term of an [`GenericQuadExpr`](@ref)
+`a` and update them in-place.
+
+See also: [`map_coefficients`](@ref)
+
+## Example
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> a = @expression(model, x^2 + x + 1)
+x² + x + 1
+
+julia> map_coefficients_inplace!(c -> 2 * c, a)
+2 x² + 2 x + 2
+
+julia> a
+2 x² + 2 x + 2
+```
+"""
 function map_coefficients_inplace!(f::Function, q::GenericQuadExpr)
     # The iterator remains valid if existing elements are updated.
     for (key, value) in q.terms
@@ -87,6 +146,27 @@ function map_coefficients_inplace!(f::Function, q::GenericQuadExpr)
     return q
 end
 
+"""
+    map_coefficients(f::Function, a::GenericQuadExpr)
+
+Apply `f` to the coefficients and constant term of an [`GenericQuadExpr`](@ref)
+`a` and return a new expression.
+
+See also: [`map_coefficients_inplace!`](@ref)
+
+## Example
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> a = @expression(model, x^2 + x + 1)
+x² + x + 1
+
+julia> map_coefficients(c -> 2 * c, a)
+2 x² + 2 x + 2
+
+julia> a
+x² + x + 1
+```
+"""
 function map_coefficients(f::Function, q::GenericQuadExpr)
     return map_coefficients_inplace!(f, copy(q))
 end
@@ -319,18 +399,17 @@ function isequal_canonical(quad::GenericQuadExpr{CoefType,VarType}, other::Gener
 end
 
 # Alias for (Float64, VariableRef)
+"""
+    QuadExpr
+
+An alias for `GenericQuadExpr{Float64,VariableRef}`, the specific
+    [`GenericQuadExpr`](@ref) used by JuMP.
+"""
 const QuadExpr = GenericQuadExpr{Float64,VariableRef}
 function Base.convert(::Type{GenericQuadExpr{C, V}}, v::Union{_Constant,AbstractVariableRef,GenericAffExpr}) where {C, V}
     return GenericQuadExpr(convert(GenericAffExpr{C, V}, v))
 end
 GenericQuadExpr{C, V}() where {C, V} = zero(GenericQuadExpr{C, V})
-# Used in `JuMP._mul!`.
-function Base.convert(::Type{T}, quad::GenericQuadExpr{T}) where T
-    if !isempty(quad.terms)
-        throw(InexactError(:convert, T, quad))
-    end
-    return convert(T, quad.aff)
-end
 
 function check_belongs_to_model(q::GenericQuadExpr, model::AbstractModel)
     check_belongs_to_model(q.aff, model)
@@ -365,7 +444,6 @@ end
 function moi_function_type(::Type{<:GenericQuadExpr{T}}) where T
     return MOI.ScalarQuadraticFunction{T}
 end
-
 
 function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
     quad = QuadExpr(AffExpr(m, MOI.ScalarAffineFunction(f.affine_terms,
@@ -435,14 +513,6 @@ end
 moi_function(a::Vector{<:GenericQuadExpr}) = MOI.VectorQuadraticFunction(a)
 function moi_function_type(::Type{<:Vector{<:GenericQuadExpr{T}}}) where {T}
     return MOI.VectorQuadraticFunction{T}
-end
-
-
-# Copy a quadratic expression to a new model by converting all the
-# variables to the new model's variables
-function Base.copy(q::GenericQuadExpr, new_model::Model)
-    GenericQuadExpr(copy(q.qvars1, new_model), copy(q.qvars2, new_model),
-                    copy(q.qcoeffs), copy(q.aff, new_model))
 end
 
 # Requires that value_func(::VarType) is defined.

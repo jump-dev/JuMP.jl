@@ -1,6 +1,143 @@
 JuMP release notes
 ==================
 
+Version 0.21.5 (September 18, 2020)
+-----------------------------------
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.5).
+A summary of changes are as follows:
+
+- Fix deprecation warnings
+- Throw `DimensionMismatch` for incompatibly sized functions and sets
+- Unify treatment of `keys(x)` on JuMP containers
+
+Version 0.21.4 (September 14, 2020)
+-----------------------------------
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.4).
+A summary of changes are as follows:
+
+- New features:
+  * Add debug info when adding unsupported constraints
+  * Add `relax_integrality` for solving continuous relaxation
+  * Allow querying constraint conflicts
+- Bug fixes:
+  * Dispatch on `Real` for `MOI.submit`
+  * Implement `copy` for `CustomSet` in tests
+  * Don't export private macros
+  * Fix invalid assertion in nonlinear
+- Error if constraint has `NaN` right-hand side
+- Improve speed of tests
+  * Lots of work modularizing files in `/test`
+- Improve line numbers in macro error messages
+- Print nonlinear subexpressions
+- Various documentation updates
+- Dependency updates:
+  * Datastructures 0.18
+  * MathOptFormat v0.5
+  * Prep for MathOptInterface 0.9.15
+
+Version 0.21.3 (June 18, 2020)
+-----------------------------
+
+- Added Special Order Sets (SOS1 and SOS2) to JuMP with default weights to ease
+  the creation of such constraints (#2212).
+- Added functions `simplex_iterations`, `barrier_iterations` and `node_count`
+  (#2201).
+- Added function `reduced_cost` (#2205).
+- Implemented `callback_value` for affine and quadratic expressions (#2231).
+- Support `MutableArithmetics.Zero` in objective and constraints (#2219).
+- Documentation improvements:
+  * Mention tutorials in the docs (#2223).
+  * Update COIN-OR links (#2242).
+  * Explicit link to the documentation of `MOI.FileFormats` (#2253).
+  * Typo fixes (#2261).
+- Containers improvements:
+  * Fix `Base.map` for `DenseAxisArray` (#2235).
+  * Throw `BoundsError` if number of indices is incorrect for `DenseAxisArray`
+    and `SparseAxisArray` (#2240).
+- Extensibility improvements:
+  * Implement a `set_objective` method fallback that redirects to
+    `set_objective_sense` and `set_objective_function` (#2247).
+  * Add `parse_constraint` method with arbitrary number of arguments (#2051).
+  * Add `parse_constraint_expr` and `parse_constraint_head` (#2228).
+
+Version 0.21.2 (April 2, 2020)
+-----------------------------
+
+- Added `relative_gap()` to access `MOI.RelativeGap()` attribute (#2199).
+- Documentation fixes:
+  * Added link to source for docstrings in the documentation (#2207).
+  * Added docstring for `@variables` macro (#2216).
+  * Typo fixes (#2177, #2184, #2182).
+- Implementation of methods for Base functions:
+  * Implemented `Base.empty!` for `JuMP.Model` (#2198).
+  * Implemented `Base.conj` for JuMP scalar types (#2209).
+- Bug fixes:
+  * Fixed sum of expression with scalar product in macro (#2178).
+  * Fixed writing of nonlinear models to MathOptFormat (#2181).
+  * Fixed construction of empty SparseAxisArray (#2179).
+  * Fixed constraint with zero function (#2188).
+
+Version 0.21.1 (Feb 18, 2020)
+-----------------------------
+
+- Improved the clarity of the `with_optimizer` deprecation warning.
+
+Version 0.21 (Feb 16, 2020)
+-----------------------------
+
+Breaking changes:
+
+- Deprecated `with_optimizer` (#2090, #2084, #2141). You can replace
+  `with_optimizer` by either nothing, `optimizer_with_attributes` or a closure:
+  * replace `with_optimizer(Ipopt.Optimizer)` by `Ipopt.Optimizer`.
+  * replace `with_optimizer(Ipopt.Optimizer, max_cpu_time=60.0)`
+    by `optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time" => 60.0)`.
+  * replace `with_optimizer(Gurobi.Optimizer, env)` by `() -> Gurobi.Optimizer(env)`.
+  * replace `with_optimizer(Gurobi.Optimizer, env, Presolve=0)`
+    by `optimizer_with_attributes(() -> Gurobi.Optimizer(env), "Presolve" => 0)`.
+
+  alternatively to `optimizer_with_attributes`, you can also set the attributes
+  separately with `set_optimizer_attribute`.
+- Renamed `set_parameter` and `set_parameters` to `set_optimizer_attribute` and
+  `set_optimizer_attributes` (#2150).
+- Broadcast should now be explicit inside macros. `@SDconstraint(model, x >= 1)`
+  and `@constraint(model, x + 1 in SecondOrderCone())` now throw an error
+  instead of broadcasting `1` along the dimension of `x` (#2107).
+- `@SDconstraint(model, x >= 0)` is now equivalent to `@constraint(model, x in PSDCone())`
+  instead of `@constraint(model, (x .- 0) in PSDCone())` (#2107).
+- The macros now create the containers with `map` instead of `for` loops,
+  as a consequence, containers created by `@expression` can now have any element
+  type and containers of constraint references now have concrete element types
+  when possible. This fixes a long-standing issue where `@expression` could
+  only be used to generate a collection of linear expressions. Now it works for
+  quadratic expressions as well (#2070).
+- Calling `deepcopy(::AbstractModel)` now throws an error.
+- The constraint name is now printed in the model string (#2108).
+
+New features:
+
+- Added support for solver-independent and solver-specific callbacks (#2101).
+- Added `write_to_file` and `read_from_file`, supported formats are CBF, LP,
+  MathOptFormat, MPS and SDPA (#2114).
+- Added support for complementarity constraints (#2132).
+- Added support for indicator constraints (#2092).
+- Added support for querying multiple solutions with the `result` keyword (#2100).
+- Added support for constraining variables on creation (#2128).
+- Added method `delete` that deletes a vector of variables at once if it is
+  supported by the underlying solver (#2135).
+- The arithmetic between JuMP expression has be refactored into the
+  MutableArithmetics package (#2107).
+- Improved error on complex values in NLP (#1978).
+- Added an example of column generation (#2010).
+
+Bug fixes:
+
+- Incorrect coefficients generated when using Symmetric variables (#2102)
+
 Version 0.20.1 (Oct 18, 2019)
 -----------------------------
 
@@ -55,10 +192,10 @@ Breaking changes:
   [MathProgBase](https://github.com/JuliaOpt/MathProgBase.jl) (MPB) to
   [MathOptInterface](https://github.com/JuliaOpt/MathOptInterface.jl)
   (MOI). MOI addresses many longstanding design issues. (See @mlubin's
-  [slides](http://www.juliaopt.org/meetings/bordeaux2018/lubin.pdf) from
+  [slides](https://www.juliaopt.org/meetings/bordeaux2018/lubin.pdf) from
   JuMP-dev 2018.) JuMP 0.19 is compatible only with solvers that have been
   updated for MOI. See the
-  [installation guide](http://www.juliaopt.org/JuMP.jl/dev/installation/)
+  [installation guide](https://www.juliaopt.org/JuMP.jl/dev/installation/)
   for a list of solvers that have and have not yet been updated.
 
 - Most solvers have been renamed to `PackageName.Optimizer`. For example,
@@ -72,12 +209,12 @@ Breaking changes:
   rewritten (inspired by `AxisArrays`) and renamed `Containers.DenseAxisArray`,
   and you can now request a container type with the `container=` keyword to the
   macros. See the corresponding
-  [documentation](http://www.juliaopt.org/JuMP.jl/dev/variables/#Variable-containers-1)
+  [documentation](https://www.juliaopt.org/JuMP.jl/dev/variables/#Variable-containers-1)
   for more details.
 
 - The statuses returned by solvers have changed. See the possible status
   values
-  [here](http://www.juliaopt.org/MathOptInterface.jl/stable/apireference.html#Termination-Status-1).
+  [here](https://www.juliaopt.org/MathOptInterface.jl/stable/apireference.html#Termination-Status-1).
   The MOI statuses are much richer than the MPB statuses and can be used to
   distinguish between previously indistinguishable cases (e.g. did the solver
   have a feasible solution when it stopped because of the time limit?).
@@ -116,7 +253,7 @@ Breaking changes:
 
 - The sign conventions for duals has changed in some cases for consistency with
   conic duality (see the
-  [documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apimanual.html#Duals-1)).
+  [documentation](https://www.juliaopt.org/MathOptInterface.jl/v0.6.2/apimanual.html#Duals-1)).
   The `shadow_price` helper method returns duals with signs that match
   conventional LP interpretations of dual values as sensitivities of the
   objective value to relaxations of constraints.
@@ -133,7 +270,7 @@ Breaking changes:
 - The `lowerbound`, `upperbound`, and `basename` keyword arguments to the `@variable`
   macro have been renamed to `lower_bound`, `upper_bound`, and `base_name`,
   for consistency with JuMP's new
-  [style recommendations](http://www.juliaopt.org/JuMP.jl/dev/style/).
+  [style recommendations](https://www.juliaopt.org/JuMP.jl/dev/style/).
 
 - We rely on broadcasting syntax to apply accessors to collections of
   variables, e.g., `value.(x)` instead of `getvalue(x)` for collections. (Use
@@ -171,7 +308,7 @@ New features:
 
 - Direct mode and manual mode provide explicit control over when copies of a
   model are stored and/or regenerated. See the corresponding
-  [documentation](http://www.juliaopt.org/JuMP.jl/dev/solvers/).
+  [documentation](https://www.juliaopt.org/JuMP.jl/dev/solvers/).
 
 There are known regressions from JuMP 0.18 that will be addressed in a future
 release (0.19.x or later):

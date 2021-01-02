@@ -1,7 +1,7 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Returns the block expression inside a :let that holds the code to be run.
 # The other block (not returned) is for declaring variables in the scope of the
@@ -221,6 +221,14 @@ end
 
 function _parse_NL_expr_runtime(m::Model, x, tape, parent, values)
     error("Unexpected object $x (of type $(typeof(x)) in nonlinear expression.")
+end
+
+function _parse_NL_expr_runtime(m, x, tape, parent, values)
+    error(
+        "Encountered an error parsing nonlinear expression: we don't support " *
+        "models of type $(typeof(m)). In general, JuMP's nonlinear features " *
+        "don't work with JuMP-extensions."
+    )
 end
 
 function _expression_complexity(ex::Expr)

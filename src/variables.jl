@@ -1,8 +1,15 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+"""
+    AbstractVariable
+
+Variable returned by [`build_variable`](@ref). It represents a variable that has
+not been added yet to any model. It can be added to a given `model` with
+[`add_variable`](@ref).
+"""
 abstract type AbstractVariable end
 
 # Any fields can usually be either a number or an expression
@@ -108,10 +115,11 @@ end
 Returns the model to which `v` belongs.
 
 # Example
-```jldoctest
-julia> model = Model()
+```jldoctest; setup=:(using JuMP)
+julia> model = Model();
 
 julia> x = @variable(model)
+noname
 
 julia> owner_model(x) === model
 true
@@ -134,13 +142,13 @@ end
 """
     check_belongs_to_model(func::AbstractJuMPScalar, model::AbstractModel)
 
-Throw `VariableNotOwned` if the `owner_model` of one of the variables of the
-function `func` is not `model`.
+Throw [`VariableNotOwned`](@ref) if the [`owner_model`](@ref) of one of the
+variables of the function `func` is not `model`.
 
     check_belongs_to_model(constraint::AbstractConstraint, model::AbstractModel)
 
-Throw `VariableNotOwned` if the `owner_model` of one of the variables of the
-constraint `constraint` is not `model`.
+Throw [`VariableNotOwned`](@ref) if the [`owner_model`](@ref) of one of the
+variables of the constraint `constraint` is not `model`.
 """
 function check_belongs_to_model end
 
@@ -160,6 +168,8 @@ isequal_canonical(v::VariableRef, other::VariableRef) = isequal(v, other)
     delete(model::Model, variable_ref::VariableRef)
 
 Delete the variable associated with `variable_ref` from the model `model`.
+
+See also: [`unregister`](@ref)
 """
 function delete(model::Model, variable_ref::VariableRef)
     if model !== owner_model(variable_ref)
@@ -167,6 +177,24 @@ function delete(model::Model, variable_ref::VariableRef)
               "belong to the model.")
     end
     MOI.delete(backend(model), variable_ref.index)
+end
+
+"""
+    delete(model::Model, variable_refs::Vector{VariableRef})
+
+Delete the variables associated with `variable_refs` from the model `model`.
+Solvers may implement methods for deleting multiple variables that are
+more efficient than repeatedly calling the single variable delete method.
+
+See also: [`unregister`](@ref)
+"""
+function delete(model::Model, variable_refs::Vector{VariableRef})
+    if any(model !== owner_model(v) for v in variable_refs)
+        error("A variable reference you are trying to delete does not " *
+              "belong to the model.")
+    end
+    MOI.delete(backend(model), index.(variable_refs))
+    return
 end
 
 """
@@ -181,7 +209,7 @@ end
 
 # The default hash is slow. It's important for the performance of AffExpr to
 # define our own.
-# https://github.com/JuliaOpt/MathOptInterface.jl/issues/234#issuecomment-366868878
+# https://github.com/jump-dev/MathOptInterface.jl/issues/234#issuecomment-366868878
 function Base.hash(v::VariableRef, h::UInt)
     return hash(objectid(owner_model(v)), hash(v.index.value, h))
 end
@@ -228,13 +256,7 @@ no variable has this name attribute. Throws an error if several variables have
 `name` as their name attribute.
 
 ```jldoctest objective_function; setup = :(using JuMP), filter = r"Stacktrace:.*"s
-julia> model = Model()
-A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+julia> model = Model();
 
 julia> @variable(model, x)
 x
@@ -736,12 +758,21 @@ end
 Return the value of variable `v` associated with result index `result` of the
 most-recent returned by the solver.
 
-Use[`has_values`](@ref) to check if a result exists before asking for values.
+Use [`has_values`](@ref) to check if a result exists before asking for values.
 
 See also: [`result_count`](@ref).
 """
 function value(v::VariableRef; result::Int = 1)::Float64
     return MOI.get(owner_model(v), MOI.VariablePrimal(result), v)
+end
+
+"""
+    value(v::VariableRef, var_value::Function)
+
+Evaluate the value of the variable `v` as `var_value(v)`.
+"""
+function value(v::VariableRef, var_value::Function)
+    return var_value(v)
 end
 
 """
@@ -808,12 +839,52 @@ function _moi_constrain_variable(backend::MOI.ModelLike, index, info)
 end
 
 """
-    ConstrainedVariables <: AbstractVariable
+    VariablesConstrainedOnCreation <: AbstractVariable
+
+Variable `scalar_variables` constrained to belong to `set`.
+Adding this variable can be understood as doing:
+```julia
+function JuMP.add_variable(model::Model, variable::JuMP.VariableConstrainedOnCreation, names)
+    var_ref = JuMP.add_variable(model, variable.scalar_variable, name)
+    JuMP.add_constraint(model, JuMP.VectorConstraint(var_ref, variable.set))
+    return var_ref
+end
+```
+but adds the variables with `MOI.add_constrained_variable(model, variable.set)`
+instead. See [the MOI documentation](https://jump.dev/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
+for the difference between adding the variables with `MOI.add_constrained_variable`
+and adding them with `MOI.add_variable` and adding the constraint separately.
+"""
+struct VariableConstrainedOnCreation{S <: MOI.AbstractScalarSet,
+                           ScalarVarType <: AbstractVariable} <: AbstractVariable
+    scalar_variable::ScalarVarType
+    set::S
+end
+
+function add_variable(model::Model, variable::VariableConstrainedOnCreation, name::String)
+    var_index = _moi_add_constrained_variable(
+        backend(model), variable.scalar_variable, variable.set, name)
+    return VariableRef(model, var_index)
+end
+
+function _moi_add_constrained_variable(
+    backend::MOI.ModelLike, scalar_variable::ScalarVariable,
+    set::MOI.AbstractScalarSet, name::String)
+    var_index, con_index = MOI.add_constrained_variable(backend, set)
+    _moi_constrain_variable(backend, var_index, scalar_variable.info)
+    if !isempty(name)
+        MOI.set(backend, MOI.VariableName(), var_index, name)
+    end
+    return var_index
+end
+
+"""
+    VariablesConstrainedOnCreation <: AbstractVariable
 
 Vector of variables `scalar_variables` constrained to belong to `set`.
 Adding this variable can be thought as doing:
 ```julia
-function JuMP.add_variable(model::Model, variable::JuMP.ConstrainedVariables, names)
+function JuMP.add_variable(model::Model, variable::JuMP.VariablesConstrainedOnCreation, names)
     var_refs = JuMP.add_variable.(model, variable.scalar_variables,
                                   JuMP.vectorize(names, variable.shape))
     JuMP.add_constraint(model, JuMP.VectorConstraint(var_refs, variable.set))
@@ -821,22 +892,22 @@ function JuMP.add_variable(model::Model, variable::JuMP.ConstrainedVariables, na
 end
 ```
 but adds the variables with `MOI.add_constrained_variables(model, variable.set)`
-instead. See [the MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
+instead. See [the MOI documentation](https://jump.dev/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
 for the difference between adding the variables with `MOI.add_constrained_variables`
 and adding them with `MOI.add_variables` and adding the constraint separately.
 """
-struct ConstrainedVariables{S <: MOI.AbstractVectorSet, Shape <: AbstractShape,
+struct VariablesConstrainedOnCreation{S <: MOI.AbstractVectorSet, Shape <: AbstractShape,
                             ScalarVarType <: AbstractVariable} <: AbstractVariable
     scalar_variables::Vector{ScalarVarType}
     set::S
     shape::Shape
 end
 
-function ConstrainedVariables(variables::Vector{<:AbstractVariable}, set::MOI.AbstractVectorSet)
-    return ConstrainedVariables(variables, set, VectorShape())
+function VariablesConstrainedOnCreation(variables::Vector{<:AbstractVariable}, set::MOI.AbstractVectorSet)
+    return VariablesConstrainedOnCreation(variables, set, VectorShape())
 end
 
-function add_variable(model::Model, variable::ConstrainedVariables, names)
+function add_variable(model::Model, variable::VariablesConstrainedOnCreation, names)
     var_indices = _moi_add_constrained_variables(
         backend(model), variable.scalar_variables, variable.set, vectorize(names, variable.shape))
     var_refs = [VariableRef(model, var_index) for var_index in var_indices]
@@ -854,12 +925,42 @@ function _moi_add_constrained_variables(
     for (index, variable) in zip(var_indices, scalar_variables)
         _moi_constrain_variable(backend, index, variable.info)
     end
-    if names !== nothing
-        for (var_index, name) in zip(var_indices, names)
+    for (var_index, name) in zip(var_indices, names)
+        if !isempty(name)
             MOI.set(backend, MOI.VariableName(), var_index, name)
         end
     end
     return var_indices
+end
+
+"""
+    reduced_cost(x::VariableRef)::Float64
+
+Return the reduced cost associated with variable `x`.
+
+Equivalent to querying the shadow price of the active variable bound
+(if one exists and is active).
+
+See also: [`shadow_price`](@ref).
+"""
+function reduced_cost(x::VariableRef)::Float64
+    model = owner_model(x)
+    if !has_duals(model)
+        error("Unable to query reduced cost of variable because model does" *
+              " not have duals available.")
+    end
+    sign = objective_sense(model) == MOI.MIN_SENSE ? 1.0 : -1.0
+    if is_fixed(x)
+        return sign * dual(FixRef(x))
+    end
+    rc = 0.0
+    if has_upper_bound(x)
+        rc += dual(UpperBoundRef(x))
+    end
+    if has_lower_bound(x)
+        rc += dual(LowerBoundRef(x))
+    end
+    return sign * rc
 end
 
 """
@@ -869,7 +970,7 @@ Returns a list of all variables currently in the model. The variables are
 ordered by creation time.
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 model = Model()
 @variable(model, x)
 @variable(model, y)
@@ -898,4 +999,130 @@ end
 function value(::AbstractArray{<:AbstractJuMPScalar})
     error("`JuMP.value` is not defined for collections of JuMP types. Use" *
           " Julia's broadcast syntax instead: `JuMP.value.(x)`.")
+end
+
+value(::_MA.Zero) = 0.0
+value(x::Number) = x
+
+function _info_from_variable(v::VariableRef)
+    has_lb = has_lower_bound(v)
+    lb = has_lb ? lower_bound(v) : -Inf
+    has_ub = has_upper_bound(v)
+    ub = has_ub ? upper_bound(v) : Inf
+    has_fix = is_fixed(v)
+    fixed_value = has_fix ? fix_value(v) : NaN
+    start_or_nothing = start_value(v)
+    has_start = !(start_or_nothing isa Nothing)
+    start = has_start ? start_or_nothing : NaN
+    has_start = start !== Nothing
+    binary = is_binary(v)
+    integer = is_integer(v)
+    return VariableInfo(has_lb, lb, has_ub, ub, has_fix, fixed_value,
+                        has_start, start, binary, integer)
+end
+
+"""
+    relax_integrality(model::Model)
+
+Modifies `model` to "relax" all binary and integrality constraints on
+variables. Specifically,
+
+- Binary constraints are deleted, and variable bounds are tightened if
+  necessary to ensure the variable is constrained to the interval ``[0, 1]``.
+- Integrality constraints are deleted without modifying variable bounds.
+- An error is thrown if semi-continuous or semi-integer constraints are
+  present (support may be added for these in the future).
+- All other constraints are ignored (left in place). This includes discrete
+  constraints like SOS and indicator constraints.
+
+Returns a function that can be called without any arguments to restore the
+original model. The behavior of this function is undefined if additional
+changes are made to the affected variables in the meantime.
+
+# Example
+```jldoctest; setup=:(using JuMP)
+julia> model = Model();
+
+julia> @variable(model, x, Bin);
+
+julia> @variable(model, 1 <= y <= 10, Int);
+
+julia> @objective(model, Min, x + y);
+
+julia> undo_relax = relax_integrality(model);
+
+julia> print(model)
+Min x + y
+Subject to
+ x ≥ 0.0
+ y ≥ 1.0
+ x ≤ 1.0
+ y ≤ 10.0
+
+julia> undo_relax()
+
+julia> print(model)
+Min x + y
+Subject to
+ y ≥ 1.0
+ y ≤ 10.0
+ y integer
+ x binary
+```
+"""
+function relax_integrality(model::Model)
+    semicont_type = _MOICON{MOI.SingleVariable, MOI.Semicontinuous{Float64}}
+    semiint_type = _MOICON{MOI.SingleVariable, MOI.Semiinteger{Float64}}
+    for v in all_variables(model)
+        if MOI.is_valid(backend(model), semicont_type(index(v).value))
+            error("Support for relaxing semicontinuous constraints is not " *
+                  "yet implemented.")
+        elseif MOI.is_valid(backend(model), semiint_type(index(v).value))
+            error("Support for relaxing semi-integer constraints is not " *
+                  "yet implemented.")
+        end
+    end
+
+    info_pre_relaxation = map(v -> (v, _info_from_variable(v)),
+        all_variables(model))
+    # We gather the info first because some solvers perform poorly when you
+    # interleave queries and changes. See, e.g.,
+    # https://github.com/jump-dev/Gurobi.jl/pull/301.
+    for (v, info) in info_pre_relaxation
+        if info.integer
+            unset_integer(v)
+        elseif info.binary
+            unset_binary(v)
+            if !info.has_fix
+                set_lower_bound(v, max(0.0, info.lower_bound))
+                set_upper_bound(v, min(1.0, info.upper_bound))
+            elseif info.fixed_value < 0 || info.fixed_value > 1
+                error("The model has no valid relaxation: binary variable " *
+                      "fixed out of bounds.")
+            end
+        end
+    end
+    function unrelax()
+        for (v, info) in info_pre_relaxation
+            if info.integer
+                set_integer(v)
+            elseif info.binary
+                set_binary(v)
+                if !info.has_fix
+                    if info.has_lb
+                        set_lower_bound(v, info.lower_bound)
+                    else
+                        delete_lower_bound(v)
+                    end
+                    if info.has_ub
+                        set_upper_bound(v, info.upper_bound)
+                    else
+                        delete_upper_bound(v)
+                    end
+                end
+            end
+        end
+        return
+    end
+    return unrelax
 end

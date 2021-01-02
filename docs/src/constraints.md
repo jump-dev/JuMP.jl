@@ -123,7 +123,7 @@ Subject to
 
 ## [Duality](@id constraint_duality)
 
-JuMP adopts the notion of [conic duality from MOI](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apimanual/#Duals-1).
+JuMP adopts the notion of [conic duality from MOI](https://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Duals-1).
 For linear programs, a feasible dual on a `>=` constraint is nonnegative and a
 feasible dual on a `<=` constraint is nonpositive. If the constraint is an
 equality constraint, it depends on which direction is binding.
@@ -133,7 +133,9 @@ equality constraint, it depends on which direction is binding.
     the sign of feasible duals associated with a constraint depends on the
     direction of the constraint and not whether the problem is maximization or
     minimization. **This is a different convention from linear programming
-    duality in some common textbooks.**
+    duality in some common textbooks.** If you have a linear program, and you
+    want the textbook definition, you probably want to use [`shadow_price`](@ref)
+    and [`reduced_cost`](@ref) instead.
 
 The dual value associated with a constraint in the most recent solution can be
 accessed using the [`dual`](@ref) function. You can use the [`has_duals`](@ref)
@@ -209,9 +211,9 @@ julia> shadow_price(con)
 To query the dual variables associated with a variable bound, first obtain a
 constraint reference using one of [`UpperBoundRef`](@ref),
 [`LowerBoundRef`](@ref), or [`FixRef`](@ref), and then call [`dual`](@ref) on
-the returned constraint reference. Note that in linear programming,
-the duals on variable bounds are also called the reduced costs
-(although the sign might differ from the one you expect).
+the returned constraint reference. The [`reduced_cost`](@ref) function may
+simplify this process as it returns the shadow price of an active bound of
+a variable (or zero, if no active bound exists).
 
 ```@meta
 DocTestSetup = quote
@@ -224,16 +226,70 @@ end
 The name, i.e. the value of the `MOI.ConstraintName` attribute, of a constraint
 can be obtained by [`name(::JuMP.ConstraintRef)`](@ref) and set by
 [`set_name(::JuMP.ConstraintRef, ::String)`](@ref).
-```@docs
-name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex})
-set_name(::JuMP.ConstraintRef{Model, <:JuMP.MOI.ConstraintIndex}, ::String)
-```
 
 The constraint can also be retrieved from its name using
 [`constraint_by_name`](@ref).
-```@docs
-constraint_by_name
+
+## Start Values
+
+Provide a starting value (also called warmstart) for a constraint's dual using
+[`set_dual_start_value`](@ref).
+
+The start value of a constraint's dual can be queried using [`dual_start_value`](@ref).
+If no start value has been set, [`dual_start_value`](@ref) will return `nothing`.
+
+```jldoctest constraint_dual_start; setup=:(model=Model())
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, con, x >= 10)
+con : x ≥ 10.0
+
+julia> dual_start_value(con)
+
+julia> set_dual_start_value(con, 2)
+
+julia> dual_start_value(con)
+2.0
 ```
+
+A vector constraint will require a vector warmstart:
+
+```jldoctest constraint_dual_start_vector; setup=:(model=Model())
+julia> @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> @constraint(model, con, x in SecondOrderCone())
+con : [x[1], x[2], x[3]] in MathOptInterface.SecondOrderCone(3)
+
+julia> dual_start_value(con)
+
+julia> set_dual_start_value(con, [1.0, 2.0, 3.0])
+
+julia> dual_start_value(con)
+3-element Array{Float64,1}:
+ 1.0
+ 2.0
+ 3.0
+```
+
+To take the dual solution from the last solve and use it as the starting point
+for a new solve, use:
+
+```julia
+for (F, S) in list_of_constraint_types(model)
+    for con in all_constraints(model, F, S)
+        set_dual_start_value(con, dual(con))
+    end
+end
+```
+
+!!! note
+    Some constraints might not have well defined duals, hence one might need to
+    filter `(F, S)` pairs.
 
 ## Constraint containers
 
@@ -365,13 +421,13 @@ julia> @constraint(model, A * x - b in MOI.Nonnegatives(2))
 
 In addition to the `Nonnegatives` set, MOI defines a number of
 other vector-valued sets such as `Nonpositives`. See the
-[MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apireference/#Sets-1)
+[MOI documentation](https://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#Sets-1)
 for more information.
 
 Note also that for the first time we have used an explicit *function-in-set*
 description of the constraint. Read more about this representation for
 constraints in the
-[MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apimanual/#Constraints-by-function-set-pairs-1).
+[MOI documentation](https://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Constraints-by-function-set-pairs-1).
 
 ## Constraints on a single variable
 
@@ -455,7 +511,7 @@ julia> @constraint(model, [t, u, x[1], x[2]] in RotatedSecondOrderCone())
 
 In addition to the second order cone and rotated second order cone,
 MOI defines a number of other conic sets such as the exponential
-and power cones. See the [MathOptInterface documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apireference/#Sets-1)
+and power cones. See the [MathOptInterface documentation](https://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#Sets-1)
 for more information.
 
 ## Constraints on a collection of variables
@@ -817,42 +873,118 @@ julia> con.set
 MathOptInterface.LessThan{Float64}(1.0)
 ```
 
+## Complementarity constraints
 
-## Reference
+A mixed complementarity constraint `F(x) ⟂ x` consists of finding `x` in the
+interval `[lb, ub]`, such that the following holds:
 
-```@docs
-@constraint
-@SDconstraint
-SecondOrderCone
-RotatedSecondOrderCone
-PSDCone
-shadow_price
-normalized_coefficient
-set_normalized_coefficient
-normalized_rhs
-set_normalized_rhs
-add_to_function_constant
-is_valid
-JuMP.delete
-LowerBoundRef
-UpperBoundRef
-FixRef
-ConstraintRef
-list_of_constraint_types
-all_constraints
-num_constraints
-constraint_object
-AbstractConstraint
-ScalarConstraint
-VectorConstraint
-index(::ConstraintRef)
-optimizer_index(::ConstraintRef{Model})
+- `F(x) == 0` if `lb < x < ub`
+- `F(x) >= 0` if `lb == x`
+- `F(x) <= 0` if `x == ub`
+
+For more information, see the [`MOI.Complements` documentation](https://jump.dev/MathOptInterface.jl/v0.9/apireference/#MathOptInterface.Complements).
+
+JuMP supports mixed complementarity constraints via `complements(F(x), x)` or
+`F(x) ⟂ x` in the [`@constraint`](@ref) macro. The interval set `[lb, ub]` is
+obtained from the variable bounds on `x`.
+
+For example, to define the problem `2x - 1 ⟂ x` with `x ∈ [0, ∞)`, do:
+```jldoctest complementarity; setup=:(model=Model())
+julia> @variable(model, x >= 0)
+x
+
+julia> @constraint(model, 2x - 1 ⟂ x)
+[2 x - 1, x] ∈ MathOptInterface.Complements(1)
+```
+This problem has a unique solution at `x = 0.5`.
+
+The perp operator `⟂` can be entered in most editors (and the Julia REPL) by
+typing `\perp<tab>`.
+
+An alternative approach that does not require the `⟂` symbol uses the
+`complements` function as follows:
+```jldoctest complementarity
+julia> @constraint(model, complements(2x - 1, x))
+[2 x - 1, x] ∈ MathOptInterface.Complements(1)
 ```
 
-## Constructing constraints without adding them to the model
+In both cases, the mapping `F(x)` is supplied as the first argument, and the
+matching variable `x` is supplied as the second.
 
-For advanced use cases.
+Vector-valued complementarity constraints are also supported:
+```jldoctest complementarity
+julia> @variable(model, -2 <= y[1:2] <= 2)
+2-element Array{VariableRef,1}:
+ y[1]
+ y[2]
 
-```@docs
-@build_constraint
+julia> M = [1 2; 3 4]
+2×2 Array{Int64,2}:
+ 1  2
+ 3  4
+
+julia> q = [5, 6]
+2-element Array{Int64,1}:
+ 5
+ 6
+
+julia> @constraint(model, M * y + q ⟂ y)
+[y[1] + 2 y[2] + 5, 3 y[1] + 4 y[2] + 6, y[1], y[2]] ∈ MathOptInterface.Complements(2)
+```
+
+## Special Ordered Sets (SOS1 and SOS2)
+
+A Special Ordered Set (SOS) is an ordered set of variables with the following characteristics.
+
+If a vector of variables `x` is in a Special Ordered Set of Type I (SOS1), then at most one
+element of `x` can take a non-zero value, and all other elements must be zero.
+
+Although not required for feasibility, solvers can benefit from an ordering of the variables
+(e.g., the variables represent different factories to build, at most one factory can be built,
+and the factories can be ordered according to cost). To induce an ordering, `weights` can be provided;
+as such, they should be unique values. The `k`th element in the ordered set corresponds to
+the `k`th weight in `weights` when the weights are sorted.
+
+A SOS1 constraint is equivalent to:
+
+- `x[i] >= 0` for some `i`
+- `x[j] == 0` for all `j != i`
+
+If a vector of variables `x` is in a Special Ordered Set of Type II (SOS2), then at most two
+elements can be non-zero, and if two elements are non-zero, they must be adjacent.
+
+Because of the adjacency requirement, you should supply a weight vector (with unique elements)
+to induce an ordering of the variables. The `k`th element in the ordered set corresponds to
+the `k`th weight in `weights` when the weights are sorted.
+
+A SOS2 constraint is equivalent to:
+
+- `x[i] >= 0`, `x[i+1] >= 0`  for some `i`
+- `x[j] == 0` for all `j != i`, `j != i+1`
+
+Create an SOS constraint as follows:
+
+```jldoctest SOS; setup=:(model=Model())
+julia> @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> @constraint(model, x in SOS2([3,5,2]))
+[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([3.0, 5.0, 2.0])
+```
+
+In the case above, `x[3]` is the first variable and `x[2]` the last variable under the
+induced ordering. When no ordering vector is provided, JuMP induces an ordering from `1:length(x)`.
+
+```jldoctest SOS; setup=:(model=Model())
+julia> @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> @constraint(model, x in SOS2())
+[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([1.0, 2.0, 3.0])
 ```

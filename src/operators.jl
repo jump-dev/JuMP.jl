@@ -1,11 +1,11 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
 const _JuMPTypes = Union{AbstractJuMPScalar, NonlinearExpression}
@@ -258,6 +258,9 @@ Base.promote_rule(::Type{<:GenericAffExpr{S, V}}, ::Type{<:GenericQuadExpr{T, V}
 Base.promote_rule(::Type{GenericQuadExpr{S, V}}, R::Type{<:Real}) where {S, V} = GenericQuadExpr{promote_type(S, R), V}
 
 Base.transpose(x::AbstractJuMPScalar) = x
+
+# only real scalars are supported
+Base.conj(x::AbstractJuMPScalar) = x
 
 # Can remove the following code once == overloading is removed
 

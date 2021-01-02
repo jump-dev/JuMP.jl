@@ -1,11 +1,11 @@
 #  Copyright 2019, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
 """
@@ -164,6 +164,11 @@ end
 
 function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, _MOICON{F, S}}; feasibility_tolerance::Float64 = 1e-8
                       )::Tuple{Float64, Float64} where {S <: Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo}, T, F <: Union{MOI.ScalarAffineFunction{T}, MOI.SingleVariable}}
+    @warn(
+        "This function has been deprecated and will be removed in a future " *
+        "release. Use `lp_sensitivity_report(model)` instead.",
+        maxlog = 1,
+    )
     model = owner_model(constraint)
     if termination_status(model) != MOI.OPTIMAL
         error("The perturbation range of rhs is not available because the current solution "*
@@ -275,6 +280,11 @@ remains optimal, i.e., the reduced costs remain valid.
   Simplex Method" by István Maros, section 9.3.4).
 """
 function lp_objective_perturbation_range(var::VariableRef; optimality_tolerance::Float64 = 1e-8)::Tuple{Float64, Float64}
+    @warn(
+        "This function has been deprecated and will be removed in a future " *
+        "release. Use `lp_sensitivity_report(model)` instead.",
+        maxlog = 1,
+    )
     model = owner_model(var)
     if termination_status(model) != MOI.OPTIMAL
         error("The perturbation range of the objective is not available because the current solution "*

@@ -1,7 +1,6 @@
-Interacting with solvers
-========================
+# Interacting with solvers
 
-A JuMP model keeps a [MathOptInterface (MOI)](https://github.com/JuliaOpt/MathOptInterface.jl)
+A JuMP model keeps a [MathOptInterface (MOI)](https://github.com/jump-dev/MathOptInterface.jl)
 *backend* of type `MOI.ModelLike` that stores the optimization
 problem and acts as the optimization solver. We call it an MOI *backend* and not
 optimizer as it can also be a wrapper around an optimization file format such as
@@ -56,7 +55,7 @@ the optimizer:
   MOI but new ones can be defined and added to the `LazyBridgeOptimizer` used by
   JuMP.
 
-See the [MOI documentation](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/)
+See the [MOI documentation](https://jump.dev/MathOptInterface.jl/v0.9.1/)
 for more details on these two MOI layers.
 
 To attach an optimizer to a JuMP model, JuMP needs to be able to create a new
@@ -66,18 +65,12 @@ optimizer object.
 
 The factory can be provided either at model construction time by calling
 [`set_optimizer`](@ref). An optimizer must be set before a call to
-[`optimize!`](@ref).
-```@docs
-set_optimizer
-NoOptimizer
-JuMP.optimize!
-```
+[`optimize!`](@ref). The optimizer can be grouped with attributes to be
+set before optimization with [`optimizer_with_attributes`](@ref).
 
 New JuMP models are created using the [`Model`](@ref) constructor:
-```@docs
-Model()
-Model(::Any)
-```
+
+A JuMP model may be reused by emptying it first with `empty!(model)`.
 
 ```@meta
 # TODO: how to control the caching optimizer states
@@ -85,46 +78,24 @@ Model(::Any)
 
 ## Direct mode
 
-JuMP models can be created in `DIRECT` mode using the
-[`JuMP.direct_model`](@ref) function.
-```@docs
-JuMP.direct_model
-```
-
-```@docs
-JuMP.backend
-```
+JuMP models can be created in `MOI.DIRECT` mode using the [`JuMP.direct_model`](@ref)
+function.
 
 ## Solver attributes
 
 Some solver attributes can be queried and set through JuMP models.
 
-```@docs
-solver_name
+Examples include:
 
-bridge_constraints
-
-set_parameter
-set_parameters
-set_silent
-unset_silent
-set_time_limit_sec
-unset_time_limit_sec
-time_limit_sec
-```
+- [`set_silent`](@ref) and [`unset_silent`](@ref)
+- [`set_time_limit_sec`](@ref) and [`unset_time_limit_sec`](@ref)
 
 ## File formats
 
 JuMP can write models to a variety of file-formats using [`write_to_file`](@ref)
 and [`Base.write`](@ref).
-```@docs
-write_to_file
-Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)
-```
+
+The file formats are defined [within MathOptInterface in the FileFormats enumeration](https://jump.dev/MathOptInterface.jl/v0.9/apireference/#MathOptInterface.FileFormats.FileFormat).
 
 JuMP models can be created from file formats using [`read_from_file`](@ref) and
 [`Base.read`](@ref).
-```@docs
-read_from_file
-Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)
-```

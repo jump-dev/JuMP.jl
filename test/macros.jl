@@ -1,50 +1,76 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 # test/macros.jl
 # Testing for macros
 #############################################################################
 
-import MutableArithmetics
-const MA = MutableArithmetics
+using JuMP
+using Test
+
+const MA = JuMP._MA
+
+include(joinpath(@__DIR__, "utilities.jl"))
+
+@static if !(:JuMPExtension in names(Main))
+    include(joinpath(@__DIR__, "JuMPExtension.jl"))
+end
 
 @testset "Check Julia generator expression parsing" begin
-    sumexpr = :(sum(x[i,j] * y[i,j] for i = 1:N, j in 1:M if i != j))
+    sumexpr = :(sum(x[i, j] * y[i, j] for i = 1:N, j in 1:M if i != j))
     @test sumexpr.head == :call
     @test sumexpr.args[1] == :sum
     @test sumexpr.args[2].head == :generator
-    @test sumexpr.args[2].args[1] == :(x[i,j] * y[i,j])
+    @test sumexpr.args[2].args[1] == :(x[i, j] * y[i, j])
     @test sumexpr.args[2].args[2].head == :filter
     @test sumexpr.args[2].args[2].args[1] == :(i != j)
     @test sumexpr.args[2].args[2].args[2] == :(i = 1:N)
     @test sumexpr.args[2].args[2].args[3] == :(j = 1:M)
 
-    sumexpr = :(sum(x[i,j] * y[i,j] for i = 1:N, j in 1:M))
+    sumexpr = :(sum(x[i, j] * y[i, j] for i in 1:N, j in 1:M))
     @test sumexpr.head == :call
     @test sumexpr.args[1] == :sum
     @test sumexpr.args[2].head == :generator
-    @test sumexpr.args[2].args[1] == :(x[i,j] * y[i,j])
+    @test sumexpr.args[2].args[1] == :(x[i, j] * y[i, j])
     @test sumexpr.args[2].args[2] == :(i = 1:N)
     @test sumexpr.args[2].args[3] == :(j = 1:M)
 end
 
 @testset "Check Julia condition expression parsing" begin
-    ex = :(x[12;3])
+    ex = :(x[12; 3])
     @test ex.head == :typed_vcat
     @test ex.args == [:x, 12, 3]
 
-    ex = :(x[i=1:3, j=S; isodd(i) && i + j >= 2])
+    ex = :(x[i = 1:3, j = S; isodd(i) && i + j >= 2])
     @test ex.head == :ref
-    @test ex.args == [:x,
-                  Expr(:parameters, Expr(:&&, :(isodd(i)), :(i + j >= 2))),
-                  Expr(:kw, :i, :(1:3)),
-                  Expr(:kw, :j, :S)]
+    @test ex.args == [
+        :x,
+        Expr(:parameters, Expr(:&&, :(isodd(i)), :(i + j >= 2))),
+        Expr(:kw, :i, :(1:3)),
+        Expr(:kw, :j, :S),
+    ]
+end
+
+@testset "MutableArithmetics.Zero (Issue #2187)" begin
+    model = Model()
+    c = @constraint(model, sum(1 for _ in 1:0) == sum(1 for _ in 1:0))
+    @test constraint_object(c).func == AffExpr(0.0)
+    @test constraint_object(c).set == MOI.EqualTo(0.0)
+end
+
+@testset "MutableArithmetics.Zero (Issue #2087)" begin
+    model = Model()
+    @objective(model, Min, sum(1 for _ in 1:0))
+    @test objective_function(model) == AffExpr(0.0)
+    c = @constraint(model, sum(1 for _ in 1:0) in MOI.EqualTo(0.0))
+    @test constraint_object(c).func == AffExpr(0.0)
+    @test constraint_object(c).set == MOI.EqualTo(0.0)
 end
 
 mutable struct MyVariable
@@ -53,9 +79,9 @@ mutable struct MyVariable
 end
 
 @testset "Extension of @variable with build_variable #1029" begin
-    local MyVariable{S, T, U, V} = Tuple{JuMP.VariableInfo{S, T, U, V}, Int, Int}
-    names = Dict{MyVariable, String}()
-    function JuMP.add_variable(::Model, v::MyVariable, name::String="")
+    local MyVariable{S,T,U,V} = Tuple{JuMP.VariableInfo{S,T,U,V},Int,Int}
+    names = Dict{MyVariable,String}()
+    function JuMP.add_variable(::Model, v::MyVariable, name::String = "")
         names[v] = name
         return v
     end
@@ -63,7 +89,12 @@ end
     # fields have the same hash hence we need to add an id to distinguish
     # variables in the `names` dictionary.
     id = 0
-    function JuMP.build_variable(_error::Function, info::JuMP.VariableInfo, ::Type{MyVariable}; test_kw::Int = 0)
+    function JuMP.build_variable(
+        _error::Function,
+        info::JuMP.VariableInfo,
+        ::Type{MyVariable};
+        test_kw::Int = 0,
+    )
         return (info, test_kw, id += 1)
     end
     m = Model()
@@ -103,7 +134,7 @@ end
         @test test_kw == 2
     end
 
-    z = @variable(m, variable_type=MyVariable, upper_bound=3, test_kw=5)
+    z = @variable(m, variable_type = MyVariable, upper_bound = 3, test_kw = 5)
     info = z[1]
     test_kw = z[2]
     @test isa(z, MyVariable)
@@ -124,8 +155,14 @@ end
 struct PowerCone{T}
     exponent::T
 end
-function JuMP.build_constraint(_error::Function, f, set::PowerCone; dual=false)
-    moi_set = dual ? MOI.DualPowerCone(set.exponent) : MOI.PowerCone(set.exponent)
+function JuMP.build_constraint(
+    _error::Function,
+    f,
+    set::PowerCone;
+    dual = false,
+)
+    moi_set =
+        dual ? MOI.DualPowerCone(set.exponent) : MOI.PowerCone(set.exponent)
     return JuMP.build_constraint(_error, f, moi_set)
 end
 function build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
@@ -139,13 +176,60 @@ function build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 end
 
-function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Type{<:JuMP.AbstractVariableRef})
+struct CustomType end
+function JuMP.parse_constraint_head(_error::Function, ::Val{:(:=)}, lhs, rhs)
+    return false, :(), :(build_constraint($_error, $(esc(lhs)), $(esc(rhs))))
+end
+struct CustomSet <: MOI.AbstractScalarSet end
+Base.copy(set::CustomSet) = set
+function JuMP.build_constraint(_error::Function, func, ::CustomType)
+    return JuMP.build_constraint(_error, func, CustomSet())
+end
+function custom_expression_test(ModelType::Type{<:JuMP.AbstractModel})
+    @testset "Custom expression" begin
+        model = ModelType()
+        @variable(model, x)
+        @constraint(model, con_ref, x := CustomType())
+        con = JuMP.constraint_object(con_ref)
+        @test jump_function(con) == x
+        @test moi_set(con) isa CustomSet
+    end
+end
+
+function JuMP.parse_one_operator_constraint(
+    _error::Function,
+    ::Bool,
+    ::Val{:f},
+    x,
+)
+    return :(), :(build_constraint($_error, $(esc(x)), $(esc(CustomType()))))
+end
+function custom_function_test(ModelType::Type{<:JuMP.AbstractModel})
+    @testset "Custom function" begin
+        model = ModelType()
+        @variable(model, x)
+        @constraint(model, con_ref, f(x))
+        con = JuMP.constraint_object(con_ref)
+        @test jump_function(con) == x
+        @test moi_set(con) isa CustomSet
+
+        @test_macro_throws ErrorException @constraint(model, g(x))
+    end
+end
+
+function macros_test(
+    ModelType::Type{<:JuMP.AbstractModel},
+    VariableRefType::Type{<:JuMP.AbstractVariableRef},
+)
     @testset "build_constraint on variable" begin
         m = ModelType()
         @variable(m, x)
-        @test JuMP.build_constraint(error, x, MOI.GreaterThan(0.0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.GreaterThan{Float64}}
-        @test JuMP.build_constraint(error, x, MOI.LessThan(0.0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.LessThan{Float64}}
-        @test JuMP.build_constraint(error, x, MOI.EqualTo(0)) isa JuMP.ScalarConstraint{VariableRefType, MOI.EqualTo{Int}}
+        @test JuMP.build_constraint(error, x, MOI.GreaterThan(0.0)) isa
+              JuMP.ScalarConstraint{VariableRefType,MOI.GreaterThan{Float64}}
+        @test JuMP.build_constraint(error, x, MOI.LessThan(0.0)) isa
+              JuMP.ScalarConstraint{VariableRefType,MOI.LessThan{Float64}}
+        @test JuMP.build_constraint(error, x, MOI.EqualTo(0)) isa
+              JuMP.ScalarConstraint{VariableRefType,MOI.EqualTo{Int}}
     end
 
     @testset "Check @constraint basics" begin
@@ -158,25 +242,25 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
 
         cref = @constraint(m, 3x - y == 3.3(w + 2z) + 5)
         c = JuMP.constraint_object(cref)
-        @test JuMP.isequal_canonical(c.func, 3*x - y - 3.3*w - 6.6*z)
+        @test JuMP.isequal_canonical(c.func, 3 * x - y - 3.3 * w - 6.6 * z)
         @test c.set == MOI.EqualTo(5.0)
 
-        cref = @constraint(m, 3x - y == (w + 2z)*3.3 + 5)
+        cref = @constraint(m, 3x - y == (w + 2z) * 3.3 + 5)
         c = JuMP.constraint_object(cref)
-        @test JuMP.isequal_canonical(c.func, 3*x - y - 3.3*w - 6.6*z)
+        @test JuMP.isequal_canonical(c.func, 3 * x - y - 3.3 * w - 6.6 * z)
         @test c.set == MOI.EqualTo(5.0)
 
-        cref = @constraint(m, (x+y)/2 == 1)
+        cref = @constraint(m, (x + y) / 2 == 1)
         c = JuMP.constraint_object(cref)
-        @test JuMP.isequal_canonical(c.func, 0.5*x + 0.5*y)
+        @test JuMP.isequal_canonical(c.func, 0.5 * x + 0.5 * y)
         @test c.set == MOI.EqualTo(1.0)
 
-        cref = @constraint(m, -1 <= x-y <= t)
+        cref = @constraint(m, -1 <= x - y <= t)
         c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, x - y)
         @test c.set == MOI.Interval(-1.0, t)
 
-        cref = @constraint(m, -1 <= x+1 <= 1)
+        cref = @constraint(m, -1 <= x + 1 <= 1)
         c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, 1x)
         @test c.set == MOI.Interval(-2.0, 0.0)
@@ -187,7 +271,7 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test JuMP.isequal_canonical(c.func, 1x)
         @test c.set == MOI.Interval(-1.0, 1.0)
 
-        cref = @constraint(m, -1 <= x <= sum(0.5 for i = 1:2))
+        cref = @constraint(m, -1 <= x <= sum(0.5 for i in 1:2))
         c = JuMP.constraint_object(cref)
         @test c.func isa JuMP.GenericAffExpr
         @test JuMP.isequal_canonical(c.func, 1x)
@@ -201,12 +285,18 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
 
         @test_throws ErrorException @constraint(m, x <= t <= y)
         @test_throws ErrorException @constraint(m, 0 <= Dict() <= 1)
-        @test_macro_throws ErrorException @constraint(1 <= x <= 2, foo=:bar)
+        @test_macro_throws ErrorException @constraint(1 <= x <= 2, foo = :bar)
 
-        @test JuMP.isequal_canonical(@expression(m, 3x - y - 3.3(w + 2z) + 5), 3*x - y - 3.3*w - 6.6*z + 5)
-        @test JuMP.isequal_canonical(@expression(m, quad, (w+3)*(2x+1)+10), 2*w*x + 6*x + w + 13)
+        @test JuMP.isequal_canonical(
+            @expression(m, 3x - y - 3.3(w + 2z) + 5),
+            3 * x - y - 3.3 * w - 6.6 * z + 5,
+        )
+        @test JuMP.isequal_canonical(
+            @expression(m, quad, (w + 3) * (2x + 1) + 10),
+            2 * w * x + 6 * x + w + 13,
+        )
 
-        cref = @constraint(m, 3 + 5*7 <= 0)
+        cref = @constraint(m, 3 + 5 * 7 <= 0)
         c = JuMP.constraint_object(cref)
         @test JuMP.isequal_canonical(c.func, zero(AffExpr))
         @test c.set == MOI.LessThan(-38.0)
@@ -258,6 +348,40 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
         @test con.set == MOI.SecondOrderCone(2)
     end
 
+    @testset "@build_constraint (SOS1)" begin
+        model = ModelType()
+        @variable(model, x[1:3])
+        con = @build_constraint(x in JuMP.SOS1())
+        con2 = @build_constraint(x in JuMP.SOS1([4.0, 6.0, 1.0]))
+        @test con isa JuMP.VectorConstraint
+        @test con.func == x
+        @test con.set == MOI.SOS1([1.0, 2.0, 3.0])
+        @test_throws(
+            ErrorException("Weight vector in SOS1 is not of length 3."),
+            @build_constraint(x in JuMP.SOS1([1.0]))
+        )
+        @test con2 isa JuMP.VectorConstraint
+        @test con2.func == x
+        @test con2.set == MOI.SOS1([4.0, 6.0, 1.0])
+    end
+
+    @testset "@build_constraint (SOS2)" begin
+        model = ModelType()
+        @variable(model, x[1:3])
+        con = @build_constraint(x in JuMP.SOS2())
+        con2 = @build_constraint(x in JuMP.SOS2([4.0, 6.0, 1.0]))
+        @test con isa JuMP.VectorConstraint
+        @test con.func == x
+        @test con.set == MOI.SOS2([1.0, 2.0, 3.0])
+        @test_throws(
+            ErrorException("Weight vector in SOS2 is not of length 3."),
+            @build_constraint(x in JuMP.SOS2([1.0]))
+        )
+        @test con2 isa JuMP.VectorConstraint
+        @test con2.func == x
+        @test con2.set == MOI.SOS2([4.0, 6.0, 1.0])
+    end
+
     @testset "@build_constraint (broadcast)" begin
         model = ModelType()
         @variable(model, x[1:2])
@@ -286,15 +410,52 @@ function macros_test(ModelType::Type{<:JuMP.AbstractModel}, VariableRefType::Typ
     end
 
     build_constraint_keyword_test(ModelType)
+    custom_expression_test(ModelType)
+    return custom_function_test(ModelType)
 end
 
 @testset "Macros for JuMP.Model" begin
     macros_test(Model, VariableRef)
 
+    @testset "Adding anonymous variable and specify required constraint on it" begin
+        model = Model()
+        @test_macro_throws(
+            ErrorException(
+                "In `@variable(m, Int)`: Ambiguous variable name Int detected." *
+                " To specify an anonymous integer variable, use `@variable(model, integer = true)` instead.",
+            ),
+            @variable(m, Int)
+        )
+        v = @variable(model, integer = true)
+        @test name(v) == ""
+        @test is_integer(v)
+
+        @test_macro_throws(
+            ErrorException(
+                "In `@variable(m, Bin)`: Ambiguous variable name Bin detected." *
+                " To specify an anonymous binary variable, use `@variable(model, binary = true)` instead.",
+            ),
+            @variable(m, Bin)
+        )
+        v = @variable(model, binary = true)
+        @test name(v) == ""
+        @test is_binary(v)
+
+        @test_macro_throws(
+            ErrorException(
+                "In `@variable(m, PSD)`: Size of anonymous square matrix of positive semidefinite anonymous variables is not specified." *
+                " To specify size of square matrix use `@variable(model, [1:n, 1:n], PSD)` instead.",
+            ),
+            @variable(m, PSD)
+        )
+        v = @variable(model, [1:1, 1:1], PSD)
+        @test name(v[1]) == ""
+    end
+
     @testset "Nested tuple destructuring" begin
         m = Model()
-        d = Dict((1,2) => 3)
-        ex = @expression(m, sum(i+j+k for ((i,j),k) in d))
+        d = Dict((1, 2) => 3)
+        ex = @expression(m, sum(i + j + k for ((i, j), k) in d))
         @test ex == 6
     end
 
@@ -307,10 +468,13 @@ end
     @testset "Warn on unexpected assignment" begin
         m = Model()
         @variable(m, x)
-        # function getindex does not accept keyword arguments
-        @test_throws ErrorException x[i=1]
+        # Julia v1.0 -> v1.3
+        # ERROR: function getindex does not accept keyword arguments
+        # Julia v1.3 onwards
+        # ERROR: MethodError: no method matching getindex(::VariableRef; i=1)
+        @test_throws Union{ErrorException,MethodError} x[i = 1]
         err = ErrorException("Unexpected assignment in expression `x[i=1]`.")
-        @test_macro_throws ErrorException @constraint(m, x[i=1] <= 1)
+        @test_macro_throws ErrorException @constraint(m, x[i = 1] <= 1)
     end
 
     @testset "Lookup in model scope: @variable" begin
@@ -378,8 +542,9 @@ end
         model = Model()
         exception = ErrorException(
             "Invalid container type Oops. Must be Auto, Array, " *
-            "DenseAxisArray, or SparseAxisArray.")
-        @test_throws exception @variable(model, x[1:3], container=Oops)
+            "DenseAxisArray, or SparseAxisArray.",
+        )
+        @test_throws exception @variable(model, x[1:3], container = Oops)
     end
 
     @testset "Adjoints" begin
@@ -392,7 +557,8 @@ end
         @test JuMP.isequal_canonical(c.func, x[1]^2 + 2 * x[1] * x[2] + x[2]^2)
         @test c.set == MOI.LessThan(1.0)
         @test JuMP.isequal_canonical(
-            MA.@rewrite(x' * ones(2, 2)), x' * ones(2, 2)
+            MA.@rewrite(x' * ones(2, 2)),
+            x' * ones(2, 2),
         )
     end
 
@@ -400,10 +566,10 @@ end
         model = Model()
         @variable(model, x)
         foo() = 2
-        con1 = @build_constraint(x^(foo()) + x^(foo()-1) +
-                                      x^(foo()-2) == 0)
-        con2 = @build_constraint((x - 1)^(foo()) + (x - 1)^2 + (x - 1)^1 +
-                                      (x - 1)^0 == 0)
+        con1 = @build_constraint(x^(foo()) + x^(foo() - 1) + x^(foo() - 2) == 0)
+        con2 = @build_constraint(
+            (x - 1)^(foo()) + (x - 1)^2 + (x - 1)^1 + (x - 1)^0 == 0
+        )
         con3 = @build_constraint(sum(x for i in 1:3)^(foo()) == 0)
         con4 = @build_constraint(sum(x for i in 1:3)^(foo() - 1) == 0)
         @test con1.func == x^2 + x
@@ -439,7 +605,7 @@ end
 
         @constraints(model, begin
             x + y[1] == 1
-            ref[i=1:3], y[1] + y[i] >= i
+            ref[i = 1:3], y[1] + y[i] >= i
         end)
 
         @test string(model) == """
@@ -466,8 +632,14 @@ end
     @testset "Plural failures" begin
         model = Model()
         @test_macro_throws MethodError @variables(model)
-        @test_macro_throws ErrorException("Invalid syntax for @variables") @variables(model, x)
-        @test_macro_throws ErrorException("Invalid syntax for @variables") @variables(model, x >= 0)
+        @test_macro_throws ErrorException("Invalid syntax for @variables") @variables(
+            model,
+            x
+        )
+        @test_macro_throws ErrorException("Invalid syntax for @variables") @variables(
+            model,
+            x >= 0
+        )
         @test_macro_throws MethodError @variables(model, x >= 0, Bin)
     end
 
@@ -475,7 +647,10 @@ end
         model = Model()
         @variable(model, x)
         c = @constraint(model, x == sum(1.0 for i in 1:0))
-        @test isa(constraint_object(c).func, GenericAffExpr{Float64, VariableRef})
+        @test isa(
+            constraint_object(c).func,
+            GenericAffExpr{Float64,VariableRef},
+        )
     end
 
     @testset "Empty summation in @NLconstraints" begin
@@ -490,35 +665,71 @@ end
         A = [1 0; 0 1]
         @variable(model, x)
 
-        @test_macro_throws ErrorException(
-            "In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...` in the definition of an index set."
-        ) @variable(model, y[axes(A)...])
+        @test_macro_throws(
+            ErrorException("In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...` in the definition of an index set."),
+            @variable(model, y[axes(A)...])
+        )
 
         f(a, b) = [a, b]
         @variable(model, z[f((1, 2)...)])
         @test length(z) == 2
 
-        @test_macro_throws ErrorException(
-            "In `@constraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @constraint(model, [axes(A)...], x >= 1)
+        @test_macro_throws(
+            ErrorException("In `@constraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."),
+            @constraint(model, [axes(A)...], x >= 1)
+        )
 
-        @test_macro_throws ErrorException(
-            "In `@NLconstraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @NLconstraint(model, [axes(A)...], x >= 1)
+        @test_macro_throws(
+            ErrorException("In `@NLconstraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."),
+            @NLconstraint(model, [axes(A)...], x >= 1)
+        )
 
-        @test_macro_throws ErrorException(
-            "In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @expression(model, [axes(A)...], x)
+        @test_macro_throws(
+            ErrorException("In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."),
+            @expression(model, [axes(A)...], x)
+        )
 
-        @test_macro_throws ErrorException(
-            "In `@NLexpression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @NLexpression(model, [axes(A)...], x)
+        @test_macro_throws(
+            ErrorException("In `@NLexpression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."),
+            @NLexpression(model, [axes(A)...], x)
+        )
 
-        @test_macro_throws ErrorException(
-            "In `@NLparameter(model, p[axes(A)...] == x)`: cannot use splatting operator `...` in the definition of an index set."
-        ) @NLparameter(model, p[axes(A)...] == x)
+        @test_macro_throws(
+            ErrorException("In `@NLparameter(model, p[axes(A)...] == x)`: cannot use splatting operator `...` in the definition of an index set."),
+            @NLparameter(model, p[axes(A)...] == x)
+        )
     end
 
+    @testset "NaN in constraints" begin
+        model = Model()
+        @variable(model, x >= 0)
+        @test_throws(
+            ErrorException("Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`."),
+            @constraint(model, x >= NaN)
+        )
+        @test_throws ErrorException("Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`.") @constraint(
+            model,
+            1 <= x + NaN <= 2
+        )
+        @test_throws ErrorException("Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`.") @constraint(
+            model,
+            1 <= x + Inf <= 2
+        )
+        @test_throws_strip(
+            ErrorException("In `@constraint(model, 1 <= x <= NaN)`: Invalid bounds, cannot contain NaN: [1, NaN]."),
+            @constraint(model, 1 <= x <= NaN)
+        )
+    end
+
+    @testset "unregister" begin
+        model = Model()
+        @variable(model, x)
+        @test num_variables(model) == 1
+        @test_throws ErrorException @variable(model, x)
+        unregister(model, :x)
+        @variable(model, x)
+        @test num_variables(model) == 2
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin

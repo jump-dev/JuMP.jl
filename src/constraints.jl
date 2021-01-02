@@ -1,11 +1,11 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
 """
@@ -52,6 +52,69 @@ end
 Base.broadcastable(con_ref::ConstraintRef) = Ref(con_ref)
 
 """
+    dual_start_value(con_ref::ConstraintRef)
+
+Return the dual start value (MOI attribute `ConstraintDualStart`) of the
+constraint `con_ref`.
+
+Note: If no dual start value has been set, `dual_start_value` will return
+`nothing`.
+
+See also [`set_dual_start_value`](@ref).
+"""
+function dual_start_value(con_ref::ConstraintRef{Model, <:_MOICON})
+    return reshape_vector(_dual_start(con_ref), dual_shape(con_ref.shape))
+end
+
+# Returns the value of MOI.ConstraintDualStart in a type-stable way
+function _dual_start(
+    con_ref::ConstraintRef{
+        Model, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}
+    },
+)::Union{Nothing, Float64}
+    return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
+end
+function _dual_start(
+    con_ref::ConstraintRef{
+        Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}
+    },
+)::Union{Nothing, Vector{Float64}}
+    return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
+end
+
+"""
+    set_dual_start_value(con_ref::ConstraintRef, value)
+
+Set the dual start value (MOI attribute `ConstraintDualStart`) of the constraint
+`con_ref` to `value`. To remove a dual start value set it to `nothing`.
+
+See also [`dual_start_value`](@ref).
+"""
+function set_dual_start_value(con_ref::ConstraintRef{
+    Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}},
+    value
+)
+    vectorized_value = vectorize(value, dual_shape(con_ref.shape))
+    MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref,
+        vectorized_value)
+    return
+end
+function set_dual_start_value(con_ref::ConstraintRef{
+    Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}},
+    ::Nothing
+)
+    MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, nothing)
+    return
+end
+function set_dual_start_value(con_ref::ConstraintRef{
+    Model, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}},
+    value
+)
+    MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, value)
+    return
+end
+
+"""
     name(con_ref::ConstraintRef)
 
 Get a constraint's name attribute.
@@ -65,7 +128,9 @@ end
 
 Set a constraint's name attribute.
 """
-set_name(con_ref::ConstraintRef{Model,<:_MOICON}, s::String) = MOI.set(con_ref.model, MOI.ConstraintName(), con_ref, s)
+function set_name(con_ref::ConstraintRef{Model,<:_MOICON}, s::String)
+    return MOI.set(con_ref.model, MOI.ConstraintName(), con_ref, s)
+end
 
 """
     constraint_by_name(model::AbstractModel,
@@ -163,13 +228,35 @@ end
     delete(model::Model, con_ref::ConstraintRef)
 
 Delete the constraint associated with `constraint_ref` from the model `model`.
+
+See also: [`unregister`](@ref)
 """
-function delete(model::Model, con_ref::ConstraintRef{Model})
+function delete(model::Model, con_ref::ConstraintRef)
     if model !== con_ref.model
         error("The constraint reference you are trying to delete does not " *
               "belong to the model.")
     end
     MOI.delete(backend(model), index(con_ref))
+end
+
+"""
+    delete(model::Model, con_refs::Vector{<:ConstraintRef})
+
+Delete the constraints associated with `con_refs` from the model `model`.
+Solvers may implement specialized methods for deleting multiple constraints of
+the same concrete type, i.e., when `isconcretetype(eltype(con_refs))`. These
+may be more efficient than repeatedly calling the single constraint delete
+method.
+
+See also: [`unregister`](@ref)
+"""
+function delete(model::Model, con_refs::Vector{<:ConstraintRef{Model}})
+    if any(c -> model !== c.model, con_refs)
+        error("A constraint reference you are trying to delete does not" * "
+            belong to the model.")
+    end
+    MOI.delete(backend(model), index.(con_refs))
+    return
 end
 
 """
@@ -218,7 +305,7 @@ model = Model()
 optimize!(model)
 ```
 with an optimizer that does not support `F`-in-`CustomSet` constraints, the
-constraint will not be bridge unless he manually calls `add_bridge(model,
+constraint will not be bridged unless he manually calls `add_bridge(model,
 CustomBridge)`. In order to automatically add the `CustomBridge` to any model to
 which an `F`-in-`CustomSet` is added, simply add the following method:
 ```julia
@@ -240,7 +327,6 @@ reasons:
 3. Defining a method where neither the function nor any of the argument types
    are defined in the package is called [*type piracy*](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-type-piracy-1)
    and is discouraged in the Julia style guide.
-```
 """
 struct BridgeableConstraint{C, B} <: AbstractConstraint
     constraint::C
@@ -258,7 +344,7 @@ end
 Return the function of the constraint `constraint` in the function-in-set form
 as a `AbstractJuMPScalar` or `Vector{AbstractJuMPScalar}`.
 """
-function jump_function end
+jump_function(constraint::AbstractConstraint) = constraint.func
 
 """
     moi_function(constraint::AbstractConstraint)
@@ -280,7 +366,7 @@ Return the set of the constraint `constraint` in the function-in-set form as a
 
 Returns the MOI set of dimension `dim` corresponding to the JuMP set `s`.
 """
-function moi_set end
+moi_set(constraint::AbstractConstraint) = constraint.set
 
 """
     constraint_object(con_ref::ConstraintRef)
@@ -303,8 +389,6 @@ struct ScalarConstraint{F <: AbstractJuMPScalar,
     set::S
 end
 
-jump_function(constraint::ScalarConstraint) = constraint.func
-moi_set(constraint::ScalarConstraint) = constraint.set
 reshape_set(set::MOI.AbstractScalarSet, ::ScalarShape) = set
 shape(::ScalarConstraint) = ScalarShape()
 
@@ -338,11 +422,15 @@ struct VectorConstraint{F <: AbstractJuMPScalar,
 end
 function VectorConstraint(func::Vector{<:AbstractJuMPScalar},
                           set::MOI.AbstractVectorSet)
+  if length(func) != MOI.dimension(set)
+      throw(DimensionMismatch(
+          "Dimension of the function $(length(func)) does not match the " *
+          "dimension of the set $(set)."
+      ))
+  end
     VectorConstraint(func, set, VectorShape())
 end
 
-jump_function(constraint::VectorConstraint) = constraint.func
-moi_set(constraint::VectorConstraint) = constraint.set
 reshape_set(set::MOI.AbstractVectorSet, ::VectorShape) = set
 shape(con::VectorConstraint) = con.shape
 function constraint_object(con_ref::ConstraintRef{Model, _MOICON{FuncType, SetType}}) where
@@ -364,7 +452,7 @@ function moi_add_constraint(model::MOI.ModelLike, f::MOI.AbstractFunction,
         if moi_mode(model) == DIRECT
             bridge_message = "."
         elseif moi_bridge_constraints(model)
-            bridge_message = " and there are no bridges that can reformulate it into supported constraints."
+            error(sprint(io -> MOI.Bridges.debug(model.optimizer, typeof(f), typeof(s); io = io)))
         else
             bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
         end
@@ -527,12 +615,12 @@ con : 2 x ∈ [-3.0, -1.0]
 For vector constraints, the constant is added to the function:
 ```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x); @variable(model, y)), filter=r"≤|<="
 julia> @constraint(model, con, [x + y, x, y] in SecondOrderCone())
-con : [x + y, x, y] in MOI.SecondOrderCone(3)
+con : [x + y, x, y] ∈ MathOptInterface.SecondOrderCone(3)
 
 julia> add_to_function_constant(con, [1, 2, 2])
 
 julia> con
-con : [x + y + 1, x + 2, y + 2] in MOI.SecondOrderCone(3)
+con : [x + y + 1, x + 2, y + 2] ∈ MathOptInterface.SecondOrderCone(3)
 ```
 
 """
@@ -569,6 +657,17 @@ evaluation of `2x + 3y`.
 """
 function value(con_ref::ConstraintRef{Model, <:_MOICON}; result::Int = 1)
     return reshape_vector(_constraint_primal(con_ref, result), con_ref.shape)
+end
+
+"""
+    value(con_ref::ConstraintRef, var_value::Function)
+
+Evaluate the primal value of the constraint `con_ref` using `var_value(v)`
+as the value for each variable `v`.
+"""
+function value(con_ref::ConstraintRef{Model, <:_MOICON}, var_value::Function)
+    f = jump_function(constraint_object(con_ref))
+    return reshape_vector(value.(f, var_value), con_ref.shape)
 end
 
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
@@ -648,6 +747,8 @@ This value is computed from [`dual`](@ref) and can be queried only when
 (not `FEASIBILITY_SENSE`). For linear constraints, the shadow prices differ at
 most in sign from the `dual` value depending on the objective sense.
 
+See also [`reduced_cost`](@ref JuMP.reduced_cost).
+
 ## Notes
 
 - The function simply translates signs from `dual` and does not validate
@@ -664,8 +765,7 @@ function shadow_price(con_ref::ConstraintRef{Model, <:_MOICON})
           "of constraint.")
 end
 
-# Internal function.
-function shadow_price_less_than_(dual_value, sense::MOI.OptimizationSense)
+function _shadow_price_less_than(dual_value, sense::MOI.OptimizationSense)
     # When minimizing, the shadow price is nonpositive and when maximizing the
     # shadow price is nonnegative (because relaxing a constraint can only
     # improve the objective). By MOI convention, a feasible dual on a LessThan
@@ -680,8 +780,7 @@ function shadow_price_less_than_(dual_value, sense::MOI.OptimizationSense)
     end
 end
 
-# Internal function.
-function shadow_price_greater_than_(dual_value, sense::MOI.OptimizationSense)
+function _shadow_price_greater_than(dual_value, sense::MOI.OptimizationSense)
     # By MOI convention, a feasible dual on a GreaterThan set is nonnegative,
     # so we flip the sign when minimizing. (See comment in the method above).
     if sense == MOI.MAX_SENSE
@@ -702,7 +801,7 @@ function shadow_price(
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
-    return shadow_price_less_than_(
+    return _shadow_price_less_than(
         dual(con_ref), objective_sense(model)
     )
 end
@@ -715,7 +814,7 @@ function shadow_price(
         error("The shadow price is not available because no dual result is " *
               "available.")
     end
-    return shadow_price_greater_than_(
+    return _shadow_price_greater_than(
         dual(con_ref), objective_sense(model)
     )
 end
@@ -732,10 +831,10 @@ function shadow_price(
     dual_val = dual(con_ref)
     if dual_val > 0
         # Treat the equality constraint as if it were a GreaterThan constraint.
-        return shadow_price_greater_than_(dual_val, sense)
+        return _shadow_price_greater_than(dual_val, sense)
     else
         # Treat the equality constraint as if it were a LessThan constraint.
-        return shadow_price_less_than_(dual_val, sense)
+        return _shadow_price_less_than(dual_val, sense)
     end
 end
 
@@ -759,7 +858,7 @@ has type `function_type` and the set has type `set_type`.
 See also [`list_of_constraint_types`](@ref) and [`all_constraints`](@ref).
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
 julia> @variable(model, x >= 0, Bin);
@@ -805,7 +904,7 @@ ordered by creation time.
 See also [`list_of_constraint_types`](@ref) and [`num_constraints`](@ref).
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
 julia> @variable(model, x >= 0, Bin);
@@ -851,14 +950,14 @@ end
 # information available.
 
 """
-    list_of_constraint_types(model::Model)
+    list_of_constraint_types(model::Model)::Vector{Tuple{DataType, DataType}}
 
 Return a list of tuples of the form `(F, S)` where `F` is a JuMP function type
 and `S` is an MOI set type such that `all_constraints(model, F, S)` returns
 a nonempty list.
 
 # Example
-```jldoctest
+```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
 julia> @variable(model, x >= 0, Bin);
@@ -872,9 +971,11 @@ julia> list_of_constraint_types(model)
  (VariableRef, MathOptInterface.ZeroOne)
 ```
 """
-function list_of_constraint_types(model::Model)
-    list = MOI.get(
-        model, MOI.ListOfConstraints())::Vector{Tuple{DataType, DataType}}
-    return Tuple{DataType, DataType}[(jump_function_type(model, f), s)
-                                     for (f,s) in list]
+function list_of_constraint_types(model::Model)::Vector{Tuple{DataType, DataType}}
+    # We include an annotated return type here because Julia fails terribly at
+    # inferring it, even though we annotate the type of the return vector.
+    return Tuple{DataType, DataType}[
+        (jump_function_type(model, F), S)
+        for (F, S) in MOI.get(model, MOI.ListOfConstraints())
+    ]
 end

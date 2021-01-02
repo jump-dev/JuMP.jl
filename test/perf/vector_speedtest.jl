@@ -11,24 +11,30 @@ function test(n::Int)
     @variable(model, z[1:n])
 
     #initialize
-    @constraint(model, sum(c[i] * z[i] for i=1:n) <= 0)
+    @constraint(model, sum(c[i] * z[i] for i in 1:n) <= 0)
 
     #Vector
-    elapsed = @elapsed @constraint(model, sum(c[i] * z[i] for i=1:n) <= 1)
+    elapsed = @elapsed @constraint(model, sum(c[i] * z[i] for i in 1:n) <= 1)
     println("Vector with sum(): $(elapsed)")
 
     elapsed = @elapsed @constraint(model, dot(c, z) <= 1)
     println("Vector with vecdot() : $(elapsed)")
 
     #2D Matrix
-    elapsed = @elapsed @constraint(model, sum(a[i, j] * x[i, j] for i=1:n, j=1:n) <= 1)
+    elapsed = @elapsed @constraint(
+        model,
+        sum(a[i, j] * x[i, j] for i in 1:n, j in 1:n) <= 1
+    )
     println("2D Matrix with sum(): $(elapsed)")
 
     elapsed = @elapsed @constraint(model, dot(a, x) <= 1)
     println("2D Matrix with bigvecdot(): $(elapsed)")
 
     #3D Matrix
-    elapsed = @elapsed @constraint(model, sum(b[i, j, k] * y[i, j, k] for i=1:n, j=1:n, k=1:n) <= 1)
+    elapsed = @elapsed @constraint(
+        model,
+        sum(b[i, j, k] * y[i, j, k] for i in 1:n, j in 1:n, k in 1:n) <= 1
+    )
     println("3D Matrix with sum(): $(elapsed)")
 
     elapsed = @elapsed @constraint(model, dot(b, y) <= 1)

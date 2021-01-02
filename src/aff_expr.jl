@@ -1,11 +1,11 @@
 #  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 #############################################################################
 # JuMP
 # An algebraic modeling language for Julia
-# See http://github.com/JuliaOpt/JuMP.jl
+# See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 # src/aff_expr.jl
 # Defines all types relating to affine expressions
@@ -18,7 +18,7 @@
 # Utilities for OrderedDict
 function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     # Adding zero terms to this dictionary leads to unacceptable performance
-    # degradations. See, e.g., https://github.com/JuliaOpt/JuMP.jl/issues/1946.
+    # degradations. See, e.g., https://github.com/jump-dev/JuMP.jl/issues/1946.
     if iszero(v)
         return dict  # No-op.
     end
@@ -76,19 +76,62 @@ end
 
 
 #############################################################################
-# GenericAffExpr
-# ∑ aᵢ xᵢ  +  c
+
+"""
+    mutable struct GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
+        constant::CoefType
+        terms::OrderedDict{VarType,CoefType}
+    end
+
+An expression type representing an affine expression of the form:
+``\\sum a_i x_i + c``.
+
+## Fields
+
+ * `.constant`: the constant `c` in the expression.
+ * `.terms`: an `OrderedDict`, with keys of `VarType` and values of `CoefType`
+   describing the sparse vector `a`.
+"""
 mutable struct GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
     constant::CoefType
     terms::OrderedDict{VarType,CoefType}
 end
 
+"""
+    variable_ref_type(::GenericAffExpr{C, V}) where {C, V}
+
+A helper function used internally by JuMP and some JuMP extensions. Returns the
+variable type `V` from a [`GenericAffExpr`](@ref)
+"""
 variable_ref_type(::GenericAffExpr{C, V}) where {C, V} = V
 
+"""
+    GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
+
+Create a [`GenericAffExpr`](@ref) by passing a constant and a vector of pairs.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> GenericAffExpr(1.0, [x => 1.0])
+x + 1
+"""
 function GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
     return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv))
 end
 
+"""
+    GenericAffExpr(constant::V, kv::Vararg{Pair{K,V},N}) where {K,V,N}
+
+Create a [`GenericAffExpr`](@Ref) by passing a constant and pairs of additional
+arguments.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> GenericAffExpr(1.0, x => 1.0)
+x + 1
+"""
 function GenericAffExpr(constant::V, kv::Vararg{Pair{K,V},N}) where {K,V,N}
     return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv...))
 end
@@ -131,6 +174,27 @@ function _affine_coefficient(f::GenericAffExpr{C, V}, variable::V) where {C, V}
     return get(f.terms, variable, zero(C))
 end
 
+"""
+    map_coefficients_inplace!(f::Function, a::GenericAffExpr)
+
+Apply `f` to the coefficients and constant term of an [`GenericAffExpr`](@ref)
+`a` and update them in-place.
+
+See also: [`map_coefficients`](@ref)
+
+## Example
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> a = GenericAffExpr(1.0, x => 1.0)
+x + 1
+
+julia> map_coefficients_inplace!(c -> 2 * c, a)
+2 x + 2
+
+julia> a
+2 x + 2
+```
+"""
 function map_coefficients_inplace!(f::Function, a::GenericAffExpr)
     # The iterator remains valid if existing elements are updated.
     for (coef, var) in linear_terms(a)
@@ -140,6 +204,27 @@ function map_coefficients_inplace!(f::Function, a::GenericAffExpr)
     return a
 end
 
+"""
+    map_coefficients(f::Function, a::GenericAffExpr)
+
+Apply `f` to the coefficients and constant term of an [`GenericAffExpr`](@ref)
+`a` and return a new expression.
+
+See also: [`map_coefficients_inplace!`](@ref)
+
+## Example
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> a = GenericAffExpr(1.0, x => 1.0)
+x + 1
+
+julia> map_coefficients(c -> 2 * c, a)
+2 x + 2
+
+julia> a
+x + 1
+```
+"""
 function map_coefficients(f::Function, a::GenericAffExpr)
     return map_coefficients_inplace!(f, copy(a))
 end
@@ -222,8 +307,6 @@ product of two variables.
 """
 function add_to_expression! end
 
-# TODO: add deprecations for Base.push! and Base.append!
-
 # With one factor.
 
 function add_to_expression!(aff::GenericAffExpr,
@@ -297,9 +380,19 @@ function SparseArrays.dropzeros(aff::GenericAffExpr)
     return result
 end
 
-# Check if two AffExprs are equal after dropping zeros and disregarding the
-# order. Mostly useful for testing.
-function isequal_canonical(aff::GenericAffExpr{C,V}, other::GenericAffExpr{C,V}) where {C,V}
+"""
+    isequal_canonical(
+        aff::GenericAffExpr{C,V},
+        other::GenericAffExpr{C,V}
+    ) where {C,V}
+
+Return `true` if `aff` is equal to `other` after dropping zeros and disregarding
+the order. Mainly useful for testing.
+"""
+function isequal_canonical(
+    aff::GenericAffExpr{C,V},
+    other::GenericAffExpr{C,V}
+) where {C,V}
     aff_nozeros = dropzeros(aff)
     other_nozeros = dropzeros(other)
     # Note: This depends on equality of OrderedDicts ignoring order.
@@ -313,21 +406,25 @@ end
 function Base.convert(::Type{GenericAffExpr{T,V}}, v::_Constant) where {T,V}
     return GenericAffExpr{T,V}(convert(T, _constant_to_number(v)))
 end
-# Used in `JuMP._mul!`.
-function Base.convert(::Type{T}, aff::GenericAffExpr{T}) where T
-    if !isempty(aff.terms)
-        throw(InexactError(:convert, T, aff))
-    end
-    return convert(T, aff.constant)
-end
 
-# Alias for (Float64, VariableRef), the specific GenericAffExpr used by JuMP
+"""
+    AffExpr
+
+Alias for `GenericAffExpr{Float64,VariableRef}`, the specific
+[`GenericAffExpr`](@ref) used by JuMP.
+"""
 const AffExpr = GenericAffExpr{Float64,VariableRef}
 
 # Check all coefficients are finite, i.e. not NaN, not Inf, not -Inf
 function _assert_isfinite(a::AffExpr)
     for (coef, var) in linear_terms(a)
         isfinite(coef) || error("Invalid coefficient $coef on variable $var.")
+    end
+    if isnan(a.constant)
+        error(
+            "Expression contains an invalid NaN constant. This could be " *
+            "produced by `Inf - Inf`."
+        )
     end
 end
 
@@ -361,11 +458,47 @@ function MOI.ScalarAffineFunction(a::AffExpr)
                                           for t in linear_terms(a)]
     return MOI.ScalarAffineFunction(terms, a.constant)
 end
+
+"""
+    moi_function(x)
+
+Given a JuMP object `x`, return the MathOptInterface equivalent.
+
+See also: [`jump_function`](@ref).
+"""
+function moi_function end
+
+"""
+    moi_function_type(::Type{T}) where {T}
+
+Given a JuMP object type `T`, return the MathOptInterface equivalent.
+
+See also: [`jump_function_type`](@ref).
+"""
+function moi_function_type end
+
+"""
+    jump_function(x)
+
+Given an MathOptInterface object `x`, return the JuMP equivalent.
+
+See also: [`moi_function`](@ref).
+"""
+function jump_function end
+
+"""
+    jump_function_type(::Type{T}) where {T}
+
+Given an MathOptInterface object type `T`, return the JuMP equivalent.
+
+See also: [`moi_function_type`](@ref).
+"""
+function jump_function_type end
+
 moi_function(a::GenericAffExpr) = MOI.ScalarAffineFunction(a)
 function moi_function_type(::Type{<:GenericAffExpr{T}}) where T
     return MOI.ScalarAffineFunction{T}
 end
-
 
 function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
     aff = AffExpr()
@@ -423,17 +556,6 @@ end
 moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
 function moi_function_type(::Type{<:Vector{<:GenericAffExpr{T}}}) where {T}
     return MOI.VectorAffineFunction{T}
-end
-
-# Copy an affine expression to a new model by converting all the
-# variables to the new model's variables
-function Base.copy(a::GenericAffExpr, new_model::AbstractModel)
-    result = zero(a)
-    for (coef, var) in linear_terms(a)
-        add_to_expression!(result, coef, copy(var, new_model))
-    end
-    result.constant = a.constant
-    return result
 end
 
 # TODO: Find somewhere to put this error message.

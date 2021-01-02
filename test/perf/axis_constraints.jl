@@ -19,11 +19,18 @@ end
 
 function dense_axis_constraints(n)
     model = Model()
-    mock = MOIU.MockOptimizer(MOIU.Model{Float64}(),
-                              eval_variable_constraint_dual=false)
-    MOIU.set_mock_optimize!(mock,
-        mock -> MOIU.mock_optimize!(mock, zeros(n),
-            (MOI.SingleVariable, MOI.EqualTo{Float64}) => ones(n - 1)))
+    mock = MOIU.MockOptimizer(
+        MOIU.Model{Float64}(),
+        eval_variable_constraint_dual = false,
+    )
+    MOIU.set_mock_optimize!(
+        mock,
+        mock -> MOIU.mock_optimize!(
+            mock,
+            zeros(n),
+            (MOI.SingleVariable, MOI.EqualTo{Float64}) => ones(n - 1),
+        ),
+    )
     MOIU.reset_optimizer(model, mock)
 
     @variable(model, x[1:n])
@@ -38,11 +45,18 @@ function dense_axis_constraints(n)
 end
 function sparse_axis_constraints(n)
     model = Model()
-    mock = MOIU.MockOptimizer(MOIU.Model{Float64}(),
-                              eval_variable_constraint_dual=false)
-    MOIU.set_mock_optimize!(mock,
-        mock -> MOIU.mock_optimize!(mock, zeros(n),
-            (MOI.SingleVariable, MOI.EqualTo{Float64}) => ones(div(n, 2))))
+    mock = MOIU.MockOptimizer(
+        MOIU.Model{Float64}(),
+        eval_variable_constraint_dual = false,
+    )
+    MOIU.set_mock_optimize!(
+        mock,
+        mock -> MOIU.mock_optimize!(
+            mock,
+            zeros(n),
+            (MOI.SingleVariable, MOI.EqualTo{Float64}) => ones(div(n, 2)),
+        ),
+    )
     MOIU.reset_optimizer(model, mock)
 
     @variable(model, x[1:n])

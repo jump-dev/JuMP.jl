@@ -19,7 +19,7 @@ optimization step. Typical questions include:
  - Do I have a dual solution?
  - How sensitive is the solution to data perturbations?
 
-JuMP follows closely the concepts defined in [MathOptInterface (MOI)](https://github.com/JuliaOpt/MathOptInterface.jl)
+JuMP follows closely the concepts defined in [MathOptInterface (MOI)](https://github.com/jump-dev/MathOptInterface.jl)
 to answer user questions about a finished call to `optimize!(model)`. There
 are three main steps in querying a solution:
 
@@ -46,14 +46,16 @@ The reason why the optimization of `model` was finished is given by
 termination_status(model)
 ```
 
-This function will return a `MOI.TerminationStatusCode` `enum`.
+This function will return a `MOI.TerminationStatusCode` `enum`. Common return
+values include `MOI.OPTIMAL`, `MOI.INFEASIBLE`, `MOI.DUAL_INFEASIBLE`, and
+`MOI.TIME_LIMIT`.
 
-```@docs
-MOI.TerminationStatusCode
-```
+Note that a return status of `MOI.DUAL_INFEASIBLE` does not guarantee that the
+primal is unbounded. When the dual is infeasible, the primal is unbounded if
+there exists a feasible primal solution.
 
-Additionally, we can receive a solver specific string explaning why the
-optimization stopped with [`raw_status`](@ref).
+We can receive a solver specific string explaining why the optimization stopped
+with [`raw_status`](@ref).
 
 ## Solution statuses
 
@@ -65,12 +67,8 @@ We can obtain these statuses by calling [`primal_status`](@ref) for the
 primal status, and [`dual_status`](@ref) for the dual status. Both will
 return a `MOI.ResultStatusCode` `enum`.
 
-```@docs
-MOI.ResultStatusCode
-```
-
 Common status situations are described in the
-[MOI docs](http://www.juliaopt.org/MathOptInterface.jl/v0.9.1/apimanual/#Common-status-situations-1).
+[MOI docs](https://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Common-status-situations-1).
 
 ## Obtaining solutions
 
@@ -119,104 +117,201 @@ else
 end
 ```
 
-!!! warning "Querying after modification"
-    If a solved model is modified, then querying the solution is undefined
-    behavior. Adding, deleting, or modifying a constraint (or variable)
-    may invalidate any part of the solution.
+!!! warning
+    Querying solution information after modifying a solved model is undefined 
+    behavior, and solvers may throw an error or return incorrect results.
+    Modifications include adding, deleting, or modifying any variable, 
+    objective, or constraint. Instead of modify then query, query the results 
+    first, then modify the problem. For example:
+    ```julia
+    model = Model(GLPK.Optimizer)
+    @variable(model, x >= 0)
+    optimize!(model)
+    # Bad:
+    set_lower_bound(x, 1)
+    @show value(x)
+    # Good:
+    x_val = value(x)
+    set_lower_bound(x, 1)
+    @show x_val
+    ```
 
 ```@meta
 # TODO: How to accurately measure the solve time.
 ```
 
+## Accessing MathOptInterface attributes
+
+[MathOptInterface](https://jump.dev/MathOptInterface.jl/v0.9.10/) defines a large
+number of model attributes that can be queried. Examples include
+[`MOI.RelativeGap`](https://jump.dev/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.RelativeGap) and
+[`MOI.SimplexIterations`](https://jump.dev/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.SimplexIterations).
+
+Some attributes can be directly accessed by getter functions. These include
+- [`objective_bound`](@ref)
+- [`relative_gap`](@ref)
+- [`simplex_iterations`](@ref)
+- [`barrier_iterations`](@ref)
+- [`node_count`](@ref)
+
+To query these attributes, use:
+```julia
+using JuMP
+model = Model()
+# ...
+optimize!(model)
+
+@show relative_gap(model)
+# or
+@show MOI.get(model, MOI.RelativeGap())
+
+@show simplex_iterations(model)
+# or
+@show MOI.get(model, MOI.SimplexIterations())
+```
+
 ## Sensitivity analysis for LP
 
 Given an LP problem and an optimal solution corresponding to a basis, we can
-question how much an objective coefficient or standard form rhs coefficient
-(c.f., [`normalized_rhs`](@ref)) can change without violating primal or dual
-feasibility of the basic solution. Note that not all solvers compute the basis,
-and for sensitivity analysis, the solver interface must implement
-`MOI.ConstraintBasisStatus`.
+question how much an objective coefficient or standard form right-hand side
+coefficient (c.f., [`normalized_rhs`](@ref)) can change without violating primal
+or dual feasibility of the basic solution.
 
-Given an LP optimal solution (and both [`has_values`](@ref) and
-[`has_duals`](@ref) returns `true`) [`lp_objective_perturbation_range`](@ref)
-returns a range of the allowed perturbation of the cost coefficient
-corresponding to the input variable. Note that the current primal solution
-remains optimal within this range, however the corresponding dual solution might
-change since a cost coefficient is perturbed. Similarly,
-[`lp_rhs_perturbation_range`](@ref) returns a range of the allowed perturbation
-of the rhs coefficient corresponding to the input constraint. And in this range
-the current dual solution remains optimal but the primal solution might change
-since a rhs coefficient is perturbed.
-
-However, if the problem is degenerate, there are multiple optimal bases and
-hence these ranges might not be as intuitive and seem too narrow. E.g., a larger
-cost coefficient perturbation might not invalidate the optimality of the current
-primal solution. Moreover, if a problem is degenerate, due to finite precision,
-it can happen that, e.g., a perturbation seems to invalidate a basis even though
-it doesn't (again providing too narrow ranges). To prevent this
-`feasibility_tolerance` and `optimality_tolerance` is introduced, which in turn,
-might make the ranges too wide for numerically challenging instances. Thus do not
-blindly trust these ranges, especially not for highly degenerate or numerically
-unstable instances.
+Note that not all solvers compute the basis, and for sensitivity analysis, the
+solver interface must implement `MOI.ConstraintBasisStatus`.
 
 To give a simple example, we could analyze the sensitivity of the optimal
 solution to the following (non-degenerate) LP problem:
 
 ```julia
-julia> model = Model();
-julia> @variable(model, x[1:2]);
-julia> @constraint(model, c1, x[1] + x[2] <= 1);
-julia> @constraint(model, c2, x[1] - x[2] <= 1);
-julia> @constraint(model, c3, -0.5 <= x[2] <= 0.5);
-julia> @objective(model, Max, x[1]);
+model = Model();
+@variable(model, x[1:2])
+set_lower_bound(x[2], -0.5)
+set_upper_bound(x[2], 0.5)
+@constraint(model, c1, x[1] + x[2] <= 1);
+@constraint(model, c2, x[1] - x[2] <= 1);
+@objective(model, Max, x[1]);
 ```
 
 ```@meta
 DocTestSetup = quote
     using JuMP
-    model = Model(() -> MOIU.MockOptimizer(MOIU.Model{Float64}(),
-                          eval_variable_constraint_dual=true));
+    mock = MOIU.MockOptimizer(
+        MOIU.Model{Float64}(), eval_variable_constraint_dual=false
+    )
+    model = direct_model(mock)
     @variable(model, x[1:2]);
+    set_lower_bound(x[2], -0.5)
+    set_upper_bound(x[2], 0.5)
     @constraint(model, c1, x[1] + x[2] <= 1);
     @constraint(model, c2, x[1] - x[2] <= 1);
-    @constraint(model, c3, -0.5 <= x[2] <= 0.5);
     @objective(model, Max, x[1]);
     optimize!(model);
-    mock = backend(model).optimizer.model;
-    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL);
-    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT);
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x[1]), 1.0);
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x[2]), 0.0);
-    MOI.set(mock, MOI.ConstraintBasisStatus(), JuMP.optimizer_index(c1), MOI.NONBASIC);
-    MOI.set(mock, MOI.ConstraintBasisStatus(), JuMP.optimizer_index(c2), MOI.NONBASIC);
-    MOI.set(mock, MOI.ConstraintBasisStatus(), JuMP.optimizer_index(c3), MOI.BASIC);
-    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c1), -0.5);
-    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c2), -0.5);
-    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c3), 0.0);
+    MOI.set(model, MOI.TerminationStatus(), MOI.OPTIMAL);
+    MOI.set(model, MOI.PrimalStatus(), MOI.FEASIBLE_POINT);
+    MOI.set(model, MOI.DualStatus(), MOI.FEASIBLE_POINT);
+    MOI.set(model, MOI.VariablePrimal(), x[1], 1.0);
+    MOI.set(model, MOI.VariablePrimal(), x[2], 0.0);
+    MOI.set(model, MOI.ConstraintBasisStatus(), c1, MOI.NONBASIC);
+    MOI.set(model, MOI.ConstraintBasisStatus(), c2, MOI.NONBASIC);
+    MOI.set(model, MOI.ConstraintBasisStatus(), LowerBoundRef(x[2]), MOI.BASIC);
+    MOI.set(model, MOI.ConstraintBasisStatus(), UpperBoundRef(x[2]), MOI.BASIC);
+    MOI.set(model, MOI.ConstraintDual(), c1, -0.5);
+    MOI.set(model, MOI.ConstraintDual(), c2, -0.5);
+    MOI.set(model, MOI.ConstraintDual(), LowerBoundRef(x[2]), 0.0);
+    MOI.set(model, MOI.ConstraintDual(), UpperBoundRef(x[2]), 0.0);
 end
 ```
 
 To analyze the sensitivity of the problem we could check the allowed
-perturbation ranges of, e.g., the cost coefficients and the rhs coefficient of
-constraint `c1` as follows:
+perturbation ranges of, e.g., the cost coefficients and the right-hand side
+coefficient of the constraint `c1` as follows:
+
 ```jldoctest
-julia> optimize!(model);
+julia> optimize!(model)
 
 julia> value.(x)
 2-element Array{Float64,1}:
  1.0
  0.0
-julia> lp_objective_perturbation_range(x[1])
+
+julia> report = lp_sensitivity_report(model);
+
+julia> x1_lo, x1_hi = report[x[1]]
 (-1.0, Inf)
-julia> lp_objective_perturbation_range(x[2])
+
+julia> println("The objective coefficient of x[1] could decrease by $(x1_lo) or increase by $(x1_hi).")
+The objective coefficient of x[1] could decrease by -1.0 or increase by Inf.
+
+julia> x2_lo, x2_hi = report[x[2]]
 (-1.0, 1.0)
-julia> lp_rhs_perturbation_range(c1)
+
+julia> println("The objective coefficient of x[2] could decrease by $(x2_lo) or increase by $(x2_hi).")
+The objective coefficient of x[2] could decrease by -1.0 or increase by 1.0.
+
+julia> c_lo, c_hi = report[c1]
 (-1.0, 1.0)
+
+julia> println("The RHS of c1 could decrease by $(c_lo) or increase by $(c_hi).")
+The RHS of c1 could decrease by -1.0 or increase by 1.0.
 ```
 
-```@docs
-lp_objective_perturbation_range
-lp_rhs_perturbation_range
+The range associated with a variable is the range of the allowed perturbation of
+the corresponding objective coefficient. Note that the current primal solution
+remains optimal within this range; however the corresponding dual solution might
+change since a cost coefficient is perturbed. Similarly, the range associated
+with a constraint is the range of the allowed perturbation of the corresponding
+right-hand side coefficient. In this range the current dual solution remains
+optimal, but the optimal primal solution might change.
+
+If the problem is degenerate, there are multiple optimal bases and hence these
+ranges might not be as intuitive and seem too narrow. E.g., a larger cost
+coefficient perturbation might not invalidate the optimality of the current
+primal solution. Moreover, if a problem is degenerate, due to finite precision,
+it can happen that, e.g., a perturbation seems to invalidate a basis even though
+it doesn't (again providing too narrow ranges). To prevent this, increase the
+`atol` keyword argument to [`lp_sensitivity_report`](@ref). Note that this might
+make the ranges too wide for numerically challenging instances. Thus, do not
+blindly trust these ranges, especially not for highly degenerate or numerically
+unstable instances.
+
+## Conflicts
+
+When the model you input is infeasible, some solvers can help you find the
+cause of this infeasibility by offering a conflict, i.e., a subset of the
+constraints that create this infeasibility. Depending on the solver,
+this can also be called an IIS (irreducible inconsistent subsystem).
+
+The function [`compute_conflict!`](@ref) is used to trigger the computation of
+a conflict. Once this process is finished, the attribute
+[`MOI.ConflictStatus`](@ref) returns a [`MOI.ConflictStatusCode`](@ref).
+
+If there is a conflict, you can query from each constraint whether it
+participates in the conflict or not using the attribute
+[`MOI.ConstraintConflictStatus`](@ref), which returns a
+[`MOI.ConflictParticipationStatusCode`](@ref).
+
+For instance, this is how you can use this functionality:
+
+```julia
+using JuMP
+model = Model() # You must use a solver that supports conflict refining/IIS computation, like CPLEX or Gurobi
+@variable(model, x >= 0)
+@constraint(model, c1, x >= 2)
+@constraint(model, c2, x <= 1)
+optimize!(model)
+
+# termination_status(model) will likely be MOI.INFEASIBLE,
+# depending on the solver
+
+compute_conflict!(model)
+if MOI.get(model, MOI.ConflictStatus()) != MOI.CONFLICT_FOUND
+    error("No conflict could be found for an infeasible model.")
+end
+
+# Both constraints should participate in the conflict.
+MOI.get(model, MOI.ConstraintConflictStatus(), c1)
+MOI.get(model, MOI.ConstraintConflictStatus(), c2)
 ```
 
 ## Multiple solutions
@@ -243,21 +338,4 @@ num_results = result_count(model)
 @assert has_values(model; result = num_results)
 an_optimal_solution = value.(x; result = num_results)
 an_optimal_objective = objective_value(model; result = num_results)
-```
-
-## Reference
-
-```@docs
-JuMP.termination_status
-JuMP.raw_status
-JuMP.primal_status
-JuMP.has_values
-JuMP.value
-JuMP.dual_status
-JuMP.has_duals
-JuMP.dual
-JuMP.solve_time
-OptimizeNotCalled
-MOI.optimize!
-JuMP.result_count
 ```
