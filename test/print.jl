@@ -204,6 +204,7 @@ end
         constr_exponent_5 = @NLconstraint(model, x^(x * x) <= 1)
         constr_exponent_6 = @NLconstraint(model, x^(2x) <= 1)
         constr_exponent_7 = @NLconstraint(model, x^(2 * 5) <= 1)
+        constr_exponent_8 = @NLconstraint(model, x^(x^2) <= 1)
 
         io_test(REPLMode, constr_le, "sin(x) - 1.0 $le 0")
         io_test(REPLMode, constr_ge, "sin(x) - 1.0 $ge 0")
@@ -215,9 +216,10 @@ end
         io_test(REPLMode, constr_exponent_2, "x ^ 40.23 - 1.0 $le 0")
         io_test(REPLMode, constr_exponent_3, "(x ^ 4.0 + x ^ 3.0 + x ^ 2.0) - 1.0 $le 0")
         io_test(REPLMode, constr_exponent_4, "(x ^ -4.0 + x ^ -3.0 + x ^ -2.0) - 1.0 $le 0")
-        io_test(REPLMode, constr_exponent_5, "x ^ (x * x) - 1.0 ≤ 0")
-        io_test(REPLMode, constr_exponent_6, "x ^ (2.0 * x) - 1.0 ≤ 0")
-        io_test(REPLMode, constr_exponent_7, "x ^ (2.0 * 5.0) - 1.0 ≤ 0")
+        io_test(REPLMode, constr_exponent_5, "x ^ (x * x) - 1.0 $le 0")
+        io_test(REPLMode, constr_exponent_6, "x ^ (2.0 * x) - 1.0 $le 0")
+        io_test(REPLMode, constr_exponent_7, "x ^ (2.0 * 5.0) - 1.0 $le 0")
+        io_test(REPLMode, constr_exponent_8, "x ^ (x ^ 2.0) - 1.0 $le 0")
 
         io_test(IJuliaMode, constr_le, "sin(x) - 1.0 \\leq 0")
         io_test(IJuliaMode, constr_ge, "sin(x) - 1.0 \\geq 0")
@@ -227,9 +229,10 @@ end
         io_test(IJuliaMode, constr_exponent_2, "x ^ {40.23} - 1.0 \\leq 0")
         io_test(IJuliaMode, constr_exponent_3, "(x ^ {4.0} + x ^ {3.0} + x ^ {2.0}) - 1.0 \\leq 0")
         io_test(IJuliaMode, constr_exponent_4, "(x ^ {-4.0} + x ^ {-3.0} + x ^ {-2.0}) - 1.0 \\leq 0")
-        io_test(IJuliaMode, constr_exponent_5, "x ^ {(x * x)} - 1.0 \\leq 0")
-        io_test(IJuliaMode, constr_exponent_6, "x ^ {(2.0 * x)} - 1.0 \\leq 0")
-        io_test(IJuliaMode, constr_exponent_7, "x ^ {(2.0 * 5.0)} - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_exponent_5, "x ^ {x * x} - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_exponent_6, "x ^ {2.0 * x} - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_exponent_7, "x ^ {2.0 * 5.0} - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_exponent_8, "x ^ {x ^ {2.0}} - 1.0 \\leq 0")
     end
 
     @testset "Nonlinear constraints with embedded parameters/expressions" begin

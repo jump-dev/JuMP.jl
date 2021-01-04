@@ -618,16 +618,36 @@ end
 ## _NonlinearExprData
 #------------------------------------------------------------------------
 function nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
-    nl = string(_tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values,
-                              [], [], model.nlp_data.user_operators, false,
-                              false, print_mode))
+    ex = _tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values,
+                       [], [], model.nlp_data.user_operators, false,
+                       false, print_mode)
     if print_mode == IJuliaMode
-        # Replace exponents x ^ 4.0 for x ^ {4.0}
-        nl = replace(nl, r"(\^) (?<exponent>(?=\()\(.+\)|-?\d+\.\d+)" => s"^ {\g<exponent>}")
+        ex = _latexify_exponentials(ex)
     end
-    return nl
+    return string(ex)
 end
 
+# Change x ^ -2.0 to x ^ {-2.0}
+# x ^ (x ^ 2.0) to x ^ {x ^ {2.0}}
+# and so on
+function _latexify_exponentials(ex::Expr)
+    if ex.head != :call
+        return ex
+    end
+    for i = 1:length(ex.args)
+        if isa(ex.args[i], Expr)
+            ex.args[i] = _latexify_exponentials(ex.args[i])
+        end
+        if ex.args[1] == :^
+            if isa(ex.args[3], Expr)
+                ex.args[3] = _latexify_exponentials(ex.args[3])
+            end
+            ex.args[3] = Expr(:braces, ex.args[3])
+            return ex
+        end
+    end
+    return ex
+end
 #------------------------------------------------------------------------
 ## _NonlinearConstraint
 #------------------------------------------------------------------------
