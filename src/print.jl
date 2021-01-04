@@ -630,21 +630,13 @@ end
 # Change x ^ -2.0 to x ^ {-2.0}
 # x ^ (x ^ 2.0) to x ^ {x ^ {2.0}}
 # and so on
+_latexify_exponentials(ex) = ex
 function _latexify_exponentials(ex::Expr)
-    if ex.head != :call
-        return ex
-    end
     for i = 1:length(ex.args)
-        if isa(ex.args[i], Expr)
-            ex.args[i] = _latexify_exponentials(ex.args[i])
-        end
-        if ex.args[1] == :^
-            if isa(ex.args[3], Expr)
-                ex.args[3] = _latexify_exponentials(ex.args[3])
-            end
-            ex.args[3] = Expr(:braces, ex.args[3])
-            return ex
-        end
+        ex.args[i] = _latexify_exponentials(ex.args[i])
+    end
+    if length(ex.args) == 3 && ex.args[1] == :^
+        ex.args[3] = Expr(:braces, ex.args[3])
     end
     return ex
 end
