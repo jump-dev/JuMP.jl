@@ -1293,10 +1293,10 @@ end
 ```
 """
 macro variable(args...)
-    _variable_macro(args, :variable, __source__)
+    variable_macro(args, :variable, __source__)
 end
 
-function _variable_macro(
+function variable_macro(
     args, macro_name::Symbol, source::LineNumberNode
 )
     _error(str...) = _macro_error(macro_name, args, source, str...)
@@ -1313,14 +1313,14 @@ function _variable_macro(
     else
         x = popfirst!(extra)
         if x == :Int
-            _error("Ambiguous variable name $x detected. To specify an anonymous integer " *
-                "variable, use `@variable(model, integer = true)` instead.")
+            _error("Ambiguous $(macro_name) name $x detected. To specify an anonymous integer " *
+                "$(macro_name), use `@$(macro_name)(model, integer = true)` instead.")
         elseif x == :Bin
-            _error("Ambiguous variable name $x detected. To specify an anonymous binary " *
-                "variable, use `@variable(model, binary = true)` instead.")
+            _error("Ambiguous $(macro_name) name $x detected. To specify an anonymous binary " *
+                "$(macro_name), use `@$(macro_name)(model, binary = true)` instead.")
         elseif x == :PSD
-            _error("Size of anonymous square matrix of positive semidefinite anonymous variables is not specified. To specify size of square matrix " *
-                "use `@variable(model, [1:n, 1:n], PSD)` instead.")
+            _error("Size of anonymous square matrix of positive semidefinite anonymous $(macro_name)s is not specified. To specify size of square matrix " *
+                "use `@$(macro_name)(model, [1:n, 1:n], PSD)` instead.")
         end
         anon_singleton = false
     end
@@ -1354,7 +1354,7 @@ function _variable_macro(
 
     anonvar = isexpr(var, :vect) || isexpr(var, :vcat) || anon_singleton
     if anonvar && explicit_comparison && set === nothing
-        _error("Cannot use explicit bounds via >=, <= with an anonymous variable")
+        _error("Cannot use explicit bounds via >=, <= with an anonymous $(macro_name)")
     end
     variable = gensym()
     # TODO: Should we generate non-empty default names for variables?
@@ -1366,7 +1366,7 @@ function _variable_macro(
     end
 
     if !isa(name, Symbol) && !anonvar
-        Base.error("Expression $name should not be used as a variable name. Use the \"anonymous\" syntax $name = @variable(model, ...) instead.")
+        Base.error("Expression $name should not be used as a $(macro_name) name. Use the \"anonymous\" syntax $name = @$(macro_name)(model, ...) instead.")
     end
 
     if !isempty(set_kw_args)
@@ -1388,7 +1388,7 @@ function _variable_macro(
     end
     if any(t -> (t == :Symmetric), extra)
         if set !== nothing
-            _error("Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `$set`.")
+            _error("Cannot specify `Symmetric` when the set is already specified, the $(macro_name) is constrained to belong to `$set`.")
         end
         set = :(JuMP.SymMatrixSpace())
     end
@@ -1410,7 +1410,7 @@ function _variable_macro(
         # Easy case - a single variable
         name_code = base_name
     else
-        isa(var, Expr) || _error("Expected $var to be a variable name")
+        isa(var, Expr) || _error("Expected $var to be a $(macro_name) name")
         # We now build the code to generate the variables (and possibly the
         # SparseAxisArray to contain them)
         idxvars, indices = Containers._build_ref_sets(_error, var)
