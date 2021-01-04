@@ -200,6 +200,7 @@ end
         constr_exponent_1 = @NLconstraint(model, x^4 <= 1)
         constr_exponent_2 = @NLconstraint(model, x^40.23 <= 1)
         constr_exponent_3 = @NLconstraint(model, x^4 + x^3 + x^2 <= 1)
+        constr_exponent_4 = @NLconstraint(model, x^-4 + x^-3 + x^-2 <= 1)
 
         io_test(REPLMode, constr_le, "sin(x) - 1.0 $le 0")
         io_test(REPLMode, constr_ge, "sin(x) - 1.0 $ge 0")
@@ -210,6 +211,7 @@ end
         io_test(REPLMode, constr_exponent_1, "x ^ 4.0 - 1.0 $le 0")
         io_test(REPLMode, constr_exponent_2, "x ^ 40.23 - 1.0 $le 0")
         io_test(REPLMode, constr_exponent_3, "(x ^ 4.0 + x ^ 3.0 + x ^ 2.0) - 1.0 $le 0")
+        io_test(REPLMode, constr_exponent_4, "(x ^ -4.0 + x ^ -3.0 + x ^ -2.0) - 1.0 $le 0")
 
         io_test(IJuliaMode, constr_le, "sin(x) - 1.0 \\leq 0")
         io_test(IJuliaMode, constr_ge, "sin(x) - 1.0 \\geq 0")
@@ -218,6 +220,7 @@ end
         io_test(IJuliaMode, constr_exponent_1, "x ^ {4.0} - 1.0 \\leq 0")
         io_test(IJuliaMode, constr_exponent_2, "x ^ {40.23} - 1.0 \\leq 0")
         io_test(IJuliaMode, constr_exponent_3, "(x ^ {4.0} + x ^ {3.0} + x ^ {2.0}) - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_exponent_4, "(x ^ {-4.0} + x ^ {-3.0} + x ^ {-2.0}) - 1.0 \\leq 0")
     end
 
     @testset "Nonlinear constraints with embedded parameters/expressions" begin

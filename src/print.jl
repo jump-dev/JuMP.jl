@@ -623,7 +623,7 @@ function nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
                               false, print_mode))
     # Replace exponents x ^ 4.0 for x ^ {4.0}
     if print_mode == IJuliaMode
-        nl = replace(nl, r"(\^) (?<exponent>\d+\.\d+)" => s"^ {\g<exponent>}")
+        nl = replace(nl, r"(\^) (?<exponent>-?\d+\.\d+)" => s"^ {\g<exponent>}")
     end
     return nl
 end
