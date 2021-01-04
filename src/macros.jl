@@ -1293,7 +1293,13 @@ end
 ```
 """
 macro variable(args...)
-    _error(str...) = _macro_error(:variable, args, __source__, str...)
+    _variable_macro(args, :variable, __source__)
+end
+
+function _variable_macro(
+    args, macro_name::Symbol, source::LineNumberNode
+)
+    _error(str...) = _macro_error(macro_name, args, source, str...)
 
     model = esc(args[1])
 
@@ -1445,7 +1451,7 @@ macro variable(args...)
         macro_code = _macro_assign_and_return(creation_code, variable, name,
                                               model_for_registering = model)
     end
-    return _finalize_macro(model, macro_code, __source__)
+    return _finalize_macro(model, macro_code, source)
 end
 
 """
