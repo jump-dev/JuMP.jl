@@ -617,12 +617,29 @@ end
 #------------------------------------------------------------------------
 ## _NonlinearExprData
 #------------------------------------------------------------------------
-function nl_expr_string(model::Model, mode, c::_NonlinearExprData)
-    return string(_tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values,
-                                [], [], model.nlp_data.user_operators, false,
-                                false, mode))
+function nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
+    ex = _tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values,
+                       [], [], model.nlp_data.user_operators, false,
+                       false, print_mode)
+    if print_mode == IJuliaMode
+        ex = _latexify_exponentials(ex)
+    end
+    return string(ex)
 end
 
+# Change x ^ -2.0 to x ^ {-2.0}
+# x ^ (x ^ 2.0) to x ^ {x ^ {2.0}}
+# and so on
+_latexify_exponentials(ex) = ex
+function _latexify_exponentials(ex::Expr)
+    for i = 1:length(ex.args)
+        ex.args[i] = _latexify_exponentials(ex.args[i])
+    end
+    if length(ex.args) == 3 && ex.args[1] == :^
+        ex.args[3] = Expr(:braces, ex.args[3])
+    end
+    return ex
+end
 #------------------------------------------------------------------------
 ## _NonlinearConstraint
 #------------------------------------------------------------------------
