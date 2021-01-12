@@ -92,7 +92,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              |        | Apache   | LP, QP                    |
 | [Pavito.jl](https://github.com/jump-dev/Pavito.jl)                             |                                                                                  |        | MPL-2    | (MI)NLP                   |
 | [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)                        |                                                                                  |        | MIT      | LP, SOCP, SDP             |
-| [SCIP](https://scip.zib.de/)                                                   | [SCIP.jl](https://github.com/SCIP-Interfaces/SCIP.jl)                            | Manual | ZIB      | (MI)LP, (MI)NLP           |
+| [SCIP](https://scipopt.org/)                                                   | [SCIP.jl](https://github.com/scipopt/SCIP.jl)                            | Manual | ZIB      | (MI)LP, (MI)NLP           |
 | [SCS](https://github.com/cvxgrp/scs)                                           | [SCS.jl](https://github.com/jump-dev/SCS.jl)                                     |        | MIT      | LP, SOCP, SDP             |
 | [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/jump-dev/SDPA.jl), [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl) |  | GPL | LP, SDP |
 | [SDPNAL](https://blog.nus.edu.sg/mattohkc/softwares/sdpnalplus/)               | [SDPNAL.jl](https://github.com/jump-dev/SDPNAL.jl)                               | Manualᴹ | CC BY-SA | LP, SDP                  |
