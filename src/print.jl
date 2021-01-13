@@ -332,7 +332,7 @@ function function_string(::Type{IJuliaMode}, v::AbstractVariableRef)
     # Escape carets to prevent them being treated as superscript markers.
     var_name = replace(var_name, "^" => "\\^")
     # Convert any x[args] to x_{args} so that indices on x print as subscripts.
-    m = match(r"^(.*)\[(.*)\]", var_name)
+    m = match(r"^(.*)\[(.+)\]$", var_name)
     if m !== nothing
         var_name = m[1] * "_{" * m[2] * "}"
     end
