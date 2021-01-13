@@ -326,7 +326,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(REPLMode, y[2], "bar[2]")
         io_test(IJuliaMode, y[2], "bar_{2}")
         io_test(REPLMode, z[:red], "color_123[red]")
-        io_test(IJuliaMode, z[:red], "color_123_{red}")
+        io_test(IJuliaMode, z[:red], "color\\_123_{red}")
         io_test(REPLMode, v[2, 1], "i123123[1,2]")
         io_test(IJuliaMode, v[2, 1], "i123123_{1,2}")
         io_test(REPLMode, w[1, 3], "symm[1,3]")
@@ -787,4 +787,15 @@ end
 @testset "Printing for JuMPExtension.MyModel" begin
     printing_test(JuMPExtension.MyModel)
     model_extension_printing_test(JuMPExtension.MyModel)
+end
+
+@testset "Print IJulia with math operators" begin
+    model = Model()
+    @variable(model, x_ab)
+    io_test(IJuliaMode, x_ab, "x\\_ab")
+    @variable(model, y[1:2], base_name = "y[:a]")
+    io_test(IJuliaMode, y[1], "y[:a]_{1}")
+    io_test(IJuliaMode, y[2], "y[:a]_{2}")
+    @variable(model, z, base_name = "z^1")
+    io_test(IJuliaMode, z, "z\\^1")
 end

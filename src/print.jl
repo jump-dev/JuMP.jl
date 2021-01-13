@@ -321,12 +321,23 @@ function function_string(::Type{REPLMode}, v::AbstractVariableRef)
 end
 function function_string(::Type{IJuliaMode}, v::AbstractVariableRef)
     var_name = name(v)
-    if !isempty(var_name)
-        # TODO: This is wrong if variable name constains extra "]"
-        return replace(replace(var_name, "[" => "_{", count = 1), "]" => "}")
-    else
+    if isempty(var_name)
         return "noname"
     end
+    # We need to escape latex math characters that appear in the name.
+    # However, it's probably impractical to catch everything, so let's just
+    # escape the common ones:
+    # Escape underscores to prevent them being treated as subscript markers.
+    var_name = replace(var_name, "_" => "\\_")
+    # Escape carets to prevent them being treated as superscript markers.
+    var_name = replace(var_name, "^" => "\\^")
+    # Convert any x[args] to x_{args} so that indices on x print as subscripts.
+    m = match(r"^(.*)\[(.+)\]$", var_name)
+    if m !== nothing
+        var_name = m[1] * "_{" * m[2] * "}"
+    end
+
+    return var_name
 end
 
 #------------------------------------------------------------------------
