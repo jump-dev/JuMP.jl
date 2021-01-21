@@ -126,7 +126,10 @@ end
 function test_DenseAxisVector(ModelType, ::Any)
     model = ModelType()
     @variable(model, y[2:5])
-    return MA.Test.array_test(y, exclude = ["matrix_vector", "non_array"])
+    return MA.Test.array_test(
+        y,
+        exclude = ["matrix_vector", "non_array", "dot"],
+    )
 end
 
 function test_different_variables(ModelType, ::Any)
