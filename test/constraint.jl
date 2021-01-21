@@ -668,8 +668,8 @@ function test_Model_all_constraints_vector(::Any, ::Any)
     )
     @test isempty(aff_constraints)
     err = ErrorException(
-        "`GenericAffExpr{Float64,VarType} where VarType` is not a " *
-        "concrete type. Did you miss a type parameter?",
+        "`$(GenericAffExpr{Float64})` is not a concrete type. Did you miss a " *
+        "type parameter?",
     )
     @test_throws err try
         num_constraints(

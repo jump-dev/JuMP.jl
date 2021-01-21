@@ -48,7 +48,7 @@ using Test
         @test sprint(show, correct_answer) == """
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, 2:3
-And data, a 2-element Array{Float64,1}:
+And data, a 2-element $(Vector{Float64}):
  2.0
  3.0"""
 
@@ -84,7 +84,7 @@ And data, a 2-element Array{Float64,1}:
         @test sprint(show, correct_answer) == """
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, $([:a, :b])
-And data, a 2-element Array{Float64,1}:
+And data, a 2-element $(Vector{Float64}):
  2.0
  3.0"""
         plus1(x) = x + 1
@@ -113,7 +113,7 @@ And data, a 2-element Array{Float64,1}:
 2-dimensional DenseAxisArray{$Int,2,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, $([:a, :b])
-And data, a 2×2 Array{$Int,2}:
+And data, a 2×2 $(Matrix{Int}):
  1  2
  3  4"""
     end
@@ -145,14 +145,14 @@ And data, a 2×2 Array{$Int,2}:
     Dimension 2, $([:a, :b])
     Dimension 3, -1:0
     Dimension 4, ["a", "b"]
-And data, a 2×2×2×2 Array{Float64,4}"""
+And data, a 2×2×2×2 $(Array{Float64,4})"""
         @test sprint(show, A) == """
 4-dimensional DenseAxisArray{Float64,4,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, $([:a, :b])
     Dimension 3, -1:0
     Dimension 4, ["a", "b"]
-And data, a 2×2×2×2 Array{Float64,4}:
+And data, a 2×2×2×2 $(Array{Float64,4}):
 [:, :, -1, "a"] =
  1.0  0.0
  0.0  0.0
@@ -179,7 +179,7 @@ And data, a 2×2×2×2 Array{Float64,4}:
         A[] = 1
         @test sprint(show, A) == """
 0-dimensional DenseAxisArray{$Int,0,...} with index sets:
-And data, a 0-dimensional Array{$Int,0}:
+And data, a 0-dimensional $(Array{Int,0}):
 1"""
     end
 
