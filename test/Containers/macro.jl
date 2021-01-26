@@ -48,4 +48,15 @@ using Test
         )
         @test x isa SparseAxisArray{Any,2,Tuple{Int,Int}}
     end
+    @testset "duplicate_indices" begin
+        expr = :(Containers.@container(x[i = 1:2, i = 1:2], i + i))
+        @test_throws(
+            LoadError,
+            try
+                @eval $expr
+            catch err
+                throw(err)
+            end,
+        )
+    end
 end

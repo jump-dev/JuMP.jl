@@ -129,6 +129,12 @@ function _parse_ref_sets(_error::Function, expr::Expr)
             idxvar = gensym()
             idxset = esc(s)
         end
+        if idxvar in idxvars
+            _error(
+                "The index $(idxvar) appears more than once. The index " *
+                "associated with each set must be unique."
+            )
+        end
         push!(idxvars, idxvar)
         push!(idxsets, idxset)
     end
