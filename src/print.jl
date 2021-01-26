@@ -321,12 +321,23 @@ function function_string(::Type{REPLMode}, v::AbstractVariableRef)
 end
 function function_string(::Type{IJuliaMode}, v::AbstractVariableRef)
     var_name = name(v)
-    if !isempty(var_name)
-        # TODO: This is wrong if variable name constains extra "]"
-        return replace(replace(var_name, "[" => "_{", count = 1), "]" => "}")
-    else
+    if isempty(var_name)
         return "noname"
     end
+    # We need to escape latex math characters that appear in the name.
+    # However, it's probably impractical to catch everything, so let's just
+    # escape the common ones:
+    # Escape underscores to prevent them being treated as subscript markers.
+    var_name = replace(var_name, "_" => "\\_")
+    # Escape carets to prevent them being treated as superscript markers.
+    var_name = replace(var_name, "^" => "\\^")
+    # Convert any x[args] to x_{args} so that indices on x print as subscripts.
+    m = match(r"^(.*)\[(.+)\]$", var_name)
+    if m !== nothing
+        var_name = m[1] * "_{" * m[2] * "}"
+    end
+
+    return var_name
 end
 
 #------------------------------------------------------------------------
@@ -617,12 +628,29 @@ end
 #------------------------------------------------------------------------
 ## _NonlinearExprData
 #------------------------------------------------------------------------
-function nl_expr_string(model::Model, mode, c::_NonlinearExprData)
-    return string(_tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values,
-                                [], [], model.nlp_data.user_operators, false,
-                                false, mode))
+function nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
+    ex = _tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values,
+                       [], [], model.nlp_data.user_operators, false,
+                       false, print_mode)
+    if print_mode == IJuliaMode
+        ex = _latexify_exponentials(ex)
+    end
+    return string(ex)
 end
 
+# Change x ^ -2.0 to x ^ {-2.0}
+# x ^ (x ^ 2.0) to x ^ {x ^ {2.0}}
+# and so on
+_latexify_exponentials(ex) = ex
+function _latexify_exponentials(ex::Expr)
+    for i = 1:length(ex.args)
+        ex.args[i] = _latexify_exponentials(ex.args[i])
+    end
+    if length(ex.args) == 3 && ex.args[1] == :^
+        ex.args[3] = Expr(:braces, ex.args[3])
+    end
+    return ex
+end
 #------------------------------------------------------------------------
 ## _NonlinearConstraint
 #------------------------------------------------------------------------

@@ -197,6 +197,14 @@ end
         constr_ge = @NLconstraint(model, sin(x) >= 1)
         constr_eq = @NLconstraint(model, sin(x) == 1)
         constr_range = @NLconstraint(model, 0 <= sin(x) <= 1)
+        constr_exponent_1 = @NLconstraint(model, x^4 <= 1)
+        constr_exponent_2 = @NLconstraint(model, x^40.23 <= 1)
+        constr_exponent_3 = @NLconstraint(model, x^4 + x^3 + x^2 <= 1)
+        constr_exponent_4 = @NLconstraint(model, x^-4 + x^-3 + x^-2 <= 1)
+        constr_exponent_5 = @NLconstraint(model, x^(x * x) <= 1)
+        constr_exponent_6 = @NLconstraint(model, x^(2x) <= 1)
+        constr_exponent_7 = @NLconstraint(model, x^(2 * 5) <= 1)
+        constr_exponent_8 = @NLconstraint(model, x^(x^2) <= 1)
 
         io_test(REPLMode, constr_le, "sin(x) - 1.0 $le 0")
         io_test(REPLMode, constr_ge, "sin(x) - 1.0 $ge 0")
@@ -204,11 +212,27 @@ end
         # Note: This is inconsistent with the "x in [-1, 1]" printing for
         # regular constraints.
         io_test(REPLMode, constr_range, "0 $le sin(x) $le 1")
+        io_test(REPLMode, constr_exponent_1, "x ^ 4.0 - 1.0 $le 0")
+        io_test(REPLMode, constr_exponent_2, "x ^ 40.23 - 1.0 $le 0")
+        io_test(REPLMode, constr_exponent_3, "(x ^ 4.0 + x ^ 3.0 + x ^ 2.0) - 1.0 $le 0")
+        io_test(REPLMode, constr_exponent_4, "(x ^ -4.0 + x ^ -3.0 + x ^ -2.0) - 1.0 $le 0")
+        io_test(REPLMode, constr_exponent_5, "x ^ (x * x) - 1.0 $le 0")
+        io_test(REPLMode, constr_exponent_6, "x ^ (2.0 * x) - 1.0 $le 0")
+        io_test(REPLMode, constr_exponent_7, "x ^ (2.0 * 5.0) - 1.0 $le 0")
+        io_test(REPLMode, constr_exponent_8, "x ^ (x ^ 2.0) - 1.0 $le 0")
 
         io_test(IJuliaMode, constr_le, "sin(x) - 1.0 \\leq 0")
         io_test(IJuliaMode, constr_ge, "sin(x) - 1.0 \\geq 0")
         io_test(IJuliaMode, constr_eq, "sin(x) - 1.0 = 0")
         io_test(IJuliaMode, constr_range, "0 \\leq sin(x) \\leq 1")
+        io_test(IJuliaMode, constr_exponent_1, "x ^ {4.0} - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_exponent_2, "x ^ {40.23} - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_exponent_3, "(x ^ {4.0} + x ^ {3.0} + x ^ {2.0}) - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_exponent_4, "(x ^ {-4.0} + x ^ {-3.0} + x ^ {-2.0}) - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_exponent_5, "x ^ {x * x} - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_exponent_6, "x ^ {2.0 * x} - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_exponent_7, "x ^ {2.0 * 5.0} - 1.0 \\leq 0")
+        io_test(IJuliaMode, constr_exponent_8, "x ^ {x ^ {2.0}} - 1.0 \\leq 0")
     end
 
     @testset "Nonlinear constraints with embedded parameters/expressions" begin
@@ -302,7 +326,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(REPLMode, y[2], "bar[2]")
         io_test(IJuliaMode, y[2], "bar_{2}")
         io_test(REPLMode, z[:red], "color_123[red]")
-        io_test(IJuliaMode, z[:red], "color_123_{red}")
+        io_test(IJuliaMode, z[:red], "color\\_123_{red}")
         io_test(REPLMode, v[2, 1], "i123123[1,2]")
         io_test(IJuliaMode, v[2, 1], "i123123_{1,2}")
         io_test(REPLMode, w[1, 3], "symm[1,3]")
@@ -763,4 +787,15 @@ end
 @testset "Printing for JuMPExtension.MyModel" begin
     printing_test(JuMPExtension.MyModel)
     model_extension_printing_test(JuMPExtension.MyModel)
+end
+
+@testset "Print IJulia with math operators" begin
+    model = Model()
+    @variable(model, x_ab)
+    io_test(IJuliaMode, x_ab, "x\\_ab")
+    @variable(model, y[1:2], base_name = "y[:a]")
+    io_test(IJuliaMode, y[1], "y[:a]_{1}")
+    io_test(IJuliaMode, y[2], "y[:a]_{2}")
+    @variable(model, z, base_name = "z^1")
+    io_test(IJuliaMode, z, "z\\^1")
 end
