@@ -90,6 +90,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [MOSEK](https://www.mosek.com/)                                                | [MosekTools.jl](https://github.com/jump-dev/MosekTools.jl)                       | Manual | Comm.    | (MI)LP, (MI)SOCP, SDP     |
 | [NLopt](https://github.com/stevengj/nlopt)                                     | [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)                                 |        | GPL      | LP, QP, NLP               |
 | [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              |        | Apache   | LP, QP                    |
+| [PATH](http://pages.cs.wisc.edu/~ferris/path.html)                             | [PATHSolver.jl](https://github.com/chkwon/PATHSolver.jl)                 |        | MIT      | MCP                       |
 | [Pavito.jl](https://github.com/jump-dev/Pavito.jl)                             |                                                                                  |        | MPL-2    | (MI)NLP                   |
 | [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)                        |                                                                                  |        | MIT      | LP, SOCP, SDP             |
 | [SCIP](https://scipopt.org/)                                                   | [SCIP.jl](https://github.com/scipopt/SCIP.jl)                            | Manual | ZIB      | (MI)LP, (MI)NLP           |
@@ -105,6 +106,7 @@ Where:
 - QP = Quadratic programming
 - SOCP = Second-order conic programming (including problems with convex
   quadratic constraints and/or objective)
+- MCP = Mixed-complementarity programming
 - NLP = Nonlinear programming
 - SDP = Semidefinite programming
 - (MI)XXX = Mixed-integer equivalent of problem type `XXX`
