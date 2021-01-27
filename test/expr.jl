@@ -297,6 +297,12 @@ function expressions_test(
         z = @inferred (x * x)^3
         @test z.pow == 6
     end
+
+    @testset "ndims(::QuadExpr)" begin
+        model = ModelType()
+        @variable(model, x)
+        @test ndims(x^2 + 1) == 0
+    end
 end
 
 @testset "Expressions for JuMP.Model" begin

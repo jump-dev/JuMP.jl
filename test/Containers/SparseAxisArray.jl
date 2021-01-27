@@ -55,9 +55,9 @@ using Test
         d = @inferred SA(Dict((:a,) => 1, (:b,) => 2))
         @testset "Printing" begin
             @test sprint(summary, d) == """
-SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries"""
+$(SparseAxisArray{Int,1,Tuple{Symbol}}) with 2 entries"""
             @test sprint(show, "text/plain", d) == """
-SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries:
+$(SparseAxisArray{Int,1,Tuple{Symbol}}) with 2 entries:
   [a]  =  1
   [b]  =  2"""
         end
@@ -94,9 +94,9 @@ SparseAxisArray{$Int,1,Tuple{Symbol}} with 2 entries:
         @test_throws BoundsError(d, (:a,)) d[:a]
         @testset "Printing" begin
             @test sprint(summary, d) == """
-SparseAxisArray{Float64,2,Tuple{Symbol,Char}} with 2 entries"""
+$(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
             @test sprint(show, "text/plain", d) == """
-SparseAxisArray{Float64,2,Tuple{Symbol,Char}} with 2 entries:
+$(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries:
   [b, v]  =  0.5
   [a, u]  =  2.0"""
         end

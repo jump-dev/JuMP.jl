@@ -412,3 +412,10 @@ function Base.show(io::IO, array::DenseAxisArray)
     println(io, ":")
     return Base.print_array(io, array)
 end
+
+# TODO(odow): deprecate this at some point? We have to implement it here because
+# it used to work in Julia 1.5. In Julia 1.6, the Base implementation changed to
+# assume `x` was 1-indexed. It doesn't make sense to repeat a DenseAxisArray,
+# but some users may depend on it's functionality so we have a work-around
+# instead of just breaking code.
+Base.repeat(x::DenseAxisArray; kwargs...) = repeat(x.data; kwargs...)

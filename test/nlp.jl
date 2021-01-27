@@ -745,7 +745,7 @@ end
         MOI.initialize(d, [:Grad])
         expected_exception = ErrorException(
             "Expected return type of Float64 from a user-defined function, " *
-            "but got GenericAffExpr{Float64,VariableRef}. Make sure your " *
+            "but got $(GenericAffExpr{Float64,VariableRef}). Make sure your " *
             "user-defined function only depends on variables passed as " *
             "arguments.",
         )

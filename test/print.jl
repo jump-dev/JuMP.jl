@@ -508,12 +508,12 @@ Subject to
 A JuMP Model
 Maximization problem with:
 Variables: 13
-Objective function type: GenericAffExpr{Float64,$VariableType}
-`GenericAffExpr{Float64,$VariableType}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-`GenericQuadExpr{Float64,$VariableType}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
-`Array{$VariableType,1}`-in-`MathOptInterface.PositiveSemidefiniteConeTriangle`: 2 constraints
-`Array{$VariableType,1}`-in-`MathOptInterface.PositiveSemidefiniteConeSquare`: 2 constraints
-`Array{GenericAffExpr{Float64,$VariableType},1}`-in-`MathOptInterface.SecondOrderCone`: 1 constraint
+Objective function type: $(GenericAffExpr{Float64,VariableType})
+`$(GenericAffExpr{Float64,VariableType})`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+`$(GenericQuadExpr{Float64,VariableType})`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+`$(Array{VariableType,1})`-in-`MathOptInterface.PositiveSemidefiniteConeTriangle`: 2 constraints
+`$(Array{VariableType,1})`-in-`MathOptInterface.PositiveSemidefiniteConeSquare`: 2 constraints
+`$(Array{GenericAffExpr{Float64,VariableType},1})`-in-`MathOptInterface.SecondOrderCone`: 1 constraint
 `$VariableType`-in-`MathOptInterface.EqualTo{Float64}`: 1 constraint
 `$VariableType`-in-`MathOptInterface.GreaterThan{Float64}`: 4 constraints
 `$VariableType`-in-`MathOptInterface.LessThan{Float64}`: 4 constraints
@@ -579,7 +579,7 @@ c & x\\\\
 A JuMP Model
 Feasibility problem with:
 Variables: 2
-`GenericQuadExpr{Float64,$VariableType}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+`$(GenericQuadExpr{Float64,VariableType})`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
 `$VariableType`-in-`MathOptInterface.Integer`: 1 constraint
 `$VariableType`-in-`MathOptInterface.ZeroOne`: 1 constraint
 Model mode: AUTOMATIC
@@ -600,7 +600,7 @@ Names registered in the model: x, y""",
 A JuMP Model
 Feasibility problem with:
 Variable: 1
-`GenericAffExpr{Float64,$VariableType}`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+`$(GenericAffExpr{Float64,VariableType})`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
 Model mode: AUTOMATIC
 CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
@@ -665,7 +665,7 @@ Subject to
 A JuMP Model
 Maximization problem with:
 Variables: 13
-Objective function type: GenericAffExpr{Float64,$VariableType}
+Objective function type: $(GenericAffExpr{Float64,VariableType})
 Constraints: 3
 Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""",
             repl = :show,
