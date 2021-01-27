@@ -934,10 +934,10 @@ function all_constraints(
     # TODO: Support JuMP's set helpers like SecondOrderCone().
     f_type = moi_function_type(function_type)
     if set_type <: MOI.AbstractScalarSet
-        constraint_ref_type = ConstraintRef{<:AbstractModel, _MOICON{f_type, set_type},
+        constraint_ref_type = ConstraintRef{Model, _MOICON{f_type, set_type},
                                             ScalarShape}
     else
-        constraint_ref_type = ConstraintRef{<:AbstractModel, _MOICON{f_type, set_type}}
+        constraint_ref_type = ConstraintRef{Model, _MOICON{f_type, set_type}}
     end
     result = constraint_ref_type[]
     for idx in MOI.get(model, MOI.ListOfConstraintIndices{f_type, set_type}())
