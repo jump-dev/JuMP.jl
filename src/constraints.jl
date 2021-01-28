@@ -69,14 +69,14 @@ end
 # Returns the value of MOI.ConstraintDualStart in a type-stable way
 function _dual_start(
     con_ref::ConstraintRef{
-        Model, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}
+        <:AbstractModel, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}
     },
 )::Union{Nothing, Float64}
     return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
 end
 function _dual_start(
     con_ref::ConstraintRef{
-        Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}
+        <:AbstractModel, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}
     },
 )::Union{Nothing, Vector{Float64}}
     return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
@@ -91,7 +91,7 @@ Set the dual start value (MOI attribute `ConstraintDualStart`) of the constraint
 See also [`dual_start_value`](@ref).
 """
 function set_dual_start_value(con_ref::ConstraintRef{
-    Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}},
+    <:AbstractModel, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}},
     value
 )
     vectorized_value = vectorize(value, dual_shape(con_ref.shape))
@@ -100,14 +100,14 @@ function set_dual_start_value(con_ref::ConstraintRef{
     return
 end
 function set_dual_start_value(con_ref::ConstraintRef{
-    Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}},
+    <:AbstractModel, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}},
     ::Nothing
 )
     MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, nothing)
     return
 end
 function set_dual_start_value(con_ref::ConstraintRef{
-    Model, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}},
+    <:AbstractModel, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}},
     value
 )
     MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, value)
@@ -673,7 +673,7 @@ end
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
 function _constraint_primal(
     con_ref::ConstraintRef{
-        Model, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}
+        <:AbstractModel, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}
     },
     result::Int
 )::Float64
@@ -681,7 +681,7 @@ function _constraint_primal(
 end
 function _constraint_primal(
     con_ref::ConstraintRef{
-        Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}
+        <:AbstractModel, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}
     },
     result
 )::Vector{Float64}
@@ -720,7 +720,7 @@ end
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
 function _constraint_dual(
     con_ref::ConstraintRef{
-        Model, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}
+        <:AbstractModel, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}
     },
     result::Int
 )::Float64
@@ -728,7 +728,7 @@ function _constraint_dual(
 end
 function _constraint_dual(
     con_ref::ConstraintRef{
-        Model, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}
+        <:AbstractModel, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}
     },
     result::Int
 )::Vector{Float64}
