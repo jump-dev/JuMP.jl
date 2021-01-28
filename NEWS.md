@@ -1,7 +1,7 @@
 JuMP release notes
 ==================
 
-Version 0.21.6 (January XX, 2020)
+Version 0.21.6 (January 29, 2020)
 ---------------------------------
 
 For a detailed list of the closed issues and pull requests from this release,
@@ -10,7 +10,7 @@ A summary of changes are as follows:
 
 - New features:
   * Added support for skew symmetric variables via
-    `@variable(model, X[1:2, 1:2] in SkewSymmetricMatrixSpace())`
+    `@variable(model, X[1:2, 1:2] in SkewSymmetricMatrixSpace())`.
   * `lp_sensitivity_report` has been added which significantly improves the
     performance of querying the sensitivity summary of an LP.
     `lp_objective_perturbation_range` and `lp_rhs_perturbation_range` are
@@ -27,14 +27,15 @@ A summary of changes are as follows:
     MathOptInterface.
   * Improved error message for containers with duplicate indices.
 - Bug fixes:
-  * Fixed a bug in the printing of nonlinear expressions in IJulia
+  * Various fixes to pass tests on Julia 1.6.
+  * Fixed a bug in the printing of nonlinear expressions in IJulia.
   * Fixed a bug when nonlinear expressions are passed to user-defined functions.
   * Some internal functions that were previously exported are now no longer
     exported.
   * Fixed a bug when relaxing a fixed binary variable.
   * Fixed a `StackOverflowError` that occured when `SparseAxisArray`s had a
     large number of elements.
-  * Removed an unnecessary type assertion in `list_of_constraint_types`
+  * Removed an unnecessary type assertion in `list_of_constraint_types`.
   * Fixed a bug when copying models with registered expressions.
 - Documentation and general maintenance:
   * The documentation has been significantly overhauled. It now has distinct
