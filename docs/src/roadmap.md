@@ -37,7 +37,7 @@ Some but not all of these tasks are summarized in the
   - Fully integrate [JuMPTutorials](https://github.com/jump-dev/JuMPTutorials.jl)
     with JuMP's documentation.
 - Developer experience
-  - Get JuMP’s unit tests running ~~in less than two minutes~~ faster. See [#1745](https://github.com/jump-dev/JuMP.jl/pull/1745). (**Done**)
+  - Get JuMP’s unit tests running faster. See [#1745](https://github.com/jump-dev/JuMP.jl/pull/1745). (**Done**)
 - All solvers should complete the transition to MOI. (**Done**)
 - Provide packages for installing Bonmin and Couenne.
 - [MathOptFormat](https://github.com/odow/MathOptFormat.jl) 1.0 (**Done**)
