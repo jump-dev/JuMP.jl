@@ -102,6 +102,10 @@ Base.zero(q::GenericQuadExpr) = zero(typeof(q))
 Base.one(q::GenericQuadExpr)  = one(typeof(q))
 Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
 Base.broadcastable(q::GenericQuadExpr) = Ref(q)
+Base.getindex(q::GenericQuadExpr{C,V}, v::V) where {C,V} = q.aff[v]
+function Base.getindex(q::GenericQuadExpr{C,V}, v1::V, v2::V) where {C,V}
+    return get(q.terms, UnorderedPair(v1,v2), zero(V))
+end
 
 """
     drop_zeros!(expr::GenericQuadExpr)

@@ -161,6 +161,8 @@ end
 Base.iszero(::VariableRef) = false
 Base.copy(v::VariableRef) = VariableRef(v.model, v.index)
 Base.broadcastable(v::VariableRef) = Ref(v)
+Base.getindex(v1::VariableRef, v2::VariableRef) = (v1 == v2 ? one(v1) : zero(v1))
+Base.getindex(v1::VariableRef, v2::VariableRef, v3::VariableRef) = zero(v1)
 
 isequal_canonical(v::VariableRef, other::VariableRef) = isequal(v, other)
 

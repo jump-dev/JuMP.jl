@@ -154,6 +154,13 @@ function expressions_test(
         @test k == 0
     end
 
+    @testset "getindex(aff::AffExpr, v::VariableRef)" begin
+        m = ModelType()
+        x = @variable(m, x)
+        aff = @expression(m, 1.0 * x)
+        @test aff[x] == 1.0
+    end
+
     @testset "MA.add_mul!(ex::Number, c::Number, x::GenericAffExpr)" begin
         aff = MA.add_mul!(1.0, 2.0, JuMP.GenericAffExpr(1.0, :a => 1.0))
         @test JuMP.isequal_canonical(aff, JuMP.GenericAffExpr(3.0, :a => 2.0))

@@ -150,9 +150,11 @@ end
 Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V} = GenericAffExpr{C,V}(zero(C), OrderedDict{V,C}())
 Base.one(::Type{GenericAffExpr{C,V}}) where {C,V}  = GenericAffExpr{C,V}(one(C), OrderedDict{V,C}())
 Base.zero(a::GenericAffExpr) = zero(typeof(a))
-Base.one( a::GenericAffExpr) =  one(typeof(a))
+Base.one(a::GenericAffExpr) = one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
 Base.broadcastable(a::GenericAffExpr) = Ref(a)
+Base.getindex(a::GenericAffExpr{C,V}, v::V) where {C,V} = get(a.terms, v, zero(V))
+Base.getindex(a::GenericAffExpr{C,V}, v1::V, v2::V) where {C,V} = zero(V)
 
 """
     drop_zeros!(expr::GenericAffExpr)
