@@ -3,13 +3,17 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # Quadratically constrained programs
+# # Quadratic programs
 
-# A simple quadratically constrained program based on an [example from Gurobi](https://www.gurobi.com/documentation/9.0/examples/qcp_c_c.html).
+# These examples use the following packages:
 
 using JuMP
 import Ipopt
 import Test
+
+# ## Quadratically constrained programs
+
+# A simple quadratically constrained program based on an [example from Gurobi](https://www.gurobi.com/documentation/9.0/examples/qcp_c_c.html).
 
 function example_qcp(; verbose = true)
     model = Model(Ipopt.Optimizer)
