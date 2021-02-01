@@ -10,8 +10,9 @@ SCS = "c946c3f1-0d1f-5ce8-9dea-7daa1f7e2d13"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-Documenter = "~0.25"
+Documenter = "~0.26"
 GLPK = "0.14.4"
 Ipopt = "0.6"
+Literate = "2.8"
 MathOptInterface = "~0.9"
 SCS = "0.7"
