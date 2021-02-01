@@ -329,8 +329,11 @@ println("immutable_type: $(immutable_type)")
 
 # You can check mutability with the `isimmutable` function.
 
-@show isimmutable([1, 2, 3])
-@show isimmutable(1);
+isimmutable([1, 2, 3])
+
+#-
+
+isimmutable(1)
 
 # ## Using Packages and the Package Manager
 
@@ -340,7 +343,8 @@ println("immutable_type: $(immutable_type)")
 # library. These packages are loaded with the commands `using` and `import`.
 
 using Random
-Random.seed!(33);
+
+Random.seed!(33)
 
 [rand() for i in 1:10]
 

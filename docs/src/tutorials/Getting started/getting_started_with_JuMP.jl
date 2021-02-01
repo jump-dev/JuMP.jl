@@ -55,9 +55,15 @@ model = Model(GLPK.Optimizer)
 
 optimize!(model)
 
-@show value(x);
-@show value(y);
-@show objective_value(model);
+value(x)
+
+#-
+
+value(y)
+
+#-
+
+objective_value(model)
 
 # ## Step-by-step JuMP code
 
@@ -88,11 +94,14 @@ model = Model(GLPK.Optimizer);
 # A constraint is modelled using [`@constraint`](@ref).
 
 @constraint(model, 6x + 8y >= 100)
-@constraint(model, 7x + 12y >= 120);
+
+#-
+
+@constraint(model, 7x + 12y >= 120)
 
 # The objective is set in a similar manner using [`@objective`](@ref):
 
-@objective(model, Min, 12x + 20y);
+@objective(model, Min, 12x + 20y)
 
 # To solve the optimization problem, we call the [`optimize!`] function.
 
@@ -100,6 +109,12 @@ optimize!(model)
 
 # Let's now check the value of objective and variables.
 
-@show value(x);
-@show value(y);
-@show objective_value(model);
+value(x)
+
+#-
+
+value(y)
+
+#-
+
+objective_value(model)
