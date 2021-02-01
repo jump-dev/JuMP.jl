@@ -56,6 +56,7 @@ if !_FAST
     literate_directory(_EXAMPLE_DIR)
     literate_directory.(joinpath.(_EXAMPLE_DIR, _EXAMPLE_SUBDIR))
     literate_directory(joinpath(_TUTORIAL_DIR, "Getting started"))
+    literate_directory(joinpath(_TUTORIAL_DIR, "Optimization concepts"))
 end
 
 makedocs(
@@ -121,7 +122,7 @@ makedocs(
                     sort(readdir(joinpath(_TUTORIAL_DIR, subdir))),
                 ),
             ),
-            ["Getting started"],
+            ["Getting started", "Optimization concepts"],
         ),
         "API Reference" => map(
             file -> joinpath("reference", file),
