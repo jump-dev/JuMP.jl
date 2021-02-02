@@ -13,7 +13,7 @@ const _EXAMPLE_SUBDIR = [
     "Mixed-integer linear programs",
     "Nonlinear programs",
     "Quadratic programs",
-    "Semi-definite programs",
+    "Semidefinite programs",
 ]
 
 function link_example(content)
