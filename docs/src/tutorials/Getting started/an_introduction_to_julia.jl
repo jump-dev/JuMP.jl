@@ -417,8 +417,6 @@ Random.seed!(33)
 # is not defined for complex numbers.  The "closest candidates" list suggest
 # some Julia types that the function is defined for.
 
-try
-    ceil(1.2 + 2.3im)
-catch err
-    println(err)
-end
+try  #hide
+ceil(1.2 + 2.3im)
+catch err; showerror(stderr, err); end  #hide

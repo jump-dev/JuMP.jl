@@ -68,12 +68,14 @@
 
 # Solve the master problem, $f_\text{m}^{(k)}$ =
 
-# \begin{align*}
+# ```math
+# \begin{aligned}
 # &\text{maximize} &&\quad t \\
 # &\text{subject to} \quad &&\forall \bar{u} \in T(k) \qquad t + (A_1^T \bar{u} - c_1)^T x \leq b^T \bar{u} \\
 # & && \forall \bar{y} \in Q(k) \qquad (A_1 ^T \bar{y})^T x \leq b^T \bar{y} \\
 # & && \qquad \qquad \qquad \; x \succeq 0, x \in \mathbb{Z}^n
-# \end{align*}
+# \end{aligned}
+# ```
 
 # Let the maximizer corresponding to the objective value $f_\text{m}^{(k)}$ be
 # denoted by $x^{(k)}$. Now there are three possibilities:
@@ -92,11 +94,13 @@
 
 # Solve the subproblem, $f_s(x^{(k)})$ =
 
-# \begin{align*}
+# ```math
+# \begin{aligned}
 #   c_1^T x^{(k)} + & \text{minimize} &&  (b-A_1 x^{(k)})^T u \\
 #   & \text{subject to} && A_2^T u \succeq c_2 \\
 #   & && u \succeq 0, u \in \mathbb{R}^m
-# \end{align*}
+# \end{aligned}
+# ```
 
 # Let the minimizer corresponding to the objective value $f_s(x^{(k)})$ be
 # denoted by $u^{(k)}$. There are three possibilities:

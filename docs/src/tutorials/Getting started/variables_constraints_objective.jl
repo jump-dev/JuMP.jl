@@ -49,7 +49,7 @@ model = Model();
 
 has_upper_bound(keyword_x)
 
-#+
+#-
 
 upper_bound(keyword_x)
 
@@ -224,18 +224,20 @@ set_objective_function(model, x + y)
 
 optimize!(model)
 
-@show objective_value(model);
+#-
+
+objective_value(model)
 
 # To query the objective function from a model, we use the [`objective_sense`](@ref),
 # [`objective_function`](@ref), and [`objective_function_type`](@ref) functions.
 
 objective_sense(model)
 
-#+
+#-
 
 objective_function(model)
 
-#+
+#-
 
 objective_function_type(model)
 
@@ -269,4 +271,6 @@ c = [1; 3; 5; 2]
 
 optimize!(vector_model)
 
-@show objective_value(vector_model);
+#-
+
+objective_value(vector_model)

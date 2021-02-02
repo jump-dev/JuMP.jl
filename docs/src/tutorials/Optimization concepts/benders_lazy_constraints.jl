@@ -71,9 +71,9 @@
 # We use the data from the original notebook and change the solution algorithm
 # to leverage lazy constraints:
 
-# **Step 1 (Initialization)**
-# **Step 2 (defining the subproblem model)**
-# **Step 3 (registering the lazy constraint of the subproblem)**
+# * Step 1 (Initialization)
+# * Step 2 (defining the subproblem model)
+# * Step 3 (registering the lazy constraint of the subproblem)
 
 # ### Data for the problem
 

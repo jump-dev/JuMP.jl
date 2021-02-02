@@ -172,7 +172,7 @@ set_silent(model)
 @constraint(dual_model, y2 in SecondOrderCone())
 optimize!(dual_model)
 
-#+
+#-
 
 objective_value(dual_model)
 
@@ -196,7 +196,7 @@ set_silent(model)
 @constraint(model, u' * p == q)
 optimize!(model)
 
-#+
+#-
 
 value.(u)
 
