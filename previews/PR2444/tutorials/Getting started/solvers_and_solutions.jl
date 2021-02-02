@@ -182,7 +182,7 @@ display(typeof(MOI.OPTIMAL))
 
 primal_status(model_auto)
 
-#+
+#-
 
 dual_status(model_auto)
 
@@ -196,9 +196,15 @@ display(typeof(MOI.FEASIBLE_POINT))
 # Provided the primal status is not `MOI.NO_SOLUTION`, we can inspect the
 # solution values and optimal cost.
 
-@show value(x)
-@show value(y)
-@show objective_value(model_auto)
+value(x)
+
+#-
+
+value(y)
+
+#-
+
+objective_value(model_auto)
 
 # Since it is possible that no solution is available to be queried from the
 # model, calls to [`value`](@ref) may throw errors. Hence, it is recommended to
