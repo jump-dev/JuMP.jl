@@ -378,7 +378,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
               "linear_eq : \$ x = 1.0 \$"
         @test sprint(show, "text/latex", linear_range) ==
               "linear_range : \$ x \\in \\[-1.0, 1.0\\] \$"
-        @test sprint(show, "text/latex", linear_noname) == "\$ x \\leq 1.0 \$"
+        @test sprint(show, "text/latex", linear_noname) == "\$\$ x \\leq 1.0 \$\$"
     end
 
     @testset "Vector AffExpr constraints" begin
@@ -529,40 +529,38 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""",
         io_test(
             IJuliaMode,
             model_1,
-            """
-\\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
-\\text{Subject to} \\quad & a + b - 10 c + c1 - 2 x \\leq 1.0\\\\
- & a\\times b \\leq 2.0\\\\
- & \\begin{bmatrix}
-a & b\\\\
-\\cdot & x\\\\
-\\end{bmatrix} \\in PSDCone()\\\\
- & [a, b, c] \\in MathOptInterface.PositiveSemidefiniteConeTriangle(2)\\\\
- & \\begin{bmatrix}
-a & b\\\\
-c & x\\\\
-\\end{bmatrix} \\in PSDCone()\\\\
- & [a, b, c, x] \\in MathOptInterface.PositiveSemidefiniteConeSquare(2)\\\\
- & [-a + 1, u_{1}, u_{2}, u_{3}] \\in MathOptInterface.SecondOrderCone(4)\\\\
- & fi = 9.0\\\\
- & a \\geq 1.0\\\\
- & c \\geq -1.0\\\\
- & a1 \\geq 1.0\\\\
- & c1 \\geq -1.0\\\\
- & b \\leq 1.0\\\\
- & c \\leq 1.0\\\\
- & b1 \\leq 1.0\\\\
- & c1 \\leq 1.0\\\\
- & a1 integer\\\\
- & b1 integer\\\\
- & c1 integer\\\\
- & z integer\\\\
- & x binary\\\\
- & u_{1} binary\\\\
- & u_{2} binary\\\\
- & u_{3} binary\\\\
-\\end{alignat*}
-""",
+            "\\begin{aligned}\\max\\quad & a - b + 2 a1 - 10 x\\\\" *
+            "\\text{Subject to} \\quad & a + b - 10 c + c1 - 2 x \\leq 1.0\\\\" *
+            " & a\\times b \\leq 2.0\\\\" *
+            " & \\begin{bmatrix}" *
+            "a & b\\\\" *
+            "\\cdot & x\\\\" *
+            "\\end{bmatrix} \\in \\text{PSDCone()}\\\\" *
+            " & [a, b, c] \\in \\text{MathOptInterface.PositiveSemidefiniteConeTriangle(2)}\\\\" *
+            " & \\begin{bmatrix}" *
+            "a & b\\\\" *
+            "c & x\\\\" *
+            "\\end{bmatrix} \\in \\text{PSDCone()}\\\\" *
+            " & [a, b, c, x] \\in \\text{MathOptInterface.PositiveSemidefiniteConeSquare(2)}\\\\" *
+            " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\" *
+            " & fi = 9.0\\\\" *
+            " & a \\geq 1.0\\\\" *
+            " & c \\geq -1.0\\\\" *
+            " & a1 \\geq 1.0\\\\" *
+            " & c1 \\geq -1.0\\\\" *
+            " & b \\leq 1.0\\\\" *
+            " & c \\leq 1.0\\\\" *
+            " & b1 \\leq 1.0\\\\" *
+            " & c1 \\leq 1.0\\\\" *
+            " & a1 \\in \\mathbb{Z}\\\\" *
+            " & b1 \\in \\mathbb{Z}\\\\" *
+            " & c1 \\in \\mathbb{Z}\\\\" *
+            " & z \\in \\mathbb{Z}\\\\" *
+            " & x \\in \\{0, 1\\}\\\\" *
+            " & u_{1} \\in \\{0, 1\\}\\\\" *
+            " & u_{2} \\in \\{0, 1\\}\\\\" *
+            " & u_{3} \\in \\{0, 1\\}\\\\" *
+            "\\end{aligned}",
         )
 
         #------------------------------------------------------------------
@@ -674,13 +672,11 @@ Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""",
         io_test(
             IJuliaMode,
             model_1,
-            """
-\\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
-\\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\
- & a\\times b \\leq 2.0\\\\
- & [-a + 1, u_{1}, u_{2}, u_{3}] \\in MathOptInterface.SecondOrderCone(4)\\\\
-\\end{alignat*}
-""",
+            "\\begin{aligned}\\max\\quad & a - b + 2 a1 - 10 x\\\\" *
+            "\\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\" *
+            " & a\\times b \\leq 2.0\\\\" *
+            " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\" *
+            "\\end{aligned}",
         )
 
         #------------------------------------------------------------------
@@ -763,12 +759,10 @@ With NL expressions
         io_test(
             IJuliaMode,
             model,
-            """
-\\begin{alignat*}{1}\\max\\quad & sin(x)\\\\
-\\text{Subject to} \\quad & subexpression_{1} - 0.0 = 0\\\\
-\\text{With NL expressions} \\quad & subexpression_{1}: cos(x)\\\\
-\\end{alignat*}
-""",
+            "\\begin{aligned}\\max\\quad & sin(x)\\\\" *
+            "\\text{Subject to} \\quad & subexpression_{1} - 0.0 = 0\\\\" *
+            "\\text{With NL expressions} \\quad & subexpression_{1}: cos(x)\\\\" *
+            "\\end{aligned}",
         )
     end
     @testset "SingleVariable constraints" begin
