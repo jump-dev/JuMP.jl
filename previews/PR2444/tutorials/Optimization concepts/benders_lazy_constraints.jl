@@ -34,8 +34,8 @@
 # The generic term for these functions is **callback**.
 
 # In integer optimization, the main callback types are lazy constraints,
-# user-cuts and heuristic solutions. See the [Callbacks](@ref) section for an
-# introduction on how to use them.
+# user-cuts and heuristic solutions. See the [Callbacks](@ref callbacks_manual)
+# section for an introduction on how to use them.
 #
 # Some callbacks define a new constraint which is only activated when necessary,
 # i.e., when a current solution does not respect them. It can avoid building an
