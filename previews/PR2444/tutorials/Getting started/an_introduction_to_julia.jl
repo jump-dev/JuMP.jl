@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Arpit Bhatia and JuMP contributors                          #src
+# Copyright (c) 2019 Arpit Bhatia and contributors                               #src
 #                                                                                #src
 # Permission is hereby granted, free of charge, to any person obtaining a copy   #src
 # of this software and associated documentation files (the "Software"), to deal  #src
