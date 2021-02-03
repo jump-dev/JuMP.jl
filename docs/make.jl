@@ -9,6 +9,12 @@ using Test
 const _FAST = findfirst(isequal("--fast"), ARGS) !== nothing
 
 const _EXAMPLE_DIR = joinpath(@__DIR__, "src", "examples")
+const _EXAMPLE_SUBDIR = [
+    "Mixed-integer linear programs",
+    "Nonlinear programs",
+    "Quadratic programs",
+    "Semidefinite programs",
+]
 
 function link_example(content)
     edit_url = match(r"EditURL = \"(.+?)\"", content)[1]
@@ -19,20 +25,24 @@ function link_example(content)
     return content
 end
 
-function literate_examples()
-    for file in readdir(_EXAMPLE_DIR)
-        if !endswith(file, ".jl")
-            continue
-        end
-        filename = joinpath(_EXAMPLE_DIR, file)
+function _file_list(full_dir, relative_dir, extension)
+    return map(
+        file -> joinpath(relative_dir, file),
+        filter(file -> endswith(file, extension), sort(readdir(full_dir))),
+    )
+end
+
+function literate_examples(dir)
+    rm.(_file_list(dir, dir, ".md"))
+    for filename in _file_list(dir, dir, ".jl")
         # `include` the file to test it before `#src` lines are removed. It is
         # in a testset to isolate local variables between files.
-        @testset "$(file)" begin
+        @testset "$(filename)" begin
             include(filename)
         end
         Literate.markdown(
             filename,
-            _EXAMPLE_DIR;
+            dir;
             documenter = true,
             postprocess = link_example,
         )
@@ -41,7 +51,8 @@ function literate_examples()
 end
 
 if !_FAST
-    literate_examples()
+    literate_examples(_EXAMPLE_DIR)
+    literate_examples.(joinpath.(_EXAMPLE_DIR, _EXAMPLE_SUBDIR))
 end
 
 makedocs(
@@ -88,16 +99,21 @@ makedocs(
             "callbacks.md",
             "Extensions" => "extensions.md",
         ],
-        "API Reference" => map(
-            file -> joinpath("reference", file),
-            sort(readdir(joinpath(@__DIR__, "src", "reference"))),
+        "API Reference" => _file_list(
+            joinpath(@__DIR__, "src", "reference"),
+            "reference",
+            ".md",
         ),
-        "Examples" => map(
-            file -> joinpath("examples", file),
-            filter(
-                file -> endswith(file, ".md"),
-                sort(readdir(_EXAMPLE_DIR)),
-            )
+        "Examples" => vcat(
+            _file_list(_EXAMPLE_DIR, "examples", ".md"),
+            map(
+                subdir -> subdir => _file_list(
+                    joinpath(_EXAMPLE_DIR, subdir),
+                    joinpath("examples", subdir),
+                    ".md",
+                ),
+                _EXAMPLE_SUBDIR,
+            ),
         ),
         "Style Guide" => "style.md",
         "Development Roadmap" => "roadmap.md",
