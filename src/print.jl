@@ -591,6 +591,12 @@ function in_set_string(print_mode, set::Union{PSDCone, MOI.AbstractSet})
     end
 end
 
+"""
+    in_set_string(print_mode::Type{<:PrintMode}, constraint::AbstractConstraint)
+
+Return a `String` representing the membership to the set of the constraint
+`constraint` using print mode `print_mode`.
+"""
 function in_set_string(print_mode, constraint::AbstractConstraint)
     set = reshape_set(moi_set(constraint), shape(constraint))
     return in_set_string(print_mode, set)
