@@ -46,6 +46,45 @@ A type used for dispatching printing. Produces LaTeX representations.
 """
 abstract type IJuliaMode <: PrintMode end
 
+struct LaTeXModel{T<:AbstractModel}
+    model::T
+end
+
+Base.show(io::IO, model::AbstractModel) = _print_summary(io, model)
+Base.show(io::IO, model::LaTeXModel) = _print_latex(io, model.model)
+Base.show(io::IO, ::MIME"text/latex", model::LaTeXModel) = show(io, model)
+
+"""
+    Base.print([io::IO,] model::AbstractModel; latex::Bool = false)
+
+If `latex == false`, print the plain-text formulation of `model` to `io`, which
+defaults to `stdout`.
+
+If `latex == true`, returns a struct that does one of two things:
+ * In the REPL, prints the latex formulation as a `String` that can be pasted
+   into a `.tex` document.
+ * In notebooks and documentation, `show`s the formulation in rendered LaTeX.
+
+To obtain the LaTeX formulation as a `String`, use
+```julia
+string(print(model; latex = true))
+```
+
+## Examples
+
+    print(model)
+    print(io, model)
+    print(model; latex = true)
+    string(print(model; latex = true))
+"""
+function Base.print(io::IO, model::AbstractModel; latex::Bool = false)
+    return latex ? LaTeXModel(model) : _print_model(io, model)
+end
+
+function Base.print(model::AbstractModel; latex::Bool = false)
+    return print(stdout, model; latex = latex)
+end
+
 # Whether something is zero or not for the purposes of printing it
 # oneunit is useful e.g. if coef is a Unitful quantity.
 _is_zero_for_printing(coef) = abs(coef) < 1e-10 * oneunit(coef)
@@ -168,9 +207,15 @@ _plural(n) = (isone(n) ? "" : "s")
 ## Model
 #------------------------------------------------------------------------
 
-# An `AbstractModel` subtype should implement `show_objective_function_summary`,
-# `show_constraints_summary` and `show_backend_summary` for this method to work.
-function Base.show(io::IO, model::AbstractModel)
+"""
+    _print_summary(io::IO, model::AbstractModel)
+
+Print a plain-text summary of `model` to `io`.
+
+An `AbstractModel` subtype should implement `show_objective_function_summary`,
+`show_constraints_summary` and `show_backend_summary` for this method to work.
+"""
+function _print_summary(io::IO, model::AbstractModel)
     println(io, "A JuMP Model")
     sense = objective_sense(model)
     if sense == MOI.MAX_SENSE
@@ -205,6 +250,13 @@ function Base.show(io::IO, model::AbstractModel)
     end
 end
 
+"""
+    show_backend_summary(io::IO, model::Model)
+
+Print a summary of the optimizer backing `model`.
+
+`AbstractModel`s should implement this method.
+"""
 function show_backend_summary(io::IO, model::Model)
     model_mode = mode(model)
     println(io, "Model mode: ", model_mode)
@@ -212,65 +264,88 @@ function show_backend_summary(io::IO, model::Model)
         println(io, "CachingOptimizer state: ", MOIU.state(backend(model)))
     end
     # The last print shouldn't have a new line
-    return print(io, "Solver name: ", solver_name(model))
+    print(io, "Solver name: ", solver_name(model))
+    return
 end
 
-function Base.print(io::IO, model::AbstractModel)
-    return print(io, model_string(REPLMode, model))
-end
-function Base.show(io::IO, ::MIME"text/latex", model::AbstractModel)
-    return print(io, _wrap_in_math_mode(model_string(IJuliaMode, model)))
-end
+"""
+    _print_model(io::IO, model::AbstractModel)
 
-# An `AbstractModel` subtype should implement `objective_function_string` and
-# `constraints_string` for this method to work.
-function model_string(print_mode, model::AbstractModel)
-    ijl = print_mode == IJuliaMode
-    sep = ijl ? " & " : " "
-    eol = ijl ? "\\\\" : "\n"
+Print a plain-text formulation of `model` to `io`.
+
+An `AbstractModel` subtype should implement `objective_function_string`,
+`constraints_string` and `_nl_subexpression_string` for this method to work.
+"""
+function _print_model(io::IO, model::AbstractModel)
     sense = objective_sense(model)
-    str = ""
     if sense == MOI.MAX_SENSE
-        str *= ijl ? "\\max" : "Max"
+        print(io, "Max ")
+        println(io, objective_function_string(REPLMode, model))
     elseif sense == MOI.MIN_SENSE
-        str *= ijl ? "\\min" : "Min"
+        print(io, "Min ")
+        println(io, objective_function_string(REPLMode, model))
     else
-        str *= ijl ? "\\text{feasibility}" : "Feasibility"
+        println(io, "Feasibility")
     end
-    if sense != MOI.FEASIBILITY_SENSE
-        if ijl
-            str *= "\\quad"
-        end
-        str *= sep
-        str *= objective_function_string(print_mode, model)
-    end
-    str *= eol
-    str *= ijl ? "\\text{Subject to} \\quad" : "Subject to" * eol
-    constraints = constraints_string(print_mode, model)
-    if print_mode == REPLMode
-        constraints = map(str -> replace(str, '\n' => eol * sep), constraints)
-    end
-    if !isempty(constraints)
-        str *= sep
-    end
-    str *= join(constraints, eol * sep)
-    if !isempty(constraints)
-        str *= eol
+    println(io, "Subject to")
+    for constraint in constraints_string(REPLMode, model)
+        println(io, " ", replace(constraint, '\n' => "\n "))
     end
     # TODO: Generalize this when similar functionality is needed for
-    # AbstractModel.
-    nl_subexpressions = _nl_subexpression_string(print_mode, model)
+    # `AbstractModel`.
+    nl_subexpressions = _nl_subexpression_string(REPLMode, model)
     if !isempty(nl_subexpressions)
-        str *=
-            ijl ? "\\text{With NL expressions} \\quad" :
-            "With NL expressions" * eol
-        str *= sep * join(nl_subexpressions, eol * sep)
-        str *= eol
+        println(io, "With NL expressions")
     end
-    if ijl
-        str = "\\begin{aligned}" * str * "\\end{aligned}"
+    for expr in nl_subexpressions
+        println(io, " ", expr)
     end
-    return str
+    return
+end
+
+"""
+    _print_latex(io::IO, model::AbstractModel)
+
+Print a LaTeX formulation of `model` to `io`.
+
+An `AbstractModel` subtype should implement `objective_function_string`,
+`constraints_string` and `_nl_subexpression_string` for this method to work.
+"""
+function _print_latex(io::IO, model::AbstractModel)
+    print(io, "\$\$ \\begin{aligned}")
+    sense = objective_sense(model)
+    if sense == MOI.MAX_SENSE
+        print(io, "\\max\\quad & ")
+        print(io, objective_function_string(IJuliaMode, model), "\\\\")
+    elseif sense == MOI.MIN_SENSE
+        print(io, "\\min\\quad & ")
+        print(io, objective_function_string(IJuliaMode, model), "\\\\")
+    else
+        print(io, "\\text{feasibility}\\\\")
+    end
+    print(io, "\\text{Subject to} \\quad")
+    for constraint in constraints_string(IJuliaMode, model)
+        print(io, " & ", constraint, "\\\\")
+    end
+    # TODO: Generalize this when similar functionality is needed for
+    # `AbstractModel`.
+    nl_subexpressions = _nl_subexpression_string(IJuliaMode, model)
+    if !isempty(nl_subexpressions)
+        print(io, "\\text{With NL expressions} \\quad")
+    end
+    for expr in nl_subexpressions
+        print(io, " & ", expr, "\\\\")
+    end
+    print(io, "\\end{aligned} \$\$")
+end
+
+# TODO(odow): deprecate this?
+function model_string(print_mode, model::AbstractModel)
+    if print_mode == IJuliaMode
+        return sprint(_print_latex, model)
+    else
+        return sprint(_print_model, model)
+    end
 end
 
 _nl_subexpression_string(print_mode, ::AbstractModel) = String[]
