@@ -55,34 +55,30 @@ Base.show(io::IO, model::LaTeXModel) = _print_latex(io, model.model)
 Base.show(io::IO, ::MIME"text/latex", model::LaTeXModel) = show(io, model)
 
 """
-    Base.print([io::IO,] model::AbstractModel; latex::Bool = false)
+    Base.print([io::IO = stdout,] model::AbstractModel; latex::Bool = false)
 
-If `latex == false`, print the plain-text formulation of `model` to `io`, which
-defaults to `stdout`.
+Print the formulation of `model` to `io` (which defaults to `stdout` if not
+provided).
 
-If `latex == true`, returns a struct that does one of two things:
- * In the REPL, prints the latex formulation as a `String` that can be pasted
-   into a `.tex` document.
- * In notebooks and documentation, `show`s the formulation in rendered LaTeX.
+If `latex == false`, print the formulation in plain text.
+If `latex == true`, print the formulation formulation in LaTeX.
 
-To obtain the LaTeX formulation as a `String`, use
-```julia
-string(print(model; latex = true))
-```
+In notebooks and documentation, calling `print(model; latex = true)` will render
+the LaTeX formulation to the screen.
 
 ## Examples
 
     print(model)
-    print(io, model)
     print(model; latex = true)
-    string(print(model; latex = true))
+    print(stdout, model))
+    print(stout, model; latex = true))
 """
 function Base.print(io::IO, model::AbstractModel; latex::Bool = false)
-    return latex ? LaTeXModel(model) : _print_model(io, model)
+    return latex ? _print_latex(io, model) : _print_model(io, model)
 end
 
 function Base.print(model::AbstractModel; latex::Bool = false)
-    return print(stdout, model; latex = latex)
+    return latex ? LaTeXModel(model) : _print_model(stdout, model)
 end
 
 # Whether something is zero or not for the purposes of printing it
