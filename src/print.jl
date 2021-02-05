@@ -692,12 +692,25 @@ end
 ## Opaque nonlinear objects
 #------------------------------------------------------------------------
 # TODO: This could be pretty printed.
-function Base.show(io::IO, ex::NonlinearExpression)
-    Base.show(io, "Reference to nonlinear expression #$(ex.index)")
+
+function function_string(::Type{<:PrintMode}, p::NonlinearExpression)
+    return "Reference to nonlinear expression #$(p.index)"
 end
 
-function Base.show(io::IO, p::NonlinearParameter)
-    Base.show(io, "Reference to nonlinear parameter #$(p.index)")
+function function_string(::Type{<:PrintMode}, p::NonlinearParameter)
+    return "Reference to nonlinear parameter #$(p.index)"
+end
+
+function Base.show(io::IO, ex::Union{NonlinearExpression,NonlinearParameter})
+    Base.show(io, function_string(REPLMode, ex))
+end
+
+function Base.show(
+    io::IO,
+    ::MIME"text/latex",
+    ex::Union{NonlinearExpression,NonlinearParameter},
+)
+    print(io, function_string(IJuliaMode, ex))
 end
 
 # TODO: Print the status of the NLPEvaluator, features available, etc.

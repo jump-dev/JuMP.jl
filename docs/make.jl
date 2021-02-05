@@ -16,6 +16,8 @@ const _EXAMPLE_SUBDIR = [
     "Semidefinite programs",
 ]
 
+const _TUTORIAL_DIR = joinpath(@__DIR__, "src", "tutorials")
+
 function link_example(content)
     edit_url = match(r"EditURL = \"(.+?)\"", content)[1]
     footer = match(r"^(---\n\n\*This page was generated using)"m, content)[1]
@@ -32,7 +34,7 @@ function _file_list(full_dir, relative_dir, extension)
     )
 end
 
-function literate_examples(dir)
+function literate_directory(dir)
     rm.(_file_list(dir, dir, ".md"))
     for filename in _file_list(dir, dir, ".jl")
         # `include` the file to test it before `#src` lines are removed. It is
@@ -51,8 +53,10 @@ function literate_examples(dir)
 end
 
 if !_FAST
-    literate_examples(_EXAMPLE_DIR)
-    literate_examples.(joinpath.(_EXAMPLE_DIR, _EXAMPLE_SUBDIR))
+    literate_directory(_EXAMPLE_DIR)
+    literate_directory.(joinpath.(_EXAMPLE_DIR, _EXAMPLE_SUBDIR))
+    literate_directory(joinpath(_TUTORIAL_DIR, "Getting started"))
+    literate_directory(joinpath(_TUTORIAL_DIR, "Optimization concepts"))
 end
 
 makedocs(
@@ -99,11 +103,6 @@ makedocs(
             "callbacks.md",
             "Extensions" => "extensions.md",
         ],
-        "API Reference" => _file_list(
-            joinpath(@__DIR__, "src", "reference"),
-            "reference",
-            ".md",
-        ),
         "Examples" => vcat(
             _file_list(_EXAMPLE_DIR, "examples", ".md"),
             map(
@@ -114,6 +113,20 @@ makedocs(
                 ),
                 _EXAMPLE_SUBDIR,
             ),
+        ),
+        "Tutorials" => map(
+            subdir -> subdir => map(
+                file -> joinpath("tutorials", subdir, file),
+                filter(
+                    file -> endswith(file, ".md"),
+                    sort(readdir(joinpath(_TUTORIAL_DIR, subdir))),
+                ),
+            ),
+            ["Getting started", "Optimization concepts"],
+        ),
+        "API Reference" => map(
+            file -> joinpath("reference", file),
+            sort(readdir(joinpath(@__DIR__, "src", "reference"))),
         ),
         "Style Guide" => "style.md",
         "Development Roadmap" => "roadmap.md",
