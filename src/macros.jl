@@ -1006,7 +1006,7 @@ Returns a new variable.
 
 Extensions should define a method with additional positional arguments to
 dispatch the call to a different method. The return type should only depend on
-the positional arguments for [`variable_type`](@ref) to make sense.
+the positional arguments for `variable_type` to make sense.
 
 As an example, `@variable(model, x, foo)` foo will call
 `build_variable(_error, info, foo)`

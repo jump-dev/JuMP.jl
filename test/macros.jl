@@ -732,6 +732,7 @@ end
     end
 
     @testset "unrecognized_variable_type" begin
+        model = Model()
         err = ErrorException(
             "In `@variable(model, x, 2, variable_type = 1)`: Unrecognized " *
             "arguments: 2, 1. (You may have passed these as positional " *
@@ -739,7 +740,7 @@ end
             "you're trying to create a JuMP extension, you need to implement " *
             "`build_variable`."
         )
-        @test_macro_throws(err, @variable(model, x, 2, variable_type = 1))
+        @test_throws_strip err @variable(model, x, 2, variable_type = 1)
     end
 end
 
