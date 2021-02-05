@@ -187,8 +187,6 @@ master_problem_model = Model(GLPK.Optimizer);
 @objective(master_problem_model, Max, t)
 global iter_num = 1
 
-print(master_problem_model)
-
 # Here is the loop that checks the status of the master problem and the
 # subproblem and then adds necessary Benders cuts accordingly.
 
@@ -199,7 +197,7 @@ while true
     println("Iteration number = ", iter_num)
     println("-----------------------\n")
     println("The current master problem is")
-    print(master_problem_model)
+    print(master_problem_model, latex = false)
 
     optimize!(master_problem_model)
 
@@ -240,7 +238,8 @@ while true
 
     @objective(sub_problem_model, Min, c1' * x_current + c_sub' * u)
 
-    print("\nThe current subproblem model is \n", sub_problem_model)
+    println("\nThe current subproblem model is ")
+    print(sub_problem_model, latex = false)
 
     optimize!(sub_problem_model)
 

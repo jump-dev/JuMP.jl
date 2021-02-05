@@ -38,17 +38,7 @@ import Test</code></pre><p>Subproblem creation</p><pre><code class="language-jul
 end</code></pre><pre class="documenter-example-output">build_subproblem (generic function with 1 method)</pre><h3 id="Master-Problem-Description"><a class="docs-heading-anchor" href="#Master-Problem-Description">Master Problem Description</a><a id="Master-Problem-Description-1"></a><a class="docs-heading-anchor-permalink" href="#Master-Problem-Description" title="Permalink"></a></h3><pre><code class="language-julia">master_problem_model = Model(GLPK.Optimizer);
 
 (sub_problem_model, u) = build_subproblem();</code></pre><p>Variable Definition</p><pre><code class="language-julia">@variable(master_problem_model, 0 &lt;= x[1:dim_x] &lt;= 1e6, Int)
-@variable(master_problem_model, t &lt;= 1e6)</code></pre><p class="math-container">\[ t \]</p><p>Objective Setting</p><pre><code class="language-julia">@objective(master_problem_model, Max, t)
-
-print(master_problem_model)</code></pre><pre class="documenter-example-output">Max t
-Subject to
- x[1] ≥ 0.0
- x[2] ≥ 0.0
- x[1] ≤ 1.0e6
- x[2] ≤ 1.0e6
- t ≤ 1.0e6
- x[1] integer
- x[2] integer</pre><p>Track the calls to the callback</p><pre><code class="language-julia">iter_num = 0</code></pre><pre class="documenter-example-output">0</pre><p>Define lazy constraints</p><pre><code class="language-julia">function benders_lazy_constraint_callback(cb_data)
+@variable(master_problem_model, t &lt;= 1e6)</code></pre><p class="math-container">\[ t \]</p><p>Objective Setting</p><pre><code class="language-julia">@objective(master_problem_model, Max, t)</code></pre><p class="math-container">\[ t \]</p><p>Track the calls to the callback</p><pre><code class="language-julia">iter_num = 0</code></pre><pre class="documenter-example-output">0</pre><p>Define lazy constraints</p><pre><code class="language-julia">function benders_lazy_constraint_callback(cb_data)
     global iter_num
     iter_num += 1
     println(&quot;Iteration number = &quot;, iter_num)
@@ -60,7 +50,8 @@ Subject to
     @objective(sub_problem_model, Min, c1&#39; * x_current + c_sub&#39; * u)
     optimize!(sub_problem_model)
 
-    print(&quot;\nThe current subproblem model is \n&quot;, sub_problem_model)
+    println(&quot;\nThe current subproblem model is &quot;)
+    print(sub_problem_model, latex = false)
 
     t_status_sub = termination_status(sub_problem_model)
     p_status_sub = primal_status(sub_problem_model)
@@ -202,4 +193,4 @@ Subject to
 [ Info: No additional constraint from the subproblem
 Status of the master problem is OPTIMAL
 with fm_current = -4.0
-x_current = [0.0, 1.0]</pre><h3 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h3><a id='c1'></a><ol><li>Garfinkel, R. &amp; Nemhauser, G. L. Integer programming. (Wiley, 1972).</li></ol><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Optimization concepts/benders_lazy_constraints.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../benders_decomposition/">« Benders Decomposition</a><a class="docs-footer-nextpage" href="../conic_programming/">Conic Programming »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Friday 5 February 2021 03:16">Friday 5 February 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+x_current = [0.0, 1.0]</pre><h3 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h3><a id='c1'></a><ol><li>Garfinkel, R. &amp; Nemhauser, G. L. Integer programming. (Wiley, 1972).</li></ol><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Optimization concepts/benders_lazy_constraints.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../benders_decomposition/">« Benders Decomposition</a><a class="docs-footer-nextpage" href="../conic_programming/">Conic Programming »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Friday 5 February 2021 07:10">Friday 5 February 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
