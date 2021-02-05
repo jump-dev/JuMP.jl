@@ -90,7 +90,7 @@ is not given) .
     print(io, model; latex = true)
     print(model; latex = true)
 """
-function Base.print(io::IO, model::AbstractModel; latex::Bool)
+function Base.print(io::IO, model::AbstractModel; latex::Bool = false)
     return latex ? _print_latex(io, model) : _print_model(io, model)
 end
 
