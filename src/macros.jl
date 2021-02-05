@@ -998,14 +998,35 @@ _esc_non_constant(x) = esc(x)
 # Example: `@variable m [1:3] foo` will allocate an vector of element type `variable_type(m, foo)`
 # Note: it needs to be implemented by all `AbstractModel`s
 variable_type(m::Model) = VariableRef
-# Returns a new variable. Additional positional arguments can be used to dispatch the call to a different method.
-# The return type should only depends on the positional arguments for `variable_type` to make sense. See the @variable macro doc for more details.
-# Example: `@variable m x` foo will call `build_variable(_error, info, foo)`
+
+"""
+    build_variable(_error::Function, info::VariableInfo; extra_kw_args...)
+
+Returns a new variable.
+
+Extensions should define a method with additional positional arguments to
+dispatch the call to a different method. The return type should only depend on
+the positional arguments for [`variable_type`](@ref) to make sense.
+
+As an example, `@variable(model, x, foo)` foo will call
+`build_variable(_error, info, foo)`
+
+See the [`@variable`](@ref) macro doc for more details.
+"""
 function build_variable(_error::Function, info::VariableInfo; extra_kw_args...)
     for (kwarg, _) in extra_kw_args
         _error("Unrecognized keyword argument $kwarg")
     end
     return ScalarVariable(info)
+end
+
+function build_variable(_error::Function, ::VariableInfo, args...; kwargs...)
+    _error(
+        "Unrecognized arguments: $(join(args, ", ")). (You may have passed " *
+        "these as positional arguments, or as a keyword value to " *
+        "`variable_type`.)\n\nIf you're trying to create a JuMP extension, " *
+        "you need to implement `build_variable`."
+    )
 end
 
 function build_variable(_error::Function, variable::ScalarVariable,
