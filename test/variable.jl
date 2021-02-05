@@ -651,6 +651,17 @@ function test_Model_value_containers(::Any, ::Any)
     @test_throws exception JuMP.value(x)
 end
 
+function test_Model_get_variable_coefficient(::Any, ::Any)
+    m = Model()
+    x = @variable(m, x)
+    y = @variable(m, y)
+    @test coefficient(x, x) == 1.0
+    @test coefficient(x, y) == 0.0
+    @test coefficient(x, x, x) == 0.0
+    @test coefficient(x, y, x) == coefficient(x, x, y) == 0.0
+    @test coefficient(x, y, y) == 0.0
+end
+
 function _mock_reduced_cost_util(
     obj_sense::MOI.OptimizationSense,
     #obj_value::Float64,

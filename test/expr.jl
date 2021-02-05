@@ -154,11 +154,36 @@ function expressions_test(
         @test k == 0
     end
 
-    @testset "getindex(aff::AffExpr, v::VariableRef)" begin
+    @testset "coefficient(aff::AffExpr, v::VariableRef)" begin
         m = ModelType()
         x = @variable(m, x)
+        y = @variable(m, y)
         aff = @expression(m, 1.0 * x)
-        @test aff[x] == 1.0
+        @test coefficient(aff, x) == 1.0
+        @test coefficient(aff, y) == 0.0
+    end
+
+    @testset "coefficient(quad::AffExpr, v::VariableRef)" begin
+        m = ModelType()
+        x = @variable(m, x)
+        y = @variable(m, y)
+        z = @variable(m, z)
+        quad = @expression(m, 6.0 * x^2 + 5.0*x*y + 2.0*y +  3.0 * x)
+        @test coefficient(quad, x) == 3.0
+        @test coefficient(quad, y) == 2.0
+        @test coefficient(quad, z) == 0.0
+    end
+
+    @testset "coefficient(quad::AffExpr, v1::VariableRef, v2::VariableRef)" begin
+        m = ModelType()
+        x = @variable(m, x)
+        y = @variable(m, y)
+        z = @variable(m, z)
+        quad = @expression(m, 6.0 * x^2 + 5.0*x*y + 2.0*y +  3.0 * x)
+        @test coefficient(quad, x, y) == 5.0
+        @test coefficient(quad, x, x) == 6.0
+        @test coefficient(quad, x, y) == coefficient(quad, y, x)
+        @test coefficient(quad, z, z) == 0.0
     end
 
     @testset "MA.add_mul!(ex::Number, c::Number, x::GenericAffExpr)" begin
