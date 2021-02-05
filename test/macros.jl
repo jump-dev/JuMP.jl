@@ -733,13 +733,13 @@ end
 
     @testset "unrecognized_variable_type" begin
         err = ErrorException(
-            "In @variable(model, x, 2, variable_type = 1)`: Unrecognized " *
+            "In `@variable(model, x, 2, variable_type = 1)`: Unrecognized " *
             "arguments: 2, 1. (You may have passed these as positional " *
             "arguments, or as a keyword value to `variable_type`.)\n\nIf " *
             "you're trying to create a JuMP extension, you need to implement " *
             "`build_variable`."
         )
-        @test_macro_throws(err, @variable(model, 1, variable_type = 2))
+        @test_macro_throws(err, @variable(model, x, 2, variable_type = 1))
     end
 end
 
