@@ -46,39 +46,60 @@ A type used for dispatching printing. Produces LaTeX representations.
 """
 abstract type IJuliaMode <: PrintMode end
 
-struct LaTeXModel{T<:AbstractModel}
+struct _ModelPrinter{T<:AbstractModel}
     model::T
 end
 
-Base.show(io::IO, model::AbstractModel) = _print_summary(io, model)
-Base.show(io::IO, model::LaTeXModel) = _print_latex(io, model.model)
-Base.show(io::IO, ::MIME"text/latex", model::LaTeXModel) = show(io, model)
+function Base.show(io::IO, model::AbstractModel)
+    return _print_summary(io, model)
+end
+
+function Base.show(io::IO, ::MIME"text/plain", model::_ModelPrinter)
+    return _print_model(io, model.model)
+end
+
+function Base.show(io::IO, ::MIME"text/latex", model::_ModelPrinter)
+    return _print_latex(io, model.model)
+end
 
 """
-    Base.print([io::IO = stdout,] model::AbstractModel; latex::Bool = false)
+    Base.print([io::IO = stdout,] model::AbstractModel; [latex::Bool])
 
 Print the formulation of `model` to `io` (which defaults to `stdout` if not
 provided).
 
-If `latex == false`, print the formulation in plain text.
-If `latex == true`, print the formulation formulation in LaTeX.
-
-In notebooks and documentation, calling `print(model; latex = true)` will render
-the LaTeX formulation to the screen.
+In notebooks and documentation, calling `print(model)` will render the LaTeX
+formulation to the screen.
 
 ## Examples
 
+Print the formulation of the model to `stdout`, rendering as LaTeX if called
+from a notebook or the documentation, or plain-text if called from the REPL.
+
     print(model)
+
+Print the plain-text formulation to `io` as a string (or to `stdout` if `io` is
+not given).
+
+    print(io, model; latex = false)
+    print(model; latex = false)
+
+Print the latex formulation to the screen as a string  (or to `stdout` if `io`
+is not given) .
+
+    print(io, model; latex = true)
     print(model; latex = true)
-    print(stdout, model))
-    print(stout, model; latex = true))
 """
-function Base.print(io::IO, model::AbstractModel; latex::Bool = false)
+function Base.print(io::IO, model::AbstractModel; latex::Bool)
     return latex ? _print_latex(io, model) : _print_model(io, model)
 end
 
-function Base.print(model::AbstractModel; latex::Bool = false)
-    return latex ? LaTeXModel(model) : _print_model(stdout, model)
+function Base.print(model::AbstractModel; latex::Union{Nothing,Bool} = nothing)
+    if latex === nothing
+        return _ModelPrinter(model)
+    else
+        return print(stdout, model; latex = latex)
+    end
 end
 
 # Whether something is zero or not for the purposes of printing it

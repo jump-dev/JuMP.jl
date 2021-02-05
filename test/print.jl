@@ -23,31 +23,31 @@ import JuMP.REPLMode
 end
 
 # Helper function to test IO methods work correctly
-function _io_test_show_latex(obj, exp_str)
+function _io_test_show(::Type{REPLMode}, obj, exp_str)
+    @test sprint(show, obj) == exp_str
+end
+function _io_test_show(::Type{IJuliaMode}, obj, exp_str)
     @test sprint(show, "text/latex", obj) == string("\$\$ ", exp_str, " \$\$")
 end
-function _io_test_print_latex(obj, exp_str)
+function _io_test_print(::Type{REPLMode}, obj, exp_str)
+    @test sprint(print, obj) == exp_str
+end
+function _io_test_print(::Type{IJuliaMode}, obj, exp_str)
     @test sprint(show, "text/latex", obj) == string("\$\$ ", exp_str, " \$\$")
 end
-function _io_test_print_latex(obj::AbstractModel, exp_str)
-    @test string(print(obj; latex = true)) == string("\$\$ ", exp_str, " \$\$")
+function _io_test_print(::Type{REPLMode}, obj::AbstractModel, exp_str)
+    @test sprint(io -> print(io, obj; latex = false)) == exp_str
+end
+function _io_test_print(::Type{IJuliaMode}, obj::AbstractModel, exp_str)
+    @test sprint(io -> print(io, obj; latex = true)) == string("\$\$ ", exp_str, " \$\$")
 end
 
 function io_test(mode, obj, exp_str; repl = :both)
-    if mode == REPLMode
-        if repl == :show || repl == :both
-            @test sprint(show, obj) == exp_str
-        end
-        if repl == :print || repl == :both
-            @test sprint(print, obj) == exp_str
-        end
-    else
-        if repl == :show || repl == :both
-            _io_test_show_latex(obj, exp_str)
-        end
-        if repl == :print || repl == :both
-            _io_test_print_latex(obj, exp_str)
-        end
+    if repl == :show || repl == :both
+        _io_test_show(mode, obj, exp_str)
+    end
+    if repl == :print || repl == :both
+        _io_test_print(mode, obj, exp_str)
     end
 end
 
