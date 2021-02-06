@@ -203,7 +203,7 @@ function _vectorize_variables(_error::Function, matrix::Matrix)
 end
 
 """
-    build_constraint(_error::Function, variables, ::SymMatrixSpace)
+    build_variable(_error::Function, variables, ::SymMatrixSpace)
 
 Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
 creating variables in `MOI.Reals`, i.e. "free" variables unless they are
@@ -249,7 +249,7 @@ function build_variable(
 end
 
 """
-    build_constraint(_error::Function, variables, ::PSDCone)
+    build_variable(_error::Function, variables, ::PSDCone)
 
 Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
 constraining the variables to be positive semidefinite.
