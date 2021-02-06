@@ -24,7 +24,7 @@ Some but not all of these tasks are summarized in the
 - Fix issues that we promised MOI would fix.
   - Checking feasibility of solutions ([#693](https://github.com/jump-dev/JuMP.jl/issues/693))
   - Accessing IIS (**Done**: see [Conflicts](@ref))
-  - Accessing multiple results from solvers
+  - Accessing multiple results from solvers (**Done**: [Gurobi#392](https://github.com/jump-dev/Gurobi.jl/pull/392))
   - Dual warm-starts (**Done**: [#2214](https://github.com/jump-dev/JuMP.jl/pull/2214))
 - Address “easy” usability issues
   - Line numbers in error messages (**Done**: [#2276](https://github.com/jump-dev/JuMP.jl/pull/2276))
