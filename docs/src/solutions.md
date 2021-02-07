@@ -323,6 +323,13 @@ Functions for querying the solutions, e.g., [`primal_status`](@ref) and
 [`value`](@ref), all take an additional keyword argument `result` which can be
 used to specify which result to return.
 
+!!! warning
+    Even if [`termination_status`](@ref) is `MOI.OPTIMAL`, some of the returned 
+    solutions may be suboptimal! However, if the solver found at least one
+    optimal solution, then `result = 1` will always return an optimal solution.
+    Use [`objective_value`](@ref) to assess the quality of the remaining 
+    solutions. 
+
 ```julia
 using JuMP
 model = Model()
@@ -334,8 +341,15 @@ if termination_status(model) != MOI.OPTIMAL
     error("The model was not solved correctly.")
 end
 
-num_results = result_count(model)
-@assert has_values(model; result = num_results)
-an_optimal_solution = value.(x; result = num_results)
-an_optimal_objective = objective_value(model; result = num_results)
+an_optimal_solution = value.(x; result = 1)
+optimal_objective = objective_value(model; result = 1)
+for i in 2:result_count(model)
+    @assert has_values(model; result = i)
+    println("Solution $(i) = ", value.(x; result = i))
+    obj = objective_value(model; result = i)
+    println("Objective $(i) = ", obj)
+    if isapprox(obj, optimal_objective; atol = 1e-8)
+        print("Solution $(i) is also optimal!")
+    end
+end
 ```
