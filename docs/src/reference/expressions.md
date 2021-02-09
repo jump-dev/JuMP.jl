@@ -14,6 +14,7 @@ UnorderedPair
 
 add_to_expression!
 constant
+coefficient
 drop_zeros!
 isequal_canonical
 linear_terms
