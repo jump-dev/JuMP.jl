@@ -267,7 +267,7 @@ julia> @variable(model, y)
 y
 
 julia> @expression(model, ex, 2*x*y + 3*x)
-2 x + 1
+2 x*y + 3 x
 
 julia> coefficient(ex, x, y)
 2.0
