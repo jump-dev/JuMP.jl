@@ -162,8 +162,15 @@ function expressions_test(
         @test coefficient(aff, x) == 1.0
         @test coefficient(aff, y) == 0.0
     end
+    
+    @testset "coefficient(aff::AffExpr, v1::VariableRef, v2::VariableRef)" begin
+        m = ModelType()
+        x = @variable(m, x)
+        aff = @expression(m, 1.0 * x)
+        @test coefficient(aff, x, x) == 0.0
+    end
 
-    @testset "coefficient(quad::AffExpr, v::VariableRef)" begin
+    @testset "coefficient(quad::QuadExpr, v::VariableRef)" begin
         m = ModelType()
         x = @variable(m, x)
         y = @variable(m, y)
@@ -174,7 +181,7 @@ function expressions_test(
         @test coefficient(quad, z) == 0.0
     end
 
-    @testset "coefficient(quad::AffExpr, v1::VariableRef, v2::VariableRef)" begin
+    @testset "coefficient(quad::Quad, v1::VariableRef, v2::VariableRef)" begin
         m = ModelType()
         x = @variable(m, x)
         y = @variable(m, y)
