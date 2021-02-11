@@ -162,6 +162,19 @@ Base.iszero(::VariableRef) = false
 Base.copy(v::VariableRef) = VariableRef(v.model, v.index)
 Base.broadcastable(v::VariableRef) = Ref(v)
 
+
+
+"""
+    coefficient(v1::VariableRef, v2::VariableRef)
+
+Return `1.0` if `v1 == v2`, and `0.0` otherwise.
+
+This is a fallback for other [`coefficient`](@ref) methods to simplify code in 
+which the expression may be a single variable.
+"""
+coefficient(v1::VariableRef, v2::VariableRef) = (v1 == v2 ? 1.0 : 0.0)
+coefficient(v1::VariableRef, v2::VariableRef, v3::VariableRef) = 0.0
+
 isequal_canonical(v::VariableRef, other::VariableRef) = isequal(v, other)
 
 """

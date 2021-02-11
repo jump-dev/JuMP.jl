@@ -104,6 +104,24 @@ Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
 Base.broadcastable(q::GenericQuadExpr) = Ref(q)
 
 """
+    coefficient(a::GenericAffExpr{C,V}, v1::V, v2::V) where {C,V}
+
+Return the coefficient associated with the term `v1 * v2` in the quadratic expression `a`.
+
+Note that `coefficient(a, v1, v2)` is the same as `coefficient(a, v2, v1)`.
+"""
+function coefficient(q::GenericQuadExpr{C,V}, v1::V, v2::V) where {C,V}
+    return get(q.terms, UnorderedPair(v1,v2), zero(C))
+end
+
+"""
+    coefficient(a::GenericQuadExpr{C,V}, v::V) where {C,V}
+
+Return the coefficient associated with variable `v` in the affine component of `a`.
+"""
+coefficient(q::GenericQuadExpr{C,V}, v::V) where {C,V} = coefficient(q.aff, v)
+
+"""
     drop_zeros!(expr::GenericQuadExpr)
 
 Remove terms in the quadratic expression with `0` coefficients.

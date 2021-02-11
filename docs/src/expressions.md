@@ -132,6 +132,30 @@ julia> ex
 1
 ```
 
+### Coefficients
+
+Use [`coefficient`](@ref) to return the coefficient associated with a variable
+in an affine expression.
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @variable(model, y)
+y
+
+julia> @expression(model, ex, 2x + 1)
+2 x + 1
+
+julia> coefficient(ex, x)
+2.0
+
+julia> coefficient(ex, y)
+0.0
+```
+
 ## Quadratic expressions
 
 Like affine expressions, there are four ways of constructing a quadratic
@@ -226,6 +250,36 @@ julia> drop_zeros!(ex)
 
 julia> ex
 x + 1
+```
+
+### Coefficients
+
+Use [`coefficient`](@ref) to return the coefficient associated with a pair of variables
+in a quadratic expression.
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @variable(model, y)
+y
+
+julia> @expression(model, ex, 2*x*y + 3*x)
+2 x*y + 3 x
+
+julia> coefficient(ex, x, y)
+2.0
+
+julia> coefficient(ex, x, x)
+0.0
+
+julia> coefficient(ex, y, x)
+2.0
+
+julia> coefficient(ex, x)
+3.0
 ```
 
 ## Nonlinear expressions
