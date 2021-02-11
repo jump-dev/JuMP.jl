@@ -275,6 +275,9 @@ julia> coefficient(ex, x, y)
 julia> coefficient(ex, x, x)
 0.0
 
+julia> coefficient(ex, y, x)
+2.0
+
 julia> coefficient(ex, x)
 3.0
 ```
