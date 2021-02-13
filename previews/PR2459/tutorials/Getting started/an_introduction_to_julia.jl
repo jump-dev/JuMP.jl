@@ -45,7 +45,7 @@ nothing #hide
 #     typed (e.g., `1 - 2`), as well as the evaluation of the expression (`-1`).
 
 # Did you notice how Julia didn't print `.0` after some of the numbers? Julia is
-# a dynamic language, which means you never have to explicltly declare the type
+# a dynamic language, which means you never have to explictly declare the type
 # of a variable. However, in the background, Julia is giving each variable a
 # type. Check the type of something using the `typeof` function:
 
@@ -63,18 +63,19 @@ nothing #hide
 
 # We create complex numbers using `im`:
 
-(2 + 1im) * (1 - 2im)
-
-#-
-
-typeof(1 + 2im)
+x = 2 + 1im
+@show real(x)
+@show imag(x)
+@show typeof(x)
+@show x * (1 - 2im)
+nothing #hide
 
 # !!! info
 #     The curly brackets surround what we call the _parameters_ of a type. You
-#     can read this case as "a complex number, where the and imaginary parts are
-#     represented by `Int64`." If we run `typeof(1.0 + 2.0im)` it will be
-#     `Complex{Float64}`, which a complex number with the parts represented by
-#     `Float64`.
+#     can read `Complex{Int64}`  as "a complex number, where the real and
+#     imaginary parts are represented by `Int64`." If we call
+#     `typeof(1.0 + 2.0im)` it will be `Complex{Float64}`, which a complex
+#     number with the parts represented by `Float64`.
 
 # There are also some cool things like an irrational representation of π.
 
@@ -86,11 +87,19 @@ typeof(1 + 2im)
 
 typeof(π)
 
+# Athough if we do math with irrational numbers, they get converted to
+# `Float64`:
+
+typeof(2π / 3)
+
 # ### Floating point numbers
 
+# !!! warning
+#     If you aren't familiar with floating point numbers, make sure to read this
+#     section carefully.
+
 # A `Float64` is a [floating point](https://en.wikipedia.org/wiki/Floating-point_arithmetic)
-# approximation of a real number using 64-bits of information. (You can create
-# other floating point numbers in Julia using `Float32(1.0)` and `Float16(1.0)`.)
+# approximation of a real number using 64-bits of information.
 
 # Because it is an approximation, things we know hold true in mathematics don't
 # hold true in a computer! For example:
@@ -114,7 +123,12 @@ sin(2π / 3) - √3 / 2
 
 # They are small, but not zero!
 
-# Let's try that again using ≈ (`\approx + [TAB]`).
+# One way of explaining this difference is to consider how we would write
+# `1 / 3` and `2 / 3` using only four digits after the decimal point. We would
+# write `1 / 3` as `0.3333`, and `2 / 3` as `0.6667`. So, depiste the fact that
+# `2 * (1 / 3) == 2 / 3`, `2 * 0.3333 == 0.6666 != 0.6667`.
+
+# Let's try that again using ≈ (`\approx + [TAB]`) instead of `==`:
 
 0.1 * 3 ≈ 0.3
 
@@ -125,6 +139,16 @@ sin(2π / 3) ≈ √3 / 2
 # `≈` is just a clever way of calling the `isapprox` function:
 
 isapprox(sin(2π / 3), √3 / 2; atol = 1e-8)
+
+# !!! warning
+#     Floating point is the reason solvers use tolerances when they solve
+#     optimization models. A common mistake you're likely to make is checking
+#     whether a binary variable is 0 using `value(z) == 0`. Always remember to
+#     use something like `isapprox` when comparing floating point numbers.
+#
+#     Gurobi has a [good series of articles](https://www.gurobi.com/documentation/9.0/refman/num_grb_guidelines_for_num.html)
+#     on the implications of floating point in optimization if you want to read
+#     more.
 
 # If you aren't careful, floating point arithmetic can throw up all manner of
 # issues. For example:
@@ -138,16 +162,6 @@ isapprox(sin(2π / 3), √3 / 2; atol = 1e-8)
 # It's important to note that this issue isn't Julia-specific. It happens in
 # every programming language (try it out in Python).
 
-# !!! warning
-#     Floating point is the reason solvers use tolerances when they solve
-#     optimization models. A common mistake you're likely to make is checking
-#     whether a binary variable is 0 using `value(z) == 0`. Always remember to
-#     use something like `isapprox` when comparing floating point numbers.
-#
-#     Gurobi has a [good series of articles](https://www.gurobi.com/documentation/9.0/refman/num_grb_guidelines_for_num.html)
-#     on the implications of floating point in optimization if you want to read
-#     more.
-
 # ## Vectors, matrices and arrays
 
 # Similar to Matlab, Julia has native support for vectors, matrices and tensors;
@@ -158,7 +172,7 @@ b = [5, 6]
 
 # !!! info
 #     `Array{Int64, 1}` means that this is an `Array`, with `Int64` elements,
-#     and it is `1` dimension.
+#     and it has `1` dimension.
 
 # Matrices can by constructed with spaces separating the columns, and semicolons
 # separating the rows:
@@ -202,11 +216,11 @@ b * b'
 
 # ### Strings
 
-# Double quotes are used for strings
+# Double quotes are used for strings:
 
 typeof("This is Julia")
 
-# Unicode is fine in strings
+# Unicode is fine in strings:
 
 typeof("π is about 3.1415")
 
@@ -215,9 +229,14 @@ typeof("π is about 3.1415")
 
 println("Hello, World!")
 
+# We can use `$()` to interpolate values into a string:
+
+x = 123
+println("The value of x is: $(x)")
+
 # ### Symbols
 
-# Julia `Symbol`s provide a way to make human readable unique identifiers.
+# Julia `Symbol`s provide a way to make human readable unique identifiers:
 
 :my_id
 
@@ -302,11 +321,15 @@ d2["D"][:foo]
 # ## Loops
 
 # Julia has native support for for-each style loops with the syntax
-# `for <value> in <collection> end`.
+# `for <value> in <collection> end`:
 
 for i in 1:5
     println(i)
 end
+
+
+# !!! info
+#     Ranges are constructed as `start:stop`, or `start:step:stop`.
 
 #-
 
@@ -314,10 +337,10 @@ for i in [1.2, 2.3, 3.4, 4.5, 5.6]
     println(i)
 end
 
-# This for-each loop also works with dictionaries.
+# This for-each loop also works with dictionaries:
 
 for (key, value) in Dict("A" => 1, "B" => 2.5, "D" => 2 - 3im)
-    println("$key: $value")
+    println("$(key): $(value)")
 end
 
 # Note that in contrast to vector languages like Matlab and R, loops do not
@@ -327,7 +350,7 @@ end
 
 # Julia control flow is similar to Matlab, using the keywords
 # `if-elseif-else-end`, and the logical operators `||` and `&&` for **or** and
-# **and** respectively.
+# **and** respectively:
 
 for i in 0:3:15
     if i < 5
@@ -348,21 +371,21 @@ end
 # Similar to languages like Haskell and Python, Julia supports the use of simple
 # loops in the construction of arrays and dictionaries, called comprehenions.
 #
-# A list of increasing integers,
+# A list of increasing integers:
 
 [i for i in 1:5]
 
-# Matrices can be built by including multiple indices,
+# Matrices can be built by including multiple indices:
 
-[i*j for i in 1:5, j in 5:10]
+[i * j for i in 1:5, j in 5:10]
 
-# Conditional statements can be used to filter out some values,
+# Conditional statements can be used to filter out some values:
 
-[i for i in 1:10 if i%2 == 1]
+[i for i in 1:10 if i % 2 == 1]
 
-# A similar syntax can be used for building dictionaries
+# A similar syntax can be used for building dictionaries:
 
-Dict("$i" => i for i in 1:10 if i%2 == 1)
+Dict("$(i)" => i for i in 1:10 if i % 2 == 1)
 
 # ## Functions
 
@@ -373,7 +396,7 @@ function print_hello()
 end
 print_hello()
 
-# Arguments can be added to a function,
+# Arguments can be added to a function:
 
 function print_it(x)
     println(x)
@@ -382,24 +405,25 @@ print_it("hello")
 print_it(1.234)
 print_it(:my_id)
 
-# Optional keyword arguments are also possible
+# Optional keyword arguments are also possible:
 
-function print_it(x; prefix="value:")
-    println("$(prefix) $x")
+function print_it(x; prefix = "value:")
+    println("$(prefix) $(x)")
 end
 print_it(1.234)
-print_it(1.234, prefix="val:")
+print_it(1.234, prefix = "val:")
 
-# The keyword `return` is used to specify the return values of a function.
+# The keyword `return` is used to specify the return values of a function:
 
-function mult(x; y=2.0)
+function mult(x; y = 2.0)
     return x * y
 end
+
 mult(4.0)
 
 #-
 
-mult(4.0, y=5.0)
+mult(4.0, y = 5.0)
 
 # ### Anonymous functions
 
@@ -495,7 +519,7 @@ println("immutable_type: $(immutable_type)")
 # function changed the value outside of the function. In constrast, the change
 # to `immutable_type` didn't modify the value outside the function.
 
-# You can check mutability with the `isimmutable` function.
+# You can check mutability with the `isimmutable` function:
 
 isimmutable([1, 2, 3])
 
