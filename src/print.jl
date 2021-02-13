@@ -201,7 +201,7 @@ end
 function model_string(print_mode, model::AbstractModel)
     ijl = print_mode == IJuliaMode
     sep = ijl ? " & " : " "
-    eol = ijl ? "\\\\\n" : "\n"
+    eol = ijl ? "\\\\" : "\n"
     sense = objective_sense(model)
     str = ""
     if sense == MOI.MAX_SENSE
@@ -241,7 +241,7 @@ function model_string(print_mode, model::AbstractModel)
         str *= eol
     end
     if ijl
-        str = "\\begin{alignat*}{1}" * str * "\\end{alignat*}\n"
+        str = "\\begin{aligned}" * str * "\\end{aligned}"
     end
     return str
 end
@@ -519,7 +519,7 @@ end
 function function_string(print_mode::Type{IJuliaMode},
                          A::AbstractMatrix{<:AbstractJuMPScalar})
     str = sprint(show, MIME"text/plain"(), A)
-    str = "\\begin{bmatrix}\n"
+    str = "\\begin{bmatrix}"
     for i in 1:size(A, 1)
         line = ""
         for j in 1:size(A, 2)
@@ -532,7 +532,7 @@ function function_string(print_mode::Type{IJuliaMode},
                 line *= function_string(print_mode, A[i, j])
             end
         end
-        str *= line * "\\\\\n"
+        str *= line * "\\\\"
     end
     return str * "\\end{bmatrix}"
 end
@@ -548,6 +548,14 @@ function function_string(print_mode, constraint::AbstractConstraint)
     f = reshape_vector(jump_function(constraint), shape(constraint))
     return function_string(print_mode, f)
 end
+
+"""
+    in_set_string(print_mode::Type{<:PrintMode}, set)
+
+Return a `String` representing the membership to the set `set` using print mode
+`print_mode`.
+"""
+function in_set_string end
 
 function in_set_string(print_mode, set::MOI.LessThan)
     return string(_math_symbol(print_mode, :leq), " ", set.upper)
@@ -570,23 +578,21 @@ end
 in_set_string(print_mode, ::MOI.ZeroOne) = "binary"
 in_set_string(print_mode, ::MOI.Integer) = "integer"
 
-# TODO: Convert back to JuMP types for sets like PSDCone.
-# TODO: Consider fancy latex names for some sets. They're currently printed as
-# regular text in math mode which looks a bit awkward.
-"""
-    in_set_string(print_mode::Type{<:JuMP.PrintMode},
-                  set::Union{PSDCone, MOI.AbstractSet})
+in_set_string(::Type{IJuliaMode}, ::MOI.ZeroOne) = "\\in \\{0, 1\\}"
+in_set_string(::Type{IJuliaMode}, ::MOI.Integer) = "\\in \\mathbb{Z}"
 
-Return a `String` representing the membership to the set `set` using print mode
-`print_mode`.
-"""
 function in_set_string(print_mode, set::Union{PSDCone, MOI.AbstractSet})
-    return string(_math_symbol(print_mode, :in), " ", set)
+    # Use an `if` here instead of multiple dispatch to avoid ambiguity errors.
+    if print_mode == REPLMode
+        return _math_symbol(print_mode, :in) * " $(set)"
+    else
+        set_str = replace(replace(string(set), "{" => "\\{"), "}" => "\\}")
+        return "\\in \\text{$(set_str)}"
+    end
 end
 
 """
-    in_set_string(print_mode::Type{<:JuMP.PrintMode},
-                  constraint::JuMP.AbstractConstraint)
+    in_set_string(print_mode::Type{<:PrintMode}, constraint::AbstractConstraint)
 
 Return a `String` representing the membership to the set of the constraint
 `constraint` using print mode `print_mode`.
@@ -607,18 +613,25 @@ function constraint_string(print_mode, constraint_object::AbstractConstraint)
         return func_str * " " * in_set_str
     end
 end
-function constraint_string(print_mode, constraint_name,
-                           constraint_object::AbstractConstraint;
-                           in_math_mode = false)
-    constraint_without_name = constraint_string(print_mode, constraint_object)
-    if print_mode == IJuliaMode && !in_math_mode
-        constraint_without_name = _wrap_in_inline_math_mode(constraint_without_name)
-    end
-    # Names don't print well in LaTeX math mode
-    if isempty(constraint_name) || (print_mode == IJuliaMode && in_math_mode)
-        return constraint_without_name
+
+function constraint_string(
+    print_mode,
+    constraint_name::String,
+    constraint_object::AbstractConstraint;
+    in_math_mode::Bool = false,
+)
+    prefix = isempty(constraint_name) ? "" : constraint_name * " : "
+    constraint_str = constraint_string(print_mode, constraint_object)
+    if print_mode == IJuliaMode
+        if in_math_mode
+            return constraint_str
+        elseif isempty(prefix)
+            return _wrap_in_math_mode(constraint_str)
+        else
+            return prefix * _wrap_in_inline_math_mode(constraint_str)
+        end
     else
-        return constraint_name * " : " * constraint_without_name
+        return prefix * constraint_str
     end
 end
 function constraint_string(print_mode, ref::ConstraintRef; in_math_mode = false)
