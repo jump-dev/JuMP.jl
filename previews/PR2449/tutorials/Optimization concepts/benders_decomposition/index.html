@@ -37,14 +37,16 @@ M = 1000;</code></pre><h2 id="How-to-implement-the-Benders-decomposition-algorit
 import GLPK
 import Test</code></pre><h3 id="Master-Problem-Description"><a class="docs-heading-anchor" href="#Master-Problem-Description">Master Problem Description</a><a id="Master-Problem-Description-1"></a><a class="docs-heading-anchor-permalink" href="#Master-Problem-Description" title="Permalink"></a></h3><pre><code class="language-julia">master_problem_model = Model(GLPK.Optimizer);</code></pre><h3 id="Variable-Definition"><a class="docs-heading-anchor" href="#Variable-Definition">Variable Definition</a><a id="Variable-Definition-1"></a><a class="docs-heading-anchor-permalink" href="#Variable-Definition" title="Permalink"></a></h3><pre><code class="language-julia">@variable(master_problem_model, 0 &lt;= x[1:dim_x] &lt;= 1e6, Int)
 @variable(master_problem_model, t &lt;= 1e6)</code></pre><p class="math-container">\[ t \]</p><h3 id="Objective-Setting"><a class="docs-heading-anchor" href="#Objective-Setting">Objective Setting</a><a id="Objective-Setting-1"></a><a class="docs-heading-anchor-permalink" href="#Objective-Setting" title="Permalink"></a></h3><pre><code class="language-julia">@objective(master_problem_model, Max, t)
-global iter_num = 1</code></pre><pre class="documenter-example-output">1</pre><p>Here is the loop that checks the status of the master problem and the subproblem and then adds necessary Benders cuts accordingly.</p><pre><code class="language-julia">iter_num = 1
+global iter_num = 1
+
+print(master_problem_model)</code></pre><p class="math-container">\[ \begin{aligned}\max\quad &amp; t\\\text{Subject to} \quad &amp; x_{1} \geq 0.0\\ &amp; x_{2} \geq 0.0\\ &amp; x_{1} \leq 1.0e6\\ &amp; x_{2} \leq 1.0e6\\ &amp; t \leq 1.0e6\\ &amp; x_{1} \in \mathbb{Z}\\ &amp; x_{2} \in \mathbb{Z}\\\end{aligned} \]</p><p>Here is the loop that checks the status of the master problem and the subproblem and then adds necessary Benders cuts accordingly.</p><pre><code class="language-julia">iter_num = 1
 
 while true
     println(&quot;\n-----------------------&quot;)
     println(&quot;Iteration number = &quot;, iter_num)
     println(&quot;-----------------------\n&quot;)
     println(&quot;The current master problem is&quot;)
-    print(master_problem_model, latex = false)
+    print(master_problem_model)
 
     optimize!(master_problem_model)
 
@@ -85,8 +87,8 @@ while true
 
     @objective(sub_problem_model, Min, c1&#39; * x_current + c_sub&#39; * u)
 
-    println(&quot;\nThe current subproblem model is &quot;)
-    print(sub_problem_model, latex = false)
+    print(&quot;\nThe current subproblem model is \n&quot;)
+    print(sub_problem_model)
 
     optimize!(sub_problem_model)
 
@@ -134,26 +136,11 @@ Iteration number = 1
 -----------------------
 
 The current master problem is
-Max t
-Subject to
- x[1] ≥ 0.0
- x[2] ≥ 0.0
- x[1] ≤ 1.0e6
- x[2] ≤ 1.0e6
- t ≤ 1.0e6
- x[1] integer
- x[2] integer
 Status of the master problem is OPTIMAL
 with fm_current = 1.0e6
 x_current = [0.0, 0.0]
 
 The current subproblem model is
-Min -2 u[1] - 3 u[2]
-Subject to
- constr_ref_subproblem[1] : u[1] - u[2] ≥ -2.0
- constr_ref_subproblem[2] : -2 u[1] - u[2] ≥ -3.0
- u[1] ≥ 0.0
- u[2] ≥ 0.0
 Status of the subproblem is OPTIMAL
 with fs_x_current = -7.666666666666667
 and fm_current = 1.0e6
@@ -166,27 +153,11 @@ Iteration number = 2
 -----------------------
 
 The current master problem is
-Max t
-Subject to
- -x[1] - 4 x[2] + t ≤ -7.666666666666667
- x[1] ≥ 0.0
- x[2] ≥ 0.0
- x[1] ≤ 1.0e6
- x[2] ≤ 1.0e6
- t ≤ 1.0e6
- x[1] integer
- x[2] integer
 Status of the master problem is OPTIMAL
 with fm_current = 1.0e6
 x_current = [0.0, 250002.0]
 
 The current subproblem model is
-Min 750004 u[1] + 750003 u[2] - 1.000008e6
-Subject to
- constr_ref_subproblem[1] : u[1] - u[2] ≥ -2.0
- constr_ref_subproblem[2] : -2 u[1] - u[2] ≥ -3.0
- u[1] ≥ 0.0
- u[2] ≥ 0.0
 Status of the subproblem is OPTIMAL
 with fs_x_current = -1.000008e6
 and fm_current = 1.0e6
@@ -199,28 +170,11 @@ Iteration number = 3
 -----------------------
 
 The current master problem is
-Max t
-Subject to
- -x[1] - 4 x[2] + t ≤ -7.666666666666667
- x[1] + 4 x[2] + t ≤ 0.0
- x[1] ≥ 0.0
- x[2] ≥ 0.0
- x[1] ≤ 1.0e6
- x[2] ≤ 1.0e6
- t ≤ 1.0e6
- x[1] integer
- x[2] integer
 Status of the master problem is OPTIMAL
 with fm_current = -4.0
 x_current = [4.0, 0.0]
 
 The current subproblem model is
-Min -6 u[1] + u[2] - 4
-Subject to
- constr_ref_subproblem[1] : u[1] - u[2] ≥ -2.0
- constr_ref_subproblem[2] : -2 u[1] - u[2] ≥ -3.0
- u[1] ≥ 0.0
- u[2] ≥ 0.0
 Status of the subproblem is OPTIMAL
 with fs_x_current = -13.0
 and fm_current = -4.0
@@ -233,29 +187,11 @@ Iteration number = 4
 -----------------------
 
 The current master problem is
-Max t
-Subject to
- -x[1] - 4 x[2] + t ≤ -7.666666666666667
- x[1] + 4 x[2] + t ≤ 0.0
- 2.5 x[1] - 0.5 x[2] + t ≤ -3.0
- x[1] ≥ 0.0
- x[2] ≥ 0.0
- x[1] ≤ 1.0e6
- x[2] ≤ 1.0e6
- t ≤ 1.0e6
- x[1] integer
- x[2] integer
 Status of the master problem is OPTIMAL
 with fm_current = -4.0
 x_current = [0.0, 1.0]
 
 The current subproblem model is
-Min u[1] - 4
-Subject to
- constr_ref_subproblem[1] : u[1] - u[2] ≥ -2.0
- constr_ref_subproblem[2] : -2 u[1] - u[2] ≥ -3.0
- u[1] ≥ 0.0
- u[2] ≥ 0.0
 Status of the subproblem is OPTIMAL
 with fs_x_current = -4.0
 and fm_current = -4.0
@@ -265,4 +201,4 @@ Optimal solution of the original problem found
 The optimal objective value t is -4.0
 The optimal x is [0.0, 1.0]
 The optimal v is [0.0, 0.0]
-################################################</pre><h3 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h3><a id='c1'></a><ol><li>Garfinkel, R. &amp; Nemhauser, G. L. Integer programming. (Wiley, 1972).</li></ol><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Optimization concepts/benders_decomposition.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../Getting started/working_with_data_files/">« Working with Data Files</a><a class="docs-footer-nextpage" href="../benders_lazy_constraints/">Benders Decomposition (Lazy Constraints) »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Friday 5 February 2021 07:10">Friday 5 February 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+################################################</pre><h3 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h3><a id='c1'></a><ol><li>Garfinkel, R. &amp; Nemhauser, G. L. Integer programming. (Wiley, 1972).</li></ol><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Optimization concepts/benders_decomposition.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../Getting started/working_with_data_files/">« Working with Data Files</a><a class="docs-footer-nextpage" href="../benders_lazy_constraints/">Benders Decomposition (Lazy Constraints) »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Saturday 13 February 2021 02:31">Saturday 13 February 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

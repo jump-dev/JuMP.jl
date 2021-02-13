@@ -22,6 +22,8 @@ model = Model(GLPK.Optimizer)
 
 @constraint(model, 1x + 5y <= 3.0)
 
+print(model)
+
 # Optimize the model:
 
 optimize!(model)

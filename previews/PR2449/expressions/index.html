@@ -62,7 +62,22 @@ julia&gt; @expression(model, ex, x + 1 - x)
 julia&gt; drop_zeros!(ex)
 
 julia&gt; ex
-1</code></pre><h2 id="Quadratic-expressions"><a class="docs-heading-anchor" href="#Quadratic-expressions">Quadratic expressions</a><a id="Quadratic-expressions-1"></a><a class="docs-heading-anchor-permalink" href="#Quadratic-expressions" title="Permalink"></a></h2><p>Like affine expressions, there are four ways of constructing a quadratic expression in JuMP: macros, operator overloading, constructors, and <a href="../reference/expressions/#JuMP.add_to_expression!"><code>add_to_expression!</code></a>.</p><h3 id="Macros-2"><a class="docs-heading-anchor" href="#Macros-2">Macros</a><a class="docs-heading-anchor-permalink" href="#Macros-2" title="Permalink"></a></h3><p>The <a href="../reference/expressions/#JuMP.@expression"><code>@expression</code></a> macro can be used to create quadratic expressions by including quadratic terms.</p><pre><code class="language-julia">model = Model()
+1</code></pre><h3 id="Coefficients"><a class="docs-heading-anchor" href="#Coefficients">Coefficients</a><a id="Coefficients-1"></a><a class="docs-heading-anchor-permalink" href="#Coefficients" title="Permalink"></a></h3><p>Use <a href="../reference/expressions/#JuMP.coefficient"><code>coefficient</code></a> to return the coefficient associated with a variable in an affine expression.</p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @variable(model, y)
+y
+
+julia&gt; @expression(model, ex, 2x + 1)
+2 x + 1
+
+julia&gt; coefficient(ex, x)
+2.0
+
+julia&gt; coefficient(ex, y)
+0.0</code></pre><h2 id="Quadratic-expressions"><a class="docs-heading-anchor" href="#Quadratic-expressions">Quadratic expressions</a><a id="Quadratic-expressions-1"></a><a class="docs-heading-anchor-permalink" href="#Quadratic-expressions" title="Permalink"></a></h2><p>Like affine expressions, there are four ways of constructing a quadratic expression in JuMP: macros, operator overloading, constructors, and <a href="../reference/expressions/#JuMP.add_to_expression!"><code>add_to_expression!</code></a>.</p><h3 id="Macros-2"><a class="docs-heading-anchor" href="#Macros-2">Macros</a><a class="docs-heading-anchor-permalink" href="#Macros-2" title="Permalink"></a></h3><p>The <a href="../reference/expressions/#JuMP.@expression"><code>@expression</code></a> macro can be used to create quadratic expressions by including quadratic terms.</p><pre><code class="language-julia">model = Model()
 @variable(model, x)
 @variable(model, y)
 ex = @expression(model, x^2 + 2 * x * y + y^2 + x + y - 1)
@@ -106,4 +121,25 @@ julia&gt; @expression(model, ex, x^2 + x + 1 - x^2)
 julia&gt; drop_zeros!(ex)
 
 julia&gt; ex
-x + 1</code></pre><h2 id="Nonlinear-expressions"><a class="docs-heading-anchor" href="#Nonlinear-expressions">Nonlinear expressions</a><a id="Nonlinear-expressions-1"></a><a class="docs-heading-anchor-permalink" href="#Nonlinear-expressions" title="Permalink"></a></h2><p>Nonlinear expressions can be constructed only using the <a href="../reference/nonlinear/#JuMP.@NLexpression"><code>@NLexpression</code></a> macro and can be used only in <a href="../reference/nonlinear/#JuMP.@NLobjective"><code>@NLobjective</code></a>, <a href="../reference/nonlinear/#JuMP.@NLconstraint"><code>@NLconstraint</code></a>, and other <a href="../reference/nonlinear/#JuMP.@NLexpression"><code>@NLexpression</code></a>s. Moreover, quadratic and affine expressions cannot be used in the nonlinear macros. For more details, see the <a href="../nlp/#Nonlinear-Modeling">Nonlinear Modeling</a> section.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../variables/">« Variables</a><a class="docs-footer-nextpage" href="../objective/">Objectives »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Friday 5 February 2021 07:10">Friday 5 February 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+x + 1</code></pre><h3 id="Coefficients-2"><a class="docs-heading-anchor" href="#Coefficients-2">Coefficients</a><a class="docs-heading-anchor-permalink" href="#Coefficients-2" title="Permalink"></a></h3><p>Use <a href="../reference/expressions/#JuMP.coefficient"><code>coefficient</code></a> to return the coefficient associated with a pair of variables in a quadratic expression.</p><pre><code class="language-julia-repl">julia&gt; model = Model();
+
+julia&gt; @variable(model, x)
+x
+
+julia&gt; @variable(model, y)
+y
+
+julia&gt; @expression(model, ex, 2*x*y + 3*x)
+2 x*y + 3 x
+
+julia&gt; coefficient(ex, x, y)
+2.0
+
+julia&gt; coefficient(ex, x, x)
+0.0
+
+julia&gt; coefficient(ex, y, x)
+2.0
+
+julia&gt; coefficient(ex, x)
+3.0</code></pre><h2 id="Nonlinear-expressions"><a class="docs-heading-anchor" href="#Nonlinear-expressions">Nonlinear expressions</a><a id="Nonlinear-expressions-1"></a><a class="docs-heading-anchor-permalink" href="#Nonlinear-expressions" title="Permalink"></a></h2><p>Nonlinear expressions can be constructed only using the <a href="../reference/nonlinear/#JuMP.@NLexpression"><code>@NLexpression</code></a> macro and can be used only in <a href="../reference/nonlinear/#JuMP.@NLobjective"><code>@NLobjective</code></a>, <a href="../reference/nonlinear/#JuMP.@NLconstraint"><code>@NLconstraint</code></a>, and other <a href="../reference/nonlinear/#JuMP.@NLexpression"><code>@NLexpression</code></a>s. Moreover, quadratic and affine expressions cannot be used in the nonlinear macros. For more details, see the <a href="../nlp/#Nonlinear-Modeling">Nonlinear Modeling</a> section.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../variables/">« Variables</a><a class="docs-footer-nextpage" href="../objective/">Objectives »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Saturday 13 February 2021 02:31">Saturday 13 February 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
