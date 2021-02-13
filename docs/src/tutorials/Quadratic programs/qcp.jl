@@ -23,6 +23,7 @@ function example_qcp(; verbose = true)
     @constraint(model, x * x - y * z <= 0)
     optimize!(model)
     if verbose
+        print(model)
         println("Objective value: ", objective_value(model))
         println("x = ", value(x))
         println("y = ", value(y))

@@ -130,6 +130,8 @@ master_problem_model = Model(GLPK.Optimizer);
 
 @objective(master_problem_model, Max, t)
 
+print(master_problem_model)
+
 # Track the calls to the callback
 
 iter_num = 0
@@ -148,8 +150,8 @@ function benders_lazy_constraint_callback(cb_data)
     @objective(sub_problem_model, Min, c1' * x_current + c_sub' * u)
     optimize!(sub_problem_model)
 
-    println("\nThe current subproblem model is ")
-    print(sub_problem_model, latex = false)
+    print("\nThe current subproblem model is \n")
+    print(sub_problem_model)
 
     t_status_sub = termination_status(sub_problem_model)
     p_status_sub = primal_status(sub_problem_model)
