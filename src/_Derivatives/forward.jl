@@ -477,6 +477,8 @@ for i in 1:length(univariate_operators)
         deriv_expr = :(-fval)
     elseif op == :exp
         deriv_expr = :(fval)
+    elseif op == :rad2deg || op == :deg2rad
+        deriv_expr = :(zero(T))
     else
         deriv_expr = Calculus.differentiate(univariate_operator_deriv[i], :x)
     end

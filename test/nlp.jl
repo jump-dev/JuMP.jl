@@ -843,4 +843,14 @@ end
         )
         @test_throws(err, @NLexpression(model, sqrt(x)))
     end
+
+    @testset "rad2deg and deg2rad" begin
+        x = 1.0
+        id = JuMP._Derivatives.univariate_operator_to_id[:rad2deg]
+        y = rad2deg(x)
+        @test JuMP._Derivatives.eval_univariate_2nd_deriv(id, x, y) == 0.0
+        id = JuMP._Derivatives.univariate_operator_to_id[:deg2rad]
+        y = deg2rad(x)
+        @test JuMP._Derivatives.eval_univariate_2nd_deriv(id, x, y) == 0.0
+    end
 end
