@@ -742,6 +742,16 @@ end
         )
         @test_throws_strip err @variable(model, x, 2, variable_type = 1)
     end
+
+    @testset "kwargs" begin
+        model = Model()
+        x = @variable(model; integer = true)
+        @test is_integer(x)
+        x = @variable(model; integer = false)
+        @test !is_integer(x)
+        @variable(model, y; integer = true)
+        @test is_integer(y)
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin

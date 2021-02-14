@@ -1151,6 +1151,19 @@ function parse_variable(_error::Function, infoexpr::_VariableInfoExpr, lvalue,
     return var, set
 end
 
+function _reorder_parameters(args)
+    if !isexpr(args[1], :parameters)
+        return args
+    end
+    args = collect(args)
+    p = popfirst!(args)
+    for arg in p.args
+        @assert arg.head == :kw
+        push!(args, Expr(:(=), arg.args[1], arg.args[2]))
+    end
+    return args
+end
+
 """
     @variable(model, kw_args...)
 
@@ -1315,7 +1328,10 @@ end
 """
 macro variable(args...)
     _error(str...) = _macro_error(:variable, args, __source__, str...)
-
+    # We need to re-order the parameters here to account for cases like
+    # `@variable(model; integer = true)`, since Julia handles kwargs by placing
+    # them first(!) in the list of arguments.
+    args = _reorder_parameters(args)
     model = esc(args[1])
 
     extra, kw_args, requestedcontainer = Containers._extract_kw_args(args[2:end])
