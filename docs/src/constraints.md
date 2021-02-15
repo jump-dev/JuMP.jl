@@ -676,12 +676,9 @@ ERROR: Operation `-` between `Array{VariableRef,2}` and `Int64` is not allowed. 
 ```
 
 
-## Constraint modifications
+## Modify a constraint
 
-A common paradigm, especially in linear programming, is to repeatedly solve a
-model with different coefficients.
-
-### Modifying a constant term
+### Modifying a constant term (Option 1)
 
 Use [`set_normalized_rhs`](@ref) to modify the right-hand side (constant)
 term of a constraint. Use [`normalized_rhs`](@ref) to query the right-hand
@@ -701,8 +698,8 @@ julia> normalized_rhs(con)
 ```
 
 !!! note
-    JuMP normalizes constraints into a standard form by moving all constant terms
-    onto the right-hand side of the constraint.
+    JuMP normalizes constraints into a standard form by moving all constant
+    terms onto the right-hand side of the constraint.
     ```julia
     @constraint(model, 2x - 1 <= 2)
     ```
@@ -712,6 +709,8 @@ julia> normalized_rhs(con)
     ```
     [`set_normalized_rhs`](@ref) sets the right-hand side term of the
     normalized constraint.
+
+### Modifying a constant term (Option 2)
 
 If constraints are complicated, e.g., they are composed of a number of
 components, each of which has a constant term, then it may be difficult to
@@ -799,11 +798,12 @@ julia> normalized_coefficient(con, x[2])
     [`set_normalized_coefficient`](@ref) sets the coefficient of the
     normalized constraint.
 
-## Constraint deletion
+## Deleting constraints
 
-Constraints can be deleted from a model using [`delete`](@ref). Just like
-variable references, it is possible to check if a constraint reference is valid
-using [`is_valid`](@ref). Here is an example of deleting a constraint:
+Constraints can be deleted from a model using [`delete`](@ref).
+
+Check if a constraint reference is valid using [`is_valid`](@ref).
+
 ```jldoctest; setup = :(model=Model(); @variable(model, x))
 julia> @constraint(model, con, 2x <= 1)
 con : 2 x <= 1.0
