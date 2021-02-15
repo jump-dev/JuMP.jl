@@ -493,21 +493,31 @@ end
 ## Checking feasibility of solutions
 
 To check the feasibility of a primal solution, use
-[`primal_feasibility_report`](@ref). The returned `report` is `nothing` if the
-point is feasible. Otherwise, it is a dictionary mapping the infeasible
-constraint references to the distance between the point and the nearest point in
-the set.
+[`primal_feasibility_report`](@ref), which takes a `model`, a dictionary mapping
+each variable to a primal solution value, and a tolerance `atol`. If a variable
+is not given in dictionary, the value is assumed to be `0.0`.
 
-```@example
+The function returns a dictionary which maps the infeasible constraint
+references to the distance between the point and the nearest point in the
+corresponding set. A point is classed as infeasible if the distance is greater
+than a supplied tolerance `atol`, and feasible otherwise.
+```@example feasibility
 using JuMP
 model = Model()
 @variable(model, x >= 1, Int)
-@constraint(model, c1, x <= 1.95)
+@variable(model, y)
+@constraint(model, c1, x + y <= 1.95)
 point = Dict(x => 2.5)
-report = primal_feasibility_report(model, point)
+report = primal_feasibility_report(model, point; atol = 1e-6)
 ```
 
-To use the point from a previous solve, use:
+If the point is feasible, this function returns `nothing`.
+```@example feasibility
+point = Dict(x => 1.0)
+report = primal_feasibility_report(model, point; atol = 1e-6)
+```
+
+To obtain the primal point from a previous solve, use:
 ```julia
 point = Dict(v => value(v) for v in all_variables(model))
 ```

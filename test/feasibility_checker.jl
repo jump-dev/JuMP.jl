@@ -105,7 +105,8 @@ function test_feasible()
     @variable(model, 0 <= y <= 2, Int)
     @variable(model, z == 0.5)
     @constraint(model, x + y + z >= 0.5)
-    @test primal_feasibility_report(model, Dict(z => 0.5)) === nothing
+    report = primal_feasibility_report(model, Dict(z => 0.5); atol = 1e-6)
+    @test report === nothing
 end
 
 function test_bounds()
@@ -113,7 +114,8 @@ function test_bounds()
     @variable(model, x, Bin)
     @variable(model, 0 <= y <= 2, Int)
     @variable(model, z == 0.5)
-    report = primal_feasibility_report(model, Dict(x => 0.1, y => 2.1))
+    point = Dict(x => 0.1, y => 2.1)
+    report = primal_feasibility_report(model, point; atol = 1e-6)
     @test report[BinaryRef(x)] ≈ 0.1
     @test report[UpperBoundRef(y)] ≈ 0.1
     @test report[IntegerRef(y)] ≈ 0.1
@@ -128,7 +130,7 @@ function test_scalar_affine()
     @constraint(model, c2, x >= 1.25)
     @constraint(model, c3, x == 1.1)
     @constraint(model, c4, 0 <= x <= 0.5)
-    report = primal_feasibility_report(model, Dict(x => 1.0))
+    report = primal_feasibility_report(model, Dict(x => 1.0); atol = 1e-6)
     @test report[c1] ≈ 0.5
     @test report[c2] ≈ 0.25
     @test report[c3] ≈ 0.1
@@ -143,7 +145,7 @@ function test_scalar_quadratic()
     @constraint(model, c2, x^2 - x >= 1.25)
     @constraint(model, c3, x^2 + x == 1.1)
     @constraint(model, c4, 0 <= x^2 + x <= 0.5)
-    report = primal_feasibility_report(model, Dict(x => 1.0))
+    report = primal_feasibility_report(model, Dict(x => 1.0); atol = 1e-6)
     @test report[c1] ≈ 1.5
     @test report[c2] ≈ 1.25
     @test report[c3] ≈ 0.9
@@ -158,7 +160,8 @@ function test_vector()
     @constraint(model, c2, x in MOI.Nonpositives(3))
     @constraint(model, c3, x in MOI.Reals(3))
     @constraint(model, c4, x in MOI.Zeros(3))
-    report = primal_feasibility_report(model, Dict(x[1] => 1.0, x[2] => -1.0))
+    point = Dict(x[1] => 1.0, x[2] => -1.0)
+    report = primal_feasibility_report(model, point; atol = 1e-6)
     @test report[c1] ≈ 1.0
     @test report[c2] ≈ 1.0
     @test !haskey(report, c3)
@@ -173,7 +176,8 @@ function test_vector_affine()
     @constraint(model, c2, 2 * x in MOI.Nonpositives(3))
     @constraint(model, c3, 2 * x in MOI.Reals(3))
     @constraint(model, c4, 2 * x in MOI.Zeros(3))
-    report = primal_feasibility_report(model, Dict(x[1] => 1.0, x[2] => -1.0))
+    point = Dict(x[1] => 1.0, x[2] => -1.0)
+    report = primal_feasibility_report(model, point; atol = 1e-6)
     @test report[c1] ≈ 2.0
     @test report[c2] ≈ 2.0
     @test !haskey(report, c3)
@@ -188,7 +192,7 @@ function test_nonlinear()
     @NLconstraint(model, c2, sin(x) <= 1.0)
     @NLconstraint(model, c3, exp(x) >= 2.0)
     @NLconstraint(model, c4, x + x^2 - x^3 == 0.5)
-    report = primal_feasibility_report(model, Dict(x => 0.5))
+    report = primal_feasibility_report(model, Dict(x => 0.5); atol = 1e-6)
     @test report[c1] ≈ sin(0.5)
     @test !haskey(report, c2)
     @test report[c3] ≈ 2 - exp(0.5)

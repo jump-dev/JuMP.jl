@@ -9,16 +9,19 @@ using LinearAlgebra
     primal_feasibility_report(
         model::Model,
         [point::AbstractDict{VariableRef,Float64}];
-        atol::Float64 = 1e-8,
+        atol::Float64,
     )::Union{Nothing,Dict{Any,Float64}}
 
 Check the primal feasibility of `model` at the point given by the dictionary
 `point` mapping variables to primal values. If a variable is not given in
 `point`, the value is assumed to be `0.0`.
 
+A point is classed as feasible if the distance between the point and the set is
+less than or equal to `atol`.
+
 If the point is feasible, this function returns `nothing`. If infeasible, this
-function returns a dictionary mapping the constriant reference of each violated
-constraint to the distance it is from being feasible.
+function returns a dictionary mapping the constraint reference of each violated
+constraint to the distance from feasibility.
 
 To obtain `point` from a solution of a solved model, use:
 ```julia
@@ -28,7 +31,7 @@ point = Dict(v => value(v) for v in all_variables(model))
 function primal_feasibility_report(
     model::Model,
     point::AbstractDict{VariableRef,Float64};
-    atol::Float64 = 1e-8,
+    atol::Float64,
 )
     point_f = x -> get(point, x, 0.0)
     violated_constraints = Dict{Any,Float64}()
