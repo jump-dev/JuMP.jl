@@ -181,6 +181,20 @@ function test_vector_affine()
     @test length(report) == 3
 end
 
+function test_nonlinear()
+    model = Model()
+    @variable(model, x)
+    @NLconstraint(model, c1, sin(x) <= 0.0)
+    @NLconstraint(model, c2, sin(x) <= 1.0)
+    @NLconstraint(model, c3, exp(x) >= 2.0)
+    @NLconstraint(model, c4, x + x^2 - x^3 == 0.5)
+    report = primal_feasibility_report(model, Dict(x => 0.5))
+    @test report[c1] ≈ sin(0.5)
+    @test !haskey(report, c2)
+    @test report[c3] ≈ 2 - exp(0.5)
+    @test report[c4] ≈ 0.125
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

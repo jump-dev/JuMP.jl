@@ -44,6 +44,23 @@ function primal_feasibility_report(
             end
         end
     end
+    if num_nl_constraints(model) > 0
+        evaluator = NLPEvaluator(model)
+        MOI.initialize(evaluator, Symbol[])
+        g = zeros(num_nl_constraints(model))
+        MOI.eval_constraint(evaluator, g, point_f.(all_variables(model)))
+        for (i, con) in enumerate(model.nlp_data.nlconstr)
+            d = max(0.0, con.lb - g[i], g[i] - con.ub)
+            if d > atol
+                cref = ConstraintRef(
+                   model,
+                   NonlinearConstraintIndex(i),
+                    ScalarShape(),
+                )
+                violated_constraints[cref] = d
+            end
+        end
+    end
     return length(violated_constraints) == 0 ? nothing : violated_constraints
 end
 
