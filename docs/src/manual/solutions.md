@@ -515,6 +515,7 @@ If the point is feasible, this function returns `nothing`.
 ```@example feasibility
 point = Dict(x => 1.0)
 report = primal_feasibility_report(model, point; atol = 1e-6)
+report === nothing
 ```
 
 To obtain the primal point from a previous solve, use:

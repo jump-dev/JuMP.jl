@@ -8,7 +8,7 @@ using LinearAlgebra
 """
     primal_feasibility_report(
         model::Model,
-        [point::AbstractDict{VariableRef,Float64}];
+        point::AbstractDict{VariableRef,Float64};
         atol::Float64,
     )::Union{Nothing,Dict{Any,Float64}}
 
