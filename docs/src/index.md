@@ -31,7 +31,8 @@ programming.
 ## Resources for getting started
 
 * Checkout the [Installation Guide](@ref).
-* Read the [Quick Start Guide](@ref).
+* Read the introductory tutorials [Getting started with Julia](@ref) and
+  [Getting started with JuMP](@ref).
 * Browse some of our examples, including classics such as [The diet problem](@ref),
   or the [Maximum likelihood estimation](@ref) problem using nonlinear
   programming.
