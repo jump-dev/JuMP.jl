@@ -20,12 +20,21 @@
 
 # # Getting started with Julia
 
-# **Originally Contributed by**: Juan Pablo Vielma
-
 # Since JuMP is embedded in Julia, knowing some basic Julia is important
 # for learning JuMP. This tutorial is designed to provide a minimalist
 # crash course in the basics of Julia. You can find resources that provide
 # a more comprehensive introduction to Julia [here](https://julialang.org/learning/).
+
+# ## Installing Julia
+
+# To install Julia, [download the latest stable release](https://julialang.org/downloads/),
+# then follow the [platform specific install instructions](https://julialang.org/downloads/platform/).
+
+# !!! tip
+#     Unless you know otherwise, you probably want the 64-bit version.
+
+# Next, you need an IDE to develop in. VS Code is a popular choice, so follow
+# [these install instructions](https://www.julia-vscode.org/docs/stable/gettingstarted/).
 
 # ## Numbers and arithmetic
 
