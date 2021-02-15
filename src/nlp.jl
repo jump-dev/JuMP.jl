@@ -1786,6 +1786,9 @@ end
 Register the user-defined function `f` that takes `dimension` arguments in
 `model` as the symbol `s`.
 
+The function `f` must support all subtypes of `Real` as arguments. Do not assume
+that the inputs are `Float64`.
+
 ## Notes
 
  * For this method, you must explicitly set `autodiff = true`, because no
@@ -1799,7 +1802,7 @@ Register the user-defined function `f` that takes `dimension` arguments in
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @variable(model, x)
-f(x) = x^2
+f(x::T) where {T<:Real} = x^2
 register(model, :foo, 1, f; autodiff = true)
 @NLobjective(model, Min, foo(x))
 ```
@@ -1807,7 +1810,7 @@ register(model, :foo, 1, f; autodiff = true)
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @variable(model, x[1:2])
-g(x, y) = x * y
+g(x::T, y::T) where {T<:Real} = x * y
 register(model, :g, 2, g; autodiff = true)
 @NLobjective(model, Min, g(x[1], x[2]))
 ```
@@ -1858,19 +1861,19 @@ end
 Register the user-defined function `f` that takes `dimension` arguments in
 `model` as the symbol `s`. In addition, provide a gradient function `∇f`.
 
-If the function `f` is univariate (i.e., `dimension == 1`), `∇f` must return
-a number which represents the first-order derivative of the function `f`.
-
-If the function `f` is multi-variate, `∇f` must have a signature matching
-`∇f(g::Vector{T}, args::T...) where {T}`, where the first argument is a vector
-`g` that is modified in-place with the gradient.
-
-If `autodiff = true` and `dimension == 1`, use automatic differentiation to
-comute the second-order derivative information. if `autodiff = false`, only
-first-order derivative information will be used.
+The functions `f`and ∇f must support all subtypes of `Real` as arguments. Do not
+assume that the inputs are `Float64`.
 
 ## Notes
 
+ * If the function `f` is univariate (i.e., `dimension == 1`), `∇f` must return
+   a number which represents the first-order derivative of the function `f`.
+ * If the function `f` is multi-variate, `∇f` must have a signature matching
+   `∇f(g::Vector{T}, args::T...) where {T<:Real}`, where the first argument is a
+   vector `g` that is modified in-place with the gradient.
+ * If `autodiff = true` and `dimension == 1`, use automatic differentiation to
+   comute the second-order derivative information. If `autodiff = false`, only
+   first-order derivative information will be used.
  * `s` does not have to be the same symbol as `f`, but it is generally more
    readable if it is.
 
@@ -1879,8 +1882,8 @@ first-order derivative information will be used.
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @variable(model, x)
-f(x) = x^2
-∇f(x) = 2x
+f(x::T) where {T<:Real} = x^2
+∇f(x::T) where {T<:Real} = 2 * x
 register(model, :foo, 1, f, ∇f; autodiff = true)
 @NLobjective(model, Min, foo(x))
 ```
@@ -1888,8 +1891,8 @@ register(model, :foo, 1, f, ∇f; autodiff = true)
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @variable(model, x[1:2])
-g(x, y) = x * y
-function ∇g(g::Vector{T}, x::T, y::T) where {T}
+g(x::T, y::T) where {T<:Real} = x * y
+function ∇g(g::Vector{T}, x::T, y::T) where {T<:Real}
     g[1] = y
     g[2] = x
     return
@@ -1956,6 +1959,8 @@ derivatives of the function `f` respectively.
 
 ## Notes
 
+ * Because automatic differentiation is not used, you can assume the inputs are
+   all `Float64`.
  * This method will throw an error if `dimension > 1`.
  * `s` does not have to be the same symbol as `f`, but it is generally more
    readable if it is.
@@ -1965,9 +1970,9 @@ derivatives of the function `f` respectively.
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @variable(model, x)
-f(x) = x^2
-∇f(x) = 2x
-∇²f(x) = 2
+f(x::Float64) = x^2
+∇f(x::Float64) = 2 * x
+∇²f(x::Float64) = 2.0
 register(model, :foo, 1, f, ∇f, ∇²f)
 @NLobjective(model, Min, foo(x))
 ```
