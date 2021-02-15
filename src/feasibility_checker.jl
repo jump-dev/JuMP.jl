@@ -8,7 +8,7 @@ using LinearAlgebra
 """
     primal_feasibility_report(
         model::Model,
-        [point::Dict{VariableRef,Float64}];
+        [point::AbstractDict{VariableRef,Float64}];
         atol::Float64 = 1e-8,
     )::Union{Nothing,Dict{Any,Float64}}
 
@@ -27,7 +27,7 @@ point = Dict(v => value(v) for v in all_variables(model))
 """
 function primal_feasibility_report(
     model::Model,
-    point::Dict{VariableRef,Float64};
+    point::AbstractDict{VariableRef,Float64};
     atol::Float64 = 1e-8,
 )
     point_f = x -> get(point, x, 0.0)
@@ -66,7 +66,7 @@ function _distance_to_set(x::T, set::MOI.GreaterThan{T}) where {T<:Real}
     return max(set.lower - x, zero(T))
 end
 
-function _distance_to_set(x::T, set::MOI.EqualTo{T}) where {T<:Real}
+function _distance_to_set(x::T, set::MOI.EqualTo{T}) where {T<:Number}
     return abs(set.value - x)
 end
 
@@ -125,7 +125,7 @@ end
 function _distance_to_set(
     x::Vector{T},
     set::MOI.Zeros
-) where {T<:Real}
+) where {T<:Number}
     _check_dimension(x, set)
     return LinearAlgebra.norm(x)
 end

@@ -68,18 +68,34 @@ function test_semiintger()
 end
 
 function test_nonnegatives()
+    @test_throws(
+        DimensionMismatch,
+        JuMP._distance_to_set([-1.0, 1.0], MOI.Nonnegatives(1))
+    )
     @test JuMP._distance_to_set([-1.0, 1.0], MOI.Nonnegatives(2)) ≈ 1.0
 end
 
 function test_nonpositives()
+    @test_throws(
+        DimensionMismatch,
+        JuMP._distance_to_set([-1.0, 1.0], MOI.Nonpositives(1))
+    )
     @test JuMP._distance_to_set([-1.0, 1.0], MOI.Nonpositives(2)) ≈ 1.0
 end
 
 function test_reals()
+    @test_throws(
+        DimensionMismatch,
+        JuMP._distance_to_set([-1.0, 1.0], MOI.Reals(1))
+    )
     @test JuMP._distance_to_set([-1.0, 1.0], MOI.Reals(2)) ≈ 0.0
 end
 
 function test_zeros()
+    @test_throws(
+        DimensionMismatch,
+        JuMP._distance_to_set([-1.0, 1.0], MOI.Zeros(1))
+    )
     @test JuMP._distance_to_set([-1.0, 1.0], MOI.Zeros(2)) ≈ sqrt(2)
 end
 
