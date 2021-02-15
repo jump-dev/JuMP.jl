@@ -501,9 +501,10 @@ The function returns a dictionary which maps the infeasible constraint
 references to the distance between the point and the nearest point in the
 corresponding set. A point is classed as infeasible if the distance is greater
 than a supplied tolerance `atol`, and feasible otherwise.
+
 ```@example feasibility
-using JuMP
-model = Model()
+using JuMP, GLPK
+model = Model(GLPK.Optimizer)
 @variable(model, x >= 1, Int)
 @variable(model, y)
 @constraint(model, c1, x + y <= 1.95)
@@ -511,14 +512,14 @@ point = Dict(x => 2.5)
 report = primal_feasibility_report(model, point; atol = 1e-6)
 ```
 
-If the point is feasible, this function returns `nothing`.
+If the point is feasible, this function returns an empty dictionary.
 ```@example feasibility
 point = Dict(x => 1.0)
 report = primal_feasibility_report(model, point; atol = 1e-6)
-report === nothing
 ```
 
-To obtain the primal point from a previous solve, use:
-```julia
-point = Dict(v => value(v) for v in all_variables(model))
+To use the primal solution from a solve, omit the `point` argument:
+```@example feasibility
+optimize!(model)
+report = primal_feasibility_report(model)
 ```
