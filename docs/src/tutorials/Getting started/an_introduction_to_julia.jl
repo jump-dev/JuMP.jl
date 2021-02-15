@@ -20,86 +20,156 @@
 
 # # Getting started with Julia
 
-# **Originally Contributed by**: Juan Pablo Vielma
-
 # Since JuMP is embedded in Julia, knowing some basic Julia is important
 # for learning JuMP. This tutorial is designed to provide a minimalist
 # crash course in the basics of Julia. You can find resources that provide
 # a more comprehensive introduction to Julia [here](https://julialang.org/learning/).
 
-# ## How to print
+# ## Installing Julia
 
-# In Julia, we usually use println() to print
+# To install Julia, [download the latest stable release](https://julialang.org/downloads/),
+# then follow the [platform specific install instructions](https://julialang.org/downloads/platform/).
 
-println("Hello, World!")
+# !!! tip
+#     Unless you know otherwise, you probably want the 64-bit version.
 
-# ## Basic data types
+# Next, you need an IDE to develop in. VS Code is a popular choice, so follow
+# [these install instructions](https://www.julia-vscode.org/docs/stable/gettingstarted/).
 
-# Integers
+# ## Numbers and arithmetic
 
-typeof(1 + -2)
+# Since we want to solve optimization problems, we're going to be using a lot of
+# math. Luckily, Julia is great for math, with all the usual operators:
 
-# Floating point numbers
+@show 1 + 1
+@show 1 - 2
+@show 2 * 2
+@show 4 / 5
+@show 3^2
+nothing #hide
 
-typeof(1.2 - 2.3)
+# !!! info
+#     The `@` in front of something indicates that it is a macro, which is just
+#     a special type of function. In this case, `@show` prints the expression as
+#     typed (e.g., `1 - 2`), as well as the evaluation of the expression (`-1`).
 
-# There are also some cool things like an irrational representation of π. To
-# make π (and most other greek letters), type `\pi` and then press `[TAB]`.
+# Did you notice how Julia didn't print `.0` after some of the numbers? Julia is
+# a dynamic language, which means you never have to explictly declare the type
+# of a variable. However, in the background, Julia is giving each variable a
+# type. Check the type of something using the `typeof` function:
+
+@show typeof(1)
+@show typeof(1.0)
+nothing #hide
+
+# Here `1` is an `Int64`, which is an integer with 64 bits of precision, and
+# `1.0` is a `Float64`, which is a floating point number with 64-bits of
+# precision.
+
+# !!! tip
+#     If you aren't familiar with floating point numbers, make sure to read
+#     the [Floating point numbers](@ref) section.
+
+# We create complex numbers using `im`:
+
+x = 2 + 1im
+@show real(x)
+@show imag(x)
+@show typeof(x)
+@show x * (1 - 2im)
+nothing #hide
+
+# !!! info
+#     The curly brackets surround what we call the _parameters_ of a type. You
+#     can read `Complex{Int64}`  as "a complex number, where the real and
+#     imaginary parts are represented by `Int64`." If we call
+#     `typeof(1.0 + 2.0im)` it will be `Complex{Float64}`, which a complex
+#     number with the parts represented by `Float64`.
+
+# There are also some cool things like an irrational representation of π.
 
 π
 
-#-
+# !!! tip
+#     To make π (and most other greek letters), type `\pi` and then press
+#     `[TAB]`.
 
 typeof(π)
 
-# Julia has native support for complex numbers
+# Athough if we do math with irrational numbers, they get converted to
+# `Float64`:
 
-typeof(2 + 3im)
+typeof(2π / 3)
 
-# Double quotes are used for strings
+# ### Floating point numbers
 
-typeof("This is Julia")
+# !!! warning
+#     If you aren't familiar with floating point numbers, make sure to read this
+#     section carefully.
 
-# Unicode is fine in strings
+# A `Float64` is a [floating point](https://en.wikipedia.org/wiki/Floating-point_arithmetic)
+# approximation of a real number using 64-bits of information.
 
-typeof("π is about 3.1415")
+# Because it is an approximation, things we know hold true in mathematics don't
+# hold true in a computer! For example:
 
-# Julia symbols provide a way to make human readable unique identifiers.
+0.1 * 3 == 0.3
 
-:my_id
-typeof(:my_id)
+#- A more complicated example is:
 
-# ## Arithmetic and Equality Testing
+sin(2π / 3) == √3 / 2
 
-# Julia is great for math
+# !!! tip
+#     Get `√` by typing `\sqrt` then press `[TAB]`.
 
-1 + 1
+# Let's see what the differences are:
 
-# Even math involving complex numbers
+0.1 * 3 - 0.3
 
-(2 + 1im) * (1 - 2im)
+#-
 
-# We can also write things like the following using √ (\sqrt)
+sin(2π / 3) - √3 / 2
 
-sin(2π/3) == √3/2
+# They are small, but not zero!
 
-# Wait. What???
+# One way of explaining this difference is to consider how we would write
+# `1 / 3` and `2 / 3` using only four digits after the decimal point. We would
+# write `1 / 3` as `0.3333`, and `2 / 3` as `0.6667`. So, depiste the fact that
+# `2 * (1 / 3) == 2 / 3`, `2 * 0.3333 == 0.6666 != 0.6667`.
 
-sin(2π/3) - √3/2
+# Let's try that again using ≈ (`\approx + [TAB]`) instead of `==`:
 
-# Let's try again using ≈ (\approx).
+0.1 * 3 ≈ 0.3
 
-sin(2π/3) ≈ √3/2
+#-
 
-# Note that this time we used ≈ instead of ==. That is because computers don't
-# use real numbers. They use a discrete representation called floating point. If
-# you aren't careful, this can throw up all manner of issues. For example:
+sin(2π / 3) ≈ √3 / 2
+
+# `≈` is just a clever way of calling the `isapprox` function:
+
+isapprox(sin(2π / 3), √3 / 2; atol = 1e-8)
+
+# !!! warning
+#     Floating point is the reason solvers use tolerances when they solve
+#     optimization models. A common mistake you're likely to make is checking
+#     whether a binary variable is 0 using `value(z) == 0`. Always remember to
+#     use something like `isapprox` when comparing floating point numbers.
+#
+#     Gurobi has a [good series of articles](https://www.gurobi.com/documentation/9.0/refman/num_grb_guidelines_for_num.html)
+#     on the implications of floating point in optimization if you want to read
+#     more.
+
+# If you aren't careful, floating point arithmetic can throw up all manner of
+# issues. For example:
 
 1 + 1e-16 == 1
 
 # It even turns out that floating point numbers aren't associative!
 
 (1 + 1e-16) - 1e-16 == 1 + (1e-16 - 1e-16)
+
+# It's important to note that this issue isn't Julia-specific. It happens in
+# every programming language (try it out in Python).
 
 # ## Vectors, matrices and arrays
 
@@ -109,14 +179,24 @@ sin(2π/3) ≈ √3/2
 
 b = [5, 6]
 
+# !!! info
+#     `Array{Int64, 1}` means that this is an `Array`, with `Int64` elements,
+#     and it has `1` dimension.
+
 # Matrices can by constructed with spaces separating the columns, and semicolons
 # separating the rows:
 
-A = [1 2; 3 4]
+A = [1.0 2.0; 3.0 4.0]
+
+# Note how this time the type is `Array{Float64, 2}`; the elements are `Float64`
+# and there are `2` dimenions.
 
 # We can do linear algebra:
 
 x = A \ b
+
+# !!! info
+#     Here is floating point at work again! `x` is approximately `[-4, 4.5]`.
 
 #-
 
@@ -124,7 +204,7 @@ A * x
 
 #-
 
-A * x == b
+A * x ≈ b
 
 # Note that when multiplying vectors and matrices, dimensions matter. For
 # example, you can't multiply a vector by a vector:
@@ -141,10 +221,45 @@ b' * b
 
 b * b'
 
-# ## Tuples
+# ## Other common types
 
-# Julia makes extensive use of a simple data structure called Tuples.  Tuples
-# are immutable collections of values. For example,
+# ### Strings
+
+# Double quotes are used for strings:
+
+typeof("This is Julia")
+
+# Unicode is fine in strings:
+
+typeof("π is about 3.1415")
+
+# Use [`println`](https://docs.julialang.org/en/v1/base/io-network/#Base.println)
+# to print a string:
+
+println("Hello, World!")
+
+# We can use `$()` to interpolate values into a string:
+
+x = 123
+println("The value of x is: $(x)")
+
+# ### Symbols
+
+# Julia `Symbol`s provide a way to make human readable unique identifiers:
+
+:my_id
+
+#-
+
+typeof(:my_id)
+
+# You can think of a `Symbol` as a `String` that takes up less memory, and that
+# can't be modified.
+
+# ### Tuples
+
+# Julia makes extensive use of a simple data structure called Tuples. Tuples are
+# immutable collections of values. For example:
 
 t = ("hello", 1.2, :foo)
 
@@ -152,11 +267,11 @@ t = ("hello", 1.2, :foo)
 
 typeof(t)
 
-# Tuples can be accessed by index, similar to arrays,
+# Tuples can be accessed by index, similar to arrays:
 
 t[2]
 
-# And can be "unpacked" like so,
+# And they be "unpacked" like so:
 
 a, b, c = t
 b
@@ -166,27 +281,41 @@ b
 
 t = (word = "hello", num = 1.2, sym = :foo)
 
-# Then values can be accessed using a dot syntax,
+# Values can be accessed using dot syntax:
 
 t.word
 
 # ## Dictionaries
 
-# Similar to Python, Julia has native support for dictionaries.  Dictionaries
+# Similar to Python, Julia has native support for dictionaries. Dictionaries
 # provide a very generic way of mapping keys to values.  For example, a map of
-# integers to strings,
+# integers to strings:
 
 d1 = Dict(1 => "A", 2 => "B", 4 => "D")
 
-# Looking up a values uses the bracket syntax,
+# !!! info
+#     Type-stuff again: `Dict{Int64,String}` is a dictionary with `Int64` keys
+#     and `String` values.
+
+# Looking up a values uses the bracket syntax:
 
 d1[2]
 
-# Dictionaries support non-integer keys and can mix data types,
+# Dictionaries support non-integer keys and can mix data types:
 
 Dict("A" => 1, "B" => 2.5, "D" => 2 - 3im)
 
-# Dictionaries can be nested
+# !!! info
+#     Julia types form a hierarchy. Here the value type of the dictionary is
+#     `Number`, which is a generalization of `Int64`, `Float64`, and `Complex{Int}`.
+#     In general, having variables with "Abstract" types like `Number` can lead
+#     to slower code, so you should try to make sure every element in a
+#     dictionary or vector is the same type. For example, in this case we could
+#     represent every element as a `Complex{Float64}`:
+
+Dict("A" => 1.0 + 0.0im, "B" => 2.5 + 0.0im, "D" => 2.0 - 3.0im)
+
+# Dictionaries can be nested:
 
 d2 = Dict("A" => 1, "B" => 2, "D" => Dict(:foo => 3, :bar => 4))
 
@@ -198,14 +327,18 @@ d2["B"]
 
 d2["D"][:foo]
 
-# ## For-Each Loops
+# ## Loops
 
 # Julia has native support for for-each style loops with the syntax
-# `for <value> in <collection> end`.
+# `for <value> in <collection> end`:
 
 for i in 1:5
     println(i)
 end
+
+
+# !!! info
+#     Ranges are constructed as `start:stop`, or `start:step:stop`.
 
 #-
 
@@ -213,10 +346,10 @@ for i in [1.2, 2.3, 3.4, 4.5, 5.6]
     println(i)
 end
 
-# This for-each loop also works with dictionaries.
+# This for-each loop also works with dictionaries:
 
 for (key, value) in Dict("A" => 1, "B" => 2.5, "D" => 2 - 3im)
-    println("$key: $value")
+    println("$(key): $(value)")
 end
 
 # Note that in contrast to vector languages like Matlab and R, loops do not
@@ -225,10 +358,9 @@ end
 # ## Control Flow
 
 # Julia control flow is similar to Matlab, using the keywords
-# `if-elseif-else-end`, and the logical operators `||` and `&&` for *or* and
-# *and* respectively.
+# `if-elseif-else-end`, and the logical operators `||` and `&&` for **or** and
+# **and** respectively:
 
-i = 10
 for i in 0:3:15
     if i < 5
         println("$(i) is less than 5")
@@ -248,21 +380,21 @@ end
 # Similar to languages like Haskell and Python, Julia supports the use of simple
 # loops in the construction of arrays and dictionaries, called comprehenions.
 #
-# A list of increasing integers,
+# A list of increasing integers:
 
 [i for i in 1:5]
 
-# Matrices can be built by including multiple indices,
+# Matrices can be built by including multiple indices:
 
-[i*j for i in 1:5, j in 5:10]
+[i * j for i in 1:5, j in 5:10]
 
-# Conditional statements can be used to filter out some values,
+# Conditional statements can be used to filter out some values:
 
-[i for i in 1:10 if i%2 == 1]
+[i for i in 1:10 if i % 2 == 1]
 
-# A similar syntax can be used for building dictionaries
+# A similar syntax can be used for building dictionaries:
 
-Dict("$i" => i for i in 1:10 if i%2 == 1)
+Dict("$(i)" => i for i in 1:10 if i % 2 == 1)
 
 # ## Functions
 
@@ -273,7 +405,7 @@ function print_hello()
 end
 print_hello()
 
-# Arguments can be added to a function,
+# Arguments can be added to a function:
 
 function print_it(x)
     println(x)
@@ -282,40 +414,89 @@ print_it("hello")
 print_it(1.234)
 print_it(:my_id)
 
-# Optional keyword arguments are also possible
+# Optional keyword arguments are also possible:
 
-function print_it(x; prefix="value:")
-    println("$(prefix) $x")
+function print_it(x; prefix = "value:")
+    println("$(prefix) $(x)")
 end
 print_it(1.234)
-print_it(1.234, prefix="val:")
+print_it(1.234, prefix = "val:")
 
-# The keyword `return` is used to specify the return values of a function.
+# The keyword `return` is used to specify the return values of a function:
 
-function mult(x; y=2.0)
+function mult(x; y = 2.0)
     return x * y
 end
+
 mult(4.0)
 
 #-
 
-mult(4.0, y=5.0)
+mult(4.0, y = 5.0)
 
-# ## Other notes on types
+# ### Anonymous functions
 
-# Usually, specifing types is not required to use Julia.  However, it can be
-# helpful to understand the basics of Julia types for debugging.
-# For example this list has a type of `Array{Int64,1}` indicating that it is a
-# one dimensional array of integer values.
+# The syntax `input -> output` creates an anonymous function. These are most
+# useful when passed to other functions. For example:
 
-[1, 5, -2, 7]
+f = x -> x^2
+f(2)
 
-# In this example, the decimal values lead to a one dimensional array of
-# floating point values, i.e. `Array{Float64,1}`.  Notice that the integer `7`
-# is promoted to a `Float64`, because all elements in the array need share a
-# common type.
+#-
 
-[1.0, 5.2, -2.1, 7]
+map(x -> x^2, 1:4)
+
+# ### Type parameters
+
+# We can constrain the inputs to a function using type parameters, which are
+# `::` followed by the type of the input we want. For example:
+
+function foo(x::Int)
+    return x^2
+end
+
+function foo(x::Float64)
+    return exp(x)
+end
+
+function foo(x::Number)
+    return x + 1
+end
+
+@show foo(2)
+@show foo(2.0)
+@show foo(1 + 1im)
+nothing #hide
+
+# But what happens if we call `foo` with something we haven't defined it for?
+
+try  #hide
+foo([1, 2, 3])
+catch err; showerror(stdout, err) end  #hide
+
+# We get a dreaded `MethodError`! A `MethodError` means that you passed a
+# function something that didn't match the type that it was expecting. In this
+# case, the error message says that it doesn't know how to handle an
+# `Array{Int64, 1}`, but it does know how to handle `Float64`, `Int64`, and
+# `Number`.
+#
+# !!! tip
+#     Read the "Closest candidates" part of the error message carefully to get a
+#     hint as to what was expected.
+
+# ### Broadcasting
+
+# In the example above, we didn't define what to do if `f` was passed an
+# `Array`. Luckily, Julia provides a convienient syntax for mapping `f`
+# element-wise over arrays! Just add a `.` between the name of the function and
+# the opening `(`. This works for _any_ function, including functions with
+# multiple arguments. For example:
+
+f.([1, 2, 3])
+
+# !!! tip
+#     Get a `MethodError` when calling a function that takes an `Array`? Try
+#     broadcasting it!
 
 # ## Mutable vs immutable objects
 
@@ -347,7 +528,7 @@ println("immutable_type: $(immutable_type)")
 # function changed the value outside of the function. In constrast, the change
 # to `immutable_type` didn't modify the value outside the function.
 
-# You can check mutability with the `isimmutable` function.
+# You can check mutability with the `isimmutable` function:
 
 isimmutable([1, 2, 3])
 
@@ -355,14 +536,17 @@ isimmutable([1, 2, 3])
 
 isimmutable(1)
 
-# ## Using Packages and the Package Manager
+# ## The package manager
+
+# ### Installing packages
 
 # No matter how wonderful Julia's base language is, at some point you will want
 # to use an extension package.  Some of these are built-in, for example random
 # number generation is available in the `Random` package in the standard
 # library. These packages are loaded with the commands `using` and `import`.
 
-using Random
+using Random  # The equivalent of Python's `from Random import *`
+import Random  # The equivalent of Python's `import Random`
 
 Random.seed!(33)
 
@@ -387,36 +571,21 @@ Random.seed!(33)
 # Pkg.add("https://github.com/user-name/MyPackage.jl.git")
 # ```
 
-# Note that for clarity this example uses the package manager `Pkg`.  Julia
-# includes an interactive package manager that can be accessed using `]`.
-# [This video](https://youtu.be/76KL8aSz0Sg) gives an overview of using the
-# interactive package manager environment.
+# ### Package environments
 
-# The state of installed packages can also be saved in two files: `Project.toml`
-# and `Manifest.toml`. If these files are stored in the directory `/tmp/jump`,
-# the state of the packages can be recovered by running
+# By default, `Pkg.add` will add packages to Julia's global environment.
+# However, Julia also has built-in support for virtual environments.
 
+# Activate a virtual environment with:
 # ```julia
-# import Pkg
-# Pkg.activate("/tmp/jump")
-# Pkg.instantiate()
+# import Pkg; Pkg.activate("/path/to/environment")
 # ```
 
-# ## HELP!
+# You can see what packages are installed in the current environment with
+# `Pkg.status()`.
 
-# Julia includes a help mode that can be accessed using `?`.  Entering any
-# object (e.g. function, type, struct, ...) into the help mode will show its
-# documentation, if any is available.
-
-# ## Some Common Gotchas
-
-# ### MethodError
-
-# A common error in Julia is `MethodError`, which indicates that the function is
-# not defined for the given value.  For example, by default the `ceil` function
-# is not defined for complex numbers.  The "closest candidates" list suggest
-# some Julia types that the function is defined for.
-
-try  #hide
-ceil(1.2 + 2.3im)
-catch err; showerror(stderr, err); end  #hide
+# !!! tip
+#     We _strongly_ recommend you create a Pkg environment for each project
+#     that you create in Julia, and add only the packages that you need, instead
+#     of adding lots of packages to the global environment. The [Pkg manager documentation](https://julialang.github.io/Pkg.jl/v1/environments/)
+#     has more information on this topic.
