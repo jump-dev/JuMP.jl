@@ -8,63 +8,110 @@ using LinearAlgebra
 """
     primal_feasibility_report(
         model::Model,
-        point::AbstractDict{VariableRef,Float64};
-        atol::Float64,
-    )::Union{Nothing,Dict{Any,Float64}}
+        [point::AbstractDict{VariableRef,Float64}];
+        atol::Float64 = 0.0,
+    )::Dict{Any,Float64}
 
-Check the primal feasibility of `model` at the point given by the dictionary
-`point` mapping variables to primal values. If a variable is not given in
-`point`, the value is assumed to be `0.0`.
+Given a dictionary `point`, which maps variables to primal values, return a
+dictionary mapping the constraint reference of each constraint in `model` to the
+distance between the point and the nearest feasible point.
 
-A point is classed as feasible if the distance between the point and the set is
-less than or equal to `atol`.
+Use `atol` to exclude constraints for which the distance is less-than or
+equal-to `atol`. `atol` defaults to `0.0`.
 
-If the point is feasible, this function returns `nothing`. If infeasible, this
-function returns a dictionary mapping the constraint reference of each violated
-constraint to the distance from feasibility.
+## Notes
 
-To obtain `point` from a solution of a solved model, use:
-```julia
-point = Dict(v => value(v) for v in all_variables(model))
+ * If a variable is not given in `point`, the value is assumed to be `0.0`.
+ * If no point is provided, the primal solution from the last time the model was
+   solved is used.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP)
+model = Model()
+@variable(model, 0.5 <= x <= 1)
+primal_feasibility_report(model, Dict(x => 0.2))
+
+# output
+
+Dict{Any,Float64} with 1 entry:
+  x ≥ 0.5 => 0.3
 ```
 """
 function primal_feasibility_report(
     model::Model,
     point::AbstractDict{VariableRef,Float64};
-    atol::Float64,
+    atol::Float64 = 0.0,
 )
     point_f = x -> get(point, x, 0.0)
     violated_constraints = Dict{Any,Float64}()
     for (F, S) in list_of_constraint_types(model)
-        # This loop is not type-stable because `F` and `S` change, but it should
-        # be fine because no one should be using this in performance-critical
-        # code.
-        for con in all_constraints(model, F, S)
-            obj = constraint_object(con)
-            d = _distance_to_set(value.(obj.func, point_f), obj.set)
-            if d > atol
-                violated_constraints[con] = d
-            end
-        end
+        _add_infeasible_constraints(
+            model, F, S, violated_constraints, point_f, atol
+        )
     end
     if num_nl_constraints(model) > 0
-        evaluator = NLPEvaluator(model)
-        MOI.initialize(evaluator, Symbol[])
-        g = zeros(num_nl_constraints(model))
-        MOI.eval_constraint(evaluator, g, point_f.(all_variables(model)))
-        for (i, con) in enumerate(model.nlp_data.nlconstr)
-            d = max(0.0, con.lb - g[i], g[i] - con.ub)
-            if d > atol
-                cref = ConstraintRef(
-                   model,
-                   NonlinearConstraintIndex(i),
-                    ScalarShape(),
-                )
-                violated_constraints[cref] = d
-            end
+        _add_infeasible_nonlinear_constraints(
+            model, violated_constraints, point_f, atol
+        )
+    end
+    return violated_constraints
+end
+
+function primal_feasibility_report(model::Model; atol::Float64 = 0.0)
+    if !has_values(model)
+        error(
+            "No primal solution is available. You must provide a point at " *
+            "which to check feasibility."
+        )
+    end
+    return primal_feasibility_report(
+        model,
+        Dict(v => value(v) for v in all_variables(model));
+        atol = atol,
+    )
+end
+
+function _add_infeasible_constraints(
+    model::Model,
+    ::Type{F},
+    ::Type{S},
+    violated_constraints::Dict{Any,Float64},
+    point_f::Function,
+    atol::Float64,
+) where {F,S}
+    for con in all_constraints(model, F, S)
+        obj = constraint_object(con)
+        d = _distance_to_set(value.(obj.func, point_f), obj.set)
+        if d > atol
+            violated_constraints[con] = d
         end
     end
-    return length(violated_constraints) == 0 ? nothing : violated_constraints
+    return
+end
+
+function _add_infeasible_nonlinear_constraints(
+    model::Model,
+    violated_constraints::Dict{Any,Float64},
+    point_f::Function,
+    atol::Float64,
+)
+    evaluator = NLPEvaluator(model)
+    MOI.initialize(evaluator, Symbol[])
+    g = zeros(num_nl_constraints(model))
+    MOI.eval_constraint(evaluator, g, point_f.(all_variables(model)))
+    for (i, con) in enumerate(model.nlp_data.nlconstr)
+        d = max(0.0, con.lb - g[i], g[i] - con.ub)
+        if d > atol
+            cref = ConstraintRef(
+                model,
+                NonlinearConstraintIndex(i),
+                ScalarShape(),
+            )
+            violated_constraints[cref] = d
+        end
+    end
+    return
 end
 
 function _distance_to_set(::Any, set::MOI.AbstractSet)
