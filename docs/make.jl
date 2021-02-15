@@ -91,7 +91,6 @@ makedocs(
         "Introduction" => "index.md",
         "Manual" => [
             "installation.md",
-            "quickstart.md",
             "variables.md",
             "expressions.md",
             "objective.md",
