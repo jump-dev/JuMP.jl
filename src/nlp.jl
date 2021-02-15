@@ -1788,7 +1788,8 @@ Register the user-defined function `f` that takes `dimension` arguments in
 
 ## Notes
 
- * For this method, you must explicitly set `autodiff = true`.
+ * For this method, you must explicitly set `autodiff = true`, because no
+   user-provided gradient function `∇f` is given.
  * Second-derivative information is only computed if `dimension == 1`.
  * `s` does not have to be the same symbol as `f`, but it is generally more
    readable if it is.
@@ -1857,7 +1858,7 @@ end
 Register the user-defined function `f` that takes `dimension` arguments in
 `model` as the symbol `s`. In addition, provide a gradient function `∇f`.
 
-If the function `f` is uni-variate (i.e., `dimension == 1`), `∇f` must return
+If the function `f` is univariate (i.e., `dimension == 1`), `∇f` must return
 a number which represents the first-order derivative of the function `f`.
 
 If the function `f` is multi-variate, `∇f` must have a signature matching
