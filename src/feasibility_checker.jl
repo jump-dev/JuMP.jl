@@ -3,6 +3,8 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+using LinearAlgebra
+
 """
     primal_feasibility_report(
         model::Model,
@@ -36,7 +38,7 @@ function primal_feasibility_report(
         # code.
         for con in all_constraints(model, F, S)
             obj = constraint_object(con)
-            d = _distance_to_set(value(obj.func, point_f), obj.set)
+            d = _distance_to_set(value.(obj.func, point_f), obj.set)
             if d > atol
                 violated_constraints[con] = d
             end
@@ -52,26 +54,88 @@ function _distance_to_set(::Any, set::MOI.AbstractSet)
     )
 end
 
-function _distance_to_set(x::Float64, set::MOI.LessThan{Float64})
-    return max(x - set.upper, 0.0)
+###
+### MOI.AbstractScalarSets
+###
+
+function _distance_to_set(x::T, set::MOI.LessThan{T}) where {T<:Real}
+    return max(x - set.upper, zero(T))
 end
 
-function _distance_to_set(x::Float64, set::MOI.GreaterThan{Float64})
-    return max(set.lower - x, 0.0)
+function _distance_to_set(x::T, set::MOI.GreaterThan{T}) where {T<:Real}
+    return max(set.lower - x, zero(T))
 end
 
-function _distance_to_set(x::Float64, set::MOI.EqualTo{Float64})
+function _distance_to_set(x::T, set::MOI.EqualTo{T}) where {T<:Real}
     return abs(set.value - x)
 end
 
-function _distance_to_set(x::Float64, set::MOI.Interval{Float64})
-    return max(x - set.upper, set.lower - x, 0.0)
+function _distance_to_set(x::T, set::MOI.Interval{T}) where {T<:Real}
+    return max(x - set.upper, set.lower - x, zero(T))
 end
 
-function _distance_to_set(x::Float64, ::MOI.ZeroOne)
-    return min(abs(x - 0.0), abs(x - 1.0))
+function _distance_to_set(x::T, ::MOI.ZeroOne) where {T<:Real}
+    return min(abs(x - zero(T)), abs(x - one(T)))
 end
 
-function _distance_to_set(x::Float64, ::MOI.Integer)
-    return abs(x - round(Int, x))
+function _distance_to_set(x::T, ::MOI.Integer) where {T<:Real}
+    return abs(x - round(x))
 end
+
+function _distance_to_set(x::T, set::MOI.Semicontinuous{T}) where {T<:Real}
+    return min(max(x - set.upper, set.lower - x, zero(T)), abs(x))
+end
+
+function _distance_to_set(x::T, set::MOI.Semiinteger{T}) where {T<:Real}
+    d = max(
+        ceil(set.lower) - x,
+        x - floor(set.upper),
+        abs(x - round(x)),
+    )
+    return min(d, abs(x))
+end
+
+###
+### MOI.AbstractVectorSets
+###
+
+function _check_dimension(v::AbstractVector, s)
+    if length(v) != MOI.dimension(s)
+        throw(DimensionMismatch("Mismatch between value and set"))
+    end
+    return
+end
+
+function _distance_to_set(
+    x::Vector{T},
+    set::MOI.Nonnegatives,
+) where {T<:Real}
+    _check_dimension(x, set)
+    return LinearAlgebra.norm(max(-xi, zero(T)) for xi in x)
+end
+
+function _distance_to_set(
+    x::Vector{T},
+    set::MOI.Nonpositives,
+) where {T<:Real}
+    _check_dimension(x, set)
+    return LinearAlgebra.norm(max(xi, zero(T)) for xi in x)
+end
+
+function _distance_to_set(
+    x::Vector{T},
+    set::MOI.Zeros
+) where {T<:Real}
+    _check_dimension(x, set)
+    return LinearAlgebra.norm(x)
+end
+
+
+function _distance_to_set(
+    x::Vector{T},
+    set::MOI.Reals
+) where {T<:Real}
+    _check_dimension(x, set)
+    return zero(T)
+end
+
