@@ -25,6 +25,10 @@ function test_distance_to_set()
     @test JuMP._distance_to_set(3.1, MOI.Integer()) ≈ 0.1
     @test JuMP._distance_to_set(-0.01, MOI.Integer()) ≈ 0.01
     @test JuMP._distance_to_set(1.01, MOI.Integer()) ≈ 0.01
+    @test_throws(
+        ErrorException,
+        JuMP._distance_to_set([1.0], MOI.Zeros(1)),
+    )
 end
 
 function test_feasible()
