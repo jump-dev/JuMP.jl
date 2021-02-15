@@ -120,7 +120,22 @@ function test_scalar_affine()
     @test length(report) == 4
 end
 
-function test_vector_affine()
+function test_scalar_quadratic()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, c1, x^2 + x <= 0.5)
+    @constraint(model, c2, x^2 - x >= 1.25)
+    @constraint(model, c3, x^2 + x == 1.1)
+    @constraint(model, c4, 0 <= x^2 + x <= 0.5)
+    report = primal_feasibility_report(model, Dict(x => 1.0))
+    @test report[c1] ≈ 1.5
+    @test report[c2] ≈ 1.25
+    @test report[c3] ≈ 0.9
+    @test report[c4] ≈ 1.5
+    @test length(report) == 4
+end
+
+function test_vector()
     model = Model()
     @variable(model, x[1:3])
     @constraint(model, c1, x in MOI.Nonnegatives(3))
@@ -132,6 +147,21 @@ function test_vector_affine()
     @test report[c2] ≈ 1.0
     @test !haskey(report, c3)
     @test report[c4] ≈ sqrt(2)
+    @test length(report) == 3
+end
+
+function test_vector_affine()
+    model = Model()
+    @variable(model, x[1:3])
+    @constraint(model, c1, 2 * x in MOI.Nonnegatives(3))
+    @constraint(model, c2, 2 * x in MOI.Nonpositives(3))
+    @constraint(model, c3, 2 * x in MOI.Reals(3))
+    @constraint(model, c4, 2 * x in MOI.Zeros(3))
+    report = primal_feasibility_report(model, Dict(x[1] => 1.0, x[2] => -1.0))
+    @test report[c1] ≈ 2.0
+    @test report[c2] ≈ 2.0
+    @test !haskey(report, c3)
+    @test report[c4] ≈ sqrt(8)
     @test length(report) == 3
 end
 
