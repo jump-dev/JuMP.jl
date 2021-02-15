@@ -1281,6 +1281,7 @@ include("lp_sensitivity.jl")
 include("lp_sensitivity2.jl")
 include("callbacks.jl")
 include("file_formats.jl")
+include("feasibility_checker.jl")
 
 # JuMP exports everything except internal symbols, which are defined as those
 # whose name starts with an underscore. Macros whose names start with

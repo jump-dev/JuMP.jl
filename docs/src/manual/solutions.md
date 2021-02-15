@@ -127,7 +127,7 @@ FEASIBLE_POINT::ResultStatusCode = 1
 ```
 Other common returns are `MOI.NO_SOLUTION`, and `MOI.INFEASIBILITY_CERTIFICATE`.
 The first means that the solver doesn't have a solution to return, and the
-second means that the primal solution is a certificate of dual infeasbility (a 
+second means that the primal solution is a certificate of dual infeasbility (a
 primal unbounded ray).
 
 You can also use [`has_values`](@ref), which returns `true` if there is a
@@ -200,7 +200,7 @@ FEASIBLE_POINT::ResultStatusCode = 1
 ```
 Other common returns are `MOI.NO_SOLUTION`, and `MOI.INFEASIBILITY_CERTIFICATE`.
 The first means that the solver doesn't have a solution to return, and the
-second means that the dual solution is a certificate of primal infeasbility (a 
+second means that the dual solution is a certificate of primal infeasbility (a
 dual unbounded ray).
 
 You can also use [`has_duals`](@ref), which returns `true` if there is a
@@ -258,7 +258,7 @@ And data, a 2-element Array{Float64,1}:
 
 ## Recommended workflow
 
-The recommended workflow for solving a model and querying the solution is 
+The recommended workflow for solving a model and querying the solution is
 something like the following:
 ```jldoctest solutions
 if termination_status(model) == MOI.OPTIMAL
@@ -427,7 +427,7 @@ For instance, this is how you can use this functionality:
 
 ```julia
 using JuMP
-model = Model() # You must use a solver that supports conflict refining/IIS 
+model = Model() # You must use a solver that supports conflict refining/IIS
 # computation, like CPLEX or Gurobi
 @variable(model, x >= 0)
 @constraint(model, c1, x >= 2)
@@ -488,4 +488,26 @@ for i in 2:result_count(model)
         print("Solution $(i) is also optimal!")
     end
 end
+```
+
+## Checking feasibility of solutions
+
+To check the feasibility of a primal solution, use
+[`primal_feasibility_report`](@ref). The returned `report` is `nothing` if the
+point is feasible. Otherwise, it is a dictionary mapping the infeasible
+constraint references to the distance between the point and the nearest point in
+the set.
+
+```@example
+using JuMP
+model = Model()
+@variable(model, x >= 1, Int)
+@constraint(model, c1, x <= 1.95)
+point = Dict(x => 2.5)
+report = primal_feasibility_report(model, point)
+```
+
+To use the point from a previous solve, use:
+```julia
+point = Dict(v => value(v) for v in all_variables(model))
 ```
