@@ -14,10 +14,8 @@ using LinearAlgebra
 
 Given a dictionary `point`, which maps variables to primal values, return a
 dictionary mapping the constraint reference of each constraint in `model` to the
-distance between the point and the nearest feasible point.
-
-Use `atol` to exclude constraints for which the distance is less-than or
-equal-to `atol`. `atol` defaults to `0.0`.
+distance between the point and the nearest feasible point, if the distance is
+greater than `atol`.
 
 ## Notes
 
@@ -28,12 +26,11 @@ equal-to `atol`. `atol` defaults to `0.0`.
 ## Examples
 
 ```jldoctest; setup=:(using JuMP)
-model = Model()
-@variable(model, 0.5 <= x <= 1)
-primal_feasibility_report(model, Dict(x => 0.2))
+julia> model = Model();
 
-# output
+julia> @variable(model, 0.5 <= x <= 1);
 
+julia> primal_feasibility_report(model, Dict(x => 0.2))
 Dict{Any,Float64} with 1 entry:
   x ≥ 0.5 => 0.3
 ```
