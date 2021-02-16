@@ -71,12 +71,20 @@ default_container(::ArrayIndices) = Array
 function container(f::Function, indices::ArrayIndices, ::Type{Array})
     return map(I -> f(I...), indices)
 end
-function _oneto(indices)
-    if indices isa UnitRange{Int} && indices == 1:length(indices)
+
+function _oneto(indices::AbstractVector{<:Integer})
+    if indices == 1:length(indices)
         return Base.OneTo(length(indices))
     end
     return error("Index set for array is not one-based interval.")
 end
+
+function _oneto(::Any)
+    return error("Index set for array is not one-based interval.")
+end
+
+_oneto(indices::Base.OneTo) = indices
+
 function container(
     f::Function,
     indices::VectorizedProductIterator,
