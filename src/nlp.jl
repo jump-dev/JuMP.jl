@@ -30,6 +30,11 @@ mutable struct _NonlinearConstraint <: AbstractConstraint
     ub::Float64
 end
 
+"""
+    NonlinearConstraintIndex(index::Int64)
+
+A struct to refer to the 1-indexed nonlinear constraint `index`.
+"""
 struct NonlinearConstraintIndex
     value::Int64
 end
@@ -171,6 +176,11 @@ function _init_NLP(m::Model)
     end
 end
 
+"""
+    dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
+
+Return the dual of the nonlinear constraint `c`.
+"""
 function dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
     _init_NLP(c.model)
     nldata::_NLPData = c.model.nlp_data
@@ -210,6 +220,13 @@ mutable struct _SubexpressionStorage
     linearity::Linearity
 end
 
+"""
+    NLPEvaluator(m::Model)
+
+Return an `MOI.AbstractNLPEvaluator` constructed from the model `model`.
+
+Before using, you must initialize the evaluator using `MOI.initialize`.
+"""
 mutable struct NLPEvaluator <: MOI.AbstractNLPEvaluator
     m::Model
     parameter_values::Vector{Float64}
@@ -245,6 +262,7 @@ mutable struct NLPEvaluator <: MOI.AbstractNLPEvaluator
     eval_objective_gradient_timer::Float64
     eval_constraint_jacobian_timer::Float64
     eval_hessian_lagrangian_timer::Float64
+
     function NLPEvaluator(m::Model)
         d = new(m)
         d.eval_objective_timer = 0
@@ -1756,7 +1774,47 @@ function _UserFunctionEvaluator(
     return _UserFunctionEvaluator(g, ∇f, dimension)
 end
 
-# TODO: Add a docstring.
+"""
+    register(
+        model::Model,
+        s::Symbol,
+        dimension::Integer,
+        f::Function;
+        autodiff:Bool = false,
+    )
+
+Register the user-defined function `f` that takes `dimension` arguments in
+`model` as the symbol `s`.
+
+The function `f` must support all subtypes of `Real` as arguments. Do not assume
+that the inputs are `Float64`.
+
+## Notes
+
+ * For this method, you must explicitly set `autodiff = true`, because no
+   user-provided gradient function `∇f` is given.
+ * Second-derivative information is only computed if `dimension == 1`.
+ * `s` does not have to be the same symbol as `f`, but it is generally more
+   readable if it is.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP)
+model = Model()
+@variable(model, x)
+f(x::T) where {T<:Real} = x^2
+register(model, :foo, 1, f; autodiff = true)
+@NLobjective(model, Min, foo(x))
+```
+
+```jldoctest; setup=:(using JuMP)
+model = Model()
+@variable(model, x[1:2])
+g(x::T, y::T) where {T<:Real} = x * y
+register(model, :g, 2, g; autodiff = true)
+@NLobjective(model, Min, g(x[1], x[2]))
+```
+"""
 function register(
     m::Model,
     s::Symbol,
@@ -1790,7 +1848,59 @@ function register(
 
 end
 
-# TODO: Add a docstring.
+"""
+    register(
+        model::Model,
+        s::Symbol,
+        dimension::Integer,
+        f::Function,
+        ∇f::Function;
+        autodiff:Bool = false,
+    )
+
+Register the user-defined function `f` that takes `dimension` arguments in
+`model` as the symbol `s`. In addition, provide a gradient function `∇f`.
+
+The functions `f`and ∇f must support all subtypes of `Real` as arguments. Do not
+assume that the inputs are `Float64`.
+
+## Notes
+
+ * If the function `f` is univariate (i.e., `dimension == 1`), `∇f` must return
+   a number which represents the first-order derivative of the function `f`.
+ * If the function `f` is multi-variate, `∇f` must have a signature matching
+   `∇f(g::Vector{T}, args::T...) where {T<:Real}`, where the first argument is a
+   vector `g` that is modified in-place with the gradient.
+ * If `autodiff = true` and `dimension == 1`, use automatic differentiation to
+   comute the second-order derivative information. If `autodiff = false`, only
+   first-order derivative information will be used.
+ * `s` does not have to be the same symbol as `f`, but it is generally more
+   readable if it is.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP)
+model = Model()
+@variable(model, x)
+f(x::T) where {T<:Real} = x^2
+∇f(x::T) where {T<:Real} = 2 * x
+register(model, :foo, 1, f, ∇f; autodiff = true)
+@NLobjective(model, Min, foo(x))
+```
+
+```jldoctest; setup=:(using JuMP)
+model = Model()
+@variable(model, x[1:2])
+g(x::T, y::T) where {T<:Real} = x * y
+function ∇g(g::Vector{T}, x::T, y::T) where {T<:Real}
+    g[1] = y
+    g[2] = x
+    return
+end
+register(model, :g, 2, g, ∇g; autodiff = true)
+@NLobjective(model, Min, g(x[1], x[2]))
+```
+"""
 function register(
     m::Model,
     s::Symbol,
@@ -1830,7 +1940,43 @@ function register(
 
 end
 
-# TODO: Add a docstring.
+"""
+    register(
+        model::Model,
+        s::Symbol,
+        dimension::Integer,
+        f::Function,
+        ∇f::Function,
+        ∇²f::Function,
+    )
+
+Register the user-defined function `f` that takes `dimension` arguments in
+`model` as the symbol `s`. In addition, provide a gradient function `∇f` and a
+hessian function `∇²f`.
+
+`∇f` and `∇²f` must return numbers corresponding to the first- and second-order
+derivatives of the function `f` respectively.
+
+## Notes
+
+ * Because automatic differentiation is not used, you can assume the inputs are
+   all `Float64`.
+ * This method will throw an error if `dimension > 1`.
+ * `s` does not have to be the same symbol as `f`, but it is generally more
+   readable if it is.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP)
+model = Model()
+@variable(model, x)
+f(x::Float64) = x^2
+∇f(x::Float64) = 2 * x
+∇²f(x::Float64) = 2.0
+register(model, :foo, 1, f, ∇f, ∇²f)
+@NLobjective(model, Min, foo(x))
+```
+"""
 function register(
     m::Model,
     s::Symbol,
@@ -1851,14 +1997,49 @@ function register(
     )
 end
 
-# TODO: Add a docstring.
-# Ex: set_NL_objective(model, MOI.MIN_SENSE, :($x + $y^2))
+"""
+    set_NL_objective(model::Model, sense::MOI.OptimizationSense, expr::Expr)
+
+Set the nonlinear objective of `model` to the expression `expr`, with the
+optimization sense `sense`.
+
+This function is most useful if the expression `expr` is generated
+programatically, and you cannot use [`@NLobjective`](@ref).
+
+## Notes
+
+ * You must interpolate the variables directly into the expression `expr`.
+ * You must use `MOI.MIN_SENSE` or `MOI.MAX_SENSE` instead of `Min` and `Max`.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> set_NL_objective(model, MOI.MIN_SENSE, :(\$(x) + \$(x)^2))
+```
+"""
 function set_NL_objective(model::Model, sense::MOI.OptimizationSense, x)
     return set_objective(model, sense, _NonlinearExprData(model, x))
 end
 
-# TODO: Add a docstring.
-# Ex: add_NL_constraint(m, :($x + $y^2 <= 1))
+"""
+    add_NL_constraint(model::Model, expr::Expr)
+
+Add a nonlinear constraint described by the Julia expression `ex` to `model`.
+
+This function is most useful if the expression `ex` is generated
+programatically, and you cannot use [`@NLconstraint`](@ref).
+
+## Notes
+
+ * You must interpolate the variables directly into the expression `expr`.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> add_NL_constraint(model, :(\$(x) + \$(x)^2 <= 1))
+(x + x ^ 2.0) - 1.0 ≤ 0
+```
+"""
 function add_NL_constraint(model::Model, ex::Expr)
     _init_NLP(model)
     nl_constraints = model.nlp_data.nlconstr

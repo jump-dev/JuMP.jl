@@ -1087,13 +1087,26 @@ function operator_warn(model::Model)
     end
 end
 
-# Types used in the nonlinear code
 # TODO: rename "m" field to "model" for style compliance
+"""
+    NonlinearExpression
+
+A struct to represent a nonlinear expression.
+
+Create an expression using [`@NLexpression`](@ref).
+"""
 struct NonlinearExpression
     m::Model
     index::Int
 end
 
+"""
+    NonlinearParameter
+
+A struct to represent a nonlinear parameter.
+
+Create a parameter using [`@NLparameter`](@ref).
+"""
 struct NonlinearParameter <: AbstractJuMPScalar
     m::Model
     index::Int

@@ -64,7 +64,7 @@ for linear and quadratic expressions. We note some important points below.
   inside of macros.
 - [User-defined Functions](@ref) may be used within nonlinear expressions only
   after they are registered. For example, the follow code results in an error
-  because `register()` must be called first to register `my_function`.
+  because [`register`](@ref) must be called first to register `my_function`.
 
 ```jldoctest
 model = Model()
@@ -220,7 +220,7 @@ differentiation.
     ```
 
 To register a user-defined function with derivatives computed by
-automatic differentiation, use the `register` method as in the following
+automatic differentiation, use the [`register`](@ref) method as in the following
 example:
 
 ```julia
@@ -237,7 +237,7 @@ register(model, :my_square, 1, my_square, autodiff=true)
 ```
 
 The above code creates a JuMP model with the objective function
-`(x[1] - 1)^2 + (x[2]^2 - 2)^2`. The first argument to `register` is the
+`(x[1] - 1)^2 + (x[2]^2 - 2)^2`. The first argument to [`register`](@ref) is the
 model for which the functions are registered. The second argument is a Julia
 symbol object which serves as the name of the user-defined function in JuMP
 expressions; the JuMP name need not be the same as the name of the corresponding
@@ -251,7 +251,7 @@ computational cost that scales linearly with the number of input dimensions. As
 such, it is not the most efficient way to compute gradients of user-defined
 functions if the number of input arguments is large. In this case, users may
 want to provide their own routines for evaluating gradients. The more general
-syntax for `register` which accepts user-provided derivative evaluation
+syntax for [`register`](@ref) which accepts user-provided derivative evaluation
 routines is:
 
 ```julia
@@ -426,9 +426,9 @@ which can be queried using the `NLPEvaluator`.
 
 In addition to the `@NLobjective` and `@NLconstraint` macros, it is also
 possible to provide Julia `Expr` objects directly by using
-`set_NL_objective` and `add_NL_constraint`. This input form may be
-useful if the expressions are generated programmatically. JuMP variables should
-be spliced into the expression object. For example:
+[`set_NL_objective`](@ref) and [`add_NL_constraint`](@ref). This input form may
+be useful if the expressions are generated programmatically. JuMP variables
+should be spliced into the expression object. For example:
 
 ```julia
 @variable(model, 1 <= x[i = 1:4] <= 5)
