@@ -23,8 +23,25 @@
 #############################################################################
 
 # Used for dispatching
+"""
+    PrintMode
+
+An abstract type used for dispatching printing.
+"""
 abstract type PrintMode end
+
+"""
+    REPLMode
+
+A type used for dispatching printing. Produces plain-text representations.
+"""
 abstract type REPLMode <: PrintMode end
+
+"""
+    IJuliaMode
+
+A type used for dispatching printing. Produces LaTeX representations.
+"""
 abstract type IJuliaMode <: PrintMode end
 
 # Whether something is zero or not for the purposes of printing it
@@ -634,6 +651,17 @@ function constraint_string(
         return prefix * constraint_str
     end
 end
+
+"""
+    constraint_string(
+        print_mode,
+        ref::ConstraintRef;
+        in_math_mode::Bool = false)
+
+Return a string representation of the constraint `ref`, given the `print_mode`.
+
+`print_mode` should be `IJuliaMode` or `REPLMode`.
+"""
 function constraint_string(print_mode, ref::ConstraintRef; in_math_mode = false)
     return constraint_string(print_mode, name(ref), constraint_object(ref), in_math_mode = in_math_mode)
 end
@@ -641,6 +669,14 @@ end
 #------------------------------------------------------------------------
 ## _NonlinearExprData
 #------------------------------------------------------------------------
+
+"""
+    nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
+
+Return a string representation of the nonlinear expression `c` belonging to
+`model`, given the `print_mode`. `print_mode` should be `IJuliaMode` or
+`REPLMode`.
+"""
 function nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
     ex = _tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values,
                        [], [], model.nlp_data.user_operators, false,
@@ -682,6 +718,13 @@ end
 
 # TODO: Printing is inconsistent between regular constraints and nonlinear
 # constraints because nonlinear constraints don't have names.
+"""
+    nl_constraint_string(model::Model, mode, c::_NonlinearConstraint)
+
+Return a string representation of the nonlinear constraint `c` belonging to
+`model`, given the `print_mode`. `print_mode` should be `IJuliaMode` or
+`REPLMode`.
+"""
 function nl_constraint_string(model::Model, mode, c::_NonlinearConstraint)
     s = _sense(c)
     nl = nl_expr_string(model, mode, c.terms)
