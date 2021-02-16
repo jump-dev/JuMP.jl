@@ -49,17 +49,17 @@ set_silent(model)
 @objective(model, Min, t)
 @constraint(model, [t, (u - u0)...] in SecondOrderCone())
 @constraint(model, u&#39; * p == q)
-optimize!(model)</code></pre><pre><code class="language-julia">objective_value(model)</code></pre><pre class="documenter-example-output">0.7413432288549509</pre><pre><code class="language-julia">value.(u)</code></pre><pre class="documenter-example-output">10-element Array{Float64,1}:
- 0.3124637200197948  
- 0.7621197939455903  
- 0.5377420159074574  
- 0.04962241343514719 
- 0.5165829552385068  
- 0.8058901767241043  
- 0.08216885500730661 
- 0.019042434938493197
- 0.22253713176368534 
- 0.2181361013672205  </pre><pre><code class="language-julia">e1 = [1, zeros(10)...]
+optimize!(model)</code></pre><pre><code class="language-julia">objective_value(model)</code></pre><pre class="documenter-example-output">0.7413432288553659</pre><pre><code class="language-julia">value.(u)</code></pre><pre class="documenter-example-output">10-element Array{Float64,1}:
+ 0.31246372001974737 
+ 0.7621197939456041  
+ 0.5377420159074654  
+ 0.04962241343506648 
+ 0.5165829552384577  
+ 0.805890176724127   
+ 0.08216885500728709 
+ 0.019042434938453437
+ 0.2225371317636857  
+ 0.21813610136719874 </pre><pre><code class="language-julia">e1 = [1, zeros(10)...]
 dual_model = Model(SCS.Optimizer)
 set_silent(model)
 @variable(dual_model, y1 &lt;= 0)
@@ -67,7 +67,7 @@ set_silent(model)
 @objective(dual_model, Max, q * y1 + vcat(0, u0)&#39; * y2)
 @constraint(dual_model, e1 - [0, p...] .* y1 - y2 .== 0)
 @constraint(dual_model, y2 in SecondOrderCone())
-optimize!(dual_model)</code></pre><pre><code class="language-julia">objective_value(dual_model)</code></pre><pre class="documenter-example-output">0.7413467177628357</pre><p>We can also have an equivalent formulation using a Rotated Second-Order Cone:</p><p class="math-container">\[\begin{aligned}
+optimize!(dual_model)</code></pre><pre><code class="language-julia">objective_value(dual_model)</code></pre><pre class="documenter-example-output">0.7413467177628361</pre><p>We can also have an equivalent formulation using a Rotated Second-Order Cone:</p><p class="math-container">\[\begin{aligned}
 &amp; \min &amp; t \\
 &amp; \;\;\text{s.t.} &amp; p&#39; \cdot u = q \\
 &amp; &amp; (t, 1/2, u - u_{0})\in Q_r^{n+2}
@@ -79,16 +79,16 @@ set_silent(model)
 @constraint(model, [t, 0.5, (u - u0)...] in RotatedSecondOrderCone())
 @constraint(model, u&#39; * p == q)
 optimize!(model)</code></pre><pre><code class="language-julia">value.(u)</code></pre><pre class="documenter-example-output">10-element Array{Float64,1}:
- 0.31246394742585964
- 0.7621174436939815 
- 0.5377403663832117 
- 0.04962273013456136
- 0.5165850039313226 
- 0.8058876148847919 
- 0.08216872070434526
- 0.01903990641957998
- 0.22253647714342503
- 0.218134975236657  </pre><p>The difference here is that the objective in the case of the Second-Order Cone is <span>$||u - u_{0}||_2$</span>, while in the case of a Rotated Second-Order Cone is <span>$||u - u_{0}||_2^2$</span>. However, the value of x is the same for both.</p><h3 id="Exponential-Cone"><a class="docs-heading-anchor" href="#Exponential-Cone">Exponential Cone</a><a id="Exponential-Cone-1"></a><a class="docs-heading-anchor-permalink" href="#Exponential-Cone" title="Permalink"></a></h3><p>An Exponential Cone is a set of the form:</p><p class="math-container">\[K_{exp} = \{ (x,y,z) \in \mathbb{R}^3 : y \exp (x/y) \le z, y &gt; 0 \}\]</p><p>It is represented in JuMP using the MOI set <code>MOI.ExponentialCone</code>.</p><h4 id="Example:-Entropy-Maximization"><a class="docs-heading-anchor" href="#Example:-Entropy-Maximization">Example: Entropy Maximization</a><a id="Example:-Entropy-Maximization-1"></a><a class="docs-heading-anchor-permalink" href="#Example:-Entropy-Maximization" title="Permalink"></a></h4><p>As the name suggests, the entropy maximization problem consists of maximizing the entropy function, <span>$H(x) = -x\log{x}$</span> subject to linear inequality constraints.</p><p class="math-container">\[\begin{aligned}
+ 0.3124639474258596  
+ 0.7621174436939816  
+ 0.5377403663832119  
+ 0.049622730134561914
+ 0.5165850039313219  
+ 0.8058876148847922  
+ 0.08216872070434535 
+ 0.01903990641958075 
+ 0.22253647714342512 
+ 0.21813497523665676 </pre><p>The difference here is that the objective in the case of the Second-Order Cone is <span>$||u - u_{0}||_2$</span>, while in the case of a Rotated Second-Order Cone is <span>$||u - u_{0}||_2^2$</span>. However, the value of x is the same for both.</p><h3 id="Exponential-Cone"><a class="docs-heading-anchor" href="#Exponential-Cone">Exponential Cone</a><a id="Exponential-Cone-1"></a><a class="docs-heading-anchor-permalink" href="#Exponential-Cone" title="Permalink"></a></h3><p>An Exponential Cone is a set of the form:</p><p class="math-container">\[K_{exp} = \{ (x,y,z) \in \mathbb{R}^3 : y \exp (x/y) \le z, y &gt; 0 \}\]</p><p>It is represented in JuMP using the MOI set <code>MOI.ExponentialCone</code>.</p><h4 id="Example:-Entropy-Maximization"><a class="docs-heading-anchor" href="#Example:-Entropy-Maximization">Example: Entropy Maximization</a><a id="Example:-Entropy-Maximization-1"></a><a class="docs-heading-anchor-permalink" href="#Example:-Entropy-Maximization" title="Permalink"></a></h4><p>As the name suggests, the entropy maximization problem consists of maximizing the entropy function, <span>$H(x) = -x\log{x}$</span> subject to linear inequality constraints.</p><p class="math-container">\[\begin{aligned}
 &amp; \max &amp; - \sum_{i=1}^n x_i \log x_i \\
 &amp; \;\;\text{s.t.} &amp; \mathbf{1}&#39; x = 1 \\
 &amp; &amp; Ax \leq b
@@ -120,7 +120,7 @@ set_silent(model)
  -0.6027068905147959 x[1] - 1.5414263839472457 x[2] - 0.5438048486401967 x[3] - 0.049950231303361896 x[4] + 0.6216732554478005 x[5] + 0.7993351658657596 x[6] + 1.2472317827807018 x[7] - 0.5212290552154003 x[8] + 0.7781507199519165 x[9] - 0.4285445284063141 x[10] + 0.1793685083027684 x[11] - 0.6392293964859453 x[12] - 0.1911762654854705 x[13] + 1.4866601505159134 x[14] + 1.743903808158704 x[15] ≤ 0.48183409770986096      
  -1.2796722102183824 x[1] - 0.0801624859452718 x[2] - 1.2267247260093483 x[3] - 1.054777824036921 x[4] + 0.18258799290295424 x[5] - 0.7341613841684609 x[6] - 0.9811315449941083 x[7] + 0.18397640704112656 x[8] + 0.6526940815724932 x[9] + 0.5798498094704334 x[10] + 0.2884648955758331 x[11] - 0.4091890933235183 x[12] + 0.037705782766167484 x[13] - 1.4864602010654682 x[14] - 1.2535513127983748 x[15] ≤ 0.8648762453075061     </pre><p>Cannot use the exponential cone directly in JuMP, hence we use MOI to specify the set.</p><pre><code class="language-julia">@constraint(model, con[i = 1:n], [t[i], x[i], 1] in MOI.ExponentialCone())
 
-optimize!(model)</code></pre><pre><code class="language-julia">objective_value(model)</code></pre><pre class="documenter-example-output">2.7021979620954806</pre><h3 id="Positive-Semidefinite-Cone"><a class="docs-heading-anchor" href="#Positive-Semidefinite-Cone">Positive Semidefinite Cone</a><a id="Positive-Semidefinite-Cone-1"></a><a class="docs-heading-anchor-permalink" href="#Positive-Semidefinite-Cone" title="Permalink"></a></h3><p>The set of positive semidefinite matrices (PSD) of dimension <span>$n$</span> form a cone in <span>$\mathbb{R}^n$</span>. We write this set mathematically as:</p><p class="math-container">\[\mathcal{S}_{+}^n = \{ X \in \mathcal{S}^n \mid z^T X z \geq 0, \: \forall z\in \mathbb{R}^n \}.\]</p><p>A PSD cone is represented in JuMP using the MOI sets <code>PositiveSemidefiniteConeTriangle</code> (for upper triangle of a PSD matrix) and <code>PositiveSemidefiniteConeSquare</code> (for a complete PSD matrix). However, it is preferable to use the <code>PSDCone</code> shortcut as illustrated below.</p><h4 id="Example:-largest-eigenvalue-of-a-symmetric-matrix"><a class="docs-heading-anchor" href="#Example:-largest-eigenvalue-of-a-symmetric-matrix">Example: largest eigenvalue of a symmetric matrix</a><a id="Example:-largest-eigenvalue-of-a-symmetric-matrix-1"></a><a class="docs-heading-anchor-permalink" href="#Example:-largest-eigenvalue-of-a-symmetric-matrix" title="Permalink"></a></h4><p>Suppose <span>$A$</span> has eigenvalues <span>$\lambda_{1} \geq \lambda_{2} \ldots \geq \lambda_{n}$</span>. Then the matrix <span>$t I-A$</span> has eigenvalues <span>$t-\lambda_{1}, t-\lambda_{2}, \ldots, t-\lambda_{n}$</span>. Note that <span>$t I-A$</span> is PSD exactly when all these eigenvalues are non-negative, and this happens for values <span>$t \geq \lambda_{1}$</span>. Thus, we can model the problem of finding the largest eigenvalue of a symmetric matrix as:</p><p class="math-container">\[\begin{aligned}
+optimize!(model)</code></pre><pre><code class="language-julia">objective_value(model)</code></pre><pre class="documenter-example-output">2.702197962095487</pre><h3 id="Positive-Semidefinite-Cone"><a class="docs-heading-anchor" href="#Positive-Semidefinite-Cone">Positive Semidefinite Cone</a><a id="Positive-Semidefinite-Cone-1"></a><a class="docs-heading-anchor-permalink" href="#Positive-Semidefinite-Cone" title="Permalink"></a></h3><p>The set of positive semidefinite matrices (PSD) of dimension <span>$n$</span> form a cone in <span>$\mathbb{R}^n$</span>. We write this set mathematically as:</p><p class="math-container">\[\mathcal{S}_{+}^n = \{ X \in \mathcal{S}^n \mid z^T X z \geq 0, \: \forall z\in \mathbb{R}^n \}.\]</p><p>A PSD cone is represented in JuMP using the MOI sets <code>PositiveSemidefiniteConeTriangle</code> (for upper triangle of a PSD matrix) and <code>PositiveSemidefiniteConeSquare</code> (for a complete PSD matrix). However, it is preferable to use the <code>PSDCone</code> shortcut as illustrated below.</p><h4 id="Example:-largest-eigenvalue-of-a-symmetric-matrix"><a class="docs-heading-anchor" href="#Example:-largest-eigenvalue-of-a-symmetric-matrix">Example: largest eigenvalue of a symmetric matrix</a><a id="Example:-largest-eigenvalue-of-a-symmetric-matrix-1"></a><a class="docs-heading-anchor-permalink" href="#Example:-largest-eigenvalue-of-a-symmetric-matrix" title="Permalink"></a></h4><p>Suppose <span>$A$</span> has eigenvalues <span>$\lambda_{1} \geq \lambda_{2} \ldots \geq \lambda_{n}$</span>. Then the matrix <span>$t I-A$</span> has eigenvalues <span>$t-\lambda_{1}, t-\lambda_{2}, \ldots, t-\lambda_{n}$</span>. Note that <span>$t I-A$</span> is PSD exactly when all these eigenvalues are non-negative, and this happens for values <span>$t \geq \lambda_{1}$</span>. Thus, we can model the problem of finding the largest eigenvalue of a symmetric matrix as:</p><p class="math-container">\[\begin{aligned}
 \lambda_{1} = \max t \\
 \text { s.t. } t I-A \succeq 0
 \end{aligned}\]</p><pre><code class="language-julia">A = [3 2 4; 2 0 2; 4 2 3]
@@ -131,4 +131,4 @@ set_silent(model)
 @objective(model, Min, t)
 @constraint(model, t .* I - A in PSDCone())
 
-optimize!(model)</code></pre><pre><code class="language-julia">objective_value(model)</code></pre><pre class="documenter-example-output">8.000000000000014</pre><h2 id="Other-Cones-and-Functions"><a class="docs-heading-anchor" href="#Other-Cones-and-Functions">Other Cones and Functions</a><a id="Other-Cones-and-Functions-1"></a><a class="docs-heading-anchor-permalink" href="#Other-Cones-and-Functions" title="Permalink"></a></h2><p>For other cones supported by JuMP, check out the <a href="http://jump.dev/MathOptInterface.jl/stable">MathOptInterface Manual</a>.</p><p>A good resource for learning more about functions which can be modelled using cones is the <a href="https://docs.mosek.com/modeling-cookbook/index.html">MOSEK Modeling Cookbook</a>.</p><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Optimization concepts/conic_programming.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../benders_lazy_constraints/">« Benders Decomposition (Lazy Constraints)</a><a class="docs-footer-nextpage" href="../integer_programming/">Integer Programming »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 16 February 2021 00:07">Tuesday 16 February 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+optimize!(model)</code></pre><pre><code class="language-julia">objective_value(model)</code></pre><pre class="documenter-example-output">8.00000000000001</pre><h2 id="Other-Cones-and-Functions"><a class="docs-heading-anchor" href="#Other-Cones-and-Functions">Other Cones and Functions</a><a id="Other-Cones-and-Functions-1"></a><a class="docs-heading-anchor-permalink" href="#Other-Cones-and-Functions" title="Permalink"></a></h2><p>For other cones supported by JuMP, check out the <a href="http://jump.dev/MathOptInterface.jl/stable">MathOptInterface Manual</a>.</p><p>A good resource for learning more about functions which can be modelled using cones is the <a href="https://docs.mosek.com/modeling-cookbook/index.html">MOSEK Modeling Cookbook</a>.</p><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Optimization concepts/conic_programming.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../benders_lazy_constraints/">« Benders Decomposition (Lazy Constraints)</a><a class="docs-footer-nextpage" href="../integer_programming/">Integer Programming »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 16 February 2021 00:51">Tuesday 16 February 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
