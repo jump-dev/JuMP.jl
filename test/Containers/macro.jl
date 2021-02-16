@@ -25,6 +25,10 @@ using Test
             ErrorException,
             Containers.@container([i=[:a, :b], j=1:2], i + j, container = Array)
         )
+        @test_throws(
+            ErrorException,
+            Containers.@container([i=1:2:4, j=1:2], i + j, container = Array)
+        )
     end
     @testset "DenseAxisArray" begin
         Containers.@container(x[i = 2:3], i^2)
