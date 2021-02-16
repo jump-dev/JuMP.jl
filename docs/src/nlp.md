@@ -471,10 +471,10 @@ For some advanced use cases, one may want to directly query the derivatives of a
 JuMP model instead of handing the problem off to a solver.
 Internally, JuMP implements the `AbstractNLPEvaluator` interface from
 [MathOptInterface](https://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#NLP-evaluator-methods-1).
-To obtain an NLP evaluator object from a JuMP model, use `JuMP.NLPEvaluator`.
-`JuMP.index` returns the `MOI.VariableIndex` corresponding to a JuMP variable.
-`MOI.VariableIndex` itself is a type-safe wrapper for `Int64` (stored in the
-`value` field.)
+To obtain an NLP evaluator object from a JuMP model, use [`NLPEvaluator`](@ref).
+[`index`](@ref) returns the `MOI.VariableIndex` corresponding to a JuMP
+variable. `MOI.VariableIndex` itself is a type-safe wrapper for `Int64` (stored
+in the `.value` field.)
 
 For example:
 
@@ -506,12 +506,16 @@ MOI.eval_objective_gradient(d, ∇f, values)
 (-0.4161468365471424, -0.9899924966004454)
 ```
 
-Only nonlinear constraints (those added with `@NLconstraint`), and nonlinear
-objectives (added with `@NLobjective`) exist in the scope of the `NLPEvaluator`.
-The `NLPEvaluator` *does not evaluate derivatives of linear or quadratic
-constraints or objectives*. The `index` method applied to a nonlinear constraint
-reference object returns its index as a `NonlinearConstraintIndex`. The `value`
-field of `NonlinearConstraintIndex` stores the raw integer index. For example:
+Only nonlinear constraints (those added with [`@NLconstraint`](@ref)), and
+nonlinear objectives (added with [`@NLobjective`](@ref)) exist in the scope of
+the [`NLPEvaluator`](@ref).
+
+The [`NLPEvaluator`](@ref) *does not evaluate derivatives of linear or quadratic
+constraints or objectives*.
+
+The [`index`](@ref) method applied to a nonlinear constraint reference object
+returns its index as a [`NonlinearConstraintIndex`](@ref). The `.value` field of
+[`NonlinearConstraintIndex`](@ref) stores the raw integer index. For example:
 
 ```jldoctest
 julia> model = Model();
@@ -545,27 +549,109 @@ This method of querying derivatives directly from a JuMP model is convenient for
 interacting with the model in a structured way, e.g., for accessing derivatives
 of specific variables. For example, in statistical maximum likelihood estimation
 problems, one is often interested in the Hessian matrix at the optimal solution,
-which can be queried using the `NLPEvaluator`.
+which can be queried using the [`NLPEvaluator`](@ref).
 
 ## Raw expression input
 
-In addition to the `@NLobjective` and `@NLconstraint` macros, it is also
-possible to provide Julia `Expr` objects directly by using
-[`set_NL_objective`](@ref) and [`add_NL_constraint`](@ref). This input form may
-be useful if the expressions are generated programmatically. JuMP variables
-should be spliced into the expression object. For example:
+!!! warning
+    This section requires advanced knowledge of Julia's `Expr`. You should read
+    the [Expressions and evaluation](https://docs.julialang.org/en/v1/manual/metaprogramming/#Expressions-and-evaluation) section of the Julia documentation first.
 
-```julia
-@variable(model, 1 <= x[i = 1:4] <= 5)
-set_NL_objective(model, :Min, :($(x[1])*$(x[4])*($(x[1])+$(x[2])+$(x[3])) + $(x[3])))
-add_NL_constraint(model, :($(x[1])*$(x[2])*$(x[3])*$(x[4]) >= 25))
+In addition to the [`@NLobjective`](@ref) and [`@NLconstraint`](@ref) macros, it
+is also possible to provide Julia `Expr` objects directly by using
+[`set_NL_objective`](@ref) and [`add_NL_constraint`](@ref).
 
-# Equivalent form using traditional JuMP macros:
-@NLobjective(model, Min, x[1] * x[4] * (x[1] + x[2] + x[3]) + x[3])
-@NLconstraint(model, x[1] * x[2] * x[3] * x[4] >= 25)
+This input form may be useful if the expressions are generated programmatically.
+
+### Set the objective function
+
+Use [`set_NL_objective`](@ref) to set a nonlinear objective.
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> expr = :($(x) + $(x)^2)
+:(x + x ^ 2)
+
+julia> set_NL_objective(model, MOI.MIN_SENSE, expr)
+```
+This is equivalent to
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> @NLobjective(model, Min, x + x^2)
 ```
 
-See the Julia documentation for more examples and description of Julia
-expressions.
+!!! note
+    You must interpolate the variables directly into the expression `expr`.
+
+!!! note
+    You must use `MOI.MIN_SENSE` or `MOI.MAX_SENSE` instead of `Min` and `Max`.
+
+### Add a constraint
+
+Use [`add_NL_constraint`](@ref) to add a nonlinear constraint.
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> expr = :($(x) + $(x)^2)
+:(x + x ^ 2)
+
+julia> add_NL_constraint(model, :($(expr) <= 1))
+(x + x ^ 2.0) - 1.0 ≤ 0
+```
+
+This is equivalent to
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> @NLconstraint(model, Min, x + x^2 <= 1)
+(x + x ^ 2.0) - 1.0 ≤ 0
+```
+
+### More complicated examples
+
+Raw expression input is most useful when the expressions are generated
+programatically, often in conjunction with user-defined functions.
+
+As an example, we construct a model with the nonlinear constraints `f(x) <= 1`,
+where `f(x) = x^2` and `f(x) = sin(x)^2`:
+```jldoctest
+julia> function main(functions::Vector{Function})
+           model = Model()
+           @variable(model, x)
+           for (i, f) in enumerate(functions)
+               f_sym = Symbol("f_$(i)")
+               register(model, f_sym, 1, f; autodiff = true)
+               add_NL_constraint(model, :($(f_sym)($(x)) <= 1))
+           end
+           print(model)
+           return
+       end
+main (generic function with 1 method)
+
+julia> main([x -> x^2, x -> sin(x)^2])
+Feasibility
+Subject to
+ f_1(x) - 1.0 ≤ 0
+ f_2(x) - 1.0 ≤ 0
+```
+
+As another example, we construct a model with the constraint
+`x^2 + sin(x)^2 <= 1`:
+```jldoctest
+julia> function main(functions::Vector{Function})
+           model = Model()
+           @variable(model, x)
+           expr = Expr(:call, :+)
+           for (i, f) in enumerate(functions)
+               f_sym = Symbol("f_$(i)")
+               register(model, f_sym, 1, f; autodiff = true)
+               push!(expr.args, :($(f_sym)($(x))))
+           end
+           add_NL_constraint(model, :($(expr) <= 1))
+           print(model)
+           return
+       end
+main (generic function with 1 method)
+
+julia> main([x -> x^2, x -> sin(x)^2])
+Feasibility
+Subject to
+ (f_1(x) + f_2(x)) - 1.0 ≤ 0
+```
 
 [^1]: Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", SIAM Review, [PDF](https://mlubin.github.io/pdf/jump-sirev.pdf).
