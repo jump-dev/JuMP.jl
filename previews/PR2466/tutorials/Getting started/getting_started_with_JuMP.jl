@@ -18,13 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Getting Started with JuMP
-
-# **Originally Contributed by**: Arpit Bhatia
+# # Getting started with JuMP
 
 # This tutorial is aimed at providing a quick introduction to writing JuMP code.
-# It assumes familiar with basic optimization and
-# the notion of an [AML](https://en.wikipedia.org/wiki/Algebraic_modeling_language).
+# If you're new to Julia, you should start with [Getting started with Julia](@ref).
 
 # ## What is JuMP?
 
@@ -37,7 +34,7 @@
 # JuMP also makes advanced optimization techniques easily accessible from a
 # high-level language.
 
-# ## Installing JuMP
+# ## Installation
 
 # JuMP is a package for Julia. From Julia, JuMP is installed by using the
 # built-in package manager.
@@ -47,11 +44,20 @@
 # Pkg.add("JuMP")
 # ```
 
-# ## A complete example
+# You also need to include a Julia package which provides an appropriate solver.
+# One such solver is `GLPK.Optimizer`, which is provided by the
+# [GLPK.jl package](https://github.com/JuliaOpt/GLPK.jl).
+# ```julia
+# import Pkg
+# Pkg.add("GLPK")
+# ```
+# See [Installation Guide](@ref) for a list of other solvers you can use.
+
+# ## An example
 
 # Let's try to solve the following linear programming problem by using JuMP and
-# GLPK (a linear and mixed integer programming solver). We will first look at
-# the complete code to solve the problem and then go through it step by step.
+# GLPK. We will first look at the complete code to solve the problem and then go
+# through it step by step.
 
 # ```math
 # \begin{aligned}
@@ -59,33 +65,31 @@
 # & \;\;\text{s.t.} & 6x + 8y \geq 100 \\
 # & & 7x + 12y \geq 120 \\
 # & & x \geq 0 \\
-# & & y \geq 0 \\
+# & & y \in [0, 3] \\
 # \end{aligned}
 # ```
 
 using JuMP
 using GLPK
-
 model = Model(GLPK.Optimizer)
 @variable(model, x >= 0)
-@variable(model, y >= 0)
-@constraint(model, 6x + 8y >= 100)
-@constraint(model, 7x + 12y >= 120)
+@variable(model, 0 <= y <= 3)
 @objective(model, Min, 12x + 20y)
-
+@constraint(model, c1, 6x + 8y >= 100)
+@constraint(model, c2, 7x + 12y >= 120)
+print(model)
 optimize!(model)
+@show termination_status(model)
+@show primal_status(model)
+@show dual_status(model)
+@show objective_value(model)
+@show value(x)
+@show value(y)
+@show shadow_price(c1)
+@show shadow_price(c2)
+nothing #hide
 
-value(x)
-
-#-
-
-value(y)
-
-#-
-
-objective_value(model)
-
-# ## Step-by-step JuMP code
+# ## Step-by-step
 
 # Once JuMP is installed, to use JuMP in your programs, we just need to write:
 
@@ -102,32 +106,65 @@ using GLPK
 # with an optimizer attached with default arguments by calling the constructor
 # with the optimizer type, as follows:
 
-model = Model(GLPK.Optimizer);
+model = Model(GLPK.Optimizer)
 
-# A variable is modelled using [`@variable`](@ref)`. The bound can be a lower
-# bound, an upper bound or both. If no variable type is defined, then it is
-# treated as a continuous variable.
+# Variables are modelled using [`@variable`](@ref):
 
 @variable(model, x >= 0)
-@variable(model, y >= 0);
 
-# A constraint is modelled using [`@constraint`](@ref).
+# They can have lower and upper bounds.
 
-@constraint(model, 6x + 8y >= 100)
+@variable(model, 0 <= y <= 30)
 
-#-
-
-@constraint(model, 7x + 12y >= 120)
-
-# The objective is set in a similar manner using [`@objective`](@ref):
+# The objective is set using [`@objective`](@ref):
 
 @objective(model, Min, 12x + 20y)
 
-# To solve the optimization problem, we call the [`optimize!`] function.
+# Constraints are modelled using [`@constraint`](@ref). Here `c1` and `c2` are
+# the names of our constraint.
+
+@constraint(model, c1, 6x + 8y >= 100)
+
+#-
+
+@constraint(model, c2, 7x + 12y >= 120)
+
+#- Call `print` to display the model:
+
+print(model)
+
+# To solve the optimization problem, call the [`optimize!`] function.
 
 optimize!(model)
 
-# Let's now check the value of objective and variables.
+# !!! info
+#     The `!` after optimize is just part of the name. It's nothing special.
+#     Julia has a convention that functions which mutate their arguments should
+#     end in `!`. A common example is `push!`.
+
+# Now let's see what information we can query about the solution.
+
+# [`termination_status`](@ref) tells us why the solver stopped:
+
+termination_status(model)
+
+# In this case, the solver found an optimal solution. We should also check
+# [`primal_status`](@ref) to see if the solver found a primal feasible point:
+
+primal_status(model)
+
+# and [`dual_status`](@ref) to see if the solver found a dual feasible point:
+
+dual_status(model)
+
+# Now we know that our solver found an optimal solution, and has a primal and a
+# dual solution to query.
+
+# Query the objective value using [`objective_value`](@ref):
+
+objective_value(model)
+
+# The primal solution using [`value`](@ref):
 
 value(x)
 
@@ -135,6 +172,10 @@ value(x)
 
 value(y)
 
+# and the dual solution using [`shadow_price`](@ref):
+
+shadow_price(c1)
+
 #-
 
-objective_value(model)
+shadow_price(c2)
