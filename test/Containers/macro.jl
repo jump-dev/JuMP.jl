@@ -14,6 +14,18 @@ using Test
         Containers.@container(x[i∈1:3], i^2)
         @test x isa Vector{Int}
     end
+    @testset "Forced array" begin
+        set = 1:2
+        x = Containers.@container([i=set, j=1:2], i + j, container = Array)
+        @test x == [2 3; 3 4]
+        set_2 = [1, 2]
+        y = Containers.@container([i=set_2, j=1:2], i + j, container = Array)
+        @test y == [2 3; 3 4]
+        @test_throws(
+            ErrorException,
+            Containers.@container([i=[:a, :b], j=1:2], i + j, container = Array)
+        )
+    end
     @testset "DenseAxisArray" begin
         Containers.@container(x[i = 2:3], i^2)
         @test x isa Containers.DenseAxisArray{Int,1}
