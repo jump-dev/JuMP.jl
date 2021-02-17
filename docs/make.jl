@@ -91,12 +91,12 @@ makedocs(
         "Introduction" => "index.md",
         "installation.md",
         "Manual" => [
+            "manual/models.md",
             "manual/variables.md",
             "manual/expressions.md",
             "manual/objective.md",
             "manual/constraints.md",
             "manual/containers.md",
-            "manual/solvers.md",
             "manual/solutions.md",
             "manual/nlp.md",
             "manual/callbacks.md",
