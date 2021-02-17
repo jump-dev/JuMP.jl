@@ -138,6 +138,8 @@ In the above examples, `x_free` represents an unbounded optimization variable,
     @variable(model, x >= a)  # works
     ```
 
+### Check if a variable bound exists
+
 We can query whether an optimization variable has a lower- or upper-bound via
 the [`has_lower_bound`](@ref) and [`has_upper_bound`](@ref) functions. For
 example:
@@ -148,6 +150,8 @@ false
 julia> has_upper_bound(x_upper)
 true
 ```
+
+### Query a variable bound
 
 If a variable has a lower or upper bound, we can query the value of it via the
 [`lower_bound`](@ref) and [`upper_bound`](@ref) functions. For example:
@@ -160,6 +164,8 @@ julia> upper_bound(x_interval)
 ```
 Querying the value of a bound that does not exist will result in an error.
 
+### Set variable bounds via keyword
+
 Instead of using the `<=` and `>=` syntax, we can also use the `lower_bound` and
 `upper_bound` keyword arguments. For example:
 ```jldoctest; setup=:(model=Model())
@@ -169,6 +175,8 @@ x
 julia> lower_bound(x)
 1.0
 ```
+
+### Set variable bounds bounds via functions
 
 Another option is to use the [`set_lower_bound`](@ref) and
 [`set_upper_bound`](@ref) functions. These can also be used to modify an
@@ -185,6 +193,8 @@ julia> set_lower_bound(x, 2)
 julia> lower_bound(x)
 2.0
 ```
+
+### Delete a variable bound
 
 We can delete variable bounds using [`delete_lower_bound`](@ref) and
 [`delete_upper_bound`](@ref):
@@ -208,6 +218,8 @@ julia> delete_upper_bound(x)
 julia> has_upper_bound(x)
 false
 ```
+
+### Create a fixed variable
 
 In addition to upper and lower bounds, JuMP variables can also be fixed to a
 value using [`fix`](@ref). See also [`is_fixed`](@ref), [`fix_value`](@ref), and
@@ -683,9 +695,10 @@ Dict{Symbol,Array{VariableRef,2}} with 2 entries:
 
 ## Deleting variables
 
-JuMP supports the deletion of optimization variables.  To delete variables, we
-can use the [`delete`](@ref) method. We can also check whether `x` is a valid
-JuMP variable in `model` using the [`is_valid`](@ref) method:
+Variables can be deleted from a model using [`delete`](@ref).
+
+Check if a variable reference is valid using [`is_valid`](@ref).
+
 ```jldoctest variables_delete; setup=:(model=Model())
 julia> @variable(model, x)
 x
