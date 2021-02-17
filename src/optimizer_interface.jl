@@ -19,23 +19,51 @@ function error_if_direct_mode(model::Model, func::Symbol)
 end
 
 # These methods directly map to CachingOptimizer methods.
-# They cannot be called in Direct mode.
+
+"""
+    MOIU.reset_optimizer(model::Model, optimizer::MOI.AbstractOptimizer)
+
+Call `MOIU.reset_optimizer` on the backend of `model`.
+
+Cannot be called in direct mode.
+"""
 function MOIU.reset_optimizer(model::Model, optimizer::MOI.AbstractOptimizer,
-                              bridge_constraints::Bool=true)
+                              ::Bool=true)
     error_if_direct_mode(model, :reset_optimizer)
     MOIU.reset_optimizer(backend(model), optimizer)
 end
 
+"""
+    MOIU.reset_optimizer(model::Model)
+
+Call `MOIU.reset_optimizer` on the backend of `model`.
+
+Cannot be called in direct mode.
+"""
 function MOIU.reset_optimizer(model::Model)
     error_if_direct_mode(model, :reset_optimizer)
     MOIU.reset_optimizer(backend(model))
 end
 
+"""
+    MOIU.drop_optimizer(model::Model)
+
+Call `MOIU.drop_optimizer` on the backend of `model`.
+
+Cannot be called in direct mode.
+"""
 function MOIU.drop_optimizer(model::Model)
     error_if_direct_mode(model, :drop_optimizer)
     MOIU.drop_optimizer(backend(model))
 end
 
+"""
+    MOIU.attach_optimizer(model::Model)
+
+Call `MOIU.attach_optimizer` on the backend of `model`.
+
+Cannot be called in direct mode.
+"""
 function MOIU.attach_optimizer(model::Model)
     error_if_direct_mode(model, :attach_optimizer)
     MOIU.attach_optimizer(backend(model))

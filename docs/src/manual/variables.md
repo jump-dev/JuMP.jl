@@ -613,10 +613,10 @@ julia> x = @variable(model, [i=1:2], base_name="x", lower_bound=i, integer=true)
     When using JuMP in [Direct mode](@ref), it may be required to constrain
     variables on creation instead of constraining free variables as the solver
     may only support variables constrained on creation. In [Automatic and Manual
-    modes](@ref), both ways of adding constraints on variables are equivalent.
-    Indeed, during the copy of the cache to the optimizer, the choice of the
-    constraints on variables that are copied as variables constrained on creation
-    does not depend on how it was added to the cache.
+    modes](@ref Backends), both ways of adding constraints on variables are
+    equivalent. Indeed, during the copy of the cache to the optimizer, the
+    choice of the constraints on variables that are copied as variables
+    constrained on creation does not depend on how it was added to the cache.
 
 All uses of the `@variable` macro documented so far translate to a separate
 call for variable creation and adding of constraints.

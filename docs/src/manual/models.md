@@ -8,43 +8,6 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
 
 # Models
 
-A JuMP model keeps a [MathOptInterface (MOI)](https://github.com/jump-dev/MathOptInterface.jl)
-*backend* of type `MOI.ModelLike` that stores the optimization
-problem and acts as the optimization solver. We call it an MOI *backend* and not
-optimizer as it can also be a wrapper around an optimization file format such as
-MPS that writes the JuMP model in a file. From JuMP, the MOI
-backend can be accessed using the [`backend`](@ref) function.
-
-JuMP can be viewed as a lightweight, user-friendly layer on top of the MOI
-backend, in the sense that:
-
-* JuMP does not maintain any copy of the model outside this MOI backend.
-* JuMP variable (resp. constraint) references are simple structures containing
-  both a reference to the JuMP model and the MOI index of the variable (resp.
-  constraint).
-* JuMP gives the constraints to the MOI backend in the form provided by the user
-  without doing any automatic reformulation.
-* variables additions, constraints additions/modifications and objective
-  modifications are directly applied to the MOI backend thus expecting the
-  backend to support such modifications.
-
-While this allows JuMP to be a thin wrapper on top of the solver API, as
-mentioned in the last point above, this seems rather demanding on the solver.
-Indeed, while some solvers support incremental building of the model and
-modifications before and after solve, other solvers only support the model being
-copied at once before solve. Moreover, it seems to require all solvers to
-implement all possible reformulations independently which seems both very
-ambitious and might generate a lot of duplicated code.
-
-These apparent limitations are addressed at level of MOI in a manner
-that is completely transparent to JuMP. While the MOI API may seem very
-demanding, it allows MOI models to be a succession of lightweight MOI layers
-that fill the gap between JuMP requirements and the solver capabilities. The
-remainder of this section describes how JuMP interacts with the MOI backend.
-
-JuMP models can be created in three different modes: `AUTOMATIC`, `MANUAL` and
-`DIRECT`.
-
 ## Create a model
 
 Create a model by passing an optimizer to [`Model`](@ref):
@@ -76,6 +39,10 @@ julia> set_optimizer(model, GLPK.Optimizer)
     to the Julia object that wraps the solver. For example, `GLPK` is a solver,
     and `GLPK.Optimizer` is an optimizer.
 
+!!! tip
+    Don't know what the fields `Model mode`, `CachingOptimizer state` mean? Read
+    the [Backends](@ref) section.
+
 Use [`optimizer_with_attributes`](@ref) to create an optimizer with some
 attributes initialized:
 ```jldoctest
@@ -106,50 +73,6 @@ Model mode: AUTOMATIC
 CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
 ```
-
-## Direct mode
-
-JuMP models can be created in `MOI.DIRECT` mode using [`direct_model`](@ref):
-```jldoctest direct_mode
-julia> model = direct_model(GLPK.Optimizer())
-A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: DIRECT
-Solver name: GLPK
-```
-
-The benefit of using [`direct_model`](@ref) is that there are no extra layers
-between `model` and the provided optimizer:
-```jldoctest direct_mode
-julia> backend(model)
-A GLPK model
-
-julia> typeof(backend(model))
-GLPK.Optimizer
-```
-
-A downside of direct mode is that there is no bridging layer. Therefore, only
-constraints which are natively supported by the solver are supported. For
-example, `GLPK.jl` does not implement constraints of the form `l <= a' x <= u`.
-```julia direct_mode
-julia> @variable(model, x)
-x
-
-julia> @constraint(model, 1 <= x <= 2)
-ERROR: Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.
-Stacktrace:
- [1] error(::String) at ./error.jl:33
- [2] moi_add_constraint(::GLPK.Optimizer, ::MathOptInterface.ScalarAffineFunction{Float64}, ::MathOptInterface.Interval{Float64}) at /Users/oscar/.julia/dev/JuMP/src/constraints.jl:459
- [3] add_constraint(::Model, ::ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.Interval{Float64}}, ::String) at /Users/oscar/.julia/dev/JuMP/src/constraints.jl:473
- [4] top-level scope at /Users/oscar/.julia/dev/JuMP/src/macros.jl:448
- [5] top-level scope at REPL[43]:1
-```
-
-!!! info
-    If the model was created as `Model(GLPK.Optimizer)`, the constraint
-    `1 <= x <= 2` would be reformulated into two constraints: `x >= 1` and
-    `x <= 2`.
 
 ## Turn off output
 
@@ -236,28 +159,180 @@ CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
 ```
 
-## Automatic and Manual modes
+## Backends
 
-In `AUTOMATIC` and `MANUAL` modes, two MOI layers are automatically applied to
-the optimizer:
+A JuMP [`Model`](@ref) is a thin layer around a *backend* of type [`MOI.ModelLike`](https://jump.dev/MathOptInterface.jl/v0.9/apireference/#Model-Interface)
+that stores the optimization problem and acts as the optimization solver.
 
-* `CachingOptimizer`: maintains a cache of the model so that when the optimizer
-  does not support an incremental change to the model, the optimizer's internal
-  model can be discarded and restored from the cache just before optimization.
-  The `CachingOptimizer` has two different modes: `AUTOMATIC` and `MANUAL`
-  corresponding to the two JuMP modes with the same names.
-* `LazyBridgeOptimizer` (this can be disabled using the `bridge_constraints`
-  keyword argument to [`Model`](@ref) constructor): when a constraint added is
-  not supported by the optimizer, it attempts to transform the constraint into
-  an equivalent form, possibly adding new variables and constraints that are
-  supported by the optimizer. The applied transformations are selected among
-  known recipes which are called bridges. A few default bridges are defined in
-  MOI but new ones can be defined and added to the `LazyBridgeOptimizer` used by
-  JuMP.
+From JuMP, the MOI backend can be accessed using the [`backend`](@ref) function.
+Let's see what the [`backend`](@ref) of a JuMP [`Model`](@ref) is:
+```jldoctest models_backends
+julia> model = Model(GLPK.Optimizer)
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: EMPTY_OPTIMIZER
+Solver name: GLPK
 
-See the [MOI documentation](https://jump.dev/MathOptInterface.jl/v0.9.1/)
-for more details on these two MOI layers.
+julia> b = backend(model)
+MOIU.CachingOptimizer{MOI.AbstractOptimizer,MOIU.UniversalFallback{MOIU.Model{Float64}}}
+in state EMPTY_OPTIMIZER
+in mode AUTOMATIC
+with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
+  fallback for MOIU.Model{Float64}
+with optimizer MOIB.LazyBridgeOptimizer{GLPK.Optimizer}
+  with 0 variable bridges
+  with 0 constraint bridges
+  with 0 objective bridges
+  with inner model A GLPK model
+```
 
-```@meta
-# TODO: how to control the caching optimizer states
+The backend is a `MOIU.CachingOptimizer` in the state `EMPTY_OPTIMIZER` and mode
+`AUTOMATIC`.
+
+### CachingOptimizer
+
+A `MOIU.CachingOptimizer` is an MOI layer that abstracts the difference between
+solvers that support incremental modification (e.g., they support adding
+variables one-by-one), and solvers that require the entire problem in a single
+API call (e.g., they only accept the `A`, `b` and `c` matrices of a linear
+program).
+
+It has two parts:
+
+ 1. A cache, where the model can be built and modified incrementally
+    ```jldoctest models_backends
+    julia> b.model_cache
+    MOIU.UniversalFallback{MOIU.Model{Float64}}
+    fallback for MOIU.Model{Float64}
+    ```
+ 2. An optimizer, which is used to solve the problem
+    ```jldoctest models_backends
+    julia> b.optimizer
+    MOIB.LazyBridgeOptimizer{GLPK.Optimizer}
+    with 0 variable bridges
+    with 0 constraint bridges
+    with 0 objective bridges
+    with inner model A GLPK model
+    ```
+
+!!! info
+    The [LazyBridgeOptimizer](@ref) section explains what a
+    `LazyBridgeOptimizer` is.
+
+The `CachingOptimizer` has logic to decide when to copy the problem from the
+cache to the optimizer, and when it can efficiently update the optimizer
+in-place.
+
+A `CachingOptimizer` may be in one of three possible states:
+
+* `NO_OPTIMIZER`: The CachingOptimizer does not have any optimizer.
+* `EMPTY_OPTIMIZER`: The CachingOptimizer has an empty optimizer, and it is not
+  synchronized with the cached model.
+* `ATTACHED_OPTIMIZER`: The CachingOptimizer has an optimizer, and it is
+  synchronized with the cached model.
+
+A `CachingOptimizer` has two modes of operation:
+
+* `AUTOMATIC`: The `CachingOptimizer` changes its state when necessary. For
+  example, [`optimize!`](@ref) will automatically call `attach_optimizer` (an
+  optimizer must have been previously set). Attempting to add a constraint or
+  perform a modification not supported by the optimizer results in a drop to
+  `EMPTY_OPTIMIZER` mode.
+* `MANUAL`: The user must change the state of the `CachingOptimizer` using
+  [`MOIU.reset_optimizer(::JuMP.Model)`](@ref),
+  [`MOIU.drop_optimizer(::JuMP.Model)`](@ref), and
+  [`MOIU.attach_optimizer(::JuMP.Model)`](@ref). Attempting to perform
+  an operation in the incorrect state results in an error.
+
+By default [`Model`](@ref) will create a `CachingOptimizer` in `AUTOMATIC` mode.
+Use the `caching_mode` keyword to create a model in `MANUAL` mode:
+```jldoctest
+julia> Model(GLPK.Optimizer; caching_mode = MOI.Utilities.MANUAL)
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: MANUAL
+CachingOptimizer state: EMPTY_OPTIMIZER
+Solver name: GLPK
+```
+
+!!! tip
+    Only use `MANUAL` mode if you have a very good reason. If you want to reduce
+    the overhead between JuMP and the underlying solver, consider
+    [Direct mode](@ref) instead.
+
+### LazyBridgeOptimizer
+
+The second layer that JuMP applies automatically is a `LazyBridgeOptimizer`. A
+`LazyBridgeOptimizer` is an MOI layer that attempts to transform constraints
+added by the user into constraints supported by the solver. This may involve
+adding new variables and constraints to the optimizer. The transformations are
+selected from a set of known recipes called _bridges_.
+
+A common example of a bridge is one that splits an interval constrait like
+`@constraint(model, 1 <= x + y <= 2)` into two constraints,
+`@constraint(model, x + y >= 1)` and `@constraint(model, x + y <= 2)`.
+
+Use the `bridge_constraints=false` keyword to remove the bridging layer:
+```jldoctest
+julia> model = Model(GLPK.Optimizer; bridge_constraints = false)
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: EMPTY_OPTIMIZER
+Solver name: GLPK
+
+julia> backend(model)
+MOIU.CachingOptimizer{MOI.AbstractOptimizer,MOIU.UniversalFallback{MOIU.Model{Float64}}}
+in state EMPTY_OPTIMIZER
+in mode AUTOMATIC
+with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
+  fallback for MOIU.Model{Float64}
+with optimizer A GLPK model
+```
+
+!!! tip
+    Only disable bridges if you have a very good reason. If you want to reduce
+    the overhead between JuMP and the underlying solver, consider
+    [Direct mode](@ref) instead.
+
+## Direct mode
+
+Using a `CachingOptimizer` results in an additional copy of the model being
+stored by JuMP in the `.model_cache` field. To avoid this overhead, create a
+JuMP model using [`direct_model`](@ref):
+```jldoctest direct_mode
+julia> model = direct_model(GLPK.Optimizer())
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: DIRECT
+Solver name: GLPK
+```
+
+!!! warning
+    Solvers that do not support incremental modification do not support
+    `direct_model`. An error will be thrown, telling you to use a
+    `CachingOptimizer` instead.
+
+The benefit of using [`direct_model`](@ref) is that there are no extra layers
+(e.g., `Cachingoptimizer` or `LazyBridgeOptimizer`) between `model` and the
+provided optimizer:
+```jldoctest direct_mode
+julia> typeof(backend(model))
+GLPK.Optimizer
+```
+
+A downside of direct mode is that there is no bridging layer. Therefore, only
+constraints which are natively supported by the solver are supported. For
+example, `GLPK.jl` does not implement constraints of the form `l <= a' x <= u`.
+```julia direct_mode
+julia> @variable(model, x[1:2]);
+
+julia> @constraint(model, 1 <= x[1] + x[2] <= 2)
+ERROR: Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.
+[...]
 ```
