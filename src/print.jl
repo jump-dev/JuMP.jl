@@ -46,61 +46,45 @@ A type used for dispatching printing. Produces LaTeX representations.
 """
 abstract type IJuliaMode <: PrintMode end
 
-struct _ModelPrinter{T<:AbstractModel}
+Base.show(io::IO, model::AbstractModel) = _print_summary(io, model)
+
+"""
+    Base.print([io::IO = stdout,] model::AbstractModel)
+
+Print the plain-text formulation of `model` to `io` as a string (or to `stdout`
+if `io` is not given).
+
+See also: [LaTeXify](@ref).
+"""
+Base.print(io::IO, model::AbstractModel) = _print_model(io, model)
+
+"""
+    LaTeXify(model)
+
+Return an object that, when called with `show` or `print`, displays the LaTeX
+formulation of model.
+
+In the REPL, calling
+```julia
+julia> PrettyPrinter(model)
+```
+prints the formulation of `model` as a LaTeX string, which can be copied into a
+`.tex` document.
+
+In IJulia, if `PrettyPrinter(model)` is the last line in a cell, then the
+rendered LaTeX version of the model will be displayed.
+
+In the REPL and IJulia, you can get the formulation as a string by calling
+```julia
+sprint(show, LaTeXify(model))
+```
+"""
+struct LaTeXify{T<:AbstractModel}
     model::T
 end
 
-function Base.show(io::IO, model::AbstractModel)
-    return _print_summary(io, model)
-end
-
-function Base.show(io::IO, ::MIME"text/plain", model::_ModelPrinter)
-    return _print_model(io, model.model)
-end
-
-function Base.show(io::IO, ::MIME"text/latex", model::_ModelPrinter)
-    return _print_latex(io, model.model)
-end
-
-"""
-    Base.print([io::IO = stdout,] model::AbstractModel; [latex::Bool])
-
-Print the formulation of `model` to `io` (which defaults to `stdout` if not
-provided).
-
-In notebooks and documentation, calling `print(model)` will render the LaTeX
-formulation to the screen.
-
-## Examples
-
-Print the formulation of the model to `stdout`, rendering as LaTeX if called
-from a notebook or the documentation, or plain-text if called from the REPL.
-
-    print(model)
-
-Print the plain-text formulation to `io` as a string (or to `stdout` if `io` is
-not given).
-
-    print(io, model; latex = false)
-    print(model; latex = false)
-
-Print the latex formulation to the screen as a string  (or to `stdout` if `io`
-is not given) .
-
-    print(io, model; latex = true)
-    print(model; latex = true)
-"""
-function Base.print(io::IO, model::AbstractModel; latex::Bool = false)
-    return latex ? _print_latex(io, model) : _print_model(io, model)
-end
-
-function Base.print(model::AbstractModel; latex::Union{Nothing,Bool} = nothing)
-    if latex === nothing
-        return _ModelPrinter(model)
-    else
-        return print(stdout, model; latex = latex)
-    end
-end
+Base.show(io::IO, model::LaTeXify) = _print_latex(io, model.model)
+Base.show(io::IO, ::MIME"text/latex", model::LaTeXify) = show(io, model)
 
 # Whether something is zero or not for the purposes of printing it
 # oneunit is useful e.g. if coef is a Unitful quantity.

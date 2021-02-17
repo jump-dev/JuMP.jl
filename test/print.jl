@@ -36,10 +36,14 @@ function _io_test_print(::Type{IJuliaMode}, obj, exp_str)
     @test sprint(show, "text/latex", obj) == string("\$\$ ", exp_str, " \$\$")
 end
 function _io_test_print(::Type{REPLMode}, obj::AbstractModel, exp_str)
-    @test sprint(io -> print(io, obj; latex = false)) == exp_str
+    @test sprint(print, obj) == exp_str
 end
 function _io_test_print(::Type{IJuliaMode}, obj::AbstractModel, exp_str)
-    @test sprint(io -> print(io, obj; latex = true)) == string("\$\$ ", exp_str, " \$\$")
+    @test sprint(show, LaTeXify(obj)) == string("\$\$ ", exp_str, " \$\$")
+    @test sprint(show, MIME("text/latex"), LaTeXify(obj)) ==
+        string("\$\$ ", exp_str, " \$\$")
+    @test sprint(show, MIME("text/plain"), LaTeXify(obj)) ==
+        string("\$\$ ", exp_str, " \$\$")
 end
 
 function io_test(mode, obj, exp_str; repl = :both)
