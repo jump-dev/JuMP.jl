@@ -9,4 +9,8 @@ MOI.CallbackNodeStatusCode
 MOI.CallbackVariablePrimal
 
 MOI.get
+
+MOIU.reset_optimizer(::JuMP.Model)
+MOIU.drop_optimizer(::JuMP.Model)
+MOIU.attach_optimizer(::JuMP.Model)
 ```

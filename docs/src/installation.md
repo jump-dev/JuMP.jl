@@ -118,10 +118,10 @@ Where:
     file.
 
 !!! note
-    Developing a solver or solver wrapper? See [Interacting with solvers](@ref)
-    and the [MathOptInterface docs](https://jump.dev/MathOptInterface.jl/stable/)
-    for more details on how JuMP interacts with solvers. Please get in touch
-    via the [Developer Chatroom](https://jump.dev/pages/governance/#developer-chatroom)
+    Developing a solver or solver wrapper? See [Models](@ref) and the
+    [MathOptInterface docs](https://jump.dev/MathOptInterface.jl/stable/) for
+    more details on how JuMP interacts with solvers. Please get in touch via the
+    [Developer Chatroom](https://jump.dev/pages/governance/#developer-chatroom)
     with any questions about connecting new solvers with JuMP.
 
 ### Solver-specific notes
@@ -264,7 +264,7 @@ if you have interest in reviving a previously supported solver.
 
 ### Check the version of your packages
 
-Each package is versioned with a [three-part number](https://semver.org) of the 
+Each package is versioned with a [three-part number](https://semver.org) of the
 form `vX.Y.Z`. You can check which versions you have installed with
 `import Pkg; Pkg.status()`.
 

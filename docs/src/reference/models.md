@@ -1,6 +1,6 @@
 # Model API
 
-More information can be found in the [Interacting with solvers](@ref) section of
+More information can be found in the [Models](@ref) section of
 the manual.
 
 ```@docs
