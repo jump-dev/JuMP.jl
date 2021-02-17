@@ -89,19 +89,28 @@ makedocs(
     doctest = !_FAST,
     pages = [
         "Introduction" => "index.md",
+        "installation.md",
         "Manual" => [
-            "installation.md",
-            "variables.md",
-            "expressions.md",
-            "objective.md",
-            "constraints.md",
-            "containers.md",
-            "solvers.md",
-            "solutions.md",
-            "nlp.md",
-            "callbacks.md",
-            "Extensions" => "extensions.md",
+            "manual/variables.md",
+            "manual/expressions.md",
+            "manual/objective.md",
+            "manual/constraints.md",
+            "manual/containers.md",
+            "manual/solvers.md",
+            "manual/solutions.md",
+            "manual/nlp.md",
+            "manual/callbacks.md",
         ],
+        "Tutorials" => map(
+            subdir -> subdir => map(
+                file -> joinpath("tutorials", subdir, file),
+                filter(
+                    file -> endswith(file, ".md"),
+                    sort(readdir(joinpath(_TUTORIAL_DIR, subdir))),
+                ),
+            ),
+            ["Getting started", "Optimization concepts"],
+        ),
         "Examples" => vcat(
             _file_list(_EXAMPLE_DIR, "examples", ".md"),
             map(
@@ -113,22 +122,15 @@ makedocs(
                 _EXAMPLE_SUBDIR,
             ),
         ),
-        "Tutorials" => map(
-            subdir -> subdir => map(
-                file -> joinpath("tutorials", subdir, file),
-                filter(
-                    file -> endswith(file, ".md"),
-                    sort(readdir(joinpath(_TUTORIAL_DIR, subdir))),
-                ),
-            ),
-            ["Getting started", "Optimization concepts"],
-        ),
         "API Reference" => map(
             file -> joinpath("reference", file),
             sort(readdir(joinpath(@__DIR__, "src", "reference"))),
         ),
-        "Style Guide" => "style.md",
-        "Development Roadmap" => "roadmap.md",
+        "Developer Docs" => [
+            "Extensions" => "developers/extensions.md",
+            "Style Guide" => "developers/style.md",
+            "Roadmap" => "developers/roadmap.md",
+        ],
     ],
 )
 
