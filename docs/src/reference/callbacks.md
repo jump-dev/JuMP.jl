@@ -1,4 +1,4 @@
-# Callback API
+# [Callbacks](@id CallbackAPI)
 
 More information can be found in the [Callbacks](@ref callbacks_manual) section
 of the manual.

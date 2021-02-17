@@ -1,4 +1,4 @@
-# Variable API
+# [Variables](@id VariableAPI)
 
 More information can be found in the [Variables](@ref) section of the manual.
 

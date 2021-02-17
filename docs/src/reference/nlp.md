@@ -1,4 +1,4 @@
-# Nonlinear API
+# [Nonlinear Modeling](@id NonlinearAPI)
 
 More information can be found in the [Nonlinear Modeling](@ref) section of the
 manual.

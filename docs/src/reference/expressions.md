@@ -1,4 +1,4 @@
-# Expression API
+# [Expressions](@id ExpressionAPI)
 
 More information can be found in the [Expressions](@ref) section of the manual.
 

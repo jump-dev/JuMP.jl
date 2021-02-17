@@ -1,4 +1,4 @@
-# Objective API
+# [Objectives](@id ObjectiveAPI)
 
 More information can be found in the [Objectives](@ref) section of the manual.
 

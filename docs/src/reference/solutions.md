@@ -1,4 +1,4 @@
-# Solution API
+# [Solutions](@id SolutionAPI)
 
 More information can be found in the [Querying Solutions](@ref) section of the
 manual.

@@ -1,4 +1,4 @@
-# Constraint API
+# [Constraints](@id ConstraintAPI)
 
 More information can be found in the [Constraints](@ref) section of the manual.
 
