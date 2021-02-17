@@ -59,6 +59,9 @@ expr
  3 x[3]
 ```
 
+!!! tip
+    You can read more about containers in the [Containers](@ref) section.
+
 ### Operator overloading
 
 Expressions can also be created without macros. However, note that in some

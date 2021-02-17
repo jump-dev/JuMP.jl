@@ -300,6 +300,9 @@ constraints compactly. References to these groups of constraints are returned in
 `DenseAxisArray`s, and `SparseAxisArray`s. We explain each of these in the
 following.
 
+!!! tip
+    You can read more about containers in the [Containers](@ref) section.
+
 ### [Arrays](@id constraint_arrays)
 
 One way of adding a group of constraints compactly is the following:
