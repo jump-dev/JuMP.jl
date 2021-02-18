@@ -122,10 +122,18 @@ makedocs(
                 _EXAMPLE_SUBDIR,
             ),
         ),
-        "API Reference" => map(
-            file -> joinpath("reference", file),
-            sort(readdir(joinpath(@__DIR__, "src", "reference"))),
-        ),
+        "API Reference" => [
+            "reference/models.md",
+            "reference/variables.md",
+            "reference/expressions.md",
+            "reference/objectives.md",
+            "reference/constraints.md",
+            "reference/containers.md",
+            "reference/solutions.md",
+            "reference/nlp.md",
+            "reference/callbacks.md",
+            "reference/moi.md",
+        ],
         "Developer Docs" => [
             "Extensions" => "developers/extensions.md",
             "Style Guide" => "developers/style.md",
