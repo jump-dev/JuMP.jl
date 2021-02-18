@@ -1,95 +1,93 @@
 ```@meta
 CurrentModule = JuMP
 DocTestSetup = quote
-    using JuMP
+    using JuMP, GLPK
 end
+DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Querying Solutions
+# Solutions
 
-So far we have seen all the elements and constructs related to writing a JuMP
-optimization model. In this section we reach the point of what to do with a
-solved problem. Suppose your model is named `model`. Right after the call to
-`optimize!(model)`, it's natural to ask JuMP questions about the finished
-optimization step. Typical questions include:
- - Why has the optimization process stopped? Did it hit the time limit or run
-   into numerical issues?
- - Do I have a solution to my problem?
- - Is it optimal?
- - Do I have a dual solution?
- - How sensitive is the solution to data perturbations?
+This section of the manual describes how to access a solved solution to a
+problem. It uses the following model as an example:
+```jldoctest solutions
+model = Model(GLPK.Optimizer)
+@variable(model, x >= 0)
+@variable(model, y[[:a, :b]] <= 1)
+@objective(model, Max, -12x - 20y[:a])
+@expression(model, my_expr, 6x + 8y[:a])
+@constraint(model, my_expr >= 100)
+@constraint(model, c1, 7x + 12y[:a] >= 120)
+optimize!(model)
+print(model)
 
-JuMP follows closely the concepts defined in [MathOptInterface (MOI)](https://github.com/jump-dev/MathOptInterface.jl)
-to answer user questions about a finished call to `optimize!(model)`. There
-are three main steps in querying a solution:
+# output
 
-First, we can query the [`termination_status`](@ref) which will tell us why the
-optimization stopped. This could be due to a number of reasons. For example, the
-solver found an optimal solution, the problem was proven to be infeasible, or a
-user-provided limit such as a time limit was encountered. For more information,
-see the [Termination statuses](@ref) section below.
-
-Second, we can query the [`primal_status`](@ref) and the [`dual_status`](@ref),
-which will tell us what kind of results we have for our primal and dual
-solutions. This might be an optimal primal-dual pair, a primal solution without
-a corresponding dual solution, or a certificate of primal or dual infeasibility.
-For more information, see the [Solution statuses](@ref) section below.
-
-Third, we can query [`value`](@ref) and [`dual`](@ref) to obtain the
-primal and dual values of the optimization variables and constraints (if there
-are values to be queried).
-
-## Termination statuses
-
-The reason why the optimization of `model` was finished is given by
-```julia
-termination_status(model)
+Max -12 x - 20 y[a]
+Subject to
+ 6 x + 8 y[a] ≥ 100.0
+ c1 : 7 x + 12 y[a] ≥ 120.0
+ x ≥ 0.0
+ y[a] ≤ 1.0
+ y[b] ≤ 1.0
 ```
 
-This function will return a `MOI.TerminationStatusCode` `enum`. Common return
-values include `MOI.OPTIMAL`, `MOI.INFEASIBLE`, `MOI.DUAL_INFEASIBLE`, and
-`MOI.TIME_LIMIT`.
+## Why did the solver stop?
 
-Note that a return status of `MOI.DUAL_INFEASIBLE` does not guarantee that the
-primal is unbounded. When the dual is infeasible, the primal is unbounded if
-there exists a feasible primal solution.
+Use[`termination_status`](@ref) to understand why the solver stopped.
 
-We can receive a solver specific string explaining why the optimization stopped
-with [`raw_status`](@ref).
+```jldoctest solutions
+julia> termination_status(model)
+OPTIMAL::TerminationStatusCode = 1
+```
 
-## Solution statuses
+The [`MOI.TerminationStatusCode`](@ref) enum describes the full list of statuses
+that could be returned.
 
-These statuses indicate what kind of result is available to be queried
-with [`value`](@ref) and [`dual`](@ref). It's possible that no result
-is available to be queried.
-
-We can obtain these statuses by calling [`primal_status`](@ref) for the
-primal status, and [`dual_status`](@ref) for the dual status. Both will
-return a `MOI.ResultStatusCode` `enum`.
-
-Common status situations are described in the
-[MOI docs](https://jump.dev/MathOptInterface.jl/v0.9.1/apimanual/#Common-status-situations-1).
-
-## Obtaining solutions
-
-Provided the primal status is not `MOI.NO_SOLUTION`, the primal solution can
-be obtained by calling [`value`](@ref). For the dual solution, the function
-is [`dual`](@ref). Calling [`has_values`](@ref) for the primal status and
-[`has_duals`](@ref) for the dual solution is an equivalent way to check whether
-the status is `MOI.NO_SOLUTION`.
-
-It is important to note that if [`has_values`](@ref) or [`has_duals`](@ref)
-return false, calls to [`value`](@ref) and [`dual`](@ref) might throw an error
-or return arbitrary values.
-
-The container type (e.g., scalar, vector, or matrix) of the returned solution
-(primal or dual) depends on the type of the variable or constraint. See
-[`AbstractShape`](@ref) and [`dual_shape`](@ref) for details.
+Common return values include `MOI.OPTIMAL`, `MOI.LOCALLY_SOLVED`,
+`MOI.INFEASIBLE`, `MOI.DUAL_INFEASIBLE`, and `MOI.TIME_LIMIT`.
 
 !!! info
-    To call [`value`](@ref) or [`dual`](@ref) on containers of
-    [`VariableRef`](@ref) or [`ConstraintRef`](@ref), use the broadcast syntax,
-    e.g., `value.(x)`.
+    A return status of `MOI.OPTIMAL` means the solver found (and proved) a
+    globally optimal solution. A return status of `MOI.LOCALLY_SOLVED` means the
+    solver found a locally optimal solution (which may also be globally
+    optimal, but it could not prove so).
+
+!!! warning
+    A return status of `MOI.DUAL_INFEASIBLE` does not guarantee that the primal
+    is unbounded. When the dual is infeasible, the primal is unbounded if
+    there exists a feasible primal solution.
+
+Use [`raw_status`](@ref) to get a solver-specific string explaining why the
+optimization stopped:
+```jldoctest solutions
+julia> raw_status(model)
+"Solution is optimal"
+```
+
+## Primal solutions
+
+### Primal solution status
+
+Use [`primal_status`](@ref) to return an [`MOI.ResultStatusCode`](@ref) enum
+describing the status of the primal solution.
+```jldoctest solutions
+julia> primal_status(model)
+FEASIBLE_POINT::ResultStatusCode = 1
+```
+Other common returns are `MOI.NO_SOLUTION`, and `MOI.INFEASIBILITY_CERTIFICATE`.
+The first means that the solver doesn't have a solution to return, and the
+second means that the solution has a certificate of dual infeasbility (a primal
+unbounded ray).
+
+You can also use [`has_values`](@ref), which returns `true` if there is a
+solution that can be queried, and `false` otherwise.
+```jldoctest solutions
+julia> has_values(model)
+true
+```
+
+### Objective values
 
 The objective value of a solved problem can be obtained via
 [`objective_value`](@ref). The best known bound on the optimal objective
@@ -97,31 +95,150 @@ value can be obtained via [`objective_bound`](@ref). If the solver supports it,
 the value of the dual objective can be obtained via
 [`dual_objective_value`](@ref).
 
-The following is a recommended workflow for solving a model and querying the
-solution:
-```julia
-using JuMP
-model = Model()
-@variable(model, x[1:10] >= 0)
-# ... other constraints ...
-optimize!(model)
+```jldoctest solutions
+julia> objective_value(model)
+-205.14285714285714
 
-if termination_status(model) == MOI.OPTIMAL
-    optimal_solution = value.(x)
-    optimal_objective = objective_value(model)
-elseif termination_status(model) == MOI.TIME_LIMIT && has_values(model)
-    suboptimal_solution = value.(x)
-    suboptimal_objective = objective_value(model)
-else
-    error("The model was not solved correctly.")
-end
+julia> objective_bound(model)  # GLPK only implements objective bound for MIPs
+Inf
+
+julia> dual_objective_value(model)
+-205.1428571428571
+```
+
+### Primal solution values
+
+If the solver has a primal solution to return, use [`value`](@ref) to access it:
+```julia solutions
+julia> value(x)
+15.428571428571429
+```
+
+Broadcast [`value]`(@ref) over containers:
+```julia solutions
+julia> value.(y)
+1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{Float64,1}:
+ 1.0
+ 1.0
+```
+
+[`value`](@ref) also works on expressions:
+```jldoctest solutions
+julia> value(my_expr)
+100.57142857142857
+```
+and constraints:
+```jldoctest solutions
+julia> value(c1)
+120.0
+```
+!!! info
+    Calling [`value`](@ref) on a constraint returns the constraint function
+    evaluated at the solution.
+
+## Dual solutions
+
+### Dual solution status
+
+Use [`dual_status`](@ref) to return an [`MOI.ResultStatusCode`](@ref) enum
+describing the status of the dual solution.
+```jldoctest solutions
+julia> dual_status(model)
+FEASIBLE_POINT::ResultStatusCode = 1
+```
+Other common returns are `MOI.NO_SOLUTION`, and `MOI.INFEASIBILITY_CERTIFICATE`.
+The first means that the solver doesn't have a solution to return, and the
+second means that the solution has a certificate of primal infeasbility (a dual
+unbounded ray).
+
+You can also use [`has_duals`](@ref), which returns `true` if there is a
+solution that can be queried, and `false` otherwise.
+```jldoctest solutions
+julia> has_duals(model)
+true
+```
+
+### Dual solution values
+
+If the solver has a dual solution to return, use [`dual`](@ref) to access it:
+```julia solutions
+julia> dual(c1)
+1.7142857142857142
+```
+
+Query the duals of variable bounds using [`LowerBoundRef`](@ref),
+[`UpperBoundRef`](@ref), and [`FixRef`](@ref):
+```julia solutions
+julia> dual(LowerBoundRef(x))
+0.0
+
+julia> dual.(UpperBoundRef.(y))
+1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{Float64,1}:
+ -0.5714285714285694
+  0.0
 ```
 
 !!! warning
-    Querying solution information after modifying a solved model is undefined 
+    JuMP's definition of duality is independent of the objective sense. That is,
+    the sign of feasible duals associated with a constraint depends on the
+    direction of the constraint and not whether the problem is maximization or
+    minimization. **This is a different convention from linear programming
+    duality in some common textbooks.** If you have a linear program, and you
+    want the textbook definition, you probably want to use [`shadow_price`](@ref)
+    and [`reduced_cost`](@ref) instead.
+
+```julia solutions
+julia> shadow_price(c1)
+1.7142857142857142
+
+julia> reduced_cost(x)
+0.0
+
+julia> reduced_cost.(y)
+1-dimensional DenseAxisArray{Float64,1,...} with index sets:
+    Dimension 1, Symbol[:a, :b]
+And data, a 2-element Array{Float64,1}:
+  0.5714285714285694
+ -0.0
+```
+
+## Recommended workflow
+
+The following is a recommended workflow for solving a model and querying the
+solution is something like the following:
+```jldoctest solutions
+if termination_status(model) == MOI.OPTIMAL
+    println("Solution is optimal")
+elseif termination_status(model) == MOI.TIME_LIMIT && has_values(model)
+    println("Solution is suboptimal")
+else
+    error("The model was not solved correctly.")
+end
+println("  objective value = ", objective_value(model))
+if primal_status(model) == MOI.FEASIBLE_POINT
+    println("  primal solution: x = ", value(x))
+end
+if dual_status(model) == MOI.FEASIBLE_POINT
+    println("  dual solution: c1 = ", dual(c1))
+end
+
+# output
+
+Solution is optimal
+  objective value = -205.14285714285714
+  primal solution: x = 15.428571428571429
+  dual solution: c1 = 1.7142857142857142
+```
+
+!!! warning
+    Querying solution information after modifying a solved model is undefined
     behavior, and solvers may throw an error or return incorrect results.
-    Modifications include adding, deleting, or modifying any variable, 
-    objective, or constraint. Instead of modify then query, query the results 
+    Modifications include adding, deleting, or modifying any variable,
+    objective, or constraint. Instead of modify-then-query, query the results
     first, then modify the problem. For example:
     ```julia
     model = Model(GLPK.Optimizer)
@@ -140,35 +257,16 @@ end
 # TODO: How to accurately measure the solve time.
 ```
 
-## Accessing MathOptInterface attributes
+## Accessing attributes
 
 [MathOptInterface](https://jump.dev/MathOptInterface.jl/v0.9.10/) defines a large
-number of model attributes that can be queried. Examples include
-[`MOI.RelativeGap`](https://jump.dev/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.RelativeGap) and
-[`MOI.SimplexIterations`](https://jump.dev/MathOptInterface.jl/v0.9.10/apireference/#MathOptInterface.SimplexIterations).
-
-Some attributes can be directly accessed by getter functions. These include
-- [`objective_bound`](@ref)
+number of model attributes that can be queried. Some attributes can be directly
+accessed by getter functions. These include:
+- [`solve_time`](@ref)
 - [`relative_gap`](@ref)
 - [`simplex_iterations`](@ref)
 - [`barrier_iterations`](@ref)
 - [`node_count`](@ref)
-
-To query these attributes, use:
-```julia
-using JuMP
-model = Model()
-# ...
-optimize!(model)
-
-@show relative_gap(model)
-# or
-@show MOI.get(model, MOI.RelativeGap())
-
-@show simplex_iterations(model)
-# or
-@show MOI.get(model, MOI.SimplexIterations())
-```
 
 ## Sensitivity analysis for LP
 
@@ -183,51 +281,31 @@ solver interface must implement `MOI.ConstraintBasisStatus`.
 To give a simple example, we could analyze the sensitivity of the optimal
 solution to the following (non-degenerate) LP problem:
 
-```julia
-model = Model();
+```jldoctest solutions_sensitivity
+model = Model(GLPK.Optimizer)
 @variable(model, x[1:2])
 set_lower_bound(x[2], -0.5)
 set_upper_bound(x[2], 0.5)
-@constraint(model, c1, x[1] + x[2] <= 1);
-@constraint(model, c2, x[1] - x[2] <= 1);
-@objective(model, Max, x[1]);
-```
+@constraint(model, c1, x[1] + x[2] <= 1)
+@constraint(model, c2, x[1] - x[2] <= 1)
+@objective(model, Max, x[1])
+print(model)
 
-```@meta
-DocTestSetup = quote
-    using JuMP
-    mock = MOIU.MockOptimizer(
-        MOIU.Model{Float64}(), eval_variable_constraint_dual=false
-    )
-    model = direct_model(mock)
-    @variable(model, x[1:2]);
-    set_lower_bound(x[2], -0.5)
-    set_upper_bound(x[2], 0.5)
-    @constraint(model, c1, x[1] + x[2] <= 1);
-    @constraint(model, c2, x[1] - x[2] <= 1);
-    @objective(model, Max, x[1]);
-    optimize!(model);
-    MOI.set(model, MOI.TerminationStatus(), MOI.OPTIMAL);
-    MOI.set(model, MOI.PrimalStatus(), MOI.FEASIBLE_POINT);
-    MOI.set(model, MOI.DualStatus(), MOI.FEASIBLE_POINT);
-    MOI.set(model, MOI.VariablePrimal(), x[1], 1.0);
-    MOI.set(model, MOI.VariablePrimal(), x[2], 0.0);
-    MOI.set(model, MOI.ConstraintBasisStatus(), c1, MOI.NONBASIC);
-    MOI.set(model, MOI.ConstraintBasisStatus(), c2, MOI.NONBASIC);
-    MOI.set(model, MOI.ConstraintBasisStatus(), LowerBoundRef(x[2]), MOI.BASIC);
-    MOI.set(model, MOI.ConstraintBasisStatus(), UpperBoundRef(x[2]), MOI.BASIC);
-    MOI.set(model, MOI.ConstraintDual(), c1, -0.5);
-    MOI.set(model, MOI.ConstraintDual(), c2, -0.5);
-    MOI.set(model, MOI.ConstraintDual(), LowerBoundRef(x[2]), 0.0);
-    MOI.set(model, MOI.ConstraintDual(), UpperBoundRef(x[2]), 0.0);
-end
+# output
+
+Max x[1]
+Subject to
+ c1 : x[1] + x[2] ≤ 1.0
+ c2 : x[1] - x[2] ≤ 1.0
+ x[2] ≥ -0.5
+ x[2] ≤ 0.5
 ```
 
 To analyze the sensitivity of the problem we could check the allowed
 perturbation ranges of, e.g., the cost coefficients and the right-hand side
 coefficient of the constraint `c1` as follows:
 
-```jldoctest
+```jldoctest solutions_sensitivity
 julia> optimize!(model)
 
 julia> value.(x)
@@ -324,11 +402,11 @@ Functions for querying the solutions, e.g., [`primal_status`](@ref) and
 used to specify which result to return.
 
 !!! warning
-    Even if [`termination_status`](@ref) is `MOI.OPTIMAL`, some of the returned 
+    Even if [`termination_status`](@ref) is `MOI.OPTIMAL`, some of the returned
     solutions may be suboptimal! However, if the solver found at least one
     optimal solution, then `result = 1` will always return an optimal solution.
-    Use [`objective_value`](@ref) to assess the quality of the remaining 
-    solutions. 
+    Use [`objective_value`](@ref) to assess the quality of the remaining
+    solutions.
 
 ```julia
 using JuMP
