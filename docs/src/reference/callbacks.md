@@ -3,8 +3,23 @@
 More information can be found in the [Callbacks](@ref callbacks_manual) section
 of the manual.
 
+## Macros
+
 ```@docs
 @build_constraint
-callback_node_status
+```
+
+## Callback variable primal
+
+```@docs
 callback_value
+MOI.CallbackVariablePrimal
+```
+
+## Callback node status
+
+```@docs
+callback_node_status
+MOI.CallbackNodeStatus
+MOI.CallbackNodeStatusCode
 ```
