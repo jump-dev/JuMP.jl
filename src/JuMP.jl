@@ -8,6 +8,13 @@
 # See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
+"""
+    JuMP
+
+An algebraic modeling language for Julia.
+
+For more information, go to https://jump.dev.
+"""
 module JuMP
 
 using LinearAlgebra
@@ -17,8 +24,26 @@ import MutableArithmetics
 const _MA = MutableArithmetics
 
 import MathOptInterface
+
+"""
+    MOI
+
+Shorthand for the MathOptInterface package.
+"""
 const MOI = MathOptInterface
+
+"""
+    MOIU
+
+Shorthand for the MathOptInterface.Utilities package.
+"""
 const MOIU = MOI.Utilities
+
+"""
+    MOIB
+
+Shorthand for the MathOptInterface.Bridges package.
+"""
 const MOIB = MOI.Bridges
 
 import Calculus
@@ -143,13 +168,25 @@ include("shapes.jl")
 
 # Model
 
-# Model has three modes:
-# 1) AUTOMATIC: moi_backend field holds a CachingOptimizer in AUTOMATIC mode.
-# 2) MANUAL: moi_backend field holds a CachingOptimizer in MANUAL mode.
-# 3) DIRECT: moi_backend field holds an AbstractOptimizer. No extra copy of the model is stored. The moi_backend must support add_constraint etc.
-# Methods to interact with the CachingOptimizer are defined in solverinterface.jl.
-@enum ModelMode AUTOMATIC MANUAL DIRECT
+"""
+    ModelMode
 
+An enum to describe the state of the CachingOptimizer inside a JuMP model.
+"""
+@enum(ModelMode, AUTOMATIC, MANUAL, DIRECT)
+@doc("`moi_backend` field holds a CachingOptimizer in AUTOMATIC mode.", AUTOMATIC)
+@doc("`moi_backend` field holds a CachingOptimizer in MANUAL mode.", MANUAL)
+@doc(
+    "`moi_backend` field holds an AbstractOptimizer. No extra copy of the " *
+    "model is stored. The `moi_backend` must support `add_constraint` etc.",
+    DIRECT,
+)
+
+"""
+    AbstractModel
+
+An abstract type that should be subtyped for users creating JuMP extensions.
+"""
 abstract type AbstractModel end
 # All `AbstractModel`s must define methods for these functions:
 # num_variables, object_dictionary
@@ -593,6 +630,33 @@ function dual_status(model::Model; result::Int = 1)
     return MOI.get(model, MOI.DualStatus(result))::MOI.ResultStatusCode
 end
 
+"""
+    set_optimize_hook(model::Model, f::Union{Function,Nothing})
+
+Set the function `f` as the optimize hook for `model`.
+
+`f` should have a signature `f(model::Model; kwargs...)`, where the `kwargs` are
+those passed to [`optimize!`](@ref).
+
+## Notes
+
+ * The optimize hook should generally modify the model, or some external state
+   in some way, and then call `optimize!(model; ignore_optimize_hook = true)` to
+   optimize the problem, bypassing the hook.
+ * Use `set_optimize_hook(model, nothing)` to unset an optimize hook.
+
+## Examples
+
+```julia
+model = Model()
+function my_hook(model::Model; kwargs...)
+    print(kwargs)
+    return optimize!(model; ignore_optimize_hook = true)
+end
+set_optimize_hook(model, my_hook)
+optimize!(model; test_arg = true)
+```
+"""
 set_optimize_hook(model::Model, f) = (model.optimize_hook = f)
 
 """
