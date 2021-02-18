@@ -277,13 +277,18 @@ end
 """
     direct_model(backend::MOI.ModelLike)
 
-Return a new JuMP model using `backend` to store the model and solve it. As
-opposed to the [`Model`](@ref) constructor, no cache of the model is stored
-outside of `backend` and no bridges are automatically applied to `backend`.
-The absence of cache reduces the memory footprint but it is important to bear
+Return a new JuMP model using [`backend`](@ref) to store the model and solve it. 
+
+As opposed to the [`Model`](@ref) constructor, no cache of the model is stored
+outside of [`backend`](@ref) and no bridges are automatically applied to 
+[`backend`](@ref).
+
+## Notes
+
+The absence of a cache reduces the memory footprint but, it is important to bear
 in mind the following implications of creating models using this *direct* mode:
 
-* When `backend` does not support an operation, such as modifying
+* When [`backend`](@ref) does not support an operation, such as modifying
   constraints or adding variables/constraints after solving, an error is
   thrown. For models created using the [`Model`](@ref) constructor, such
   situations can be dealt with by storing the modifications in a cache and
@@ -315,7 +320,7 @@ model depends on which operating mode JuMP is in (see [`mode`](@ref)), and
 whether there are any bridges in the model.
 
 If JuMP is in `DIRECT` mode (i.e., the model was created using
-[`direct_model`](@ref)), the backend with be the optimizer passed to
+[`direct_model`](@ref)), the backend will be the optimizer passed to
 [`direct_model`](@ref).
 
 If JuMP is in `MANUAL` or `AUTOMATIC` mode, the backend is a
