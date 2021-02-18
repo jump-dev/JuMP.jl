@@ -19,6 +19,12 @@ end
 # parent is the index of the parent expression
 # values is the name of the list of constants which appear in the expression
 function _parse_NL_expr(m, x, tapevar, parent, values)
+    if isexpr(x, :block)
+        error(
+            "`begin...end` blocks are not supported in nonlinear macros. The " *
+            "nonlinear expression must be a single statement."
+        )
+    end
     if isexpr(x,:call) && length(x.args) >= 2 && (isexpr(x.args[2],:generator) || isexpr(x.args[2],:flatten))
         header = x.args[1]
         if _is_sum(header)

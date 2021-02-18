@@ -193,6 +193,16 @@ end
         @test_macro_throws ErrorException @NLexpression(model, (*)((x / 2)...))
     end
 
+    @testset "Error on begin...end" begin
+        model = Model()
+        @variable(model, x)
+        err = ErrorException(
+            "`begin...end` blocks are not supported in nonlinear macros. The " *
+            "nonlinear expression must be a single statement."
+        )
+        @test_macro_throws(err, @NLexpression(model, begin sin(x) + 1 end))
+    end
+
     @testset "Error on unexpected splatting" begin
         model = Model()
         @variable(model, x[1:2])
