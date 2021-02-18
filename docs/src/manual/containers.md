@@ -40,8 +40,8 @@ natively supported by JuMP: `Array`,
 
 ## Array
 
-An `Array` is created when the index sets are rectangular and the sets are or
-the form `1:n`.
+An `Array` is created when the index sets are rectangular and the index sets are
+of the form `1:n`.
 ```jldoctest containers_array
 julia> Containers.@container(x[i = 1:2, j = 1:3], (i, j))
 2×3 Array{Tuple{Int64,Int64},2}:
@@ -105,7 +105,7 @@ julia> swap.(x)
 ## DenseAxisArray
 
 A [`Containers.DenseAxisArray`](@ref) is created when the index sets are
-rectangular. The index sets can be of any type.
+rectangular, but not of the form `1:n`. The index sets can be of any type.
 
 ```jldoctest containers_dense
 julia> x = Containers.@container([i = 1:2, j = [:A, :B]], (i, j))
@@ -172,6 +172,7 @@ And data, a 2×2 Array{Tuple{Symbol,Int64},2}:
  (:A, 1)  (:B, 1)
  (:A, 2)  (:B, 2)
 ```
+
 ## SparseAxisArray
 
 A [`Containers.SparseAxisArray`](@ref) is created when the index sets are
@@ -193,9 +194,8 @@ JuMP.Containers.SparseAxisArray{Tuple{Int64,Symbol},2,Tuple{Int64,Symbol}} with 
   [2, B]  =  (2, :B)
   [3, B]  =  (3, :B)
 ```
-Here we have the index sets`i = 1:3, j = [:A, :B]`, followed by `;`, and then
-a condition, which evaluates to `true` or `false`: `i > 1 && j == :B`.
-
+Here we have the index sets `i = 1:3, j = [:A, :B]`, followed by `;`, and then a
+condition, which evaluates to `true` or `false`: `i > 1 && j == :B`.
 
 ### Slicing
 

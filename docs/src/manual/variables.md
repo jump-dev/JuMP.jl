@@ -277,6 +277,7 @@ and `SparseAxisArray`s. We explain each of these in the following.
 
 !!! tip
     You can read more about containers in the [Containers](@ref) section.
+
 ### Arrays
 
 We have already seen the creation of an array of JuMP variables with the
