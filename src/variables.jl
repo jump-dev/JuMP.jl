@@ -169,7 +169,7 @@ Base.broadcastable(v::VariableRef) = Ref(v)
 
 Return `1.0` if `v1 == v2`, and `0.0` otherwise.
 
-This is a fallback for other [`coefficient`](@ref) methods to simplify code in 
+This is a fallback for other [`coefficient`](@ref) methods to simplify code in
 which the expression may be a single variable.
 """
 coefficient(v1::VariableRef, v2::VariableRef) = (v1 == v2 ? 1.0 : 0.0)
@@ -360,7 +360,10 @@ end
     has_lower_bound(v::VariableRef)
 
 Return `true` if `v` has a lower bound. If `true`, the lower bound can be
-queried with [`lower_bound`](@ref). See also [`LowerBoundRef`](@ref).
+queried with [`lower_bound`](@ref).
+
+See also [`LowerBoundRef`](@ref), [`lower_bound`](@ref),
+[`set_lower_bound`](@ref), [`delete_lower_bound`](@ref).
 """
 function has_lower_bound(v::VariableRef)
     return _moi_has_lower_bound(backend(owner_model(v)), v)
@@ -376,13 +379,14 @@ function _lower_bound_index(v::VariableRef)
     return _MOICON{MOI.SingleVariable, MOI.GreaterThan{Float64}}(index(v).value)
 end
 
-
-
 """
     set_lower_bound(v::VariableRef, lower::Number)
 
 Set the lower bound of a variable. If one does not exist, create a new lower
-bound constraint. See also [`delete_lower_bound`](@ref).
+bound constraint.
+
+See also [`LowerBoundRef`](@ref), [`has_lower_bound`](@ref),
+[`lower_bound`](@ref), [`delete_lower_bound`](@ref).
 """
 function set_lower_bound(v::VariableRef, lower::Number)
     return _moi_set_lower_bound(backend(owner_model(v)), v, lower)
@@ -405,6 +409,9 @@ end
 
 Return a constraint reference to the lower bound constraint of `v`. Errors if
 one does not exist.
+
+See also [`has_lower_bound`](@ref), [`lower_bound`](@ref),
+[`set_lower_bound`](@ref), [`delete_lower_bound`](@ref).
 """
 function LowerBoundRef(v::VariableRef)
     moi_lb = _MOICON{MOI.SingleVariable, MOI.GreaterThan{Float64}}
@@ -417,6 +424,9 @@ end
     delete_lower_bound(v::VariableRef)
 
 Delete the lower bound constraint of a variable.
+
+See also [`LowerBoundRef`](@ref), [`has_lower_bound`](@ref),
+[`lower_bound`](@ref), [`set_lower_bound`](@ref).
 """
 function delete_lower_bound(variable_ref::VariableRef)
     JuMP.delete(owner_model(variable_ref), LowerBoundRef(variable_ref))
@@ -426,8 +436,10 @@ end
 """
     lower_bound(v::VariableRef)
 
-Return the lower bound of a variable. Error if one does not exist. See also
-[`has_lower_bound`](@ref).
+Return the lower bound of a variable. Error if one does not exist.
+
+See also [`LowerBoundRef`](@ref), [`has_lower_bound`](@ref),
+[`set_lower_bound`](@ref), [`delete_lower_bound`](@ref).
 """
 function lower_bound(v::VariableRef)
     if !has_lower_bound(v)
@@ -444,7 +456,10 @@ end
     has_upper_bound(v::VariableRef)
 
 Return `true` if `v` has a upper bound. If `true`, the upper bound can be
-queried with [`upper_bound`](@ref). See also [`UpperBoundRef`](@ref).
+queried with [`upper_bound`](@ref).
+
+See also [`UpperBoundRef`](@ref), [`upper_bound`](@ref),
+[`set_upper_bound`](@ref), [`delete_upper_bound`](@ref).
 """
 function has_upper_bound(v::VariableRef)
     return _moi_has_upper_bound(backend(owner_model(v)), v)
@@ -462,7 +477,10 @@ end
     set_upper_bound(v::VariableRef,upper::Number)
 
 Set the upper bound of a variable. If one does not exist, create an upper bound
-constraint. See also [`delete_upper_bound`](@ref).
+constraint.
+
+See also [`UpperBoundRef`](@ref), [`has_upper_bound`](@ref),
+[`upper_bound`](@ref), [`delete_upper_bound`](@ref).
 """
 function set_upper_bound(v::VariableRef, upper::Number)
     return _moi_set_upper_bound(backend(owner_model(v)), v, upper)
@@ -485,6 +503,9 @@ end
 
 Return a constraint reference to the upper bound constraint of `v`. Errors if
 one does not exist.
+
+See also [`has_upper_bound`](@ref), [`upper_bound`](@ref),
+[`set_upper_bound`](@ref), [`delete_upper_bound`](@ref).
 """
 function UpperBoundRef(v::VariableRef)
     moi_ub = _MOICON{MOI.SingleVariable, MOI.LessThan{Float64}}
@@ -497,6 +518,9 @@ end
     delete_upper_bound(v::VariableRef)
 
 Delete the upper bound constraint of a variable.
+
+See also [`UpperBoundRef`](@ref), [`has_upper_bound`](@ref),
+[`upper_bound`](@ref), [`set_upper_bound`](@ref).
 """
 function delete_upper_bound(variable_ref::VariableRef)
     JuMP.delete(owner_model(variable_ref), UpperBoundRef(variable_ref))
@@ -506,8 +530,10 @@ end
 """
     upper_bound(v::VariableRef)
 
-Return the upper bound of a variable. Error if one does not exist. See also
-[`has_upper_bound`](@ref).
+Return the upper bound of a variable. Error if one does not exist.
+
+See also [`UpperBoundRef`](@ref), [`has_upper_bound`](@ref),
+[`set_upper_bound`](@ref), [`delete_upper_bound`](@ref).
 """
 function upper_bound(v::VariableRef)
     if !has_upper_bound(v)
@@ -524,7 +550,9 @@ end
     is_fixed(v::VariableRef)
 
 Return `true` if `v` is a fixed variable. If `true`, the fixed value can be
-queried with [`fix_value`](@ref). See also [`FixRef`](@ref).
+queried with [`fix_value`](@ref).
+
+See also [`FixRef`](@ref), [`fix_value`](@ref), [`fix`](@ref), [`unfix`](@ref).
 """
 function is_fixed(v::VariableRef)
     return _moi_is_fixed(backend(owner_model(v)), v)
@@ -542,12 +570,15 @@ end
     fix(v::VariableRef, value::Number; force::Bool = false)
 
 Fix a variable to a value. Update the fixing constraint if one exists, otherwise
-create a new one. See also [`unfix`](@ref).
+create a new one.
 
 If the variable already has variable bounds and `force=false`, calling `fix`
 will throw an error. If `force=true`, existing variable bounds will be deleted,
 and the fixing constraint will be added. Note a variable will have no bounds
 after a call to [`unfix`](@ref).
+
+See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix_value`](@ref),
+[`unfix`](@ref).
 """
 function fix(variable::VariableRef, value::Number; force::Bool = false)
     return _moi_fix(backend(owner_model(variable)), variable, value, force)
@@ -584,6 +615,9 @@ end
     unfix(v::VariableRef)
 
 Delete the fixing constraint of a variable.
+
+See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix_value`](@ref),
+[`fix`](@ref).
 """
 function unfix(variable_ref::VariableRef)
     JuMP.delete(owner_model(variable_ref), FixRef(variable_ref))
@@ -593,8 +627,9 @@ end
 """
     fix_value(v::VariableRef)
 
-Return the value to which a variable is fixed. Error if one does not exist. See
-also [`is_fixed`](@ref).
+Return the value to which a variable is fixed. Error if one does not exist.
+
+See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix`](@ref), [`unfix`](@ref).
 """
 function fix_value(v::VariableRef)
     cset = MOI.get(owner_model(v), MOI.ConstraintSet(),
@@ -607,6 +642,9 @@ end
 
 Return a constraint reference to the constraint fixing the value of `v`. Errors
 if one does not exist.
+
+See also [`is_fixed`](@ref), [`fix_value`](@ref), [`fix`](@ref),
+[`unfix`](@ref).
 """
 function FixRef(v::VariableRef)
     moi_fix = _MOICON{MOI.SingleVariable, MOI.EqualTo{Float64}}
@@ -618,8 +656,9 @@ end
 """
     is_integer(v::VariableRef)
 
-Return `true` if `v` is constrained to be integer. See also
-[`IntegerRef`](@ref).
+Return `true` if `v` is constrained to be integer.
+
+See also [`IntegerRef`](@ref), [`set_integer`](@ref), [`unset_integer`](@ref).
 """
 function is_integer(v::VariableRef)
     return _moi_is_integer(backend(owner_model(v)), v)
@@ -636,8 +675,9 @@ end
 """
     set_integer(variable_ref::VariableRef)
 
-Add an integrality constraint on the variable `variable_ref`. See also
-[`unset_integer`](@ref).
+Add an integrality constraint on the variable `variable_ref`.
+
+See also [`IntegerRef`](@ref), [`is_integer`](@ref), [`unset_integer`](@ref).
 """
 function set_integer(variable_ref::VariableRef)
     return _moi_set_integer(backend(owner_model(variable_ref)), variable_ref)
@@ -659,6 +699,8 @@ end
     unset_integer(variable_ref::VariableRef)
 
 Remove the integrality constraint on the variable `variable_ref`.
+
+See also [`IntegerRef`](@ref), [`is_integer`](@ref), [`set_integer`](@ref).
 """
 function unset_integer(variable_ref::VariableRef)
     JuMP.delete(owner_model(variable_ref), IntegerRef(variable_ref))
@@ -670,6 +712,8 @@ end
 
 Return a constraint reference to the constraint constrainting `v` to be integer.
 Errors if one does not exist.
+
+See also [`is_integer`](@ref), [`set_integer`](@ref), [`unset_integer`](@ref).
 """
 function IntegerRef(v::VariableRef)
     moi_int = _MOICON{MOI.SingleVariable, MOI.Integer}
@@ -680,7 +724,9 @@ end
 """
     is_binary(v::VariableRef)
 
-Return `true` if `v` is constrained to be binary. See also [`BinaryRef`](@ref).
+Return `true` if `v` is constrained to be binary.
+
+See also [`BinaryRef`](@ref), [`set_binary`](@ref), [`unset_binary`](@ref).
 """
 function is_binary(v::VariableRef)
     return _moi_is_binary(backend(owner_model(v)), v)
@@ -698,7 +744,9 @@ end
     set_binary(v::VariableRef)
 
 Add a constraint on the variable `v` that it must take values in the set
-``\\{0,1\\}``. See also [`unset_binary`](@ref).
+``\\{0,1\\}``.
+
+See also [`BinaryRef`](@ref), [`is_binary`](@ref), [`unset_binary`](@ref).
 """
 function set_binary(variable_ref::VariableRef)
     return _moi_set_binary(backend(owner_model(variable_ref)), variable_ref)
@@ -720,6 +768,8 @@ end
     unset_binary(variable_ref::VariableRef)
 
 Remove the binary constraint on the variable `variable_ref`.
+
+See also [`BinaryRef`](@ref), [`is_binary`](@ref), [`set_binary`](@ref).
 """
 function unset_binary(variable_ref::VariableRef)
     JuMP.delete(owner_model(variable_ref), BinaryRef(variable_ref))
@@ -731,6 +781,8 @@ end
 
 Return a constraint reference to the constraint constrainting `v` to be binary.
 Errors if one does not exist.
+
+See also [`is_binary`](@ref), [`set_binary`](@ref), [`unset_binary`](@ref).
 """
 function BinaryRef(v::VariableRef)
     moi_bin = _MOICON{MOI.SingleVariable, MOI.ZeroOne}
@@ -742,9 +794,11 @@ end
     start_value(v::VariableRef)
 
 Return the start value (MOI attribute `VariablePrimalStart`) of the variable
-`v`. See also [`set_start_value`](@ref).
+`v`.
 
 Note: `VariablePrimalStart`s are sometimes called "MIP-starts" or "warmstarts".
+
+See also [`set_start_value`](@ref).
 """
 function start_value(v::VariableRef)::Union{Nothing, Float64}
     return MOI.get(owner_model(v), MOI.VariablePrimalStart(), v)
@@ -755,9 +809,11 @@ end
     set_start_value(variable::VariableRef, value::Number)
 
 Set the start value (MOI attribute `VariablePrimalStart`) of the variable `v` to
-`value`. See also [`start_value`](@ref).
+`value`.
 
 Note: `VariablePrimalStart`s are sometimes called "MIP-starts" or "warmstarts".
+
+See also [`start_value`](@ref).
 """
 function set_start_value(variable::VariableRef, value::Number)
     MOI.set(owner_model(variable), MOI.VariablePrimalStart(), variable,

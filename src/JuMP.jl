@@ -311,12 +311,15 @@ Base.broadcastable(model::Model) = Ref(model)
     backend(model::Model)
 
 Return the lower-level MathOptInterface model that sits underneath JuMP. This
-model depends on which operating mode JuMP is in (manual, automatic, or direct),
-and whether there are any bridges in the model.
+model depends on which operating mode JuMP is in (see [`mode`](@ref)), and
+whether there are any bridges in the model.
 
-If JuMP is in direct mode (i.e., the model was created using [`direct_model`](@ref)),
-the backend with be the optimizer passed to `direct_model`. If JuMP is in manual
-or automatic mode, the backend is a `MOI.Utilities.CachingOptimizer`.
+If JuMP is in `DIRECT` mode (i.e., the model was created using
+[`direct_model`](@ref)), the backend with be the optimizer passed to
+[`direct_model`](@ref).
+
+If JuMP is in `MANUAL` or `AUTOMATIC` mode, the backend is a
+`MOI.Utilities.CachingOptimizer`.
 
 This function should only be used by advanced users looking to access low-level
 MathOptInterface or solver-specific functionality.
@@ -335,7 +338,7 @@ end
 """
     mode(model::Model)
 
-Return mode (DIRECT, AUTOMATIC, MANUAL) of model.
+Return the `ModelMode` (`DIRECT`, `AUTOMATIC`, or `MANUAL`) of `model`.
 """
 function mode(model::Model)
     # The type of `backend(model)` is not type-stable, so we use a function
@@ -366,10 +369,12 @@ end
     solver_name(model::Model)
 
 If available, returns the `SolverName` property of the underlying optimizer.
+
 Returns `"No optimizer attached"` in `AUTOMATIC` or `MANUAL` modes when no
-optimizer is attached. Returns
-"SolverName() attribute not implemented by the optimizer." if the attribute is
-not implemented.
+optimizer is attached.
+
+Returns `"SolverName() attribute not implemented by the optimizer."` if the
+attribute is not implemented.
 """
 function solver_name(model::Model)
     if mode(model) != DIRECT &&
@@ -455,7 +460,7 @@ graph, so many nodes may be un-used.
 
 For more information, see Legat, B., Dowson, O., Garcia, J., and Lubin, M.
 (2020).  "MathOptInterface: a data structure for mathematical optimization
-problems." URL: https://arxiv.org/abs/2002.03447
+problems." URL: [https://arxiv.org/abs/2002.03447](https://arxiv.org/abs/2002.03447)
 """
 print_bridge_graph(model::Model) = print_bridge_graph(Base.stdout, model)
 
@@ -483,7 +488,7 @@ function _moi_print_bridge_graph(::IO, ::MOI.ModelLike)
 end
 
 """
-    empty!(model::Model) -> model
+    empty!(model::Model)::Model
 
 Empty the model, that is, remove all variables, constraints and model
 attributes but not optimizer attributes. Always return the argument.
@@ -551,6 +556,8 @@ delete(model, model[key])
 unregister(model, key)
 ```
 
+See also: [`object_dictionary`](@ref).
+
 ## Examples
 
 ```jldoctest; setup=:(model = Model())
@@ -578,6 +585,7 @@ x
 
 julia> num_variables(model)
 2
+```
 """
 function unregister(model::AbstractModel, key::Symbol)
     delete!(object_dictionary(model), key)
@@ -787,8 +795,10 @@ end
 """
     set_silent(model::Model)
 
-Takes precedence over any other attribute controlling verbosity
-and requires the solver to produce no output.
+Takes precedence over any other attribute controlling verbosity and requires the
+solver to produce no output.
+
+See also: [`unset_silent`](@ref).
 """
 function set_silent(model::Model)
     return MOI.set(model, MOI.Silent(), true)
@@ -797,8 +807,10 @@ end
 """
     unset_silent(model::Model)
 
-Neutralize the effect of the `set_silent` function and let the solver
-attributes control the verbosity.
+Neutralize the effect of the `set_silent` function and let the solver attributes
+control the verbosity.
+
+See also: [`set_silent`](@ref).
 """
 function unset_silent(model::Model)
     return MOI.set(model, MOI.Silent(), false)
@@ -807,8 +819,12 @@ end
 """
     set_time_limit_sec(model::Model, limit)
 
-Sets the time limit (in seconds) of the solver.
-Can be unset using `unset_time_limit_sec` or with `limit` set to `nothing`.
+Set the time limit (in seconds) of the solver.
+
+Can be unset using [`unset_time_limit_sec`](@ref) or with `limit` set to
+`nothing`.
+
+See also: [`unset_time_limit_sec`](@ref), [`time_limit_sec`](@ref).
 """
 function set_time_limit_sec(model::Model, limit)
     return MOI.set(model, MOI.TimeLimitSec(), limit)
@@ -817,7 +833,9 @@ end
 """
     unset_time_limit_sec(model::Model)
 
-Unsets the time limit of the solver. Can be set using `set_time_limit_sec`.
+Unset the time limit of the solver.
+
+See also: [`set_time_limit_sec`](@ref), [`time_limit_sec`](@ref).
 """
 function unset_time_limit_sec(model::Model)
     return MOI.set(model, MOI.TimeLimitSec(), nothing)
@@ -826,7 +844,11 @@ end
 """
     time_limit_sec(model::Model)
 
-Gets the time limit (in seconds) of the model (`nothing` if unset). Can be set using `set_time_limit_sec`.
+Return the time limit (in seconds) of the `model`.
+
+Returns `nothing` if unset.
+
+See also: [`set_time_limit_sec`](@ref), [`unset_time_limit_sec`](@ref).
 """
 function time_limit_sec(model::Model)
     return MOI.get(model, MOI.TimeLimitSec())
