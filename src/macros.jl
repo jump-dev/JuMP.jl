@@ -1191,8 +1191,7 @@ instead of `≤` and the symbol `>=`can be used instead of `≥`)
 The expression `varexpr` can either be
 
 * of the form `varname` creating a scalar real variable of name `varname`;
-* of the form `varname[...]` or `[...]` creating a container of variables (see
-  [Containers in macros](@ref)).
+* of the form `varname[...]` or `[...]` creating a container of variables.
 
 The recognized positional arguments in `args` are the following:
 
@@ -1222,7 +1221,7 @@ The recognized keyword arguments in `kw_args` are the following:
 * `variable_type`: See the "Note for extending the variable macro" section below.
 * `set`: Equivalent to using `varexpr in value` as `expr` where `value` is the
   value of the keyword argument.
-* `container`: Specify the container type, see [Containers in macros](@ref).
+* `container`: Specify the container type.
 
 ## Examples
 

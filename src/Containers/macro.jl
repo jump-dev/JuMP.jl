@@ -223,10 +223,9 @@ may depend on the value of the indices.
 
 Same as above but the container is assigned to the variable of name `ref`.
 
-The type of container can be controlled by the `container` keyword. See
-[Containers in macros](@ref). Note that when the index set is explicitly
-given as `1:n` for any expression `n`, it is transformed to `Base.OneTo(n)`
-before being given to [`container`](@ref).
+The type of container can be controlled by the `container` keyword. Note that
+when the index set is explicitly given as `1:n` for any expression `n`, it is
+transformed to `Base.OneTo(n)` before being given to [`container`](@ref).
 
 ## Examples
 

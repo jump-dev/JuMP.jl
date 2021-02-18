@@ -275,6 +275,9 @@ JuMP provides a mechanism for creating three types of these data structures,
 which we refer to as *containers*. The three types are `Array`s, `DenseAxisArray`s,
 and `SparseAxisArray`s. We explain each of these in the following.
 
+!!! tip
+    You can read more about containers in the [Containers](@ref) section.
+
 ### Arrays
 
 We have already seen the creation of an array of JuMP variables with the
