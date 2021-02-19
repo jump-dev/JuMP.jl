@@ -431,6 +431,13 @@ function VectorConstraint(func::Vector{<:AbstractJuMPScalar},
     VectorConstraint(func, set, VectorShape())
 end
 
+function VectorConstraint(
+    func::AbstractVector{<:AbstractJuMPScalar},
+    set::MOI.AbstractVectorSet,
+)
+    return VectorConstraint(collect(func), set)
+end
+
 reshape_set(set::MOI.AbstractVectorSet, ::VectorShape) = set
 shape(con::VectorConstraint) = con.shape
 function constraint_object(con_ref::ConstraintRef{<:AbstractModel, _MOICON{FuncType, SetType}}) where

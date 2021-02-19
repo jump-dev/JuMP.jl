@@ -906,6 +906,15 @@ function test_Model_shadow_price(::Any, ::Any)
     )
 end
 
+function test_abstractarray_vector_constraint(ModelType, ::Any)
+    model = ModelType()
+    @variable(model, x[1:2, 1:2])
+    c = @constraint(model, view(x, 1:4) in SOS1())
+    obj = constraint_object(c)
+    @test obj.func == x[1:4]
+    @test obj.set == MOI.SOS1([1.0, 2.0, 3.0, 4.0])
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

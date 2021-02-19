@@ -300,8 +300,11 @@ function build_constraint(
     return build_constraint(_error, zero(AffExpr), set)
 end
 
-function build_constraint(_error::Function, x::Vector{<:AbstractJuMPScalar},
-                          set::MOI.AbstractVectorSet)
+function build_constraint(
+    ::Function,
+    x::AbstractVector{<:AbstractJuMPScalar},
+    set::MOI.AbstractVectorSet,
+)
     return VectorConstraint(x, set)
 end
 function build_constraint(_error::Function, a::Vector{<:Number},
@@ -357,12 +360,18 @@ function build_constraint(_error::Function, expr, lb, ub)
 end
 
 function build_constraint(
-        ::Function, x::Vector{<:AbstractJuMPScalar}, set::MOI.SOS1)
+    ::Function,
+    x::AbstractVector{<:AbstractJuMPScalar},
+    set::MOI.SOS1,
+)
     return VectorConstraint(x, MOI.SOS1{Float64}(set.weights))
 end
 
 function build_constraint(
-        ::Function, x::Vector{<:AbstractJuMPScalar}, set::MOI.SOS2)
+    ::Function,
+    x::AbstractVector{<:AbstractJuMPScalar},
+    set::MOI.SOS2,
+)
     return VectorConstraint(x, MOI.SOS2{Float64}(set.weights))
 end
 
