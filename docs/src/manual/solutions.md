@@ -77,8 +77,8 @@ FEASIBLE_POINT::ResultStatusCode = 1
 ```
 Other common returns are `MOI.NO_SOLUTION`, and `MOI.INFEASIBILITY_CERTIFICATE`.
 The first means that the solver doesn't have a solution to return, and the
-second means that the solution has a certificate of dual infeasbility (a primal
-unbounded ray).
+second means that the primal solution is a certificate of dual infeasbility (a 
+primal unbounded ray).
 
 You can also use [`has_values`](@ref), which returns `true` if there is a
 solution that can be queried, and `false` otherwise.
@@ -150,8 +150,8 @@ FEASIBLE_POINT::ResultStatusCode = 1
 ```
 Other common returns are `MOI.NO_SOLUTION`, and `MOI.INFEASIBILITY_CERTIFICATE`.
 The first means that the solver doesn't have a solution to return, and the
-second means that the solution has a certificate of primal infeasbility (a dual
-unbounded ray).
+second means that the dual solution is a certificate of primal infeasbility (a 
+dual unbounded ray).
 
 You can also use [`has_duals`](@ref), which returns `true` if there is a
 solution that can be queried, and `false` otherwise.
