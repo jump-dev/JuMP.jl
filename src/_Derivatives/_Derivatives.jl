@@ -43,4 +43,9 @@ include("forward.jl")
 include("reverse.jl")
 include("subexpressions.jl")
 
+if Base.VERSION >= v"1.4.2"
+    include("precompile.jl")
+    _precompile_()
+end
+
 end # module
