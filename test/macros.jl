@@ -752,6 +752,35 @@ end
         @variable(model, y; integer = true)
         @test is_integer(y)
     end
+
+    @testset "Model as index" begin
+        m = Model()
+        @variable(m, x)
+        @test_macro_throws(
+            ErrorException("In `@variable(m, y[m = 1:2] <= m)`: Index is the same name as the model."),
+            @variable(m, y[m = 1:2] <= m),
+        )
+        @test_macro_throws(
+            ErrorException("In `@constraint(m, [m = 1:2], x <= m)`: Index is the same name as the model."),
+            @constraint(m, [m = 1:2], x <= m),
+        )
+        @test_macro_throws(
+            ErrorException("In `@expression(m, [m = 1:2], m * x)`: Index is the same name as the model."),
+            @expression(m, [m = 1:2], m * x),
+        )
+        @test_macro_throws(
+            ErrorException("In `@NLconstraint(m, [m = 1:2], sqrt(x) <= m)`: Index is the same name as the model."),
+            @NLconstraint(m, [m = 1:2], sqrt(x) <= m),
+        )
+        @test_macro_throws(
+            ErrorException("In `@NLexpression(m, [m = 1:2], x)`: Index is the same name as the model."),
+            @NLexpression(m, [m = 1:2], x),
+        )
+        @test_macro_throws(
+            ErrorException("In `@NLparameter(m, p[m = 1:2] == m)`: Index is the same name as the model."),
+            @NLparameter(m, p[m = 1:2] == m),
+        )
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
