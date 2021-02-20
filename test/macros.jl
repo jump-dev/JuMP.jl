@@ -756,28 +756,29 @@ end
     @testset "Model as index" begin
         m = Model()
         @variable(m, x)
+        index_set = VERSION < v"1.1" ? "m=1:2" : "m = 1:2"
         @test_macro_throws(
-            ErrorException("In `@variable(m, y[m=1:2] <= m)`: Index is the same name as the model."),
+            ErrorException("In `@variable(m, y[$(index_set)] <= m)`: Index is the same name as the model."),
             @variable(m, y[m=1:2] <= m),
         )
         @test_macro_throws(
-            ErrorException("In `@constraint(m, [m=1:2], x <= m)`: Index is the same name as the model."),
+            ErrorException("In `@constraint(m, [$(index_set)], x <= m)`: Index is the same name as the model."),
             @constraint(m, [m=1:2], x <= m),
         )
         @test_macro_throws(
-            ErrorException("In `@expression(m, [m=1:2], m * x)`: Index is the same name as the model."),
+            ErrorException("In `@expression(m, [$(index_set)], m * x)`: Index is the same name as the model."),
             @expression(m, [m=1:2], m * x),
         )
         @test_macro_throws(
-            ErrorException("In `@NLconstraint(m, [m=1:2], sqrt(x) <= m)`: Index is the same name as the model."),
+            ErrorException("In `@NLconstraint(m, [$(index_set)], sqrt(x) <= m)`: Index is the same name as the model."),
             @NLconstraint(m, [m=1:2], sqrt(x) <= m),
         )
         @test_macro_throws(
-            ErrorException("In `@NLexpression(m, [m=1:2], x)`: Index is the same name as the model."),
+            ErrorException("In `@NLexpression(m, [$(index_set)], x)`: Index is the same name as the model."),
             @NLexpression(m, [m=1:2], x),
         )
         @test_macro_throws(
-            ErrorException("In `@NLparameter(m, p[m=1:2] == m)`: Index is the same name as the model."),
+            ErrorException("In `@NLparameter(m, p[$(index_set)] == m)`: Index is the same name as the model."),
             @NLparameter(m, p[m=1:2] == m),
         )
     end
