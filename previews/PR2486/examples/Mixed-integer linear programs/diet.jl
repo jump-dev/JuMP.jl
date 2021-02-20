@@ -5,8 +5,8 @@
 
 # # The diet problem
 
-# Solve the classic "diet problem".
-# Based on an [example from Gurobi](https://www.gurobi.com/documentation/9.0/examples/diet_cpp_cpp.html).
+# Solve the classic "diet problem", also known as the [Stigler diet](https://en.wikipedia.org/wiki/Stigler_diet).
+# The code is based on [an example from Gurobi](https://www.gurobi.com/documentation/9.0/examples/diet_cpp_cpp.html).
 
 using JuMP
 import GLPK
