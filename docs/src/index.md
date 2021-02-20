@@ -53,7 +53,7 @@ you know where to look for certain things. There are three main parts:
   here if you are new to JuMP, or you have a particular problem class you want
   to model.
 
-* The **Manual** contain short code-snippets that explain how to achieve
+* The **Manual** contains short code-snippets that explain how to achieve
   specific tasks in JuMP. Look here if you want to know how to achieve a
   particular task, such as [how to delete a variable](@ref Deleting-variables)
   or [how to modify an objective coefficient](@ref Modify-an-objective-coefficient).
