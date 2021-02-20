@@ -42,7 +42,7 @@ programming.
     Need help? Join the [community forum](https://discourse.julialang.org/c/domain/opt/13)
     to search for questions to commonly asked questions.
 
-    Before asking a question, make sure to read [PSA: make it easier to help you](https://discourse.julialang.org/t/psa-make-it-easier-to-help-you/14757),
+    Before asking a question, make sure to read the post [make it easier to help you](https://discourse.julialang.org/t/psa-make-it-easier-to-help-you/14757),
     which contains a number of tips on how to ask a good question.
 
 ## Key features
