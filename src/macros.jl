@@ -435,7 +435,10 @@ function _constraint_macro(
     # in a function returning `ConstraintRef`s and give it to `Containers.container`.
     idxvars, indices = Containers._build_ref_sets(_error, c)
     if args[1] in idxvars
-        _error("Index is the same name as the model.")
+        _error(
+            "Index $(args[1]) is the same symbol as the model. Use a " *
+            "different name for the index.",
+        )
     end
     vectorized, parsecode, buildcall = parsefun(_error, x)
     _add_kw_args(buildcall, kw_args)
@@ -981,7 +984,10 @@ macro expression(args...)
 
     idxvars, indices = Containers._build_ref_sets(_error, c)
     if args[1] in idxvars
-        _error("Index is the same name as the model.")
+        _error(
+            "Index $(args[1]) is the same symbol as the model. Use a " *
+            "different name for the index.",
+        )
     end
     code = _MA.rewrite_and_return(x)
     code = Containers.container_code(idxvars, indices, code, requestedcontainer)
@@ -1450,7 +1456,10 @@ macro variable(args...)
         # SparseAxisArray to contain them)
         idxvars, indices = Containers._build_ref_sets(_error, var)
         if args[1] in idxvars
-            _error("Index is the same name as the model.")
+            _error(
+            "Index $(args[1]) is the same symbol as the model. Use a " *
+            "different name for the index.",
+        )
         end
         name_code = _name_call(base_name, idxvars)
         if set !== nothing
@@ -1543,7 +1552,10 @@ macro NLconstraint(m, x, args...)
     # we will wrap in loops to assign to the ConstraintRefs
     idxvars, indices = Containers._build_ref_sets(_error, c)
     if m in idxvars
-        _error("Index is the same name as the model.")
+        _error(
+            "Index $(m) is the same symbol as the model. Use a different " *
+            "name for the index.",
+        )
     end
     # Build the constraint
     if isexpr(con, :call) # one-sided constraint
@@ -1643,7 +1655,10 @@ macro NLexpression(args...)
 
     idxvars, indices = Containers._build_ref_sets(_error, c)
     if args[1] in idxvars
-        _error("Index is the same name as the model.")
+        _error(
+            "Index $(args[1]) is the same symbol as the model. Use a " *
+            "different name for the index.",
+        )
     end
     code = :( NonlinearExpression($(esc(m)), $(_process_NL_expr(m, x))) )
     creation_code = Containers.container_code(idxvars, indices, code, requestedcontainer)
@@ -1710,7 +1725,10 @@ macro NLparameter(m, ex, extra...)
 
     idxvars, indices = Containers._build_ref_sets(_error, c)
     if m in idxvars
-        _error("Index is the same name as the model.")
+        _error(
+            "Index $(m) is the same symbol as the model. Use a different" *
+            "name for the index.",
+        )
     end
     code = quote
         if !isa($(esc(x)), Number)
