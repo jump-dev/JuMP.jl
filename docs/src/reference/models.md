@@ -10,6 +10,15 @@ Model
 direct_model
 ```
 
+## Enums
+
+```@docs
+ModelMode
+AUTOMATIC
+MANUAL
+DIRECT
+```
+
 ## Basic functions
 
 ```@docs

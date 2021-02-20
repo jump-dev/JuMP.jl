@@ -277,10 +277,10 @@ end
 """
     direct_model(backend::MOI.ModelLike)
 
-Return a new JuMP model using [`backend`](@ref) to store the model and solve it. 
+Return a new JuMP model using [`backend`](@ref) to store the model and solve it.
 
 As opposed to the [`Model`](@ref) constructor, no cache of the model is stored
-outside of [`backend`](@ref) and no bridges are automatically applied to 
+outside of [`backend`](@ref) and no bridges are automatically applied to
 [`backend`](@ref).
 
 ## Notes
@@ -343,7 +343,8 @@ end
 """
     mode(model::Model)
 
-Return the `ModelMode` (`DIRECT`, `AUTOMATIC`, or `MANUAL`) of `model`.
+Return the [`ModelMode`](@ref) ([`DIRECT`](@ref), [`AUTOMATIC`](@ref), or
+[`MANUAL`](@ref)) of `model`.
 """
 function mode(model::Model)
     # The type of `backend(model)` is not type-stable, so we use a function
