@@ -1726,7 +1726,7 @@ macro NLparameter(m, ex, extra...)
     idxvars, indices = Containers._build_ref_sets(_error, c)
     if m in idxvars
         _error(
-            "Index $(m) is the same symbol as the model. Use a different" *
+            "Index $(m) is the same symbol as the model. Use a different " *
             "name for the index.",
         )
     end
