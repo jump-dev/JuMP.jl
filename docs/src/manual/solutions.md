@@ -208,13 +208,13 @@ And data, a 2-element Array{Float64,1}:
 
 ## Recommended workflow
 
-The following is a recommended workflow for solving a model and querying the
-solution is something like the following:
+The recommended workflow for solving a model and querying the solution is 
+something like the following:
 ```jldoctest solutions
 if termination_status(model) == MOI.OPTIMAL
     println("Solution is optimal")
 elseif termination_status(model) == MOI.TIME_LIMIT && has_values(model)
-    println("Solution is suboptimal")
+    println("Solution is suboptimal due to a time limit, but a primal solution is available")
 else
     error("The model was not solved correctly.")
 end
