@@ -762,19 +762,19 @@ end
             @variable(m, y[m=1:2] <= m),
         )
         @test_macro_throws(
-            ErrorException("In `@constraint(m, [$(index_set)], x <= m)`: Index is the same name as the model."),
+            ErrorException("In `@constraint(m, [m = 1:2], x <= m)`: Index is the same name as the model."),
             @constraint(m, [m=1:2], x <= m),
         )
         @test_macro_throws(
-            ErrorException("In `@expression(m, [$(index_set)], m * x)`: Index is the same name as the model."),
+            ErrorException("In `@expression(m, [m = 1:2], m * x)`: Index is the same name as the model."),
             @expression(m, [m=1:2], m * x),
         )
         @test_macro_throws(
-            ErrorException("In `@NLconstraint(m, [$(index_set)], sqrt(x) <= m)`: Index is the same name as the model."),
+            ErrorException("In `@NLconstraint(m, [m = 1:2], sqrt(x) <= m)`: Index is the same name as the model."),
             @NLconstraint(m, [m=1:2], sqrt(x) <= m),
         )
         @test_macro_throws(
-            ErrorException("In `@NLexpression(m, [$(index_set)], x)`: Index is the same name as the model."),
+            ErrorException("In `@NLexpression(m, [m = 1:2], x)`: Index is the same name as the model."),
             @NLexpression(m, [m=1:2], x),
         )
         @test_macro_throws(
