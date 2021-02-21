@@ -31,11 +31,13 @@
 # * The numbers 1 to 9 must appear in each column
 
 # Here is a partially solved Sudoku problem:
-# ![Partially solved Sudoku](/assets/partial_sudoku.svg")
 
-# This isn't an optimization problem, its actually a *feasibility* problem: we
-# wish to find a feasible solution that satsifies these rules. You can think of
-# it as an optimization problem with an objective of 0.
+# ![Partially solved Sudoku](../../assets/partial_sudoku.svg)
+
+# Solving a Sudoku isn't an optimization problem with an objective; its actually
+# a *feasibility* problem: we wish to find a feasible solution that satsifies
+# these rules. You can think of it as an optimization problem with an objective
+# of 0.
 #
 # We can model this problem using 0-1 integer programming: a problem where all
 # the decision variables are binary. We'll use JuMP to create the model, and
@@ -150,4 +152,5 @@ end
 sol
 
 # Which is the correct solution:
-# ![Solved Sudoku](/assets/full_sudoku.svg")
+
+# ![Solved Sudoku](../../assets/full_sudoku.svg)

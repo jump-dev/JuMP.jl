@@ -105,7 +105,7 @@ set_silent(model)
 
 fix(x[1, 1], 1; force = true)
 
-#The total population of a group $k$ is $Q_k = \sum_ix_{i,k}q_i$ where $q_i$ is
+# The total population of a group $k$ is $Q_k = \sum_ix_{i,k}q_i$ where $q_i$ is
 # simply the $i$th value from the `population` column in our `cities` DataFrame.
 # Let's add constraints so that $\alpha \leq (Q_k - P) \leq \beta$. We'll set
 # $\alpha$ equal to $-3$ million and $\beta$ equal to $3$. By adjusting
