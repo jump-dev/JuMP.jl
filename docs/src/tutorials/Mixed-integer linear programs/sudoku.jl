@@ -102,7 +102,7 @@ for i = 1:3:7
 end
 
 # The final step is to add the initial solution as a set of constraints. We'll
-# solve the problem that is in the picture at the start of the notebook. We'll
+# solve the problem that is in the picture at the start of the tutorial. We'll
 # put a `0` if there is no digit in that location.
 
 # The given digits
