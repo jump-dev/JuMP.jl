@@ -221,7 +221,7 @@ function set_objective_coefficient(model::Model, variable::VariableRef, coeff::R
     if model.nlp_data !== nothing && _nlp_objective_function(model) !== nothing
         error("A nonlinear objective is already set in the model")
     end
-
+    coeff = convert(Float64, coeff)::Float64
     obj_fct_type = objective_function_type(model)
     if obj_fct_type == VariableRef
         # Promote the objective function to be an affine expression.
@@ -239,6 +239,5 @@ function set_objective_coefficient(model::Model, variable::VariableRef, coeff::R
     else
         error("Objective function type not supported: $(obj_fct_type)")
     end
-
     return
 end
