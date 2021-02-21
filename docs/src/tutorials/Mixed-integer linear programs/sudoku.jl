@@ -1,124 +1,153 @@
-# Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors    #src
-# This Source Code Form is subject to the terms of the Mozilla Public License   #src
-# v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
-# obtain one at https://mozilla.org/MPL/2.0/.                                   #src
+# Copyright (c) 2019 Iain Dunning and contributors                               #src
+#                                                                                #src
+# Permission is hereby granted, free of charge, to any person obtaining a copy   #src
+# of this software and associated documentation files (the "Software"), to deal  #src
+# in the Software without restriction, including without limitation the rights   #src
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell      #src
+# copies of the Software, and to permit persons to whom the Software is          #src
+# furnished to do so, subject to the following conditions:                       #src
+#                                                                                #src
+# The above copyright notice and this permission notice shall be included in all #src
+# copies or substantial portions of the Software.                                #src
+#                                                                                #src
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR     #src
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,       #src
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE    #src
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER         #src
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,  #src
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
+# SOFTWARE.                                                                      #src
 
-# # Solving Sudokus with MIP
+# # Sudoku
 
-# A sudoku solver that uses a MIP to find solutions.
+# **Originally Contributed by**: Iain Dunning
 
-# We have binary variables `x[i, j, k]` which, if = 1, say that cell (i, j)
-# contains the number k. The constraints are:
-#  1 - Each cell has one value only
-#  2 - Each row contains each number exactly once
-#  3 - Each column contains each number exactly once
-#  4 - Each 3x3 subgrid contains each number exactly once
-# We will take the initial grid as a CSV file at `filepath`, where 0s are blanks.
+# [Sudoku](http://en.wikipedia.org/wiki/Sudoku) is a popular number puzzle. The
+# goal is to place the digits 1,...,9 on a nine-by-nine grid, with some of the
+# digits already filled in. Your solution must satisfy the following rules:
+#
+# * The numbers 1 to 9 must appear in each 3x3 square
+# * The numbers 1 to 9 must appear in each row
+# * The numbers 1 to 9 must appear in each column
+
+# Here is a partially solved Sudoku problem:
+# ![Partially solved Sudoku](/assets/partial_sudoku.svg")
+
+# This isn't an optimization problem, its actually a *feasibility* problem: we
+# wish to find a feasible solution that satsifies these rules. You can think of
+# it as an optimization problem with an objective of 0.
+#
+# We can model this problem using 0-1 integer programming: a problem where all
+# the decision variables are binary. We'll use JuMP to create the model, and
+# then we can solve it with any integer programming solver.
 
 using JuMP
-import GLPK
-import Test
+using GLPK
 
-function example_sudoku(filepath::String)
-    initial_grid = zeros(Int, 9, 9)
-    open(filepath, "r") do fp
-        for row in 1:9
-            line = readline(fp)
-            initial_grid[row, :] .= parse.(Int, split(line, ","))
-        end
-    end
-    model = Model(GLPK.Optimizer)
-    @variable(model, x[1:9, 1:9, 1:9], Bin)
-    @constraints(model, begin
-        ## Constraint 1 - Only one value appears in each cell
-        cell[i in 1:9, j in 1:9], sum(x[i, j, :]) == 1
-        ## Constraint 2 - Each value appears in each row once only
-        row[i in 1:9, k in 1:9], sum(x[i, :, k]) == 1
-        ## Constraint 3 - Each value appears in each column once only
-        col[j in 1:9, k in 1:9], sum(x[:, j, k]) == 1
-        ## Constraint 4 - Each value appears in each 3x3 subgrid once only
-        subgrid[i=1:3:7, j=1:3:7, val=1:9], sum(x[i:i + 2, j:j + 2, val]) == 1
-    end)
-    ## Initial solution
-    for row in 1:9, col in 1:9
-        if initial_grid[row, col] != 0
-            fix(x[row, col, initial_grid[row, col]], 1)
-        end
-    end
-    ## Solve it
-    optimize!(model)
-    ## Check solution
-    term_status = termination_status(model)
-    is_optimal = term_status == MOI.OPTIMAL
-    if is_optimal
-        mip_solution = value.(x)
-        sol = zeros(Int, 9, 9)
-        for row in 1:9, col in 1:9, val in 1:9
-            if mip_solution[row, col, val] >= 0.9
-                sol[row, col] = val
-            end
-        end
-        return sol
-    else
-        error("The solver did not find an optimal solution.")
+# We will define a binary variable (a variable that is either 0 or 1) for each
+# possible number in each possible cell. The meaning of each variable is as
+# follows:
+# `x[i,j,k] = 1  if and only if cell (i,j) has number k`,
+# where `i` is the row and `j` is the column.
+
+# Create a model
+sudoku = Model(GLPK.Optimizer)
+
+# Create our variables
+@variable(sudoku, x[i=1:9, j=1:9, k=1:9], Bin)
+
+# Now we can begin to add our constraints. We'll actually start with something
+# obvious to us as humans, but what we need to enforce: that there can be only
+# one number per cell.
+
+for i = 1:9  ## For each row
+    for j = 1:9  ## and each column
+        ## Sum across all the possible digits. One and only one of the digits
+        ## can be in this cell, so the sum must be equal to one.
+        @constraint(sudoku, sum(x[i, j, k] for k = 1:9) == 1)
     end
 end
 
-# Create an initial file. We could have set the `example_sudoku` function to
-# take a matrix as input, but this example shows Julia's ability to parse files.
+# Next we'll add the constraints for the rows and the columns. These constraints
+# are all very similar, so much so that we can actually add them at the same
+# time.
 
-open("sudoku.csv", "w") do io
-    write(io, """
-    3, 1, 0, 0, 5, 8, 0, 0, 4
-    0, 0, 9, 3, 2, 0, 0, 0, 0
-    0, 2, 5, 1, 0, 4, 0, 9, 0
-    0, 0, 0, 0, 0, 0, 3, 8, 9
-    0, 0, 8, 0, 0, 0, 5, 0, 0
-    5, 4, 6, 0, 0, 0, 0, 0, 0
-    0, 8, 0, 2, 0, 3, 6, 5, 0
-    0, 0, 0, 0, 7, 1, 4, 0, 0
-    7, 0, 0, 4, 8, 0, 0, 2, 1
-    """)
+for ind = 1:9  ## Each row, OR each column
+    for k = 1:9  ## Each digit
+        ## Sum across columns (j) - row constraint
+        @constraint(sudoku, sum(x[ind, j, k] for j = 1:9) == 1)
+        ## Sum across rows (i) - column constraint
+        @constraint(sudoku, sum(x[i, ind, k] for i = 1:9) == 1)
+    end
 end
 
-# Now try solving the example:
+# Finally, we have the to enforce the constraint that each digit appears once in
+# each of the nine 3x3 sub-grids. Our strategy will be to index over the
+# top-left corners of each 3x3 square with `for` loops, then sum over the
+# squares.
 
-solution = example_sudoku("sudoku.csv")
+for i = 1:3:7
+    for j = 1:3:7
+        for k = 1:9
+            ## i is the top left row, j is the top left column.
+            ## We'll sum from i to i+2, e.g. i=4, r=4, 5, 6.
+            @constraint(
+                sudoku,
+                sum(x[r, c, k] for r in i:(i+2), c in j:(j+2)) == 1
+            )
+        end
+    end
+end
 
-Test.@test solution == [
-    3 1 7 9 5 8 2 6 4;
-    4 6 9 3 2 7 8 1 5;
-    8 2 5 1 6 4 7 9 3;
-    2 7 1 6 4 5 3 8 9;
-    9 3 8 7 1 2 5 4 6;
-    5 4 6 8 3 9 1 7 2;
-    1 8 4 2 9 3 6 5 7;
-    6 9 2 5 7 1 4 3 8;
-    7 5 3 4 8 6 9 2 1
+# The final step is to add the initial solution as a set of constraints. We'll
+# solve the problem that is in the picture at the start of the notebook. We'll
+# put a `0` if there is no digit in that location.
+
+# The given digits
+init_sol = [
+    5 3 0 0 7 0 0 0 0
+    6 0 0 1 9 5 0 0 0
+    0 9 8 0 0 0 0 6 0
+    8 0 0 0 6 0 0 0 3
+    4 0 0 8 0 3 0 0 1
+    7 0 0 0 2 0 0 0 6
+    0 6 0 0 0 0 2 8 0
+    0 0 0 4 1 9 0 0 5
+    0 0 0 0 8 0 0 7 9
 ]
-
-# The matrix can be hard to read. Print the solution properly:
-
-function print_sudoku_solution(solution)
-    println("Solution:")
-    println("[-----------------------]")
-    for row in 1:9
-        print("[ ")
-        for col in 1:9
-            print(solution[row, col], " ")
-            if col % 3 == 0 && col < 9
-                print("| ")
-            end
-        end
-        println("]")
-        if row % 3 == 0
-            println("[-----------------------]")
+for i = 1:9
+    for j = 1:9
+        ## If the space isn't empty
+        if init_sol[i, j] != 0
+            ## Then the corresponding variable for that digit and location must
+            ## be 1.
+            fix(x[i, j, init_sol[i, j]], 1; force = true)
         end
     end
 end
 
-print_sudoku_solution(solution)
+# solve problem
+optimize!(sudoku)
 
-# Clean up the file we made:
+# Extract the values of x
+x_val = value.(x)
+# Create a matrix to store the solution
+sol = zeros(Int, 9, 9)  # 9x9 matrix of integers
+for i = 1:9
+    for j = 1:9
+        for k = 1:9
+            ## Integer programs are solved as a series of linear programs so the
+            ## values might not be precisely 0 and 1. We can just round them to
+            ## the nearest integer to make it easier.
+            if round(Int, x_val[i, j, k]) == 1
+                sol[i, j] = k
+            end
+        end
+    end
+end
 
-rm("sudoku.csv")
+# Display the solution
+sol
+
+# Which is the correct solution:
+# ![Solved Sudoku](/assets/full_sudoku.svg")
