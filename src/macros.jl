@@ -443,7 +443,12 @@ function _constraint_macro(
     # Strategy: build up the code for add_constraint, and if needed we will wrap
     # in a function returning `ConstraintRef`s and give it to `Containers.container`.
     idxvars, indices = Containers._build_ref_sets(_error, c)
-
+    if args[1] in idxvars
+        _error(
+            "Index $(args[1]) is the same symbol as the model. Use a " *
+            "different name for the index.",
+        )
+    end
     vectorized, parsecode, buildcall = parsefun(_error, x)
     _add_kw_args(buildcall, kw_args)
     if vectorized
@@ -987,6 +992,12 @@ macro expression(args...)
     variable = gensym()
 
     idxvars, indices = Containers._build_ref_sets(_error, c)
+    if args[1] in idxvars
+        _error(
+            "Index $(args[1]) is the same symbol as the model. Use a " *
+            "different name for the index.",
+        )
+    end
     code = _MA.rewrite_and_return(x)
     code = Containers.container_code(idxvars, indices, code, requestedcontainer)
     # don't do anything with the model, but check that it's valid anyway
@@ -1453,6 +1464,12 @@ macro variable(args...)
         # We now build the code to generate the variables (and possibly the
         # SparseAxisArray to contain them)
         idxvars, indices = Containers._build_ref_sets(_error, var)
+        if args[1] in idxvars
+            _error(
+            "Index $(args[1]) is the same symbol as the model. Use a " *
+            "different name for the index.",
+        )
+        end
         name_code = _name_call(base_name, idxvars)
         if set !== nothing
             name_code = Containers.container_code(idxvars, indices, name_code, requestedcontainer)
@@ -1543,6 +1560,12 @@ macro NLconstraint(m, x, args...)
     # Strategy: build up the code for non-macro add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     idxvars, indices = Containers._build_ref_sets(_error, c)
+    if m in idxvars
+        _error(
+            "Index $(m) is the same symbol as the model. Use a different " *
+            "name for the index.",
+        )
+    end
     # Build the constraint
     if isexpr(con, :call) # one-sided constraint
         # Simple comparison - move everything to the LHS
@@ -1640,6 +1663,12 @@ macro NLexpression(args...)
     variable = gensym()
 
     idxvars, indices = Containers._build_ref_sets(_error, c)
+    if args[1] in idxvars
+        _error(
+            "Index $(args[1]) is the same symbol as the model. Use a " *
+            "different name for the index.",
+        )
+    end
     code = :( NonlinearExpression($(esc(m)), $(_process_NL_expr(m, x))) )
     creation_code = Containers.container_code(idxvars, indices, code, requestedcontainer)
     if anonvar
@@ -1704,6 +1733,12 @@ macro NLparameter(m, ex, extra...)
     variable = gensym()
 
     idxvars, indices = Containers._build_ref_sets(_error, c)
+    if m in idxvars
+        _error(
+            "Index $(m) is the same symbol as the model. Use a different " *
+            "name for the index.",
+        )
+    end
     code = quote
         if !isa($(esc(x)), Number)
             _error("Expected ", $(string(x)), " to be a number.")

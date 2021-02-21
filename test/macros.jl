@@ -752,6 +752,37 @@ end
         @variable(model, y; integer = true)
         @test is_integer(y)
     end
+
+    @testset "Model as index" begin
+        m = Model()
+        @variable(m, x)
+        index_set = VERSION < v"1.1" ? "m=1:2" : "m = 1:2"
+        msg = "Index m is the same symbol as the model. Use a different name for the index."
+        @test_macro_throws(
+            ErrorException("In `@variable(m, y[$(index_set)] <= m)`: $(msg)"),
+            @variable(m, y[m=1:2] <= m),
+        )
+        @test_macro_throws(
+            ErrorException("In `@constraint(m, [m = 1:2], x <= m)`: $(msg)"),
+            @constraint(m, [m=1:2], x <= m),
+        )
+        @test_macro_throws(
+            ErrorException("In `@expression(m, [m = 1:2], m * x)`: $(msg)"),
+            @expression(m, [m=1:2], m * x),
+        )
+        @test_macro_throws(
+            ErrorException("In `@NLconstraint(m, [m = 1:2], sqrt(x) <= m)`: $(msg)"),
+            @NLconstraint(m, [m=1:2], sqrt(x) <= m),
+        )
+        @test_macro_throws(
+            ErrorException("In `@NLexpression(m, [m = 1:2], x)`: $(msg)"),
+            @NLexpression(m, [m=1:2], x),
+        )
+        @test_macro_throws(
+            ErrorException("In `@NLparameter(m, p[$(index_set)] == m)`: $(msg)"),
+            @NLparameter(m, p[m=1:2] == m),
+        )
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
