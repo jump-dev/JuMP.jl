@@ -30,13 +30,12 @@ programming.
 
 ## Resources for getting started
 
-* Checkout the [Installation Guide](@ref).
+* Read the [Installation Guide](@ref).
 * Read the introductory tutorials [Getting started with Julia](@ref) and
   [Getting started with JuMP](@ref).
-* Browse some of our examples, including classics such as [The diet problem](@ref),
-  or the [Maximum likelihood estimation](@ref) problem using nonlinear
-  programming.
-* Work through more in-depth tutorials at [JuMPTutorials.jl](https://github.com/jump-dev/JuMPTutorials.jl)
+* Browse some of our modeling tutorials, including classics such as
+  [The diet problem](@ref), or the [Maximum likelihood estimation](@ref) problem
+  using nonlinear programming.
 
 !!! tip
     Need help? Join the [community forum](https://discourse.julialang.org/c/domain/opt/13)
@@ -44,6 +43,23 @@ programming.
 
     Before asking a question, make sure to read the post [make it easier to help you](https://discourse.julialang.org/t/psa-make-it-easier-to-help-you/14757),
     which contains a number of tips on how to ask a good question.
+
+## How the documentation is structured
+
+Having a high-level overview of how this documentation is structured will help
+you know where to look for certain things. There are three main parts:
+
+* **Tutorials** contain worked examples of solving problems with JuMP. Start
+  here if you are new to JuMP, or you have a particular problem class you want
+  to model.
+
+* The **Manual** contains short code-snippets that explain how to achieve
+  specific tasks in JuMP. Look here if you want to know how to achieve a
+  particular task, such as [how to delete a variable](@ref Deleting-variables)
+  or [how to modify an objective coefficient](@ref Modify-an-objective-coefficient).
+
+* The **API Reference** contains a complete list of the functions you can use in
+  JuMP. Look here if you want to know how to use a particular function.
 
 ## Key features
 

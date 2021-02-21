@@ -8,15 +8,15 @@ using Test
 # Markdown. _Never_ set it in production.
 const _FAST = findfirst(isequal("--fast"), ARGS) !== nothing
 
-const _EXAMPLE_DIR = joinpath(@__DIR__, "src", "examples")
-const _EXAMPLE_SUBDIR = [
+const _TUTORIAL_DIR = joinpath(@__DIR__, "src", "tutorials")
+const _TUTORIAL_SUBDIR = [
+    "Getting started",
     "Mixed-integer linear programs",
     "Nonlinear programs",
     "Quadratic programs",
     "Semidefinite programs",
+    "Optimization concepts",
 ]
-
-const _TUTORIAL_DIR = joinpath(@__DIR__, "src", "tutorials")
 
 function link_example(content)
     edit_url = match(r"EditURL = \"(.+?)\"", content)[1]
@@ -53,10 +53,7 @@ function literate_directory(dir)
 end
 
 if !_FAST
-    literate_directory(_EXAMPLE_DIR)
-    literate_directory.(joinpath.(_EXAMPLE_DIR, _EXAMPLE_SUBDIR))
-    literate_directory(joinpath(_TUTORIAL_DIR, "Getting started"))
-    literate_directory(joinpath(_TUTORIAL_DIR, "Optimization concepts"))
+    literate_directory.(joinpath.(_TUTORIAL_DIR, _TUTORIAL_SUBDIR))
 end
 
 makedocs(
@@ -90,6 +87,16 @@ makedocs(
     pages = [
         "Introduction" => "index.md",
         "installation.md",
+        "Tutorials" => map(
+            subdir -> subdir => map(
+                file -> joinpath("tutorials", subdir, file),
+                filter(
+                    file -> endswith(file, ".md"),
+                    sort(readdir(joinpath(_TUTORIAL_DIR, subdir))),
+                ),
+            ),
+            _TUTORIAL_SUBDIR,
+        ),
         "Manual" => [
             "manual/models.md",
             "manual/variables.md",
@@ -101,27 +108,6 @@ makedocs(
             "manual/nlp.md",
             "manual/callbacks.md",
         ],
-        "Tutorials" => map(
-            subdir -> subdir => map(
-                file -> joinpath("tutorials", subdir, file),
-                filter(
-                    file -> endswith(file, ".md"),
-                    sort(readdir(joinpath(_TUTORIAL_DIR, subdir))),
-                ),
-            ),
-            ["Getting started", "Optimization concepts"],
-        ),
-        "Examples" => vcat(
-            _file_list(_EXAMPLE_DIR, "examples", ".md"),
-            map(
-                subdir -> subdir => _file_list(
-                    joinpath(_EXAMPLE_DIR, subdir),
-                    joinpath("examples", subdir),
-                    ".md",
-                ),
-                _EXAMPLE_SUBDIR,
-            ),
-        ),
         "API Reference" => [
             "reference/models.md",
             "reference/variables.md",
