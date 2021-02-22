@@ -51,10 +51,10 @@ Random.seed!(1234)
 
 # ```math
 # \begin{aligned}
-# \min\left(\mathrm{w.r.t.} \mathbf{S}_{+}^{n}\right)} & {E=\left(\sum_{j=1}^{p} m_{j} v_{j} v_{j}^{T}\right)^{-1}} \\
-# \text{subject to} & {m_{i} \geq 0
-# & m_{1}+\cdots+m_{p}=m \\
-# & m_{i} \in \mathbf{Z}
+# \min\left(\mathrm{w.r.t.} \mathbf{S}_{+}^{n}\right) & E=\left(\sum_{j=1}^{p} m_{j} v_{j} v_{j}^{T}\right)^{-1} \\
+# \text{subject to} & m_{i} \geq 0 \\
+# & \sum\limits_{i=1}^p m_{i} = m \\
+# & m_{i} \in \mathbb{Z},\quad i=1,\ldots,p
 # \end{aligned}
 # ```
 
@@ -81,13 +81,11 @@ Random.seed!(1234)
 
 # ```math
 # \begin{aligned}
-# \min\left(\mathrm{w.r.t.} \mathbf{S}_{+}^{n}\right)} & {E=(1 / m)\left(\sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T}\right)^{-1}} \\
-# \text{subject to} & \lambda \succeq 0 \\
+# \min\left(\mathrm{w.r.t.} \mathbf{S}_{+}^{n}\right) & E=(1 / m)\left(\sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T}\right)^{-1} \\
+# \text{subject to:}\quad & \lambda \succeq 0 \\
 # & \mathbf{1}^{T} \lambda=1
 # \end{aligned}
 # ```
-
-# ## Types of Experiment Design Problems
 
 # Several scalarizations have been proposed for the experiment design problem,
 # which is a vector optimization problem over the positive semidefinite cone.
@@ -101,7 +99,7 @@ V = randn(q, p)
 
 eye = Matrix{Float64}(LinearAlgebra.I, q, q);
 
-# ### A-optimal design
+# ## A-optimal design
 
 # In A-optimal experiment design, we minimize tr $E$, the trace of the
 # covariance matrix. This objective is simply the mean of the norm of the error
@@ -142,7 +140,7 @@ objective_value(aOpt)
 
 value.(np)
 
-# ### E-optimal design
+# ## E-optimal design
 
 # In $E$ -optimal design, we minimize the norm of the error covariance matrix,
 # i.e. the maximum eigenvalue of $E$.
@@ -177,7 +175,7 @@ objective_value(eOpt)
 #-
 value.(np)
 
-# ### D-optimal design
+# ## D-optimal design
 
 # The most widely used scalarization is called $D$ -optimal design,
 # in which we minimize the determinant of the error covariance matrix $E$.
@@ -186,13 +184,13 @@ value.(np)
 # constant factor $1 / m$ in $E$, and taking the logarithm of the objective, we
 # can pose this problem as convex optimization problem:
 
-# ``math
+# ```math
 # \begin{aligned}
 # \min & \log \operatorname{det}\left(\sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T}\right)^{-1} \\
 # \text{subject to} & \lambda \succeq 0 \\
-# & \quad \mathbf{1}^{T} \lambda=1}
+# & \mathbf{1}^{T} \lambda=1
 # \end{aligned}
-# ````
+# ```
 
 dOpt = Model(SCS.Optimizer)
 set_silent(dOpt)
