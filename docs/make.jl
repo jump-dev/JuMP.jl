@@ -34,13 +34,24 @@ function _file_list(full_dir, relative_dir, extension)
     )
 end
 
+"""
+    _include_sandbox(filename)
+
+Include the `filename` in a temporary module that acts as a sandbox. (Ensuring
+no constants or functions leak into other files.)
+"""
+function _include_sandbox(filename)
+    mod = @eval module $(gensym()) end
+    return Base.include(mod, filename)
+end
+
 function literate_directory(dir)
     rm.(_file_list(dir, dir, ".md"))
     for filename in _file_list(dir, dir, ".jl")
         # `include` the file to test it before `#src` lines are removed. It is
         # in a testset to isolate local variables between files.
         @testset "$(filename)" begin
-            include(filename)
+            _include_sandbox(filename)
         end
         Literate.markdown(
             filename,
