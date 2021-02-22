@@ -92,9 +92,8 @@ julia> @NLexpression(model, nested[i = 1:2], sin(my_expr[i]))
 
 ## Create a nonlinear parameter
 
-For nonlinear models only, JuMP offers a syntax for explicit "parameter" objects
-which can be used to modify a model in-place just by updating the value of the
-parameter.
+For nonlinear models only, JuMP offers a syntax for explicit "parameter" objects,
+which are constants in the model that can be efficiently updated between solves.
 
 Nonlinear parameters are declared by using the [`@NLparameter`](@ref) macro
 and may be indexed by arbitrary sets analogously to JuMP variables and
@@ -109,6 +108,11 @@ julia> @NLparameter(model, p[i = 1:2] == i)
  "Reference to nonlinear parameter #1"
  "Reference to nonlinear parameter #2"
 ```
+
+!!! info
+    A parameter is not an optimization variable. It must be fixed to a value with 
+    `==`. If you want a parameter that is `<=` or `>=`, create a variable instead
+    using [`@variable`](@ref).
 
 Use [`value`](@ref) and [`set_value`](@ref) to query or update the value of a
 parameter.
@@ -147,6 +151,8 @@ ERROR: MethodError: no method matching *(::NonlinearParameter, ::GenericQuadExpr
 julia> @NLexpression(model, my_nl_expr, p[1] * x^2)
 "Reference to nonlinear expression #1"
 ```
+
+### When to use a parameter
 
 Nonlinear parameters are useful when solving nonlinear models in a sequence:
 
