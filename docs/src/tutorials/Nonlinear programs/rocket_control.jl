@@ -64,6 +64,7 @@
 
 using JuMP
 import Ipopt
+import Plots
 
 # Create JuMP model, using Ipopt as the solver
 
@@ -168,15 +169,20 @@ println("Max height: ", objective_value(rocket))
 
 #-
 
-## Uncomment these to visualize the trajectory.
-## Can visualize the state and control variables
-## using Gadfly
-## h_plot = plot(x = (1:n) * value.(Δt), y = value.(h)[:], Geom.line,
-##                 Guide.xlabel("Time (s)"), Guide.ylabel("Altitude"))
-## m_plot = plot(x = (1:n) * value.(Δt), y = value.(m)[:], Geom.line,
-##                 Guide.xlabel("Time (s)"), Guide.ylabel("Mass"))
-## v_plot = plot(x = (1:n) * value.(Δt), y = value.(v)[:], Geom.line,
-##                 Guide.xlabel("Time (s)"), Guide.ylabel("Velocity"))
-## T_plot = plot(x = (1:n) * value.(Δt), y = value.(T)[:], Geom.line,
-##                 Guide.xlabel("Time (s)"), Guide.ylabel("Thrust"))
-## draw(SVG(6inch, 6inch), vstack(hstack(h_plot, m_plot), hstack(v_plot, T_plot)))
+function my_plot(y, ylabel)
+    return Plots.plot(
+        (1:n) * value.(Δt),
+        value.(y)[:];
+        xlabel = "Time (s)",
+        ylabel = ylabel,
+    )
+end
+
+Plots.plot(
+    my_plot(h, "Altitude"),
+    my_plot(m, "Mass"),
+    my_plot(v, "Velocity"),
+    my_plot(T, "Thrust");
+    layout = (2, 2),
+    legend = false,
+)
