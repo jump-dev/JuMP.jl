@@ -314,8 +314,8 @@ function solve_uc(g_max, g_min, c_g, c_w, d, w_f)
     @objective(uc, Min, c_g' * g + c_w * w)
     ## Define the constraint on the maximum and minimum power output of each
     ## generator.
-    @constraint(uc, [i = 1:2], g[i] <= g_max[i]) ## maximum
-    @constraint(uc, [i = 1:2], g[i] >= g_min[i]) ## minimum
+    @constraint(uc, [i = 1:2], g[i] <= g_max[i] * u[i]) ## maximum
+    @constraint(uc, [i = 1:2], g[i] >= g_min[i] * u[i]) ## minimum
     ## Define the constraint on the wind power injection
     @constraint(uc, w <= w_f)
     ## Define the power balance constraint
