@@ -259,9 +259,13 @@ demandscale_df
 # transmission network. Indeed, the flows in transmission lines would attain the
 # following values:
 
-# $$f_{1-2} = 150 MW \leq f_{1-2}^{\max} = 100 MW $$
+# ```math
+# f_{1-2} = 150 MW \leq f_{1-2}^{\max} = 100 MW
+# ```
 
-# $$f_{2-3} = 1200 MW \leq f_{2-3}^{\max} = 1000 MW $$
+# ```math
+# f_{2-3} = 1200 MW \leq f_{2-3}^{\max} = 1000 MW
+# ```
 
 # Thus, if this ED solution was enforced in practice, the power flow limits on
 # both lines would be violated. Therefore, in the following section we consider
