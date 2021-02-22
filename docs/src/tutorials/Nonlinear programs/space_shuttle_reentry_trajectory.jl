@@ -31,6 +31,10 @@
 # ["Practical Methods for Optimal Control and Estimation Using Nonlinear Programming"](https://epubs.siam.org/doi/book/10.1137/1.9780898718577),
 # by John T. Betts.
 
+# !!! tip
+#     This tutorial is a more-complicated version of the [Rocket Control](@ref) example.
+#     If you are new to solving nonlinear programs in JuMP, you may want to start there instead.
+
 # The motion of the vehicle is defined by the following set of DAEs:
 # 
 # ```math
@@ -116,71 +120,73 @@
 # > There's no mesh refinement going on, which can lead to unrealistic trajectories having position
 # > and velocity errors with orders of magnitude $10^4$ ft and $10^2$ ft/sec, respectively.
 
-using Interpolations
-using JuMP, Ipopt #, KNITRO
+using JuMP
+import Interpolations
+import Ipopt
 
 ## Global variables
-w  = 203000.0  # weight (lb)
-g₀ = 32.174    # acceleration (ft/sec^2)
-m  = w / g₀    # mass (slug)
+const w  = 203000.0  # weight (lb)
+const g₀ = 32.174    # acceleration (ft/sec^2)
+const m  = w / g₀    # mass (slug)
 
 ## Aerodynamic and atmospheric forces on the vehicle
-ρ₀ =  0.002378
-hᵣ =  23800.0
-Rₑ =  20902900.0
-μ  =  0.14076539e17
-S  =  2690.0
-a₀ = -0.20704
-a₁ =  0.029244
-b₀ =  0.07854
-b₁ = -0.61592e-2
-b₂ =  0.621408e-3
-c₀ =  1.0672181
-c₁ = -0.19213774e-1
-c₂ =  0.21286289e-3
-c₃ = -0.10117249e-5
+const ρ₀ =  0.002378
+const hᵣ =  23800.0
+const Rₑ =  20902900.0
+const μ  =  0.14076539e17
+const S  =  2690.0
+const a₀ = -0.20704
+const a₁ =  0.029244
+const b₀ =  0.07854
+const b₁ = -0.61592e-2
+const b₂ =  0.621408e-3
+const c₀ =  1.0672181
+const c₁ = -0.19213774e-1
+const c₂ =  0.21286289e-3
+const c₃ = -0.10117249e-5
 
 ## Initial conditions
-hₛ = 2.6          # altitude (ft) / 1e5
-ϕₛ = deg2rad(0)   # longitude (rad)
-θₛ = deg2rad(0)   # latitude (rad)
-vₛ = 2.56         # velocity (ft/sec) / 1e4
-γₛ = deg2rad(-1)  # flight path angle (rad)
-ψₛ = deg2rad(90)  # azimuth (rad)
-αₛ = deg2rad(0)   # angle of attack (rad)
-βₛ = deg2rad(0)   # bank angle (rad)
-tₛ = 1.00         # time step (sec)
+const hₛ = 2.6          # altitude (ft) / 1e5
+const ϕₛ = deg2rad(0)   # longitude (rad)
+const θₛ = deg2rad(0)   # latitude (rad)
+const vₛ = 2.56         # velocity (ft/sec) / 1e4
+const γₛ = deg2rad(-1)  # flight path angle (rad)
+const ψₛ = deg2rad(90)  # azimuth (rad)
+const αₛ = deg2rad(0)   # angle of attack (rad)
+const βₛ = deg2rad(0)   # bank angle (rad)
+const tₛ = 1.00         # time step (sec)
 
 ## Final conditions, the so-called Terminal Area Energy Management (TAEM)
-hₜ = 0.8          # altitude (ft) / 1e5
-vₜ = 0.25         # velocity (ft/sec) / 1e4
-γₜ = deg2rad(-5)  # flight path angle (rad)
+const hₜ = 0.8          # altitude (ft) / 1e5
+const vₜ = 0.25         # velocity (ft/sec) / 1e4
+const γₜ = deg2rad(-5)  # flight path angle (rad)
 
 ## Number of mesh points (knots) to be used
-n = 2009
+const n = 2009
 
 ## Integration scheme to be used for the dynamics
-integration_rule = "rectangular"
+const integration_rule = "rectangular"
 nothing #hide
 
 #-
 
-user_options_ipopt = (
-    "mu_strategy" => "monotone",
-    "linear_solver" => "ma27",  # For the best results, it is advised to experiment different linear solvers.
-                                ## If Ipopt is not compiled with MA27/MA57, it may fallback to 'MUMPS'.
-                                ## In general, the linear solver MA27 is much faster than MUMPS.
+# !!! tip "Choose a good linear solver"
+#     Picking a good linear solver is **extremely important**
+#     to maximise the performance of nonlinear solvers.
+#     For the best results, it is advised to experiment different linear solvers.
+# 
+#     For example, the linear solver `MA27` is outdated and can be quite slow.
+#     `MA57` is a much better alternative, especially for highly-sparse problems
+#     (such as trajectory optimization problems).
+
+## Uncomment the lines below to pass user options to the solver
+user_options = (
+    ## "mu_strategy" => "monotone",
+    ## "linear_solver" => "ma27",
 )
 
-## user_options_knitro = (
-##     "algorithm" => KNITRO.KN_ALG_BAR_DIRECT,
-##     "bar_murule" => KNITRO.KN_BAR_MURULE_QUALITY,
-##     "linsolver" => KNITRO.KN_LINSOLVER_MA27,
-## )
-
 ## Create JuMP model, using Ipopt as the solver
-model = Model(optimizer_with_attributes(Ipopt.Optimizer, user_options_ipopt...))
-## model = Model(optimizer_with_attributes(KNITRO.Optimizer, user_options_knitro...))
+model = Model(optimizer_with_attributes(Ipopt.Optimizer, user_options...))
 
 @variables(model, begin
                0 ≤ scaled_h[1:n]                # altitude (ft) / 1e5
@@ -194,6 +200,20 @@ model = Model(optimizer_with_attributes(Ipopt.Optimizer, user_options_ipopt...))
     ##        0.5 ≤       Δt[1:n] ≤ 1.5          # time step (sec)
                          Δt[1:n] == 1.0         # time step (sec)
 end)
+
+# !!! info
+#     Above you can find two alternatives for the `Δt` variables.
+#     
+#     The first one, `0.5 ≤ Δt[1:n] ≤ 1.5` (currently commented), allows some wiggle room
+#     for the solver to adjust the time step size between pairs of mesh points. This is neat because
+#     it allows the solver to figure out which parts of the flight require more dense discretization than others.
+#     (Remember, the number of discretized points is fixed, and this example does not implement mesh refinement.)
+#     However, this makes the problem more complex to solve, and therefore leads to a longer computation time.
+#     
+#     The second line, `Δt[1:n] == 1.0`, fixes the duration of every time step to exactly 1.0 seconds.
+#     This allows the problem to be solved faster. However, to do this we need to know beforehand that
+#     the close-to-optimal total duration of the flight is ~33 minutes. That way, we know that by setting
+#     a fixed time step of 1.0 seconds, we require `n = 2009` knots to discretize the trajectory.
 
 ## Fix initial conditions
 fix(scaled_h[1], hₛ; force=true)
@@ -211,7 +231,7 @@ fix(       γ[n], γₜ; force=true)
 ## Initial guess: linear interpolation between boundary conditions
 xₛ = [hₛ, ϕₛ, θₛ, vₛ, γₛ, ψₛ, αₛ, βₛ, tₛ]
 xₜ = [hₜ, ϕₛ, θₛ, vₜ, γₜ, ψₛ, αₛ, βₛ, tₛ]
-interp_linear = LinearInterpolation([1, n], [xₛ, xₜ])
+interp_linear = Interpolations.LinearInterpolation([1, n], [xₛ, xₜ])
 initial_guess = mapreduce(transpose, vcat, interp_linear.(1:n))
 set_start_value.(all_variables(model), vec(initial_guess))
 
@@ -270,43 +290,42 @@ status = optimize!(model)
 ## Show final crossrange of the solution
 println("Final latitude θ = ", round(objective_value(model) |> rad2deg, digits = 2), "°")
 
-# ### Plot the results
+# ### Plotting the results
 
-## using Plots
-
-#-
-
-## ts = cumsum([0; value.(Δt)])[1:end-1]
-## 
-## plt_altitude = plot(ts, value.(scaled_h), legend = nothing, title = "Altitude (100,000 ft)")
-## plt_longitude = plot(ts, rad2deg.(value.(ϕ)), legend = nothing, title = "Longitude (deg)")
-## plt_latitude = plot(ts, rad2deg.(value.(θ)), legend = nothing, title = "Latitude (deg)")
-## plt_velocity = plot(ts, value.(scaled_v), legend = nothing, title = "Velocity (1000 ft/sec)")
-## plt_flight_path = plot(ts, rad2deg.(value.(γ)), legend = nothing, title = "Flight Path (deg)")
-## plt_azimuth = plot(ts, rad2deg.(value.(ψ)), legend = nothing, title = "Azimuth (deg)")
-## 
-## plt = plot(plt_altitude,  plt_velocity, plt_longitude, plt_flight_path, plt_latitude,
-##            plt_azimuth, layout=grid(3, 2), linewidth=2, size=(700, 700))
+using Plots
 
 #-
 
-## function q(h, v, a)
-##     ρ(h) = ρ₀ * exp(-h / hᵣ)
-##     qᵣ(h, v) = 17700 * √ρ(h) * (0.0001 * v)^3.07
-##     qₐ(a) = c₀ + c₁ * rad2deg(a) + c₂ * rad2deg(a)^2 + c₃ * rad2deg(a)^3    
-##     ## Aerodynamic heating on the vehicle wing leading edge
-##     qₐ(a) * qᵣ(h, v)
-## end
-## 
-## plt_attack_angle = plot(ts[1:end-1], rad2deg.(value.(α)[1:end-1]), legend=nothing, title="Angle of Attack (deg)")
-## plt_bank_angle = plot(ts[1:end-1], rad2deg.(value.(β)[1:end-1]), legend=nothing, title="Bank Angle (deg)")
-## plt_heating = plot(ts, q.(value.(scaled_h)*1e5, value.(scaled_v)*1e4, value.(α)), legend=nothing, title="Heating (BTU/ft/ft/sec)") 
-## 
-## plt = plot(plt_attack_angle, plt_bank_angle, plt_heating, layout=grid(3, 1), linewidth=2, size=(700, 700))
+ts = cumsum([0; value.(Δt)])[1:end-1]
+
+plt_altitude = plot(ts, value.(scaled_h), legend = nothing, title = "Altitude (100,000 ft)")
+plt_longitude = plot(ts, rad2deg.(value.(ϕ)), legend = nothing, title = "Longitude (deg)")
+plt_latitude = plot(ts, rad2deg.(value.(θ)), legend = nothing, title = "Latitude (deg)")
+plt_velocity = plot(ts, value.(scaled_v), legend = nothing, title = "Velocity (1000 ft/sec)")
+plt_flight_path = plot(ts, rad2deg.(value.(γ)), legend = nothing, title = "Flight Path (deg)")
+plt_azimuth = plot(ts, rad2deg.(value.(ψ)), legend = nothing, title = "Azimuth (deg)")
+
+plt = plot(plt_altitude,  plt_velocity, plt_longitude, plt_flight_path, plt_latitude,
+           plt_azimuth, layout=grid(3, 2), linewidth=2, size=(700, 700))
 
 #-
 
-## plt = plot(rad2deg.(value.(ϕ)), rad2deg.(value.(θ)), value.(scaled_h),
-##            linewidth=2, legend=nothing, title="Space Shuttle Reentry Trajectory",
-##            xlabel="Longitude (deg)", ylabel="Latitude (deg)", zlabel="Altitude (100,000 ft)")
+function q(h, v, a)
+    ρ(h) = ρ₀ * exp(-h / hᵣ)
+    qᵣ(h, v) = 17700 * √ρ(h) * (0.0001 * v)^3.07
+    qₐ(a) = c₀ + c₁ * rad2deg(a) + c₂ * rad2deg(a)^2 + c₃ * rad2deg(a)^3    
+    ## Aerodynamic heating on the vehicle wing leading edge
+    qₐ(a) * qᵣ(h, v)
+end
 
+plt_attack_angle = plot(ts[1:end-1], rad2deg.(value.(α)[1:end-1]), legend=nothing, title="Angle of Attack (deg)")
+plt_bank_angle = plot(ts[1:end-1], rad2deg.(value.(β)[1:end-1]), legend=nothing, title="Bank Angle (deg)")
+plt_heating = plot(ts, q.(value.(scaled_h)*1e5, value.(scaled_v)*1e4, value.(α)), legend=nothing, title="Heating (BTU/ft/ft/sec)") 
+
+plt = plot(plt_attack_angle, plt_bank_angle, plt_heating, layout=grid(3, 1), linewidth=2, size=(700, 700))
+
+#-
+
+plt = plot(rad2deg.(value.(ϕ)), rad2deg.(value.(θ)), value.(scaled_h),
+           linewidth=2, legend=nothing, title="Space Shuttle Reentry Trajectory",
+           xlabel="Longitude (deg)", ylabel="Latitude (deg)", zlabel="Altitude (100,000 ft)")
