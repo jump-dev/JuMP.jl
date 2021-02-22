@@ -185,4 +185,5 @@ Plots.plot(
     my_plot(T, "Thrust");
     layout = (2, 2),
     legend = false,
+    margin = 1Plots.cm,
 )
