@@ -496,28 +496,39 @@ function JuMP.copy_extension_data(
 end
 function dummy_optimizer_hook(::JuMP.AbstractModel) end
 
-function copy_model_style_mode(use_copy_model, caching_mode)
+function copy_model_style_mode(use_copy_model, caching_mode, filter_mode)
     model = Model(caching_mode = caching_mode)
     model.optimize_hook = dummy_optimizer_hook
     data = DummyExtensionData(model)
     model.ext[:dummy] = data
+    @variable(model, w[i=1:2] ≥ 0)
     @variable(model, x ≥ 0, Bin)
     @variable(model, y ≤ 1, Int)
     @variable(model, z == 0)
     @constraint(model, cref, x + y == 1)
+    @constraint(model, cref2[i=1:2], w[i] + z == 1)
 
     if use_copy_model
-        new_model, reference_map = JuMP.copy_model(model)
+        if filter_mode
+            filter_constraints = (cr) -> cr != cref
+            new_model, reference_map = JuMP.copy_model(model, filter_constraints=filter_constraints)
+        else
+            new_model, reference_map = JuMP.copy_model(model)
+        end
     else
         new_model = copy(model)
         reference_map = Dict{
             Union{JuMP.VariableRef,JuMP.ConstraintRef},
             Union{JuMP.VariableRef,JuMP.ConstraintRef},
         }()
+        reference_map[w[1]] = new_model[:w][1]
+        reference_map[w[2]] = new_model[:w][2]
         reference_map[x] = new_model[:x]
         reference_map[y] = new_model[:y]
         reference_map[z] = new_model[:z]
         reference_map[cref] = new_model[:cref]
+        reference_map[cref2[1]] = new_model[:cref2][1]
+        reference_map[cref2[2]] = new_model[:cref2][2]
     end
     @test caching_mode == @inferred MOIU.mode(JuMP.backend(new_model))
     @test new_model.optimize_hook === dummy_optimizer_hook
@@ -542,13 +553,25 @@ function copy_model_style_mode(use_copy_model, caching_mode)
               @inferred JuMP.IntegerRef(y_new)
         @test reference_map[JuMP.FixRef(z)] == @inferred JuMP.FixRef(z_new)
     end
-    cref_new = reference_map[cref]
-    @test cref_new.model === new_model
-    @test "cref" == @inferred JuMP.name(cref_new)
+
+    cref2_1_new = reference_map[cref2[1]]
+    @test cref2_1_new.model === new_model
+    @test "cref2[1]" == @inferred JuMP.name(cref2_1_new)
+    cref2_2_new = reference_map[cref2[2]]
+    @test cref2_2_new.model === new_model
+    @test "cref2[2]" == @inferred JuMP.name(cref2_2_new)
+    
+    if filter_mode
+        @test_throws KeyError JuMP.object_dictionary(new_model)[JuMP.name(cref)]
+    else
+        cref_new = reference_map[cref]
+        @test cref_new.model === new_model
+        @test "cref" == @inferred JuMP.name(cref_new)
+    end
 end
 
 function test_copy_model_jump_auto()
-    return copy_model_style_mode(true, MOIU.AUTOMATIC)
+    return copy_model_style_mode(true, MOIU.AUTOMATIC, false)
 end
 
 function test_compute_conflict()
@@ -558,13 +581,13 @@ function test_compute_conflict()
 end
 
 function test_copy_model_base_auto()
-    return copy_model_style_mode(false, MOIU.AUTOMATIC)
+    return copy_model_style_mode(false, MOIU.AUTOMATIC, false)
 end
 function test_copy_model_jump_manual()
-    return copy_model_style_mode(true, MOIU.MANUAL)
+    return copy_model_style_mode(true, MOIU.MANUAL, false)
 end
 function test_copy_model_base_manual()
-    return copy_model_style_mode(false, MOIU.MANUAL)
+    return copy_model_style_mode(false, MOIU.MANUAL, false)
 end
 
 function test_copy_direct_mode()
@@ -596,6 +619,96 @@ function test_haskey()
     @variable(model, p[i = 1:10] >= 0)
     @test haskey(model, :p)
     @test !haskey(model, :i)
+end
+
+function test_copy_filter()
+    copy_model_style_mode(true, MOIU.AUTOMATIC, true)
+end
+    
+function test_copy_filter_array()
+    model = Model()
+    @variable(model, x[i=1:2], container=Array)
+    @constraint(model, cref[i=1:2], x[i] == 1, container=Array)
+    @test num_constraints(model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 2
+
+    filter_constraints = (cr) -> cr != cref[1]
+    new_model, reference_map = JuMP.copy_model(model, filter_constraints=filter_constraints)
+    @test num_constraints(new_model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 1
+
+    x1_new = reference_map[x[1]]
+    @test JuMP.owner_model(x1_new) === new_model
+    @test "x[1]" == @inferred JuMP.name(x1_new)
+    
+    cref_2_new = reference_map[cref[2]]
+    @test cref_2_new.model === new_model
+    @test "cref[2]" == @inferred JuMP.name(cref_2_new)
+end
+
+function test_copy_filter_denseaxisarray()
+    model = Model()
+    @variable(model, x[i=1:2], container=DenseAxisArray)
+    @constraint(model, cref[i=1:2], x[i] == 1, container=DenseAxisArray)
+    @test num_constraints(model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 2
+
+    filter_constraints = (cr) -> cr != cref[1]
+    new_model, reference_map = JuMP.copy_model(model, filter_constraints=filter_constraints)
+    @test num_constraints(new_model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 1
+
+    x1_new = reference_map[x[1]]
+    @test JuMP.owner_model(x1_new) === new_model
+    @test "x[1]" == @inferred JuMP.name(x1_new)
+    
+    cref_2_new = reference_map[cref[2]]
+    @test cref_2_new.model === new_model
+    @test "cref[2]" == @inferred JuMP.name(cref_2_new)
+end
+
+function test_copy_filter_sparseaxisarray()
+    model = Model()
+    @variable(model, x[i=1:2], container=SparseAxisArray)
+    @constraint(model, cref[i=1:2], x[i] == 1, container=SparseAxisArray)
+    @test num_constraints(model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 2
+
+    filter_constraints = (cr) -> cr != cref[1]
+    new_model, reference_map = JuMP.copy_model(model, filter_constraints=filter_constraints)
+    @test num_constraints(new_model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 1
+
+    x1_new = reference_map[x[1]]
+    @test JuMP.owner_model(x1_new) === new_model
+    @test "x[1]" == @inferred JuMP.name(x1_new)
+    
+    cref_2_new = reference_map[cref[2]]
+    @test cref_2_new.model === new_model
+    @test "cref[2]" == @inferred JuMP.name(cref_2_new)
+end
+
+function test_copy_conflict()
+    model = Model()
+    @variable(model, x[i=1:2], container=SparseAxisArray)
+    @constraint(model, cref[i=1:2], x[i] == 1, container=SparseAxisArray)
+    @test num_constraints(model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 2
+    
+    set_optimizer(model, () -> MOIU.MockOptimizer(
+                                    MOIU.Model{Float64}(),
+                                    eval_objective_value=false))
+    JuMP.optimize!(model)
+
+    mockoptimizer = JuMP.backend(model).optimizer.model
+    MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.INFEASIBLE)
+    MOI.set(mockoptimizer, MOI.ConflictStatus(), MOI.CONFLICT_FOUND)
+    MOI.set(mockoptimizer, MOI.ConstraintConflictStatus(), JuMP.optimizer_index(cref[1]), MOI.IN_CONFLICT)
+    MOI.set(mockoptimizer, MOI.ConstraintConflictStatus(), JuMP.optimizer_index(cref[2]), MOI.NOT_IN_CONFLICT)
+
+    new_model, reference_map = JuMP.copy_conflict(model)
+    @test num_constraints(new_model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 1
+
+    x1_new = reference_map[x[1]]
+    @test JuMP.owner_model(x1_new) === new_model
+    @test "x[1]" == @inferred JuMP.name(x1_new)
+    
+    cref_1_new = reference_map[cref[1]]
+    @test cref_1_new.model === new_model
+    @test "cref[1]" == @inferred JuMP.name(cref_1_new)
 end
 
 function runtests()
