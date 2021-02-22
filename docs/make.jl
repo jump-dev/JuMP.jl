@@ -14,6 +14,7 @@ const _TUTORIAL_SUBDIR = [
     "Mixed-integer linear programs",
     "Nonlinear programs",
     "Quadratic programs",
+    "Conic programs",
     "Semidefinite programs",
     "Optimization concepts",
 ]
