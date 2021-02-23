@@ -674,10 +674,9 @@ julia> a = 0
 0
 
 julia> @SDconstraint(model, [x x; x x] >= a)
-ERROR: Operation `-` between `Array{VariableRef,2}` and `Int64` is not allowed. You should use broadcast.
+ERROR: MethodError: promote_operation(::typeof(MutableArithmetics.sub_mul), ::Type{Array{VariableRef,2}}, ::Type{Int64}) is ambiguous. Candidates:
 [...]
 ```
-
 
 ## Modify a constraint
 

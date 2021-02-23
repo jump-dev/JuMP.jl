@@ -153,9 +153,20 @@ for c_g1_scale = 0.5:0.1:3.0
     ## Update the incremental cost of the first generator at every iteration.
     c_g_scale = [c_g[1] * c_g1_scale, c_g[2]]
     ## Solve the ed problem with the updated incremental cost
-    g_opt, w_opt, ws_opt, obj = solve_ed(g_max, g_min, c_g_scale, c_w, d, w_f)
+    local g_opt, w_opt, ws_opt, obj =
+        solve_ed(g_max, g_min, c_g_scale, c_w, d, w_f)
     push!(c_g_scale_df, (g_opt[1], g_opt[2], w_opt, ws_opt, obj))
 end
+
+# !!! info
+#     Because we defined variables like `g_opt` and `w_opt` earlier in this
+#     tutorial, we use the `local` keyword in the loop to avoid a warning like
+#     ```
+#     Warning: Assignment to `g_opt` in soft scope is ambiguous because a global
+#     variable by the same name exists: `g_opt` will be treated as a new local.
+#     Disambiguate by using `local g_opt` to suppress this warning or
+#     `global g_opt` to assign to the existing global variable.
+#     ```
 
 #-
 
@@ -238,7 +249,8 @@ demandscale_df = DataFrames.DataFrame(
 )
 
 for demandscale = 0.2:0.1:1.5
-    g_opt,w_opt,ws_opt,obj = solve_ed(g_max, g_min, c_g, c_w, demandscale*d, w_f)
+    local g_opt,w_opt,ws_opt,obj =
+        solve_ed(g_max, g_min, c_g, c_w, demandscale*d, w_f)
     push!(demandscale_df, (g_opt[1], g_opt[2], w_opt, ws_opt, obj))
 end
 
@@ -356,7 +368,7 @@ uc_df = DataFrames.DataFrame(
 )
 
 for demandscale = 0.2:0.1:1.5
-    status, g_opt, w_opt, ws_opt, u_opt, obj =
+    local status, g_opt, w_opt, ws_opt, u_opt, obj =
         solve_uc(g_max, g_min, c_g, c_w, demandscale*d, w_f)
     if status == MOI.OPTIMAL
         push!(uc_df, (u_opt[1], u_opt[2], g_opt[1], g_opt[2], w_opt, ws_opt, obj))

@@ -332,7 +332,7 @@ return a `DenseAxisArray`. For example:
 julia> @variable(model, x[1:2, [:A,:B]])
 2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
     Dimension 1, Base.OneTo(2)
-    Dimension 2, Symbol[:A, :B]
+    Dimension 2, [:A, :B]
 And data, a 2×2 Array{VariableRef,2}:
  x[1,A]  x[1,B]
  x[2,A]  x[2,B]
@@ -345,7 +345,7 @@ x[1,A]
 
 julia> x[2, :]
 1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
-    Dimension 1, Symbol[:A, :B]
+    Dimension 1, [:A, :B]
 And data, a 2-element Array{VariableRef,1}:
  x[2,A]
  x[2,B]
@@ -684,7 +684,7 @@ in their own datastructures. For example, the following code creates a
 dictionary with symmetric matrices as the values:
 ```jldoctest; setup=:(model=Model())
 julia> variables = Dict{Symbol, Array{VariableRef,2}}()
-Dict{Symbol,Array{VariableRef,2}} with 0 entries
+Dict{Symbol,Array{VariableRef,2}}()
 
 julia> for key in [:A, :B]
            global variables[key] = @variable(model, [1:2, 1:2])

@@ -111,7 +111,7 @@ rectangular, but not of the form `1:n`. The index sets can be of any type.
 julia> x = Containers.@container([i = 1:2, j = [:A, :B]], (i, j))
 2-dimensional DenseAxisArray{Tuple{Int64,Symbol},2,...} with index sets:
     Dimension 1, Base.OneTo(2)
-    Dimension 2, Symbol[:A, :B]
+    Dimension 2, [:A, :B]
 And data, a 2×2 Array{Tuple{Int64,Symbol},2}:
  (1, :A)  (1, :B)
  (2, :A)  (2, :B)
@@ -130,7 +130,7 @@ And data, a 2-element Array{Tuple{Int64,Symbol},1}:
 
 julia> x[1, :]
 1-dimensional DenseAxisArray{Tuple{Int64,Symbol},1,...} with index sets:
-    Dimension 1, Symbol[:A, :B]
+    Dimension 1, [:A, :B]
 And data, a 2-element Array{Tuple{Int64,Symbol},1}:
  (1, :A)
  (1, :B)
@@ -154,7 +154,7 @@ julia> for key in eachindex(x)
 Use `axes` to obtain the index sets:
 ```jldoctest containers_dense
 julia> axes(x)
-(Base.OneTo(2), Symbol[:A, :B])
+(Base.OneTo(2), [:A, :B])
 ```
 
 ### Broadcasting
@@ -167,7 +167,7 @@ swap (generic function with 1 method)
 julia> swap.(x)
 2-dimensional DenseAxisArray{Tuple{Symbol,Int64},2,...} with index sets:
     Dimension 1, Base.OneTo(2)
-    Dimension 2, Symbol[:A, :B]
+    Dimension 2, [:A, :B]
 And data, a 2×2 Array{Tuple{Symbol,Int64},2}:
  (:A, 1)  (:B, 1)
  (:A, 2)  (:B, 2)
