@@ -38,10 +38,10 @@ julia&gt; @NLconstraint(model, [i = 1:2], my_expr[i] &lt;= i)
 julia&gt; @NLexpression(model, nested[i = 1:2], sin(my_expr[i]))
 2-element Array{NonlinearExpression,1}:
  &quot;Reference to nonlinear expression #6&quot;
- &quot;Reference to nonlinear expression #7&quot;</code></pre><h2 id="Create-a-nonlinear-parameter"><a class="docs-heading-anchor" href="#Create-a-nonlinear-parameter">Create a nonlinear parameter</a><a id="Create-a-nonlinear-parameter-1"></a><a class="docs-heading-anchor-permalink" href="#Create-a-nonlinear-parameter" title="Permalink"></a></h2><p>For nonlinear models only, JuMP offers a syntax for explicit &quot;parameter&quot; objects which can be used to modify a model in-place just by updating the value of the parameter.</p><p>Nonlinear parameters are declared by using the <a href="../../reference/nlp/#JuMP.@NLparameter"><code>@NLparameter</code></a> macro and may be indexed by arbitrary sets analogously to JuMP variables and expressions.</p><p>The initial value of the parameter must be provided on the right-hand side of the <code>==</code> sign.</p><pre><code class="language-julia-repl">julia&gt; @NLparameter(model, p[i = 1:2] == i)
+ &quot;Reference to nonlinear expression #7&quot;</code></pre><h2 id="Create-a-nonlinear-parameter"><a class="docs-heading-anchor" href="#Create-a-nonlinear-parameter">Create a nonlinear parameter</a><a id="Create-a-nonlinear-parameter-1"></a><a class="docs-heading-anchor-permalink" href="#Create-a-nonlinear-parameter" title="Permalink"></a></h2><p>For nonlinear models only, JuMP offers a syntax for explicit &quot;parameter&quot; objects, which are constants in the model that can be efficiently updated between solves.</p><p>Nonlinear parameters are declared by using the <a href="../../reference/nlp/#JuMP.@NLparameter"><code>@NLparameter</code></a> macro and may be indexed by arbitrary sets analogously to JuMP variables and expressions.</p><p>The initial value of the parameter must be provided on the right-hand side of the <code>==</code> sign.</p><pre><code class="language-julia-repl">julia&gt; @NLparameter(model, p[i = 1:2] == i)
 2-element Array{NonlinearParameter,1}:
  &quot;Reference to nonlinear parameter #1&quot;
- &quot;Reference to nonlinear parameter #2&quot;</code></pre><p>Use <a href="../../reference/solutions/#JuMP.value"><code>value</code></a> and <a href="../../reference/nlp/#JuMP.set_value-Tuple{NonlinearParameter,Number}"><code>set_value</code></a> to query or update the value of a parameter.</p><pre><code class="language-julia-repl">julia&gt; value.(p)
+ &quot;Reference to nonlinear parameter #2&quot;</code></pre><div class="admonition is-info"><header class="admonition-header">Info</header><div class="admonition-body"><p>A parameter is not an optimization variable. It must be fixed to a value with  <code>==</code>. If you want a parameter that is <code>&lt;=</code> or <code>&gt;=</code>, create a variable instead using <a href="../../reference/variables/#JuMP.@variable"><code>@variable</code></a>.</p></div></div><p>Use <a href="../../reference/solutions/#JuMP.value"><code>value</code></a> and <a href="../../reference/nlp/#JuMP.set_value-Tuple{NonlinearParameter,Number}"><code>set_value</code></a> to query or update the value of a parameter.</p><pre><code class="language-julia-repl">julia&gt; value.(p)
 2-element Array{Float64,1}:
  1.0
  2.0
@@ -63,7 +63,7 @@ ERROR: MethodError: no method matching *(::NonlinearParameter, ::GenericQuadExpr
 [...]
 
 julia&gt; @NLexpression(model, my_nl_expr, p[1] * x^2)
-&quot;Reference to nonlinear expression #1&quot;</code></pre><p>Nonlinear parameters are useful when solving nonlinear models in a sequence:</p><pre><code class="language-julia">using JuMP, Ipopt
+&quot;Reference to nonlinear expression #1&quot;</code></pre><h3 id="When-to-use-a-parameter"><a class="docs-heading-anchor" href="#When-to-use-a-parameter">When to use a parameter</a><a id="When-to-use-a-parameter-1"></a><a class="docs-heading-anchor-permalink" href="#When-to-use-a-parameter" title="Permalink"></a></h3><p>Nonlinear parameters are useful when solving nonlinear models in a sequence:</p><pre><code class="language-julia">using JuMP, Ipopt
 model = Model(Ipopt.Optimizer)
 set_silent(model)
 @variable(model, z)
@@ -86,18 +86,18 @@ Variables n = 12, constraints m = 23
 Cones:	primal zero / dual free vars: 11
 	linear vars: 1
 	soc vars: 11, soc blks: 1
-Setup time: 5.48e-05s
+Setup time: 5.07e-05s
 ----------------------------------------------------------------------------
  Iter | pri res | dua res | rel gap | pri obj | dua obj | kap/tau | time (s)
 ----------------------------------------------------------------------------
-     0| 1.11e+19  3.24e+19  1.00e+00 -2.00e+19  7.23e+19  1.73e+19  2.09e-05
-    20| 2.69e-07  5.48e-07  4.91e-07 -7.41e-01 -7.41e-01  7.08e-17  1.40e-04
+     0| 1.11e+19  3.24e+19  1.00e+00 -2.00e+19  7.23e+19  1.73e+19  2.35e-05
+    20| 2.69e-07  5.48e-07  4.91e-07 -7.41e-01 -7.41e-01  7.08e-17  1.82e-04
 ----------------------------------------------------------------------------
 Status: Solved
-Timing: Solve time: 1.41e-04s
-	Lin-sys: avg # CG iterations: 2.14, avg solve time: 7.71e-07s
-	Cones: avg projection time: 8.57e-08s
-	Acceleration: avg step time: 4.26e-06s
+Timing: Solve time: 1.83e-04s
+	Lin-sys: avg # CG iterations: 2.14, avg solve time: 1.04e-06s
+	Cones: avg projection time: 1.24e-07s
+	Acceleration: avg step time: 5.60e-06s
 ----------------------------------------------------------------------------
 Error metrics:
 dist(s, K) = 1.1102e-16, dist(y, K*) = 5.5511e-17, s&#39;y/|s||y| = -7.6171e-17
@@ -267,4 +267,4 @@ main (generic function with 1 method)
 julia&gt; main([x -&gt; x^2, x -&gt; sin(x)^2])
 Feasibility
 Subject to
- (f_1(x) + f_2(x)) - 1.0 ≤ 0</code></pre><section class="footnotes is-size-7"><ul><li class="footnote" id="footnote-1"><a class="tag is-link" href="#citeref-1">1</a>Dunning, Huchette, and Lubin, &quot;JuMP: A Modeling Language for Mathematical Optimization&quot;, SIAM Review, <a href="https://mlubin.github.io/pdf/jump-sirev.pdf">PDF</a>.</li></ul></section></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../solutions/">« Solutions</a><a class="docs-footer-nextpage" href="../callbacks/">Callbacks »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 22 February 2021 23:36">Monday 22 February 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ (f_1(x) + f_2(x)) - 1.0 ≤ 0</code></pre><section class="footnotes is-size-7"><ul><li class="footnote" id="footnote-1"><a class="tag is-link" href="#citeref-1">1</a>Dunning, Huchette, and Lubin, &quot;JuMP: A Modeling Language for Mathematical Optimization&quot;, SIAM Review, <a href="https://mlubin.github.io/pdf/jump-sirev.pdf">PDF</a>.</li></ul></section></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../solutions/">« Solutions</a><a class="docs-footer-nextpage" href="../callbacks/">Callbacks »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 23 February 2021 00:49">Tuesday 23 February 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
