@@ -162,7 +162,7 @@ const vₜ = 0.25         # velocity (ft/sec) / 1e4
 const γₜ = deg2rad(-5)  # flight path angle (rad)
 
 ## Number of mesh points (knots) to be used
-const n = 2009
+const n = 503
 
 ## Integration scheme to be used for the dynamics
 const integration_rule = "rectangular"
@@ -197,23 +197,23 @@ model = Model(optimizer_with_attributes(Ipopt.Optimizer, user_options...))
                           ψ[1:n]                # azimuth (rad)
     deg2rad(-90) ≤        α[1:n] ≤ deg2rad(90)  # angle of attack (rad)
     deg2rad(-89) ≤        β[1:n] ≤ deg2rad( 1)  # bank angle (rad)
-    ##        0.5 ≤       Δt[1:n] ≤ 1.5          # time step (sec)
-                         Δt[1:n] == 1.0         # time step (sec)
+    ##        3.5 ≤       Δt[1:n] ≤ 4.5          # time step (sec)
+                         Δt[1:n] == 4.0         # time step (sec)
 end)
 
 # !!! info
 #     Above you can find two alternatives for the `Δt` variables.
 #     
-#     The first one, `0.5 ≤ Δt[1:n] ≤ 1.5` (currently commented), allows some wiggle room
+#     The first one, `3.5 ≤ Δt[1:n] ≤ 4.5` (currently commented), allows some wiggle room
 #     for the solver to adjust the time step size between pairs of mesh points. This is neat because
 #     it allows the solver to figure out which parts of the flight require more dense discretization than others.
 #     (Remember, the number of discretized points is fixed, and this example does not implement mesh refinement.)
 #     However, this makes the problem more complex to solve, and therefore leads to a longer computation time.
 #     
-#     The second line, `Δt[1:n] == 1.0`, fixes the duration of every time step to exactly 1.0 seconds.
-#     This allows the problem to be solved faster. However, to do this we need to know beforehand that
-#     the close-to-optimal total duration of the flight is ~33 minutes. That way, we know that by setting
-#     a fixed time step of 1.0 seconds, we require `n = 2009` knots to discretize the trajectory.
+#     The second line, `Δt[1:n] == 4.0`, fixes the duration of every time step to exactly 4.0 seconds.
+#     This allows the problem to be solved faster. However, to do this we need to know beforehand that the
+#     close-to-optimal total duration of the flight is ~2009 seconds. Therefore, if we split the total duration
+#     in slices of 4.0 seconds, we know that we require `n = 503` knots to discretize the whole trajectory.
 
 ## Fix initial conditions
 fix(scaled_h[1], hₛ; force=true)
@@ -284,8 +284,9 @@ end
 ## Objective: Maximize crossrange
 @objective(model, Max, θ[n])
 
-## Solve for the control and state
-status = optimize!(model)
+set_silent(model)  # Hide solver's verbose output
+optimize!(model)  # Solve for the control and state
+@assert termination_status(model) == MOI.LOCALLY_SOLVED
 
 ## Show final crossrange of the solution
 println("Final latitude θ = ", round(objective_value(model) |> rad2deg, digits = 2), "°")
@@ -297,6 +298,9 @@ using Plots
 #-
 
 ts = cumsum([0; value.(Δt)])[1:end-1]
+nothing #hide
+
+#-
 
 plt_altitude = plot(ts, value.(scaled_h), legend = nothing, title = "Altitude (100,000 ft)")
 plt_longitude = plot(ts, rad2deg.(value.(ϕ)), legend = nothing, title = "Longitude (deg)")
