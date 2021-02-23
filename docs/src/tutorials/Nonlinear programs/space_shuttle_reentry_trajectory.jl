@@ -146,20 +146,20 @@ const c₂ =  0.21286289e-3
 const c₃ = -0.10117249e-5
 
 ## Initial conditions
-const hₛ = 2.6          # altitude (ft) / 1e5
-const ϕₛ = deg2rad(0)   # longitude (rad)
-const θₛ = deg2rad(0)   # latitude (rad)
-const vₛ = 2.56         # velocity (ft/sec) / 1e4
-const γₛ = deg2rad(-1)  # flight path angle (rad)
-const ψₛ = deg2rad(90)  # azimuth (rad)
-const αₛ = deg2rad(0)   # angle of attack (rad)
-const βₛ = deg2rad(0)   # bank angle (rad)
-const tₛ = 1.00         # time step (sec)
+const h_s = 2.6          # altitude (ft) / 1e5
+const ϕ_s = deg2rad(0)   # longitude (rad)
+const θ_s = deg2rad(0)   # latitude (rad)
+const v_s = 2.56         # velocity (ft/sec) / 1e4
+const γ_s = deg2rad(-1)  # flight path angle (rad)
+const ψ_s = deg2rad(90)  # azimuth (rad)
+const α_s = deg2rad(0)   # angle of attack (rad)
+const β_s = deg2rad(0)   # bank angle (rad)
+const t_s = 1.00         # time step (sec)
 
 ## Final conditions, the so-called Terminal Area Energy Management (TAEM)
-const hₜ = 0.8          # altitude (ft) / 1e5
-const vₜ = 0.25         # velocity (ft/sec) / 1e4
-const γₜ = deg2rad(-5)  # flight path angle (rad)
+const h_t = 0.8          # altitude (ft) / 1e5
+const v_t = 0.25         # velocity (ft/sec) / 1e4
+const γ_t = deg2rad(-5)  # flight path angle (rad)
 
 ## Number of mesh points (knots) to be used
 const n = 503
@@ -216,22 +216,22 @@ end)
 #     in slices of 4.0 seconds, we know that we require `n = 503` knots to discretize the whole trajectory.
 
 ## Fix initial conditions
-fix(scaled_h[1], hₛ; force=true)
-fix(       ϕ[1], ϕₛ; force=true)
-fix(       θ[1], θₛ; force=true)
-fix(scaled_v[1], vₛ; force=true)
-fix(       γ[1], γₛ; force=true)
-fix(       ψ[1], ψₛ; force=true)
+fix(scaled_h[1], h_s; force=true)
+fix(       ϕ[1], ϕ_s; force=true)
+fix(       θ[1], θ_s; force=true)
+fix(scaled_v[1], v_s; force=true)
+fix(       γ[1], γ_s; force=true)
+fix(       ψ[1], ψ_s; force=true)
 
 ## Fix final conditions
-fix(scaled_h[n], hₜ; force=true)
-fix(scaled_v[n], vₜ; force=true)
-fix(       γ[n], γₜ; force=true)
+fix(scaled_h[n], h_t; force=true)
+fix(scaled_v[n], v_t; force=true)
+fix(       γ[n], γ_t; force=true)
 
 ## Initial guess: linear interpolation between boundary conditions
-xₛ = [hₛ, ϕₛ, θₛ, vₛ, γₛ, ψₛ, αₛ, βₛ, tₛ]
-xₜ = [hₜ, ϕₛ, θₛ, vₜ, γₜ, ψₛ, αₛ, βₛ, tₛ]
-interp_linear = Interpolations.LinearInterpolation([1, n], [xₛ, xₜ])
+x_s = [h_s, ϕ_s, θ_s, v_s, γ_s, ψ_s, α_s, β_s, t_s]
+x_t = [h_t, ϕ_s, θ_s, v_t, γ_t, ψ_s, α_s, β_s, t_s]
+interp_linear = Interpolations.LinearInterpolation([1, n], [x_s, x_t])
 initial_guess = mapreduce(transpose, vcat, interp_linear.(1:n))
 set_start_value.(all_variables(model), vec(initial_guess))
 
