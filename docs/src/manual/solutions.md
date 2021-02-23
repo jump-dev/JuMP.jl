@@ -521,7 +521,7 @@ Dict{Any,Float64} with 2 entries:
 
 julia> primal_feasibility_report(model, point; atol = 0.02)
 Dict{Any,Float64} with 1 entry:
-  x integer         => 0.1
+  x integer => 0.1
 ```
 
 If the point is feasible, an empty dictionary is returned:
