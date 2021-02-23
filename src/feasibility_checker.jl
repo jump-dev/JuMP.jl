@@ -65,18 +65,15 @@ function primal_feasibility_report(
     return violated_constraints
 end
 
-function primal_feasibility_report(model::Model; atol::Float64 = 0.0)
+function primal_feasibility_report(model::Model; kwargs...)
     if !has_values(model)
         error(
             "No primal solution is available. You must provide a point at " *
             "which to check feasibility."
         )
     end
-    return primal_feasibility_report(
-        model,
-        Dict(v => value(v) for v in all_variables(model));
-        atol = atol,
-    )
+    point = Dict(v => value(v) for v in all_variables(model))
+    return primal_feasibility_report(model, point; kwargs...)
 end
 
 function _add_infeasible_constraints(
