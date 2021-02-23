@@ -128,6 +128,17 @@ function test_feasible()
     @test isempty(report)
 end
 
+function test_missing()
+    model = Model()
+    @variable(model, x, Bin)
+    @variable(model, 0 <= y <= 2, Int)
+    @variable(model, z == 0.5)
+    @constraint(model, x + y + z >= 0.5)
+    report = primal_feasibility_report(model, Dict(z => 0.0), default = missing)
+    @test report[FixRef(z)] == 0.5
+    @test length(report) == 1
+end
+
 function test_bounds()
     model = Model()
     @variable(model, x, Bin)
@@ -216,6 +227,19 @@ function test_nonlinear()
     @test !haskey(report, c2)
     @test report[c3] ≈ 2 - exp(0.5)
     @test report[c4] ≈ 0.125
+end
+
+function test_nonlinear_missing()
+    model = Model()
+    @variable(model, x)
+    @NLconstraint(model, c1, sin(x) <= 0.0)
+    @test_throws(
+        ErrorException(
+            "`default` cannot be `missing` when nonlinear constraints are " *
+            "present.",
+        ),
+        primal_feasibility_report(model, Dict(x => 0.5); default = missing)
+    )
 end
 
 function runtests()

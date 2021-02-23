@@ -10,6 +10,7 @@ using LinearAlgebra
         model::Model,
         [point::AbstractDict{VariableRef,Float64}];
         atol::Float64 = 0.0,
+        default::Union{Float64,Missing} = 0.0,
     )::Dict{Any,Float64}
 
 Given a dictionary `point`, which maps variables to primal values, return a
@@ -19,7 +20,9 @@ greater than `atol`.
 
 ## Notes
 
- * If a variable is not given in `point`, the value is assumed to be `0.0`.
+ * If a variable is not given in `point`, the value is assumed to be `default`.
+   If `default = missing`, constraints which contain a missing variable are
+   skipped.
  * If no point is provided, the primal solution from the last time the model was
    solved is used.
 
@@ -39,8 +42,9 @@ function primal_feasibility_report(
     model::Model,
     point::AbstractDict{VariableRef,Float64};
     atol::Float64 = 0.0,
+    default::Union{Float64,Missing} = 0.0,
 )
-    point_f = x -> get(point, x, 0.0)
+    point_f = x -> get(point, x, default)
     violated_constraints = Dict{Any,Float64}()
     for (F, S) in list_of_constraint_types(model)
         _add_infeasible_constraints(
@@ -48,6 +52,12 @@ function primal_feasibility_report(
         )
     end
     if num_nl_constraints(model) > 0
+        if ismissing(default)
+            error(
+                "`default` cannot be `missing` when nonlinear constraints " *
+                "are present.",
+            )
+        end
         _add_infeasible_nonlinear_constraints(
             model, violated_constraints, point_f, atol
         )
@@ -117,6 +127,8 @@ function _distance_to_set(::Any, set::MOI.AbstractSet)
         "implemented yet."
     )
 end
+
+_distance_to_set(::Missing, ::MOI.AbstractSet) = 0.0
 
 ###
 ### MOI.AbstractScalarSets
