@@ -1,3 +1,25 @@
+# MIT License                                                                    #src
+#                                                                                #src
+# Copyright (c) 2020 François Pacaud                                             #src
+#                                                                                #src
+# Permission is hereby granted, free of charge, to any person obtaining a copy   #src
+# of this software and associated documentation files (the "Software"), to deal  #src
+# in the Software without restriction, including without limitation the rights   #src
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell      #src
+# copies of the Software, and to permit persons to whom the Software is          #src
+# furnished to do so, subject to the following conditions:                       #src
+#                                                                                #src
+# The above copyright notice and this permission notice shall be included in all #src
+# copies or substantial portions of the Software.                                #src
+#                                                                                #src
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR     #src
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,       #src
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE    #src
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER         #src
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,  #src
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
+# SOFTWARE.                                                                      #src
+
 # # Logistic Regression
 
 # **Originally Contributed by**: François Pacaud
@@ -11,7 +33,7 @@
 # the resulting problem is convex and differentiable. On a modern optimization
 # glance, it is even conic representable.
 #
-# # Formulating the logistic regression problem
+# ## Formulating the logistic regression problem
 #
 # Suppose we have a set of training data-point $i = 1, \cdots, n$, where
 # for each $i$ we have a vector of features $x_i \in \mathbb{R}^p$ and a
@@ -104,8 +126,8 @@
 #
 # It is now time to pass to the implementation. We choose SCS as a conic solver.
 using JuMP
-using Random
-using SCS
+import Random
+import SCS
 
 Random.seed!(2713);
 
@@ -131,7 +153,7 @@ function softplus(model, t, u)
     @constraint(model, vec([-t, 1, z[2]]) in MOI.ExponentialCone())
 end
 
-# ## $\ell_2$ regularized logistic regression
+# ### $\ell_2$ regularized logistic regression
 # Then, with the help of the `softplus` function, we could write our
 # optimization model. In the $\ell_2$ regularization case, the constraint
 # $r \geq \|\theta\|_2$ rewrites as a second order cone constraint.
@@ -152,8 +174,11 @@ function build_logit_model(X, y, λ)
     return model
 end
 
-## Generate one dataset.
-## Be careful here, for large n and p SCS could fail to converge!
+# We generate the dataset.
+#
+# !!! Warning
+#     Be careful here, for large n and p SCS could fail to converge!
+#
 n, p = 200, 10
 X, y = generate_dataset(n, p, shift=10.0);
 
@@ -169,7 +194,7 @@ JuMP.optimize!(model)
 # of the dataset, nor by the penalty $\lambda$.
 
 
-# ### Sparse logistic regression
+# ### $\ell_1$ regularized logistic regression
 #
 # We now formulate the logistic problem with a $\ell_1$ regularization term.
 # The $\ell_1$ regularization ensures sparsity in the optimal
@@ -208,7 +233,7 @@ println("Number of non-zero components: ", count_nonzero(θ♯),
         " (out of ", p, " features)")
 
 
-# # Extensions
+# ### Extensions
 # A direct extension would be to consider the sparse logistic regression with
 # *hard* thresholding, which, on contrary to the *soft* version using a $\ell_1$ regularization,
 # adds an explicit cardinality constraint in its formulation:
@@ -231,5 +256,3 @@ println("Number of non-zero components: ", count_nonzero(θ♯),
 # binary variables. Thus the hard sparse regression problem could be solved
 # by any solver supporting mixed integer conic problems.
 #
-# ## References
-# 1. Logistic regression — MOSEK Fusion API. Available at: https://docs.mosek.com/9.2/pythonfusion/case-studies-logistic.html
