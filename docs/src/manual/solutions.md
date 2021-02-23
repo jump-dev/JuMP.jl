@@ -516,8 +516,8 @@ julia> point = Dict(x => 1.9, y => 0.06);
 
 julia> primal_feasibility_report(model, point)
 Dict{Any,Float64} with 2 entries:
-  x integer         => 0.1
   c1 : x + y ≤ 1.95 => 0.01
+  x integer         => 0.1
 
 julia> primal_feasibility_report(model, point; atol = 0.02)
 Dict{Any,Float64} with 1 entry:
