@@ -50,7 +50,7 @@ programming.
 ## How the documentation is structured
 
 Having a high-level overview of how this documentation is structured will help
-you know where to look for certain things. There are three four parts:
+you know where to look for certain things. There are four main parts:
 
 * **Tutorials** contain worked examples of solving problems with JuMP. Start
   here if you are new to JuMP, or you have a particular problem class you want
