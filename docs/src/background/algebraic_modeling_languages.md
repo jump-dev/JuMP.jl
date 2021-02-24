@@ -6,7 +6,7 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Algebraic modeling languages
+# [Algebraic modeling languages](@id algebraic-modeling-language)
 
 ## What is an algebraic modeling language?
 
@@ -14,9 +14,9 @@ If you have taken a class in mixed-integer linear programming, you will have
 seen a formulation like:
 ```math
 \begin{aligned}
-\min & c^\top x
-\text{s.t.} & A x = b \\
-            & x \ge 0 \\
+\min \;     & c^\top x \\
+\text{s.t.} & A x = b  \\
+            & x \ge 0  \\
             & x_i \in \mathbb{Z}, \quad \forall i \in \mathcal{I}
 \end{aligned}
 ```
@@ -27,12 +27,24 @@ Solvers expect problems in a _standard form_ like this because it limits the
 types of constraints that they need to consider. This makes writing a solver
 much easier.
 
+!!! info "What is a solver?"
+    A solver is a software package that computes solutions to one or more
+    classes of problems.
+
+    For example, GLPK is a solver for linear programming (LP) and mixed integer
+    programming (MIP) problems. It incorporates algorithms such as the simplex
+    method and the interior-point method.
+
+    JuMP currently supports a number of open-source and commercial solvers,
+    which can be viewed in the [Supported-solvers](@ref) table.
+
+
 However, you probably formulated problems algebraically like so:
 ```math
 \begin{aligned}
-\min & \sum\limits_{i = 1}^n c_i x_i
-\text{s.t.} & \sum\limits_{i = 1}^n w_i x_i \le b \\
-            & x_i \ge 0 \quad \forall i = 1,\ldots,n.
+\min \;     & \sum\limits_{i = 1}^n c_i x_i                   \\
+\text{s.t.} & \sum\limits_{i = 1}^n w_i x_i \le b             \\
+            & x_i \ge 0 \quad \forall i = 1,\ldots,n          \\
             & x_i \in \mathbb{Z} \quad \forall i = 1,\ldots,n.
 \end{aligned}
 ```
@@ -47,10 +59,10 @@ We could convert our knapsack problem into the standard form by adding a new
 slack variable $x_0$ like so:
 ```math
 \begin{aligned}
-\min & \sum\limits_{i = 1}^n c_i x_i
-\text{s.t.} & x_0 + \sum\limits_{i = 1}^n w_i x_i = b \\
-            & x_i \ge 0 \quad \forall i = 0,\ldots,n \\
-            & x_i \in \mathbb{Z} \quad \forall i = 0,\ldots,n.
+\min \;     & \sum\limits_{i = 1}^n c_i x_i            \\
+\text{s.t.} & x_0 + \sum\limits_{i = 1}^n w_i x_i = b  \\
+            & x_i \ge 0 \quad \forall i = 0,\ldots,n   \\
+            & x_i \in \mathbb{Z} \quad \forall i = 1,\ldots,n.
 \end{aligned}
 ```
 However, as models get more complicated, this manual conversion becomes more and
@@ -135,44 +147,13 @@ Hopefully you agree that the macro version is much easier to read!
 
 ## Part II: talking to solvers
 
-Another complicating factor is the diversity of standard forms expected by
-solvers. For example, other linear programming solvers require a standard form
-like:
-```math
-\begin{aligned}
-\min & c^\top x
-\text{s.t.} & l_c \le A x \le u_c \\
-            & l_x \le x \le u_x,
-\end{aligned}
-```
+Now that we have the algebraic problem from the user, we need a way of
+communicating the problem to the solver, and a way of returning the solution
+from the solver back to the user. JuMP does this through the
+[MathOptInterface.jl](https://github.com/jump-dev/MathOptInterface.jl)
+package.
 
-```math
-\begin{aligned}
-\min & c^\top x
-\text{s.t.} & A x - b \in \mathcal{K}\\
-\end{aligned}
-```
-```math
-\begin{aligned}
-\min & c^\top x
-\text{s.t.} & A x = b \\
-            & x \in \mathcal{K}
-\end{aligned}
-```
-
-## What is a Solver?
-
-A solver is a software package that incorporates algorithms for finding
-solutions to one or more classes of problem.
-
-For example, GLPK is a solver for linear programming (LP) and mixed integer
-programming (MIP) problems. It incorporates algorithms such as the simplex
-method and the interior-point method.
-
-JuMP currently supports a number of open-source and commercial solvers, which
-can be viewed in the [Supported-solvers](@ref) table.
-
-## What is MathOptInterface?
+### What is MathOptInterface?
 
 Each mathematical optimization solver API has its own concepts and data
 structures for representing optimization models and obtaining results.
@@ -183,3 +164,31 @@ MathOptInterface (MOI) is an abstraction layer designed to provide an
 interface to mathematical optimization solvers so that users do not need to
 understand multiple solver-specific APIs. MOI can be used directly, or through
 a higher-level modeling interface like JuMP.
+
+## Complications
+
+Another complicating factor is the diversity of standard forms expected by
+solvers. For example, other linear programming solvers require a standard form
+like:
+```math
+\begin{aligned}
+\min \;     & c^\top x            \\
+\text{s.t.} & l_c \le A x \le u_c \\
+            & l_x \le x \le u_x,
+\end{aligned}
+```
+
+```math
+\begin{aligned}
+\min \;     & c^\top x                \\
+\text{s.t.} & A x - b \in \mathcal{K}
+\end{aligned}
+```
+```math
+\begin{aligned}
+\min \;     & c^\top x          \\
+\text{s.t.} & A x = b           \\
+            & x \in \mathcal{K}
+\end{aligned}
+```
+

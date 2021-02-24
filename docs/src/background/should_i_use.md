@@ -1,6 +1,6 @@
 # Should I use JuMP?
 
-JuMP is an [algebraic modeling language](@ref Algebraic modeling languages) for
+JuMP is an [algebraic modeling language](@ref algebraic-modeling-language) for
 mathematical optimization written in the [Julia language](https://julialang.org).
 
 ## When should I use JuMP?
@@ -12,22 +12,24 @@ set of constraints.
 Key reasons to use JuMP include:
 
  - User friendliness
-   - Syntax that mimics natural mathematical expressions.
+   - Syntax that mimics natural mathematical expressions. (See the section on
+     [algebraic modeling languages](@ref algebraic-modeling-language).)
  - Speed
    - Benchmarking has shown that JuMP can create problems at similar speeds to
      special-purpose modeling languages such as [AMPL](https://ampl.com/).
    - JuMP communicates with most solvers in memory, avoiding the need to write
      intermediary files.
  - Solver independence
-   -   JuMP uses a generic solver-independent interface provided by the
-        [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl)
-        package, making it easy to change between a number of open-source and
-        commercial optimization software packages ("solvers"). The
-        [Supported solvers](@ref) section contains a table of the currently
-        supported solvers.
+   - JuMP uses a generic solver-independent interface provided by the
+     [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl)
+     package, making it easy to change between a number of open-source and
+     commercial optimization software packages ("solvers"). The
+     [Supported solvers](@ref) section contains a table of the currently
+     supported solvers.
  - Access to advanced algorithmic techniques
-   -   Including efficient LP re-solves which previously required using
-        solver-specific and/or low-level C++ libraries.
+   - Efficient _in-memory_ LP re-solves which previously required using
+     solver-specific and/or low-level C++ libraries.
+   - Access to solver-independent and solver-dependent [Callbacks](@ref).
  - Ease of embedding
    - JuMP itself is written purely in Julia. Solvers are the only binary
      dependencies.
