@@ -37,13 +37,15 @@ function _io_test_print(::Type{IJuliaMode}, obj, exp_str)
 end
 function _io_test_print(::Type{REPLMode}, obj::AbstractModel, exp_str)
     @test sprint(print, obj) == exp_str
+    path = tempname()
+    open(io -> redirect_stdout(() -> print(obj; latex = false), io), path, "w")
+    @test read(path, String) == exp_str
 end
 function _io_test_print(::Type{IJuliaMode}, obj::AbstractModel, exp_str)
-    @test sprint(show, LaTeXify(obj)) == string("\$\$ ", exp_str, " \$\$")
-    @test sprint(show, MIME("text/latex"), LaTeXify(obj)) ==
-        string("\$\$ ", exp_str, " \$\$")
-    @test sprint(show, MIME("text/plain"), LaTeXify(obj)) ==
-        string("\$\$ ", exp_str, " \$\$")
+    @test sprint(io -> print(io, obj; latex = true)) == string("\$\$ ", exp_str, " \$\$")
+    # Don't know how to test a `display`, so let's just run the code to check it
+    # doesn't error.
+    print(obj; latex = true)
 end
 
 function io_test(mode, obj, exp_str; repl = :both)

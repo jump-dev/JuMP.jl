@@ -48,43 +48,28 @@ abstract type IJuliaMode <: PrintMode end
 
 Base.show(io::IO, model::AbstractModel) = _print_summary(io, model)
 
-"""
-    Base.print([io::IO = stdout,] model::AbstractModel)
-
-Print the plain-text formulation of `model` to `io` as a string (or to `stdout`
-if `io` is not given).
-
-See also: [LaTeXify](@ref).
-"""
-Base.print(io::IO, model::AbstractModel) = _print_model(io, model)
-
-"""
-    LaTeXify(model)
-
-Return an object that, when called with `show` or `print`, displays the LaTeX
-formulation of model.
-
-In the REPL, calling
-```julia
-julia> PrettyPrinter(model)
-```
-prints the formulation of `model` as a LaTeX string, which can be copied into a
-`.tex` document.
-
-In IJulia, if `PrettyPrinter(model)` is the last line in a cell, then the
-rendered LaTeX version of the model will be displayed.
-
-In the REPL and IJulia, you can get the formulation as a string by calling
-```julia
-sprint(show, LaTeXify(model))
-```
-"""
-struct LaTeXify{T<:AbstractModel}
+struct _LatexWrapper{T<:AbstractModel}
     model::T
 end
 
-Base.show(io::IO, model::LaTeXify) = _print_latex(io, model.model)
-Base.show(io::IO, ::MIME"text/latex", model::LaTeXify) = show(io, model)
+Base.show(io::IO, model::_LatexWrapper) = _print_latex(io, model.model)
+Base.show(io::IO, ::MIME"text/latex", model::_LatexWrapper) = show(io, model)
+
+"""
+    Base.print([io::IO = stdout,] model::AbstractModel; latex::Bool = false)
+
+Print the formulation of `model` to `io` as a string (or to `stdout` if `io` is
+not given).
+
+If `latex=true` print the model in LaTeX. If `latex=false`, print in plain-text.
+"""
+function Base.print(io::IO, model::AbstractModel; latex::Bool = false)
+    return latex ? _print_latex(io, model) : _print_model(io, model)
+end
+
+function Base.print(model::AbstractModel; latex::Bool = false)
+    return latex ? display(_LatexWrapper(model)) : _print_model(stdout, model)
+end
 
 # Whether something is zero or not for the purposes of printing it
 # oneunit is useful e.g. if coef is a Unitful quantity.
