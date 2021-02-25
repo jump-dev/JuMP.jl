@@ -10,7 +10,7 @@ using LinearAlgebra
         model::Model,
         [point::AbstractDict{VariableRef,Float64}];
         atol::Float64 = 0.0,
-        default::Union{Float64,Missing} = 0.0,
+        skip_missing::Bool = false,
     )::Dict{Any,Float64}
 
 Given a dictionary `point`, which maps variables to primal values, return a
@@ -20,9 +20,8 @@ greater than `atol`.
 
 ## Notes
 
- * If a variable is not given in `point`, the value is assumed to be `default`.
-   If `default = missing`, constraints which contain a missing variable are
-   skipped.
+ * If `skip_missing = true`, constraints containing variables that are not in
+   `point` will be ignored.
  * If no point is provided, the primal solution from the last time the model was
    solved is used.
 
@@ -42,9 +41,18 @@ function primal_feasibility_report(
     model::Model,
     point::AbstractDict{VariableRef,Float64};
     atol::Float64 = 0.0,
-    default::Union{Float64,Missing} = 0.0,
+    skip_missing::Bool = false,
 )
-    point_f = x -> get(point, x, default)
+    function point_f(x)
+        fx = get(point, x, missing)
+        if ismissing(fx) && !skip_missing
+            error(
+                "point does not contain a value for variable $x. Provide a " *
+                "value, or pass `skip_missing = true`.",
+            )
+        end
+        return fx
+    end
     violated_constraints = Dict{Any,Float64}()
     for (F, S) in list_of_constraint_types(model)
         _add_infeasible_constraints(
@@ -52,10 +60,10 @@ function primal_feasibility_report(
         )
     end
     if num_nl_constraints(model) > 0
-        if ismissing(default)
+        if skip_missing
             error(
-                "`default` cannot be `missing` when nonlinear constraints " *
-                "are present.",
+                "`skip_missing = true` is not allowed when nonlinear " *
+                "constraints are present.",
             )
         end
         _add_infeasible_nonlinear_constraints(

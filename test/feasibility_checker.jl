@@ -124,7 +124,7 @@ function test_feasible()
     @variable(model, 0 <= y <= 2, Int)
     @variable(model, z == 0.5)
     @constraint(model, x + y + z >= 0.5)
-    report = primal_feasibility_report(model, Dict(z => 0.5))
+    report = primal_feasibility_report(model, Dict(x => 0.0, y => 0.0, z => 0.5))
     @test isempty(report)
 end
 
@@ -134,9 +134,25 @@ function test_missing()
     @variable(model, 0 <= y <= 2, Int)
     @variable(model, z == 0.5)
     @constraint(model, x + y + z >= 0.5)
-    report = primal_feasibility_report(model, Dict(z => 0.0), default = missing)
+    report = primal_feasibility_report(
+        model,
+        Dict(z => 0.0),
+        skip_missing = true,
+    )
     @test report[FixRef(z)] == 0.5
     @test length(report) == 1
+end
+
+function test_missing_error()
+    model = Model()
+    @variable(model, x, Bin)
+    @variable(model, 0 <= y <= 2, Int)
+    point = Dict(x => 0.1)
+    err = ErrorException(
+        "point does not contain a value for variable $(y). Provide a value, " *
+        "or pass `skip_missing = true`.",
+    )
+    @test_throws err primal_feasibility_report(model, point)
 end
 
 function test_bounds()
@@ -144,7 +160,7 @@ function test_bounds()
     @variable(model, x, Bin)
     @variable(model, 0 <= y <= 2, Int)
     @variable(model, z == 0.5)
-    point = Dict(x => 0.1, y => 2.1)
+    point = Dict(x => 0.1, y => 2.1, z => 0.0)
     report = primal_feasibility_report(model, point)
     @test report[BinaryRef(x)] ≈ 0.1
     @test report[UpperBoundRef(y)] ≈ 0.1
@@ -190,7 +206,7 @@ function test_vector()
     @constraint(model, c2, x in MOI.Nonpositives(3))
     @constraint(model, c3, x in MOI.Reals(3))
     @constraint(model, c4, x in MOI.Zeros(3))
-    point = Dict(x[1] => 1.0, x[2] => -1.0)
+    point = Dict(x[1] => 1.0, x[2] => -1.0, x[3] => 0.0)
     report = primal_feasibility_report(model, point)
     @test report[c1] ≈ 1.0
     @test report[c2] ≈ 1.0
@@ -206,7 +222,7 @@ function test_vector_affine()
     @constraint(model, c2, 2 * x in MOI.Nonpositives(3))
     @constraint(model, c3, 2 * x in MOI.Reals(3))
     @constraint(model, c4, 2 * x in MOI.Zeros(3))
-    point = Dict(x[1] => 1.0, x[2] => -1.0)
+    point = Dict(x[1] => 1.0, x[2] => -1.0, x[3] => 0.0)
     report = primal_feasibility_report(model, point)
     @test report[c1] ≈ 2.0
     @test report[c2] ≈ 2.0
@@ -235,10 +251,10 @@ function test_nonlinear_missing()
     @NLconstraint(model, c1, sin(x) <= 0.0)
     @test_throws(
         ErrorException(
-            "`default` cannot be `missing` when nonlinear constraints are " *
-            "present.",
+            "`skip_missing = true` is not allowed when nonlinear constraints " *
+            "are present.",
         ),
-        primal_feasibility_report(model, Dict(x => 0.5); default = missing)
+        primal_feasibility_report(model, Dict(x => 0.5); skip_missing = true)
     )
 end
 

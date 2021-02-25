@@ -495,8 +495,7 @@ end
 To check the feasibility of a primal solution, use
 [`primal_feasibility_report`](@ref), which takes a `model`, a dictionary mapping
 each variable to a primal solution value (defaults to the last solved solution),
-a tolerance `atol` (defaults to `0.0`), and a `default` value for variables not
-given in dictionary (defaults to `0.0`).
+a tolerance `atol` (defaults to `0.0`).
 
 The function returns a dictionary which maps the infeasible constraint
 references to the distance between the point and the nearest point in the
@@ -538,18 +537,10 @@ julia> primal_feasibility_report(model)
 Dict{Any,Float64} with 0 entries
 ```
 
-Use the `default` keyword argument to provide a value for variables not in the
-`point`:
-```jldoctest feasibility
-julia> primal_feasibility_report(model, Dict(x => 1.0); default = 1.5)
-Dict{Any,Float64} with 1 entry:
-  c1 : x + y ≤ 1.95 => 0.55
-```
-
-Pass `default = missing` to skip constraints which contain variables that are
+Pass `skip_mising = true` to skip constraints which contain variables that are
 not in `point`:
 ```jldoctest feasibility
-julia> primal_feasibility_report(model, Dict(x => 2.1); default = missing)
+julia> primal_feasibility_report(model, Dict(x => 2.1); skip_missing = true)
 Dict{Any,Float64} with 1 entry:
   x integer => 0.1
 ```
