@@ -28,6 +28,9 @@ open-source and commercial solvers for a variety of problem classes, including
 linear, mixed-integer, second-order conic, semidefinite, and nonlinear
 programming.
 
+!!! tip
+    If you aren't sure if you should use JuMP, read [Should I use JuMP?](@ref).
+
 ## Resources for getting started
 
 * Read the [Installation Guide](@ref).
@@ -47,7 +50,7 @@ programming.
 ## How the documentation is structured
 
 Having a high-level overview of how this documentation is structured will help
-you know where to look for certain things. There are three main parts:
+you know where to look for certain things. There are four main parts:
 
 * **Tutorials** contain worked examples of solving problems with JuMP. Start
   here if you are new to JuMP, or you have a particular problem class you want
@@ -61,40 +64,9 @@ you know where to look for certain things. There are three main parts:
 * The **API Reference** contains a complete list of the functions you can use in
   JuMP. Look here if you want to know how to use a particular function.
 
-## Key features
-
-JuMP's features include:
-
--   User friendliness
-    -   Syntax that mimics natural mathematical expressions.
-    -   Complete documentation (WIP!)
--   Speed
-    -   Benchmarking has shown that JuMP can create problems at similar speeds
-        to special-purpose modeling languages such as
-        [AMPL](https://ampl.com/).
-    -   JuMP communicates with most solvers in memory, avoiding the need to
-        write intermediary files.
--   Solver independence
-    -   JuMP uses a generic solver-independent interface provided by the
-        [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl)
-        package, making it easy to change between a number of open-source and
-        commercial optimization software packages ("solvers"). The [Supported solvers](@ref)
-        section contains a table of the currently supported solvers.
--   Access to advanced algorithmic techniques
-    -   Including efficient LP re-solves which previously required using
-        solver-specific and/or low-level C++ libraries.
--   Ease of embedding
-    -   JuMP itself is written purely in Julia. Solvers are the only binary
-        dependencies.
-    -   Being embedded in a general-purpose programming language makes it easy
-        to solve optimization problems as part of a larger workflow (e.g.,
-        inside a simulation, behind a web server, or as a subproblem in a
-        decomposition algorithm).
-        -   As a trade-off, JuMP's syntax is constrained by the syntax available
-            in Julia.
-    -   JuMP is [MPL](https://www.mozilla.org/MPL/2.0/) licensed, meaning that
-        it can be embedded in commercial software that complies with the terms
-        of the license.
+* The **Background information** section contains background reading material to
+  provide context to JuMP. Look here if you want an understanding of what JuMP
+  is and why we created it, rather than how to use it.
 
 ### Citing JuMP
 

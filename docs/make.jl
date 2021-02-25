@@ -131,6 +131,10 @@ makedocs(
             "reference/callbacks.md",
             "reference/moi.md",
         ],
+        "Background information" => [
+            "background/should_i_use.md",
+            "background/algebraic_modeling_languages.md",
+        ],
         "Developer Docs" => [
             "Extensions" => "developers/extensions.md",
             "Style Guide" => "developers/style.md",
