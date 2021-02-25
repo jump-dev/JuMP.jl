@@ -149,46 +149,35 @@ Hopefully you agree that the macro version is much easier to read!
 
 Now that we have the algebraic problem from the user, we need a way of
 communicating the problem to the solver, and a way of returning the solution
-from the solver back to the user. JuMP does this through the
+from the solver back to the user.
+
+This is less trivial than it might seem, because each solver has a unique
+application programming interface (API) and data structures for representing
+optimization models and obtaining results.
+
+JuMP uses the
 [MathOptInterface.jl](https://github.com/jump-dev/MathOptInterface.jl)
-package.
+package to abstract these differences between solvers.
 
 ### What is MathOptInterface?
-
-Each mathematical optimization solver API has its own concepts and data
-structures for representing optimization models and obtaining results.
-However, it is often desirable to represent an instance of an optimization
-problem at a higher level so that it is easy to try using different solvers.
 
 MathOptInterface (MOI) is an abstraction layer designed to provide an
 interface to mathematical optimization solvers so that users do not need to
 understand multiple solver-specific APIs. MOI can be used directly, or through
 a higher-level modeling interface like JuMP.
 
-## Complications
+There are three main parts to MathOptInterface:
 
-Another complicating factor is the diversity of standard forms expected by
-solvers. For example, other linear programming solvers require a standard form
-like:
-```math
-\begin{aligned}
-\min \;     & c^\top x            \\
-\text{s.t.} & l_c \le A x \le u_c \\
-            & l_x \le x \le u_x,
-\end{aligned}
-```
+ 1. A solver-independent API that abstracts concepts such as adding and deleting
+    variables and constraints, settting and getting parameters, and querying
+    results. For more information on the MathOptInterface API, read the
+    [documentation]([https://jump.dev/MathOptInterface.jl/stable/])
 
-```math
-\begin{aligned}
-\min \;     & c^\top x                \\
-\text{s.t.} & A x - b \in \mathcal{K}
-\end{aligned}
-```
-```math
-\begin{aligned}
-\min \;     & c^\top x          \\
-\text{s.t.} & A x = b           \\
-            & x \in \mathcal{K}
-\end{aligned}
-```
+ 2. An automatic rewriting system based on equivalent formulations of a
+    constraint. For more information on this rewriting system, read the
+    [LazyBridgeOptimizer](@ref) section of the manual, and our
+    [paper on arXiv](https://arxiv.org/abs/2002.03447).
 
+ 3. Utilities for managing how and when models are copied to solvers. For more
+    information on this, read the [CachingOptimizer](@ref) section of the
+    manual.
