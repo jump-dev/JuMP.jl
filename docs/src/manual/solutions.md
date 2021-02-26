@@ -495,12 +495,12 @@ end
 To check the feasibility of a primal solution, use
 [`primal_feasibility_report`](@ref), which takes a `model`, a dictionary mapping
 each variable to a primal solution value (defaults to the last solved solution),
-a tolerance `atol` (defaults to `0.0`).
+and a tolerance `atol` (defaults to `0.0`).
 
 The function returns a dictionary which maps the infeasible constraint
-references to the distance between the point and the nearest point in the
-corresponding set. A point is classed as infeasible if the distance is greater
-than the supplied tolerance `atol`.
+references to the distance between the primal value of the constraint and the 
+nearest point in the corresponding set. A point is classed as infeasible if the 
+distance is greater than the supplied tolerance `atol`.
 
 ```jldoctest feasibility
 julia> model = Model(GLPK.Optimizer);
