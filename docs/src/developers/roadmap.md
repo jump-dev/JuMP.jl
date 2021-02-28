@@ -35,7 +35,7 @@ Some but not all of these tasks are summarized in the
   - Separate how-to, concept explanation, and technical reference following the
     [Divio recommendations](https://www.divio.com/blog/documentation/) (**Done**)
   - Fully integrate [JuMPTutorials](https://github.com/jump-dev/JuMPTutorials.jl)
-    with JuMP's documentation.
+    with JuMP's documentation. (**Done**)
 - Developer experience
   - Get JuMP’s unit tests running faster. See [#1745](https://github.com/jump-dev/JuMP.jl/pull/1745). (**Done**)
 - All solvers should complete the transition to MOI. (**Done**)
