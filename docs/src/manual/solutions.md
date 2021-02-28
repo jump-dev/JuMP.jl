@@ -20,7 +20,6 @@ model = Model(GLPK.Optimizer)
 @constraint(model, c1, 7x + 12y[:a] >= 120)
 optimize!(model)
 print(model)
-show_solution_summary(model)
 
 # output
 
@@ -31,7 +30,13 @@ Subject to
  x ≥ 0.0
  y[a] ≤ 1.0
  y[b] ≤ 1.0
+```
 
+## Solutions summary  
+[`show_solution_summary`](@ref) can be used for checking the summary of the optimization solutions.
+
+```jldoctest solutions
+julia> show_solution_summary(model)
 * Solver:GLPK
 
 * Status
