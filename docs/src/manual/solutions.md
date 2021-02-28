@@ -20,6 +20,7 @@ model = Model(GLPK.Optimizer)
 @constraint(model, c1, 7x + 12y[:a] >= 120)
 optimize!(model)
 print(model)
+show_solution_summary(model)
 
 # output
 
@@ -30,6 +31,23 @@ Subject to
  x ≥ 0.0
  y[a] ≤ 1.0
  y[b] ≤ 1.0
+
+* Solver:GLPK
+
+* Status
+  Termination status : OPTIMAL
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Message from the solver:
+  "Solution is optimal"
+
+* Candidate solution
+  Objective value : -205.14285714285714
+  Objective bound : Inf
+  Dual objective value : -205.1428571428571
+
+* Work counters
+  Solve time (sec)   : 7.414817810058594e-5
 ```
 
 ## Why did the solver stop?

@@ -363,7 +363,7 @@ function _show_candidate_solution_summary(io::IO, model::Model, verbose::Bool)
         # do not print
     end
     try
-        print(io, "  Objective bound : ", dual_objective_value(model), "\n")
+        print(io, "  Dual objective value : ", dual_objective_value(model), "\n")
     catch ArgumentError
         # do not print
     end
