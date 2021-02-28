@@ -324,6 +324,94 @@ function objective_function_string(print_mode, model::Model)
    end
 end
 
+"""
+    show_solution_summary([io::IO], model::Model; verbose::Bool = false)
+
+Write to `io` (or to the default output stream `stdout` if `io` is not given) a summary of the solution results.
+If `verbose` is true, additional information are written.
+"""
+function show_solution_summary(io::IO, model::Model; verbose::Bool = false)
+    print(io, "* Solver:", solver_name(model), "\n")
+    print(io, "\n")
+
+    _show_status_summary(io, model, verbose)
+    _show_candidate_solution_summary(io, model, verbose)
+    _show_work_counters_summary(io, model, verbose)
+end
+
+show_solution_summary(model::Model; verbose::Bool = false) = show_solution_summary(stdout, model; verbose = verbose)
+
+function _show_status_summary(io::IO, model::Model, verbose::Bool)
+    print(io, "* Status\n")
+    print(io, "  Termination status : ", termination_status(model), "\n")
+    print(io, "  Primal status      : ", primal_status(model), "\n")
+    print(io, "  Dual status        : ", dual_status(model), "\n")
+    verbose && print(io, "  Result count       : ", result_count(model), "\n")
+    verbose && print(io, "  Has values         : ", has_values(model), "\n")
+    verbose && print(io, "  Has duals          : ", has_duals(model), "\n")
+    print(io, "  Message from the solver:\n")
+    print(io, "  \"", raw_status(model), "\"\n")
+    print(io, "\n")
+end
+
+function _show_candidate_solution_summary(io::IO, model::Model, verbose::Bool)
+    print(io, "* Candidate solution\n")
+    print(io, "  Objective value : ", objective_value(model), "\n")
+    try
+        print(io, "  Objective bound : ", objective_bound(model), "\n")
+    catch ArgumentError
+        # do not print
+    end
+    try
+        print(io, "  Objective bound : ", dual_objective_value(model), "\n")
+    catch ArgumentError
+        # do not print
+    end
+
+    if verbose && has_values(model)
+        print(io, "  Primal solution : \n")
+        for (symbol, variable) in object_dictionary(model) 
+            print(io, "    ", string(symbol), ":", value(variable), "\n")
+        end
+    end
+
+    if verbose && has_duals(model)
+        print(io, "  Dual solution : \n")
+        constraint_id = 1
+        for (F, S) in list_of_constraint_types(model)
+            for constraint in all_constraints(model, F, S)
+                constraint_name = name(constraint)
+                if isempty(constraint_name) 
+                    constraint_name = "c"*string(constraint_id) # use temporary constraint name
+                    constraint_id += 1
+                end
+                print(io, "    ", constraint_name, ":", dual(constraint), "\n")
+            end
+        end
+    end
+    print(io, "\n")
+end
+
+function _show_work_counters_summary(io::IO, model::Model, verbose::Bool)
+    print(io, "* Work counters\n")
+    print(io, "  Solve time (sec)   : ", solve_time(model), "\n")
+    try
+        print(io, "  Simplex iterations : ", simplex_iterations(model), "\n")
+    catch ArgumentError
+        # do not print
+    end
+    try
+        print(io, "  Barrier iterations : ", barrier_iterations(model), "\n")
+    catch ArgumentError
+        # do not print
+    end
+    try
+        print(io, "  Node count : ", node_count(model), "\n")
+    catch ArgumentError
+        # do not print
+    end
+end
+
 #------------------------------------------------------------------------
 ## VariableRef
 #------------------------------------------------------------------------
