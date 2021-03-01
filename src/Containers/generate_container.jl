@@ -104,9 +104,10 @@ function generate_container(T, indexvars, indexsets, requestedtype)
     arrayexpr = :(Array{$T}(undef, $sizes...))
 
     if requestedtype == :Array
-        has_dependent &&
-            return :(error("Unable to create requested Array because index sets are dependent.")),
-            true
+        has_dependent && return :(error(
+            "Unable to create requested Array because index sets are dependent.",
+        )),
+        true
         if all(onetosets)
             return arrayexpr, true
         else
@@ -137,9 +138,10 @@ function generate_container(T, indexvars, indexsets, requestedtype)
     append!(axisexpr.args, indexsets)
 
     if requestedtype == :DenseAxisArray
-        has_dependent &&
-            return :(error("Unable to create requested DenseAxisArray because index sets are dependent.")),
-            true
+        has_dependent && return :(error(
+            "Unable to create requested DenseAxisArray because index sets are dependent.",
+        )),
+        true
         return axisexpr, true
     end
 

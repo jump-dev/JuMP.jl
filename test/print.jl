@@ -220,8 +220,16 @@ end
         io_test(REPLMode, constr_range, "0 $le sin(x) $le 1")
         io_test(REPLMode, constr_exponent_1, "x ^ 4.0 - 1.0 $le 0")
         io_test(REPLMode, constr_exponent_2, "x ^ 40.23 - 1.0 $le 0")
-        io_test(REPLMode, constr_exponent_3, "(x ^ 4.0 + x ^ 3.0 + x ^ 2.0) - 1.0 $le 0")
-        io_test(REPLMode, constr_exponent_4, "(x ^ -4.0 + x ^ -3.0 + x ^ -2.0) - 1.0 $le 0")
+        io_test(
+            REPLMode,
+            constr_exponent_3,
+            "(x ^ 4.0 + x ^ 3.0 + x ^ 2.0) - 1.0 $le 0",
+        )
+        io_test(
+            REPLMode,
+            constr_exponent_4,
+            "(x ^ -4.0 + x ^ -3.0 + x ^ -2.0) - 1.0 $le 0",
+        )
         io_test(REPLMode, constr_exponent_5, "x ^ (x * x) - 1.0 $le 0")
         io_test(REPLMode, constr_exponent_6, "x ^ (2.0 * x) - 1.0 $le 0")
         io_test(REPLMode, constr_exponent_7, "x ^ (2.0 * 5.0) - 1.0 $le 0")
@@ -233,8 +241,16 @@ end
         io_test(IJuliaMode, constr_range, "0 \\leq sin(x) \\leq 1")
         io_test(IJuliaMode, constr_exponent_1, "x ^ {4.0} - 1.0 \\leq 0")
         io_test(IJuliaMode, constr_exponent_2, "x ^ {40.23} - 1.0 \\leq 0")
-        io_test(IJuliaMode, constr_exponent_3, "(x ^ {4.0} + x ^ {3.0} + x ^ {2.0}) - 1.0 \\leq 0")
-        io_test(IJuliaMode, constr_exponent_4, "(x ^ {-4.0} + x ^ {-3.0} + x ^ {-2.0}) - 1.0 \\leq 0")
+        io_test(
+            IJuliaMode,
+            constr_exponent_3,
+            "(x ^ {4.0} + x ^ {3.0} + x ^ {2.0}) - 1.0 \\leq 0",
+        )
+        io_test(
+            IJuliaMode,
+            constr_exponent_4,
+            "(x ^ {-4.0} + x ^ {-3.0} + x ^ {-2.0}) - 1.0 \\leq 0",
+        )
         io_test(IJuliaMode, constr_exponent_5, "x ^ {x * x} - 1.0 \\leq 0")
         io_test(IJuliaMode, constr_exponent_6, "x ^ {2.0 * x} - 1.0 \\leq 0")
         io_test(IJuliaMode, constr_exponent_7, "x ^ {2.0 * 5.0} - 1.0 \\leq 0")
@@ -405,7 +421,8 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
               "linear_eq : \$ x = 1.0 \$"
         @test sprint(show, "text/latex", linear_range) ==
               "linear_range : \$ x \\in \\[-1.0, 1.0\\] \$"
-        @test sprint(show, "text/latex", linear_noname) == "\$\$ x \\leq 1.0 \$\$"
+        @test sprint(show, "text/latex", linear_noname) ==
+              "\$\$ x \\leq 1.0 \$\$"
     end
 
     @testset "Vector AffExpr constraints" begin

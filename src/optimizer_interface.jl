@@ -27,10 +27,13 @@ Call `MOIU.reset_optimizer` on the backend of `model`.
 
 Cannot be called in direct mode.
 """
-function MOIU.reset_optimizer(model::Model, optimizer::MOI.AbstractOptimizer,
-                              ::Bool=true)
+function MOIU.reset_optimizer(
+    model::Model,
+    optimizer::MOI.AbstractOptimizer,
+    ::Bool = true,
+)
     error_if_direct_mode(model, :reset_optimizer)
-    MOIU.reset_optimizer(backend(model), optimizer)
+    return MOIU.reset_optimizer(backend(model), optimizer)
 end
 
 """
@@ -42,7 +45,7 @@ Cannot be called in direct mode.
 """
 function MOIU.reset_optimizer(model::Model)
     error_if_direct_mode(model, :reset_optimizer)
-    MOIU.reset_optimizer(backend(model))
+    return MOIU.reset_optimizer(backend(model))
 end
 
 """
@@ -54,7 +57,7 @@ Cannot be called in direct mode.
 """
 function MOIU.drop_optimizer(model::Model)
     error_if_direct_mode(model, :drop_optimizer)
-    MOIU.drop_optimizer(backend(model))
+    return MOIU.drop_optimizer(backend(model))
 end
 
 """
@@ -66,7 +69,7 @@ Cannot be called in direct mode.
 """
 function MOIU.attach_optimizer(model::Model)
     error_if_direct_mode(model, :attach_optimizer)
-    MOIU.attach_optimizer(backend(model))
+    return MOIU.attach_optimizer(backend(model))
 end
 
 """
@@ -93,31 +96,40 @@ model = Model()
 set_optimizer(model, GLPK.Optimizer)
 ```
 """
-function set_optimizer(model::Model, optimizer_constructor;
-                       bridge_constraints::Bool=true)
+function set_optimizer(
+    model::Model,
+    optimizer_constructor;
+    bridge_constraints::Bool = true,
+)
     error_if_direct_mode(model, :set_optimizer)
     if bridge_constraints
         # We set `with_names=false` because the names are handled by the first
         # caching optimizer. If `default_copy_to` without names is supported,
         # no need for a second cache.
-        optimizer = MOI.instantiate(optimizer_constructor, with_bridge_type=Float64, with_names=false)
+        optimizer = MOI.instantiate(
+            optimizer_constructor,
+            with_bridge_type = Float64,
+            with_names = false,
+        )
         for bridge_type in model.bridge_types
             _moi_add_bridge(optimizer, bridge_type)
         end
     else
         optimizer = MOI.instantiate(optimizer_constructor)
     end
-    MOIU.reset_optimizer(model, optimizer)
+    return MOIU.reset_optimizer(model, optimizer)
 end
 
 # Deprecation for JuMP v0.18 -> JuMP v0.19 transition
 export solve
 function solve(::Model)
-    error("`solve` has been replaced by `optimize!`. Note that `solve` " *
-          "used to return a `Symbol` summarizing the solution while " *
-          "`optimize!` returns nothing and the status of the solution " *
-          "is queried using `termination_status`, `primal_status` " *
-          "and `dual_status`.")
+    return error(
+        "`solve` has been replaced by `optimize!`. Note that `solve` " *
+        "used to return a `Symbol` summarizing the solution while " *
+        "`optimize!` returns nothing and the status of the solution " *
+        "is queried using `termination_status`, `primal_status` " *
+        "and `dual_status`.",
+    )
 end
 
 """
@@ -131,13 +143,15 @@ Optimize the model. If an optimizer has not been set yet (see
 Keyword arguments `kwargs` are passed to the `optimize_hook`. An error is
 thrown if `optimize_hook` is `nothing` and keyword arguments are provided.
 """
-function optimize!(model::Model,
-                   # TODO: Remove the optimizer_factory and bridge_constraints
-                   # arguments when the deprecation error below is removed.
-                   optimizer_factory=nothing;
-                   bridge_constraints::Bool=true,
-                   ignore_optimize_hook=(model.optimize_hook === nothing),
-                   kwargs...)
+function optimize!(
+    model::Model,
+    # TODO: Remove the optimizer_factory and bridge_constraints
+    # arguments when the deprecation error below is removed.
+    optimizer_factory = nothing;
+    bridge_constraints::Bool = true,
+    ignore_optimize_hook = (model.optimize_hook === nothing),
+    kwargs...,
+)
     # The nlp_data is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
     if model.nlp_data !== nothing
@@ -147,8 +161,10 @@ function optimize!(model::Model,
 
     if optimizer_factory !== nothing
         # This argument was deprecated in JuMP 0.21.
-        error("The optimizer factory argument is no longer accepted by " *
-              "`optimize!`. Call `set_optimizer` before `optimize!`.")
+        error(
+            "The optimizer factory argument is no longer accepted by " *
+            "`optimize!`. Call `set_optimizer` before `optimize!`.",
+        )
     end
 
     # If the user or an extension has provided an optimize hook, call
@@ -157,7 +173,9 @@ function optimize!(model::Model,
         return model.optimize_hook(model; kwargs...)
     end
 
-    isempty(kwargs) || error("Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))")
+    isempty(kwargs) || error(
+        "Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))",
+    )
 
     if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
         throw(NoOptimizer())
@@ -170,8 +188,10 @@ function optimize!(model::Model,
         # attached. Currently we catch only the more common case. More generally
         # JuMP is missing a translation layer from MOI errors to JuMP errors.
         if err isa MOI.UnsupportedAttribute{MOI.NLPBlock}
-            error("The solver does not support nonlinear problems " *
-                  "(i.e., NLobjective and NLconstraint).")
+            error(
+                "The solver does not support nonlinear problems " *
+                "(i.e., NLobjective and NLconstraint).",
+            )
         else
             rethrow(err)
         end

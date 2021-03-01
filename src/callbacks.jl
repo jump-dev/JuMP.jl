@@ -46,7 +46,9 @@ function callback_value(cb_data, x::VariableRef)
     # Once this is resolved, we can replace the current function with:
     #     MOI.get(owner_model(x), MOI.CallbackVariablePrimal(cb_data), x)
     return MOI.get(
-        backend(owner_model(x)), MOI.CallbackVariablePrimal(cb_data), index(x)
+        backend(owner_model(x)),
+        MOI.CallbackVariablePrimal(cb_data),
+        index(x),
     )
 end
 
@@ -59,7 +61,7 @@ the value for each variable appearing in the expression.
 `cb_data` is the argument to the callback function, and the type is dependent on
 the solver.
 """
-function callback_value(cb_data, expr::Union{GenericAffExpr, GenericQuadExpr})
+function callback_value(cb_data, expr::Union{GenericAffExpr,GenericQuadExpr})
     return value(expr, v -> callback_value(cb_data, v))
 end
 
@@ -75,7 +77,12 @@ function MOI.submit(
     model::Model,
     cb::MOI.HeuristicSolution,
     variables::Vector{VariableRef},
-    values::Vector{<:Real}
+    values::Vector{<:Real},
 )
-    return MOI.submit(backend(model), cb, index.(variables), convert(Vector{Float64}, values))
+    return MOI.submit(
+        backend(model),
+        cb,
+        index.(variables),
+        convert(Vector{Float64}, values),
+    )
 end

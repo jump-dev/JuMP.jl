@@ -16,18 +16,30 @@ using Test
     end
     @testset "Forced array" begin
         set = 1:2
-        x = Containers.@container([i=set, j=1:2], i + j, container = Array)
+        x = Containers.@container([i = set, j = 1:2], i + j, container = Array)
         @test x == [2 3; 3 4]
         set_2 = [1, 2]
-        y = Containers.@container([i=set_2, j=1:2], i + j, container = Array)
+        y = Containers.@container(
+            [i = set_2, j = 1:2],
+            i + j,
+            container = Array
+        )
         @test y == [2 3; 3 4]
         @test_throws(
             ErrorException,
-            Containers.@container([i=[:a, :b], j=1:2], i + j, container = Array)
+            Containers.@container(
+                [i = [:a, :b], j = 1:2],
+                i + j,
+                container = Array
+            )
         )
         @test_throws(
             ErrorException,
-            Containers.@container([i=1:2:4, j=1:2], i + j, container = Array)
+            Containers.@container(
+                [i = 1:2:4, j = 1:2],
+                i + j,
+                container = Array
+            )
         )
     end
     @testset "DenseAxisArray" begin
@@ -66,13 +78,10 @@ using Test
     end
     @testset "duplicate_indices" begin
         expr = :(Containers.@container(x[i = 1:2, i = 1:2], i + i))
-        @test_throws(
-            LoadError,
-            try
-                @eval $expr
-            catch err
-                throw(err)
-            end,
-        )
+        @test_throws(LoadError, try
+            @eval $expr
+        catch err
+            throw(err)
+        end,)
     end
 end

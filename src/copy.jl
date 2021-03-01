@@ -43,10 +43,8 @@ end
 
 function Base.getindex(map::ReferenceMap, expr::GenericQuadExpr)
     aff = map[expr.aff]
-    terms = [
-        UnorderedPair(map[key.a], map[key.b]) => val
-        for (key, val) in expr.terms
-    ]
+    terms = [UnorderedPair(map[key.a], map[key.b]) => val for
+     (key, val) in expr.terms]
     return GenericQuadExpr(aff, terms)
 end
 
@@ -55,9 +53,18 @@ Base.broadcastable(reference_map::ReferenceMap) = Ref(reference_map)
 # Return a Boolean if the filtering function (1st argument) indicates that the whole value should 
 # be copied over.
 _should_copy_complete_object(_, _) = true
-_should_copy_complete_object(filter_constraints::Function, value::ConstraintRef) = filter_constraints(value)
-_should_copy_complete_object(filter_constraints::Function, value::AbstractArray{T}) where T <: ConstraintRef = 
-    all([filter_constraints(value[i]) for i in eachindex(value)]) # all(filter_constraints.(value))
+function _should_copy_complete_object(
+    filter_constraints::Function,
+    value::ConstraintRef,
+)
+    return filter_constraints(value)
+end
+function _should_copy_complete_object(
+    filter_constraints::Function,
+    value::AbstractArray{T},
+) where {T<:ConstraintRef}
+    return all([filter_constraints(value[i]) for i in eachindex(value)])
+end # all(filter_constraints.(value))
 
 """
     copy_model(model::Model; filter_constraints::Union{Nothing, Function}=nothing)
@@ -95,12 +102,16 @@ x_new = reference_map[x]
 cref_new = reference_map[cref]
 ```
 """
-function copy_model(model::Model;
-                    filter_constraints::Union{Nothing, Function}=nothing)
+function copy_model(
+    model::Model;
+    filter_constraints::Union{Nothing,Function} = nothing,
+)
     if mode(model) == DIRECT
-        error("Cannot copy a model in `DIRECT` mode. Use the `Model` ",
-              "constructor instead of the `direct_model` constructor to be ",
-              "able to copy the constructed model.")
+        error(
+            "Cannot copy a model in `DIRECT` mode. Use the `Model` ",
+            "constructor instead of the `direct_model` constructor to be ",
+            "able to copy the constructed model.",
+        )
     end
     caching_mode = backend(model).mode
     new_model = Model(caching_mode = caching_mode)
@@ -116,16 +127,21 @@ function copy_model(model::Model;
     # Copy the MOI backend, note that variable and constraint indices may have
     # changed, the `index_map` gives the map between the indices of
     # `backend(model` and the indices of `backend(new_model)`.
-    index_map = MOI.copy_to(backend(new_model), backend(model),
-                            copy_names = true, 
-                            filter_constraints = filter)
+    index_map = MOI.copy_to(
+        backend(new_model),
+        backend(model),
+        copy_names = true,
+        filter_constraints = filter,
+    )
 
     new_model.optimize_hook = model.optimize_hook
 
     # TODO copy NLP data
     if model.nlp_data !== nothing
-        error("copy is not supported yet for models with nonlinear constraints",
-              " and/or nonlinear objective function")
+        error(
+            "copy is not supported yet for models with nonlinear constraints",
+            " and/or nonlinear objective function",
+        )
     end
 
     reference_map = ReferenceMap(new_model, index_map)
@@ -219,8 +235,12 @@ new_model, reference_map = copy_conflict(model)
 ```
 """
 function copy_conflict(model::Model)
-    filter_constraints = (cref) -> MOI.get(model, MOI.ConstraintConflictStatus(), cref) != MOI.NOT_IN_CONFLICT
-    new_model, reference_map = copy_model(model, filter_constraints=filter_constraints)
+    filter_constraints =
+        (cref) ->
+            MOI.get(model, MOI.ConstraintConflictStatus(), cref) !=
+            MOI.NOT_IN_CONFLICT
+    new_model, reference_map =
+        copy_model(model, filter_constraints = filter_constraints)
     return new_model, reference_map
 end
 
@@ -228,7 +248,9 @@ end
 # supported, because it would involve making a deep copy of the underlying
 # solver (behind a C pointer).
 function Base.deepcopy(::Model)
-    error("`JuMP.Model` does not support `deepcopy` as the reference to the underlying solver cannot be deep copied, use `copy` instead.")
+    return error(
+        "`JuMP.Model` does not support `deepcopy` as the reference to the underlying solver cannot be deep copied, use `copy` instead.",
+    )
 end
 
 function MOI.copy_to(dest::MOI.ModelLike, src::Model)

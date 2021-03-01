@@ -172,13 +172,12 @@ function forward_eval(
                 end
                 # TODO: The function names are confusing here. This just
                 # evaluates the function value and gradient.
-                fval =
-                    eval_and_check_return_type(
-                        MOI.eval_objective,
-                        T,
-                        evaluator,
-                        f_input,
-                    )::T
+                fval = eval_and_check_return_type(
+                    MOI.eval_objective,
+                    T,
+                    evaluator,
+                    f_input,
+                )::T
                 MOI.eval_objective_gradient(evaluator, grad_output, f_input)
                 storage[k] = fval
                 r = 1
@@ -397,7 +396,9 @@ function forward_eval_ϵ(
                         recip_denominator,
                     )
                 elseif op >= USER_OPERATOR_ID_START
-                    error("User-defined operators not supported for hessian computations")
+                    error(
+                        "User-defined operators not supported for hessian computations",
+                    )
                 end
             elseif nod.nodetype == CALLUNIVAR # univariate function
                 op = nod.index
@@ -405,12 +406,11 @@ function forward_eval_ϵ(
                 child_val = storage[child_idx]
                 if op >= USER_UNIVAR_OPERATOR_ID_START
                     userop = op - USER_UNIVAR_OPERATOR_ID_START + 1
-                    fprimeprime =
-                        eval_and_check_return_type(
-                            user_operators.univariate_operator_fprimeprime[userop],
-                            T,
-                            child_val,
-                        )::T
+                    fprimeprime = eval_and_check_return_type(
+                        user_operators.univariate_operator_fprimeprime[userop],
+                        T,
+                        child_val,
+                    )::T
                 else
                     fprimeprime =
                         eval_univariate_2nd_deriv(op, child_val, storage[k])

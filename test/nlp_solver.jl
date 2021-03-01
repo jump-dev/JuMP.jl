@@ -282,8 +282,8 @@ const MOI = MathOptInterface
             m,
             Min,
             sum(
-                x[j] * (c[j] + log(x[j] / sum(x[k] for k in 1:10)))
-                for j in 1:10
+                x[j] * (c[j] + log(x[j] / sum(x[k] for k in 1:10))) for
+                j in 1:10
             )
         )
 

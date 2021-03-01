@@ -89,8 +89,8 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     d = Dict{Int,Vector{Float64}}(
         # We call `collect` here because some Julia versions are missing sparse
         # matrix \ sparse vector fallbacks.
-        j => B_fact \ collect(std_form.A[:, j])
-        for j = 1:length(basis.basic_cols) if basis.basic_cols[j] == false
+        j => B_fact \ collect(std_form.A[:, j]) for
+        j = 1:length(basis.basic_cols) if basis.basic_cols[j] == false
     )
 
     report = SensitivityReport(
@@ -138,8 +138,8 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     ###
 
     π = Dict{Int,Float64}(
-        i => reduced_cost(var)
-        for (var, i) in std_form.columns if basis.variables[i] != MOI.BASIC
+        i => reduced_cost(var) for
+        (var, i) in std_form.columns if basis.variables[i] != MOI.BASIC
     )
     for (i, c) in enumerate(std_form.constraints)
         if basis.constraints[i] != MOI.BASIC

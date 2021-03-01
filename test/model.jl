@@ -257,8 +257,9 @@ function test_bridges_automatic_disabled()
     @test JuMP.backend(model) isa MOIU.CachingOptimizer
     @test !(JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer)
     @variable model x
-    err =
-        ErrorException("Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver, try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver.")
+    err = ErrorException(
+        "Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver, try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver.",
+    )
     @test_throws err @constraint model 0 <= x + 1 <= 1
 end
 
@@ -268,8 +269,9 @@ function test_bridges_direct()
     model = JuMP.direct_model(optimizer)
     @test !JuMP.bridge_constraints(model)
     @variable model x
-    err =
-        ErrorException("Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.")
+    err = ErrorException(
+        "Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.",
+    )
     @test_throws err @constraint model 0 <= x + 1 <= 1
 end
 
@@ -381,14 +383,14 @@ function test_bridge_graph_false()
     @test_throws(
         ErrorException(
             "Cannot add bridge if `bridge_constraints` was set to `false` in " *
-            "the `Model` constructor."
+            "the `Model` constructor.",
         ),
         add_bridge(model, NonnegativeBridge)
     )
     @test_throws(
         ErrorException(
             "Cannot print bridge graph if `bridge_constraints` was set to " *
-            "`false` in the `Model` constructor."
+            "`false` in the `Model` constructor.",
         ),
         print_bridge_graph(model)
     )
@@ -401,16 +403,15 @@ function test_bridge_graph_true()
     @variable(model, x)
     add_bridge(model, NonnegativeBridge)
     @test sprint(print_bridge_graph, model) ==
-        "Bridge graph with 0 variable nodes, 0 constraint nodes and 0 objective nodes.\n"
+          "Bridge graph with 0 variable nodes, 0 constraint nodes and 0 objective nodes.\n"
     c = @constraint(model, x in Nonnegative())
-    @test sprint(print_bridge_graph, model) ==
-        replace(
-            "Bridge graph with 1 variable nodes, 2 constraint nodes and 0 objective nodes.\n"*
-            " [1] constrained variables in `$(Nonnegative)` are supported (distance 2) by adding free variables and then constrain them, see (1).\n" *
-            " (1) `MOI.SingleVariable`-in-`$(Nonnegative)` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.SingleVariable}).\n"*
-            " (2) `MOI.ScalarAffineFunction{Float64}`-in-`$(Nonnegative)` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.ScalarAffineFunction{Float64}}).\n",
-            "MathOptInterface." => "MOI.",
-        )
+    @test sprint(print_bridge_graph, model) == replace(
+        "Bridge graph with 1 variable nodes, 2 constraint nodes and 0 objective nodes.\n" *
+        " [1] constrained variables in `$(Nonnegative)` are supported (distance 2) by adding free variables and then constrain them, see (1).\n" *
+        " (1) `MOI.SingleVariable`-in-`$(Nonnegative)` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.SingleVariable}).\n" *
+        " (2) `MOI.ScalarAffineFunction{Float64}`-in-`$(Nonnegative)` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.ScalarAffineFunction{Float64}}).\n",
+        "MathOptInterface." => "MOI.",
+    )
     optimize!(model)
     @test 1.0 == @inferred value(x)
     @test 1.0 == @inferred value(c)
@@ -501,17 +502,18 @@ function copy_model_style_mode(use_copy_model, caching_mode, filter_mode)
     model.optimize_hook = dummy_optimizer_hook
     data = DummyExtensionData(model)
     model.ext[:dummy] = data
-    @variable(model, w[i=1:2] ≥ 0)
+    @variable(model, w[i = 1:2] ≥ 0)
     @variable(model, x ≥ 0, Bin)
     @variable(model, y ≤ 1, Int)
     @variable(model, z == 0)
     @constraint(model, cref, x + y == 1)
-    @constraint(model, cref2[i=1:2], w[i] + z == 1)
+    @constraint(model, cref2[i = 1:2], w[i] + z == 1)
 
     if use_copy_model
         if filter_mode
             filter_constraints = (cr) -> cr != cref
-            new_model, reference_map = JuMP.copy_model(model, filter_constraints=filter_constraints)
+            new_model, reference_map =
+                JuMP.copy_model(model, filter_constraints = filter_constraints)
         else
             new_model, reference_map = JuMP.copy_model(model)
         end
@@ -560,7 +562,7 @@ function copy_model_style_mode(use_copy_model, caching_mode, filter_mode)
     cref2_2_new = reference_map[cref2[2]]
     @test cref2_2_new.model === new_model
     @test "cref2[2]" == @inferred JuMP.name(cref2_2_new)
-    
+
     if filter_mode
         @test_throws KeyError JuMP.object_dictionary(new_model)[JuMP.name(cref)]
     else
@@ -622,23 +624,32 @@ function test_haskey()
 end
 
 function test_copy_filter()
-    copy_model_style_mode(true, MOIU.AUTOMATIC, true)
+    return copy_model_style_mode(true, MOIU.AUTOMATIC, true)
 end
-    
+
 function test_copy_filter_array()
     model = Model()
-    @variable(model, x[i=1:2], container=Array)
-    @constraint(model, cref[i=1:2], x[i] == 1, container=Array)
-    @test num_constraints(model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 2
+    @variable(model, x[i = 1:2], container = Array)
+    @constraint(model, cref[i = 1:2], x[i] == 1, container = Array)
+    @test num_constraints(
+        model,
+        GenericAffExpr{Float64,VariableRef},
+        MOI.EqualTo{Float64},
+    ) == 2
 
     filter_constraints = (cr) -> cr != cref[1]
-    new_model, reference_map = JuMP.copy_model(model, filter_constraints=filter_constraints)
-    @test num_constraints(new_model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 1
+    new_model, reference_map =
+        JuMP.copy_model(model, filter_constraints = filter_constraints)
+    @test num_constraints(
+        new_model,
+        GenericAffExpr{Float64,VariableRef},
+        MOI.EqualTo{Float64},
+    ) == 1
 
     x1_new = reference_map[x[1]]
     @test JuMP.owner_model(x1_new) === new_model
     @test "x[1]" == @inferred JuMP.name(x1_new)
-    
+
     cref_2_new = reference_map[cref[2]]
     @test cref_2_new.model === new_model
     @test "cref[2]" == @inferred JuMP.name(cref_2_new)
@@ -646,18 +657,27 @@ end
 
 function test_copy_filter_denseaxisarray()
     model = Model()
-    @variable(model, x[i=1:2], container=DenseAxisArray)
-    @constraint(model, cref[i=1:2], x[i] == 1, container=DenseAxisArray)
-    @test num_constraints(model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 2
+    @variable(model, x[i = 1:2], container = DenseAxisArray)
+    @constraint(model, cref[i = 1:2], x[i] == 1, container = DenseAxisArray)
+    @test num_constraints(
+        model,
+        GenericAffExpr{Float64,VariableRef},
+        MOI.EqualTo{Float64},
+    ) == 2
 
     filter_constraints = (cr) -> cr != cref[1]
-    new_model, reference_map = JuMP.copy_model(model, filter_constraints=filter_constraints)
-    @test num_constraints(new_model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 1
+    new_model, reference_map =
+        JuMP.copy_model(model, filter_constraints = filter_constraints)
+    @test num_constraints(
+        new_model,
+        GenericAffExpr{Float64,VariableRef},
+        MOI.EqualTo{Float64},
+    ) == 1
 
     x1_new = reference_map[x[1]]
     @test JuMP.owner_model(x1_new) === new_model
     @test "x[1]" == @inferred JuMP.name(x1_new)
-    
+
     cref_2_new = reference_map[cref[2]]
     @test cref_2_new.model === new_model
     @test "cref[2]" == @inferred JuMP.name(cref_2_new)
@@ -665,18 +685,27 @@ end
 
 function test_copy_filter_sparseaxisarray()
     model = Model()
-    @variable(model, x[i=1:2], container=SparseAxisArray)
-    @constraint(model, cref[i=1:2], x[i] == 1, container=SparseAxisArray)
-    @test num_constraints(model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 2
+    @variable(model, x[i = 1:2], container = SparseAxisArray)
+    @constraint(model, cref[i = 1:2], x[i] == 1, container = SparseAxisArray)
+    @test num_constraints(
+        model,
+        GenericAffExpr{Float64,VariableRef},
+        MOI.EqualTo{Float64},
+    ) == 2
 
     filter_constraints = (cr) -> cr != cref[1]
-    new_model, reference_map = JuMP.copy_model(model, filter_constraints=filter_constraints)
-    @test num_constraints(new_model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 1
+    new_model, reference_map =
+        JuMP.copy_model(model, filter_constraints = filter_constraints)
+    @test num_constraints(
+        new_model,
+        GenericAffExpr{Float64,VariableRef},
+        MOI.EqualTo{Float64},
+    ) == 1
 
     x1_new = reference_map[x[1]]
     @test JuMP.owner_model(x1_new) === new_model
     @test "x[1]" == @inferred JuMP.name(x1_new)
-    
+
     cref_2_new = reference_map[cref[2]]
     @test cref_2_new.model === new_model
     @test "cref[2]" == @inferred JuMP.name(cref_2_new)
@@ -684,28 +713,50 @@ end
 
 function test_copy_conflict()
     model = Model()
-    @variable(model, x[i=1:2], container=SparseAxisArray)
-    @constraint(model, cref[i=1:2], x[i] == 1, container=SparseAxisArray)
-    @test num_constraints(model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 2
-    
-    set_optimizer(model, () -> MOIU.MockOptimizer(
-                                    MOIU.Model{Float64}(),
-                                    eval_objective_value=false))
+    @variable(model, x[i = 1:2], container = SparseAxisArray)
+    @constraint(model, cref[i = 1:2], x[i] == 1, container = SparseAxisArray)
+    @test num_constraints(
+        model,
+        GenericAffExpr{Float64,VariableRef},
+        MOI.EqualTo{Float64},
+    ) == 2
+
+    set_optimizer(
+        model,
+        () -> MOIU.MockOptimizer(
+            MOIU.Model{Float64}(),
+            eval_objective_value = false,
+        ),
+    )
     JuMP.optimize!(model)
 
     mockoptimizer = JuMP.backend(model).optimizer.model
     MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.INFEASIBLE)
     MOI.set(mockoptimizer, MOI.ConflictStatus(), MOI.CONFLICT_FOUND)
-    MOI.set(mockoptimizer, MOI.ConstraintConflictStatus(), JuMP.optimizer_index(cref[1]), MOI.IN_CONFLICT)
-    MOI.set(mockoptimizer, MOI.ConstraintConflictStatus(), JuMP.optimizer_index(cref[2]), MOI.NOT_IN_CONFLICT)
+    MOI.set(
+        mockoptimizer,
+        MOI.ConstraintConflictStatus(),
+        JuMP.optimizer_index(cref[1]),
+        MOI.IN_CONFLICT,
+    )
+    MOI.set(
+        mockoptimizer,
+        MOI.ConstraintConflictStatus(),
+        JuMP.optimizer_index(cref[2]),
+        MOI.NOT_IN_CONFLICT,
+    )
 
     new_model, reference_map = JuMP.copy_conflict(model)
-    @test num_constraints(new_model, GenericAffExpr{Float64, VariableRef}, MOI.EqualTo{Float64}) == 1
+    @test num_constraints(
+        new_model,
+        GenericAffExpr{Float64,VariableRef},
+        MOI.EqualTo{Float64},
+    ) == 1
 
     x1_new = reference_map[x[1]]
     @test JuMP.owner_model(x1_new) === new_model
     @test "x[1]" == @inferred JuMP.name(x1_new)
-    
+
     cref_1_new = reference_map[cref[1]]
     @test cref_1_new.model === new_model
     @test "cref[1]" == @inferred JuMP.name(cref_1_new)

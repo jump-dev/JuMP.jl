@@ -11,8 +11,9 @@ using Test
             @test dict[(i, j)] == i + j
         end
     end
-    err =
-        ErrorException("Repeated index (1, 2). Index sets must have unique elements.")
+    err = ErrorException(
+        "Repeated index (1, 2). Index sets must have unique elements.",
+    )
     g = Base.Generator(f, [(1, 1), (1, 2), (1, 2)])
     @test_throws err Containers.NoDuplicateDict(g)
     g = Base.Generator(f, [(1, 2), (1, 2)])
@@ -33,8 +34,9 @@ end
         end
     end
     g = Base.Generator(f, [(1, 1), (1, 2), (1, 1)])
-    err =
-        ErrorException("Repeated index (1, 1). Index sets must have unique elements.")
+    err = ErrorException(
+        "Repeated index (1, 1). Index sets must have unique elements.",
+    )
     @test_throws err Containers.NoDuplicateDict(g)
     g = Base.Generator(f, [(1, 1), (1, 1)])
     @test_throws err Containers.NoDuplicateDict(g)

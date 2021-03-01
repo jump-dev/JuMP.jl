@@ -198,9 +198,11 @@ end
         @variable(model, x)
         err = ErrorException(
             "`begin...end` blocks are not supported in nonlinear macros. The " *
-            "nonlinear expression must be a single statement."
+            "nonlinear expression must be a single statement.",
         )
-        @test_macro_throws(err, @NLexpression(model, begin sin(x) + 1 end))
+        @test_macro_throws(err, @NLexpression(model, begin
+            sin(x) + 1
+        end))
     end
 
     @testset "Error on unexpected splatting" begin
@@ -828,8 +830,9 @@ end
         model = Model()
         @variable(model, x)
         c = sqrt(Complex(-1))
-        expected_exception =
-            ErrorException("Unexpected object $c (of type $(typeof(c)) in nonlinear expression.")
+        expected_exception = ErrorException(
+            "Unexpected object $c (of type $(typeof(c)) in nonlinear expression.",
+        )
         @test_throws expected_exception @NLobjective(model, Min, c * x)
     end
     @testset "Special functions" begin

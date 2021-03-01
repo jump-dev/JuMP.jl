@@ -1,14 +1,23 @@
 abstract type AbstractVectorSet end
 
 # Used in `@constraint(model, [1:n] in s)`
-function build_variable(_error::Function, variables::Vector{<:ScalarVariable},
-                        set::AbstractVectorSet)
-    return VariablesConstrainedOnCreation(variables, moi_set(set, length(variables)))
+function build_variable(
+    _error::Function,
+    variables::Vector{<:ScalarVariable},
+    set::AbstractVectorSet,
+)
+    return VariablesConstrainedOnCreation(
+        variables,
+        moi_set(set, length(variables)),
+    )
 end
 
 # Used in `@constraint(model, func in set)`
-function build_constraint(_error::Function, func::AbstractVector,
-                          set::AbstractVectorSet)
+function build_constraint(
+    _error::Function,
+    func::AbstractVector,
+    set::AbstractVectorSet,
+)
     return build_constraint(_error, func, moi_set(set, length(func)))
 end
 
@@ -67,11 +76,13 @@ moi_set(::RotatedSecondOrderCone, dim::Int) = MOI.RotatedSecondOrderCone(dim)
 
 # Deprecation for JuMP v0.18 -> JuMP v0.19 transition
 function LinearAlgebra.norm(::AbstractVector{<:AbstractJuMPScalar})
-    error("JuMP no longer performs automatic transformation of `norm()` ",
-          "expressions into second-order cone constraints. They should now ",
-          "be expressed using the SecondOrderCone() set. For example, ",
-          "`@constraint(model, norm(x) <= t)` should now be written as ",
-          "`@constraint(model, [t; x] in SecondOrderCone())`")
+    return error(
+        "JuMP no longer performs automatic transformation of `norm()` ",
+        "expressions into second-order cone constraints. They should now ",
+        "be expressed using the SecondOrderCone() set. For example, ",
+        "`@constraint(model, norm(x) <= t)` should now be written as ",
+        "`@constraint(model, [t; x] in SecondOrderCone())`",
+    )
 end
 
 """
@@ -89,7 +100,7 @@ This is a shortcut for the `MathOptInterface.SOS1` set.
 struct SOS1 <: AbstractVectorSet
     weights::Vector{Float64}
     function SOS1(weights::AbstractVector = Float64[])
-        new(convert(Vector{Float64}, weights))
+        return new(convert(Vector{Float64}, weights))
     end
 end
 function moi_set(set::SOS1, dim::Int)
@@ -118,7 +129,7 @@ This is a shortcut for the `MathOptInterface.SOS2` set.
 struct SOS2 <: AbstractVectorSet
     weights::Vector{Float64}
     function SOS2(weights::AbstractVector = Float64[])
-        new(convert(Vector{Float64}, weights))
+        return new(convert(Vector{Float64}, weights))
     end
 end
 function moi_set(set::SOS2, dim::Int)
