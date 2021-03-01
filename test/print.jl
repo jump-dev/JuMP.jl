@@ -800,18 +800,17 @@ end
     @variable(m, x <= 2.0)
     @variable(m, y >= 0.0)
     @objective(m, Min, -x)
-    c = @constraint(m, x + y <= 1)
+    c = @constraint(m, x + y <= 1) # anonymous constraint
 
     JuMP.set_name(JuMP.UpperBoundRef(x), "xub")
     JuMP.set_name(JuMP.LowerBoundRef(y), "ylb")
-    JuMP.set_name(c, "c")
 
     modelstring = """
     variables: x, y
     minobjective: -1.0*x
     xub: x <= 2.0
     ylb: y >= 0.0
-    c: x + y <= 1.0
+    noname: x + y <= 1.0
     """
 
     model = MOIU.Model{Float64}()
@@ -830,6 +829,7 @@ end
     MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
     MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
+    MOI.set(mockoptimizer, MOI.ObjectiveBound(), 3.0)
     MOI.set(mockoptimizer, MOI.ResultCount(), 1)
     MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
@@ -880,6 +880,7 @@ end
 
 * Candidate solution
   Objective value : -1.0
+  Objective bound : 3.0
   Dual objective value : -1.0
 
 * Work counters
@@ -904,12 +905,13 @@ end
 
 * Candidate solution
   Objective value : -1.0
+  Objective bound : 3.0
   Dual objective value : -1.0
   Primal solution : 
     y:0.0
     x:1.0
   Dual solution : 
-    c:-1.0
+    c1:-1.0
     ylb:1.0
     xub:0.0
 
