@@ -20,6 +20,12 @@ jobs:
           using Pkg
           Pkg.add(PackageSpec(name="JuliaFormatter", version="0.13.2"))
           using JuliaFormatter
-          ret = format("src", verbose=true)
-          ret = ret && format("test", verbose=true)
-          exit(ret ? 0 : 1)
+          format("src", verbose=true)
+          format("test", verbose=true)
+          out = String(read(Cmd(`git diff --name-only`)))
+          if isempty(out)
+              exit(0)
+          end
+          @error "Some files have not been formatted !!!"
+          write(stdout, out)
+          exit(1)

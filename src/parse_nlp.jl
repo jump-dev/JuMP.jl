@@ -125,7 +125,8 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                 push!(
                     block.args,
                     :(
-                        $lookupcode; push!(
+                        $lookupcode;
+                        push!(
                             $tapevar,
                             NodeData(CALLUNIVAR, operatorid, $parent),
                         )
@@ -194,12 +195,8 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                 end
                 push!(
                     block.args,
-                    :(
-                        $lookupcode; push!(
-                            $tapevar,
-                            NodeData(CALL, operatorid, $parent),
-                        )
-                    ),
+                    :($lookupcode;
+                    push!($tapevar, NodeData(CALL, operatorid, $parent))),
                 )
             end
             parentvar = gensym()
