@@ -149,8 +149,8 @@ end
 function softplus(model, t, u)
     z = @variable(model, [1:2], lower_bound=0.0)
     @constraint(model, sum(z) <= 1.0)
-    @constraint(model, vec([u - t, 1, z[1]]) in MOI.ExponentialCone())
-    @constraint(model, vec([-t, 1, z[2]]) in MOI.ExponentialCone())
+    @constraint(model, [u - t, 1, z[1]] in MOI.ExponentialCone())
+    @constraint(model, [-t, 1, z[2]] in MOI.ExponentialCone())
 end
 
 # ### $\ell_2$ regularized logistic regression
@@ -168,7 +168,7 @@ function build_logit_model(X, y, λ)
     end
     ## Add ℓ2 regularization
     @variable(model, 0.0 <= reg)
-    @constraint(model, vec([reg; θ]) in MOI.SecondOrderCone(p+1))
+    @constraint(model, [reg; θ] in MOI.SecondOrderCone(p+1))
     ## Define objective
     @objective(model, Min, sum(t) + λ * reg)
     return model
@@ -176,7 +176,7 @@ end
 
 # We generate the dataset.
 #
-# !!! Warning
+# !!! warning
 #     Be careful here, for large n and p SCS could fail to converge!
 #
 n, p = 200, 10
@@ -185,10 +185,12 @@ X, y = generate_dataset(n, p, shift=10.0);
 ## We could now solve the logistic regression problem
 λ = 10.0
 model = build_logit_model(X, y, λ)
-JuMP.set_optimizer(model, SCS.Optimizer)
+set_optimizer(model, SCS.Optimizer)
 JuMP.optimize!(model)
 
-θ♯ = JuMP.value.(model[:θ]);
+#-
+
+θ♯ = JuMP.value.(model[:θ])
 
 # It appears that the speed of convergence is not that impacted by the correlation
 # of the dataset, nor by the penalty $\lambda$.
@@ -213,20 +215,22 @@ function build_sparse_logit_model(X, y, λ)
     end
     ## Add ℓ1 regularization
     @variable(model, 0.0 <= reg)
-    @constraint(model, vec([reg; θ]) in MOI.NormOneCone(p+1))
+    @constraint(model, [reg; θ] in MOI.NormOneCone(p+1))
     ## Define objective
     @objective(model, Min, sum(t) + λ * reg)
     return model
 end
 
 ## Auxiliary function to count non-null components:
-count_nonzero(v::Vector; tol=1e-8) = sum(abs.(v) .<= tol)
+count_nonzero(v::Vector; tol=1e-6) = sum(abs.(v) .>= tol)
 
 ## We solve the sparse logistic regression problem on the same dataset as before.
 λ = 10.0
 sparse_model = build_sparse_logit_model(X, y, λ)
-JuMP.set_optimizer(sparse_model, SCS.Optimizer)
+set_optimizer(sparse_model, SCS.Optimizer)
 JuMP.optimize!(sparse_model)
+
+#-
 
 θ♯ = JuMP.value.(sparse_model[:θ])
 println("Number of non-zero components: ", count_nonzero(θ♯),
