@@ -18,8 +18,8 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           using Pkg
-          Pkg.add(PackageSpec(name="JuliaFormatter", version="0.13.0"))
+          Pkg.add(PackageSpec(name="JuliaFormatter", version="0.13.2"))
           using JuliaFormatter
           ret = format("src", verbose=true)
-          ret = format("test", verbose=true)
+          ret = ret && format("test", verbose=true)
           exit(ret ? 0 : 1)
