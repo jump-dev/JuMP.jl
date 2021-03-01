@@ -5,10 +5,20 @@
 
 using LinearAlgebra
 
+function _last_primal_solution(model::Model)
+    if !has_values(model)
+        error(
+            "No primal solution is available. You must provide a point at " *
+            "which to check feasibility."
+        )
+    end
+    return Dict(v => value(v) for v in all_variables(model))
+end
+
 """
     primal_feasibility_report(
         model::Model,
-        [point::AbstractDict{VariableRef,Float64}];
+        point::AbstractDict{VariableRef,Float64} = _last_primal_solution(model),
         atol::Float64 = 0.0,
         skip_missing::Bool = false,
     )::Dict{Any,Float64}
@@ -39,11 +49,11 @@ Dict{Any,Float64} with 1 entry:
 """
 function primal_feasibility_report(
     model::Model,
-    point::AbstractDict{VariableRef,Float64};
+    point::AbstractDict{VariableRef,Float64} = _last_primal_solution(model);
     atol::Float64 = 0.0,
     skip_missing::Bool = false,
 )
-    function point_f(x)
+    function point_f(x::VariableRef)
         fx = get(point, x, missing)
         if ismissing(fx) && !skip_missing
             error(
@@ -71,17 +81,6 @@ function primal_feasibility_report(
         )
     end
     return violated_constraints
-end
-
-function primal_feasibility_report(model::Model; kwargs...)
-    if !has_values(model)
-        error(
-            "No primal solution is available. You must provide a point at " *
-            "which to check feasibility."
-        )
-    end
-    point = Dict(v => value(v) for v in all_variables(model))
-    return primal_feasibility_report(model, point; kwargs...)
 end
 
 function _add_infeasible_constraints(
