@@ -793,3 +793,131 @@ end
     @variable(model, z, base_name = "z^1")
     io_test(IJuliaMode, z, "z\\^1")
 end
+
+@testset "Print solution summary" begin
+
+    m = Model()
+    @variable(m, x <= 2.0)
+    @variable(m, y >= 0.0)
+    @objective(m, Min, -x)
+    c = @constraint(m, x + y <= 1)
+
+    JuMP.set_name(JuMP.UpperBoundRef(x), "xub")
+    JuMP.set_name(JuMP.LowerBoundRef(y), "ylb")
+    JuMP.set_name(c, "c")
+
+    modelstring = """
+    variables: x, y
+    minobjective: -1.0*x
+    xub: x <= 2.0
+    ylb: y >= 0.0
+    c: x + y <= 1.0
+    """
+
+    model = MOIU.Model{Float64}()
+    MOIU.loadfromstring!(model, modelstring)
+
+    set_optimizer(
+        m,
+        () -> MOIU.MockOptimizer(
+            MOIU.Model{Float64}(),
+            eval_objective_value = false,
+        ),
+    )
+    optimize!(m)
+
+    mockoptimizer = JuMP.backend(m).optimizer.model
+    MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
+    MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
+    MOI.set(mockoptimizer, MOI.ResultCount(), 1)
+    MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(
+        mockoptimizer,
+        MOI.VariablePrimal(),
+        JuMP.optimizer_index(x),
+        1.0,
+    )
+    MOI.set(
+        mockoptimizer,
+        MOI.VariablePrimal(),
+        JuMP.optimizer_index(y),
+        0.0,
+    )
+    MOI.set(
+        mockoptimizer,
+        MOI.ConstraintDual(),
+        JuMP.optimizer_index(c),
+        -1.0,
+    )
+    MOI.set(
+        mockoptimizer,
+        MOI.ConstraintDual(),
+        JuMP.optimizer_index(JuMP.UpperBoundRef(x)),
+        0.0,
+    )
+    MOI.set(
+        mockoptimizer,
+        MOI.ConstraintDual(),
+        JuMP.optimizer_index(JuMP.LowerBoundRef(y)),
+        1.0,
+    )
+    MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
+    MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
+    MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+    MOI.set(mockoptimizer, MOI.SolveTime(), 5.0)
+
+    @test sprint(show_solution_summary, m) == """
+* Solver:Mock
+
+* Status
+  Termination status : OPTIMAL
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Message from the solver:
+  "solver specific string"
+
+* Candidate solution
+  Objective value : -1.0
+  Dual objective value : -1.0
+
+* Work counters
+  Solve time (sec)   : 5.0
+  Simplex iterations : 1
+  Barrier iterations : 1
+  Node count : 1
+"""
+
+    @test sprint((io, m) -> show_solution_summary(io, m, verbose=true), m) == """
+* Solver:Mock
+
+* Status
+  Termination status : OPTIMAL
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Result count       : 1
+  Has values         : true
+  Has duals          : true
+  Message from the solver:
+  "solver specific string"
+
+* Candidate solution
+  Objective value : -1.0
+  Dual objective value : -1.0
+  Primal solution : 
+    y:0.0
+    x:1.0
+  Dual solution : 
+    c:-1.0
+    ylb:1.0
+    xub:0.0
+
+* Work counters
+  Solve time (sec)   : 5.0
+  Simplex iterations : 1
+  Barrier iterations : 1
+  Node count : 1
+"""
+
+end
