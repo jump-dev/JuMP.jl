@@ -27,7 +27,6 @@ function order_subexpressions(
     # For each subexpression k, the indices of the main expressions that depend
     # on k, possibly transitively.
     depended_on_by = [Set{Int}() for i in 1:num_sub]
-
     while !isempty(to_visit)
         idx = pop!(to_visit)
         if idx > num_sub
@@ -58,6 +57,7 @@ function order_subexpressions(
     N = num_sub + length(main_expressions)
     sp = sparse(I, J, ones(length(I)), N, N)
     cmap = Vector{Int}(undef, N)
+
     order = reverse(Coloring.reverse_topological_sort_by_dfs(
         sp.rowval,
         sp.colptr,
@@ -88,4 +88,35 @@ function order_subexpressions(
     return order_filtered, individual_order
 end
 
-export list_subexpressions, order_subexpressions
+# An implementation of depth-first-search for topologically sorting the
+# subexpressions needed to compute main_expression.
+function order_subexpression(
+    main_expression::Vector{NodeData},
+    subexpressions::Vector{Vector{NodeData}},
+)
+    L = Int[]
+    marked_nodes = Set{Int}()
+    unmarked_nodes = Set{Int}(
+        node.index for node in main_expression if node.nodetype == SUBEXPRESSION
+    )
+    function visit(n::Int)
+        if n in marked_nodes
+            return
+        end
+        for m in subexpressions[n]
+            if m.nodetype == SUBEXPRESSION
+                visit(m.index)
+            end
+        end
+        push!(marked_nodes, n)
+        push!(L, n)
+        return
+    end
+    while !isempty(unmarked_nodes)
+        n = pop!(unmarked_nodes)
+        visit(n)
+    end
+    return L
+end
+
+export list_subexpressions, order_subexpressions, order_subexpression

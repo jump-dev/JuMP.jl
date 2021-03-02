@@ -1689,9 +1689,7 @@ function value(ex::NonlinearExpression, var_value::Function)
     subexpressions = Vector{NodeData}[nl_expr.nd for nl_expr in nlp_data.nlexpr]
     original_ex = nlp_data.nlexpr[ex.index]
     ex_nd = original_ex.nd
-    main_expressions = Vector{NodeData}[ex_nd]
-    subexpression_order, _ =
-        order_subexpressions(main_expressions, subexpressions)
+    subexpression_order = order_subexpression(ex_nd, subexpressions)
     max_len = length(ex_nd)
     for k in subexpression_order
         max_len = max(max_len, length(subexpressions[k]))
