@@ -3,7 +3,7 @@ CurrentModule = JuMP
 DocTestSetup = quote
     using JuMP, GLPK
 end
-DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
+DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI", r"[0-9]+.[0-9]+"]
 ```
 
 # Solutions
@@ -32,12 +32,13 @@ Subject to
  y[b] ≤ 1.0
 ```
 
-## Solutions summary  
+## Solutions summary
+
 [`show_solution_summary`](@ref) can be used for checking the summary of the optimization solutions.
 
 ```jldoctest solutions
 julia> show_solution_summary(model)
-* Solver:GLPK
+* Solver : GLPK
 
 * Status
   Termination status : OPTIMAL
@@ -47,12 +48,12 @@ julia> show_solution_summary(model)
   "Solution is optimal"
 
 * Candidate solution
-  Objective value : -205.14285714285714
-  Objective bound : Inf
+  Objective value      : -205.14285714285714
+  Objective bound      : Inf
   Dual objective value : -205.1428571428571
 
 * Work counters
-  Solve time (sec)   : 7.414817810058594e-5
+  Solve time (sec)   : 0.00008
 ```
 
 ## Why did the solver stop?

@@ -869,7 +869,7 @@ end
     MOI.set(mockoptimizer, MOI.SolveTime(), 5.0)
 
     @test sprint(show_solution_summary, m) == """
-* Solver:Mock
+* Solver : Mock
 
 * Status
   Termination status : OPTIMAL
@@ -879,19 +879,19 @@ end
   "solver specific string"
 
 * Candidate solution
-  Objective value : -1.0
-  Objective bound : 3.0
+  Objective value      : -1.0
+  Objective bound      : 3.0
   Dual objective value : -1.0
 
 * Work counters
-  Solve time (sec)   : 5.0
+  Solve time (sec)   : 5.00000
   Simplex iterations : 1
   Barrier iterations : 1
-  Node count : 1
+  Node count         : 1
 """
 
     @test sprint((io, m) -> show_solution_summary(io, m, verbose=true), m) == """
-* Solver:Mock
+* Solver : Mock
 
 * Status
   Termination status : OPTIMAL
@@ -904,22 +904,22 @@ end
   "solver specific string"
 
 * Candidate solution
-  Objective value : -1.0
-  Objective bound : 3.0
+  Objective value      : -1.0
+  Objective bound      : 3.0
   Dual objective value : -1.0
   Primal solution : 
-    y:0.0
-    x:1.0
+    x : 1.0
+    y : 0.0
   Dual solution : 
-    c1:-1.0
-    ylb:1.0
-    xub:0.0
+    c1 : -1.0
+    ylb : 1.0
+    xub : 0.0
 
 * Work counters
-  Solve time (sec)   : 5.0
+  Solve time (sec)   : 5.00000
   Simplex iterations : 1
   Barrier iterations : 1
-  Node count : 1
+  Node count         : 1
 """
 
 end
