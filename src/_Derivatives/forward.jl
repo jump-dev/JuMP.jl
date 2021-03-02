@@ -54,7 +54,7 @@ function forward_eval(
         # compute the value of node k
         @inbounds nod = nd[k]
         partials_storage[k] = zero(T)
-        if nod.nodetype == VARIABLE
+        if nod.nodetype == VARIABLE || nod.nodetype == MOIVARIABLE
             @inbounds storage[k] = x_values[nod.index]
         elseif nod.nodetype == VALUE
             @inbounds storage[k] = const_values[nod.index]

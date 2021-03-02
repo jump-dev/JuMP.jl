@@ -1652,8 +1652,31 @@ function MOI.constraint_expr(d::NLPEvaluator, i::Integer)
     end
 end
 
+
+"""
+    _VarValueMap{T,F}
+
+A lazy cache used for computing the primal variable solution in `forward_eval`.
+
+This avoids the need to rewrite the nonlinear expressions from MOIVARIABLE to
+VARIABLE, as well as eagerly computing the `var_value` for every variable. We
+use a `cache` so we don't have to recompute variables we have already seen.
+"""
+struct _VarValueMap{T,F} <: AbstractVector{T}
+    model::Model
+    var_value::F
+    cache::Dict{Int64,T}
+end
+function Base.getindex(m::_VarValueMap{T}, moi_index::Int64) where {T}
+    return get!(m.cache, moi_index) do
+        return m.var_value(VariableRef(m.model, MOI.VariableIndex(moi_index)))::T
+    end
+end
+
 # NOTE: This is a slow approach that does *a lot* of setup work on each call.
 # See https://github.com/jump-dev/JuMP.jl/issues/746.
+#
+# The new bottleneck is computing `order_subexpressions`.
 """
     value(ex::NonlinearExpression, var_value::Function)
 
@@ -1661,44 +1684,23 @@ Evaluate `ex` using `var_value(v)` as the value for each variable `v`.
 """
 function value(ex::NonlinearExpression, var_value::Function)
     model = ex.m
-
     nlp_data::_NLPData = model.nlp_data
-
-    moi_index_to_consecutive_index = Dict{MOI.VariableIndex,Int}()
-    variable_indices = MOI.get(model, MOI.ListOfVariableIndices())
-    variable_values = Vector{Float64}(undef, length(variable_indices))
-    for (consecutive_index, moi_index) in enumerate(variable_indices)
-        moi_index_to_consecutive_index[moi_index] = consecutive_index
-        jump_var = VariableRef(model, moi_index)
-        variable_values[consecutive_index] = var_value(jump_var)
-    end
-
-    subexpressions = Vector{Vector{NodeData}}(undef, 0)
-    for nl_expr in nlp_data.nlexpr
-        push!(
-            subexpressions,
-            _replace_moi_variables(nl_expr.nd, moi_index_to_consecutive_index),
-        )
-    end
-
+    variable_values = _VarValueMap(model, var_value, Dict{Int64,Float64}())
+    subexpressions = Vector{NodeData}[nl_expr.nd for nl_expr in nlp_data.nlexpr]
     original_ex = nlp_data.nlexpr[ex.index]
-    ex_nd =
-        _replace_moi_variables(original_ex.nd, moi_index_to_consecutive_index)
+    ex_nd = original_ex.nd
     main_expressions = Vector{NodeData}[ex_nd]
     subexpression_order, _ =
         order_subexpressions(main_expressions, subexpressions)
-
     max_len = length(ex_nd)
     for k in subexpression_order
         max_len = max(max_len, length(subexpressions[k]))
     end
-
     subexpr_values = Vector{Float64}(undef, length(subexpressions))
     forward_storage = Vector{Float64}(undef, max_len)
     partials_storage = Vector{Float64}(undef, max_len)
     user_input_buffer = zeros(nlp_data.largest_user_input_dimension)
     user_output_buffer = zeros(nlp_data.largest_user_input_dimension)
-
     for k in subexpression_order # Compute value of dependent subexpressions.
         subexpr_nd = subexpressions[k]
         original_subexpr = nlp_data.nlexpr[k]
@@ -1716,7 +1718,6 @@ function value(ex::NonlinearExpression, var_value::Function)
             nlp_data.user_operators,
         )
     end
-
     return forward_eval(
         forward_storage,
         partials_storage,
