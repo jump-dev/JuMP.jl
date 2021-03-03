@@ -754,7 +754,13 @@ function function_string(::Type{<:PrintMode}, p::NonlinearExpression)
 end
 
 function function_string(::Type{<:PrintMode}, p::NonlinearParameter)
-    return "Reference to nonlinear parameter #$(p.index)"
+    relevant_parameters = filter(i->i[2] isa NonlinearParameter && i[2].index==p.index, p.m.obj_dict)
+    if length(relevant_parameters) == 1
+        par_name = first(relevant_parameters)[1]
+        return "Reference to nonlinear parameter $(par_name)"
+    else
+        return "Reference to nonlinear parameter #$(p.index)"
+    end
 end
 
 function Base.show(io::IO, ex::Union{NonlinearExpression,NonlinearParameter})
