@@ -274,12 +274,12 @@ end
         io_test(
             REPLMode,
             constr,
-            "(subexpression[1] - parameter[1]) - 0.0 $le 0",
+            "(subexpression[1] - param) - 0.0 $le 0",
         )
         io_test(
             IJuliaMode,
             constr,
-            "(subexpression_{1} - parameter_{1}) - 0.0 \\leq 0",
+            "(subexpression_{1} - param) - 0.0 \\leq 0",
         )
     end
 
