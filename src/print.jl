@@ -369,7 +369,10 @@ function _show_candidate_solution_summary(io::IO, model::Model, verbose::Bool)
     if verbose && has_values(model)
         println(io, "  Primal solution : ")
         for x in all_variables(model)
-            println(io, "    ", name(x), " : ", value(x))
+            variable_name = name(x)
+            if !isempty(variable_name)
+                println(io, "    ", variable_name, " : ", value(x))
+            end
         end
     end
 
