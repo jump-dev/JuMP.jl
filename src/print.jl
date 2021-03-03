@@ -337,7 +337,7 @@ dual solution for every constraint, excluding those with empty names.
 """
 function show_solution_summary(io::IO, model::Model; verbose::Bool = false)
     println(io, "* Solver : ", solver_name(model))
-    println(io, "")
+    println(io)
 
     _show_status_summary(io, model, verbose)
     _show_candidate_solution_summary(io, model, verbose)
