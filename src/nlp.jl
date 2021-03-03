@@ -1377,14 +1377,21 @@ function Base.show(io::IO, v::_VariablePrintWrapper)
     print(io, function_string(v.mode, v.v))
 end
 mutable struct _ParameterPrintWrapper
+    model::Model
     idx::Int
     mode::Any
 end
 function Base.show(io::IO, p::_ParameterPrintWrapper)
-    if p.mode == IJuliaMode
-        print(io, "parameter_{$(p.idx)}")
+    relevant_parameters = filter(i->i[2] isa NonlinearParameter && i[2].index==p.idx, p.model.obj_dict)
+    if length(relevant_parameters) == 1
+        par_name = first(relevant_parameters)[1]
+        print(io, par_name)
     else
-        print(io, "parameter[$(p.idx)]")
+        if p.mode == IJuliaMode
+            print(io, "parameter_{$(p.idx)}")
+        else
+            print(io, "parameter[$(p.idx)]")
+        end
     end
 end
 mutable struct _SubexpressionPrintWrapper
@@ -1438,7 +1445,7 @@ function _tape_to_expr(
         if splat_subexpressions
             return parameter_values[nod.index]
         else
-            return _ParameterPrintWrapper(nod.index, print_mode)
+            return _ParameterPrintWrapper(m, nod.index, print_mode)
         end
     elseif nod.nodetype == CALL
         op = nod.index
