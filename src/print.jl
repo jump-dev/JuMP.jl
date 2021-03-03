@@ -329,7 +329,6 @@ end
 """
     show_solution_summary([io::IO], model::Model; verbose::Bool = false)
 
-If `verbose` is true, additional information are written.
 Write a summary of the solution results to `io` (or to `stdout` if `io` is not 
 given).
 
