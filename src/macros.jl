@@ -1750,7 +1750,6 @@ macro NLparameter(m, ex, extra...)
     # TODO: NLparameters are not registered in the model because we don't yet
     # have an anonymous version.
     macro_code = _macro_assign_and_return(creation_code, variable,
-                                          Containers._get_name(c),
-                                          model_for_registering = esc_m)
+                                          Containers._get_name(c))
     return _finalize_macro(esc_m, macro_code, __source__)
 end
