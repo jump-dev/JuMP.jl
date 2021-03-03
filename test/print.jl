@@ -180,6 +180,12 @@ end
         io_test(REPLMode, param, "\"Reference to nonlinear parameter #1\"")
     end
 
+    @testset "Registered nonlinear parameters" begin
+        model = Model()
+        model[:param] = @NLparameter(model, param == 1.0)
+        io_test(REPLMode, param, "\"Reference to nonlinear parameter param\"")
+    end
+
     @testset "NLPEvaluator" begin
         model = Model()
         evaluator = JuMP.NLPEvaluator(model)
@@ -242,6 +248,27 @@ end
         @variable(model, x)
         expr = @NLexpression(model, x + 1)
         @NLparameter(model, param == 1.0)
+
+        constr = @NLconstraint(model, expr - param <= 0)
+        io_test(
+            REPLMode,
+            constr,
+            "(subexpression[1] - parameter[1]) - 0.0 $le 0",
+        )
+        io_test(
+            IJuliaMode,
+            constr,
+            "(subexpression_{1} - parameter_{1}) - 0.0 \\leq 0",
+        )
+    end
+
+    @testset "Nonlinear constraints with embedded registered parameters/expressions" begin
+        le = JuMP._math_symbol(REPLMode, :leq)
+
+        model = Model()
+        @variable(model, x)
+        expr = @NLexpression(model, x + 1)
+        model[:param] = @NLparameter(model, param == 1.0)
 
         constr = @NLconstraint(model, expr - param <= 0)
         io_test(
