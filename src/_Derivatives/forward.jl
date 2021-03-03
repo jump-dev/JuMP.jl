@@ -36,7 +36,7 @@ function forward_eval(
     adj,
     const_values,
     parameter_values,
-    x_values::AbstractVector{T},
+    x_values,
     subexpression_values,
     user_input_buffer,
     user_output_buffer,

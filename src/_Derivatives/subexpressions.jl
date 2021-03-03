@@ -14,109 +14,100 @@ function list_subexpressions(nd::Vector{NodeData})
     return sort(collect(indices))
 end
 
-# Order the subexpressions which main_expressions depend on such that we can
-# run forward mode in this order.
+function _visit_nodes(
+    subexpressions::Vector{Vector{NodeData}},
+    n::Int64,
+    individual::Tuple{Vector{Int64},Set{Int64}},
+    full::Union{Nothing,Tuple{Vector{Int64},Set{Int64}}},
+)
+    # First, check if we have already visited node `n`. If so, bail from the
+    # recursion.
+    if n in individual[2]
+        return
+    end
+    # Else, recurse on each SUBEXPRESSION node in subexpression n.
+    for m in subexpressions[n]
+        if m.nodetype == SUBEXPRESSION
+            _visit_nodes(subexpressions, m.index, individual, full)
+        end
+    end
+    # If we made it here, it means that all the children subexpressions (if they
+    # exist) are added, so we're free to append subexpression `n` to the list.
+    push!(individual[1], n)
+    push!(individual[2], n)
+    # In addition, if we are storing the full list, add `n` here too.
+    if full !== nothing && !(n in full[2])
+        push!(full[1], n)
+        push!(full[2], n)
+    end
+    return
+end
+
+"""
+    order_subexpressions(
+        main_expression::Vector{NodeData},
+        subexpressions::Vector{Vector{NodeData}},
+        full::Union{Nothing,Tuple{Vector{Int64},Set{Int64}}} = nothing,
+    )
+
+Return a topologically ordered list of subexpression-indices needed to evaluate
+`main_expression`.
+
+`full` is an argument used by `order_subexpressions` to collate a list of
+expressions needed to evaluate multiple `main_expressions`.
+
+**Warning:** This doesn't handle cyclic expressions! But this should be fine
+because we can't compute them in JuMP anyway.
+"""
+function order_subexpressions(
+    main_expression::Vector{NodeData},
+    subexpressions::Vector{Vector{NodeData}},
+    full::Union{Nothing,Tuple{Vector{Int64},Set{Int64}}} = nothing,
+)
+    # `order` is a topologically sorted list of nodes. Nodes at the start of the
+    # list need to be evaluated first.
+    # `tagged` is a set to efficiently keep track of nodes that we have added to
+    # `order`. We could just use `n in order`, but a `Set` is probably faster.
+    order, tagged = Int64[], Set{Int64}()
+    # The meat of DFS is this recursive call to `_visit_node` for each
+    # SUBEXPRESSION node in `main_expression`.
+    for node in main_expression
+        if node.nodetype == SUBEXPRESSION
+            _visit_nodes(subexpressions, node.index, (order, tagged), full)
+        end
+    end
+    return order
+end
+
+"""
+    order_subexpressions(
+        main_expressions::Vector{Vector{NodeData}},
+        subexpressions::Vector{Vector{NodeData}};
+    )
+
+Topologically sort the subexpressions needed to evaluate `main_expressions`.
+
+Returns two things:
+
+ * A `Vector{Int64}` containing the ordered list of subexpression-indices that
+   need to be evaluated to compute all `main_expressions`
+ * A `Vector{Vector{Int64}}`, containing a list of ordered lists of
+   subexpression-indices that need to be evaluated to compute
+   `main_expressions[i]`.
+
+**Warning:** This doesn't handle cyclic expressions! But this should be fine
+because we can't compute them in JuMP anyway.
+"""
 function order_subexpressions(
     main_expressions::Vector{Vector{NodeData}},
     subexpressions::Vector{Vector{NodeData}},
 )
-    num_sub = length(subexpressions)
-    computed = falses(num_sub)
-    dependencies = Dict{Int,Vector{Int}}()
-    to_visit = collect(num_sub+1:num_sub+length(main_expressions))
-    # For each subexpression k, the indices of the main expressions that depend
-    # on k, possibly transitively.
-    depended_on_by = [Set{Int}() for i in 1:num_sub]
-    while !isempty(to_visit)
-        idx = pop!(to_visit)
-        if idx > num_sub
-            subexpr = list_subexpressions(main_expressions[idx-num_sub])
-        else
-            computed[idx] && continue
-            subexpr = list_subexpressions(subexpressions[idx])
-            computed[idx] = true
-        end
-        dependencies[idx] = subexpr
-        for k in subexpr
-            if idx > num_sub
-                push!(depended_on_by[k], idx - num_sub)
-            end
-            push!(to_visit, k)
-        end
-    end
-
-    # Now order dependencies.
-    I = Int[]
-    J = Int[]
-    for (idx, subexpr) in dependencies
-        for k in subexpr
-            push!(I, idx)
-            push!(J, k)
-        end
-    end
-    N = num_sub + length(main_expressions)
-    sp = sparse(I, J, ones(length(I)), N, N)
-    cmap = Vector{Int}(undef, N)
-
-    order = reverse(Coloring.reverse_topological_sort_by_dfs(
-        sp.rowval,
-        sp.colptr,
-        N,
-        cmap,
-    )[1])
-    # Remove the subexpressions which never appear anywhere and the indices of
-    # the main expressions.
-    condition(idx) = idx <= num_sub && computed[idx]
-    order_filtered = collect(filter(condition, order))
-
-    # Propagate transitive dependencies.
-    for o in Iterators.reverse(order_filtered)
-        @assert !isempty(depended_on_by[o])
-        for k in list_subexpressions(subexpressions[o])
-            union!(depended_on_by[k], depended_on_by[o])
-        end
-    end
-
-    # Generate an individual order for each main expression.
-    individual_order = [Int[] for i in 1:length(main_expressions)]
-    for o in order_filtered
-        for i in depended_on_by[o]
-            push!(individual_order[i], o)
-        end
-    end
-
-    return order_filtered, individual_order
+    full = (Int64[], Set{Int64}())
+    individual = Vector{Int64}[
+        order_subexpressions(expr, subexpressions, full)
+        for expr in main_expressions
+    ]
+    return full[1], individual
 end
 
-# An implementation of depth-first-search for topologically sorting the
-# subexpressions needed to compute main_expression.
-function order_subexpression(
-    main_expression::Vector{NodeData},
-    subexpressions::Vector{Vector{NodeData}},
-)
-    L = Int[]
-    marked_nodes = Set{Int}()
-    unmarked_nodes = Set{Int}(
-        node.index for node in main_expression if node.nodetype == SUBEXPRESSION
-    )
-    function visit(n::Int)
-        if n in marked_nodes
-            return
-        end
-        for m in subexpressions[n]
-            if m.nodetype == SUBEXPRESSION
-                visit(m.index)
-            end
-        end
-        push!(marked_nodes, n)
-        push!(L, n)
-        return
-    end
-    while !isempty(unmarked_nodes)
-        n = pop!(unmarked_nodes)
-        visit(n)
-    end
-    return L
-end
-
-export list_subexpressions, order_subexpressions, order_subexpression
+export list_subexpressions, order_subexpressions

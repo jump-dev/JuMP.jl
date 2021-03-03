@@ -1662,7 +1662,7 @@ This avoids the need to rewrite the nonlinear expressions from MOIVARIABLE to
 VARIABLE, as well as eagerly computing the `var_value` for every variable. We
 use a `cache` so we don't have to recompute variables we have already seen.
 """
-struct _VarValueMap{T,F} <: AbstractVector{T}
+struct _VarValueMap{T,F}
     model::Model
     var_value::F
     cache::Dict{Int64,T}
@@ -1673,10 +1673,6 @@ function Base.getindex(m::_VarValueMap{T}, moi_index::Int64) where {T}
     end
 end
 
-# NOTE: This is a slow approach that does *a lot* of setup work on each call.
-# See https://github.com/jump-dev/JuMP.jl/issues/746.
-#
-# The new bottleneck is computing `order_subexpressions`.
 """
     value(ex::NonlinearExpression, var_value::Function)
 
@@ -1688,9 +1684,8 @@ function value(ex::NonlinearExpression, var_value::Function)
     variable_values = _VarValueMap(model, var_value, Dict{Int64,Float64}())
     subexpressions = Vector{NodeData}[nl_expr.nd for nl_expr in nlp_data.nlexpr]
     original_ex = nlp_data.nlexpr[ex.index]
-    ex_nd = original_ex.nd
-    subexpression_order = order_subexpression(ex_nd, subexpressions)
-    max_len = length(ex_nd)
+    subexpression_order = order_subexpressions(original_ex.nd, subexpressions)
+    max_len = length(original_ex.nd)
     for k in subexpression_order
         max_len = max(max_len, length(subexpressions[k]))
     end
@@ -1719,8 +1714,8 @@ function value(ex::NonlinearExpression, var_value::Function)
     return forward_eval(
         forward_storage,
         partials_storage,
-        ex_nd,
-        adjmat(ex_nd),
+        original_ex.nd,
+        adjmat(original_ex.nd),
         original_ex.const_values,
         nlp_data.nlparamvalues,
         variable_values,
