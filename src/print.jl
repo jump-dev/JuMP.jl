@@ -329,9 +329,12 @@ end
 """
     show_solution_summary([io::IO], model::Model; verbose::Bool = false)
 
-Write to `io` (or to the default output stream `stdout` if `io` is not given)
-a summary of the solution results. 
 If `verbose` is true, additional information are written.
+Write a summary of the solution results to `io` (or to `stdout` if `io` is not 
+given).
+
+If `verbose=true`, write out the primal solution for every variable and the
+dual solution for every constraint, excluding those with empty names.
 """
 function show_solution_summary(io::IO, model::Model; verbose::Bool = false)
     println(io, "* Solver : ", solver_name(model))
@@ -355,7 +358,7 @@ function _show_status_summary(io::IO, model::Model, verbose::Bool)
     verbose && println(io, "  Has duals          : ", has_duals(model))
     println(io, "  Message from the solver:")
     println(io, "  \"", raw_status(model), "\"")
-    println(io, "")
+    println(io)
 end
 
 function _show_candidate_solution_summary(io::IO, model::Model, verbose::Bool)
@@ -373,19 +376,16 @@ function _show_candidate_solution_summary(io::IO, model::Model, verbose::Bool)
 
     if verbose && has_duals(model)
         println(io, "  Dual solution : ")
-        constraint_id = 1
         for (F, S) in list_of_constraint_types(model)
             for constraint in all_constraints(model, F, S)
                 constraint_name = name(constraint)
-                if isempty(constraint_name) 
-                    constraint_name = "c"*string(constraint_id) # use temporary constraint name
-                    constraint_id += 1
+                if !isempty(constraint_name) 
+                    println(io, "    ", constraint_name, " : ", dual(constraint), )
                 end
-                println(io, "    ", constraint_name, " : ", dual(constraint), )
             end
         end
     end
-    println(io, "")
+    println(io)
 end
 
 function _show_work_counters_summary(io::IO, model::Model, verbose::Bool)

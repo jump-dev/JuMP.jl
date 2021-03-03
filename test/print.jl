@@ -911,7 +911,6 @@ end
     x : 1.0
     y : 0.0
   Dual solution : 
-    c1 : -1.0
     ylb : 1.0
     xub : 0.0
 
