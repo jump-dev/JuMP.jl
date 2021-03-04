@@ -407,7 +407,8 @@ Hessian information is not supported for multivariate functions.
 ### Register a function, gradient, and hessian
 
 !!! warning
-    This feature is only available for univariate functions.
+    The ability to explicitly register a hessian is only available for 
+    univariate functions.
 
 Instead of automatically differentiating the hessian, you can instead pass a
 function which returns a number representing the second-order derivative.
