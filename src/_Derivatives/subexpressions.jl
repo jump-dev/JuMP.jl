@@ -14,69 +14,84 @@ function list_subexpressions(nd::Vector{NodeData})
     return sort(collect(indices))
 end
 
-function _visit_nodes(
-    subexpressions::Vector{Vector{NodeData}},
-    n::Int64,
-    individual::Tuple{Vector{Int64},Set{Int64}},
-    full::Union{Nothing,Tuple{Vector{Int64},Set{Int64}}},
-)
-    # First, check if we have already visited node `n`. If so, bail from the
-    # recursion.
-    if n in individual[2]
-        return
-    end
-    # Else, recurse on each SUBEXPRESSION node in subexpression n.
-    for m in subexpressions[n]
-        if m.nodetype == SUBEXPRESSION
-            _visit_nodes(subexpressions, m.index, individual, full)
-        end
-    end
-    # If we made it here, it means that all the children subexpressions (if they
-    # exist) are added, so we're free to append subexpression `n` to the list.
-    push!(individual[1], n)
-    push!(individual[2], n)
-    # In addition, if we are storing the full list, add `n` here too.
-    if full !== nothing && !(n in full[2])
-        push!(full[1], n)
-        push!(full[2], n)
-    end
-    return
+"""
+Return the list of dependent subexpressions. Similar to `list_subexpressions`,
+but without the unnecessary `Set{Int}` -> `Vector{Int}` -> `sort`.
+"""
+function _subexpressions(nd::Vector{NodeData})
+    return Int[n.index for n in nd if n.nodetype == SUBEXPRESSION]
 end
 
 """
-    order_subexpressions(
-        main_expression::Vector{NodeData},
-        subexpressions::Vector{Vector{NodeData}},
-        full::Union{Nothing,Tuple{Vector{Int64},Set{Int64}}} = nothing,
-    )
-
-Return a topologically ordered list of subexpression-indices needed to evaluate
-`main_expression`.
-
-`full` is an argument used by `order_subexpressions` to collate a list of
-expressions needed to evaluate multiple `main_expressions`.
-
-**Warning:** This doesn't handle cyclic expressions! But this should be fine
-because we can't compute them in JuMP anyway.
+Return `G[node]`, lazily building it from `subexpressions` if it is not yet
+assigned.
 """
-function order_subexpressions(
-    main_expression::Vector{NodeData},
+function _children(
+    G::Vector{Vector{Int}},
     subexpressions::Vector{Vector{NodeData}},
-    full::Union{Nothing,Tuple{Vector{Int64},Set{Int64}}} = nothing,
+    node::Int,
 )
-    # `order` is a topologically sorted list of nodes. Nodes at the start of the
-    # list need to be evaluated first.
-    # `tagged` is a set to efficiently keep track of nodes that we have added to
-    # `order`. We could just use `n in order`, but a `Set` is probably faster.
-    order, tagged = Int64[], Set{Int64}()
-    # The meat of DFS is this recursive call to `_visit_node` for each
-    # SUBEXPRESSION node in `main_expression`.
-    for node in main_expression
-        if node.nodetype == SUBEXPRESSION
-            _visit_nodes(subexpressions, node.index, (order, tagged), full)
+    if !isassigned(G, node)
+        G[node] = _subexpressions(subexpressions[node])
+    end
+    return G[node]
+end
+
+"""
+    _topological_sort(starts, G::Vector{Vector{Int}})
+
+Return a topologically sorted list of nodes in `G` that need to be evaluated
+to compute the nodes contained in `starts`.
+
+## Notes
+
+* It is important to not use recursion here, because expressions may have
+  arbitrary levels of nesting!
+* This function assumes `G` is acyclic.
+"""
+function _topological_sort(
+    starts,
+    G::Vector{Vector{Int}},
+    subexpressions::Vector{Vector{NodeData}},
+)
+    ordered = Int[]
+    visited = fill(false, length(G))
+    stack = Tuple{Int,Bool}[]
+    for s in starts
+        if visited[s]
+            continue  # This node has already been visited.
+        else
+            push!(stack, (s, true))
+            visited[s] = true
+        end
+        while !isempty(stack)
+            # Get a new node from the top of the stack.
+            node, needs_checking = pop!(stack)
+            # If !needs_checking, we must be returning to this node for a second
+            # time, and we have already checked all of the children. Therefore,
+            # we can add it to the set of ordered nodes.
+            if !needs_checking
+                push!(ordered, node)
+                continue
+            end
+            # Re-add the node to the stack, but set the `false` flag this time
+            # so next time we visit it, it will go on the `ordered` list
+            # instead.
+            push!(stack, (node, false))
+            # Now check all of the children.
+            for child in _children(G, subexpressions, node)
+                if visited[child]
+                    continue  # This node has already been visited.
+                else
+                    # Add the node to the stack. Because we haven't visited it
+                    # before, we need to check all of the children.
+                    push!(stack, (child, true))
+                    visited[child] = true
+                end
+            end
         end
     end
-    return order
+    return ordered
 end
 
 """
@@ -102,12 +117,36 @@ function order_subexpressions(
     main_expressions::Vector{Vector{NodeData}},
     subexpressions::Vector{Vector{NodeData}},
 )
-    full = (Int64[], Set{Int64}())
-    individual = Vector{Int64}[
-        order_subexpressions(expr, subexpressions, full)
-        for expr in main_expressions
-    ]
-    return full[1], individual
+    # The graph of node dependencies. Constructed lazily.
+    G = Vector{Vector{Int}}(undef, length(subexpressions))
+    # Node dependencies of the main expressions.
+    starts = Set{Int}()
+    individual_sorts = Vector{Int}[]
+    for expression in main_expressions
+        s = _subexpressions(expression)
+        union!(starts, s)
+        push!(individual_sorts, _topological_sort(s, G, subexpressions))
+    end
+    full_sort = _topological_sort(starts, G, subexpressions)
+    return full_sort, individual_sorts
+end
+
+"""
+    order_subexpressions(
+        main_expression::Vector{NodeData},
+        subexpressions::Vector{Vector{NodeData}},
+    )
+
+Return a topologically ordered list of subexpression-indices needed to evaluate
+`main_expression`.
+"""
+function order_subexpressions(
+    main_expression::Vector{NodeData},
+    subexpressions::Vector{Vector{NodeData}},
+)
+    s = _subexpressions(main_expression)
+    G = Vector{Vector{Int}}(undef, length(subexpressions))
+    return _topological_sort(s, G, subexpressions)
 end
 
 export list_subexpressions, order_subexpressions
