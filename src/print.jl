@@ -327,7 +327,21 @@ function objective_function_string(print_mode, model::Model)
 end
 
 """
-    show_solution_summary([io::IO], model::Model; verbose::Bool = false)
+    SolutionSummary
+
+A struct to show a summary of the solution results.
+"""
+struct SolutionSummary;model::JuMP.Model;end
+
+"""
+    solution_summary(model::Model)
+
+Create a summary of the solution results.
+"""
+solution_summary(model::Model) = SolutionSummary(model)
+
+"""
+    Base.show([io::IO], summary::SolutionSummary; verbose::Bool = false)
 
 Write a summary of the solution results to `io` (or to `stdout` if `io` is not 
 given).
@@ -335,17 +349,17 @@ given).
 If `verbose=true`, write out the primal solution for every variable and the
 dual solution for every constraint, excluding those with empty names.
 """
-function show_solution_summary(io::IO, model::Model; verbose::Bool = false)
-    println(io, "* Solver : ", solver_name(model))
+function Base.show(io::IO, summary::SolutionSummary; verbose::Bool = false)
+    println(io, "* Solver : ", solver_name(summary.model))
     println(io)
 
-    _show_status_summary(io, model, verbose)
-    _show_candidate_solution_summary(io, model, verbose)
-    _show_work_counters_summary(io, model, verbose)
+    _show_status_summary(io, summary.model, verbose)
+    _show_candidate_solution_summary(io, summary.model, verbose)
+    _show_work_counters_summary(io, summary.model, verbose)
     return
 end
 
-show_solution_summary(model::Model; verbose::Bool = false) = show_solution_summary(stdout, model; verbose = verbose)
+Base.show(summary::SolutionSummary; verbose::Bool = false) = Base.show(stdout, summary; verbose = verbose)
 
 function _show_status_summary(io::IO, model::Model, verbose::Bool)
     println(io, "* Status")

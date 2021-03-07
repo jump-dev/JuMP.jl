@@ -857,7 +857,7 @@ end
     MOI.set(mockoptimizer, MOI.NodeCount(), 1)
     MOI.set(mockoptimizer, MOI.SolveTime(), 5.0)
 
-    @test sprint(show_solution_summary, model) == """
+    @test sprint(show, solution_summary(model)) == """
 * Solver : Mock
 
 * Status
@@ -879,7 +879,7 @@ end
   Node count         : 1
 """
 
-    @test sprint((io, model) -> show_solution_summary(io, model, verbose=true), model) == """
+    @test sprint((io, model) -> show(io, solution_summary(model), verbose=true), model) == """
 * Solver : Mock
 
 * Status
