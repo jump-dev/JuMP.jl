@@ -15,44 +15,49 @@ function list_subexpressions(nd::Vector{NodeData})
 end
 
 """
-Return the list of dependent subexpressions. Similar to `list_subexpressions`,
-but without the unnecessary `Set{Int}` -> `Vector{Int}` -> `sort`.
+    _subexpressions(nd::Vector{NodeData})::Vector{Int}
+
+Return the integer-indices of subexpressions which the tape `nd` depends on
+directly.
+
+This list may contain duplicates. If you want a list of unique indices, use
+`list_subexpressions` instead.
 """
 function _subexpressions(nd::Vector{NodeData})
     return Int[n.index for n in nd if n.nodetype == SUBEXPRESSION]
 end
 
 """
-Return `G[node]`, lazily building it from `subexpressions` if it is not yet
-assigned.
-"""
-function _children(
-    G::Vector{Vector{Int}},
-    subexpressions::Vector{Vector{NodeData}},
-    node::Int,
-)
-    if !isassigned(G, node)
-        G[node] = _subexpressions(subexpressions[node])
-    end
-    return G[node]
-end
+    _topological_sort(
+        starts,
+        subexpressions::Vector{Vector{NodeData}},
+        G::Vector{Vector{Int}} = Vector{Vector{Int}}(undef, subexpressions),
+    )
 
-"""
-    _topological_sort(starts, G::Vector{Vector{Int}})
+Return a topologically sorted list of the integer subexpresssion indices that
+need to be computed to evalute `subexpressions[s]` for all `s in starts`.
+(`starts` may contain duplicates, and just needs to be iterable.)
 
-Return a topologically sorted list of nodes in `G` that need to be evaluated
-to compute the nodes contained in `starts`.
+`G[i]` is a lazily-computed list of "out" edges from node `i`, in terms of the
+integer-valued subexpression index (i.e., `node.index`). This list may contain
+duplicates.
+
+If calling `_topological_sort` a single time, you may omit the `G` argument.
+
+However, if calling `_topological_sort` multiple times on the _same_ vector of
+subexpresssions, you should create `G` once (either as the uninitialized vector,
+or by explicitly computing the full `G`), and pass it in.
 
 ## Notes
 
 * It is important to not use recursion here, because expressions may have
   arbitrary levels of nesting!
-* This function assumes `G` is acyclic.
+* This function assumes `subexpressions` is acyclic.
 """
 function _topological_sort(
     starts,
-    G::Vector{Vector{Int}},
     subexpressions::Vector{Vector{NodeData}},
+    G::Vector{Vector{Int}} = Vector{Vector{Int}}(undef, subexpressions),
 )
     ordered = Int[]
     visited = fill(false, length(G))
@@ -79,7 +84,10 @@ function _topological_sort(
             # instead.
             push!(stack, (node, false))
             # Now check all of the children.
-            for child in _children(G, subexpressions, node)
+            if !isassigned(G, node)
+                G[node] = _subexpressions(subexpressions[node])
+            end
+            for child in G[node]
                 if visited[child]
                     continue  # This node has already been visited.
                 else
@@ -100,13 +108,13 @@ end
         subexpressions::Vector{Vector{NodeData}};
     )
 
-Topologically sort the subexpressions needed to evaluate `main_expressions`.
+Topologically sort the subexpression needed to evaluate `main_expressions`.
 
 Returns two things:
 
- * A `Vector{Int64}` containing the ordered list of subexpression-indices that
+ * A `Vector{Int}` containing the ordered list of subexpression-indices that
    need to be evaluated to compute all `main_expressions`
- * A `Vector{Vector{Int64}}`, containing a list of ordered lists of
+ * A `Vector{Vector{Int}}`, containing a list of ordered lists of
    subexpression-indices that need to be evaluated to compute
    `main_expressions[i]`.
 
@@ -125,9 +133,9 @@ function order_subexpressions(
     for expression in main_expressions
         s = _subexpressions(expression)
         union!(starts, s)
-        push!(individual_sorts, _topological_sort(s, G, subexpressions))
+        push!(individual_sorts, _topological_sort(s, subexpressions, G))
     end
-    full_sort = _topological_sort(starts, G, subexpressions)
+    full_sort = _topological_sort(starts, subexpressions, G)
     return full_sort, individual_sorts
 end
 
@@ -137,16 +145,15 @@ end
         subexpressions::Vector{Vector{NodeData}},
     )
 
-Return a topologically ordered list of subexpression-indices needed to evaluate
-`main_expression`.
+Return a `Vector{Int}` containing the topologically ordered list of
+subexpression-indices that need to be evaluated to compute `main_expression`.
 """
 function order_subexpressions(
     main_expression::Vector{NodeData},
     subexpressions::Vector{Vector{NodeData}},
 )
     s = _subexpressions(main_expression)
-    G = Vector{Vector{Int}}(undef, length(subexpressions))
-    return _topological_sort(s, G, subexpressions)
+    return _topological_sort(s, subexpressions)
 end
 
 export list_subexpressions, order_subexpressions
