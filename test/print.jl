@@ -796,36 +796,25 @@ end
 
 @testset "Print solution summary" begin
 
-    m = Model()
-    @variable(m, x <= 2.0)
-    @variable(m, y >= 0.0)
-    @objective(m, Min, -x)
-    c = @constraint(m, x + y <= 1) # anonymous constraint
+    model = Model()
+    @variable(model, x <= 2.0)
+    @variable(model, y >= 0.0)
+    @objective(model, Min, -x)
+    c = @constraint(model, x + y <= 1) # anonymous constraint
 
     JuMP.set_name(JuMP.UpperBoundRef(x), "xub")
     JuMP.set_name(JuMP.LowerBoundRef(y), "ylb")
-
-    modelstring = """
-    variables: x, y
-    minobjective: -1.0*x
-    xub: x <= 2.0
-    ylb: y >= 0.0
-    noname: x + y <= 1.0
-    """
-
-    model = MOIU.Model{Float64}()
-    MOIU.loadfromstring!(model, modelstring)
-
+    
     set_optimizer(
-        m,
+        model,
         () -> MOIU.MockOptimizer(
             MOIU.Model{Float64}(),
             eval_objective_value = false,
         ),
     )
-    optimize!(m)
+    optimize!(model)
 
-    mockoptimizer = JuMP.backend(m).optimizer.model
+    mockoptimizer = JuMP.backend(model).optimizer.model
     MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
     MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
@@ -868,7 +857,7 @@ end
     MOI.set(mockoptimizer, MOI.NodeCount(), 1)
     MOI.set(mockoptimizer, MOI.SolveTime(), 5.0)
 
-    @test sprint(show_solution_summary, m) == """
+    @test sprint(show_solution_summary, model) == """
 * Solver : Mock
 
 * Status
@@ -890,7 +879,7 @@ end
   Node count         : 1
 """
 
-    @test sprint((io, m) -> show_solution_summary(io, m, verbose=true), m) == """
+    @test sprint((io, model) -> show_solution_summary(io, model, verbose=true), model) == """
 * Solver : Mock
 
 * Status
