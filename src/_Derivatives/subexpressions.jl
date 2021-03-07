@@ -10,26 +10,12 @@ function list_subexpressions(nd::Vector{NodeData})
             push!(indices, nod.index)
         end
     end
-
     return sort(collect(indices))
 end
 
 """
-    _subexpressions(nd::Vector{NodeData})::Vector{Int}
-
-Return the integer-indices of subexpressions which the tape `nd` depends on
-directly.
-
-This list may contain duplicates. If you want a list of unique indices, use
-`list_subexpressions` instead.
-"""
-function _subexpressions(nd::Vector{NodeData})
-    return Int[n.index for n in nd if n.nodetype == SUBEXPRESSION]
-end
-
-"""
     _topological_sort(
-        starts,
+        starts::Vector{Int},
         subexpressions::Vector{Vector{NodeData}},
         subexpression_dependency_graph::Vector{Vector{Int}} =
             Vector{Vector{Int}}(undef, length(subexpressions)),
@@ -37,11 +23,12 @@ end
 
 Return a topologically sorted list of the integer subexpresssion indices that
 need to be computed to evalute `subexpressions[s]` for all `s in starts`.
-(`starts` may contain duplicates, and just needs to be iterable.)
+
+`starts` should be ordered, and not contain duplicates.
 
 `subexpression_dependency_graph[i]` is a lazily-computed list of "out" edges
 from node `i`, in terms of the integer-valued subexpression index (i.e.,
-`node.index`). This list may contain duplicates.
+`node.index`). This list should be unique and ordered.
 
 If calling `_topological_sort` a single time, you may omit the
 `subexpression_dependency_graph` argument.
@@ -64,42 +51,36 @@ function _topological_sort(
         Vector{Vector{Int}}(undef, length(subexpressions)),
 )
     ordered = Int[]
-    visited = fill(false, length(subexpressions))
+    in_order = fill(false, length(subexpressions))
     stack = Tuple{Int,Bool}[]
     for s in starts
-        if visited[s]
-            continue  # This node has already been visited.
-        else
-            push!(stack, (s, true))
-            visited[s] = true
+        if in_order[s]
+            continue  # s is already in `ordered`.
         end
+        push!(stack, (s, true))
         while !isempty(stack)
-            # Get a new node from the top of the stack.
             node, needs_checking = pop!(stack)
-            # If !needs_checking, we must be returning to this node for a second
-            # time, and we have already checked all of the children. Therefore,
-            # we can add it to the set of ordered nodes.
             if !needs_checking
+                # We must be returning to this node for a second time, and we
+                # have already checked all of the children. Therefore, we can
+                # add it to the set of ordered nodes.
                 push!(ordered, node)
+                in_order[node] = true
                 continue
+            elseif in_order[node]
+                continue  # This node has already been added to `ordered`.
             end
             # Re-add the node to the stack, but set the `false` flag this time
             # so next time we visit it, it will go on the `ordered` list
             # instead.
             push!(stack, (node, false))
-            # Now check all of the children.
             if !isassigned(subexpression_dependency_graph, node)
                 subexpression_dependency_graph[node] =
-                    _subexpressions(subexpressions[node])
+                    list_subexpressions(subexpressions[node])
             end
             for child in subexpression_dependency_graph[node]
-                if visited[child]
-                    continue  # This node has already been visited.
-                else
-                    # Add the node to the stack. Because we haven't visited it
-                    # before, we need to check all of the children.
+                if !in_order[child]
                     push!(stack, (child, true))
-                    visited[child] = true
                 end
             end
         end
@@ -137,7 +118,7 @@ function order_subexpressions(
     starts = Set{Int}()
     individual_sorts = Vector{Int}[]
     for expression in main_expressions
-        s = _subexpressions(expression)
+        s = list_subexpressions(expression)
         union!(starts, s)
         push!(
             individual_sorts,
@@ -169,7 +150,7 @@ function order_subexpressions(
     main_expression::Vector{NodeData},
     subexpressions::Vector{Vector{NodeData}},
 )
-    s = _subexpressions(main_expression)
+    s = list_subexpressions(main_expression)
     return _topological_sort(s, subexpressions)
 end
 
