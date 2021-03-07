@@ -31,22 +31,25 @@ end
     _topological_sort(
         starts,
         subexpressions::Vector{Vector{NodeData}},
-        G::Vector{Vector{Int}} = Vector{Vector{Int}}(undef, subexpressions),
+        subexpression_dependency_graph::Vector{Vector{Int}} =
+            Vector{Vector{Int}}(undef, length(subexpressions)),
     )
 
 Return a topologically sorted list of the integer subexpresssion indices that
 need to be computed to evalute `subexpressions[s]` for all `s in starts`.
 (`starts` may contain duplicates, and just needs to be iterable.)
 
-`G[i]` is a lazily-computed list of "out" edges from node `i`, in terms of the
-integer-valued subexpression index (i.e., `node.index`). This list may contain
-duplicates.
+`subexpression_dependency_graph[i]` is a lazily-computed list of "out" edges
+from node `i`, in terms of the integer-valued subexpression index (i.e.,
+`node.index`). This list may contain duplicates.
 
-If calling `_topological_sort` a single time, you may omit the `G` argument.
+If calling `_topological_sort` a single time, you may omit the
+`subexpression_dependency_graph` argument.
 
 However, if calling `_topological_sort` multiple times on the _same_ vector of
-subexpresssions, you should create `G` once (either as the uninitialized vector,
-or by explicitly computing the full `G`), and pass it in.
+subexpresssions, you should create `subexpression_dependency_graph` once (either
+as the uninitialized vector, or by explicitly computing the full
+`subexpression_dependency_graph`), and pass it in.
 
 ## Notes
 
@@ -57,10 +60,11 @@ or by explicitly computing the full `G`), and pass it in.
 function _topological_sort(
     starts,
     subexpressions::Vector{Vector{NodeData}},
-    G::Vector{Vector{Int}} = Vector{Vector{Int}}(undef, subexpressions),
+    subexpression_dependency_graph::Vector{Vector{Int}} =
+        Vector{Vector{Int}}(undef, length(subexpressions)),
 )
     ordered = Int[]
-    visited = fill(false, length(G))
+    visited = fill(false, length(subexpressions))
     stack = Tuple{Int,Bool}[]
     for s in starts
         if visited[s]
@@ -84,10 +88,11 @@ function _topological_sort(
             # instead.
             push!(stack, (node, false))
             # Now check all of the children.
-            if !isassigned(G, node)
-                G[node] = _subexpressions(subexpressions[node])
+            if !isassigned(subexpression_dependency_graph, node)
+                subexpression_dependency_graph[node] =
+                    _subexpressions(subexpressions[node])
             end
-            for child in G[node]
+            for child in subexpression_dependency_graph[node]
                 if visited[child]
                     continue  # This node has already been visited.
                 else
@@ -126,16 +131,28 @@ function order_subexpressions(
     subexpressions::Vector{Vector{NodeData}},
 )
     # The graph of node dependencies. Constructed lazily.
-    G = Vector{Vector{Int}}(undef, length(subexpressions))
+    subexpression_dependency_graph =
+        Vector{Vector{Int}}(undef, length(subexpressions))
     # Node dependencies of the main expressions.
     starts = Set{Int}()
     individual_sorts = Vector{Int}[]
     for expression in main_expressions
         s = _subexpressions(expression)
         union!(starts, s)
-        push!(individual_sorts, _topological_sort(s, subexpressions, G))
+        push!(
+            individual_sorts,
+            _topological_sort(
+                s,
+                subexpressions,
+                subexpression_dependency_graph,
+            ),
+        )
     end
-    full_sort = _topological_sort(starts, subexpressions, G)
+    full_sort = _topological_sort(
+        starts,
+        subexpressions,
+        subexpression_dependency_graph,
+    )
     return full_sort, individual_sorts
 end
 
