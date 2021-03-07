@@ -58,19 +58,19 @@ Variables n = 612, constraints m = 1813
 Cones:	linear vars: 601
 	soc vars: 12, soc blks: 1
 	exp vars: 1200, dual exp vars: 0
-Setup time: 1.24e-03s
+Setup time: 1.52e-03s
 ----------------------------------------------------------------------------
  Iter | pri res | dua res | rel gap | pri obj | dua obj | kap/tau | time (s)
 ----------------------------------------------------------------------------
-     0| 2.05e+20  5.75e+20  1.00e+00 -2.33e+22  3.63e+22  5.04e+22  1.03e-02
-   100| 3.20e-07  4.46e-05  3.52e-07  1.02e+02  1.02e+02  1.56e-14  5.75e-01
-   160| 4.46e-08  8.67e-06  9.26e-09  1.02e+02  1.02e+02  1.83e-14  9.21e-01
+     0| 2.05e+20  5.75e+20  1.00e+00 -2.33e+22  3.63e+22  5.04e+22  1.14e-02
+   100| 3.20e-07  4.46e-05  3.52e-07  1.02e+02  1.02e+02  1.56e-14  6.04e-01
+   160| 4.46e-08  8.67e-06  9.26e-09  1.02e+02  1.02e+02  1.83e-14  9.65e-01
 ----------------------------------------------------------------------------
 Status: Solved
-Timing: Solve time: 9.21e-01s
-	Lin-sys: avg # CG iterations: 3.61, avg solve time: 7.27e-05s
-	Cones: avg projection time: 5.37e-03s
-	Acceleration: avg step time: 2.40e-04s
+Timing: Solve time: 9.65e-01s
+	Lin-sys: avg # CG iterations: 3.61, avg solve time: 7.58e-05s
+	Cones: avg projection time: 5.64e-03s
+	Acceleration: avg step time: 2.29e-04s
 ----------------------------------------------------------------------------
 Error metrics:
 dist(s, K) = 1.8719e-16, dist(y, K*) = 1.7764e-15, s&#39;y/|s||y| = -2.6993e-12
@@ -90,19 +90,19 @@ acceleration_lookback = 10, rho_x = 1.00e-03
 Variables n = 623, constraints m = 1824
 Cones:	linear vars: 624
 	exp vars: 1200, dual exp vars: 0
-Setup time: 1.25e-03s
+Setup time: 1.01e-03s
 ----------------------------------------------------------------------------
  Iter | pri res | dua res | rel gap | pri obj | dua obj | kap/tau | time (s)
 ----------------------------------------------------------------------------
-     0| 2.04e+20  7.26e+20  1.00e+00 -3.07e+22  4.05e+22  6.21e+22  1.12e-02
-   100| 2.51e-06  4.47e-05  9.57e-07  1.18e+02  1.18e+02  1.98e-14  6.37e-01
-   160| 3.29e-07  7.93e-06  1.65e-07  1.18e+02  1.18e+02  1.75e-14  1.01e+00
+     0| 2.04e+20  7.26e+20  1.00e+00 -3.07e+22  4.05e+22  6.21e+22  1.14e-02
+   100| 2.51e-06  4.47e-05  9.57e-07  1.18e+02  1.18e+02  1.98e-14  6.88e-01
+   160| 3.29e-07  7.93e-06  1.65e-07  1.18e+02  1.18e+02  1.75e-14  1.07e+00
 ----------------------------------------------------------------------------
 Status: Solved
-Timing: Solve time: 1.01e+00s
-	Lin-sys: avg # CG iterations: 6.16, avg solve time: 1.14e-04s
-	Cones: avg projection time: 5.92e-03s
-	Acceleration: avg step time: 2.20e-04s
+Timing: Solve time: 1.07e+00s
+	Lin-sys: avg # CG iterations: 6.16, avg solve time: 1.13e-04s
+	Cones: avg projection time: 6.29e-03s
+	Acceleration: avg step time: 2.26e-04s
 ----------------------------------------------------------------------------
 Error metrics:
 dist(s, K) = 6.6489e-16, dist(y, K*) = 0.0000e+00, s&#39;y/|s||y| = 1.8194e-12
@@ -153,10 +153,10 @@ Number of inequality constraint evaluations          = 0
 Number of equality constraint Jacobian evaluations   = 5
 Number of inequality constraint Jacobian evaluations = 0
 Number of Lagrangian Hessian evaluations             = 4
-Total CPU secs in IPOPT (w/o function evaluations)   =      0.107
+Total CPU secs in IPOPT (w/o function evaluations)   =      0.112
 Total CPU secs in NLP function evaluations           =      0.005
 
 EXIT: Optimal Solution Found.
 termination_status = LOCALLY_SOLVED
 primal_status      = FEASIBLE_POINT
-objective_value    = 350.0000000000032</pre><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Nonlinear programs/clnlbeam.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../Mixed-integer linear programs/urban_plan/">« The urban planning problem</a><a class="docs-footer-nextpage" href="../mle/">Maximum likelihood estimation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 4 March 2021 03:27">Thursday 4 March 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+objective_value    = 350.0000000000032</pre><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Nonlinear programs/clnlbeam.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../Mixed-integer linear programs/urban_plan/">« The urban planning problem</a><a class="docs-footer-nextpage" href="../mle/">Maximum likelihood estimation »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Sunday 7 March 2021 01:55">Sunday 7 March 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -78,18 +78,18 @@ optimize!(model)
 @show value(z) # Equals 5.0</code></pre><pre class="documenter-example-output">zero / dual free vars: 11
 	linear vars: 1
 	soc vars: 11, soc blks: 1
-Setup time: 5.50e-05s
+Setup time: 5.82e-05s
 ----------------------------------------------------------------------------
  Iter | pri res | dua res | rel gap | pri obj | dua obj | kap/tau | time (s)
 ----------------------------------------------------------------------------
-     0| 1.11e+19  3.24e+19  1.00e+00 -2.00e+19  7.23e+19  1.73e+19  1.97e-05
-    20| 2.69e-07  5.48e-07  4.91e-07 -7.41e-01 -7.41e-01  1.12e-16  1.63e-04
+     0| 1.11e+19  3.24e+19  1.00e+00 -2.00e+19  7.23e+19  1.73e+19  2.08e-05
+    20| 2.69e-07  5.48e-07  4.91e-07 -7.41e-01 -7.41e-01  1.12e-16  1.70e-04
 ----------------------------------------------------------------------------
 Status: Solved
-Timing: Solve time: 1.65e-04s
-	Lin-sys: avg # CG iterations: 2.14, avg solve time: 8.57e-07s
-	Cones: avg projection time: 1.05e-07s
-	Acceleration: avg step time: 5.19e-06s
+Timing: Solve time: 1.72e-04s
+	Lin-sys: avg # CG iterations: 2.14, avg solve time: 9.67e-07s
+	Cones: avg projection time: 8.57e-08s
+	Acceleration: avg step time: 5.36e-06s
 ----------------------------------------------------------------------------
 Error metrics:
 dist(s, K) = 3.4172e-17, dist(y, K*) = 0.0000e+00, s&#39;y/|s||y| = 2.8564e-17
@@ -259,4 +259,4 @@ main (generic function with 1 method)
 julia&gt; main([x -&gt; x^2, x -&gt; sin(x)^2])
 Feasibility
 Subject to
- (f_1(x) + f_2(x)) - 1.0 ≤ 0</code></pre><section class="footnotes is-size-7"><ul><li class="footnote" id="footnote-1"><a class="tag is-link" href="#citeref-1">1</a>Dunning, Huchette, and Lubin, &quot;JuMP: A Modeling Language for Mathematical Optimization&quot;, SIAM Review, <a href="https://mlubin.github.io/pdf/jump-sirev.pdf">PDF</a>.</li></ul></section></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../solutions/">« Solutions</a><a class="docs-footer-nextpage" href="../callbacks/">Callbacks »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 4 March 2021 03:27">Thursday 4 March 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ (f_1(x) + f_2(x)) - 1.0 ≤ 0</code></pre><section class="footnotes is-size-7"><ul><li class="footnote" id="footnote-1"><a class="tag is-link" href="#citeref-1">1</a>Dunning, Huchette, and Lubin, &quot;JuMP: A Modeling Language for Mathematical Optimization&quot;, SIAM Review, <a href="https://mlubin.github.io/pdf/jump-sirev.pdf">PDF</a>.</li></ul></section></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../solutions/">« Solutions</a><a class="docs-footer-nextpage" href="../callbacks/">Callbacks »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Sunday 7 March 2021 01:55">Sunday 7 March 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
