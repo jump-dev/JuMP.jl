@@ -599,10 +599,10 @@ function _moi_fix(backend, variable::VariableRef, value::Number, force::Bool)
                       "delete existing bounds before fixing the variable.")
             end
             if _moi_has_upper_bound(backend, variable)
-                delete_upper_bound(variable)
+                MOI.delete(backend, _upper_bound_index(variable))
             end
             if _moi_has_lower_bound(backend, variable)
-                delete_lower_bound(variable)
+                MOI.delete(backend, _lower_bound_index(variable))
             end
         end
         MOI.add_constraint(backend, MOI.SingleVariable(index(variable)),
