@@ -111,7 +111,11 @@ function set_optimizer(
     else
         optimizer = MOI.instantiate(optimizer_constructor)
     end
-    return MOIU.reset_optimizer(model, optimizer)
+    model.moi_backend = MOI.Utilities.CachingOptimizer(
+        backend(model).model_cache,
+        optimizer,
+    )
+    return
 end
 
 # Deprecation for JuMP v0.18 -> JuMP v0.19 transition
