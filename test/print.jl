@@ -879,7 +879,7 @@ end
   Node count         : 1
 """
 
-    @test sprint((io, model) -> show(io, solution_summary(model), verbose=true), model) == """
+    @test sprint((io, model) -> show(io, solution_summary(model, verbose=true)), model) == """
 * Solver : Mock
 
 * Status

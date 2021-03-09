@@ -37,7 +37,7 @@ Subject to
 [`solution_summary`](@ref) can be used for checking the summary of the optimization solutions.
 
 ```jldoctest solutions; filter=r"[0-9]+.[0-9]+"
-julia> show(solution_summary(model))
+julia> solution_summary(model)
 * Solver : GLPK
 
 * Status
@@ -55,7 +55,7 @@ julia> show(solution_summary(model))
 * Work counters
   Solve time (sec)   : 0.00008
 
-julia> show(solution_summary(model), verbose=true)
+julia> solution_summary(model, verbose=true)
 * Solver : GLPK
 
 * Status
