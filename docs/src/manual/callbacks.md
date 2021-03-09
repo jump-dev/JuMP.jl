@@ -104,7 +104,7 @@ MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
     nodes in the branch-and-bound tree. There is no guarantee that the
     callback is called at _every_ primal solution.
 
-!!! warn
+!!! warning
     Only add a lazy constraint if your primal solution violates the constraint.
     Adding the lazy constraint irrespective of feasibility may result in the
     solver returning an incorrect solution, or lead to a large number of
