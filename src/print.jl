@@ -400,9 +400,6 @@ solution_summary(model::Model; verbose::Bool = false) = _SolutionSummary(
 
 Write a summary of the solution results to `io` (or to `stdout` if `io` is not 
 given).
-
-If `verbose=true`, write out the primal solution for every variable and the
-dual solution for every constraint, excluding those with empty names.
 """
 function Base.show(io::IO, summary::_SolutionSummary)
     println(io, "* Solver : ", summary.solver)
