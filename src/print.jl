@@ -341,8 +341,8 @@ struct _SolutionSummary
     objective_value::Float64
     objective_bound::Union{Missing,Float64}
     dual_objective_value::Union{Missing,Float64}
-    primal_solution::Dict{String,Float64}
-    dual_solution::Dict{String,Float64}
+    primal_solution::Union{Missing,Dict{String,Float64}}
+    dual_solution::Union{Missing,Dict{String,Float64}}
     # Work counters
     solve_time::Float64
     barrier_iterations::Union{Missing,Int}
@@ -387,8 +387,8 @@ solution_summary(model::Model; verbose::Bool = false) = _SolutionSummary(
     objective_value(model),
     _try_get(objective_bound, model),
     _try_get(dual_objective_value, model),
-    _get_solution_dict(model),
-    _get_constraint_dict(model),
+    ifelse(verbose,_get_solution_dict(model),missing),
+    ifelse(verbose,_get_constraint_dict(model),missing),
     solve_time(model),
     _try_get(simplex_iterations, model),
     _try_get(barrier_iterations, model),
@@ -416,7 +416,6 @@ function _show_status_summary(io::IO, summary::_SolutionSummary)
     println(io, "  Primal status      : ", summary.primal_status)
     println(io, "  Dual status        : ", summary.dual_status)
     summary.verbose && println(io, "  Result count       : ", summary.result_count)
-    summary.verbose && println(io, "  Has values         : ", summary.has_values)
     summary.verbose && println(io, "  Has duals          : ", summary.has_duals)
     println(io, "  Message from the solver:")
     println(io, "  \"", summary.raw_status, "\"")
@@ -431,15 +430,15 @@ function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
 
     if summary.verbose && summary.has_values
         println(io, "  Primal solution : ")
-        for (variable_name, value) in summary.primal_solution
-            println(io, "    ", variable_name, " : ", value)
+        for variable_name in sort(collect(keys(summary.primal_solution)))
+            println(io, "    ", variable_name, " : ", summary.primal_solution[variable_name])
         end
     end
 
     if summary.verbose && summary.has_duals
         println(io, "  Dual solution : ")
-        for (constraint_name, value) in summary.dual_solution
-            println(io, "    ", constraint_name, " : ", value)
+        for constraint_name in sort(collect(keys(summary.dual_solution)))
+            println(io, "    ", constraint_name, " : ", summary.dual_solution[constraint_name])
         end
     end
     println(io)

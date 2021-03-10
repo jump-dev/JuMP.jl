@@ -63,7 +63,6 @@ julia> solution_summary(model, verbose=true)
   Primal status      : FEASIBLE_POINT
   Dual status        : FEASIBLE_POINT
   Result count       : 1
-  Has values         : true
   Has duals          : true
   Message from the solver:
   "Solution is optimal"

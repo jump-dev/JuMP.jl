@@ -887,7 +887,6 @@ end
   Primal status      : FEASIBLE_POINT
   Dual status        : FEASIBLE_POINT
   Result count       : 1
-  Has values         : true
   Has duals          : true
   Message from the solver:
   "solver specific string"
@@ -900,8 +899,8 @@ end
     x : 1.0
     y : 0.0
   Dual solution : 
-    ylb : 1.0
     xub : 0.0
+    ylb : 1.0
 
 * Work counters
   Solve time (sec)   : 5.00000
