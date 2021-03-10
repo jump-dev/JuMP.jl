@@ -485,7 +485,7 @@ function _try_get(f, model)
     try
         return f(model)
     catch
-        return Missing
+        return missing
     end
 end
 
