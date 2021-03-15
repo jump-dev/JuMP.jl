@@ -374,26 +374,28 @@ function foo(model)
 end
 ```
 """
-solution_summary(model::Model; verbose::Bool = false) = _SolutionSummary(
-    verbose,
-    solver_name(model),
-    termination_status(model),
-    primal_status(model),
-    dual_status(model),
-    raw_status(model),
-    result_count(model),
-    has_values(model),
-    has_duals(model),
-    objective_value(model),
-    _try_get(objective_bound, model),
-    _try_get(dual_objective_value, model),
-    ifelse(verbose,_get_solution_dict(model),missing),
-    ifelse(verbose,_get_constraint_dict(model),missing),
-    solve_time(model),
-    _try_get(simplex_iterations, model),
-    _try_get(barrier_iterations, model),
-    _try_get(node_count, model),
+function solution_summary(model::Model; verbose::Bool = false)
+    return _SolutionSummary(
+        verbose,
+        solver_name(model),
+        termination_status(model),
+        primal_status(model),
+        dual_status(model),
+        raw_status(model),
+        result_count(model),
+        has_values(model),
+        has_duals(model),
+        objective_value(model),
+        _try_get(objective_bound, model),
+        _try_get(dual_objective_value, model),
+        verbose ? _get_solution_dict(model) : missing,
+        verbose ? _get_constraint_dict(model) : missing,
+        solve_time(model),
+        _try_get(simplex_iterations, model),
+        _try_get(barrier_iterations, model),
+        _try_get(node_count, model),
     )
+end
 
 """
     Base.show([io::IO], summary::SolutionSummary; verbose::Bool = false)
@@ -420,6 +422,7 @@ function _show_status_summary(io::IO, summary::_SolutionSummary)
     println(io, "  Message from the solver:")
     println(io, "  \"", summary.raw_status, "\"")
     println(io)
+    return
 end
 
 function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
@@ -427,14 +430,12 @@ function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
     println(io, "  Objective value      : ", summary.objective_value)
     _print_if_not_missing(io, "  Objective bound      : ", summary.objective_bound)
     _print_if_not_missing(io, "  Dual objective value : ", summary.dual_objective_value)
-
     if summary.verbose && summary.has_values
         println(io, "  Primal solution : ")
         for variable_name in sort(collect(keys(summary.primal_solution)))
             println(io, "    ", variable_name, " : ", summary.primal_solution[variable_name])
         end
     end
-
     if summary.verbose && summary.has_duals
         println(io, "  Dual solution : ")
         for constraint_name in sort(collect(keys(summary.dual_solution)))
@@ -442,6 +443,7 @@ function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
         end
     end
     println(io)
+    return
 end
 
 function _show_work_counters_summary(io::IO, summary::_SolutionSummary)
@@ -450,6 +452,7 @@ function _show_work_counters_summary(io::IO, summary::_SolutionSummary)
     _print_if_not_missing(io, "  Simplex iterations : ", summary.simplex_iterations)
     _print_if_not_missing(io, "  Barrier iterations : ", summary.barrier_iterations)
     _print_if_not_missing(io, "  Node count         : ", summary.node_count)
+    return
 end
 
 function _get_solution_dict(model)
@@ -488,11 +491,8 @@ function _try_get(f, model)
     end
 end
 
-function _print_if_not_missing(io, header, value)
-    if !ismissing(value)
-        println(io, header, value)
-    end
-end
+_print_if_not_missing(io, header, ::Missing) = nothing
+_print_if_not_missing(io, header, value) = println(io, header, value)
 
 #------------------------------------------------------------------------
 ## VariableRef
