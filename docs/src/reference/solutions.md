@@ -8,6 +8,7 @@ More information can be found in the [Solutions](@ref) section of the manual.
 JuMP.optimize!
 NoOptimizer
 OptimizeNotCalled
+solution_summary
 ```
 
 ## Termination status

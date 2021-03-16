@@ -32,6 +32,56 @@ Subject to
  y[b] ≤ 1.0
 ```
 
+## Solutions summary
+
+[`solution_summary`](@ref) can be used for checking the summary of the optimization solutions.
+
+```jldoctest solutions; filter=r"[0-9]+.[0-9]+"
+julia> solution_summary(model)
+* Solver : GLPK
+
+* Status
+  Termination status : OPTIMAL
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Message from the solver:
+  "Solution is optimal"
+
+* Candidate solution
+  Objective value      : -205.14285714285714
+  Objective bound      : Inf
+  Dual objective value : -205.1428571428571
+
+* Work counters
+  Solve time (sec)   : 0.00008
+
+julia> solution_summary(model, verbose=true)
+* Solver : GLPK
+
+* Status
+  Termination status : OPTIMAL
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Result count       : 1
+  Has duals          : true
+  Message from the solver:
+  "Solution is optimal"
+
+* Candidate solution
+  Objective value      : -205.14285714285714
+  Objective bound      : Inf
+  Dual objective value : -205.1428571428571
+  Primal solution :
+    x : 15.428571428571429
+    y[a] : 1.0
+    y[b] : 1.0
+  Dual solution :
+    c1 : 1.7142857142857142
+
+* Work counters
+  Solve time (sec)   : 0.00008
+```
+
 ## Why did the solver stop?
 
 Use[`termination_status`](@ref) to understand why the solver stopped.
