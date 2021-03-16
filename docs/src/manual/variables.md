@@ -5,7 +5,7 @@ DocTestSetup = quote
 end
 ```
 
-# Variables
+# [Variables](@id jump_variables)
 
 ## What is a JuMP variable?
 

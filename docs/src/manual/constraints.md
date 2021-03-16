@@ -6,12 +6,12 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Constraints
+# [Constraints](@id jump_constraints)
 
 This page explains how to write various types of constraints in JuMP. Before
 reading further, please make sure you are familiar with JuMP models, and JuMP
-[Variables](@ref). For nonlinear constraints, see [Nonlinear Modeling](@ref)
-instead.
+[Variables](@ref jump_variables). For nonlinear constraints, see
+[Nonlinear Modeling](@ref) instead.
 
 JuMP is based on the MathOptInterface (MOI) API. Because of this, JuMP thinks of a
 constraint as the restriction that the output of a *function* belongs to a
@@ -434,10 +434,10 @@ constraints in the
 
 ## Constraints on a single variable
 
-In [Variables](@ref), we saw how to modify the variable bounds, as well as add
-binary and integer restrictions to the domain of each variable. This can also be
-achieved using the [`@constraint`](@ref) macro. For example, `MOI.ZeroOne()`
-restricts the domain to ``\{0, 1\}``:
+In [Variables](@ref jump_variables), we saw how to modify the variable bounds,
+as well as add binary and integer restrictions to the domain of each variable.
+This can also be achieved using the [`@constraint`](@ref) macro. For example,
+`MOI.ZeroOne()` restricts the domain to ``\{0, 1\}``:
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, x in MOI.ZeroOne())
 x binary
@@ -461,7 +461,7 @@ julia> @constraint(model, x in MOI.Semiinteger(1.0, 3.0))
 x in MathOptInterface.Semiinteger{Float64}(1.0, 3.0)
 ```
 
-## Quadratic constraints
+## [Quadratic constraints](@id quad_constraints)
 
 In addition to affine functions, JuMP also supports constraints with quadratic
 terms. (For more general nonlinear functions, see [Nonlinear Modeling](@ref).)
@@ -521,8 +521,8 @@ for more information.
 
 In addition to constraining the domain of a single variable, JuMP supports
 placing constraints of a subset of the variables. We already saw an example of
-this in the [Quadratic constraints](@ref) section when we constrained a vector
-of variables to belong to the second order cone.
+this in the [Quadratic constraints](@ref quad_constraints) section when we
+constrained a vector of variables to belong to the second order cone.
 
 In a special ordered set of type I (often denoted SOS-I), at most one variable
 can take a non-zero value. We can construct SOS-I constraints using the

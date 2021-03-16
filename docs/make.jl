@@ -1,7 +1,10 @@
 using Documenter
 using Literate
 using JuMP
+const MathOptInterface = MOI
 using Test
+
+const _INCLUDE_MOI = true
 
 # Pass --fast as an argument to skip rebuilding the examples and running
 # doctests. Only use this argument to rapidly test small changes to the
@@ -68,6 +71,74 @@ if !_FAST
     literate_directory.(joinpath.(_TUTORIAL_DIR, _TUTORIAL_SUBDIR))
 end
 
+const _PAGES = [
+    "Introduction" => "index.md",
+    "installation.md",
+    "Tutorials" => map(
+        subdir -> subdir => map(
+            file -> joinpath("tutorials", subdir, file),
+            filter(
+                file -> endswith(file, ".md"),
+                sort(readdir(joinpath(_TUTORIAL_DIR, subdir))),
+            ),
+        ),
+        _TUTORIAL_SUBDIR,
+    ),
+    "Manual" => [
+        "manual/models.md",
+        "manual/variables.md",
+        "manual/expressions.md",
+        "manual/objective.md",
+        "manual/constraints.md",
+        "manual/containers.md",
+        "manual/solutions.md",
+        "manual/nlp.md",
+        "manual/callbacks.md",
+    ],
+    "API Reference" => [
+        "reference/models.md",
+        "reference/variables.md",
+        "reference/expressions.md",
+        "reference/objectives.md",
+        "reference/constraints.md",
+        "reference/containers.md",
+        "reference/solutions.md",
+        "reference/nlp.md",
+        "reference/callbacks.md",
+    ],
+    "Background information" => [
+        "background/should_i_use.md",
+        "background/algebraic_modeling_languages.md",
+    ],
+    "Developer Docs" => [
+        "Extensions" => "developers/extensions.md",
+        "Style Guide" => "developers/style.md",
+        "Roadmap" => "developers/roadmap.md",
+    ],
+]
+
+function _add_moi_pages()
+    moi_docs = joinpath(dirname(dirname(pathof(MOI))), "docs")
+    cp(
+        joinpath(moi_docs, "src"),
+        joinpath(@__DIR__, "src", "moi");
+        force = true,
+    )
+    make = read(joinpath(moi_docs, "make.jl"), String)
+    s = match(r"pages = (\[.+?)\)"s, make)[1]
+    for m in eachmatch(r"\"([a-zA-Z\_\/]+?\.md)\"", s)
+        s = replace(s, m[1] => "moi/" * m[1])
+    end
+    push!(_PAGES, "MathOptInterface" => eval(Meta.parse(s)))
+    return
+end
+
+if _INCLUDE_MOI
+    _add_moi_pages()
+else
+    rm(joinpath("src", "moi"); recursive = true)
+end
+
 makedocs(
     sitename = "JuMP",
     authors = "Miles Lubin, Iain Dunning, and Joey Huchette",
@@ -96,53 +167,7 @@ makedocs(
     # ==========================================================================
     # Skip doctests if --fast provided.
     doctest = !_FAST,
-    pages = [
-        "Introduction" => "index.md",
-        "installation.md",
-        "Tutorials" => map(
-            subdir -> subdir => map(
-                file -> joinpath("tutorials", subdir, file),
-                filter(
-                    file -> endswith(file, ".md"),
-                    sort(readdir(joinpath(_TUTORIAL_DIR, subdir))),
-                ),
-            ),
-            _TUTORIAL_SUBDIR,
-        ),
-        "Manual" => [
-            "manual/models.md",
-            "manual/variables.md",
-            "manual/expressions.md",
-            "manual/objective.md",
-            "manual/constraints.md",
-            "manual/containers.md",
-            "manual/solutions.md",
-            "manual/nlp.md",
-            "manual/callbacks.md",
-        ],
-        "API Reference" => [
-            "reference/models.md",
-            "reference/variables.md",
-            "reference/expressions.md",
-            "reference/objectives.md",
-            "reference/constraints.md",
-            "reference/containers.md",
-            "reference/solutions.md",
-            "reference/nlp.md",
-            "reference/callbacks.md",
-            "reference/moi.md",
-            "reference/extensions.md",
-        ],
-        "Background information" => [
-            "background/should_i_use.md",
-            "background/algebraic_modeling_languages.md",
-        ],
-        "Developer Docs" => [
-            "Extensions" => "developers/extensions.md",
-            "Style Guide" => "developers/style.md",
-            "Roadmap" => "developers/roadmap.md",
-        ],
-    ],
+    pages = _PAGES,
 )
 
 deploydocs(

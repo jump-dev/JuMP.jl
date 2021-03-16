@@ -6,7 +6,7 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Models
+# [Models](@id jump_models)
 
 ## Create a model
 

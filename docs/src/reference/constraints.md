@@ -1,6 +1,7 @@
 # [Constraints](@id ConstraintAPI)
 
-More information can be found in the [Constraints](@ref) section of the manual.
+More information can be found in the [Constraints](@ref jump_constraints)
+section of the manual.
 
 ## Macros
 
