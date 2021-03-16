@@ -6,12 +6,12 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Constraints
+# [Constraints](@id jump_constraints)
 
 This page explains how to write various types of constraints in JuMP. Before
 reading further, please make sure you are familiar with JuMP models, and JuMP
-[Variables](@ref). For nonlinear constraints, see [Nonlinear Modeling](@ref)
-instead.
+[Variables](@ref jump_variables). For nonlinear constraints, see
+[Nonlinear Modeling](@ref) instead.
 
 JuMP is based on the MathOptInterface (MOI) API. Because of this, JuMP thinks of a
 constraint as the restriction that the output of a *function* belongs to a
@@ -434,10 +434,10 @@ constraints in the
 
 ## Constraints on a single variable
 
-In [Variables](@ref), we saw how to modify the variable bounds, as well as add
-binary and integer restrictions to the domain of each variable. This can also be
-achieved using the [`@constraint`](@ref) macro. For example, `MOI.ZeroOne()`
-restricts the domain to ``\{0, 1\}``:
+In [Variables](@ref jump_variables), we saw how to modify the variable bounds,
+as well as add binary and integer restrictions to the domain of each variable.
+This can also be achieved using the [`@constraint`](@ref) macro. For example,
+`MOI.ZeroOne()` restricts the domain to ``\{0, 1\}``:
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, x in MOI.ZeroOne())
 x binary
@@ -461,7 +461,7 @@ julia> @constraint(model, x in MOI.Semiinteger(1.0, 3.0))
 x in MathOptInterface.Semiinteger{Float64}(1.0, 3.0)
 ```
 
-## Quadratic constraints
+## [Quadratic constraints](@id quad_constraints)
 
 In addition to affine functions, JuMP also supports constraints with quadratic
 terms. (For more general nonlinear functions, see [Nonlinear Modeling](@ref).)
@@ -516,6 +516,43 @@ In addition to the second order cone and rotated second order cone,
 MOI defines a number of other conic sets such as the exponential
 and power cones. See the [MathOptInterface documentation](https://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#Sets-1)
 for more information.
+
+## Constraints on a collection of variables
+
+In addition to constraining the domain of a single variable, JuMP supports
+placing constraints of a subset of the variables. We already saw an example of
+this in the [Quadratic constraints](@ref quad_constraints) section when we
+constrained a vector of variables to belong to the second order cone.
+
+In a special ordered set of type I (often denoted SOS-I), at most one variable
+can take a non-zero value. We can construct SOS-I constraints using the
+`MOI.SOS1` set:
+```jldoctest con_sos; setup=:(model = Model())
+julia> @variable(model, x[1:3])
+3-element Array{VariableRef,1}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> @constraint(model, x in MOI.SOS1([1.0, 2.0, 3.0]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])
+```
+Note that we have to pass `MOI.SOS1` a *weight* vector. This vector implies an
+ordering on the variables. If the decision variables are related and have a
+physical ordering (e.g., they correspond to the size of a factory to be built,
+and the SOS-I constraint enforces that only one factory can be built), then the
+weight vector, although not used directly in the constraint, can help the solver
+make a better decision in the solution process.
+
+This ordering is more important in a special ordered set of type II (SOS-II), in
+which at most two values can be non-zero, and if there are two non-zeros, they
+must be consecutive according to the ordering. For example, in the following
+constraint, the possible non-zero pairs are (`x[1]` and `x[3]`) and (`x[2]` and
+`x[3]`):
+```jldoctest con_sos
+julia> @constraint(model, x in MOI.SOS2([3.0, 1.0, 2.0]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
+```
 
 ## Indicator constraints
 

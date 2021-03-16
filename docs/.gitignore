@@ -2,3 +2,4 @@ build/
 src/examples/*.md
 src/examples/*/*.md
 src/tutorials/*/*.md
+src/moi/

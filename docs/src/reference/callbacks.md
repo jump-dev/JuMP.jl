@@ -13,13 +13,10 @@ of the manual.
 
 ```@docs
 callback_value
-MOI.CallbackVariablePrimal
 ```
 
 ## Callback node status
 
 ```@docs
 callback_node_status
-MOI.CallbackNodeStatus
-MOI.CallbackNodeStatusCode
 ```
