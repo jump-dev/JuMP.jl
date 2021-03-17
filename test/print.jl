@@ -287,16 +287,8 @@ end
         model[:param] = @NLparameter(model, param == 1.0)
 
         constr = @NLconstraint(model, expr - param <= 0)
-        io_test(
-            REPLMode,
-            constr,
-            "(subexpression[1] - param) - 0.0 $le 0",
-        )
-        io_test(
-            IJuliaMode,
-            constr,
-            "(subexpression_{1} - param) - 0.0 \\leq 0",
-        )
+        io_test(REPLMode, constr, "(subexpression[1] - param) - 0.0 $le 0")
+        io_test(IJuliaMode, constr, "(subexpression_{1} - param) - 0.0 \\leq 0")
     end
 
     @testset "Custom constraint" begin
@@ -839,7 +831,6 @@ end
 end
 
 @testset "Print solution summary" begin
-
     model = Model()
     @variable(model, x <= 2.0)
     @variable(model, y >= 0.0)
@@ -848,7 +839,7 @@ end
 
     JuMP.set_name(JuMP.UpperBoundRef(x), "xub")
     JuMP.set_name(JuMP.LowerBoundRef(y), "ylb")
-    
+
     set_optimizer(
         model,
         () -> MOIU.MockOptimizer(
@@ -866,24 +857,9 @@ end
     MOI.set(mockoptimizer, MOI.ResultCount(), 1)
     MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(
-        mockoptimizer,
-        MOI.VariablePrimal(),
-        JuMP.optimizer_index(x),
-        1.0,
-    )
-    MOI.set(
-        mockoptimizer,
-        MOI.VariablePrimal(),
-        JuMP.optimizer_index(y),
-        0.0,
-    )
-    MOI.set(
-        mockoptimizer,
-        MOI.ConstraintDual(),
-        JuMP.optimizer_index(c),
-        -1.0,
-    )
+    MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
+    MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
+    MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c), -1.0)
     MOI.set(
         mockoptimizer,
         MOI.ConstraintDual(),
@@ -923,7 +899,10 @@ end
   Node count         : 1
 """
 
-    @test sprint((io, model) -> show(io, solution_summary(model, verbose=true)), model) == """
+    @test sprint(
+        (io, model) -> show(io, solution_summary(model, verbose = true)),
+        model,
+    ) == """
 * Solver : Mock
 
 * Status
@@ -952,5 +931,4 @@ end
   Barrier iterations : 1
   Node count         : 1
 """
-
 end

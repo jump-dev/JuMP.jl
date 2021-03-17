@@ -1365,7 +1365,10 @@ mutable struct _ParameterPrintWrapper
     mode::Any
 end
 function Base.show(io::IO, p::_ParameterPrintWrapper)
-    relevant_parameters = filter(i->i[2] isa NonlinearParameter && i[2].index==p.idx, p.model.obj_dict)
+    relevant_parameters = filter(
+        i -> i[2] isa NonlinearParameter && i[2].index == p.idx,
+        p.model.obj_dict,
+    )
     if length(relevant_parameters) == 1
         par_name = first(relevant_parameters)[1]
         print(io, par_name)
@@ -1639,7 +1642,6 @@ function MOI.constraint_expr(d::NLPEvaluator, i::Integer)
     end
 end
 
-
 """
     _VarValueMap{T,F}
 
@@ -1656,7 +1658,9 @@ struct _VarValueMap{T,F}
 end
 function Base.getindex(m::_VarValueMap{T}, moi_index::Int64) where {T}
     return get!(m.cache, moi_index) do
-        return m.var_value(VariableRef(m.model, MOI.VariableIndex(moi_index)))::T
+        return m.var_value(
+            VariableRef(m.model, MOI.VariableIndex(moi_index)),
+        )::T
     end
 end
 

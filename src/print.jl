@@ -408,7 +408,7 @@ end
 """
     Base.show([io::IO], summary::SolutionSummary; verbose::Bool = false)
 
-Write a summary of the solution results to `io` (or to `stdout` if `io` is not 
+Write a summary of the solution results to `io` (or to `stdout` if `io` is not
 given).
 """
 function Base.show(io::IO, summary::_SolutionSummary)
@@ -425,8 +425,10 @@ function _show_status_summary(io::IO, summary::_SolutionSummary)
     println(io, "  Termination status : ", summary.termination_status)
     println(io, "  Primal status      : ", summary.primal_status)
     println(io, "  Dual status        : ", summary.dual_status)
-    summary.verbose && println(io, "  Result count       : ", summary.result_count)
-    summary.verbose && println(io, "  Has duals          : ", summary.has_duals)
+    if summary.verbose
+        println(io, "  Result count       : ", summary.result_count)
+        println(io, "  Has duals          : ", summary.has_duals)
+    end
     println(io, "  Message from the solver:")
     println(io, "  \"", summary.raw_status, "\"")
     println(io)
@@ -436,18 +438,38 @@ end
 function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
     println(io, "* Candidate solution")
     println(io, "  Objective value      : ", summary.objective_value)
-    _print_if_not_missing(io, "  Objective bound      : ", summary.objective_bound)
-    _print_if_not_missing(io, "  Dual objective value : ", summary.dual_objective_value)
+    _print_if_not_missing(
+        io,
+        "  Objective bound      : ",
+        summary.objective_bound,
+    )
+    _print_if_not_missing(
+        io,
+        "  Dual objective value : ",
+        summary.dual_objective_value,
+    )
     if summary.verbose && summary.has_values
         println(io, "  Primal solution : ")
         for variable_name in sort(collect(keys(summary.primal_solution)))
-            println(io, "    ", variable_name, " : ", summary.primal_solution[variable_name])
+            println(
+                io,
+                "    ",
+                variable_name,
+                " : ",
+                summary.primal_solution[variable_name],
+            )
         end
     end
     if summary.verbose && summary.has_duals
         println(io, "  Dual solution : ")
         for constraint_name in sort(collect(keys(summary.dual_solution)))
-            println(io, "    ", constraint_name, " : ", summary.dual_solution[constraint_name])
+            println(
+                io,
+                "    ",
+                constraint_name,
+                " : ",
+                summary.dual_solution[constraint_name],
+            )
         end
     end
     println(io)
@@ -457,8 +479,16 @@ end
 function _show_work_counters_summary(io::IO, summary::_SolutionSummary)
     println(io, "* Work counters")
     println(io, "  Solve time (sec)   : ", @sprintf("%.5f", summary.solve_time))
-    _print_if_not_missing(io, "  Simplex iterations : ", summary.simplex_iterations)
-    _print_if_not_missing(io, "  Barrier iterations : ", summary.barrier_iterations)
+    _print_if_not_missing(
+        io,
+        "  Simplex iterations : ",
+        summary.simplex_iterations,
+    )
+    _print_if_not_missing(
+        io,
+        "  Barrier iterations : ",
+        summary.barrier_iterations,
+    )
     _print_if_not_missing(io, "  Node count         : ", summary.node_count)
     return
 end
@@ -482,7 +512,7 @@ function _get_constraint_dict(model)
         for (F, S) in list_of_constraint_types(model)
             for constraint in all_constraints(model, F, S)
                 constraint_name = name(constraint)
-                if !isempty(constraint_name) 
+                if !isempty(constraint_name)
                     dict[constraint_name] = dual(constraint)
                 end
             end
@@ -988,7 +1018,10 @@ function function_string(::Type{<:PrintMode}, p::NonlinearExpression)
 end
 
 function function_string(::Type{<:PrintMode}, p::NonlinearParameter)
-    relevant_parameters = filter(i->i[2] isa NonlinearParameter && i[2].index==p.index, p.m.obj_dict)
+    relevant_parameters = filter(
+        i -> i[2] isa NonlinearParameter && i[2].index == p.index,
+        p.m.obj_dict,
+    )
     if length(relevant_parameters) == 1
         par_name = first(relevant_parameters)[1]
         return "Reference to nonlinear parameter $(par_name)"

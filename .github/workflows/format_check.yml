@@ -22,7 +22,7 @@ jobs:
           using JuliaFormatter
           format("src", verbose=true)
           format("test", verbose=true)
-          out = String(read(Cmd(`git diff --name-only`)))
+          out = String(read(Cmd(`git diff`)))
           if isempty(out)
               exit(0)
           end
