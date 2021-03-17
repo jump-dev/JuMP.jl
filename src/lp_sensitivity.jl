@@ -24,9 +24,14 @@ remains feasible, i.e., where the shadow prices apply.
   however apply in most situations (c.f. "Computational Techniques of the
   Simplex Method" by István Maros, section 9.3.4).
 """
-function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, <:_MOICON}; feasibility_tolerance::Float64 = 1e-8)
-    error("The perturbation range of rhs is not defined or not implemented for this type " *
-          "of constraint.")
+function lp_rhs_perturbation_range(
+    constraint::ConstraintRef{Model,<:_MOICON};
+    feasibility_tolerance::Float64 = 1e-8,
+)
+    return error(
+        "The perturbation range of rhs is not defined or not implemented for this type " *
+        "of constraint.",
+    )
 end
 
 """
@@ -48,15 +53,28 @@ s.t.            Ax == 0
 function _std_matrix(model::Model)
     con_types = list_of_constraint_types(model)
     con_func_type = first.(con_types)
-    if !all(broadcast(<:, AffExpr, con_func_type) .| broadcast(<:, VariableRef, con_func_type))
-        error("The requested operation is not supported because the problem is not a linear optimization problem.")
+    if !all(
+        broadcast(<:, AffExpr, con_func_type) .|
+        broadcast(<:, VariableRef, con_func_type),
+    )
+        error(
+            "The requested operation is not supported because the problem is not a linear optimization problem.",
+        )
     end
     con_set_type = last.(con_types)
-    if !all(broadcast(<:, con_set_type, Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo, MOI.Interval}))
-        error("The requested operation is not supported because the problem is not a linear optimization problem.")
+    if !all(
+        broadcast(
+            <:,
+            con_set_type,
+            Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo,MOI.Interval},
+        ),
+    )
+        error(
+            "The requested operation is not supported because the problem is not a linear optimization problem.",
+        )
     end
     vars = all_variables(model)
-    var_to_idx = Dict{VariableRef, Int}()
+    var_to_idx = Dict{VariableRef,Int}()
     for (j, var) in enumerate(vars)
         var_to_idx[var] = j
     end
@@ -121,7 +139,7 @@ Returns the basis status of all variables of the problem in standard form, c.f. 
 function _std_basis_status(model::Model)::Vector{MOI.BasisStatusCode}
     con_types = list_of_constraint_types(model)
     vars = all_variables(model)
-    var_to_idx = Dict{VariableRef, Int}()
+    var_to_idx = Dict{VariableRef,Int}()
     for (j, var) in enumerate(vars)
         var_to_idx[var] = j
     end
@@ -134,10 +152,13 @@ function _std_basis_status(model::Model)::Vector{MOI.BasisStatusCode}
                 con_obj = constraint_object(constraint)
                 j = var_to_idx[con_obj.func]
                 try
-                    basis_status[j] = MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
+                    basis_status[j] =
+                        MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
                 catch e
-                    error("The perturbation range of rhs is not available because the solver doesn't "*
-                          "support ´ConstraintBasisStatus´.")
+                    error(
+                        "The perturbation range of rhs is not available because the solver doesn't " *
+                        "support ´ConstraintBasisStatus´.",
+                    )
                 end
                 if S <: MOI.LessThan && basis_status[j] == MOI.NONBASIC
                     basis_status[j] = MOI.NONBASIC_AT_UPPER
@@ -149,7 +170,8 @@ function _std_basis_status(model::Model)::Vector{MOI.BasisStatusCode}
             #issue 1892 makes it hard to know how to handle variable constraints, atm. assume unique variable constraints.
         else
             for constraint in constraints
-                con_basis_status = MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
+                con_basis_status =
+                    MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
                 if S <: MOI.LessThan && con_basis_status == MOI.NONBASIC
                     con_basis_status = MOI.NONBASIC_AT_UPPER
                 elseif S <: MOI.GreaterThan && con_basis_status == MOI.NONBASIC
@@ -162,8 +184,17 @@ function _std_basis_status(model::Model)::Vector{MOI.BasisStatusCode}
     return basis_status
 end
 
-function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, _MOICON{F, S}}; feasibility_tolerance::Float64 = 1e-8
-                      )::Tuple{Float64, Float64} where {S <: Union{MOI.LessThan, MOI.GreaterThan, MOI.EqualTo}, T, F <: Union{MOI.ScalarAffineFunction{T}, MOI.SingleVariable}}
+function lp_rhs_perturbation_range(
+    constraint::ConstraintRef{Model,_MOICON{F,S}};
+    feasibility_tolerance::Float64 = 1e-8,
+)::Tuple{
+    Float64,
+    Float64,
+} where {
+    S<:Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo},
+    T,
+    F<:Union{MOI.ScalarAffineFunction{T},MOI.SingleVariable},
+}
     @warn(
         "This function has been deprecated and will be removed in a future " *
         "release. Use `lp_sensitivity_report(model)` instead.",
@@ -171,8 +202,10 @@ function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, _MOICON{F, S
     )
     model = owner_model(constraint)
     if termination_status(model) != MOI.OPTIMAL
-        error("The perturbation range of rhs is not available because the current solution "*
-              "is not optimal.")
+        error(
+            "The perturbation range of rhs is not available because the current solution " *
+            "is not optimal.",
+        )
     end
 
     try
@@ -180,16 +213,21 @@ function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, _MOICON{F, S
         # The constraint is inactive.
         if con_status == MOI.BASIC
             if S <: MOI.LessThan
-                return value(constraint) - constraint_object(constraint).set.upper, Inf
+                return value(constraint) -
+                       constraint_object(constraint).set.upper,
+                Inf
             end
             if S <: MOI.GreaterThan
-                return -Inf, value(constraint) - constraint_object(constraint).set.lower
+                return -Inf,
+                value(constraint) - constraint_object(constraint).set.lower
             end
             return 0.0, 0.0
         end
     catch e
-        error("The perturbation range of rhs is not available because the solver doesn't "*
-              "support ´ConstraintBasisStatus´.")
+        error(
+            "The perturbation range of rhs is not available because the solver doesn't " *
+            "support ´ConstraintBasisStatus´.",
+        )
     end
     # The constraint is active.
     # TODO: This could be made more efficient because actually we only need the basic columns.
@@ -222,10 +260,20 @@ function lp_rhs_perturbation_range(constraint::ConstraintRef{Model, _MOICON{F, S
     pos = rho .> 0.0
     neg = rho .< 0.0
     # Find the first basic variable bound that is strictly violated.
-    lower_bounds_delta = [-Inf; UmX_B[neg]  ./ rho[neg]; LmX_B[pos] ./ rho[pos]]
-    lower_bounds_delta_strict = lower_bounds_delta + [0.0; feasibility_tolerance ./ rho[neg]; -feasibility_tolerance ./ rho[pos]]
+    lower_bounds_delta = [-Inf; UmX_B[neg] ./ rho[neg]; LmX_B[pos] ./ rho[pos]]
+    lower_bounds_delta_strict =
+        lower_bounds_delta + [
+            0.0
+            feasibility_tolerance ./ rho[neg]
+            -feasibility_tolerance ./ rho[pos]
+        ]
     upper_bounds_delta = [Inf; UmX_B[pos] ./ rho[pos]; LmX_B[neg] ./ rho[neg]]
-    upper_bounds_delta_strict = upper_bounds_delta + [0.0; feasibility_tolerance ./ rho[pos]; -feasibility_tolerance ./ rho[neg]]
+    upper_bounds_delta_strict =
+        upper_bounds_delta + [
+            0.0
+            feasibility_tolerance ./ rho[pos]
+            -feasibility_tolerance ./ rho[neg]
+        ]
 
     lower_max_idx = last(findmax(lower_bounds_delta_strict))
     upper_min_idx = last(findmin(upper_bounds_delta_strict))
@@ -239,7 +287,7 @@ Returns the optimal reduced costs for the variables of the problem in standard f
 function _std_reduced_costs(model::Model, constraints::Vector{ConstraintRef})
     con_types = list_of_constraint_types(model)
     vars = all_variables(model)
-    var_to_idx = Dict{VariableRef, Int}()
+    var_to_idx = Dict{VariableRef,Int}()
     for (j, var) in enumerate(vars)
         var_to_idx[var] = j
     end
@@ -279,7 +327,10 @@ remains optimal, i.e., the reduced costs remain valid.
   however apply in most situations (c.f. "Computational Techniques of the
   Simplex Method" by István Maros, section 9.3.4).
 """
-function lp_objective_perturbation_range(var::VariableRef; optimality_tolerance::Float64 = 1e-8)::Tuple{Float64, Float64}
+function lp_objective_perturbation_range(
+    var::VariableRef;
+    optimality_tolerance::Float64 = 1e-8,
+)::Tuple{Float64,Float64}
     @warn(
         "This function has been deprecated and will be removed in a future " *
         "release. Use `lp_sensitivity_report(model)` instead.",
@@ -287,15 +338,21 @@ function lp_objective_perturbation_range(var::VariableRef; optimality_tolerance:
     )
     model = owner_model(var)
     if termination_status(model) != MOI.OPTIMAL
-        error("The perturbation range of the objective is not available because the current solution "*
-              "is not optimal.")
+        error(
+            "The perturbation range of the objective is not available because the current solution " *
+            "is not optimal.",
+        )
     end
     if objective_sense(model) == MOI.FEASIBILITY_SENSE
-        error("The perturbation range of the objective is not applicable on feasibility problems.")
+        error(
+            "The perturbation range of the objective is not applicable on feasibility problems.",
+        )
     end
     if !has_duals(model)
-        error("The perturbation range of the objective is not available because no dual result is " *
-              "available.")
+        error(
+            "The perturbation range of the objective is not available because no dual result is " *
+            "available.",
+        )
     end
     # TODO: This could be made more efficient for non-basic variables by checking them
     #       before building calling ´_std_matrix´ and ´_std_reduced_costs´ and only check
@@ -319,8 +376,13 @@ function lp_objective_perturbation_range(var::VariableRef; optimality_tolerance:
         if var_lower[j] == var_upper[j]
             return -Inf, Inf
         end
-        if (var_basis_status[j] == MOI.NONBASIC_AT_LOWER && objective_sense(model) == MOI.MIN_SENSE) ||
-            (var_basis_status[j] == MOI.NONBASIC_AT_UPPER && objective_sense(model) == MOI.MAX_SENSE)
+        if (
+            var_basis_status[j] == MOI.NONBASIC_AT_LOWER &&
+            objective_sense(model) == MOI.MIN_SENSE
+        ) || (
+            var_basis_status[j] == MOI.NONBASIC_AT_UPPER &&
+            objective_sense(model) == MOI.MAX_SENSE
+        )
             return -c_red[j], Inf
         end
         return -Inf, -c_red[j]
@@ -341,14 +403,16 @@ function lp_objective_perturbation_range(var::VariableRef; optimality_tolerance:
         in_lb, in_ub = in_ub, in_lb
     end
     # The reduced cost of variables fixed at equality do not be accounted for (they only change binding direction).
-    unfixed_vars = (var_lower .< var_upper)[.!basic]
+    unfixed_vars = (var_lower.<var_upper)[.!basic]
     in_lb .&= unfixed_vars
     in_ub .&= unfixed_vars
     # Find the first reduced cost that is strictly violated
     lower_bounds_delta = [-Inf; c_red[in_lb] ./ N_red[in_lb]]
-    lower_bounds_delta_strict = lower_bounds_delta - [0.0; optimality_tolerance ./ abs.(N_red[in_lb])]
+    lower_bounds_delta_strict =
+        lower_bounds_delta - [0.0; optimality_tolerance ./ abs.(N_red[in_lb])]
     upper_bounds_delta = [Inf; c_red[in_ub] ./ N_red[in_ub]]
-    upper_bounds_delta_strict = upper_bounds_delta + [0.0; optimality_tolerance ./ abs.(N_red[in_ub])]
+    upper_bounds_delta_strict =
+        upper_bounds_delta + [0.0; optimality_tolerance ./ abs.(N_red[in_ub])]
 
     lower_max_idx = last(findmax(lower_bounds_delta_strict))
     upper_min_idx = last(findmin(upper_bounds_delta_strict))

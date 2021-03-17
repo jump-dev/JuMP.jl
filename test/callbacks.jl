@@ -9,8 +9,9 @@ using Test
 struct DummyCallbackData end
 
 @testset "LazyConstraint" begin
-    mock =
-        MOI.Utilities.MockOptimizer(MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()))
+    mock = MOI.Utilities.MockOptimizer(
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+    )
     model = Model(() -> mock)
     @variable(model, 0 <= x <= 2.5, Int)
     # We attach optimizer here, because when submitting the lazy constraint
@@ -30,8 +31,9 @@ struct DummyCallbackData end
 end
 
 @testset "UserCut" begin
-    mock =
-        MOI.Utilities.MockOptimizer(MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()))
+    mock = MOI.Utilities.MockOptimizer(
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+    )
     model = direct_model(mock)
     @variable(model, 0 <= x <= 2.5, Int)
     con = @build_constraint(x <= 2)
@@ -44,8 +46,9 @@ end
 end
 
 @testset "HeuristicSolution" begin
-    mock =
-        MOI.Utilities.MockOptimizer(MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()))
+    mock = MOI.Utilities.MockOptimizer(
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+    )
     model = direct_model(mock)
     @variable(model, 0 <= x <= 2.5, Int)
     con = @build_constraint(x <= 2)
@@ -65,8 +68,9 @@ end
 end
 
 @testset "callback_value" begin
-    mock =
-        MOI.Utilities.MockOptimizer(MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()))
+    mock = MOI.Utilities.MockOptimizer(
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+    )
     cb = DummyCallbackData()
     model = direct_model(mock)
     @variable(model, 0 <= x <= 2.5, Int)
@@ -87,15 +91,22 @@ end
 
 @testset "callback_node_status" begin
     mock = MOI.Utilities.MockOptimizer(
-        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}())
+        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
     )
     cb = DummyCallbackData()
     model = direct_model(mock)
     @variable(model, 0 <= x <= 2.5, Int)
-    MOIU.set_mock_optimize!(mock, mock -> begin
-        MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
-        MOI.set(mock, MOI.CallbackNodeStatus(cb), MOI.CALLBACK_NODE_STATUS_INTEGER)
-    end)
+    MOIU.set_mock_optimize!(
+        mock,
+        mock -> begin
+            MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+            MOI.set(
+                mock,
+                MOI.CallbackNodeStatus(cb),
+                MOI.CALLBACK_NODE_STATUS_INTEGER,
+            )
+        end,
+    )
     optimize!(model)
     @test callback_node_status(cb, model) == MOI.CALLBACK_NODE_STATUS_INTEGER
 end

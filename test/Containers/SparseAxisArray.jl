@@ -105,11 +105,9 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries:
         dsqr = @inferred SA(Dict((:a, 'u') => 4.0, (:b, 'v') => 0.25))
         da = @inferred SA(Dict((:b, 'v') => 2.0))
         db = @inferred SA(Dict((:a, 'u') => 1.0, (:b, 'u') => 2.0))
-        dc = @inferred SA(Dict(
-            (:a, 'u') => 1.0,
-            (:b, 'v') => 2.0,
-            (:c, 'w') => 3.0,
-        ))
+        dc = @inferred SA(
+            Dict((:a, 'u') => 1.0, (:b, 'v') => 2.0, (:c, 'w') => 3.0),
+        )
         sparse_test(d, 2.5, d2, d3, dsqr, [da, db, dc])
     end
     @testset "3-dimensional" begin
@@ -123,11 +121,9 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries:
         dsqr = @inferred SA(Dict((:a, 'u', 2) => 4.0, (:b, 'v', 3) => 0.25))
         da = @inferred SA(Dict((:b, 'v', 3) => 2.0))
         db = @inferred SA(Dict((:a, 'u', 3) => 1.0, (:b, 'u', 2) => 2.0))
-        dc = @inferred SA(Dict(
-            (:a, 'u', 2) => 1.0,
-            (:b, 'v', 3) => 2.0,
-            (:c, 'w', 4) => 3.0,
-        ))
+        dc = @inferred SA(
+            Dict((:a, 'u', 2) => 1.0, (:b, 'v', 3) => 2.0, (:c, 'w', 4) => 3.0),
+        )
         sparse_test(d, 2.5, d2, d3, dsqr, [da, db, dc])
     end
 end

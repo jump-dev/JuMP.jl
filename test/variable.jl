@@ -509,25 +509,29 @@ end
 function test_variables_constrained_on_creation(ModelType, ::Any)
     model = ModelType()
 
-    err =
-        ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `set` keyword argument is not allowed.")
+    err = ErrorException(
+        "In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `set` keyword argument is not allowed.",
+    )
     @test_macro_throws err @variable(
         model,
         x[1:2] in SecondOrderCone(),
         set = PSDCone()
     )
-    err =
-        ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `PSD` argument is not allowed.")
+    err = ErrorException(
+        "In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `PSD` argument is not allowed.",
+    )
     @test_macro_throws err @variable(model, x[1:2] in SecondOrderCone(), PSD)
-    err =
-        ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), Symmetric)`: Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `\$(Expr(:escape, :(SecondOrderCone())))`.")
+    err = ErrorException(
+        "In `@variable(model, x[1:2] in SecondOrderCone(), Symmetric)`: Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `\$(Expr(:escape, :(SecondOrderCone())))`.",
+    )
     @test_macro_throws err @variable(
         model,
         x[1:2] in SecondOrderCone(),
         Symmetric
     )
-    err =
-        ErrorException("In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`: `set` keyword argument was given 2 times.")
+    err = ErrorException(
+        "In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`: `set` keyword argument was given 2 times.",
+    )
     @test_macro_throws err @variable(
         model,
         x[1:2],

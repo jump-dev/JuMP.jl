@@ -75,9 +75,12 @@ end
 # Error for sa[..., :, ...]
 function _colon_error() end
 function _colon_error(::Colon, args...)
-    return throw(ArgumentError(
-        "Indexing with `:` is not supported by" * " Containers.SparseAxisArray",
-    ))
+    return throw(
+        ArgumentError(
+            "Indexing with `:` is not supported by" *
+            " Containers.SparseAxisArray",
+        ),
+    )
 end
 _colon_error(arg, args...) = _colon_error(args...)
 
@@ -140,10 +143,12 @@ Base.Broadcast.newindex(d::SparseAxisArray, idx) = idx
 
 struct BroadcastStyle{N,K} <: Broadcast.BroadcastStyle end
 function Base.BroadcastStyle(::BroadcastStyle, ::Base.BroadcastStyle)
-    return throw(ArgumentError(
-        "Cannot broadcast Containers.SparseAxisArray with" *
-        " another array of different type",
-    ))
+    return throw(
+        ArgumentError(
+            "Cannot broadcast Containers.SparseAxisArray with" *
+            " another array of different type",
+        ),
+    )
 end
 # Scalars can be used with SparseAxisArray in broadcast
 function Base.BroadcastStyle(
@@ -171,10 +176,12 @@ function check_same_eachindex(each_index, not_sa, args...)
 end
 function check_same_eachindex(each_index, sa::SparseAxisArray, args...)
     if Set(each_index) != Set(eachindex(sa))
-        throw(ArgumentError(
-            "Cannot broadcast Containers.SparseAxisArray with" *
-            " different indices",
-        ))
+        throw(
+            ArgumentError(
+                "Cannot broadcast Containers.SparseAxisArray with" *
+                " different indices",
+            ),
+        )
     end
     return check_same_eachindex(eachindex, args...)
 end
@@ -277,10 +284,12 @@ function Base.show(io::IOContext, x::SparseAxisArray)
     half_screen_rows = limit ? div(displaysize(io)[1] - 8, 2) : typemax(Int)
     key_string(key::Tuple) = join(key, ", ")
     print_entry(i) = i < half_screen_rows || i > length(x) - half_screen_rows
-    pad = maximum(Int[
-        print_entry(i) ? length(key_string(key)) : 0
-        for (i, key) in enumerate(keys(x.data))
-    ])
+    pad = maximum(
+        Int[
+            print_entry(i) ? length(key_string(key)) : 0 for
+            (i, key) in enumerate(keys(x.data))
+        ],
+    )
     if !haskey(io, :compact)
         io = IOContext(io, :compact => true)
     end

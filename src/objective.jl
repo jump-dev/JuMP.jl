@@ -75,7 +75,7 @@ low-level functions; the recommended way to set the objective is with the
 [`@objective`](@ref) macro.
 """
 function set_objective_sense(model::Model, sense::MOI.OptimizationSense)
-    MOI.set(model, MOI.ObjectiveSense(), sense)
+    return MOI.set(model, MOI.ObjectiveSense(), sense)
 end
 
 """
@@ -93,8 +93,11 @@ function set_objective_function end
 function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
     attr = MOI.ObjectiveFunction{typeof(func)}()
     if !MOI.supports(backend(model), attr)
-        error("The solver does not support an objective function of type ",
-              typeof(func), ".")
+        error(
+            "The solver does not support an objective function of type ",
+            typeof(func),
+            ".",
+        )
     end
     MOI.set(model, attr, func)
     # Nonlinear objectives override regular objectives, so if there was a
@@ -107,20 +110,25 @@ end
 
 function set_objective_function(model::Model, func::AbstractJuMPScalar)
     check_belongs_to_model(func, model)
-    set_objective_function(model, moi_function(func))
+    return set_objective_function(model, moi_function(func))
 end
 
 function set_objective_function(model::Model, func::Real)
-    set_objective_function(model, MOI.ScalarAffineFunction(
-        MOI.ScalarAffineTerm{Float64}[], Float64(func)))
+    return set_objective_function(
+        model,
+        MOI.ScalarAffineFunction(
+            MOI.ScalarAffineTerm{Float64}[],
+            Float64(func),
+        ),
+    )
 end
 
 function set_objective_function(model::AbstractModel, ::MutableArithmetics.Zero)
-    set_objective_function(model, 0.0)
+    return set_objective_function(model, 0.0)
 end
 
 function set_objective_function(model::AbstractModel, func)
-    error("The objective function `$(func)` is not supported by JuMP.")
+    return error("The objective function `$(func)` is not supported by JuMP.")
 end
 
 """
@@ -145,7 +153,7 @@ set_objective(model, MOI.MIN_SENSE, x)
 """
 function set_objective(model::AbstractModel, sense::MOI.OptimizationSense, func)
     set_objective_sense(model, sense)
-    set_objective_function(model, func)
+    return set_objective_function(model, func)
 end
 
 """
@@ -154,8 +162,10 @@ end
 Return the type of the objective function.
 """
 function objective_function_type(model::Model)
-    jump_function_type(model,
-                       MOI.get(backend(model), MOI.ObjectiveFunctionType()))
+    return jump_function_type(
+        model,
+        MOI.get(backend(model), MOI.ObjectiveFunctionType()),
+    )
 end
 
 """
@@ -202,11 +212,13 @@ ERROR: InexactError: convert(MathOptInterface.SingleVariable, MathOptInterface.S
 [...]
 ```
 """
-function objective_function(model::Model,
-             FunType::Type{<:AbstractJuMPScalar}=objective_function_type(model))
+function objective_function(
+    model::Model,
+    FunType::Type{<:AbstractJuMPScalar} = objective_function_type(model),
+)
     MOIFunType = moi_function_type(FunType)
-    func = MOI.get(backend(model),
-                   MOI.ObjectiveFunction{MOIFunType}())::MOIFunType
+    func =
+        MOI.get(backend(model), MOI.ObjectiveFunction{MOIFunType}())::MOIFunType
     return jump_function(model, func)
 end
 
@@ -217,7 +229,11 @@ Set the linear objective coefficient associated with `Variable` to `coefficient`
 
 Note: this function will throw an error if a nonlinear objective is set.
 """
-function set_objective_coefficient(model::Model, variable::VariableRef, coeff::Real)
+function set_objective_coefficient(
+    model::Model,
+    variable::VariableRef,
+    coeff::Real,
+)
     if model.nlp_data !== nothing && _nlp_objective_function(model) !== nothing
         error("A nonlinear objective is already set in the model")
     end
@@ -229,12 +245,16 @@ function set_objective_coefficient(model::Model, variable::VariableRef, coeff::R
         if index(current_obj) == index(variable)
             set_objective_function(model, coeff * variable)
         else
-            set_objective_function(model, add_to_expression!(coeff * variable, current_obj))
+            set_objective_function(
+                model,
+                add_to_expression!(coeff * variable, current_obj),
+            )
         end
     elseif obj_fct_type == AffExpr || obj_fct_type == QuadExpr
-        MOI.modify(backend(model),
+        MOI.modify(
+            backend(model),
             MOI.ObjectiveFunction{moi_function_type(obj_fct_type)}(),
-            MOI.ScalarCoefficientChange(index(variable), coeff)
+            MOI.ScalarCoefficientChange(index(variable), coeff),
         )
     else
         error("Objective function type not supported: $(obj_fct_type)")

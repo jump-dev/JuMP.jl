@@ -18,7 +18,7 @@ If the filename ends in `.bz2`, it will be compressed using BZip2.
 function write_to_file(
     model::Model,
     filename::String;
-    format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC
+    format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC,
 )
     dest = MOI.FileFormats.Model(format = format, filename = filename)
     # We add a `full_bridge_optimizer` here because MOI.FileFormats models may not
@@ -43,7 +43,7 @@ Write the JuMP model `model` to `io` in the format `format`.
 function Base.write(
     io::IO,
     model::Model;
-    format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_MOF
+    format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_MOF,
 )
     if format == MOI.FileFormats.FORMAT_AUTOMATIC
         error("Unable to infer the file format from an IO stream.")
@@ -72,7 +72,7 @@ If the filename ends in `.bz2`, it will be uncompressed using BZip2.
 """
 function read_from_file(
     filename::String;
-    format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC
+    format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC,
 )
     src = MOI.FileFormats.Model(format = format, filename = filename)
     MOI.read_from_file(src, filename)

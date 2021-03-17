@@ -198,7 +198,9 @@ end
 function JuMP.fix(vref::MyVariableRef, value; force::Bool = false)
     info = variable_info(vref)
     if !force && (info.has_lb || info.has_ub)
-        error("Unable to fix $(vref) to $(value) because it has existing bounds.")
+        error(
+            "Unable to fix $(vref) to $(value) because it has existing bounds.",
+        )
     end
     update_variable_info(
         vref,
@@ -402,11 +404,13 @@ JuMP.objective_function(model::MyModel) = model.objective_function
 function JuMP.objective_function(model::MyModel, FT::Type)
     # InexactError should be thrown, this is needed in `objective.jl`
     if !(model.objective_function isa FT)
-        throw(InexactError(
-            :objective_function,
-            FT,
-            typeof(model.objective_function),
-        ))
+        throw(
+            InexactError(
+                :objective_function,
+                FT,
+                typeof(model.objective_function),
+            ),
+        )
     end
     return model.objective_function::FT
 end

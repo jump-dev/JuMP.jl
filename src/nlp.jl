@@ -63,7 +63,7 @@ end
 function _rhs(c::_NonlinearConstraint)
     s = _sense(c)
     s == :range && error("Range constraints do not have a well-defined RHS")
-    s == :(<=) ? c.ub : c.lb
+    return s == :(<=) ? c.ub : c.lb
 end
 
 mutable struct _NLPData
@@ -152,7 +152,7 @@ value(p)
 ```
 """
 function set_value(p::NonlinearParameter, v::Number)
-    p.m.nlp_data.nlparamvalues[p.index] = v
+    return p.m.nlp_data.nlparamvalues[p.index] = v
 end
 
 function _NLPData()
@@ -307,7 +307,6 @@ function _FunctionStorage(
     subexpression_variables,
     moi_index_to_consecutive_index,
 )
-
     nd = _replace_moi_variables(nd, moi_index_to_consecutive_index)
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
@@ -361,7 +360,6 @@ function _FunctionStorage(
         linearity[1],
         dependent_subexpressions,
     )
-
 end
 
 function _SubexpressionStorage(
@@ -371,7 +369,6 @@ function _SubexpressionStorage(
     subexpression_linearity,
     moi_index_to_consecutive_index,
 )
-
     nd = _replace_moi_variables(nd, moi_index_to_consecutive_index)
     adj = adjmat(nd)
     forward_storage = zeros(length(nd))
@@ -393,7 +390,6 @@ function _SubexpressionStorage(
         empty_arr,
         linearity[1],
     )
-
 end
 
 function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
@@ -413,9 +409,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     num_variables_ = num_variables(d.m)
 
     moi_index_to_consecutive_index = Dict(
-        moi_index => consecutive_index
-        for
-        (consecutive_index, moi_index) in
+        moi_index => consecutive_index for (consecutive_index, moi_index) in
         enumerate(MOI.get(d.m, MOI.ListOfVariableIndices()))
     )
 
@@ -610,7 +604,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     d.eval_constraint_jacobian_timer = 0
     d.eval_hessian_lagrangian_timer = 0
 
-    nothing
+    return nothing
 end
 
 function _recompute_disable_2ndorder(evaluator::NLPEvaluator)
@@ -717,7 +711,7 @@ function _reverse_eval_all(d::NLPEvaluator, x)
     for con in d.constraints
         reverse_eval(con.reverse_storage, con.partials_storage, con.nd, con.adj)
     end
-    copyto!(d.last_x, x)
+    return copyto!(d.last_x, x)
 end
 
 function MOI.eval_objective(d::NLPEvaluator, x)
@@ -881,7 +875,6 @@ function MOI.eval_hessian_lagrangian_product(
     σ::Float64,                 # multiplier for objective
     μ::AbstractVector{Float64}, # multipliers for each constraint
 )
-
     nldata = d.m.nlp_data::_NLPData
 
     if d.last_x != x
@@ -968,7 +961,6 @@ function MOI.eval_hessian_lagrangian_product(
         )
     end
 
-
     for i in 1:length(d.constraints)
         ex = d.constraints[i]
         l = μ[i]
@@ -1027,7 +1019,6 @@ function MOI.eval_hessian_lagrangian_product(
     for i in 1:length(x)
         h[i] += output_ϵ[i].values[1]
     end
-
 end
 
 function MOI.eval_hessian_lagrangian(
@@ -1037,11 +1028,11 @@ function MOI.eval_hessian_lagrangian(
     obj_factor::Float64,             # Lagrangian multiplier for objective
     lambda::AbstractVector{Float64}, # Multipliers for each constraint
 )
-
     nldata = d.m.nlp_data::_NLPData
 
-    d.want_hess ||
-        error("Hessian computations were not requested on the call to initialize!.")
+    d.want_hess || error(
+        "Hessian computations were not requested on the call to initialize!.",
+    )
 
     if d.last_x != x
         _forward_eval_all(d, x)
@@ -1058,29 +1049,27 @@ function MOI.eval_hessian_lagrangian(
             chunk = min(size(ex.seed_matrix, 2), d.max_chunk)
             if chunk == 1
                 # skip dynamic dispatch
-                nzthis =
-                    _hessian_slice(
-                        d,
-                        ex,
-                        x,
-                        H,
-                        obj_factor,
-                        nzcount,
-                        recovery_tmp_storage,
-                        Val{1},
-                    )::Int
+                nzthis = _hessian_slice(
+                    d,
+                    ex,
+                    x,
+                    H,
+                    obj_factor,
+                    nzcount,
+                    recovery_tmp_storage,
+                    Val{1},
+                )::Int
             else
-                nzthis =
-                    _hessian_slice(
-                        d,
-                        ex,
-                        x,
-                        H,
-                        obj_factor,
-                        nzcount,
-                        recovery_tmp_storage,
-                        Val{chunk},
-                    )::Int
+                nzthis = _hessian_slice(
+                    d,
+                    ex,
+                    x,
+                    H,
+                    obj_factor,
+                    nzcount,
+                    recovery_tmp_storage,
+                    Val{chunk},
+                )::Int
             end
             nzcount += nzthis
         end # else, obj_factor is ignored.
@@ -1089,29 +1078,27 @@ function MOI.eval_hessian_lagrangian(
             ex = d.constraints[i]
             chunk = min(size(ex.seed_matrix, 2), d.max_chunk)
             if chunk == 1
-                nzthis =
-                    _hessian_slice(
-                        d,
-                        ex,
-                        x,
-                        H,
-                        lambda[i],
-                        nzcount,
-                        recovery_tmp_storage,
-                        Val{1},
-                    )::Int
+                nzthis = _hessian_slice(
+                    d,
+                    ex,
+                    x,
+                    H,
+                    lambda[i],
+                    nzcount,
+                    recovery_tmp_storage,
+                    Val{1},
+                )::Int
             else
-                nzthis =
-                    _hessian_slice(
-                        d,
-                        ex,
-                        x,
-                        H,
-                        lambda[i],
-                        nzcount,
-                        recovery_tmp_storage,
-                        Val{chunk},
-                    )::Int
+                nzthis = _hessian_slice(
+                    d,
+                    ex,
+                    x,
+                    H,
+                    lambda[i],
+                    nzcount,
+                    recovery_tmp_storage,
+                    Val{chunk},
+                )::Int
             end
             nzcount += nzthis
         end
@@ -1127,7 +1114,6 @@ function _hessian_slice_inner(
     output_ϵ,
     ::Type{Val{CHUNK}},
 ) where {CHUNK}
-
     subexpr_forward_values_ϵ = _reinterpret_unsafe(
         ForwardDiff.Partials{CHUNK,Float64},
         d.subexpression_forward_values_ϵ,
@@ -1243,7 +1229,6 @@ function _hessian_slice(
     recovery_tmp_storage,
     ::Type{Val{CHUNK}},
 ) where {CHUNK}
-
     nzthis = length(ex.hess_I)
     if ex.linearity == LINEAR
         @assert nzthis == 0
@@ -1261,7 +1246,6 @@ function _hessian_slice(
         _reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64}, input_ϵ_raw)
     output_ϵ =
         _reinterpret_unsafe(ForwardDiff.Partials{CHUNK,Float64}, output_ϵ_raw)
-
 
     # compute hessian-vector products
     num_products = size(R, 2) # number of hessian-vector products
@@ -1290,7 +1274,6 @@ function _hessian_slice(
             end
             @inbounds input_ϵ[idx] = zero_ϵ
         end
-
     end
 
     # leftover chunk
@@ -1333,7 +1316,6 @@ function _hessian_slice(
     )
     _rmul!(output_slice, scale)
     return nzthis
-
 end
 
 function MOI.jacobian_structure(d::NLPEvaluator)
@@ -1347,8 +1329,9 @@ function MOI.jacobian_structure(d::NLPEvaluator)
     return jacobian_sparsity
 end
 function MOI.hessian_lagrangian_structure(d::NLPEvaluator)
-    d.want_hess ||
-        error("Hessian computations were not requested on the call to initialize!.")
+    d.want_hess || error(
+        "Hessian computations were not requested on the call to initialize!.",
+    )
     return d.hessian_sparsity
 end
 function _hessian_lagrangian_structure(d::NLPEvaluator)
@@ -1374,7 +1357,7 @@ mutable struct _VariablePrintWrapper
     mode::Any
 end
 function Base.show(io::IO, v::_VariablePrintWrapper)
-    print(io, function_string(v.mode, v.v))
+    return print(io, function_string(v.mode, v.v))
 end
 mutable struct _ParameterPrintWrapper
     model::Model
@@ -1382,7 +1365,10 @@ mutable struct _ParameterPrintWrapper
     mode::Any
 end
 function Base.show(io::IO, p::_ParameterPrintWrapper)
-    relevant_parameters = filter(i->i[2] isa NonlinearParameter && i[2].index==p.idx, p.model.obj_dict)
+    relevant_parameters = filter(
+        i -> i[2] isa NonlinearParameter && i[2].index == p.idx,
+        p.model.obj_dict,
+    )
     if length(relevant_parameters) == 1
         par_name = first(relevant_parameters)[1]
         print(io, par_name)
@@ -1611,11 +1597,8 @@ function _tape_to_expr(
         )
         return Expr(opsymbol, lhs, rhs)
     end
-    error()
-
-
+    return error()
 end
-
 
 function MOI.objective_expr(d::NLPEvaluator)
     if d.has_nlobj
@@ -1659,7 +1642,6 @@ function MOI.constraint_expr(d::NLPEvaluator, i::Integer)
     end
 end
 
-
 """
     _VarValueMap{T,F}
 
@@ -1676,7 +1658,9 @@ struct _VarValueMap{T,F}
 end
 function Base.getindex(m::_VarValueMap{T}, moi_index::Int64) where {T}
     return get!(m.cache, moi_index) do
-        return m.var_value(VariableRef(m.model, MOI.VariableIndex(moi_index)))::T
+        return m.var_value(
+            VariableRef(m.model, MOI.VariableIndex(moi_index)),
+        )::T
     end
 end
 
@@ -1761,7 +1745,7 @@ function MOI.eval_objective(d::_UserFunctionEvaluator, x)
 end
 function MOI.eval_objective_gradient(d::_UserFunctionEvaluator, grad, x)
     d.∇f(grad, x)
-    nothing
+    return nothing
 end
 
 function _UserFunctionEvaluator(
@@ -1846,7 +1830,6 @@ function register(
             _UserFunctionEvaluator(dimension, f),
         )
     end
-
 end
 
 """
@@ -1912,8 +1895,9 @@ function register(
 )
     _init_NLP(m)
     if dimension == 1
-        autodiff == true ||
-            error("Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.")
+        autodiff == true || error(
+            "Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.",
+        )
         fprimeprime = x -> ForwardDiff.derivative(∇f, x)
         _Derivatives.register_univariate_operator!(
             m.nlp_data.user_operators,
@@ -1923,8 +1907,9 @@ function register(
             fprimeprime,
         )
     else
-        autodiff == false ||
-            Base.warn_once("autodiff=true ignored since gradient is already provided.")
+        autodiff == false || Base.warn_once(
+            "autodiff=true ignored since gradient is already provided.",
+        )
         m.nlp_data.largest_user_input_dimension =
             max(m.nlp_data.largest_user_input_dimension, dimension)
         d = _UserFunctionEvaluator(
@@ -1938,7 +1923,6 @@ function register(
             d,
         )
     end
-
 end
 
 """
@@ -1986,10 +1970,11 @@ function register(
     ∇f::Function,
     ∇²f::Function,
 )
-    dimension == 1 ||
-        error("Providing hessians for multivariate functions is not yet supported")
+    dimension == 1 || error(
+        "Providing hessians for multivariate functions is not yet supported",
+    )
     _init_NLP(m)
-    _Derivatives.register_univariate_operator!(
+    return _Derivatives.register_univariate_operator!(
         m.nlp_data.user_operators,
         s,
         f,

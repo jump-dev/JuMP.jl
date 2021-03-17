@@ -132,7 +132,7 @@ function _parse_ref_sets(_error::Function, expr::Expr)
         if idxvar in idxvars
             _error(
                 "The index $(idxvar) appears more than once. The index " *
-                "associated with each set must be unique."
+                "associated with each set must be unique.",
             )
         end
         push!(idxvars, idxvar)
@@ -156,14 +156,16 @@ returns:
 function _build_ref_sets(_error::Function, expr)
     idxvars, idxsets, condition = _parse_ref_sets(_error, expr)
     if any(_expr_is_splat.(idxsets))
-        _error("cannot use splatting operator `...` in the definition of an index set.")
+        _error(
+            "cannot use splatting operator `...` in the definition of an index set.",
+        )
     end
     has_dependent = has_dependent_sets(idxvars, idxsets)
     if has_dependent || condition != :()
         esc_idxvars = esc.(idxvars)
         idxfuns = [
-            :(($(esc_idxvars[1:(i-1)]...),) -> $(idxsets[i]))
-            for i in 1:length(idxvars)
+            :(($(esc_idxvars[1:(i-1)]...),) -> $(idxsets[i])) for
+            i in 1:length(idxvars)
         ]
         if condition == :()
             indices = :(Containers.nested($(idxfuns...)))

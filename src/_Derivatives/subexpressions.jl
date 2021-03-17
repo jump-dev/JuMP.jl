@@ -47,8 +47,10 @@ as the uninitialized vector, or by explicitly computing the full
 function _topological_sort(
     starts,
     subexpressions::Vector{Vector{NodeData}},
-    subexpression_dependency_graph::Vector{Vector{Int}} =
-        Vector{Vector{Int}}(undef, length(subexpressions)),
+    subexpression_dependency_graph::Vector{Vector{Int}} = Vector{Vector{Int}}(
+        undef,
+        length(subexpressions),
+    ),
 )
     ordered = Int[]
     in_order = fill(false, length(subexpressions))

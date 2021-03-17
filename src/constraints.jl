@@ -13,7 +13,7 @@
 
 Holds a reference to the model and the corresponding MOI.ConstraintIndex.
 """
-struct ConstraintRef{M <: AbstractModel, C, Shape <: AbstractShape}
+struct ConstraintRef{M<:AbstractModel,C,Shape<:AbstractShape}
     model::M
     index::C
     shape::Shape
@@ -27,7 +27,7 @@ end
 The constraint `constraint_ref` was used in a model different to
 `owner_model(constraint_ref)`.
 """
-struct ConstraintNotOwned{C <: ConstraintRef} <: Exception
+struct ConstraintNotOwned{C<:ConstraintRef} <: Exception
     constraint_ref::C
 end
 
@@ -62,23 +62,25 @@ Note: If no dual start value has been set, `dual_start_value` will return
 
 See also [`set_dual_start_value`](@ref).
 """
-function dual_start_value(con_ref::ConstraintRef{<:AbstractModel, <:_MOICON})
+function dual_start_value(con_ref::ConstraintRef{<:AbstractModel,<:_MOICON})
     return reshape_vector(_dual_start(con_ref), dual_shape(con_ref.shape))
 end
 
 # Returns the value of MOI.ConstraintDualStart in a type-stable way
 function _dual_start(
     con_ref::ConstraintRef{
-        <:AbstractModel, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractScalarFunction,<:MOI.AbstractScalarSet},
     },
-)::Union{Nothing, Float64}
+)::Union{Nothing,Float64}
     return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
 end
 function _dual_start(
     con_ref::ConstraintRef{
-        <:AbstractModel, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractVectorFunction,<:MOI.AbstractVectorSet},
     },
-)::Union{Nothing, Vector{Float64}}
+)::Union{Nothing,Vector{Float64}}
     return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
 end
 
@@ -90,25 +92,38 @@ Set the dual start value (MOI attribute `ConstraintDualStart`) of the constraint
 
 See also [`dual_start_value`](@ref).
 """
-function set_dual_start_value(con_ref::ConstraintRef{
-    <:AbstractModel, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}},
-    value
+function set_dual_start_value(
+    con_ref::ConstraintRef{
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractVectorFunction,<:MOI.AbstractVectorSet},
+    },
+    value,
 )
     vectorized_value = vectorize(value, dual_shape(con_ref.shape))
-    MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref,
-        vectorized_value)
+    MOI.set(
+        owner_model(con_ref),
+        MOI.ConstraintDualStart(),
+        con_ref,
+        vectorized_value,
+    )
     return
 end
-function set_dual_start_value(con_ref::ConstraintRef{
-    <:AbstractModel, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}},
-    ::Nothing
+function set_dual_start_value(
+    con_ref::ConstraintRef{
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractVectorFunction,<:MOI.AbstractVectorSet},
+    },
+    ::Nothing,
 )
     MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, nothing)
     return
 end
-function set_dual_start_value(con_ref::ConstraintRef{
-    <:AbstractModel, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}},
-    value
+function set_dual_start_value(
+    con_ref::ConstraintRef{
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractScalarFunction,<:MOI.AbstractScalarSet},
+    },
+    value,
 )
     MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, value)
     return
@@ -193,34 +208,45 @@ function constraint_by_name(model::Model, name::String)
     end
 end
 
-function constraint_by_name(model::Model, name::String,
-                            F::Type{<:MOI.AbstractFunction},
-                            S::Type{<:MOI.AbstractSet})
-    index = MOI.get(backend(model), MOI.ConstraintIndex{F, S}, name)
+function constraint_by_name(
+    model::Model,
+    name::String,
+    F::Type{<:MOI.AbstractFunction},
+    S::Type{<:MOI.AbstractSet},
+)
+    index = MOI.get(backend(model), MOI.ConstraintIndex{F,S}, name)
     if index isa Nothing
         return nothing
     else
         return constraint_ref_with_index(model, index)
     end
 end
-function constraint_by_name(model::Model, name::String,
-                            F::Type{<:Union{ScalarType,
-                                            Vector{ScalarType}}},
-                            S::Type) where ScalarType <: AbstractJuMPScalar
+function constraint_by_name(
+    model::Model,
+    name::String,
+    F::Type{<:Union{ScalarType,Vector{ScalarType}}},
+    S::Type,
+) where {ScalarType<:AbstractJuMPScalar}
     return constraint_by_name(model, name, moi_function_type(F), S)
 end
 
 # Creates a ConstraintRef with default shape
 function constraint_ref_with_index(
     model::AbstractModel,
-    index::MOI.ConstraintIndex{<:MOI.AbstractScalarFunction,
-                               <:MOI.AbstractScalarSet})
+    index::MOI.ConstraintIndex{
+        <:MOI.AbstractScalarFunction,
+        <:MOI.AbstractScalarSet,
+    },
+)
     return ConstraintRef(model, index, ScalarShape())
 end
 function constraint_ref_with_index(
     model::AbstractModel,
-    index::MOI.ConstraintIndex{<:MOI.AbstractVectorFunction,
-                               <:MOI.AbstractVectorSet})
+    index::MOI.ConstraintIndex{
+        <:MOI.AbstractVectorFunction,
+        <:MOI.AbstractVectorSet,
+    },
+)
     return ConstraintRef(model, index, get(model.shapes, index, VectorShape()))
 end
 
@@ -233,10 +259,12 @@ See also: [`unregister`](@ref)
 """
 function delete(model::Model, con_ref::ConstraintRef)
     if model !== con_ref.model
-        error("The constraint reference you are trying to delete does not " *
-              "belong to the model.")
+        error(
+            "The constraint reference you are trying to delete does not " *
+            "belong to the model.",
+        )
     end
-    MOI.delete(backend(model), index(con_ref))
+    return MOI.delete(backend(model), index(con_ref))
 end
 
 """
@@ -250,7 +278,10 @@ method.
 
 See also: [`unregister`](@ref)
 """
-function delete(model::Model, con_refs::Vector{<:ConstraintRef{<:AbstractModel}})
+function delete(
+    model::Model,
+    con_refs::Vector{<:ConstraintRef{<:AbstractModel}},
+)
     if any(c -> model !== c.model, con_refs)
         error("A constraint reference you are trying to delete does not" * "
             belong to the model.")
@@ -265,8 +296,9 @@ end
 Return `true` if `constraint_ref` refers to a valid constraint in `model`.
 """
 function is_valid(model::Model, con_ref::ConstraintRef{<:AbstractModel})
-    return (model === con_ref.model &&
-            MOI.is_valid(backend(model), con_ref.index))
+    return (
+        model === con_ref.model && MOI.is_valid(backend(model), con_ref.index)
+    )
 end
 
 #############################################################################
@@ -328,12 +360,16 @@ reasons:
    are defined in the package is called [*type piracy*](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-type-piracy-1)
    and is discouraged in the Julia style guide.
 """
-struct BridgeableConstraint{C, B} <: AbstractConstraint
+struct BridgeableConstraint{C,B} <: AbstractConstraint
     constraint::C
     bridge_type::B
 end
 
-function add_constraint(model::Model, con::BridgeableConstraint, name::String="")
+function add_constraint(
+    model::Model,
+    con::BridgeableConstraint,
+    name::String = "",
+)
     add_bridge(model, con.bridge_type)
     return add_constraint(model, con.constraint, name)
 end
@@ -383,8 +419,8 @@ representing the function and the `set` field contains the MOI set.
 See also the [documentation](@ref Constraints) on JuMP's representation of
 constraints for more background.
 """
-struct ScalarConstraint{F <: AbstractJuMPScalar,
-                        S <: MOI.AbstractScalarSet} <: AbstractConstraint
+struct ScalarConstraint{F<:AbstractJuMPScalar,S<:MOI.AbstractScalarSet} <:
+       AbstractConstraint
     func::F
     set::S
 end
@@ -392,15 +428,16 @@ end
 reshape_set(set::MOI.AbstractScalarSet, ::ScalarShape) = set
 shape(::ScalarConstraint) = ScalarShape()
 
-function constraint_object(con_ref::ConstraintRef{<:AbstractModel, _MOICON{FuncType, SetType}}) where
-        {FuncType <: MOI.AbstractScalarFunction, SetType <: MOI.AbstractScalarSet}
+function constraint_object(
+    con_ref::ConstraintRef{<:AbstractModel,_MOICON{FuncType,SetType}},
+) where {FuncType<:MOI.AbstractScalarFunction,SetType<:MOI.AbstractScalarSet}
     model = con_ref.model
     f = MOI.get(model, MOI.ConstraintFunction(), con_ref)::FuncType
     s = MOI.get(model, MOI.ConstraintSet(), con_ref)::SetType
     return ScalarConstraint(jump_function(model, f), s)
 end
 function check_belongs_to_model(con::ScalarConstraint, model)
-    check_belongs_to_model(con.func, model)
+    return check_belongs_to_model(con.func, model)
 end
 
 """
@@ -413,22 +450,28 @@ the constraint was constructed (e.g., by using matrices or flat vectors).
 See also the [documentation](@ref Constraints) on JuMP's representation of
 constraints.
 """
-struct VectorConstraint{F <: AbstractJuMPScalar,
-                        S <: MOI.AbstractVectorSet,
-                        Shape <: AbstractShape} <: AbstractConstraint
+struct VectorConstraint{
+    F<:AbstractJuMPScalar,
+    S<:MOI.AbstractVectorSet,
+    Shape<:AbstractShape,
+} <: AbstractConstraint
     func::Vector{F}
     set::S
     shape::Shape
 end
-function VectorConstraint(func::Vector{<:AbstractJuMPScalar},
-                          set::MOI.AbstractVectorSet)
-  if length(func) != MOI.dimension(set)
-      throw(DimensionMismatch(
-          "Dimension of the function $(length(func)) does not match the " *
-          "dimension of the set $(set)."
-      ))
-  end
-    VectorConstraint(func, set, VectorShape())
+function VectorConstraint(
+    func::Vector{<:AbstractJuMPScalar},
+    set::MOI.AbstractVectorSet,
+)
+    if length(func) != MOI.dimension(set)
+        throw(
+            DimensionMismatch(
+                "Dimension of the function $(length(func)) does not match the " *
+                "dimension of the set $(set).",
+            ),
+        )
+    end
+    return VectorConstraint(func, set, VectorShape())
 end
 
 function VectorConstraint(
@@ -440,8 +483,9 @@ end
 
 reshape_set(set::MOI.AbstractVectorSet, ::VectorShape) = set
 shape(con::VectorConstraint) = con.shape
-function constraint_object(con_ref::ConstraintRef{<:AbstractModel, _MOICON{FuncType, SetType}}) where
-        {FuncType <: MOI.AbstractVectorFunction, SetType <: MOI.AbstractVectorSet}
+function constraint_object(
+    con_ref::ConstraintRef{<:AbstractModel,_MOICON{FuncType,SetType}},
+) where {FuncType<:MOI.AbstractVectorFunction,SetType<:MOI.AbstractVectorSet}
     model = con_ref.model
     f = MOI.get(model, MOI.ConstraintFunction(), con_ref)::FuncType
     s = MOI.get(model, MOI.ConstraintSet(), con_ref)::SetType
@@ -453,17 +497,32 @@ function check_belongs_to_model(con::VectorConstraint, model)
     end
 end
 
-function moi_add_constraint(model::MOI.ModelLike, f::MOI.AbstractFunction,
-                            s::MOI.AbstractSet)
+function moi_add_constraint(
+    model::MOI.ModelLike,
+    f::MOI.AbstractFunction,
+    s::MOI.AbstractSet,
+)
     if !MOI.supports_constraint(model, typeof(f), typeof(s))
         if moi_mode(model) == DIRECT
             bridge_message = "."
         elseif moi_bridge_constraints(model)
-            error(sprint(io -> MOI.Bridges.debug(model.optimizer, typeof(f), typeof(s); io = io)))
+            error(
+                sprint(
+                    io -> MOI.Bridges.debug(
+                        model.optimizer,
+                        typeof(f),
+                        typeof(s);
+                        io = io,
+                    ),
+                ),
+            )
         else
             bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
         end
-        error("Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver" * bridge_message)
+        error(
+            "Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver" *
+            bridge_message,
+        )
     end
     return MOI.add_constraint(model, f, s)
 end
@@ -473,7 +532,11 @@ end
 
 Add a constraint `con` to `Model model` and sets its name.
 """
-function add_constraint(model::Model, con::AbstractConstraint, name::String="")
+function add_constraint(
+    model::Model,
+    con::AbstractConstraint,
+    name::String = "",
+)
     # The type of backend(model) is unknown so we directly redirect to another
     # function.
     check_belongs_to_model(con, model)
@@ -511,10 +574,19 @@ con : 4 x <= 2.0
 ```
 """
 function set_normalized_coefficient(
-    con_ref::ConstraintRef{<:AbstractModel, _MOICON{F, S}}, variable, value
-    ) where {S, T, F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
-    MOI.modify(backend(owner_model(con_ref)), index(con_ref),
-               MOI.ScalarCoefficientChange(index(variable), convert(T, value)))
+    con_ref::ConstraintRef{<:AbstractModel,_MOICON{F,S}},
+    variable,
+    value,
+) where {
+    S,
+    T,
+    F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
+}
+    MOI.modify(
+        backend(owner_model(con_ref)),
+        index(con_ref),
+        MOI.ScalarCoefficientChange(index(variable), convert(T, value)),
+    )
     return
 end
 @deprecate set_coefficient set_normalized_coefficient
@@ -527,8 +599,13 @@ normalized the constraint into its standard form. See also
 [`set_normalized_coefficient`](@ref).
 """
 function normalized_coefficient(
-    con_ref::ConstraintRef{<:AbstractModel, _MOICON{F, S}}, variable
-    ) where {S, T, F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
+    con_ref::ConstraintRef{<:AbstractModel,_MOICON{F,S}},
+    variable,
+) where {
+    S,
+    T,
+    F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
+}
     con = JuMP.constraint_object(con_ref)
     return _affine_coefficient(con.func, variable)
 end
@@ -554,12 +631,19 @@ con : 2 x <= 4.0
 ```
 """
 function set_normalized_rhs(
-    con_ref::ConstraintRef{<:AbstractModel, _MOICON{F, S}}, value) where {
-        T,
-        S <: Union{MOI.LessThan{T}, MOI.GreaterThan{T}, MOI.EqualTo{T}},
-        F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
-    MOI.set(owner_model(con_ref), MOI.ConstraintSet(), con_ref,
-            S(convert(T, value)))
+    con_ref::ConstraintRef{<:AbstractModel,_MOICON{F,S}},
+    value,
+) where {
+    T,
+    S<:Union{MOI.LessThan{T},MOI.GreaterThan{T},MOI.EqualTo{T}},
+    F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
+}
+    MOI.set(
+        owner_model(con_ref),
+        MOI.ConstraintSet(),
+        con_ref,
+        S(convert(T, value)),
+    )
     return
 end
 
@@ -569,31 +653,40 @@ end
 Return the right-hand side term of `con_ref` after JuMP has converted the
 constraint into its normalized form. See also [`set_normalized_rhs`](@ref).
 """
-function normalized_rhs(con_ref::ConstraintRef{<:AbstractModel, _MOICON{F, S}}) where {
-        T, S <: Union{MOI.LessThan{T}, MOI.GreaterThan{T}, MOI.EqualTo{T}},
-        F <: Union{MOI.ScalarAffineFunction{T}, MOI.ScalarQuadraticFunction{T}}}
+function normalized_rhs(
+    con_ref::ConstraintRef{<:AbstractModel,_MOICON{F,S}},
+) where {
+    T,
+    S<:Union{MOI.LessThan{T},MOI.GreaterThan{T},MOI.EqualTo{T}},
+    F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
+}
     con = constraint_object(con_ref)
     return MOI.constant(con.set)
 end
 
 function moi_add_to_function_constant(
     model::MOI.ModelLike,
-    ci::MOI.ConstraintIndex{<:MOI.AbstractScalarFunction,
-                            <:MOI.AbstractScalarSet},
-    value)
+    ci::MOI.ConstraintIndex{
+        <:MOI.AbstractScalarFunction,
+        <:MOI.AbstractScalarSet,
+    },
+    value,
+)
     set = MOI.get(model, MOI.ConstraintSet(), ci)
     new_set = MOIU.shift_constant(set, convert(Float64, -value))
-    MOI.set(model, MOI.ConstraintSet(), ci, new_set)
+    return MOI.set(model, MOI.ConstraintSet(), ci, new_set)
 end
 function moi_add_to_function_constant(
     model::MOI.ModelLike,
-    ci::MOI.ConstraintIndex{<:Union{MOI.VectorAffineFunction,
-                                    MOI.VectorQuadraticFunction},
-                            <:MOI.AbstractVectorSet},
-    value)
+    ci::MOI.ConstraintIndex{
+        <:Union{MOI.VectorAffineFunction,MOI.VectorQuadraticFunction},
+        <:MOI.AbstractVectorSet,
+    },
+    value,
+)
     func = MOI.get(model, MOI.ConstraintFunction(), ci)
     new_constant = value + MOI.constant(func)
-    MOI.modify(model, ci, MOI.VectorConstantChange(new_constant))
+    return MOI.modify(model, ci, MOI.VectorConstantChange(new_constant))
 end
 
 """
@@ -631,11 +724,17 @@ con : [x + y + 1, x + 2, y + 2] ∈ MathOptInterface.SecondOrderCone(3)
 ```
 
 """
-function add_to_function_constant(constraint::ConstraintRef{<:AbstractModel}, value)
+function add_to_function_constant(
+    constraint::ConstraintRef{<:AbstractModel},
+    value,
+)
     # The type of `backend(model)` is not type-stable, so we use a function
     # barrier (`moi_add_to_function_constant`) to improve performance.
-    moi_add_to_function_constant(backend(owner_model(constraint)),
-                                 index(constraint), value)
+    moi_add_to_function_constant(
+        backend(owner_model(constraint)),
+        index(constraint),
+        value,
+    )
     return
 end
 
@@ -662,7 +761,10 @@ into account in the primal value of the constraint. For instance, the constraint
 evaluation of `2x + 3y`.
 ```
 """
-function value(con_ref::ConstraintRef{<:AbstractModel, <:_MOICON}; result::Int = 1)
+function value(
+    con_ref::ConstraintRef{<:AbstractModel,<:_MOICON};
+    result::Int = 1,
+)
     return reshape_vector(_constraint_primal(con_ref, result), con_ref.shape)
 end
 
@@ -672,7 +774,10 @@ end
 Evaluate the primal value of the constraint `con_ref` using `var_value(v)`
 as the value for each variable `v`.
 """
-function value(con_ref::ConstraintRef{<:AbstractModel, <:_MOICON}, var_value::Function)
+function value(
+    con_ref::ConstraintRef{<:AbstractModel,<:_MOICON},
+    var_value::Function,
+)
     f = jump_function(constraint_object(con_ref))
     return reshape_vector(value.(f, var_value), con_ref.shape)
 end
@@ -680,17 +785,19 @@ end
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
 function _constraint_primal(
     con_ref::ConstraintRef{
-        <:AbstractModel, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractScalarFunction,<:MOI.AbstractScalarSet},
     },
-    result::Int
+    result::Int,
 )::Float64
     return MOI.get(con_ref.model, MOI.ConstraintPrimal(result), con_ref)
 end
 function _constraint_primal(
     con_ref::ConstraintRef{
-        <:AbstractModel, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractVectorFunction,<:MOI.AbstractVectorSet},
     },
-    result
+    result,
 )::Vector{Float64}
     return MOI.get(con_ref.model, MOI.ConstraintPrimal(result), con_ref)
 end
@@ -717,31 +824,35 @@ Use `has_dual` to check if a result exists before asking for values.
 
 See also: [`result_count`](@ref), [`shadow_price`](@ref).
 """
-function dual(con_ref::ConstraintRef{<:AbstractModel, <:_MOICON}; result::Int = 1)
+function dual(
+    con_ref::ConstraintRef{<:AbstractModel,<:_MOICON};
+    result::Int = 1,
+)
     return reshape_vector(
         _constraint_dual(con_ref, result),
-        dual_shape(con_ref.shape)
+        dual_shape(con_ref.shape),
     )
 end
 
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
 function _constraint_dual(
     con_ref::ConstraintRef{
-        <:AbstractModel, <:_MOICON{<:MOI.AbstractScalarFunction, <:MOI.AbstractScalarSet}
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractScalarFunction,<:MOI.AbstractScalarSet},
     },
-    result::Int
+    result::Int,
 )::Float64
     return MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref)
 end
 function _constraint_dual(
     con_ref::ConstraintRef{
-        <:AbstractModel, <:_MOICON{<:MOI.AbstractVectorFunction, <:MOI.AbstractVectorSet}
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractVectorFunction,<:MOI.AbstractVectorSet},
     },
-    result::Int
+    result::Int,
 )::Vector{Float64}
     return MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref)
 end
-
 
 """
     shadow_price(con_ref::ConstraintRef)
@@ -767,9 +878,11 @@ See also [`reduced_cost`](@ref JuMP.reduced_cost).
 - Relaxation of equality constraints (and hence the shadow price) is defined
   based on which sense of the equality constraint is active.
 """
-function shadow_price(con_ref::ConstraintRef{<:AbstractModel, <:_MOICON})
-    error("The shadow price is not defined or not implemented for this type " *
-          "of constraint.")
+function shadow_price(con_ref::ConstraintRef{<:AbstractModel,<:_MOICON})
+    return error(
+        "The shadow price is not defined or not implemented for this type " *
+        "of constraint.",
+    )
 end
 
 function _shadow_price_less_than(dual_value, sense::MOI.OptimizationSense)
@@ -782,8 +895,10 @@ function _shadow_price_less_than(dual_value, sense::MOI.OptimizationSense)
     elseif sense == MOI.MIN_SENSE
         return dual_value
     else
-        error("The shadow price is not available because the objective sense " *
-              "$sense is not minimization or maximization.")
+        error(
+            "The shadow price is not available because the objective sense " *
+            "$sense is not minimization or maximization.",
+        )
     end
 end
 
@@ -795,44 +910,48 @@ function _shadow_price_greater_than(dual_value, sense::MOI.OptimizationSense)
     elseif sense == MOI.MIN_SENSE
         return -dual_value
     else
-        error("The shadow price is not available because the objective sense " *
-              "$sense is not minimization or maximization.")
+        error(
+            "The shadow price is not available because the objective sense " *
+            "$sense is not minimization or maximization.",
+        )
     end
 end
 
 function shadow_price(
-    con_ref::ConstraintRef{<:AbstractModel, _MOICON{F, S}}
-) where {S <: MOI.LessThan, F}
+    con_ref::ConstraintRef{<:AbstractModel,_MOICON{F,S}},
+) where {S<:MOI.LessThan,F}
     model = con_ref.model
     if !has_duals(model)
-        error("The shadow price is not available because no dual result is " *
-              "available.")
+        error(
+            "The shadow price is not available because no dual result is " *
+            "available.",
+        )
     end
-    return _shadow_price_less_than(
-        dual(con_ref), objective_sense(model)
-    )
+    return _shadow_price_less_than(dual(con_ref), objective_sense(model))
 end
 
 function shadow_price(
-    con_ref::ConstraintRef{<:AbstractModel, _MOICON{F, S}}
-) where {S <: MOI.GreaterThan, F}
+    con_ref::ConstraintRef{<:AbstractModel,_MOICON{F,S}},
+) where {S<:MOI.GreaterThan,F}
     model = con_ref.model
     if !has_duals(model)
-        error("The shadow price is not available because no dual result is " *
-              "available.")
+        error(
+            "The shadow price is not available because no dual result is " *
+            "available.",
+        )
     end
-    return _shadow_price_greater_than(
-        dual(con_ref), objective_sense(model)
-    )
+    return _shadow_price_greater_than(dual(con_ref), objective_sense(model))
 end
 
 function shadow_price(
-    con_ref::ConstraintRef{<:AbstractModel, _MOICON{F, S}}
-) where {S <: MOI.EqualTo, F}
+    con_ref::ConstraintRef{<:AbstractModel,_MOICON{F,S}},
+) where {S<:MOI.EqualTo,F}
     model = con_ref.model
     if !has_duals(model)
-        error("The shadow price is not available because no dual result is " *
-              "available.")
+        error(
+            "The shadow price is not available because no dual result is " *
+            "available.",
+        )
     end
     sense = objective_sense(model)
     dual_val = dual(con_ref)
@@ -852,8 +971,8 @@ function _error_if_not_concrete_type(t)
     return
 end
 # `isconcretetype(Vector{Integer})` is `true`
-function _error_if_not_concrete_type(t::Type{Vector{ElT}}) where ElT
-    _error_if_not_concrete_type(ElT)
+function _error_if_not_concrete_type(t::Type{Vector{ElT}}) where {ElT}
+    return _error_if_not_concrete_type(ElT)
 end
 
 """
@@ -890,16 +1009,17 @@ julia> num_constraints(model, AffExpr, MOI.LessThan{Float64})
 """
 function num_constraints(
     model::Model,
-    function_type::Type{<:Union{AbstractJuMPScalar,
-                                Vector{<:AbstractJuMPScalar}}},
-    set_type::Type{<:MOI.AbstractSet})::Int64
+    function_type::Type{
+        <:Union{AbstractJuMPScalar,Vector{<:AbstractJuMPScalar}},
+    },
+    set_type::Type{<:MOI.AbstractSet},
+)::Int64
     _error_if_not_concrete_type(function_type)
     _error_if_not_concrete_type(set_type)
     # TODO: Support JuMP's set helpers like SecondOrderCone().
     f_type = moi_function_type(function_type)
-    return MOI.get(model, MOI.NumberOfConstraints{f_type, set_type}())
+    return MOI.get(model, MOI.NumberOfConstraints{f_type,set_type}())
 end
-
 
 """
     all_constraints(model::Model, function_type, set_type)::Vector{<:ConstraintRef}
@@ -933,21 +1053,23 @@ julia> all_constraints(model, AffExpr, MOI.LessThan{Float64})
 """
 function all_constraints(
     model::Model,
-    function_type::Type{<:Union{AbstractJuMPScalar,
-                                Vector{<:AbstractJuMPScalar}}},
-    set_type::Type{<:MOI.AbstractSet})
+    function_type::Type{
+        <:Union{AbstractJuMPScalar,Vector{<:AbstractJuMPScalar}},
+    },
+    set_type::Type{<:MOI.AbstractSet},
+)
     _error_if_not_concrete_type(function_type)
     _error_if_not_concrete_type(set_type)
     # TODO: Support JuMP's set helpers like SecondOrderCone().
     f_type = moi_function_type(function_type)
     if set_type <: MOI.AbstractScalarSet
-        constraint_ref_type = ConstraintRef{Model, _MOICON{f_type, set_type},
-                                            ScalarShape}
+        constraint_ref_type =
+            ConstraintRef{Model,_MOICON{f_type,set_type},ScalarShape}
     else
-        constraint_ref_type = ConstraintRef{Model, _MOICON{f_type, set_type}}
+        constraint_ref_type = ConstraintRef{Model,_MOICON{f_type,set_type}}
     end
     result = constraint_ref_type[]
-    for idx in MOI.get(model, MOI.ListOfConstraintIndices{f_type, set_type}())
+    for idx in MOI.get(model, MOI.ListOfConstraintIndices{f_type,set_type}())
         push!(result, constraint_ref_with_index(model, idx))
     end
     return result
@@ -978,11 +1100,13 @@ julia> list_of_constraint_types(model)
  (VariableRef, MathOptInterface.ZeroOne)
 ```
 """
-function list_of_constraint_types(model::Model)::Vector{Tuple{DataType, DataType}}
+function list_of_constraint_types(
+    model::Model,
+)::Vector{Tuple{DataType,DataType}}
     # We include an annotated return type here because Julia fails terribly at
     # inferring it, even though we annotate the type of the return vector.
-    return Tuple{DataType, DataType}[
-        (jump_function_type(model, F), S)
-        for (F, S) in MOI.get(model, MOI.ListOfConstraints())
+    return Tuple{DataType,DataType}[
+        (jump_function_type(model, F), S) for
+        (F, S) in MOI.get(model, MOI.ListOfConstraints())
     ]
 end

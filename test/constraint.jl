@@ -96,8 +96,9 @@ end
 function test_AffExpr_vectorized_constraints(ModelType, ::Any)
     model = ModelType()
     @variable(model, x)
-    err =
-        ErrorException("In `@constraint(model, [x, 2x] == [1 - x, 3])`: Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?")
+    err = ErrorException(
+        "In `@constraint(model, [x, 2x] == [1 - x, 3])`: Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?",
+    )
     @test_throws_strip err @constraint(model, [x, 2x] == [1 - x, 3])
     @test_macro_throws ErrorException begin
         @constraint(model, [x == 1 - x, 2x == 3])
@@ -299,20 +300,25 @@ function test_indicator_constraint(ModelType, ::Any)
         @test c.func == [b, 2x + y]
         @test c.set == MOI.IndicatorSet{MOI.ACTIVATE_ON_ZERO}(MOI.LessThan(1.0))
     end
-    err =
-        ErrorException("In `@constraint(model, !(a, b) => {x <= 1})`: Invalid binary variable expression `!(a, b)` for indicator constraint.")
+    err = ErrorException(
+        "In `@constraint(model, !(a, b) => {x <= 1})`: Invalid binary variable expression `!(a, b)` for indicator constraint.",
+    )
     @test_macro_throws err @constraint(model, !(a, b) => {x <= 1})
-    err =
-        ErrorException("In `@constraint(model, a => x)`: Invalid right-hand side `x` of indicator constraint. Expected constraint surrounded by `{` and `}`.")
+    err = ErrorException(
+        "In `@constraint(model, a => x)`: Invalid right-hand side `x` of indicator constraint. Expected constraint surrounded by `{` and `}`.",
+    )
     @test_macro_throws err @constraint(model, a => x)
-    err =
-        ErrorException("In `@constraint(model, a => x <= 1)`: Invalid right-hand side `x <= 1` of indicator constraint. Expected constraint surrounded by `{` and `}`.")
+    err = ErrorException(
+        "In `@constraint(model, a => x <= 1)`: Invalid right-hand side `x <= 1` of indicator constraint. Expected constraint surrounded by `{` and `}`.",
+    )
     @test_macro_throws err @constraint(model, a => x <= 1)
-    err =
-        ErrorException("In `@constraint(model, a => {x <= 1, x >= 0})`: Invalid right-hand side `{x <= 1, x >= 0}` of indicator constraint. Expected constraint surrounded by `{` and `}`.")
+    err = ErrorException(
+        "In `@constraint(model, a => {x <= 1, x >= 0})`: Invalid right-hand side `{x <= 1, x >= 0}` of indicator constraint. Expected constraint surrounded by `{` and `}`.",
+    )
     @test_macro_throws err @constraint(model, a => {x <= 1, x >= 0})
-    err =
-        ErrorException("In `@constraint(model, [a, b] .=> {x + y <= 1})`: Inconsistent use of `.` in symbols to indicate vectorization.")
+    err = ErrorException(
+        "In `@constraint(model, [a, b] .=> {x + y <= 1})`: Inconsistent use of `.` in symbols to indicate vectorization.",
+    )
     @test_macro_throws err @constraint(model, [a, b] .=> {x + y <= 1})
 end
 
@@ -429,7 +435,9 @@ function test_SDP_constraint(ModelType, VariableRefType)
 
     # Julia changed how it reports keyword arguments between 1.3 and 1.4!
     err = if VERSION < v"1.4"
-        ErrorException("function build_constraint does not accept keyword arguments")
+        ErrorException(
+            "function build_constraint does not accept keyword arguments",
+        )
     else
         MethodError
     end
@@ -535,7 +543,9 @@ end
 function test_nonsensical_SDP_constraint(ModelType, ::Any)
     m = ModelType()
     @test_throws_strip(
-        ErrorException("In `@variable(m, unequal[1:5, 1:6], PSD)`: Symmetric variables must be square. Got size (5, 6)."),
+        ErrorException(
+            "In `@variable(m, unequal[1:5, 1:6], PSD)`: Symmetric variables must be square. Got size (5, 6).",
+        ),
         @variable(m, unequal[1:5, 1:6], PSD)
     )
     # Some of these errors happen at compile time, so we can't use @test_throws
@@ -545,19 +555,27 @@ function test_nonsensical_SDP_constraint(ModelType, ::Any)
     @test_throws MethodError @variable(m, psd[2] <= rand(2, 2), PSD)
 
     @test_throws_strip(
-        ErrorException("In `@variable(m, -(ones(3, 4)) <= foo[1:4, 1:4] <= ones(4, 4), PSD)`: Non-symmetric bounds, integrality or starting values for symmetric variable."),
+        ErrorException(
+            "In `@variable(m, -(ones(3, 4)) <= foo[1:4, 1:4] <= ones(4, 4), PSD)`: Non-symmetric bounds, integrality or starting values for symmetric variable.",
+        ),
         @variable(m, -ones(3, 4) <= foo[1:4, 1:4] <= ones(4, 4), PSD)
     )
     @test_throws_strip(
-        ErrorException("In `@variable(m, -(ones(3, 4)) <= foo[1:4, 1:4] <= ones(4, 4), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable."),
+        ErrorException(
+            "In `@variable(m, -(ones(3, 4)) <= foo[1:4, 1:4] <= ones(4, 4), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable.",
+        ),
         @variable(m, -ones(3, 4) <= foo[1:4, 1:4] <= ones(4, 4), Symmetric)
     )
     @test_throws_strip(
-        ErrorException("In `@variable(m, -(ones(4, 4)) <= foo[1:4, 1:4] <= ones(4, 5), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable."),
+        ErrorException(
+            "In `@variable(m, -(ones(4, 4)) <= foo[1:4, 1:4] <= ones(4, 5), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable.",
+        ),
         @variable(m, -ones(4, 4) <= foo[1:4, 1:4] <= ones(4, 5), Symmetric)
     )
     @test_throws_strip(
-        ErrorException("In `@variable(m, -(rand(5, 5)) <= nonsymmetric[1:5, 1:5] <= rand(5, 5), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable."),
+        ErrorException(
+            "In `@variable(m, -(rand(5, 5)) <= nonsymmetric[1:5, 1:5] <= rand(5, 5), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable.",
+        ),
         @variable(
             m,
             -rand(5, 5) <= nonsymmetric[1:5, 1:5] <= rand(5, 5),
@@ -609,8 +627,9 @@ function test_Model_all_constraints_scalar(::Any, ::Any)
     )
     @test_throws err num_constraints(model, AffExpr, MOI.GreaterThan)
     @test_throws err all_constraints(model, AffExpr, MOI.GreaterThan)
-    err =
-        ErrorException("`GenericAffExpr` is not a concrete type. Did you miss a type parameter?")
+    err = ErrorException(
+        "`GenericAffExpr` is not a concrete type. Did you miss a type parameter?",
+    )
     @test_throws err try
         num_constraints(model, JuMP.GenericAffExpr, MOI.ZeroOne)
     catch e
