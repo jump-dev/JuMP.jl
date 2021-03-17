@@ -28,6 +28,7 @@ Base.empty!(::Model)
 mode
 object_dictionary
 unregister
+print(::IO, ::AbstractModel)
 ```
 
 ## Working with attributes
