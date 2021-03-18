@@ -105,7 +105,7 @@ Subject to
 
 
 Pass `latex = true` to print the model in LaTeX form.
-```jldoctesst model_print
+```jldoctest model_print
 julia> print(model; latex = true)
 $$ \begin{aligned}\max\quad & x\\\text{Subject to} \quad & x \geq 0.0\\\end{aligned} $$
 ```
