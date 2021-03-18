@@ -32,6 +32,8 @@ greater than `atol`.
 
  * If `skip_missing = true`, constraints containing variables that are not in
    `point` will be ignored.
+ * If `skip_missing = false` and a partial primal solution is provided, an error
+   will be thrown.
  * If no point is provided, the primal solution from the last time the model was
    solved is used.
 

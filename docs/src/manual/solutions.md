@@ -498,8 +498,8 @@ each variable to a primal solution value (defaults to the last solved solution),
 and a tolerance `atol` (defaults to `0.0`).
 
 The function returns a dictionary which maps the infeasible constraint
-references to the distance between the primal value of the constraint and the 
-nearest point in the corresponding set. A point is classed as infeasible if the 
+references to the distance between the primal value of the constraint and the
+nearest point in the corresponding set. A point is classed as infeasible if the
 distance is greater than the supplied tolerance `atol`.
 
 ```jldoctest feasibility
