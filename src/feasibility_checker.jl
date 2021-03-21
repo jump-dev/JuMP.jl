@@ -24,9 +24,11 @@ end
     )::Dict{Any,Float64}
 
 Given a dictionary `point`, which maps variables to primal values, return a
-dictionary mapping the constraint reference of each constraint in `model` to the
-distance between the point and the nearest feasible point, if the distance is
-greater than `atol`.
+dictionary whose keys are the constraints with an infeasibility greater than the
+supplied tolerance `atol`. The value corresponding to each key is the respective
+infeasibilility. Infeasibility is defined as the distance between the primal
+value of the constraint (see `MOI.ConstraintPrimal`) and the nearest point by
+Euclidean distance in the corresponding set.
 
 ## Notes
 
