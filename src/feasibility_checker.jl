@@ -9,7 +9,7 @@ function _last_primal_solution(model::Model)
     if !has_values(model)
         error(
             "No primal solution is available. You must provide a point at " *
-            "which to check feasibility."
+            "which to check feasibility.",
         )
     end
     return Dict(v => value(v) for v in all_variables(model))
@@ -68,7 +68,12 @@ function primal_feasibility_report(
     violated_constraints = Dict{Any,Float64}()
     for (F, S) in list_of_constraint_types(model)
         _add_infeasible_constraints(
-            model, F, S, violated_constraints, point_f, atol
+            model,
+            F,
+            S,
+            violated_constraints,
+            point_f,
+            atol,
         )
     end
     if num_nl_constraints(model) > 0
@@ -79,7 +84,10 @@ function primal_feasibility_report(
             )
         end
         _add_infeasible_nonlinear_constraints(
-            model, violated_constraints, point_f, atol
+            model,
+            violated_constraints,
+            point_f,
+            atol,
         )
     end
     return violated_constraints
@@ -116,11 +124,8 @@ function _add_infeasible_nonlinear_constraints(
     for (i, con) in enumerate(model.nlp_data.nlconstr)
         d = max(0.0, con.lb - g[i], g[i] - con.ub)
         if d > atol
-            cref = ConstraintRef(
-                model,
-                NonlinearConstraintIndex(i),
-                ScalarShape(),
-            )
+            cref =
+                ConstraintRef(model, NonlinearConstraintIndex(i), ScalarShape())
             violated_constraints[cref] = d
         end
     end
@@ -128,9 +133,9 @@ function _add_infeasible_nonlinear_constraints(
 end
 
 function _distance_to_set(::Any, set::MOI.AbstractSet)
-    error(
+    return error(
         "Feasibility checker for set type $(typeof(set)) has not been " *
-        "implemented yet."
+        "implemented yet.",
     )
 end
 
@@ -169,11 +174,7 @@ function _distance_to_set(x::T, set::MOI.Semicontinuous{T}) where {T<:Real}
 end
 
 function _distance_to_set(x::T, set::MOI.Semiinteger{T}) where {T<:Real}
-    d = max(
-        ceil(set.lower) - x,
-        x - floor(set.upper),
-        abs(x - round(x)),
-    )
+    d = max(ceil(set.lower) - x, x - floor(set.upper), abs(x - round(x)))
     return min(d, abs(x))
 end
 
@@ -188,36 +189,22 @@ function _check_dimension(v::AbstractVector, s)
     return
 end
 
-function _distance_to_set(
-    x::Vector{T},
-    set::MOI.Nonnegatives,
-) where {T<:Real}
+function _distance_to_set(x::Vector{T}, set::MOI.Nonnegatives) where {T<:Real}
     _check_dimension(x, set)
     return LinearAlgebra.norm(max(-xi, zero(T)) for xi in x)
 end
 
-function _distance_to_set(
-    x::Vector{T},
-    set::MOI.Nonpositives,
-) where {T<:Real}
+function _distance_to_set(x::Vector{T}, set::MOI.Nonpositives) where {T<:Real}
     _check_dimension(x, set)
     return LinearAlgebra.norm(max(xi, zero(T)) for xi in x)
 end
 
-function _distance_to_set(
-    x::Vector{T},
-    set::MOI.Zeros
-) where {T<:Number}
+function _distance_to_set(x::Vector{T}, set::MOI.Zeros) where {T<:Number}
     _check_dimension(x, set)
     return LinearAlgebra.norm(x)
 end
 
-
-function _distance_to_set(
-    x::Vector{T},
-    set::MOI.Reals
-) where {T<:Real}
+function _distance_to_set(x::Vector{T}, set::MOI.Reals) where {T<:Real}
     _check_dimension(x, set)
     return zero(T)
 end
-

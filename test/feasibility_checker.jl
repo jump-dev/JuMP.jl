@@ -117,14 +117,14 @@ function test_primal_solution()
     @test isempty(report)
 end
 
-
 function test_feasible()
     model = Model()
     @variable(model, x, Bin)
     @variable(model, 0 <= y <= 2, Int)
     @variable(model, z == 0.5)
     @constraint(model, x + y + z >= 0.5)
-    report = primal_feasibility_report(model, Dict(x => 0.0, y => 0.0, z => 0.5))
+    report =
+        primal_feasibility_report(model, Dict(x => 0.0, y => 0.0, z => 0.5))
     @test isempty(report)
 end
 
@@ -134,11 +134,8 @@ function test_missing()
     @variable(model, 0 <= y <= 2, Int)
     @variable(model, z == 0.5)
     @constraint(model, x + y + z >= 0.5)
-    report = primal_feasibility_report(
-        model,
-        Dict(z => 0.0),
-        skip_missing = true,
-    )
+    report =
+        primal_feasibility_report(model, Dict(z => 0.0), skip_missing = true)
     @test report[FixRef(z)] == 0.5
     @test length(report) == 1
 end

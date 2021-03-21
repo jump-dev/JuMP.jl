@@ -502,7 +502,7 @@ references to the distance between the primal value of the constraint and the
 nearest point in the corresponding set. A point is classed as infeasible if the
 distance is greater than the supplied tolerance `atol`.
 
-```jldoctest feasibility
+```jldoctest feasibility; filter=["x integer         => 0.1", "c1 : x + y ≤ 1.95 => 0.01"]
 julia> model = Model(GLPK.Optimizer);
 
 julia> @variable(model, x >= 1, Int);
