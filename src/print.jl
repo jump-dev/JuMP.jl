@@ -322,7 +322,7 @@ function _print_latex(io::IO, model::AbstractModel)
     for expr in nl_subexpressions
         print(io, " & ", expr, "\\\\")
     end
-    print(io, "\\end{aligned} \$\$")
+    return print(io, "\\end{aligned} \$\$")
 end
 
 # TODO(odow): deprecate this?

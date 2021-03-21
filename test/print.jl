@@ -42,10 +42,11 @@ function _io_test_print(::Type{REPLMode}, obj::AbstractModel, exp_str)
     @test read(path, String) == exp_str
 end
 function _io_test_print(::Type{IJuliaMode}, obj::AbstractModel, exp_str)
-    @test sprint(io -> print(io, obj; latex = true)) == string("\$\$ ", exp_str, " \$\$")
+    @test sprint(io -> print(io, obj; latex = true)) ==
+          string("\$\$ ", exp_str, " \$\$")
     # Don't know how to test a `display`, so let's just run the code to check it
     # doesn't error.
-    print(obj; latex = true)
+    return print(obj; latex = true)
 end
 
 function io_test(mode, obj, exp_str; repl = :both)
@@ -738,7 +739,7 @@ Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""",
             " & a\\times b \\leq 2.0\\\\" *
             " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\" *
             "\\end{aligned}",
-            repl = :print
+            repl = :print,
         )
 
         #------------------------------------------------------------------
@@ -825,7 +826,7 @@ With NL expressions
             "\\text{Subject to} \\quad & subexpression_{1} - 0.0 = 0\\\\" *
             "\\text{With NL expressions} \\quad & subexpression_{1}: cos(x)\\\\" *
             "\\end{aligned}",
-            repl = :print
+            repl = :print,
         )
     end
     @testset "SingleVariable constraints" begin
