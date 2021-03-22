@@ -9,11 +9,22 @@
 # https://github.com/JuliaArrays/AxisArrays.jl/issues/117
 # https://github.com/JuliaArrays/AxisArrays.jl/issues/84
 
-struct DenseAxisArray{T,N,Ax,L<:NTuple{N,Dict}} <: AbstractArray{T,N}
+struct _AxisLookup{D}
+    data::D
+end
+
+# Default fallbacks.
+Base.getindex(::_AxisLookup, key) = throw(KeyError(key))
+Base.getindex(::_AxisLookup, key::Colon) = key
+
+struct DenseAxisArray{T,N,Ax,L<:NTuple{N,_AxisLookup}} <: AbstractArray{T,N}
     data::Array{T,N}
     axes::Ax
     lookup::L
 end
+
+# Any -> _AxisLookup{<:Dict}: The most generic type of axis is a dictionary
+# which maps keys to their index. This works for any AbstractVector-type axis.
 
 function build_lookup(ax)
     d = Dict{eltype(ax),Int}()
@@ -25,7 +36,80 @@ function build_lookup(ax)
         d[el] = cnt
         cnt += 1
     end
-    return d
+    return _AxisLookup(d)
+end
+
+Base.getindex(x::_AxisLookup{Dict{K,Int}}, key::K) where {K} = x.data[key]
+Base.getindex(::_AxisLookup{Dict{K,Int}}, key::Colon) where {K} = key
+
+function Base.getindex(
+    x::_AxisLookup{Dict{K,Int}},
+    keys::AbstractVector{<:K},
+) where {K}
+    return [x[key] for key in keys]
+end
+
+function Base.get(x::_AxisLookup{Dict{K,Int}}, key::K, default) where {K}
+    return get(x.data, key, default)
+end
+
+# Base.OneTo -> _AxisLookup{<:Base.OneTo}: This one is an easy optimization, and
+# avoids the unnecessary Dict lookup.
+
+build_lookup(ax::Base.OneTo) = _AxisLookup(ax)
+function Base.getindex(ax::_AxisLookup{<:Base.OneTo}, k::Integer)
+    if !(k in ax.data)
+        throw(KeyError(k))
+    end
+    return k
+end
+
+function Base.getindex(
+    x::_AxisLookup{<:Base.OneTo},
+    keys::AbstractVector{<:Integer},
+)
+    return [x[key] for key in keys]
+end
+
+function Base.get(ax::_AxisLookup{<:Base.OneTo}, k::Integer, default)
+    return k in ax.data ? k : default
+end
+
+# AbstractUnitRange{<:Integer} -> _AxisLookup{Tuple{T,T}}: A related
+# optimization to Base.OneTo.
+
+function build_lookup(ax::AbstractUnitRange{<:Integer})
+    return _AxisLookup((first(ax), length(ax)))
+end
+
+function Base.getindex(
+    x::_AxisLookup{Tuple{T,T}},
+    key::Integer,
+) where {T<:Integer}
+    i = key - x.data[1] + 1
+    if !(1 <= i <= x.data[2])
+        throw(KeyError(key))
+    end
+    return i
+end
+
+function Base.getindex(
+    x::_AxisLookup{Tuple{T,T}},
+    keys::AbstractVector{<:Integer},
+) where {T<:Integer}
+    return [x[key] for key in keys]
+end
+
+function Base.get(
+    x::_AxisLookup{Tuple{T,T}},
+    key::Integer,
+    default,
+) where {T<:Integer}
+    i = key - x.data[1] + 1
+    if !(1 <= i <= x.data[2])
+        return default
+    end
+    return i
 end
 
 """
@@ -141,62 +225,41 @@ end
 
 Base.eachindex(A::DenseAxisArray) = CartesianIndices(size(A.data))
 
-lookup_index(i::Colon, lookup) = Colon()
-lookup_index(i, lookup) = lookup[i]
-
-# Lisp-y tuple recursion trick to handle indexing in a nice type-
-# stable way. The idea here is that `_to_index_tuple(idx, lookup)`
-# performs a lookup on the first element of `idx` and `lookup`,
-# then recurses using the remaining elements of both tuples.
-# The compiler knows the lengths and types of each tuple, so
-# all of the types are inferable.
-function _to_index_tuple(idx::Tuple, lookup::Tuple)
-    return tuple(
-        lookup_index(first(idx), first(lookup)),
-        _to_index_tuple(Base.tail(idx), Base.tail(lookup))...,
-    )
+# Use recursion over tuples to ensure the return-type of functions like
+# `Base.to_index` are type-stable.
+_getindex_recurse(::NTuple{0}, ::Tuple, ::Function) = ()
+function _getindex_recurse(data::Tuple, keys::Tuple, condition::Function)
+    d, d_rest = first(data), Base.tail(data)
+    k, k_rest = first(keys), Base.tail(keys)
+    remainder = _getindex_recurse(d_rest, k_rest, condition)
+    return condition(k) ? tuple(d[k], remainder...) : remainder
 end
 
-# Handle the base case when we have more indices than lookups:
-function _to_index_tuple(idx::NTuple{N}, ::NTuple{0}) where {N}
-    return ntuple(k -> begin
-        i = idx[k]
-        (i == 1) ? 1 : error("invalid index $i")
-    end, Val(N))
-end
-
-# Handle the base case when we have fewer indices than lookups:
-_to_index_tuple(idx::NTuple{0}, lookup::Tuple) = ()
-
-# Resolve ambiguity with the above two base cases
-_to_index_tuple(idx::NTuple{0}, lookup::NTuple{0}) = ()
-
-to_index(A::DenseAxisArray, idx...) = _to_index_tuple(idx, A.lookup)
-
-# Doing `Colon() in idx` is relatively slow because it involves
-# a non-unrolled loop through the `idx` tuple which may be of
-# varying element type. Another lisp-y recursion trick fixes that
-has_colon(idx::Tuple{}) = false
-has_colon(idx::Tuple) = isa(first(idx), Colon) || has_colon(Base.tail(idx))
-
-# TODO: better error (or just handle correctly) when user tries to index with a range like a:b
-# The only kind of slicing we support is dropping a dimension with colons
-function Base.getindex(A::DenseAxisArray{T,N}, idx...) where {T,N}
-    length(idx) < N && throw(BoundsError(A, idx))
-    if has_colon(idx)
-        DenseAxisArray(
-            A.data[to_index(A, idx...)...],
-            (ax for (i, ax) in enumerate(A.axes) if idx[i] == Colon())...,
-        )
-    else
-        return A.data[to_index(A, idx...)...]
+function Base.to_index(A::DenseAxisArray{T,N}, idx) where {T,N}
+    if length(idx) < N
+        throw(BoundsError(A, idx))
+    elseif any(i -> !isone(idx[i]), (N+1):length(idx))
+        throw(KeyError(idx))
     end
+    return _getindex_recurse(A.lookup, idx, x -> true)
 end
+
+_is_range(::Any) = false
+_is_range(::Union{Vector{Int},Colon}) = true
+
+function Base.getindex(A::DenseAxisArray{T,N}, idx...) where {T,N}
+    new_indices = Base.to_index(A, idx)
+    if !any(_is_range, new_indices)
+        return A.data[new_indices...]::T
+    end
+    new_axes = _getindex_recurse(A.axes, new_indices, _is_range)
+    return DenseAxisArray(A.data[new_indices...], new_axes...)
+end
+
 Base.getindex(A::DenseAxisArray, idx::CartesianIndex) = A.data[idx]
 
 function Base.setindex!(A::DenseAxisArray{T,N}, v, idx...) where {T,N}
-    length(idx) < N && throw(BoundsError(A, idx))
-    return A.data[to_index(A, idx...)...] = v
+    return A.data[Base.to_index(A, idx)...] = v
 end
 Base.setindex!(A::DenseAxisArray, v, idx::CartesianIndex) = A.data[idx] = v
 function Base.IndexStyle(::Type{DenseAxisArray{T,N,Ax}}) where {T,N,Ax}
@@ -241,12 +304,15 @@ function Base.keys(a::DenseAxisArray)
     return DenseAxisArrayKeys(a)
 end
 Base.getindex(a::DenseAxisArrayKeys, idx::CartesianIndex) = a[idx.I...]
+
 function Base.getindex(
     a::DenseAxisArrayKeys{T,S,N},
     args::Vararg{Int,N},
 ) where {T,S,N}
-    return DenseAxisArrayKey(_to_index_tuple(args, a.product_iter.iterators))
+    key = _getindex_recurse(a.product_iter.iterators, args, x -> true)
+    return DenseAxisArrayKey(key)
 end
+
 function Base.IndexStyle(::Type{DenseAxisArrayKeys{T,N,Ax}}) where {T,N,Ax}
     return IndexCartesian()
 end
