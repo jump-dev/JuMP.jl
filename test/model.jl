@@ -616,6 +616,28 @@ function test_copy_expr_quad()
     @test new_model[:ex] == 2 * new_model[:x]^2 + new_model[:x] + 1
 end
 
+function test_copy_dense()
+    model = Model()
+    @variable(model, x[[:a, :b]])
+    new_model, ref_map = copy_model(model)
+    @test ref_map[x] == new_model[:x]
+end
+
+function test_copy_sparse()
+    model = Model()
+    @variable(model, x[i = 1:4; isodd(i)])
+    new_model, ref_map = copy_model(model)
+    @test ref_map[x] == new_model[:x]
+end
+
+function test_copy_object_fail()
+    model = Model()
+    @variable(model, x)
+    model[:d] = Dict(x => 2)
+    new_model, ref_map = copy_model(model)
+    @test !haskey(new_model, :d)
+end
+
 function test_haskey()
     model = Model()
     @variable(model, p[i = 1:10] >= 0)
