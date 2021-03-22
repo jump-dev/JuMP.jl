@@ -92,7 +92,8 @@ Solver name: No optimizer attached.
 Names registered in the model: x
 ```
 
-Use [`print(::AbstractModel)`](@ref) to print the formulation of the model.
+Use `print` to print the formulation of the model (in IJulia, this will render
+as LaTeX.
 ```jldoctest model_print
 julia> print(model)
 Max x
@@ -104,15 +105,20 @@ Subject to
     [`write_to_file`](@ref) instead.
 
 
-Pass `latex = true` to print the model in LaTeX form.
-```julia
-julia> print(model; latex = true)
+Use [`latex_formulation`](@ref) to display the model in LaTeX form.
+```jldoctest model_print
+julia> latex_formulation(model)
 $$ \begin{aligned}\max\quad & x\\\text{Subject to} \quad & x \geq 0.0\\\end{aligned} $$
 ```
 
-In IJulia (and Documenter), this will render as LaTeX!
-```@example getting_started_with_JuMP
-print(model; latex = true)
+In IJulia (and Documenter), ending a cell in with [`latex_formulation`](@ref)
+will render the model in LaTeX!
+```@example
+using JuMP                # hide
+model = Model()           # hide
+@variable(model, x >= 0)  # hide
+@objective(model, Max, x) # hide
+latex_formulation(model)
 ```
 
 ## Turn off output

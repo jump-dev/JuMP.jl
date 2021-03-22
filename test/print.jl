@@ -37,16 +37,12 @@ function _io_test_print(::Type{IJuliaMode}, obj, exp_str)
 end
 function _io_test_print(::Type{REPLMode}, obj::AbstractModel, exp_str)
     @test sprint(print, obj) == exp_str
-    path = tempname()
-    open(io -> redirect_stdout(() -> print(obj; latex = false), io), path, "w")
-    @test read(path, String) == exp_str
 end
 function _io_test_print(::Type{IJuliaMode}, obj::AbstractModel, exp_str)
-    @test sprint(io -> print(io, obj; latex = true)) ==
+    model = JuMP.latex_formulation(obj)
+    @test sprint(io -> print(io, model)) ==
           string("\$\$ ", exp_str, " \$\$")
-    # Don't know how to test a `display`, so let's just run the code to check it
-    # doesn't error.
-    return print(obj; latex = true)
+    return
 end
 
 function io_test(mode, obj, exp_str; repl = :both)

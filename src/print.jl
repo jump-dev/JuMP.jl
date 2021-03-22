@@ -48,28 +48,34 @@ abstract type IJuliaMode <: PrintMode end
 
 Base.show(io::IO, model::AbstractModel) = _print_summary(io, model)
 
-struct _LatexWrapper{T<:AbstractModel}
+struct _LatexModel{T<:AbstractModel}
     model::T
 end
 
-Base.show(io::IO, model::_LatexWrapper) = _print_latex(io, model.model)
-Base.show(io::IO, ::MIME"text/latex", model::_LatexWrapper) = show(io, model)
-
 """
-    Base.print([io::IO = stdout,] model::AbstractModel; latex::Bool = false)
+    latex_formulation(model::AbstractModel)
 
-Print the formulation of `model` to `io` as a string (or to `stdout` if `io` is
-not given).
+Wrap `model` in a type so that it can be pretty-printed as `text/latex` in a
+notebook like IJulia, or in Documenter.
 
-If `latex=true` print the model in LaTeX. If `latex=false`, print in plain-text.
+To render the model, end the cell with `latex_formulation(model)`, or call
+`display(latex_formulation(model))` in to force the display of the model from
+inside a function.
 """
-function Base.print(io::IO, model::AbstractModel; latex::Bool = false)
-    return latex ? _print_latex(io, model) : _print_model(io, model)
-end
+latex_formulation(model::AbstractModel) = _LatexModel(model)
 
-function Base.print(model::AbstractModel; latex::Bool = false)
-    return latex ? display(_LatexWrapper(model)) : _print_model(stdout, model)
+Base.show(io::IO, model::_LatexModel) = _print_latex(io, model.model)
+Base.show(io::IO, ::MIME"text/latex", model::_LatexModel) = show(io, model)
+
+function Base.print(model::AbstractModel)
+    for d in Base.Multimedia.displays
+        if Base.Multimedia.displayable(d, "text/latex") && startswith("$(typeof(d))", "IJulia.")
+            return display(d, "text/latex", latex_formulation(model))
+        end
+    end
+    return _print_model(stdout, model)
 end
+Base.print(io::IO, model::AbstractModel) = _print_model(io, model)
 
 # Whether something is zero or not for the purposes of printing it
 # oneunit is useful e.g. if coef is a Unitful quantity.

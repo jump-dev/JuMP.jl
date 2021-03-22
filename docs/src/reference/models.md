@@ -28,7 +28,7 @@ Base.empty!(::Model)
 mode
 object_dictionary
 unregister
-print(::IO, ::AbstractModel)
+latex_formulation
 ```
 
 ## Working with attributes
