@@ -221,9 +221,8 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test (@inferred A[:a, :b, 1]) == 6.0
         @test (@inferred A[:b, :a]) == 7.0
         @test (@inferred A[[:a, :b], [:a, :b]]) == A
-        @test A[[:a, :b], [:a, :b]] == A
-        @test A[:a, [:a, :b]] == DenseAxisArray([5.0, 6.0], [:a, :b])
-        @test A[[:a, :b], :b] == DenseAxisArray([6.0, 8.0], [:a, :b])
+        @test (@inferred A[:a, [:a, :b]]) == DenseAxisArray([5.0, 6.0], [:a, :b])
+        @test (@inferred A[[:a, :b], :b]) == DenseAxisArray([6.0, 8.0], [:a, :b])
 
         B = DenseAxisArray([5.0 6.0; 7.0 8.0], Base.OneTo(2), [:a, :b])
         @test B.lookup[1] isa Containers._AxisLookup{Base.OneTo{Int}}
@@ -234,9 +233,8 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test (@inferred B[1, :b]) == 6.0
         @test (@inferred B[2, :a]) == 7.0
         @test (@inferred B[1:2, [:a, :b]]) == B
-        @test B[1:2, [:a, :b]] == B
-        @test B[1, [:a, :b]] == DenseAxisArray([5.0, 6.0], [:a, :b])
-        @test B[1:2, :b] == DenseAxisArray([6.0, 8.0], 1:2)
+        @test (@inferred B[1, [:a, :b]]) == DenseAxisArray([5.0, 6.0], [:a, :b])
+        @test (@inferred B[1:2, :b]) == DenseAxisArray([6.0, 8.0], 1:2)
 
         C = DenseAxisArray([5.0 6.0; 7.0 8.0], 2:3, [:a, :b])
         @test C.lookup[1] isa Containers._AxisLookup{Tuple{Int,Int}}
@@ -246,8 +244,7 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test (@inferred C[2, :b]) == 6.0
         @test (@inferred C[3, :a]) == 7.0
         @test (@inferred C[2:3, [:a, :b]]) == C
-        @test C[2:3, [:a, :b]] == C
-        @test C[2, [:a, :b]] == DenseAxisArray([5.0, 6.0], [:a, :b])
-        @test C[2:3, :b] == DenseAxisArray([6.0, 8.0], 2:3)
+        @test (@inferred C[2, [:a, :b]]) == DenseAxisArray([5.0, 6.0], [:a, :b])
+        @test (@inferred C[2:3, :b]) == DenseAxisArray([6.0, 8.0], 2:3)
     end
 end
