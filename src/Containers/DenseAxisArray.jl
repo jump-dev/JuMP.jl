@@ -40,7 +40,7 @@ end
 
 Base.getindex(x::_AxisLookup{Dict{K,Int}}, key::K) where {K} = x.data[key]
 # Fix ambiguity with fallback method, although this probably never gets called.
-Base.getindex(::_AxisLookup{Dict{Colon,Int}}, key::Colon) = key
+Base.getindex(::_AxisLookup{Dict{K,Int}}, key::Colon) where {K} = key
 
 function Base.getindex(
     x::_AxisLookup{Dict{K,Int}},
