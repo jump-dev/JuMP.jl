@@ -300,12 +300,16 @@ function Base.keys(a::DenseAxisArray)
     return DenseAxisArrayKeys(a)
 end
 Base.getindex(a::DenseAxisArrayKeys, idx::CartesianIndex) = a[idx.I...]
+
 function Base.getindex(
     a::DenseAxisArrayKeys{T,S,N},
     args::Vararg{Int,N},
 ) where {T,S,N}
-    return DenseAxisArrayKey(_to_index_tuple(args, a.product_iter.iterators))
+    return DenseAxisArrayKey(
+        ntuple(k -> getindex(a.product_iter.iterators[k], args[k]), Val(N)),
+    )
 end
+
 function Base.IndexStyle(::Type{DenseAxisArrayKeys{T,N,Ax}}) where {T,N,Ax}
     return IndexCartesian()
 end
