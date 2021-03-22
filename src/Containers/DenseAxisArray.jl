@@ -19,6 +19,8 @@ struct DenseAxisArray{T,N,Ax,L<:NTuple{N,_AxisLookup}} <: AbstractArray{T,N}
     lookup::L
 end
 
+# _AxisLookup{<:Dict}: The most generic type of axis is a dictionary which maps
+# keys to their index. This works for any AbstractVector-type axis.
 function build_lookup(ax)
     d = Dict{eltype(ax),Int}()
     cnt = 1
@@ -31,14 +33,35 @@ function build_lookup(ax)
     end
     return _AxisLookup(d)
 end
-Base.getindex(ax::_AxisLookup{Dict{K,Int}}, k::K) where {K} = ax.data[k]
+
+Base.getindex(x::_AxisLookup{Dict{K,Int}}, key::K) where {K} = x.data[key]
+
+# _AxisLookup{<:Base.OneTo}: This one is an easy optimization, and avoids the
+# unnecessary Dict lookup.
 
 build_lookup(ax::Base.OneTo) = _AxisLookup(ax)
 function Base.getindex(ax::_AxisLookup{<:Base.OneTo}, k::Integer)
-    if !(1 <= k <= length(ax))
+    if !(1 <= k <= length(ax.data))
         throw(KeyError(k))
     end
     return k
+end
+
+# _AxisLookup{<:Integer}: A related optimization to Base.OneTo.
+
+function build_lookup(ax::AbstractUnitRange{<:Integer})
+    return _AxisLookup((first(ax), length(ax)))
+end
+
+function Base.getindex(
+    x::_AxisLookup{Tuple{T,T}},
+    key::Integer,
+) where {T<:Integer}
+    i = key - x.data[1] + 1
+    if !(1 <= i <= x.data[2])
+        throw(KeyError(key))
+    end
+    return i
 end
 
 """
@@ -205,6 +228,7 @@ function Base.getindex(A::DenseAxisArray{T,N}, idx...) where {T,N}
         return A.data[to_index(A, idx...)...]
     end
 end
+
 Base.getindex(A::DenseAxisArray, idx::CartesianIndex) = A.data[idx]
 
 function Base.setindex!(A::DenseAxisArray{T,N}, v, idx...) where {T,N}

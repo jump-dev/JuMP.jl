@@ -208,12 +208,23 @@ And data, a 0-dimensional $(Array{Int,0}):
             @test k[2] == Containers.DenseAxisArrayKey((2, :b))
         end
     end
-    @testset "Base.OneTo" begin
-        A = DenseAxisArray([5.0 6.0; 7.0 8.0], 1:2, [:a, :b])
-        @test A.lookup[1] isa Containers._AxisLookup{Dict{Int,Int}}
-        @test_throws KeyError A[0, :a]
+    @testset "AxisLookup" begin
+        A = DenseAxisArray([5.0 6.0; 7.0 8.0], [:a, :b], [:a, :b])
+        @test A.lookup[1] isa Containers._AxisLookup{Dict{Symbol,Int}}
+        @test_throws KeyError A[:c, :a]
+        @test A[:a, :b] == 6.0
+        @test A[:b, :a] == 7.0
+
         B = DenseAxisArray([5.0 6.0; 7.0 8.0], Base.OneTo(2), [:a, :b])
         @test B.lookup[1] isa Containers._AxisLookup{Base.OneTo{Int}}
         @test_throws KeyError B[0, :a]
+        @test B[1, :b] == 6.0
+        @test B[2, :a] == 7.0
+
+        C = DenseAxisArray([5.0 6.0; 7.0 8.0], 2:3, [:a, :b])
+        @test C.lookup[1] isa Containers._AxisLookup{Tuple{Int,Int}}
+        @test_throws KeyError C[0, :a]
+        @test C[2, :b] == 6.0
+        @test C[3, :a] == 7.0
     end
 end
