@@ -109,8 +109,11 @@ Pass `latex = true` to print the model in LaTeX form.
 julia> print(model; latex = true)
 $$ \begin{aligned}\max\quad & x\\\text{Subject to} \quad & x \geq 0.0\\\end{aligned} $$
 ```
-!!! info
-    In IJulia, this will render as LaTeX!
+
+In IJulia (and Documenter), this will render as LaTeX!
+```@example getting_started_with_JuMP
+print(model; latex = true)
+```
 
 ## Turn off output
 
