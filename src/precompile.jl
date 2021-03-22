@@ -38,8 +38,8 @@ function _precompile_()
         MOI.VectorQuadraticFunction{T},
     )
     constraints = vcat(
-        [(F, S) for F in scalar_functions, S in scalar_sets],
-        [(F, S) for F in vector_functions, S in vector_sets],
+        [(F, S) for F in scalar_functions for S in scalar_sets],
+        [(F, S) for F in vector_functions for S in vector_sets],
     )
     for (F, S) in constraints
         Base.precompile(
