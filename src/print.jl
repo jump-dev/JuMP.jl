@@ -510,7 +510,7 @@ function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
         summary.dual_objective_value,
     )
     if summary.verbose && summary.has_values
-        println(io, "  Primal solution : ")
+        println(io, "  Primal solution :")
         for variable_name in sort(collect(keys(summary.primal_solution)))
             println(
                 io,
@@ -522,7 +522,7 @@ function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
         end
     end
     if summary.verbose && summary.has_duals
-        println(io, "  Dual solution : ")
+        println(io, "  Dual solution :")
         for constraint_name in sort(collect(keys(summary.dual_solution)))
             println(
                 io,

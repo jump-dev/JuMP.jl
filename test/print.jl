@@ -840,6 +840,27 @@ With NL expressions
         io_test(REPLMode, zero_one, "x binary")
         # TODO: Test in IJulia mode
     end
+    @testset "Feasibility" begin
+        io_test(
+            IJuliaMode,
+            Model(),
+            "\\begin{aligned}\\text{feasibility}\\\\" *
+            "\\text{Subject to} \\quad\\end{aligned}",
+            repl = :print,
+        )
+    end
+    @testset "Min" begin
+        model = Model()
+        @variable(model, x)
+        @objective(model, Min, x)
+        io_test(
+            IJuliaMode,
+            model,
+            "\\begin{aligned}\\min\\quad & x\\\\" *
+            "\\text{Subject to} \\quad\\end{aligned}",
+            repl = :print,
+        )
+    end
 end
 
 @testset "Printing for JuMPExtension.MyModel" begin
@@ -946,10 +967,10 @@ end
   Objective value      : -1.0
   Objective bound      : 3.0
   Dual objective value : -1.0
-  Primal solution : 
+  Primal solution :
     x : 1.0
     y : 0.0
-  Dual solution : 
+  Dual solution :
     xub : 0.0
     ylb : 1.0
 
