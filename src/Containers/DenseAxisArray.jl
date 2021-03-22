@@ -228,11 +228,8 @@ Base.eachindex(A::DenseAxisArray) = CartesianIndices(size(A.data))
 function Base.to_index(A::DenseAxisArray{T,N}, idx) where {T,N}
     if length(idx) < N
         throw(BoundsError(A, idx))
-    end
-    for i = (N+1):length(idx)
-        if !isone(idx[i])
-            throw(KeyError(idx))
-        end
+    elseif any(i -> !isone(idx[i]), (N+1):length(idx))
+        throw(KeyError(idx))
     end
     return ntuple(Val(N)) do k
         return getindex(A.lookup[k], idx[k])
