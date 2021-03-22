@@ -23,8 +23,9 @@ struct DenseAxisArray{T,N,Ax,L<:NTuple{N,_AxisLookup}} <: AbstractArray{T,N}
     lookup::L
 end
 
-# _AxisLookup{<:Dict}: The most generic type of axis is a dictionary which maps
-# keys to their index. This works for any AbstractVector-type axis.
+# Any -> _AxisLookup{<:Dict}: The most generic type of axis is a dictionary
+# which maps keys to their index. This works for any AbstractVector-type axis.
+
 function build_lookup(ax)
     d = Dict{eltype(ax),Int}()
     cnt = 1
@@ -53,12 +54,12 @@ function Base.get(x::_AxisLookup{Dict{K,Int}}, key::K, default) where {K}
     return get(x.data, key, default)
 end
 
-# _AxisLookup{<:Base.OneTo}: This one is an easy optimization, and avoids the
-# unnecessary Dict lookup.
+# Base.OneTo -> _AxisLookup{<:Base.OneTo}: This one is an easy optimization, and
+# avoids the unnecessary Dict lookup.
 
 build_lookup(ax::Base.OneTo) = _AxisLookup(ax)
 function Base.getindex(ax::_AxisLookup{<:Base.OneTo}, k::Integer)
-    if !(1 <= k <= length(ax.data))
+    if !(k in ax.data)
         throw(KeyError(k))
     end
     return k
@@ -72,13 +73,11 @@ function Base.getindex(
 end
 
 function Base.get(ax::_AxisLookup{<:Base.OneTo}, k::Integer, default)
-    if !(1 <= k <= length(ax.data))
-        return default
-    end
-    return k
+    return k in ax.data ? k : default
 end
 
-# _AxisLookup{<:Integer}: A related optimization to Base.OneTo.
+# AbstractUnitRange{<:Integer} -> _AxisLookup{Tuple{T,T}}: A related
+# optimization to Base.OneTo.
 
 function build_lookup(ax::AbstractUnitRange{<:Integer})
     return _AxisLookup((first(ax), length(ax)))
@@ -243,15 +242,14 @@ _is_range(::Union{Vector{Int},Colon}) = true
 
 function Base.getindex(A::DenseAxisArray{T,N}, idx...) where {T,N}
     new_indices = Base.to_index(A, idx)
-    new_data = A.data[new_indices...]
     if !any(_is_range, new_indices)
-        return new_data::T
+        return A.data[new_indices...]::T
     end
     new_axes = (
         axis[index] for
         (axis, index) in zip(A.axes, new_indices) if _is_range(index)
     )
-    return DenseAxisArray(new_data, new_axes...)
+    return DenseAxisArray(A.data[new_indices...], new_axes...)
 end
 
 Base.getindex(A::DenseAxisArray, idx::CartesianIndex) = A.data[idx]
