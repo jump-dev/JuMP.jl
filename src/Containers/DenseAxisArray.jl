@@ -36,6 +36,10 @@ end
 
 Base.getindex(x::_AxisLookup{Dict{K,Int}}, key::K) where {K} = x.data[key]
 
+function Base.get(x::_AxisLookup{Dict{K,Int}}, key::K, default) where {K}
+    return get(x.data, key, default)
+end
+
 # _AxisLookup{<:Base.OneTo}: This one is an easy optimization, and avoids the
 # unnecessary Dict lookup.
 
@@ -43,6 +47,13 @@ build_lookup(ax::Base.OneTo) = _AxisLookup(ax)
 function Base.getindex(ax::_AxisLookup{<:Base.OneTo}, k::Integer)
     if !(1 <= k <= length(ax.data))
         throw(KeyError(k))
+    end
+    return k
+end
+
+function Base.get(ax::_AxisLookup{<:Base.OneTo}, k::Integer, default)
+    if !(1 <= k <= length(ax.data))
+        return default
     end
     return k
 end
@@ -60,6 +71,18 @@ function Base.getindex(
     i = key - x.data[1] + 1
     if !(1 <= i <= x.data[2])
         throw(KeyError(key))
+    end
+    return i
+end
+
+function Base.get(
+    x::_AxisLookup{Tuple{T,T}},
+    key::Integer,
+    default,
+) where {T<:Integer}
+    i = key - x.data[1] + 1
+    if !(1 <= i <= x.data[2])
+        return default
     end
     return i
 end
