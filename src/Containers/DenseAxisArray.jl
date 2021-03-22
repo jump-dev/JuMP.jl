@@ -138,6 +138,11 @@ function DenseAxisArray(data::Array{T,N}, axs...) where {T,N}
     return DenseAxisArray(data, axs, build_lookup.(axs))
 end
 
+# A converter for different array types.
+function DenseAxisArray(data::AbstractArray, axes...)
+    return DenseAxisArray(collect(data), axes...)
+end
+
 """
     DenseAxisArray{T}(undef, axes...) where T
 
