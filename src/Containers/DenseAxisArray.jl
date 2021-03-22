@@ -9,7 +9,8 @@
 # https://github.com/JuliaArrays/AxisArrays.jl/issues/117
 # https://github.com/JuliaArrays/AxisArrays.jl/issues/84
 
-struct DenseAxisArray{T,N,Ax,L<:NTuple{N,Dict}} <: AbstractArray{T,N}
+
+struct DenseAxisArray{T,N,Ax,L<:NTuple{N,Union{Base.OneTo,Dict}}} <: AbstractArray{T,N}
     data::Array{T,N}
     axes::Ax
     lookup::L
@@ -27,6 +28,8 @@ function build_lookup(ax)
     end
     return d
 end
+
+build_lookup(ax::Base.OneTo) = ax
 
 """
     DenseAxisArray(data::Array{T, N}, axes...) where {T, N}
