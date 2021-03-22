@@ -309,9 +309,8 @@ function Base.getindex(
     a::DenseAxisArrayKeys{T,S,N},
     args::Vararg{Int,N},
 ) where {T,S,N}
-    return DenseAxisArrayKey(
-        ntuple(k -> getindex(a.product_iter.iterators[k], args[k]), Val(N)),
-    )
+    key = _getindex_recurse(a.product_iter.iterators, args, x -> true)
+    return DenseAxisArrayKey(key)
 end
 
 function Base.IndexStyle(::Type{DenseAxisArrayKeys{T,N,Ax}}) where {T,N,Ax}
