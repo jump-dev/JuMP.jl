@@ -9,8 +9,11 @@
 # https://github.com/JuliaArrays/AxisArrays.jl/issues/117
 # https://github.com/JuliaArrays/AxisArrays.jl/issues/84
 
+struct _AxisLookup{D}
+    data::D
+end
 
-struct DenseAxisArray{T,N,Ax,L<:NTuple{N,Union{Base.OneTo,Dict}}} <: AbstractArray{T,N}
+struct DenseAxisArray{T,N,Ax,L<:NTuple{N,_AxisLookup}} <: AbstractArray{T,N}
     data::Array{T,N}
     axes::Ax
     lookup::L
@@ -26,10 +29,17 @@ function build_lookup(ax)
         d[el] = cnt
         cnt += 1
     end
-    return d
+    return _AxisLookup(d)
 end
+Base.getindex(ax::_AxisLookup{Dict{K,Int}}, k::K) where {K} = ax.data[k]
 
-build_lookup(ax::Base.OneTo) = ax
+build_lookup(ax::Base.OneTo) = _AxisLookup(ax)
+function Base.getindex(ax::_AxisLookup{<:Base.OneTo}, k::Integer)
+    if !(1 <= k <= length(ax))
+        throw(KeyError(k))
+    end
+    return k
+end
 
 """
     DenseAxisArray(data::Array{T, N}, axes...) where {T, N}

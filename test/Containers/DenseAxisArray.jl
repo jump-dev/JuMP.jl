@@ -210,8 +210,10 @@ And data, a 0-dimensional $(Array{Int,0}):
     end
     @testset "Base.OneTo" begin
         A = DenseAxisArray([5.0 6.0; 7.0 8.0], 1:2, [:a, :b])
-        @test A.lookup[1] isa Dict{Int,Int}
+        @test A.lookup[1] isa Containers._AxisLookup{Dict{Int,Int}}
+        @test_throws KeyError A[0, :a]
         B = DenseAxisArray([5.0 6.0; 7.0 8.0], Base.OneTo(2), [:a, :b])
-        @test B.lookup[1] == Base.OneTo(2)
+        @test B.lookup[1] isa Containers._AxisLookup{Base.OneTo{Int}}
+        @test_throws KeyError B[0, :a]
     end
 end
