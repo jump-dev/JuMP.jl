@@ -69,7 +69,8 @@ Base.show(io::IO, ::MIME"text/latex", model::_LatexModel) = show(io, model)
 
 function Base.print(model::AbstractModel)
     for d in Base.Multimedia.displays
-        if Base.Multimedia.displayable(d, "text/latex") && startswith("$(typeof(d))", "IJulia.")
+        if Base.Multimedia.displayable(d, "text/latex") &&
+           startswith("$(typeof(d))", "IJulia.")
             return display(d, "text/latex", latex_formulation(model))
         end
     end

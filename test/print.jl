@@ -40,8 +40,7 @@ function _io_test_print(::Type{REPLMode}, obj::AbstractModel, exp_str)
 end
 function _io_test_print(::Type{IJuliaMode}, obj::AbstractModel, exp_str)
     model = JuMP.latex_formulation(obj)
-    @test sprint(io -> print(io, model)) ==
-          string("\$\$ ", exp_str, " \$\$")
+    @test sprint(io -> print(io, model)) == string("\$\$ ", exp_str, " \$\$")
     return
 end
 
