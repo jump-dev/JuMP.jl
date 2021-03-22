@@ -127,7 +127,7 @@ FEASIBLE_POINT::ResultStatusCode = 1
 ```
 Other common returns are `MOI.NO_SOLUTION`, and `MOI.INFEASIBILITY_CERTIFICATE`.
 The first means that the solver doesn't have a solution to return, and the
-second means that the primal solution is a certificate of dual infeasbility (a 
+second means that the primal solution is a certificate of dual infeasbility (a
 primal unbounded ray).
 
 You can also use [`has_values`](@ref), which returns `true` if there is a
@@ -200,7 +200,7 @@ FEASIBLE_POINT::ResultStatusCode = 1
 ```
 Other common returns are `MOI.NO_SOLUTION`, and `MOI.INFEASIBILITY_CERTIFICATE`.
 The first means that the solver doesn't have a solution to return, and the
-second means that the dual solution is a certificate of primal infeasbility (a 
+second means that the dual solution is a certificate of primal infeasbility (a
 dual unbounded ray).
 
 You can also use [`has_duals`](@ref), which returns `true` if there is a
@@ -258,7 +258,7 @@ And data, a 2-element Array{Float64,1}:
 
 ## Recommended workflow
 
-The recommended workflow for solving a model and querying the solution is 
+The recommended workflow for solving a model and querying the solution is
 something like the following:
 ```jldoctest solutions
 if termination_status(model) == MOI.OPTIMAL
@@ -427,7 +427,7 @@ For instance, this is how you can use this functionality:
 
 ```julia
 using JuMP
-model = Model() # You must use a solver that supports conflict refining/IIS 
+model = Model() # You must use a solver that supports conflict refining/IIS
 # computation, like CPLEX or Gurobi
 @variable(model, x >= 0)
 @constraint(model, c1, x >= 2)
@@ -488,4 +488,63 @@ for i in 2:result_count(model)
         print("Solution $(i) is also optimal!")
     end
 end
+```
+
+## Checking feasibility of solutions
+
+To check the feasibility of a primal solution, use
+[`primal_feasibility_report`](@ref), which takes a `model`, a dictionary mapping
+each variable to a primal solution value (defaults to the last solved solution),
+and a tolerance `atol` (defaults to `0.0`).
+
+The function returns a dictionary which maps the infeasible constraint
+references to the distance between the primal value of the constraint and the
+nearest point in the corresponding set. A point is classed as infeasible if the
+distance is greater than the supplied tolerance `atol`.
+
+```@meta
+# Add a filter here because the output of the dictionary is not ordered, and
+# changes in printing order will cause the doctest to fail.
+```
+```jldoctest feasibility; filter=[r"x.+?\=\> 0.1", r"c1.+? \=\> 0.01"]
+julia> model = Model(GLPK.Optimizer);
+
+julia> @variable(model, x >= 1, Int);
+
+julia> @variable(model, y);
+
+julia> @constraint(model, c1, x + y <= 1.95);
+
+julia> point = Dict(x => 1.9, y => 0.06);
+
+julia> primal_feasibility_report(model, point)
+Dict{Any,Float64} with 2 entries:
+  c1 : x + y ≤ 1.95 => 0.01
+  x integer         => 0.1
+
+julia> primal_feasibility_report(model, point; atol = 0.02)
+Dict{Any,Float64} with 1 entry:
+  x integer => 0.1
+```
+
+If the point is feasible, an empty dictionary is returned:
+```jldoctest feasibility
+julia> primal_feasibility_report(model, Dict(x => 1.0, y => 0.0))
+Dict{Any,Float64} with 0 entries
+```
+
+To use the primal solution from a solve, omit the `point` argument:
+```jldoctest feasibility
+julia> optimize!(model)
+
+julia> primal_feasibility_report(model)
+Dict{Any,Float64} with 0 entries
+```
+
+Pass `skip_mising = true` to skip constraints which contain variables that are
+not in `point`:
+```jldoctest feasibility
+julia> primal_feasibility_report(model, Dict(x => 2.1); skip_missing = true)
+Dict{Any,Float64} with 1 entry:
+  x integer => 0.1
 ```
