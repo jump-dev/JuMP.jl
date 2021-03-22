@@ -39,8 +39,8 @@ function build_lookup(ax)
 end
 
 Base.getindex(x::_AxisLookup{Dict{K,Int}}, key::K) where {K} = x.data[key]
-# Fix ambiguity with fallback method.
-Base.getindex(::_AxisLookup{Dict{<:Any,Int}}, key::Colon) = key
+# Fix ambiguity with fallback method, although this probably never gets called.
+Base.getindex(::_AxisLookup{Dict{Colon,Int}}, key::Colon) = key
 
 function Base.getindex(
     x::_AxisLookup{Dict{K,Int}},
