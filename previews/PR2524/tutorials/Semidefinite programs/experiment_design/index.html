@@ -44,15 +44,15 @@ for i = 1:q
 end
 @objective(aOpt, Min, sum(u))
 optimize!(aOpt)
-objective_value(aOpt)</code></pre><pre class="documenter-example-output">5.041247589148935</pre><pre><code class="language-julia">value.(np)</code></pre><pre class="documenter-example-output">8-element Array{Float64,1}:
- 1.7479360444207457   
- 1.1153135402236287   
- 1.8896080115566673e-6
- 1.6619566409940143   
- 2.9999969400033906   
- 0.8414161134946255   
- 1.3825673956267661   
- 2.25080400472545     </pre><h2 id="E-optimal-design"><a class="docs-heading-anchor" href="#E-optimal-design">E-optimal design</a><a id="E-optimal-design-1"></a><a class="docs-heading-anchor-permalink" href="#E-optimal-design" title="Permalink"></a></h2><p>In <span>$E$</span> -optimal design, we minimize the norm of the error covariance matrix, i.e. the maximum eigenvalue of <span>$E$</span>.</p><p>Since the diameter (twice the longest semi-axis) of the confidence ellipsoid <span>$\mathcal{E}$</span> is proportional to <span>$\|E\|_{2}^{1 / 2}$</span>, minimizing <span>$\|E\|_{2}$</span> can be interpreted geometrically as minimizing the diameter of the confidence ellipsoid.</p><p>E-optimal design can also be interpreted as minimizing the maximum variance of <span>$q^{T} e$</span>, over all <span>$q$</span> with <span>$\|q\|_{2}=1$</span>. The E-optimal experiment design problem in SDP form is:</p><p class="math-container">\[\begin{aligned}
+objective_value(aOpt)</code></pre><pre class="documenter-example-output">5.041247589265131</pre><pre><code class="language-julia">value.(np)</code></pre><pre class="documenter-example-output">8-element Array{Float64,1}:
+ 1.7479360436953184   
+ 1.115313540064675    
+ 1.8899140021302877e-6
+ 1.6619566418994247   
+ 2.999996940001866    
+ 0.8414161117660524   
+ 1.3825673960019045   
+ 2.2508040064854136   </pre><h2 id="E-optimal-design"><a class="docs-heading-anchor" href="#E-optimal-design">E-optimal design</a><a id="E-optimal-design-1"></a><a class="docs-heading-anchor-permalink" href="#E-optimal-design" title="Permalink"></a></h2><p>In <span>$E$</span> -optimal design, we minimize the norm of the error covariance matrix, i.e. the maximum eigenvalue of <span>$E$</span>.</p><p>Since the diameter (twice the longest semi-axis) of the confidence ellipsoid <span>$\mathcal{E}$</span> is proportional to <span>$\|E\|_{2}^{1 / 2}$</span>, minimizing <span>$\|E\|_{2}$</span> can be interpreted geometrically as minimizing the diameter of the confidence ellipsoid.</p><p>E-optimal design can also be interpreted as minimizing the maximum variance of <span>$q^{T} e$</span>, over all <span>$q$</span> with <span>$\|q\|_{2}=1$</span>. The E-optimal experiment design problem in SDP form is:</p><p class="math-container">\[\begin{aligned}
 \min &amp; t \\
 \text{subject to} &amp; \sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T} \succeq t I \\
 &amp; \lambda \succeq 0 \\
@@ -65,15 +65,15 @@ set_silent(eOpt)
 @constraint(eOpt, sum(np) &lt;= n)
 @objective(eOpt, Max, t)
 optimize!(eOpt)
-objective_value(eOpt)</code></pre><pre class="documenter-example-output">0.4489430774609742</pre><pre><code class="language-julia">value.(np)</code></pre><pre class="documenter-example-output">8-element Array{Float64,1}:
-  3.0000033649730002   
-  0.6752098200096417   
- -2.1874856564735654e-6
-  1.0458573723670574   
-  2.9999992875514727   
-  1.7869721672722332   
-  0.30150709122580693  
-  2.190460469380653    </pre><h2 id="D-optimal-design"><a class="docs-heading-anchor" href="#D-optimal-design">D-optimal design</a><a id="D-optimal-design-1"></a><a class="docs-heading-anchor-permalink" href="#D-optimal-design" title="Permalink"></a></h2><p>The most widely used scalarization is called <span>$D$</span> -optimal design, in which we minimize the determinant of the error covariance matrix <span>$E$</span>. This corresponds to designing the experiment to minimize the volume of the resulting confidence ellipsoid (for a fixed confidence level). Ignoring the constant factor <span>$1 / m$</span> in <span>$E$</span>, and taking the logarithm of the objective, we can pose this problem as convex optimization problem:</p><p class="math-container">\[\begin{aligned}
+objective_value(eOpt)</code></pre><pre class="documenter-example-output">0.4489430761395082</pre><pre><code class="language-julia">value.(np)</code></pre><pre class="documenter-example-output">8-element Array{Float64,1}:
+  3.0000033587011705   
+  0.6752098189054311   
+ -2.1880963065487475e-6
+  1.0458573703123515   
+  2.9999992832228677   
+  1.7869721644137855   
+  0.30150709168864204  
+  2.1904604684506817   </pre><h2 id="D-optimal-design"><a class="docs-heading-anchor" href="#D-optimal-design">D-optimal design</a><a id="D-optimal-design-1"></a><a class="docs-heading-anchor-permalink" href="#D-optimal-design" title="Permalink"></a></h2><p>The most widely used scalarization is called <span>$D$</span> -optimal design, in which we minimize the determinant of the error covariance matrix <span>$E$</span>. This corresponds to designing the experiment to minimize the volume of the resulting confidence ellipsoid (for a fixed confidence level). Ignoring the constant factor <span>$1 / m$</span> in <span>$E$</span>, and taking the logarithm of the objective, we can pose this problem as convex optimization problem:</p><p class="math-container">\[\begin{aligned}
 \min &amp; \log \operatorname{det}\left(\sum_{i=1}^{p} \lambda_{i} v_{i} v_{i}^{T}\right)^{-1} \\
 \text{subject to} &amp; \lambda \succeq 0 \\
 &amp; \mathbf{1}^{T} \lambda=1
@@ -89,12 +89,12 @@ E = V * LinearAlgebra.diagm(0 =&gt; np ./ n) * V&#39;
     [t, 1, (E[i, j] for i in 1:q for j in 1:i)...] in MOI.LogDetConeTriangle(q)
 )
 optimize!(dOpt)
-objective_value(dOpt)</code></pre><pre class="documenter-example-output">0.19015174239253715</pre><pre><code class="language-julia">value.(np)</code></pre><pre class="documenter-example-output">8-element Array{Float64,1}:
- -8.79402147330283e-7  
-  2.567393113706525    
-  4.4145237864313906e-7
-  0.2627580211834385   
-  2.9434800539941457   
-  2.3925267125050307   
-  2.8369691609526035   
-  0.9968787186836513   </pre><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Semidefinite programs/experiment_design.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../corr_sdp/">« The correlation problem</a><a class="docs-footer-nextpage" href="../max_cut_sdp/">SDP relaxations: max-cut »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 22 March 2021 19:54">Monday 22 March 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+objective_value(dOpt)</code></pre><pre class="documenter-example-output">0.19014655971032338</pre><pre><code class="language-julia">value.(np)</code></pre><pre class="documenter-example-output">8-element Array{Float64,1}:
+ -1.4105081413253679e-6
+  2.5673993850093133   
+ -8.699434116245897e-7 
+  0.2627510335334194   
+  2.9434767950403455   
+  2.3925302087681466   
+  2.8369741480581023   
+  0.9968841960241067   </pre><p><a href="https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/Semidefinite programs/experiment_design.jl">View this file on Github</a>.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../corr_sdp/">« The correlation problem</a><a class="docs-footer-nextpage" href="../max_cut_sdp/">SDP relaxations: max-cut »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 22 March 2021 20:35">Monday 22 March 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
