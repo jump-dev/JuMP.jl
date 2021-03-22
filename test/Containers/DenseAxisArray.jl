@@ -220,11 +220,7 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test (@inferred A[:a, :b]) == 6.0
         @test (@inferred A[:a, :b, 1]) == 6.0
         @test (@inferred A[:b, :a]) == 7.0
-        if VERSION >= v"1.6.0-DEV"
-            @test (@inferred A[[:a, :b], [:a, :b]]) == A
-        else
-            @test_broken (@inferred A[[:a, :b], [:a, :b]]) == A
-        end
+        @test (@inferred A[[:a, :b], [:a, :b]]) == A
         @test A[[:a, :b], [:a, :b]] == A
         @test A[:a, [:a, :b]] == DenseAxisArray([5.0, 6.0], [:a, :b])
         @test A[[:a, :b], :b] == DenseAxisArray([6.0, 8.0], [:a, :b])
@@ -237,11 +233,7 @@ And data, a 0-dimensional $(Array{Int,0}):
 
         @test (@inferred B[1, :b]) == 6.0
         @test (@inferred B[2, :a]) == 7.0
-        if VERSION >= v"1.6.0-DEV"
-            @test (@inferred B[1:2, [:a, :b]]) == B
-        else
-            @test_broken (@inferred B[1:2, [:a, :b]]) == B
-        end
+        @test (@inferred B[1:2, [:a, :b]]) == B
         @test B[1:2, [:a, :b]] == B
         @test B[1, [:a, :b]] == DenseAxisArray([5.0, 6.0], [:a, :b])
         @test B[1:2, :b] == DenseAxisArray([6.0, 8.0], 1:2)
@@ -253,11 +245,7 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test !isassigned(C, 4, :b)
         @test (@inferred C[2, :b]) == 6.0
         @test (@inferred C[3, :a]) == 7.0
-        if VERSION >= v"1.6.0-DEV"
-            @test (@inferred C[2:3, [:a, :b]]) == C
-        else
-            @test_broken (@inferred C[2:3, [:a, :b]]) == C
-        end
+        @test (@inferred C[2:3, [:a, :b]]) == C
         @test C[2:3, [:a, :b]] == C
         @test C[2, [:a, :b]] == DenseAxisArray([5.0, 6.0], [:a, :b])
         @test C[2:3, :b] == DenseAxisArray([6.0, 8.0], 2:3)

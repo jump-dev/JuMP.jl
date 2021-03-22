@@ -240,15 +240,23 @@ end
 _is_range(::Any) = false
 _is_range(::Union{Vector{Int},Colon}) = true
 
+# An optimization to ensure the return-type of `_new_axes` is type-stable.
+# The length of `axes` and `indices` will always be identical due to the earlier
+# call to `to_index`.
+_new_axes(::NTuple{0}, ::NTuple{0}) = ()
+function _new_axes(axes::Tuple, indices::Tuple)
+    index, i_rest = first(indices), Base.tail(indices)
+    axis, a_rest = first(axes), Base.tail(axes)
+    remainder = _new_axes(a_rest, i_rest)
+    return _is_range(index) ? tuple(axis[index], remainder...) : remainder
+end
+
 function Base.getindex(A::DenseAxisArray{T,N}, idx...) where {T,N}
     new_indices = Base.to_index(A, idx)
     if !any(_is_range, new_indices)
         return A.data[new_indices...]::T
     end
-    new_axes = (
-        axis[index] for
-        (axis, index) in zip(A.axes, new_indices) if _is_range(index)
-    )
+    new_axes = _new_axes(A.axes, new_indices)
     return DenseAxisArray(A.data[new_indices...], new_axes...)
 end
 
