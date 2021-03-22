@@ -221,8 +221,10 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test (@inferred A[:a, :b, 1]) == 6.0
         @test (@inferred A[:b, :a]) == 7.0
         @test (@inferred A[[:a, :b], [:a, :b]]) == A
-        @test (@inferred A[:a, [:a, :b]]) == DenseAxisArray([5.0, 6.0], [:a, :b])
-        @test (@inferred A[[:a, :b], :b]) == DenseAxisArray([6.0, 8.0], [:a, :b])
+        @test (@inferred A[:a, [:a, :b]]) ==
+              DenseAxisArray([5.0, 6.0], [:a, :b])
+        @test (@inferred A[[:a, :b], :b]) ==
+              DenseAxisArray([6.0, 8.0], [:a, :b])
 
         B = DenseAxisArray([5.0 6.0; 7.0 8.0], Base.OneTo(2), [:a, :b])
         @test B.lookup[1] isa Containers._AxisLookup{Base.OneTo{Int}}

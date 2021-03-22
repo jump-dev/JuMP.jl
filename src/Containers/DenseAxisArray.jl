@@ -225,37 +225,34 @@ end
 
 Base.eachindex(A::DenseAxisArray) = CartesianIndices(size(A.data))
 
+# Use recursion over tuples to ensure the return-type of functions like
+# `Base.to_index` are type-stable.
+_getindex_recurse(::NTuple{0}, ::Tuple, ::Function) = ()
+function _getindex_recurse(data::Tuple, keys::Tuple, condition::Function)
+    d, d_rest = first(data), Base.tail(data)
+    k, k_rest = first(keys), Base.tail(keys)
+    remainder = _getindex_recurse(d_rest, k_rest, condition)
+    return condition(k) ? tuple(d[k], remainder...) : remainder
+end
+
 function Base.to_index(A::DenseAxisArray{T,N}, idx) where {T,N}
     if length(idx) < N
         throw(BoundsError(A, idx))
     elseif any(i -> !isone(idx[i]), (N+1):length(idx))
         throw(KeyError(idx))
     end
-    return ntuple(Val(N)) do k
-        return getindex(A.lookup[k], idx[k])
-    end
+    return _getindex_recurse(A.lookup, idx, x -> true)
 end
 
 _is_range(::Any) = false
 _is_range(::Union{Vector{Int},Colon}) = true
-
-# An optimization to ensure the return-type of `_new_axes` is type-stable.
-# The length of `axes` and `indices` will always be identical due to the earlier
-# call to `to_index`.
-_new_axes(::NTuple{0}, ::NTuple{0}) = ()
-function _new_axes(axes::Tuple, indices::Tuple)
-    index, i_rest = first(indices), Base.tail(indices)
-    axis, a_rest = first(axes), Base.tail(axes)
-    remainder = _new_axes(a_rest, i_rest)
-    return _is_range(index) ? tuple(axis[index], remainder...) : remainder
-end
 
 function Base.getindex(A::DenseAxisArray{T,N}, idx...) where {T,N}
     new_indices = Base.to_index(A, idx)
     if !any(_is_range, new_indices)
         return A.data[new_indices...]::T
     end
-    new_axes = _new_axes(A.axes, new_indices)
+    new_axes = _getindex_recurse(A.axes, new_indices, _is_range)
     return DenseAxisArray(A.data[new_indices...], new_axes...)
 end
 
