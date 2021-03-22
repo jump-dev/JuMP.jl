@@ -13,6 +13,9 @@ struct _AxisLookup{D}
     data::D
 end
 
+# Default fallback.
+Base.getindex(::_AxisLookup, key) = throw(KeyError(key))
+
 struct DenseAxisArray{T,N,Ax,L<:NTuple{N,_AxisLookup}} <: AbstractArray{T,N}
     data::Array{T,N}
     axes::Ax
@@ -36,6 +39,13 @@ end
 
 Base.getindex(x::_AxisLookup{Dict{K,Int}}, key::K) where {K} = x.data[key]
 
+function Base.getindex(
+    x::_AxisLookup{Dict{K,Int}},
+    keys::AbstractVector{<:K},
+) where {K}
+    return [x[key] for key in keys]
+end
+
 function Base.get(x::_AxisLookup{Dict{K,Int}}, key::K, default) where {K}
     return get(x.data, key, default)
 end
@@ -49,6 +59,13 @@ function Base.getindex(ax::_AxisLookup{<:Base.OneTo}, k::Integer)
         throw(KeyError(k))
     end
     return k
+end
+
+function Base.getindex(
+    x::_AxisLookup{<:Base.OneTo},
+    keys::AbstractVector{<:Integer},
+)
+    return [x[key] for key in keys]
 end
 
 function Base.get(ax::_AxisLookup{<:Base.OneTo}, k::Integer, default)
@@ -73,6 +90,13 @@ function Base.getindex(
         throw(KeyError(key))
     end
     return i
+end
+
+function Base.getindex(
+    x::_AxisLookup{Tuple{T,T}},
+    keys::AbstractVector{<:Integer},
+) where {T<:Integer}
+    return [x[key] for key in keys]
 end
 
 function Base.get(
@@ -235,21 +259,28 @@ to_index(A::DenseAxisArray, idx...) = _to_index_tuple(idx, A.lookup)
 # Doing `Colon() in idx` is relatively slow because it involves
 # a non-unrolled loop through the `idx` tuple which may be of
 # varying element type. Another lisp-y recursion trick fixes that
-has_colon(idx::Tuple{}) = false
-has_colon(idx::Tuple) = isa(first(idx), Colon) || has_colon(Base.tail(idx))
+_has_range(::Any) = false
+_has_range(::Colon) = true
+_has_range(::Vector{Int}) = true
+_has_range(idx::Tuple{}) = false
+_has_range(idx::Tuple) = _has_range(first(idx)) || _has_range(Base.tail(idx))
 
-# TODO: better error (or just handle correctly) when user tries to index with a range like a:b
-# The only kind of slicing we support is dropping a dimension with colons
 function Base.getindex(A::DenseAxisArray{T,N}, idx...) where {T,N}
-    length(idx) < N && throw(BoundsError(A, idx))
-    if has_colon(idx)
-        DenseAxisArray(
-            A.data[to_index(A, idx...)...],
-            (ax for (i, ax) in enumerate(A.axes) if idx[i] == Colon())...,
-        )
-    else
-        return A.data[to_index(A, idx...)...]
+    if length(idx) < N
+        throw(BoundsError(A, idx))
     end
+    new_indices = to_index(A, idx...)
+    new_data = A.data[new_indices...]
+    if !_has_range(new_indices)
+        return new_data
+    end
+    return DenseAxisArray(
+        new_data,
+        (
+            A.axes[i][index] for
+            (i, index) in enumerate(new_indices) if _has_range(new_indices[i])
+        )...,
+    )
 end
 
 Base.getindex(A::DenseAxisArray, idx::CartesianIndex) = A.data[idx]
