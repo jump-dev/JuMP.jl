@@ -219,7 +219,7 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test a isa Vector{Pair{Symbol,Int}}
         @test_throws KeyError A[(:a, 3), 1]
         @test_throws KeyError A[:a, 3]
-        @test_throws KeyError A[:b => 1, 2]
+        @test_throws KeyError A[:b=>1, 2]
     end
     @testset "AxisLookup" begin
         A = DenseAxisArray([5.0 6.0; 7.0 8.0], [:a, :b], [:a, :b])
