@@ -9,6 +9,70 @@ include(joinpath(@__DIR__, "utilities.jl"))
     include(joinpath(@__DIR__, "JuMPExtension.jl"))
 end
 
+function test_univariate_error()
+    model = Model()
+    @variable(model, x >= 0)
+    @test_throws ErrorException @NLobjective(model, Min, g(x))
+end
+
+function test_multivariate_error()
+    model = Model()
+    @variable(model, x >= 0)
+    @test_throws ErrorException @NLobjective(model, Min, g(x, x))
+end
+
+function test_univariate()
+    model = Model()
+    @variable(model, x >= 0)
+    g(x) = x^2
+    @NLobjective(model, Min, g(x))
+
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 4.0
+end
+
+function test_multivariate()
+    model = Model()
+    @variable(model, x >= 0)
+    g(x, y) = x^2 + y^2
+    @NLobjective(model, Min, g(x, x))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 8.0
+end
+
+function test_multivariate_max()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLobjective(model, Min, max(x, 2 * x))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    # TODO(odow): We can't register some functions like `max` because they are
+    # treated differently.
+    @test_broken MOI.eval_objective(d, x) == [4.0]
+end
+
+@testset "Auto-register-univariate" begin
+    test_univariate()
+end
+
+@testset "Auto-register-multivariate" begin
+    test_multivariate()
+    test_multivariate_max()
+end
+
+@testset "Auto-register-univariate-error" begin
+    test_univariate_error()
+end
+
+@testset "Auto-register-multivariate-error" begin
+    test_multivariate_error()
+end
+
 @testset "Nonlinear" begin
     import JuMP: _NonlinearExprData
 

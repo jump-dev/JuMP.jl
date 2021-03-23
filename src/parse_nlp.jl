@@ -97,7 +97,17 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                 errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
                 lookupcode = quote
                     if $(esc(m)).nlp_data === nothing
-                        error($errorstring)
+                        try
+                            register(
+                                $(esc(m)),
+                                $opname,
+                                1,
+                                $(esc(x.args[1]));
+                                autodiff = true,
+                            )
+                        catch
+                            error($errorstring)
+                        end
                     end
                     if !haskey(
                         $(esc(
@@ -113,7 +123,17 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                         )
                             error($errorstring2)
                         else
-                            error($errorstring)
+                            try
+                                register(
+                                    $(esc(m)),
+                                    $opname,
+                                    1,
+                                    $(esc(x.args[1]));
+                                    autodiff = true,
+                                )
+                            catch
+                                error($errorstring)
+                            end
                         end
                     end
                     operatorid =
@@ -166,9 +186,20 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                 opname = quot(x.args[1])
                 errorstring = "Unrecognized function \"$(x.args[1])\" used in nonlinear expression."
                 errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
+                N = length(x.args) - 1
                 lookupcode = quote
                     if $(esc(m)).nlp_data === nothing
-                        error($errorstring)
+                        try
+                            register(
+                                $(esc(m)),
+                                $opname,
+                                $N,
+                                $(esc(x.args[1]));
+                                autodiff = true,
+                            )
+                        catch
+                            error($errorstring)
+                        end
                     end
                     if !haskey(
                         $(esc(
@@ -184,7 +215,17 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                         )
                             error($errorstring2)
                         else
-                            error($errorstring)
+                            try
+                                register(
+                                    $(esc(m)),
+                                    $opname,
+                                    $N,
+                                    $(esc(x.args[1]));
+                                    autodiff = true,
+                                )
+                            catch
+                                error($errorstring)
+                            end
                         end
                     end
                     operatorid =
