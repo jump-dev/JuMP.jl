@@ -15,6 +15,13 @@ function test_univariate_error()
     @test_throws ErrorException @NLobjective(model, Min, g(x))
 end
 
+function test_univariate_error_existing()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    @test_throws ErrorException @NLobjective(model, Min, g(ex))
+end
+
 function test_univariate()
     model = Model()
     @variable(model, x >= 0)
@@ -60,6 +67,13 @@ function test_multivariate_error()
     @test_throws ErrorException @NLobjective(model, Min, g(x, x))
 end
 
+function test_multivariate_error_existing()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    @test_throws ErrorException @NLobjective(model, Min, g(ex, x))
+end
+
 function test_multivariate()
     model = Model()
     @variable(model, x >= 0)
@@ -100,6 +114,7 @@ end
 
 @testset "Auto-register-univariate" begin
     test_univariate_error()
+    test_univariate_error_existing()
     test_univariate()
     test_univariate_existing_nlpdata()
     test_univariate_redefine()
@@ -107,6 +122,7 @@ end
 
 @testset "Auto-register-multivariate" begin
     test_multivariate_error()
+    test_multivariate_error_existing()
     test_multivariate()
     test_multivariate_existing_nlpdata()
     test_multivariate_redefine()
