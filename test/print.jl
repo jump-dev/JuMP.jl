@@ -37,10 +37,18 @@ function _io_test_print(::Type{IJuliaMode}, obj, exp_str)
 end
 function _io_test_print(::Type{REPLMode}, obj::AbstractModel, exp_str)
     @test sprint(print, obj) == exp_str
+    @test JuMP.model_string(JuMP.REPLMode, obj) == exp_str
+    return
 end
 function _io_test_print(::Type{IJuliaMode}, obj::AbstractModel, exp_str)
     model = JuMP.latex_formulation(obj)
-    @test sprint(io -> print(io, model)) == string("\$\$ ", exp_str, " \$\$")
+    @test sprint(io -> show(io, MIME("text/latex"), model)) ==
+          string("\$\$ ", exp_str, " \$\$")
+    @test JuMP.model_string(JuMP.IJuliaMode, obj) ==
+          string("\$\$ ", exp_str, " \$\$")
+    # TODO(odow): I don't know how to test an IJulia display without adding
+    # IJulia as a test-dependency, so just print and check it doesn't error.
+    print(model)
     return
 end
 
