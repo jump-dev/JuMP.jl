@@ -187,7 +187,18 @@ function forward_eval(
                     r += 1
                 end
             else
-                error("Unsupported operation $(operators[op])")
+                f = operators[op]
+                error("""
+                Unsupported function `$(f)`.
+
+                Register it as a user-defined function before building the
+                model. For example:
+                ```julia
+                model = Model()
+                register(model, :$(f), $(n_children), $(f), autodiff=true)
+                # ... variables and constraints ...
+                ```
+                """)
             end
         elseif nod.nodetype == CALLUNIVAR # univariate function
             op = nod.index

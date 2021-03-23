@@ -866,4 +866,14 @@ end
         y = deg2rad(x)
         @test JuMP._Derivatives.eval_univariate_2nd_deriv(id, x, y) == 0.0
     end
+
+    @testset "Unsupported function max" begin
+        model = Model()
+        @variable(model, x >= 0)
+        @NLobjective(model, Min, max(x, 2 * x))
+        d = JuMP.NLPEvaluator(model)
+        MOI.initialize(d, Symbol[])
+        x = [2.0]
+        @test_throws ErrorException MOI.eval_objective(d, x)
+    end
 end
