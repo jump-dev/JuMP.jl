@@ -12,6 +12,7 @@
 struct _AxisLookup{D}
     data::D
 end
+Base.:(==)(x::_AxisLookup{D}, y::_AxisLookup{D}) where {D} = x.data == y.data
 
 # Default fallbacks.
 Base.getindex(::_AxisLookup, key) = throw(KeyError(key))
@@ -327,52 +328,44 @@ end
 ################
 
 # This implementation follows the instructions at
-# https://docs.julialang.org/en/latest/manual/interfaces/#man-interfaces-broadcasting-1
-# for implementing broadcast. We eagerly evaluate expressions involving
-# DenseAxisArrays, overriding operation fusion.  For now, nested (fused)
-# broadcasts like f.(A .+ 1) don't work, and we don't support broadcasts
-# where multiple DenseAxisArrays appear. This is a stopgap solution to get tests
-# passing on Julia 0.7 and leaves lots of room for improvement.
-struct DenseAxisArrayBroadcastStyle <: Broadcast.BroadcastStyle end
-# Scalars can be used with DenseAxisArray in broadcast
+# hhttps://docs.julialang.org/en/v1/manual/interfaces/#man-interfaces-broadcasting
+# for implementing broadcast.
+
+struct _DenseAxisArrayBroadcastStyle <: Broadcast.BroadcastStyle end
+
+Base.BroadcastStyle(::Type{<:DenseAxisArray}) = _DenseAxisArrayBroadcastStyle()
+
 function Base.BroadcastStyle(
-    ::DenseAxisArrayBroadcastStyle,
+    ::_DenseAxisArrayBroadcastStyle,
     ::Base.Broadcast.DefaultArrayStyle{0},
 )
-    return DenseAxisArrayBroadcastStyle()
-end
-Base.BroadcastStyle(::Type{<:DenseAxisArray}) = DenseAxisArrayBroadcastStyle()
-function Base.Broadcast.broadcasted(::DenseAxisArrayBroadcastStyle, f, args...)
-    array = find_jump_array(args)
-    if sum(arg isa DenseAxisArray for arg in args) > 1
-        error(
-            "Broadcast operations with multiple DenseAxisArrays are not yet " *
-            "supported.",
-        )
-    end
-    result_data = broadcast(f, unpack_jump_array(args)...)
-    return DenseAxisArray(result_data, array.axes, array.lookup)
-end
-function find_jump_array(args::Tuple)
-    return find_jump_array(args[1], Base.tail(args))
-end
-find_jump_array(array::DenseAxisArray, rest) = array
-find_jump_array(::Any, rest) = find_jump_array(rest)
-function find_jump_array(broadcasted::Broadcast.Broadcasted)
-    return error(
-        "Unsupported nested broadcast operation. DenseAxisArray supports " *
-        "only simple broadcast operations like f.(A) but not f.(A .+ 1).",
-    )
+    return _DenseAxisArrayBroadcastStyle()
 end
 
-function unpack_jump_array(args::Tuple)
-    return unpack_jump_array(args[1], Base.tail(args))
+function _broadcast_axes_inner(arg::DenseAxisArray, axes_lookup)
+    if axes_lookup !== nothing && axes(arg) != axes_lookup[1]
+        error("Unable to broadcast over DenseAxisArrays with different axes.")
+    end
+    return (arg.axes, arg.lookup)
 end
-unpack_jump_array(args::Tuple{}) = ()
-function unpack_jump_array(array::DenseAxisArray, rest)
-    return (array.data, unpack_jump_array(rest)...)
+_broadcast_axes_inner(::Any, axes_lookup) = axes_lookup
+
+function _broadcast_axes(args::Tuple, axes = nothing)
+    new_axes = _broadcast_axes_inner(first(args), axes)
+    return _broadcast_axes(Base.tail(args), new_axes)
 end
-unpack_jump_array(other::Any, rest) = (other, unpack_jump_array(rest)...)
+_broadcast_axes(::NTuple{0}, axes) = axes
+
+_broadcast_args(x::Tuple) = _broadcast_args(first(x), Base.tail(x))
+_broadcast_args(x::Any, tail) = (x, _broadcast_args(tail)...)
+_broadcast_args(x::DenseAxisArray, tail) = (x.data, _broadcast_args(tail)...)
+_broadcast_args(::Tuple{}) = ()
+
+function Base.Broadcast.broadcasted(::_DenseAxisArrayBroadcastStyle, f, args...)
+    axes_lookup = _broadcast_axes(args)
+    new_args = _broadcast_args(args)
+    return DenseAxisArray(broadcast(f, new_args...), axes_lookup...)
+end
 
 ########
 # Show #
