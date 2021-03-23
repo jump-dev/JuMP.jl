@@ -15,12 +15,6 @@ function test_univariate_error()
     @test_throws ErrorException @NLobjective(model, Min, g(x))
 end
 
-function test_multivariate_error()
-    model = Model()
-    @variable(model, x >= 0)
-    @test_throws ErrorException @NLobjective(model, Min, g(x, x))
-end
-
 function test_univariate()
     model = Model()
     @variable(model, x >= 0)
@@ -31,6 +25,39 @@ function test_univariate()
     MOI.initialize(d, Symbol[])
     x = [2.0]
     @test MOI.eval_objective(d, x) == 4.0
+end
+
+function test_univariate_existing_nlpdata()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    g(x) = x^2
+    @NLobjective(model, Min, g(ex))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 16.0
+end
+
+function test_univariate_redefine()
+    model = Model()
+    @variable(model, x >= 0)
+    g = (x) -> x^2
+    @NLobjective(model, Min, g(x))
+
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 4.0
+
+    g = (x) -> 2x^2
+    @test MOI.eval_objective(d, x) == 4.0
+end
+
+function test_multivariate_error()
+    model = Model()
+    @variable(model, x >= 0)
+    @test_throws ErrorException @NLobjective(model, Min, g(x, x))
 end
 
 function test_multivariate()
@@ -44,33 +71,45 @@ function test_multivariate()
     @test MOI.eval_objective(d, x) == 8.0
 end
 
-function test_multivariate_max()
+function test_multivariate_existing_nlpdata()
     model = Model()
     @variable(model, x >= 0)
-    @NLobjective(model, Min, max(x, 2 * x))
+    @NLexpression(model, ex, x^2)
+    g(x, y) = x^2 + y^2
+    @NLobjective(model, Min, g(ex, x))
     d = JuMP.NLPEvaluator(model)
     MOI.initialize(d, Symbol[])
     x = [2.0]
-    # TODO(odow): We can't register some functions like `max` because they are
-    # treated differently.
-    @test_broken MOI.eval_objective(d, x) == [4.0]
+    @test MOI.eval_objective(d, x) == 20.0
+end
+
+function test_multivariate_redefine()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    g = (x, y) -> x^2 + y^2
+    @NLobjective(model, Min, g(ex, x))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 20.0
+
+    g = (x, y) -> x^2 + y
+    @test MOI.eval_objective(d, x) == 20.0
 end
 
 @testset "Auto-register-univariate" begin
+    test_univariate_error()
     test_univariate()
+    test_univariate_existing_nlpdata()
+    test_univariate_redefine()
 end
 
 @testset "Auto-register-multivariate" begin
-    test_multivariate()
-    test_multivariate_max()
-end
-
-@testset "Auto-register-univariate-error" begin
-    test_univariate_error()
-end
-
-@testset "Auto-register-multivariate-error" begin
     test_multivariate_error()
+    test_multivariate()
+    test_multivariate_existing_nlpdata()
+    test_multivariate_redefine()
 end
 
 @testset "Nonlinear" begin
