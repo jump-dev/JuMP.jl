@@ -208,6 +208,19 @@ And data, a 0-dimensional $(Array{Int,0}):
             @test k[2] == Containers.DenseAxisArrayKey((2, :b))
         end
     end
+    @testset "Iterable axis" begin
+        A = DenseAxisArray(rand(3, 2), Dict(:a => 1, :b => 2, :c => 3), 1:2)
+        a, b = axes(A)
+        @test b == 1:2
+        @test (:a => 1) in a
+        @test (:b => 2) in a
+        @test (:c => 3) in a
+        @test length(a) == 3
+        @test a isa Vector{Pair{Symbol,Int}}
+        @test_throws KeyError A[(:a, 3), 1]
+        @test_throws KeyError A[:a, 3]
+        @test_throws KeyError A[:b => 1, 2]
+    end
     @testset "AxisLookup" begin
         A = DenseAxisArray([5.0 6.0; 7.0 8.0], [:a, :b], [:a, :b])
         @test A.lookup[1] isa Containers._AxisLookup{Dict{Symbol,Int}}

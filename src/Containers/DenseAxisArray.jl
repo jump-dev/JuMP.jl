@@ -112,6 +112,9 @@ function Base.get(
     return i
 end
 
+_collect(x::AbstractVector) = x
+_collect(x) = collect(x)
+
 """
     DenseAxisArray(data::Array{T, N}, axes...) where {T, N}
 
@@ -133,9 +136,10 @@ julia> array[:b, 3]
 4
 ```
 """
-function DenseAxisArray(data::Array{T,N}, axs...) where {T,N}
-    @assert length(axs) == N
-    return DenseAxisArray(data, axs, build_lookup.(axs))
+function DenseAxisArray(data::Array{T,N}, axes...) where {T,N}
+    @assert length(axes) == N
+    new_axes = _collect.(axes)
+    return DenseAxisArray(data, new_axes, build_lookup.(new_axes))
 end
 
 """
