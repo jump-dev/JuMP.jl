@@ -93,7 +93,19 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                 )
             else
                 opname = quot(x.args[1])
-                errorstring = "Unrecognized function \"$(x.args[1])\" used in nonlinear expression."
+                f = x.args[1]
+                errorstring = """
+                Unrecognized function \"$(f)\" used in nonlinear expression.
+
+                If the function exists, but is not within the scope of this call,
+                you should register it as a user-defined function before building
+                the model. For example:
+                ```julia
+                model = Model()
+                register(model, :$(f), 1, $(f), autodiff=true)
+                # ... variables and constraints ...
+                ```
+                """
                 errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
                 lookupcode = quote
                     if $(esc(m)).nlp_data === nothing
@@ -184,9 +196,21 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                 )
             else # could be user defined
                 opname = quot(x.args[1])
-                errorstring = "Unrecognized function \"$(x.args[1])\" used in nonlinear expression."
-                errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
                 N = length(x.args) - 1
+                f = x.args[1]
+                errorstring = """
+                Unrecognized function \"$(f)\" used in nonlinear expression.
+
+                If the function exists, but is not within the scope of this call,
+                you should register it as a user-defined function before building
+                the model. For example:
+                ```julia
+                model = Model()
+                register(model, :$(f), $(N), $(f), autodiff=true)
+                # ... variables and constraints ...
+                ```
+                """
+                errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
                 lookupcode = quote
                     if $(esc(m)).nlp_data === nothing
                         try

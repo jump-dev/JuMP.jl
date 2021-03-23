@@ -110,7 +110,7 @@ julia> @NLparameter(model, p[i = 1:2] == i)
 ```
 
 !!! info
-    A parameter is not an optimization variable. It must be fixed to a value with 
+    A parameter is not an optimization variable. It must be fixed to a value with
     `==`. If you want a parameter that is `<=` or `>=`, create a variable instead
     using [`@variable`](@ref).
 
@@ -268,6 +268,13 @@ In addition to this list of functions, it is possible to register custom
     User-defined functions can be used anywhere in [`@NLobjective`](@ref),
     [`@NLconstraint`](@ref), and [`@NLexpression`](@ref).
 
+!!! tip
+    JuMP will attempt to automatically register functions it detects in your
+    nonlinear expressions, which means that in most cases, manually registering
+    a function is not needed. Two exceptions are if you want to provide custom
+    derivatives, or if the function is not available in the scope of the
+    nonlinear expression.
+
 ### Automatic differentiation
 
 JuMP does not support black-box optimization, so all user-defined functions must
@@ -407,7 +414,7 @@ Hessian information is not supported for multivariate functions.
 ### Register a function, gradient, and hessian
 
 !!! warning
-    The ability to explicitly register a hessian is only available for 
+    The ability to explicitly register a hessian is only available for
     univariate functions.
 
 Instead of automatically differentiating the hessian, you can instead pass a
