@@ -48,7 +48,7 @@ function _io_test_print(::Type{IJuliaMode}, obj::AbstractModel, exp_str)
           string("\$\$ ", exp_str, " \$\$")
     # TODO(odow): I don't know how to test an IJulia display without adding
     # IJulia as a test-dependency, so just print and check it doesn't error.
-    print(model)
+    print(obj)
     return
 end
 
