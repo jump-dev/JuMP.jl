@@ -1,6 +1,34 @@
 JuMP release notes
 ==================
 
+Version 0.21.7 (In development)
+---------------------------------
+
+A summary of changes are as follows:
+
+- New features:
+  * Added `primal_feasibility_report`, which can be used to check whether a 
+    primal point statisfies primal feasibility.
+  * Added `coefficient`, which returns the coefficient associtated with a 
+    variable in affine and quadratic expressions.
+  * Added `copy_conflict`, which returns the IIS of an infeasible model.
+  * Added `solution_summary`, which returns (and prints) a struct containing a
+    summary of the solution.
+  * Allow `AbstractVector` in vector constraints instead of just `Vector`.
+- Bug fixes:
+  * Fixed bug in `rad2deg` and `deg2rad` in nonlinear expressions.
+  * Fixed a MethodError bug in `Containers` when forcing container type.
+  * Allow partial slicing of a DenseAxisArray, resolving an issue from 2014!
+  * Fixed a bug printing variable names in IJulia.
+- Documentation, performance improvements, and general maintenance:
+  * Tutorials are now part of the documentation, and more refactoring has taken
+    place.
+  * Added JuliaFormatter added as a code formatter.
+  * Added some precompilation statements to reduce initial latency.
+  * Various improvements to error messages to make them more helpful.
+  * Improved performance of `value(::NonlinearExpression)`.
+  * Improved performance of `fix(::VariableRef)`.
+
 Version 0.21.6 (January 29, 2021)
 ---------------------------------
 
