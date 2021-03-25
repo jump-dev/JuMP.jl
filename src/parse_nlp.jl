@@ -17,6 +17,21 @@ function _error_curly(x)
     )
 end
 
+function _warn_auto_register(opname, N)
+    @warn("""Function $(opname) automatically registered with $N arguments.
+
+    Calling the function with a different number of arguments will result in an
+    error.
+
+    While you can safely ignore this warning, we recommend that you manually
+    register the function as follows:
+    ```Julia
+    model = Model()
+    register(model, :$opname, $N, $opname; autodiff = true)
+    ```""")
+    return
+end
+
 # generates code which converts an expression into a NodeData array (tape)
 # parent is the index of the parent expression
 # values is the name of the list of constants which appear in the expression
@@ -117,6 +132,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                                 $(esc(x.args[1]));
                                 autodiff = true,
                             )
+                            _warn_auto_register($opname, 1)
                         catch
                             error($errorstring)
                         end
@@ -143,6 +159,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                                     $(esc(x.args[1]));
                                     autodiff = true,
                                 )
+                                _warn_auto_register($opname, 1)
                             catch
                                 error($errorstring)
                             end
@@ -221,6 +238,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                                 $(esc(x.args[1]));
                                 autodiff = true,
                             )
+                            _warn_auto_register($opname, $N)
                         catch
                             error($errorstring)
                         end
@@ -247,6 +265,7 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                                     $(esc(x.args[1]));
                                     autodiff = true,
                                 )
+                                _warn_auto_register($opname, $N)
                             catch
                                 error($errorstring)
                             end

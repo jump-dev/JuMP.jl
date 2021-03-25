@@ -34,6 +34,30 @@ function test_univariate()
     @test MOI.eval_objective(d, x) == 4.0
 end
 
+function test_univariate_register_twice()
+    model = Model()
+    @variable(model, x >= 0)
+    g(x) = x^2
+    @NLobjective(model, Min, g(x))
+    @NLconstraint(model, g(x) <= 1)
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    y = [NaN]
+    MOI.eval_constraint(d, y, x)
+    @test y == [3.0]
+end
+
+
+function test_univariate_register_twice_error()
+    model = Model()
+    @variable(model, x >= 0)
+    g(x) = x^2
+    g(x, y) = x^2 + x^2
+    @NLobjective(model, Min, g(x))
+    @test_throws ErrorException @NLconstraint(model, g(x, x) <= 1)
+end
+
 function test_univariate_existing_nlpdata()
     model = Model()
     @variable(model, x >= 0)
@@ -118,6 +142,8 @@ end
     test_univariate()
     test_univariate_existing_nlpdata()
     test_univariate_redefine()
+    test_univariate_register_twice()
+    test_univariate_register_twice_error()
 end
 
 @testset "Auto-register-multivariate" begin
