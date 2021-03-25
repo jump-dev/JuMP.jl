@@ -48,9 +48,11 @@ function Base.getindex(map::ReferenceMap, expr::GenericQuadExpr)
     return GenericQuadExpr(aff, terms)
 end
 
+Base.getindex(map::ReferenceMap, val::AbstractArray) = getindex.(map, val)
+
 Base.broadcastable(reference_map::ReferenceMap) = Ref(reference_map)
 
-# Return a Boolean if the filtering function (1st argument) indicates that the whole value should 
+# Return a Boolean if the filtering function (1st argument) indicates that the whole value should
 # be copied over.
 _should_copy_complete_object(_, _) = true
 function _should_copy_complete_object(
@@ -76,8 +78,8 @@ has also been implemented, it is similar to `copy_model` but does not return
 the reference map.
 
 If the `filter_constraints` argument is given, only the constraints for which
-this function returns `true` will be copied. This function is given a 
-constraint reference as argument. 
+this function returns `true` will be copied. This function is given a
+constraint reference as argument.
 
 ## Note
 
@@ -116,8 +118,8 @@ function copy_model(
     caching_mode = backend(model).mode
     new_model = Model(caching_mode = caching_mode)
 
-    # At JuMP's level, filter_constraints should work with JuMP.ConstraintRef, 
-    # whereas MOI.copy_to's filter_constraints works with MOI.ConstraintIndex. 
+    # At JuMP's level, filter_constraints should work with JuMP.ConstraintRef,
+    # whereas MOI.copy_to's filter_constraints works with MOI.ConstraintIndex.
     function moi_filter_constraints(cref::MOI.ConstraintIndex)
         jump_cref = constraint_ref_with_index(model, cref)
         return filter_constraints(jump_cref)
@@ -148,7 +150,20 @@ function copy_model(
 
     for (name, value) in object_dictionary(model)
         if _should_copy_complete_object(filter_constraints, value)
-            new_model[name] = getindex.(reference_map, value)
+            try
+                new_model[name] = getindex(reference_map, value)
+            catch err
+                if err isa MethodError
+                    @warn(
+                        "Skipping the copy of object `:$(name)` due to " *
+                        "unsupported type $(typeof(value)). Please open a " *
+                        "GitHub issue at https://github.com/jump-dev/JuMP.jl " *
+                        "with this message.",
+                    )
+                else
+                    rethrow(err)
+                end
+            end
         end
     end
 
@@ -197,12 +212,12 @@ end
 """
     copy_conflict(model::Model)
 
-Return a copy of the current conflict for the model `model` and a 
-[`ReferenceMap`](@ref) that can be used to obtain the variable and constraint 
-reference of the new model corresponding to a given `model`'s reference. 
+Return a copy of the current conflict for the model `model` and a
+[`ReferenceMap`](@ref) that can be used to obtain the variable and constraint
+reference of the new model corresponding to a given `model`'s reference.
 
-This is a convenience function that provides a filtering function for 
-[`copy_model`](@ref). 
+This is a convenience function that provides a filtering function for
+[`copy_model`](@ref).
 
 ## Note
 
@@ -215,12 +230,12 @@ will have to be provided to the new model in the [`optimize!`](@ref) call.
 ## Examples
 
 In the following example, a model `model` is constructed with a variable `x` and
-two constraints `cref` and `cref2`. This model has no solution, as the two 
+two constraints `cref` and `cref2`. This model has no solution, as the two
 constraints are mutually exclusive. The solver is asked to compute a conflict
-with [`compute_conflict!`](@ref). The parts of `model` participating in the 
+with [`compute_conflict!`](@ref). The parts of `model` participating in the
 conflict are then copied into a model `new_model`.
 ```julia
-model = Model() # You must use a solver that supports conflict refining/IIS 
+model = Model() # You must use a solver that supports conflict refining/IIS
 # computation, like CPLEX or Gurobi
 @variable(model, x)
 @constraint(model, cref, x >= 2)
