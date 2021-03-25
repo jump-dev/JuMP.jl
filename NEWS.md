@@ -26,6 +26,7 @@ A summary of changes are as follows:
   * Ending an IJulia cell with `model` now prints a summary of the model (like
     in the REPL) not the latex formulation. Use `print(model)` to print the latex
     formulation.
+  * Fixed a bug when copying models containing nested arrays.
 - Documentation, performance improvements, and general maintenance:
   * Tutorials are now part of the documentation, and more refactoring has taken
     place.
