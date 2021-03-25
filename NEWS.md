@@ -15,11 +15,17 @@ A summary of changes are as follows:
   * Added `solution_summary`, which returns (and prints) a struct containing a
     summary of the solution.
   * Allow `AbstractVector` in vector constraints instead of just `Vector`.
+  * Added `latex_formulation(model)` which returns an object representing the 
+    latex formulation of a model. Use `print(latex_formulation(model))` to print
+    the formulation as a string.
 - Bug fixes:
   * Fixed bug in `rad2deg` and `deg2rad` in nonlinear expressions.
   * Fixed a MethodError bug in `Containers` when forcing container type.
   * Allow partial slicing of a DenseAxisArray, resolving an issue from 2014!
   * Fixed a bug printing variable names in IJulia.
+  * Ending an IJulia cell with `model` now prints a summary of the model (like
+    in the REPL) not the latex formulation. Use `print(model)` to print the latex
+    formulation.
 - Documentation, performance improvements, and general maintenance:
   * Tutorials are now part of the documentation, and more refactoring has taken
     place.
