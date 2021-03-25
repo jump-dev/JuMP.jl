@@ -651,8 +651,8 @@ function test_copy_refmap_expr()
     @expression(model, expr[i = 1:2, j = 1:2], [i, j] * x)
     new_model, ref_map = copy_model(model)
     @test ref_map[expr] == new_model[:expr]
-    for i = 1:2, j = 1:2
-        @test new_model[:expr][i, j] ==  [i, j] * new_model[:x]
+    for i in 1:2, j in 1:2
+        @test new_model[:expr][i, j] == [i, j] * new_model[:x]
     end
 end
 
