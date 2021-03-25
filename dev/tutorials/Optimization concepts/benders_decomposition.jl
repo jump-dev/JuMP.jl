@@ -240,7 +240,8 @@ while true
 
     @objective(sub_problem_model, Min, c1' * x_current + c_sub' * u)
 
-    print("\nThe current subproblem model is \n", sub_problem_model)
+    print("\nThe current subproblem model is \n")
+    print(sub_problem_model)
 
     optimize!(sub_problem_model)
 
