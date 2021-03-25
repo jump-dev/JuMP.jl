@@ -48,7 +48,6 @@ function test_univariate_register_twice()
     @test y == [3.0]
 end
 
-
 function test_univariate_register_twice_error()
     model = Model()
     @variable(model, x >= 0)
