@@ -150,7 +150,8 @@ function benders_lazy_constraint_callback(cb_data)
     @objective(sub_problem_model, Min, c1' * x_current + c_sub' * u)
     optimize!(sub_problem_model)
 
-    print("\nThe current subproblem model is \n", sub_problem_model)
+    print("\nThe current subproblem model is \n")
+    print(sub_problem_model)
 
     t_status_sub = termination_status(sub_problem_model)
     p_status_sub = primal_status(sub_problem_model)

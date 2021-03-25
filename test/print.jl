@@ -23,13 +23,41 @@ import JuMP.REPLMode
 end
 
 # Helper function to test IO methods work correctly
+function _io_test_show(::Type{REPLMode}, obj, exp_str)
+    @test sprint(show, obj) == exp_str
+end
+function _io_test_show(::Type{IJuliaMode}, obj, exp_str)
+    @test sprint(show, "text/latex", obj) == string("\$\$ ", exp_str, " \$\$")
+end
+function _io_test_print(::Type{REPLMode}, obj, exp_str)
+    @test sprint(print, obj) == exp_str
+end
+function _io_test_print(::Type{IJuliaMode}, obj, exp_str)
+    @test sprint(show, "text/latex", obj) == string("\$\$ ", exp_str, " \$\$")
+end
+function _io_test_print(::Type{REPLMode}, obj::AbstractModel, exp_str)
+    @test sprint(print, obj) == exp_str
+    @test JuMP.model_string(JuMP.REPLMode, obj) == exp_str
+    return
+end
+function _io_test_print(::Type{IJuliaMode}, obj::AbstractModel, exp_str)
+    model = JuMP.latex_formulation(obj)
+    @test sprint(io -> show(io, MIME("text/latex"), model)) ==
+          string("\$\$ ", exp_str, " \$\$")
+    @test JuMP.model_string(JuMP.IJuliaMode, obj) ==
+          string("\$\$ ", exp_str, " \$\$")
+    # TODO(odow): I don't know how to test an IJulia display without adding
+    # IJulia as a test-dependency, so just print and check it doesn't error.
+    print(obj)
+    return
+end
+
 function io_test(mode, obj, exp_str; repl = :both)
-    if mode == REPLMode
-        repl != :show && @test sprint(print, obj) == exp_str
-        repl != :print && @test sprint(show, obj) == exp_str
-    else
-        @test sprint(show, "text/latex", obj) ==
-              string("\$\$ ", exp_str, " \$\$")
+    if repl == :show || repl == :both
+        _io_test_show(mode, obj, exp_str)
+    end
+    if repl == :print || repl == :both
+        _io_test_print(mode, obj, exp_str)
     end
 end
 
@@ -597,6 +625,7 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""",
             " & u_{2} \\in \\{0, 1\\}\\\\" *
             " & u_{3} \\in \\{0, 1\\}\\\\" *
             "\\end{aligned}",
+            repl = :print,
         )
 
         #------------------------------------------------------------------
@@ -713,6 +742,7 @@ Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""",
             " & a\\times b \\leq 2.0\\\\" *
             " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\" *
             "\\end{aligned}",
+            repl = :print,
         )
 
         #------------------------------------------------------------------
@@ -799,6 +829,7 @@ With NL expressions
             "\\text{Subject to} \\quad & subexpression_{1} - 0.0 = 0\\\\" *
             "\\text{With NL expressions} \\quad & subexpression_{1}: cos(x)\\\\" *
             "\\end{aligned}",
+            repl = :print,
         )
     end
     @testset "SingleVariable constraints" begin
@@ -811,6 +842,27 @@ With NL expressions
         io_test(REPLMode, JuMP.LowerBoundRef(x), "x $ge 10.0")
         io_test(REPLMode, zero_one, "x binary")
         # TODO: Test in IJulia mode
+    end
+    @testset "Feasibility" begin
+        io_test(
+            IJuliaMode,
+            Model(),
+            "\\begin{aligned}\\text{feasibility}\\\\" *
+            "\\text{Subject to} \\quad\\end{aligned}",
+            repl = :print,
+        )
+    end
+    @testset "Min" begin
+        model = Model()
+        @variable(model, x)
+        @objective(model, Min, x)
+        io_test(
+            IJuliaMode,
+            model,
+            "\\begin{aligned}\\min\\quad & x\\\\" *
+            "\\text{Subject to} \\quad\\end{aligned}",
+            repl = :print,
+        )
     end
 end
 
@@ -918,10 +970,10 @@ end
   Objective value      : -1.0
   Objective bound      : 3.0
   Dual objective value : -1.0
-  Primal solution : 
+  Primal solution :
     x : 1.0
     y : 0.0
-  Dual solution : 
+  Dual solution :
     xub : 0.0
     ylb : 1.0
 

@@ -28,6 +28,7 @@ Base.empty!(::Model)
 mode
 object_dictionary
 unregister
+latex_formulation
 ```
 
 ## Working with attributes

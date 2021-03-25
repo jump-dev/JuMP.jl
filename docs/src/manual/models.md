@@ -74,6 +74,53 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
 ```
 
+## Print the model
+
+By default, `show(model)` will print a summary of the problem.
+```jldoctest model_print
+julia> model = Model(); @variable(model, x >= 0); @objective(model, Max, x);
+
+julia> model
+A JuMP Model
+Maximization problem with:
+Variable: 1
+Objective function type: VariableRef
+`VariableRef`-in-`MathOptInterface.GreaterThan{Float64}`: 1 constraint
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+Names registered in the model: x
+```
+
+Use `print` to print the formulation of the model (in IJulia, this will render
+as LaTeX.
+```jldoctest model_print
+julia> print(model)
+Max x
+Subject to
+ x ≥ 0.0
+```
+!!! warning
+    This format is specific to JuMP. To write the model to a file, use
+    [`write_to_file`](@ref) instead.
+
+
+Use [`latex_formulation`](@ref) to display the model in LaTeX form.
+```jldoctest model_print
+julia> latex_formulation(model)
+$$ \begin{aligned}\max\quad & x\\\text{Subject to} \quad & x \geq 0.0\\\end{aligned} $$
+```
+
+In IJulia (and Documenter), ending a cell in with [`latex_formulation`](@ref)
+will render the model in LaTeX!
+```@example
+using JuMP                # hide
+model = Model()           # hide
+@variable(model, x >= 0)  # hide
+@objective(model, Max, x) # hide
+latex_formulation(model)
+```
+
 ## Turn off output
 
 Use [`set_silent`](@ref) and [`unset_silent`](@ref) to disable or enable
