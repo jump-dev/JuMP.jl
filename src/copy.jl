@@ -155,10 +155,10 @@ function copy_model(
             catch err
                 if err isa MethodError
                     @warn(
-                        "Unable to copy `:$(name)` of type $(typeof(value)) " *
-                        "in the model. Please open a Github issue at " *
-                        "https://github.com/jump-dev/JuMP.jl with this " *
-                        "message.",
+                        "Skipping the copy of object `:$(name)` due to " *
+                        "unsupported type $(typeof(value)). Please open a " *
+                        "GitHub issue at https://github.com/jump-dev/JuMP.jl " *
+                        "with this message.",
                     )
                 else
                     rethrow(err)
