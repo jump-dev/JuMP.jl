@@ -648,18 +648,18 @@ end
 function test_copy_refmap_expr()
     model = Model()
     @variable(model, x)
-    @expression(model, expr[i=1:2, j=1:2], [i, j] * x)
+    @expression(model, expr[i = 1:2, j = 1:2], [i, j] * x)
     new_model, ref_map = copy_model(model)
     @test ref_map[expr] == new_model[:expr]
-    for i=1:2, j=1:2
-        @test new_model[:expr][i,j] ==  [i, j] * new_model[:x]
+    for i = 1:2, j = 1:2
+        @test new_model[:expr][i, j] ==  [i, j] * new_model[:x]
     end
 end
 
 function test_copy_dict_expr()
     model = Model()
     @variable(model, x)
-    @expression(model, dictExpr[i=1:2, j=1:2], Dict(i => x, j => 2x))
+    @expression(model, dictExpr[i = 1:2, j = 1:2], Dict(i => x, j => 2x))
     new_model, ref_map = copy_model(model)
     @test !haskey(new_model, :dictExpr)
 end
