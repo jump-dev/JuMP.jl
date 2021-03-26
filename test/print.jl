@@ -593,7 +593,7 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""",
         io_test(
             IJuliaMode,
             model_1,
-            "\\begin{aligned}\n" *
+            "\\x\n" *
             "\\max\\quad & a - b + 2 a1 - 10 x\\\\\n" *
             "\\text{Subject to} \\quad & a + b - 10 c + c1 - 2 x \\leq 1.0\\\\\n" *
             " & a\\times b \\leq 2.0\\\\\n" *
@@ -861,9 +861,7 @@ With NL expressions
         io_test(
             IJuliaMode,
             model,
-            "\\begin{aligned}\n" *
-            "\\min\\quad & x\\\\\n" *
-            "\\end{aligned}",
+            "\\begin{aligned}\n\\min\\quad & x\\\\\n\\end{aligned}",
             repl = :print,
         )
     end
