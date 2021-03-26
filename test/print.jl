@@ -593,37 +593,38 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""",
         io_test(
             IJuliaMode,
             model_1,
-            "\\begin{aligned}\\max\\quad & a - b + 2 a1 - 10 x\\\\" *
-            "\\text{Subject to} \\quad & a + b - 10 c + c1 - 2 x \\leq 1.0\\\\" *
-            " & a\\times b \\leq 2.0\\\\" *
-            " & \\begin{bmatrix}" *
-            "a & b\\\\" *
-            "\\cdot & x\\\\" *
-            "\\end{bmatrix} \\in \\text{PSDCone()}\\\\" *
-            " & [a, b, c] \\in \\text{MathOptInterface.PositiveSemidefiniteConeTriangle(2)}\\\\" *
-            " & \\begin{bmatrix}" *
-            "a & b\\\\" *
-            "c & x\\\\" *
-            "\\end{bmatrix} \\in \\text{PSDCone()}\\\\" *
-            " & [a, b, c, x] \\in \\text{MathOptInterface.PositiveSemidefiniteConeSquare(2)}\\\\" *
-            " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\" *
-            " & fi = 9.0\\\\" *
-            " & a \\geq 1.0\\\\" *
-            " & c \\geq -1.0\\\\" *
-            " & a1 \\geq 1.0\\\\" *
-            " & c1 \\geq -1.0\\\\" *
-            " & b \\leq 1.0\\\\" *
-            " & c \\leq 1.0\\\\" *
-            " & b1 \\leq 1.0\\\\" *
-            " & c1 \\leq 1.0\\\\" *
-            " & a1 \\in \\mathbb{Z}\\\\" *
-            " & b1 \\in \\mathbb{Z}\\\\" *
-            " & c1 \\in \\mathbb{Z}\\\\" *
-            " & z \\in \\mathbb{Z}\\\\" *
-            " & x \\in \\{0, 1\\}\\\\" *
-            " & u_{1} \\in \\{0, 1\\}\\\\" *
-            " & u_{2} \\in \\{0, 1\\}\\\\" *
-            " & u_{3} \\in \\{0, 1\\}\\\\" *
+            "\\begin{aligned}\n" *
+            "\\max\\quad & a - b + 2 a1 - 10 x\\\\\n" *
+            "\\text{Subject to} \\quad & a + b - 10 c + c1 - 2 x \\leq 1.0\\\\\n" *
+            " & a\\times b \\leq 2.0\\\\\n" *
+            " & \\begin{bmatrix}\n" *
+            "a & b\\\\\n" *
+            "\\cdot & x\\\\\n" *
+            "\\end{bmatrix} \\in \\text{PSDCone()}\\\\\n" *
+            " & [a, b, c] \\in \\text{MathOptInterface.PositiveSemidefiniteConeTriangle(2)}\\\\\n" *
+            " & \\begin{bmatrix}\n" *
+            "a & b\\\\\n" *
+            "c & x\\\\\n" *
+            "\\end{bmatrix} \\in \\text{PSDCone()}\\\\\n" *
+            " & [a, b, c, x] \\in \\text{MathOptInterface.PositiveSemidefiniteConeSquare(2)}\\\\\n" *
+            " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\\n" *
+            " & fi = 9.0\\\\\n" *
+            " & a \\geq 1.0\\\\\n" *
+            " & c \\geq -1.0\\\\\n" *
+            " & a1 \\geq 1.0\\\\\n" *
+            " & c1 \\geq -1.0\\\\\n" *
+            " & b \\leq 1.0\\\\\n" *
+            " & c \\leq 1.0\\\\\n" *
+            " & b1 \\leq 1.0\\\\\n" *
+            " & c1 \\leq 1.0\\\\\n" *
+            " & a1 \\in \\mathbb{Z}\\\\\n" *
+            " & b1 \\in \\mathbb{Z}\\\\\n" *
+            " & c1 \\in \\mathbb{Z}\\\\\n" *
+            " & z \\in \\mathbb{Z}\\\\\n" *
+            " & x \\in \\{0, 1\\}\\\\\n" *
+            " & u_{1} \\in \\{0, 1\\}\\\\\n" *
+            " & u_{2} \\in \\{0, 1\\}\\\\\n" *
+            " & u_{3} \\in \\{0, 1\\}\\\\\n" *
             "\\end{aligned}",
             repl = :print,
         )
@@ -737,10 +738,11 @@ Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""",
         io_test(
             IJuliaMode,
             model_1,
-            "\\begin{aligned}\\max\\quad & a - b + 2 a1 - 10 x\\\\" *
-            "\\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\" *
-            " & a\\times b \\leq 2.0\\\\" *
-            " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\" *
+            "\\begin{aligned}\n" *
+            "\\max\\quad & a - b + 2 a1 - 10 x\\\\\n" *
+            "\\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\\n" *
+            " & a\\times b \\leq 2.0\\\\\n" *
+            " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\\n" *
             "\\end{aligned}",
             repl = :print,
         )
@@ -825,9 +827,10 @@ With NL expressions
         io_test(
             IJuliaMode,
             model,
-            "\\begin{aligned}\\max\\quad & sin(x)\\\\" *
-            "\\text{Subject to} \\quad & subexpression_{1} - 0.0 = 0\\\\" *
-            "\\text{With NL expressions} \\quad & subexpression_{1}: cos(x)\\\\" *
+            "\\begin{aligned}\n" *
+            "\\max\\quad & sin(x)\\\\\n" *
+            "\\text{Subject to} \\quad & subexpression_{1} - 0.0 = 0\\\\\n" *
+            "\\text{With NL expressions} \\quad & subexpression_{1}: cos(x)\\\\\n" *
             "\\end{aligned}",
             repl = :print,
         )
@@ -847,8 +850,7 @@ With NL expressions
         io_test(
             IJuliaMode,
             Model(),
-            "\\begin{aligned}\\text{feasibility}\\\\" *
-            "\\text{Subject to} \\quad\\end{aligned}",
+            "\\begin{aligned}\n\\text{feasibility}\\\\\n\\end{aligned}",
             repl = :print,
         )
     end
@@ -859,8 +861,7 @@ With NL expressions
         io_test(
             IJuliaMode,
             model,
-            "\\begin{aligned}\\min\\quad & x\\\\" *
-            "\\text{Subject to} \\quad\\end{aligned}",
+            "\\begin{aligned}\n\\min\\quad & x\\\\\n\\end{aligned}",
             repl = :print,
         )
     end

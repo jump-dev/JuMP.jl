@@ -108,7 +108,10 @@ Subject to
 Use [`latex_formulation`](@ref) to display the model in LaTeX form.
 ```jldoctest model_print
 julia> latex_formulation(model)
-$$ \begin{aligned}\max\quad & x\\\text{Subject to} \quad & x \geq 0.0\\\end{aligned} $$
+$$ \begin{aligned}
+\max\quad & x\\
+\text{Subject to} \quad & x \geq 0.0\\
+\end{aligned} $$
 ```
 
 In IJulia (and Documenter), ending a cell in with [`latex_formulation`](@ref)

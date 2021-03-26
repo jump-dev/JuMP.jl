@@ -17,7 +17,7 @@ XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 [compat]
 CSV = "0.8"
 DataFrames = "0.22"
-Documenter = "~0.26"
+Documenter = "~0.26.2"
 GLPK = "0.14.4"
 Ipopt = "0.6"
 Literate = "2.8"
