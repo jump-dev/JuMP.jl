@@ -18,6 +18,7 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           using Pkg
+          # If you update the version, also update the style guide docs.
           Pkg.add(PackageSpec(name="JuliaFormatter", version="0.13.2"))
           using JuliaFormatter
           format("src", verbose=true)
