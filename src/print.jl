@@ -305,20 +305,23 @@ An `AbstractModel` subtype should implement `objective_function_string`,
 `constraints_string` and `_nl_subexpression_string` for this method to work.
 """
 function _print_latex(io::IO, model::AbstractModel)
-    print(io, "\$\$ \\begin{aligned}")
+    println(io, "\$\$ \\begin{aligned}")
     sense = objective_sense(model)
     if sense == MOI.MAX_SENSE
         print(io, "\\max\\quad & ")
-        print(io, objective_function_string(IJuliaMode, model), "\\\\")
+        println(io, objective_function_string(IJuliaMode, model), "\\\\")
     elseif sense == MOI.MIN_SENSE
         print(io, "\\min\\quad & ")
-        print(io, objective_function_string(IJuliaMode, model), "\\\\")
+        println(io, objective_function_string(IJuliaMode, model), "\\\\")
     else
-        print(io, "\\text{feasibility}\\\\")
+        println(io, "\\text{feasibility}\\\\")
     end
-    print(io, "\\text{Subject to} \\quad")
-    for constraint in constraints_string(IJuliaMode, model)
-        print(io, " & ", constraint, "\\\\")
+    constraints = constraints_string(IJuliaMode, model)
+    if !isempty(constraints)
+        print(io, "\\text{Subject to} \\quad")
+    end
+    for constraint in constraints
+        println(io, " & ", constraint, "\\\\")
     end
     # TODO: Generalize this when similar functionality is needed for
     # `AbstractModel`.
@@ -327,7 +330,7 @@ function _print_latex(io::IO, model::AbstractModel)
         print(io, "\\text{With NL expressions} \\quad")
     end
     for expr in nl_subexpressions
-        print(io, " & ", expr, "\\\\")
+        println(io, " & ", expr, "\\\\")
     end
     return print(io, "\\end{aligned} \$\$")
 end
@@ -831,8 +834,7 @@ function function_string(
     print_mode::Type{IJuliaMode},
     A::AbstractMatrix{<:AbstractJuMPScalar},
 )
-    str = sprint(show, MIME"text/plain"(), A)
-    str = "\\begin{bmatrix}"
+    str = "\\begin{bmatrix}\n"
     for i in 1:size(A, 1)
         line = ""
         for j in 1:size(A, 2)
@@ -845,7 +847,7 @@ function function_string(
                 line *= function_string(print_mode, A[i, j])
             end
         end
-        str *= line * "\\\\"
+        str *= line * "\\\\\n"
     end
     return str * "\\end{bmatrix}"
 end
