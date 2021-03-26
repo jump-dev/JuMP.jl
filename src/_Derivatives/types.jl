@@ -98,8 +98,13 @@ function register_multivariate_operator!(
     s::Symbol,
     f::MOI.AbstractNLPEvaluator,
 )
-    haskey(r.multivariate_operator_to_id, s) &&
-        error("Operator $s has already been defined")
+    if haskey(r.multivariate_operator_to_id, s)
+        error("""The multivariate operator $s has already been defined.
+
+        User-defined functions can not be re-registered. If you want to
+        re-register a function between solves (e.g., to modify the user-defined
+        function), rebuild the model, or use a different function name.""")
+    end
     id = length(r.multivariate_operator_evaluator) + 1
     r.multivariate_operator_to_id[s] = id
     push!(r.multivariate_operator_evaluator, f)
@@ -117,8 +122,13 @@ function register_univariate_operator!(
     fprime,
     fprimeprime,
 )
-    haskey(r.univariate_operator_to_id, s) &&
-        error("Operator $s has already been defined")
+    if haskey(r.univariate_operator_to_id, s)
+        error("""The univariate operator $s has already been defined.
+
+        User-defined functions can not be re-registered. If you want to
+        re-register a function between solves (e.g., to modify the user-defined
+        function), rebuild the model, or use a different function name.""")
+    end
     id = length(r.univariate_operator_f) + 1
     r.univariate_operator_to_id[s] = id
     push!(r.univariate_operator_f, f)
