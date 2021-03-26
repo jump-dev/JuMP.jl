@@ -103,7 +103,7 @@ function register_multivariate_operator!(
 
         User-defined functions can not be re-registered. If you want to
         re-register a function between solves (e.g., to modify the user-defined
-        function), rebuild the model, or use a different function name.""")
+        function), rebuild the model or use a different function name.""")
     end
     id = length(r.multivariate_operator_evaluator) + 1
     r.multivariate_operator_to_id[s] = id
@@ -127,7 +127,7 @@ function register_univariate_operator!(
 
         User-defined functions can not be re-registered. If you want to
         re-register a function between solves (e.g., to modify the user-defined
-        function), rebuild the model, or use a different function name.""")
+        function), rebuild the model or use a different function name.""")
     end
     id = length(r.univariate_operator_f) + 1
     r.univariate_operator_to_id[s] = id
