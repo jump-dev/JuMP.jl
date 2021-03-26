@@ -249,4 +249,10 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test (@inferred C[2, [:a, :b]]) == DenseAxisArray([5.0, 6.0], [:a, :b])
         @test (@inferred C[2:3, :b]) == DenseAxisArray([6.0, 8.0], 2:3)
     end
+    @testset "BitArray" begin
+        x = DenseAxisArray([0 1; 1 0], [:a, :b], 1:2)
+        y = Bool.(x)
+        @test y isa DenseAxisArray
+        @test x == y
+    end
 end
