@@ -876,4 +876,20 @@ end
         x = [2.0]
         @test_throws ErrorException MOI.eval_objective(d, x)
     end
+
+    @testset "Re-register univariate" begin
+        model = Model()
+        @variable(model, x >= 0)
+        f(x) = x^2
+        register(model, :f, 1, f; autodiff = true)
+        @test_throws ErrorException register(model, :f, 1, f; autodiff = true)
+    end
+
+    @testset "Re-register multivariate" begin
+        model = Model()
+        @variable(model, x >= 0)
+        f(x, y) = x + y
+        register(model, :f, 2, f; autodiff = true)
+        @test_throws ErrorException register(model, :f, 2, f; autodiff = true)
+    end
 end
