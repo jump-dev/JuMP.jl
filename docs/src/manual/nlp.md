@@ -110,7 +110,7 @@ julia> @NLparameter(model, p[i = 1:2] == i)
 ```
 
 !!! info
-    A parameter is not an optimization variable. It must be fixed to a value with 
+    A parameter is not an optimization variable. It must be fixed to a value with
     `==`. If you want a parameter that is `<=` or `>=`, create a variable instead
     using [`@variable`](@ref).
 
@@ -359,6 +359,12 @@ The above code creates a JuMP model with the objective function
     some cases. Only use a user-defined function if you cannot write out the
     expression algebraically in the macro.
 
+!!! warning
+    User-defined functions cannot be re-registered and will not update if you
+    modify the underlying Julia function. If you want to change a user-defined
+    function between solves, rebuild the model or use a different name. To use
+    a different name programatically, see [Raw expression input](@ref).
+
 ### Register a function and gradient
 
 Forward-mode automatic differentiation as implemented by ForwardDiff.jl has a
@@ -407,7 +413,7 @@ Hessian information is not supported for multivariate functions.
 ### Register a function, gradient, and hessian
 
 !!! warning
-    The ability to explicitly register a hessian is only available for 
+    The ability to explicitly register a hessian is only available for
     univariate functions.
 
 Instead of automatically differentiating the hessian, you can instead pass a
