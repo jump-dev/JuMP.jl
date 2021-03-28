@@ -41,7 +41,7 @@ julia&gt; @NLexpression(model, nested[i = 1:2], sin(my_expr[i]))
  &quot;Reference to nonlinear expression #7&quot;</code></pre><h2 id="Create-a-nonlinear-parameter"><a class="docs-heading-anchor" href="#Create-a-nonlinear-parameter">Create a nonlinear parameter</a><a id="Create-a-nonlinear-parameter-1"></a><a class="docs-heading-anchor-permalink" href="#Create-a-nonlinear-parameter" title="Permalink"></a></h2><p>For nonlinear models only, JuMP offers a syntax for explicit &quot;parameter&quot; objects, which are constants in the model that can be efficiently updated between solves.</p><p>Nonlinear parameters are declared by using the <a href="../../reference/nlp/#JuMP.@NLparameter"><code>@NLparameter</code></a> macro and may be indexed by arbitrary sets analogously to JuMP variables and expressions.</p><p>The initial value of the parameter must be provided on the right-hand side of the <code>==</code> sign.</p><pre><code class="language-julia-repl">julia&gt; @NLparameter(model, p[i = 1:2] == i)
 2-element Array{NonlinearParameter,1}:
  &quot;Reference to nonlinear parameter #1&quot;
- &quot;Reference to nonlinear parameter #2&quot;</code></pre><div class="admonition is-info"><header class="admonition-header">Info</header><div class="admonition-body"><p>A parameter is not an optimization variable. It must be fixed to a value with  <code>==</code>. If you want a parameter that is <code>&lt;=</code> or <code>&gt;=</code>, create a variable instead using <a href="../../reference/variables/#JuMP.@variable"><code>@variable</code></a>.</p></div></div><p>Use <a href="../../reference/solutions/#JuMP.value"><code>value</code></a> and <a href="../../reference/nlp/#JuMP.set_value-Tuple{NonlinearParameter,Number}"><code>set_value</code></a> to query or update the value of a parameter.</p><pre><code class="language-julia-repl">julia&gt; value.(p)
+ &quot;Reference to nonlinear parameter #2&quot;</code></pre><div class="admonition is-info"><header class="admonition-header">Info</header><div class="admonition-body"><p>A parameter is not an optimization variable. It must be fixed to a value with <code>==</code>. If you want a parameter that is <code>&lt;=</code> or <code>&gt;=</code>, create a variable instead using <a href="../../reference/variables/#JuMP.@variable"><code>@variable</code></a>.</p></div></div><p>Use <a href="../../reference/solutions/#JuMP.value"><code>value</code></a> and <a href="../../reference/nlp/#JuMP.set_value-Tuple{NonlinearParameter,Number}"><code>set_value</code></a> to query or update the value of a parameter.</p><pre><code class="language-julia-repl">julia&gt; value.(p)
 2-element Array{Float64,1}:
  1.0
  2.0
@@ -86,25 +86,25 @@ Variables n = 612, constraints m = 1813
 Cones:	linear vars: 601
 	soc vars: 12, soc blks: 1
 	exp vars: 1200, dual exp vars: 0
-Setup time: 9.41e-04s
+Setup time: 9.16e-04s
 ----------------------------------------------------------------------------
  Iter | pri res | dua res | rel gap | pri obj | dua obj | kap/tau | time (s)
 ----------------------------------------------------------------------------
-     0| 2.05e+20  5.75e+20  1.00e+00 -2.33e+22  3.63e+22  5.04e+22  7.74e-03
-   100| 2.74e-07  3.23e-05  3.43e-07  1.02e+02  1.02e+02  1.50e-14  4.04e-01
-   160| 2.74e-08  8.83e-06  8.20e-09  1.02e+02  1.02e+02  7.80e-15  6.36e-01
+     0| 2.05e+20  5.75e+20  1.00e+00 -2.33e+22  3.63e+22  5.04e+22  7.42e-03
+   100| 2.20e-07  3.38e-05  8.02e-08  1.02e+02  1.02e+02  1.74e-14  3.98e-01
+   180| 2.70e-08  7.14e-06  1.27e-08  1.02e+02  1.02e+02  1.40e-14  7.07e-01
 ----------------------------------------------------------------------------
 Status: Solved
-Timing: Solve time: 6.36e-01s
-	Lin-sys: avg # CG iterations: 3.53, avg solve time: 8.60e-05s
-	Cones: avg projection time: 3.52e-03s
-	Acceleration: avg step time: 2.89e-04s
+Timing: Solve time: 7.07e-01s
+	Lin-sys: avg # CG iterations: 3.31, avg solve time: 9.48e-05s
+	Cones: avg projection time: 3.51e-03s
+	Acceleration: avg step time: 2.38e-04s
 ----------------------------------------------------------------------------
 Error metrics:
-dist(s, K) = 1.8941e-16, dist(y, K*) = 0.0000e+00, s&#39;y/|s||y| = 1.5148e-11
-primal res: |Ax + s - b|_2 / (1 + |b|_2) = 2.7389e-08
-dual res:   |A&#39;y + c|_2 / (1 + |c|_2) = 8.8279e-06
-rel gap:    |c&#39;x + b&#39;y| / (1 + |c&#39;x| + |b&#39;y|) = 8.1963e-09
+dist(s, K) = 1.8426e-16, dist(y, K*) = 8.8818e-16, s&#39;y/|s||y| = -7.8514e-12
+primal res: |Ax + s - b|_2 / (1 + |b|_2) = 2.7028e-08
+dual res:   |A&#39;y + c|_2 / (1 + |c|_2) = 7.1357e-06
+rel gap:    |c&#39;x + b&#39;y| / (1 + |c&#39;x| + |b&#39;y|) = 1.2737e-08
 ----------------------------------------------------------------------------
 c&#39;x = 101.9931, -b&#39;y = 101.9931
 ============================================================================
@@ -118,26 +118,26 @@ acceleration_lookback = 10, rho_x = 1.00e-03
 Variables n = 623, constraints m = 1824
 Cones:	linear vars: 624
 	exp vars: 1200, dual exp vars: 0
-Setup time: 1.04e-03s
+Setup time: 9.93e-04s
 ----------------------------------------------------------------------------
  Iter | pri res | dua res | rel gap | pri obj | dua obj | kap/tau | time (s)
 ----------------------------------------------------------------------------
-     0| 2.04e+20  7.26e+20  1.00e+00 -3.07e+22  4.05e+22  6.21e+22  6.93e-03
-   100| 1.66e-06  4.05e-05  7.27e-07  1.18e+02  1.18e+02  1.63e-15  4.45e-01
-   200| 2.68e-07  4.58e-05  1.42e-07  1.18e+02  1.18e+02  1.33e-14  8.61e-01
-   220| 8.85e-08  5.32e-06  9.86e-09  1.18e+02  1.18e+02  3.15e-14  9.46e-01
+     0| 2.04e+20  7.26e+20  1.00e+00 -3.07e+22  4.05e+22  6.21e+22  7.47e-03
+   100| 1.02e-06  4.99e-05  2.88e-07  1.18e+02  1.18e+02  1.17e-15  4.24e-01
+   200| 2.28e-06  5.11e-05  1.40e-06  1.18e+02  1.18e+02  1.07e-14  8.43e-01
+   220| 9.41e-08  5.93e-06  7.42e-08  1.18e+02  1.18e+02  6.68e-15  9.24e-01
 ----------------------------------------------------------------------------
 Status: Solved
-Timing: Solve time: 9.46e-01s
-	Lin-sys: avg # CG iterations: 4.99, avg solve time: 1.14e-04s
-	Cones: avg projection time: 3.83e-03s
-	Acceleration: avg step time: 2.91e-04s
+Timing: Solve time: 9.24e-01s
+	Lin-sys: avg # CG iterations: 5.18, avg solve time: 1.16e-04s
+	Cones: avg projection time: 3.78e-03s
+	Acceleration: avg step time: 2.34e-04s
 ----------------------------------------------------------------------------
 Error metrics:
-dist(s, K) = 6.4852e-16, dist(y, K*) = 0.0000e+00, s&#39;y/|s||y| = -8.4996e-15
-primal res: |Ax + s - b|_2 / (1 + |b|_2) = 8.8504e-08
-dual res:   |A&#39;y + c|_2 / (1 + |c|_2) = 5.3155e-06
-rel gap:    |c&#39;x + b&#39;y| / (1 + |c&#39;x| + |b&#39;y|) = 9.8613e-09
+dist(s, K) = 1.1807e-15, dist(y, K*) = 0.0000e+00, s&#39;y/|s||y| = -8.0429e-12
+primal res: |Ax + s - b|_2 / (1 + |b|_2) = 9.4084e-08
+dual res:   |A&#39;y + c|_2 / (1 + |c|_2) = 5.9292e-06
+rel gap:    |c&#39;x + b&#39;y| / (1 + |c&#39;x| + |b&#39;y|) = 7.4215e-08
 ----------------------------------------------------------------------------
 c&#39;x = 117.8507, -b&#39;y = 117.8507
 ============================================================================
@@ -197,7 +197,7 @@ register(model, :square, 1, square; autodiff = true)
 register(model, :my_f, 2, f; autodiff = true)
 
 @variable(model, x[1:2] &gt;= 0.5)
-@NLobjective(model, Min, my_f(x[1], square(x[2])))</code></pre><p>The above code creates a JuMP model with the objective function <code>(x[1] - 1)^2 + (x[2]^2 - 2)^2</code>. The arguments to <a href="../../reference/nlp/#JuMP.register"><code>register</code></a> are:</p><ol><li>The model for which the functions are registered.</li><li>A Julia symbol object which serves as the name of the user-defined function in JuMP expressions.</li><li>The number of input arguments that the function takes.</li><li>The Julia method which computes the function</li><li>A flag to instruct JuMP to compute exact gradients automatically.</li></ol><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>The symbol <code>:my_f</code> doesn&#39;t have to match the name of the function <code>f</code>. However, it&#39;s generally more readable if it does. Make sure you use <code>my_f</code> and not <code>f</code> in the macros.</p></div></div><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>If you use multi-variate user-defined functions, JuMP will disable second-derivative information. This can lead to significant slow-downs in some cases. Only use a user-defined function if you cannot write out the expression algebraically in the macro.</p></div></div><h3 id="Register-a-function-and-gradient"><a class="docs-heading-anchor" href="#Register-a-function-and-gradient">Register a function and gradient</a><a id="Register-a-function-and-gradient-1"></a><a class="docs-heading-anchor-permalink" href="#Register-a-function-and-gradient" title="Permalink"></a></h3><p>Forward-mode automatic differentiation as implemented by ForwardDiff.jl has a computational cost that scales linearly with the number of input dimensions. As such, it is not the most efficient way to compute gradients of user-defined functions if the number of input arguments is large. In this case, users may want to provide their own routines for evaluating gradients.</p><h4 id="Univariate-functions"><a class="docs-heading-anchor" href="#Univariate-functions">Univariate functions</a><a id="Univariate-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Univariate-functions" title="Permalink"></a></h4><p>For univariate functions, the gradient function <code>∇f</code> should return a number that represents the first-order derivative:</p><pre><code class="language-julia">f(x) = x^2
+@NLobjective(model, Min, my_f(x[1], square(x[2])))</code></pre><p>The above code creates a JuMP model with the objective function <code>(x[1] - 1)^2 + (x[2]^2 - 2)^2</code>. The arguments to <a href="../../reference/nlp/#JuMP.register"><code>register</code></a> are:</p><ol><li>The model for which the functions are registered.</li><li>A Julia symbol object which serves as the name of the user-defined function in JuMP expressions.</li><li>The number of input arguments that the function takes.</li><li>The Julia method which computes the function</li><li>A flag to instruct JuMP to compute exact gradients automatically.</li></ol><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>The symbol <code>:my_f</code> doesn&#39;t have to match the name of the function <code>f</code>. However, it&#39;s generally more readable if it does. Make sure you use <code>my_f</code> and not <code>f</code> in the macros.</p></div></div><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>If you use multi-variate user-defined functions, JuMP will disable second-derivative information. This can lead to significant slow-downs in some cases. Only use a user-defined function if you cannot write out the expression algebraically in the macro.</p></div></div><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>User-defined functions cannot be re-registered and will not update if you modify the underlying Julia function. If you want to change a user-defined function between solves, rebuild the model or use a different name. To use a different name programatically, see <a href="#Raw-expression-input">Raw expression input</a>.</p></div></div><h3 id="Register-a-function-and-gradient"><a class="docs-heading-anchor" href="#Register-a-function-and-gradient">Register a function and gradient</a><a id="Register-a-function-and-gradient-1"></a><a class="docs-heading-anchor-permalink" href="#Register-a-function-and-gradient" title="Permalink"></a></h3><p>Forward-mode automatic differentiation as implemented by ForwardDiff.jl has a computational cost that scales linearly with the number of input dimensions. As such, it is not the most efficient way to compute gradients of user-defined functions if the number of input arguments is large. In this case, users may want to provide their own routines for evaluating gradients.</p><h4 id="Univariate-functions"><a class="docs-heading-anchor" href="#Univariate-functions">Univariate functions</a><a id="Univariate-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Univariate-functions" title="Permalink"></a></h4><p>For univariate functions, the gradient function <code>∇f</code> should return a number that represents the first-order derivative:</p><pre><code class="language-julia">f(x) = x^2
 ∇f(x) = 2x
 model = Model()
 register(model, :my_square, 1, f, ∇f; autodiff = true)
@@ -212,7 +212,7 @@ end
 model = Model()
 register(model, :my_square, 2, f, ∇f)
 @variable(model, x[1:2] &gt;= 0)
-@NLobjective(model, Min, my_square(x[1], x[2]))</code></pre><p>Hessian information is not supported for multivariate functions.</p><h3 id="Register-a-function,-gradient,-and-hessian"><a class="docs-heading-anchor" href="#Register-a-function,-gradient,-and-hessian">Register a function, gradient, and hessian</a><a id="Register-a-function,-gradient,-and-hessian-1"></a><a class="docs-heading-anchor-permalink" href="#Register-a-function,-gradient,-and-hessian" title="Permalink"></a></h3><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>The ability to explicitly register a hessian is only available for  univariate functions.</p></div></div><p>Instead of automatically differentiating the hessian, you can instead pass a function which returns a number representing the second-order derivative.</p><pre><code class="language-julia">f(x) = x^2
+@NLobjective(model, Min, my_square(x[1], x[2]))</code></pre><p>Hessian information is not supported for multivariate functions.</p><h3 id="Register-a-function,-gradient,-and-hessian"><a class="docs-heading-anchor" href="#Register-a-function,-gradient,-and-hessian">Register a function, gradient, and hessian</a><a id="Register-a-function,-gradient,-and-hessian-1"></a><a class="docs-heading-anchor-permalink" href="#Register-a-function,-gradient,-and-hessian" title="Permalink"></a></h3><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>The ability to explicitly register a hessian is only available for univariate functions.</p></div></div><p>Instead of automatically differentiating the hessian, you can instead pass a function which returns a number representing the second-order derivative.</p><pre><code class="language-julia">f(x) = x^2
 ∇f(x) = 2x
 ∇²f(x) = 2
 model = Model()
@@ -301,4 +301,4 @@ main (generic function with 1 method)
 julia&gt; main([x -&gt; x^2, x -&gt; sin(x)^2])
 Feasibility
 Subject to
- (f_1(x) + f_2(x)) - 1.0 ≤ 0</code></pre><section class="footnotes is-size-7"><ul><li class="footnote" id="footnote-1"><a class="tag is-link" href="#citeref-1">1</a>Dunning, Huchette, and Lubin, &quot;JuMP: A Modeling Language for Mathematical Optimization&quot;, SIAM Review, <a href="https://mlubin.github.io/pdf/jump-sirev.pdf">PDF</a>.</li></ul></section></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../solutions/">« Solutions</a><a class="docs-footer-nextpage" href="../callbacks/">Callbacks »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Friday 26 March 2021 05:28">Friday 26 March 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ (f_1(x) + f_2(x)) - 1.0 ≤ 0</code></pre><section class="footnotes is-size-7"><ul><li class="footnote" id="footnote-1"><a class="tag is-link" href="#citeref-1">1</a>Dunning, Huchette, and Lubin, &quot;JuMP: A Modeling Language for Mathematical Optimization&quot;, SIAM Review, <a href="https://mlubin.github.io/pdf/jump-sirev.pdf">PDF</a>.</li></ul></section></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../solutions/">« Solutions</a><a class="docs-footer-nextpage" href="../callbacks/">Callbacks »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Sunday 28 March 2021 01:21">Sunday 28 March 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
