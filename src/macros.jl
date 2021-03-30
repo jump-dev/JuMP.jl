@@ -629,7 +629,13 @@ function _constraint_macro(
     return _finalize_macro(m, macro_code, source)
 end
 
-# This function needs to be implemented by all `AbstractModel`s
+"""
+    constraint_type(model::AbstractModel)
+
+Return the type of constraint references stored in `model`.
+
+This function needs to be implemented by all `AbstractModel`s
+"""
 constraint_type(m::Model) = ConstraintRef{typeof(m)}
 
 """
@@ -1296,6 +1302,13 @@ function _name_call(base_name, idxvars)
     return ex
 end
 
+"""
+    reverse_sense(::Val{T}) where {T}
+
+Given an (in)equality symbol `T`, return a new `Val` object with the opposite
+(in)equality symbol.
+"""
+function reverse_sense end
 reverse_sense(::Val{:<=}) = Val(:>=)
 reverse_sense(::Val{:≤}) = Val(:≥)
 reverse_sense(::Val{:>=}) = Val(:<=)

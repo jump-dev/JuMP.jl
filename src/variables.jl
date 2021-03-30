@@ -90,6 +90,14 @@ function _VariableInfoExpr(;
     )
 end
 
+"""
+    VariableInfo{S,T,U,V}
+
+A struct by JuMP internally when creating variables. This may also be used by
+JuMP extensions to create new types of variables.
+
+See also: [`ScalarVariable`](@ref).
+"""
 struct VariableInfo{S,T,U,V}
     has_lb::Bool
     lower_bound::S
@@ -118,6 +126,13 @@ function _constructor_expr(info::_VariableInfoExpr)
     ))
 end
 
+"""
+    ScalarVariable{S,T,U,V} <: AbstractVariable
+
+A struct used when adding variables.
+
+See also: [`add_variable`](@ref).
+"""
 struct ScalarVariable{S,T,U,V} <: AbstractVariable
     info::VariableInfo{S,T,U,V}
 end

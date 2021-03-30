@@ -227,6 +227,12 @@ linear part of the quadratic expression.
 """
 linear_terms(quad::GenericQuadExpr) = LinearTermIterator(quad.aff)
 
+"""
+    QuadTermIterator{GQE<:GenericQuadExpr}
+
+A struct that implements the `iterate` protocol in order to iterate over tuples
+of `(coefficient, variable, variable)` in the `GenericQuadExpr`.
+"""
 struct QuadTermIterator{GQE<:GenericQuadExpr}
     quad::GQE
 end

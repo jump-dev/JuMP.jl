@@ -335,7 +335,13 @@ function _print_latex(io::IO, model::AbstractModel)
     return print(io, "\\end{aligned} \$\$")
 end
 
-# TODO(odow): deprecate this?
+"""
+    model_string(print_mode, model::AbstractModel)
+
+Return a `String` representation of `model` given the `print_mode`.
+
+`print_mode` must be `IJuliaMode` or `REPLMode`.
+"""
 function model_string(print_mode, model::AbstractModel)
     if print_mode == IJuliaMode
         return sprint(_print_latex, model)
