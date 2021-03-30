@@ -230,7 +230,11 @@ function constraint_by_name(
     return constraint_by_name(model, name, moi_function_type(F), S)
 end
 
-# Creates a ConstraintRef with default shape
+"""
+    constraint_ref_with_index(model::AbstractModel, index::MOI.ConstraintIndex)
+
+Return a `ConstraintRef` of `model` corresponding to `index`.
+"""
 function constraint_ref_with_index(
     model::AbstractModel,
     index::MOI.ConstraintIndex{

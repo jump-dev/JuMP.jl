@@ -289,7 +289,12 @@ Return the constant of the affine expression.
 """
 constant(aff::GenericAffExpr) = aff.constant
 
-# Iterator protocol - iterates over tuples (aᵢ,xᵢ)
+"""
+    LinearTermIterator{GAE<:GenericAffExpr}
+
+A struct that implements the `iterate` protocol in order to iterate over tuples
+of `(coefficient, variable)` in the `GenericAffExpr`.
+"""
 struct LinearTermIterator{GAE<:GenericAffExpr}
     aff::GAE
 end
