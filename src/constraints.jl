@@ -544,7 +544,7 @@ function add_constraint(
     # The type of backend(model) is unknown so we directly redirect to another
     # function.
     check_belongs_to_model(con, model)
-    cindex = 
+    cindex =
         _moi_add_constraint(backend(model), moi_function(con), moi_set(con))
     cshape = shape(con)
     if !(cshape isa ScalarShape) && !(cshape isa VectorShape)
