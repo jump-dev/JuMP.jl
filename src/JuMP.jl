@@ -350,6 +350,11 @@ MathOptInterface or solver-specific functionality.
 """
 backend(model::Model) = model.moi_backend
 
+"""
+    moi_mode(model::MOI.ModelLike)
+
+Return the `ModelMode` of `model`.
+"""
 moi_mode(model::MOI.ModelLike) = DIRECT
 function moi_mode(model::MOIU.CachingOptimizer)
     if model.mode == MOIU.AUTOMATIC
@@ -371,7 +376,11 @@ function mode(model::Model)
     return moi_mode(backend(model))
 end
 
-# Direct mode
+"""
+    moi_bridge_constraints(model::MOI.ModelLike)
+
+Return `true` if `model` will bridge constraints.
+"""
 moi_bridge_constraints(model::MOI.ModelLike) = false
 function moi_bridge_constraints(model::MOIU.CachingOptimizer)
     return model.optimizer isa MOI.Bridges.LazyBridgeOptimizer
@@ -924,11 +933,16 @@ function node_count(model::Model)
     return MOI.get(model, MOI.NodeCount())
 end
 
-# Abstract base type for all scalar types
-# The subtyping of `AbstractMutable` will allow calls of some `Base` functions
-# to be redirected to a method in MA that handles type promotion more carefuly
-# (e.g. the promotion in sparse matrix products in SparseArrays usually does not
-# work for JuMP types) and exploits the mutability of `AffExpr` and `QuadExpr`.
+"""
+    AbstractJuMPScalar <: MutableArithmetics.AbstractMutable
+
+Abstract base type for all scalar types
+
+The subtyping of `AbstractMutable` will allow calls of some `Base` functions
+to be redirected to a method in MA that handles type promotion more carefuly
+(e.g. the promotion in sparse matrix products in SparseArrays usually does not
+work for JuMP types) and exploits the mutability of `AffExpr` and `QuadExpr`.
+"""
 abstract type AbstractJuMPScalar <: _MA.AbstractMutable end
 Base.ndims(::Type{<:AbstractJuMPScalar}) = 0
 
