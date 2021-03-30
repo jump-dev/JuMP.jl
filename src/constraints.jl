@@ -497,15 +497,15 @@ function check_belongs_to_model(con::VectorConstraint, model)
     end
 end
 
-function moi_add_constraint(
+function _moi_add_constraint(
     model::MOI.ModelLike,
     f::MOI.AbstractFunction,
     s::MOI.AbstractSet,
 )
     if !MOI.supports_constraint(model, typeof(f), typeof(s))
-        if moi_mode(model) == DIRECT
+        if _moi_mode(model) == DIRECT
             bridge_message = "."
-        elseif moi_bridge_constraints(model)
+        elseif _moi_bridge_constraints(model)
             error(
                 sprint(
                     io -> MOI.Bridges.debug(
@@ -540,7 +540,7 @@ function add_constraint(
     # The type of backend(model) is unknown so we directly redirect to another
     # function.
     check_belongs_to_model(con, model)
-    cindex = moi_add_constraint(backend(model), moi_function(con), moi_set(con))
+    cindex = _moi_add_constraint(backend(model), moi_function(con), moi_set(con))
     cshape = shape(con)
     if !(cshape isa ScalarShape) && !(cshape isa VectorShape)
         model.shapes[cindex] = cshape
