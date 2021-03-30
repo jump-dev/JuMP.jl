@@ -27,13 +27,29 @@ The JuMP style guide adopts many recommendations from the
     started). If large changes are needed, consider separating them into
     another PR.
 
-### Formatting
+### JuliaFormatter
 
-Julia unfortunately does not have an autoformatting tool like
-[gofmt](https://blog.golang.org/go-fmt-your-code). Until a reliable
-autoformatting tool is available, we adopt the following conventions.
+JuMP uses [JuliaFormatter.jl](https://github.com/domluna/JuliaFormatter.jl) as
+an autoformatting tool.
 
-#### Whitespace
+We use the options contained in [`.JuliaFormatter.toml`](https://github.com/jump-dev/JuMP.jl/blob/master/.JuliaFormatter.toml).
+
+To format code, `cd` to the JuMP directory, then run:
+```julia
+] add JuliaFormatter@0.13.2
+using JuliaFormatter
+format("src")
+format("test")
+```
+
+!!! info
+    A continuous integration check verifies that all PRs made to JuMP have
+    passed the formatter.
+
+The following sections outline extra style guide points that are not fixed
+automatically by JuliaFormatter.
+
+### Whitespace
 
 For conciseness, never use more than one blank line within a function, and never
 begin a function with a blank line.
@@ -54,68 +70,9 @@ function foo(x)
 end
 ```
 
-Julia is mostly insensitive to whitespace characters within lines.
-For consistency:
+### Juxtaposed multiplication
 
-- Use spaces between binary operators (with some exceptions, see below)
-- Use a single space after commas and semicolons
-- Do not use extra spaces for unary operators, parentheses, or braces
-- Indent within new blocks (except `module`) using 4 spaces
-
-Good:
-```julia
-f(x, y) = [3 * dot(x, y); x']
-```
-
-Bad:
-```julia
-f(x,y) = [ 3*dot(x,y) ; x' ]
-```
-
-Good:
-```julia
-module Foo
-
-function f(x)
-    return x + 1
-end
-
-end # module Foo
-```
-
-##### Exceptions
-
-For aesthetic reasons, we make an exception for whitespace surrounding the
-exponential operator `^`.
-
-Good:
-```julia
-f(x) = x^2
-```
-
-Bad:
-```julia
-f(x) = x ^ 2
-```
-
-We also make an exception for the `:` operator when it is used to form a range.
-
-Good:
-```julia
-x = 1:5
-```
-
-Bad:
-```julia
-x = 1 : 5
-```
-
-One reason is that it can be confused with Julia's conditional statement:
-`cond ? x : y` which requires whitespace around the `:`.
-
-We also make an exception for juxtaposed multiplication (i.e. dropping the `*`
-between a numeric literal and an expression) when the right-hand side is a
-symbol.
+Only use juxtaposed multiplication when the right-hand side is a symbol.
 
 Good:
 ```julia
@@ -129,174 +86,12 @@ Bad:
 2(x + 1)
 ```
 
-#### Return statements
-
-To avoid situations in which it is unclear whether the author intended to return
-a certain value or not, always use an explicit `return` statement to exit from a
-function. If the return from a function is `nothing`, use `return` instead of
-`return nothing`.
-
-We make an exception for assignment-form one-line functions (`f(x) = 2x`).
-
-Good:
-```julia
-foo(x) = 2x  # Acceptable if one line
-function foo(x)
-    return 2x
-end
-function foo(x)
-    x[1] += 1
-    return
-end
-```
-
-Bad:
-```julia
-function foo(x)
-    2x
-end
-function foo(x)
-    x[1] += 1
-    return nothing
-end
-```
-
-#### Line length
-
-Line lengths are a contentious issue. Our foremost goal is to maximize code
-readability. Very long line lengths can be hard to easily comprehend. However,
-arbitrarily enforcing a maximum line length (like 80 characters) inevitably
-leads to cases in which slightly longer lines (e.g. 81 characters) might be more
-readable.
-
-Therefore, aim to keep line lengths under 80 characters by breaking lines
-for maximum readability (examples are given in the [Line breaks](@ref) section),
-but don't treat this as a hard rule.
-
-We make exceptions for
- - URLs
- - pathnames
-
-#### Line breaks
-
-The "readability" of a line is subjective. In this section we give suggestions
-of good and bad style of how to break a line. These suggestions are inspired by
-Google's [Python style guide](https://google.github.io/styleguide/pyguide.html).
-
-!!! note
-    If you're unsure about how format your code, you can experiment (in Python)
-    using [YAPF](https://yapf.now.sh/).
-
-When defining functions, align arguments vertically after the opening
-parenthesis, or list all arguments on a new (indented) line.
-
-Good:
-```julia
-# Arguments to the function are aligned vertically.
-function my_very_long_function_name(with_lots_of_long_arguments_1,
-                                    and_another_long_one)
-    # First line of the function begins here.
-end
-
-# Arguments to the function are listed on a new line and indented.
-function my_very_long_function_name(
-    with_lots_of_long_arguments_1, and_another_long_one)
-    # First line of the function begins here.
-end
-```
-
-Bad:
-```julia
-# When defining functions, if vertical alignment is not used, then the arguments
-# should not begin on the first line.
-function my_very_long_function_name(with_lots_of_long_arguments_1,
-    and_another_long_one)
-    # First line of the function begins here.
-end
-```
-
-Don't use vertical alignment if all of the arguments are very far to the right.
-
-Bad:
-```julia
-a_very_long_variable_name = a_long_variable_name_with_arguments(first_argument,
-                                                                second_argument)
-```
-
-Better:
-```julia
-a_very_long_variable_name = a_long_variable_name_with_arguments(
-    first_argument, second_argument)
-```
-
-Don't use vertical alignment if it would be more readable to place all arguments
-on a new indented line.
-
-Bad:
-```julia
-con_index = MOI.add_constraint(backend(owner_model(variable)),
-                               MOI.SingleVariable(index(variable)), set)
-```
-
-Better:
-```julia
-con_index = MOI.add_constraint(
-    backend(owner_model(variable)), MOI.SingleVariable(index(variable)), set)
-```
-
-Don't break lines at an inner-level of function nesting.
-
-Bad:
-```julia
-con_index = MOI.add_constraint(
-    backend(owner_model(variable)), MOI.SingleVariable(
-    index(variable)), new_set)
-```
-
-Better:
-```julia
-con_index = MOI.add_constraint(
-    backend(owner_model(variable)),
-    MOI.SingleVariable(index(variable)), new_set)
-```
-
-For readability, don't split a one-line function over multiple lines.
-
-Bad:
-```julia
-f(x) = 1 + x +
-    x^2 + x^3
-```
-
-Better:
-```julia
-f(x) = 1 + x + x^2 + x^3 + x^3
-```
-
-### Syntax
-
-Julia sometimes provides equivalent syntax to express the same basic
-operation. We discuss these cases below.
-
-#### `for` loops
-
-Julia allows both `for x = 1:N` and `for x in 1:N`. Always prefer to use
-`in` over `=`, because `in` generalizes better to other index sets like `for x in eachindex(A)`.
-
-#### Empty vectors
+### Empty vectors
 
 For a type `T`, `T[]` and `Vector{T}()` are equivalent ways to create an
 empty vector with element type `T`. Prefer `T[]` because it is more concise.
 
-#### Trailing periods in floating-point constants
-
-Both `1.0` and `1.` create a `Float64` with value `1.0`. Prefer `1.0` over `1.`
-because it is more easily distinguished from the integer constant `1`.
-
-Moreover, as recommended by the [Julia style guide](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-using-floats-for-numeric-literals-in-generic-code-when-possible-1),
-never use `1.0` when `1` is okay.
-
-#### Comments
+### Comments
 
 For non-native speakers and for general clarity, comments in code must be proper
 English sentences with appropriate punctuation.
@@ -311,7 +106,7 @@ Bad:
 # a bad comment
 ```
 
-#### JuMP macro syntax
+### JuMP macro syntax
 
 For consistency, always use parentheses.
 
@@ -381,6 +176,18 @@ Also acceptable:
 end)
 ```
 
+While we always use `in` for `for`-loops, it is acceptable to use `=` in the
+container declarations of JuMP macros.
+
+Okay:
+```julia
+@variable(model, x[i=1:3])
+```
+Also okay:
+```julia
+@variable(model, x[i in 1:3])
+```
+
 ### Naming
 
 ```julia
@@ -395,7 +202,7 @@ some_local_variable = ...
 some_file.jl # Except for ModuleName.jl.
 ```
 
-#### Exported and non-exported names
+### Exported and non-exported names
 
 Begin private module level functions and constants with an underscore. All other
 objects in the scope of a module should be exported. (See JuMP.jl for an example
@@ -423,7 +230,7 @@ const PUBLIC_CONSTANT = 1.41421
 end
 ```
 
-#### Use of underscores within names
+### Use of underscores within names
 
 The Julia style guide recommends avoiding underscores "when readable", for
 example, `haskey`, `isequal`, `remotecall`, and `remotecall_fetch`. This
@@ -432,7 +239,7 @@ the user to recall the presence/absence of an underscore, e.g., "was that
 argument named `basename` or `base_name`?". For consistency, *always use
 underscores* in variable names and function names to separate words.
 
-#### Use of `!`
+### Use of `!`
 
 Julia has a convention of appending `!` to a function name if the function
 modifies its arguments. We recommend to:
@@ -453,7 +260,7 @@ Be sure to document which arguments are modified in the method's docstring.
 See also the Julia style guide recommendations for
 [ordering of function arguments](https://docs.julialang.org/en/v1.0.0/manual/style-guide/#Write-functions-with-argument-ordering-similar-to-Julia's-Base-1).
 
-#### Abbreviations
+### Abbreviations
 
 Abbreviate names to make the code more readable, not to save typing.
 Don't arbitrarily delete letters from a word to abbreviate it (e.g., `indx`).
@@ -465,13 +272,15 @@ Common abbreviations:
 - `num` for `number`
 - `con` for `constraint`
 
-TODO: add more
+### No one-letter variable names
 
-### Miscellaneous
+Where possible, avoid one-letter variable names.
 
-(TODO: Rethink categories.)
+Use `model = Model()` instead of `m = Model()`
 
-#### User-facing `MethodError`
+Exceptions are made for indices in loops.
+
+### User-facing `MethodError`
 
 Specifying argument types for methods is mostly optional in Julia, which means
 that it's possible to find out that you are working with unexpected types deep in
@@ -499,13 +308,15 @@ then the following pattern is also ok:
 ```julia
 _internal_function(x::Integer) = x + 1
 function _internal_function(x)
-    error("Internal error. This probably means that you called " *
-          "public_function() with the wrong type.")
+    error(
+        "Internal error. This probably means that you called " *
+        "public_function() with the wrong type.",
+    )
 end
 public_function(x) = _internal_function(x)
 ```
 
-#### `@enum` vs. `Symbol`
+### `@enum` vs. `Symbol`
 
 The `@enum` macro lets you define types with a finite number of values that
 are explicitly enumerated (like `enum` in C/C++). `Symbol`s are lightweight
@@ -518,7 +329,7 @@ Use strings to provide long-form additional information like error messages.
 Use of `Symbol` should typically be reserved for identifiers, e.g., for lookup
 in the JuMP model (`model[:my_variable]`).
 
-#### `using` vs. `import`
+### `using` vs. `import`
 
 `using ModuleName` brings all symbols exported by the module `ModuleName`
 into scope, while `import ModuleName` brings only the module itself into scope.
@@ -545,15 +356,13 @@ We can recommend the documentation style guides by [Divio](https://www.divio.com
 [Google](https://developers.google.com/style/), and [Write the Docs](https://www.writethedocs.org/guide/)
 as general reading for those writing documentation. This guide delegates a
 thorough handling of the topic to those guides and instead elaborates on the
-points more specific to Julia and documentation that uses
-[Documenter](https://github.com/JuliaDocs/Documenter.jl).
+points more specific to Julia and documentation that use [Documenter](https://github.com/JuliaDocs/Documenter.jl).
 
- - Be concise.
- - Use lists instead of long sentences.
- - Use numbered lists when describing a sequence, e.g., (1) do X, (2) then Y.
- - Use bullet points when the items are not ordered.
- - Example code should be covered by doctests. (But it's [unclear what to do](https://github.com/jump-dev/JuMP.jl/issues/1175)
-   if the code depends on a solver.)
+ - Be concise
+ - Use lists instead of long sentences
+ - Use numbered lists when describing a sequence, e.g., (1) do X, (2) then Y
+ - Use bullet points when the items are not ordered
+ - Example code should be covered by doctests
  - When a word is a Julia symbol and not an English word, enclose it with
    backticks. In addition, if it has a docstring in this doc add a link using
    `@ref`. If it is a plural, add the "s" after the closing backtick. For example,
@@ -568,7 +377,69 @@ points more specific to Julia and documentation that uses
    # TODO: Mention also X, Y, and Z.
    ```
    ````
+### Docstrings
 
+- Every exported object needs a docstring
+- All examples in docstrings should be [`jldoctests`](https://juliadocs.github.io/Documenter.jl/stable/man/doctests/)
+- Always use complete English sentences with proper punctuation
+- Do not terminate lists swith punctuation (e.g., as in this doc)
+
+Here is an example:
+````julia
+"""
+    signature(args; kwargs...)
+
+Short sentence describing the function.
+
+Optional: add a slightly longer paragraph describing the function.
+
+## Notes
+
+ - List any notes that the user should be aware of
+
+## Examples
+
+```jldoctest
+julia> 1 + 1
+2
+```
+"""
+````
+
+## Testing
+
+Use a module to encapsulate tests, and structure all tests as functions. This
+avoids leaking local variables between tests.
+
+Here is a basic skeleton:
+```julia
+module TestPkg
+
+using Test
+
+_helper_function() = 2
+
+function test_addition()
+    @test 1 + 1 == _helper_function()
+end
+
+function runtests()
+    for name in names(@__MODULE__; all = true)
+        if startswith("$(name)", "test_")
+            @testset "$(name)" begin
+                getfield(@__MODULE__, name)()
+            end
+        end
+    end
+end
+
+end # TestPkg
+
+TestPkg.runtests()
+```
+
+Break the tests into multiple files, with one module per file, so that subsets
+of the codebase can be tested by calling `include` with the relevant file.
 
 ## Design principles
 
