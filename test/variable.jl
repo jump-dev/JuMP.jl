@@ -922,6 +922,18 @@ function test_Model_relax_integrality_error_cases(::Any, ::Any)
     @test_throws err relax_integrality(model)
 end
 
+function test_start_value(::Any, ::Any)
+    model = Model()
+    @variable(model, x)
+    @test start_value(x) === nothing
+    set_start_value(x, 1.0)
+    @test start_value(x) == 1.0
+    set_start_value(x, nothing)
+    @test start_value(x) === nothing
+    set_start_value(x, 1)
+    @test start_value(x) == 1.0
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
