@@ -65,7 +65,7 @@ julia> struct AddTwice
        end
 ```
 
-Second, implement [`build_variable`](@ref), which takes `::Type{Duplicate}` as
+Second, implement [`build_variable`](@ref), which takes `::Type{AddTwice}` as
 an argument, and returns an instance of `AddTwice`. Note that you can also
 receive keyword arguments.
 ```jldoctest new_variable
