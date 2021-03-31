@@ -666,27 +666,6 @@ The expression `expr` can either be
 * of the forms `@constraint(m, a .sign b)` or
   `@constraint(m, a .sign b .sign c)` which broadcast the constraint creation to
   each element of the vectors.
-
-## Note for extending the constraint macro
-
-Each constraint will be created using
-`add_constraint(m, build_constraint(_error, func, set))` where
-* `_error` is an error function showing the constraint call in addition to the
-  error message given as argument,
-* `func` is the expression that is constrained
-* and `set` is the set in which it is constrained to belong.
-
-For `expr` of the first type (i.e. `@constraint(m, func in set)`), `func` and
-`set` are passed unchanged to `build_constraint` but for the other types, they
-are determined from the expressions and signs. For instance,
-`@constraint(m, x^2 + y^2 == 1)` is transformed into
-`add_constraint(m, build_constraint(_error, x^2 + y^2, MOI.EqualTo(1.0)))`.
-
-To extend JuMP to accept new constraints of this form, it is necessary to add
-the corresponding methods to `build_constraint`. Note that this will likely mean
-that either `func` or `set` will be some custom type, rather than e.g. a
-`Symbol`, since we will likely want to dispatch on the type of the function or
-set appearing in the constraint.
 """
 macro constraint(args...)
     return _constraint_macro(
@@ -1576,69 +1555,6 @@ or it can be specified with the `upper_bound` keyword argument:
 And data, a 2-element Array{VariableRef,1}:
  y[a]
  y[b]
-```
-
-## Note for extending the variable macro
-
-The single scalar variable or each scalar variable of the container are created
-using `add_variable(model, build_variable(_error, info, extra_args...;
-extra_kw_args...))` where
-
-* `model` is the model passed to the `@variable` macro;
-* `_error` is an error function with a single `String` argument showing the
-  `@variable` call in addition to the error message given as argument;
-* `info` is the `VariableInfo` struct containing the information gathered in
-  `expr`, the recognized keyword arguments (except `base_name` and
-  `variable_type`) and the recognized positional arguments (except `Symmetric`
-  and `PSD`);
-* `extra_args` are the unrecognized positional arguments of `args` plus the
-  value of the `variable_type` keyword argument if present. The `variable_type`
-  keyword argument allows the user to pass a position argument to
-  `build_variable` without the need to give a positional argument to
-  `@variable`. In particular, this allows the user to give a positional
-  argument to the `build_variable` call when using the anonymous single variable
-  syntax `@variable(model, kw_args...)`; and
-* `extra_kw_args` are the unrecognized keyword argument of `kw_args`.
-
-## Examples
-
-The following creates a variable `x` of name `x` with `lower_bound` 0 as with the first
-example above but does it without using the `@variable` macro
-```julia
-info = VariableInfo(true, 0, false, NaN, false, NaN, false, NaN, false, false)
-JuMP.add_variable(model, JuMP.build_variable(error, info), "x")
-```
-
-The following creates a `DenseAxisArray` of index set `[:a, :b]` and with respective
-upper bounds 2 and 3 and names `x[a]` and `x[b]` as with the second example
-above but does it without using the `@variable` macro
-```jldoctest variable_macro
-# Without the `@variable` macro
-x = JuMP.Containers.container(i -> begin
-        info = VariableInfo(false, NaN, true, ub[i], false, NaN, false, NaN, false, false)
-        x[i] = JuMP.add_variable(model, JuMP.build_variable(error, info), "x[\$i]")
-    end, JuMP.Containers.vectorized_product(keys(ub)))
-
-# output
-1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
-    Dimension 1, Symbol[:a, :b]
-And data, a 2-element Array{VariableRef,1}:
- x[a]
- x[b]
-```
-
-The following are equivalent ways of creating a `Matrix` of size
-`N x N` with variables custom variables created with a JuMP extension using
-the `Poly(X)` positional argument to specify its variables:
-```julia
-# Using the `@variable` macro
-@variable(model, x[1:N,1:N], Symmetric, Poly(X))
-# Without the `@variable` macro
-x = Matrix{JuMP.variable_type(model, Poly(X))}(N, N)
-info = VariableInfo(false, NaN, false, NaN, false, NaN, false, NaN, false, false)
-for i in 1:N, j in i:N
-    x[i,j] = x[j,i] = JuMP.add_variable(model, build_variable(error, info, Poly(X)), "x[\$i,\$j]")
-end
 ```
 """
 macro variable(args...)
