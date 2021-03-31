@@ -910,12 +910,7 @@ Note: `VariablePrimalStart`s are sometimes called "MIP-starts" or "warmstarts".
 See also [`start_value`](@ref).
 """
 function set_start_value(variable::VariableRef, value::Union{Nothing,Float64})
-    MOI.set(
-        owner_model(variable),
-        MOI.VariablePrimalStart(),
-        variable,
-        value,
-    )
+    MOI.set(owner_model(variable), MOI.VariablePrimalStart(), variable, value)
     return
 end
 set_start_value(x::VariableRef, v::Number) = set_start_value(x, Float64(v))
