@@ -44,10 +44,18 @@ For instance:
 struct VectorizedProductIterator{T}
     prod::Iterators.ProductIterator{T}
 end
+
 function _collect(x)
     # Collect iterators with unknown size so they can be used as axes.
-    return Base.IteratorSize(x) == Base.SizeUnknown() ? collect(x) : x
+    if Base.IteratorSize(x) == Base.SizeUnknown()
+        return collect(x)
+    elseif Base.IteratorSize(x) == Base.IsInfinite()
+        error("Unable to form a container. Axis $(x) has infinite size!")
+    else
+        return x
+    end
 end
+
 function vectorized_product(iterators...)
     return VectorizedProductIterator(Iterators.product(_collect.(iterators)...))
 end
