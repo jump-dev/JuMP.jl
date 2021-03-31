@@ -98,7 +98,5 @@ relax_integrality
 ```@docs
 AbstractVariable
 AbstractVariableRef
-add_variable
-build_variable
 parse_one_operator_variable
 ```

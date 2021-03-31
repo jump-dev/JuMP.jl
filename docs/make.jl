@@ -131,6 +131,7 @@ makedocs(
             "reference/nlp.md",
             "reference/callbacks.md",
             "reference/moi.md",
+            "reference/extensions.md",
         ],
         "Background information" => [
             "background/should_i_use.md",
