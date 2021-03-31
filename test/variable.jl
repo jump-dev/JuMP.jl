@@ -936,6 +936,18 @@ function test_unknown_size_sparse(::Any, ::Any)
     @test length(x) == 2
 end
 
+function test_start_value(::Any, ::Any)
+    model = Model()
+    @variable(model, x)
+    @test start_value(x) === nothing
+    set_start_value(x, 1.0)
+    @test start_value(x) == 1.0
+    set_start_value(x, nothing)
+    @test start_value(x) === nothing
+    set_start_value(x, 1)
+    @test start_value(x) == 1.0
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
