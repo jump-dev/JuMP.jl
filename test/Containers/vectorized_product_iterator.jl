@@ -12,7 +12,7 @@ using Test
           [(2, 1) (2, 3) (2, 2) (2, 4)]
 end
 
-@test "Unknown size" begin
+@testset "Unknown size" begin
     f = Iterators.filter(k -> isodd(k), 1:10)
     v = Containers.vectorized_product(f)
     @test axes(v) == (Base.OneTo(5),)
