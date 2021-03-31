@@ -666,6 +666,27 @@ The expression `expr` can either be
 * of the forms `@constraint(m, a .sign b)` or
   `@constraint(m, a .sign b .sign c)` which broadcast the constraint creation to
   each element of the vectors.
+
+## Note for extending the constraint macro
+
+Each constraint will be created using
+`add_constraint(m, build_constraint(_error, func, set))` where
+* `_error` is an error function showing the constraint call in addition to the
+  error message given as argument,
+* `func` is the expression that is constrained
+* and `set` is the set in which it is constrained to belong.
+
+For `expr` of the first type (i.e. `@constraint(m, func in set)`), `func` and
+`set` are passed unchanged to `build_constraint` but for the other types, they
+are determined from the expressions and signs. For instance,
+`@constraint(m, x^2 + y^2 == 1)` is transformed into
+`add_constraint(m, build_constraint(_error, x^2 + y^2, MOI.EqualTo(1.0)))`.
+
+To extend JuMP to accept new constraints of this form, it is necessary to add
+the corresponding methods to `build_constraint`. Note that this will likely mean
+that either `func` or `set` will be some custom type, rather than e.g. a
+`Symbol`, since we will likely want to dispatch on the type of the function or
+set appearing in the constraint.
 """
 macro constraint(args...)
     return _constraint_macro(
