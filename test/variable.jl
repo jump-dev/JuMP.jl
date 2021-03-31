@@ -922,6 +922,20 @@ function test_Model_relax_integrality_error_cases(::Any, ::Any)
     @test_throws err relax_integrality(model)
 end
 
+function test_unknown_size_dense(::Any, ::Any)
+    model = Model()
+    f = Iterators.filter(k -> isodd(k), 1:10)
+    @variable(model, x[f])
+    @test length(x) == 5
+end
+
+function test_unknown_size_sparse(::Any, ::Any)
+    model = Model()
+    f = Iterators.filter(k -> isodd(k), 1:10)
+    @variable(model, x[i=f; i < 5])
+    @test length(x) == 2
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
