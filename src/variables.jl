@@ -898,24 +898,27 @@ function start_value(v::VariableRef)::Union{Nothing,Float64}
 end
 
 """
-    set_start_value(variable::VariableRef, value::Number)
+    set_start_value(variable::VariableRef, value::Union{Real,Nothing})
 
-Set the start value (MOI attribute `VariablePrimalStart`) of the variable `v` to
+Set the start value (MOI attribute `VariablePrimalStart`) of the `variable` to
 `value`.
+
+Pass `nothing` to unset the start value.
 
 Note: `VariablePrimalStart`s are sometimes called "MIP-starts" or "warmstarts".
 
 See also [`start_value`](@ref).
 """
-function set_start_value(variable::VariableRef, value::Number)
+function set_start_value(variable::VariableRef, value::Union{Nothing,Float64})
     MOI.set(
         owner_model(variable),
         MOI.VariablePrimalStart(),
         variable,
-        Float64(value),
+        value,
     )
     return
 end
+set_start_value(x::VariableRef, v::Number) = set_start_value(x, Float64(v))
 
 """
     value(v::VariableRef; result = 1)
