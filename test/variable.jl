@@ -932,7 +932,7 @@ end
 function test_unknown_size_sparse(::Any, ::Any)
     model = Model()
     f = Iterators.filter(k -> isodd(k), 1:10)
-    @variable(model, x[i=f; i < 5])
+    @variable(model, x[i = f; i < 5])
     @test length(x) == 2
 end
 
