@@ -256,18 +256,18 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test x == y
     end
     @testset "Broadcast" begin
+        foo(x, y) = x + y
+        foo_b(x, y) = foo.(x, y)
+        bar(x, y) = foo.(x, y) .+ x
         a = [5.0 6.0; 7.0 8.0]
         A = DenseAxisArray(a, [:a, :b], [:a, :b])
         b = a .+ 1
         B = A .+ 1
         @test B == DenseAxisArray(b, [:a, :b], [:a, :b])
-        foo = (x, y) -> x + y
-        c = foo.(a, b)
-        C = foo.(A, B)
-        @test C == DenseAxisArray(c, [:a, :b], [:a, :b])
-        d = (foo.(a, b) .+ a) .^ 2
-        D = (foo.(A, B) .+ A) .^ 2
-        @test D == DenseAxisArray(d, [:a, :b], [:a, :b])
+        C = @inferred foo_b(A, B)
+        @test C == DenseAxisArray(foo_b(a, b), [:a, :b], [:a, :b])
+        D = @inferred bar(A, B)
+        @test D == DenseAxisArray(bar(a, b), [:a, :b], [:a, :b])
     end
     @testset "Broadcast_errors" begin
         a = [5.0 6.0; 7.0 8.0]
