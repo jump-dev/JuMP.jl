@@ -268,6 +268,13 @@ In addition to this list of functions, it is possible to register custom
     User-defined functions can be used anywhere in [`@NLobjective`](@ref),
     [`@NLconstraint`](@ref), and [`@NLexpression`](@ref).
 
+!!! tip
+    JuMP will attempt to automatically register functions it detects in your
+    nonlinear expressions, which means that in most cases, manually registering
+    a function is not needed. Two exceptions are if you want to provide custom
+    derivatives, or if the function is not available in the scope of the
+    nonlinear expression.
+
 ### Automatic differentiation
 
 JuMP does not support black-box optimization, so all user-defined functions must

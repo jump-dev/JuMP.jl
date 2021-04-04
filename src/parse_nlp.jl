@@ -17,6 +17,21 @@ function _error_curly(x)
     )
 end
 
+function _warn_auto_register(opname, N)
+    @warn("""Function $(opname) automatically registered with $N arguments.
+
+    Calling the function with a different number of arguments will result in an
+    error.
+
+    While you can safely ignore this warning, we recommend that you manually
+    register the function as follows:
+    ```Julia
+    model = Model()
+    register(model, :$opname, $N, $opname; autodiff = true)
+    ```""")
+    return
+end
+
 # generates code which converts an expression into a NodeData array (tape)
 # parent is the index of the parent expression
 # values is the name of the list of constants which appear in the expression
@@ -93,11 +108,34 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                 )
             else
                 opname = quot(x.args[1])
-                errorstring = "Unrecognized function \"$(x.args[1])\" used in nonlinear expression."
+                f = x.args[1]
+                errorstring = """
+                Unrecognized function \"$(f)\" used in nonlinear expression.
+
+                If the function exists, but is not within the scope of this call,
+                you should register it as a user-defined function before building
+                the model. For example:
+                ```julia
+                model = Model()
+                register(model, :$(f), 1, $(f), autodiff=true)
+                # ... variables and constraints ...
+                ```
+                """
                 errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
                 lookupcode = quote
                     if $(esc(m)).nlp_data === nothing
-                        error($errorstring)
+                        try
+                            register(
+                                $(esc(m)),
+                                $opname,
+                                1,
+                                $(esc(x.args[1]));
+                                autodiff = true,
+                            )
+                            _warn_auto_register($opname, 1)
+                        catch
+                            error($errorstring)
+                        end
                     end
                     if !haskey(
                         $(esc(
@@ -113,7 +151,18 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                         )
                             error($errorstring2)
                         else
-                            error($errorstring)
+                            try
+                                register(
+                                    $(esc(m)),
+                                    $opname,
+                                    1,
+                                    $(esc(x.args[1]));
+                                    autodiff = true,
+                                )
+                                _warn_auto_register($opname, 1)
+                            catch
+                                error($errorstring)
+                            end
                         end
                     end
                     operatorid =
@@ -164,11 +213,35 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                 )
             else # could be user defined
                 opname = quot(x.args[1])
-                errorstring = "Unrecognized function \"$(x.args[1])\" used in nonlinear expression."
+                N = length(x.args) - 1
+                f = x.args[1]
+                errorstring = """
+                Unrecognized function \"$(f)\" used in nonlinear expression.
+
+                If the function exists, but is not within the scope of this call,
+                you should register it as a user-defined function before building
+                the model. For example:
+                ```julia
+                model = Model()
+                register(model, :$(f), $(N), $(f), autodiff=true)
+                # ... variables and constraints ...
+                ```
+                """
                 errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
                 lookupcode = quote
                     if $(esc(m)).nlp_data === nothing
-                        error($errorstring)
+                        try
+                            register(
+                                $(esc(m)),
+                                $opname,
+                                $N,
+                                $(esc(x.args[1]));
+                                autodiff = true,
+                            )
+                            _warn_auto_register($opname, $N)
+                        catch
+                            error($errorstring)
+                        end
                     end
                     if !haskey(
                         $(esc(
@@ -184,7 +257,18 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                         )
                             error($errorstring2)
                         else
-                            error($errorstring)
+                            try
+                                register(
+                                    $(esc(m)),
+                                    $opname,
+                                    $N,
+                                    $(esc(x.args[1]));
+                                    autodiff = true,
+                                )
+                                _warn_auto_register($opname, $N)
+                            catch
+                                error($errorstring)
+                            end
                         end
                     end
                     operatorid =

@@ -9,6 +9,149 @@ include(joinpath(@__DIR__, "utilities.jl"))
     include(joinpath(@__DIR__, "JuMPExtension.jl"))
 end
 
+function test_univariate_error()
+    model = Model()
+    @variable(model, x >= 0)
+    @test_throws ErrorException @NLobjective(model, Min, g_doesnotexist(x))
+end
+
+function test_univariate_error_existing()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    @test_throws ErrorException @NLobjective(model, Min, g_doestnotexist(ex))
+end
+
+function test_univariate()
+    model = Model()
+    @variable(model, x >= 0)
+    g(x) = x^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(x))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 4.0
+end
+
+function test_univariate_register_twice()
+    model = Model()
+    @variable(model, x >= 0)
+    g(x) = x^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(x))
+    @test_logs @NLconstraint(model, g(x) <= 1)
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    y = [NaN]
+    MOI.eval_constraint(d, y, x)
+    @test y == [3.0]
+end
+
+function test_univariate_register_twice_error()
+    model = Model()
+    @variable(model, x >= 0)
+    g(x) = x^2
+    g(x, y) = x^2 + x^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(x))
+    @test_throws ErrorException @NLconstraint(model, g(x, x) <= 1)
+end
+
+function test_univariate_existing_nlpdata()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    g(x) = x^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(ex))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 16.0
+end
+
+function test_univariate_redefine()
+    model = Model()
+    @variable(model, x >= 0)
+    g = (x) -> x^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(x))
+
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 4.0
+
+    g = (x) -> 2x^2
+    @test MOI.eval_objective(d, x) == 4.0
+end
+
+function test_multivariate_error()
+    model = Model()
+    @variable(model, x >= 0)
+    @test_throws ErrorException @NLobjective(model, Min, g_doesnotexist(x, x))
+end
+
+function test_multivariate_error_existing()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    @test_throws ErrorException @NLobjective(model, Min, g_doestnotexist(ex, x))
+end
+
+function test_multivariate()
+    model = Model()
+    @variable(model, x >= 0)
+    g(x, y) = x^2 + y^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(x, x))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 8.0
+end
+
+function test_multivariate_existing_nlpdata()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    g(x, y) = x^2 + y^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(ex, x))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 20.0
+end
+
+function test_multivariate_redefine()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    g = (x, y) -> x^2 + y^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(ex, x))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 20.0
+
+    g = (x, y) -> x^2 + y
+    @test MOI.eval_objective(d, x) == 20.0
+end
+
+@testset "Auto-register-univariate" begin
+    test_univariate_error()
+    test_univariate_error_existing()
+    test_univariate()
+    test_univariate_existing_nlpdata()
+    test_univariate_redefine()
+    test_univariate_register_twice()
+    test_univariate_register_twice_error()
+end
+
+@testset "Auto-register-multivariate" begin
+    test_multivariate_error()
+    test_multivariate_error_existing()
+    test_multivariate()
+    test_multivariate_existing_nlpdata()
+    test_multivariate_redefine()
+end
+
 @testset "Nonlinear" begin
     import JuMP: _NonlinearExprData
 
