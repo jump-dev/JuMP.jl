@@ -328,41 +328,41 @@ end
 ################
 
 # This implementation follows the instructions at
-# hhttps://docs.julialang.org/en/v1/manual/interfaces/#man-interfaces-broadcasting
+# https://docs.julialang.org/en/v1/manual/interfaces/#man-interfaces-broadcasting
 # for implementing broadcast.
 
-struct _DenseAxisArrayBroadcastStyle <: Broadcast.BroadcastStyle end
-
-Base.BroadcastStyle(::Type{<:DenseAxisArray}) = _DenseAxisArrayBroadcastStyle()
-
-function Base.BroadcastStyle(
-    ::_DenseAxisArrayBroadcastStyle,
-    ::Base.Broadcast.DefaultArrayStyle{0},
-)
-    return _DenseAxisArrayBroadcastStyle()
+function Base.BroadcastStyle(::Type{T}) where {T<:DenseAxisArray}
+    return Broadcast.ArrayStyle{T}()
 end
 
-function _broadcast_axes_inner(arg::DenseAxisArray, axes_lookup)
-    if axes_lookup !== nothing && axes(arg) != axes_lookup[1]
-        error("Unable to broadcast over DenseAxisArrays with different axes.")
+function _broadcast_axes_check(x::NTuple{N}) where {N}
+    axes = first(x)
+    for i = 2:N
+        if x[i][1] != axes[1]
+            error("Unable to broadcast over DenseAxisArrays with different axes.")
+        end
     end
-    return (arg.axes, arg.lookup)
+    return axes
 end
-_broadcast_axes_inner(::Any, axes_lookup) = axes_lookup
 
-function _broadcast_axes(args::Tuple, axes = nothing)
-    new_axes = _broadcast_axes_inner(first(args), axes)
-    return _broadcast_axes(Base.tail(args), new_axes)
+_broadcast_axes(x::Tuple) = _broadcast_axes(first(x), Base.tail(x))
+_broadcast_axes(::Tuple{}) = ()
+_broadcast_axes(::Any, tail) = _broadcast_axes(tail)
+function _broadcast_axes(x::DenseAxisArray, tail)
+    return ((x.axes, x.lookup), _broadcast_axes(tail)...)
 end
-_broadcast_axes(::NTuple{0}, axes) = axes
 
 _broadcast_args(x::Tuple) = _broadcast_args(first(x), Base.tail(x))
+_broadcast_args(::Tuple{}) = ()
 _broadcast_args(x::Any, tail) = (x, _broadcast_args(tail)...)
 _broadcast_args(x::DenseAxisArray, tail) = (x.data, _broadcast_args(tail)...)
-_broadcast_args(::Tuple{}) = ()
 
-function Base.Broadcast.broadcasted(::_DenseAxisArrayBroadcastStyle, f, args...)
-    axes_lookup = _broadcast_axes(args)
+function Base.Broadcast.broadcasted(
+    ::Broadcast.ArrayStyle{<:DenseAxisArray},
+    f,
+    args...,
+)
+    axes_lookup = _broadcast_axes_check(_broadcast_axes(args))
     new_args = _broadcast_args(args)
     return DenseAxisArray(broadcast(f, new_args...), axes_lookup...)
 end
