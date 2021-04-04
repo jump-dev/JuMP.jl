@@ -12,22 +12,21 @@ end
 function test_univariate_error()
     model = Model()
     @variable(model, x >= 0)
-    @test_throws ErrorException @NLobjective(model, Min, g(x))
+    @test_throws ErrorException @NLobjective(model, Min, g_doesnotexist(x))
 end
 
 function test_univariate_error_existing()
     model = Model()
     @variable(model, x >= 0)
     @NLexpression(model, ex, x^2)
-    @test_throws ErrorException @NLobjective(model, Min, g(ex))
+    @test_throws ErrorException @NLobjective(model, Min, g_doestnotexist(ex))
 end
 
 function test_univariate()
     model = Model()
     @variable(model, x >= 0)
     g(x) = x^2
-    @NLobjective(model, Min, g(x))
-
+    @test_logs (:warn,) @NLobjective(model, Min, g(x))
     d = JuMP.NLPEvaluator(model)
     MOI.initialize(d, Symbol[])
     x = [2.0]
@@ -38,8 +37,8 @@ function test_univariate_register_twice()
     model = Model()
     @variable(model, x >= 0)
     g(x) = x^2
-    @NLobjective(model, Min, g(x))
-    @NLconstraint(model, g(x) <= 1)
+    @test_logs (:warn,) @NLobjective(model, Min, g(x))
+    @test_logs @NLconstraint(model, g(x) <= 1)
     d = JuMP.NLPEvaluator(model)
     MOI.initialize(d, Symbol[])
     x = [2.0]
@@ -53,7 +52,7 @@ function test_univariate_register_twice_error()
     @variable(model, x >= 0)
     g(x) = x^2
     g(x, y) = x^2 + x^2
-    @NLobjective(model, Min, g(x))
+    @test_logs (:warn,) @NLobjective(model, Min, g(x))
     @test_throws ErrorException @NLconstraint(model, g(x, x) <= 1)
 end
 
@@ -62,7 +61,7 @@ function test_univariate_existing_nlpdata()
     @variable(model, x >= 0)
     @NLexpression(model, ex, x^2)
     g(x) = x^2
-    @NLobjective(model, Min, g(ex))
+    @test_logs (:warn,) @NLobjective(model, Min, g(ex))
     d = JuMP.NLPEvaluator(model)
     MOI.initialize(d, Symbol[])
     x = [2.0]
@@ -73,7 +72,7 @@ function test_univariate_redefine()
     model = Model()
     @variable(model, x >= 0)
     g = (x) -> x^2
-    @NLobjective(model, Min, g(x))
+    @test_logs (:warn,) @NLobjective(model, Min, g(x))
 
     d = JuMP.NLPEvaluator(model)
     MOI.initialize(d, Symbol[])
@@ -87,21 +86,21 @@ end
 function test_multivariate_error()
     model = Model()
     @variable(model, x >= 0)
-    @test_throws ErrorException @NLobjective(model, Min, g(x, x))
+    @test_throws ErrorException @NLobjective(model, Min, g_doesnotexist(x, x))
 end
 
 function test_multivariate_error_existing()
     model = Model()
     @variable(model, x >= 0)
     @NLexpression(model, ex, x^2)
-    @test_throws ErrorException @NLobjective(model, Min, g(ex, x))
+    @test_throws ErrorException @NLobjective(model, Min, g_doestnotexist(ex, x))
 end
 
 function test_multivariate()
     model = Model()
     @variable(model, x >= 0)
     g(x, y) = x^2 + y^2
-    @NLobjective(model, Min, g(x, x))
+    @test_logs (:warn,) @NLobjective(model, Min, g(x, x))
     d = JuMP.NLPEvaluator(model)
     MOI.initialize(d, Symbol[])
     x = [2.0]
@@ -113,7 +112,7 @@ function test_multivariate_existing_nlpdata()
     @variable(model, x >= 0)
     @NLexpression(model, ex, x^2)
     g(x, y) = x^2 + y^2
-    @NLobjective(model, Min, g(ex, x))
+    @test_logs (:warn,) @NLobjective(model, Min, g(ex, x))
     d = JuMP.NLPEvaluator(model)
     MOI.initialize(d, Symbol[])
     x = [2.0]
@@ -125,7 +124,7 @@ function test_multivariate_redefine()
     @variable(model, x >= 0)
     @NLexpression(model, ex, x^2)
     g = (x, y) -> x^2 + y^2
-    @NLobjective(model, Min, g(ex, x))
+    @test_logs (:warn,) @NLobjective(model, Min, g(ex, x))
     d = JuMP.NLPEvaluator(model)
     MOI.initialize(d, Symbol[])
     x = [2.0]
