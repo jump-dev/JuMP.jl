@@ -258,7 +258,7 @@ And data, a 0-dimensional $(Array{Int,0}):
     @testset "Broadcast" begin
         foo(x, y) = x + y
         foo_b(x, y) = foo.(x, y)
-        bar(x, y) = (foo.(x, y) .+ x).^2
+        bar(x, y) = (foo.(x, y) .+ x) .^ 2
         a = [5.0 6.0; 7.0 8.0]
         A = DenseAxisArray(a, [:a, :b], [:a, :b])
         b = a .+ 1

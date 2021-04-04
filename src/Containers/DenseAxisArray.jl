@@ -337,9 +337,11 @@ end
 
 function _broadcast_axes_check(x::NTuple{N}) where {N}
     axes = first(x)
-    for i = 2:N
+    for i in 2:N
         if x[i][1] != axes[1]
-            error("Unable to broadcast over DenseAxisArrays with different axes.")
+            error(
+                "Unable to broadcast over DenseAxisArrays with different axes.",
+            )
         end
     end
     return axes
