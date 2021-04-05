@@ -255,4 +255,26 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test y isa DenseAxisArray
         @test x == y
     end
+    @testset "Broadcast" begin
+        foo(x, y) = x + y
+        foo_b(x, y) = foo.(x, y)
+        bar(x, y) = (foo.(x, y) .+ x) .^ 2
+        a = [5.0 6.0; 7.0 8.0]
+        A = DenseAxisArray(a, [:a, :b], [:a, :b])
+        b = a .+ 1
+        B = A .+ 1
+        @test B == DenseAxisArray(b, [:a, :b], [:a, :b])
+        C = @inferred foo_b(A, B)
+        @test C == DenseAxisArray(foo_b(a, b), [:a, :b], [:a, :b])
+        D = @inferred bar(A, B)
+        @test D == DenseAxisArray(bar(a, b), [:a, :b], [:a, :b])
+    end
+    @testset "Broadcast_errors" begin
+        a = [5.0 6.0; 7.0 8.0]
+        A = DenseAxisArray(a, [:a, :b], [:a, :b])
+        B = DenseAxisArray(a, [:b, :a], [:a, :b])
+        @test_throws ErrorException A .+ B
+        b = [5.0 6.0; 7.0 8.0; 9.0 10.0]
+        @test_throws DimensionMismatch A .+ b
+    end
 end
