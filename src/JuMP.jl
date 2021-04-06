@@ -984,16 +984,6 @@ function Base.one(::Type{V}) where {V<:AbstractVariableRef}
 end
 Base.one(v::AbstractVariableRef) = one(typeof(v))
 
-mutable struct VariableNotOwnedError <: Exception
-    context::String
-end
-function Base.showerror(io::IO, ex::VariableNotOwnedError)
-    return print(
-        io,
-        "VariableNotOwnedError: Variable not owned by model present in $(ex.context)",
-    )
-end
-
 _moi_optimizer_index(model::MOI.AbstractOptimizer, index::MOI.Index) = index
 function _moi_optimizer_index(model::MOIU.CachingOptimizer, index::MOI.Index)
     if MOIU.state(model) == MOIU.NO_OPTIMIZER
