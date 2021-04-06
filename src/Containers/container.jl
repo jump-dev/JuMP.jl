@@ -113,13 +113,24 @@ function container(f::Function, indices, ::Type{SparseAxisArray})
     mappings = Base.Generator(I -> I => f(I...), indices)
     # Same as `Dict(mapping)` but it will error if two indices are the same.
     data = NoDuplicateDict(mappings)
-    dict = data.dict
-    if isempty(dict)
-        # If `dict` is empty, it was not able to determine the type
-        # of the key hence the type of `dict` is `Dict{Any, Any}`.
-        # This is an issue since `SparseAxisArray` needs the key
-        # type to be a tuple.
-        dict = Dict{_eltype_or_any(indices),Any}()
+    if !isempty(data.dict)
+        return SparseAxisArray(data.dict)
+    else
+        # If `dict` is empty, it was not able to determine the type of the key.
+        # To make a best-guess attemp, collect all of the keys excluding the
+        # conditional statement (these must be defined, because the conditional
+        # applies to the lowest-level of the index loops), then get the eltype
+        # of the result.
+        el = eltype(collect(nested(indices.iterators...)))
+        # If the eltype is a tuple, we can use that as the key for the
+        # SparseAxisArray. If it isn't, it may be something like `Any`, so we
+        # should just use an `NTuple{N,Any}` of appropriate length.
+        K = el <: Tuple ? el : _eltype_or_any(indices)
+        # For the key-type of the SparseAxisArray, use `Base.return_types`. But
+        # if there is more than one return type, just use `Any` as the return
+        # type.
+        ret = Base.return_types(f, K)
+        V = length(ret) == 1 ? first(ret) : Any
+        return SparseAxisArray(Dict{K,V}())
     end
-    return SparseAxisArray(dict)
 end
