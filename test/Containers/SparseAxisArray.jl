@@ -139,9 +139,8 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries:
             i,
             container = SparseAxisArray
         )
-        @test c isa SparseAxisArray{Any,2,Tuple{Int64,Any}}
+        @test c isa SparseAxisArray{Any,2,Tuple{Int,Any}}
         @test length(c) == 0
-
         d = Containers.@container([i = Any[], j = Any[]; isodd(i)], i)
         @test d isa SparseAxisArray{Any,2,Tuple{Any,Any}}
         @test length(d) == 0
