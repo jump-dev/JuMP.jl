@@ -129,14 +129,6 @@ function _container_dict(
     return Dict{K,V}()
 end
 
-function _container_dict(
-    ::Union{Any,Type{Union{}}},
-    ::Function,
-    K::Type{<:NTuple{N,Any}},
-) where {N}
-    return Dict{K,Any}()
-end
-
 function _container_dict(::Any, ::Any, K::Type{<:NTuple{N,Any}}) where {N}
     return Dict{K,Any}()
 end
