@@ -62,19 +62,19 @@ using Test
         Containers.@container(x[i = 1:0, j = i:0], i)
         @test x isa SparseAxisArray{Any,2,Tuple{Any,Any}}
         Containers.@container(x[i = 1:2, j = 1:2; false], i)
-        @test x isa SparseAxisArray{Any,2,Tuple{Any,Any}}
+        @test x isa SparseAxisArray{Int,2,Tuple{Int,Int}}
         Containers.@container(
             x[i = 1:0, j = 2:1],
             i,
             container = SparseAxisArray
         )
-        @test x isa SparseAxisArray{Any,2,Tuple{Int,Int}}
+        @test x isa SparseAxisArray{Int,2,Tuple{Int,Int}}
         Containers.@container(
             x[i = 1:0, j = 1:0],
             i,
             container = SparseAxisArray
         )
-        @test x isa SparseAxisArray{Any,2,Tuple{Int,Int}}
+        @test x isa SparseAxisArray{Int,2,Tuple{Int,Int}}
     end
     @testset "duplicate_indices" begin
         expr = :(Containers.@container(x[i = 1:2, i = 1:2], i + i))

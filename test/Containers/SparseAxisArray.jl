@@ -127,11 +127,11 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries:
         sparse_test(d, 2.5, d2, d3, dsqr, [da, db, dc])
     end
     @testset "empty-array" begin
-        c = Containers.@container([i=1:3; i > 5], sqrt(i))
+        c = Containers.@container([i = 1:3; i > 5], sqrt(i))
         @test c isa SparseAxisArray{Float64,1,Tuple{Int}}
         @test length(c) == 0
         S = [["a"], [:b]]
-        d = Containers.@container([i=1:2, j=S[i]; i > 3], fill(i, j))
+        d = Containers.@container([i = 1:2, j = S[i]; i > 3], fill(i, j))
         @test d isa SparseAxisArray{Any,2,Tuple{Int,Any}}
         @test length(d) == 0
     end
