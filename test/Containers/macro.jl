@@ -66,7 +66,7 @@ using Test
         # can't always infer the key or value types.
         Containers.@container(x[i = 1:0, j = i:0], i)
         @test(
-            x isa SparseAxisArray{Int,2,<:T} || 
+            x isa SparseAxisArray{Int,2,<:T} ||
             x isa SparseAxisArray{Any,2,<:T}
         )
         # This one is better, we can infer the value type, but the keys are
