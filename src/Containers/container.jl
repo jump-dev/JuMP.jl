@@ -137,7 +137,9 @@ function _container_dict(
     return Dict{K,Any}()
 end
 
-_container_dict(::Any, ::Any, K::Type{<:NTuple{N,Any}}) where {N} = Dict{K,Any}()
+function _container_dict(::Any, ::Any, K::Type{<:NTuple{N,Any}}) where {N}
+    return Dict{K,Any}()
+end
 
 function _container_dict(
     ::Type{Union{}},
