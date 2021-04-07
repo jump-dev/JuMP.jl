@@ -125,13 +125,23 @@ function _sparseaxisarray(dict::Dict{Any,Any}, ::Any, indices)
 end
 
 # If the eltype is a tuple, we can use that as the key for the SparseAxisArray.
-function _container_dict(K::Type{<:Tuple}, f, ::Any)
+function _container_dict(
+    K::Type{<:NTuple{N,Any}},
+    f,
+    ::Type{<:NTuple{N,Any}},
+) where {N}
     ret = Base.return_types(f, K)
     V = length(ret) == 1 ? first(ret) : Any
     return Dict{K,V}()
 end
 # Catch this case where Union{} <: Tuple.
-_container_dict(::Type{Union{}}, ::Any, K) = Dict{K,Any}()
+function _container_dict(
+    ::Type{Union{}},
+    ::Any,
+    K::Type{<:NTuple{N,Any}},
+) where {N}
+    return Dict{K,Any}()
+end
 _container_dict(::Any, ::Any, K) = Dict{K,Any}()
 
 # The NoDuplicateDict was not able to infer the element type. To make a
@@ -143,4 +153,3 @@ function _sparseaxisarray(dict::Dict{Any,Any}, f, indices::NestedIterator)
     el = eltype(collect(nested(indices.iterators...)))
     return SparseAxisArray(_container_dict(el, f, _eltype_or_any(indices)))
 end
-

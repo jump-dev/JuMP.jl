@@ -60,7 +60,10 @@ using Test
         Containers.@container(x[i = 1:10; iseven(i)], i)
         @test x isa Containers.SparseAxisArray{Int,1}
         Containers.@container(x[i = 1:0, j = i:0], i)
-        @test x isa SparseAxisArray{Any,2,Tuple{Any,Any}}
+        @test(
+            x isa SparseAxisArray{Any,2,Tuple{Any,Any}} ||
+            x isa SparseAxisArray{Int,2,Tuple{Int,Int}}
+        )
         Containers.@container(x[i = 1:2, j = 1:2; false], i)
         @test x isa SparseAxisArray{Int,2,Tuple{Int,Int}}
         Containers.@container(
