@@ -60,9 +60,12 @@ using Test
         Containers.@container(x[i = 1:10; iseven(i)], i)
         @test x isa Containers.SparseAxisArray{Int,1}
         Containers.@container(x[i = 1:0, j = i:0], i)
+        # Return types are not the same across Julia versions. Check for a
+        # variety of plausible results.
         @test(
             x isa SparseAxisArray{Any,2,Tuple{Any,Any}} ||
-            x isa SparseAxisArray{Int,2,Tuple{Int,Int}}
+            x isa SparseAxisArray{Int,2,Tuple{Int,Int}} ||
+            x isa SparseAxisArray{Int,2,Tuple{Int,Any}}
         )
         Containers.@container(x[i = 1:2, j = 1:2; false], i)
         @test x isa SparseAxisArray{Int,2,Tuple{Int,Int}}
