@@ -65,7 +65,10 @@ using Test
         # Here the iterators are empty, and have a linked dependence, so we
         # can't always infer the key or value types.
         Containers.@container(x[i = 1:0, j = i:0], i)
-        @test(x isa SparseAxisArray{Int,2,<:T} || x isa SparseAxisArray{Any,2,<:T})
+        @test(
+            x isa SparseAxisArray{Int,2,<:T} || 
+            x isa SparseAxisArray{Any,2,<:T}
+        )
         # This one is better, we can infer the value type, but the keys are
         # difficult to infer, and depend on the Julia version you are running.
         Containers.@container(x[i = 1:2, j = 1:2; false], i)
