@@ -119,37 +119,33 @@ end
 # The NoDuplicateDict was able to infer the element type.
 _sparseaxisarray(dict::Dict, ::Any, ::Any) = SparseAxisArray(dict)
 
-function _sparseaxisarray(dict::Dict{Any,Any}, ::Any, indices)
-    @assert isempty(dict)
-    return SparseAxisArray(Dict{_eltype_or_any(indices),Any}())
-end
-
-# If the eltype is a tuple, we can use that as the key for the SparseAxisArray.
 function _container_dict(
     K::Type{<:NTuple{N,Any}},
-    f,
+    f::Function,
     ::Type{<:NTuple{N,Any}},
 ) where {N}
     ret = Base.return_types(f, K)
     V = length(ret) == 1 ? first(ret) : Any
     return Dict{K,V}()
 end
-# Catch this case where Union{} <: Tuple.
+
 function _container_dict(
-    ::Type{Union{}},
-    ::Any,
+    ::Union{Any,Type{Union{}}},
+    ::Function,
     K::Type{<:NTuple{N,Any}},
 ) where {N}
     return Dict{K,Any}()
 end
-_container_dict(::Any, ::Any, K) = Dict{K,Any}()
+
+_default_eltype(x::NestedIterator) = Base.@default_eltype nested(x.iterators...)
+_default_eltype(x) = Base.@default_eltype x
 
 # The NoDuplicateDict was not able to infer the element type. To make a
 # best-guess attempt, collect all of the keys excluding the conditional
 # statement (these must be defined, because the conditional applies to the
 # lowest-level of the index loops), then get the eltype of the result.
-function _sparseaxisarray(dict::Dict{Any,Any}, f, indices::NestedIterator)
+function _sparseaxisarray(dict::Dict{Any,Any}, f, indices)
     @assert isempty(dict)
-    el = eltype(collect(nested(indices.iterators...)))
-    return SparseAxisArray(_container_dict(el, f, _eltype_or_any(indices)))
+    d = _container_dict(_default_eltype(indices), f, _eltype_or_any(indices))
+    return SparseAxisArray(d)
 end
