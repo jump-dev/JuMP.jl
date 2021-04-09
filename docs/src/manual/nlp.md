@@ -274,6 +274,10 @@ In addition to this list of functions, it is possible to register custom
     a function is not needed. Two exceptions are if you want to provide custom
     derivatives, or if the function is not available in the scope of the
     nonlinear expression.
+    
+!!! warning
+    User-defined functions must return a scalar output. For a work-around, see
+    [User-defined functions with vector outputs](@ref).
 
 ### Automatic differentiation
 
