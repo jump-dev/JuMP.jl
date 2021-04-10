@@ -75,8 +75,8 @@ import DataFrames
 import XLSX
 
 # To read a Excel file into a DataFrame, we use the following julia code. The
-# first arguement to the `readtable` function is the file to be read and the
-# second arguement is the name of the sheet.
+# first argument to the `readtable` function is the file to be read and the
+# second argument is the name of the sheet.
 
 excel_df = DataFrames.DataFrame(
     XLSX.readtable(joinpath(DATA_DIR, "SalesData.xlsx"), "SalesOrders")...
@@ -111,14 +111,14 @@ csv_df = CSV.read(joinpath(DATA_DIR, "StarWars.csv"), DataFrames.DataFrame)
 
 ss_df = CSV.read(joinpath(DATA_DIR, "Cereal.txt"), DataFrames.DataFrame)
 
-# We can also specify the delimiter by passing the `delim` arguement.
+# We can also specify the delimiter by passing the `delim` argument.
 
 delim_df = CSV.read(
     joinpath(DATA_DIR, "Soccer.txt"), DataFrames.DataFrame, delim = "::"
 )
 
 # Note that by default, are read-only. If we wish to make changes to the data
-# read, we pass the `copycols = true` arguement in the function call.
+# read, we pass the `copycols = true` argument in the function call.
 
 ss_df = CSV.read(
     joinpath(DATA_DIR, "Cereal.txt"), DataFrames.DataFrame, copycols = true
@@ -253,8 +253,8 @@ end
 # * 1 = no visa required for travel
 # * 0 = visa required for travel
 
-# Let us assossciate each passport with a decision variable $pass_{cntr}$ for
-# each country. We want to minize the sum $\sum pass_{cntr}$ over all countries.
+# Let us associate each passport with a decision variable $pass_{cntr}$ for
+# each country. We want to minimize the sum $\sum pass_{cntr}$ over all countries.
 
 # Since we wish to visit all the countries, for every country, we should own at
 # least one passport that lets us travel to that country visa free. For one
@@ -280,7 +280,7 @@ import GLPK
 
 World = names(passport_data)[2:end]
 
-# Then, create the model and intialize the decision variables:
+# Then, create the model and initialize the decision variables:
 model = Model(GLPK.Optimizer)
 @variable(model, pass[cntr in World], Bin)
 

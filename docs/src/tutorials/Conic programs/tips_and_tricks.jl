@@ -221,4 +221,4 @@ objective_value(model)
 # ## Other Cones and Functions
 
 # For other cones supported by JuMP, check out the
-# [MathOptInterface Manual](http://jump.dev/MathOptInterface.jl/stable).
+# [MathOptInterface Manual](https://jump.dev/MathOptInterface.jl/stable).

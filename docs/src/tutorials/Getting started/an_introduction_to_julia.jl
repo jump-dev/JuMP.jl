@@ -54,7 +54,7 @@ nothing #hide
 #     typed (e.g., `1 - 2`), as well as the evaluation of the expression (`-1`).
 
 # Did you notice how Julia didn't print `.0` after some of the numbers? Julia is
-# a dynamic language, which means you never have to explictly declare the type
+# a dynamic language, which means you never have to explicitly declare the type
 # of a variable. However, in the background, Julia is giving each variable a
 # type. Check the type of something using the `typeof` function:
 
@@ -91,12 +91,12 @@ nothing #hide
 π
 
 # !!! tip
-#     To make π (and most other greek letters), type `\pi` and then press
+#     To make π (and most other Greek letters), type `\pi` and then press
 #     `[TAB]`.
 
 typeof(π)
 
-# Athough if we do math with irrational numbers, they get converted to
+# Although if we do math with irrational numbers, they get converted to
 # `Float64`:
 
 typeof(2π / 3)
@@ -134,7 +134,7 @@ sin(2π / 3) - √3 / 2
 
 # One way of explaining this difference is to consider how we would write
 # `1 / 3` and `2 / 3` using only four digits after the decimal point. We would
-# write `1 / 3` as `0.3333`, and `2 / 3` as `0.6667`. So, depiste the fact that
+# write `1 / 3` as `0.3333`, and `2 / 3` as `0.6667`. So, despite the fact that
 # `2 * (1 / 3) == 2 / 3`, `2 * 0.3333 == 0.6666 != 0.6667`.
 
 # Let's try that again using ≈ (`\approx + [TAB]`) instead of `==`:
@@ -189,7 +189,7 @@ b = [5, 6]
 A = [1.0 2.0; 3.0 4.0]
 
 # Note how this time the type is `Array{Float64, 2}`; the elements are `Float64`
-# and there are `2` dimenions.
+# and there are `2` dimensions.
 
 # We can do linear algebra:
 
@@ -378,7 +378,7 @@ end
 # ## Comprehensions
 
 # Similar to languages like Haskell and Python, Julia supports the use of simple
-# loops in the construction of arrays and dictionaries, called comprehenions.
+# loops in the construction of arrays and dictionaries, called comprehensions.
 #
 # A list of increasing integers:
 
@@ -487,7 +487,7 @@ catch err; showerror(stdout, err) end  #hide
 # ### Broadcasting
 
 # In the example above, we didn't define what to do if `f` was passed an
-# `Array`. Luckily, Julia provides a convienient syntax for mapping `f`
+# `Array`. Luckily, Julia provides a convenient syntax for mapping `f`
 # element-wise over arrays! Just add a `.` between the name of the function and
 # the opening `(`. This works for _any_ function, including functions with
 # multiple arguments. For example:
@@ -525,7 +525,7 @@ println("mutable_type: $(mutable_type)")
 println("immutable_type: $(immutable_type)")
 
 # Because `Vector{Int}` is a mutable type, modifying the variable inside the
-# function changed the value outside of the function. In constrast, the change
+# function changed the value outside of the function. In contrast, the change
 # to `immutable_type` didn't modify the value outside the function.
 
 # You can check mutability with the `isimmutable` function:
@@ -561,7 +561,7 @@ Random.seed!(33)
 # Pkg.add("JuMP")
 # ```
 
-# For a complete list of registed Julia packages see the package listing at
+# For a complete list of registered Julia packages see the package listing at
 # [JuliaHub](https://juliahub.com).
 
 # From time to you may wish to use a Julia package that is not registered.  In

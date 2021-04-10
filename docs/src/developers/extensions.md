@@ -54,7 +54,7 @@ model = Model()
 Just as `Bin` and `Int` create binary and integer variables, you can extend
 the [`@variable`](@ref) macro to create new types of variables. Here is an
 explanation by example, where we create a `AddTwice` type, that creates a tuple
-of two JuMP variables instead of a single varaible.
+of two JuMP variables instead of a single variable.
 
 First, create a new struct. This can be anything. Our struct holds a
 [`VariableInfo`](@ref) object that stores bound information, and whether the
