@@ -96,7 +96,7 @@ nothing #hide
 
 typeof(π)
 
-# Although if we do math with irrational numbers, they get converted to
+# However, if we do math with irrational numbers, they get converted to
 # `Float64`:
 
 typeof(2π / 3)
