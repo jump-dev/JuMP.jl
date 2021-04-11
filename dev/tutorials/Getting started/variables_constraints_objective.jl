@@ -124,8 +124,8 @@ u = [10; 11; 12; 13; 14; 15; 16; 17; 18; 19]
 
 # ### Variable types
 
-# The last arguement to the `@variable` macro is usually the variable type. Here
-# we'll look at how to specifiy the variable type.
+# The last argument to the `@variable` macro is usually the variable type. Here
+# we'll look at how to specify the variable type.
 
 # #### Integer variables
 
@@ -169,7 +169,7 @@ model = Model()
 # ### Constraint references
 
 # While calling the `@constraint` macro, we can also set up a constraint
-# reference. Such a referrence is useful for obtaining additional information
+# reference. Such a reference is useful for obtaining additional information
 # about the constraint, such as its dual solution.
 
 @constraint(model, con, x <= 4)

@@ -35,7 +35,7 @@
 # ![Partially solved Sudoku](../../assets/partial_sudoku.svg)
 
 # Solving a Sudoku isn't an optimization problem with an objective; its actually
-# a *feasibility* problem: we wish to find a feasible solution that satsifies
+# a *feasibility* problem: we wish to find a feasible solution that satisfies
 # these rules. You can think of it as an optimization problem with an objective
 # of 0.
 #

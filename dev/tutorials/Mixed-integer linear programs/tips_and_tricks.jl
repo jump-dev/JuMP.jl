@@ -159,7 +159,7 @@ model = Model()
 
 # ## Semi-Integer Variables
 
-# A semi-integer variable is a variable which asummes integer values between
+# A semi-integer variable is a variable which assumes integer values between
 # bounds $[l,u]$ and can also assume the value zero:
 # $$x \in \{0\} \cup [l, u] \cap \mathbb{Z}.$$
 
@@ -215,7 +215,7 @@ model = Model()
 x̂ = -1:0.5:2
 # and a set of corresponding points for `y`:
 ŷ = x̂.^2
-# the piecewise linear approximation is constructed by reprsenting `x` and `y`
+# the piecewise linear approximation is constructed by representing `x` and `y`
 # as convex combinations of `x̂` and `ŷ`.
 
 N = length(x̂)

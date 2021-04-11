@@ -11,10 +11,10 @@
 
 # Intuitively, this problem is about cutting large rolls of paper into smaller
 # pieces. There is an exact demand of pieces to meet, and all rolls have the
-# same size. The goal is to meet the demand while maximising the profits (each
+# same size. The goal is to meet the demand while maximizing the profits (each
 # paper roll has a fixed cost, each sold piece allows earning some money),
 # which is roughly equivalent to using the smallest amount of rolls
-# to cut (or, equivalently, to minimise the amount of paper waste).
+# to cut (or, equivalently, to minimize the amount of paper waste).
 
 # This function takes five parameters:
 
