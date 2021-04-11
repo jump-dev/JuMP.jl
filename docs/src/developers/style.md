@@ -382,7 +382,7 @@ points more specific to Julia and documentation that use [Documenter](https://gi
 - Every exported object needs a docstring
 - All examples in docstrings should be [`jldoctests`](https://juliadocs.github.io/Documenter.jl/stable/man/doctests/)
 - Always use complete English sentences with proper punctuation
-- Do not terminate lists swith punctuation (e.g., as in this doc)
+- Do not terminate lists with punctuation (e.g., as in this doc)
 
 Here is an example:
 ````julia

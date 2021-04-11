@@ -323,7 +323,7 @@ remains optimal, i.e., the reduced costs remain valid.
 - The range denotes valid changes, Δ ∈ [l, u], for which cost[var] += Δ do not
   violate the current optimality conditions.
 - `optimality_tolerance` is the dual feasibility tolerance, this should
-  preferably match the tolerance used by the solver. The defualt tolerance should
+  preferably match the tolerance used by the solver. The default tolerance should
   however apply in most situations (c.f. "Computational Techniques of the
   Simplex Method" by István Maros, section 9.3.4).
 """

@@ -349,7 +349,7 @@ function parse_constraint_head(_error::Function, ::Val, args...)
 end
 function parse_constraint(_error::Function, args...)
     # Define this as the last fallback: either this is a function call that may
-    # be overridden by extensions, or a syntax that is not recognised.
+    # be overridden by extensions, or a syntax that is not recognized.
     # Multiple dispatch does not work here, due to ambiguity with:
     #     parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol, ub)
     if args[1] isa Symbol
@@ -1089,7 +1089,7 @@ Set the objective sense to `sense` and objective function to `func`. The
 objective sense can be either `Min`, `Max`, `MathOptInterface.MIN_SENSE`,
 `MathOptInterface.MAX_SENSE` or `MathOptInterface.FEASIBILITY_SENSE`; see
 [`MathOptInterface.ObjectiveSense`](https://jump.dev/MathOptInterface.jl/v0.8/apireference.html#MathOptInterface.ObjectiveSense).
-In order to set the sense programatically, i.e., when `sense` is a Julia
+In order to set the sense programmatically, i.e., when `sense` is a Julia
 variable whose value is the sense, one of the three
 `MathOptInterface.ObjectiveSense` values should be used. The function `func` can
 be a single JuMP variable, an affine expression of JuMP variables or a quadratic
@@ -1120,7 +1120,7 @@ julia> @objective(model, Max, 2x - 1)
 2 x - 1
 ```
 
-To set a quadratic objective and set the objective sense programatically, do
+To set a quadratic objective and set the objective sense programmatically, do
 as follows:
 ```jldoctest @objective
 julia> sense = MOI.MIN_SENSE

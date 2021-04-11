@@ -66,7 +66,7 @@
 #
 # A detailed explanation on the distinction between user-cuts and lazy
 # constraints is also available on [Paul Rubin's blog](https://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html).
-# He also [describes this approach to Benders Decomposition](http://orinanobworld.blogspot.ca/2011/10/benders-decomposition-then-and-now.html).
+# He also [describes this approach to Benders Decomposition](https://orinanobworld.blogspot.ca/2011/10/benders-decomposition-then-and-now.html).
 
 # We use the data from the original notebook and change the solution algorithm
 # to leverage lazy constraints:

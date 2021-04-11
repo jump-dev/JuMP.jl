@@ -546,7 +546,7 @@ function Base.empty!(model::Model)::Model
     # * bridge_types: for consistency with MOI.empty! for
     #   MOI.Bridges.LazyBridgeOptimizer.
     # * operator_counter: it is just a counter for a single-time warning
-    #   message (so keeping it helps to discover inneficiencies).
+    #   message (so keeping it helps to discover inefficiencies).
     MOI.empty!(model.moi_backend)
     empty!(model.shapes)
     model.nlp_data = nothing
@@ -939,7 +939,7 @@ end
 Abstract base type for all scalar types
 
 The subtyping of `AbstractMutable` will allow calls of some `Base` functions
-to be redirected to a method in MA that handles type promotion more carefuly
+to be redirected to a method in MA that handles type promotion more carefully
 (e.g. the promotion in sparse matrix products in SparseArrays usually does not
 work for JuMP types) and exploits the mutability of `AffExpr` and `QuadExpr`.
 """

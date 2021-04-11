@@ -1856,7 +1856,7 @@ assume that the inputs are `Float64`.
    `∇f(g::Vector{T}, args::T...) where {T<:Real}`, where the first argument is a
    vector `g` that is modified in-place with the gradient.
  * If `autodiff = true` and `dimension == 1`, use automatic differentiation to
-   comute the second-order derivative information. If `autodiff = false`, only
+   compute the second-order derivative information. If `autodiff = false`, only
    first-order derivative information will be used.
  * `s` does not have to be the same symbol as `f`, but it is generally more
    readable if it is.
@@ -1990,7 +1990,7 @@ Set the nonlinear objective of `model` to the expression `expr`, with the
 optimization sense `sense`.
 
 This function is most useful if the expression `expr` is generated
-programatically, and you cannot use [`@NLobjective`](@ref).
+programmatically, and you cannot use [`@NLobjective`](@ref).
 
 ## Notes
 
@@ -2013,7 +2013,7 @@ end
 Add a nonlinear constraint described by the Julia expression `ex` to `model`.
 
 This function is most useful if the expression `ex` is generated
-programatically, and you cannot use [`@NLconstraint`](@ref).
+programmatically, and you cannot use [`@NLconstraint`](@ref).
 
 ## Notes
 

@@ -41,7 +41,7 @@ foo_2(x, y) = foo(x, y)[2]
 
 # However, if the common term is expensive to compute, this approach is wasteful
 # because it will evaluate the expensive term twice. Let's have a look at how
-# many times we evalute `x^2 + y^2` during a solve:
+# many times we evaluate `x^2 + y^2` during a solve:
 
 model = Model(Ipopt.Optimizer)
 set_silent(model)
@@ -67,8 +67,8 @@ naive_approach = function_calls  #src
 Take a function `foo` and return a vector of length `n_outputs`, where each
 element is a function that returns the `i`'th output of `foo`.
 
-To avoid duplication of work, cache the most-recent evaluations of `foo`. 
-Because `foo_i` is auto-differentiated with ForwardDiff, our cache needs to 
+To avoid duplication of work, cache the most-recent evaluations of `foo`.
+Because `foo_i` is auto-differentiated with ForwardDiff, our cache needs to
 work when `x` is a `Float64` and a `ForwardDiff.Dual`.
 """
 function memoize(foo::Function, n_outputs::Int)

@@ -24,9 +24,9 @@
 # ```
 # while we need the size to be `(4,)`, not `(2, 2)` when the user does
 # `@container([i = [1, 2; 3 4]], i^2)`.
-# Long story short, we want to tried everything as a interator without shape
+# Long story short, we want to tried everything as an iterator without shape
 # while `Iterators.ProductIterator` does care about preserving the shape
-# when doing the cartesian product.
+# when doing the Cartesian product.
 """
     struct VectorizedProductIterator{T}
         prod::Iterators.ProductIterator{T}

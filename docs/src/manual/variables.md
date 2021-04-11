@@ -680,7 +680,7 @@ x = @variable(model, [1:2, 1:2], set = PSDCone())
 In the section [Variable containers](@ref), we explained how JuMP supports the
 efficient creation of collections of JuMP variables in three types of
 containers. However, users are also free to create collections of JuMP variables
-in their own datastructures. For example, the following code creates a
+in their own data structures. For example, the following code creates a
 dictionary with symmetric matrices as the values:
 ```jldoctest; setup=:(model=Model())
 julia> variables = Dict{Symbol, Array{VariableRef,2}}()
