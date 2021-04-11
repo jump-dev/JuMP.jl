@@ -81,7 +81,7 @@ makedocs(
     strict = true,
     # ==========================================================================
     # `modules = [JuMP]`, along with `checkdocs = :exports` causes Documenter to
-    # thow an error if exported functions with docstrings are not contained in
+    # throw an error if exported functions with docstrings are not contained in
     # the Documentation. However, problematically, we include some MOI docs,
     # which forces us to include MOI in `modules`, despite the fact that we
     # don't necessarily want to document every MOI method.

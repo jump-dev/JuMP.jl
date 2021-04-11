@@ -363,7 +363,7 @@ The above code creates a JuMP model with the objective function
     User-defined functions cannot be re-registered and will not update if you
     modify the underlying Julia function. If you want to change a user-defined
     function between solves, rebuild the model or use a different name. To use
-    a different name programatically, see [Raw expression input](@ref).
+    a different name programmatically, see [Raw expression input](@ref).
 
 ### Register a function and gradient
 
@@ -618,7 +618,7 @@ julia> @NLconstraint(model, Min, x + x^2 <= 1)
 ### More complicated examples
 
 Raw expression input is most useful when the expressions are generated
-programatically, often in conjunction with user-defined functions.
+programmatically, often in conjunction with user-defined functions.
 
 As an example, we construct a model with the nonlinear constraints `f(x) <= 1`,
 where `f(x) = x^2` and `f(x) = sin(x)^2`:

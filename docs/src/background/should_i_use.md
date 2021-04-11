@@ -89,5 +89,5 @@ Alternatives to consider are:
 
 !!! note
     `Convex.jl` is also built on MathOptInterface, and shares the same set of
-    underlying solvers. However, you input problems differenly, and Convex.jl
+    underlying solvers. However, you input problems differently, and Convex.jl
     checks that the problem is DCP.

@@ -36,7 +36,7 @@ Random.seed!(1234) # hide
 nothing            # hide
 
 # !!! tip
-#     A good resource for learning more about functions which can be modelled
+#     A good resource for learning more about functions which can be modeled
 #     using cones is the [MOSEK Modeling Cookbook](https://docs.mosek.com/modeling-cookbook/index.html).
 
 # ## What is a cone?
