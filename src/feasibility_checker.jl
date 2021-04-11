@@ -26,7 +26,7 @@ end
 Given a dictionary `point`, which maps variables to primal values, return a
 dictionary whose keys are the constraints with an infeasibility greater than the
 supplied tolerance `atol`. The value corresponding to each key is the respective
-infeasibilility. Infeasibility is defined as the distance between the primal
+infeasibility. Infeasibility is defined as the distance between the primal
 value of the constraint (see `MOI.ConstraintPrimal`) and the nearest point by
 Euclidean distance in the corresponding set.
 

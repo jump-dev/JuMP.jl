@@ -792,7 +792,7 @@ end
 """
     IntegerRef(v::VariableRef)
 
-Return a constraint reference to the constraint constrainting `v` to be integer.
+Return a constraint reference to the constraint constraining `v` to be integer.
 Errors if one does not exist.
 
 See also [`is_integer`](@ref), [`set_integer`](@ref), [`unset_integer`](@ref).
@@ -869,7 +869,7 @@ end
 """
     BinaryRef(v::VariableRef)
 
-Return a constraint reference to the constraint constrainting `v` to be binary.
+Return a constraint reference to the constraint constraining `v` to be binary.
 Errors if one does not exist.
 
 See also [`is_binary`](@ref), [`set_binary`](@ref), [`unset_binary`](@ref).

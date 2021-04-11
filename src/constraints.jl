@@ -151,7 +151,7 @@ end
     constraint_by_name(model::AbstractModel,
                        name::String)::Union{ConstraintRef, Nothing}
 
-Returns the reference of the constraint with name attribute `name` or `Nothing`
+Return the reference of the constraint with name attribute `name` or `Nothing`
 if no constraint has this name attribute. Throws an error if several
 constraints have `name` as their name attribute.
 
@@ -418,7 +418,7 @@ function constraint_object end
 """
     struct ScalarConstraint
 
-The data for a scalar constraint. The `func` field containts a JuMP object
+The data for a scalar constraint. The `func` field contains a JuMP object
 representing the function and the `set` field contains the MOI set.
 See also the [documentation](@ref Constraints) on JuMP's representation of
 constraints for more background.
@@ -447,7 +447,7 @@ end
 """
     struct VectorConstraint
 
-The data for a vector constraint. The `func` field containts a JuMP object
+The data for a vector constraint. The `func` field contains a JuMP object
 representing the function and the `set` field contains the MOI set. The
 `shape` field contains an [`AbstractShape`](@ref) matching the form in which
 the constraint was constructed (e.g., by using matrices or flat vectors).
@@ -758,7 +758,7 @@ See also: [`result_count`](@ref).
 
 ## Note
 
-For scalar contraints, the constant is moved to the `set` so it is not taken
+For scalar constraints, the constant is moved to the `set` so it is not taken
 into account in the primal value of the constraint. For instance, the constraint
 `@constraint(model, 2x + 3y + 1 == 5)` is transformed into
 `2x + 3y`-in-`MOI.EqualTo(4)` so the value returned by this function is the
