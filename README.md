@@ -7,11 +7,11 @@ JuMP is a domain-specific modeling language for [mathematical optimization](http
 embedded in [Julia](https://julialang.org/). You can find out more about us by
 visiting [jump.dev](https://jump.dev).
 
-**Latest Release**: 0.21.6 (`release-0.21` branch):
+**Latest Release**: 0.21.7 (`release-0.21` branch):
   * Installation via the Julia package manager:
     * `import Pkg; Pkg.add("JuMP")`
   * Get help:
-    * Read the [Documentation](https://jump.dev/JuMP.jl/v0.21.6/)
+    * Read the [Documentation](https://jump.dev/JuMP.jl/v0.21.7/)
     * Ask a question on the [Community forum]
     * Explore the [JuMPTutorials](https://github.com/jump-dev/JuMPTutorials.jl)
   * Testing status:

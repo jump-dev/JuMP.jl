@@ -1,7 +1,7 @@
 JuMP release notes
 ==================
 
-Version 0.21.7 (In development)
+Version 0.21.7 (April 12, 2021)
 ---------------------------------
 
 A summary of changes are as follows:
@@ -18,6 +18,11 @@ A summary of changes are as follows:
   * Added `latex_formulation(model)` which returns an object representing the 
     latex formulation of a model. Use `print(latex_formulation(model))` to print
     the formulation as a string.
+  * User-defined functions in nonlinear expressions are now automatically
+    registered to aid quick model prototyping. However, a warning is printed to
+    encourage the manual registration.
+  * DenseAxisArray's now support broadcasting over multiple arrays.
+  * Container indices can now be iterators of `Base.SizeUnknown`.
 - Bug fixes:
   * Fixed bug in `rad2deg` and `deg2rad` in nonlinear expressions.
   * Fixed a MethodError bug in `Containers` when forcing container type.
