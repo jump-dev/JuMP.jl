@@ -79,11 +79,12 @@ The link in the `Solver` column is the corresponding Julia package.
 | [COSMO.jl](https://github.com/oxfordcontrol/COSMO.jl)                          |                                                                                  |        | Apache   | LP, QP, SOCP, SDP         |
 | [CPLEX](https://www.ibm.com/analytics/cplex-optimizer/)                        | [CPLEX.jl](https://github.com/jump-dev/CPLEX.jl)                                 | Manual | Comm.    | (MI)LP, (MI)SOCP          |
 | [CSDP](https://github.com/coin-or/Csdp)                                        | [CSDP.jl](https://github.com/jump-dev/CSDP.jl)                                   |        | EPL      | LP, SDP                   |
-| [EAGO.jl](https://github.com/psorlab/EAGO.jl)                                  |                                                                                  |        | CC BY-NC-SA | NLP                    |
+| [EAGO.jl](https://github.com/psorlab/EAGO.jl)                                  |                                                                                  |        | MIT | NLP                    |
 | [ECOS](https://github.com/ifa-ethz/ecos)                                       | [ECOS.jl](https://github.com/jump-dev/ECOS.jl)                                   |        | GPL      | LP, SOCP                  |
 | [FICO Xpress](https://www.fico.com/en/products/fico-xpress-optimization-suite) | [Xpress.jl](https://github.com/jump-dev/Xpress.jl)                               | Manual | Comm.    | (MI)LP, (MI)SOCP          |
 | [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK.jl](https://github.com/jump-dev/GLPK.jl)                                   |        | GPL      | (MI)LP                    |
 | [Gurobi](https://gurobi.com)                                                   | [Gurobi.jl](https://github.com/jump-dev/Gurobi.jl)                               | Manual | Comm.    | (MI)LP, (MI)SOCP          |
+| [HiGHS](https://github.com/ERGO-Code/HiGHS)                                    | [HiGHS.jl](https://github.com/jump-dev/HiGHS.jl)                                 |        |MIT       | LP                        |
 | [Hypatia.jl](https://github.com/chriscoey/Hypatia.jl)                          |                                                                                  |        | MIT      | LP, SOCP, SDP             |
 | [Ipopt](https://github.com/coin-or/Ipopt)                                      | [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl)                                 |        | EPL      | LP, QP, NLP               |
 | [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl)                          |                                                                                  |        | MIT      | (MI)SOCP, (MI)NLP         |
@@ -93,7 +94,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [PATH](http://pages.cs.wisc.edu/~ferris/path.html)                             | [PATHSolver.jl](https://github.com/chkwon/PATHSolver.jl)                 |        | MIT      | MCP                       |
 | [Pavito.jl](https://github.com/jump-dev/Pavito.jl)                             |                                                                                  |        | MPL-2    | (MI)NLP                   |
 | [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)                        |                                                                                  |        | MIT      | LP, SOCP, SDP             |
-| [SCIP](https://scipopt.org/)                                                   | [SCIP.jl](https://github.com/scipopt/SCIP.jl)                            | Manual | ZIB      | (MI)LP, (MI)NLP           |
+| [SCIP](https://scipopt.org/)                                                   | [SCIP.jl](https://github.com/scipopt/SCIP.jl)                            |        | ZIB      | (MI)LP, (MI)NLP           |
 | [SCS](https://github.com/cvxgrp/scs)                                           | [SCS.jl](https://github.com/jump-dev/SCS.jl)                                     |        | MIT      | LP, SOCP, SDP             |
 | [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/jump-dev/SDPA.jl), [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl) |  | GPL | LP, SDP |
 | [SDPNAL](https://blog.nus.edu.sg/mattohkc/softwares/sdpnalplus/)               | [SDPNAL.jl](https://github.com/jump-dev/SDPNAL.jl)                               | Manualᴹ | CC BY-SA | LP, SDP                  |
@@ -117,10 +118,10 @@ Where:
     file.
 
 !!! note
-    Developing a solver or solver wrapper? See [Interacting with solvers](@ref)
-    and the [MathOptInterface docs](https://jump.dev/MathOptInterface.jl/stable/)
-    for more details on how JuMP interacts with solvers. Please get in touch
-    via the [Developer Chatroom](https://jump.dev/pages/governance/#developer-chatroom)
+    Developing a solver or solver wrapper? See [Models](@ref) and the
+    [MathOptInterface docs](https://jump.dev/MathOptInterface.jl/stable/) for
+    more details on how JuMP interacts with solvers. Please get in touch via the
+    [Developer Chatroom](https://jump.dev/pages/governance/#developer-chatroom)
     with any questions about connecting new solvers with JuMP.
 
 ### Solver-specific notes
@@ -263,7 +264,7 @@ if you have interest in reviving a previously supported solver.
 
 ### Check the version of your packages
 
-Each package is versioned with a [three-part number](https://semver.org) of the 
+Each package is versioned with a [three-part number](https://semver.org) of the
 form `vX.Y.Z`. You can check which versions you have installed with
 `import Pkg; Pkg.status()`.
 

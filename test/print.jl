@@ -23,13 +23,41 @@ import JuMP.REPLMode
 end
 
 # Helper function to test IO methods work correctly
+function _io_test_show(::Type{REPLMode}, obj, exp_str)
+    @test sprint(show, obj) == exp_str
+end
+function _io_test_show(::Type{IJuliaMode}, obj, exp_str)
+    @test sprint(show, "text/latex", obj) == string("\$\$ ", exp_str, " \$\$")
+end
+function _io_test_print(::Type{REPLMode}, obj, exp_str)
+    @test sprint(print, obj) == exp_str
+end
+function _io_test_print(::Type{IJuliaMode}, obj, exp_str)
+    @test sprint(show, "text/latex", obj) == string("\$\$ ", exp_str, " \$\$")
+end
+function _io_test_print(::Type{REPLMode}, obj::AbstractModel, exp_str)
+    @test sprint(print, obj) == exp_str
+    @test JuMP.model_string(JuMP.REPLMode, obj) == exp_str
+    return
+end
+function _io_test_print(::Type{IJuliaMode}, obj::AbstractModel, exp_str)
+    model = JuMP.latex_formulation(obj)
+    @test sprint(io -> show(io, MIME("text/latex"), model)) ==
+          string("\$\$ ", exp_str, " \$\$")
+    @test JuMP.model_string(JuMP.IJuliaMode, obj) ==
+          string("\$\$ ", exp_str, " \$\$")
+    # TODO(odow): I don't know how to test an IJulia display without adding
+    # IJulia as a test-dependency, so just print and check it doesn't error.
+    print(obj)
+    return
+end
+
 function io_test(mode, obj, exp_str; repl = :both)
-    if mode == REPLMode
-        repl != :show && @test sprint(print, obj) == exp_str
-        repl != :print && @test sprint(show, obj) == exp_str
-    else
-        @test sprint(show, "text/latex", obj) ==
-              string("\$\$ ", exp_str, " \$\$")
+    if repl == :show || repl == :both
+        _io_test_show(mode, obj, exp_str)
+    end
+    if repl == :print || repl == :both
+        _io_test_print(mode, obj, exp_str)
     end
 end
 
@@ -180,6 +208,12 @@ end
         io_test(REPLMode, param, "\"Reference to nonlinear parameter #1\"")
     end
 
+    @testset "Registered nonlinear parameters" begin
+        model = Model()
+        model[:param] = @NLparameter(model, param == 1.0)
+        io_test(REPLMode, param, "\"Reference to nonlinear parameter param\"")
+    end
+
     @testset "NLPEvaluator" begin
         model = Model()
         evaluator = JuMP.NLPEvaluator(model)
@@ -214,8 +248,16 @@ end
         io_test(REPLMode, constr_range, "0 $le sin(x) $le 1")
         io_test(REPLMode, constr_exponent_1, "x ^ 4.0 - 1.0 $le 0")
         io_test(REPLMode, constr_exponent_2, "x ^ 40.23 - 1.0 $le 0")
-        io_test(REPLMode, constr_exponent_3, "(x ^ 4.0 + x ^ 3.0 + x ^ 2.0) - 1.0 $le 0")
-        io_test(REPLMode, constr_exponent_4, "(x ^ -4.0 + x ^ -3.0 + x ^ -2.0) - 1.0 $le 0")
+        io_test(
+            REPLMode,
+            constr_exponent_3,
+            "(x ^ 4.0 + x ^ 3.0 + x ^ 2.0) - 1.0 $le 0",
+        )
+        io_test(
+            REPLMode,
+            constr_exponent_4,
+            "(x ^ -4.0 + x ^ -3.0 + x ^ -2.0) - 1.0 $le 0",
+        )
         io_test(REPLMode, constr_exponent_5, "x ^ (x * x) - 1.0 $le 0")
         io_test(REPLMode, constr_exponent_6, "x ^ (2.0 * x) - 1.0 $le 0")
         io_test(REPLMode, constr_exponent_7, "x ^ (2.0 * 5.0) - 1.0 $le 0")
@@ -227,8 +269,16 @@ end
         io_test(IJuliaMode, constr_range, "0 \\leq sin(x) \\leq 1")
         io_test(IJuliaMode, constr_exponent_1, "x ^ {4.0} - 1.0 \\leq 0")
         io_test(IJuliaMode, constr_exponent_2, "x ^ {40.23} - 1.0 \\leq 0")
-        io_test(IJuliaMode, constr_exponent_3, "(x ^ {4.0} + x ^ {3.0} + x ^ {2.0}) - 1.0 \\leq 0")
-        io_test(IJuliaMode, constr_exponent_4, "(x ^ {-4.0} + x ^ {-3.0} + x ^ {-2.0}) - 1.0 \\leq 0")
+        io_test(
+            IJuliaMode,
+            constr_exponent_3,
+            "(x ^ {4.0} + x ^ {3.0} + x ^ {2.0}) - 1.0 \\leq 0",
+        )
+        io_test(
+            IJuliaMode,
+            constr_exponent_4,
+            "(x ^ {-4.0} + x ^ {-3.0} + x ^ {-2.0}) - 1.0 \\leq 0",
+        )
         io_test(IJuliaMode, constr_exponent_5, "x ^ {x * x} - 1.0 \\leq 0")
         io_test(IJuliaMode, constr_exponent_6, "x ^ {2.0 * x} - 1.0 \\leq 0")
         io_test(IJuliaMode, constr_exponent_7, "x ^ {2.0 * 5.0} - 1.0 \\leq 0")
@@ -254,6 +304,19 @@ end
             constr,
             "(subexpression_{1} - parameter_{1}) - 0.0 \\leq 0",
         )
+    end
+
+    @testset "Nonlinear constraints with embedded registered parameters/expressions" begin
+        le = JuMP._math_symbol(REPLMode, :leq)
+
+        model = Model()
+        @variable(model, x)
+        expr = @NLexpression(model, x + 1)
+        model[:param] = @NLparameter(model, param == 1.0)
+
+        constr = @NLconstraint(model, expr - param <= 0)
+        io_test(REPLMode, constr, "(subexpression[1] - param) - 0.0 $le 0")
+        io_test(IJuliaMode, constr, "(subexpression_{1} - param) - 0.0 \\leq 0")
     end
 
     @testset "Custom constraint" begin
@@ -378,7 +441,8 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
               "linear_eq : \$ x = 1.0 \$"
         @test sprint(show, "text/latex", linear_range) ==
               "linear_range : \$ x \\in \\[-1.0, 1.0\\] \$"
-        @test sprint(show, "text/latex", linear_noname) == "\$ x \\leq 1.0 \$"
+        @test sprint(show, "text/latex", linear_noname) ==
+              "\$\$ x \\leq 1.0 \$\$"
     end
 
     @testset "Vector AffExpr constraints" begin
@@ -529,40 +593,40 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""",
         io_test(
             IJuliaMode,
             model_1,
-            """
-\\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
-\\text{Subject to} \\quad & a + b - 10 c + c1 - 2 x \\leq 1.0\\\\
- & a\\times b \\leq 2.0\\\\
- & \\begin{bmatrix}
-a & b\\\\
-\\cdot & x\\\\
-\\end{bmatrix} \\in PSDCone()\\\\
- & [a, b, c] \\in MathOptInterface.PositiveSemidefiniteConeTriangle(2)\\\\
- & \\begin{bmatrix}
-a & b\\\\
-c & x\\\\
-\\end{bmatrix} \\in PSDCone()\\\\
- & [a, b, c, x] \\in MathOptInterface.PositiveSemidefiniteConeSquare(2)\\\\
- & [-a + 1, u_{1}, u_{2}, u_{3}] \\in MathOptInterface.SecondOrderCone(4)\\\\
- & fi = 9.0\\\\
- & a \\geq 1.0\\\\
- & c \\geq -1.0\\\\
- & a1 \\geq 1.0\\\\
- & c1 \\geq -1.0\\\\
- & b \\leq 1.0\\\\
- & c \\leq 1.0\\\\
- & b1 \\leq 1.0\\\\
- & c1 \\leq 1.0\\\\
- & a1 integer\\\\
- & b1 integer\\\\
- & c1 integer\\\\
- & z integer\\\\
- & x binary\\\\
- & u_{1} binary\\\\
- & u_{2} binary\\\\
- & u_{3} binary\\\\
-\\end{alignat*}
-""",
+            "\\begin{aligned}\n" *
+            "\\max\\quad & a - b + 2 a1 - 10 x\\\\\n" *
+            "\\text{Subject to} \\quad & a + b - 10 c + c1 - 2 x \\leq 1.0\\\\\n" *
+            " & a\\times b \\leq 2.0\\\\\n" *
+            " & \\begin{bmatrix}\n" *
+            "a & b\\\\\n" *
+            "\\cdot & x\\\\\n" *
+            "\\end{bmatrix} \\in \\text{PSDCone()}\\\\\n" *
+            " & [a, b, c] \\in \\text{MathOptInterface.PositiveSemidefiniteConeTriangle(2)}\\\\\n" *
+            " & \\begin{bmatrix}\n" *
+            "a & b\\\\\n" *
+            "c & x\\\\\n" *
+            "\\end{bmatrix} \\in \\text{PSDCone()}\\\\\n" *
+            " & [a, b, c, x] \\in \\text{MathOptInterface.PositiveSemidefiniteConeSquare(2)}\\\\\n" *
+            " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\\n" *
+            " & fi = 9.0\\\\\n" *
+            " & a \\geq 1.0\\\\\n" *
+            " & c \\geq -1.0\\\\\n" *
+            " & a1 \\geq 1.0\\\\\n" *
+            " & c1 \\geq -1.0\\\\\n" *
+            " & b \\leq 1.0\\\\\n" *
+            " & c \\leq 1.0\\\\\n" *
+            " & b1 \\leq 1.0\\\\\n" *
+            " & c1 \\leq 1.0\\\\\n" *
+            " & a1 \\in \\mathbb{Z}\\\\\n" *
+            " & b1 \\in \\mathbb{Z}\\\\\n" *
+            " & c1 \\in \\mathbb{Z}\\\\\n" *
+            " & z \\in \\mathbb{Z}\\\\\n" *
+            " & x \\in \\{0, 1\\}\\\\\n" *
+            " & u_{1} \\in \\{0, 1\\}\\\\\n" *
+            " & u_{2} \\in \\{0, 1\\}\\\\\n" *
+            " & u_{3} \\in \\{0, 1\\}\\\\\n" *
+            "\\end{aligned}",
+            repl = :print,
         )
 
         #------------------------------------------------------------------
@@ -674,13 +738,13 @@ Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""",
         io_test(
             IJuliaMode,
             model_1,
-            """
-\\begin{alignat*}{1}\\max\\quad & a - b + 2 a1 - 10 x\\\\
-\\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\
- & a\\times b \\leq 2.0\\\\
- & [-a + 1, u_{1}, u_{2}, u_{3}] \\in MathOptInterface.SecondOrderCone(4)\\\\
-\\end{alignat*}
-""",
+            "\\begin{aligned}\n" *
+            "\\max\\quad & a - b + 2 a1 - 10 x\\\\\n" *
+            "\\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\\n" *
+            " & a\\times b \\leq 2.0\\\\\n" *
+            " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\\n" *
+            "\\end{aligned}",
+            repl = :print,
         )
 
         #------------------------------------------------------------------
@@ -763,12 +827,12 @@ With NL expressions
         io_test(
             IJuliaMode,
             model,
-            """
-\\begin{alignat*}{1}\\max\\quad & sin(x)\\\\
-\\text{Subject to} \\quad & subexpression_{1} - 0.0 = 0\\\\
-\\text{With NL expressions} \\quad & subexpression_{1}: cos(x)\\\\
-\\end{alignat*}
-""",
+            "\\begin{aligned}\n" *
+            "\\max\\quad & sin(x)\\\\\n" *
+            "\\text{Subject to} \\quad & subexpression_{1} - 0.0 = 0\\\\\n" *
+            "\\text{With NL expressions} \\quad & subexpression_{1}: cos(x)\\\\\n" *
+            "\\end{aligned}",
+            repl = :print,
         )
     end
     @testset "SingleVariable constraints" begin
@@ -781,6 +845,25 @@ With NL expressions
         io_test(REPLMode, JuMP.LowerBoundRef(x), "x $ge 10.0")
         io_test(REPLMode, zero_one, "x binary")
         # TODO: Test in IJulia mode
+    end
+    @testset "Feasibility" begin
+        io_test(
+            IJuliaMode,
+            Model(),
+            "\\begin{aligned}\n\\text{feasibility}\\\\\n\\end{aligned}",
+            repl = :print,
+        )
+    end
+    @testset "Min" begin
+        model = Model()
+        @variable(model, x)
+        @objective(model, Min, x)
+        io_test(
+            IJuliaMode,
+            model,
+            "\\begin{aligned}\n\\min\\quad & x\\\\\n\\end{aligned}",
+            repl = :print,
+        )
     end
 end
 
@@ -798,4 +881,107 @@ end
     io_test(IJuliaMode, y[2], "y[:a]_{2}")
     @variable(model, z, base_name = "z^1")
     io_test(IJuliaMode, z, "z\\^1")
+end
+
+@testset "Print solution summary" begin
+    model = Model()
+    @variable(model, x <= 2.0)
+    @variable(model, y >= 0.0)
+    @objective(model, Min, -x)
+    c = @constraint(model, x + y <= 1) # anonymous constraint
+
+    JuMP.set_name(JuMP.UpperBoundRef(x), "xub")
+    JuMP.set_name(JuMP.LowerBoundRef(y), "ylb")
+
+    set_optimizer(
+        model,
+        () -> MOIU.MockOptimizer(
+            MOIU.Model{Float64}(),
+            eval_objective_value = false,
+        ),
+    )
+    optimize!(model)
+
+    mockoptimizer = JuMP.backend(model).optimizer.model
+    MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
+    MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
+    MOI.set(mockoptimizer, MOI.ObjectiveBound(), 3.0)
+    MOI.set(mockoptimizer, MOI.ResultCount(), 1)
+    MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
+    MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
+    MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c), -1.0)
+    MOI.set(
+        mockoptimizer,
+        MOI.ConstraintDual(),
+        JuMP.optimizer_index(JuMP.UpperBoundRef(x)),
+        0.0,
+    )
+    MOI.set(
+        mockoptimizer,
+        MOI.ConstraintDual(),
+        JuMP.optimizer_index(JuMP.LowerBoundRef(y)),
+        1.0,
+    )
+    MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
+    MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
+    MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+    MOI.set(mockoptimizer, MOI.SolveTime(), 5.0)
+
+    @test sprint(show, solution_summary(model)) == """
+* Solver : Mock
+
+* Status
+  Termination status : OPTIMAL
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Message from the solver:
+  "solver specific string"
+
+* Candidate solution
+  Objective value      : -1.0
+  Objective bound      : 3.0
+  Dual objective value : -1.0
+
+* Work counters
+  Solve time (sec)   : 5.00000
+  Simplex iterations : 1
+  Barrier iterations : 1
+  Node count         : 1
+"""
+
+    @test sprint(
+        (io, model) -> show(io, solution_summary(model, verbose = true)),
+        model,
+    ) == """
+* Solver : Mock
+
+* Status
+  Termination status : OPTIMAL
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Result count       : 1
+  Has duals          : true
+  Message from the solver:
+  "solver specific string"
+
+* Candidate solution
+  Objective value      : -1.0
+  Objective bound      : 3.0
+  Dual objective value : -1.0
+  Primal solution :
+    x : 1.0
+    y : 0.0
+  Dual solution :
+    xub : 0.0
+    ylb : 1.0
+
+* Work counters
+  Solve time (sec)   : 5.00000
+  Simplex iterations : 1
+  Barrier iterations : 1
+  Node count         : 1
+"""
 end

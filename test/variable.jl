@@ -509,25 +509,29 @@ end
 function test_variables_constrained_on_creation(ModelType, ::Any)
     model = ModelType()
 
-    err =
-        ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `set` keyword argument is not allowed.")
+    err = ErrorException(
+        "In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `set` keyword argument is not allowed.",
+    )
     @test_macro_throws err @variable(
         model,
         x[1:2] in SecondOrderCone(),
         set = PSDCone()
     )
-    err =
-        ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `PSD` argument is not allowed.")
+    err = ErrorException(
+        "In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `PSD` argument is not allowed.",
+    )
     @test_macro_throws err @variable(model, x[1:2] in SecondOrderCone(), PSD)
-    err =
-        ErrorException("In `@variable(model, x[1:2] in SecondOrderCone(), Symmetric)`: Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `\$(Expr(:escape, :(SecondOrderCone())))`.")
+    err = ErrorException(
+        "In `@variable(model, x[1:2] in SecondOrderCone(), Symmetric)`: Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `\$(Expr(:escape, :(SecondOrderCone())))`.",
+    )
     @test_macro_throws err @variable(
         model,
         x[1:2] in SecondOrderCone(),
         Symmetric
     )
-    err =
-        ErrorException("In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`: `set` keyword argument was given 2 times.")
+    err = ErrorException(
+        "In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`: `set` keyword argument was given 2 times.",
+    )
     @test_macro_throws err @variable(
         model,
         x[1:2],
@@ -649,6 +653,17 @@ function test_Model_value_containers(::Any, ::Any)
         "Julia's broadcast syntax instead: `JuMP.value.(x)`.",
     )
     @test_throws exception JuMP.value(x)
+end
+
+function test_Model_get_variable_coefficient(::Any, ::Any)
+    m = Model()
+    x = @variable(m, x)
+    y = @variable(m, y)
+    @test coefficient(x, x) == 1.0
+    @test coefficient(x, y) == 0.0
+    @test coefficient(x, x, x) == 0.0
+    @test coefficient(x, y, x) == coefficient(x, x, y) == 0.0
+    @test coefficient(x, y, y) == 0.0
 end
 
 function _mock_reduced_cost_util(
@@ -905,6 +920,32 @@ function test_Model_relax_integrality_error_cases(::Any, ::Any)
         "fixed out of bounds.",
     )
     @test_throws err relax_integrality(model)
+end
+
+function test_unknown_size_dense(::Any, ::Any)
+    model = Model()
+    f = Iterators.filter(k -> isodd(k), 1:10)
+    @variable(model, x[f])
+    @test length(x) == 5
+end
+
+function test_unknown_size_sparse(::Any, ::Any)
+    model = Model()
+    f = Iterators.filter(k -> isodd(k), 1:10)
+    @variable(model, x[i = f; i < 5])
+    @test length(x) == 2
+end
+
+function test_start_value(::Any, ::Any)
+    model = Model()
+    @variable(model, x)
+    @test start_value(x) === nothing
+    set_start_value(x, 1.0)
+    @test start_value(x) == 1.0
+    set_start_value(x, nothing)
+    @test start_value(x) === nothing
+    set_start_value(x, 1)
+    @test start_value(x) == 1.0
 end
 
 function runtests()

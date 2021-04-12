@@ -46,8 +46,8 @@ function p_median(num_facilities, num_customers, num_locations)
         Min,
         sum(
             abs(customer_locations[customer] - location) *
-            is_closest[location, customer]
-            for customer in 1:num_customers, location in 1:num_locations
+            is_closest[location, customer] for customer in 1:num_customers,
+            location in 1:num_locations
         )
     )
 

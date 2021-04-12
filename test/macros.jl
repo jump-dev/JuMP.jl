@@ -666,7 +666,9 @@ end
         @variable(model, x)
 
         @test_macro_throws(
-            ErrorException("In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...` in the definition of an index set."),
+            ErrorException(
+                "In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...` in the definition of an index set.",
+            ),
             @variable(model, y[axes(A)...])
         )
 
@@ -675,27 +677,37 @@ end
         @test length(z) == 2
 
         @test_macro_throws(
-            ErrorException("In `@constraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."),
+            ErrorException(
+                "In `@constraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set.",
+            ),
             @constraint(model, [axes(A)...], x >= 1)
         )
 
         @test_macro_throws(
-            ErrorException("In `@NLconstraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set."),
+            ErrorException(
+                "In `@NLconstraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set.",
+            ),
             @NLconstraint(model, [axes(A)...], x >= 1)
         )
 
         @test_macro_throws(
-            ErrorException("In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."),
+            ErrorException(
+                "In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set.",
+            ),
             @expression(model, [axes(A)...], x)
         )
 
         @test_macro_throws(
-            ErrorException("In `@NLexpression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set."),
+            ErrorException(
+                "In `@NLexpression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set.",
+            ),
             @NLexpression(model, [axes(A)...], x)
         )
 
         @test_macro_throws(
-            ErrorException("In `@NLparameter(model, p[axes(A)...] == x)`: cannot use splatting operator `...` in the definition of an index set."),
+            ErrorException(
+                "In `@NLparameter(model, p[axes(A)...] == x)`: cannot use splatting operator `...` in the definition of an index set.",
+            ),
             @NLparameter(model, p[axes(A)...] == x)
         )
     end
@@ -704,19 +716,21 @@ end
         model = Model()
         @variable(model, x >= 0)
         @test_throws(
-            ErrorException("Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`."),
+            ErrorException(
+                "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`.",
+            ),
             @constraint(model, x >= NaN)
         )
-        @test_throws ErrorException("Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`.") @constraint(
-            model,
-            1 <= x + NaN <= 2
-        )
-        @test_throws ErrorException("Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`.") @constraint(
-            model,
-            1 <= x + Inf <= 2
-        )
+        @test_throws ErrorException(
+            "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`.",
+        ) @constraint(model, 1 <= x + NaN <= 2)
+        @test_throws ErrorException(
+            "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`.",
+        ) @constraint(model, 1 <= x + Inf <= 2)
         @test_throws_strip(
-            ErrorException("In `@constraint(model, 1 <= x <= NaN)`: Invalid bounds, cannot contain NaN: [1, NaN]."),
+            ErrorException(
+                "In `@constraint(model, 1 <= x <= NaN)`: Invalid bounds, cannot contain NaN: [1, NaN].",
+            ),
             @constraint(model, 1 <= x <= NaN)
         )
     end
@@ -729,6 +743,63 @@ end
         unregister(model, :x)
         @variable(model, x)
         @test num_variables(model) == 2
+    end
+
+    @testset "unrecognized_variable_type" begin
+        model = Model()
+        err = ErrorException(
+            "In `@variable(model, x, 2, variable_type = 1)`: Unrecognized " *
+            "arguments: 2, 1. (You may have passed these as positional " *
+            "arguments, or as a keyword value to `variable_type`.)\n\nIf " *
+            "you're trying to create a JuMP extension, you need to implement " *
+            "`build_variable`.",
+        )
+        @test_throws_strip err @variable(model, x, 2, variable_type = 1)
+    end
+
+    @testset "kwargs" begin
+        model = Model()
+        x = @variable(model; integer = true)
+        @test is_integer(x)
+        x = @variable(model; integer = false)
+        @test !is_integer(x)
+        @variable(model, y; integer = true)
+        @test is_integer(y)
+    end
+
+    @testset "Model as index" begin
+        m = Model()
+        @variable(m, x)
+        index_set = VERSION < v"1.1" ? "m=1:2" : "m = 1:2"
+        msg = "Index m is the same symbol as the model. Use a different name for the index."
+        @test_macro_throws(
+            ErrorException("In `@variable(m, y[$(index_set)] <= m)`: $(msg)"),
+            @variable(m, y[m = 1:2] <= m),
+        )
+        @test_macro_throws(
+            ErrorException("In `@constraint(m, [m = 1:2], x <= m)`: $(msg)"),
+            @constraint(m, [m = 1:2], x <= m),
+        )
+        @test_macro_throws(
+            ErrorException("In `@expression(m, [m = 1:2], m * x)`: $(msg)"),
+            @expression(m, [m = 1:2], m * x),
+        )
+        @test_macro_throws(
+            ErrorException(
+                "In `@NLconstraint(m, [m = 1:2], sqrt(x) <= m)`: $(msg)",
+            ),
+            @NLconstraint(m, [m = 1:2], sqrt(x) <= m),
+        )
+        @test_macro_throws(
+            ErrorException("In `@NLexpression(m, [m = 1:2], x)`: $(msg)"),
+            @NLexpression(m, [m = 1:2], x),
+        )
+        @test_macro_throws(
+            ErrorException(
+                "In `@NLparameter(m, p[$(index_set)] == m)`: $(msg)",
+            ),
+            @NLparameter(m, p[m = 1:2] == m),
+        )
     end
 end
 

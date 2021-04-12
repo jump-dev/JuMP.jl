@@ -208,4 +208,73 @@ And data, a 0-dimensional $(Array{Int,0}):
             @test k[2] == Containers.DenseAxisArrayKey((2, :b))
         end
     end
+    @testset "AxisLookup" begin
+        A = DenseAxisArray([5.0 6.0; 7.0 8.0], [:a, :b], [:a, :b])
+        @test A.lookup[1] isa Containers._AxisLookup{Dict{Symbol,Int}}
+        @test_throws KeyError A[:c, :a]
+        @test_throws KeyError A[1, 1]
+        @test_throws KeyError A[:a, :b, 2] == 6.0
+        @test isassigned(A, :a, :a)
+        @test !isassigned(A, :a, :c)
+
+        @test (@inferred A[:a, :b]) == 6.0
+        @test (@inferred A[:a, :b, 1]) == 6.0
+        @test (@inferred A[:b, :a]) == 7.0
+        @test (@inferred A[[:a, :b], [:a, :b]]) == A
+        @test (@inferred A[:a, [:a, :b]]) ==
+              DenseAxisArray([5.0, 6.0], [:a, :b])
+        @test (@inferred A[[:a, :b], :b]) ==
+              DenseAxisArray([6.0, 8.0], [:a, :b])
+
+        B = DenseAxisArray([5.0 6.0; 7.0 8.0], Base.OneTo(2), [:a, :b])
+        @test B.lookup[1] isa Containers._AxisLookup{Base.OneTo{Int}}
+        @test_throws KeyError B[0, :a]
+        @test isassigned(B, 1, :a)
+        @test !isassigned(B, 3, :b)
+
+        @test (@inferred B[1, :b]) == 6.0
+        @test (@inferred B[2, :a]) == 7.0
+        @test (@inferred B[1:2, [:a, :b]]) == B
+        @test (@inferred B[1, [:a, :b]]) == DenseAxisArray([5.0, 6.0], [:a, :b])
+        @test (@inferred B[1:2, :b]) == DenseAxisArray([6.0, 8.0], 1:2)
+
+        C = DenseAxisArray([5.0 6.0; 7.0 8.0], 2:3, [:a, :b])
+        @test C.lookup[1] isa Containers._AxisLookup{Tuple{Int,Int}}
+        @test_throws KeyError C[0, :a]
+        @test isassigned(C, 2, :a)
+        @test !isassigned(C, 4, :b)
+        @test (@inferred C[2, :b]) == 6.0
+        @test (@inferred C[3, :a]) == 7.0
+        @test (@inferred C[2:3, [:a, :b]]) == C
+        @test (@inferred C[2, [:a, :b]]) == DenseAxisArray([5.0, 6.0], [:a, :b])
+        @test (@inferred C[2:3, :b]) == DenseAxisArray([6.0, 8.0], 2:3)
+    end
+    @testset "BitArray" begin
+        x = DenseAxisArray([0 1; 1 0], [:a, :b], 1:2)
+        y = Bool.(x)
+        @test y isa DenseAxisArray
+        @test x == y
+    end
+    @testset "Broadcast" begin
+        foo(x, y) = x + y
+        foo_b(x, y) = foo.(x, y)
+        bar(x, y) = (foo.(x, y) .+ x) .^ 2
+        a = [5.0 6.0; 7.0 8.0]
+        A = DenseAxisArray(a, [:a, :b], [:a, :b])
+        b = a .+ 1
+        B = A .+ 1
+        @test B == DenseAxisArray(b, [:a, :b], [:a, :b])
+        C = @inferred foo_b(A, B)
+        @test C == DenseAxisArray(foo_b(a, b), [:a, :b], [:a, :b])
+        D = @inferred bar(A, B)
+        @test D == DenseAxisArray(bar(a, b), [:a, :b], [:a, :b])
+    end
+    @testset "Broadcast_errors" begin
+        a = [5.0 6.0; 7.0 8.0]
+        A = DenseAxisArray(a, [:a, :b], [:a, :b])
+        B = DenseAxisArray(a, [:b, :a], [:a, :b])
+        @test_throws ErrorException A .+ B
+        b = [5.0 6.0; 7.0 8.0; 9.0 10.0]
+        @test_throws DimensionMismatch A .+ b
+    end
 end

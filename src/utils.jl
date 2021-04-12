@@ -42,7 +42,7 @@ function _rmul!(v::_VectorView{T}, value::T) where {T<:Number}
     return
 end
 
-function _reinterpret_unsafe(::Type{T}, x::Vector{R}) where {T, R}
+function _reinterpret_unsafe(::Type{T}, x::Vector{R}) where {T,R}
     # how many T's fit into x?
     @assert isbitstype(T) && isbitstype(R)
     len = length(x) * sizeof(R)

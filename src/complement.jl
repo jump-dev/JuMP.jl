@@ -12,12 +12,12 @@
 function _build_complements_constraint(
     errorf::Function,
     F::AbstractArray{<:AbstractJuMPScalar},
-    x::AbstractArray{<:AbstractVariableRef}
+    x::AbstractArray{<:AbstractVariableRef},
 )
     if size(F) != size(x)
         errorf(
             "size of mapping does not match size of variables: " *
-            "$(size(F)) != $(size(x))."
+            "$(size(F)) != $(size(x)).",
         )
     end
     return VectorConstraint(vec([F x]), MOI.Complements(length(F)))
@@ -44,27 +44,31 @@ function _build_complements_constraint(
     ::AbstractArray{<:AbstractJuMPScalar},
     ::AbstractArray{<:AbstractJuMPScalar},
 )
-    errorf("second term must be an array of variables.")
+    return errorf("second term must be an array of variables.")
 end
 
 function _build_complements_constraint(
-    ::Function, F::AbstractJuMPScalar, x::AbstractVariableRef
+    ::Function,
+    F::AbstractJuMPScalar,
+    x::AbstractVariableRef,
 )
     return VectorConstraint([F, x], MOI.Complements(1))
 end
 
 function _build_complements_constraint(
-    errorf::Function, ::AbstractJuMPScalar, ::AbstractJuMPScalar
+    errorf::Function,
+    ::AbstractJuMPScalar,
+    ::AbstractJuMPScalar,
 )
-    errorf("second term must be a variable.")
+    return errorf("second term must be a variable.")
 end
 
 function parse_one_operator_constraint(
     errorf::Function,
     ::Bool,
-    ::Union{Val{:complements}, Val{:⟂}},
+    ::Union{Val{:complements},Val{:⟂}},
     F,
-    x
+    x,
 )
     f, parse_code = _MA.rewrite(F)
     return parse_code, :(_build_complements_constraint($errorf, $f, $(esc(x))))
