@@ -4,6 +4,8 @@ JuMP release notes
 Version 0.21.7 (April 12, 2021)
 ---------------------------------
 
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.7).
 A summary of changes are as follows:
 
 - New features:
