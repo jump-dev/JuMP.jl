@@ -113,13 +113,53 @@ function container(f::Function, indices, ::Type{SparseAxisArray})
     mappings = Base.Generator(I -> I => f(I...), indices)
     # Same as `Dict(mapping)` but it will error if two indices are the same.
     data = NoDuplicateDict(mappings)
-    dict = data.dict
-    if isempty(dict)
-        # If `dict` is empty, it was not able to determine the type
-        # of the key hence the type of `dict` is `Dict{Any, Any}`.
-        # This is an issue since `SparseAxisArray` needs the key
-        # type to be a tuple.
-        dict = Dict{_eltype_or_any(indices),Any}()
-    end
-    return SparseAxisArray(dict)
+    return _sparseaxisarray(data.dict, f, indices)
+end
+
+# The NoDuplicateDict was able to infer the element type.
+_sparseaxisarray(dict::Dict, ::Any, ::Any) = SparseAxisArray(dict)
+
+# @default_eltype succeeded and inferred a tuple of the appropriate size!
+# Use `return_types` to get the value type of the dictionary.
+function _container_dict(
+    K::Type{<:NTuple{N,Any}},
+    f::Function,
+    ::Type{<:NTuple{N,Any}},
+) where {N}
+    ret = Base.return_types(f, K)
+    V = length(ret) == 1 ? first(ret) : Any
+    return Dict{K,V}()
+end
+
+# @default_eltype bailed and returned Any. Use an NTuple of Any of the
+# appropriate size intead.
+function _container_dict(::Any, ::Any, K::Type{<:NTuple{N,Any}}) where {N}
+    return Dict{K,Any}()
+end
+
+# @default_eltype bailed and returned Union{}. Use an NTuple of Any of the
+# appropriate size intead. We need this method to avoid an ambiguity with
+# `::Type{<:NTuple{N,Any}}` and `::Any`.
+function _container_dict(
+    ::Type{Union{}},
+    ::Function,
+    K::Type{<:NTuple{N,Any}},
+) where {N}
+    return Dict{K,Any}()
+end
+
+# Calling `@default_eltye` on `x` isn't sufficient, because the iterator may
+# skip every element based on the condition. Call it on an identical nested
+# iterator, but this time without the condition.
+_default_eltype(x::NestedIterator) = Base.@default_eltype nested(x.iterators...)
+_default_eltype(x) = Base.@default_eltype x
+
+# The NoDuplicateDict was not able to infer the element type. To make a
+# best-guess attempt, collect all of the keys excluding the conditional
+# statement (these must be defined, because the conditional applies to the
+# lowest-level of the index loops), then get the eltype of the result.
+function _sparseaxisarray(dict::Dict{Any,Any}, f, indices)
+    @assert isempty(dict)
+    d = _container_dict(_default_eltype(indices), f, _eltype_or_any(indices))
+    return SparseAxisArray(d)
 end
