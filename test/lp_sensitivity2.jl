@@ -416,4 +416,25 @@ end
             ),
         )
     end
+
+    @testset "Free variable" begin
+        _test_sensitivity(
+            """
+            variables: x, y
+            minobjective: 1.0 * x
+            xlb: x >= 1.0
+            """,
+            Dict(
+                "x" => TestSensitivitySolution(1.0, NaN, nothing, (-1.0, Inf)),
+                "y" => TestSensitivitySolution(0.0, NaN, nothing, (0.0, 0.0)),
+                "xlb" => TestSensitivitySolution(
+                    NaN,
+                    1.0,
+                    MOI.NONBASIC_AT_LOWER,
+                    (-Inf, Inf),
+                ),
+            ),
+        )
+    end
+
 end
