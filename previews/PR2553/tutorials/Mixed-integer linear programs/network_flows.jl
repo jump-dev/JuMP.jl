@@ -176,7 +176,7 @@ max_flow = Model(GLPK.Optimizer)
 @variable(max_flow, f[1:n,1:n] >= 0)
 # Capacity constraints
 @constraint(max_flow, [i = 1:n, j = 1:n], f[i,j] <= G[i,j])
-# Flow conservation contraints
+# Flow conservation constraints
 @constraint(max_flow, [i = 1:n; i != 1 && i != 8], sum(f[i,:]) == sum(f[:,i]))
 @objective(max_flow, Max, sum(f[1, :]))
 

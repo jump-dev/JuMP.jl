@@ -108,7 +108,7 @@ using GLPK
 
 model = Model(GLPK.Optimizer)
 
-# Variables are modelled using [`@variable`](@ref):
+# Variables are modeled using [`@variable`](@ref):
 
 @variable(model, x >= 0)
 
@@ -120,7 +120,7 @@ model = Model(GLPK.Optimizer)
 
 @objective(model, Min, 12x + 20y)
 
-# Constraints are modelled using [`@constraint`](@ref). Here `c1` and `c2` are
+# Constraints are modeled using [`@constraint`](@ref). Here `c1` and `c2` are
 # the names of our constraint.
 
 @constraint(model, c1, 6x + 8y >= 100)

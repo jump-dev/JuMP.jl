@@ -8,7 +8,7 @@
 # **Originally Contributed by**: Iain Dunning
 
 # This tutorial shows how to solve a nonlinear rocketry control problem.
-# The problem was drawn from the [COPS3](http://www.mcs.anl.gov/~more/cops/cops3.pdf)
+# The problem was drawn from the [COPS3](https://www.mcs.anl.gov/~more/cops/cops3.pdf)
 # benchmark.
 
 # Our goal is to maximize the final altitude of a vertically launched rocket.
@@ -26,7 +26,7 @@
 
 # We will make the time step size $\Delta t$, and thus the final time
 # $t_f = n \cdot \Delta t$, a variable in the problem. To approximate the
-# derivatives in the problem we will use the [trapezoidal rule](http://en.wikipedia.org/wiki/Trapezoidal_rule).
+# derivatives in the problem we will use the [trapezoidal rule](https://en.wikipedia.org/wiki/Trapezoidal_rule).
 
 # ### State and Control
 

@@ -42,7 +42,7 @@ function example_cannery()
     @constraint(
         cannery, demand_con[j = 1:num_markets], sum(ship[:, j]) >= demand[j]
     )
-    ## Minimize transporatation cost
+    ## Minimize transportation cost
     @objective(
         cannery,
         Min,
