@@ -12,6 +12,7 @@
 #############################################################################
 
 using JuMP
+using SparseArrays
 using Test
 using Base.Meta
 
@@ -914,6 +915,19 @@ end
             ),
             @NLparameter(m, p[m = 1:2] == m),
         )
+    end
+
+    @testset "Broadcasting sparse arrays" begin
+        model = Model()
+        A = sparse([1, 2], [1, 2], [1, 1])
+        b = sparsevec([1, 2], [1, 2])
+        @variable(model, x[1:2])
+        le_cons = @constraint(model, A * x .<= b)
+        @test length(le_cons) ==
+              num_constraints(model, AffExpr, MOI.LessThan{Float64})
+        int_cons = @constraint(model, -b .<= A * x .<= b)
+        @test length(int_cons) ==
+              num_constraints(model, AffExpr, MOI.Interval{Float64})
     end
 end
 
