@@ -200,28 +200,6 @@ julia> expr = @NLexpression(model, sin(x) + 1)
 "Reference to nonlinear expression #1"
 ```
 
-### [`AffExpr` and `QuadExpr` cannot be used](@id aux_trick)
-
-`AffExpr` and `QuadExpr` objects cannot currently be used inside nonlinear
- expressions. Instead, introduce auxiliary variables, e.g.:
-
-```jldoctest; setup=:(model = Model(); @variable(model, x[1:2]); @variable(model, y); c = [1, 2])
-julia> @expression(model, my_expr, c' * x + 3y)
-x[1] + 2 x[2] + 3 y
-
-julia> @NLobjective(model, Min, sin(my_expr))
-ERROR: Unexpected affine expression x[1] + 2 x[2] + 3 y in nonlinear expression. Affine expressions (e.g., created using @expression) and nonlinear expressions cannot be mixed.
-[...]
-
-julia> aux = @variable(model)
-noname
-
-julia> @constraint(model, aux == my_expr)
--x[1] - 2 x[2] - 3 y + noname = 0.0
-
-julia> @NLobjective(model, Min, sin(aux))
-```
-
 ### Scalar operations only
 
 With the exception of the splatting syntax discussed below, all expressions

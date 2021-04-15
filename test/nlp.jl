@@ -944,31 +944,32 @@ end
         @test !(:Hess in MOI.features_available(evaluator))
     end
 
-    @testset "Error on using AffExpr in NLexpression" begin
+    @testset "AffExpr in nonlinear" begin
         model = Model()
-        @variable(model, x)
-        @variable(model, y)
-        A = x + y
-        expected_exception = ErrorException(
-            "Unexpected affine expression x + y in nonlinear expression. " *
-            "Affine expressions (e.g., created using @expression) and " *
-            "nonlinear expressions cannot be mixed.",
+        @variable(model, x, start = 1.1)
+        @variable(model, y, start = 1.2)
+        @expression(model, ex, 2 * x + y + 1)
+        nl_ex = @NLexpression(model, ex^2)
+        @test isapprox(
+            value(nl_ex, start_value),
+            (2 * 1.1 + 1.2 + 1)^2,
+            atol = 1e-4,
         )
-        @test_throws expected_exception @NLexpression(model, A)
     end
 
-    @testset "Error on using QuadExpr in NLexpression" begin
+    @testset "QuadExpr in nonlinear" begin
         model = Model()
-        @variable(model, x)
-        @variable(model, y)
-        A = x * y
-        expected_exception = ErrorException(
-            "Unexpected quadratic expression x*y in nonlinear expression. " *
-            "Quadratic expressions (e.g., created using @expression) and " *
-            "nonlinear expressions cannot be mixed.",
+        @variable(model, x, start = 1.1)
+        @variable(model, y, start = 1.2)
+        @expression(model, ex, 0.5 * x^2 + y^2 + 2 * x + 1)
+        nl_ex = @NLexpression(model, sqrt(ex))
+        @test isapprox(
+            value(nl_ex, start_value),
+            sqrt(0.5 * 1.1^2 + 1.2^2 + 2 * 1.1 + 1),
+            atol = 1e-4,
         )
-        @test_throws expected_exception @NLexpression(model, A)
     end
+
     @testset "Error on complex values" begin
         model = Model()
         @variable(model, x)

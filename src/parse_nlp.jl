@@ -443,11 +443,19 @@ function _parse_NL_expr_runtime(
     parent,
     values,
 )
-    return error(
-        "Unexpected quadratic expression $x in nonlinear expression. " *
-        "Quadratic expressions (e.g., created using @expression) and " *
-        "nonlinear expressions cannot be mixed.",
-    )
+    push!(tape, NodeData(CALL, operator_to_id[:+], parent))
+    sum_parent = length(tape)
+    _parse_NL_expr_runtime(m, x.aff, tape, sum_parent, values)
+    for (xy, c) in x.terms
+        push!(tape, NodeData(CALL, operator_to_id[:*], sum_parent))
+        mult_parent = length(tape)
+        _parse_NL_expr_runtime(m, xy.a, tape, mult_parent, values)
+        _parse_NL_expr_runtime(m, xy.b, tape, mult_parent, values)
+        if !isone(c)  # Optimization: no need for * node.
+            _parse_NL_expr_runtime(m, c, tape, mult_parent, values)
+        end
+    end
+    return
 end
 
 function _parse_NL_expr_runtime(
@@ -457,11 +465,22 @@ function _parse_NL_expr_runtime(
     parent,
     values,
 )
-    return error(
-        "Unexpected affine expression $x in nonlinear expression. " *
-        "Affine expressions (e.g., created using @expression) and " *
-        "nonlinear expressions cannot be mixed.",
-    )
+    push!(tape, NodeData(CALL, operator_to_id[:+], parent))
+    sum_parent = length(tape)
+    if !iszero(x.constant)
+        _parse_NL_expr_runtime(m, x.constant, tape, sum_parent, values)
+    end
+    for (v, c) in x.terms
+        if isone(c)  # Optimization: no need for * node.
+            _parse_NL_expr_runtime(m, v, tape, sum_parent, values)
+        else
+            push!(tape, NodeData(CALL, operator_to_id[:*], sum_parent))
+            mult_parent = length(tape)
+            _parse_NL_expr_runtime(m, c, tape, mult_parent, values)
+            _parse_NL_expr_runtime(m, v, tape, mult_parent, values)
+        end
+    end
+    return
 end
 
 function _parse_NL_expr_runtime(m::Model, x, tape, parent, values)
