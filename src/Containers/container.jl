@@ -119,6 +119,8 @@ end
 # The NoDuplicateDict was able to infer the element type.
 _sparseaxisarray(dict::Dict, ::Any, ::Any) = SparseAxisArray(dict)
 
+# @default_eltype succeeded and inferred a tuple of the appropriate size!
+# Use `return_types` to get the value type of the dictionary.
 function _container_dict(
     K::Type{<:NTuple{N,Any}},
     f::Function,
@@ -129,10 +131,15 @@ function _container_dict(
     return Dict{K,V}()
 end
 
+# @default_eltype bailed and returned Any. Use an NTuple of Any of the
+# appropriate size intead.
 function _container_dict(::Any, ::Any, K::Type{<:NTuple{N,Any}}) where {N}
     return Dict{K,Any}()
 end
 
+# @default_eltype bailed and returned Union{}. Use an NTuple of Any of the
+# appropriate size intead. We need this method to avoid an ambiguity with
+# `::Type{<:NTuple{N,Any}}` and `::Any`.
 function _container_dict(
     ::Type{Union{}},
     ::Function,
@@ -141,6 +148,9 @@ function _container_dict(
     return Dict{K,Any}()
 end
 
+# Calling `@default_eltye` on `x` isn't sufficient, because the iterator may
+# skip every element based on the condition. Call it on an identical nested
+# iterator, but this time without the condition.
 _default_eltype(x::NestedIterator) = Base.@default_eltype nested(x.iterators...)
 _default_eltype(x) = Base.@default_eltype x
 
