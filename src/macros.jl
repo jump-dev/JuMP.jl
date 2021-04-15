@@ -221,19 +221,17 @@ end
 If `x` is an `AbstractSparseArray`, return the dense equivalent, otherwise just
 return `x`.
 
+This function is used in `_build_constraint`.
+
 ## Why is this needed?
 
 When broadcasting `f.(x)` over an `AbstractSparseArray` `x`, Julia first calls
-the equivalent of `f(zero(eltype(x))`. However, if `f` is mutating, this can
-have serious consequences! In our case, broadcasting `build_constraint` will add
-a new `0 = 0` constraint.
-
-To avoid this, make sure to `_desparsify` any arguments that might be
-SparseArrays when broadcasting!
-
-Here's an example of what is happening:
+the equivalent of `f(zero(eltype(x))`. Here's an example:
 
 ```julia
+julia> foo(x) = (println("Calling \$(x)"); x)
+foo (generic function with 1 method)
+
 julia> foo.(sparsevec([1, 2], [1, 2]))
 Calling 0
 Calling 1
@@ -242,6 +240,20 @@ Calling 2
   [1]  =  1
   [2]  =  2
 ```
+
+However, if `f` is mutating, this can have serious consequences! In our case,
+broadcasting `build_constraint` will add a new `0 = 0` constraint.
+
+SparseArrays most-often arise when some input data to the constraint is sparse
+(e.g., a constant vector or matrix). Due to promotion and arithmetic, this
+results in a constraint function that is represented by a SparseArray, but is
+actually dense. Thus, we can safely `collect` the matrix into a dense array.
+
+If the function is sparse, it's not obvious what to do. What is the "zero"
+element of the result? What does it mean to broadcast `build_constraint` over a
+sparse array adding scalar constraints? This likely means that the user is using
+the wrong data structure. For simplicity, let's also call `collect` into a dense
+array, and wait for complaints.
 """
 _desparsify(x::AbstractSparseArray) = collect(x)
 _desparsify(x) = x
