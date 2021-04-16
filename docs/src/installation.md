@@ -72,11 +72,13 @@ The link in the `Solver` column is the corresponding Julia package.
 | [Alpine.jl](https://github.com/lanl-ansi/Alpine.jl)                            |                                                                                  |        | Triad NS | (MI)NLP                   |
 | [Artelys Knitro](https://www.artelys.com/knitro)                               | [KNITRO.jl](https://github.com/jump-dev/KNITRO.jl)                               | Manual | Comm.    | (MI)LP, (MI)SOCP, (MI)NLP |
 | [BARON](http://minlp.com/baron)                                                | [BARON.jl](https://github.com/joehuchette/BARON.jl)                              | Manual | Comm.    | (MI)NLP                   |
+| [Bonmin](http://github.com/coin-or/Bonmin)                                     | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | EPL      | (MI)NLP                   |
 | [Cbc](https://github.com/coin-or/Cbc)                                          | [Cbc.jl](https://github.com/jump-dev/Cbc.jl)                                     |        | EPL      | (MI)LP                    |
 | [CDCS](https://github.com/oxfordcontrol/CDCS)                                  | [CDCS.jl](https://github.com/oxfordcontrol/CDCS.jl)                              | Manualᴹ | GPL     | LP, SOCP, SDP             |
 | [CDD](https://github.com/cddlib/cddlib)                                        | [CDDLib.jl](https://github.com/JuliaPolyhedra/CDDLib.jl)                         |        | GPL      | LP                        |
 | [Clp](https://github.com/coin-or/Clp)                                          | [Clp.jl](https://github.com/jump-dev/Clp.jl)                                     |        | EPL      | LP                        |
 | [COSMO.jl](https://github.com/oxfordcontrol/COSMO.jl)                          |                                                                                  |        | Apache   | LP, QP, SOCP, SDP         |
+| [Couenne](http://github.com/coin-or/Couenne)                                   | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | EPL      | (MI)NLP                   |
 | [CPLEX](https://www.ibm.com/analytics/cplex-optimizer/)                        | [CPLEX.jl](https://github.com/jump-dev/CPLEX.jl)                                 | Manual | Comm.    | (MI)LP, (MI)SOCP          |
 | [CSDP](https://github.com/coin-or/Csdp)                                        | [CSDP.jl](https://github.com/jump-dev/CSDP.jl)                                   |        | EPL      | LP, SDP                   |
 | [EAGO.jl](https://github.com/psorlab/EAGO.jl)                                  |                                                                                  |        | MIT | NLP                    |
@@ -215,13 +217,18 @@ precision) and SDPA-DD ("double-double" precision) do not expose a library
 interface, but can used via [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl),
 which writes and reads files to interact with the solver binary.
 
-## AMPL and GAMS
+## AMPL-based solvers
 
 Use [AmplNLWriter](https://github.com/jump-dev/AmplNLWriter.jl) to access
 solvers that support the [nl format](https://en.wikipedia.org/wiki/Nl_(format)).
-Such solvers include [Bonmin](https://github.com/coin-or/Bonmin) and
-[Couenne](https://github.com/coin-or/Couenne). See a more complete list
-[here](https://ampl.com/products/solvers/all-solvers-for-ampl/).
+
+Some solvers, such as [Bonmin](https://github.com/coin-or/Bonmin) and
+[Couenne](https://github.com/coin-or/Couenne) can be installed via the Julia
+package manager. Others need to be manually installed.
+
+Consult the AMPL documentation for a [complete list of supported solvers](https://ampl.com/products/solvers/all-solvers-for-ampl/).
+
+## GAMS-based solvers
 
 Use [GAMS.jl](https://github.com/GAMS-dev/gams.jl) to access solvers available
 through [GAMS](https://www.gams.com). Such solvers include:

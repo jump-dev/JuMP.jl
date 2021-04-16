@@ -39,7 +39,7 @@ Some but not all of these tasks are summarized in the
 - Developer experience
   - Get JuMP's unit tests running faster. See [#1745](https://github.com/jump-dev/JuMP.jl/pull/1745). (**Done**)
 - All solvers should complete the transition to MOI (**Done**)
-- Provide packages for installing Bonmin and Couenne
+- Provide packages for installing Bonmin and Couenne (**Done**)
 - [MathOptFormat](https://github.com/odow/MathOptFormat.jl) 1.0 (**Done**)
 
 ## MOI 1.0
