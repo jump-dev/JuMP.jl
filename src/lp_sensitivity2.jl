@@ -75,7 +75,12 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     std_form = _standard_form_matrix(model)
     basis = _standard_form_basis(model, std_form)
     B = std_form.A[:, basis.basic_cols]
-    @assert size(B, 1) == size(B, 2)
+    if size(B, 1) != size(B, 2)
+        error(
+            "Unable to compute LP sensitivity: problem is degenerate. Try " *
+            "adding variable bounds to free variables",
+        )
+    end
 
     n = length(std_form.columns)
     is_min = objective_sense(model) == MOI.MIN_SENSE
