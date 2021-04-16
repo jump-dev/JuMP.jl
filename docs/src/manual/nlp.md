@@ -204,15 +204,24 @@ julia> expr = @NLexpression(model, sin(x) + 1)
 
 With the exception of the splatting syntax discussed below, all expressions
 must be simple scalar operations. You cannot use `dot`, matrix-vector products,
-vector slices, etc. Translate vector operations into explicit `sum()` operations
-or use the `AffExpr` plus the [auxiliary variable trick](@ref aux_trick).
-
-```jldoctest; setup=:(model = Model(); @variable(model, x[1:2]); @variable(model, y); c = [1, 2])
+vector slices, etc. 
+```jldoctest nlp_scalar_only; setup=:(model = Model(); @variable(model, x[1:2]); @variable(model, y); c = [1, 2])
 julia> @NLobjective(model, Min, c' * x + 3y)
 ERROR: Unexpected array [1 2] in nonlinear expression. Nonlinear expressions may contain only scalar expressions.
 [...]
+```
 
+Translate vector operations into explicit `sum()` operations:
+```jldoctest nlp_scalar_only
 julia> @NLobjective(model, Min, sum(c[i] * x[i] for i = 1:2) + 3y)
+```
+
+Or use an [`@expression`](@ref):
+```jldoctest nlp_scalar_only
+julia> @expression(model, expr, c' * x)
+x[1] + 2 x[2]
+
+julia> @NLobjective(model, Min, expr + 3y)
 ```
 
 ### Splatting
