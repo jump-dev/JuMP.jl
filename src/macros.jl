@@ -244,10 +244,11 @@ Calling 2
 However, if `f` is mutating, this can have serious consequences! In our case,
 broadcasting `build_constraint` will add a new `0 = 0` constraint.
 
-SparseArrays most-often arise when some input data to the constraint is sparse
+Sparse arrays most-often arise when some input data to the constraint is sparse
 (e.g., a constant vector or matrix). Due to promotion and arithmetic, this
-results in a constraint function that is represented by a SparseArray, but is
-actually dense. Thus, we can safely `collect` the matrix into a dense array.
+results in a constraint function that is represented by an `AbstractSparseArray`, 
+but is actually dense. Thus, we can safely `collect` the matrix into a dense 
+array.
 
 If the function is sparse, it's not obvious what to do. What is the "zero"
 element of the result? What does it mean to broadcast `build_constraint` over a
