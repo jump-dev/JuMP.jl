@@ -153,36 +153,7 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     end
 
     for (var, i) in std_form.columns
-        if basis.variables[i] == MOI.NONBASIC_AT_LOWER && is_min
-            @assert π[i] > -atol
-            # We are minimizing and variable `i` is nonbasic at lower bound.
-            # (δ⁻, δ⁺) = (-πᵢ, ∞) because increasing the objective coefficient
-            # will only keep it at the bound.
-            report.objective[var] = (-π[i], Inf)
-        elseif basis.variables[i] == MOI.NONBASIC_AT_UPPER && !is_min
-            @assert π[i] > -atol
-            # We are maximizing and variable `i` is nonbasic at upper bound.
-            # (δ⁻, δ⁺) = (-πᵢ, ∞) because increasing the objective coefficient
-            # will only keep it at the bound.
-            report.objective[var] = (-π[i], Inf)
-        elseif basis.variables[i] != MOI.BASIC
-            if std_form.lower[i] == -Inf && std_form.upper[i] == Inf
-                # The variable is nonbasic with free bounds.
-                report.objective[var] = (0.0, 0.0)
-            elseif std_form.lower[i] == std_form.upper[i]
-                # The variable is nonbasic with fixed bounds. Therefore,
-                # (δ⁻, δ⁺) = (-∞, ∞) because the variable can be effectively
-                # substituted out.
-                # TODO(odow): is this correct?
-                report.objective[var] = (-Inf, Inf)
-            else
-                @assert π[i] < atol
-                # The variable is nonbasic with nonfixed bounds. This is the
-                # reverse of the first two cases because the variable is at the
-                # opposite bound
-                report.objective[var] = (-Inf, -π[i])
-            end
-        else
+        if basis.variables[i] == MOI.BASIC
             # The variable `i` is basic. Given an optimal basis B, the reduced
             # costs are:
             #   c_bar = π = c_N - c_Bᵀ(B⁻¹N)
@@ -195,7 +166,6 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
             # compute
             #     dᵢⱼ = (eᵢ)ᵀB⁻¹aⱼ
             # Then, depending on the sign of dᵢⱼ, we can compute bounds on δ.
-            @assert basis.variables[i] == MOI.BASIC
             t_lo, t_hi = -Inf, Inf
             e_i = sum(basis.basic_cols[ii] for ii in 1:i)
             for j in 1:length(basis.basic_cols)
@@ -225,9 +195,30 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
                 end
             end
             report.objective[var] = (t_lo, t_hi)
+        elseif std_form.lower[i] == -Inf && std_form.upper[i] == Inf
+            # The variable is nonbasic with free bounds.
+            report.objective[var] = (0.0, 0.0)
+        elseif std_form.lower[i] == std_form.upper[i]
+            # The SingleVariable-in-EqualTo case.
+            # The variable is nonbasic with fixed bounds. Therefore,
+            # (δ⁻, δ⁺) = (-∞, ∞) because the variable can be effectively
+            # substituted out.
+            report.objective[var] = (-Inf, Inf)
+        elseif basis.variables[i] == MOI.NONBASIC_AT_LOWER
+            # The SingleVariable-in-GreaterThan case.
+            # Variable `i` is nonbasic at lower bound. If minimizing, (δ⁻, δ⁺) =
+            # (-πᵢ, ∞) because increasing the objective coefficient will only
+            # keep it at the bound. If maximizing, the opposite is true.
+            report.objective[var] = is_min ? (-π[i], Inf) : (-Inf, -π[i])
+        else
+            # The SingleVariable-in-LessThan case. Because we don't support
+            # interval constraints, this assertion must hold.
+            @assert basis.variables[i] == MOI.NONBASIC_AT_UPPER
+            # Variable `i` is nonbasic at upper bound. The opposite case of the
+            # one above.
+            report.objective[var] = is_min ? (-Inf, -π[i]) : (-π[i], Inf)
         end
     end
-
     return report
 end
 
