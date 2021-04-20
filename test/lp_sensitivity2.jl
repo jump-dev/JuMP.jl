@@ -93,6 +93,47 @@ c: [x, y] in Nonnegatives(2)
     @test_throws err lp_sensitivity_report(model)
 end
 
+@testset "Degeneracy" begin
+    m = MOIU.MockOptimizer(
+        MOIU.Model{Float64}(),
+        eval_variable_constraint_dual = false,
+    )
+    model = direct_model(m)
+    MOI.Utilities.loadfromstring!(
+        m,
+        """
+        variables: x, y
+        maxobjective: 2.0 * x + 4.0 * y
+        c1: x + 2 * y <= 4.0
+        c2: x + 2 * y <= 4.0
+        """,
+    )
+    optimize!(model)
+    MOI.set(m, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(m, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(m, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    for (key, val) in Dict("x" => 0, "y" => 2, "c1" => 0, "c2" => 2)
+        var = variable_by_name(model, key)
+        if var !== nothing
+            MOI.set(model, MOI.VariablePrimal(), var, val)
+        else
+            c = constraint_by_name(model, key)
+            MOI.set(model, MOI.ConstraintDual(), c, val)
+            MOI.set(
+                model,
+                MOI.ConstraintBasisStatus(),
+                c,
+                MOI.NONBASIC_AT_UPPER,
+            )
+        end
+    end
+    err = ErrorException(
+        "Unable to compute LP sensitivity: problem is degenerate. Try adding " *
+        "variable bounds to free variables",
+    )
+    @test_throws err lp_sensitivity_report(model)
+end
+
 @testset "Problems" begin
     @testset "Simple bounds: Min" begin
         _test_sensitivity(
@@ -412,6 +453,26 @@ end
                     -1 / 3,
                     MOI.NONBASIC,
                     (-1.0, 2),
+                ),
+            ),
+        )
+    end
+
+    @testset "Free variable" begin
+        _test_sensitivity(
+            """
+            variables: x, y
+            minobjective: 1.0 * x
+            xlb: x >= 1.0
+            """,
+            Dict(
+                "x" => TestSensitivitySolution(1.0, NaN, nothing, (-1.0, Inf)),
+                "y" => TestSensitivitySolution(0.0, NaN, nothing, (0.0, 0.0)),
+                "xlb" => TestSensitivitySolution(
+                    NaN,
+                    1.0,
+                    MOI.NONBASIC_AT_LOWER,
+                    (-Inf, Inf),
                 ),
             ),
         )
