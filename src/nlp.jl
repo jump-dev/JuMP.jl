@@ -1907,9 +1907,8 @@ function register(
             fprimeprime,
         )
     else
-        autodiff == false || Base.warn_once(
-            "autodiff=true ignored since gradient is already provided.",
-        )
+        autodiff == false ||
+            @warn("autodiff=true ignored since gradient is already provided.")
         m.nlp_data.largest_user_input_dimension =
             max(m.nlp_data.largest_user_input_dimension, dimension)
         d = _UserFunctionEvaluator(
