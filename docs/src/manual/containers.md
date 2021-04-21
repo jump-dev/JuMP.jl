@@ -238,7 +238,7 @@ JuMP.Containers.SparseAxisArray{Tuple{Symbol,Int64},2,Tuple{Int64,Symbol}} with 
 ## Forcing the container type
 
 Pass `container = T` to use `T` as the container. For example:
-```jldoctest
+```jldoctest; filter=r"\([1-2], [1-2]\) \=\> [2-4]"
 julia> Containers.@container([i = 1:2, j = 1:2], i + j, container = Array)
 2×2 Array{Int64,2}:
  2  3
