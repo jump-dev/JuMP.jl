@@ -107,6 +107,17 @@ function test_multivariate()
     @test MOI.eval_objective(d, x) == 8.0
 end
 
+function test_multivariate_register_warn()
+    model = Model()
+    g(x, y) = x^2 + y^2
+    function ∇g(g::Vector{T}, x::T, y::T) where {T<:Real}
+        g[1] = y
+        g[2] = x
+        return
+    end
+    @test_logs (:warn,) register(model, :g, 2, g, ∇g; autodiff = true)
+end
+
 function test_multivariate_existing_nlpdata()
     model = Model()
     @variable(model, x >= 0)
@@ -150,6 +161,7 @@ end
     test_multivariate()
     test_multivariate_existing_nlpdata()
     test_multivariate_redefine()
+    test_multivariate_register_warn()
 end
 
 @testset "Nonlinear" begin
