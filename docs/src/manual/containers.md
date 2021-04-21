@@ -235,6 +235,24 @@ JuMP.Containers.SparseAxisArray{Tuple{Symbol,Int64},2,Tuple{Int64,Symbol}} with 
   [3, B]  =  (:B, 3)
 ```
 
+## Forcing the container type
+
+Pass `container = T` to use `T` as the container. For example:
+```jldoctest
+julia> Containers.@container([i = 1:2, j = 1:2], i + j, container = Array)
+2×2 Array{Int64,2}:
+ 2  3
+ 3  4
+
+julia> Containers.@container([i = 1:2, j = 1:2], i + j, container = Dict)
+Dict{Tuple{Int64,Int64},Int64} with 4 entries:
+  (1, 2) => 3
+  (1, 1) => 2
+  (2, 2) => 4
+  (2, 1) => 3
+```
+You can also pass `DenseAxisArray` or `SparseAxisArray`.
+
 ## How different container types are chosen
 
 If the compiler can prove _at compile time_ that the index sets are rectangular,

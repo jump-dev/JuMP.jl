@@ -94,4 +94,41 @@ using Test
             throw(err)
         end,)
     end
+    @testset "Dict" begin
+        Containers.@container(v[i = 1:3], sin(i), container = Dict)
+        @test v isa Dict{Int,Float64}
+        @test length(v) == 3
+        @test v[2] ≈ sin(2)
+        Containers.@container(w[i = 1:3, j = 1:3], i + j, container = Dict)
+        @test w isa Dict{Tuple{Int,Int},Int}
+        @test length(w) == 9
+        @test w[2, 3] == 5
+        Containers.@container(
+            x[i = 1:3, j = [:a, :b]],
+            (j, i),
+            container = Dict
+        )
+        @test x isa Dict{Tuple{Int,Symbol},Tuple{Symbol,Int}}
+        @test length(x) == 6
+        @test x[2, :a] == (:a, 2)
+        Containers.@container(y[i = 1:3, j = 1:i], i + j, container = Dict)
+        @test y isa Dict{Tuple{Int,Int},Int}
+        @test length(y) == 6
+        @test y[2, 1] == 3
+        Containers.@container(
+            z[i = 1:3, j = 1:3; isodd(i + j)],
+            i + j,
+            container = Dict
+        )
+        @test z isa Dict{Tuple{Int,Int},Int}
+        @test length(z) == 4
+        @test z[1, 2] == 3
+    end
+    @testset "Invalid container" begin
+        @test_throws ErrorException Containers.@container(
+            x[i = 1:2, j = 1:2],
+            i + j,
+            container = Int
+        )
+    end
 end
