@@ -57,6 +57,12 @@ end
     ]
 end
 
+@testset "Test _add_positional_args" begin
+    call = :(f(1, a=2))
+    @test JuMP._add_positional_args(call, [:(MyObject)]) isa Nothing 
+    @test call == :(f(1, $(Expr(:escape, :MyObject)), a = 2))
+end
+
 @testset "MutableArithmetics.Zero (Issue #2187)" begin
     model = Model()
     c = @constraint(model, sum(1 for _ in 1:0) == sum(1 for _ in 1:0))
@@ -173,6 +179,29 @@ function build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
         @test JuMP.constraint_object(cref1).set isa MOI.PowerCone{Float64}
         cref2 = @constraint(model, [1, x, x] in PowerCone(0.5), dual = true)
         @test JuMP.constraint_object(cref2).set isa MOI.DualPowerCone{Float64}
+    end
+end
+
+struct MyConstrType end
+struct BadPosArg end
+function JuMP.build_constraint(
+    _error::Function,
+    f,
+    set,
+    extra::Type{MyConstrType};
+    d = false,
+)
+    return JuMP.build_constraint(_error, f, set)
+end
+function build_constraint_extra_arg_test(ModelType::Type{<:JuMP.AbstractModel})
+    @testset "build_constraint with extra positional arguments" begin
+        model = ModelType()
+        @variable(model, x)
+        cref = @constraint(model, x == 0, MyConstrType)
+        @test JuMP.constraint_object(cref).set isa MOI.EqualTo{Float64}
+        cref = @constraint(model, c1, x == 0, MyConstrType, d = true)
+        @test JuMP.constraint_object(cref).set isa MOI.EqualTo{Float64}
+        @test_macro_throws ErrorException @constraint(model, x == 0, BadPosArg)
     end
 end
 
@@ -328,6 +357,29 @@ function macros_test(
         @test c.func isa JuMP.GenericAffExpr
         @test JuMP.isequal_canonical(c.func, 1 * x)
         @test c.set == MOI.Interval(0.0, 1.0)
+    end
+
+    @testset "Constraint Naming" begin 
+        model = ModelType()
+        @variable(model, x)
+
+        cref = @constraint(model, x == 0)
+        @test name(cref) == ""
+
+        cref = @constraint(model, x == 0, base_name = "cat")
+        @test name(cref) == "cat"
+
+        cref = @constraint(model, c1, x == 0)
+        @test name(cref) == "c1"
+
+        cref = @constraint(model, c2, x == 0, base_name = "cat")
+        @test name(cref) == "cat"
+
+        crefs = @constraint(model, [1:2], x == 0, base_name = "cat")
+        @test name.(crefs) == ["cat[1]", "cat[2]"]
+
+        @test_macro_throws ErrorException @constraint(model, c3[1:2])
+        @test_macro_throws ErrorException @constraint(model, "c"[1:2])
     end
 
     @testset "@build_constraint (scalar inequality)" begin

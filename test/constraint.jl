@@ -269,7 +269,7 @@ function test_syntax_error_constraint(ModelType, ::Any)
     model = ModelType()
     @variable(model, x[1:2])
     err = ErrorException(
-        "In `@constraint(model, [3, x] in SecondOrderCone())`: unable to " *
+        "In `@constraint(model, [3, x] in SecondOrderCone())`: Unable to " *
         "add the constraint because we don't recognize $([3, x]) as a " *
         "valid JuMP function.",
     )

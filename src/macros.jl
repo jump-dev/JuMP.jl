@@ -35,6 +35,37 @@ function _add_kw_args(call, kw_args)
     end
 end
 
+"""
+    _add_positional_args(call, args)::Nothing
+
+Add the positional arguments `args` to the function call expression `call`, 
+escaping each argument expression. The elements of `args` should should be ones 
+that were extracted via [`Containers._extract_kw_args`](@ref) and had appropriate 
+arguments filtered out (e.g., the model argument). This is able to incorporate 
+additional positional arguments to `call`s that already have keyword arguments.
+
+## Examples 
+
+```jldoctest; setup = :(using JuMP)
+julia> call = :(f(1, a=2))
+:(f(1, a = 2))
+
+julia> JuMP._add_positional_args(call, [:(x)])
+
+julia> call
+:(f(1, $(Expr(:escape, :x)), a = 2))
+```
+"""
+function _add_positional_args(call, args)
+    kw_args = filter(arg -> isexpr(arg, :kw), call.args)
+    filter!(arg -> !isexpr(arg, :kw), call.args)
+    for arg in args 
+        push!(call.args, esc(arg))
+    end
+    append!(call.args, kw_args)
+    return
+end
+
 _valid_model(m::AbstractModel, name) = nothing
 function _valid_model(m, name)
     return error(
@@ -371,9 +402,22 @@ function build_constraint(
     _error::Function,
     func,
     set::Union{MOI.AbstractScalarSet,MOI.AbstractVectorSet},
+    args...;
+    kwargs...,
 )
     return _error(
-        "unable to add the constraint because we don't recognize " *
+        "Unrecognized arguments: $(join(args, ", ")). \n\nIf you're trying " * 
+        "to create a JuMP extension, you need to implement `build_constraint`.",
+    )
+end
+
+function build_constraint(
+    _error::Function,
+    func,
+    set::Union{MOI.AbstractScalarSet,MOI.AbstractVectorSet},
+)
+    return _error(
+        "Unable to add the constraint because we don't recognize " *
         "$(func) as a valid JuMP function.",
     )
 end
@@ -523,16 +567,18 @@ end
 
 Returns the code for the macro `@constraint_like args...` of syntax
 ```julia
-@constraint_like con     # Single constraint
-@constraint_like ref con # group of constraints
+@constraint_like model con extra_args...     # single constraint
+@constraint_like model ref con extra_args... # group of constraints
 ```
 where `@constraint_like` is either `@constraint` or `@SDconstraint`.
 
 The expression `con` is parsed by `parsefun` which returns a `build_constraint`
 call code that, when executed, returns an `AbstractConstraint`. The macro
 keyword arguments (except the `container` keyword argument which is used to
-determine the container type) are added to the `build_constraint` call. The
-returned value of this call is passed to `add_constraint` which returns a
+determine the container type) are added to the `build_constraint` call. The 
+`extra_args` are added as terminal positional arguments to the `build_constraint` 
+call along with any keyword arguments (apart from `container` and `base_name`). 
+The returned value of this call is passed to `add_constraint` which returns a 
 constraint reference.
 
 `source` is a `LineNumberNode` that should refer to the line that the macro was
@@ -549,6 +595,7 @@ function _constraint_macro(
 
     args, kw_args, requestedcontainer = Containers._extract_kw_args(args)
 
+    # Initial check of the positional arguments and get the model
     if length(args) < 2
         if length(kw_args) > 0
             _error("Not enough positional arguments")
@@ -556,34 +603,54 @@ function _constraint_macro(
             _error("Not enough arguments")
         end
     end
-    m = args[1]
-    x = args[2]
+    model = esc(args[1])
+    y = args[2]
     extra = args[3:end]
 
-    m = esc(m)
-    # Two formats:
-    # - @constraint_like(m, a*x <= 5)
-    # - @constraint_like(m, myref[a=1:5], a*x <= 5)
-    length(extra) > 1 && _error("Too many arguments.")
-    # Canonicalize the arguments
-    c = length(extra) == 1 ? x : gensym()
-    x = length(extra) == 1 ? extra[1] : x
+    # Determine if a reference/container argument was given by the user
+    # There are six cases to consider:
+    # y                                  | type of y | y.head
+    # -----------------------------------+-----------+------------
+    # name                               | Symbol    | NA
+    # name[1:2]                          | Expr      | :ref
+    # name[i = 1:2, j = 1:2; i + j >= 3] | Expr      | :typed_vcat
+    # [1:2]                              | Expr      | :vect
+    # [i = 1:2, j = 1:2; i + j >= 3]     | Expr      | :vcat
+    # a constraint expression            | Expr      | :call or :comparison 
+    if isa(y, Symbol) || isexpr(y, (:vect, :vcat, :ref, :typed_vcat))
+        length(extra) >= 1 || _error("No constraint expression was given.")
+        c = y
+        x = popfirst!(extra)
+        anonvar = isexpr(y, :vect) || isexpr(y, :vcat)
+    else
+        c = gensym()
+        x = y
+        anonvar = true
+    end
 
-    anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
-    variable = gensym()
+    # Prepare the keyword arguments 
+    extra_kw_args = filter(kw -> kw.args[1] != :base_name, kw_args)
+    base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
+
+    # Set the base name 
     name = Containers._get_name(c)
-    base_name = anonvar ? "" : string(name)
-    # TODO: support the base_name keyword argument
+    if isempty(base_name_kw_args)
+        base_name = anonvar ? "" : string(name)
+    else
+        base_name = esc(base_name_kw_args[1].args[2])
+    end
 
-    if isa(x, Symbol)
+    if !isa(name, Symbol) && !anonvar
         _error(
-            "Incomplete constraint specification $x. Are you missing a comparison (<=, >=, or ==)?",
+            "Expression $name should not be used as a constraint name. Use the \"anonymous\" syntax $name = @constraint(model, ...) instead.",
         )
     end
 
     (x.head == :block) && _error(
         "Code block passed as constraint. Perhaps you meant to use @constraints instead?",
     )
+
+    variable = gensym()
 
     # Strategy: build up the code for add_constraint, and if needed we will wrap
     # in a function returning `ConstraintRef`s and give it to `Containers.container`.
@@ -595,13 +662,14 @@ function _constraint_macro(
         )
     end
     vectorized, parsecode, buildcall = parsefun(_error, x)
-    _add_kw_args(buildcall, kw_args)
+    _add_positional_args(buildcall, extra)
+    _add_kw_args(buildcall, extra_kw_args)
     if vectorized
         # TODO: Pass through names here.
-        constraintcall = :(add_constraint.($m, $buildcall))
+        constraintcall = :(add_constraint.($model, $buildcall))
     else
         constraintcall =
-            :(add_constraint($m, $buildcall, $(_name_call(base_name, idxvars))))
+            :(add_constraint($model, $buildcall, $(_name_call(base_name, idxvars))))
     end
     code = quote
         $parsecode
@@ -623,10 +691,10 @@ function _constraint_macro(
             creation_code,
             variable,
             name,
-            model_for_registering = m,
+            model_for_registering = model,
         )
     end
-    return _finalize_macro(m, macro_code, source)
+    return _finalize_macro(model, macro_code, source)
 end
 
 """
