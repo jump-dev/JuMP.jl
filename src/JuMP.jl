@@ -332,23 +332,49 @@ end
 Base.broadcastable(model::Model) = Ref(model)
 
 """
-    backend(model::Model)
+    backend(model::Model; innermost::Bool = false)
 
 Return the lower-level MathOptInterface model that sits underneath JuMP. This
-model depends on which operating mode JuMP is in (see [`mode`](@ref)), and
-whether there are any bridges in the model.
+model depends on which operating mode JuMP is in (see [`mode`](@ref)).
 
-If JuMP is in `DIRECT` mode (i.e., the model was created using
-[`direct_model`](@ref)), the backend will be the optimizer passed to
-[`direct_model`](@ref).
+ * If JuMP is in `DIRECT` mode (i.e., the model was created using
+   [`direct_model`](@ref)), the backend will be the optimizer passed to
+   [`direct_model`](@ref).
+ * If JuMP is in `MANUAL` or `AUTOMATIC` mode, the backend is a
+   `MOI.Utilities.CachingOptimizer`.
 
-If JuMP is in `MANUAL` or `AUTOMATIC` mode, the backend is a
-`MOI.Utilities.CachingOptimizer`.
+For most solvers, JuMP will add additional `CachingOptimizer` and
+`LazyBridgeOptimizer` layers as needed. To skip these layers and return the
+innermost optimizer object, pass `innermost = true`.
 
-This function should only be used by advanced users looking to access low-level
-MathOptInterface or solver-specific functionality.
+**This function should only be used by advanced users looking to access
+low-level MathOptInterface or solver-specific functionality.**
 """
-backend(model::Model) = model.moi_backend
+function backend(model::Model; innermost::Bool = false)
+    if innermost
+        return _innermost_backend(model.moi_backend)
+    else
+        return model.moi_backend
+    end
+end
+
+function _innermost_backend(model::MOIU.CachingOptimizer)
+    if MOIU.state(model) == MOIU.EMPTY_OPTIMIZER
+        MOIU.attach_optimizer(model)
+    elseif MOIU.state(model) == MOIU.NO_OPTIMIZER
+        error(
+            "Unable to get innnermost optimizer because CachingOptimizer is " *
+            "in state NO_OPTIMIZER.",
+        )
+    end
+    return _innermost_backend(model.optimizer)
+end
+
+function _innermost_backend(model::MOIB.LazyBridgeOptimizer)
+    return _innermost_backend(model.model)
+end
+
+_innermost_backend(model::MOI.ModelLike) = model
 
 """
     moi_mode(model::MOI.ModelLike)

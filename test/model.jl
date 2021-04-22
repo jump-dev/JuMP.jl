@@ -107,6 +107,19 @@ function test_empty!_model()
     @test fill_small_test_model!(model) === model
 end
 
+function test_innermost_error()
+    model = Model()
+    @test_throws ErrorException backend(model; innermost = true)
+end
+
+function test_innermost()
+    model = Model(() -> MOIU.MockOptimizer(MOIU.Model{Float64}()))
+    @test isa(
+        backend(model; innermost = true),
+        MOIU.MockOptimizer{MOIU.Model{Float64}},
+    )
+end
+
 function test_hygiene_variable()
     model_x = Model()
     @variable(model_x, x)
