@@ -164,10 +164,12 @@ function _sparseaxisarray(dict::Dict{Any,Any}, f, indices)
     return SparseAxisArray(d)
 end
 
+# Don't use length-1 tuples if there is only one index!
+_container_key(i::Tuple) = i
+_container_key(i::Tuple{T}) where {T} = i[1]
+
 function container(f::Function, indices, D::Type{<:AbstractDict})
-    # Don't use length-1 tuples if there is only one index!
-    key(i) = length(i) == 1 ? i[1] : i
-    return D(key(i) => f(i...) for i in indices)
+    return D(_container_key(i) => f(i...) for i in indices)
 end
 
 function container(::Function, ::Any, D::Type)

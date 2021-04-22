@@ -125,7 +125,11 @@ using Test
         @test z[1, 2] == 3
     end
     @testset "Invalid container" begin
-        @test_throws ErrorException Containers.@container(
+        err = ErrorException(
+            "Unable to build a container with the provided type $(Int). " *
+            "Implement `Containers.container`.",
+        )
+        @test_throws err Containers.@container(
             x[i = 1:2, j = 1:2],
             i + j,
             container = Int
