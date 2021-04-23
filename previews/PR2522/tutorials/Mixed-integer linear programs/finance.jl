@@ -65,7 +65,7 @@ import GLPK
 # 2. upper bounds on $u_{i}$
 # 3. nonnegativity of the decision variables $u_{i}$, $v_{i}$ and $w_{i}$.
 
-# Our objective will be to simply maximimse the company's wealth in June, which
+# Our objective will be to simply maximize the company's wealth in June, which
 # say we represent with the variable $m$.
 
 financing = Model(GLPK.Optimizer)

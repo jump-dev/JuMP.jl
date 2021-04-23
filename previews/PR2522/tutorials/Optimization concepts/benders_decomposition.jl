@@ -26,7 +26,7 @@
 # is a large scale optimization scheme.
 
 # We only discuss the classical approach (using loops) here. The approach using
-# lazy constraints is showed in the correponding tutorial.
+# lazy constraints is showed in the corresponding tutorial.
 
 # To illustrate an implementation of the Benders decomposition in JuMP, we apply
 # it to the following general mixed integer problem:
@@ -160,7 +160,7 @@ M = 1000;
 #   better but ultimately infeasible solution to the relaxed one.
 
 # For more details on the comparison between the two approaches, see
-# [Paul Rubin's blog on Benders Decomposition](http://orinanobworld.blogspot.ca/2011/10/benders-decomposition-then-and-now.html).
+# [Paul Rubin's blog on Benders Decomposition](https://orinanobworld.blogspot.ca/2011/10/benders-decomposition-then-and-now.html).
 
 # ## Classical Approach: Adding the Benders Cuts in a Loop
 
@@ -240,7 +240,8 @@ while true
 
     @objective(sub_problem_model, Min, c1' * x_current + c_sub' * u)
 
-    print("\nThe current subproblem model is \n", sub_problem_model)
+    print("\nThe current subproblem model is \n")
+    print(sub_problem_model)
 
     optimize!(sub_problem_model)
 

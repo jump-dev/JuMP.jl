@@ -113,7 +113,7 @@ function example_factory_schedule()
       [m in months, f in factories],
       production[m, f] >= d_min_cap[m, f] * status[m, f],
    )
-   ## The production cannot be more tha maximum capacity.
+   ## The production cannot be more that maximum capacity.
    @constraint(
       model,
       [m in months, f in factories],

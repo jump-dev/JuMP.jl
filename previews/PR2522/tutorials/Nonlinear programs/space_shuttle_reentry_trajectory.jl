@@ -27,7 +27,7 @@
 # This tutorial demonstrates how to compute a reentry trajectory for the
 # [Space Shuttle](https://en.wikipedia.org/wiki/Space_Shuttle),
 # by formulating and solving a nonlinear programming problem.
-# The problem was drawn from Chapter 6 of 
+# The problem was drawn from Chapter 6 of
 # ["Practical Methods for Optimal Control and Estimation Using Nonlinear Programming"](https://epubs.siam.org/doi/book/10.1137/1.9780898718577),
 # by John T. Betts.
 
@@ -36,7 +36,7 @@
 #     If you are new to solving nonlinear programs in JuMP, you may want to start there instead.
 
 # The motion of the vehicle is defined by the following set of DAEs:
-# 
+#
 # ```math
 # \begin{aligned}
 # \dot{h} & = v \sin \gamma , \\
@@ -51,7 +51,7 @@
 
 # where the aerodynamic heating on the vehicle wing leading edge is $q = q_a q_r$
 # and the dynamic variables are
-# 
+#
 # ```math
 # \begin{aligned}
 #      h & \quad \text{altitude (ft)},     \qquad & & \gamma \quad \text{flight path angle (rad)}, \\
@@ -63,7 +63,7 @@
 
 # The aerodynamic and atmospheric forces on the vehicle are
 # specified by the following quantities (English units):
-# 
+#
 # ```math
 # \begin{aligned}
 #            D & = \frac{1}{2} c_D S \rho v^2,                  \qquad & a_0 & = -0.20704, \\
@@ -84,7 +84,7 @@
 # The reentry trajectory begins at an altitude where the aerodynamic forces are quite small
 # with a weight of $w = 203000$ (lb) and mass $m = w / g_0$ (slug), where $g_0 = 32.174$ (ft/sec$^2$).
 # The initial conditions are as follows:
-# 
+#
 # ```math
 # \begin{aligned}
 #      h & = 260000 \text{ ft},  \qquad & v      & = 25600 \text{ ft/sec}, \\
@@ -95,7 +95,7 @@
 
 # The final point on the reentry trajectory occurs at the unknown (free) time $t_F$,
 # at the so-called terminal area energy management (TAEM) interface, which is defined by the conditions
-# 
+#
 # ```math
 # h = 80000 \text{ ft}, \qquad v = 2500 \text{ ft/sec}, \qquad \gamma = -5 \text{ deg}.
 # ```
@@ -106,7 +106,7 @@
 
 # ![Max crossrange shuttle reentry](https://i.imgur.com/1tUN3wM.png)
 
-# ### Approach 
+# ### Approach
 # We will use a discretized model of time, with a fixed number of discretized points, $n$.
 # The decision variables at each point are going to be the state of the vehicle and the controls commanded to it.
 # In addition, we will also make each time step size $\Delta t$ a decision variable;
@@ -172,9 +172,9 @@ nothing #hide
 
 # !!! tip "Choose a good linear solver"
 #     Picking a good linear solver is **extremely important**
-#     to maximise the performance of nonlinear solvers.
+#     to maximize the performance of nonlinear solvers.
 #     For the best results, it is advised to experiment different linear solvers.
-# 
+#
 #     For example, the linear solver `MA27` is outdated and can be quite slow.
 #     `MA57` is a much better alternative, especially for highly-sparse problems
 #     (such as trajectory optimization problems).
@@ -203,13 +203,13 @@ end)
 
 # !!! info
 #     Above you can find two alternatives for the `Δt` variables.
-#     
+#
 #     The first one, `3.5 ≤ Δt[1:n] ≤ 4.5` (currently commented), allows some wiggle room
 #     for the solver to adjust the time step size between pairs of mesh points. This is neat because
 #     it allows the solver to figure out which parts of the flight require more dense discretization than others.
 #     (Remember, the number of discretized points is fixed, and this example does not implement mesh refinement.)
 #     However, this makes the problem more complex to solve, and therefore leads to a longer computation time.
-#     
+#
 #     The second line, `Δt[1:n] == 4.0`, fixes the duration of every time step to exactly 4.0 seconds.
 #     This allows the problem to be solved faster. However, to do this we need to know beforehand that the
 #     close-to-optimal total duration of the flight is ~2009 seconds. Therefore, if we split the total duration
@@ -317,14 +317,14 @@ plt = plot(plt_altitude,  plt_velocity, plt_longitude, plt_flight_path, plt_lati
 function q(h, v, a)
     ρ(h) = ρ₀ * exp(-h / hᵣ)
     qᵣ(h, v) = 17700 * √ρ(h) * (0.0001 * v)^3.07
-    qₐ(a) = c₀ + c₁ * rad2deg(a) + c₂ * rad2deg(a)^2 + c₃ * rad2deg(a)^3    
+    qₐ(a) = c₀ + c₁ * rad2deg(a) + c₂ * rad2deg(a)^2 + c₃ * rad2deg(a)^3
     ## Aerodynamic heating on the vehicle wing leading edge
     qₐ(a) * qᵣ(h, v)
 end
 
 plt_attack_angle = plot(ts[1:end-1], rad2deg.(value.(α)[1:end-1]), legend=nothing, title="Angle of Attack (deg)")
 plt_bank_angle = plot(ts[1:end-1], rad2deg.(value.(β)[1:end-1]), legend=nothing, title="Bank Angle (deg)")
-plt_heating = plot(ts, q.(value.(scaled_h)*1e5, value.(scaled_v)*1e4, value.(α)), legend=nothing, title="Heating (BTU/ft/ft/sec)") 
+plt_heating = plot(ts, q.(value.(scaled_h)*1e5, value.(scaled_v)*1e4, value.(α)), legend=nothing, title="Heating (BTU/ft/ft/sec)")
 
 plt = plot(plt_attack_angle, plt_bank_angle, plt_heating, layout=grid(3, 1), linewidth=2, size=(700, 700))
 
