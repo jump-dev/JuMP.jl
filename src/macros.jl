@@ -59,7 +59,7 @@ julia> call
 function _add_positional_args(call, args)
     kw_args = filter(arg -> isexpr(arg, :kw), call.args)
     filter!(arg -> !isexpr(arg, :kw), call.args)
-    for arg in args 
+    for arg in args
         push!(call.args, esc(arg))
     end
     append!(call.args, kw_args)
@@ -398,16 +398,18 @@ function parse_constraint(_error::Function, args...)
 end
 
 # Generic fallback.
-function build_constraint(
-    _error::Function,
-    func,
-    set::Union{MOI.AbstractScalarSet,MOI.AbstractVectorSet},
-    args...;
-    kwargs...,
-)
+function build_constraint(_error::Function, func, set, args...; kwargs...)
+    arg_str = join(args, ", ")
+    arg_str = isempty(arg_str) ? "" : ", " * arg_str
+    kwarg_str = join(Tuple(string(k, " = ", v) for (k, v) in kwargs), ", ")
+    kwarg_str = isempty(kwarg_str) ? "" : "; " * kwarg_str
     return _error(
-        "Unrecognized arguments: $(join(args, ", ")). \n\nIf you're trying " * 
-        "to create a JuMP extension, you need to implement `build_constraint`.",
+        "Unrecognized constraint building format. Tried to invoke " *
+        "`build_constraint(error, $(func), $(set)$(arg_str)$(kwarg_str))`, " *
+        "but no such method exists. This is due to specifying an unrecognized " *
+        "function, constraint set, and/or extra positional/keyword arguments." *
+        "\n\nIf you're trying to create a JuMP extension, you need to " *
+        "implement `build_constraint` to accomodate these arguments.",
     )
 end
 
@@ -534,14 +536,6 @@ function build_constraint(
     return build_constraint(_error, 1.0func, lb, ub)
 end
 
-function build_constraint(_error::Function, expr, lb, ub)
-    lb isa Number || _error(string("Expected $lb to be a number."))
-    ub isa Number || _error(string("Expected $ub to be a number."))
-    if lb isa Number && ub isa Number
-        _error("Range constraint is not supported for $expr.")
-    end
-end
-
 function build_constraint(
     ::Function,
     x::AbstractVector{<:AbstractJuMPScalar},
@@ -593,19 +587,20 @@ function _constraint_macro(
 )
     _error(str...) = _macro_error(macro_name, args, source, str...)
 
-    args, kw_args, requestedcontainer = Containers._extract_kw_args(args)
+    # The positional args can't be `args` otherwise `_error` excludes keyword args
+    pos_args, kw_args, requestedcontainer = Containers._extract_kw_args(args)
 
     # Initial check of the positional arguments and get the model
-    if length(args) < 2
+    if length(pos_args) < 2
         if length(kw_args) > 0
             _error("Not enough positional arguments")
         else
             _error("Not enough arguments")
         end
     end
-    model = esc(args[1])
-    y = args[2]
-    extra = args[3:end]
+    model = esc(pos_args[1])
+    y = pos_args[2]
+    extra = pos_args[3:end]
 
     # Determine if a reference/container argument was given by the user
     # There are six cases to consider:
@@ -650,14 +645,12 @@ function _constraint_macro(
         "Code block passed as constraint. Perhaps you meant to use @constraints instead?",
     )
 
-    variable = gensym()
-
     # Strategy: build up the code for add_constraint, and if needed we will wrap
     # in a function returning `ConstraintRef`s and give it to `Containers.container`.
     idxvars, indices = Containers._build_ref_sets(_error, c)
-    if args[1] in idxvars
+    if pos_args[1] in idxvars
         _error(
-            "Index $(args[1]) is the same symbol as the model. Use a " *
+            "Index $(pos_args[1]) is the same symbol as the model. Use a " *
             "different name for the index.",
         )
     end
@@ -668,8 +661,11 @@ function _constraint_macro(
         # TODO: Pass through names here.
         constraintcall = :(add_constraint.($model, $buildcall))
     else
-        constraintcall =
-            :(add_constraint($model, $buildcall, $(_name_call(base_name, idxvars))))
+        constraintcall = :(add_constraint(
+            $model,
+            $buildcall,
+            $(_name_call(base_name, idxvars)),
+        ))
     end
     code = quote
         $parsecode
@@ -687,6 +683,7 @@ function _constraint_macro(
     else
         # We register the constraint reference to its name and
         # we assign it to a variable in the local scope of this name
+        variable = gensym()
         macro_code = _macro_assign_and_return(
             creation_code,
             variable,

@@ -58,8 +58,8 @@ end
 end
 
 @testset "Test _add_positional_args" begin
-    call = :(f(1, a=2))
-    @test JuMP._add_positional_args(call, [:(MyObject)]) isa Nothing 
+    call = :(f(1, a = 2))
+    @test JuMP._add_positional_args(call, [:(MyObject)]) isa Nothing
     @test call == :(f(1, $(Expr(:escape, :MyObject)), a = 2))
 end
 
@@ -186,12 +186,13 @@ struct MyConstrType end
 struct BadPosArg end
 function JuMP.build_constraint(
     _error::Function,
-    f,
-    set,
+    f::AffExpr,
+    set::MOI.EqualTo,
     extra::Type{MyConstrType};
-    d = false,
+    d = 0,
 )
-    return JuMP.build_constraint(_error, f, set)
+    new_set = MOI.LessThan{Float64}(set.value + d)
+    return JuMP.build_constraint(_error, f, new_set)
 end
 function build_constraint_extra_arg_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "build_constraint with extra positional arguments" begin
@@ -199,9 +200,15 @@ function build_constraint_extra_arg_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(model, x)
         cref = @constraint(model, x == 0, MyConstrType)
         @test JuMP.constraint_object(cref).set isa MOI.EqualTo{Float64}
-        cref = @constraint(model, c1, x == 0, MyConstrType, d = true)
-        @test JuMP.constraint_object(cref).set isa MOI.EqualTo{Float64}
+        cref = @constraint(model, c1, x == 0, MyConstrType, d = 1)
+        @test JuMP.constraint_object(cref).set == MOI.LessThan{Float64}(1)
         @test_macro_throws ErrorException @constraint(model, x == 0, BadPosArg)
+        @test_macro_throws ErrorException @constraint(
+            model,
+            x == 0,
+            BadPosArg,
+            d = 1
+        )
     end
 end
 
@@ -359,7 +366,7 @@ function macros_test(
         @test c.set == MOI.Interval(0.0, 1.0)
     end
 
-    @testset "Constraint Naming" begin 
+    @testset "Constraint Naming" begin
         model = ModelType()
         @variable(model, x)
 
@@ -379,7 +386,7 @@ function macros_test(
         @test name.(crefs) == ["cat[1]", "cat[2]"]
 
         @test_macro_throws ErrorException @constraint(model, c3[1:2])
-        @test_macro_throws ErrorException @constraint(model, "c"[1:2])
+        @test_macro_throws ErrorException @constraint(model, "c"[1:2], x == 0)
     end
 
     @testset "@build_constraint (scalar inequality)" begin

@@ -433,17 +433,34 @@ function test_SDP_constraint(ModelType, VariableRefType)
     @test JuMP.isequal_canonical(c.func[4], 1w)
     @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
 
-    # Julia changed how it reports keyword arguments between 1.3 and 1.4!
-    err = if VERSION < v"1.4"
-        ErrorException(
-            "function build_constraint does not accept keyword arguments",
-        )
+    # Test fallback and account for different Julia version behavior
+    if VariableRefType == VariableRef
+        var_str = "VariableRef"
     else
-        MethodError
+        var_str = "Main.TestConstraint.JuMPExtension.MyVariableRef"
     end
-    @test_throws(
-        err,
-        @SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw = 1)
+    if Base.VERSION >= v"1.6"
+        var_str = " " * var_str
+    end
+    if VariableRefType == VariableRef && Base.VERSION >= v"1.6"
+        aff_str = "AffExpr"
+    else
+        aff_str = "GenericAffExpr{Float64,$(var_str)}"
+    end
+    err = ErrorException(
+        "In `@SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw = 1)`:" *
+        " Unrecognized constraint building format. Tried to invoke " *
+        "`build_constraint(error, $(aff_str)[x - " *
+        "1 -x + 1; -x + 1 -y + 2], PSDCone(); unknown_kw = 1)`, but no " *
+        "such method exists. This is due to specifying an unrecognized " *
+        "function, constraint set, and/or extra positional/keyword " *
+        "arguments.\n\nIf you're trying to create a JuMP extension, you " *
+        "need to implement `build_constraint` to accomodate these arguments.",
+    )
+    @test_throws_strip err @SDconstraint(
+        m,
+        [x 1; 1 -y] ⪰ [1 x; x -2],
+        unknown_kw = 1
     )
     # Invalid sense == in SDP constraint
     @test_macro_throws ErrorException @SDconstraint(
