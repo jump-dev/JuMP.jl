@@ -213,22 +213,33 @@ function build_constraint_extra_arg_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 end
 
-struct MyInfo 
+struct MyInfo
     var::JuMP.VariableRef
     value::Float64
 end
-function JuMP.build_constraint(_error::Function, func::AffExpr, set::MOI.AbstractScalarSet, info::MyInfo)
+function JuMP.build_constraint(
+    _error::Function,
+    func::AffExpr,
+    set::MOI.AbstractScalarSet,
+    info::MyInfo,
+)
     func.terms[info.var] *= info.value
     return JuMP.build_constraint(_error, func, set)
 end
-function JuMP.parse_extra_constraint_args(_error::Function, ::Val{:constraint}, arg)
+function JuMP.parse_extra_constraint_args(
+    _error::Function,
+    ::Val{:constraint},
+    arg,
+)
     if isexpr(arg, :*=)
         return [Expr(:call, :MyInfo, arg.args...)]
     else
         return [arg]
     end
 end
-function constraint_with_symbolic_extra_args(ModelType::Type{<:JuMP.AbstractModel})
+function constraint_with_symbolic_extra_args(
+    ModelType::Type{<:JuMP.AbstractModel},
+)
     @testset "build constraint with extra symbilic arguments" begin
         model = ModelType()
         @variable(model, x)
