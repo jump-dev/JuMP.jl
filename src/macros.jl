@@ -397,6 +397,71 @@ function parse_constraint(_error::Function, args...)
     end
 end
 
+"""
+    parse_extra_constraint_args(_error::Function, ::Val{macro_name}, args...)::Vector
+
+Parse the extra positional argument expressions `args` given to a constraint 
+macro with name `macro_name` and return a vector of the parsed argument 
+expressions. By default, this will simply return `[args...]` (i.e., leave the 
+argument expressions unchanged). These extra positional come from the syntax:
+```julia
+@macro_name(model, ref, constr, args...)
+```
+
+JuMP extensions that extend `build_constraint` to use extra positional supports, 
+may also choose to extend this method to parse symbolic input formats. This 
+should only be extended by users that are well experienced with meta programming 
+in Julia.
+
+**Example**
+
+To exemplify how this can be used, consider the following constraint extension 
+Note that it is a little contrived for succintness, relevant extensions will 
+typically be defining a new constraint type.
+```jldoctest constr_ext; setup = :(using JuMP)
+julia> struct MyInfo 
+           var::JuMP.VariableRef
+           value::Float64
+       end
+
+julia> function JuMP.build_constraint(_error::Function, func::JuMP.AffExpr, set::MOI.AbstractScalarSet, info::MyInfo)
+           func.terms[info.var] *= info.value
+           return JuMP.build_constraint(_error, func, set)
+       end
+```
+We can invoke our `build_constraint` extension via [`@constraint`](@ref) by 
+giving an extra argument of type `MyInfo`.
+```jldoctest constr_ext
+julia> model = Model(); @variable(model, x);
+
+julia> @constraint(model, c1, x >= 0, MyInfo(x, 2.3))
+c1 : 2.3 x >= 0.0
+```
+For more complex use cases, these arguments might become complicated and verbose 
+to define explicitly and it may be more convenient to provide a symbolic syntax. 
+This can be accomplished by extending `parse_extra_constraint_args`.
+```jldoctest constr_ext
+julia> using Base.Meta;
+
+julia> function JuMP.parse_extra_constraint_args(_error::Function, ::Val{:constraint}, arg)
+           if isexpr(arg, :*=)
+               return [Expr(:call, :MyInfo, arg.args...)]
+           else
+               [arg] # some other syntax --> pass it on to `build_constraint`
+           end
+       end
+
+julia> @constraint(model, c2, x >= 0, x *= 2.3)
+c2 : 2.3 x >= 0.0
+```
+"""
+function parse_extra_constraint_args end
+
+# Fallback that simply leaves the extra args unchanged.
+function parse_extra_constraint_args(_error::Function, macro_name::Val, args...)
+    return [a for a in args]
+end
+
 # Generic fallback.
 function build_constraint(_error::Function, func, set, args...; kwargs...)
     arg_str = join(args, ", ")
@@ -644,6 +709,9 @@ function _constraint_macro(
     (x.head == :block) && _error(
         "Code block passed as constraint. Perhaps you meant to use @constraints instead?",
     )
+
+    # Process the extra positional argument syntax (enables extension parsing)
+    extra = parse_extra_constraint_args(_error, Val(macro_name), extra...)
 
     # Strategy: build up the code for add_constraint, and if needed we will wrap
     # in a function returning `ConstraintRef`s and give it to `Containers.container`.

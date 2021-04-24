@@ -13,6 +13,7 @@
 
 using JuMP
 using Test
+using Base.Meta
 
 const MA = JuMP._MA
 
@@ -209,6 +210,34 @@ function build_constraint_extra_arg_test(ModelType::Type{<:JuMP.AbstractModel})
             BadPosArg,
             d = 1
         )
+    end
+end
+
+struct MyInfo 
+    var::JuMP.VariableRef
+    value::Float64
+end
+function JuMP.build_constraint(_error::Function, func::AffExpr, set::MOI.AbstractScalarSet, info::MyInfo)
+    func.terms[info.var] *= info.value
+    return JuMP.build_constraint(_error, func, set)
+end
+function JuMP.parse_extra_constraint_args(_error::Function, ::Val{:constraint}, arg)
+    if isexpr(arg, :*=)
+        return [Expr(:call, :MyInfo, arg.args...)]
+    else
+        return [arg]
+    end
+end
+function constraint_with_symbolic_extra_args(ModelType::Type{<:JuMP.AbstractModel})
+    @testset "build constraint with extra symbilic arguments" begin
+        model = ModelType()
+        @variable(model, x)
+        cref = @constraint(model, x == 0, MyInfo(x, 2.3))
+        @test JuMP.constraint_object(cref).set == MOI.EqualTo{Float64}(0)
+        @test JuMP.constraint_object(cref).func = 2.3x
+        cref = @constraint(model, c1, x == 0, x *= 2.3)
+        @test JuMP.constraint_object(cref).set == MOI.EqualTo{Float64}(0)
+        @test JuMP.constraint_object(cref).func = 2.3x
     end
 end
 
