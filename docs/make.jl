@@ -126,6 +126,10 @@ function _add_moi_pages()
     )
     make = read(joinpath(moi_docs, "make.jl"), String)
     s = match(r"pages = (\[.+?)\)"s, make)[1]
+    s = strip(s)
+    if endswith(s, ",")
+        s = s[1:end - 1]
+    end
     for m in eachmatch(r"\"([a-zA-Z\_\/]+?\.md)\"", s)
         s = replace(s, m[1] => "moi/" * m[1])
     end
@@ -133,10 +137,13 @@ function _add_moi_pages()
     return
 end
 
+try
+    rm(joinpath("src", "moi"); recursive = true)
+catch
+end
+
 if _INCLUDE_MOI
     _add_moi_pages()
-else
-    rm(joinpath("src", "moi"); recursive = true)
 end
 
 makedocs(
