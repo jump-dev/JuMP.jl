@@ -222,6 +222,7 @@ julia> @expression(model, expr, c' * x)
 x[1] + 2 x[2]
 
 julia> @NLobjective(model, Min, expr + 3y)
+
 ```
 
 ### Splatting
