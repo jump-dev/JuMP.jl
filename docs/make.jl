@@ -134,6 +134,18 @@ function _add_moi_pages()
         s = replace(s, m[1] => "moi/" * m[1])
     end
     push!(_PAGES, "MathOptInterface" => eval(Meta.parse(s)))
+    index = read(joinpath(moi_docs, "src", "index.md"), String)
+    write(
+        joinpath(moi_docs, "src", "index.md"),
+        """
+        !!! warning
+            This documentation is a copy of the official MathOptInterface documentation
+            available at [https://jump.dev/MathOptInterface.jl/v0.9.21](https://jump.dev/MathOptInterface.jl/v0.9.21).
+            It is included here to make it easier to link concepts between JuMP and
+            MathOptInterface.
+
+        """ * index,
+    )
     return
 end
 

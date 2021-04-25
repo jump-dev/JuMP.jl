@@ -68,6 +68,10 @@ you know where to look for certain things.
   provide context to JuMP. Look here if you want an understanding of what JuMP
   is and why we created it, rather than how to use it.
 
+* The **Developer docs** section contains information for people contributing to
+  JuMP development or writing JuMP extensions. Don't worry about this section if
+  you are just using JuMP to formulate and solve problems as a user.
+
 * The **MathOptInterface** section is a self-contained copy of the documentation
   for MathOptInterface. Looks here for functions and constants beginning with
   `MOI.`, as well as for general information on how MathOptInterface works.
