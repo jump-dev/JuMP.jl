@@ -4,6 +4,11 @@ using JuMP
 const MathOptInterface = MOI
 using Test
 
+# When updating the version of MOI used to build these docs, change the entry in
+# Project.toml, and modify the warning message below. You may need to modify the
+# JuMP documentation to avoid conflicts with the header links (i.e., JuMP and
+# MOI both have a header called `# Foo`, then `[Foo](@ref)` doesn't know which
+# to link to).
 const _INCLUDE_MOI = true
 
 # Pass --fast as an argument to skip rebuilding the examples and running
@@ -134,9 +139,9 @@ function _add_moi_pages()
         s = replace(s, m[1] => "moi/" * m[1])
     end
     push!(_PAGES, "MathOptInterface" => eval(Meta.parse(s)))
-    index = read(joinpath(moi_docs, "src", "index.md"), String)
+    index = read(joinpath(@__DIR__, "src", "moi", "index.md"), String)
     write(
-        joinpath(moi_docs, "src", "index.md"),
+        joinpath(@__DIR__, "src", "moi", "index.md"),
         """
         !!! warning
             This documentation is a copy of the official MathOptInterface documentation
@@ -150,7 +155,7 @@ function _add_moi_pages()
 end
 
 try
-    rm(joinpath("src", "moi"); recursive = true)
+    rm(joinpath(@__DIR__, "src", "moi"); recursive = true)
 catch
 end
 
