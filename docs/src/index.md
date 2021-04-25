@@ -73,7 +73,7 @@ you know where to look for certain things.
   you are just using JuMP to formulate and solve problems as a user.
 
 * The **MathOptInterface** section is a self-contained copy of the documentation
-  for MathOptInterface. Looks here for functions and constants beginning with
+  for MathOptInterface. Look here for functions and constants beginning with
   `MOI.`, as well as for general information on how MathOptInterface works.
 
 ### Citing JuMP
