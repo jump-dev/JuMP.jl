@@ -5,11 +5,19 @@ const MathOptInterface = MOI
 using Test
 
 # When updating the version of MOI used to build these docs, change the entry in
-# Project.toml, and modify the warning message below. You may need to modify the
+# Project.toml, and modify the info message below. You may need to modify the
 # JuMP documentation to avoid conflicts with the header links (i.e., JuMP and
 # MOI both have a header called `# Foo`, then `[Foo](@ref)` doesn't know which
 # to link to).
 const _INCLUDE_MOI = true
+const _MOI_INFO_MSG = """
+!!! info
+    This documentation is a copy of the official MathOptInterface documentation
+    available at [https://jump.dev/MathOptInterface.jl/v0.9.21](https://jump.dev/MathOptInterface.jl/v0.9.21).
+    It is included here to make it easier to link concepts between JuMP and
+    MathOptInterface.
+
+"""
 
 # Pass --fast as an argument to skip rebuilding the examples and running
 # doctests. Only use this argument to rapidly test small changes to the
@@ -139,18 +147,12 @@ function _add_moi_pages()
         s = replace(s, m[1] => "moi/" * m[1])
     end
     push!(_PAGES, "MathOptInterface" => eval(Meta.parse(s)))
-    index = read(joinpath(@__DIR__, "src", "moi", "index.md"), String)
-    write(
-        joinpath(@__DIR__, "src", "moi", "index.md"),
-        """
-        !!! warning
-            This documentation is a copy of the official MathOptInterface documentation
-            available at [https://jump.dev/MathOptInterface.jl/v0.9.21](https://jump.dev/MathOptInterface.jl/v0.9.21).
-            It is included here to make it easier to link concepts between JuMP and
-            MathOptInterface.
-
-        """ * index,
-    )
+    for (root, _, files) in walkdir(joinpath(@__DIR__, "src", "moi"))
+        for f in filter(f -> endswith(f, ".md"), files)
+            data = read(joinpath(root, f), String)
+            write(joinpath(root, f), _MOI_INFO_MSG * data)
+        end
+    end
     return
 end
 
