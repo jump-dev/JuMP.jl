@@ -534,7 +534,7 @@ julia> @variable(model, x[1:2, 1:2], PSD)
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
 ```
-or using the syntax for [Variables constrained on creation](@ref):
+or using the syntax for [Variables constrained on creation](@ref jump_variables_on_creation):
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2] in PSDCone())
 2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
@@ -610,7 +610,7 @@ julia> x = @variable(model, [i=1:2], base_name="x", lower_bound=i, integer=true)
     Creating two named JuMP variables with the same name results in an error at
     runtime. Use anonymous variables as an alternative.
 
-## Variables constrained on creation
+## [Variables constrained on creation](@id jump_variables_on_creation)
 
 !!! info
     When using JuMP in [Direct mode](@ref), it may be required to constrain

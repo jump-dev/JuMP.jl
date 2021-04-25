@@ -1,6 +1,7 @@
 # [Solutions](@id SolutionAPI)
 
-More information can be found in the [Solutions](@ref) section of the manual.
+More information can be found in the [Solutions](@ref jump_solutions) section of
+the manual.
 
 ## Basic utilities
 
