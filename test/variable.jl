@@ -547,10 +547,10 @@ function test_variables_constrained_on_creation(ModelType, ::Any)
     @variable(model, [1:2] in SecondOrderCone())
     @test num_constraints(model, typeof(x), MOI.SecondOrderCone) == 2
 
-    @variable(model, [1:3] in MOI.SecondOrderCone(3))
+    @variable(model, [1:3] ∈ MOI.SecondOrderCone(3))
     @test num_constraints(model, typeof(x), MOI.SecondOrderCone) == 3
 
-    z = @variable(model, z in MOI.Semiinteger(1.0, 2.0))
+    z = @variable(model, z ∈ MOI.Semiinteger(1.0, 2.0))
     @test num_constraints(model, typeof(z), MOI.Semiinteger{Float64}) == 1
 
     @variable(model, set = MOI.Semiinteger(1.0, 2.0))
