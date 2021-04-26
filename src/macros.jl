@@ -704,11 +704,11 @@ This function needs to be implemented by all `AbstractModel`s
 constraint_type(m::Model) = ConstraintRef{typeof(m)}
 
 """
-    @constraint(m::Model, expr)
+    @constraint(m::Model, expr, kw_args...)
 
 Add a constraint described by the expression `expr`.
 
-    @constraint(m::Model, ref[i=..., j=..., ...], expr)
+    @constraint(m::Model, ref[i=..., j=..., ...], expr, kw_args...)
 
 Add a group of constraints described by the expression `expr` parametrized by
 `i`, `j`, ...
@@ -732,6 +732,14 @@ The expression `expr` can either be
   `@constraint(m, a .sign b .sign c)` which broadcast the constraint creation to
   each element of the vectors.
 
+The recognized keyword arguments in `kw_args` are the following:
+
+* `base_name`: Sets the name prefix used to generate constraint names. It
+  corresponds to the constraint name for scalar constraints, otherwise, the
+  constraint names are set to `base_name[...]` for each index `...` of the axes
+  `axes`.
+* `container`: Specify the container type.
+
 ## Note for extending the constraint macro
 
 Each constraint will be created using
@@ -752,6 +760,14 @@ the corresponding methods to `build_constraint`. Note that this will likely mean
 that either `func` or `set` will be some custom type, rather than e.g. a
 `Symbol`, since we will likely want to dispatch on the type of the function or
 set appearing in the constraint.
+
+For extensions that need to create constraints with more information than just 
+`func` and `set`, additional positional arguments can be specified to 
+`@constraint` that will then be passed on `build_constraint`. Hence, we can 
+enable this syntax by defining extensions of 
+`build_constraint(_error, func, set, my_args...; kw_args...)` (using explicit 
+typed arguments not splatted ones as shown). This produces the user syntax: 
+`@constraint(model, ref[...], expr, my_args..., kw_args...)`. 
 """
 macro constraint(args...)
     return _constraint_macro(
