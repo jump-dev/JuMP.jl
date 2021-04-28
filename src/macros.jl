@@ -1325,7 +1325,7 @@ function parse_one_operator_variable end
 function parse_one_operator_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
-    ::Val{:in},
+    ::Union{Val{:in},Val{:∈}},
     set,
 )
     return set
@@ -1491,7 +1491,8 @@ arguments `kw_args` and returns the variable.
 Add a variable to the model `model` described by the expression `expr`, the
 positional arguments `args` and the keyword arguments `kw_args`. The expression
 `expr` can either be (note that in the following the symbol `<=` can be used
-instead of `≤` and the symbol `>=`can be used instead of `≥`)
+instead of `≤`, the symbol `>=`can be used instead of `≥`, the symbol `in` can be 
+used instead of `∈`)
 
 * of the form `varexpr` creating variables described by `varexpr`;
 * of the form `varexpr ≤ ub` (resp. `varexpr ≥ lb`) creating variables described by
@@ -1501,7 +1502,7 @@ instead of `≤` and the symbol `>=`can be used instead of `≥`)
 * of the form `lb ≤ varexpr ≤ ub` or `ub ≥ varexpr ≥ lb` creating variables
   described by `varexpr` with lower bounds given by `lb` and upper bounds given
   by `ub`.
-* of the form `varexpr in set` creating variables described by
+* of the form `varexpr ∈ set` creating variables described by
   `varexpr` constrained to belong to `set`, see [Variables constrained on creation](@ref).
 
 The expression `varexpr` can either be
