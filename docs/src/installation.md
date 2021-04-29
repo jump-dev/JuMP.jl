@@ -126,97 +126,6 @@ Where:
     [Developer Chatroom](https://jump.dev/pages/governance/#developer-chatroom)
     with any questions about connecting new solvers with JuMP.
 
-### Solver-specific notes
-
-* Artelys Knitro
-
-Requires a license.
-
-* BARON
-
-Requires a license. A trial version is available for small problem instances.
-
-* CDD
-
-CDD can solve the problem both using `Float64` and `Rational{BigInt}`
-arithmetics. The arithmetic used the type `T` given in `CDDLib.Optimizer{T}`.
-Only `CDDLib.Optimizer{Float64}` can be used with JuMP as JuMP inputs the
-problem in `Float64` arithmetics. Use [MOI](https://github.com/jump-dev/MathOptInterface.jl)
-directly for `CDDLib.Optimizer{Rational{BigInt}}`.
-
-* COIN-OR Cbc
-
-Cbc supports "SOS" constraints.
-
-* COSMO
-
-COSMO can solve LPs, QPs, SOCPs and SDPs. It can handle SDPs with quadratic
-objective functions and supports chordal decomposition of large structured PSD
-constraints. COSMO is a first order method that performs well on large problems
-but has a low accuracy by default (``10^{−4}``).
-See the [COSMO.jl documentation](https://oxfordcontrol.github.io/COSMO.jl/stable/)
-for more information.
-
-* CPLEX
-
-Requires a working installation of CPLEX with a license (free for faculty
-members and graduate teaching assistants). CPLEX supports "SOS" constraints.
-
-* ECOS
-
-ECOS can be used by JuMP to solve LPs and SOCPs. ECOS does not support general
-quadratic objectives or constraints, only second-order conic constraints
-specified by using the `SecondOrderCone` set.
-
-* Gurobi
-
-Requires a working installation of Gurobi with an activated license (free for
-academic use). Gurobi supports "SOS" constraints.
-
-* FICO Xpress
-
-Requires a working installation of Xpress with an active license (it is possible
-to get a license for academic use, see
-[FICO Academic Partner Program](https://fico.com/en/xpress-academic-license)).
-Supports SOCP and "SOS" constraints.
-
-* MOSEK
-
-Requires a license (free for academic use). The [Mosek interface](https://github.com/MOSEK/Mosek.jl)
-is maintained by the Mosek team. (Thanks!) Note that even if the package
-implementing MathOptInterface is `MosekTools`, for consistency the MOI optimizer
-is called `Mosek.Optimizer` so do the following to create a model with the Mosek
-solver:
-```julia
-using MosekTools
-model = Model(Mosek.Optimizer)
-```
-
-* ProxSDP
-
-ProxSDP solves general SDP problems by means of a first order proximal algorithm
-based on the primal-dual hybrid gradient, also known as Chambolle-Pock method.
-The main advantage of ProxSDP over other state-of-the-art solvers is the ability
-to exploit the low-rank property inherent to several SDP problems. ProxSDP is a
-first order solver and has low accuracy. See the [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)
-documentation for more information.
-
-* SCS
-
-SCS can be used by JuMP to solve LPs and SOCPs, and SDPs. SCS is a first order
-solver and has low accuracy (``10^{−4}``) by default; see the [SCS.jl](https://github.com/jump-dev/SCS.jl)
-documentation for more information.
-
-* SDPA
-
-SDPA is a second order solver which comes in several variants. The main version
-has a C++ interface which [SDPA.jl](https://github.com/jump-dev/SDPA.jl) uses
-for efficiently communicating the problem instance to the solver. The three
-high-precision variants, SDPA-GMP (arbitrary precision), SDPA-QD ("quad-double"
-precision) and SDPA-DD ("double-double" precision) do not expose a library
-interface, but can used via [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl),
-which writes and reads files to interact with the solver binary.
-
 ## AMPL-based solvers
 
 Use [AmplNLWriter](https://github.com/jump-dev/AmplNLWriter.jl) to access
@@ -249,6 +158,11 @@ See a complete list [here](https://www.gams.com/latest/docs/S_MAIN.html).
     the commercial software [GAMS](https://www.gams.com) for which a
     [free community license](https://www.gams.com/latest/docs/UG_License.html#GAMS_Community_Licenses)
     exists.
+    
+## NEOS-based solvers
+
+Use [NEOSServer.jl](https://github.com/odow/NEOSServer.jl) to access solvers
+available through the [NEOS Server](https://neos-server.org).
 
 ## Previously supported solvers
 
