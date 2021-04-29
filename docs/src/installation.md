@@ -158,7 +158,7 @@ See a complete list [here](https://www.gams.com/latest/docs/S_MAIN.html).
     the commercial software [GAMS](https://www.gams.com) for which a
     [free community license](https://www.gams.com/latest/docs/UG_License.html#GAMS_Community_Licenses)
     exists.
-    
+
 ## Previously supported solvers
 
 The following solvers were compatible with JuMP up to release 0.18 but are
