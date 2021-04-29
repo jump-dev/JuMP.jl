@@ -159,11 +159,6 @@ See a complete list [here](https://www.gams.com/latest/docs/S_MAIN.html).
     [free community license](https://www.gams.com/latest/docs/UG_License.html#GAMS_Community_Licenses)
     exists.
     
-## NEOS-based solvers
-
-Use [NEOSServer.jl](https://github.com/odow/NEOSServer.jl) to access solvers
-available through the [NEOS Server](https://neos-server.org).
-
 ## Previously supported solvers
 
 The following solvers were compatible with JuMP up to release 0.18 but are
