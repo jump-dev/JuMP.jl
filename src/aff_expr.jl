@@ -555,7 +555,7 @@ end
 function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
     aff = AffExpr()
     for t in f.terms
-        add_to_expression!(aff, t.coefficient, VariableRef(m, t.variable_index))
+        add_to_expression!(aff, t.coefficient, VariableRef(m, t.variable))
     end
     aff.constant = f.constant
     return aff

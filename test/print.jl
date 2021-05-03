@@ -928,7 +928,7 @@ end
     MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
     MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
     MOI.set(mockoptimizer, MOI.NodeCount(), 1)
-    MOI.set(mockoptimizer, MOI.SolveTime(), 5.0)
+    MOI.set(mockoptimizer, MOI.SolveTimeSec(), 5.0)
 
     @test sprint(show, solution_summary(model)) == """
 * Solver : Mock

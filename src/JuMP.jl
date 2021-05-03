@@ -712,7 +712,7 @@ the attribute MathOptInterface.SolveTime()" if the attribute is
 not implemented.
 """
 function solve_time(model::Model)
-    return MOI.get(model, MOI.SolveTime())
+    return MOI.get(model, MOI.SolveTimeSec())
 end
 
 """
