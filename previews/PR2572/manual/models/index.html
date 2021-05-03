@@ -113,19 +113,19 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
 
 julia&gt; b = backend(model)
-MOIU.CachingOptimizer{MOI.AbstractOptimizer,MOIU.UniversalFallback{MOIU.Model{Float64}}}
+MOIU.CachingOptimizer{MOI.AbstractOptimizer,MOIU.UniversalFallback{MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}}}
 in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
-with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
-  fallback for MOIU.Model{Float64}
+with model cache MOIU.UniversalFallback{MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}}
+  fallback for MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}
 with optimizer MOIB.LazyBridgeOptimizer{GLPK.Optimizer}
   with 0 variable bridges
   with 0 constraint bridges
   with 0 objective bridges
-  with inner model A GLPK model</code></pre><p>The backend is a <code>MOIU.CachingOptimizer</code> in the state <code>EMPTY_OPTIMIZER</code> and mode <code>AUTOMATIC</code>.</p><p>Alternatively, pass <code>innermost = true</code> to access the <code>GLPK.Optimizer</code> object at  the bottom of the stack.</p><pre><code class="language-julia-repl">julia&gt; backend(model; innermost = true)
-A GLPK model</code></pre><h3 id="CachingOptimizer"><a class="docs-heading-anchor" href="#CachingOptimizer">CachingOptimizer</a><a id="CachingOptimizer-1"></a><a class="docs-heading-anchor-permalink" href="#CachingOptimizer" title="Permalink"></a></h3><p>A <code>MOIU.CachingOptimizer</code> is an MOI layer that abstracts the difference between solvers that support incremental modification (e.g., they support adding variables one-by-one), and solvers that require the entire problem in a single API call (e.g., they only accept the <code>A</code>, <code>b</code> and <code>c</code> matrices of a linear program).</p><p>It has two parts:</p><ol><li>A cache, where the model can be built and modified incrementally<pre><code class="language-julia-repl">julia&gt; b.model_cache
-MOIU.UniversalFallback{MOIU.Model{Float64}}
-fallback for MOIU.Model{Float64}</code></pre></li><li>An optimizer, which is used to solve the problem<pre><code class="language-julia-repl">julia&gt; b.optimizer
+  with inner model A GLPK model</code></pre><p>The backend is a <code>MOIU.CachingOptimizer</code> in the state <code>EMPTY_OPTIMIZER</code> and mode <code>AUTOMATIC</code>.</p><p>Alternatively, use <a href="../../reference/models/#JuMP.unsafe_backend"><code>unsafe_backend</code></a> to access the <code>GLPK.Optimizer</code> object at the bottom of the stack.</p><pre><code class="language-julia-repl">julia&gt; unsafe_backend(model)
+A GLPK model</code></pre><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p><a href="../../reference/models/#JuMP.backend"><code>backend</code></a> and <a href="../../reference/models/#JuMP.unsafe_backend"><code>unsafe_backend</code></a> are advanced routines. Read their docstrings to understand the cavets of their usage. You should only call them if you wish to access low-level solver-specific functions.</p></div></div><h3 id="CachingOptimizer"><a class="docs-heading-anchor" href="#CachingOptimizer">CachingOptimizer</a><a id="CachingOptimizer-1"></a><a class="docs-heading-anchor-permalink" href="#CachingOptimizer" title="Permalink"></a></h3><p>A <code>MOIU.CachingOptimizer</code> is an MOI layer that abstracts the difference between solvers that support incremental modification (e.g., they support adding variables one-by-one), and solvers that require the entire problem in a single API call (e.g., they only accept the <code>A</code>, <code>b</code> and <code>c</code> matrices of a linear program).</p><p>It has two parts:</p><ol><li>A cache, where the model can be built and modified incrementally<pre><code class="language-julia-repl">julia&gt; b.model_cache
+MOIU.UniversalFallback{MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}}
+fallback for MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}</code></pre></li><li>An optimizer, which is used to solve the problem<pre><code class="language-julia-repl">julia&gt; b.optimizer
 MOIB.LazyBridgeOptimizer{GLPK.Optimizer}
 with 0 variable bridges
 with 0 constraint bridges
@@ -145,11 +145,11 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
 
 julia&gt; backend(model)
-MOIU.CachingOptimizer{MOI.AbstractOptimizer,MOIU.UniversalFallback{MOIU.Model{Float64}}}
+MOIU.CachingOptimizer{MOI.AbstractOptimizer,MOIU.UniversalFallback{MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}}}
 in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
-with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
-  fallback for MOIU.Model{Float64}
+with model cache MOIU.UniversalFallback{MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}}
+  fallback for MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}
 with optimizer A GLPK model</code></pre><div class="admonition is-success"><header class="admonition-header">Tip</header><div class="admonition-body"><p>Only disable bridges if you have a very good reason. If you want to reduce the overhead between JuMP and the underlying solver, consider <a href="#Direct-mode">Direct mode</a> instead.</p></div></div><h2 id="Direct-mode"><a class="docs-heading-anchor" href="#Direct-mode">Direct mode</a><a id="Direct-mode-1"></a><a class="docs-heading-anchor-permalink" href="#Direct-mode" title="Permalink"></a></h2><p>Using a <code>CachingOptimizer</code> results in an additional copy of the model being stored by JuMP in the <code>.model_cache</code> field. To avoid this overhead, create a JuMP model using <a href="../../reference/models/#JuMP.direct_model"><code>direct_model</code></a>:</p><pre><code class="language-julia-repl">julia&gt; model = direct_model(GLPK.Optimizer())
 A JuMP Model
 Feasibility problem with:
@@ -160,4 +160,4 @@ GLPK.Optimizer</code></pre><p>A downside of direct mode is that there is no brid
 
 julia&gt; @constraint(model, 1 &lt;= x[1] + x[2] &lt;= 2)
 ERROR: Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.
-[...]</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../tutorials/Optimization concepts/benders_lazy_constraints/">« Benders Decomposition (Lazy Constraints)</a><a class="docs-footer-nextpage" href="../variables/">Variables »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 22 April 2021 02:47">Thursday 22 April 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+[...]</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../tutorials/Optimization concepts/benders_lazy_constraints/">« Benders Decomposition (Lazy Constraints)</a><a class="docs-footer-nextpage" href="../variables/">Variables »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 3 May 2021 05:54">Monday 3 May 2021</span>. Using Julia version 1.0.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
