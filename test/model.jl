@@ -114,10 +114,7 @@ end
 
 function test_innermost()
     model = Model(() -> MOIU.MockOptimizer(MOIU.Model{Float64}()))
-    @test isa(
-        unsafe_backend(model),
-        MOIU.MockOptimizer{MOIU.Model{Float64}},
-    )
+    @test isa(unsafe_backend(model), MOIU.MockOptimizer{MOIU.Model{Float64}})
 end
 
 function test_hygiene_variable()
