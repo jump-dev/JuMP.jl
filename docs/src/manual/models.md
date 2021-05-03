@@ -241,12 +241,17 @@ with optimizer MOIB.LazyBridgeOptimizer{GLPK.Optimizer}
 The backend is a `MOIU.CachingOptimizer` in the state `EMPTY_OPTIMIZER` and mode
 `AUTOMATIC`.
 
-Alternatively, pass `innermost = true` to access the `GLPK.Optimizer` object at 
-the bottom of the stack.
+Alternatively, use [`unsafe_backend`](@ref) to access the `GLPK.Optimizer`
+object at the bottom of the stack.
 ```jldoctest models_backends
-julia> backend(model; innermost = true)
+julia> unsafe_backend(model)
 A GLPK model
 ```
+
+!!! warning
+    [`backend`](@ref) and [`unsafe_backend`](@ref) are advanced routines. Read
+    their docstrings to understand the cavets of their usage. You should only
+    call them if you wish to access low-level solver-specific functions.
 
 ### CachingOptimizer
 

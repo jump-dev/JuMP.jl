@@ -109,13 +109,13 @@ end
 
 function test_innermost_error()
     model = Model()
-    @test_throws ErrorException backend(model; innermost = true)
+    @test_throws ErrorException unsafe_backend(model)
 end
 
 function test_innermost()
     model = Model(() -> MOIU.MockOptimizer(MOIU.Model{Float64}()))
     @test isa(
-        backend(model; innermost = true),
+        unsafe_backend(model),
         MOIU.MockOptimizer{MOIU.Model{Float64}},
     )
 end

@@ -332,7 +332,7 @@ end
 Base.broadcastable(model::Model) = Ref(model)
 
 """
-    backend(model::Model; innermost::Bool = false)
+    backend(model::Model)
 
 Return the lower-level MathOptInterface model that sits underneath JuMP. This
 model depends on which operating mode JuMP is in (see [`mode`](@ref)).
@@ -343,38 +343,114 @@ model depends on which operating mode JuMP is in (see [`mode`](@ref)).
  * If JuMP is in `MANUAL` or `AUTOMATIC` mode, the backend is a
    `MOI.Utilities.CachingOptimizer`.
 
-For most solvers, JuMP will add additional `CachingOptimizer` and
-`LazyBridgeOptimizer` layers as needed. To skip these layers and return the
-innermost optimizer object, pass `innermost = true`.
-
 **This function should only be used by advanced users looking to access
 low-level MathOptInterface or solver-specific functionality.**
+
+## Notes
+
+If JuMP is not in `DIRECT` mode, the type returned by `backend` may change
+between any JuMP releases. Therefore, only use the public API exposed by
+MathOptInterface, and do not access internal fields such as
+`backend(model).optimizer.model`. If you require access to the
+innermost optimizer, see [`unsafe_backend`](@ref). Alternatively, use
+[`direct_model`](@ref) to create a JuMP model in `DIRECT` mode.
+
+See also: [`unsafe_backend`](@ref).
 """
-function backend(model::Model; innermost::Bool = false)
-    if innermost
-        return _innermost_backend(model.moi_backend)
-    else
-        return model.moi_backend
-    end
+backend(model::Model) = model.moi_backend
+
+"""
+    unsafe_backend(model::Model; attach_caching_optimizers::Bool = true)
+
+Return the innermost optimizer associated with the JuMP model `model`, skipping
+`CachingOptimizer` and `LazyBridgeOptimizer` layers as needed.
+
+If `attach_caching_optimizers`, `MOIU.attach_optimizer(model)` will be called on
+all `MOIU.CachingOptimizer`s in the stack.
+
+**This function should only be used by advanced users looking to access
+low-level solver-specific functionality.**
+
+See also: [`backend`](@ref).
+
+## Unsafe behavior
+
+This function is unsafe because the innermost optimizer may not represent the
+same problem as `model`.
+
+In particular, if you modify the JuMP model, the reference you have to the
+backend may be invalid. Using an invalid reference may result in incorrect
+solutions, errors, or Julia crashing. Always get a new reference by calling
+`unsafe_backend` before calling any low-level functionality.
+
+Moreover, if you pass `attach_caching_optimizers = false`, you should assume
+that any `CachingOptimizer`s may be in the `EMPTY_OPTIMIZER` state.
+
+## Alternatives
+
+Instead of this function, you should consider creating a model using
+[`direct_model`](@ref) and calling [`backend`](@ref) instead.
+
+## Examples
+
+```julia
+model = Model(GLPK.Optimizer)
+@variable(model, x >= 0)
+glpk = unsafe_backend(model)
+# ... use GLPK ...
+@objective(model, Min, 2x + 1)
+glpk = unsafe_backend(model)
+# ... use GLPK again...
+```
+
+Suggested alternative:
+```julia
+model = direct_model(GLPK.Optimizer())
+@variable(model, x >= 0)
+glpk = backend(model)
+# ... use GLPK ...
+@objective(model, Min, 2x + 1)
+# ... use GLPK again. No need to call `backend` twice...
+```
+
+"""
+function unsafe_backend(model::Model; attach_caching_optimizers::Bool = true)
+    return unsafe_backend(
+        backend(model);
+        attach_caching_optimizers = attach_caching_optimizers,
+    )
 end
 
-function _innermost_backend(model::MOIU.CachingOptimizer)
-    if MOIU.state(model) == MOIU.EMPTY_OPTIMIZER
-        MOIU.attach_optimizer(model)
-    elseif MOIU.state(model) == MOIU.NO_OPTIMIZER
+function unsafe_backend(
+    model::MOIU.CachingOptimizer;
+    attach_caching_optimizers::Bool,
+)
+    if MOIU.state(model) == MOIU.NO_OPTIMIZER
         error(
-            "Unable to get innnermost optimizer because CachingOptimizer is " *
-            "in state NO_OPTIMIZER.",
+            "Unable to get backend optimizer because CachingOptimizer is " *
+            "in state `NO_OPTIMIZER`. Call [`set_optimizer`](@ref) first.",
         )
+    elseif attach_caching_optimizers &&
+           MOIU.state(model) == MOIU.EMPTY_OPTIMIZER
+        MOIU.attach_optimizer(model)
     end
-    return _innermost_backend(model.optimizer)
+    return unsafe_backend(
+        model.optimizer;
+        attach_caching_optimizers = attach_caching_optimizers,
+    )
 end
 
-function _innermost_backend(model::MOIB.LazyBridgeOptimizer)
-    return _innermost_backend(model.model)
+function unsafe_backend(
+    model::MOIB.LazyBridgeOptimizer;
+    attach_caching_optimizers::Bool,
+)
+    return unsafe_backend(
+        model.model;
+        attach_caching_optimizers = attach_caching_optimizers,
+    )
 end
 
-_innermost_backend(model::MOI.ModelLike) = model
+unsafe_backend(model::MOI.ModelLike; kwargs...) = model
 
 """
     moi_mode(model::MOI.ModelLike)
