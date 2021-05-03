@@ -250,7 +250,7 @@ A GLPK model
 
 !!! warning
     [`backend`](@ref) and [`unsafe_backend`](@ref) are advanced routines. Read
-    their docstrings to understand the cavets of their usage. You should only
+    their docstrings to understand the caveats of their usage. You should only
     call them if you wish to access low-level solver-specific functions.
 
 ### CachingOptimizer
