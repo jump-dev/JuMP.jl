@@ -210,7 +210,7 @@ function build_constraint_extra_arg_test(ModelType::Type{<:JuMP.AbstractModel})
             BadPosArg,
             d = 1
         )
-        @test_throws_strip ErrorException @constraint(
+        @test_macro_throws ErrorException @constraint(
             model,
             x == 0,
             MyConstrType,
