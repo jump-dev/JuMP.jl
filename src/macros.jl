@@ -39,8 +39,8 @@ end
     _add_positional_args(call, args)::Nothing
 
 Add the positional arguments `args` to the function call expression `call`, 
-escaping each argument expression. The elements of `args` should should be ones 
-that were extracted via [`Containers._extract_kw_args`](@ref) and had appropriate 
+escaping each argument expression. The elements of `args` should be ones that 
+were extracted via [`Containers._extract_kw_args`](@ref) and had appropriate 
 arguments filtered out (e.g., the model argument). This is able to incorporate 
 additional positional arguments to `call`s that already have keyword arguments.
 
@@ -561,8 +561,8 @@ end
 
 Returns the code for the macro `@constraint_like args...` of syntax
 ```julia
-@constraint_like model con extra_args...     # single constraint
-@constraint_like model ref con extra_args... # group of constraints
+@constraint_like(model, con, extra_arg, kw_args...)      # single constraint
+@constraint_like(model, ref, con, extra_arg, kw_args...) # group of constraints
 ```
 where `@constraint_like` is either `@constraint` or `@SDconstraint`.
 
@@ -570,7 +570,7 @@ The expression `con` is parsed by `parsefun` which returns a `build_constraint`
 call code that, when executed, returns an `AbstractConstraint`. The macro
 keyword arguments (except the `container` keyword argument which is used to
 determine the container type) are added to the `build_constraint` call. The 
-`extra_args` are added as terminal positional arguments to the `build_constraint` 
+`extra_arg` is added as terminal positional argument to the `build_constraint` 
 call along with any keyword arguments (apart from `container` and `base_name`). 
 The returned value of this call is passed to `add_constraint` which returns a 
 constraint reference.
@@ -621,6 +621,11 @@ function _constraint_macro(
         c = gensym()
         x = y
         anonvar = true
+    end
+
+    # Enforce that only one extra positional argument can be given 
+    if length(extra) > 1
+        _error("Cannot specify more than 1 additional positional argument.")
     end
 
     # Prepare the keyword arguments 
@@ -762,12 +767,11 @@ that either `func` or `set` will be some custom type, rather than e.g. a
 set appearing in the constraint.
 
 For extensions that need to create constraints with more information than just 
-`func` and `set`, additional positional arguments can be specified to 
+`func` and `set`, an additional positional argument can be specified to 
 `@constraint` that will then be passed on `build_constraint`. Hence, we can 
 enable this syntax by defining extensions of 
-`build_constraint(_error, func, set, my_args...; kw_args...)` (using explicit 
-typed arguments not splatted ones as shown). This produces the user syntax: 
-`@constraint(model, ref[...], expr, my_args..., kw_args...)`. 
+`build_constraint(_error, func, set, my_arg; kw_args...)`. This produces the 
+user syntax: `@constraint(model, ref[...], expr, my_arg, kw_args...)`. 
 """
 macro constraint(args...)
     return _constraint_macro(

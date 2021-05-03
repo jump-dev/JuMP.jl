@@ -155,7 +155,7 @@ model, i.e. `ScalarConstraint` or `VectorConstraint`, or a custom
 
 Work in progress.
 
-### Adding extra positional arguments
+### Adding an extra positional argument
 
 We can also extend `@constraint` to handle additional positional arguments that 
 effectively "tag" a particular constraint type and/or pass along additional 
@@ -180,6 +180,9 @@ julia> function JuMP.build_constraint(
 julia> @constraint(model, my_con, x == 0, MyConstrType, d = 2)
 my_con : x ≤ 2.0
 ```
+Note that only a single positional argument can be given to a particular 
+constraint. Extensions that seek to pass multiple arguments (e.g., `Foo` and 
+`Bar`) should combine them into one argument type (e.g., `FooBar`). 
 
 ### Shapes
 
