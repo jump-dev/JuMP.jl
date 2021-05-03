@@ -63,17 +63,17 @@ X, y = generate_dataset(n, p, shift=10.0);
 model = build_logit_model(X, y, λ)
 set_optimizer(model, SCS.Optimizer)
 JuMP.optimize!(model)</code></pre><pre><code class="language-julia">θ♯ = JuMP.value.(model[:θ])</code></pre><pre class="documenter-example-output">11-element Array{Float64,1}:
-  0.3202855747667252 
- -0.5571952231349188 
-  0.37942941424695803
- -0.18100209814311582
- -0.5383667478418829 
- -0.2889122859702004 
-  0.45076922295074123
- -0.07094730174540306
-  0.0650150396447445 
-  0.4338209870437348 
- -0.09369944242007228</pre><p>It appears that the speed of convergence is not that impacted by the correlation of the dataset, nor by the penalty <span>$\lambda$</span>.</p><h3 id="\\ell_1-regularized-logistic-regression"><a class="docs-heading-anchor" href="#\\ell_1-regularized-logistic-regression"><span>$\ell_1$</span> regularized logistic regression</a><a id="\\ell_1-regularized-logistic-regression-1"></a><a class="docs-heading-anchor-permalink" href="#\\ell_1-regularized-logistic-regression" title="Permalink"></a></h3><p>We now formulate the logistic problem with a <span>$\ell_1$</span> regularization term. The <span>$\ell_1$</span> regularization ensures sparsity in the optimal solution of the resulting optimization problem. Luckily, the <span>$\ell_1$</span> norm is implemented as a set in <code>MathOptInterface</code>. Thus, we could easily formulate the sparse logistic regression problem with the help of a <code>MOI.NormOneCone</code> set.</p><pre><code class="language-julia">function build_sparse_logit_model(X, y, λ)
+  0.32028567816799114
+ -0.5571961622848078 
+  0.3794295079285758 
+ -0.1810027821337921 
+ -0.5383660506275623 
+ -0.28891083869580797
+  0.4507688843538184 
+ -0.0709478226302231 
+  0.06501525651669134
+  0.43382088901122906
+ -0.09369916035491717</pre><p>It appears that the speed of convergence is not that impacted by the correlation of the dataset, nor by the penalty <span>$\lambda$</span>.</p><h3 id="\\ell_1-regularized-logistic-regression"><a class="docs-heading-anchor" href="#\\ell_1-regularized-logistic-regression"><span>$\ell_1$</span> regularized logistic regression</a><a id="\\ell_1-regularized-logistic-regression-1"></a><a class="docs-heading-anchor-permalink" href="#\\ell_1-regularized-logistic-regression" title="Permalink"></a></h3><p>We now formulate the logistic problem with a <span>$\ell_1$</span> regularization term. The <span>$\ell_1$</span> regularization ensures sparsity in the optimal solution of the resulting optimization problem. Luckily, the <span>$\ell_1$</span> norm is implemented as a set in <code>MathOptInterface</code>. Thus, we could easily formulate the sparse logistic regression problem with the help of a <code>MOI.NormOneCone</code> set.</p><pre><code class="language-julia">function build_sparse_logit_model(X, y, λ)
     n, p = size(X)
     model = Model()
     @variable(model, θ[1:p])
