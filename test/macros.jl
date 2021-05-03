@@ -13,6 +13,7 @@
 
 using JuMP
 using Test
+using Base.Meta
 
 const MA = JuMP._MA
 
@@ -55,6 +56,12 @@ end
         Expr(:kw, :i, :(1:3)),
         Expr(:kw, :j, :S),
     ]
+end
+
+@testset "Test _add_positional_args" begin
+    call = :(f(1, a = 2))
+    @test JuMP._add_positional_args(call, [:(MyObject)]) isa Nothing
+    @test call == :(f(1, $(Expr(:escape, :MyObject)), a = 2))
 end
 
 @testset "MutableArithmetics.Zero (Issue #2187)" begin
@@ -173,6 +180,42 @@ function build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
         @test JuMP.constraint_object(cref1).set isa MOI.PowerCone{Float64}
         cref2 = @constraint(model, [1, x, x] in PowerCone(0.5), dual = true)
         @test JuMP.constraint_object(cref2).set isa MOI.DualPowerCone{Float64}
+    end
+end
+
+struct MyConstrType end
+struct BadPosArg end
+function JuMP.build_constraint(
+    _error::Function,
+    f::GenericAffExpr,
+    set::MOI.EqualTo,
+    extra::Type{MyConstrType};
+    d = 0,
+)
+    new_set = MOI.LessThan{Float64}(set.value + d)
+    return JuMP.build_constraint(_error, f, new_set)
+end
+function build_constraint_extra_arg_test(ModelType::Type{<:JuMP.AbstractModel})
+    @testset "build_constraint with extra positional arguments" begin
+        model = ModelType()
+        @variable(model, x)
+        cref = @constraint(model, x == 0, MyConstrType)
+        @test JuMP.constraint_object(cref).set isa MOI.LessThan{Float64}
+        cref = @constraint(model, c1, x == 0, MyConstrType, d = 1)
+        @test JuMP.constraint_object(cref).set == MOI.LessThan{Float64}(1)
+        @test_throws_strip ErrorException @constraint(model, x == 0, BadPosArg)
+        @test_throws_strip ErrorException @constraint(
+            model,
+            x == 0,
+            BadPosArg,
+            d = 1
+        )
+        @test_macro_throws ErrorException @constraint(
+            model,
+            x == 0,
+            MyConstrType,
+            BadPosArg
+        )
     end
 end
 
@@ -330,6 +373,29 @@ function macros_test(
         @test c.set == MOI.Interval(0.0, 1.0)
     end
 
+    @testset "Constraint Naming" begin
+        model = ModelType()
+        @variable(model, x)
+
+        cref = @constraint(model, x == 0)
+        @test name(cref) == ""
+
+        cref = @constraint(model, x == 0, base_name = "cat")
+        @test name(cref) == "cat"
+
+        cref = @constraint(model, c1, x == 0)
+        @test name(cref) == "c1"
+
+        cref = @constraint(model, c2, x == 0, base_name = "cat")
+        @test name(cref) == "cat"
+
+        crefs = @constraint(model, [1:2], x == 0, base_name = "cat")
+        @test name.(crefs) == ["cat[1]", "cat[2]"]
+
+        @test_macro_throws ErrorException @constraint(model, c3[1:2])
+        @test_macro_throws ErrorException @constraint(model, "c"[1:2], x == 0)
+    end
+
     @testset "@build_constraint (scalar inequality)" begin
         model = ModelType()
         @variable(model, x)
@@ -411,6 +477,7 @@ function macros_test(
 
     build_constraint_keyword_test(ModelType)
     custom_expression_test(ModelType)
+    build_constraint_extra_arg_test(ModelType)
     return custom_function_test(ModelType)
 end
 

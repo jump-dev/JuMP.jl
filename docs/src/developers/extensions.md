@@ -154,6 +154,36 @@ model, i.e. `ScalarConstraint` or `VectorConstraint`, or a custom
 ### Adding `add_constraint` methods
 
 Work in progress.
+
+### Adding an extra positional argument
+
+We can also extend `@constraint` to handle additional positional arguments that 
+effectively "tag" a particular constraint type and/or pass along additional 
+information that we may want. For example, we can make a `MyConstrType` that 
+modifies affine equalities:
+```jldoctest
+julia> model = Model(); @variable(model, x);
+
+julia> struct MyConstrType end
+
+julia> function JuMP.build_constraint(
+            _error::Function,
+            f::JuMP.GenericAffExpr,
+            set::MOI.EqualTo,
+            extra::Type{MyConstrType};
+            d = 0,
+       )
+            new_set = MOI.LessThan(set.value + d)
+            return JuMP.build_constraint(_error, f, new_set)
+       end
+
+julia> @constraint(model, my_con, x == 0, MyConstrType, d = 2)
+my_con : x ≤ 2.0
+```
+Note that only a single positional argument can be given to a particular 
+constraint. Extensions that seek to pass multiple arguments (e.g., `Foo` and 
+`Bar`) should combine them into one argument type (e.g., `FooBar`). 
+
 ### Shapes
 
 Shapes allow vector constraints, which are represented as flat vectors in MOI,
