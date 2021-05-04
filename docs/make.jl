@@ -77,6 +77,7 @@ makedocs(
         analytics = "UA-44252521-1",
         collapselevel = 1,
         assets = ["assets/extra_styles.css"],
+        sidebar_sitename = false,
     ),
     # `strict = true` causes Documenter to throw an error if the Doctests fail.
     strict = true,

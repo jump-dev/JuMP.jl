@@ -1,6 +1,6 @@
 ```@raw html
-<img class="display-light-only" src="assets/jump-logo-with-text.svg" alt="JuMP logo"/>
-<img class="display-dark-only" src="assets/dark-jump-logo-with-text.svg" alt="JuMP logo"/>
+<img class="display-light-only" src="assets/logo-with-text.svg" alt="JuMP logo"/>
+<img class="display-dark-only" src="assets/logo-dark-with-text.svg" alt="JuMP logo"/>
 ```
 
 [![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org)
