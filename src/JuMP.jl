@@ -369,7 +369,8 @@ If `attach_caching_optimizers`, `MOIU.attach_optimizer(model)` will be called on
 all `MOIU.CachingOptimizer`s in the stack.
 
 **This function should only be used by advanced users looking to access
-low-level solver-specific functionality.**
+low-level solver-specific functionality. It has a high-risk of incorrect usage.
+We strongly suggest you use the alternative suggested below.**
 
 See also: [`backend`](@ref).
 
@@ -378,21 +379,25 @@ See also: [`backend`](@ref).
 This function is unsafe because the innermost optimizer may not represent the
 same problem as `model`.
 
-In particular, if you modify the JuMP model, the reference you have to the
-backend may be invalid. Using an invalid reference may result in incorrect
-solutions, errors, or Julia crashing. Always get a new reference by calling
-`unsafe_backend` before calling any low-level functionality.
+If you modify the JuMP model, the reference you have to the backend may be
+invalid. Using an invalid reference may result in incorrect solutions, errors,
+or Julia crashing. Always get a new reference by calling `unsafe_backend` before
+calling any low-level functionality.
 
-Moreover, if you pass `attach_caching_optimizers = false`, you should assume
-that any `CachingOptimizer`s may be in the `EMPTY_OPTIMIZER` state.
+Moreover, if you modify the unsafe backend, e.g., by adding a new constraint,
+the changes may be silently discarded by JuMP when the model is modified or
+solved. Don't to this unless you understand when and how JuMP attaches and
+detaches optimizers! Use the alternative suggested below.
 
-## Alternatives
+If you pass `attach_caching_optimizers = false`, you should assume that any
+`CachingOptimizer`s may be in the `EMPTY_OPTIMIZER` state.
 
-Instead of this function, you should consider creating a model using
-[`direct_model`](@ref) and calling [`backend`](@ref) instead.
+## Alternative
 
-## Examples
+Instead of `unsafe_backend`, create a model using [`direct_model`](@ref) and
+call [`backend`](@ref) instead.
 
+For example, instead of:
 ```julia
 model = Model(GLPK.Optimizer)
 @variable(model, x >= 0)
@@ -402,8 +407,7 @@ glpk = unsafe_backend(model)
 glpk = unsafe_backend(model)
 # ... use GLPK again...
 ```
-
-Suggested alternative:
+Use;
 ```julia
 model = direct_model(GLPK.Optimizer())
 @variable(model, x >= 0)
@@ -412,7 +416,6 @@ glpk = backend(model)
 @objective(model, Min, 2x + 1)
 # ... use GLPK again. No need to call `backend` twice...
 ```
-
 """
 function unsafe_backend(model::Model; attach_caching_optimizers::Bool = true)
     return unsafe_backend(
