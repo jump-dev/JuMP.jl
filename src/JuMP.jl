@@ -386,8 +386,8 @@ calling any low-level functionality.
 
 Moreover, if you modify the unsafe backend, e.g., by adding a new constraint,
 the changes may be silently discarded by JuMP when the model is modified or
-solved. Don't to this unless you understand when and how JuMP attaches and
-detaches optimizers! Use the alternative suggested below.
+solved. So don't modify the unsafe backend unless you understand when and how
+JuMP attaches and detaches optimizers! Use the alternative suggested below.
 
 If you pass `attach_caching_optimizers = false`, you should assume that any
 `CachingOptimizer`s may be in the `EMPTY_OPTIMIZER` state.
