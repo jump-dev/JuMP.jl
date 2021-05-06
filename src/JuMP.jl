@@ -350,9 +350,8 @@ low-level MathOptInterface or solver-specific functionality.**
 
 If JuMP is not in `DIRECT` mode, the type returned by `backend` may change
 between any JuMP releases. Therefore, only use the public API exposed by
-MathOptInterface, and do not access internal fields such as
-`backend(model).optimizer.model`. If you require access to the
-innermost optimizer, see [`unsafe_backend`](@ref). Alternatively, use
+MathOptInterface, and do not access internal fields. If you require access to
+the innermost optimizer, see [`unsafe_backend`](@ref). Alternatively, use
 [`direct_model`](@ref) to create a JuMP model in `DIRECT` mode.
 
 See also: [`unsafe_backend`](@ref).
@@ -360,13 +359,9 @@ See also: [`unsafe_backend`](@ref).
 backend(model::Model) = model.moi_backend
 
 """
-    unsafe_backend(model::Model; attach_caching_optimizers::Bool = true)
+    unsafe_backend(model::Model)
 
-Return the innermost optimizer associated with the JuMP model `model`, skipping
-`CachingOptimizer` and `LazyBridgeOptimizer` layers as needed.
-
-If `attach_caching_optimizers`, `MOIU.attach_optimizer(model)` will be called on
-all `MOIU.CachingOptimizer`s in the stack.
+Return the innermost optimizer associated with the JuMP model `model`.
 
 **This function should only be used by advanced users looking to access
 low-level solver-specific functionality. It has a high-risk of incorrect usage.
@@ -377,20 +372,24 @@ See also: [`backend`](@ref).
 ## Unsafe behavior
 
 This function is unsafe because the innermost optimizer may not represent the
-same problem as `model`.
+same problem as the JuMP `model`.
 
-If you modify the JuMP model, the reference you have to the backend may be
-invalid. Using an invalid reference may result in incorrect solutions, errors,
-or Julia crashing. Always get a new reference by calling `unsafe_backend` before
-calling any low-level functionality.
+Thus, before calling `unsafe_backend` you should first call
+[`MOI.Utilities.attach_optimizer`](@ref) to ensure that the backend is
+synchronized with the JuMP model.
+```julia
+MOI.Utilities.attach_optimizer(model)
+inner = unsafe_backend(model)
+```
 
-Moreover, if you modify the unsafe backend, e.g., by adding a new constraint,
-the changes may be silently discarded by JuMP when the model is modified or
-solved. So don't modify the unsafe backend unless you understand when and how
-JuMP attaches and detaches optimizers! Use the alternative suggested below.
+Moreover, if you modify the JuMP model, the reference you have to the backend
+(i.e., `inner` in the example above) may be out-dated. Always get a new
+reference by calling `unsafe_backend` before calling any low-level
+functionality.
 
-If you pass `attach_caching_optimizers = false`, you should assume that any
-`CachingOptimizer`s may be in the `EMPTY_OPTIMIZER` state.
+This function is also unsafe in the reverse direction: if you modify the unsafe
+backend, e.g., by adding a new constraint to `inner`, the changes may be
+silently discarded by JuMP when the JuMP `model` is modified or solved.
 
 ## Alternative
 
@@ -401,59 +400,38 @@ For example, instead of:
 ```julia
 model = Model(GLPK.Optimizer)
 @variable(model, x >= 0)
+MOI.Utilities.attach_optimizer(model)
 glpk = unsafe_backend(model)
 # ... use GLPK ...
 @objective(model, Min, 2x + 1)
+MOI.Utilities.attach_optimizer(model)
 glpk = unsafe_backend(model)
 # ... use GLPK again...
 ```
-Use;
+Use:
 ```julia
 model = direct_model(GLPK.Optimizer())
 @variable(model, x >= 0)
-glpk = backend(model)
+glpk = backend(model)  # No need to call `attach_optimizer`.
 # ... use GLPK ...
 @objective(model, Min, 2x + 1)
-# ... use GLPK again. No need to call `backend` twice...
+# ... use GLPK again. No need to call `backend` twice ...
 ```
 """
-function unsafe_backend(model::Model; attach_caching_optimizers::Bool = true)
-    return unsafe_backend(
-        backend(model);
-        attach_caching_optimizers = attach_caching_optimizers,
-    )
-end
+unsafe_backend(model::Model) = unsafe_backend(backend(model))
 
-function unsafe_backend(
-    model::MOIU.CachingOptimizer;
-    attach_caching_optimizers::Bool,
-)
+function unsafe_backend(model::MOIU.CachingOptimizer)
     if MOIU.state(model) == MOIU.NO_OPTIMIZER
         error(
             "Unable to get backend optimizer because CachingOptimizer is " *
             "in state `NO_OPTIMIZER`. Call [`set_optimizer`](@ref) first.",
         )
-    elseif attach_caching_optimizers &&
-           MOIU.state(model) == MOIU.EMPTY_OPTIMIZER
-        MOIU.attach_optimizer(model)
     end
-    return unsafe_backend(
-        model.optimizer;
-        attach_caching_optimizers = attach_caching_optimizers,
-    )
+    return unsafe_backend(model.optimizer)
 end
 
-function unsafe_backend(
-    model::MOIB.LazyBridgeOptimizer;
-    attach_caching_optimizers::Bool,
-)
-    return unsafe_backend(
-        model.model;
-        attach_caching_optimizers = attach_caching_optimizers,
-    )
-end
-
-unsafe_backend(model::MOI.ModelLike; kwargs...) = model
+unsafe_backend(model::MOIB.LazyBridgeOptimizer) = unsafe_backend(model.model)
+unsafe_backend(model::MOI.ModelLike) = model
 
 """
     moi_mode(model::MOI.ModelLike)
