@@ -383,9 +383,8 @@ inner = unsafe_backend(model)
 ```
 
 Moreover, if you modify the JuMP model, the reference you have to the backend
-(i.e., `inner` in the example above) may be out-dated. Always get a new
-reference by calling `unsafe_backend` before calling any low-level
-functionality.
+(i.e., `inner` in the example above) may be out-dated, and you should call
+[`MOI.Utilities.attach_optimizer`](@ref) again.
 
 This function is also unsafe in the reverse direction: if you modify the unsafe
 backend, e.g., by adding a new constraint to `inner`, the changes may be
@@ -402,20 +401,12 @@ model = Model(GLPK.Optimizer)
 @variable(model, x >= 0)
 MOI.Utilities.attach_optimizer(model)
 glpk = unsafe_backend(model)
-# ... use GLPK ...
-@objective(model, Min, 2x + 1)
-MOI.Utilities.attach_optimizer(model)
-glpk = unsafe_backend(model)
-# ... use GLPK again...
 ```
 Use:
 ```julia
 model = direct_model(GLPK.Optimizer())
 @variable(model, x >= 0)
 glpk = backend(model)  # No need to call `attach_optimizer`.
-# ... use GLPK ...
-@objective(model, Min, 2x + 1)
-# ... use GLPK again. No need to call `backend` twice ...
 ```
 """
 unsafe_backend(model::Model) = unsafe_backend(backend(model))
