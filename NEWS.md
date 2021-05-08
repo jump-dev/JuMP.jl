@@ -1,6 +1,20 @@
 JuMP release notes
 ==================
 
+Version 0.21.8 (May 8, 2021)
+---------------------------------
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.8).
+A summary of changes are as follows:
+
+- New features:
+  * The `@constraint` macro is now extendable in the same way as `@variable`.
+  * `AffExpr` and `QuadExpr` can now be used in nonlinear macros.
+- Bug fixes:
+  * Fixed a bug in `lp_sensitivity_report`.
+  * Fixed an inference issue when creating empty `SparseAxisArray`s.
+
 Version 0.21.7 (April 12, 2021)
 ---------------------------------
 
