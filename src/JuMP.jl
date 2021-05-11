@@ -371,10 +371,15 @@ See also: [`backend`](@ref).
 
 ## Unsafe behavior
 
-This function is unsafe because the innermost optimizer may not represent the
-same problem as the JuMP `model`.
+This function is unsafe for two main reasons.
 
-Thus, before calling `unsafe_backend` you should first call
+First, the formulation and order of variables and constraints in the unsafe
+backend may be different to the variables and constraints in `model` due to
+bridges. There is no solution to this. Use the alternative suggested below
+instead.
+
+Second, the `unsafe_backend` may be empty, or lack some modifications made to
+the JuMP model. Thus, before calling `unsafe_backend` you should first call
 [`MOI.Utilities.attach_optimizer`](@ref) to ensure that the backend is
 synchronized with the JuMP model.
 ```julia
