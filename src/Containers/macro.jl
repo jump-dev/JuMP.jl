@@ -185,18 +185,6 @@ function container_code(idxvars, indices, code, requested_container)
     if isempty(idxvars)
         return code
     end
-    if !(
-        requested_container in
-        [:Auto, :Array, :DenseAxisArray, :SparseAxisArray]
-    )
-        # We do this two-step interpolation, first into the string, and then
-        # into the expression because interpolating into a string inside an
-        # expression has scoping issues.
-        error_message =
-            "Invalid container type $requested_container. Must be " *
-            "Auto, Array, DenseAxisArray, or SparseAxisArray."
-        return :(error($error_message))
-    end
     if requested_container == :DenseAxisArray
         requested_container = :(Containers.DenseAxisArray)
     elseif requested_container == :SparseAxisArray

@@ -163,3 +163,18 @@ function _sparseaxisarray(dict::Dict{Any,Any}, f, indices)
     d = _container_dict(_default_eltype(indices), f, _eltype_or_any(indices))
     return SparseAxisArray(d)
 end
+
+# Don't use length-1 tuples if there is only one index!
+_container_key(i::Tuple) = i
+_container_key(i::Tuple{T}) where {T} = i[1]
+
+function container(f::Function, indices, D::Type{<:AbstractDict})
+    return D(_container_key(i) => f(i...) for i in indices)
+end
+
+function container(::Function, ::Any, D::Type)
+    return error(
+        "Unable to build a container with the provided type $(D). Implement " *
+        "`Containers.container`.",
+    )
+end
