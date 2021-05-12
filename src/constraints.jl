@@ -482,7 +482,8 @@ function VectorConstraint(
     func::AbstractVector{<:AbstractJuMPScalar},
     set::MOI.AbstractVectorSet,
 )
-    return VectorConstraint(collect(func), set)
+    f = [func[idx] for idx in eachindex(func)]
+    return VectorConstraint(f, set) 
 end
 
 reshape_set(set::MOI.AbstractVectorSet, ::VectorShape) = set
