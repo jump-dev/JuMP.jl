@@ -483,7 +483,7 @@ function VectorConstraint(
     set::MOI.AbstractVectorSet,
 )
     f = [func[idx] for idx in eachindex(func)]
-    return VectorConstraint(f, set) 
+    return VectorConstraint(f, set)
 end
 
 reshape_set(set::MOI.AbstractVectorSet, ::VectorShape) = set
