@@ -310,7 +310,7 @@ end
              c::ConstraintRef{Model,NonlinearConstraintIndex})
 
 Return `true` if `constraint_ref` refers to a valid nonlinear constraint in
-    `model`.
+`model`.
 """
 function is_valid(model::Model,
                   c::ConstraintRef{Model,NonlinearConstraintIndex})
