@@ -56,30 +56,6 @@ function test_univariate_register_twice_error()
     @test_throws ErrorException @NLconstraint(model, g(x, x) <= 1)
 end
 
-function test_univariate_NLconstraint()
-    model = Model()
-    @variable(model, x >= 0)
-    c = @NLconstraint(model, exp(x) <= 1)
-    @test is_valid(model, c)
-end
-
-function test_multivariate_NLconstraint()
-    model = Model()
-    @variable(model, x >= 0)
-    @variable(model, y >= 0)
-    c = @NLconstraint(model, exp(x) + log(y) <= 1)
-    @test is_valid(model, c)
-end
-
-function test_univariate_NLconstraint_notvalid()
-    model1 = Model()
-    model2 = Model()
-    @variable(model2, x >= 0)
-    c = @NLconstraint(model2, exp(x) <= 1)
-    @test !is_valid(model1, c)
-    @test is_valid(model2, c)
-end
-
 function test_univariate_existing_nlpdata()
     model = Model()
     @variable(model, x >= 0)
@@ -1071,5 +1047,24 @@ end
         f(x, y) = x + y
         register(model, :f, 2, f; autodiff = true)
         @test_throws ErrorException register(model, :f, 2, f; autodiff = true)
+    end
+
+    @testset "Check univariate NLconstraint is valid" begin
+        model = Model()
+        model2 = Model()
+        @variable(model, x >= 0)
+        c = @NLconstraint(model, exp(x) <= 1)
+        @test is_valid(model, c)
+        @test !is_valid(model2, c)
+    end
+
+    @testset "Check multivariate NLconstraint is valid" begin
+        model = Model()
+        model2 = Model()
+        @variable(model, x >= 0)
+        @variable(model, y >= 0)
+        c = @NLconstraint(model, exp(x) + log(y) <= 1)
+        @test is_valid(model, c)
+        @test !is_valid(model2, c)
     end
 end
