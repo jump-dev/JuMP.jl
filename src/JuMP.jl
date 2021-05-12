@@ -378,7 +378,7 @@ backend may be different to the variables and constraints in `model`. This
 can happen because of bridges, or because the solver requires the variables or 
 constraints in a specific order. In addition, the variable or constraint index 
 returned by [`index`](@ref) at the JuMP level may be different to the index of 
-the corresponding variable or constraint in the `unsafe_backed`. There is no 
+the corresponding variable or constraint in the `unsafe_backend`. There is no 
 solution to this. Use the alternative suggested below instead.
 
 Second, the `unsafe_backend` may be empty, or lack some modifications made to
