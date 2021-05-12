@@ -374,9 +374,12 @@ See also: [`backend`](@ref).
 This function is unsafe for two main reasons.
 
 First, the formulation and order of variables and constraints in the unsafe
-backend may be different to the variables and constraints in `model` due to
-bridges. There is no solution to this. Use the alternative suggested below
-instead.
+backend may be different to the variables and constraints in `model`. This 
+can happen because of bridges, or because the solver requires the variables or 
+constraints in a specific order. In addition, the variable or constraint index 
+returned by [`index`](@ref) at the JuMP level may be different to the index of 
+the corresponding variable or constraint in the `unsafe_backed`. There is no 
+solution to this. Use the alternative suggested below instead.
 
 Second, the `unsafe_backend` may be empty, or lack some modifications made to
 the JuMP model. Thus, before calling `unsafe_backend` you should first call
