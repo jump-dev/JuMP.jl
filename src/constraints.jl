@@ -305,6 +305,22 @@ function is_valid(model::Model, con_ref::ConstraintRef{<:AbstractModel})
     )
 end
 
+"""
+    is_valid(model::Model,
+             c::ConstraintRef{Model,NonlinearConstraintIndex})
+
+Return `true` if `constraint_ref` refers to a valid nonlinear constraint in
+    `model`.
+"""
+function is_valid(model::Model,
+                  c::ConstraintRef{Model,NonlinearConstraintIndex})
+    if model !== c.model
+        return false
+    end
+    _init_NLP(model)
+    return 1 <= c.index.value <= num_nl_constraints(model)
+end
+
 #############################################################################
 # AbstractConstraint
 """
