@@ -482,6 +482,7 @@ function VectorConstraint(
     func::AbstractVector{<:AbstractJuMPScalar},
     set::MOI.AbstractVectorSet,
 )
+    # collect() is not used here so that DenseAxisArray will work
     f = [func[idx] for idx in eachindex(func)]
     return VectorConstraint(f, set)
 end
