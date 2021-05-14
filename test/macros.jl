@@ -117,7 +117,7 @@ end
     @test name(x) == "x"
 
     @variable(model, y[1:3] in SecondOrderCone(), NewVariable)
-    @test name(y) == "y"
+    @test name.(y) == ["y[$i]" for i = 1:3]
     @test num_constraints(model, Vector{VariableRef}, MOI.SecondOrderCone) == 1
 end
 
