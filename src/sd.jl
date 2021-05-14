@@ -242,7 +242,7 @@ This function is used by the [`@variable`](@ref) macro as follows:
 """
 function build_variable(
     _error::Function,
-    variables::Matrix{<:ScalarVariable},
+    variables::Matrix{<:AbstractVariable},
     ::SymMatrixSpace,
 )
     n = _square_side(_error, variables)
@@ -269,7 +269,7 @@ This function is used by the [`@variable`](@ref) macro as follows:
 """
 function build_variable(
     _error::Function,
-    variables::Matrix{<:ScalarVariable},
+    variables::Matrix{<:AbstractVariable},
     ::SkewSymmetricMatrixSpace,
 )
     n = _square_side(_error, variables)
@@ -295,7 +295,7 @@ This function is used by the [`@variable`](@ref) macro as follows:
 """
 function build_variable(
     _error::Function,
-    variables::Matrix{<:ScalarVariable},
+    variables::Matrix{<:AbstractVariable},
     ::PSDCone,
 )
     n = _square_side(_error, variables)

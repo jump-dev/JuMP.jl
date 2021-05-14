@@ -1348,14 +1348,14 @@ end
 
 function build_variable(
     _error::Function,
-    variable::ScalarVariable,
+    variable::AbstractVariable,
     set::MOI.AbstractScalarSet,
 )
     return VariableConstrainedOnCreation(variable, set)
 end
 function build_variable(
     _error::Function,
-    variables::Vector{<:ScalarVariable},
+    variables::Vector{<:AbstractVariable},
     set::MOI.AbstractVectorSet,
 )
     return VariablesConstrainedOnCreation(variables, set)
