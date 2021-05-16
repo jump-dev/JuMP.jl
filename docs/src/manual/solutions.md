@@ -164,7 +164,7 @@ julia> value(x)
 15.428571428571429
 ```
 
-Broadcast [`value]`(@ref) over containers:
+Broadcast [`value`](@ref) over containers:
 ```julia solutions
 julia> value.(y)
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
