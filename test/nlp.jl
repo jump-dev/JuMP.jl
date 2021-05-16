@@ -1048,4 +1048,23 @@ end
         register(model, :f, 2, f; autodiff = true)
         @test_throws ErrorException register(model, :f, 2, f; autodiff = true)
     end
+
+    @testset "Check univariate NLconstraint is valid" begin
+        model = Model()
+        model2 = Model()
+        @variable(model, x >= 0)
+        c = @NLconstraint(model, exp(x) <= 1)
+        @test is_valid(model, c)
+        @test !is_valid(model2, c)
+    end
+
+    @testset "Check multivariate NLconstraint is valid" begin
+        model = Model()
+        model2 = Model()
+        @variable(model, x >= 0)
+        @variable(model, y >= 0)
+        c = @NLconstraint(model, exp(x) + log(y) <= 1)
+        @test is_valid(model, c)
+        @test !is_valid(model2, c)
+    end
 end

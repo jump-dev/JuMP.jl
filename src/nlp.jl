@@ -177,6 +177,22 @@ function _init_NLP(m::Model)
 end
 
 """
+    is_valid(model::Model, c::ConstraintRef{Model,NonlinearConstraintIndex})
+
+Return `true` if `c` refers to a valid nonlinear constraint in `model`.
+"""
+function is_valid(
+    model::Model,
+    c::ConstraintRef{Model,NonlinearConstraintIndex},
+)
+    if model !== c.model
+        return false
+    end
+    _init_NLP(model)
+    return 1 <= c.index.value <= num_nl_constraints(model)
+end
+
+"""
     dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
 
 Return the dual of the nonlinear constraint `c`.
