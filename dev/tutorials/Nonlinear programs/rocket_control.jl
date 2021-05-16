@@ -161,7 +161,8 @@ end
 
 # Solve for the control and state
 println("Solving...")
-status = optimize!(rocket)
+optimize!(rocket)
+solution_summary(rocket)
 
 # ## Display results
 
