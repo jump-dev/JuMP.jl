@@ -47,6 +47,15 @@ function test_SingleVariable_constraints(ModelType, ::Any)
     @test c.set == MOI.LessThan(1.0)
 end
 
+function test_Container_constraints(ModelType, ::Any)
+    m = ModelType()
+    S = ["a", "b"]
+    @variable(m, x[S], Bin)
+    cref = @constraint(m, x in SOS2())
+    c = JuMP.constraint_object(cref)
+    @test c.func == [x["a"], x["b"]]
+end
+
 function test_VectorOfVariables_constraints(ModelType, ::Any)
     m = ModelType()
     @variable(m, x[1:2])
