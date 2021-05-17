@@ -517,43 +517,6 @@ MOI defines a number of other conic sets such as the exponential
 and power cones. See the [MathOptInterface documentation](https://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#Sets-1)
 for more information.
 
-## Constraints on a collection of variables
-
-In addition to constraining the domain of a single variable, JuMP supports
-placing constraints of a subset of the variables. We already saw an example of
-this in the [Quadratic constraints](@ref) section when we constrained a vector
-of variables to belong to the second order cone.
-
-In a special ordered set of type I (often denoted SOS-I), at most one variable
-can take a non-zero value. We can construct SOS-I constraints using the
-`MOI.SOS1` set:
-```jldoctest con_sos; setup=:(model = Model())
-julia> @variable(model, x[1:3])
-3-element Array{VariableRef,1}:
- x[1]
- x[2]
- x[3]
-
-julia> @constraint(model, x in MOI.SOS1([1.0, 2.0, 3.0]))
-[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])
-```
-Note that we have to pass `MOI.SOS1` a *weight* vector. This vector implies an
-ordering on the variables. If the decision variables are related and have a
-physical ordering (e.g., they correspond to the size of a factory to be built,
-and the SOS-I constraint enforces that only one factory can be built), then the
-weight vector, although not used directly in the constraint, can help the solver
-make a better decision in the solution process.
-
-This ordering is more important in a special ordered set of type II (SOS-II), in
-which at most two values can be non-zero, and if there are two non-zeros, they
-must be consecutive according to the ordering. For example, in the following
-constraint, the possible non-zero pairs are (`x[1]` and `x[3]`) and (`x[2]` and
-`x[3]`):
-```jldoctest con_sos
-julia> @constraint(model, x in MOI.SOS2([3.0, 1.0, 2.0]))
-[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
-```
-
 ## Indicator constraints
 
 JuMP provides a special syntax for creating indicator constraints, that is,
@@ -937,57 +900,53 @@ julia> @constraint(model, M * y + q ⟂ y)
 
 ## Special Ordered Sets (SOS1 and SOS2)
 
-A Special Ordered Set (SOS) is an ordered set of variables with the following characteristics.
+### Type 1
 
-If a vector of variables `x` is in a Special Ordered Set of Type I (SOS1), then at most one
-element of `x` can take a non-zero value, and all other elements must be zero.
+In a Special Ordered Set of Type 1 (often denoted SOS-I or SOS1), at most one
+element can take a non-zero value.
 
-Although not required for feasibility, solvers can benefit from an ordering of the variables
-(e.g., the variables represent different factories to build, at most one factory can be built,
-and the factories can be ordered according to cost). To induce an ordering, `weights` can be provided;
-as such, they should be unique values. The `k`th element in the ordered set corresponds to
-the `k`th weight in `weights` when the weights are sorted.
-
-A SOS1 constraint is equivalent to:
-
-- `x[i] >= 0` for some `i`
-- `x[j] == 0` for all `j != i`
-
-If a vector of variables `x` is in a Special Ordered Set of Type II (SOS2), then at most two
-elements can be non-zero, and if two elements are non-zero, they must be adjacent.
-
-Because of the adjacency requirement, you should supply a weight vector (with unique elements)
-to induce an ordering of the variables. The `k`th element in the ordered set corresponds to
-the `k`th weight in `weights` when the weights are sorted.
-
-A SOS2 constraint is equivalent to:
-
-- `x[i] >= 0`, `x[i+1] >= 0`  for some `i`
-- `x[j] == 0` for all `j != i`, `j != i+1`
-
-Create an SOS constraint as follows:
-
-```jldoctest SOS; setup=:(model=Model())
+Construct SOS-I constraints using the [`SOS1`](@ref) set:
+```jldoctest con_sos; setup=:(model = Model())
 julia> @variable(model, x[1:3])
 3-element Array{VariableRef,1}:
  x[1]
  x[2]
  x[3]
 
-julia> @constraint(model, x in SOS2([3,5,2]))
-[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([3.0, 5.0, 2.0])
+julia> @constraint(model, x in SOS())
+[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])
 ```
 
-In the case above, `x[3]` is the first variable and `x[2]` the last variable under the
-induced ordering. When no ordering vector is provided, JuMP induces an ordering from `1:length(x)`.
+Although not required for feasibility, solvers can benefit from an ordering of
+the variables (e.g., the variables represent different factories to build, at
+most one factory can be built, and the factories can be ordered according to
+cost). To induce an ordering, weights can be provided; as such, they should be
+unique values. The kth element in the ordered set corresponds to the kth weight
+in weights when the weights are sorted.
 
-```jldoctest SOS; setup=:(model=Model())
-julia> @variable(model, x[1:3])
-3-element Array{VariableRef,1}:
- x[1]
- x[2]
- x[3]
+For example, in the constraint:
+```jldoctest con_sos
+julia> @constraint(model, x in SOS1([3.1, 1.2, 2.3]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([3.1, 1.2, 2.3])
+```
+the variables `x` have precedence `x[2]`, `x[3]`, `x[1]`.
 
+### Type 2
+
+In a Special Ordered Set of Type 2 (SOS-II), at most two elements can be
+non-zero, and if there are two non-zeros, they must be consecutive according to
+the ordering induced by a weight vector.
+
+Construct SOS-I constraints using the [`SOS2`](@ref) set.
+```jldoctest con_sos
+julia> @constraint(model, x in SOS2([3.0, 1.0, 2.0]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
+```
+In the following constraint, the possible non-zero pairs are (`x[1]` and `x[3]`)
+and (`x[2]` and `x[3]`):
+
+If the weight vector is omitted, JuMP induces an ordering from `1:length(x)`:
+```jldoctest con_sos
 julia> @constraint(model, x in SOS2())
-[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([1.0, 2.0, 3.0])
+[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([1.0, 2.0, 3.0])
 ```
