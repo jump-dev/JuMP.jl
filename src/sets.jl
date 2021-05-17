@@ -10,10 +10,10 @@ See also: [`moi_set`](@ref).
 """
 abstract type AbstractVectorSet end
 
-# Used in `@constraint(model, [1:n] in s)`
+# Used in `@variable(model, [1:n] in s)`
 function build_variable(
     _error::Function,
-    variables::Vector{<:ScalarVariable},
+    variables::Vector{<:AbstractVariable},
     set::AbstractVectorSet,
 )
     return VariablesConstrainedOnCreation(

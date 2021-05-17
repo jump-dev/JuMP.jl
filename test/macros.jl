@@ -80,6 +80,52 @@ end
     @test constraint_object(c).set == MOI.EqualTo(0.0)
 end
 
+struct NewVariable <: JuMP.AbstractVariable
+    info::JuMP.VariableInfo
+end
+
+@testset "Extension variables constrained on creation #2594" begin
+    function JuMP.build_variable(
+        _error::Function,
+        info::JuMP.VariableInfo,
+        ::Type{NewVariable},
+    )
+        return NewVariable(info)
+    end
+    function JuMP.add_variable(model::Model, v::NewVariable, name::String = "")
+        return JuMP.add_variable(
+            model,
+            ScalarVariable(v.info),
+            name * "_normal_add",
+        )
+    end
+    function JuMP.add_variable(
+        model::Model,
+        v::VariablesConstrainedOnCreation{
+            MOI.SecondOrderCone,
+            VectorShape,
+            NewVariable,
+        },
+        names,
+    )
+        vs = map(i -> ScalarVariable(i.info), v.scalar_variables)
+        new_v = VariablesConstrainedOnCreation(vs, v.set, v.shape)
+        names .*= "_constr_add"
+        return JuMP.add_variable(model, new_v, names)
+    end
+
+    model = Model()
+    @variable(model, 0 <= x <= 1, NewVariable, Bin)
+    @test lower_bound(x) == 0
+    @test upper_bound(x) == 1
+    @test is_binary(x)
+    @test name(x) == "x_normal_add"
+
+    @variable(model, y[1:3] in SecondOrderCone(), NewVariable)
+    @test name.(y) == ["y[$i]_constr_add" for i in 1:3]
+    @test num_constraints(model, Vector{VariableRef}, MOI.SecondOrderCone) == 1
+end
+
 mutable struct MyVariable
     test_kw::Int
     info::JuMP.VariableInfo
