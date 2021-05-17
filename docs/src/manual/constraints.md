@@ -913,7 +913,7 @@ julia> @variable(model, x[1:3])
  x[2]
  x[3]
 
-julia> @constraint(model, x in SOS())
+julia> @constraint(model, x in SOS1())
 [x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])
 ```
 
