@@ -937,7 +937,7 @@ In a Special Ordered Set of Type 2 (SOS-II), at most two elements can be
 non-zero, and if there are two non-zeros, they must be consecutive according to
 the ordering induced by a weight vector.
 
-Construct SOS-I constraints using the [`SOS2`](@ref) set.
+Construct SOS-II constraints using the [`SOS2`](@ref) set.
 ```jldoctest con_sos
 julia> @constraint(model, x in SOS2([3.0, 1.0, 2.0]))
 [x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
