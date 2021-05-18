@@ -58,8 +58,8 @@ you know where to look for certain things. There are four main parts:
 
 * The **Manual** contains short code-snippets that explain how to achieve
   specific tasks in JuMP. Look here if you want to know how to achieve a
-  particular task, such as [how to delete a variable](@ref Deleting-variables)
-  or [how to modify an objective coefficient](@ref Modify-an-objective-coefficient).
+  particular task, such as how to [Delete a variable](@ref) or how to
+  [Modify an objective coefficient](@ref).
 
 * The **API Reference** contains a complete list of the functions you can use in
   JuMP. Look here if you want to know how to use a particular function.

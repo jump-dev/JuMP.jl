@@ -764,13 +764,12 @@ julia> normalized_coefficient(con, x[2])
     [`set_normalized_coefficient`](@ref) sets the coefficient of the
     normalized constraint.
 
-## Deleting constraints
+## Delete a constraint
 
-Constraints can be deleted from a model using [`delete`](@ref).
+Use [`delete`](@ref) to delete a constraint from a model. Use [`is_valid`](@ref)
+to check if a constraint belongs to a model and has not been deleted.
 
-Check if a constraint reference is valid using [`is_valid`](@ref).
-
-```jldoctest; setup = :(model=Model(); @variable(model, x))
+```jldoctest constraints_delete; setup = :(model=Model(); @variable(model, x))
 julia> @constraint(model, con, 2x <= 1)
 con : 2 x <= 1.0
 
@@ -782,6 +781,38 @@ julia> delete(model, con)
 julia> is_valid(model, con)
 false
 ```
+
+Deleting a constraint does not unregister the symbolic reference from the model.
+Therefore, creating a new constraint of the same name will throw an error:
+```jldoctest constraints_delete
+julia> @constraint(model, con, 2x <= 1)
+ERROR: An object of name con is already attached to this model. If this
+    is intended, consider using the anonymous construction syntax, e.g.,
+    `x = @variable(model, [1:N], ...)` where the name of the object does
+    not appear inside the macro.
+
+    Alternatively, use `unregister(model, :con)` to first unregister
+    the existing name from the model. Note that this will not delete the
+    object; it will just remove the reference at `model[:con]`.
+[...]
+```
+
+After calling [`delete`](@ref), call [`unregister`](@ref) to remove the symbolic
+reference:
+```jldoctest constraints_delete
+julia> unregister(model, :con)
+
+julia> @constraint(model, con, 2x <= 1)
+con : 2 x <= 1.0
+```
+
+!!! info
+    [`delete`](@ref) does not automatically [`unregister`](@ref) because we do
+    not distinguish between names that are automatically registered by JuMP
+    macros, and names that are manually registered by the user by setting values
+    in [`object_dictionary`](@ref). In addition, deleting a constraint and then
+    adding a new constraint of the same name is an easy way to introduce bugs
+    into your code.
 
 ## Accessing constraints from a model
 

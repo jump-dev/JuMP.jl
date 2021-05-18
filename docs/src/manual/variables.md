@@ -696,11 +696,10 @@ Dict{Symbol,Array{VariableRef,2}} with 2 entries:
   :B => VariableRef[noname noname; noname noname]
 ```
 
-## Deleting variables
+## Delete a variable
 
-Variables can be deleted from a model using [`delete`](@ref).
-
-Check if a variable reference is valid using [`is_valid`](@ref).
+Use [`delete`](@ref) to delete a variable from a model. Use [`is_valid`](@ref)
+to check if a variable belongs to a model and has not been deleted.
 
 ```jldoctest variables_delete; setup=:(model=Model())
 julia> @variable(model, x)
@@ -714,6 +713,38 @@ julia> delete(model, x)
 julia> is_valid(model, x)
 false
 ```
+
+Deleting a variable does not unregister the symbolic reference from the model.
+Therefore, creating a new variable of the same name will throw an error:
+```jldoctest variables_delete
+julia> @variable(model, x)
+ERROR: An object of name x is already attached to this model. If this
+    is intended, consider using the anonymous construction syntax, e.g.,
+    `x = @variable(model, [1:N], ...)` where the name of the object does
+    not appear inside the macro.
+
+    Alternatively, use `unregister(model, :x)` to first unregister
+    the existing name from the model. Note that this will not delete the
+    object; it will just remove the reference at `model[:x]`.
+[...]
+```
+
+After calling [`delete`](@ref), call [`unregister`](@ref) to remove the symbolic
+reference:
+```jldoctest variables_delete
+julia> unregister(model, :x)
+
+julia> @variable(model, x)
+x
+```
+
+!!! info
+    [`delete`](@ref) does not automatically [`unregister`](@ref) because we do
+    not distinguish between names that are automatically registered by JuMP
+    macros, and names that are manually registered by the user by setting values
+    in [`object_dictionary`](@ref). In addition, deleting a variable and then
+    adding a new variable of the same name is an easy way to introduce bugs into
+    your code.
 
 ## Listing all variables
 
