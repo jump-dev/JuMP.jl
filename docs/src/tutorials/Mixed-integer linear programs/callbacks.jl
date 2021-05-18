@@ -3,7 +3,7 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # Callbacks
+# # [Callbacks](@id callbacks_tutorial)
 
 # This example uses the following packages:
 
