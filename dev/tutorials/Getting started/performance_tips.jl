@@ -28,6 +28,43 @@
 #     variables!
 
 using JuMP  # hide
+using GLPK  # hide
+
+# ## The "time-to-first-solve" issue
+
+# Similar to the infamous [time-to-first-plot](https://discourse.julialang.org/t/roadmap-for-a-faster-time-to-first-plot/22956)
+# plotting problem, JuMP suffers from time-to-first-solve latency. This latency
+# occurs because the first time you call JuMP code in each session, Julia needs 
+# to compile a lot of code specific to your problem. This issue is actively being
+# worked on, but there are a few things you can do to improve things.
+
+# ### Don't call JuMP from the command line
+
+# In other languages, you might be used to a workflow like:
+# ```
+# $ julia my_script.jl
+# ```
+# This doesn't work for JuMP, because we have to pay the compilation latency
+# every time you run the script. Instead, use one of the [suggested workflows](https://docs.julialang.org/en/v1/manual/workflow-tips/)
+# from the Julia documentation.
+
+# ### Disable bridges if none are being used
+
+# At present, the majority of the latency problems are caused by JuMP's bridging
+# mechanism. If you only use constraints that are natively supported by the
+# solver, you can disable bridges by passing `bridge_constraints = false` to
+# [`Model`](@ref).
+
+model = Model(GLPK.Optimizer; bridge_constraints = false)
+
+# ### Use PackageCompiler
+
+# As a final option, consider using [PackageCompiler.jl](https://julialang.github.io/PackageCompiler.jl/dev/)
+# to [create a custom sysimage](https://julialang.github.io/PackageCompiler.jl/dev/examples/plots/).
+
+# This is a good option if you have finished prototyping a model, and you now
+# want to call it frequently from the command line without paying the
+# compilation price.
 
 # ## Use macros to build expressions
 
