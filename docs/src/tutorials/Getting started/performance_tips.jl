@@ -34,8 +34,8 @@ using GLPK  # hide
 
 # Similar to the infamous [time-to-first-plot](https://discourse.julialang.org/t/roadmap-for-a-faster-time-to-first-plot/22956)
 # plotting problem, JuMP suffers from time-to-first-solve latency. This latency
-# occurs because the first time you call JuMP code in each session, we need to
-# compile a lot of code specific to your problem. This issue is actively being
+# occurs because the first time you call JuMP code in each session, Julia needs 
+# to compile a lot of code specific to your problem. This issue is actively being
 # worked on, but there are a few things you can do to improve things.
 
 # ### Don't call JuMP from the command line
