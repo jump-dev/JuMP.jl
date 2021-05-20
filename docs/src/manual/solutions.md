@@ -429,6 +429,7 @@ For instance, this is how you can use this functionality:
 using JuMP
 model = Model() # You must use a solver that supports conflict refining/IIS
 # computation, like CPLEX or Gurobi
+# e.g. using Gurobi; model = Model(Gurobi.Optimizer)
 @variable(model, x >= 0)
 @constraint(model, c1, x >= 2)
 @constraint(model, c2, x <= 1)
@@ -448,6 +449,21 @@ MOI.get(model, MOI.ConstraintConflictStatus(), c2)
 
 # Get a copy of the model with only the constraints in the conflict.
 new_model, reference_map = copy_conflict(model)
+```
+
+Conflicting constraints can be collected in a list and printed 
+as follows:
+
+```julia
+conflict_constraint_list = ConstraintRef[]
+for (F, S) in list_of_constraint_types(model)
+    for con in all_constraints(model, F, S)
+        if MOI.get(model, MOI.ConstraintConflictStatus(), con) == MOI.IN_CONFLICT
+            push!(conflict_constraint_list, con)
+            println(con)
+        end
+    end
+end
 ```
 
 ## Multiple solutions
