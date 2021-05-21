@@ -204,11 +204,13 @@ end
 
 function test_bridges_automatic()
     # optimizer not supporting Interval
-    model = Model(() -> MOIU.MockOptimizer(SimpleLPModel{Float64}()))
-    @test JuMP.bridge_constraints(model)
+    model = Model(
+        () -> MOIU.MockOptimizer(SimpleLPModel{Float64}());
+        force_bridge_formulation = true,
+    )
     @test JuMP.backend(model) isa MOIU.CachingOptimizer
     @test JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer
-    @test JuMP.backend(model).optimizer.model isa MOIU.MockOptimizer
+    @test JuMP.unsafe_backend(model) isa MOIU.MockOptimizer
     @variable model x
     cref = @constraint model 0 <= x + 1 <= 1
     @test cref isa JuMP.ConstraintRef{
@@ -221,34 +223,10 @@ function test_bridges_automatic()
     return JuMP.optimize!(model)
 end
 
-function test_bridges_automatic_disabled()
-    # Automatic bridging disabled with `bridge_constraints` keyword
-    model = Model(
-        () -> MOIU.MockOptimizer(SimpleLPModel{Float64}()),
-        bridge_constraints = false,
-    )
-    @test !JuMP.bridge_constraints(model)
-    @test JuMP.backend(model) isa MOIU.CachingOptimizer
-    @test !(JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer)
-    @variable model x
-    F = MOI.ScalarAffineFunction{Float64}
-    S = MOI.Interval{Float64}
-    err = ErrorException(
-        "Constraints of type $(F)-in-$(S) are not supported by the " *
-        "solver.\n\nIf you expected the solver to support your problem, " *
-        "you may have an error in our formulation. Otherwise, consider " *
-        "using a different solver.\n\nThe list of available solvers, " *
-        "along with the problem types they support, is available at " *
-        "https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.",
-    )
-    @test_throws err @constraint model 0 <= x + 1 <= 1
-end
-
 function test_bridges_direct()
     # No bridge automatically added in Direct mode
     optimizer = MOIU.MockOptimizer(SimpleLPModel{Float64}())
     model = JuMP.direct_model(optimizer)
-    @test !JuMP.bridge_constraints(model)
     @variable model x
     F = MOI.ScalarAffineFunction{Float64}
     S = MOI.Interval{Float64}
@@ -280,7 +258,7 @@ function mock_factory()
 end
 
 function test_bridges_add_before_con_model_optimizer()
-    model = Model(mock_factory)
+    model = Model(mock_factory; force_bridge_formulation = true)
     @variable(model, x)
     JuMP.add_bridge(model, NonnegativeBridge)
     c = @constraint(model, x in Nonnegative())
@@ -358,7 +336,7 @@ function test_bridges_add_bridgeable_con_set_optimizer()
     constraint = ScalarConstraint(x, Nonnegative())
     bc = BridgeableConstraint(constraint, NonnegativeBridge)
     c = add_constraint(model, bc)
-    set_optimizer(model, mock_factory)
+    set_optimizer(model, mock_factory; force_bridge_formulation = true)
     JuMP.optimize!(model)
     @test 1.0 == @inferred JuMP.value(x)
     @test 1.0 == @inferred JuMP.value(c)
@@ -366,19 +344,13 @@ function test_bridges_add_bridgeable_con_set_optimizer()
 end
 
 function test_bridge_graph_false()
-    model = Model(mock_factory, bridge_constraints = false)
+    model = Model(mock_factory)
     @variable(model, x)
     @test_throws(
         ErrorException(
-            "Cannot add bridge if `bridge_constraints` was set to `false` in " *
-            "the `Model` constructor.",
-        ),
-        add_bridge(model, NonnegativeBridge)
-    )
-    @test_throws(
-        ErrorException(
-            "Cannot print bridge graph if `bridge_constraints` was set to " *
-            "`false` in the `Model` constructor.",
+            "`In order to print the bridge graph, you must pass " *
+            "`force_bridge_formulation = true` to `Model`, i.e., " *
+            "`Model(optimizer; force_bridge_formulation = true)`.",
         ),
         print_bridge_graph(model)
     )
@@ -486,7 +458,7 @@ end
 function dummy_optimizer_hook(::JuMP.AbstractModel) end
 
 function copy_model_style_mode(use_copy_model, caching_mode, filter_mode)
-    model = Model(caching_mode = caching_mode)
+    model = Model()
     model.optimize_hook = dummy_optimizer_hook
     data = DummyExtensionData(model)
     model.ext[:dummy] = data
@@ -572,12 +544,6 @@ end
 
 function test_copy_model_base_auto()
     return copy_model_style_mode(false, MOIU.AUTOMATIC, false)
-end
-function test_copy_model_jump_manual()
-    return copy_model_style_mode(true, MOIU.MANUAL, false)
-end
-function test_copy_model_base_manual()
-    return copy_model_style_mode(false, MOIU.MANUAL, false)
 end
 
 function test_copy_direct_mode()
@@ -782,7 +748,7 @@ function test_copy_conflict()
     )
     JuMP.optimize!(model)
 
-    mockoptimizer = JuMP.backend(model).optimizer.model
+    mockoptimizer = JuMP.unsafe_backend(model)
     MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.INFEASIBLE)
     MOI.set(mockoptimizer, MOI.ConflictStatus(), MOI.CONFLICT_FOUND)
     MOI.set(
@@ -812,6 +778,25 @@ function test_copy_conflict()
     cref_1_new = reference_map[cref[1]]
     @test cref_1_new.model === new_model
     @test "cref[1]" == @inferred JuMP.name(cref_1_new)
+end
+
+function test_bridge_formulation()
+    optimizer = () -> MOIU.MockOptimizer(MOIU.Model{Float64}())
+    model = @test_logs (:warn,) Model(optimizer, bridge_constraints = true)
+    @test isa(
+        backend(model),
+        MOI.Utilities.CachingOptimizer{<:MOI.Bridges.LazyBridgeOptimizer},
+    )
+    return
+end
+
+function test_bridge_constraints()
+    model = @test_logs (:warn,) Model(mock_factory, bridge_constraints = true)
+    @test isa(
+        backend(model),
+        MOI.Utilities.CachingOptimizer{<:MOI.Bridges.LazyBridgeOptimizer},
+    )
+    return
 end
 
 function runtests()

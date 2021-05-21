@@ -72,6 +72,7 @@
 using JuMP
 using GLPK
 model = Model(GLPK.Optimizer)
+set_silent(model)
 @variable(model, x >= 0)
 @variable(model, 0 <= y <= 3)
 @objective(model, Min, 12x + 20y)
@@ -107,6 +108,10 @@ using GLPK
 # with the optimizer type, as follows:
 
 model = Model(GLPK.Optimizer)
+
+# Turn off printing from GLPK:
+
+set_silent(model)
 
 # Variables are modeled using [`@variable`](@ref):
 

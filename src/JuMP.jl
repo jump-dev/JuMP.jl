@@ -239,59 +239,73 @@ mutable struct Model <: AbstractModel
 end
 
 """
-    Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC)
+    Model(optimizer_factory = nothing; force_bridge_formulation::Bool = false)
 
-Return a new JuMP model without any optimizer; the model is stored the model in
-a cache. The mode of the `CachingOptimizer` storing this cache is
-`caching_mode`. Use [`set_optimizer`](@ref) to set the optimizer before
-calling [`optimize!`](@ref).
-"""
-function Model(;
-    caching_mode::MOIU.CachingOptimizerMode = MOIU.AUTOMATIC,
-    solver = nothing,
-)
-    if solver !== nothing
-        error(
-            "The solver= keyword is no longer available in JuMP 0.19 and " *
-            "later. See the JuMP documentation " *
-            "(https://jump.dev/JuMP.jl/latest/) for latest syntax.",
-        )
-    end
-    universal_fallback = MOIU.UniversalFallback(MOIU.Model{Float64}())
-    caching_opt = MOIU.CachingOptimizer(universal_fallback, caching_mode)
-    return direct_model(caching_opt)
-end
+Construct a JuMP model with a `MOI.Utilities.CachingOptimizer` backend.
 
-"""
-    Model(optimizer_factory;
-          caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
-          bridge_constraints::Bool=true)
-
-Return a new JuMP model with the provided optimizer and bridge settings. This
-function is equivalent to:
-```julia
-    model = Model()
-    set_optimizer(model, optimizer_factory,
-                  bridge_constraints=bridge_constraints)
-    return model
-```
-See [`set_optimizer`](@ref) for the description of the `optimizer_factory` and
-`bridge_constraints` arguments.
+See [`set_optimizer`](@ref) for a description of the arguments.
 
 ## Examples
 
-The following creates a model with the optimizer set to `Ipopt`:
+Create a model with no backing optimizer. Call [`set_optimizer`](@ref) later to
+add an optimizer prior to calling [`optimize!`](@ref).
 ```julia
-model = Model(Ipopt.Optimizer)
+model = Model()
+```
+
+Pass a `.Optimizer` object from a supported package:
+```julia
+model = Model(GLPK.Optimizer)
+```
+
+Use [`optimizer_with_attributes`](@ref) to initialize the model with the
+provided attributes:
+```julia
+model = Model(
+    optimizer_with_attributes(GLPK.Optimizer, "loglevel" => 0),
+)
+```
+
+Create an anonymous function to pass positional arguments to the optimizer:
+```julia
+model = Model() do
+    AmplNLWriter.Optimizer(Bonmin_jll.amplexe)
+end
+```
+
+Pass `force_bridge_formulation = true` to intialize the model with bridges.
+Normally, bridges will be added only if necessary. Adding them here can have
+performance benefits if you know that your model will use the bridges.
+```julia
+model = Model(SCS.Optimizer; force_bridge_formulation = true)
 ```
 """
-function Model(optimizer_factory; bridge_constraints::Bool = true, kwargs...)
-    model = Model(; kwargs...)
-    set_optimizer(
-        model,
-        optimizer_factory,
-        bridge_constraints = bridge_constraints,
+function Model(
+    optimizer_factory = nothing;
+    force_bridge_formulation::Bool = false,
+    bridge_constraints::Union{Nothing,Bool} = nothing,
+)
+    if bridge_constraints !== nothing
+        @warn(
+            "`bridge_constraints` is deprecated. Use " *
+            "`force_bridge_formulation` instead.",
+        )
+        force_bridge_formulation = bridge_constraints
+    end
+
+    model = direct_model(
+        MOI.Utilities.CachingOptimizer(
+            MOIU.UniversalFallback(MOIU.Model{Float64}()),
+            MOI.Utilities.AUTOMATIC,
+        ),
     )
+    if optimizer_factory !== nothing
+        set_optimizer(
+            model,
+            optimizer_factory;
+            force_bridge_formulation = force_bridge_formulation,
+        )
+    end
     return model
 end
 
@@ -465,6 +479,53 @@ end
 unsafe_backend(model::MOIB.LazyBridgeOptimizer) = unsafe_backend(model.model)
 unsafe_backend(model::MOI.ModelLike) = model
 
+_needs_bridges(::MOI.ModelLike) = true
+_needs_bridges(::MOI.Bridges.LazyBridgeOptimizer) = false
+_needs_bridges(::Nothing) = false
+
+function _add_bridges_if_needed(
+    model::Model,
+    backend::MOI.Utilities.CachingOptimizer,
+)
+    if !_needs_bridges(backend.optimizer)
+        return false
+    end
+    # We might have detected that we need bridges part-way through copying the
+    # optimizer. Therefore, it might not be empty.
+    if !MOI.is_empty(backend.optimizer)
+        MOI.empty!(backend.optimizer)
+    end
+    new_optimizer = if MOI.supports_incremental_interface(backend.optimizer)
+        backend.optimizer
+    else
+        MOI.Utilities.CachingOptimizer(
+            MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+            backend.optimizer,
+        )
+    end
+    # We don't have to worry about adding `model.bridge_types` here, because
+    # calling `add_bridge` will force a `LazyBridgeOptimizer` backend.
+    model.moi_backend = MOI.Utilities.CachingOptimizer(
+        backend.model_cache,
+        MOI.Bridges.full_bridge_optimizer(new_optimizer, Float64),
+    )
+    MOIU.reset_optimizer(model)
+    return true
+end
+
+_add_bridges_if_needed(::Model, ::MOI.ModelLike) = false
+
+"""
+    _add_bridges_if_needed(model::Model)
+
+Add a `MOI.Bridges.LazyBridgeOptimizer` to the backend of `model` if one does
+not already exist. Returns `true` if a new `MOI.Bridges.LazyBridgeOptimizer` is
+added, and `false` otherwise.
+"""
+function _add_bridges_if_needed(model::Model)
+    return _add_bridges_if_needed(model, backend(model))
+end
+
 _moi_mode(::MOI.ModelLike) = DIRECT
 
 function _moi_mode(model::MOIU.CachingOptimizer)
@@ -536,22 +597,17 @@ function bridge_constraints(model::Model)
     return _moi_bridge_constraints(backend(model))
 end
 
-function _moi_add_bridge(
-    model::Nothing,
-    BridgeType::Type{<:MOI.Bridges.AbstractBridge},
-)
-    # No optimizer is attached, the bridge will be added when one is attached
-    return
-end
-function _moi_add_bridge(
-    model::MOI.ModelLike,
-    BridgeType::Type{<:MOI.Bridges.AbstractBridge},
-)
+# No optimizer is attached, the bridge will be added when one is attached
+_moi_add_bridge(::Nothing, ::Type{<:MOI.Bridges.AbstractBridge}) = nothing
+
+function _moi_add_bridge(::MOI.ModelLike, ::Type{<:MOI.Bridges.AbstractBridge})
     return error(
-        "Cannot add bridge if `bridge_constraints` was set to `false` in the",
-        " `Model` constructor.",
+        "`In order to add a bridge, you must pass " *
+        "`force_bridge_formulation = true` to `Model`, i.e., " *
+        "`Model(optimizer; force_bridge_formulation = true)`.",
     )
 end
+
 function _moi_add_bridge(
     bridge_opt::MOI.Bridges.LazyBridgeOptimizer,
     BridgeType::Type{<:MOI.Bridges.AbstractBridge},
@@ -559,6 +615,7 @@ function _moi_add_bridge(
     MOI.Bridges.add_bridge(bridge_opt, BridgeType{Float64})
     return
 end
+
 function _moi_add_bridge(
     caching_opt::MOIU.CachingOptimizer,
     BridgeType::Type{<:MOI.Bridges.AbstractBridge},
@@ -568,8 +625,10 @@ function _moi_add_bridge(
 end
 
 """
-     add_bridge(model::Model,
-                BridgeType::Type{<:MOI.Bridges.AbstractBridge})
+    add_bridge(
+        model::Model,
+        BridgeType::Type{<:MOI.Bridges.AbstractBridge},
+    )
 
 Add `BridgeType` to the list of bridges that can be used to transform
 unsupported constraints into an equivalent formulation using only constraints
@@ -580,6 +639,8 @@ function add_bridge(
     BridgeType::Type{<:MOI.Bridges.AbstractBridge},
 )
     push!(model.bridge_types, BridgeType)
+    # Make sure we force a `LazyBridgeOptimizer` backend!
+    _add_bridges_if_needed(model)
     # The type of `backend(model)` is not type-stable, so we use a function
     # barrier (`_moi_add_bridge`) to improve performance.
     _moi_add_bridge(JuMP.backend(model), BridgeType)
@@ -627,8 +688,9 @@ end
 
 function _moi_print_bridge_graph(::IO, ::MOI.ModelLike)
     return error(
-        "Cannot print bridge graph if `bridge_constraints` was set to " *
-        "`false` in the `Model` constructor.",
+        "`In order to print the bridge graph, you must pass " *
+        "`force_bridge_formulation = true` to `Model`, i.e., " *
+        "`Model(optimizer; force_bridge_formulation = true)`.",
     )
 end
 

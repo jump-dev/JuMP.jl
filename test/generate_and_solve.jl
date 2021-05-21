@@ -202,7 +202,6 @@ using JuMP
                 MOIU.Model{Float64}(),
                 eval_objective_value = false,
             ),
-            caching_mode = MOIU.AUTOMATIC,
         )
         @variable(m, x == 1.0, Int)
         @variable(m, y, Bin)

@@ -53,8 +53,8 @@
 
 # ## Constructing a model
 
-# JuMP models can be created in three different modes: `AUTOMATIC`, `MANUAL` and
-# `DIRECT`. We'll use the following LP to illustrate them.
+# JuMP models can be created in a number of ways. We'll use the following LP to
+# illustrate them.
 
 # ```math
 # \begin{aligned}
@@ -67,55 +67,35 @@
 using JuMP
 using GLPK
 
-# ### `AUTOMATIC` Mode
-
-# #### With Optimizer
+# ### With Optimizer
 
 # This is the easiest method to use a solver in JuMP. In order to do so, we
 # simply set the solver inside the Model constructor.
 
-model_auto = Model(GLPK.Optimizer)
-@variable(model_auto, 0 <= x <= 1)
-@variable(model_auto, 0 <= y <= 1)
-@constraint(model_auto, x + y <= 1)
-@objective(model_auto, Max, x + 2y)
-optimize!(model_auto)
-objective_value(model_auto)
+model_1 = Model(GLPK.Optimizer)
+set_silent(model_1)
+@variable(model_1, 0 <= x <= 1)
+@variable(model_1, 0 <= y <= 1)
+@constraint(model_1, x + y <= 1)
+@objective(model_1, Max, x + 2y)
+optimize!(model_1)
+objective_value(model_1)
 
-# #### No Optimizer (at first)
+# ### No Optimizer (at first)
 
 # It is also possible to create a JuMP model with no optimizer attached. After
 # the model object is initialized empty and all its variables, constraints and
 # objective are set, then we can attach the solver at `optimize!` time.
 
-model_auto_no = Model()
-@variable(model_auto_no, 0 <= x <= 1)
-@variable(model_auto_no, 0 <= y <= 1)
-@constraint(model_auto_no, x + y <= 1)
-@objective(model_auto_no, Max, x + 2y)
-set_optimizer(model_auto_no, GLPK.Optimizer)
-optimize!(model_auto_no)
-objective_value(model_auto_no)
-
-# Note that we can also enforce the automatic mode by passing
-# `caching_mode = MOIU.AUTOMATIC` in the Model function call.
-
-# ### `MANUAL` Mode
-
-# This mode is similar to the `AUTOMATIC` mode, but there are less protections
-# from the user getting errors from the solver API. On the other side, nothing
-# happens silently, which might give the user more control. It requires
-# attaching the solver before the solve step using the `MOIU.attach_optimizer()`
-# function.
-
-model_manual = Model(GLPK.Optimizer, caching_mode = MOIU.MANUAL)
-@variable(model_manual, 0 <= x <= 1)
-@variable(model_manual, 0 <= y <= 1)
-@constraint(model_manual, x + y <= 1)
-@objective(model_manual, Max, x + 2y)
-MOIU.attach_optimizer(model_manual)
-optimize!(model_manual)
-objective_value(model_manual)
+model = Model()
+@variable(model, 0 <= x <= 1)
+@variable(model, 0 <= y <= 1)
+@constraint(model, x + y <= 1)
+@objective(model, Max, x + 2y)
+set_optimizer(model, GLPK.Optimizer)
+set_silent(model)
+optimize!(model)
+objective_value(model)
 
 # ### `DIRECT` Mode
 
@@ -124,13 +104,14 @@ objective_value(model_manual)
 # we do not set a optimizer, we set a backend which is more generic and is able
 # to hold data and not only solving a model.
 
-model_direct = direct_model(GLPK.Optimizer())
-@variable(model_direct, 0 <= x <= 1)
-@variable(model_direct, 0 <= y <= 1)
-@constraint(model_direct, x + y <= 1)
-@objective(model_direct, Max, x + 2y)
-optimize!(model_direct)
-objective_value(model_direct)
+model = direct_model(GLPK.Optimizer())
+set_silent(model)
+@variable(model, 0 <= x <= 1)
+@variable(model, 0 <= y <= 1)
+@constraint(model, x + y <= 1)
+@objective(model, Max, x + 2y)
+optimize!(model)
+objective_value(model)
 
 # ### Solver Options
 
@@ -143,15 +124,15 @@ using GLPK
 
 # To turn off printing (i.e. silence the solver),
 
-model = Model(optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => 0));
+Model(optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => 0));
 
 # To increase the maximum number of simplex iterations:
 
-model = Model(optimizer_with_attributes(GLPK.Optimizer, "it_lim" => 10_000));
+Model(optimizer_with_attributes(GLPK.Optimizer, "it_lim" => 10_000));
 
 # To set the solution timeout limit (in milliseconds):
 
-model = Model(optimizer_with_attributes(GLPK.Optimizer, "tm_lim" => 5_000));
+Model(optimizer_with_attributes(GLPK.Optimizer, "tm_lim" => 5_000));
 
 # ## How to querying the solution
 
@@ -167,7 +148,7 @@ model = Model(optimizer_with_attributes(GLPK.Optimizer, "tm_lim" => 5_000));
 # Termination statuses are meant to explain the reason why the optimizer stopped
 # executing in the most recent call to `optimize!`.
 
-termination_status(model_auto)
+termination_status(model_1)
 
 # You can view the different termination status codes by referring to the docs
 # or though checking the possible types using the below command.
@@ -180,11 +161,11 @@ display(typeof(MOI.OPTIMAL))
 # the model. It's possible that no result is available to be queried. We shall
 # discuss more on the dual status and solutions in the Duality tutorial.
 
-primal_status(model_auto)
+primal_status(model_1)
 
 #-
 
-dual_status(model_auto)
+dual_status(model_1)
 
 # As we saw before, the result (solution) status codes can be viewed directly
 # from Julia.
@@ -204,19 +185,19 @@ value(y)
 
 #-
 
-objective_value(model_auto)
+objective_value(model_1)
 
 # Since it is possible that no solution is available to be queried from the
 # model, calls to [`value`](@ref) may throw errors. Hence, it is recommended to
 # check for the presence of solutions.
 
-model_no_solution = Model(GLPK.Optimizer)
-@variable(model_no_solution, 0 <= x <= 1)
-@variable(model_no_solution, 0 <= y <= 1)
-@constraint(model_no_solution, x + y >= 3)
-@objective(model_no_solution, Max, x + 2y)
-
-optimize!(model_no_solution)
+model = Model(GLPK.Optimizer)
+@variable(model, 0 <= x <= 1)
+@variable(model, 0 <= y <= 1)
+@constraint(model, x + y >= 3)
+@objective(model, Max, x + 2y)
+set_silent(model)
+optimize!(model)
 
 try                         #hide
     if termination_status(model_no_solution) == MOI.OPTIMAL

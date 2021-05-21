@@ -76,7 +76,6 @@ MOIU.attach_optimizer(::JuMP.Model)
 ## Bridge tools
 
 ```@docs
-bridge_constraints
 print_bridge_graph
 ```
 
