@@ -960,6 +960,16 @@ function test_abstractarray_vector_constraint(ModelType, ::Any)
     @test obj.set == MOI.SOS1([1.0, 2.0, 3.0, 4.0])
 end
 
+function test_constraint_inference(ModelType, ::Any)
+    model = ModelType()
+    @variable(model, x)
+    foo(model, x) = @constraint(model, 2x <= 1)
+    c = @inferred foo(model, x)
+    obj = constraint_object(c)
+    @test obj.func == 2x
+    @test obj.set == MOI.LessThan(1.0)
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

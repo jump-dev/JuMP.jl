@@ -555,8 +555,7 @@ function add_constraint(
     # The type of backend(model) is unknown so we directly redirect to another
     # function.
     check_belongs_to_model(con, model)
-    func = moi_function(con)
-    set = moi_set(con)
+    func, set = moi_function(con), moi_set(con)
     cindex = moi_add_constraint(
         backend(model),
         func,
