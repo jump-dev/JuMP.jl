@@ -348,8 +348,6 @@ function direct_model(optimizer::MOI.OptimizerWithAttributes)
     )
 end
 
-
-
 Base.broadcastable(model::Model) = Ref(model)
 
 """
