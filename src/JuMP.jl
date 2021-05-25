@@ -329,6 +329,27 @@ function direct_model(backend::MOI.ModelLike)
     )
 end
 
+"""
+    direct_model(optimizer::MOI.OptimizerWithAttributes)
+
+Return a new JuMP model that instantiates a [`OptimizerWithAttributes`](@ref) to store the
+model and solve it.
+"""
+function direct_model(optimizer::MOI.OptimizerWithAttributes)
+    return Model(
+        MOI._instantiate_and_check(optimizer),
+        Dict{_MOICON,AbstractShape}(),
+        Set{Any}(),
+        nothing,
+        nothing,
+        Dict{Symbol,Any}(),
+        0,
+        Dict{Symbol,Any}(),
+    )
+end
+
+
+
 Base.broadcastable(model::Model) = Ref(model)
 
 """
