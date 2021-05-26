@@ -619,8 +619,8 @@ function test_direct_mode_using_OptimizerWithAttributes()
     optimizer = optimizer_with_attributes(fake_optimizer, "a" => 1, "b" => 2)
     model = JuMP.direct_model(optimizer)
     @test model.moi_backend isa MOIU.MockOptimizer
-    @test MOI.get(model.moi_backend, MOI.RawOptimizerAttribute("a")) == 1
-    @test MOI.get(model.moi_backend, MOI.RawOptimizerAttribute("b")) == 2
+    @test MOI.get(model.moi_backend, MOI.RawParameter("a")) == 1
+    @test MOI.get(model.moi_backend, MOI.RawParameter("b")) == 2
 end
 
 function test_copy_expr_aff()
