@@ -876,7 +876,7 @@ function _test_shadow_price_util(
         ),
     )
     JuMP.optimize!(model)
-    mock_optimizer = JuMP.backend(model).optimizer.model
+    mock_optimizer = JuMP.unsafe_backend(model)
     MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     JuMP.optimize!(model)

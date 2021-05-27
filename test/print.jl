@@ -902,7 +902,7 @@ end
     )
     optimize!(model)
 
-    mockoptimizer = JuMP.backend(model).optimizer.model
+    mockoptimizer = JuMP.unsafe_backend(model)
     MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
     MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)

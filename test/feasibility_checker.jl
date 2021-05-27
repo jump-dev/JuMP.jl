@@ -109,7 +109,7 @@ function test_primal_solution()
     model = Model(() -> MOIU.MockOptimizer(MOIU.Model{Float64}()))
     @variable(model, x, Bin)
     optimize!(model)
-    mock = backend(model).optimizer.model
+    mock = unsafe_backend(model)
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 1.0)
