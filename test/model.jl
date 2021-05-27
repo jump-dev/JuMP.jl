@@ -609,6 +609,20 @@ function test_copy_direct_mode()
     @test_throws ErrorException JuMP.copy(model)
 end
 
+function test_direct_mode_using_OptimizerWithAttributes()
+    function fake_optimizer()
+        return MOIU.MockOptimizer(
+            MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        )
+    end
+
+    optimizer = optimizer_with_attributes(fake_optimizer, "a" => 1, "b" => 2)
+    model = JuMP.direct_model(optimizer)
+    @test model.moi_backend isa MOIU.MockOptimizer
+    @test MOI.get(model.moi_backend, MOI.RawParameter("a")) == 1
+    @test MOI.get(model.moi_backend, MOI.RawParameter("b")) == 2
+end
+
 function test_copy_expr_aff()
     model = Model()
     @variable(model, x)
