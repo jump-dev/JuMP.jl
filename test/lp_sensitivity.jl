@@ -27,7 +27,7 @@ function test_lp_rhs_perturbation_range(
         ),
     )
     JuMP.optimize!(model)
-    mock_optimizer = JuMP.backend(model).optimizer.model
+    mock_optimizer = JuMP.unsafe_backend(model)
     MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
 
     JuMP.optimize!(model)
@@ -188,7 +188,7 @@ function test_lp_objective_perturbation_range(
         ),
     )
     JuMP.optimize!(model)
-    mock_optimizer = JuMP.backend(model).optimizer.model
+    mock_optimizer = JuMP.unsafe_backend(model)
     MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
 

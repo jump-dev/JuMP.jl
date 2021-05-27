@@ -56,7 +56,7 @@ using JuMP
         )
         JuMP.optimize!(m)
 
-        mockoptimizer = JuMP.backend(m).optimizer.model
+        mockoptimizer = JuMP.unsafe_backend(m)
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
         MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
@@ -233,7 +233,7 @@ using JuMP
 
         MOIU.attach_optimizer(m)
 
-        mockoptimizer = JuMP.backend(m).optimizer.model
+        mockoptimizer = JuMP.unsafe_backend(m)
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
         MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), 1.0)
@@ -314,7 +314,7 @@ using JuMP
         )
         JuMP.optimize!(m)
 
-        mockoptimizer = JuMP.backend(m).optimizer.model
+        mockoptimizer = JuMP.unsafe_backend(m)
         MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
         MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
         MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
@@ -627,7 +627,7 @@ c2: x + y <= 1.0
         )
         JuMP.optimize!(m)
 
-        mock = JuMP.backend(m).optimizer.model
+        mock = JuMP.unsafe_backend(m)
         MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
         MOI.set(mock, MOI.ResultCount(), 2)
 
