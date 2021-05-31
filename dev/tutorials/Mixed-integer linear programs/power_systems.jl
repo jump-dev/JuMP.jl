@@ -293,7 +293,7 @@ demandscale_df
 # ```
 # where $u_{i} \in \{0,1\}.$ In this constraint, if $u_{i} = 0$, then
 # $g_{i}  = 0$. On the other hand, if $u_{i} = 1$, then
-# $g^{max}_{i} \leq g_{i} \leq g^{min}_{i}$.
+# $g^{min}_{i} \leq g_{i} \leq g^{max}_{i}$.
 
 # For further reading on the UC problem we refer interested readers to G.
 # Morales-Espana, J. M. Latorre, and A. Ramos, "Tight and Compact MILP
