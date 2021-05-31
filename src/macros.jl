@@ -1101,7 +1101,7 @@ end)
 
  The model must be the first argument, and multiple parameters can be added on
  multiple lines wrapped in a `begin ... end` block. Distinct parameters need to be placed
- on separate lines without `base_names` as in the following example.
+ on separate lines as in the following example.
 
 # Example
 ```jldoctest; setup=:(using JuMP)
