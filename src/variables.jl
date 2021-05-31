@@ -90,6 +90,12 @@ function _VariableInfoExpr(;
     )
 end
 
+# It isn't sufficient to use `isfinite` below, because some bounds are given as
+# matrices. As a fallback, we define `_isfinite`, because overloading `isfinite`
+# would be type piracy.
+_isfinite(x::Number) = isfinite(x)
+_isfinite(x) = true
+
 """
     VariableInfo{S,T,U,V}
 
@@ -121,15 +127,15 @@ struct VariableInfo{S,T,U,V}
         binary::Bool,
         integer::Bool,
     ) where {S,T,U,V}
-        if has_lb && !isfinite(lower_bound)
+        if has_lb && !_isfinite(lower_bound)
             has_lb = false
             lower_bound = NaN
         end
-        if has_ub && !isfinite(upper_bound)
+        if has_ub && !_isfinite(upper_bound)
             has_ub = false
             upper_bound = NaN
         end
-        if has_fix && !isfinite(fixed_value)
+        if has_fix && !_isfinite(fixed_value)
             error("Unable to fix variable to $(fixed_value)")
         end
         return new{S,T,U,V}(
