@@ -121,15 +121,15 @@ struct VariableInfo{S,T,U,V}
         binary::Bool,
         integer::Bool,
     ) where {S,T,U,V}
-        if has_lb && lower_bound === -Inf
+        if has_lb && !isfinite(lower_bound)
             has_lb = false
             lower_bound = NaN
         end
-        if has_ub && upper_bound === Inf
+        if has_ub && !isfinite(upper_bound)
             has_ub = false
             upper_bound = NaN
         end
-        if has_fix && (fixed_value === -Inf || fixed_value === Inf)
+        if has_fix && !isfinite(fixed_value)
             error("Unable to fix variable to $(fixed_value)")
         end
         return new{S,T,U,V}(
@@ -486,7 +486,7 @@ See also [`LowerBoundRef`](@ref), [`has_lower_bound`](@ref),
 [`lower_bound`](@ref), [`delete_lower_bound`](@ref).
 """
 function set_lower_bound(v::VariableRef, lower::Number)
-    if lower === -Inf
+    if !isfinite(lower)
         error(
             "Unable to set lower bound to $(lower). To remove the bound, use " *
             "`delete_lower_bound`.",
@@ -591,7 +591,7 @@ See also [`UpperBoundRef`](@ref), [`has_upper_bound`](@ref),
 [`upper_bound`](@ref), [`delete_upper_bound`](@ref).
 """
 function set_upper_bound(v::VariableRef, upper::Number)
-    if upper === Inf
+    if !isfinite(upper)
         error(
             "Unable to set upper bound to $(upper). To remove the bound, use " *
             "`delete_upper_bound`.",
@@ -700,7 +700,7 @@ See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix_value`](@ref),
 [`unfix`](@ref).
 """
 function fix(variable::VariableRef, value::Number; force::Bool = false)
-    if value === -Inf || value === Inf
+    if !isfinite(value)
         error("Unable to fix variable to $(value)")
     end
     return _moi_fix(backend(owner_model(variable)), variable, value, force)
