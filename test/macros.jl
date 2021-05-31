@@ -726,7 +726,7 @@ end
         model = Model()
         @NLparameters(model, begin
             a == 1
-            b[i=1:2] == i
+            b[i = 1:2] == i
         end)
         @test value(a) == 1
         @test value.(b) == [1, 2]
