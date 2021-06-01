@@ -722,6 +722,16 @@ end
         """
     end
 
+    @testset "NLparameters" begin
+        model = Model()
+        @NLparameters(model, begin
+            a == 1
+            b[i = 1:2] == i
+        end)
+        @test value(a) == 1
+        @test value.(b) == [1, 2]
+    end
+
     @testset "Index variables don't leak out of macros" begin
         model = Model()
         i = 10

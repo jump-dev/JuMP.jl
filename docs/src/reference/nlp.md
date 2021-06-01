@@ -32,6 +32,7 @@ set_NL_objective
 
 ```@docs
 @NLparameter
+@NLparameters
 NonlinearParameter
 value(::JuMP.NonlinearParameter)
 set_value(::JuMP.NonlinearParameter, ::Number)

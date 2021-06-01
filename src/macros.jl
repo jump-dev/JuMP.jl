@@ -38,13 +38,13 @@ end
 """
     _add_positional_args(call, args)::Nothing
 
-Add the positional arguments `args` to the function call expression `call`, 
-escaping each argument expression. The elements of `args` should be ones that 
-were extracted via [`Containers._extract_kw_args`](@ref) and had appropriate 
-arguments filtered out (e.g., the model argument). This is able to incorporate 
+Add the positional arguments `args` to the function call expression `call`,
+escaping each argument expression. The elements of `args` should be ones that
+were extracted via [`Containers._extract_kw_args`](@ref) and had appropriate
+arguments filtered out (e.g., the model argument). This is able to incorporate
 additional positional arguments to `call`s that already have keyword arguments.
 
-## Examples 
+## Examples
 
 ```jldoctest; setup = :(using JuMP)
 julia> call = :(f(1, a=2))
@@ -569,10 +569,10 @@ where `@constraint_like` is either `@constraint` or `@SDconstraint`.
 The expression `con` is parsed by `parsefun` which returns a `build_constraint`
 call code that, when executed, returns an `AbstractConstraint`. The macro
 keyword arguments (except the `container` keyword argument which is used to
-determine the container type) are added to the `build_constraint` call. The 
-`extra_arg` is added as terminal positional argument to the `build_constraint` 
-call along with any keyword arguments (apart from `container` and `base_name`). 
-The returned value of this call is passed to `add_constraint` which returns a 
+determine the container type) are added to the `build_constraint` call. The
+`extra_arg` is added as terminal positional argument to the `build_constraint`
+call along with any keyword arguments (apart from `container` and `base_name`).
+The returned value of this call is passed to `add_constraint` which returns a
 constraint reference.
 
 `source` is a `LineNumberNode` that should refer to the line that the macro was
@@ -611,7 +611,7 @@ function _constraint_macro(
     # name[i = 1:2, j = 1:2; i + j >= 3] | Expr      | :typed_vcat
     # [1:2]                              | Expr      | :vect
     # [i = 1:2, j = 1:2; i + j >= 3]     | Expr      | :vcat
-    # a constraint expression            | Expr      | :call or :comparison 
+    # a constraint expression            | Expr      | :call or :comparison
     if isa(y, Symbol) || isexpr(y, (:vect, :vcat, :ref, :typed_vcat))
         length(extra) >= 1 || _error("No constraint expression was given.")
         c = y
@@ -623,16 +623,16 @@ function _constraint_macro(
         anonvar = true
     end
 
-    # Enforce that only one extra positional argument can be given 
+    # Enforce that only one extra positional argument can be given
     if length(extra) > 1
         _error("Cannot specify more than 1 additional positional argument.")
     end
 
-    # Prepare the keyword arguments 
+    # Prepare the keyword arguments
     extra_kw_args = filter(kw -> kw.args[1] != :base_name, kw_args)
     base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
 
-    # Set the base name 
+    # Set the base name
     name = Containers._get_name(c)
     if isempty(base_name_kw_args)
         base_name = anonvar ? "" : string(name)
@@ -766,12 +766,12 @@ that either `func` or `set` will be some custom type, rather than e.g. a
 `Symbol`, since we will likely want to dispatch on the type of the function or
 set appearing in the constraint.
 
-For extensions that need to create constraints with more information than just 
-`func` and `set`, an additional positional argument can be specified to 
-`@constraint` that will then be passed on `build_constraint`. Hence, we can 
-enable this syntax by defining extensions of 
-`build_constraint(_error, func, set, my_arg; kw_args...)`. This produces the 
-user syntax: `@constraint(model, ref[...], expr, my_arg, kw_args...)`. 
+For extensions that need to create constraints with more information than just
+`func` and `set`, an additional positional argument can be specified to
+`@constraint` that will then be passed on `build_constraint`. Hence, we can
+enable this syntax by defining extensions of
+`build_constraint(_error, func, set, my_arg; kw_args...)`. This produces the
+user syntax: `@constraint(model, ref[...], expr, my_arg, kw_args...)`.
 """
 macro constraint(args...)
     return _constraint_macro(
@@ -946,6 +946,7 @@ end
 _add_JuMP_prefix(s::Symbol) = Expr(:., JuMP, :($(QuoteNode(s))))
 
 for (mac, sym) in [
+    (:NLparameters, Symbol("@NLparameter")),
     (:constraints, Symbol("@constraint")),
     (:NLconstraints, Symbol("@NLconstraint")),
     (:SDconstraints, Symbol("@SDconstraint")),
@@ -1091,6 +1092,30 @@ multiple lines wrapped in a `begin ... end` block.
 end)
 ```
 """ :(@SDconstraints)
+
+@doc """
+     @NLparameters(model, args...)
+
+ Create and return multiple nonlinear parameters attached to model `model`, in the same fashion as
+ [`@NLparameter`](@ref) macro.
+
+ The model must be the first argument, and multiple parameters can be added on
+ multiple lines wrapped in a `begin ... end` block. Distinct parameters need to be placed
+ on separate lines as in the following example.
+
+# Example
+```jldoctest; setup=:(using JuMP)
+model = Model()
+@NLparameters(model, begin
+    x == 10
+    b == 156
+end)
+value(x)
+
+# output
+10.0
+```
+ """ :(@NLparameters)
 
 @doc """
     @NLconstraints(model, args...)
@@ -1576,7 +1601,7 @@ arguments `kw_args` and returns the variable.
 Add a variable to the model `model` described by the expression `expr`, the
 positional arguments `args` and the keyword arguments `kw_args`. The expression
 `expr` can either be (note that in the following the symbol `<=` can be used
-instead of `≤`, the symbol `>=`can be used instead of `≥`, the symbol `in` can be 
+instead of `≤`, the symbol `>=`can be used instead of `≥`, the symbol `in` can be
 used instead of `∈`)
 
 * of the form `varexpr` creating variables described by `varexpr`;
