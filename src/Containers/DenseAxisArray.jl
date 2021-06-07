@@ -198,7 +198,7 @@ end
 # Avoid conflict with method defined in Julia Base when the axes of the
 # `DenseAxisArray` are all `Base.OneTo`:
 function Base.similar(
-    ::DenseAxisArray{T, N, Ax},
+    ::DenseAxisArray{T,N,Ax},
     ::Type{S},
     axes::Ax,
 ) where {T,N,Ax<:Tuple{Base.OneTo,Vararg{Base.OneTo}},S}
