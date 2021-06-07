@@ -283,7 +283,7 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test B isa DenseAxisArray
         @test B.data == [1, 9, 4]
         @test B.axes == (Base.OneTo(3),)
-        C = @inferred DenseAxisArray([1  3; 2 4], Base.OneTo(2), Base.OneTo(2))
+        C = @inferred DenseAxisArray([1 3; 2 4], Base.OneTo(2), Base.OneTo(2))
         D = @inferred map(x -> x - 1, C)
         @test D isa DenseAxisArray
         @test D.data == [0 2; 1 3]
