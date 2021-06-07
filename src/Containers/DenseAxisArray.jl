@@ -201,7 +201,7 @@ function Base.similar(
     ::DenseAxisArray{T, N, Ax},
     ::Type{S},
     axes::Ax,
-) where {T, N, Ax<:Tuple{Base.OneTo, Vararg{Base.OneTo}}, S}
+) where {T,N,Ax<:Tuple{Base.OneTo,Vararg{Base.OneTo}},S}
     return construct_undef_array(S, axes)
 end
 
