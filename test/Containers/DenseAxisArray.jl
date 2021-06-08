@@ -107,7 +107,7 @@ And data, a 2-element $(Vector{Float64}):
         @test A[2, :a, 1] == 1
         @test A[2, :a, 1, 1] == 1
         @test A[3, :a, 1, 1, 1] == 3
-        @test @inferred A[:, :a] == DenseAxisArray([1, 3], 2:3)
+        @test DenseAxisArray([1, 3], 2:3) == @inferred A[:, :a]
         @test A[2, :] == DenseAxisArray([1, 2], [:a, :b])
         @test sprint(show, A) == """
 2-dimensional DenseAxisArray{$Int,2,...} with index sets:
@@ -276,5 +276,17 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test_throws ErrorException A .+ B
         b = [5.0 6.0; 7.0 8.0; 9.0 10.0]
         @test_throws DimensionMismatch A .+ b
+    end
+    @testset "DenseAxisArray with Base.OneTo" begin
+        A = @inferred DenseAxisArray([1, 3, 2], Base.OneTo(3))
+        B = @inferred map(x -> x^2, A)
+        @test B isa DenseAxisArray
+        @test B.data == [1, 9, 4]
+        @test B.axes == (Base.OneTo(3),)
+        C = @inferred DenseAxisArray([1 3; 2 4], Base.OneTo(2), Base.OneTo(2))
+        D = @inferred map(x -> x - 1, C)
+        @test D isa DenseAxisArray
+        @test D.data == [0 2; 1 3]
+        @test D.axes == (Base.OneTo(2), Base.OneTo(2))
     end
 end
