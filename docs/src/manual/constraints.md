@@ -637,7 +637,7 @@ julia> a = 0
 0
 
 julia> @SDconstraint(model, [x x; x x] >= a)
-ERROR: Operation `-` between `Array{VariableRef,2}` and `Int64` is not allowed. You should use broadcast.
+ERROR: Operation `MutableArithmetics.sub_mul` between `Array{VariableRef,2}` and `Int64` is not allowed. You should use broadcast.
 [...]
 ```
 
