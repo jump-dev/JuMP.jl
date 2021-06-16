@@ -15,15 +15,30 @@
 # Operator overloads in src/operators.jl
 #############################################################################
 
-# Utilities for OrderedDict
+import DataStructures
+
 function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     # Adding zero terms to this dictionary leads to unacceptable performance
     # degradations. See, e.g., https://github.com/jump-dev/JuMP.jl/issues/1946.
     if iszero(v)
-        return dict  # No-op.
+        return
     end
-    # TODO: This unnecessarily requires two lookups for k.
-    dict[k] = get!(dict, k, zero(V)) + v
+    # A naive implementation of the following is
+    #     dict[k] = get!(dict, k, zero(V)) + v
+    # The problem with these is that there are two key lookups (one for
+    # `setindex!` and one to get the current element).
+    #
+    # The following is an optimization to reduce the cost to one lookup if the
+    # key exists. Using one lookup when the key doesn't exist requires some
+    # calls to `_setindex!` in OrderedCollections, which may be a step too far.
+    pos = DataStructures.OrderedCollections.ht_keyindex(dict, k, true)
+    if pos == -1
+        # Key not found. Fallback to setindex!
+        dict[k] = v
+    else
+        # Key found in position `pos`. Update in-place.
+        dict.vals[pos] += v
+    end
     return
 end
 
