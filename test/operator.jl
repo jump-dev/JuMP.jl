@@ -536,6 +536,12 @@ function test_error_multiply(ModelType, ::Any)
     @test_throws ErrorException y * y * x
 end
 
+function test_sin_fallback(ModelType, ::Any)
+    model = ModelType()
+    @variable(model, x)
+    @test_throws ErrorException sin(x)
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

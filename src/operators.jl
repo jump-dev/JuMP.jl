@@ -375,8 +375,11 @@ for (func, _) in Calculus.symbolic_derivatives_1arg()
         continue
     end
     for typ in [:AbstractVariableRef, :GenericAffExpr, :GenericQuadExpr]
-        @eval function Base.$(func)(::$typ)
-            return error("$func is not defined for type $typ. $_OP_HINT.")
+        # Interpolation into a string into an expression doesn't work, so build
+        # the string here first. Make it a local variable to avoid polluting
+        # JuMP's namespace.
+        let error_message = "$func is not defined for type $typ. $_OP_HINT."
+            @eval Base.$(func)(::$typ) = error($error_message)
         end
     end
 end
