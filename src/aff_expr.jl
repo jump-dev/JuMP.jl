@@ -24,7 +24,7 @@ function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     end
     # TODO: This unnecessarily requires two lookups for k.
     dict[k] = get!(dict, k, zero(V)) + v
-    return dict
+    return
 end
 
 function _new_ordered_dict(
@@ -392,8 +392,7 @@ function add_to_expression!(
     coef::_Constant,
     other::GenericAffExpr{C,V},
 ) where {C,V}
-    sizehint!(aff, length(linear_terms(aff)) + length(linear_terms(other)))
-    for (term_coef, var) in linear_terms(other)
+    for (var, term_coef) in other.terms
         _add_or_set!(aff.terms, var, coef * term_coef)
     end
     aff.constant += coef * other.constant
