@@ -527,11 +527,11 @@ function test_higher_level(ModelType, ::Any)
     end
 end
 
-function test_error_multiply()
+function test_error_multiply(ModelType, ::Any)
     err = ErrorException(
         "Cannot multiply a quadratic expression by non-constant.",
     )
-    model = Model()
+    model = ModelType()
     @variable(model, x[1:1, 1:1])
     @variable(model, y[1:2, 1:2])
     @variable(model, z[1:2])
