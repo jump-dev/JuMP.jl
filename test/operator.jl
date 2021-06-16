@@ -527,6 +527,18 @@ function test_higher_level(ModelType, ::Any)
     end
 end
 
+function test_error_multiply()
+    err = ErrorException(
+        "Cannot multiply a quadratic expression by non-constant.",
+    )
+    model = Model()
+    @variable(model, x[1:1, 1:1])
+    @variable(model, y[1:2, 1:2])
+    @variable(model, z[1:2])
+    @test_throws(err, x * x * x)
+    @test_throws(err, y * y * x)
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

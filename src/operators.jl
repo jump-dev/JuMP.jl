@@ -265,12 +265,23 @@ end
 function Base.:-(q::GenericQuadExpr, v::AbstractVariableRef)
     return GenericQuadExpr(q.aff - v, copy(q.terms))
 end
-function Base.:*(q::GenericQuadExpr, v::AbstractVariableRef)
-    return error("Cannot multiply a quadratic expression by a variable")
+
+function Base.:*(::GenericQuadExpr, v::AbstractJuMPScalar)
+    return error("Cannot multiply a quadratic expression by a $(typeof(v))")
 end
-function Base.:/(q::GenericQuadExpr, v::AbstractVariableRef)
-    return error("Cannot divide a quadratic expression by a variable")
+
+function Base.:*(::Matrix{<:GenericQuadExpr}, ::Matrix{<:AbstractJuMPScalar})
+    return error("Cannot multiply a quadratic expression by non-constant.")
 end
+
+function Base.:*(::Matrix{<:GenericQuadExpr}, ::Vector{<:AbstractJuMPScalar})
+    return error("Cannot multiply a quadratic expression by non-constant.")
+end
+
+function Base.:/(::GenericQuadExpr, v::AbstractJuMPScalar)
+    return error("Cannot divide a quadratic expression by a $(typeof(v))")
+end
+
 # GenericQuadExpr--GenericAffExpr
 function Base.:+(q::GenericQuadExpr, a::GenericAffExpr)
     return GenericQuadExpr(q.aff + a, copy(q.terms))
@@ -278,12 +289,7 @@ end
 function Base.:-(q::GenericQuadExpr, a::GenericAffExpr)
     return GenericQuadExpr(q.aff - a, copy(q.terms))
 end
-function Base.:*(q::GenericQuadExpr, a::GenericAffExpr)
-    return error("Cannot multiply a quadratic expression by an aff. expression")
-end
-function Base.:/(q::GenericQuadExpr, a::GenericAffExpr)
-    return error("Cannot divide a quadratic expression by an aff. expression")
-end
+
 # GenericQuadExpr--GenericQuadExpr
 function Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr)
     result = copy(q1)
