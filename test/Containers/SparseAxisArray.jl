@@ -151,4 +151,11 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
         @test d isa SparseAxisArray{Any,2,Tuple{Any,Any}}
         @test length(d) == 0
     end
+    @testset "half-screen" begin
+        d = SparseAxisArray(Dict((i,) => 2 * i for i in 1:100))
+        io = IOBuffer()
+        show(IOContext(io, :limit => true, :compact => true), "text/plain", d)
+        seekstart(io)
+        @test occursin("\u22ee", read(io, String))
+    end
 end

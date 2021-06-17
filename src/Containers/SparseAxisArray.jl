@@ -280,9 +280,9 @@ function Base.show(io::IOContext, x::SparseAxisArray)
     if isempty(x)
         return show(io, MIME("text/plain"), x)
     end
-    limit::Bool = get(io, :limit, false)
+    limit = get(io, :limit, false)::Bool
     half_screen_rows = limit ? div(displaysize(io)[1] - 8, 2) : typemax(Int)
-    print_entry(i) = i < half_screen_rows || i > length(x) - half_screen_row
+    print_entry(i) = i < half_screen_rows || i > length(x) - half_screen_rows
     # For stable printing, sort by the string value of the key.
     key_strings = [(join(key, ", "), value) for (key, value) in x.data]
     sort!(key_strings; by = x -> x[1])
