@@ -95,16 +95,10 @@ $(SparseAxisArray{Int,1,Tuple{Symbol}}) with 2 entries:
         @testset "Printing" begin
             @test sprint(summary, d) == """
 $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
-            have = sprint(show, "text/plain", d)
-            want_A = """
-            $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries:
-              [b, v]  =  0.5
-              [a, u]  =  2.0"""
-            want_B = """
+            @test sprint(show, "text/plain", d) == """
             $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries:
               [a, u]  =  2.0
               [b, v]  =  0.5"""
-            @test have == want_A || have == want_B
         end
         d2 = @inferred SA(Dict((:b, 'v') => 1.0, (:a, 'u') => 4.0))
         d3 = @inferred SA(Dict((:a, 'u') => 6.0, (:b, 'v') => 1.5))

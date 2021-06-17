@@ -275,27 +275,26 @@ function Base.show(io::IO, ::MIME"text/plain", sa::SparseAxisArray)
     end
 end
 Base.show(io::IO, x::SparseAxisArray) = show(convert(IOContext, io), x)
+
 function Base.show(io::IOContext, x::SparseAxisArray)
-    # TODO: make this a one-line form
     if isempty(x)
         return show(io, MIME("text/plain"), x)
     end
     limit::Bool = get(io, :limit, false)
     half_screen_rows = limit ? div(displaysize(io)[1] - 8, 2) : typemax(Int)
-    key_string(key::Tuple) = join(key, ", ")
-    print_entry(i) = i < half_screen_rows || i > length(x) - half_screen_rows
+    print_entry(i) = i < half_screen_rows || i > length(x) - half_screen_row
+    # For stable printing, sort by the string value of the key.
+    key_strings = [(join(key, ", "), value) for (key, value) in x.data]
+    sort!(key_strings; by = x -> x[1])
     pad = maximum(
-        Int[
-            print_entry(i) ? length(key_string(key)) : 0 for
-            (i, key) in enumerate(keys(x.data))
-        ],
+        print_entry(i) ? length(x[1]) : 0 for (i, x) in enumerate(key_strings)
     )
     if !haskey(io, :compact)
         io = IOContext(io, :compact => true)
     end
-    for (i, (key, value)) in enumerate(x.data)
+    for (i, (key, value)) in enumerate(key_strings)
         if print_entry(i)
-            print(io, "  ", '[', rpad(key_string(key), pad), "]  =  ", value)
+            print(io, "  [", rpad(key, pad), "]  =  ", value)
             if i != length(x)
                 println(io)
             end
