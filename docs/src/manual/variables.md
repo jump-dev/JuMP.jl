@@ -379,9 +379,9 @@ indices (called *triangular indexing*). JuMP supports this as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:2, j=i:2])
 JuMP.Containers.SparseAxisArray{VariableRef,2,Tuple{Int64,Int64}} with 3 entries:
+  [1, 1]  =  x[1,1]
   [1, 2]  =  x[1,2]
   [2, 2]  =  x[2,2]
-  [1, 1]  =  x[1,1]
 ```
 
 We can also conditionally create variables via a JuMP-specific syntax. This
@@ -390,8 +390,8 @@ separated from the indices by a semi-colon (`;`). For example:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:4; mod(i, 2)==0])
 JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Int64}} with 2 entries:
-  [4]  =  x[4]
   [2]  =  x[2]
+  [4]  =  x[4]
 ```
 
 Note that with many index dimensions and a large amount of sparsity,
