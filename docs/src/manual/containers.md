@@ -182,9 +182,9 @@ An index depends on a prior index:
 ```jldoctest containers_sparse
 julia> Containers.@container([i = 1:2, j = i:2], (i, j))
 JuMP.Containers.SparseAxisArray{Tuple{Int64,Int64},2,Tuple{Int64,Int64}} with 3 entries:
+  [1, 1]  =  (1, 1)
   [1, 2]  =  (1, 2)
   [2, 2]  =  (2, 2)
-  [1, 1]  =  (1, 1)
 ```
 
 The `[indices; condition]` syntax is used:
@@ -341,20 +341,20 @@ This occurs when some indices depend on a previous one:
 ```jldoctest
 julia> Containers.@container([i=1:3, j=1:i], i + j)
 JuMP.Containers.SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 6 entries:
+  [1, 1]  =  2
+  [2, 1]  =  3
+  [2, 2]  =  4
   [3, 1]  =  4
   [3, 2]  =  5
   [3, 3]  =  6
-  [2, 2]  =  4
-  [1, 1]  =  2
-  [2, 1]  =  3
 ```
 or if there is a condition on the index sets:
 ```jldoctest
 julia> Containers.@container([i = 1:5; isodd(i)], i^2)
 JuMP.Containers.SparseAxisArray{Int64,1,Tuple{Int64}} with 3 entries:
+  [1]  =  1
   [3]  =  9
   [5]  =  25
-  [1]  =  1
 ```
 
 The condition can depend on multiple indices; it just needs to be a function
