@@ -534,7 +534,7 @@ function test_error_multiply(ModelType, ::Any)
     @variable(model, z[1:2])
     @test_throws ErrorException x * x * x
     @test_throws ErrorException y * y * x
-    @test_throws ErrorException x * x * z
+    @test_throws ErrorException y * y * z
 end
 
 function test_sin_fallback(ModelType, ::Any)
