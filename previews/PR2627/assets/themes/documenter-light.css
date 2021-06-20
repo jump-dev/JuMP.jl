@@ -310,13 +310,13 @@ button,
 input,
 select,
 textarea {
-  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif; }
+  font-family: "Lato Medium", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif; }
 
 code,
 pre {
   -moz-osx-font-smoothing: auto;
   -webkit-font-smoothing: auto;
-  font-family: "Roboto Mono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace; }
+  font-family: "JuliaMono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace; }
 
 body {
   color: #222222;
@@ -853,19 +853,19 @@ a.has-text-danger:hover, a.has-text-danger:focus {
   font-weight: 700 !important; }
 
 .is-family-primary {
-  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important; }
+  font-family: "Lato Medium", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important; }
 
 .is-family-secondary {
-  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important; }
+  font-family: "Lato Medium", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important; }
 
 .is-family-sans-serif {
-  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important; }
+  font-family: "Lato Medium", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important; }
 
 .is-family-monospace {
-  font-family: "Roboto Mono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace !important; }
+  font-family: "JuliaMono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace !important; }
 
 .is-family-code {
-  font-family: "Roboto Mono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace !important; }
+  font-family: "JuliaMono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace !important; }
 
 .is-block {
   display: block !important; }
@@ -7138,7 +7138,7 @@ h1:hover .docs-heading-anchor-permalink, h2:hover .docs-heading-anchor-permalink
     .admonition.is-default > .admonition-body {
       color: #fff; }
   .admonition.is-info {
-    background-color: #b8dffa;
+    background-color: #def0fd;
     border-color: #209cee; }
     .admonition.is-info > .admonition-header {
       background-color: #209cee;
@@ -7146,7 +7146,7 @@ h1:hover .docs-heading-anchor-permalink, h2:hover .docs-heading-anchor-permalink
     .admonition.is-info > .admonition-body {
       color: rgba(0, 0, 0, 0.7); }
   .admonition.is-success {
-    background-color: #9beeb8;
+    background-color: #bdf4d1;
     border-color: #22c35b; }
     .admonition.is-success > .admonition-header {
       background-color: #22c35b;
@@ -7162,15 +7162,15 @@ h1:hover .docs-heading-anchor-permalink, h2:hover .docs-heading-anchor-permalink
     .admonition.is-warning > .admonition-body {
       color: rgba(0, 0, 0, 0.7); }
   .admonition.is-danger {
-    background-color: #ff857e;
+    background-color: #ffaba7;
     border-color: #da0b00; }
     .admonition.is-danger > .admonition-header {
       background-color: #da0b00;
       color: #fff; }
     .admonition.is-danger > .admonition-body {
-      color: #fff; }
+      color: rgba(0, 0, 0, 0.7); }
   .admonition.is-compat {
-    background-color: #99e6f0;
+    background-color: #bdeff5;
     border-color: #1db5c9; }
     .admonition.is-compat > .admonition-header {
       background-color: #1db5c9;
@@ -7241,6 +7241,30 @@ h1:hover .docs-heading-anchor-permalink, h2:hover .docs-heading-anchor-permalink
 
 .documenter-example-output {
   background-color: white; }
+
+.outdated-warning-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  z-index: 999;
+  background-color: #ffaba7;
+  color: rgba(0, 0, 0, 0.7);
+  border-bottom: 3px solid #da0b00;
+  padding: 10px 35px;
+  text-align: center;
+  font-size: 15px; }
+  .outdated-warning-overlay .outdated-warning-closer {
+    position: absolute;
+    top: calc(50% - 10px);
+    right: 18px;
+    cursor: pointer;
+    width: 12px; }
+  .outdated-warning-overlay a {
+    color: #2e63b8; }
+    .outdated-warning-overlay a:hover {
+      color: #363636; }
 
 .content pre {
   border: 1px solid #dbdbdb; }
@@ -7432,6 +7456,8 @@ html {
     padding: 0.5rem 0; }
     #documenter .docs-sidebar .docs-package-name .docs-autofit {
       max-width: 16.2rem; }
+    #documenter .docs-sidebar .docs-package-name a, #documenter .docs-sidebar .docs-package-name a:hover {
+      color: #0a0a0a; }
   #documenter .docs-sidebar .docs-version-selector {
     border-top: 1px solid #dbdbdb;
     display: none;
@@ -7553,29 +7579,54 @@ html {
   #documenter .docs-main #documenter-search-results .docs-highlight {
     background-color: yellow; }
 
-/*
-
-Original highlight.js style (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
-
+/*!
+  Theme: Default
+  Description: Original highlight.js style
+  Author: (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
+  Maintainer: @highlightjs/core-team
+  Website: https://highlightjs.org/
+  License: see project LICENSE
+  Touched: 2021
 */
-.hljs {
+/*
+This is left on purpose making default.css the single file that can be lifted
+as-is from the repository directly without the need for a build step
+
+Typically this "required" baseline CSS is added by `makestuff.js` during build.
+*/
+pre code.hljs {
   display: block;
   overflow-x: auto;
-  padding: 0.5em;
-  background: #F0F0F0; }
+  padding: 1em; }
 
-/* Base color: saturation 0; */
-.hljs,
-.hljs-subst {
+code.hljs {
+  padding: 3px 5px; }
+
+/* end baseline CSS */
+.hljs {
+  background: #F0F0F0;
   color: #444; }
 
+/* Base color: saturation 0; */
+.hljs-subst {
+  /* default */ }
+
+/* purposely ignored */
 .hljs-comment {
   color: #888888; }
+
+.hljs-tag,
+.hljs-punctuation {
+  color: #444a; }
+
+.hljs-tag .hljs-name,
+.hljs-tag .hljs-attr {
+  color: #444; }
 
 .hljs-keyword,
 .hljs-attribute,
 .hljs-selector-tag,
-.hljs-meta-keyword,
+.hljs-meta .hljs-keyword,
 .hljs-doctag,
 .hljs-name {
   font-weight: bold; }
@@ -7602,6 +7653,7 @@ Original highlight.js style (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
 .hljs-template-variable,
 .hljs-link,
 .hljs-selector-attr,
+.hljs-operator,
 .hljs-selector-pseudo {
   color: #BC6060; }
 
@@ -7619,7 +7671,7 @@ Original highlight.js style (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
 .hljs-meta {
   color: #1f7199; }
 
-.hljs-meta-string {
+.hljs-meta .hljs-string {
   color: #4d99bf; }
 
 /* Misc effects */

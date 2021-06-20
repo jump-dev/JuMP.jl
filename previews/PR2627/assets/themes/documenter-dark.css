@@ -753,19 +753,19 @@ a.has-text-danger:hover, a.has-text-danger:focus {
   font-weight: 700 !important; }
 
 .is-family-primary {
-  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important; }
+  font-family: "Lato Medium", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important; }
 
 .is-family-secondary {
-  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important; }
+  font-family: "Lato Medium", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important; }
 
 .is-family-sans-serif {
-  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important; }
+  font-family: "Lato Medium", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif !important; }
 
 .is-family-monospace {
-  font-family: "Roboto Mono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace !important; }
+  font-family: "JuliaMono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace !important; }
 
 .is-family-code {
-  font-family: "Roboto Mono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace !important; }
+  font-family: "JuliaMono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace !important; }
 
 .is-block {
   display: block !important; }
@@ -1070,9 +1070,13 @@ html.theme--documenter-dark {
  *
  * The main container is <div> that is identified by id #documenter.
  */
-  /* a11y-dark theme */
-  /* Based on the Tomorrow Night Eighties theme: https://github.com/isagalaev/highlight.js/blob/master/src/styles/tomorrow-night-eighties.css */
-  /* @author: ericwbailey */
+  /*!
+  Theme: a11y-dark
+  Author: @ericwbailey
+  Maintainer: @ericwbailey
+
+  Based on the Tomorrow Night Eighties theme: https://github.com/isagalaev/highlight.js/blob/master/src/styles/tomorrow-night-eighties.css
+*/
   /* Comment */
   /* Red */
   /* Orange */
@@ -1103,12 +1107,12 @@ html.theme--documenter-dark {
   html.theme--documenter-dark input,
   html.theme--documenter-dark select,
   html.theme--documenter-dark textarea {
-    font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif; }
+    font-family: "Lato Medium", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Helvetica", "Arial", sans-serif; }
   html.theme--documenter-dark code,
   html.theme--documenter-dark pre {
     -moz-osx-font-smoothing: auto;
     -webkit-font-smoothing: auto;
-    font-family: "Roboto Mono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace; }
+    font-family: "JuliaMono", "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "DejaVu Sans Mono", monospace; }
   html.theme--documenter-dark body {
     color: #fff;
     font-size: 1em;
@@ -7279,6 +7283,28 @@ html.theme--documenter-dark {
       opacity: 1; }
   html.theme--documenter-dark .documenter-example-output {
     background-color: #1f2424; }
+  html.theme--documenter-dark .outdated-warning-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 999;
+    background-color: #282f2f;
+    border-bottom: 3px solid #9e1b0d;
+    padding: 10px 35px;
+    text-align: center;
+    font-size: 15px; }
+    html.theme--documenter-dark .outdated-warning-overlay .outdated-warning-closer {
+      position: absolute;
+      top: calc(50% - 10px);
+      right: 18px;
+      cursor: pointer;
+      width: 12px; }
+    html.theme--documenter-dark .outdated-warning-overlay a {
+      color: #1abc9c; }
+      html.theme--documenter-dark .outdated-warning-overlay a:hover {
+        color: #1dd2af; }
   html.theme--documenter-dark .content pre {
     border: 1px solid #5e6d6f; }
   html.theme--documenter-dark .content code {
@@ -7448,6 +7474,8 @@ html.theme--documenter-dark {
       padding: 0.5rem 0; }
       html.theme--documenter-dark #documenter .docs-sidebar .docs-package-name .docs-autofit {
         max-width: 16.2rem; }
+      html.theme--documenter-dark #documenter .docs-sidebar .docs-package-name a, html.theme--documenter-dark #documenter .docs-sidebar .docs-package-name a:hover {
+        color: #fff; }
     html.theme--documenter-dark #documenter .docs-sidebar .docs-version-selector {
       border-top: 1px solid #5e6d6f;
       display: none;
@@ -7574,6 +7602,9 @@ html.theme--documenter-dark {
     overflow-y: scroll;
     text-rendering: optimizeLegibility;
     text-size-adjust: 100%; }
+  html.theme--documenter-dark .hljs {
+    background: #2b2b2b;
+    color: #f8f8f2; }
   html.theme--documenter-dark .hljs-comment,
   html.theme--documenter-dark .hljs-quote {
     color: #d4d0ab; }
@@ -7588,7 +7619,6 @@ html.theme--documenter-dark {
     color: #ffa07a; }
   html.theme--documenter-dark .hljs-number,
   html.theme--documenter-dark .hljs-built_in,
-  html.theme--documenter-dark .hljs-builtin-name,
   html.theme--documenter-dark .hljs-literal,
   html.theme--documenter-dark .hljs-type,
   html.theme--documenter-dark .hljs-params,
@@ -7608,12 +7638,6 @@ html.theme--documenter-dark {
   html.theme--documenter-dark .hljs-keyword,
   html.theme--documenter-dark .hljs-selector-tag {
     color: #dcc6e0; }
-  html.theme--documenter-dark .hljs {
-    display: block;
-    overflow-x: auto;
-    background: #2b2b2b;
-    color: #f8f8f2;
-    padding: 0.5em; }
   html.theme--documenter-dark .hljs-emphasis {
     font-style: italic; }
   html.theme--documenter-dark .hljs-strong {
@@ -7622,7 +7646,6 @@ html.theme--documenter-dark {
     html.theme--documenter-dark .hljs-addition,
     html.theme--documenter-dark .hljs-attribute,
     html.theme--documenter-dark .hljs-built_in,
-    html.theme--documenter-dark .hljs-builtin-name,
     html.theme--documenter-dark .hljs-bullet,
     html.theme--documenter-dark .hljs-comment,
     html.theme--documenter-dark .hljs-link,
