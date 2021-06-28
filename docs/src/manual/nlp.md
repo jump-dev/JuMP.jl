@@ -204,7 +204,7 @@ julia> expr = @NLexpression(model, sin(x) + 1)
 
 With the exception of the splatting syntax discussed below, all expressions
 must be simple scalar operations. You cannot use `dot`, matrix-vector products,
-vector slices, etc. 
+vector slices, etc.
 ```jldoctest nlp_scalar_only; setup=:(model = Model(); @variable(model, x[1:2]); @variable(model, y); c = [1, 2])
 julia> @NLobjective(model, Min, c' * x + 3y)
 ERROR: Unexpected array [1 2] in nonlinear expression. Nonlinear expressions may contain only scalar expressions.
@@ -262,7 +262,7 @@ In addition to this list of functions, it is possible to register custom
     a function is not needed. Two exceptions are if you want to provide custom
     derivatives, or if the function is not available in the scope of the
     nonlinear expression.
-    
+
 !!! warning
     User-defined functions must return a scalar output. For a work-around, see
     [User-defined functions with vector outputs](@ref).
@@ -395,7 +395,7 @@ vector as the first argument that is filled in-place:
 ```@example
 using JuMP #hide
 f(x, y) = (x - 1)^2 + (y - 2)^2
-function ∇f(g::Vector{T}, x::T, y::T) where {T}
+function ∇f(g::AbstractVector{T}, x::T, y::T) where {T}
     g[1] = 2 * (x - 1)
     g[2] = 2 * (y - 2)
     return
@@ -407,7 +407,9 @@ register(model, :my_square, 2, f, ∇f)
 @NLobjective(model, Min, my_square(x[1], x[2]))
 ```
 
-Hessian information is not supported for multivariate functions.
+!!! warning
+    Make sure the first argument to `∇f` supports an `AbstractVector`, and do
+    not assume the input is `Float64`.
 
 ### Register a function, gradient, and hessian
 
