@@ -239,6 +239,7 @@ julia> unfix(x)
 julia> is_fixed(x)
 false
 ```
+
 Fixing a variable with existing bounds will throw an error. To delete the bounds
 prior to fixing, use `fix(variable, value; force = true)`.
 
@@ -255,6 +256,10 @@ julia> fix(x, 2; force = true)
 julia> fix_value(x)
 2.0
 ```
+
+!!! tip
+    Use [`fix`](@ref) instead of `@constraint(model, x == 2)`. The former modifies
+    variable bounds, while the latter adds a new linear constraint to the problem.
 
 ## Variable names
 
