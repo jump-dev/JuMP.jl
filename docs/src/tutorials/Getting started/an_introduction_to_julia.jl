@@ -256,6 +256,23 @@ typeof(:my_id)
 # You can think of a `Symbol` as a `String` that takes up less memory, and that
 # can't be modified.
 
+# Convert between `String` and `Symbol` using their constructors:
+
+String(:abc)
+
+#-
+
+Symbol("abc")
+
+# Julia generally uses `Symbol`s when dealing with values or options that appear
+# directly in code (e.g., the [`uplo` argument to `Hermitian`](https://docs.julialang.org/en/v1/stdlib/LinearAlgebra/#LinearAlgebra.Hermitian)), 
+# and uses `String`s when dealing with input from files or users or network 
+# streams. 
+
+# !!! tip 
+#     If you're writing your own code or datastructures, it's fine to use only 
+#    `String`s.
+
 # ### Tuples
 
 # Julia makes extensive use of a simple data structure called Tuples. Tuples are
