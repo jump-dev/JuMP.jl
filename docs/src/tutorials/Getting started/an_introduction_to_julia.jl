@@ -245,13 +245,19 @@ println("The value of x is: $(x)")
 
 # ### Symbols
 
-# Julia `Symbol`s provide a way to make human readable unique identifiers:
+# Julia `Symbol`s are a data structure from the compiler that represent Julia
+# identifiers (i.e., variable names).
 
-:my_id
+println("The value of x is: $(eval(:x))")
 
-#-
+# !!! tip
+#     We used `eval` here to demonstrate how Julia links `Symbol`s to variables.
+#     However, avoid calling `eval` in your code. It is usually a sign that your
+#     code is doing something that could be more easily achieved a different
+#     way. The [Community Forum](https://discourse.julialang.org/c/domain/opt/13)
+#     is a good place to ask for advice on alternative approaches.
 
-typeof(:my_id)
+typeof(:x)
 
 # You can think of a `Symbol` as a `String` that takes up less memory, and that
 # can't be modified.
@@ -264,14 +270,11 @@ String(:abc)
 
 Symbol("abc")
 
-# Julia generally uses `Symbol`s when dealing with values or options that appear
-# directly in code (e.g., the [`uplo` argument to `Hermitian`](https://docs.julialang.org/en/v1/stdlib/LinearAlgebra/#LinearAlgebra.Hermitian)), 
-# and uses `String`s when dealing with input from files or users or network 
-# streams. 
-
-# !!! tip 
-#     If you're writing your own code or datastructures, it's fine to use only 
-#    `String`s.
+# !!! tip
+#     `Symbol`s are often (ab)used to stand in for a `String` or an `Enum`, when
+#     one of the former is likely a better choice. The JuMP style guide
+#     recommends reserving `Symbol`s for identifiers. See [@enum vs. Symbol](@ref)
+#     for more.
 
 # ### Tuples
 
