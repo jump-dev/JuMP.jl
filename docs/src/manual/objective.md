@@ -63,7 +63,7 @@ julia> objective_function(model)
 
 ## Evaluate the objective function at a point
 
-Use [`value`]($ref) to evaluate an objective function at a point specifying values for variables.
+Use [`value`](@ref) to evaluate an objective function at a point specifying values for variables.
 
 ```jldoctest; setup = :(model=Model())
 julia> @variable(model, x[1:2]);
