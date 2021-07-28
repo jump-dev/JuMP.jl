@@ -70,7 +70,7 @@ model = Model(GLPK.Optimizer; bridge_constraints = false)
 
 # ### What
 
-# Use JuMP's macros (or [`add_to_expression!`](@ref) to build expressions.
+# Use JuMP's macros (or [`add_to_expression!`](@ref)) to build expressions.
 # Avoid constructing expressions outside the macros.
 
 # ### Why
