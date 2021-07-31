@@ -18,7 +18,7 @@ A summary of changes are as follows:
   * Containers (e.g., `DenseAxisArray`) can now be used in vector-valued
     constraints.
 - Documentation, maintenance and performance:
-  * Various improvments to the documentation.
+  * Various improvements to the documentation.
 
 Version 0.21.8 (May 8, 2021)
 ---------------------------------
