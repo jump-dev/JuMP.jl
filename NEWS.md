@@ -1,6 +1,25 @@
 JuMP release notes
 ==================
 
+Version 0.21.9 (August 1, 2021)
+---------------------------------
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.9).
+A summary of changes are as follows:
+
+- New features:
+  * Containers now support arbitrary container types by passing the type to the
+    `container` keyword and overloading `Containers.container`.
+  * `is_valid` now supports nonlinear constraints
+  * Added `unsafe_backend` for querying the inner-most optimizer of a JuMP
+    model.
+  * Nonlinear parameters now support the plural `@NLparameters` macro.
+  * Containers (e.g., `DenseAxisArray`) can now be used in vector-valued
+    constraints.
+- Documentation, maintenance and performance:
+  * Various improvements to the documentation.
+
 Version 0.21.8 (May 8, 2021)
 ---------------------------------
 
