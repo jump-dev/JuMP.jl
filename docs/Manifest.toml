@@ -336,7 +336,7 @@ version = "0.3.3"
 
 [[JuMP]]
 deps = ["Calculus", "DataStructures", "ForwardDiff", "JSON", "LinearAlgebra", "MathOptInterface", "MutableArithmetics", "NaNMath", "Printf", "Random", "SparseArrays", "SpecialFunctions", "Statistics"]
-path = ".."
+git-tree-sha1 = "4f0a771949bbe24bf70c89e8032c107ebe03f6ba"
 uuid = "4076af6c-e467-56ae-b986-b466b2749572"
 version = "0.21.9"
 
