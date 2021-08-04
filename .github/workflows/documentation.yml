@@ -16,6 +16,8 @@ jobs:
           version: '1.0'
       - name: Install dependencies
         run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+      - name: Update documenter
+        run: julia --project=docs/ -e 'using Pkg; Pkg.add(PackageSpec("Documenter", rev="mp/preview-check-test"))'
       - name: Build and deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
