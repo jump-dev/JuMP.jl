@@ -1251,6 +1251,34 @@ function test_nlparameter_invalid_number()
     return
 end
 
+function test_broadcasting_variable_in_set()
+    model = Model()
+    @variable(model, z[1:2] in MOI.GreaterThan.([3., 2.]))
+    @test num_variables(model) == 2
+    @test lower_bound.(z) == [3., 2.]
+    @test has_upper_bound.(z) == [false, false]
+    @variable(model, w[1:2] in MOI.GreaterThan(3.0))
+    @test num_variables(model) == 4
+    @test lower_bound.(w) == [3., 3.]
+    @test has_upper_bound.(w) == [false, false]
+    @variable(model, v[1:2] in [MOI.GreaterThan(3.0), MOI.LessThan(3.0), ])
+    @test num_variables(model) == 6
+    @test lower_bound(v[1]) == 3.
+    @test has_upper_bound(v[1]) == false
+    @test upper_bound(v[2]) == 3.
+    @test has_lower_bound(v[2]) == false
+    @test_throws(
+        ErrorException,
+        @variable(model, k in MOI.GreaterThan.([3., 2.])),
+    )
+    @test_throws(
+        ErrorException,
+        @variable(model, u[1:3] in MOI.GreaterThan.([3., 2.])),
+    )
+    @test num_variables(model) == 6
+    return
+end
+
 end  # module
 
 TestMacros.runtests()

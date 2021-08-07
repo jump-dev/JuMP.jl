@@ -1125,6 +1125,13 @@ function add_variable(
     )
     return VariableRef(model, var_index)
 end
+function add_variable(
+    model::Model,
+    variables::Vector{<:VariableConstrainedOnCreation},
+    names::Vector{String},
+)
+    return add_variable.(model, variables, names)
+end
 
 function _moi_add_constrained_variable(
     moi_backend::MOI.ModelLike,

@@ -1492,6 +1492,41 @@ end
 
 function build_variable(
     ::Function,
+    variables::Vector{<:ScalarVariable},
+    sets::Vector{<:MOI.AbstractScalarSet},
+)
+    if length(variables) != length(sets)
+        return _error(
+            "Dimensions of the vector of scalar variables and the vector of " *
+            "scalar sets don't match.",
+        )
+    end
+    return VariableConstrainedOnCreation.(variables, sets)
+end
+
+function build_variable(
+    ::Function,
+    variables::Vector{<:ScalarVariable},
+    set::MOI.AbstractScalarSet,
+)
+    return VariableConstrainedOnCreation.(variables, Ref(set))
+end
+
+function build_variable(
+    _error::Function,
+    ::ScalarVariable,
+    ::Vector{<:MOI.AbstractScalarSet},
+)
+    return _error(
+        "It is not possible to add a scalar variable in a vector of " *
+        "sets. Either add a vector of scalar variables in a scalar set or " *
+        "add a vector of scalar variables in a vector of scalar sets of " *
+        "the same dimension. ",
+    )
+end
+
+function build_variable(
+    ::Function,
     variables::Vector{<:AbstractVariable},
     set::MOI.AbstractVectorSet,
 )
