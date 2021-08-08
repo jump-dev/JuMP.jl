@@ -20,8 +20,8 @@ using Plots
 # ### Problem description
 # 
 # We are given
-# * $M=\{1, \dots, m\}$ clients
-# * $N=\{ 1, \dots, n\}$ sites where a facility can be built
+# * A set $M=\{1, \dots, m\}$ of clients
+# * A set $N=\{ 1, \dots, n\}$ of sites where a facility can be built
 # 
 # **Decision variables**
 # Decision variables are split into two categories:
@@ -47,15 +47,15 @@ using Plots
 # The problem can be formulated as the following MILP:
 # 
 # ```math
-# \begin{align}
+# \begin{aligned}
 # \min_{x, y} \ \ \ &
 # \sum_{i, j} c_{i, j} x_{i, j} + 
-# \sum_{j} f_{j} y_{j}\\
+# \sum_{j} f_{j} y_{j} \\
 # s.t. &
-# \sum_{j} x_{i, j} = 1, && \forall i \in M\\
-# & x_{i, j} \leq y_{j}, && \forall i \in M, j \in N\\
+# \sum_{j} x_{i, j} = 1, && \forall i \in M \\
+# & x_{i, j} \leq y_{j}, && \forall i \in M, j \in N \\
 # & x_{i, j}, y_{j} \in \{0, 1\}, && \forall i \in M, j \in N
-# \end{align}
+# \end{aligned}
 # ```
 # 
 # where the first set of constraints ensures
@@ -65,23 +65,26 @@ using Plots
 
 # ### Problem data
 
+
 Random.seed!(314)
 
-m = 12  # number of clients
-n = 5  # number of facility locations
+## number of clients
+m = 12
+## number of facility locations
+n = 5
 
-# Clients' locations
+## Clients' locations
 Xc = rand(m)
 Yc = rand(m)
 
-# Facilities' potential locations
+## Facilities' potential locations
 Xf = rand(n)
 Yf = rand(n)
 
-# Fixed costs
+## Fixed costs
 f = ones(n);
 
-# Distance
+## Distance
 c = zeros(m, n)
 for i in 1:m
     for j in 1:n
@@ -100,24 +103,24 @@ scatter!(Xf, Yf, label="Facility",
 
 # Create a JuMP model
 ufl = Model(GLPK.Optimizer)
-
+#-
 # Variables
 @variable(ufl, y[1:n], Bin);
 @variable(ufl, x[1:m, 1:n], Bin);
-
+#-
 # Each client is served exactly once
 @constraint(ufl, client_service[i in 1:m],
     sum(x[i, j] for j in 1:n) == 1
-);
-
+)
+#-
 # A facility must be open to serve a client
 @constraint(ufl, open_facility[i in 1:m, j in 1:n],
     x[i, j] <= y[j]
 )
-
+#-
 # Objective
 @objective(ufl, Min, f'y + sum(c .* x));
-
+#-
 # Solve the uncapacitated facility location problem with GLPK
 optimize!(ufl)
 println("Optimal value: ", objective_value(ufl))
@@ -148,7 +151,7 @@ for i in 1:m
     end
 end
 
-display(p)
+p
 
 
 # ## Capacitated Facility location
@@ -157,15 +160,15 @@ display(p)
 # 
 # The capacitated variant introduces a capacity constraint on each facility, i.e., clients have a certain level of demand to be served, while each facility only has finite capacity which cannot be exceeded.
 # 
-# Specifically, let
-# * $a_{i} \geq 0$ denote the demand of client $i$
-# * $q_{j} \geq 0$ denote the capacity of facility $j$
+# Specifically,
+# * The demand of client $i$ is denoted by $a_{i} \geq 0$
+# * The capacity of facility $j$ is denoted by $q_{j} \geq 0$
 # 
 # The capacity constraints then write
 # ```math
-# \begin{align}
+# \begin{aligned}
 # \sum_{i} a_{i} x_{i, j} &\leq q_{j} y_{j} && \forall j \in N
-# \end{align}
+# \end{aligned}
 # ```
 # 
 # Note that, if $y_{j}$ is set to $0$, the capacity constraint above automatically forces $x_{i, j}$ to $0$.
@@ -173,15 +176,15 @@ display(p)
 # Thus, the capacitated facility location can be formulated as follows
 #
 # ```math
-# \begin{align}
+# \begin{aligned}
 # \min_{x, y} \ \ \ &
 # \sum_{i, j} c_{i, j} x_{i, j} + 
-# \sum_{j} f_{j} y_{j}\\
+# \sum_{j} f_{j} y_{j} \\
 # s.t. &
-# \sum_{j} x_{i, j} = 1, && \forall i \in M\\
-# & \sum_{i} a_{i} x_{i, j} \leq q_{j} y_{j}, && \forall j \in N\\
+# \sum_{j} x_{i, j} = 1, && \forall i \in M \\
+# & \sum_{i} a_{i} x_{i, j} \leq q_{j} y_{j}, && \forall j \in N \\
 # & x_{i, j}, y_{j} \in \{0, 1\}, && \forall i \in M, j \in N
-# \end{align}
+# \end{aligned}
 # ```
 #
 # For simplicity, we will assume that there is enough capacity to serve the demand,
@@ -207,20 +210,20 @@ scatter!(Xf, Yf, label=nothing,
 
 # Create a JuMP model
 cfl = Model(GLPK.Optimizer)
-
+#-
 # Variables
 @variable(cfl, y[1:n], Bin);
 @variable(cfl, x[1:m, 1:n], Bin);
-
+#-
 # Each client is served exactly once
 @constraint(cfl, client_service[i in 1:m], sum(x[i, :]) == 1)
-
+#-
 # Capacity constraint
 @constraint(cfl, capacity, x'a .<= (q .* y))
-
+#-
 # Objective
 @objective(cfl, Min, f'y + sum(c .* x));
-
+#-
 # Solve the problem
 optimize!(cfl)
 println("Optimal value: ", objective_value(cfl))
@@ -252,11 +255,10 @@ for i in 1:m
     end
 end
 
-display(p)
+p
 
 
-# ## Further
+# ## Further Reading
 # * [Benders decomposition](https://github.com/JuliaOpt/JuMPTutorials.jl/blob/master/script/optimization_concepts/benders_decomposition.jl)
-# is a method of choice for solving facility location problems.
-# * Benchmark instances can be found
-# [here](https://resources.mpi-inf.mpg.de/departments/d1/projects/benchmarks/UflLib/).
+#is a method of choice for solving facility location problems.
+# * Benchmark instances can be found [here](https://resources.mpi-inf.mpg.de/departments/d1/projects/benchmarks/UflLib/).
