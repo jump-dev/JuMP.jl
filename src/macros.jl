@@ -1497,8 +1497,9 @@ function build_variable(
 )
     if length(variables) != length(sets)
         return _error(
-            "Dimensions of the vector of scalar variables and the vector of " *
-            "scalar sets don't match.",
+            "Dimensions must match. Got a vector of scalar variables with" *
+            "$(length(variables)) elements and a vector of " *
+            "scalar sets with $(length(sets)).",
         )
     end
     return VariableConstrainedOnCreation.(variables, sets)
