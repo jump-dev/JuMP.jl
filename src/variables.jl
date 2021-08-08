@@ -1125,6 +1125,7 @@ function add_variable(
     )
     return VariableRef(model, var_index)
 end
+
 function add_variable(
     model::Model,
     variables::Vector{<:VariableConstrainedOnCreation},
