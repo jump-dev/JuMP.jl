@@ -116,10 +116,10 @@ function example_heuristic_solution()
         ret =
             MOI.submit(model, MOI.HeuristicSolution(cb_data), x, floor.(x_vals))
         println("Heuristic solution status = $(ret)")
-        Test.@test ret in (
-            MOI.HEURISTIC_SOLUTION_ACCEPTED,
-            MOI.HEURISTIC_SOLUTION_REJECTED,
-        )  #src
+        Test.@test ret in (                     #src
+            MOI.HEURISTIC_SOLUTION_ACCEPTED,    #src
+            MOI.HEURISTIC_SOLUTION_REJECTED,    #src
+        )                                       #src
     end
     MOI.set(model, MOI.HeuristicCallback(), my_callback_function)
     optimize!(model)
