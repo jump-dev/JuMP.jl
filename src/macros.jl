@@ -1516,13 +1516,13 @@ end
 function build_variable(
     _error::Function,
     ::ScalarVariable,
-    ::Vector{<:MOI.AbstractScalarSet},
+    sets::AbstractArray{<:MOI.AbstractScalarSet},
 )
     return _error(
-        "It is not possible to add a scalar variable in a vector of " *
-        "sets. Either add a vector of scalar variables in a scalar set or " *
-        "add a vector of scalar variables in a vector of scalar sets of " *
-        "the same dimension. ",
+        "It is not possible to add a scalar variable in an Array of " *
+        "sets. Either add an Array of scalar variables in a scalar set or " *
+        "add an Array of scalar variables in an Array of scalar sets of " *
+        "the same dimension.",
     )
 end
 
