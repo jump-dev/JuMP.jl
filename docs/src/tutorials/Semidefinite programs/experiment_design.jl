@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-
 # # Experiment Design
 
 # **Originally Contributed by**: Arpit Bhatia, Chris Coey
@@ -125,9 +124,9 @@ set_silent(aOpt)
 @variable(aOpt, np[1:p], lower_bound = 0, upper_bound = nmax)
 @variable(aOpt, u[1:q], lower_bound = 0)
 @constraint(aOpt, sum(np) <= n)
-for i = 1:q
+for i in 1:q
     matrix = [
-        V * LinearAlgebra.diagm(0 => np ./ n) * V' eye[:, i];
+        V*LinearAlgebra.diagm(0 => np ./ n)*V' eye[:, i]
         eye[i, :]' u[i]
     ]
     @SDconstraint(aOpt, matrix >= 0)
@@ -167,7 +166,10 @@ eOpt = Model(SCS.Optimizer)
 set_silent(eOpt)
 @variable(eOpt, 0 <= np[1:p] <= nmax)
 @variable(eOpt, t)
-@SDconstraint(eOpt, V * LinearAlgebra.diagm(0 => np ./ n) * V' - (t .* eye) >= 0)
+@SDconstraint(
+    eOpt,
+    V * LinearAlgebra.diagm(0 => np ./ n) * V' - (t .* eye) >= 0
+)
 @constraint(eOpt, sum(np) <= n)
 @objective(eOpt, Max, t)
 optimize!(eOpt)

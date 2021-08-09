@@ -74,10 +74,12 @@ function example_max_cut_sdp()
     ##
     ## Solution:
     ##  (S, S′)  = ({1}, {2, 3, 4})
-    W = [0.0 5.0 7.0 6.0;
-         5.0 0.0 0.0 1.0;
-         7.0 0.0 0.0 1.0;
-         6.0 1.0 1.0 0.0]
+    W = [
+        0.0 5.0 7.0 6.0
+        5.0 0.0 0.0 1.0
+        7.0 0.0 0.0 1.0
+        6.0 1.0 1.0 0.0
+    ]
     cut, cutval = solve_max_cut_sdp(4, W)
     Test.@test cut[1] != cut[2]
     Test.@test cut[2] == cut[3] == cut[4]
@@ -91,10 +93,12 @@ function example_max_cut_sdp()
     ##
     ## Solution:
     ##  (S, S′)  = ({1, 4}, {2, 3})
-    W = [0.0 1.0 5.0 0.0;
-         1.0 0.0 0.0 9.0;
-         5.0 0.0 0.0 2.0;
-         0.0 9.0 2.0 0.0]
+    W = [
+        0.0 1.0 5.0 0.0
+        1.0 0.0 0.0 9.0
+        5.0 0.0 0.0 2.0
+        0.0 9.0 2.0 0.0
+    ]
     cut, cutval = solve_max_cut_sdp(4, W)
     Test.@test cut[1] == cut[4]
     Test.@test cut[2] == cut[3]

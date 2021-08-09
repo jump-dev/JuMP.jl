@@ -64,7 +64,6 @@ import Random
 
 # ### Problem data
 
-
 Random.seed!(314)
 
 ## number of clients
@@ -92,10 +91,22 @@ for i in 1:m
 end
 
 # Display the data
-Plots.scatter(Xc, Yc, label = "Clients", markershape=:circle, markercolor=:blue)
-Plots.scatter!(Xf, Yf, label="Facility", 
-    markershape=:square, markercolor=:white, markersize=6,
-    markerstrokecolor=:red, markerstrokewidth=2
+Plots.scatter(
+    Xc,
+    Yc,
+    label = "Clients",
+    markershape = :circle,
+    markercolor = :blue,
+)
+Plots.scatter!(
+    Xf,
+    Yf,
+    label = "Facility",
+    markershape = :square,
+    markercolor = :white,
+    markersize = 6,
+    markerstrokecolor = :red,
+    markerstrokewidth = 2,
 )
 
 # ### JuMP implementation
@@ -108,14 +119,10 @@ ufl = Model(GLPK.Optimizer)
 @variable(ufl, x[1:m, 1:n], Bin);
 #-
 # Each client is served exactly once
-@constraint(ufl, client_service[i in 1:m],
-    sum(x[i, j] for j in 1:n) == 1
-);
+@constraint(ufl, client_service[i in 1:m], sum(x[i, j] for j in 1:n) == 1);
 #-
 # A facility must be open to serve a client
-@constraint(ufl, open_facility[i in 1:m, j in 1:n],
-    x[i, j] <= y[j]
-);
+@constraint(ufl, open_facility[i in 1:m, j in 1:n], x[i, j] <= y[j]);
 #-
 # Objective
 @objective(ufl, Min, f'y + sum(c .* x));
@@ -131,27 +138,42 @@ x_ = value.(x) .> 1 - 1e-5
 y_ = value.(y) .> 1 - 1e-5
 
 # Display clients
-p = Plots.scatter(Xc, Yc, markershape=:circle, markercolor=:blue, label=nothing)
+p = Plots.scatter(
+    Xc,
+    Yc,
+    markershape = :circle,
+    markercolor = :blue,
+    label = nothing,
+)
 
 # Show open facility
 mc = [(y_[j] ? :red : :white) for j in 1:n]
-Plots.scatter!(Xf, Yf, 
-    markershape=:square, markercolor=mc, markersize=6,
-    markerstrokecolor=:red, markerstrokewidth=2,
-    label=nothing
+Plots.scatter!(
+    Xf,
+    Yf,
+    markershape = :square,
+    markercolor = mc,
+    markersize = 6,
+    markerstrokecolor = :red,
+    markerstrokewidth = 2,
+    label = nothing,
 )
 
 # Show client-facility assignment
 for i in 1:m
     for j in 1:n
         if x_[i, j] == 1
-           Plots.plot!([Xc[i], Xf[j]], [Yc[i], Yf[j]], color=:black, label=nothing)
+            Plots.plot!(
+                [Xc[i], Xf[j]],
+                [Yc[i], Yf[j]],
+                color = :black,
+                label = nothing,
+            )
         end
     end
 end
 
 p
-
 
 # ## Capacitated Facility location
 
@@ -196,13 +218,24 @@ a = rand(1:3, m);
 q = rand(5:10, n);
 
 # Display the data
-Plots.scatter(Xc, Yc, label=nothing,
-    markershape=:circle, markercolor=:blue, markersize= 2 .*(2 .+ a)
+Plots.scatter(
+    Xc,
+    Yc,
+    label = nothing,
+    markershape = :circle,
+    markercolor = :blue,
+    markersize = 2 .* (2 .+ a),
 )
 
-Plots.scatter!(Xf, Yf, label=nothing, 
-    markershape=:rect, markercolor=:white, markersize= q,
-    markerstrokecolor=:red, markerstrokewidth=2
+Plots.scatter!(
+    Xf,
+    Yf,
+    label = nothing,
+    markershape = :rect,
+    markercolor = :white,
+    markersize = q,
+    markerstrokecolor = :red,
+    markerstrokewidth = 2,
 )
 
 # ### JuMP implementation
@@ -234,21 +267,37 @@ x_ = value.(x) .> 1 - 1e-5;
 y_ = value.(y) .> 1 - 1e-5;
 
 # Display the solution
-p = Plots.scatter(Xc, Yc, label=nothing,
-    markershape=:circle, markercolor=:blue, markersize= 2 .*(2 .+ a)
+p = Plots.scatter(
+    Xc,
+    Yc,
+    label = nothing,
+    markershape = :circle,
+    markercolor = :blue,
+    markersize = 2 .* (2 .+ a),
 )
 
 mc = [(y_[j] ? :red : :white) for j in 1:n]
-Plots.scatter!(Xf, Yf, label=nothing, 
-    markershape=:rect, markercolor=mc, markersize=q,
-    markerstrokecolor=:red, markerstrokewidth=2
+Plots.scatter!(
+    Xf,
+    Yf,
+    label = nothing,
+    markershape = :rect,
+    markercolor = mc,
+    markersize = q,
+    markerstrokecolor = :red,
+    markerstrokewidth = 2,
 )
 
 # Show client-facility assignment
 for i in 1:m
     for j in 1:n
         if x_[i, j] == 1
-            Plots.plot!([Xc[i], Xf[j]], [Yc[i], Yf[j]], color=:black, label=nothing)
+            Plots.plot!(
+                [Xc[i], Xf[j]],
+                [Yc[i], Yf[j]],
+                color = :black,
+                label = nothing,
+            )
             break
         end
     end

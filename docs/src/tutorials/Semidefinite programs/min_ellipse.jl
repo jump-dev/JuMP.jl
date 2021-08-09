@@ -28,15 +28,15 @@ import Test
 function example_min_ellipse()
     ## We will use three ellipses: two "simple" ones, and a random one.
     As = [
-        [2.0  0.0; 0.0  1.0],
-        [1.0  0.0; 0.0  3.0],
-        [2.86715 1.60645; 1.60645 1.12639]
+        [2.0 0.0; 0.0 1.0],
+        [1.0 0.0; 0.0 3.0],
+        [2.86715 1.60645; 1.60645 1.12639],
     ]
     ## We change the weights to see different solutions, if they exist
     weights = [1.0 0.0; 0.0 1.0]
     model = Model(SCS.Optimizer)
     set_silent(model)
-    @variable(model, X[i=1:2, j=1:2], PSD)
+    @variable(model, X[i = 1:2, j = 1:2], PSD)
     @objective(model, Min, LinearAlgebra.tr(weights * X))
     for As_i in As
         @SDconstraint(model, X >= As_i)

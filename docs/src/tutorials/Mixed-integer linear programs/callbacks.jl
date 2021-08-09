@@ -69,8 +69,8 @@ function example_user_cut_constraint()
     item_weights, item_values = rand(N), rand(N)
     model = Model(GLPK.Optimizer)
     @variable(model, x[1:N], Bin)
-    @constraint(model, sum(item_weights[i] * x[i] for i = 1:N) <= 10)
-    @objective(model, Max, sum(item_values[i] * x[i] for i = 1:N))
+    @constraint(model, sum(item_weights[i] * x[i] for i in 1:N) <= 10)
+    @objective(model, Max, sum(item_values[i] * x[i] for i in 1:N))
     callback_called = false
     function my_callback_function(cb_data)
         callback_called = true
@@ -107,17 +107,19 @@ function example_heuristic_solution()
     item_weights, item_values = rand(N), rand(N)
     model = Model(GLPK.Optimizer)
     @variable(model, x[1:N], Bin)
-    @constraint(model, sum(item_weights[i] * x[i] for i = 1:N) <= 10)
-    @objective(model, Max, sum(item_values[i] * x[i] for i = 1:N))
+    @constraint(model, sum(item_weights[i] * x[i] for i in 1:N) <= 10)
+    @objective(model, Max, sum(item_values[i] * x[i] for i in 1:N))
     callback_called = false
     function my_callback_function(cb_data)
         callback_called = true
         x_vals = callback_value.(Ref(cb_data), x)
-        ret = MOI.submit(
-            model, MOI.HeuristicSolution(cb_data), x, floor.(x_vals)
-        )
+        ret =
+            MOI.submit(model, MOI.HeuristicSolution(cb_data), x, floor.(x_vals))
         println("Heuristic solution status = $(ret)")
-        Test.@test ret in (MOI.HEURISTIC_SOLUTION_ACCEPTED, MOI.HEURISTIC_SOLUTION_REJECTED)  #src
+        Test.@test ret in (
+            MOI.HEURISTIC_SOLUTION_ACCEPTED,
+            MOI.HEURISTIC_SOLUTION_REJECTED,
+        )  #src
     end
     MOI.set(model, MOI.HeuristicCallback(), my_callback_function)
     optimize!(model)

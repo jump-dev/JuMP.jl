@@ -18,7 +18,6 @@
 #     | ρ_AB   1    ρ_BC |  ≽ 0
 #     | ρ_AC  ρ_BC   1   |
 
-
 using JuMP
 import SCS
 import Test  #src
@@ -34,8 +33,8 @@ function example_corr_sdp()
     ## Bounds on the known correlations
     @constraint(model, X[1, 2] >= -0.2)
     @constraint(model, X[1, 2] <= -0.1)
-    @constraint(model, X[2, 3] >=  0.4)
-    @constraint(model, X[2, 3] <=  0.5)
+    @constraint(model, X[2, 3] >= 0.4)
+    @constraint(model, X[2, 3] <= 0.5)
     ## Find upper bound
     @objective(model, Max, X[1, 3])
     optimize!(model)

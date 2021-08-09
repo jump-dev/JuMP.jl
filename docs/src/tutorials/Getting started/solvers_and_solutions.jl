@@ -218,14 +218,17 @@ model_no_solution = Model(GLPK.Optimizer)
 
 optimize!(model_no_solution)
 
-try #hide
-if termination_status(model_no_solution) == MOI.OPTIMAL
-    optimal_solution = value(x)
-    optimal_objective = objective_value(model_no_solution)
-elseif termination_status(model_no_solution) == MOI.TIME_LIMIT && has_values(model_no_solution)
-    suboptimal_solution = value(x)
-    suboptimal_objective = objective_value(model_no_solution)
-else
-    error("The model was not solved correctly.")
-end
-catch err; showerror(stderr, err); end  #hide
+try                         #hide
+    if termination_status(model_no_solution) == MOI.OPTIMAL
+        optimal_solution = value(x)
+        optimal_objective = objective_value(model_no_solution)
+    elseif termination_status(model_no_solution) == MOI.TIME_LIMIT &&
+           has_values(model_no_solution)
+        suboptimal_solution = value(x)
+        suboptimal_objective = objective_value(model_no_solution)
+    else
+        error("The model was not solved correctly.")
+    end
+catch err                   #hide
+    showerror(stderr, err)  #hide
+end                         #hide

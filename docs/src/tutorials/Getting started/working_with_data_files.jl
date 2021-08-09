@@ -79,7 +79,7 @@ import XLSX
 # second argument is the name of the sheet.
 
 excel_df = DataFrames.DataFrame(
-    XLSX.readtable(joinpath(DATA_DIR, "SalesData.xlsx"), "SalesOrders")...
+    XLSX.readtable(joinpath(DATA_DIR, "SalesData.xlsx"), "SalesOrders")...,
 )
 
 # ### CSV files
@@ -114,14 +114,18 @@ ss_df = CSV.read(joinpath(DATA_DIR, "Cereal.txt"), DataFrames.DataFrame)
 # We can also specify the delimiter by passing the `delim` argument.
 
 delim_df = CSV.read(
-    joinpath(DATA_DIR, "Soccer.txt"), DataFrames.DataFrame, delim = "::"
+    joinpath(DATA_DIR, "Soccer.txt"),
+    DataFrames.DataFrame,
+    delim = "::",
 )
 
 # Note that by default, are read-only. If we wish to make changes to the data
 # read, we pass the `copycols = true` argument in the function call.
 
 ss_df = CSV.read(
-    joinpath(DATA_DIR, "Cereal.txt"), DataFrames.DataFrame, copycols = true
+    joinpath(DATA_DIR, "Cereal.txt"),
+    DataFrames.DataFrame,
+    copycols = true,
 )
 
 # ## Working with DataFrames
@@ -195,9 +199,8 @@ excel_df[4:6, 5] = [4, 5, 6]
 
 # Subset of the DataFrame to another data frame of matching size.
 
-excel_df[1:2, 6:7] =  DataFrames.DataFrame(
-    [-2 -2; -2 -2], [Symbol("Unit Cost"), :Total]
-)
+excel_df[1:2, 6:7] =
+    DataFrames.DataFrame([-2 -2; -2 -2], [Symbol("Unit Cost"), :Total])
 
 #-
 

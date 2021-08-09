@@ -47,24 +47,27 @@ function example_min_distortion()
     model = Model(SCS.Optimizer)
     set_silent(model)
     D = [
-        0.0 1.0 1.0 1.0;
-        1.0 0.0 2.0 2.0;
-        1.0 2.0 0.0 2.0;
+        0.0 1.0 1.0 1.0
+        1.0 0.0 2.0 2.0
+        1.0 2.0 0.0 2.0
         1.0 2.0 2.0 0.0
     ]
     @variable(model, c² >= 1.0)
     @variable(model, Q[1:4, 1:4], PSD)
     for i in 1:4
-        for j in (i + 1):4
+        for j in (i+1):4
             @constraint(model, D[i, j]^2 <= Q[i, i] + Q[j, j] - 2 * Q[i, j])
-            @constraint(model, Q[i, i] + Q[j, j] - 2 * Q[i, j] <= c² * D[i, j]^2)
+            @constraint(
+                model,
+                Q[i, i] + Q[j, j] - 2 * Q[i, j] <= c² * D[i, j]^2
+            )
         end
     end
     @objective(model, Min, c²)
     optimize!(model)
     Test.@test termination_status(model) == MOI.OPTIMAL
     Test.@test primal_status(model) == MOI.FEASIBLE_POINT
-    Test.@test objective_value(model) ≈ 4/3 atol = 1e-4
+    Test.@test objective_value(model) ≈ 4 / 3 atol = 1e-4
     return
 end
 

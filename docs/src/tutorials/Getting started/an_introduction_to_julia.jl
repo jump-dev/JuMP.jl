@@ -209,9 +209,11 @@ A * x ≈ b
 # Note that when multiplying vectors and matrices, dimensions matter. For
 # example, you can't multiply a vector by a vector:
 
-try  #hide
-b * b
-catch err; showerror(stderr, err); end  #hide
+try                         #hide
+    b * b
+catch err                   #hide
+    showerror(stderr, err)  #hide
+end                         #hide
 
 # But multiplying transposes works:
 
@@ -356,7 +358,6 @@ for i in 1:5
     println(i)
 end
 
-
 # !!! info
 #     Ranges are constructed as `start:stop`, or `start:step:stop`.
 
@@ -421,14 +422,14 @@ Dict("$(i)" => i for i in 1:10 if i % 2 == 1)
 # A simple function is defined as follows:
 
 function print_hello()
-    println("hello")
+    return println("hello")
 end
 print_hello()
 
 # Arguments can be added to a function:
 
 function print_it(x)
-    println(x)
+    return println(x)
 end
 print_it("hello")
 print_it(1.234)
@@ -437,7 +438,7 @@ print_it(:my_id)
 # Optional keyword arguments are also possible:
 
 function print_it(x; prefix = "value:")
-    println("$(prefix) $(x)")
+    return println("$(prefix) $(x)")
 end
 print_it(1.234)
 print_it(1.234, prefix = "val:")
@@ -490,9 +491,11 @@ nothing #hide
 
 # But what happens if we call `foo` with something we haven't defined it for?
 
-try  #hide
-foo([1, 2, 3])
-catch err; showerror(stdout, err) end  #hide
+try                         #hide
+    foo([1, 2, 3])
+catch err                   #hide
+    showerror(stdout, err)  #hide
+end                         #hide
 
 # We get a dreaded `MethodError`! A `MethodError` means that you passed a
 # function something that didn't match the type that it was expecting. In this

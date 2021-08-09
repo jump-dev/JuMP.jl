@@ -141,10 +141,14 @@ dim_u = length(c2)
 
 b = [-2; -3]
 
-A1 = [1 -3;
-     -1 -3]
-A2 = [1 -2;
-     -1 -1]
+A1 = [
+    1 -3
+    -1 -3
+]
+A2 = [
+    1 -2
+    -1 -1
+]
 
 M = 1000;
 
@@ -219,9 +223,14 @@ while true
         error("Unexpected status: $((t_status, p_status))")
     end
 
-    println("Status of the master problem is ", t_status,
-            "\nwith fm_current = ", fm_current,
-            "\nx_current = ", x_current)
+    println(
+        "Status of the master problem is ",
+        t_status,
+        "\nwith fm_current = ",
+        fm_current,
+        "\nx_current = ",
+        x_current,
+    )
 
     sub_problem_model = Model(GLPK.Optimizer)
 
@@ -254,9 +263,14 @@ while true
 
     γ = b' * u_current
 
-    println("Status of the subproblem is ", t_status_sub,
-        "\nwith fs_x_current = ", fs_x_current,
-        "\nand fm_current = ", fm_current)
+    println(
+        "Status of the subproblem is ",
+        t_status_sub,
+        "\nwith fs_x_current = ",
+        fs_x_current,
+        "\nand fm_current = ",
+        fm_current,
+    )
 
     if p_status_sub == MOI.FEASIBLE_POINT && fs_x_current == fm_current # we are done
         Test.@test value(t) ≈ -4 #hide
@@ -264,21 +278,25 @@ while true
         println("Optimal solution of the original problem found")
         println("The optimal objective value t is ", fm_current)
         println("The optimal x is ", x_current)
-                println("The optimal v is ", dual.(constr_ref_subproblem))
+        println("The optimal v is ", dual.(constr_ref_subproblem))
         println("################################################\n")
         break
     end
 
     if p_status_sub == MOI.FEASIBLE_POINT && fs_x_current < fm_current
-        println("\nThere is a suboptimal vertex, add the corresponding constraint")
+        println(
+            "\nThere is a suboptimal vertex, add the corresponding constraint",
+        )
         cv = A1' * u_current - c1
         @constraint(master_problem_model, t + cv' * x <= γ)
         println("t + ", cv, "ᵀ x <= ", γ)
     end
 
     if t_status_sub == MOI.INFEASIBLE_OR_UNBOUNDED
-        println("\nThere is an  extreme ray, adding the corresponding constraint")
-        ce = A1'* u_current
+        println(
+            "\nThere is an  extreme ray, adding the corresponding constraint",
+        )
+        ce = A1' * u_current
         @constraint(master_problem_model, ce' * x <= γ)
         println(ce, "ᵀ x <= ", γ)
     end

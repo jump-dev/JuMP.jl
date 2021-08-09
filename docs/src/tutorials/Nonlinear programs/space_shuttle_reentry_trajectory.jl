@@ -125,24 +125,24 @@ import Interpolations
 import Ipopt
 
 ## Global variables
-const w  = 203000.0  # weight (lb)
+const w = 203000.0  # weight (lb)
 const g₀ = 32.174    # acceleration (ft/sec^2)
-const m  = w / g₀    # mass (slug)
+const m = w / g₀    # mass (slug)
 
 ## Aerodynamic and atmospheric forces on the vehicle
-const ρ₀ =  0.002378
-const hᵣ =  23800.0
-const Rₑ =  20902900.0
-const μ  =  0.14076539e17
-const S  =  2690.0
+const ρ₀ = 0.002378
+const hᵣ = 23800.0
+const Rₑ = 20902900.0
+const μ = 0.14076539e17
+const S = 2690.0
 const a₀ = -0.20704
-const a₁ =  0.029244
-const b₀ =  0.07854
+const a₁ = 0.029244
+const b₀ = 0.07854
 const b₁ = -0.61592e-2
-const b₂ =  0.621408e-3
-const c₀ =  1.0672181
+const b₂ = 0.621408e-3
+const c₀ = 1.0672181
 const c₁ = -0.19213774e-1
-const c₂ =  0.21286289e-3
+const c₂ = 0.21286289e-3
 const c₃ = -0.10117249e-5
 
 ## Initial conditions
@@ -181,24 +181,24 @@ nothing #hide
 
 ## Uncomment the lines below to pass user options to the solver
 user_options = (
-    ## "mu_strategy" => "monotone",
-    ## "linear_solver" => "ma27",
+## "mu_strategy" => "monotone",
+## "linear_solver" => "ma27",
 )
 
 ## Create JuMP model, using Ipopt as the solver
 model = Model(optimizer_with_attributes(Ipopt.Optimizer, user_options...))
 
 @variables(model, begin
-               0 ≤ scaled_h[1:n]                # altitude (ft) / 1e5
-                          ϕ[1:n]                # longitude (rad)
-    deg2rad(-89) ≤        θ[1:n] ≤ deg2rad(89)  # latitude (rad)
-            1e-4 ≤ scaled_v[1:n]                # velocity (ft/sec) / 1e4
-    deg2rad(-89) ≤        γ[1:n] ≤ deg2rad(89)  # flight path angle (rad)
-                          ψ[1:n]                # azimuth (rad)
-    deg2rad(-90) ≤        α[1:n] ≤ deg2rad(90)  # angle of attack (rad)
-    deg2rad(-89) ≤        β[1:n] ≤ deg2rad( 1)  # bank angle (rad)
+    0 ≤ scaled_h[1:n]                # altitude (ft) / 1e5
+    ϕ[1:n]                # longitude (rad)
+    deg2rad(-89) ≤ θ[1:n] ≤ deg2rad(89)  # latitude (rad)
+    1e-4 ≤ scaled_v[1:n]                # velocity (ft/sec) / 1e4
+    deg2rad(-89) ≤ γ[1:n] ≤ deg2rad(89)  # flight path angle (rad)
+    ψ[1:n]                # azimuth (rad)
+    deg2rad(-90) ≤ α[1:n] ≤ deg2rad(90)  # angle of attack (rad)
+    deg2rad(-89) ≤ β[1:n] ≤ deg2rad(1)  # bank angle (rad)
     ##        3.5 ≤       Δt[1:n] ≤ 4.5          # time step (sec)
-                         Δt[1:n] == 4.0         # time step (sec)
+    Δt[1:n] == 4.0         # time step (sec)
 end)
 
 # !!! info
@@ -216,17 +216,17 @@ end)
 #     in slices of 4.0 seconds, we know that we require `n = 503` knots to discretize the whole trajectory.
 
 ## Fix initial conditions
-fix(scaled_h[1], h_s; force=true)
-fix(       ϕ[1], ϕ_s; force=true)
-fix(       θ[1], θ_s; force=true)
-fix(scaled_v[1], v_s; force=true)
-fix(       γ[1], γ_s; force=true)
-fix(       ψ[1], ψ_s; force=true)
+fix(scaled_h[1], h_s; force = true)
+fix(ϕ[1], ϕ_s; force = true)
+fix(θ[1], θ_s; force = true)
+fix(scaled_v[1], v_s; force = true)
+fix(γ[1], γ_s; force = true)
+fix(ψ[1], ψ_s; force = true)
 
 ## Fix final conditions
-fix(scaled_h[n], h_t; force=true)
-fix(scaled_v[n], v_t; force=true)
-fix(       γ[n], γ_t; force=true)
+fix(scaled_h[n], h_t; force = true)
+fix(scaled_v[n], v_t; force = true)
+fix(γ[n], γ_t; force = true)
 
 ## Initial guess: linear interpolation between boundary conditions
 x_s = [h_s, ϕ_s, θ_s, v_s, γ_s, ψ_s, α_s, β_s, t_s]
@@ -241,20 +241,38 @@ set_start_value.(all_variables(model), vec(initial_guess))
 
 ## Helper functions
 @NLexpression(model, c_L[j = 1:n], a₀ + a₁ * rad2deg(α[j]))
-@NLexpression(model, c_D[j = 1:n], b₀ + b₁ * rad2deg(α[j]) + b₂ * rad2deg(α[j])^2)
-@NLexpression(model,   ρ[j = 1:n], ρ₀ * exp(-h[j] / hᵣ))
-@NLexpression(model,   D[j = 1:n], 0.5 * c_D[j] * S * ρ[j] * v[j]^2)
-@NLexpression(model,   L[j = 1:n], 0.5 * c_L[j] * S * ρ[j] * v[j]^2)
-@NLexpression(model,   r[j = 1:n], Rₑ + h[j])
-@NLexpression(model,   g[j = 1:n], μ / r[j]^2)
+@NLexpression(
+    model,
+    c_D[j = 1:n],
+    b₀ + b₁ * rad2deg(α[j]) + b₂ * rad2deg(α[j])^2
+)
+@NLexpression(model, ρ[j = 1:n], ρ₀ * exp(-h[j] / hᵣ))
+@NLexpression(model, D[j = 1:n], 0.5 * c_D[j] * S * ρ[j] * v[j]^2)
+@NLexpression(model, L[j = 1:n], 0.5 * c_L[j] * S * ρ[j] * v[j]^2)
+@NLexpression(model, r[j = 1:n], Rₑ + h[j])
+@NLexpression(model, g[j = 1:n], μ / r[j]^2)
 
 ## Motion of the vehicle as a differential-algebraic system of equations (DAEs)
 @NLexpression(model, δh[j = 1:n], v[j] * sin(γ[j]))
-@NLexpression(model, δϕ[j = 1:n], (v[j] / r[j]) * cos(γ[j]) * sin(ψ[j]) / cos(θ[j]))
+@NLexpression(
+    model,
+    δϕ[j = 1:n],
+    (v[j] / r[j]) * cos(γ[j]) * sin(ψ[j]) / cos(θ[j])
+)
 @NLexpression(model, δθ[j = 1:n], (v[j] / r[j]) * cos(γ[j]) * cos(ψ[j]))
 @NLexpression(model, δv[j = 1:n], -(D[j] / m) - g[j] * sin(γ[j]))
-@NLexpression(model, δγ[j = 1:n], (L[j] / (m * v[j])) * cos(β[j]) + cos(γ[j]) * ((v[j] / r[j]) - (g[j] / v[j])))
-@NLexpression(model, δψ[j = 1:n], (1 / (m * v[j] * cos(γ[j]))) * L[j] * sin(β[j]) + (v[j] / (r[j] * cos(θ[j]))) * cos(γ[j]) * sin(ψ[j]) * sin(θ[j]))
+@NLexpression(
+    model,
+    δγ[j = 1:n],
+    (L[j] / (m * v[j])) * cos(β[j]) +
+    cos(γ[j]) * ((v[j] / r[j]) - (g[j] / v[j]))
+)
+@NLexpression(
+    model,
+    δψ[j = 1:n],
+    (1 / (m * v[j] * cos(γ[j]))) * L[j] * sin(β[j]) +
+    (v[j] / (r[j] * cos(θ[j]))) * cos(γ[j]) * sin(ψ[j]) * sin(θ[j])
+)
 
 ## System dynamics
 for j in 2:n
@@ -289,7 +307,11 @@ optimize!(model)  # Solve for the control and state
 @assert termination_status(model) == MOI.LOCALLY_SOLVED
 
 ## Show final crossrange of the solution
-println("Final latitude θ = ", round(objective_value(model) |> rad2deg, digits = 2), "°")
+println(
+    "Final latitude θ = ",
+    round(objective_value(model) |> rad2deg, digits = 2),
+    "°",
+)
 
 # ### Plotting the results
 
@@ -302,15 +324,38 @@ nothing #hide
 
 #-
 
-plt_altitude = plot(ts, value.(scaled_h), legend = nothing, title = "Altitude (100,000 ft)")
-plt_longitude = plot(ts, rad2deg.(value.(ϕ)), legend = nothing, title = "Longitude (deg)")
-plt_latitude = plot(ts, rad2deg.(value.(θ)), legend = nothing, title = "Latitude (deg)")
-plt_velocity = plot(ts, value.(scaled_v), legend = nothing, title = "Velocity (1000 ft/sec)")
-plt_flight_path = plot(ts, rad2deg.(value.(γ)), legend = nothing, title = "Flight Path (deg)")
-plt_azimuth = plot(ts, rad2deg.(value.(ψ)), legend = nothing, title = "Azimuth (deg)")
+plt_altitude = plot(
+    ts,
+    value.(scaled_h),
+    legend = nothing,
+    title = "Altitude (100,000 ft)",
+)
+plt_longitude =
+    plot(ts, rad2deg.(value.(ϕ)), legend = nothing, title = "Longitude (deg)")
+plt_latitude =
+    plot(ts, rad2deg.(value.(θ)), legend = nothing, title = "Latitude (deg)")
+plt_velocity = plot(
+    ts,
+    value.(scaled_v),
+    legend = nothing,
+    title = "Velocity (1000 ft/sec)",
+)
+plt_flight_path =
+    plot(ts, rad2deg.(value.(γ)), legend = nothing, title = "Flight Path (deg)")
+plt_azimuth =
+    plot(ts, rad2deg.(value.(ψ)), legend = nothing, title = "Azimuth (deg)")
 
-plt = plot(plt_altitude,  plt_velocity, plt_longitude, plt_flight_path, plt_latitude,
-           plt_azimuth, layout=grid(3, 2), linewidth=2, size=(700, 700))
+plt = plot(
+    plt_altitude,
+    plt_velocity,
+    plt_longitude,
+    plt_flight_path,
+    plt_latitude,
+    plt_azimuth,
+    layout = grid(3, 2),
+    linewidth = 2,
+    size = (700, 700),
+)
 
 #-
 
@@ -319,17 +364,47 @@ function q(h, v, a)
     qᵣ(h, v) = 17700 * √ρ(h) * (0.0001 * v)^3.07
     qₐ(a) = c₀ + c₁ * rad2deg(a) + c₂ * rad2deg(a)^2 + c₃ * rad2deg(a)^3
     ## Aerodynamic heating on the vehicle wing leading edge
-    qₐ(a) * qᵣ(h, v)
+    return qₐ(a) * qᵣ(h, v)
 end
 
-plt_attack_angle = plot(ts[1:end-1], rad2deg.(value.(α)[1:end-1]), legend=nothing, title="Angle of Attack (deg)")
-plt_bank_angle = plot(ts[1:end-1], rad2deg.(value.(β)[1:end-1]), legend=nothing, title="Bank Angle (deg)")
-plt_heating = plot(ts, q.(value.(scaled_h)*1e5, value.(scaled_v)*1e4, value.(α)), legend=nothing, title="Heating (BTU/ft/ft/sec)")
+plt_attack_angle = plot(
+    ts[1:end-1],
+    rad2deg.(value.(α)[1:end-1]),
+    legend = nothing,
+    title = "Angle of Attack (deg)",
+)
+plt_bank_angle = plot(
+    ts[1:end-1],
+    rad2deg.(value.(β)[1:end-1]),
+    legend = nothing,
+    title = "Bank Angle (deg)",
+)
+plt_heating = plot(
+    ts,
+    q.(value.(scaled_h) * 1e5, value.(scaled_v) * 1e4, value.(α)),
+    legend = nothing,
+    title = "Heating (BTU/ft/ft/sec)",
+)
 
-plt = plot(plt_attack_angle, plt_bank_angle, plt_heating, layout=grid(3, 1), linewidth=2, size=(700, 700))
+plt = plot(
+    plt_attack_angle,
+    plt_bank_angle,
+    plt_heating,
+    layout = grid(3, 1),
+    linewidth = 2,
+    size = (700, 700),
+)
 
 #-
 
-plt = plot(rad2deg.(value.(ϕ)), rad2deg.(value.(θ)), value.(scaled_h),
-           linewidth=2, legend=nothing, title="Space Shuttle Reentry Trajectory",
-           xlabel="Longitude (deg)", ylabel="Latitude (deg)", zlabel="Altitude (100,000 ft)")
+plt = plot(
+    rad2deg.(value.(ϕ)),
+    rad2deg.(value.(θ)),
+    value.(scaled_h),
+    linewidth = 2,
+    legend = nothing,
+    title = "Space Shuttle Reentry Trajectory",
+    xlabel = "Longitude (deg)",
+    ylabel = "Latitude (deg)",
+    zlabel = "Altitude (100,000 ft)",
+)

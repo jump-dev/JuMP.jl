@@ -88,13 +88,16 @@ dim_u = length(c2)
 
 b = [-2; -3]
 
-A1 = [1 -3;
-     -1 -3]
-A2 = [1 -2;
-     -1 -1]
+A1 = [
+    1 -3
+    -1 -3
+]
+A2 = [
+    1 -2
+    -1 -1
+]
 
 M = 1000;
-
 
 # ### Loading the necessary packages
 
@@ -162,12 +165,14 @@ function benders_lazy_constraint_callback(cb_data)
 
     γ = b' * u_current
 
-    if p_status_sub == MOI.FEASIBLE_POINT && fs_x_current  ≈  fm_current # we are done
+    if p_status_sub == MOI.FEASIBLE_POINT && fs_x_current ≈ fm_current # we are done
         @info("No additional constraint from the subproblem")
     end
 
     if p_status_sub == MOI.FEASIBLE_POINT && fs_x_current < fm_current
-        println("\nThere is a suboptimal vertex, add the corresponding constraint")
+        println(
+            "\nThere is a suboptimal vertex, add the corresponding constraint",
+        )
         cv = A1' * u_current - c1
         new_optimality_cons = @build_constraint(t + cv' * x <= γ)
         MOI.submit(
@@ -178,7 +183,9 @@ function benders_lazy_constraint_callback(cb_data)
     end
 
     if t_status_sub == MOI.INFEASIBLE_OR_UNBOUNDED
-        println("\nThere is an  extreme ray, adding the corresponding constraint")
+        println(
+            "\nThere is an  extreme ray, adding the corresponding constraint",
+        )
         ce = A1' * u_current
         new_feasibility_cons = @build_constraint(dot(ce, x) <= γ)
         MOI.submit(
@@ -216,9 +223,14 @@ end
 
 Test.@test value(t) ≈ -4 #hide
 
-println("Status of the master problem is ", t_status,
-        "\nwith fm_current = ", fm_current,
-        "\nx_current = ", x_current)
+println(
+    "Status of the master problem is ",
+    t_status,
+    "\nwith fm_current = ",
+    fm_current,
+    "\nx_current = ",
+    x_current,
+)
 
 # ### References
 
