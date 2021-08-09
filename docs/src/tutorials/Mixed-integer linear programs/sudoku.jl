@@ -56,17 +56,17 @@ using GLPK
 sudoku = Model(GLPK.Optimizer)
 
 # Create our variables
-@variable(sudoku, x[i=1:9, j=1:9, k=1:9], Bin)
+@variable(sudoku, x[i = 1:9, j = 1:9, k = 1:9], Bin)
 
 # Now we can begin to add our constraints. We'll actually start with something
 # obvious to us as humans, but what we need to enforce: that there can be only
 # one number per cell.
 
-for i = 1:9  ## For each row
-    for j = 1:9  ## and each column
+for i in 1:9  ## For each row
+    for j in 1:9  ## and each column
         ## Sum across all the possible digits. One and only one of the digits
         ## can be in this cell, so the sum must be equal to one.
-        @constraint(sudoku, sum(x[i, j, k] for k = 1:9) == 1)
+        @constraint(sudoku, sum(x[i, j, k] for k in 1:9) == 1)
     end
 end
 
@@ -74,12 +74,12 @@ end
 # are all very similar, so much so that we can actually add them at the same
 # time.
 
-for ind = 1:9  ## Each row, OR each column
-    for k = 1:9  ## Each digit
+for ind in 1:9  ## Each row, OR each column
+    for k in 1:9  ## Each digit
         ## Sum across columns (j) - row constraint
-        @constraint(sudoku, sum(x[ind, j, k] for j = 1:9) == 1)
+        @constraint(sudoku, sum(x[ind, j, k] for j in 1:9) == 1)
         ## Sum across rows (i) - column constraint
-        @constraint(sudoku, sum(x[i, ind, k] for i = 1:9) == 1)
+        @constraint(sudoku, sum(x[i, ind, k] for i in 1:9) == 1)
     end
 end
 
@@ -88,9 +88,9 @@ end
 # top-left corners of each 3x3 square with `for` loops, then sum over the
 # squares.
 
-for i = 1:3:7
-    for j = 1:3:7
-        for k = 1:9
+for i in 1:3:7
+    for j in 1:3:7
+        for k in 1:9
             ## i is the top left row, j is the top left column.
             ## We'll sum from i to i+2, e.g. i=4, r=4, 5, 6.
             @constraint(
@@ -117,8 +117,8 @@ init_sol = [
     0 0 0 4 1 9 0 0 5
     0 0 0 0 8 0 0 7 9
 ]
-for i = 1:9
-    for j = 1:9
+for i in 1:9
+    for j in 1:9
         ## If the space isn't empty
         if init_sol[i, j] != 0
             ## Then the corresponding variable for that digit and location must
@@ -135,9 +135,9 @@ optimize!(sudoku)
 x_val = value.(x)
 # Create a matrix to store the solution
 sol = zeros(Int, 9, 9)  # 9x9 matrix of integers
-for i = 1:9
-    for j = 1:9
-        for k = 1:9
+for i in 1:9
+    for j in 1:9
+        for k in 1:9
             ## Integer programs are solved as a series of linear programs so the
             ## values might not be precisely 0 and 1. We can just round them to
             ## the nearest integer to make it easier.

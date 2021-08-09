@@ -23,7 +23,8 @@ function link_example(content)
     edit_url = match(r"EditURL = \"(.+?)\"", content)[1]
     footer = match(r"^(---\n\n\*This page was generated using)"m, content)[1]
     content = replace(
-        content, footer => "[View this file on Github]($(edit_url)).\n\n" * footer
+        content,
+        footer => "[View this file on Github]($(edit_url)).\n\n" * footer,
     )
     return content
 end
@@ -102,13 +103,14 @@ makedocs(
         "Introduction" => "index.md",
         "installation.md",
         "Tutorials" => map(
-            subdir -> subdir => map(
-                file -> joinpath("tutorials", subdir, file),
-                filter(
-                    file -> endswith(file, ".md"),
-                    sort(readdir(joinpath(_TUTORIAL_DIR, subdir))),
+            subdir ->
+                subdir => map(
+                    file -> joinpath("tutorials", subdir, file),
+                    filter(
+                        file -> endswith(file, ".md"),
+                        sort(readdir(joinpath(_TUTORIAL_DIR, subdir))),
+                    ),
                 ),
-            ),
             _TUTORIAL_SUBDIR,
         ),
         "Manual" => [
@@ -147,7 +149,4 @@ makedocs(
     ],
 )
 
-deploydocs(
-    repo   = "github.com/jump-dev/JuMP.jl.git",
-    push_preview = true,
-)
+deploydocs(repo = "github.com/jump-dev/JuMP.jl.git", push_preview = true)

@@ -52,8 +52,8 @@ register(model, :foo_2, 2, foo_2; autodiff = true)
 @NLconstraint(model, foo_2(x[1], x[2]) <= 2)
 function_calls = 0
 optimize!(model)
-Test.@test objective_value(model) ≈ √3 atol=1e-4
-Test.@test value.(x) ≈ [1.0, 1.0] atol=1e-4
+Test.@test objective_value(model) ≈ √3 atol = 1e-4
+Test.@test value.(x) ≈ [1.0, 1.0] atol = 1e-4
 println("Naive approach: function calls = $(function_calls)")
 naive_approach = function_calls  #src
 
@@ -74,7 +74,7 @@ work when `x` is a `Float64` and a `ForwardDiff.Dual`.
 function memoize(foo::Function, n_outputs::Int)
     last_x, last_f = nothing, nothing
     last_dx, last_dfdx = nothing, nothing
-    function foo_i(i, x::T...) where {T <: Real}
+    function foo_i(i, x::T...) where {T<:Real}
         if T == Float64
             if x != last_x
                 last_x, last_f = x, foo(x...)
@@ -87,7 +87,7 @@ function memoize(foo::Function, n_outputs::Int)
             return last_dfdx[i]::T
         end
     end
-    return [(x...) -> foo_i(i, x...) for i = 1:n_outputs]
+    return [(x...) -> foo_i(i, x...) for i in 1:n_outputs]
 end
 
 # Let's see how it works. First, construct the memoized versions of `foo`:
@@ -120,8 +120,8 @@ register(model, :foo_2, 2, memoized_foo[2]; autodiff = true)
 @NLconstraint(model, foo_2(x[1], x[2]) <= 2)
 function_calls = 0
 optimize!(model)
-Test.@test objective_value(model) ≈ √3 atol=1e-4
-Test.@test value.(x) ≈ [1.0, 1.0] atol=1e-4
+Test.@test objective_value(model) ≈ √3 atol = 1e-4
+Test.@test value.(x) ≈ [1.0, 1.0] atol = 1e-4
 println("Memoized approach: function_calls = $(function_calls)")
 Test.@test function_calls <= naive_approach / 2 + 1  #src
 

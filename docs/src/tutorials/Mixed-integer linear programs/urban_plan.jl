@@ -21,19 +21,22 @@ function example_urban_plan()
     points = [5, 4, 3, -3, -4, -5]
     @variable(model, 0 <= y[rowcol, points, 1:5] <= 1, Int)
     ## Objective - combine the positive and negative parts
-    @objective(model, Max, sum(
-          3 * (y["R", 3, i] + y["C", 3, i])
-        + 1 * (y["R", 4, i] + y["C", 4, i])
-        + 1 * (y["R", 5, i] + y["C", 5, i])
-        - 3 * (y["R", -3, i] + y["C", -3, i])
-        - 1 * (y["R", -4, i] + y["C", -4, i])
-        - 1 * (y["R", -5, i] + y["C", -5, i])
-        for i in 1:5)
+    @objective(
+        model,
+        Max,
+        sum(
+            3 * (y["R", 3, i] + y["C", 3, i]) +
+            1 * (y["R", 4, i] + y["C", 4, i]) +
+            1 * (y["R", 5, i] + y["C", 5, i]) -
+            3 * (y["R", -3, i] + y["C", -3, i]) -
+            1 * (y["R", -4, i] + y["C", -4, i]) -
+            1 * (y["R", -5, i] + y["C", -5, i]) for i in 1:5
+        )
     )
     ## Constrain the number of residential lots
     @constraint(model, sum(x) == 12)
     ## Add the constraints that link the auxiliary y variables to the x variables
-    for i = 1:5
+    for i in 1:5
         @constraints(model, begin
             ## Rows
             y["R", 5, i] <= 1 / 5 * sum(x[i, :]) # sum = 5

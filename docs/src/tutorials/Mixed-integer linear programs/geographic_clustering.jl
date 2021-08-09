@@ -35,10 +35,94 @@ import LinearAlgebra
 # For this example, we'll use the 20 most populous cities in the United States.
 
 cities = DataFrames.DataFrame(
-    city = ["New York, NY", "Los Angeles, CA", "Chicago, IL", "Houston, TX", "Philadelphia, PA", "Phoenix, AZ", "San Antonio, TX", "San Diego, CA", "Dallas, TX", "San Jose, CA", "Austin, TX", "Indianapolis, IN", "Jacksonville, FL", "San Francisco, CA", "Columbus, OH", "Charlotte, NC", "Fort Worth, TX", "Detroit, MI", "El Paso, TX", "Memphis, TN"],
-    population = [8.405,3.884,2.718,2.195,1.553,1.513,1.409,1.355,1.257,0.998,0.885,0.843,0.842,0.837,0.822,0.792,0.792,0.688,0.674,0.653],
-    lat = [40.7127,34.0522,41.8781,29.7604,39.9525,33.4483,29.4241,32.7157,32.7766,37.3382,30.2671,39.7684,30.3321,37.7749,39.9611,35.2270,32.7554,42.3314,31.7775,35.1495],
-    lon = [-74.0059,-118.2436,-87.6297,-95.3698,-75.1652,-112.0740,-98.4936,-117.1610,-96.7969,-121.8863,-97.7430,-86.1580,-81.6556,-122.4194,-82.9987,-80.8431,-97.3307,-83.0457,-106.4424,-90.0489],
+    city = [
+        "New York, NY",
+        "Los Angeles, CA",
+        "Chicago, IL",
+        "Houston, TX",
+        "Philadelphia, PA",
+        "Phoenix, AZ",
+        "San Antonio, TX",
+        "San Diego, CA",
+        "Dallas, TX",
+        "San Jose, CA",
+        "Austin, TX",
+        "Indianapolis, IN",
+        "Jacksonville, FL",
+        "San Francisco, CA",
+        "Columbus, OH",
+        "Charlotte, NC",
+        "Fort Worth, TX",
+        "Detroit, MI",
+        "El Paso, TX",
+        "Memphis, TN",
+    ],
+    population = [
+        8.405,
+        3.884,
+        2.718,
+        2.195,
+        1.553,
+        1.513,
+        1.409,
+        1.355,
+        1.257,
+        0.998,
+        0.885,
+        0.843,
+        0.842,
+        0.837,
+        0.822,
+        0.792,
+        0.792,
+        0.688,
+        0.674,
+        0.653,
+    ],
+    lat = [
+        40.7127,
+        34.0522,
+        41.8781,
+        29.7604,
+        39.9525,
+        33.4483,
+        29.4241,
+        32.7157,
+        32.7766,
+        37.3382,
+        30.2671,
+        39.7684,
+        30.3321,
+        37.7749,
+        39.9611,
+        35.2270,
+        32.7554,
+        42.3314,
+        31.7775,
+        35.1495,
+    ],
+    lon = [
+        -74.0059,
+        -118.2436,
+        -87.6297,
+        -95.3698,
+        -75.1652,
+        -112.0740,
+        -98.4936,
+        -117.1610,
+        -96.7969,
+        -121.8863,
+        -97.7430,
+        -86.1580,
+        -81.6556,
+        -122.4194,
+        -82.9987,
+        -80.8431,
+        -97.3307,
+        -83.0457,
+        -106.4424,
+        -90.0489,
+    ],
 )
 
 # ### Model Specifics
@@ -47,7 +131,7 @@ cities = DataFrames.DataFrame(
 # that the ideal or target population $P$ for a group is simply the total
 # population of the 20 cities divided by 3:
 
-n = size(cities,1)
+n = size(cities, 1)
 k = 3
 P = sum(cities.population) / k
 
@@ -78,7 +162,7 @@ end
 
 dm = LinearAlgebra.LowerTriangular([
     haversine(cities.lat[i], cities.lon[i], cities.lat[j], cities.lon[j])
-    for i = 1:n, j = 1:n
+    for i in 1:n, j in 1:n
 ])
 
 # ### Build the model
@@ -138,7 +222,7 @@ end
 # We can now add an objective to our model which will simply be to minimize the
 # dot product of $z$ and our distance matrix, `dm`.
 
-@objective(model, Min, sum(dm[i, j] * z[i, j] for i = 1:n, j = 1:i))
+@objective(model, Min, sum(dm[i, j] * z[i, j] for i in 1:n, j in 1:i))
 
 # We can then call `optimize!` and review the results.
 
@@ -154,7 +238,7 @@ optimize!(model)
 
 cities.group = zeros(n)
 
-for i = 1:n, j = 1:k
+for i in 1:n, j in 1:k
     if round(Int, value(x[i, j])) == 1
         cities.group[i] = j
     end

@@ -25,7 +25,8 @@ function example_mle(; verbose = true)
     @NLobjective(
         model,
         Max,
-        n / 2 * log(1 / (2 * π * σ^2)) - sum((data[i] - μ)^2 for i = 1:n) / (2 * σ^2)
+        n / 2 * log(1 / (2 * π * σ^2)) -
+        sum((data[i] - μ)^2 for i in 1:n) / (2 * σ^2)
     )
     optimize!(model)
     if verbose

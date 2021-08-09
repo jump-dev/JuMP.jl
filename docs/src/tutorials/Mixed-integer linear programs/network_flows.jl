@@ -64,26 +64,30 @@ import LinearAlgebra
 # ![Flow Network 1](../../assets/g1.svg)
 
 G = [
-    0 100 30  0  0;
-    0   0 20  0  0;
-    0   0  0 10 60;
-    0  15  0  0 50;
-    0   0  0  0  0;
+    0 100 30 0 0
+    0 0 20 0 0
+    0 0 0 10 60
+    0 15 0 0 50
+    0 0 0 0 0
 ]
 
 n = size(G)[1]
 
 shortest_path = Model(GLPK.Optimizer)
 
-@variable(shortest_path, x[1:n,1:n], Bin)
+@variable(shortest_path, x[1:n, 1:n], Bin)
 # Arcs with zero cost are not a part of the path as they do no exist
-@constraint(shortest_path, [i = 1:n, j = 1:n; G[i,j] == 0], x[i,j] == 0)
+@constraint(shortest_path, [i = 1:n, j = 1:n; G[i, j] == 0], x[i, j] == 0)
 # Flow conservation constraint
-@constraint(shortest_path, [i = 1:n; i != 1 && i != 2], sum(x[i,:]) == sum(x[:,i]))
+@constraint(
+    shortest_path,
+    [i = 1:n; i != 1 && i != 2],
+    sum(x[i, :]) == sum(x[:, i])
+)
 # Flow coming out of source = 1
-@constraint(shortest_path, sum(x[1,:]) - sum(x[:,1]) == 1)
+@constraint(shortest_path, sum(x[1, :]) - sum(x[:, 1]) == 1)
 # Flowing coming out of destination = -1 i.e. Flow entering destination = 1
-@constraint(shortest_path, sum(x[2,:]) - sum(x[:,2]) == -1)
+@constraint(shortest_path, sum(x[2, :]) - sum(x[:, 2]) == -1)
 @objective(shortest_path, Min, LinearAlgebra.dot(G, x))
 
 optimize!(shortest_path)
@@ -118,20 +122,20 @@ value.(x)
 # ![Flow Network 2](../../assets/g2.svg)
 
 G = [
-    6 4 5 0;
-    0 3 6 0;
-    5 0 4 3;
-    7 5 5 5;
+    6 4 5 0
+    0 3 6 0
+    5 0 4 3
+    7 5 5 5
 ]
 
 n = size(G)[1]
 
 assignment = Model(GLPK.Optimizer)
-@variable(assignment, y[1:n,1:n], Bin)
+@variable(assignment, y[1:n, 1:n], Bin)
 # One person can only be assigned to one object
-@constraint(assignment, [i = 1:n], sum(y[:,i]) == 1)
+@constraint(assignment, [i = 1:n], sum(y[:, i]) == 1)
 # One object can only be assigned to one person
-@constraint(assignment, [j = 1:n], sum(y[j,:]) == 1)
+@constraint(assignment, [j = 1:n], sum(y[j, :]) == 1)
 @objective(assignment, Max, LinearAlgebra.dot(G, y))
 
 optimize!(assignment)
@@ -159,25 +163,25 @@ value.(y)
 # ![Flow Network 3](../../assets/g3.svg)
 
 G = [
-    0 3 2 2 0 0 0 0;
-    0 0 0 0 5 1 0 0;
-    0 0 0 0 1 3 1 0;
-    0 0 0 0 0 1 0 0;
-    0 0 0 0 0 0 0 4;
-    0 0 0 0 0 0 0 2;
-    0 0 0 0 0 0 0 4;
-    0 0 0 0 0 0 0 0;
+    0 3 2 2 0 0 0 0
+    0 0 0 0 5 1 0 0
+    0 0 0 0 1 3 1 0
+    0 0 0 0 0 1 0 0
+    0 0 0 0 0 0 0 4
+    0 0 0 0 0 0 0 2
+    0 0 0 0 0 0 0 4
+    0 0 0 0 0 0 0 0
 ]
 
 n = size(G)[1]
 
 max_flow = Model(GLPK.Optimizer)
 
-@variable(max_flow, f[1:n,1:n] >= 0)
+@variable(max_flow, f[1:n, 1:n] >= 0)
 # Capacity constraints
-@constraint(max_flow, [i = 1:n, j = 1:n], f[i,j] <= G[i,j])
+@constraint(max_flow, [i = 1:n, j = 1:n], f[i, j] <= G[i, j])
 # Flow conservation constraints
-@constraint(max_flow, [i = 1:n; i != 1 && i != 8], sum(f[i,:]) == sum(f[:,i]))
+@constraint(max_flow, [i = 1:n; i != 1 && i != 8], sum(f[i, :]) == sum(f[:, i]))
 @objective(max_flow, Max, sum(f[1, :]))
 
 optimize!(max_flow)

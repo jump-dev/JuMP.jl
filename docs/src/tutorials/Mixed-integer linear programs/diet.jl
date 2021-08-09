@@ -26,51 +26,70 @@ end
 function example_diet(; verbose = true)
     ## Nutrition guidelines
     categories = ["calories", "protein", "fat", "sodium"]
-    category_data = Containers.DenseAxisArray([
-        1800 2200;
-        91   Inf;
-        0    65;
-        0    1779
-        ], categories, ["min", "max"]
+    category_data = Containers.DenseAxisArray(
+        [
+            1800 2200
+            91 Inf
+            0 65
+            0 1779
+        ],
+        categories,
+        ["min", "max"],
     )
     Test.@test category_data["protein", "min"] == 91.0
     Test.@test category_data["sodium", "max"] == 1779.0
     ## Foods
     foods = [
-        "hamburger", "chicken", "hot dog", "fries", "macaroni", "pizza",
-        "salad", "milk", "ice cream",
+        "hamburger",
+        "chicken",
+        "hot dog",
+        "fries",
+        "macaroni",
+        "pizza",
+        "salad",
+        "milk",
+        "ice cream",
     ]
     cost = Containers.DenseAxisArray(
         [2.49, 2.89, 1.50, 1.89, 2.09, 1.99, 2.49, 0.89, 1.59],
-        foods
+        foods,
     )
     food_data = Containers.DenseAxisArray(
         [
-            410 24 26 730;
-            420 32 10 1190;
-            560 20 32 1800;
-            380  4 19 270;
-            320 12 10 930;
-            320 15 12 820;
-            320 31 12 1230;
-            100  8 2.5 125;
-            330  8 10 180
-        ], foods, categories
+            410 24 26 730
+            420 32 10 1190
+            560 20 32 1800
+            380 4 19 270
+            320 12 10 930
+            320 15 12 820
+            320 31 12 1230
+            100 8 2.5 125
+            330 8 10 180
+        ],
+        foods,
+        categories,
     )
     Test.@test food_data["hamburger", "calories"] == 410.0
     Test.@test food_data["milk", "fat"] == 2.5
     ## Build model
     model = Model(GLPK.Optimizer)
-    @variables(model, begin
-        ## Variables for nutrition info
-        category_data[c, "min"] <= nutrition[c = categories] <= category_data[c, "max"]
-        ## Variables for which foods to buy
-        buy[foods] >= 0
-    end)
+    @variables(
+        model,
+        begin
+            ## Variables for nutrition info
+            category_data[c, "min"] <=
+            nutrition[c = categories] <=
+            category_data[c, "max"]
+            ## Variables for which foods to buy
+            buy[foods] >= 0
+        end
+    )
     ## Objective - minimize cost
     @objective(model, Min, sum(cost[f] * buy[f] for f in foods))
     ## Nutrition constraints
-    @constraint(model, [c in categories],
+    @constraint(
+        model,
+        [c in categories],
         sum(food_data[f, c] * buy[f] for f in foods) == nutrition[c]
     )
     ## Solve
