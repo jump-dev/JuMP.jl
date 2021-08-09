@@ -1128,8 +1128,8 @@ end
 
 function add_variable(
     model::Model,
-    variables::Vector{<:VariableConstrainedOnCreation},
-    names::Vector{String},
+    variables::AbstractArray{<:VariableConstrainedOnCreation},
+    names::AbstractArray{String},
 )
     return add_variable.(model, variables, names)
 end

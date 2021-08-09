@@ -1276,6 +1276,25 @@ function test_broadcasting_variable_in_set()
         @variable(model, u[1:3] in MOI.GreaterThan.([3.0, 2.0])),
     )
     @test num_variables(model) == 6
+
+    # SparseAxisArray
+    @variable(model, b[i=1:2, j=1:2; i+j==3] in MOI.GreaterThan(3.0))
+    @test num_variables(model) == 8
+
+    @variable(model, a[i=1:2, j=1:2; i+j==3] in
+        JuMP.Containers.SparseAxisArray(
+            Dict(
+                (1,2) => MOI.GreaterThan(3.0),
+                (2,1) => MOI.GreaterThan(3.0),
+    )))
+    @test num_variables(model) == 10
+
+    # #DenseAxisArray (F)
+    # @variable(model, a[i=["x","xx"]] in MOI.GreaterThan(3.0))
+    # @test num_variables(model) == 8
+
+    # @variable(model, z1[1:2, 2:4] in MOI.GreaterThan(3.0))
+    # @test num_variables(model) == 12
     return
 end
 
