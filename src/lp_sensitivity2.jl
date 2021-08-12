@@ -414,13 +414,21 @@ _convert_nonbasic_status(::MOI.LessThan) = MOI.NONBASIC_AT_UPPER
 _convert_nonbasic_status(::MOI.GreaterThan) = MOI.NONBASIC_AT_LOWER
 _convert_nonbasic_status(::Any) = MOI.NONBASIC
 
+function _try_get_constraint_basis_status(model::Model, constraint)
+    try
+        return MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
+    catch e
+        error("This solver doesn't support querying the basis.")
+    end
+end
+
 function _standard_form_basis(model::Model, std_form)
     variable_seen = fill(false, length(std_form.columns))
     variable_status = fill(MOI.BASIC, length(std_form.columns))
     bound_status = fill(MOI.BASIC, length(std_form.bounds))
     constraint_status = fill(MOI.BASIC, length(std_form.constraints))
     for (i, c) in enumerate(std_form.bounds)
-        status = MOI.get(model, MOI.ConstraintBasisStatus(), c)
+        status = _try_get_constraint_basis_status(model, c)
         c_obj = constraint_object(c)
         if status == MOI.NONBASIC
             status = _convert_nonbasic_status(c_obj.set)
@@ -445,7 +453,7 @@ function _standard_form_basis(model::Model, std_form)
         variable_status[col] = abs(value(x)) < 1e-8 ? MOI.NONBASIC : MOI.BASIC
     end
     for (i, c) in enumerate(std_form.constraints)
-        status = MOI.get(model, MOI.ConstraintBasisStatus(), c)
+        status = _try_get_constraint_basis_status(model, c)
         if status == MOI.NONBASIC
             status = _convert_nonbasic_status(constraint_object(c).set)
         end
