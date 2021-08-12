@@ -418,7 +418,11 @@ function _try_get_constraint_basis_status(model::Model, constraint)
     try
         return MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
     catch e
-        error("This solver doesn't support querying the basis.")
+        error(
+            "Unable to query LP sensitivity information because this solver " * 
+            "does not support querying the status of variables and constraints " *
+            "in the optimal basis."
+            )
     end
 end
 
