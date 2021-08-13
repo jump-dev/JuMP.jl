@@ -309,11 +309,11 @@ function Base.eltype(iter::DenseAxisArrayKeys)
 end
 function Base.iterate(iter::DenseAxisArrayKeys)
     next = iterate(iter.product_iter)
-    return next == nothing ? nothing : (DenseAxisArrayKey(next[1]), next[2])
+    return next === nothing ? nothing : (DenseAxisArrayKey(next[1]), next[2])
 end
 function Base.iterate(iter::DenseAxisArrayKeys, state)
     next = iterate(iter.product_iter, state)
-    return next == nothing ? nothing : (DenseAxisArrayKey(next[1]), next[2])
+    return next === nothing ? nothing : (DenseAxisArrayKey(next[1]), next[2])
 end
 function Base.keys(a::DenseAxisArray)
     return DenseAxisArrayKeys(a)
