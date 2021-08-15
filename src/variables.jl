@@ -1246,7 +1246,7 @@ function _info_from_variable(v::VariableRef)
     fixed_value = has_fix ? fix_value(v) : NaN
     has_start, start = false, NaN
     if MOI.supports(
-        owner_model(v),
+        backend(owner_model(v)),
         MOI.VariablePrimalStart(),
         MOI.VariableIndex,
     )
