@@ -788,6 +788,11 @@ julia> start_value(y)
 2.0
 ```
 
+!!! warning
+    Some solvers do not support start values. If a solver does not support start
+    values, an `MathOptInterface.UnsupportedAttribute{MathOptInterface.VariablePrimalStart}`
+    error will be thrown.
+
 !!! note
     Prior to JuMP 0.19, the previous solution to a solve was automatically set
     as the new starting value. JuMP 0.19 no longer does this automatically. To
