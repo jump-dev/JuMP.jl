@@ -1244,10 +1244,15 @@ function _info_from_variable(v::VariableRef)
     ub = has_ub ? upper_bound(v) : Inf
     has_fix = is_fixed(v)
     fixed_value = has_fix ? fix_value(v) : NaN
-    start_or_nothing = start_value(v)
-    has_start = !(start_or_nothing isa Nothing)
-    start = has_start ? start_or_nothing : NaN
-    has_start = start !== Nothing
+    has_start, start = false, NaN
+    if MOI.supports(
+        backend(owner_model(v)),
+        MOI.VariablePrimalStart(),
+        MOI.VariableIndex,
+    )
+        start = start_value(v)
+        has_start = start !== nothing
+    end
     binary = is_binary(v)
     integer = is_integer(v)
     return VariableInfo(
