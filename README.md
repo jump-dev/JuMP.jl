@@ -34,7 +34,7 @@ visiting [jump.dev](https://jump.dev).
 Use the [Community forum] to search for answers to previously asked questions,
 or ask a new question.
 
-The post [PSA: make it easier to help you](https://discourse.julialang.org/t/psa-make-it-easier-to-help-you/14757),
+The post [Please read: make it easier to help you](https://discourse.julialang.org/t/please-read-make-it-easier-to-help-you/14757),
 describes the best practices for asking a question.
 
 [Community forum]: https://discourse.julialang.org/c/domain/opt
