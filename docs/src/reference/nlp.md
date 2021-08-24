@@ -19,6 +19,7 @@ add_NL_constraint
 @NLexpression
 @NLexpressions
 NonlinearExpression
+add_NL_expression
 ```
 
 ## [Objectives](@id ref_nl_objectives)

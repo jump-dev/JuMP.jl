@@ -560,6 +560,53 @@ function _Derivatives.expr_to_nodedata(
     return nothing
 end
 
+function _Derivatives.expr_to_nodedata(
+    ex::GenericAffExpr,
+    nd::Vector{NodeData},
+    values::Vector{Float64},
+    parentid,
+    r::_Derivatives.UserOperatorRegistry,
+)
+    push!(nd, NodeData(CALL, operator_to_id[:+], parentid))
+    sum_parent = length(nd)
+    if !iszero(ex.constant)
+        _Derivatives.expr_to_nodedata(ex.constant, nd, values, sum_parent, r)
+    end
+    for (v, c) in ex.terms
+        if isone(c)  # Optimization: no need for * node.
+            _Derivatives.expr_to_nodedata(v, nd, values, sum_parent, r)
+        else
+            push!(nd, NodeData(CALL, operator_to_id[:*], sum_parent))
+            mult_parent = length(nd)
+            _Derivatives.expr_to_nodedata(c, nd, values, mult_parent, r)
+            _Derivatives.expr_to_nodedata(v, nd, values, mult_parent, r)
+        end
+    end
+    return
+end
+
+function _Derivatives.expr_to_nodedata(
+    ex::GenericQuadExpr,
+    nd::Vector{NodeData},
+    values::Vector{Float64},
+    parentid,
+    r::_Derivatives.UserOperatorRegistry,
+)
+    push!(nd, NodeData(CALL, operator_to_id[:+], parentid))
+    sum_parent = length(nd)
+    _Derivatives.expr_to_nodedata(ex.aff, nd, values, sum_parent, r)
+    for (xy, c) in ex.terms
+        push!(nd, NodeData(CALL, operator_to_id[:*], sum_parent))
+        mult_parent = length(nd)
+        _Derivatives.expr_to_nodedata(xy.a, nd, values, mult_parent, r)
+        _Derivatives.expr_to_nodedata(xy.b, nd, values, mult_parent, r)
+        if !isone(c)  # Optimization: no need for * node.
+            _Derivatives.expr_to_nodedata(c, nd, values, mult_parent, r)
+        end
+    end
+    return
+end
+
 # Construct a _NonlinearExprData from a Julia expression.
 # VariableRef objects should be spliced into the expression.
 function _NonlinearExprData(m::Model, ex::Expr)
