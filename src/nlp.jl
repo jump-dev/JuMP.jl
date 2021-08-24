@@ -1999,6 +1999,28 @@ function register(
 end
 
 """
+    add_NL_expression(model::Model, expr::Expr)
+
+Add a nonlinear expression `expr` to `model`.
+
+This function is most useful if the expression `expr` is generated
+programmatically, and you cannot use [`@NLexpression`](@ref).
+
+## Notes
+
+ * You must interpolate the variables directly into the expression `expr`.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> add_NL_expression(model, :(\$(x) + \$(x)^2))
+```
+"""
+function add_NL_expression(model::Model, ex)
+    return NonlinearExpression(model, _NonlinearExprData(model, ex))
+end
+
+"""
     set_NL_objective(model::Model, sense::MOI.OptimizationSense, expr::Expr)
 
 Set the nonlinear objective of `model` to the expression `expr`, with the

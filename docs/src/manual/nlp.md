@@ -569,13 +569,35 @@ which can be queried using the [`NLPEvaluator`](@ref).
 
 !!! warning
     This section requires advanced knowledge of Julia's `Expr`. You should read
-    the [Expressions and evaluation](https://docs.julialang.org/en/v1/manual/metaprogramming/#Expressions-and-evaluation) section of the Julia documentation first.
+    the [Expressions and evaluation](https://docs.julialang.org/en/v1/manual/metaprogramming/#Expressions-and-evaluation) 
+    section of the Julia documentation first.
 
-In addition to the [`@NLobjective`](@ref) and [`@NLconstraint`](@ref) macros, it
-is also possible to provide Julia `Expr` objects directly by using
+In addition to the [`@NLexpression`](@ref), [`@NLobjective`](@ref) and 
+[`@NLconstraint`](@ref) macros, it is also possible to provide Julia `Expr` 
+objects directly by using [`add_NL_expression`](@ref), 
 [`set_NL_objective`](@ref) and [`add_NL_constraint`](@ref).
 
 This input form may be useful if the expressions are generated programmatically.
+
+### Add a nonlinear expression
+
+Use [`add_NL_expression`](@ref) to add a nonlinear expression to the model.
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> expr = :($(x) + sin($(x)^2))
+:(x + sin(x ^ 2))
+
+julia> expr_ref = add_NL_expr(model, expr)
+"Reference to nonlinear expression #1"
+```
+This is equivalent to
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> @NLexpression(model, expr_ref, x + sin(x^2))
+"Reference to nonlinear expression #1"
+```
+
+!!! note
+    You must interpolate the variables directly into the expression `expr`.
 
 ### Set the objective function
 
@@ -591,9 +613,6 @@ This is equivalent to
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
 julia> @NLobjective(model, Min, x + x^2)
 ```
-
-!!! note
-    You must interpolate the variables directly into the expression `expr`.
 
 !!! note
     You must use `MOI.MIN_SENSE` or `MOI.MAX_SENSE` instead of `Min` and `Max`.
