@@ -587,7 +587,7 @@ Use [`add_NL_expression`](@ref) to add a nonlinear expression to the model.
 julia> expr = :($(x) + sin($(x)^2))
 :(x + sin(x ^ 2))
 
-julia> expr_ref = add_NL_expr(model, expr)
+julia> expr_ref = add_NL_expression(model, expr)
 "Reference to nonlinear expression #1"
 ```
 This is equivalent to
