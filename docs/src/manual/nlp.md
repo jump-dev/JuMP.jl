@@ -583,7 +583,10 @@ This input form may be useful if the expressions are generated programmatically.
 
 Use [`add_NL_expression`](@ref) to add a nonlinear expression to the model.
 
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest; setup=:(using JuMP; model = Model())
+julia> @variable(model, x)
+x
+
 julia> expr = :($(x) + sin($(x)^2))
 :(x + sin(x ^ 2))
 
