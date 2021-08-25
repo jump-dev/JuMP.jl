@@ -20,6 +20,8 @@ jobs:
           using Pkg
           # If you update the version, also update the style guide docs.
           Pkg.add(PackageSpec(name="JuliaFormatter", version="0.13.2"))
+          # Remove once issue #189 in Tokenize.jl is fixed
+          Pkg.add(PackageSpec(name="Tokenize", version="0.5.18"))
           using JuliaFormatter
           format("src", verbose=true)
           format("test", verbose=true)
