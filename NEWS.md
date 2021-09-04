@@ -1,6 +1,21 @@
 JuMP release notes
 ==================
 
+Version 0.21.10 (September 4, 2021)
+---------------------------------
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.10).
+A summary of changes are as follows:
+
+- New features:
+  * Add `add_NL_expression`
+  * `add_NL_xxx` functions now support `AffExpr` and `QuadExpr` as terms
+- Documentation, maintenance and performance:
+  * Fix bug in `solution_summary`
+  * Fix bug in `relax_integrality`
+  * Improve error message in `lp_sensitivity_report`
+
 Version 0.21.9 (August 1, 2021)
 ---------------------------------
 
