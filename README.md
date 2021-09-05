@@ -8,11 +8,11 @@ embedded in [Julia](https://julialang.org/). You can find out more about us by
 visiting [jump.dev](https://jump.dev).
 
 
-**Latest Release**: [![version](https://juliahub.com/docs/JuMP/DmXqY/0.21.9/version.svg)](https://juliahub.com/ui/Packages/JuMP/DmXqY/0.21.9) (`release-0.21` branch):
+**Latest Release**: [![version](https://juliahub.com/docs/JuMP/DmXqY/0.21.10/version.svg)](https://juliahub.com/ui/Packages/JuMP/DmXqY/0.21.10) (`release-0.21` branch):
   * Installation via the Julia package manager:
     * `import Pkg; Pkg.add("JuMP")`
   * Get help:
-    * Read the [Documentation](https://jump.dev/JuMP.jl/v0.21.9/)
+    * Read the [Documentation](https://jump.dev/JuMP.jl/v0.21.10/)
     * Ask a question on the [Community forum]
   * Testing status:
     * Github Actions: [![Build Status](https://github.com/jump-dev/JuMP.jl/workflows/CI/badge.svg?branch=release-0.21)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI)
