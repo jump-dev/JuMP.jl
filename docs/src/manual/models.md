@@ -241,7 +241,7 @@ with optimizer MOIB.LazyBridgeOptimizer{GLPK.Optimizer}
 The backend is a `MOIU.CachingOptimizer` in the state `EMPTY_OPTIMIZER` and mode
 `AUTOMATIC`.
 
-Alternatively, use [`unsafe_backend`](@ref) to access the innermost 
+Alternatively, use [`unsafe_backend`](@ref) to access the innermost
 `GLPK.Optimizer` object:
 ```jldoctest models_backends
 julia> unsafe_backend(model)
@@ -396,5 +396,9 @@ julia> @variable(model, x[1:2]);
 
 julia> @constraint(model, 1 <= x[1] + x[2] <= 2)
 ERROR: Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.
+
+If you expected the solver to support your problem, you may have an error in our formulation. Otherwise, consider using a different solver.
+
+The list of available solvers, along with the problem types they support, is available at https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.
 [...]
 ```

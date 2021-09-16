@@ -268,8 +268,15 @@ function test_bridges_automatic_disabled()
     @test JuMP.backend(model) isa MOIU.CachingOptimizer
     @test !(JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer)
     @variable model x
+    F = MathOptInterface.ScalarAffineFunction{Float64}
+    S = MathOptInterface.Interval{Float64}
     err = ErrorException(
-        "Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver, try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver.",
+        "Constraints of type $(F)-in-$(S) are not supported by the " *
+        "solver.\n\nIf you expected the solver to support your problem, " *
+        "you may have an error in our formulation. Otherwise, consider " *
+        "using a different solver.\n\nThe list of available solvers, " *
+        "along with the problem types they support, is available at " *
+        "https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.",
     )
     @test_throws err @constraint model 0 <= x + 1 <= 1
 end
@@ -280,8 +287,15 @@ function test_bridges_direct()
     model = JuMP.direct_model(optimizer)
     @test !JuMP.bridge_constraints(model)
     @variable model x
+    F = MathOptInterface.ScalarAffineFunction{Float64}
+    S = MathOptInterface.Interval{Float64}
     err = ErrorException(
-        "Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.",
+        "Constraints of type $(F)-in-$(S) are not supported by the " *
+        "solver.\n\nIf you expected the solver to support your problem, " *
+        "you may have an error in our formulation. Otherwise, consider " *
+        "using a different solver.\n\nThe list of available solvers, " *
+        "along with the problem types they support, is available at " *
+        "https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.",
     )
     @test_throws err @constraint model 0 <= x + 1 <= 1
 end
@@ -338,7 +352,7 @@ function test_bridges_add_after_con_model_optimizer()
         # bridge explanation has been called. The sequence of errors could vary
         # between MOI versions.
         @test occursin("Nonnegative", err.msg)
-        @test occursin("are not supported and cannot be bridged", err.msg)
+        @test occursin("are not supported", err.msg)
     end
     @test flag
     JuMP.add_bridge(model, NonnegativeBridge)

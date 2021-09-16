@@ -514,29 +514,17 @@ end
 
 function moi_add_constraint(
     model::MOI.ModelLike,
-    f::MOI.AbstractFunction,
-    s::MOI.AbstractSet,
-)
-    if !MOI.supports_constraint(model, typeof(f), typeof(s))
-        if moi_mode(model) == DIRECT
-            bridge_message = "."
-        elseif moi_bridge_constraints(model)
-            error(
-                sprint(
-                    io -> MOI.Bridges.debug(
-                        model.optimizer,
-                        typeof(f),
-                        typeof(s);
-                        io = io,
-                    ),
-                ),
-            )
-        else
-            bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
-        end
+    f::F,
+    s::S,
+) where {F<:MOI.AbstractFunction,S<:MOI.AbstractSet}
+    if !MOI.supports_constraint(model, F, S)
         error(
-            "Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver" *
-            bridge_message,
+            "Constraints of type $(F)-in-$(S) are not supported by the " *
+            "solver.\n\nIf you expected the solver to support your problem, " *
+            "you may have an error in our formulation. Otherwise, consider " *
+            "using a different solver.\n\nThe list of available solvers, " *
+            "along with the problem types they support, is available at " *
+            "https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.",
         )
     end
     return MOI.add_constraint(model, f, s)
