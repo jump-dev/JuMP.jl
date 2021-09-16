@@ -343,12 +343,13 @@ For the same reason that `from <module> import *` is not recommended in python
 statement makes it harder to track where symbols come from and exposes the code
 to ambiguities when two modules export the same symbol.
 
-`using Foo: Foo` is an acceptable substitute for `import Foo`.
-It is only `using Foo` that must be avoided.
-
 Prefer `using ModuleName: x, p` to `import ModuleName.x, ModuleName.p` and
 `import MyModule: x, p` because the `import` versions allow method extension
 without qualifying with the module name.
+
+Similarly, `using ModuleName: ModuleName` is an acceptable substitute for
+`import ModuleName`, because it does not bring all symbols exported by
+`ModuleName` into scope. However, we prefer `import ModuleName` for consistency.
 
 ## Documentation
 
