@@ -268,8 +268,8 @@ function test_bridges_automatic_disabled()
     @test JuMP.backend(model) isa MOIU.CachingOptimizer
     @test !(JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer)
     @variable model x
-    F = MathOptInterface.ScalarAffineFunction{Float64}
-    S = MathOptInterface.Interval{Float64}
+    F = MOI.ScalarAffineFunction{Float64}
+    S = MOI.Interval{Float64}
     err = ErrorException(
         "Constraints of type $(F)-in-$(S) are not supported by the " *
         "solver.\n\nIf you expected the solver to support your problem, " *
@@ -287,8 +287,8 @@ function test_bridges_direct()
     model = JuMP.direct_model(optimizer)
     @test !JuMP.bridge_constraints(model)
     @variable model x
-    F = MathOptInterface.ScalarAffineFunction{Float64}
-    S = MathOptInterface.Interval{Float64}
+    F = MOI.ScalarAffineFunction{Float64}
+    S = MOI.Interval{Float64}
     err = ErrorException(
         "Constraints of type $(F)-in-$(S) are not supported by the " *
         "solver.\n\nIf you expected the solver to support your problem, " *
