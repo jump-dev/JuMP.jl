@@ -287,8 +287,9 @@ function Base.show(io::IOContext, x::SparseAxisArray)
     end
     # For stable printing, sort by the string value of the key.
     key_strings = [
-        (join(key, ", "), value) for (i, (key, value)) in enumerate(x.data)
-        if i < half_screen_rows || i > length(x) - half_screen_rows
+        (join(key, ", "), value) for
+        (i, (key, value)) in enumerate(x.data) if
+        i < half_screen_rows || i > length(x) - half_screen_rows
     ]
     sort!(key_strings; by = x -> x[1])
     pad = maximum(length(x[1]) for x in key_strings)
