@@ -209,6 +209,13 @@ CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
 ```
 
+!!! note
+    Because file formats do not serialize the containers of JuMP variables and
+    constraints, he names in the model will _not_ be registered. Therefore, you
+    cannot access named variables and constraints via `model[:x]`. Instead, use
+    [`variable_by_name`](@ref) or [`constraint_by_name`](@ref) to access
+    specific variables or constraints.
+
 ## Backends
 
 A JuMP [`Model`](@ref) is a thin layer around a *backend* of type [`MOI.ModelLike`](https://jump.dev/MathOptInterface.jl/v0.9/apireference/#Model-Interface)
@@ -241,7 +248,7 @@ with optimizer MOIB.LazyBridgeOptimizer{GLPK.Optimizer}
 The backend is a `MOIU.CachingOptimizer` in the state `EMPTY_OPTIMIZER` and mode
 `AUTOMATIC`.
 
-Alternatively, use [`unsafe_backend`](@ref) to access the innermost 
+Alternatively, use [`unsafe_backend`](@ref) to access the innermost
 `GLPK.Optimizer` object:
 ```jldoctest models_backends
 julia> unsafe_backend(model)
