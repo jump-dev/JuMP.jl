@@ -289,4 +289,15 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test D.data == [0 2; 1 3]
         @test D.axes == (Base.OneTo(2), Base.OneTo(2))
     end
+
+    @testset "Array" begin
+        A = DenseAxisArray([1, 3, 2], Base.OneTo(3))
+        B = @inferred Array(A)
+        @test B isa Vector{Int}
+        @test B == [1, 3, 2]
+        C = @inferred Array{Float64}(A)
+        @test C isa Vector{Float64}
+        @test C == [1.0, 3.0, 2.0]
+    end
+
 end
