@@ -299,5 +299,4 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test C isa Vector{Float64}
         @test C == [1.0, 3.0, 2.0]
     end
-
 end
