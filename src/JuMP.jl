@@ -1370,7 +1370,7 @@ A struct to represent a nonlinear expression.
 
 Create an expression using [`@NLexpression`](@ref).
 """
-struct NonlinearExpression
+struct NonlinearExpression <: AbstractJuMPScalar
     m::Model
     index::Int
 end

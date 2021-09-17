@@ -1081,4 +1081,17 @@ end
         @test is_valid(model, c)
         @test !is_valid(model2, c)
     end
+
+    @testset "Check multivariate NLconstraint is valid" begin
+        model = Model()
+        @variable(model, x)
+        @NLexpression(model, expr, sin(x))
+        @test_throws(
+            ErrorException(
+                "`JuMP.value` is not defined for collections of JuMP types. " *
+                "Use Julia's broadcast syntax instead: `JuMP.value.(x)`.",
+            ),
+            value([x, x]),
+        )
+    end
 end
