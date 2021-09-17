@@ -347,6 +347,10 @@ Prefer `using ModuleName: x, p` to `import ModuleName.x, ModuleName.p` and
 `import MyModule: x, p` because the `import` versions allow method extension
 without qualifying with the module name.
 
+Similarly, `using ModuleName: ModuleName` is an acceptable substitute for
+`import ModuleName`, because it does not bring all symbols exported by
+`ModuleName` into scope. However, we prefer `import ModuleName` for consistency.
+
 ## Documentation
 
 This section describes the writing style that should be used when writing
