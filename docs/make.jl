@@ -142,7 +142,7 @@ makedocs(
             "background/algebraic_modeling_languages.md",
         ],
         "Developer Docs" => [
-            "Release notes" => "developers/release_notes.md".
+            "Release notes" => "developers/release_notes.md",
             "Extensions" => "developers/extensions.md",
             "Style Guide" => "developers/style.md",
             "Roadmap" => "developers/roadmap.md",
