@@ -211,7 +211,7 @@ Solver name: No optimizer attached.
 
 !!! note
     Because file formats do not serialize the containers of JuMP variables and
-    constraints, he names in the model will _not_ be registered. Therefore, you
+    constraints, the names in the model will _not_ be registered. Therefore, you
     cannot access named variables and constraints via `model[:x]`. Instead, use
     [`variable_by_name`](@ref) or [`constraint_by_name`](@ref) to access
     specific variables or constraints.
