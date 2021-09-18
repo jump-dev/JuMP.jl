@@ -1364,7 +1364,7 @@ end
 
 # TODO: rename "m" field to "model" for style compliance
 """
-    NonlinearExpression
+    NonlinearExpression <: AbstractJuMPScalar
 
 A struct to represent a nonlinear expression.
 
@@ -1376,7 +1376,7 @@ struct NonlinearExpression <: AbstractJuMPScalar
 end
 
 """
-    NonlinearParameter
+    NonlinearParameter <: AbstractJuMPScalar
 
 A struct to represent a nonlinear parameter.
 
