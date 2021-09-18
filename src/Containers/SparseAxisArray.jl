@@ -282,24 +282,24 @@ function Base.show(io::IOContext, x::SparseAxisArray)
     end
     limit = get(io, :limit, false)::Bool
     half_screen_rows = limit ? div(displaysize(io)[1] - 8, 2) : typemax(Int)
-    print_entry(i) = i < half_screen_rows || i > length(x) - half_screen_rows
-    # For stable printing, sort by the string value of the key.
-    key_strings = [(join(key, ", "), value) for (key, value) in x.data]
-    sort!(key_strings; by = x -> x[1])
-    pad = maximum(
-        print_entry(i) ? length(x[1]) : 0 for (i, x) in enumerate(key_strings)
-    )
     if !haskey(io, :compact)
         io = IOContext(io, :compact => true)
     end
+    key_strings = [
+        (join(key, ", "), value) for
+        (i, (key, value)) in enumerate(x.data) if
+        i < half_screen_rows || i > length(x) - half_screen_rows
+    ]
+    sort!(key_strings; by = x -> x[1])
+    pad = maximum(length(x[1]) for x in key_strings)
     for (i, (key, value)) in enumerate(key_strings)
-        if print_entry(i)
-            print(io, "  [", rpad(key, pad), "]  =  ", value)
-            if i != length(x)
-                println(io)
+        print(io, "  [", rpad(key, pad), "]  =  ", value)
+        if i != length(key_strings)
+            println(io)
+            if i == half_screen_rows
+                println(io, "   ", " "^pad, "   \u22ee")
             end
-        elseif i == half_screen_rows
-            println(io, "   ", " "^pad, "   \u22ee")
         end
     end
+    return
 end
