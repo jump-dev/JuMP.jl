@@ -70,6 +70,11 @@ how to use it in the README of their Github repository.
 If you want to modify the problem in a callback, you _must_ use a lazy
 constraint.
 
+ !!! warning
+    You can only set each callback once. Calling `set` twice will over-write the
+    earlier callback. In addition, if you use a solver-independent callback, you
+    cannot set a solver-dependent callback.
+
 ## Lazy constraints
 
 Lazy constraints are useful when the full set of constraints is too large to
@@ -134,6 +139,12 @@ MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
     end
     MOI.set(model, MOI.LazyConstraintCallback(), good_callback_function)
     ```
+
+!!! warning
+    During the solve, a solver may visit a point that was cut off by a previous
+    lazy constraint, e.g., because the earlier lazy constraint was removed
+    during presolve. However, the solver will not terminate until it reaches a
+    solution that satisfies all added lazy constraints.
 
 ## User cuts
 
