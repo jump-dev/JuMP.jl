@@ -285,7 +285,6 @@ function Base.show(io::IOContext, x::SparseAxisArray)
     if !haskey(io, :compact)
         io = IOContext(io, :compact => true)
     end
-    # For stable printing, sort by the string value of the key.
     key_strings = [
         (join(key, ", "), value) for
         (i, (key, value)) in enumerate(x.data) if
