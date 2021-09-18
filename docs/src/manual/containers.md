@@ -173,6 +173,16 @@ And data, a 2×2 Array{Tuple{Symbol,Int64},2}:
  (:A, 2)  (:B, 2)
 ```
 
+### Access internal data
+
+Use `Array(x)` to access the internal data array
+```jldoctest containers_dense
+julia> Array(x)
+2×2 Array{Tuple{Int64,Symbol},2}:
+ (1, :A)  (1, :B)
+ (2, :A)  (2, :B)
+```
+
 ## SparseAxisArray
 
 A [`Containers.SparseAxisArray`](@ref) is created when the index sets are
