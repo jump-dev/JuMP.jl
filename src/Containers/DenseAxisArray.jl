@@ -24,6 +24,8 @@ struct DenseAxisArray{T,N,Ax,L<:NTuple{N,_AxisLookup}} <: AbstractArray{T,N}
     lookup::L
 end
 
+Base.Array{T,N}(x::DenseAxisArray) where {T,N} = convert(Array{T,N}, x.data)
+
 # Any -> _AxisLookup{<:Dict}: The most generic type of axis is a dictionary
 # which maps keys to their index. This works for any AbstractVector-type axis.
 
