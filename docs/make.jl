@@ -146,6 +146,7 @@ makedocs(
             "Style Guide" => "developers/style.md",
             "Roadmap" => "developers/roadmap.md",
         ],
+        "Release notes" => "release_notes.md",
     ],
 )
 
