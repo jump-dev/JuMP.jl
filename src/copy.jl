@@ -120,21 +120,17 @@ function copy_model(
 
     # At JuMP's level, filter_constraints should work with JuMP.ConstraintRef,
     # whereas MOI.copy_to's filter_constraints works with MOI.ConstraintIndex.
-    function moi_filter_constraints(cref::MOI.ConstraintIndex)
-        jump_cref = constraint_ref_with_index(model, cref)
-        return filter_constraints(jump_cref)
+    function moi_filter(cref::MOI.ConstraintIndex)
+        return filter_constraints(constraint_ref_with_index(model, cref))
     end
-    filter = filter_constraints !== nothing ? moi_filter_constraints : nothing
+    moi_filter(::Any) = true
 
-    # Copy the MOI backend, note that variable and constraint indices may have
-    # changed, the `index_map` gives the map between the indices of
-    # `backend(model` and the indices of `backend(new_model)`.
-    index_map = MOI.copy_to(
-        backend(new_model),
-        backend(model),
-        copy_names = true,
-        filter_constraints = filter,
-    )
+    index_map = if filter_constraints === nothing
+        MOI.copy_to(backend(new_model), backend(model))
+    else
+        filtered_src = MOI.Utilities.ModelFilter(moi_filter, backend(model))
+        MOI.copy_to(backend(new_model), filtered_src)
+    end
 
     new_model.optimize_hook = model.optimize_hook
 

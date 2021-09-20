@@ -220,44 +220,6 @@ function test_bridges_automatic()
     return JuMP.optimize!(model)
 end
 
-function test_bridges_automatic_with_cache()
-    # Automatic bridging with cache for bridged model
-    # optimizer not supporting Interval and not supporting `default_copy_to`
-    model = Model(
-        () -> MOIU.MockOptimizer(
-            SimpleLPModel{Float64}(),
-            needs_allocate_load = true,
-        ),
-    )
-    @test JuMP.bridge_constraints(model)
-    @test JuMP.backend(model) isa MOIU.CachingOptimizer
-    @test JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer
-    @test JuMP.backend(model).optimizer.model isa MOIU.CachingOptimizer
-    @test JuMP.backend(model).optimizer.model.optimizer isa MOIU.MockOptimizer
-    @variable model x
-    err = ErrorException(
-        "There is no `optimizer_index` as the optimizer is not " *
-        "synchronized with the cached model. Call " *
-        "`MOIU.attach_optimizer(model)` to synchronize it.",
-    )
-    @test_throws err optimizer_index(x)
-    cref = @constraint model 0 <= x + 1 <= 1
-    @test cref isa JuMP.ConstraintRef{
-        JuMP.Model,
-        MOI.ConstraintIndex{
-            MOI.ScalarAffineFunction{Float64},
-            MOI.Interval{Float64},
-        },
-    }
-    @test_throws err optimizer_index(cref)
-    JuMP.optimize!(model)
-    err = ErrorException(
-        "There is no `optimizer_index` for $(typeof(index(cref))) " *
-        "constraints because they are bridged.",
-    )
-    @test_throws err optimizer_index(cref)
-end
-
 function test_bridges_automatic_disabled()
     # Automatic bridging disabled with `bridge_constraints` keyword
     model = Model(
