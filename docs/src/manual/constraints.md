@@ -639,22 +639,7 @@ julia> a = 0
 julia> @SDconstraint(model, [x x; x x] >= a)
 ERROR: Operation `sub_mul` between `Matrix{VariableRef}` and `Int64` is not allowed. You should use broadcast.
 Stacktrace:
- [1] error(s::String)
-   @ Base ./error.jl:33
- [2] promote_operation(op::typeof(MutableArithmetics.sub_mul), A::Type{Matrix{VariableRef}}, α::Type{Int64})
-   @ MutableArithmetics ~/.julia/packages/MutableArithmetics/8xkW3/src/interface.jl:67
- [3] mutability(::Type, ::Function, ::Type, ::Type)
-   @ MutableArithmetics ~/.julia/packages/MutableArithmetics/8xkW3/src/interface.jl:177
- [4] mutability(::Matrix{VariableRef}, ::Function, ::Matrix{VariableRef}, ::Int64)
-   @ MutableArithmetics ~/.julia/packages/MutableArithmetics/8xkW3/src/interface.jl:183
- [5] operate!(op::typeof(MutableArithmetics.sub_mul), x::Matrix{VariableRef}, args::Int64)
-   @ MutableArithmetics ~/.julia/packages/MutableArithmetics/8xkW3/src/rewrite.jl:83
- [6] macro expansion
-   @ ~/.julia/packages/MutableArithmetics/8xkW3/src/rewrite.jl:279 [inlined]
- [7] macro expansion
-   @ ~/.julia/dev/JuMP/src/macros.jl:676 [inlined]
- [8] top-level scope
-   @ none:1
+[...]
 ```
 
 

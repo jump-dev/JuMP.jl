@@ -147,25 +147,7 @@ julia> @NLobjective(model, Max, p[1] * x)
 julia> @expression(model, my_expr, p[1] * x^2)
 ERROR: MethodError: no method matching *(::NonlinearParameter, ::QuadExpr)
 Closest candidates are:
-  *(::Any, ::Any, !Matched::Any, !Matched::Any...) at operators.jl:560
-  *(!Matched::Union{.ScalarAffineFunction{T}, .ScalarQuadraticFunction{T}, .VectorAffineFunction{T}, .VectorQuadraticFunction{T}}, ::T) where T at /Users/oscar/.julia/packages//YDdD3/src/Utilities/functions.jl:2995
-  *(!Matched::ChainRulesCore.Tangent, ::Any) at /Users/oscar/.julia/packages/ChainRulesCore/1LqRD/src/differential_arithmetic.jl:169
-  ...
-Stacktrace:
- [1] operate(::typeof(*), ::NonlinearParameter, ::QuadExpr)
-   @ MutableArithmetics ~/.julia/packages/MutableArithmetics/8xkW3/src/interface.jl:131
- [2] operate(::typeof(MutableArithmetics.add_mul), ::MutableArithmetics.Zero, ::NonlinearParameter, ::QuadExpr)
-   @ MutableArithmetics ~/.julia/packages/MutableArithmetics/8xkW3/src/rewrite.jl:35
- [3] operate_fallback!(::MutableArithmetics.NotMutable, ::Function, ::MutableArithmetics.Zero, ::NonlinearParameter, ::QuadExpr)
-   @ MutableArithmetics ~/.julia/packages/MutableArithmetics/8xkW3/src/interface.jl:428
- [4] operate!(::typeof(MutableArithmetics.add_mul), ::MutableArithmetics.Zero, ::NonlinearParameter, ::QuadExpr)
-   @ MutableArithmetics ~/.julia/packages/MutableArithmetics/8xkW3/src/rewrite.jl:83
- [5] macro expansion
-   @ ~/.julia/packages/MutableArithmetics/8xkW3/src/rewrite.jl:279 [inlined]
- [6] macro expansion
-   @ ~/.julia/dev/JuMP/src/macros.jl:142 [inlined]
- [7] top-level scope
-   @ none:1
+[...]
 
 julia> @NLexpression(model, my_nl_expr, p[1] * x^2)
 "Reference to nonlinear expression #1"
@@ -588,12 +570,12 @@ which can be queried using the [`NLPEvaluator`](@ref).
 
 !!! warning
     This section requires advanced knowledge of Julia's `Expr`. You should read
-    the [Expressions and evaluation](https://docs.julialang.org/en/v1/manual/metaprogramming/#Expressions-and-evaluation) 
+    the [Expressions and evaluation](https://docs.julialang.org/en/v1/manual/metaprogramming/#Expressions-and-evaluation)
     section of the Julia documentation first.
 
-In addition to the [`@NLexpression`](@ref), [`@NLobjective`](@ref) and 
-[`@NLconstraint`](@ref) macros, it is also possible to provide Julia `Expr` 
-objects directly by using [`add_NL_expression`](@ref), 
+In addition to the [`@NLexpression`](@ref), [`@NLobjective`](@ref) and
+[`@NLconstraint`](@ref) macros, it is also possible to provide Julia `Expr`
+objects directly by using [`add_NL_expression`](@ref),
 [`set_NL_objective`](@ref) and [`add_NL_constraint`](@ref).
 
 This input form may be useful if the expressions are generated programmatically.
