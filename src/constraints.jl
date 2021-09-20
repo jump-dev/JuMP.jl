@@ -1100,7 +1100,7 @@ end
 # information available.
 
 """
-    list_of_constraint_types(model::Model)::Vector{Tuple{DataType, DataType}}
+    list_of_constraint_types(model::Model)::Vector{Tuple{Type,Type}}
 
 Return a list of tuples of the form `(F, S)` where `F` is a JuMP function type
 and `S` is an MOI set type such that `all_constraints(model, F, S)` returns
@@ -1115,19 +1115,17 @@ julia> @variable(model, x >= 0, Bin);
 julia> @constraint(model, 2x <= 1);
 
 julia> list_of_constraint_types(model)
-3-element Array{Tuple{DataType,DataType},1}:
+3-element Array{Tuple{Type,Type},1}:
  (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
  (VariableRef, MathOptInterface.GreaterThan{Float64})
  (VariableRef, MathOptInterface.ZeroOne)
 ```
 """
-function list_of_constraint_types(
-    model::Model,
-)::Vector{Tuple{DataType,DataType}}
+function list_of_constraint_types(model::Model)::Vector{Tuple{Type,Type}}
     # We include an annotated return type here because Julia fails terribly at
     # inferring it, even though we annotate the type of the return vector.
-    return Tuple{DataType,DataType}[
+    return Tuple{Type,Type}[
         (jump_function_type(model, F), S) for
-        (F, S) in MOI.get(model, MOI.ListOfConstraints())
+        (F, S) in MOI.get(model, MOI.ListOfConstraintTypesPresent())
     ]
 end

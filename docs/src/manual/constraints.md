@@ -833,7 +833,7 @@ julia> @variable(model, x[i=1:2] >= i, Int);
 julia> @constraint(model, x[1] + x[2] <= 1);
 
 julia> list_of_constraint_types(model)
-3-element Vector{Tuple{DataType, DataType}}:
+3-element Vector{Tuple{Type, Type}}:
  (AffExpr, MathOptInterface.LessThan{Float64})
  (VariableRef, MathOptInterface.GreaterThan{Float64})
  (VariableRef, MathOptInterface.Integer)
