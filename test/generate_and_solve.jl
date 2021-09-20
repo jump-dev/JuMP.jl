@@ -25,26 +25,24 @@ using JuMP
         @objective(m, Min, -x)
 
         c = @constraint(m, x + y <= 1)
-
-        JuMP.set_name(JuMP.UpperBoundRef(x), "xub")
-        JuMP.set_name(JuMP.LowerBoundRef(y), "ylb")
         JuMP.set_name(c, "c")
 
         modelstring = """
         variables: x, y
         minobjective: -1.0*x
-        xub: x <= 2.0
-        ylb: y >= 0.0
+        x <= 2.0
+        y >= 0.0
         c: x + y <= 1.0
         """
 
         model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(
+        MOI.Test.util_test_models_equal(
             JuMP.backend(m).model_cache,
             model,
             ["x", "y"],
-            ["c", "xub", "ylb"],
+            ["c"],
+            [("x", MOI.LessThan(2.0)), ("y", MOI.GreaterThan(0.0))],
         )
 
         set_optimizer(
@@ -210,25 +208,26 @@ using JuMP
         @variable(m, y, Bin)
         @objective(m, Max, x)
 
-        JuMP.set_name(JuMP.FixRef(x), "xfix")
-        JuMP.set_name(JuMP.IntegerRef(x), "xint")
-        JuMP.set_name(JuMP.BinaryRef(y), "ybin")
-
         modelstring = """
         variables: x, y
         maxobjective: x
-        xfix: x == 1.0
-        xint: x in Integer()
-        ybin: y in ZeroOne()
+        x == 1.0
+        x in Integer()
+        y in ZeroOne()
         """
 
         model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(
+        MOI.Test.util_test_models_equal(
             JuMP.backend(m).model_cache,
             model,
             ["x", "y"],
-            ["xfix", "xint", "ybin"],
+            String[],
+            [
+                ("x", MOI.EqualTo(1.0)),
+                ("x", MOI.Integer()),
+                ("y", MOI.ZeroOne()),
+            ],
         )
 
         MOIU.attach_optimizer(m)
@@ -298,7 +297,7 @@ using JuMP
 
         model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(
+        MOI.Test.util_test_models_equal(
             JuMP.backend(m).model_cache,
             model,
             ["x", "y"],
@@ -401,7 +400,7 @@ using JuMP
 
         model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(
+        MOI.Test.util_test_models_equal(
             JuMP.backend(m).model_cache,
             model,
             ["x", "y", "z"],
@@ -500,7 +499,7 @@ using JuMP
 
         model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(
+        MOI.Test.util_test_models_equal(
             JuMP.backend(m).model_cache,
             model,
             ["x11", "x12", "x22"],
@@ -612,9 +611,9 @@ using JuMP
             """
 variables: x, y
 maxobjective: x + y
-xub: x >= 0.0
-ylb: y >= 0.0
-c1: x <= 2.0
+x >= 0.0
+y >= 0.0
+x <= 2.0
 c2: x + y <= 1.0
 """,
         )

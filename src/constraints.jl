@@ -566,7 +566,8 @@ function add_constraint(
         model.shapes[cindex] = cshape
     end
     con_ref = ConstraintRef(model, cindex, cshape)
-    if !isempty(name)
+    if !(func isa MOI.VariableIndex) && !isempty(name)
+        # Don't set names for VariableIndex constraints!
         set_name(con_ref, name)
     end
     return con_ref
