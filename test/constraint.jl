@@ -297,7 +297,7 @@ function test_indicator_constraint(ModelType, ::Any)
     ]
         c = JuMP.constraint_object(cref)
         @test c.func == [a, x + 2y]
-        @test c.set == MOI.IndicatorSet{MOI.ACTIVATE_ON_ONE}(MOI.LessThan(1.0))
+        @test c.set == MOI.Indicator{MOI.ACTIVATE_ON_ONE}(MOI.LessThan(1.0))
     end
     for cref in [
         @constraint(model, !b => {2x + y <= 1})
@@ -307,7 +307,7 @@ function test_indicator_constraint(ModelType, ::Any)
     ]
         c = JuMP.constraint_object(cref)
         @test c.func == [b, 2x + y]
-        @test c.set == MOI.IndicatorSet{MOI.ACTIVATE_ON_ZERO}(MOI.LessThan(1.0))
+        @test c.set == MOI.Indicator{MOI.ACTIVATE_ON_ZERO}(MOI.LessThan(1.0))
     end
     err = ErrorException(
         "In `@constraint(model, !(a, b) => {x <= 1})`: Invalid binary variable expression `!(a, b)` for indicator constraint.",
