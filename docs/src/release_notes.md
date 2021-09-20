@@ -1,5 +1,13 @@
 # JuMP release notes
 
+## Version 0.22.0 (In development)
+
+**JuMP v0.22 is a breaking release**
+
+### Breaking changes
+
+- Update to MathOptInterface v0.10
+
 ## Version 0.21.10 (September 4, 2021)
 
 For a detailed list of the closed issues and pull requests from this release,
