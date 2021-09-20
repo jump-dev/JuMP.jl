@@ -529,8 +529,8 @@ function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
         AffExpr(m, MOI.ScalarAffineFunction(f.affine_terms, f.constant)),
     )
     for t in f.quadratic_terms
-        v1 = t.variable_index_1
-        v2 = t.variable_index_2
+        v1 = t.variable_1
+        v2 = t.variable_2
         coef = t.coefficient
         if v1 == v2
             coef /= 2
