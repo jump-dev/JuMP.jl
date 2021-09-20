@@ -1,12 +1,12 @@
 # JuMP Documentation README
 
-**The documentation currently requires Julia 1.0.x to build.**
+**The documentation currently requires Julia 1.6 to build.**
 
 JuMP's documentation is written with [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl).
 
 ## Initial setup
 
-To build the documentation, you need to do a series of initialization steps. 
+To build the documentation, you need to do a series of initialization steps.
 However, you only need to do this once!
 
 First, you will need a local copy of JuMP. If you don't have one already, run:

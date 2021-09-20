@@ -38,12 +38,12 @@ julia> @NLconstraint(model, exp(x[1]) <= 1)
 exp(x[1]) - 1.0 ≤ 0
 
 julia> @NLconstraint(model, [i = 1:2], x[i]^i >= i)
-2-element Array{ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape},1}:
+2-element Vector{NonlinearConstraintRef{ScalarShape}}:
  x[1] ^ 1.0 - 1.0 ≥ 0
  x[2] ^ 2.0 - 2.0 ≥ 0
 
 julia> @NLconstraint(model, con[i = 1:2], prod(x[j] for j = 1:i) == i)
-2-element Array{ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape},1}:
+2-element Vector{NonlinearConstraintRef{ScalarShape}}:
  (*)(x[1]) - 1.0 = 0
  x[1] * x[2] - 2.0 = 0
 ```
@@ -63,12 +63,12 @@ julia> expr = @NLexpression(model, exp(x[1]) + sqrt(x[2]))
 "Reference to nonlinear expression #1"
 
 julia> my_anon_expr = @NLexpression(model, [i = 1:2], sin(x[i]))
-2-element Array{NonlinearExpression,1}:
+2-element Vector{NonlinearExpression}:
  "Reference to nonlinear expression #2"
  "Reference to nonlinear expression #3"
 
 julia> @NLexpression(model, my_expr[i = 1:2], sin(x[i]))
-2-element Array{NonlinearExpression,1}:
+2-element Vector{NonlinearExpression}:
  "Reference to nonlinear expression #4"
  "Reference to nonlinear expression #5"
 ```
@@ -80,12 +80,12 @@ and even nested in other [`@NLexpression`](@ref)s.
 julia> @NLobjective(model, Min, expr^2 + 1)
 
 julia> @NLconstraint(model, [i = 1:2], my_expr[i] <= i)
-2-element Array{ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape},1}:
+2-element Vector{NonlinearConstraintRef{ScalarShape}}:
  subexpression[4] - 1.0 ≤ 0
  subexpression[5] - 2.0 ≤ 0
 
 julia> @NLexpression(model, nested[i = 1:2], sin(my_expr[i]))
-2-element Array{NonlinearExpression,1}:
+2-element Vector{NonlinearExpression}:
  "Reference to nonlinear expression #6"
  "Reference to nonlinear expression #7"
 ```
@@ -104,7 +104,7 @@ the `==` sign.
 
 ```jldoctest nonlinear_parameters; setup=:(model = Model(); @variable(model, x))
 julia> @NLparameter(model, p[i = 1:2] == i)
-2-element Array{NonlinearParameter,1}:
+2-element Vector{NonlinearParameter}:
  "Reference to nonlinear parameter #1"
  "Reference to nonlinear parameter #2"
 ```
@@ -119,7 +119,7 @@ parameter.
 
 ```jldoctest nonlinear_parameters
 julia> value.(p)
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  1.0
  2.0
 
@@ -127,7 +127,7 @@ julia> set_value(p[2], 3.0)
 3.0
 
 julia> value.(p)
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  1.0
  3.0
 ```
@@ -145,7 +145,8 @@ ERROR: MethodError: no method matching *(::NonlinearParameter, ::VariableRef)
 julia> @NLobjective(model, Max, p[1] * x)
 
 julia> @expression(model, my_expr, p[1] * x^2)
-ERROR: MethodError: no method matching *(::NonlinearParameter, ::GenericQuadExpr{Float64,VariableRef})
+ERROR: MethodError: no method matching *(::NonlinearParameter, ::QuadExpr)
+Closest candidates are:
 [...]
 
 julia> @NLexpression(model, my_nl_expr, p[1] * x^2)
@@ -541,7 +542,7 @@ julia> @NLconstraint(model, cons1, sin(x) <= 1);
 julia> @NLconstraint(model, cons2, x + 5 == 10);
 
 julia> typeof(cons1)
-ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape}
+NonlinearConstraintRef{ScalarShape} (alias for ConstraintRef{Model, NonlinearConstraintIndex, ScalarShape})
 
 julia> index(cons1)
 NonlinearConstraintIndex(1)
@@ -569,12 +570,12 @@ which can be queried using the [`NLPEvaluator`](@ref).
 
 !!! warning
     This section requires advanced knowledge of Julia's `Expr`. You should read
-    the [Expressions and evaluation](https://docs.julialang.org/en/v1/manual/metaprogramming/#Expressions-and-evaluation) 
+    the [Expressions and evaluation](https://docs.julialang.org/en/v1/manual/metaprogramming/#Expressions-and-evaluation)
     section of the Julia documentation first.
 
-In addition to the [`@NLexpression`](@ref), [`@NLobjective`](@ref) and 
-[`@NLconstraint`](@ref) macros, it is also possible to provide Julia `Expr` 
-objects directly by using [`add_NL_expression`](@ref), 
+In addition to the [`@NLexpression`](@ref), [`@NLobjective`](@ref) and
+[`@NLconstraint`](@ref) macros, it is also possible to provide Julia `Expr`
+objects directly by using [`add_NL_expression`](@ref),
 [`set_NL_objective`](@ref) and [`add_NL_constraint`](@ref).
 
 This input form may be useful if the expressions are generated programmatically.

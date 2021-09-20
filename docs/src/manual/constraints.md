@@ -257,7 +257,7 @@ A vector constraint will require a vector warmstart:
 
 ```jldoctest constraint_dual_start_vector; setup=:(model=Model())
 julia> @variable(model, x[1:3])
-3-element Array{VariableRef,1}:
+3-element Vector{VariableRef}:
  x[1]
  x[2]
  x[3]
@@ -270,7 +270,7 @@ julia> dual_start_value(con)
 julia> set_dual_start_value(con, [1.0, 2.0, 3.0])
 
 julia> dual_start_value(con)
-3-element Array{Float64,1}:
+3-element Vector{Float64}:
  1.0
  2.0
  3.0
@@ -308,10 +308,10 @@ following.
 One way of adding a group of constraints compactly is the following:
 ```jldoctest constraint_arrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:3], i * x <= i + 1)
-3-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
- con[1] : x <= 2.0
- con[2] : 2 x <= 3.0
- con[3] : 3 x <= 4.0
+3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ con[1] : x ≤ 2.0
+ con[2] : 2 x ≤ 3.0
+ con[3] : 3 x ≤ 4.0
 ```
 JuMP returns references to the three constraints in an `Array` that is bound to
 the Julia variable `con`. This array can be accessed and sliced as you would
@@ -321,18 +321,18 @@ julia> con[1]
 con[1] : x <= 2.0
 
 julia> con[2:3]
-2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
- con[2] : 2 x <= 3.0
- con[3] : 3 x <= 4.0
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ con[2] : 2 x ≤ 3.0
+ con[3] : 3 x ≤ 4.0
 ```
 
 Anonymous containers can also be constructed by dropping the name (e.g. `con`)
 before the square brackets:
 ```jldoctest constraint_arrays
 julia> @constraint(model, [i = 1:2], i * x <= i + 1)
-2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
- x <= 2.0
- 2 x <= 3.0
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ x ≤ 2.0
+ 2 x ≤ 3.0
 ```
 
 Just like [`@variable`](@ref), JuMP will form an `Array` of constraints when it
@@ -351,12 +351,12 @@ variables.
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:2, j = 2:3], i * x <= j + 1)
-2-dimensional DenseAxisArray{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},2,...} with index sets:
+2-dimensional DenseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape},2,...} with index sets:
     Dimension 1, Base.OneTo(2)
     Dimension 2, 2:3
-And data, a 2×2 Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},2}:
- con[1,2] : x <= 3.0    con[1,3] : x <= 4.0
- con[2,2] : 2 x <= 3.0  con[2,3] : 2 x <= 4.0
+And data, a 2×2 Matrix{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ con[1,2] : x ≤ 3.0    con[1,3] : x ≤ 4.0
+ con[2,2] : 2 x ≤ 3.0  con[2,3] : 2 x ≤ 4.0
 ```
 
 ### SparseAxisArrays
@@ -368,9 +368,9 @@ similar to the [syntax for constructing](@ref variable_sparseaxisarrays) a
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x <= j + 1)
-JuMP.Containers.SparseAxisArray{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},2,Tuple{Int64,Int64}} with 2 entries:
-  [1, 2]  =  con[1,2] : x <= 3.0
-  [2, 1]  =  con[2,1] : 2 x <= 2.0
+JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}, 2, Tuple{Int64, Int64}} with 2 entries:
+  [1, 2]  =  con[1,2] : x ≤ 3.0
+  [2, 1]  =  con[2,1] : 2 x ≤ 2.0
 ```
 
 ### Forcing the container type
@@ -389,24 +389,24 @@ example:
 
 ```jldoctest con_vector; setup=:(model = Model())
 julia> @variable(model, x[i=1:2])
-2-element Array{VariableRef,1}:
+2-element Vector{VariableRef}:
  x[1]
  x[2]
 
 julia> A = [1 2; 3 4]
-2×2 Array{Int64,2}:
+2×2 Matrix{Int64}:
  1  2
  3  4
 
 julia> b = [5, 6]
-2-element Array{Int64,1}:
+2-element Vector{Int64}:
  5
  6
 
 julia> @constraint(model, con, A * x .== b)
-2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.EqualTo{Float64}},ScalarShape},1}:
- x[1] + 2 x[2] == 5.0
- 3 x[1] + 4 x[2] == 6.0
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
+ x[1] + 2 x[2] = 5.0
+ 3 x[1] + 4 x[2] = 6.0
 ```
 
 !!! note
@@ -468,7 +468,7 @@ terms. (For more general nonlinear functions, see [Nonlinear Modeling](@ref).)
 For example:
 ```jldoctest con_quadratic; setup=:(model=Model())
 julia> @variable(model, x[i=1:2])
-2-element Array{VariableRef,1}:
+2-element Vector{VariableRef}:
  x[1]
  x[2]
 
@@ -487,7 +487,7 @@ function and the set.
 The function is a vector of variables:
 ```jldoctest con_quadratic
 julia> [t, x[1], x[2]]
-3-element Array{VariableRef,1}:
+3-element Vector{VariableRef}:
  t
  x[1]
  x[2]
@@ -594,7 +594,7 @@ julia> cref = @constraint(model, Symmetric([x 2x; 3x 4x]) in PSDCone())
  2 x  4 x] ∈ PSDCone()
 
 julia> jump_function(constraint_object(cref))
-3-element Array{GenericAffExpr{Float64,VariableRef},1}:
+3-element Vector{AffExpr}:
  x
  2 x
  4 x
@@ -610,14 +610,14 @@ example below, the function is `VectorAffineFunction` instead of
 `VectorOfVariables`.
 ```jldoctest con_psd
 julia> typeof(@SDconstraint(model, [x x; x x] >= zeros(2, 2)))
-ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64},MathOptInterface.PositiveSemidefiniteConeSquare},SquareMatrixShape}
+ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64}, MathOptInterface.PositiveSemidefiniteConeSquare}, SquareMatrixShape}
 ```
 Moreover, the `Symmetric` structure can be lost in the operation `A - B`. For
 instance, in the example below, the set is `PositiveSemidefiniteConeSquare`
 instead of `PositiveSemidefiniteConeTriangle`.
 ```jldoctest con_psd
 julia> typeof(@SDconstraint(model, Symmetric([x x; x x]) >= zeros(2, 2)))
-ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64},MathOptInterface.PositiveSemidefiniteConeSquare},SquareMatrixShape}
+ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64}, MathOptInterface.PositiveSemidefiniteConeSquare}, SquareMatrixShape}
 ```
 To create a constraint on the vector of variables with the [`@SDconstraint`](@ref)
 macro, use the `0` symbol. The following three syntax are equivalent:
@@ -626,10 +626,10 @@ macro, use the `0` symbol. The following three syntax are equivalent:
 * `@constraint(model, A in PSDCone())`.
 ```jldoctest con_psd
 julia> typeof(@SDconstraint(model, [x x; x x] >= 0))
-ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables,MathOptInterface.PositiveSemidefiniteConeSquare},SquareMatrixShape}
+ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.PositiveSemidefiniteConeSquare}, SquareMatrixShape}
 
 julia> typeof(@SDconstraint(model, 0 <= Symmetric([x x; x x])))
-ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables,MathOptInterface.PositiveSemidefiniteConeTriangle},SymmetricMatrixShape}
+ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.PositiveSemidefiniteConeTriangle}, SymmetricMatrixShape}
 ```
 As the syntax is recognized at parse time, using a variable with value zero does not work:
 ```jldoctest con_psd
@@ -637,7 +637,8 @@ julia> a = 0
 0
 
 julia> @SDconstraint(model, [x x; x x] >= a)
-ERROR: Operation `MutableArithmetics.sub_mul` between `Array{VariableRef,2}` and `Int64` is not allowed. You should use broadcast.
+ERROR: Operation `sub_mul` between `Matrix{VariableRef}` and `Int64` is not allowed. You should use broadcast.
+Stacktrace:
 [...]
 ```
 
@@ -832,8 +833,8 @@ julia> @variable(model, x[i=1:2] >= i, Int);
 julia> @constraint(model, x[1] + x[2] <= 1);
 
 julia> list_of_constraint_types(model)
-3-element Array{Tuple{DataType,DataType},1}:
- (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
+3-element Vector{Tuple{DataType, DataType}}:
+ (AffExpr, MathOptInterface.LessThan{Float64})
  (VariableRef, MathOptInterface.GreaterThan{Float64})
  (VariableRef, MathOptInterface.Integer)
 
@@ -841,7 +842,7 @@ julia> num_constraints(model, VariableRef, MOI.Integer)
 2
 
 julia> all_constraints(model, VariableRef, MOI.Integer)
-2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.Integer},ScalarShape},1}:
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable, MathOptInterface.Integer}, ScalarShape}}:
  x[1] integer
  x[2] integer
 
@@ -849,7 +850,7 @@ julia> num_constraints(model, VariableRef, MOI.GreaterThan{Float64})
 2
 
 julia> all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
-2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}:
  x[1] ≥ 1.0
  x[2] ≥ 2.0
 
@@ -857,11 +858,11 @@ julia> num_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{
 1
 
 julia> less_than_constraints = all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{Float64})
-1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
+1-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
  x[1] + x[2] ≤ 1.0
 
 julia> con = constraint_object(less_than_constraints[1])
-ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.LessThan{Float64}}(x[1] + x[2], MathOptInterface.LessThan{Float64}(1.0))
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}(x[1] + x[2], MathOptInterface.LessThan{Float64}(1.0))
 
 julia> con.func
 x[1] + x[2]
@@ -911,17 +912,17 @@ matching variable `x` is supplied as the second.
 Vector-valued complementarity constraints are also supported:
 ```jldoctest complementarity
 julia> @variable(model, -2 <= y[1:2] <= 2)
-2-element Array{VariableRef,1}:
+2-element Vector{VariableRef}:
  y[1]
  y[2]
 
 julia> M = [1 2; 3 4]
-2×2 Array{Int64,2}:
+2×2 Matrix{Int64}:
  1  2
  3  4
 
 julia> q = [5, 6]
-2-element Array{Int64,1}:
+2-element Vector{Int64}:
  5
  6
 
@@ -939,7 +940,7 @@ element can take a non-zero value.
 Construct SOS-I constraints using the [`SOS1`](@ref) set:
 ```jldoctest con_sos; setup=:(model = Model())
 julia> @variable(model, x[1:3])
-3-element Array{VariableRef,1}:
+3-element Vector{VariableRef}:
  x[1]
  x[2]
  x[3]

@@ -192,7 +192,7 @@ julia> model = read_from_file("model.mps")
 A JuMP Model
 Minimization problem with:
 Variables: 0
-Objective function type: GenericAffExpr{Float64,VariableRef}
+Objective function type: AffExpr
 Model mode: AUTOMATIC
 CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
@@ -203,7 +203,7 @@ julia> model2 = read(io, Model; format = MOI.FileFormats.FORMAT_MPS)
 A JuMP Model
 Minimization problem with:
 Variables: 0
-Objective function type: GenericAffExpr{Float64,VariableRef}
+Objective function type: AffExpr
 Model mode: AUTOMATIC
 CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
@@ -233,11 +233,11 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
 
 julia> b = backend(model)
-MOIU.CachingOptimizer{MOI.AbstractOptimizer,MOIU.UniversalFallback{MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}}}
+MOIU.CachingOptimizer{MOI.AbstractOptimizer, MOIU.UniversalFallback{MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}}}
 in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
-with model cache MOIU.UniversalFallback{MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}}
-  fallback for MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}
+with model cache MOIU.UniversalFallback{MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}}
+  fallback for MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}
 with optimizer MOIB.LazyBridgeOptimizer{GLPK.Optimizer}
   with 0 variable bridges
   with 0 constraint bridges
@@ -273,8 +273,8 @@ It has two parts:
  1. A cache, where the model can be built and modified incrementally
     ```jldoctest models_backends
     julia> b.model_cache
-    MOIU.UniversalFallback{MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}}
-    fallback for MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}
+    MOIU.UniversalFallback{MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}}
+    fallback for MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}
     ```
  2. An optimizer, which is used to solve the problem
     ```jldoctest models_backends
@@ -355,11 +355,11 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
 
 julia> backend(model)
-MOIU.CachingOptimizer{MOI.AbstractOptimizer,MOIU.UniversalFallback{MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}}}
+MOIU.CachingOptimizer{MOI.AbstractOptimizer, MOIU.UniversalFallback{MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}}}
 in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
-with model cache MOIU.UniversalFallback{MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}}
-  fallback for MOIU.GenericModel{Float64,MOIU.ModelFunctionConstraints{Float64}}
+with model cache MOIU.UniversalFallback{MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}}
+  fallback for MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}
 with optimizer A GLPK model
 ```
 
