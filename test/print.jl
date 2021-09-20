@@ -890,9 +890,6 @@ end
     @objective(model, Min, -x)
     c = @constraint(model, x + y <= 1) # anonymous constraint
 
-    JuMP.set_name(JuMP.UpperBoundRef(x), "xub")
-    JuMP.set_name(JuMP.LowerBoundRef(y), "ylb")
-
     set_optimizer(
         model,
         () -> MOIU.MockOptimizer(
@@ -975,8 +972,6 @@ end
     x : 1.0
     y : 0.0
   Dual solution :
-    xub : 0.0
-    ylb : 1.0
 
 * Work counters
   Solve time (sec)   : 5.00000
