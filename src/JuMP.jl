@@ -824,12 +824,12 @@ set_optimize_hook(model::Model, f) = (model.optimize_hook = f)
     solve_time(model::Model)
 
 If available, returns the solve time reported by the solver.
-Returns "ArgumentError: ModelLike of type `Solver.Optimizer` does not support accessing
-the attribute MathOptInterface.SolveTime()" if the attribute is
+Returns "ArgumentError: ModelLike of type `Solver.Optimizer` does not support
+accessing the attribute MathOptInterface.SolveTimeSec()" if the attribute is
 not implemented.
 """
 function solve_time(model::Model)
-    return MOI.get(model, MOI.SolveTime())
+    return MOI.get(model, MOI.SolveTimeSec())
 end
 
 """
