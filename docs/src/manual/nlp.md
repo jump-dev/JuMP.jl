@@ -38,12 +38,12 @@ julia> @NLconstraint(model, exp(x[1]) <= 1)
 exp(x[1]) - 1.0 ≤ 0
 
 julia> @NLconstraint(model, [i = 1:2], x[i]^i >= i)
-2-element Array{ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape},1}:
+2-element Vector{NonlinearConstraintRef{ScalarShape}}:
  x[1] ^ 1.0 - 1.0 ≥ 0
  x[2] ^ 2.0 - 2.0 ≥ 0
 
 julia> @NLconstraint(model, con[i = 1:2], prod(x[j] for j = 1:i) == i)
-2-element Array{ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape},1}:
+2-element Vector{NonlinearConstraintRef{ScalarShape}}:
  (*)(x[1]) - 1.0 = 0
  x[1] * x[2] - 2.0 = 0
 ```
@@ -63,12 +63,12 @@ julia> expr = @NLexpression(model, exp(x[1]) + sqrt(x[2]))
 "Reference to nonlinear expression #1"
 
 julia> my_anon_expr = @NLexpression(model, [i = 1:2], sin(x[i]))
-2-element Array{NonlinearExpression,1}:
+2-element Vector{NonlinearExpression}:
  "Reference to nonlinear expression #2"
  "Reference to nonlinear expression #3"
 
 julia> @NLexpression(model, my_expr[i = 1:2], sin(x[i]))
-2-element Array{NonlinearExpression,1}:
+2-element Vector{NonlinearExpression}:
  "Reference to nonlinear expression #4"
  "Reference to nonlinear expression #5"
 ```
@@ -80,12 +80,12 @@ and even nested in other [`@NLexpression`](@ref)s.
 julia> @NLobjective(model, Min, expr^2 + 1)
 
 julia> @NLconstraint(model, [i = 1:2], my_expr[i] <= i)
-2-element Array{ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape},1}:
+2-element Vector{NonlinearConstraintRef{ScalarShape}}:
  subexpression[4] - 1.0 ≤ 0
  subexpression[5] - 2.0 ≤ 0
 
 julia> @NLexpression(model, nested[i = 1:2], sin(my_expr[i]))
-2-element Array{NonlinearExpression,1}:
+2-element Vector{NonlinearExpression}:
  "Reference to nonlinear expression #6"
  "Reference to nonlinear expression #7"
 ```
@@ -104,7 +104,7 @@ the `==` sign.
 
 ```jldoctest nonlinear_parameters; setup=:(model = Model(); @variable(model, x))
 julia> @NLparameter(model, p[i = 1:2] == i)
-2-element Array{NonlinearParameter,1}:
+2-element Vector{NonlinearParameter}:
  "Reference to nonlinear parameter #1"
  "Reference to nonlinear parameter #2"
 ```
@@ -119,7 +119,7 @@ parameter.
 
 ```jldoctest nonlinear_parameters
 julia> value.(p)
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  1.0
  2.0
 
@@ -127,7 +127,7 @@ julia> set_value(p[2], 3.0)
 3.0
 
 julia> value.(p)
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  1.0
  3.0
 ```
@@ -145,8 +145,27 @@ ERROR: MethodError: no method matching *(::NonlinearParameter, ::VariableRef)
 julia> @NLobjective(model, Max, p[1] * x)
 
 julia> @expression(model, my_expr, p[1] * x^2)
-ERROR: MethodError: no method matching *(::NonlinearParameter, ::GenericQuadExpr{Float64,VariableRef})
-[...]
+ERROR: MethodError: no method matching *(::NonlinearParameter, ::QuadExpr)
+Closest candidates are:
+  *(::Any, ::Any, !Matched::Any, !Matched::Any...) at operators.jl:560
+  *(!Matched::Union{.ScalarAffineFunction{T}, .ScalarQuadraticFunction{T}, .VectorAffineFunction{T}, .VectorQuadraticFunction{T}}, ::T) where T at /Users/oscar/.julia/packages//YDdD3/src/Utilities/functions.jl:2995
+  *(!Matched::ChainRulesCore.Tangent, ::Any) at /Users/oscar/.julia/packages/ChainRulesCore/1LqRD/src/differential_arithmetic.jl:169
+  ...
+Stacktrace:
+ [1] operate(::typeof(*), ::NonlinearParameter, ::QuadExpr)
+   @ MutableArithmetics ~/.julia/packages/MutableArithmetics/8xkW3/src/interface.jl:131
+ [2] operate(::typeof(MutableArithmetics.add_mul), ::MutableArithmetics.Zero, ::NonlinearParameter, ::QuadExpr)
+   @ MutableArithmetics ~/.julia/packages/MutableArithmetics/8xkW3/src/rewrite.jl:35
+ [3] operate_fallback!(::MutableArithmetics.NotMutable, ::Function, ::MutableArithmetics.Zero, ::NonlinearParameter, ::QuadExpr)
+   @ MutableArithmetics ~/.julia/packages/MutableArithmetics/8xkW3/src/interface.jl:428
+ [4] operate!(::typeof(MutableArithmetics.add_mul), ::MutableArithmetics.Zero, ::NonlinearParameter, ::QuadExpr)
+   @ MutableArithmetics ~/.julia/packages/MutableArithmetics/8xkW3/src/rewrite.jl:83
+ [5] macro expansion
+   @ ~/.julia/packages/MutableArithmetics/8xkW3/src/rewrite.jl:279 [inlined]
+ [6] macro expansion
+   @ ~/.julia/dev/JuMP/src/macros.jl:142 [inlined]
+ [7] top-level scope
+   @ none:1
 
 julia> @NLexpression(model, my_nl_expr, p[1] * x^2)
 "Reference to nonlinear expression #1"
@@ -541,7 +560,7 @@ julia> @NLconstraint(model, cons1, sin(x) <= 1);
 julia> @NLconstraint(model, cons2, x + 5 == 10);
 
 julia> typeof(cons1)
-ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape}
+NonlinearConstraintRef{ScalarShape} (alias for ConstraintRef{Model, NonlinearConstraintIndex, ScalarShape})
 
 julia> index(cons1)
 NonlinearConstraintIndex(1)

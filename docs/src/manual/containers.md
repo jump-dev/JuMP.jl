@@ -44,7 +44,7 @@ An `Array` is created when the index sets are rectangular and the index sets are
 of the form `1:n`.
 ```jldoctest containers_array
 julia> Containers.@container(x[i = 1:2, j = 1:3], (i, j))
-2×3 Array{Tuple{Int64,Int64},2}:
+2×3 Matrix{Tuple{Int64, Int64}}:
  (1, 1)  (1, 2)  (1, 3)
  (2, 1)  (2, 2)  (2, 3)
 ```
@@ -55,12 +55,12 @@ The result is just a normal Julia array, so you can do all the usual things.
 Arrays can be sliced
 ```jldoctest containers_array
 julia> x[:, 1]
-2-element Array{Tuple{Int64,Int64},1}:
+2-element Vector{Tuple{Int64, Int64}}:
  (1, 1)
  (2, 1)
 
 julia> x[2, :]
-3-element Array{Tuple{Int64,Int64},1}:
+3-element Vector{Tuple{Int64, Int64}}:
  (2, 1)
  (2, 2)
  (2, 3)
@@ -97,7 +97,7 @@ julia> swap(x::Tuple) = (last(x), first(x))
 swap (generic function with 1 method)
 
 julia> swap.(x)
-2×3 Array{Tuple{Int64,Int64},2}:
+2×3 Matrix{Tuple{Int64, Int64}}:
  (1, 1)  (2, 1)  (3, 1)
  (1, 2)  (2, 2)  (3, 2)
 ```
@@ -109,10 +109,10 @@ rectangular, but not of the form `1:n`. The index sets can be of any type.
 
 ```jldoctest containers_dense
 julia> x = Containers.@container([i = 1:2, j = [:A, :B]], (i, j))
-2-dimensional DenseAxisArray{Tuple{Int64,Symbol},2,...} with index sets:
+2-dimensional DenseAxisArray{Tuple{Int64, Symbol},2,...} with index sets:
     Dimension 1, Base.OneTo(2)
-    Dimension 2, Symbol[:A, :B]
-And data, a 2×2 Array{Tuple{Int64,Symbol},2}:
+    Dimension 2, [:A, :B]
+And data, a 2×2 Matrix{Tuple{Int64, Symbol}}:
  (1, :A)  (1, :B)
  (2, :A)  (2, :B)
 ```
@@ -122,16 +122,16 @@ And data, a 2×2 Array{Tuple{Int64,Symbol},2}:
 DenseAxisArrays can be sliced
 ```jldoctest containers_dense
 julia> x[:, :A]
-1-dimensional DenseAxisArray{Tuple{Int64,Symbol},1,...} with index sets:
+1-dimensional DenseAxisArray{Tuple{Int64, Symbol},1,...} with index sets:
     Dimension 1, Base.OneTo(2)
-And data, a 2-element Array{Tuple{Int64,Symbol},1}:
+And data, a 2-element Vector{Tuple{Int64, Symbol}}:
  (1, :A)
  (2, :A)
 
 julia> x[1, :]
-1-dimensional DenseAxisArray{Tuple{Int64,Symbol},1,...} with index sets:
-    Dimension 1, Symbol[:A, :B]
-And data, a 2-element Array{Tuple{Int64,Symbol},1}:
+1-dimensional DenseAxisArray{Tuple{Int64, Symbol},1,...} with index sets:
+    Dimension 1, [:A, :B]
+And data, a 2-element Vector{Tuple{Int64, Symbol}}:
  (1, :A)
  (1, :B)
 ```
@@ -154,7 +154,7 @@ julia> for key in eachindex(x)
 Use `axes` to obtain the index sets:
 ```jldoctest containers_dense
 julia> axes(x)
-(Base.OneTo(2), Symbol[:A, :B])
+(Base.OneTo(2), [:A, :B])
 ```
 
 ### Broadcasting
@@ -165,10 +165,10 @@ julia> swap(x::Tuple) = (last(x), first(x))
 swap (generic function with 1 method)
 
 julia> swap.(x)
-2-dimensional DenseAxisArray{Tuple{Symbol,Int64},2,...} with index sets:
+2-dimensional DenseAxisArray{Tuple{Symbol, Int64},2,...} with index sets:
     Dimension 1, Base.OneTo(2)
-    Dimension 2, Symbol[:A, :B]
-And data, a 2×2 Array{Tuple{Symbol,Int64},2}:
+    Dimension 2, [:A, :B]
+And data, a 2×2 Matrix{Tuple{Symbol, Int64}}:
  (:A, 1)  (:B, 1)
  (:A, 2)  (:B, 2)
 ```
@@ -178,7 +178,7 @@ And data, a 2×2 Array{Tuple{Symbol,Int64},2}:
 Use `Array(x)` to access the internal data array
 ```jldoctest containers_dense
 julia> Array(x)
-2×2 Array{Tuple{Int64,Symbol},2}:
+2×2 Matrix{Tuple{Int64, Symbol}}:
  (1, :A)  (1, :B)
  (2, :A)  (2, :B)
 ```
@@ -191,7 +191,7 @@ non-rectangular. This occurs in two circumstances:
 An index depends on a prior index:
 ```jldoctest containers_sparse
 julia> Containers.@container([i = 1:2, j = i:2], (i, j))
-JuMP.Containers.SparseAxisArray{Tuple{Int64,Int64},2,Tuple{Int64,Int64}} with 3 entries:
+JuMP.Containers.SparseAxisArray{Tuple{Int64, Int64}, 2, Tuple{Int64, Int64}} with 3 entries:
   [1, 1]  =  (1, 1)
   [1, 2]  =  (1, 2)
   [2, 2]  =  (2, 2)
@@ -200,7 +200,7 @@ JuMP.Containers.SparseAxisArray{Tuple{Int64,Int64},2,Tuple{Int64,Int64}} with 3 
 The `[indices; condition]` syntax is used:
 ```jldoctest containers_sparse
 julia> x = Containers.@container([i = 1:3, j = [:A, :B]; i > 1 && j == :B], (i, j))
-JuMP.Containers.SparseAxisArray{Tuple{Int64,Symbol},2,Tuple{Int64,Symbol}} with 2 entries:
+JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 2, Tuple{Int64, Symbol}} with 2 entries:
   [2, B]  =  (2, :B)
   [3, B]  =  (3, :B)
 ```
@@ -240,7 +240,7 @@ julia> swap(x::Tuple) = (last(x), first(x))
 swap (generic function with 1 method)
 
 julia> swap.(x)
-JuMP.Containers.SparseAxisArray{Tuple{Symbol,Int64},2,Tuple{Int64,Symbol}} with 2 entries:
+JuMP.Containers.SparseAxisArray{Tuple{Symbol, Int64}, 2, Tuple{Int64, Symbol}} with 2 entries:
   [2, B]  =  (:B, 2)
   [3, B]  =  (:B, 3)
 ```
@@ -250,12 +250,12 @@ JuMP.Containers.SparseAxisArray{Tuple{Symbol,Int64},2,Tuple{Int64,Symbol}} with 
 Pass `container = T` to use `T` as the container. For example:
 ```jldoctest; filter=r"\([1-2], [1-2]\) \=\> [2-4]"
 julia> Containers.@container([i = 1:2, j = 1:2], i + j, container = Array)
-2×2 Array{Int64,2}:
+2×2 Matrix{Int64}:
  2  3
  3  4
 
 julia> Containers.@container([i = 1:2, j = 1:2], i + j, container = Dict)
-Dict{Tuple{Int64,Int64},Int64} with 4 entries:
+Dict{Tuple{Int64, Int64}, Int64} with 4 entries:
   (1, 2) => 3
   (1, 1) => 2
   (2, 2) => 4
@@ -271,7 +271,7 @@ and indexed by a compact set of integers that start at `1`,
 index sets are visible to the macro as `1:n`:
 ```jldoctest
 julia> Containers.@container([i=1:3, j=1:5], i + j)
-3×5 Array{Int64,2}:
+3×5 Matrix{Int64}:
  2  3  4  5  6
  3  4  5  6  7
  4  5  6  7  8
@@ -282,7 +282,7 @@ julia> set = Base.OneTo(3)
 Base.OneTo(3)
 
 julia> Containers.@container([i=set, j=1:5], i + j)
-3×5 Array{Int64,2}:
+3×5 Matrix{Int64}:
  2  3  4  5  6
  3  4  5  6  7
  4  5  6  7  8
@@ -299,7 +299,7 @@ julia> Containers.@container([i=set, j=1:5], i + j)
 2-dimensional DenseAxisArray{Int64,2,...} with index sets:
     Dimension 1, 1:3
     Dimension 2, Base.OneTo(5)
-And data, a 3×5 Array{Int64,2}:
+And data, a 3×5 Matrix{Int64}:
  2  3  4  5  6
  3  4  5  6  7
  4  5  6  7  8
@@ -319,7 +319,7 @@ julia> set = 1:3
 1:3
 
 julia> Containers.@container([i=set, j=1:5], i + j, container = Array)
-3×5 Array{Int64,2}:
+3×5 Matrix{Int64}:
  2  3  4  5  6
  3  4  5  6  7
  4  5  6  7  8
@@ -334,13 +334,13 @@ julia> Containers.@container([i=a:3, j=1:5], i + j)
 2-dimensional DenseAxisArray{Int64,2,...} with index sets:
     Dimension 1, 1:3
     Dimension 2, Base.OneTo(5)
-And data, a 3×5 Array{Int64,2}:
+And data, a 3×5 Matrix{Int64}:
  2  3  4  5  6
  3  4  5  6  7
  4  5  6  7  8
 
 julia> Containers.@container([i=1:a, j=1:5], i + j)
-1×5 Array{Int64,2}:
+1×5 Matrix{Int64}:
  2  3  4  5  6
 ```
 
@@ -350,7 +350,7 @@ Finally, if the compiler cannot prove that the index set is rectangular, a
 This occurs when some indices depend on a previous one:
 ```jldoctest
 julia> Containers.@container([i=1:3, j=1:i], i + j)
-JuMP.Containers.SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 6 entries:
+JuMP.Containers.SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 6 entries:
   [1, 1]  =  2
   [2, 1]  =  3
   [2, 2]  =  4
@@ -361,7 +361,7 @@ JuMP.Containers.SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 6 entries:
 or if there is a condition on the index sets:
 ```jldoctest
 julia> Containers.@container([i = 1:5; isodd(i)], i^2)
-JuMP.Containers.SparseAxisArray{Int64,1,Tuple{Int64}} with 3 entries:
+JuMP.Containers.SparseAxisArray{Int64, 1, Tuple{Int64}} with 3 entries:
   [1]  =  1
   [3]  =  9
   [5]  =  25
@@ -374,7 +374,7 @@ julia> condition(i, j) = isodd(i) && iseven(j)
 condition (generic function with 1 method)
 
 julia> Containers.@container([i = 1:2, j = 1:4; condition(i, j)], i + j)
-JuMP.Containers.SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 2 entries:
+JuMP.Containers.SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 2 entries:
   [1, 2]  =  3
   [1, 4]  =  5
 ```

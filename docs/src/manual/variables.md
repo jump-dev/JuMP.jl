@@ -33,7 +33,7 @@ CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
 
 julia> @variable(model, x[1:2])
-2-element Array{VariableRef,1}:
+2-element Vector{VariableRef}:
  x[1]
  x[2]
 ```
@@ -290,7 +290,7 @@ We have already seen the creation of an array of JuMP variables with the
 arrays of JuMP variables. For example:
 ```jldoctest variables_arrays; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2])
-2×2 Array{VariableRef,2}:
+2×2 Matrix{VariableRef}:
  x[1,1]  x[1,2]
  x[2,1]  x[2,2]
 ```
@@ -301,7 +301,7 @@ julia> x[1, 2]
 x[1,2]
 
 julia> x[2, :]
-2-element Array{VariableRef,1}:
+2-element Vector{VariableRef}:
  x[2,1]
  x[2,2]
 ```
@@ -309,12 +309,12 @@ julia> x[2, :]
 Variable bounds can depend upon the indices:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:2, j=1:2] >= 2i + j)
-2×2 Array{VariableRef,2}:
+2×2 Matrix{VariableRef}:
  x[1,1]  x[1,2]
  x[2,1]  x[2,2]
 
 julia> lower_bound.(x)
-2×2 Array{Float64,2}:
+2×2 Matrix{Float64}:
  3.0  4.0
  5.0  6.0
 ```
@@ -337,8 +337,8 @@ return a `DenseAxisArray`. For example:
 julia> @variable(model, x[1:2, [:A,:B]])
 2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
     Dimension 1, Base.OneTo(2)
-    Dimension 2, Symbol[:A, :B]
-And data, a 2×2 Array{VariableRef,2}:
+    Dimension 2, [:A, :B]
+And data, a 2×2 Matrix{VariableRef}:
  x[1,A]  x[1,B]
  x[2,A]  x[2,B]
 ```
@@ -350,8 +350,8 @@ x[1,A]
 
 julia> x[2, :]
 1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
-    Dimension 1, Symbol[:A, :B]
-And data, a 2-element Array{VariableRef,1}:
+    Dimension 1, [:A, :B]
+And data, a 2-element Vector{VariableRef}:
  x[2,A]
  x[2,B]
 ```
@@ -362,7 +362,7 @@ julia> @variable(model, x[i=2:3, j=1:2:3] >= 0.5i + j)
 2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, 1:2:3
-And data, a 2×2 Array{VariableRef,2}:
+And data, a 2×2 Matrix{VariableRef}:
  x[2,1]  x[2,3]
  x[3,1]  x[3,3]
 
@@ -370,7 +370,7 @@ julia> lower_bound.(x)
 2-dimensional DenseAxisArray{Float64,2,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, 1:2:3
-And data, a 2×2 Array{Float64,2}:
+And data, a 2×2 Matrix{Float64}:
  2.0  4.0
  2.5  4.5
 ```
@@ -383,7 +383,7 @@ For example, this applies when indices have a dependence upon previous
 indices (called *triangular indexing*). JuMP supports this as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:2, j=i:2])
-JuMP.Containers.SparseAxisArray{VariableRef,2,Tuple{Int64,Int64}} with 3 entries:
+JuMP.Containers.SparseAxisArray{VariableRef, 2, Tuple{Int64, Int64}} with 3 entries:
   [1, 1]  =  x[1,1]
   [1, 2]  =  x[1,2]
   [2, 2]  =  x[2,2]
@@ -394,7 +394,7 @@ syntax appends a comparison check that depends upon the named indices and is
 separated from the indices by a semi-colon (`;`). For example:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[i=1:4; mod(i, 2)==0])
-JuMP.Containers.SparseAxisArray{VariableRef,1,Tuple{Int64}} with 2 entries:
+JuMP.Containers.SparseAxisArray{VariableRef, 1, Tuple{Int64}} with 2 entries:
   [2]  =  x[2]
   [4]  =  x[4]
 ```
@@ -440,7 +440,7 @@ julia> A = 1:2
 julia> @variable(model, x[A])
 1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
     Dimension 1, 1:2
-And data, a 2-element Array{VariableRef,1}:
+And data, a 2-element Vector{VariableRef}:
  x[1]
  x[2]
 ```
@@ -453,7 +453,7 @@ We can share our knowledge that it is possible to store these JuMP variables as
 an array by setting the `container` keyword:
 ```jldoctest variable_force_container
 julia> @variable(model, y[A], container=Array)
-2-element Array{VariableRef,1}:
+2-element Vector{VariableRef}:
  y[1]
  y[2]
 ```
@@ -535,14 +535,14 @@ matrix ``X`` is positive semidefinite if all eigenvalues are nonnegative. We can
 declare a matrix of JuMP variables to be positive semidefinite as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2], PSD)
-2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
 ```
 or using the syntax for [Variables constrained on creation](@ref):
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2] in PSDCone())
-2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
 ```
@@ -555,7 +555,7 @@ You can also impose a weaker constraint that the square matrix is only symmetric
 (instead of positive semidefinite) as follows:
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2], Symmetric)
-2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
 ```
@@ -564,7 +564,7 @@ You can impose a constraint that the square matrix is skew symmetric with
 [`SkewSymmetricMatrixSpace`](@ref):
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2] in SkewSymmetricMatrixSpace())
-2×2 Array{GenericAffExpr{Float64,VariableRef},2}:
+2×2 Matrix{AffExpr}:
  0        x[1,2]
  -x[1,2]  0
 ```
@@ -589,7 +589,7 @@ x
 An `Array` of anonymous JuMP variables can be created as follows:
 ```jldoctest; setup=:(model=Model())
 julia> y = @variable(model, [i=1:2])
-2-element Array{VariableRef,1}:
+2-element Vector{VariableRef}:
  noname
  noname
 ```
@@ -606,7 +606,7 @@ use the `binary` and `integer` keywords.
 Thus, the anonymous variant of `@variable(model, x[i=1:2] >= i, Int)` is:
 ```jldoctest; setup=:(model=Model())
 julia> x = @variable(model, [i=1:2], base_name="x", lower_bound=i, integer=true)
-2-element Array{VariableRef,1}:
+2-element Vector{VariableRef}:
  x[1]
  x[2]
 ```
@@ -646,7 +646,7 @@ variables on creation. For example, the following creates a vector of variables
 constrained on creation to belong to the [`SecondOrderCone`](@ref):
 ```jldoctest constrained_variables; setup=:(model=Model())
 julia> @variable(model, y[1:3] in SecondOrderCone())
-3-element Array{VariableRef,1}:
+3-element Vector{VariableRef}:
  y[1]
  y[2]
  y[3]
@@ -655,7 +655,7 @@ julia> @variable(model, y[1:3] in SecondOrderCone())
 For contrast, the more standard approach is as follows:
 ```jldoctest constrained_variables
 julia> @variable(model, x[1:3])
-3-element Array{VariableRef,1}:
+3-element Vector{VariableRef}:
  x[1]
  x[2]
  x[3]
@@ -689,16 +689,16 @@ in their own data structures. For example, the following code creates a
 dictionary with symmetric matrices as the values:
 ```jldoctest; setup=:(model=Model())
 julia> variables = Dict{Symbol, Array{VariableRef,2}}()
-Dict{Symbol,Array{VariableRef,2}} with 0 entries
+Dict{Symbol, Matrix{VariableRef}}()
 
 julia> for key in [:A, :B]
            global variables[key] = @variable(model, [1:2, 1:2])
        end
 
 julia> variables
-Dict{Symbol,Array{VariableRef,2}} with 2 entries:
-  :A => VariableRef[noname noname; noname noname]
-  :B => VariableRef[noname noname; noname noname]
+Dict{Symbol, Matrix{VariableRef}} with 2 entries:
+  :A => [noname noname; noname noname]
+  :B => [noname noname; noname noname]
 ```
 
 ## Delete a variable

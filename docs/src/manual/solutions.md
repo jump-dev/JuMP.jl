@@ -359,7 +359,7 @@ coefficient of the constraint `c1` as follows:
 julia> optimize!(model)
 
 julia> value.(x)
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  1.0
  0.0
 
@@ -534,19 +534,19 @@ julia> @constraint(model, c1, x + y <= 1.95);
 julia> point = Dict(x => 1.9, y => 0.06);
 
 julia> primal_feasibility_report(model, point)
-Dict{Any,Float64} with 2 entries:
-  c1 : x + y ≤ 1.95 => 0.01
+Dict{Any, Float64} with 2 entries:
   x integer         => 0.1
+  c1 : x + y ≤ 1.95 => 0.01
 
 julia> primal_feasibility_report(model, point; atol = 0.02)
-Dict{Any,Float64} with 1 entry:
+Dict{Any, Float64} with 1 entry:
   x integer => 0.1
 ```
 
 If the point is feasible, an empty dictionary is returned:
 ```jldoctest feasibility
 julia> primal_feasibility_report(model, Dict(x => 1.0, y => 0.0))
-Dict{Any,Float64} with 0 entries
+Dict{Any, Float64}()
 ```
 
 To use the primal solution from a solve, omit the `point` argument:
@@ -554,13 +554,13 @@ To use the primal solution from a solve, omit the `point` argument:
 julia> optimize!(model)
 
 julia> primal_feasibility_report(model)
-Dict{Any,Float64} with 0 entries
+Dict{Any, Float64}()
 ```
 
 Pass `skip_mising = true` to skip constraints which contain variables that are
 not in `point`:
 ```jldoctest feasibility
 julia> primal_feasibility_report(model, Dict(x => 2.1); skip_missing = true)
-Dict{Any,Float64} with 1 entry:
+Dict{Any, Float64} with 1 entry:
   x integer => 0.1
 ```

@@ -53,7 +53,7 @@ expr
 
 # output
 
-3-element Array{GenericAffExpr{Float64,VariableRef},1}:
+3-element Vector{AffExpr}:
  x[1] + x[2] + x[3]
  2 x[2] + 2 x[3]
  3 x[3]
