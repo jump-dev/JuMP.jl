@@ -135,8 +135,8 @@ function with_optimizer(constructor; kwargs...)
 `with_optimizer(Ipopt.Optimizer, max_cpu_time=60.0)` becomes `optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time" => 60.0)`.
 """
         Base.depwarn(deprecation_message, :with_optimizer_kw)
-        params =
-            [MOI.RawOptimizerAttribute(string(kw.first)) => kw.second for kw in kwargs]
+        params = [MOI.RawOptimizerAttribute(string(kw.first)) => kw.second for
+         kw in kwargs]
         return MOI.OptimizerWithAttributes(constructor, params)
     end
 end
@@ -168,8 +168,8 @@ function with_optimizer(constructor, args...; kwargs...)
                 " the other argument of `with_optimizer`.",
             )
         end
-        params =
-            [MOI.RawOptimizerAttribute(string(kw.first)) => kw.second for kw in kwargs]
+        params = [MOI.RawOptimizerAttribute(string(kw.first)) => kw.second for
+         kw in kwargs]
         return MOI.OptimizerWithAttributes(() -> constructor(args...), params)
     end
 end

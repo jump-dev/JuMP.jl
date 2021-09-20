@@ -683,11 +683,7 @@ function _moi_fix(
                 MOI.delete(moi_backend, _lower_bound_index(variable))
             end
         end
-        moi_add_constraint(
-            moi_backend,
-            index(variable),
-            new_set,
-        )
+        moi_add_constraint(moi_backend, index(variable), new_set)
     end
     return
 end
@@ -778,11 +774,7 @@ function _moi_set_integer(moi_backend, variable_ref::VariableRef)
             "is already binary.",
         )
     end
-    moi_add_constraint(
-        moi_backend,
-        index(variable_ref),
-        MOI.Integer(),
-    )
+    moi_add_constraint(moi_backend, index(variable_ref), MOI.Integer())
     return
 end
 
@@ -855,11 +847,7 @@ function _moi_set_binary(moi_backend, variable_ref)
             "is already integer.",
         )
     end
-    moi_add_constraint(
-        moi_backend,
-        index(variable_ref),
-        MOI.ZeroOne(),
-    )
+    moi_add_constraint(moi_backend, index(variable_ref), MOI.ZeroOne())
     return
 end
 
@@ -1007,18 +995,10 @@ function _moi_constrain_variable(moi_backend::MOI.ModelLike, index, info)
         )
     end
     if info.binary
-        moi_add_constraint(
-            moi_backend,
-            index,
-            MOI.ZeroOne(),
-        )
+        moi_add_constraint(moi_backend, index, MOI.ZeroOne())
     end
     if info.integer
-        moi_add_constraint(
-            moi_backend,
-            index,
-            MOI.Integer(),
-        )
+        moi_add_constraint(moi_backend, index, MOI.Integer())
     end
     if info.has_start
         MOI.set(

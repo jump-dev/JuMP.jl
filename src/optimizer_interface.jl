@@ -103,10 +103,8 @@ function set_optimizer(
 )
     error_if_direct_mode(model, :set_optimizer)
     if bridge_constraints
-        optimizer = MOI.instantiate(
-            optimizer_constructor,
-            with_bridge_type = Float64,
-        )
+        optimizer =
+            MOI.instantiate(optimizer_constructor, with_bridge_type = Float64)
         for bridge_type in model.bridge_types
             _moi_add_bridge(optimizer, bridge_type)
         end
