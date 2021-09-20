@@ -414,10 +414,10 @@ end
 function test_set_silent()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
-    @test JuMP.set_silent(model)
+    JuMP.set_silent(model)
     @test MOI.get(backend(model), MOI.Silent())
     @test MOI.get(model, MOI.Silent())
-    @test !JuMP.unset_silent(model)
+    JuMP.unset_silent(model)
     @test !MOI.get(backend(model), MOI.Silent())
     @test !MOI.get(model, MOI.Silent())
 end
@@ -425,23 +425,23 @@ end
 function test_set_optimizer_attribute()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
-    @test JuMP.set_optimizer_attribute(model, "aaa", "bbb") == "bbb"
-    @test MOI.get(backend(model), MOI.RawParameter("aaa")) == "bbb"
-    @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
+    @test JuMP.set_optimizer_attribute(model, "aaa", "bbb") === nothing
+    @test MOI.get(backend(model), MOI.RawOptimizerAttribute("aaa")) == "bbb"
+    @test MOI.get(model, MOI.RawOptimizerAttribute("aaa")) == "bbb"
 end
 
 function test_set_optimizer_attributes()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
     JuMP.set_optimizer_attributes(model, "aaa" => "bbb", "abc" => 10)
-    @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
-    @test MOI.get(model, MOI.RawParameter("abc")) == 10
+    @test MOI.get(model, MOI.RawOptimizerAttribute("aaa")) == "bbb"
+    @test MOI.get(model, MOI.RawOptimizerAttribute("abc")) == 10
 end
 
 function test_get_optimizer_attribute()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
-    @test JuMP.set_optimizer_attribute(model, "aaa", "bbb") == "bbb"
+    @test JuMP.set_optimizer_attribute(model, "aaa", "bbb") === nothing
     @test JuMP.get_optimizer_attribute(model, "aaa") == "bbb"
 end
 
@@ -581,8 +581,8 @@ function test_direct_mode_using_OptimizerWithAttributes()
     optimizer = optimizer_with_attributes(fake_optimizer, "a" => 1, "b" => 2)
     model = JuMP.direct_model(optimizer)
     @test model.moi_backend isa MOIU.MockOptimizer
-    @test MOI.get(model.moi_backend, MOI.RawParameter("a")) == 1
-    @test MOI.get(model.moi_backend, MOI.RawParameter("b")) == 2
+    @test MOI.get(model.moi_backend, MOI.RawOptimizerAttribute("a")) == 1
+    @test MOI.get(model.moi_backend, MOI.RawOptimizerAttribute("b")) == 2
 end
 
 function test_copy_expr_aff()

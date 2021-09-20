@@ -60,7 +60,7 @@ an initialized `Optimizer` object:
 ```jldoctest
 julia> function my_optimizer()
            model = GLPK.Optimizer()
-           MOI.set(model, MOI.RawParameter("msg_lev"), 0)
+           MOI.set(model, MOI.RawOptimizerAttribute("msg_lev"), 0)
            return model
        end
 my_optimizer (generic function with 1 method)
