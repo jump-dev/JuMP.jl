@@ -515,7 +515,7 @@ function MOI.ScalarQuadraticFunction(q::QuadExpr)
         _moi_quadratic_term(t) for t in quad_terms(q)
     ]
     moi_aff = MOI.ScalarAffineFunction(q.aff)
-    return MOI.ScalarQuadraticFunction(moi_aff.terms, qterms, moi_aff.constant)
+    return MOI.ScalarQuadraticFunction(qterms, moi_aff.terms, moi_aff.constant)
 end
 function moi_function(aff::GenericQuadExpr)
     return MOI.ScalarQuadraticFunction(aff)
