@@ -1059,11 +1059,11 @@ julia> @variable(model, x >= 0, Bin);
 julia> @constraint(model, 2x <= 1);
 
 julia> all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
-1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
  x ≥ 0.0
 
 julia> all_constraints(model, VariableRef, MOI.ZeroOne)
-1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.ZeroOne},ScalarShape},1}:
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex,MathOptInterface.ZeroOne},ScalarShape},1}:
  x binary
 
 julia> all_constraints(model, AffExpr, MOI.LessThan{Float64})

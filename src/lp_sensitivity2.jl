@@ -199,19 +199,19 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
             # The variable is nonbasic with free bounds.
             report.objective[var] = (0.0, 0.0)
         elseif std_form.lower[i] == std_form.upper[i]
-            # The SingleVariable-in-EqualTo case.
+            # The VariableIndex-in-EqualTo case.
             # The variable is nonbasic with fixed bounds. Therefore,
             # (δ⁻, δ⁺) = (-∞, ∞) because the variable can be effectively
             # substituted out.
             report.objective[var] = (-Inf, Inf)
         elseif basis.variables[i] == MOI.NONBASIC_AT_LOWER
-            # The SingleVariable-in-GreaterThan case.
+            # The VariableIndex-in-GreaterThan case.
             # Variable `i` is nonbasic at lower bound. If minimizing, (δ⁻, δ⁺) =
             # (-πᵢ, ∞) because increasing the objective coefficient will only
             # keep it at the bound. If maximizing, the opposite is true.
             report.objective[var] = is_min ? (-π[i], Inf) : (-Inf, -π[i])
         else
-            # The SingleVariable-in-LessThan case. Because we don't support
+            # The VariableIndex-in-LessThan case. Because we don't support
             # interval constraints, this assertion must hold.
             @assert basis.variables[i] == MOI.NONBASIC_AT_UPPER
             # Variable `i` is nonbasic at upper bound. The opposite case of the

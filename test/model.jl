@@ -295,7 +295,7 @@ function mock_factory()
         return MOIU.mock_optimize!(
             mock,
             [1.0],
-            (MOI.SingleVariable, MOI.GreaterThan{Float64}) => [2.0],
+            (MOI.VariableIndex, MOI.GreaterThan{Float64}) => [2.0],
         )
     end
     MOIU.set_mock_optimize!(mock, optimize!)
@@ -350,7 +350,7 @@ function test_bridges_add_after_con_model_optimizer()
 end
 
 function test_bridges_add_after_con_set_optimizer()
-    err = MOI.UnsupportedConstraint{MOI.SingleVariable,Nonnegative}()
+    err = MOI.UnsupportedConstraint{MOI.VariableIndex,Nonnegative}()
     model = Model()
     @variable(model, x)
     c = @constraint(model, x in Nonnegative())
@@ -419,7 +419,7 @@ function test_bridge_graph_true()
     @test sprint(print_bridge_graph, model) == replace(
         "Bridge graph with 1 variable nodes, 2 constraint nodes and 0 objective nodes.\n" *
         " [1] constrained variables in `$(Nonnegative)` are supported (distance 2) by adding free variables and then constrain them, see (1).\n" *
-        " (1) `MOI.SingleVariable`-in-`$(Nonnegative)` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.SingleVariable}).\n" *
+        " (1) `MOI.VariableIndex`-in-`$(Nonnegative)` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.VariableIndex}).\n" *
         " (2) `MOI.ScalarAffineFunction{Float64}`-in-`$(Nonnegative)` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.ScalarAffineFunction{Float64}}).\n",
         "MathOptInterface." => "MOI.",
     )
