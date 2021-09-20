@@ -892,7 +892,7 @@ julia> @variable(model, x >= 0)
 x
 
 julia> @constraint(model, 2x - 1 ⟂ x)
-[2 x - 1, x] ∈ MathOptInterface.Complements(1)
+[2 x - 1, x] ∈ MathOptInterface.Complements(2)
 ```
 This problem has a unique solution at `x = 0.5`.
 
@@ -903,7 +903,7 @@ An alternative approach that does not require the `⟂` symbol uses the
 `complements` function as follows:
 ```jldoctest complementarity
 julia> @constraint(model, complements(2x - 1, x))
-[2 x - 1, x] ∈ MathOptInterface.Complements(1)
+[2 x - 1, x] ∈ MathOptInterface.Complements(2)
 ```
 
 In both cases, the mapping `F(x)` is supplied as the first argument, and the
@@ -927,7 +927,7 @@ julia> q = [5, 6]
  6
 
 julia> @constraint(model, M * y + q ⟂ y)
-[y[1] + 2 y[2] + 5, 3 y[1] + 4 y[2] + 6, y[1], y[2]] ∈ MathOptInterface.Complements(2)
+[y[1] + 2 y[2] + 5, 3 y[1] + 4 y[2] + 6, y[1], y[2]] ∈ MathOptInterface.Complements(4)
 ```
 
 ## Special Ordered Sets (SOS1 and SOS2)

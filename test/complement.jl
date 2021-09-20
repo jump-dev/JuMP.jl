@@ -15,7 +15,7 @@ include(joinpath(@__DIR__, "utilities.jl"))
         @constraint(model, c, complements(2x - 1, x))
         obj = constraint_object(c)
         @test obj.func == [2x - 1, x]
-        @test obj.set == MOI.Complements(1)
+        @test obj.set == MOI.Complements(2)
     end
 
     @testset "⟂" begin
@@ -25,7 +25,7 @@ include(joinpath(@__DIR__, "utilities.jl"))
         @constraint(model, c, x ⟂ y)
         obj = constraint_object(c)
         @test obj.func == [x, y]
-        @test obj.set == MOI.Complements(1)
+        @test obj.set == MOI.Complements(2)
     end
 
     @testset "error: x--F" begin
@@ -60,7 +60,7 @@ end
         @constraint(model, c, complements(2x .- 1, x))
         obj = constraint_object(c)
         @test obj.func == [2x .- 1; x]
-        @test obj.set == MOI.Complements(2)
+        @test obj.set == MOI.Complements(4)
     end
 
     @testset "⟂" begin
@@ -70,7 +70,7 @@ end
         @constraint(model, c, x ⟂ y)
         obj = constraint_object(c)
         @test obj.func == [x; y]
-        @test obj.set == MOI.Complements(2)
+        @test obj.set == MOI.Complements(4)
     end
 
     @testset "error: length mismatch" begin
@@ -118,7 +118,7 @@ end
         obj = constraint_object(c)
         @test obj.func == [2x[3] - 1, 2x[1] - 1, x[3], x[1]] ||
               obj.func == [2x[1] - 1, 2x[3] - 1, x[1], x[3]]
-        @test obj.set == MOI.Complements(2)
+        @test obj.set == MOI.Complements(4)
     end
 
     @testset "⟂" begin
@@ -128,7 +128,7 @@ end
         obj = constraint_object(c)
         @test obj.func == [2x[3] - 1, 2x[1] - 1, x[3], x[1]] ||
               obj.func == [2x[1] - 1, 2x[3] - 1, x[1], x[3]]
-        @test obj.set == MOI.Complements(2)
+        @test obj.set == MOI.Complements(4)
     end
 
     @testset "key mismatch" begin
