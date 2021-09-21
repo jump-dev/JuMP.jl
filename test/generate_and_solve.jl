@@ -91,9 +91,9 @@ using JuMP
             JuMP.optimizer_index(JuMP.LowerBoundRef(y)),
             1.0,
         )
-        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
 
         #@test JuMP.isattached(m)
         @test JuMP.has_values(m)
@@ -166,9 +166,9 @@ using JuMP
             JuMP.optimizer_index(JuMP.LowerBoundRef(y)),
             1.0,
         )
-        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
 
         JuMP.optimize!(m)
 
@@ -251,9 +251,9 @@ using JuMP
             0.0,
         )
         MOI.set(mockoptimizer, MOI.DualStatus(), MOI.NO_SOLUTION)
-        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
         MOI.set(mockoptimizer, MOI.RelativeGap(), 0.0)
 
         JuMP.optimize!(m)
@@ -350,9 +350,9 @@ using JuMP
             JuMP.optimizer_index(c3),
             3.0,
         )
-        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
 
         #@test JuMP.isattached(m)
         @test JuMP.has_values(m)
@@ -450,9 +450,9 @@ using JuMP
             JuMP.optimizer_index(affsoc),
             [1.0, 2.0, 3.0],
         )
-        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
 
         JuMP.optimize!(m)
 
@@ -555,9 +555,9 @@ using JuMP
             JuMP.optimizer_index(con_psd),
             [7.0, 8.0, 9.0, 10.0],
         )
-        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
 
         JuMP.optimize!(m)
 
