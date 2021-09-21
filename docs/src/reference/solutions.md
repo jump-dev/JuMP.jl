@@ -69,8 +69,6 @@ JuMP.copy_conflict
 ```@docs
 lp_sensitivity_report
 SensitivityReport
-lp_objective_perturbation_range
-lp_rhs_perturbation_range
 ```
 
 ## Feasibility
