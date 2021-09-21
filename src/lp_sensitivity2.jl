@@ -417,44 +417,53 @@ _convert_nonbasic_status(::Any) = MOI.NONBASIC
 function _try_get_constraint_basis_status(model::Model, constraint)
     try
         return MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
-    catch e
+    catch
         error(
             "Unable to query LP sensitivity information because this solver " *
-            "does not support querying the status of variables and constraints " *
-            "in the optimal basis.",
+            "does not support querying the status of constraints in the " *
+            "optimal basis.",
         )
     end
 end
 
+function _try_get_variable_basis_status(model::Model, variable)
+    try
+        return MOI.get(model, MOI.VariableBasisStatus(), variable)
+    catch
+        error(
+            "Unable to query LP sensitivity information because this solver " *
+            "does not support querying the status of variables in the " *
+            "optimal basis.",
+        )
+    end
+end
+
+_nonbasic_at_lower(::MOI.GreaterThan) = MOI.NONBASIC_AT_LOWER
+_nonbasic_at_lower(::Any) = MOI.BASIC
+_nonbasic_at_upper(::MOI.LessThan) = MOI.NONBASIC_AT_UPPER
+_nonbasic_at_upper(::Any) = MOI.BASIC
+
 function _standard_form_basis(model::Model, std_form)
-    variable_seen = fill(false, length(std_form.columns))
     variable_status = fill(MOI.BASIC, length(std_form.columns))
     bound_status = fill(MOI.BASIC, length(std_form.bounds))
     constraint_status = fill(MOI.BASIC, length(std_form.constraints))
-    for (i, c) in enumerate(std_form.bounds)
-        status = _try_get_constraint_basis_status(model, c)
-        c_obj = constraint_object(c)
-        if status == MOI.NONBASIC
-            status = _convert_nonbasic_status(c_obj.set)
-        end
-        col = std_form.columns[c_obj.func]
-        variable_seen[col] = true
-        if status != MOI.BASIC
-            variable_status[col] = status
-        end
-        bound_status[i] = status
-    end
     for (x, col) in std_form.columns
-        if variable_seen[col]
-            continue
+        variable_status[col] = _try_get_variable_basis_status(model, x)
+    end
+    for (i, c) in enumerate(std_form.bounds)
+        c_obj = constraint_object(c)
+        col = std_form.columns[c_obj.func]
+        status = variable_status[col]
+        if status == MOI.NONBASIC_AT_LOWER
+            bound_status[i] = _nonbasic_at_lower(c_obj.set)
+        elseif status == MOI.NONBASIC_AT_UPPER
+            bound_status[i] = _nonbasic_at_upper(c_obj.set)
+        elseif status == MOI.NONBASIC
+            bound_status[i] = _convert_nonbasic_status(c_obj.set)
+        else
+            @assert status == MOI.BASIC
+            bound_status[i] = MOI.BASIC
         end
-        # MOI doesn't provide a way of distinguishing between basic and
-        # non-basic variables if they have no bounds. As a heuristic, assume the
-        # variable is non-basic if it is at 0.
-        #
-        # This doesn't cover degenerate problems (basic variable at 0), or
-        # super-basic problems (variable not at 0, but not in the basis).
-        variable_status[col] = abs(value(x)) < 1e-8 ? MOI.NONBASIC : MOI.BASIC
     end
     for (i, c) in enumerate(std_form.constraints)
         status = _try_get_constraint_basis_status(model, c)
@@ -467,7 +476,6 @@ function _standard_form_basis(model::Model, std_form)
         variables = variable_status,
         bounds = bound_status,
         constraints = constraint_status,
-        basic_cols = vcat(variable_status, constraint_status) .==
-                     Ref(MOI.BASIC),
+        basic_cols = [variable_status; constraint_status] .== Ref(MOI.BASIC),
     )
 end
