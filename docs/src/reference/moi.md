@@ -9,4 +9,6 @@ MOI.optimize!
 MOIU.reset_optimizer(::JuMP.Model)
 MOIU.drop_optimizer(::JuMP.Model)
 MOIU.attach_optimizer(::JuMP.Model)
+MOI.supports_incremental_interface
+MOI.copy_to
 ```
