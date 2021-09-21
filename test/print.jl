@@ -922,9 +922,9 @@ end
         JuMP.optimizer_index(JuMP.LowerBoundRef(y)),
         1.0,
     )
-    MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-    MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-    MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+    MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(1))
+    MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(1))
+    MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
     MOI.set(mockoptimizer, MOI.SolveTimeSec(), 5.0)
 
     @test sprint(show, solution_summary(model)) == """
