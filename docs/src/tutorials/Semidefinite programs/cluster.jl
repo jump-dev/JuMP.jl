@@ -53,12 +53,13 @@ function example_cluster(; verbose = true)
     which_cluster = zeros(Int, m)
     num_clusters = 0
     for i in 1:m
-        Z_val[i, i] <= 1e-6 && continue
-        if which_cluster[i] == 0
+        if Z_val[i, i] <= 1e-3
+            continue
+        elseif which_cluster[i] == 0
             num_clusters += 1
             which_cluster[i] = num_clusters
             for j in i+1:m
-                if LinearAlgebra.norm(Z_val[i, j] - Z_val[i, i]) <= 1e-6
+                if LinearAlgebra.norm(Z_val[i, j] - Z_val[i, i]) <= 1e-3
                     which_cluster[j] = num_clusters
                 end
             end
