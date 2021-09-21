@@ -842,7 +842,7 @@ julia> num_constraints(model, VariableRef, MOI.Integer)
 2
 
 julia> all_constraints(model, VariableRef, MOI.Integer)
-2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable, MathOptInterface.Integer}, ScalarShape}}:
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}, ScalarShape}}:
  x[1] integer
  x[2] integer
 
@@ -850,7 +850,7 @@ julia> num_constraints(model, VariableRef, MOI.GreaterThan{Float64})
 2
 
 julia> all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
-2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}:
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}:
  x[1] ≥ 1.0
  x[2] ≥ 2.0
 
