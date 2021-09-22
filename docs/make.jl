@@ -89,13 +89,14 @@ const _PAGES = [
     "Introduction" => "index.md",
     "installation.md",
     "Tutorials" => map(
-        subdir -> subdir => map(
-            file -> joinpath("tutorials", subdir, file),
-            filter(
-                file -> endswith(file, ".md"),
-                sort(readdir(joinpath(_TUTORIAL_DIR, subdir))),
+        subdir ->
+            subdir => map(
+                file -> joinpath("tutorials", subdir, file),
+                filter(
+                    file -> endswith(file, ".md"),
+                    sort(readdir(joinpath(_TUTORIAL_DIR, subdir))),
+                ),
             ),
-        ),
         _TUTORIAL_SUBDIR,
     ),
     "Manual" => [
@@ -131,7 +132,6 @@ const _PAGES = [
         "Roadmap" => "developers/roadmap.md",
     ],
     "Release notes" => "release_notes.md",
-
 ]
 
 function _add_moi_pages()
@@ -148,7 +148,7 @@ function _add_moi_pages()
     s = match(r"pages = (\[.+?)\)"s, make)[1]
     s = strip(s)
     if endswith(s, ",")
-        s = s[1:end - 1]
+        s = s[1:end-1]
     end
     for m in eachmatch(r"\"([a-zA-Z\_\/]+?\.md)\"", s)
         s = replace(s, m[1] => "moi/" * m[1])
