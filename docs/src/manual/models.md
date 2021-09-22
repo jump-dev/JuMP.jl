@@ -404,5 +404,9 @@ julia> @variable(model, x[1:2]);
 
 julia> @constraint(model, 1 <= x[1] + x[2] <= 2)
 ERROR: Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.
+
+If you expected the solver to support your problem, you may have an error in our formulation. Otherwise, consider using a different solver.
+
+The list of available solvers, along with the problem types they support, is available at https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.
 [...]
 ```
