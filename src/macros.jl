@@ -246,8 +246,8 @@ broadcasting `build_constraint` will add a new `0 = 0` constraint.
 
 Sparse arrays most-often arise when some input data to the constraint is sparse
 (e.g., a constant vector or matrix). Due to promotion and arithmetic, this
-results in a constraint function that is represented by an `AbstractSparseArray`, 
-but is actually dense. Thus, we can safely `collect` the matrix into a dense 
+results in a constraint function that is represented by an `AbstractSparseArray`,
+but is actually dense. Thus, we can safely `collect` the matrix into a dense
 array.
 
 If the function is sparse, it's not obvious what to do. What is the "zero"
@@ -749,15 +749,6 @@ function _constraint_macro(
     end
     return _finalize_macro(model, macro_code, source)
 end
-
-"""
-    constraint_type(model::AbstractModel)
-
-Return the type of constraint references stored in `model`.
-
-This function needs to be implemented by all `AbstractModel`s
-"""
-constraint_type(m::Model) = ConstraintRef{typeof(m)}
 
 """
     @constraint(m::Model, expr, kw_args...)
@@ -1387,19 +1378,13 @@ _esc_non_constant(x::Number) = x
 _esc_non_constant(x::Expr) = isexpr(x, :quote) ? x : esc(x)
 _esc_non_constant(x) = esc(x)
 
-# Returns the type of what `add_variable(::Model, build_variable(...))` would return where `...` represents the positional arguments.
-# Example: `@variable m [1:3] foo` will allocate an vector of element type `variable_type(m, foo)`
-# Note: it needs to be implemented by all `AbstractModel`s
-variable_type(m::Model) = VariableRef
-
 """
     build_variable(_error::Function, info::VariableInfo; extra_kw_args...)
 
 Returns a new variable.
 
 Extensions should define a method with additional positional arguments to
-dispatch the call to a different method. The return type should only depend on
-the positional arguments for `variable_type` to make sense.
+dispatch the call to a different method.
 
 As an example, `@variable(model, x, foo)` foo will call
 `build_variable(_error, info, foo)`

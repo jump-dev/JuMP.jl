@@ -55,7 +55,6 @@ function Base.:(==)(v::MyVariableRef, w::MyVariableRef)
 end
 Base.broadcastable(v::MyVariableRef) = Ref(v)
 JuMP.isequal_canonical(v::MyVariableRef, w::MyVariableRef) = v == w
-JuMP.variable_type(::MyModel) = MyVariableRef
 function JuMP.add_variable(
     m::MyModel,
     v::JuMP.AbstractVariable,
@@ -337,7 +336,6 @@ end
 
 # Constraints
 const MyConstraintRef = JuMP.ConstraintRef{MyModel,ConstraintIndex}
-JuMP.constraint_type(::MyModel) = MyConstraintRef
 function JuMP.add_constraint(
     model::MyModel,
     c::JuMP.AbstractConstraint,
