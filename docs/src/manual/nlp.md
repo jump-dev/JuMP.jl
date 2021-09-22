@@ -24,14 +24,14 @@ There are three main changes to solve nonlinear programs in JuMP.
 
 ## Set a nonlinear objective
 
-Use [`@NLobjective`](@Ref) to set a nonlinear objective.
+Use [`@NLobjective`](@ref) to set a nonlinear objective.
 
 ```jldoctest; setup=:(model = Model(); @variable(model, x[1:2]))
 julia> @NLobjective(model, Min, exp(x[1]) - sqrt(x[2]))
 ```
 ## Add a nonlinear constraint
 
-Use [`@NLconstraint`](@Ref) to add a nonlinear constraint.
+Use [`@NLconstraint`](@ref) to add a nonlinear constraint.
 
 ```jldoctest; setup=:(model = Model(); @variable(model, x[1:2]))
 julia> @NLconstraint(model, exp(x[1]) <= 1)

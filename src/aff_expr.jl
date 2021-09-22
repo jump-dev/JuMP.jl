@@ -141,7 +141,7 @@ end
 """
     GenericAffExpr(constant::V, kv::Vararg{Pair{K,V},N}) where {K,V,N}
 
-Create a [`GenericAffExpr`](@Ref) by passing a constant and pairs of additional
+Create a [`GenericAffExpr`](@ref) by passing a constant and pairs of additional
 arguments.
 
 ## Examples
