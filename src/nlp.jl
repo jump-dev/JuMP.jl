@@ -133,7 +133,7 @@ value(p)
 10.0
 ```
 """
-value(p::NonlinearParameter) = p.m.nlp_data.nlparamvalues[p.index]::Float64
+value(p::NonlinearParameter) = p.model.nlp_data.nlparamvalues[p.index]::Float64
 
 """
     set_value(p::NonlinearParameter, v::Number)
@@ -152,7 +152,7 @@ value(p)
 ```
 """
 function set_value(p::NonlinearParameter, v::Number)
-    return p.m.nlp_data.nlparamvalues[p.index] = v
+    return p.model.nlp_data.nlparamvalues[p.index] = v
 end
 
 function _NLPData()
@@ -244,7 +244,7 @@ Return an `MOI.AbstractNLPEvaluator` constructed from the model `model`.
 Before using, you must initialize the evaluator using `MOI.initialize`.
 """
 mutable struct NLPEvaluator <: MOI.AbstractNLPEvaluator
-    m::Model
+    model::Model
     parameter_values::Vector{Float64}
     has_nlobj::Bool
     objective::_FunctionStorage
@@ -409,7 +409,7 @@ function _SubexpressionStorage(
 end
 
 function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
-    nldata::_NLPData = d.m.nlp_data
+    nldata::_NLPData = d.model.nlp_data
 
     for feat in requested_features
         if !(feat in MOI.features_available(d))
@@ -422,18 +422,18 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
         return
     end
 
-    num_variables_ = num_variables(d.m)
+    num_variables_ = num_variables(d.model)
 
     moi_index_to_consecutive_index = Dict(
         moi_index => consecutive_index for (consecutive_index, moi_index) in
-        enumerate(MOI.get(d.m, MOI.ListOfVariableIndices()))
+        enumerate(MOI.get(d.model, MOI.ListOfVariableIndices()))
     )
 
     d.user_output_buffer =
-        Array{Float64}(undef, d.m.nlp_data.largest_user_input_dimension)
+        Array{Float64}(undef, d.model.nlp_data.largest_user_input_dimension)
     d.jac_storage = Array{Float64}(
         undef,
-        max(num_variables_, d.m.nlp_data.largest_user_input_dimension),
+        max(num_variables_, d.model.nlp_data.largest_user_input_dimension),
     )
 
     d.constraints = _FunctionStorage[]
@@ -516,7 +516,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
         for k in d.subexpression_order
             ex = d.subexpressions[k]
             d.subexpressions_as_julia_expressions[k] = _tape_to_expr(
-                d.m,
+                d.model,
                 1,
                 nldata.nlexpr[k].nd,
                 ex.adj,
@@ -602,15 +602,15 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
             d.hessian_sparsity = _hessian_lagrangian_structure(d)
             # JIT warm-up
             # TODO: rewrite without MPB
-            #MathProgBase.eval_hessian_lagrangian(d, Array{Float64}(undef,length(d.hess_I)), d.m.colVal, 1.0, ones(MathProgBase.numconstr(d.m)))
+            #MathProgBase.eval_hessian_lagrangian(d, Array{Float64}(undef,length(d.hess_I)), d.model.colVal, 1.0, ones(MathProgBase.numconstr(d.model)))
         end
     end
 
     # JIT warm-up
     # TODO: rewrite without MPB
     # if :Grad in requested_features
-    #     MOI.eval_objective_gradient(d, zeros(numVar), d.m.colVal)
-    #     MOI.eval_constraint(d, zeros(MathProgBase.numconstr(d.m)), d.m.colVal)
+    #     MOI.eval_objective_gradient(d, zeros(numVar), d.model.colVal)
+    #     MOI.eval_constraint(d, zeros(MathProgBase.numconstr(d.model)), d.model.colVal)
     # end
 
     # reset timers
@@ -626,7 +626,7 @@ end
 function _recompute_disable_2ndorder(evaluator::NLPEvaluator)
     # Check if we have any user-defined operators, in which case we need to
     # disable hessians. The result of features_available depends on this.
-    nldata::_NLPData = evaluator.m.nlp_data
+    nldata::_NLPData = evaluator.model.nlp_data
     has_nlobj = nldata.nlobj !== nothing
     has_user_mv_operator = false
     for nlexpr in nldata.nlexpr
@@ -659,7 +659,7 @@ function _forward_eval_all(d::NLPEvaluator, x)
     # do a forward pass on all expressions at x
     subexpr_values = d.subexpression_forward_values
     user_operators =
-        d.m.nlp_data.user_operators::_Derivatives.UserOperatorRegistry
+        d.model.nlp_data.user_operators::_Derivatives.UserOperatorRegistry
     user_input_buffer = d.jac_storage
     user_output_buffer = d.user_output_buffer
     for k in d.subexpression_order
@@ -891,7 +891,7 @@ function MOI.eval_hessian_lagrangian_product(
     σ::Float64,                 # multiplier for objective
     μ::AbstractVector{Float64}, # multipliers for each constraint
 )
-    nldata = d.m.nlp_data::_NLPData
+    nldata = d.model.nlp_data::_NLPData
 
     if d.last_x != x
         _forward_eval_all(d, x)
@@ -1044,7 +1044,7 @@ function MOI.eval_hessian_lagrangian(
     obj_factor::Float64,             # Lagrangian multiplier for objective
     lambda::AbstractVector{Float64}, # Multipliers for each constraint
 )
-    nldata = d.m.nlp_data::_NLPData
+    nldata = d.model.nlp_data::_NLPData
 
     d.want_hess || error(
         "Hessian computations were not requested on the call to initialize!.",
@@ -1153,7 +1153,7 @@ function _hessian_slice_inner(
     zero_ϵ = zero(ForwardDiff.Partials{CHUNK,Float64})
 
     user_operators =
-        d.m.nlp_data.user_operators::_Derivatives.UserOperatorRegistry
+        d.model.nlp_data.user_operators::_Derivatives.UserOperatorRegistry
     # do a forward pass
     for expridx in ex.dependent_subexpressions
         subexpr = d.subexpressions[expridx]
@@ -1620,14 +1620,14 @@ function MOI.objective_expr(d::NLPEvaluator)
     if d.has_nlobj
         ex = d.objective
         return _tape_to_expr(
-            d.m,
+            d.model,
             1,
-            d.m.nlp_data.nlobj.nd,
+            d.model.nlp_data.nlobj.nd,
             ex.adj,
             ex.const_values,
             d.parameter_values,
             d.subexpressions_as_julia_expressions,
-            d.m.nlp_data.user_operators,
+            d.model.nlp_data.user_operators,
             true,
             true,
         )
@@ -1638,16 +1638,16 @@ end
 
 function MOI.constraint_expr(d::NLPEvaluator, i::Integer)
     ex = d.constraints[i]
-    constr = d.m.nlp_data.nlconstr[i]
+    constr = d.model.nlp_data.nlconstr[i]
     julia_expr = _tape_to_expr(
-        d.m,
+        d.model,
         1,
         constr.terms.nd,
         ex.adj,
         ex.const_values,
         d.parameter_values,
         d.subexpressions_as_julia_expressions,
-        d.m.nlp_data.user_operators,
+        d.model.nlp_data.user_operators,
         true,
         true,
     )
@@ -1686,7 +1686,7 @@ end
 Evaluate `ex` using `var_value(v)` as the value for each variable `v`.
 """
 function value(ex::NonlinearExpression, var_value::Function)
-    model = ex.m
+    model = ex.model
     nlp_data::_NLPData = model.nlp_data
     variable_values = _VarValueMap(model, var_value, Dict{Int64,Float64}())
     subexpressions = Vector{NodeData}[nl_expr.nd for nl_expr in nlp_data.nlexpr]
