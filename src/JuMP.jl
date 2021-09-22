@@ -1367,7 +1367,6 @@ function operator_warn(model::Model)
     end
 end
 
-# TODO: rename "m" field to "model" for style compliance
 """
     NonlinearExpression <: AbstractJuMPScalar
 
@@ -1376,7 +1375,7 @@ A struct to represent a nonlinear expression.
 Create an expression using [`@NLexpression`](@ref).
 """
 struct NonlinearExpression <: AbstractJuMPScalar
-    m::Model
+    model::Model
     index::Int
 end
 
@@ -1388,7 +1387,7 @@ A struct to represent a nonlinear parameter.
 Create a parameter using [`@NLparameter`](@ref).
 """
 struct NonlinearParameter <: AbstractJuMPScalar
-    m::Model
+    model::Model
     index::Int
 end
 
@@ -1402,6 +1401,7 @@ include("lp_sensitivity2.jl")
 include("callbacks.jl")
 include("file_formats.jl")
 include("feasibility_checker.jl")
+include("deprecate.jl")
 
 # JuMP exports everything except internal symbols, which are defined as those
 # whose name starts with an underscore. Macros whose names start with

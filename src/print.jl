@@ -1104,7 +1104,7 @@ end
 function function_string(::Type{<:PrintMode}, p::NonlinearParameter)
     relevant_parameters = filter(
         i -> i[2] isa NonlinearParameter && i[2].index == p.index,
-        p.m.obj_dict,
+        p.model.obj_dict,
     )
     if length(relevant_parameters) == 1
         par_name = first(relevant_parameters)[1]
