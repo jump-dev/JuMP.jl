@@ -136,7 +136,7 @@ model = Model()
 @variable(model, x[1:2])
 @variable(model, z, Bin)
 M = 100
-@constraint(model, sum(x) <=  1 + M * (1 - z))
+@constraint(model, sum(x) <= 1 + M * (1 - z))
 
 # **Example** $x_1 + x_2 \leq 1$ if $z = 0$.
 
@@ -144,7 +144,7 @@ model = Model()
 @variable(model, x[1:2])
 @variable(model, z, Bin)
 M = 100
-@constraint(model, sum(x) <=  1 + M * z)
+@constraint(model, sum(x) <= 1 + M * z)
 
 # ## Semi-Continuous Variables
 
@@ -159,7 +159,7 @@ model = Model()
 
 # ## Semi-Integer Variables
 
-# A semi-integer variable is a variable which asummes integer values between
+# A semi-integer variable is a variable which assumes integer values between
 # bounds $[l,u]$ and can also assume the value zero:
 # $$x \in \{0\} \cup [l, u] \cap \mathbb{Z}.$$
 
@@ -214,8 +214,8 @@ model = Model()
 # Given a set of points for `x`:
 x̂ = -1:0.5:2
 # and a set of corresponding points for `y`:
-ŷ = x̂.^2
-# the piecewise linear approximation is constructed by reprsenting `x` and `y`
+ŷ = x̂ .^ 2
+# the piecewise linear approximation is constructed by representing `x` and `y`
 # as convex combinations of `x̂` and `ŷ`.
 
 N = length(x̂)
@@ -225,8 +225,8 @@ model = Model()
 @variable(model, 0 <= λ[1:N] <= 1)
 @objective(model, Max, y)
 @constraints(model, begin
-    x == sum(x̂[i] * λ[i] for i = 1:N)
-    y == sum(ŷ[i] * λ[i] for i = 1:N)
+    x == sum(x̂[i] * λ[i] for i in 1:N)
+    y == sum(ŷ[i] * λ[i] for i in 1:N)
     sum(λ) == 1
     λ in SOS2()
 end)

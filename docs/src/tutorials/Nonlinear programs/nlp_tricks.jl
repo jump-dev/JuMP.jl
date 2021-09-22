@@ -41,7 +41,7 @@ foo_2(x, y) = foo(x, y)[2]
 
 # However, if the common term is expensive to compute, this approach is wasteful
 # because it will evaluate the expensive term twice. Let's have a look at how
-# many times we evalute `x^2 + y^2` during a solve:
+# many times we evaluate `x^2 + y^2` during a solve:
 
 model = Model(Ipopt.Optimizer)
 set_silent(model)
@@ -52,8 +52,8 @@ register(model, :foo_2, 2, foo_2; autodiff = true)
 @NLconstraint(model, foo_2(x[1], x[2]) <= 2)
 function_calls = 0
 optimize!(model)
-Test.@test objective_value(model) ≈ √3 atol=1e-4
-Test.@test value.(x) ≈ [1.0, 1.0] atol=1e-4
+Test.@test objective_value(model) ≈ √3 atol = 1e-4
+Test.@test value.(x) ≈ [1.0, 1.0] atol = 1e-4
 println("Naive approach: function calls = $(function_calls)")
 naive_approach = function_calls  #src
 
@@ -67,14 +67,14 @@ naive_approach = function_calls  #src
 Take a function `foo` and return a vector of length `n_outputs`, where each
 element is a function that returns the `i`'th output of `foo`.
 
-To avoid duplication of work, cache the most-recent evaluations of `foo`. 
-Because `foo_i` is auto-differentiated with ForwardDiff, our cache needs to 
+To avoid duplication of work, cache the most-recent evaluations of `foo`.
+Because `foo_i` is auto-differentiated with ForwardDiff, our cache needs to
 work when `x` is a `Float64` and a `ForwardDiff.Dual`.
 """
 function memoize(foo::Function, n_outputs::Int)
     last_x, last_f = nothing, nothing
     last_dx, last_dfdx = nothing, nothing
-    function foo_i(i, x::T...) where {T <: Real}
+    function foo_i(i, x::T...) where {T<:Real}
         if T == Float64
             if x != last_x
                 last_x, last_f = x, foo(x...)
@@ -87,7 +87,7 @@ function memoize(foo::Function, n_outputs::Int)
             return last_dfdx[i]::T
         end
     end
-    return [(x...) -> foo_i(i, x...) for i = 1:n_outputs]
+    return [(x...) -> foo_i(i, x...) for i in 1:n_outputs]
 end
 
 # Let's see how it works. First, construct the memoized versions of `foo`:
@@ -120,8 +120,8 @@ register(model, :foo_2, 2, memoized_foo[2]; autodiff = true)
 @NLconstraint(model, foo_2(x[1], x[2]) <= 2)
 function_calls = 0
 optimize!(model)
-Test.@test objective_value(model) ≈ √3 atol=1e-4
-Test.@test value.(x) ≈ [1.0, 1.0] atol=1e-4
+Test.@test objective_value(model) ≈ √3 atol = 1e-4
+Test.@test value.(x) ≈ [1.0, 1.0] atol = 1e-4
 println("Memoized approach: function_calls = $(function_calls)")
 Test.@test function_calls <= naive_approach / 2 + 1  #src
 

@@ -149,7 +149,7 @@ c_g_scale_df = DataFrames.DataFrame(
     Symbol("Spillage of Wind(MW)") => Float64[],
     Symbol("Total cost(\$)") => Float64[],
 )
-for c_g1_scale = 0.5:0.1:3.0
+for c_g1_scale in 0.5:0.1:3.0
     ## Update the incremental cost of the first generator at every iteration.
     c_g_scale = [c_g[1] * c_g1_scale, c_g[2]]
     ## Solve the ed problem with the updated incremental cost
@@ -159,7 +159,7 @@ end
 
 #-
 
-ENV["COLUMNS"]=250 #hide
+ENV["COLUMNS"] = 250 #hide
 
 c_g_scale_df
 
@@ -182,7 +182,7 @@ function solve_ed_inplace(c_w_scale)
     ed = Model(GLPK.Optimizer)
     ## Define decision variables
     @variable(ed, 0 <= g[i = 1:2] <= g_max[i]) ## power output of generators
-    @variable(ed, 0 <= w <= w_f ) ## wind power injection
+    @variable(ed, 0 <= w <= w_f) ## wind power injection
     ## Define the objective function
     @objective(ed, Min, c_g' * g + c_w * w)
     ## Define the constraint on the maximum and minimum power output of each generator
@@ -193,7 +193,7 @@ function solve_ed_inplace(c_w_scale)
     ## Define the power balance constraint
     @constraint(ed, sum(g) + w == d)
     optimize!(ed)
-    for c_g1_scale = 0.5:0.01:3.0
+    for c_g1_scale in 0.5:0.01:3.0
         @objective(
             ed,
             Min,
@@ -237,8 +237,9 @@ demandscale_df = DataFrames.DataFrame(
     Symbol("Total cost(\$)") => Float64[],
 )
 
-for demandscale = 0.2:0.1:1.5
-    g_opt,w_opt,ws_opt,obj = solve_ed(g_max, g_min, c_g, c_w, demandscale*d, w_f)
+for demandscale in 0.2:0.1:1.5
+    g_opt, w_opt, ws_opt, obj =
+        solve_ed(g_max, g_min, c_g, c_w, demandscale * d, w_f)
     push!(demandscale_df, (g_opt[1], g_opt[2], w_opt, ws_opt, obj))
 end
 
@@ -293,7 +294,7 @@ demandscale_df
 # ```
 # where $u_{i} \in \{0,1\}.$ In this constraint, if $u_{i} = 0$, then
 # $g_{i}  = 0$. On the other hand, if $u_{i} = 1$, then
-# $g^{max}_{i} \leq g_{i} \leq g^{min}_{i}$.
+# $g^{min}_{i} \leq g_{i} \leq g^{max}_{i}$.
 
 # For further reading on the UC problem we refer interested readers to G.
 # Morales-Espana, J. M. Latorre, and A. Ramos, "Tight and Compact MILP
@@ -307,7 +308,7 @@ function solve_uc(g_max, g_min, c_g, c_w, d, w_f)
     ## Define the unit commitment (UC) model
     uc = Model(GLPK.Optimizer)
     ## Define decision variables
-    @variable(uc, 0 <= g[i=1:2] <= g_max[i]) ## power output of generators
+    @variable(uc, 0 <= g[i = 1:2] <= g_max[i]) ## power output of generators
     @variable(uc, u[i = 1:2], Bin) ## Binary status of generators
     @variable(uc, 0 <= w <= w_f) ## wind power injection
     ## Define the objective function
@@ -326,7 +327,12 @@ function solve_uc(g_max, g_min, c_g, c_w, d, w_f)
     if status != MOI.OPTIMAL
         return status, zeros(length(g)), 0.0, 0.0, zeros(length(u)), Inf
     end
-    return status, value.(g), value(w), w_f - value(w), value.(u), objective_value(uc)
+    return status,
+    value.(g),
+    value(w),
+    w_f - value(w),
+    value.(u),
+    objective_value(uc)
 end
 
 # Solve the economic dispatch problem
@@ -355,11 +361,14 @@ uc_df = DataFrames.DataFrame(
     Symbol("Total cost(\$)") => Float64[],
 )
 
-for demandscale = 0.2:0.1:1.5
+for demandscale in 0.2:0.1:1.5
     status, g_opt, w_opt, ws_opt, u_opt, obj =
-        solve_uc(g_max, g_min, c_g, c_w, demandscale*d, w_f)
+        solve_uc(g_max, g_min, c_g, c_w, demandscale * d, w_f)
     if status == MOI.OPTIMAL
-        push!(uc_df, (u_opt[1], u_opt[2], g_opt[1], g_opt[2], w_opt, ws_opt, obj))
+        push!(
+            uc_df,
+            (u_opt[1], u_opt[2], g_opt[1], g_opt[2], w_opt, ws_opt, obj),
+        )
     else
         println("Status: $status for demandscale = $demandscale \n")
     end

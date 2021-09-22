@@ -103,14 +103,8 @@ function set_optimizer(
 )
     error_if_direct_mode(model, :set_optimizer)
     if bridge_constraints
-        # We set `with_names=false` because the names are handled by the first
-        # caching optimizer. If `default_copy_to` without names is supported,
-        # no need for a second cache.
-        optimizer = MOI.instantiate(
-            optimizer_constructor,
-            with_bridge_type = Float64,
-            with_names = false,
-        )
+        optimizer =
+            MOI.instantiate(optimizer_constructor, with_bridge_type = Float64)
         for bridge_type in model.bridge_types
             _moi_add_bridge(optimizer, bridge_type)
         end

@@ -1,6 +1,7 @@
 # [Solutions](@id SolutionAPI)
 
-More information can be found in the [Solutions](@ref) section of the manual.
+More information can be found in the [Solutions](@ref jump_solutions) section of
+the manual.
 
 ## Basic utilities
 
@@ -15,7 +16,6 @@ solution_summary
 
 ```@docs
 termination_status
-MOI.TerminationStatusCode
 raw_status
 result_count
 ```
@@ -26,7 +26,6 @@ result_count
 primal_status
 has_values
 value
-MOI.ResultStatusCode
 ```
 
 ## Dual solutions
@@ -55,13 +54,8 @@ node_count
 ## [Conflicts](@id ref_conflicts)
 
 ```@docs
-JuMP.compute_conflict!
-MOI.compute_conflict!
-MOI.ConflictStatus
-MOI.ConflictStatusCode
-MOI.ConstraintConflictStatus
-MOI.ConflictParticipationStatusCode
-JuMP.copy_conflict
+compute_conflict!
+copy_conflict
 ```
 
 ## Sensitivity
@@ -69,8 +63,6 @@ JuMP.copy_conflict
 ```@docs
 lp_sensitivity_report
 SensitivityReport
-lp_objective_perturbation_range
-lp_rhs_perturbation_range
 ```
 
 ## Feasibility

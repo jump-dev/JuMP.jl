@@ -51,8 +51,6 @@ mutable struct GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
     terms::OrderedDict{UnorderedPair{VarType},CoefType}
 end
 
-Base.ndims(::GenericQuadExpr) = 0
-
 """
     GenericQuadExpr(
         aff::GenericAffExpr{V,K},
@@ -517,7 +515,7 @@ function MOI.ScalarQuadraticFunction(q::QuadExpr)
         _moi_quadratic_term(t) for t in quad_terms(q)
     ]
     moi_aff = MOI.ScalarAffineFunction(q.aff)
-    return MOI.ScalarQuadraticFunction(moi_aff.terms, qterms, moi_aff.constant)
+    return MOI.ScalarQuadraticFunction(qterms, moi_aff.terms, moi_aff.constant)
 end
 function moi_function(aff::GenericQuadExpr)
     return MOI.ScalarQuadraticFunction(aff)
@@ -531,8 +529,8 @@ function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
         AffExpr(m, MOI.ScalarAffineFunction(f.affine_terms, f.constant)),
     )
     for t in f.quadratic_terms
-        v1 = t.variable_index_1
-        v2 = t.variable_index_2
+        v1 = t.variable_1
+        v2 = t.variable_2
         coef = t.coefficient
         if v1 == v2
             coef /= 2
@@ -612,19 +610,24 @@ function moi_function_type(::Type{<:Vector{<:GenericQuadExpr{T}}}) where {T}
     return MOI.VectorQuadraticFunction{T}
 end
 
-# Requires that value_func(::VarType) is defined.
+# Requires that var_value(::VarType) is defined.
+"""
+    value(ex::GenericQuadExpr, var_value::Function)
+
+Evaluate `ex` using `var_value(v)` as the value for each variable `v`.
+"""
 function value(
     ex::GenericQuadExpr{CoefType,VarType},
-    value_func::Function,
+    var_value::Function,
 ) where {CoefType,VarType}
     RetType = Base.promote_op(
-        (ctype, vtype) -> ctype * value_func(vtype) * value_func(vtype),
+        (ctype, vtype) -> ctype * var_value(vtype) * var_value(vtype),
         CoefType,
         VarType,
     )
-    ret = convert(RetType, value(ex.aff, value_func))
+    ret = convert(RetType, value(ex.aff, var_value))
     for (vars, coef) in ex.terms
-        ret += coef * value_func(vars.a) * value_func(vars.b)
+        ret += coef * var_value(vars.a) * var_value(vars.b)
     end
     return ret
 end

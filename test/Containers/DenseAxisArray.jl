@@ -107,7 +107,7 @@ And data, a 2-element $(Vector{Float64}):
         @test A[2, :a, 1] == 1
         @test A[2, :a, 1, 1] == 1
         @test A[3, :a, 1, 1, 1] == 3
-        @test @inferred A[:, :a] == DenseAxisArray([1, 3], 2:3)
+        @test DenseAxisArray([1, 3], 2:3) == @inferred A[:, :a]
         @test A[2, :] == DenseAxisArray([1, 2], [:a, :b])
         @test sprint(show, A) == """
 2-dimensional DenseAxisArray{$Int,2,...} with index sets:
@@ -254,5 +254,49 @@ And data, a 0-dimensional $(Array{Int,0}):
         y = Bool.(x)
         @test y isa DenseAxisArray
         @test x == y
+    end
+    @testset "Broadcast" begin
+        foo(x, y) = x + y
+        foo_b(x, y) = foo.(x, y)
+        bar(x, y) = (foo.(x, y) .+ x) .^ 2
+        a = [5.0 6.0; 7.0 8.0]
+        A = DenseAxisArray(a, [:a, :b], [:a, :b])
+        b = a .+ 1
+        B = A .+ 1
+        @test B == DenseAxisArray(b, [:a, :b], [:a, :b])
+        C = @inferred foo_b(A, B)
+        @test C == DenseAxisArray(foo_b(a, b), [:a, :b], [:a, :b])
+        D = @inferred bar(A, B)
+        @test D == DenseAxisArray(bar(a, b), [:a, :b], [:a, :b])
+    end
+    @testset "Broadcast_errors" begin
+        a = [5.0 6.0; 7.0 8.0]
+        A = DenseAxisArray(a, [:a, :b], [:a, :b])
+        B = DenseAxisArray(a, [:b, :a], [:a, :b])
+        @test_throws ErrorException A .+ B
+        b = [5.0 6.0; 7.0 8.0; 9.0 10.0]
+        @test_throws DimensionMismatch A .+ b
+    end
+    @testset "DenseAxisArray with Base.OneTo" begin
+        A = @inferred DenseAxisArray([1, 3, 2], Base.OneTo(3))
+        B = @inferred map(x -> x^2, A)
+        @test B isa DenseAxisArray
+        @test B.data == [1, 9, 4]
+        @test B.axes == (Base.OneTo(3),)
+        C = @inferred DenseAxisArray([1 3; 2 4], Base.OneTo(2), Base.OneTo(2))
+        D = @inferred map(x -> x - 1, C)
+        @test D isa DenseAxisArray
+        @test D.data == [0 2; 1 3]
+        @test D.axes == (Base.OneTo(2), Base.OneTo(2))
+    end
+
+    @testset "Array" begin
+        A = DenseAxisArray([1, 3, 2], Base.OneTo(3))
+        B = @inferred Array(A)
+        @test B isa Vector{Int}
+        @test B == [1, 3, 2]
+        C = @inferred Array{Float64}(A)
+        @test C isa Vector{Float64}
+        @test C == [1.0, 3.0, 2.0]
     end
 end

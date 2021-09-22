@@ -177,6 +177,22 @@ function _init_NLP(m::Model)
 end
 
 """
+    is_valid(model::Model, c::ConstraintRef{Model,NonlinearConstraintIndex})
+
+Return `true` if `c` refers to a valid nonlinear constraint in `model`.
+"""
+function is_valid(
+    model::Model,
+    c::ConstraintRef{Model,NonlinearConstraintIndex},
+)
+    if model !== c.model
+        return false
+    end
+    _init_NLP(model)
+    return 1 <= c.index.value <= num_nl_constraints(model)
+end
+
+"""
     dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
 
 Return the dual of the nonlinear constraint `c`.
@@ -1845,18 +1861,18 @@ end
 Register the user-defined function `f` that takes `dimension` arguments in
 `model` as the symbol `s`. In addition, provide a gradient function `∇f`.
 
-The functions `f`and ∇f must support all subtypes of `Real` as arguments. Do not
-assume that the inputs are `Float64`.
+The functions `f`and `∇f` must support all subtypes of `Real` as arguments. Do
+not assume that the inputs are `Float64`.
 
 ## Notes
 
  * If the function `f` is univariate (i.e., `dimension == 1`), `∇f` must return
    a number which represents the first-order derivative of the function `f`.
  * If the function `f` is multi-variate, `∇f` must have a signature matching
-   `∇f(g::Vector{T}, args::T...) where {T<:Real}`, where the first argument is a
-   vector `g` that is modified in-place with the gradient.
+   `∇f(g::AbstractVector{T}, args::T...) where {T<:Real}`, where the first
+   argument is a vector `g` that is modified in-place with the gradient.
  * If `autodiff = true` and `dimension == 1`, use automatic differentiation to
-   comute the second-order derivative information. If `autodiff = false`, only
+   compute the second-order derivative information. If `autodiff = false`, only
    first-order derivative information will be used.
  * `s` does not have to be the same symbol as `f`, but it is generally more
    readable if it is.
@@ -1876,7 +1892,7 @@ register(model, :foo, 1, f, ∇f; autodiff = true)
 model = Model()
 @variable(model, x[1:2])
 g(x::T, y::T) where {T<:Real} = x * y
-function ∇g(g::Vector{T}, x::T, y::T) where {T<:Real}
+function ∇g(g::AbstractVector{T}, x::T, y::T) where {T<:Real}
     g[1] = y
     g[2] = x
     return
@@ -1907,9 +1923,8 @@ function register(
             fprimeprime,
         )
     else
-        autodiff == false || Base.warn_once(
-            "autodiff=true ignored since gradient is already provided.",
-        )
+        autodiff == false ||
+            @warn("autodiff=true ignored since gradient is already provided.")
         m.nlp_data.largest_user_input_dimension =
             max(m.nlp_data.largest_user_input_dimension, dimension)
         d = _UserFunctionEvaluator(
@@ -1984,13 +1999,36 @@ function register(
 end
 
 """
+    add_NL_expression(model::Model, expr::Expr)
+
+Add a nonlinear expression `expr` to `model`.
+
+This function is most useful if the expression `expr` is generated
+programmatically, and you cannot use [`@NLexpression`](@ref).
+
+## Notes
+
+ * You must interpolate the variables directly into the expression `expr`.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> add_NL_expression(model, :(\$(x) + \$(x)^2))
+"Reference to nonlinear expression #1"
+```
+"""
+function add_NL_expression(model::Model, ex)
+    return NonlinearExpression(model, _NonlinearExprData(model, ex))
+end
+
+"""
     set_NL_objective(model::Model, sense::MOI.OptimizationSense, expr::Expr)
 
 Set the nonlinear objective of `model` to the expression `expr`, with the
 optimization sense `sense`.
 
 This function is most useful if the expression `expr` is generated
-programatically, and you cannot use [`@NLobjective`](@ref).
+programmatically, and you cannot use [`@NLobjective`](@ref).
 
 ## Notes
 
@@ -2013,7 +2051,7 @@ end
 Add a nonlinear constraint described by the Julia expression `ex` to `model`.
 
 This function is most useful if the expression `ex` is generated
-programatically, and you cannot use [`@NLconstraint`](@ref).
+programmatically, and you cannot use [`@NLconstraint`](@ref).
 
 ## Notes
 

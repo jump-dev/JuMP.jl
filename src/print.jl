@@ -470,14 +470,14 @@ function solution_summary(model::Model; verbose::Bool = false)
         result_count(model),
         has_values(model),
         has_duals(model),
-        objective_value(model),
+        _try_get(objective_value, model),
         _try_get(objective_bound, model),
         _try_get(dual_objective_value, model),
         verbose ? _get_solution_dict(model) : missing,
         verbose ? _get_constraint_dict(model) : missing,
-        solve_time(model),
-        _try_get(simplex_iterations, model),
+        _try_get(solve_time, model),
         _try_get(barrier_iterations, model),
+        _try_get(simplex_iterations, model),
         _try_get(node_count, model),
     )
 end
@@ -514,7 +514,11 @@ end
 
 function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
     println(io, "* Candidate solution")
-    println(io, "  Objective value      : ", summary.objective_value)
+    _print_if_not_missing(
+        io,
+        "  Objective value      : ",
+        summary.objective_value,
+    )
     _print_if_not_missing(
         io,
         "  Objective bound      : ",
@@ -555,7 +559,11 @@ end
 
 function _show_work_counters_summary(io::IO, summary::_SolutionSummary)
     println(io, "* Work counters")
-    println(io, "  Solve time (sec)   : ", @sprintf("%.5f", summary.solve_time))
+    _print_if_not_missing(
+        io,
+        "  Solve time (sec)   : ",
+        @sprintf("%.5f", summary.solve_time),
+    )
     _print_if_not_missing(
         io,
         "  Simplex iterations : ",

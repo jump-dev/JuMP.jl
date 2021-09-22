@@ -121,7 +121,6 @@
 # is only a virtual constraint used to clarify the notation).
 # Thus, if $n \gg 1$, we get a large number of variables and constraints.
 
-
 # ## Fitting logistic regression with a conic solver
 #
 # It is now time to pass to the implementation. We choose SCS as a conic solver.
@@ -134,7 +133,7 @@ Random.seed!(2713);
 # We start by implementing a function to generate a fake dataset, and where
 # we could tune the correlation between the feature variables. The function
 # is a direct transcription of the one used in [this blog post](http://fa.bianp.net/blog/2013/numerical-optimizers-for-logistic-regression/).
-function generate_dataset(n_samples=100, n_features=10; shift=0.0)
+function generate_dataset(n_samples = 100, n_features = 10; shift = 0.0)
     X = randn(n_samples, n_features)
     w = randn(n_features)
     y = sign.(X * w)
@@ -147,7 +146,7 @@ end
 # We write a `softplus` function to formulate each constraint
 # $t \geq \log(1 + \exp(u))$ with two exponential cones.
 function softplus(model, t, u)
-    z = @variable(model, [1:2], lower_bound=0.0)
+    z = @variable(model, [1:2], lower_bound = 0.0)
     @constraint(model, sum(z) <= 1.0)
     @constraint(model, [u - t, 1, z[1]] in MOI.ExponentialCone())
     @constraint(model, [-t, 1, z[2]] in MOI.ExponentialCone())
@@ -163,12 +162,12 @@ function build_logit_model(X, y, λ)
     @variable(model, θ[1:p])
     @variable(model, t[1:n])
     for i in 1:n
-        u = - (X[i, :]' * θ) * y[i]
+        u = -(X[i, :]' * θ) * y[i]
         softplus(model, t[i], u)
     end
     ## Add ℓ2 regularization
     @variable(model, 0.0 <= reg)
-    @constraint(model, [reg; θ] in MOI.SecondOrderCone(p+1))
+    @constraint(model, [reg; θ] in MOI.SecondOrderCone(p + 1))
     ## Define objective
     @objective(model, Min, sum(t) + λ * reg)
     return model
@@ -180,7 +179,7 @@ end
 #     Be careful here, for large n and p SCS could fail to converge!
 #
 n, p = 200, 10
-X, y = generate_dataset(n, p, shift=10.0);
+X, y = generate_dataset(n, p, shift = 10.0);
 
 ## We could now solve the logistic regression problem
 λ = 10.0
@@ -194,7 +193,6 @@ JuMP.optimize!(model)
 
 # It appears that the speed of convergence is not that impacted by the correlation
 # of the dataset, nor by the penalty $\lambda$.
-
 
 # ### $\ell_1$ regularized logistic regression
 #
@@ -210,19 +208,19 @@ function build_sparse_logit_model(X, y, λ)
     @variable(model, θ[1:p])
     @variable(model, t[1:n])
     for i in 1:n
-        u = - (X[i, :]' * θ) * y[i]
+        u = -(X[i, :]' * θ) * y[i]
         softplus(model, t[i], u)
     end
     ## Add ℓ1 regularization
     @variable(model, 0.0 <= reg)
-    @constraint(model, [reg; θ] in MOI.NormOneCone(p+1))
+    @constraint(model, [reg; θ] in MOI.NormOneCone(p + 1))
     ## Define objective
     @objective(model, Min, sum(t) + λ * reg)
     return model
 end
 
 ## Auxiliary function to count non-null components:
-count_nonzero(v::Vector; tol=1e-6) = sum(abs.(v) .>= tol)
+count_nonzero(v::Vector; tol = 1e-6) = sum(abs.(v) .>= tol)
 
 ## We solve the sparse logistic regression problem on the same dataset as before.
 λ = 10.0
@@ -233,9 +231,13 @@ JuMP.optimize!(sparse_model)
 #-
 
 θ♯ = JuMP.value.(sparse_model[:θ])
-println("Number of non-zero components: ", count_nonzero(θ♯),
-        " (out of ", p, " features)")
-
+println(
+    "Number of non-zero components: ",
+    count_nonzero(θ♯),
+    " (out of ",
+    p,
+    " features)",
+)
 
 # ### Extensions
 # A direct extension would be to consider the sparse logistic regression with

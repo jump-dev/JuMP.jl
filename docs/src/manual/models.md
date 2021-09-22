@@ -6,7 +6,7 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Models
+# [Models](@id jump_models)
 
 ## Create a model
 
@@ -60,7 +60,7 @@ an initialized `Optimizer` object:
 ```jldoctest
 julia> function my_optimizer()
            model = GLPK.Optimizer()
-           MOI.set(model, MOI.RawParameter("msg_lev"), 0)
+           MOI.set(model, MOI.RawOptimizerAttribute("msg_lev"), 0)
            return model
        end
 my_optimizer (generic function with 1 method)
@@ -132,10 +132,10 @@ printing output from the solver.
 julia> model = Model(GLPK.Optimizer);
 
 julia> set_silent(model)
-true
+
 
 julia> unset_silent(model)
-false
+
 ```
 
 ## Set a time limit
@@ -146,7 +146,7 @@ Use [`set_time_limit_sec`](@ref), [`unset_time_limit_sec`](@ref), and
 julia> model = Model(GLPK.Optimizer);
 
 julia> set_time_limit_sec(model, 60.0)
-60.0
+
 
 julia> time_limit_sec(model)
 60.0
@@ -179,7 +179,8 @@ julia> write(io, model; format = MOI.FileFormats.FORMAT_MPS)
     FORMAT_LP = 2
     FORMAT_MOF = 3
     FORMAT_MPS = 4
-    FORMAT_SDPA = 5
+    FORMAT_NL = 5
+    FORMAT_SDPA = 6
     ```
 
 ## Read a model from file
@@ -192,7 +193,7 @@ julia> model = read_from_file("model.mps")
 A JuMP Model
 Minimization problem with:
 Variables: 0
-Objective function type: GenericAffExpr{Float64,VariableRef}
+Objective function type: AffExpr
 Model mode: AUTOMATIC
 CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
@@ -203,11 +204,18 @@ julia> model2 = read(io, Model; format = MOI.FileFormats.FORMAT_MPS)
 A JuMP Model
 Minimization problem with:
 Variables: 0
-Objective function type: GenericAffExpr{Float64,VariableRef}
+Objective function type: AffExpr
 Model mode: AUTOMATIC
 CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
 ```
+
+!!! note
+    Because file formats do not serialize the containers of JuMP variables and
+    constraints, the names in the model will _not_ be registered. Therefore, you
+    cannot access named variables and constraints via `model[:x]`. Instead, use
+    [`variable_by_name`](@ref) or [`constraint_by_name`](@ref) to access
+    specific variables or constraints.
 
 ## Backends
 
@@ -226,7 +234,7 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
 
 julia> b = backend(model)
-MOIU.CachingOptimizer{MOI.AbstractOptimizer,MOIU.UniversalFallback{MOIU.Model{Float64}}}
+MOIU.CachingOptimizer{MOI.AbstractOptimizer, MOIU.UniversalFallback{MOIU.Model{Float64}}}
 in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
 with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
@@ -240,6 +248,18 @@ with optimizer MOIB.LazyBridgeOptimizer{GLPK.Optimizer}
 
 The backend is a `MOIU.CachingOptimizer` in the state `EMPTY_OPTIMIZER` and mode
 `AUTOMATIC`.
+
+Alternatively, use [`unsafe_backend`](@ref) to access the innermost
+`GLPK.Optimizer` object:
+```jldoctest models_backends
+julia> unsafe_backend(model)
+A GLPK model
+```
+
+!!! warning
+    [`backend`](@ref) and [`unsafe_backend`](@ref) are advanced routines. Read
+    their docstrings to understand the caveats of their usage. You should only
+    call them if you wish to access low-level solver-specific functions.
 
 ### CachingOptimizer
 
@@ -336,7 +356,7 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
 
 julia> backend(model)
-MOIU.CachingOptimizer{MOI.AbstractOptimizer,MOIU.UniversalFallback{MOIU.Model{Float64}}}
+MOIU.CachingOptimizer{MOI.AbstractOptimizer, MOIU.UniversalFallback{MOIU.Model{Float64}}}
 in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
 with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}

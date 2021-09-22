@@ -6,12 +6,12 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Constraints
+# [Constraints](@id jump_constraints)
 
 This page explains how to write various types of constraints in JuMP. Before
 reading further, please make sure you are familiar with JuMP models, and JuMP
-[Variables](@ref). For nonlinear constraints, see [Nonlinear Modeling](@ref)
-instead.
+[Variables](@ref jump_variables). For nonlinear constraints, see
+[Nonlinear Modeling](@ref) instead.
 
 JuMP is based on the MathOptInterface (MOI) API. Because of this, JuMP thinks of a
 constraint as the restriction that the output of a *function* belongs to a
@@ -165,7 +165,7 @@ DocTestSetup = quote
     @constraint(model, con, x <= 1);
     @objective(model, Max, -2x);
     optimize!(model);
-    mock = backend(model).optimizer.model;
+    mock = unsafe_backend(model);
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.ConstraintDual(), optimizer_index(con), -2.0)
@@ -257,7 +257,7 @@ A vector constraint will require a vector warmstart:
 
 ```jldoctest constraint_dual_start_vector; setup=:(model=Model())
 julia> @variable(model, x[1:3])
-3-element Array{VariableRef,1}:
+3-element Vector{VariableRef}:
  x[1]
  x[2]
  x[3]
@@ -270,7 +270,7 @@ julia> dual_start_value(con)
 julia> set_dual_start_value(con, [1.0, 2.0, 3.0])
 
 julia> dual_start_value(con)
-3-element Array{Float64,1}:
+3-element Vector{Float64}:
  1.0
  2.0
  3.0
@@ -308,10 +308,10 @@ following.
 One way of adding a group of constraints compactly is the following:
 ```jldoctest constraint_arrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:3], i * x <= i + 1)
-3-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
- con[1] : x <= 2.0
- con[2] : 2 x <= 3.0
- con[3] : 3 x <= 4.0
+3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ con[1] : x ≤ 2.0
+ con[2] : 2 x ≤ 3.0
+ con[3] : 3 x ≤ 4.0
 ```
 JuMP returns references to the three constraints in an `Array` that is bound to
 the Julia variable `con`. This array can be accessed and sliced as you would
@@ -321,18 +321,18 @@ julia> con[1]
 con[1] : x <= 2.0
 
 julia> con[2:3]
-2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
- con[2] : 2 x <= 3.0
- con[3] : 3 x <= 4.0
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ con[2] : 2 x ≤ 3.0
+ con[3] : 3 x ≤ 4.0
 ```
 
 Anonymous containers can also be constructed by dropping the name (e.g. `con`)
 before the square brackets:
 ```jldoctest constraint_arrays
 julia> @constraint(model, [i = 1:2], i * x <= i + 1)
-2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
- x <= 2.0
- 2 x <= 3.0
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ x ≤ 2.0
+ 2 x ≤ 3.0
 ```
 
 Just like [`@variable`](@ref), JuMP will form an `Array` of constraints when it
@@ -351,12 +351,12 @@ variables.
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:2, j = 2:3], i * x <= j + 1)
-2-dimensional DenseAxisArray{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},2,...} with index sets:
+2-dimensional DenseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape},2,...} with index sets:
     Dimension 1, Base.OneTo(2)
     Dimension 2, 2:3
-And data, a 2×2 Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},2}:
- con[1,2] : x <= 3.0    con[1,3] : x <= 4.0
- con[2,2] : 2 x <= 3.0  con[2,3] : 2 x <= 4.0
+And data, a 2×2 Matrix{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ con[1,2] : x ≤ 3.0    con[1,3] : x ≤ 4.0
+ con[2,2] : 2 x ≤ 3.0  con[2,3] : 2 x ≤ 4.0
 ```
 
 ### SparseAxisArrays
@@ -368,9 +368,9 @@ similar to the [syntax for constructing](@ref variable_sparseaxisarrays) a
 
 ```jldoctest constraint_jumparrays; setup=:(model=Model(); @variable(model, x))
 julia> @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x <= j + 1)
-JuMP.Containers.SparseAxisArray{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},2,Tuple{Int64,Int64}} with 2 entries:
-  [1, 2]  =  con[1,2] : x <= 3.0
-  [2, 1]  =  con[2,1] : 2 x <= 2.0
+JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}, 2, Tuple{Int64, Int64}} with 2 entries:
+  [1, 2]  =  con[1,2] : x ≤ 3.0
+  [2, 1]  =  con[2,1] : 2 x ≤ 2.0
 ```
 
 ### Forcing the container type
@@ -389,24 +389,24 @@ example:
 
 ```jldoctest con_vector; setup=:(model = Model())
 julia> @variable(model, x[i=1:2])
-2-element Array{VariableRef,1}:
+2-element Vector{VariableRef}:
  x[1]
  x[2]
 
 julia> A = [1 2; 3 4]
-2×2 Array{Int64,2}:
+2×2 Matrix{Int64}:
  1  2
  3  4
 
 julia> b = [5, 6]
-2-element Array{Int64,1}:
+2-element Vector{Int64}:
  5
  6
 
 julia> @constraint(model, con, A * x .== b)
-2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.EqualTo{Float64}},ScalarShape},1}:
- x[1] + 2 x[2] == 5.0
- 3 x[1] + 4 x[2] == 6.0
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
+ x[1] + 2 x[2] = 5.0
+ 3 x[1] + 4 x[2] = 6.0
 ```
 
 !!! note
@@ -434,10 +434,10 @@ constraints in the
 
 ## Constraints on a single variable
 
-In [Variables](@ref), we saw how to modify the variable bounds, as well as add
-binary and integer restrictions to the domain of each variable. This can also be
-achieved using the [`@constraint`](@ref) macro. For example, `MOI.ZeroOne()`
-restricts the domain to ``\{0, 1\}``:
+In [Variables](@ref jump_variables), we saw how to modify the variable bounds,
+as well as add binary and integer restrictions to the domain of each variable.
+This can also be achieved using the [`@constraint`](@ref) macro. For example,
+`MOI.ZeroOne()` restricts the domain to ``\{0, 1\}``:
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, x in MOI.ZeroOne())
 x binary
@@ -461,14 +461,14 @@ julia> @constraint(model, x in MOI.Semiinteger(1.0, 3.0))
 x in MathOptInterface.Semiinteger{Float64}(1.0, 3.0)
 ```
 
-## Quadratic constraints
+## [Quadratic constraints](@id quad_constraints)
 
 In addition to affine functions, JuMP also supports constraints with quadratic
 terms. (For more general nonlinear functions, see [Nonlinear Modeling](@ref).)
 For example:
 ```jldoctest con_quadratic; setup=:(model=Model())
 julia> @variable(model, x[i=1:2])
-2-element Array{VariableRef,1}:
+2-element Vector{VariableRef}:
  x[1]
  x[2]
 
@@ -487,7 +487,7 @@ function and the set.
 The function is a vector of variables:
 ```jldoctest con_quadratic
 julia> [t, x[1], x[2]]
-3-element Array{VariableRef,1}:
+3-element Vector{VariableRef}:
  t
  x[1]
  x[2]
@@ -521,15 +521,15 @@ for more information.
 
 In addition to constraining the domain of a single variable, JuMP supports
 placing constraints of a subset of the variables. We already saw an example of
-this in the [Quadratic constraints](@ref) section when we constrained a vector
-of variables to belong to the second order cone.
+this in the [Quadratic constraints](@ref quad_constraints) section when we
+constrained a vector of variables to belong to the second order cone.
 
 In a special ordered set of type I (often denoted SOS-I), at most one variable
 can take a non-zero value. We can construct SOS-I constraints using the
 `MOI.SOS1` set:
 ```jldoctest con_sos; setup=:(model = Model())
 julia> @variable(model, x[1:3])
-3-element Array{VariableRef,1}:
+3-element Vector{VariableRef}:
  x[1]
  x[2]
  x[3]
@@ -631,7 +631,7 @@ julia> cref = @constraint(model, Symmetric([x 2x; 3x 4x]) in PSDCone())
  2 x  4 x] ∈ PSDCone()
 
 julia> jump_function(constraint_object(cref))
-3-element Array{GenericAffExpr{Float64,VariableRef},1}:
+3-element Vector{AffExpr}:
  x
  2 x
  4 x
@@ -647,14 +647,14 @@ example below, the function is `VectorAffineFunction` instead of
 `VectorOfVariables`.
 ```jldoctest con_psd
 julia> typeof(@SDconstraint(model, [x x; x x] >= zeros(2, 2)))
-ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64},MathOptInterface.PositiveSemidefiniteConeSquare},SquareMatrixShape}
+ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64}, MathOptInterface.PositiveSemidefiniteConeSquare}, SquareMatrixShape}
 ```
 Moreover, the `Symmetric` structure can be lost in the operation `A - B`. For
 instance, in the example below, the set is `PositiveSemidefiniteConeSquare`
 instead of `PositiveSemidefiniteConeTriangle`.
 ```jldoctest con_psd
 julia> typeof(@SDconstraint(model, Symmetric([x x; x x]) >= zeros(2, 2)))
-ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64},MathOptInterface.PositiveSemidefiniteConeSquare},SquareMatrixShape}
+ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64}, MathOptInterface.PositiveSemidefiniteConeSquare}, SquareMatrixShape}
 ```
 To create a constraint on the vector of variables with the [`@SDconstraint`](@ref)
 macro, use the `0` symbol. The following three syntax are equivalent:
@@ -663,10 +663,10 @@ macro, use the `0` symbol. The following three syntax are equivalent:
 * `@constraint(model, A in PSDCone())`.
 ```jldoctest con_psd
 julia> typeof(@SDconstraint(model, [x x; x x] >= 0))
-ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables,MathOptInterface.PositiveSemidefiniteConeSquare},SquareMatrixShape}
+ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.PositiveSemidefiniteConeSquare}, SquareMatrixShape}
 
 julia> typeof(@SDconstraint(model, 0 <= Symmetric([x x; x x])))
-ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables,MathOptInterface.PositiveSemidefiniteConeTriangle},SymmetricMatrixShape}
+ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.PositiveSemidefiniteConeTriangle}, SymmetricMatrixShape}
 ```
 As the syntax is recognized at parse time, using a variable with value zero does not work:
 ```jldoctest con_psd
@@ -674,7 +674,8 @@ julia> a = 0
 0
 
 julia> @SDconstraint(model, [x x; x x] >= a)
-ERROR: Operation `-` between `Array{VariableRef,2}` and `Int64` is not allowed. You should use broadcast.
+ERROR: Operation `sub_mul` between `Matrix{VariableRef}` and `Int64` is not allowed. You should use broadcast.
+Stacktrace:
 [...]
 ```
 
@@ -801,13 +802,12 @@ julia> normalized_coefficient(con, x[2])
     [`set_normalized_coefficient`](@ref) sets the coefficient of the
     normalized constraint.
 
-## Deleting constraints
+## Delete a constraint
 
-Constraints can be deleted from a model using [`delete`](@ref).
+Use [`delete`](@ref) to delete a constraint from a model. Use [`is_valid`](@ref)
+to check if a constraint belongs to a model and has not been deleted.
 
-Check if a constraint reference is valid using [`is_valid`](@ref).
-
-```jldoctest; setup = :(model=Model(); @variable(model, x))
+```jldoctest constraints_delete; setup = :(model=Model(); @variable(model, x))
 julia> @constraint(model, con, 2x <= 1)
 con : 2 x <= 1.0
 
@@ -819,6 +819,38 @@ julia> delete(model, con)
 julia> is_valid(model, con)
 false
 ```
+
+Deleting a constraint does not unregister the symbolic reference from the model.
+Therefore, creating a new constraint of the same name will throw an error:
+```jldoctest constraints_delete
+julia> @constraint(model, con, 2x <= 1)
+ERROR: An object of name con is already attached to this model. If this
+    is intended, consider using the anonymous construction syntax, e.g.,
+    `x = @variable(model, [1:N], ...)` where the name of the object does
+    not appear inside the macro.
+
+    Alternatively, use `unregister(model, :con)` to first unregister
+    the existing name from the model. Note that this will not delete the
+    object; it will just remove the reference at `model[:con]`.
+[...]
+```
+
+After calling [`delete`](@ref), call [`unregister`](@ref) to remove the symbolic
+reference:
+```jldoctest constraints_delete
+julia> unregister(model, :con)
+
+julia> @constraint(model, con, 2x <= 1)
+con : 2 x <= 1.0
+```
+
+!!! info
+    [`delete`](@ref) does not automatically [`unregister`](@ref) because we do
+    not distinguish between names that are automatically registered by JuMP
+    macros, and names that are manually registered by the user by setting values
+    in [`object_dictionary`](@ref). In addition, deleting a constraint and then
+    adding a new constraint of the same name is an easy way to introduce bugs
+    into your code.
 
 ## Accessing constraints from a model
 
@@ -838,8 +870,8 @@ julia> @variable(model, x[i=1:2] >= i, Int);
 julia> @constraint(model, x[1] + x[2] <= 1);
 
 julia> list_of_constraint_types(model)
-3-element Array{Tuple{DataType,DataType},1}:
- (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
+3-element Vector{Tuple{Type, Type}}:
+ (AffExpr, MathOptInterface.LessThan{Float64})
  (VariableRef, MathOptInterface.GreaterThan{Float64})
  (VariableRef, MathOptInterface.Integer)
 
@@ -847,7 +879,7 @@ julia> num_constraints(model, VariableRef, MOI.Integer)
 2
 
 julia> all_constraints(model, VariableRef, MOI.Integer)
-2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.Integer},ScalarShape},1}:
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.Integer}, ScalarShape}}:
  x[1] integer
  x[2] integer
 
@@ -855,7 +887,7 @@ julia> num_constraints(model, VariableRef, MOI.GreaterThan{Float64})
 2
 
 julia> all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
-2-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}:
  x[1] ≥ 1.0
  x[2] ≥ 2.0
 
@@ -863,11 +895,11 @@ julia> num_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{
 1
 
 julia> less_than_constraints = all_constraints(model, GenericAffExpr{Float64,VariableRef}, MOI.LessThan{Float64})
-1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
+1-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
  x[1] + x[2] ≤ 1.0
 
 julia> con = constraint_object(less_than_constraints[1])
-ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.LessThan{Float64}}(x[1] + x[2], MathOptInterface.LessThan{Float64}(1.0))
+ScalarConstraint{AffExpr, MathOptInterface.LessThan{Float64}}(x[1] + x[2], MathOptInterface.LessThan{Float64}(1.0))
 
 julia> con.func
 x[1] + x[2]
@@ -897,7 +929,7 @@ julia> @variable(model, x >= 0)
 x
 
 julia> @constraint(model, 2x - 1 ⟂ x)
-[2 x - 1, x] ∈ MathOptInterface.Complements(1)
+[2 x - 1, x] ∈ MathOptInterface.Complements(2)
 ```
 This problem has a unique solution at `x = 0.5`.
 
@@ -908,7 +940,7 @@ An alternative approach that does not require the `⟂` symbol uses the
 `complements` function as follows:
 ```jldoctest complementarity
 julia> @constraint(model, complements(2x - 1, x))
-[2 x - 1, x] ∈ MathOptInterface.Complements(1)
+[2 x - 1, x] ∈ MathOptInterface.Complements(2)
 ```
 
 In both cases, the mapping `F(x)` is supplied as the first argument, and the
@@ -917,77 +949,73 @@ matching variable `x` is supplied as the second.
 Vector-valued complementarity constraints are also supported:
 ```jldoctest complementarity
 julia> @variable(model, -2 <= y[1:2] <= 2)
-2-element Array{VariableRef,1}:
+2-element Vector{VariableRef}:
  y[1]
  y[2]
 
 julia> M = [1 2; 3 4]
-2×2 Array{Int64,2}:
+2×2 Matrix{Int64}:
  1  2
  3  4
 
 julia> q = [5, 6]
-2-element Array{Int64,1}:
+2-element Vector{Int64}:
  5
  6
 
 julia> @constraint(model, M * y + q ⟂ y)
-[y[1] + 2 y[2] + 5, 3 y[1] + 4 y[2] + 6, y[1], y[2]] ∈ MathOptInterface.Complements(2)
+[y[1] + 2 y[2] + 5, 3 y[1] + 4 y[2] + 6, y[1], y[2]] ∈ MathOptInterface.Complements(4)
 ```
 
 ## Special Ordered Sets (SOS1 and SOS2)
 
-A Special Ordered Set (SOS) is an ordered set of variables with the following characteristics.
+### Type 1
 
-If a vector of variables `x` is in a Special Ordered Set of Type I (SOS1), then at most one
-element of `x` can take a non-zero value, and all other elements must be zero.
+In a Special Ordered Set of Type 1 (often denoted SOS-I or SOS1), at most one
+element can take a non-zero value.
 
-Although not required for feasibility, solvers can benefit from an ordering of the variables
-(e.g., the variables represent different factories to build, at most one factory can be built,
-and the factories can be ordered according to cost). To induce an ordering, `weights` can be provided;
-as such, they should be unique values. The `k`th element in the ordered set corresponds to
-the `k`th weight in `weights` when the weights are sorted.
-
-A SOS1 constraint is equivalent to:
-
-- `x[i] >= 0` for some `i`
-- `x[j] == 0` for all `j != i`
-
-If a vector of variables `x` is in a Special Ordered Set of Type II (SOS2), then at most two
-elements can be non-zero, and if two elements are non-zero, they must be adjacent.
-
-Because of the adjacency requirement, you should supply a weight vector (with unique elements)
-to induce an ordering of the variables. The `k`th element in the ordered set corresponds to
-the `k`th weight in `weights` when the weights are sorted.
-
-A SOS2 constraint is equivalent to:
-
-- `x[i] >= 0`, `x[i+1] >= 0`  for some `i`
-- `x[j] == 0` for all `j != i`, `j != i+1`
-
-Create an SOS constraint as follows:
-
-```jldoctest SOS; setup=:(model=Model())
+Construct SOS-I constraints using the [`SOS1`](@ref) set:
+```jldoctest con_sos; setup=:(model = Model())
 julia> @variable(model, x[1:3])
-3-element Array{VariableRef,1}:
+3-element Vector{VariableRef}:
  x[1]
  x[2]
  x[3]
 
-julia> @constraint(model, x in SOS2([3,5,2]))
-[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([3.0, 5.0, 2.0])
+julia> @constraint(model, x in SOS1())
+[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])
 ```
 
-In the case above, `x[3]` is the first variable and `x[2]` the last variable under the
-induced ordering. When no ordering vector is provided, JuMP induces an ordering from `1:length(x)`.
+Although not required for feasibility, solvers can benefit from an ordering of
+the variables (e.g., the variables represent different factories to build, at
+most one factory can be built, and the factories can be ordered according to
+cost). To induce an ordering, weights can be provided; as such, they should be
+unique values. The kth element in the ordered set corresponds to the kth weight
+in weights when the weights are sorted.
 
-```jldoctest SOS; setup=:(model=Model())
-julia> @variable(model, x[1:3])
-3-element Array{VariableRef,1}:
- x[1]
- x[2]
- x[3]
+For example, in the constraint:
+```jldoctest con_sos
+julia> @constraint(model, x in SOS1([3.1, 1.2, 2.3]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([3.1, 1.2, 2.3])
+```
+the variables `x` have precedence `x[2]`, `x[3]`, `x[1]`.
 
+### Type 2
+
+In a Special Ordered Set of Type 2 (SOS-II), at most two elements can be
+non-zero, and if there are two non-zeros, they must be consecutive according to
+the ordering induced by a weight vector.
+
+Construct SOS-II constraints using the [`SOS2`](@ref) set.
+```jldoctest con_sos
+julia> @constraint(model, x in SOS2([3.0, 1.0, 2.0]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
+```
+In the following constraint, the possible non-zero pairs are (`x[1]` and `x[3]`)
+and (`x[2]` and `x[3]`):
+
+If the weight vector is omitted, JuMP induces an ordering from `1:length(x)`:
+```jldoctest con_sos
 julia> @constraint(model, x in SOS2())
-[x[1], x[2], x[3]] ∈ MathOptInterface.SOS2{Float64}([1.0, 2.0, 3.0])
+[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([1.0, 2.0, 3.0])
 ```

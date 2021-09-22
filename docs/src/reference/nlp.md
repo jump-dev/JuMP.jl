@@ -19,6 +19,7 @@ add_NL_constraint
 @NLexpression
 @NLexpressions
 NonlinearExpression
+add_NL_expression
 ```
 
 ## [Objectives](@id ref_nl_objectives)
@@ -32,6 +33,7 @@ set_NL_objective
 
 ```@docs
 @NLparameter
+@NLparameters
 NonlinearParameter
 value(::JuMP.NonlinearParameter)
 set_value(::JuMP.NonlinearParameter, ::Number)

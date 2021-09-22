@@ -890,9 +890,6 @@ end
     @objective(model, Min, -x)
     c = @constraint(model, x + y <= 1) # anonymous constraint
 
-    JuMP.set_name(JuMP.UpperBoundRef(x), "xub")
-    JuMP.set_name(JuMP.LowerBoundRef(y), "ylb")
-
     set_optimizer(
         model,
         () -> MOIU.MockOptimizer(
@@ -902,7 +899,7 @@ end
     )
     optimize!(model)
 
-    mockoptimizer = JuMP.backend(model).optimizer.model
+    mockoptimizer = JuMP.unsafe_backend(model)
     MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
     MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
@@ -925,10 +922,10 @@ end
         JuMP.optimizer_index(JuMP.LowerBoundRef(y)),
         1.0,
     )
-    MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-    MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-    MOI.set(mockoptimizer, MOI.NodeCount(), 1)
-    MOI.set(mockoptimizer, MOI.SolveTime(), 5.0)
+    MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(3))
+    MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(2))
+    MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
+    MOI.set(mockoptimizer, MOI.SolveTimeSec(), 5.0)
 
     @test sprint(show, solution_summary(model)) == """
 * Solver : Mock
@@ -947,8 +944,8 @@ end
 
 * Work counters
   Solve time (sec)   : 5.00000
-  Simplex iterations : 1
-  Barrier iterations : 1
+  Simplex iterations : 3
+  Barrier iterations : 2
   Node count         : 1
 """
 
@@ -975,13 +972,11 @@ end
     x : 1.0
     y : 0.0
   Dual solution :
-    xub : 0.0
-    ylb : 1.0
 
 * Work counters
   Solve time (sec)   : 5.00000
-  Simplex iterations : 1
-  Barrier iterations : 1
+  Simplex iterations : 3
+  Barrier iterations : 2
   Node count         : 1
 """
 end

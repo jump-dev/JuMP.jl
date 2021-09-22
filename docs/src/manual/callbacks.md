@@ -6,7 +6,7 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# [Callbacks](@id callbacks_manual)
+# [Solver-independent Callbacks](@id callbacks_manual)
 
 Many mixed-integer (linear, conic, and nonlinear) programming solvers offer
 the ability to modify the solve process. Examples include changing branching
@@ -25,10 +25,11 @@ callbacks:
 
 ## Available solvers
 
-Callback support is limited to a few solvers. This includes
-[CPLEX](https://github.com/JuliaOpt/CPLEX.jl),
-[GLPK](https://github.com/JuliaOpt/GLPK.jl), and
-[Gurobi](https://github.com/JuliaOpt/Gurobi.jl).
+Solver-independent callback support is limited to a few solvers. This includes
+[CPLEX](https://github.com/jump-dev/CPLEX.jl),
+[GLPK](https://github.com/jump-dev/GLPK.jl),
+[Gurobi](https://github.com/jump-dev/Gurobi.jl), and
+[Xpress](https://github.com/jump-dev/Xpress.jl).
 
 !!! warning
     While JuMP provides a solver-independent way of accessing callbacks, you
@@ -38,11 +39,18 @@ Callback support is limited to a few solvers. This includes
     underlying solver's callback documentation to understand details specific to
     each solver.
 
-## Things you can and cannot do during callbacks
+!!! tip
+    This page discusses solver-_independent_ callbacks. However, each solver
+    listed above also provides a solver-_dependent_ callback to provide access
+    to the full range of solver-specific features. Consult the solver's README
+    for an example of how to use the solver-dependent callback. This will
+    require you to understand the C interface of the solver.
+
+## Things you can and cannot do during solver-independent callbacks
 
 There is a very limited range of things you can do during a callback. Only use
 the functions and macros explicitly stated in this page of the documentation, or
-in the [Callbacks example](/examples/callbacks).
+in the [Callbacks tutorial](@ref callbacks_tutorial).
 
 Using any other part of the JuMP API (e.g., adding a constraint with [`@constraint`](@ref)
 or modifying a variable bound with [`set_lower_bound`](@ref)) is undefined
@@ -61,6 +69,11 @@ how to use it in the README of their Github repository.
 
 If you want to modify the problem in a callback, you _must_ use a lazy
 constraint.
+
+ !!! warning
+    You can only set each callback once. Calling `set` twice will over-write the
+    earlier callback. In addition, if you use a solver-independent callback, you
+    cannot set a solver-dependent callback.
 
 ## Lazy constraints
 
@@ -126,6 +139,12 @@ MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
     end
     MOI.set(model, MOI.LazyConstraintCallback(), good_callback_function)
     ```
+
+!!! warning
+    During the solve, a solver may visit a point that was cut off by a previous
+    lazy constraint, e.g., because the earlier lazy constraint was removed
+    during presolve. However, the solver will not terminate until it reaches a
+    solution that satisfies all added lazy constraints.
 
 ## User cuts
 

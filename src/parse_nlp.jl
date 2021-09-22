@@ -17,6 +17,21 @@ function _error_curly(x)
     )
 end
 
+function _warn_auto_register(opname, N)
+    @warn("""Function $(opname) automatically registered with $N arguments.
+
+    Calling the function with a different number of arguments will result in an
+    error.
+
+    While you can safely ignore this warning, we recommend that you manually
+    register the function as follows:
+    ```Julia
+    model = Model()
+    register(model, :$opname, $N, $opname; autodiff = true)
+    ```""")
+    return
+end
+
 # generates code which converts an expression into a NodeData array (tape)
 # parent is the index of the parent expression
 # values is the name of the list of constants which appear in the expression
@@ -93,11 +108,34 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                 )
             else
                 opname = quot(x.args[1])
-                errorstring = "Unrecognized function \"$(x.args[1])\" used in nonlinear expression."
+                f = x.args[1]
+                errorstring = """
+                Unrecognized function \"$(f)\" used in nonlinear expression.
+
+                If the function exists, but is not within the scope of this call,
+                you should register it as a user-defined function before building
+                the model. For example:
+                ```julia
+                model = Model()
+                register(model, :$(f), 1, $(f), autodiff=true)
+                # ... variables and constraints ...
+                ```
+                """
                 errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
                 lookupcode = quote
                     if $(esc(m)).nlp_data === nothing
-                        error($errorstring)
+                        try
+                            register(
+                                $(esc(m)),
+                                $opname,
+                                1,
+                                $(esc(x.args[1]));
+                                autodiff = true,
+                            )
+                            _warn_auto_register($opname, 1)
+                        catch
+                            error($errorstring)
+                        end
                     end
                     if !haskey(
                         $(esc(
@@ -113,7 +151,18 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                         )
                             error($errorstring2)
                         else
-                            error($errorstring)
+                            try
+                                register(
+                                    $(esc(m)),
+                                    $opname,
+                                    1,
+                                    $(esc(x.args[1]));
+                                    autodiff = true,
+                                )
+                                _warn_auto_register($opname, 1)
+                            catch
+                                error($errorstring)
+                            end
                         end
                     end
                     operatorid =
@@ -164,11 +213,35 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                 )
             else # could be user defined
                 opname = quot(x.args[1])
-                errorstring = "Unrecognized function \"$(x.args[1])\" used in nonlinear expression."
+                N = length(x.args) - 1
+                f = x.args[1]
+                errorstring = """
+                Unrecognized function \"$(f)\" used in nonlinear expression.
+
+                If the function exists, but is not within the scope of this call,
+                you should register it as a user-defined function before building
+                the model. For example:
+                ```julia
+                model = Model()
+                register(model, :$(f), $(N), $(f), autodiff=true)
+                # ... variables and constraints ...
+                ```
+                """
                 errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
                 lookupcode = quote
                     if $(esc(m)).nlp_data === nothing
-                        error($errorstring)
+                        try
+                            register(
+                                $(esc(m)),
+                                $opname,
+                                $N,
+                                $(esc(x.args[1]));
+                                autodiff = true,
+                            )
+                            _warn_auto_register($opname, $N)
+                        catch
+                            error($errorstring)
+                        end
                     end
                     if !haskey(
                         $(esc(
@@ -184,7 +257,18 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                         )
                             error($errorstring2)
                         else
-                            error($errorstring)
+                            try
+                                register(
+                                    $(esc(m)),
+                                    $opname,
+                                    $N,
+                                    $(esc(x.args[1]));
+                                    autodiff = true,
+                                )
+                                _warn_auto_register($opname, $N)
+                            catch
+                                error($errorstring)
+                            end
                         end
                     end
                     operatorid =
@@ -359,11 +443,19 @@ function _parse_NL_expr_runtime(
     parent,
     values,
 )
-    return error(
-        "Unexpected quadratic expression $x in nonlinear expression. " *
-        "Quadratic expressions (e.g., created using @expression) and " *
-        "nonlinear expressions cannot be mixed.",
-    )
+    push!(tape, NodeData(CALL, operator_to_id[:+], parent))
+    sum_parent = length(tape)
+    _parse_NL_expr_runtime(m, x.aff, tape, sum_parent, values)
+    for (xy, c) in x.terms
+        push!(tape, NodeData(CALL, operator_to_id[:*], sum_parent))
+        mult_parent = length(tape)
+        _parse_NL_expr_runtime(m, xy.a, tape, mult_parent, values)
+        _parse_NL_expr_runtime(m, xy.b, tape, mult_parent, values)
+        if !isone(c)  # Optimization: no need for * node.
+            _parse_NL_expr_runtime(m, c, tape, mult_parent, values)
+        end
+    end
+    return
 end
 
 function _parse_NL_expr_runtime(
@@ -373,11 +465,22 @@ function _parse_NL_expr_runtime(
     parent,
     values,
 )
-    return error(
-        "Unexpected affine expression $x in nonlinear expression. " *
-        "Affine expressions (e.g., created using @expression) and " *
-        "nonlinear expressions cannot be mixed.",
-    )
+    push!(tape, NodeData(CALL, operator_to_id[:+], parent))
+    sum_parent = length(tape)
+    if !iszero(x.constant)
+        _parse_NL_expr_runtime(m, x.constant, tape, sum_parent, values)
+    end
+    for (v, c) in x.terms
+        if isone(c)  # Optimization: no need for * node.
+            _parse_NL_expr_runtime(m, v, tape, sum_parent, values)
+        else
+            push!(tape, NodeData(CALL, operator_to_id[:*], sum_parent))
+            mult_parent = length(tape)
+            _parse_NL_expr_runtime(m, c, tape, mult_parent, values)
+            _parse_NL_expr_runtime(m, v, tape, mult_parent, values)
+        end
+    end
+    return
 end
 
 function _parse_NL_expr_runtime(m::Model, x, tape, parent, values)
@@ -455,6 +558,53 @@ function _Derivatives.expr_to_nodedata(
 )
     push!(nd, NodeData(PARAMETER, ex.index, parentid))
     return nothing
+end
+
+function _Derivatives.expr_to_nodedata(
+    ex::GenericAffExpr,
+    nd::Vector{NodeData},
+    values::Vector{Float64},
+    parentid,
+    r::_Derivatives.UserOperatorRegistry,
+)
+    push!(nd, NodeData(CALL, operator_to_id[:+], parentid))
+    sum_parent = length(nd)
+    if !iszero(ex.constant)
+        _Derivatives.expr_to_nodedata(ex.constant, nd, values, sum_parent, r)
+    end
+    for (v, c) in ex.terms
+        if isone(c)  # Optimization: no need for * node.
+            _Derivatives.expr_to_nodedata(v, nd, values, sum_parent, r)
+        else
+            push!(nd, NodeData(CALL, operator_to_id[:*], sum_parent))
+            mult_parent = length(nd)
+            _Derivatives.expr_to_nodedata(c, nd, values, mult_parent, r)
+            _Derivatives.expr_to_nodedata(v, nd, values, mult_parent, r)
+        end
+    end
+    return
+end
+
+function _Derivatives.expr_to_nodedata(
+    ex::GenericQuadExpr,
+    nd::Vector{NodeData},
+    values::Vector{Float64},
+    parentid,
+    r::_Derivatives.UserOperatorRegistry,
+)
+    push!(nd, NodeData(CALL, operator_to_id[:+], parentid))
+    sum_parent = length(nd)
+    _Derivatives.expr_to_nodedata(ex.aff, nd, values, sum_parent, r)
+    for (xy, c) in ex.terms
+        push!(nd, NodeData(CALL, operator_to_id[:*], sum_parent))
+        mult_parent = length(nd)
+        _Derivatives.expr_to_nodedata(xy.a, nd, values, mult_parent, r)
+        _Derivatives.expr_to_nodedata(xy.b, nd, values, mult_parent, r)
+        if !isone(c)  # Optimization: no need for * node.
+            _Derivatives.expr_to_nodedata(c, nd, values, mult_parent, r)
+        end
+    end
+    return
 end
 
 # Construct a _NonlinearExprData from a Julia expression.

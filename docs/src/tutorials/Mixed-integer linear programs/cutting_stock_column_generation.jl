@@ -11,10 +11,10 @@
 
 # Intuitively, this problem is about cutting large rolls of paper into smaller
 # pieces. There is an exact demand of pieces to meet, and all rolls have the
-# same size. The goal is to meet the demand while maximising the profits (each
+# same size. The goal is to meet the demand while maximizing the profits (each
 # paper roll has a fixed cost, each sold piece allows earning some money),
 # which is roughly equivalent to using the smallest amount of rolls
-# to cut (or, equivalently, to minimise the amount of paper waste).
+# to cut (or, equivalently, to minimize the amount of paper waste).
 
 # This function takes five parameters:
 
@@ -92,7 +92,12 @@ import Test  #src
 # improve the current cost.
 
 function solve_pricing(
-    dual_demand_satisfaction, maxwidth, widths, rollcost, demand, prices
+    dual_demand_satisfaction,
+    maxwidth,
+    widths,
+    rollcost,
+    demand,
+    prices,
 )
     reduced_costs = dual_demand_satisfaction + prices
     n = length(reduced_costs)
@@ -104,7 +109,8 @@ function solve_pricing(
     @objective(submodel, Max, sum(xs .* reduced_costs))
     optimize!(submodel)
     new_pattern = round.(Int, value.(xs))
-    net_cost = rollcost - sum(new_pattern .* (dual_demand_satisfaction .+ prices))
+    net_cost =
+        rollcost - sum(new_pattern .* (dual_demand_satisfaction .+ prices))
     ## If the net cost of this new pattern is nonnegative, no more patterns to add.
     return net_cost >= 0 ? nothing : new_pattern
 end
@@ -113,16 +119,70 @@ function example_cutting_stock(; max_gen_cols::Int = 5_000)
     maxwidth = 100.0
     rollcost = 500.0
     prices = [
-        167.0, 197.0, 281.0, 212.0, 225.0, 111.0, 93.0, 129.0, 108.0, 106.0,
-        55.0, 85.0, 66.0, 44.0, 47.0, 15.0, 24.0, 13.0, 16.0, 14.0,
+        167.0,
+        197.0,
+        281.0,
+        212.0,
+        225.0,
+        111.0,
+        93.0,
+        129.0,
+        108.0,
+        106.0,
+        55.0,
+        85.0,
+        66.0,
+        44.0,
+        47.0,
+        15.0,
+        24.0,
+        13.0,
+        16.0,
+        14.0,
     ]
     widths = [
-        75.0, 75.0, 75.0, 75.0, 75.0, 53.8, 53.0, 51.0, 50.2, 32.2,
-        30.8, 29.8, 20.1, 16.2, 14.5, 11.0, 8.6, 8.2, 6.6, 5.1,
+        75.0,
+        75.0,
+        75.0,
+        75.0,
+        75.0,
+        53.8,
+        53.0,
+        51.0,
+        50.2,
+        32.2,
+        30.8,
+        29.8,
+        20.1,
+        16.2,
+        14.5,
+        11.0,
+        8.6,
+        8.2,
+        6.6,
+        5.1,
     ]
     demand = [
-        38, 44, 30, 41, 36, 33, 36, 41, 35, 37,
-        44, 49, 37, 36, 42, 33, 47, 35, 49, 42,
+        38,
+        44,
+        30,
+        41,
+        36,
+        33,
+        36,
+        41,
+        35,
+        37,
+        44,
+        49,
+        37,
+        36,
+        42,
+        33,
+        47,
+        35,
+        49,
+        42,
     ]
     nwidths = length(prices)
     n = length(widths)
@@ -130,10 +190,9 @@ function example_cutting_stock(; max_gen_cols::Int = 5_000)
     ## Initial set of patterns (stored in a sparse matrix: a pattern won't
     ## include many different cuts).
     patterns = SparseArrays.spzeros(UInt16, n, ncols)
-    for i = 1:n
-        patterns[i, i] = min(
-            floor(Int, maxwidth / widths[i]), round(Int, demand[i])
-        )
+    for i in 1:n
+        patterns[i, i] =
+            min(floor(Int, maxwidth / widths[i]), round(Int, demand[i]))
     end
     ## Write the master problem with this "reduced" set of patterns.
     ## Not yet integer variables: otherwise, the dual values may make no sense
@@ -146,14 +205,14 @@ function example_cutting_stock(; max_gen_cols::Int = 5_000)
         m,
         Min,
         sum(
-            θ[p] * (rollcost - sum(patterns[j, p] * prices[j] for j = 1:n))
-            for p = 1:ncols
+            θ[p] * (rollcost - sum(patterns[j, p] * prices[j] for j in 1:n)) for
+            p in 1:ncols
         )
     )
     @constraint(
         m,
-        demand_satisfaction[j=1:n],
-        sum(patterns[j, p] * θ[p] for p = 1:ncols) >= demand[j]
+        demand_satisfaction[j = 1:n],
+        sum(patterns[j, p] * θ[p] for p in 1:ncols) >= demand[j]
     )
     ## First solve of the master problem.
     optimize!(m)
@@ -162,7 +221,7 @@ function example_cutting_stock(; max_gen_cols::Int = 5_000)
     end
     ## Then, generate new patterns, based on the dual information.
     while ncols - n <= max_gen_cols ## Generate at most max_gen_cols columns.
-        if ! has_duals(m)
+        if !has_duals(m)
             break
         end
         new_pattern = solve_pricing(
@@ -188,13 +247,15 @@ function example_cutting_stock(; max_gen_cols::Int = 5_000)
         set_objective_coefficient(
             m,
             θ[ncols],
-            rollcost - sum(patterns[j, ncols] * prices[j] for j = 1:n)
+            rollcost - sum(patterns[j, ncols] * prices[j] for j in 1:n),
         )
         ## Update the constraint number j if the new pattern impacts this production.
-        for j = 1:n
+        for j in 1:n
             if new_pattern[j] > 0
                 set_normalized_coefficient(
-                    demand_satisfaction[j], new_var[ncols], new_pattern[j]
+                    demand_satisfaction[j],
+                    new_var[ncols],
+                    new_pattern[j],
                 )
             end
         end
@@ -217,7 +278,7 @@ function example_cutting_stock(; max_gen_cols::Int = 5_000)
     end
     Test.@test objective_value(m) ≈ 78374.0 atol = 1e-3  #src
     println("Final solution:")
-    for i = 1:length(θ)
+    for i in 1:length(θ)
         if value(θ[i]) > 0.5
             println("$(round(Int, value(θ[i]))) units of pattern $(i)")
         end

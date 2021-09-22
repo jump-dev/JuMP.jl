@@ -547,10 +547,10 @@ function test_variables_constrained_on_creation(ModelType, ::Any)
     @variable(model, [1:2] in SecondOrderCone())
     @test num_constraints(model, typeof(x), MOI.SecondOrderCone) == 2
 
-    @variable(model, [1:3] in MOI.SecondOrderCone(3))
+    @variable(model, [1:3] ∈ MOI.SecondOrderCone(3))
     @test num_constraints(model, typeof(x), MOI.SecondOrderCone) == 3
 
-    z = @variable(model, z in MOI.Semiinteger(1.0, 2.0))
+    z = @variable(model, z ∈ MOI.Semiinteger(1.0, 2.0))
     @test num_constraints(model, typeof(z), MOI.Semiinteger{Float64}) == 1
 
     @variable(model, set = MOI.Semiinteger(1.0, 2.0))
@@ -920,6 +920,32 @@ function test_Model_relax_integrality_error_cases(::Any, ::Any)
         "fixed out of bounds.",
     )
     @test_throws err relax_integrality(model)
+end
+
+function test_unknown_size_dense(::Any, ::Any)
+    model = Model()
+    f = Iterators.filter(k -> isodd(k), 1:10)
+    @variable(model, x[f])
+    @test length(x) == 5
+end
+
+function test_unknown_size_sparse(::Any, ::Any)
+    model = Model()
+    f = Iterators.filter(k -> isodd(k), 1:10)
+    @variable(model, x[i = f; i < 5])
+    @test length(x) == 2
+end
+
+function test_start_value(::Any, ::Any)
+    model = Model()
+    @variable(model, x)
+    @test start_value(x) === nothing
+    set_start_value(x, 1.0)
+    @test start_value(x) == 1.0
+    set_start_value(x, nothing)
+    @test start_value(x) === nothing
+    set_start_value(x, 1)
+    @test start_value(x) == 1.0
 end
 
 function runtests()

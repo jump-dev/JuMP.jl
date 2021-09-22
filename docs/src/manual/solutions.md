@@ -6,7 +6,7 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Solutions
+# [Solutions](@id jump_solutions)
 
 This section of the manual describes how to access a solved solution to a
 problem. It uses the following model as an example:
@@ -164,7 +164,7 @@ julia> value(x)
 15.428571428571429
 ```
 
-Broadcast [`value]`(@ref) over containers:
+Broadcast [`value`](@ref) over containers:
 ```julia solutions
 julia> value.(y)
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
@@ -359,7 +359,7 @@ coefficient of the constraint `c1` as follows:
 julia> optimize!(model)
 
 julia> value.(x)
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  1.0
  0.0
 
@@ -429,6 +429,7 @@ For instance, this is how you can use this functionality:
 using JuMP
 model = Model() # You must use a solver that supports conflict refining/IIS
 # computation, like CPLEX or Gurobi
+# e.g. using Gurobi; model = Model(Gurobi.Optimizer)
 @variable(model, x >= 0)
 @constraint(model, c1, x >= 2)
 @constraint(model, c2, x <= 1)
@@ -448,6 +449,21 @@ MOI.get(model, MOI.ConstraintConflictStatus(), c2)
 
 # Get a copy of the model with only the constraints in the conflict.
 new_model, reference_map = copy_conflict(model)
+```
+
+Conflicting constraints can be collected in a list and printed 
+as follows:
+
+```julia
+conflict_constraint_list = ConstraintRef[]
+for (F, S) in list_of_constraint_types(model)
+    for con in all_constraints(model, F, S)
+        if MOI.get(model, MOI.ConstraintConflictStatus(), con) == MOI.IN_CONFLICT
+            push!(conflict_constraint_list, con)
+            println(con)
+        end
+    end
+end
 ```
 
 ## Multiple solutions
@@ -518,19 +534,19 @@ julia> @constraint(model, c1, x + y <= 1.95);
 julia> point = Dict(x => 1.9, y => 0.06);
 
 julia> primal_feasibility_report(model, point)
-Dict{Any,Float64} with 2 entries:
-  c1 : x + y ≤ 1.95 => 0.01
+Dict{Any, Float64} with 2 entries:
   x integer         => 0.1
+  c1 : x + y ≤ 1.95 => 0.01
 
 julia> primal_feasibility_report(model, point; atol = 0.02)
-Dict{Any,Float64} with 1 entry:
+Dict{Any, Float64} with 1 entry:
   x integer => 0.1
 ```
 
 If the point is feasible, an empty dictionary is returned:
 ```jldoctest feasibility
 julia> primal_feasibility_report(model, Dict(x => 1.0, y => 0.0))
-Dict{Any,Float64} with 0 entries
+Dict{Any, Float64}()
 ```
 
 To use the primal solution from a solve, omit the `point` argument:
@@ -538,13 +554,13 @@ To use the primal solution from a solve, omit the `point` argument:
 julia> optimize!(model)
 
 julia> primal_feasibility_report(model)
-Dict{Any,Float64} with 0 entries
+Dict{Any, Float64}()
 ```
 
 Pass `skip_mising = true` to skip constraints which contain variables that are
 not in `point`:
 ```jldoctest feasibility
 julia> primal_feasibility_report(model, Dict(x => 2.1); skip_missing = true)
-Dict{Any,Float64} with 1 entry:
+Dict{Any, Float64} with 1 entry:
   x integer => 0.1
 ```

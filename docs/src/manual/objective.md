@@ -61,6 +61,25 @@ julia> objective_function(model)
 2 x + 1
 ```
 
+## Evaluate the objective function at a point
+
+Use [`value`](@ref) to evaluate an objective function at a point specifying values for variables.
+
+```jldoctest; setup = :(model=Model())
+julia> @variable(model, x[1:2]);
+
+julia> @objective(model, Min, 2x[1]^2 + x[1] + 0.5*x[2])
+2 x[1]² + x[1] + 0.5 x[2]
+
+julia> f = objective_function(model)
+2 x[1]² + x[1] + 0.5 x[2]
+
+julia> point = Dict(x[1] => 2.0, x[2] => 1.0);
+
+julia> value(f, z -> point[z])
+10.5
+```
+
 ## Query the objective sense
 
 Use [`objective_sense`](@ref) to return the current objective sense.

@@ -13,6 +13,7 @@
 
 using JuMP
 using Test
+using Base.Meta
 
 const MA = JuMP._MA
 
@@ -57,6 +58,12 @@ end
     ]
 end
 
+@testset "Test _add_positional_args" begin
+    call = :(f(1, a = 2))
+    @test JuMP._add_positional_args(call, [:(MyObject)]) isa Nothing
+    @test call == :(f(1, $(Expr(:escape, :MyObject)), a = 2))
+end
+
 @testset "MutableArithmetics.Zero (Issue #2187)" begin
     model = Model()
     c = @constraint(model, sum(1 for _ in 1:0) == sum(1 for _ in 1:0))
@@ -71,6 +78,52 @@ end
     c = @constraint(model, sum(1 for _ in 1:0) in MOI.EqualTo(0.0))
     @test constraint_object(c).func == AffExpr(0.0)
     @test constraint_object(c).set == MOI.EqualTo(0.0)
+end
+
+struct NewVariable <: JuMP.AbstractVariable
+    info::JuMP.VariableInfo
+end
+
+@testset "Extension variables constrained on creation #2594" begin
+    function JuMP.build_variable(
+        _error::Function,
+        info::JuMP.VariableInfo,
+        ::Type{NewVariable},
+    )
+        return NewVariable(info)
+    end
+    function JuMP.add_variable(model::Model, v::NewVariable, name::String = "")
+        return JuMP.add_variable(
+            model,
+            ScalarVariable(v.info),
+            name * "_normal_add",
+        )
+    end
+    function JuMP.add_variable(
+        model::Model,
+        v::VariablesConstrainedOnCreation{
+            MOI.SecondOrderCone,
+            VectorShape,
+            NewVariable,
+        },
+        names,
+    )
+        vs = map(i -> ScalarVariable(i.info), v.scalar_variables)
+        new_v = VariablesConstrainedOnCreation(vs, v.set, v.shape)
+        names .*= "_constr_add"
+        return JuMP.add_variable(model, new_v, names)
+    end
+
+    model = Model()
+    @variable(model, 0 <= x <= 1, NewVariable, Bin)
+    @test lower_bound(x) == 0
+    @test upper_bound(x) == 1
+    @test is_binary(x)
+    @test name(x) == "x_normal_add"
+
+    @variable(model, y[1:3] in SecondOrderCone(), NewVariable)
+    @test name.(y) == ["y[$i]_constr_add" for i in 1:3]
+    @test num_constraints(model, Vector{VariableRef}, MOI.SecondOrderCone) == 1
 end
 
 mutable struct MyVariable
@@ -173,6 +226,42 @@ function build_constraint_keyword_test(ModelType::Type{<:JuMP.AbstractModel})
         @test JuMP.constraint_object(cref1).set isa MOI.PowerCone{Float64}
         cref2 = @constraint(model, [1, x, x] in PowerCone(0.5), dual = true)
         @test JuMP.constraint_object(cref2).set isa MOI.DualPowerCone{Float64}
+    end
+end
+
+struct MyConstrType end
+struct BadPosArg end
+function JuMP.build_constraint(
+    _error::Function,
+    f::GenericAffExpr,
+    set::MOI.EqualTo,
+    extra::Type{MyConstrType};
+    d = 0,
+)
+    new_set = MOI.LessThan{Float64}(set.value + d)
+    return JuMP.build_constraint(_error, f, new_set)
+end
+function build_constraint_extra_arg_test(ModelType::Type{<:JuMP.AbstractModel})
+    @testset "build_constraint with extra positional arguments" begin
+        model = ModelType()
+        @variable(model, x)
+        cref = @constraint(model, x == 0, MyConstrType)
+        @test JuMP.constraint_object(cref).set isa MOI.LessThan{Float64}
+        cref = @constraint(model, c1, x == 0, MyConstrType, d = 1)
+        @test JuMP.constraint_object(cref).set == MOI.LessThan{Float64}(1)
+        @test_throws_strip ErrorException @constraint(model, x == 0, BadPosArg)
+        @test_throws_strip ErrorException @constraint(
+            model,
+            x == 0,
+            BadPosArg,
+            d = 1
+        )
+        @test_macro_throws ErrorException @constraint(
+            model,
+            x == 0,
+            MyConstrType,
+            BadPosArg
+        )
     end
 end
 
@@ -330,6 +419,29 @@ function macros_test(
         @test c.set == MOI.Interval(0.0, 1.0)
     end
 
+    @testset "Constraint Naming" begin
+        model = ModelType()
+        @variable(model, x)
+
+        cref = @constraint(model, x == 0)
+        @test name(cref) == ""
+
+        cref = @constraint(model, x == 0, base_name = "cat")
+        @test name(cref) == "cat"
+
+        cref = @constraint(model, c1, x == 0)
+        @test name(cref) == "c1"
+
+        cref = @constraint(model, c2, x == 0, base_name = "cat")
+        @test name(cref) == "cat"
+
+        crefs = @constraint(model, [1:2], x == 0, base_name = "cat")
+        @test name.(crefs) == ["cat[1]", "cat[2]"]
+
+        @test_macro_throws ErrorException @constraint(model, c3[1:2])
+        @test_macro_throws ErrorException @constraint(model, "c"[1:2], x == 0)
+    end
+
     @testset "@build_constraint (scalar inequality)" begin
         model = ModelType()
         @variable(model, x)
@@ -411,6 +523,7 @@ function macros_test(
 
     build_constraint_keyword_test(ModelType)
     custom_expression_test(ModelType)
+    build_constraint_extra_arg_test(ModelType)
     return custom_function_test(ModelType)
 end
 
@@ -538,15 +651,6 @@ end
         @test length(JuMP.object_dictionary(model)) == 0
     end
 
-    @testset "Invalid container" begin
-        model = Model()
-        exception = ErrorException(
-            "Invalid container type Oops. Must be Auto, Array, " *
-            "DenseAxisArray, or SparseAxisArray.",
-        )
-        @test_throws exception @variable(model, x[1:3], container = Oops)
-    end
-
     @testset "Adjoints" begin
         model = Model()
         @variable(model, x[1:2])
@@ -616,6 +720,16 @@ end
          ref[2] : y[1] + y[2] $ge 2.0
          ref[3] : y[1] + y[3] $ge 3.0
         """
+    end
+
+    @testset "NLparameters" begin
+        model = Model()
+        @NLparameters(model, begin
+            a == 1
+            b[i = 1:2] == i
+        end)
+        @test value(a) == 1
+        @test value.(b) == [1, 2]
     end
 
     @testset "Index variables don't leak out of macros" begin

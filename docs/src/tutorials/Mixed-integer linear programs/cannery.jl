@@ -36,25 +36,29 @@ function example_cannery()
     @variable(cannery, ship[1:num_plants, 1:num_markets] >= 0)
     ## Ship no more than plant capacity
     @constraint(
-        cannery, capacity_con[i = 1:num_plants], sum(ship[i, :]) <= capacity[i]
+        cannery,
+        capacity_con[i = 1:num_plants],
+        sum(ship[i, :]) <= capacity[i]
     )
     ## Ship at least market demand
     @constraint(
-        cannery, demand_con[j = 1:num_markets], sum(ship[:, j]) >= demand[j]
+        cannery,
+        demand_con[j = 1:num_markets],
+        sum(ship[:, j]) >= demand[j]
     )
-    ## Minimize transporatation cost
+    ## Minimize transportation cost
     @objective(
         cannery,
         Min,
         sum(
-            distance[i, j] * freight * ship[i, j]
-            for i = 1:num_plants, j = 1:num_markets
+            distance[i, j] * freight * ship[i, j] for i in 1:num_plants,
+            j in 1:num_markets
         )
     )
     optimize!(cannery)
     println("RESULTS:")
-    for i = 1:num_plants
-        for j = 1:num_markets
+    for i in 1:num_plants
+        for j in 1:num_markets
             println("  $(plants[i]) $(markets[j]) = $(value(ship[i, j]))")
         end
     end

@@ -347,6 +347,10 @@ Prefer `using ModuleName: x, p` to `import ModuleName.x, ModuleName.p` and
 `import MyModule: x, p` because the `import` versions allow method extension
 without qualifying with the module name.
 
+Similarly, `using ModuleName: ModuleName` is an acceptable substitute for
+`import ModuleName`, because it does not bring all symbols exported by
+`ModuleName` into scope. However, we prefer `import ModuleName` for consistency.
+
 ## Documentation
 
 This section describes the writing style that should be used when writing
@@ -382,7 +386,7 @@ points more specific to Julia and documentation that use [Documenter](https://gi
 - Every exported object needs a docstring
 - All examples in docstrings should be [`jldoctests`](https://juliadocs.github.io/Documenter.jl/stable/man/doctests/)
 - Always use complete English sentences with proper punctuation
-- Do not terminate lists swith punctuation (e.g., as in this doc)
+- Do not terminate lists with punctuation (e.g., as in this doc)
 
 Here is an example:
 ````julia

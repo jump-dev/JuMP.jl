@@ -1,6 +1,7 @@
 # [Variables](@id VariableAPI)
 
-More information can be found in the [Variables](@ref) section of the manual.
+More information can be found in the [Variables](@ref jump_variables) section of
+the manual.
 
 ## Macros
 
@@ -98,7 +99,5 @@ relax_integrality
 ```@docs
 AbstractVariable
 AbstractVariableRef
-add_variable
-build_variable
 parse_one_operator_variable
 ```

@@ -33,14 +33,15 @@ function example_robust_uncertainty()
     @variable(model, μ[1:d])
     @constraint(model, [Γ1(𝛿 / 2, N); μ - μhat] in SecondOrderCone())
     @constraint(model, [Γ2(𝛿 / 2, N); vec(Σ - Σhat)] in SecondOrderCone())
-    @SDconstraint(model, [((1 - ɛ) / ɛ) (u - μ)'; (u - μ) Σ] >= 0)
+    @SDconstraint(model, [((1-ɛ)/ɛ) (u - μ)'; (u-μ) Σ] >= 0)
     @objective(model, Max, LinearAlgebra.dot(c, u))
     optimize!(model)
     I = Matrix(1.0 * LinearAlgebra.I, d, d)
     exact =
         LinearAlgebra.dot(μhat, c) +
         Γ1(𝛿 / 2, N) * LinearAlgebra.norm(c) +
-        sqrt((1 - ɛ) / ɛ) * sqrt(LinearAlgebra.dot(c, (Σhat + Γ2(𝛿 / 2, N) * I) * c))
+        sqrt((1 - ɛ) / ɛ) *
+        sqrt(LinearAlgebra.dot(c, (Σhat + Γ2(𝛿 / 2, N) * I) * c))
     Test.@test objective_value(model) ≈ exact atol = 1e-3
     return
 end

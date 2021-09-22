@@ -169,7 +169,7 @@ a higher-level modeling interface like JuMP.
 There are three main parts to MathOptInterface:
 
  1. A solver-independent API that abstracts concepts such as adding and deleting
-    variables and constraints, settting and getting parameters, and querying
+    variables and constraints, setting and getting parameters, and querying
     results. For more information on the MathOptInterface API, read the
     [documentation]([https://jump.dev/MathOptInterface.jl/stable/])
 

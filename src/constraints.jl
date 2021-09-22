@@ -151,7 +151,7 @@ end
     constraint_by_name(model::AbstractModel,
                        name::String)::Union{ConstraintRef, Nothing}
 
-Returns the reference of the constraint with name attribute `name` or `Nothing`
+Return the reference of the constraint with name attribute `name` or `Nothing`
 if no constraint has this name attribute. Throws an error if several
 constraints have `name` as their name attribute.
 
@@ -258,6 +258,15 @@ end
     delete(model::Model, con_ref::ConstraintRef)
 
 Delete the constraint associated with `constraint_ref` from the model `model`.
+
+Note that `delete` does not unregister the name from the model, so adding a new
+constraint of the same name will throw an error. Use [`unregister`](@ref) to
+unregister the name after deletion as follows:
+```julia
+@constraint(model, c, 2x <= 1)
+delete(model, c)
+unregister(model, :c)
+```
 
 See also: [`unregister`](@ref)
 """
@@ -418,7 +427,7 @@ function constraint_object end
 """
     struct ScalarConstraint
 
-The data for a scalar constraint. The `func` field containts a JuMP object
+The data for a scalar constraint. The `func` field contains a JuMP object
 representing the function and the `set` field contains the MOI set.
 See also the [documentation](@ref Constraints) on JuMP's representation of
 constraints for more background.
@@ -447,7 +456,7 @@ end
 """
     struct VectorConstraint
 
-The data for a vector constraint. The `func` field containts a JuMP object
+The data for a vector constraint. The `func` field contains a JuMP object
 representing the function and the `set` field contains the MOI set. The
 `shape` field contains an [`AbstractShape`](@ref) matching the form in which
 the constraint was constructed (e.g., by using matrices or flat vectors).
@@ -482,7 +491,9 @@ function VectorConstraint(
     func::AbstractVector{<:AbstractJuMPScalar},
     set::MOI.AbstractVectorSet,
 )
-    return VectorConstraint(collect(func), set)
+    # collect() is not used here so that DenseAxisArray will work
+    f = [func[idx] for idx in eachindex(func)]
+    return VectorConstraint(f, set)
 end
 
 reshape_set(set::MOI.AbstractVectorSet, ::VectorShape) = set
@@ -544,14 +555,19 @@ function add_constraint(
     # The type of backend(model) is unknown so we directly redirect to another
     # function.
     check_belongs_to_model(con, model)
-    cindex =
-        _moi_add_constraint(backend(model), moi_function(con), moi_set(con))
+    func, set = moi_function(con), moi_set(con)
+    cindex = _moi_add_constraint(
+        backend(model),
+        func,
+        set,
+    )::MOI.ConstraintIndex{typeof(func),typeof(set)}
     cshape = shape(con)
     if !(cshape isa ScalarShape) && !(cshape isa VectorShape)
         model.shapes[cindex] = cshape
     end
     con_ref = ConstraintRef(model, cindex, cshape)
-    if !isempty(name)
+    if !(func isa MOI.VariableIndex) && !isempty(name)
+        # Don't set names for VariableIndex constraints!
         set_name(con_ref, name)
     end
     return con_ref
@@ -759,7 +775,7 @@ See also: [`result_count`](@ref).
 
 ## Note
 
-For scalar contraints, the constant is moved to the `set` so it is not taken
+For scalar constraints, the constant is moved to the `set` so it is not taken
 into account in the primal value of the constraint. For instance, the constraint
 `@constraint(model, 2x + 3y + 1 == 5)` is transformed into
 `2x + 3y`-in-`MOI.EqualTo(4)` so the value returned by this function is the
@@ -1044,11 +1060,11 @@ julia> @variable(model, x >= 0, Bin);
 julia> @constraint(model, 2x <= 1);
 
 julia> all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
-1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
  x ≥ 0.0
 
 julia> all_constraints(model, VariableRef, MOI.ZeroOne)
-1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.ZeroOne},ScalarShape},1}:
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex,MathOptInterface.ZeroOne},ScalarShape},1}:
  x binary
 
 julia> all_constraints(model, AffExpr, MOI.LessThan{Float64})
@@ -1084,7 +1100,7 @@ end
 # information available.
 
 """
-    list_of_constraint_types(model::Model)::Vector{Tuple{DataType, DataType}}
+    list_of_constraint_types(model::Model)::Vector{Tuple{Type,Type}}
 
 Return a list of tuples of the form `(F, S)` where `F` is a JuMP function type
 and `S` is an MOI set type such that `all_constraints(model, F, S)` returns
@@ -1099,19 +1115,17 @@ julia> @variable(model, x >= 0, Bin);
 julia> @constraint(model, 2x <= 1);
 
 julia> list_of_constraint_types(model)
-3-element Array{Tuple{DataType,DataType},1}:
+3-element Array{Tuple{Type,Type},1}:
  (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
  (VariableRef, MathOptInterface.GreaterThan{Float64})
  (VariableRef, MathOptInterface.ZeroOne)
 ```
 """
-function list_of_constraint_types(
-    model::Model,
-)::Vector{Tuple{DataType,DataType}}
+function list_of_constraint_types(model::Model)::Vector{Tuple{Type,Type}}
     # We include an annotated return type here because Julia fails terribly at
     # inferring it, even though we annotate the type of the return vector.
-    return Tuple{DataType,DataType}[
+    return Tuple{Type,Type}[
         (jump_function_type(model, F), S) for
-        (F, S) in MOI.get(model, MOI.ListOfConstraints())
+        (F, S) in MOI.get(model, MOI.ListOfConstraintTypesPresent())
     ]
 end

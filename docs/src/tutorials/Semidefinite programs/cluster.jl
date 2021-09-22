@@ -20,13 +20,18 @@ function example_cluster(; verbose = true)
     n = 2
     m = 6
     a = Any[
-        [2.0, 2.0], [2.5, 2.1], [7.0, 7.0], [2.2, 2.3], [6.8, 7.0], [7.2, 7.5]
+        [2.0, 2.0],
+        [2.5, 2.1],
+        [7.0, 7.0],
+        [2.2, 2.3],
+        [6.8, 7.0],
+        [7.2, 7.5],
     ]
     k = 2
     ## Weight matrix
     W = zeros(m, m)
     for i in 1:m
-        for j in i + 1:m
+        for j in i+1:m
             W[i, j] = W[j, i] = exp(-LinearAlgebra.norm(a[i] - a[j]) / 1.0)
         end
     end
@@ -48,12 +53,13 @@ function example_cluster(; verbose = true)
     which_cluster = zeros(Int, m)
     num_clusters = 0
     for i in 1:m
-        Z_val[i, i] <= 1e-6 && continue
-        if which_cluster[i] == 0
+        if Z_val[i, i] <= 1e-3
+            continue
+        elseif which_cluster[i] == 0
             num_clusters += 1
             which_cluster[i] = num_clusters
-            for j in i + 1:m
-                if LinearAlgebra.norm(Z_val[i, j] - Z_val[i, i]) <= 1e-6
+            for j in i+1:m
+                if LinearAlgebra.norm(Z_val[i, j] - Z_val[i, i]) <= 1e-3
                     which_cluster[j] = num_clusters
                 end
             end

@@ -135,8 +135,8 @@ function with_optimizer(constructor; kwargs...)
 `with_optimizer(Ipopt.Optimizer, max_cpu_time=60.0)` becomes `optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time" => 60.0)`.
 """
         Base.depwarn(deprecation_message, :with_optimizer_kw)
-        params =
-            [MOI.RawParameter(string(kw.first)) => kw.second for kw in kwargs]
+        params = [MOI.RawOptimizerAttribute(string(kw.first)) => kw.second for
+         kw in kwargs]
         return MOI.OptimizerWithAttributes(constructor, params)
     end
 end
@@ -168,8 +168,8 @@ function with_optimizer(constructor, args...; kwargs...)
                 " the other argument of `with_optimizer`.",
             )
         end
-        params =
-            [MOI.RawParameter(string(kw.first)) => kw.second for kw in kwargs]
+        params = [MOI.RawOptimizerAttribute(string(kw.first)) => kw.second for
+         kw in kwargs]
         return MOI.OptimizerWithAttributes(() -> constructor(args...), params)
     end
 end
@@ -329,33 +329,140 @@ function direct_model(backend::MOI.ModelLike)
     )
 end
 
+"""
+    direct_model(factory::MOI.OptimizerWithAttributes)
+
+Create a [`direct_model`](@ref) using `factory`, a `MOI.OptimizerWithAttributes`
+object created by [`optimizer_with_attributes`](@ref).
+
+## Example
+
+```julia
+model = direct_model(
+    optimizer_with_attributes(
+        Gurobi.Optimizer,
+        "Presolve" => 0,
+        "OutputFlag" => 1,
+    )
+)
+```
+is equivalent to:
+```julia
+model = direct_model(Gurobi.Optimizer())
+set_optimizer_attribute(model, "Presolve", 0)
+set_optimizer_attribute(model, "OutputFlag", 1)
+```
+"""
+function direct_model(factory::MOI.OptimizerWithAttributes)
+    optimizer = MOI.instantiate(factory)
+    return direct_model(optimizer)
+end
+
 Base.broadcastable(model::Model) = Ref(model)
 
 """
     backend(model::Model)
 
 Return the lower-level MathOptInterface model that sits underneath JuMP. This
-model depends on which operating mode JuMP is in (see [`mode`](@ref)), and
-whether there are any bridges in the model.
+model depends on which operating mode JuMP is in (see [`mode`](@ref)).
 
-If JuMP is in `DIRECT` mode (i.e., the model was created using
-[`direct_model`](@ref)), the backend will be the optimizer passed to
-[`direct_model`](@ref).
+ * If JuMP is in `DIRECT` mode (i.e., the model was created using
+   [`direct_model`](@ref)), the backend will be the optimizer passed to
+   [`direct_model`](@ref).
+ * If JuMP is in `MANUAL` or `AUTOMATIC` mode, the backend is a
+   `MOI.Utilities.CachingOptimizer`.
 
-If JuMP is in `MANUAL` or `AUTOMATIC` mode, the backend is a
-`MOI.Utilities.CachingOptimizer`.
+**This function should only be used by advanced users looking to access
+low-level MathOptInterface or solver-specific functionality.**
 
-This function should only be used by advanced users looking to access low-level
-MathOptInterface or solver-specific functionality.
+## Notes
+
+If JuMP is not in `DIRECT` mode, the type returned by `backend` may change
+between any JuMP releases. Therefore, only use the public API exposed by
+MathOptInterface, and do not access internal fields. If you require access to
+the innermost optimizer, see [`unsafe_backend`](@ref). Alternatively, use
+[`direct_model`](@ref) to create a JuMP model in `DIRECT` mode.
+
+See also: [`unsafe_backend`](@ref).
 """
 backend(model::Model) = model.moi_backend
 
 """
-    _moi_mode(model::MOI.ModelLike)
+    unsafe_backend(model::Model)
 
-Return the `ModelMode` of `model`.
+Return the innermost optimizer associated with the JuMP model `model`.
+
+**This function should only be used by advanced users looking to access
+low-level solver-specific functionality. It has a high-risk of incorrect usage.
+We strongly suggest you use the alternative suggested below.**
+
+See also: [`backend`](@ref).
+
+## Unsafe behavior
+
+This function is unsafe for two main reasons.
+
+First, the formulation and order of variables and constraints in the unsafe
+backend may be different to the variables and constraints in `model`. This
+can happen because of bridges, or because the solver requires the variables or
+constraints in a specific order. In addition, the variable or constraint index
+returned by [`index`](@ref) at the JuMP level may be different to the index of
+the corresponding variable or constraint in the `unsafe_backend`. There is no
+solution to this. Use the alternative suggested below instead.
+
+Second, the `unsafe_backend` may be empty, or lack some modifications made to
+the JuMP model. Thus, before calling `unsafe_backend` you should first call
+[`MOI.Utilities.attach_optimizer`](@ref) to ensure that the backend is
+synchronized with the JuMP model.
+```julia
+MOI.Utilities.attach_optimizer(model)
+inner = unsafe_backend(model)
+```
+
+Moreover, if you modify the JuMP model, the reference you have to the backend
+(i.e., `inner` in the example above) may be out-dated, and you should call
+[`MOI.Utilities.attach_optimizer`](@ref) again.
+
+This function is also unsafe in the reverse direction: if you modify the unsafe
+backend, e.g., by adding a new constraint to `inner`, the changes may be
+silently discarded by JuMP when the JuMP `model` is modified or solved.
+
+## Alternative
+
+Instead of `unsafe_backend`, create a model using [`direct_model`](@ref) and
+call [`backend`](@ref) instead.
+
+For example, instead of:
+```julia
+model = Model(GLPK.Optimizer)
+@variable(model, x >= 0)
+MOI.Utilities.attach_optimizer(model)
+glpk = unsafe_backend(model)
+```
+Use:
+```julia
+model = direct_model(GLPK.Optimizer())
+@variable(model, x >= 0)
+glpk = backend(model)  # No need to call `attach_optimizer`.
+```
 """
+unsafe_backend(model::Model) = unsafe_backend(backend(model))
+
+function unsafe_backend(model::MOIU.CachingOptimizer)
+    if MOIU.state(model) == MOIU.NO_OPTIMIZER
+        error(
+            "Unable to get backend optimizer because CachingOptimizer is " *
+            "in state `NO_OPTIMIZER`. Call [`set_optimizer`](@ref) first.",
+        )
+    end
+    return unsafe_backend(model.optimizer)
+end
+
+unsafe_backend(model::MOIB.LazyBridgeOptimizer) = unsafe_backend(model.model)
+unsafe_backend(model::MOI.ModelLike) = model
+
 _moi_mode(model::MOI.ModelLike) = DIRECT
+
 function _moi_mode(model::MOIU.CachingOptimizer)
     if model.mode == MOIU.AUTOMATIC
         return AUTOMATIC
@@ -546,7 +653,7 @@ function Base.empty!(model::Model)::Model
     # * bridge_types: for consistency with MOI.empty! for
     #   MOI.Bridges.LazyBridgeOptimizer.
     # * operator_counter: it is just a counter for a single-time warning
-    #   message (so keeping it helps to discover inneficiencies).
+    #   message (so keeping it helps to discover inefficiencies).
     MOI.empty!(model.moi_backend)
     empty!(model.shapes)
     model.nlp_data = nothing
@@ -713,12 +820,12 @@ set_optimize_hook(model::Model, f) = (model.optimize_hook = f)
     solve_time(model::Model)
 
 If available, returns the solve time reported by the solver.
-Returns "ArgumentError: ModelLike of type `Solver.Optimizer` does not support accessing
-the attribute MathOptInterface.SolveTime()" if the attribute is
+Returns "ArgumentError: ModelLike of type `Solver.Optimizer` does not support
+accessing the attribute MathOptInterface.SolveTimeSec()" if the attribute is
 not implemented.
 """
 function solve_time(model::Model)
-    return MOI.get(model, MOI.SolveTime())
+    return MOI.get(model, MOI.SolveTimeSec())
 end
 
 """
@@ -727,7 +834,7 @@ end
 Sets solver-specific attribute identified by `name` to `value`.
 
 Note that this is equivalent to
-`set_optimizer_attribute(model, MOI.RawParameter(name), value)`.
+`set_optimizer_attribute(model, MOI.RawOptimizerAttribute(name), value)`.
 
 ## Example
 
@@ -738,12 +845,15 @@ set_optimizer_attribute(model, "SolverSpecificAttributeName", true)
 See also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
 """
 function set_optimizer_attribute(model::Model, name::String, value)
-    return set_optimizer_attribute(model, MOI.RawParameter(name), value)
+    set_optimizer_attribute(model, MOI.RawOptimizerAttribute(name), value)
+    return
 end
 
 """
     set_optimizer_attribute(
-        model::Model, attr::MOI.AbstractOptimizerAttribute, value
+        model::Model,
+        attr::MOI.AbstractOptimizerAttribute,
+        value,
     )
 
 Set the solver-specific attribute `attr` in `model` to `value`.
@@ -761,7 +871,8 @@ function set_optimizer_attribute(
     attr::MOI.AbstractOptimizerAttribute,
     value,
 )
-    return MOI.set(model, attr, value)
+    MOI.set(model, attr, value)
+    return
 end
 
 @deprecate set_parameter set_optimizer_attribute
@@ -791,6 +902,7 @@ function set_optimizer_attributes(model::Model, pairs::Pair...)
     for (name, value) in pairs
         set_optimizer_attribute(model, name, value)
     end
+    return
 end
 
 @deprecate set_parameters set_optimizer_attributes
@@ -801,7 +913,7 @@ end
 Return the value associated with the solver-specific attribute named `name`.
 
 Note that this is equivalent to
-`get_optimizer_attribute(model, MOI.RawParameter(name))`.
+`get_optimizer_attribute(model, MOI.RawOptimizerAttribute(name))`.
 
 ## Example
 
@@ -812,7 +924,7 @@ get_optimizer_attribute(model, "SolverSpecificAttributeName")
 See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
 """
 function get_optimizer_attribute(model::Model, name::String)
-    return get_optimizer_attribute(model, MOI.RawParameter(name))
+    return get_optimizer_attribute(model, MOI.RawOptimizerAttribute(name))
 end
 
 """
@@ -939,12 +1051,13 @@ end
 Abstract base type for all scalar types
 
 The subtyping of `AbstractMutable` will allow calls of some `Base` functions
-to be redirected to a method in MA that handles type promotion more carefuly
+to be redirected to a method in MA that handles type promotion more carefully
 (e.g. the promotion in sparse matrix products in SparseArrays usually does not
 work for JuMP types) and exploits the mutability of `AffExpr` and `QuadExpr`.
 """
 abstract type AbstractJuMPScalar <: _MA.AbstractMutable end
 Base.ndims(::Type{<:AbstractJuMPScalar}) = 0
+Base.ndims(::AbstractJuMPScalar) = 0
 
 # These are required to create symmetric containers of AbstractJuMPScalars.
 LinearAlgebra.symmetric_type(::Type{T}) where {T<:AbstractJuMPScalar} = T
@@ -983,16 +1096,6 @@ function Base.one(::Type{V}) where {V<:AbstractVariableRef}
     return one(GenericAffExpr{Float64,V})
 end
 Base.one(v::AbstractVariableRef) = one(typeof(v))
-
-mutable struct VariableNotOwnedError <: Exception
-    context::String
-end
-function Base.showerror(io::IO, ex::VariableNotOwnedError)
-    return print(
-        io,
-        "VariableNotOwnedError: Variable not owned by model present in $(ex.context)",
-    )
-end
 
 _moi_optimizer_index(model::MOI.AbstractOptimizer, index::MOI.Index) = index
 function _moi_optimizer_index(model::MOIU.CachingOptimizer, index::MOI.Index)
@@ -1262,19 +1365,19 @@ end
 
 # TODO: rename "m" field to "model" for style compliance
 """
-    NonlinearExpression
+    NonlinearExpression <: AbstractJuMPScalar
 
 A struct to represent a nonlinear expression.
 
 Create an expression using [`@NLexpression`](@ref).
 """
-struct NonlinearExpression
+struct NonlinearExpression <: AbstractJuMPScalar
     m::Model
     index::Int
 end
 
 """
-    NonlinearParameter
+    NonlinearParameter <: AbstractJuMPScalar
 
 A struct to represent a nonlinear parameter.
 
@@ -1291,7 +1394,6 @@ include("macros.jl")
 include("optimizer_interface.jl")
 include("nlp.jl")
 include("print.jl")
-include("lp_sensitivity.jl")
 include("lp_sensitivity2.jl")
 include("callbacks.jl")
 include("file_formats.jl")

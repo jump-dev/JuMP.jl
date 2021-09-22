@@ -22,7 +22,7 @@ end
     )
 
 Return a topologically sorted list of the integer subexpresssion indices that
-need to be computed to evalute `subexpressions[s]` for all `s in starts`.
+need to be computed to evaluate `subexpressions[s]` for all `s in starts`.
 
 `starts` should be ordered, and not contain duplicates.
 

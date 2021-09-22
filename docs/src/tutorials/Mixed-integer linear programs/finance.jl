@@ -65,7 +65,7 @@ import GLPK
 # 2. upper bounds on $u_{i}$
 # 3. nonnegativity of the decision variables $u_{i}$, $v_{i}$ and $w_{i}$.
 
-# Our objective will be to simply maximimse the company's wealth in June, which
+# Our objective will be to simply maximize the company's wealth in June, which
 # say we represent with the variable $m$.
 
 financing = Model(GLPK.Optimizer)
@@ -79,14 +79,17 @@ end)
 
 @objective(financing, Max, m)
 
-@constraints(financing, begin
-    u[1] + v[1] - w[1] == 150 # January
-    u[2] + v[2] - w[2] - 1.01u[1] + 1.003w[1] == 100 # February
-    u[3] + v[3] - w[3] - 1.01u[2] + 1.003w[2] == -200 # March
-    u[4] - w[4] - 1.02v[1] - 1.01u[3] + 1.003w[3] == 200 # April
-    u[5] - w[5] - 1.02v[2] - 1.01u[4] + 1.003w[4] == -50 # May
-    -m - 1.02v[3] - 1.01u[5] + 1.003w[5] == -300 # June
-end)
+@constraints(
+    financing,
+    begin
+        u[1] + v[1] - w[1] == 150 # January
+        u[2] + v[2] - w[2] - 1.01u[1] + 1.003w[1] == 100 # February
+        u[3] + v[3] - w[3] - 1.01u[2] + 1.003w[2] == -200 # March
+        u[4] - w[4] - 1.02v[1] - 1.01u[3] + 1.003w[3] == 200 # April
+        u[5] - w[5] - 1.02v[2] - 1.01u[4] + 1.003w[4] == -50 # May
+        -m - 1.02v[3] - 1.01u[5] + 1.003w[5] == -300 # June
+    end
+)
 
 optimize!(financing)
 

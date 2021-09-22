@@ -55,9 +55,11 @@ upper_bound(keyword_x)
 
 # Note querying the value of a bound that does not exist will result in an error.
 
-try #hide
-lower_bound(free_x)
-catch err; showerror(stderr, err); end  #hide
+try                         #hide
+    lower_bound(free_x)
+catch err                   #hide
+    showerror(stderr, err)  #hide
+end                         #hide
 
 # JuMP also allows us to change the bounds on variable. We will learn this in
 # the problem modification tutorial.
@@ -106,7 +108,7 @@ u = [10; 11; 12; 13; 14; 15; 16; 17; 18; 19]
 
 # Another example where the indices are an arbitrary vector.
 
-@variable(model, w[1:5,["red", "blue"]] <= 1)
+@variable(model, w[1:5, ["red", "blue"]] <= 1)
 
 # #### SparseAxisArrays
 
@@ -124,8 +126,8 @@ u = [10; 11; 12; 13; 14; 15; 16; 17; 18; 19]
 
 # ### Variable types
 
-# The last arguement to the `@variable` macro is usually the variable type. Here
-# we'll look at how to specifiy the variable type.
+# The last argument to the `@variable` macro is usually the variable type. Here
+# we'll look at how to specify the variable type.
 
 # #### Integer variables
 
@@ -169,7 +171,7 @@ model = Model()
 # ### Constraint references
 
 # While calling the `@constraint` macro, we can also set up a constraint
-# reference. Such a referrence is useful for obtaining additional information
+# reference. Such a reference is useful for obtaining additional information
 # about the constraint, such as its dual solution.
 
 @constraint(model, con, x <= 4)
@@ -257,9 +259,11 @@ objective_function_type(model)
 
 vector_model = Model(GLPK.Optimizer)
 
-A= [ 1 1 9  5;
-     3 5 0  8;
-     2 0 6 13]
+A = [
+    1 1 9 5
+    3 5 0 8
+    2 0 6 13
+]
 
 b = [7; 3; 5]
 
