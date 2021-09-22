@@ -215,9 +215,53 @@ function sense_to_set(_error::Function, ::Val{S}) where {S}
     return _error("Unrecognized sense $S")
 end
 
+"""
+    _desparsify(x)
+
+If `x` is an `AbstractSparseArray`, return the dense equivalent, otherwise just
+return `x`.
+
+This function is used in `_build_constraint`.
+
+## Why is this needed?
+
+When broadcasting `f.(x)` over an `AbstractSparseArray` `x`, Julia first calls
+the equivalent of `f(zero(eltype(x))`. Here's an example:
+
+```julia
+julia> foo(x) = (println("Calling \$(x)"); x)
+foo (generic function with 1 method)
+
+julia> foo.(sparsevec([1, 2], [1, 2]))
+Calling 0
+Calling 1
+Calling 2
+2-element SparseVector{Int64, Int64} with 2 stored entries:
+  [1]  =  1
+  [2]  =  2
+```
+
+However, if `f` is mutating, this can have serious consequences! In our case,
+broadcasting `build_constraint` will add a new `0 = 0` constraint.
+
+Sparse arrays most-often arise when some input data to the constraint is sparse
+(e.g., a constant vector or matrix). Due to promotion and arithmetic, this
+results in a constraint function that is represented by an `AbstractSparseArray`, 
+but is actually dense. Thus, we can safely `collect` the matrix into a dense 
+array.
+
+If the function is sparse, it's not obvious what to do. What is the "zero"
+element of the result? What does it mean to broadcast `build_constraint` over a
+sparse array adding scalar constraints? This likely means that the user is using
+the wrong data structure. For simplicity, let's also call `collect` into a dense
+array, and wait for complaints.
+"""
+_desparsify(x::AbstractSparseArray) = collect(x)
+_desparsify(x) = x
+
 function _build_call(_error::Function, vectorized::Bool, func, set)
     return if vectorized
-        :(build_constraint.($_error, $func, Ref($(esc(set)))))
+        :(build_constraint.($_error, _desparsify($func), Ref($(esc(set)))))
     else
         :(build_constraint($_error, $func, $(esc(set))))
     end
@@ -290,7 +334,14 @@ function parse_ternary_constraint(
     newlb, parselb = _MA.rewrite(lb)
     newub, parseub = _MA.rewrite(ub)
     if vectorized
-        buildcall = :(build_constraint.($_error, $newaff, $newlb, $newub))
+        buildcall = :(
+            build_constraint.(
+                $_error,
+                _desparsify($newaff),
+                _desparsify($newlb),
+                _desparsify($newub),
+            )
+        )
     else
         buildcall = :(build_constraint($_error, $newaff, $newlb, $newub))
     end
