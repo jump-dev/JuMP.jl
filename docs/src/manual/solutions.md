@@ -6,7 +6,7 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Solutions
+# [Solutions](@id jump_solutions)
 
 This section of the manual describes how to access a solved solution to a
 problem. It uses the following model as an example:

@@ -17,31 +17,19 @@ function _test_constraint_name_util(constraint, name, F::Type, S::Type)
     end
 end
 
-function test_SingleVariable_constraints(ModelType, ::Any)
+function test_VariableIndex_constraints(ModelType, ::Any)
     m = ModelType()
     @variable(m, x)
 
     # x <= 10.0 doesn't translate to a SingleVariable constraint because
     # the LHS is first subtracted to form x - 10.0 <= 0.
     @constraint(m, cref, x in MOI.LessThan(10.0))
-    _test_constraint_name_util(
-        cref,
-        "cref",
-        JuMP.VariableRef,
-        MOI.LessThan{Float64},
-    )
     c = JuMP.constraint_object(cref)
     @test c.func == x
     @test c.set == MOI.LessThan(10.0)
 
     @variable(m, y[1:2])
     @constraint(m, cref2[i = 1:2], y[i] in MOI.LessThan(float(i)))
-    _test_constraint_name_util(
-        cref2[1],
-        "cref2[1]",
-        JuMP.VariableRef,
-        MOI.LessThan{Float64},
-    )
     c = JuMP.constraint_object(cref2[1])
     @test c.func == y[1]
     @test c.set == MOI.LessThan(1.0)
@@ -297,7 +285,7 @@ function test_indicator_constraint(ModelType, ::Any)
     ]
         c = JuMP.constraint_object(cref)
         @test c.func == [a, x + 2y]
-        @test c.set == MOI.IndicatorSet{MOI.ACTIVATE_ON_ONE}(MOI.LessThan(1.0))
+        @test c.set == MOI.Indicator{MOI.ACTIVATE_ON_ONE}(MOI.LessThan(1.0))
     end
     for cref in [
         @constraint(model, !b => {2x + y <= 1})
@@ -307,7 +295,7 @@ function test_indicator_constraint(ModelType, ::Any)
     ]
         c = JuMP.constraint_object(cref)
         @test c.func == [b, 2x + y]
-        @test c.set == MOI.IndicatorSet{MOI.ACTIVATE_ON_ZERO}(MOI.LessThan(1.0))
+        @test c.set == MOI.Indicator{MOI.ACTIVATE_ON_ZERO}(MOI.LessThan(1.0))
     end
     err = ErrorException(
         "In `@constraint(model, !(a, b) => {x <= 1})`: Invalid binary variable expression `!(a, b)` for indicator constraint.",
@@ -880,17 +868,22 @@ function _test_shadow_price_util(
     MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     JuMP.optimize!(model)
-    for constraint_name in keys(constraint_dual)
-        ci = MOI.get(backend(model), MOI.ConstraintIndex, constraint_name)
+    for (key, val) in constraint_dual
+        ci = if key isa String
+            MOI.get(backend(model), MOI.ConstraintIndex, key)
+        else
+            x = MOI.get(backend(model), MOI.VariableIndex, key[1])
+            MOI.ConstraintIndex{MOI.VariableIndex,key[2]}(x.value)
+        end
         constraint_ref = JuMP.ConstraintRef(model, ci, JuMP.ScalarShape())
         MOI.set(
             mock_optimizer,
             MOI.ConstraintDual(),
             JuMP.optimizer_index(constraint_ref),
-            constraint_dual[constraint_name],
+            val,
         )
-        @test dual(constraint_ref) == constraint_dual[constraint_name]
-        @test shadow_price(constraint_ref) == constraint_shadow[constraint_name]
+        @test dual(constraint_ref) == val
+        @test shadow_price(constraint_ref) == constraint_shadow[key]
     end
 end
 
@@ -899,56 +892,79 @@ function test_Model_shadow_price(::Any, ::Any)
         """
         variables: x, y
         minobjective: -1.0*x
-        xub: x <= 2.0
-        ylb: y >= 0.0
+        x <= 2.0
+        y >= 0.0
         c: x + y <= 1.0
         """,
-        Dict("xub" => 0.0, "ylb" => 1.0, "c" => -1.0),
-        Dict("xub" => 0.0, "ylb" => -1.0, "c" => -1.0),
+        Dict(
+            ("x", MOI.LessThan{Float64}) => 0.0,
+            ("y", MOI.GreaterThan{Float64}) => 1.0,
+            "c" => -1.0,
+        ),
+        Dict(
+            ("x", MOI.LessThan{Float64}) => 0.0,
+            ("y", MOI.GreaterThan{Float64}) => -1.0,
+            "c" => -1.0,
+        ),
     )
 
     _test_shadow_price_util(
         """
         variables: x, y
         maxobjective: 1.0*x
-        xub: x <= 2.0
-        ylb: y >= 0.0
+        x <= 2.0
+        y >= 0.0
         c: x + y <= 1.0
         """,
-        Dict("xub" => 0.0, "ylb" => 1.0, "c" => -1.0),
-        Dict("xub" => 0.0, "ylb" => 1.0, "c" => 1.0),
+        Dict(
+            ("x", MOI.LessThan{Float64}) => 0.0,
+            ("y", MOI.GreaterThan{Float64}) => 1.0,
+            "c" => -1.0,
+        ),
+        Dict(
+            ("x", MOI.LessThan{Float64}) => 0.0,
+            ("y", MOI.GreaterThan{Float64}) => 1.0,
+            "c" => 1.0,
+        ),
     )
 
     _test_shadow_price_util(
         """
         variables: x, y
         maxobjective: 1.0*x
-        xub: x <= 2.0
-        ylb: y >= 0.0
+        x <= 2.0
+        y >= 0.0
         """,
-        Dict("xub" => -1.0, "ylb" => 0.0),
-        Dict("xub" => 1.0, "ylb" => 0.0),
+        Dict(
+            ("x", MOI.LessThan{Float64}) => -1.0,
+            ("y", MOI.GreaterThan{Float64}) => 0.0,
+        ),
+        Dict(
+            ("x", MOI.LessThan{Float64}) => 1.0,
+            ("y", MOI.GreaterThan{Float64}) => 0.0,
+        ),
     )
 
     _test_shadow_price_util(
         """
         variables: x
         maxobjective: 1.0*x
-        xeq: x == 2.0
+        x == 2.0
         """,
-        Dict("xeq" => -1.0),
-        Dict("xeq" => 1.0),
+        Dict(("x", MOI.EqualTo{Float64}) => -1.0),
+        Dict(("x", MOI.EqualTo{Float64}) => 1.0),
     )
 
-    return _test_shadow_price_util(
+    _test_shadow_price_util(
         """
         variables: x
         minobjective: 1.0*x
-        xeq: x == 2.0
+        x == 2.0
         """,
-        Dict("xeq" => 1.0),
-        Dict("xeq" => -1.0),
+        Dict(("x", MOI.EqualTo{Float64}) => 1.0),
+        Dict(("x", MOI.EqualTo{Float64}) => -1.0),
     )
+    return
 end
 
 function test_abstractarray_vector_constraint(ModelType, ::Any)

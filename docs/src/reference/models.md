@@ -1,6 +1,6 @@
 # [Models](@id ModelAPI)
 
-More information can be found in the [Models](@ref) section of
+More information can be found in the [Models](@ref jump_models) section of
 the manual.
 
 ## Constructors
@@ -62,6 +62,14 @@ write_to_file
 Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)
 read_from_file
 Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)
+```
+
+## Caching Optimizer
+
+```@docs
+MOIU.reset_optimizer(::JuMP.Model)
+MOIU.drop_optimizer(::JuMP.Model)
+MOIU.attach_optimizer(::JuMP.Model)
 ```
 
 ## Bridge tools

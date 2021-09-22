@@ -523,8 +523,8 @@ end
 
 # This method intercepts `@constraint(model, lb <= var <= ub)` and promotes
 # `var` to an `AffExpr` to form a `ScalarAffineFunction-in-Interval` instead of
-# `SingleVariable-in-Interval`. To create a
-# `MOI.SingleVariable`-in-`MOI.Interval`, use
+# `VariableIndex-in-Interval`. To create a
+# `MOI.VariableIndex`-in-`MOI.Interval`, use
 # `@constraint(model, var in MOI.Interval(lb, ub))`. We do this for consistency
 # with how one-sided (in)equality constraints are parsed.
 function build_constraint(

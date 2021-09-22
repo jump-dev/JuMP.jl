@@ -220,44 +220,6 @@ function test_bridges_automatic()
     return JuMP.optimize!(model)
 end
 
-function test_bridges_automatic_with_cache()
-    # Automatic bridging with cache for bridged model
-    # optimizer not supporting Interval and not supporting `default_copy_to`
-    model = Model(
-        () -> MOIU.MockOptimizer(
-            SimpleLPModel{Float64}(),
-            needs_allocate_load = true,
-        ),
-    )
-    @test JuMP.bridge_constraints(model)
-    @test JuMP.backend(model) isa MOIU.CachingOptimizer
-    @test JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer
-    @test JuMP.backend(model).optimizer.model isa MOIU.CachingOptimizer
-    @test JuMP.backend(model).optimizer.model.optimizer isa MOIU.MockOptimizer
-    @variable model x
-    err = ErrorException(
-        "There is no `optimizer_index` as the optimizer is not " *
-        "synchronized with the cached model. Call " *
-        "`MOIU.attach_optimizer(model)` to synchronize it.",
-    )
-    @test_throws err optimizer_index(x)
-    cref = @constraint model 0 <= x + 1 <= 1
-    @test cref isa JuMP.ConstraintRef{
-        JuMP.Model,
-        MOI.ConstraintIndex{
-            MOI.ScalarAffineFunction{Float64},
-            MOI.Interval{Float64},
-        },
-    }
-    @test_throws err optimizer_index(cref)
-    JuMP.optimize!(model)
-    err = ErrorException(
-        "There is no `optimizer_index` for $(typeof(index(cref))) " *
-        "constraints because they are bridged.",
-    )
-    @test_throws err optimizer_index(cref)
-end
-
 function test_bridges_automatic_disabled()
     # Automatic bridging disabled with `bridge_constraints` keyword
     model = Model(
@@ -295,7 +257,7 @@ function mock_factory()
         return MOIU.mock_optimize!(
             mock,
             [1.0],
-            (MOI.SingleVariable, MOI.GreaterThan{Float64}) => [2.0],
+            (MOI.VariableIndex, MOI.GreaterThan{Float64}) => [2.0],
         )
     end
     MOIU.set_mock_optimize!(mock, optimize!)
@@ -350,7 +312,7 @@ function test_bridges_add_after_con_model_optimizer()
 end
 
 function test_bridges_add_after_con_set_optimizer()
-    err = MOI.UnsupportedConstraint{MOI.SingleVariable,Nonnegative}()
+    err = MOI.UnsupportedConstraint{MOI.VariableIndex,Nonnegative}()
     model = Model()
     @variable(model, x)
     c = @constraint(model, x in Nonnegative())
@@ -419,7 +381,7 @@ function test_bridge_graph_true()
     @test sprint(print_bridge_graph, model) == replace(
         "Bridge graph with 1 variable nodes, 2 constraint nodes and 0 objective nodes.\n" *
         " [1] constrained variables in `$(Nonnegative)` are supported (distance 2) by adding free variables and then constrain them, see (1).\n" *
-        " (1) `MOI.SingleVariable`-in-`$(Nonnegative)` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.SingleVariable}).\n" *
+        " (1) `MOI.VariableIndex`-in-`$(Nonnegative)` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.VariableIndex}).\n" *
         " (2) `MOI.ScalarAffineFunction{Float64}`-in-`$(Nonnegative)` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.ScalarAffineFunction{Float64}}).\n",
         "MathOptInterface." => "MOI.",
     )
@@ -452,10 +414,10 @@ end
 function test_set_silent()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
-    @test JuMP.set_silent(model)
+    JuMP.set_silent(model)
     @test MOI.get(backend(model), MOI.Silent())
     @test MOI.get(model, MOI.Silent())
-    @test !JuMP.unset_silent(model)
+    JuMP.unset_silent(model)
     @test !MOI.get(backend(model), MOI.Silent())
     @test !MOI.get(model, MOI.Silent())
 end
@@ -463,23 +425,23 @@ end
 function test_set_optimizer_attribute()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
-    @test JuMP.set_optimizer_attribute(model, "aaa", "bbb") == "bbb"
-    @test MOI.get(backend(model), MOI.RawParameter("aaa")) == "bbb"
-    @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
+    @test JuMP.set_optimizer_attribute(model, "aaa", "bbb") === nothing
+    @test MOI.get(backend(model), MOI.RawOptimizerAttribute("aaa")) == "bbb"
+    @test MOI.get(model, MOI.RawOptimizerAttribute("aaa")) == "bbb"
 end
 
 function test_set_optimizer_attributes()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
     JuMP.set_optimizer_attributes(model, "aaa" => "bbb", "abc" => 10)
-    @test MOI.get(model, MOI.RawParameter("aaa")) == "bbb"
-    @test MOI.get(model, MOI.RawParameter("abc")) == 10
+    @test MOI.get(model, MOI.RawOptimizerAttribute("aaa")) == "bbb"
+    @test MOI.get(model, MOI.RawOptimizerAttribute("abc")) == 10
 end
 
 function test_get_optimizer_attribute()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
-    @test JuMP.set_optimizer_attribute(model, "aaa", "bbb") == "bbb"
+    @test JuMP.set_optimizer_attribute(model, "aaa", "bbb") === nothing
     @test JuMP.get_optimizer_attribute(model, "aaa") == "bbb"
 end
 
@@ -619,8 +581,8 @@ function test_direct_mode_using_OptimizerWithAttributes()
     optimizer = optimizer_with_attributes(fake_optimizer, "a" => 1, "b" => 2)
     model = JuMP.direct_model(optimizer)
     @test model.moi_backend isa MOIU.MockOptimizer
-    @test MOI.get(model.moi_backend, MOI.RawParameter("a")) == 1
-    @test MOI.get(model.moi_backend, MOI.RawParameter("b")) == 2
+    @test MOI.get(model.moi_backend, MOI.RawOptimizerAttribute("a")) == 1
+    @test MOI.get(model.moi_backend, MOI.RawOptimizerAttribute("b")) == 2
 end
 
 function test_copy_expr_aff()

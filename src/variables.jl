@@ -385,13 +385,11 @@ function variable_by_name(model::Model, name::String)
     end
 end
 
-MOI.SingleVariable(v::VariableRef) = MOI.SingleVariable(index(v))
-function moi_function(variable::AbstractVariableRef)
-    return MOI.SingleVariable(variable)
-end
-function moi_function_type(::Type{<:AbstractVariableRef})
-    return MOI.SingleVariable
-end
+MOI.VariableIndex(v::VariableRef) = index(v)
+
+moi_function(variable::AbstractVariableRef) = index(variable)
+
+moi_function_type(::Type{<:AbstractVariableRef}) = MOI.VariableIndex
 
 # Note: No validation is performed that the variables belong to the same model.
 function MOI.VectorOfVariables(vars::Vector{VariableRef})
@@ -410,11 +408,8 @@ function jump_function(model::Model, variables::MOI.VectorOfVariables)
     return VariableRef[VariableRef(model, v) for v in variables.variables]
 end
 
-function VariableRef(model::Model, f::MOI.SingleVariable)
-    return VariableRef(model, f.variable)
-end
-jump_function_type(::Model, ::Type{MOI.SingleVariable}) = VariableRef
-function jump_function(model::Model, variable::MOI.SingleVariable)
+jump_function_type(::Model, ::Type{MOI.VariableIndex}) = VariableRef
+function jump_function(model::Model, variable::MOI.VariableIndex)
     return VariableRef(model, variable)
 end
 
@@ -442,7 +437,7 @@ function _moi_has_lower_bound(moi_backend, v::VariableRef)
 end
 
 function _lower_bound_index(v::VariableRef)
-    return _MOICON{MOI.SingleVariable,MOI.GreaterThan{Float64}}(index(v).value)
+    return _MOICON{MOI.VariableIndex,MOI.GreaterThan{Float64}}(index(v).value)
 end
 
 """
@@ -465,7 +460,7 @@ function _moi_set_lower_bound(moi_backend, v::VariableRef, lower::Number)
         MOI.set(moi_backend, MOI.ConstraintSet(), cindex, new_set)
     else
         @assert !_moi_is_fixed(moi_backend, v)
-        moi_add_constraint(moi_backend, MOI.SingleVariable(index(v)), new_set)
+        moi_add_constraint(moi_backend, index(v), new_set)
     end
     return
 end
@@ -480,7 +475,7 @@ See also [`has_lower_bound`](@ref), [`lower_bound`](@ref),
 [`set_lower_bound`](@ref), [`delete_lower_bound`](@ref).
 """
 function LowerBoundRef(v::VariableRef)
-    moi_lb = _MOICON{MOI.SingleVariable,MOI.GreaterThan{Float64}}
+    moi_lb = _MOICON{MOI.VariableIndex,MOI.GreaterThan{Float64}}
     return ConstraintRef{Model,moi_lb,ScalarShape}(
         owner_model(v),
         _lower_bound_index(v),
@@ -541,7 +536,7 @@ function _moi_has_upper_bound(moi_backend, v::VariableRef)
 end
 
 function _upper_bound_index(v::VariableRef)
-    return _MOICON{MOI.SingleVariable,MOI.LessThan{Float64}}(index(v).value)
+    return _MOICON{MOI.VariableIndex,MOI.LessThan{Float64}}(index(v).value)
 end
 
 """
@@ -564,7 +559,7 @@ function _moi_set_upper_bound(moi_backend, v::VariableRef, upper::Number)
         MOI.set(moi_backend, MOI.ConstraintSet(), cindex, new_set)
     else
         @assert !_moi_is_fixed(moi_backend, v)
-        moi_add_constraint(moi_backend, MOI.SingleVariable(index(v)), new_set)
+        moi_add_constraint(moi_backend, index(v), new_set)
     end
     return
 end
@@ -579,7 +574,7 @@ See also [`has_upper_bound`](@ref), [`upper_bound`](@ref),
 [`set_upper_bound`](@ref), [`delete_upper_bound`](@ref).
 """
 function UpperBoundRef(v::VariableRef)
-    moi_ub = _MOICON{MOI.SingleVariable,MOI.LessThan{Float64}}
+    moi_ub = _MOICON{MOI.VariableIndex,MOI.LessThan{Float64}}
     return ConstraintRef{Model,moi_ub,ScalarShape}(
         owner_model(v),
         _upper_bound_index(v),
@@ -639,7 +634,7 @@ function _moi_is_fixed(moi_backend, v::VariableRef)
 end
 
 function _fix_index(v::VariableRef)
-    return _MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}(index(v).value)
+    return _MOICON{MOI.VariableIndex,MOI.EqualTo{Float64}}(index(v).value)
 end
 
 """
@@ -688,11 +683,7 @@ function _moi_fix(
                 MOI.delete(moi_backend, _lower_bound_index(variable))
             end
         end
-        moi_add_constraint(
-            moi_backend,
-            MOI.SingleVariable(index(variable)),
-            new_set,
-        )
+        moi_add_constraint(moi_backend, index(variable), new_set)
     end
     return
 end
@@ -736,7 +727,7 @@ See also [`is_fixed`](@ref), [`fix_value`](@ref), [`fix`](@ref),
 [`unfix`](@ref).
 """
 function FixRef(v::VariableRef)
-    moi_fix = _MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
+    moi_fix = _MOICON{MOI.VariableIndex,MOI.EqualTo{Float64}}
     return ConstraintRef{Model,moi_fix,ScalarShape}(
         owner_model(v),
         _fix_index(v),
@@ -760,7 +751,7 @@ function _moi_is_integer(moi_backend, v::VariableRef)
 end
 
 function _integer_index(v::VariableRef)
-    return _MOICON{MOI.SingleVariable,MOI.Integer}(index(v).value)
+    return _MOICON{MOI.VariableIndex,MOI.Integer}(index(v).value)
 end
 
 """
@@ -783,11 +774,7 @@ function _moi_set_integer(moi_backend, variable_ref::VariableRef)
             "is already binary.",
         )
     end
-    moi_add_constraint(
-        moi_backend,
-        MOI.SingleVariable(index(variable_ref)),
-        MOI.Integer(),
-    )
+    moi_add_constraint(moi_backend, index(variable_ref), MOI.Integer())
     return
 end
 
@@ -812,7 +799,7 @@ Errors if one does not exist.
 See also [`is_integer`](@ref), [`set_integer`](@ref), [`unset_integer`](@ref).
 """
 function IntegerRef(v::VariableRef)
-    moi_int = _MOICON{MOI.SingleVariable,MOI.Integer}
+    moi_int = _MOICON{MOI.VariableIndex,MOI.Integer}
     return ConstraintRef{Model,moi_int,ScalarShape}(
         owner_model(v),
         _integer_index(v),
@@ -836,7 +823,7 @@ function _moi_is_binary(moi_backend, v::VariableRef)
 end
 
 function _binary_index(v::VariableRef)
-    return _MOICON{MOI.SingleVariable,MOI.ZeroOne}(index(v).value)
+    return _MOICON{MOI.VariableIndex,MOI.ZeroOne}(index(v).value)
 end
 
 """
@@ -860,11 +847,7 @@ function _moi_set_binary(moi_backend, variable_ref)
             "is already integer.",
         )
     end
-    moi_add_constraint(
-        moi_backend,
-        MOI.SingleVariable(index(variable_ref)),
-        MOI.ZeroOne(),
-    )
+    moi_add_constraint(moi_backend, index(variable_ref), MOI.ZeroOne())
     return
 end
 
@@ -889,7 +872,7 @@ Errors if one does not exist.
 See also [`is_binary`](@ref), [`set_binary`](@ref), [`unset_binary`](@ref).
 """
 function BinaryRef(v::VariableRef)
-    moi_bin = _MOICON{MOI.SingleVariable,MOI.ZeroOne}
+    moi_bin = _MOICON{MOI.VariableIndex,MOI.ZeroOne}
     return ConstraintRef{Model,moi_bin,ScalarShape}(
         owner_model(v),
         _binary_index(v),
@@ -993,37 +976,29 @@ function _moi_constrain_variable(moi_backend::MOI.ModelLike, index, info)
     if info.has_lb
         moi_add_constraint(
             moi_backend,
-            MOI.SingleVariable(index),
+            index,
             MOI.GreaterThan{Float64}(info.lower_bound),
         )
     end
     if info.has_ub
         moi_add_constraint(
             moi_backend,
-            MOI.SingleVariable(index),
+            index,
             MOI.LessThan{Float64}(info.upper_bound),
         )
     end
     if info.has_fix
         moi_add_constraint(
             moi_backend,
-            MOI.SingleVariable(index),
+            index,
             MOI.EqualTo{Float64}(info.fixed_value),
         )
     end
     if info.binary
-        moi_add_constraint(
-            moi_backend,
-            MOI.SingleVariable(index),
-            MOI.ZeroOne(),
-        )
+        moi_add_constraint(moi_backend, index, MOI.ZeroOne())
     end
     if info.integer
-        moi_add_constraint(
-            moi_backend,
-            MOI.SingleVariable(index),
-            MOI.Integer(),
-        )
+        moi_add_constraint(moi_backend, index, MOI.Integer())
     end
     if info.has_start
         MOI.set(
@@ -1319,8 +1294,8 @@ Subject to
 ```
 """
 function relax_integrality(model::Model)
-    semicont_type = _MOICON{MOI.SingleVariable,MOI.Semicontinuous{Float64}}
-    semiint_type = _MOICON{MOI.SingleVariable,MOI.Semiinteger{Float64}}
+    semicont_type = _MOICON{MOI.VariableIndex,MOI.Semicontinuous{Float64}}
+    semiint_type = _MOICON{MOI.VariableIndex,MOI.Semiinteger{Float64}}
     for v in all_variables(model)
         if MOI.is_valid(backend(model), semicont_type(index(v).value))
             error(

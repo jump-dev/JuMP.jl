@@ -5,7 +5,7 @@ DocTestSetup = quote
 end
 ```
 
-# Variables
+# [Variables](@id jump_variables)
 
 ## What is a JuMP variable?
 
@@ -539,7 +539,7 @@ julia> @variable(model, x[1:2, 1:2], PSD)
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]
 ```
-or using the syntax for [Variables constrained on creation](@ref):
+or using the syntax for [Variables constrained on creation](@ref jump_variables_on_creation):
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2] in PSDCone())
 2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
@@ -615,7 +615,7 @@ julia> x = @variable(model, [i=1:2], base_name="x", lower_bound=i, integer=true)
     Creating two named JuMP variables with the same name results in an error at
     runtime. Use anonymous variables as an alternative.
 
-## Variables constrained on creation
+## [Variables constrained on creation](@id jump_variables_on_creation)
 
 !!! info
     When using JuMP in [Direct mode](@ref), it may be required to constrain
@@ -701,7 +701,7 @@ Dict{Symbol, Matrix{VariableRef}} with 2 entries:
   :B => [noname noname; noname noname]
 ```
 
-## Delete a variable
+## [Delete a variable](@id delete_a_variable)
 
 Use [`delete`](@ref) to delete a variable from a model. Use [`is_valid`](@ref)
 to check if a variable belongs to a model and has not been deleted.

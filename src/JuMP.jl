@@ -135,8 +135,8 @@ function with_optimizer(constructor; kwargs...)
 `with_optimizer(Ipopt.Optimizer, max_cpu_time=60.0)` becomes `optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time" => 60.0)`.
 """
         Base.depwarn(deprecation_message, :with_optimizer_kw)
-        params =
-            [MOI.RawParameter(string(kw.first)) => kw.second for kw in kwargs]
+        params = [MOI.RawOptimizerAttribute(string(kw.first)) => kw.second for
+         kw in kwargs]
         return MOI.OptimizerWithAttributes(constructor, params)
     end
 end
@@ -168,8 +168,8 @@ function with_optimizer(constructor, args...; kwargs...)
                 " the other argument of `with_optimizer`.",
             )
         end
-        params =
-            [MOI.RawParameter(string(kw.first)) => kw.second for kw in kwargs]
+        params = [MOI.RawOptimizerAttribute(string(kw.first)) => kw.second for
+         kw in kwargs]
         return MOI.OptimizerWithAttributes(() -> constructor(args...), params)
     end
 end
@@ -824,12 +824,12 @@ set_optimize_hook(model::Model, f) = (model.optimize_hook = f)
     solve_time(model::Model)
 
 If available, returns the solve time reported by the solver.
-Returns "ArgumentError: ModelLike of type `Solver.Optimizer` does not support accessing
-the attribute MathOptInterface.SolveTime()" if the attribute is
+Returns "ArgumentError: ModelLike of type `Solver.Optimizer` does not support
+accessing the attribute MathOptInterface.SolveTimeSec()" if the attribute is
 not implemented.
 """
 function solve_time(model::Model)
-    return MOI.get(model, MOI.SolveTime())
+    return MOI.get(model, MOI.SolveTimeSec())
 end
 
 """
@@ -838,7 +838,7 @@ end
 Sets solver-specific attribute identified by `name` to `value`.
 
 Note that this is equivalent to
-`set_optimizer_attribute(model, MOI.RawParameter(name), value)`.
+`set_optimizer_attribute(model, MOI.RawOptimizerAttribute(name), value)`.
 
 ## Example
 
@@ -849,12 +849,15 @@ set_optimizer_attribute(model, "SolverSpecificAttributeName", true)
 See also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
 """
 function set_optimizer_attribute(model::Model, name::String, value)
-    return set_optimizer_attribute(model, MOI.RawParameter(name), value)
+    set_optimizer_attribute(model, MOI.RawOptimizerAttribute(name), value)
+    return
 end
 
 """
     set_optimizer_attribute(
-        model::Model, attr::MOI.AbstractOptimizerAttribute, value
+        model::Model,
+        attr::MOI.AbstractOptimizerAttribute,
+        value,
     )
 
 Set the solver-specific attribute `attr` in `model` to `value`.
@@ -872,7 +875,8 @@ function set_optimizer_attribute(
     attr::MOI.AbstractOptimizerAttribute,
     value,
 )
-    return MOI.set(model, attr, value)
+    MOI.set(model, attr, value)
+    return
 end
 
 @deprecate set_parameter set_optimizer_attribute
@@ -902,6 +906,7 @@ function set_optimizer_attributes(model::Model, pairs::Pair...)
     for (name, value) in pairs
         set_optimizer_attribute(model, name, value)
     end
+    return
 end
 
 @deprecate set_parameters set_optimizer_attributes
@@ -912,7 +917,7 @@ end
 Return the value associated with the solver-specific attribute named `name`.
 
 Note that this is equivalent to
-`get_optimizer_attribute(model, MOI.RawParameter(name))`.
+`get_optimizer_attribute(model, MOI.RawOptimizerAttribute(name))`.
 
 ## Example
 
@@ -923,7 +928,7 @@ get_optimizer_attribute(model, "SolverSpecificAttributeName")
 See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
 """
 function get_optimizer_attribute(model::Model, name::String)
-    return get_optimizer_attribute(model, MOI.RawParameter(name))
+    return get_optimizer_attribute(model, MOI.RawOptimizerAttribute(name))
 end
 
 """

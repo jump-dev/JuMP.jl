@@ -6,7 +6,7 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Models
+# [Models](@id jump_models)
 
 ## Create a model
 
@@ -60,7 +60,7 @@ an initialized `Optimizer` object:
 ```jldoctest
 julia> function my_optimizer()
            model = GLPK.Optimizer()
-           MOI.set(model, MOI.RawParameter("msg_lev"), 0)
+           MOI.set(model, MOI.RawOptimizerAttribute("msg_lev"), 0)
            return model
        end
 my_optimizer (generic function with 1 method)
@@ -132,10 +132,10 @@ printing output from the solver.
 julia> model = Model(GLPK.Optimizer);
 
 julia> set_silent(model)
-true
+
 
 julia> unset_silent(model)
-false
+
 ```
 
 ## Set a time limit
@@ -146,7 +146,7 @@ Use [`set_time_limit_sec`](@ref), [`unset_time_limit_sec`](@ref), and
 julia> model = Model(GLPK.Optimizer);
 
 julia> set_time_limit_sec(model, 60.0)
-60.0
+
 
 julia> time_limit_sec(model)
 60.0
@@ -179,7 +179,8 @@ julia> write(io, model; format = MOI.FileFormats.FORMAT_MPS)
     FORMAT_LP = 2
     FORMAT_MOF = 3
     FORMAT_MPS = 4
-    FORMAT_SDPA = 5
+    FORMAT_NL = 5
+    FORMAT_SDPA = 6
     ```
 
 ## Read a model from file
@@ -233,11 +234,11 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
 
 julia> b = backend(model)
-MOIU.CachingOptimizer{MOI.AbstractOptimizer, MOIU.UniversalFallback{MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}}}
+MOIU.CachingOptimizer{MOI.AbstractOptimizer, MOIU.UniversalFallback{MOIU.Model{Float64}}}
 in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
-with model cache MOIU.UniversalFallback{MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}}
-  fallback for MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}
+with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
+  fallback for MOIU.Model{Float64}
 with optimizer MOIB.LazyBridgeOptimizer{GLPK.Optimizer}
   with 0 variable bridges
   with 0 constraint bridges
@@ -273,8 +274,8 @@ It has two parts:
  1. A cache, where the model can be built and modified incrementally
     ```jldoctest models_backends
     julia> b.model_cache
-    MOIU.UniversalFallback{MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}}
-    fallback for MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}
+    MOIU.UniversalFallback{MOIU.Model{Float64}}
+    fallback for MOIU.Model{Float64}
     ```
  2. An optimizer, which is used to solve the problem
     ```jldoctest models_backends
@@ -355,11 +356,11 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
 
 julia> backend(model)
-MOIU.CachingOptimizer{MOI.AbstractOptimizer, MOIU.UniversalFallback{MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}}}
+MOIU.CachingOptimizer{MOI.AbstractOptimizer, MOIU.UniversalFallback{MOIU.Model{Float64}}}
 in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
-with model cache MOIU.UniversalFallback{MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}}
-  fallback for MOIU.GenericModel{Float64, MOIU.ModelFunctionConstraints{Float64}}
+with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
+  fallback for MOIU.Model{Float64}
 with optimizer A GLPK model
 ```
 

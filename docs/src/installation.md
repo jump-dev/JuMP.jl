@@ -121,7 +121,7 @@ Where:
     file.
 
 !!! note
-    Developing a solver or solver wrapper? See [Models](@ref) and the
+    Developing a solver or solver wrapper? See [Models](@ref jump_models) and the
     [MathOptInterface docs](https://jump.dev/MathOptInterface.jl/stable/) for
     more details on how JuMP interacts with solvers. Please get in touch via the
     [Developer Chatroom](https://jump.dev/pages/governance/#developer-chatroom)

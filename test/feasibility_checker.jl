@@ -11,7 +11,7 @@ using Test
 function test_unsupported()
     @test_throws(
         ErrorException,
-        JuMP._distance_to_set([1.0, 1.0], MOI.Complements(1)),
+        JuMP._distance_to_set([1.0, 1.0], MOI.Complements(2)),
     )
 end
 
