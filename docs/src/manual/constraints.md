@@ -529,7 +529,7 @@ can take a non-zero value. We can construct SOS-I constraints using the
 `MOI.SOS1` set:
 ```jldoctest con_sos; setup=:(model = Model())
 julia> @variable(model, x[1:3])
-3-element Array{VariableRef,1}:
+3-element Vector{VariableRef}:
  x[1]
  x[2]
  x[3]
