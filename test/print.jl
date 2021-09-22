@@ -925,8 +925,8 @@ end
         JuMP.optimizer_index(JuMP.LowerBoundRef(y)),
         1.0,
     )
-    MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-    MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
+    MOI.set(mockoptimizer, MOI.SimplexIterations(), 3)
+    MOI.set(mockoptimizer, MOI.BarrierIterations(), 2)
     MOI.set(mockoptimizer, MOI.NodeCount(), 1)
     MOI.set(mockoptimizer, MOI.SolveTime(), 5.0)
 
@@ -947,8 +947,8 @@ end
 
 * Work counters
   Solve time (sec)   : 5.00000
-  Simplex iterations : 1
-  Barrier iterations : 1
+  Simplex iterations : 3
+  Barrier iterations : 2
   Node count         : 1
 """
 
@@ -980,8 +980,8 @@ end
 
 * Work counters
   Solve time (sec)   : 5.00000
-  Simplex iterations : 1
-  Barrier iterations : 1
+  Simplex iterations : 3
+  Barrier iterations : 2
   Node count         : 1
 """
 end

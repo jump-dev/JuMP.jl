@@ -476,8 +476,8 @@ function solution_summary(model::Model; verbose::Bool = false)
         verbose ? _get_solution_dict(model) : missing,
         verbose ? _get_constraint_dict(model) : missing,
         _try_get(solve_time, model),
-        _try_get(simplex_iterations, model),
         _try_get(barrier_iterations, model),
+        _try_get(simplex_iterations, model),
         _try_get(node_count, model),
     )
 end
