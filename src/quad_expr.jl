@@ -610,22 +610,21 @@ function moi_function_type(::Type{<:Vector{<:GenericQuadExpr{T}}}) where {T}
     return MOI.VectorQuadraticFunction{T}
 end
 
-# Requires that var_value(::VarType) is defined.
 """
-    value(ex::GenericQuadExpr, var_value::Function)
+    value(var_value::Function, ex::GenericQuadExpr)
 
 Evaluate `ex` using `var_value(v)` as the value for each variable `v`.
 """
 function value(
-    ex::GenericQuadExpr{CoefType,VarType},
     var_value::Function,
+    ex::GenericQuadExpr{CoefType,VarType},
 ) where {CoefType,VarType}
     RetType = Base.promote_op(
         (ctype, vtype) -> ctype * var_value(vtype) * var_value(vtype),
         CoefType,
         VarType,
     )
-    ret = convert(RetType, value(ex.aff, var_value))
+    ret = convert(RetType, value(var_value, ex.aff))
     for (vars, coef) in ex.terms
         ret += coef * var_value(vars.a) * var_value(vars.b)
     end
@@ -643,5 +642,7 @@ Replaces `getvalue` for most use cases.
 See also: [`result_count`](@ref).
 """
 function value(ex::GenericQuadExpr; result::Int = 1)
-    return value(ex, (x) -> value(x; result = result))
+    return value(ex) do x
+        return value(x; result = result)
+    end
 end

@@ -955,9 +955,9 @@ end
         @NLexpression(model, ex2, ex1 + x^2)
         @NLexpression(model, ex3, 2ex1 + ex2 / 2)
         JuMP.set_start_value(x, 2.0)
-        @test JuMP.value(ex1, JuMP.start_value) ≈ sin(2.0)
-        @test JuMP.value(ex2, JuMP.start_value) ≈ sin(2.0) + 4.0
-        @test JuMP.value(ex3, JuMP.start_value) ≈ 2.5 * sin(2.0) + 2.0
+        @test JuMP.value(JuMP.start_value, ex1) ≈ sin(2.0)
+        @test JuMP.value(JuMP.start_value, ex2) ≈ sin(2.0) + 4.0
+        @test JuMP.value(JuMP.start_value, ex3) ≈ 2.5 * sin(2.0) + 2.0
     end
 
     @testset "Hessians disabled with user-defined multivariate functions" begin
@@ -977,7 +977,7 @@ end
         @expression(model, ex, 2 * x + y + 1)
         nl_ex = @NLexpression(model, ex^2)
         @test isapprox(
-            value(nl_ex, start_value),
+            value(start_value, nl_ex),
             (2 * 1.1 + 1.2 + 1)^2,
             atol = 1e-4,
         )
@@ -990,7 +990,7 @@ end
         @expression(model, ex, 0.5 * x^2 + y^2 + 2 * x + 1)
         nl_ex = @NLexpression(model, sqrt(ex))
         @test isapprox(
-            value(nl_ex, start_value),
+            value(start_value, nl_ex),
             sqrt(0.5 * 1.1^2 + 1.2^2 + 2 * 1.1 + 1),
             atol = 1e-4,
         )

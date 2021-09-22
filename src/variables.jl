@@ -984,11 +984,11 @@ function value(v::VariableRef; result::Int = 1)::Float64
 end
 
 """
-    value(v::VariableRef, var_value::Function)
+    value(var_value::Function, v::VariableRef)
 
 Evaluate the value of the variable `v` as `var_value(v)`.
 """
-function value(v::VariableRef, var_value::Function)
+function value(var_value::Function, v::VariableRef)
     return var_value(v)
 end
 

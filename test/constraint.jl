@@ -843,9 +843,9 @@ function test_Model_value_constraint_var(ModelType, ::Any)
     vals = Dict(x[1] => 1.0, x[2] => 2.0)
     f = vidx -> vals[vidx]
 
-    @test value(c1, f) === 3.0 # Affine expression
-    @test value(c2, f) === 5.0 # Quadratic expression
-    @test value(c3, f) == [1.0, 1.0, 2.0] # Vector expression
+    @test value(f, c1) === 3.0 # Affine expression
+    @test value(f, c2) === 5.0 # Quadratic expression
+    @test value(f, c3) == [1.0, 1.0, 2.0] # Vector expression
 end
 
 function _test_shadow_price_util(
