@@ -90,6 +90,12 @@ function _VariableInfoExpr(;
     )
 end
 
+# It isn't sufficient to use `isfinite` below, because some bounds are given as
+# matrices. As a fallback, we define `_isfinite`, because overloading `isfinite`
+# would be type piracy.
+_isfinite(x::Number) = isfinite(x)
+_isfinite(x) = true
+
 """
     VariableInfo{S,T,U,V}
 
@@ -109,6 +115,42 @@ struct VariableInfo{S,T,U,V}
     start::V
     binary::Bool
     integer::Bool
+    function VariableInfo(
+        has_lb::Bool,
+        lower_bound::S,
+        has_ub::Bool,
+        upper_bound::T,
+        has_fix::Bool,
+        fixed_value::U,
+        has_start::Bool,
+        start::V,
+        binary::Bool,
+        integer::Bool,
+    ) where {S,T,U,V}
+        if has_lb && !_isfinite(lower_bound)
+            has_lb = false
+            lower_bound = NaN
+        end
+        if has_ub && !_isfinite(upper_bound)
+            has_ub = false
+            upper_bound = NaN
+        end
+        if has_fix && !_isfinite(fixed_value)
+            error("Unable to fix variable to $(fixed_value)")
+        end
+        return new{S,T,U,V}(
+            has_lb,
+            lower_bound,
+            has_ub,
+            upper_bound,
+            has_fix,
+            fixed_value,
+            has_start,
+            start,
+            binary,
+            integer,
+        )
+    end
 end
 
 function _constructor_expr(info::_VariableInfoExpr)
@@ -450,6 +492,12 @@ See also [`LowerBoundRef`](@ref), [`has_lower_bound`](@ref),
 [`lower_bound`](@ref), [`delete_lower_bound`](@ref).
 """
 function set_lower_bound(v::VariableRef, lower::Number)
+    if !isfinite(lower)
+        error(
+            "Unable to set lower bound to $(lower). To remove the bound, use " *
+            "`delete_lower_bound`.",
+        )
+    end
     return _moi_set_lower_bound(backend(owner_model(v)), v, lower)
 end
 
@@ -549,6 +597,12 @@ See also [`UpperBoundRef`](@ref), [`has_upper_bound`](@ref),
 [`upper_bound`](@ref), [`delete_upper_bound`](@ref).
 """
 function set_upper_bound(v::VariableRef, upper::Number)
+    if !isfinite(upper)
+        error(
+            "Unable to set upper bound to $(upper). To remove the bound, use " *
+            "`delete_upper_bound`.",
+        )
+    end
     return _moi_set_upper_bound(backend(owner_model(v)), v, upper)
 end
 
@@ -652,6 +706,9 @@ See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix_value`](@ref),
 [`unfix`](@ref).
 """
 function fix(variable::VariableRef, value::Number; force::Bool = false)
+    if !isfinite(value)
+        error("Unable to fix variable to $(value)")
+    end
     return _moi_fix(backend(owner_model(variable)), variable, value, force)
 end
 

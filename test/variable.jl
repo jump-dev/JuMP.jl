@@ -948,6 +948,48 @@ function test_start_value(::Any, ::Any)
     @test start_value(x) == 1.0
 end
 
+function test_Model_inf_lower_bound(::Any, ::Any)
+    for y in [-Inf, Inf, NaN]
+        model = Model()
+        @variable(model, x >= y)
+        @test !has_lower_bound(x)
+        @test_throws(
+            ErrorException(
+                "Unable to set lower bound to $y. To remove the bound, use " *
+                "`delete_lower_bound`.",
+            ),
+            set_lower_bound(x, y),
+        )
+    end
+end
+
+function test_Model_inf_upper_bound(::Any, ::Any)
+    for y in [-Inf, Inf, NaN]
+        model = Model()
+        @variable(model, x <= y)
+        @test !has_upper_bound(x)
+        @test_throws(
+            ErrorException(
+                "Unable to set upper bound to $y. To remove the bound, use " *
+                "`delete_upper_bound`.",
+            ),
+            set_upper_bound(x, y),
+        )
+    end
+end
+
+function test_Model_inf_fixed(::Any, ::Any)
+    for y in [-Inf, Inf, NaN]
+        model = Model()
+        @test_throws(
+            ErrorException("Unable to fix variable to $y"),
+            @variable(model, x == y),
+        )
+        @variable(model, x)
+        @test_throws(ErrorException("Unable to fix variable to $y"), fix(x, y))
+    end
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
