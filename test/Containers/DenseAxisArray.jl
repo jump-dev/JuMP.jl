@@ -303,7 +303,7 @@ And data, a 0-dimensional $(Array{Int,0}):
     @testset "hash" begin
         a = [5.0 6.0; 7.0 8.0]
         A = DenseAxisArray(a, [:a, :b], Base.OneTo(2))
-        @test hash(A) isa UInt64
+        @test hash(A) isa UInt
         s = Set{Any}()
         push!(s, A)
         @test length(s) == 1

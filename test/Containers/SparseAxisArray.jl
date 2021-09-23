@@ -160,7 +160,7 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
     end
     @testset "hash" begin
         a = Containers.@container([i = 1:3; i > 5], sqrt(i))
-        @test hash(a) isa UInt64
+        @test hash(a) isa UInt
         s = Set{Any}()
         push!(s, a)
         @test length(s) == 1
