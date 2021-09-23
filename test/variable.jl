@@ -998,7 +998,7 @@ function test_Model_unsupported_VariableName(::Any, ::Any)
     model = direct_model(_UnsupportedVariableName())
     @variable(model, x)
     @test x isa VariableRef
-    @test_throws ArgumentError name(x)
+    @test name(x) == ""
     return
 end
 

@@ -134,8 +134,12 @@ end
 
 Get a constraint's name attribute.
 """
-function name(con_ref::ConstraintRef{<:AbstractModel,<:_MOICON})
-    return MOI.get(con_ref.model, MOI.ConstraintName(), con_ref)::String
+function name(con_ref::ConstraintRef{<:AbstractModel,C}) where {C<:_MOICON}
+    model = owner_model(con_ref)
+    if !MOI.supports(backend(model), MOI.ConstraintName(), C)
+        return ""
+    end
+    return MOI.get(model, MOI.ConstraintName(), con_ref)::String
 end
 
 """

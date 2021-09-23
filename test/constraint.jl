@@ -1009,7 +1009,7 @@ function test_Model_unsupported_ConstraintName(::Any, ::Any)
     @variable(model, x)
     @constraint(model, c, [x, x] in SOS1())
     @test c isa ConstraintRef
-    @test_throws ArgumentError name(c)
+    @test name(c) == ""
     return
 end
 

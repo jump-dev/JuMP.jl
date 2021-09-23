@@ -355,7 +355,13 @@ end
 
 Get a variable's name attribute.
 """
-name(v::VariableRef) = MOI.get(owner_model(v), MOI.VariableName(), v)::String
+function name(v::VariableRef)
+    model = owner_model(v)
+    if !MOI.supports(backend(model), MOI.VariableName(), MOI.VariableIndex)
+        return ""
+    end
+    return MOI.get(model, MOI.VariableName(), v)::String
+end
 
 """
     set_name(v::VariableRef, s::AbstractString)
