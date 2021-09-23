@@ -986,6 +986,33 @@ function test_constraint_inference(ModelType, ::Any)
     @test obj.set == MOI.LessThan(1.0)
 end
 
+struct _UnsupportedConstraintName <: MOI.AbstractOptimizer end
+MOI.add_variable(::_UnsupportedConstraintName) = MOI.VariableIndex(1)
+function MOI.supports_constraint(
+    ::_UnsupportedConstraintName,
+    ::Type{MOI.VectorOfVariables},
+    ::Type{MOI.SOS1{Float64}},
+)
+    return true
+end
+function MOI.add_constraint(
+    ::_UnsupportedConstraintName,
+    ::MOI.VectorOfVariables,
+    ::MOI.SOS1{Float64},
+)
+    return MOI.ConstraintIndex{MOI.VectorOfVariables,MOI.SOS1{Float64}}(1)
+end
+MOI.is_empty(::_UnsupportedConstraintName) = true
+
+function test_Model_unsupported_ConstraintName(::Any, ::Any)
+    model = direct_model(_UnsupportedConstraintName())
+    @variable(model, x)
+    @constraint(model, c, [x, x] in SOS1())
+    @test c isa ConstraintRef
+    @test_throws ArgumentError name(c)
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

@@ -554,8 +554,10 @@ function add_constraint(
         model.shapes[cindex] = cshape
     end
     con_ref = ConstraintRef(model, cindex, cshape)
-    if !(func isa MOI.VariableIndex) && !isempty(name)
-        # Don't set names for VariableIndex constraints!
+    # Only set names if appropriate!
+    if !(func isa MOI.VariableIndex) &&
+       !isempty(name) &&
+       MOI.supports(backend(model), MOI.ConstraintName(), typeof(cindex))
         set_name(con_ref, name)
     end
     return con_ref

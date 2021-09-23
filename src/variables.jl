@@ -1021,7 +1021,8 @@ function _moi_add_variable(moi_backend, model, v::ScalarVariable, name::String)
     index = MOI.add_variable(moi_backend)
     var_ref = VariableRef(model, index)
     _moi_constrain_variable(moi_backend, index, v.info)
-    if !isempty(name)
+    if !isempty(name) &&
+       MOI.supports(moi_backend, MOI.VariableName(), MOI.VariableIndex)
         set_name(var_ref, name)
     end
     return var_ref

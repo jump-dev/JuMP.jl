@@ -990,6 +990,18 @@ function test_Model_inf_fixed(::Any, ::Any)
     end
 end
 
+struct _UnsupportedVariableName <: MOI.AbstractOptimizer end
+MOI.add_variable(::_UnsupportedVariableName) = MOI.VariableIndex(1)
+MOI.is_empty(::_UnsupportedVariableName) = true
+
+function test_Model_unsupported_VariableName(::Any, ::Any)
+    model = direct_model(_UnsupportedVariableName())
+    @variable(model, x)
+    @test x isa VariableRef
+    @test_throws ArgumentError name(x)
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
