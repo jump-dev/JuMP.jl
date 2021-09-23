@@ -603,9 +603,11 @@ function MOI.VectorQuadraticFunction(quads::Vector{QuadExpr})
         lin_offset = _fill_vaf!(lin_terms, lin_offset, i, quad)
         constants[i] = constant(quad)
     end
-    return MOI.VectorQuadraticFunction(lin_terms, quadratic_terms, constants)
+    return MOI.VectorQuadraticFunction(quadratic_terms, lin_terms, constants)
 end
+
 moi_function(a::Vector{<:GenericQuadExpr}) = MOI.VectorQuadraticFunction(a)
+
 function moi_function_type(::Type{<:Vector{<:GenericQuadExpr{T}}}) where {T}
     return MOI.VectorQuadraticFunction{T}
 end
