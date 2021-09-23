@@ -26,6 +26,10 @@ end
 
 Base.Array{T,N}(x::DenseAxisArray) where {T,N} = convert(Array{T,N}, x.data)
 
+function Base.hash(d::DenseAxisArray, h::UInt64)
+    return hash(d.data, hash(d.axes, hash(d.lookup, h)))
+end
+
 # Any -> _AxisLookup{<:Dict}: The most generic type of axis is a dictionary
 # which maps keys to their index. This works for any AbstractVector-type axis.
 
