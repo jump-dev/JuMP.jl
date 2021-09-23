@@ -158,4 +158,11 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
         seekstart(io)
         @test occursin("\u22ee", read(io, String))
     end
+    @testset "hash" begin
+        a = Containers.@container([i = 1:3; i > 5], sqrt(i))
+        @test hash(a) isa UInt
+        s = Set{Any}()
+        push!(s, a)
+        @test length(s) == 1
+    end
 end
