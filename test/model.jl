@@ -639,6 +639,15 @@ function test_copy_object_fail()
     @test !haskey(new_model, :d)
 end
 
+function test_copy_extension()
+    model = Model()
+    @variable(model, x)
+    model.ext[:my_content] = "x"
+    new_model, _ = copy_model(model)
+    @test ismissing(new_model.ext[:my_content])
+    return
+end
+
 function test_haskey()
     model = Model()
     @variable(model, p[i = 1:10] >= 0)
