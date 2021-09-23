@@ -682,6 +682,12 @@ function moi_add_to_function_constant(
     value,
 )
     set = MOI.get(model, MOI.ConstraintSet(), ci)
+    if !MOI.Utilities.supports_shift_constant(typeof(set))
+        error(
+            "Unable to add to function constant for constraint type " *
+            "$(typeof(ci))",
+        )
+    end
     new_set = MOIU.shift_constant(set, convert(Float64, -value))
     return MOI.set(model, MOI.ConstraintSet(), ci, new_set)
 end
