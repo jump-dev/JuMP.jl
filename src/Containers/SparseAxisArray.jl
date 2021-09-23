@@ -45,7 +45,7 @@ Base.IteratorSize(::Type{<:SparseAxisArray}) = Base.HasLength()
 Base.IteratorSize(::Type{Base.Generator{<:SparseAxisArray}}) = Base.HasLength()
 Base.iterate(sa::SparseAxisArray, args...) = iterate(values(sa.data), args...)
 
-Base.hash(s::SparseAxisArray, h::UInt64) = hash(s.data, h)
+Base.hash(s::SparseAxisArray, h::UInt) = hash(s.data, h)
 
 # A `length` argument can be given because `IteratorSize` is `HasLength`
 function Base.similar(
