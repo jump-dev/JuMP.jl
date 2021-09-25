@@ -1681,11 +1681,11 @@ function Base.getindex(m::_VarValueMap{T}, moi_index::Int64) where {T}
 end
 
 """
-    value(ex::NonlinearExpression, var_value::Function)
+    value(var_value::Function, ex::NonlinearExpression)
 
 Evaluate `ex` using `var_value(v)` as the value for each variable `v`.
 """
-function value(ex::NonlinearExpression, var_value::Function)
+function value(var_value::Function, ex::NonlinearExpression)
     model = ex.model
     nlp_data::_NLPData = model.nlp_data
     variable_values = _VarValueMap(model, var_value, Dict{Int64,Float64}())
@@ -1744,7 +1744,9 @@ Replaces `getvalue` for most use cases.
 See also: [`result_count`](@ref).
 """
 function value(ex::NonlinearExpression; result::Int = 1)
-    return value(ex, (x) -> value(x; result = result))
+    return value(ex) do x
+        return value(x; result = result)
+    end
 end
 
 mutable struct _UserFunctionEvaluator <: MOI.AbstractNLPEvaluator

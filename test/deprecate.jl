@@ -39,6 +39,13 @@ function test_NLPEvaluator()
     return
 end
 
+function test_value()
+    model = Model()
+    @variable(model, x)
+    @test_logs (:warn,) value(x, i -> 1.0) == 1.0
+    return
+end
+
 end
 
 TestDeprecate.runtests()

@@ -13,3 +13,8 @@ function Base.getproperty(
     end
     return getfield(x, key)
 end
+
+function value(x, f::Function)
+    @warn("`value(x, f::Function)` is deprecated. Use `value(f, x)` instead.")
+    return value(f, x)
+end
