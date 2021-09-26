@@ -976,6 +976,16 @@ end
             @NLparameter(model, begin x == 1 end),
         )
     end
+
+    @testset "supports_shift_constant" begin
+        model = Model()
+        @variable(model, x)
+        @constraint(model, c, x + 0.5 in MOI.Integer())
+        obj = constraint_object(c)
+        @test obj.func == x + 0.5
+        @test obj.set == MOI.Integer()
+        @test_throws ErrorException add_to_function_constant(c, 1.0)
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin

@@ -7,10 +7,26 @@
     copy_extension_data(data, new_model::AbstractModel, model::AbstractModel)
 
 Return a copy of the extension data `data` of the model `model` to the extension
-data of the new model `new_model`. A method should be added for any JuMP
-extension storing data in the `ext` field.
+data of the new model `new_model`.
+
+A method should be added for any JuMP extension storing data in the `ext` field.
+
+!!! warning
+    Do not engage in type piracy by implementing this method for types of `data`
+    that you did not define! JuMP extensions should store types that they
+    define in `model.ext`, rather than regular Julia types.
 """
-function copy_extension_data end
+function copy_extension_data(data, ::AbstractModel, ::AbstractModel)
+    @warn(
+        "Model contains extension data of type $(typeof(data)) that we do " *
+        "not know how to copy.\n\nIf you are using a JuMP extension and you " *
+        "did not add data to the `model.ext` dictionary. Please open an " *
+        "issue on the GitHub repository of the JuMP extension and tell them " *
+        "to implement `JuMP.copy_extension_data`.\n\nIf you added things to " *
+        "`model.ext`, they have not been copied.",
+    )
+    return missing
+end
 
 """
     ReferenceMap

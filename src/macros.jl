@@ -487,9 +487,14 @@ function build_constraint(
     expr::Union{GenericAffExpr,GenericQuadExpr},
     set::MOI.AbstractScalarSet,
 )
-    offset = constant(expr)
-    add_to_expression!(expr, -offset)
-    return ScalarConstraint(expr, MOIU.shift_constant(set, -offset))
+    if MOI.Utilities.supports_shift_constant(typeof(set))
+        offset = constant(expr)
+        add_to_expression!(expr, -offset)
+        new_set = MOI.Utilities.shift_constant(set, -offset)
+        return ScalarConstraint(expr, new_set)
+    else
+        return ScalarConstraint(expr, set)
+    end
 end
 function build_constraint(
     _error::Function,

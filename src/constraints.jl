@@ -682,6 +682,12 @@ function moi_add_to_function_constant(
     value,
 )
     set = MOI.get(model, MOI.ConstraintSet(), ci)
+    if !MOI.Utilities.supports_shift_constant(typeof(set))
+        error(
+            "Unable to add to function constant for constraint type " *
+            "$(typeof(ci))",
+        )
+    end
     new_set = MOIU.shift_constant(set, convert(Float64, -value))
     return MOI.set(model, MOI.ConstraintSet(), ci, new_set)
 end
@@ -778,17 +784,17 @@ function value(
 end
 
 """
-    value(con_ref::ConstraintRef, var_value::Function)
+    value(var_value::Function, con_ref::ConstraintRef)
 
 Evaluate the primal value of the constraint `con_ref` using `var_value(v)`
 as the value for each variable `v`.
 """
 function value(
-    con_ref::ConstraintRef{<:AbstractModel,<:_MOICON},
     var_value::Function,
+    con_ref::ConstraintRef{<:AbstractModel,<:_MOICON},
 )
     f = jump_function(constraint_object(con_ref))
-    return reshape_vector(value.(f, var_value), con_ref.shape)
+    return reshape_vector(value.(var_value, f), con_ref.shape)
 end
 
 # Returns the value of MOI.ConstraintPrimal in a type-stable way

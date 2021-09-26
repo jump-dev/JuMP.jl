@@ -268,11 +268,11 @@ end
 Base.sizehint!(a::GenericAffExpr, n::Int) = sizehint!(a.terms, n)
 
 """
-    value(ex::GenericAffExpr, var_value::Function)
+    value(var_value::Function, ex::GenericAffExpr)
 
 Evaluate `ex` using `var_value(v)` as the value for each variable `v`.
 """
-function value(ex::GenericAffExpr{T,V}, var_value::Function) where {T,V}
+function value(var_value::Function, ex::GenericAffExpr{T,V}) where {T,V}
     S = Base.promote_op(var_value, V)
     U = Base.promote_op(*, T, S)
     ret = convert(U, ex.constant)
@@ -491,7 +491,9 @@ Replaces `getvalue` for most use cases.
 See also: [`result_count`](@ref).
 """
 function value(a::GenericAffExpr; result::Int = 1)
-    return value(a, (x) -> value(x; result = result))
+    return value(a) do x
+        return value(x; result = result)
+    end
 end
 
 function check_belongs_to_model(a::GenericAffExpr, model::AbstractModel)

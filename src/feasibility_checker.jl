@@ -105,7 +105,7 @@ function _add_infeasible_constraints(
 ) where {F,S}
     for con in all_constraints(model, F, S)
         obj = constraint_object(con)
-        d = _distance_to_set(value.(obj.func, point_f), obj.set)
+        d = _distance_to_set(value.(point_f, obj.func), obj.set)
         if d > atol
             violated_constraints[con] = d
         end
