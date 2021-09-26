@@ -142,6 +142,13 @@ function name(con_ref::ConstraintRef{<:AbstractModel,C}) where {C<:_MOICON}
     return MOI.get(model, MOI.ConstraintName(), con_ref)::String
 end
 
+# The name of VariableIndex constraints is empty.
+function name(
+    ::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{MOI.VariableIndex}},
+)
+    return ""
+end
+
 """
     set_name(con_ref::ConstraintRef, s::AbstractString)
 
