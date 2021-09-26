@@ -259,5 +259,6 @@ function set_objective_coefficient(
     else
         error("Objective function type not supported: $(obj_fct_type)")
     end
+    model.is_model_dirty = true
     return
 end

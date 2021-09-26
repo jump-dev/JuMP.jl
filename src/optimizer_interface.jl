@@ -190,7 +190,7 @@ function optimize!(
             rethrow(err)
         end
     end
-
+    model.is_model_dirty = false
     return
 end
 
