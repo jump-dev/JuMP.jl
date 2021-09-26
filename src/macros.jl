@@ -657,7 +657,7 @@ function _constraint_macro(
     model = esc(pos_args[1])
     y = pos_args[2]
     extra = pos_args[3:end]
-    if isexpr(args[2] , :block)
+    if isexpr(args[2], :block)
         _error("Invalid syntax. Did you mean to use `@$(macro_name)s`?")
     end
     # Determine if a reference/container argument was given by the user
@@ -1741,7 +1741,7 @@ macro variable(args...)
     # them first(!) in the list of arguments.
     args = _reorder_parameters(args)
     model = esc(args[1])
-    if length(args) >= 2 && isexpr(args[2] , :block)
+    if length(args) >= 2 && isexpr(args[2], :block)
         _error("Invalid syntax. Did you mean to use `@variables`?")
     end
     extra, kw_args, requestedcontainer =
@@ -1982,7 +1982,7 @@ macro NLconstraint(m, x, args...)
         return _macro_error(:NLconstraint, (m, x, args...), __source__, str...)
     end
     esc_m = esc(m)
-    if isexpr(x , :block)
+    if isexpr(x, :block)
         _error("Invalid syntax. Did you mean to use `@NLconstraints`?")
     end
     # Two formats:
