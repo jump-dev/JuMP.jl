@@ -930,6 +930,65 @@ end
               num_constraints(model, AffExpr, MOI.Interval{Float64})
     end
 
+    @testset "singular_plural_error" begin
+        model = Model()
+        @test_macro_throws(
+            ErrorException(
+                "In `@variable(model, begin\n    x\nend)`: " *
+                "Invalid syntax. Did you mean to use `@variables`?",
+            ),
+            @variable(model, begin
+                x
+            end),
+        )
+        @variable(model, x)
+        @test_macro_throws(
+            ErrorException(
+                "In `@constraint(model, begin\n    x >= 0\nend)`: " *
+                "Invalid syntax. Did you mean to use `@constraints`?",
+            ),
+            @constraint(model, begin
+                x >= 0
+            end),
+        )
+        @test_macro_throws(
+            ErrorException(
+                "In `@expression(model, begin\n    x\nend)`: " *
+                "Invalid syntax. Did you mean to use `@expressions`?",
+            ),
+            @expression(model, begin
+                x
+            end),
+        )
+        @test_macro_throws(
+            ErrorException(
+                "In `@NLconstraint(model, begin\n    x >= 0\nend)`: " *
+                "Invalid syntax. Did you mean to use `@NLconstraints`?",
+            ),
+            @NLconstraint(model, begin
+                x >= 0
+            end),
+        )
+        @test_macro_throws(
+            ErrorException(
+                "In `@NLexpression(model, begin\n    x\nend)`: " *
+                "Invalid syntax. Did you mean to use `@NLexpressions`?",
+            ),
+            @NLexpression(model, begin
+                x
+            end),
+        )
+        @test_macro_throws(
+            ErrorException(
+                "In `@NLparameter(model, begin\n    x == 1\nend)`: " *
+                "Invalid syntax. Did you mean to use `@NLparameters`?",
+            ),
+            @NLparameter(model, begin
+                x == 1
+            end),
+        )
+    end
+
     @testset "supports_shift_constant" begin
         model = Model()
         @variable(model, x)

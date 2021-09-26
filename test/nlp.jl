@@ -355,7 +355,7 @@ end
             "`begin...end` blocks are not supported in nonlinear macros. The " *
             "nonlinear expression must be a single statement.",
         )
-        @test_macro_throws(err, @NLexpression(model, begin
+        @test_macro_throws(err, @NLobjective(model, Max, begin
             sin(x) + 1
         end))
     end

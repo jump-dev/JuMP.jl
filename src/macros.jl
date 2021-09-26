@@ -657,7 +657,9 @@ function _constraint_macro(
     model = esc(pos_args[1])
     y = pos_args[2]
     extra = pos_args[3:end]
-
+    if isexpr(args[2], :block)
+        _error("Invalid syntax. Did you mean to use `@$(macro_name)s`?")
+    end
     # Determine if a reference/container argument was given by the user
     # There are six cases to consider:
     # y                                  | type of y | y.head
@@ -1352,7 +1354,9 @@ macro expression(args...)
         _error("needs at least two arguments.")
     end
     length(kw_args) == 0 || _error("unrecognized keyword argument")
-
+    if isexpr(args[2], :block)
+        _error("Invalid syntax. Did you mean to use `@expressions`?")
+    end
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
@@ -1737,7 +1741,9 @@ macro variable(args...)
     # them first(!) in the list of arguments.
     args = _reorder_parameters(args)
     model = esc(args[1])
-
+    if length(args) >= 2 && isexpr(args[2], :block)
+        _error("Invalid syntax. Did you mean to use `@variables`?")
+    end
     extra, kw_args, requestedcontainer =
         Containers._extract_kw_args(args[2:end])
 
@@ -1798,7 +1804,6 @@ macro variable(args...)
         var = x
         set = nothing
     end
-
     anonvar = isexpr(var, :vect) || isexpr(var, :vcat) || anon_singleton
     if anonvar && explicit_comparison && set === nothing
         _error(
@@ -1977,6 +1982,9 @@ macro NLconstraint(m, x, args...)
         return _macro_error(:NLconstraint, (m, x, args...), __source__, str...)
     end
     esc_m = esc(m)
+    if isexpr(x, :block)
+        _error("Invalid syntax. Did you mean to use `@NLconstraints`?")
+    end
     # Two formats:
     # - @NLconstraint(m, a*x <= 5)
     # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
@@ -2111,6 +2119,9 @@ macro NLexpression(args...)
     elseif length(args) == 3
         m, c, x = args
     end
+    if isexpr(args[2], :block)
+        _error("Invalid syntax. Did you mean to use `@NLexpressions`?")
+    end
     if length(args) > 3 || length(kw_args) > 0
         _error("To many arguments ($(length(args))).")
     end
@@ -2179,7 +2190,9 @@ macro NLparameter(m, ex, extra...)
     function _error(str...)
         return _macro_error(:NLparameter, (m, ex, extra...), __source__, str...)
     end
-
+    if isexpr(ex, :block)
+        _error("Invalid syntax. Did you mean to use `@NLparameters`?")
+    end
     extra, kw_args, requestedcontainer = Containers._extract_kw_args(extra)
     (length(extra) == 0 && length(kw_args) == 0) ||
         _error("Too many arguments.")
