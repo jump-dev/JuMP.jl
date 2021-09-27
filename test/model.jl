@@ -87,9 +87,10 @@ function test_nooptimizer()
     cref = @constraint(model, x == 1)
     @test_throws err JuMP.optimizer_index(cref)
     @test_throws err JuMP.optimize!(model)
-    @test_throws err JuMP.value(x)
-    @test_throws err JuMP.value(cref)
-    @test_throws err JuMP.dual(cref)
+    @test_throws OptimizeNotCalled() JuMP.value(x)
+    @test_throws OptimizeNotCalled() JuMP.value(cref)
+    @test_throws OptimizeNotCalled() JuMP.dual(cref)
+    return
 end
 
 function test_empty!_model()
