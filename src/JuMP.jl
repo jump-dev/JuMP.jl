@@ -1218,17 +1218,17 @@ function MOI.get(model::Model, attr::MOI.AbstractModelAttribute)
     if !MOI.is_set_by_optimize(attr)
         return MOI.get(backend(model), attr)
     elseif attr isa MOI.TerminationStatus
-        if model.is_model_dirty
+        if model.is_model_dirty && mode(model) != DIRECT
             return MOI.OPTIMIZE_NOT_CALLED
         end
         return MOI.get(backend(model), attr)
     elseif attr isa MOI.PrimalStatus || attr isa MOI.DualStatus
-        if model.is_model_dirty
+        if model.is_model_dirty && mode(model) != DIRECT
             return MOI.NO_SOLUTION
         end
         return MOI.get(backend(model), attr)
     else
-        if model.is_model_dirty
+        if model.is_model_dirty && mode(model) != DIRECT
             throw(OptimizeNotCalled())
         end
         return _moi_get_result(backend(model), attr)
@@ -1252,7 +1252,7 @@ function MOI.get(
     check_belongs_to_model(v, model)
     if !MOI.is_set_by_optimize(attr)
         return MOI.get(backend(model), attr, index(v))
-    elseif model.is_model_dirty
+    elseif model.is_model_dirty && mode(model) != DIRECT
         throw(OptimizeNotCalled())
     end
     return _moi_get_result(backend(model), attr, index(v))
@@ -1266,7 +1266,7 @@ function MOI.get(
     check_belongs_to_model(cr, model)
     if !MOI.is_set_by_optimize(attr)
         return MOI.get(backend(model), attr, index(cr))
-    elseif model.is_model_dirty
+    elseif model.is_model_dirty && mode(model) != DIRECT
         throw(OptimizeNotCalled())
     end
     return _moi_get_result(backend(model), attr, index(cr))

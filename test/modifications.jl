@@ -172,7 +172,7 @@ function test_objective_modify()
     return
 end
 
-function test_status()
+function test_status_caching()
     model = Model()
     @variable(model, x)
     @constraint(model, c, x == 1.2)
@@ -210,6 +210,43 @@ function test_status()
     @test_throws JuMP.OptimizeNotCalled() value(x)
     @test_throws JuMP.OptimizeNotCalled() dual(c)
     @test_throws JuMP.OptimizeNotCalled() objective_value(model)
+    return
+end
+
+function test_status_direct()
+    mock = MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    model = direct_model(mock)
+    @variable(model, x)
+    @constraint(model, c, x == 1.2)
+    @objective(model, Min, x - 0.1)
+    JuMP.optimize!(model)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.ResultCount(), 1)
+    xis = MOI.get(mock, MOI.ListOfVariableIndices())
+    MOI.set(mock, MOI.VariablePrimal(), xis[1], 1.2)
+    cis = MOI.get(
+        mock,
+        MOI.ListOfConstraintIndices{
+            MOI.ScalarAffineFunction{Float64},
+            MOI.EqualTo{Float64},
+        }(),
+    )
+    MOI.set(mock, MOI.ConstraintDual(), cis[1], 1.3)
+    @test termination_status(model) == MOI.OPTIMAL
+    @test dual_status(model) == MOI.FEASIBLE_POINT
+    @test primal_status(model) == MOI.FEASIBLE_POINT
+    @test objective_value(model) ≈ 1.1
+    @test value(x) == 1.2
+    @test dual(c) == 1.3
+    model.is_model_dirty = true  # Hack!
+    @test termination_status(model) == MOI.OPTIMAL
+    @test dual_status(model) == MOI.FEASIBLE_POINT
+    @test primal_status(model) == MOI.FEASIBLE_POINT
+    @test objective_value(model) ≈ 1.1
+    @test value(x) == 1.2
+    @test dual(c) == 1.3
     return
 end
 
