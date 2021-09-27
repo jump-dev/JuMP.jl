@@ -318,8 +318,9 @@ And data, a 0-dimensional $(Array{Int,0}):
             @test X[(k, v)] == X[k=>v]
         end
         @test_throws KeyError X[(:a, "b")]
-        @test isassigned(X, :a => "a")
-        @test !isassigned(X, :a => "b")
+        @test isassigned(X, (:a, "a"))
+        @test !isassigned(X, (:a, "b"))
+        @test length(X[[(:a, "a"), (:c, "c")]]) == 2
     end
 
     @testset "Non-AbstractArray matrix" begin
@@ -333,8 +334,9 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test_throws BoundsError X[(:a, "b")]
         @test_throws KeyError X[(:a, "b"), (:a, "a")]
         @test_throws KeyError X[(:a, "a"), (:a, "b")]
-        @test isassigned(X, :a => "a", :a => "a")
-        @test !isassigned(X, :a => "b")
+        @test isassigned(X, (:a, "a"), (:a, "a"))
+        @test !isassigned(X, (:a, "b"))
+        @test isassigned(X, (:a, "a"), (:b, "b"))
         y = Array(X[:, (:a, "a")])
         @test all(y .== y[1])
     end
