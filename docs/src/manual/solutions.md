@@ -451,7 +451,7 @@ MOI.get(model, MOI.ConstraintConflictStatus(), c2)
 new_model, reference_map = copy_conflict(model)
 ```
 
-Conflicting constraints can be collected in a list and printed 
+Conflicting constraints can be collected in a list and printed
 as follows:
 
 ```julia
@@ -563,4 +563,13 @@ not in `point`:
 julia> primal_feasibility_report(model, Dict(x => 2.1); skip_missing = true)
 Dict{Any, Float64} with 1 entry:
   x integer => 0.1
+```
+
+You can also use the functional form, where the first argument is a function
+that maps variables to their primal values:
+```jldoctest feasibility
+julia> optimize!(model)
+
+julia> primal_feasibility_report(v -> value(v), model)
+Dict{Any, Float64}()
 ```

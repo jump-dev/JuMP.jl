@@ -117,6 +117,21 @@ function test_primal_solution()
     @test isempty(report)
 end
 
+function test_primal_solution_func()
+    model = Model(() -> MOIU.MockOptimizer(MOIU.Model{Float64}()))
+    @variable(model, x, Bin)
+    optimize!(model)
+    mock = unsafe_backend(model)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 1.0)
+    report = primal_feasibility_report(model) do xi
+        return value(xi)
+    end
+    @test isempty(report)
+    return
+end
+
 function test_feasible()
     model = Model()
     @variable(model, x, Bin)
@@ -179,6 +194,24 @@ function test_scalar_affine()
     @test report[c3] ≈ 0.1
     @test report[c4] ≈ 0.5
     @test length(report) == 4
+end
+
+function test_scalar_affine_func()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, c1, x <= 0.5)
+    @constraint(model, c2, x >= 1.25)
+    @constraint(model, c3, x == 1.1)
+    @constraint(model, c4, 0 <= x <= 0.5)
+    report = primal_feasibility_report(model) do _
+        return 1.0
+    end
+    @test report[c1] ≈ 0.5
+    @test report[c2] ≈ 0.25
+    @test report[c3] ≈ 0.1
+    @test report[c4] ≈ 0.5
+    @test length(report) == 4
+    return
 end
 
 function test_scalar_quadratic()
