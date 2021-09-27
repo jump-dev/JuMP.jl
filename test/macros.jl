@@ -1019,7 +1019,7 @@ end
             "two separate constraints, or move all variables into the " *
             "central term.",
         )
-        @test_macro_throws err @constraint(model, x <= x <= 2)
+        @test_throws_strip err @constraint(model, x <= x <= 2)
     end
 
     @testset "Interval_errors_rhs" begin
@@ -1031,10 +1031,10 @@ end
             "two separate constraints, or move all variables into the " *
             "central term.",
         )
-        @test_macro_throws err @constraint(model, 2 <= x <= x)
+        @test_throws_strip err @constraint(model, 2 <= x <= x)
     end
 
-    @testset "Interval_errors_rhs" begin
+    @testset "Interval_errors_lhs_and_rhs" begin
         model = Model()
         @variable(model, x)
         err = ErrorException(
@@ -1043,7 +1043,7 @@ end
             "two separate constraints, or move all variables into the " *
             "central term.",
         )
-        @test_macro_throws err @constraint(model, x <= x <= x)
+        @test_throws_strip err @constraint(model, x <= x <= x)
     end
 end
 
