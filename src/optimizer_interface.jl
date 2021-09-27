@@ -111,10 +111,8 @@ function set_optimizer(
     else
         optimizer = MOI.instantiate(optimizer_constructor)
     end
-    model.moi_backend = MOI.Utilities.CachingOptimizer(
-        backend(model).model_cache,
-        optimizer,
-    )
+    model.moi_backend =
+        MOI.Utilities.CachingOptimizer(backend(model).model_cache, optimizer)
     return
 end
 
