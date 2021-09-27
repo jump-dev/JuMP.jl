@@ -101,20 +101,7 @@ end
 function Base.iszero(expr::GenericQuadExpr)
     return iszero(expr.aff) && all(iszero, values(expr.terms))
 end
-function Base.zero(::Type{GenericQuadExpr{C,V}}) where {C,V}
-    return GenericQuadExpr(
-        zero(GenericAffExpr{C,V}),
-        OrderedDict{UnorderedPair{V},C}(),
-    )
-end
-function Base.one(::Type{GenericQuadExpr{C,V}}) where {C,V}
-    return GenericQuadExpr(
-        one(GenericAffExpr{C,V}),
-        OrderedDict{UnorderedPair{V},C}(),
-    )
-end
-Base.zero(q::GenericQuadExpr) = zero(typeof(q))
-Base.one(q::GenericQuadExpr) = one(typeof(q))
+
 Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
 Base.broadcastable(q::GenericQuadExpr) = Ref(q)
 
@@ -485,7 +472,10 @@ function Base.convert(
 ) where {C,V}
     return GenericQuadExpr(convert(GenericAffExpr{C,V}, v))
 end
-GenericQuadExpr{C,V}() where {C,V} = zero(GenericQuadExpr{C,V})
+
+function GenericQuadExpr{C,V}() where {C,V}
+    return GenericQuadExpr{C,V}(GenericAffExpr{C,V}(zero(C)))
+end
 
 function check_belongs_to_model(q::GenericQuadExpr, model::AbstractModel)
     check_belongs_to_model(q.aff, model)

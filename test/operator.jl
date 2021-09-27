@@ -19,10 +19,7 @@ struct MySumType{T}
     a::T
 end
 Base.copy(t::MyType) = t
-Base.zero(::Type{MyType{T}}) where {T} = MyType(zero(T))
-Base.one(::Type{MyType{T}}) where {T} = MyType(one(T))
-Base.zero(::Type{MySumType{T}}) where {T} = MySumType(zero(T))
-Base.zero(::MySumType{T}) where {T} = MySumType(zero(T))
+
 Base.transpose(t::MyType) = MyType(t.a)
 Base.transpose(t::MySumType) = MySumType(t.a)
 LinearAlgebra.adjoint(t::Union{MyType,MySumType}) = t
@@ -178,7 +175,7 @@ function test_custom_dimension_mismatch(ModelType, VariableRefType)
     @test size(z) == (1, 3)
     for i in 1:3
         # Q is symmetric
-        a = zero(JuMP.GenericAffExpr{Float64,VariableRefType})
+        a = JuMP.GenericAffExpr{Float64,VariableRefType}(0.0)
         a += Q[1, i]
         a += 2Q[2, i]
         a += 3Q[3, i]

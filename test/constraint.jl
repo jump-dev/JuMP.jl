@@ -86,7 +86,7 @@ function test_AffExpr_scalar_constraints(ModelType, ::Any)
 
     cref = @constraint(model, 2 == 1)
     c = JuMP.constraint_object(cref)
-    @test JuMP.isequal_canonical(c.func, zero(JuMP.AffExpr))
+    @test JuMP.isequal_canonical(c.func, JuMP.AffExpr(0.0))
     @test c.set == MOI.EqualTo(-1.0)
 end
 
@@ -112,8 +112,8 @@ function test_AffExpr_vector_constraints(ModelType, ::Any)
     model = ModelType()
     cref = @constraint(model, [1, 2] in MOI.Zeros(2))
     c = JuMP.constraint_object(cref)
-    @test JuMP.isequal_canonical(c.func[1], zero(JuMP.AffExpr) + 1)
-    @test JuMP.isequal_canonical(c.func[2], zero(JuMP.AffExpr) + 2)
+    @test JuMP.isequal_canonical(c.func[1], JuMP.AffExpr(0.0) + 1)
+    @test JuMP.isequal_canonical(c.func[2], JuMP.AffExpr(0.0) + 2)
     @test c.set == MOI.Zeros(2)
     @test c.shape isa JuMP.VectorShape
     @test_throws DimensionMismatch @constraint(model, [1, 2] in MOI.Zeros(3))

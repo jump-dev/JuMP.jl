@@ -171,14 +171,7 @@ end
 function Base.iszero(expr::GenericAffExpr)
     return iszero(expr.constant) && all(iszero, values(expr.terms))
 end
-function Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V}
-    return GenericAffExpr{C,V}(zero(C), OrderedDict{V,C}())
-end
-function Base.one(::Type{GenericAffExpr{C,V}}) where {C,V}
-    return GenericAffExpr{C,V}(one(C), OrderedDict{V,C}())
-end
-Base.zero(a::GenericAffExpr) = zero(typeof(a))
-Base.one(a::GenericAffExpr) = one(typeof(a))
+
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
 Base.broadcastable(a::GenericAffExpr) = Ref(a)
 
@@ -204,7 +197,7 @@ function drop_zeros!(expr::GenericAffExpr)
     return
 end
 
-GenericAffExpr{C,V}() where {C,V} = zero(GenericAffExpr{C,V})
+GenericAffExpr{C,V}() where {C,V} = GenericAffExpr{C,V}(zero(C))
 
 function _affine_coefficient(f::GenericAffExpr{C,V}, variable::V) where {C,V}
     return get(f.terms, variable, zero(C))

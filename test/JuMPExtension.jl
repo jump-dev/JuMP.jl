@@ -34,7 +34,7 @@ mutable struct MyModel <: JuMP.AbstractModel
             Dict{ConstraintIndex,String}(),
             nothing,            # Constraints
             MOI.FEASIBILITY_SENSE,
-            zero(JuMP.GenericAffExpr{Float64,MyVariableRef}),
+            JuMP.GenericAffExpr{Float64,MyVariableRef}(0.0),
             Dict{Symbol,Any}(),
         )
     end

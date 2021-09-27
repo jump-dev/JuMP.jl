@@ -388,7 +388,7 @@ function macros_test(
 
         cref = @constraint(m, 3 + 5 * 7 <= 0)
         c = JuMP.constraint_object(cref)
-        @test JuMP.isequal_canonical(c.func, zero(AffExpr))
+        @test JuMP.isequal_canonical(c.func, AffExpr(0.0))
         @test c.set == MOI.LessThan(-38.0)
     end
 

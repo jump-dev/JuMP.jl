@@ -31,7 +31,7 @@ function Base.:-(lhs::_Constant, rhs::AbstractVariableRef)
 end
 function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
     if iszero(lhs)
-        return zero(GenericAffExpr{Float64,typeof(rhs)})
+        return GenericAffExpr{Float64,typeof(rhs)}(0.0)
     else
         return _build_aff_expr(0.0, _float(lhs), rhs)
     end
@@ -47,9 +47,19 @@ function Base.:-(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     add_to_expression!(result, lhs)
     return result
 end
-function Base.:*(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
+
+function Base.:*(lhs::_Constant, rhs::GenericAffExpr{C,V}) where {C,V}
     if iszero(lhs)
-        return zero(rhs)
+        return GenericAffExpr{C,V}(zero(C))
+    else
+        α = _constant_to_number(lhs)
+        return map_coefficients(c -> α * c, rhs)
+    end
+end
+
+function Base.:*(lhs::_Constant, rhs::GenericQuadExpr{C,V}) where {C,V}
+    if iszero(lhs)
+        return GenericQuadExpr{C,V}(GenericAffExpr{C,V}(zero(C)))
     else
         α = _constant_to_number(lhs)
         return map_coefficients(c -> α * c, rhs)
@@ -72,7 +82,7 @@ function Base.:+(lhs::V, rhs::V) where {V<:AbstractVariableRef}
 end
 function Base.:-(lhs::V, rhs::V) where {V<:AbstractVariableRef}
     if lhs == rhs
-        return zero(GenericAffExpr{Float64,V})
+        return GenericAffExpr{Float64,V}(0.0)
     else
         return _build_aff_expr(0.0, 1.0, lhs, -1.0, rhs)
     end
@@ -89,7 +99,7 @@ function Base.:+(
     rhs::GenericAffExpr{C,V},
 ) where {C,V<:AbstractVariableRef}
     # For the variables to have the proper order in the result, we need to add the lhs first.
-    result = zero(rhs)
+    result = GenericAffExpr{C,V}(zero(C))
     result.constant = rhs.constant
     sizehint!(result, length(linear_terms(rhs)) + 1)
     add_to_expression!(result, one(C), lhs)
@@ -104,7 +114,7 @@ function Base.:-(
     rhs::GenericAffExpr{C,V},
 ) where {C,V<:AbstractVariableRef}
     # For the variables to have the proper order in the result, we need to add the lhs first.
-    result = zero(rhs)
+    result = GenericAffExpr{C,V}(zero(C))
     result.constant = -rhs.constant
     sizehint!(result, length(linear_terms(rhs)) + 1)
     add_to_expression!(result, one(C), lhs)
@@ -121,7 +131,7 @@ function Base.:*(
     if !iszero(rhs.constant)
         result = GenericQuadExpr{C,V}(lhs * rhs.constant)
     else
-        result = zero(GenericQuadExpr{C,V})
+        result = GenericQuadExpr{C,V}(GenericAffExpr{C,V}(zero(C)))
     end
     for (coef, var) in linear_terms(rhs)
         add_to_expression!(result, coef, lhs, var)
@@ -193,7 +203,7 @@ function Base.:*(
     if !iszero(lhs.constant)
         result = GenericQuadExpr{C,V}(lhs.constant * rhs)
     else
-        result = zero(GenericQuadExpr{C,V})
+        result = GenericQuadExpr{C,V}(GenericAffExpr{C,V}(zero(C)))
     end
     for (coef, var) in linear_terms(lhs)
         add_to_expression!(result, coef, var, rhs)
@@ -233,7 +243,7 @@ function Base.:*(
     lhs::GenericAffExpr{C,V},
     rhs::GenericAffExpr{C,V},
 ) where {C,V<:_JuMPTypes}
-    result = zero(GenericQuadExpr{C,V})
+    result = GenericQuadExpr{C,V}(GenericAffExpr{C,V}(zero(C)))
     add_to_expression!(result, lhs, rhs)
     return result
 end

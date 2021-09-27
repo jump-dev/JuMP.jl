@@ -508,7 +508,7 @@ function build_constraint(
     ::MutableArithmetics.Zero,
     set::MOI.AbstractScalarSet,
 )
-    return build_constraint(_error, zero(AffExpr), set)
+    return build_constraint(_error, AffExpr(0.0), set)
 end
 
 function build_constraint(

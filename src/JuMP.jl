@@ -1092,15 +1092,6 @@ include("constraints.jl")
 include("variables.jl")
 include("objective.jl")
 
-function Base.zero(::Type{V}) where {V<:AbstractVariableRef}
-    return zero(GenericAffExpr{Float64,V})
-end
-Base.zero(v::AbstractVariableRef) = zero(typeof(v))
-function Base.one(::Type{V}) where {V<:AbstractVariableRef}
-    return one(GenericAffExpr{Float64,V})
-end
-Base.one(v::AbstractVariableRef) = one(typeof(v))
-
 _moi_optimizer_index(model::MOI.AbstractOptimizer, index::MOI.Index) = index
 function _moi_optimizer_index(model::MOIU.CachingOptimizer, index::MOI.Index)
     if MOIU.state(model) == MOIU.NO_OPTIMIZER

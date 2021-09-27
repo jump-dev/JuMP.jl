@@ -146,7 +146,7 @@ function expressions_test(
 
     @testset "linear_terms(::AffExpr) for empty expression" begin
         k = 0
-        aff = zero(AffExprType)
+        aff = AffExprType(0.0)
         @test length(linear_terms(aff)) == 0
         for (coeff, var) in linear_terms(aff)
             k += 1

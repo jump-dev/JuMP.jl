@@ -48,8 +48,8 @@ function Base.getindex(map::ReferenceMap, cref::ConstraintRef)
     return ConstraintRef(map.model, map.index_map[index(cref)], cref.shape)
 end
 
-function Base.getindex(map::ReferenceMap, expr::GenericAffExpr)
-    result = zero(expr)
+function Base.getindex(map::ReferenceMap, expr::GenericAffExpr{C,V}) where {C,V}
+    result = GenericAffExpr{C,V}(zero(C))
     for (coef, var) in linear_terms(expr)
         add_to_expression!(result, coef, map[var])
     end
