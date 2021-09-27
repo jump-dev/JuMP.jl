@@ -57,7 +57,11 @@ function primal_feasibility_report(
     atol::Float64 = 0.0,
     skip_missing::Bool = false,
 )
-    function point_f(x::VariableRef)
+    return primal_feasibility_report(
+        model;
+        atol = atol,
+        skip_missing = skip_missing,
+    ) do x
         fx = get(point, x, missing)
         if ismissing(fx) && !skip_missing
             error(
@@ -67,6 +71,39 @@ function primal_feasibility_report(
         end
         return fx
     end
+end
+
+"""
+    primal_feasibility_report(
+        point::Function,
+        model::Model;
+        atol::Float64 = 0.0,
+        skip_missing::Bool = false,
+    )
+
+A form of `primal_feasibility_report` where a function is passed as the first
+argument instead of a dictionary as the second argument.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP)
+julia> model = Model();
+
+julia> @variable(model, 0.5 <= x <= 1);
+
+julia> primal_feasibility_report(model) do v
+           return value(v)
+       end
+Dict{Any,Float64} with 1 entry:
+    x ≥ 0.5 => 0.3
+```
+"""
+function primal_feasibility_report(
+    point::Function,
+    model::Model;
+    atol::Float64 = 0.0,
+    skip_missing::Bool = false,
+)
     violated_constraints = Dict{Any,Float64}()
     for (F, S) in list_of_constraint_types(model)
         _add_infeasible_constraints(
@@ -74,7 +111,7 @@ function primal_feasibility_report(
             F,
             S,
             violated_constraints,
-            point_f,
+            point,
             atol,
         )
     end
@@ -88,7 +125,7 @@ function primal_feasibility_report(
         _add_infeasible_nonlinear_constraints(
             model,
             violated_constraints,
-            point_f,
+            point,
             atol,
         )
     end
