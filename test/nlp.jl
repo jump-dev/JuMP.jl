@@ -1103,6 +1103,6 @@ end
             "sides. Reformulate as two separate constraints, or move all " *
             "variables into the central term.",
         )
-        @test_throws err add_NL_constraint(model, :($x <= $x <= 2$x))
+        @test_throws err add_NL_constraint(model, :($x <= $x <= 2 * $x))
     end
 end
