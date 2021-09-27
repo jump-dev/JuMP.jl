@@ -577,6 +577,19 @@ function build_constraint(
     )
 end
 
+function build_constraint(
+    _error::Function,
+    ::AbstractJuMPScalar,
+    ::Union{AbstractJuMPScalar,Real},
+    ::Union{AbstractJuMPScalar,Real},
+)
+    return _error(
+        "Interval constraint contains non-constant left- or " *
+        "right-hand sides. Reformulate as two separate " *
+        "constraints, or move all variables into the central term.",
+    )
+end
+
 # This method intercepts `@constraint(model, lb <= var <= ub)` and promotes
 # `var` to an `AffExpr` to form a `ScalarAffineFunction-in-Interval` instead of
 # `VariableIndex-in-Interval`. To create a
@@ -2043,10 +2056,12 @@ macro NLconstraint(m, x, args...)
         lb = con.args[1]
         ub = con.args[5]
         code = quote
-            if !isa($(esc(lb)), Number)
-                _error("expected ", $(string(lb)), " to be a number.")
-            elseif !isa($(esc(ub)), Number)
-                _error("expected ", $(string(ub)), " to be a number.")
+            if !isa($(esc(lb)), Number) || !isa($(esc(ub)), Number)
+                error(
+                    "Interval constraint contains non-constant left- or " *
+                    "right-hand sides. Reformulate as two separate " *
+                    "constraints, or move all variables into the central term.",
+                )
             end
             c = _NonlinearConstraint(
                 $(_process_NL_expr(m, con.args[3])),

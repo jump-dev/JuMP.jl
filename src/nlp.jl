@@ -2106,10 +2106,12 @@ function add_NL_constraint(model::Model, ex::Expr)
         end
         lb = ex.args[1]
         ub = ex.args[5]
-        if !isa(lb, Number)
-            error(string("In (", ex, "): expected ", lb, " to be a number."))
-        elseif !isa(ub, Number)
-            error(string("In (", ex, "): expected ", ub, " to be a number."))
+        if !isa(lb, Number) || !isa(ub, Number)
+            error(
+                "Interval constraint contains non-constant left- or " *
+                "right-hand sides. Reformulate as two separate " *
+                "constraints, or move all variables into the central term.",
+            )
         end
         c = _NonlinearConstraint(_NonlinearExprData(model, ex.args[3]), lb, ub)
         push!(nl_constraints, c)

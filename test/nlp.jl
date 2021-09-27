@@ -1094,4 +1094,15 @@ end
             value([x, x]),
         )
     end
+
+    @testset "Interval errors" begin
+        model = Model()
+        @variable(model, x)
+        err = ErrorException(
+            "Interval constraint contains non-constant left- or right-hand " *
+            "sides. Reformulate as two separate constraints, or move all " *
+            "variables into the central term.",
+        )
+        @test_throws err add_NL_constraint(model, :($x <= $x <= 2$x))
+    end
 end
