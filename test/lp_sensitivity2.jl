@@ -44,14 +44,14 @@ function _test_sensitivity(model_string, solution)
             var = variable_by_name(model, key)
             if var !== nothing
                 obj_map[key] = var
-                MOI.set(model, MOI.VariablePrimal(), var, val.primal)
-                MOI.set(model, MOI.VariableBasisStatus(), var, val.basis)
+                MOI.set(m, MOI.VariablePrimal(), index(var), val.primal)
+                MOI.set(m, MOI.VariableBasisStatus(), index(var), val.basis)
             else
                 c = constraint_by_name(model, key)
                 @assert c !== nothing
                 obj_map[key] = c
-                MOI.set(model, MOI.ConstraintDual(), c, val.dual)
-                MOI.set(model, MOI.ConstraintBasisStatus(), c, val.basis)
+                MOI.set(m, MOI.ConstraintDual(), index(c), val.dual)
+                MOI.set(m, MOI.ConstraintBasisStatus(), index(c), val.basis)
             end
         else
             var = variable_by_name(model, key[1])
@@ -64,8 +64,8 @@ function _test_sensitivity(model_string, solution)
             end
             @assert c !== nothing
             obj_map[key] = c
-            MOI.set(model, MOI.ConstraintDual(), c, val.dual)
-            MOI.set(model, MOI.ConstraintBasisStatus(), c, val.basis)
+            MOI.set(m, MOI.ConstraintDual(), index(c), val.dual)
+            MOI.set(m, MOI.ConstraintBasisStatus(), index(c), val.basis)
         end
     end
     sens = lp_sensitivity_report(model)
@@ -148,20 +148,20 @@ function test_Degeneracy()
     for (key, val) in Dict("x" => 0, "y" => 2, "c1" => 0, "c2" => 2)
         var = variable_by_name(model, key)
         if var !== nothing
-            MOI.set(model, MOI.VariablePrimal(), var, val)
-            MOI.set(model, MOI.VariableBasisStatus(), var, MOI.BASIC)
+            MOI.set(m, MOI.VariablePrimal(), index(var), val)
+            MOI.set(m, MOI.VariableBasisStatus(), index(var), MOI.BASIC)
         else
             c = constraint_by_name(model, key)
-            MOI.set(model, MOI.ConstraintDual(), c, val)
+            MOI.set(m, MOI.ConstraintDual(), index(c), val)
             MOI.set(
-                model,
+                m,
                 MOI.ConstraintBasisStatus(),
-                c,
+                index(c),
                 MOI.NONBASIC_AT_UPPER,
             )
         end
     end
-    @test_throws(LinearAlgebra.SingularException, lp_sensitivity_report(model),)
+    @test_throws(LinearAlgebra.SingularException, lp_sensitivity_report(model))
     return
 end
 
