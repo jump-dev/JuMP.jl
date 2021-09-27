@@ -308,4 +308,34 @@ And data, a 0-dimensional $(Array{Int,0}):
         push!(s, A)
         @test length(s) == 1
     end
+
+    @testset "Non-AbstractArray axes" begin
+        x = [1.0, 2.0, 3.0]
+        d = Dict(:a => "a", :b => "b", :c => "c")
+        X = DenseAxisArray(x, d)
+        for (k, v) in d
+            @test X[(k, v)] in x
+            @test X[(k, v)] == X[k=>v]
+        end
+        @test_throws KeyError X[(:a, "b")]
+        @test isassigned(X, :a => "a")
+        @test !isassigned(X, :a => "b")
+    end
+
+    @testset "Non-AbstractArray matrix" begin
+        x = [1.0 2.0 3.0; 1.0 2.0 3.0; 1.0 2.0 3.0]
+        d = Dict(:a => "a", :b => "b", :c => "c")
+        X = DenseAxisArray(x, d, d)
+        for (k, v) in d
+            @test X[(k, v), (k, v)] in x
+            @test X[(k, v), (k, v)] == X[k=>v, k=>v]
+        end
+        @test_throws BoundsError X[(:a, "b")]
+        @test_throws KeyError X[(:a, "b"), (:a, "a")]
+        @test_throws KeyError X[(:a, "a"), (:a, "b")]
+        @test isassigned(X, :a => "a", :a => "a")
+        @test !isassigned(X, :a => "b")
+        y = Array(X[:, (:a, "a")])
+        @test all(y .== y[1])
+    end
 end

@@ -119,6 +119,36 @@ function Base.get(
     return i
 end
 
+# Implement a special case: If the axis is a vector of pairs, also allow tuples
+# as indices. This is needed due to the behavior pairs and tuples when iterating
+# through dictionaries, i.e., `x[(k, v) in d]` gets added as `x[k => v]`, even
+# though it looks to the user like they were tuples.
+
+function Base.getindex(
+    x::_AxisLookup{Dict{Pair{A,B},Int}},
+    key::Tuple{A,B},
+) where {A,B}
+    return x.data[key[1]=>key[2]]
+end
+
+function Base.getindex(
+    x::_AxisLookup{Dict{Pair{A,B},Int}},
+    keys::AbstractVector{<:Tuple{A,B}},
+) where {A,B}
+    return [x[key] for key in keys]
+end
+
+function Base.get(
+    x::_AxisLookup{Dict{Pair{A,B},Int}},
+    key::Tuple{A,B},
+    default,
+) where {A,B}
+    return get(x.data, key[1] => key[2], default)
+end
+
+_abstract_vector(x::AbstractVector) = x
+_abstract_vector(x) = [a for a in x]
+
 """
     DenseAxisArray(data::Array{T, N}, axes...) where {T, N}
 
@@ -142,7 +172,8 @@ julia> array[:b, 3]
 """
 function DenseAxisArray(data::Array{T,N}, axs...) where {T,N}
     @assert length(axs) == N
-    return DenseAxisArray(data, axs, build_lookup.(axs))
+    new_axes = _abstract_vector.(axs)  # Force all axes to be AbstractVector!
+    return DenseAxisArray(data, new_axes, build_lookup.(new_axes))
 end
 
 # A converter for different array types.
