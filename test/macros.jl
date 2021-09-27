@@ -998,6 +998,53 @@ end
         @test obj.set == MOI.Integer()
         @test_throws ErrorException add_to_function_constant(c, 1.0)
     end
+
+    @testset "Interval errors" begin
+        model = Model()
+        @variable(model, x)
+        err = ErrorException(
+            "Interval constraint contains non-constant left- or right-hand " *
+            "sides. Reformulate as two separate constraints, or move all " *
+            "variables into the central term.",
+        )
+        @test_throws err @NLconstraint(model, x <= x <= 2x)
+    end
+
+    @testset "Interval_errors_lhs" begin
+        model = Model()
+        @variable(model, x)
+        err = ErrorException(
+            "In `@constraint(model, x <= x <= 2)`: Interval constraint " *
+            "contains non-constant left- or right-hand sides. Reformulate as " *
+            "two separate constraints, or move all variables into the " *
+            "central term.",
+        )
+        @test_throws_strip err @constraint(model, x <= x <= 2)
+    end
+
+    @testset "Interval_errors_rhs" begin
+        model = Model()
+        @variable(model, x)
+        err = ErrorException(
+            "In `@constraint(model, 2 <= x <= x)`: Interval constraint " *
+            "contains non-constant left- or right-hand sides. Reformulate as " *
+            "two separate constraints, or move all variables into the " *
+            "central term.",
+        )
+        @test_throws_strip err @constraint(model, 2 <= x <= x)
+    end
+
+    @testset "Interval_errors_lhs_and_rhs" begin
+        model = Model()
+        @variable(model, x)
+        err = ErrorException(
+            "In `@constraint(model, x <= x <= x)`: Interval constraint " *
+            "contains non-constant left- or right-hand sides. Reformulate as " *
+            "two separate constraints, or move all variables into the " *
+            "central term.",
+        )
+        @test_throws_strip err @constraint(model, x <= x <= x)
+    end
 end
 
 @testset "Macros for JuMPExtension.MyModel" begin
