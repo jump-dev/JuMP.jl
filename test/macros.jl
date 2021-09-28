@@ -862,14 +862,28 @@ end
 
     @testset "unrecognized_variable_type" begin
         model = Model()
+
         err = ErrorException(
-            "In `@variable(model, x, 2, variable_type = 1)`: Unrecognized " *
-            "arguments: 2, 1. (You may have passed these as positional " *
-            "arguments, or as a keyword value to `variable_type`.)\n\nIf " *
-            "you're trying to create a JuMP extension, you need to implement " *
-            "`build_variable`.",
+            "In `@variable(model, x, 2, variable_type = 1)`: " *
+            "Unrecognized positional arguments: (2, 1). (You may have " *
+            "passed it as a positional argument, or as a keyword value to " *
+            "`variable_type`.)\n\nIf you're trying to create a JuMP " *
+            "extension, you need to implement `build_variable`. Read the " *
+            "docstring for more details.",
         )
         @test_throws_strip err @variable(model, x, 2, variable_type = 1)
+    end
+
+    @testset "unrecognized_kwarg" begin
+        model = Model()
+
+        err = ErrorException(
+            "In `@variable(model, x, foo = 1)`: " *
+            "Unrecognized keyword argument: foo.\n\nIf you're trying to " *
+            "create a JuMP extension, you need to implement " *
+            "`build_variable`. Read the docstring for more details.",
+        )
+        @test_throws_strip err @variable(model, x, foo = 1)
     end
 
     @testset "kwargs" begin

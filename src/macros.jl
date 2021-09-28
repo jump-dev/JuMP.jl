@@ -1401,43 +1401,97 @@ _esc_non_constant(x::Expr) = isexpr(x, :quote) ? x : esc(x)
 _esc_non_constant(x) = esc(x)
 
 """
-    build_variable(_error::Function, info::VariableInfo; extra_kw_args...)
+    build_variable(
+        _error::Function,
+        info::VariableInfo,
+        args...;
+        kwargs...,
+    )
 
-Returns a new variable.
+Return a new [`AbstractVariable`](@ref) object.
 
-Extensions should define a method with additional positional arguments to
-dispatch the call to a different method.
+This method should only be implemented by developers creating JuMP extensions.
+It should never be called by users of JuMP.
 
-As an example, `@variable(model, x, foo)` foo will call
-`build_variable(_error, info, foo)`
+## Arguments
 
-See the [`@variable`](@ref) macro doc for more details.
+ * `_error`: a function to call instead of `error`. `_error` annotates the
+   error message with additional information for the user.
+ * `info`: an instance of [`VariableInfo`](@ref). This has a variety of fields
+   relating to the variable such as `info.lower_bound` and `info.binary`.
+ * `args`: optional additional positional arguments for extending the
+   [`@variable`](@ref) macro.
+ * `kwargs`: optional keyword arguments for extending the [`@variable`](@ref)
+   macro.
+
+See also: [`@variable`](@ref)
+
+!!! warning
+    Extensions should define a method with ONE positional argument to dispatch
+    the call to a different method. Creating an extension that relies on
+    multiple positional arguments leads to `MethodError`s if the user passes the
+    arguments in the wrong order.
+
+## Examples
+
+```julia
+@variable(model, x, Foo)
+```
+will call
+```julia
+build_variable(_error::Function, info::VariableInfo, ::Type{Foo})
+```
+
+Passing special-case positional arguments such as `Bin`, `Int`, and `PSD` is
+okay, along with keyword arguments:
+```julia
+@variable(model, x, Int, Foo(), mykwarg = true)
+# or
+@variable(model, x, Foo(), Int, mykwarg = true)
+```
+will call
+```julia
+build_variable(_error::Function, info::VariableInfo, ::Foo; mykwarg)
+```
+and `info.integer` will be true.
+
+Note that the order of the positional arguments does not matter.
 """
-function build_variable(_error::Function, info::VariableInfo; extra_kw_args...)
-    for (kwarg, _) in extra_kw_args
-        _error("Unrecognized keyword argument $kwarg")
+function build_variable(
+    _error::Function,
+    info::VariableInfo,
+    args...;
+    kwargs...,
+)
+    if length(args) > 0
+        _error(
+            "Unrecognized positional arguments: $(args). (You may have " *
+            "passed it as a positional argument, or as a keyword value to " *
+            "`variable_type`.)\n\nIf you're trying to create a JuMP " *
+            "extension, you need to implement `build_variable`. Read the " *
+            "docstring for more details.",
+        )
+    end
+    for (key, _) in kwargs
+        _error(
+            "Unrecognized keyword argument: $key.\n\nIf you're trying " *
+            "to create a JuMP extension, you need to implement " *
+            "`build_variable`. Read the docstring for more details.",
+        )
     end
     return ScalarVariable(info)
 end
 
-function build_variable(_error::Function, ::VariableInfo, args...; kwargs...)
-    return _error(
-        "Unrecognized arguments: $(join(args, ", ")). (You may have passed " *
-        "these as positional arguments, or as a keyword value to " *
-        "`variable_type`.)\n\nIf you're trying to create a JuMP extension, " *
-        "you need to implement `build_variable`.",
-    )
-end
-
 function build_variable(
-    _error::Function,
+    ::Function,
     variable::AbstractVariable,
     set::MOI.AbstractScalarSet,
 )
     return VariableConstrainedOnCreation(variable, set)
 end
+
 function build_variable(
-    _error::Function,
+    ::Function,
     variables::Vector{<:AbstractVariable},
     set::MOI.AbstractVectorSet,
 )
