@@ -1064,3 +1064,106 @@ end
 @testset "Macros for JuMPExtension.MyModel" begin
     macros_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end
+
+function test_nlparameter_basic()
+    model = Model()
+    @NLparameter(model, p == 1)
+    @test p isa NonlinearParameter
+    return
+end
+
+function test_nlparameter_Vector()
+    model = Model()
+    @NLparameter(model, p[i = 1:3] == i)
+    @test p isa Vector{NonlinearParameter}
+    @test value(p[2]) == 2
+    return
+end
+
+function test_nlparameter_DenseAxisArray()
+    model = Model()
+    @NLparameter(model, p[i = 2:3] == i)
+    @test p isa Containers.DenseAxisArray{NonlinearParameter}
+    @test value(p[2]) == 2
+    return
+end
+
+function test_nlparameter_SparseAxisArray()
+    model = Model()
+    @NLparameter(model, p[i = 1:3; iseven(i)] == i)
+    @test p isa Containers.SparseAxisArray{NonlinearParameter}
+    @test value(p[2]) == 2
+    return
+end
+
+function test_nlparameter_requested_container()
+    model = Model()
+    S = 1:3
+    @NLparameter(model, p[i = S] == i, container = Array)
+    @test p isa Vector{NonlinearParameter}
+    @test value(p[2]) == 2
+    return
+end
+
+function test_nlparameter_too_many_positional_args()
+    msg = "Invalid syntax: too many positional arguments."
+    model = Model()
+    @test_macro_throws(
+        ErrorException("In `@NLparameter(model, p == 1, Int)`: $(msg)"),
+        @NLparameter(model, p == 1, Int),
+    )
+    return
+end
+
+function test_nlparameter_unsupported_keyword_args()
+    msg = "Invalid syntax: unsupported keyword arguments."
+    model = Model()
+    @test_macro_throws(
+        ErrorException("In `@NLparameter(model, p == 1, bad = false)`: $(msg)"),
+        @NLparameter(model, p == 1, bad = false),
+    )
+    return
+end
+
+function test_nlparameter_invalid_syntax()
+    msg = "Invalid syntax: expected argument of form `param == value`."
+    model = Model()
+    @test_macro_throws(
+        ErrorException("In `@NLparameter(model, p)`: $(msg)"),
+        @NLparameter(model, p),
+    )
+    return
+end
+
+function test_nlparameter_anonymous()
+    msg = "Anonymous nonlinear parameter syntax is not currently supported."
+    model = Model()
+    @test_macro_throws(
+        ErrorException("In `@NLparameter(model, [i = 1:2] == i)`: $(msg)"),
+        @NLparameter(model, [i = 1:2] == i),
+    )
+    return
+end
+
+function test_nlparameter_invalid_number()
+    msg = "Parameter value is not a number."
+    model = Model()
+    @test_throws_strip(
+        ErrorException("In `@NLparameter(model, p == :a)`: $(msg)"),
+        @NLparameter(model, p == :a),
+    )
+    return
+end
+
+@testset "NLparameter" begin
+    test_nlparameter_basic()
+    test_nlparameter_Vector()
+    test_nlparameter_DenseAxisArray()
+    test_nlparameter_SparseAxisArray()
+    test_nlparameter_requested_container()
+    test_nlparameter_too_many_positional_args()
+    test_nlparameter_unsupported_keyword_args()
+    test_nlparameter_invalid_syntax()
+    test_nlparameter_anonymous()
+    test_nlparameter_invalid_number()
+end
