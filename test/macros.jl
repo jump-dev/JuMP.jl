@@ -1090,7 +1090,7 @@ function test_singular_plural_error()
     @test_macro_throws(
         ErrorException(
             "In `@NLparameter(model, begin\n    x == 1\nend)`: " *
-            "Invalid syntax. Did you mean to use `@NLparameters`?",
+            "Invalid syntax: did you mean to use `@NLparameters`?",
         ),
         @NLparameter(model, begin
             x == 1
@@ -1222,7 +1222,7 @@ function test_nlparameter_unsupported_keyword_args()
 end
 
 function test_nlparameter_invalid_syntax()
-    msg = "Invalid syntax: expected argument of form `param == value`."
+    msg = "Invalid syntax: expected syntax of form `param == value`."
     model = Model()
     @test_macro_throws(
         ErrorException("In `@NLparameter(model, p)`: $(msg)"),
@@ -1232,12 +1232,12 @@ function test_nlparameter_invalid_syntax()
 end
 
 function test_nlparameter_anonymous()
-    msg = "Anonymous nonlinear parameter syntax is not currently supported."
     model = Model()
-    @test_macro_throws(
-        ErrorException("In `@NLparameter(model, [i = 1:2] == i)`: $(msg)"),
-        @NLparameter(model, [i = 1:2] == i),
-    )
+    p = @NLparameter(model, [i = 1:2] == i)
+    @test p isa Vector{NonlinearParameter}
+    @test length(p) == 2
+    q = @NLparameter(model, value = 1)
+    @test q isa NonlinearParameter
     return
 end
 
@@ -1248,6 +1248,18 @@ function test_nlparameter_invalid_number()
         ErrorException("In `@NLparameter(model, p == :a)`: $(msg)"),
         @NLparameter(model, p == :a),
     )
+    return
+end
+
+function test_nlparameter_register()
+    model = Model()
+    @NLparameter(model, p == 1)
+    @test model[:p] === p
+    @NLparameter(model, q[i = 1:3; isodd(i)] == i)
+    @test model[:q] === q
+    @test_throws ErrorException @NLparameter(model, p == 1)
+    r = @NLparameter(model, value = 1)
+    @test_throws KeyError model[:r]
     return
 end
 
