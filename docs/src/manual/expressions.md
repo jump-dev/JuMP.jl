@@ -315,7 +315,8 @@ julia> one(AffExpr)
 ```
 
 However, this can result in a subtle bug if you call
-[`add_to_expression!`](@ref) on an element created by `zeros` or `ones`:
+[`add_to_expression!`](@ref) or the [MutableArithmetics API](https://github.com/jump-dev/MutableArithmetics.jl)
+on an element created by `zeros` or `ones`:
 ```jldoctest
 julia> x = zeros(AffExpr, 2)
 2-element Vector{AffExpr}:
@@ -393,3 +394,5 @@ julia> x
  1.1
  0
 ```
+Note that for large expressions this will be slower due to the allocation of
+additional temporary objects.
