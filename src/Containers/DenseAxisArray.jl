@@ -377,8 +377,8 @@ end
 # https://docs.julialang.org/en/v1/manual/interfaces/#man-interfaces-broadcasting
 # for implementing broadcast.
 
-function Base.BroadcastStyle(::Type{T}) where {T<:DenseAxisArray}
-    return Broadcast.ArrayStyle{T}()
+function Base.BroadcastStyle(::Type{<:DenseAxisArray})
+    return Broadcast.ArrayStyle{DenseAxisArray}()
 end
 
 function _broadcast_axes_check(x::NTuple{N}) where {N}
@@ -406,7 +406,7 @@ _broadcast_args(x::Any, tail) = (x, _broadcast_args(tail)...)
 _broadcast_args(x::DenseAxisArray, tail) = (x.data, _broadcast_args(tail)...)
 
 function Base.Broadcast.broadcasted(
-    ::Broadcast.ArrayStyle{<:DenseAxisArray},
+    ::Broadcast.ArrayStyle{DenseAxisArray},
     f,
     args...,
 )
