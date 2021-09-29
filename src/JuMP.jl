@@ -970,6 +970,15 @@ function get_optimizer_attribute(model::Model, attr::MOI.AnyAttribute, args...)
     return MOI.get(backend(model), new_attr, index.(args)...)
 end
 
+# Special case to the method above: no need to wrap optimizer attributes in
+# `AttributeFromOptimizer`.
+function get_optimizer_attribute(
+    model::Model,
+    attr::MOI.AbstractOptimizerAttribute,
+)
+    return MOI.get(backend(model), attr)
+end
+
 """
     set_silent(model::Model)
 
