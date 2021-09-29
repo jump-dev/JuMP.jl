@@ -134,8 +134,19 @@ end
 
 Get a constraint's name attribute.
 """
-function name(con_ref::ConstraintRef{<:AbstractModel,<:_MOICON})
-    return MOI.get(con_ref.model, MOI.ConstraintName(), con_ref)::String
+function name(con_ref::ConstraintRef{<:AbstractModel,C}) where {C<:_MOICON}
+    model = owner_model(con_ref)
+    if !MOI.supports(backend(model), MOI.ConstraintName(), C)
+        return ""
+    end
+    return MOI.get(model, MOI.ConstraintName(), con_ref)::String
+end
+
+# The name of VariableIndex constraints is empty.
+function name(
+    ::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{MOI.VariableIndex}},
+)
+    return ""
 end
 
 """
@@ -554,8 +565,10 @@ function add_constraint(
         model.shapes[cindex] = cshape
     end
     con_ref = ConstraintRef(model, cindex, cshape)
-    if !(func isa MOI.VariableIndex) && !isempty(name)
-        # Don't set names for VariableIndex constraints!
+    # Only set names if appropriate!
+    if !(func isa MOI.VariableIndex) &&
+       !isempty(name) &&
+       MOI.supports(backend(model), MOI.ConstraintName(), typeof(cindex))
         set_name(con_ref, name)
     end
     return con_ref

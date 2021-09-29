@@ -355,7 +355,13 @@ end
 
 Get a variable's name attribute.
 """
-name(v::VariableRef) = MOI.get(owner_model(v), MOI.VariableName(), v)::String
+function name(v::VariableRef)
+    model = owner_model(v)
+    if !MOI.supports(backend(model), MOI.VariableName(), MOI.VariableIndex)
+        return ""
+    end
+    return MOI.get(model, MOI.VariableName(), v)::String
+end
 
 """
     set_name(v::VariableRef, s::AbstractString)
@@ -1021,7 +1027,8 @@ function _moi_add_variable(moi_backend, model, v::ScalarVariable, name::String)
     index = MOI.add_variable(moi_backend)
     var_ref = VariableRef(model, index)
     _moi_constrain_variable(moi_backend, index, v.info)
-    if !isempty(name)
+    if !isempty(name) &&
+       MOI.supports(moi_backend, MOI.VariableName(), MOI.VariableIndex)
         set_name(var_ref, name)
     end
     return var_ref
