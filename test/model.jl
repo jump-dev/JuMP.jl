@@ -494,12 +494,14 @@ function test_get_optimizer_attribute_EMPTY_OPTIMIZER()
     @variable(model, x >= 1.5)
     @constraint(model, c, 2x + 1 == 0)
     @test MOI.Utilities.state(backend(model)) == MOI.Utilities.EMPTY_OPTIMIZER
-    # MockModelAttribute has a default value.
-    @test get_optimizer_attribute(model, MOIU.MockModelAttribute()) == 0
-    # We don't query x and c attributes because we can't set them in the mock
-    # without attaching!
-    @test MOI.Utilities.state(backend(model)) ==
-          MOI.Utilities.ATTACHED_OPTIMIZER
+    @test_throws(
+        KeyError,
+        get_optimizer_attribute(model, MOIU.MockModelAttribute()),
+    )
+    @test get_optimizer_attribute(model, MOIU.MockVariableAttribute(), x) ===
+          nothing
+    @test get_optimizer_attribute(model, MOIU.MockConstraintAttribute(), c) ===
+          nothing
     return
 end
 

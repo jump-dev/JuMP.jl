@@ -954,20 +954,15 @@ function get_optimizer_attribute(model::Model, attr::MOI.AnyAttribute, args...)
     end
     # ... else we have a caching optimizer.
     state = MOI.Utilities.state(backend(model))
-    if state == MOI.Utilities.NO_OPTIMIZER
-        # There's no optimizer, so we can just query this from the model cache.
+    if state == MOI.Utilities.NO_OPTIMIZER ||
+       state == MOI.Utilities.EMPTY_OPTIMIZER
+        # Query from the model cache.
         return MOI.get(model, attr, args...)
-    elseif state == MOI.Utilities.EMPTY_OPTIMIZER
-        # There's an optimizer, but it's not attached. Since the user might be
-        # querying some low-level attribute of a variable or constraint, we need
-        # to attach the optimizer.
-        MOI.Utilities.attach_optimizer(model)
     else
-        # Nothing to do here.
         @assert state == MOI.Utilities.ATTACHED_OPTIMIZER
+        new_attr = MOI.Utilities.AttributeFromOptimizer(attr)
+        return MOI.get(backend(model), new_attr, index.(args)...)
     end
-    new_attr = MOI.Utilities.AttributeFromOptimizer(attr)
-    return MOI.get(backend(model), new_attr, index.(args)...)
 end
 
 # Special case to the method above: no need to wrap optimizer attributes in
