@@ -1241,6 +1241,16 @@ function test_nlparameter_anonymous()
     return
 end
 
+function test_nlparameter_anonymous_error()
+    msg = "Invalid syntax: no positional args allowed for anonymous parameters."
+    model = Model()
+    @test_macro_throws(
+        ErrorException("In `@NLparameter(model, p, value = 1)`: $(msg)"),
+        @NLparameter(model, p, value = 1),
+    )
+    return
+end
+
 function test_nlparameter_invalid_number()
     msg = "Parameter value is not a number."
     model = Model()
