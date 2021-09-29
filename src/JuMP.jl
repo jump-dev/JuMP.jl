@@ -926,24 +926,48 @@ end
 
 """
     get_optimizer_attribute(
-        model::Model, attr::MOI.AbstractOptimizerAttribute
+        model::Model,
+        attr::MOI.AnyAttribute,
+        args...
     )
 
 Return the value of the solver-specific attribute `attr` in `model`.
 
-## Example
+## Examples
 
+Query model or optimizer attributes:
 ```julia
 get_optimizer_attribute(model, MOI.Silent())
 ```
 
+Query variable or constraint attributes:
+```julia
+get_optimizer_attribute(model, MOI.VariablePrimalStart(), x)
+```
+
 See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
 """
-function get_optimizer_attribute(
-    model::Model,
-    attr::MOI.AbstractOptimizerAttribute,
-)
-    return MOI.get(model, attr)
+function get_optimizer_attribute(model::Model, attr::MOI.AnyAttribute, args...)
+    # If we're in direct mode, no need for `AttributeFromOptimizer`.
+    if mode(model) == DIRECT
+        return MOI.get(model, attr, args...)
+    end
+    # ... else we have a caching optimizer.
+    state = MOI.Utilities.state(backend(model))
+    if state == MOI.Utilities.NO_OPTIMIZER
+        # There's no optimizer, so we can just query this from the model cache.
+        return MOI.get(model, attr, args...)
+    elseif state == MOI.Utilities.EMPTY_OPTIMIZER
+        # There's an optimizer, but it's not attached. Since the user might be
+        # querying some low-level attribute of a variable or constraint, we need
+        # to attach the optimizer.
+        MOI.Utilities.attach_optimizer(model)
+    else
+        # Nothing to do here.
+        @assert state == MOI.Utilities.ATTACHED_OPTIMIZER
+    end
+    new_attr = MOI.Utilities.AttributeFromOptimizer(attr)
+    return MOI.get(backend(model), new_attr, index.(args)...)
 end
 
 """

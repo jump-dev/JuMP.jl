@@ -460,6 +460,67 @@ function test_get_optimizer_attribute()
     @test JuMP.get_optimizer_attribute(model, "aaa") == "bbb"
 end
 
+function test_get_optimizer_attribute_direct_model()
+    mock = MOIU.MockOptimizer(MOIU.Model{Float64}())
+    model = direct_model(mock)
+    @variable(model, x >= 1.5)
+    @constraint(model, c, 2x + 1 == 0)
+    MOI.set(mock, MOIU.MockModelAttribute(), 1)
+    MOI.set(mock, MOIU.MockVariableAttribute(), index(x), 2)
+    MOI.set(mock, MOIU.MockConstraintAttribute(), index(c), 3)
+    @test get_optimizer_attribute(model, MOIU.MockModelAttribute()) == 1
+    @test get_optimizer_attribute(model, MOIU.MockVariableAttribute(), x) == 2
+    @test get_optimizer_attribute(model, MOIU.MockConstraintAttribute(), c) == 3
+    return
+end
+
+function test_get_optimizer_attribute_NO_OPTIMIZER()
+    model = Model()
+    @variable(model, x >= 1.5)
+    @constraint(model, c, 2x + 1 == 0)
+    @test_throws(
+        KeyError,
+        get_optimizer_attribute(model, MOIU.MockModelAttribute()),
+    )
+    @test get_optimizer_attribute(model, MOIU.MockVariableAttribute(), x) ===
+          nothing
+    @test get_optimizer_attribute(model, MOIU.MockConstraintAttribute(), c) ===
+          nothing
+    return
+end
+
+function test_get_optimizer_attribute_EMPTY_OPTIMIZER()
+    model = Model(() -> MOIU.MockOptimizer(MOIU.Model{Float64}()))
+    @variable(model, x >= 1.5)
+    @constraint(model, c, 2x + 1 == 0)
+    @test MOI.Utilities.state(backend(model)) == MOI.Utilities.EMPTY_OPTIMIZER
+    # MockModelAttribute has a default value.
+    @test get_optimizer_attribute(model, MOIU.MockModelAttribute()) == 0
+    # We don't query x and c attributes because we can't set them in the mock
+    # without attaching!
+    @test MOI.Utilities.state(backend(model)) ==
+          MOI.Utilities.ATTACHED_OPTIMIZER
+    return
+end
+
+function test_get_optimizer_attribute_ATTACHED_OPTIMIZER()
+    model = Model(() -> MOIU.MockOptimizer(MOIU.Model{Float64}()))
+    @variable(model, x >= 1.5)
+    @constraint(model, c, 2x + 1 == 0)
+    MOI.Utilities.attach_optimizer(model)
+    mock = unsafe_backend(model)
+    MOI.set(mock, MOIU.MockModelAttribute(), 1)
+    x_mock = MOI.get(mock, MOI.ListOfVariableIndices())[1]
+    MOI.set(mock, MOIU.MockVariableAttribute(), x_mock, 2)
+    F, S = MOI.ScalarAffineFunction{Float64}, MOI.EqualTo{Float64}
+    c_mock = MOI.get(mock, MOI.ListOfConstraintIndices{F,S}())[1]
+    MOI.set(mock, MOIU.MockConstraintAttribute(), c_mock, 3)
+    @test get_optimizer_attribute(model, MOIU.MockModelAttribute()) == 1
+    @test get_optimizer_attribute(model, MOIU.MockVariableAttribute(), x) == 2
+    @test get_optimizer_attribute(model, MOIU.MockConstraintAttribute(), c) == 3
+    return
+end
+
 function test_set_retrieve_time_limit()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
