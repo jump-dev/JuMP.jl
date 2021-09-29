@@ -115,6 +115,10 @@ add_to_expression!(ex, 1.0, y)
 2 x + y - 1
 ```
 
+!!! warning
+    Read the section [Initializing arrays](@ref) for some cases to be careful
+    about when using [`add_to_expression!`](@ref).
+
 ### Removing zero terms
 
 Use [`drop_zeros!`](@ref) to remove terms from an affine expression with a `0`
@@ -235,6 +239,10 @@ add_to_expression!(ex, 1.0, y, y)
 x² + 2 x*y + y² + x + y - 1
 ```
 
+!!! warning
+    Read the section [Initializing arrays](@ref) for some cases to be careful
+    about when using [`add_to_expression!`](@ref).
+
 ### Removing zero terms
 
 Use [`drop_zeros!`](@ref) to remove terms from a quadratic expression with a `0`
@@ -292,3 +300,99 @@ macro and can be used only in [`@NLobjective`](@ref), [`@NLconstraint`](@ref),
 and other [`@NLexpression`](@ref)s. Moreover, quadratic and affine expressions
 cannot be used in the nonlinear macros. For more details, see the [Nonlinear
 Modeling](@ref) section.
+
+## Initializing arrays
+
+JuMP implements `zero(AffExpr)` and `one(AffExpr)` in order to support various
+functions in `LinearAlgebra` (e.g., accessing the off-diagonal of a `Diagonal`
+matrix).
+```jldoctest
+julia> zero(AffExpr)
+0
+
+julia> one(AffExpr)
+1
+```
+
+However, this can result in a subtle bug if you call
+[`add_to_expression!`](@ref) or the [MutableArithmetics API](https://github.com/jump-dev/MutableArithmetics.jl)
+on an element created by `zeros` or `ones`:
+```jldoctest
+julia> x = zeros(AffExpr, 2)
+2-element Vector{AffExpr}:
+ 0
+ 0
+
+julia> add_to_expression!(x[1], 1.1)
+1.1
+
+julia> x
+2-element Vector{AffExpr}:
+ 1.1
+ 1.1
+```
+
+Notice how we modified `x[1]`, but we also changed `x[2]`!
+
+This happened because `zeros(AffExpr, 2)` calls `zero(AffExpr)` once to obtain a
+zero element, and then creates an appropriately sized array filled with the same
+element.
+
+This also happens with broadcasting calls containing a conversion of `0` or `1`:
+```jldoctest
+julia> x = Vector{AffExpr}(undef, 2)
+2-element Vector{AffExpr}:
+ #undef
+ #undef
+
+julia> x .= 0
+2-element Vector{AffExpr}:
+ 0
+ 0
+
+julia> add_to_expression!(x[1], 1.1)
+1.1
+
+julia> x
+2-element Vector{AffExpr}:
+ 1.1
+ 1.1
+```
+
+The recommended way to create an array of empty expressions is as follows:
+```jldoctest
+julia> x = Vector{AffExpr}(undef, 2)
+2-element Vector{AffExpr}:
+ #undef
+ #undef
+
+julia> for i in eachindex(x)
+           x[i] = AffExpr(0.0)
+       end
+
+julia> add_to_expression!(x[1], 1.1)
+1.1
+
+julia> x
+2-element Vector{AffExpr}:
+ 1.1
+ 0
+```
+
+Alternatively, use non-mutating operation to avoid updating `x[1]` in-place:
+```jldoctest
+julia> x = zeros(AffExpr, 2)
+2-element Vector{AffExpr}:
+ 0
+ 0
+
+julia> x[1] += 1.1
+1.1
+
+julia> x
+2-element Vector{AffExpr}:
+ 1.1
+ 0
+```
+Note that for large expressions this will be slower due to the allocation of
+additional temporary objects.
