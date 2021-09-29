@@ -2255,51 +2255,54 @@ value(y[9])
 18.0
 ```
 """
-macro NLparameter(m, ex, extra...)
+macro NLparameter(model, args...)
+    esc_m = esc(model)
     function _error(str...)
-        return _macro_error(:NLparameter, (m, ex, extra...), __source__, str...)
+        return _macro_error(:NLparameter, (model, args...), __source__, str...)
     end
+    pos_args, kw_args, requested_container = Containers._extract_kw_args(args)
+    if length(pos_args) > 1
+        _error("Invalid syntax: too many positional arguments.")
+    elseif length(kw_args) > 0
+        _error("Invalid syntax: unsupported keyword arguments.")
+    end
+    ex = pos_args[1]
     if isexpr(ex, :block)
         _error("Invalid syntax. Did you mean to use `@NLparameters`?")
+    elseif !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
+        _error("Invalid syntax: expected argument of form `param == value`.")
     end
-    extra, kw_args, requestedcontainer = Containers._extract_kw_args(extra)
-    (length(extra) == 0 && length(kw_args) == 0) ||
-        _error("Too many arguments.")
-    if !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
-        _error("Syntax error.")
-    end
-    c = ex.args[2]
-    x = ex.args[3]
-    anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
-    if anonvar
+    param, value = ex.args[2], ex.args[3]
+    if isexpr(param, :vect) || isexpr(param, :vcat)
         _error(
             "Anonymous nonlinear parameter syntax is not currently supported.",
         )
     end
-    esc_m = esc(m)
-    variable = gensym()
-
-    idxvars, indices = Containers._build_ref_sets(_error, c)
-    if m in idxvars
+    index_vars, index_values = Containers._build_ref_sets(_error, param)
+    if model in index_vars
         _error(
-            "Index $(m) is the same symbol as the model. Use a different " *
+            "Index $(model) is the same symbol as the model. Use a different " *
             "name for the index.",
         )
     end
     code = quote
-        if !isa($(esc(x)), Number)
-            _error("Expected ", $(string(x)), " to be a number.")
+        if !isa($(esc(value)), Number)
+            $(esc(_error))("Parameter value is not a number.")
         end
-        _new_parameter($esc_m, $(esc(x)))
+        _new_parameter($esc_m, $(esc(value)))
     end
-    creation_code = Containers.container_code(idxvars, indices, code, :Auto)
-
+    creation_code = Containers.container_code(
+        index_vars,
+        index_values,
+        code,
+        requested_container,
+    )
     # TODO: NLparameters are not registered in the model because we don't yet
     # have an anonymous version.
     macro_code = _macro_assign_and_return(
         creation_code,
-        variable,
-        Containers._get_name(c),
+        gensym(),
+        Containers._get_name(param),
     )
     return _finalize_macro(esc_m, macro_code, __source__)
 end
