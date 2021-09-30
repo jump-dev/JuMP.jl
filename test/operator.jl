@@ -484,9 +484,9 @@ function test_dot(ModelType, ::Any)
             @test model.operator_counter == 0
             test_add = test_dot1 + test_dot2
             @test model.operator_counter == 1  # Check triggerable.
-            test_sum_value = JuMP.value(test_sum, JuMP.start_value)
-            @test test_sum_value ≈ JuMP.value(test_dot1, JuMP.start_value)
-            @test test_sum_value ≈ JuMP.value(test_dot2, JuMP.start_value)
+            test_sum_value = JuMP.value(JuMP.start_value, test_sum)
+            @test test_sum_value ≈ JuMP.value(JuMP.start_value, test_dot1)
+            @test test_sum_value ≈ JuMP.value(JuMP.start_value, test_dot2)
         end
     end
 end

@@ -28,7 +28,7 @@ function dense_axis_constraints(n)
         mock -> MOIU.mock_optimize!(
             mock,
             zeros(n),
-            (MOI.SingleVariable, MOI.EqualTo{Float64}) => ones(n - 1),
+            (MOI.VariableIndex, MOI.EqualTo{Float64}) => ones(n - 1),
         ),
     )
     MOIU.reset_optimizer(model, mock)
@@ -54,7 +54,7 @@ function sparse_axis_constraints(n)
         mock -> MOIU.mock_optimize!(
             mock,
             zeros(n),
-            (MOI.SingleVariable, MOI.EqualTo{Float64}) => ones(div(n, 2)),
+            (MOI.VariableIndex, MOI.EqualTo{Float64}) => ones(div(n, 2)),
         ),
     )
     MOIU.reset_optimizer(model, mock)

@@ -45,9 +45,11 @@ Base.IteratorSize(::Type{<:SparseAxisArray}) = Base.HasLength()
 Base.IteratorSize(::Type{Base.Generator{<:SparseAxisArray}}) = Base.HasLength()
 Base.iterate(sa::SparseAxisArray, args...) = iterate(values(sa.data), args...)
 
+Base.hash(s::SparseAxisArray, h::UInt) = hash(s.data, h)
+
 # A `length` argument can be given because `IteratorSize` is `HasLength`
 function Base.similar(
-    sa::SparseAxisArray{S,N,K},
+    ::SparseAxisArray{S,N,K},
     ::Type{T},
     length::Integer = 0,
 ) where {S,T,N,K}
@@ -75,9 +77,12 @@ end
 # Error for sa[..., :, ...]
 function _colon_error() end
 function _colon_error(::Colon, args...)
-    return throw(ArgumentError(
-        "Indexing with `:` is not supported by" * " Containers.SparseAxisArray",
-    ))
+    return throw(
+        ArgumentError(
+            "Indexing with `:` is not supported by" *
+            " Containers.SparseAxisArray",
+        ),
+    )
 end
 _colon_error(arg, args...) = _colon_error(args...)
 
@@ -140,10 +145,12 @@ Base.Broadcast.newindex(d::SparseAxisArray, idx) = idx
 
 struct BroadcastStyle{N,K} <: Broadcast.BroadcastStyle end
 function Base.BroadcastStyle(::BroadcastStyle, ::Base.BroadcastStyle)
-    return throw(ArgumentError(
-        "Cannot broadcast Containers.SparseAxisArray with" *
-        " another array of different type",
-    ))
+    return throw(
+        ArgumentError(
+            "Cannot broadcast Containers.SparseAxisArray with" *
+            " another array of different type",
+        ),
+    )
 end
 # Scalars can be used with SparseAxisArray in broadcast
 function Base.BroadcastStyle(
@@ -171,10 +178,12 @@ function check_same_eachindex(each_index, not_sa, args...)
 end
 function check_same_eachindex(each_index, sa::SparseAxisArray, args...)
     if Set(each_index) != Set(eachindex(sa))
-        throw(ArgumentError(
-            "Cannot broadcast Containers.SparseAxisArray with" *
-            " different indices",
-        ))
+        throw(
+            ArgumentError(
+                "Cannot broadcast Containers.SparseAxisArray with" *
+                " different indices",
+            ),
+        )
     end
     return check_same_eachindex(eachindex, args...)
 end
@@ -268,30 +277,31 @@ function Base.show(io::IO, ::MIME"text/plain", sa::SparseAxisArray)
     end
 end
 Base.show(io::IO, x::SparseAxisArray) = show(convert(IOContext, io), x)
+
 function Base.show(io::IOContext, x::SparseAxisArray)
-    # TODO: make this a one-line form
     if isempty(x)
         return show(io, MIME("text/plain"), x)
     end
-    limit::Bool = get(io, :limit, false)
+    limit = get(io, :limit, false)::Bool
     half_screen_rows = limit ? div(displaysize(io)[1] - 8, 2) : typemax(Int)
-    key_string(key::Tuple) = join(key, ", ")
-    print_entry(i) = i < half_screen_rows || i > length(x) - half_screen_rows
-    pad = maximum(Int[
-        print_entry(i) ? length(key_string(key)) : 0
-        for (i, key) in enumerate(keys(x.data))
-    ])
     if !haskey(io, :compact)
         io = IOContext(io, :compact => true)
     end
-    for (i, (key, value)) in enumerate(x.data)
-        if print_entry(i)
-            print(io, "  ", '[', rpad(key_string(key), pad), "]  =  ", value)
-            if i != length(x)
-                println(io)
+    key_strings = [
+        (join(key, ", "), value) for
+        (i, (key, value)) in enumerate(x.data) if
+        i < half_screen_rows || i > length(x) - half_screen_rows
+    ]
+    sort!(key_strings; by = x -> x[1])
+    pad = maximum(length(x[1]) for x in key_strings)
+    for (i, (key, value)) in enumerate(key_strings)
+        print(io, "  [", rpad(key, pad), "]  =  ", value)
+        if i != length(key_strings)
+            println(io)
+            if i == half_screen_rows
+                println(io, "   ", " "^pad, "   \u22ee")
             end
-        elseif i == half_screen_rows
-            println(io, "   ", " "^pad, "   \u22ee")
         end
     end
+    return
 end

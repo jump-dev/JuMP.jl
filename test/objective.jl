@@ -10,7 +10,7 @@ MOI.is_empty(::DummyOptimizer) = true
 
 @testset "Unsupported objective_function" begin
     model = Model(DummyOptimizer)
-    func = MOI.SingleVariable(MOI.VariableIndex(1))
+    func = MOI.VariableIndex(1)
     @test_throws ErrorException JuMP.set_objective_function(model, func)
 end
 

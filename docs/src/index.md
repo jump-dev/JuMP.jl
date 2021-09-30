@@ -1,5 +1,7 @@
-![JuMP logo](assets/jump-logo-with-text.svg)
-===
+```@raw html
+<img class="display-light-only" src="assets/logo-with-text.svg" alt="JuMP logo"/>
+<img class="display-dark-only" src="assets/logo-dark-with-text.svg" alt="JuMP logo"/>
+```
 
 [![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org)
 
@@ -28,53 +30,53 @@ open-source and commercial solvers for a variety of problem classes, including
 linear, mixed-integer, second-order conic, semidefinite, and nonlinear
 programming.
 
+!!! tip
+    If you aren't sure if you should use JuMP, read [Should I use JuMP?](@ref).
+
 ## Resources for getting started
 
-* Checkout the [Installation Guide](@ref).
-* Read the [Quick Start Guide](@ref).
-* Browse some of our examples, including classics such as [The diet problem](@ref),
-  or the [Maximum likelihood estimation](@ref) problem using nonlinear
-  programming.
-* Work through more in-depth tutorials at [JuMPTutorials.jl](https://github.com/jump-dev/JuMPTutorials.jl)
-* Join the [community forum](https://discourse.julialang.org/c/domain/opt/13) to
-  search for questions to commonly asked questions.
-  - Before asking a question, make sure to read [PSA: make it easier to help you](https://discourse.julialang.org/t/psa-make-it-easier-to-help-you/14757),
+* Read the [Installation Guide](@ref).
+* Read the introductory tutorials [Getting started with Julia](@ref) and
+  [Getting started with JuMP](@ref).
+* Browse some of our modeling tutorials, including classics such as
+  [The diet problem](@ref), or the [Maximum likelihood estimation](@ref) problem
+  using nonlinear programming.
+
+!!! tip
+    Need help? Join the [community forum](https://discourse.julialang.org/c/domain/opt/13)
+    to search for answers to commonly asked questions.
+
+    Before asking a question, make sure to read the post [make it easier to help you](https://discourse.julialang.org/t/psa-make-it-easier-to-help-you/14757),
     which contains a number of tips on how to ask a good question.
 
-## Key features
+## How the documentation is structured
 
-JuMP's features include:
+Having a high-level overview of how this documentation is structured will help
+you know where to look for certain things.
 
--   User friendliness
-    -   Syntax that mimics natural mathematical expressions.
-    -   Complete documentation (WIP!)
--   Speed
-    -   Benchmarking has shown that JuMP can create problems at similar speeds
-        to special-purpose modeling languages such as
-        [AMPL](https://ampl.com/).
-    -   JuMP communicates with most solvers in memory, avoiding the need to
-        write intermediary files.
--   Solver independence
-    -   JuMP uses a generic solver-independent interface provided by the
-        [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl)
-        package, making it easy to change between a number of open-source and
-        commercial optimization software packages ("solvers"). The [Supported solvers](@ref)
-        section contains a table of the currently supported solvers.
--   Access to advanced algorithmic techniques
-    -   Including efficient LP re-solves which previously required using
-        solver-specific and/or low-level C++ libraries.
--   Ease of embedding
-    -   JuMP itself is written purely in Julia. Solvers are the only binary
-        dependencies.
-    -   Being embedded in a general-purpose programming language makes it easy
-        to solve optimization problems as part of a larger workflow (e.g.,
-        inside a simulation, behind a web server, or as a subproblem in a
-        decomposition algorithm).
-        -   As a trade-off, JuMP's syntax is constrained by the syntax available
-            in Julia.
-    -   JuMP is [MPL](https://www.mozilla.org/MPL/2.0/) licensed, meaning that
-        it can be embedded in commercial software that complies with the terms
-        of the license.
+* **Tutorials** contain worked examples of solving problems with JuMP. Start
+  here if you are new to JuMP, or you have a particular problem class you want
+  to model.
+
+* The **Manual** contains short code-snippets that explain how to achieve
+  specific tasks in JuMP. Look here if you want to know how to achieve a
+  particular task, such as how to [Delete a variable](@ref delete_a_variable) or
+  how to [Modify an objective coefficient](@ref).
+
+* The **API Reference** contains a complete list of the functions you can use in
+  JuMP. Look here if you want to know how to use a particular function.
+
+* The **Background information** section contains background reading material to
+  provide context to JuMP. Look here if you want an understanding of what JuMP
+  is and why we created it, rather than how to use it.
+
+* The **Developer docs** section contains information for people contributing to
+  JuMP development or writing JuMP extensions. Don't worry about this section if
+  you are just using JuMP to formulate and solve problems as a user.
+
+* The **MathOptInterface** section is a self-contained copy of the documentation
+  for MathOptInterface. Look here for functions and constants beginning with
+  `MOI.`, as well as for general information on how MathOptInterface works.
 
 ### Citing JuMP
 

@@ -87,10 +87,10 @@ function expressions_test(
 
     @testset "value for GenericAffExpr" begin
         expr1 = JuMP.GenericAffExpr(3.0, 3 => -5.0, 2 => 4.0)
-        @test @inferred(JuMP.value(expr1, -)) == 10.0
+        @test @inferred(JuMP.value(-, expr1)) == 10.0
         expr2 = JuMP.GenericAffExpr{Int,Int}(2)
-        @test typeof(@inferred(JuMP.value(expr2, i -> 1.0))) == Float64
-        @test @inferred(JuMP.value(expr2, i -> 1.0)) == 2.0
+        @test typeof(@inferred(JuMP.value(i -> 1.0, expr2))) == Float64
+        @test @inferred(JuMP.value(i -> 1.0, expr2)) == 2.0
     end
 
     @testset "value for GenericQuadExpr" begin
@@ -103,9 +103,9 @@ function expressions_test(
             JuMP.UnorderedPair(1, 2) => 5.0,
             JuMP.UnorderedPair(2, 2) => 6.0,
         )
-        @test typeof(@inferred(JuMP.value(expr, i -> 1.0))) == Float64
-        @test @inferred(JuMP.value(expr, i -> 1.0)) == 21
-        @test @inferred(JuMP.value(expr, i -> 2.0)) == 71
+        @test typeof(@inferred(JuMP.value(i -> 1.0, expr))) == Float64
+        @test @inferred(JuMP.value(i -> 1.0, expr)) == 21
+        @test @inferred(JuMP.value(i -> 2.0, expr)) == 71
     end
 
     @testset "add_to_expression!(::GenericAffExpr{C,V}, ::V)" begin
@@ -152,6 +152,45 @@ function expressions_test(
             k += 1
         end
         @test k == 0
+    end
+
+    @testset "coefficient(aff::AffExpr, v::VariableRef)" begin
+        m = ModelType()
+        x = @variable(m, x)
+        y = @variable(m, y)
+        aff = @expression(m, 1.0 * x)
+        @test coefficient(aff, x) == 1.0
+        @test coefficient(aff, y) == 0.0
+    end
+
+    @testset "coefficient(aff::AffExpr, v1::VariableRef, v2::VariableRef)" begin
+        m = ModelType()
+        x = @variable(m, x)
+        aff = @expression(m, 1.0 * x)
+        @test coefficient(aff, x, x) == 0.0
+    end
+
+    @testset "coefficient(quad::QuadExpr, v::VariableRef)" begin
+        m = ModelType()
+        x = @variable(m, x)
+        y = @variable(m, y)
+        z = @variable(m, z)
+        quad = @expression(m, 6.0 * x^2 + 5.0 * x * y + 2.0 * y + 3.0 * x)
+        @test coefficient(quad, x) == 3.0
+        @test coefficient(quad, y) == 2.0
+        @test coefficient(quad, z) == 0.0
+    end
+
+    @testset "coefficient(quad::Quad, v1::VariableRef, v2::VariableRef)" begin
+        m = ModelType()
+        x = @variable(m, x)
+        y = @variable(m, y)
+        z = @variable(m, z)
+        quad = @expression(m, 6.0 * x^2 + 5.0 * x * y + 2.0 * y + 3.0 * x)
+        @test coefficient(quad, x, y) == 5.0
+        @test coefficient(quad, x, x) == 6.0
+        @test coefficient(quad, x, y) == coefficient(quad, y, x)
+        @test coefficient(quad, z, z) == 0.0
     end
 
     @testset "MA.add_mul!(ex::Number, c::Number, x::GenericAffExpr)" begin
@@ -296,6 +335,12 @@ function expressions_test(
         @test y.pow == 6
         z = @inferred (x * x)^3
         @test z.pow == 6
+    end
+
+    @testset "ndims(::QuadExpr)" begin
+        model = ModelType()
+        @variable(model, x)
+        @test ndims(x^2 + 1) == 0
     end
 end
 

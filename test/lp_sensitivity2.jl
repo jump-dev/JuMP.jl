@@ -3,18 +3,34 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+module TestLPSensitivity
+
 using Test
+using JuMP
+import LinearAlgebra
+
+function runtests()
+    for name in names(@__MODULE__; all = true)
+        if startswith("$(name)", "test_")
+            @testset "$(name)" begin
+                getfield(@__MODULE__, name)()
+            end
+        end
+    end
+    return
+end
 
 struct TestSensitivitySolution
     primal::Float64
     dual::Float64
-    basis::Union{Nothing, MOI.BasisStatusCode}
-    range::Tuple{Float64, Float64}
+    basis::MOI.BasisStatusCode
+    range::Tuple{Float64,Float64}
 end
 
 function _test_sensitivity(model_string, solution)
     m = MOIU.MockOptimizer(
-        MOIU.Model{Float64}(), eval_variable_constraint_dual=false
+        MOIU.Model{Float64}(),
+        eval_variable_constraint_dual = false,
     )
     model = direct_model(m)
     MOI.Utilities.loadfromstring!(m, model_string)
@@ -22,19 +38,35 @@ function _test_sensitivity(model_string, solution)
     MOI.set(m, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(m, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(m, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-    obj_map = Dict{String, Any}()
+    obj_map = Dict{Any,Any}()
     for (key, val) in solution
-        var = variable_by_name(model, key)
-        if var !== nothing
-            obj_map[key] = var
-            MOI.set(model, MOI.VariablePrimal(), var, val.primal)
-            continue
+        if key isa String
+            var = variable_by_name(model, key)
+            if var !== nothing
+                obj_map[key] = var
+                MOI.set(model, MOI.VariablePrimal(), var, val.primal)
+                MOI.set(model, MOI.VariableBasisStatus(), var, val.basis)
+            else
+                c = constraint_by_name(model, key)
+                @assert c !== nothing
+                obj_map[key] = c
+                MOI.set(model, MOI.ConstraintDual(), c, val.dual)
+                MOI.set(model, MOI.ConstraintBasisStatus(), c, val.basis)
+            end
+        else
+            var = variable_by_name(model, key[1])
+            c = if key[2] <: MOI.GreaterThan
+                LowerBoundRef(var)
+            elseif key[2] <: MOI.LessThan
+                UpperBoundRef(var)
+            else
+                FixRef(var)
+            end
+            @assert c !== nothing
+            obj_map[key] = c
+            MOI.set(model, MOI.ConstraintDual(), c, val.dual)
+            MOI.set(model, MOI.ConstraintBasisStatus(), c, val.basis)
         end
-        c = constraint_by_name(model, key)
-        @assert c !== nothing
-        obj_map[key] = c
-        MOI.set(model, MOI.ConstraintDual(), c, val.dual)
-        MOI.set(model, MOI.ConstraintBasisStatus(), c, val.basis)
     end
     sens = lp_sensitivity_report(model)
     @testset "$(s_key)" for (s_key, val) in solution
@@ -42,11 +74,13 @@ function _test_sensitivity(model_string, solution)
         @test sens[key][1] ≈ val.range[1]
         @test sens[key][2] ≈ val.range[2]
     end
+    return
 end
 
-@testset "Error handling" begin
+function test_Error_handling()
     m = MOIU.MockOptimizer(
-        MOIU.Model{Float64}(), eval_variable_constraint_dual=false
+        MOIU.Model{Float64}(),
+        eval_variable_constraint_dual = false,
     )
     model = direct_model(m)
     optimize!(model)
@@ -54,258 +88,418 @@ end
     MOI.set(m, MOI.PrimalStatus(), MOI.NO_SOLUTION)
     MOI.set(m, MOI.DualStatus(), MOI.NO_SOLUTION)
     err = ErrorException(
-        "Unable to compute LP sensitivity: no primal solution available."
+        "Unable to compute LP sensitivity: no primal solution available.",
     )
     @test_throws err lp_sensitivity_report(model)
     MOI.set(m, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     err = ErrorException(
-        "Unable to compute LP sensitivity: no dual solution available."
+        "Unable to compute LP sensitivity: no dual solution available.",
     )
     @test_throws err lp_sensitivity_report(model)
-    MOI.Utilities.loadfromstring!(m, """
-    variables: x
-    maxobjective: 1.0 * x
-    c: x in Interval(0.0, 1.0)
-    """)
+    MOI.Utilities.loadfromstring!(
+        m,
+        """
+variables: x
+maxobjective: 1.0 * x
+c: x in Interval(0.0, 1.0)
+""",
+    )
     err = ErrorException(
         "Unable to compute LP sensitivity because model is not a linear " *
-        "program (or it contains interval constraints)."
+        "program (or it contains interval constraints).",
     )
     @test_throws err lp_sensitivity_report(model)
     MOI.empty!(m)
-    MOI.Utilities.loadfromstring!(m, """
-    variables: x, y
-    minobjective: 1.0 * x + 1.0 * y
-    c: [x, y] in Nonnegatives(2)
-    """)
+    MOI.Utilities.loadfromstring!(
+        m,
+        """
+variables: x, y
+minobjective: 1.0 * x + 1.0 * y
+c: [x, y] in Nonnegatives(2)
+""",
+    )
     err = ErrorException(
         "Unable to compute LP sensitivity because model is not a linear " *
-        "program (or it contains interval constraints)."
+        "program (or it contains interval constraints).",
     )
     @test_throws err lp_sensitivity_report(model)
+    return
 end
 
-@testset "Problems" begin
-    @testset "Simple bounds: Min" begin
-        _test_sensitivity(
-            """
-            variables: x
-            minobjective: x
-            xlb: x >= -1.0
-            xub: x <= 1.0
-            """,
-            Dict(
-                "x" => TestSensitivitySolution(-1.0, NaN, nothing, (-1, Inf)),
-                "xlb" => TestSensitivitySolution(NaN, 1.0, MOI.NONBASIC, (-Inf, 2.0)),
-                "xub" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-2, Inf)),
-            ),
-        )
+function test_Degeneracy()
+    m = MOIU.MockOptimizer(
+        MOIU.Model{Float64}(),
+        eval_variable_constraint_dual = false,
+    )
+    model = direct_model(m)
+    MOI.Utilities.loadfromstring!(
+        m,
+        """
+        variables: x, y
+        maxobjective: 2.0 * x + 4.0 * y
+        c1: x + 2 * y <= 4.0
+        c2: x + 2 * y <= 4.0
+        """,
+    )
+    optimize!(model)
+    MOI.set(m, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(m, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(m, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    for (key, val) in Dict("x" => 0, "y" => 2, "c1" => 0, "c2" => 2)
+        var = variable_by_name(model, key)
+        if var !== nothing
+            MOI.set(model, MOI.VariablePrimal(), var, val)
+            MOI.set(model, MOI.VariableBasisStatus(), var, MOI.BASIC)
+        else
+            c = constraint_by_name(model, key)
+            MOI.set(model, MOI.ConstraintDual(), c, val)
+            MOI.set(
+                model,
+                MOI.ConstraintBasisStatus(),
+                c,
+                MOI.NONBASIC_AT_UPPER,
+            )
+        end
     end
-    @testset "Simple bounds: Max" begin
-        _test_sensitivity(
-            """
-            variables: x
-            maxobjective: x
-            xlb: x >= -1.0
-            xub: x <= 1.0
-            """,
-            Dict(
-                "x" => TestSensitivitySolution(1.0, NaN, nothing, (-1, Inf)),
-                "xlb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2.0)),
-                "xub" => TestSensitivitySolution(NaN, -1.0, MOI.NONBASIC, (-2, Inf)),
-            ),
-        )
-    end
-    @testset "Max I" begin
-        _test_sensitivity(
-            """
-            variables: x, y, z, w
-            maxobjective: 1.1 * x + y
-            xlb: x >= -1.0
-            xub: x <= 1.0
-            ylb: y >= 0.0
-            zfx: z == 1.0
-            c1: x + y + z + w == 1.0
-            c2: x + y         <= 2.0
-            """,
-            Dict(
-                "x" => TestSensitivitySolution(1.0, NaN, nothing, (-0.1, Inf)),
-                "y" => TestSensitivitySolution(1.0, NaN, nothing, (-1, 0.1)),
-                "z" => TestSensitivitySolution(1.0, NaN, nothing, (-Inf, Inf)),
-                "w" => TestSensitivitySolution(-2.0, NaN, nothing, (-Inf, 1.0)),
-                "xlb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2.0)),
-                "xub" => TestSensitivitySolution(NaN, -0.1, MOI.NONBASIC, (-2, 1.0)),
-                "ylb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 1.0)),
-                "c1" => TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
-                "c2" => TestSensitivitySolution(NaN, -1.0, MOI.NONBASIC, (-1.0, Inf)),
-                "zfx" => TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
-            ),
-        )
-    end
-    @testset "Min I" begin
-        _test_sensitivity(
-            """
-            variables: x, y, z, w
-            minobjective: -1.1 * x + -1.0 * y
-            xlb: x >= -1.0
-            xub: x <= 1.0
-            ylb: y >= 0.0
-            zfx: z == 1.0
-            c1: x + y + z + w == 1.0
-            c2: x + y         <= 2.0
-            """,
-            Dict(
-                "x" => TestSensitivitySolution(1.0, NaN, nothing, (-Inf, 0.1)),
-                "y" => TestSensitivitySolution(1.0, NaN, nothing, (-0.1, 1)),
-                "z" => TestSensitivitySolution(1.0, NaN, nothing, (-Inf, Inf)),
-                "w" => TestSensitivitySolution(-2.0, NaN, nothing, (-1.0, Inf)),
-                "xlb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2.0)),
-                "xub" => TestSensitivitySolution(NaN, -0.1, MOI.NONBASIC, (-2, 1.0)),
-                "ylb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 1.0)),
-                "c1" => TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
-                "c2" => TestSensitivitySolution(NaN, -1.0, MOI.NONBASIC, (-1.0, Inf)),
-                "zfx" => TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
-            ),
-        )
-    end
-    @testset "Max II" begin
-        _test_sensitivity(
-            """
-            variables: x, y
-            maxobjective: -1.0 * x + -1.0 * y
-            xlb: x >= 0.0
-            ylb: y >= 0.0
-            c1l: x + 2 * y >= -1.0
-            c1u: x + 2 * y <= 2.0
-            c2: x + y      >= 0.5
-            c3: 2 * x + y  <= 2.0
-            """,
-            Dict(
-                "x" => TestSensitivitySolution(0.5, NaN, nothing, (0, 1)),
-                "y" => TestSensitivitySolution(0.0, NaN, nothing, (-Inf, 0)),
-                "xlb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 0.5)),
-                "ylb" => TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-1, 0.5)),
-                "c1l" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 1.5)),
-                "c1u" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-1.5, Inf)),
-                "c2" => TestSensitivitySolution(NaN, 1.0, MOI.NONBASIC, (-0.5, 0.5)),
-                "c3" => TestSensitivitySolution(NaN, 1.0, MOI.BASIC, (-1.0, Inf)),
-            ),
-        )
-    end
-    @testset "Min II" begin
-        _test_sensitivity(
-            """
-            variables: x, y
-            minobjective: 1.0 * x + 1.0 * y
-            xlb: x >= 0.0
-            ylb: y >= 0.0
-            c1l: x + 2 * y >= -1.0
-            c1u: x + 2 * y <= 2.0
-            c2: x + y      >= 0.5
-            c3: 2 * x + y  <= 2.0
-            """,
-            Dict(
-                "x" => TestSensitivitySolution(0.5, NaN, nothing, (-1, 0)),
-                "y" => TestSensitivitySolution(0.0, NaN, nothing, (0, Inf)),
-                "xlb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 0.5)),
-                "ylb" => TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-1, 0.5)),
-                "c1l" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 1.5)),
-                "c1u" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-1.5, Inf)),
-                "c2" => TestSensitivitySolution(NaN, 1.0, MOI.NONBASIC, (-0.5, 0.5)),
-                "c3" => TestSensitivitySolution(NaN, 1.0, MOI.BASIC, (-1.0, Inf)),
-            ),
-        )
-    end
-    @testset "Max III" begin
-        _test_sensitivity(
-            """
-            variables: x, y
-            maxobjective: 6.0 * x + 4.0 * y
-            xlb: x >= 0.0
-            ylb: y >= 0.0
-            c1: 1 * x + 1 * y <=  6.0
-            c2: 2 * x + 1 * y <=  9.0
-            c3: 2 * x + 3 * y <= 16.0
-            """,
-            Dict(
-                "x" => TestSensitivitySolution(3.0, NaN, nothing, (-2, 2)),
-                "y" => TestSensitivitySolution(3.0, NaN, nothing, (-1, 2)),
-                "xlb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 3)),
-                "ylb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 3)),
-                "c1" => TestSensitivitySolution(NaN, -2.0, MOI.NONBASIC, (-1.5, 0.25)),
-                "c2" => TestSensitivitySolution(NaN, -2.0, MOI.NONBASIC, (-1, 3)),
-                "c3" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-1, Inf)),
-            ),
-        )
-    end
-    @testset "Min III" begin
-        _test_sensitivity(
-            """
-            variables: x, y
-            minobjective: -6.0 * x + -4.0 * y
-            xlb: x >= 0.0
-            ylb: y >= 0.0
-            c1: 1 * x + 1 * y <=  6.0
-            c2: 2 * x + 1 * y <=  9.0
-            c3: 2 * x + 3 * y <= 16.0
-            """,
-            Dict(
-                "x" => TestSensitivitySolution(3.0, NaN, nothing, (-2, 2)),
-                "y" => TestSensitivitySolution(3.0, NaN, nothing, (-2, 1)),
-                "xlb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 3)),
-                "ylb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 3)),
-                "c1" => TestSensitivitySolution(NaN, -2.0, MOI.NONBASIC, (-1.5, 0.25)),
-                "c2" => TestSensitivitySolution(NaN, -2.0, MOI.NONBASIC, (-1, 3)),
-                "c3" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-1, Inf)),
-            ),
-        )
-    end
-    @testset "Max IV" begin
-        _test_sensitivity(
-            """
-            variables: x, y
-            maxobjective: 1.0 * x + 1.0 * y
-            xlb: x >= 0.0
-            ylb: y >= 0.0
-            c1l: x + 2 * y >= -1.0
-            c1u: x + 2 * y <= 2.0
-            c2: x + y      >= 0.5
-            c3: 2 * x + y  <= 2.0
-            """,
-            Dict(
-                "x" => TestSensitivitySolution(2/3, NaN, nothing, (-0.5, 1)),
-                "y" => TestSensitivitySolution(2/3, NaN, nothing, (-0.5, 1)),
-                "xlb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2/3)),
-                "ylb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2/3)),
-                "c1l" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 3)),
-                "c1u" => TestSensitivitySolution(NaN, -1/3, MOI.NONBASIC, (-1, 2)),
-                "c2" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 5/6)),
-                "c3" => TestSensitivitySolution(NaN, -1/3, MOI.NONBASIC, (-1.0, 2)),
-            ),
-        )
-    end
-    @testset "Min IV" begin
-        _test_sensitivity(
-            """
-            variables: x, y
-            minobjective: -1.0 * x + -1.0 * y
-            xlb: x >= 0.0
-            ylb: y >= 0.0
-            c1l: x + 2 * y >= -1.0
-            c1u: x + 2 * y <= 2.0
-            c2: x + y      >= 0.5
-            c3: 2 * x + y  <= 2.0
-            """,
-            Dict(
-                "x" => TestSensitivitySolution(2/3, NaN, nothing, (-1, 0.5)),
-                "y" => TestSensitivitySolution(2/3, NaN, nothing, (-1, 0.5)),
-                "xlb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2/3)),
-                "ylb" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2/3)),
-                "c1l" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 3)),
-                "c1u" => TestSensitivitySolution(NaN, -1/3, MOI.NONBASIC, (-1, 2)),
-                "c2" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 5/6)),
-                "c3" => TestSensitivitySolution(NaN, -1/3, MOI.NONBASIC, (-1.0, 2)),
-            ),
-        )
-    end
+    @test_throws(LinearAlgebra.SingularException, lp_sensitivity_report(model),)
+    return
 end
+
+function test_Simple_bounds_Min()
+    _test_sensitivity(
+        """
+        variables: x
+        minobjective: x
+        x >= -1.0
+        x <= 1.0
+        """,
+        Dict(
+            "x" => TestSensitivitySolution(
+                -1.0,
+                NaN,
+                MOI.NONBASIC_AT_LOWER,
+                (-1, Inf),
+            ),
+            ("x", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 1.0, MOI.NONBASIC, (-Inf, 2.0)),
+            ("x", MOI.LessThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-2, Inf)),
+        ),
+    )
+    return
+end
+
+function test_Simple_bounds_Max()
+    _test_sensitivity(
+        """
+        variables: x
+        maxobjective: x
+        x >= -1.0
+        x <= 1.0
+        """,
+        Dict(
+            "x" => TestSensitivitySolution(
+                1.0,
+                NaN,
+                MOI.NONBASIC_AT_UPPER,
+                (-1, Inf),
+            ),
+            ("x", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2.0)),
+            ("x", MOI.LessThan{Float64}) =>
+                TestSensitivitySolution(NaN, -1.0, MOI.NONBASIC, (-2, Inf)),
+        ),
+    )
+    return
+end
+
+function test_Max_I()
+    _test_sensitivity(
+        """
+        variables: x, y, z, w
+        maxobjective: 1.1 * x + y
+        x >= -1.0
+        x <= 1.0
+        y >= 0.0
+        z == 1.0
+        c1: x + y + z + w == 1.0
+        c2: x + y         <= 2.0
+        """,
+        Dict(
+            "x" => TestSensitivitySolution(
+                1.0,
+                NaN,
+                MOI.NONBASIC_AT_UPPER,
+                (-0.1, Inf),
+            ),
+            "y" => TestSensitivitySolution(1.0, NaN, MOI.BASIC, (-1, 0.1)),
+            "z" => TestSensitivitySolution(1.0, NaN, MOI.NONBASIC, (-Inf, Inf)),
+            "w" => TestSensitivitySolution(-2.0, NaN, MOI.BASIC, (-Inf, 1.0)),
+            ("x", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2.0)),
+            ("x", MOI.LessThan{Float64}) =>
+                TestSensitivitySolution(NaN, -0.1, MOI.NONBASIC, (-2, 1.0)),
+            ("y", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 1.0)),
+            "c1" =>
+                TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
+            "c2" =>
+                TestSensitivitySolution(NaN, -1.0, MOI.NONBASIC, (-1.0, Inf)),
+            ("z", MOI.EqualTo{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
+        ),
+    )
+    return
+end
+
+function test_Min_I()
+    _test_sensitivity(
+        """
+        variables: x, y, z, w
+        minobjective: -1.1 * x + -1.0 * y
+        x >= -1.0
+        x <= 1.0
+        y >= 0.0
+        z == 1.0
+        c1: x + y + z + w == 1.0
+        c2: x + y         <= 2.0
+        """,
+        Dict(
+            "x" => TestSensitivitySolution(
+                1.0,
+                NaN,
+                MOI.NONBASIC_AT_UPPER,
+                (-Inf, 0.1),
+            ),
+            "y" => TestSensitivitySolution(1.0, NaN, MOI.BASIC, (-0.1, 1)),
+            "z" => TestSensitivitySolution(1.0, NaN, MOI.NONBASIC, (-Inf, Inf)),
+            "w" => TestSensitivitySolution(-2.0, NaN, MOI.BASIC, (-1.0, Inf)),
+            ("x", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2.0)),
+            ("x", MOI.LessThan{Float64}) =>
+                TestSensitivitySolution(NaN, -0.1, MOI.NONBASIC, (-2, 1.0)),
+            ("y", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 1.0)),
+            "c1" =>
+                TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
+            "c2" =>
+                TestSensitivitySolution(NaN, -1.0, MOI.NONBASIC, (-1.0, Inf)),
+            ("z", MOI.EqualTo{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
+        ),
+    )
+    return
+end
+
+function test_Max_II()
+    _test_sensitivity(
+        """
+        variables: x, y
+        maxobjective: -1.0 * x + -1.0 * y
+        x >= 0.0
+        y >= 0.0
+        c1l: x + 2 * y >= -1.0
+        c1u: x + 2 * y <= 2.0
+        c2: x + y      >= 0.5
+        c3: 2 * x + y  <= 2.0
+        """,
+        Dict(
+            "x" => TestSensitivitySolution(0.5, NaN, MOI.BASIC, (0, 1)),
+            "y" => TestSensitivitySolution(
+                0.0,
+                NaN,
+                MOI.NONBASIC_AT_LOWER,
+                (-Inf, 0),
+            ),
+            ("x", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 0.5)),
+            ("y", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-1, 0.5)),
+            "c1l" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 1.5)),
+            "c1u" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-1.5, Inf)),
+            "c2" =>
+                TestSensitivitySolution(NaN, 1.0, MOI.NONBASIC, (-0.5, 0.5)),
+            "c3" => TestSensitivitySolution(NaN, 1.0, MOI.BASIC, (-1.0, Inf)),
+        ),
+    )
+    return
+end
+
+function test_Min_II()
+    _test_sensitivity(
+        """
+        variables: x, y
+        minobjective: 1.0 * x + 1.0 * y
+        x >= 0.0
+        y >= 0.0
+        c1l: x + 2 * y >= -1.0
+        c1u: x + 2 * y <= 2.0
+        c2: x + y      >= 0.5
+        c3: 2 * x + y  <= 2.0
+        """,
+        Dict(
+            "x" => TestSensitivitySolution(0.5, NaN, MOI.BASIC, (-1, 0)),
+            "y" => TestSensitivitySolution(
+                0.0,
+                NaN,
+                MOI.NONBASIC_AT_LOWER,
+                (0, Inf),
+            ),
+            ("x", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 0.5)),
+            ("y", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-1, 0.5)),
+            "c1l" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 1.5)),
+            "c1u" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-1.5, Inf)),
+            "c2" =>
+                TestSensitivitySolution(NaN, 1.0, MOI.NONBASIC, (-0.5, 0.5)),
+            "c3" => TestSensitivitySolution(NaN, 1.0, MOI.BASIC, (-1.0, Inf)),
+        ),
+    )
+    return
+end
+
+function test_Max_III()
+    _test_sensitivity(
+        """
+        variables: x, y
+        maxobjective: 6.0 * x + 4.0 * y
+        x >= 0.0
+        y >= 0.0
+        c1: 1 * x + 1 * y <=  6.0
+        c2: 2 * x + 1 * y <=  9.0
+        c3: 2 * x + 3 * y <= 16.0
+        """,
+        Dict(
+            "x" => TestSensitivitySolution(3.0, NaN, MOI.BASIC, (-2, 2)),
+            "y" => TestSensitivitySolution(3.0, NaN, MOI.BASIC, (-1, 2)),
+            ("x", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 3)),
+            ("y", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 3)),
+            "c1" =>
+                TestSensitivitySolution(NaN, -2.0, MOI.NONBASIC, (-1.5, 0.25)),
+            "c2" => TestSensitivitySolution(NaN, -2.0, MOI.NONBASIC, (-1, 3)),
+            "c3" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-1, Inf)),
+        ),
+    )
+    return
+end
+
+function test_Min_III()
+    _test_sensitivity(
+        """
+        variables: x, y
+        minobjective: -6.0 * x + -4.0 * y
+        x >= 0.0
+        y >= 0.0
+        c1: 1 * x + 1 * y <=  6.0
+        c2: 2 * x + 1 * y <=  9.0
+        c3: 2 * x + 3 * y <= 16.0
+        """,
+        Dict(
+            "x" => TestSensitivitySolution(3.0, NaN, MOI.BASIC, (-2, 2)),
+            "y" => TestSensitivitySolution(3.0, NaN, MOI.BASIC, (-2, 1)),
+            ("x", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 3)),
+            ("y", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 3)),
+            "c1" =>
+                TestSensitivitySolution(NaN, -2.0, MOI.NONBASIC, (-1.5, 0.25)),
+            "c2" => TestSensitivitySolution(NaN, -2.0, MOI.NONBASIC, (-1, 3)),
+            "c3" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-1, Inf)),
+        ),
+    )
+    return
+end
+
+function test_Max_IV()
+    _test_sensitivity(
+        """
+        variables: x, y
+        maxobjective: 1.0 * x + 1.0 * y
+        x >= 0.0
+        y >= 0.0
+        c1l: x + 2 * y >= -1.0
+        c1u: x + 2 * y <= 2.0
+        c2: x + y      >= 0.5
+        c3: 2 * x + y  <= 2.0
+        """,
+        Dict(
+            "x" => TestSensitivitySolution(2 / 3, NaN, MOI.BASIC, (-0.5, 1)),
+            "y" => TestSensitivitySolution(2 / 3, NaN, MOI.BASIC, (-0.5, 1)),
+            ("x", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2 / 3)),
+            ("y", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2 / 3)),
+            "c1l" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 3)),
+            "c1u" =>
+                TestSensitivitySolution(NaN, -1 / 3, MOI.NONBASIC, (-1, 2)),
+            "c2" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 5 / 6)),
+            "c3" =>
+                TestSensitivitySolution(NaN, -1 / 3, MOI.NONBASIC, (-1.0, 2)),
+        ),
+    )
+    return
+end
+
+function test_Min_IV()
+    _test_sensitivity(
+        """
+        variables: x, y
+        minobjective: -1.0 * x + -1.0 * y
+        x >= 0.0
+        y >= 0.0
+        c1l: x + 2 * y >= -1.0
+        c1u: x + 2 * y <= 2.0
+        c2: x + y      >= 0.5
+        c3: 2 * x + y  <= 2.0
+        """,
+        Dict(
+            "x" => TestSensitivitySolution(2 / 3, NaN, MOI.BASIC, (-1, 0.5)),
+            "y" => TestSensitivitySolution(2 / 3, NaN, MOI.BASIC, (-1, 0.5)),
+            ("x", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2 / 3)),
+            ("y", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2 / 3)),
+            "c1l" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 3)),
+            "c1u" =>
+                TestSensitivitySolution(NaN, -1 / 3, MOI.NONBASIC, (-1, 2)),
+            "c2" => TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 5 / 6)),
+            "c3" =>
+                TestSensitivitySolution(NaN, -1 / 3, MOI.NONBASIC, (-1.0, 2)),
+        ),
+    )
+    return
+end
+
+function test_Free_variable()
+    _test_sensitivity(
+        """
+        variables: x, y
+        minobjective: 1.0 * x
+        x >= 1.0
+        """,
+        Dict(
+            "x" => TestSensitivitySolution(
+                1.0,
+                NaN,
+                MOI.NONBASIC_AT_LOWER,
+                (-1.0, Inf),
+            ),
+            "y" =>
+                TestSensitivitySolution(0.0, NaN, MOI.SUPER_BASIC, (0.0, 0.0)),
+            ("x", MOI.GreaterThan{Float64}) => TestSensitivitySolution(
+                NaN,
+                1.0,
+                MOI.NONBASIC_AT_LOWER,
+                (-Inf, Inf),
+            ),
+        ),
+    )
+    return
+end
+
+end  # module
+
+TestLPSensitivity.runtests()

@@ -9,6 +9,161 @@ include(joinpath(@__DIR__, "utilities.jl"))
     include(joinpath(@__DIR__, "JuMPExtension.jl"))
 end
 
+function test_univariate_error()
+    model = Model()
+    @variable(model, x >= 0)
+    @test_throws ErrorException @NLobjective(model, Min, g_doesnotexist(x))
+end
+
+function test_univariate_error_existing()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    @test_throws ErrorException @NLobjective(model, Min, g_doestnotexist(ex))
+end
+
+function test_univariate()
+    model = Model()
+    @variable(model, x >= 0)
+    g(x) = x^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(x))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 4.0
+end
+
+function test_univariate_register_twice()
+    model = Model()
+    @variable(model, x >= 0)
+    g(x) = x^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(x))
+    @test_logs @NLconstraint(model, g(x) <= 1)
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    y = [NaN]
+    MOI.eval_constraint(d, y, x)
+    @test y == [3.0]
+end
+
+function test_univariate_register_twice_error()
+    model = Model()
+    @variable(model, x >= 0)
+    g(x) = x^2
+    g(x, y) = x^2 + x^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(x))
+    @test_throws ErrorException @NLconstraint(model, g(x, x) <= 1)
+end
+
+function test_univariate_existing_nlpdata()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    g(x) = x^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(ex))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 16.0
+end
+
+function test_univariate_redefine()
+    model = Model()
+    @variable(model, x >= 0)
+    g = (x) -> x^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(x))
+
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 4.0
+
+    g = (x) -> 2x^2
+    @test MOI.eval_objective(d, x) == 4.0
+end
+
+function test_multivariate_error()
+    model = Model()
+    @variable(model, x >= 0)
+    @test_throws ErrorException @NLobjective(model, Min, g_doesnotexist(x, x))
+end
+
+function test_multivariate_error_existing()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    @test_throws ErrorException @NLobjective(model, Min, g_doestnotexist(ex, x))
+end
+
+function test_multivariate()
+    model = Model()
+    @variable(model, x >= 0)
+    g(x, y) = x^2 + y^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(x, x))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 8.0
+end
+
+function test_multivariate_register_warn()
+    model = Model()
+    g(x, y) = x^2 + y^2
+    function ∇g(g::Vector{T}, x::T, y::T) where {T<:Real}
+        g[1] = y
+        g[2] = x
+        return
+    end
+    @test_logs (:warn,) register(model, :g, 2, g, ∇g; autodiff = true)
+end
+
+function test_multivariate_existing_nlpdata()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    g(x, y) = x^2 + y^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(ex, x))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 20.0
+end
+
+function test_multivariate_redefine()
+    model = Model()
+    @variable(model, x >= 0)
+    @NLexpression(model, ex, x^2)
+    g = (x, y) -> x^2 + y^2
+    @test_logs (:warn,) @NLobjective(model, Min, g(ex, x))
+    d = JuMP.NLPEvaluator(model)
+    MOI.initialize(d, Symbol[])
+    x = [2.0]
+    @test MOI.eval_objective(d, x) == 20.0
+
+    g = (x, y) -> x^2 + y
+    @test MOI.eval_objective(d, x) == 20.0
+end
+
+@testset "Auto-register-univariate" begin
+    test_univariate_error()
+    test_univariate_error_existing()
+    test_univariate()
+    test_univariate_existing_nlpdata()
+    test_univariate_redefine()
+    test_univariate_register_twice()
+    test_univariate_register_twice_error()
+end
+
+@testset "Auto-register-multivariate" begin
+    test_multivariate_error()
+    test_multivariate_error_existing()
+    test_multivariate()
+    test_multivariate_existing_nlpdata()
+    test_multivariate_redefine()
+    test_multivariate_register_warn()
+end
+
 @testset "Nonlinear" begin
     import JuMP: _NonlinearExprData
 
@@ -191,6 +346,18 @@ end
         model = Model()
         @variable(model, x[1:2])
         @test_macro_throws ErrorException @NLexpression(model, (*)((x / 2)...))
+    end
+
+    @testset "Error on begin...end" begin
+        model = Model()
+        @variable(model, x)
+        err = ErrorException(
+            "`begin...end` blocks are not supported in nonlinear macros. The " *
+            "nonlinear expression must be a single statement.",
+        )
+        @test_macro_throws(err, @NLobjective(model, Max, begin
+            sin(x) + 1
+        end))
     end
 
     @testset "Error on unexpected splatting" begin
@@ -658,25 +825,39 @@ end
         @test jac_values ≈ [1.0, 0.0, 1.0, 3.0]
     end
 
-    @testset "set_NL_objective and add_NL_constraint" begin
+    @testset "add_NL_expression, set_NL_objective, and add_NL_constraint" begin
         model = Model()
         @variable(model, x)
         @variable(model, y)
-        JuMP.set_NL_objective(model, MOI.MIN_SENSE, :($x^2 + $y^2))
+        @expression(model, aff, x + 2y - 3)
+        @expression(model, quad, x^2 + 2y^2 - x)
+        nlexpr = JuMP.add_NL_expression(model, :($x^2 + $y^2))
+        JuMP.set_NL_objective(model, MOI.MIN_SENSE, :(2 * $nlexpr))
         JuMP.add_NL_constraint(model, :($x + $y <= 1))
         JuMP.add_NL_constraint(model, :($x + $y >= 1))
         JuMP.add_NL_constraint(model, :($x + $y == 1))
         JuMP.add_NL_constraint(model, :(0 <= $x + $y <= 1))
+        JuMP.add_NL_constraint(model, :($aff == 1))
+        JuMP.add_NL_constraint(model, :($quad == 1))
 
         d = JuMP.NLPEvaluator(model)
         MOI.initialize(d, [:ExprGraph])
         xidx = x.index
         yidx = y.index
-        @test MOI.objective_expr(d) == :(x[$xidx]^2.0 + x[$yidx]^2.0)
+        @test MOI.objective_expr(d) == :(2.0 * (x[$xidx]^2.0 + x[$yidx]^2.0))
         @test MOI.constraint_expr(d, 1) == :((x[$xidx] + x[$yidx]) - 1.0 <= 0.0)
         @test MOI.constraint_expr(d, 2) == :((x[$xidx] + x[$yidx]) - 1.0 >= 0.0)
         @test MOI.constraint_expr(d, 3) == :((x[$xidx] + x[$yidx]) - 1.0 == 0.0)
         @test MOI.constraint_expr(d, 4) == :(0.0 <= x[$xidx] + x[$yidx] <= 1.0)
+        @test MOI.constraint_expr(d, 5) ==
+              :((-3.0 + x[$xidx] + 2.0 * x[$yidx]) - 1.0 == 0.0)
+        @test MOI.constraint_expr(d, 6) == :(
+            (
+                +(-1.0 * x[$xidx]) +
+                x[$xidx] * x[$xidx] +
+                x[$yidx] * x[$yidx] * 2.0
+            ) - 1.0 == 0.0
+        )
     end
 
     @testset "Test views on Hessian functions" begin
@@ -745,7 +926,7 @@ end
         MOI.initialize(d, [:Grad])
         expected_exception = ErrorException(
             "Expected return type of Float64 from a user-defined function, " *
-            "but got GenericAffExpr{Float64,VariableRef}. Make sure your " *
+            "but got $(GenericAffExpr{Float64,VariableRef}). Make sure your " *
             "user-defined function only depends on variables passed as " *
             "arguments.",
         )
@@ -774,9 +955,9 @@ end
         @NLexpression(model, ex2, ex1 + x^2)
         @NLexpression(model, ex3, 2ex1 + ex2 / 2)
         JuMP.set_start_value(x, 2.0)
-        @test JuMP.value(ex1, JuMP.start_value) ≈ sin(2.0)
-        @test JuMP.value(ex2, JuMP.start_value) ≈ sin(2.0) + 4.0
-        @test JuMP.value(ex3, JuMP.start_value) ≈ 2.5 * sin(2.0) + 2.0
+        @test JuMP.value(JuMP.start_value, ex1) ≈ sin(2.0)
+        @test JuMP.value(JuMP.start_value, ex2) ≈ sin(2.0) + 4.0
+        @test JuMP.value(JuMP.start_value, ex3) ≈ 2.5 * sin(2.0) + 2.0
     end
 
     @testset "Hessians disabled with user-defined multivariate functions" begin
@@ -789,37 +970,39 @@ end
         @test !(:Hess in MOI.features_available(evaluator))
     end
 
-    @testset "Error on using AffExpr in NLexpression" begin
+    @testset "AffExpr in nonlinear" begin
         model = Model()
-        @variable(model, x)
-        @variable(model, y)
-        A = x + y
-        expected_exception = ErrorException(
-            "Unexpected affine expression x + y in nonlinear expression. " *
-            "Affine expressions (e.g., created using @expression) and " *
-            "nonlinear expressions cannot be mixed.",
+        @variable(model, x, start = 1.1)
+        @variable(model, y, start = 1.2)
+        @expression(model, ex, 2 * x + y + 1)
+        nl_ex = @NLexpression(model, ex^2)
+        @test isapprox(
+            value(start_value, nl_ex),
+            (2 * 1.1 + 1.2 + 1)^2,
+            atol = 1e-4,
         )
-        @test_throws expected_exception @NLexpression(model, A)
     end
 
-    @testset "Error on using QuadExpr in NLexpression" begin
+    @testset "QuadExpr in nonlinear" begin
         model = Model()
-        @variable(model, x)
-        @variable(model, y)
-        A = x * y
-        expected_exception = ErrorException(
-            "Unexpected quadratic expression x*y in nonlinear expression. " *
-            "Quadratic expressions (e.g., created using @expression) and " *
-            "nonlinear expressions cannot be mixed.",
+        @variable(model, x, start = 1.1)
+        @variable(model, y, start = 1.2)
+        @expression(model, ex, 0.5 * x^2 + y^2 + 2 * x + 1)
+        nl_ex = @NLexpression(model, sqrt(ex))
+        @test isapprox(
+            value(start_value, nl_ex),
+            sqrt(0.5 * 1.1^2 + 1.2^2 + 2 * 1.1 + 1),
+            atol = 1e-4,
         )
-        @test_throws expected_exception @NLexpression(model, A)
     end
+
     @testset "Error on complex values" begin
         model = Model()
         @variable(model, x)
         c = sqrt(Complex(-1))
-        expected_exception =
-            ErrorException("Unexpected object $c (of type $(typeof(c)) in nonlinear expression.")
+        expected_exception = ErrorException(
+            "Unexpected object $c (of type $(typeof(c)) in nonlinear expression.",
+        )
         @test_throws expected_exception @NLobjective(model, Min, c * x)
     end
     @testset "Special functions" begin
@@ -842,5 +1025,84 @@ end
             "don't work with JuMP-extensions.",
         )
         @test_throws(err, @NLexpression(model, sqrt(x)))
+    end
+
+    @testset "rad2deg and deg2rad" begin
+        x = 1.0
+        id = JuMP._Derivatives.univariate_operator_to_id[:rad2deg]
+        y = rad2deg(x)
+        @test JuMP._Derivatives.eval_univariate_2nd_deriv(id, x, y) == 0.0
+        id = JuMP._Derivatives.univariate_operator_to_id[:deg2rad]
+        y = deg2rad(x)
+        @test JuMP._Derivatives.eval_univariate_2nd_deriv(id, x, y) == 0.0
+    end
+
+    @testset "Unsupported function max" begin
+        model = Model()
+        @variable(model, x >= 0)
+        @NLobjective(model, Min, max(x, 2 * x))
+        d = JuMP.NLPEvaluator(model)
+        MOI.initialize(d, Symbol[])
+        x = [2.0]
+        @test_throws ErrorException MOI.eval_objective(d, x)
+    end
+
+    @testset "Re-register univariate" begin
+        model = Model()
+        @variable(model, x >= 0)
+        f(x) = x^2
+        register(model, :f, 1, f; autodiff = true)
+        @test_throws ErrorException register(model, :f, 1, f; autodiff = true)
+    end
+
+    @testset "Re-register multivariate" begin
+        model = Model()
+        @variable(model, x >= 0)
+        f(x, y) = x + y
+        register(model, :f, 2, f; autodiff = true)
+        @test_throws ErrorException register(model, :f, 2, f; autodiff = true)
+    end
+
+    @testset "Check univariate NLconstraint is valid" begin
+        model = Model()
+        model2 = Model()
+        @variable(model, x >= 0)
+        c = @NLconstraint(model, exp(x) <= 1)
+        @test is_valid(model, c)
+        @test !is_valid(model2, c)
+    end
+
+    @testset "Check multivariate NLconstraint is valid" begin
+        model = Model()
+        model2 = Model()
+        @variable(model, x >= 0)
+        @variable(model, y >= 0)
+        c = @NLconstraint(model, exp(x) + log(y) <= 1)
+        @test is_valid(model, c)
+        @test !is_valid(model2, c)
+    end
+
+    @testset "Check multivariate NLconstraint is valid" begin
+        model = Model()
+        @variable(model, x)
+        @NLexpression(model, expr, sin(x))
+        @test_throws(
+            ErrorException(
+                "`JuMP.value` is not defined for collections of JuMP types. " *
+                "Use Julia's broadcast syntax instead: `JuMP.value.(x)`.",
+            ),
+            value([x, x]),
+        )
+    end
+
+    @testset "Interval errors" begin
+        model = Model()
+        @variable(model, x)
+        err = ErrorException(
+            "Interval constraint contains non-constant left- or right-hand " *
+            "sides. Reformulate as two separate constraints, or move all " *
+            "variables into the central term.",
+        )
+        @test_throws err add_NL_constraint(model, :($x <= $x <= 2 * $x))
     end
 end

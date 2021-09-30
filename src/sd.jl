@@ -1,3 +1,18 @@
+"""
+    SymMatrixSpace()
+
+Use in the [`@variable`](@ref) macro to constrain a matrix of variables to be
+symmetric.
+
+## Examples
+
+```jldoctest; setup=:(model = Model())
+julia> @variable(model, Q[1:2, 1:2] in SymMatrixSpace())
+2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
+ Q[1,1]  Q[1,2]
+ Q[1,2]  Q[2,2]
+```
+"""
 struct SymMatrixSpace end
 
 """
@@ -90,7 +105,10 @@ lower-left triangular part given row by row).
 struct SymmetricMatrixShape <: AbstractShape
     side_dimension::Int
 end
-function reshape_vector(vectorized_form::Vector{T}, shape::SymmetricMatrixShape) where T
+function reshape_vector(
+    vectorized_form::Vector{T},
+    shape::SymmetricMatrixShape,
+) where {T}
     matrix = Matrix{T}(undef, shape.side_dimension, shape.side_dimension)
     k = 0
     for j in 1:shape.side_dimension
@@ -101,15 +119,16 @@ function reshape_vector(vectorized_form::Vector{T}, shape::SymmetricMatrixShape)
     end
     return Symmetric(matrix)
 end
-function reshape_set(::MOI.PositiveSemidefiniteConeTriangle,
-                     ::SymmetricMatrixShape)
+function reshape_set(
+    ::MOI.PositiveSemidefiniteConeTriangle,
+    ::SymmetricMatrixShape,
+)
     return PSDCone()
 end
 function vectorize(matrix::Matrix, ::SymmetricMatrixShape)
     n = LinearAlgebra.checksquare(matrix)
     return [matrix[i, j] for j in 1:n for i in 1:j]
 end
-
 
 """
     SkewSymmetricMatrixShape
@@ -135,9 +154,9 @@ function reshape_vector(
     matrix = Matrix{NewType}(undef, shape.side_dimension, shape.side_dimension)
     k = 0
     for j in 1:shape.side_dimension
-        for i in 1:(j - 1)
+        for i in 1:(j-1)
             k += 1
-            matrix[i, j] =  vectorized_form[k]
+            matrix[i, j] = vectorized_form[k]
             matrix[j, i] = -vectorized_form[k]
         end
         matrix[j, j] = zero(NewType)
@@ -161,7 +180,10 @@ row).
 struct SquareMatrixShape <: AbstractShape
     side_dimension::Int
 end
-function reshape_vector(vectorized_form::Vector{T}, shape::SquareMatrixShape) where T
+function reshape_vector(
+    vectorized_form::Vector{T},
+    shape::SquareMatrixShape,
+) where {T}
     return reshape(vectorized_form, shape.side_dimension, shape.side_dimension)
 end
 function reshape_set(::MOI.PositiveSemidefiniteConeSquare, ::SquareMatrixShape)
@@ -169,18 +191,20 @@ function reshape_set(::MOI.PositiveSemidefiniteConeSquare, ::SquareMatrixShape)
 end
 vectorize(matrix::Matrix, ::SquareMatrixShape) = vec(matrix)
 
-function vectorize(matrix, shape::Union{SymmetricMatrixShape, SquareMatrixShape})
+function vectorize(matrix, shape::Union{SymmetricMatrixShape,SquareMatrixShape})
     return vectorize(Matrix(matrix), shape)
 end
 
 function _square_side(_error::Function, ::Containers.SparseAxisArray)
-    _error("Cannot have index dependencies in symmetric variables.")
+    return _error("Cannot have index dependencies in symmetric variables.")
 end
 function _square_side(_error::Function, ::Containers.DenseAxisArray)
-    _error("Index sets for symmetric variables must be ranges of the form 1:N.")
+    return _error(
+        "Index sets for symmetric variables must be ranges of the form 1:N.",
+    )
 end
 function _square_side(_error::Function, ::Array)
-    _error("Symmetric variables must be 2-dimensional.")
+    return _error("Symmetric variables must be 2-dimensional.")
 end
 function _square_side(_error::Function, variables::Matrix)
     n, m = size(variables)
@@ -195,7 +219,9 @@ function _vectorize_variables(_error::Function, matrix::Matrix)
     for j in 1:n
         for i in 1:j
             if matrix[i, j] != matrix[j, i]
-                _error("Non-symmetric bounds, integrality or starting values for symmetric variable.")
+                _error(
+                    "Non-symmetric bounds, integrality or starting values for symmetric variable.",
+                )
             end
         end
     end
@@ -203,7 +229,7 @@ function _vectorize_variables(_error::Function, matrix::Matrix)
 end
 
 """
-    build_constraint(_error::Function, variables, ::SymMatrixSpace)
+    build_variable(_error::Function, variables, ::SymMatrixSpace)
 
 Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
 creating variables in `MOI.Reals`, i.e. "free" variables unless they are
@@ -214,11 +240,19 @@ This function is used by the [`@variable`](@ref) macro as follows:
 @variable(model, Q[1:2, 1:2], Symmetric)
 ```
 """
-function build_variable(_error::Function, variables::Matrix{<:ScalarVariable}, ::SymMatrixSpace)
+function build_variable(
+    _error::Function,
+    variables::Matrix{<:AbstractVariable},
+    ::SymMatrixSpace,
+)
     n = _square_side(_error, variables)
     set = MOI.Reals(MOI.dimension(MOI.PositiveSemidefiniteConeTriangle(n)))
     shape = SymmetricMatrixShape(n)
-    return VariablesConstrainedOnCreation(_vectorize_variables(_error, variables), set, shape)
+    return VariablesConstrainedOnCreation(
+        _vectorize_variables(_error, variables),
+        set,
+        shape,
+    )
 end
 
 """
@@ -235,7 +269,7 @@ This function is used by the [`@variable`](@ref) macro as follows:
 """
 function build_variable(
     _error::Function,
-    variables::Matrix{<:ScalarVariable},
+    variables::Matrix{<:AbstractVariable},
     ::SkewSymmetricMatrixSpace,
 )
     n = _square_side(_error, variables)
@@ -249,7 +283,7 @@ function build_variable(
 end
 
 """
-    build_constraint(_error::Function, variables, ::PSDCone)
+    build_variable(_error::Function, variables, ::PSDCone)
 
 Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
 constraining the variables to be positive semidefinite.
@@ -259,11 +293,19 @@ This function is used by the [`@variable`](@ref) macro as follows:
 @variable(model, Q[1:2, 1:2], PSD)
 ```
 """
-function build_variable(_error::Function, variables::Matrix{<:ScalarVariable}, ::PSDCone)
+function build_variable(
+    _error::Function,
+    variables::Matrix{<:AbstractVariable},
+    ::PSDCone,
+)
     n = _square_side(_error, variables)
     set = MOI.PositiveSemidefiniteConeTriangle(n)
     shape = SymmetricMatrixShape(n)
-    return VariablesConstrainedOnCreation(_vectorize_variables(_error, variables), set, shape)
+    return VariablesConstrainedOnCreation(
+        _vectorize_variables(_error, variables),
+        set,
+        shape,
+    )
 end
 
 """
@@ -288,14 +330,18 @@ var_psd = @constraint model Q in PSDCone()
 # The `var_psd` variable contains a reference to the constraint
 ```
 """
-function build_constraint(_error::Function, Q::Symmetric{V, M},
-                          ::PSDCone) where {V <: AbstractJuMPScalar,
-                                            M <: AbstractMatrix{V}}
+function build_constraint(
+    _error::Function,
+    Q::Symmetric{V,M},
+    ::PSDCone,
+) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
     n = LinearAlgebra.checksquare(Q)
     shape = SymmetricMatrixShape(n)
-    VectorConstraint(vectorize(Q, shape),
-                     MOI.PositiveSemidefiniteConeTriangle(n),
-                     shape)
+    return VectorConstraint(
+        vectorize(Q, shape),
+        MOI.PositiveSemidefiniteConeTriangle(n),
+        shape,
+    )
 end
 
 """
@@ -322,12 +368,16 @@ var_psd = @constraint model Q in PSDCone()
 # The `var_psd` variable contains a reference to the constraint
 ```
 """
-function build_constraint(_error::Function,
-                          Q::AbstractMatrix{<:AbstractJuMPScalar},
-                          ::PSDCone)
+function build_constraint(
+    _error::Function,
+    Q::AbstractMatrix{<:AbstractJuMPScalar},
+    ::PSDCone,
+)
     n = LinearAlgebra.checksquare(Q)
     shape = SquareMatrixShape(n)
-    VectorConstraint(vectorize(Q, shape),
-                     MOI.PositiveSemidefiniteConeSquare(n),
-                     shape)
+    return VectorConstraint(
+        vectorize(Q, shape),
+        MOI.PositiveSemidefiniteConeSquare(n),
+        shape,
+    )
 end

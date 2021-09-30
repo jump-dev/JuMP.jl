@@ -129,6 +129,12 @@ function _parse_ref_sets(_error::Function, expr::Expr)
             idxvar = gensym()
             idxset = esc(s)
         end
+        if idxvar in idxvars
+            _error(
+                "The index $(idxvar) appears more than once. The index " *
+                "associated with each set must be unique.",
+            )
+        end
         push!(idxvars, idxvar)
         push!(idxsets, idxset)
     end
@@ -150,14 +156,16 @@ returns:
 function _build_ref_sets(_error::Function, expr)
     idxvars, idxsets, condition = _parse_ref_sets(_error, expr)
     if any(_expr_is_splat.(idxsets))
-        _error("cannot use splatting operator `...` in the definition of an index set.")
+        _error(
+            "cannot use splatting operator `...` in the definition of an index set.",
+        )
     end
     has_dependent = has_dependent_sets(idxvars, idxsets)
     if has_dependent || condition != :()
         esc_idxvars = esc.(idxvars)
         idxfuns = [
-            :(($(esc_idxvars[1:(i-1)]...),) -> $(idxsets[i]))
-            for i in 1:length(idxvars)
+            :(($(esc_idxvars[1:(i-1)]...),) -> $(idxsets[i])) for
+            i in 1:length(idxvars)
         ]
         if condition == :()
             indices = :(Containers.nested($(idxfuns...)))
@@ -176,18 +184,6 @@ end
 function container_code(idxvars, indices, code, requested_container)
     if isempty(idxvars)
         return code
-    end
-    if !(
-        requested_container in
-        [:Auto, :Array, :DenseAxisArray, :SparseAxisArray]
-    )
-        # We do this two-step interpolation, first into the string, and then
-        # into the expression because interpolating into a string inside an
-        # expression has scoping issues.
-        error_message =
-            "Invalid container type $requested_container. Must be " *
-            "Auto, Array, DenseAxisArray, or SparseAxisArray."
-        return :(error($error_message))
     end
     if requested_container == :DenseAxisArray
         requested_container = :(Containers.DenseAxisArray)
@@ -217,10 +213,9 @@ may depend on the value of the indices.
 
 Same as above but the container is assigned to the variable of name `ref`.
 
-The type of container can be controlled by the `container` keyword. See
-[Containers in macros](@ref). Note that when the index set is explicitly
-given as `1:n` for any expression `n`, it is transformed to `Base.OneTo(n)`
-before being given to [`container`](@ref).
+The type of container can be controlled by the `container` keyword. Note that
+when the index set is explicitly given as `1:n` for any expression `n`, it is
+transformed to `Base.OneTo(n)` before being given to [`container`](@ref).
 
 ## Examples
 

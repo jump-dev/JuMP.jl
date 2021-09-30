@@ -36,7 +36,7 @@ function forward_eval(
     adj,
     const_values,
     parameter_values,
-    x_values::AbstractVector{T},
+    x_values,
     subexpression_values,
     user_input_buffer,
     user_output_buffer,
@@ -54,7 +54,7 @@ function forward_eval(
         # compute the value of node k
         @inbounds nod = nd[k]
         partials_storage[k] = zero(T)
-        if nod.nodetype == VARIABLE
+        if nod.nodetype == VARIABLE || nod.nodetype == MOIVARIABLE
             @inbounds storage[k] = x_values[nod.index]
         elseif nod.nodetype == VALUE
             @inbounds storage[k] = const_values[nod.index]
@@ -172,13 +172,12 @@ function forward_eval(
                 end
                 # TODO: The function names are confusing here. This just
                 # evaluates the function value and gradient.
-                fval =
-                    eval_and_check_return_type(
-                        MOI.eval_objective,
-                        T,
-                        evaluator,
-                        f_input,
-                    )::T
+                fval = eval_and_check_return_type(
+                    MOI.eval_objective,
+                    T,
+                    evaluator,
+                    f_input,
+                )::T
                 MOI.eval_objective_gradient(evaluator, grad_output, f_input)
                 storage[k] = fval
                 r = 1
@@ -188,7 +187,18 @@ function forward_eval(
                     r += 1
                 end
             else
-                error("Unsupported operation $(operators[op])")
+                f = operators[op]
+                error("""
+                Unsupported function `$(f)`.
+
+                Register it as a user-defined function before building the
+                model. For example:
+                ```julia
+                model = Model()
+                register(model, :$(f), $(n_children), $(f), autodiff=true)
+                # ... variables and constraints ...
+                ```
+                """)
             end
         elseif nod.nodetype == CALLUNIVAR # univariate function
             op = nod.index
@@ -397,7 +407,9 @@ function forward_eval_ϵ(
                         recip_denominator,
                     )
                 elseif op >= USER_OPERATOR_ID_START
-                    error("User-defined operators not supported for hessian computations")
+                    error(
+                        "User-defined operators not supported for hessian computations",
+                    )
                 end
             elseif nod.nodetype == CALLUNIVAR # univariate function
                 op = nod.index
@@ -405,12 +417,11 @@ function forward_eval_ϵ(
                 child_val = storage[child_idx]
                 if op >= USER_UNIVAR_OPERATOR_ID_START
                     userop = op - USER_UNIVAR_OPERATOR_ID_START + 1
-                    fprimeprime =
-                        eval_and_check_return_type(
-                            user_operators.univariate_operator_fprimeprime[userop],
-                            T,
-                            child_val,
-                        )::T
+                    fprimeprime = eval_and_check_return_type(
+                        user_operators.univariate_operator_fprimeprime[userop],
+                        T,
+                        child_val,
+                    )::T
                 else
                     fprimeprime =
                         eval_univariate_2nd_deriv(op, child_val, storage[k])
@@ -477,6 +488,8 @@ for i in 1:length(univariate_operators)
         deriv_expr = :(-fval)
     elseif op == :exp
         deriv_expr = :(fval)
+    elseif op == :rad2deg || op == :deg2rad
+        deriv_expr = :(zero(T))
     else
         deriv_expr = Calculus.differentiate(univariate_operator_deriv[i], :x)
     end

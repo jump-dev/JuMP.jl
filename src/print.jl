@@ -22,10 +22,61 @@
 #   separately defined.
 #############################################################################
 
+using Printf
+
 # Used for dispatching
+"""
+    PrintMode
+
+An abstract type used for dispatching printing.
+"""
 abstract type PrintMode end
+
+"""
+    REPLMode
+
+A type used for dispatching printing. Produces plain-text representations.
+"""
 abstract type REPLMode <: PrintMode end
+
+"""
+    IJuliaMode
+
+A type used for dispatching printing. Produces LaTeX representations.
+"""
 abstract type IJuliaMode <: PrintMode end
+
+Base.show(io::IO, model::AbstractModel) = _print_summary(io, model)
+
+struct _LatexModel{T<:AbstractModel}
+    model::T
+end
+
+"""
+    latex_formulation(model::AbstractModel)
+
+Wrap `model` in a type so that it can be pretty-printed as `text/latex` in a
+notebook like IJulia, or in Documenter.
+
+To render the model, end the cell with `latex_formulation(model)`, or call
+`display(latex_formulation(model))` in to force the display of the model from
+inside a function.
+"""
+latex_formulation(model::AbstractModel) = _LatexModel(model)
+
+Base.show(io::IO, model::_LatexModel) = _print_latex(io, model.model)
+Base.show(io::IO, ::MIME"text/latex", model::_LatexModel) = show(io, model)
+
+function Base.print(model::AbstractModel)
+    for d in Base.Multimedia.displays
+        if Base.Multimedia.displayable(d, "text/latex") &&
+           startswith("$(typeof(d))", "IJulia.")
+            return display(d, "text/latex", latex_formulation(model))
+        end
+    end
+    return _print_model(stdout, model)
+end
+Base.print(io::IO, model::AbstractModel) = _print_model(io, model)
 
 # Whether something is zero or not for the purposes of printing it
 # oneunit is useful e.g. if coef is a Unitful quantity.
@@ -40,7 +91,7 @@ _sign_string(coef) = coef < zero(coef) ? " - " : " + "
 function _string_round(f::Float64)
     iszero(f) && return "0" # strip sign off zero
     str = string(f)
-    length(str) >= 2 && str[end-1:end] == ".0" ? str[1:end-2] : str
+    return length(str) >= 2 && str[end-1:end] == ".0" ? str[1:end-2] : str
 end
 _string_round(f) = string(f)
 
@@ -149,9 +200,15 @@ _plural(n) = (isone(n) ? "" : "s")
 ## Model
 #------------------------------------------------------------------------
 
-# An `AbstractModel` subtype should implement `show_objective_function_summary`,
-# `show_constraints_summary` and `show_backend_summary` for this method to work.
-function Base.show(io::IO, model::AbstractModel)
+"""
+    _print_summary(io::IO, model::AbstractModel)
+
+Print a plain-text summary of `model` to `io`.
+
+An `AbstractModel` subtype should implement `show_objective_function_summary`,
+`show_constraints_summary` and `show_backend_summary` for this method to work.
+"""
+function _print_summary(io::IO, model::AbstractModel)
     println(io, "A JuMP Model")
     sense = objective_sense(model)
     if sense == MOI.MAX_SENSE
@@ -163,8 +220,13 @@ function Base.show(io::IO, model::AbstractModel)
     end
     println(io, " problem with:")
     # TODO: Use MOI.Name for the name of a JuMP model.
-    println(io, "Variable", _plural(num_variables(model)), ": ",
-            num_variables(model))
+    println(
+        io,
+        "Variable",
+        _plural(num_variables(model)),
+        ": ",
+        num_variables(model),
+    )
     if sense != MOI.FEASIBILITY_SENSE
         show_objective_function_summary(io, model)
     end
@@ -173,77 +235,119 @@ function Base.show(io::IO, model::AbstractModel)
     names_in_scope = sort(collect(keys(object_dictionary(model))))
     if !isempty(names_in_scope)
         println(io)
-        print(io, "Names registered in the model: ",
-              join(string.(names_in_scope), ", "))
+        print(
+            io,
+            "Names registered in the model: ",
+            join(string.(names_in_scope), ", "),
+        )
     end
 end
 
+"""
+    show_backend_summary(io::IO, model::Model)
+
+Print a summary of the optimizer backing `model`.
+
+`AbstractModel`s should implement this method.
+"""
 function show_backend_summary(io::IO, model::Model)
     model_mode = mode(model)
     println(io, "Model mode: ", model_mode)
     if model_mode == MANUAL || model_mode == AUTOMATIC
-        println(io, "CachingOptimizer state: ",
-                MOIU.state(backend(model)))
+        println(io, "CachingOptimizer state: ", MOIU.state(backend(model)))
     end
     # The last print shouldn't have a new line
     print(io, "Solver name: ", solver_name(model))
+    return
 end
 
-function Base.print(io::IO, model::AbstractModel)
-    print(io, model_string(REPLMode, model))
-end
-function Base.show(io::IO, ::MIME"text/latex", model::AbstractModel)
-    print(io, _wrap_in_math_mode(model_string(IJuliaMode, model)))
-end
+"""
+    _print_model(io::IO, model::AbstractModel)
 
-# An `AbstractModel` subtype should implement `objective_function_string` and
-# `constraints_string` for this method to work.
-function model_string(print_mode, model::AbstractModel)
-    ijl = print_mode == IJuliaMode
-    sep = ijl ? " & " : " "
-    eol = ijl ? "\\\\\n" : "\n"
+Print a plain-text formulation of `model` to `io`.
+
+An `AbstractModel` subtype should implement `objective_function_string`,
+`constraints_string` and `_nl_subexpression_string` for this method to work.
+"""
+function _print_model(io::IO, model::AbstractModel)
     sense = objective_sense(model)
-    str = ""
     if sense == MOI.MAX_SENSE
-        str *= ijl ? "\\max" : "Max"
+        print(io, "Max ")
+        println(io, objective_function_string(REPLMode, model))
     elseif sense == MOI.MIN_SENSE
-        str *= ijl ? "\\min" : "Min"
+        print(io, "Min ")
+        println(io, objective_function_string(REPLMode, model))
     else
-        str *= ijl ? "\\text{feasibility}" : "Feasibility"
+        println(io, "Feasibility")
     end
-    if sense != MOI.FEASIBILITY_SENSE
-        if ijl
-            str *= "\\quad"
-        end
-        str *= sep
-        str *= objective_function_string(print_mode, model)
-    end
-    str *= eol
-    str *= ijl ? "\\text{Subject to} \\quad" : "Subject to" * eol
-    constraints = constraints_string(print_mode, model)
-    if print_mode == REPLMode
-        constraints = map(str -> replace(str, '\n' => eol * sep), constraints)
-    end
-    if !isempty(constraints)
-        str *= sep
-    end
-    str *= join(constraints, eol * sep)
-    if !isempty(constraints)
-        str *= eol
+    println(io, "Subject to")
+    for constraint in constraints_string(REPLMode, model)
+        println(io, " ", replace(constraint, '\n' => "\n "))
     end
     # TODO: Generalize this when similar functionality is needed for
-    # AbstractModel.
-    nl_subexpressions = _nl_subexpression_string(print_mode, model)
+    # `AbstractModel`.
+    nl_subexpressions = _nl_subexpression_string(REPLMode, model)
     if !isempty(nl_subexpressions)
-        str *= ijl ? "\\text{With NL expressions} \\quad" :
-            "With NL expressions" * eol
-        str *= sep * join(nl_subexpressions, eol * sep)
-        str *= eol
+        println(io, "With NL expressions")
     end
-    if ijl
-        str = "\\begin{alignat*}{1}" * str * "\\end{alignat*}\n"
+    for expr in nl_subexpressions
+        println(io, " ", expr)
     end
-    return str
+    return
+end
+
+"""
+    _print_latex(io::IO, model::AbstractModel)
+
+Print a LaTeX formulation of `model` to `io`.
+
+An `AbstractModel` subtype should implement `objective_function_string`,
+`constraints_string` and `_nl_subexpression_string` for this method to work.
+"""
+function _print_latex(io::IO, model::AbstractModel)
+    println(io, "\$\$ \\begin{aligned}")
+    sense = objective_sense(model)
+    if sense == MOI.MAX_SENSE
+        print(io, "\\max\\quad & ")
+        println(io, objective_function_string(IJuliaMode, model), "\\\\")
+    elseif sense == MOI.MIN_SENSE
+        print(io, "\\min\\quad & ")
+        println(io, objective_function_string(IJuliaMode, model), "\\\\")
+    else
+        println(io, "\\text{feasibility}\\\\")
+    end
+    constraints = constraints_string(IJuliaMode, model)
+    if !isempty(constraints)
+        print(io, "\\text{Subject to} \\quad")
+    end
+    for constraint in constraints
+        println(io, " & ", constraint, "\\\\")
+    end
+    # TODO: Generalize this when similar functionality is needed for
+    # `AbstractModel`.
+    nl_subexpressions = _nl_subexpression_string(IJuliaMode, model)
+    if !isempty(nl_subexpressions)
+        print(io, "\\text{With NL expressions} \\quad")
+    end
+    for expr in nl_subexpressions
+        println(io, " & ", expr, "\\\\")
+    end
+    return print(io, "\\end{aligned} \$\$")
+end
+
+"""
+    model_string(print_mode, model::AbstractModel)
+
+Return a `String` representation of `model` given the `print_mode`.
+
+`print_mode` must be `IJuliaMode` or `REPLMode`.
+"""
+function model_string(print_mode, model::AbstractModel)
+    if print_mode == IJuliaMode
+        return sprint(_print_latex, model)
+    else
+        return sprint(_print_model, model)
+    end
 end
 
 _nl_subexpression_string(print_mode, ::AbstractModel) = String[]
@@ -299,13 +403,219 @@ end
 Return a `String` describing the objective function of the model.
 """
 function objective_function_string(print_mode, model::Model)
-   nlobj = _nlp_objective_function(model)
-   if nlobj === nothing
-       return function_string(print_mode, objective_function(model))
-   else
-       return nl_expr_string(model, print_mode, nlobj)
-   end
+    nlobj = _nlp_objective_function(model)
+    if nlobj === nothing
+        return function_string(print_mode, objective_function(model))
+    else
+        return nl_expr_string(model, print_mode, nlobj)
+    end
 end
+
+struct _SolutionSummary
+    verbose::Bool
+    solver::String
+    # Status
+    termination_status::MOI.TerminationStatusCode
+    primal_status::MOI.ResultStatusCode
+    dual_status::MOI.ResultStatusCode
+    raw_status::String
+    result_count::Int
+    has_values::Bool
+    has_duals::Bool
+    # Candidate solution
+    objective_value::Float64
+    objective_bound::Union{Missing,Float64}
+    dual_objective_value::Union{Missing,Float64}
+    primal_solution::Union{Missing,Dict{String,Float64}}
+    dual_solution::Union{Missing,Dict{String,Float64}}
+    # Work counters
+    solve_time::Float64
+    barrier_iterations::Union{Missing,Int}
+    simplex_iterations::Union{Missing,Int}
+    node_count::Union{Missing,Int}
+end
+
+"""
+    solution_summary(model::Model; verbose::Bool = false)
+
+Return a struct that can be used print a summary of the solution.
+
+If `verbose=true`, write out the primal solution for every variable and the
+dual solution for every constraint, excluding those with empty names.
+
+## Examples
+
+When called at the REPL, the summary is automatically printed:
+```julia
+julia> solution_summary(model)
+[...]
+```
+
+Use `print` to force the printing of the summary from inside a function:
+```julia
+function foo(model)
+    print(solution_summary(model))
+    return
+end
+```
+"""
+function solution_summary(model::Model; verbose::Bool = false)
+    return _SolutionSummary(
+        verbose,
+        solver_name(model),
+        termination_status(model),
+        primal_status(model),
+        dual_status(model),
+        raw_status(model),
+        result_count(model),
+        has_values(model),
+        has_duals(model),
+        _try_get(objective_value, model),
+        _try_get(objective_bound, model),
+        _try_get(dual_objective_value, model),
+        verbose ? _get_solution_dict(model) : missing,
+        verbose ? _get_constraint_dict(model) : missing,
+        _try_get(solve_time, model),
+        _try_get(barrier_iterations, model),
+        _try_get(simplex_iterations, model),
+        _try_get(node_count, model),
+    )
+end
+
+"""
+    Base.show([io::IO], summary::SolutionSummary; verbose::Bool = false)
+
+Write a summary of the solution results to `io` (or to `stdout` if `io` is not
+given).
+"""
+function Base.show(io::IO, summary::_SolutionSummary)
+    println(io, "* Solver : ", summary.solver)
+    println(io)
+    _show_status_summary(io, summary)
+    _show_candidate_solution_summary(io, summary)
+    _show_work_counters_summary(io, summary)
+    return
+end
+
+function _show_status_summary(io::IO, summary::_SolutionSummary)
+    println(io, "* Status")
+    println(io, "  Termination status : ", summary.termination_status)
+    println(io, "  Primal status      : ", summary.primal_status)
+    println(io, "  Dual status        : ", summary.dual_status)
+    if summary.verbose
+        println(io, "  Result count       : ", summary.result_count)
+        println(io, "  Has duals          : ", summary.has_duals)
+    end
+    println(io, "  Message from the solver:")
+    println(io, "  \"", summary.raw_status, "\"")
+    println(io)
+    return
+end
+
+function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
+    println(io, "* Candidate solution")
+    _print_if_not_missing(
+        io,
+        "  Objective value      : ",
+        summary.objective_value,
+    )
+    _print_if_not_missing(
+        io,
+        "  Objective bound      : ",
+        summary.objective_bound,
+    )
+    _print_if_not_missing(
+        io,
+        "  Dual objective value : ",
+        summary.dual_objective_value,
+    )
+    if summary.verbose && summary.has_values
+        println(io, "  Primal solution :")
+        for variable_name in sort(collect(keys(summary.primal_solution)))
+            println(
+                io,
+                "    ",
+                variable_name,
+                " : ",
+                summary.primal_solution[variable_name],
+            )
+        end
+    end
+    if summary.verbose && summary.has_duals
+        println(io, "  Dual solution :")
+        for constraint_name in sort(collect(keys(summary.dual_solution)))
+            println(
+                io,
+                "    ",
+                constraint_name,
+                " : ",
+                summary.dual_solution[constraint_name],
+            )
+        end
+    end
+    println(io)
+    return
+end
+
+function _show_work_counters_summary(io::IO, summary::_SolutionSummary)
+    println(io, "* Work counters")
+    _print_if_not_missing(
+        io,
+        "  Solve time (sec)   : ",
+        @sprintf("%.5f", summary.solve_time),
+    )
+    _print_if_not_missing(
+        io,
+        "  Simplex iterations : ",
+        summary.simplex_iterations,
+    )
+    _print_if_not_missing(
+        io,
+        "  Barrier iterations : ",
+        summary.barrier_iterations,
+    )
+    _print_if_not_missing(io, "  Node count         : ", summary.node_count)
+    return
+end
+
+function _get_solution_dict(model)
+    dict = Dict{String,Float64}()
+    if has_values(model)
+        for x in all_variables(model)
+            variable_name = name(x)
+            if !isempty(variable_name)
+                dict[variable_name] = value(x)
+            end
+        end
+    end
+    return dict
+end
+
+function _get_constraint_dict(model)
+    dict = Dict{String,Float64}()
+    if has_duals(model)
+        for (F, S) in list_of_constraint_types(model)
+            for constraint in all_constraints(model, F, S)
+                constraint_name = name(constraint)
+                if !isempty(constraint_name)
+                    dict[constraint_name] = dual(constraint)
+                end
+            end
+        end
+    end
+    return dict
+end
+
+function _try_get(f, model)
+    try
+        return f(model)
+    catch
+        return missing
+    end
+end
+
+_print_if_not_missing(io, header, ::Missing) = nothing
+_print_if_not_missing(io, header, value) = println(io, header, value)
 
 #------------------------------------------------------------------------
 ## VariableRef
@@ -344,7 +654,7 @@ end
 ## GenericAffExpr
 #------------------------------------------------------------------------
 
-function function_string(mode, a::GenericAffExpr, show_constant=true)
+function function_string(mode, a::GenericAffExpr, show_constant = true)
     # If the expression is empty, return the constant (or 0)
     if length(linear_terms(a)) == 0
         return show_constant ? _string_round(a.constant) : "0"
@@ -356,8 +666,8 @@ function function_string(mode, a::GenericAffExpr, show_constant=true)
     for (coef, var) in linear_terms(a)
         pre = _is_one_for_printing(coef) ? "" : _string_round(abs(coef)) * " "
 
-        term_str[2 * elm - 1] = _sign_string(coef)
-        term_str[2 * elm] = string(pre, function_string(mode, var))
+        term_str[2*elm-1] = _sign_string(coef)
+        term_str[2*elm] = string(pre, function_string(mode, var))
         elm += 1
     end
 
@@ -368,10 +678,13 @@ function function_string(mode, a::GenericAffExpr, show_constant=true)
     else
         # Correction for very first term - don't want a " + "/" - "
         term_str[1] = (term_str[1] == " - ") ? "-" : ""
-        ret = join(term_str[1 : 2 * (elm - 1)])
+        ret = join(term_str[1:2*(elm-1)])
         if !_is_zero_for_printing(a.constant) && show_constant
-            ret = string(ret, _sign_string(a.constant),
-                         _string_round(abs(a.constant)))
+            ret = string(
+                ret,
+                _sign_string(a.constant),
+                _string_round(abs(a.constant)),
+            )
         end
         return ret
     end
@@ -389,17 +702,18 @@ function function_string(mode, q::GenericQuadExpr)
     elm = 1
     if length(term_str) > 0
         for (coef, var1, var2) in quad_terms(q)
-            pre = _is_one_for_printing(coef) ? "" : _string_round(abs(coef)) * " "
+            pre =
+                _is_one_for_printing(coef) ? "" : _string_round(abs(coef)) * " "
 
             x = function_string(mode, var1)
             y = function_string(mode, var2)
 
-            term_str[2 * elm - 1] = _sign_string(coef)
-            term_str[2 * elm] = "$pre$x"
+            term_str[2*elm-1] = _sign_string(coef)
+            term_str[2*elm] = "$pre$x"
             if x == y
-                term_str[2 * elm] *= _math_symbol(mode, :sq)
+                term_str[2*elm] *= _math_symbol(mode, :sq)
             else
-                term_str[2 * elm] *= string(_math_symbol(mode, :times), y)
+                term_str[2*elm] *= string(_math_symbol(mode, :times), y)
             end
             if elm == 1
                 # Correction for first term as there is no space
@@ -409,20 +723,19 @@ function function_string(mode, q::GenericQuadExpr)
             elm += 1
         end
     end
-    ret = join(term_str[1 : 2 * (elm - 1)])
+    ret = join(term_str[1:2*(elm-1)])
 
     aff_str = function_string(mode, q.aff)
     if aff_str == "0"
         return ret
     else
         if aff_str[1] == '-'
-            return string(ret, " - ", aff_str[2 : end])
+            return string(ret, " - ", aff_str[2:end])
         else
             return string(ret, " + ", aff_str)
         end
     end
 end
-
 
 #------------------------------------------------------------------------
 ## Constraints
@@ -436,12 +749,20 @@ Write to `io` a summary of the number of constraints.
 function show_constraints_summary(io::IO, model::Model)
     for (F, S) in list_of_constraint_types(model)
         n_constraints = num_constraints(model, F, S)
-        println(io, "`$F`-in-`$S`: $n_constraints constraint",
-                _plural(n_constraints))
+        println(
+            io,
+            "`$F`-in-`$S`: $n_constraints constraint",
+            _plural(n_constraints),
+        )
     end
     if !iszero(num_nl_constraints(model))
-        println(io, "Nonlinear: ", num_nl_constraints(model), " constraint",
-                _plural(num_nl_constraints(model)))
+        println(
+            io,
+            "Nonlinear: ",
+            num_nl_constraints(model),
+            " constraint",
+            _plural(num_nl_constraints(model)),
+        )
     end
 end
 
@@ -454,13 +775,18 @@ function constraints_string(print_mode, model::Model)
     strings = String[]
     for (F, S) in list_of_constraint_types(model)
         for cref in all_constraints(model, F, S)
-            push!(strings, constraint_string(print_mode, cref, in_math_mode = true))
+            push!(
+                strings,
+                constraint_string(print_mode, cref, in_math_mode = true),
+            )
         end
     end
     if model.nlp_data !== nothing
         for nl_constraint in model.nlp_data.nlconstr
-            push!(strings,
-                  nl_constraint_string(model, print_mode, nl_constraint))
+            push!(
+                strings,
+                nl_constraint_string(model, print_mode, nl_constraint),
+            )
         end
     end
     return strings
@@ -475,10 +801,10 @@ end
 # `JuMP.jump_function` or `JuMP.function_string` and either `JuMP.moi_set` or
 # `JuMP.in_set_string` should be implemented.
 function Base.show(io::IO, ref::ConstraintRef)
-    print(io, constraint_string(REPLMode, ref))
+    return print(io, constraint_string(REPLMode, ref))
 end
 function Base.show(io::IO, ::MIME"text/latex", ref::ConstraintRef)
-    print(io, constraint_string(IJuliaMode, ref))
+    return print(io, constraint_string(IJuliaMode, ref))
 end
 
 """
@@ -492,18 +818,20 @@ Return a `String` representing the function `func` using print mode
 function function_string end
 
 function Base.show(io::IO, f::AbstractJuMPScalar)
-    print(io, function_string(REPLMode, f))
+    return print(io, function_string(REPLMode, f))
 end
 function Base.show(io::IO, ::MIME"text/latex", f::AbstractJuMPScalar)
-    print(io, _wrap_in_math_mode(function_string(IJuliaMode, f)))
+    return print(io, _wrap_in_math_mode(function_string(IJuliaMode, f)))
 end
 
 function function_string(print_mode, vector::Vector{<:AbstractJuMPScalar})
     return "[" * join(function_string.(print_mode, vector), ", ") * "]"
 end
 
-function function_string(::Type{REPLMode},
-                         A::AbstractMatrix{<:AbstractJuMPScalar})
+function function_string(
+    ::Type{REPLMode},
+    A::AbstractMatrix{<:AbstractJuMPScalar},
+)
     str = sprint(show, MIME"text/plain"(), A)
     lines = split(str, '\n')
     # We drop the first line with the signature "m×n Array{...}:"
@@ -516,9 +844,10 @@ function function_string(::Type{REPLMode},
     return join(lines, '\n')
 end
 
-function function_string(print_mode::Type{IJuliaMode},
-                         A::AbstractMatrix{<:AbstractJuMPScalar})
-    str = sprint(show, MIME"text/plain"(), A)
+function function_string(
+    print_mode::Type{IJuliaMode},
+    A::AbstractMatrix{<:AbstractJuMPScalar},
+)
     str = "\\begin{bmatrix}\n"
     for i in 1:size(A, 1)
         line = ""
@@ -549,6 +878,14 @@ function function_string(print_mode, constraint::AbstractConstraint)
     return function_string(print_mode, f)
 end
 
+"""
+    in_set_string(print_mode::Type{<:PrintMode}, set)
+
+Return a `String` representing the membership to the set `set` using print mode
+`print_mode`.
+"""
+function in_set_string end
+
 function in_set_string(print_mode, set::MOI.LessThan)
     return string(_math_symbol(print_mode, :leq), " ", set.upper)
 end
@@ -562,31 +899,35 @@ function in_set_string(print_mode, set::MOI.EqualTo)
 end
 
 function in_set_string(print_mode, set::MOI.Interval)
-    return string(_math_symbol(print_mode, :in), " ",
-                  _math_symbol(print_mode, :open_rng), set.lower, ", ",
-                  set.upper, _math_symbol(print_mode, :close_rng))
+    return string(
+        _math_symbol(print_mode, :in),
+        " ",
+        _math_symbol(print_mode, :open_rng),
+        set.lower,
+        ", ",
+        set.upper,
+        _math_symbol(print_mode, :close_rng),
+    )
 end
 
 in_set_string(print_mode, ::MOI.ZeroOne) = "binary"
 in_set_string(print_mode, ::MOI.Integer) = "integer"
 
-# TODO: Convert back to JuMP types for sets like PSDCone.
-# TODO: Consider fancy latex names for some sets. They're currently printed as
-# regular text in math mode which looks a bit awkward.
-"""
-    in_set_string(print_mode::Type{<:JuMP.PrintMode},
-                  set::Union{PSDCone, MOI.AbstractSet})
+in_set_string(::Type{IJuliaMode}, ::MOI.ZeroOne) = "\\in \\{0, 1\\}"
+in_set_string(::Type{IJuliaMode}, ::MOI.Integer) = "\\in \\mathbb{Z}"
 
-Return a `String` representing the membership to the set `set` using print mode
-`print_mode`.
-"""
-function in_set_string(print_mode, set::Union{PSDCone, MOI.AbstractSet})
-    return string(_math_symbol(print_mode, :in), " ", set)
+function in_set_string(print_mode, set::Union{PSDCone,MOI.AbstractSet})
+    # Use an `if` here instead of multiple dispatch to avoid ambiguity errors.
+    if print_mode == REPLMode
+        return _math_symbol(print_mode, :in) * " $(set)"
+    else
+        set_str = replace(replace(string(set), "{" => "\\{"), "}" => "\\}")
+        return "\\in \\text{$(set_str)}"
+    end
 end
 
 """
-    in_set_string(print_mode::Type{<:JuMP.PrintMode},
-                  constraint::JuMP.AbstractConstraint)
+    in_set_string(print_mode::Type{<:PrintMode}, constraint::AbstractConstraint)
 
 Return a `String` representing the membership to the set of the constraint
 `constraint` using print mode `print_mode`.
@@ -601,37 +942,78 @@ function constraint_string(print_mode, constraint_object::AbstractConstraint)
     in_set_str = in_set_string(print_mode, constraint_object)
     if print_mode == REPLMode
         lines = split(func_str, '\n')
-        lines[1 + div(length(lines), 2)] *= " " * in_set_str
+        lines[1+div(length(lines), 2)] *= " " * in_set_str
         return join(lines, '\n')
     else
         return func_str * " " * in_set_str
     end
 end
-function constraint_string(print_mode, constraint_name,
-                           constraint_object::AbstractConstraint;
-                           in_math_mode = false)
-    constraint_without_name = constraint_string(print_mode, constraint_object)
-    if print_mode == IJuliaMode && !in_math_mode
-        constraint_without_name = _wrap_in_inline_math_mode(constraint_without_name)
-    end
-    # Names don't print well in LaTeX math mode
-    if isempty(constraint_name) || (print_mode == IJuliaMode && in_math_mode)
-        return constraint_without_name
+
+function constraint_string(
+    print_mode,
+    constraint_name::String,
+    constraint_object::AbstractConstraint;
+    in_math_mode::Bool = false,
+)
+    prefix = isempty(constraint_name) ? "" : constraint_name * " : "
+    constraint_str = constraint_string(print_mode, constraint_object)
+    if print_mode == IJuliaMode
+        if in_math_mode
+            return constraint_str
+        elseif isempty(prefix)
+            return _wrap_in_math_mode(constraint_str)
+        else
+            return prefix * _wrap_in_inline_math_mode(constraint_str)
+        end
     else
-        return constraint_name * " : " * constraint_without_name
+        return prefix * constraint_str
     end
 end
+
+"""
+    constraint_string(
+        print_mode,
+        ref::ConstraintRef;
+        in_math_mode::Bool = false)
+
+Return a string representation of the constraint `ref`, given the `print_mode`.
+
+`print_mode` should be `IJuliaMode` or `REPLMode`.
+"""
 function constraint_string(print_mode, ref::ConstraintRef; in_math_mode = false)
-    return constraint_string(print_mode, name(ref), constraint_object(ref), in_math_mode = in_math_mode)
+    return constraint_string(
+        print_mode,
+        name(ref),
+        constraint_object(ref),
+        in_math_mode = in_math_mode,
+    )
 end
 
 #------------------------------------------------------------------------
 ## _NonlinearExprData
 #------------------------------------------------------------------------
+
+"""
+    nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
+
+Return a string representation of the nonlinear expression `c` belonging to
+`model`, given the `print_mode`. `print_mode` should be `IJuliaMode` or
+`REPLMode`.
+"""
 function nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
-    ex = _tape_to_expr(model, 1, c.nd, adjmat(c.nd), c.const_values,
-                       [], [], model.nlp_data.user_operators, false,
-                       false, print_mode)
+    ex = _tape_to_expr(
+        model,
+        1,
+        c.nd,
+        adjmat(c.nd),
+        c.const_values,
+        [],
+        [],
+        model.nlp_data.user_operators,
+        false,
+        false,
+        print_mode,
+    )
     if print_mode == IJuliaMode
         ex = _latexify_exponentials(ex)
     end
@@ -643,7 +1025,7 @@ end
 # and so on
 _latexify_exponentials(ex) = ex
 function _latexify_exponentials(ex::Expr)
-    for i = 1:length(ex.args)
+    for i in 1:length(ex.args)
         ex.args[i] = _latexify_exponentials(ex.args[i])
     end
     if length(ex.args) == 3 && ex.args[1] == :^
@@ -654,27 +1036,49 @@ end
 #------------------------------------------------------------------------
 ## _NonlinearConstraint
 #------------------------------------------------------------------------
-const NonlinearConstraintRef = ConstraintRef{Model, NonlinearConstraintIndex}
+const NonlinearConstraintRef = ConstraintRef{Model,NonlinearConstraintIndex}
 
 function Base.show(io::IO, c::NonlinearConstraintRef)
-    print(io, nl_constraint_string(c.model, REPLMode,
-                                   c.model.nlp_data.nlconstr[c.index.value]))
+    return print(
+        io,
+        nl_constraint_string(
+            c.model,
+            REPLMode,
+            c.model.nlp_data.nlconstr[c.index.value],
+        ),
+    )
 end
 
 function Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraintRef)
     constraint = c.model.nlp_data.nlconstr[c.index.value]
-    print(io, _wrap_in_math_mode(nl_constraint_string(c.model, IJuliaMode,
-                                                      constraint)))
+    return print(
+        io,
+        _wrap_in_math_mode(
+            nl_constraint_string(c.model, IJuliaMode, constraint),
+        ),
+    )
 end
 
 # TODO: Printing is inconsistent between regular constraints and nonlinear
 # constraints because nonlinear constraints don't have names.
+"""
+    nl_constraint_string(model::Model, mode, c::_NonlinearConstraint)
+
+Return a string representation of the nonlinear constraint `c` belonging to
+`model`, given the `print_mode`. `print_mode` should be `IJuliaMode` or
+`REPLMode`.
+"""
 function nl_constraint_string(model::Model, mode, c::_NonlinearConstraint)
     s = _sense(c)
     nl = nl_expr_string(model, mode, c.terms)
     if s == :range
-        out_str = "$(_string_round(c.lb)) " * _math_symbol(mode, :leq) *
-                  " $nl " * _math_symbol(mode, :leq) * " " * _string_round(c.ub)
+        out_str =
+            "$(_string_round(c.lb)) " *
+            _math_symbol(mode, :leq) *
+            " $nl " *
+            _math_symbol(mode, :leq) *
+            " " *
+            _string_round(c.ub)
     else
         if s == :<=
             rel = _math_symbol(mode, :leq)
@@ -692,15 +1096,37 @@ end
 ## Opaque nonlinear objects
 #------------------------------------------------------------------------
 # TODO: This could be pretty printed.
-function Base.show(io::IO, ex::NonlinearExpression)
-    Base.show(io, "Reference to nonlinear expression #$(ex.index)")
+
+function function_string(::Type{<:PrintMode}, p::NonlinearExpression)
+    return "Reference to nonlinear expression #$(p.index)"
 end
 
-function Base.show(io::IO, p::NonlinearParameter)
-    Base.show(io, "Reference to nonlinear parameter #$(p.index)")
+function function_string(::Type{<:PrintMode}, p::NonlinearParameter)
+    relevant_parameters = filter(
+        i -> i[2] isa NonlinearParameter && i[2].index == p.index,
+        p.model.obj_dict,
+    )
+    if length(relevant_parameters) == 1
+        par_name = first(relevant_parameters)[1]
+        return "Reference to nonlinear parameter $(par_name)"
+    else
+        return "Reference to nonlinear parameter #$(p.index)"
+    end
+end
+
+function Base.show(io::IO, ex::Union{NonlinearExpression,NonlinearParameter})
+    return Base.show(io, function_string(REPLMode, ex))
+end
+
+function Base.show(
+    io::IO,
+    ::MIME"text/latex",
+    ex::Union{NonlinearExpression,NonlinearParameter},
+)
+    return print(io, function_string(IJuliaMode, ex))
 end
 
 # TODO: Print the status of the NLPEvaluator, features available, etc.
 function Base.show(io::IO, evaluator::NLPEvaluator)
-    Base.show(io, "A JuMP.NLPEvaluator")
+    return Base.show(io, "A JuMP.NLPEvaluator")
 end

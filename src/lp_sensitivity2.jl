@@ -75,7 +75,12 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     std_form = _standard_form_matrix(model)
     basis = _standard_form_basis(model, std_form)
     B = std_form.A[:, basis.basic_cols]
-    @assert size(B, 1) == size(B, 2)
+    if size(B, 1) != size(B, 2)
+        error(
+            "Unable to compute LP sensitivity: problem is degenerate. Try " *
+            "adding variable bounds to free variables",
+        )
+    end
 
     n = length(std_form.columns)
     is_min = objective_sense(model) == MOI.MIN_SENSE
@@ -89,8 +94,8 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     d = Dict{Int,Vector{Float64}}(
         # We call `collect` here because some Julia versions are missing sparse
         # matrix \ sparse vector fallbacks.
-        j => B_fact \ collect(std_form.A[:, j])
-        for j = 1:length(basis.basic_cols) if basis.basic_cols[j] == false
+        j => B_fact \ collect(std_form.A[:, j]) for
+        j = 1:length(basis.basic_cols) if basis.basic_cols[j] == false
     )
 
     report = SensitivityReport(
@@ -138,8 +143,8 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     ###
 
     π = Dict{Int,Float64}(
-        i => reduced_cost(var)
-        for (var, i) in std_form.columns if basis.variables[i] != MOI.BASIC
+        i => reduced_cost(var) for
+        (var, i) in std_form.columns if basis.variables[i] != MOI.BASIC
     )
     for (i, c) in enumerate(std_form.constraints)
         if basis.constraints[i] != MOI.BASIC
@@ -148,31 +153,7 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     end
 
     for (var, i) in std_form.columns
-        if basis.variables[i] == MOI.NONBASIC_AT_LOWER && is_min
-            @assert π[i] > -atol
-            # We are minimizing and variable `i` is nonbasic at lower bound.
-            # (δ⁻, δ⁺) = (-πᵢ, ∞) because increasing the objective coefficient
-            # will only keep it at the bound.
-            report.objective[var] = (-π[i], Inf)
-        elseif basis.variables[i] == MOI.NONBASIC_AT_UPPER && !is_min
-            @assert π[i] > -atol
-            # We are maximizing and variable `i` is nonbasic at upper bound.
-            # (δ⁻, δ⁺) = (-πᵢ, ∞) because increasing the objective coefficient
-            # will only keep it at the bound.
-            report.objective[var] = (-π[i], Inf)
-        elseif basis.variables[i] != MOI.BASIC &&
-               std_form.lower[i] < std_form.upper[i]
-            @assert π[i] < atol
-            # The variable is nonbasic with nonfixed bounds. This is the
-            # reverse of the above two cases because the variable is at the
-            # opposite bound
-            report.objective[var] = (-Inf, -π[i])
-        elseif basis.variables[i] != MOI.BASIC
-            # The variable is nonbasic with fixed bounds. Therefore, (δ⁻, δ⁺) =
-            # (-∞, ∞) because the variable can be effectively substituted out.
-            # TODO(odow): is this correct?
-            report.objective[var] = (-Inf, Inf)
-        else
+        if basis.variables[i] == MOI.BASIC
             # The variable `i` is basic. Given an optimal basis B, the reduced
             # costs are:
             #   c_bar = π = c_N - c_Bᵀ(B⁻¹N)
@@ -185,7 +166,6 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
             # compute
             #     dᵢⱼ = (eᵢ)ᵀB⁻¹aⱼ
             # Then, depending on the sign of dᵢⱼ, we can compute bounds on δ.
-            @assert basis.variables[i] == MOI.BASIC
             t_lo, t_hi = -Inf, Inf
             e_i = sum(basis.basic_cols[ii] for ii in 1:i)
             for j in 1:length(basis.basic_cols)
@@ -215,9 +195,30 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
                 end
             end
             report.objective[var] = (t_lo, t_hi)
+        elseif std_form.lower[i] == -Inf && std_form.upper[i] == Inf
+            # The variable is nonbasic with free bounds.
+            report.objective[var] = (0.0, 0.0)
+        elseif std_form.lower[i] == std_form.upper[i]
+            # The VariableIndex-in-EqualTo case.
+            # The variable is nonbasic with fixed bounds. Therefore,
+            # (δ⁻, δ⁺) = (-∞, ∞) because the variable can be effectively
+            # substituted out.
+            report.objective[var] = (-Inf, Inf)
+        elseif basis.variables[i] == MOI.NONBASIC_AT_LOWER
+            # The VariableIndex-in-GreaterThan case.
+            # Variable `i` is nonbasic at lower bound. If minimizing, (δ⁻, δ⁺) =
+            # (-πᵢ, ∞) because increasing the objective coefficient will only
+            # keep it at the bound. If maximizing, the opposite is true.
+            report.objective[var] = is_min ? (-π[i], Inf) : (-Inf, -π[i])
+        else
+            # The VariableIndex-in-LessThan case. Because we don't support
+            # interval constraints, this assertion must hold.
+            @assert basis.variables[i] == MOI.NONBASIC_AT_UPPER
+            # Variable `i` is nonbasic at upper bound. The opposite case of the
+            # one above.
+            report.objective[var] = is_min ? (-Inf, -π[i]) : (-π[i], Inf)
         end
     end
-
     return report
 end
 
@@ -413,24 +414,59 @@ _convert_nonbasic_status(::MOI.LessThan) = MOI.NONBASIC_AT_UPPER
 _convert_nonbasic_status(::MOI.GreaterThan) = MOI.NONBASIC_AT_LOWER
 _convert_nonbasic_status(::Any) = MOI.NONBASIC
 
+function _try_get_constraint_basis_status(model::Model, constraint)
+    try
+        return MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
+    catch
+        error(
+            "Unable to query LP sensitivity information because this solver " *
+            "does not support querying the status of constraints in the " *
+            "optimal basis.",
+        )
+    end
+end
+
+function _try_get_variable_basis_status(model::Model, variable)
+    try
+        return MOI.get(model, MOI.VariableBasisStatus(), variable)
+    catch
+        error(
+            "Unable to query LP sensitivity information because this solver " *
+            "does not support querying the status of variables in the " *
+            "optimal basis.",
+        )
+    end
+end
+
+_nonbasic_at_lower(::MOI.GreaterThan) = MOI.NONBASIC_AT_LOWER
+_nonbasic_at_lower(::Any) = MOI.BASIC
+_nonbasic_at_upper(::MOI.LessThan) = MOI.NONBASIC_AT_UPPER
+_nonbasic_at_upper(::Any) = MOI.BASIC
+
 function _standard_form_basis(model::Model, std_form)
     variable_status = fill(MOI.BASIC, length(std_form.columns))
     bound_status = fill(MOI.BASIC, length(std_form.bounds))
     constraint_status = fill(MOI.BASIC, length(std_form.constraints))
+    for (x, col) in std_form.columns
+        variable_status[col] = _try_get_variable_basis_status(model, x)
+    end
     for (i, c) in enumerate(std_form.bounds)
-        status = MOI.get(model, MOI.ConstraintBasisStatus(), c)
         c_obj = constraint_object(c)
-        if status == MOI.NONBASIC
-            status = _convert_nonbasic_status(c_obj.set)
+        col = std_form.columns[c_obj.func]
+        status = variable_status[col]
+        if status == MOI.NONBASIC_AT_LOWER
+            bound_status[i] = _nonbasic_at_lower(c_obj.set)
+        elseif status == MOI.NONBASIC_AT_UPPER
+            bound_status[i] = _nonbasic_at_upper(c_obj.set)
+        elseif status == MOI.NONBASIC
+            bound_status[i] = _convert_nonbasic_status(c_obj.set)
+        else
+            @assert status == MOI.BASIC
+            bound_status[i] = MOI.BASIC
         end
-        if status != MOI.BASIC
-            col = std_form.columns[c_obj.func]
-            variable_status[col] = status
-        end
-        bound_status[i] = status
     end
     for (i, c) in enumerate(std_form.constraints)
-        status = MOI.get(model, MOI.ConstraintBasisStatus(), c)
+        status = _try_get_constraint_basis_status(model, c)
         if status == MOI.NONBASIC
             status = _convert_nonbasic_status(constraint_object(c).set)
         end
@@ -440,7 +476,6 @@ function _standard_form_basis(model::Model, std_form)
         variables = variable_status,
         bounds = bound_status,
         constraints = constraint_status,
-        basic_cols = vcat(variable_status, constraint_status) .==
-                     Ref(MOI.BASIC),
+        basic_cols = [variable_status; constraint_status] .== Ref(MOI.BASIC),
     )
 end

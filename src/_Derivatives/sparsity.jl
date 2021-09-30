@@ -25,7 +25,9 @@ function compute_gradient_sparsity!(
         if nod.nodetype == VARIABLE
             push!(indices, nod.index)
         elseif nod.nodetype == MOIVARIABLE
-            error("Internal error: Invalid to compute sparsity if MOIVARIABLE nodes are present.")
+            error(
+                "Internal error: Invalid to compute sparsity if MOIVARIABLE nodes are present.",
+            )
         end
     end
     return nothing
@@ -80,7 +82,9 @@ function compute_hessian_sparsity(
     for k in 2:length(nd)
         nod = nd[k]
         if nod.nodetype == MOIVARIABLE
-            error("Internal error: Invalid to compute sparsity if MOIVARIABLE nodes are present.")
+            error(
+                "Internal error: Invalid to compute sparsity if MOIVARIABLE nodes are present.",
+            )
         end
         nonlinear_wrt_output[k] && continue # already seen this node one way or another
         input_linearity[k] == CONSTANT && continue # definitely not nonlinear

@@ -32,8 +32,8 @@ function pMedian(solver, numFacility::Int, numCustomer::Int, numLocation::Int)
             m,
             Max,
             sum(
-                abs(customerLocations[a] - i) * x[i, a]
-                for a in 1:numCustomer, i in 1:numLocation
+                abs(customerLocations[a] - i) * x[i, a] for
+                a in 1:numCustomer, i in 1:numLocation
             )
         )
 
