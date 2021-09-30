@@ -38,16 +38,16 @@ function benchmark(;
 end
 
 """
-    run(N::Int)
+    run_microbenchmark(N::Int)
 
-Run each benchmark function `N` times.
+Run each micro benchmark function `N` times.
 
 !!! warning
     This is not a rigorous benchmark. It uses `@time`, so it doesn't accurately
     capture top-level compilation and inference. Use `benchmark` for a more
     rigorous comparison.
 """
-function run(N::Int)
+function run_microbenchmark(N::Int)
     for name in sort!(names(@__MODULE__, all = true))
         if startswith("$(name)", "bench_")
             f = getfield(@__MODULE__, name)
@@ -55,6 +55,39 @@ function run(N::Int)
             for _ in 1:N
                 @time f()
             end
+        end
+    end
+    return
+end
+
+"""
+    run_examples(julia_cmd = "julia")
+
+Run each example in the `/docs/src/tutorials` folder in a fresh Julia instance.
+"""
+function run_examples(julia_cmd = "julia")
+    src_dir = joinpath(dirname(dirname(@__DIR__)), "docs", "src", "tutorials")
+    doc_project = joinpath(dirname(dirname(@__DIR__)), "docs")
+    timings = Dict{String,Any}()
+    for (root, dir, files) in walkdir(src_dir)
+        for file in files
+            if !endswith(file, ".jl")
+                continue
+            end
+            filename = joinpath(root, file)
+            println("Running: ", file)
+            @time timings[file] = @timed redirect_stderr(devnull) do
+                return redirect_stdout(devnull) do
+                    return run(`$(julia_cmd) --project=$(doc_project) $(filename)`)
+                end
+            end
+        end
+    end
+    open("run_examples.log", "w") do io
+        for (file, val) in timings
+            println(io, file)
+            println(io, "  Time (s): ", val.time)
+            println(io, "  Bytes   : ", val.bytes)
         end
     end
     return
@@ -258,20 +291,108 @@ function benchmark_print_small_model()
     return sprint(print, m)
 end
 
+###
+### Axis constraints
+###
+
+function _sum_iterate(con_refs)
+    x = 0.0
+    for con_ref in con_refs
+        x += dual(con_ref)
+    end
+    return x
+end
+
+function _sum_index(con_refs)
+    x = 0.0
+    for i in eachindex(con_refs)
+        x += dual(con_refs[i])
+    end
+    return x
+end
+
+function _dense_axis_constraints(key = :index)
+    n = 1_000
+    model = Model()
+    mock = MOIU.MockOptimizer(
+        MOIU.Model{Float64}(),
+        eval_variable_constraint_dual = false,
+    )
+    MOIU.set_mock_optimize!(
+        mock,
+        mock -> MOIU.mock_optimize!(
+            mock,
+            zeros(n),
+            (MOI.VariableIndex, MOI.EqualTo{Float64}) => ones(n - 1),
+        ),
+    )
+    MOIU.reset_optimizer(model, mock)
+    @variable(model, x[1:n])
+    set = MOI.EqualTo(0.0)
+    con_refs = @constraint(model, [i = 2:n], x[i] in set)
+    optimize!(model)
+    if key == :index
+        _sum_index(con_refs)
+    else
+        _sum_iterate(con_refs)
+    end
+    return
+end
+
+function _sparse_axis_constraints(key = :index)
+    n = 1_000
+    model = Model()
+    mock = MOIU.MockOptimizer(
+        MOIU.Model{Float64}(),
+        eval_variable_constraint_dual = false,
+    )
+    MOIU.set_mock_optimize!(
+        mock,
+        mock -> MOIU.mock_optimize!(
+            mock,
+            zeros(n),
+            (MOI.VariableIndex, MOI.EqualTo{Float64}) => ones(div(n, 2)),
+        ),
+    )
+    MOIU.reset_optimizer(model, mock)
+    @variable(model, x[1:n])
+    set = MOI.EqualTo(0.0)
+    con_refs = @constraint(model, [i = 1:n; iseven(i)], x[i] in set)
+    optimize!(model)
+    if key == :index
+        _sum_index(con_refs)
+    else
+        _sum_iterate(con_refs)
+    end
+    return
+end
+
+for container in (:dense, :sparse), sum_type in (:iterate, :index)
+    f = getfield(@__MODULE__, Symbol("_$(container)_axis_constraints"))
+    new_name = Symbol("bench_$(container)_axis_constraints_$(sum_type)")
+    @eval $(new_name)() = $f($(sum_type))
+end
+
 end  # module
 
 function _print_help()
     return println(
         """
-julia test/perf/JuMPBenchmarks.jl [-r N] [-f file] [--compare]
+julia test/perf/JuMPBenchmarks.jl [-r N] [-f file [--compare]] [-j julia]
 
-Run a script to benchmark JuMP.
+Run a script to benchmark various aspects of JuMP.
 
-## Run a simple benchmark
+## Run a simple micro-benchmark
 
- * Pass `-r N` to run each benchmark function `N` times.
+Pass `-r N` to run each benchmark function `N` times.
 
-## Run a rigorous benchmark
+### Examples
+
+```
+\$ julia test/perf/JuMPBenchmarks.jl -r 2
+```
+
+## Run a rigorous micro-benchmark
 
 To run a more rigorous benchmark, do not pass `-r` and pass `-f file`
 instead.
@@ -279,37 +400,56 @@ instead.
  * If `--compare` is not given, save a new benchmark dataset to `file`.
  * If `--compare`, compare aginst the data in `file`.
 
-## Example
+### Examples
 
-Run a simple benchmark
-```
-\$ julia test/perf/JuMPBenchmarks.jl -r 2
-```
-
-Run a complicated benchmark:
 ```
 \$ julia test/perf/JuMPBenchmarks.jl -f my_benchmark_run
 # Make changes to JuMP, then run:
 \$ julia test/perf/JuMPBenchmarks.jl -f my_benchmark_run --compare
 ```
+
+## Run the examples
+
+To run all of the examples, pass `-j julia` where `julia` is the command to
+start Julia at the command line. This uses the Project.toml located at
+`/docs/src/Project.toml`, which assumes you have dev'd JuMP to it as
+appropriate.
+
+### Examples
+
+```
+\$ julia test/perf/JuMPBenchmarks.jl -j /Users/oscar/julia1.6
+```
 """,
     )
 end
 
+function _run(f, key)
+    arg = findfirst(isequal(key), ARGS)
+    if arg !== nothing
+        f(ARGS[arg+1])
+    end
+    return
+end
+
 if length(ARGS) > 0
-    file_index = findfirst(isequal("-f"), ARGS)
-    run = findfirst(isequal("-r"), ARGS)
-    if run !== nothing
-        JuMPBenchmarks.run(parse(Int, ARGS[run+1]))
+    if findfirst(isequal("-h"), ARGS) !== nothing
+        _print_help()
         exit(0)
     end
-    if file_index === nothing
-        _print_help()
+    _run("-r") do N
+        return JuMPBenchmarks.run_microbenchmark(parse(Int, N))
     end
-    JuMPBenchmarks.benchmark(
-        baseline = ARGS[file_index+1],
-        compare_against = findfirst(isequal("--compare"), ARGS) !== nothing,
-    )
+    _run("-j") do julia
+        return JuMPBenchmarks.run_examples(julia)
+    end
+    _run("-f") do baseline
+        compare_against = findfirst(isequal("--compare"), ARGS) !== nothing
+        return JuMPBenchmarks.benchmark(
+            baseline = baseline,
+            compare_against = compare_against,
+        )
+    end
 else
     _print_help()
 end
