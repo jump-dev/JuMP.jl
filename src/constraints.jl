@@ -288,6 +288,7 @@ function delete(model::Model, con_ref::ConstraintRef)
             "belong to the model.",
         )
     end
+    model.is_model_dirty = true
     return MOI.delete(backend(model), index(con_ref))
 end
 
@@ -310,6 +311,7 @@ function delete(
         error("A constraint reference you are trying to delete does not" * "
             belong to the model.")
     end
+    model.is_model_dirty = true
     MOI.delete(backend(model), index.(con_refs))
     return
 end
@@ -571,6 +573,7 @@ function add_constraint(
        MOI.supports(backend(model), MOI.ConstraintName(), typeof(cindex))
         set_name(con_ref, name)
     end
+    model.is_model_dirty = true
     return con_ref
 end
 
@@ -604,11 +607,13 @@ function set_normalized_coefficient(
     T,
     F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
 }
+    model = owner_model(con_ref)
     MOI.modify(
-        backend(owner_model(con_ref)),
+        backend(model),
         index(con_ref),
         MOI.ScalarCoefficientChange(index(variable), convert(T, value)),
     )
+    model.is_model_dirty = true
     return
 end
 @deprecate set_coefficient set_normalized_coefficient
@@ -756,13 +761,11 @@ function add_to_function_constant(
     constraint::ConstraintRef{<:AbstractModel},
     value,
 )
+    model = owner_model(constraint)
     # The type of `backend(model)` is not type-stable, so we use a function
     # barrier (`moi_add_to_function_constant`) to improve performance.
-    moi_add_to_function_constant(
-        backend(owner_model(constraint)),
-        index(constraint),
-        value,
-    )
+    moi_add_to_function_constant(backend(model), index(constraint), value)
+    model.is_model_dirty = true
     return
 end
 

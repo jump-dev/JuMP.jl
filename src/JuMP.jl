@@ -230,6 +230,9 @@ mutable struct Model <: AbstractModel
     # Number of times we add large expressions. Incremented and checked by
     # the `operator_warn` method.
     operator_counter::Int
+    # A flag to track whether we have modified the model after calling
+    # optimize!.
+    is_model_dirty::Bool
     # Enable extensions to attach arbitrary information to a JuMP model by
     # using an extension-specific symbol as a key.
     ext::Dict{Symbol,Any}
@@ -325,6 +328,7 @@ function direct_model(backend::MOI.ModelLike)
         nothing,
         Dict{Symbol,Any}(),
         0,
+        false,
         Dict{Symbol,Any}(),
     )
 end
@@ -663,6 +667,7 @@ function Base.empty!(model::Model)::Model
     model.nlp_data = nothing
     empty!(model.obj_dict)
     empty!(model.ext)
+    model.is_model_dirty = false
     return model
 end
 
@@ -1210,15 +1215,26 @@ end
 Return the value of the attribute `attr` from the model's MOI backend.
 """
 function MOI.get(model::Model, attr::MOI.AbstractModelAttribute)
-    if MOI.is_set_by_optimize(attr) &&
-       !(attr isa MOI.TerminationStatus) && # Before `optimize!` is called, the
-       !(attr isa MOI.PrimalStatus) &&      # statuses are `OPTIMIZE_NOT_CALLED`
-       !(attr isa MOI.DualStatus)           # and `NO_SOLUTION`
-        _moi_get_result(backend(model), attr)
+    if !MOI.is_set_by_optimize(attr)
+        return MOI.get(backend(model), attr)
+    elseif attr isa MOI.TerminationStatus
+        if model.is_model_dirty && mode(model) != DIRECT
+            return MOI.OPTIMIZE_NOT_CALLED
+        end
+        return MOI.get(backend(model), attr)
+    elseif attr isa MOI.PrimalStatus || attr isa MOI.DualStatus
+        if model.is_model_dirty && mode(model) != DIRECT
+            return MOI.NO_SOLUTION
+        end
+        return MOI.get(backend(model), attr)
     else
-        MOI.get(backend(model), attr)
+        if model.is_model_dirty && mode(model) != DIRECT
+            throw(OptimizeNotCalled())
+        end
+        return _moi_get_result(backend(model), attr)
     end
 end
+
 """
     get(model::Model, attr::MathOptInterface.AbstractOptimizerAttribute)
 
@@ -1227,37 +1243,45 @@ Return the value of the attribute `attr` from the model's MOI backend.
 function MOI.get(model::Model, attr::MOI.AbstractOptimizerAttribute)
     return MOI.get(backend(model), attr)
 end
+
 function MOI.get(
     model::Model,
     attr::MOI.AbstractVariableAttribute,
     v::VariableRef,
 )
     check_belongs_to_model(v, model)
-    if MOI.is_set_by_optimize(attr)
-        return _moi_get_result(backend(model), attr, index(v))
-    else
+    if !MOI.is_set_by_optimize(attr)
         return MOI.get(backend(model), attr, index(v))
+    elseif model.is_model_dirty && mode(model) != DIRECT
+        throw(OptimizeNotCalled())
     end
+    return _moi_get_result(backend(model), attr, index(v))
 end
+
 function MOI.get(
     model::Model,
     attr::MOI.AbstractConstraintAttribute,
     cr::ConstraintRef,
 )
     check_belongs_to_model(cr, model)
-    if MOI.is_set_by_optimize(attr)
-        return _moi_get_result(backend(model), attr, index(cr))
-    else
+    if !MOI.is_set_by_optimize(attr)
         return MOI.get(backend(model), attr, index(cr))
+    elseif model.is_model_dirty && mode(model) != DIRECT
+        throw(OptimizeNotCalled())
     end
+    return _moi_get_result(backend(model), attr, index(cr))
 end
 
 function MOI.set(m::Model, attr::MOI.AbstractOptimizerAttribute, value)
+    m.is_model_dirty = true
     return MOI.set(backend(m), attr, value)
 end
+
 function MOI.set(m::Model, attr::MOI.AbstractModelAttribute, value)
+    m.is_model_dirty = true
     return MOI.set(backend(m), attr, value)
 end
+
 function MOI.set(
     model::Model,
     attr::MOI.AbstractVariableAttribute,
@@ -1265,8 +1289,10 @@ function MOI.set(
     value,
 )
     check_belongs_to_model(v, model)
+    model.is_model_dirty = true
     return MOI.set(backend(model), attr, index(v), value)
 end
+
 function MOI.set(
     model::Model,
     attr::MOI.AbstractConstraintAttribute,
@@ -1274,6 +1300,7 @@ function MOI.set(
     value,
 )
     check_belongs_to_model(cr, model)
+    model.is_model_dirty = true
     return MOI.set(backend(model), attr, index(cr), value)
 end
 

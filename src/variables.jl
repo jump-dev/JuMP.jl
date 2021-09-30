@@ -291,6 +291,7 @@ function delete(model::Model, variable_ref::VariableRef)
             "belong to the model.",
         )
     end
+    model.is_model_dirty = true
     return MOI.delete(backend(model), variable_ref.index)
 end
 
@@ -310,6 +311,7 @@ function delete(model::Model, variable_refs::Vector{VariableRef})
             "belong to the model.",
         )
     end
+    model.is_model_dirty = true
     MOI.delete(backend(model), index.(variable_refs))
     return
 end
@@ -504,7 +506,9 @@ function set_lower_bound(v::VariableRef, lower::Number)
             "`delete_lower_bound`.",
         )
     end
-    return _moi_set_lower_bound(backend(owner_model(v)), v, lower)
+    model = owner_model(v)
+    model.is_model_dirty = true
+    return _moi_set_lower_bound(backend(model), v, lower)
 end
 
 function _moi_set_lower_bound(moi_backend, v::VariableRef, lower::Number)
@@ -609,7 +613,9 @@ function set_upper_bound(v::VariableRef, upper::Number)
             "`delete_upper_bound`.",
         )
     end
-    return _moi_set_upper_bound(backend(owner_model(v)), v, upper)
+    model = owner_model(v)
+    model.is_model_dirty = true
+    return _moi_set_upper_bound(backend(model), v, upper)
 end
 
 function _moi_set_upper_bound(moi_backend, v::VariableRef, upper::Number)
@@ -715,7 +721,9 @@ function fix(variable::VariableRef, value::Number; force::Bool = false)
     if !isfinite(value)
         error("Unable to fix variable to $(value)")
     end
-    return _moi_fix(backend(owner_model(variable)), variable, value, force)
+    model = owner_model(variable)
+    model.is_model_dirty = true
+    return _moi_fix(backend(model), variable, value, force)
 end
 
 function _moi_fix(
@@ -824,8 +832,10 @@ Add an integrality constraint on the variable `variable_ref`.
 
 See also [`IntegerRef`](@ref), [`is_integer`](@ref), [`unset_integer`](@ref).
 """
-function set_integer(variable_ref::VariableRef)
-    return _moi_set_integer(backend(owner_model(variable_ref)), variable_ref)
+function set_integer(v::VariableRef)
+    model = owner_model(v)
+    model.is_model_dirty = true
+    return _moi_set_integer(backend(model), v)
 end
 
 function _moi_set_integer(moi_backend, variable_ref::VariableRef)
@@ -897,8 +907,10 @@ Add a constraint on the variable `v` that it must take values in the set
 
 See also [`BinaryRef`](@ref), [`is_binary`](@ref), [`unset_binary`](@ref).
 """
-function set_binary(variable_ref::VariableRef)
-    return _moi_set_binary(backend(owner_model(variable_ref)), variable_ref)
+function set_binary(v::VariableRef)
+    model = owner_model(v)
+    model.is_model_dirty = true
+    return _moi_set_binary(backend(model), v)
 end
 
 function _moi_set_binary(moi_backend, variable_ref)
@@ -1020,6 +1032,7 @@ Add a variable `v` to `Model m` and sets its name.
 function add_variable end
 
 function add_variable(model::Model, v::ScalarVariable, name::String = "")
+    model.is_model_dirty = true
     return _moi_add_variable(backend(model), model, v, name)
 end
 

@@ -745,7 +745,7 @@ function _mock_reduced_cost_util(
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
         MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     end
-
+    optimize!(m)
     return x
 end
 

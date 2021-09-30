@@ -284,24 +284,33 @@ Solution is optimal
   dual solution: c1 = 1.7142857142857142
 ```
 
-!!! warning
-    Querying solution information after modifying a solved model is undefined
-    behavior, and solvers may throw an error or return incorrect results.
-    Modifications include adding, deleting, or modifying any variable,
-    objective, or constraint. Instead of modify-then-query, query the results
-    first, then modify the problem. For example:
-    ```julia
-    model = Model(GLPK.Optimizer)
-    @variable(model, x >= 0)
-    optimize!(model)
-    # Bad:
-    set_lower_bound(x, 1)
-    @show value(x)
-    # Good:
-    x_val = value(x)
-    set_lower_bound(x, 1)
-    @show x_val
-    ```
+## OptimizeNotCalled errors
+
+Modifing a model after calling [`optimize!`](@ref) will reset the model into
+the `MOI.OPTIMIZE_NOT_CALLED` state. If you attempt to query solution
+information, an `OptimizeNotCalled` error will be thrown.
+
+If you are iteratively querying solution information and modifying a model,
+query all the results first, then modify the problem.
+
+For example, instead of:
+```julia
+model = Model(GLPK.Optimizer)
+@variable(model, x >= 0)
+optimize!(model)
+set_lower_bound(x, 1)  # This will modify the model
+x_val = value(x)       # This will fail because the model has been modified
+set_start_value(x, x_val)
+```
+do
+```julia
+model = Model(GLPK.Optimizer)
+@variable(model, x >= 0)
+optimize!(model)
+x_val = value(x)
+set_lower_bound(x, 1)
+set_start_value(x, x_val)
+```
 
 ```@meta
 # TODO: How to accurately measure the solve time.
