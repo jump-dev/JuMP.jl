@@ -460,6 +460,53 @@ julia> @variable(model, y[A], container=Array)
 JuMP now creates a vector of JuMP variables instead of a DenseAxisArray. Note
 that choosing an invalid container type will throw an error.
 
+### User-defined containers
+
+!!! tip
+    This is a point that users often overlook: you are not restricted to the
+    built-in container types in JuMP.
+
+In addition to the built-in container types, you can create your own collections
+of JuMP variables.
+
+For example, the following code creates a dictionary with symmetric matrices as
+the values:
+```jldoctest; setup=:(model=Model())
+julia> variables = Dict{Symbol,Array{VariableRef,2}}(
+           key => @variable(model, [1:2, 1:2], Symmetric, base_name = "$(key)")
+           for key in [:A, :B]
+       )
+Dict{Symbol, Matrix{VariableRef}} with 2 entries:
+  :A => [A[1,1] A[1,2]; A[1,2] A[2,2]]
+  :B => [B[1,1] B[1,2]; B[1,2] B[2,2]]
+```
+
+Another common scenario is a request to add variables to existing containers,
+for example:
+```julia
+using JuMP
+model = Model()
+@variable(model, x[1:2] >= 0)
+# Later I want to add
+@variable(model, x[3:4] >= 0)
+```
+This is not possible with the built-in JuMP container types. However, you can
+use regular Julia types instead:
+```jldoctest
+model = Model()
+x = model[:x] = @variable(model, [1:2], lower_bound = 0, base_name = "x")
+append!(x, @variable(model, [1:2], lower_bound = 0, base_name = "y"))
+model[:x]
+
+# output
+
+4-element Vector{VariableRef}:
+ x[1]
+ x[2]
+ y[1]
+ y[2]
+```
+
 ## Integrality utilities
 
 Adding integrality constraints to a model such as `@constraint(model, x in MOI.ZeroOne())`
@@ -678,27 +725,6 @@ An alternate syntax to `x in Set` is to use the `set` keyword of
 [`@variable`](@ref). This is most useful when creating anonymous variables:
 ```julia
 x = @variable(model, [1:2, 1:2], set = PSDCone())
-```
-
-## User-defined containers
-
-In the section [Variable containers](@ref), we explained how JuMP supports the
-efficient creation of collections of JuMP variables in three types of
-containers. However, users are also free to create collections of JuMP variables
-in their own data structures. For example, the following code creates a
-dictionary with symmetric matrices as the values:
-```jldoctest; setup=:(model=Model())
-julia> variables = Dict{Symbol, Array{VariableRef,2}}()
-Dict{Symbol, Matrix{VariableRef}}()
-
-julia> for key in [:A, :B]
-           global variables[key] = @variable(model, [1:2, 1:2])
-       end
-
-julia> variables
-Dict{Symbol, Matrix{VariableRef}} with 2 entries:
-  :A => [noname noname; noname noname]
-  :B => [noname noname; noname noname]
 ```
 
 ## [Delete a variable](@id delete_a_variable)
