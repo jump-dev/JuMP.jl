@@ -24,7 +24,7 @@ function benchmark(;
             baseline;
             directory = directory,
             report_filename = report_filename,
-            kwargs...
+            kwargs...,
         )
     else
         MOI.Benchmarks.create_baseline(
@@ -220,7 +220,7 @@ function benchmark_print_AffExpr()
     m = Model()
     N = 100
     @variable(m, x[1:N])
-    c = @constraint(m, sum(i*x[i] for i=1:N) >= N)
+    c = @constraint(m, sum(i * x[i] for i in 1:N) >= N)
     return sprint(print, c)
 end
 
@@ -228,7 +228,7 @@ function benchmark_print_model()
     m = Model()
     N = 100
     @variable(m, x[1:N])
-    @constraint(m, sum(i*x[i] for i=1:N) >= N)
+    @constraint(m, sum(i * x[i] for i in 1:N) >= N)
     return sprint(print, m)
 end
 
@@ -236,7 +236,7 @@ function benchmark_print_model_10000()
     m = Model()
     N = 10_000
     @variable(m, x[1:N])
-    @constraint(m, sum(i*x[i] for i=1:N) >= N)
+    @constraint(m, sum(i * x[i] for i in 1:N) >= N)
     return sprint(print, m)
 end
 
@@ -244,52 +244,56 @@ function benchmark_print_small_model()
     m = Model()
     N = 10
     @variable(m, x1[1:N])
-    @variable(m, x2[1:N,f=1:N])
-    @variable(m, x3[1:N,f=1:2:N])
-    @variable(m, x4[[:a,:b,:c]])
-    @variable(m, x5[[:a,:b,:c],[:d,"e",4]])
-    @constraint(m,
-        sum(i*x1[i] for i=1:N) +
-        sum(i*f*x2[i,f] for i=1:N,f=1:N) +
-        sum(i*f*x3[i,f] for i=1:N,f=1:2:N) +
-        sum(x4) >= N)
+    @variable(m, x2[1:N, f = 1:N])
+    @variable(m, x3[1:N, f = 1:2:N])
+    @variable(m, x4[[:a, :b, :c]])
+    @variable(m, x5[[:a, :b, :c], [:d, "e", 4]])
+    @constraint(
+        m,
+        sum(i * x1[i] for i in 1:N) +
+        sum(i * f * x2[i, f] for i in 1:N, f in 1:N) +
+        sum(i * f * x3[i, f] for i in 1:N, f in 1:2:N) +
+        sum(x4) >= N
+    )
     return sprint(print, m)
 end
 
 end  # module
 
 function _print_help()
-    println("""
-    julia test/perf/JuMPBenchmarks.jl [-r N] [-f file] [--compare]
+    return println(
+        """
+julia test/perf/JuMPBenchmarks.jl [-r N] [-f file] [--compare]
 
-    Run a script to benchmark JuMP.
+Run a script to benchmark JuMP.
 
-    ## Run a simple benchmark
+## Run a simple benchmark
 
-     * Pass `-r N` to run each benchmark function `N` times.
+ * Pass `-r N` to run each benchmark function `N` times.
 
-    ## Run a rigorous benchmark
+## Run a rigorous benchmark
 
-    To run a more rigorous benchmark, do not pass `-r` and pass `-f file`
-    instead.
+To run a more rigorous benchmark, do not pass `-r` and pass `-f file`
+instead.
 
-     * If `--compare` is not given, save a new benchmark dataset to `file`.
-     * If `--compare`, compare aginst the data in `file`.
+ * If `--compare` is not given, save a new benchmark dataset to `file`.
+ * If `--compare`, compare aginst the data in `file`.
 
-    ## Example
+## Example
 
-    Run a simple benchmark
-    ```
-    \$ julia test/perf/JuMPBenchmarks.jl -r 2
-    ```
+Run a simple benchmark
+```
+\$ julia test/perf/JuMPBenchmarks.jl -r 2
+```
 
-    Run a complicated benchmark:
-    ```
-    \$ julia test/perf/JuMPBenchmarks.jl -f my_benchmark_run
-    # Make changes to JuMP, then run:
-    \$ julia test/perf/JuMPBenchmarks.jl -f my_benchmark_run --compare
-    ```
-    """)
+Run a complicated benchmark:
+```
+\$ julia test/perf/JuMPBenchmarks.jl -f my_benchmark_run
+# Make changes to JuMP, then run:
+\$ julia test/perf/JuMPBenchmarks.jl -f my_benchmark_run --compare
+```
+""",
+    )
 end
 
 if length(ARGS) > 0
