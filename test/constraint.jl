@@ -566,36 +566,33 @@ function test_nonsensical_SDP_constraint(ModelType, ::Any)
     @test_throws MethodError @variable(m, notone[1:5, 2:6], PSD)
     @test_throws MethodError @variable(m, oneD[1:5], PSD)
     @test_throws MethodError @variable(m, threeD[1:5, 1:5, 1:5], PSD)
-    @test_throws MethodError @variable(m, psd[2] <= rand(2, 2), PSD)
 
-    @test_throws_strip(
-        ErrorException(
-            "In `@variable(m, -(ones(3, 4)) <= foo[1:4, 1:4] <= ones(4, 4), PSD)`: Non-symmetric bounds, integrality or starting values for symmetric variable.",
-        ),
-        @variable(m, -ones(3, 4) <= foo[1:4, 1:4] <= ones(4, 4), PSD)
-    )
-    @test_throws_strip(
-        ErrorException(
-            "In `@variable(m, -(ones(3, 4)) <= foo[1:4, 1:4] <= ones(4, 4), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable.",
-        ),
-        @variable(m, -ones(3, 4) <= foo[1:4, 1:4] <= ones(4, 4), Symmetric)
-    )
-    @test_throws_strip(
-        ErrorException(
-            "In `@variable(m, -(ones(4, 4)) <= foo[1:4, 1:4] <= ones(4, 5), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable.",
-        ),
-        @variable(m, -ones(4, 4) <= foo[1:4, 1:4] <= ones(4, 5), Symmetric)
-    )
-    @test_throws_strip(
-        ErrorException(
-            "In `@variable(m, -(rand(5, 5)) <= nonsymmetric[1:5, 1:5] <= rand(5, 5), Symmetric)`: Non-symmetric bounds, integrality or starting values for symmetric variable.",
-        ),
-        @variable(
-            m,
-            -rand(5, 5) <= nonsymmetric[1:5, 1:5] <= rand(5, 5),
-            Symmetric
+    Y = [1.0 2.0; 2.1 3.0]
+    function _ErrorException(m)
+        return ErrorException(
+            "In `$m`: Non-symmetric bounds, integrality or starting values " *
+            "for symmetric variable.",
         )
+    end
+    # Hack to work around an annoying change in Julia expression printing.
+    index_set = VERSION < v"1.1" ? "i=1:2, j=1:2" : "i = 1:2, j = 1:2"
+    @test_throws_strip(
+        _ErrorException("@variable(m, foo[$index_set] >= Y[i, j], PSD)"),
+        @variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], PSD),
     )
+    @test_throws_strip(
+        _ErrorException("@variable(m, foo[$index_set] <= Y[i, j], PSD)"),
+        @variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], PSD),
+    )
+    @test_throws_strip(
+        _ErrorException("@variable(m, foo[$index_set] >= Y[i, j], Symmetric)"),
+        @variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], Symmetric),
+    )
+    @test_throws_strip(
+        _ErrorException("@variable(m, foo[$index_set] <= Y[i, j], Symmetric)"),
+        @variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], Symmetric),
+    )
+    return
 end
 
 function test_sum_constraint(ModelType, ::Any)
