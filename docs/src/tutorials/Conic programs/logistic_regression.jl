@@ -185,6 +185,7 @@ X, y = generate_dataset(n, p, shift = 10.0);
 λ = 10.0
 model = build_logit_model(X, y, λ)
 set_optimizer(model, SCS.Optimizer)
+set_silent(model)
 JuMP.optimize!(model)
 
 #-
@@ -226,6 +227,7 @@ count_nonzero(v::Vector; tol = 1e-6) = sum(abs.(v) .>= tol)
 λ = 10.0
 sparse_model = build_sparse_logit_model(X, y, λ)
 set_optimizer(sparse_model, SCS.Optimizer)
+set_silent(sparse_model)
 JuMP.optimize!(sparse_model)
 
 #-
