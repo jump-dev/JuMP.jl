@@ -204,13 +204,13 @@ end
 
     @testset "Nonlinear parameters" begin
         model = Model()
-        @NLparameter(model, param == 1.0)
+        param = @NLparameter(model, value = 1.0)
         io_test(REPLMode, param, "\"Reference to nonlinear parameter #1\"")
     end
 
     @testset "Registered nonlinear parameters" begin
         model = Model()
-        model[:param] = @NLparameter(model, param == 1.0)
+        @NLparameter(model, param == 1.0)
         io_test(REPLMode, param, "\"Reference to nonlinear parameter param\"")
     end
 
@@ -291,7 +291,7 @@ end
         model = Model()
         @variable(model, x)
         expr = @NLexpression(model, x + 1)
-        @NLparameter(model, param == 1.0)
+        param = @NLparameter(model, value = 1.0)
 
         constr = @NLconstraint(model, expr - param <= 0)
         io_test(

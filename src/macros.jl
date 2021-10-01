@@ -2268,6 +2268,23 @@ value(x)
 10.0
 ```
 
+    @NLparameter(model, value = param_value)
+
+Create and return an anonymous nonlinear parameter `param` attached to the model
+`model` with initial value set to `param_value`. Nonlinear parameters may be
+used only in nonlinear expressions.
+
+## Example
+
+```jldoctest; setup=:(using JuMP)
+model = Model()
+x = @NLparameter(model, value = 10)
+value(x)
+
+# output
+10.0
+```
+
     @NLparameter(model, param_collection[...] == value_expr)
 
 Create and return a collection of nonlinear parameters `param_collection`
@@ -2275,10 +2292,28 @@ attached to the model `model` with initial value set to `value_expr` (may
 depend on index sets).
 Uses the same syntax for specifying index sets as [`@variable`](@ref).
 
-# Example
+## Example
+
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @NLparameter(model, y[i = 1:10] == 2 * i)
+value(y[9])
+
+# output
+18.0
+```
+
+    @NLparameter(model, [...] == value_expr)
+
+Create and return an anonymous collection of nonlinear parameters attached to
+the model `model` with initial value set to `value_expr` (may depend on index
+sets). Uses the same syntax for specifying index sets as [`@variable`](@ref).
+
+## Example
+
+```jldoctest; setup=:(using JuMP)
+model = Model()
+y = @NLparameter(model, [i = 1:10] == 2 * i)
 value(y[9])
 
 # output
@@ -2291,22 +2326,34 @@ macro NLparameter(model, args...)
         return _macro_error(:NLparameter, (model, args...), __source__, str...)
     end
     pos_args, kw_args, requested_container = Containers._extract_kw_args(args)
-    if length(pos_args) > 1
+    value = missing
+    for arg in kw_args
+        if arg.args[1] == :value
+            value = arg.args[2]
+        end
+    end
+    kw_args = filter(kw -> kw.args[1] != :value, kw_args)
+    if !ismissing(value) && length(pos_args) > 0
+        _error(
+            "Invalid syntax: no positional args allowed for anonymous " *
+            "parameters.",
+        )
+    elseif length(pos_args) > 1
         _error("Invalid syntax: too many positional arguments.")
     elseif length(kw_args) > 0
         _error("Invalid syntax: unsupported keyword arguments.")
+    elseif ismissing(value) && isexpr(pos_args[1], :block)
+        _error("Invalid syntax: did you mean to use `@NLparameters`?")
+    elseif ismissing(value)
+        ex = pos_args[1]
+        if !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
+            _error("Invalid syntax: expected syntax of form `param == value`.")
+        end
     end
-    ex = pos_args[1]
-    if isexpr(ex, :block)
-        _error("Invalid syntax. Did you mean to use `@NLparameters`?")
-    elseif !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
-        _error("Invalid syntax: expected argument of form `param == value`.")
-    end
-    param, value = ex.args[2], ex.args[3]
-    if isexpr(param, :vect) || isexpr(param, :vcat)
-        _error(
-            "Anonymous nonlinear parameter syntax is not currently supported.",
-        )
+    param, anon = gensym(), true
+    if ismissing(value)
+        param, value = pos_args[1].args[2], pos_args[1].args[3]
+        anon = isexpr(param, :vect) || isexpr(param, :vcat)
     end
     index_vars, index_values = Containers._build_ref_sets(_error, param)
     if model in index_vars
@@ -2327,12 +2374,15 @@ macro NLparameter(model, args...)
         code,
         requested_container,
     )
-    # TODO: NLparameters are not registered in the model because we don't yet
-    # have an anonymous version.
-    macro_code = _macro_assign_and_return(
-        creation_code,
-        gensym(),
-        Containers._get_name(param),
-    )
+    macro_code = if anon
+        creation_code
+    else
+        _macro_assign_and_return(
+            creation_code,
+            gensym(),
+            Containers._get_name(param),
+            model_for_registering = esc_m,
+        )
+    end
     return _finalize_macro(esc_m, macro_code, __source__)
 end

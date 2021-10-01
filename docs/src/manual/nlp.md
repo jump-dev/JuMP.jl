@@ -109,6 +109,12 @@ julia> @NLparameter(model, p[i = 1:2] == i)
  "Reference to nonlinear parameter #2"
 ```
 
+Create anonymous parameters using the `value` keyword:
+```jldoctest nonlinear_parameters
+julia> anon_parameter = @NLparameter(model, value = 1)
+"Reference to nonlinear parameter #3"
+```
+
 !!! info
     A parameter is not an optimization variable. It must be fixed to a value with
     `==`. If you want a parameter that is `<=` or `>=`, create a variable instead
@@ -131,9 +137,6 @@ julia> value.(p)
  1.0
  3.0
 ```
-
-!!! info
-    There is no anonymous syntax for creating parameters.
 
 Nonlinear parameters can be used *within nonlinear macros* only:
 
