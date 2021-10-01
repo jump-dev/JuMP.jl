@@ -1346,6 +1346,46 @@ function test_variable_vector_interval()
     return
 end
 
+function test_invalid_name_errors()
+    model = Model()
+    @test_macro_throws(
+        ErrorException("Expression x.y cannot be used as a name."),
+        @variable(model, x.y),
+    )
+    return
+end
+
+function test_invalid_name_errors_denseaxisarray()
+    model = Model()
+    @test_macro_throws(
+        ErrorException("Expression x.y cannot be used as a name."),
+        @variable(model, x.y[2:3, 1:2]),
+    )
+    return
+end
+
+function test_invalid_name_errors_sparseaxisarray()
+    model = Model()
+    @test_macro_throws(
+        ErrorException("Expression x.y cannot be used as a name."),
+        @variable(model, x.y[i = 1:3; isodd(i)]),
+    )
+    return
+end
+
+function test_invalid_variable_syntax()
+    model = Model()
+    @test_macro_throws(
+        ErrorException(
+            "In `@variable(model, MyInfo(1))`: Invalid syntax: your syntax " *
+            "is wrong, but we don't know why. Consult the documentation for " *
+            "various ways to create variables in JuMP.",
+        ),
+        @variable(model, MyInfo(1)),
+    )
+    return
+end
+
 end  # module
 
 TestMacros.runtests()
