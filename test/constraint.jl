@@ -585,15 +585,11 @@ function test_nonsensical_SDP_constraint(ModelType, ::Any)
         @variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], PSD),
     )
     @test_throws_strip(
-        _ErrorException(
-            "@variable(m, foo[$index_set] >= Y[i, j], Symmetric)",
-        ),
+        _ErrorException("@variable(m, foo[$index_set] >= Y[i, j], Symmetric)"),
         @variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], Symmetric),
     )
     @test_throws_strip(
-        _ErrorException(
-            "@variable(m, foo[$index_set] <= Y[i, j], Symmetric)",
-        ),
+        _ErrorException("@variable(m, foo[$index_set] <= Y[i, j], Symmetric)"),
         @variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], Symmetric),
     )
     return
