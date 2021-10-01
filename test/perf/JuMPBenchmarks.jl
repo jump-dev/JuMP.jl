@@ -1,8 +1,15 @@
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 module JuMPBenchmarks
 
 using JuMP
-using LinearAlgebra
-using BenchmarkTools
+
+import BenchmarkTools
+import LinearAlgebra
+import Random
 
 function benchmark(;
     baseline::String = "baseline",
@@ -15,7 +22,7 @@ function benchmark(;
     for name in names(@__MODULE__, all = true)
         if startswith("$(name)", "bench_")
             f = getfield(@__MODULE__, name)
-            group[name] = @benchmarkable $f()
+            group[name] = BenchmarkTools.@benchmarkable $f()
         end
     end
     if compare_against
@@ -42,18 +49,28 @@ end
 
 Run each micro benchmark function `N` times.
 
+ * If `N == 0`, uses the `BenchmarkTools.@benchmark` macro.
+ * If `N > 0`, runs the function multiple times with `@time`.
+
 !!! warning
-    This is not a rigorous benchmark. It uses `@time`, so it doesn't accurately
-    capture top-level compilation and inference. Use `benchmark` for a more
-    rigorous comparison.
+    This is not a rigorous benchmark if `N > 0`. It uses `@time`, so it doesn't
+    accurately capture top-level compilation and inference. Use `N = 0` for a
+    more rigorous evaluation, or use `JuMPBenchmarks.benchmark` for a comparison
+    with prior benchmarks.
 """
 function run_microbenchmark(N::Int)
     for name in sort!(names(@__MODULE__, all = true))
         if startswith("$(name)", "bench_")
             f = getfield(@__MODULE__, name)
             @info("$(name)")
-            for _ in 1:N
-                @time f()
+            if N == 0
+                result = BenchmarkTools.@benchmark $f()
+                display(result)
+                println()
+            else
+                for _ in 1:N
+                    @time f()
+                end
             end
         end
     end
@@ -378,6 +395,119 @@ for container in (:dense, :sparse), sum_type in (:iterate, :index)
     f = getfield(@__MODULE__, Symbol("_$(container)_axis_constraints"))
     new_name = Symbol("bench_$(container)_axis_constraints_$(sum_type)")
     @eval $(new_name)() = $f($(sum_type))
+end
+
+###
+### Model constructors
+###
+
+"""
+    benchmark_p_median(
+        num_facilities = 100,
+        num_customers = 100,
+        num_locations = 5_000,
+    )
+
+Implements the "p-median" facility location problem. We try to locate N
+facilities such that we minimize the distance any given customer has to travel
+to reach their closest facility. In this simple instance we will operate
+in a 1D world with L possible locations for facilities, and customers being
+located at random locations along the number line from 1 to D.
+
+We use anonymous variables to remove the cost of name generation from the
+benchmark.
+"""
+function benchmark_p_median(
+    num_facilities = 100,
+    num_customers = 100,
+    num_locations = 5_000,
+)
+    Random.seed!(10)
+    customer_locations = [rand(1:num_locations) for _ in 1:num_customers]
+    model = Model()
+    has_facility = @variable(model, [1:num_locations], Bin)
+    is_closest = @variable(model, [1:num_locations, 1:num_customers], Bin)
+    @objective(
+        model,
+        Min,
+        sum(
+            abs(customer_locations[customer] - location) *
+            is_closest[location, customer] for customer in 1:num_customers,
+            location in 1:num_locations
+        )
+    )
+    for customer in 1:num_customers
+        # `location` can't be closest for `customer` if there is no facility.
+        @constraint(
+            model,
+            [location in 1:num_locations],
+            is_closest[location, customer] <= has_facility[location]
+        )
+        # One facility must be the closest for `customer`.
+        @constraint(
+            model,
+            sum(
+                is_closest[location, customer] for location in 1:num_locations
+            ) == 1
+        )
+    end
+    # Must place all facilities.
+    @constraint(model, sum(has_facility) == num_facilities)
+    return model
+end
+
+"""
+    benchmark_cont5(n = 500)
+
+Based on a linear-Quadratic control problem (cont5_2_1) from one of Hans
+Mittleman's instance collections.
+
+We use anonymous variables to remove the cost of name generation from the
+benchmark.
+"""
+function benchmark_cont5(n = 500)
+    m = n
+    n1 = n - 1
+    m1 = m - 1
+    dx = 1 / n
+    T = 1.58
+    dt = T / m
+    h2 = dx^2
+    a = 0.001
+    yt = [0.5 * (1 - (j * dx)^2) for j in 0:n]
+    model = Model()
+    y = @variable(model, [0:m, 0:n], lower_bound = 0, upper_bound = 1)
+    u = @variable(model, [1:m], lower_bound = -1, upper_bound = 1)
+    @objective(model, Min, y[0, 0])
+    # PDE
+    for i in 0:m1
+        for j in 1:n1
+            @constraint(
+                model,
+                h2 * (y[i+1, j] - y[i, j]) ==
+                0.5 *
+                dt *
+                (
+                    y[i, j-1] - 2 * y[i, j] + y[i, j+1] + y[i+1, j-1] -
+                    2 * y[i+1, j] + y[i+1, j+1]
+                )
+            )
+        end
+    end
+    # Initial conditions.
+    for j in 0:n
+        @constraint(model, y[0, j] == 0)
+    end
+    # Boundary conditions.
+    for i in 1:m
+        @constraint(model, y[i, 2] - 4 * y[i, 1] + 3 * y[i, 0] == 0)
+        @constraint(
+            model,
+            y[i, n-2] - 4 * y[i, n1] + 3 * y[i, n] ==
+            (2 * dx) * (u[i] - y[i, n])
+        )
+    end
+    return model
 end
 
 end  # module
