@@ -68,26 +68,33 @@ Run each example in the `/docs/src/tutorials` folder in a fresh Julia instance.
 function run_examples(julia_cmd = "julia")
     src_dir = joinpath(dirname(dirname(@__DIR__)), "docs", "src", "tutorials")
     doc_project = joinpath(dirname(dirname(@__DIR__)), "docs")
-    timings = Dict{String,Any}()
+    log_file = joinpath(@__DIR__, "run_examples.log")
     for (root, dir, files) in walkdir(src_dir)
         for file in files
             if !endswith(file, ".jl")
                 continue
             end
             filename = joinpath(root, file)
+            code = """
+            data_1 = @timed include(\"$(filename)\")
+            data_2 = @timed include(\"$(filename)\")
+            open("$(log_file)", "a") do io
+                println(io, "$(file)")
+                println(io, "  Time (s): ", data_1.time)
+                println(io, "  Bytes   : ", data_1.bytes)
+                println(io, "  -- run 2 --")
+                println(io, "  Time (s): ", data_2.time)
+                println(io, "  Bytes   : ", data_2.bytes)
+            end
+            """
             println("Running: ", file)
-            @time timings[file] = @timed redirect_stderr(devnull) do
+            @time redirect_stderr(devnull) do
                 return redirect_stdout(devnull) do
-                    return run(`$(julia_cmd) --project=$(doc_project) $(filename)`)
+                    return run(
+                        `$(julia_cmd) --project=$(doc_project) -e $(code)`,
+                    )
                 end
             end
-        end
-    end
-    open("run_examples.log", "w") do io
-        for (file, val) in timings
-            println(io, file)
-            println(io, "  Time (s): ", val.time)
-            println(io, "  Bytes   : ", val.bytes)
         end
     end
     return
