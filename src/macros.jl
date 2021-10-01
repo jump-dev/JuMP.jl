@@ -711,16 +711,6 @@ function _constraint_macro(
         base_name = esc(base_name_kw_args[1].args[2])
     end
 
-    if !isa(name, Symbol) && !anonvar
-        _error(
-            "Expression $name should not be used as a constraint name. Use the \"anonymous\" syntax $name = @constraint(model, ...) instead.",
-        )
-    end
-
-    (x.head == :block) && _error(
-        "Code block passed as constraint. Perhaps you meant to use @constraints instead?",
-    )
-
     # Strategy: build up the code for add_constraint, and if needed we will wrap
     # in a function returning `ConstraintRef`s and give it to `Containers.container`.
     idxvars, indices = Containers._build_ref_sets(_error, c)
@@ -1914,12 +1904,6 @@ macro variable(args...)
         base_name = anonvar ? "" : string(name)
     else
         base_name = esc(base_name_kw_args[1].args[2])
-    end
-
-    if !isa(name, Symbol) && !anonvar
-        Base.error(
-            "Expression $name should not be used as a variable name. Use the \"anonymous\" syntax $name = @variable(model, ...) instead.",
-        )
     end
 
     if !isempty(set_kw_args)

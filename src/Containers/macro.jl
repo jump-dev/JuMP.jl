@@ -5,14 +5,15 @@
 
 using Base.Meta
 
-_get_name(c::Symbol) = c
-_get_name(c::Nothing) = ()
-_get_name(c::AbstractString) = c
+_get_name(c::Union{Symbol,AbstractString}) = c
+
 function _get_name(c::Expr)
-    if c.head == :string
-        return c
+    if isexpr(c, :vcat) || isexpr(c, :vect)
+        return Symbol("")  # Anonymous variable
+    elseif isexpr(c, :ref) || isexpr(c, :typed_vcat)
+        return _get_name(c.args[1])
     else
-        return c.args[1]
+        error("Expression $c cannot be used as a name.")
     end
 end
 
