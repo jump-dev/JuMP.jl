@@ -1479,6 +1479,36 @@ function build_variable(
             "`build_variable`. Read the docstring for more details.",
         )
     end
+    if info.lower_bound isa AbstractArray
+        _error(
+            "Passing arrays as variable bounds is not supported. Instead of " *
+            "`@variable(model, x[1:2] >= lb)`, do " *
+            "`@variable(model, x[i=1:2] >= lb[i])`. Alternatively, create " *
+            "the variable without bounds, then call `set_lower_bound.(x, lb)`",
+        )
+    elseif info.upper_bound isa AbstractArray
+        _error(
+            "Passing arrays as variable bounds is not supported. Instead of " *
+            "`@variable(model, x[1:2] <= ub)`, do " *
+            "`@variable(model, x[i=1:2] <= ub[i])`. Alternatively, create " *
+            "the variable without bounds, then call `set_upper_bound.(x, ub)`",
+        )
+    elseif info.fixed_value isa AbstractArray
+        _error(
+            "Passing arrays as variable bounds is not supported. Instead of " *
+            "`@variable(model, x[1:2] == fx)`, do " *
+            "`@variable(model, x[i=1:2] == fx[i])`. Alternatively, create " *
+            "the variable without bounds, then call `fix.(x, fx)`",
+        )
+    elseif info.start isa AbstractArray
+        _error(
+            "Passing arrays as variable starts is not supported. Instead of " *
+            "`@variable(model, x[1:2], start = x0)`, do " *
+            "`@variable(model, x[i=1:2], start = x0[i])`. Alternatively, " *
+            "create the variable without starting values, then call " *
+            "`set_start_value.(x, x0)`.",
+        )
+    end
     return ScalarVariable(info)
 end
 
