@@ -711,16 +711,6 @@ function _constraint_macro(
         base_name = esc(base_name_kw_args[1].args[2])
     end
 
-    if !isa(name, Symbol) && !anonvar
-        _error(
-            "Expression $name should not be used as a constraint name. Use the \"anonymous\" syntax $name = @constraint(model, ...) instead.",
-        )
-    end
-
-    (x.head == :block) && _error(
-        "Code block passed as constraint. Perhaps you meant to use @constraints instead?",
-    )
-
     # Strategy: build up the code for add_constraint, and if needed we will wrap
     # in a function returning `ConstraintRef`s and give it to `Containers.container`.
     idxvars, indices = Containers._build_ref_sets(_error, c)
@@ -1479,6 +1469,36 @@ function build_variable(
             "`build_variable`. Read the docstring for more details.",
         )
     end
+    if info.lower_bound isa AbstractArray
+        _error(
+            "Passing arrays as variable bounds is not supported. Instead of " *
+            "`@variable(model, x[1:2] >= lb)`, do " *
+            "`@variable(model, x[i=1:2] >= lb[i])`. Alternatively, create " *
+            "the variable without bounds, then call `set_lower_bound.(x, lb)`",
+        )
+    elseif info.upper_bound isa AbstractArray
+        _error(
+            "Passing arrays as variable bounds is not supported. Instead of " *
+            "`@variable(model, x[1:2] <= ub)`, do " *
+            "`@variable(model, x[i=1:2] <= ub[i])`. Alternatively, create " *
+            "the variable without bounds, then call `set_upper_bound.(x, ub)`",
+        )
+    elseif info.fixed_value isa AbstractArray
+        _error(
+            "Passing arrays as variable bounds is not supported. Instead of " *
+            "`@variable(model, x[1:2] == fx)`, do " *
+            "`@variable(model, x[i=1:2] == fx[i])`. Alternatively, create " *
+            "the variable without bounds, then call `fix.(x, fx)`",
+        )
+    elseif info.start isa AbstractArray
+        _error(
+            "Passing arrays as variable starts is not supported. Instead of " *
+            "`@variable(model, x[1:2], start = x0)`, do " *
+            "`@variable(model, x[i=1:2], start = x0[i])`. Alternatively, " *
+            "create the variable without starting values, then call " *
+            "`set_start_value.(x, x0)`.",
+        )
+    end
     return ScalarVariable(info)
 end
 
@@ -1572,6 +1592,14 @@ reverse_sense(::Val{:≤}) = Val(:≥)
 reverse_sense(::Val{:>=}) = Val(:<=)
 reverse_sense(::Val{:≥}) = Val(:≤)
 reverse_sense(::Val{:(==)}) = Val(:(==))
+
+function parse_variable(_error::Function, ::_VariableInfoExpr, args...)
+    return _error(
+        "Invalid syntax: your syntax is wrong, but we don't know why. " *
+        "Consult the documentation for various ways to create variables in " *
+        "JuMP.",
+    )
+end
 
 """
     parse_one_operator_variable(_error::Function, infoexpr::_VariableInfoExpr, sense::Val{S}, value) where S
@@ -1922,12 +1950,6 @@ macro variable(args...)
         base_name = esc(base_name_kw_args[1].args[2])
     end
 
-    if !isa(name, Symbol) && !anonvar
-        Base.error(
-            "Expression $name should not be used as a variable name. Use the \"anonymous\" syntax $name = @variable(model, ...) instead.",
-        )
-    end
-
     if !isempty(set_kw_args)
         if length(set_kw_args) > 1
             _error(
@@ -2274,6 +2296,23 @@ value(x)
 10.0
 ```
 
+    @NLparameter(model, value = param_value)
+
+Create and return an anonymous nonlinear parameter `param` attached to the model
+`model` with initial value set to `param_value`. Nonlinear parameters may be
+used only in nonlinear expressions.
+
+## Example
+
+```jldoctest; setup=:(using JuMP)
+model = Model()
+x = @NLparameter(model, value = 10)
+value(x)
+
+# output
+10.0
+```
+
     @NLparameter(model, param_collection[...] == value_expr)
 
 Create and return a collection of nonlinear parameters `param_collection`
@@ -2281,10 +2320,28 @@ attached to the model `model` with initial value set to `value_expr` (may
 depend on index sets).
 Uses the same syntax for specifying index sets as [`@variable`](@ref).
 
-# Example
+## Example
+
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @NLparameter(model, y[i = 1:10] == 2 * i)
+value(y[9])
+
+# output
+18.0
+```
+
+    @NLparameter(model, [...] == value_expr)
+
+Create and return an anonymous collection of nonlinear parameters attached to
+the model `model` with initial value set to `value_expr` (may depend on index
+sets). Uses the same syntax for specifying index sets as [`@variable`](@ref).
+
+## Example
+
+```jldoctest; setup=:(using JuMP)
+model = Model()
+y = @NLparameter(model, [i = 1:10] == 2 * i)
 value(y[9])
 
 # output
@@ -2297,22 +2354,34 @@ macro NLparameter(model, args...)
         return _macro_error(:NLparameter, (model, args...), __source__, str...)
     end
     pos_args, kw_args, requested_container = Containers._extract_kw_args(args)
-    if length(pos_args) > 1
+    value = missing
+    for arg in kw_args
+        if arg.args[1] == :value
+            value = arg.args[2]
+        end
+    end
+    kw_args = filter(kw -> kw.args[1] != :value, kw_args)
+    if !ismissing(value) && length(pos_args) > 0
+        _error(
+            "Invalid syntax: no positional args allowed for anonymous " *
+            "parameters.",
+        )
+    elseif length(pos_args) > 1
         _error("Invalid syntax: too many positional arguments.")
     elseif length(kw_args) > 0
         _error("Invalid syntax: unsupported keyword arguments.")
+    elseif ismissing(value) && isexpr(pos_args[1], :block)
+        _error("Invalid syntax: did you mean to use `@NLparameters`?")
+    elseif ismissing(value)
+        ex = pos_args[1]
+        if !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
+            _error("Invalid syntax: expected syntax of form `param == value`.")
+        end
     end
-    ex = pos_args[1]
-    if isexpr(ex, :block)
-        _error("Invalid syntax. Did you mean to use `@NLparameters`?")
-    elseif !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
-        _error("Invalid syntax: expected argument of form `param == value`.")
-    end
-    param, value = ex.args[2], ex.args[3]
-    if isexpr(param, :vect) || isexpr(param, :vcat)
-        _error(
-            "Anonymous nonlinear parameter syntax is not currently supported.",
-        )
+    param, anon = gensym(), true
+    if ismissing(value)
+        param, value = pos_args[1].args[2], pos_args[1].args[3]
+        anon = isexpr(param, :vect) || isexpr(param, :vcat)
     end
     index_vars, index_values = Containers._build_ref_sets(_error, param)
     if model in index_vars
@@ -2333,12 +2402,15 @@ macro NLparameter(model, args...)
         code,
         requested_container,
     )
-    # TODO: NLparameters are not registered in the model because we don't yet
-    # have an anonymous version.
-    macro_code = _macro_assign_and_return(
-        creation_code,
-        gensym(),
-        Containers._get_name(param),
-    )
+    macro_code = if anon
+        creation_code
+    else
+        _macro_assign_and_return(
+            creation_code,
+            gensym(),
+            Containers._get_name(param),
+            model_for_registering = esc_m,
+        )
+    end
     return _finalize_macro(esc_m, macro_code, __source__)
 end
