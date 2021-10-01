@@ -1373,6 +1373,19 @@ function test_invalid_name_errors_sparseaxisarray()
     return
 end
 
+function test_invalid_variable_syntax()
+    model = Model()
+    @test_macro_throws(
+        ErrorException(
+            "In `@variable(model, MyInfo(1))`: Invalid syntax: your syntax " *
+            "is wrong, but we don't know why. Consult the documentation for " *
+            "various ways to create variables in JuMP.",
+        ),
+        @variable(model, MyInfo(1)),
+    )
+    return
+end
+
 end  # module
 
 TestMacros.runtests()

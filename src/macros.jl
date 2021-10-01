@@ -1557,6 +1557,14 @@ reverse_sense(::Val{:>=}) = Val(:<=)
 reverse_sense(::Val{:≥}) = Val(:≤)
 reverse_sense(::Val{:(==)}) = Val(:(==))
 
+function parse_variable(_error::Function, ::_VariableInfoExpr, args...)
+    return _error(
+        "Invalid syntax: your syntax is wrong, but we don't know why. " *
+        "Consult the documentation for various ways to create variables in " *
+        "JuMP.",
+    )
+end
+
 """
     parse_one_operator_variable(_error::Function, infoexpr::_VariableInfoExpr, sense::Val{S}, value) where S
 
