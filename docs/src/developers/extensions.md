@@ -10,6 +10,20 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
 
 JuMP provides a variety of ways to extend the basic modeling functionality.
 
+!!! tip
+    This documentation in this section is still a work-in-progress. The best
+    place to look for ideas and help when writing a new JuMP extension are
+    existing JuMP extensions. Examples include:
+     * [BilevelJuMP.jl](https://github.com/joaquimg/BilevelJuMP.jl)
+     * [Coluna.jl](https://github.com/atoptima/Coluna.jl)
+     * [InfiniteOpt.jl](https://github.com/pulsipher/InfiniteOpt.jl)
+     * [Plasmo.jl](https://github.com/zavalab/Plasmo.jl)
+     * [PolyJuMP.jl](https://github.com/jump-dev/PolyJuMP.jl)
+     * [SDDP.jl](https://github.com/odow/SDDP.jl)
+     * [StochasticPrograms.jl](https://github.com/martinbiel/StochasticPrograms.jl)
+     * [SumOfSquares.jl](https://github.com/jump-dev/SumOfSquares.jl)
+     * [vOptGeneric.jl](https://github.com/vOptSolver/vOptGeneric.jl)
+
 ## Define a new set
 
 To define a new set for JuMP, subtype `MOI.AbstractScalarSet` or
@@ -157,9 +171,9 @@ Work in progress.
 
 ### Adding an extra positional argument
 
-We can also extend `@constraint` to handle additional positional arguments that 
-effectively "tag" a particular constraint type and/or pass along additional 
-information that we may want. For example, we can make a `MyConstrType` that 
+We can also extend `@constraint` to handle additional positional arguments that
+effectively "tag" a particular constraint type and/or pass along additional
+information that we may want. For example, we can make a `MyConstrType` that
 modifies affine equalities:
 ```jldoctest
 julia> model = Model(); @variable(model, x);
@@ -180,9 +194,9 @@ julia> function JuMP.build_constraint(
 julia> @constraint(model, my_con, x == 0, MyConstrType, d = 2)
 my_con : x ≤ 2.0
 ```
-Note that only a single positional argument can be given to a particular 
-constraint. Extensions that seek to pass multiple arguments (e.g., `Foo` and 
-`Bar`) should combine them into one argument type (e.g., `FooBar`). 
+Note that only a single positional argument can be given to a particular
+constraint. Extensions that seek to pass multiple arguments (e.g., `Foo` and
+`Bar`) should combine them into one argument type (e.g., `FooBar`).
 
 ### Shapes
 
