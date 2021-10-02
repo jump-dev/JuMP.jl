@@ -1386,6 +1386,52 @@ function test_invalid_variable_syntax()
     return
 end
 
+function test_broadcasting_variable_in_set()
+    model = Model()
+    @variable(model, z[1:2] in MOI.GreaterThan.([3.0, 2.0]))
+    @test num_variables(model) == 2
+    @test lower_bound.(z) == [3.0, 2.0]
+    @test has_upper_bound.(z) == [false, false]
+    @variable(model, w[1:2] in MOI.GreaterThan(3.0))
+    @test num_variables(model) == 4
+    @test lower_bound.(w) == [3.0, 3.0]
+    @test has_upper_bound.(w) == [false, false]
+    @variable(model, v[1:2] in [MOI.GreaterThan(3.0), MOI.LessThan(3.0)])
+    @test num_variables(model) == 6
+    @test lower_bound(v[1]) == 3.0
+    @test has_upper_bound(v[1]) == false
+    @test upper_bound(v[2]) == 3.0
+    @test has_lower_bound(v[2]) == false
+    @test_throws(
+        ErrorException,
+        @variable(model, k in MOI.GreaterThan.([3.0, 2.0])),
+    )
+    @test_throws(
+        ErrorException,
+        @variable(model, u[1:3] in MOI.GreaterThan.([3.0, 2.0])),
+    )
+    @test num_variables(model) == 6
+    # SparseAxisArray
+    @variable(model, b[i = 1:2, j = 1:2; i + j == 3] in MOI.GreaterThan(3.0))
+    @test num_variables(model) == 8
+    @variable(
+        model,
+        a[i = 1:2, j = 1:2; i + j == 3] in JuMP.Containers.SparseAxisArray(
+            Dict(
+                (1, 2) => MOI.GreaterThan(3.0),
+                (2, 1) => MOI.GreaterThan(3.0),
+            ),
+        )
+    )
+    @test num_variables(model) == 10
+    # DenseAxisArray
+    @variable(model, dense_a[i = ["x", "xx"]] in MOI.GreaterThan(3.0))
+    @test num_variables(model) == 12
+    @variable(model, dense_b[1:2, 2:4] in MOI.GreaterThan(3.0))
+    @test num_variables(model) == 18
+    return
+end
+
 end  # module
 
 TestMacros.runtests()
