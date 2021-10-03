@@ -933,6 +933,15 @@ end
 
 Return the value of the solver-specific attribute `attr` in `model`.
 
+!!! warning
+    If you are querying a solver-specific attribute such as
+    `Gurobi.ModelAttribute`, and you are not using [`direct_model`](@ref), and
+    you have not called [`optimize!`](@ref), you must first call
+    `MOI.Utilities.attach_optimizer(model)` in order to first copy the problem
+    into the solver.
+
+See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
+
 ## Examples
 
 Query model or optimizer attributes:
@@ -945,7 +954,11 @@ Query variable or constraint attributes:
 get_optimizer_attribute(model, MOI.VariablePrimalStart(), x)
 ```
 
-See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
+Query a solver-specific attribute:
+```julia
+MOI.Utilities.attach_optimizer(model)
+get_optimizer_attribute(model, Gurobi.ModelAttribute("IsMIP"))
+```
 """
 function get_optimizer_attribute(model::Model, attr::MOI.AnyAttribute, args...)
     # If we're in direct mode, no need for `AttributeFromOptimizer`.
