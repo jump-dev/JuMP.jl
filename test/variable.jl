@@ -1005,14 +1005,14 @@ end
 function test_Model_error_messages(::Any, ::Any)
     model = Model()
     @variable(model, x)
-    e = try
+    err = try
         x == 1
     catch err
         err
     end
     function f(s)
         return ErrorException(
-            replace(replace(e.msg, "== 1" => "$(s) 1"), "`==`" => "`$(s)`"),
+            replace(replace(err.msg, "== 1" => "$(s) 1"), "`==`" => "`$(s)`"),
         )
     end
     @test_throws err 1 == x
