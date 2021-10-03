@@ -1002,6 +1002,27 @@ function test_Model_unsupported_VariableName(::Any, ::Any)
     return
 end
 
+function test_Model_error_messages(::Any, ::Any)
+    model = Model()
+    @variable(model, x)
+    e = try
+        x == 1
+    catch err
+        err
+    end
+    function f(s)
+        return ErrorException(
+            replace(replace(e.msg, "== 1" => "$(s) 1"), "`==`" => "`$(s)`"),
+        )
+    end
+    @test_throws err 1 == x
+    @test_throws f("<=") x <= 1
+    @test_throws f("<=") 1 <= x
+    @test_throws f(">=") x >= 1
+    @test_throws f(">=") 1 >= x
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
