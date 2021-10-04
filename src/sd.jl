@@ -129,7 +129,6 @@ function _MA.operate!(
     return x
 end
 
-
 """
     SymmetricMatrixShape
 
