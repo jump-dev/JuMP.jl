@@ -8,6 +8,7 @@ module JuMPBenchmarks
 using JuMP
 
 import BenchmarkTools
+import DataFrames
 import LinearAlgebra
 import Random
 
@@ -115,6 +116,51 @@ function run_examples(julia_cmd = "julia")
         end
     end
     return
+end
+
+function _parse_example_log(filename::String)
+    data = Dict{String,Any}()
+    open(filename, "r") do io
+        while !eof(io)
+            file = readline(io)
+            time_1 = parse(Float64, replace(readline(io), "Time (s): " => ""))
+            alloc_1 = parse(Float64, replace(readline(io), "Bytes   : " => ""))
+            tmp = readline(io)
+            @assert occursin("-- run 2 --", tmp)
+            time_2 = parse(Float64, replace(readline(io), "Time (s): " => ""))
+            alloc_2 = parse(Float64, replace(readline(io), "Bytes   : " => ""))
+            data[file] = (
+                time_1 = time_1,
+                alloc_1 = alloc_1,
+                time_2 = time_2,
+                alloc_2 = alloc_2,
+            )
+        end
+    end
+    return data
+end
+
+function analyze_examples(filename_A::String, filename_B::String)
+    A = _parse_example_log(filename_A)
+    B = _parse_example_log(filename_B)
+    models = collect(keys(A))
+    df = DataFrames.DataFrame(
+        models = models,
+        time_A = map(m -> A[m].time_1, models),
+        time_B = map(m -> B[m].time_1, models),
+        alloc_A = map(m -> A[m].alloc_1, models),
+        alloc_B = map(m -> B[m].alloc_1, models),
+        time_2_A = map(m -> A[m].time_2, models),
+        time_2_B = map(m -> B[m].time_2, models),
+        alloc_2_A = map(m -> A[m].alloc_2, models),
+        alloc_2_B = map(m -> B[m].alloc_2, models),
+    )
+    df[!, :time_ratio] = df.time_B ./ df.time_A
+    df[!, :time_2_ratio] = df.time_2_B ./ df.time_2_A
+    df[!, :alloc_ratio] = df.alloc_B ./ df.alloc_A
+    df[!, :alloc_2_ratio] = df.alloc_2_B ./ df.alloc_2_A
+    DataFrames.sort!(df, :time_ratio)
+    return df
 end
 
 ###
@@ -515,7 +561,7 @@ end  # module
 function _print_help()
     return println(
         """
-julia test/perf/JuMPBenchmarks.jl [-r N] [-f file [--compare]] [-j julia]
+julia test/perf/JuMPBenchmarks.jl args...
 
 Run a script to benchmark various aspects of JuMP.
 
@@ -531,8 +577,8 @@ Pass `-r N` to run each benchmark function `N` times.
 
 ## Run a rigorous micro-benchmark
 
-To run a more rigorous benchmark, do not pass `-r` and pass `-f file`
-instead.
+Pass `-f file [--compare]` to run a more rigorous benchmark, where `--compare`
+is optional.
 
  * If `--compare` is not given, save a new benchmark dataset to `file`.
  * If `--compare`, compare aginst the data in `file`.
@@ -552,10 +598,14 @@ start Julia at the command line. This uses the Project.toml located at
 `/docs/src/Project.toml`, which assumes you have dev'd JuMP to it as
 appropriate.
 
+After running two sets of examples, copy the results into two files and then run
+`--compare file_1 file_2` to compare the two files.
+
 ### Examples
 
 ```
 \$ julia test/perf/JuMPBenchmarks.jl -j /Users/oscar/julia1.6
+\$ julia test/perf/JuMPBenchmarks.jl --compare file_1 file_2
 ```
 """,
     )
@@ -586,6 +636,11 @@ if length(ARGS) > 0
             baseline = baseline,
             compare_against = compare_against,
         )
+    end
+    i = findfirst(isequal("--compare"), ARGS)
+    if i !== nothing && length(ARGS) >= i + 2
+        df = JuMPBenchmarks.analyze_examples(ARGS[i+1], ARGS[i+2])
+        @show df[!, [:time_A, :time_B, :time_ratio]]
     end
 else
     _print_help()
