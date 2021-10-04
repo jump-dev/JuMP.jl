@@ -609,9 +609,9 @@ julia> @constraint(model, X >= Y, PSDCone())
 ```
 
 The following three syntax are equivalent:
- * `@constraint(model, X >= 0, PSDCone())`
- * `@constraint(model, 0 <= X, PSDCone())`
- * `@constraint(model, X in PSDCone())`
+ * `@constraint(model, X >= Y, PSDCone())`
+ * `@constraint(model, Y <= X, PSDCone())`
+ * `@constraint(model, X - Y in PSDCone())`
 
 !!! note
     Non-zero constants are not supported:
@@ -656,16 +656,11 @@ julia> @constraint(model, LinearAlgebra.Symmetric(Z) >= 0, PSDCone())
 Note that the lower triangular entries are silently ignored even if they are
 different so use it with caution:
 ```jldoctest con_psd
-julia> A = [X[1, 1] X[1, 2]; X[2, 2] X[2, 2]]
-2×2 Matrix{VariableRef}:
- X[1,1]  X[1,2]
- X[2,2]  X[2,2]
-
-julia> @constraint(model, LinearAlgebra.Symmetric(A) >= 0, PSDCone())
+julia> @constraint(model, LinearAlgebra.Symmetric(X) >= 0, PSDCone())
 [X[1,1]  X[1,2];
  X[1,2]  X[2,2]] ∈ PSDCone()
 ```
-(Note the `(2, 1)` element of the constraint is `X[1,2]`, not `X[2,2]`.)
+(Note the `(2, 1)` element of the constraint is `X[1,2]`, not `X[2,1]`.)
 
 ## Modify a constraint
 
