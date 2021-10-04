@@ -282,8 +282,14 @@ end
 
 _functionize(v::VariableRef) = convert(AffExpr, v)
 _functionize(v::AbstractArray{VariableRef}) = _functionize.(v)
+
+function _functionize(v::LinearAlgebra.Symmetric{Matrix{VariableRef}})
+    return convert(LinearAlgebra.Symmetric{AffExpr,Matrix{AffExpr}}, v)
+end
+
 _functionize(x) = x
 _functionize(::MutableArithmetics.Zero) = 0.0
+
 function parse_one_operator_constraint(
     _error::Function,
     vectorized::Bool,

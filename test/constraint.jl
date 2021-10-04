@@ -1010,6 +1010,42 @@ function test_Model_unsupported_ConstraintName(::Any, ::Any)
     return
 end
 
+function test_PSDCone_constraints(::Any, ::Any)
+    model = Model()
+    @variable(model, X[1:2, 1:2])
+    Y = [1 1; 1 1]
+    f = reshape(X .- Y, 4)
+    c1 = @constraint(model, X >= Y, PSDCone())
+    obj = constraint_object(c1)
+    @test obj.func == f
+    @test obj.set == MOI.PositiveSemidefiniteConeSquare(2)
+    c2 = @constraint(model, Y <= X, PSDCone())
+    @test constraint_object(c2).func == f
+    c3 = @constraint(model, X - Y >= 0, PSDCone())
+    @test constraint_object(c3).func == f
+    c4 = @constraint(model, Y - X <= 0, PSDCone())
+    @test constraint_object(c4).func == f
+    return
+end
+
+function test_PSDCone_Symmetric_constraints(::Any, ::Any)
+    model = Model()
+    @variable(model, X[1:2, 1:2], Symmetric)
+    Y = Symmetric([1 1; 1 1])
+    f = reshape(X - Y, 4)
+    c1 = @constraint(model, X >= Y, PSDCone())
+    obj = constraint_object(c1)
+    @test obj.func == f[[1, 3, 4]]
+    @test obj.set == MOI.PositiveSemidefiniteConeTriangle(2)
+    c2 = @constraint(model, Y <= X, PSDCone())
+    @test constraint_object(c2).func == f[[1, 3, 4]]
+    c3 = @constraint(model, X - Y >= 0, PSDCone())
+    @test constraint_object(c3).func == f[[1, 3, 4]]
+    c4 = @constraint(model, Y - X <= 0, PSDCone())
+    @test constraint_object(c4).func == f[[1, 3, 4]]
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
