@@ -465,18 +465,10 @@ end
 unsafe_backend(model::MOIB.LazyBridgeOptimizer) = unsafe_backend(model.model)
 unsafe_backend(model::MOI.ModelLike) = model
 
-"""
-    moi_mode(model::MOI.ModelLike)
+_moi_mode(::MOI.ModelLike) = DIRECT
 
-Return the `ModelMode` of `model`.
-"""
-moi_mode(model::MOI.ModelLike) = DIRECT
-function moi_mode(model::MOIU.CachingOptimizer)
-    if model.mode == MOIU.AUTOMATIC
-        return AUTOMATIC
-    else
-        return MANUAL
-    end
+function _moi_mode(model::MOIU.CachingOptimizer)
+    return model.mode == MOIU.AUTOMATIC ? AUTOMATIC : MANUAL
 end
 
 """
@@ -487,18 +479,8 @@ Return the [`ModelMode`](@ref) ([`DIRECT`](@ref), [`AUTOMATIC`](@ref), or
 """
 function mode(model::Model)
     # The type of `backend(model)` is not type-stable, so we use a function
-    # barrier (`moi_mode`) to improve performance.
-    return moi_mode(backend(model))
-end
-
-"""
-    moi_bridge_constraints(model::MOI.ModelLike)
-
-Return `true` if `model` will bridge constraints.
-"""
-moi_bridge_constraints(model::MOI.ModelLike) = false
-function moi_bridge_constraints(model::MOIU.CachingOptimizer)
-    return model.optimizer isa MOI.Bridges.LazyBridgeOptimizer
+    # barrier (`_moi_mode`) to improve performance.
+    return _moi_mode(backend(model))
 end
 
 # Internal function.
@@ -533,6 +515,12 @@ function solver_name(model::Model)
     end
 end
 
+_moi_bridge_constraints(::MOI.ModelLike) = false
+
+function _moi_bridge_constraints(model::MOIU.CachingOptimizer)
+    return model.optimizer isa MOI.Bridges.LazyBridgeOptimizer
+end
+
 """
     bridge_constraints(model::Model)
 
@@ -544,8 +532,8 @@ available.
 """
 function bridge_constraints(model::Model)
     # The type of `backend(model)` is not type-stable, so we use a function
-    # barrier (`moi_bridge_constraints`) to improve performance.
-    return moi_bridge_constraints(backend(model))
+    # barrier (`_moi_bridge_constraints`) to improve performance.
+    return _moi_bridge_constraints(backend(model))
 end
 
 function _moi_add_bridge(

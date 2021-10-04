@@ -518,7 +518,7 @@ function _moi_set_lower_bound(moi_backend, v::VariableRef, lower::Number)
         MOI.set(moi_backend, MOI.ConstraintSet(), cindex, new_set)
     else
         @assert !_moi_is_fixed(moi_backend, v)
-        moi_add_constraint(moi_backend, index(v), new_set)
+        _moi_add_constraint(moi_backend, index(v), new_set)
     end
     return
 end
@@ -625,7 +625,7 @@ function _moi_set_upper_bound(moi_backend, v::VariableRef, upper::Number)
         MOI.set(moi_backend, MOI.ConstraintSet(), cindex, new_set)
     else
         @assert !_moi_is_fixed(moi_backend, v)
-        moi_add_constraint(moi_backend, index(v), new_set)
+        _moi_add_constraint(moi_backend, index(v), new_set)
     end
     return
 end
@@ -754,7 +754,7 @@ function _moi_fix(
                 MOI.delete(moi_backend, _lower_bound_index(variable))
             end
         end
-        moi_add_constraint(moi_backend, index(variable), new_set)
+        _moi_add_constraint(moi_backend, index(variable), new_set)
     end
     return
 end
@@ -847,7 +847,7 @@ function _moi_set_integer(moi_backend, variable_ref::VariableRef)
             "is already binary.",
         )
     end
-    moi_add_constraint(moi_backend, index(variable_ref), MOI.Integer())
+    _moi_add_constraint(moi_backend, index(variable_ref), MOI.Integer())
     return
 end
 
@@ -922,7 +922,7 @@ function _moi_set_binary(moi_backend, variable_ref)
             "is already integer.",
         )
     end
-    moi_add_constraint(moi_backend, index(variable_ref), MOI.ZeroOne())
+    _moi_add_constraint(moi_backend, index(variable_ref), MOI.ZeroOne())
     return
 end
 
@@ -1051,31 +1051,31 @@ function _moi_constrain_variable(moi_backend::MOI.ModelLike, index, info)
     # We don't call the _moi* versions (e.g., _moi_set_lower_bound) because they
     # have extra checks that are not necessary for newly created variables.
     if info.has_lb
-        moi_add_constraint(
+        _moi_add_constraint(
             moi_backend,
             index,
             MOI.GreaterThan{Float64}(info.lower_bound),
         )
     end
     if info.has_ub
-        moi_add_constraint(
+        _moi_add_constraint(
             moi_backend,
             index,
             MOI.LessThan{Float64}(info.upper_bound),
         )
     end
     if info.has_fix
-        moi_add_constraint(
+        _moi_add_constraint(
             moi_backend,
             index,
             MOI.EqualTo{Float64}(info.fixed_value),
         )
     end
     if info.binary
-        moi_add_constraint(moi_backend, index, MOI.ZeroOne())
+        _moi_add_constraint(moi_backend, index, MOI.ZeroOne())
     end
     if info.integer
-        moi_add_constraint(moi_backend, index, MOI.Integer())
+        _moi_add_constraint(moi_backend, index, MOI.Integer())
     end
     if info.has_start
         MOI.set(

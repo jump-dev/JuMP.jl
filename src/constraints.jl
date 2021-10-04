@@ -525,7 +525,7 @@ function check_belongs_to_model(con::VectorConstraint, model)
     end
 end
 
-function moi_add_constraint(
+function _moi_add_constraint(
     model::MOI.ModelLike,
     f::F,
     s::S,
@@ -557,7 +557,7 @@ function add_constraint(
     # function.
     check_belongs_to_model(con, model)
     func, set = moi_function(con), moi_set(con)
-    cindex = moi_add_constraint(
+    cindex = _moi_add_constraint(
         backend(model),
         func,
         set,
@@ -691,7 +691,7 @@ function normalized_rhs(
     return MOI.constant(con.set)
 end
 
-function moi_add_to_function_constant(
+function _moi_add_to_function_constant(
     model::MOI.ModelLike,
     ci::MOI.ConstraintIndex{
         <:MOI.AbstractScalarFunction,
@@ -709,7 +709,7 @@ function moi_add_to_function_constant(
     new_set = MOIU.shift_constant(set, convert(Float64, -value))
     return MOI.set(model, MOI.ConstraintSet(), ci, new_set)
 end
-function moi_add_to_function_constant(
+function _moi_add_to_function_constant(
     model::MOI.ModelLike,
     ci::MOI.ConstraintIndex{
         <:Union{MOI.VectorAffineFunction,MOI.VectorQuadraticFunction},
@@ -763,8 +763,8 @@ function add_to_function_constant(
 )
     model = owner_model(constraint)
     # The type of `backend(model)` is not type-stable, so we use a function
-    # barrier (`moi_add_to_function_constant`) to improve performance.
-    moi_add_to_function_constant(backend(model), index(constraint), value)
+    # barrier (`_moi_add_to_function_constant`) to improve performance.
+    _moi_add_to_function_constant(backend(model), index(constraint), value)
     model.is_model_dirty = true
     return
 end
