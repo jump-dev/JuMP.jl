@@ -1440,3 +1440,56 @@ function relax_integrality(model::Model)
     end
     return unrelax
 end
+
+###
+### Error messages for common incorrect usages
+###
+
+for sym in (:(<=), :(>=), :(<), :(>))
+    msg = """Cannot evaluate `$(sym)` between a variable and a number.
+
+    There are two common mistakes that lead to this.
+
+     * You tried to write a constraint that depends on the value of a variable
+
+       For example:
+       ```julia
+       model = Model()
+       @variable(model, x[1:2])
+       if x[1] $(sym) 1
+           @constraint(model, x[2] == 0)
+       end
+       ```
+
+       You cannot write a model like this. You must formulate your problem as a
+       single optimization problem. Unfortunately, the way to do this is
+       problem-specific and depends on your choice of solver. You may be able to
+       use indicator constraints, or some other mixed-integer linear
+       reformulation. If stuck, post your problem on the community forum:
+       https://discourse.julialang.org/c/domain/opt/13
+
+     * You wrote a function that expected the value of a variable, but it was
+       passed the variable instead
+
+       For example:
+       ```julia
+       foo(x) = x $(sym) 1 ? 0 : 1 - x
+       model = Model()
+       @variable(model, x)
+       @objective(model, foo(x))
+       ```
+
+       To fix this, create a nonlinear model with a user-defined function:
+       ```julia
+       foo(x) = x $(sym) 1 ? 0 : 1 - x
+       model = Model()
+       register(model, :foo, 1, foo; autodiff = true)
+       @variable(model, x)
+       @NLobjective(model, foo(x))
+       ```
+    """
+    @eval begin
+        Base.$(sym)(::VariableRef, ::Number) = error($(msg))
+        Base.$(sym)(::Number, ::VariableRef) = error($(msg))
+    end
+end
