@@ -1441,7 +1441,7 @@ end
 function test_MA_Zero_expression()
     model = Model()
     @test @expression(model, sum(i for i in 1:0)) === 0.0
-    @expression(model, expr[j=1:2], sum(i for i in j:0))
+    @expression(model, expr[j = 1:2], sum(i for i in j:0))
     @test expr == [0.0, 0.0]
     @test expr isa Vector{Float64}
     return
