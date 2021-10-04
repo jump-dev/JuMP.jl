@@ -1142,7 +1142,7 @@ end)
     @SDconstraints(model, args...)
 
 Adds multiple semi-definite constraints to model at once, in the same fashion as
-the [`@SDconstraint`](@ref) macro.
+the `@SDconstraint` macro.
 
 The model must be the first argument, and multiple constraints can be added on
 multiple lines wrapped in a `begin ... end` block.
