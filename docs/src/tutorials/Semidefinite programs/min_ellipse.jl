@@ -38,9 +38,7 @@ function example_min_ellipse()
     set_silent(model)
     @variable(model, X[i = 1:2, j = 1:2], PSD)
     @objective(model, Min, LinearAlgebra.tr(weights * X))
-    for As_i in As
-        @SDconstraint(model, X >= As_i)
-    end
+    @constraint(model, [As_i in As], X >= As_i, PSDCone())
     optimize!(model)
     Test.@test termination_status(model) == MOI.OPTIMAL
     Test.@test primal_status(model) == MOI.FEASIBLE_POINT

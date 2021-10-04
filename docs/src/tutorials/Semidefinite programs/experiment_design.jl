@@ -129,7 +129,7 @@ for i in 1:q
         V*LinearAlgebra.diagm(0 => np ./ n)*V' eye[:, i]
         eye[i, :]' u[i]
     ]
-    @SDconstraint(aOpt, matrix >= 0)
+    @constraint(aOpt, matrix >= 0, PSDCone())
 end
 @objective(aOpt, Min, sum(u))
 optimize!(aOpt)
@@ -166,9 +166,10 @@ eOpt = Model(SCS.Optimizer)
 set_silent(eOpt)
 @variable(eOpt, 0 <= np[1:p] <= nmax)
 @variable(eOpt, t)
-@SDconstraint(
+@constraint(
     eOpt,
-    V * LinearAlgebra.diagm(0 => np ./ n) * V' - (t .* eye) >= 0
+    V * LinearAlgebra.diagm(0 => np ./ n) * V' - (t .* eye) >= 0,
+    PSDCone(),
 )
 @constraint(eOpt, sum(np) <= n)
 @objective(eOpt, Max, t)

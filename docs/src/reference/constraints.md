@@ -8,8 +8,6 @@ section of the manual.
 ```@docs
 @constraint
 @constraints
-@SDconstraint
-@SDconstraints
 ConstraintRef
 AbstractConstraint
 ScalarConstraint

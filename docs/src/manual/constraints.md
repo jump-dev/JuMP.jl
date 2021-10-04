@@ -595,7 +595,7 @@ julia> @constraint(model, X >= 0, PSDCone())
  X[2,1]  X[2,2]] ∈ PSDCone()
 ```
 
-Yhe inequality `X >= Y` between two square matrices `X` and `Y` is understood as
+The inequality `X >= Y` between two square matrices `X` and `Y` is understood as
 constraining `X - Y` to be symmetric positive semidefinite.
 ```jldoctest con_psd
 julia> Y = [1 2; 2 1]
