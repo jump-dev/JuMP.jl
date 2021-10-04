@@ -617,7 +617,7 @@ The following three syntax are equivalent:
     Non-zero constants are not supported:
     ```jldoctest con_psd
     julia> @constraint(model, X >= 1, PSDCone())
-    ERROR: Operation `sub_mul` between `Matrix{VariableRef}` and `Int64` is not allowed. You should use broadcast.
+    ERROR: Operation `sub_mul!` between `Matrix{VariableRef}` and `Int64` is not allowed. You should use broadcast.
     Stacktrace:
     [...]
     ```
@@ -625,7 +625,7 @@ The following three syntax are equivalent:
     ```jldoctest con_psd
     julia> @constraint(model, X .- 1 >= 0, PSDCone())
     [X[1,1] - 1  X[1,2] - 1;
-    X[2,1] - 1  X[2,2] - 1] ∈ PSDCone()
+     X[2,1] - 1  X[2,2] - 1] ∈ PSDCone()
     ```
 
 ### Symmetry
@@ -649,8 +649,8 @@ julia> Z = [X[1, 1] X[1, 2]; X[1, 2] X[2, 2]]
  X[1,2]  X[2,2]
 
 julia> @constraint(model, LinearAlgebra.Symmetric(Z) >= 0, PSDCone())
-[x - 1    2 x - 1;
- 2 x - 1  4 x - 1] ∈ PSDCone()
+[X[1,1]  X[1,2];
+ X[1,2]  X[2,2]] ∈ PSDCone()
 ```
 
 Note that the lower triangular entries are silently ignored even if they are
