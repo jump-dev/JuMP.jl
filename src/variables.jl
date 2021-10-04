@@ -1445,7 +1445,7 @@ end
 ### Error messages for common incorrect usages
 ###
 
-for sym in (:(==), :(<=), :(>=))
+for sym in (:(<=), :(>=), :(<), :(>))
     msg = """Cannot evaluate `$(sym)` between a variable and a number.
 
     There are two common mistakes that lead to this.
