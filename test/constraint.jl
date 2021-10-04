@@ -1033,15 +1033,19 @@ function test_PSDCone_Symmetric_constraints(::Any, ::Any)
     @variable(model, X[1:2, 1:2], Symmetric)
     Y = Symmetric([1 1; 1 1])
     f = reshape(X - Y, 4)
-    c1 = @constraint(model, X >= Y, PSDCone())
-    obj = constraint_object(c1)
-    @test obj.func == f[[1, 3, 4]]
-    @test obj.set == MOI.PositiveSemidefiniteConeTriangle(2)
-    c2 = @constraint(model, Y <= X, PSDCone())
-    @test constraint_object(c2).func == f[[1, 3, 4]]
-    c3 = @constraint(model, X - Y >= 0, PSDCone())
+    if VERSION >= v"1.6"
+        # Julia 1.0 doesn't maintain symmetry for X - Y, so only test this on
+        # Julia 1.6 and higher.
+        c1 = @constraint(model, X >= Y, PSDCone())
+        obj = constraint_object(c1)
+        @test obj.func == f[[1, 3, 4]]
+        @test obj.set == MOI.PositiveSemidefiniteConeTriangle(2)
+        c2 = @constraint(model, Y <= X, PSDCone())
+        @test constraint_object(c2).func == f[[1, 3, 4]]
+    end
+    c3 = @constraint(model, Symmetric(X - Y) >= 0, PSDCone())
     @test constraint_object(c3).func == f[[1, 3, 4]]
-    c4 = @constraint(model, Y - X <= 0, PSDCone())
+    c4 = @constraint(model, Symmetric(Y - X) <= 0, PSDCone())
     @test constraint_object(c4).func == f[[1, 3, 4]]
     c5 = @constraint(model, X >= 0, PSDCone())
     @test constraint_object(c5).func == 1.0 .* X[[1, 3, 4]]
