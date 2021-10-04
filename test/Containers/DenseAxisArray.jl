@@ -340,4 +340,11 @@ And data, a 0-dimensional $(Array{Int,0}):
         y = Array(X[:, (:a, "a")])
         @test all(y .== y[1])
     end
+
+    @testset "Singular axis" begin
+        x =  @test_logs (:warn,) DenseAxisArray([1.1 2.2], 1, 1:2)
+        @test x[1, 2] == 2.2
+        y =  @test_logs DenseAxisArray([1.1 2.2], [1], 1:2)
+        @test y[1, 2] == 2.2
+    end
 end
