@@ -1025,6 +1025,7 @@ function test_PSDCone_constraints(::Any, ::Any)
     @test constraint_object(c3).func == f
     c4 = @constraint(model, Y - X <= 0, PSDCone())
     @test constraint_object(c4).func == f
+    @test_throws ErrorException @constraint(model, X >= 1, PSDCone())
     return
 end
 
