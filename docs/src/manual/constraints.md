@@ -582,103 +582,85 @@ julia> @constraint(model, !a => {x + y <= 1})
 
 ## Semidefinite constraints
 
-JuMP provides a special syntax for constraining a matrix to be symmetric
-positive semidefinite (PSD) with the [`@SDconstraint`](@ref) macro.
-In the context of this macro, the inequality `A >= B` between two square
-matrices `A` and `B` is understood as constraining `A - B` to be symmetric
-positive semidefinite.
+Use [`PSDCone`](ref) to constrain a matrix to be symmetric positive
+semidefinite (PSD). For example,
 ```jldoctest con_psd; setup=:(model = Model())
-julia> @variable(model, x)
-x
+julia> @variable(model, X[1:2, 1:2])
+2×2 Matrix{VariableRef}:
+ X[1,1]  X[1,2]
+ X[2,1]  X[2,2]
 
-julia> @SDconstraint(model, [x 2x; 3x 4x] >= ones(2, 2))
-[x - 1    2 x - 1;
- 3 x - 1  4 x - 1] ∈ PSDCone()
+julia> @constraint(model, X >= 0, PSDCone())
+[X[1,1]  X[1,2];
+ X[2,1]  X[2,2]] ∈ PSDCone()
 ```
 
-Solvers supporting such constraints usually expect to be given a matrix that
-is *symbolically* symmetric, that is, for which the expression in corresponding
-off-diagonal entries are the same. In our example, the expressions of entries
-`(1, 2)` and `(2, 1)` are respectively `2x - 1` and `3x - 1` which are
-different. To bridge the gap between the constraint modeled and what the solver
-expects, JuMP creates an equality constraint `3x - 1 == 2x - 1` and constrains
-the symmetric matrix `[x - 1, 2 x - 1, 2 x - 1, 4 x - 1]` to be positive
-semidefinite.
+The inequality `X >= Y` between two square matrices `X` and `Y` is understood as
+constraining `X - Y` to be symmetric positive semidefinite.
+```jldoctest con_psd
+julia> Y = [1 2; 2 1]
+2×2 Matrix{Int64}:
+ 1  2
+ 2  1
+
+julia> @constraint(model, X >= Y, PSDCone())
+[X[1,1] - 1  X[1,2] - 2;
+ X[2,1] - 2  X[2,2] - 1] ∈ PSDCone()
+```
+
+The following three syntax are equivalent:
+ * `@constraint(model, X >= Y, PSDCone())`
+ * `@constraint(model, Y <= X, PSDCone())`
+ * `@constraint(model, X - Y in PSDCone())`
 
 !!! note
-    If the matrix provided is already symbolically symmetric, the equality
-    constrains are equivalent to `0 = 0` and are not added. In practice, if
-    all coefficients are smaller than `1e-10`, the constraint is ignored, if
-    all coefficients are smaller than `1e-8` but some are larger than `1e-10`,
-    it is ignored but a warning is displayed, otherwise if at least one
-    coefficient is larger than `1e-8`, the constraint is added.
+    Non-zero constants are not supported:
+    ```jldoctest con_psd
+    julia> @constraint(model, X >= 1, PSDCone())
+    ERROR: Operation `sub_mul!` between `Matrix{VariableRef}` and `Int64` is not allowed. You should use broadcast.
+    Stacktrace:
+    [...]
+    ```
+    Use instead:
+    ```jldoctest con_psd
+    julia> @constraint(model, X .- 1 >= 0, PSDCone())
+    [X[1,1] - 1  X[1,2] - 1;
+     X[2,1] - 1  X[2,2] - 1] ∈ PSDCone()
+    ```
 
-If the matrix is known to be symmetric, the PSD constraint can be added as
-follows:
+### Symmetry
+
+Solvers supporting PSD constraints usually expect to be given a matrix that
+is *symbolically* symmetric, that is, for which the expression in corresponding
+off-diagonal entries are the same. In our example, the expressions of entries
+`(1, 2)` and `(2, 1)` are respectively `X[1,2] - 2` and `X[2,1] - 2` which are
+different.
+
+To bridge the gap between the constraint modeled and what the solver
+expects, solvers may add an equality constraint `X[1,2] - 2 == X[2,1] - 2` to
+force symmetry. Use `LinearAlgebra.Symmetric` to explicitly tell the solver that
+the matrix is symmetric:
 ```jldoctest con_psd
-julia> using LinearAlgebra
+julia> import LinearAlgebra
 
-julia> @constraint(model, Symmetric([x 2x; 2x 4x] - ones(2, 2)) in PSDCone())
-[x - 1    2 x - 1;
- 2 x - 1  4 x - 1] ∈ PSDCone()
+julia> Z = [X[1, 1] X[1, 2]; X[1, 2] X[2, 2]]
+2×2 Matrix{VariableRef}:
+ X[1,1]  X[1,2]
+ X[1,2]  X[2,2]
+
+julia> @constraint(model, LinearAlgebra.Symmetric(Z) >= 0, PSDCone())
+[X[1,1]  X[1,2];
+ X[1,2]  X[2,2]] ∈ PSDCone()
 ```
 
 Note that the lower triangular entries are silently ignored even if they are
 different so use it with caution:
 ```jldoctest con_psd
-julia> cref = @constraint(model, Symmetric([x 2x; 3x 4x]) in PSDCone())
-[x    2 x;
- 2 x  4 x] ∈ PSDCone()
-
-julia> jump_function(constraint_object(cref))
-3-element Vector{AffExpr}:
- x
- 2 x
- 4 x
-
-julia> moi_set(constraint_object(cref))
-MathOptInterface.PositiveSemidefiniteConeTriangle(2)
+julia> @constraint(model, LinearAlgebra.Symmetric(X) >= 0, PSDCone())
+[X[1,1]  X[1,2];
+ X[1,2]  X[2,2]] ∈ PSDCone()
 ```
-
-Note that as `@SDconstraint(model, A >= B)` constrains `A - B` to be symmetric
-positive semidefinite, even if `A` is a matrix of variables and `B` is a matrix
-of zeros, `A - B` will be a matrix of affine expressions. For instance, in the
-example below, the function is `VectorAffineFunction` instead of
-`VectorOfVariables`.
-```jldoctest con_psd
-julia> typeof(@SDconstraint(model, [x x; x x] >= zeros(2, 2)))
-ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64}, MathOptInterface.PositiveSemidefiniteConeSquare}, SquareMatrixShape}
-```
-Moreover, the `Symmetric` structure can be lost in the operation `A - B`. For
-instance, in the example below, the set is `PositiveSemidefiniteConeSquare`
-instead of `PositiveSemidefiniteConeTriangle`.
-```jldoctest con_psd
-julia> typeof(@SDconstraint(model, Symmetric([x x; x x]) >= zeros(2, 2)))
-ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorAffineFunction{Float64}, MathOptInterface.PositiveSemidefiniteConeSquare}, SquareMatrixShape}
-```
-To create a constraint on the vector of variables with the [`@SDconstraint`](@ref)
-macro, use the `0` symbol. The following three syntax are equivalent:
-* `@SDconstraint(model, A >= 0)`,
-* `@SDconstraint(model, 0 <= A)` and
-* `@constraint(model, A in PSDCone())`.
-```jldoctest con_psd
-julia> typeof(@SDconstraint(model, [x x; x x] >= 0))
-ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.PositiveSemidefiniteConeSquare}, SquareMatrixShape}
-
-julia> typeof(@SDconstraint(model, 0 <= Symmetric([x x; x x])))
-ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.PositiveSemidefiniteConeTriangle}, SymmetricMatrixShape}
-```
-As the syntax is recognized at parse time, using a variable with value zero does not work:
-```jldoctest con_psd
-julia> a = 0
-0
-
-julia> @SDconstraint(model, [x x; x x] >= a)
-ERROR: Operation `sub_mul` between `Matrix{VariableRef}` and `Int64` is not allowed. You should use broadcast.
-Stacktrace:
-[...]
-```
-
+(Note the `(2, 1)` element of the constraint is `X[1,2]`, not `X[2,1]`.)
 
 ## Modify a constraint
 

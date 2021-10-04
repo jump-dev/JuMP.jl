@@ -94,6 +94,41 @@ triangular part of the matrix is constrained to belong to the
 """
 struct PSDCone end
 
+function build_constraint(
+    _error::Function,
+    f::AbstractMatrix{<:AbstractJuMPScalar},
+    s::MOI.GreaterThan,
+    extra::PSDCone,
+)
+    @assert iszero(s.lower)
+    return build_constraint(_error, f, extra)
+end
+
+function build_constraint(
+    _error::Function,
+    f::AbstractMatrix{<:AbstractJuMPScalar},
+    s::MOI.LessThan,
+    extra::PSDCone,
+)
+    @assert iszero(s.upper)
+    new_f = _MA.operate!(*, -1, f)
+    return build_constraint(_error, new_f, extra)
+end
+
+function _MA.operate!(
+    ::typeof(_MA.sub_mul),
+    x::AbstractMatrix{<:AbstractJuMPScalar},
+    y::Int,
+)
+    if !iszero(y)
+        error(
+            "Operation `sub_mul!` between `$(typeof(x))` and `$(typeof(y))` " *
+            "is not allowed. You should use broadcast.",
+        )
+    end
+    return x
+end
+
 """
     SymmetricMatrixShape
 
@@ -345,27 +380,18 @@ function build_constraint(
 end
 
 """
-    build_constraint(_error::Function,
-                     Q::AbstractMatrix{<:AbstractJuMPScalar},
-                     ::PSDCone)
+    build_constraint(
+        _error::Function,
+        Q::AbstractMatrix{<:AbstractJuMPScalar},
+        ::PSDCone,
+    )
 
 Return a `VectorConstraint` of shape [`SquareMatrixShape`](@ref) constraining
 the matrix `Q` to be symmetric and positive semidefinite.
 
-This function is used by the [`@constraint`](@ref) and [`@SDconstraint`](@ref)
-macros as follows:
+This function is used by the [`@constraint`](@ref) macro as follows:
 ```julia
 @constraint(model, Q in PSDCone())
-@SDconstraint(model, P ⪰ Q)
-```
-The [`@constraint`](@ref) call above is usually used when the entries of `Q` are
-affine or quadratic expressions, but it can also be used when the entries are
-variables to get the reference of the semidefinite constraint, e.g.,
-```julia
-@variable model Q[1:2,1:2]
-# The type of `Q` is `Matrix{VariableRef}`
-var_psd = @constraint model Q in PSDCone()
-# The `var_psd` variable contains a reference to the constraint
 ```
 """
 function build_constraint(
