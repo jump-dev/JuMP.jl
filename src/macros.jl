@@ -483,6 +483,89 @@ function build_constraint(
     )
 end
 
+"""
+    build_constraint(
+        _error::Function,
+        f::AbstractArray{<:AbstractJuMPScalar},
+        s::MOI.GreaterThan,
+        extra,
+    )
+
+A helper method that re-writes
+```julia
+@constraint(model, X >= Y, extra)
+```
+into
+```julia
+@constraint(model, X - Y in extra)
+```
+"""
+function build_constraint(
+    _error::Function,
+    f::AbstractArray{<:AbstractJuMPScalar},
+    s::MOI.GreaterThan,
+    extra,
+)
+    @assert iszero(s.lower)
+    return build_constraint(_error, f, extra)
+end
+
+"""
+    build_constraint(
+        _error::Function,
+        f::AbstractArray{<:AbstractJuMPScalar},
+        s::MOI.LessThan,
+        extra,
+    )
+
+A helper method that re-writes
+```julia
+@constraint(model, Y <= X, extra)
+```
+into
+```julia
+@constraint(model, X - Y in extra)
+```
+"""
+function build_constraint(
+    _error::Function,
+    f::AbstractArray{<:AbstractJuMPScalar},
+    s::MOI.LessThan,
+    extra,
+)
+    @assert iszero(s.upper)
+    new_f = _MA.operate!(*, -1, f)
+    return build_constraint(_error, new_f, extra)
+end
+
+function _MA.operate!(
+    ::typeof(_MA.sub_mul),
+    x::AbstractArray{<:AbstractJuMPScalar},
+    y::Int,
+)
+    if !iszero(y)
+        error(
+            "Operation `sub_mul!` between `$(typeof(x))` and `$(typeof(y))` " *
+            "is not allowed. You should use broadcast.",
+        )
+    end
+    return x
+end
+
+function _MA.operate!(
+    ::typeof(_MA.sub_mul),
+    y::Int,
+    x::AbstractArray{<:AbstractJuMPScalar},
+)
+    if !iszero(y)
+        error(
+            "Operation `sub_mul!` between `$(typeof(x))` and `$(typeof(y))` " *
+            "is not allowed. You should use broadcast.",
+        )
+    end
+    return _MA.operate!(*, -1, x)
+end
+
 function build_constraint(
     _error::Function,
     v::AbstractJuMPScalar,

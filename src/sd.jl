@@ -115,20 +115,6 @@ function build_constraint(
     return build_constraint(_error, new_f, extra)
 end
 
-function _MA.operate!(
-    ::typeof(_MA.sub_mul),
-    x::AbstractMatrix{<:AbstractJuMPScalar},
-    y::Int,
-)
-    if !iszero(y)
-        error(
-            "Operation `sub_mul!` between `$(typeof(x))` and `$(typeof(y))` " *
-            "is not allowed. You should use broadcast.",
-        )
-    end
-    return x
-end
-
 """
     SymmetricMatrixShape
 

@@ -1053,6 +1053,33 @@ function test_PSDCone_Symmetric_constraints(::Any, ::Any)
     return
 end
 
+"""
+    test_set_inequalities(::Any, ::Any)
+
+Test the syntax `@constraint(model, X >= Y, Set())` is the same as
+`@constraint(model, X - Y in Set())`.
+"""
+function test_set_inequalities(::Any, ::Any)
+    model = Model()
+    @variable(model, X[1:2])
+    Y = [3.0, 4.0]
+    f1 = 1 .* X
+    f2 = X .- Y
+    c1 = @constraint(model, X >= 0, MOI.Nonnegatives(2))
+    c2 = @constraint(model, X >= Y, MOI.Nonnegatives(2))
+    c3 = @constraint(model, 0 <= X, MOI.Nonnegatives(2))
+    c4 = @constraint(model, Y <= X, MOI.Nonnegatives(2))
+    @test constraint_object(c1).func == f1
+    @test constraint_object(c2).func == f2
+    @test constraint_object(c3).func == f1
+    @test constraint_object(c4).func == f2
+    @test constraint_object(c1).set == MOI.Nonnegatives(2)
+    @test constraint_object(c2).set == MOI.Nonnegatives(2)
+    @test constraint_object(c3).set == MOI.Nonnegatives(2)
+    @test constraint_object(c4).set == MOI.Nonnegatives(2)
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

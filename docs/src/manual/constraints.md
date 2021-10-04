@@ -608,13 +608,19 @@ julia> @constraint(model, X >= Y, PSDCone())
  X[2,1] - 2  X[2,2] - 1] ∈ PSDCone()
 ```
 
-The following three syntax are equivalent:
- * `@constraint(model, X >= Y, PSDCone())`
- * `@constraint(model, Y <= X, PSDCone())`
- * `@constraint(model, X - Y in PSDCone())`
+!!! tip
+    `@constraint(model, X >= Y, Set())` is short-hand for
+    `@constraint(model, X - Y in Set())`. Therefore, the following calls are
+    equivalent:
+     * `@constraint(model, X >= Y, PSDCone())`
+     * `@constraint(model, Y <= X, PSDCone())`
+     * `@constraint(model, X - Y in PSDCone())`
+    This also works for any vector-valued cone, so instead of
+    `@constraint(model, X - Y in MOI.Nonnegatives(2))`, you can write
+    `@constraint(model, X >= Y, MOI.Nonnegatives(2))`.
 
-!!! note
-    Non-zero constants are not supported:
+!!! warning
+    Non-zero constants are not supported in this syntax:
     ```jldoctest con_psd
     julia> @constraint(model, X >= 1, PSDCone())
     ERROR: Operation `sub_mul!` between `Matrix{VariableRef}` and `Int64` is not allowed. You should use broadcast.
