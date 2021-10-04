@@ -283,7 +283,9 @@ end
 _functionize(v::VariableRef) = convert(AffExpr, v)
 _functionize(v::AbstractArray{VariableRef}) = _functionize.(v)
 
-function _functionize(v::LinearAlgebra.Symmetric{Matrix{VariableRef}})
+function _functionize(
+    v::LinearAlgebra.Symmetric{VariableRef,Matrix{VariableRef}},
+)
     return convert(LinearAlgebra.Symmetric{AffExpr,Matrix{AffExpr}}, v)
 end
 
@@ -639,7 +641,7 @@ Returns the code for the macro `@constraint_like args...` of syntax
 @constraint_like(model, con, extra_arg, kw_args...)      # single constraint
 @constraint_like(model, ref, con, extra_arg, kw_args...) # group of constraints
 ```
-where `@constraint_like` is either `@constraint` or `@SDconstraint`.
+where `@constraint_like` is `@constraint` or `@SDconstraint`.
 
 The expression `con` is parsed by `parsefun` which returns a `build_constraint`
 call code that, when executed, returns an `AbstractConstraint`. The macro
@@ -945,6 +947,10 @@ part of the matrix assuming that it is symmetric, see [`PSDCone`](@ref) to see
 how to use it.
 """
 macro SDconstraint(args...)
+    @warn(
+        "`@SDconstraint` is deprecated. Use `@constraint(model, X - Y in " *
+        "PSDCone())`, or `@constraint(model, X >= Y, PSDCone())` instead.",
+    )
     return _constraint_macro(
         args,
         :SDconstraint,

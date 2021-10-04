@@ -1043,6 +1043,8 @@ function test_PSDCone_Symmetric_constraints(::Any, ::Any)
     @test constraint_object(c3).func == f[[1, 3, 4]]
     c4 = @constraint(model, Y - X <= 0, PSDCone())
     @test constraint_object(c4).func == f[[1, 3, 4]]
+    c5 = @constraint(model, X <= 0, PSDCone())
+    @test constraint_object(c5).func == X[[1, 3, 4]]
     return
 end
 
