@@ -43,7 +43,7 @@ function _precompile_()
     )
     for (F, S) in constraints
         Base.precompile(
-            moi_add_constraint,
+            _moi_add_constraint,
             (
                 MOIU.CachingOptimizer{
                     MOI.AbstractOptimizer,
