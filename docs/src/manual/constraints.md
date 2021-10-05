@@ -615,9 +615,9 @@ julia> @constraint(model, X >= Y, PSDCone())
      * `@constraint(model, X >= Y, PSDCone())`
      * `@constraint(model, Y <= X, PSDCone())`
      * `@constraint(model, X - Y in PSDCone())`
-    This also works for any vector-valued cone, so instead of
-    `@constraint(model, X - Y in MOI.Nonnegatives(2))`, you can write
-    `@constraint(model, X >= Y, MOI.Nonnegatives(2))`.
+    This also works for any vector-valued cone, so if `x` and `y` are vectors of
+    length 2, you can write `@constraint(model, x >= y, MOI.Nonnegatives(2))`
+    instead of `@constraint(model, x - y in MOI.Nonnegatives(2))`.
 
 !!! warning
     Non-zero constants are not supported in this syntax:
