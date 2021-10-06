@@ -34,7 +34,7 @@ end
 """
     build_constraint(
         _error::Function,
-        f::AbstractArray{<:AbstractJuMPScalar},
+        f::AbstractVector{<:AbstractJuMPScalar},
         s::MOI.GreaterThan,
         extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
     )
@@ -50,7 +50,7 @@ into
 """
 function build_constraint(
     _error::Function,
-    f::AbstractArray{<:AbstractJuMPScalar},
+    f::AbstractVector{<:AbstractJuMPScalar},
     s::MOI.GreaterThan,
     extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
 )
@@ -61,7 +61,7 @@ end
 """
     build_constraint(
         _error::Function,
-        f::AbstractArray{<:AbstractJuMPScalar},
+        f::AbstractVector{<:AbstractJuMPScalar},
         s::MOI.LessThan,
         extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
     )
@@ -77,7 +77,7 @@ into
 """
 function build_constraint(
     _error::Function,
-    f::AbstractArray{<:AbstractJuMPScalar},
+    f::AbstractVector{<:AbstractJuMPScalar},
     s::MOI.LessThan,
     extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
 )
@@ -86,6 +86,7 @@ function build_constraint(
     return build_constraint(_error, new_f, extra)
 end
 
+# Handle the case `@constraint(model, X >= 0, Set())`.
 function _MA.operate!(
     ::typeof(_MA.sub_mul),
     x::AbstractArray{<:AbstractJuMPScalar},
@@ -100,6 +101,7 @@ function _MA.operate!(
     return x
 end
 
+# Handle the case `@constraint(model, 0 <= X, Set())`.
 function _MA.operate!(
     ::typeof(_MA.sub_mul),
     y::Int,
