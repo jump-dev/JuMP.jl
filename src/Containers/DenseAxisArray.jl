@@ -153,7 +153,7 @@ function _abstract_vector(x)
         @warn(
             "Axis contains one element: $x. If intended, you can safely " *
             "ignore this warning. To explicitly pass the axis with one " *
-            "element, pass `[$(axis[1])]` instead of `$(x)`.",
+            "element, pass `[$(repr(axis[1]))]` instead of `$(x)`.",
         )
     end
     return axis
