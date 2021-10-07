@@ -45,7 +45,7 @@ function parse_constraint_call(
     end
     rhs_con = rhs.args[1]
     rhs_vectorized, rhs_parsecode, rhs_buildcall =
-        parse_constraint(_error, rhs_con)
+        _parse_constraint(_error, rhs_con)
     if vectorized != rhs_vectorized
         _error("Inconsistent use of `.` in symbols to indicate vectorization.")
     end

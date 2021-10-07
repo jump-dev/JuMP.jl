@@ -23,7 +23,6 @@ build_variable
 ```@docs
 build_constraint
 add_constraint
-operator_to_set
 AbstractShape
 shape
 reshape_vector
@@ -33,4 +32,7 @@ ScalarShape
 VectorShape
 SquareMatrixShape
 SymmetricMatrixShape
+operator_to_set
+parse_constraint_head
+parse_constraint_call
 ```

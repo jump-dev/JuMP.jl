@@ -447,8 +447,8 @@ function test_SDP_constraint(ModelType, VariableRefType)
     err = ErrorException(
         "In `@SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw = 1)`:" *
         " Unrecognized constraint building format. Tried to invoke " *
-        "`build_constraint(error, JuMP.$(aff_str)[x - " *
-        "1 -x + 1; -x + 1 -y + 2], JuMP.PSDCone(); unknown_kw = 1)`, but no " *
+        "`build_constraint(error, $(aff_str)[x - " *
+        "1 -x + 1; -x + 1 -y + 2], PSDCone(); unknown_kw = 1)`, but no " *
         "such method exists. This is due to specifying an unrecognized " *
         "function, constraint set, and/or extra positional/keyword " *
         "arguments.\n\nIf you're trying to create a JuMP extension, you " *
@@ -701,7 +701,6 @@ function test_Model_all_constraints_vector(::Any, ::Any)
         "`$(GenericAffExpr{Float64})` is not a concrete type. Did you miss a " *
         "type parameter?",
     )
-    err = ErrorException(replace(err.msg, "JuMP." => ""))
     @test_throws err try
         num_constraints(
             model,
