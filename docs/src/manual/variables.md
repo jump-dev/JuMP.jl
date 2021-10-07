@@ -267,7 +267,85 @@ The name, i.e. the value of the `MOI.VariableName` attribute, of a variable can
 be obtained by [`JuMP.name(::JuMP.VariableRef)`](@ref) and set by
 [`JuMP.set_name(::JuMP.VariableRef, ::String)`](@ref).
 
-The variable can also be retrieved from its name using [`JuMP.variable_by_name`](@ref).
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> name(x)
+"x"
+
+julia> set_name(x, "my_x_name")
+
+julia> x
+my_x_name
+```
+
+Specify a name in the macro via `base_name`:
+```jldoctest variable_name_vector
+julia> model = Model();
+
+julia> x = @variable(model, [i=1:2], base_name = "my_var")
+2-element Vector{VariableRef}:
+ my_var[1]
+ my_var[2]
+```
+
+Note that names apply to each element of the container, not to the container of
+variables:
+```jldoctest variable_name_vector
+julia> name(x[1])
+"my_var[1]"
+
+julia> set_name(x[1], "my_x")
+
+julia> x
+2-element Vector{VariableRef}:
+ my_x
+ my_var[2]
+```
+
+### Retrieve a variable by name
+
+Retrieve a variable from a model using [`variable_by_name`](@ref):
+```jldoctest variable_name_vector
+julia> variable_by_name(model, "my_x")
+my_x
+```
+If the name is not present, `nothing` will be returned:
+```jldoctest variable_name_vector
+julia> variable_by_name(model, "bad_name")
+```
+
+You can only look up invididual variabless using [`variable_by_name`](@ref).
+Something like this will not work:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, [i = 1:2], base_name = "my_var")
+2-element Vector{VariableRef}:
+ my_var[1]
+ my_var[2]
+
+julia> variable_by_name(model, "my_var")
+```
+
+To look up a collection of variables, do not use [`variable_by_name`](@ref).
+Instead, register them using the `model[:key] = value` syntax:
+```jldoctest
+julia> model = Model()
+
+julia> model[:x] = @variable(model, [i = 1:2], base_name = "my_var")
+2-element Vector{VariableRef}:
+ my_var[1]
+ my_var[2]
+
+julia> model[:x]
+2-element Vector{VariableRef}:
+ my_var[1]
+ my_var[2]
+```
 
 ## Variable containers
 
