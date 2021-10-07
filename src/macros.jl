@@ -270,7 +270,7 @@ _functionize(x) = x
 _functionize(::MutableArithmetics.Zero) = 0.0
 
 """
-    _parse_constraint(_error::Function, expr::Expr)
+    parse_constraint(_error::Function, expr::Expr)
 
 The entry-point for all constraint-related parsing.
 
@@ -281,6 +281,8 @@ The entry-point for all constraint-related parsing.
     * `@constraint(model, expr)`
     * `@constraint(model, name[args], expr)`
    In both cases, `expr` is the main component of the constraint.
+
+## Supported syntax
 
 JuMP currently supports the following `expr` objects:
  * `lhs <= rhs`
@@ -295,13 +297,12 @@ JuMP currently supports the following `expr` objects:
  * `!z => {constraint}`
 as well as all broadcasted variants.
 
-## See also
+## Extensions
 
-The aim of `_parse_constraint` is to make this extensible by JuMP extensions.
-Thus, `_parse_constraint` forwards to [`parse_constraint_head`](@ref) to
-dispatch on `expr.head`
+The infrastructure behind `parse_constraint` is extendable. See
+[`parse_constraint_head`](@ref) and [`parse_constraint_call`](@ref) for details.
 """
-function _parse_constraint(_error::Function, expr::Expr)
+function parse_constraint(_error::Function, expr::Expr)
     return parse_constraint_head(_error, Val(expr.head), expr.args...)
 end
 
@@ -903,7 +904,7 @@ enable this syntax by defining extensions of
 user syntax: `@constraint(model, ref[...], expr, my_arg, kw_args...)`.
 """
 macro constraint(args...)
-    return _constraint_macro(args, :constraint, _parse_constraint, __source__)
+    return _constraint_macro(args, :constraint, parse_constraint, __source__)
 end
 
 function parse_SD_constraint_expr(_error::Function, expr::Expr)
@@ -1056,7 +1057,7 @@ macro build_constraint(constraint_expr)
     end
 
     is_vectorized, parse_code, build_call =
-        _parse_constraint(_error, constraint_expr)
+        parse_constraint(_error, constraint_expr)
     result_variable = gensym()
     code = quote
         $parse_code

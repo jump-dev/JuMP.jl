@@ -21,4 +21,4 @@ end
 
 @deprecate sense_to_set operator_to_set
 @deprecate parse_one_operator_constraint parse_constraint_call
-@deprecate parse_constraint_expr _parse_constraint
+@deprecate parse_constraint_expr parse_constraint

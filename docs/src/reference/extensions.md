@@ -33,6 +33,7 @@ VectorShape
 SquareMatrixShape
 SymmetricMatrixShape
 operator_to_set
+parse_constraint
 parse_constraint_head
 parse_constraint_call
 ```

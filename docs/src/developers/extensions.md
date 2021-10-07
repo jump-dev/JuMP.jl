@@ -219,6 +219,10 @@ Rewriting my_equal_to to ==
 2 x = 1.0
 ```
 
+!!! tip
+    When parsing a constraint you can recurse into sub-constraint (e.g., the
+    `{expr}` in `z => {x <= 1}`) by calling [`parse_constraint`](@ref).
+
 ### Build
 
 To extend the [`@constraint`](@ref) macro at build time, implement a new
