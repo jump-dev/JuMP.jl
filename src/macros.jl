@@ -311,15 +311,39 @@ end
 Implement this method to intercept the parsing of an expression with head
 `head`.
 
+!!! warning
+    Extending the constraint macro at parse time is an advanced operation and
+    has the potential to interfere with existing JuMP syntax. Please discuss
+    with the [developer chatroom](https://gitter.im/JuliaOpt/jump-dev) before
+    publishing any code that implements these methods.
+
+## Arguments
+
+ * `_error`: a function that accepts a `String` and throws the string as an
+   error, along with some descriptive information of the macro from which it was
+   thrown.
+ * `head`: the `.head` field of the `Expr` to intercept
+ * `args...`: the `.args` field of the `Expr`.
+
+## Returns
+
+This function must return:
+
+ * `is_vectorized::Bool`: whether the expression represents a broadcasted
+   expression like `x .<= 1`
+ * `parse_code::Expr`: an expression containing any setup or rewriting code that
+   needs to be called before `build_constraint`
+ * `build_code::Expr`: an expression that calls `build_constraint(` or
+   `build_constraint.(` depending on `is_vectorized`.
+
+## Existing implementations
+
 JuMP currently implements:
 
- * `::Val{:call}`, which forwards calls to [`parse_constraint_call`](@ref)
- * `::Val{:comparison}`, which handles the special case of `l <= body <= u`.
+   * `::Val{:call}`, which forwards calls to [`parse_constraint_call`](@ref)
+   * `::Val{:comparison}`, which handles the special case of `l <= body <= u`.
 
-!!! warning
-    Think carefully before doing this! By implementing this method, your package
-    will own the sytax. Do not implement a method for syntax that JuMP already
-    supports.
+See also: [`parse_constraint_call`](@ref), [`build_constraint`](@ref)
 """
 function parse_constraint_head(_error::Function, ::Val{T}, args...) where {T}
     return _error(
@@ -330,8 +354,16 @@ function parse_constraint_head(_error::Function, ::Val{T}, args...) where {T}
     )
 end
 
-function parse_constraint_head(_error::Function, ::Val{:call}, args...)
-    return parse_constraint_call(_error, args...)
+function parse_constraint_head(
+    _error::Function,
+    ::Val{:call},
+    op::Symbol,
+    args...,
+)
+    op, is_vectorized = _check_vectorized(op)
+    parse_code, build_call =
+        parse_constraint_call(_error, is_vectorized, Val(op), args...)
+    return is_vectorized, parse_code, build_call
 end
 
 function parse_constraint_head(
@@ -359,25 +391,25 @@ function parse_constraint_head(
             "`ub >= expr >= lb` are supported.",
         )
     end
-    newaff, parse_aff = _MA.rewrite(aff)
-    newlb, parse_lb = _MA.rewrite(lb)
-    newub, parse_ub = _MA.rewrite(ub)
-    build_call = if lvectorized
-        :(
-            build_constraint.(
-                $_error,
-                _desparsify($newaff),
-                _desparsify($newlb),
-                _desparsify($newub),
-            )
-        )
-    else
-        :(build_constraint($_error, $newaff, $newlb, $newub))
-    end
+    new_aff, parse_aff = _MA.rewrite(aff)
+    new_lb, parse_lb = _MA.rewrite(lb)
+    new_ub, parse_ub = _MA.rewrite(ub)
     parse_code = quote
         $parse_aff
         $parse_lb
         $parse_ub
+    end
+    build_call = if lvectorized
+        :(
+            build_constraint.(
+                $_error,
+                _desparsify($new_aff),
+                _desparsify($new_lb),
+                _desparsify($new_ub),
+            )
+        )
+    else
+        :(build_constraint($_error, $new_aff, $new_lb, $new_ub))
     end
     return lvectorized, parse_code, build_call
 end
@@ -385,21 +417,39 @@ end
 """
     parse_constraint_call(
         _error::Function,
-        vectorized::Bool,
+        is_vectorized::Bool,
         ::Val{op},
         args...,
     )
 
-Parse constraints of the form:
-```julia
-@constraint(model, op(args...))
-```
-If `vectorized`, the operation is broadcasted, so the constraint is of the form
-```julia
-@constraint(model, op.(args...))
-```
+Implement this method to intercept the parsing of a `:call` expression with
+operator `op`.
 
-This function returns a `(parse_code, build_call)` tuple.
+!!! warning
+    Extending the constraint macro at parse time is an advanced operation and
+    has the potential to interfere with existing JuMP syntax. Please discuss
+    with the [developer chatroom](https://gitter.im/JuliaOpt/jump-dev) before
+    publishing any code that implements these methods.
+
+## Arguments
+
+ * `_error`: a function that accepts a `String` and throws the string as an
+   error, along with some descriptive information of the macro from which it was
+   thrown.
+ * `is_vectorized`: a boolean to indicate if `op` should be broadcast or not
+ * `op`: the first element of the `.args` field of the `Expr` to intercept
+ * `args...`: the `.args` field of the `Expr`.
+
+## Returns
+
+This function must return:
+
+ * `parse_code::Expr`: an expression containing any setup or rewriting code that
+   needs to be called before `build_constraint`
+ * `build_code::Expr`: an expression that calls `build_constraint(` or
+   `build_constraint.(` depending on `is_vectorized`.
+
+See also: [`parse_constraint_head`](@ref), [`build_constraint`](@ref)
 """
 function parse_constraint_call(
     _error::Function,
@@ -413,13 +463,6 @@ function parse_constraint_call(
         "JuMP extension, implement " *
         "`parse_constraint_call(::Function, ::Bool, ::Val{$T}, args...)",
     )
-end
-
-function parse_constraint_call(_error::Function, operator::Symbol, args...)
-    operator, vectorized = _check_vectorized(operator)
-    parse_code, build_call =
-        parse_constraint_call(_error, vectorized, Val(operator), args...)
-    return vectorized, parse_code, build_call
 end
 
 # `@constraint(model, func in set)`
@@ -444,16 +487,17 @@ end
     parse_constraint_call(
         _error::Function,
         vectorized::Bool,
-        operator::Val,
+        ::Val{op},
         lhs,
         rhs,
-    )
+    ) where {op}
 
 Fallback handler for binary operators. These might be infix operators like
 `@constraint(model, lhs op rhs)`, or normal operators like
 `@constraint(model, op(lhs, rhs))`.
 
 In both cases, we rewrite as `lhs - rhs in operator_to_set(_error, op)`.
+
 See [`operator_to_set`](@ref) for details.
 """
 function parse_constraint_call(
