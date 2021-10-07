@@ -349,9 +349,9 @@ See also: [`parse_constraint_call`](@ref), [`build_constraint`](@ref)
 function parse_constraint_head(_error::Function, ::Val{T}, args...) where {T}
     return _error(
         "Unsupported constraint expression: we don't know how to parse " *
-        "constraints containing expressions of type $T.\n\nIf you are " *
+        "constraints containing expressions of type :$T.\n\nIf you are " *
         "writing a JuMP extension, implement " *
-        "`parse_constraint_head(::Function, ::Val{$T}, args...)",
+        "`parse_constraint_head(::Function, ::Val{:$T}, args...)",
     )
 end
 

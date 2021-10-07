@@ -1431,13 +1431,13 @@ function test_parse_constraint_head_error()
     model = Model()
     @variable(model, x)
     err = ErrorException(
-        "In `@constraint(model, \$(Expr(:(:=), :x, 0)))`: " *
+        "In `@constraint(model, {x == 0})`: " *
         "Unsupported constraint expression: we don't know how to parse " *
-        "constraints containing expressions of type :=.\n\nIf you are " *
+        "constraints containing expressions of type :braces.\n\nIf you are " *
         "writing a JuMP extension, implement " *
-        "`parse_constraint_head(::Function, ::Val{:=}, args...)",
+        "`parse_constraint_head(::Function, ::Val{:braces}, args...)",
     )
-    @test_macro_throws(err, @constraint(model, x := 0))
+    @test_macro_throws(err, @constraint(model, {x == 0}))
     return
 end
 
