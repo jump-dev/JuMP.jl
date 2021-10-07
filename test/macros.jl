@@ -1427,6 +1427,43 @@ function test_broadcasting_variable_in_set()
     return
 end
 
+function test_parse_constraint_head_error()
+    model = Model()
+    @variable(model, x)
+    err = ErrorException(
+        "In `@constraint(model, \$(Expr(:(:=), :x, 0)))`: " *
+        "Unsupported constraint expression: we don't know how to parse " *
+        "constraints containing expressions of type :=.\n\nIf you are " *
+        "writing a JuMP extension, implement " *
+        "`parse_constraint_head(::Function, ::Val{:=}, args...)",
+    )
+    @test_macro_throws(err, @constraint(model, x := 0))
+    return
+end
+
+function test_parse_constraint_head_inconsistent_vectorize()
+    model = Model()
+    @variable(model, x)
+    err = ErrorException(
+        "In `@constraint(model, 1 .<= [x, x] <= 2)`: " *
+        "Operators are inconsistently vectorized.",
+    )
+    @test_throws(err, @constraint(model, 1 .<= [x, x] <= 2))
+    return
+end
+
+function test_parse_constraint_head_inconsistent_signs()
+    model = Model()
+    @variable(model, x)
+    err = ErrorException(
+        "In `@constraint(model, 1 >= x <= 2)`: " *
+        "Only two-sided rows of the form `lb <= expr <= ub` or " *
+        "`ub >= expr >= lb` are supported.",
+    )
+    @test_throws(err, @constraint(model, 1 >= x <= 2))
+    return
+end
+
 end  # module
 
 TestMacros.runtests()

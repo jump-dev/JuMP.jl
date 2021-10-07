@@ -378,7 +378,7 @@ function parse_constraint_head(
     lsign, lvectorized = _check_vectorized(lsign)
     rsign, rvectorized = _check_vectorized(rsign)
     if lvectorized != rvectorized
-        _error("Signs are inconsistently vectorized")
+        _error("Operators are inconsistently vectorized.")
     end
     if lsign in (:(<=), :≤) && rsign in (:(<=), :≤)
         # Nothing. What we expect.
