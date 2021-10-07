@@ -241,8 +241,7 @@ function example_cutting_stock(; max_gen_cols::Int = 5_000)
         ncols += 1
         patterns = hcat(patterns, new_pattern)
         ## One new variable.
-        new_var = @variable(m, [ncols], base_name = "θ", lower_bound = 0)
-        push!(θ, new_var[ncols])
+        push!(θ, @variable(m, base_name = "θ", lower_bound = 0))
         ## Update the objective function.
         set_objective_coefficient(
             m,
@@ -254,7 +253,7 @@ function example_cutting_stock(; max_gen_cols::Int = 5_000)
             if new_pattern[j] > 0
                 set_normalized_coefficient(
                     demand_satisfaction[j],
-                    new_var[ncols],
+                    θ[ncols],
                     new_pattern[j],
                 )
             end
