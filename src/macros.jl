@@ -159,11 +159,8 @@ function _check_vectorized(sense::Symbol)
     end
 end
 
-# two-argument build_constraint is used for one-sided constraints.
-# Right-hand side is zero.
-
 """
-    sense_to_set(_error::Function, ::Val{sense_symbol})
+    operator_to_set(_error::Function, ::Val{sense_symbol})
 
 Converts a sense symbol to a set `set` such that
 `@constraint(model, func sense_symbol 0)` is equivalent to
@@ -172,7 +169,7 @@ Converts a sense symbol to a set `set` such that
 ## Example
 
 Once a custom set is defined you can directly create a JuMP constraint with it:
-```jldoctest sense_to_set; setup = :(using JuMP)
+```jldoctest operator_to_set; setup = :(using JuMP)
 julia> struct CustomSet{T} <: MOI.AbstractScalarSet
            value::T
        end
@@ -190,8 +187,8 @@ x ∈ CustomSet{Float64}(1.0)
 
 However, there might be an appropriate sign that could be used in order to
 provide a more convenient syntax:
-```jldoctest sense_to_set
-julia> JuMP.sense_to_set(::Function, ::Val{:⊰}) = CustomSet(0.0)
+```jldoctest operator_to_set
+julia> JuMP.operator_to_set(::Function, ::Val{:⊰}) = CustomSet(0.0)
 
 julia> MOIU.shift_constant(set::CustomSet, value) = CustomSet(set.value + value)
 
@@ -202,16 +199,17 @@ Note that the whole function is first moved to the right-hand side, then the
 sign is transformed into a set with zero constant and finally the constant is
 moved to the set with `MOIU.shift_constant`.
 """
-function sense_to_set end
+function operator_to_set end
 
-function sense_to_set(_error::Function, ::Union{Val{:(<=)},Val{:(≤)}})
-    return MOI.LessThan(0.0)
-end
-function sense_to_set(_error::Function, ::Union{Val{:(>=)},Val{:(≥)}})
+operator_to_set(::Function, ::Union{Val{:(<=)},Val{:(≤)}}) = MOI.LessThan(0.0)
+
+function operator_to_set(::Function, ::Union{Val{:(>=)},Val{:(≥)}})
     return MOI.GreaterThan(0.0)
 end
-sense_to_set(_error::Function, ::Val{:(==)}) = MOI.EqualTo(0.0)
-function sense_to_set(_error::Function, ::Val{S}) where {S}
+
+operator_to_set(::Function, ::Val{:(==)}) = MOI.EqualTo(0.0)
+
+function operator_to_set(_error::Function, ::Val{S}) where {S}
     return _error("Unrecognized sense $S")
 end
 
@@ -259,27 +257,6 @@ array, and wait for complaints.
 _desparsify(x::AbstractSparseArray) = collect(x)
 _desparsify(x) = x
 
-function _build_call(_error::Function, vectorized::Bool, func, set)
-    return if vectorized
-        :(build_constraint.($_error, _desparsify($func), Ref($(esc(set)))))
-    else
-        :(build_constraint($_error, $func, $(esc(set))))
-    end
-end
-function parse_one_operator_constraint(
-    _error::Function,
-    vectorized::Bool,
-    ::Union{Val{:in},Val{:∈}},
-    func,
-    set,
-)
-    variable, parse_code = _MA.rewrite(func)
-    return parse_code, _build_call(_error, vectorized, variable, set)
-end
-function parse_one_operator_constraint(_error::Function, args...)
-    return _unknown_constraint_expr(_error)
-end
-
 _functionize(v::VariableRef) = convert(AffExpr, v)
 _functionize(v::AbstractArray{VariableRef}) = _functionize.(v)
 
@@ -292,94 +269,69 @@ end
 _functionize(x) = x
 _functionize(::MutableArithmetics.Zero) = 0.0
 
-function parse_one_operator_constraint(
-    _error::Function,
-    vectorized::Bool,
-    sense::Val,
-    lhs,
-    rhs,
-)
-    # Simple comparison - move everything to the LHS.
-    #
-    # `_functionize` deals with the pathological case where the `lhs` is a `VariableRef`
-    # and the `rhs` is a summation with no terms. `_build_call` should be passed a
-    # `GenericAffExpr` or a `GenericQuadExpr`, and not a `VariableRef` as would be the case
-    # without `_functionize`.
-    if vectorized
-        func = :($lhs .- $rhs)
-    else
-        func = :($lhs - $rhs)
-    end
-    set = sense_to_set(_error, sense)
-    variable, parse_code = _MA.rewrite(func)
-    return parse_code,
-    _build_call(_error, vectorized, :(_functionize($variable)), set)
-end
+"""
+    parse_constraint(_error::Function, expr::Expr)
 
-function parse_constraint_expr(_error::Function, expr::Expr)
+The entry-point for all constraint-related parsing.
+
+## Arguments
+
+ * The `_error` function is passed everywhere to provide better error messages
+ * `expr` comes from the `@constraint` macro. There are two possibilities:
+    * `@constraint(model, expr)`
+    * `@constraint(model, name[args], expr)`
+   In both cases, `expr` is the main component of the constraint.
+
+JuMP currently supports the following `expr` objects:
+ * `lhs <= rhs`
+ * `lhs == rhs`
+ * `lhs >= rhs`
+ * `l <= body <= u`
+ * `u >= body >= l`
+ * `lhs ⟂ rhs`
+ * `lhs in rhs`
+ * `lhs ∈ rhs`
+ * `z => {constraint}`
+ * `!z => {constraint}`
+as well as all broadcasted variants.
+
+## See also
+
+The aim of `parse_constraint` is to make this extensible by JuMP extensions.
+Thus, `parse_constraint` forwards to [`parse_constraint_head`](@ref) to dispatch
+on `expr.head`
+"""
+function parse_constraint(_error::Function, expr::Expr)
     return parse_constraint_head(_error, Val(expr.head), expr.args...)
 end
-function parse_constraint_head(_error::Function, ::Val{:call}, args...)
-    return parse_constraint(_error, args...)
-end
 
-function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
-    (sense, vectorized) = _check_vectorized(sense)
-    return vectorized,
-    parse_one_operator_constraint(_error, vectorized, Val(sense), lhs, rhs)...
-end
+"""
+    parse_constraint_head(_error::Function, ::Val{head}, args...)
 
-function parse_ternary_constraint(
-    _error::Function,
-    vectorized::Bool,
-    lb,
-    ::Union{Val{:(<=)},Val{:(≤)}},
-    aff,
-    rsign::Union{Val{:(<=)},Val{:(≤)}},
-    ub,
-)
-    newaff, parseaff = _MA.rewrite(aff)
-    newlb, parselb = _MA.rewrite(lb)
-    newub, parseub = _MA.rewrite(ub)
-    if vectorized
-        buildcall = :(
-            build_constraint.(
-                $_error,
-                _desparsify($newaff),
-                _desparsify($newlb),
-                _desparsify($newub),
-            )
-        )
-    else
-        buildcall = :(build_constraint($_error, $newaff, $newlb, $newub))
-    end
-    return parseaff, parselb, parseub, buildcall
-end
+Implement this method to intercept the parsing of an expression with head
+`head`.
 
-function parse_ternary_constraint(
-    _error::Function,
-    vectorized::Bool,
-    ub,
-    ::Union{Val{:(>=)},Val{:(≥)}},
-    aff,
-    rsign::Union{Val{:(>=)},Val{:(≥)}},
-    lb,
-)
-    return parse_ternary_constraint(
-        _error,
-        vectorized,
-        lb,
-        Val(:(<=)),
-        aff,
-        Val(:(<=)),
-        ub,
-    )
-end
+JuMP currently implements:
 
-function parse_ternary_constraint(_error::Function, args...)
+ * `::Val{:call}`, which forwards calls to [`parse_constraint_call`](@ref)
+ * `::Val{:comparison}`, which handles the special case of `l <= body <= u`.
+
+!!! warning
+    Think carefully before doing this! By implementing this method, your package
+    will own the sytax. Do not implement a method for syntax that JuMP already
+    supports.
+"""
+function parse_constraint_head(_error::Function, ::Val{T}, args...) where {T}
     return _error(
-        "Only two-sided rows of the form lb <= expr <= ub or ub >= expr >= lb are supported.",
+        "Unsupported constraint expression: we don't know how to parse " *
+        "constraints containing expressions of type $T.\n\nIf you are " *
+        "writing a JuMP extension, implement " *
+        "`parse_constraint_head(::Function, ::Val{$T}, args...)",
     )
+end
+
+function parse_constraint_head(_error::Function, ::Val{:call}, args...)
+    return parse_constraint_call(_error, args...)
 end
 
 function parse_constraint_head(
@@ -391,70 +343,143 @@ function parse_constraint_head(
     rsign::Symbol,
     ub,
 )
-    return parse_constraint(_error, lb, lsign, aff, rsign, ub)
-end
-
-function parse_constraint(
-    _error::Function,
-    lb,
-    lsign::Symbol,
-    aff,
-    rsign::Symbol,
-    ub,
-)
-    (lsign, lvectorized) = _check_vectorized(lsign)
-    (rsign, rvectorized) = _check_vectorized(rsign)
-    ((vectorized = lvectorized) == rvectorized) ||
+    lsign, lvectorized = _check_vectorized(lsign)
+    rsign, rvectorized = _check_vectorized(rsign)
+    if lvectorized != rvectorized
         _error("Signs are inconsistently vectorized")
-    parseaff, parselb, parseub, buildcall = parse_ternary_constraint(
-        _error,
-        vectorized,
-        lb,
-        Val(lsign),
-        aff,
-        Val(rsign),
-        ub,
-    )
-    parsecode = quote
-        $parseaff
-        $parselb
-        $parseub
     end
-    return vectorized, parsecode, buildcall
-end
-
-function _unknown_constraint_expr(_error::Function)
-    # Unknown
-    return _error(
-        "Constraints must be in one of the following forms:\n" *
-        "       expr1 <= expr2\n" *
-        "       expr1 >= expr2\n" *
-        "       expr1 == expr2\n" *
-        "       lb <= expr <= ub",
-    )
-end
-
-function parse_constraint_head(_error::Function, ::Val, args...)
-    return _unknown_constraint_expr(_error)
-end
-function parse_constraint(_error::Function, args...)
-    # Define this as the last fallback: either this is a function call that may
-    # be overridden by extensions, or a syntax that is not recognized.
-    # Multiple dispatch does not work here, due to ambiguity with:
-    #     parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol, ub)
-    if args[1] isa Symbol
-        (sense, vectorized) = _check_vectorized(args[1])
-        vectorized,
-        parse_one_operator_constraint(
-            _error,
-            vectorized,
-            Val(sense),
-            args[2:end]...,
-        )...
+    if lsign in (:(<=), :≤) && rsign in (:(<=), :≤)
+        # Nothing. What we expect.
+    elseif lsign in (:(>=), :≥) && rsign in (:(>=), :≥)
+        # Flip lb and ub
+        lb, ub = ub, lb
     else
-        _unknown_constraint_expr(_error)
+        _error(
+            "Only two-sided rows of the form `lb <= expr <= ub` or " *
+            "`ub >= expr >= lb` are supported.",
+        )
     end
+    newaff, parse_aff = _MA.rewrite(aff)
+    newlb, parse_lb = _MA.rewrite(lb)
+    newub, parse_ub = _MA.rewrite(ub)
+    build_call = if lvectorized
+        :(
+            build_constraint.(
+                $_error,
+                _desparsify($newaff),
+                _desparsify($newlb),
+                _desparsify($newub),
+            )
+        )
+    else
+        :(build_constraint($_error, $newaff, $newlb, $newub))
+    end
+    parse_code = quote
+        $parse_aff
+        $parse_lb
+        $parse_ub
+    end
+    return lvectorized, parse_code, build_call
 end
+
+"""
+    parse_constraint_call(
+        _error::Function,
+        vectorized::Bool,
+        ::Val{op},
+        args...,
+    )
+
+Parse constraints of the form:
+```julia
+@constraint(model, op(args...))
+```
+If `vectorized`, the operation is broadcasted, so the constraint is of the form
+```julia
+@constraint(model, op.(args...))
+```
+
+This function returns a `(parse_code, build_call)` tuple.
+"""
+function parse_constraint_call(
+    _error::Function,
+    ::Bool,
+    ::Val{T},
+    args...,
+) where {T}
+    return _error(
+        "Unsupported constraint expression: we don't know how to parse " *
+        "constraints containing the operator $T.\n\nIf you are writing a " *
+        "JuMP extension, implement " *
+        "`parse_constraint_call(::Function, ::Bool, ::Val{$T}, args...)",
+    )
+end
+
+function parse_constraint_call(_error::Function, operator::Symbol, args...)
+    operator, vectorized = _check_vectorized(operator)
+    parse_code, build_call =
+        parse_constraint_call(_error, vectorized, Val(operator), args...)
+    return vectorized, parse_code, build_call
+end
+
+# `@constraint(model, func in set)`
+# `@constraint(model, func ∈ set)`
+function parse_constraint_call(
+    _error::Function,
+    vectorized::Bool,
+    ::Union{Val{:in},Val{:∈}},
+    func,
+    set,
+)
+    f, parse_code = _MA.rewrite(func)
+    build_call = if vectorized
+        :(build_constraint.($_error, _desparsify($f), Ref($(esc(set)))))
+    else
+        :(build_constraint($_error, $f, $(esc(set))))
+    end
+    return parse_code, build_call
+end
+
+"""
+    parse_constraint_call(
+        _error::Function,
+        vectorized::Bool,
+        operator::Val,
+        lhs,
+        rhs,
+    )
+
+Fallback handler for binary operators. These might be infix operators like
+`@constraint(model, lhs op rhs)`, or normal operators like
+`@constraint(model, op(lhs, rhs))`.
+
+In both cases, we rewrite as `lhs - rhs in operator_to_set(_error, op)`.
+See [`operator_to_set`](@ref) for details.
+"""
+function parse_constraint_call(
+    _error::Function,
+    vectorized::Bool,
+    operator::Val,
+    lhs,
+    rhs,
+)
+    func = vectorized ? :($lhs .- $rhs) : :($lhs - $rhs)
+    set = operator_to_set(_error, operator)
+    f, parse_code = _MA.rewrite(func)
+    # `_functionize` deals with the pathological case where the `lhs` is a
+    # `VariableRef` and the `rhs` is a summation with no terms.
+    f = :(_functionize($f))
+    build_call = if vectorized
+        :(build_constraint.($_error, _desparsify($f), Ref($(esc(set)))))
+    else
+        :(build_constraint($_error, $f, $(esc(set))))
+    end
+    return parse_code, build_call
+end
+
+###
+### Build constraints using actual data.
+###
 
 # Generic fallback.
 function build_constraint(_error::Function, func, set, args...; kwargs...)
@@ -834,12 +859,7 @@ enable this syntax by defining extensions of
 user syntax: `@constraint(model, ref[...], expr, my_arg, kw_args...)`.
 """
 macro constraint(args...)
-    return _constraint_macro(
-        args,
-        :constraint,
-        parse_constraint_expr,
-        __source__,
-    )
+    return _constraint_macro(args, :constraint, parse_constraint, __source__)
 end
 
 function parse_SD_constraint_expr(_error::Function, expr::Expr)
@@ -865,13 +885,8 @@ function parse_SD_constraint(_error::Function, sense::Symbol, lhs, rhs)
         aff = :($succ - $prec)
     end
     vectorized = false
-    parsecode, buildcall = parse_one_operator_constraint(
-        _error,
-        false,
-        Val(:in),
-        aff,
-        :(JuMP.PSDCone()),
-    )
+    parsecode, buildcall =
+        parse_constraint_call(_error, false, Val(:in), aff, :(JuMP.PSDCone()))
     return vectorized, parsecode, buildcall
 end
 
@@ -997,7 +1012,7 @@ macro build_constraint(constraint_expr)
     end
 
     is_vectorized, parse_code, build_call =
-        parse_constraint_expr(_error, constraint_expr)
+        parse_constraint(_error, constraint_expr)
     result_variable = gensym()
     code = quote
         $parse_code

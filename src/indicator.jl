@@ -30,7 +30,7 @@ function _indicator_variable_set(_error::Function, expr::Expr)
         return expr, MOI.Indicator{MOI.ACTIVATE_ON_ONE}
     end
 end
-function parse_one_operator_constraint(
+function parse_constraint_call(
     _error::Function,
     vectorized::Bool,
     ::Union{Val{:(=>)},Val{:⇒}},
@@ -45,7 +45,7 @@ function parse_one_operator_constraint(
     end
     rhs_con = rhs.args[1]
     rhs_vectorized, rhs_parsecode, rhs_buildcall =
-        parse_constraint_expr(_error, rhs_con)
+        parse_constraint(_error, rhs_con)
     if vectorized != rhs_vectorized
         _error("Inconsistent use of `.` in symbols to indicate vectorization.")
     end

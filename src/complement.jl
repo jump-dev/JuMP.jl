@@ -63,7 +63,7 @@ function _build_complements_constraint(
     return errorf("second term must be a variable.")
 end
 
-function parse_one_operator_constraint(
+function parse_constraint_call(
     errorf::Function,
     ::Bool,
     ::Union{Val{:complements},Val{:⟂}},

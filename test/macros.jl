@@ -111,12 +111,7 @@ function JuMP.build_constraint(_error::Function, func, ::CustomType)
     return JuMP.build_constraint(_error, func, CustomSet())
 end
 
-function JuMP.parse_one_operator_constraint(
-    _error::Function,
-    ::Bool,
-    ::Val{:f},
-    x,
-)
+function JuMP.parse_constraint_call(_error::Function, ::Bool, ::Val{:f}, x)
     return :(), :(build_constraint($_error, $(esc(x)), $(esc(CustomType()))))
 end
 

@@ -23,7 +23,7 @@ build_variable
 ```@docs
 build_constraint
 add_constraint
-sense_to_set
+operator_to_set
 AbstractShape
 shape
 reshape_vector
