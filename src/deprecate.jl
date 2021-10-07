@@ -18,3 +18,7 @@ function value(x, f::Function)
     @warn("`value(x, f::Function)` is deprecated. Use `value(f, x)` instead.")
     return value(f, x)
 end
+
+@deprecate sense_to_set operator_to_set
+@deprecate parse_one_operator_constraint parse_constraint_call
+@deprecate parse_constraint_expr _parse_constraint
