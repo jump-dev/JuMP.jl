@@ -359,7 +359,8 @@ function expressions_test(
     @testset "issue_2309" begin
         model = ModelType()
         @variable(model, x[1:10])
-        A = SparseArrays.sparse(LinearAlgebra.I(10)) + LinearAlgebra.Diagonal(x)
+        I = SparseArrays.sparse(LinearAlgebra.Diagonal(ones(10))
+        A = I + LinearAlgebra.Diagonal(x)
         @test A isa SparseArrays.SparseMatrixCSC
         @test SparseArrays.nnz(A) == 10
     end
