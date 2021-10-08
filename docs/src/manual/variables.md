@@ -334,7 +334,7 @@ julia> variable_by_name(model, "my_var")
 To look up a collection of variables, do not use [`variable_by_name`](@ref).
 Instead, register them using the `model[:key] = value` syntax:
 ```jldoctest
-julia> model = Model()
+julia> model = Model();
 
 julia> model[:x] = @variable(model, [i = 1:2], base_name = "my_var")
 2-element Vector{VariableRef}:
