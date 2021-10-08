@@ -1435,7 +1435,7 @@ end
 function test_vectorized_constraint_name()
     model = Model()
     @variable(model, x)
-    c = @constraint(model, [i=1:2], [x, x] .>= [i, i + 1], base_name = "my_c")
+    c = @constraint(model, [i = 1:2], [x, x] .>= [i, i + 1], base_name = "my_c")
     @test name(c[1][1]) == "my_c[1]"
     @test name(c[1][2]) == "my_c[1]"
     @test name(c[2][1]) == "my_c[2]"
