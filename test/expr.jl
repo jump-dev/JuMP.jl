@@ -360,7 +360,7 @@ function expressions_test(
         model = ModelType()
         @variable(model, x[1:10])
         A = SparseArrays.sparse(LinearAlgebra.I(10)) + LinearAlgebra.Diagonal(x)
-        @test A isa SparseArrays.SparseMatrixCSC{AffExpr,Int}
+        @test typeof(A) == SparseArrays.SparseMatrixCSC{AffExpr,Int}
         @test SparseArrays.nnz(A) == 10
     end
 end
