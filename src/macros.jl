@@ -731,15 +731,13 @@ function _constraint_macro(
     vectorized, parsecode, buildcall = parsefun(_error, x)
     _add_positional_args(buildcall, extra)
     _add_kw_args(buildcall, extra_kw_args)
+    name_expr = _name_call(base_name, idxvars)
     if vectorized
-        # TODO: Pass through names here.
-        constraintcall = :(add_constraint.($model, $buildcall))
+        # For vectorized constraints, we set every constraint to have the same
+        # name.
+        constraintcall = :(add_constraint.($model, $buildcall, $name_expr))
     else
-        constraintcall = :(add_constraint(
-            $model,
-            $buildcall,
-            $(_name_call(base_name, idxvars)),
-        ))
+        constraintcall = :(add_constraint($model, $buildcall, $name_expr))
     end
     code = quote
         $parsecode
