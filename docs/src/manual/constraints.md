@@ -405,8 +405,8 @@ julia> b = [5, 6]
 
 julia> @constraint(model, con, A * x .== b)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
- x[1] + 2 x[2] = 5.0
- 3 x[1] + 4 x[2] = 6.0
+ con : x[1] + 2 x[2] = 5.0
+ con : 3 x[1] + 4 x[2] = 6.0
 ```
 
 !!! note
