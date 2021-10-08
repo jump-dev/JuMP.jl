@@ -182,6 +182,9 @@ Base.one(a::GenericAffExpr) = one(typeof(a))
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
 Base.broadcastable(a::GenericAffExpr) = Ref(a)
 
+# Needed for cases when Base Julia uses `x == 0` instead of `iszero(x)`
+Base.:(==)(x::GenericAffExpr, y::Number) = isempty(x.terms) && x.constant == y
+
 """
     coefficient(a::GenericAffExpr{C,V}, v::V) where {C,V}
 

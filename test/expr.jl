@@ -1,4 +1,6 @@
 using JuMP
+using LinearAlgebra
+using SparseArrays
 using Test
 
 const MA = JuMP._MA
@@ -341,6 +343,25 @@ function expressions_test(
         model = ModelType()
         @variable(model, x)
         @test ndims(x^2 + 1) == 0
+    end
+
+    @testset "==0" begin
+        model = ModelType()
+        @variable(model, x)
+        @test x + 0.0 != 0.0
+        @test AffExpr(0.0) == 0.0
+        @test AffExpr(1.0) == 1.0
+        @test QuadExpr(AffExpr(0.0)) == 0.0
+        @test QuadExpr(AffExpr(1.0)) == 1.0
+        @test x^2 + 0.0 != 0.0
+    end
+
+    @testset "issue_2309" begin
+        model = ModelType()
+        @variable(model, x[1:10])
+        A = SparseArrays.sparse(LinearAlgebra.I(10)) + LinearAlgebra.Diagonal(x)
+        @test A isa SparseArrays.SparseMatrixCSC{AffExpr,Int}
+        @test SparseArrays.nnz(A) == 10
     end
 end
 
