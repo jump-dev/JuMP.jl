@@ -227,8 +227,85 @@ The name, i.e. the value of the `MOI.ConstraintName` attribute, of a constraint
 can be obtained by [`name(::JuMP.ConstraintRef)`](@ref) and set by
 [`set_name(::JuMP.ConstraintRef, ::String)`](@ref).
 
-The constraint can also be retrieved from its name using
-[`constraint_by_name`](@ref).
+```jldoctest
+julia> model = Model(); @variable(model, x);
+
+julia> @constraint(model, con, x <= 1)
+con : x <= 1.0
+
+julia> name(con)
+"con"
+
+julia> set_name(con, "my_con_name")
+
+julia> con
+my_con_name : x <= 1.0
+```
+
+Specify a constraint name in the macro via `base_name`:
+```jldoctest constraint_name_vector
+julia> model = Model(); @variable(model, x);
+
+julia> con = @constraint(model, [i=1:2], x <= i, base_name = "my_con")
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ my_con[1] : x ≤ 1.0
+ my_con[2] : x ≤ 2.0
+```
+
+Note that names apply to each element of the container, not to the container of
+constraints:
+```jldoctest constraint_name_vector
+julia> name(con[1])
+"my_con[1]"
+
+julia> set_name(con[1], "c")
+
+julia> con
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ c : x ≤ 1.0
+ my_con[2] : x ≤ 2.0
+```
+
+### Retrieve a constraint by name
+
+Retrieve a constraint from a model using [`constraint_by_name`](@ref):
+```jldoctest constraint_name_vector
+julia> constraint_by_name(model, "c")
+c : x ≤ 1.0
+```
+If the name is not present, `nothing` will be returned:
+```jldoctest constraint_name_vector
+julia> constraint_by_name(model, "bad_name")
+```
+
+You can only look up invididual constraints using [`constraint_by_name`](@ref).
+Something like this will not work:
+```jldoctest
+julia> model = Model(); @variable(model, x);
+
+julia> con = @constraint(model, [i=1:2], x <= i, base_name = "my_con")
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ my_con[1] : x ≤ 1.0
+ my_con[2] : x ≤ 2.0
+
+julia> constraint_by_name(model, "my_con")
+```
+
+To look up a collection of constraints, do not use [`constraint_by_name`](@ref).
+Instead, register them using the `model[:key] = value` syntax:
+```jldoctest
+julia> model = Model(); @variable(model, x);
+
+julia> model[:con] = @constraint(model, [i=1:2], x <= i, base_name = "my_con")
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ my_con[1] : x ≤ 1.0
+ my_con[2] : x ≤ 2.0
+
+julia> model[:con]
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ my_con[1] : x ≤ 1.0
+ my_con[2] : x ≤ 2.0
+```
 
 ## Start Values
 
@@ -608,13 +685,19 @@ julia> @constraint(model, X >= Y, PSDCone())
  X[2,1] - 2  X[2,2] - 1] ∈ PSDCone()
 ```
 
-The following three syntax are equivalent:
- * `@constraint(model, X >= Y, PSDCone())`
- * `@constraint(model, Y <= X, PSDCone())`
- * `@constraint(model, X - Y in PSDCone())`
+!!! tip
+    `@constraint(model, X >= Y, Set())` is short-hand for
+    `@constraint(model, X - Y in Set())`. Therefore, the following calls are
+    equivalent:
+     * `@constraint(model, X >= Y, PSDCone())`
+     * `@constraint(model, Y <= X, PSDCone())`
+     * `@constraint(model, X - Y in PSDCone())`
+    This also works for any vector-valued cone, so if `x` and `y` are vectors of
+    length 2, you can write `@constraint(model, x >= y, MOI.Nonnegatives(2))`
+    instead of `@constraint(model, x - y in MOI.Nonnegatives(2))`.
 
-!!! note
-    Non-zero constants are not supported:
+!!! warning
+    Non-zero constants are not supported in this syntax:
     ```jldoctest con_psd
     julia> @constraint(model, X >= 1, PSDCone())
     ERROR: Operation `sub_mul!` between `Matrix{VariableRef}` and `Int64` is not allowed. You should use broadcast.
