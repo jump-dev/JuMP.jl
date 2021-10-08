@@ -1461,6 +1461,7 @@ function test_parse_constraint_head_inconsistent_signs()
         "`ub >= expr >= lb` are supported.",
     )
     @test_macro_throws(err, @constraint(model, 1 >= x <= 2))
+    return
 end
 
 function test_reorder_keyword_arguments()
