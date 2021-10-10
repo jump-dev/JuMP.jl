@@ -147,7 +147,17 @@ function Base.get(
 end
 
 _abstract_vector(x::AbstractVector) = x
+
 _abstract_vector(x) = [a for a in x]
+
+function _abstract_vector(x::Number)
+    @warn(
+        "Axis contains one element: $x. If intended, you can safely " *
+        "ignore this warning. To explicitly pass the axis with one " *
+        "element, pass `[$x]` instead of `$x`.",
+    )
+    return [x]
+end
 
 """
     DenseAxisArray(data::Array{T, N}, axes...) where {T, N}
