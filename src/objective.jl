@@ -123,10 +123,6 @@ function set_objective_function(model::Model, func::Real)
     )
 end
 
-function set_objective_function(model::AbstractModel, ::MutableArithmetics.Zero)
-    return set_objective_function(model, 0.0)
-end
-
 function set_objective_function(model::AbstractModel, func)
     return error("The objective function `$(func)` is not supported by JuMP.")
 end

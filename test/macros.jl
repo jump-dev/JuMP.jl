@@ -1464,12 +1464,38 @@ function test_parse_constraint_head_inconsistent_signs()
     return
 end
 
+function test_MA_Zero_objective()
+    model = Model()
+    @test @objective(model, Min, sum(i for i in 1:0)) === 0.0
+    return
+end
+
+function test_MA_Zero_expression()
+    model = Model()
+    @test @expression(model, sum(i for i in 1:0)) === 0.0
+    @expression(model, expr[j = 1:2], sum(i for i in j:0))
+    @test expr == [0.0, 0.0]
+    @test expr isa Vector{Float64}
+    return
+end
+
 function test_reorder_keyword_arguments()
     model = Model()
     @variable(model, integer = true, x)
     @test is_integer(x)
     c = @constraint(model, base_name = "my_c", x <= 1)
     @test name(c) == "my_c"
+    return
+end
+
+function test_vectorized_constraint_name()
+    model = Model()
+    @variable(model, x)
+    c = @constraint(model, [i = 1:2], [x, x] .>= [i, i + 1], base_name = "my_c")
+    @test name(c[1][1]) == "my_c[1]"
+    @test name(c[1][2]) == "my_c[1]"
+    @test name(c[2][1]) == "my_c[2]"
+    @test name(c[2][2]) == "my_c[2]"
     return
 end
 
