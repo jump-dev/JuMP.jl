@@ -365,11 +365,15 @@ end
     @test x^2 + 0.0 != 0.0
 end
 
-@testset "issue_2309" begin
-    model = Model()
-    @variable(model, x[1:10])
-    I = SparseArrays.sparse(LinearAlgebra.Diagonal(ones(10)))
-    A = I + LinearAlgebra.Diagonal(x)
-    @test A isa SparseArrays.SparseMatrixCSC
-    @test SparseArrays.nnz(A) == 10
+if VERSION >= v"1.6"
+    # Don't test this on Julia 1.0. There are some issues adding the sparse and
+    # diagonal matrices.
+    @testset "issue_2309" begin
+        model = Model()
+        @variable(model, x[1:10])
+        I = SparseArrays.sparse(LinearAlgebra.Diagonal(ones(10)))
+        A = I + LinearAlgebra.Diagonal(x)
+        @test A isa SparseArrays.SparseMatrixCSC
+        @test SparseArrays.nnz(A) == 10
+    end
 end
