@@ -8,6 +8,12 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
 
 # [Models](@id jump_models)
 
+!!! info
+    JuMP uses "optimizer" as a synonym for "solver." Our convention is to use
+    "solver" to refer to the underlying software, and use "optimizer" to refer
+    to the Julia object that wraps the solver. For example, `GLPK` is a solver,
+    and `GLPK.Optimizer` is an optimizer.
+
 ## Create a model
 
 Create a model by passing an optimizer to [`Model`](@ref):
@@ -33,15 +39,31 @@ Solver name: No optimizer attached.
 julia> set_optimizer(model, GLPK.Optimizer)
 ```
 
-!!! info
-    JuMP uses "optimizer" as a synonym for "solver." Our convention is to use
-    "solver" to refer to the underlying software, and use "optimizer" to refer
-    to the Julia object that wraps the solver. For example, `GLPK` is a solver,
-    and `GLPK.Optimizer` is an optimizer.
-
 !!! tip
     Don't know what the fields `Model mode`, `CachingOptimizer state` mean? Read
     the [Backends](@ref) section.
+
+### What is the difference?
+
+For most models, there is no difference between passing the optimizer to
+[`Model`](@ref), and calling [`set_optimizer`](@ref).
+
+However, if an optimizer does not support a constraint in the model, the timing
+of when an error will be thrown can differ:
+
+ * If you pass an optimizer, an error will be thrown when you try to add the
+   constraint.
+ * If you call [`set_optimizer`](@ref), an error will be thrown when you try to
+   solve the model via [`optimize!`](@ref).
+
+Therefore, most users should pass an optimizer to [`Model`](@ref) because it
+provides the earliest warning that your solver is not suitable for the model you
+are trying to build. However, if you are modifying a problem by adding and
+deleting different constraint types, you may need to use
+[`set_optimizer`](@ref). See [Switching optimizer for the relaxed problem](@ref)
+for an example of when this is useful.
+
+## Solver options
 
 Use [`optimizer_with_attributes`](@ref) to create an optimizer with some
 attributes initialized:
@@ -72,6 +94,16 @@ Variables: 0
 Model mode: AUTOMATIC
 CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
+```
+
+A third option is to use [`set_optimizer_attribute`](@ref):
+```jldoctest
+julia> model = Model(GLPK.Optimizer);
+
+julia> set_optimizer_attribute(model, "msg_lev", 0)
+
+julia> get_optimizer_attribute(model, "msg_lev")
+0
 ```
 
 ## Print the model
@@ -216,6 +248,68 @@ Solver name: No optimizer attached.
     cannot access named variables and constraints via `model[:x]`. Instead, use
     [`variable_by_name`](@ref) or [`constraint_by_name`](@ref) to access
     specific variables or constraints.
+
+## Relax integrality
+
+Use [`relax_integrality`](@ref) to remove any integrality constraints from the
+model, such as integer and binary restrictions on variables.
+[`relax_integrality`](@ref) returns a function that can be later called with
+zero arguments in order to re-add the removed constraints:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, Int)
+x
+
+julia> num_constraints(model, VariableRef, MOI.Integer)
+1
+
+julia> undo = relax_integrality(model);
+
+julia> num_constraints(model, VariableRef, MOI.Integer)
+0
+
+julia> undo()
+
+julia> num_constraints(model, VariableRef, MOI.Integer)
+1
+```
+
+### Switching optimizer for the relaxed problem
+
+A common reason for relaxing integrality is to compute dual variables of the
+relaxed problem. However, some mixed-integer linear solvers (e.g., Cbc) do not
+return dual solutions, even if the problem does not have integrality
+restrictions.
+
+Therefore, after [`relax_integrality`](@ref) you should call
+[`set_optimizer`](@ref) with a solver that does support dual solutions, such as
+Clp. For example:
+
+```julia
+using JuMP, Cbc
+model = Model(Cbc.Optimizer)
+@variable(model, x, Int)
+undo = relax_integrality(model)
+optimize!(model)
+reduced_cost(x)  # Errors
+```
+
+```julia
+using JuMP, Cbc, Clp
+model = Model(Cbc.Optimizer)
+@variable(model, x, Int)
+undo = relax_integrality(model)
+
+# Bad
+optimize!(model)
+has_duals(model)  # false
+
+# Good
+set_optimizer(model, Clp.Optimizer)
+optimize!(model)
+has_duals(model)  # true
+```
 
 ## Backends
 
