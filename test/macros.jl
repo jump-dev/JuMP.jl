@@ -1432,6 +1432,21 @@ function test_broadcasting_variable_in_set()
     return
 end
 
+function test_MA_Zero_objective()
+    model = Model()
+    @test @objective(model, Min, sum(i for i in 1:0)) === 0.0
+    return
+end
+
+function test_MA_Zero_expression()
+    model = Model()
+    @test @expression(model, sum(i for i in 1:0)) === 0.0
+    @expression(model, expr[j = 1:2], sum(i for i in j:0))
+    @test expr == [0.0, 0.0]
+    @test expr isa Vector{Float64}
+    return
+end
+
 function test_reorder_keyword_arguments()
     model = Model()
     @variable(model, integer = true, x)

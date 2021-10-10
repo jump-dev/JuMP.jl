@@ -1255,6 +1255,14 @@ function _throw_error_for_invalid_sense(
 end
 
 """
+    _replace_zero(x)
+
+Replaces `_MA.Zero` with a floating point `0.0`.
+"""
+_replace_zero(::_MA.Zero) = 0.0
+_replace_zero(x) = x
+
+"""
     @objective(model::Model, sense, func)
 
 Set the objective sense to `sense` and objective function to `func`. The
@@ -1320,6 +1328,9 @@ macro objective(model, args...)
     newaff, parsecode = _MA.rewrite(x)
     code = quote
         $parsecode
+        # Don't leak a `_MA.Zero` if the objective expression is an empty
+        # summation, or other structure that returns `_MA.Zero()`.
+        $newaff = _replace_zero($newaff)
         set_objective($esc_model, $sense_expr, $newaff)
         $newaff
     end
@@ -1381,6 +1392,11 @@ macro expression(args...)
         )
     end
     code = _MA.rewrite_and_return(x)
+    code = quote
+        # Don't leak a `_MA.Zero` if the expression is an empty summation, or
+        # other structure that returns `_MA.Zero()`.
+        _replace_zero($code)
+    end
     code = Containers.container_code(idxvars, indices, code, requestedcontainer)
     # don't do anything with the model, but check that it's valid anyway
     if anonvar
