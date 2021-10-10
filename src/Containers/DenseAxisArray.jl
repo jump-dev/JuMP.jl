@@ -147,16 +147,16 @@ function Base.get(
 end
 
 _abstract_vector(x::AbstractVector) = x
-function _abstract_vector(x)
-    axis = [a for a in x]
-    if length(axis) == 1
-        @warn(
-            "Axis contains one element: $x. If intended, you can safely " *
-            "ignore this warning. To explicitly pass the axis with one " *
-            "element, pass `[$(repr(axis[1]))]` instead of `$(x)`.",
-        )
-    end
-    return axis
+
+_abstract_vector(x) = [a for a in x]
+
+function _abstract_vector(x::Number)
+    @warn(
+        "Axis contains one element: $x. If intended, you can safely " *
+        "ignore this warning. To explicitly pass the axis with one " *
+        "element, pass `[$x]` instead of `$x`.",
+    )
+    return [x]
 end
 
 """
