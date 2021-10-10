@@ -118,7 +118,8 @@ Base.one(q::GenericQuadExpr) = one(typeof(q))
 Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
 Base.broadcastable(q::GenericQuadExpr) = Ref(q)
 
-# Needed for cases when Base Julia uses `x == 0` instead of `iszero(x)`
+# Needed for cases when Julia uses `x == 0` instead of `iszero(x)` (e.g., in the
+# stdlib).
 Base.:(==)(x::GenericQuadExpr, y::Number) = isempty(x.terms) && x.aff == y
 
 """

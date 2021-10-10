@@ -344,26 +344,6 @@ function expressions_test(
         @variable(model, x)
         @test ndims(x^2 + 1) == 0
     end
-
-    @testset "==0" begin
-        model = ModelType()
-        @variable(model, x)
-        @test x + 0.0 != 0.0
-        @test AffExpr(0.0) == 0.0
-        @test AffExpr(1.0) == 1.0
-        @test QuadExpr(AffExpr(0.0)) == 0.0
-        @test QuadExpr(AffExpr(1.0)) == 1.0
-        @test x^2 + 0.0 != 0.0
-    end
-
-    @testset "issue_2309" begin
-        model = ModelType()
-        @variable(model, x[1:10])
-        I = SparseArrays.sparse(LinearAlgebra.Diagonal(ones(10)))
-        A = I + LinearAlgebra.Diagonal(x)
-        @test A isa SparseArrays.SparseMatrixCSC
-        @test SparseArrays.nnz(A) == 10
-    end
 end
 
 @testset "Expressions for JuMP.Model" begin
@@ -372,4 +352,24 @@ end
 
 @testset "Expressions for JuMPExtension.MyModel" begin
     expressions_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
+end
+
+@testset "==0" begin
+    model = Model()
+    @variable(model, x)
+    @test x + 0.0 != 0.0
+    @test AffExpr(0.0) == 0.0
+    @test AffExpr(1.0) == 1.0
+    @test QuadExpr(AffExpr(0.0)) == 0.0
+    @test QuadExpr(AffExpr(1.0)) == 1.0
+    @test x^2 + 0.0 != 0.0
+end
+
+@testset "issue_2309" begin
+    model = Model()
+    @variable(model, x[1:10])
+    I = SparseArrays.sparse(LinearAlgebra.Diagonal(ones(10)))
+    A = I + LinearAlgebra.Diagonal(x)
+    @test A isa SparseArrays.SparseMatrixCSC
+    @test SparseArrays.nnz(A) == 10
 end
