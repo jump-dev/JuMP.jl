@@ -735,7 +735,7 @@ julia> x = @variable(model, [i=1:2], base_name="x", lower_bound=i, integer=true)
  x[2]
 ```
 
-!!! warn
+!!! warning
     Creating two named JuMP variables with the same name results in an error at
     runtime. Use anonymous variables as an alternative.
 

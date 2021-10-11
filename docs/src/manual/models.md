@@ -201,19 +201,8 @@ julia> write(io, model; format = MOI.FileFormats.FORMAT_MPS)
 ```
 
 !!! info
-    The supported file formats are defined by the [MOI.FileFormats.FileFormat](https://jump.dev/MathOptInterface.jl/v0.9/apireference/#MathOptInterface.FileFormats.FileFormat)
-    enum.
-    ```jldoctest
-    julia> MOI.FileFormats.FileFormat
-    Enum MathOptInterface.FileFormats.FileFormat:
-    FORMAT_AUTOMATIC = 0
-    FORMAT_CBF = 1
-    FORMAT_LP = 2
-    FORMAT_MOF = 3
-    FORMAT_MPS = 4
-    FORMAT_NL = 5
-    FORMAT_SDPA = 6
-    ```
+    The supported file formats are defined by the
+    [`MOI.FileFormats.FileFormat`](@ref) enum.
 
 ## Read a model from file
 
@@ -313,8 +302,9 @@ has_duals(model)  # true
 
 ## Backends
 
-A JuMP [`Model`](@ref) is a thin layer around a *backend* of type [`MOI.ModelLike`](https://jump.dev/MathOptInterface.jl/v0.9/apireference/#Model-Interface)
-that stores the optimization problem and acts as the optimization solver.
+A JuMP [`Model`](@ref) is a thin layer around a *backend* of type
+[`MOI.ModelLike`](@ref) that stores the optimization problem and acts as the
+optimization solver.
 
 From JuMP, the MOI backend can be accessed using the [`backend`](@ref) function.
 Let's see what the [`backend`](@ref) of a JuMP [`Model`](@ref) is:
