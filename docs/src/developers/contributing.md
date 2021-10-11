@@ -81,7 +81,7 @@ Finally, you can also contribute code to JuMP!
     If you need any help, come join the [developer chatroom](https://gitter.im/JuliaOpt/JuMP-dev)
     and we will walk you through the process.
 
-Once you are familiar with Git, the workflow for contributing code to JuMP is
+Once you are familiar with Git and GitHub, the workflow for contributing code to JuMP is
 along the lines of the following:
 
 **Step 1: decide what to work on**
