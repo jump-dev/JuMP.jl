@@ -149,16 +149,11 @@ _depends_on(ex::Symbol, s::Symbol) = ex == s
 
 _depends_on(ex, s::Symbol) = false
 
-function _depends_on(ex1, ex2::Expr)
-    @assert isexpr(ex2, :tuple)
-    return any(s -> _depends_on(ex1, s), ex2.args)
-end
-
 function _has_dependent_sets(idxvars, idxsets)
     # check if any index set depends on a previous index var
     for i in 2:length(idxsets)
-        for v in idxvars[1:(i-1)]
-            if _depends_on(idxsets[i], v)
+        for j in 1:(i-1)
+            if _depends_on(idxsets[i], idxvars[j])
                 return true
             end
         end
