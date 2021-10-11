@@ -73,11 +73,11 @@ Finally, you can also contribute code to JuMP!
 !!! warning
     If you do not have experience with Git, Github, and Julia development, the
     first steps can be a little daunting. However, there are lots of tutorials
-    available online (such as
-    [this](https://try.github.io/),
-    [this](https://guides.github.com/activities/hello-world/),
-    [this](https://git-scm.com/book/en/v2), and
-    [this](https://docs.julialang.org/en/v1/stdlib/Pkg/#Developing-packages-1)).
+    available online, including these for:
+     * [GitHub](https://guides.github.com/activities/hello-world/)
+     * [Git and GitHub](https://try.github.io/)
+     * [Git](https://git-scm.com/book/en/v2)
+     * [Julia package development](https://docs.julialang.org/en/v1/stdlib/Pkg/#Developing-packages-1)
     If you need any help, come join the [developer chatroom](https://gitter.im/JuliaOpt/JuMP-dev)
     and we will walk you through the process.
 
