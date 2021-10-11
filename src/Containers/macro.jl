@@ -143,11 +143,22 @@ function _parse_ref_sets(_error::Function, expr::Expr)
 end
 _parse_ref_sets(_error::Function, expr) = (Any[], Any[], :())
 
-function has_dependent_sets(idxvars, idxsets)
+_depends_on(ex::Expr, s::Symbol) = any(a -> _depends_on(a, s), ex.args)
+
+_depends_on(ex::Symbol, s::Symbol) = ex == s
+
+_depends_on(ex, s::Symbol) = false
+
+function _depends_on(ex1, ex2::Expr)
+    @assert isexpr(ex2, :tuple)
+    return any(s -> _depends_on(ex1, s), ex2.args)
+end
+
+function _has_dependent_sets(idxvars, idxsets)
     # check if any index set depends on a previous index var
     for i in 2:length(idxsets)
         for v in idxvars[1:(i-1)]
-            if depends_on(idxsets[i], v)
+            if _depends_on(idxsets[i], v)
                 return true
             end
         end
@@ -173,7 +184,7 @@ function _build_ref_sets(_error::Function, expr)
             "cannot use splatting operator `...` in the definition of an index set.",
         )
     end
-    has_dependent = has_dependent_sets(idxvars, idxsets)
+    has_dependent = _has_dependent_sets(idxvars, idxsets)
     if has_dependent || condition != :()
         esc_idxvars = esc.(idxvars)
         idxfuns = [
