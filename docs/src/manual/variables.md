@@ -126,16 +126,20 @@ x_fixed
 In the above examples, `x_free` represents an unbounded optimization variable,
 `x_lower` represents an optimization variable with a lower bound and so forth.
 
-!!! note
+!!! warning
     When creating a variable with only a lower-bound or an upper-bound, and the
-    value of the bound is not a numeric literal, the name of the variable must appear on the
-    left-hand side. Putting the name on the right-hand side will result in an
-    error. For example:
+    value of the bound is not a numeric literal (e.g., `1` or `1.0`), the name
+    of the variable must appear on the left-hand side. Putting the name on the
+    right-hand side will result in an error. For example to create a variable
+    `x`:
     ```julia
-    @variable(model, 1 <= x)  # works
     a = 1
-    @variable(model, a <= x)  # errors
-    @variable(model, x >= a)  # works
+    @variable(model, x >= 1)      # ✓ Okay
+    @variable(model, 1.0 <= x)    # ✓ Okay
+    @variable(model, x >= a)      # ✓ Okay
+    @variable(model, a <= x)      # × Not okay
+    @variable(model, x >= 1 / 2)  # ✓ Okay
+    @variable(model, 1 / 2 <= x)  # × Not okay
     ```
 
 ### Check if a variable bound exists
