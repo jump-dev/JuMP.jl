@@ -721,7 +721,7 @@ function _constraint_macro(
 
     # Strategy: build up the code for add_constraint, and if needed we will wrap
     # in a function returning `ConstraintRef`s and give it to `Containers.container`.
-    idxvars, indices = Containers._build_ref_sets(_error, c)
+    idxvars, indices = Containers.build_ref_sets(_error, c)
     if pos_args[1] in idxvars
         _error(
             "Index $(pos_args[1]) is the same symbol as the model. Use a " *
@@ -1384,7 +1384,7 @@ macro expression(args...)
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
-    idxvars, indices = Containers._build_ref_sets(_error, c)
+    idxvars, indices = Containers.build_ref_sets(_error, c)
     if args[1] in idxvars
         _error(
             "Index $(args[1]) is the same symbol as the model. Use a " *
@@ -2028,7 +2028,7 @@ macro variable(args...)
         isa(var, Expr) || _error("Expected $var to be a variable name")
         # We now build the code to generate the variables (and possibly the
         # SparseAxisArray to contain them)
-        idxvars, indices = Containers._build_ref_sets(_error, var)
+        idxvars, indices = Containers.build_ref_sets(_error, var)
         if args[1] in idxvars
             _error(
                 "Index $(args[1]) is the same symbol as the model. Use a " *
@@ -2150,7 +2150,7 @@ macro NLconstraint(m, x, args...)
 
     # Strategy: build up the code for non-macro add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
-    idxvars, indices = Containers._build_ref_sets(_error, c)
+    idxvars, indices = Containers.build_ref_sets(_error, c)
     if m in idxvars
         _error(
             "Index $(m) is the same symbol as the model. Use a different " *
@@ -2282,7 +2282,7 @@ macro NLexpression(args...)
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
-    idxvars, indices = Containers._build_ref_sets(_error, c)
+    idxvars, indices = Containers.build_ref_sets(_error, c)
     if args[1] in idxvars
         _error(
             "Index $(args[1]) is the same symbol as the model. Use a " *
@@ -2409,7 +2409,7 @@ macro NLparameter(model, args...)
         param, value = pos_args[1].args[2], pos_args[1].args[3]
         anon = isexpr(param, :vect) || isexpr(param, :vcat)
     end
-    index_vars, index_values = Containers._build_ref_sets(_error, param)
+    index_vars, index_values = Containers.build_ref_sets(_error, param)
     if model in index_vars
         _error(
             "Index $(model) is the same symbol as the model. Use a different " *
