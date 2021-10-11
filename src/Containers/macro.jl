@@ -242,7 +242,7 @@ end
     container_code(
         index_vars::Vector{Symbol},
         indices::Expr,
-        code::Expr,
+        code,
         requested_container::Union{Symbol,Expr},
     )
 
@@ -254,8 +254,8 @@ in conjunction with [`build_ref_sets`](@ref).
  * `index_vars::Vector{Symbol}`: a vector of names for the indices of the
    container.
  * `indices::Expr`: an expression that evaluates to an iterator of the indices.
- * `code::Expr`: an expression for the value to be stored in the container as a
-   function of the named `index_vars`.
+ * `code`: an expression or literal constant for the value to be stored in the
+   container as a function of the named `index_vars`.
  * `requested_container`: passed to the third argument of [`container`](@ref).
    For built-in JuMP types, choose one of `:Array`, `:DenseAxisArray`,
    `:SparseAxisArray`, or `:Auto`. For a user-defined container, this expression
@@ -290,7 +290,7 @@ And data, a 2×2 Matrix{String}:
 function container_code(
     index_vars::Vector{Symbol},
     indices::Expr,
-    code::Expr,
+    code,
     requested_container::Union{Symbol,Expr},
 )
     if isempty(index_vars)
