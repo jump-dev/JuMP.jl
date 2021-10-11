@@ -14,7 +14,7 @@ First up, join the [community forum](https://discourse.julialang.org/c/domain/op
 
 The forum is a good place to ask questions about how to use JuMP. You can also
 use the forum to discuss possible feature requests and bugs before raising a
-Github issue (more on this below).
+GitHub issue (more on this below).
 
 Aside from asking questions, the easiest way you can contribute to JuMP is to
 help answer questions on the forum!
@@ -38,7 +38,7 @@ You can find the source of all the docs
 [here](https://github.com/jump-dev/JuMP.jl/tree/master/docs).
 
 If your change is small (like fixing typos, or one or two sentence corrections),
-the easiest way to do this is via Github's online editor. (Github has
+the easiest way to do this is via GitHub's online editor. (GitHub has
 [help](https://help.github.com/articles/editing-files-in-another-user-s-repository/)
 on how to do this.)
 
@@ -71,7 +71,7 @@ before posting. You can also find a copy of that info
 Finally, you can also contribute code to JuMP!
 
 !!! warning
-    If you do not have experience with Git, Github, and Julia development, the
+    If you do not have experience with Git, GitHub, and Julia development, the
     first steps can be a little daunting. However, there are lots of tutorials
     available online, including these for:
      * [GitHub](https://guides.github.com/activities/hello-world/)
@@ -103,7 +103,7 @@ Open Julia and run:
 ```julia
 ] dev JuMP
 ```
-This will download the JuMP git repository to `~/.julia/dev/JuMP`. If you're on
+This will download the JuMP Git repository to `~/.julia/dev/JuMP`. If you're on
 Windows, this will be `C:\\Users\\<my_name>\\.julia\\dev\\JuMP`.
 
 !!! warning
@@ -214,7 +214,7 @@ automatically update.
 
 **Step 9: cleaning up**
 
-Once the PR is merged, you should clean-up your git repository ready for the
+Once the PR is merged, you should clean-up your Git repository ready for the
 next contribution!
 ```
 $ cd ~/.julia/dev/JuMP
