@@ -143,6 +143,18 @@ function _parse_ref_sets(_error::Function, expr::Expr)
 end
 _parse_ref_sets(_error::Function, expr) = (Any[], Any[], :())
 
+function has_dependent_sets(idxvars, idxsets)
+    # check if any index set depends on a previous index var
+    for i in 2:length(idxsets)
+        for v in idxvars[1:(i-1)]
+            if depends_on(idxsets[i], v)
+                return true
+            end
+        end
+    end
+    return false
+end
+
 """
     _build_ref_sets(_error::Function, expr)
 
