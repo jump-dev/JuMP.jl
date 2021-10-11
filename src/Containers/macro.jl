@@ -69,7 +69,7 @@ function _expr_is_splat(expr)
     return false
 end
 
-function _parse_index_sets(_error, index_vars, index_sets, arg::Expr)
+function _parse_index_sets(_error::Function, index_vars, index_sets, arg::Expr)
     index_var, index_set = gensym(), esc(arg)
     if isexpr(arg, :kw, 2) || isexpr(arg, :(=), 2)
         # Handle [i=S] and x[i=S]
