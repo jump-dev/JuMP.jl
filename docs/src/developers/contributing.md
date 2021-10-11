@@ -161,6 +161,13 @@ cd("~/.julia/dev/JuMP")
 !!! warning
     Running the tests might take a long time (~10-15 minutes).
 
+!!! tip
+    If you're using Revise.jl, you can also run the tests by calling `include`:
+    ```julia
+    include("test/runtests.jl")
+    ```
+    This can be faster if you want to re-run the tests multiple times.
+
 **Step 6b: test your documentation changes**
 
 Open Julia, then run:
