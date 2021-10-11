@@ -127,6 +127,7 @@ const _PAGES = [
         "background/algebraic_modeling_languages.md",
     ],
     "Developer Docs" => [
+        "Contributing" => "developers/contributing.md",
         "Extensions" => "developers/extensions.md",
         "Style Guide" => "developers/style.md",
         "Roadmap" => "developers/roadmap.md",
