@@ -89,7 +89,14 @@ along the lines of the following:
 The first step is to find an [open issue](https://github.com/jump-dev/JuMP.jl/issues)
 (or open a new one) for the problem you want to solve. Then, _before_ spending
 too much time on it, discuss what you are planning to do in the issue to see if
-other contributors are fine with your proposed changes.
+other contributors are fine with your proposed changes. Getting feedback early can
+improve code quality, and avoid time spent writing code that does not get merged into
+JuMP.
+
+!!! tip
+    At this point, remember to be patient and polite; you may get a _lot_ of
+    comments on your issue! However, do not be afraid! Comments mean that people are
+    willing to help you improve the code that you are contributing to JuMP.
 
 **Step 2: fork JuMP**
 
