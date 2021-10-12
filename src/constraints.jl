@@ -587,11 +587,7 @@ function _moi_add_constraints(
     return indices
 end
 
-function add_constraints(
-    model::Model,
-    cons::Vector{<:AbstractConstraint},
-    name::String = "",
-)
+function add_constraints(model::Model, cons, name::String = "")
     return add_constraint.(model, cons, name)
 end
 
