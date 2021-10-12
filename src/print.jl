@@ -200,16 +200,26 @@ _plural(n) = (isone(n) ? "" : "s")
 ## Model
 #------------------------------------------------------------------------
 
+name(model::AbstractModel) = "An Abstract JuMP Model"
+
+function name(model::Model)
+    ret = MOI.get(model, MOI.Name())
+    return isempty(ret) ? "A JuMP Model" : ret
+end
+
 """
     _print_summary(io::IO, model::AbstractModel)
 
 Print a plain-text summary of `model` to `io`.
 
-An `AbstractModel` subtype should implement `show_objective_function_summary`,
-`show_constraints_summary` and `show_backend_summary` for this method to work.
+For this method to work, an `AbstractModel` subtype should implement:
+ * `name(::AbstractModel)`
+ * `show_objective_function_summary`
+ * `show_constraints_summary`
+ * `show_backend_summary`
 """
 function _print_summary(io::IO, model::AbstractModel)
-    println(io, "A JuMP Model")
+    println(io, name(model))
     sense = objective_sense(model)
     if sense == MOI.MAX_SENSE
         print(io, "Maximization")
@@ -219,7 +229,6 @@ function _print_summary(io::IO, model::AbstractModel)
         print(io, "Feasibility")
     end
     println(io, " problem with:")
-    # TODO: Use MOI.Name for the name of a JuMP model.
     println(
         io,
         "Variable",
@@ -284,8 +293,6 @@ function _print_model(io::IO, model::AbstractModel)
     for constraint in constraints_string(REPLMode, model)
         println(io, " ", replace(constraint, '\n' => "\n "))
     end
-    # TODO: Generalize this when similar functionality is needed for
-    # `AbstractModel`.
     nl_subexpressions = _nl_subexpression_string(REPLMode, model)
     if !isempty(nl_subexpressions)
         println(io, "With NL expressions")
@@ -323,8 +330,6 @@ function _print_latex(io::IO, model::AbstractModel)
     for constraint in constraints
         println(io, " & ", constraint, "\\\\")
     end
-    # TODO: Generalize this when similar functionality is needed for
-    # `AbstractModel`.
     nl_subexpressions = _nl_subexpression_string(IJuliaMode, model)
     if !isempty(nl_subexpressions)
         print(io, "\\text{With NL expressions} \\quad")
@@ -1059,8 +1064,6 @@ function Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraintRef)
     )
 end
 
-# TODO: Printing is inconsistent between regular constraints and nonlinear
-# constraints because nonlinear constraints don't have names.
 """
     nl_constraint_string(model::Model, mode, c::_NonlinearConstraint)
 
@@ -1095,23 +1098,20 @@ end
 #------------------------------------------------------------------------
 ## Opaque nonlinear objects
 #------------------------------------------------------------------------
-# TODO: This could be pretty printed.
 
-function function_string(::Type{<:PrintMode}, p::NonlinearExpression)
-    return "Reference to nonlinear expression #$(p.index)"
+function function_string(print_mode::Type{<:PrintMode}, p::NonlinearExpression)
+    model = p.model
+    s = nl_expr_string(model, print_mode, model.nlp_data.nlexpr[p.index])
+    return "subexpression[$(p.index)]: " * s
 end
 
 function function_string(::Type{<:PrintMode}, p::NonlinearParameter)
-    relevant_parameters = filter(
-        i -> i[2] isa NonlinearParameter && i[2].index == p.index,
-        p.model.obj_dict,
-    )
-    if length(relevant_parameters) == 1
-        par_name = first(relevant_parameters)[1]
-        return "Reference to nonlinear parameter $(par_name)"
-    else
-        return "Reference to nonlinear parameter #$(p.index)"
+    for (k, v) in object_dictionary(p.model)
+        if v == p
+            return "$k == $(value(p))"
+        end
     end
+    return "parameter[$(p.index)] == $(value(p))"
 end
 
 function Base.show(io::IO, ex::Union{NonlinearExpression,NonlinearParameter})
@@ -1126,7 +1126,11 @@ function Base.show(
     return print(io, function_string(IJuliaMode, ex))
 end
 
-# TODO: Print the status of the NLPEvaluator, features available, etc.
 function Base.show(io::IO, evaluator::NLPEvaluator)
-    return Base.show(io, "A JuMP.NLPEvaluator")
+    _init_NLP(evaluator.model)
+    Base.print(io, "An NLPEvaluator with available features:")
+    for feat in MOI.features_available(evaluator)
+        print(io, "\n  * :", feat)
+    end
+    return
 end
