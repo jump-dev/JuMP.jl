@@ -15,7 +15,7 @@
 # Operator overloads in src/operators.jl
 #############################################################################
 
-using OrderedCollections
+import OrderedCollections
 
 function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     # Adding zero terms to this dictionary leads to unacceptable performance
