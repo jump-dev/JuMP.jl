@@ -94,6 +94,26 @@ using Test
             throw(err)
         end,)
     end
+    @testset "double_filter_typed_vcat" begin
+        expr =
+            :(Containers.@container(x[i = 1:2; isodd(i); iseven(i + 1)], i + i))
+        @test_throws(LoadError, try
+            @eval $expr
+        catch err
+            throw(err)
+        end,)
+    end
+    @testset "double_filter_vect" begin
+        expr = :(Containers.@container(
+            x[i = 1:2, 1:2; isodd(i); iseven(i + 1)],
+            i + i,
+        ))
+        @test_throws(LoadError, try
+            @eval $expr
+        catch err
+            throw(err)
+        end,)
+    end
     @testset "Dict" begin
         Containers.@container(v[i = 1:3], sin(i), container = Dict)
         @test v isa Dict{Int,Float64}
