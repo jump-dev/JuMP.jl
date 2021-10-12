@@ -635,9 +635,9 @@ function _fill_vaf!(
 end
 
 function MOI.VectorAffineFunction(affs::Vector{AffExpr})
-    nterms = 0
+    len = 0
     for aff in affs
-        nterms += length(linear_terms(aff))
+        len += length(linear_terms(aff))
     end
     terms = Vector{MOI.VectorAffineTerm{Float64}}(undef, len)
     constant = Vector{Float64}(undef, length(affs))
