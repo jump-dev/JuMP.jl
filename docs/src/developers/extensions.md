@@ -160,7 +160,7 @@ following methods:
     publishing any code that implements these methods.
 
 [`parse_constraint_head`](@ref) should be implemented to intercept an expression
-based on the `.head` field. For example:
+based on the `.head` field of `Base.Expr`. For example:
 ```jldoctest
 julia> using JuMP
 
