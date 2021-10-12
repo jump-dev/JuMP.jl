@@ -142,39 +142,106 @@ x[2]_b
 
 ## Extend [`@constraint`](@ref)
 
-The [`@constraint`](@ref) macro always calls the same three functions:
-* `parse_constraint`: is called at parsing time, it parses the constraint
-  expression and returns a [`build_constraint`](@ref) call expression;
-* [`build_constraint`](@ref): given the functions and sets involved in the
-  constraints, it returns a `AbstractConstraint`;
-* [`add_constraint`](@ref): given the model, the `AbstractConstraint`
-  constructed in [`build_constraint`](@ref) and the constraint name, it stores
-  them in the model and returns a `ConstraintRef`.
+The [`@constraint`](@ref) macro has three steps that can be intercepted and
+extended: parse time, build time, and add time.
 
-Adding methods to these functions is the recommended way to extend the
-[`@constraint`](@ref) macro.
+### Parse
 
-### Adding `parse_constraint` methods
+To extend the [`@constraint`](@ref) macro at parse time, implement one of the
+following methods:
 
-Work in progress.
-### Adding `build_constraint` methods
+ * [`parse_constraint_head`](@ref)
+ * [`parse_constraint_call`](@ref)
 
-There are typically two choices when creating a [`build_constraint`](@ref)
-method, either return an `AbstractConstraint` already supported by the
-model, i.e. `ScalarConstraint` or `VectorConstraint`, or a custom
-`AbstractConstraint` with a corresponding [`add_constraint`](@ref) method (see
-[Adding `add_constraint` methods](@ref)).
+!!! warning
+    Extending the constraint macro at parse time is an advanced operation and
+    has the potential to interfere with existing JuMP syntax. Please discuss
+    with the [developer chatroom](https://gitter.im/JuliaOpt/jump-dev) before
+    publishing any code that implements these methods.
 
-### Adding `add_constraint` methods
+[`parse_constraint_head`](@ref) should be implemented to intercept an expression
+based on the `.head` field of `Base.Expr`. For example:
+```jldoctest
+julia> using JuMP
 
-Work in progress.
+julia> const MutableArithmetics = JuMP._MA;
 
-### Adding an extra positional argument
+julia> model = Model(); @variable(model, x);
 
-We can also extend `@constraint` to handle additional positional arguments that
-effectively "tag" a particular constraint type and/or pass along additional
-information that we may want. For example, we can make a `MyConstrType` that
-modifies affine equalities:
+julia> function JuMP.parse_constraint_head(
+           _error::Function,
+           ::Val{:(:=)},
+           lhs,
+           rhs,
+       )
+           println("Rewriting := as ==")
+           new_lhs, parse_code = MutableArithmetics.rewrite(lhs)
+           build_code = :(
+               build_constraint($(_error), $(new_lhs), MOI.EqualTo($(rhs)))
+           )
+           return false, parse_code, build_code
+       end
+
+julia> @constraint(model, x + x := 1.0)
+Rewriting := as ==
+2 x = 1.0
+```
+
+[`parse_constraint_call`](@ref) should be implemented to intercept an expression
+of the form `Expr(:call, op, args...)`. For example:
+```jldoctest
+julia> using JuMP
+
+julia> const MutableArithmetics = JuMP._MA;
+
+julia> model = Model(); @variable(model, x);
+
+julia> function JuMP.parse_constraint_call(
+           _error::Function,
+           is_vectorized::Bool,
+           ::Val{:my_equal_to},
+           lhs,
+           rhs,
+       )
+           println("Rewriting my_equal_to to ==")
+           new_lhs, parse_code = MutableArithmetics.rewrite(lhs)
+           build_code = if is_vectorized
+               :(build_constraint($(_error), $(new_lhs), MOI.EqualTo($(rhs)))
+           )
+           else
+               :(build_constraint.($(_error), $(new_lhs), MOI.EqualTo($(rhs))))
+           end
+           return parse_code, build_code
+       end
+
+julia> @constraint(model, my_equal_to(x + x, 1.0))
+Rewriting my_equal_to to ==
+2 x = 1.0
+```
+
+!!! tip
+    When parsing a constraint you can recurse into sub-constraint (e.g., the
+    `{expr}` in `z => {x <= 1}`) by calling [`parse_constraint`](@ref).
+
+### Build
+
+To extend the [`@constraint`](@ref) macro at build time, implement a new
+[`build_constraint`](@ref) method.
+
+This may mean implementing a method for a specific function or set created at
+parse time, or it may mean implementing a method which handles additional
+positional arguments.
+
+[`build_constraint`](@ref) must return an [`AbstractConstraint`](@ref), which
+can either be an [`AbstractConstraint`](@ref) already supported by JuMP, e.g., `ScalarConstraint` or `VectorConstraint`, or a custom
+[`AbstractConstraint`](@ref) with a corresponding [`add_constraint`](@ref)
+method (see [Add](@ref extension_add_constraint)).
+
+!!! tip
+    The easiest way to extend [`@constraint`](@ref) is via an additional
+    positional argument to [`build_constraint`](@ref).
+
+Here is an example of adding extra arguments to [`build_constraint`](@ref):
 ```jldoctest
 julia> model = Model(); @variable(model, x);
 
@@ -194,9 +261,15 @@ julia> function JuMP.build_constraint(
 julia> @constraint(model, my_con, x == 0, MyConstrType, d = 2)
 my_con : x ≤ 2.0
 ```
-Note that only a single positional argument can be given to a particular
-constraint. Extensions that seek to pass multiple arguments (e.g., `Foo` and
-`Bar`) should combine them into one argument type (e.g., `FooBar`).
+
+!!! note
+    Only a single positional argument can be given to a particular constraint.
+    Extensions that seek to pass multiple arguments (e.g., `Foo` and `Bar`)
+    should combine them into one argument type (e.g., `FooBar`).
+
+### [Add](@id extension_add_constraint)
+
+Work in progress.
 
 ### Shapes
 

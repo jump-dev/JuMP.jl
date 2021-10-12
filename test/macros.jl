@@ -111,12 +111,7 @@ function JuMP.build_constraint(_error::Function, func, ::CustomType)
     return JuMP.build_constraint(_error, func, CustomSet())
 end
 
-function JuMP.parse_one_operator_constraint(
-    _error::Function,
-    ::Bool,
-    ::Val{:f},
-    x,
-)
+function JuMP.parse_constraint_call(_error::Function, ::Bool, ::Val{:f}, x)
     return :(), :(build_constraint($_error, $(esc(x)), $(esc(CustomType()))))
 end
 
@@ -1429,6 +1424,43 @@ function test_broadcasting_variable_in_set()
     @test num_variables(model) == 12
     @variable(model, dense_b[1:2, 2:4] in MOI.GreaterThan(3.0))
     @test num_variables(model) == 18
+    return
+end
+
+function test_parse_constraint_head_error()
+    model = Model()
+    @variable(model, x)
+    err = ErrorException(
+        "In `@constraint(model, {x == 0})`: " *
+        "Unsupported constraint expression: we don't know how to parse " *
+        "constraints containing expressions of type :braces.\n\nIf you are " *
+        "writing a JuMP extension, implement " *
+        "`parse_constraint_head(::Function, ::Val{:braces}, args...)",
+    )
+    @test_macro_throws(err, @constraint(model, {x == 0}))
+    return
+end
+
+function test_parse_constraint_head_inconsistent_vectorize()
+    model = Model()
+    @variable(model, x)
+    err = ErrorException(
+        "In `@constraint(model, 1 .<= [x, x] <= 2)`: " *
+        "Operators are inconsistently vectorized.",
+    )
+    @test_macro_throws(err, @constraint(model, 1 .<= [x, x] <= 2))
+    return
+end
+
+function test_parse_constraint_head_inconsistent_signs()
+    model = Model()
+    @variable(model, x)
+    err = ErrorException(
+        "In `@constraint(model, 1 >= x <= 2)`: " *
+        "Only two-sided rows of the form `lb <= expr <= ub` or " *
+        "`ub >= expr >= lb` are supported.",
+    )
+    @test_macro_throws(err, @constraint(model, 1 >= x <= 2))
     return
 end
 
