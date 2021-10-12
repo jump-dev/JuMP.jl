@@ -544,6 +544,58 @@ function _moi_add_constraint(
 end
 
 """
+    add_constraints(
+        model::Model,
+        cons::Vector{ScalarConstraint{F,S}},
+        name::String = "",
+    ) where {F,S}
+
+Add a vector of constraints `cons` to `Model model` and set their names to
+`name`.
+"""
+function add_constraints(
+    model::Model,
+    cons::Vector{ScalarConstraint{F,S}},
+    name::String = "",
+) where {F,S}
+    check_belongs_to_model.(cons, model)
+    funcs = moi_function.(cons)
+    sets = moi_set.(cons)
+    indices = _moi_add_constraints(
+        backend(model),
+        funcs,
+        sets,
+        name,
+    )::Vector{MOI.ConstraintIndex{eltype(funcs),S}}
+    model.is_model_dirty = true
+    return [ConstraintRef(model, i, ScalarShape()) for i in indices]
+end
+
+function _moi_add_constraints(
+    model::MOI.ModelLike,
+    funcs::Vector{F},
+    sets::Vector{S},
+    name::String = "",
+) where {F,S}
+    indices = MOI.add_constraints(model, funcs, sets)
+    flag = MOI.supports(model, MOI.ConstraintName(), MOI.ConstraintIndex{F,S})
+    if !isempty(name) && F != MOI.VariableIndex && flag
+        for index in indices
+            MOI.set(model, MOI.ConstraintName(), index, name)
+        end
+    end
+    return indices
+end
+
+function add_constraints(
+    model::Model,
+    cons::Vector{<:AbstractConstraint},
+    name::String = "",
+)
+    return add_constraint.(model, cons, name)
+end
+
+"""
     add_constraint(model::Model, con::AbstractConstraint, name::String="")
 
 Add a constraint `con` to `Model model` and sets its name.

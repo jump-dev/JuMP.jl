@@ -735,7 +735,7 @@ function _constraint_macro(
     if vectorized
         # For vectorized constraints, we set every constraint to have the same
         # name.
-        constraintcall = :(add_constraint.($model, $buildcall, $name_expr))
+        constraintcall = :(add_constraints($model, $buildcall, $name_expr))
     else
         constraintcall = :(add_constraint($model, $buildcall, $name_expr))
     end
