@@ -8,7 +8,9 @@ Containers.DenseAxisArray
 Containers.SparseAxisArray
 Containers.container
 Containers.default_container
-Containers.VectorizedProductIterator
-Containers.NestedIterator
 Containers.@container
+Containers.VectorizedProductIterator
+Containers.vectorized_product
+Containers.NestedIterator
+Containers.nested
 ```
