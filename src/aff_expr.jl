@@ -15,7 +15,6 @@
 # Operator overloads in src/operators.jl
 #############################################################################
 
-# Utilities for OrderedDict
 function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     # Adding zero terms to this dictionary leads to unacceptable performance
     # degradations. See, e.g., https://github.com/jump-dev/JuMP.jl/issues/1946.
@@ -52,11 +51,13 @@ function _new_ordered_dict(
     end
     return dict
 end
+
 # Shortcut for one and two arguments to avoid creating an empty dict and add
 # elements one by one with `JuMP._add_or_set!`
 function _new_ordered_dict(::Type{K}, ::Type{V}, kv::Pair) where {K,V}
     return OrderedDict{K,V}(kv)
 end
+
 function _new_ordered_dict(
     ::Type{K},
     ::Type{V},
@@ -77,6 +78,7 @@ function _build_aff_expr(constant::V, coef::V, var::K) where {V,K}
     terms[var] = coef
     return GenericAffExpr{V,K}(constant, terms)
 end
+
 function _build_aff_expr(
     constant::V,
     coef1::V,
@@ -171,15 +173,21 @@ end
 function Base.iszero(expr::GenericAffExpr)
     return iszero(expr.constant) && all(iszero, values(expr.terms))
 end
+
 function Base.zero(::Type{GenericAffExpr{C,V}}) where {C,V}
     return GenericAffExpr{C,V}(zero(C), OrderedDict{V,C}())
 end
+
+Base.zero(a::GenericAffExpr) = zero(typeof(a))
+
 function Base.one(::Type{GenericAffExpr{C,V}}) where {C,V}
     return GenericAffExpr{C,V}(one(C), OrderedDict{V,C}())
 end
-Base.zero(a::GenericAffExpr) = zero(typeof(a))
+
 Base.one(a::GenericAffExpr) = one(typeof(a))
+
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
+
 Base.broadcastable(a::GenericAffExpr) = Ref(a)
 
 # Needed for cases when Julia uses `x == 0` instead of `iszero(x)` (e.g., in the
@@ -192,7 +200,7 @@ Base.:(==)(x::GenericAffExpr, y::Number) = isempty(x.terms) && x.constant == y
 Return the coefficient associated with variable `v` in the affine expression `a`.
 """
 coefficient(a::GenericAffExpr{C,V}, v::V) where {C,V} = get(a.terms, v, zero(C))
-coefficient(a::GenericAffExpr{C,V}, v1::V, v2::V) where {C,V} = zero(C)
+coefficient(::GenericAffExpr{C,V}, ::V, ::V) where {C,V} = zero(C)
 
 """
     drop_zeros!(expr::GenericAffExpr)
@@ -312,24 +320,27 @@ linear part of the affine expression.
 linear_terms(aff::GenericAffExpr) = LinearTermIterator(aff)
 
 _reverse_pair_to_tuple(p::Pair) = (p.second, p.first)
+
 function Base.iterate(lti::LinearTermIterator)
     ret = iterate(lti.aff.terms)
     if ret === nothing
-        return nothing
+        return
     else
         return _reverse_pair_to_tuple(ret[1]), ret[2]
     end
 end
+
 function Base.iterate(lti::LinearTermIterator, state)
     ret = iterate(lti.aff.terms, state)
     if ret === nothing
-        return nothing
+        return
     else
         return _reverse_pair_to_tuple(ret[1]), ret[2]
     end
 end
 Base.length(lti::LinearTermIterator) = length(lti.aff.terms)
-function Base.eltype(lti::LinearTermIterator{GenericAffExpr{C,V}}) where {C,V}
+
+function Base.eltype(::LinearTermIterator{GenericAffExpr{C,V}}) where {C,V}
     return Tuple{C,V}
 end
 
@@ -459,6 +470,7 @@ end
 function Base.convert(::Type{GenericAffExpr{T,V}}, v::V) where {T,V}
     return GenericAffExpr(zero(T), v => one(T))
 end
+
 function Base.convert(::Type{GenericAffExpr{T,V}}, v::_Constant) where {T,V}
     return GenericAffExpr{T,V}(convert(T, _constant_to_number(v)))
 end
@@ -474,7 +486,9 @@ const AffExpr = GenericAffExpr{Float64,VariableRef}
 # Check all coefficients are finite, i.e. not NaN, not Inf, not -Inf
 function _assert_isfinite(a::AffExpr)
     for (coef, var) in linear_terms(a)
-        isfinite(coef) || error("Invalid coefficient $coef on variable $var.")
+        if !isfinite(coef)
+            error("Invalid coefficient $coef on variable $var.")
+        end
     end
     if isnan(a.constant)
         error(
@@ -482,6 +496,7 @@ function _assert_isfinite(a::AffExpr)
             "produced by `Inf - Inf`.",
         )
     end
+    return
 end
 
 """
@@ -489,8 +504,6 @@ end
 
 Return the value of the `GenericAffExpr` `v` associated with result index
 `result` of the most-recent solution returned by the solver.
-
-Replaces `getvalue` for most use cases.
 
 See also: [`result_count`](@ref).
 """
@@ -504,6 +517,7 @@ function check_belongs_to_model(a::GenericAffExpr, model::AbstractModel)
     for variable in keys(a.terms)
         check_belongs_to_model(variable, model)
     end
+    return
 end
 
 # Note: No validation is performed that the variables in the AffExpr belong to
@@ -554,33 +568,37 @@ See also: [`moi_function_type`](@ref).
 function jump_function_type end
 
 moi_function(a::GenericAffExpr) = MOI.ScalarAffineFunction(a)
+
 function moi_function_type(::Type{<:GenericAffExpr{T}}) where {T}
     return MOI.ScalarAffineFunction{T}
 end
 
 function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
-    aff = AffExpr()
+    aff = AffExpr(f.constant)
     for t in f.terms
         add_to_expression!(aff, t.coefficient, VariableRef(m, t.variable))
     end
-    aff.constant = f.constant
     return aff
 end
+
 function jump_function_type(
     ::Model,
     ::Type{MOI.ScalarAffineFunction{T}},
 ) where {T}
     return GenericAffExpr{T,VariableRef}
 end
+
 function jump_function(model::Model, f::MOI.ScalarAffineFunction{T}) where {T}
     return GenericAffExpr{T,VariableRef}(model, f)
 end
+
 function jump_function_type(
     ::Model,
     ::Type{MOI.VectorAffineFunction{T}},
 ) where {T}
     return Vector{GenericAffExpr{T,VariableRef}}
 end
+
 function jump_function(model::Model, f::MOI.VectorAffineFunction{T}) where {T}
     return GenericAffExpr{T,VariableRef}[
         GenericAffExpr{T,VariableRef}(model, f) for f in MOIU.eachscalar(f)
@@ -588,8 +606,12 @@ function jump_function(model::Model, f::MOI.VectorAffineFunction{T}) where {T}
 end
 
 """
-    _fill_vaf!(terms::Vector{<:MOI.VectorAffineTerm}, offset::Int, oi::Int,
-               aff::AbstractJuMPScalar)
+    _fill_vaf!(
+        terms::Vector{<:MOI.VectorAffineTerm},
+        offset::Int,
+        oi::Int,
+        aff::AbstractJuMPScalar,
+    )
 
 Fills the vectors terms at indices starting at `offset+1` with the affine terms
 of `aff`. The output index for all terms is `oi`. Return the index of the last
@@ -613,7 +635,10 @@ function _fill_vaf!(
 end
 
 function MOI.VectorAffineFunction(affs::Vector{AffExpr})
-    len = sum(aff -> length(linear_terms(aff)), affs)
+    len = 0
+    for aff in affs
+        len += length(linear_terms(aff))
+    end
     terms = Vector{MOI.VectorAffineTerm{Float64}}(undef, len)
     constant = Vector{Float64}(undef, length(affs))
     offset = 0
@@ -623,11 +648,9 @@ function MOI.VectorAffineFunction(affs::Vector{AffExpr})
     end
     return MOI.VectorAffineFunction(terms, constant)
 end
+
 moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
+
 function moi_function_type(::Type{<:Vector{<:GenericAffExpr{T}}}) where {T}
     return MOI.VectorAffineFunction{T}
 end
-
-# TODO: Find somewhere to put this error message.
-#add_constraint(m::Model, c::Array{AffExprConstraint}) =
-#    error("The operators <=, >=, and == can only be used to specify scalar constraints. If you are trying to add a vectorized constraint, use the element-wise dot comparison operators (.<=, .>=, or .==) instead")
