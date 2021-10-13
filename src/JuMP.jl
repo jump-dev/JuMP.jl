@@ -931,16 +931,9 @@ end
         args...
     )
 
-Return the value of the solver-specific attribute `attr` in `model`.
+Return the value of the attribute `attr` in `model`.
 
-!!! warning
-    If you are querying a solver-specific attribute such as
-    `Gurobi.ModelAttribute`, and you are not using [`direct_model`](@ref), and
-    you have not called [`optimize!`](@ref), you must first call
-    `MOI.Utilities.attach_optimizer(model)` in order to first copy the problem
-    into the solver.
-
-See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
+See also: [`set_optimizer_attribute`](@ref).
 
 ## Examples
 
@@ -954,11 +947,27 @@ Query variable or constraint attributes:
 get_optimizer_attribute(model, MOI.VariablePrimalStart(), x)
 ```
 
-Query a solver-specific attribute:
+## Querying solver-specific attributes
+
+Solver-specific attributes are attributes which are defined in packages other
+than MathOptInterface. One example is Gurobi's `Gurobi.ModelAttribute`.
+
+If you are querying a solver-specific attribute, we strongly recommend that you
+use [`direct_model`](@ref) to create `model`.
+
+Querying solver-specific attributes for models constructed using [`Model`](@ref)
+is an advanced operation that may require additional solver-specific calls.
+
+For example, if you have not called [`optimize!`](@ref), you must first call
+`MOI.Utilities.attach_optimizer(model)` in order to first copy the problem into
+the solver.
 ```julia
 MOI.Utilities.attach_optimizer(model)
 get_optimizer_attribute(model, Gurobi.ModelAttribute("IsMIP"))
 ```
+
+In addition, `get_optimizer_attribute` will not work for solvers
+which use multiple [`MOI.Utilities.CachingOptimizer`](@ref) layers.
 """
 function get_optimizer_attribute(model::Model, attr::MOI.AnyAttribute, args...)
     # If we're in direct mode, no need for `AttributeFromOptimizer`.
