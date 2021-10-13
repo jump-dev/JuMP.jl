@@ -319,7 +319,7 @@ Every JuMP model has a field `.ext::Dict{Symbol,Any}` that can be used by
 extensions. This is useful if your extensions to [`@variable`](@ref) and
 [`@constraint`](@ref) need to store information between calls.
 
-The most common way to initialize a model with information in the `.ext
+The most common way to initialize a model with information in the `.ext`
 dictionary is to provide a new constructor:
 ```jldoctest
 julia> function MyModel()
@@ -362,6 +362,7 @@ internals. Therefore, the list of methods to implement is currently
 undocumented.
 
 The easiest way to extend JuMP by defining a new model type is to follow an
-existing example. The best example of a JuMP extension that implements an
-[`AbstractModel`](@ref) is
-[InfiniteOpt.jl](https://github.com/pulsipher/InfiniteOpt.jl).
+existing example. A simple example to follow is the [JuMPExtension module](https://github.com/jump-dev/JuMP.jl/blob/master/test/JuMPExtension.jl)
+in the JuMP test suite. The best example of an external JuMP extension that
+implements an [`AbstractModel`](@ref) is [InfiniteOpt.jl](https://github.com/pulsipher/InfiniteOpt.jl).
+
