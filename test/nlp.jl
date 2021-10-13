@@ -145,6 +145,45 @@ function test_multivariate_redefine()
     @test MOI.eval_objective(d, x) == 20.0
 end
 
+function test_multivariate_register_splat()
+    model = Model()
+    @variable(model, x[1:2])
+    f(x, y) = x + y
+    err = ErrorException("""
+        Unrecognized function "f" used in nonlinear expression.
+
+        You must register it as a user-defined function before building
+        the model. For example, replacing `N` with the appropriate number
+        of arguments, do:
+        ```julia
+        model = Model()
+        register(model, :f, N, f, autodiff=true)
+        # ... variables and constraints ...
+        ```
+        """)
+    @test_throws err @NLexpression(model, ex, f(x...))
+end
+
+function test_multivariate_register_splat_existing()
+    model = Model()
+    @variable(model, x[1:2])
+    f(x, y) = x + y
+    @NLconstraint(model, x[1]^2 <= 1)
+    err = ErrorException("""
+        Unrecognized function "f" used in nonlinear expression.
+
+        You must register it as a user-defined function before building
+        the model. For example, replacing `N` with the appropriate number
+        of arguments, do:
+        ```julia
+        model = Model()
+        register(model, :f, N, f, autodiff=true)
+        # ... variables and constraints ...
+        ```
+        """)
+    @test_throws err @NLexpression(model, ex, f(x...))
+end
+
 @testset "Auto-register-univariate" begin
     test_univariate_error()
     test_univariate_error_existing()
@@ -162,6 +201,8 @@ end
     test_multivariate_existing_nlpdata()
     test_multivariate_redefine()
     test_multivariate_register_warn()
+    test_multivariate_register_splat()
+    test_multivariate_register_splat_existing()
 end
 
 @testset "Nonlinear" begin
