@@ -327,7 +327,7 @@ julia> function MyModel()
            model.ext[:MyModel] = 1
            return model
        end
-MyModel
+MyModel (generic function with 1 method)
 
 julia> model = MyModel()
 A JuMP Model
