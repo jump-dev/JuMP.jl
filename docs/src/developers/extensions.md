@@ -269,23 +269,99 @@ my_con : x ≤ 2.0
 
 ### [Add](@id extension_add_constraint)
 
-Work in progress.
+[`build_constraint`](@ref) returns an [`AbstractConstraint`](@ref) object. To
+extend [`@constraint`](@ref) at add time, define a subtype of
+[`AbstractConstraint`](@ref), implement [`build_constraint`](@ref) to return an
+instance of the new type, and then implement [`add_constraint`](@ref).
 
-### Shapes
+Here is an example:
+```jldoctest
+julia> model = Model(); @variable(model, x);
 
-Shapes allow vector constraints, which are represented as flat vectors in MOI,
-to retain a matrix shape at the JuMP level. There is a `shape` field in
-`VectorConstraint` that can be set in [`build_constraint`](@ref) and that is
-used to reshape the result computed in [`value`](@ref) and [`dual`](@ref).
+julia> struct MyTag
+           name::String
+       end
 
-## Extend [`@objective`](@ref)
+julia> struct MyConstraint{S} <: AbstractConstraint
+           name::String
+           f::AffExpr
+           s::S
+       end
 
-Work in progress.
+julia> function JuMP.build_constraint(
+            _error::Function,
+            f::AffExpr,
+            set::MOI.AbstractScalarSet,
+            extra::MyTag,
+       )
+            return MyConstraint(extra.name, f, set)
+       end
 
-### Adding a bridge
+julia> function JuMP.add_constraint(
+            model::Model,
+            con::MyConstraint,
+            name::String,
+       )
+            return add_constraint(
+                model,
+                ScalarConstraint(con.f, con.s),
+                "$(con.name)[$(name)]",
+            )
+       end
 
-Work in progress.
+julia> @constraint(model, my_con, 2x <= 1, MyTag("my_prefix"))
+my_prefix[my_con] : 2 x - 1 ≤ 0.0
+```
+
+## The extension dictionary
+
+Every JuMP model has a field `.ext::Dict{Symbol,Any}` that can be used by
+extensions. This is useful if you extensions to [`@variable`](@ref) and
+[`@constraint`](@ref) need to store information between calls.
+
+The most common way to initialize a model with information in the `.ext
+dictionary is to provide a new constructor:
+```jldoctest
+julia> function MyModel()
+           model = Model()
+           model.ext[:MyModel] = 1
+           return model
+       end
+MyModel
+
+julia> model = MyModel()
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+
+julia> model.ext
+Dict{Symbol, Any} with 1 entry:
+  :MyModel => 1
+```
 
 ## Defining new JuMP models
 
-Work in progress.
+If extending individual calls to [`@variable`](@ref) and [`@constraint`](@ref)
+is not sufficient, it is possible to implement a new model subtype of
+[`AbstractModel`](@ref). You can also define new [`AbstractVariableRef`](@ref)s
+to create different types of JuMP variables.
+
+!!! warning
+    Extending JuMP in this manner is an advanced operation. We strongly
+    encourage you to consider how you can use the methods mentioned in the
+    previous sections to achieve your aims instead of defining new model and
+    variable types. Consult the [developer chatroom](https://gitter.im/JuliaOpt/jump-dev)
+    _before_ starting work on this.
+
+If you define new types, you will need to implement a considerable number of
+methods, and doing so will require a detailed understanding of the JuMP
+internals. Therefore, the list of methods to implement is currently
+undocumented.
+
+The easiest way to extend JuMP by defining a new model type is to follow an
+existing example. The best example of a JuMP extension that implements an
+[`AbstractModel`](@ref) is
+[InfiniteOpt.jl](https://github.com/pulsipher/InfiniteOpt.jl).
