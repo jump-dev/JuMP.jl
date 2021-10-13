@@ -103,14 +103,16 @@ Helper function for macros to construct container objects.
 Takes an `Expr` that specifies the container, e.g.,
 `:(x[i=1:3,[:red,:blue],k=S; i+k <= 6])`, and returns:
 
- 1. `index_vars`: Names for the index variables, e.g. `[:i, gensym(), :k]`
+ 1. `index_vars`: Names for the index variables, e.g. `[:i, gensym(), :k]`.
+    These may also be expressions, like `:((i, j))` from a call like
+    `:(x[(i, j) in S])`.
  2. `index_sets`: Sets used for indexing, e.g. `[1:3, [:red,:blue], S]`
  3. `condition`: Expr containing any conditional imposed on indexing, or `:()`
     if none is present
 """
 function _parse_ref_sets(_error::Function, expr::Expr)
     c = copy(expr)
-    index_vars, index_sets, condition = Symbol[], Any[], :()
+    index_vars, index_sets, condition = Any[], Any[], :()
     # `:(t[i, j; k])` is a `:ref`, while `:(t[i; j])` is a `:typed_vcat`. In
     # both cases `:t` is the first argument.
     if isexpr(c, :typed_vcat) || isexpr(c, :ref)
@@ -152,7 +154,7 @@ function _parse_ref_sets(_error::Function, expr::Expr)
 end
 
 # Catch the case that has no index sets, just a name like `x`.
-_parse_ref_sets(::Function, ::Symbol) = (Symbol[], Any[], :())
+_parse_ref_sets(::Function, ::Symbol) = (Any[], Any[], :())
 
 _depends_on(ex::Expr, s::Symbol) = any(a -> _depends_on(a, s), ex.args)
 
@@ -162,7 +164,7 @@ _depends_on(ex::Symbol, s::Symbol) = ex == s
 _depends_on(ex, s::Symbol) = false
 
 function _has_dependent_sets(
-    index_vars::Vector{Symbol},
+    index_vars::Vector{Any},
     index_sets::Vector{Any},
 )
     for i in 2:length(index_sets)
@@ -194,8 +196,9 @@ Helper function for macros to construct container objects.
 
 ## Returns
 
- 1. `index_vars`: a `Vector{Symbol}` of names for the index variables, e.g.,
-    `[:i, gensym(), :k]`
+ 1. `index_vars`: a `Vector{Any}` of names for the index variables, e.g.,
+    `[:i, gensym(), :k]`. These may also be expressions, like `:((i, j))` from a
+    call like `:(x[(i, j) in S])`.
  2. `indices`: an iterator over the indices, e.g.,
     ```julia
     Containers.NestedIterators(
@@ -240,7 +243,7 @@ end
 
 """
     container_code(
-        index_vars::Vector{Symbol},
+        index_vars::Vector{Any},
         indices::Expr,
         code,
         requested_container::Union{Symbol,Expr},
@@ -251,8 +254,9 @@ in conjunction with [`build_ref_sets`](@ref).
 
 ## Arguments
 
- * `index_vars::Vector{Symbol}`: a vector of names for the indices of the
-   container.
+ * `index_vars::Vector{Any}`: a vector of names for the indices of the
+   container. These may also be expressions, like `:((i, j))` from a
+   call like `:(x[(i, j) in S])`.
  * `indices::Expr`: an expression that evaluates to an iterator of the indices.
  * `code`: an expression or literal constant for the value to be stored in the
    container as a function of the named `index_vars`.
@@ -288,7 +292,7 @@ And data, a 2×2 Matrix{String}:
 ```
 """
 function container_code(
-    index_vars::Vector{Symbol},
+    index_vars::Vector{Any},
     indices::Expr,
     code,
     requested_container::Union{Symbol,Expr},

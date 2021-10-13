@@ -1499,6 +1499,16 @@ function test_vectorized_constraint_name()
     return
 end
 
+function test_expr_index_vars()
+    model = Model()
+    S = [(1, 2), (3, 4)]
+    @variable(model, x[(i, j) in S])
+    @test x[(1, 2)] isa VariableRef
+    @test x[(3, 4)] isa VariableRef
+    @test length(x) == 2
+    return
+end
+
 end  # module
 
 TestMacros.runtests()
