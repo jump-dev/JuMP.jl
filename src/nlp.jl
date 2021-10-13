@@ -2016,7 +2016,7 @@ programmatically, and you cannot use [`@NLexpression`](@ref).
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
 julia> add_NL_expression(model, :(\$(x) + \$(x)^2))
-"Reference to nonlinear expression #1"
+"subexpression[1]: x + x ^ 2.0"
 ```
 """
 function add_NL_expression(model::Model, ex)

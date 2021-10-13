@@ -199,25 +199,35 @@ end
         model = Model()
         @variable(model, x)
         expr = @NLexpression(model, x + 1)
-        io_test(REPLMode, expr, "\"Reference to nonlinear expression #1\"")
+        io_test(REPLMode, expr, "\"subexpression[1]: x + 1.0\"")
     end
 
     @testset "Nonlinear parameters" begin
         model = Model()
         param = @NLparameter(model, value = 1.0)
-        io_test(REPLMode, param, "\"Reference to nonlinear parameter #1\"")
+        io_test(REPLMode, param, "\"parameter[1] == 1.0\"")
     end
 
     @testset "Registered nonlinear parameters" begin
         model = Model()
         @NLparameter(model, param == 1.0)
-        io_test(REPLMode, param, "\"Reference to nonlinear parameter param\"")
+        io_test(REPLMode, param, "\"param == 1.0\"")
     end
 
     @testset "NLPEvaluator" begin
         model = Model()
         evaluator = JuMP.NLPEvaluator(model)
-        io_test(REPLMode, evaluator, "\"A JuMP.NLPEvaluator\"")
+        io_test(
+            REPLMode,
+            evaluator,
+            "An NLPEvaluator with available features:\n" *
+            "  * :Grad\n" *
+            "  * :Jac\n" *
+            "  * :JacVec\n" *
+            "  * :ExprGraph\n" *
+            "  * :Hess\n" *
+            "  * :HessVec",
+        )
     end
 
     @testset "Nonlinear constraints" begin
@@ -635,7 +645,6 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""",
         @variable(model_2, x, Bin)
         @variable(model_2, y, Int)
         @constraint(model_2, x * y <= 1)
-
         io_test(
             REPLMode,
             model_2,
@@ -726,7 +735,7 @@ Subject to
             REPLMode,
             model_1,
             """
-A JuMP Model
+An Abstract JuMP Model
 Maximization problem with:
 Variables: 13
 Objective function type: $(GenericAffExpr{Float64,VariableType})
@@ -758,7 +767,7 @@ Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""",
             REPLMode,
             model_2,
             """
-A JuMP Model
+An Abstract JuMP Model
 Feasibility problem with:
 Variables: 2
 Constraint: 1
@@ -774,7 +783,7 @@ Names registered in the model: x, y""",
             REPLMode,
             model_3,
             """
-A JuMP Model
+An Abstract JuMP Model
 Feasibility problem with:
 Variable: 1
 Constraint: 1
