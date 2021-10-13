@@ -316,7 +316,7 @@ my_prefix[my_con] : 2 x - 1 ≤ 0.0
 ## The extension dictionary
 
 Every JuMP model has a field `.ext::Dict{Symbol,Any}` that can be used by
-extensions. This is useful if you extensions to [`@variable`](@ref) and
+extensions. This is useful if your extensions to [`@variable`](@ref) and
 [`@constraint`](@ref) need to store information between calls.
 
 The most common way to initialize a model with information in the `.ext
@@ -345,7 +345,7 @@ Dict{Symbol, Any} with 1 entry:
 ## Defining new JuMP models
 
 If extending individual calls to [`@variable`](@ref) and [`@constraint`](@ref)
-is not sufficient, it is possible to implement a new model subtype of
+is not sufficient, it is possible to implement a new model via a subtype of
 [`AbstractModel`](@ref). You can also define new [`AbstractVariableRef`](@ref)s
 to create different types of JuMP variables.
 
