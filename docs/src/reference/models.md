@@ -24,6 +24,7 @@ DIRECT
 ```@docs
 backend
 unsafe_backend
+name(::AbstractModel)
 solver_name
 Base.empty!(::Model)
 mode

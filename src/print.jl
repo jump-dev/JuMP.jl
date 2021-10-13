@@ -200,6 +200,12 @@ _plural(n) = (isone(n) ? "" : "s")
 ## Model
 #------------------------------------------------------------------------
 
+"""
+    name(model::AbstractModel)
+
+Return the [`MOI.Name`](@ref) attribute of `model`'s [`backend`](@ref), or a
+default if empty.
+"""
 name(model::AbstractModel) = "An Abstract JuMP Model"
 
 function name(model::Model)
