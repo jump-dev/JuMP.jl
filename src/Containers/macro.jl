@@ -163,10 +163,7 @@ _depends_on(ex::Symbol, s::Symbol) = ex == s
 # For the case that `ex` might be an iterable literal like `4`.
 _depends_on(ex, s::Symbol) = false
 
-function _has_dependent_sets(
-    index_vars::Vector{Any},
-    index_sets::Vector{Any},
-)
+function _has_dependent_sets(index_vars::Vector{Any}, index_sets::Vector{Any})
     for i in 2:length(index_sets)
         for j in 1:(i-1)
             if _depends_on(index_sets[i], index_vars[j])
