@@ -83,6 +83,7 @@ print_bridge_graph
 ## Extension tools
 
 ```@docs
+AbstractModel
 operator_warn
 error_if_direct_mode
 ```
