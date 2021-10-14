@@ -76,7 +76,7 @@ end
     set_optimizer(
         model::Model,
         optimizer_factory;
-        force_bridge_formulation::Bool = length(model.bridge_types) > 0,
+        force_bridge_formulation::Bool = !isempty(model.bridge_types),
     )
 
 Creates an empty `MathOptInterface.AbstractOptimizer` instance by calling
@@ -105,7 +105,7 @@ function set_optimizer(
     model::Model,
     optimizer_constructor;
     # By default, add bridges only if the user has manually added bridges.
-    force_bridge_formulation::Bool = length(model.bridge_types) > 0,
+    force_bridge_formulation::Bool = !isempty(model.bridge_types),
     bridge_constraints::Union{Nothing,Bool} = nothing,
 )
     if bridge_constraints !== nothing

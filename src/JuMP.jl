@@ -600,14 +600,6 @@ end
 # No optimizer is attached, the bridge will be added when one is attached
 _moi_add_bridge(::Nothing, ::Type{<:MOI.Bridges.AbstractBridge}) = nothing
 
-function _moi_add_bridge(::MOI.ModelLike, ::Type{<:MOI.Bridges.AbstractBridge})
-    return error(
-        "`In order to add a bridge, you must pass " *
-        "`force_bridge_formulation = true` to `Model`, i.e., " *
-        "`Model(optimizer; force_bridge_formulation = true)`.",
-    )
-end
-
 function _moi_add_bridge(
     bridge_opt::MOI.Bridges.LazyBridgeOptimizer,
     BridgeType::Type{<:MOI.Bridges.AbstractBridge},
@@ -673,6 +665,7 @@ problems." URL: [https://arxiv.org/abs/2002.03447](https://arxiv.org/abs/2002.03
 print_bridge_graph(model::Model) = print_bridge_graph(Base.stdout, model)
 
 function print_bridge_graph(io::IO, model::Model)
+    _add_bridges_if_needed(model)
     # The type of `backend(model)` is not type-stable, so we use a function
     # barrier (`_moi_print_bridge_graph`) to improve performance.
     return _moi_print_bridge_graph(io, backend(model))
@@ -684,14 +677,6 @@ end
 
 function _moi_print_bridge_graph(io::IO, model::MOIU.CachingOptimizer)
     return _moi_print_bridge_graph(io, model.optimizer)
-end
-
-function _moi_print_bridge_graph(::IO, ::MOI.ModelLike)
-    return error(
-        "`In order to print the bridge graph, you must pass " *
-        "`force_bridge_formulation = true` to `Model`, i.e., " *
-        "`Model(optimizer; force_bridge_formulation = true)`.",
-    )
 end
 
 """
