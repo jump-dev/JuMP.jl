@@ -301,11 +301,7 @@ function Model(
         add_bridges = bridge_constraints
     end
     model = Model(; kwargs...)
-    set_optimizer(
-        model,
-        optimizer_factory,
-        add_bridges = add_bridges,
-    )
+    set_optimizer(model, optimizer_factory, add_bridges = add_bridges)
     return model
 end
 

@@ -125,10 +125,8 @@ function set_optimizer(
     end
     # Update the backend to create a new, concretely typed CachingOptimizer
     # using the existing `model_cache`.
-    model.moi_backend = MOI.Utilities.CachingOptimizer(
-        backend(model).model_cache,
-        optimizer,
-    )
+    model.moi_backend =
+        MOI.Utilities.CachingOptimizer(backend(model).model_cache, optimizer)
     return
 end
 

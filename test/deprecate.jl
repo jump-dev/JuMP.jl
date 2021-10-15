@@ -46,8 +46,30 @@ function test_value()
     return
 end
 
-function test_Model()
+function test_Model_caching_mode()
     @test_logs (:warn,) Model(caching_mode = MOIU.MANUAL)
+    return
+end
+
+function test_Model_solver()
+    optimizer =
+        () -> MOI.Utilities.MockOptimizer(
+            MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        )
+    @test_throws ErrorException Model(solver = optimizer)
+    return
+end
+
+function test_set_optimizer()
+    model = Model()
+    optimizer =
+        () -> MOI.Utilities.MockOptimizer(
+            MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        )
+    @test_logs(
+        (:warn,),
+        set_optimizer(model, optimizer; bridge_constraints = false),
+    )
     return
 end
 
