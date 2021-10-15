@@ -63,16 +63,16 @@ deleting different constraint types, you may need to use
 [`set_optimizer`](@ref). See [Switching optimizer for the relaxed problem](@ref)
 for an example of when this is useful.
 
-### Improving performance
+### Reducing time-to-first-solve latency
 
 By default, JuMP uses [bridges](@ref LazyBridgeOptimizer) to reformulate the
 model you wrote into an equivalent model supported by the solver.
 
 However, if your model is already supported by the solver, bridges add latency
 (read [The "time-to-first-solve" issue](@ref)). This is particularly noticeable
-for small models.
+for small models. 
 
-To improve performance, try passing `add_bridges = false`.
+To reduce the "time-to-first-solve", try passing `add_bridges = false`.
 ```jldoctest
 julia> model = Model(GLPK.Optimizer; add_bridges = false);
 ```
