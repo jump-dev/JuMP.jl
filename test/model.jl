@@ -485,8 +485,8 @@ function JuMP.copy_extension_data(
 end
 function dummy_optimizer_hook(::JuMP.AbstractModel) end
 
-function copy_model_style_mode(use_copy_model, caching_mode, filter_mode)
-    model = Model(caching_mode = caching_mode)
+function copy_model_style_mode(use_copy_model, filter_mode)
+    model = Model()
     model.optimize_hook = dummy_optimizer_hook
     data = DummyExtensionData(model)
     model.ext[:dummy] = data
@@ -520,7 +520,6 @@ function copy_model_style_mode(use_copy_model, caching_mode, filter_mode)
         reference_map[cref2[1]] = new_model[:cref2][1]
         reference_map[cref2[2]] = new_model[:cref2][2]
     end
-    @test caching_mode == @inferred MOIU.mode(JuMP.backend(new_model))
     @test new_model.optimize_hook === dummy_optimizer_hook
     @test new_model.ext[:dummy].model === new_model
     x_new = reference_map[x]
@@ -561,7 +560,7 @@ function copy_model_style_mode(use_copy_model, caching_mode, filter_mode)
 end
 
 function test_copy_model_jump_auto()
-    return copy_model_style_mode(true, MOIU.AUTOMATIC, false)
+    return copy_model_style_mode(true, false)
 end
 
 function test_compute_conflict()
@@ -571,13 +570,7 @@ function test_compute_conflict()
 end
 
 function test_copy_model_base_auto()
-    return copy_model_style_mode(false, MOIU.AUTOMATIC, false)
-end
-function test_copy_model_jump_manual()
-    return copy_model_style_mode(true, MOIU.MANUAL, false)
-end
-function test_copy_model_base_manual()
-    return copy_model_style_mode(false, MOIU.MANUAL, false)
+    return copy_model_style_mode(false, false)
 end
 
 function test_copy_direct_mode()
@@ -676,7 +669,7 @@ function test_copy_dict_expr()
 end
 
 function test_copy_filter()
-    return copy_model_style_mode(true, MOIU.AUTOMATIC, true)
+    return copy_model_style_mode(true, true)
 end
 
 function test_copy_filter_array()

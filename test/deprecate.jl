@@ -46,6 +46,11 @@ function test_value()
     return
 end
 
+function test_Model()
+    @test_logs (:warn,) Model(caching_mode = MOIU.MANUAL)
+    return
+end
+
 end
 
 TestDeprecate.runtests()

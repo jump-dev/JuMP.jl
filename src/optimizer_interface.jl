@@ -73,36 +73,48 @@ function MOIU.attach_optimizer(model::Model)
 end
 
 """
-    set_optimizer(model::Model, optimizer_factory;
-                  bridge_constraints::Bool=true)
-
+    set_optimizer(
+        model::Model,
+        optimizer_factory;
+        add_bridges::Bool = true,
+    )
 
 Creates an empty `MathOptInterface.AbstractOptimizer` instance by calling
 `optimizer_factory()` and sets it as the optimizer of `model`. Specifically,
 `optimizer_factory` must be callable with zero arguments and return an empty
 `MathOptInterface.AbstractOptimizer`.
 
-If `bridge_constraints` is true, constraints that are not supported by the
-optimizer are automatically bridged to equivalent supported constraints when
-an appropriate transformation is defined in the `MathOptInterface.Bridges`
-module or is defined in another module and is explicitly added.
+If `add_bridges` is true, constraints and objectives that are not supported by
+the optimizer are automatically bridged to equivalent supported formulation.
+Passing `add_bridges = false` can improve performance if the solver natively
+supports all of the elements in `model`.
 
-See [`set_optimizer_attributes`](@ref) and [`set_optimizer_attribute`](@ref) for setting
-solver-specific parameters of the optimizer.
+See [`set_optimizer_attributes`](@ref) and [`set_optimizer_attribute`](@ref) for
+setting solver-specific parameters of the optimizer.
 
 ## Examples
+
 ```julia
 model = Model()
 set_optimizer(model, GLPK.Optimizer)
+set_optimizer(model, GLPK.Optimizer; add_bridges = false)
 ```
 """
 function set_optimizer(
     model::Model,
     optimizer_constructor;
-    bridge_constraints::Bool = true,
+    add_bridges::Bool = true,
+    bridge_constraints::Union{Nothing,Bool} = nothing,
 )
     error_if_direct_mode(model, :set_optimizer)
-    if bridge_constraints
+    if bridge_constraints !== nothing
+        @warn(
+            "`bridge_constraints` argument is deprecated. Use `add_bridges` " *
+            "instead.",
+        )
+        add_bridges = bridge_constraints
+    end
+    if add_bridges
         optimizer =
             MOI.instantiate(optimizer_constructor, with_bridge_type = Float64)
         for bridge_type in model.bridge_types
@@ -111,7 +123,13 @@ function set_optimizer(
     else
         optimizer = MOI.instantiate(optimizer_constructor)
     end
-    return MOIU.reset_optimizer(model, optimizer)
+    # Update the backend to create a new, concretely typed CachingOptimizer
+    # using the existing `model_cache`.
+    model.moi_backend = MOI.Utilities.CachingOptimizer(
+        backend(model).model_cache,
+        optimizer,
+    )
+    return
 end
 
 # Deprecation for JuMP v0.18 -> JuMP v0.19 transition
