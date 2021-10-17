@@ -25,6 +25,32 @@
 # crash course in the basics of Julia. You can find resources that provide
 # a more comprehensive introduction to Julia [here](https://julialang.org/learning/).
 
+# ## Where to get help
+
+#  * Read the documentation
+#    * JuMP https://jump.dev/JuMP.jl/stable/
+#    * Julia https://docs.julialang.org/en/v1/
+#  * Ask (or browse) the Julia community forum: https://discourse.julialang.org
+#    * If the question is JuMP-related, ask in the [Optimization (Mathematical)](https://discourse.julialang.org/c/domain/opt/13)
+#      section, or tag your question with "jump"
+
+# To access the built-in help at the REPL, type `?`, followed by the name of the
+# function to lookup:
+# ```julia
+# help?> help
+# search: help schedule Channel hasfield check_belongs_to_model @threadcall AbstractChannel searchsortedlast
+#
+#  Welcome to Julia 1.6.2. The full manual is available at
+#
+#  https://docs.julialang.org
+#
+#  as well as many great tutorials and learning resources:
+#
+#  https://julialang.org/learning/
+#
+#  For help on a specific function or macro, type ? followed by its name, e.g. ?cos, or ?@time, and press enter. Type ; to enter shell mode, ] to enter package mode.
+# ```
+
 # ## Installing Julia
 
 # To install Julia, [download the latest stable release](https://julialang.org/downloads/),
@@ -154,7 +180,16 @@ isapprox(sin(2π / 3), √3 / 2; atol = 1e-8)
 #     optimization models. A common mistake you're likely to make is checking
 #     whether a binary variable is 0 using `value(z) == 0`. Always remember to
 #     use something like `isapprox` when comparing floating point numbers.
-#
+#     Note that `isapprox` will always return `false` if one of the number being
+#     compared is `0` and `atol` is zero (its default value).
+
+1e-300 ≈ 0.0
+
+# so always set a nonzero value of `atol` if one of the arguments can be zero.
+
+isapprox(1e-9, 0.0, atol=1e-8)
+
+# !!! tip
 #     Gurobi has a [good series of articles](https://www.gurobi.com/documentation/9.0/refman/num_grb_guidelines_for_num.html)
 #     on the implications of floating point in optimization if you want to read
 #     more.
@@ -293,7 +328,7 @@ typeof(t)
 
 t[2]
 
-# And they be "unpacked" like so:
+# And they can be "unpacked" like so:
 
 a, b, c = t
 b
@@ -349,6 +384,40 @@ d2["B"]
 
 d2["D"][:foo]
 
+# ## Structs
+
+# You can define custom datastructures with `struct`:
+
+struct MyStruct
+    x::Int
+    y::String
+    z::Dict{Int,Int}
+end
+
+a = MyStruct(1, "a", Dict(2 => 3))
+
+# By default, these are not mutable
+
+try                         #hide
+    a.x = 1
+catch err                   #hide
+    showerror(stderr, err)  #hide
+end                         #hide
+
+# However, you can declare `mutable struct`:
+
+mutable struct MyStructMutable
+    x::Int
+    y::String
+    z::Dict{Int,Int}
+end
+
+a = MyStructMutable(1, "a", Dict(2 => 3))
+
+a.x = 2
+
+a
+
 # ## Loops
 
 # Julia has native support for for-each style loops with the syntax
@@ -363,7 +432,7 @@ end
 
 #-
 
-for i in [1.2, 2.3, 3.4, 4.5, 5.6]
+for i in 1.2:1.1:5.6
     println(i)
 end
 
@@ -494,7 +563,7 @@ nothing #hide
 try                         #hide
     foo([1, 2, 3])
 catch err                   #hide
-    showerror(stdout, err)  #hide
+    showerror(stderr, err)  #hide
 end                         #hide
 
 # We get a dreaded `MethodError`! A `MethodError` means that you passed a
