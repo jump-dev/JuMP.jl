@@ -32,7 +32,8 @@
 # * CSV.jl documentation: http://csv.juliadata.org/stable
 # * DataFrames.jl documentation: https://dataframes.juliadata.org/stable/
 
-## We need this constant to point to where the data file are.
+## We need this constant to point to where the data files are.
+
 const DATA_DIR = joinpath(@__DIR__, "data");
 
 # !!! note
@@ -256,3 +257,107 @@ csv_df
 # For information on dplyr-type syntax:
  # * Read: https://dataframes.juliadata.org/stable/man/querying_frameworks/
  # * Check out DataFramesMeta.jl: https://github.com/JuliaData/DataFramesMeta.jl
+
+# ## A Complete Modelling Example - Passport Problem
+
+# Let's now apply what we have learnt to solve a real modelling problem.
+
+# The [Passport Index Dataset](https://github.com/ilyankou/passport-index-dataset)
+# lists travel visa requirements for 199 countries, in `.csv` format. Our task
+# is to find out the minimum number of passports required to visit all
+# countries.
+
+passport_data = CSV.read(
+    joinpath(DATA_DIR, "passport-index-matrix.csv"),
+    DataFrames.DataFrame,
+)
+
+# In this dataset, the first column represents a passport (=from) and each
+# remaining column represents a foreign country (=to).
+
+# The values in each cell are as follows:
+# * 3 = visa-free travel
+# * 2 = eTA is required
+# * 1 = visa can be obtained on arrival
+# * 0 = visa is required
+# * -1 is for all instances where passport and destination are the same
+
+# Our task is to find out the minimum number of passports needed to visit every
+# country without requiring a visa.
+
+# The values we are interested in are -1 and 3. Modify the dataframe so that
+# the -1 and 3 are `1` (true), and all others are `0` (false).
+
+function modifier(x)
+    if x == -1 || x == 3
+        return 1
+    else
+        return 0
+    end
+end
+
+for country in passport_data.Passport
+    passport_data[!, country] = modifier.(passport_data[!, country])
+end
+
+passport_data
+
+# The values in the cells now represent:
+# * 1 = no visa required for travel
+# * 0 = visa required for travel
+
+# Let us associate each passport with a decision variable $x_c$ for
+# each country $c$. We want to minimize the sum $\sum x_c$ over all countries.
+
+# Since we wish to visit all the countries, for every country, we should own at
+# least one passport that lets us travel to that country visa free. For one
+# destination, this can be mathematically represented as
+# $\sum_{c \in C} passportdata_{c,d} \cdot x_{d} \geq 1$.
+
+# Thus, we can represent this problem using the following model:
+
+# ```math
+# \begin{aligned}
+# \min && \sum_{c \in C} x_c \\
+# \text{s.t.} && \sum_{c \in C} passportdata_{c,d} \cdot x_c \geq 1 && \forall c \in C \\
+# && x_c \in \{0,1\} && \forall c \in C
+# \end{aligned}
+# ```
+
+# We'll now solve the problem using JuMP.
+
+using JuMP
+import GLPK
+
+# First, create the set of countries:
+
+C = passport_data.Passport
+
+# Then, create the model and initialize the decision variables:
+
+model = Model(GLPK.Optimizer)
+@variable(model, x[C], Bin)
+@objective(model, Min, sum(x))
+@constraint(model, [d in C], passport_data[!, d]' * x >= 1)
+
+# Now optimize!
+
+optimize!(model)
+solution_summary(model)
+
+#-
+
+println("Minimum number of passports needed: ", objective_value(model))
+
+#-
+
+println("Optimal passports:")
+for c in C
+    if value(x[c]) > 0.5
+        println(" ", c)
+    end
+end
+
+# !!! note
+#     We use `value(x[c]) > 0.5` rather than `value(x[c]) == 1` to avoid
+#     excluding solutions like `x[c] = 0.99999` that are "1" to some tolerance.
