@@ -104,7 +104,7 @@ Plots.scatter(
 csv_df = CSV.read(
     joinpath(DATA_DIR, "StarWars.csv"),
     DataFrames.DataFrame,
-    missingstring="NA",
+    missingstring = "NA",
 )
 
 # Then let's re-plot our data
@@ -255,8 +255,8 @@ csv_df
 #     information.
 
 # For information on dplyr-type syntax:
- # * Read: https://dataframes.juliadata.org/stable/man/querying_frameworks/
- # * Check out DataFramesMeta.jl: https://github.com/JuliaData/DataFramesMeta.jl
+# * Read: https://dataframes.juliadata.org/stable/man/querying_frameworks/
+# * Check out DataFramesMeta.jl: https://github.com/JuliaData/DataFramesMeta.jl
 
 # ## A Complete Modelling Example - Passport Problem
 

@@ -187,7 +187,7 @@ isapprox(sin(2π / 3), √3 / 2; atol = 1e-8)
 
 # so always set a nonzero value of `atol` if one of the arguments can be zero.
 
-isapprox(1e-9, 0.0, atol=1e-8)
+isapprox(1e-9, 0.0, atol = 1e-8)
 
 # !!! tip
 #     Gurobi has a [good series of articles](https://www.gurobi.com/documentation/9.0/refman/num_grb_guidelines_for_num.html)
