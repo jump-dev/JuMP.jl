@@ -28,18 +28,19 @@
 
 # ## Where to get help
 
-# * Plots.jl documentation: http://docs.juliaplots.org/latest/
-# * CSV.jl documentation: http://csv.juliadata.org/stable
-# * DataFrames.jl documentation: https://dataframes.juliadata.org/stable/
-
-## We need this constant to point to where the data files are.
-
-const DATA_DIR = joinpath(@__DIR__, "data");
+# Read the documentation
+# * Plots.jl: [http://docs.juliaplots.org/latest/](http://docs.juliaplots.org/latest/)
+# * CSV.jl: [http://csv.juliadata.org/stable](http://csv.juliadata.org/stable)
+# * DataFrames.jl: [https://dataframes.juliadata.org/stable/](https://dataframes.juliadata.org/stable/)
 
 # !!! note
 #     There are multiple ways to read the same kind of data into Julia. This
 #     tutorial focuses on DataFrames.jl because it provides the ecosystem to
 #     work with most of the required file types in a straightforward manner.
+
+# We need this constant to point to where the data files are.
+
+const DATA_DIR = joinpath(@__DIR__, "data");
 
 # ### DataFrames.jl
 
@@ -255,17 +256,18 @@ csv_df
 #     information.
 
 # For information on dplyr-type syntax:
-# * Read: https://dataframes.juliadata.org/stable/man/querying_frameworks/
-# * Check out DataFramesMeta.jl: https://github.com/JuliaData/DataFramesMeta.jl
+# * Read the [DataFrames.jl documentation](https://dataframes.juliadata.org/stable/man/querying_frameworks/)
+# * Check out [DataFramesMeta.jl](https://github.com/JuliaData/DataFramesMeta.jl)
 
 # ## A Complete Modelling Example - Passport Problem
 
 # Let's now apply what we have learnt to solve a real modelling problem.
 
+# ### Data manipulation
+
 # The [Passport Index Dataset](https://github.com/ilyankou/passport-index-dataset)
 # lists travel visa requirements for 199 countries, in `.csv` format. Our task
-# is to find out the minimum number of passports required to visit all
-# countries.
+# is to find the minimum number of passports required to visit all countries.
 
 passport_data = CSV.read(
     joinpath(DATA_DIR, "passport-index-matrix.csv"),
@@ -306,20 +308,23 @@ passport_data
 # * 1 = no visa required for travel
 # * 0 = visa required for travel
 
+# ### JuMP Modeling
+
 # Let us associate each passport with a decision variable $x_c$ for
 # each country $c$. We want to minimize the sum $\sum x_c$ over all countries.
 
 # Since we wish to visit all the countries, for every country, we should own at
 # least one passport that lets us travel to that country visa free. For one
 # destination, this can be mathematically represented as
-# $\sum_{c \in C} passportdata_{c,d} \cdot x_{d} \geq 1$.
+# $\sum_{c \in C} a_{c,d} \cdot x_{d} \geq 1$, where $a$ is the `passport_data`
+# dataframe.
 
 # Thus, we can represent this problem using the following model:
 
 # ```math
 # \begin{aligned}
 # \min && \sum_{c \in C} x_c \\
-# \text{s.t.} && \sum_{c \in C} passportdata_{c,d} \cdot x_c \geq 1 && \forall c \in C \\
+# \text{s.t.} && \sum_{c \in C} a_{c,d} \cdot x_c \geq 1 && \forall c \in C \\
 # && x_c \in \{0,1\} && \forall c \in C
 # \end{aligned}
 # ```
@@ -345,7 +350,8 @@ model = Model(GLPK.Optimizer)
 optimize!(model)
 solution_summary(model)
 
-#-
+
+# ### Solution
 
 println("Minimum number of passports needed: ", objective_value(model))
 
@@ -354,7 +360,7 @@ println("Minimum number of passports needed: ", objective_value(model))
 println("Optimal passports:")
 for c in C
     if value(x[c]) > 0.5
-        println(" ", c)
+        println(" * ", c)
     end
 end
 

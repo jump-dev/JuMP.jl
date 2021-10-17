@@ -21,16 +21,19 @@
 # # Getting started with Julia
 
 # Since JuMP is embedded in Julia, knowing some basic Julia is important
-# for learning JuMP. This tutorial is designed to provide a minimalist
-# crash course in the basics of Julia. You can find resources that provide
-# a more comprehensive introduction to Julia [here](https://julialang.org/learning/).
+# for learning JuMP.
+
+# !!! tip
+#     This tutorial is designed to provide a minimalist crash course in the
+#     basics of Julia. You can find resources that provide a more comprehensive
+#     introduction to Julia [here](https://julialang.org/learning/).
 
 # ## Where to get help
 
 #  * Read the documentation
-#    * JuMP https://jump.dev/JuMP.jl/stable/
-#    * Julia https://docs.julialang.org/en/v1/
-#  * Ask (or browse) the Julia community forum: https://discourse.julialang.org
+#    * JuMP [https://jump.dev/JuMP.jl/stable/](https://jump.dev/JuMP.jl/stable/)
+#    * Julia [https://docs.julialang.org/en/v1/](https://docs.julialang.org/en/v1/)
+#  * Ask (or browse) the Julia community forum: [https://discourse.julialang.org](https://discourse.julialang.org)
 #    * If the question is JuMP-related, ask in the [Optimization (Mathematical)](https://discourse.julialang.org/c/domain/opt/13)
 #      section, or tag your question with "jump"
 
