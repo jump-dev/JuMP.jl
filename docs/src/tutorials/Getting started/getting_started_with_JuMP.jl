@@ -34,6 +34,35 @@
 # JuMP also makes advanced optimization techniques easily accessible from a
 # high-level language.
 
+# ## What is a solver?
+
+# A solver is a software package that incorporates algorithms for finding
+# solutions to one or more classes of problem.
+
+# For example, GLPK is a solver for linear programming (LP) and mixed integer
+# programming (MIP) problems. It incorporates algorithms such as the simplex
+# method and the interior-point method.
+
+# The [Supported-solvers](@ref) table lists the open-source and commercial
+# solvers that JuMP currently supports.
+
+# ## What is MathOptInterface?
+
+# Each solver has its own concepts and data structures for representing
+# optimization models and obtaining results.
+
+# [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl) (MOI) is
+# an abstraction layer that JuMP uses to convert from the problem written in
+# JuMP to the solver-specific data structures for each solver.
+
+# MOI can be used directly, or through a higher-level modeling interface like
+# JuMP.
+
+# !!! note
+#     JuMP re-exports the MathOptInterface.jl package via the `MOI` constant.
+#     When you see code like `MOI.OPTIMAL`, this is constant from the
+#     MathOptInterface package.
+
 # ## Installation
 
 # JuMP is a package for Julia. From Julia, JuMP is installed by using the
@@ -179,6 +208,66 @@ shadow_price(c1)
 #-
 
 shadow_price(c2)
+
+# ## Model basics
+
+# Create a model by passing an optimizer
+
+model = Model(GLPK.Optimizer)
+
+# Alternatively, call [`set_optimizer`](@ref) at any point before calling
+# [`optimize!`](@ref).
+
+model = Model()
+set_optimizer(model, GLPK.Optimizer)
+
+# For some solvers, you can also use [`direct_model`](@ref), which offers a more
+# efficient connection to the underlying solver.
+
+model = direct_model(GLPK.Optimizer())
+
+# !!! warning
+#     Some solvers do not support [`direct_model`](@ref)!
+
+# ### Solver Options
+
+# Pass options to solvers with [`optimizer_with_attributes`](@ref):
+
+model = Model(optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => 0))
+
+# !!! note
+#     These options are solver-specific. To find out the various options
+#     available, see the GitHub README of the individual solver packages.
+
+# You can also pass options with [`set_optimizer_attribute`](@ref)
+
+model = Model(GLPK.Optimizer)
+set_optimizer_attribute(model, "msg_lev", 0)
+
+# ## Solution basics
+
+# We saw above how to use [`termination_status`](@ref) and
+# [`primal_status`](@ref) to understand the solution returned by the solver.
+
+# However, you should only query solution attributes like [`value`](@ref) and
+# [`objective_value`](@ref) if there is an available solution. Here's a
+# recommended way to check:
+
+function solve_infeasible()
+    model = Model(GLPK.Optimizer)
+    @variable(model, 0 <= x <= 1)
+    @variable(model, 0 <= y <= 1)
+    @constraint(model, x + y >= 3)
+    @objective(model, Max, x + 2y)
+    optimize!(model)
+    if termination_status(model) != MOI.OPTIMAL
+        @warn("The model was not solved correctly.")
+        return nothing
+    end
+    return value(x), value(y)
+end
+
+solve_infeasible()
 
 # ## Variable basics
 
