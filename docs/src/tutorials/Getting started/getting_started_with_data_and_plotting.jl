@@ -18,28 +18,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Working with Data Files
-
-# **Originally Contributed by**: Arpit Bhatia
+# # Getting started with data and plotting
 
 # In many cases we might need to read data available in an external file rather
 # than type it into Julia ourselves.
 
-# This tutorial is concerned with reading tabular data into Julia and using it
-# for a JuMP model.
+# This tutorial is concerned with reading tabular data into Julia. We'll cover
+# basic plotting along the way.
 
-# We'll be reading data using the [DataFrames.jl](https://github.com/JuliaData/DataFrames.jl)
-# package and some other packages specific to file types.
+# ## Where to get help
 
-# The data are stored in the [`/docs/src/tutorials/Getting started/data`](https://github.com/jump-dev/JuMP.jl/tree/master/docs/src//tutorials/Getting started/data)
-# directory of the JuMP source code.
-
-const DATA_DIR = joinpath(@__DIR__, "data");
+# Read the documentation
+# * Plots.jl: [http://docs.juliaplots.org/latest/](http://docs.juliaplots.org/latest/)
+# * CSV.jl: [http://csv.juliadata.org/stable](http://csv.juliadata.org/stable)
+# * DataFrames.jl: [https://dataframes.juliadata.org/stable/](https://dataframes.juliadata.org/stable/)
 
 # !!! note
 #     There are multiple ways to read the same kind of data into Julia. This
 #     tutorial focuses on DataFrames.jl because it provides the ecosystem to
 #     work with most of the required file types in a straightforward manner.
+
+# We need this constant to point to where the data files are.
+
+const DATA_DIR = joinpath(@__DIR__, "data");
 
 # ### DataFrames.jl
 
@@ -52,6 +53,17 @@ const DATA_DIR = joinpath(@__DIR__, "data");
 
 import DataFrames
 
+# ### Plots.jl
+
+# The `Plots` package provides a set of tools for plotting. It is available
+# through the Julia package system.
+# ```julia
+# using Pkg
+# Pkg.add("Plots")
+# ```
+
+import Plots
+
 # ### What is a DataFrame?
 
 # A DataFrame is a data structure like a table or spreadsheet. You can use it
@@ -62,25 +74,6 @@ import DataFrames
 
 # We will begin by reading data from different file formats into a DataFrame
 # object.
-
-# ### Excel Sheets
-
-# Excel files can be read using the [XLSX.jl](https://github.com/filepenoris/XLSX.jl)
-# package.
-
-# ```julia
-# Pkg.add("XLSX")
-# ```
-
-import XLSX
-
-# To read a Excel file into a DataFrame, we use the following julia code. The
-# first argument to the `readtable` function is the file to be read and the
-# second argument is the name of the sheet.
-
-excel_df = DataFrames.DataFrame(
-    XLSX.readtable(joinpath(DATA_DIR, "SalesData.xlsx"), "SalesOrders")...,
-)
 
 # ### CSV files
 
@@ -95,6 +88,71 @@ import CSV
 # To read a CSV file into a DataFrame, we use the `CSV.read` function.
 
 csv_df = CSV.read(joinpath(DATA_DIR, "StarWars.csv"), DataFrames.DataFrame)
+
+# Let's try plotting some of this data
+
+Plots.scatter(
+    csv_df.Weight,
+    csv_df.Height,
+    xlabel = "Weight",
+    ylabel = "Height",
+)
+
+# That doesn't look right. What happened? If you look at the dataframe above, it
+# read `Weight` in as a `String` column because there are "NA" fields. Let's
+# correct that, by telling CSV to consider "NA" as `missing`.
+
+csv_df = CSV.read(
+    joinpath(DATA_DIR, "StarWars.csv"),
+    DataFrames.DataFrame,
+    missingstring = "NA",
+)
+
+# Then let's re-plot our data
+
+Plots.scatter(
+    csv_df.Weight,
+    csv_df.Height,
+    title = "Height vs Weight of StarWars characters",
+    xlabel = "Weight",
+    ylabel = "Height",
+    label = false,
+    ylims = (0, 3),
+)
+
+# Better! Read the [CSV documentation](https://csv.juliadata.org/stable/) for
+# other parsing options.
+
+# DataFrames.jl supports manipulation using functions similar to pandas. For
+# example, split the dataframe into groups based on eye-color:
+
+by_eyecolor = DataFrames.groupby(csv_df, :Eyecolor)
+
+# Then recombine into a single dataframe based on a function operating over the
+# split dataframes:
+
+eyecolor_count = DataFrames.combine(by_eyecolor) do df
+    return DataFrames.nrow(df)
+end
+
+# We can rename columns:
+
+DataFrames.rename!(eyecolor_count, :x1 => :count)
+
+# Drop some missing rows:
+
+DataFrames.dropmissing!(eyecolor_count, :Eyecolor)
+
+# Then we can visualize the data:
+
+sort!(eyecolor_count, :count, rev = true)
+Plots.bar(
+    eyecolor_count.Eyecolor,
+    eyecolor_count.count,
+    xlabel = "Eyecolor",
+    ylabel = "Number of characters",
+    label = false,
+)
 
 # ### Other Delimited Files
 
@@ -119,15 +177,6 @@ delim_df = CSV.read(
     delim = "::",
 )
 
-# Note that by default, are read-only. If we wish to make changes to the data
-# read, we pass the `copycols = true` argument in the function call.
-
-ss_df = CSV.read(
-    joinpath(DATA_DIR, "Cereal.txt"),
-    DataFrames.DataFrame,
-    copycols = true,
-)
-
 # ## Working with DataFrames
 
 # Now that we have read the required data into a DataFrame, let us look at some
@@ -139,7 +188,7 @@ ss_df = CSV.read(
 
 DataFrames.size(ss_df)
 
-# We can also us the `nrow` and `ncol` functions to get the number of rows and
+# We can also use the `nrow` and `ncol` functions to get the number of rows and
 # columns respectively.
 
 DataFrames.nrow(ss_df), DataFrames.ncol(ss_df)
@@ -191,34 +240,39 @@ csv_df[1, :] # This produces a DataFrameRow.
 
 # Assign a range to scalar.
 
-excel_df[1:3, 5] .= 1
+csv_df[1:3, :Height] .= 1.83
 
 # Vector to equal length vector.
 
-excel_df[4:6, 5] = [4, 5, 6]
-
-# Subset of the DataFrame to another data frame of matching size.
-
-excel_df[1:2, 6:7] =
-    DataFrames.DataFrame([-2 -2; -2 -2], [Symbol("Unit Cost"), :Total])
+csv_df[4:6, :Height] = [1.8, 1.6, 1.8]
 
 #-
 
-excel_df
+csv_df
 
 # !!! tip
 #     There are a lot more things which can be done with a DataFrame. Read the
 #     [docs](https://juliadata.github.io/DataFrames.jl/stable/) for more
 #     information.
 
+# For information on dplyr-type syntax:
+# * Read the [DataFrames.jl documentation](https://dataframes.juliadata.org/stable/man/querying_frameworks/)
+# * Check out [DataFramesMeta.jl](https://github.com/JuliaData/DataFramesMeta.jl)
+
 # ## A Complete Modelling Example - Passport Problem
 
 # Let's now apply what we have learnt to solve a real modelling problem.
 
+# ### Data manipulation
+
 # The [Passport Index Dataset](https://github.com/ilyankou/passport-index-dataset)
 # lists travel visa requirements for 199 countries, in `.csv` format. Our task
-# is to find out the minimum number of passports required to visit all
-# countries.
+# is to find the minimum number of passports required to visit all countries.
+
+passport_data = CSV.read(
+    joinpath(DATA_DIR, "passport-index-matrix.csv"),
+    DataFrames.DataFrame,
+)
 
 # In this dataset, the first column represents a passport (=from) and each
 # remaining column represents a foreign country (=to).
@@ -233,44 +287,45 @@ excel_df
 # Our task is to find out the minimum number of passports needed to visit every
 # country without requiring a visa.
 
-# Thus, the values we are interested in are -1 and 3. Let us modify the data in
-# the following manner:
+# The values we are interested in are -1 and 3. Modify the dataframe so that
+# the -1 and 3 are `1` (true), and all others are `0` (false).
 
-passport_data = CSV.read(
-    joinpath(DATA_DIR, "passport-index-matrix.csv"),
-    DataFrames.DataFrame;
-    copycols = true,
-)
-
-for i in 1:DataFrames.nrow(passport_data)
-    for j in 2:DataFrames.ncol(passport_data)
-        if passport_data[i, j] == -1 || passport_data[i, j] == 3
-            passport_data[i, j] = 1
-        else
-            passport_data[i, j] = 0
-        end
+function modifier(x)
+    if x == -1 || x == 3
+        return 1
+    else
+        return 0
     end
 end
+
+for country in passport_data.Passport
+    passport_data[!, country] = modifier.(passport_data[!, country])
+end
+
+passport_data
 
 # The values in the cells now represent:
 # * 1 = no visa required for travel
 # * 0 = visa required for travel
 
-# Let us associate each passport with a decision variable $pass_{cntr}$ for
-# each country. We want to minimize the sum $\sum pass_{cntr}$ over all countries.
+# ### JuMP Modeling
+
+# Let us associate each passport with a decision variable $x_c$ for
+# each country $c$. We want to minimize the sum $\sum x_c$ over all countries.
 
 # Since we wish to visit all the countries, for every country, we should own at
 # least one passport that lets us travel to that country visa free. For one
 # destination, this can be mathematically represented as
-# $\sum_{cntr \in world} passportdata_{cntr,dest} \cdot pass_{cntr} \geq 1$.
+# $\sum_{c \in C} a_{c,d} \cdot x_{d} \geq 1$, where $a$ is the `passport_data`
+# dataframe.
 
 # Thus, we can represent this problem using the following model:
 
 # ```math
 # \begin{aligned}
-# \min && \sum_{cntr \in World} pass_{cntr} \\
-# \text{s.t.} && \sum_{cntr \in World} passportdata_{cntr,dest} \cdot pass_{cntr} \geq 1 && \forall dest \in World \\
-# && pass_{cntr} \in \{0,1\} && \forall cntr \in World
+# \min && \sum_{c \in C} x_c \\
+# \text{s.t.} && \sum_{c \in C} a_{c,d} \cdot x_c \geq 1 && \forall c \in C \\
+# && x_c \in \{0,1\} && \forall c \in C
 # \end{aligned}
 # ```
 
@@ -281,34 +336,33 @@ import GLPK
 
 # First, create the set of countries:
 
-World = names(passport_data)[2:end]
+C = passport_data.Passport
 
 # Then, create the model and initialize the decision variables:
+
 model = Model(GLPK.Optimizer)
-@variable(model, pass[cntr in World], Bin)
-
-# Define the objective function
-
-@objective(model, Min, sum(pass[cntr] for cntr in World))
-
-#-
-
-@constraint(model, [dest in World], passport_data[:, dest]' * pass >= 1)
+@variable(model, x[C], Bin)
+@objective(model, Min, sum(x))
+@constraint(model, [d in C], passport_data[!, d]' * x >= 1)
 
 # Now optimize!
 
 optimize!(model)
+solution_summary(model)
+
+# ### Solution
+
 println("Minimum number of passports needed: ", objective_value(model))
 
 #-
 
-optimal_passports = [cntr for cntr in World if value(pass[cntr]) > 0.5]
-println("Countries:")
-for p in optimal_passports
-    println(" ", p)
+println("Optimal passports:")
+for c in C
+    if value(x[c]) > 0.5
+        println(" * ", c)
+    end
 end
 
 # !!! note
-#     We use `value(pass[i]) > 0.5` rather than `value(pass[i]) == 1` to avoid
-#     excluding solutions like `pass[i] = 0.99999` that are "1" to some
-#     tolerance.
+#     We use `value(x[c]) > 0.5` rather than `value(x[c]) == 1` to avoid
+#     excluding solutions like `x[c] = 0.99999` that are "1" to some tolerance.

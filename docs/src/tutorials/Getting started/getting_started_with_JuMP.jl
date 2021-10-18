@@ -26,13 +26,42 @@
 # ## What is JuMP?
 
 # JuMP ("Julia for Mathematical Programming") is an open-source modeling
-# language that is embedded in Julia. It allows users to users formulate various
+# language that is embedded in Julia. It allows users to formulate various
 # classes of optimization problems (linear, mixed-integer, quadratic, conic
 # quadratic, semidefinite, and nonlinear) with easy-to-read code. These problems
 # can then be solved using state-of-the-art open-source and commercial solvers.
 
 # JuMP also makes advanced optimization techniques easily accessible from a
 # high-level language.
+
+# ## What is a solver?
+
+# A solver is a software package that incorporates algorithms for finding
+# solutions to one or more classes of problem.
+
+# For example, GLPK is a solver for linear programming (LP) and mixed integer
+# programming (MIP) problems. It incorporates algorithms such as the simplex
+# method and the interior-point method.
+
+# The [Supported-solvers](@ref) table lists the open-source and commercial
+# solvers that JuMP currently supports.
+
+# ## What is MathOptInterface?
+
+# Each solver has its own concepts and data structures for representing
+# optimization models and obtaining results.
+
+# [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl) (MOI) is
+# an abstraction layer that JuMP uses to convert from the problem written in
+# JuMP to the solver-specific data structures for each solver.
+
+# MOI can be used directly, or through a higher-level modeling interface like
+# JuMP.
+
+# !!! note
+#     JuMP re-exports the MathOptInterface.jl package via the `MOI` constant.
+#     When you see code like `MOI.OPTIMAL`, this is constant from the
+#     MathOptInterface package.
 
 # ## Installation
 
@@ -46,7 +75,7 @@
 
 # You also need to include a Julia package which provides an appropriate solver.
 # One such solver is `GLPK.Optimizer`, which is provided by the
-# [GLPK.jl package](https://github.com/JuliaOpt/GLPK.jl).
+# [GLPK.jl package](https://github.com/jump-dev/GLPK.jl).
 # ```julia
 # import Pkg
 # Pkg.add("GLPK")
@@ -133,7 +162,7 @@ model = Model(GLPK.Optimizer)
 
 print(model)
 
-# To solve the optimization problem, call the [`optimize!`] function.
+# To solve the optimization problem, call the [`optimize!`](@ref) function.
 
 optimize!(model)
 
@@ -179,3 +208,303 @@ shadow_price(c1)
 #-
 
 shadow_price(c2)
+
+# ## Model basics
+
+# Create a model by passing an optimizer
+
+model = Model(GLPK.Optimizer)
+
+# Alternatively, call [`set_optimizer`](@ref) at any point before calling
+# [`optimize!`](@ref).
+
+model = Model()
+set_optimizer(model, GLPK.Optimizer)
+
+# For some solvers, you can also use [`direct_model`](@ref), which offers a more
+# efficient connection to the underlying solver.
+
+model = direct_model(GLPK.Optimizer())
+
+# !!! warning
+#     Some solvers do not support [`direct_model`](@ref)!
+
+# ### Solver Options
+
+# Pass options to solvers with [`optimizer_with_attributes`](@ref):
+
+model = Model(optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => 0))
+
+# !!! note
+#     These options are solver-specific. To find out the various options
+#     available, see the GitHub README of the individual solver packages.
+
+# You can also pass options with [`set_optimizer_attribute`](@ref)
+
+model = Model(GLPK.Optimizer)
+set_optimizer_attribute(model, "msg_lev", 0)
+
+# ## Solution basics
+
+# We saw above how to use [`termination_status`](@ref) and
+# [`primal_status`](@ref) to understand the solution returned by the solver.
+
+# However, you should only query solution attributes like [`value`](@ref) and
+# [`objective_value`](@ref) if there is an available solution. Here's a
+# recommended way to check:
+
+function solve_infeasible()
+    model = Model(GLPK.Optimizer)
+    @variable(model, 0 <= x <= 1)
+    @variable(model, 0 <= y <= 1)
+    @constraint(model, x + y >= 3)
+    @objective(model, Max, x + 2y)
+    optimize!(model)
+    if termination_status(model) != MOI.OPTIMAL
+        @warn("The model was not solved correctly.")
+        return nothing
+    end
+    return value(x), value(y)
+end
+
+solve_infeasible()
+
+# ## Variable basics
+
+model = Model()
+
+# ### Variable bounds
+
+# All of the variables we have created till now have had a bound. We can also
+# create a free variable.
+
+@variable(model, free_x)
+
+# While creating a variable, instead of using the <= and >= syntax, we can also
+# use the `lower_bound` and `upper_bound` keyword arguments.
+
+@variable(model, keyword_x, lower_bound = 1, upper_bound = 2)
+
+# We can query whether a variable has a bound using the `has_lower_bound` and
+# `has_upper_bound` functions. The values of the bound can be obtained using the
+# `lower_bound` and `upper_bound` functions.
+
+has_upper_bound(keyword_x)
+
+#-
+
+upper_bound(keyword_x)
+
+# Note querying the value of a bound that does not exist will result in an error.
+
+try                         #hide
+    lower_bound(free_x)
+catch err                   #hide
+    showerror(stderr, err)  #hide
+end                         #hide
+
+# JuMP also allows us to change the bounds on variable. We will learn this in
+# the problem modification tutorial.
+
+# ### [Containers](@id tutorial_variable_container)
+
+# We have already seen how to add a single variable to a model using the
+# [`@variable`](@ref) macro. Let's now look at more ways to add variables to a
+# JuMP model.
+
+# JuMP provides data structures for adding collections of variables to a model.
+# These data structures are referred to as Containers and are of three types:
+# `Arrays`, `DenseAxisArrays`, and `SparseAxisArrays`.
+
+# #### Arrays
+
+# JuMP arrays are created in a similar syntax to Julia arrays with the addition
+# of specifying that the indices start with 1. If we do not tell JuMP that the
+# indices start at 1, it will create a `DenseAxisArray` instead.
+
+@variable(model, a[1:2, 1:2])
+
+# An n-dimensional variable $x \in {R}^n$ having a bound $l \preceq x \preceq u$
+# ($l, u \in {R}^n$) is added in the following manner.
+
+n = 10
+l = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10]
+u = [10; 11; 12; 13; 14; 15; 16; 17; 18; 19]
+
+@variable(model, l[i] <= x[i = 1:n] <= u[i])
+
+# Note that while working with Containers, we can also create variable bounds
+# depending upon the indices:
+
+@variable(model, y[i = 1:2, j = 1:2] >= 2i + j)
+
+# #### DenseAxisArrays
+
+# `DenseAxisArrays` are used when the required indices are not one-based integer
+# ranges. The syntax is similar except with an arbitrary vector as an index as
+# opposed to a one-based range.
+
+# An example where the indices are integers but do not start with one.
+
+@variable(model, z[i = 2:3, j = 1:2:3] >= 0)
+
+# Another example where the indices are an arbitrary vector.
+
+@variable(model, w[1:5, ["red", "blue"]] <= 1)
+
+# #### SparseAxisArrays
+
+# `SparseAxisArrays` are created when the indices do not form a rectangular set.
+# For example, this applies when indices have a dependence upon previous indices
+# (called triangular indexing).
+
+@variable(model, u[i = 1:3, j = i:5])
+
+# We can also conditionally create variables by adding a comparison check that
+# depends upon the named indices and is separated from the indices by a
+# semi-colon (;).
+
+@variable(model, v[i = 1:9; mod(i, 3) == 0])
+
+# ### Variable types
+
+# The last argument to the `@variable` macro is usually the variable type. Here
+# we'll look at how to specify the variable type.
+
+# #### Integer variables
+
+# Integer optimization variables are constrained to the set $x \in {Z}$
+
+@variable(model, integer_x, Int)
+
+# or
+
+@variable(model, integer_z, integer = true)
+
+# #### Binary variables
+
+# Binary optimization variables are constrained to the set $x \in \{0, 1\}$.
+
+@variable(model, binary_x, Bin)
+
+# or
+
+@variable(model, binary_z, binary = true)
+
+# ## Constraint basics
+
+model = Model()
+@variable(model, x)
+@variable(model, y)
+@variable(model, z[1:10]);
+
+# ### Constraint references
+
+# While calling the `@constraint` macro, we can also set up a constraint
+# reference. Such a reference is useful for obtaining additional information
+# about the constraint, such as its dual solution.
+
+@constraint(model, con, x <= 4)
+
+# ### [Containers](@id tutorial_constraint_container)
+
+# Just as we had containers for variables, JuMP also provides `Arrays`,
+# `DenseAxisArrays`, and `SparseAxisArrays` for storing collections of
+# constraints. Examples for each container type are given below.
+
+# #### Arrays
+
+@constraint(model, [i = 1:3], i * x <= i + 1)
+
+# #### DenseAxisArrays
+
+@constraint(model, [i = 1:2, j = 2:3], i * x <= j + 1)
+
+# #### SparseAxisArrays
+
+@constraint(model, [i = 1:2, j = 1:2; i != j], i * x <= j + 1)
+
+# ### Constraints in a loop
+
+# We can add constraints using regular Julia loops
+
+for i in 1:3
+    @constraint(model, 6x + 4y >= 5i)
+end
+
+# or use for each loops inside the `@constraint` macro.
+
+@constraint(model, [i in 1:3], 6x + 4y >= 5i)
+
+# We can also create constraints such as $\sum _{i = 1}^{10} z_i \leq 1$
+
+@constraint(model, sum(z[i] for i in 1:10) <= 1)
+
+# ## Objective functions
+
+# While the recommended way to set the objective is with the [`@objective`](@ref)
+# macro, the functions [`set_objective_sense`](@ref) and [`set_objective_function`](@ref)
+# provide an equivalent lower-level interface.
+
+using GLPK
+
+model = Model(GLPK.Optimizer)
+@variable(model, x >= 0)
+@variable(model, y >= 0)
+set_objective_sense(model, MOI.MIN_SENSE)
+set_objective_function(model, x + y)
+
+optimize!(model)
+
+#-
+
+objective_value(model)
+
+# To query the objective function from a model, we use the [`objective_sense`](@ref),
+# [`objective_function`](@ref), and [`objective_function_type`](@ref) functions.
+
+objective_sense(model)
+
+#-
+
+objective_function(model)
+
+#-
+
+objective_function_type(model)
+
+# ## Vectorized syntax
+
+# We can also add constraints and an objective to JuMP using vectorized linear
+# algebra. We'll illustrate this by solving an LP in standard form i.e.
+
+# ```math
+# \begin{aligned}
+# & \min & c^T x \\
+# & \;\;\text{s.t.} & A x = b \\
+# & & x \succeq 0 \\
+# & & x \in \mathbb{R}^n
+# \end{aligned}
+# ```
+
+vector_model = Model(GLPK.Optimizer)
+
+A = [
+    1 1 9 5
+    3 5 0 8
+    2 0 6 13
+]
+
+b = [7; 3; 5]
+
+c = [1; 3; 5; 2]
+
+@variable(vector_model, x[1:4] >= 0)
+@constraint(vector_model, A * x .== b)
+@objective(vector_model, Min, c' * x)
+
+optimize!(vector_model)
+
+#-
+
+objective_value(vector_model)
