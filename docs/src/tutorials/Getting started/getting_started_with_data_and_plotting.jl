@@ -350,7 +350,6 @@ model = Model(GLPK.Optimizer)
 optimize!(model)
 solution_summary(model)
 
-
 # ### Solution
 
 println("Minimum number of passports needed: ", objective_value(model))
