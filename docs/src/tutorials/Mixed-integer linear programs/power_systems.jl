@@ -13,6 +13,14 @@
 # We will consider basic "economic dispatch" and "unit commitment" models
 # without taking into account transmission constraints.
 
+# For this tutorial, we use the following packages:
+
+using JuMP
+import DataFrames
+import GLPK
+import Plots
+import StatsPlots
+
 # ## Economic dispatch
 
 # Economic dispatch (ED) is an optimization problem that minimizes the cost of
@@ -26,9 +34,9 @@
 # \min \sum_{i \in I} c^g_{i} \cdot g_{i} + c^w \cdot w,
 # ```
 
-# where $c_{i}$ and $g_{i}$ are the incremental cost (\\&#36;/MWh) and power
+# where $c_{i}$ and $g_{i}$ are the incremental cost (\$/MWh) and power
 # output (MW) of the $i^{th}$ generator, respectively, and $c^w$ and $w$ are the
-# incremental cost (\\&#36;/MWh) and wind power injection (MW), respectively.
+# incremental cost (\$/MWh) and wind power injection (MW), respectively.
 
 # Subject to the constraints:
 
@@ -45,14 +53,6 @@
 
 # Further reading on ED models can be found in A. J. Wood, B. F. Wollenberg, and
 # G. B. Sheblé, "Power Generation, Operation and Control", Wiley, 2013.
-
-# ## JuMP Implementation of Economic Dispatch
-
-using JuMP
-import DataFrames
-import GLPK
-import Plots
-import StatsPlots
 
 # Define some input data about the test system.
 
@@ -91,7 +91,7 @@ end
 
 scenario = Scenario(1500.0, 200.0)
 
-# Create a function solve_ed, which solves the economic dispatch problem for a
+# Create a function `solve_ed`, which solves the economic dispatch problem for a
 # given set of input parameters.
 
 function solve_ed(generators::Vector, wind, scenario)
@@ -130,10 +130,9 @@ solution = solve_ed(generators, wind_generator, scenario);
 println("Dispatch of Generators: ", solution.g, " MW")
 println("Dispatch of Wind: ", solution.w, " MW")
 println("Wind spillage: ", solution.wind_spill, " MW")
-println("\n")
 println("Total cost: \$", solution.total_cost)
 
-# ### Economic dispatch with adjustable incremental costs
+# ## Economic dispatch with adjustable incremental costs
 
 # In the following exercise we adjust the incremental cost of generator G1 and
 # observe its impact on the total cost.
@@ -173,7 +172,7 @@ print(string("elapsed time: ", time() - start, " seconds"))
 
 c_g_scale_df
 
-# ## Modifying the JuMP model in place
+# ## Modifying the JuMP model in-place
 
 # Note that in the previous exercise we entirely rebuilt the optimization model
 # at every iteration of the internal loop, which incurs an additional
@@ -231,19 +230,21 @@ function solve_ed_inplace(
     return df
 end
 
-@time solve_ed_inplace(generators, wind_generator, scenario, 0.5:0.1:3.0)
+start = time()
+inplace_df = solve_ed_inplace(generators, wind_generator, scenario, 0.5:0.1:3.0)
+print(string("elapsed time: ", time() - start, " seconds"))
 
 # Adjusting specific constraints and/or the objective function is faster than
 # re-building the entire model.
 
-# ## A few practical limitations of the economic dispatch model
+inplace_df
 
-# ### Inefficient usage of wind generators
+# ## Inefficient usage of wind generators
 
 # The economic dispatch problem does not perform commitment decisions and, thus,
 # assumes that all generators must be dispatched at least at their minimum power
 # output limit. This approach is not cost efficient and may lead to absurd
-# decisions. For example, if $ d = \sum_{i \in I} g^{\min}_{i}$, the wind power
+# decisions. For example, if $d = \sum_{i \in I} g^{\min}_{i}$, the wind power
 # injection must be zero, i.e. all available wind generation is spilled, to meet
 # the minimum power output constraints on generators.
 
@@ -322,7 +323,7 @@ Plots.plot(dispatch_plot, wind_plot)
 # Baldick, "Wind and Energy Markets: A Case Study of Texas," IEEE Systems
 # Journal, vol. 6, pp. 27-34, 2012.
 
-# ## Unit Commitment model
+# ## Unit commitment
 
 # The Unit Commitment (UC) model can be obtained from ED model by introducing
 # binary variable associated with each generator. This binary variable can
@@ -388,10 +389,9 @@ println("Dispatch of Generators: ", solution.g, " MW")
 println("Commitments of Generators: ", solution.u)
 println("Dispatch of Wind: ", solution.w, " MW")
 println("Wind spillage: ", solution.wind_spill, " MW")
-println("\n")
 println("Total cost: \$", solution.total_cost)
 
-# ### Unit Commitment as a function of demand
+# ## Unit Commitment as a function of demand
 
 # After implementing the UC model, we can now assess the interplay between the
 # minimum power output constraints on generators and wind generation.
