@@ -13,32 +13,6 @@
 # We will consider basic "economic dispatch" and "unit commitment" models
 # without taking into account transmission constraints.
 
-# ## Illustrative example
-
-# For this example, we set the following characteristics of generators,
-# transmission lines, wind farms and demands:
-
-# | Quantity         | Generator 1 | Generator 2 |
-# |:-----------------|:-----------:|------------:|
-# | $g_{min}$, MW    | 0           | 300         |
-# | $g_{max}$, MW    | 1000        | 1000        |
-# | $c^g$, \$/MWh    | 50          | 100         |
-# | $c^{g0}$, \$/MWh | 1000        | 0           |
-
-# | Quantity      | Line 1 | Line 2 |
-# |:--------------|:------:|-------:|
-# | $f^{max}$, MW | 100    | 1000   |
-# | $x$, p.u.     | 0.001  | 0.001  |
-
-# | Quantity        | Wind farm 1 | Wind farm 2 |
-# |:----------------|:-----------:|------------:|
-# | $w^{f}$, MW     | 150         | 50          |
-# | $c^{w}$, \$/MWh | 50          | 50          |
-
-# | Quantity | Bus 1 | Bus 2 | Bus 3 |
-# |:---------|:-----:|:-----:|------:|
-# | $d$, MW  | 0     | 0     | 15000 |
-
 # ## Economic dispatch
 
 # Economic dispatch (ED) is an optimization problem that minimizes the cost of
@@ -350,30 +324,6 @@ Plots.plot(dispatch_plot, wind_plot)
 # power output constraints of generators, we refer interested readers to R.
 # Baldick, "Wind and Energy Markets: A Case Study of Texas," IEEE Systems
 # Journal, vol. 6, pp. 27-34, 2012.
-
-# ### Transmission-infeasible solution
-
-# The ED solution is entirely market-based and disrespects limitations of the
-# transmission network. Indeed, the flows in transmission lines would attain the
-# following values:
-
-# ```math
-# f_{1-2} = 150 MW \leq f_{1-2}^{\max} = 100 MW
-# ```
-
-# ```math
-# f_{2-3} = 1200 MW \leq f_{2-3}^{\max} = 1000 MW
-# ```
-
-# Thus, if this ED solution was enforced in practice, the power flow limits on
-# both lines would be violated. Therefore, in the following section we consider
-# the optimal power flow model, which amends the ED model with network
-# constraints.
-
-# The importance of the transmission-aware decisions is emphasized in E.
-# Lannoye, D. Flynn, and M. O'Malley, "Transmission, Variable Generation, and
-# Power System Flexibility," IEEE Transactions on Power Systems, vol. 30, pp.
-# 57-66, 2015.
 
 # ## Unit Commitment model
 
