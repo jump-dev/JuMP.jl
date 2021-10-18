@@ -189,7 +189,6 @@ function solve_ed_inplace(
     scenario,
     scale::AbstractVector{Float64},
 )
-    start = time()
     obj_out = Float64[]
     w_out = Float64[]
     g1_out = Float64[]
@@ -229,12 +228,10 @@ function solve_ed_inplace(
         spillage_wind = scenario.wind .- w_out,
         total_cost = obj_out,
     )
-    elapsed = time() - start
-    print(string("elapsed time: ", elapsed, " seconds"))
     return df
 end
 
-solve_ed_inplace(generators, wind_generator, scenario, 0.5:0.1:3.0)
+@time solve_ed_inplace(generators, wind_generator, scenario, 0.5:0.1:3.0)
 
 # Adjusting specific constraints and/or the objective function is faster than
 # re-building the entire model.
