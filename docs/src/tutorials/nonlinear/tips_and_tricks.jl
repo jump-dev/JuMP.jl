@@ -3,7 +3,7 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # Nonlinear tips and tricks
+# # Tips and tricks
 
 # This example collates some tips and tricks you can use when formulating
 # nonlinear programs. It uses the following packages:

@@ -1,15 +1,15 @@
-using Documenter
-using Literate
+import Documenter
+import Literate
+import Test
+
 using JuMP
 const MathOptInterface = MOI
-using Test
 
 # When updating the version of MOI used to build these docs, change the entry in
 # Project.toml, and modify the info message below. You may need to modify the
 # JuMP documentation to avoid conflicts with the header links (i.e., JuMP and
 # MOI both have a header called `# Foo`, then `[Foo](@ref)` doesn't know which
 # to link to).
-const _INCLUDE_MOI = true
 const _MOI_INFO_MSG = """
 !!! info
     This documentation is a copy of the official MathOptInterface documentation
@@ -24,18 +24,11 @@ const _MOI_INFO_MSG = """
 # Markdown. _Never_ set it in production.
 const _FAST = findfirst(isequal("--fast"), ARGS) !== nothing
 
-const _TUTORIAL_DIR = joinpath(@__DIR__, "src", "tutorials")
-const _TUTORIAL_SUBDIR = [
-    "Getting started",
-    "Mixed-integer linear programs",
-    "Nonlinear programs",
-    "Quadratic programs",
-    "Conic programs",
-    "Semidefinite programs",
-    "Optimization concepts",
-]
+# ==============================================================================
+#  Run literate.jl
+# ==============================================================================
 
-function link_example(content)
+function _link_example(content)
     edit_url = match(r"EditURL = \"(.+?)\"", content)[1]
     footer = match(r"^(---\n\n\*This page was generated using)"m, content)[1]
     content = replace(
@@ -63,42 +56,94 @@ function _include_sandbox(filename)
     return Base.include(mod, filename)
 end
 
-function literate_directory(dir)
+function _literate_directory(dir)
     rm.(_file_list(dir, dir, ".md"))
     for filename in _file_list(dir, dir, ".jl")
         # `include` the file to test it before `#src` lines are removed. It is
         # in a testset to isolate local variables between files.
-        @testset "$(filename)" begin
+        Test.@testset "$(filename)" begin
             _include_sandbox(filename)
         end
         Literate.markdown(
             filename,
             dir;
             documenter = true,
-            postprocess = link_example,
+            postprocess = _link_example,
         )
     end
     return nothing
 end
 
 if !_FAST
-    literate_directory.(joinpath.(_TUTORIAL_DIR, _TUTORIAL_SUBDIR))
+    for (root, dir, files) in walkdir(joinpath(@__DIR__, "src", "tutorials"))
+        _literate_directory.(joinpath.(root, dir))
+    end
 end
 
+# ==============================================================================
+#  JuMP documentation structure
+# ==============================================================================
+
+# This constant dictates the layout of the documentation. It is manually
+# constructed so that we can have control over the order in which pages are
+# shown. If you add a new page to the documentation, make sure to add it here!
 const _PAGES = [
     "Introduction" => "index.md",
     "installation.md",
-    "Tutorials" => map(
-        subdir ->
-            subdir => map(
-                file -> joinpath("tutorials", subdir, file),
-                filter(
-                    file -> endswith(file, ".md"),
-                    sort(readdir(joinpath(_TUTORIAL_DIR, subdir))),
-                ),
-            ),
-        _TUTORIAL_SUBDIR,
-    ),
+    "Tutorials" => [
+        "Getting started" => [
+            "tutorials/getting_started/getting_started_with_julia.md",
+            "tutorials/getting_started/getting_started_with_JuMP.md",
+            "tutorials/getting_started/getting_started_with_data_and_plotting.md",
+            "tutorials/getting_started/performance_tips.md",
+        ],
+        "Linear programs" => [
+            "tutorials/linear/tips_and_tricks.md",
+            "tutorials/linear/diet.md",
+            "tutorials/linear/cannery.md",
+            "tutorials/linear/facility_location.md",
+            "tutorials/linear/factory_schedule.md",
+            "tutorials/linear/finance.md",
+            "tutorials/linear/geographic_clustering.md",
+            "tutorials/linear/knapsack.md",
+            "tutorials/linear/multi.md",
+            "tutorials/linear/n-queens.md",
+            "tutorials/linear/network_flows.md",
+            "tutorials/linear/prod.md",
+            "tutorials/linear/steelT3.md",
+            "tutorials/linear/sudoku.md",
+            "tutorials/linear/transp.md",
+            "tutorials/linear/urban_plan.md",
+            "tutorials/linear/callbacks.md",
+        ],
+        "Nonlinear programs" => [
+            "tutorials/nonlinear/tips_and_tricks.md",
+            "tutorials/nonlinear/portfolio.md",
+            "tutorials/nonlinear/qcp.md",
+            "tutorials/nonlinear/space_shuttle_reentry_trajectory.md",
+            "tutorials/nonlinear/rocket_control.md",
+            "tutorials/nonlinear/rosenbrock.md",
+            "tutorials/nonlinear/mle.md",
+            "tutorials/nonlinear/clnlbeam.md",
+        ],
+        "Conic programs" => [
+            "tutorials/conic/tips_and_tricks.md",
+            "tutorials/conic/logistic_regression.md",
+            "tutorials/conic/cluster.md",
+            "tutorials/conic/corr_sdp.md",
+            "tutorials/conic/experiment_design.md",
+            "tutorials/conic/max_cut_sdp.md",
+            "tutorials/conic/min_distortion.md",
+            "tutorials/conic/min_ellipse.md",
+            "tutorials/conic/robust_uncertainty.md",
+        ],
+        "Algorithms" => [
+            "tutorials/algorithms/benders_decomposition.md",
+            "tutorials/algorithms/benders_lazy_constraints.md",
+            "tutorials/algorithms/cutting_stock_column_generation.md",
+        ],
+        "Applications" => ["tutorials/applications/power_systems.md"],
+    ],
     "Manual" => [
         "manual/models.md",
         "manual/variables.md",
@@ -135,6 +180,10 @@ const _PAGES = [
     "Release notes" => "release_notes.md",
 ]
 
+# ==============================================================================
+#  Embed MathOptInterface.jl documentation
+# ==============================================================================
+
 function _add_moi_pages()
     moi_docs = joinpath(dirname(dirname(pathof(MOI))), "docs")
     cp(
@@ -168,14 +217,46 @@ try
     rm(joinpath(@__DIR__, "src", "moi"); recursive = true)
 catch
 end
+_add_moi_pages()
 
-if _INCLUDE_MOI
-    _add_moi_pages()
+# ==============================================================================
+#  Check that we have included all the markdown files in _PAGES!
+# ==============================================================================
+
+_add_to_set(set, filename::String) = push!(set, filename)
+_add_to_set(set, filename::Pair) = _add_to_set(set, filename[2])
+_add_to_set(set, filename::Vector) = _add_to_set.(Ref(set), filename)
+
+function _validate_pages()
+    set = Set{String}()
+    for page in _PAGES
+        _add_to_set(set, page)
+    end
+    missing_files = String[]
+    doc_src = joinpath(@__DIR__, "src", "")
+    for (root, dir, files) in walkdir(doc_src)
+        for file in files
+            filename = replace(joinpath(root, file), doc_src => "")
+            if endswith(filename, ".md") && !(filename in set)
+                push!(missing_files, filename)
+            end
+        end
+    end
+    if !isempty(missing_files)
+        error("Some files missing from documentation: $(missing_files)")
+    end
+    return
 end
 
-makedocs(
+_validate_pages()
+
+# ==============================================================================
+#  Build and deploy
+# ==============================================================================
+
+Documenter.makedocs(
     sitename = "JuMP",
-    authors = "Miles Lubin, Iain Dunning, and Joey Huchette",
+    authors = "The JuMP core developers and contributors",
     format = Documenter.HTML(
         # See https://github.com/JuliaDocs/Documenter.jl/issues/868
         prettyurls = get(ENV, "CI", nothing) == "true",
@@ -206,4 +287,7 @@ makedocs(
     pages = _PAGES,
 )
 
-deploydocs(repo = "github.com/jump-dev/JuMP.jl.git", push_preview = true)
+Documenter.deploydocs(
+    repo = "github.com/jump-dev/JuMP.jl.git",
+    push_preview = true,
+)
