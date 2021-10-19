@@ -70,7 +70,7 @@ model you wrote into an equivalent model supported by the solver.
 
 However, if your model is already supported by the solver, bridges add latency
 (read [The "time-to-first-solve" issue](@ref)). This is particularly noticeable
-for small models. 
+for small models.
 
 To reduce the "time-to-first-solve", try passing `add_bridges = false`.
 ```jldoctest
