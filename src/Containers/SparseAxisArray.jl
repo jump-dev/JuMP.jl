@@ -253,6 +253,12 @@ _getindex(x::Ref, ::Any) = x[]
     end
 end
 
+########
+# Show #
+########
+
+# Inspired from Julia SparseArrays stdlib package
+# `Base.summary` is also called from `showerror` on `BoundsError`.
 function Base.summary(io::IO, sa::SparseAxisArray)
     num_entries = length(sa.data)
     return print(
@@ -266,7 +272,7 @@ end
 
 function Base.show(io::IO, ::MIME"text/plain", sa::SparseAxisArray)
     summary(io, sa)
-    if length(sa.data) > 0
+    if !isempty(sa.data)
         println(io, ":")
         show(io, sa)
     end
