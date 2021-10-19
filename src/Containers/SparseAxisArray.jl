@@ -241,6 +241,7 @@ _get_arg(::Tuple{}, ::Tuple) = ()
 # we are broadcasting over!
 _getindex(x::SparseAxisArray, index) = getindex(x, index...)
 _getindex(x::Any, ::Any) = x
+_getindex(x::Ref, ::Any) = x[]
 
 @static if VERSION >= v"1.3"
     # `broadcast_preserving_zero_d` calls `axes(A)` which calls `size(A)` which
