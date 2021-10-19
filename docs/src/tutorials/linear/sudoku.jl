@@ -32,7 +32,7 @@
 
 # Here is a partially solved Sudoku problem:
 
-# ![Partially solved Sudoku](../../assets/partial_sudoku.svg)
+# ![Partially solved Sudoku](../../assets/partial_sudoku.png)
 
 # Solving a Sudoku isn't an optimization problem with an objective; its actually
 # a *feasibility* problem: we wish to find a feasible solution that satisfies
@@ -153,4 +153,4 @@ sol
 
 # Which is the correct solution:
 
-# ![Solved Sudoku](../../assets/full_sudoku.svg)
+# ![Solved Sudoku](../../assets/full_sudoku.png)

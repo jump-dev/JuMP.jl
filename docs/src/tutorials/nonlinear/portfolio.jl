@@ -47,7 +47,7 @@ import Statistics
 #
 # Suppose we bought a stock at $p$ dollars per share in the beginning of the
 # month, and sold it off at $s$ dollars per share at the end of the month. Then
-# the one-month return on a share of the stock is $ \frac{s-p}{p} $.
+# the one-month return on a share of the stock is $\frac{s-p}{p}$.
 
 # Since the stock prices are quite uncertain, so is the end-of-month return on
 # our investment. Our goal is to invest in such a way that the expected

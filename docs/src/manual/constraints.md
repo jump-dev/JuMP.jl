@@ -652,7 +652,7 @@ julia> @constraint(model, !a => {x + y <= 1})
 
 ## Semidefinite constraints
 
-Use [`PSDCone`](ref) to constrain a matrix to be symmetric positive
+Use [`PSDCone`](@ref) to constrain a matrix to be symmetric positive
 semidefinite (PSD). For example,
 ```jldoctest con_psd; setup=:(model = Model())
 julia> @variable(model, X[1:2, 1:2])

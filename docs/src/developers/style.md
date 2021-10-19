@@ -258,7 +258,7 @@ ambiguous which arguments are modified when multiple arguments are present.
 Be sure to document which arguments are modified in the method's docstring.
 
 See also the Julia style guide recommendations for
-[ordering of function arguments](https://docs.julialang.org/en/v1.0.0/manual/style-guide/#Write-functions-with-argument-ordering-similar-to-Julia's-Base-1).
+[ordering of function arguments](https://docs.julialang.org/en/v1/manual/style-guide/#Write-functions-with-argument-ordering-similar-to-Julia-Base).
 
 ### Abbreviations
 

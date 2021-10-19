@@ -3,8 +3,6 @@
 <img class="display-dark-only" src="assets/logo-dark-with-text.svg" alt="JuMP logo"/>
 ```
 
-[![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org)
-
 ```@meta
 # These comments do not display in the HTML output.
 # See https://github.com/JuliaDocs/Documenter.jl/issues/674.
@@ -114,7 +112,7 @@ doi = {10.1287/ijoc.2014.0623},
 
 A preprint of this paper is [freely available](https://arxiv.org/abs/1312.1431).
 
----
+## NumFOCUS
 
 ![NumFOCUS logo](assets/numfocus-logo.png)
 

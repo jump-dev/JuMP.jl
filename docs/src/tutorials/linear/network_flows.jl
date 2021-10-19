@@ -61,8 +61,6 @@ import LinearAlgebra
 # \end{aligned}
 # ```
 
-# ![Flow Network 1](../../assets/g1.svg)
-
 G = [
     0 100 30 0 0
     0 0 20 0 0
@@ -119,8 +117,6 @@ value.(x)
 # \end{aligned}
 # ```
 
-# ![Flow Network 2](../../assets/g2.svg)
-
 G = [
     6 4 5 0
     0 3 6 0
@@ -159,8 +155,6 @@ value.(y)
 # && f(u,v) \geq 0 && \forall (u,v) \in E
 # \end{aligned}
 # ```
-
-# ![Flow Network 3](../../assets/g3.svg)
 
 G = [
     0 3 2 2 0 0 0 0
