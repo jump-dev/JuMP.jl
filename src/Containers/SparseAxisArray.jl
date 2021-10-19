@@ -42,9 +42,6 @@ end
 Base.length(sa::SparseAxisArray) = length(sa.data)
 
 Base.IteratorSize(::Type{<:SparseAxisArray}) = Base.HasLength()
-# By default `IteratorSize` for `Generator{<:AbstractArray{T,N}}` is
-# `HasShape{N}`
-Base.IteratorSize(::Type{Base.Generator{<:SparseAxisArray}}) = Base.HasLength()
 
 Base.iterate(sa::SparseAxisArray, args...) = iterate(values(sa.data), args...)
 
@@ -124,14 +121,6 @@ end
 
 Base.eachindex(d::SparseAxisArray) = keys(d.data)
 
-# Need to define it as indices may be non-integers
-Base.to_index(::SparseAxisArray, idx) = idx
-
-Base.IndexStyle(::Type{<:SparseAxisArray}) = IndexAnyCartesian()
-
-# eachindex redirect to keys
-Base.keys(::IndexAnyCartesian, d::SparseAxisArray) = keys(d)
-
 ################
 # Broadcasting #
 ################
@@ -159,10 +148,6 @@ function Base.BroadcastStyle(
 )
     return style
 end
-
-# We have to define `extrude` because `SparseAxisArray<:AbstractArray`, but it
-# doesn't behave like one. This is the generic fallback for non-array types.
-Base.Broadcast.extrude(x::SparseAxisArray) = x
 
 # The fallback uses `axes` but recommend in the docstring to create a custom
 # method for custom style if needed.
