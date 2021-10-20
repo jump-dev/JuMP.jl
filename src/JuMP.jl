@@ -239,17 +239,18 @@ mutable struct Model <: AbstractModel
 end
 
 """
-    Model(; caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC)
+    Model()
 
 Return a new JuMP model without any optimizer; the model is stored the model in
-a cache. The mode of the `CachingOptimizer` storing this cache is
-`caching_mode`. Use [`set_optimizer`](@ref) to set the optimizer before
-calling [`optimize!`](@ref).
+a cache.
+
+Use [`set_optimizer`](@ref) to set the optimizer before calling
+[`optimize!`](@ref).
 """
-function Model(;
-    caching_mode::MOIU.CachingOptimizerMode = MOIU.AUTOMATIC,
-    solver = nothing,
-)
+function Model(; caching_mode = nothing, solver = nothing)
+    if caching_mode !== nothing
+        @warn("Ignoring `caching_mode` keyword because it has been removed.")
+    end
     if solver !== nothing
         error(
             "The solver= keyword is no longer available in JuMP 0.19 and " *
@@ -257,41 +258,50 @@ function Model(;
             "(https://jump.dev/JuMP.jl/latest/) for latest syntax.",
         )
     end
-    universal_fallback = MOIU.UniversalFallback(MOIU.Model{Float64}())
-    caching_opt = MOIU.CachingOptimizer(universal_fallback, caching_mode)
+    caching_opt = MOIU.CachingOptimizer(
+        MOIU.UniversalFallback(MOIU.Model{Float64}()),
+        MOIU.AUTOMATIC,
+    )
     return direct_model(caching_opt)
 end
 
 """
-    Model(optimizer_factory;
-          caching_mode::MOIU.CachingOptimizerMode=MOIU.AUTOMATIC,
-          bridge_constraints::Bool=true)
+    Model(optimizer_factory; add_bridges::Bool = true)
 
-Return a new JuMP model with the provided optimizer and bridge settings. This
-function is equivalent to:
-```julia
-    model = Model()
-    set_optimizer(model, optimizer_factory,
-                  bridge_constraints=bridge_constraints)
-    return model
-```
+Return a new JuMP model with the provided optimizer and bridge settings.
+
 See [`set_optimizer`](@ref) for the description of the `optimizer_factory` and
-`bridge_constraints` arguments.
+`add_bridges` arguments.
 
 ## Examples
 
-The following creates a model with the optimizer set to `Ipopt`:
+Create a model with the optimizer set to `Ipopt`:
 ```julia
 model = Model(Ipopt.Optimizer)
 ```
+
+Pass an anonymous function which creates a `Gurobi.Optimizer`, and disable
+bridges:
+```julia
+env = Gurobi.Env()
+model = Model(() -> Gurobi.Optimizer(env); add_bridges = false)
+```
 """
-function Model(optimizer_factory; bridge_constraints::Bool = true, kwargs...)
+function Model(
+    optimizer_factory;
+    add_bridges::Bool = true,
+    bridge_constraints::Union{Nothing,Bool} = nothing,
+    kwargs...,
+)
+    if bridge_constraints !== nothing
+        @warn(
+            "`bridge_constraints` argument is deprecated. Use `add_bridges` " *
+            "instead.",
+        )
+        add_bridges = bridge_constraints
+    end
     model = Model(; kwargs...)
-    set_optimizer(
-        model,
-        optimizer_factory,
-        bridge_constraints = bridge_constraints,
-    )
+    set_optimizer(model, optimizer_factory, add_bridges = add_bridges)
     return model
 end
 

@@ -131,8 +131,7 @@ function copy_model(
             "able to copy the constructed model.",
         )
     end
-    caching_mode = backend(model).mode
-    new_model = Model(caching_mode = caching_mode)
+    new_model = Model()
 
     # At JuMP's level, filter_constraints should work with JuMP.ConstraintRef,
     # whereas MOI.copy_to's filter_constraints works with MOI.ConstraintIndex.

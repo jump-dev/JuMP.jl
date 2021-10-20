@@ -1,7 +1,7 @@
 ```@meta
 CurrentModule = JuMP
 DocTestSetup = quote
-    using JuMP, GLPK
+    using JuMP, GLPK, SCS
 end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
@@ -62,6 +62,44 @@ are trying to build. However, if you are modifying a problem by adding and
 deleting different constraint types, you may need to use
 [`set_optimizer`](@ref). See [Switching optimizer for the relaxed problem](@ref)
 for an example of when this is useful.
+
+### Reducing time-to-first-solve latency
+
+By default, JuMP uses [bridges](@ref LazyBridgeOptimizer) to reformulate the
+model you wrote into an equivalent model supported by the solver.
+
+However, if your model is already supported by the solver, bridges add latency
+(read [The "time-to-first-solve" issue](@ref)). This is particularly noticeable
+for small models.
+
+To reduce the "time-to-first-solve", try passing `add_bridges = false`.
+```jldoctest
+julia> model = Model(GLPK.Optimizer; add_bridges = false);
+```
+or
+```jldoctest
+julia> model = Model();
+
+julia> set_optimizer(model, GLPK.Optimizer; add_bridges = false)
+```
+
+However, be wary! If your model and solver combination needs bridges, an error
+will be thrown:
+```jldoctest
+julia> model = Model(SCS.Optimizer; add_bridges = false);
+
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, 2x <= 1)
+ERROR: Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.LessThan{Float64} are not supported by the solver.
+
+If you expected the solver to support your problem, you may have an error in our formulation. Otherwise, consider using a different solver.
+
+The list of available solvers, along with the problem types they support, is available at https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.
+[...]
+```
 
 ## Solver options
 
@@ -318,7 +356,7 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
 
 julia> b = backend(model)
-MOIU.CachingOptimizer{MOI.AbstractOptimizer, MOIU.UniversalFallback{MOIU.Model{Float64}}}
+MOIU.CachingOptimizer{MOIB.LazyBridgeOptimizer{GLPK.Optimizer}, MOIU.UniversalFallback{MOIU.Model{Float64}}}
 in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
 with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
@@ -401,21 +439,6 @@ A `CachingOptimizer` has two modes of operation:
   an operation in the incorrect state results in an error.
 
 By default [`Model`](@ref) will create a `CachingOptimizer` in `AUTOMATIC` mode.
-Use the `caching_mode` keyword to create a model in `MANUAL` mode:
-```jldoctest
-julia> Model(GLPK.Optimizer; caching_mode = MOI.Utilities.MANUAL)
-A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: MANUAL
-CachingOptimizer state: EMPTY_OPTIMIZER
-Solver name: GLPK
-```
-
-!!! tip
-    Only use `MANUAL` mode if you have a very good reason. If you want to reduce
-    the overhead between JuMP and the underlying solver, consider
-    [Direct mode](@ref) instead.
 
 ### LazyBridgeOptimizer
 
@@ -429,9 +452,9 @@ A common example of a bridge is one that splits an interval constrait like
 `@constraint(model, 1 <= x + y <= 2)` into two constraints,
 `@constraint(model, x + y >= 1)` and `@constraint(model, x + y <= 2)`.
 
-Use the `bridge_constraints=false` keyword to remove the bridging layer:
+Use the `add_bridges = false` keyword to remove the bridging layer:
 ```jldoctest
-julia> model = Model(GLPK.Optimizer; bridge_constraints = false)
+julia> model = Model(GLPK.Optimizer; add_bridges = false)
 A JuMP Model
 Feasibility problem with:
 Variables: 0
@@ -440,18 +463,13 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
 
 julia> backend(model)
-MOIU.CachingOptimizer{MOI.AbstractOptimizer, MOIU.UniversalFallback{MOIU.Model{Float64}}}
+MOIU.CachingOptimizer{GLPK.Optimizer, MOIU.UniversalFallback{MOIU.Model{Float64}}}
 in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
 with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
   fallback for MOIU.Model{Float64}
 with optimizer A GLPK model
 ```
-
-!!! tip
-    Only disable bridges if you have a very good reason. If you want to reduce
-    the overhead between JuMP and the underlying solver, consider
-    [Direct mode](@ref) instead.
 
 ## Direct mode
 
