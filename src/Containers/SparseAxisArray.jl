@@ -16,7 +16,8 @@ entries are defined. The entries with indices `idx = (i1, i2, ..., iN)` in
 `map(f, sa::SparseAxisArray)` or `f.(sa::SparseAxisArray)` has the same sparsity
 structure than `sa` even if `f(zero(T))` is not zero.
 
-# Example
+## Examples
+
 ```jldoctest; setup=:(using JuMP)
 julia> dict = Dict((:a, 2) => 1.0, (:a, 3) => 2.0, (:b, 3) => 3.0)
 Dict{Tuple{Symbol,Int64},Float64} with 3 entries:
@@ -39,10 +40,9 @@ struct SparseAxisArray{T,N,K<:NTuple{N,Any}} <: AbstractArray{T,N}
 end
 
 Base.length(sa::SparseAxisArray) = length(sa.data)
+
 Base.IteratorSize(::Type{<:SparseAxisArray}) = Base.HasLength()
-# By default `IteratorSize` for `Generator{<:AbstractArray{T,N}}` is
-# `HasShape{N}`
-Base.IteratorSize(::Type{Base.Generator{<:SparseAxisArray}}) = Base.HasLength()
+
 Base.iterate(sa::SparseAxisArray, args...) = iterate(values(sa.data), args...)
 
 Base.hash(s::SparseAxisArray, h::UInt) = hash(s.data, h)
@@ -60,9 +60,8 @@ function Base.similar(
     return SparseAxisArray(d)
 end
 
-function Base.mapreduce(f, op, sa::SparseAxisArray)
-    return mapreduce(f, op, values(sa.data))
-end
+Base.mapreduce(f, op, sa::SparseAxisArray) = mapreduce(f, op, values(sa.data))
+
 Base.:(==)(sa1::SparseAxisArray, sa2::SparseAxisArray) = sa1.data == sa2.data
 
 ############
@@ -70,12 +69,16 @@ Base.:(==)(sa1::SparseAxisArray, sa2::SparseAxisArray) = sa1.data == sa2.data
 ############
 
 Base.haskey(sa::SparseAxisArray, idx) = haskey(sa.data, idx)
+
 function Base.haskey(sa::SparseAxisArray{T,1,Tuple{I}}, idx::I) where {T,I}
     return haskey(sa.data, (idx,))
 end
 
 # Error for sa[..., :, ...]
-function _colon_error() end
+_colon_error() = nothing
+
+_colon_error(::Any, args...) = _colon_error(args...)
+
 function _colon_error(::Colon, args...)
     return throw(
         ArgumentError(
@@ -84,7 +87,6 @@ function _colon_error(::Colon, args...)
         ),
     )
 end
-_colon_error(arg, args...) = _colon_error(args...)
 
 function Base.setindex!(
     d::SparseAxisArray{T,N,K},
@@ -93,8 +95,11 @@ function Base.setindex!(
 ) where {T,N,K<:NTuple{N,Any}}
     return setindex!(d, value, idx...)
 end
+
 function Base.setindex!(d::SparseAxisArray{T,N}, value, idx...) where {T,N}
-    length(idx) < N && throw(BoundsError(d, idx))
+    if length(idx) < N
+        throw(BoundsError(d, idx))
+    end
     _colon_error(idx...)
     return setindex!(d.data, value, idx)
 end
@@ -105,45 +110,28 @@ function Base.getindex(
 ) where {T,N,K<:NTuple{N,Any}}
     return getindex(d, idx...)
 end
+
 function Base.getindex(d::SparseAxisArray{T,N}, idx...) where {T,N}
-    length(idx) < N && throw(BoundsError(d, idx))
+    if length(idx) < N
+        throw(BoundsError(d, idx))
+    end
     _colon_error(idx...)
     return getindex(d.data, idx)
 end
 
 Base.eachindex(d::SparseAxisArray) = keys(d.data)
 
-# Need to define it as indices may be non-integers
-Base.to_index(d::SparseAxisArray, idx) = idx
-
-Base.IndexStyle(::Type{<:SparseAxisArray}) = IndexAnyCartesian()
-# eachindex redirect to keys
-Base.keys(::IndexAnyCartesian, d::SparseAxisArray) = keys(d)
-
 ################
 # Broadcasting #
 ################
 
-# `broadcast(f, args...)` starts by creating an object:
-#
-#     bc = Broadcast.broadcasted(f, args...)
-#
-# If one of the arguments is `SparseAxisArray`, we want `bc` to be of type
-# `Broadcasted{BroadcastStyle)`. Then, the following functions is called:
-# `copy(bc)`. It first attempts to determine the return type `ElType` of `f` on
-# applied on elements of `args`. If `ElType` is a concrete type, it returns:
-#
-#     copyto!(similar(bc, ElType), bc)
-#
-# Otherwise, it calls `extrude` on each `args`, maps the first element, set
-# `ElType` to its type and calls `copyto_nonleaf!`.
-
-Base.Broadcast.extrude(sa::SparseAxisArray) = sa
-
-# Need to define it as indices may be non-integers
-Base.Broadcast.newindex(d::SparseAxisArray, idx) = idx
-
 struct BroadcastStyle{N,K} <: Broadcast.BroadcastStyle end
+
+function Base.BroadcastStyle(::Type{<:SparseAxisArray{T,N,K}}) where {T,N,K}
+    return BroadcastStyle{N,K}()
+end
+
+# Disallow mixing broadcasts.
 function Base.BroadcastStyle(::BroadcastStyle, ::Base.BroadcastStyle)
     return throw(
         ArgumentError(
@@ -152,50 +140,13 @@ function Base.BroadcastStyle(::BroadcastStyle, ::Base.BroadcastStyle)
         ),
     )
 end
-# Scalars can be used with SparseAxisArray in broadcast
+
+# Allow broadcasting over scalars.
 function Base.BroadcastStyle(
-    ::BroadcastStyle{N,K},
+    style::BroadcastStyle,
     ::Base.Broadcast.DefaultArrayStyle{0},
-) where {N,K}
-    return BroadcastStyle{N,K}()
-end
-function Base.BroadcastStyle(::Type{<:SparseAxisArray{T,N,K}}) where {T,N,K}
-    return BroadcastStyle{N,K}()
-end
-
-function Base.similar(
-    b::Base.Broadcast.Broadcasted{BroadcastStyle{N,K}},
-    ::Type{T},
-) where {T,N,K}
-    return SparseAxisArray(Dict{K,T}())
-end
-
-# Check that all `SparseAxisArray`s involved have the same indices. The other
-# arguments are scalars
-function check_same_eachindex(each_index) end
-function check_same_eachindex(each_index, not_sa, args...)
-    return check_same_eachindex(eachindex, args...)
-end
-function check_same_eachindex(each_index, sa::SparseAxisArray, args...)
-    if Set(each_index) != Set(eachindex(sa))
-        throw(
-            ArgumentError(
-                "Cannot broadcast Containers.SparseAxisArray with" *
-                " different indices",
-            ),
-        )
-    end
-    return check_same_eachindex(eachindex, args...)
-end
-_eachindex(not_sa, args...) = _eachindex(args...)
-function _eachindex(sa::SparseAxisArray, args...)
-    each_index = eachindex(sa)
-    check_same_eachindex(each_index, args...)
-    return each_index
-end
-# Need to define it as it falls back to `axes` by default
-function Base.eachindex(bc::Base.Broadcast.Broadcasted{<:BroadcastStyle})
-    return _eachindex(bc.args...)
+)
+    return style
 end
 
 # The fallback uses `axes` but recommend in the docstring to create a custom
@@ -206,27 +157,76 @@ function Base.Broadcast.instantiate(
     return bc
 end
 
-# The generic method in `Base` is `getindex(::Broadcasted, ::Union{Integer, CartesianIndex})`
-# which is not applicable here since the index is not integer
-# TODO make a change in `Base` so that we don't have to call a function starting
-# with an `_`.
-function Base.getindex(bc::Base.Broadcast.Broadcasted{<:BroadcastStyle}, I)
-    return Base.Broadcast._broadcast_getindex(bc, I)
+# We use a couple of lisp-y tricks in `copy`.
+#
+# * `_indices` searches for the first SparseAxisArray in the broadcast and
+#   returns the `keys(x.data)` as an iterator. It also checks that any other
+#   SparseAxisArray's have the same set of keys.
+# * Given an `index` from `_indices`, `_get_arg` walks the arguments of
+#   broadcast and returns the equivalent of
+#   `tuple([arg[index...] for arg in bc.args]...)` in a type-stable way.
+function Base.copy(
+    bc::Base.Broadcast.Broadcasted{BroadcastStyle{N,K}},
+) where {N,K}
+    dict = Dict(
+        index => bc.f(_get_arg(bc.args, index)...) for
+        index in _indices(bc.args...)
+    )
+    return SparseAxisArray(dict)
 end
 
-# The generic implementation fall back to converting `bc` to
-# `Broadcasted{Nothing}`. It is advised in `Base` to define a custom method for
-# custom styles. The fallback for `Broadcasted{Nothing}` is not appropriate as
-# indices are not integers for `SparseAxisArray`.
-function Base.copyto!(
-    dest::SparseAxisArray{T,N,K},
-    bc::Base.Broadcast.Broadcasted{BroadcastStyle{N,K}},
-) where {T,N,K}
-    for key in eachindex(bc)
-        dest[key] = bc[key]
-    end
-    return dest
+# Recursion end for `_check_same_indices`. No more arguments to search.
+_check_same_indices(::Any) = nothing
+
+# This argument is not a `SparseAxisArray`. Keep searching.
+function _check_same_indices(indices, ::Any, args...)
+    return _check_same_indices(indices, args...)
 end
+
+# This argument is a SparseAxisArray. Check it has the same keys as the first
+# argument.
+function _check_same_indices(indices, x::SparseAxisArray, args...)
+    if length(x.data) != length(indices) ||
+       any(i -> !haskey(x.data, i), indices)
+        throw(
+            ArgumentError(
+                "Cannot broadcast Containers.SparseAxisArray with" *
+                " different indices",
+            ),
+        )
+    end
+    return _check_same_indices(indices, args...)
+end
+
+# `_indices` returns the set of keys for the SparseAxisArray being broadcasted
+# over. It might be in any position of the arguments, so we keep stripping away
+# arguments until we find one.
+_indices(::Any, args...) = _indices(args...)
+
+function _indices(x::SparseAxisArray, args...)
+    indices = keys(x.data)
+    # Now that we have some keys, check the remaining arugments for
+    # SparseAxisArrays, and if we find one, check it has the same set of keys.
+    _check_same_indices(indices, args...)
+    return indices
+end
+
+"""
+    _get_arg(args::Tuple, index::Tuple)
+
+Return a tuple corresponding to `tuple([arg[index] for arg in args]...)` in a
+type-stable way.
+"""
+function _get_arg(args::Tuple, index::Tuple)
+    return (_getindex(first(args), index), _get_arg(Base.tail(args), index)...)
+end
+_get_arg(::Tuple{}, ::Tuple) = ()
+
+# We need this `getindex` lookalike because some of the `x` may be scalars that
+# we are broadcasting over!
+_getindex(x::SparseAxisArray, index) = getindex(x, index...)
+_getindex(x::Any, ::Any) = x
+_getindex(x::Ref, ::Any) = x[]
 
 @static if VERSION >= v"1.3"
     # `broadcast_preserving_zero_d` calls `axes(A)` which calls `size(A)` which
@@ -269,13 +269,16 @@ function Base.summary(io::IO, sa::SparseAxisArray)
         isone(num_entries) ? " entry" : " entries",
     )
 end
+
 function Base.show(io::IO, ::MIME"text/plain", sa::SparseAxisArray)
     summary(io, sa)
-    if !iszero(length(sa.data))
+    if !isempty(sa.data)
         println(io, ":")
         show(io, sa)
     end
+    return
 end
+
 Base.show(io::IO, x::SparseAxisArray) = show(convert(IOContext, io), x)
 
 function Base.show(io::IOContext, x::SparseAxisArray)
