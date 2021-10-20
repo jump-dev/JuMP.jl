@@ -115,10 +115,11 @@
 # Finally, in order to approximate the derivatives of the problem dynamics, we will use either rectangular
 # or [trapezoidal](http://en.wikipedia.org/wiki/Trapezoidal_rule) integration.
 
-# > #### Disclaimer
-# > Do not try to actually land a Space Shuttle using this notebook! 😛
-# > There's no mesh refinement going on, which can lead to unrealistic trajectories having position
-# > and velocity errors with orders of magnitude $10^4$ ft and $10^2$ ft/sec, respectively.
+# !!! warning
+#     Do not try to actually land a Space Shuttle using this notebook! There's
+#     no mesh refinement going on, which can lead to unrealistic trajectories
+#     having position and velocity errors with orders of magnitude $10^4$ ft and
+#     $10^2$ ft/sec, respectively.
 
 using JuMP
 import Interpolations
