@@ -40,8 +40,8 @@ The breaking changes are as follows:
    `@variable(model, x[length(S)])` instead of
    `@variable(model, x[1:length(S)])`.
  * The `caching_mode` argument to `Model`, e.g.,
-   `Model(caching_mode = MOIU.MANUAL)` mode has been removed due to lack of
-   usage.
+   `Model(caching_mode = MOIU.MANUAL)` mode has been removed. For more control
+   over the optimizer, use `direct_model` instead.
  * The previously deprecated `lp_objective_perturbation_range` and
    `lp_rhs_perturbation_range` functions have been removed. Use
    `lp_sensitivity_report` instead.
