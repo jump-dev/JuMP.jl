@@ -751,8 +751,8 @@ end
 """
     termination_status(model::Model)
 
-Return the reason why the solver stopped (i.e., the MathOptInterface model
-attribute `TerminationStatus`).
+Return a [`MOI.TerminationStatusCode`](@ref) describing why the solver stopped
+(i.e., the [`MOI.TerminationStatus`](@ref) attribute).
 """
 function termination_status(model::Model)
     return MOI.get(model, MOI.TerminationStatus())::MOI.TerminationStatusCode
@@ -771,9 +771,9 @@ end
 """
     primal_status(model::Model; result::Int = 1)
 
-Return the status of the most recent primal solution of the solver (i.e., the
-MathOptInterface model attribute `PrimalStatus`) associated with the result
-index `result`.
+Return a [`MOI.ResultStatusCode`](@ref) describing the status of the most recent
+primal solution of the solver (i.e., the [`MOI.PrimalStatus`](@ref) attribute)
+associated with the result index `result`.
 
 See also: [`result_count`](@ref).
 """
@@ -784,9 +784,9 @@ end
 """
     dual_status(model::Model; result::Int = 1)
 
-Return the status of the most recent dual solution of the solver (i.e., the
-MathOptInterface model attribute `DualStatus`) associated with the result
-index `result`.
+Return a [`MOI.ResultStatusCode`](@ref) describing the status of the most recent
+dual solution of the solver (i.e., the [`MOI.DualStatus`](@ref) attribute)
+associated with the result index `result`.
 
 See also: [`result_count`](@ref).
 """
