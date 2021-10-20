@@ -6,7 +6,104 @@
 
 ### Breaking changes
 
-- Update to MathOptInterface v0.10
+JuMP 0.22 contains a number of breaking changes. However, these should be
+invisible for the majority of users. You will mostly encounter these breaking
+changes if you: wrote a JuMP extension, accessed `backend(model)`, or called
+ `@SDconstraint`.
+
+The breaking changes are as follows:
+
+ * MathOptInterface has been updated to v0.10.3. For users who have interacted
+   with the MOI backend, this contains a large number of breaking changes. Read
+   the [MathOptInterface release notes](https://jump.dev/MathOptInterface.jl/v0.10/release_notes/#v0.10.0-(September-6,-2021))
+   for more details.
+ * The `bridge_constraints` keyword argument to `Model` and `set_optimizer` has
+   been renamed `add_bridges` to reflect that more thing were bridged than just
+   constraints.
+ * The `backend(model)` field now contains a concrete instance of a
+   `MOI.Utilities.CachingOptimizer` instead of one with an abstractly typed
+   optimizer field. In most cases, this will lead to improved performance.
+   However, calling `set_optimizer` after `backend` invalidates the old
+   backend. For example:
+   ```julia
+   model = Model()
+   b = backend(model)
+   set_optimizer(model, GLPK.Optimizer)
+   @variable(model, x)
+   # b is not updated with `x`! Get a new b by calling `backend` again.
+   new_b = backend(model)
+   ```
+ * All usages of `@SDconstraint` are deprecated. The new syntax is
+   `@constraint(model, X >= Y, PSDCone())`.
+ * Creating a `DenseAxisArray` with a `Number` as an axis will now display a
+   warning. This catches a common error in which users write
+   `@variable(model, x[length(S)])` instead of
+   `@variable(model, x[1:length(S)])`.
+ * The `caching_mode` argument to `Model`, e.g.,
+   `Model(caching_mode = MOIU.MANUAL)` mode has been removed due to lack of
+   usage.
+ * The previously deprecated `lp_objective_perturbation_range` and
+   `lp_rhs_perturbation_range` functions have been removed. Use
+   `lp_sensitivity_report` instead.
+ * The `.m` fields of `NonlinearExpression` and `NonlinearParameter` have been
+   renamed to `.model`.
+ * Infinite variable bounds are now ignored. Thus, `@variable(model, x <= Inf)`
+   will show `has_upper_bound(x) == false`. Previously, these bounds were passed
+   through to the solvers which caused numerical issues for solvers expecting
+   finite bounds.
+ * The `variable_type` and `constraint_type` functions were removed. This should
+   only affect users who previously wrote JuMP extensions. The functions can be
+   deleted without consequence.
+ * The internal functions `moi_mode`, `moi_bridge_constraints`,
+   `moi_add_constraint`, and `moi_add_to_function_constant` are no longer
+   exported.
+ * The un-used method `Containers.generate_container` has been deleted.
+ * The `Containers` API has been refactored, and `_build_ref_sets` is now
+   public as `Containers.build_ref_sets`.
+ * The `parse_constraint_` methods for extending `@constraint` at parse time
+   have been refactored in a breaking way. Consult the Extensions documentation
+   for more details and examples.
+
+### New features
+
+ * Convert a `x::DenseAxisArray` to an `Array` by calling `Array(x)`. This is
+   preferred over accessing `x.data`.
+ * `NonlinearExpression` is now a subtype of `AbstractJuMPScalar`
+ * Constraints such as `@constraint(model, x + 1 in MOI.Integer())` are now
+   supported.
+ * `primal_feasibility_report` now accepts a function as the first argument.
+ * Scalar variables `@variable(model, x[1:2] in MOI.Integer())` creates two
+   variables, both of which are constrained to be in the set `MOI.Integer`.
+ * Conic constraints can now be specified as inequalities under a different
+   partial ordering. So `@constraint(model, x - y in MOI.Nonnegatives())` can
+   now be written as `@constraint(model, x >= y, MOI.Nonnegatives())`.
+ * Names are now set for vectorized constraints.
+
+### Documentation, maintenance and performance
+
+ * The documentation now includes a full copy of the MathOptInterface
+   documentation to make it easy to link concepts between the docs. (The
+   MathOptInterface documentation has also been significantly improved.)
+ * The documentation contains a large number of improvements and clarifications
+   on a range of topics. Thanks to @sshin23, @DilumAluthge, and @jlwether.
+ * The documentation is now built with Julia 1.6 instead of 1.0.
+ * Various error messages have been improved to be more readable.
+ * Fixed a performance issue when `show` was called on a `SparseAxisArray` with
+   a large number of elements.
+ * Fixed a bug displaying barrier and simplex iterations in `solution_summary`.
+ * Fixed a bug by implementing `hash` for `DenseAxisArray` and
+   `SparseAxisArray`.
+ * Names are now only set if the solver supports them. Previously, this
+   prevented solvers such as Ipopt from being used with `direct_model`.
+ * `MutableArithmetics.Zero` is converted into a `0.0` before being returned to
+   the user. Previously, some calls to `@expression` would return the
+   undocumented `MutableArithmetics.Zero()` object. One example is summing over
+   an empty set `@expression(model, sum(x[i] for i in 1:0))`. You will now get
+   `0.0` instead.
+ * `AffExpr` and `QuadExpr` can now be used with `== 0` instead of `iszero`.
+   This fixes a number of issues relating to Julia standard libraries such as
+   `LinearAlgebra` and `SparseArrays`.
+ * Fixed a bug when registering a user-defined function with splatting.
 
 ## Version 0.21.10 (September 4, 2021)
 
