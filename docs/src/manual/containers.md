@@ -175,9 +175,17 @@ And data, a 2×2 Matrix{Tuple{Symbol, Int64}}:
 
 ### Access internal data
 
-Use `Array(x)` to access the internal data array
+Use `Array(x)` to copy the internal data array into a new `Array`:
 ```jldoctest containers_dense
 julia> Array(x)
+2×2 Matrix{Tuple{Int64, Symbol}}:
+ (1, :A)  (1, :B)
+ (2, :A)  (2, :B)
+```
+
+To access the internal data without a copy, use `x.data`.
+```jldoctest containers_dense
+julia> x.data
 2×2 Matrix{Tuple{Int64, Symbol}}:
  (1, :A)  (1, :B)
  (2, :A)  (2, :B)

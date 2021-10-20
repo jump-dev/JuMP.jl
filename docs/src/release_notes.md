@@ -66,8 +66,7 @@ The breaking changes are as follows:
 
 ### New features
 
- * Convert a `x::DenseAxisArray` to an `Array` by calling `Array(x)`. This is
-   preferred over accessing `x.data`.
+ * Copy a `x::DenseAxisArray` to an `Array` by calling `Array(x)`.
  * `NonlinearExpression` is now a subtype of `AbstractJuMPScalar`
  * Constraints such as `@constraint(model, x + 1 in MOI.Integer())` are now
    supported.
