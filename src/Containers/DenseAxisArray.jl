@@ -24,7 +24,9 @@ struct DenseAxisArray{T,N,Ax,L<:NTuple{N,_AxisLookup}} <: AbstractArray{T,N}
     lookup::L
 end
 
-Base.Array{T,N}(x::DenseAxisArray) where {T,N} = convert(Array{T,N}, x.data)
+function Base.Array{T,N}(x::DenseAxisArray) where {T,N}
+    return convert(Array{T,N}, copy(x.data))
+end
 
 function Base.hash(d::DenseAxisArray, h::UInt)
     return hash(d.data, hash(d.axes, hash(d.lookup, h)))

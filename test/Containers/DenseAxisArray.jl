@@ -295,6 +295,9 @@ And data, a 0-dimensional $(Array{Int,0}):
         B = @inferred Array(A)
         @test B isa Vector{Int}
         @test B == [1, 3, 2]
+        # Test mutating B doesn't mutate A
+        B[2] = 4
+        @test A[2] == 3
         C = @inferred Array{Float64}(A)
         @test C isa Vector{Float64}
         @test C == [1.0, 3.0, 2.0]
