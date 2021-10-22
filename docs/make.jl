@@ -91,8 +91,7 @@ end
 # constructed so that we can have control over the order in which pages are
 # shown. If you add a new page to the documentation, make sure to add it here!
 const _PAGES = [
-    "Introduction" => "index.md",
-    "installation.md",
+    "Introduction" => ["index.md", "installation.md"],
     "Tutorials" => [
         "Getting started" => [
             "tutorials/getting_started/getting_started_with_julia.md",
@@ -180,7 +179,7 @@ const _PAGES = [
         "Style Guide" => "developers/style.md",
         "Roadmap" => "developers/roadmap.md",
     ],
-    "Release notes" => "release_notes.md",
+    "release_notes.md",
 ]
 
 # ==============================================================================

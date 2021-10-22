@@ -1,4 +1,4 @@
-# JuMP release notes
+# Release notes
 
 ## Version 0.22.0 (In development)
 
