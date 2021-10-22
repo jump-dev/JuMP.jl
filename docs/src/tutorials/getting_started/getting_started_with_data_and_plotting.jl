@@ -20,11 +20,21 @@
 
 # # Getting started with data and plotting
 
-# In many cases we might need to read data available in an external file rather
-# than type it into Julia ourselves.
+# In this tutorial we will learn how to read tabular data into Julia, and some
+# of the basics of plotting.
 
-# This tutorial is concerned with reading tabular data into Julia. We'll cover
-# basic plotting along the way.
+# If you're new to Julia, start by reading [Getting started with Julia](@ref)
+# and [Getting started with JuMP](@ref) first.
+
+# !!! note
+#     There are multiple ways to read the same kind of data into Julia. This
+#     tutorial focuses on DataFrames.jl because it provides the ecosystem to
+#     work with most of the required file types in a straightforward manner.
+
+# Before we get started, we need this constant to point to where the data files
+# are.
+
+const DATA_DIR = joinpath(@__DIR__, "data")
 
 # ## Where to get help
 
@@ -33,19 +43,14 @@
 # * CSV.jl: [http://csv.juliadata.org/stable](http://csv.juliadata.org/stable)
 # * DataFrames.jl: [https://dataframes.juliadata.org/stable/](https://dataframes.juliadata.org/stable/)
 
-# !!! note
-#     There are multiple ways to read the same kind of data into Julia. This
-#     tutorial focuses on DataFrames.jl because it provides the ecosystem to
-#     work with most of the required file types in a straightforward manner.
+# ## Preliminaries
 
-# We need this constant to point to where the data files are.
-
-const DATA_DIR = joinpath(@__DIR__, "data");
+# To get started, we need to install some packages.
 
 # ### DataFrames.jl
 
 # The `DataFrames` package provides a set of tools for working with tabular
-# data. It is available through the Julia package system.
+# data. It is available through the Julia package manager.
 # ```julia
 # using Pkg
 # Pkg.add("DataFrames")
@@ -53,10 +58,15 @@ const DATA_DIR = joinpath(@__DIR__, "data");
 
 import DataFrames
 
+# !!! info What is a DataFrame?
+#     A DataFrame is a data structure like a table or spreadsheet. You can use
+#     it for storing and exploring a set of related data values. Think of it as
+#     a smarter array for holding tabular data.
+
 # ### Plots.jl
 
 # The `Plots` package provides a set of tools for plotting. It is available
-# through the Julia package system.
+# through the Julia package manager.
 # ```julia
 # using Pkg
 # Pkg.add("Plots")
@@ -64,18 +74,7 @@ import DataFrames
 
 import Plots
 
-# ### What is a DataFrame?
-
-# A DataFrame is a data structure like a table or spreadsheet. You can use it
-# for storing and exploring a set of related data values. Think of it as a
-# smarter array for holding tabular data.
-
-# ## Reading Tabular Data into a DataFrame
-
-# We will begin by reading data from different file formats into a DataFrame
-# object.
-
-# ### CSV files
+# ### CSV .jl
 
 # CSV and other delimited text files can be read by the CSV.jl package.
 
@@ -84,6 +83,8 @@ import Plots
 # ```
 
 import CSV
+
+# ## DataFrame basics
 
 # To read a CSV file into a DataFrame, we use the `CSV.read` function.
 
@@ -120,8 +121,11 @@ Plots.scatter(
     ylims = (0, 3),
 )
 
-# Better! Read the [CSV documentation](https://csv.juliadata.org/stable/) for
-# other parsing options.
+# Better!
+
+# !!! tip
+#     Read the [CSV documentation](https://csv.juliadata.org/stable/) for other
+#     parsing options.
 
 # DataFrames.jl supports manipulation using functions similar to pandas. For
 # example, split the dataframe into groups based on eye-color:
@@ -184,35 +188,35 @@ delim_df = CSV.read(
 
 # ### Querying Basic Information
 
-# The `size` function gets us the dimensions of the DataFrame.
+# The `size` function gets us the dimensions of the DataFrame:
 
 DataFrames.size(ss_df)
 
 # We can also use the `nrow` and `ncol` functions to get the number of rows and
-# columns respectively.
+# columns respectively:
 
 DataFrames.nrow(ss_df), DataFrames.ncol(ss_df)
 
-# The `describe` function gives basic summary statistics of data in a DataFrame.
+# The `describe` function gives basic summary statistics of data in a DataFrame:
 
 DataFrames.describe(ss_df)
 
-# Names of every column can be obtained by the `names` function.
+# Names of every column can be obtained by the `names` function:
 
 DataFrames.names(ss_df)
 
-# Corresponding data types are obtained using the broadcasted `eltype` function.
+# Corresponding data types are obtained using the broadcasted `eltype` function:
 
 eltype.(ss_df)
 
 # ### Accessing the Data
 
 # Similar to regular arrays, we use numerical indexing to access elements of a
-# DataFrame.
+# DataFrame:
 
 csv_df[1, 1]
 
-# The following are different ways to access a column.
+# The following are different ways to access a column:
 
 csv_df[!, 1]
 
@@ -228,7 +232,7 @@ csv_df.Name
 
 csv_df[:, 1] # Note that this creates a copy.
 
-# The following are different ways to access a row.
+# The following are different ways to access a row:
 
 csv_df[1:1, :]
 
@@ -238,11 +242,11 @@ csv_df[1, :] # This produces a DataFrameRow.
 
 # We can change the values just as we normally assign values.
 
-# Assign a range to scalar.
+# Assign a range to scalar:
 
 csv_df[1:3, :Height] .= 1.83
 
-# Vector to equal length vector.
+# Assign a vector:
 
 csv_df[4:6, :Height] = [1.8, 1.6, 1.8]
 
@@ -287,8 +291,8 @@ passport_data = CSV.read(
 # Our task is to find out the minimum number of passports needed to visit every
 # country without requiring a visa.
 
-# The values we are interested in are -1 and 3. Modify the dataframe so that
-# the -1 and 3 are `1` (true), and all others are `0` (false).
+# The values we are interested in are -1 and 3. Let's modify the dataframe so
+# that the -1 and 3 are `1` (true), and all others are `0` (false):
 
 function modifier(x)
     if x == -1 || x == 3
@@ -310,8 +314,10 @@ passport_data
 
 # ### JuMP Modeling
 
-# Let us associate each passport with a decision variable $x_c$ for
-# each country $c$. We want to minimize the sum $\sum x_c$ over all countries.
+# To model the problem as a mixed-integer linear program, we need a binary
+# decision variable $x_c$ for each country $c$. $x_c$ is $1$ if we select
+# passport $c$ and $0$ otherwise. Our objective is to minimize the sum
+# $\sum x_c$ over all countries.
 
 # Since we wish to visit all the countries, for every country, we should own at
 # least one passport that lets us travel to that country visa free. For one
@@ -324,12 +330,12 @@ passport_data
 # ```math
 # \begin{aligned}
 # \min && \sum_{c \in C} x_c \\
-# \text{s.t.} && \sum_{c \in C} a_{c,d} \cdot x_c \geq 1 && \forall c \in C \\
-# && x_c \in \{0,1\} && \forall c \in C
+# \text{s.t.} && \sum_{c \in C} a_{c,d} x_c \geq 1 && \forall d \in C \\
+# && x_c \in \{0,1\} && \forall c \in C.
 # \end{aligned}
 # ```
 
-# We'll now solve the problem using JuMP.
+# We'll now solve the problem using JuMP:
 
 using JuMP
 import GLPK
@@ -344,13 +350,20 @@ model = Model(GLPK.Optimizer)
 @variable(model, x[C], Bin)
 @objective(model, Min, sum(x))
 @constraint(model, [d in C], passport_data[!, d]' * x >= 1)
+model
 
 # Now optimize!
 
 optimize!(model)
+
+# We can use the [`solution_summary`](@ref) function to get an overview of the
+# solution:
+
 solution_summary(model)
 
 # ### Solution
+
+# Let's  have a look at the solution in more detail:
 
 println("Minimum number of passports needed: ", objective_value(model))
 
@@ -362,6 +375,11 @@ for c in C
         println(" * ", c)
     end
 end
+
+# Interesting! We need some passports, like Australia and the United States,
+# which have widespread access to a large number of countries. However, we also
+# need passports like North Korea which only have visa-free access to a very
+# limited number of countries.
 
 # !!! note
 #     We use `value(x[c]) > 0.5` rather than `value(x[c]) == 1` to avoid
