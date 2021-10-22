@@ -8,16 +8,9 @@
 # See https://github.com/JuliaDocs/Documenter.jl/issues/674.
 ```
 
-!!! warning
-    Between versions 0.18 and 0.19, JuMP underwent a major transition in its
-    underlying solver abstraction API, from
-    [MathProgBase](https://github.com/JuliaOpt/MathProgBase.jl) to
-    [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl).
-    See [NEWS.md](https://github.com/jump-dev/JuMP.jl/blob/master/NEWS.md) for
-    a comprehensive list of changes between the two versions, many of which
-    are breaking. This documentation is for JuMP/MathOptInterface.
-    For the documentation of JuMP 0.18, see
-    [here](https://jump.dev/JuMP.jl/0.18/).
+# Introduction
+
+Welcome to the documentation for JuMP!
 
 ## What is JuMP?
 
@@ -32,6 +25,8 @@ programming.
     If you aren't sure if you should use JuMP, read [Should I use JuMP?](@ref).
 
 ## Resources for getting started
+
+There are few ways to get started with JuMP:
 
 * Read the [Installation Guide](@ref).
 * Read the introductory tutorials [Getting started with Julia](@ref) and
@@ -76,7 +71,7 @@ you know where to look for certain things.
   for MathOptInterface. Look here for functions and constants beginning with
   `MOI.`, as well as for general information on how MathOptInterface works.
 
-### Citing JuMP
+## Citing JuMP
 
 If you find JuMP useful in your work, we kindly request that you cite the
 following paper ([pdf](https://mlubin.github.io/pdf/jump-sirev.pdf)):

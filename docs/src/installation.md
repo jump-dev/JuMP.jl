@@ -1,14 +1,38 @@
 # Installation Guide
 
-!!! info
-    Installation troubles? Check the [Common installation issues](@ref) section
-    below.
+This guide explains how to install Julia and  JuMP. If you have installation
+troubles, read the [Common installation issues](@ref) section below.
+
+## Install Julia
 
 JuMP is a package for [Julia](https://julialang.org). To use JuMP, first
 [download and install](https://julialang.org/downloads/) Julia.
 
-!!! note
-    This version of JuMP is compatible with Julia 1.0 and later.
+!!! tip
+    If you  are new  to Julia, read our [Getting started with Julia](@ref)
+    tutorial.
+
+### Which version should I pick?
+
+You can install the "Current stable release" or the "Long-term support (LTS)
+release".
+
+ * The "Current stable release" is the latest release of Julia. It has access to
+   newer features, and is likely faster.
+ * The "Long-term support release" is an older version of Julia that has
+   continued to receive bug and security fixes. However, it may not have the
+   latest features or performance improvements.
+
+For most users, you should install the "Current stable release", and whenever
+Julia releases a new version of the current stable release, you should update
+your version of Julia. Note that any code you write on one version of the
+current stable release will continue to work on all subsequent releases.
+
+For users in restricted software environments (e.g., your enterprise IT controls
+what software you can install), you may be better off installing the long-term
+support release because you will not have to update Julia as frequently.
+
+## Install JuMP
 
 From Julia, JuMP is installed using the built-in package manager:
 ```julia
@@ -22,11 +46,16 @@ Pkg.add("JuMP")
     [Pkg manager documentation](https://julialang.github.io/Pkg.jl/v1/environments/)
     has more information on this topic.
 
-## Installing a solver
+When we release a new version of JuMP, you can update with:
+```julia
+import Pkg
+Pkg.update("JuMP")
+```
 
-JuMP depends on solvers to solve optimization problems, and you will need to
-install one before you can solve problems with JuMP. The table below lists the
-currently available solvers.
+## Install a solver
+
+JuMP depends on solvers to solve optimization problems. Therefore, you will need
+to install one before you can solve problems with JuMP.
 
 Install a solver using the Julia package manager, replacing `"Clp"` by the
 Julia package name as appropriate.
