@@ -20,12 +20,16 @@
 
 # # Performance tips
 
-# This tutorial explains how to write performant JuMP code.
+# By now you should have read the other "getting started" tutorials. You're
+# almost ready to write your own models, but before you do so there are some
+# important things to be aware of.
 
-# !!! tip
-#     Read the [Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/index.html)
-#     section of the Julia manual. The most important rule is to avoid global
-#     variables!
+# ## Read the Julia performance tips
+
+# The first thing to do is read the [Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/index.html)
+# section of the Julia manual. The most important rule is to avoid global
+# variables! This is particularly important if you're learning JuMP after using
+# a language like MATLAB.
 
 using JuMP  # hide
 using GLPK  # hide

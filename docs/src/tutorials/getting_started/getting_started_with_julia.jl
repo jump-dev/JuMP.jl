@@ -183,8 +183,9 @@ isapprox(sin(2π / 3), √3 / 2; atol = 1e-8)
 #     optimization models. A common mistake you're likely to make is checking
 #     whether a binary variable is 0 using `value(z) == 0`. Always remember to
 #     use something like `isapprox` when comparing floating point numbers.
-#     Note that `isapprox` will always return `false` if one of the number being
-#     compared is `0` and `atol` is zero (its default value).
+
+# Note that `isapprox` will always return `false` if one of the number being
+# compared is `0` and `atol` is zero (its default value).
 
 1e-300 ≈ 0.0
 
@@ -217,17 +218,10 @@ isapprox(1e-9, 0.0, atol = 1e-8)
 
 b = [5, 6]
 
-# !!! info
-#     `Array{Int64, 1}` means that this is an `Array`, with `Int64` elements,
-#     and it has `1` dimension.
-
 # Matrices can by constructed with spaces separating the columns, and semicolons
 # separating the rows:
 
 A = [1.0 2.0; 3.0 4.0]
-
-# Note how this time the type is `Array{Float64, 2}`; the elements are `Float64`
-# and there are `2` dimensions.
 
 # We can do linear algebra:
 
@@ -278,7 +272,7 @@ typeof("π is about 3.1415")
 
 println("Hello, World!")
 
-# We can use `$()` to interpolate values into a string:
+# Use `$()` to interpolate values into a string:
 
 x = 123
 println("The value of x is: $(x)")
@@ -312,7 +306,7 @@ Symbol("abc")
 
 # !!! tip
 #     `Symbol`s are often (ab)used to stand in for a `String` or an `Enum`, when
-#     one of the former is likely a better choice. The JuMP style guide
+#     one of the former is likely a better choice. The JuMP [Style guide](@ref)
 #     recommends reserving `Symbol`s for identifiers. See [@enum vs. Symbol](@ref)
 #     for more.
 
@@ -367,11 +361,13 @@ Dict("A" => 1, "B" => 2.5, "D" => 2 - 3im)
 
 # !!! info
 #     Julia types form a hierarchy. Here the value type of the dictionary is
-#     `Number`, which is a generalization of `Int64`, `Float64`, and `Complex{Int}`.
-#     In general, having variables with "Abstract" types like `Number` can lead
-#     to slower code, so you should try to make sure every element in a
-#     dictionary or vector is the same type. For example, in this case we could
-#     represent every element as a `Complex{Float64}`:
+#     `Number`, which is a generalization of `Int64`, `Float64`, and
+#     `Complex{Int}`. Leaf nodes in this hierarchy are called "concrete" types,
+#     and all others are called "Abstract". In general, having variables with
+#     abstract types like `Number` can lead to slower code, so you should try to
+#     make sure every element in a dictionary or vector is the same type. For
+#     example, in this case we could represent every element as a
+#     `Complex{Float64}`:
 
 Dict("A" => 1.0 + 0.0im, "B" => 2.5 + 0.0im, "D" => 2.0 - 3.0im)
 
@@ -399,15 +395,19 @@ end
 
 a = MyStruct(1, "a", Dict(2 => 3))
 
+#-
+
+a.x
+
 # By default, these are not mutable
 
 try                         #hide
-    a.x = 1
+    a.x = 2
 catch err                   #hide
     showerror(stderr, err)  #hide
 end                         #hide
 
-# However, you can declare `mutable struct`:
+# However, you can declare a `mutable struct` which is mutable:
 
 mutable struct MyStructMutable
     x::Int
@@ -416,6 +416,9 @@ mutable struct MyStructMutable
 end
 
 a = MyStructMutable(1, "a", Dict(2 => 3))
+a.x
+
+#-
 
 a.x = 2
 
@@ -454,7 +457,7 @@ end
 # `if-elseif-else-end`, and the logical operators `||` and `&&` for **or** and
 # **and** respectively:
 
-for i in 0:3:15
+for i in 0:5:15
     if i < 5
         println("$(i) is less than 5")
     elseif i < 10
@@ -572,7 +575,7 @@ end                         #hide
 # We get a dreaded `MethodError`! A `MethodError` means that you passed a
 # function something that didn't match the type that it was expecting. In this
 # case, the error message says that it doesn't know how to handle an
-# `Array{Int64, 1}`, but it does know how to handle `Float64`, `Int64`, and
+# `Vector{Int64}`, but it does know how to handle `Float64`, `Int64`, and
 # `Number`.
 #
 # !!! tip
@@ -581,8 +584,8 @@ end                         #hide
 
 # ### Broadcasting
 
-# In the example above, we didn't define what to do if `f` was passed an
-# `Array`. Luckily, Julia provides a convenient syntax for mapping `f`
+# In the example above, we didn't define what to do if `f` was passed a
+# `Vector`. Luckily, Julia provides a convenient syntax for mapping `f`
 # element-wise over arrays! Just add a `.` between the name of the function and
 # the opening `(`. This works for _any_ function, including functions with
 # multiple arguments. For example:
@@ -590,8 +593,8 @@ end                         #hide
 f.([1, 2, 3])
 
 # !!! tip
-#     Get a `MethodError` when calling a function that takes an `Array`? Try
-#     broadcasting it!
+#     Get a `MethodError` when calling a function that takes a `Vector`,
+#     `Matrix`, or `Array`? Try broadcasting it!
 
 # ## Mutable vs immutable objects
 
