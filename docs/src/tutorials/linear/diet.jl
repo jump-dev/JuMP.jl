@@ -34,7 +34,7 @@ import Test  #hide
 # ```math
 # \begin{aligned}
 # \min & \sum\limits_{f \in F} c_f x_f \\
-# \text{s.t.}\ \ & l_m \le \sum\limits_{f \in F} a_{m,f} x_f \le u_m, && \forall m in M \\
+# \text{s.t.}\ \ & l_m \le \sum\limits_{f \in F} a_{m,f} x_f \le u_m, && \forall m \in M \\
 # & x_f \ge 0, && \forall f \in F
 # \end{aligned}
 # ```
