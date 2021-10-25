@@ -123,10 +123,10 @@ print(model)
 
 optimize!(model)
 
-solution_summary(model)
-
 Test.@test primal_status(model) == MOI.FEASIBLE_POINT   #hide
 Test.@test objective_value(model) ≈ 11.8288 atol = 1e-4 #hide
+
+solution_summary(model)
 
 # Success! We found an optimal solution. Let's see what the optimal solution is:
 
