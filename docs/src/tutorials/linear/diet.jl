@@ -130,7 +130,7 @@ Test.@test objective_value(model) ≈ 11.8288 atol = 1e-4 #hide
 
 # Success! We found an optimal solution. Let's see what the optimal solution is:
 
-for food in foods.food
+for food in foods.name
     println(food, " = ", value(x[food]))
 end
 
