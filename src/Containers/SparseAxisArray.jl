@@ -54,7 +54,7 @@ function Base.size(::SparseAxisArray)
         "closer to a dictionary with `N`-dimensional keys. If you encounter " *
         "this error and you didn't call `size` explicitly, it is because " *
         "you called a method that is unsupported for `SparseAxisArray`s. " *
-        "Consult the JuMP documentation for a list of supported operations."
+        "Consult the JuMP documentation for a list of supported operations.",
     )
 end
 
