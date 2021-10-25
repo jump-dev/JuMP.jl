@@ -174,7 +174,7 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
             "you called a method that is unsupported for `SparseAxisArray`s. " *
             "Consult the JuMP documentation for a list of supported operations.",
         )
-        x = Containers.@container([i = 1:3, j=i:3], i + j)
+        x = Containers.@container([i = 1:3, j = i:3], i + j)
         @test_throws err size(x)
     end
 end
