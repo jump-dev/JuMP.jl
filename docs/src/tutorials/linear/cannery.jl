@@ -34,8 +34,8 @@ import Test  #src
 # ```math
 # \begin{aligned}
 # \min & \sum\limits_{p \in P}\sum\limits_{m \in M} d_{p,m} x_{p,m} \\
-# \text{s.t.} & \sum\limits_{m \in M} x_{p,m} \le c_p, && \forall p\in P} \\
-#             & \sum\limits_{p \in P} x_{p,m} \ge d_m, && \forall m\in M \\
+# \text{s.t.} & \sum\limits_{m \in M} x_{p,m} \le c_p, && \forall p \in P \\
+#             & \sum\limits_{p \in P} x_{p,m} \ge d_m, && \forall m \in M \\
 #             & x_{p,m} \ge 0, && \forall p \in P, m \in M
 # \end{aligned}
 # ```
