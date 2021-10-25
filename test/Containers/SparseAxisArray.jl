@@ -165,7 +165,7 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
         push!(s, a)
         @test length(s) == 1
     end
-    @testsest "size" begin
+    @testset "size" begin
         err = ErrorException(
             "`Base.size` is not implemented for `SparseAxisArray` because " *
             "although it is a subtype of `AbstractArray`, it is conceptually " *
