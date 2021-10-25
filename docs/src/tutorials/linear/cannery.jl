@@ -32,12 +32,12 @@ import Test  #src
 # With a little effort, we can formulate our problem as the following linear
 # program:
 # ```math
-# \begin{array}{r l}
+# \begin{aligned}
 # \min & \sum\limits_{p \in P}\sum\limits_{m \in M} d_{p,m} x_{p,m} \\
-# \text{s.t.} & \sum\limits_{m \in M} x_{p,m} \le c_p,\quad\forall p\in P} \\
-#             & \sum\limits_{p \in P} x_{p,m} \ge d_m,\quad\forall m\in M \\
-#             & x_{p,m} \ge 0, \quad \forall p \in P, m \in M
-# \end{array}
+# \text{s.t.} & \sum\limits_{m \in M} x_{p,m} \le c_p, && \forall p\in P} \\
+#             & \sum\limits_{p \in P} x_{p,m} \ge d_m, && \forall m\in M \\
+#             & x_{p,m} \ge 0, && \forall p \in P, m \in M
+# \end{aligned}
 # ```
 
 # ## Data
