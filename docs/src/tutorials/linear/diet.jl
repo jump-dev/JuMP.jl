@@ -21,7 +21,7 @@ import Test  #hide
 # of each food ``f`` to eat from a set of foods ``F`` in our kitchen.
 
 # Each food ``f`` has a cost, ``c_f``, as well as a macronutrient profile
-# ``a_{m,f}`` for each macronutrient ```m \in M``.
+# ``a_{m,f}`` for each macronutrient ``m \in M``.
 
 # Because we care about a nutritionally balanced meal, we set some minimum and
 # maximum limits for each nutrient, which we denote ``l_m`` and ``u_m``
@@ -34,7 +34,7 @@ import Test  #hide
 # ```math
 # \begin{aligned}
 # \min & \sum\limits_{f \in F} c_f x_f \\
-# \text{s.t.} & l_m \le \sum\limits_{f \in F} a_{m,f} x_f \le u_m, && \forall m in M \\
+# \text{s.t.}\ \ & l_m \le \sum\limits_{f \in F} a_{m,f} x_f \le u_m, && \forall m in M \\
 # & x_f \ge 0, && \forall f \in F
 # \end{aligned}
 # ```
@@ -61,7 +61,7 @@ foods = DataFrames.DataFrame(
     ["name", "cost", "calories", "protein", "fat", "sodium"],
 )
 
-# Here, ``F`` is `foods.name`` and ``c_f`` is `foods.cost`. (We're also playing
+# Here, ``F`` is `foods.name` and ``c_f`` is `foods.cost`. (We're also playing
 # a bit loose the term "macronutrient" by including calories and sodium.)
 
 # !!! tip
@@ -149,10 +149,10 @@ end
 
 optimize!(model)
 
-solution_summary(model)
-
 Test.@test termination_status(model) == MOI.INFEASIBLE  #hide
 Test.@test primal_status(model) == MOI.NO_SOLUTION      #hide
+
+solution_summary(model)
 
 # Uh oh! The exists no feasible solution to our problem. Looks like we're stuck
 # eating ice cream for dinner.
