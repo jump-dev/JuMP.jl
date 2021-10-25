@@ -13,7 +13,7 @@
 using JuMP
 import DataFrames
 import GLPK
-import Test  #src
+import Test  #hide
 
 # ## Formulation
 
@@ -32,11 +32,11 @@ import Test  #src
 # With a little effort, we can formulate our dinner problem as the following
 # linear program:
 # ```math
-# \begin{array}{r l}
+# \begin{aligned}
 # \min & \sum\limits_{f \in F} c_f x_f \\
-# \text{s.t.} & l_m \le \sum\limits_{f \in F} a_{m,f} x_f \le u_m, \quad \forall m in M \\
-# & x_f \ge 0, \quad \forall f \in F
-# \end{array}
+# \text{s.t.} & l_m \le \sum\limits_{f \in F} a_{m,f} x_f \le u_m, && \forall m in M \\
+# & x_f \ge 0, && \forall f \in F
+# \end{aligned}
 # ```
 
 # In the rest of this tutorial, we will create and solve this problem in JuMP,
