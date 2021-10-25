@@ -31,13 +31,14 @@ import Test
 
 # With a little effort, we can formulate our dinner problem as the following
 # linear program:
-```math
-\begin{array}{r l}
-\min & \sum\limits_{f \in F}  c_f x_f \\
-\text{s.t.} & l_m \le \sum\limits_{f \in F} a_{m,f} x_f \le u_m, \quad \forall m in M \\
- & x_f \ge 0, \quad \forall f \in F
-\end{array}
-```
+# ```math
+# \begin{array}{r l}
+# \min & \sum\limits_{f \in F} c_f x_f \\
+# \text{s.t.} & l_m \le \sum\limits_{f \in F} a_{m,f} x_f \le u_m, \quad \forall m in M \\
+# & x_f \ge 0, \quad \forall f \in F
+# \end{array}
+# ```
+
 # In the rest of this tutorial, we will create and solve this problem in JuMP,
 # and learn what we should cook for dinner.
 
@@ -48,40 +49,40 @@ import Test
 foods = DataFrames.DataFrame(
     [
         "hamburger" 2.49 410 24 26 730
-        "chicken"   2.89 420 32 10 1190
-        "hot dog"   1.50 560 20 32 1800
-        "fries"     1.89 380 4 19 270
-        "macaroni"  2.09 320 12 10 930
-        "pizza"     1.99 320 15 12 820
-        "salad"     2.49 320 31 12 1230
-        "milk"      0.89 100 8 2.5 125
+        "chicken" 2.89 420 32 10 1190
+        "hot dog" 1.50 560 20 32 1800
+        "fries" 1.89 380 4 19 270
+        "macaroni" 2.09 320 12 10 930
+        "pizza" 1.99 320 15 12 820
+        "salad" 2.49 320 31 12 1230
+        "milk" 0.89 100 8 2.5 125
         "ice cream" 1.59 330 8 10 180
     ],
     ["name", "cost", "calories", "protein", "fat", "sodium"],
 )
 
-# Here, ``F`` is `foods.name`  and ``c_f`` is `foods.cost`. (We're also playing
+# Here, ``F`` is `foods.name`` and ``c_f`` is `foods.cost`. (We're also playing
 # a bit loose the term "macronutrient" by including calories and sodium.)
 
 # !!! tip
 #     Although we hard-coded the data here, you could also read it in from a
 #     file. See [Getting started with data and plotting](@ref) for details.
 
-# We also need our  minimum and maximum limits:
+# We also need our minimum and maximum limits:
 
 limits = DataFrames.DataFrame(
     [
-        "calories"  1800 2200
-        "protein"   91   Inf
-        "fat"       0    65
-        "sodium"    0    1779
+        "calories" 1800 2200
+        "protein" 91 Inf
+        "fat" 0 65
+        "sodium" 0 1779
     ],
     ["name", "min", "max"],
 )
 
 # ## JuMP formulation
 
-# Now we're ready to  convert our mathematical formulation into a JuMP model.
+# Now we're ready to convert our mathematical formulation into a JuMP model.
 
 # First, create a new JuMP model. Since we have a linear program, we'll use
 # GLPK as our optimizer:
