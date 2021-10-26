@@ -36,7 +36,7 @@ function _link_example(content)
     footer = match(r"^(---\n\n\*This page was generated using)"m, content)[1]
     content = replace(
         content,
-        footer => 
+        footer =>
             "---\n\n!!! tip\n    This tutorial was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl). [View the source `.jl` file on GitHub]($(edit_url)).\n",
     )
     return content
