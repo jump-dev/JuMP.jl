@@ -38,8 +38,10 @@ model = Model()
 # We can also use things like the `keys` of a dictionary:
 
 weight_of_animals = Dict(
-    "dog" => 20.0"cat" => 5.0,
-    "chicken" => 2.0"cow" => 720.0,
+    "dog" => 20.0,
+    "cat" => 5.0,
+    "chicken" => 2.0,
+    "cow" => 720.0,
     "pig" => 150.0,
 )
 animal_keys = keys(weight_of_animals)
