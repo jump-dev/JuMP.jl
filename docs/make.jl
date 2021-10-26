@@ -96,6 +96,7 @@ const _PAGES = [
         "Getting started" => [
             "tutorials/getting_started/getting_started_with_julia.md",
             "tutorials/getting_started/getting_started_with_JuMP.md",
+            "tutorials/getting_started/getting_started_with_sets_and_indexing.md",
             "tutorials/getting_started/getting_started_with_data_and_plotting.md",
             "tutorials/getting_started/performance_tips.md",
         ],
