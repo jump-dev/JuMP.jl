@@ -33,7 +33,7 @@ const _FIX = findfirst(isequal("--fix"), ARGS) !== nothing
 
 function _link_example(content)
     edit_url = match(r"EditURL = \"(.+?)\"", content)[1]
-    footer = match(r"^(---\n\n\*This page was generated using)"m, content)[1]
+    footer = match(r"^(---\n\n\*This page was generated using\*)"m, content)[1]
     content = replace(
         content,
         footer =>
