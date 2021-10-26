@@ -104,7 +104,7 @@ model = Model()
 x[("A", "D")]
 
 # For multi-dimensional sets, you can use JuMP's syntax for constructing
-# [DenseAxisArrays](@ref):
+# [Containers](@ref):
 
 model = Model()
 @variable(model, x[sources, sinks])
@@ -153,7 +153,7 @@ olympic_3_years = [year for year in olympic_years if mod(year, 3) == 0]
 model = Model()
 @variable(model, x[olympic_3_years])
 
-# Alternatively, use JuMP's syntax for constructing [SparseAxisArrays](@ref):
+# Alternatively, use JuMP's syntax for constructing [Containers](@ref):
 
 model = Model()
 @variable(model, x[year in olympic_years; mod(year, 3) == 0])
@@ -208,7 +208,7 @@ model = Model()
 
 # ### Filtered indexing
 
-# We could also use JuMP's support for [`SparseAxisArrays`](@ref):
+# We could also use JuMP's support for [Containers](@ref):
 
 N = length(cities)
 model = Model()
@@ -243,8 +243,9 @@ model = Model()
 # algebraic model and variables that are named in a more meaningful way.
 
 # !!! tip
-#     If you're struggling to formulate a problem using JuMP, consider how you
-#     could convert your data into a more useful form.
+#     If you're struggling to formulate a problem using JuMP using the available
+#     syntax, it's probably a sign that you should convert your data into a
+#     different form.
 
 # ## Next steps
 
