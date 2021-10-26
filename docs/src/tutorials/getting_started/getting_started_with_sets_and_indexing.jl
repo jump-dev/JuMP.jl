@@ -22,6 +22,8 @@
 # If you haven't already, you should first read
 # [Getting started with JuMP](@ref).
 
+using JuMP
+
 # ## Unordered sets
 
 # Unordered sets are useful to describe non-numeric indices, such as the names
