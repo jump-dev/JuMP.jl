@@ -33,12 +33,8 @@ const _FIX = findfirst(isequal("--fix"), ARGS) !== nothing
 
 function _link_example(content)
     edit_url = match(r"EditURL = \"(.+?)\"", content)[1]
-    footer = match(r"^(---\n\n\*This page was generated using)"m, content)[1]
-    content = replace(
-        content,
-        footer => "[View this file on Github]($(edit_url)).\n\n" * footer,
-    )
-    return content
+    return content *
+           "---\n\n!!! tip\n    This tutorial was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl). [View the source `.jl` file on GitHub]($(edit_url)).\n"
 end
 
 function _file_list(full_dir, relative_dir, extension)
@@ -72,6 +68,8 @@ function _literate_directory(dir)
             dir;
             documenter = true,
             postprocess = _link_example,
+            # Turn off the footer. We manually add a modified one.
+            credit = false,
         )
     end
     return nothing
