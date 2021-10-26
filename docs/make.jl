@@ -13,7 +13,7 @@ const MathOptInterface = MOI
 const _MOI_INFO_MSG = """
 !!! info
     This documentation is a copy of the official MathOptInterface documentation
-    available at [https://jump.dev/MathOptInterface.jl/v0.10.3](https://jump.dev/MathOptInterface.jl/v0.10.3).
+    available at [https://jump.dev/MathOptInterface.jl/v0.10.4](https://jump.dev/MathOptInterface.jl/v0.10.4).
     It is included here to make it easier to link concepts between JuMP and
     MathOptInterface.
 
