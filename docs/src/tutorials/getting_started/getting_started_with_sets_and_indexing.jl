@@ -243,8 +243,8 @@ model = Model()
 # algebraic model and variables that are named in a more meaningful way.
 
 # !!! tip
-#     If you're struggling to formulate a problem using JuMP using the available
-#     syntax, it's probably a sign that you should convert your data into a
+#     If you're struggling to formulate a problem using the available syntax in
+#     JuMP, it's probably a sign that you should convert your data into a
 #     different form.
 
 # ## Next steps
