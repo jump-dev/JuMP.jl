@@ -33,7 +33,8 @@ const _FIX = findfirst(isequal("--fix"), ARGS) !== nothing
 
 function _link_example(content)
     edit_url = match(r"EditURL = \"(.+?)\"", content)[1]
-    return content * "---\n\n!!! tip\n    This tutorial was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl). [View the source `.jl` file on GitHub]($(edit_url)).\n"
+    return content *
+           "---\n\n!!! tip\n    This tutorial was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl). [View the source `.jl` file on GitHub]($(edit_url)).\n"
 end
 
 function _file_list(full_dir, relative_dir, extension)
