@@ -155,11 +155,7 @@ function _MA.operate!(
     return quad
 end
 
-function _MA.operate!(
-    ::typeof(*),
-    expr::_GenericAffOrQuadExpr,
-    α::_Constant,
-)
+function _MA.operate!(::typeof(*), expr::_GenericAffOrQuadExpr, α::_Constant)
     if iszero(α)
         return _MA.operate!(zero, expr)
     else
@@ -220,12 +216,7 @@ end
 
 # If `x` could be a transposed vector and `y` a vector, they are not subtypes
 # of `_Scalar` but their product is.
-function _MA.operate!(
-    op::_MA.AddSubMul,
-    expr::_GenericAffOrQuadExpr,
-    x,
-    y,
-)
+function _MA.operate!(op::_MA.AddSubMul, expr::_GenericAffOrQuadExpr, x, y)
     return _MA.operate!(op, expr, x * y)
 end
 
