@@ -13,12 +13,26 @@ const _FAST = findfirst(isequal("--fast"), ARGS) !== nothing
 # Pass --fix to run with `doctests=:fix`.
 const _FIX = findfirst(isequal("--fix"), ARGS) !== nothing
 
+# A flag to check if we are running in a GitHub action.
+const _IS_GITHUB_ACTIONS = get(ENV, "GITHUB_ACTIONS", "false") == "true"
+
+# Pass --pdf to build the PDF. On GitHub actions, we always build the PDF.
+const _PDF = findfirst(isequal("--pdf"), ARGS) !== nothing || _IS_GITHUB_ACTIONS
+
 # ==============================================================================
 #  Run literate.jl
 # ==============================================================================
 
 function _link_example(content)
     edit_url = match(r"EditURL = \"(.+?)\"", content)[1]
+    if !_IS_GITHUB_ACTIONS
+        # The link won't work locally. So hard-code in a URL.
+        edit_url = replace(
+            edit_url,
+            "<unknown>" =>
+                "https://github.com/jump-dev/JuMP.jl/tree/master",
+        )
+    end
     return content *
            "---\n\n!!! tip\n    This tutorial was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl). [View the source `.jl` file on GitHub]($(edit_url)).\n"
 end
@@ -248,10 +262,10 @@ end
 _validate_pages()
 
 # ==============================================================================
-#  Build and deploy
+#  Build the HTML docs
 # ==============================================================================
 
-Documenter.makedocs(
+@time Documenter.makedocs(
     sitename = "JuMP",
     authors = "The JuMP core developers and contributors",
     format = Documenter.HTML(
@@ -262,7 +276,6 @@ Documenter.makedocs(
         assets = ["assets/extra_styles.css"],
         sidebar_sitename = false,
     ),
-    # `strict = true` causes Documenter to throw an error if the Doctests fail.
     strict = true,
     # ==========================================================================
     # `modules = [JuMP]`, along with `checkdocs = :exports` causes Documenter to
@@ -283,6 +296,32 @@ Documenter.makedocs(
     doctest = _FIX ? :fix : !_FAST,
     pages = _PAGES,
 )
+
+# ==============================================================================
+#  Build the LaTeX docs (if needed)
+# ==============================================================================
+
+if _PDF
+    latex_platform = _IS_GITHUB_ACTIONS ? "docker" : "native"
+    @time Documenter.makedocs(
+        sitename = "JuMP",
+        authors = "The JuMP core developers and contributors",
+        format = Documenter.LaTeX(platform = latex_platform),
+        build = "latex_build",
+        pages = _PAGES,
+    )
+    # Hack for deploying: copy the pdf (and only the PDF) into the HTML build
+    # directory! We don't want to copy everything in `latex_build` because it
+    # includes lots of extraneous LaTeX files.
+    cp(
+        joinpath(@__DIR__, "latex_build", "JuMP.pdf"),
+        joinpath(@__DIR__, "build", "JuMP.pdf"),
+    )
+end
+
+# ==============================================================================
+#  Deploy everything in `build`
+# ==============================================================================
 
 Documenter.deploydocs(
     repo = "github.com/jump-dev/JuMP.jl.git",
