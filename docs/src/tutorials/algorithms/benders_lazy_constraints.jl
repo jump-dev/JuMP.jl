@@ -165,11 +165,11 @@ function benders_lazy_constraint_callback(cb_data)
 
     γ = b' * u_current
 
-    if p_status_sub == MOI.FEASIBLE_POINT && fs_x_current ≈ fm_current # we are done
+    if p_status_sub == FEASIBLE_POINT && fs_x_current ≈ fm_current # we are done
         @info("No additional constraint from the subproblem")
     end
 
-    if p_status_sub == MOI.FEASIBLE_POINT && fs_x_current < fm_current
+    if p_status_sub == FEASIBLE_POINT && fs_x_current < fm_current
         println(
             "\nThere is a suboptimal vertex, add the corresponding constraint",
         )
@@ -182,7 +182,7 @@ function benders_lazy_constraint_callback(cb_data)
         )
     end
 
-    if t_status_sub == MOI.INFEASIBLE_OR_UNBOUNDED
+    if t_status_sub == INFEASIBLE_OR_UNBOUNDED
         println(
             "\nThere is an  extreme ray, adding the corresponding constraint",
         )
@@ -207,16 +207,16 @@ optimize!(master_problem_model)
 t_status = termination_status(master_problem_model)
 p_status = primal_status(master_problem_model)
 
-if p_status == MOI.INFEASIBLE_POINT
+if p_status == INFEASIBLE_POINT
     println("The problem is infeasible :-(")
 end
 
-if t_status == MOI.INFEASIBLE_OR_UNBOUNDED
+if t_status == INFEASIBLE_OR_UNBOUNDED
     fm_current = M
     x_current = M * ones(dim_x)
 end
 
-if p_status == MOI.FEASIBLE_POINT
+if p_status == FEASIBLE_POINT
     fm_current = value(t)
     x_current = value.(x)
 end

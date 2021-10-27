@@ -210,14 +210,14 @@ while true
     t_status = termination_status(master_problem_model)
     p_status = primal_status(master_problem_model)
 
-    if p_status == MOI.INFEASIBLE_POINT
+    if p_status == INFEASIBLE_POINT
         println("The problem is infeasible :-(")
         break
     end
 
-    (fm_current, x_current) = if t_status == MOI.INFEASIBLE_OR_UNBOUNDED
+    (fm_current, x_current) = if t_status == INFEASIBLE_OR_UNBOUNDED
         (M, M * ones(dim_x))
-    elseif p_status == MOI.FEASIBLE_POINT
+    elseif p_status == FEASIBLE_POINT
         (value(t), value.(x))
     else
         error("Unexpected status: $((t_status, p_status))")
@@ -272,7 +272,7 @@ while true
         fm_current,
     )
 
-    if p_status_sub == MOI.FEASIBLE_POINT && fs_x_current == fm_current # we are done
+    if p_status_sub == FEASIBLE_POINT && fs_x_current == fm_current # we are done
         Test.@test value(t) ≈ -4 #hide
         println("\n################################################")
         println("Optimal solution of the original problem found")
@@ -283,7 +283,7 @@ while true
         break
     end
 
-    if p_status_sub == MOI.FEASIBLE_POINT && fs_x_current < fm_current
+    if p_status_sub == FEASIBLE_POINT && fs_x_current < fm_current
         println(
             "\nThere is a suboptimal vertex, add the corresponding constraint",
         )
@@ -292,7 +292,7 @@ while true
         println("t + ", cv, "ᵀ x <= ", γ)
     end
 
-    if t_status_sub == MOI.INFEASIBLE_OR_UNBOUNDED
+    if t_status_sub == INFEASIBLE_OR_UNBOUNDED
         println(
             "\nThere is an  extreme ray, adding the corresponding constraint",
         )

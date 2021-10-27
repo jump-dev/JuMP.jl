@@ -92,8 +92,8 @@ function example_multi(; verbose = true)
         sum(trans[i, j, p] for p in 1:numprod) - limit[i, j] <= 0
     )
     optimize!(multi)
-    Test.@test termination_status(multi) == MOI.OPTIMAL
-    Test.@test primal_status(multi) == MOI.FEASIBLE_POINT
+    Test.@test termination_status(multi) == OPTIMAL
+    Test.@test primal_status(multi) == FEASIBLE_POINT
     Test.@test objective_value(multi) == 225_700.0
     if verbose
         println("RESULTS:")

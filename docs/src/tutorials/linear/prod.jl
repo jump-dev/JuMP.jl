@@ -279,8 +279,8 @@ function example_prod(; verbose = true)
     )
     ## Obtain solution
     optimize!(prod)
-    Test.@test termination_status(prod) == MOI.OPTIMAL
-    Test.@test primal_status(prod) == MOI.FEASIBLE_POINT
+    Test.@test termination_status(prod) == OPTIMAL
+    Test.@test primal_status(prod) == FEASIBLE_POINT
     Test.@test objective_value(prod) ≈ 4_426_822.89 atol = 1e-2
     if verbose
         println("RESULTS:")

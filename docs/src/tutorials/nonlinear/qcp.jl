@@ -28,8 +28,8 @@ function example_qcp(; verbose = true)
         println("x = ", value(x))
         println("y = ", value(y))
     end
-    Test.@test termination_status(model) == MOI.LOCALLY_SOLVED
-    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test termination_status(model) == LOCALLY_SOLVED
+    Test.@test primal_status(model) == FEASIBLE_POINT
     Test.@test objective_value(model) ≈ 0.32699 atol = 1e-5
     Test.@test value(x) ≈ 0.32699 atol = 1e-5
     Test.@test value(y) ≈ 0.25707 atol = 1e-5

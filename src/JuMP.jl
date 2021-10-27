@@ -1428,6 +1428,21 @@ include("file_formats.jl")
 include("feasibility_checker.jl")
 include("deprecate.jl")
 
+# MOI contains a number of Enums that are often accessed by users such as
+# `MOI.OPTIMAL`. This piece of code re-exports them from JuMP so that users can
+# use: `MOI.OPTIMAL`, `JuMP.OPTIMAL`, or `using JuMP; OPTIMAL`.
+
+function _reexport_enum(enum)
+    @eval const $(Symbol(enum)) = $(enum)
+    for name in instances(enum)
+        @eval const $(Symbol(name)) = $(name)
+    end
+    return
+end
+
+_reexport_enum(MOI.ResultStatusCode)
+_reexport_enum(MOI.TerminationStatusCode)
+
 # JuMP exports everything except internal symbols, which are defined as those
 # whose name starts with an underscore. Macros whose names start with
 # underscores are internal as well. If you don't want all of these symbols

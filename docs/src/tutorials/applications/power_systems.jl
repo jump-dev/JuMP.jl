@@ -369,7 +369,7 @@ function solve_uc(generators::Vector, wind, scenario)
     )
     optimize!(uc)
     status = termination_status(uc)
-    if status != MOI.OPTIMAL
+    if status != OPTIMAL
         return (status = status,)
     end
     return (
@@ -410,7 +410,7 @@ uc_df = DataFrames.DataFrame(
 for demand_scale in 0.2:0.1:1.5
     new_scenario = scale_demand(scenario, demand_scale)
     sol = solve_uc(generators, wind_generator, new_scenario)
-    if sol.status == MOI.OPTIMAL
+    if sol.status == OPTIMAL
         push!(
             uc_df,
             (

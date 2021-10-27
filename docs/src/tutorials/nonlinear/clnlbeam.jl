@@ -57,8 +57,8 @@ function example_clnlbeam()
     primal_status      = $(primal_status(model))
     objective_value    = $(objective_value(model))
     """)
-    Test.@test termination_status(model) == MOI.LOCALLY_SOLVED  #src
-    Test.@test primal_status(model) == MOI.FEASIBLE_POINT  #src
+    Test.@test termination_status(model) == LOCALLY_SOLVED  #src
+    Test.@test primal_status(model) == FEASIBLE_POINT  #src
     Test.@test objective_value(model) ≈ 350.0  #src
     return
 end

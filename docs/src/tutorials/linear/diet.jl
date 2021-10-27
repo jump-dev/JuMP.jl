@@ -123,7 +123,7 @@ print(model)
 
 optimize!(model)
 
-Test.@test primal_status(model) == MOI.FEASIBLE_POINT   #hide
+Test.@test primal_status(model) == FEASIBLE_POINT   #hide
 Test.@test objective_value(model) ≈ 11.8288 atol = 1e-4 #hide
 
 solution_summary(model)
@@ -149,8 +149,8 @@ end
 
 optimize!(model)
 
-Test.@test termination_status(model) == MOI.INFEASIBLE  #hide
-Test.@test primal_status(model) == MOI.NO_SOLUTION      #hide
+Test.@test termination_status(model) == INFEASIBLE  #hide
+Test.@test primal_status(model) == NO_SOLUTION      #hide
 
 solution_summary(model)
 

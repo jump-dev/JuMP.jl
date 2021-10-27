@@ -305,7 +305,7 @@ end
 
 set_silent(model)  # Hide solver's verbose output
 optimize!(model)  # Solve for the control and state
-@assert termination_status(model) == MOI.LOCALLY_SOLVED
+@assert termination_status(model) == LOCALLY_SOLVED
 
 ## Show final crossrange of the solution
 println(
