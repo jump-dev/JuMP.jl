@@ -88,6 +88,10 @@ end
 # This constant dictates the layout of the documentation. It is manually
 # constructed so that we can have control over the order in which pages are
 # shown. If you add a new page to the documentation, make sure to add it here!
+#
+# !!! warning
+#     If you move any of the top-level chapters around, make sure to update the
+#     index of the "release_notes.md" in the section which builds the PDF.
 const _PAGES = [
     "Introduction" => ["index.md", "installation.md"],
     "Tutorials" => [
@@ -168,7 +172,7 @@ const _PAGES = [
         "reference/callbacks.md",
         "reference/extensions.md",
     ],
-    "Background information" => [
+    "Background Information" => [
         "background/should_i_use.md",
         "background/algebraic_modeling_languages.md",
     ],
@@ -302,6 +306,10 @@ _validate_pages()
 # ==============================================================================
 
 if _PDF
+    # Small inconsistency between HTML and LaTeX! We want the release notes to
+    # be a separate chapter in LaTeX, but we don't want an annoying drop-down in
+    # HTML.
+    _PAGES[7] = "Release Notes" => "release_notes.md"
     latex_platform = _IS_GITHUB_ACTIONS ? "docker" : "native"
     @time Documenter.makedocs(
         sitename = "JuMP",
