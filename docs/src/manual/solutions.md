@@ -318,9 +318,9 @@ set_start_value(x, x_val)
 
 ## Accessing attributes
 
-[MathOptInterface](@ref) defines a large number of model attributes that can be
-queried. Some attributes can be directly accessed by getter functions. These
-include:
+[MathOptInterface](@ref moi_documentation) defines a large number of model
+attributes that can be queried. Some attributes can be directly accessed by
+getter functions. These include:
 - [`solve_time`](@ref)
 - [`relative_gap`](@ref)
 - [`simplex_iterations`](@ref)
