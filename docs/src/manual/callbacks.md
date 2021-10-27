@@ -70,10 +70,10 @@ how to use it in the README of their Github repository.
 If you want to modify the problem in a callback, you _must_ use a lazy
 constraint.
 
- !!! warning
-     You can only set each callback once. Calling `set` twice will over-write
-     the earlier callback. In addition, if you use a solver-independent
-     callback, you cannot set a solver-dependent callback.
+!!! warning
+    You can only set each callback once. Calling `set` twice will over-write
+    the earlier callback. In addition, if you use a solver-independent
+    callback, you cannot set a solver-dependent callback.
 
 ## Lazy constraints
 
