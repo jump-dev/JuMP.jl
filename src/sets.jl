@@ -82,7 +82,7 @@ function build_constraint(
     extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
 )
     @assert iszero(s.upper)
-    new_f = _MA.operate!(*, -1, f)
+    new_f = _MA.operate!!(*, -1, f)
     return build_constraint(_error, new_f, extra)
 end
 
