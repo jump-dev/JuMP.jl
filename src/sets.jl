@@ -82,19 +82,19 @@ function build_constraint(
     extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
 )
     @assert iszero(s.upper)
-    new_f = _MA.operate!(*, -1, f)
+    new_f = _MA.operate!!(*, -1, f)
     return build_constraint(_error, new_f, extra)
 end
 
 # Handle the case `@constraint(model, X >= 0, Set())`.
-function _MA.operate!(
+function _MA.operate!!(
     ::typeof(_MA.sub_mul),
     x::AbstractArray{<:AbstractJuMPScalar},
     y::Int,
 )
     if !iszero(y)
         error(
-            "Operation `sub_mul!` between `$(typeof(x))` and `$(typeof(y))` " *
+            "Operation `sub_mul` between `$(typeof(x))` and `$(typeof(y))` " *
             "is not allowed. You should use broadcast.",
         )
     end
@@ -102,18 +102,18 @@ function _MA.operate!(
 end
 
 # Handle the case `@constraint(model, 0 <= X, Set())`.
-function _MA.operate!(
+function _MA.operate!!(
     ::typeof(_MA.sub_mul),
     y::Int,
     x::AbstractArray{<:AbstractJuMPScalar},
 )
     if !iszero(y)
         error(
-            "Operation `sub_mul!` between `$(typeof(x))` and `$(typeof(y))` " *
+            "Operation `sub_mul` between `$(typeof(x))` and `$(typeof(y))` " *
             "is not allowed. You should use broadcast.",
         )
     end
-    return _MA.operate!(*, -1, x)
+    return _MA.operate!!(*, -1, x)
 end
 
 """

@@ -693,7 +693,7 @@ julia> @constraint(model, X >= Y, PSDCone())
     Non-zero constants are not supported in this syntax:
     ```jldoctest con_psd
     julia> @constraint(model, X >= 1, PSDCone())
-    ERROR: Operation `sub_mul!` between `Matrix{VariableRef}` and `Int64` is not allowed. You should use broadcast.
+    ERROR: Operation `sub_mul` between `Matrix{VariableRef}` and `Int64` is not allowed. You should use broadcast.
     Stacktrace:
     [...]
     ```

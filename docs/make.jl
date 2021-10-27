@@ -5,20 +5,6 @@ import Test
 using JuMP
 const MathOptInterface = MOI
 
-# When updating the version of MOI used to build these docs, change the entry in
-# Project.toml, and modify the info message below. You may need to modify the
-# JuMP documentation to avoid conflicts with the header links (i.e., JuMP and
-# MOI both have a header called `# Foo`, then `[Foo](@ref)` doesn't know which
-# to link to).
-const _MOI_INFO_MSG = """
-!!! info
-    This documentation is a copy of the official MathOptInterface documentation
-    available at [https://jump.dev/MathOptInterface.jl/v0.10.3](https://jump.dev/MathOptInterface.jl/v0.10.3).
-    It is included here to make it easier to link concepts between JuMP and
-    MathOptInterface.
-
-"""
-
 # Pass --fast as an argument to skip rebuilding the examples and running
 # doctests. Only use this argument to rapidly test small changes to the
 # Markdown. _Never_ set it in production.
@@ -196,21 +182,31 @@ function _add_moi_pages()
     # ourselves write permission.
     chmod(joinpath(@__DIR__, "src", "moi"), 0o777; recursive = true)
     make = read(joinpath(moi_docs, "make.jl"), String)
-    s = match(r"pages = (\[.+?)\)"s, make)[1]
-    s = strip(s)
-    if endswith(s, ",")
-        s = s[1:end-1]
-    end
+    # Match from `_PAGES = [` until the start of in `# =====`
+    s = strip(match(r"_PAGES = (\[.+?)\#"s, make)[1])
+    # Rename every file to the `moi/` directory.
     for m in eachmatch(r"\"([a-zA-Z\_\/]+?\.md)\"", s)
         s = replace(s, m[1] => "moi/" * m[1])
     end
     push!(_PAGES, "MathOptInterface" => eval(Meta.parse(s)))
-    for (root, _, files) in walkdir(joinpath(@__DIR__, "src", "moi"))
-        for f in filter(f -> endswith(f, ".md"), files)
-            data = read(joinpath(root, f), String)
-            write(joinpath(root, f), _MOI_INFO_MSG * data)
-        end
-    end
+    # Update the intro of the MOI docs.
+    src = """# Introduction
+
+    !!! note
+        This documentation is also available in PDF format:
+        [MathOptInterface.pdf](MathOptInterface.pdf)."""
+    dest = """# [Introduction](@id moi_documentation)
+
+    !!! warning
+        This documentation in this section is a copy of the official
+        MathOptInterface documentation  available at
+        [https://jump.dev/MathOptInterface.jl/v0.10.4](https://jump.dev/MathOptInterface.jl/v0.10.4).
+        It is included here to make it easier to link concepts between JuMP and
+        MathOptInterface.
+    """
+    index_filename = joinpath(@__DIR__, "src", "moi", "index.md")
+    content = replace(read(index_filename, String), src => dest)
+    write(index_filename, content)
     return
 end
 
