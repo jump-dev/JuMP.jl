@@ -196,15 +196,14 @@ function _add_moi_pages()
     # ourselves write permission.
     chmod(joinpath(@__DIR__, "src", "moi"), 0o777; recursive = true)
     make = read(joinpath(moi_docs, "make.jl"), String)
-    s = match(r"pages = (\[.+?)\)"s, make)[1]
-    s = strip(s)
-    if endswith(s, ",")
-        s = s[1:end-1]
-    end
+    # Match from `_PAGES = [` until the start of in `# =====`
+    s = strip(match(r"_PAGES = (\[.+?)\#"s, make)[1])
+    # Rename every file to the `moi/` directory.
     for m in eachmatch(r"\"([a-zA-Z\_\/]+?\.md)\"", s)
         s = replace(s, m[1] => "moi/" * m[1])
     end
     push!(_PAGES, "MathOptInterface" => eval(Meta.parse(s)))
+    # Add the _MOI_INFO_MSG to the header of every file
     for (root, _, files) in walkdir(joinpath(@__DIR__, "src", "moi"))
         for f in filter(f -> endswith(f, ".md"), files)
             data = read(joinpath(root, f), String)
