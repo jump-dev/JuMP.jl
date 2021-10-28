@@ -171,7 +171,7 @@ There are three main parts to MathOptInterface:
  1. A solver-independent API that abstracts concepts such as adding and deleting
     variables and constraints, setting and getting parameters, and querying
     results. For more information on the MathOptInterface API, read the
-    [documentation](@ref moi_documentation)
+    [documentation](@ref moi_documentation).
 
  2. An automatic rewriting system based on equivalent formulations of a
     constraint. For more information on this rewriting system, read the

@@ -104,7 +104,7 @@
 # which is equivalent to maximizing the final latitude of the vehicle,
 # i.e., $J = \theta(t_F)$.
 
-# ![Max crossrange shuttle reentry](../../../assets/space_shuttle.png)
+# ![Max crossrange shuttle reentry](../../assets/space_shuttle.png)
 
 # ### Approach
 # We will use a discretized model of time, with a fixed number of discretized points, $n$.
