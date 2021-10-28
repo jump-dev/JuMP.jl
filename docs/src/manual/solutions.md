@@ -198,7 +198,7 @@ describing the status of the dual solution.
 julia> dual_status(model)
 FEASIBLE_POINT::ResultStatusCode = 1
 ```
-Other common returns are `NO_SOLUTION`, and `MOI.INFEASIBILITY_CERTIFICATE`.
+Other common returns are `NO_SOLUTION`, and `INFEASIBILITY_CERTIFICATE`.
 The first means that the solver doesn't have a solution to return, and the
 second means that the dual solution is a certificate of primal infeasbility (a
 dual unbounded ray).
@@ -263,7 +263,7 @@ something like the following:
 ```jldoctest solutions
 if termination_status(model) == OPTIMAL
     println("Solution is optimal")
-elseif termination_status(model) == MOI.TIME_LIMIT && has_values(model)
+elseif termination_status(model) == TIME_LIMIT && has_values(model)
     println("Solution is suboptimal due to a time limit, but a primal solution is available")
 else
     error("The model was not solved correctly.")
