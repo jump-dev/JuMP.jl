@@ -1432,16 +1432,15 @@ include("deprecate.jl")
 # `MOI.OPTIMAL`. This piece of code re-exports them from JuMP so that users can
 # use: `MOI.OPTIMAL`, `JuMP.OPTIMAL`, or `using JuMP; OPTIMAL`.
 
-function _reexport_enum(enum)
-    @eval const $(Symbol(enum)) = $(enum)
-    for name in instances(enum)
-        @eval const $(Symbol(name)) = $(name)
-    end
-    return
+const ResultStatusCode = MOI.ResultStatusCode
+for name in instances(ResultStatusCode)
+    @eval const $(Symbol(name)) = $(name)
 end
 
-_reexport_enum(MOI.ResultStatusCode)
-_reexport_enum(MOI.TerminationStatusCode)
+const TerminationStatusCode = MOI.TerminationStatusCode
+for name in instances(TerminationStatusCode)
+    @eval const $(Symbol(name)) = $(name)
+end
 
 # JuMP exports everything except internal symbols, which are defined as those
 # whose name starts with an underscore. Macros whose names start with
