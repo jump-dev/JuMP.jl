@@ -165,4 +165,16 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
         push!(s, a)
         @test length(s) == 1
     end
+    @testset "size" begin
+        err = ErrorException(
+            "`Base.size` is not implemented for `SparseAxisArray` because " *
+            "although it is a subtype of `AbstractArray`, it is conceptually " *
+            "closer to a dictionary with `N`-dimensional keys. If you encounter " *
+            "this error and you didn't call `size` explicitly, it is because " *
+            "you called a method that is unsupported for `SparseAxisArray`s. " *
+            "Consult the JuMP documentation for a list of supported operations.",
+        )
+        x = Containers.@container([i = 1:3, j = i:3], i + j)
+        @test_throws err size(x)
+    end
 end

@@ -47,6 +47,17 @@ Base.iterate(sa::SparseAxisArray, args...) = iterate(values(sa.data), args...)
 
 Base.hash(s::SparseAxisArray, h::UInt) = hash(s.data, h)
 
+function Base.size(::SparseAxisArray)
+    return error(
+        "`Base.size` is not implemented for `SparseAxisArray` because " *
+        "although it is a subtype of `AbstractArray`, it is conceptually " *
+        "closer to a dictionary with `N`-dimensional keys. If you encounter " *
+        "this error and you didn't call `size` explicitly, it is because " *
+        "you called a method that is unsupported for `SparseAxisArray`s. " *
+        "Consult the JuMP documentation for a list of supported operations.",
+    )
+end
+
 # A `length` argument can be given because `IteratorSize` is `HasLength`
 function Base.similar(
     ::SparseAxisArray{S,N,K},
