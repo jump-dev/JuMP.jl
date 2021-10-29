@@ -131,7 +131,7 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: Gurobi
 ```
 
-## Solver options
+## [Solver options](@id solver_options)
 
 JuMP uses "attribute" as a synonym for "option." Use
 [`optimizer_with_attributes`](@ref) to create an optimizer with some attributes
@@ -222,7 +222,7 @@ julia> unset_silent(model)
 ```
 
 !!! tip
-    Most solvers will also have a [solver-specifc option](@ref Solver options)
+    Most solvers will also have a [solver-specifc option](@ref solver_options)
     to provide finer-grained control over the output. Consult their README's for
     details.
 
