@@ -27,11 +27,13 @@
 
 # We'll look at some objects from recreational mathematics that could be called **"symmetric square sums"**.
 # Here are a few examples (inspired by [Number Squares](https://www.futilitycloset.com/2012/12/05/number-squares/)):
+"""
     1529      2318      5219
     5837      3790      2384
     2340      1956      1867
   + ____    + ____    + ____
     9706      8064      9470
+"""
 
 # Notice how all the digits 0 to 9 are used at least once,
 # the first three rows sum to the last row,
@@ -81,7 +83,7 @@ ROWS = 1:number_of_digits
 
 ## Let's define the model's core variables.
 # Here a given digit between 0 and 9 is found in the `i`-th row at the `j`-th place:
-@variable(model, 0 <= Digit[i=ROWS,j=PLACES] <= 9, Int)
+@variable(model, 0 <= Digit[i = ROWS, j = PLACES] <= 9, Int)
 # We also need a higher level "term" variable that represents the actual number in each row:
 @variable(model, Term[ROWS] >= 1, Int)
 # The lower bound of 1 is because we require non-zero solutions.
@@ -92,33 +94,53 @@ ROWS = 1:number_of_digits
 # @objective(model, Max, Digit[1,0]) #src
 
 # Make sure the leading digit of each row is not zero:
-@constraint(model, NonZeroLead[i in ROWS],
-    Digit[i,(number_of_digits-1)] >= 1)
+@constraint(model, NonZeroLead[i in ROWS], Digit[i, (number_of_digits-1)] >= 1)
 
 # Define the terms from the digits:
-@constraint(model, TermDef[i in ROWS],
-    Term[i] == sum((10^j)*Digit[i,j] for j in PLACES))
+@constraint(
+    model,
+    TermDef[i in ROWS],
+    Term[i] == sum((10^j) * Digit[i, j] for j in PLACES)
+)
 
 # The sum of the first three terms equals the last term:
-@constraint(model, SumHolds,
-    Term[number_of_digits] == sum(Term[i] for i in 1:(number_of_digits-1)))
+@constraint(
+    model,
+    SumHolds,
+    Term[number_of_digits] == sum(Term[i] for i in 1:(number_of_digits-1))
+)
 
 # The square is symmetric, that is, the sum should work either row-wise or column-wise:
-@constraint(model, Symmetry[i in ROWS, j in PLACES; i + j <= (number_of_digits-1)],
-    Digit[i,j] == Digit[number_of_digits-j,number_of_digits-i])
+@constraint(
+    model,
+    Symmetry[i in ROWS, j in PLACES; i + j <= (number_of_digits - 1)],
+    Digit[i, j] == Digit[number_of_digits-j, number_of_digits-i]
+)
 
 # We also want to make sure we use each digit exactly once on the diagonal or upper triangular region.
 # The following set, with the collection of binary variables and constraints ensures this property.
-COMPS = [(i,j,k,m) for i in ROWS for j in PLACES for k in ROWS for m in PLACES 
-            if (i + j <= number_of_digits && k + m <= number_of_digits && (i,j) < (k,m))]
+COMPS = [
+    (i, j, k, m) for i in ROWS for j in PLACES for k in ROWS for
+    m in PLACES if (
+        i + j <= number_of_digits &&
+        k + m <= number_of_digits &&
+        (i, j) < (k, m)
+    )
+]
 
-@variable(model, BinDiffs[COMPS], Bin)  
+@variable(model, BinDiffs[COMPS], Bin)
 
-@constraint(model, AllDiffLo[(i,j,k,m) in COMPS], 
-                Digit[i,j] <= Digit[k,m] - 1 + 50*BinDiffs[(i,j,k,m)])
+@constraint(
+    model,
+    AllDiffLo[(i, j, k, m) in COMPS],
+    Digit[i, j] <= Digit[k, m] - 1 + 50 * BinDiffs[(i, j, k, m)]
+)
 
-@constraint(model, AllDiffHi[(i,j,k,m) in COMPS], 
-                Digit[i,j] >= Digit[k,m] + 1 - 50*(1-BinDiffs[(i,j,k,m)]))
+@constraint(
+    model,
+    AllDiffHi[(i, j, k, m) in COMPS],
+    Digit[i, j] >= Digit[k, m] + 1 - 50 * (1 - BinDiffs[(i, j, k, m)])
+)
 
 # Note that the constant 50 is a "big enough" number to make these valid constraints; see 
 # [this paper](https://doi.org/10.1287/ijoc.13.2.96.10515) and 
@@ -133,14 +155,14 @@ optimize!(model)
 @assert JuMP.primal_status(model) == MOI.FEASIBLE_POINT
 
 JuMP.objective_value(model)
-JuMP.value.(Digit, ) |> show
+JuMP.value.(Digit,) |> show
 
 # ### Viewing the Results
 
 # Now that we have results, we can print out the feasible solutions found:
 TermInt = Dict()
 for i in 1:result_count(model)
-    TermInt[i] = convert.(Int64,round.(value.(Term; result = i).data))
+    TermInt[i] = convert.(Int64, round.(value.(Term; result = i).data))
 end
 
 an_optimal_solution = display(TermInt[1])
@@ -149,8 +171,7 @@ for i in 1:result_count(model)
     @assert has_values(model; result = i)
     println("Solution $(i): ")
     display(TermInt[i])
-    println()
-    end
+    print("\n")
 end
 
 # The result is the full list of feasible solutions.
