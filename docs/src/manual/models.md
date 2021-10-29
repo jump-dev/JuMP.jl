@@ -512,3 +512,20 @@ If you expected the solver to support your problem, you may have an error in our
 The list of available solvers, along with the problem types they support, is available at https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.
 [...]
 ```
+
+## Solver-specific attributes
+
+Some solvers expose solver-specific attributes, such as `Gurobi.ModelAttribute`.
+To access these, use [`direct_model`](@ref) in order to expose the lower-level
+[MathOptInterface API](@ref moi_documentation).
+
+For example:
+```julia
+using JuMP, Gurobi
+model = direct_model(Gurobi.Optimizer())
+@variable(model, x >= 1.5)
+@constraint(model, c, 2x + 1 == 0)
+MOI.get(model, Gurobi.ModelAttribute("IsMIP"))       # Returns 0
+MOI.get(model, Gurobi.VariableAttribute("LB"), x)    # Returns 1.5
+MOI.get(model, Gurobi.ConstraintAttribute("RHS"), c) # Returns -1.0
+```
