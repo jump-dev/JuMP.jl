@@ -120,6 +120,7 @@ const _PAGES = [
             "tutorials/linear/transp.md",
             "tutorials/linear/urban_plan.md",
             "tutorials/linear/callbacks.md",
+            "tutorials/linear/multiple_feasible_solutions.md",
         ],
         "Nonlinear programs" => [
             "tutorials/nonlinear/tips_and_tricks.md",
