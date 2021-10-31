@@ -177,7 +177,7 @@ function build_logit_model(X, y, λ)
     end
     ## Add ℓ2 regularization
     @variable(model, 0.0 <= reg)
-    @constraint(model, [reg; θ] in SecondOrderCone(p + 1))
+    @constraint(model, [reg; θ] in SecondOrderCone())
     ## Define objective
     @objective(model, Min, sum(t) + λ * reg)
     return model
