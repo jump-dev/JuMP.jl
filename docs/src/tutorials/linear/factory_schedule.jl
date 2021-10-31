@@ -145,7 +145,7 @@ function example_factory_schedule()
     optimize!(model)
     ## Check the solution!
     Test.@testset "Check the solution against known optimal" begin
-        Test.@test termination_status(model) == MOI.OPTIMAL
+        Test.@test termination_status(model) == OPTIMAL
         Test.@test objective_value(model) == 12_906_400.0
         Test.@test value.(production)[1, :A] == 70_000
         Test.@test value.(status)[1, :A] == 1

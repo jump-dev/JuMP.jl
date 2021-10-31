@@ -56,8 +56,8 @@ function example_urban_plan()
     end
     ## Solve it
     optimize!(model)
-    Test.@test termination_status(model) == MOI.OPTIMAL
-    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test termination_status(model) == OPTIMAL
+    Test.@test primal_status(model) == FEASIBLE_POINT
     Test.@test objective_value(model) ≈ 14.0
     return
 end

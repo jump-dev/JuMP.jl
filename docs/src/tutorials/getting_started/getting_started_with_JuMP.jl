@@ -62,7 +62,7 @@
 
 # !!! note
 #     JuMP re-exports the MathOptInterface.jl package via the `MOI` constant.
-#     When you see code like `MOI.OPTIMAL`, this is a constant from the
+#     When you see code like `OPTIMAL`, this is a constant from the
 #     MathOptInterface package.
 
 # ## Installation
@@ -270,7 +270,7 @@ function solve_infeasible()
     @constraint(model, x + y >= 3)
     @objective(model, Max, x + 2y)
     optimize!(model)
-    if termination_status(model) != MOI.OPTIMAL
+    if termination_status(model) != OPTIMAL
         @warn("The model was not solved correctly.")
         return nothing
     end

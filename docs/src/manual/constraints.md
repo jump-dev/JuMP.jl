@@ -166,8 +166,8 @@ DocTestSetup = quote
     @objective(model, Max, -2x);
     optimize!(model);
     mock = unsafe_backend(model);
-    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
-    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.TerminationStatus(), OPTIMAL)
+    MOI.set(mock, MOI.DualStatus(), FEASIBLE_POINT)
     MOI.set(mock, MOI.ConstraintDual(), optimizer_index(con), -2.0)
 end
 ```

@@ -86,8 +86,8 @@ function example_steelT3(; verbose = true)
         )
     )
     optimize!(model)
-    Test.@test termination_status(model) == MOI.OPTIMAL
-    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test termination_status(model) == OPTIMAL
+    Test.@test primal_status(model) == FEASIBLE_POINT
     Test.@test objective_value(model) == 172850.0
     if verbose
         println("RESULTS:")

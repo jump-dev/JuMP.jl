@@ -94,17 +94,17 @@ OPTIMAL::TerminationStatusCode = 1
 The [`MOI.TerminationStatusCode`](@ref) enum describes the full list of statuses
 that could be returned.
 
-Common return values include `MOI.OPTIMAL`, `MOI.LOCALLY_SOLVED`,
-`MOI.INFEASIBLE`, `MOI.DUAL_INFEASIBLE`, and `MOI.TIME_LIMIT`.
+Common return values include `OPTIMAL`, `LOCALLY_SOLVED`, `INFEASIBLE`,
+`DUAL_INFEASIBLE`, and `TIME_LIMIT`.
 
 !!! info
-    A return status of `MOI.OPTIMAL` means the solver found (and proved) a
-    globally optimal solution. A return status of `MOI.LOCALLY_SOLVED` means the
+    A return status of `OPTIMAL` means the solver found (and proved) a
+    globally optimal solution. A return status of `LOCALLY_SOLVED` means the
     solver found a locally optimal solution (which may also be globally
     optimal, but it could not prove so).
 
 !!! warning
-    A return status of `MOI.DUAL_INFEASIBLE` does not guarantee that the primal
+    A return status of `DUAL_INFEASIBLE` does not guarantee that the primal
     is unbounded. When the dual is infeasible, the primal is unbounded if
     there exists a feasible primal solution.
 
@@ -125,7 +125,7 @@ describing the status of the primal solution.
 julia> primal_status(model)
 FEASIBLE_POINT::ResultStatusCode = 1
 ```
-Other common returns are `MOI.NO_SOLUTION`, and `MOI.INFEASIBILITY_CERTIFICATE`.
+Other common returns are `NO_SOLUTION`, and `INFEASIBILITY_CERTIFICATE`.
 The first means that the solver doesn't have a solution to return, and the
 second means that the primal solution is a certificate of dual infeasbility (a
 primal unbounded ray).
@@ -198,7 +198,7 @@ describing the status of the dual solution.
 julia> dual_status(model)
 FEASIBLE_POINT::ResultStatusCode = 1
 ```
-Other common returns are `MOI.NO_SOLUTION`, and `MOI.INFEASIBILITY_CERTIFICATE`.
+Other common returns are `NO_SOLUTION`, and `INFEASIBILITY_CERTIFICATE`.
 The first means that the solver doesn't have a solution to return, and the
 second means that the dual solution is a certificate of primal infeasbility (a
 dual unbounded ray).
@@ -261,18 +261,18 @@ And data, a 2-element Array{Float64,1}:
 The recommended workflow for solving a model and querying the solution is
 something like the following:
 ```jldoctest solutions
-if termination_status(model) == MOI.OPTIMAL
+if termination_status(model) == OPTIMAL
     println("Solution is optimal")
-elseif termination_status(model) == MOI.TIME_LIMIT && has_values(model)
+elseif termination_status(model) == TIME_LIMIT && has_values(model)
     println("Solution is suboptimal due to a time limit, but a primal solution is available")
 else
     error("The model was not solved correctly.")
 end
 println("  objective value = ", objective_value(model))
-if primal_status(model) == MOI.FEASIBLE_POINT
+if primal_status(model) == FEASIBLE_POINT
     println("  primal solution: x = ", value(x))
 end
-if dual_status(model) == MOI.FEASIBLE_POINT
+if dual_status(model) == FEASIBLE_POINT
     println("  dual solution: c1 = ", dual(c1))
 end
 
@@ -444,7 +444,7 @@ model = Model() # You must use a solver that supports conflict refining/IIS
 @constraint(model, c2, x <= 1)
 optimize!(model)
 
-# termination_status(model) will likely be MOI.INFEASIBLE,
+# termination_status(model) will likely be INFEASIBLE,
 # depending on the solver
 
 compute_conflict!(model)
@@ -485,7 +485,7 @@ Functions for querying the solutions, e.g., [`primal_status`](@ref) and
 used to specify which result to return.
 
 !!! warning
-    Even if [`termination_status`](@ref) is `MOI.OPTIMAL`, some of the returned
+    Even if [`termination_status`](@ref) is `OPTIMAL`, some of the returned
     solutions may be suboptimal! However, if the solver found at least one
     optimal solution, then `result = 1` will always return an optimal solution.
     Use [`objective_value`](@ref) to assess the quality of the remaining
@@ -498,7 +498,7 @@ model = Model()
 # ... other constraints ...
 optimize!(model)
 
-if termination_status(model) != MOI.OPTIMAL
+if termination_status(model) != OPTIMAL
     error("The model was not solved correctly.")
 end
 

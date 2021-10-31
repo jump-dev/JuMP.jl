@@ -216,7 +216,7 @@ function example_cutting_stock(; max_gen_cols::Int = 5_000)
     )
     ## First solve of the master problem.
     optimize!(m)
-    if termination_status(m) != MOI.OPTIMAL
+    if termination_status(m) != OPTIMAL
         warn("Master not optimal ($ncols patterns so far)")
     end
     ## Then, generate new patterns, based on the dual information.
@@ -260,7 +260,7 @@ function example_cutting_stock(; max_gen_cols::Int = 5_000)
         end
         ## Solve the new master problem to update the dual variables.
         optimize!(m)
-        if termination_status(m) != MOI.OPTIMAL
+        if termination_status(m) != OPTIMAL
             @warn("Master not optimal ($ncols patterns so far)")
         end
     end
@@ -271,7 +271,7 @@ function example_cutting_stock(; max_gen_cols::Int = 5_000)
     ## solution).
     set_integer.(θ)
     optimize!(m)
-    if termination_status(m) != MOI.OPTIMAL
+    if termination_status(m) != OPTIMAL
         @warn("Final master not optimal ($ncols patterns)")
         return
     end

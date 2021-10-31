@@ -120,6 +120,6 @@ for p in P, m in M
     println(p, " => ", m, ": ", value(x[p, m]))
 end
 
-Test.@test termination_status(model) == MOI.OPTIMAL    #src
-Test.@test primal_status(model) == MOI.FEASIBLE_POINT  #src
+Test.@test termination_status(model) == OPTIMAL    #src
+Test.@test primal_status(model) == FEASIBLE_POINT  #src
 Test.@test objective_value(model) == 1_680.0           #src

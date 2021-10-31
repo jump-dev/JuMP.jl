@@ -35,8 +35,8 @@ function example_knapsack(; verbose = true)
             println(", p[$i]/w[$i] = ", profit[i] / weight[i])
         end
     end
-    Test.@test termination_status(model) == MOI.OPTIMAL
-    Test.@test primal_status(model) == MOI.FEASIBLE_POINT
+    Test.@test termination_status(model) == OPTIMAL
+    Test.@test primal_status(model) == FEASIBLE_POINT
     Test.@test objective_value(model) == 16.0
     return
 end

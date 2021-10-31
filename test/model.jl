@@ -776,7 +776,7 @@ function test_copy_conflict()
     JuMP.optimize!(model)
 
     mockoptimizer = JuMP.backend(model).optimizer.model
-    MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.INFEASIBLE)
+    MOI.set(mockoptimizer, MOI.TerminationStatus(), INFEASIBLE)
     MOI.set(mockoptimizer, MOI.ConflictStatus(), MOI.CONFLICT_FOUND)
     MOI.set(
         mockoptimizer,
