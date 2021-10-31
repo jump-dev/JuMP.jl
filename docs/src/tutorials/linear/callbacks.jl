@@ -5,12 +5,25 @@
 
 # # [Callbacks](@id callbacks_tutorial)
 
-# This example uses the following packages:
+# The purpose of the tutorial is to demonstrate the various solver-independent
+# and solver-dependent callbacks that are supported by JuMP.
+
+# The tutorial uses the following packages:
 
 using JuMP
 import GLPK
 import Random
 import Test  #src
+
+# !!! info
+#     This tutorial uses the [MathOptInterface](@ref moi_documentation) API.
+#     By default, JuMP exports the `MOI` symbol as an alias for the
+#     MathOptInterface.jl package. We recommend making this more explicit in
+#     your code by adding the following lines:
+#     ```julia
+#     import MathOptInterface
+#     const MOI = MathOptInterface
+#     ```
 
 # ## Lazy constraints
 

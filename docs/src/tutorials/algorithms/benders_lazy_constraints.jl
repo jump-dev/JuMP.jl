@@ -105,6 +105,16 @@ using JuMP
 import GLPK
 import Test
 
+# !!! info
+#     This tutorial uses the [MathOptInterface](@ref moi_documentation) API.
+#     By default, JuMP exports the `MOI` symbol as an alias for the
+#     MathOptInterface.jl package. We recommend making this more explicit in
+#     your code by adding the following lines:
+#     ```julia
+#     import MathOptInterface
+#     const MOI = MathOptInterface
+#     ```
+
 # Subproblem creation
 
 function build_subproblem()

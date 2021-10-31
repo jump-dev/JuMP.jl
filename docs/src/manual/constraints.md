@@ -596,7 +596,7 @@ constrained a vector of variables to belong to the second order cone.
 
 In a special ordered set of type I (often denoted SOS-I), at most one variable
 can take a non-zero value. We can construct SOS-I constraints using the
-`MOI.SOS1` set:
+[`SOS1`](@ref) set:
 ```jldoctest con_sos; setup=:(model = Model())
 julia> @variable(model, x[1:3])
 3-element Vector{VariableRef}:
@@ -604,10 +604,10 @@ julia> @variable(model, x[1:3])
  x[2]
  x[3]
 
-julia> @constraint(model, x in MOI.SOS1([1.0, 2.0, 3.0]))
+julia> @constraint(model, x in SOS1([1.0, 2.0, 3.0]))
 [x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])
 ```
-Note that we have to pass `MOI.SOS1` a *weight* vector. This vector implies an
+Note that we have to pass `SOS1` a *weight* vector. This vector implies an
 ordering on the variables. If the decision variables are related and have a
 physical ordering (e.g., they correspond to the size of a factory to be built,
 and the SOS-I constraint enforces that only one factory can be built), then the
@@ -620,7 +620,7 @@ must be consecutive according to the ordering. For example, in the following
 constraint, the possible non-zero pairs are (`x[1]` and `x[3]`) and (`x[2]` and
 `x[3]`):
 ```jldoctest con_sos
-julia> @constraint(model, x in MOI.SOS2([3.0, 1.0, 2.0]))
+julia> @constraint(model, x in SOS2([3.0, 1.0, 2.0]))
 [x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
 ```
 
