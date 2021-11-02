@@ -13,7 +13,7 @@ changes if you: wrote a JuMP extension, accessed `backend(model)`, or called
 
 The breaking changes are as follows:
 
- * MathOptInterface has been updated to v0.10.3. For users who have interacted
+ * MathOptInterface has been updated to v0.10.4. For users who have interacted
    with the MOI backend, this contains a large number of breaking changes. Read
    the [MathOptInterface release notes](https://jump.dev/MathOptInterface.jl/v0.10/release_notes/#v0.10.0-(September-6,-2021))
    for more details.
@@ -66,6 +66,9 @@ The breaking changes are as follows:
 
 ### New features
 
+ * The `TerminationStatusCode` and `ResultStatusCode` enums are now exported
+   by JuMP. Prefer `termination_status(model) == OPTIMAL` instead of
+   `== MOI.OPTIMAL`, although the `MOI.` way still works.
  * Copy a `x::DenseAxisArray` to an `Array` by calling `Array(x)`.
  * `NonlinearExpression` is now a subtype of `AbstractJuMPScalar`
  * Constraints such as `@constraint(model, x + 1 in MOI.Integer())` are now
@@ -80,6 +83,7 @@ The breaking changes are as follows:
 
 ### Documentation, maintenance and performance
 
+ * The documentation is now available as a PDF.
  * The documentation now includes a full copy of the MathOptInterface
    documentation to make it easy to link concepts between the docs. (The
    MathOptInterface documentation has also been significantly improved.)
