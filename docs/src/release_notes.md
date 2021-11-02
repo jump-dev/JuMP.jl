@@ -68,7 +68,7 @@ The breaking changes are as follows:
 
  * The `TerminationStatusCode` and `ResultStatusCode` enums are now exported
    by JuMP. Prefer `termination_status(model) == OPTIMAL` instead of
-   `== MOI.OPTIMAL`, although the `MOI.` way still works.
+   `== MOI.OPTIMAL`, although the `MOI.` prefix way still works.
  * Copy a `x::DenseAxisArray` to an `Array` by calling `Array(x)`.
  * `NonlinearExpression` is now a subtype of `AbstractJuMPScalar`
  * Constraints such as `@constraint(model, x + 1 in MOI.Integer())` are now
