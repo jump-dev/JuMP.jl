@@ -60,10 +60,17 @@
 # MOI can be used directly, or through a higher-level modeling interface like
 # JuMP.
 
-# !!! note
-#     JuMP re-exports the MathOptInterface.jl package via the `MOI` constant.
-#     When you see code like `OPTIMAL`, this is a constant from the
-#     MathOptInterface package.
+# !!! info
+#     By default, JuMP exports the `MOI` symbol as an alias for the
+#     MathOptInterface.jl package. If write code that ends up calling `MOI.`, we
+#     recommend making this more explicit in your code by adding the following
+#     lines immediately after `using JuMP`:
+#     ```julia
+#     import MathOptInterface
+#     const MOI = MathOptInterface
+#     ```
+#     You will also need to explicitly install MathOptInterface via
+#     `import Pkg; Pkg.add("MathOptInterface")`.
 
 # ## Installation
 
@@ -441,35 +448,20 @@ end
 
 # ## Objective functions
 
-# While the recommended way to set the objective is with the [`@objective`](@ref)
-# macro, the functions [`set_objective_sense`](@ref) and
-# [`set_objective_function`](@ref) provide an equivalent lower-level interface.
+# Set an objective function with [`@objective`](@ref):
 
 model = Model(GLPK.Optimizer)
 @variable(model, x >= 0)
 @variable(model, y >= 0)
-set_objective_sense(model, MOI.MIN_SENSE)
-set_objective_function(model, x + y)
+@objective(model, Min, 2x + y)
 
-optimize!(model)
+# Create a maximization objective using `Max`:
+@objective(model, Max, 2x + y)
 
-#-
-
-objective_value(model)
-
-# To query the objective function from a model, we use the
-# [`objective_sense`](@ref), [`objective_function`](@ref), and
-# [`objective_function_type`](@ref) functions.
-
-objective_sense(model)
-
-#-
-
-objective_function(model)
-
-#-
-
-objective_function_type(model)
+# !!! tip
+#     Calling [`@objective`](@ref) multiple times will over-write the previous
+#     objective. This can be useful when you want to solve the same problem with
+#     different objectives:
 
 # ## Vectorized syntax
 

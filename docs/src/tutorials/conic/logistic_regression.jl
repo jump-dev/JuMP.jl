@@ -128,6 +128,16 @@ using JuMP
 import Random
 import SCS
 
+# !!! info
+#     This tutorial uses sets from [MathOptInterface](@ref moi_documentation).
+#     By default, JuMP exports the `MOI` symbol as an alias for the
+#     MathOptInterface.jl package. We recommend making this more explicit in
+#     your code by adding the following lines:
+#     ```julia
+#     import MathOptInterface
+#     const MOI = MathOptInterface
+#     ```
+
 Random.seed!(2713);
 
 # We start by implementing a function to generate a fake dataset, and where
@@ -167,7 +177,7 @@ function build_logit_model(X, y, λ)
     end
     ## Add ℓ2 regularization
     @variable(model, 0.0 <= reg)
-    @constraint(model, [reg; θ] in MOI.SecondOrderCone(p + 1))
+    @constraint(model, [reg; θ] in SecondOrderCone())
     ## Define objective
     @objective(model, Min, sum(t) + λ * reg)
     return model

@@ -149,6 +149,16 @@ M = 100
 
 # ## Semi-Continuous Variables
 
+# !!! info
+#     This section uses sets from [MathOptInterface](@ref moi_documentation).
+#     By default, JuMP exports the `MOI` symbol as an alias for the
+#     MathOptInterface.jl package. We recommend making this more explicit in
+#     your code by adding the following lines:
+#     ```julia
+#     import MathOptInterface
+#     const MOI = MathOptInterface
+#     ```
+
 # A semi-continuous variable is a continuous variable between bounds $[l,u]$
 # that also can assume the value zero. ie.
 # $$x \in \{0\} \cup [l,u].$$
@@ -196,7 +206,7 @@ model = Model()
 
 model = Model()
 @variable(model, x[1:3])
-@constraint(model, x in MOI.SOS2([3.0, 1.0, 2.0]))
+@constraint(model, x in SOS2([3.0, 1.0, 2.0]))
 
 # The ordering provided by the weight vector is more important in this case as
 # the variables need to be consecutive according to the ordering.

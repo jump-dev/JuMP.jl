@@ -32,6 +32,16 @@ import SCS
 import LinearAlgebra
 import Random
 
+# !!! info
+#     This tutorial uses sets from [MathOptInterface](@ref moi_documentation).
+#     By default, JuMP exports the `MOI` symbol as an alias for the
+#     MathOptInterface.jl package. We recommend making this more explicit in
+#     your code by adding the following lines:
+#     ```julia
+#     import MathOptInterface
+#     const MOI = MathOptInterface
+#     ```
+
 # We set a seed so the random numbers are repeatable:
 Random.seed!(1234)
 
