@@ -1,6 +1,6 @@
 # Release notes
 
-## Version 0.22.0 (In development)
+## Version 0.22.0 (November 4, 2021)
 
 **JuMP v0.22 is a breaking release**
 
