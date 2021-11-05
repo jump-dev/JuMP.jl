@@ -172,7 +172,7 @@ MOI.set(model, MOI.UserCutCallback(), my_callback_function)
 ```
 
 !!! warning
-    Your user cuts should not change the set of integer feasible solutions.
+    Your user cuts must not change the set of integer feasible solutions.
     Equivalently, your cuts can only remove fractional solutions. If you add a
     cut that removes an integer solution, the solver may return an incorrect
     solution.
@@ -215,8 +215,8 @@ end
 MOI.set(model, MOI.HeuristicCallback(), my_callback_function)
 ```
 
-The third argument to `submit` should be a vector of JuMP variables, and the
-fourth argument should be a vector of values corresponding to each variable.
+The third argument to `submit` is a vector of JuMP variables, and the
+fourth argument is a vector of values corresponding to each variable.
 
 `MOI.submit` returns an enum that depends on whether the solver accepted the
 solution. The possible return codes are:

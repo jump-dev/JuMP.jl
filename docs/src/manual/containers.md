@@ -48,7 +48,7 @@ julia> Containers.@container(x[i = 1:2, j = 1:3], (i, j))
  (1, 1)  (1, 2)  (1, 3)
  (2, 1)  (2, 2)  (2, 3)
 ```
-The result is just a normal Julia array, so you can do all the usual things.
+The result is a normal Julia `Array`, so you can do all the usual things.
 
 ### Slicing
 
@@ -375,8 +375,8 @@ JuMP.Containers.SparseAxisArray{Int64, 1, Tuple{Int64}} with 3 entries:
   [5]  =  25
 ```
 
-The condition can depend on multiple indices; it just needs to be a function
-that returns `true` or `false`:
+The condition can depend on multiple indices, the only requirement is that it is
+an expression that returns `true` or `false`:
 ```jldoctest
 julia> condition(i, j) = isodd(i) && iseven(j)
 condition (generic function with 1 method)

@@ -234,7 +234,7 @@ start = time()
 inplace_df = solve_ed_inplace(generators, wind_generator, scenario, 0.5:0.1:3.0)
 print(string("elapsed time: ", time() - start, " seconds"))
 
-# Adjusting specific constraints and/or the objective function is faster than
+# Adjusting specific constraints or the objective function is faster than
 # re-building the entire model.
 
 inplace_df

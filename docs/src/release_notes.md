@@ -536,7 +536,7 @@ New features:
 - Style and naming guidelines.
 
 - Direct mode and manual mode provide explicit control over when copies of a
-  model are stored and/or regenerated. See the corresponding
+  model are stored or regenerated. See the corresponding
   [documentation](https://www.juliaopt.org/JuMP.jl/dev/solvers/).
 
 There are known regressions from JuMP 0.18 that will be addressed in a future

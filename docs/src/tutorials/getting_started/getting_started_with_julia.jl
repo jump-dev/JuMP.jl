@@ -78,7 +78,7 @@
 nothing #hide
 
 # !!! info
-#     The `@` in front of something indicates that it is a macro, which is just
+#     The `@` in front of something indicates that it is a macro, which is
 #     a special type of function. In this case, `@show` prints the expression as
 #     typed (e.g., `1 - 2`), as well as the evaluation of the expression (`-1`).
 
@@ -174,7 +174,7 @@ sin(2π / 3) - √3 / 2
 
 sin(2π / 3) ≈ √3 / 2
 
-# `≈` is just a clever way of calling the `isapprox` function:
+# `≈` is a clever way of calling the `isapprox` function:
 
 isapprox(sin(2π / 3), √3 / 2; atol = 1e-8)
 

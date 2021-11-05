@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Network Flows
+# # Network flow problems
 
 # **Originally Contributed by**: Arpit Bhatia
 
@@ -41,7 +41,7 @@ using JuMP
 import GLPK
 import LinearAlgebra
 
-# ## The Shortest Path Problem
+# ## The shortest path problem
 
 # Suppose that each arc $(i, j)$ of a graph is assigned a scalar cost $a_{i,j}$,
 # and suppose that we define the cost of a forward path to be the sum of the
@@ -93,7 +93,7 @@ objective_value(shortest_path)
 #-
 value.(x)
 
-# ## The Assignment Problem
+# ## The assignment problem
 
 # Suppose that there are $n$ persons and $n$ objects that we have to match on a
 # one-to-one basis. There is a benefit or value $a_{i,j}$ for matching person
@@ -139,7 +139,7 @@ objective_value(assignment)
 #-
 value.(y)
 
-# ## The Max-Flow Problem
+# ## The max-flow problem
 
 # In the max-flow problem, we have a graph with two special nodes: the $source$,
 # denoted by $s$, and the $sink$, denoted by $t$.

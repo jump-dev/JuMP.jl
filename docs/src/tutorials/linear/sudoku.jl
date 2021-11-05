@@ -139,7 +139,7 @@ for i in 1:9
     for j in 1:9
         for k in 1:9
             ## Integer programs are solved as a series of linear programs so the
-            ## values might not be precisely 0 and 1. We can just round them to
+            ## values might not be precisely 0 and 1. We can round them to
             ## the nearest integer to make it easier.
             if round(Int, x_val[i, j, k]) == 1
                 sol[i, j] = k

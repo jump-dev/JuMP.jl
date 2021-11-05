@@ -83,7 +83,7 @@ model = Model()
 # **Trick** Introduce a "big-M" multiplied by a binary variable to relax one of
 # the constraints.
 
-# **Example** Either $x_1 \leq 1$ and/or $x_2 \leq 2$.
+# **Example** Either $x_1 \leq 1$ or $x_2 \leq 2$.
 
 model = Model()
 @variable(model, x[1:2])

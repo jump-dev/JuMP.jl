@@ -138,7 +138,7 @@ Where:
 - LP = Linear programming
 - QP = Quadratic programming
 - SOCP = Second-order conic programming (including problems with convex
-  quadratic constraints and/or objective)
+  quadratic constraints or objective)
 - MCP = Mixed-complementarity programming
 - NLP = Nonlinear programming
 - SDP = Semidefinite programming

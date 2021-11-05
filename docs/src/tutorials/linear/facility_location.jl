@@ -3,7 +3,7 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # Facility Location
+# # The facility location problem
 
 # It was originally contributed by Mathieu Tanneau (@mtanneau) and
 # Alexis Montoison (@amontoison).
@@ -17,16 +17,16 @@ import Random
 # ## Uncapacitated facility location
 
 # ### Problem description
-# 
+#
 # We are given
 # * A set $M=\{1, \dots, m\}$ of clients
 # * A set $N=\{ 1, \dots, n\}$ of sites where a facility can be built
-# 
+#
 # **Decision variables**
 # Decision variables are split into two categories:
 # * Binary variable $y_{j}$ indicates whether facility $j$ is built or not
 # * Binary variable $x_{i, j}$ indicates whether client $i$ is assigned to facility $j$
-# 
+#
 # **Objective**
 # The objective is to minimize the total cost of serving all clients.
 # This costs breaks down into two components:
@@ -36,19 +36,19 @@ import Random
 # In this example, the cost $c_{i, j}$
 # of serving client $i$ from facility $j$
 # is the Euclidean distance between the two.
-# 
+#
 # **Constraints**
 # * Each customer must be served by exactly one facility
 # * A facility cannot serve any client unless it is open
 
 # ### MILP formulation
-# 
+#
 # The problem can be formulated as the following MILP:
-# 
+#
 # ```math
 # \begin{aligned}
 # \min_{x, y} \ \ \ &
-# \sum_{i, j} c_{i, j} x_{i, j} + 
+# \sum_{i, j} c_{i, j} x_{i, j} +
 # \sum_{j} f_{j} y_{j} \\
 # s.t. &
 # \sum_{j} x_{i, j} = 1, && \forall i \in M \\
@@ -56,7 +56,7 @@ import Random
 # & x_{i, j}, y_{j} \in \{0, 1\}, && \forall i \in M, j \in N
 # \end{aligned}
 # ```
-# 
+#
 # where the first set of constraints ensures
 # that each client is served exactly once,
 # and the second set of constraints ensures
@@ -175,23 +175,23 @@ end
 
 p
 
-# ## Capacitated Facility location
+# ## Capacitated facility location
 
 # ### Problem formulation
-# 
+#
 # The capacitated variant introduces a capacity constraint on each facility, i.e., clients have a certain level of demand to be served, while each facility only has finite capacity which cannot be exceeded.
-# 
+#
 # Specifically,
 # * The demand of client $i$ is denoted by $a_{i} \geq 0$
 # * The capacity of facility $j$ is denoted by $q_{j} \geq 0$
-# 
+#
 # The capacity constraints then write
 # ```math
 # \begin{aligned}
 # \sum_{i} a_{i} x_{i, j} &\leq q_{j} y_{j} && \forall j \in N
 # \end{aligned}
 # ```
-# 
+#
 # Note that, if $y_{j}$ is set to $0$, the capacity constraint above automatically forces $x_{i, j}$ to $0$.
 
 # Thus, the capacitated facility location can be formulated as follows
@@ -199,7 +199,7 @@ p
 # ```math
 # \begin{aligned}
 # \min_{x, y} \ \ \ &
-# \sum_{i, j} c_{i, j} x_{i, j} + 
+# \sum_{i, j} c_{i, j} x_{i, j} +
 # \sum_{j} f_{j} y_{j} \\
 # s.t. &
 # \sum_{j} x_{i, j} = 1, && \forall i \in M \\

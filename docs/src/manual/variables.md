@@ -701,10 +701,9 @@ julia> @variable(model, x[1:2, 1:2] in SkewSymmetricMatrixSpace())
 
 In all of the above examples, we have created *named* JuMP variables. However,
 it is also possible to create so called *anonymous* JuMP variables. To create an
-anonymous JuMP variable, we drop the name of the variable from the macro call.
-This means dropping the second positional argument if the JuMP variable is a
-scalar, or dropping the name before the square bracket (`[`) if a container is
-being created. For example:
+anonymous JuMP variable, drop the second positional argument if the JuMP
+variable is a scalar, or drop the name before the square bracket (`[`) if a
+container is being created. For example:
 ```jldoctest; setup=:(model=Model())
 julia> x = @variable(model)
 noname
@@ -726,9 +725,9 @@ If necessary, you can store `x` in `model` as follows:
 julia> model[:x] = x
 ```
 The `<=` and `>=` short-hand cannot be used to set bounds on anonymous JuMP
-variables. Instead, you should use the `lower_bound` and `upper_bound` keywords.
+variables. Instead, you must use the `lower_bound` and `upper_bound` keywords.
 
-Passing the `Bin` and `Int` variable types are also invalid. Instead, you should
+Passing the `Bin` and `Int` variable types are also invalid. Instead, you must
 use the `binary` and `integer` keywords.
 
 Thus, the anonymous variant of `@variable(model, x[i=1:2] >= i, Int)` is:
