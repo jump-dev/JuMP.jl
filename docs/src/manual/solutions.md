@@ -452,7 +452,7 @@ if MOI.get(model, MOI.ConflictStatus()) != MOI.CONFLICT_FOUND
     error("No conflict could be found for an infeasible model.")
 end
 
-# Both constraints should participate in the conflict.
+# Both constraints participate in the conflict.
 MOI.get(model, MOI.ConstraintConflictStatus(), c1)
 MOI.get(model, MOI.ConstraintConflictStatus(), c2)
 

@@ -263,9 +263,9 @@ csv_df
 # * Read the [DataFrames.jl documentation](https://dataframes.juliadata.org/stable/man/querying_frameworks/)
 # * Check out [DataFramesMeta.jl](https://github.com/JuliaData/DataFramesMeta.jl)
 
-# ## A Complete Modelling Example - Passport Problem
+# ## Example: the passport problem
 
-# Let's now apply what we have learnt to solve a real modelling problem.
+# Let's now apply what we have learned to solve a real problem.
 
 # ### Data manipulation
 
@@ -319,7 +319,7 @@ passport_data
 # passport $c$ and $0$ otherwise. Our objective is to minimize the sum
 # $\sum x_c$ over all countries.
 
-# Since we wish to visit all the countries, for every country, we should own at
+# Since we wish to visit all the countries, for every country, we must own at
 # least one passport that lets us travel to that country visa free. For one
 # destination, this can be mathematically represented as
 # $\sum_{c \in C} a_{c,d} \cdot x_{d} \geq 1$, where $a$ is the `passport_data`

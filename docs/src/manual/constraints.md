@@ -370,7 +370,7 @@ end
 
 ## Constraint containers
 
-So far, we've added constraints one-by-one. However, just like
+So far, we've added constraints one-by-one. However, like
 [Variable containers](@ref), JuMP provides a mechanism for building groups of
 constraints compactly. References to these groups of constraints are returned in
 *containers*. Three types of constraint containers are supported: `Array`s,
@@ -643,7 +643,7 @@ a
 julia> @constraint(model, a => {x + y <= 1})
 a => {x + y ≤ 1.0}
 ```
-If instead the constraint should hold when `a` is zero, simply add a `!` or `¬`
+If instead the constraint must hold when `a` is zero, simply add a `!` or `¬`
 before the binary variable.
 ```jldoctest indicator
 julia> @constraint(model, !a => {x + y <= 1})
@@ -776,7 +776,7 @@ julia> normalized_rhs(con)
 
 If constraints are complicated, e.g., they are composed of a number of
 components, each of which has a constant term, then it may be difficult to
-calculate what the right-hand side term should be in the standard form.
+calculate what the right-hand side term is in the standard form.
 
 For this situation, JuMP includes the ability to *fix* variables to a
 value using the [`fix`](@ref) function. Fixing a variable sets its lower
@@ -1045,7 +1045,7 @@ julia> @constraint(model, x in SOS1())
 Although not required for feasibility, solvers can benefit from an ordering of
 the variables (e.g., the variables represent different factories to build, at
 most one factory can be built, and the factories can be ordered according to
-cost). To induce an ordering, weights can be provided; as such, they should be
+cost). To induce an ordering, weights can be provided; as such, they must be
 unique values. The kth element in the ordered set corresponds to the kth weight
 in weights when the weights are sorted.
 

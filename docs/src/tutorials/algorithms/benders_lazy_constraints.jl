@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # [Benders Decomposition (Lazy Constraints)](@id benders_decomposition_lazy)
+# # [Benders decomposition (via callbacks)](@id benders_decomposition_lazy)
 
 # **Originally Contributed by**: Mathieu Besançon
 
@@ -45,7 +45,7 @@
 # For a detailed explanation on the Benders decomposition algorithm, see the
 # introduction notebook.
 
-# ### Lazy constraints
+# ## Lazy constraints
 
 # Some optimization solvers allow users to interact with them during the
 # solution process by providing user-defined functions which are triggered under
@@ -75,7 +75,7 @@
 # * Step 2 (defining the subproblem model)
 # * Step 3 (registering the lazy constraint of the subproblem)
 
-# ### Data for the problem
+# ## Input data
 
 # The input data is from page 139, Integer programming by Garfinkel and
 # Nemhauser[[1]](#c1).
@@ -99,7 +99,7 @@ A2 = [
 
 M = 1000;
 
-# ### Loading the necessary packages
+# ## Implementation
 
 using JuMP
 import GLPK
@@ -130,20 +130,15 @@ end
 
 # ### Master Problem Description
 
-master_problem_model = Model(GLPK.Optimizer);
-
-(sub_problem_model, u) = build_subproblem();
-
-# Variable Definition
-
+master_problem_model = Model(GLPK.Optimizer)
 @variable(master_problem_model, 0 <= x[1:dim_x] <= 1e6, Int)
 @variable(master_problem_model, t <= 1e6)
-
-# Objective Setting
-
 @objective(master_problem_model, Max, t)
-
 print(master_problem_model)
+
+#-
+
+(sub_problem_model, u) = build_subproblem();
 
 # Track the calls to the callback
 

@@ -30,12 +30,12 @@
 
 using JuMP
 
-# ## Boolean Operators on Binary Variables
+# ## Boolean operators
 
 # Binary variables can be used to construct logical operators. Here are some
 # example.
 
-# ### OR
+# ### Or
 
 # $$x_3 = x_1 \lor x_2$$
 
@@ -75,15 +75,19 @@ model = Model()
 @variable(model, x[1:2], Bin)
 @constraint(model, x[1] <= x[2])
 
-# ## Big-M Disjunctive Constraints (OR)
+# ## Disjunctions
 
-# **Problem** Suppose that we have two constraints $a^\top x \leq b$ and
+# ### Problem
+
+# Suppose that we have two constraints $a^\top x \leq b$ and
 # $c^\top x \leq d$, and we want at least one to hold.
 
-# **Trick** Introduce a "big-M" multiplied by a binary variable to relax one of
+# ### Trick
+
+# Introduce a "big-M" multiplied by a binary variable to relax one of
 # the constraints.
 
-# **Example** Either $x_1 \leq 1$ and/or $x_2 \leq 2$.
+# **Example** Either $x_1 \leq 1$ or $x_2 \leq 2$.
 
 model = Model()
 @variable(model, x[1:2])
@@ -98,7 +102,7 @@ M = 100
 #     choose an `M` that is just right. Gurobi has a [good documentation section](https://www.gurobi.com/documentation/9.1/refman/dealing_with_big_m_constra.html)
 #     on this topic.
 
-# ## Indicator Constraints ($\implies$)
+# ## Indicator constraints
 
 # ### Problem
 
@@ -147,7 +151,7 @@ model = Model()
 M = 100
 @constraint(model, sum(x) <= 1 + M * z)
 
-# ## Semi-Continuous Variables
+# ## Semi-continuous variables
 
 # !!! info
 #     This section uses sets from [MathOptInterface](@ref moi_documentation).
@@ -168,7 +172,7 @@ M = 100
 model = Model()
 @variable(model, x in MOI.Semicontinuous(1.0, 2.0))
 
-# ## Semi-Integer Variables
+# ## Semi-integer variables
 
 # A semi-integer variable is a variable which assumes integer values between
 # bounds $[l,u]$ and can also assume the value zero:
@@ -177,7 +181,7 @@ model = Model()
 model = Model()
 @variable(model, x in MOI.Semiinteger(5.0, 10.0))
 
-# ## Special Ordered Sets of Type I (SOS1)
+# ## Special Ordered Sets of Type I
 
 # A Special Ordered Set of Type I is a set of variables, at most one of which
 # can take a non-zero value, all others being at 0.
@@ -198,7 +202,7 @@ model = Model()
 # weight vector, although not used directly in the constraint, can help the
 # solver make a better decision in the solution process.
 
-# ## [Special Ordered Sets of Type II (SOS2)](@id tip_sos2)
+# ## [Special Ordered Sets of Type II](@id tip_sos2)
 
 # A Special Ordered Set of type 2 is a set of non-negative variables, of which
 # at most two can be non-zero, and if two are non-zero these must be consecutive

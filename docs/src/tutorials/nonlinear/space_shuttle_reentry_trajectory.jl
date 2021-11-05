@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE   #src
 # SOFTWARE.                                                                       #src
 
-# # Space Shuttle Reentry Trajectory
+# # Optimal control for a Space Shuttle reentry trajectory
 
 # **Originally Contributed by**: Henrique Ferrolho
 

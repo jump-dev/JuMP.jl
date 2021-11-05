@@ -23,7 +23,7 @@
 # This tutorial is aimed at providing a quick introduction to writing and
 # solving optimization models with JuMP.
 
-# If you're new to Julia, you should start with [Getting started with Julia](@ref).
+# If you're new to Julia, start by reading [Getting started with Julia](@ref).
 
 # ## What is JuMP?
 
@@ -60,17 +60,10 @@
 # MOI can be used directly, or through a higher-level modeling interface like
 # JuMP.
 
-# !!! info
-#     By default, JuMP exports the `MOI` symbol as an alias for the
-#     MathOptInterface.jl package. If write code that ends up calling `MOI.`, we
-#     recommend making this more explicit in your code by adding the following
-#     lines immediately after `using JuMP`:
-#     ```julia
-#     import MathOptInterface
-#     const MOI = MathOptInterface
-#     ```
-#     You will also need to explicitly install MathOptInterface via
-#     `import Pkg; Pkg.add("MathOptInterface")`.
+# Because JuMP is built on top of MOI, you'll often see the `MathOptInterface.`
+# prefix displayed when JuMP types are printed. However, you'll only need to
+# understand and interact with MOI to accomplish advanced tasks such as creating
+# [solver-independent callbacks](@ref callbacks_manual).
 
 # ## Installation
 
@@ -132,7 +125,7 @@ nothing #hide
 
 # ## Step-by-step
 
-# Once JuMP is installed, to use JuMP in your programs, we just need to write:
+# Once JuMP is installed, to use JuMP in your programs write:
 
 using JuMP
 
@@ -177,7 +170,7 @@ print(model)
 optimize!(model)
 
 # !!! info
-#     The `!` after optimize is just part of the name. It's nothing special.
+#     The `!` after optimize is part of the name. It's nothing special.
 #     Julia has a convention that functions which mutate their arguments should
 #     end in `!`. A common example is `push!`.
 
@@ -266,7 +259,7 @@ set_optimizer_attribute(model, "msg_lev", 0)
 # We saw above how to use [`termination_status`](@ref) and
 # [`primal_status`](@ref) to understand the solution returned by the solver.
 
-# However, you should only query solution attributes like [`value`](@ref) and
+# However, only query solution attributes like [`value`](@ref) and
 # [`objective_value`](@ref) if there is an available solution. Here's a
 # recommended way to check:
 

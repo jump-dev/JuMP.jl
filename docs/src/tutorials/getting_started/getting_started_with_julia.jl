@@ -20,8 +20,8 @@
 
 # # Getting started with Julia
 
-# Since JuMP is embedded in Julia, knowing some basic Julia is important
-# for learning JuMP.
+# Because JuMP is embedded in Julia, knowing some basic Julia is important
+# before you start learning JuMP.
 
 # !!! tip
 #     This tutorial is designed to provide a minimalist crash course in the
@@ -78,7 +78,7 @@
 nothing #hide
 
 # !!! info
-#     The `@` in front of something indicates that it is a macro, which is just
+#     The `@` in front of something indicates that it is a macro, which is
 #     a special type of function. In this case, `@show` prints the expression as
 #     typed (e.g., `1 - 2`), as well as the evaluation of the expression (`-1`).
 
@@ -174,7 +174,7 @@ sin(2π / 3) - √3 / 2
 
 sin(2π / 3) ≈ √3 / 2
 
-# `≈` is just a clever way of calling the `isapprox` function:
+# `≈` is a clever way of calling the `isapprox` function:
 
 isapprox(sin(2π / 3), √3 / 2; atol = 1e-8)
 
@@ -451,7 +451,7 @@ end
 # Note that in contrast to vector languages like Matlab and R, loops do not
 # result in a significant performance degradation in Julia.
 
-# ## Control Flow
+# ## Control flow
 
 # Julia control flow is similar to Matlab, using the keywords
 # `if-elseif-else-end`, and the logical operators `||` and `&&` for **or** and

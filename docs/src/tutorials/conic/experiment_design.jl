@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Experiment Design
+# # Experiment design
 
 # **Originally Contributed by**: Arpit Bhatia, Chris Coey
 
@@ -45,7 +45,7 @@ import Random
 # We set a seed so the random numbers are repeatable:
 Random.seed!(1234)
 
-# ## Relaxed Experiment Design Problem
+# ## The relaxed experiment design problem
 
 # The basic experiment design problem is as follows.
 

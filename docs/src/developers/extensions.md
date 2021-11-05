@@ -118,7 +118,7 @@ julia> function JuMP.add_variable(
        end
 ```
 
-Now `AddTwice` can be passed to [`@variable`](@ref) just like `Bin` or `Int`.
+Now `AddTwice` can be passed to [`@variable`](@ref) similar to `Bin` or `Int`.
 However, now it adds two variables instead of one!
 ```jldoctest new_variable
 julia> model = Model();

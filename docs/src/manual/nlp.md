@@ -378,7 +378,7 @@ want to provide their own routines for evaluating gradients.
 
 #### Univariate functions
 
-For univariate functions, the gradient function `∇f` should return a number that
+For univariate functions, the gradient function `∇f` returns a number that
 represents the first-order derivative:
 ```@example
 using JuMP #hide

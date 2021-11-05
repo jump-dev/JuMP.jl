@@ -52,7 +52,7 @@ However, you probably formulated problems algebraically like so:
     Do you recognize this formulation? It's the knapsack problem.
 
 Users prefer to write problems in _algebraic form_ because it is more
-convenient. For example, we just used $\le b$, even though the standard form
+convenient. For example, we used $\le b$, even though the standard form
 only supported constraints of the form $Ax = b$.
 
 We could convert our knapsack problem into the standard form by adding a new

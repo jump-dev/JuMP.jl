@@ -234,7 +234,7 @@ start = time()
 inplace_df = solve_ed_inplace(generators, wind_generator, scenario, 0.5:0.1:3.0)
 print(string("elapsed time: ", time() - start, " seconds"))
 
-# Adjusting specific constraints and/or the objective function is faster than
+# Adjusting specific constraints or the objective function is faster than
 # re-building the entire model.
 
 inplace_df
@@ -391,7 +391,7 @@ println("Dispatch of Wind: ", solution.w, " MW")
 println("Wind spillage: ", solution.wind_spill, " MW")
 println("Total cost: \$", solution.total_cost)
 
-# ## Unit Commitment as a function of demand
+# ## Unit commitment as a function of demand
 
 # After implementing the UC model, we can now assess the interplay between the
 # minimum power output constraints on generators and wind generation.

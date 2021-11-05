@@ -65,7 +65,7 @@ you know where to look for certain things.
 
 * The **Developer docs** section contains information for people contributing to
   JuMP development or writing JuMP extensions. Don't worry about this section if
-  you are just using JuMP to formulate and solve problems as a user.
+  you are using JuMP to formulate and solve problems as a user.
 
 * The **MathOptInterface** section is a self-contained copy of the documentation
   for MathOptInterface. Look here for functions and constants beginning with

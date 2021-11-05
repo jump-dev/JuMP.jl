@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Finance
+# # Financial modeling problems
 
 # **Originally Contributed by**: Arpit Bhatia
 
@@ -33,7 +33,7 @@
 using JuMP
 import GLPK
 
-# ## Short Term Financing
+# ## Short-term financing
 
 # Corporations routinely face the problem of financing short term cash
 # commitments such as the following:
@@ -95,7 +95,7 @@ optimize!(financing)
 
 objective_value(financing)
 
-# ## Combinatorial Auctions
+# ## Combinatorial auctions
 
 # In many auctions, the value that a bidder has for a set of items may not be
 # the sum of the values that he has for individual items.

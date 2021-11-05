@@ -3,7 +3,7 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # Column Generation
+# # Column generation
 
 # This example solves the cutting stock problem (sometimes also called the
 # cutting rod problem) using a column-generation technique. It is based on
@@ -56,7 +56,7 @@
 # cutting pattern.
 
 # In more detail, the solving process is the following. First, a series of dumb
-# patterns are generated (just one width per roll, repeated until the roll is
+# patterns are generated (one width per roll, repeated until the roll is
 # completely cut). Then, the master problem is solved with these first patterns
 # and its dual solution is passed on to the pricing problem. The latter decides
 # if there is a new pattern to include in the formulation or not; if so,

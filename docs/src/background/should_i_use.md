@@ -28,7 +28,7 @@ Key reasons to use JuMP include:
      supported solvers.
  - Access to advanced algorithmic techniques
    - Efficient _in-memory_ LP re-solves which previously required using
-     solver-specific and/or low-level C++ libraries.
+     solver-specific or low-level C++ libraries.
    - Access to solver-independent and solver-dependent [Callbacks](@ref callbacks_manual).
  - Ease of embedding
    - JuMP itself is written purely in Julia. Solvers are the only binary

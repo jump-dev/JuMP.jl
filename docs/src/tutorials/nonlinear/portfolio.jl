@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Portfolio Optimization
+# # Portfolio optimization
 
 # **Originally Contributed by**: Arpit Bhatia
 
@@ -38,7 +38,7 @@ import Statistics
 # stocks, IBM (IBM), Walmart (WMT), and Southern Electric (SEHI), for a
 # one-month period.
 
-# This means we will use the money to buy shares of the three stocks at the
+# We will use the initial money to buy shares of the three stocks at the
 # current market prices, hold these for one month, and sell the shares off at
 # the prevailing market prices at the end of the month.
 #
@@ -104,7 +104,7 @@ import Statistics
 # \end{aligned}
 # ```
 
-# After that long discussion, lets now use JuMP to solve the portfolio
+# After that long discussion, let's now use JuMP to solve the portfolio
 # optimization problem for the data given below.
 
 # | Month        |  IBM     |  WMT    |  SEHI  |
