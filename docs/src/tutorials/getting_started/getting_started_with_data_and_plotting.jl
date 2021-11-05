@@ -263,9 +263,9 @@ csv_df
 # * Read the [DataFrames.jl documentation](https://dataframes.juliadata.org/stable/man/querying_frameworks/)
 # * Check out [DataFramesMeta.jl](https://github.com/JuliaData/DataFramesMeta.jl)
 
-# ## A Complete Modelling Example - Passport Problem
+# ## Example: the passport problem
 
-# Let's now apply what we have learnt to solve a real modelling problem.
+# Let's now apply what we have learned to solve a real problem.
 
 # ### Data manipulation
 

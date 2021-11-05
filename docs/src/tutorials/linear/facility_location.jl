@@ -303,7 +303,3 @@ for i in 1:m
     end
 end
 p
-
-# ## Further Reading
-# * [Benders decomposition](https://github.com/JuliaOpt/JuMPTutorials.jl/blob/master/script/optimization_concepts/benders_decomposition.jl) is a method of choice for solving facility location problems.
-# * Benchmark instances can be found [here](https://resources.mpi-inf.mpg.de/departments/d1/projects/benchmarks/UflLib/).

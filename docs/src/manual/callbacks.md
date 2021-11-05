@@ -172,10 +172,10 @@ MOI.set(model, MOI.UserCutCallback(), my_callback_function)
 ```
 
 !!! warning
-    Your user cuts must not change the set of integer feasible solutions.
-    Equivalently, your cuts can only remove fractional solutions. If you add a
-    cut that removes an integer solution, the solver may return an incorrect
-    solution.
+    User cuts must not change the set of integer feasible solutions.
+    Equivalently, user cuts can only remove fractional solutions. If you add a
+    cut that removes an integer solution (even one that is not optimal), the
+    solver may return an incorrect solution.
 
 !!! info
     The user-cut callback _may_ be called at fractional nodes in the

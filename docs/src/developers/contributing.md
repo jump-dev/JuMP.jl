@@ -221,7 +221,7 @@ automatically update.
 
 **Step 9: cleaning up**
 
-Once the PR is merged, you clean-up your Git repository ready for the
+Once the PR is merged, clean-up your Git repository ready for the
 next contribution!
 ```
 $ cd ~/.julia/dev/JuMP

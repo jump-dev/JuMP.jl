@@ -72,7 +72,7 @@ end
 
 example_lazy_constraint()
 
-# ## User-cut
+# ## User-cuts
 
 # An example using a user-cut callback.
 
@@ -110,7 +110,7 @@ end
 
 example_user_cut_constraint()
 
-# ## HeuristicCallback
+# ## Heuristic solutions
 
 # An example using a heuristic solution callback.
 

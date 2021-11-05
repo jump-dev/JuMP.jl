@@ -391,7 +391,7 @@ println("Dispatch of Wind: ", solution.w, " MW")
 println("Wind spillage: ", solution.wind_spill, " MW")
 println("Total cost: \$", solution.total_cost)
 
-# ## Unit Commitment as a function of demand
+# ## Unit commitment as a function of demand
 
 # After implementing the UC model, we can now assess the interplay between the
 # minimum power output constraints on generators and wind generation.

@@ -20,8 +20,8 @@
 
 # # Getting started with Julia
 
-# Since JuMP is embedded in Julia, knowing some basic Julia is important
-# for learning JuMP.
+# Because JuMP is embedded in Julia, knowing some basic Julia is important
+# before you start learning JuMP.
 
 # !!! tip
 #     This tutorial is designed to provide a minimalist crash course in the
@@ -451,7 +451,7 @@ end
 # Note that in contrast to vector languages like Matlab and R, loops do not
 # result in a significant performance degradation in Julia.
 
-# ## Control Flow
+# ## Control flow
 
 # Julia control flow is similar to Matlab, using the keywords
 # `if-elseif-else-end`, and the logical operators `||` and `&&` for **or** and
