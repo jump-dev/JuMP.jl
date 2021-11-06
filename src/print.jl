@@ -522,12 +522,15 @@ struct _SolutionSummary
 end
 
 """
-    solution_summary(model::Model; verbose::Bool = false)
+    solution_summary(model::Model; verbose::Bool = false, sensitivity = false)
 
 Return a struct that can be used print a summary of the solution.
 
 If `verbose=true`, write out the primal solution for every variable and the
 dual solution for every constraint, excluding those with empty names.
+
+If `sensitivity=true`, write out the LP sensitivity reports for every variable and
+for every constraint.
 
 ## Examples
 
