@@ -443,48 +443,58 @@ struct _LPConstraintSensitivitySummary
 end
 
 struct _LPSensitivitySummary
-    lp_variables_sensitivity_report::Dict{VariableRef, _LPVariableSensitivitySummary}
-    lp_constraints_sensitivity_report::Dict{ConstraintRef, _LPConstraintSensitivitySummary}
+    lp_variables_sensitivity_report::Dict{
+        VariableRef,
+        _LPVariableSensitivitySummary,
+    }
+    lp_constraints_sensitivity_report::Dict{
+        ConstraintRef,
+        _LPConstraintSensitivitySummary,
+    }
 end
 
 function _get_lp_sensitivity_summary(model)
-    report = lp_sensitivity_report(model);
+    report = lp_sensitivity_report(model)
 
-    obj_value_coeff_dict = Dict{VariableRef, Float64}()
+    obj_value_coeff_dict = Dict{VariableRef,Float64}()
     for (coeff, variable) in linear_terms(objective_function(model, AffExpr))
         obj_value_coeff_dict[variable] = coeff
     end
 
-    lp_variables_sensitivity_report = Dict{VariableRef, _LPVariableSensitivitySummary}()
+    lp_variables_sensitivity_report =
+        Dict{VariableRef,_LPVariableSensitivitySummary}()
     for variable in all_variables(model)
         v_lo, v_hi = report[variable]
         if haskey(obj_value_coeff_dict, variable)
-            lp_variables_sensitivity_report[variable] = _LPVariableSensitivitySummary(
-                name(variable),
-                obj_value_coeff_dict[variable],
-                reduced_cost.(variable),
-                has_lower_bound(variable) ? lower_bound(variable) : -Inf,
-                has_upper_bound(variable) ? upper_bound(variable) :  Inf,
-                value.(variable),
-                v_hi,
-                -v_lo,
-            )
+            lp_variables_sensitivity_report[variable] =
+                _LPVariableSensitivitySummary(
+                    name(variable),
+                    obj_value_coeff_dict[variable],
+                    reduced_cost.(variable),
+                    has_lower_bound(variable) ? lower_bound(variable) : -Inf,
+                    has_upper_bound(variable) ? upper_bound(variable) : Inf,
+                    value.(variable),
+                    v_hi,
+                    -v_lo,
+                )
         end
     end
 
-    lp_constraints_sensitivity_report = Dict{ConstraintRef, _LPConstraintSensitivitySummary}()
+    lp_constraints_sensitivity_report =
+        Dict{ConstraintRef,_LPConstraintSensitivitySummary}()
     for (function_type, set_type) in list_of_constraint_types(model)
         function_type != AffExpr && continue # ignore
         for constraint in all_constraints(model, function_type, set_type)
             c_lo, c_hi = report[constraint]
-            lp_constraints_sensitivity_report[constraint] = _LPConstraintSensitivitySummary(
-                name(constraint),
-                normalized_rhs(constraint),
-                shadow_price(constraint),
-                value(constraint),
-                c_hi,
-                -c_lo,
-            )
+            lp_constraints_sensitivity_report[constraint] =
+                _LPConstraintSensitivitySummary(
+                    name(constraint),
+                    normalized_rhs(constraint),
+                    shadow_price(constraint),
+                    value(constraint),
+                    c_hi,
+                    -c_lo,
+                )
         end
     end
 
@@ -518,7 +528,7 @@ struct _SolutionSummary
     node_count::Union{Missing,Int}
     # Sensitivity
     sensitivity::Bool
-    lp_sensitivity_summary::Union{Missing, _LPSensitivitySummary}
+    lp_sensitivity_summary::Union{Missing,_LPSensitivitySummary}
 end
 
 """
@@ -548,7 +558,11 @@ function foo(model)
 end
 ```
 """
-function solution_summary(model::Model; verbose::Bool = false, sensitivity = false)
+function solution_summary(
+    model::Model;
+    verbose::Bool = false,
+    sensitivity = false,
+)
     return _SolutionSummary(
         verbose,
         solver_name(model),
@@ -585,7 +599,8 @@ function Base.show(io::IO, summary::_SolutionSummary)
     _show_status_summary(io, summary)
     _show_candidate_solution_summary(io, summary)
     _show_work_counters_summary(io, summary)
-    summary.sensitivity && _show_lp_sensitivity_summary(io, summary.lp_sensitivity_summary)
+    summary.sensitivity &&
+        _show_lp_sensitivity_summary(io, summary.lp_sensitivity_summary)
     return
 end
 
@@ -673,8 +688,14 @@ end
 function _show_lp_sensitivity_summary(io::IO, summary::_LPSensitivitySummary)
     println(io, "")
     println(io, "* LP sensitivity summary")
-    _show_lp_variables_sensitivity_report(io, summary.lp_variables_sensitivity_report)
-    _show_lp_constraints_sensitivity_report(io, summary.lp_constraints_sensitivity_report)
+    _show_lp_variables_sensitivity_report(
+        io,
+        summary.lp_variables_sensitivity_report,
+    )
+    _show_lp_constraints_sensitivity_report(
+        io,
+        summary.lp_constraints_sensitivity_report,
+    )
     return
 end
 
@@ -683,37 +704,17 @@ function _show_lp_variables_sensitivity_report(io::IO, report)
     println(io, "- Variables sensitivity")
 
     for key in sort(collect(keys(report)), by = k -> report[k].variable_name)
-        summary = report[key] 
-        _print_if_not_missing(
-            io,
-            "  Variable name : ",
-            summary.variable_name,
-        )
+        summary = report[key]
+        _print_if_not_missing(io, "  Variable name : ", summary.variable_name)
         _print_if_not_missing(
             io,
             "    Objective value coefficient : ",
             summary.obj_value_coeff,
         )
-        _print_if_not_missing(
-            io,
-            "    Reduced cost : ",
-            summary.reduced_cost,
-        )
-        _print_if_not_missing(
-            io,
-            "    Lower bound : ",
-            summary.lower_bound,
-        )
-        _print_if_not_missing(
-            io,
-            "    Upper bound : ",
-            summary.upper_bound,
-        )
-        _print_if_not_missing(
-            io,
-            "    Optimal value : ",
-            summary.optimal_value,
-        )
+        _print_if_not_missing(io, "    Reduced cost : ", summary.reduced_cost)
+        _print_if_not_missing(io, "    Lower bound : ", summary.lower_bound)
+        _print_if_not_missing(io, "    Upper bound : ", summary.upper_bound)
+        _print_if_not_missing(io, "    Optimal value : ", summary.optimal_value)
         _print_if_not_missing(
             io,
             "    Allowable increase in objective coefficient : ",
@@ -732,7 +733,7 @@ function _show_lp_constraints_sensitivity_report(io::IO, report)
     println(io, "- Constraints sensitivity")
 
     for key in sort(collect(keys(report)), by = k -> report[k].constraint_name)
-        summary = report[key] 
+        summary = report[key]
         _print_if_not_missing(
             io,
             "  Constraint name : ",
@@ -745,10 +746,16 @@ function _show_lp_constraints_sensitivity_report(io::IO, report)
         )
         println(io, "    Shadow price : ", summary.shadow_price)
         println(io, "    RHS optimal value : ", summary.rhs_opt_value)
-        println(io, "    Allowable increase in RHS coefficient  : ",
-         summary.allowable_increase_rhs_coeff)
-        println(io, "    Allowable decrease in RHS coefficient  : ",
-         summary.allowable_decrease_rhs_coeff)
+        println(
+            io,
+            "    Allowable increase in RHS coefficient  : ",
+            summary.allowable_increase_rhs_coeff,
+        )
+        println(
+            io,
+            "    Allowable decrease in RHS coefficient  : ",
+            summary.allowable_decrease_rhs_coeff,
+        )
     end
 end
 

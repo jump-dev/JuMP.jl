@@ -997,7 +997,6 @@ struct TestSensitivitySolution
 end
 
 @testset "Print LP sensitivity report" begin
-
     m = MOIU.MockOptimizer(
         MOIU.Model{Float64}(),
         eval_variable_constraint_dual = false,
@@ -1013,29 +1012,29 @@ end
         c2: x + y         <= 2.0
         """
     solution = Dict(
-            "x" => TestSensitivitySolution(
-                1.0,
-                NaN,
-                MOI.NONBASIC_AT_UPPER,
-                (-0.1, Inf),
-            ),
-            "y" => TestSensitivitySolution(1.0, NaN, MOI.BASIC, (-1, 0.1)),
-            "z" => TestSensitivitySolution(1.0, NaN, MOI.NONBASIC, (-Inf, Inf)),
-            "w" => TestSensitivitySolution(-2.0, NaN, MOI.BASIC, (-Inf, 1.0)),
-            ("x", MOI.GreaterThan{Float64}) =>
-                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2.0)),
-            ("x", MOI.LessThan{Float64}) =>
-                TestSensitivitySolution(NaN, -0.1, MOI.NONBASIC, (-2, 1.0)),
-            ("y", MOI.GreaterThan{Float64}) =>
-                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 1.0)),
-            "c1" =>
-                TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
-            "c2" =>
-                TestSensitivitySolution(NaN, -1.0, MOI.NONBASIC, (-1.0, Inf)),
-            ("z", MOI.EqualTo{Float64}) =>
-                TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
-        )
-    
+        "x" => TestSensitivitySolution(
+            1.0,
+            NaN,
+            MOI.NONBASIC_AT_UPPER,
+            (-0.1, Inf),
+        ),
+        "y" => TestSensitivitySolution(1.0, NaN, MOI.BASIC, (-1, 0.1)),
+        "z" => TestSensitivitySolution(1.0, NaN, MOI.NONBASIC, (-Inf, Inf)),
+        "w" => TestSensitivitySolution(-2.0, NaN, MOI.BASIC, (-Inf, 1.0)),
+        ("x", MOI.GreaterThan{Float64}) =>
+            TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2.0)),
+        ("x", MOI.LessThan{Float64}) =>
+            TestSensitivitySolution(NaN, -0.1, MOI.NONBASIC, (-2, 1.0)),
+        ("y", MOI.GreaterThan{Float64}) =>
+            TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 1.0)),
+        "c1" =>
+            TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
+        "c2" =>
+            TestSensitivitySolution(NaN, -1.0, MOI.NONBASIC, (-1.0, Inf)),
+        ("z", MOI.EqualTo{Float64}) =>
+            TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
+    )
+
     model = direct_model(m)
     MOI.Utilities.loadfromstring!(m, model_string)
     optimize!(model)
@@ -1077,7 +1076,7 @@ end
     end
 
     @test sprint(
-        (io, model) -> show(io, solution_summary(model, sensitivity=true)),
+        (io, model) -> show(io, solution_summary(model, sensitivity = true)),
         model,
     ) == """
 * Solver : Mock
@@ -1132,7 +1131,10 @@ end
 """
 
     @test sprint(
-        (io, model) -> show(io, solution_summary(model, verbose = true, sensitivity=true)),
+        (io, model) -> show(
+            io,
+            solution_summary(model, verbose = true, sensitivity = true),
+        ),
         model,
     ) == """
 * Solver : Mock
@@ -1195,5 +1197,4 @@ end
     Allowable increase in RHS coefficient  : Inf
     Allowable decrease in RHS coefficient  : 1.0
 """
-
 end
