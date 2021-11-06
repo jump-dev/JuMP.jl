@@ -989,3 +989,211 @@ end
   Node count         : 1
 """
 end
+struct TestSensitivitySolution
+    primal::Float64
+    dual::Float64
+    basis::MOI.BasisStatusCode
+    range::Tuple{Float64,Float64}
+end
+
+@testset "Print LP sensitivity report" begin
+
+    m = MOIU.MockOptimizer(
+        MOIU.Model{Float64}(),
+        eval_variable_constraint_dual = false,
+    )
+    model_string = """
+        variables: x, y, z, w
+        maxobjective: 1.1 * x + y
+        x >= -1.0
+        x <= 1.0
+        y >= 0.0
+        z == 1.0
+        c1: x + y + z + w == 1.0
+        c2: x + y         <= 2.0
+        """
+    solution = Dict(
+            "x" => TestSensitivitySolution(
+                1.0,
+                NaN,
+                MOI.NONBASIC_AT_UPPER,
+                (-0.1, Inf),
+            ),
+            "y" => TestSensitivitySolution(1.0, NaN, MOI.BASIC, (-1, 0.1)),
+            "z" => TestSensitivitySolution(1.0, NaN, MOI.NONBASIC, (-Inf, Inf)),
+            "w" => TestSensitivitySolution(-2.0, NaN, MOI.BASIC, (-Inf, 1.0)),
+            ("x", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 2.0)),
+            ("x", MOI.LessThan{Float64}) =>
+                TestSensitivitySolution(NaN, -0.1, MOI.NONBASIC, (-2, 1.0)),
+            ("y", MOI.GreaterThan{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.BASIC, (-Inf, 1.0)),
+            "c1" =>
+                TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
+            "c2" =>
+                TestSensitivitySolution(NaN, -1.0, MOI.NONBASIC, (-1.0, Inf)),
+            ("z", MOI.EqualTo{Float64}) =>
+                TestSensitivitySolution(NaN, 0.0, MOI.NONBASIC, (-Inf, Inf)),
+        )
+    
+    model = direct_model(m)
+    MOI.Utilities.loadfromstring!(m, model_string)
+    optimize!(model)
+    MOI.set(m, MOI.RawStatusString(), "solver specific string")
+    MOI.set(m, MOI.ObjectiveValue(), -1.0)
+    MOI.set(m, MOI.SolveTimeSec(), 5.0)
+    MOI.set(m, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(m, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(m, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    obj_map = Dict{Any,Any}()
+    for (key, val) in solution
+        if key isa String
+            var = variable_by_name(model, key)
+            if var !== nothing
+                obj_map[key] = var
+                MOI.set(m, MOI.VariablePrimal(), index(var), val.primal)
+                MOI.set(m, MOI.VariableBasisStatus(), index(var), val.basis)
+            else
+                c = constraint_by_name(model, key)
+                @assert c !== nothing
+                obj_map[key] = c
+                MOI.set(m, MOI.ConstraintDual(), index(c), val.dual)
+                MOI.set(m, MOI.ConstraintBasisStatus(), index(c), val.basis)
+            end
+        else
+            var = variable_by_name(model, key[1])
+            c = if key[2] <: MOI.GreaterThan
+                LowerBoundRef(var)
+            elseif key[2] <: MOI.LessThan
+                UpperBoundRef(var)
+            else
+                FixRef(var)
+            end
+            @assert c !== nothing
+            obj_map[key] = c
+            MOI.set(m, MOI.ConstraintDual(), index(c), val.dual)
+            MOI.set(m, MOI.ConstraintBasisStatus(), index(c), val.basis)
+        end
+    end
+
+    @test sprint(
+        (io, model) -> show(io, solution_summary(model, sensitivity=true)),
+        model,
+    ) == """
+* Solver : Mock
+
+* Status
+  Termination status : OPTIMAL
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Message from the solver:
+  "solver specific string"
+
+* Candidate solution
+  Objective value      : 2.1
+  Dual objective value : 2.1
+
+* Work counters
+  Solve time (sec)   : 5.00000
+
+* LP sensitivity summary
+
+- Variables sensitivity
+  Variable name : x
+    Objective value coefficient : 1.1
+    Reduced cost : 0.1
+    Lower bound : -1.0
+    Upper bound : 1.0
+    Optimal value : 1.0
+    Allowable increase in objective coefficient : Inf
+    Allowable decrease in objective coefficient : 0.1
+  Variable name : y
+    Objective value coefficient : 1.0
+    Reduced cost : -0.0
+    Lower bound : 0.0
+    Upper bound : Inf
+    Optimal value : 1.0
+    Allowable increase in objective coefficient : 0.1
+    Allowable decrease in objective coefficient : 1.0
+
+- Constraints sensitivity
+  Constraint name : c1
+    Right hand side (RHS) coefficient : 1.0
+    Shadow price : -0.0
+    RHS optimal value : 1.0
+    Allowable increase in RHS coefficient  : Inf
+    Allowable decrease in RHS coefficient  : Inf
+  Constraint name : c2
+    Right hand side (RHS) coefficient : 2.0
+    Shadow price : 1.0
+    RHS optimal value : 2.0
+    Allowable increase in RHS coefficient  : Inf
+    Allowable decrease in RHS coefficient  : 1.0
+"""
+
+    @test sprint(
+        (io, model) -> show(io, solution_summary(model, verbose = true, sensitivity=true)),
+        model,
+    ) == """
+* Solver : Mock
+
+* Status
+  Termination status : OPTIMAL
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Result count       : 1
+  Has duals          : true
+  Message from the solver:
+  "solver specific string"
+
+* Candidate solution
+  Objective value      : 2.1
+  Dual objective value : 2.1
+  Primal solution :
+    w : -2.0
+    x : 1.0
+    y : 1.0
+    z : 1.0
+  Dual solution :
+    c1 : 0.0
+    c2 : -1.0
+
+* Work counters
+  Solve time (sec)   : 5.00000
+
+* LP sensitivity summary
+
+- Variables sensitivity
+  Variable name : x
+    Objective value coefficient : 1.1
+    Reduced cost : 0.1
+    Lower bound : -1.0
+    Upper bound : 1.0
+    Optimal value : 1.0
+    Allowable increase in objective coefficient : Inf
+    Allowable decrease in objective coefficient : 0.1
+  Variable name : y
+    Objective value coefficient : 1.0
+    Reduced cost : -0.0
+    Lower bound : 0.0
+    Upper bound : Inf
+    Optimal value : 1.0
+    Allowable increase in objective coefficient : 0.1
+    Allowable decrease in objective coefficient : 1.0
+
+- Constraints sensitivity
+  Constraint name : c1
+    Right hand side (RHS) coefficient : 1.0
+    Shadow price : -0.0
+    RHS optimal value : 1.0
+    Allowable increase in RHS coefficient  : Inf
+    Allowable decrease in RHS coefficient  : Inf
+  Constraint name : c2
+    Right hand side (RHS) coefficient : 2.0
+    Shadow price : 1.0
+    RHS optimal value : 2.0
+    Allowable increase in RHS coefficient  : Inf
+    Allowable decrease in RHS coefficient  : 1.0
+"""
+
+end
