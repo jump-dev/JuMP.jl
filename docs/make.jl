@@ -307,8 +307,8 @@ _validate_pages()
 
 if _PDF
     # Remove release notes from PDF
-    splice!(_PAGES, 7)  # JuMP release notes
-    pop!(_PAGES[end])        # MOI release notes
+    splice!(_PAGES, 7)   # JuMP release notes
+    pop!(_PAGES[end][2]) # MOI release notes
     latex_platform = _IS_GITHUB_ACTIONS ? "docker" : "native"
     @time Documenter.makedocs(
         sitename = "JuMP",
