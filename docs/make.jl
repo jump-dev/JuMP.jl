@@ -306,10 +306,9 @@ _validate_pages()
 # ==============================================================================
 
 if _PDF
-    # Small inconsistency between HTML and LaTeX! We want the release notes to
-    # be a separate chapter in LaTeX, but we don't want an annoying drop-down in
-    # HTML.
-    _PAGES[7] = "Release Notes" => ["release_notes.md"]
+    # Remove release notes from PDF
+    splice!(_PAGES, 7)  # JuMP release notes
+    pop!(_PAGES)        # MOI release notes
     latex_platform = _IS_GITHUB_ACTIONS ? "docker" : "native"
     @time Documenter.makedocs(
         sitename = "JuMP",
