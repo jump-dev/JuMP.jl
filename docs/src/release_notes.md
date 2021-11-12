@@ -1,5 +1,10 @@
 # Release notes
 
+## Version 0.22.1 (In development)
+
+- Bug fixes:
+ * Fix bug in container with tuples as indices.
+
 ## Version 0.22.0 (November 10, 2021)
 
 **JuMP v0.22 is a breaking release**

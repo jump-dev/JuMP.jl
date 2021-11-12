@@ -11,7 +11,7 @@ using Test
         # alternative syntax
         Containers.@container(x[i in 1:3], i^2)
         @test x isa Vector{Int}
-        Containers.@container(x[i∈1:3], i^2)
+        Containers.@container(x[i ∈ 1:3], i^2)
         @test x isa Vector{Int}
     end
     @testset "Forced array" begin
@@ -154,5 +154,14 @@ using Test
             i + j,
             container = Int
         )
+    end
+    @testset "Compound indexing expressions" begin
+        Containers.@container(
+            x[(i, j) in [(1, 1), (2, 2)], k in i:3],
+            i + j + k,
+        )
+        @test x isa Containers.SparseAxisArray
+        @test length(x) == 5
+        @test x[(2, 2), 3] == 7
     end
 end
