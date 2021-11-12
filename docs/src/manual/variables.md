@@ -60,7 +60,7 @@ Subject to
 !!! warning
     When creating a variable with a single lower- or upper-bound, and the
     value of the bound is not a numeric literal (e.g., `1` or `1.0`), the name
-    of the variable _must_) appear on the left-hand side. Putting the name on the
+    of the variable _must_ appear on the left-hand side. Putting the name on the
     right-hand side is an error. For example to create a variable `x`:
     ```julia
     a = 1
@@ -77,6 +77,8 @@ Subject to
 The [`@variable`](@ref) macro also supports creating collections of JuMP
 variables. We'll cover some brief syntax here; read the [Variable containers](@ref)
 section for more details.
+
+You can create arrays of JuMP variables:
 ```jldoctest; setup=:(model = Model())
 julia> @variable(model, x[1:2, 1:2])
 2×2 Matrix{VariableRef}:
