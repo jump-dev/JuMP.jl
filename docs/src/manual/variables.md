@@ -787,7 +787,7 @@ evaluates the conditional for each combination. If there are many index
 dimensions and a large amount of sparsity, this can be inefficient.
 
 For example:
-```jldoctest; setup=:(model=Model()) filter=r"[0-9\.]+ seconds"
+```jldoctest; setup=:(model=Model()), filter=r"[0-9\.]+ seconds.+?time"
 julia> N = 10
 10
 
