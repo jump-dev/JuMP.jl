@@ -60,7 +60,7 @@ Subject to
 !!! warning
     When creating a variable with a single lower- or upper-bound, and the
     value of the bound is not a numeric literal (e.g., `1` or `1.0`), the name
-    of the variable _must) appear on the left-hand side. Putting the name on the
+    of the variable _must_) appear on the left-hand side. Putting the name on the
     right-hand side is an error. For example to create a variable `x`:
     ```julia
     a = 1
@@ -168,7 +168,7 @@ true
 ```
 
 Registered names are most useful when you start to write larger models and
-start to break up the model construction into functions:
+want to break up the model construction into functions:
 ```jldoctest
 julia> function set_objective(model::Model)
            @objective(model, Min, 2 * model[:my_x] + 1)
@@ -209,7 +209,7 @@ ERROR: An object of name x is already attached to this model. If this
 [...]
 ```
 
-A common reason for this error is adding variables in a loop.
+A common reason for encountering this error is adding variables in a loop.
 
 As a work-around, JuMP provides *anonymous* variables. Create a scalar valued
 anonymous variable by ommitting the name argument:
@@ -241,7 +241,7 @@ noname
 
 ## Variable names
 
-In addition to the symbol that variables are registered under, JuMP variables
+In addition to the symbol that variables are registered with, JuMP variables
 have a `String` name that is used for printing and writing to file formats.
 
 Get and set the name of a variable using [`name`](@ref) and [`set_name`](@ref):
@@ -396,7 +396,7 @@ julia> x
 ERROR: UndefVarError: x not defined
 ```
 
-## Check if a variable bound exists
+## Create, delete, and modify variable bounds
 
 Query whether a variable has a bound using [`has_lower_bound`](@ref),
 [`has_upper_bound`](@ref), and [`is_fixed`](@ref):
@@ -410,8 +410,6 @@ true
 julia> is_fixed(x_fixed)
 true
 ```
-
-## Query a variable bound
 
 If a variable has a particular bound, query the value of it using
 [`lower_bound`](@ref), [`upper_bound`](@ref), and [`fix_value`](@ref):
@@ -427,8 +425,6 @@ julia> fix_value(x_fixed)
 ```
 
 Querying the value of a bound that does not exist will result in an error.
-
-## Delete a variable bound
 
 Delete variable bounds using [`delete_lower_bound`](@ref),
 [`delete_upper_bound`](@ref), and [`unfix`](@ref):
@@ -449,9 +445,7 @@ julia> is_fixed(x_fixed)
 false
 ```
 
-## Set or modify variable bounds via functions
-
-Set or modify variable bounds using [`set_lower_bound`](@ref),
+Set or update variable bounds using [`set_lower_bound`](@ref),
 [`set_upper_bound`](@ref), and [`fix`](@ref):
 ```jldoctest variables_2
 julia> set_lower_bound(x_lower, 1.1)
@@ -784,39 +778,59 @@ JuMP.Containers.SparseAxisArray{VariableRef, 1, Tuple{Int64}} with 2 entries:
   [4]  =  x[4]
 ```
 
-Note that with many index dimensions and a large amount of sparsity,
-variable construction may be unnecessarily slow if the semi-colon syntax is
-naively applied. When using the semi-colon as a filter, JuMP iterates over
-*all* indices and evaluates the conditional for each combination. When this
-is undesired, the recommended work-around is to work directly with a list
-of tuples or create a dictionary. Consider the following examples:
+#### Performance considerations
 
-```@meta
-# TODO: Reformat the code below as a doctest.
+When using the semi-colon as a filter, JuMP iterates over *all* indices and
+evaluates the conditional for each combination. If there are many index
+dimensions and a large amount of sparsity, this can be inefficient.
+
+For example:
+```jldoctest; setup=:(model=Model()) filter=r"[0-9\.]+ seconds"
+julia> N = 10
+10
+
+julia> S = [(1, 1, 1), (N, N, N)]
+2-element Vector{Tuple{Int64, Int64, Int64}}:
+ (1, 1, 1)
+ (10, 10, 10)
+
+julia> @time @variable(model, x1[i=1:N, j=1:N, k=1:N; (i, j, k) in S])
+  0.203861 seconds (392.22 k allocations: 23.977 MiB, 99.10% compilation time)
+JuMP.Containers.SparseAxisArray{VariableRef, 3, Tuple{Int64, Int64, Int64}} with 2 entries:
+  [1, 1, 1   ]  =  x1[1,1,1]
+  [10, 10, 10]  =  x1[10,10,10]
+
+julia> @time @variable(model, x2[S])
+  0.045407 seconds (65.24 k allocations: 3.771 MiB, 99.15% compilation time)
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, [(1, 1, 1), (10, 10, 10)]
+And data, a 2-element Vector{VariableRef}:
+ x2[(1, 1, 1)]
+ x2[(10, 10, 10)]
 ```
 
-```jl
-N = 10
-S = [(1, 1, 1),(N, N, N)]
-# Slow. It evaluates conditional N^3 times.
-@variable(model, x1[i=1:N, j=1:N, k=1:N; (i, j, k) in S])
-# Fast.
-@variable(model, x2[S])
-# Fast. Manually constructs a dictionary and fills it.
-x3 = Dict()
-for (i, j, k) in S
-    x3[i, j, k] = @variable(model)
-    # Optional, if you care about pretty printing:
-    set_name(x3[i, j, k], "x[$i,$j,$k]")
+The first option is slower because it is equivalent to:
+```julia
+x1 = Dict()
+for i in 1:N
+    for j in 1:N
+        for k in 1:N
+            if (i, j, k) in S
+                x1[i, j, k] = @variable(model)
+            end
+        end
+    end
 end
 ```
+If performance is a concern, explicitly construct the set of indices instead of
+using the filtering syntax.
 
 ### [Forcing the container type](@id variable_forcing)
 
 When creating a container of JuMP variables, JuMP will attempt to choose the
 tightest container type that can store the JuMP variables. Thus, it will prefer
 to create an Array before a DenseAxisArray and a DenseAxisArray before a
-SparseAxisArray. However, because this happens at compile time, it does not
+SparseAxisArray. However, because this happens at compile time, JuMP does not
 always make the best choice. To illustrate this, consider the following example:
 ```jldoctest variable_force_container; setup=:(model=Model())
 julia> A = 1:2
@@ -959,8 +973,8 @@ Subject to
 
 ## [Variables constrained on creation](@id jump_variables_on_creation)
 
-All uses of the [`@variable`](@ref) macro documented so far translate to a
-separate call for variable creation and the adding of any bound or integrality
+All uses of the [`@variable`](@ref) macro documented so far translate into
+separate calls for variable creation and the adding of any bound or integrality
 constraints.
 
 For example, `@variable(model, x >= 0, Int)`, is equivalent to:
