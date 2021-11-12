@@ -155,4 +155,13 @@ using Test
             container = Int
         )
     end
+    @testset "Compound indexing expressions" begin
+        Containers.@container(
+            x[(i, j) in [(1, 1), (2, 2)], k in i:3],
+            i + j + k,
+        )
+        @test x isa Containers.SparseAxisArray
+        @test length(x) == 5
+        @test x[(2, 2), 3] == 7
+    end
 end

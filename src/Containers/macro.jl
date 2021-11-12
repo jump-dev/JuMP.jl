@@ -163,6 +163,9 @@ _depends_on(ex::Symbol, s::Symbol) = ex == s
 # For the case that `ex` might be an iterable literal like `4`.
 _depends_on(ex, s::Symbol) = false
 
+# For the case where the index set is compound, like `[(i, j) in S, k in i:K]`.
+_depends_on(ex1, ex2::Expr) = any(s -> _depends_on(ex1, s), ex2.args)
+
 function _has_dependent_sets(index_vars::Vector{Any}, index_sets::Vector{Any})
     for i in 2:length(index_sets)
         for j in 1:(i-1)
