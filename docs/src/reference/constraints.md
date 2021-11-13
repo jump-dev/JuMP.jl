@@ -70,6 +70,7 @@ SOS1
 SOS2
 SkewSymmetricMatrixSpace
 SkewSymmetricMatrixShape
+SymMatrixSpace
 moi_set
 ```
 
