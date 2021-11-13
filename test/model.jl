@@ -236,7 +236,7 @@ function test_bridges_automatic_disabled()
     err = ErrorException(
         "Constraints of type $(F)-in-$(S) are not supported by the " *
         "solver.\n\nIf you expected the solver to support your problem, " *
-        "you may have an error in our formulation. Otherwise, consider " *
+        "you may have an error in your formulation. Otherwise, consider " *
         "using a different solver.\n\nThe list of available solvers, " *
         "along with the problem types they support, is available at " *
         "https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.",
@@ -255,7 +255,7 @@ function test_bridges_direct()
     err = ErrorException(
         "Constraints of type $(F)-in-$(S) are not supported by the " *
         "solver.\n\nIf you expected the solver to support your problem, " *
-        "you may have an error in our formulation. Otherwise, consider " *
+        "you may have an error in your formulation. Otherwise, consider " *
         "using a different solver.\n\nThe list of available solvers, " *
         "along with the problem types they support, is available at " *
         "https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.",
