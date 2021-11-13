@@ -214,7 +214,7 @@ ERROR: An object of name x is already attached to this model. If this
 A common reason for encountering this error is adding variables in a loop.
 
 As a work-around, JuMP provides *anonymous* variables. Create a scalar valued
-anonymous variable by ommitting the name argument:
+anonymous variable by omitting the name argument:
 ```jldoctest; setup=:(model=Model())
 julia> x = @variable(model)
 noname
@@ -330,7 +330,7 @@ julia> model[:x]
 ## String names, symbolic names, and bindings
 
 It's common for new users to experience confusion relating to JuMP variables.
-Part of the problem the overloaded use of "variable" in mathematical
+Part of the problem is the overloaded use of "variable" in mathematical
 optimization, along with the difference between the name that a variable is
 registered under and the `String` name used for printing.
 
@@ -937,20 +937,6 @@ julia> @variable(model, x[1:2, 1:2], Symmetric)
  x[1,2]  x[2,2]
 ```
 
-## Skew-symmetric variables
-
-Declare a matrix of JuMP variables to be skew-symmetric using
-[`SkewSymmetricMatrixSpace`](@ref):
-```jldoctest; setup=:(model=Model())
-julia> @variable(model, x[1:2, 1:2] in SkewSymmetricMatrixSpace())
-2×2 Matrix{AffExpr}:
- 0        x[1,2]
- -x[1,2]  0
-```
-Note that even though `x` is 2 by 2, only one decision variable is added to
-`model`; the remaining elements in `x` are linear transformations of the single
-variable.
-
 ## [The `@variables` macro](@id variables)
 
 If you have many [`@variable`](@ref) calls, JuMP provides the macro
@@ -988,12 +974,15 @@ set_integer(x)
 Importantly, the bound and integrality constraints are added _after_ the
 variable has been created.
 
-However, some solvers require a constraining set _at creation time_.
-We say that these variables are _constrained on creation_.
+However, some solvers require a set specifying the variable domain to be given
+when the variable is first created. We say that these variables are
+_constrained on creation_.
 
-Use `in` within `@variable` to access the special syntax for constraining
-variables on creation. For example, the following creates a vector of variables
-constrained on creation to belong to the [`SecondOrderCone`](@ref):
+Use `in` within [`@variable`](@ref) to access the special syntax for
+constraining variables on creation.
+
+For example, the following creates a vector of variables that belong to the
+[`SecondOrderCone`](@ref):
 ```jldoctest constrained_variables; setup=:(model=Model())
 julia> @variable(model, y[1:3] in SecondOrderCone())
 3-element Vector{VariableRef}:
@@ -1017,12 +1006,48 @@ julia> @constraint(model, x in SecondOrderCone())
 An alternate syntax to `x in Set` is to use the `set` keyword of
 [`@variable`](@ref). This is most useful when creating anonymous variables:
 ```julia
-x = @variable(model, [1:2, 1:2], set = PSDCone())
+x = @variable(model, [1:3], set = SecondOrderCone())
 ```
 
 !!! note
     You cannot delete the constraint associated with a variable constrained on
     creation.
+
+### Example: positive semidefinite variables
+
+Declare a matrix of JuMP variables to be positive semidefinite
+[`PSDCone`](@ref):
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, x[1:2, 1:2] in PSDCone())
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+```
+
+### Example: symmetric variables
+
+Declare a matrix of JuMP variables to be symmetric using
+[`SymMatrixSpace`](@ref):
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, x[1:2, 1:2] in SymMatrixSpace())
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ x[1,1]  x[1,2]
+ x[1,2]  x[2,2]
+```
+
+### Example: skew-symmetric variables
+
+Declare a matrix of JuMP variables to be skew-symmetric using
+[`SkewSymmetricMatrixSpace`](@ref):
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, x[1:2, 1:2] in SkewSymmetricMatrixSpace())
+2×2 Matrix{AffExpr}:
+ 0        x[1,2]
+ -x[1,2]  0
+```
+Note that even though `x` is 2 by 2, only one decision variable is added to
+`model`; the remaining elements in `x` are linear transformations of the single
+variable.
 
 ### Why use variables constrained on creation?
 
