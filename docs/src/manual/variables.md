@@ -1015,8 +1015,8 @@ x = @variable(model, [1:3], set = SecondOrderCone())
 
 ### Example: positive semidefinite variables
 
-Declare a matrix of JuMP variables to be positive semidefinite
-[`PSDCone`](@ref):
+An alternative to the syntax in [Semidefinite variables](@ref), declare a matrix
+of JuMP variables to be positive semidefinite using [`PSDCone`](@ref):
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2] in PSDCone())
 2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
@@ -1026,8 +1026,8 @@ julia> @variable(model, x[1:2, 1:2] in PSDCone())
 
 ### Example: symmetric variables
 
-Declare a matrix of JuMP variables to be symmetric using
-[`SymMatrixSpace`](@ref):
+As an alternative to the syntax in [Symmetric variables](@ref), declare a matrix
+of JuMP variables to be symmetric using [`SymMatrixSpace`](@ref):
 ```jldoctest; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2] in SymMatrixSpace())
 2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
