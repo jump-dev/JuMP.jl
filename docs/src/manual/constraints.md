@@ -312,8 +312,9 @@ julia> model[:con]
 Provide a starting value (also called warmstart) for a constraint's dual using
 [`set_dual_start_value`](@ref).
 
-The start value of a constraint's dual can be queried using [`dual_start_value`](@ref).
-If no start value has been set, [`dual_start_value`](@ref) will return `nothing`.
+The start value of a constraint's dual can be queried using
+[`dual_start_value`](@ref). If no start value has been set,
+[`dual_start_value`](@ref) will return `nothing`.
 
 ```jldoctest constraint_dual_start; setup=:(model=Model())
 julia> @variable(model, x)
@@ -330,8 +331,7 @@ julia> dual_start_value(con)
 2.0
 ```
 
-A vector constraint will require a vector warmstart:
-
+Vector constraints require a vector warmstart:
 ```jldoctest constraint_dual_start_vector; setup=:(model=Model())
 julia> @variable(model, x[1:3])
 3-element Vector{VariableRef}:
@@ -355,7 +355,6 @@ julia> dual_start_value(con)
 
 To take the dual solution from the last solve and use it as the starting point
 for a new solve, use:
-
 ```julia
 for (F, S) in list_of_constraint_types(model)
     for con in all_constraints(model, F, S)
@@ -507,35 +506,6 @@ section for more information.
     For the first time we have used an explicit *function-in-set* description of
     the constraint. Read more about this in [Standard form problem](@ref).
 
-## Constraints on a single variable
-
-In [Variables](@ref jump_variables), we saw how to modify the variable bounds,
-as well as add binary and integer restrictions to the domain of each variable.
-This can also be achieved using the [`@constraint`](@ref) macro. For example,
-`MOI.ZeroOne()` restricts the domain to ``\{0, 1\}``:
-```jldoctest; setup = :(model = Model(); @variable(model, x))
-julia> @constraint(model, x in MOI.ZeroOne())
-x binary
-```
-and `MOI.Integer()` restricts to the domain to the integers ``\mathbb{Z}``:
-```jldoctest; setup = :(model = Model(); @variable(model, x))
-julia> @constraint(model, x in MOI.Integer())
-x integer
-```
-
-JuMP also supports modeling semi-continuous variables, whose domain is ``\{0\} ∪
-[l, u]``, using the `MOI.Semicontinuous` set:
-```jldoctest; setup = :(model = Model(); @variable(model, x))
-julia> @constraint(model, x in MOI.Semicontinuous(1.5, 3.5))
-x in MathOptInterface.Semicontinuous{Float64}(1.5, 3.5)
-```
-as well as semi-integer variables, whose domain is ``\{0\} ∪ \{l, l+1, \dots, u\}``,
-using the `MOI.Semiinteger` set:
-```jldoctest; setup = :(model = Model(); @variable(model, x))
-julia> @constraint(model, x in MOI.Semiinteger(1.0, 3.0))
-x in MathOptInterface.Semiinteger{Float64}(1.0, 3.0)
-```
-
 ## [Quadratic constraints](@id quad_constraints)
 
 In addition to affine functions, JuMP also supports constraints with quadratic
@@ -587,160 +557,12 @@ julia> @constraint(model, [t, u, x[1], x[2]] in RotatedSecondOrderCone())
 [t, u, x[1], x[2]] in MathOptInterface.RotatedSecondOrderCone(4)
 ```
 
-## Constraints on a collection of variables
+## Modify a constant term
 
-In addition to constraining the domain of a single variable, JuMP supports
-placing constraints of a subset of the variables. We already saw an example of
-this in the [Quadratic constraints](@ref quad_constraints) section when we
-constrained a vector of variables to belong to the second order cone.
+This section explains how to modify the constant term in a constraint. There are
+multiple ways to achieve this goal; we explain three options.
 
-In a special ordered set of type I (often denoted SOS-I), at most one variable
-can take a non-zero value. We can construct SOS-I constraints using the
-[`SOS1`](@ref) set:
-```jldoctest con_sos; setup=:(model = Model())
-julia> @variable(model, x[1:3])
-3-element Vector{VariableRef}:
- x[1]
- x[2]
- x[3]
-
-julia> @constraint(model, x in SOS1([1.0, 2.0, 3.0]))
-[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])
-```
-Note that we have to pass `SOS1` a *weight* vector. This vector implies an
-ordering on the variables. If the decision variables are related and have a
-physical ordering (e.g., they correspond to the size of a factory to be built,
-and the SOS-I constraint enforces that only one factory can be built), then the
-weight vector, although not used directly in the constraint, can help the solver
-make a better decision in the solution process.
-
-This ordering is more important in a special ordered set of type II (SOS-II), in
-which at most two values can be non-zero, and if there are two non-zeros, they
-must be consecutive according to the ordering. For example, in the following
-constraint, the possible non-zero pairs are (`x[1]` and `x[3]`) and (`x[2]` and
-`x[3]`):
-```jldoctest con_sos
-julia> @constraint(model, x in SOS2([3.0, 1.0, 2.0]))
-[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
-```
-
-## Indicator constraints
-
-JuMP provides a special syntax for creating indicator constraints, that is,
-enforce a constraint to hold depending on the value of a binary variable.
-In order to constrain the constraint `x + y <= 1` to hold when a binary
-variable `a` is one, use the following syntax:
-```jldoctest indicator; setup=:(model = Model())
-julia> @variable(model, x)
-x
-
-julia> @variable(model, y)
-y
-
-julia> @variable(model, a, Bin)
-a
-
-julia> @constraint(model, a => {x + y <= 1})
-a => {x + y ≤ 1.0}
-```
-If instead the constraint must hold when `a` is zero, simply add a `!` or `¬`
-before the binary variable.
-```jldoctest indicator
-julia> @constraint(model, !a => {x + y <= 1})
-!a => {x + y ≤ 1.0}
-```
-
-## Semidefinite constraints
-
-Use [`PSDCone`](@ref) to constrain a matrix to be symmetric positive
-semidefinite (PSD). For example,
-```jldoctest con_psd; setup=:(model = Model())
-julia> @variable(model, X[1:2, 1:2])
-2×2 Matrix{VariableRef}:
- X[1,1]  X[1,2]
- X[2,1]  X[2,2]
-
-julia> @constraint(model, X >= 0, PSDCone())
-[X[1,1]  X[1,2];
- X[2,1]  X[2,2]] ∈ PSDCone()
-```
-
-The inequality `X >= Y` between two square matrices `X` and `Y` is understood as
-constraining `X - Y` to be symmetric positive semidefinite.
-```jldoctest con_psd
-julia> Y = [1 2; 2 1]
-2×2 Matrix{Int64}:
- 1  2
- 2  1
-
-julia> @constraint(model, X >= Y, PSDCone())
-[X[1,1] - 1  X[1,2] - 2;
- X[2,1] - 2  X[2,2] - 1] ∈ PSDCone()
-```
-
-!!! tip
-    `@constraint(model, X >= Y, Set())` is short-hand for
-    `@constraint(model, X - Y in Set())`. Therefore, the following calls are
-    equivalent:
-     * `@constraint(model, X >= Y, PSDCone())`
-     * `@constraint(model, Y <= X, PSDCone())`
-     * `@constraint(model, X - Y in PSDCone())`
-    This also works for any vector-valued cone, so if `x` and `y` are vectors of
-    length 2, you can write `@constraint(model, x >= y, MOI.Nonnegatives(2))`
-    instead of `@constraint(model, x - y in MOI.Nonnegatives(2))`.
-
-!!! warning
-    Non-zero constants are not supported in this syntax:
-    ```jldoctest con_psd
-    julia> @constraint(model, X >= 1, PSDCone())
-    ERROR: Operation `sub_mul` between `Matrix{VariableRef}` and `Int64` is not allowed. You should use broadcast.
-    Stacktrace:
-    [...]
-    ```
-    Use instead:
-    ```jldoctest con_psd
-    julia> @constraint(model, X .- 1 >= 0, PSDCone())
-    [X[1,1] - 1  X[1,2] - 1;
-     X[2,1] - 1  X[2,2] - 1] ∈ PSDCone()
-    ```
-
-### Symmetry
-
-Solvers supporting PSD constraints usually expect to be given a matrix that
-is *symbolically* symmetric, that is, for which the expression in corresponding
-off-diagonal entries are the same. In our example, the expressions of entries
-`(1, 2)` and `(2, 1)` are respectively `X[1,2] - 2` and `X[2,1] - 2` which are
-different.
-
-To bridge the gap between the constraint modeled and what the solver
-expects, solvers may add an equality constraint `X[1,2] - 2 == X[2,1] - 2` to
-force symmetry. Use `LinearAlgebra.Symmetric` to explicitly tell the solver that
-the matrix is symmetric:
-```jldoctest con_psd
-julia> import LinearAlgebra
-
-julia> Z = [X[1, 1] X[1, 2]; X[1, 2] X[2, 2]]
-2×2 Matrix{VariableRef}:
- X[1,1]  X[1,2]
- X[1,2]  X[2,2]
-
-julia> @constraint(model, LinearAlgebra.Symmetric(Z) >= 0, PSDCone())
-[X[1,1]  X[1,2];
- X[1,2]  X[2,2]] ∈ PSDCone()
-```
-
-Note that the lower triangular entries are silently ignored even if they are
-different so use it with caution:
-```jldoctest con_psd
-julia> @constraint(model, LinearAlgebra.Symmetric(X) >= 0, PSDCone())
-[X[1,1]  X[1,2];
- X[1,2]  X[2,2]] ∈ PSDCone()
-```
-(Note the `(2, 1)` element of the constraint is `X[1,2]`, not `X[2,1]`.)
-
-## Modify a constraint
-
-### Modifying a constant term (Option 1)
+### Option 1: change the right-hand side
 
 Use [`set_normalized_rhs`](@ref) to modify the right-hand side (constant)
 term of a constraint. Use [`normalized_rhs`](@ref) to query the right-hand
@@ -772,7 +594,7 @@ julia> normalized_rhs(con)
     [`set_normalized_rhs`](@ref) sets the right-hand side term of the
     normalized constraint.
 
-### Modifying a constant term (Option 2)
+### Option 2: use fixed variables
 
 If constraints are complicated, e.g., they are composed of a number of
 components, each of which has a constant term, then it may be difficult to
@@ -800,8 +622,10 @@ The constraint `con` is now equivalent to `2x <= 2`.
     `const_term * x` is bilinear. Fixed variables are not replaced with
     constants when communicating the problem to a solver.
 
-Another option is to use [`add_to_function_constant`](@ref). The constant given
-is added to the function of a `func`-in-`set` constraint. In the following
+### Option 3: modify the function's constant
+
+The third option is to use [`add_to_function_constant`](@ref). The constant
+given is added to the function of a `func`-in-`set` constraint. In the following
 example, adding `2` to the function has the effect of removing `2` to the
 right-hand side:
 ```jldoctest con_add; setup = :(model = Model(); @variable(model, x))
@@ -828,7 +652,7 @@ julia> con
 con : 2 x ∈ [-4.0, -2.0]
 ```
 
-### Modifying a variable coefficient
+## Modify a variable coefficient
 
 To modify the coefficients for a linear term in a constraint (but
 notably not yet the coefficients on a quadratic term), use
@@ -966,6 +790,195 @@ julia> con.set
 MathOptInterface.LessThan{Float64}(1.0)
 ```
 
+## Semi-integer and semi-continuous variables
+
+Semi-continuous variables are constrained to the set
+``x \\in \{0\} \cup [l, u]``.
+
+Create a semi-continuous variable using the `MOI.Semicontinuous` set:
+```jldoctest; setup = :(model = Model(); @variable(model, x))
+julia> @constraint(model, x in MOI.Semicontinuous(1.5, 3.5))
+x in MathOptInterface.Semicontinuous{Float64}(1.5, 3.5)
+```
+
+Semi-integer variables  are constrained to the set
+``x \\in \{0\} \cup \{l, l+1, \dots, u\}``.
+
+Create a semi-integer variable using the `MOI.Semiinteger` set:
+```jldoctest; setup = :(model = Model(); @variable(model, x))
+julia> @constraint(model, x in MOI.Semiinteger(1.0, 3.0))
+x in MathOptInterface.Semiinteger{Float64}(1.0, 3.0)
+```
+
+## Special Ordered Sets
+
+### Type 1
+
+In a Special Ordered Set of Type 1 (often denoted SOS-I or SOS1), at most one
+element can take a non-zero value.
+
+Construct SOS-I constraints using the [`SOS1`](@ref) set:
+```jldoctest con_sos; setup=:(model = Model())
+julia> @variable(model, x[1:3])
+3-element Vector{VariableRef}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> @constraint(model, x in SOS1())
+[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])
+```
+
+Although not required for feasibility, solvers can benefit from an ordering of
+the variables (e.g., the variables represent different factories to build, at
+most one factory can be built, and the factories can be ordered according to
+cost). To induce an ordering, weights can be provided; as such, they must be
+unique values. The kth element in the ordered set corresponds to the kth weight
+in weights when the weights are sorted.
+
+For example, in the constraint:
+```jldoctest con_sos
+julia> @constraint(model, x in SOS1([3.1, 1.2, 2.3]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([3.1, 1.2, 2.3])
+```
+the variables `x` have precedence `x[2]`, `x[3]`, `x[1]`.
+
+### Type 2
+
+In a Special Ordered Set of Type 2 (SOS-II), at most two elements can be
+non-zero, and if there are two non-zeros, they must be consecutive according to
+the ordering induced by a weight vector.
+
+Construct SOS-II constraints using the [`SOS2`](@ref) set.
+```jldoctest con_sos
+julia> @constraint(model, x in SOS2([3.0, 1.0, 2.0]))
+[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
+```
+In the following constraint, the possible non-zero pairs are (`x[1]` and `x[3]`)
+and (`x[2]` and `x[3]`):
+
+If the weight vector is omitted, JuMP induces an ordering from `1:length(x)`:
+```jldoctest con_sos
+julia> @constraint(model, x in SOS2())
+[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([1.0, 2.0, 3.0])
+```
+
+## Indicator constraints
+
+JuMP provides a special syntax for creating indicator constraints, that is,
+enforce a constraint to hold depending on the value of a binary variable.
+
+In order to constrain the constraint `x + y <= 1` to hold when a binary
+variable `a` is one, use the following syntax:
+```jldoctest indicator; setup=:(model = Model())
+julia> @variable(model, x)
+x
+
+julia> @variable(model, y)
+y
+
+julia> @variable(model, a, Bin)
+a
+
+julia> @constraint(model, a => {x + y <= 1})
+a => {x + y ≤ 1.0}
+```
+
+If the constraint must hold when `a` is zero, add `!` or `¬` before the binary
+variable;
+```jldoctest indicator
+julia> @constraint(model, !a => {x + y <= 1})
+!a => {x + y ≤ 1.0}
+```
+
+## Semidefinite constraints
+
+To constrain a matrix to be symmetric positive semidefinite (PSD), use
+[`PSDCone`](@ref):
+```jldoctest con_psd; setup=:(model = Model())
+julia> @variable(model, X[1:2, 1:2])
+2×2 Matrix{VariableRef}:
+ X[1,1]  X[1,2]
+ X[2,1]  X[2,2]
+
+julia> @constraint(model, X >= 0, PSDCone())
+[X[1,1]  X[1,2];
+ X[2,1]  X[2,2]] ∈ PSDCone()
+```
+
+The inequality `X >= Y` between two square matrices `X` and `Y` is understood as
+constraining `X - Y` to be symmetric positive semidefinite.
+```jldoctest con_psd
+julia> Y = [1 2; 2 1]
+2×2 Matrix{Int64}:
+ 1  2
+ 2  1
+
+julia> @constraint(model, X >= Y, PSDCone())
+[X[1,1] - 1  X[1,2] - 2;
+ X[2,1] - 2  X[2,2] - 1] ∈ PSDCone()
+```
+
+!!! tip
+    `@constraint(model, X >= Y, Set())` is short-hand for
+    `@constraint(model, X - Y in Set())`. Therefore, the following calls are
+    equivalent:
+     * `@constraint(model, X >= Y, PSDCone())`
+     * `@constraint(model, Y <= X, PSDCone())`
+     * `@constraint(model, X - Y in PSDCone())`
+    This also works for any vector-valued cone, so if `x` and `y` are vectors of
+    length 2, you can write `@constraint(model, x >= y, MOI.Nonnegatives(2))`
+    instead of `@constraint(model, x - y in MOI.Nonnegatives(2))`.
+
+!!! warning
+    Non-zero constants are not supported in this syntax:
+    ```jldoctest con_psd
+    julia> @constraint(model, X >= 1, PSDCone())
+    ERROR: Operation `sub_mul` between `Matrix{VariableRef}` and `Int64` is not allowed. You should use broadcast.
+    Stacktrace:
+    [...]
+    ```
+    Use instead:
+    ```jldoctest con_psd
+    julia> @constraint(model, X .- 1 >= 0, PSDCone())
+    [X[1,1] - 1  X[1,2] - 1;
+     X[2,1] - 1  X[2,2] - 1] ∈ PSDCone()
+    ```
+
+### Symmetry
+
+Solvers supporting PSD constraints usually expect to be given a matrix that
+is *symbolically* symmetric, that is, for which the expression in corresponding
+off-diagonal entries are the same. In our example, the expressions of entries
+`(1, 2)` and `(2, 1)` are respectively `X[1,2] - 2` and `X[2,1] - 2` which are
+different.
+
+To bridge the gap between the constraint modeled and what the solver
+expects, solvers may add an equality constraint `X[1,2] - 2 == X[2,1] - 2` to
+force symmetry. Use `LinearAlgebra.Symmetric` to explicitly tell the solver that
+the matrix is symmetric:
+```jldoctest con_psd
+julia> import LinearAlgebra
+
+julia> Z = [X[1, 1] X[1, 2]; X[1, 2] X[2, 2]]
+2×2 Matrix{VariableRef}:
+ X[1,1]  X[1,2]
+ X[1,2]  X[2,2]
+
+julia> @constraint(model, LinearAlgebra.Symmetric(Z) >= 0, PSDCone())
+[X[1,1]  X[1,2];
+ X[1,2]  X[2,2]] ∈ PSDCone()
+```
+
+Note that the lower triangular entries are silently ignored even if they are
+different so use it with caution:
+```jldoctest con_psd
+julia> @constraint(model, LinearAlgebra.Symmetric(X) >= 0, PSDCone())
+[X[1,1]  X[1,2];
+ X[1,2]  X[2,2]] ∈ PSDCone()
+```
+(Note the `(2, 1)` element of the constraint is `X[1,2]`, not `X[2,1]`.)
+
 ## Complementarity constraints
 
 A mixed complementarity constraint `F(x) ⟂ x` consists of finding `x` in the
@@ -1021,57 +1034,4 @@ julia> q = [5, 6]
 
 julia> @constraint(model, M * y + q ⟂ y)
 [y[1] + 2 y[2] + 5, 3 y[1] + 4 y[2] + 6, y[1], y[2]] ∈ MathOptInterface.Complements(4)
-```
-
-## Special Ordered Sets (SOS1 and SOS2)
-
-### Type 1
-
-In a Special Ordered Set of Type 1 (often denoted SOS-I or SOS1), at most one
-element can take a non-zero value.
-
-Construct SOS-I constraints using the [`SOS1`](@ref) set:
-```jldoctest con_sos; setup=:(model = Model())
-julia> @variable(model, x[1:3])
-3-element Vector{VariableRef}:
- x[1]
- x[2]
- x[3]
-
-julia> @constraint(model, x in SOS1())
-[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([1.0, 2.0, 3.0])
-```
-
-Although not required for feasibility, solvers can benefit from an ordering of
-the variables (e.g., the variables represent different factories to build, at
-most one factory can be built, and the factories can be ordered according to
-cost). To induce an ordering, weights can be provided; as such, they must be
-unique values. The kth element in the ordered set corresponds to the kth weight
-in weights when the weights are sorted.
-
-For example, in the constraint:
-```jldoctest con_sos
-julia> @constraint(model, x in SOS1([3.1, 1.2, 2.3]))
-[x[1], x[2], x[3]] in MathOptInterface.SOS1{Float64}([3.1, 1.2, 2.3])
-```
-the variables `x` have precedence `x[2]`, `x[3]`, `x[1]`.
-
-### Type 2
-
-In a Special Ordered Set of Type 2 (SOS-II), at most two elements can be
-non-zero, and if there are two non-zeros, they must be consecutive according to
-the ordering induced by a weight vector.
-
-Construct SOS-II constraints using the [`SOS2`](@ref) set.
-```jldoctest con_sos
-julia> @constraint(model, x in SOS2([3.0, 1.0, 2.0]))
-[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([3.0, 1.0, 2.0])
-```
-In the following constraint, the possible non-zero pairs are (`x[1]` and `x[3]`)
-and (`x[2]` and `x[3]`):
-
-If the weight vector is omitted, JuMP induces an ordering from `1:length(x)`:
-```jldoctest con_sos
-julia> @constraint(model, x in SOS2())
-[x[1], x[2], x[3]] in MathOptInterface.SOS2{Float64}([1.0, 2.0, 3.0])
 ```
