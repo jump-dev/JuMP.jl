@@ -2,6 +2,7 @@
 CurrentModule = JuMP
 DocTestSetup = quote
     using JuMP
+    import GLPK
 end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
@@ -104,10 +105,17 @@ julia> @constraint(model, 2x + 1 <= 4x + 4)
 -2 x <= 3.0
 ```
 
+## Add a constraint
+
+## Registered constraints
+## Anonymous constraints
+
+Add a section on anonymous constraints
+
 ## The `@constraints` macro
 
-Like [`@variables`](@ref variables), there is a "plural" version of the
-[`@constraint`](@ref) macro:
+If you have many [`@constraint`](@ref) calls, JuMP provides the
+[`@constraints`](@ref) macro that can improve readability:
 ```jldoctest; setup=:(model=Model(); @variable(model, x))
 julia> @constraints(model, begin
            2x <=  1
@@ -128,7 +136,7 @@ For linear programs, a feasible dual on a `>=` constraint is nonnegative and a
 feasible dual on a `<=` constraint is nonpositive. If the constraint is an
 equality constraint, it depends on which direction is binding.
 
-!!! note
+!!! warning
     JuMP's definition of duality is independent of the objective sense. That is,
     the sign of feasible duals associated with a constraint depends on the
     direction of the constraint and not whether the problem is maximization or
@@ -138,12 +146,10 @@ equality constraint, it depends on which direction is binding.
     and [`reduced_cost`](@ref) instead.
 
 The dual value associated with a constraint in the most recent solution can be
-accessed using the [`dual`](@ref) function. You can use the [`has_duals`](@ref)
-function to check whether the model has a dual solution available to query.
-For example:
-
+accessed using the [`dual`](@ref) function. Use [`has_duals`](@ref)to check if
+the model has a dual solution available to query. For example:
 ```jldoctest
-julia> model = Model();
+julia> model = Model(GLPK.Optimizer);
 
 julia> @variable(model, x)
 x
@@ -151,30 +157,11 @@ x
 julia> @constraint(model, con, x <= 1)
 con : x <= 1.0
 
-julia> has_duals(model)
-false
-```
-```@meta
-DocTestSetup = quote
-    using JuMP
-    model = Model(() -> MOIU.MockOptimizer(
-                            MOIU.Model{Float64}(),
-                            eval_objective_value = false,
-                            eval_variable_constraint_dual = false));
-    @variable(model, x);
-    @constraint(model, con, x <= 1);
-    @objective(model, Max, -2x);
-    optimize!(model);
-    mock = unsafe_backend(model);
-    MOI.set(mock, MOI.TerminationStatus(), OPTIMAL)
-    MOI.set(mock, MOI.DualStatus(), FEASIBLE_POINT)
-    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(con), -2.0)
-end
-```
-
-```jldoctest con_duality
 julia> @objective(model, Min, -2x)
 -2 x
+
+julia> has_duals(model)
+false
 
 julia> optimize!(model)
 
@@ -193,16 +180,16 @@ julia> dual(con)
 -2.0
 ```
 
-To help users who may be less familiar with conic duality, JuMP provides the
-[`shadow_price`](@ref) function which returns a value that can be
-interpreted as the improvement in the objective in response to an infinitesimal
-relaxation (on the scale of one unit) in the right-hand side of the constraint.
-[`shadow_price`](@ref) can be used only on linear constraints with a `<=`,
-`>=`, or `==` comparison operator.
+To help users who may be less familiar with conic duality, JuMP provides
+[`shadow_price`](@ref), which returns a value that can be interpreted as the
+improvement in the objective in response to an infinitesimal relaxation (on the
+scale of one unit) in the right-hand side of the constraint.
+[`shadow_price`](@ref) can be used only on linear constraints with a `<=`, `>=`,
+or `==` comparison operator.
 
-In the example above, `dual(con)` returned `-2.0` regardless of the
-optimization sense. However, in the second case when the optimization sense is
-`Max`, [`shadow_price`](@ref) returns:
+In the example above, `dual(con)` returned `-2.0` regardless of the optimization
+sense. However, in the second case when the optimization sense is `Max`,
+[`shadow_price`](@ref) returns:
 ```jldoctest con_duality
 julia> shadow_price(con)
 2.0
@@ -215,18 +202,13 @@ the returned constraint reference. The [`reduced_cost`](@ref) function may
 simplify this process as it returns the shadow price of an active bound of
 a variable (or zero, if no active bound exists).
 
-```@meta
-DocTestSetup = quote
-    using JuMP
-end
-```
-
 ## Constraint names
 
-The name, i.e. the value of the `MOI.ConstraintName` attribute, of a constraint
-can be obtained by [`name(::JuMP.ConstraintRef)`](@ref) and set by
-[`set_name(::JuMP.ConstraintRef, ::String)`](@ref).
+In addition to the symbol that constraints are registered with, contraints have
+a `String` name that is used for printing and writing to file formats.
 
+Get and set the name of a constraint using [`name(::JuMP.ConstraintRef)`](@ref)
+and [`set_name(::JuMP.ConstraintRef, ::String)`](@ref):
 ```jldoctest
 julia> model = Model(); @variable(model, x);
 
@@ -242,7 +224,7 @@ julia> con
 my_con_name : x <= 1.0
 ```
 
-Specify a constraint name in the macro via `base_name`:
+Override the default choice of name using the `base_name` keyword:
 ```jldoctest constraint_name_vector
 julia> model = Model(); @variable(model, x);
 
@@ -273,12 +255,13 @@ Retrieve a constraint from a model using [`constraint_by_name`](@ref):
 julia> constraint_by_name(model, "c")
 c : x ≤ 1.0
 ```
+
 If the name is not present, `nothing` will be returned:
 ```jldoctest constraint_name_vector
 julia> constraint_by_name(model, "bad_name")
 ```
 
-You can only look up invididual constraints using [`constraint_by_name`](@ref).
+You can only look up individual constraints using [`constraint_by_name`](@ref).
 Something like this will not work:
 ```jldoctest
 julia> model = Model(); @variable(model, x);
@@ -305,6 +288,82 @@ julia> model[:con]
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
  my_con[1] : x ≤ 1.0
  my_con[2] : x ≤ 2.0
+```
+
+## String names, symbolic names, and bindings
+
+
+It's common for new users to experience confusion relating to JuMP constraints.
+Part of the problem is the difference between the name that a constraint is
+registered under and the `String` name used for printing.
+
+Here's a summary of the differences:
+
+ * JuMP constraints are created using [`@constraint`](@ref).
+ * JuMP constraints can be named or anonymous.
+ * Named JuMP constraints have the form `@constraint(model, c, expr)`. For named
+   constraints:
+   * The `String` name of the constraint is set to `"c"`.
+   * A Julia variable `c` is created that binds `c` to  the JuMP constraint.
+   * The name `:c` is registered as a key in the model with the value `c`.
+ * Anonymous JuMP constraints have the form `c = @constraint(model, expr)`. For
+   anonymous constraints:
+   * The `String` name of the constraint is set to `""`.
+   * You control the name of the Julia variable used as the binding.
+   * No name is registered as a key in the model.
+ * The `base_name` keyword can override the `String` name of the constraint.
+ * You can manually register names in the model via `model[:key] = value`.
+
+Here's an example that should make things clearer:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> c_binding = @constraint(model, 2x <= 1, base_name = "c")
+c: 2 x <= 1.0
+
+julia> model
+A JuMP Model
+Feasibility problem with:
+Variable: 1
+`AffExpr`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+Names registered in the model: x
+
+julia> c
+ERROR: UndefVarError: c not defined
+
+julia> c_binding
+c: 2 x <= 1.0
+
+julia> name(c_binding)
+"c"
+
+julia> model[:c_register] = c_binding
+c: 2 x <= 1.0
+
+julia> model
+A JuMP Model
+Feasibility problem with:
+Variable: 1
+`AffExpr`-in-`MathOptInterface.LessThan{Float64}`: 1 constraint
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+Names registered in the model: c_register, x
+
+julia> model[:c_register]
+c: 2 x <= 1.0
+
+julia> model[:c_register] === c_binding
+true
+
+julia> c
+ERROR: UndefVarError: c not defined
 ```
 
 ## Start Values
@@ -581,7 +640,7 @@ julia> normalized_rhs(con)
 3.0
 ```
 
-!!! note
+!!! info
     JuMP normalizes constraints into a standard form by moving all constant
     terms onto the right-hand side of the constraint.
     ```julia
@@ -618,9 +677,9 @@ julia> fix(const_term, 1.0)
 The constraint `con` is now equivalent to `2x <= 2`.
 
 !!! note
-    Even though `const_term` is fixed, it is still a decision variable. Thus,
-    `const_term * x` is bilinear. Fixed variables are not replaced with
-    constants when communicating the problem to a solver.
+    Fixed variables are not replaced with constants when communicating the
+    problem to a solver. Therefore, even though `const_term` is fixed, it is
+    still a decision variable, and so `const_term * x` is bilinear.
 
 ### Option 3: modify the function's constant
 
@@ -641,7 +700,7 @@ julia> normalized_rhs(con)
 -1.0
 ```
 
-In the case of interval constraints, the constant is removed in each bounds.
+In the case of interval constraints, the constant is removed from each bound:
 ```jldoctest con_add_interval; setup = :(model = Model(); @variable(model, x))
 julia> @constraint(model, con, 0 <= 2x + 1 <= 2)
 con : 2 x ∈ [-1.0, 1.0]
