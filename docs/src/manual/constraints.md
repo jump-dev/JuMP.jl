@@ -76,8 +76,8 @@ Because the named variables and constraints are stored in the same namespace,
 creating a constraint with the same name as a variable or an existing constraint
 will result in an error. To overcome this limitation, it is possible to create
 anonymous constraints, just like it is possible to create
-[Anonymous JuMP variables](@ref). This is done by dropping the second argument
-to [`@constraint`](@ref):
+[Anonymous JuMP variables](@ref anonymous_variables). This is done by dropping
+the second argument to [`@constraint`](@ref):
 ```jldoctest con1
 julia> con = @constraint(model, 2x <= 1)
 2 x <= 1.0
