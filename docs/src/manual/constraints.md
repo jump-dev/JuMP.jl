@@ -111,7 +111,7 @@ We'll cover some brief snytax here; read the [Constraint containers](@ref)
 section for more details:
 
 Create arrays of constraints:
-```jldoctest setup=:(model=Model(); @variable(model, x[1:3]))
+```jldoctest; setup=:(model=Model(); @variable(model, x[1:3]))
 julia> @constraint(model, c[i=1:3], x[i] <= i^2)
 3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
  c[1] : x[1] ≤ 1.0
@@ -123,7 +123,7 @@ c[2] : x[2] ≤ 4.0
 ```
 
 Sets can be any Julia type that supports iteration:
-```jldoctest setup=:(model=Model(); @variable(model, x[1:3]))
+```jldoctest; setup=:(model=Model(); @variable(model, x[1:3]))
 julia> @constraint(model, c[i=2:3, ["red", "blue"]], x[i] <= i^2)
 2-dimensional DenseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape},2,...} with index sets:
     Dimension 1, 2:3
@@ -137,7 +137,7 @@ c[2,red] : x[2] ≤ 4.0
 ```
 
 Sets can depend upon previous indices:
-```jldoctest setup=:(model=Model(); @variable(model, x[1:3]))
+```jldoctest; setup=:(model=Model(); @variable(model, x[1:3]))
 julia> @constraint(model, c[i=1:3, j=i:3], x[i] <= j)
 JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}, 2, Tuple{Int64, Int64}} with 6 entries:
   [1, 1]  =  c[1,1] : x[1] ≤ 1.0
@@ -148,7 +148,7 @@ JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.Constraint
   [3, 3]  =  c[3,3] : x[3] ≤ 3.0
 ```
 and we can filter elements in the sets using the `;` syntax:
-```jldoctest setup=:(model=Model(); @variable(model, x[1:9]))
+```jldoctest; setup=:(model=Model(); @variable(model, x[1:9]))
 julia> @constraint(model, c[i=1:9; mod(i, 3) == 0], x[i] <= i)
 JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}, 1, Tuple{Int64}} with 3 entries:
   [3]  =  c[3] : x[3] ≤ 3.0
@@ -433,7 +433,7 @@ equality constraint, it depends on which direction is binding.
 The dual value associated with a constraint in the most recent solution can be
 accessed using the [`dual`](@ref) function. Use [`has_duals`](@ref)to check if
 the model has a dual solution available to query. For example:
-```jldoctest
+```jldoctest con_duality
 julia> model = Model(GLPK.Optimizer);
 
 julia> @variable(model, x)
@@ -898,8 +898,8 @@ More generally, you can use any set defined by MathOptInterface:
 julia> @constraint(model, x - [1; 2; 3] in MOI.Nonnegatives(3))
 [x[1] - 1, x[2] - 2, x[3] - 3] ∈ MathOptInterface.Nonnegatives(3)
 
-julia> @constraint(model, x in MOI.ExponentialCone(3))
-[x[1], x[2], x[3]] ∈ MathOptInterface.ExponentialCone(3)
+julia> @constraint(model, x in MOI.ExponentialCone())
+[x[1], x[2], x[3]] ∈ MathOptInterface.ExponentialCone()
 ```
 
 !!! info
