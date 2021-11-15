@@ -93,7 +93,7 @@ end
 #     If you move any of the top-level chapters around, make sure to update the
 #     index of the "release_notes.md" in the section which builds the PDF.
 const _PAGES = [
-    "Introduction" => ["index.md", "installation.md"],
+    "Introduction" => ["index.md", "should_i_use.md", "installation.md"],
     "Tutorials" => [
         "Getting started" => [
             "tutorials/getting_started/getting_started_with_julia.md",
@@ -172,10 +172,8 @@ const _PAGES = [
         "reference/callbacks.md",
         "reference/extensions.md",
     ],
-    "Background Information" => [
-        "background/should_i_use.md",
-        "background/algebraic_modeling_languages.md",
-    ],
+    "Background Information" =>
+        ["background/algebraic_modeling_languages.md"],
     "Developer Docs" => [
         "Contributing" => "developers/contributing.md",
         "Extensions" => "developers/extensions.md",
