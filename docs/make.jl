@@ -95,7 +95,7 @@ end
 const _PAGES = [
     "Introduction" => [
         "index.md",
-        "background/should_i_use.md",
+        "should_i_use.md",
         "installation.md",
     ],
     "Tutorials" => [
