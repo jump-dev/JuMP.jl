@@ -9,18 +9,32 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
 
 # [Constraints](@id jump_constraints)
 
-JuMP is based on the MathOptInterface (MOI) API. Because of this, we represent
-constraints as the restriction that the output of a *function* belongs to a
-*set*. For example, instead of representing a constraint ``a^\top x \le b`` as a
-*less-than-or-equal-to* constraint, we say that this is a *scalar affine*
-function ``a^\top x`` belonging to the *less-than* set ``(-\infty, b]``. More
-generally, we use the shorthand *function-in-set* to refer to constraints
-composed of different types of functions and sets.
+JuMP is based on the [MathOptInterface (MOI) API](@ref moi_documentation).
+Because of this, JuMP uses the following standard form to represent problems:
+```math
+\begin{align}
+    & \min_{x \in \mathbb{R}^n} & f_0(x)
+    \\
+    & \;\;\text{s.t.} & f_i(x) & \in \mathcal{S}_i & i = 1 \ldots m
+\end{align}
+```
+Each constraint, ``f_i(x) \in \mathcal{S}_i``, is composed of a function and a
+set. For example, instead of calling ``a^\top x \le b`` a
+*less-than-or-equal-to* constraint, we say that it is a
+*scalar-affine-in-less-than* constraint, where the function ``a^\top x`` belongs
+to the *less-than* set ``(-\infty, b]``. More  generally, we use the shorthand
+*function-in-set* to refer to constraints composed of different types of
+functions and sets.
 
 This page explains how to write various types of constraints in JuMP. For
 nonlinear constraints, see [Nonlinear Modeling](@ref) instead.
 
-## Add a linear constraint
+## Add a constraint
+
+Add a constraint to a JuMP model using the [`@constraint`](@ref) macro. The
+syntax to use depends on the type of constraint you wish to add.
+
+### Add a linear constraint
 
 Create linear constraints using the [`@constraint`](@ref) macro:
 ```jldoctest
@@ -55,8 +69,7 @@ julia> @constraint(model, 2x + 1 <= 4x + 4)
 ## [Add a quadratic constraint](@id quad_constraints)
 
 In addition to affine functions, JuMP also supports constraints with quadratic
-terms. (For more general nonlinear functions, see [Nonlinear Modeling](@ref).)
-For example:
+terms. For example:
 ```jldoctest con_quadratic; setup=:(model=Model())
 julia> @variable(model, x[i=1:2])
 2-element Vector{VariableRef}:
@@ -77,7 +90,7 @@ my_q : x[1]² + x[2]² - t² <= 0.0
 
 ## Vectorized constraints
 
-We can also add constraints to JuMP using vectorized linear algebra. For
+You can also add constraints to JuMP using vectorized linear algebra. For
 example:
 ```jldoctest con_vector; setup=:(model = Model())
 julia> @variable(model, x[i=1:2])
@@ -106,10 +119,10 @@ julia> @constraint(model, con, A * x .== b)
     in front of the comparison operators (e.g. `.==`, `.>=`, and `.<=`). If you
     use a comparison without the dot, an error will be thrown.
 
-## Containers of constraints
+### Containers of constraints
 
 The [`@constraint`](@ref) macro supports creating collections of constraints.
-We'll cover some brief snytax here; read the [Constraint containers](@ref)
+We'll cover some brief syntax here; read the [Constraint containers](@ref)
 section for more details:
 
 Create arrays of constraints:
@@ -149,7 +162,7 @@ JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.Constraint
   [2, 3]  =  c[2,3] : x[2] ≤ 3.0
   [3, 3]  =  c[3,3] : x[3] ≤ 3.0
 ```
-and we can filter elements in the sets using the `;` syntax:
+and you can filter elements in the sets using the `;` syntax:
 ```jldoctest; setup=:(model=Model(); @variable(model, x[1:9]))
 julia> @constraint(model, c[i=1:9; mod(i, 3) == 0], x[i] <= i)
 JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}, 1, Tuple{Int64}} with 3 entries:
@@ -815,7 +828,7 @@ JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.Constraint
 When creating a container of constraints, JuMP will attempt to choose the
 tightest container type that can store the constraints. However, because this
 happens at parse time, it does not always make the best choice. Just like in
-[`@variable`](@ref), we can force the type of container using the `container`
+[`@variable`](@ref), you can force the type of container using the `container`
 keyword. For syntax and the reason behind this, take a look at the
 [variable docs](@ref variable_forcing).
 
@@ -866,7 +879,8 @@ MathOptInterface.Integer()
 ## MathOptInterface constraints
 
 Because JuMP is based on MathOptInterface, you can add any constraints supported
-by MathOptInterface using the function-in-set syntax.
+by MathOptInterface using the function-in-set syntax. For a list of supported
+functions and sets, read [Standard form problem](@ref).
 
 !!! note
     We use `MOI` as an alias for the `MathOptInterface` module. This alias is
