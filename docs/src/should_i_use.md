@@ -3,17 +3,22 @@
 JuMP is an [algebraic modeling language](@ref algebraic-modeling-language) for
 mathematical optimization written in the [Julia language](https://julialang.org).
 
+This page explains when you should consider using JuMP, and importantly, when
+you should _not_ use JuMP.
+
 ## When should I use JuMP?
 
 You should use JuMP if you have a constrained optimization problem for which you
-can formulate a set of decision variables, a scalar objective function, and a
-set of constraints.
+can formulate:
+ * a set of decision variables
+ * a scalar objective function
+ * a set of constraints.
 
 Key reasons to use JuMP include:
 
  - User friendliness
-   - Syntax that mimics natural mathematical expressions. (See the section on
-     [algebraic modeling languages](@ref algebraic-modeling-language).)
+   - JuMP has syntax that mimics natural mathematical expressions. (See the
+     section on [algebraic modeling languages](@ref algebraic-modeling-language).)
  - Speed
    - Benchmarking has shown that JuMP can create problems at similar speeds to
      special-purpose modeling languages such as [AMPL](https://ampl.com/).
@@ -27,9 +32,10 @@ Key reasons to use JuMP include:
      [Supported solvers](@ref) section contains a table of the currently
      supported solvers.
  - Access to advanced algorithmic techniques
-   - Efficient _in-memory_ LP re-solves which previously required using
-     solver-specific or low-level C++ libraries.
-   - Access to solver-independent and solver-dependent [Callbacks](@ref callbacks_manual).
+   - JuMP supports efficient _in-memory_ re-solves of linear programs, which
+     previously required using solver-specific or low-level C++ libraries.
+   - JuMP provides access to solver-independent and solver-dependent
+     [Callbacks](@ref callbacks_manual).
  - Ease of embedding
    - JuMP itself is written purely in Julia. Solvers are the only binary
      dependencies.
@@ -53,6 +59,20 @@ JuMP supports a broad range of optimization classes. However, there are still
 some that it doesn't support, or that are better supported by other software
 packages.
 
+### You want to optimize a complicated Julia function
+
+Packages in Julia compose well. It's common for people to pick two unrelated
+packages and use them in conjunction to create novel behavior. JuMP isn't one of
+those packages.
+
+If you want to optimize a ordinary differential equation from
+[DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl)
+or tune a neural network from [Flux.jl](https://github.com/FluxML/Flux.jl),
+consider using other packages such as:
+ * [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl)
+ * [GalacticOptim.jl](https://github.com/SciML/GalacticOptim.jl)
+ * [Nonconvex.jl](https://github.com/JuliaNonconvex/Nonconvex.jl)
+
 ### Black-box, derivative free, or unconstrained optimization
 
 JuMP does support nonlinear programs with constraints and objectives containing
@@ -70,6 +90,7 @@ which are only concerned with function minimization.
 
 Alternatives to consider are:
  * [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl)
+ * [GalacticOptim.jl](https://github.com/SciML/GalacticOptim.jl)
  * [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)
 
 ### Multiobjective programs
@@ -91,3 +112,12 @@ Alternatives to consider are:
     `Convex.jl` is also built on MathOptInterface, and shares the same set of
     underlying solvers. However, you input problems differently, and Convex.jl
     checks that the problem is DCP.
+
+### Stochastic programming
+
+JuMP requires deterministic input data.
+
+If you have stochastic input data, consider using a JuMP extension such as:
+ * [InfiniteOpt.jl](https://github.com/pulsipher/InfiniteOpt.jl)
+ * [StochasticPrograms.jl](https://github.com/martinbiel/StochasticPrograms.jl)
+ * [SDDP.jl](https://github.com/odow/SDDP.jl)
