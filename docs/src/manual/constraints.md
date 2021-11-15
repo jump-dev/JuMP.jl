@@ -62,11 +62,11 @@ JuMP normalizes constraints by moving all of the terms containing variables to
 the left-hand side and all of the constant terms to the right-hand side. Thus,
 we get:
 ```jldoctest; setup=:(model=Model(); @variable(model, x))
-julia> @constraint(model, 2x + 1 <= 4x + 4)
--2 x <= 3.0
+julia> @constraint(model, c, 2x + 1 <= 4x + 4)
+c : -2 x <= 3.0
 ```
 
-## [Add a quadratic constraint](@id quad_constraints)
+### [Add a quadratic constraint](@id quad_constraints)
 
 In addition to affine functions, JuMP also supports constraints with quadratic
 terms. For example:
@@ -88,7 +88,7 @@ my_q : x[1]² + x[2]² - t² <= 0.0
     quadratic, prefer adding quadratic constraints using [`@constraint`](@ref),
     rather than [`@NLconstraint`](@ref).
 
-## Vectorized constraints
+### Vectorized constraints
 
 You can also add constraints to JuMP using vectorized linear algebra. For
 example:
@@ -360,7 +360,7 @@ Here's a summary of the differences:
  * The `base_name` keyword can override the `String` name of the constraint.
  * You can manually register names in the model via `model[:key] = value`.
 
-Here's an example that should make things clearer:
+Here's an example of the differences:
 ```jldoctest
 julia> model = Model();
 
@@ -419,13 +419,13 @@ macro to improve readability:
 ```jldoctest; setup=:(model=Model(); @variable(model, x))
 julia> @constraints(model, begin
            2x <= 1
-           x >= -1
+           c, x >= -1
        end)
 
 julia> print(model)
 Feasibility
 Subject to
- x ≥ -1.0
+ c : x ≥ -1.0
  2 x ≤ 1.0
 ```
 
@@ -607,7 +607,7 @@ con : 2 x ∈ [-4.0, -2.0]
 
 ## Modify a variable coefficient
 
-To modify the coefficients for a linear term ((modifying the coefficient of a
+To modify the coefficients for a linear term (modifying the coefficient of a
 quadratic term is not supported) in a constraint, use
 [`set_normalized_coefficient`](@ref). To query the current coefficient, use
 [`normalized_coefficient`](@ref).
@@ -678,7 +678,7 @@ con : 2 x <= 1.0
     adding a new constraint of the same name is an easy way to introduce bugs
     into your code.
 
-## Start Values
+## Start values
 
 Provide a starting value (also called warmstart) for a constraint's dual using
 [`set_dual_start_value`](@ref).
@@ -702,7 +702,7 @@ julia> dual_start_value(con)
 2.0
 ```
 
-Vector constraints require a vector warmstart:
+Vector-valued constraints require a vector warmstart:
 ```jldoctest constraint_dual_start_vector; setup=:(model=Model())
 julia> @variable(model, x[1:3])
 3-element Vector{VariableRef}:
@@ -775,7 +775,7 @@ julia> con[2:3]
 Anonymous containers can also be constructed by dropping the name (e.g. `con`)
 before the square brackets:
 ```jldoctest constraint_arrays
-julia> @constraint(model, [i = 1:2], i * x <= i + 1)
+julia> con = @constraint(model, [i = 1:2], i * x <= i + 1)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
  x ≤ 2.0
  2 x ≤ 3.0
@@ -834,8 +834,8 @@ keyword. For syntax and the reason behind this, take a look at the
 
 ## Accessing constraints from a model
 
-Query the types of function-in-set constraints currently present in the model by
-calling [`list_of_constraint_types`](@ref);
+Query the types of function-in-set constraints in a model using
+[`list_of_constraint_types`](@ref):
 ```jldoctest con_access
 julia> model = Model();
 
@@ -850,8 +850,8 @@ julia> list_of_constraint_types(model)
  (VariableRef, MathOptInterface.Integer)
 ```
 
-For a given function and set type, use
-[`num_constraints`](@ref) to access the number of constraints of this type and
+For a given combination of function and set type, use
+[`num_constraints`](@ref) to access the number of constraints and
 [`all_constraints`](@ref) to access a list of their references:
 ```jldoctest con_access
 julia> num_constraints(model, VariableRef, MOI.Integer)
@@ -1097,8 +1097,7 @@ julia> @constraint(model, !a => {x + y <= 1})
 
 ## Semidefinite constraints
 
-To constrain a matrix to be symmetric positive semidefinite (PSD), use
-[`PSDCone`](@ref):
+To constrain a matrix to be positive semidefinite (PSD), use [`PSDCone`](@ref):
 ```jldoctest con_psd; setup=:(model = Model())
 julia> @variable(model, X[1:2, 1:2])
 2×2 Matrix{VariableRef}:
@@ -1119,7 +1118,7 @@ julia> @constraint(model, X >= 0, PSDCone())
     constraints being added to the model.
 
 The inequality `X >= Y` between two square matrices `X` and `Y` is understood as
-constraining `X - Y` to be symmetric positive semidefinite.
+constraining `X - Y` to be positive semidefinite.
 ```jldoctest con_psd
 julia> Y = [1 2; 2 1]
 2×2 Matrix{Int64}:
