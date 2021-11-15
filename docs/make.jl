@@ -152,9 +152,9 @@ const _PAGES = [
     "Manual" => [
         "manual/models.md",
         "manual/variables.md",
+        "manual/constraints.md",
         "manual/expressions.md",
         "manual/objective.md",
-        "manual/constraints.md",
         "manual/containers.md",
         "manual/solutions.md",
         "manual/nlp.md",
