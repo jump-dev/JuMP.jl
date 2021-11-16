@@ -126,7 +126,7 @@ understands.
 JuMP provides the first part of an algebraic modeling language using the
 [`@variable`](@ref), [`@objective`](@ref), and [`@constraint`](@ref) macros.
 
-For example, here's how we would write the knapsack problem in JuMP:
+For example, here's how we write the knapsack problem in JuMP:
 ```jldoctest
 julia> using JuMP, GLPK
 
@@ -152,8 +152,7 @@ the model we wrote out above.
 ### Step II: algebraic to functional
 
 For the next step, JuMP's macros re-write the variables and constraints into a
-functional form. Here's what the JuMP code would look like if we didn't use
-macros:
+functional form. Here's what the JuMP code looks like after this step:
 ```jldoctest
 julia> using JuMP, GLPK
 
@@ -193,7 +192,7 @@ Hopefully you agree that the macro version is much easier to read!
 ### Part III: JuMP to MathOptInterface
 
 In the third step, JuMP converts the functional form of the problem, i.e.,
-`nonalgebraic_knapsack`, into the MathOptInterface API. That looks like this:
+`nonalgebraic_knapsack`, into the MathOptInterface API:
 ```jldoctest
 julia> using MathOptInterface, GLPK
 
@@ -233,7 +232,7 @@ formulation that we started with.
 
 As a final step, the [GLPK.jl](https://github.com/jump-dev/GLPK.jl) package
 converts the MathOptInterface form, i.e., `mathoptinterface_knapsack`, into a
-GLPK-specific API that looks like:
+GLPK-specific API:
 ```jldoctest
 julia> using GLPK
 
@@ -281,5 +280,10 @@ julia> glpk_knapsack([1.0, 2.0], [0.5, 0.5], 1.25)
 ```
 We've now gone from a algebraic model that looked identical to the mathematical
 model we started with, to a verbose function that uses GLPK-specific
-functionality. The difference between `algebraic_knapsack` and `glpk_knapsack`
-highlights the benefit that algebraic modeling languages provide to users.
+functionality.
+
+The difference between `algebraic_knapsack` and `glpk_knapsack` highlights the
+benefit that algebraic modeling languages provide to users. Moreover, if we used
+a different solver, the solver-specific function would be entirely different. A
+key benefit of an algebraic modeling language is that you can change the solver
+without needing to rewrite the model.
