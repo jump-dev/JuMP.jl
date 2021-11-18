@@ -58,23 +58,23 @@ function dual_objective_value(model::Model; result::Int = 1)::Float64
 end
 
 """
-    objective_sense(model::Model)::MathOptInterface.OptimizationSense
+    objective_sense(model::Model)::MOI.OptimizationSense
 
 Return the objective sense.
 """
 function objective_sense(model::Model)
-    return MOI.get(model, MOI.ObjectiveSense())::OptimizationSense
+    return MOI.get(model, MOI.ObjectiveSense())::MOI.OptimizationSense
 end
 
 """
-    set_objective_sense(model::Model, sense::MathOptInterface.OptimizationSense)
+    set_objective_sense(model::Model, sense::MOI.OptimizationSense)
 
 Sets the objective sense of the model to the given sense. See
 [`set_objective_function`](@ref) to set the objective function. These are
 low-level functions; the recommended way to set the objective is with the
 [`@objective`](@ref) macro.
 """
-function set_objective_sense(model::Model, sense::OptimizationSense)
+function set_objective_sense(model::Model, sense::MOI.OptimizationSense)
     return MOI.set(model, MOI.ObjectiveSense(), sense)
 end
 
@@ -128,7 +128,7 @@ function set_objective_function(model::AbstractModel, func)
 end
 
 """
-    set_objective(model::AbstractModel, sense::OptimizationSense, func)
+    set_objective(model::AbstractModel, sense::MOI.OptimizationSense, func)
 
 The functional equivalent of the [`@objective`](@ref) macro.
 
@@ -147,7 +147,7 @@ model = Model()
 set_objective(model, MIN_SENSE, x)
 ```
 """
-function set_objective(model::AbstractModel, sense::OptimizationSense, func)
+function set_objective(model::AbstractModel, sense::MOI.OptimizationSense, func)
     set_objective_sense(model, sense)
     return set_objective_function(model, func)
 end

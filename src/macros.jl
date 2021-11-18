@@ -1280,13 +1280,13 @@ end)
 """
     _moi_sense(_error::Function, sense)
 
-Return an expression whose value is an `OptimizationSense` corresponding
+Return an expression whose value is an `MOI.OptimizationSense` corresponding
 to `sense`. Sense is either the symbol `:Min` or `:Max`, corresponding
 respectively to `MIN_SENSE` and `MAX_SENSE` or it is another symbol,
 which should be the name of a variable or expression whose value is an
-`OptimizationSense`.
+`MOI.OptimizationSense`.
 In the last case, the expression throws an error using the `_error`
-function in case the value is not an `OptimizationSense`.
+function in case the value is not an `MOI.OptimizationSense`.
 """
 function _moi_sense(_error::Function, sense)
     if sense == :Min
@@ -1309,7 +1309,7 @@ function _throw_error_for_invalid_sense(_error::Function, sense)
 end
 function _throw_error_for_invalid_sense(
     _error::Function,
-    sense::OptimizationSense,
+    sense::MOI.OptimizationSense,
 )
     return sense
 end

@@ -10,7 +10,7 @@ end
 
 function set_objective(
     m::Model,
-    sense::OptimizationSense,
+    sense::MOI.OptimizationSense,
     ex::_NonlinearExprData,
 )
     _init_NLP(m)
@@ -2024,7 +2024,7 @@ function add_NL_expression(model::Model, ex)
 end
 
 """
-    set_NL_objective(model::Model, sense::OptimizationSense, expr::Expr)
+    set_NL_objective(model::Model, sense::MOI.OptimizationSense, expr::Expr)
 
 Set the nonlinear objective of `model` to the expression `expr`, with the
 optimization sense `sense`.
@@ -2043,7 +2043,7 @@ programmatically, and you cannot use [`@NLobjective`](@ref).
 julia> set_NL_objective(model, MIN_SENSE, :(\$(x) + \$(x)^2))
 ```
 """
-function set_NL_objective(model::Model, sense::OptimizationSense, x)
+function set_NL_objective(model::Model, sense::MOI.OptimizationSense, x)
     return set_objective(model, sense, _NonlinearExprData(model, x))
 end
 

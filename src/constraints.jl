@@ -916,7 +916,7 @@ function shadow_price(con_ref::ConstraintRef{<:AbstractModel,<:_MOICON})
     )
 end
 
-function _shadow_price_less_than(dual_value, sense::OptimizationSense)
+function _shadow_price_less_than(dual_value, sense::MOI.OptimizationSense)
     # When minimizing, the shadow price is nonpositive and when maximizing the
     # shadow price is nonnegative (because relaxing a constraint can only
     # improve the objective). By MOI convention, a feasible dual on a LessThan
@@ -933,7 +933,7 @@ function _shadow_price_less_than(dual_value, sense::OptimizationSense)
     end
 end
 
-function _shadow_price_greater_than(dual_value, sense::OptimizationSense)
+function _shadow_price_greater_than(dual_value, sense::MOI.OptimizationSense)
     # By MOI convention, a feasible dual on a GreaterThan set is nonnegative,
     # so we flip the sign when minimizing. (See comment in the method above).
     if sense == MAX_SENSE
