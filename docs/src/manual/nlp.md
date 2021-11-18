@@ -613,7 +613,7 @@ Use [`set_NL_objective`](@ref) to set a nonlinear objective.
 julia> expr = :($(x) + $(x)^2)
 :(x + x ^ 2)
 
-julia> set_NL_objective(model, MOI.MIN_SENSE, expr)
+julia> set_NL_objective(model, MIN_SENSE, expr)
 ```
 This is equivalent to
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
@@ -621,7 +621,7 @@ julia> @NLobjective(model, Min, x + x^2)
 ```
 
 !!! note
-    You must use `MOI.MIN_SENSE` or `MOI.MAX_SENSE` instead of `Min` and `Max`.
+    You must use `MIN_SENSE` or `MAX_SENSE` instead of `Min` and `Max`.
 
 ### Add a constraint
 

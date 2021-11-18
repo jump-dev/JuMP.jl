@@ -83,7 +83,7 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     end
 
     n = length(std_form.columns)
-    is_min = objective_sense(model) == MOI.MIN_SENSE
+    is_min = objective_sense(model) == MIN_SENSE
 
     x = vcat(value.(all_variables(model)), value.(std_form.constraints))
     x_B = @view x[basis.basic_cols]

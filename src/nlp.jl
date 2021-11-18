@@ -10,7 +10,7 @@ end
 
 function set_objective(
     m::Model,
-    sense::MOI.OptimizationSense,
+    sense::OptimizationSense,
     ex::_NonlinearExprData,
 )
     _init_NLP(m)
@@ -2024,7 +2024,7 @@ function add_NL_expression(model::Model, ex)
 end
 
 """
-    set_NL_objective(model::Model, sense::MOI.OptimizationSense, expr::Expr)
+    set_NL_objective(model::Model, sense::OptimizationSense, expr::Expr)
 
 Set the nonlinear objective of `model` to the expression `expr`, with the
 optimization sense `sense`.
@@ -2035,15 +2035,15 @@ programmatically, and you cannot use [`@NLobjective`](@ref).
 ## Notes
 
  * You must interpolate the variables directly into the expression `expr`.
- * You must use `MOI.MIN_SENSE` or `MOI.MAX_SENSE` instead of `Min` and `Max`.
+ * You must use `MIN_SENSE` or `MAX_SENSE` instead of `Min` and `Max`.
 
 ## Examples
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
-julia> set_NL_objective(model, MOI.MIN_SENSE, :(\$(x) + \$(x)^2))
+julia> set_NL_objective(model, MIN_SENSE, :(\$(x) + \$(x)^2))
 ```
 """
-function set_NL_objective(model::Model, sense::MOI.OptimizationSense, x)
+function set_NL_objective(model::Model, sense::OptimizationSense, x)
     return set_objective(model, sense, _NonlinearExprData(model, x))
 end
 

@@ -873,7 +873,7 @@ end
         @expression(model, aff, x + 2y - 3)
         @expression(model, quad, x^2 + 2y^2 - x)
         nlexpr = JuMP.add_NL_expression(model, :($x^2 + $y^2))
-        JuMP.set_NL_objective(model, MOI.MIN_SENSE, :(2 * $nlexpr))
+        JuMP.set_NL_objective(model, MIN_SENSE, :(2 * $nlexpr))
         JuMP.add_NL_constraint(model, :($x + $y <= 1))
         JuMP.add_NL_constraint(model, :($x + $y >= 1))
         JuMP.add_NL_constraint(model, :($x + $y == 1))

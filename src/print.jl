@@ -227,9 +227,9 @@ For this method to work, an `AbstractModel` subtype should implement:
 function _print_summary(io::IO, model::AbstractModel)
     println(io, name(model))
     sense = objective_sense(model)
-    if sense == MOI.MAX_SENSE
+    if sense == MAX_SENSE
         print(io, "Maximization")
-    elseif sense == MOI.MIN_SENSE
+    elseif sense == MIN_SENSE
         print(io, "Minimization")
     else
         print(io, "Feasibility")
@@ -242,7 +242,7 @@ function _print_summary(io::IO, model::AbstractModel)
         ": ",
         num_variables(model),
     )
-    if sense != MOI.FEASIBILITY_SENSE
+    if sense != FEASIBILITY_SENSE
         show_objective_function_summary(io, model)
     end
     show_constraints_summary(io, model)
@@ -286,10 +286,10 @@ An `AbstractModel` subtype should implement `objective_function_string`,
 """
 function _print_model(io::IO, model::AbstractModel)
     sense = objective_sense(model)
-    if sense == MOI.MAX_SENSE
+    if sense == MAX_SENSE
         print(io, "Max ")
         println(io, objective_function_string(REPLMode, model))
-    elseif sense == MOI.MIN_SENSE
+    elseif sense == MIN_SENSE
         print(io, "Min ")
         println(io, objective_function_string(REPLMode, model))
     else
@@ -320,10 +320,10 @@ An `AbstractModel` subtype should implement `objective_function_string`,
 function _print_latex(io::IO, model::AbstractModel)
     println(io, "\$\$ \\begin{aligned}")
     sense = objective_sense(model)
-    if sense == MOI.MAX_SENSE
+    if sense == MAX_SENSE
         print(io, "\\max\\quad & ")
         println(io, objective_function_string(IJuliaMode, model), "\\\\")
-    elseif sense == MOI.MIN_SENSE
+    elseif sense == MIN_SENSE
         print(io, "\\min\\quad & ")
         println(io, objective_function_string(IJuliaMode, model), "\\\\")
     else

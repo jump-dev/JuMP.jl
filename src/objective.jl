@@ -63,7 +63,7 @@ end
 Return the objective sense.
 """
 function objective_sense(model::Model)
-    return MOI.get(model, MOI.ObjectiveSense())::MOI.OptimizationSense
+    return MOI.get(model, MOI.ObjectiveSense())::OptimizationSense
 end
 
 """
@@ -74,7 +74,7 @@ Sets the objective sense of the model to the given sense. See
 low-level functions; the recommended way to set the objective is with the
 [`@objective`](@ref) macro.
 """
-function set_objective_sense(model::Model, sense::MOI.OptimizationSense)
+function set_objective_sense(model::Model, sense::OptimizationSense)
     return MOI.set(model, MOI.ObjectiveSense(), sense)
 end
 
@@ -128,7 +128,7 @@ function set_objective_function(model::AbstractModel, func)
 end
 
 """
-    set_objective(model::AbstractModel, sense::MOI.OptimizationSense, func)
+    set_objective(model::AbstractModel, sense::OptimizationSense, func)
 
 The functional equivalent of the [`@objective`](@ref) macro.
 
@@ -144,10 +144,10 @@ set_objective_function(model, func)
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @variable(model, x)
-set_objective(model, MOI.MIN_SENSE, x)
+set_objective(model, MIN_SENSE, x)
 ```
 """
-function set_objective(model::AbstractModel, sense::MOI.OptimizationSense, func)
+function set_objective(model::AbstractModel, sense::OptimizationSense, func)
     set_objective_sense(model, sense)
     return set_objective_function(model, func)
 end

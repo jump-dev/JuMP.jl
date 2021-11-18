@@ -1442,6 +1442,11 @@ for name in instances(TerminationStatusCode)
     @eval const $(Symbol(name)) = $(name)
 end
 
+const OptimizationSense = MOI.OptimizationSense
+for name in instances(OptimizationSense)
+    @eval const $(Symbol(name)) = $(name)
+end
+
 # JuMP exports everything except internal symbols, which are defined as those
 # whose name starts with an underscore. Macros whose names start with
 # underscores are internal as well. If you don't want all of these symbols

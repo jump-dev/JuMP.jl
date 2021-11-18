@@ -68,7 +68,7 @@ const MOI = MathOptInterface
         @variable(m, 1 <= x[i = 1:4] <= 5, start = initval[i])
         JuMP.set_NL_objective(
             m,
-            MOI.MIN_SENSE,
+            MIN_SENSE,
             :($(x[1]) * $(x[4]) * ($(x[1]) + $(x[2]) + $(x[3])) + $(x[3])),
         )
         JuMP.add_NL_constraint(
@@ -568,7 +568,7 @@ const MOI = MathOptInterface
     @testset "Two-sided constraints (no macros)" begin
         m = Model(Ipopt.Optimizer)
         @variable(m, x)
-        JuMP.set_NL_objective(m, MOI.MAX_SENSE, x)
+        JuMP.set_NL_objective(m, MAX_SENSE, x)
         l = -1
         u = 1
         JuMP.add_NL_constraint(m, :($l <= $x <= $u))
@@ -580,7 +580,7 @@ const MOI = MathOptInterface
         @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
         @test JuMP.objective_value(m) ≈ u atol = 1e-6
 
-        JuMP.set_NL_objective(m, MOI.MIN_SENSE, x)
+        JuMP.set_NL_objective(m, MIN_SENSE, x)
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)

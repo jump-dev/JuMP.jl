@@ -1280,19 +1280,19 @@ end)
 """
     _moi_sense(_error::Function, sense)
 
-Return an expression whose value is an `MOI.OptimizationSense` corresponding
+Return an expression whose value is an `OptimizationSense` corresponding
 to `sense`. Sense is either the symbol `:Min` or `:Max`, corresponding
-respectively to `MOI.MIN_SENSE` and `MOI.MAX_SENSE` or it is another symbol,
+respectively to `MIN_SENSE` and `MAX_SENSE` or it is another symbol,
 which should be the name of a variable or expression whose value is an
-`MOI.OptimizationSense`.
+`OptimizationSense`.
 In the last case, the expression throws an error using the `_error`
-function in case the value is not an `MOI.OptimizationSense`.
+function in case the value is not an `OptimizationSense`.
 """
 function _moi_sense(_error::Function, sense)
     if sense == :Min
-        expr = MOI.MIN_SENSE
+        expr = MIN_SENSE
     elseif sense == :Max
-        expr = MOI.MAX_SENSE
+        expr = MAX_SENSE
     else
         # Refers to a variable that holds the sense.
         # TODO: Better document this behavior
@@ -1309,7 +1309,7 @@ function _throw_error_for_invalid_sense(_error::Function, sense)
 end
 function _throw_error_for_invalid_sense(
     _error::Function,
-    sense::MOI.OptimizationSense,
+    sense::OptimizationSense,
 )
     return sense
 end
@@ -1363,7 +1363,7 @@ julia> @objective(model, Max, 2x - 1)
 To set a quadratic objective and set the objective sense programmatically, do
 as follows:
 ```jldoctest @objective
-julia> sense = MOI.MIN_SENSE
+julia> sense = MIN_SENSE
 MIN_SENSE::OptimizationSense = 0
 
 julia> @objective(model, sense, x^2 - 2x + 1)
