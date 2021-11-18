@@ -994,6 +994,10 @@ function set_time_limit_sec(model::Model, limit::Real)
     return MOI.set(model, MOI.TimeLimitSec(), convert(Float64, limit))
 end
 
+function set_time_limit_sec(model::Model, ::Nothing)
+    return unset_time_limit_sec(model)
+end
+
 """
     unset_time_limit_sec(model::Model)
 
