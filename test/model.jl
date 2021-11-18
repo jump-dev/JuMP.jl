@@ -470,6 +470,10 @@ function test_set_retrieve_time_limit()
     JuMP.set_time_limit_sec(model, 12.0)
     JuMP.unset_time_limit_sec(model)
     @test JuMP.time_limit_sec(model) === nothing
+    # Test setting something other than `Float64`.
+    JuMP.set_time_limit_sec(model, 0x0a)
+    @test JuMP.time_limit_sec(model) == 10.0
+    return
 end
 
 struct DummyExtensionData
