@@ -2035,12 +2035,12 @@ programmatically, and you cannot use [`@NLobjective`](@ref).
 ## Notes
 
  * You must interpolate the variables directly into the expression `expr`.
- * You must use `MOI.MIN_SENSE` or `MOI.MAX_SENSE` instead of `Min` and `Max`.
+ * You must use `MIN_SENSE` or `MAX_SENSE` instead of `Min` and `Max`.
 
 ## Examples
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
-julia> set_NL_objective(model, MOI.MIN_SENSE, :(\$(x) + \$(x)^2))
+julia> set_NL_objective(model, MIN_SENSE, :(\$(x) + \$(x)^2))
 ```
 """
 function set_NL_objective(model::Model, sense::MOI.OptimizationSense, x)

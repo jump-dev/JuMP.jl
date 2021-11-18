@@ -142,7 +142,7 @@ julia> @objective(model, Min, 2x)
 julia> objective_sense(model)
 MIN_SENSE::OptimizationSense = 0
 
-julia> set_objective_sense(model, MOI.MAX_SENSE);
+julia> set_objective_sense(model, MAX_SENSE);
 
 julia> objective_sense(model)
 MAX_SENSE::OptimizationSense = 1

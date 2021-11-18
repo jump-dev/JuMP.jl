@@ -169,7 +169,7 @@ julia> function nonalgebraic_knapsack(c, w, b)
            for i = 1:n
                add_to_expression!(obj, c[i], x[i])
            end
-           set_objective(model, MOI.MAX_SENSE, obj)
+           set_objective(model, MAX_SENSE, obj)
            lhs = AffExpr(0.0)
            for i = 1:n
                add_to_expression!(lhs, w[i], x[i])

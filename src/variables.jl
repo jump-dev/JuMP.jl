@@ -1238,7 +1238,7 @@ function reduced_cost(x::VariableRef)::Float64
             " not have duals available.",
         )
     end
-    sign = objective_sense(model) == MOI.MIN_SENSE ? 1.0 : -1.0
+    sign = objective_sense(model) == MIN_SENSE ? 1.0 : -1.0
     if is_fixed(x)
         return sign * dual(FixRef(x))
     end

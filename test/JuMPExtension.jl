@@ -20,7 +20,7 @@ mutable struct MyModel <: JuMP.AbstractModel
     constraints::Dict{ConstraintIndex,JuMP.AbstractConstraint}      # Map conidx -> variable
     con_to_name::Dict{ConstraintIndex,String}      # Map conidx -> name
     name_to_con::Union{Dict{String,ConstraintIndex},Nothing}                     # Map name -> conidx
-    objectivesense::MOI.OptimizationSense
+    objectivesense::OptimizationSense
     objective_function::JuMP.AbstractJuMPScalar
     obj_dict::Dict{Symbol,Any}                     # Same that JuMP.Model's field `obj_dict`
     function MyModel()
@@ -33,7 +33,7 @@ mutable struct MyModel <: JuMP.AbstractModel
             Dict{ConstraintIndex,JuMP.AbstractConstraint}(),
             Dict{ConstraintIndex,String}(),
             nothing,            # Constraints
-            MOI.FEASIBILITY_SENSE,
+            FEASIBILITY_SENSE,
             zero(JuMP.GenericAffExpr{Float64,MyVariableRef}),
             Dict{Symbol,Any}(),
         )

@@ -667,7 +667,7 @@ function test_Model_get_variable_coefficient(::Any, ::Any)
 end
 
 function _mock_reduced_cost_util(
-    obj_sense::MOI.OptimizationSense,
+    obj_sense::OptimizationSense,
     #obj_value::Float64,
     var_obj_coeff::Float64,
     #var_value,
@@ -750,8 +750,8 @@ function _mock_reduced_cost_util(
 end
 
 function test_Model_reduced_cost(::Any, ::Any)
-    Min = MOI.MIN_SENSE
-    Max = MOI.MAX_SENSE
+    Min = MIN_SENSE
+    Max = MAX_SENSE
     # The method should always fail if duals are not available.
     x = _mock_reduced_cost_util(Min, 1.0, :none)
     @test_throws ErrorException reduced_cost(x)

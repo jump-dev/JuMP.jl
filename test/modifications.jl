@@ -147,7 +147,7 @@ function test_objective_sense()
     @variable(model, x)
     @objective(model, Min, x)
     model.is_model_dirty = false  # Hack!
-    set_objective_sense(model, MOI.MIN_SENSE)
+    set_objective_sense(model, MIN_SENSE)
     @test model.is_model_dirty
     return
 end

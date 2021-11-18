@@ -58,7 +58,7 @@ function dual_objective_value(model::Model; result::Int = 1)::Float64
 end
 
 """
-    objective_sense(model::Model)::MathOptInterface.OptimizationSense
+    objective_sense(model::Model)::MOI.OptimizationSense
 
 Return the objective sense.
 """
@@ -67,7 +67,7 @@ function objective_sense(model::Model)
 end
 
 """
-    set_objective_sense(model::Model, sense::MathOptInterface.OptimizationSense)
+    set_objective_sense(model::Model, sense::MOI.OptimizationSense)
 
 Sets the objective sense of the model to the given sense. See
 [`set_objective_function`](@ref) to set the objective function. These are
@@ -144,7 +144,7 @@ set_objective_function(model, func)
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @variable(model, x)
-set_objective(model, MOI.MIN_SENSE, x)
+set_objective(model, MIN_SENSE, x)
 ```
 """
 function set_objective(model::AbstractModel, sense::MOI.OptimizationSense, func)
