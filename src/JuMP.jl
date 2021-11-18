@@ -981,7 +981,7 @@ function unset_silent(model::Model)
 end
 
 """
-    set_time_limit_sec(model::Model, limit)
+    set_time_limit_sec(model::Model, limit::Float64)
 
 Set the time limit (in seconds) of the solver.
 
@@ -990,8 +990,12 @@ Can be unset using [`unset_time_limit_sec`](@ref) or with `limit` set to
 
 See also: [`unset_time_limit_sec`](@ref), [`time_limit_sec`](@ref).
 """
-function set_time_limit_sec(model::Model, limit)
-    return MOI.set(model, MOI.TimeLimitSec(), limit)
+function set_time_limit_sec(model::Model, limit::Real)
+    return MOI.set(model, MOI.TimeLimitSec(), convert(Float64, limit))
+end
+
+function set_time_limit_sec(model::Model, ::Nothing)
+    return unset_time_limit_sec(model)
 end
 
 """
