@@ -47,7 +47,9 @@ function _test_result_attributes(; test_empty = false)
     @objective(model, Max, x)
     if test_empty
         optimize!(model)
+        @test !isempty(model)
         empty!(model)
+        @test isempty(model)
     end
     @test_throws err JuMP.objective_value(model)
     @test_throws err JuMP.dual_objective_value(model)
