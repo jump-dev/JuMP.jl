@@ -27,6 +27,7 @@ unsafe_backend
 name(::AbstractModel)
 solver_name
 Base.empty!(::Model)
+Base.isempty(::Model)
 mode
 object_dictionary
 unregister

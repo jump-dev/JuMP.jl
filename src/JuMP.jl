@@ -670,6 +670,21 @@ function Base.empty!(model::Model)::Model
 end
 
 """
+    isempty(model::Model)
+
+Verifies whether the model is empty, that is, whether the MOI backend
+is empty and whether the model is in the same state as at its creation
+apart from optimizer attributes.
+"""
+function Base.isempty(model::Model)
+    MOI.is_empty(model.moi_backend) || return false
+    isempty(model.shapes) || return false
+    model.nlp_data === nothing || return false
+    isempty(mode.obj_dict) && isempty(model.ext) || return false
+    return !model.is_model_dirty
+end
+
+"""
     num_variables(model::Model)::Int64
 
 Returns number of variables in `model`.
