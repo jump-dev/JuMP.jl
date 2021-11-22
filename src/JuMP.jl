@@ -680,7 +680,7 @@ function Base.isempty(model::Model)
     MOI.is_empty(model.moi_backend) || return false
     isempty(model.shapes) || return false
     model.nlp_data === nothing || return false
-    isempty(mode.obj_dict) && isempty(model.ext) || return false
+    isempty(model.obj_dict) && isempty(model.ext) || return false
     return !model.is_model_dirty
 end
 
