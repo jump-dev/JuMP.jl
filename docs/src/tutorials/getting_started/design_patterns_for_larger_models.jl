@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Design partterns for larger models
+# # Design patterns for larger models
 
 # JuMP makes it easy to build and solve optimization models. However, once you
 # start to construct larger models, and especially ones that interact with
@@ -127,7 +127,10 @@ data = KnapsackData(objects, 10.0)
 function Base.show(io::IO, data::KnapsackData)
     println(io, "A knapsack with capacity $(data.capacity) and possible items:")
     for (k, v) in data.objects
-        println(io, "  $(rpad(k, 8)) : profit = $(v.profit), weight = $(v.weight)")
+        println(
+            io,
+            "  $(rpad(k, 8)) : profit = $(v.profit), weight = $(v.weight)",
+        )
     end
     return
 end
@@ -560,11 +563,11 @@ using Test
             joinpath(@__DIR__, "data", "knapsack.json"),
             KnapsackModel.BinaryKnapsack(),
         )
-        @test isapprox(x["apple"], 1, atol=1e-5)
-        @test isapprox(x["banana"], 0, atol=1e-5)
-        @test isapprox(x["cherry"], 0, atol=1e-5)
-        @test isapprox(x["date"], 1, atol=1e-5)
-        @test isapprox(x["eggplant"], 1, atol=1e-5)
+        @test isapprox(x["apple"], 1, atol = 1e-5)
+        @test isapprox(x["banana"], 0, atol = 1e-5)
+        @test isapprox(x["cherry"], 0, atol = 1e-5)
+        @test isapprox(x["date"], 1, atol = 1e-5)
+        @test isapprox(x["eggplant"], 1, atol = 1e-5)
     end
     @testset "feasible_integer_knapsack" begin
         x = KnapsackModel.solve_knapsack(
@@ -572,11 +575,11 @@ using Test
             joinpath(@__DIR__, "data", "knapsack.json"),
             KnapsackModel.IntegerKnapsack(),
         )
-        @test isapprox(x["apple"], 0, atol=1e-5)
-        @test isapprox(x["banana"], 0, atol=1e-5)
-        @test isapprox(x["cherry"], 0, atol=1e-5)
-        @test isapprox(x["date"], 5, atol=1e-5)
-        @test isapprox(x["eggplant"], 0, atol=1e-5)
+        @test isapprox(x["apple"], 0, atol = 1e-5)
+        @test isapprox(x["banana"], 0, atol = 1e-5)
+        @test isapprox(x["cherry"], 0, atol = 1e-5)
+        @test isapprox(x["date"], 5, atol = 1e-5)
+        @test isapprox(x["eggplant"], 0, atol = 1e-5)
     end
     @testset "feasible_binary_knapsack" begin
         x = KnapsackModel.solve_knapsack(
