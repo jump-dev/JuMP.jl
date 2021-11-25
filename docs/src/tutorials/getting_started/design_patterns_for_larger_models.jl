@@ -349,9 +349,9 @@ function solve_knapsack_6(
     config::AbstractKnapsack,
 )
     model = Model(optimizer)
-    _add_knapsack_variables(model, data, config)
-    _add_knapsack_constraints(model, data, config)
-    _add_knapsack_objective(model, data, config)
+    add_knapsack_variables(model, data, config)
+    add_knapsack_constraints(model, data, config)
+    add_knapsack_objective(model, data, config)
     optimize!(model)
     if termination_status(model) != OPTIMAL
         @warn("Model not solved to optimality")
