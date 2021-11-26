@@ -358,8 +358,7 @@ solve_knapsack_5(data, BinaryKnapsack())
 # Compared to where we started, our knapsack model is now significantly
 # different. We've wrapped it in a function, defined some data types, and
 # introduced configuration options to control the variables and constraints that
-# get added. There's a few other steps we can do to further improve things. They
-# are:
+# get added. There are a few other steps we can do to further improve things:
 #  * remove the dependence on `GLPK`
 #  * add checks that we found an optimal solution
 #  * add a helper function to avoid the need to explicitly construct the data.
@@ -394,11 +393,12 @@ solution = solve_knapsack_6(GLPK.Optimizer, data_filename, BinaryKnapsack())
 
 # ## Create a module
 
-# Now we're ready to expose our model to the wider-world. That might be as part
+# Now we're ready to expose our model to the wider world. That might be as part
 # of a larger Julia project that we're contributing to, or as a stand-alone
 # script that we can run on-demand. In either case, it's good practice to wrap
 # everything in a module. This further encapsulates our code into a single
-# namespace, and we can add documentation in the form of docstrings.
+# namespace, and we can add documentation in the form of
+# [docstrings](https://docs.julialang.org/en/v1/manual/documentation/).
 
 # Some good rules to follow when creating a module are:
 # * use `import` in a module instead of `using` to make it clear which functions
@@ -450,7 +450,7 @@ struct BinaryKnapsack <: _AbstractConfiguration end
 """
     IntegerKnapsack()
 
-Create an integer knapsack problem where each object can be taken any amount of
+Create an integer knapsack problem where each object can be taken any number of
 times.
 """
 struct IntegerKnapsack <: _AbstractConfiguration end
@@ -629,7 +629,8 @@ end
 
 # !!! tip
 #     Place these tests in a separate file `test_knapsack_model.jl` so that you
-#     can run the tests by `include`ing the file.
+#     can run the tests by adding `include("test_knapsack_model.jl")` to any
+#     file where needed.
 
 # ## Next steps
 
