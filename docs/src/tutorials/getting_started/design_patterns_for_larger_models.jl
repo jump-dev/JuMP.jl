@@ -397,6 +397,12 @@ import JSON
 struct _KnapsackObject
     profit::Float64
     weight::Float64
+    function _KnapsackObject(profit::Float64, weight::Float64)
+        if weight < 0
+            throw(DomainError("Weight of object cannot be negative"))
+        end
+        return new(profit, weight)
+    end
 end
 
 struct _KnapsackData
