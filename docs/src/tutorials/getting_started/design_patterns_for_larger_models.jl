@@ -37,7 +37,8 @@
 # ## Overview
 
 # This tutorial uses explanation-by-example. We're going to start with a simple
-# knapsack model, and then expand it to add various features and structure.
+# [knapsack model](https://en.wikipedia.org/wiki/Knapsack_problem), and then
+# expand it to add various features and structure.
 
 # ## A simple script
 
@@ -56,7 +57,7 @@ model = Model(GLPK.Optimizer)
 optimize!(model)
 value.(x)
 
-# The benefit of this approach are:
+# The benefits of this approach are:
 #  * it is quick to code
 #  * it is quick to make changes.
 
@@ -96,14 +97,21 @@ solve_knapsack_1([5, 3, 2, 7, 4], [2, 8, 4, 2, 5], 10)
 # indices is fragile and a common source of bugs. A good solution is to use
 # Julia's type system to create an abstraction over your data.
 
-# For example, we can create a struct that represents a single object:
+# For example, we can create a `struct` that represents a single object, with a
+# constructor that lets us validate assumptions on the input data:
 
 struct KnapsackObject
     profit::Float64
     weight::Float64
+    function KnapsackObject(profit::Float64, weight::Float64)
+        if weight < 0
+            throw(DomainError("Weight of object cannot be negative"))
+        end
+        return new(profit, weight)
+    end
 end
 
-# as well as a struct that holds a dictionary of objects and the knapsack's
+# as well as a `struct` that holds a dictionary of objects and the knapsack's
 # capacity:
 
 struct KnapsackData
@@ -156,9 +164,9 @@ solve_knapsack_2(data)
 
 # ## Read in data from files
 
-# Having a datastructure is a good step. But it is still annoying that we have
+# Having a data structure is a good step. But it is still annoying that we have
 # to hard-code the data into Julia. A good next step is to separate the data
-# into an external file format--JSON is a common choice.
+# into an external file format; JSON is a common choice.
 
 import JSON
 
