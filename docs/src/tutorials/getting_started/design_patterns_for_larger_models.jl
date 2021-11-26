@@ -168,6 +168,18 @@ solve_knapsack_2(data)
 # to hard-code the data into Julia. A good next step is to separate the data
 # into an external file format; JSON is a common choice.
 
+# The JuMP repository [has a file](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/getting_started/data)
+# we're going to use for this tutorial. It is found here:
+
+data_filename = joinpath(@__DIR__, "data", "knapsack.json")
+
+# with these contents:
+
+println(read(data_filename, String))
+
+# Now let's write a function that reads this file and builds a `KnapsackData`
+# object:
+
 import JSON
 
 function read_data(filename)
@@ -181,7 +193,7 @@ function read_data(filename)
     )
 end
 
-data = read_data(joinpath(@__DIR__, "data", "knapsack.json"))
+data = read_data(data_filename)
 
 # ## Add options via if-else
 
@@ -218,28 +230,29 @@ solve_knapsack_3(data; binary_knapsack = true)
 
 solve_knapsack_3(data; binary_knapsack = false)
 
-# ## Add options via dispatch
+# ## Add configuation options via dispatch
 
 # If you get repeated requests to add different options, you'll quickly find
 # yourself in a mess of different flags and `if-else` statements. It's hard to
 # write, hard to read, and hard to ensure you haven't introduced any bugs.
-# A good solution is to use Julia's type dispatch. The easiest way to explain
-# this is by example.
+# A good solution is to use Julia's type dispatch to control the configuration
+# of the model. The easiest way to explain this is by example.
 
 # First, start by defining a new abstract type, as well as new subtypes for each
-# of our options.
+# of our options. These types are going to control the configuration of the
+# knapsack model.
 
-abstract type AbstractKnapsack end
+abstract type AbstractConfiguration end
 
-struct BinaryKnapsack <: AbstractKnapsack end
+struct BinaryKnapsack <: AbstractConfiguration end
 
-struct IntegerKnapsack <: AbstractKnapsack end
+struct IntegerKnapsack <: AbstractConfiguration end
 
 # Then, we rewrite our `solve_knapsack` function to take a `config` argument,
 # and we introduce an `add_knapsack_variables` function to abstract the creation
 # of our variables.
 
-function solve_knapsack_4(data::KnapsackData, config::AbstractKnapsack)
+function solve_knapsack_4(data::KnapsackData, config::AbstractConfiguration)
     model = Model(GLPK.Optimizer)
     x = add_knapsack_variables(model, data, config)
     @objective(model, Max, sum(v.profit * x[k] for (k, v) in data.objects))
@@ -282,7 +295,7 @@ solve_knapsack_4(data, IntegerKnapsack())
 # The main benefit of the dispatch approach is that you can quickly add new
 # options without needing to modify the existing code. For example:
 
-struct UpperBoundedKnapsack <: AbstractKnapsack
+struct UpperBoundedKnapsack <: AbstractConfiguration
     limit::Int
 end
 
@@ -301,14 +314,14 @@ solve_knapsack_4(data, UpperBoundedKnapsack(3))
 # It's easy to extend the dispatch approach to constraints and objectives as
 # well. The key points to notice in the next two functions are that:
 #  * we can access registered variables via `model[:x]`
-#  * we can define generic functions which accept any `AbstractKnapsack` as a
+#  * we can define generic functions which accept any `AbstractConfiguration` as a
 #    configuration argument. That means we can implement a single method and
 #    have it apply to multiple configuration types.
 
 function add_knapsack_constraints(
     model::Model,
     data::KnapsackData,
-    ::AbstractKnapsack,
+    ::AbstractConfiguration,
 )
     x = model[:x]
     @constraint(
@@ -322,14 +335,14 @@ end
 function add_knapsack_objective(
     model::Model,
     data::KnapsackData,
-    ::AbstractKnapsack,
+    ::AbstractConfiguration,
 )
     x = model[:x]
     @objective(model, Max, sum(v.profit * x[k] for (k, v) in data.objects))
     return
 end
 
-function solve_knapsack_5(data::KnapsackData, config::AbstractKnapsack)
+function solve_knapsack_5(data::KnapsackData, config::AbstractConfiguration)
     model = Model(GLPK.Optimizer)
     add_knapsack_variables(model, data, config)
     add_knapsack_constraints(model, data, config)
@@ -354,7 +367,7 @@ solve_knapsack_5(data, BinaryKnapsack())
 function solve_knapsack_6(
     optimizer,
     data::KnapsackData,
-    config::AbstractKnapsack,
+    config::AbstractConfiguration,
 )
     model = Model(optimizer)
     add_knapsack_variables(model, data, config)
@@ -368,7 +381,11 @@ function solve_knapsack_6(
     return value.(model[:x])
 end
 
-function solve_knapsack_6(optimizer, data::String, config::AbstractKnapsack)
+function solve_knapsack_6(
+    optimizer,
+    data::String,
+    config::AbstractConfiguration,
+)
     return solve_knapsack_6(optimizer, read_data(data), config)
 end
 
@@ -383,11 +400,11 @@ solution = solve_knapsack_6(GLPK.Optimizer, data_filename, BinaryKnapsack())
 # everything in a module. This further encapsulates our code into a single
 # namespace, and we can add documentation in the form of docstrings.
 
-# Some good rules to follow whe creating a module are:
-# * Use `import` in a module instead of `using` to make it clear which functions
+# Some good rules to follow when creating a module are:
+# * use `import` in a module instead of `using` to make it clear which functions
 #   are from which packages
-# * Use `_` to start function and type names that are considered private
-# * Add docstrings to all public variables and functions.
+# * use `_` to start function and type names that are considered private
+# * add docstrings to all public variables and functions.
 
 module KnapsackModel
 
@@ -421,14 +438,14 @@ function _read_data(filename)
     )
 end
 
-abstract type _AbstractKnapsack end
+abstract type _AbstractConfiguration end
 
 """
     BinaryKnapsack()
 
 Create a binary knapsack problem where each object can be taken 0 or 1 times.
 """
-struct BinaryKnapsack <: _AbstractKnapsack end
+struct BinaryKnapsack <: _AbstractConfiguration end
 
 """
     IntegerKnapsack()
@@ -436,7 +453,7 @@ struct BinaryKnapsack <: _AbstractKnapsack end
 Create an integer knapsack problem where each object can be taken any amount of
 times.
 """
-struct IntegerKnapsack <: _AbstractKnapsack end
+struct IntegerKnapsack <: _AbstractConfiguration end
 
 function _add_knapsack_variables(
     model::JuMP.Model,
@@ -457,7 +474,7 @@ end
 function _add_knapsack_constraints(
     model::JuMP.Model,
     data::_KnapsackData,
-    ::_AbstractKnapsack,
+    ::_AbstractConfiguration,
 )
     x = model[:x]
     JuMP.@constraint(
@@ -471,7 +488,7 @@ end
 function _add_knapsack_objective(
     model::JuMP.Model,
     data::_KnapsackData,
-    ::_AbstractKnapsack,
+    ::_AbstractConfiguration,
 )
     x = model[:x]
     JuMP.@objective(model, Max, sum(v.profit * x[k] for (k, v) in data.objects))
@@ -481,7 +498,7 @@ end
 function _solve_knapsack(
     optimizer,
     data::_KnapsackData,
-    config::_AbstractKnapsack,
+    config::_AbstractConfiguration,
 )
     model = JuMP.Model(optimizer)
     _add_knapsack_variables(model, data, config)
@@ -496,7 +513,11 @@ function _solve_knapsack(
 end
 
 """
-    solve_knapsack(optimizer, data_filename::String, config::_AbstractKnapsack)
+    solve_knapsack(
+        optimizer,
+        data_filename::String,
+        config::_AbstractConfiguration,
+    )
 
 Solve the knapsack problem and return the optimal primal solution
 
@@ -535,7 +556,7 @@ solution = solve_knapsack(
 function solve_knapsack(
     optimizer,
     data_filename::String,
-    config::_AbstractKnapsack,
+    config::_AbstractConfiguration,
 )
     return _solve_knapsack(optimizer, _read_data(data_filename), config)
 end
@@ -598,6 +619,7 @@ using Test
     @testset "feasible_binary_knapsack" begin
         x = KnapsackModel.solve_knapsack(
             GLPK.Optimizer,
+            ## This file contains data that makes the problem infeasible.
             joinpath(@__DIR__, "data", "knapsack_infeasible.json"),
             KnapsackModel.BinaryKnapsack(),
         )
@@ -608,3 +630,15 @@ end
 # !!! tip
 #     Place these tests in a separate file `test_knapsack_model.jl` so that you
 #     can run the tests by `include`ing the file.
+
+# ## Next steps
+
+# We've only briefly scratched the surface of ways to create and structure large
+# JuMP models, so consider this tutorial a starting point, rather than a
+# comprehensive list of all the possible ways to structure JuMP models.  If you
+# are embarking on a large project that uses JuMP, a good next step is to
+# look at ways people have written large JuMP projects "in the wild". Here are
+# some examples:
+#  * [PowerSimulations.jl](https://github.com/NREL-SIIP/PowerSimulations.jl/)
+#  * [PowerModels.jl](https://github.com/lanl-ansi/PowerModels.jl)
+#  * [AnyMod.jl](https://github.com/leonardgoeke/AnyMOD.jl)
