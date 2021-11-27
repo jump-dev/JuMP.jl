@@ -78,7 +78,9 @@ value.(x)
 #  * we can add some error checking.
 
 function solve_knapsack_1(profit::Vector, weight::Vector, capacity::Real)
-    @assert length(profit) == length(weight)
+    if length(profit) != length(weight)
+        throw(DimensionMismatch("profit and weight are different sizes"))
+    end
     N = length(weight)
     model = Model(GLPK.Optimizer)
     @variable(model, x[1:N], Bin)
@@ -168,12 +170,16 @@ solve_knapsack_2(data)
 # to hard-code the data into Julia. A good next step is to separate the data
 # into an external file format; JSON is a common choice.
 
-# The JuMP repository [has a file](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/getting_started/data)
-# we're going to use for this tutorial. It is found here:
+# The JuMP repository [has a file](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/getting_started/data/knapsack.json)
+# we're going to use for this tutorial. To run this tutorial locally, download
+# the file and then update `data_filename` as appropriate.
 
-data_filename = joinpath(@__DIR__, "data", "knapsack.json")
+# To build this version of the JuMP documentation, we needed to set the
+# filename:
 
-# with these contents:
+data_filename = joinpath(@__DIR__, "data", "knapsack.json");
+
+# `knapsack.json` has the following contents:
 
 println(read(data_filename, String))
 
@@ -616,7 +622,7 @@ using Test
         @test isapprox(x["date"], 5, atol = 1e-5)
         @test isapprox(x["eggplant"], 0, atol = 1e-5)
     end
-    @testset "feasible_binary_knapsack" begin
+    @testset "infeasible_binary_knapsack" begin
         x = KnapsackModel.solve_knapsack(
             GLPK.Optimizer,
             ## This file contains data that makes the problem infeasible.
@@ -638,8 +644,18 @@ end
 # JuMP models, so consider this tutorial a starting point, rather than a
 # comprehensive list of all the possible ways to structure JuMP models.  If you
 # are embarking on a large project that uses JuMP, a good next step is to
-# look at ways people have written large JuMP projects "in the wild". Here are
-# some examples:
-#  * [PowerSimulations.jl](https://github.com/NREL-SIIP/PowerSimulations.jl/)
-#  * [PowerModels.jl](https://github.com/lanl-ansi/PowerModels.jl)
-#  * [AnyMod.jl](https://github.com/leonardgoeke/AnyMOD.jl)
+# look at ways people have written large JuMP projects "in the wild".
+
+# Here are some good examples (all co-incidentally related to energy):
+# * AnyMOD.jl
+#   * [JuMP-dev 2021 talk](https://www.youtube.com/watch?v=QE_tNDER0F4)
+#   * [source code](https://github.com/leonardgoeke/AnyMOD.jl)
+# * PowerModels.jl
+#   * [JuMP-dev 2021 talk](https://www.youtube.com/watch?v=POOt1FCA8LI)
+#   * [source code](https://github.com/lanl-ansi/PowerModels.jl)
+# * PowerSimulations.jl
+#    * [JuliaCon 2021 talk](https://www.youtube.com/watch?v=-ZoO3npjwYU)
+#    * [source code](https://github.com/NREL-SIIP/PowerSimulations.jl)
+# * UnitCommitment.jl
+#   * [JuMP-dev 2021 talk](https://www.youtube.com/watch?v=rYUZK9kYeIY)
+#   * [source code](https://github.com/ANL-CEEESA/UnitCommitment.jl)
