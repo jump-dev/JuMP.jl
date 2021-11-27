@@ -250,9 +250,9 @@ solve_knapsack_3(data; binary_knapsack = false)
 
 abstract type AbstractConfiguration end
 
-struct BinaryKnapsack <: AbstractConfiguration end
+struct BinaryKnapsackConfig <: AbstractConfiguration end
 
-struct IntegerKnapsack <: AbstractConfiguration end
+struct IntegerKnapsackConfig <: AbstractConfiguration end
 
 # Then, we rewrite our `solve_knapsack` function to take a `config` argument,
 # and we introduce an `add_knapsack_variables` function to abstract the creation
@@ -285,35 +285,35 @@ end
 function add_knapsack_variables(
     model::Model,
     data::KnapsackData,
-    ::IntegerKnapsack,
+    ::IntegerKnapsackConfig,
 )
     return @variable(model, x[keys(data.objects)] >= 0, Int)
 end
 
 # Now we can solve the binary knapsack:
 
-solve_knapsack_4(data, BinaryKnapsack())
+solve_knapsack_4(data, BinaryKnapsackConfig())
 
 # and the integer knapsack problem:
 
-solve_knapsack_4(data, IntegerKnapsack())
+solve_knapsack_4(data, IntegerKnapsackConfig())
 
 # The main benefit of the dispatch approach is that you can quickly add new
 # options without needing to modify the existing code. For example:
 
-struct UpperBoundedKnapsack <: AbstractConfiguration
+struct UpperBoundedKnapsackConfig <: AbstractConfiguration
     limit::Int
 end
 
 function add_knapsack_variables(
     model::Model,
     data::KnapsackData,
-    config::UpperBoundedKnapsack,
+    config::UpperBoundedKnapsackConfig,
 )
     return @variable(model, 0 <= x[keys(data.objects)] <= config.limit, Int)
 end
 
-solve_knapsack_4(data, UpperBoundedKnapsack(3))
+solve_knapsack_4(data, UpperBoundedKnapsackConfig(3))
 
 # ## Generalize constraints and objectives
 
@@ -357,7 +357,7 @@ function solve_knapsack_5(data::KnapsackData, config::AbstractConfiguration)
     return value.(model[:x])
 end
 
-solve_knapsack_5(data, BinaryKnapsack())
+solve_knapsack_5(data, BinaryKnapsackConfig())
 
 # ## Remove solver dependence, add error checks
 
@@ -394,8 +394,11 @@ function solve_knapsack_6(
     return solve_knapsack_6(optimizer, read_data(data), config)
 end
 
-data_filename = joinpath(@__DIR__, "data", "knapsack.json")
-solution = solve_knapsack_6(GLPK.Optimizer, data_filename, BinaryKnapsack())
+solution = solve_knapsack_6(
+    GLPK.Optimizer,
+    data_filename,
+    BinaryKnapsackConfig(),
+)
 
 # ## Create a module
 
@@ -447,24 +450,24 @@ end
 abstract type _AbstractConfiguration end
 
 """
-    BinaryKnapsack()
+    BinaryKnapsackConfig()
 
 Create a binary knapsack problem where each object can be taken 0 or 1 times.
 """
-struct BinaryKnapsack <: _AbstractConfiguration end
+struct BinaryKnapsackConfig <: _AbstractConfiguration end
 
 """
-    IntegerKnapsack()
+    IntegerKnapsackConfig()
 
 Create an integer knapsack problem where each object can be taken any number of
 times.
 """
-struct IntegerKnapsack <: _AbstractConfiguration end
+struct IntegerKnapsackConfig <: _AbstractConfiguration end
 
 function _add_knapsack_variables(
     model::JuMP.Model,
     data::_KnapsackData,
-    ::BinaryKnapsack,
+    ::BinaryKnapsackConfig,
 )
     return JuMP.@variable(model, x[keys(data.objects)], Bin)
 end
@@ -472,7 +475,7 @@ end
 function _add_knapsack_variables(
     model::JuMP.Model,
     data::_KnapsackData,
-    ::IntegerKnapsack,
+    ::IntegerKnapsackConfig,
 )
     return JuMP.@variable(model, x[keys(data.objects)] >= 0, Int)
 end
@@ -535,7 +538,7 @@ Solve the knapsack problem and return the optimal primal solution
    problem.
  * `config` : an object to control the type of knapsack model constructed.
    Valid options are:
-    * `BinaryKnapsack()`
+    * `BinaryKnapsackConfig()`
     * `IntegerKnapsack()`
 
 ## Returns
@@ -548,14 +551,18 @@ Solve the knapsack problem and return the optimal primal solution
 ## Examples
 
 ```julia
-solution = solve_knapsack(GLPK.Optimizer, "path/to/data.json", BinaryKnapsack())
+solution = solve_knapsack(
+    GLPK.Optimizer,
+    "path/to/data.json",
+    BinaryKnapsackConfig(),
+)
 ```
 
 ```julia
 solution = solve_knapsack(
     MOI.OptimizerWithAttributes(GLPK.Optimizer, "msg_lev" => 0),
     "path/to/data.json",
-    IntegerKnapsack(),
+    IntegerKnapsackConfig(),
 )
 ```
 """
@@ -576,7 +583,7 @@ import .KnapsackModel
 KnapsackModel.solve_knapsack(
     GLPK.Optimizer,
     joinpath(@__DIR__, "data", "knapsack.json"),
-    KnapsackModel.BinaryKnapsack(),
+    KnapsackModel.BinaryKnapsackConfig(),
 )
 
 # !!! note
@@ -602,7 +609,7 @@ using Test
         x = KnapsackModel.solve_knapsack(
             GLPK.Optimizer,
             joinpath(@__DIR__, "data", "knapsack.json"),
-            KnapsackModel.BinaryKnapsack(),
+            KnapsackModel.BinaryKnapsackConfig(),
         )
         @test isapprox(x["apple"], 1, atol = 1e-5)
         @test isapprox(x["banana"], 0, atol = 1e-5)
@@ -614,7 +621,7 @@ using Test
         x = KnapsackModel.solve_knapsack(
             GLPK.Optimizer,
             joinpath(@__DIR__, "data", "knapsack.json"),
-            KnapsackModel.IntegerKnapsack(),
+            KnapsackModel.IntegerKnapsackConfigConfig(),
         )
         @test isapprox(x["apple"], 0, atol = 1e-5)
         @test isapprox(x["banana"], 0, atol = 1e-5)
@@ -627,7 +634,7 @@ using Test
             GLPK.Optimizer,
             ## This file contains data that makes the problem infeasible.
             joinpath(@__DIR__, "data", "knapsack_infeasible.json"),
-            KnapsackModel.BinaryKnapsack(),
+            KnapsackModel.BinaryKnapsackConfig(),
         )
         @test x === nothing
     end
