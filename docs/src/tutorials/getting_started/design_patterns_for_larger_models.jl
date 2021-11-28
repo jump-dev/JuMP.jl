@@ -275,7 +275,7 @@ end
 function add_knapsack_variables(
     model::Model,
     data::KnapsackData,
-    ::BinaryKnapsack,
+    ::BinaryKnapsackConfig,
 )
     return @variable(model, x[keys(data.objects)], Bin)
 end
@@ -394,11 +394,8 @@ function solve_knapsack_6(
     return solve_knapsack_6(optimizer, read_data(data), config)
 end
 
-solution = solve_knapsack_6(
-    GLPK.Optimizer,
-    data_filename,
-    BinaryKnapsackConfig(),
-)
+solution =
+    solve_knapsack_6(GLPK.Optimizer, data_filename, BinaryKnapsackConfig())
 
 # ## Create a module
 
@@ -539,7 +536,7 @@ Solve the knapsack problem and return the optimal primal solution
  * `config` : an object to control the type of knapsack model constructed.
    Valid options are:
     * `BinaryKnapsackConfig()`
-    * `IntegerKnapsack()`
+    * `IntegerKnapsackConfig()`
 
 ## Returns
 
@@ -621,7 +618,7 @@ using Test
         x = KnapsackModel.solve_knapsack(
             GLPK.Optimizer,
             joinpath(@__DIR__, "data", "knapsack.json"),
-            KnapsackModel.IntegerKnapsackConfigConfig(),
+            KnapsackModel.IntegerKnapsackConfig(),
         )
         @test isapprox(x["apple"], 0, atol = 1e-5)
         @test isapprox(x["banana"], 0, atol = 1e-5)
