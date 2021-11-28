@@ -1,9 +1,18 @@
 # Release notes
 
-## Version 0.22.1 (In development)
+## Version 0.22.1 (November 29, 2021)
 
+- New features:
+ * Export `OptimizationSense` enum, with instances: `MIN_SENSE`, `MAX_SENSE`,
+   and `FEASIBILITY_SENSE`
+ * Add `Base.isempty(::Model)` to match `Base.empty(::Model)`
 - Bug fixes:
- * Fix bug in container with tuples as indices.
+ * Fix bug in container with tuples as indices
+ * Fix bug in `set_time_limit_sec`
+- Documentation, maintenance
+ * Add tutorial "Design patterns for larger models"
+ * Remove release notes section from PDF
+ * General edits of the documentation and error messages
 
 ## Version 0.22.0 (November 10, 2021)
 
