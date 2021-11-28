@@ -101,6 +101,7 @@ const _PAGES = [
             "tutorials/getting_started/getting_started_with_sets_and_indexing.md",
             "tutorials/getting_started/getting_started_with_data_and_plotting.md",
             "tutorials/getting_started/performance_tips.md",
+            "tutorials/getting_started/design_patterns_for_larger_models.md",
         ],
         "Linear programs" => [
             "tutorials/linear/tips_and_tricks.md",
