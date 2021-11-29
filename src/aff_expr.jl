@@ -15,14 +15,21 @@
 # Operator overloads in src/operators.jl
 #############################################################################
 
+import OrderedCollections
+
 function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     # Adding zero terms to this dictionary leads to unacceptable performance
     # degradations. See, e.g., https://github.com/jump-dev/JuMP.jl/issues/1946.
     if iszero(v)
         return dict  # No-op.
     end
-    # TODO: This unnecessarily requires two lookups for k.
-    dict[k] = get!(dict, k, zero(V)) + v
+    index = OrderedCollections.ht_keyindex2(dict, k)
+    if index <= 0  # Key does not exist. We pay the penalty of a second lookup.
+        setindex!(dict, v, k)
+    else
+        dict.vals[index] += v
+        dict.keys[index] = k
+    end
     return dict
 end
 
