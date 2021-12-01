@@ -16,17 +16,20 @@ jobs:
         # Since JuMP doesn't have binary dependencies, only test on a subset of
         # possible platforms.
         include:
-          - version: '1'
+          - version: '1'  # The latest point-release (Linux)
             os: ubuntu-latest
             arch: x64
-          - version: '1.0'
+          - version: '1'  # The latest point-release (Windows)
+            os: windows-latest
+            arch: x64
+          - version: '1.6'  # 1.6 LTS (64-bit Linux)
             os: ubuntu-latest
             arch: x64
-          - version: '1.0'
+          - version: '1.6'  # 1.6 LTS (32-bit Linux)
             os: ubuntu-latest
             arch: x86
-          - version: '1'
-            os: windows-latest
+          - version: '1.0'  # 1.0 LTS (64-bit Linux)
+            os: ubuntu-latest
             arch: x64
     steps:
       - uses: actions/checkout@v2
