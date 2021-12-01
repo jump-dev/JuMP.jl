@@ -70,9 +70,24 @@ Base.zero(::Union{UnitNumber,Type{UnitNumber}}) = UnitNumber(0.0)
 Base.oneunit(::Union{UnitNumber,Type{UnitNumber}}) = UnitNumber(1.0)
 Base.:(+)(u::UnitNumber, v::UnitNumber) = UnitNumber(u.α + v.α)
 Base.:(-)(u::UnitNumber, v::UnitNumber) = UnitNumber(u.α - v.α)
-Base.:(*)(α::Float64, u::UnitNumber) = UnitNumber(α * u.α)
+Base.:(*)(α::Real, u::UnitNumber) = UnitNumber(α * u.α)
+Base.:(/)(u::UnitNumber, α::Real) = UnitNumber(u.α / α)
 Base.abs(u::UnitNumber) = UnitNumber(abs(u.α))
 Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
+
+MOI.Utilities._shorten(::Any, x::UnitNumber) = string(x)
+function MOI.Utilities._to_string(
+    ::Any,
+    c::UnitNumber,
+    x::String;
+    is_first::Bool
+)
+    if is_first
+        return string(c, " ", x)
+    else
+        return string(" + ", c, " ", x)
+    end
+end
 
 # Used to test extensibility of JuMP printing for `JuMP.AbstractConstraint`
 struct CustomConstraint{S<:JuMP.AbstractShape} <: JuMP.AbstractConstraint
@@ -140,19 +155,19 @@ end
         # TODO: These tests shouldn't depend on order of the two variables in
         # quadratic terms, i.e., x*y vs y*x.
         ex = @expression(mod, (x[1] + x[2]) * (y[2, 2] + 3.0))
-        io_test(REPLMode, ex, "x[1]*y[2,2] + x[2]*y[2,2] + 3 x[1] + 3 x[2]")
+        io_test(REPLMode, ex, "3 x[1] + 3 x[2] + x[1]*y[2,2] + x[2]*y[2,2]")
         io_test(
             IJuliaMode,
             ex,
-            "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + 3 x_{1} + 3 x_{2}",
+            "3 x_{1} + 3 x_{2} + x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2}",
         )
 
         ex = @expression(mod, (y[2, 2] + 3.0) * (x[1] + x[2]))
-        io_test(REPLMode, ex, "y[2,2]*x[1] + y[2,2]*x[2] + 3 x[1] + 3 x[2]")
+        io_test(REPLMode, ex, "3 x[1] + 3 x[2] + y[2,2]*x[1] + y[2,2]*x[2]")
         io_test(
             IJuliaMode,
             ex,
-            "y_{2,2}\\times x_{1} + y_{2,2}\\times x_{2} + 3 x_{1} + 3 x_{2}",
+            "3 x_{1} + 3 x_{2} + y_{2,2}\\times x_{1} + y_{2,2}\\times x_{2}",
         )
 
         ex = @expression(mod, (x[1] + x[2]) * (y[2, 2] + 3.0) + z^2 - 1)
@@ -160,13 +175,13 @@ end
         io_test(
             REPLMode,
             ex,
-            "x[1]*y[2,2] + x[2]*y[2,2] + z$repl_sq + 3 x[1] + 3 x[2] - 1",
+            "-1 + 3 x[1] + 3 x[2] + x[1]*y[2,2] + x[2]*y[2,2] + z$repl_sq",
         )
         ijulia_sq = JuMP._math_symbol(IJuliaMode, :sq)
         io_test(
             IJuliaMode,
             ex,
-            "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + z$ijulia_sq + 3 x_{1} + 3 x_{2} - 1",
+            "-1 + 3 x_{1} + 3 x_{2} + x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + z$ijulia_sq",
         )
 
         ex = @expression(mod, -z * x[1] - x[1] * z + x[1] * x[2] + 0 * z^2)
@@ -174,8 +189,8 @@ end
         io_test(IJuliaMode, ex, "-2 z\\times x_{1} + x_{1}\\times x_{2}")
 
         ex = z^2 + x[1] - z^2 - x[1]
-        io_test(REPLMode, ex, "0 z² + 0 x[1]")
-        io_test(IJuliaMode, ex, "0 z$ijulia_sq + 0 x_{1}")
+        io_test(REPLMode, ex, "0 x[1] + 0 z²")
+        io_test(IJuliaMode, ex, "0 x_{1} + 0 z$ijulia_sq")
     end
 
     # See https://github.com/jump-dev/JuMP.jl/pull/1352
@@ -191,8 +206,8 @@ end
         io_test(REPLMode, aff, "UnitNumber(2.0) x")
         io_test(IJuliaMode, aff, "UnitNumber(2.0) x")
         quad = aff * x
-        io_test(REPLMode, quad, "UnitNumber(2.0) x² + UnitNumber(0.0)")
-        io_test(IJuliaMode, quad, "UnitNumber(2.0) x^2 + UnitNumber(0.0)")
+        io_test(REPLMode, quad, "UnitNumber(2.0) x²")
+        io_test(IJuliaMode, quad, "UnitNumber(2.0) x^2")
     end
 
     @testset "Nonlinear expressions" begin
@@ -358,8 +373,8 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
 
         JuMP.set_name(x, "")
         @test JuMP.name(x) == ""
-        io_test(REPLMode, x, "noname")
-        io_test(IJuliaMode, x, "noname")
+        io_test(REPLMode, x, "anon[1]")
+        io_test(IJuliaMode, x, "anon_{1}")
 
         @variable(m, z[1:2, 3:5])
         @test JuMP.name(z[1, 3]) == "z[1,3]"
@@ -417,7 +432,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         io_test(
             REPLMode,
             zero_constr,
-            "[x, y] $in_sym MathOptInterface.Zeros(2)",
+            "[x, y] $in_sym Zeros(2)",
         )
         # TODO: Test in IJulia mode and do nice printing for Zeros().
     end
@@ -436,23 +451,23 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @constraint(model, linear_range, -1 <= x + 0 <= 1)
         linear_noname = @constraint(model, x + 0 <= 1)
 
-        io_test(REPLMode, linear_le, "linear_le : x $le 1.0")
-        io_test(REPLMode, linear_eq, "linear_eq : x $eq 1.0")
-        io_test(REPLMode, linear_range, "linear_range : x $in_sym [-1.0, 1.0]")
-        io_test(REPLMode, linear_noname, "x $le 1.0")
+        io_test(REPLMode, linear_le, "linear_le : x <= 1")
+        io_test(REPLMode, linear_eq, "linear_eq : x == 1")
+        io_test(REPLMode, linear_range, "linear_range : x $in_sym [-1, 1]")
+        io_test(REPLMode, linear_noname, "x <= 1")
 
         # io_test doesn't work here because constraints print with a mix of math
         # and non-math.
         @test sprint(show, "text/latex", linear_le) ==
-              "linear_le : \$ x \\leq 1.0 \$"
+              "linear_le : \$ x \\le 1 \$"
         @test sprint(show, "text/latex", linear_ge) ==
-              "linear_ge : \$ x \\geq 1.0 \$"
+              "linear_ge : \$ x \\ge 1 \$"
         @test sprint(show, "text/latex", linear_eq) ==
-              "linear_eq : \$ x = 1.0 \$"
+              "linear_eq : \$ x = 1 \$"
         @test sprint(show, "text/latex", linear_range) ==
-              "linear_range : \$ x \\in \\[-1.0, 1.0\\] \$"
+              "linear_range : \$ x \\in \\[-1, 1\\] \$"
         @test sprint(show, "text/latex", linear_noname) ==
-              "\$\$ x \\leq 1.0 \$\$"
+              "\$\$ x \\le 1 \$\$"
     end
 
     @testset "Vector AffExpr constraints" begin
@@ -466,7 +481,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
             REPLMode,
             soc_constr,
             "soc_constr : " *
-            "[x - 1, x + 1] $in_sym MathOptInterface.SecondOrderCone(2)",
+            "[-1 + x, 1 + x] $in_sym SecondOrderCone(2)",
         )
 
         # TODO: Test in IJulia mode.
@@ -481,7 +496,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(model, x)
         quad_constr = @constraint(model, 2x^2 <= 1)
 
-        io_test(REPLMode, quad_constr, "2 x$sq $le 1.0")
+        io_test(REPLMode, quad_constr, "2 x$sq <= 1")
         # TODO: Test in IJulia mode.
     end
     @testset "Scalar Indicator constraints" begin
@@ -492,7 +507,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(model, y)
         ind_constr = @constraint(model, !x => {y <= 1})
 
-        io_test(REPLMode, ind_constr, "!x => {y $le 1.0}")
+        io_test(REPLMode, ind_constr, "!x => {y <= 1}")
         # TODO: Test in IJulia mode.
     end
 end
@@ -545,32 +560,32 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
             """
 Max a - b + 2 a1 - 10 x
 Subject to
- con : a + b - 10 c + c1 - 2 x $le 1.0
- a*b $le 2.0
+ con : a + b - 10 c + c1 - 2 x <= 1
+ a*b <= 2
  [a  b;
   b  x] $inset PSDCone()
- [a, b, c] $inset MathOptInterface.PositiveSemidefiniteConeTriangle(2)
+ [a, b, c] $inset PositiveSemidefiniteConeTriangle(2)
  [a  b;
   c  x] $inset PSDCone()
- [a, b, c, x] $inset MathOptInterface.PositiveSemidefiniteConeSquare(2)
- soc : [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
- fi $eq 9.0
- a $ge 1.0
- c $ge -1.0
- a1 $ge 1.0
- c1 $ge -1.0
- b $le 1.0
- c $le 1.0
- b1 $le 1.0
- c1 $le 1.0
- a1 integer
- b1 integer
- c1 integer
- z integer
- x binary
- u[1] binary
- u[2] binary
- u[3] binary
+ [a, b, c, x] $inset PositiveSemidefiniteConeSquare(2)
+ soc : [1 - a, u[1], u[2], u[3]] $inset SecondOrderCone(4)
+ fi == 9
+ a >= 1
+ c >= -1
+ a1 >= 1
+ c1 >= -1
+ b <= 1
+ c <= 1
+ b1 <= 1
+ c1 <= 1
+ a1 ∈ ℤ
+ b1 ∈ ℤ
+ c1 ∈ ℤ
+ z ∈ ℤ
+ x ∈ {0, 1}
+ u[1] ∈ {0, 1}
+ u[2] ∈ {0, 1}
+ u[3] ∈ {0, 1}
 """,
             repl = :print,
         )
@@ -605,28 +620,28 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""",
             model_1,
             "\\begin{aligned}\n" *
             "\\max\\quad & a - b + 2 a1 - 10 x\\\\\n" *
-            "\\text{Subject to} \\quad & a + b - 10 c + c1 - 2 x \\leq 1.0\\\\\n" *
-            " & a\\times b \\leq 2.0\\\\\n" *
+            "\\text{Subject to} \\quad & a + b - 10 c + c1 - 2 x \\le 1\\\\\n" *
+            " & a\\times b \\le 2\\\\\n" *
             " & \\begin{bmatrix}\n" *
             "a & b\\\\\n" *
             "\\cdot & x\\\\\n" *
             "\\end{bmatrix} \\in \\text{PSDCone()}\\\\\n" *
-            " & [a, b, c] \\in \\text{MathOptInterface.PositiveSemidefiniteConeTriangle(2)}\\\\\n" *
+            " & [a, b, c] \\in \\text{PositiveSemidefiniteConeTriangle(2)}\\\\\n" *
             " & \\begin{bmatrix}\n" *
             "a & b\\\\\n" *
             "c & x\\\\\n" *
             "\\end{bmatrix} \\in \\text{PSDCone()}\\\\\n" *
-            " & [a, b, c, x] \\in \\text{MathOptInterface.PositiveSemidefiniteConeSquare(2)}\\\\\n" *
-            " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\\n" *
-            " & fi = 9.0\\\\\n" *
-            " & a \\geq 1.0\\\\\n" *
-            " & c \\geq -1.0\\\\\n" *
-            " & a1 \\geq 1.0\\\\\n" *
-            " & c1 \\geq -1.0\\\\\n" *
-            " & b \\leq 1.0\\\\\n" *
-            " & c \\leq 1.0\\\\\n" *
-            " & b1 \\leq 1.0\\\\\n" *
-            " & c1 \\leq 1.0\\\\\n" *
+            " & [a, b, c, x] \\in \\text{PositiveSemidefiniteConeSquare(2)}\\\\\n" *
+            " & [1 - a, u_{1}, u_{2}, u_{3}] \\in \\text{SecondOrderCone(4)}\\\\\n" *
+            " & fi = 9\\\\\n" *
+            " & a \\ge 1\\\\\n" *
+            " & c \\ge -1\\\\\n" *
+            " & a1 \\ge 1\\\\\n" *
+            " & c1 \\ge -1\\\\\n" *
+            " & b \\le 1\\\\\n" *
+            " & c \\le 1\\\\\n" *
+            " & b1 \\le 1\\\\\n" *
+            " & c1 \\le 1\\\\\n" *
             " & a1 \\in \\mathbb{Z}\\\\\n" *
             " & b1 \\in \\mathbb{Z}\\\\\n" *
             " & c1 \\in \\mathbb{Z}\\\\\n" *
@@ -724,9 +739,9 @@ function model_extension_printing_test(ModelType::Type{<:JuMP.AbstractModel})
             """
 Max a - b + 2 a1 - 10 x
 Subject to
- a + b - 10 c - 2 x + c1 $le 1.0
- a*b $le 2.0
- [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
+ a + b - 10 c - 2 x + c1 <= 1
+ a*b <= 2
+ [1 - a, u[1], u[2], u[3]] $inset SecondOrderCone(4)
 """,
             repl = :print,
         )
@@ -851,8 +866,8 @@ With NL expressions
         @variable(model, x >= 10)
         zero_one = @constraint(model, x in MOI.ZeroOne())
 
-        io_test(REPLMode, JuMP.LowerBoundRef(x), "x $ge 10.0")
-        io_test(REPLMode, zero_one, "x binary")
+        io_test(REPLMode, JuMP.LowerBoundRef(x), "x >= 10")
+        io_test(REPLMode, zero_one, "x ∈ {0, 1}")
         # TODO: Test in IJulia mode
     end
     @testset "Feasibility" begin

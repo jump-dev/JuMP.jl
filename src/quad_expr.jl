@@ -513,9 +513,9 @@ function _moi_quadratic_term(t::Tuple)
         index(t[3]),
     )
 end
-function MOI.ScalarQuadraticFunction(q::QuadExpr)
+function MOI.ScalarQuadraticFunction(q::GenericQuadExpr{C}) where {C}
     _assert_isfinite(q)
-    qterms = MOI.ScalarQuadraticTerm{Float64}[
+    qterms = MOI.ScalarQuadraticTerm{C}[
         _moi_quadratic_term(t) for t in quad_terms(q)
     ]
     moi_aff = MOI.ScalarAffineFunction(q.aff)

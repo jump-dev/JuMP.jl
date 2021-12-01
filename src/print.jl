@@ -46,6 +46,24 @@ A type used for dispatching printing. Produces LaTeX representations.
 """
 abstract type IJuliaMode <: PrintMode end
 
+function _moi_options(::Type{REPLMode})
+    return MOI.Utilities._PrintOptions(
+        MIME("text/plain");
+        simplify_coefficients = true,
+        default_name = "anon",
+        print_types = false,
+    )
+end
+
+function _moi_options(::Type{IJuliaMode})
+    return MOI.Utilities._PrintOptions(
+        MIME("text/latex");
+        simplify_coefficients = true,
+        default_name = "anon",
+        print_types = false,
+    )
+end
+
 Base.show(io::IO, model::AbstractModel) = _print_summary(io, model)
 
 struct _LatexModel{T<:AbstractModel}
@@ -632,73 +650,18 @@ _print_if_not_missing(io, header, value) = println(io, header, value)
 ## VariableRef
 #------------------------------------------------------------------------
 
-function function_string(::Type{REPLMode}, v::AbstractVariableRef)
-    var_name = name(v)
-    if !isempty(var_name)
-        return var_name
-    else
-        return "noname"
-    end
-end
-function function_string(::Type{IJuliaMode}, v::AbstractVariableRef)
-    var_name = name(v)
-    if isempty(var_name)
-        return "noname"
-    end
-    # We need to escape latex math characters that appear in the name.
-    # However, it's probably impractical to catch everything, so let's just
-    # escape the common ones:
-    # Escape underscores to prevent them being treated as subscript markers.
-    var_name = replace(var_name, "_" => "\\_")
-    # Escape carets to prevent them being treated as superscript markers.
-    var_name = replace(var_name, "^" => "\\^")
-    # Convert any x[args] to x_{args} so that indices on x print as subscripts.
-    m = match(r"^(.*)\[(.+)\]$", var_name)
-    if m !== nothing
-        var_name = m[1] * "_{" * m[2] * "}"
-    end
-
-    return var_name
+function function_string(mode, v::AbstractVariableRef)
+    model = backend(owner_model(v))
+    return MOI.Utilities._to_string(_moi_options(mode), model, index(v))
 end
 
 #------------------------------------------------------------------------
 ## GenericAffExpr
 #------------------------------------------------------------------------
 
-function function_string(mode, a::GenericAffExpr, show_constant = true)
-    # If the expression is empty, return the constant (or 0)
-    if length(linear_terms(a)) == 0
-        return show_constant ? _string_round(a.constant) : "0"
-    end
-
-    term_str = Array{String}(undef, 2 * length(linear_terms(a)))
-    elm = 1
-
-    for (coef, var) in linear_terms(a)
-        pre = _is_one_for_printing(coef) ? "" : _string_round(abs(coef)) * " "
-
-        term_str[2*elm-1] = _sign_string(coef)
-        term_str[2*elm] = string(pre, function_string(mode, var))
-        elm += 1
-    end
-
-    if elm == 1
-        # Will happen with cancellation of all terms
-        # We should just return the constant, if its desired
-        return show_constant ? _string_round(a.constant) : "0"
-    else
-        # Correction for very first term - don't want a " + "/" - "
-        term_str[1] = (term_str[1] == " - ") ? "-" : ""
-        ret = join(term_str[1:2*(elm-1)])
-        if !_is_zero_for_printing(a.constant) && show_constant
-            ret = string(
-                ret,
-                _sign_string(a.constant),
-                _string_round(abs(a.constant)),
-            )
-        end
-        return ret
-    end
+function function_string(mode, a::GenericAffExpr)
+    model = backend(owner_model(first(first(a.terms))))
+    return MOI.Utilities._to_string(_moi_options(mode), model, moi_function(a))
 end
 
 #------------------------------------------------------------------------
@@ -706,46 +669,11 @@ end
 #------------------------------------------------------------------------
 
 function function_string(mode, q::GenericQuadExpr)
-    length(quad_terms(q)) == 0 && return function_string(mode, q.aff)
-
-    # Odd terms are +/i, even terms are the variables/coeffs
-    term_str = Array{String}(undef, 2 * length(quad_terms(q)))
-    elm = 1
-    if length(term_str) > 0
-        for (coef, var1, var2) in quad_terms(q)
-            pre =
-                _is_one_for_printing(coef) ? "" : _string_round(abs(coef)) * " "
-
-            x = function_string(mode, var1)
-            y = function_string(mode, var2)
-
-            term_str[2*elm-1] = _sign_string(coef)
-            term_str[2*elm] = "$pre$x"
-            if x == y
-                term_str[2*elm] *= _math_symbol(mode, :sq)
-            else
-                term_str[2*elm] *= string(_math_symbol(mode, :times), y)
-            end
-            if elm == 1
-                # Correction for first term as there is no space
-                # between - and variable coefficient/name
-                term_str[1] = coef < zero(coef) ? "-" : ""
-            end
-            elm += 1
-        end
+    if length(quad_terms(q)) == 0
+        return function_string(mode, q.aff)
     end
-    ret = join(term_str[1:2*(elm-1)])
-
-    aff_str = function_string(mode, q.aff)
-    if aff_str == "0"
-        return ret
-    else
-        if aff_str[1] == '-'
-            return string(ret, " - ", aff_str[2:end])
-        else
-            return string(ret, " + ", aff_str)
-        end
-    end
+    model = backend(owner_model(first(first(q.terms)).a))
+    return MOI.Utilities._to_string(_moi_options(mode), model, moi_function(q))
 end
 
 #------------------------------------------------------------------------
@@ -895,39 +823,11 @@ end
 Return a `String` representing the membership to the set `set` using print mode
 `print_mode`.
 """
-function in_set_string end
-
-function in_set_string(print_mode, set::MOI.LessThan)
-    return string(_math_symbol(print_mode, :leq), " ", set.upper)
+function in_set_string(print_mode, set::MOI.AbstractSet)
+    return MOI.Utilities._to_string(_moi_options(print_mode), set)
 end
 
-function in_set_string(print_mode, set::MOI.GreaterThan)
-    return string(_math_symbol(print_mode, :geq), " ", set.lower)
-end
-
-function in_set_string(print_mode, set::MOI.EqualTo)
-    return string(_math_symbol(print_mode, :eq), " ", set.value)
-end
-
-function in_set_string(print_mode, set::MOI.Interval)
-    return string(
-        _math_symbol(print_mode, :in),
-        " ",
-        _math_symbol(print_mode, :open_rng),
-        set.lower,
-        ", ",
-        set.upper,
-        _math_symbol(print_mode, :close_rng),
-    )
-end
-
-in_set_string(print_mode, ::MOI.ZeroOne) = "binary"
-in_set_string(print_mode, ::MOI.Integer) = "integer"
-
-in_set_string(::Type{IJuliaMode}, ::MOI.ZeroOne) = "\\in \\{0, 1\\}"
-in_set_string(::Type{IJuliaMode}, ::MOI.Integer) = "\\in \\mathbb{Z}"
-
-function in_set_string(print_mode, set::Union{PSDCone,MOI.AbstractSet})
+function in_set_string(print_mode, set::PSDCone)
     # Use an `if` here instead of multiple dispatch to avoid ambiguity errors.
     if print_mode == REPLMode
         return _math_symbol(print_mode, :in) * " $(set)"
