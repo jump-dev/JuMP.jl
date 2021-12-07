@@ -65,7 +65,7 @@ query:
 
 If you need to query any other information, use a solver-dependent callback
 instead. Each solver supporting a solver-dependent callback has information on
-how to use it in the README of their Github repository.
+how to use it in the README of their GitHub repository.
 
 If you want to modify the problem in a callback, you _must_ use a lazy
 constraint.

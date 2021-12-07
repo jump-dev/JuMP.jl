@@ -75,7 +75,7 @@ set_optimizer_attributes(model, "LogLevel" => 1, "PrimalTolerance" => 1e-7)
 
 !!! note
     Most packages follow the `ModuleName.Optimizer` naming convention, but
-    exceptions may exist. See the README of the Julia package's Github
+    exceptions may exist. See the README of the Julia package's GitHub
     repository for more details on how to use a particular solver, including any
     solver-specific options.
 
@@ -220,7 +220,7 @@ form `vX.Y.Z`. You can check which versions you have installed with
 `import Pkg; Pkg.status()`.
 
 This should almost always be the most-recent release. You can check the releases
-of a package by going to the relevant Github page, and navigating to the
+of a package by going to the relevant GitHub page, and navigating to the
 "releases" page. For example, the list of JuMP releases is available at:
 [https://github.com/jump-dev/JuMP.jl/releases](https://github.com/jump-dev/JuMP.jl/releases).
 

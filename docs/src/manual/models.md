@@ -222,7 +222,7 @@ julia> unset_silent(model)
 ```
 
 !!! tip
-    Most solvers will also have a [solver-specifc option](@ref solver_options)
+    Most solvers will also have a [solver-specific option](@ref solver_options)
     to provide finer-grained control over the output. Consult their README's for
     details.
 
@@ -260,7 +260,7 @@ For example, here is how to write an MPS file:
 julia> write_to_file(model, "model.mps")
 ```
 
-To write to a specifc `io::IO`, use [`Base.write`](@ref). Specify the file type
+To write to a specific `io::IO`, use [`Base.write`](@ref). Specify the file type
 by passing a [`MOI.FileFormats.FileFormat`](@ref) enum.
 ```jldoctest file_formats; setup=:(model = Model(); io = IOBuffer())
 julia> write(io, model; format = MOI.FileFormats.FORMAT_MPS)
@@ -458,7 +458,7 @@ by the solver. This may involve adding new variables and constraints to the
 optimizer. The transformations are selected from a set of known recipes called
 _bridges_.
 
-A common example of a bridge is one that splits an interval constrait like
+A common example of a bridge is one that splits an interval constraint like
 `@constraint(model, 1 <= x + y <= 2)` into two constraints,
 `@constraint(model, x + y >= 1)` and `@constraint(model, x + y <= 2)`.
 

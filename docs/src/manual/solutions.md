@@ -127,7 +127,7 @@ FEASIBLE_POINT::ResultStatusCode = 1
 ```
 Other common returns are `NO_SOLUTION`, and `INFEASIBILITY_CERTIFICATE`.
 The first means that the solver doesn't have a solution to return, and the
-second means that the primal solution is a certificate of dual infeasbility (a
+second means that the primal solution is a certificate of dual infeasibility (a
 primal unbounded ray).
 
 You can also use [`has_values`](@ref), which returns `true` if there is a
@@ -200,7 +200,7 @@ FEASIBLE_POINT::ResultStatusCode = 1
 ```
 Other common returns are `NO_SOLUTION`, and `INFEASIBILITY_CERTIFICATE`.
 The first means that the solver doesn't have a solution to return, and the
-second means that the dual solution is a certificate of primal infeasbility (a
+second means that the dual solution is a certificate of primal infeasibility (a
 dual unbounded ray).
 
 You can also use [`has_duals`](@ref), which returns `true` if there is a
@@ -286,7 +286,7 @@ Solution is optimal
 
 ## OptimizeNotCalled errors
 
-Modifing a model after calling [`optimize!`](@ref) will reset the model into
+Modifying a model after calling [`optimize!`](@ref) will reset the model into
 the `MOI.OPTIMIZE_NOT_CALLED` state. If you attempt to query solution
 information, an `OptimizeNotCalled` error will be thrown.
 

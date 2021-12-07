@@ -298,7 +298,7 @@ If the name is not present, `nothing` will be returned:
 julia> variable_by_name(model, "bad_name")
 ```
 
-You can only look up invididual variables using [`variable_by_name`](@ref).
+You can only look up individual variables using [`variable_by_name`](@ref).
 Something like this will not work:
 ```jldoctest
 julia> model = Model();

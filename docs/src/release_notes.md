@@ -252,7 +252,7 @@ A summary of changes are as follows:
     to roll out over time, as we fix upstream issues in the formatter, and will
     eventually become compulsory.
   * The root cause of a large number of method invalidations has been resolved.
-  * We switched continuous integration from Travis and Appveyor to Github
+  * We switched continuous integration from Travis and Appveyor to GitHub
     Actions.
 
 ## Version 0.21.5 (September 18, 2020)

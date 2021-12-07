@@ -1037,9 +1037,8 @@ julia> @constraint(model, x in SOS1())
 Although not required for feasibility, solvers can benefit from an ordering of
 the variables (e.g., the variables represent different factories to build, at
 most one factory can be built, and the factories can be ordered according to
-cost). To induce an ordering, weights can be provided; as such, they must be
-unique values. The kth element in the ordered set corresponds to the kth weight
-in weights when the weights are sorted.
+cost). To induce an ordering, a vector of weights can be provided, and the
+variables are ordered according to their corresponding weight.
 
 For example, in the constraint:
 ```jldoctest con_sos
