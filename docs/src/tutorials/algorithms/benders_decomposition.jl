@@ -82,7 +82,7 @@
 # denoted by $x^{(k)}$. Now there are three possibilities:
 
 # - If $f_\text{m}^{(k)}=-\infty$, i.e., the master problem is infeasible,
-#   then the original proble is infeasible and sadly, we are done.
+#   then the original problem is infeasible and sadly, we are done.
 #
 # - If $f_\text{m}^{(k)}=\infty$, i.e. the master problem is unbounded above,
 #   then we take $f_\text{m}^{(k)}$ to be arbitrarily large and $x^{(k)}$ to be

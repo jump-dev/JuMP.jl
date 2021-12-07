@@ -5,7 +5,7 @@
 
 # # The factory schedule example
 
-# This is a Julia translation of part 5 from "Introduction to to Linear
+# This is a Julia translation of part 5 from "Introduction to Linear
 # Programming with Python"
 # available at https://github.com/benalexkeen/Introduction-to-linear-programming
 #

@@ -1,6 +1,6 @@
 # How to contribute to JuMP
 
-Welcome! This document explains some of the ways you can contribute to JuMP.
+Welcome! This document explains some ways you can contribute to JuMP.
 
 ## Code of Conduct
 
@@ -81,8 +81,8 @@ Finally, you can also contribute code to JuMP!
     If you need any help, come join the [developer chatroom](https://gitter.im/JuliaOpt/JuMP-dev)
     and we will walk you through the process.
 
-Once you are familiar with Git and GitHub, the workflow for contributing code to JuMP is
-along the lines of the following:
+Once you are familiar with Git and GitHub, the workflow for contributing code to
+JuMP is similar to the following:
 
 **Step 1: decide what to work on**
 
@@ -166,7 +166,7 @@ cd("~/.julia/dev/JuMP")
 ```
 
 !!! warning
-    Running the tests might take a long time (~10-15 minutes).
+    Running the tests might take a long time (~10--15 minutes).
 
 !!! tip
     If you're using Revise.jl, you can also run the tests by calling `include`:
@@ -189,7 +189,7 @@ include("src/make.jl")
 
 !!! tip
     If there's a problem with the tests that you don't know how to fix, don't
-    worry. Continue on to step 5, and one of the JuMP contributors will comment
+    worry. Continue to step 5, and one of the JuMP contributors will comment
     on your pull request telling you how to fix things.
 
 **Step 7: make a pull request**

@@ -28,7 +28,7 @@ function foo(x, y)
 end
 
 # For example, the first term might be used in the objective, and the second
-# term might be used in a constraint, and often they share share work that is
+# term might be used in a constraint, and often they share work that is
 # expensive to evaluate.
 
 # This is a problem for JuMP, because it requires user-defined functions to
