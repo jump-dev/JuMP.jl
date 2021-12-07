@@ -305,7 +305,7 @@ Solver name: No optimizer attached.
 Use [`relax_integrality`](@ref) to remove any integrality constraints from the
 model, such as integer and binary restrictions on variables.
 [`relax_integrality`](@ref) returns a function that can be later called with
-zero arguments in order to re-add the removed constraints:
+zero arguments to re-add the removed constraints:
 ```jldoctest
 julia> model = Model();
 
@@ -329,7 +329,7 @@ julia> num_constraints(model, VariableRef, MOI.Integer)
 ### Switching optimizer for the relaxed problem
 
 A common reason for relaxing integrality is to compute dual variables of the
-relaxed problem. However, some mixed-integer linear solvers (e.g., Cbc) do not
+relaxed problem. However, some mixed-integer linear solvers (for example, Cbc) do not
 return dual solutions, even if the problem does not have integrality
 restrictions.
 
@@ -362,7 +362,7 @@ reduced_cost(x)  # Works
 !!! info
     This section discusses advanced features of JuMP. For new users, you may
     want to skip this section. You don't need to know how JuMP manages problems
-    behind the scenes in order to create and solve JuMP models.
+    behind the scenes to create and solve JuMP models.
 
 A JuMP [`Model`](@ref) is a thin layer around a *backend* of type
 [`MOI.ModelLike`](@ref) that stores the optimization problem and acts as the
@@ -395,9 +395,9 @@ complicated object.
 ### CachingOptimizer
 
 A `MOIU.CachingOptimizer` is a layer that abstracts the difference between
-solvers that support incremental modification (e.g., they support adding
+solvers that support incremental modification (for example, they support adding
 variables one-by-one), and solvers that require the entire problem in a single
-API call (e.g., they only accept the `A`, `b` and `c` matrices of a linear
+API call (for example, they only accept the `A`, `b` and `c` matrices of a linear
 program).
 
 It has two parts:
@@ -527,7 +527,7 @@ Solver name: GLPK
     `CachingOptimizer` instead.
 
 The benefit of using [`direct_model`](@ref) is that there are no extra layers
-(e.g., `Cachingoptimizer` or `LazyBridgeOptimizer`) between `model` and the
+(for example, `Cachingoptimizer` or `LazyBridgeOptimizer`) between `model` and the
 provided optimizer:
 ```jldoctest direct_mode
 julia> backend(model)

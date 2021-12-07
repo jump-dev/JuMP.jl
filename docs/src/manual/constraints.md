@@ -22,7 +22,7 @@ Each constraint, ``f_i(x) \in \mathcal{S}_i``, is composed of a function and a
 set. For example, instead of calling ``a^\top x \le b`` a
 *less-than-or-equal-to* constraint, we say that it is a
 *scalar-affine-in-less-than* constraint, where the function ``a^\top x`` belongs
-to the *less-than* set ``(-\infty, b]``. More  generally, we use the shorthand
+to the *less-than* set ``(-\infty, b]``. We use the shorthand
 *function-in-set* to refer to constraints composed of different types of
 functions and sets.
 
@@ -116,7 +116,7 @@ julia> @constraint(model, con, A * x .== b)
 
 !!! note
     Make sure to use [Julia's dot syntax](https://docs.julialang.org/en/v1/manual/functions/index.html#man-vectorized-1)
-    in front of the comparison operators (e.g. `.==`, `.>=`, and `.<=`). If you
+    in front of the comparison operators (for example, `.==`, `.>=`, and `.<=`). If you
     use a comparison without the dot, an error will be thrown.
 
 ### Containers of constraints
@@ -220,7 +220,7 @@ c : 2 x <= 1.0
 
 julia> @constraint(model, c, 2x <= 1)
 ERROR: An object of name c is already attached to this model. If this
-    is intended, consider using the anonymous construction syntax, e.g.,
+    is intended, consider using the anonymous construction syntax, for example,
     `x = @variable(model, [1:N], ...)` where the name of the object does
     not appear inside the macro.
 
@@ -550,7 +550,7 @@ julia> normalized_rhs(con)
 
 ### Option 2: use fixed variables
 
-If constraints are complicated, e.g., they are composed of a number of
+If constraints are complicated, for example, they are composed of a number of
 components, each of which has a constant term, then it may be difficult to
 calculate what the right-hand side term is in the standard form.
 
@@ -651,7 +651,7 @@ Therefore, creating a new constraint of the same name will throw an error:
 ```jldoctest constraints_delete
 julia> @constraint(model, con, 2x <= 1)
 ERROR: An object of name con is already attached to this model. If this
-    is intended, consider using the anonymous construction syntax, e.g.,
+    is intended, consider using the anonymous construction syntax, for example,
     `x = @variable(model, [1:N], ...)` where the name of the object does
     not appear inside the macro.
 
@@ -772,7 +772,7 @@ julia> con[2:3]
  con[3] : 3 x ≤ 4.0
 ```
 
-Anonymous containers can also be constructed by dropping the name (e.g. `con`)
+Anonymous containers can also be constructed by dropping the name (for example, `con`)
 before the square brackets:
 ```jldoctest constraint_arrays
 julia> con = @constraint(model, [i = 1:2], i * x <= i + 1)
@@ -785,7 +785,7 @@ Just like [`@variable`](@ref), JuMP will form an `Array` of constraints when it
 can determine at parse time that the indices are one-based integer ranges.
 Therefore `con[1:b]` will create an `Array`, but `con[a:b]` will not. A special
 case is `con[Base.OneTo(n)]` which will produce an `Array`. If JuMP cannot
-determine that the indices are one-based integer ranges (e.g., in the case of
+determine that the indices are one-based integer ranges (for example, in the case of
 `con[a:b]`), JuMP will create a `DenseAxisArray` instead.
 
 ### DenseAxisArrays
@@ -899,7 +899,7 @@ julia> @constraint(model, 2 * x[1] in MOI.LessThan(1.0))
 2 x[1] ≤ 1.0
 ```
 
-More generally, you can use any set defined by MathOptInterface:
+You can also use any set defined by MathOptInterface:
 ```jldoctest moi
 julia> @constraint(model, x - [1; 2; 3] in MOI.Nonnegatives(3))
 [x[1] - 1, x[2] - 2, x[3] - 3] ∈ MathOptInterface.Nonnegatives(3)
@@ -1035,7 +1035,7 @@ julia> @constraint(model, x in SOS1())
 ```
 
 Although not required for feasibility, solvers can benefit from an ordering of
-the variables (e.g., the variables represent different factories to build, at
+the variables (for example, the variables represent different factories to build, at
 most one factory can be built, and the factories can be ordered according to
 cost). To induce an ordering, a vector of weights can be provided, and the
 variables are ordered according to their corresponding weight.
@@ -1154,7 +1154,7 @@ julia> @constraint(model, LinearAlgebra.Symmetric(Z) >= 0, PSDCone())
  X[1,2]  X[2,2]] ∈ PSDCone()
 ```
 
-Note that the lower triangular entries are silently ignored even if they are
+Note that the lower triangular entries are ignored even if they are
 different so use it with caution:
 ```jldoctest con_psd
 julia> @constraint(model, LinearAlgebra.Symmetric(X) >= 0, PSDCone())

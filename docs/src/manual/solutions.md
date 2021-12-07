@@ -318,9 +318,9 @@ set_start_value(x, x_val)
 
 ## Accessing attributes
 
-[MathOptInterface](@ref moi_documentation) defines a large number of model
-attributes that can be queried. Some attributes can be directly accessed by
-getter functions. These include:
+[MathOptInterface](@ref moi_documentation) defines many model attributes that
+can be queried. Some attributes can be directly accessed by getter functions.
+These include:
 - [`solve_time`](@ref)
 - [`relative_gap`](@ref)
 - [`simplex_iterations`](@ref)
@@ -361,7 +361,7 @@ Subject to
 ```
 
 To analyze the sensitivity of the problem we could check the allowed
-perturbation ranges of, e.g., the cost coefficients and the right-hand side
+perturbation ranges of, for example, the cost coefficients and the right-hand side
 coefficient of the constraint `c1` as follows:
 
 ```jldoctest solutions_sensitivity
@@ -402,10 +402,10 @@ right-hand side coefficient. In this range the current dual solution remains
 optimal, but the optimal primal solution might change.
 
 If the problem is degenerate, there are multiple optimal bases and hence these
-ranges might not be as intuitive and seem too narrow. E.g., a larger cost
+ranges might not be as intuitive and seem too narrow, for example, a larger cost
 coefficient perturbation might not invalidate the optimality of the current
 primal solution. Moreover, if a problem is degenerate, due to finite precision,
-it can happen that, e.g., a perturbation seems to invalidate a basis even though
+it can happen that, for example, a perturbation seems to invalidate a basis even though
 it doesn't (again providing too narrow ranges). To prevent this, increase the
 `atol` keyword argument to [`lp_sensitivity_report`](@ref). Note that this might
 make the ranges too wide for numerically challenging instances. Thus, do not
@@ -415,7 +415,7 @@ unstable instances.
 ## Conflicts
 
 When the model you input is infeasible, some solvers can help you find the
-cause of this infeasibility by offering a conflict, i.e., a subset of the
+cause of this infeasibility by offering a conflict, that is, a subset of the
 constraints that create this infeasibility. Depending on the solver,
 this can also be called an IIS (irreducible inconsistent subsystem).
 
@@ -438,7 +438,7 @@ For instance, this is how you can use this functionality:
 using JuMP
 model = Model() # You must use a solver that supports conflict refining/IIS
 # computation, like CPLEX or Gurobi
-# e.g. using Gurobi; model = Model(Gurobi.Optimizer)
+# for example, using Gurobi; model = Model(Gurobi.Optimizer)
 @variable(model, x >= 0)
 @constraint(model, c1, x >= 2)
 @constraint(model, c2, x <= 1)
@@ -480,7 +480,7 @@ end
 Some solvers support returning multiple solutions. You can check how many
 solutions are available to query using [`result_count`](@ref).
 
-Functions for querying the solutions, e.g., [`primal_status`](@ref) and
+Functions for querying the solutions, for example, [`primal_status`](@ref) and
 [`value`](@ref), all take an additional keyword argument `result` which can be
 used to specify which result to return.
 
