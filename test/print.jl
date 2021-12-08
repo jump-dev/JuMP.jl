@@ -199,19 +199,19 @@ end
         model = Model()
         @variable(model, x)
         expr = @NLexpression(model, x + 1)
-        io_test(REPLMode, expr, "\"subexpression[1]: x + 1.0\"")
+        io_test(REPLMode, expr, "subexpression[1]: x + 1.0")
     end
 
     @testset "Nonlinear parameters" begin
         model = Model()
         param = @NLparameter(model, value = 1.0)
-        io_test(REPLMode, param, "\"parameter[1] == 1.0\"")
+        io_test(REPLMode, param, "parameter[1] == 1.0")
     end
 
     @testset "Registered nonlinear parameters" begin
         model = Model()
         @NLparameter(model, param == 1.0)
-        io_test(REPLMode, param, "\"param == 1.0\"")
+        io_test(REPLMode, param, "param == 1.0")
     end
 
     @testset "NLPEvaluator" begin

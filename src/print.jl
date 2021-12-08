@@ -307,9 +307,8 @@ Return a `String` representation of `model` given the `print_mode`.
 function model_string(print_mode, model::AbstractModel)
     if print_mode == IJuliaMode
         return sprint(_print_latex, model)
-    else
-        return sprint(_print_model, model)
     end
+    return sprint(_print_model, model)
 end
 
 """
@@ -321,9 +320,8 @@ function objective_function_string(print_mode, model::Model)
     nlobj = _nlp_objective_function(model)
     if nlobj === nothing
         return function_string(print_mode, objective_function(model))
-    else
-        return nl_expr_string(model, print_mode, nlobj)
     end
+    return nl_expr_string(model, print_mode, nlobj)
 end
 
 """
@@ -366,16 +364,13 @@ Return a list of `String`s describing each constraint of the model.
 """
 function constraints_string(print_mode, model::Model)
     strings = String[
-        constraint_string(print_mode, cref, in_math_mode = true) for
+        constraint_string(print_mode, cref; in_math_mode = true) for
         (F, S) in list_of_constraint_types(model) for
         cref in all_constraints(model, F, S)
     ]
     if model.nlp_data !== nothing
-        for nl_constraint in model.nlp_data.nlconstr
-            push!(
-                strings,
-                nl_constraint_string(model, print_mode, nl_constraint),
-            )
+        for c in model.nlp_data.nlconstr
+            push!(strings, nl_constraint_string(model, print_mode, c))
         end
     end
     return strings
@@ -403,7 +398,7 @@ function nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
         print_mode,
     )
     if print_mode == IJuliaMode
-        ex = _latexify_exponentials(ex)
+        return string(_latexify_exponentials(ex))
     end
     return string(ex)
 end
@@ -423,7 +418,7 @@ function _latexify_exponentials(ex::Expr)
     return ex
 end
 
-_nl_subexpression_string(print_mode, ::AbstractModel) = String[]
+_nl_subexpression_string(::Any, ::AbstractModel) = String[]
 
 function _nl_subexpression_string(print_mode, model::Model)
     if model.nlp_data === nothing
@@ -478,6 +473,7 @@ function function_string(::Type{IJuliaMode}, v::AbstractVariableRef)
     return var_name
 end
 
+# TODO(odow): remove show_constant in JuMP 1.0
 function function_string(mode, a::GenericAffExpr, show_constant = true)
     if length(linear_terms(a)) == 0
         return show_constant ? _string_round(a.constant) : "0"
@@ -701,9 +697,8 @@ function constraint_string(
         else
             return prefix * _wrap_in_inline_math_mode(constraint_str)
         end
-    else
-        return prefix * constraint_str
     end
+    return prefix * constraint_str
 end
 
 function Base.show(io::IO, ref::ConstraintRef)
@@ -732,7 +727,7 @@ function Base.show(io::IO, evaluator::NLPEvaluator)
 end
 
 function Base.show(io::IO, ex::Union{NonlinearExpression,NonlinearParameter})
-    return Base.show(io, function_string(REPLMode, ex))
+    return print(io, function_string(REPLMode, ex))
 end
 
 function Base.show(
@@ -748,7 +743,7 @@ function Base.show(io::IO, c::NonlinearConstraintRef)
     return print(io, nl_constraint_string(c.model, REPLMode, expr))
 end
 
-function Base.show(io::IO, ::MIME"text/latex", cref::NonlinearConstraintRef)
+function Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraintRef)
     expr = c.model.nlp_data.nlconstr[c.index.value]
     s = _wrap_in_math_mode(nl_constraint_string(c.model, IJuliaMode, expr))
     return print(io, s)
