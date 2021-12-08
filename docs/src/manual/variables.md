@@ -59,9 +59,9 @@ Subject to
 
 !!! warning
     When creating a variable with a single lower- or upper-bound, and the
-    value of the bound is not a numeric literal (e.g., `1` or `1.0`), the name
-    of the variable _must_ appear on the left-hand side. Putting the name on the
-    right-hand side is an error. For example to create a variable `x`:
+    value of the bound is not a numeric literal (for example, `1` or `1.0`), the
+    name of the variable _must_ appear on the left-hand side. Putting the name
+    on the right-hand side is an error. For example, to create a variable `x`:
     ```julia
     a = 1
     @variable(model, x >= 1)      # ✓ Okay
@@ -298,7 +298,7 @@ If the name is not present, `nothing` will be returned:
 julia> variable_by_name(model, "bad_name")
 ```
 
-You can only look up invididual variables using [`variable_by_name`](@ref).
+You can only look up individual variables using [`variable_by_name`](@ref).
 Something like this will not work:
 ```jldoctest
 julia> model = Model();
@@ -667,7 +667,7 @@ explain each of these in the following.
 ### Arrays
 
 We have already seen the creation of an array of JuMP variables with the
-`x[1:2]` syntax. This can naturally be extended to create multi-dimensional
+`x[1:2]` syntax. This can be extended to create multi-dimensional
 arrays of JuMP variables. For example:
 ```jldoctest variables_arrays; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2])
@@ -703,7 +703,7 @@ julia> lower_bound.(x)
 JuMP will form an `Array` of JuMP variables when it can determine at compile
 time that the indices are one-based integer ranges. Therefore `x[1:b]` will
 create an `Array` of JuMP variables, but `x[a:b]` will not. If JuMP cannot
-determine that the indices are one-based integer ranges (e.g., in the case of
+determine that the indices are one-based integer ranges (for example, in the case of
 `x[a:b]`), JuMP will create a `DenseAxisArray` instead.
 
 ### [DenseAxisArrays](@id variable_jump_arrays)

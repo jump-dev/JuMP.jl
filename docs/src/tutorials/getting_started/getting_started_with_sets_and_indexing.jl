@@ -82,7 +82,7 @@ model = Model()
 model = Model()
 @variable(model, x[2012:2021])
 
-# Ranges also have a `start:step:stop` syntax. So the olympic years are:
+# Ranges also have a `start:step:stop` syntax. So the Olympic years are:
 
 model = Model()
 @variable(model, x[1896:4:2020])
@@ -121,7 +121,7 @@ x["A", "D"]
 # Julia has built-in support for set operations such as `union`, `intersect`,
 # and  `setdiff`.
 
-# Therefore, to create a set of all years in which the summer olympics were
+# Therefore, to create a set of all years in which the summer Olympics were
 # held, we can use:
 
 baseline = 1896:4:2020
@@ -147,7 +147,7 @@ length(olympic_years)
 # ## Indexing expressions
 
 # Use Julia's generator syntax to compute new sets, such as the list of
-# olympic years that are divisible by 3:
+# Olympic years that are divisible by 3:
 
 olympic_3_years = [year for year in olympic_years if mod(year, 3) == 0]
 model = Model()

@@ -94,7 +94,7 @@ model = Model(GLPK.Optimizer)
 
 @variable(model, x[foods.name] >= 0)
 
-# Our objective is to minimze the total cost of purchasing food. We can write
+# Our objective is to minimize the total cost of purchasing food. We can write
 # that as a sum over the rows in `data`.
 
 @objective(

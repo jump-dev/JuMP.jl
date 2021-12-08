@@ -210,7 +210,7 @@ JuMP.optimize!(model)
 # We now formulate the logistic problem with a $\ell_1$ regularization term.
 # The $\ell_1$ regularization ensures sparsity in the optimal
 # solution of the resulting optimization problem. Luckily, the $\ell_1$ norm
-# is implemented as a set in `MathOptInterface`. Thus, we could easily formulate
+# is implemented as a set in `MathOptInterface`. Thus, we could formulate
 # the sparse logistic regression problem with the help of a `MOI.NormOneCone`
 # set.
 function build_sparse_logit_model(X, y, λ)

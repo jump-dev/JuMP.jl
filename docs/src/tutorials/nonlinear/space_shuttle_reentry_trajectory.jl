@@ -100,11 +100,11 @@
 # h = 80000 \text{ ft}, \qquad v = 2500 \text{ ft/sec}, \qquad \gamma = -5 \text{ deg}.
 # ```
 
-# As explained in the book, our goal is to maximize the final crossrange,
+# As explained in the book, our goal is to maximize the final cross-range,
 # which is equivalent to maximizing the final latitude of the vehicle,
 # i.e., $J = \theta(t_F)$.
 
-# ![Max crossrange shuttle reentry](../../assets/space_shuttle.png)
+# ![Max cross-range shuttle reentry](../../assets/space_shuttle.png)
 
 # ### Approach
 # We will use a discretized model of time, with a fixed number of discretized points, $n$.
@@ -300,14 +300,14 @@ for j in 2:n
     end
 end
 
-## Objective: Maximize crossrange
+## Objective: Maximize cross-range
 @objective(model, Max, θ[n])
 
 set_silent(model)  # Hide solver's verbose output
 optimize!(model)  # Solve for the control and state
 @assert termination_status(model) == LOCALLY_SOLVED
 
-## Show final crossrange of the solution
+## Show final cross-range of the solution
 println(
     "Final latitude θ = ",
     round(objective_value(model) |> rad2deg, digits = 2),

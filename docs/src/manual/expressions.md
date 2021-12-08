@@ -303,8 +303,8 @@ Modeling](@ref) section.
 
 ## Initializing arrays
 
-JuMP implements `zero(AffExpr)` and `one(AffExpr)` in order to support various
-functions in `LinearAlgebra` (e.g., accessing the off-diagonal of a `Diagonal`
+JuMP implements `zero(AffExpr)` and `one(AffExpr)` to support various functions
+in `LinearAlgebra` (for example, accessing the off-diagonal of a `Diagonal`
 matrix).
 ```jldoctest
 julia> zero(AffExpr)

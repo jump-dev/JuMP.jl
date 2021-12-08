@@ -206,7 +206,7 @@ julia> expr = @NLexpression(model, sin(x) + 1)
 
 ### Scalar operations only
 
-With the exception of the splatting syntax discussed below, all expressions
+Except for the splatting syntax discussed below, all expressions
 must be simple scalar operations. You cannot use `dot`, matrix-vector products,
 vector slices, etc.
 ```jldoctest nlp_scalar_only; setup=:(model = Model(); @variable(model, x[1:2]); @variable(model, y); c = [1, 2])
@@ -262,7 +262,7 @@ In addition to this list of functions, it is possible to register custom
 
 !!! tip
     JuMP will attempt to automatically register functions it detects in your
-    nonlinear expressions, which means that in most cases, manually registering
+    nonlinear expressions, which usually means manually registering
     a function is not needed. Two exceptions are if you want to provide custom
     derivatives, or if the function is not available in the scope of the
     nonlinear expression.
@@ -294,7 +294,7 @@ differentiation.
     this section, and see the guidelines at [ForwardDiff.jl](https://www.juliadiff.org/ForwardDiff.jl/release-0.10/user/limitations.html).
 
 The most common error is that your user-defined function is not generic with
-respect to the number type, i.e., don't assume that the input to the function
+respect to the number type, that is, don't assume that the input to the function
 is `Float64`.
 ```julia
 f(x::Float64) = 2 * x  # This will not work.
@@ -353,7 +353,7 @@ The above code creates a JuMP model with the objective function
 
 !!! tip
     The symbol `:my_f` doesn't have to match the name of the function `f`.
-    However, it's generally more readable if it does. Make sure you use `my_f`
+    However, it's more readable if it does. Make sure you use `my_f`
     and not `f` in the macros.
 
 !!! warning
@@ -437,7 +437,7 @@ register(model, :my_square, 1, f, ∇f, ∇²f)
 
 ### User-defined functions with vector inputs
 
-User-defined functions which take vectors as input arguments (e.g.
+User-defined functions which take vectors as input arguments (for example,
 `f(x::Vector)`) are *not* supported. Instead, use Julia's splatting syntax to
 create a function with scalar arguments. For example, instead of
 ```julia
@@ -563,7 +563,7 @@ right-hand side when computing expressions. In other words, one-sided nonlinear
 constraints are always transformed to have a right-hand side of zero.
 
 This method of querying derivatives directly from a JuMP model is convenient for
-interacting with the model in a structured way, e.g., for accessing derivatives
+interacting with the model in a structured way, for example, for accessing derivatives
 of specific variables. For example, in statistical maximum likelihood estimation
 problems, one is often interested in the Hessian matrix at the optimal solution,
 which can be queried using the [`NLPEvaluator`](@ref).
