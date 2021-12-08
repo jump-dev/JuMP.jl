@@ -60,17 +60,17 @@ nonlinear terms.
 
 ```jldoctest nl_expression; setup=:(model = Model(); @variable(model, x[1:2]))
 julia> expr = @NLexpression(model, exp(x[1]) + sqrt(x[2]))
-"subexpression[1]: exp(x[1]) + sqrt(x[2])"
+subexpression[1]: exp(x[1]) + sqrt(x[2])
 
 julia> my_anon_expr = @NLexpression(model, [i = 1:2], sin(x[i]))
 2-element Vector{NonlinearExpression}:
- "subexpression[2]: sin(x[1])"
- "subexpression[3]: sin(x[2])"
+ subexpression[2]: sin(x[1])
+ subexpression[3]: sin(x[2])
 
 julia> @NLexpression(model, my_expr[i = 1:2], sin(x[i]))
 2-element Vector{NonlinearExpression}:
- "subexpression[4]: sin(x[1])"
- "subexpression[5]: sin(x[2])"
+ subexpression[4]: sin(x[1])
+ subexpression[5]: sin(x[2])
 ```
 
 Nonlinear expression can be used in [`@NLobjective`](@ref), [`@NLconstraint`](@ref),
@@ -86,8 +86,8 @@ julia> @NLconstraint(model, [i = 1:2], my_expr[i] <= i)
 
 julia> @NLexpression(model, nested[i = 1:2], sin(my_expr[i]))
 2-element Vector{NonlinearExpression}:
- "subexpression[6]: sin(subexpression[4])"
- "subexpression[7]: sin(subexpression[5])"
+ subexpression[6]: sin(subexpression[4])
+ subexpression[7]: sin(subexpression[5])
 ```
 
 ## Create a nonlinear parameter
@@ -105,14 +105,14 @@ the `==` sign.
 ```jldoctest nonlinear_parameters; setup=:(model = Model(); @variable(model, x))
 julia> @NLparameter(model, p[i = 1:2] == i)
 2-element Vector{NonlinearParameter}:
- "parameter[1] == 1.0"
- "parameter[2] == 2.0"
+ parameter[1] == 1.0
+ parameter[2] == 2.0
 ```
 
 Create anonymous parameters using the `value` keyword:
 ```jldoctest nonlinear_parameters
 julia> anon_parameter = @NLparameter(model, value = 1)
-"parameter[3] == 1.0"
+parameter[3] == 1.0
 ```
 
 !!! info
@@ -153,7 +153,7 @@ Closest candidates are:
 [...]
 
 julia> @NLexpression(model, my_nl_expr, p[1] * x^2)
-"subexpression[1]: parameter[1] * x ^ 2.0"
+subexpression[1]: parameter[1] * x ^ 2.0
 ```
 
 ### When to use a parameter
@@ -201,7 +201,7 @@ ERROR: sin is not defined for type AbstractVariableRef. Are you trying to build 
 [...]
 
 julia> expr = @NLexpression(model, sin(x) + 1)
-"subexpression[1]: sin(x) + 1.0"
+subexpression[1]: sin(x) + 1.0
 ```
 
 ### Scalar operations only
@@ -594,12 +594,12 @@ julia> expr = :($(x) + sin($(x)^2))
 :(x + sin(x ^ 2))
 
 julia> expr_ref = add_NL_expression(model, expr)
-"subexpression[1]: x + sin(x ^ 2.0)"
+subexpression[1]: x + sin(x ^ 2.0)
 ```
 This is equivalent to
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
 julia> expr_ref = @NLexpression(model, x + sin(x^2))
-"subexpression[1]: x + sin(x ^ 2.0)"
+subexpression[1]: x + sin(x ^ 2.0)
 ```
 
 !!! note
