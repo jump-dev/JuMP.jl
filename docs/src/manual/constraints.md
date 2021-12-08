@@ -220,7 +220,7 @@ c : 2 x <= 1.0
 
 julia> @constraint(model, c, 2x <= 1)
 ERROR: An object of name c is already attached to this model. If this
-    is intended, consider using the anonymous construction syntax, for example,
+    is intended, consider using the anonymous construction syntax, e.g.,
     `x = @variable(model, [1:N], ...)` where the name of the object does
     not appear inside the macro.
 
@@ -651,7 +651,7 @@ Therefore, creating a new constraint of the same name will throw an error:
 ```jldoctest constraints_delete
 julia> @constraint(model, con, 2x <= 1)
 ERROR: An object of name con is already attached to this model. If this
-    is intended, consider using the anonymous construction syntax, for example,
+    is intended, consider using the anonymous construction syntax, e.g.,
     `x = @variable(model, [1:N], ...)` where the name of the object does
     not appear inside the macro.
 
