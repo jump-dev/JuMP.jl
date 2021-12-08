@@ -3,6 +3,8 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+import Printf
+
 struct _SolutionSummary
     verbose::Bool
     solver::String
@@ -154,7 +156,7 @@ function _show_work_counters_summary(io::IO, summary::_SolutionSummary)
     _print_if_not_missing(
         io,
         "  Solve time (sec)   : ",
-        @sprintf("%.5f", summary.solve_time),
+        Printf.@sprintf("%.5f", summary.solve_time),
     )
     _print_if_not_missing(
         io,

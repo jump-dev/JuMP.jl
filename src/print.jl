@@ -7,22 +7,6 @@
 # An algebraic modeling language for Julia
 # See https://github.com/jump-dev/JuMP.jl
 #############################################################################
-# print.jl
-# All "pretty printers" for JuMP types.
-# - Delegates to appropriate handler methods for REPL or IJulia.
-# - These handler methods then pass the correct symbols to use into a
-#   generic string builder. The IJulia handlers will also wrap in MathJax
-#   start/close tags.
-# - To find printing code for a type in this file, search for `## TypeName`
-# - Code here does not need to be fast, in fact simplicity trumps speed
-#   within reason as this code is thorny enough as it is.
-# - Corresponding tests are in test/print.jl, although test/operator.jl
-#   is also testing the constraint/expression code extensively as well.
-# - Base.print and Base.string both delegate to Base.show, if they are not
-#   separately defined.
-#############################################################################
-
-using Printf
 
 """
     PrintMode
@@ -154,10 +138,6 @@ function name(model::Model)
     return isempty(ret) ? "A JuMP Model" : ret
 end
 
-###
-### print_summary
-###
-
 """
     _print_summary(io::IO, model::AbstractModel)
 
@@ -173,13 +153,12 @@ function _print_summary(io::IO, model::AbstractModel)
     println(io, name(model))
     sense = objective_sense(model)
     if sense == MAX_SENSE
-        print(io, "Maximization")
+        println(io, "Maximization problem with:")
     elseif sense == MIN_SENSE
-        print(io, "Minimization")
+        println(io, "Minimization problem with:")
     else
-        print(io, "Feasibility")
+        println(io, "Feasibility problem with:")
     end
-    println(io, " problem with:")
     n = num_variables(model)
     println(io, "Variable", _plural(n), ": ", n)
     if sense != FEASIBILITY_SENSE
@@ -187,14 +166,9 @@ function _print_summary(io::IO, model::AbstractModel)
     end
     show_constraints_summary(io, model)
     show_backend_summary(io, model)
-    names_in_scope = sort(collect(keys(object_dictionary(model))))
-    if !isempty(names_in_scope)
-        println(io)
-        print(
-            io,
-            "Names registered in the model: ",
-            join(string.(names_in_scope), ", "),
-        )
+    if !isempty(object_dictionary(model))
+        print(io, "\nNames registered in the model: ")
+        print(io, join(sort!(collect(keys(object_dictionary(model)))), ", "))
     end
     return
 end
@@ -250,10 +224,6 @@ function show_backend_summary(io::IO, model::Model)
     return
 end
 
-###
-### print_model
-###
-
 """
     _print_model(io::IO, model::AbstractModel)
 
@@ -267,11 +237,9 @@ For this method to work, an `AbstractModel` subtype must implement:
 function _print_model(io::IO, model::AbstractModel)
     sense = objective_sense(model)
     if sense == MAX_SENSE
-        print(io, "Max ")
-        println(io, objective_function_string(REPLMode, model))
+        println(io, "Max ", objective_function_string(REPLMode, model))
     elseif sense == MIN_SENSE
-        print(io, "Min ")
-        println(io, objective_function_string(REPLMode, model))
+        println(io, "Min ", objective_function_string(REPLMode, model))
     else
         println(io, "Feasibility")
     end
@@ -344,10 +312,6 @@ function model_string(print_mode, model::AbstractModel)
     end
 end
 
-###
-### objective_function_string
-###
-
 """
     objective_function_string(print_mode, model::AbstractModel)::String
 
@@ -362,10 +326,6 @@ function objective_function_string(print_mode, model::Model)
     end
 end
 
-###
-### constraints_string
-###
-
 """
     nl_constraint_string(model::Model, mode, c::_NonlinearConstraint)
 
@@ -377,24 +337,26 @@ function nl_constraint_string(model::Model, mode, c::_NonlinearConstraint)
     s = _sense(c)
     nl = nl_expr_string(model, mode, c.terms)
     if s == :range
-        out_str =
-            "$(_string_round(c.lb)) " *
-            _math_symbol(mode, :leq) *
-            " $nl " *
-            _math_symbol(mode, :leq) *
-            " " *
-            _string_round(c.ub)
-    else
-        if s == :<=
-            rel = _math_symbol(mode, :leq)
-        elseif s == :>=
-            rel = _math_symbol(mode, :geq)
-        else
-            rel = _math_symbol(mode, :eq)
-        end
-        out_str = string(nl, " ", rel, " ", _string_round(_rhs(c)))
+        return string(
+            _string_round(c.lb),
+            " ",
+            _math_symbol(mode, :leq),
+            " ",
+            nl,
+            " ",
+            _math_symbol(mode, :leq),
+            " ",
+            _string_round(c.ub),
+        )
     end
-    return out_str
+    if s == :<=
+        rel = _math_symbol(mode, :leq)
+    elseif s == :>=
+        rel = _math_symbol(mode, :geq)
+    else
+        rel = _math_symbol(mode, :eq)
+    end
+    return string(nl, " ", rel, " ", _string_round(_rhs(c)))
 end
 
 """
@@ -418,10 +380,6 @@ function constraints_string(print_mode, model::Model)
     end
     return strings
 end
-
-###
-### _nl_subexpression_string
-###
 
 """
     nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
@@ -482,10 +440,6 @@ function _nl_subexpression_string(print_mode, model::Model)
     end
     return strings
 end
-
-###
-### function_string
-###
 
 """
     function_string(
@@ -644,10 +598,6 @@ function function_string(::Type{<:PrintMode}, p::NonlinearParameter)
     return "parameter[$(p.index)] == $(value(p))"
 end
 
-###
-### in_set_string
-###
-
 """
     in_set_string(print_mode::Type{<:PrintMode}, set)
 
@@ -704,10 +654,6 @@ function in_set_string(print_mode, constraint::AbstractConstraint)
     return in_set_string(print_mode, set)
 end
 
-###
-### constraint_string
-###
-
 """
     constraint_string(
         print_mode,
@@ -722,7 +668,7 @@ function constraint_string(print_mode, ref::ConstraintRef; in_math_mode = false)
     return constraint_string(
         print_mode,
         name(ref),
-        constraint_object(ref),
+        constraint_object(ref);
         in_math_mode = in_math_mode,
     )
 end
@@ -759,19 +705,6 @@ function constraint_string(
         return prefix * constraint_str
     end
 end
-
-## Notes for extensions
-# For a `ConstraintRef{ModelType, IndexType}` where `ModelType` is not
-# `JuMP.Model` or `IndexType` is not `MathOptInterface.ConstraintIndex`, the
-# methods `JuMP.name` and `JuMP.constraint_object` should be implemented for
-# printing to work. If the `AbstractConstraint` returned by `constraint_object`
-# is not `JuMP.ScalarConstraint` nor `JuMP.VectorConstraint`, then either
-# `JuMP.jump_function` or `JuMP.function_string` and either `JuMP.moi_set` or
-# `JuMP.in_set_string` should be implemented.
-
-###
-### Base.show
-###
 
 function Base.show(io::IO, ref::ConstraintRef)
     return print(io, constraint_string(REPLMode, ref))
@@ -811,22 +744,12 @@ function Base.show(
 end
 
 function Base.show(io::IO, c::NonlinearConstraintRef)
-    return print(
-        io,
-        nl_constraint_string(
-            c.model,
-            REPLMode,
-            c.model.nlp_data.nlconstr[c.index.value],
-        ),
-    )
+    expr = c.model.nlp_data.nlconstr[c.index.value]
+    return print(io, nl_constraint_string(c.model, REPLMode, expr))
 end
 
-function Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraintRef)
-    constraint = c.model.nlp_data.nlconstr[c.index.value]
-    return print(
-        io,
-        _wrap_in_math_mode(
-            nl_constraint_string(c.model, IJuliaMode, constraint),
-        ),
-    )
+function Base.show(io::IO, ::MIME"text/latex", cref::NonlinearConstraintRef)
+    expr = c.model.nlp_data.nlconstr[c.index.value]
+    s = _wrap_in_math_mode(nl_constraint_string(c.model, IJuliaMode, expr))
+    return print(io, s)
 end
