@@ -1371,34 +1371,39 @@ mutable struct _VariablePrintWrapper
     v::VariableRef
     mode::Any
 end
+
 function Base.show(io::IO, v::_VariablePrintWrapper)
     return print(io, function_string(v.mode, v.v))
 end
+
 mutable struct _ParameterPrintWrapper
     model::Model
     idx::Int
     mode::Any
 end
-function Base.show(io::IO, p::_ParameterPrintWrapper)
-    relevant_parameters = filter(
-        i -> i[2] isa NonlinearParameter && i[2].index == p.idx,
-        p.model.obj_dict,
-    )
-    if length(relevant_parameters) == 1
-        par_name = first(relevant_parameters)[1]
-        print(io, par_name)
-    else
-        if p.mode == IJuliaMode
-            print(io, "parameter_{$(p.idx)}")
-        else
-            print(io, "parameter[$(p.idx)]")
+
+function Base.show(io::IO, wrapper::_ParameterPrintWrapper)
+    p = NonlinearParameter(wrapper.model, wrapper.idx)
+    for (k, v) in object_dictionary(p.model)
+        if v == p
+            print(io, k)
+            return
         end
     end
+    # No named parameter; use a generic name.
+    if wrapper.mode == IJuliaMode
+        print(io, "parameter_{$(p.index)}")
+    else
+        print(io, "parameter[$(p.index)]")
+    end
+    return
 end
+
 mutable struct _SubexpressionPrintWrapper
     idx::Int
     mode::Any
 end
+
 function Base.show(io::IO, s::_SubexpressionPrintWrapper)
     if s.mode == IJuliaMode
         print(io, "subexpression_{$(s.idx)}")
