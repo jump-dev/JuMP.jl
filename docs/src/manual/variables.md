@@ -217,15 +217,22 @@ As a work-around, JuMP provides *anonymous* variables. Create a scalar valued
 anonymous variable by omitting the name argument:
 ```jldoctest; setup=:(model=Model())
 julia> x = @variable(model)
-noname
+_[1]
 ```
+Anonymous variables get printed as an underscore followed by a unique index of
+the variable.
+
+!!! warning
+    The index of the variable may not correspond to the column of the variable
+    in the solver!
+
 Create a container of anonymous JuMP variables by dropping the name in front of
 the `[`:
 ```jldoctest; setup=:(model=Model())
 julia> y = @variable(model, [1:2])
 2-element Vector{VariableRef}:
- noname
- noname
+ _[1]
+ _[2]
 ```
 
 The `<=` and `>=` short-hand cannot be used to set bounds on scalar-valued
@@ -233,12 +240,13 @@ anonymous JuMP variables. Instead, use the `lower_bound` and `upper_bound`
 keywords:
 ```jldoctest; setup=:(model=Model())
 julia> x_lower = @variable(model, lower_bound = 1.0)
-noname
+_[1]
+
 julia> x_upper = @variable(model, upper_bound = 2.0)
-noname
+_[2]
 
 julia> x_interval = @variable(model, lower_bound = 3.0, upper_bound = 4.0)
-noname
+_[3]
 ```
 
 ## Variable names
@@ -346,7 +354,7 @@ Here's a summary of the differences:
  * Anonymous JuMP variables have the form `x = @variable(model)`. For anonymous
    variables:
    * The `String` name of the variable is set to `""`. When printed, this is
-     replaced with `"noname"`.
+     replaced with `"_[i]"` where `i` is the index of the variable.
    * You control the name of the Julia variable used as the binding.
    * No name is registered as a key in the model.
  * The `base_name` keyword can override the `String` name of the variable.
