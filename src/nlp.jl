@@ -176,15 +176,14 @@ function _init_NLP(m::Model)
     end
 end
 
+const NonlinearConstraintRef = ConstraintRef{Model,NonlinearConstraintIndex}
+
 """
-    is_valid(model::Model, c::ConstraintRef{Model,NonlinearConstraintIndex})
+    is_valid(model::Model, c::NonlinearConstraintRef)
 
 Return `true` if `c` refers to a valid nonlinear constraint in `model`.
 """
-function is_valid(
-    model::Model,
-    c::ConstraintRef{Model,NonlinearConstraintIndex},
-)
+function is_valid(model::Model, c::NonlinearConstraintRef)
     if model !== c.model
         return false
     end
@@ -193,11 +192,11 @@ function is_valid(
 end
 
 """
-    dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
+    dual(c::NonlinearConstraintRef)
 
 Return the dual of the nonlinear constraint `c`.
 """
-function dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
+function dual(c::NonlinearConstraintRef)
     _init_NLP(c.model)
     nldata::_NLPData = c.model.nlp_data
     # The array is cleared on every solve.
@@ -1372,34 +1371,39 @@ mutable struct _VariablePrintWrapper
     v::VariableRef
     mode::Any
 end
+
 function Base.show(io::IO, v::_VariablePrintWrapper)
     return print(io, function_string(v.mode, v.v))
 end
+
 mutable struct _ParameterPrintWrapper
     model::Model
     idx::Int
     mode::Any
 end
-function Base.show(io::IO, p::_ParameterPrintWrapper)
-    relevant_parameters = filter(
-        i -> i[2] isa NonlinearParameter && i[2].index == p.idx,
-        p.model.obj_dict,
-    )
-    if length(relevant_parameters) == 1
-        par_name = first(relevant_parameters)[1]
-        print(io, par_name)
-    else
-        if p.mode == IJuliaMode
-            print(io, "parameter_{$(p.idx)}")
-        else
-            print(io, "parameter[$(p.idx)]")
+
+function Base.show(io::IO, wrapper::_ParameterPrintWrapper)
+    p = NonlinearParameter(wrapper.model, wrapper.idx)
+    for (k, v) in object_dictionary(p.model)
+        if v == p
+            print(io, k)
+            return
         end
     end
+    # No named parameter; use a generic name.
+    if wrapper.mode == IJuliaMode
+        print(io, "parameter_{$(p.index)}")
+    else
+        print(io, "parameter[$(p.index)]")
+    end
+    return
 end
+
 mutable struct _SubexpressionPrintWrapper
     idx::Int
     mode::Any
 end
+
 function Base.show(io::IO, s::_SubexpressionPrintWrapper)
     if s.mode == IJuliaMode
         print(io, "subexpression_{$(s.idx)}")
@@ -2016,7 +2020,7 @@ programmatically, and you cannot use [`@NLexpression`](@ref).
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
 julia> add_NL_expression(model, :(\$(x) + \$(x)^2))
-"subexpression[1]: x + x ^ 2.0"
+subexpression[1]: x + x ^ 2.0
 ```
 """
 function add_NL_expression(model::Model, ex)
