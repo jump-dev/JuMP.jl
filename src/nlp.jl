@@ -176,15 +176,14 @@ function _init_NLP(m::Model)
     end
 end
 
+const NonlinearConstraintRef = ConstraintRef{Model,NonlinearConstraintIndex}
+
 """
-    is_valid(model::Model, c::ConstraintRef{Model,NonlinearConstraintIndex})
+    is_valid(model::Model, c::NonlinearConstraintRef)
 
 Return `true` if `c` refers to a valid nonlinear constraint in `model`.
 """
-function is_valid(
-    model::Model,
-    c::ConstraintRef{Model,NonlinearConstraintIndex},
-)
+function is_valid(model::Model, c::NonlinearConstraintRef)
     if model !== c.model
         return false
     end
@@ -193,11 +192,11 @@ function is_valid(
 end
 
 """
-    dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
+    dual(c::NonlinearConstraintRef)
 
 Return the dual of the nonlinear constraint `c`.
 """
-function dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
+function dual(c::NonlinearConstraintRef)
     _init_NLP(c.model)
     nldata::_NLPData = c.model.nlp_data
     # The array is cleared on every solve.
