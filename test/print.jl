@@ -360,7 +360,7 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @test JuMP.name(x) == ""
         if x isa VariableRef
             io_test(REPLMode, x, "_[1]")
-            io_test(IJuliaMode, x, "\\_\\[1\\]")
+            io_test(IJuliaMode, x, "{\\_}_{1}")
         else
             io_test(REPLMode, x, "noname")
             io_test(IJuliaMode, x, "noname")

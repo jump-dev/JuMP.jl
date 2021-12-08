@@ -441,7 +441,7 @@ anonymous_name(::Any, x::AbstractVariableRef) = "noname"
 anonymous_name(::Type{REPLMode}, x::VariableRef) = "_[$(index(x).value)]"
 
 function anonymous_name(::Type{IJuliaMode}, x::VariableRef)
-    return "\\_\\[$(index(x).value)\\]"
+    return "{\\_}_{$(index(x).value)}"
 end
 
 """
