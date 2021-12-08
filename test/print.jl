@@ -8,7 +8,7 @@
 # See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 # test/print.jl
-# Testing $fa pretty-printing-related functionality
+# Testing for all pretty-printing-related functionality
 #############################################################################
 
 using JuMP
@@ -502,12 +502,7 @@ end
 function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Model" begin
         repl(s) = JuMP._math_symbol(REPLMode, s)
-        le, ge, eq, fa = repl(:leq), repl(:geq), repl(:eq), repl(:for_all)
-        inset, dots = repl(:in), repl(:dots)
-        infty, union = repl(:infty), repl(:union)
-        Vert, sub2 = repl(:Vert), repl(:sub2)
-        for_all = repl(:for_all)
-
+        le, ge, eq, inset = repl(:leq), repl(:geq), repl(:eq), repl(:in)
         #------------------------------------------------------------------
 
         model_1 = ModelType()
@@ -690,12 +685,7 @@ end
 function model_extension_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Model" begin
         repl(s) = JuMP._math_symbol(REPLMode, s)
-        le, ge, eq, fa = repl(:leq), repl(:geq), repl(:eq), repl(:for_all)
-        inset, dots = repl(:in), repl(:dots)
-        infty, union = repl(:infty), repl(:union)
-        Vert, sub2 = repl(:Vert), repl(:sub2)
-        for_all = repl(:for_all)
-
+        le, inset = repl(:leq), repl(:in)
         #------------------------------------------------------------------
 
         model_1 = ModelType()

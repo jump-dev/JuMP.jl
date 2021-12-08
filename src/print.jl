@@ -108,42 +108,11 @@ function _math_symbol(::Type{REPLMode}, name::Symbol)
         return Sys.iswindows() ? ">=" : "≥"
     elseif name == :eq
         return Sys.iswindows() ? "==" : "="
-    elseif name == :times
-        return "*"
     elseif name == :sq
         return "²"
-    elseif name == :ind_open
-        return "["
-    elseif name == :ind_close
-        return "]"
-    elseif name == :for_all
-        return Sys.iswindows() ? "for all" : "∀"
-    elseif name == :in
-        return Sys.iswindows() ? "in" : "∈"
-    elseif name == :open_set
-        return "{"
-    elseif name == :dots
-        return Sys.iswindows() ? ".." : "…"
-    elseif name == :close_set
-        return "}"
-    elseif name == :union
-        return Sys.iswindows() ? "or" : "∪"
-    elseif name == :infty
-        return Sys.iswindows() ? "Inf" : "∞"
-    elseif name == :open_rng
-        return "["
-    elseif name == :close_rng
-        return "]"
-    elseif name == :integer
-        return "integer"
-    elseif name == :succeq0
-        return " is semidefinite"
-    elseif name == :Vert
-        return Sys.iswindows() ? "||" : "‖"
-    elseif name == :sub2
-        return Sys.iswindows() ? "_2" : "₂"
     else
-        error("Internal error: Unrecognized symbol $name.")
+        @assert name == :in
+        return Sys.iswindows() ? "in" : "∈"
     end
 end
 
@@ -155,42 +124,11 @@ function _math_symbol(::Type{IJuliaMode}, name::Symbol)
         return "\\geq"
     elseif name == :eq
         return "="
-    elseif name == :times
-        return "\\times "
     elseif name == :sq
         return "^2"
-    elseif name == :ind_open
-        return "_{"
-    elseif name == :ind_close
-        return "}"
-    elseif name == :for_all
-        return "\\quad\\forall"
-    elseif name == :in
-        return "\\in"
-    elseif name == :open_set
-        return "\\{"
-    elseif name == :dots
-        return "\\dots"
-    elseif name == :close_set
-        return "\\}"
-    elseif name == :union
-        return "\\cup"
-    elseif name == :infty
-        return "\\infty"
-    elseif name == :open_rng
-        return "\\["
-    elseif name == :close_rng
-        return "\\]"
-    elseif name == :integer
-        return "\\in \\mathbb{Z}"
-    elseif name == :succeq0
-        return "\\succeq 0"
-    elseif name == :Vert
-        return "\\Vert"
-    elseif name == :sub2
-        return "_2"
     else
-        error("Internal error: Unrecognized symbol $name.")
+        @assert name == :in
+        return "\\in"
     end
 end
 
@@ -629,7 +567,8 @@ function function_string(mode, q::GenericQuadExpr)
         if x == y
             terms[2*elm] *= _math_symbol(mode, :sq)
         else
-            terms[2*elm] *= string(_math_symbol(mode, :times), y)
+            times = mode == IJuliaMode ? "\\times " : "*"
+            terms[2*elm] *= string(times, y)
         end
     end
     terms[1] = terms[1] == " - " ? "-" : ""
@@ -729,16 +668,13 @@ function in_set_string(print_mode, set::MOI.EqualTo)
     return string(_math_symbol(print_mode, :eq), " ", set.value)
 end
 
-function in_set_string(print_mode, set::MOI.Interval)
-    return string(
-        _math_symbol(print_mode, :in),
-        " ",
-        _math_symbol(print_mode, :open_rng),
-        set.lower,
-        ", ",
-        set.upper,
-        _math_symbol(print_mode, :close_rng),
-    )
+function in_set_string(::Type{IJuliaMode}, set::MOI.Interval)
+    return string("\\in \\[", set.lower, ", ", set.upper, "\\]")
+end
+
+function in_set_string(::Type{REPLMode}, set::MOI.Interval)
+    in = _math_symbol(REPLMode, :in)
+    return string("$in [", set.lower, ", ", set.upper, "]")
 end
 
 in_set_string(print_mode, ::MOI.ZeroOne) = "binary"
