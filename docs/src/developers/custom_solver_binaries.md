@@ -1,6 +1,8 @@
 # How to use a custom binary
 
 Many solvers are not written in Julia, but instead in languages like C or C++.
+JuMP interacts with these solvers through binary dependencies.
+
 For many open-source solvers, we automatically install the appropriate binary
 when you run `Pkg.add("Solver")`. For example, `Pkg.add("ECOS")` will also
 install the ECOS binary.
@@ -27,7 +29,7 @@ MathOptInterface. However, it does not handle the installation of the solver
 binary; that is the job for a JLL package.
 
 A JLL is a Julia package that wraps a pre-compiled binary.
-The binaries are built using [Yggdrasil](https://github.com/JuliaPackaging/Yggdrasil)
+Binaries are built using [Yggdrasil](https://github.com/JuliaPackaging/Yggdrasil)
 (for example, [ECOS](https://github.com/JuliaPackaging/Yggdrasil/blob/master/E/ECOS/build_tarballs.jl))
 and hosted in the [JuliaBinaryWrappers](https://github.com/JuliaBinaryWrappers)
 GitHub repository (for example, [ECOS_jll.jl](https://github.com/JuliaBinaryWrappers/ECOS_jll.jl)).
@@ -41,11 +43,11 @@ binary artifact for each different platform that it might be installed on. Here
 is the [Artifacts.toml file for ECOS_jll.jl](https://github.com/JuliaBinaryWrappers/ECOS_jll.jl/blob/main/Artifacts.toml).
 
 The binaries installed by the JLL package should be sufficient for most users.
-In a rare case however, you may require a custom binary. The two main reasons to
+In rare cases, however, you may require a custom binary. The two main reasons to
 use a custom binary are:
 
  * You want a binary with custom compilation settings (for example, debugging)
- * You want a binary with a different set of dependencies that is available on
+ * You want a binary with a set of dependencies that are not available on
    Yggdrasil (for example, a commerial solver like Gurobi or CPLEX).
 
 The following sections explain how to replace the binaries provided by a JLL
@@ -83,8 +85,7 @@ julia> readdir(joinpath(ECOS_jll.artifact_dir, "lib"))
 ```
 
 Other solvers may have a `bin` directory containing executables. To use a custom
-binary of ECOS, we need to replace the `/lib/libecos.dylib` with our custom
-binary.
+binary of ECOS, we need to replace `/lib/libecos.dylib` with our custom binary.
 
 ## [Compile a custom binary](@id compile_ecos)
 
@@ -170,7 +171,7 @@ Sometimes a solver may provide a number of libraries and executables, and
 specifying the path for each of the becomes tedious. In this case, we can use
 Julia's `Override.toml` to replace an entire artifact.
 
-Over-riding an entire artifact requires you to replicate the structure and
+Overriding an entire artifact requires you to replicate the structure and
 contents of the JLL package that we [explored above](@ref jll_structure).
 
 In most cases you need only reproduce the `include`, `lib`, and `bin`
@@ -182,7 +183,7 @@ For our ECOS example, we already reproduced the structure when we
 [compiled ECOS](@ref compile_ecos).
 
 So, now we need to tell Julia to use our custom installation instead of
-the default. We can do this by making an over-ride file at
+the default. We can do this by making an override file at
 `~/.julia/artifacts/Overrides.toml`.
 
 `Overrides.toml` has the following content:
