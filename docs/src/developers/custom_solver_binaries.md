@@ -24,13 +24,10 @@ MathOptInterface. However, it does not handle the installation of the solver
 binary; that is the job for a JLL package.
 
 A JLL is a Julia package that wraps a pre-compiled binary.
-The binaries are built using https://github.com/JuliaPackaging/Yggdrasil
-and hosted in the `JuliaBinaryWrappers` GitHub repository.
-
-For example, the build script for ECOS is located at:
-https://github.com/JuliaPackaging/Yggdrasil/blob/master/E/ECOS/build_tarballs.jl
-and the binaries are hosted at
-https://github.com/JuliaBinaryWrappers/ECOS_jll.jl
+The binaries are built using [Yggdrasil](https://github.com/JuliaPackaging/Yggdrasil)
+(for example, [ECOS](https://github.com/JuliaPackaging/Yggdrasil/blob/master/E/ECOS/build_tarballs.jl))
+and hosted in the [JuliaBinaryWrappers](https://github.com/JuliaBinaryWrappers)
+GitHub repository (for example, [ECOS_jll.jl](https://github.com/JuliaBinaryWrappers/ECOS_jll.jl)).
 
 JLL packages contain little code. Their only job is to `dlopen` a dynamic
 library, along with any dependencies.
@@ -61,7 +58,7 @@ julia> using ECOS_jll
 julia> ECOS_jll.artifact_dir
 "/Users/oscar/.julia/artifacts/2addb75332eff5a1657b46bb6bf30d2410bc7ecf"
 ```
-The name of the last folder is important and we will need it later.
+The name of the last folder is important, and we will need it later.
 
 !!! tip
     This path may be different on other machines.
@@ -102,8 +99,8 @@ oscar@Oscars-MBP ecos % cp libecos.dylib lib
 
 !!! warning
     Compiling custom solver binaries is an advanced operation. Due to the
-    complexities of compiling various solvers, the JuMP community may be unable
-    to help you diagonse and fix compilation issues.
+    complexities of compiling various solvers, the JuMP community is unable to
+    help you diagnose and fix compilation issues.
 
 After this compilation step, we now have a folder `/tmp/jll_example/ecos`
 that contains `lib` and `include` directories with the same files as `ECOS_jll`:
@@ -126,7 +123,7 @@ the default. We can do this by making an over-ride file at
 ```
 Where `2addb75332eff5a1657b46bb6bf30d2410bc7ecf` is the folder from the original
 `ECOS_jll.artifact_dir` and `"/tmp/jll_example/ecos"` is the location of our new
-installation.
+installation. Replace these as appropriate for your system.
 
 If you restart Julia after creating the override file, you will see:
 ```julia
@@ -135,3 +132,4 @@ julia> using ECOS_jll
 julia> ECOS_jll.artifact_dir
 "/tmp/jll_example/ecos"
 ```
+Now when we use ECOS it will use our custom binary.
