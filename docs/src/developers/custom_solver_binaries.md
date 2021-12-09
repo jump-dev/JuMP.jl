@@ -133,3 +133,65 @@ julia> ECOS_jll.artifact_dir
 "/tmp/jll_example/ecos"
 ```
 Now when we use ECOS it will use our custom binary.
+
+## Using Cbc with a custom binary
+
+As a second example, we demonstrate how to use
+[Cbc.jl](https://github.com/jump-dev/Cbc.jl) with a custom binary.
+
+First, let's check where `Cbc_jll` is installed:
+```julia
+julia> using Cbc_jll
+
+julia> Cbc_jll.artifact_dir
+"/Users/oscar/.julia/artifacts/e481bc81db5e229ba1f52b2b4bd57484204b1b06"
+
+julia> readdir(Cbc_jll.artifact_dir)
+5-element Vector{String}:
+ "bin"
+ "include"
+ "lib"
+ "logs"
+ "share"
+
+julia> readdir(joinpath(Cbc_jll.artifact_dir, "bin"))
+1-element Vector{String}:
+ "cbc"
+
+julia> readdir(joinpath(Cbc_jll.artifact_dir, "lib"))
+10-element Vector{String}:
+ "libCbc.3.10.5.dylib"
+ "libCbc.3.dylib"
+ "libCbc.dylib"
+ "libCbcSolver.3.10.5.dylib"
+ "libCbcSolver.3.dylib"
+ "libCbcSolver.dylib"
+ "libOsiCbc.3.10.5.dylib"
+ "libOsiCbc.3.dylib"
+ "libOsiCbc.dylib"
+ "pkgconfig"
+```
+
+Next, we need to compile Cbc. Cbc can be difficult to compile (it has a lot of
+dependencies), but for macOS users there is a homebrew recipe:
+```
+(base) oscar@Oscars-MBP jll_example % brew install cbc
+[ ... lines omitted ... ]
+(base) oscar@Oscars-MBP jll_example % brew list cbc
+/usr/local/Cellar/cbc/2.10.5/bin/cbc
+/usr/local/Cellar/cbc/2.10.5/include/cbc/ (76 files)
+/usr/local/Cellar/cbc/2.10.5/lib/libCbc.3.10.5.dylib
+/usr/local/Cellar/cbc/2.10.5/lib/libCbcSolver.3.10.5.dylib
+/usr/local/Cellar/cbc/2.10.5/lib/libOsiCbc.3.10.5.dylib
+/usr/local/Cellar/cbc/2.10.5/lib/pkgconfig/ (2 files)
+/usr/local/Cellar/cbc/2.10.5/lib/ (6 other files)
+/usr/local/Cellar/cbc/2.10.5/share/cbc/ (59 files)
+/usr/local/Cellar/cbc/2.10.5/share/coin/ (4 files)
+```
+
+To use the homebrew install as our custom binary we add the following to
+`~/.julia/artifacts/Overrides.toml`:
+```julia
+# Override for Cbc_jll
+e481bc81db5e229ba1f52b2b4bd57484204b1b06 = "/usr/local/Cellar/cbc/2.10.5"
+```
