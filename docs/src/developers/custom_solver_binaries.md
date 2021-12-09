@@ -142,7 +142,7 @@ using Preferences
 set_preference!(
     "LocalPreferences.toml",
     "ECOS_jll",
-    "libecos_path" => "/tmp/jll_example/libecos"
+    "libecos_path" => "/tmp/jll_example/ecos/lib/libecos"
 )
 ```
 
