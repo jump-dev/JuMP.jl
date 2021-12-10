@@ -140,7 +140,7 @@ Once you know the name of the variable to override (the one that ends in
 to specify a new path:
 ```julia
 using Preferences
-set_preference!(
+set_preferences!(
     "LocalPreferences.toml",
     "ECOS_jll",
     "libecos_path" => "/tmp/jll_example/ecos/lib/libecos"
