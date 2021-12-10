@@ -436,7 +436,7 @@ function _nl_subexpression_string(print_mode, model::Model)
     return strings
 end
 
-anonymous_name(::Any, x::AbstractVariableRef) = "noname"
+anonymous_name(::Any, x::AbstractVariableRef) = "anon"
 
 anonymous_name(::Type{REPLMode}, x::VariableRef) = "_[$(index(x).value)]"
 

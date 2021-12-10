@@ -362,8 +362,8 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
             io_test(REPLMode, x, "_[1]")
             io_test(IJuliaMode, x, "{\\_}_{1}")
         else
-            io_test(REPLMode, x, "noname")
-            io_test(IJuliaMode, x, "noname")
+            io_test(REPLMode, x, "anon")
+            io_test(IJuliaMode, x, "anon")
         end
 
         @variable(m, z[1:2, 3:5])
