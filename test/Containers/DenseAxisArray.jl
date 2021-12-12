@@ -358,9 +358,6 @@ And data, a 0-dimensional $(Array{Int,0}):
             "indices are restricted for indexing into and iterating over " *
             "multidimensional arrays.",
         )
-        @test_throws(
-            err,
-            DenseAxisArray([1.1 2.2], S),
-        )
+        @test_throws(err, DenseAxisArray([1.1, 2.2], S))
     end
 end
