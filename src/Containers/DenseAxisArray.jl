@@ -148,9 +148,18 @@ function Base.get(
     return get(x.data, key[1] => key[2], default)
 end
 
-_abstract_vector(x::AbstractVector) = x
+function _abstract_vector(x::AbstractVector)
+    if eltype(x) <: CartesianIndex
+        error(
+            "Unsupported index type `CartesianIndex` in axis: $x. Cartesian " *
+            "indices are restricted for indexing into and iterating over " *
+            "multidimensional arrays.",
+        )
+    end
+    return x
+end
 
-_abstract_vector(x) = [a for a in x]
+_abstract_vector(x) = _abstract_vector([a for a in x])
 
 function _abstract_vector(x::Number)
     @warn(
@@ -158,7 +167,7 @@ function _abstract_vector(x::Number)
         "ignore this warning. To explicitly pass the axis with one " *
         "element, pass `[$x]` instead of `$x`.",
     )
-    return [x]
+    return _abstract_vector([x])
 end
 
 """
