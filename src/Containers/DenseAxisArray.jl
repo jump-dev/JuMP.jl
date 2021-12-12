@@ -159,7 +159,7 @@ function _abstract_vector(x::AbstractVector)
     return x
 end
 
-_abstract_vector(x) = _abstract_vector([a for a in x])
+_abstract_vector(x) = _abstract_vector(vec([a for a in x]))
 
 function _abstract_vector(x::Number)
     @warn(
