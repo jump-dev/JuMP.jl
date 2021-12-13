@@ -436,6 +436,14 @@ function _nl_subexpression_string(print_mode, model::Model)
     return strings
 end
 
+anonymous_name(::Any, x::AbstractVariableRef) = "anon"
+
+anonymous_name(::Type{REPLMode}, x::VariableRef) = "_[$(index(x).value)]"
+
+function anonymous_name(::Type{IJuliaMode}, x::VariableRef)
+    return "{\\_}_{$(index(x).value)}"
+end
+
 """
     function_string(
         print_mode::Type{<:JuMP.PrintMode},
@@ -448,7 +456,7 @@ Return a `String` representing the function `func` using print mode
 function function_string(::Type{REPLMode}, v::AbstractVariableRef)
     var_name = name(v)
     if isempty(var_name)
-        return "noname"
+        return anonymous_name(REPLMode, v)
     end
     return var_name
 end
@@ -456,7 +464,7 @@ end
 function function_string(::Type{IJuliaMode}, v::AbstractVariableRef)
     var_name = name(v)
     if isempty(var_name)
-        return "noname"
+        return anonymous_name(IJuliaMode, v)
     end
     # We need to escape latex math characters that appear in the name.
     # However, it's probably impractical to catch everything, so let's just

@@ -212,7 +212,7 @@ Returns the model to which `v` belongs.
 julia> model = Model();
 
 julia> x = @variable(model)
-noname
+_[1]
 
 julia> owner_model(x) === model
 true

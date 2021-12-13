@@ -358,8 +358,13 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
 
         JuMP.set_name(x, "")
         @test JuMP.name(x) == ""
-        io_test(REPLMode, x, "noname")
-        io_test(IJuliaMode, x, "noname")
+        if x isa VariableRef
+            io_test(REPLMode, x, "_[1]")
+            io_test(IJuliaMode, x, "{\\_}_{1}")
+        else
+            io_test(REPLMode, x, "anon")
+            io_test(IJuliaMode, x, "anon")
+        end
 
         @variable(m, z[1:2, 3:5])
         @test JuMP.name(z[1, 3]) == "z[1,3]"
