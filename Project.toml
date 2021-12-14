@@ -28,7 +28,7 @@ MathOptInterface = "0.10.4"
 MutableArithmetics = "0.3"
 NaNMath = "0.3"
 OrderedCollections = "1"
-SpecialFunctions = "0.8, 1"
+SpecialFunctions = "0.8, 1, 2"
 julia = "1"
 
 [extras]
