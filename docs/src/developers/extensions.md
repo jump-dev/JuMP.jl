@@ -342,6 +342,9 @@ Dict{Symbol, Any} with 1 entry:
   :MyModel => 1
 ```
 
+If you define extension data, implement [`copy_extension_data`](@ref)
+to support [`copy_model`](@ref).
+
 ## Defining new JuMP models
 
 If extending individual calls to [`@variable`](@ref) and [`@constraint`](@ref)
