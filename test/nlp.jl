@@ -217,6 +217,14 @@ end
     # they use different pathways). It would be better to check the NodeData
     # representation directly.
 
+    @testset "all_nl_constraints" begin
+        model = Model()
+        @variable(model, x)
+        @NLconstraint(model, c1, x^2 <= 1)
+        c2 = @NLconstraint(model, [i=1:2], x^i >= -1)
+        @test all_nl_constraints(model) = [c1; c2]
+    end
+
     @testset "Parse + (binary)" begin
         m = Model()
         @variable(m, x)
