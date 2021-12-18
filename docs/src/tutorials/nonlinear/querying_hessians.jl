@@ -20,10 +20,34 @@
 
 # # Computing Hessians
 
+# The purpose of this tutorial is to demonstrate how to extract the hessian of a
+# nonlinear program, evaluated at the optimal solution.
+
+# !!! info
+#     This is an advanced tutorial that interacts with the low-level nonlinear
+#     interface of MathOptInterface.
+#
+#     By default, JuMP exports the `MOI` symbol as an alias for the
+#     MathOptInterface.jl package. We recommend making this more explicit in
+#     your code by adding the following lines:
+#     ```julia
+#     import MathOptInterface
+#     const MOI = MathOptInterface
+#     ```
+
+# This tutorial uses the following packages:
+
 using JuMP
 import Ipopt
 import Random
 import SparseArrays
+
+# ## The basic model
+
+# To demonstrate how to interact with the lower-level nonlinear interface, we
+# need an example model. The exact model isn't important; we use the model from
+# the [Maximum likelihood estimation](@ref) tutorial, with some additional
+# constraints to demonstrate various features of the lower-level interface.
 
 n = 1_000
 Random.seed!(1234)
@@ -42,7 +66,10 @@ nlp_ref = @NLconstraint(model, (σ + μ)^2 >= 0)
 )
 optimize!(model)
 
-# To access
+# ## Initializing the NLPEvaluator
+
+# JuMP stores all information relating to the nonlinear portions of the model in
+# a [`NLPEvaluator`](@ref) struct:
 
 d = NLPEvaluator(model)
 
@@ -98,17 +125,36 @@ x = all_variables(model)
 
 x_optimal = value.(x)
 
-# The next step is a litte trickier.
+# Next, we need the optimal dual solution associated with the nonlinear
+# constraints:
 
-nlp_cons = all_nl_constraints(model)
-y_optimal = dual.(nlp_cons)
+y_optimal = dual.(all_nl_constraints(model))
 
 # Now we can compute the Hessian at the optimal primal-dual point:
 
 MOI.eval_hessian_lagrangian(d, V, x_optimal, 1.0, y_optimal)
 H = SparseArrays.sparse(I, J, V, n, n)
 
-# However, this Hessian only accounts for the objective and constraints entered
+# However, this Hessian isn't quite right because it isn't symmetric. We can fix
+# this by filling in the appropriate off-diagonal terms:
+
+function fill_off_diagonal(H)
+    ret = H + H'
+    row_vals = SparseArrays.rowvals(ret)
+    non_zeros = SparseArrays.nonzeros(ret)
+    for col in 1:size(ret, 2)
+        for i in SparseArrays.nzrange(ret, col)
+            if col == row_vals[i]
+                non_zeros[i] /= 2
+            end
+        end
+    end
+    return ret
+end
+
+fill_off_diagonal(H)
+
+# Moreover, this Hessian only accounts for the objective and constraints entered
 # using [`@NLobjective`](@ref) and [`@NLconstraint`](@ref). If we want to take
 # quadratic objectives and constraints written using [`@objective`](@ref) or
 # [`@constraint`](@ref) into account, we'll need to handle them separately.
@@ -209,7 +255,7 @@ function optimal_hessian(model)
     if f_obj isa QuadExpr
         add_to_hessian(H, f_obj, 1.0)
     end
-    return H
+    return fill_off_diagonal(H)
 end
 
 optimal_hessian(model)
