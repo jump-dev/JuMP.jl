@@ -179,6 +179,18 @@ end
 const NonlinearConstraintRef = ConstraintRef{Model,NonlinearConstraintIndex}
 
 """
+    all_nl_constraints(model::Model)
+
+Return a vector of all nonlinear constraint references in the model in the
+order they were added to the model.
+"""
+function all_nl_constraints(model::Model)
+    return map(1:num_nl_constraints(model)) do i
+        return ConstraintRef(model, NonlinearConstraintIndex(i), ScalarShape())
+    end
+end
+
+"""
     is_valid(model::Model, c::NonlinearConstraintRef)
 
 Return `true` if `c` refers to a valid nonlinear constraint in `model`.

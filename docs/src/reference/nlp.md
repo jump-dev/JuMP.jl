@@ -11,6 +11,7 @@ manual.
 NonlinearConstraintIndex
 num_nl_constraints
 add_NL_constraint
+all_nl_constraints
 ```
 
 ## [Expressions](@id ref_nl_expressions)
