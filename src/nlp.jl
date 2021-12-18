@@ -181,7 +181,8 @@ const NonlinearConstraintRef = ConstraintRef{Model,NonlinearConstraintIndex}
 """
     all_nl_constraints(model::Model)
 
-Return a vector of nonlinear constraint references in the correct order.
+Return a vector of all nonlinear constraint references in the model in the
+correct order.
 """
 function all_nl_constraints(model::Model)
     return map(1:num_nl_constraints(model)) do i
