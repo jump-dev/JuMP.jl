@@ -34,6 +34,7 @@ import Combinatorics
 import GLPK
 import LinearAlgebra
 import Random
+import Plots
 
 
 # # Mathematical Formulation
@@ -116,14 +117,14 @@ tsp = Model(GLPK.Optimizer)
 
 
 function subtour_elimination(cb_data)
-    # We only checkfor subtours when we encounter integer-feasible solutions
+    ## We only checkfor subtours when we encounter integer-feasible solutions
     status = callback_node_status(cb_data, tsp)
     if status == MOI.CALLBACK_NODE_STATUS_INTEGER
 
-        # Load the callback data at the current node  
+        ## Load the callback data at the current node  
         x_val = callback_value.(Ref(cb_data), x)
 
-        # Write the current edges in a tuple list
+        ## Write the current edges in a tuple list
         edges = Tuple{Int,Int}[]
         for i = 1:n
             for j = 1:n
@@ -133,10 +134,10 @@ function subtour_elimination(cb_data)
             end
         end
 
-        # Get the shortest cycle from the list of edges
+        ## Get the shortest cycle from the list of edges
         cycle = subtour(edges)
 
-        # A subtour contains at least 2 locations and at most (n-1)
+        ## A subtour contains at least 2 locations and at most (n-1)
         if length(cycle) > 1 && length(cycle) < n
             subtour_edges = subtour_edges_helper(cycle)
             con = @build_constraint(sum(x[e[1], e[2]] for e in subtour_edges) <= length(cycle) - 1)
@@ -161,41 +162,41 @@ end
 
 
 function subtour(edges)
-    # A list of all unvisited vertices
+    ## A list of all unvisited vertices
     unvisited = Set(collect(1:n))
 
-    # Placeholder for the shortest subtour
+    ## Placeholder for the shortest subtour
     cycle = collect(1:n)
 
     while !(isempty(unvisited))
         thiscycle = []
         neighbors = unvisited
         while !(isempty(neighbors))
-            # Get the first item         
+            ## Get the first item         
             current = pop!(neighbors)
 
-            # Add it to the current cycle and remove it from unvisited
+            ## Add it to the current cycle and remove it from unvisited
             push!(thiscycle, current)
 
-            # If we are in the first iteration of the inner while loop,
-            # then the previous pop! already removed `current'
+            ## If we are in the first iteration of the inner while loop,
+            ## then the previous pop! already removed `current'
             if length(thiscycle) > 1
                 pop!(unvisited, current)
             end
 
-            # Get the index of all edges to which the current node is connected
+            ## Get the index of all edges to which the current node is connected
             index = findall(edges -> edges[1] == current, edges)
 
-            # Based on the index, add the neighbors
+            ## Based on the index, add the neighbors
             neighbors = []
             for i in index
                 append!(neighbors, edges[i][2])
             end
 
-            # We only consider neighbors that have not yet been visited
+            ## We only consider neighbors that have not yet been visited
             neighbors = intersect(neighbors, unvisited)
         end
-        # We always store the shortest cycle as subtour
+        ## We always store the shortest cycle as subtour
         if length(thiscycle) < length(cycle)
             cycle = thiscycle
         end
@@ -222,18 +223,15 @@ optimize!(tsp)
 
 # As a quick sanity check, we might visualize the optimal tour to verify that no subtour is present.
 
-
-using Plots
-
-plt = plot()
+plt = Plots.plot()
 for i = 1:n
     for j = i:n
         if (value.(x[i, j]) > 0.8)
-            plot!([X[i], X[j]], [Y[i], Y[j]], legend = false, linecolor = :black)
+            Plots.plot!([X[i], X[j]], [Y[i], Y[j]], legend = false, linecolor = :black)
         end
     end
 end
-plot!()
+Plots.plot!()
 
 
 # # References
