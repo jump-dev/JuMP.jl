@@ -30,7 +30,7 @@
 
 
 using JuMP
-using Combinatorics
+import Combinatorics
 # using Gurobi
 using GLPK
 import LinearAlgebra
