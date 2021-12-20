@@ -41,7 +41,7 @@ import Random
 # Assume that we are given a complete graph $\mathcal{G}(V,E)$ where $V$ is the set of vertices and $E$ is the set of edges. 
 # For each pair of vertices $i, j \in V, i \neq j$ the edge $(i,j) \in E$ is associated with a distance (or weight) $d_{ij} \in \mathbb{R}^+$.
 # For the purpose of this Notebook, we assume the problem to be symmetric, i.e., $d_{ij} = d_{ji} \, \forall i,j \in V$.
-# In the Traveling Salesperson Problem, we are tasked with finding a tour with minimal length that visits every vertex exactly once and then returns to the point of origin, i.e., a hamiltonian cycle with minimal weight.
+# In the Traveling Salesperson Problem, we are tasked with finding a tour with minimal length that visits every vertex exactly once and then returns to the point of origin, i.e., a *hamiltonian cycle* with minimal weight.
 # 
 # In order to model the problem, we introduce a binary variable $x_{ij} \in \{0,1\} \; \forall i, j \in V$ that indicates if edge $(i,j)$ is part of the tour or not.
 # Using these variables, the Traveling Salesperson Problem can be modeled through the following Integer Linear Programming Formulation:
@@ -108,7 +108,7 @@ tsp = Model(GLPK.Optimizer)
 # $$ \sum_{i \in S} \sum_{j \in S, j \neq i} x_{ij} \leq \vert S \vert - 1 \quad \forall S \subset V $$
 # 
 # In general, we would require an exponential number of subtour eliminations constraints as $\vert V \vert$ increases.
-# Therefore, in this model, we will add these constraints as **lazy constraints** , i.e., not before needed and only when necessary.
+# Therefore, in this model, we will add these constraints as **lazy constraints**, i.e., not before needed and only when necessary.
 # 
 # We do this through the callback **subtour_elimination()** below, which is only run whenever we encounter an integer-feasible solution.
 # Based on the edges that are currently in the solution, we identify the shortest cycle through the function **subtour()**.
@@ -121,12 +121,7 @@ function subtour_elimination(cb_data)
     if status == MOI.CALLBACK_NODE_STATUS_INTEGER
 
         # Load the callback data at the current node  
-        x_val = zeros(n, n)
-        for i = 1:n
-            for j = 1:n
-                x_val[i, j] = callback_value(cb_data, x[i, j])
-            end
-        end
+        x_val = callback_value.(Ref(cb_data), x)
 
         # Write the current edges in a tuple list
         edges = Tuple{Int,Int}[]
@@ -228,7 +223,7 @@ optimize!(tsp)
 # As a quick sanity check, we might visualize the optimal tour to verify that no subtour is present.
 
 
-import Plots
+using Plots
 
 plt = plot()
 for i = 1:n
