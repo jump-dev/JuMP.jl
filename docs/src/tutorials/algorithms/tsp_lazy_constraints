@@ -259,7 +259,7 @@ optimize!(tsp)
 # As a quick sanity check, we might visualize the optimal tour to verify that no subtour is present.
 
 
-using Plots
+import Plots
 
 plot()
 for i = 1:n
