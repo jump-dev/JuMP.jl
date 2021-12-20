@@ -25,7 +25,7 @@
 # **Originally Contributed by**: Daniel Schermer
 # 
 # This notebook describes how to implement the Traveling Salesperson Problem in JuMP using lazy constraints that dynamically separate subtours.
-# To be more precise, we use lazy constraints to cut off feasible subtours only when necessary and not before needed.
+# To be more precise, we use lazy constraints to cut off infeasible subtours only when necessary and not before needed.
 # The model has been tested with Julia Version 1.7.0, JuMP.jl Version 0.22.1, and GLPK Version 0.15.2.
 
 
