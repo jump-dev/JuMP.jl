@@ -26,12 +26,11 @@
 # 
 # This notebook describes how to implement the Traveling Salesperson Problem in JuMP using lazy constraints that dynamically separate subtours.
 # To be more precise, we use lazy constraints to cut off feasible subtours only when necessary and not before needed.
-# The model has been tested with Julia Version 1.7.0, JuMP.jl Version 0.22.1, Gurobi.jl Version 0.10.1 (Solver Version 9.5), and GLPK Version 0.15.2.
+# The model has been tested with Julia Version 1.7.0, JuMP.jl Version 0.22.1, and GLPK Version 0.15.2.
 
 
 using JuMP
 import Combinatorics
-# using Gurobi
 import GLPK
 import LinearAlgebra
 import Random
@@ -44,7 +43,7 @@ import Random
 # For the purpose of this Notebook, we assume the problem to be symmetric, i.e., $d_{ij} = d_{ji} \, \forall i,j \in V$.
 # In the Traveling Salesperson Problem, we are tasked with finding a tour with minimal length that visits every vertex exactly once and then returns to the point of origin, i.e., a hamiltonian cycle with minimal weight.
 # 
-# In order to model the problem, we introduce a binary variable $x_{ij} \in \{0,1\} \; \forall i, j \in V$ that indicates if item edge $(i,j)$ is part of the tour or not.
+# In order to model the problem, we introduce a binary variable $x_{ij} \in \{0,1\} \; \forall i, j \in V$ that indicates if edge $(i,j)$ is part of the tour or not.
 # Using these variables, the Traveling Salesperson Problem can be modeled through the following Integer Linear Programming Formulation:
 # 
 # ## Objective Function
@@ -77,7 +76,6 @@ n = 25
 X = 100 * rand(n)
 Y = 100 * rand(n)
 
-
 # Thus, the distance (weight) of each edge is defined as follows
 d = zeros(n, n)
 for i = 1:n
@@ -87,11 +85,6 @@ for i = 1:n
 end
 
 # Initialize the model object
-
-# Gurobi
-# tsp = Model(Gurobi.Optimizer)
-
-# GLPK
 tsp = Model(GLPK.Optimizer)
 
 # Initialize the binary decision variables
@@ -107,47 +100,33 @@ tsp = Model(GLPK.Optimizer)
 
 
 # ## Subtour Elimination
-# A major difficulty of the Traveling Salesperson Problem arises from the fact that we need to prevent *subtours*, i.e., several distinct Hamiltonian paths existing on distinct subgraphs of the graph $G$.
+# A major difficulty of the Traveling Salesperson Problem arises from the fact that we need to prevent *subtours*, i.e., several distinct Hamiltonian cycles existing on distinct subgraphs of $G$.
 # Note that the previous parts of the model (listed above) *do not* guarantee that the solution will be free of subtours.
 # 
-# To this end, by $S$ we label a subset of vertices. Then, for each proper subset $S \subset V$, the following constraints guarantee that no subtour may occur (due to the right-hand side).
+# To this end, by $S$ we label a subset of vertices. Then, for each proper subset $S \subset V$, the following constraints guarantee that no subtour may occur.
 # 
 # $$ \sum_{i \in S} \sum_{j \in S, j \neq i} x_{ij} \leq \vert S \vert - 1 \quad \forall S \subset V $$
 # 
-# These constraints have the disadvantage that we require exponentially many of them as $\vert V \vert$ increases.
-# Therefore, we will add these constraints as **lazy constraints** , i.e., not before needed and only when necessary.
+# In general, we would require an exponential number of subtour eliminations constraints as $\vert V \vert$ increases.
+# Therefore, in this model, we will add these constraints as **lazy constraints** , i.e., not before needed and only when necessary.
 # 
 # We do this through the callback **subtour_elimination()** below, which is only run whenever we encounter an integer-feasible solution.
 # Based on the edges that are currently in the solution, we identify the shortest cycle through the function **subtour()**.
-# Once the subtour has been identified, the constraint above is added to the model.
+# Once the subtour has been identified, a corresponding subtour elimination constraint is added to the model.
 
 
 function subtour_elimination(cb_data)
-
     # We only checkfor subtours when we encounter integer-feasible solutions
-
-    # Gurobi
-    #if cb_where == GRB_CB_MIPSOL #
-
-    # GPLK
     status = callback_node_status(cb_data, tsp)
     if status == MOI.CALLBACK_NODE_STATUS_INTEGER
 
-        # Load the callback data at the current node
-
-        # Gurobi
-        #Gurobi.load_callback_variable_primal(cb_data, cb_where)
-        # x_val = callback_value(cb_data, x)        
-
-        # GLPK
+        # Load the callback data at the current node  
         x_val = zeros(n, n)
         for i = 1:n
             for j = 1:n
                 x_val[i, j] = callback_value(cb_data, x[i, j])
             end
         end
-
-
 
         # Write the current edges in a tuple list
         edges = Tuple{Int,Int}[]
@@ -164,20 +143,15 @@ function subtour_elimination(cb_data)
 
         # A subtour contains at least 2 locations and at most (n-1)
         if length(cycle) > 1 && length(cycle) < n
-
             subtour_edges = subtour_edges_helper(cycle)
-            con = @build_constraint(sum(x[c[1], c[2]] for c in subtour_edges) <= length(cycle) - 1)
+            con = @build_constraint(sum(x[e[1], e[2]] for e in subtour_edges) <= length(cycle) - 1)
             MOI.submit(tsp, MOI.LazyConstraint(cb_data), con)
-
         end
-
-
     end
 end
 
 # Helper for constraint building
 function subtour_edges_helper(cycle)
-
     subtour_edges = []
     for i = 1:length(cycle)-1
         push!(subtour_edges, [cycle[i], cycle[i+1]])
@@ -223,9 +197,8 @@ function subtour(edges)
                 append!(neighbors, edges[i][2])
             end
 
-            # Only consider neighbors that have not yet been visited
+            # We only consider neighbors that have not yet been visited
             neighbors = intersect(neighbors, unvisited)
-
         end
         # We always store the shortest cycle as subtour
         if length(thiscycle) < length(cycle)
@@ -241,17 +214,13 @@ end
 
 
 # Lazy constraints need to be set; otherwise, subtours might exist.
-
-# Gurobi
-#MOI.set(tsp, MOI.RawOptimizerAttribute("LazyConstraints"), 1)
-#MOI.set(tsp, Gurobi.CallbackFunction(), subtour_elimination)
-
-# GPLK - when using GPLK in conjunction with callbacks, the simple rounding heuristic needs to be turned off.
-# Otherwise, the final solution will be infeasible, because the lazy constraint callback is not involved.
-# See this discussion: https://discourse.julialang.org/t/solution-foun-by-heuristic-glpk/38772/7
 MOI.set(tsp, MOI.LazyConstraintCallback(), subtour_elimination)
-set_optimizer_attribute(tsp, "msg_lev", GLPK.GLP_MSG_ON)
+
+# CAREFUL: When using GPLK in conjunction with callbacks, the simple rounding heuristic needs to be turned off.
+# Otherwise, the final solution will be infeasible, because the lazy constraint callback is not involved.
+# For more details, refer to: https://discourse.julialang.org/t/solution-foun-by-heuristic-glpk/38772/7
 set_optimizer_attribute(tsp, "sr_heur", GLPK.GLP_OFF)
+set_optimizer_attribute(tsp, "msg_lev", GLPK.GLP_MSG_ON)
 
 optimize!(tsp)
 
@@ -261,7 +230,7 @@ optimize!(tsp)
 
 import Plots
 
-plot()
+plt = plot()
 for i = 1:n
     for j = i:n
         if (value.(x[i, j]) > 0.8)
@@ -269,7 +238,6 @@ for i = 1:n
         end
     end
 end
-
 plot!()
 
 
@@ -282,5 +250,3 @@ plot!()
 # ```
 # 
 # 1. Gurobi Optimization, LLC. Gurobi Optimizer Reference Manual. (2021).
-
-
