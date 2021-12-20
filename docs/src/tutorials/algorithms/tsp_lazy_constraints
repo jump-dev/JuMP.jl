@@ -32,7 +32,7 @@
 using JuMP
 import Combinatorics
 # using Gurobi
-using GLPK
+import GLPK
 import LinearAlgebra
 import Random
 
