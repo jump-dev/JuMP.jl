@@ -19,13 +19,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.     
 
-# ## [Traveling Salesperson Problem (via callbacks)](@id tsp_lazy)
+# # [Traveling Salesperson Problem (via callbacks)](@id tsp_lazy)
 # 
 # **Originally Contributed by**: Daniel Schermer
 # 
 # This notebook describes how to implement the Traveling Salesperson Problem in JuMP using lazy constraints that dynamically separate subtours.
 # To be more precise, we use lazy constraints to cut off infeasible subtours only when necessary and not before needed.
-# The model has been tested with Julia Version 1.7.0, JuMP.jl Version 0.22.1, and GLPK Version 0.15.2.
 
 using JuMP
 import GLPK
@@ -33,58 +32,68 @@ import LinearAlgebra
 import Random
 import Plots
 
-# # Mathematical Formulation
+# # [Mathematical Formulation](@id tsp_model)
 # 
-# Assume that we are given a complete graph $\mathcal{G}(V,E)$ where $V$ is the set of vertices and $E$ is the set of edges. 
-# For each pair of vertices $i, j \in V, i \neq j$ the edge $(i,j) \in E$ is associated with a distance (or weight) $d_{ij} \in \mathbb{R}^+$.
-# For the purpose of this Notebook, we assume the problem to be symmetric, i.e., $d_{ij} = d_{ji} \, \forall i,j \in V$.
+# Assume that we are given a complete graph $\mathcal{G}(V,E)$ where $V$ is the set of vertices (or cities) and $E$ is the set of edges (or roads). 
+# For each pair of vertices $i, j \in V, i \neq j$ the edge $(i,j) \in E$ is associated with a weight (or distance) $d_{ij} \in \mathbb{R}^+$.
+# For this Notebook, we assume the problem to be symmetric, i.e., $d_{ij} = d_{ji} \, \forall i,j \in V$.
+#
 # In the Traveling Salesperson Problem, we are tasked with finding a tour with minimal length that visits every vertex exactly once and then returns to the point of origin, i.e., a *hamiltonian cycle* with minimal weight.
 # 
 # In order to model the problem, we introduce a binary variable $x_{ij} \in \{0,1\} \; \forall i, j \in V$ that indicates if edge $(i,j)$ is part of the tour or not.
-# Using these variables, the Traveling Salesperson Problem can be modeled through the following Integer Linear Programming Formulation:
+# Using these variables, the Traveling Salesperson Problem can be modeled through the following Integer Linear Programming Formulation.
 # 
-# ## Objective Function
+# ## [Objective Function](@id tsp_objective)
 # The objective consists in minimizing the weighted edges (due to the assumed symmetry, the second sum only contains $j>i$).
-# $$\text{min } \sum_{i \in V}  \sum_{j \in V, j > i} d_{ij} x_{ij}$$
+#
+# ```math
+# \text{min } \sum_{i \in V}  \sum_{j \in V, j > i} d_{ij} x_{ij}
+# ```
 # 
-# ## Constraints
+# ## [Constraints](@id tsp_constraints)
 # For the formulation of our problem, we need four classes of constraints which we will discuss in what follows.
-# 
-# ### Symmetry
 # Due to the presumed symmetry, the following constraints must hold.
+#
+# ```math
+# x_{ij} = x_{ji} \quad \forall (i,j) \in V
+# ```
+#
+# For each vertex $i$, exactly two edges must be selected that connect it to other vertices $j$ in the graph $G$.
+#
+# ```math
+# \sum_{i,j \in V} x_{ij} = 2 \quad \forall i \in V
+# ```
 # 
-# $$ x_{ij} = x_{ji} \quad \forall (i,j) \in V $$
-# 
-# ### Degree Constraints
-# For each vertex $i$, exactly two edges must be selected that connect it to other vertices $j$.
-# $$ \sum_{i,j \in V} x_{ij} = 2 \quad \forall i \in V $$
-# 
-# ### Loops
-# We do not permit loops.
-# $$ x_{ii} = 0 \quad \forall i \in V $$
+# We do not permit loops to occur.
+#
+# ```math
+# x_{ii} = 0 \quad \forall i \in V
+# ```
+#
+# The number of vertices can be adjusted here.
+# The vertices are assumed to be randomly distributed in the Euclidean space;
+# thus, the weight (distance) of each edge is defined as follows.
 
 Random.seed!(1)
-
-# Number of vertices
 n = 25
-
-# The vertices are assumed to be randomly distributed in the Euclidean space
 X = 100 * rand(n)
 Y = 100 * rand(n)
-
-# Thus, the distance (weight) of each edge is defined as follows
 d = zeros(n, n)
+
 for i in 1:n
     for j in 1:n
         d[i, j] = LinearAlgebra.norm([X[i] - X[j], Y[i] - Y[j]], 2)
     end
 end
 
-# Initialize the model object
+# For the JuMP model, we first initialize the model object.
+# Then, we create the the binary decision variables and add the objective function and constraints (as introduced above).
+
 tsp = Model(GLPK.Optimizer)
 
-# Initialize the binary decision variables
 @variable(tsp, x[i in 1:n, j in 1:n], Bin)
+
+@objective(tsp, Min, sum(x[i, j] * d[i, j] for i in 1:n for j in 1:n))
 
 @constraint(tsp, symmetry[i in 1:n, j in 1:n], x[i, j] == x[j, i]);
 
@@ -92,22 +101,25 @@ tsp = Model(GLPK.Optimizer)
 
 @constraint(tsp, no_loop[i in 1:n], x[i, i] == 0);
 
-@objective(tsp, Min, sum(x[i, j] * d[i, j] for i in 1:n for j in 1:n))
-
-# ## Subtour Elimination
-# A major difficulty of the Traveling Salesperson Problem arises from the fact that we need to prevent *subtours*, i.e., several distinct Hamiltonian cycles existing on distinct subgraphs of $G$.
+# ## [Subtour Elimination](@id tsp_sec)
+# A major difficulty of the Traveling Salesperson Problem arises from the fact that we need to prevent *subtours*, i.e., several distinct Hamiltonian cycles existing on subgraphs of $G$.
 # Note that the previous parts of the model (listed above) *do not* guarantee that the solution will be free of subtours.
 # 
 # To this end, by $S$ we label a subset of vertices. Then, for each proper subset $S \subset V$, the following constraints guarantee that no subtour may occur.
-# 
-# $$ \sum_{i \in S} \sum_{j \in S, j \neq i} x_{ij} \leq \vert S \vert - 1 \quad \forall S \subset V $$
-# 
-# In general, we would require an exponential number of subtour eliminations constraints as $\vert V \vert$ increases.
+#
+# ```math
+# \sum_{i \in S} \sum_{j \in S, j \neq i} x_{ij} \leq \vert S \vert - 1 \quad \forall S \subset V
+# ```
+#
+# In general, we would require an exponential number of these subtour eliminations constraints as $\vert V \vert$ increases.
 # Therefore, in this model, we will add these constraints as **lazy constraints**, i.e., not before needed and only when necessary.
 # 
-# We do this through the callback **subtour_elimination()** below, which is only run whenever we encounter an integer-feasible solution.
-# Based on the edges that are currently in the solution, we identify the shortest cycle through the function **subtour()**.
+# We do this through the callback `subtour_elimination()` below, which is only run whenever we encounter an integer-feasible solution.
+# Based on the edges that are currently in the solution, we identify the shortest cycle through the function `subtour()`.
 # Once the subtour has been identified, a corresponding subtour elimination constraint is added to the model.
+#
+# Note that, in principle, it would also be feasible to add all subtours (instead of just the shortest one) to the model.
+# However, preventing just the shortest cycle is often sufficient for breaking other subtours and will keep the model size smaller.
 
 function subtour_elimination(cb_data)
     ## We only checkfor subtours when we encounter integer-feasible solutions
@@ -141,7 +153,7 @@ function subtour_elimination(cb_data)
     end
 end
 
-# Helper for constraint building
+# This helper function is used for constraint building above.
 function subtour_edges_helper(cycle)
     subtour_edges = []
     for i in 1:length(cycle)-1
@@ -151,8 +163,8 @@ function subtour_edges_helper(cycle)
     return subtour_edges
 end
 
-# Given a list of edges, the function **subtour()**, is programmed to identify the shortest subtour as follows.
-# Note that the resulting cycle is passed back to **subtour_elimination()**.
+# Given a list of edges, the function `subtour()`, is programmed to identify the shortest subtour as follows.
+# Note that the resulting cycle is passed back to `subtour_elimination()`.
 
 function subtour(edges)
     ## A list of all unvisited vertices
@@ -199,13 +211,14 @@ end
 
 # All that is left to do is to run the model.
 # To do this, we need to make sure that **LazyConstraints** are enabled and that the proper **Callback** is passed.
+# It is easy to verify that the final solution consists of several distinct subtours, when commenting the following line.
 
-# Lazy constraints need to be set; otherwise, subtours might exist.
 MOI.set(tsp, MOI.LazyConstraintCallback(), subtour_elimination)
 
-# CAREFUL: When using GPLK in conjunction with callbacks, the simple rounding heuristic needs to be turned off.
+# **CAREFUL**: When using GPLK in conjunction with callbacks, the simple rounding heuristic (`sr_heur`) needs to be turned *off*.
 # Otherwise, the final solution will be infeasible, because the lazy constraint callback is not involved.
-# For more details, refer to: https://discourse.julialang.org/t/solution-foun-by-heuristic-glpk/38772/7
+#
+# For more details, refer to: [https://discourse.julialang.org/t/solution-foun-by-heuristic-glpk/38772](https://discourse.julialang.org/t/solution-foun-by-heuristic-glpk/38772).
 set_optimizer_attribute(tsp, "sr_heur", GLPK.GLP_OFF)
 set_optimizer_attribute(tsp, "msg_lev", GLPK.GLP_MSG_ON)
 
