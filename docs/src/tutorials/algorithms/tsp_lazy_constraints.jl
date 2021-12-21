@@ -19,7 +19,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.     
 
-
 # ## [Traveling Salesperson Problem (via callbacks)](@id tsp_lazy)
 # 
 # **Originally Contributed by**: Daniel Schermer
@@ -28,13 +27,11 @@
 # To be more precise, we use lazy constraints to cut off infeasible subtours only when necessary and not before needed.
 # The model has been tested with Julia Version 1.7.0, JuMP.jl Version 0.22.1, and GLPK Version 0.15.2.
 
-
 using JuMP
 import GLPK
 import LinearAlgebra
 import Random
 import Plots
-
 
 # # Mathematical Formulation
 # 
@@ -66,7 +63,6 @@ import Plots
 # We do not permit loops.
 # $$ x_{ii} = 0 \quad \forall i \in V $$
 
-
 Random.seed!(1)
 
 # Number of vertices
@@ -78,8 +74,8 @@ Y = 100 * rand(n)
 
 # Thus, the distance (weight) of each edge is defined as follows
 d = zeros(n, n)
-for i = 1:n
-    for j = 1:n
+for i in 1:n
+    for j in 1:n
         d[i, j] = LinearAlgebra.norm([X[i] - X[j], Y[i] - Y[j]], 2)
     end
 end
@@ -92,12 +88,11 @@ tsp = Model(GLPK.Optimizer)
 
 @constraint(tsp, symmetry[i in 1:n, j in 1:n], x[i, j] == x[j, i]);
 
-@constraint(tsp, two_degree[i in 1:n], sum(x[i, j] for j = 1:n) == 2);
+@constraint(tsp, two_degree[i in 1:n], sum(x[i, j] for j in 1:n) == 2);
 
 @constraint(tsp, no_loop[i in 1:n], x[i, i] == 0);
 
-@objective(tsp, Min, sum(x[i, j] * d[i, j] for i = 1:n for j = 1:n))
-
+@objective(tsp, Min, sum(x[i, j] * d[i, j] for i in 1:n for j in 1:n))
 
 # ## Subtour Elimination
 # A major difficulty of the Traveling Salesperson Problem arises from the fact that we need to prevent *subtours*, i.e., several distinct Hamiltonian cycles existing on distinct subgraphs of $G$.
@@ -114,7 +109,6 @@ tsp = Model(GLPK.Optimizer)
 # Based on the edges that are currently in the solution, we identify the shortest cycle through the function **subtour()**.
 # Once the subtour has been identified, a corresponding subtour elimination constraint is added to the model.
 
-
 function subtour_elimination(cb_data)
     ## We only checkfor subtours when we encounter integer-feasible solutions
     status = callback_node_status(cb_data, tsp)
@@ -125,8 +119,8 @@ function subtour_elimination(cb_data)
 
         ## Write the current edges in a tuple list
         edges = Tuple{Int,Int}[]
-        for i = 1:n
-            for j = 1:n
+        for i in 1:n
+            for j in 1:n
                 if (x_val[i, j] > 0.5)
                     push!(edges, (i, j))
                 end
@@ -139,7 +133,9 @@ function subtour_elimination(cb_data)
         ## A subtour contains at least 2 locations and at most (n-1)
         if length(cycle) > 1 && length(cycle) < n
             subtour_edges = subtour_edges_helper(cycle)
-            con = @build_constraint(sum(x[e[1], e[2]] for e in subtour_edges) <= length(cycle) - 1)
+            con = @build_constraint(
+                sum(x[e[1], e[2]] for e in subtour_edges) <= length(cycle) - 1
+            )
             MOI.submit(tsp, MOI.LazyConstraint(cb_data), con)
         end
     end
@@ -148,17 +144,15 @@ end
 # Helper for constraint building
 function subtour_edges_helper(cycle)
     subtour_edges = []
-    for i = 1:length(cycle)-1
+    for i in 1:length(cycle)-1
         push!(subtour_edges, [cycle[i], cycle[i+1]])
     end
     push!(subtour_edges, [cycle[length(cycle)], cycle[1]])
     return subtour_edges
 end
 
-
 # Given a list of edges, the function **subtour()**, is programmed to identify the shortest subtour as follows.
 # Note that the resulting cycle is passed back to **subtour_elimination()**.
-
 
 function subtour(edges)
     ## A list of all unvisited vertices
@@ -203,10 +197,8 @@ function subtour(edges)
     return cycle
 end
 
-
 # All that is left to do is to run the model.
 # To do this, we need to make sure that **LazyConstraints** are enabled and that the proper **Callback** is passed.
-
 
 # Lazy constraints need to be set; otherwise, subtours might exist.
 MOI.set(tsp, MOI.LazyConstraintCallback(), subtour_elimination)
@@ -219,19 +211,22 @@ set_optimizer_attribute(tsp, "msg_lev", GLPK.GLP_MSG_ON)
 
 optimize!(tsp)
 
-
 # As a quick sanity check, we might visualize the optimal tour to verify that no subtour is present.
 
 plt = Plots.plot()
-for i = 1:n
-    for j = i:n
+for i in 1:n
+    for j in i:n
         if (value.(x[i, j]) > 0.8)
-            Plots.plot!([X[i], X[j]], [Y[i], Y[j]], legend = false, linecolor = :black)
+            Plots.plot!(
+                [X[i], X[j]],
+                [Y[i], Y[j]],
+                legend = false,
+                linecolor = :black,
+            )
         end
     end
 end
 Plots.plot!()
-
 
 # # References
 # 
