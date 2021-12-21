@@ -147,6 +147,7 @@ const _PAGES = [
             "tutorials/algorithms/benders_decomposition.md",
             "tutorials/algorithms/benders_lazy_constraints.md",
             "tutorials/algorithms/cutting_stock_column_generation.md",
+            "tutorials/algorithms/tsp_lazy.md",
         ],
         "Applications" => ["tutorials/applications/power_systems.md"],
     ],
