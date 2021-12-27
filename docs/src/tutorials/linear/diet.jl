@@ -154,5 +154,5 @@ Test.@test primal_status(model) == NO_SOLUTION      #hide
 
 solution_summary(model)
 
-# Uh oh! The exists no feasible solution to our problem. Looks like we're stuck
+# Uh oh! There exists no feasible solution to our problem. Looks like we're stuck
 # eating ice cream for dinner.
