@@ -454,7 +454,7 @@ model = Model(GLPK.Optimizer)
 # !!! tip
 #     Calling [`@objective`](@ref) multiple times will over-write the previous
 #     objective. This can be useful when you want to solve the same problem with
-#     different objectives:
+#     different objectives.
 
 # ## Vectorized syntax
 
