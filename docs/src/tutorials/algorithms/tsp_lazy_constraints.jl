@@ -1,5 +1,4 @@
-
-# Copyright (c) 2019 Arpit Bhatia and contributors                               #src
+# Copyright (c) 2022 Daniel Schermer and contributors                            #src
 #                                                                                #src
 # Permission is hereby granted, free of charge, to any person obtaining a copy   #src
 # of this software and associated documentation files (the "Software"), to deal  #src
@@ -201,9 +200,7 @@ cycle = subtour(selected_edges(x))
 ## Check for cycles, add the subtour elimination constraint,
 ## and optimize until no more cycles exist
 while length(cycle) > 1 && length(cycle) < n
-    S = collect(
-        Iterators.filter(t -> t[1] < t[2], Iterators.product(cycle, cycle)),
-    )
+    S = [(i, j) for (i, j) in Iterators.product(cycle, cycle) if i < j]
     @constraint(tsp, sum(x[t[1], t[2]] for t in S) <= length(cycle) - 1)
     optimize!(tsp)
     global time_iterated += solve_time(tsp)
