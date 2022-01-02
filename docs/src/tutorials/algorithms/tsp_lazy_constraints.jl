@@ -77,8 +77,6 @@ import Plots
 # x_{ii} = 0 \quad \forall i \in V
 # ```
 #
-#
-# ## [Subtour Elimination](@id tsp_sec)
 # A major difficulty of the Traveling Salesperson Problem arises from the fact that we need to prevent *subtours*, i.e., several distinct Hamiltonian cycles existing on subgraphs of $G$.
 # Note that the previous parts of the model (listed above) *do not* guarantee that the solution will be free of subtours.
 # To this end, by $S$ we label a subset of vertices.
