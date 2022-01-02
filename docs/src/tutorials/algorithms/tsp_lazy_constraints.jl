@@ -36,7 +36,7 @@ import Plots
 # 
 # Assume that we are given a complete graph $\mathcal{G}(V,E)$ where $V$ is the set of vertices (or cities) and $E$ is the set of edges (or roads). 
 # For each pair of vertices $i, j \in V, i \neq j$ the edge $(i,j) \in E$ is associated with a weight (or distance) $d_{ij} \in \mathbb{R}^+$.
-# For this Notebook, we assume the problem to be symmetric, i.e., $d_{ij} = d_{ji} \, \forall i,j \in V$.
+# For this tutorial, we assume the problem to be symmetric, i.e., $d_{ij} = d_{ji} \, \forall i,j \in V$.
 
 # In the Traveling Salesperson Problem, we are tasked with finding a tour with minimal length that visits every vertex exactly once and then returns to the point of origin, i.e., a *hamiltonian cycle* with minimal weight.
 # 
