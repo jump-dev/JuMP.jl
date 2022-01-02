@@ -43,7 +43,8 @@ import Plots
 # Using these variables, the Traveling Salesperson Problem can be modeled as the following Integer Linear Programming Formulation.
 # 
 # ## [Objective Function](@id tsp_objective)
-# The objective consists in minimizing the weighted edges (due to the assumed symmetry, the second sum only contains $i<j$).
+
+# The objective is to minimize the length of the tour (due to the assumed symmetry, the second sum only contains $i<j$).
 #
 # ```math
 # \text{min } \sum_{i \in V}  \sum_{j \in V, i < j} d_{ij} x_{ij}
