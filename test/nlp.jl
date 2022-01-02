@@ -184,6 +184,28 @@ function test_multivariate_register_splat_existing()
     @test_throws err @NLexpression(model, ex, f(x...))
 end
 
+function test_multivariate_max()
+    m = Model()
+    @variable(m, x)
+    @NLobjective(m, Min, max(0, x))
+    nlp = NLPEvaluator(m)
+    MOI.initialize(nlp, [:Grad])
+    @test MOI.eval_objective(nlp, [-1.0]) == 0.0
+    @test MOI.eval_objective(nlp, [1.0]) == 1.0
+    return
+end
+
+function test_multivariate_min()
+    m = Model()
+    @variable(m, x)
+    @NLobjective(m, Max, min(0, x))
+    nlp = NLPEvaluator(m)
+    MOI.initialize(nlp, [:Grad])
+    @test MOI.eval_objective(nlp, [-1.0]) == -1.0
+    @test MOI.eval_objective(nlp, [1.0]) == 0.0
+    return
+end
+
 @testset "Auto-register-univariate" begin
     test_univariate_error()
     test_univariate_error_existing()
@@ -203,6 +225,8 @@ end
     test_multivariate_register_warn()
     test_multivariate_register_splat()
     test_multivariate_register_splat_existing()
+    test_multivariate_max()
+    test_multivariate_min()
 end
 
 @testset "Nonlinear" begin
