@@ -102,7 +102,6 @@ end
 
 tsp = Model(GLPK.Optimizer);
 set_optimizer_attribute(tsp, "sr_heur", GLPK.GLP_OFF)
-## set_optimizer_attribute(tsp, "msg_lev", GLPK.GLP_MSG_ON)
 
 @variable(tsp, x[i in 1:n, j in 1:n], Bin);
 
