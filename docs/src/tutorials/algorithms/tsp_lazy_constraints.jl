@@ -77,6 +77,25 @@ import Plots
 # x_{ii} = 0 \quad \forall i \in V
 # ```
 #
+#
+# ## [Subtour Elimination](@id tsp_sec)
+# A major difficulty of the Traveling Salesperson Problem arises from the fact that we need to prevent *subtours*, i.e., several distinct Hamiltonian cycles existing on subgraphs of $G$.
+# Note that the previous parts of the model (listed above) *do not* guarantee that the solution will be free of subtours.
+# To this end, by $S$ we label a subset of vertices.
+# Then, for each proper subset $S \subset V$, the following constraints guarantee that no subtour may occur.
+#
+# ```math
+# \sum_{i \in S} \sum_{j \in S, i < j} x_{ij} \leq \vert S \vert - 1 \quad \forall S \subset V
+# ```
+# These constraints have the disadvantage that we would require exponentially many of them as $\vert V \vert$ increases. 
+# Therefore, we will add these constraints not before needed and only when necessary.
+
+
+# # [Implementation](@id tsp_implementation)
+# There are two ways we can eliminate subtours in JuMP, both of which will be shown in what follows:
+# - Iteratively solving a new model that incorporates previously identified subtours.
+# - Adding violated subtours as *lazy constraints*.
+#
 # The number of vertices can be adjusted here.
 # The vertices are assumed to be randomly distributed in the Euclidean space;
 # thus, the weight (distance) of each edge is defined as follows.
@@ -114,18 +133,6 @@ set_optimizer_attribute(tsp, "sr_heur", GLPK.GLP_OFF)
 
 @constraint(tsp, no_loop[i in 1:n], x[i, i] == 0);
 
-# ## [Subtour Elimination](@id tsp_sec)
-# A major difficulty of the Traveling Salesperson Problem arises from the fact that we need to prevent *subtours*, i.e., several distinct Hamiltonian cycles existing on subgraphs of $G$.
-# Note that the previous parts of the model (listed above) *do not* guarantee that the solution will be free of subtours.
-# To this end, by $S$ we label a subset of vertices.
-# Then, for each proper subset $S \subset V$, the following constraints guarantee that no subtour may occur.
-#
-# ```math
-# \sum_{i \in S} \sum_{j \in S, i < j} x_{ij} \leq \vert S \vert - 1 \quad \forall S \subset V
-# ```
-# These constraints have the disadvantage that we would require exponentially many of them as $\vert V \vert$  increases. 
-# Therefore, we will add these constraints not before needed and only when necessary.
-#
 # To search for violated constraints, based on the edges that are currently in the solution (i.e., those that have value $x_{ij} = 1$), we identify the shortest cycle through the function `subtour()`.
 # Whenever a subtour has been identified, a constraint corresponding to the form above can be added to the model.
 
@@ -140,7 +147,7 @@ function subtour(edges)
         thiscycle = []
         neighbors = unvisited
         while !(isempty(neighbors))
-            ## Get the first item         
+            ## Get the first item
             current = pop!(neighbors)
 
             ## Add it to the current cycle and remove it from unvisited
@@ -225,10 +232,10 @@ function subtour_elimination(cb_data)
     status = callback_node_status(cb_data, tsp)
     if status == MOI.CALLBACK_NODE_STATUS_INTEGER
 
-        ## Load the callback data at the current node  
+        ## Load the callback data at the current node
         x_val = callback_value.(Ref(cb_data), x)
 
-        ## Write the current edges in a tuple list and identify the shortest  cycle
+        ## Write the current edges in a tuple list and identify the shortest cycle
         edges = selected_edges(x_val)
         cycle = subtour(edges)
         h = hash(sort(cycle))
@@ -279,7 +286,7 @@ time_lazy = solve_time(tsp);
 #     While the following part is not necessary when using `Gurobi` as an Optimizer, in the case of `GLPK` things are different:
 #     in combination with the dict `lazy_constraints` introduced above, some lazy constraints may be ignored, even though they were explicitely added to the model.
 #     This might be remedied by removing the dict; however, then the optimization using lazy constraints will be very slow.
-#     Therefore, for use with `GLPK`,  after the first solution we will verify that all previously identified lazy constraints are actually respected, by adding them to the model and re-solving it.
+#     Therefore, for use with `GLPK`, after the first solution we will verify that all previously identified lazy constraints are actually respected, by adding them to the model and re-solving it.
 #     Note that this fix also works for the `sr_heur` issue discussed at the beginning of this document.
 
 cycle = subtour(selected_edges(x))
