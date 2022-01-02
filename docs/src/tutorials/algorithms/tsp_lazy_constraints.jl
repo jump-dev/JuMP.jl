@@ -57,7 +57,8 @@ import Plots
 # ```
 #
 # ## [Constraints](@id tsp_constraints)
-# For the formulation of our problem, we need four classes of constraints which we will discuss in what follows.
+
+# There are four classes of constraints in our formulation.
 # Due to the presumed symmetry, the following constraints must hold.
 #
 # ```math
