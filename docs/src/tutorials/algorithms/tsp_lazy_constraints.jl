@@ -40,7 +40,7 @@ import Plots
 # In the Traveling Salesperson Problem, we are tasked with finding a tour with minimal length that visits every vertex exactly once and then returns to the point of origin, i.e., a *hamiltonian cycle* with minimal weight.
 # 
 # To model the problem, we introduce a binary variable $x_{ij} \in \{0,1\} \; \forall i, j \in V$ that indicates if edge $(i,j)$ is part of the tour or not.
-# Using these variables, the Traveling Salesperson Problem can be modeled through the following Integer Linear Programming Formulation.
+# Using these variables, the Traveling Salesperson Problem can be modeled as the following Integer Linear Programming Formulation.
 # 
 # ## [Objective Function](@id tsp_objective)
 # The objective consists in minimizing the weighted edges (due to the assumed symmetry, the second sum only contains $i<j$).
