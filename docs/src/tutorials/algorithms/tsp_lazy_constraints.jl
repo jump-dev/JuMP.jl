@@ -50,7 +50,7 @@ import Plots
 # \text{min } \sum_{i \in V}  \sum_{j \in V, i < j} d_{ij} x_{ij}
 # ```
 #
-# Note that it is also psosible to use the following objective function instead.
+# Note that it is also possible to use the following objective function instead.
 #
 # ```math
 # \text{min } \sum_{i \in V}  \sum_{j \in V} \dfrac{d_{ij} x_{ij}}{2}
