@@ -23,7 +23,7 @@
 # 
 # **Originally Contributed by**: Daniel Schermer
 # 
-# This notebook describes how to implement the Traveling Salesperson Problem in JuMP using solver-independent lazy constraints that dynamically separate subtours.
+# This tutorial describes how to implement the [Traveling Salesperson Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem) in JuMP using solver-independent lazy constraints that dynamically separate subtours.
 # To be more precise, we use lazy constraints to cut off infeasible subtours only when necessary and not before needed.
 
 using JuMP
