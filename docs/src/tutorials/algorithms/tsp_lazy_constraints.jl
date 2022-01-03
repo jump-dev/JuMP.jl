@@ -76,7 +76,7 @@ import Plots
 # x_{ij} = x_{ji} \quad \forall i,j \in V.
 # ```
 
-# Second, or each vertex $i$, exactly two edges must be selected that connect it
+# Second, for each vertex $i$, exactly two edges must be selected that connect it
 # to other vertices $j$ in the graph $G$:
 # ```math
 # \sum_{j \in V} x_{ij} = 2 \quad \forall i \in V.
@@ -99,7 +99,7 @@ import Plots
 # \sum_{i \in S} \sum_{j \in S, i < j} x_{ij} \leq \vert S \vert - 1 \quad \forall S \subset V.
 # ```
 
-# Problematicaly, we require exponentially many of these constraints as
+# Problematically, we require exponentially many of these constraints as
 # $\vert V \vert$ increases. Therefore, we will add these constraints only when
 # necessary.
 
@@ -108,8 +108,8 @@ import Plots
 # There are two ways we can eliminate subtours in JuMP, both of which will be
 # shown in what follows:
 # - iteratively solving a new model that incorporates previously identified
-#   subtours
-# - adding violated subtours as *lazy constraints*.
+#   subtours,
+# - or adding violated subtours as *lazy constraints*.
 
 # ### Data
 
