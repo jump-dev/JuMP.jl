@@ -157,7 +157,8 @@ function subtour(edges::Vector{Tuple{Int,Int}}, n)
             if length(this_cycle) > 1
                 pop!(unvisited, current)
             end
-            neighbors = [j for (i, j) in edges if i == current && j in unvisited]
+            neighbors =
+                [j for (i, j) in edges if i == current && j in unvisited]
         end
         if length(this_cycle) < length(shortest_subtour)
             shortest_subtour = this_cycle
