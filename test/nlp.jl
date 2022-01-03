@@ -189,9 +189,10 @@ function test_multivariate_max()
     @variable(m, x)
     @NLobjective(m, Min, max(0, x))
     nlp = NLPEvaluator(m)
-    MOI.initialize(nlp, [:Grad])
+    MOI.initialize(nlp, [:ExprGraph])
     @test MOI.eval_objective(nlp, [-1.0]) == 0.0
     @test MOI.eval_objective(nlp, [1.0]) == 1.0
+    @test MOI.objective_expr(nlp) == :(max(0.0, x[$(index(x))]))
     return
 end
 
@@ -200,9 +201,10 @@ function test_multivariate_min()
     @variable(m, x)
     @NLobjective(m, Max, min(0, x))
     nlp = NLPEvaluator(m)
-    MOI.initialize(nlp, [:Grad])
+    MOI.initialize(nlp, [:ExprGraph])
     @test MOI.eval_objective(nlp, [-1.0]) == -1.0
     @test MOI.eval_objective(nlp, [1.0]) == 0.0
+    @test MOI.objective_expr(nlp) == :(min(0.0, x[$(index(x))]))
     return
 end
 
