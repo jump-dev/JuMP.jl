@@ -184,6 +184,30 @@ function test_multivariate_register_splat_existing()
     @test_throws err @NLexpression(model, ex, f(x...))
 end
 
+function test_multivariate_max()
+    m = Model()
+    @variable(m, x)
+    @NLobjective(m, Min, max(0, x))
+    nlp = NLPEvaluator(m)
+    MOI.initialize(nlp, [:ExprGraph])
+    @test MOI.eval_objective(nlp, [-1.0]) == 0.0
+    @test MOI.eval_objective(nlp, [1.0]) == 1.0
+    @test MOI.objective_expr(nlp) == :(max(0.0, x[$(index(x))]))
+    return
+end
+
+function test_multivariate_min()
+    m = Model()
+    @variable(m, x)
+    @NLobjective(m, Max, min(0, x))
+    nlp = NLPEvaluator(m)
+    MOI.initialize(nlp, [:ExprGraph])
+    @test MOI.eval_objective(nlp, [-1.0]) == -1.0
+    @test MOI.eval_objective(nlp, [1.0]) == 0.0
+    @test MOI.objective_expr(nlp) == :(min(0.0, x[$(index(x))]))
+    return
+end
+
 @testset "Auto-register-univariate" begin
     test_univariate_error()
     test_univariate_error_existing()
@@ -203,6 +227,8 @@ end
     test_multivariate_register_warn()
     test_multivariate_register_splat()
     test_multivariate_register_splat_existing()
+    test_multivariate_max()
+    test_multivariate_min()
 end
 
 @testset "Nonlinear" begin
@@ -1084,16 +1110,6 @@ end
         id = JuMP._Derivatives.univariate_operator_to_id[:deg2rad]
         y = deg2rad(x)
         @test JuMP._Derivatives.eval_univariate_2nd_deriv(id, x, y) == 0.0
-    end
-
-    @testset "Unsupported function max" begin
-        model = Model()
-        @variable(model, x >= 0)
-        @NLobjective(model, Min, max(x, 2 * x))
-        d = JuMP.NLPEvaluator(model)
-        MOI.initialize(d, Symbol[])
-        x = [2.0]
-        @test_throws ErrorException MOI.eval_objective(d, x)
     end
 
     @testset "Re-register univariate" begin
