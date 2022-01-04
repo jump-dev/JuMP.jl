@@ -160,6 +160,8 @@ end
 
 _abstract_vector(x) = _abstract_vector([a for a in x])
 
+_abstract_vector(x::AbstractArray) = vec(x)
+
 function _abstract_vector(x::Number)
     @warn(
         "Axis contains one element: $x. If intended, you can safely " *
