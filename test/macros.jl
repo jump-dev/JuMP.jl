@@ -852,6 +852,21 @@ function test_Plural_failures()
     return
 end
 
+function test_Plural_returns()
+    model = Model()
+    vars = @variables(model, begin
+        x
+        y[1:2]
+    end)
+    @test vars == [x, y]
+    eqs = @constraints(model, begin
+        E_x, x == 0
+        E_y[i=1:2], y[i] == 0
+    end)
+    @test eqs == [E_x, E_y]
+    return
+end
+
 function test_Empty_summation_in_constraints()
     model = Model()
     @variable(model, x)

@@ -1067,25 +1067,17 @@ end
 
 _add_JuMP_prefix(s::Symbol) = Expr(:., JuMP, :($(QuoteNode(s))))
 
-for (mac, sym) in [
-    (:NLparameters, Symbol("@NLparameter")),
-    (:constraints, Symbol("@constraint")),
-    (:NLconstraints, Symbol("@NLconstraint")),
-    (:SDconstraints, Symbol("@SDconstraint")),
-    (:variables, Symbol("@variable")),
-    (:expressions, Symbol("@expression")),
-    (:NLexpressions, Symbol("@NLexpression")),
-]
+function _pluralize_macro(mac, sym)
     @eval begin
         macro $mac(m, x)
-            if typeof(x) != Expr || x.head != :block
+            if !(isa(x, Expr) && x.head == :block)
                 # We do a weird string interpolation here so that it gets
                 # interpolated at compile time, not run-time.
                 error("Invalid syntax for @" * $(string(mac)))
             end
             @assert isa(x.args[1], LineNumberNode)
             lastline = x.args[1]
-            code = Expr(:block)
+            code = Expr(:vect)
             for it in x.args
                 if isa(it, LineNumberNode)
                     lastline = it
@@ -1101,7 +1093,7 @@ for (mac, sym) in [
                             push!(args, ex)
                         end
                     end
-                    mac = esc(
+                    macro_call = esc(
                         Expr(
                             :macrocall,
                             $(_add_JuMP_prefix(sym)),
@@ -1110,26 +1102,35 @@ for (mac, sym) in [
                             args...,
                         ),
                     )
-                    push!(code.args, mac)
+                    push!(code.args, macro_call)
                 else # stand-alone symbol or expression
-                    push!(
-                        code.args,
-                        esc(
-                            Expr(
-                                :macrocall,
-                                $(_add_JuMP_prefix(sym)),
-                                lastline,
-                                m,
-                                it,
-                            ),
+                    macro_call = esc(
+                        Expr(
+                            :macrocall,
+                            $(_add_JuMP_prefix(sym)),
+                            lastline,
+                            m,
+                            it,
                         ),
                     )
+                    push!(code.args, macro_call)
                 end
             end
-            push!(code.args, :(nothing))
             return code
         end
     end
+end
+
+for (mac, sym) in [
+    (:NLparameters, Symbol("@NLparameter")),
+    (:constraints, Symbol("@constraint")),
+    (:NLconstraints, Symbol("@NLconstraint")),
+    (:SDconstraints, Symbol("@SDconstraint")),
+    (:variables, Symbol("@variable")),
+    (:expressions, Symbol("@expression")),
+    (:NLexpressions, Symbol("@NLexpression")),
+]
+    _pluralize_macro(mac, sym)
 end
 
 # Doc strings for the auto-generated macro pluralizations
