@@ -360,4 +360,12 @@ And data, a 0-dimensional $(Array{Int,0}):
         )
         @test_throws(err, DenseAxisArray([1.1, 2.2], S))
     end
+
+    @testset "Matrix indices" begin
+        sources = ["A", "B", "C"]
+        sinks = ["D", "E"]
+        S = [(source, sink) for source in sources, sink in sinks]
+        x = DenseAxisArray(1:6, S)
+        @test size(x) == (6,)
+    end
 end
