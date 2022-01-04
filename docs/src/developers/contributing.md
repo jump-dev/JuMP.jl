@@ -147,7 +147,7 @@ Now make any changes to the source code inside the `~/.julia/dev/JuMP`
 directory.
 
 Make sure you:
- * Follow the [Style guide](@ref)
+ * Follow the [Style guide](@ref) and run [JuliaFormatter](@ref)
  * Add tests and documentation for any changes or new features
 
 !!! tip
