@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Portfolio optimization
+# # Portfolio optimization (Quadratic Program (QP))
 
 # **Originally Contributed by**: Arpit Bhatia
 

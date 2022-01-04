@@ -79,7 +79,7 @@ set_optimizer_attributes(model, "LogLevel" => 1, "PrimalTolerance" => 1e-7)
     repository for more details on how to use a particular solver, including any
     solver-specific options.
 
-### Supported solvers
+## Supported solvers (and applicability for problems)
 
 Most solvers are not written in Julia, and some require commercial licenses to
 use, so installation is often more complex.

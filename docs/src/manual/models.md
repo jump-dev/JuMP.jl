@@ -18,6 +18,9 @@ well as which solver to use and even solution information.
     to the Julia object that wraps the solver. For example, `GLPK` is a solver,
     and `GLPK.Optimizer` is an optimizer.
 
+!!! tip
+    See [Supported solvers](@ref) for a list of available solvers.
+
 ## Create a model
 
 Create a model by passing an optimizer to [`Model`](@ref):
@@ -30,9 +33,6 @@ Model mode: AUTOMATIC
 CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: GLPK
 ```
-
-!!! tip
-    See [Supported solvers](@ref) for a list of available solvers.
 
 If you don't know which optimizer you will be using at creation time, create a
 model without an optimizer, and then call [`set_optimizer`](@ref) at any time
