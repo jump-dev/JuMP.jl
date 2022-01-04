@@ -858,12 +858,12 @@ function test_Plural_returns()
         x
         y[1:2]
     end)
-    @test vars == [x, y]
+    @test vars == (x, y)
     eqs = @constraints(model, begin
         E_x, x == 0
         E_y[i=1:2], y[i] == 0
     end)
-    @test eqs == [E_x, E_y]
+    @test eqs == (E_x, E_y)
     return
 end
 

@@ -1077,7 +1077,7 @@ function _pluralize_macro(mac, sym)
             end
             @assert isa(x.args[1], LineNumberNode)
             lastline = x.args[1]
-            code = Expr(:vect)
+            code = Expr(:tuple)
             for it in x.args
                 if isa(it, LineNumberNode)
                     lastline = it
