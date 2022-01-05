@@ -131,6 +131,7 @@ const _PAGES = [
             "tutorials/nonlinear/rosenbrock.md",
             "tutorials/nonlinear/mle.md",
             "tutorials/nonlinear/clnlbeam.md",
+            "tutorials/nonlinear/querying_hessians.md",
         ],
         "Conic programs" => [
             "tutorials/conic/tips_and_tricks.md",
