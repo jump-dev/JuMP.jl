@@ -67,7 +67,7 @@ import SparseArrays
 
 model = Model(Ipopt.Optimizer)
 set_silent(model)
-@variable(model, x[i=1:2], start = -i)
+@variable(model, x[i = 1:2], start = -i)
 @constraint(model, g_1, x[1]^2 <= 1)
 @NLconstraint(model, g_2, (x[1] + x[2])^2 <= 2)
 @NLobjective(model, Min, (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2)
