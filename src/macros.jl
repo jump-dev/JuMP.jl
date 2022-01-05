@@ -1143,6 +1143,8 @@ Adds groups of constraints at once, in the same fashion as the
 The model must be the first argument, and multiple constraints can be added on
 multiple lines wrapped in a `begin ... end` block.
 
+The macro returns a tuple containing the constraints that were defined.
+
 # Examples
 
 ```julia
@@ -1162,6 +1164,8 @@ Adds multiple variables to model at once, in the same fashion as the
 
 The model must be the first argument, and multiple variables can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the variables that were defined.
 
 # Examples
 
@@ -1184,8 +1188,10 @@ end)
 Adds multiple expressions to model at once, in the same fashion as the
 [`@expression`](@ref) macro.
 
-The model must be the first argument, and multiple variables can be added on
+The model must be the first argument, and multiple expressions can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the expressions that were defined.
 
 # Examples
 
@@ -1219,12 +1225,14 @@ end)
 @doc """
      @NLparameters(model, args...)
 
- Create and return multiple nonlinear parameters attached to model `model`, in the same fashion as
- [`@NLparameter`](@ref) macro.
+Create and return multiple nonlinear parameters attached to model `model`, in
+the same fashion as [`@NLparameter`](@ref) macro.
 
- The model must be the first argument, and multiple parameters can be added on
- multiple lines wrapped in a `begin ... end` block. Distinct parameters need to be placed
- on separate lines as in the following example.
+The model must be the first argument, and multiple parameters can be added on
+multiple lines wrapped in a `begin ... end` block. Distinct parameters need to
+be placed on separate lines as in the following example.
+
+The macro returns a tuple containing the parameters that were defined.
 
 # Example
 ```jldoctest; setup=:(using JuMP)
@@ -1246,8 +1254,10 @@ value(x)
 Adds multiple nonlinear constraints to model at once, in the same fashion as
 the [`@NLconstraint`](@ref) macro.
 
-The model must be the first argument, and multiple variables can be added on
+The model must be the first argument, and multiple constraints can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the constraints that were defined.
 
 # Examples
 
@@ -1265,8 +1275,10 @@ end)
 Adds multiple nonlinear expressions to model at once, in the same fashion as the
 [`@NLexpression`](@ref) macro.
 
-The model must be the first argument, and multiple variables can be added on
+The model must be the first argument, and multiple expressions can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the expressions that were defined.
 
 # Examples
 
