@@ -44,10 +44,10 @@
 # ```
 # the Hessian of the Lagrangian is computed as:
 # ```math
-# H(x, \\sigma, \\mu) = \\sigma\\nabla^2 f(x) + \\sum_{i=1}^m \\mu_i \\nabla^2 g_i(x)
+# H(x, \sigma, \mu) = \sigma\nabla^2 f(x) + \sum_{i=1}^m \mu_i \nabla^2 g_i(x)
 # ```
-# where ``x`` is a primal point, ``\\sigma`` is a scalar (typically ``1``), and
-# ``\\mu`` is a vector of weights corresponding to the Lagrangian dual of the
+# where ``x`` is a primal point, ``\sigma`` is a scalar (typically ``1``), and
+# ``\mu`` is a vector of weights corresponding to the Lagrangian dual of the
 # constraints.
 
 # This tutorial uses the following packages:
@@ -210,13 +210,13 @@ fill_off_diagonal(H)
 
 f = constraint_object(g_1).func
 
-# `f`` is a quadratic expression of the form:
+# `f` is a quadratic expression of the form:
 # ```
 # f(x) = Σqᵢⱼ * xᵢ * xⱼ + Σaᵢ xᵢ + c
 # ```
 # So `∇²f(x)` is the matrix formed by `[qᵢⱼ]ᵢⱼ`.
 
-variables_to_column = Dict(xi => i for (i, xi) in enumerate(x))
+variables_to_column = Dict(x[i] => i for i in 1:n)
 
 function add_to_hessian(H, f::QuadExpr, μ)
     for (vars, coef) in f.terms
