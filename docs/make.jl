@@ -211,6 +211,8 @@ function _add_moi_pages()
     # Update the intro of the MOI docs.
     src = """# Introduction
 
+    Welcome to the documentation for MathOptInterface.
+
     !!! note
         This documentation is also available in PDF format:
         [MathOptInterface.pdf](MathOptInterface.pdf)."""
@@ -218,8 +220,8 @@ function _add_moi_pages()
 
     !!! warning
         This documentation in this section is a copy of the official
-        MathOptInterface documentation  available at
-        [https://jump.dev/MathOptInterface.jl/v0.10.4](https://jump.dev/MathOptInterface.jl/v0.10.4).
+        MathOptInterface documentation available at
+        [https://jump.dev/MathOptInterface.jl/v0.10.6](https://jump.dev/MathOptInterface.jl/v0.10.6).
         It is included here to make it easier to link concepts between JuMP and
         MathOptInterface.
     """
