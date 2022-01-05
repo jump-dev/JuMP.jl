@@ -287,7 +287,7 @@ H_star = compute_optimal_hessian(model)
 
 analytic_hessian(value.(x), 1.0, dual.([g_1, g_2]))
 
-# If we look at the eigen values of the Hessian:
+# If we look at the eigenvalues of the Hessian:
 
 LinearAlgebra.eigvals(H_star)
 
