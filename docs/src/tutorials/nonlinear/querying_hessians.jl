@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Oscar Dowson and contributors                               #src
+# Copyright (c) 2022 Oscar Dowson and contributors                               #src
 #                                                                                #src
 # Permission is hereby granted, free of charge, to any person obtaining a copy   #src
 # of this software and associated documentation files (the "Software"), to deal  #src
@@ -20,10 +20,10 @@
 
 # # Computing Hessians
 
-# The purpose of this tutorial is to demonstrate how to extract the hessian of a
-# nonlinear program, evaluated at the optimal solution.
+# The purpose of this tutorial is to demonstrate how to compute the Hessian of
+# the Lagrangian of a nonlinear program.
 
-# !!! info
+# !!! warning
 #     This is an advanced tutorial that interacts with the low-level nonlinear
 #     interface of MathOptInterface.
 #
@@ -35,10 +35,26 @@
 #     const MOI = MathOptInterface
 #     ```
 
+# Given a nonlinear program:
+# ```math
+# \begin{align}
+# & \min_{x \in \mathbb{R}^n} & f(x) \\
+# & \;\;\text{s.t.} & l \le g_i(x) \le u
+# \end{align}
+# ```
+# the Hessian of the Lagrangian is computed as:
+# ```math
+# H(x, \\sigma, \\mu) = \\sigma\\nabla^2 f(x) + \\sum_{i=1}^m \\mu_i \\nabla^2 g_i(x)
+# ```
+# where ``x`` is a primal point, ``\\sigma`` is a scalar (typically ``1``), and
+# ``\\mu`` is a vector of weights corresponding to the Lagrangian dual of the
+# constraints.
+
 # This tutorial uses the following packages:
 
 using JuMP
 import Ipopt
+import LinearAlgebra
 import Random
 import SparseArrays
 
@@ -46,25 +62,48 @@ import SparseArrays
 
 # To demonstrate how to interact with the lower-level nonlinear interface, we
 # need an example model. The exact model isn't important; we use the model from
-# the [Maximum likelihood estimation](@ref) tutorial, with some additional
-# constraints to demonstrate various features of the lower-level interface.
+# [The Rosenbrock function](@ref) tutorial, with some additional constraints to
+# demonstrate various features of the lower-level interface.
 
-n = 1_000
-Random.seed!(1234)
-data = randn(n)
 model = Model(Ipopt.Optimizer)
 set_silent(model)
-@variable(model, μ, start = 0.0)
-@variable(model, σ >= 0.0, start = 1.0)
-quad_ref = @constraint(model, μ^2 <= 0.01)
-nlp_ref = @NLconstraint(model, (σ + μ)^2 >= 0)
-@NLobjective(
-    model,
-    Max,
-    n / 2 * log(1 / (2 * π * σ^2)) -
-    sum((data[i] - μ)^2 for i in 1:n) / (2 * σ^2)
-)
+@variable(model, x[i=1:2], start = -i)
+@constraint(model, g_1, x[1]^2 <= 1)
+@NLconstraint(model, g_2, (x[1] + x[2])^2 <= 2)
+@NLobjective(model, Min, (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2)
 optimize!(model)
+
+# ## The analytic solution
+
+# With a little work, it is possible to analytically derive the correct hessian:
+
+function analytic_hessian(x, σ, μ)
+    g_1_H = [2.0 0.0; 0.0 0.0]
+    g_2_H = [2.0 2.0; 2.0 2.0]
+    f_H = zeros(2, 2)
+    f_H[1, 1] = 2.0 + 1200.0 * x[1]^2 - 400.0 * x[2]
+    f_H[1, 2] = f_H[2, 1] = -400.0 * x[1]
+    f_H[2, 2] = 200.0
+    return σ * f_H + μ' * [g_1_H, g_2_H]
+end
+
+# Here are various points:
+
+analytic_hessian([1, 1], 0, [0, 0])
+
+#-
+
+analytic_hessian([1, 1], 0, [1, 0])
+
+#-
+
+analytic_hessian([1, 1], 0, [0, 1])
+
+#-
+
+analytic_hessian([1, 1], 1, [0, 0])
+
+#-
 
 # ## Initializing the NLPEvaluator
 
@@ -169,7 +208,7 @@ fill_off_diagonal(H)
 # To compute the hessian from a quadratic expression, let's see how JuMP
 # represents a quadratic constraint:
 
-f = constraint_object(quad_ref).func
+f = constraint_object(g_1).func
 
 # `f`` is a quadratic expression of the form:
 # ```
@@ -188,15 +227,18 @@ function add_to_hessian(H, f::QuadExpr, μ)
     return
 end
 
+# If the function `f` is not a `QuadExpr`, do nothing because it is an `AffExpr`
+# or a `VariableRef`. In both cases, the second derivative is zero.
+
+add_to_hessian(H, f::Any, μ) = nothing
+
 # Then we iterate over all constraints in the model and add their Hessian
 # components:
 
 for (F, S) in list_of_constraint_types(model)
-    if F <: QuadExpr
-        for cref in all_constraints(model, F, S)
-            f = constraint_object(cref).func
-            add_to_hessian(H, f, dual(cref))
-        end
+    for cref in all_constraints(model, F, S)
+        f = constraint_object(cref).func
+        add_to_hessian(H, f, dual(cref))
     end
 end
 
@@ -204,58 +246,50 @@ H
 
 # Finally, we need to take into account the objective function:
 
-f_obj = objective_function(model)
-if f_obj isa QuadExpr
-    add_to_hessian(H, f_obj, 1.0)
-end
+add_to_hessian(H, objective_function(model), 1.0)
 
-H
+fill_off_diagonal(H)
 
 # Putting everything together:
 
-"""
-    optimal_hessian(model::Model)
-
-Return the Hessian matrix of a nonlinear model, evaluated at the optimal
-solution.
-"""
-function optimal_hessian(model)
+function compute_optimal_hessian(model)
     d = NLPEvaluator(model)
     MOI.initialize(d, [:Hess])
     hessian_sparsity = MOI.hessian_lagrangian_structure(d)
     I = [i for (i, _) in hessian_sparsity]
     J = [j for (_, j) in hessian_sparsity]
     V = zeros(length(hessian_sparsity))
-    n = num_variables(model)
-    H = SparseArrays.sparse(I, J, V, n, n)
     x = all_variables(model)
     x_optimal = value.(x)
-    nlp_cons = all_nl_constraints(model)
-    y_optimal = dual.(nlp_cons)
+    y_optimal = dual.(all_nl_constraints(model))
     MOI.eval_hessian_lagrangian(d, V, x_optimal, 1.0, y_optimal)
+    n = num_variables(model)
     H = SparseArrays.sparse(I, J, V, n, n)
-    variables_to_column = Dict(xi => i for (i, xi) in enumerate(x))
+    vmap = Dict(x[i] => i for i in 1:n)
+    add_to_hessian(H, f::Any, μ) = nothing
     function add_to_hessian(H, f::QuadExpr, μ)
         for (vars, coef) in f.terms
-            i = variables_to_column[vars.a]
-            j = variables_to_column[vars.b]
-            H[i, j] += μ * coef
+            H[vmap[vars.a], vmap[vars.b]] += μ * coef
         end
-        return
     end
     for (F, S) in list_of_constraint_types(model)
-        if F <: QuadExpr
-            for cref in all_constraints(model, F, S)
-                f = constraint_object(cref).func
-                add_to_hessian(H, f, dual(cref))
-            end
+        for cref in all_constraints(model, F, S)
+            add_to_hessian(H, constraint_object(cref).func, dual(cref))
         end
     end
-    f_obj = objective_function(model)
-    if f_obj isa QuadExpr
-        add_to_hessian(H, f_obj, 1.0)
-    end
-    return fill_off_diagonal(H)
+    add_to_hessian(H, objective_function(model), 1.0)
+    return Matrix(fill_off_diagonal(H))
 end
 
-optimal_hessian(model)
+H_star = compute_optimal_hessian(model)
+
+# If we compare our solution against the analytical solution:
+
+analytic_hessian(value.(x), 1.0, dual.([g_1, g_2]))
+
+# If we look at the eigen values of the Hessian:
+
+LinearAlgebra.eigvals(H_star)
+
+# we see that they are all positive. Therefore, the Hessian is positive
+# definite, and so the solution found by Ipopt is a local minimizer.
