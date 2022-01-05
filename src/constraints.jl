@@ -172,7 +172,7 @@ function set_start_value(
     },
     value,
 )
-    MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, value)
+    MOI.set(owner_model(con_ref), MOI.ConstraintPrimalStart(), con_ref, value)
     return
 end
 
