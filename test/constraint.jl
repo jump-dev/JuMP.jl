@@ -770,6 +770,30 @@ function test_Model_dual_start_vector(::Any, ::Any)
     @test dual_start_value(con_vec) === nothing
 end
 
+function test_Model_primal_start(::Any, ::Any)
+    model = Model()
+    @variable(model, x)
+    con = @constraint(model, 2x <= 1)
+    @test start_value(con) === nothing
+    set_start_value(con, 2)
+    @test start_value(con) == 2.0
+    set_start_value(con, nothing)
+    @test start_value(con) === nothing
+    return
+end
+
+function test_Model_primal_start_vector(::Any, ::Any)
+    model = Model()
+    @variable(model, x)
+    con_vec = @constraint(model, [x, x] in SecondOrderCone())
+    @test start_value(con_vec) === nothing
+    set_start_value(con_vec, [1.0, 3.0])
+    @test start_value(con_vec) == [1.0, 3.0]
+    set_start_value(con_vec, nothing)
+    @test start_value(con_vec) === nothing
+    return
+end
+
 function test_Model_change_coefficient(::Any, ::Any)
     model = JuMP.Model()
     x = @variable(model)
