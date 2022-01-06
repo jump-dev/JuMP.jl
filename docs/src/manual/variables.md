@@ -955,6 +955,7 @@ julia> @variables(model, begin
            y[i=1:2] >= i, (start = i, base_name = "Y_$i")
            z, Bin
        end)
+(x, VariableRef[Y_1[1], Y_2[2]], z)
 
 julia> print(model)
 Feasibility
@@ -963,6 +964,8 @@ Subject to
  Y_2[2] ≥ 2.0
  z binary
 ```
+The [`@variables`](@ref) macro returns a tuple of the variables that were
+defined.
 
 !!! note
     Keyword arguments must be contained within parentheses.
