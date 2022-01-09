@@ -130,6 +130,71 @@ function set_dual_start_value(
 end
 
 """
+    set_start_value(con_ref::ConstraintRef, value)
+
+Set the primal start value ([`MOI.ConstraintPrimalStart`](@ref)) of the
+constraint `con_ref` to `value`. To remove a primal start value set it to
+`nothing`.
+
+See also [`start_value`](@ref).
+"""
+function set_start_value(
+    con_ref::ConstraintRef{
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractVectorFunction,<:MOI.AbstractVectorSet},
+    },
+    value,
+)
+    MOI.set(
+        owner_model(con_ref),
+        MOI.ConstraintPrimalStart(),
+        con_ref,
+        vectorize(value, con_ref.shape),
+    )
+    return
+end
+
+function set_start_value(
+    con_ref::ConstraintRef{
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractVectorFunction,<:MOI.AbstractVectorSet},
+    },
+    ::Nothing,
+)
+    MOI.set(owner_model(con_ref), MOI.ConstraintPrimalStart(), con_ref, nothing)
+    return
+end
+
+function set_start_value(
+    con_ref::ConstraintRef{
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractScalarFunction,<:MOI.AbstractScalarSet},
+    },
+    value,
+)
+    MOI.set(owner_model(con_ref), MOI.ConstraintPrimalStart(), con_ref, value)
+    return
+end
+
+"""
+    start_value(con_ref::ConstraintRef)
+
+Return the primal start value ([`MOI.ConstraintPrimalStart`](@ref)) of the
+constraint `con_ref`.
+
+Note: If no primal start value has been set, `start_value` will return
+`nothing`.
+
+See also [`set_start_value`](@ref).
+"""
+function start_value(con_ref::ConstraintRef{<:AbstractModel,<:_MOICON})
+    return reshape_vector(
+        MOI.get(owner_model(con_ref), MOI.ConstraintPrimalStart(), con_ref),
+        con_ref.shape,
+    )
+end
+
+"""
     name(con_ref::ConstraintRef)
 
 Get a constraint's name attribute.
