@@ -1,5 +1,26 @@
 # Release notes
 
+## Version 0.22.2 (In development)
+
+- New features:
+  - The function `add_nl_constraints` now returns all nonlinear constraints
+    in a model
+  - `start_value` and `set_start_value` can now be used to get and set the
+    primal start for constraint references
+  - Plural macros now return a tuple containing the elements that were defined
+    instead of `nothing`
+  - Anonymous variables are now printed as `_[i]` where `i` is the index of the
+    variable instead of `noname`. Calling `name(x)` still returns `""` so this
+    is non-breaking.
+- Bug fixes:
+  - Fixed handling of `min` and `max` in nonlinear expressions
+  - CartesianIndex is no longer allowed as a key for DenseAxisArrays.
+- Documentation, maintenance:
+  - Improved the performance of GenericAffExpr
+  - Added a tutorial on the Travelling Salesperson Problem
+  - Added a tutorial on querying the Hessian of a nonlinear program
+  - Added documentation on using custom solver binaries.
+
 ## Version 0.22.1 (November 29, 2021)
 
 - New features:
