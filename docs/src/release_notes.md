@@ -1,6 +1,6 @@
 # Release notes
 
-## Version 0.22.2 (In development)
+## Version 0.22.2 (January 10, 2021)
 
 - New features:
   - The function `all_nl_constraints` now returns all nonlinear constraints
