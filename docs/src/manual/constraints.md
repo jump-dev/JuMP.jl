@@ -421,6 +421,7 @@ julia> @constraints(model, begin
            2x <= 1
            c, x >= -1
        end)
+(2 x ≤ 1.0, c : x ≥ -1.0)
 
 julia> print(model)
 Feasibility
@@ -428,6 +429,8 @@ Subject to
  c : x ≥ -1.0
  2 x ≤ 1.0
 ```
+The [`@constraints`](@ref) macro returns a tuple of the constraints that were
+defined.
 
 ## [Duality](@id constraint_duality)
 

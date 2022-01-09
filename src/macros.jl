@@ -1067,25 +1067,17 @@ end
 
 _add_JuMP_prefix(s::Symbol) = Expr(:., JuMP, :($(QuoteNode(s))))
 
-for (mac, sym) in [
-    (:NLparameters, Symbol("@NLparameter")),
-    (:constraints, Symbol("@constraint")),
-    (:NLconstraints, Symbol("@NLconstraint")),
-    (:SDconstraints, Symbol("@SDconstraint")),
-    (:variables, Symbol("@variable")),
-    (:expressions, Symbol("@expression")),
-    (:NLexpressions, Symbol("@NLexpression")),
-]
+function _pluralize_macro(mac, sym)
     @eval begin
         macro $mac(m, x)
-            if typeof(x) != Expr || x.head != :block
+            if !(isa(x, Expr) && x.head == :block)
                 # We do a weird string interpolation here so that it gets
                 # interpolated at compile time, not run-time.
                 error("Invalid syntax for @" * $(string(mac)))
             end
             @assert isa(x.args[1], LineNumberNode)
             lastline = x.args[1]
-            code = Expr(:block)
+            code = Expr(:tuple)
             for it in x.args
                 if isa(it, LineNumberNode)
                     lastline = it
@@ -1101,7 +1093,7 @@ for (mac, sym) in [
                             push!(args, ex)
                         end
                     end
-                    mac = esc(
+                    macro_call = esc(
                         Expr(
                             :macrocall,
                             $(_add_JuMP_prefix(sym)),
@@ -1110,26 +1102,35 @@ for (mac, sym) in [
                             args...,
                         ),
                     )
-                    push!(code.args, mac)
+                    push!(code.args, macro_call)
                 else # stand-alone symbol or expression
-                    push!(
-                        code.args,
-                        esc(
-                            Expr(
-                                :macrocall,
-                                $(_add_JuMP_prefix(sym)),
-                                lastline,
-                                m,
-                                it,
-                            ),
+                    macro_call = esc(
+                        Expr(
+                            :macrocall,
+                            $(_add_JuMP_prefix(sym)),
+                            lastline,
+                            m,
+                            it,
                         ),
                     )
+                    push!(code.args, macro_call)
                 end
             end
-            push!(code.args, :(nothing))
             return code
         end
     end
+end
+
+for (mac, sym) in [
+    (:NLparameters, Symbol("@NLparameter")),
+    (:constraints, Symbol("@constraint")),
+    (:NLconstraints, Symbol("@NLconstraint")),
+    (:SDconstraints, Symbol("@SDconstraint")),
+    (:variables, Symbol("@variable")),
+    (:expressions, Symbol("@expression")),
+    (:NLexpressions, Symbol("@NLexpression")),
+]
+    _pluralize_macro(mac, sym)
 end
 
 # Doc strings for the auto-generated macro pluralizations
@@ -1141,6 +1142,8 @@ Adds groups of constraints at once, in the same fashion as the
 
 The model must be the first argument, and multiple constraints can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the constraints that were defined.
 
 # Examples
 
@@ -1161,6 +1164,8 @@ Adds multiple variables to model at once, in the same fashion as the
 
 The model must be the first argument, and multiple variables can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the variables that were defined.
 
 # Examples
 
@@ -1183,8 +1188,10 @@ end)
 Adds multiple expressions to model at once, in the same fashion as the
 [`@expression`](@ref) macro.
 
-The model must be the first argument, and multiple variables can be added on
+The model must be the first argument, and multiple expressions can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the expressions that were defined.
 
 # Examples
 
@@ -1218,12 +1225,14 @@ end)
 @doc """
      @NLparameters(model, args...)
 
- Create and return multiple nonlinear parameters attached to model `model`, in the same fashion as
- [`@NLparameter`](@ref) macro.
+Create and return multiple nonlinear parameters attached to model `model`, in
+the same fashion as [`@NLparameter`](@ref) macro.
 
- The model must be the first argument, and multiple parameters can be added on
- multiple lines wrapped in a `begin ... end` block. Distinct parameters need to be placed
- on separate lines as in the following example.
+The model must be the first argument, and multiple parameters can be added on
+multiple lines wrapped in a `begin ... end` block. Distinct parameters need to
+be placed on separate lines as in the following example.
+
+The macro returns a tuple containing the parameters that were defined.
 
 # Example
 ```jldoctest; setup=:(using JuMP)
@@ -1245,8 +1254,10 @@ value(x)
 Adds multiple nonlinear constraints to model at once, in the same fashion as
 the [`@NLconstraint`](@ref) macro.
 
-The model must be the first argument, and multiple variables can be added on
+The model must be the first argument, and multiple constraints can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the constraints that were defined.
 
 # Examples
 
@@ -1264,8 +1275,10 @@ end)
 Adds multiple nonlinear expressions to model at once, in the same fashion as the
 [`@NLexpression`](@ref) macro.
 
-The model must be the first argument, and multiple variables can be added on
+The model must be the first argument, and multiple expressions can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the expressions that were defined.
 
 # Examples
 
