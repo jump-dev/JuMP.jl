@@ -3,7 +3,7 @@
 ## Version 0.22.2 (In development)
 
 - New features:
-  - The function `add_nl_constraints` now returns all nonlinear constraints
+  - The function `all_nl_constraints` now returns all nonlinear constraints
     in a model
   - `start_value` and `set_start_value` can now be used to get and set the
     primal start for constraint references
