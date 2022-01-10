@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Tips and Tricks
+# # [Tips and Tricks](@id conic_tips_and_tricks)
 
 # **Originally Contributed by**: Arpit Bhatia
 
