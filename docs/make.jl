@@ -56,7 +56,11 @@ function _include_sandbox(filename)
 end
 
 function _literate_directory(dir)
-    rm.(_file_list(dir, dir, ".md"))
+    for filename in _file_list(dir, dir, ".md")
+        if !endswith(filename, "introduction.md")
+            rm(filename)
+        end
+    end
     for filename in _file_list(dir, dir, ".jl")
         # `include` the file to test it before `#src` lines are removed. It is
         # in a testset to isolate local variables between files.
