@@ -16,11 +16,11 @@ will help you know where to look for certain things.
    * [Getting started with sets and indexing](@ref)
    * [Getting started with data and plotting](@ref)
  * Julia has a reputation for being "fast." Unfortunately, it is also easy to
-   write _slow_ Julia code. The [Performance tips](@ref) contains a number of
+   write _slow_ Julia code. [Performance tips](@ref) contains a number of
    important tips on how to improve the performance of models you write in JuMP.
- * The [Design patterns for larger models](@ref) is a more advanced tutorial
+ * [Design patterns for larger models](@ref) is a more advanced tutorial
    that is aimed at users writing large JuMP models. It's in the "Getting
    started" section to give you an early preview of how JuMP makes it easy to
-   structure larger models. However, if you are new to JuMP you may want to skip
+   structure larger models. If you are new to JuMP you may want to skip
    or briefly skim this tutorial, and come back to it once you have written a
    few JuMP models.
