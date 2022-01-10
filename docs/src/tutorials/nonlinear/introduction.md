@@ -5,9 +5,9 @@ are a class of optimization problems in which some of the constraints or the
 objective function are nonlinear:
 ```math
 \begin{align}
-    & \min_{x \in \mathbb{R}^n} & f_0(x)\\
-    & \;\;\text{s.t.} & l_j \le \sum\limits_{i=1}^n a_{ij} x_i \le u_j & j = 1 \ldots m
-    & & l_i \le x_i \le u_i.
+    \min_{x \in \mathbb{R}^n} & f_0(x) \\
+    \;\;\text{s.t.} & l_j \le \sum\limits_{i=1}^n a_{ij} x_i \le u_j & j = 1 \ldots m \\
+    & l_i \le x_i \le u_i & i = 1 \ldots n.
 \end{align}
 ```
 
@@ -28,14 +28,15 @@ restricted to convex quadratic problems and will error if you pass a nonconvex
 quadratic function; however, Gurobi has the ability to solve nonconvex quadratic
 terms.
 
-## How this section is structured
+## How these tutorials are structured
 
 Having a high-level overview of how this part of the documentation is structured
 will help you know where to look for certain things.
 
- * Tutorial-style worked examples present a problem in words, then formulate it
-   in mathematics, and then solve it in JuMP. This usually involves some sort of
-   visualization of the solution. Start here if you are new to JuMP.
+ * The following tutorials are worked examples that present a problem in words,
+   then formulate it in mathematics, and then solve it in JuMP. This usually
+   involves some sort of visualization of the solution. Start here if you are
+   new to JuMP.
    * [Rocket Control](@ref)
    * [Optimal control for a Space Shuttle reentry trajectory](@ref)
    * [Quadratic portfolio optimization](@ref)

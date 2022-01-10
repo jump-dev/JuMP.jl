@@ -5,8 +5,8 @@ of convex nonlinear optimization problems which use cones to represent the
 nonlinearities. They have the form:
 ```math
 \begin{align}
-    & \min_{x \in \mathbb{R}^n} & f_0(x)\\
-    & \;\;\text{s.t.} & f_i(x) in \mathcal{S}_i & i = 1 \ldots m
+    & \min_{x \in \mathbb{R}^n} & f_0(x) \\
+    & \;\;\text{s.t.} & f_i(x) \in \mathcal{S}_i & \;\; i = 1 \ldots m
 \end{align}
 ```
 
@@ -24,14 +24,15 @@ MathOptInterface, many of these solvers support a much wider range of exotic
 cones than they natively support. Solvers supporting discrete variables start
 with "(MI)" in the list of [Supported solvers](@ref).
 
-## How this section is structured
+## How these tutorials are structured
 
 Having a high-level overview of how this part of the documentation is structured
 will help you know where to look for certain things.
 
- * Tutorial-style worked examples present a problem in words, then formulate it
-   in mathematics, and then solve it in JuMP. This usually involves some sort of
-   visualization of the solution. Start here if you are new to JuMP.
+ * The following tutorials are worked examples that present a problem in words,
+   then formulate it in mathematics, and then solve it in JuMP. This usually
+   involves some sort of visualization of the solution. Start here if you are
+   new to JuMP.
    * [Experiment design](@ref)
    * [Logistic regression](@ref)
  * The [Tips and tricks](@ref conic_tips_and_tricks) tutorial contains a

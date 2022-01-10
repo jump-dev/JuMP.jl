@@ -1,13 +1,12 @@
 # Introduction
 
 [Linear programs (LPs)](https://en.wikipedia.org/wiki/Linear_programming) are a
-fundamental class of optimization problems:
+fundamental class of optimization problems of the form:
 ```math
 \begin{align}
-    & \min_{x \in \mathbb{R}^n} & \sum\limits_{i=1}^n c_i x_i
-    \\
-    & \;\;\text{s.t.} & l_j \le \sum\limits_{i=1}^n a_{ij} x_i \le u_j & j = 1 \ldots m
-    & & l_i \le x_i \le u_i.
+    \min_{x \in \mathbb{R}^n} & \sum\limits_{i=1}^n c_i x_i \\
+    \;\;\text{s.t.} & l_j \le \sum\limits_{i=1}^n a_{ij} x_i \le u_j & j = 1 \ldots m \\
+    & l_i \le x_i \le u_i & i = 1 \ldots n.
 \end{align}
 ```
 The most important thing to note is that all terms are of the form
@@ -24,14 +23,15 @@ Almost all solvers support linear programs; look for "LP" in the list of
 programs. Solvers supporting discrete variables start with "(MI)" in the list of
 [Supported solvers](@ref).
 
-## How this section is structured
+## How these tutorials are structured
 
 Having a high-level overview of how this part of the documentation is structured
 will help you know where to look for certain things.
 
- * Tutorial-style worked examples present a problem in words, then formulate it
-   in mathematics, and then solve it in JuMP. This usually involves some sort of
-   visualization of the solution. Start here if you are new to JuMP.
+ * The following tutorials are worked examples that present a problem in words,
+   then formulate it in mathematics, and then solve it in JuMP. This usually
+   involves some sort of visualization of the solution. Start here if you are
+   new to JuMP.
    * [The diet problem](@ref)
    * [The cannery problem](@ref)
    * [The facility location problem](@ref)
