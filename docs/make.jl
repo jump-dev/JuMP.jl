@@ -100,6 +100,7 @@ const _PAGES = [
     "Introduction" => ["index.md", "should_i_use.md", "installation.md"],
     "Tutorials" => [
         "Getting started" => [
+            "tutorials/getting_started/introduction.md",
             "tutorials/getting_started/getting_started_with_julia.md",
             "tutorials/getting_started/getting_started_with_JuMP.md",
             "tutorials/getting_started/getting_started_with_sets_and_indexing.md",
