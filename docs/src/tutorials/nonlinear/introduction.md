@@ -6,7 +6,7 @@ objective function are nonlinear:
 ```math
 \begin{align}
     \min_{x \in \mathbb{R}^n} & f_0(x) \\
-    \;\;\text{s.t.} & l_j \le \sum\limits_{i=1}^n a_{ij} x_i \le u_j & j = 1 \ldots m \\
+    \;\;\text{s.t.} & l_j \le f_j(x) \le u_j & j = 1 \ldots m \\
     & l_i \le x_i \le u_i & i = 1 \ldots n.
 \end{align}
 ```

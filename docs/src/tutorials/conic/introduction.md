@@ -6,7 +6,7 @@ nonlinearities. They have the form:
 ```math
 \begin{align}
     & \min_{x \in \mathbb{R}^n} & f_0(x) \\
-    & \;\;\text{s.t.} & f_i(x) \in \mathcal{S}_i & \;\; i = 1 \ldots m
+    & \;\;\text{s.t.} & f_j(x) \in \mathcal{S}_j & \;\; j = 1 \ldots m
 \end{align}
 ```
 
@@ -18,7 +18,7 @@ some (or all) of the decision variables take discrete values.
 JuMP supports a range of conic solvers, although support differs on what types
 of cones each solver supports. In the list of [Supported solvers](@ref), "SOCP"
 denotes solvers supporting second-order cones and "SDP" denotes solvers
-supporting semi-definite cones. In addition, solvers such as SCS and Mosek have
+supporting semidefinite cones. In addition, solvers such as SCS and Mosek have
 support for the exponential cone. Moreover, due to the bridging system in
 MathOptInterface, many of these solvers support a much wider range of exotic
 cones than they natively support. Solvers supporting discrete variables start
@@ -38,7 +38,7 @@ will help you know where to look for certain things.
  * The [Tips and tricks](@ref conic_tips_and_tricks) tutorial contains a
    number of helpful reformulations and tricks you can use when modeling
    conic programs. Look here if you are stuck trying to formulate a problem
-   as a nonlinear program.
+   as a conic program.
  * The remaining tutorials are less verbose and styled in the form of short code
    examples. These tutorials have less explanation, but may contain useful
    code snippets, particularly if they are similar to a problem you are trying
