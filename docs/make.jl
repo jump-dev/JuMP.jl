@@ -104,6 +104,7 @@ const _PAGES = [
             "tutorials/getting_started/design_patterns_for_larger_models.md",
         ],
         "Linear programs" => [
+            "tutorials/linear/introduction.md",
             "tutorials/linear/tips_and_tricks.md",
             "tutorials/linear/diet.md",
             "tutorials/linear/cannery.md",
@@ -123,6 +124,7 @@ const _PAGES = [
             "tutorials/linear/callbacks.md",
         ],
         "Nonlinear programs" => [
+            "tutorials/nonlinear/introduction.md",
             "tutorials/nonlinear/tips_and_tricks.md",
             "tutorials/nonlinear/portfolio.md",
             "tutorials/nonlinear/qcp.md",
@@ -134,6 +136,7 @@ const _PAGES = [
             "tutorials/nonlinear/querying_hessians.md",
         ],
         "Conic programs" => [
+            "tutorials/conic/introduction.md",
             "tutorials/conic/tips_and_tricks.md",
             "tutorials/conic/logistic_regression.md",
             "tutorials/conic/cluster.md",

@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # Tips and tricks
+# # [Tips and tricks](@id linear_tips_and_tricks)
 
 # **Originally Contributed by**: Arpit Bhatia
 
