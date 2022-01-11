@@ -274,7 +274,7 @@ end
 
 # This requires 343 rolls:
 
-Test.@test sum(ceil.(Int, value.(x))) == 343  #hide
+Test.@test sum(ceil.(Int, value.(x))) == 343  #src
 sum(ceil.(Int, value.(x)))
 
 # Alternatively, we can re-introduce the integrality constraints and resolve the
@@ -291,5 +291,5 @@ end
 
 # This now requires 334 rolls:
 
-Test.@test sum(ceil.(Int, value.(x))) == 334  #hide
+Test.@test sum(ceil.(Int, value.(x))) == 334  #src
 total_rolls = sum(ceil.(Int, value.(x)))
