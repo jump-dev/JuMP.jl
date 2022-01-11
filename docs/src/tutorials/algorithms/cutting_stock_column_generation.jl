@@ -295,7 +295,11 @@ optimize!(model)
 for p in 1:length(x)
     v = round(Int, value(x[p]))
     if v > 0
-        println("  ", lpad(v, 2), " rolls of pattern $p, each roll of which makes:")
+        println(
+            "  ",
+            lpad(v, 2),
+            " rolls of pattern $p, each roll of which makes:",
+        )
         for i in 1:I
             if patterns[p][i] > 0
                 println("  ", patterns[p][i], " units of piece $i")
