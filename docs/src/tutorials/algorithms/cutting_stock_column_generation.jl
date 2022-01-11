@@ -50,26 +50,26 @@ end
 
 function get_data()
     data = [
-        75	    38
-        75	    44
-        75	    30
-        75	    41
-        75	    36
-        53.8    33
-        53	    36
-        51	    41
-        50.2    35
-        32.2    37
-        30.8    44
-        29.8    49
-        20.1    37
-        16.2    36
-        14.5    42
-        11	    33
-        8.6	    47
-        8.2	    35
-        6.6	    49
-        5.1	    42
+        75.0 38
+        75.0 44
+        75.0 30
+        75.0 41
+        75.0 36
+        53.8 33
+        53.0 36
+        51.0 41
+        50.2 35
+        32.2 37
+        30.8 44
+        29.8 49
+        20.1 37
+        16.2 36
+        14.5 42
+        11.0 33
+        8.6 47
+        8.2 35
+        6.6 49
+        5.1 42
     ]
     return Data([Piece(data[i, 1], data[i, 2]) for i in 1:size(data, 1)], 100.0)
 end
@@ -216,7 +216,7 @@ P = length(patterns)
 # We can visualize the patterns by looking at the sparse matrix of the
 # non-zeros:
 
-sparse(hcat(patterns...))
+SparseArrays.sparse(hcat(patterns...))
 
 # ## Solving the problem
 
@@ -257,7 +257,7 @@ end
 
 # Let's have a look at the patterns now:
 
-sparse(hcat(patterns...))
+SparseArrays.sparse(hcat(patterns...))
 
 # ## Looking at the solution
 
