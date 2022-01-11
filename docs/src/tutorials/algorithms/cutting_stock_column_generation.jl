@@ -111,13 +111,14 @@ model = Model(GLPK.Optimizer)
 )
 @constraint(model, [i in 1:I], sum(x[i, j] for j in 1:J) >= data.pieces[i].d)
 @objective(model, Min, sum(y[j] for j in 1:J))
+model
 
 # Unfortunately, we won't attempt to solve this formulation because it takes a
 # very long time to solve. (Try it and see.)
 
 ## optimize!(model)
 
-# However, this is a formulation that solves much faster, and that is to use a
+# However, there is a formulation that solves much faster, and that is to use a
 # column generation scheme.
 
 # ## Column generation theory
@@ -125,9 +126,9 @@ model = Model(GLPK.Optimizer)
 # The key insight for column generation is to recognize that the ``x`` variables
 # above encode _cutting patterns_. For example, if we look only at the roll
 # ``j=1``, then feasible solutions are:
-# * ``x_{1,1} = 1``, ``x_{13,1} = 1`` and all the rest `0`, which is 1 roll of
-#   \#1 and 1 roll of \#13
-# * ``x_{1,20} = 1`` and all the rest ``0```, which is 19 rolls of \#20.
+# * ``x_{1,1} = 1``, ``x_{13,1} = 1`` and all the rest ``0``, which is 1 roll of
+#   piece \#1 and 1 roll of piece \#13
+# * ``x_{1,20} = 19`` and all the rest ``0``, which is 19 rolls of piece \#20.
 
 # Cutting patterns like ``x_{1,1} = 1`` and ``x_{2,1} = 1`` are infeasible
 # because the combined length is greater than ``W``.
@@ -140,7 +141,7 @@ model = Model(GLPK.Optimizer)
 # ```math
 # \begin{align}
 #     \min & \sum\limits_{p=1}^P x_p \\
-#     \;\;\text{s.t.} & \sum\limits_{p=1}^P a_{ip} x_p \ge d_i & \forall i=1,\ldots,I
+#     \;\;\text{s.t.} & \sum\limits_{p=1}^P a_{ip} x_p \ge d_i & \forall i=1,\ldots,I \\
 #          & x_{p} \ge 0 & \forall p=1,\ldots,P \\
 #          & x_{p} \in \mathbb{Z} & \forall p=1,\ldots,P
 # \end{align}
@@ -179,7 +180,7 @@ model = Model(GLPK.Optimizer)
 #          & y_{i} \in \mathbb{Z} & \forall i=1,\ldots,I \\
 # \end{align}
 # ```
-# If this problem, called the _pricing problem_ has an objective value greater
+# If this problem, called the _pricing problem_, has an objective value greater
 # than ``1``, then we estimate than adding `y` as the coefficients of a new
 # column will decrease the objective by more than the cost of an extra roll.
 
@@ -227,9 +228,9 @@ set_silent(model)
 @variable(model, x[1:P] >= 0)
 @objective(model, Min, sum(x))
 @constraint(model, demand[i = 1:I], patterns[i]' * x == data.pieces[i].d)
+model
 
-# Then, column generation works by solving the problem, obtaining a dual vector,
-# solving the pricing problem,
+# Then, we run the iterative column generation scheme:
 
 while true
     ## Solve the linear relaxation
@@ -259,11 +260,20 @@ end
 
 SparseArrays.sparse(hcat(patterns...))
 
+# Nice! We found over 20 new patterns.    
+
+# Here's pattern 21:
+
+for i in 1:I
+    if patterns[21][i] > 0
+        println(patterns[21][i], " units of piece $i")
+    end
+end
+
 # ## Looking at the solution
 
 # Since we only solved a linear relaxation, some of our columns have fractional
-# solutions. We can create a integer feasible solution by cutting the next
-# integeral solution:
+# solutions. We can create a integer feasible solution by rounding up the orders:
 
 for p in 1:length(x)
     v = ceil(Int, value(x[p]))
