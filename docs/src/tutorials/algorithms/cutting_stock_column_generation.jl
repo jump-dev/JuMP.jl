@@ -266,7 +266,7 @@ SparseArrays.sparse(hcat(patterns...))
 
 for i in 1:I
     if patterns[21][i] > 0
-        println(patterns[21][i], " units of piece $i")
+        println(patterns[21][i], " unit(s) of piece $i")
     end
 end
 
@@ -278,7 +278,7 @@ end
 for p in 1:length(x)
     v = ceil(Int, value(x[p]))
     if v > 0
-        println("  ", lpad(v, 2), " rolls of pattern $p")
+        println(lpad(v, 2), " roll(s) of pattern $p")
     end
 end
 
@@ -295,14 +295,10 @@ optimize!(model)
 for p in 1:length(x)
     v = round(Int, value(x[p]))
     if v > 0
-        println(
-            "  ",
-            lpad(v, 2),
-            " rolls of pattern $p, each roll of which makes:",
-        )
+        println(lpad(v, 2), " roll(s) of pattern $p, each roll of which makes:")
         for i in 1:I
             if patterns[p][i] > 0
-                println("  ", patterns[p][i], " units of piece $i")
+                println("  ", patterns[p][i], " unit(s) of piece $i")
             end
         end
     end
