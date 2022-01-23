@@ -30,7 +30,7 @@ function solve_max_cut_sdp(num_vertex, weights)
     ## Solve the SDP relaxation
     model = Model(SCS.Optimizer)
     set_silent(model)
-    # Start with X as the identity matrix to avoid numerical issues.
+    ## Start with X as the identity matrix to avoid numerical issues.
     @variable(
         model,
         X[i = 1:num_vertex, j = 1:num_vertex],
