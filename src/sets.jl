@@ -152,7 +152,7 @@ euclidean norm of a vector `x` to be less than or equal to ``2tu`` where `t` and
 
 ## Examples
 
-The following constrains ``\\|(x-1, x-2)\\|_2 \\le 2tx`` and ``t, x \\ge 0``:
+The following constrains ``\\|(x-1, x-2)\\|^2_2 \\le 2tx`` and ``t, x \\ge 0``:
 ```jldoctest; setup = :(using JuMP)
 julia> model = Model();
 
