@@ -213,20 +213,20 @@ lazy_model = Model(GLPK.Optimizer)
 print(lazy_model)
 
 function my_callback(cb_data)
-    # fm_current = callback_value(cb_data, θ)
-    # lower_bound = objective_value(model)
+    ## fm_current = callback_value(cb_data, θ)
+    ## lower_bound = objective_value(model)
     x_k = callback_value.(cb_data, x)
     ret = solve_subproblem(x_k)
     if callback_value(cb_data, θ) ≈ ret.obj
         return  # We are done
     end
-    # upper_bound = objective_value(model) - value(θ) + ret.obj
-    # gap = (upper_bound - lower_bound) / upper_bound
-    # print_iteration(k, lower_bound, upper_bound, gap)
-    # if gap < ABSOLUTE_OPTIMALITY_GAP
-    # println("Terminating with the optimal solution")
-    # break
-    # end
+    ## upper_bound = objective_value(model) - value(θ) + ret.obj
+    ## gap = (upper_bound - lower_bound) / upper_bound
+    ## print_iteration(k, lower_bound, upper_bound, gap)
+    ## if gap < ABSOLUTE_OPTIMALITY_GAP
+    ##     println("Terminating with the optimal solution")
+    ##     break
+    ## end
     cut = @build_constraint(θ >= ret.obj + -ret.π' * A_1 * (x .- x_k))
     MOI.submit(model, MOI.LazyConstraint(cb_data), cut)
     return
