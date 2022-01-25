@@ -41,11 +41,11 @@ import Test  #src
 # following mixed-integer linear program:
 # ```math
 # \begin{aligned}
-# \text{min} \quad &&c_1^\top x+c_2^\top y \\
-# \text{subject to} \quad &&A_1 x+ A_2 y \le b \\
-# & x \ge 0 \\
-# & y \ge 0 \\
-# & x \in \mathbb{Z}^n
+# \text{min}        \ & c_1^\top x+c_2^\top y   \\
+# \text{subject to} \ & A_1 x+ A_2 y \le b      \\
+#                     & x \ge 0                 \\
+#                     & y \ge 0                 \\
+#                     & x \in \mathbb{Z}^n
 # \end{aligned}
 # ```
 # where $b \in \mathbb{R}^m$, $A_1 \in \mathbb{R}^{m \times n}$,
@@ -55,28 +55,29 @@ import Test  #src
 
 # If there are relatively few integer variables, and many more continuous
 # variables, then it may be beneficial to decompose the problem into a small
-# problem containing only integer variables, and a linear program containing
-# only continous variables. Hopefully, the linear program will be much easier to
-# solve in isolation that in the full mixed-integer linear program.
+# problem containing only integer variables and a linear program containing
+# only continuous variables. Hopefully, the linear program will be much easier
+# to solve in isolation than in the full mixed-integer linear program.
 
 # For example, if we knew a feasible solution for ``x``, we could obtain a
 # solution for ``y`` by solving:
 # ```math
 # \begin{aligned}
-# V_2(x) = \text{min} \quad && c_2^\top y \\
-# \text{subject to} \quad && A_2 y \le b - A_1 x & [\pi] \\
-# & y \ge 0.
+# V_2(x) = & \text{min}          \ & c_2^\top y                        \\
+#          & \text{subject to}   \ & A_2 y \le b - A_1 x & \quad [\pi] \\
+#          &                       & y \ge 0,
 # \end{aligned}
 # ```
-# Since this is a linear program it is easy to solve.
+# where ``\pi`` is the dual variable associated with the constraints. Because
+# this is a linear program, it is easy to solve.
 
 # Replacing the ``c_2^\top y`` component of the objective in our original
 # problem with ``V_2`` yields:
 # ```math
 # \begin{aligned}
-# \text{min} \quad && c_1^\top x + V_2(x) \\
-# \text{subject to} & x \ge 0 \\
-# & x \in \mathbb{Z}^n
+# \text{min}        \ & c_1^\top x + V_2(x) \\
+# \text{subject to} \ & x \ge 0             \\
+#                     & x \in \mathbb{Z}^n
 # \end{aligned}
 # ```
 # This problem looks a lot simpler to solve, but we need to do something else
@@ -87,7 +88,7 @@ import Test  #src
 # variable ``\pi`` can be multiplied by ``-A_1`` to obtain a subgradient of
 # ``V_2(x)`` with respect to ``x``. Therefore, if we have a candidate solution
 # ``x_k``, then we can solve ``V_2(x_k)`` and obtain a feasible dual vector
-# ``\pi_k``. Using these values, we can constraint a first-order Taylor-series
+# ``\pi_k``. Using these values, we can construct a first-order Taylor-series
 # approximation of ``V_2`` about the point ``x_k``:
 # ```math
 # V_2(x) \ge V_2(x_k) + -\pi_k^\top A_1 (x - x_k).
@@ -96,17 +97,19 @@ import Test  #src
 # these inequalities _cuts_.
 
 # Benders decomposition is an iterative technique that replaces ``V_2(x)`` with
-# a new decision variable ``theta``, and approximates it from below using cuts:
+# a new decision variable ``\theta``, and approximates it from below using cuts:
 # ```math
 # \begin{aligned}
-# V_1^K = \text{min} \quad && c_1^\top x + \theta \\
-# \text{subject to} & x \ge 0 \\
-# & x \in \mathbb{Z}^n \\
-# & \theta \le M \\
-# & \theta \le V_2(x_k) + \pi_k^\top(x - x_k) & \forall k = 1,\ldots,K.
+# V_1^K = & \text{min}         \ & c_1^\top x + \theta  \\
+#         &  \text{subject to} \ & x \ge 0              \\
+#         &                    \ & x \in \mathbb{Z}^n   \\
+#         &                    \ & \theta \ge M         \\
+#         &                    \ & \theta \ge V_2(x_k) + \pi_k^\top(x - x_k) & \forall k = 1,\ldots,K.
 # \end{aligned}
 # ```
-# This optimization is called the _first-stage_ subproblem.
+# This integer program is called the _first-stage_ subproblem.
+
+# ... still more to do ...
 
 # ## Input data
 
