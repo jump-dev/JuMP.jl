@@ -84,10 +84,11 @@ import Test  #src
 
 # Because ``x`` is a constant that appears on the right-hand side of the
 # constraints, ``V_2`` is a convex function with respect to ``x``, and the dual
-# variable ``\pi`` is a subgradient of ``V_2(x)``. Therefore, if we have some
-# candidate solution ``x_k``, then we can solve ``V_2(x_k)`` and obtain a
-# feasible dual vector ``\pi_k``. Using these values, we can constraint a
-# first-order Taylor-series approximation of ``V_2`` about the point ``x_k``:
+# variable ``\pi`` can be multiplied by ``-A_1`` to obtain a subgradient of
+# ``V_2(x)`` with respect to ``x``. Therefore, if we have a candidate solution
+# ``x_k``, then we can solve ``V_2(x_k)`` and obtain a feasible dual vector
+# ``\pi_k``. Using these values, we can constraint a first-order Taylor-series
+# approximation of ``V_2`` about the point ``x_k``:
 # ```math
 # V_2(x) \ge V_2(x_k) + -\pi_k^\top A_1 (x - x_k).
 # ```
@@ -121,7 +122,7 @@ A_1 = [1 -3; -1 -3]
 A_2 = [1 -2; -1 -1]
 M = -1000;
 
-# ## Implementation
+# ## Iterative method
 
 # !!! warning
 #     This is a basic implementation for pedagogical purposes. We haven't
@@ -191,6 +192,46 @@ end
 # Finally, we can obtain the optimal solution
 
 optimize!(model)
+Test.@test value.(x) == [0.0, 1.0]  #src
+x_optimal = value.(x)
+
+#-
+
+optimal_ret = solve_subproblem(x_optimal)
+Test.@test optimal_ret.y == [0.0, 0.0]  #src
+y_optimal = optimal_ret.y
+
+# ## Callback method
+
+lazy_model = Model(GLPK.Optimizer)
+@variable(lazy_model, x[1:dim_x] >= 0, Int)
+@variable(lazy_model, θ >= M)
+@objective(lazy_model, Min, θ)
+print(lazy_model)
+
+function my_callback(cb_data)
+    # fm_current = callback_value(cb_data, θ)
+    # lower_bound = objective_value(model)
+    x_k = callback_value.(cb_data, x)
+    ret = solve_subproblem(x_k)
+    if callback_value(cb_data, θ) ≈ ret.obj
+        return  # We are done
+    end
+    # upper_bound = objective_value(model) - value(θ) + ret.obj
+    # gap = (upper_bound - lower_bound) / upper_bound
+    # print_iteration(k, lower_bound, upper_bound, gap)
+    # if gap < ABSOLUTE_OPTIMALITY_GAP
+    # println("Terminating with the optimal solution")
+    # break
+    # end
+    cut = @build_constraint(θ >= ret.obj + -ret.π' * A_1 * (x .- x_k))
+    MOI.submit(model, MOI.LazyConstraint(cb_data), cut)
+    return
+end
+
+MOI.set(lazy_model, MOI.LazyConstraintCallback(), my_callback)
+
+optimize!(lazy_model)
 Test.@test value.(x) == [0.0, 1.0]  #src
 x_optimal = value.(x)
 
