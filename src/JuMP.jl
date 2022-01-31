@@ -1234,22 +1234,30 @@ Return the value of the attribute `attr` from the model's MOI backend.
 function MOI.get(model::Model, attr::MOI.AbstractModelAttribute)
     if !MOI.is_set_by_optimize(attr)
         return MOI.get(backend(model), attr)
-    elseif attr isa MOI.TerminationStatus
-        if model.is_model_dirty && mode(model) != DIRECT
-            return MOI.OPTIMIZE_NOT_CALLED
-        end
-        return MOI.get(backend(model), attr)
-    elseif attr isa MOI.PrimalStatus || attr isa MOI.DualStatus
-        if model.is_model_dirty && mode(model) != DIRECT
-            return MOI.NO_SOLUTION
-        end
-        return MOI.get(backend(model), attr)
-    else
-        if model.is_model_dirty && mode(model) != DIRECT
-            throw(OptimizeNotCalled())
-        end
-        return _moi_get_result(backend(model), attr)
+    elseif model.is_model_dirty && mode(model) != DIRECT
+        @warn(
+            "The model has been modified since the last call to `optimize!`. " *
+            "If you are iteratively querying solution information and " *
+            "modifying a model, query all the results first, then modify the " *
+            "model.",
+        )
+        throw(OptimizeNotCalled())
     end
+    return _moi_get_result(backend(model), attr)
+end
+
+function MOI.get(model::Model, attr::MOI.TerminationStatus)
+    if model.is_model_dirty && mode(model) != DIRECT
+        return MOI.OPTIMIZE_NOT_CALLED
+    end
+    return MOI.get(backend(model), attr)
+end
+
+function MOI.get(model::Model, attr::Union{MOI.PrimalStatus,MOI.DualStatus})
+    if model.is_model_dirty && mode(model) != DIRECT
+        return MOI.NO_SOLUTION
+    end
+    return MOI.get(backend(model), attr)
 end
 
 """

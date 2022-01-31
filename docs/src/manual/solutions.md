@@ -286,30 +286,79 @@ Solution is optimal
 
 ## OptimizeNotCalled errors
 
-Modifying a model after calling [`optimize!`](@ref) will reset the model into
-the `MOI.OPTIMIZE_NOT_CALLED` state. If you attempt to query solution
+Due to differences in how solvers cache solutions internally, modifying a model
+after calling [`optimize!`](@ref) will reset the model into the
+`MOI.OPTIMIZE_NOT_CALLED` state. If you then attempt to query solution
 information, an `OptimizeNotCalled` error will be thrown.
 
 If you are iteratively querying solution information and modifying a model,
 query all the results first, then modify the problem.
 
 For example, instead of:
-```julia
-model = Model(GLPK.Optimizer)
-@variable(model, x >= 0)
-optimize!(model)
-set_lower_bound(x, 1)  # This will modify the model
-x_val = value(x)       # This will fail because the model has been modified
-set_start_value(x, x_val)
+```jldoctest
+julia> model = Model(GLPK.Optimizer);
+
+julia> @variable(model, x >= 0);
+
+julia> optimize!(model);
+
+julia> termination_status(model)
+OPTIMAL::TerminationStatusCode = 1
+
+julia> set_upper_bound(x, 1)
+
+julia> x_val = value(x)
+ERROR: OptimizeNotCalled()
+Stacktrace:
+[...]
+
+julia> termination_status(model)
+OPTIMIZE_NOT_CALLED::TerminationStatusCode = 0
 ```
 do
-```julia
-model = Model(GLPK.Optimizer)
-@variable(model, x >= 0)
-optimize!(model)
-x_val = value(x)
-set_lower_bound(x, 1)
-set_start_value(x, x_val)
+```jldoctest
+julia> model = Model(GLPK.Optimizer);
+
+julia> @variable(model, x >= 0);
+
+julia> optimize!(model);
+
+julia> x_val = value(x)
+0.0
+
+julia> termination_status(model)
+OPTIMAL::TerminationStatusCode = 1
+
+julia> set_upper_bound(x, 1)
+
+julia> set_lower_bound(x, x_val)
+
+julia> termination_status(model)
+OPTIMIZE_NOT_CALLED::TerminationStatusCode = 0
+```
+
+If you know that your particular solver supports querying solution information
+after modifications, you can use [`direct_model`](@ref) to bypass the
+`MOI.OPTIMIZE_NOT_CALLED` state:
+```jldoctest
+julia> model = direct_model(GLPK.Optimizer());
+
+julia> @variable(model, x >= 0);
+
+julia> optimize!(model)
+
+julia> termination_status(model)
+OPTIMAL::TerminationStatusCode = 1
+
+julia> set_upper_bound(x, 1)
+
+julia> x_val = value(x)
+0.0
+
+julia> set_lower_bound(x, x_val)
+
+julia> termination_status(model)
+OPTIMAL::TerminationStatusCode = 1
 ```
 
 ```@meta
