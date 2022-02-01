@@ -137,7 +137,7 @@ A_1 = [1 -3; -1 -3]
 A_2 = [1 -2; -1 -1]
 M = -1000;
 
-# ## Iterative method
+# ## [Iterative method](@id benders_iterative)
 
 # !!! warning
 #     This is a basic implementation for pedagogical purposes. We haven't
@@ -221,13 +221,13 @@ y_optimal = optimal_ret.y
 
 # ## Callback method
 
-# The [Iterative method](@ref) section implemented Benders decomposition using a
-# loop. In each iteration, we re-solved the first-stage subproblem to generate
-# a candidate solution. However, modern MILP solvers such as CPLEX, Gurobi, and
-# GLPK provide lazy constraint callbacks which allow us to add new cuts _while_
-# _the solver is running_. This can be more efficient than an iterative method
-# because we can avoid repeating work such as solving the root node of the
-# first-stage MIP at each iteration.
+# The [Iterative method](@ref benders_iterative) section implemented Benders
+# decomposition using a loop. In each iteration, we re-solved the first-stage
+# subproblem to generate a candidate solution. However, modern MILP solvers such
+# as CPLEX, Gurobi, and GLPK provide lazy constraint callbacks which allow us to
+# add new cuts _while the solver is running_. This can be more efficient than an
+# iterative method because we can avoid repeating work such as solving the root
+# node of the first-stage MILP at each iteration.
 
 # !!! tip
 #     For more information on callbacks, read the page
