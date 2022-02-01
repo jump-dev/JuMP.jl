@@ -23,16 +23,14 @@
 # **Originally Contributed by**: Shuvomoy Das Gupta
 
 # This tutorial describes how to implement [Benders decomposition](https://en.wikipedia.org/wiki/Benders_decomposition)
-# in JuMP using an iterative method. It uses the following packages:
+# in JuMP. It uses the following packages:
 
 using JuMP
 import GLPK
 import Printf
 import Test  #src
 
-# !!! info
-#     For an alternative approach using callbacks, read
-#     [Benders decomposition (via callbacks)](@ref benders_decomposition_lazy).
+# ## Theory
 
 # Benders decomposition is a useful algorithm for solving convex optimization
 # problems with a large number of variables. It works best when a larger problem
@@ -104,17 +102,31 @@ import Test  #src
 #         &  \text{subject to} \ & x \ge 0              \\
 #         &                    \ & x \in \mathbb{Z}^n   \\
 #         &                    \ & \theta \ge M         \\
-#         &                    \ & \theta \ge V_2(x_k) + \pi_k^\top(x - x_k) & \forall k = 1,\ldots,K.
+#         &                    \ & \theta \ge V_2(x_k) + \pi_k^\top(x - x_k) & \quad \forall k = 1,\ldots,K.
 # \end{aligned}
 # ```
 # This integer program is called the _first-stage_ subproblem.
 
-# ... still more to do ...
+# To generate cuts, we solve ``V_1^K`` to obtain a candidate first-stage
+# solution ``x_k``, then we use that solution to solve ``V_2(x_k)``. Then, using
+# the optimal objective value and dual solution from ``V_2``, we add a new cut
+# to form ``V_1^{K+1}`` and repeat.
+
+# ### Bounds
+
+# Due to convexity, we know that ``V_2(x) \ge \theta`` for all ``x``. Therefore,
+# the optimal objective value of ``V_1^K`` provides a valid _lower_ bound on the
+# objective value of the full problem. In addition, if we take a feasible
+# solution for ``x`` from the first-stage problem, then ``c_1^\top x + V_2(x)``
+# is a valid _upper_ bound on the objective value of the full problem.
+
+# Benders decomposition uses the lower and upper bounds to determine when it has
+# found the global optimal solution.
 
 # ## Input data
 
-# The input data is from page 139 of Garfinkel, R. & Nemhauser, G. L. Integer
-# programming. (Wiley, 1972).
+# As an example for this tutorial, we use the input data is from page 139 of
+# Garfinkel, R. & Nemhauser, G. L. Integer programming. (Wiley, 1972).
 
 c_1 = [1, 4]
 c_2 = [2, 3]
@@ -133,17 +145,17 @@ M = -1000;
 #     that are required to build a performative implementation for large-scale
 #     problems.
 
-# Here is the first-stage subproblem:
+# We start by formulating the first-stage subproblem:
 
 model = Model(GLPK.Optimizer)
 @variable(model, x[1:dim_x] >= 0, Int)
-@variable(model, θ)
-@constraint(model, c_1' * x + θ >= M)
+@variable(model, θ >= M)
 @objective(model, Min, c_1' * x + θ)
 print(model)
 
-# Here is a function that takes a first-stage candidate solution `x` and returns
-# the optimal solution from the second-stage subproblem:
+# FOr the next step, we need a function that takes a first-stage candidate
+# solution `x` and returns the optimal solution from the second-stage
+# subproblem:
 
 function solve_subproblem(x)
     model = Model(GLPK.Optimizer)
@@ -155,7 +167,10 @@ function solve_subproblem(x)
     return (obj = objective_value(model), y = value.(y), π = dual.(con))
 end
 
-# We're almost ready for our optimization look, but first, here's a helpful
+# Note that `solve_subproblem` returns a `NamedTuple` of the objective value,
+# the optimal primal solution for `y`, and the optimal dual solution for `π`.
+
+# We're almost ready for our optimization loop, but first, here's a helpful
 # function for logging:
 
 function print_iteration(k, args...)
@@ -181,7 +196,7 @@ for k in 1:MAXIMUM_ITERATIONS
     lower_bound = objective_value(model)
     x_k = value.(x)
     ret = solve_subproblem(x_k)
-    upper_bound = objective_value(model) - value(θ) + ret.obj
+    upper_bound = c_1' * x_k + ret.obj
     gap = (upper_bound - lower_bound) / upper_bound
     print_iteration(k, lower_bound, upper_bound, gap)
     if gap < ABSOLUTE_OPTIMALITY_GAP
@@ -206,27 +221,49 @@ y_optimal = optimal_ret.y
 
 # ## Callback method
 
+# The [Iterative method](@ref) section implemented Benders decomposition using a
+# loop. In each iteration, we re-solved the first-stage subproblem to generate
+# a candidate solution. However, modern MILP solvers such as CPLEX, Gurobi, and
+# GLPK provide lazy constraint callbacks which allow us to add new cuts _while_
+# _the solver is running_. This can be more efficient than an iterative method
+# because we can avoid repeating work such as solving the root node of the
+# first-stage MIP at each iteration.
+
+# !!! tip
+#     For more information on callbacks, read the page
+#     [Solver-independent callbacks](@ref callbacks_manual).
+
+# As before, we construct the same first-stage subproblem:
+
 lazy_model = Model(GLPK.Optimizer)
 @variable(lazy_model, x[1:dim_x] >= 0, Int)
 @variable(lazy_model, θ >= M)
 @objective(lazy_model, Min, θ)
 print(lazy_model)
 
+# What differs is that we write a callback function instead of a loop:
+
+k = 0
+
+"""
+    my_callback(cb_data)
+
+A callback that implements Benders decomposition. Note how similar it is to the
+inner loop of the iterative method.
+"""
 function my_callback(cb_data)
-    ## fm_current = callback_value(cb_data, θ)
-    ## lower_bound = objective_value(model)
+    global k += 1
     x_k = callback_value.(cb_data, x)
+    θ_k = callback_value(cb_data, θ)
+    lower_bound = c_1' * x_k + θ_k
     ret = solve_subproblem(x_k)
-    if callback_value(cb_data, θ) ≈ ret.obj
-        return  # We are done
+    upper_bound = c_1' * x_k + c_2' * ret.y
+    gap = (upper_bound - lower_bound) / upper_bound
+    print_iteration(k, lower_bound, upper_bound, gap)
+    if gap < ABSOLUTE_OPTIMALITY_GAP
+        println("Terminating with the optimal solution")
+        return
     end
-    ## upper_bound = objective_value(model) - value(θ) + ret.obj
-    ## gap = (upper_bound - lower_bound) / upper_bound
-    ## print_iteration(k, lower_bound, upper_bound, gap)
-    ## if gap < ABSOLUTE_OPTIMALITY_GAP
-    ##     println("Terminating with the optimal solution")
-    ##     break
-    ## end
     cut = @build_constraint(θ >= ret.obj + -ret.π' * A_1 * (x .- x_k))
     MOI.submit(model, MOI.LazyConstraint(cb_data), cut)
     return
@@ -234,7 +271,15 @@ end
 
 MOI.set(lazy_model, MOI.LazyConstraintCallback(), my_callback)
 
+# Now when we optimize!, our callback is run:
+
 optimize!(lazy_model)
+
+# Note how this problem also takes 4 iterations to converge, but the sequence
+# of bounds is different compared to the iterative method.
+
+# Finally, we can obtain the optimal solution:
+
 Test.@test value.(x) == [0.0, 1.0]  #src
 x_optimal = value.(x)
 
