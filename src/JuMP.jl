@@ -1236,10 +1236,10 @@ function MOI.get(model::Model, attr::MOI.AbstractModelAttribute)
         return MOI.get(backend(model), attr)
     elseif model.is_model_dirty && mode(model) != DIRECT
         @warn(
-            "The model has been modified since the last call to `optimize!`. " *
-            "If you are iteratively querying solution information and " *
-            "modifying a model, query all the results first, then modify the " *
-            "model.",
+            "The model has been modified since the last call to `optimize!` (" *
+            "or `optimize!` has not been called yet. If you are iteratively " *
+            "querying solution information and modifying a model, query all " *
+            "the results first, then modify the model.",
         )
         throw(OptimizeNotCalled())
     end
