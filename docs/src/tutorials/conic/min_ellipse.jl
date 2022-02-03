@@ -42,7 +42,7 @@ function example_min_ellipse()
     optimize!(model)
     Test.@test termination_status(model) == OPTIMAL
     Test.@test primal_status(model) == FEASIBLE_POINT
-    Test.@test objective_value(model) ≈ 6.46233 atol = 1e-5
+    Test.@test objective_value(model) ≈ 6.46236 atol = 1e-4
     Test.@test value.(X) ≈ [3.1651 0.8022; 0.8022 3.2972] atol = 1e-4
     return
 end
