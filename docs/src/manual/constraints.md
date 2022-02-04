@@ -737,7 +737,7 @@ julia> dual_start_value(con)
 
 To take the solution from the last solve and use it as the starting point for a
 new solve, use a function like this:
-```@example
+```@repl
 using JuMP, SCS
 function set_optimal_start_values(model::Model)
     variable_primal = Dict(x => value(x) for x in all_variables(model))
@@ -760,9 +760,9 @@ function set_optimal_start_values(model::Model)
     end
     return
 end
-model = Model(SCS.Optimizer)
-@variable(model, x[1:3] >= 0)
-@constraint(model, sum(x) <= 1)
+model = Model(SCS.Optimizer);
+@variable(model, x[1:3] >= 0);
+@constraint(model, sum(x) <= 1);
 optimize!(model)
 set_optimal_start_values(model)
 using Test # hide
