@@ -36,7 +36,7 @@ We use the options contained in [`.JuliaFormatter.toml`](https://github.com/jump
 
 To format code, `cd` to the JuMP directory, then run:
 ```julia
-] add JuliaFormatter@0.13.2
+] add JuliaFormatter@0.22.2
 using JuliaFormatter
 format("src")
 format("test")
