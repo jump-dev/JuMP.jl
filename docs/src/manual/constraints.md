@@ -735,42 +735,9 @@ julia> dual_start_value(con)
  3.0
 ```
 
-To take the solution from the last solve and use it as the starting point for a
-new solve, use a function like this:
-```@repl
-using JuMP, SCS
-function set_optimal_start_values(model::Model)
-    variable_primal = Dict(x => value(x) for x in all_variables(model))
-    constraint_solution = Dict()
-    for (F, S) in list_of_constraint_types(model)
-        try
-            for ci in all_constraints(model, F, S)
-                constraint_solution[ci] = (value(ci), dual(ci))
-            end
-        catch
-            # Something went wrong, so skip this constraint type.
-        end
-    end
-    for (x, primal_start) in variable_primal
-        set_start_value(x, primal_start)
-    end
-    for (ci, (primal_start, dual_start)) in constraint_solution
-        set_start_value(ci, primal_start)
-        set_dual_start_value(ci, dual_start)
-    end
-    return
-end
-model = Model(SCS.Optimizer);
-@variable(model, x[1:3] >= 0);
-@constraint(model, sum(x) <= 1);
-optimize!(model)
-set_optimal_start_values(model)
-using Test # hide
-@test termination_status(model) == OPTIMIZE_NOT_CALLED # hide
-optimize!(model)
-```
-Note how the second call to `optimize!` terminates after a single iteration
-because it is warm-started from the optimal solution.
+!!! tip
+    For more information, check out the [Primal and dual warm-starts](@ref)
+    tutorial.
 
 ## Constraint containers
 
