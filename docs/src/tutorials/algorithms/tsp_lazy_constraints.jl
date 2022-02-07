@@ -117,7 +117,7 @@ import Plots
 # thus, the weight (distance) of each edge is defined as follows.
 
 function generate_distance_matrix(n; random_seed = 1)
-    Random.seed!(Random.MersenneTwister(),random_seed)
+    Random.seed!(Random.MersenneTwister(), random_seed)
     X = 100 * rand(n)
     Y = 100 * rand(n)
     d = [sqrt((X[i] - X[j])^2 + (Y[i] - Y[j])^2) for i in 1:n, j in 1:n]
