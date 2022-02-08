@@ -29,8 +29,7 @@ function _link_example(content)
         # The link won't work locally. So hard-code in a URL.
         edit_url = replace(
             edit_url,
-            "<unknown>" =>
-                "https://github.com/jump-dev/JuMP.jl/tree/master",
+            "<unknown>" => "https://github.com/jump-dev/JuMP.jl/tree/master",
         )
     end
     return content *

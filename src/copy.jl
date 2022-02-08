@@ -59,8 +59,10 @@ end
 
 function Base.getindex(map::ReferenceMap, expr::GenericQuadExpr)
     aff = map[expr.aff]
-    terms = [UnorderedPair(map[key.a], map[key.b]) => val for
-     (key, val) in expr.terms]
+    terms = [
+        UnorderedPair(map[key.a], map[key.b]) => val for
+        (key, val) in expr.terms
+    ]
     return GenericQuadExpr(aff, terms)
 end
 
