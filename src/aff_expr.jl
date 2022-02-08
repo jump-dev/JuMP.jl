@@ -481,18 +481,20 @@ end
 function Base.convert(::Type{GenericAffExpr{T,V}}, v::_Constant) where {T,V}
     return GenericAffExpr{T,V}(convert(T, _constant_to_number(v)))
 end
+
 function Base.convert(
     ::Type{GenericAffExpr{T,V}},
     aff::GenericAffExpr{T,V},
 ) where {T,V}
     return aff
 end
+
 function Base.convert(
     ::Type{GenericAffExpr{T,V}},
     aff::GenericAffExpr{S,V},
 ) where {S,T,V}
     return GenericAffExpr{T,V}(
-        aff.constant,
+        convert(T, aff.constant),
         convert(OrderedDict{V,T}, aff.terms),
     )
 end
@@ -656,7 +658,9 @@ function _fill_vaf!(
     return offset + length(linear_terms(aff))
 end
 
-function MOI.VectorAffineFunction(affs::Vector{GenericAffExpr{C,V}}) where {C,V}
+function MOI.VectorAffineFunction(
+    affs::Vector{GenericAffExpr{C,VariableRef}},
+) where {C}
     len = 0
     for aff in affs
         len += length(linear_terms(aff))

@@ -17,24 +17,6 @@ _float(x::Real) = convert(Float64, x)
 _float(x::Complex) = convert(Complex{Float64}, x)
 _float(J::UniformScaling) = _float(J.λ)
 
-_number_type(::AbstractVariableRef) = Float64
-_number_type(::Type{<:AbstractVariableRef}) = Float64
-
-function _aff_type(::Type{V}) where {V<:AbstractVariableRef}
-    # TODO(odow): is typeof(V) correct here?
-    return GenericAffExpr{_number_type(V),typeof(V)}
-end
-
-function _quad_type(::Type{V}) where {V<:AbstractVariableRef}
-    return GenericQuadExpr{_number_type(V),typeof(V)}
-end
-
-_aff_type(v::AbstractVariableRef) = _aff_type(typeof(v))
-
-_quad_type(v::AbstractVariableRef) = _quad_type(typeof(v))
-
-_quad_type(::GenericAffExpr{C,V}) where {C,V} = GenericQuadExpr{C,V}
-
 # Overloads
 #
 # Different objects that must all interact:
@@ -54,7 +36,7 @@ function Base.:-(lhs::_Constant, rhs::AbstractVariableRef)
 end
 function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
     if iszero(lhs)
-        return zero(_aff_type(rhs))
+        return zero(GenericAffExpr{Float64,typeof(rhs)})
     else
         coef = _float(lhs)
         return _build_aff_expr(zero(coef), coef, rhs)
@@ -96,13 +78,16 @@ function Base.:+(lhs::V, rhs::V) where {V<:AbstractVariableRef}
 end
 function Base.:-(lhs::V, rhs::V) where {V<:AbstractVariableRef}
     if lhs == rhs
-        return zero(_aff_type(V))
+        return zero(GenericAffExpr{Float64,V})
     else
         return _build_aff_expr(0.0, 1.0, lhs, -1.0, rhs)
     end
 end
 function Base.:*(lhs::V, rhs::V) where {V<:AbstractVariableRef}
-    return GenericQuadExpr(zero(_aff_type(V)), UnorderedPair(lhs, rhs) => 1.0)
+    return GenericQuadExpr(
+        GenericAffExpr{Float64,V}(),
+        UnorderedPair(lhs, rhs) => 1.0,
+    )
 end
 # AbstractVariableRef--GenericAffExpr
 function Base.:+(
@@ -178,9 +163,9 @@ function Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::Integer)
     if rhs == 2
         return lhs * lhs
     elseif rhs == 1
-        return convert(_quad_type(lhs), lhs)
+        return convert(GenericQuadExpr{Float64,variable_ref_type(lhs)}, lhs)
     elseif rhs == 0
-        return one(_quad_type(lhs))
+        return one(GenericQuadExpr{Float64,variable_ref_type(lhs)})
     else
         error(
             "Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.",

@@ -52,7 +52,7 @@ function _MA.promote_operation(
     ::Type{V},
     ::Type{V},
 ) where {V<:AbstractVariableRef}
-    return _aff_type(V)
+    return GenericAffExpr{Float64,V}
 end
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-)},
@@ -95,8 +95,9 @@ function _MA.promote_operation(
     ::Type{V},
     ::Type{V},
 ) where {V<:AbstractVariableRef}
-    return _quad_type(V)
+    return GenericQuadExpr{Float64,V}
 end
+
 function _MA.promote_operation(
     ::typeof(*),
     ::Type{V},
@@ -104,6 +105,7 @@ function _MA.promote_operation(
 ) where {T,V<:AbstractVariableRef}
     return GenericQuadExpr{T,V}
 end
+
 function _MA.promote_operation(
     ::typeof(*),
     ::Type{GenericAffExpr{T,V}},
