@@ -624,9 +624,15 @@ function jump_function_type(
 end
 
 function jump_function(model::Model, f::MOI.VectorAffineFunction{T}) where {T}
-    return GenericAffExpr{T,VariableRef}[
-        GenericAffExpr{T,VariableRef}(model, f) for f in MOIU.eachscalar(f)
-    ]
+    ret = GenericAffExpr{T,VariableRef}[]
+    for scalar_f in MOIU.eachscalar(f)
+        g = GenericAffExpr{T,VariableRef}(scalar_f.constant)
+        for t in scalar_f.terms
+            add_to_expression!(g, t.coefficient, VariableRef(model, t.variable))
+        end
+        push!(ret, g)
+    end
+    return ret
 end
 
 """
