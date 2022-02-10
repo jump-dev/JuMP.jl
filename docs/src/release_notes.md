@@ -1,5 +1,22 @@
 # Release notes
 
+## Version 0.22.3 (February 10, 2021)
+
+- New features:
+  - There are no new features in this release.
+- Bug fixes:
+  - Fixed a reproducibility issue in the TSP tutorial
+  - Fixed a reproducibility issue in the `max_cut_sdp` tutorial
+  - Fixed a bug broadcasting an empty SparseAxisArray
+- Documentation, maintenance:
+  - Added a warning and improved documentation for the modify-then-query case
+  - Fixed a typo in the docstring of `RotatedSecondOrderCone`
+  - Added Aqua.jl as a check for code health
+  - Added introductions to each section of the tutorials
+  - Improved the column generation and Benders decomposition tutorials
+  - Updated documentation to MOI v0.10.8
+  - Updated JuliaFormatter to v0.22.2
+
 ## Version 0.22.2 (January 10, 2021)
 
 - New features:

@@ -8,7 +8,7 @@ embedded in [Julia](https://julialang.org/). You can find out more about us by
 visiting [jump.dev](https://jump.dev).
 
 
-**Latest Release**: [![version](https://juliahub.com/docs/JuMP/DmXqY/0.22.2/version.svg)](https://juliahub.com/ui/Packages/JuMP/DmXqY/0.22.2) (`release-0.22` branch):
+**Latest Release**: [![version](https://juliahub.com/docs/JuMP/DmXqY/0.22.3/version.svg)](https://juliahub.com/ui/Packages/JuMP/DmXqY/0.22.3) (`release-0.22` branch):
   * Installation via the Julia package manager:
     * `import Pkg; Pkg.add("JuMP")`
   * Get help:
