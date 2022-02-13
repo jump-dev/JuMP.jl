@@ -92,6 +92,8 @@ _string_round(::typeof(abs), x::Any) = _string_round(x)
 
 _sign_string(::Any) = " + "
 
+_string_round(x::Complex) = string("(", x, ")")
+
 # REPL-specific symbols
 # Anything here: https://en.wikipedia.org/wiki/Windows-1252
 # should probably work fine on Windows
