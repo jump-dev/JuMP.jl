@@ -65,11 +65,11 @@ optimize!(model)
 # SCS took 100 iterations to find the optimal solution. Now we set the optimal
 # solution as our starting point:
 
-# set_optimal_start_values(model)
+set_optimal_start_values(model)
 
 # and we re-optimize:
 
-# optimize!(model)
+optimize!(model)
 
 # Now the optimization terminates after 0 iterations because our starting point
 # is already optimal.
