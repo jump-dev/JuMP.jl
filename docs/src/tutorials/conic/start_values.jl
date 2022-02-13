@@ -55,18 +55,11 @@ end
 
 # To test our function, we use the following linear program:
 
-function main()
-    model = Model(SCS.Optimizer)
-    @variable(model, x[1:3] >= 0)
-    @constraint(model, sum(x) <= 1)
-    @objective(model, Max, sum(i * x[i] for i in 1:3))
-    optimize!(model)
-    set_optimal_start_values(model)
-    optimize!(model)
-    return
-end
-
-main()
+model = Model(SCS.Optimizer)
+@variable(model, x[1:3] >= 0)
+@constraint(model, sum(x) <= 1)
+@objective(model, Max, sum(i * x[i] for i in 1:3))
+optimize!(model)
 
 # By looking at the log (not shown in Documenter due to a bug), we can see that
 # SCS took 100 iterations to find the optimal solution. Now we set the optimal
