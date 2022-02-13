@@ -11,6 +11,7 @@
 const _JuMPTypes = Union{AbstractJuMPScalar,NonlinearExpression}
 
 _float_type(::Type{<:Real}) = Float64
+_float_type(::Type{<:UniformScaling}) = Float64
 _float_type(::Type{<:Complex}) = Complex{Float64}
 
 _float(x::Real) = convert(Float64, x)
