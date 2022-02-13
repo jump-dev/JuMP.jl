@@ -75,27 +75,22 @@ function _is_zero_for_printing(coef::Complex)
            _is_zero_for_printing(imag(coef))
 end
 
-# Helper function that rounds carefully for the purposes of printing
+# Helper function that rounds carefully for the purposes of printing Reals
 # e.g.   5.3  =>  5.3
 #        1.0  =>  1
-function _string_round(x::Float64)
-    if isinteger(x)
-        return string(round(Int, x))
-    end
-    return string(x)
-end
-
-_string_round(x) = string(x)
+_string_round(x::Float64) = isinteger(x) ? string(round(Int, x)) : string(x)
 
 _string_round(::typeof(abs), x::Real) = _string_round(abs(x))
 
-# We don't take the abs of x for Complex value because we don't use a - as a
-# sign.
-_string_round(::typeof(abs), x::Complex) = _string_round(x)
-
 _sign_string(x::Real) = x < zero(x) ? " - " : " + "
 
-_sign_string(::Complex) = " + "
+# Fallbacks for other number types
+
+_string_round(x::Any) = string(x)
+
+_string_round(::typeof(abs), x::Any) = _string_round(x)
+
+_sign_string(::Any) = " + "
 
 # REPL-specific symbols
 # Anything here: https://en.wikipedia.org/wiki/Windows-1252
