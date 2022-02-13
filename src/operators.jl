@@ -213,13 +213,6 @@ end
 # AffExpr--AffExpr
 
 function Base.:+(
-    lhs::GenericAffExpr{S,V},
-    rhs::GenericAffExpr{T,V},
-) where {S,T,V}
-    return +(promote(lhs, rhs)...)
-end
-
-function Base.:+(
     lhs::GenericAffExpr{C,V},
     rhs::GenericAffExpr{C,V},
 ) where {C,V<:_JuMPTypes}
