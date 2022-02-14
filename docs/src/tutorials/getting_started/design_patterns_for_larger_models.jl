@@ -68,7 +68,7 @@ value.(x)
 #  * the solution, `x[i]`, is hard to interpret without knowing the order in
 #    which we provided the data.
 
-# ## Wrap the model in a fuction
+# ## Wrap the model in a function
 
 # A good next step is to wrap your model in a function. This is useful for a few
 # reasons:
