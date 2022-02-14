@@ -141,6 +141,7 @@ const _PAGES = [
         ],
         "Conic programs" => [
             "tutorials/conic/introduction.md",
+            "tutorials/conic/start_values.md",
             "tutorials/conic/tips_and_tricks.md",
             "tutorials/conic/logistic_regression.md",
             "tutorials/conic/cluster.md",
