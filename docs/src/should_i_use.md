@@ -104,6 +104,8 @@ the right tool for the job.
 Alternatives to consider are:
  * [CasADi](https://web.casadi.org),
    [CasADi.jl](https://github.com/ichatzinikolaidis/CasADi.jl)
+ * [InfiniteOpt.jl](https://github.com/pulsipher/InfiniteOpt.jl)
+ * [pyomo.DAE](https://pyomo.readthedocs.io/en/stable/modeling_extensions/dae.html)
 
 ### Multiobjective programs
 
