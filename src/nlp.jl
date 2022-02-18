@@ -1403,7 +1403,7 @@ function Base.show(io::IO, wrapper::_ParameterPrintWrapper)
         end
     end
     # No named parameter; use a generic name.
-    if wrapper.mode == IJuliaMode
+    if wrapper.mode == MIME("text/latex")
         print(io, "parameter_{$(p.index)}")
     else
         print(io, "parameter[$(p.index)]")
@@ -1417,7 +1417,7 @@ mutable struct _SubexpressionPrintWrapper
 end
 
 function Base.show(io::IO, s::_SubexpressionPrintWrapper)
-    if s.mode == IJuliaMode
+    if s.mode == MIME("text/latex")
         print(io, "subexpression_{$(s.idx)}")
     else
         print(io, "subexpression[$(s.idx)]")
@@ -1436,7 +1436,7 @@ function _tape_to_expr(
     user_operators::_Derivatives.UserOperatorRegistry,
     generic_variable_names::Bool,
     splat_subexpressions::Bool,
-    print_mode = REPLMode,
+    print_mode = MIME("text/plain"),
 )
     children_arr = rowvals(adj)
 
