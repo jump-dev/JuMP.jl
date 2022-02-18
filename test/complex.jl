@@ -37,9 +37,8 @@ function test_complex_constraint()
     model = Model()
     @variable(model, x)
     @constraint(model, [(1 + 2im) * x + 1] in MOI.Zeros(1))
-    @test list_of_constraint_types(model) == [
-        (Vector{GenericAffExpr{Complex{Float64},VariableRef}}, MOI.Zeros),
-    ]
+    @test list_of_constraint_types(model) ==
+          [(Vector{GenericAffExpr{Complex{Float64},VariableRef}}, MOI.Zeros)]
     return
 end
 
