@@ -456,15 +456,14 @@ function _moi_add_bridge(
     # No optimizer is attached, the bridge will be added when one is attached
     return
 end
-function _moi_add_bridge(
-    model::MOI.ModelLike,
-    BridgeType::Type{<:MOI.Bridges.AbstractBridge},
-)
+
+function _moi_add_bridge(::MOI.ModelLike, ::Type{<:MOI.Bridges.AbstractBridge})
     return error(
-        "Cannot add bridge if `bridge_constraints` was set to `false` in the",
-        " `Model` constructor.",
+        "Cannot add bridge if `add_bridges` was set to `false` in the `Model` ",
+        "constructor.",
     )
 end
+
 function _moi_add_bridge(
     bridge_opt::MOI.Bridges.LazyBridgeOptimizer,
     BridgeType::Type{<:MOI.Bridges.AbstractBridge},
@@ -472,6 +471,7 @@ function _moi_add_bridge(
     MOI.Bridges.add_bridge(bridge_opt, BridgeType{Float64})
     return
 end
+
 function _moi_add_bridge(
     caching_opt::MOIU.CachingOptimizer,
     BridgeType::Type{<:MOI.Bridges.AbstractBridge},

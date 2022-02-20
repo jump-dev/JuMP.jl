@@ -469,7 +469,12 @@ function test_SDP_errors(ModelType, VariableRefType)
     )
     @test_throws_strip(
         err,
-        @constraint(model, [x 1; 1 -y] >= [1 x; x -2], PSDCone(), unknown_kw = 1),
+        @constraint(
+            model,
+            [x 1; 1 -y] >= [1 x; x -2],
+            PSDCone(),
+            unknown_kw = 1,
+        ),
     )
     # Invalid sense == in SDP constraint
     @test_throws(

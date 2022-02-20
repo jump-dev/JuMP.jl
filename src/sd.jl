@@ -230,7 +230,6 @@ function vectorize(matrix::LowerTriangular, ::SquareMatrixShape)
     return [matrix[i, j] for j in 1:n for i in 1:n]
 end
 
-
 function _square_side(_error::Function, ::Containers.SparseAxisArray)
     return _error("Cannot have index dependencies in symmetric variables.")
 end
