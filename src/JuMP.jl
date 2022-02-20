@@ -47,7 +47,7 @@ Shorthand for the MathOptInterface.Bridges package.
 const MOIB = MOI.Bridges
 
 import Calculus
-import DataStructures.OrderedDict
+import OrderedCollections.OrderedDict
 import ForwardDiff
 include("_Derivatives/_Derivatives.jl")
 using ._Derivatives
