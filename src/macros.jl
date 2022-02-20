@@ -257,13 +257,16 @@ array, and wait for complaints.
 _desparsify(x::AbstractSparseArray) = collect(x)
 _desparsify(x) = x
 
-_functionize(v::VariableRef) = convert(AffExpr, v)
-_functionize(v::AbstractArray{VariableRef}) = _functionize.(v)
+function _functionize(v::V) where {V<:AbstractVariableRef}
+    return convert(GenericAffExpr{Float64,V}, v)
+end
+
+_functionize(v::AbstractArray{<:AbstractVariableRef}) = _functionize.(v)
 
 function _functionize(
-    v::LinearAlgebra.Symmetric{VariableRef,Matrix{VariableRef}},
-)
-    return convert(LinearAlgebra.Symmetric{AffExpr,Matrix{AffExpr}}, v)
+    v::LinearAlgebra.Symmetric{V},
+) where {V<:AbstractVariableRef}
+    return Symmetric(_functionize(v.data))
 end
 
 _functionize(x) = x

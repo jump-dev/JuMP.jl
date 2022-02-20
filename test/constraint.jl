@@ -434,7 +434,15 @@ function test_SDP_constraint(ModelType, VariableRefType)
     @test iszero(c.func[3])
     @test JuMP.isequal_canonical(c.func[4], 1w)
     @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
+    return
+end
 
+function test_SDP_errors(ModelType, VariableRefType)
+    model = ModelType()
+    @variable(model, x)
+    @variable(model, y)
+    @variable(model, z)
+    @variable(model, w)
     # Test fallback and account for different Julia version behavior
     if VariableRefType == VariableRef
         var_str = "VariableRef"
@@ -450,10 +458,10 @@ function test_SDP_constraint(ModelType, VariableRefType)
         aff_str = "GenericAffExpr{Float64,$(var_str)}"
     end
     err = ErrorException(
-        "In `@constraint(m,[x 1; 1 -y] ⪰ [1 x; x -2], PSDCone(), unknown_kw = 1)`:" *
+        "In `@constraint(model, [x 1; 1 -y] >= [1 x; x -2], PSDCone(), unknown_kw = 1)`:" *
         " Unrecognized constraint building format. Tried to invoke " *
         "`build_constraint(error, $(aff_str)[x - " *
-        "1 -x + 1; -x + 1 -y + 2], PSDCone(); unknown_kw = 1)`, but no " *
+        "1 -x + 1; -x + 1 -y + 2], $(MOI.GreaterThan(0.0)), PSDCone(); unknown_kw = 1)`, but no " *
         "such method exists. This is due to specifying an unrecognized " *
         "function, constraint set, and/or extra positional/keyword " *
         "arguments.\n\nIf you're trying to create a JuMP extension, you " *
@@ -461,14 +469,14 @@ function test_SDP_constraint(ModelType, VariableRefType)
     )
     @test_throws_strip(
         err,
-        @constraint(m,[x 1; 1 -y] ⪰ [1 x; x -2], PSDCone(), unknown_kw = 1),
+        @constraint(model, [x 1; 1 -y] >= [1 x; x -2], PSDCone(), unknown_kw = 1),
     )
     # Invalid sense == in SDP constraint
-    @test_macro_throws ErrorException @constraint(
-        m,
-        [x 1; 1 -y] == [1 x; x -2],
-        PSDCone(),
+    @test_throws(
+        ErrorException,
+        @constraint(model, [x 1; 1 -y] == [1 x; x -2], PSDCone()),
     )
+    return
 end
 
 function _test_constraint_name_util(ModelType, VariableRefType)
@@ -703,8 +711,11 @@ function test_Model_all_constraints_vector(::Any, ::Any)
     )
     @test isempty(aff_constraints)
     err = ErrorException(
-        "`$(GenericAffExpr{Float64})` is not a concrete type. Did you miss a " *
-        "type parameter?",
+        replace(
+            "`$(GenericAffExpr{Float64})` is not a concrete type. Did you " *
+            "miss a type parameter?",
+            "JuMP." => "",
+        ),
     )
     @test_throws err try
         num_constraints(
