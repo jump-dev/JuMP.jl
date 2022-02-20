@@ -540,8 +540,8 @@ end
 
 function _moi_print_bridge_graph(::IO, ::MOI.ModelLike)
     return error(
-        "Cannot print bridge graph if `bridge_constraints` was set to " *
-        "`false` in the `Model` constructor.",
+        "Cannot print bridge graph if `add_bridges` was set to `false` in " *
+        "the `Model` constructor.",
     )
 end
 
