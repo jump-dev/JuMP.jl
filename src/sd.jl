@@ -55,7 +55,7 @@ julia> a = [ x 2x
 julia> b = [1 2
             2 4];
 
-julia> cref = @SDconstraint(model, a ⪰ b)
+julia> cref = @constraint(model, a >= b, PSDCone())
 [x - 1    2 x - 2;
  2 x - 2  x - 4  ] ∈ PSDCone()
 

@@ -483,7 +483,7 @@ using JuMP
         set_name(var_psd, "var_psd")
         sym_psd = @constraint(m, Symmetric(x - [1.0 0.0; 0.0 1.0]) in PSDCone())
         set_name(sym_psd, "sym_psd")
-        con_psd = @SDconstraint(m, x ⪰ [1.0 0.0; 0.0 1.0])
+        con_psd = @constraint(m, x >= [1.0 0.0; 0.0 1.0], PSDCone())
         set_name(con_psd, "con_psd")
 
         modelstring = """

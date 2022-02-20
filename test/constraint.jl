@@ -346,7 +346,7 @@ function test_SDP_constraint(ModelType, VariableRefType)
     @test c.set == MOI.PositiveSemidefiniteConeTriangle(2)
     @test c.shape isa JuMP.SymmetricMatrixShape
 
-    @SDconstraint(m, cref, [x 1; 1 -y] ⪰ [1 x; x -2])
+    @constraint(m, cref, [x 1; 1 -y] >= [1 x; x -2], PSDCone())
     _test_constraint_name_util(
         cref,
         "cref",
@@ -361,7 +361,7 @@ function test_SDP_constraint(ModelType, VariableRefType)
     @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
     @test c.shape isa JuMP.SquareMatrixShape
 
-    @SDconstraint(m, iref[i = 1:2], 0 ⪯ [x+i x+y; x+y -y])
+    @constraint(m, iref[i = 1:2], 0 <= [x+i x+y; x+y -y], PSDCone())
     for i in 1:2
         _test_constraint_name_util(
             iref[i],
@@ -378,7 +378,7 @@ function test_SDP_constraint(ModelType, VariableRefType)
         @test c.shape isa JuMP.SquareMatrixShape
     end
 
-    @SDconstraint(m, con_d, 0 ⪯ Diagonal([x, y]))
+    @constraint(m, con_d, 0 <= Diagonal([x, y]), PSDCone())
     c = JuMP.constraint_object(con_d)
     @test c.func isa Vector{GenericAffExpr{Float64,VariableRefType}}
     @test JuMP.isequal_canonical(c.func[1], 1x)
@@ -387,7 +387,7 @@ function test_SDP_constraint(ModelType, VariableRefType)
     @test JuMP.isequal_canonical(c.func[4], 1y)
     @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
 
-    @SDconstraint(m, con_d_sym, 0 ⪯ Symmetric(Diagonal([x, y])))
+    @constraint(m, con_d_sym, 0 <= Symmetric(Diagonal([x, y])), PSDCone())
     c = JuMP.constraint_object(con_d_sym)
     @test c.func isa Vector{GenericAffExpr{Float64,VariableRefType}}
     @test JuMP.isequal_canonical(c.func[1], 1x)
@@ -395,7 +395,7 @@ function test_SDP_constraint(ModelType, VariableRefType)
     @test JuMP.isequal_canonical(c.func[3], 1y)
     @test c.set == MOI.PositiveSemidefiniteConeTriangle(2)
 
-    @SDconstraint(m, con_td, Tridiagonal([z], [x, y], [w]) ⪰ 0)
+    @constraint(m, con_td, Tridiagonal([z], [x, y], [w]) >= 0, PSDCone())
     c = JuMP.constraint_object(con_td)
     @test c.func isa Vector{GenericAffExpr{Float64,VariableRefType}}
     @test JuMP.isequal_canonical(c.func[1], 1x)
@@ -404,7 +404,12 @@ function test_SDP_constraint(ModelType, VariableRefType)
     @test JuMP.isequal_canonical(c.func[4], 1y)
     @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
 
-    @SDconstraint(m, con_td_sym, Symmetric(Tridiagonal([z], [x, y], [w])) ⪰ 0)
+    @constraint(
+        m,
+        con_td_sym,
+        Symmetric(Tridiagonal([z], [x, y], [w])) >= 0,
+        PSDCone(),
+    )
     c = JuMP.constraint_object(con_td_sym)
     @test c.func isa Vector{GenericAffExpr{Float64,VariableRefType}}
     @test JuMP.isequal_canonical(c.func[1], 1x)
@@ -412,7 +417,7 @@ function test_SDP_constraint(ModelType, VariableRefType)
     @test JuMP.isequal_canonical(c.func[3], 1y)
     @test c.set == MOI.PositiveSemidefiniteConeTriangle(2)
 
-    @SDconstraint(m, con_ut, UpperTriangular([x y; z w]) ⪰ 0)
+    @constraint(m, con_ut, UpperTriangular([x y; z w]) >= 0, PSDCone())
     c = JuMP.constraint_object(con_ut)
     @test c.func isa Vector{GenericAffExpr{Float64,VariableRefType}}
     @test JuMP.isequal_canonical(c.func[1], 1x)
@@ -421,7 +426,7 @@ function test_SDP_constraint(ModelType, VariableRefType)
     @test JuMP.isequal_canonical(c.func[4], 1w)
     @test c.set == MOI.PositiveSemidefiniteConeSquare(2)
 
-    @SDconstraint(m, con_lt, 0 ⪯ LowerTriangular([x y; z w]))
+    @constraint(m, con_lt, 0 <= LowerTriangular([x y; z w]), PSDCone())
     c = JuMP.constraint_object(con_lt)
     @test c.func isa Vector{GenericAffExpr{Float64,VariableRefType}}
     @test JuMP.isequal_canonical(c.func[1], 1x)
@@ -445,7 +450,7 @@ function test_SDP_constraint(ModelType, VariableRefType)
         aff_str = "GenericAffExpr{Float64,$(var_str)}"
     end
     err = ErrorException(
-        "In `@SDconstraint(m, [x 1; 1 -y] ⪰ [1 x; x -2], unknown_kw = 1)`:" *
+        "In `@constraint(m,[x 1; 1 -y] ⪰ [1 x; x -2], PSDCone(), unknown_kw = 1)`:" *
         " Unrecognized constraint building format. Tried to invoke " *
         "`build_constraint(error, $(aff_str)[x - " *
         "1 -x + 1; -x + 1 -y + 2], PSDCone(); unknown_kw = 1)`, but no " *
@@ -454,15 +459,15 @@ function test_SDP_constraint(ModelType, VariableRefType)
         "arguments.\n\nIf you're trying to create a JuMP extension, you " *
         "need to implement `build_constraint` to accomodate these arguments.",
     )
-    @test_throws_strip err @SDconstraint(
-        m,
-        [x 1; 1 -y] ⪰ [1 x; x -2],
-        unknown_kw = 1
+    @test_throws_strip(
+        err,
+        @constraint(m,[x 1; 1 -y] ⪰ [1 x; x -2], PSDCone(), unknown_kw = 1),
     )
     # Invalid sense == in SDP constraint
-    @test_macro_throws ErrorException @SDconstraint(
+    @test_macro_throws ErrorException @constraint(
         m,
-        [x 1; 1 -y] == [1 x; x -2]
+        [x 1; 1 -y] == [1 x; x -2],
+        PSDCone(),
     )
 end
 

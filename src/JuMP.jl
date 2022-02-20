@@ -56,28 +56,6 @@ include("Containers/Containers.jl")
 
 # Exports are at the end of the file.
 
-# Deprecations for JuMP v0.18 -> JuMP v0.19 transition
-Base.@deprecate(getobjectivevalue, JuMP.objective_value)
-Base.@deprecate(getobjectivebound, JuMP.objective_bound)
-Base.@deprecate(getvalue, JuMP.value)
-Base.@deprecate(getdual, JuMP.dual)
-Base.@deprecate(numvar, JuMP.num_variables)
-Base.@deprecate(numnlconstr, JuMP.num_nl_constraints)
-Base.@deprecate(setlowerbound, JuMP.set_lower_bound)
-Base.@deprecate(setupperbound, JuMP.set_upper_bound)
-Base.@deprecate(linearterms, JuMP.linear_terms)
-
-function writeLP(args...; kargs...)
-    return error(
-        "writeLP has been removed from JuMP. Use `write_to_file` instead.",
-    )
-end
-function writeMPS(args...; kargs...)
-    return error(
-        "writeMPS has been removed from JuMP. Use `write_to_file` instead.",
-    )
-end
-
 include("utils.jl")
 
 const _MOIVAR = MOI.VariableIndex
@@ -119,63 +97,6 @@ See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref),
 """
 function optimizer_with_attributes(optimizer_constructor, args::Pair...)
     return MOI.OptimizerWithAttributes(optimizer_constructor, args...)
-end
-
-function with_optimizer(constructor; kwargs...)
-    if isempty(kwargs)
-        deprecation_message = """
-`with_optimizer` is deprecated. Adapt the following example to update your code:
-`with_optimizer(Ipopt.Optimizer)` becomes `Ipopt.Optimizer`.
-"""
-        Base.depwarn(deprecation_message, :with_optimizer)
-        return constructor
-    else
-        deprecation_message = """
-`with_optimizer` is deprecated. Adapt the following example to update your code:
-`with_optimizer(Ipopt.Optimizer, max_cpu_time=60.0)` becomes `optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time" => 60.0)`.
-"""
-        Base.depwarn(deprecation_message, :with_optimizer_kw)
-        params = [
-            MOI.RawOptimizerAttribute(string(kw.first)) => kw.second for
-            kw in kwargs
-        ]
-        return MOI.OptimizerWithAttributes(constructor, params)
-    end
-end
-function with_optimizer(constructor, args...; kwargs...)
-    if isempty(kwargs)
-        deprecation_message = """
-`with_optimizer` is deprecated. Adapt the following example to update your code:
-`with_optimizer(Gurobi.Optimizer, env)` becomes `() -> Gurobi.Optimizer(env)`.
-"""
-        Base.depwarn(deprecation_message, :with_optimizer_args)
-        if !applicable(constructor, args...)
-            error(
-                "$constructor does not have any method with arguments $args.",
-                " The first argument of `with_optimizer` should be callable with",
-                " the other argument of `with_optimizer`.",
-            )
-        end
-        return with_optimizer(() -> constructor(args...); kwargs...)
-    else
-        deprecation_message = """
-`with_optimizer` is deprecated. Adapt the following example to update your code:
-`with_optimizer(Gurobi.Optimizer, env, Presolve=0)` becomes `optimizer_with_attributes(() -> Gurobi.Optimizer(env), "Presolve" => 0)`.
-"""
-        Base.depwarn(deprecation_message, :with_optimizer_args_kw)
-        if !applicable(constructor, args...)
-            error(
-                "$constructor does not have any method with arguments $args.",
-                " The first argument of `with_optimizer` should be callable with",
-                " the other argument of `with_optimizer`.",
-            )
-        end
-        params = [
-            MOI.RawOptimizerAttribute(string(kw.first)) => kw.second for
-            kw in kwargs
-        ]
-        return MOI.OptimizerWithAttributes(() -> constructor(args...), params)
-    end
 end
 
 include("shapes.jl")
@@ -251,17 +172,7 @@ a cache.
 Use [`set_optimizer`](@ref) to set the optimizer before calling
 [`optimize!`](@ref).
 """
-function Model(; caching_mode = nothing, solver = nothing)
-    if caching_mode !== nothing
-        @warn("Ignoring `caching_mode` keyword because it has been removed.")
-    end
-    if solver !== nothing
-        error(
-            "The solver= keyword is no longer available in JuMP 0.19 and " *
-            "later. See the JuMP documentation " *
-            "(https://jump.dev/JuMP.jl/latest/) for latest syntax.",
-        )
-    end
+function Model()
     caching_opt = MOIU.CachingOptimizer(
         MOIU.UniversalFallback(MOIU.Model{Float64}()),
         MOIU.AUTOMATIC,
@@ -291,20 +202,8 @@ env = Gurobi.Env()
 model = Model(() -> Gurobi.Optimizer(env); add_bridges = false)
 ```
 """
-function Model(
-    optimizer_factory;
-    add_bridges::Bool = true,
-    bridge_constraints::Union{Nothing,Bool} = nothing,
-    kwargs...,
-)
-    if bridge_constraints !== nothing
-        @warn(
-            "`bridge_constraints` argument is deprecated. Use `add_bridges` " *
-            "instead.",
-        )
-        add_bridges = bridge_constraints
-    end
-    model = Model(; kwargs...)
+function Model(optimizer_factory; add_bridges::Bool = true)
+    model = Model()
     set_optimizer(model, optimizer_factory, add_bridges = add_bridges)
     return model
 end
@@ -901,8 +800,6 @@ function set_optimizer_attribute(
     return
 end
 
-@deprecate set_parameter set_optimizer_attribute
-
 """
     set_optimizer_attributes(model::Model, pairs::Pair...)
 
@@ -930,8 +827,6 @@ function set_optimizer_attributes(model::Model, pairs::Pair...)
     end
     return
 end
-
-@deprecate set_parameters set_optimizer_attributes
 
 """
     get_optimizer_attribute(model, name::String)
@@ -1458,7 +1353,6 @@ include("lp_sensitivity2.jl")
 include("callbacks.jl")
 include("file_formats.jl")
 include("feasibility_checker.jl")
-include("deprecate.jl")
 
 # MOI contains a number of Enums that are often accessed by users such as
 # `MOI.OPTIMAL`. This piece of code re-exports them from JuMP so that users can
@@ -1504,9 +1398,7 @@ for sym in names(@__MODULE__, all = true)
     @eval export $sym
 end
 
-if Base.VERSION >= v"1.4.2"
-    include("precompile.jl")
-    _precompile_()
-end
+include("precompile.jl")
+_precompile_()
 
 end

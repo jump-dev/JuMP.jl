@@ -706,12 +706,11 @@ end
         args, macro_name::Symbol, parsefun::Function, source::LineNumberNode
     )
 
-Returns the code for the macro `@constraint_like args...` of syntax
+Returns the code for the macro `@constraint args...` of syntax
 ```julia
-@constraint_like(model, con, extra_arg, kw_args...)      # single constraint
-@constraint_like(model, ref, con, extra_arg, kw_args...) # group of constraints
+@constraint(model, con, extra_arg, kw_args...)      # single constraint
+@constraint(model, ref, con, extra_arg, kw_args...) # group of constraints
 ```
-where `@constraint_like` is `@constraint` or `@SDconstraint`.
 
 The expression `con` is parsed by `parsefun` which returns a `build_constraint`
 call code that, when executed, returns an `AbstractConstraint`. The macro
@@ -905,118 +904,6 @@ macro constraint(args...)
     return _constraint_macro(args, :constraint, parse_constraint, __source__)
 end
 
-function parse_SD_constraint_expr(_error::Function, expr::Expr)
-    return parse_SD_constraint(_error, expr.args...)
-end
-function parse_SD_constraint(_error::Function, sense::Symbol, lhs, rhs)
-    # Simple comparison - move everything to the LHS
-    aff = :()
-    if sense == :⪰ || sense == :(≥) || sense == :(>=)
-        succ = lhs
-        prec = rhs
-    elseif sense == :⪯ || sense == :(≤) || sense == :(<=)
-        succ = rhs
-        prec = lhs
-    else
-        _error("Invalid sense $sense in SDP constraint")
-    end
-    if prec == 0
-        aff = succ
-    elseif succ == 0
-        aff = :(-$prec)
-    else
-        aff = :($succ - $prec)
-    end
-    vectorized = false
-    parsecode, buildcall =
-        parse_constraint_call(_error, false, Val(:in), aff, :(JuMP.PSDCone()))
-    return vectorized, parsecode, buildcall
-end
-
-function parse_SD_constraint(_error::Function, args...)
-    return _error(
-        "Constraints must be in one of the following forms:\n" *
-        "       expr1 <= expr2\n" *
-        "       expr1 >= expr2",
-    )
-end
-
-"""
-    @SDconstraint(model::Model, expr)
-
-Add a semidefinite constraint described by the expression `expr`.
-
-    @SDconstraint(model::Model, ref[i=..., j=..., ...], expr)
-
-Add a group of semidefinite constraints described by the expression `expr`
-parametrized by `i`, `j`, ...
-
-The expression `expr` needs to be of the form `a sign b` where `sign` is `⪰`,
-`≥`, `>=`, `⪯`, `≤` or `<=` and `a` and `b` are `square` matrices. It constrains
-the square matrix `x` (or `-x` if the sign is `⪯`, `≤` or `<=`) to be symmetric
-and positive semidefinite where
-
-* `x = a`, if `b` is the symbol `0`,
-* `x = -b`, if `a` is the symbol `0`,
-* otherwise, `x = a - b`.
-
-By default, we check numerical symmetry of the matrix `x`, and if symmetry is
-violated by some arbitrary amount, we add explicit equality constraints.
-You can use `Symmetric(x) in PSDCone()` with the [`@constraint`](@ref) macro to
-skip these checks if you know the matrix must be symmetric; see
-[`PSDCone`](@ref) for more information.
-
-## Examples
-
-The following constrains the matrix `[x-1 2x-2; -3 x-4]` to be symmetric and
-positive semidefinite, that is, it constrains `2x-2` to be equal to `-3` and
-constrains all eigenvalues of the matrix to be nonnegative.
-```jldoctest; setup = :(using JuMP)
-julia> model = Model();
-
-julia> @variable(model, x)
-x
-
-julia> a = [x 2x
-            0  x];
-
-julia> b = [1 2
-            3 4];
-
-julia> cref = @SDconstraint(model, a ⪰ b)
-[x - 1  2 x - 2;
- -3     x - 4  ] ∈ PSDCone()
-
-julia> jump_function(constraint_object(cref))
-4-element Array{GenericAffExpr{Float64,VariableRef},1}:
- x - 1
- -3
- 2 x - 2
- x - 4
-
-julia> moi_set(constraint_object(cref))
-MathOptInterface.PositiveSemidefiniteConeSquare(2)
-```
-In the set `PositiveSemidefiniteConeSquare(2)` in the last output, `Square`
-means that the matrix is passed as a square matrix as the corresponding
-off-diagonal entries need to be constrained to be equal. A similar set
-`PositiveSemidefiniteConeTriangle` exists which only uses the upper triangular
-part of the matrix assuming that it is symmetric, see [`PSDCone`](@ref) to see
-how to use it.
-"""
-macro SDconstraint(args...)
-    @warn(
-        "`@SDconstraint` is deprecated. Use `@constraint(model, X - Y in " *
-        "PSDCone())`, or `@constraint(model, X >= Y, PSDCone())` instead.",
-    )
-    return _constraint_macro(
-        args,
-        :SDconstraint,
-        parse_SD_constraint_expr,
-        __source__,
-    )
-end
-
 """
     @build_constraint(constraint_expr)
 
@@ -1125,7 +1012,6 @@ for (mac, sym) in [
     (:NLparameters, Symbol("@NLparameter")),
     (:constraints, Symbol("@constraint")),
     (:NLconstraints, Symbol("@NLconstraint")),
-    (:SDconstraints, Symbol("@SDconstraint")),
     (:variables, Symbol("@variable")),
     (:expressions, Symbol("@expression")),
     (:NLexpressions, Symbol("@NLexpression")),
@@ -1202,25 +1088,6 @@ The macro returns a tuple containing the expressions that were defined.
 end)
 ```
 """ :(@expressions)
-
-@doc """
-    @SDconstraints(model, args...)
-
-Adds multiple semi-definite constraints to model at once, in the same fashion as
-the `@SDconstraint` macro.
-
-The model must be the first argument, and multiple constraints can be added on
-multiple lines wrapped in a `begin ... end` block.
-
-# Examples
-
-```julia
-@SDconstraints(model, begin
-    A * x >= b
-    b - C * y >= 0
-end)
-```
-""" :(@SDconstraints)
 
 @doc """
      @NLparameters(model, args...)
