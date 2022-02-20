@@ -27,7 +27,7 @@ JuMP.@constraints(model, begin
     sum(y[j] for j = r if j == 4) <= 1
 end)
 
-JuMP.@constraint(model, [x x; -x x] >= 0, PSDCone())
+JuMP.@constraint(model, [x x; -x x] >= 0, JuMP.PSDCone())
 
 JuMP.@objective(model, sense, y[4])
 JuMP.@objective(model, Min, x + sum(j * y[j] for j in r))
