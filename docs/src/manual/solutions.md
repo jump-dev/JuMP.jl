@@ -12,6 +12,7 @@ This section of the manual describes how to access a solved solution to a
 problem. It uses the following model as an example:
 ```jldoctest solutions
 model = Model(HiGHS.Optimizer)
+set_silent(model)
 @variable(model, x >= 0)
 @variable(model, y[[:a, :b]] <= 1)
 @objective(model, Max, -12x - 20y[:a])
@@ -298,9 +299,11 @@ For example, instead of:
 ```jldoctest
 julia> model = Model(HiGHS.Optimizer);
 
+julia> set_silent(model)
+
 julia> @variable(model, x >= 0);
 
-julia> optimize!(model);
+julia> optimize!(model)
 
 julia> termination_status(model)
 OPTIMAL::TerminationStatusCode = 1
@@ -318,6 +321,8 @@ OPTIMIZE_NOT_CALLED::TerminationStatusCode = 0
 do
 ```jldoctest
 julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
 
 julia> @variable(model, x >= 0);
 
@@ -342,6 +347,8 @@ after modifications, you can use [`direct_model`](@ref) to bypass the
 `MOI.OPTIMIZE_NOT_CALLED` state:
 ```jldoctest
 julia> model = direct_model(HiGHS.Optimizer());
+
+julia> set_silent(model)
 
 julia> @variable(model, x >= 0);
 
@@ -391,6 +398,7 @@ solution to the following (non-degenerate) LP problem:
 
 ```jldoctest solutions_sensitivity
 model = Model(HiGHS.Optimizer)
+set_silent(model)
 @variable(model, x[1:2])
 set_lower_bound(x[2], -0.5)
 set_upper_bound(x[2], 0.5)
@@ -582,6 +590,8 @@ distance is greater than the supplied tolerance `atol`.
 ```
 ```jldoctest feasibility; filter=[r"x.+?\=\> 0.1", r"c1.+? \=\> 0.01"]
 julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
 
 julia> @variable(model, x >= 1, Int);
 

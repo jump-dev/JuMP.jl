@@ -241,9 +241,8 @@ model = direct_model(HiGHS.Optimizer())
 
 # Pass options to solvers with [`optimizer_with_attributes`](@ref):
 
-model = Model(
-    optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => false),
-)
+model =
+    Model(optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => false))
 
 # !!! note
 #     These options are solver-specific. To find out the various options

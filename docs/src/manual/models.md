@@ -388,7 +388,7 @@ with optimizer MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}
   with 0 variable bridges
   with 0 constraint bridges
   with 0 objective bridges
-  with inner model A HiGHS model
+  with inner model A HiGHS model with 0 columns and 0 rows.
 ```
 
 Uh oh! Even though we passed a `HiGHS.Optimizer`, the backend is a much more
@@ -417,7 +417,7 @@ It has two parts:
     with 0 variable bridges
     with 0 constraint bridges
     with 0 objective bridges
-    with inner model A HiGHS model
+    with inner model A HiGHS model with 0 columns and 0 rows.
     ```
 
 !!! info
@@ -498,7 +498,7 @@ with optimizer MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}
   with 0 variable bridges
   with 0 constraint bridges
   with 0 objective bridges
-  with inner model A HiGHS model
+  with inner model A HiGHS model with 0 columns and 0 rows.
 
 julia> unsafe_backend(model)
 A HiGHS model

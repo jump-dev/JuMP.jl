@@ -557,7 +557,7 @@ solution = solve_knapsack(
 
 ```julia
 solution = solve_knapsack(
-    MOI.OptimizerWithAttributes(HiGHS.Optimizer, "msg_lev" => 0),
+    MOI.OptimizerWithAttributes(HiGHS.Optimizer, "output_flag" => false),
     "path/to/data.json",
     IntegerKnapsackConfig(),
 )
