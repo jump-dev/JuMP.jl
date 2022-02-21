@@ -69,5 +69,3 @@ optimize!(model)
 # We can now review the solution that our model found:
 
 solution = round.(Int, value.(x))
-
-# ![Four Queens](../../assets/n_queens.png)

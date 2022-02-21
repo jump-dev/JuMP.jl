@@ -1,7 +1,7 @@
 ```@meta
 CurrentModule = JuMP
 DocTestSetup = quote
-    using JuMP, HiGHS, SCS, GLPK
+    using JuMP, HiGHS, SCS
 end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
@@ -538,14 +538,14 @@ A HiGHS model with 0 columns and 0 rows.
 
 A downside of direct mode is that there is no bridging layer. Therefore, only
 constraints which are natively supported by the solver are supported. For
-example, `GLPK.jl` does not implement constraints of the form `l <= a' x <= u`.
+example, `HiGHS.jl` does not implement quadratic constraints:
 ```julia direct_mode
-julia> model = direct_model(GLPK.Optimizer());
+julia> model = direct_model(HiGHS.Optimizer());
 
 julia> @variable(model, x[1:2]);
 
-julia> @constraint(model, 1 <= x[1] + x[2] <= 2)
-ERROR: Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.
+julia> @constraint(model, x[1]^2 + x[2]^2 <= 2)
+ERROR: Constraints of type MathOptInterface.MathOptInterface.ScalarQuadraticFunction{Float64}-in-MathOptInterface.LessThan{Float64} are not supported by the solver.
 
 If you expected the solver to support your problem, you may have an error in your formulation. Otherwise, consider using a different solver.
 

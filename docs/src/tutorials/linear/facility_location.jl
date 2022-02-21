@@ -129,6 +129,9 @@ ufl = Model(HiGHS.Optimizer)
 #-
 # Solve the uncapacitated facility location problem with HiGHS
 optimize!(ufl)
+
+#-
+
 println("Optimal value: ", objective_value(ufl))
 
 # ### Visualizing the solution
@@ -258,6 +261,9 @@ cfl = Model(HiGHS.Optimizer)
 #-
 # Solve the problem
 optimize!(cfl)
+
+#-
+
 println("Optimal value: ", objective_value(cfl))
 
 # ### Visualizing the solution
