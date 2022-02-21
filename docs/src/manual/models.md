@@ -480,7 +480,7 @@ in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
 with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
   fallback for MOIU.Model{Float64}
-with optimizer A HiGHS model
+with optimizer A HiGHS model with 0 columns and 0 rows.
 ```
 
 ### Unsafe backend
@@ -501,7 +501,7 @@ with optimizer MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}
   with inner model A HiGHS model with 0 columns and 0 rows.
 
 julia> unsafe_backend(model)
-A HiGHS model
+A HiGHS model with 0 columns and 0 rows.
 ```
 
 !!! warning

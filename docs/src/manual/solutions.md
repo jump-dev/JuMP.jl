@@ -46,15 +46,15 @@ julia> solution_summary(model)
   Primal status      : FEASIBLE_POINT
   Dual status        : FEASIBLE_POINT
   Message from the solver:
-  "Solution is optimal"
+  "kOptimal"
 
 * Candidate solution
   Objective value      : -205.14285714285714
-  Objective bound      : Inf
+  Objective bound      : -0.0
   Dual objective value : -205.1428571428571
 
 * Work counters
-  Solve time (sec)   : 0.00008
+  Solve time (sec)   : 0.00068
 
 julia> solution_summary(model, verbose=true)
 * Solver : HiGHS
@@ -66,11 +66,11 @@ julia> solution_summary(model, verbose=true)
   Result count       : 1
   Has duals          : true
   Message from the solver:
-  "Solution is optimal"
+  "kOptimal"
 
 * Candidate solution
   Objective value      : -205.14285714285714
-  Objective bound      : Inf
+  Objective bound      : -0.0
   Dual objective value : -205.1428571428571
   Primal solution :
     x : 15.428571428571429
@@ -80,7 +80,7 @@ julia> solution_summary(model, verbose=true)
     c1 : 1.7142857142857142
 
 * Work counters
-  Solve time (sec)   : 0.00008
+  Solve time (sec)   : 0.00068
 ```
 
 ## Why did the solver stop?
@@ -113,7 +113,7 @@ Use [`raw_status`](@ref) to get a solver-specific string explaining why the
 optimization stopped:
 ```jldoctest solutions
 julia> raw_status(model)
-"Solution is optimal"
+"kOptimal"
 ```
 
 ## Primal solutions
@@ -151,7 +151,7 @@ julia> objective_value(model)
 -205.14285714285714
 
 julia> objective_bound(model)  # HiGHS only implements objective bound for MIPs
-Inf
+-0.0
 
 julia> dual_objective_value(model)
 -205.1428571428571
@@ -426,8 +426,8 @@ julia> optimize!(model)
 
 julia> value.(x)
 2-element Vector{Float64}:
- 1.0
- 0.0
+  1.0
+ -0.0
 
 julia> report = lp_sensitivity_report(model);
 
