@@ -133,6 +133,7 @@ julia> using JuMP, HiGHS
 julia> function algebraic_knapsack(c, w, b)
            n = length(c)
            model = Model(HiGHS.Optimizer)
+           set_silent(model)
            @variable(model, x[1:n] >= 0, Int)
            @objective(model, Max, sum(c[i] * x[i] for i = 1:n))
            @constraint(model, sum(w[i] * x[i] for i = 1:n) <= b)
@@ -159,6 +160,7 @@ julia> using JuMP, HiGHS
 julia> function nonalgebraic_knapsack(c, w, b)
            n = length(c)
            model = Model(HiGHS.Optimizer)
+           set_silent(model)
            x = [VariableRef(model) for i = 1:n]
            for i = 1:n
                set_lower_bound(x[i], 0)
@@ -201,6 +203,7 @@ julia> const MOI = MathOptInterface;
 julia> function mathoptinterface_knapsack(optimizer, c, w, b)
            n = length(c)
            model = MOI.instantiate(optimizer)
+           MOI.set(model, MOI.Silent(), true)
            x = MOI.add_variables(model, n)
            for i in 1:n
                MOI.add_constraint(model, x[i], MOI.GreaterThan(0.0))
@@ -239,6 +242,7 @@ julia> using HiGHS
 julia> function highs_knapsack(c, w, b)
            n = length(c)
            model = Highs_create()
+           Highs_setBoolOptionValue(model, "output_flag", false)
            for i in 1:n
                Highs_addCol(model, c[i], 0.0, Inf, 0, C_NULL, C_NULL)
                Highs_changeColIntegrality(model, i-1, 1)
