@@ -104,16 +104,8 @@ function set_optimizer(
     model::Model,
     optimizer_constructor;
     add_bridges::Bool = true,
-    bridge_constraints::Union{Nothing,Bool} = nothing,
 )
     error_if_direct_mode(model, :set_optimizer)
-    if bridge_constraints !== nothing
-        @warn(
-            "`bridge_constraints` argument is deprecated. Use `add_bridges` " *
-            "instead.",
-        )
-        add_bridges = bridge_constraints
-    end
     if add_bridges
         optimizer =
             MOI.instantiate(optimizer_constructor, with_bridge_type = Float64)
@@ -130,18 +122,6 @@ function set_optimizer(
     return
 end
 
-# Deprecation for JuMP v0.18 -> JuMP v0.19 transition
-export solve
-function solve(::Model)
-    return error(
-        "`solve` has been replaced by `optimize!`. Note that `solve` " *
-        "used to return a `Symbol` summarizing the solution while " *
-        "`optimize!` returns nothing and the status of the solution " *
-        "is queried using `termination_status`, `primal_status` " *
-        "and `dual_status`.",
-    )
-end
-
 """
     optimize!(model::Model;
               ignore_optimize_hook=(model.optimize_hook === nothing),
@@ -154,11 +134,7 @@ Keyword arguments `kwargs` are passed to the `optimize_hook`. An error is
 thrown if `optimize_hook` is `nothing` and keyword arguments are provided.
 """
 function optimize!(
-    model::Model,
-    # TODO: Remove the optimizer_factory and bridge_constraints
-    # arguments when the deprecation error below is removed.
-    optimizer_factory = nothing;
-    bridge_constraints::Bool = true,
+    model::Model;
     ignore_optimize_hook = (model.optimize_hook === nothing),
     kwargs...,
 )
@@ -168,29 +144,19 @@ function optimize!(
         MOI.set(model, MOI.NLPBlock(), _create_nlp_block_data(model))
         empty!(model.nlp_data.nlconstr_duals)
     end
-
-    if optimizer_factory !== nothing
-        # This argument was deprecated in JuMP 0.21.
-        error(
-            "The optimizer factory argument is no longer accepted by " *
-            "`optimize!`. Call `set_optimizer` before `optimize!`.",
-        )
-    end
-
     # If the user or an extension has provided an optimize hook, call
     # that instead of solving the model ourselves
     if !ignore_optimize_hook
         return model.optimize_hook(model; kwargs...)
     end
-
-    isempty(kwargs) || error(
-        "Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))",
-    )
-
+    if !isempty(kwargs)
+        error(
+            "Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))",
+        )
+    end
     if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
         throw(NoOptimizer())
     end
-
     try
         MOI.optimize!(backend(model))
     catch err

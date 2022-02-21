@@ -1022,8 +1022,6 @@ function has_values(model::Model; result::Int = 1)
     return primal_status(model; result = result) != MOI.NO_SOLUTION
 end
 
-Base.@deprecate setvalue(v::VariableRef, val::Number) set_start_value(v, val)
-
 """
     add_variable(m::Model, v::AbstractVariable, name::String="")
 
