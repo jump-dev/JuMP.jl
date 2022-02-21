@@ -1179,7 +1179,7 @@ end
         @NLconstraint(model, t <= sqrt(x))
         @test nlp_dual_start_value(model) === nothing
         set_nlp_dual_start_value(model, [1.0, -1.0])
-        @test nlp_dual_start_value(model) ==[1.0, -1.0]
+        @test nlp_dual_start_value(model) == [1.0, -1.0]
         set_nlp_dual_start_value(model, nothing)
         @test nlp_dual_start_value(model) === nothing
         @test_throws(ArgumentError, set_nlp_dual_start_value(model, [1.0]))
