@@ -14,7 +14,7 @@
 # Originally contributed by Louis Luangkesorn, January 30, 2015.
 
 using JuMP
-import GLPK
+import HiGHS
 import Test
 
 function example_transp()
@@ -28,7 +28,7 @@ function example_transp()
         27 9 12 9 26 95 17
         24 14 17 13 28 99 20
     ]
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     @variable(model, trans[1:length(ORIG), 1:length(DEST)] >= 0)
     @objective(
         model,

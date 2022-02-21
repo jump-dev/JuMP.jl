@@ -41,7 +41,7 @@
 # A solver is a software package that incorporates algorithms for finding
 # solutions to one or more classes of problem.
 
-# For example, GLPK is a solver for linear programming (LP) and mixed integer
+# For example, HiGHS is a solver for linear programming (LP) and mixed integer
 # programming (MIP) problems. It incorporates algorithms such as the simplex
 # method and the interior-point method.
 
@@ -76,17 +76,17 @@
 # ```
 
 # You also need to include a Julia package which provides an appropriate solver.
-# One such solver is `GLPK.Optimizer`, which is provided by the
-# [GLPK.jl package](https://github.com/jump-dev/GLPK.jl).
+# One such solver is `HiGHS.Optimizer`, which is provided by the
+# [HiGHS.jl package](https://github.com/jump-dev/HiGHS.jl).
 # ```julia
 # import Pkg
-# Pkg.add("GLPK")
+# Pkg.add("HiGHS")
 # ```
 # See [Installation Guide](@ref) for a list of other solvers you can use.
 
 # ## An example
 
-# Let's to solve the following linear programming problem using JuMP and GLPK.
+# Let's to solve the following linear programming problem using JuMP and HiGHS.
 # We will first look at the complete code to solve the problem and then go
 # through it step by step.
 
@@ -104,8 +104,8 @@
 # And here's the code to solve this problem:
 
 using JuMP
-using GLPK
-model = Model(GLPK.Optimizer)
+using HiGHS
+model = Model(HiGHS.Optimizer)
 @variable(model, x >= 0)
 @variable(model, 0 <= y <= 3)
 @objective(model, Min, 12x + 20y)
@@ -130,15 +130,15 @@ nothing #hide
 using JuMP
 
 # We also need to include a Julia package which provides an appropriate solver.
-# We want to use `GLPK.Optimizer` here which is provided by the `GLPK.jl`
+# We want to use `HiGHS.Optimizer` here which is provided by the `HiGHS.jl`
 # package.
 
-using GLPK
+using HiGHS
 
 # JuMP builds problems incrementally in a `Model` object. Create a model by
 # passing an optimizer to the [`Model`](@ref) function:
 
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 
 # Variables are modeled using [`@variable`](@ref):
 
@@ -221,18 +221,18 @@ shadow_price(c2)
 
 # Create a model by passing an optimizer:
 
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 
 # Alternatively, call [`set_optimizer`](@ref) at any point before calling
 # [`optimize!`](@ref):
 
 model = Model()
-set_optimizer(model, GLPK.Optimizer)
+set_optimizer(model, HiGHS.Optimizer)
 
 # For some solvers, you can also use [`direct_model`](@ref), which offers a more
 # efficient connection to the underlying solver:
 
-model = direct_model(GLPK.Optimizer())
+model = direct_model(HiGHS.Optimizer())
 
 # !!! warning
 #     Some solvers do not support [`direct_model`](@ref)!
@@ -241,7 +241,9 @@ model = direct_model(GLPK.Optimizer())
 
 # Pass options to solvers with [`optimizer_with_attributes`](@ref):
 
-model = Model(optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => 0))
+model = Model(
+    optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => false),
+)
 
 # !!! note
 #     These options are solver-specific. To find out the various options
@@ -251,8 +253,8 @@ model = Model(optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => 0))
 
 # You can also pass options with [`set_optimizer_attribute`](@ref)
 
-model = Model(GLPK.Optimizer)
-set_optimizer_attribute(model, "msg_lev", 0)
+model = Model(HiGHS.Optimizer)
+set_optimizer_attribute(model, "output_flag", false)
 
 # ## Solution basics
 
@@ -264,7 +266,7 @@ set_optimizer_attribute(model, "msg_lev", 0)
 # recommended way to check:
 
 function solve_infeasible()
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     @variable(model, 0 <= x <= 1)
     @variable(model, 0 <= y <= 1)
     @constraint(model, x + y >= 3)
@@ -443,7 +445,7 @@ end
 
 # Set an objective function with [`@objective`](@ref):
 
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 @variable(model, x >= 0)
 @variable(model, y >= 0)
 @objective(model, Min, 2x + y)
@@ -469,7 +471,7 @@ model = Model(GLPK.Optimizer)
 # \end{aligned}
 # ```
 
-vector_model = Model(GLPK.Optimizer)
+vector_model = Model(HiGHS.Optimizer)
 
 A = [
     1 1 9 5

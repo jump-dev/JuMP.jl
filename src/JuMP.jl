@@ -351,16 +351,16 @@ call [`backend`](@ref) instead.
 
 For example, instead of:
 ```julia
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 @variable(model, x >= 0)
 MOI.Utilities.attach_optimizer(model)
-glpk = unsafe_backend(model)
+highs = unsafe_backend(model)
 ```
 Use:
 ```julia
-model = direct_model(GLPK.Optimizer())
+model = direct_model(HiGHS.Optimizer())
 @variable(model, x >= 0)
-glpk = backend(model)  # No need to call `attach_optimizer`.
+highs = backend(model)  # No need to call `attach_optimizer`.
 ```
 """
 unsafe_backend(model::Model) = unsafe_backend(backend(model))

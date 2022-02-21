@@ -9,7 +9,7 @@
 # Alexis Montoison (@amontoison).
 
 using JuMP
-import GLPK
+import HiGHS
 import LinearAlgebra
 import Plots
 import Random
@@ -112,7 +112,7 @@ Plots.scatter!(
 # ### JuMP implementation
 
 # Create a JuMP model
-ufl = Model(GLPK.Optimizer)
+ufl = Model(HiGHS.Optimizer)
 #-
 # Variables
 @variable(ufl, y[1:n], Bin);
@@ -127,7 +127,7 @@ ufl = Model(GLPK.Optimizer)
 # Objective
 @objective(ufl, Min, f'y + sum(c .* x));
 #-
-# Solve the uncapacitated facility location problem with GLPK
+# Solve the uncapacitated facility location problem with HiGHS
 optimize!(ufl)
 println("Optimal value: ", objective_value(ufl))
 
@@ -241,7 +241,7 @@ Plots.scatter!(
 # ### JuMP implementation
 
 # Create a JuMP model
-cfl = Model(GLPK.Optimizer)
+cfl = Model(HiGHS.Optimizer)
 #-
 # Variables
 @variable(cfl, y[1:n], Bin);

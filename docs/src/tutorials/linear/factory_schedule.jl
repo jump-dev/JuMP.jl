@@ -16,7 +16,7 @@
 # It was originally contributed by @Crghilardi.
 
 using JuMP
-import GLPK
+import HiGHS
 import Test
 
 function example_factory_schedule()
@@ -107,7 +107,7 @@ function example_factory_schedule()
         100_000,
     ]
     ## The model!
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     ## Decision variables
     @variables(model, begin
         status[m in months, f in factories], Bin

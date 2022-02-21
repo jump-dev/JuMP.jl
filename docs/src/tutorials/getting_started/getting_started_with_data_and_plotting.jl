@@ -338,7 +338,7 @@ passport_data
 # We'll now solve the problem using JuMP:
 
 using JuMP
-import GLPK
+import HiGHS
 
 # First, create the set of countries:
 
@@ -346,7 +346,7 @@ C = passport_data.Passport
 
 # Then, create the model and initialize the decision variables:
 
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 @variable(model, x[C], Bin)
 @objective(model, Min, sum(x))
 @constraint(model, [d in C], passport_data[!, d]' * x >= 1)

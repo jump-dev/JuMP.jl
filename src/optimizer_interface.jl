@@ -96,8 +96,8 @@ setting solver-specific parameters of the optimizer.
 
 ```julia
 model = Model()
-set_optimizer(model, GLPK.Optimizer)
-set_optimizer(model, GLPK.Optimizer; add_bridges = false)
+set_optimizer(model, HiGHS.Optimizer)
+set_optimizer(model, HiGHS.Optimizer; add_bridges = false)
 ```
 """
 function set_optimizer(

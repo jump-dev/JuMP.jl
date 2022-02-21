@@ -1,7 +1,7 @@
 ```@meta
 CurrentModule = JuMP
 DocTestSetup = quote
-    using JuMP, GLPK
+    using JuMP, HiGHS
 end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
@@ -11,7 +11,7 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
 This section of the manual describes how to access a solved solution to a
 problem. It uses the following model as an example:
 ```jldoctest solutions
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 @variable(model, x >= 0)
 @variable(model, y[[:a, :b]] <= 1)
 @objective(model, Max, -12x - 20y[:a])
@@ -38,7 +38,7 @@ Subject to
 
 ```jldoctest solutions; filter=r"[0-9]+.[0-9]+"
 julia> solution_summary(model)
-* Solver : GLPK
+* Solver : HiGHS
 
 * Status
   Termination status : OPTIMAL
@@ -56,7 +56,7 @@ julia> solution_summary(model)
   Solve time (sec)   : 0.00008
 
 julia> solution_summary(model, verbose=true)
-* Solver : GLPK
+* Solver : HiGHS
 
 * Status
   Termination status : OPTIMAL
@@ -149,7 +149,7 @@ the value of the dual objective can be obtained via
 julia> objective_value(model)
 -205.14285714285714
 
-julia> objective_bound(model)  # GLPK only implements objective bound for MIPs
+julia> objective_bound(model)  # HiGHS only implements objective bound for MIPs
 Inf
 
 julia> dual_objective_value(model)
@@ -296,7 +296,7 @@ query all the results first, then modify the problem.
 
 For example, instead of:
 ```jldoctest
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
 
 julia> @variable(model, x >= 0);
 
@@ -317,7 +317,7 @@ OPTIMIZE_NOT_CALLED::TerminationStatusCode = 0
 ```
 do
 ```jldoctest
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
 
 julia> @variable(model, x >= 0);
 
@@ -341,7 +341,7 @@ If you know that your particular solver supports querying solution information
 after modifications, you can use [`direct_model`](@ref) to bypass the
 `MOI.OPTIMIZE_NOT_CALLED` state:
 ```jldoctest
-julia> model = direct_model(GLPK.Optimizer());
+julia> model = direct_model(HiGHS.Optimizer());
 
 julia> @variable(model, x >= 0);
 
@@ -390,7 +390,7 @@ To give a simple example, we could analyze the sensitivity of the optimal
 solution to the following (non-degenerate) LP problem:
 
 ```jldoctest solutions_sensitivity
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 @variable(model, x[1:2])
 set_lower_bound(x[2], -0.5)
 set_upper_bound(x[2], 0.5)
@@ -581,7 +581,7 @@ distance is greater than the supplied tolerance `atol`.
 # changes in printing order will cause the doctest to fail.
 ```
 ```jldoctest feasibility; filter=[r"x.+?\=\> 0.1", r"c1.+? \=\> 0.01"]
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
 
 julia> @variable(model, x >= 1, Int);
 

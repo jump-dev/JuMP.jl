@@ -11,7 +11,7 @@
 # Originally contributed by Louis Luangkesorn, April 3, 2015.
 
 using JuMP
-import GLPK
+import HiGHS
 import Test
 
 function example_steelT3(; verbose = true)
@@ -49,7 +49,7 @@ function example_steelT3(; verbose = true)
         ),
     )
     ## Model
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     ## Decision Variables
     @variables(
         model,

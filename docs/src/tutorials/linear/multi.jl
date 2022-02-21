@@ -12,7 +12,7 @@
 # Originally contributed by Louis Luangkesorn, February 26, 2015.
 
 using JuMP
-import GLPK
+import HiGHS
 import Test
 
 function example_multi(; verbose = true)
@@ -60,7 +60,7 @@ function example_multi(; verbose = true)
         3,
     )
     ## DECLARE MODEL
-    multi = Model(GLPK.Optimizer)
+    multi = Model(HiGHS.Optimizer)
     ## VARIABLES
     @variable(multi, trans[1:numorig, 1:numdest, 1:numprod] >= 0)
     ## OBJECTIVE

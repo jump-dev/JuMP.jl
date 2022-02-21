@@ -8,11 +8,11 @@
 # An "urban planning" problem based on an [example from puzzlor](http://www.puzzlor.com/2013-08_UrbanPlanning.html).
 
 using JuMP
-import GLPK
+import HiGHS
 import Test
 
 function example_urban_plan()
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     ## x is indexed by row and column
     @variable(model, 0 <= x[1:5, 1:5] <= 1, Int)
     ## y is indexed by R or C, the points, and an index in 1:5. Note how JuMP

@@ -43,7 +43,7 @@ Note: interval constraints are NOT supported.
 
 # Example
 
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     @variable(model, -1 <= x <= 2)
     @objective(model, Min, x)
     optimize!(model)

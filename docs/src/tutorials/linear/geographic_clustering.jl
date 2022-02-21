@@ -29,7 +29,7 @@
 # This tutorial uses the following packages:
 using JuMP
 import DataFrames
-import GLPK
+import HiGHS
 import LinearAlgebra
 
 # For this example, we'll use the 20 most populous cities in the United States.
@@ -175,7 +175,7 @@ dm = LinearAlgebra.LowerTriangular([
 # $k$ and $0$ otherwise. Each city must be in a group, so we'll add the
 # constraint $\sum_kx_{i,k} = 1$ for every $i$.
 
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 set_silent(model)
 #-
 
