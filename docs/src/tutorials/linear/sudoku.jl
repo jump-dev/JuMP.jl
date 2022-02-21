@@ -44,7 +44,7 @@
 # then we can solve it with any integer programming solver.
 
 using JuMP
-using GLPK
+using HiGHS
 
 # We will define a binary variable (a variable that is either 0 or 1) for each
 # possible number in each possible cell. The meaning of each variable is as
@@ -53,7 +53,7 @@ using GLPK
 # where `i` is the row and `j` is the column.
 
 # Create a model
-sudoku = Model(GLPK.Optimizer)
+sudoku = Model(HiGHS.Optimizer)
 
 # Create our variables
 @variable(sudoku, x[i = 1:9, j = 1:9, k = 1:9], Bin)

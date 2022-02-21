@@ -45,12 +45,12 @@
 # Your first prototype of a JuMP model is probably a script that uses a small
 # set of hard-coded data.
 
-using JuMP, GLPK
+using JuMP, HiGHS
 profit = [5, 3, 2, 7, 4]
 weight = [2, 8, 4, 2, 5]
 capacity = 10
 N = 5
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 @variable(model, x[1:N], Bin)
 @objective(model, Max, sum(profit[i] * x[i] for i in 1:N))
 @constraint(model, sum(weight[i] * x[i] for i in 1:N) <= capacity)
@@ -82,7 +82,7 @@ function solve_knapsack_1(profit::Vector, weight::Vector, capacity::Real)
         throw(DimensionMismatch("profit and weight are different sizes"))
     end
     N = length(weight)
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     @variable(model, x[1:N], Bin)
     @objective(model, Max, sum(profit[i] * x[i] for i in 1:N))
     @constraint(model, sum(weight[i] * x[i] for i in 1:N) <= capacity)
@@ -151,7 +151,7 @@ data
 # as input:
 
 function solve_knapsack_2(data::KnapsackData)
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     @variable(model, x[keys(data.objects)], Bin)
     @objective(model, Max, sum(v.profit * x[k] for (k, v) in data.objects))
     @constraint(
@@ -213,7 +213,7 @@ data = read_data(data_filename)
 # write:
 
 function solve_knapsack_3(data::KnapsackData; binary_knapsack::Bool)
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     if binary_knapsack
         @variable(model, x[keys(data.objects)], Bin)
     else
@@ -259,7 +259,7 @@ struct IntegerKnapsackConfig <: AbstractConfiguration end
 # of our variables.
 
 function solve_knapsack_4(data::KnapsackData, config::AbstractConfiguration)
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     x = add_knapsack_variables(model, data, config)
     @objective(model, Max, sum(v.profit * x[k] for (k, v) in data.objects))
     @constraint(
@@ -349,7 +349,7 @@ function add_knapsack_objective(
 end
 
 function solve_knapsack_5(data::KnapsackData, config::AbstractConfiguration)
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     add_knapsack_variables(model, data, config)
     add_knapsack_constraints(model, data, config)
     add_knapsack_objective(model, data, config)
@@ -365,7 +365,7 @@ solve_knapsack_5(data, BinaryKnapsackConfig())
 # different. We've wrapped it in a function, defined some data types, and
 # introduced configuration options to control the variables and constraints that
 # get added. There are a few other steps we can do to further improve things:
-#  * remove the dependence on `GLPK`
+#  * remove the dependence on `HiGHS`
 #  * add checks that we found an optimal solution
 #  * add a helper function to avoid the need to explicitly construct the data.
 
@@ -395,7 +395,7 @@ function solve_knapsack_6(
 end
 
 solution =
-    solve_knapsack_6(GLPK.Optimizer, data_filename, BinaryKnapsackConfig())
+    solve_knapsack_6(HiGHS.Optimizer, data_filename, BinaryKnapsackConfig())
 
 # ## Create a module
 
@@ -549,7 +549,7 @@ Solve the knapsack problem and return the optimal primal solution
 
 ```julia
 solution = solve_knapsack(
-    GLPK.Optimizer,
+    HiGHS.Optimizer,
     "path/to/data.json",
     BinaryKnapsackConfig(),
 )
@@ -557,7 +557,7 @@ solution = solve_knapsack(
 
 ```julia
 solution = solve_knapsack(
-    MOI.OptimizerWithAttributes(GLPK.Optimizer, "msg_lev" => 0),
+    MOI.OptimizerWithAttributes(HiGHS.Optimizer, "output_flag" => false),
     "path/to/data.json",
     IntegerKnapsackConfig(),
 )
@@ -578,7 +578,7 @@ end
 import .KnapsackModel
 
 KnapsackModel.solve_knapsack(
-    GLPK.Optimizer,
+    HiGHS.Optimizer,
     joinpath(@__DIR__, "data", "knapsack.json"),
     KnapsackModel.BinaryKnapsackConfig(),
 )
@@ -604,7 +604,7 @@ using Test
 @testset "KnapsackModel" begin
     @testset "feasible_binary_knapsack" begin
         x = KnapsackModel.solve_knapsack(
-            GLPK.Optimizer,
+            HiGHS.Optimizer,
             joinpath(@__DIR__, "data", "knapsack.json"),
             KnapsackModel.BinaryKnapsackConfig(),
         )
@@ -616,7 +616,7 @@ using Test
     end
     @testset "feasible_integer_knapsack" begin
         x = KnapsackModel.solve_knapsack(
-            GLPK.Optimizer,
+            HiGHS.Optimizer,
             joinpath(@__DIR__, "data", "knapsack.json"),
             KnapsackModel.IntegerKnapsackConfig(),
         )
@@ -628,7 +628,7 @@ using Test
     end
     @testset "infeasible_binary_knapsack" begin
         x = KnapsackModel.solve_knapsack(
-            GLPK.Optimizer,
+            HiGHS.Optimizer,
             ## This file contains data that makes the problem infeasible.
             joinpath(@__DIR__, "data", "knapsack_infeasible.json"),
             KnapsackModel.BinaryKnapsackConfig(),

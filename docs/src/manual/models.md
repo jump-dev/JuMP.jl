@@ -1,7 +1,7 @@
 ```@meta
 CurrentModule = JuMP
 DocTestSetup = quote
-    using JuMP, GLPK, SCS
+    using JuMP, HiGHS, SCS
 end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
@@ -15,8 +15,8 @@ well as which solver to use and even solution information.
 !!! info
     JuMP uses "optimizer" as a synonym for "solver." Our convention is to use
     "solver" to refer to the underlying software, and use "optimizer" to refer
-    to the Julia object that wraps the solver. For example, `GLPK` is a solver,
-    and `GLPK.Optimizer` is an optimizer.
+    to the Julia object that wraps the solver. For example, `HiGHS` is a solver,
+    and `HiGHS.Optimizer` is an optimizer.
 
 !!! tip
     See [Supported solvers](@ref) for a list of available solvers.
@@ -25,13 +25,13 @@ well as which solver to use and even solution information.
 
 Create a model by passing an optimizer to [`Model`](@ref):
 ```jldoctest
-julia> model = Model(GLPK.Optimizer)
+julia> model = Model(HiGHS.Optimizer)
 A JuMP Model
 Feasibility problem with:
 Variables: 0
 Model mode: AUTOMATIC
 CachingOptimizer state: EMPTY_OPTIMIZER
-Solver name: GLPK
+Solver name: HiGHS
 ```
 
 If you don't know which optimizer you will be using at creation time, create a
@@ -46,7 +46,7 @@ Model mode: AUTOMATIC
 CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
 
-julia> set_optimizer(model, GLPK.Optimizer)
+julia> set_optimizer(model, HiGHS.Optimizer)
 ```
 
 !!! tip
@@ -84,13 +84,13 @@ for small models.
 
 To reduce the "time-to-first-solve", try passing `add_bridges = false`.
 ```jldoctest
-julia> model = Model(GLPK.Optimizer; add_bridges = false);
+julia> model = Model(HiGHS.Optimizer; add_bridges = false);
 ```
 or
 ```jldoctest
 julia> model = Model();
 
-julia> set_optimizer(model, GLPK.Optimizer; add_bridges = false)
+julia> set_optimizer(model, HiGHS.Optimizer; add_bridges = false)
 ```
 
 However, be wary! If your model and solver combination needs bridges, an error
@@ -137,24 +137,26 @@ JuMP uses "attribute" as a synonym for "option." Use
 [`optimizer_with_attributes`](@ref) to create an optimizer with some attributes
 initialized:
 ```jldoctest
-julia> model = Model(optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => 0))
+julia> model = Model(
+           optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => false),
+       )
 A JuMP Model
 Feasibility problem with:
 Variables: 0
 Model mode: AUTOMATIC
 CachingOptimizer state: EMPTY_OPTIMIZER
-Solver name: GLPK
+Solver name: HiGHS
 ```
 
 Alternatively, use [`set_optimizer_attribute`](@ref) to set an attribute after
 the model has been created:
 ```jldoctest
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
 
-julia> set_optimizer_attribute(model, "msg_lev", 0)
+julia> set_optimizer_attribute(model, "output_flag", false)
 
-julia> get_optimizer_attribute(model, "msg_lev")
-0
+julia> get_optimizer_attribute(model, "output_flag")
+false
 ```
 
 ## Print the model
@@ -214,7 +216,7 @@ latex_formulation(model)
 Use [`set_silent`](@ref) and [`unset_silent`](@ref) to disable or enable
 printing output from the solver.
 ```jldoctest
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
 
 julia> set_silent(model)
 
@@ -231,7 +233,7 @@ julia> unset_silent(model)
 Use [`set_time_limit_sec`](@ref), [`unset_time_limit_sec`](@ref), and
 [`time_limit_sec`](@ref) to manage time limits.
 ```jldoctest
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
 
 julia> set_time_limit_sec(model, 60.0)
 
@@ -242,7 +244,7 @@ julia> time_limit_sec(model)
 julia> unset_time_limit_sec(model)
 
 julia> time_limit_sec(model)
-2.147483647e6
+Inf
 ```
 
 !!! info
@@ -368,28 +370,28 @@ A JuMP [`Model`](@ref) is a thin layer around a *backend* of type
 [`MOI.ModelLike`](@ref) that stores the optimization problem and acts as the
 optimization solver.
 
-However, if you construct a model like `Model(GLPK.Optimizer)`, the backend is
-not a `GLPK.Optimizer`, but a more complicated object.
+However, if you construct a model like `Model(HiGHS.Optimizer)`, the backend is
+not a `HiGHS.Optimizer`, but a more complicated object.
 
 From JuMP, the MOI backend can be accessed using the [`backend`](@ref) function.
 Let's see what the [`backend`](@ref) of a JuMP [`Model`](@ref) is:
 ```jldoctest models_backends
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
 
 julia> b = backend(model)
-MOIU.CachingOptimizer{MOIB.LazyBridgeOptimizer{GLPK.Optimizer}, MOIU.UniversalFallback{MOIU.Model{Float64}}}
+MOIU.CachingOptimizer{MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}, MOIU.UniversalFallback{MOIU.Model{Float64}}}
 in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
 with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
   fallback for MOIU.Model{Float64}
-with optimizer MOIB.LazyBridgeOptimizer{GLPK.Optimizer}
+with optimizer MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}
   with 0 variable bridges
   with 0 constraint bridges
   with 0 objective bridges
-  with inner model A GLPK model
+  with inner model A HiGHS model with 0 columns and 0 rows.
 ```
 
-Uh oh! Even though we passed a `GLPK.Optimizer`, the backend is a much more
+Uh oh! Even though we passed a `HiGHS.Optimizer`, the backend is a much more
 complicated object.
 
 ### CachingOptimizer
@@ -411,11 +413,11 @@ It has two parts:
  2. An optimizer, which is used to solve the problem
     ```jldoctest models_backends
     julia> b.optimizer
-    MOIB.LazyBridgeOptimizer{GLPK.Optimizer}
+    MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}
     with 0 variable bridges
     with 0 constraint bridges
     with 0 objective bridges
-    with inner model A GLPK model
+    with inner model A HiGHS model with 0 columns and 0 rows.
     ```
 
 !!! info
@@ -464,21 +466,21 @@ A common example of a bridge is one that splits an interval constraint like
 
 Use the `add_bridges = false` keyword to remove the bridging layer:
 ```jldoctest
-julia> model = Model(GLPK.Optimizer; add_bridges = false)
+julia> model = Model(HiGHS.Optimizer; add_bridges = false)
 A JuMP Model
 Feasibility problem with:
 Variables: 0
 Model mode: AUTOMATIC
 CachingOptimizer state: EMPTY_OPTIMIZER
-Solver name: GLPK
+Solver name: HiGHS
 
 julia> backend(model)
-MOIU.CachingOptimizer{GLPK.Optimizer, MOIU.UniversalFallback{MOIU.Model{Float64}}}
+MOIU.CachingOptimizer{HiGHS.Optimizer, MOIU.UniversalFallback{MOIU.Model{Float64}}}
 in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
 with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
   fallback for MOIU.Model{Float64}
-with optimizer A GLPK model
+with optimizer A HiGHS model with 0 columns and 0 rows.
 ```
 
 ### Unsafe backend
@@ -487,19 +489,19 @@ In some advanced use-cases, it is necessary to work with the inner optimization
 model directly. To access this model, use [`unsafe_backend`](@ref):
 ```jldoctest models_backends
 julia> backend(model)
-MOIU.CachingOptimizer{MOIB.LazyBridgeOptimizer{GLPK.Optimizer}, MOIU.UniversalFallback{MOIU.Model{Float64}}}
+MOIU.CachingOptimizer{MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}, MOIU.UniversalFallback{MOIU.Model{Float64}}}
 in state EMPTY_OPTIMIZER
 in mode AUTOMATIC
 with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
   fallback for MOIU.Model{Float64}
-with optimizer MOIB.LazyBridgeOptimizer{GLPK.Optimizer}
+with optimizer MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}
   with 0 variable bridges
   with 0 constraint bridges
   with 0 objective bridges
-  with inner model A GLPK model
+  with inner model A HiGHS model with 0 columns and 0 rows.
 
 julia> unsafe_backend(model)
-A GLPK model
+A HiGHS model with 0 columns and 0 rows.
 ```
 
 !!! warning
@@ -513,12 +515,12 @@ Using a `CachingOptimizer` results in an additional copy of the model being
 stored by JuMP in the `.model_cache` field. To avoid this overhead, create a
 JuMP model using [`direct_model`](@ref):
 ```jldoctest direct_mode
-julia> model = direct_model(GLPK.Optimizer())
+julia> model = direct_model(HiGHS.Optimizer())
 A JuMP Model
 Feasibility problem with:
 Variables: 0
 Model mode: DIRECT
-Solver name: GLPK
+Solver name: HiGHS
 ```
 
 !!! warning
@@ -531,17 +533,19 @@ The benefit of using [`direct_model`](@ref) is that there are no extra layers
 provided optimizer:
 ```jldoctest direct_mode
 julia> backend(model)
-A GLPK model
+A HiGHS model with 0 columns and 0 rows.
 ```
 
 A downside of direct mode is that there is no bridging layer. Therefore, only
 constraints which are natively supported by the solver are supported. For
-example, `GLPK.jl` does not implement constraints of the form `l <= a' x <= u`.
+example, `HiGHS.jl` does not implement quadratic constraints:
 ```julia direct_mode
+julia> model = direct_model(HiGHS.Optimizer());
+
 julia> @variable(model, x[1:2]);
 
-julia> @constraint(model, 1 <= x[1] + x[2] <= 2)
-ERROR: Constraints of type MathOptInterface.ScalarAffineFunction{Float64}-in-MathOptInterface.Interval{Float64} are not supported by the solver.
+julia> @constraint(model, x[1]^2 + x[2]^2 <= 2)
+ERROR: Constraints of type MathOptInterface.MathOptInterface.ScalarQuadraticFunction{Float64}-in-MathOptInterface.LessThan{Float64} are not supported by the solver.
 
 If you expected the solver to support your problem, you may have an error in your formulation. Otherwise, consider using a different solver.
 

@@ -38,7 +38,7 @@
 # similar in which something travels through a network of nodes.
 
 using JuMP
-import GLPK
+import HiGHS
 import LinearAlgebra
 
 # ## The shortest path problem
@@ -71,7 +71,7 @@ G = [
 
 n = size(G)[1]
 
-shortest_path = Model(GLPK.Optimizer)
+shortest_path = Model(HiGHS.Optimizer)
 
 @variable(shortest_path, x[1:n, 1:n], Bin)
 # Arcs with zero cost are not a part of the path as they do no exist
@@ -126,7 +126,7 @@ G = [
 
 n = size(G)[1]
 
-assignment = Model(GLPK.Optimizer)
+assignment = Model(HiGHS.Optimizer)
 @variable(assignment, y[1:n, 1:n], Bin)
 # One person can only be assigned to one object
 @constraint(assignment, [i = 1:n], sum(y[:, i]) == 1)
@@ -169,7 +169,7 @@ G = [
 
 n = size(G)[1]
 
-max_flow = Model(GLPK.Optimizer)
+max_flow = Model(HiGHS.Optimizer)
 
 @variable(max_flow, f[1:n, 1:n] >= 0)
 # Capacity constraints

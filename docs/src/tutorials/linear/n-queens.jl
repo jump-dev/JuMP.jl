@@ -33,13 +33,13 @@
 # of their careful placement.*
 
 using JuMP
-import GLPK
+import HiGHS
 import LinearAlgebra
 
 # N-Queens
 N = 8
 
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 
 # Next, let's create an N x N chessboard of binary values. 0 will represent an
 # empty space on the board and 1 will represent a space occupied by one of our
@@ -68,6 +68,4 @@ optimize!(model)
 
 # We can now review the solution that our model found:
 
-solution = convert.(Int, value.(x))
-
-# ![Four Queens](../../assets/n_queens.png)
+solution = round.(Int, value.(x))

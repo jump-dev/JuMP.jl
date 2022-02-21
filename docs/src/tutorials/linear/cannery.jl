@@ -17,7 +17,7 @@
 # ## Required packages
 
 using JuMP
-import GLPK
+import HiGHS
 import JSON
 import Test  #src
 
@@ -87,9 +87,9 @@ distance(p::String, m::String) = data["distances"]["$(p) => $(m)"]
 # Now we're ready to convert our mathematical formulation into a JuMP model.
 
 # First, create a new JuMP model. Since we have a linear program, we'll use
-# GLPK as our optimizer:
+# HiGHS as our optimizer:
 
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 
 # Our decision variables are indexed over the set of plants and markets:
 

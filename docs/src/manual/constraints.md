@@ -2,7 +2,7 @@
 CurrentModule = JuMP
 DocTestSetup = quote
     using JuMP
-    import GLPK
+    import HiGHS
 end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
@@ -452,7 +452,9 @@ The dual value associated with a constraint in the most recent solution can be
 accessed using the [`dual`](@ref) function. Use [`has_duals`](@ref) to check if
 the model has a dual solution available to query. For example:
 ```jldoctest con_duality
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
 
 julia> @variable(model, x)
 x
@@ -507,7 +509,9 @@ the returned constraint reference. The [`reduced_cost`](@ref) function may
 simplify this process as it returns the shadow price of an active bound of
 a variable (or zero, if no active bound exists).
 ```jldoctest
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
 
 julia> @variable(model, x <= 1)
 x

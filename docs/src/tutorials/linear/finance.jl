@@ -31,7 +31,7 @@
 
 # This tutorial uses the following packages
 using JuMP
-import GLPK
+import HiGHS
 
 # ## Short-term financing
 
@@ -68,7 +68,7 @@ import GLPK
 # Our objective will be to simply maximize the company's wealth in June, which
 # say we represent with the variable $m$.
 
-financing = Model(GLPK.Optimizer)
+financing = Model(HiGHS.Optimizer)
 
 @variables(financing, begin
     0 <= u[1:5] <= 100
@@ -130,7 +130,7 @@ objective_value(financing)
 bid_values = [6 3 12 12 8 16]
 bid_items = [[1], [2], [3 4], [1 3], [2 4], [1 3 4]]
 
-auction = Model(GLPK.Optimizer)
+auction = Model(HiGHS.Optimizer)
 @variable(auction, y[1:6], Bin)
 @objective(auction, Max, sum(y' .* bid_values))
 for i in 1:6

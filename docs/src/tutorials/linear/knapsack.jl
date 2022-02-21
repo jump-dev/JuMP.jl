@@ -12,14 +12,14 @@
 #         x binary
 
 using JuMP
-import GLPK
+import HiGHS
 import Test
 
 function example_knapsack(; verbose = true)
     profit = [5, 3, 2, 7, 4]
     weight = [2, 8, 4, 2, 5]
     capacity = 10
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     @variable(model, x[1:5], Bin)
     ## Objective: maximize profit
     @objective(model, Max, profit' * x)

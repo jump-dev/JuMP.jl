@@ -16,7 +16,7 @@
 # Originally contributed by Louis Luangkesorn, February 26, 2015.
 
 using JuMP
-import GLPK
+import HiGHS
 import Test
 
 function example_prod(; verbose = true)
@@ -171,7 +171,7 @@ function example_prod(; verbose = true)
         for p in 1:numprd
     ]
     ## DEFINE MODEL
-    prod = Model(GLPK.Optimizer)
+    prod = Model(HiGHS.Optimizer)
     ## VARIABLES
     ## Average number of crews employed in each period
     @variable(prod, Crews[0:lastperiod] >= 0)

@@ -1,7 +1,7 @@
 ```@meta
 CurrentModule = JuMP
 DocTestSetup = quote
-    using JuMP, GLPK
+    using JuMP, HiGHS
 end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
@@ -35,7 +35,7 @@ much easier.
     A solver is a software package that computes solutions to one or more
     classes of problems.
 
-    For example, [GLPK](https://www.gnu.org/software/glpk/) is a solver for
+    For example, [HiGHS](https://github.com/ERGO-Code/HiGHS) is a solver for
     linear programming (LP) and mixed integer programming (MIP) problems. It
     incorporates algorithms such as the simplex method and the interior-point
     method.
@@ -128,11 +128,12 @@ JuMP provides the first part of an algebraic modeling language using the
 
 For example, here's how we write the knapsack problem in JuMP:
 ```jldoctest
-julia> using JuMP, GLPK
+julia> using JuMP, HiGHS
 
 julia> function algebraic_knapsack(c, w, b)
            n = length(c)
-           model = Model(GLPK.Optimizer)
+           model = Model(HiGHS.Optimizer)
+           set_silent(model)
            @variable(model, x[1:n] >= 0, Int)
            @objective(model, Max, sum(c[i] * x[i] for i = 1:n))
            @constraint(model, sum(w[i] * x[i] for i = 1:n) <= b)
@@ -154,11 +155,12 @@ the model we wrote out above.
 For the next step, JuMP's macros re-write the variables and constraints into a
 functional form. Here's what the JuMP code looks like after this step:
 ```jldoctest
-julia> using JuMP, GLPK
+julia> using JuMP, HiGHS
 
 julia> function nonalgebraic_knapsack(c, w, b)
            n = length(c)
-           model = Model(GLPK.Optimizer)
+           model = Model(HiGHS.Optimizer)
+           set_silent(model)
            x = [VariableRef(model) for i = 1:n]
            for i = 1:n
                set_lower_bound(x[i], 0)
@@ -194,13 +196,14 @@ Hopefully you agree that the macro version is much easier to read!
 In the third step, JuMP converts the functional form of the problem, i.e.,
 `nonalgebraic_knapsack`, into the MathOptInterface API:
 ```jldoctest
-julia> using MathOptInterface, GLPK
+julia> using MathOptInterface, HiGHS
 
 julia> const MOI = MathOptInterface;
 
 julia> function mathoptinterface_knapsack(optimizer, c, w, b)
            n = length(c)
            model = MOI.instantiate(optimizer)
+           MOI.set(model, MOI.Silent(), true)
            x = MOI.add_variables(model, n)
            for i in 1:n
                MOI.add_constraint(model, x[i], MOI.GreaterThan(0.0))
@@ -220,7 +223,7 @@ julia> function mathoptinterface_knapsack(optimizer, c, w, b)
        end
 mathoptinterface_knapsack (generic function with 1 method)
 
-julia> mathoptinterface_knapsack(GLPK.Optimizer, [1.0, 2.0], [0.5, 0.5], 1.25)
+julia> mathoptinterface_knapsack(HiGHS.Optimizer, [1.0, 2.0], [0.5, 0.5], 1.25)
 2-element Vector{Float64}:
  0.0
  2.0
@@ -228,61 +231,49 @@ julia> mathoptinterface_knapsack(GLPK.Optimizer, [1.0, 2.0], [0.5, 0.5], 1.25)
 The code is becoming more verbose and looking less like the mathematical
 formulation that we started with.
 
-### Step IV: MathOptInterface to GLPK
+### Step IV: MathOptInterface to HiGHS
 
-As a final step, the [GLPK.jl](https://github.com/jump-dev/GLPK.jl) package
+As a final step, the [HiGHS.jl](https://github.com/jump-dev/HiGHS.jl) package
 converts the MathOptInterface form, i.e., `mathoptinterface_knapsack`, into a
-GLPK-specific API:
+HiGHS-specific API:
 ```jldoctest
-julia> using GLPK
+julia> using HiGHS
 
-julia> function glpk_knapsack(c, w, b)
+julia> function highs_knapsack(c, w, b)
            n = length(c)
-           model = glp_create_prob()
-           glp_add_cols(model, n)
+           model = Highs_create()
+           Highs_setBoolOptionValue(model, "output_flag", false)
            for i in 1:n
-               glp_set_col_bnds(model, i, GLP_LO, 0.0, GLP_DBL_MAX)
-               glp_set_col_kind(model, i, GLP_IV)
-               glp_set_col_name(model, i, "x[$i]")
+               Highs_addCol(model, c[i], 0.0, Inf, 0, C_NULL, C_NULL)
+               Highs_changeColIntegrality(model, i-1, 1)
            end
-           glp_set_obj_dir(model, GLP_MAX)
-           for i in 1:n
-               glp_set_obj_coef(model, i, c[i])
-           end
-           glp_set_obj_coef(model, 0, 0.0)
-           glp_add_rows(model, 1)
-           glp_set_mat_row(
+           Highs_changeObjectiveSense(model, -1)
+           Highs_addRow(
                model,
-               1,
-               length(w),
-               Ref(Cint.(1:n), 0),
-               Ref(w, 0),
+               -Inf,
+               b,
+               Cint(length(w)),
+               collect(Cint(0):Cint(n-1)),
+               w,
            )
-           glp_set_row_bnds(model, 1, GLP_UP, -GLP_DBL_MAX, b)
-           simplex_options = glp_smcp()
-           glp_init_smcp(simplex_options)
-           simplex_options.msg_lev = GLP_MSG_ERR
-           glp_simplex(model, simplex_options)
-           options = glp_iocp()
-           glp_init_iocp(options)
-           options.msg_lev = GLP_MSG_ERR
-           glp_intopt(model, options)
-           x = glp_mip_col_val.(model, 1:n)
-           glp_delete_prob(model)
+           Highs_run(model)
+           x = fill(NaN, 2)
+           Highs_getSolution(model, x, C_NULL, C_NULL, C_NULL)
+           Highs_destroy(model)
            return x
        end
-glpk_knapsack (generic function with 1 method)
+highs_knapsack (generic function with 1 method)
 
-julia> glpk_knapsack([1.0, 2.0], [0.5, 0.5], 1.25)
+julia> highs_knapsack([1.0, 2.0], [0.5, 0.5], 1.25)
 2-element Vector{Float64}:
  0.0
  2.0
 ```
 We've now gone from a algebraic model that looked identical to the mathematical
-model we started with, to a verbose function that uses GLPK-specific
+model we started with, to a verbose function that uses HiGHS-specific
 functionality.
 
-The difference between `algebraic_knapsack` and `glpk_knapsack` highlights the
+The difference between `algebraic_knapsack` and `highs_knapsack` highlights the
 benefit that algebraic modeling languages provide to users. Moreover, if we used
 a different solver, the solver-specific function would be entirely different. A
 key benefit of an algebraic modeling language is that you can change the solver
