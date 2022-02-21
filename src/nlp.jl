@@ -219,24 +219,28 @@ function dual(c::NonlinearConstraintRef)
 end
 
 """
-    nlp_dual_start_value(model::Model)
+    nl_dual_start_value(model::Model)
 
 Return the current value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref).
 """
-function nlp_dual_start_value(model::Model)
+function nl_dual_start_value(model::Model)
     return MOI.get(model, MOI.NLPBlockDualStart())
 end
 
 """
-    set_nlp_dual_start_value(
+    set_nl_dual_start_value(
         model::Model,
         start::Union{Nothing,Vector{Float64}},
     )
 
-Set the value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref). Pass
-`nothing` to unset a previous start.
+Set the value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref).
+
+The start vector corresponds to the Lagrangian duals of the nonlinear
+constraints, in the order given by [`all_nl_constraints`](@ref).
+
+Pass `nothing` to unset a previous start.
 """
-function set_nlp_dual_start_value(model::Model, start::Vector{Float64})
+function set_nl_dual_start_value(model::Model, start::Vector{Float64})
     _init_NLP(model)
     nldata::_NLPData = model.nlp_data
     if length(nldata.nlconstr) != length(start)
@@ -251,7 +255,7 @@ function set_nlp_dual_start_value(model::Model, start::Vector{Float64})
     return
 end
 
-function set_nlp_dual_start_value(model::Model, start::Nothing)
+function set_nl_dual_start_value(model::Model, start::Nothing)
     MOI.set(model, MOI.NLPBlockDualStart(), start)
     return
 end
