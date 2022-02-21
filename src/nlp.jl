@@ -218,6 +218,44 @@ function dual(c::NonlinearConstraintRef)
     return nldata.nlconstr_duals[c.index.value]
 end
 
+"""
+    nlp_dual_start_value(model::Model)
+
+Return the current value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref).
+"""
+function nlp_dual_start_value(model::Model)
+    return MOI.get(model, MOI.NLPBlockDualStart())
+end
+
+"""
+    set_nlp_dual_start_value(
+        model::Model,
+        start::Union{Nothing,Vector{Float64}},
+    )
+
+Set the value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref). Pass
+`nothing` to unset a previous start.
+"""
+function set_nlp_dual_start_value(model::Model, start::Vector{Float64})
+    _init_NLP(model)
+    nldata::_NLPData = model.nlp_data
+    if length(nldata.nlconstr) != length(start)
+        throw(
+            ArgumentError(
+                "length start vector ($(length(start))) does not match the " *
+                "number of nonlinear constraints ($(length(nldata.nlconstr))).",
+            ),
+        )
+    end
+    MOI.set(model, MOI.NLPBlockDualStart(), start)
+    return
+end
+
+function set_nlp_dual_start_value(model::Model, start::Nothing)
+    MOI.set(model, MOI.NLPBlockDualStart(), start)
+    return
+end
+
 mutable struct _FunctionStorage
     nd::Vector{NodeData}
     adj::SparseMatrixCSC{Bool,Int}
