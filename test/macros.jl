@@ -777,8 +777,8 @@ function test_Nonliteral_exponents_in_constraint()
 end
 
 function test_AffExpr_in_macros()
-    eq = JuMP._math_symbol(REPLMode, :eq)
-    ge = JuMP._math_symbol(REPLMode, :geq)
+    eq = JuMP._math_symbol(MIME("text/plain"), :eq)
+    ge = JuMP._math_symbol(MIME("text/plain"), :geq)
 
     model = Model()
     @variable(model, x)
@@ -795,8 +795,8 @@ function test_AffExpr_in_macros()
 end
 
 function test_constraints()
-    eq = JuMP._math_symbol(REPLMode, :eq)
-    ge = JuMP._math_symbol(REPLMode, :geq)
+    eq = JuMP._math_symbol(MIME("text/plain"), :eq)
+    ge = JuMP._math_symbol(MIME("text/plain"), :geq)
     model = Model()
     @variable(model, x)
     @variable(model, y[1:3])

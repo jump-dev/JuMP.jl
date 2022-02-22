@@ -8,27 +8,6 @@
 # See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
-"""
-    PrintMode
-
-An abstract type used for dispatching printing.
-"""
-abstract type PrintMode end
-
-"""
-    REPLMode
-
-A type used for dispatching printing. Produces plain-text representations.
-"""
-abstract type REPLMode <: PrintMode end
-
-"""
-    IJuliaMode
-
-A type used for dispatching printing. Produces LaTeX representations.
-"""
-abstract type IJuliaMode <: PrintMode end
-
 Base.show(io::IO, model::AbstractModel) = _print_summary(io, model)
 
 struct _LatexModel{T<:AbstractModel}
@@ -85,7 +64,7 @@ _string_round(x) = string(x)
 # REPL-specific symbols
 # Anything here: https://en.wikipedia.org/wiki/Windows-1252
 # should probably work fine on Windows
-function _math_symbol(::Type{REPLMode}, name::Symbol)
+function _math_symbol(::MIME"text/plain", name::Symbol)
     if name == :leq
         return Sys.iswindows() ? "<=" : "≤"
     elseif name == :geq
@@ -101,7 +80,7 @@ function _math_symbol(::Type{REPLMode}, name::Symbol)
 end
 
 # IJulia-specific symbols.
-function _math_symbol(::Type{IJuliaMode}, name::Symbol)
+function _math_symbol(::MIME"text/latex", name::Symbol)
     if name == :leq
         return "\\leq"
     elseif name == :geq
@@ -235,19 +214,20 @@ For this method to work, an `AbstractModel` subtype must implement:
  * `_nl_subexpression_string`
 """
 function _print_model(io::IO, model::AbstractModel)
+    mode = MIME("text/plain")
     sense = objective_sense(model)
     if sense == MAX_SENSE
-        println(io, "Max ", objective_function_string(REPLMode, model))
+        println(io, "Max ", objective_function_string(mode, model))
     elseif sense == MIN_SENSE
-        println(io, "Min ", objective_function_string(REPLMode, model))
+        println(io, "Min ", objective_function_string(mode, model))
     else
         println(io, "Feasibility")
     end
     println(io, "Subject to")
-    for constraint in constraints_string(REPLMode, model)
+    for constraint in constraints_string(mode, model)
         println(io, " ", replace(constraint, '\n' => "\n "))
     end
-    nl_subexpressions = _nl_subexpression_string(REPLMode, model)
+    nl_subexpressions = _nl_subexpression_string(mode, model)
     if !isempty(nl_subexpressions)
         println(io, "With NL expressions")
         for expr in nl_subexpressions
@@ -268,25 +248,26 @@ For this method to work, an `AbstractModel` subtype must implement:
  * `_nl_subexpression_string`
 """
 function _print_latex(io::IO, model::AbstractModel)
+    mode = MIME("text/latex")
     println(io, "\$\$ \\begin{aligned}")
     sense = objective_sense(model)
     if sense == MAX_SENSE
         print(io, "\\max\\quad & ")
-        println(io, objective_function_string(IJuliaMode, model), "\\\\")
+        println(io, objective_function_string(mode, model), "\\\\")
     elseif sense == MIN_SENSE
         print(io, "\\min\\quad & ")
-        println(io, objective_function_string(IJuliaMode, model), "\\\\")
+        println(io, objective_function_string(mode, model), "\\\\")
     else
         println(io, "\\text{feasibility}\\\\")
     end
-    constraints = constraints_string(IJuliaMode, model)
+    constraints = constraints_string(mode, model)
     if !isempty(constraints)
         print(io, "\\text{Subject to} \\quad")
         for constraint in constraints
             println(io, " & ", constraint, "\\\\")
         end
     end
-    nl_subexpressions = _nl_subexpression_string(IJuliaMode, model)
+    nl_subexpressions = _nl_subexpression_string(mode, model)
     if !isempty(nl_subexpressions)
         print(io, "\\text{With NL expressions} \\quad")
         for expr in nl_subexpressions
@@ -298,40 +279,37 @@ function _print_latex(io::IO, model::AbstractModel)
 end
 
 """
-    model_string(print_mode, model::AbstractModel)
+    model_string(mode::MIME, model::AbstractModel)
 
-Return a `String` representation of `model` given the `print_mode`.
-
-`print_mode` must be `IJuliaMode` or `REPLMode`.
+Return a `String` representation of `model` given the `mode`.
 """
-function model_string(print_mode, model::AbstractModel)
-    if print_mode == IJuliaMode
+function model_string(mode::MIME, model::AbstractModel)
+    if mode == MIME("text/latex")
         return sprint(_print_latex, model)
     end
     return sprint(_print_model, model)
 end
 
 """
-    objective_function_string(print_mode, model::AbstractModel)::String
+    objective_function_string(mode, model::AbstractModel)::String
 
 Return a `String` describing the objective function of the model.
 """
-function objective_function_string(print_mode, model::Model)
+function objective_function_string(mode, model::Model)
     nlobj = _nlp_objective_function(model)
     if nlobj === nothing
-        return function_string(print_mode, objective_function(model))
+        return function_string(mode, objective_function(model))
     end
-    return nl_expr_string(model, print_mode, nlobj)
+    return nl_expr_string(model, mode, nlobj)
 end
 
 """
-    nl_constraint_string(model::Model, mode, c::_NonlinearConstraint)
+    nl_constraint_string(model::Model, mode::MIME, c::_NonlinearConstraint)
 
 Return a string representation of the nonlinear constraint `c` belonging to
-`model`, given the `print_mode`. `print_mode` should be `IJuliaMode` or
-`REPLMode`.
+`model`, given the `mode`.
 """
-function nl_constraint_string(model::Model, mode, c::_NonlinearConstraint)
+function nl_constraint_string(model::Model, mode::MIME, c::_NonlinearConstraint)
     s = _sense(c)
     nl = nl_expr_string(model, mode, c.terms)
     if s == :range
@@ -358,32 +336,31 @@ function nl_constraint_string(model::Model, mode, c::_NonlinearConstraint)
 end
 
 """
-    constraints_string(print_mode, model::AbstractModel)::Vector{String}
+    constraints_string(mode, model::AbstractModel)::Vector{String}
 
 Return a list of `String`s describing each constraint of the model.
 """
-function constraints_string(print_mode, model::Model)
+function constraints_string(mode, model::Model)
     strings = String[
-        constraint_string(print_mode, cref; in_math_mode = true) for
+        constraint_string(mode, cref; in_math_mode = true) for
         (F, S) in list_of_constraint_types(model) for
         cref in all_constraints(model, F, S)
     ]
     if model.nlp_data !== nothing
         for c in model.nlp_data.nlconstr
-            push!(strings, nl_constraint_string(model, print_mode, c))
+            push!(strings, nl_constraint_string(model, mode, c))
         end
     end
     return strings
 end
 
 """
-    nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
+    nl_expr_string(model::Model, mode::MIME, c::_NonlinearExprData)
 
 Return a string representation of the nonlinear expression `c` belonging to
-`model`, given the `print_mode`. `print_mode` should be `IJuliaMode` or
-`REPLMode`.
+`model`, given the `mode`.
 """
-function nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
+function nl_expr_string(model::Model, mode::MIME, c::_NonlinearExprData)
     ex = _tape_to_expr(
         model,
         1,
@@ -395,22 +372,19 @@ function nl_expr_string(model::Model, print_mode, c::_NonlinearExprData)
         model.nlp_data.user_operators,
         false,
         false,
-        print_mode,
+        mode,
     )
-    if print_mode == IJuliaMode
-        return string(_latexify_exponentials(ex))
-    end
-    return string(ex)
+    return string(_latexify_exponentials(mode, ex))
 end
 
 # Change x ^ -2.0 to x ^ {-2.0}
 # x ^ (x ^ 2.0) to x ^ {x ^ {2.0}}
 # and so on
-_latexify_exponentials(ex) = ex
+_latexify_exponentials(::MIME, ex) = ex
 
-function _latexify_exponentials(ex::Expr)
+function _latexify_exponentials(mode::MIME"text/latex", ex::Expr)
     for i in 1:length(ex.args)
-        ex.args[i] = _latexify_exponentials(ex.args[i])
+        ex.args[i] = _latexify_exponentials(mode, ex.args[i])
     end
     if length(ex.args) == 3 && ex.args[1] == :^
         ex.args[3] = Expr(:braces, ex.args[3])
@@ -420,14 +394,14 @@ end
 
 _nl_subexpression_string(::Any, ::AbstractModel) = String[]
 
-function _nl_subexpression_string(print_mode, model::Model)
+function _nl_subexpression_string(mode::MIME, model::Model)
     if model.nlp_data === nothing
         return String[]
     end
     strings = String[]
     for k in 1:length(model.nlp_data.nlexpr)::Int
-        expr = nl_expr_string(model, print_mode, model.nlp_data.nlexpr[k])
-        if print_mode == IJuliaMode
+        expr = nl_expr_string(model, mode, model.nlp_data.nlexpr[k])
+        if mode == MIME("text/latex")
             push!(strings, "subexpression_{$k}: $expr")
         else
             push!(strings, "subexpression[$k]: $expr")
@@ -438,33 +412,32 @@ end
 
 anonymous_name(::Any, x::AbstractVariableRef) = "anon"
 
-anonymous_name(::Type{REPLMode}, x::VariableRef) = "_[$(index(x).value)]"
+anonymous_name(::MIME"text/plain", x::VariableRef) = "_[$(index(x).value)]"
 
-function anonymous_name(::Type{IJuliaMode}, x::VariableRef)
+function anonymous_name(::MIME"text/latex", x::VariableRef)
     return "{\\_}_{$(index(x).value)}"
 end
 
 """
     function_string(
-        print_mode::Type{<:JuMP.PrintMode},
+        mode::MIME,
         func::Union{JuMP.AbstractJuMPScalar,Vector{<:JuMP.AbstractJuMPScalar}},
     )
 
-Return a `String` representing the function `func` using print mode
-`print_mode`.
+Return a `String` representing the function `func` using print mode `mode`.
 """
-function function_string(::Type{REPLMode}, v::AbstractVariableRef)
+function function_string(mode::MIME"text/plain", v::AbstractVariableRef)
     var_name = name(v)
     if isempty(var_name)
-        return anonymous_name(REPLMode, v)
+        return anonymous_name(mode, v)
     end
     return var_name
 end
 
-function function_string(::Type{IJuliaMode}, v::AbstractVariableRef)
+function function_string(mode::MIME"text/latex", v::AbstractVariableRef)
     var_name = name(v)
     if isempty(var_name)
-        return anonymous_name(IJuliaMode, v)
+        return anonymous_name(mode, v)
     end
     # We need to escape latex math characters that appear in the name.
     # However, it's probably impractical to catch everything, so let's just
@@ -525,7 +498,7 @@ function function_string(mode, q::GenericQuadExpr)
         if x == y
             terms[2*elm] *= _math_symbol(mode, :sq)
         else
-            times = mode == IJuliaMode ? "\\times " : "*"
+            times = mode == MIME("text/latex") ? "\\times " : "*"
             terms[2*elm] *= string(times, y)
         end
     end
@@ -541,12 +514,12 @@ function function_string(mode, q::GenericQuadExpr)
     end
 end
 
-function function_string(print_mode, vector::Vector{<:AbstractJuMPScalar})
-    return "[" * join(function_string.(print_mode, vector), ", ") * "]"
+function function_string(mode, vector::Vector{<:AbstractJuMPScalar})
+    return "[" * join(function_string.(Ref(mode), vector), ", ") * "]"
 end
 
 function function_string(
-    ::Type{REPLMode},
+    ::MIME"text/plain",
     A::AbstractMatrix{<:AbstractJuMPScalar},
 )
     str = sprint(show, MIME"text/plain"(), A)
@@ -562,7 +535,7 @@ function function_string(
 end
 
 function function_string(
-    print_mode::Type{IJuliaMode},
+    mode::MIME"text/latex",
     A::AbstractMatrix{<:AbstractJuMPScalar},
 )
     str = "\\begin{bmatrix}\n"
@@ -575,7 +548,7 @@ function function_string(
             if A isa Symmetric && i > j
                 line *= "\\cdot"
             else
-                line *= function_string(print_mode, A[i, j])
+                line *= function_string(mode, A[i, j])
             end
         end
         str *= line * "\\\\\n"
@@ -583,17 +556,17 @@ function function_string(
     return str * "\\end{bmatrix}"
 end
 
-function function_string(print_mode, constraint::AbstractConstraint)
+function function_string(mode, constraint::AbstractConstraint)
     f = reshape_vector(jump_function(constraint), shape(constraint))
-    return function_string(print_mode, f)
+    return function_string(mode, f)
 end
 
-function function_string(print_mode::Type{<:PrintMode}, p::NonlinearExpression)
-    s = nl_expr_string(p.model, print_mode, p.model.nlp_data.nlexpr[p.index])
+function function_string(mode::MIME, p::NonlinearExpression)
+    s = nl_expr_string(p.model, mode, p.model.nlp_data.nlexpr[p.index])
     return "subexpression[$(p.index)]: " * s
 end
 
-function function_string(::Type{<:PrintMode}, p::NonlinearParameter)
+function function_string(::MIME, p::NonlinearParameter)
     for (k, v) in object_dictionary(p.model)
         if v == p
             return "$k == $(value(p))"
@@ -603,84 +576,85 @@ function function_string(::Type{<:PrintMode}, p::NonlinearParameter)
 end
 
 """
-    in_set_string(print_mode::Type{<:PrintMode}, set)
+    in_set_string(mode::MIME, set)
 
 Return a `String` representing the membership to the set `set` using print mode
-`print_mode`.
+`mode`.
 """
 function in_set_string end
 
-function in_set_string(print_mode, set::MOI.LessThan)
-    return string(_math_symbol(print_mode, :leq), " ", set.upper)
+function in_set_string(mode::MIME, set::MOI.LessThan)
+    return string(_math_symbol(mode, :leq), " ", set.upper)
 end
 
-function in_set_string(print_mode, set::MOI.GreaterThan)
-    return string(_math_symbol(print_mode, :geq), " ", set.lower)
+function in_set_string(mode::MIME, set::MOI.GreaterThan)
+    return string(_math_symbol(mode, :geq), " ", set.lower)
 end
 
-function in_set_string(print_mode, set::MOI.EqualTo)
-    return string(_math_symbol(print_mode, :eq), " ", set.value)
+function in_set_string(mode::MIME, set::MOI.EqualTo)
+    return string(_math_symbol(mode, :eq), " ", set.value)
 end
 
-function in_set_string(::Type{IJuliaMode}, set::MOI.Interval)
+function in_set_string(::MIME"text/latex", set::MOI.Interval)
     return string("\\in \\[", set.lower, ", ", set.upper, "\\]")
 end
 
-function in_set_string(::Type{REPLMode}, set::MOI.Interval)
-    in = _math_symbol(REPLMode, :in)
+function in_set_string(mode::MIME"text/plain", set::MOI.Interval)
+    in = _math_symbol(mode, :in)
     return string("$in [", set.lower, ", ", set.upper, "]")
 end
 
-in_set_string(print_mode, ::MOI.ZeroOne) = "binary"
-in_set_string(::Type{IJuliaMode}, ::MOI.ZeroOne) = "\\in \\{0, 1\\}"
+in_set_string(::MIME"text/plain", ::MOI.ZeroOne) = "binary"
+in_set_string(::MIME"text/latex", ::MOI.ZeroOne) = "\\in \\{0, 1\\}"
 
-in_set_string(print_mode, ::MOI.Integer) = "integer"
-in_set_string(::Type{IJuliaMode}, ::MOI.Integer) = "\\in \\mathbb{Z}"
+in_set_string(::MIME"text/plain", ::MOI.Integer) = "integer"
+in_set_string(::MIME"text/latex", ::MOI.Integer) = "\\in \\mathbb{Z}"
 
-function in_set_string(print_mode, set::Union{PSDCone,MOI.AbstractSet})
+function in_set_string(mode, set::Union{PSDCone,MOI.AbstractSet})
     # Use an `if` here instead of multiple dispatch to avoid ambiguity errors.
-    if print_mode == REPLMode
-        return _math_symbol(print_mode, :in) * " $(set)"
+    if mode == MIME("text/plain")
+        return _math_symbol(mode, :in) * " $(set)"
     else
+        @assert mode == MIME("text/latex")
         set_str = replace(replace(string(set), "{" => "\\{"), "}" => "\\}")
         return "\\in \\text{$(set_str)}"
     end
 end
 
 """
-    in_set_string(print_mode::Type{<:PrintMode}, constraint::AbstractConstraint)
+    in_set_string(mode::MIME, constraint::AbstractConstraint)
 
 Return a `String` representing the membership to the set of the constraint
-`constraint` using print mode `print_mode`.
+`constraint` using print mode `mode`.
 """
-function in_set_string(print_mode, constraint::AbstractConstraint)
+function in_set_string(mode, constraint::AbstractConstraint)
+    # Leave `mode` untyped to avoid ambiguities!
     set = reshape_set(moi_set(constraint), shape(constraint))
-    return in_set_string(print_mode, set)
+    return in_set_string(mode, set)
 end
 
 """
     constraint_string(
-        print_mode,
+        mode::MIME,
         ref::ConstraintRef;
         in_math_mode::Bool = false)
 
-Return a string representation of the constraint `ref`, given the `print_mode`.
-
-`print_mode` should be `IJuliaMode` or `REPLMode`.
+Return a string representation of the constraint `ref`, given the `mode`.
 """
-function constraint_string(print_mode, ref::ConstraintRef; in_math_mode = false)
+function constraint_string(mode::MIME, ref::ConstraintRef; in_math_mode = false)
     return constraint_string(
-        print_mode,
+        mode,
         name(ref),
         constraint_object(ref);
         in_math_mode = in_math_mode,
     )
 end
 
-function constraint_string(print_mode, constraint_object::AbstractConstraint)
-    func_str = function_string(print_mode, constraint_object)
-    in_set_str = in_set_string(print_mode, constraint_object)
-    if print_mode == REPLMode
+function constraint_string(mode, constraint_object::AbstractConstraint)
+    # Leave `mode` untyped to avoid ambiguities!
+    func_str = function_string(mode, constraint_object)
+    in_set_str = in_set_string(mode, constraint_object)
+    if mode == MIME("text/plain")
         lines = split(func_str, '\n')
         lines[1+div(length(lines), 2)] *= " " * in_set_str
         return join(lines, '\n')
@@ -690,14 +664,14 @@ function constraint_string(print_mode, constraint_object::AbstractConstraint)
 end
 
 function constraint_string(
-    print_mode,
+    mode,  # Leave mode untyped to avoid ambiguities
     constraint_name::String,
     constraint_object::AbstractConstraint;
     in_math_mode::Bool = false,
 )
     prefix = isempty(constraint_name) ? "" : constraint_name * " : "
-    constraint_str = constraint_string(print_mode, constraint_object)
-    if print_mode == IJuliaMode
+    constraint_str = constraint_string(mode, constraint_object)
+    if mode == MIME("text/latex")
         if in_math_mode
             return constraint_str
         elseif isempty(prefix)
@@ -710,19 +684,19 @@ function constraint_string(
 end
 
 function Base.show(io::IO, ref::ConstraintRef)
-    return print(io, constraint_string(REPLMode, ref))
+    return print(io, constraint_string(MIME("text/plain"), ref))
 end
 
 function Base.show(io::IO, ::MIME"text/latex", ref::ConstraintRef)
-    return print(io, constraint_string(IJuliaMode, ref))
+    return print(io, constraint_string(MIME("text/latex"), ref))
 end
 
 function Base.show(io::IO, f::AbstractJuMPScalar)
-    return print(io, function_string(REPLMode, f))
+    return print(io, function_string(MIME("text/plain"), f))
 end
 
 function Base.show(io::IO, ::MIME"text/latex", f::AbstractJuMPScalar)
-    return print(io, _wrap_in_math_mode(function_string(IJuliaMode, f)))
+    return print(io, _wrap_in_math_mode(function_string(MIME("text/latex"), f)))
 end
 
 function Base.show(io::IO, evaluator::NLPEvaluator)
@@ -735,7 +709,7 @@ function Base.show(io::IO, evaluator::NLPEvaluator)
 end
 
 function Base.show(io::IO, ex::Union{NonlinearExpression,NonlinearParameter})
-    return print(io, function_string(REPLMode, ex))
+    return print(io, function_string(MIME("text/plain"), ex))
 end
 
 function Base.show(
@@ -743,16 +717,17 @@ function Base.show(
     ::MIME"text/latex",
     ex::Union{NonlinearExpression,NonlinearParameter},
 )
-    return print(io, function_string(IJuliaMode, ex))
+    return print(io, function_string(MIME("text/latex"), ex))
 end
 
 function Base.show(io::IO, c::NonlinearConstraintRef)
     expr = c.model.nlp_data.nlconstr[c.index.value]
-    return print(io, nl_constraint_string(c.model, REPLMode, expr))
+    return print(io, nl_constraint_string(c.model, MIME("text/plain"), expr))
 end
 
 function Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraintRef)
     expr = c.model.nlp_data.nlconstr[c.index.value]
-    s = _wrap_in_math_mode(nl_constraint_string(c.model, IJuliaMode, expr))
+    mode = MIME("text/latex")
+    s = _wrap_in_math_mode(nl_constraint_string(c.model, mode, expr))
     return print(io, s)
 end

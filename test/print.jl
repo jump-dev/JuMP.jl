@@ -15,36 +15,33 @@ using JuMP
 using LinearAlgebra
 using Test
 
-import JuMP.IJuliaMode
-import JuMP.REPLMode
-
 @static if !(:JuMPExtension in names(Main))
     include(joinpath(@__DIR__, "JuMPExtension.jl"))
 end
 
 # Helper function to test IO methods work correctly
-function _io_test_show(::Type{REPLMode}, obj, exp_str)
+function _io_test_show(::MIME"text/plain", obj, exp_str)
     @test sprint(show, obj) == exp_str
 end
-function _io_test_show(::Type{IJuliaMode}, obj, exp_str)
+function _io_test_show(::MIME"text/latex", obj, exp_str)
     @test sprint(show, "text/latex", obj) == string("\$\$ ", exp_str, " \$\$")
 end
-function _io_test_print(::Type{REPLMode}, obj, exp_str)
+function _io_test_print(::MIME"text/plain", obj, exp_str)
     @test sprint(print, obj) == exp_str
 end
-function _io_test_print(::Type{IJuliaMode}, obj, exp_str)
+function _io_test_print(::MIME"text/latex", obj, exp_str)
     @test sprint(show, "text/latex", obj) == string("\$\$ ", exp_str, " \$\$")
 end
-function _io_test_print(::Type{REPLMode}, obj::AbstractModel, exp_str)
+function _io_test_print(::MIME"text/plain", obj::AbstractModel, exp_str)
     @test sprint(print, obj) == exp_str
-    @test JuMP.model_string(JuMP.REPLMode, obj) == exp_str
+    @test JuMP.model_string(MIME("text/plain"), obj) == exp_str
     return
 end
-function _io_test_print(::Type{IJuliaMode}, obj::AbstractModel, exp_str)
+function _io_test_print(::MIME"text/latex", obj::AbstractModel, exp_str)
     model = JuMP.latex_formulation(obj)
     @test sprint(io -> show(io, MIME("text/latex"), model)) ==
           string("\$\$ ", exp_str, " \$\$")
-    @test JuMP.model_string(JuMP.IJuliaMode, obj) ==
+    @test JuMP.model_string(MIME("text/latex"), obj) ==
           string("\$\$ ", exp_str, " \$\$")
     # TODO(odow): I don't know how to test an IJulia display without adding
     # IJulia as a test-dependency, so just print and check it doesn't error.
@@ -80,10 +77,10 @@ struct CustomConstraint{S<:JuMP.AbstractShape} <: JuMP.AbstractConstraint
     in_set_str::String
     shape::S
 end
-function JuMP.function_string(print_mode, constraint::CustomConstraint)
+function JuMP.function_string(mode, constraint::CustomConstraint)
     return constraint.function_str
 end
-function JuMP.in_set_string(print_mode, constraint::CustomConstraint)
+function JuMP.in_set_string(mode, constraint::CustomConstraint)
     return constraint.in_set_str
 end
 struct CustomIndex
@@ -120,8 +117,8 @@ end
     @testset "expressions" begin
         # Most of the expression logic is well covered by test/operator.jl
         # This is really just to check IJulia printing for expressions
-        le = JuMP._math_symbol(REPLMode, :leq)
-        ge = JuMP._math_symbol(REPLMode, :geq)
+        le = JuMP._math_symbol(MIME("text/plain"), :leq)
+        ge = JuMP._math_symbol(MIME("text/plain"), :geq)
 
         #------------------------------------------------------------------
         mod = Model()
@@ -130,52 +127,64 @@ end
         @variable(mod, z)
 
         ex = @expression(mod, x[1] + 2 * y[2, 3])
-        io_test(REPLMode, ex, "x[1] + 2 y[2,3]")
-        io_test(IJuliaMode, ex, "x_{1} + 2 y_{2,3}")
+        io_test(MIME("text/plain"), ex, "x[1] + 2 y[2,3]")
+        io_test(MIME("text/latex"), ex, "x_{1} + 2 y_{2,3}")
 
         ex = @expression(mod, x[1] + 2 * y[2, 3] + x[1])
-        io_test(REPLMode, ex, "2 x[1] + 2 y[2,3]")
-        io_test(IJuliaMode, ex, "2 x_{1} + 2 y_{2,3}")
+        io_test(MIME("text/plain"), ex, "2 x[1] + 2 y[2,3]")
+        io_test(MIME("text/latex"), ex, "2 x_{1} + 2 y_{2,3}")
 
         # TODO: These tests shouldn't depend on order of the two variables in
         # quadratic terms, i.e., x*y vs y*x.
         ex = @expression(mod, (x[1] + x[2]) * (y[2, 2] + 3.0))
-        io_test(REPLMode, ex, "x[1]*y[2,2] + x[2]*y[2,2] + 3 x[1] + 3 x[2]")
         io_test(
-            IJuliaMode,
+            MIME("text/plain"),
+            ex,
+            "x[1]*y[2,2] + x[2]*y[2,2] + 3 x[1] + 3 x[2]",
+        )
+        io_test(
+            MIME("text/latex"),
             ex,
             "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + 3 x_{1} + 3 x_{2}",
         )
 
         ex = @expression(mod, (y[2, 2] + 3.0) * (x[1] + x[2]))
-        io_test(REPLMode, ex, "y[2,2]*x[1] + y[2,2]*x[2] + 3 x[1] + 3 x[2]")
         io_test(
-            IJuliaMode,
+            MIME("text/plain"),
+            ex,
+            "y[2,2]*x[1] + y[2,2]*x[2] + 3 x[1] + 3 x[2]",
+        )
+        io_test(
+            MIME("text/latex"),
             ex,
             "y_{2,2}\\times x_{1} + y_{2,2}\\times x_{2} + 3 x_{1} + 3 x_{2}",
         )
 
         ex = @expression(mod, (x[1] + x[2]) * (y[2, 2] + 3.0) + z^2 - 1)
-        repl_sq = JuMP._math_symbol(REPLMode, :sq)
+        repl_sq = JuMP._math_symbol(MIME("text/plain"), :sq)
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             ex,
             "x[1]*y[2,2] + x[2]*y[2,2] + z$repl_sq + 3 x[1] + 3 x[2] - 1",
         )
-        ijulia_sq = JuMP._math_symbol(IJuliaMode, :sq)
+        ijulia_sq = JuMP._math_symbol(MIME("text/latex"), :sq)
         io_test(
-            IJuliaMode,
+            MIME("text/latex"),
             ex,
             "x_{1}\\times y_{2,2} + x_{2}\\times y_{2,2} + z$ijulia_sq + 3 x_{1} + 3 x_{2} - 1",
         )
 
         ex = @expression(mod, -z * x[1] - x[1] * z + x[1] * x[2] + 0 * z^2)
-        io_test(REPLMode, ex, "-2 z*x[1] + x[1]*x[2]")
-        io_test(IJuliaMode, ex, "-2 z\\times x_{1} + x_{1}\\times x_{2}")
+        io_test(MIME("text/plain"), ex, "-2 z*x[1] + x[1]*x[2]")
+        io_test(
+            MIME("text/latex"),
+            ex,
+            "-2 z\\times x_{1} + x_{1}\\times x_{2}",
+        )
 
         ex = z^2 + x[1] - z^2 - x[1]
-        io_test(REPLMode, ex, "0 z² + 0 x[1]")
-        io_test(IJuliaMode, ex, "0 z$ijulia_sq + 0 x_{1}")
+        io_test(MIME("text/plain"), ex, "0 z² + 0 x[1]")
+        io_test(MIME("text/latex"), ex, "0 z$ijulia_sq + 0 x_{1}")
     end
 
     # See https://github.com/jump-dev/JuMP.jl/pull/1352
@@ -185,40 +194,56 @@ end
         @variable m y
         u = UnitNumber(2.0)
         aff = JuMP.GenericAffExpr(zero(u), x => u, y => zero(u))
-        io_test(REPLMode, aff, "UnitNumber(2.0) x + UnitNumber(0.0) y")
-        io_test(IJuliaMode, aff, "UnitNumber(2.0) x + UnitNumber(0.0) y")
+        io_test(
+            MIME("text/plain"),
+            aff,
+            "UnitNumber(2.0) x + UnitNumber(0.0) y",
+        )
+        io_test(
+            MIME("text/latex"),
+            aff,
+            "UnitNumber(2.0) x + UnitNumber(0.0) y",
+        )
         drop_zeros!(aff)
-        io_test(REPLMode, aff, "UnitNumber(2.0) x")
-        io_test(IJuliaMode, aff, "UnitNumber(2.0) x")
+        io_test(MIME("text/plain"), aff, "UnitNumber(2.0) x")
+        io_test(MIME("text/latex"), aff, "UnitNumber(2.0) x")
         quad = aff * x
-        io_test(REPLMode, quad, "UnitNumber(2.0) x² + UnitNumber(0.0)")
-        io_test(IJuliaMode, quad, "UnitNumber(2.0) x^2 + UnitNumber(0.0)")
+        io_test(
+            MIME("text/plain"),
+            quad,
+            "UnitNumber(2.0) x² + UnitNumber(0.0)",
+        )
+        io_test(
+            MIME("text/latex"),
+            quad,
+            "UnitNumber(2.0) x^2 + UnitNumber(0.0)",
+        )
     end
 
     @testset "Nonlinear expressions" begin
         model = Model()
         @variable(model, x)
         expr = @NLexpression(model, x + 1)
-        io_test(REPLMode, expr, "subexpression[1]: x + 1.0")
+        io_test(MIME("text/plain"), expr, "subexpression[1]: x + 1.0")
     end
 
     @testset "Nonlinear parameters" begin
         model = Model()
         param = @NLparameter(model, value = 1.0)
-        io_test(REPLMode, param, "parameter[1] == 1.0")
+        io_test(MIME("text/plain"), param, "parameter[1] == 1.0")
     end
 
     @testset "Registered nonlinear parameters" begin
         model = Model()
         @NLparameter(model, param == 1.0)
-        io_test(REPLMode, param, "param == 1.0")
+        io_test(MIME("text/plain"), param, "param == 1.0")
     end
 
     @testset "NLPEvaluator" begin
         model = Model()
         evaluator = JuMP.NLPEvaluator(model)
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             evaluator,
             "An NLPEvaluator with available features:\n" *
             "  * :Grad\n" *
@@ -231,9 +256,9 @@ end
     end
 
     @testset "Nonlinear constraints" begin
-        le = JuMP._math_symbol(REPLMode, :leq)
-        ge = JuMP._math_symbol(REPLMode, :geq)
-        eq = JuMP._math_symbol(REPLMode, :eq)
+        le = JuMP._math_symbol(MIME("text/plain"), :leq)
+        ge = JuMP._math_symbol(MIME("text/plain"), :geq)
+        eq = JuMP._math_symbol(MIME("text/plain"), :eq)
 
         model = Model()
         @variable(model, x)
@@ -250,53 +275,93 @@ end
         constr_exponent_7 = @NLconstraint(model, x^(2 * 5) <= 1)
         constr_exponent_8 = @NLconstraint(model, x^(x^2) <= 1)
 
-        io_test(REPLMode, constr_le, "sin(x) - 1.0 $le 0")
-        io_test(REPLMode, constr_ge, "sin(x) - 1.0 $ge 0")
-        io_test(REPLMode, constr_eq, "sin(x) - 1.0 $eq 0")
+        io_test(MIME("text/plain"), constr_le, "sin(x) - 1.0 $le 0")
+        io_test(MIME("text/plain"), constr_ge, "sin(x) - 1.0 $ge 0")
+        io_test(MIME("text/plain"), constr_eq, "sin(x) - 1.0 $eq 0")
         # Note: This is inconsistent with the "x in [-1, 1]" printing for
         # regular constraints.
-        io_test(REPLMode, constr_range, "0 $le sin(x) $le 1")
-        io_test(REPLMode, constr_exponent_1, "x ^ 4.0 - 1.0 $le 0")
-        io_test(REPLMode, constr_exponent_2, "x ^ 40.23 - 1.0 $le 0")
+        io_test(MIME("text/plain"), constr_range, "0 $le sin(x) $le 1")
+        io_test(MIME("text/plain"), constr_exponent_1, "x ^ 4.0 - 1.0 $le 0")
+        io_test(MIME("text/plain"), constr_exponent_2, "x ^ 40.23 - 1.0 $le 0")
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             constr_exponent_3,
             "(x ^ 4.0 + x ^ 3.0 + x ^ 2.0) - 1.0 $le 0",
         )
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             constr_exponent_4,
             "(x ^ -4.0 + x ^ -3.0 + x ^ -2.0) - 1.0 $le 0",
         )
-        io_test(REPLMode, constr_exponent_5, "x ^ (x * x) - 1.0 $le 0")
-        io_test(REPLMode, constr_exponent_6, "x ^ (2.0 * x) - 1.0 $le 0")
-        io_test(REPLMode, constr_exponent_7, "x ^ (2.0 * 5.0) - 1.0 $le 0")
-        io_test(REPLMode, constr_exponent_8, "x ^ (x ^ 2.0) - 1.0 $le 0")
-
-        io_test(IJuliaMode, constr_le, "sin(x) - 1.0 \\leq 0")
-        io_test(IJuliaMode, constr_ge, "sin(x) - 1.0 \\geq 0")
-        io_test(IJuliaMode, constr_eq, "sin(x) - 1.0 = 0")
-        io_test(IJuliaMode, constr_range, "0 \\leq sin(x) \\leq 1")
-        io_test(IJuliaMode, constr_exponent_1, "x ^ {4.0} - 1.0 \\leq 0")
-        io_test(IJuliaMode, constr_exponent_2, "x ^ {40.23} - 1.0 \\leq 0")
         io_test(
-            IJuliaMode,
+            MIME("text/plain"),
+            constr_exponent_5,
+            "x ^ (x * x) - 1.0 $le 0",
+        )
+        io_test(
+            MIME("text/plain"),
+            constr_exponent_6,
+            "x ^ (2.0 * x) - 1.0 $le 0",
+        )
+        io_test(
+            MIME("text/plain"),
+            constr_exponent_7,
+            "x ^ (2.0 * 5.0) - 1.0 $le 0",
+        )
+        io_test(
+            MIME("text/plain"),
+            constr_exponent_8,
+            "x ^ (x ^ 2.0) - 1.0 $le 0",
+        )
+
+        io_test(MIME("text/latex"), constr_le, "sin(x) - 1.0 \\leq 0")
+        io_test(MIME("text/latex"), constr_ge, "sin(x) - 1.0 \\geq 0")
+        io_test(MIME("text/latex"), constr_eq, "sin(x) - 1.0 = 0")
+        io_test(MIME("text/latex"), constr_range, "0 \\leq sin(x) \\leq 1")
+        io_test(
+            MIME("text/latex"),
+            constr_exponent_1,
+            "x ^ {4.0} - 1.0 \\leq 0",
+        )
+        io_test(
+            MIME("text/latex"),
+            constr_exponent_2,
+            "x ^ {40.23} - 1.0 \\leq 0",
+        )
+        io_test(
+            MIME("text/latex"),
             constr_exponent_3,
             "(x ^ {4.0} + x ^ {3.0} + x ^ {2.0}) - 1.0 \\leq 0",
         )
         io_test(
-            IJuliaMode,
+            MIME("text/latex"),
             constr_exponent_4,
             "(x ^ {-4.0} + x ^ {-3.0} + x ^ {-2.0}) - 1.0 \\leq 0",
         )
-        io_test(IJuliaMode, constr_exponent_5, "x ^ {x * x} - 1.0 \\leq 0")
-        io_test(IJuliaMode, constr_exponent_6, "x ^ {2.0 * x} - 1.0 \\leq 0")
-        io_test(IJuliaMode, constr_exponent_7, "x ^ {2.0 * 5.0} - 1.0 \\leq 0")
-        io_test(IJuliaMode, constr_exponent_8, "x ^ {x ^ {2.0}} - 1.0 \\leq 0")
+        io_test(
+            MIME("text/latex"),
+            constr_exponent_5,
+            "x ^ {x * x} - 1.0 \\leq 0",
+        )
+        io_test(
+            MIME("text/latex"),
+            constr_exponent_6,
+            "x ^ {2.0 * x} - 1.0 \\leq 0",
+        )
+        io_test(
+            MIME("text/latex"),
+            constr_exponent_7,
+            "x ^ {2.0 * 5.0} - 1.0 \\leq 0",
+        )
+        io_test(
+            MIME("text/latex"),
+            constr_exponent_8,
+            "x ^ {x ^ {2.0}} - 1.0 \\leq 0",
+        )
     end
 
     @testset "Nonlinear constraints with embedded parameters/expressions" begin
-        le = JuMP._math_symbol(REPLMode, :leq)
+        le = JuMP._math_symbol(MIME("text/plain"), :leq)
 
         model = Model()
         @variable(model, x)
@@ -305,19 +370,19 @@ end
 
         constr = @NLconstraint(model, expr - param <= 0)
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             constr,
             "(subexpression[1] - parameter[1]) - 0.0 $le 0",
         )
         io_test(
-            IJuliaMode,
+            MIME("text/latex"),
             constr,
             "(subexpression_{1} - parameter_{1}) - 0.0 \\leq 0",
         )
     end
 
     @testset "Nonlinear constraints with embedded registered parameters/expressions" begin
-        le = JuMP._math_symbol(REPLMode, :leq)
+        le = JuMP._math_symbol(MIME("text/plain"), :leq)
 
         model = Model()
         @variable(model, x)
@@ -325,8 +390,16 @@ end
         model[:param] = @NLparameter(model, param == 1.0)
 
         constr = @NLconstraint(model, expr - param <= 0)
-        io_test(REPLMode, constr, "(subexpression[1] - param) - 0.0 $le 0")
-        io_test(IJuliaMode, constr, "(subexpression_{1} - param) - 0.0 \\leq 0")
+        io_test(
+            MIME("text/plain"),
+            constr,
+            "(subexpression[1] - param) - 0.0 $le 0",
+        )
+        io_test(
+            MIME("text/latex"),
+            constr,
+            "(subexpression_{1} - param) - 0.0 \\leq 0",
+        )
     end
 
     @testset "Custom constraint" begin
@@ -348,46 +421,46 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(m, 0 <= x <= 2)
 
         @test JuMP.name(x) == "x"
-        io_test(REPLMode, x, "x")
-        io_test(IJuliaMode, x, "x")
+        io_test(MIME("text/plain"), x, "x")
+        io_test(MIME("text/latex"), x, "x")
 
         JuMP.set_name(x, "x2")
         @test JuMP.name(x) == "x2"
-        io_test(REPLMode, x, "x2")
-        io_test(IJuliaMode, x, "x2")
+        io_test(MIME("text/plain"), x, "x2")
+        io_test(MIME("text/latex"), x, "x2")
 
         JuMP.set_name(x, "")
         @test JuMP.name(x) == ""
         if x isa VariableRef
-            io_test(REPLMode, x, "_[1]")
-            io_test(IJuliaMode, x, "{\\_}_{1}")
+            io_test(MIME("text/plain"), x, "_[1]")
+            io_test(MIME("text/latex"), x, "{\\_}_{1}")
         else
-            io_test(REPLMode, x, "anon")
-            io_test(IJuliaMode, x, "anon")
+            io_test(MIME("text/plain"), x, "anon")
+            io_test(MIME("text/latex"), x, "anon")
         end
 
         @variable(m, z[1:2, 3:5])
         @test JuMP.name(z[1, 3]) == "z[1,3]"
-        io_test(REPLMode, z[1, 3], "z[1,3]")
-        io_test(IJuliaMode, z[1, 3], "z_{1,3}")
+        io_test(MIME("text/plain"), z[1, 3], "z[1,3]")
+        io_test(MIME("text/latex"), z[1, 3], "z_{1,3}")
         @test JuMP.name(z[2, 4]) == "z[2,4]"
-        io_test(REPLMode, z[2, 4], "z[2,4]")
-        io_test(IJuliaMode, z[2, 4], "z_{2,4}")
+        io_test(MIME("text/plain"), z[2, 4], "z[2,4]")
+        io_test(MIME("text/latex"), z[2, 4], "z_{2,4}")
         @test JuMP.name(z[2, 5]) == "z[2,5]"
-        io_test(REPLMode, z[2, 5], "z[2,5]")
-        io_test(IJuliaMode, z[2, 5], "z_{2,5}")
+        io_test(MIME("text/plain"), z[2, 5], "z[2,5]")
+        io_test(MIME("text/latex"), z[2, 5], "z_{2,5}")
 
         @variable(m, w[3:9, ["red", "blue", "green"]])
         @test JuMP.name(w[7, "green"]) == "w[7,green]"
-        io_test(REPLMode, w[7, "green"], "w[7,green]")
-        io_test(IJuliaMode, w[7, "green"], "w_{7,green}")
+        io_test(MIME("text/plain"), w[7, "green"], "w[7,green]")
+        io_test(MIME("text/latex"), w[7, "green"], "w_{7,green}")
 
         rng = 2:5
         @variable(m, v[rng, rng, rng, rng, rng, rng, rng])
         a_v = v[4, 5, 2, 3, 2, 2, 4]
         @test JuMP.name(a_v) == "v[4,5,2,3,2,2,4]"
-        io_test(REPLMode, a_v, "v[4,5,2,3,2,2,4]")
-        io_test(IJuliaMode, a_v, "v_{4,5,2,3,2,2,4}")
+        io_test(MIME("text/plain"), a_v, "v[4,5,2,3,2,2,4]")
+        io_test(MIME("text/latex"), a_v, "v_{4,5,2,3,2,2,4}")
     end
 
     @testset "base_name keyword argument" begin
@@ -399,28 +472,28 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @variable(m, v[1:2, 1:2], PSD, base_name = string("i", "$num", num))
         @variable(m, w[1:3, 1:3], Symmetric, base_name = "symm")
 
-        io_test(REPLMode, x, "foo")
-        io_test(IJuliaMode, x, "foo")
-        io_test(REPLMode, y[2], "bar[2]")
-        io_test(IJuliaMode, y[2], "bar_{2}")
-        io_test(REPLMode, z[:red], "color_123[red]")
-        io_test(IJuliaMode, z[:red], "color\\_123_{red}")
-        io_test(REPLMode, v[2, 1], "i123123[1,2]")
-        io_test(IJuliaMode, v[2, 1], "i123123_{1,2}")
-        io_test(REPLMode, w[1, 3], "symm[1,3]")
-        io_test(IJuliaMode, w[1, 3], "symm_{1,3}")
+        io_test(MIME("text/plain"), x, "foo")
+        io_test(MIME("text/latex"), x, "foo")
+        io_test(MIME("text/plain"), y[2], "bar[2]")
+        io_test(MIME("text/latex"), y[2], "bar_{2}")
+        io_test(MIME("text/plain"), z[:red], "color_123[red]")
+        io_test(MIME("text/latex"), z[:red], "color\\_123_{red}")
+        io_test(MIME("text/plain"), v[2, 1], "i123123[1,2]")
+        io_test(MIME("text/latex"), v[2, 1], "i123123_{1,2}")
+        io_test(MIME("text/plain"), w[1, 3], "symm[1,3]")
+        io_test(MIME("text/latex"), w[1, 3], "symm_{1,3}")
     end
 
     @testset "VectorOfVariable constraints" begin
-        ge = JuMP._math_symbol(REPLMode, :geq)
-        in_sym = JuMP._math_symbol(REPLMode, :in)
+        ge = JuMP._math_symbol(MIME("text/plain"), :geq)
+        in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
         model = ModelType()
         @variable(model, x)
         @variable(model, y)
         zero_constr = @constraint(model, [x, y] in MOI.Zeros(2))
 
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             zero_constr,
             "[x, y] $in_sym MathOptInterface.Zeros(2)",
         )
@@ -428,10 +501,10 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 
     @testset "Scalar AffExpr constraints" begin
-        le = JuMP._math_symbol(REPLMode, :leq)
-        ge = JuMP._math_symbol(REPLMode, :geq)
-        eq = JuMP._math_symbol(REPLMode, :eq)
-        in_sym = JuMP._math_symbol(REPLMode, :in)
+        le = JuMP._math_symbol(MIME("text/plain"), :leq)
+        ge = JuMP._math_symbol(MIME("text/plain"), :geq)
+        eq = JuMP._math_symbol(MIME("text/plain"), :eq)
+        in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
 
         model = ModelType()
         @variable(model, x)
@@ -441,10 +514,14 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
         @constraint(model, linear_range, -1 <= x + 0 <= 1)
         linear_noname = @constraint(model, x + 0 <= 1)
 
-        io_test(REPLMode, linear_le, "linear_le : x $le 1.0")
-        io_test(REPLMode, linear_eq, "linear_eq : x $eq 1.0")
-        io_test(REPLMode, linear_range, "linear_range : x $in_sym [-1.0, 1.0]")
-        io_test(REPLMode, linear_noname, "x $le 1.0")
+        io_test(MIME("text/plain"), linear_le, "linear_le : x $le 1.0")
+        io_test(MIME("text/plain"), linear_eq, "linear_eq : x $eq 1.0")
+        io_test(
+            MIME("text/plain"),
+            linear_range,
+            "linear_range : x $in_sym [-1.0, 1.0]",
+        )
+        io_test(MIME("text/plain"), linear_noname, "x $le 1.0")
 
         # io_test doesn't work here because constraints print with a mix of math
         # and non-math.
@@ -461,14 +538,14 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 
     @testset "Vector AffExpr constraints" begin
-        in_sym = JuMP._math_symbol(REPLMode, :in)
+        in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
 
         model = ModelType()
         @variable(model, x)
         @constraint(model, soc_constr, [x - 1, x + 1] in SecondOrderCone())
 
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             soc_constr,
             "soc_constr : " *
             "[x - 1, x + 1] $in_sym MathOptInterface.SecondOrderCone(2)",
@@ -478,26 +555,26 @@ function printing_test(ModelType::Type{<:JuMP.AbstractModel})
     end
 
     @testset "Scalar QuadExpr constraints" begin
-        in_sym = JuMP._math_symbol(REPLMode, :in)
-        le = JuMP._math_symbol(REPLMode, :leq)
-        sq = JuMP._math_symbol(REPLMode, :sq)
+        in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
+        le = JuMP._math_symbol(MIME("text/plain"), :leq)
+        sq = JuMP._math_symbol(MIME("text/plain"), :sq)
 
         model = ModelType()
         @variable(model, x)
         quad_constr = @constraint(model, 2x^2 <= 1)
 
-        io_test(REPLMode, quad_constr, "2 x$sq $le 1.0")
+        io_test(MIME("text/plain"), quad_constr, "2 x$sq $le 1.0")
         # TODO: Test in IJulia mode.
     end
     @testset "Scalar Indicator constraints" begin
-        le = JuMP._math_symbol(REPLMode, :leq)
+        le = JuMP._math_symbol(MIME("text/plain"), :leq)
 
         model = ModelType()
         @variable(model, x, Bin)
         @variable(model, y)
         ind_constr = @constraint(model, !x => {y <= 1})
 
-        io_test(REPLMode, ind_constr, "!x => {y $le 1.0}")
+        io_test(MIME("text/plain"), ind_constr, "!x => {y $le 1.0}")
         # TODO: Test in IJulia mode.
     end
 end
@@ -506,7 +583,7 @@ end
 # an MOI backend
 function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Model" begin
-        repl(s) = JuMP._math_symbol(REPLMode, s)
+        repl(s) = JuMP._math_symbol(MIME("text/plain"), s)
         le, ge, eq, inset = repl(:leq), repl(:geq), repl(:eq), repl(:in)
         #------------------------------------------------------------------
 
@@ -540,7 +617,7 @@ function model_printing_test(ModelType::Type{<:JuMP.AbstractModel})
         VariableType = typeof(a)
 
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             model_1,
             """
 Max a - b + 2 a1 - 10 x
@@ -576,7 +653,7 @@ Subject to
         )
 
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             model_1,
             """
 A JuMP Model
@@ -601,7 +678,7 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""",
         )
 
         io_test(
-            IJuliaMode,
+            MIME("text/latex"),
             model_1,
             "\\begin{aligned}\n" *
             "\\max\\quad & a - b + 2 a1 - 10 x\\\\\n" *
@@ -646,7 +723,7 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""",
         @variable(model_2, y, Int)
         @constraint(model_2, x * y <= 1)
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             model_2,
             """
 A JuMP Model
@@ -667,7 +744,7 @@ Names registered in the model: x, y""",
         @constraint(model_3, x <= 3)
 
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             model_3,
             """
 A JuMP Model
@@ -689,7 +766,7 @@ end
 # as `StructJuMP`, see https://github.com/jump-dev/JuMP.jl/issues/1711
 function model_extension_printing_test(ModelType::Type{<:JuMP.AbstractModel})
     @testset "Model" begin
-        repl(s) = JuMP._math_symbol(REPLMode, s)
+        repl(s) = JuMP._math_symbol(MIME("text/plain"), s)
         le, inset = repl(:leq), repl(:in)
         #------------------------------------------------------------------
 
@@ -714,7 +791,7 @@ function model_extension_printing_test(ModelType::Type{<:JuMP.AbstractModel})
 
         # TODO variable constraints
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             model_1,
             """
 Max a - b + 2 a1 - 10 x
@@ -727,7 +804,7 @@ Subject to
         )
 
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             model_1,
             """
 An Abstract JuMP Model
@@ -740,7 +817,7 @@ Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""",
         )
 
         io_test(
-            IJuliaMode,
+            MIME("text/latex"),
             model_1,
             "\\begin{aligned}\n" *
             "\\max\\quad & a - b + 2 a1 - 10 x\\\\\n" *
@@ -759,7 +836,7 @@ Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""",
         @constraint(model_2, x * y <= 1)
 
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             model_2,
             """
 An Abstract JuMP Model
@@ -775,7 +852,7 @@ Names registered in the model: x, y""",
         @constraint(model_3, x <= 3)
 
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             model_3,
             """
 An Abstract JuMP Model
@@ -792,7 +869,7 @@ end
     printing_test(Model)
     model_printing_test(Model)
     @testset "Model with nonlinear terms" begin
-        eq = JuMP._math_symbol(REPLMode, :eq)
+        eq = JuMP._math_symbol(MIME("text/plain"), :eq)
         model = Model()
         @variable(model, x)
         @NLobjective(model, Max, sin(x))
@@ -800,7 +877,7 @@ end
         @NLconstraint(model, c == 0)
 
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             model,
             """
 A JuMP Model
@@ -816,7 +893,7 @@ Names registered in the model: x""",
         )
 
         io_test(
-            REPLMode,
+            MIME("text/plain"),
             model,
             """
 Max sin(x)
@@ -829,7 +906,7 @@ With NL expressions
         )
 
         io_test(
-            IJuliaMode,
+            MIME("text/latex"),
             model,
             "\\begin{aligned}\n" *
             "\\max\\quad & sin(x)\\\\\n" *
@@ -840,19 +917,19 @@ With NL expressions
         )
     end
     @testset "SingleVariable constraints" begin
-        ge = JuMP._math_symbol(REPLMode, :geq)
-        in_sym = JuMP._math_symbol(REPLMode, :in)
+        ge = JuMP._math_symbol(MIME("text/plain"), :geq)
+        in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
         model = Model()
         @variable(model, x >= 10)
         zero_one = @constraint(model, x in MOI.ZeroOne())
 
-        io_test(REPLMode, JuMP.LowerBoundRef(x), "x $ge 10.0")
-        io_test(REPLMode, zero_one, "x binary")
+        io_test(MIME("text/plain"), JuMP.LowerBoundRef(x), "x $ge 10.0")
+        io_test(MIME("text/plain"), zero_one, "x binary")
         # TODO: Test in IJulia mode
     end
     @testset "Feasibility" begin
         io_test(
-            IJuliaMode,
+            MIME("text/latex"),
             Model(),
             "\\begin{aligned}\n\\text{feasibility}\\\\\n\\end{aligned}",
             repl = :print,
@@ -863,7 +940,7 @@ With NL expressions
         @variable(model, x)
         @objective(model, Min, x)
         io_test(
-            IJuliaMode,
+            MIME("text/latex"),
             model,
             "\\begin{aligned}\n\\min\\quad & x\\\\\n\\end{aligned}",
             repl = :print,
@@ -879,10 +956,10 @@ end
 @testset "Print IJulia with math operators" begin
     model = Model()
     @variable(model, x_ab)
-    io_test(IJuliaMode, x_ab, "x\\_ab")
+    io_test(MIME("text/latex"), x_ab, "x\\_ab")
     @variable(model, y[1:2], base_name = "y[:a]")
-    io_test(IJuliaMode, y[1], "y[:a]_{1}")
-    io_test(IJuliaMode, y[2], "y[:a]_{2}")
+    io_test(MIME("text/latex"), y[1], "y[:a]_{1}")
+    io_test(MIME("text/latex"), y[2], "y[:a]_{2}")
     @variable(model, z, base_name = "z^1")
-    io_test(IJuliaMode, z, "z\\^1")
+    io_test(MIME("text/latex"), z, "z\\^1")
 end
