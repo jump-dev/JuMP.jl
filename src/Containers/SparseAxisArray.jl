@@ -183,6 +183,14 @@ function Base.copy(
         index => bc.f(_get_arg(bc.args, index)...) for
         index in _indices(bc.args...)
     )
+    if isempty(dict) && dict isa Dict{Any,Any}
+        # If `dict` is empty (e.g., because there are no indices), then
+        # inference will produce a `Dict{Any,Any}`, and we won't have enough
+        # type information to call SparseAxisArray(dict). As a work-around, we
+        # explicitly construct the type of the resulting SparseAxisArray.
+        # For more, see JuMP issue #2867.
+        return SparseAxisArray{Any,N,K}(dict)
+    end
     return SparseAxisArray(dict)
 end
 

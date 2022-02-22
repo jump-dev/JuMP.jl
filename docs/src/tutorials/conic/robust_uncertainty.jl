@@ -42,7 +42,7 @@ function example_robust_uncertainty()
         Γ1(𝛿 / 2, N) * LinearAlgebra.norm(c) +
         sqrt((1 - ɛ) / ɛ) *
         sqrt(LinearAlgebra.dot(c, (Σhat + Γ2(𝛿 / 2, N) * I) * c))
-    Test.@test objective_value(model) ≈ exact atol = 1e-3
+    Test.@test objective_value(model) ≈ exact atol = 1e-2
     return
 end
 

@@ -17,13 +17,13 @@ struct _SolutionSummary
     has_values::Bool
     has_duals::Bool
     # Candidate solution
-    objective_value::Float64
+    objective_value::Union{Missing,Float64}
     objective_bound::Union{Missing,Float64}
     dual_objective_value::Union{Missing,Float64}
     primal_solution::Union{Missing,Dict{String,Float64}}
     dual_solution::Union{Missing,Dict{String,Float64}}
     # Work counters
-    solve_time::Float64
+    solve_time::Union{Missing,Float64}
     barrier_iterations::Union{Missing,Int}
     simplex_iterations::Union{Missing,Int}
     node_count::Union{Missing,Int}

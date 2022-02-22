@@ -681,7 +681,6 @@ function set_normalized_coefficient(
     model.is_model_dirty = true
     return
 end
-@deprecate set_coefficient set_normalized_coefficient
 
 """
     normalized_coefficient(con_ref::ConstraintRef, variable::VariableRef)

@@ -12,7 +12,7 @@
 
 using JuMP
 import DataFrames
-import GLPK
+import HiGHS
 import Test  #hide
 
 # ## Formulation
@@ -85,9 +85,9 @@ limits = DataFrames.DataFrame(
 # Now we're ready to convert our mathematical formulation into a JuMP model.
 
 # First, create a new JuMP model. Since we have a linear program, we'll use
-# GLPK as our optimizer:
+# HiGHS as our optimizer:
 
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 
 # Next, we create a set of decision variables `x`, indexed over the foods in the
 # `data` DataFrame. Each `x` has a lower bound of `0`.

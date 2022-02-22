@@ -55,7 +55,7 @@ julia> a = [ x 2x
 julia> b = [1 2
             2 4];
 
-julia> cref = @SDconstraint(model, a ⪰ b)
+julia> cref = @constraint(model, a >= b, PSDCone())
 [x - 1    2 x - 2;
  2 x - 2  x - 4  ] ∈ PSDCone()
 
@@ -214,6 +214,20 @@ vectorize(matrix::Matrix, ::SquareMatrixShape) = vec(matrix)
 
 function vectorize(matrix, shape::Union{SymmetricMatrixShape,SquareMatrixShape})
     return vectorize(Matrix(matrix), shape)
+end
+
+# This is a special method because calling `Matrix(matrix)` accesses an undef
+# reference.
+function vectorize(matrix::UpperTriangular, ::SquareMatrixShape)
+    n = LinearAlgebra.checksquare(matrix)
+    return [matrix[i, j] for j in 1:n for i in 1:n]
+end
+
+# This is a special method because calling `Matrix(matrix)` accesses an undef
+# reference.
+function vectorize(matrix::LowerTriangular, ::SquareMatrixShape)
+    n = LinearAlgebra.checksquare(matrix)
+    return [matrix[i, j] for j in 1:n for i in 1:n]
 end
 
 function _square_side(_error::Function, ::Containers.SparseAxisArray)

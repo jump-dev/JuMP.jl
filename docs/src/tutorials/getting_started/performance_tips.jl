@@ -32,7 +32,7 @@
 # a language like MATLAB.
 
 using JuMP  # hide
-using GLPK  # hide
+using HiGHS  # hide
 
 # ## The "time-to-first-solve" issue
 
@@ -59,7 +59,7 @@ using GLPK  # hide
 # solver, you can disable bridges by passing `add_bridges = false` to
 # [`Model`](@ref).
 
-model = Model(GLPK.Optimizer; add_bridges = false)
+model = Model(HiGHS.Optimizer; add_bridges = false)
 
 # ### Use PackageCompiler
 

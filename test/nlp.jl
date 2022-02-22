@@ -1170,4 +1170,18 @@ end
         )
         @test_throws err add_NL_constraint(model, :($x <= $x <= 2 * $x))
     end
+
+    @testset "dual_start_value" begin
+        model = Model()
+        @variable(model, x)
+        @variable(model, t >= 0)
+        @NLconstraint(model, 2x >= 1)
+        @NLconstraint(model, t <= sqrt(x))
+        @test nl_dual_start_value(model) === nothing
+        set_nl_dual_start_value(model, [1.0, -1.0])
+        @test nl_dual_start_value(model) == [1.0, -1.0]
+        set_nl_dual_start_value(model, nothing)
+        @test nl_dual_start_value(model) === nothing
+        @test_throws(ArgumentError, set_nl_dual_start_value(model, [1.0]))
+    end
 end

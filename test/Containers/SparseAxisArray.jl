@@ -177,4 +177,12 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
         x = Containers.@container([i = 1:3, j = i:3], i + j)
         @test_throws err size(x)
     end
+    @testset "empty broadcasting" begin
+        S = Any[]
+        x = Containers.@container([S, 1:2], 0, container = SparseAxisArray)
+        f(x) = 2x
+        y = f.(x)
+        @test y isa SparseAxisArray{Any,2,Tuple{Any,Int}}
+        @test isempty(y)
+    end
 end

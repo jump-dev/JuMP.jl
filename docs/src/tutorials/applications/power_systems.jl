@@ -17,7 +17,7 @@
 
 using JuMP
 import DataFrames
-import GLPK
+import HiGHS
 import Plots
 import StatsPlots
 
@@ -96,7 +96,8 @@ scenario = Scenario(1500.0, 200.0)
 
 function solve_ed(generators::Vector, wind, scenario)
     ## Define the economic dispatch (ED) model
-    ed = Model(GLPK.Optimizer)
+    ed = Model(HiGHS.Optimizer)
+    set_silent(ed)
     ## Define decision variables
     ## power output of generators
     N = length(generators)
@@ -194,7 +195,8 @@ function solve_ed_inplace(
     g2_out = Float64[]
     ## This function only works for two generators
     @assert length(generators) == 2
-    ed = Model(GLPK.Optimizer)
+    ed = Model(HiGHS.Optimizer)
+    set_silent(ed)
     N = length(generators)
     @variable(ed, generators[i].min <= g[i = 1:N] <= generators[i].max)
     @variable(ed, 0 <= w <= scenario.wind)
@@ -264,7 +266,7 @@ function scale_demand(scenario, scale)
     return Scenario(scale * scenario.demand, scenario.wind)
 end
 
-for demand_scale in 0.2:0.1:1.5
+for demand_scale in 0.2:0.1:1.4
     new_scenario = scale_demand(scenario, demand_scale)
     sol = solve_ed(generators, wind_generator, new_scenario)
     push!(
@@ -350,7 +352,8 @@ Plots.plot(dispatch_plot, wind_plot)
 # model.
 
 function solve_uc(generators::Vector, wind, scenario)
-    uc = Model(GLPK.Optimizer)
+    uc = Model(HiGHS.Optimizer)
+    set_silent(uc)
     N = length(generators)
     @variable(uc, generators[i].min <= g[i = 1:N] <= generators[i].max)
     @variable(uc, 0 <= w <= scenario.wind)
@@ -407,7 +410,7 @@ uc_df = DataFrames.DataFrame(
     total_cost = Float64[],
 )
 
-for demand_scale in 0.2:0.1:1.5
+for demand_scale in 0.2:0.1:1.4
     new_scenario = scale_demand(scenario, demand_scale)
     sol = solve_uc(generators, wind_generator, new_scenario)
     if sol.status == OPTIMAL

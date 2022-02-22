@@ -2,7 +2,7 @@
 CurrentModule = JuMP
 DocTestSetup = quote
     using JuMP
-    import GLPK
+    import HiGHS
 end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
@@ -452,7 +452,9 @@ The dual value associated with a constraint in the most recent solution can be
 accessed using the [`dual`](@ref) function. Use [`has_duals`](@ref) to check if
 the model has a dual solution available to query. For example:
 ```jldoctest con_duality
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
 
 julia> @variable(model, x)
 x
@@ -507,7 +509,9 @@ the returned constraint reference. The [`reduced_cost`](@ref) function may
 simplify this process as it returns the shadow price of an active bound of
 a variable (or zero, if no active bound exists).
 ```jldoctest
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
 
 julia> @variable(model, x <= 1)
 x
@@ -683,12 +687,13 @@ con : 2 x <= 1.0
 
 ## Start values
 
-Provide a starting value (also called warmstart) for a constraint's dual using
+Provide a starting value (also called warmstart) for a constraint's primal and
+dual solutions using [`set_start_value`](@ref) and
 [`set_dual_start_value`](@ref).
 
-The start value of a constraint's dual can be queried using
-[`dual_start_value`](@ref). If no start value has been set,
-[`dual_start_value`](@ref) will return `nothing`.
+Query the starting value for a constraint's primal and dual solution using
+[`start_value`](@ref) and [`dual_start_value`](@ref). If no start value has been
+set, the methods will return `nothing`.
 
 ```jldoctest constraint_dual_start; setup=:(model=Model())
 julia> @variable(model, x)
@@ -696,6 +701,13 @@ x
 
 julia> @constraint(model, con, x >= 10)
 con : x ≥ 10.0
+
+julia> start_value(con)
+
+julia> set_start_value(con, 10.0)
+
+julia> start_value(con)
+10.0
 
 julia> dual_start_value(con)
 
@@ -705,7 +717,7 @@ julia> dual_start_value(con)
 2.0
 ```
 
-Vector-valued constraints require a vector warmstart:
+Vector-valued constraints require a vector:
 ```jldoctest constraint_dual_start_vector; setup=:(model=Model())
 julia> @variable(model, x[1:3])
 3-element Vector{VariableRef}:
@@ -727,19 +739,9 @@ julia> dual_start_value(con)
  3.0
 ```
 
-To take the dual solution from the last solve and use it as the starting point
-for a new solve, use:
-```julia
-for (F, S) in list_of_constraint_types(model)
-    for con in all_constraints(model, F, S)
-        set_dual_start_value(con, dual(con))
-    end
-end
-```
-
-!!! note
-    Some constraints might not have well defined duals, hence you might need to
-    filter `(F, S)` pairs.
+!!! tip
+    For more information, check out the [Primal and dual warm-starts](@ref)
+    tutorial.
 
 ## Constraint containers
 

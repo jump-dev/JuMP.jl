@@ -1,7 +1,7 @@
 ```@meta
 CurrentModule = JuMP
 DocTestSetup = quote
-    using JuMP, GLPK
+    using JuMP, HiGHS
 end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
@@ -11,7 +11,8 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
 This section of the manual describes how to access a solved solution to a
 problem. It uses the following model as an example:
 ```jldoctest solutions
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
+set_silent(model)
 @variable(model, x >= 0)
 @variable(model, y[[:a, :b]] <= 1)
 @objective(model, Max, -12x - 20y[:a])
@@ -38,25 +39,25 @@ Subject to
 
 ```jldoctest solutions; filter=r"[0-9]+.[0-9]+"
 julia> solution_summary(model)
-* Solver : GLPK
+* Solver : HiGHS
 
 * Status
   Termination status : OPTIMAL
   Primal status      : FEASIBLE_POINT
   Dual status        : FEASIBLE_POINT
   Message from the solver:
-  "Solution is optimal"
+  "kOptimal"
 
 * Candidate solution
   Objective value      : -205.14285714285714
-  Objective bound      : Inf
+  Objective bound      : -0.0
   Dual objective value : -205.1428571428571
 
 * Work counters
-  Solve time (sec)   : 0.00008
+  Solve time (sec)   : 0.00068
 
 julia> solution_summary(model, verbose=true)
-* Solver : GLPK
+* Solver : HiGHS
 
 * Status
   Termination status : OPTIMAL
@@ -65,11 +66,11 @@ julia> solution_summary(model, verbose=true)
   Result count       : 1
   Has duals          : true
   Message from the solver:
-  "Solution is optimal"
+  "kOptimal"
 
 * Candidate solution
   Objective value      : -205.14285714285714
-  Objective bound      : Inf
+  Objective bound      : -0.0
   Dual objective value : -205.1428571428571
   Primal solution :
     x : 15.428571428571429
@@ -79,7 +80,7 @@ julia> solution_summary(model, verbose=true)
     c1 : 1.7142857142857142
 
 * Work counters
-  Solve time (sec)   : 0.00008
+  Solve time (sec)   : 0.00068
 ```
 
 ## Why did the solver stop?
@@ -112,7 +113,7 @@ Use [`raw_status`](@ref) to get a solver-specific string explaining why the
 optimization stopped:
 ```jldoctest solutions
 julia> raw_status(model)
-"Solution is optimal"
+"kOptimal"
 ```
 
 ## Primal solutions
@@ -149,8 +150,8 @@ the value of the dual objective can be obtained via
 julia> objective_value(model)
 -205.14285714285714
 
-julia> objective_bound(model)  # GLPK only implements objective bound for MIPs
-Inf
+julia> objective_bound(model)  # HiGHS only implements objective bound for MIPs
+-0.0
 
 julia> dual_objective_value(model)
 -205.1428571428571
@@ -296,11 +297,13 @@ query all the results first, then modify the problem.
 
 For example, instead of:
 ```jldoctest
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
 
 julia> @variable(model, x >= 0);
 
-julia> optimize!(model);
+julia> optimize!(model)
 
 julia> termination_status(model)
 OPTIMAL::TerminationStatusCode = 1
@@ -317,7 +320,9 @@ OPTIMIZE_NOT_CALLED::TerminationStatusCode = 0
 ```
 do
 ```jldoctest
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
 
 julia> @variable(model, x >= 0);
 
@@ -341,7 +346,9 @@ If you know that your particular solver supports querying solution information
 after modifications, you can use [`direct_model`](@ref) to bypass the
 `MOI.OPTIMIZE_NOT_CALLED` state:
 ```jldoctest
-julia> model = direct_model(GLPK.Optimizer());
+julia> model = direct_model(HiGHS.Optimizer());
+
+julia> set_silent(model)
 
 julia> @variable(model, x >= 0);
 
@@ -390,7 +397,8 @@ To give a simple example, we could analyze the sensitivity of the optimal
 solution to the following (non-degenerate) LP problem:
 
 ```jldoctest solutions_sensitivity
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
+set_silent(model)
 @variable(model, x[1:2])
 set_lower_bound(x[2], -0.5)
 set_upper_bound(x[2], 0.5)
@@ -418,8 +426,8 @@ julia> optimize!(model)
 
 julia> value.(x)
 2-element Vector{Float64}:
- 1.0
- 0.0
+  1.0
+ -0.0
 
 julia> report = lp_sensitivity_report(model);
 
@@ -581,7 +589,9 @@ distance is greater than the supplied tolerance `atol`.
 # changes in printing order will cause the doctest to fail.
 ```
 ```jldoctest feasibility; filter=[r"x.+?\=\> 0.1", r"c1.+? \=\> 0.01"]
-julia> model = Model(GLPK.Optimizer);
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
 
 julia> @variable(model, x >= 1, Int);
 

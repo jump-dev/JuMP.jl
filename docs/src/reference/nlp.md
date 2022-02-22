@@ -12,6 +12,8 @@ NonlinearConstraintIndex
 num_nl_constraints
 add_NL_constraint
 all_nl_constraints
+nl_dual_start_value
+set_nl_dual_start_value
 ```
 
 ## [Expressions](@id ref_nl_expressions)

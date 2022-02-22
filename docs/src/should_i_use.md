@@ -93,6 +93,20 @@ Alternatives to consider are:
  * [GalacticOptim.jl](https://github.com/SciML/GalacticOptim.jl)
  * [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)
 
+### Optimal control problems
+
+JuMP supports formulating optimal control problems as large nonlinear programs
+(see, for example, [Optimal control for a Space Shuttle reentry trajectory](@ref)).
+However, the nonlinear interface has a number of limitations (for example, the
+need to write out the dynamics in algebraic form) that mean JuMP might not be
+the right tool for the job.
+
+Alternatives to consider are:
+ * [CasADi](https://web.casadi.org),
+   [CasADi.jl](https://github.com/ichatzinikolaidis/CasADi.jl)
+ * [InfiniteOpt.jl](https://github.com/pulsipher/InfiniteOpt.jl)
+ * [pyomo.DAE](https://pyomo.readthedocs.io/en/stable/modeling_extensions/dae.html)
+
 ### Multiobjective programs
 
 If your problem has more than one objective, JuMP is not the right tool for the

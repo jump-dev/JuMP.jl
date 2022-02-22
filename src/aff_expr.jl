@@ -159,8 +159,12 @@ arguments.
 julia> GenericAffExpr(1.0, x => 1.0)
 x + 1
 """
-function GenericAffExpr(constant::V, kv::Vararg{Pair{K,V},N}) where {K,V,N}
-    return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv...))
+function GenericAffExpr(
+    constant::V,
+    kv1::Pair{K,V},
+    tail::Vararg{Pair{K,V},N},
+) where {K,V,N}
+    return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv1, tail...))
 end
 
 function GenericAffExpr{V,K}(constant, kv::AbstractArray{<:Pair}) where {K,V}

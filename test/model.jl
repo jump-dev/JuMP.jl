@@ -224,10 +224,10 @@ function test_bridges_automatic()
 end
 
 function test_bridges_automatic_disabled()
-    # Automatic bridging disabled with `bridge_constraints` keyword
+    # Automatic bridging disabled with `add_bridges` keyword
     model = Model(
         () -> MOIU.MockOptimizer(SimpleLPModel{Float64}()),
-        bridge_constraints = false,
+        add_bridges = false,
     )
     @test !JuMP.bridge_constraints(model)
     @test JuMP.backend(model) isa MOIU.CachingOptimizer
@@ -368,18 +368,18 @@ function test_bridges_add_bridgeable_con_set_optimizer()
 end
 
 function test_bridge_graph_false()
-    model = Model(mock_factory, bridge_constraints = false)
+    model = Model(mock_factory, add_bridges = false)
     @variable(model, x)
     @test_throws(
         ErrorException(
-            "Cannot add bridge if `bridge_constraints` was set to `false` in " *
+            "Cannot add bridge if `add_bridges` was set to `false` in " *
             "the `Model` constructor.",
         ),
         add_bridge(model, NonnegativeBridge)
     )
     @test_throws(
         ErrorException(
-            "Cannot print bridge graph if `bridge_constraints` was set to " *
+            "Cannot print bridge graph if `add_bridges` was set to " *
             "`false` in the `Model` constructor.",
         ),
         print_bridge_graph(model)
