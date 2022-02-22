@@ -119,6 +119,9 @@ function set_optimizer(
     # using the existing `model_cache`.
     model.moi_backend =
         MOI.Utilities.CachingOptimizer(backend(model).model_cache, optimizer)
+    # reset_optimizer is called here so that we copy all copyable and supported
+    # optimizer attributes to the new optimizer.
+    MOI.Utilities.reset_optimizer(model.moi_backend, optimizer)
     return
 end
 

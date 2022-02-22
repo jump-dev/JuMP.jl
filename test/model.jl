@@ -813,6 +813,29 @@ function test_copy_conflict()
     @test "cref[1]" == @inferred JuMP.name(cref_1_new)
 end
 
+function test_copy_optimizer_attributes()
+    function optimizer()
+        return MOI.Utilities.MockOptimizer(
+            MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        )
+    end
+    # Test without calling set_silent
+    model = Model()
+    set_optimizer(model, optimizer)
+    @test MOI.get(unsafe_backend(model), MOI.Silent()) === nothing
+    # Test with set_silent
+    model = Model()
+    set_silent(model)
+    set_optimizer(model, optimizer)
+    @test MOI.get(unsafe_backend(model), MOI.Silent()) == true
+    # Test with unset_silent
+    model = Model()
+    unset_silent(model)
+    set_optimizer(model, optimizer)
+    @test MOI.get(unsafe_backend(model), MOI.Silent()) == false
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
