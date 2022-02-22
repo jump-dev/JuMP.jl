@@ -115,7 +115,7 @@ function primal_feasibility_report(
             atol,
         )
     end
-    if num_nl_constraints(model) > 0
+    if num_nonlinear_constraints(model) > 0
         if skip_missing
             error(
                 "`skip_missing = true` is not allowed when nonlinear " *
@@ -158,7 +158,7 @@ function _add_infeasible_nonlinear_constraints(
 )
     evaluator = NLPEvaluator(model)
     MOI.initialize(evaluator, Symbol[])
-    g = zeros(num_nl_constraints(model))
+    g = zeros(num_nonlinear_constraints(model))
     MOI.eval_constraint(evaluator, g, point_f.(all_variables(model)))
     for (i, con) in enumerate(model.nlp_data.nlconstr)
         d = max(0.0, con.lb - g[i], g[i] - con.ub)

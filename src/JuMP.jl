@@ -595,12 +595,18 @@ Returns number of variables in `model`.
 num_variables(model::Model)::Int64 = MOI.get(model, MOI.NumberOfVariables())
 
 """
-    num_nl_constraints(model::Model)
+    num_nonlinear_constraints(model::Model)
 
 Returns the number of nonlinear constraints associated with the `model`.
 """
-function num_nl_constraints(model::Model)
+function num_nonlinear_constraints(model::Model)
     return model.nlp_data !== nothing ? length(model.nlp_data.nlconstr) : 0
+end
+
+function num_nl_constraints(::Model)
+    return error(
+        "`num_nl_constraints` has been renamed to `num_nonlinear_constraints`",
+    )
 end
 
 """
