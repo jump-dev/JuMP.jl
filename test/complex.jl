@@ -22,6 +22,14 @@ function test_complex_aff_expr()
     return
 end
 
+function test_complex_plus_variable()
+    model = Model()
+    @variable(model, x)
+    y = x + (1 + 2im)
+    @test typeof(y) == GenericAffExpr{Complex{Float64},VariableRef}
+    return
+end
+
 function test_complex_aff_expr_convert()
     model = Model()
     @variable(model, x)
