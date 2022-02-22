@@ -179,15 +179,21 @@ end
 const NonlinearConstraintRef = ConstraintRef{Model,NonlinearConstraintIndex}
 
 """
-    all_nl_constraints(model::Model)
+    all_nonlinear_constraints(model::Model)
 
 Return a vector of all nonlinear constraint references in the model in the
 order they were added to the model.
 """
-function all_nl_constraints(model::Model)
-    return map(1:num_nl_constraints(model)) do i
+function all_nonlinear_constraints(model::Model)
+    return map(1:num_nonlinear_constraints(model)) do i
         return ConstraintRef(model, NonlinearConstraintIndex(i), ScalarShape())
     end
+end
+
+function all_nl_constraints(::Model)
+    return error(
+        "`all_nl_constraints`` has been renamed `all_nonlinear_constraints`",
+    )
 end
 
 """
@@ -200,7 +206,7 @@ function is_valid(model::Model, c::NonlinearConstraintRef)
         return false
     end
     _init_NLP(model)
-    return 1 <= c.index.value <= num_nl_constraints(model)
+    return 1 <= c.index.value <= num_nonlinear_constraints(model)
 end
 
 """
@@ -219,16 +225,16 @@ function dual(c::NonlinearConstraintRef)
 end
 
 """
-    nl_dual_start_value(model::Model)
+    nonlinear_dual_start_value(model::Model)
 
 Return the current value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref).
 """
-function nl_dual_start_value(model::Model)
+function nonlinear_dual_start_value(model::Model)
     return MOI.get(model, MOI.NLPBlockDualStart())
 end
 
 """
-    set_nl_dual_start_value(
+    set_nonlinear_dual_start_value(
         model::Model,
         start::Union{Nothing,Vector{Float64}},
     )
@@ -236,11 +242,11 @@ end
 Set the value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref).
 
 The start vector corresponds to the Lagrangian duals of the nonlinear
-constraints, in the order given by [`all_nl_constraints`](@ref). That is, you
+constraints, in the order given by [`all_nonlinear_constraints`](@ref). That is, you
 must pass a single start vector corresponding to all of the nonlinear
 constraints in a single function call; you cannot set the dual start value of
 nonlinear constraints one-by-one. The example below demonstrates how to use
-[`all_nl_constraints`](@ref) to create a mapping between the nonlinear
+[`all_nonlinear_constraints`](@ref) to create a mapping between the nonlinear
 constraint references and the start vector.
 
 Pass `nothing` to unset a previous start.
@@ -258,20 +264,20 @@ julia> nl2 = @NLconstraint(model, x[1] >= exp(x[2]));
 
 julia> start = Dict(nl1 => -1.0, nl2 => 1.0);
 
-julia> start_vector = [start[con] for con in all_nl_constraints(model)]
+julia> start_vector = [start[con] for con in all_nonlinear_constraints(model)]
 2-element Vector{Float64}:
  -1.0
   1.0
 
-julia> set_nl_dual_start_value(model, start_vector)
+julia> set_nonlinear_dual_start_value(model, start_vector)
 
-julia> nl_dual_start_value(model)
+julia> nonlinear_dual_start_value(model)
 2-element Vector{Float64}:
  -1.0
   1.0
 ```
 """
-function set_nl_dual_start_value(model::Model, start::Vector{Float64})
+function set_nonlinear_dual_start_value(model::Model, start::Vector{Float64})
     _init_NLP(model)
     nldata::_NLPData = model.nlp_data
     if length(nldata.nlconstr) != length(start)
@@ -286,7 +292,7 @@ function set_nl_dual_start_value(model::Model, start::Vector{Float64})
     return
 end
 
-function set_nl_dual_start_value(model::Model, start::Nothing)
+function set_nonlinear_dual_start_value(model::Model, start::Nothing)
     MOI.set(model, MOI.NLPBlockDualStart(), start)
     return
 end
@@ -2090,7 +2096,7 @@ function register(
 end
 
 """
-    add_NL_expression(model::Model, expr::Expr)
+    add_nonlinear_expression(model::Model, expr::Expr)
 
 Add a nonlinear expression `expr` to `model`.
 
@@ -2104,16 +2110,26 @@ programmatically, and you cannot use [`@NLexpression`](@ref).
 ## Examples
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
-julia> add_NL_expression(model, :(\$(x) + \$(x)^2))
+julia> add_nonlinear_expression(model, :(\$(x) + \$(x)^2))
 subexpression[1]: x + x ^ 2.0
 ```
 """
-function add_NL_expression(model::Model, ex)
+function add_nonlinear_expression(model::Model, ex)
     return NonlinearExpression(model, _NonlinearExprData(model, ex))
 end
 
+function add_NL_expression(::Model, ::Expr)
+    return error(
+        "`add_NL_expression` has been renamed to `add_nonlinear_expression`",
+    )
+end
+
 """
-    set_NL_objective(model::Model, sense::MOI.OptimizationSense, expr::Expr)
+    set_nonlinear_objective(
+        model::Model,
+        sense::MOI.OptimizationSense,
+        expr::Expr,
+    )
 
 Set the nonlinear objective of `model` to the expression `expr`, with the
 optimization sense `sense`.
@@ -2129,15 +2145,21 @@ programmatically, and you cannot use [`@NLobjective`](@ref).
 ## Examples
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
-julia> set_NL_objective(model, MIN_SENSE, :(\$(x) + \$(x)^2))
+julia> set_nonlinear_objective(model, MIN_SENSE, :(\$(x) + \$(x)^2))
 ```
 """
-function set_NL_objective(model::Model, sense::MOI.OptimizationSense, x)
+function set_nonlinear_objective(model::Model, sense::MOI.OptimizationSense, x)
     return set_objective(model, sense, _NonlinearExprData(model, x))
 end
 
+function set_NL_objective(::Model, ::MOI.OptimizationSense, ::Expr)
+    return error(
+        "`set_NL_objective` has been renamed to `set_nonlinear_objective`",
+    )
+end
+
 """
-    add_NL_constraint(model::Model, expr::Expr)
+    add_nonlinear_constraint(model::Model, expr::Expr)
 
 Add a nonlinear constraint described by the Julia expression `ex` to `model`.
 
@@ -2151,11 +2173,11 @@ programmatically, and you cannot use [`@NLconstraint`](@ref).
 ## Examples
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
-julia> add_NL_constraint(model, :(\$(x) + \$(x)^2 <= 1))
+julia> add_nonlinear_constraint(model, :(\$(x) + \$(x)^2 <= 1))
 (x + x ^ 2.0) - 1.0 ≤ 0
 ```
 """
-function add_NL_constraint(model::Model, ex::Expr)
+function add_nonlinear_constraint(model::Model, ex::Expr)
     _init_NLP(model)
     nl_constraints = model.nlp_data.nlconstr
     if isexpr(ex, :call) # One-sided constraint.
@@ -2218,4 +2240,10 @@ function add_NL_constraint(model::Model, ex::Expr)
             "       expr1 == expr2",
         )
     end
+end
+
+function add_NL_constraint(::Model, ::Expr)
+    return error(
+        "`add_NL_constraint` has been renamed to `add_nonlinear_constraint`",
+    )
 end

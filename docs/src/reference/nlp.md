@@ -9,11 +9,11 @@ manual.
 @NLconstraint
 @NLconstraints
 NonlinearConstraintIndex
-num_nl_constraints
-add_NL_constraint
-all_nl_constraints
-nl_dual_start_value
-set_nl_dual_start_value
+num_nonlinear_constraints
+add_nonlinear_constraint
+all_nonlinear_constraints
+nonlinear_dual_start_value
+set_nonlinear_dual_start_value
 ```
 
 ## [Expressions](@id ref_nl_expressions)
@@ -22,14 +22,14 @@ set_nl_dual_start_value
 @NLexpression
 @NLexpressions
 NonlinearExpression
-add_NL_expression
+add_nonlinear_expression
 ```
 
 ## [Objectives](@id ref_nl_objectives)
 
 ```@docs
 @NLobjective
-set_NL_objective
+set_nonlinear_objective
 ```
 
 ## [Parameters](@id ref_nl_parameters)

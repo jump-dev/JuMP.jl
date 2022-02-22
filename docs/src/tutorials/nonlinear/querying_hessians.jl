@@ -147,7 +147,7 @@ H = SparseArrays.sparse(I, J, V, n, n)
 # Of course, knowing where the zeros are isn't very interesting. We really want
 # to compute the value of the Hessian matrix at a point.
 
-num_g = num_nl_constraints(model)
+num_g = num_nonlinear_constraints(model)
 MOI.eval_hessian_lagrangian(d, V, ones(n), 1.0, ones(num_g))
 H = SparseArrays.sparse(I, J, V, n, n)
 
@@ -167,7 +167,7 @@ x_optimal = value.(x)
 # Next, we need the optimal dual solution associated with the nonlinear
 # constraints:
 
-y_optimal = dual.(all_nl_constraints(model))
+y_optimal = dual.(all_nonlinear_constraints(model))
 
 # Now we can compute the Hessian at the optimal primal-dual point:
 
@@ -261,7 +261,7 @@ function compute_optimal_hessian(model)
     V = zeros(length(hessian_sparsity))
     x = all_variables(model)
     x_optimal = value.(x)
-    y_optimal = dual.(all_nl_constraints(model))
+    y_optimal = dual.(all_nonlinear_constraints(model))
     MOI.eval_hessian_lagrangian(d, V, x_optimal, 1.0, y_optimal)
     n = num_variables(model)
     H = SparseArrays.sparse(I, J, V, n, n)

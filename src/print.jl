@@ -199,7 +199,7 @@ function show_constraints_summary(io::IO, model::Model)
         n = num_constraints(model, F, S)
         println(io, "`$F`-in-`$S`: $n constraint", _plural(n))
     end
-    n = num_nl_constraints(model)
+    n = num_nonlinear_constraints(model)
     if n > 0
         println(io, "Nonlinear: ", n, " constraint", _plural(n))
     end

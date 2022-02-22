@@ -577,14 +577,14 @@ which can be queried using the [`NLPEvaluator`](@ref).
 
 In addition to the [`@NLexpression`](@ref), [`@NLobjective`](@ref) and
 [`@NLconstraint`](@ref) macros, it is also possible to provide Julia `Expr`
-objects directly by using [`add_NL_expression`](@ref),
-[`set_NL_objective`](@ref) and [`add_NL_constraint`](@ref).
+objects directly by using [`add_nonlinear_expression`](@ref),
+[`set_nonlinear_objective`](@ref) and [`add_nonlinear_constraint`](@ref).
 
 This input form may be useful if the expressions are generated programmatically.
 
 ### Add a nonlinear expression
 
-Use [`add_NL_expression`](@ref) to add a nonlinear expression to the model.
+Use [`add_nonlinear_expression`](@ref) to add a nonlinear expression to the model.
 
 ```jldoctest; setup=:(using JuMP; model = Model())
 julia> @variable(model, x)
@@ -593,7 +593,7 @@ x
 julia> expr = :($(x) + sin($(x)^2))
 :(x + sin(x ^ 2))
 
-julia> expr_ref = add_NL_expression(model, expr)
+julia> expr_ref = add_nonlinear_expression(model, expr)
 subexpression[1]: x + sin(x ^ 2.0)
 ```
 This is equivalent to
@@ -607,13 +607,13 @@ subexpression[1]: x + sin(x ^ 2.0)
 
 ### Set the objective function
 
-Use [`set_NL_objective`](@ref) to set a nonlinear objective.
+Use [`set_nonlinear_objective`](@ref) to set a nonlinear objective.
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
 julia> expr = :($(x) + $(x)^2)
 :(x + x ^ 2)
 
-julia> set_NL_objective(model, MIN_SENSE, expr)
+julia> set_nonlinear_objective(model, MIN_SENSE, expr)
 ```
 This is equivalent to
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
@@ -625,13 +625,13 @@ julia> @NLobjective(model, Min, x + x^2)
 
 ### Add a constraint
 
-Use [`add_NL_constraint`](@ref) to add a nonlinear constraint.
+Use [`add_nonlinear_constraint`](@ref) to add a nonlinear constraint.
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
 julia> expr = :($(x) + $(x)^2)
 :(x + x ^ 2)
 
-julia> add_NL_constraint(model, :($(expr) <= 1))
+julia> add_nonlinear_constraint(model, :($(expr) <= 1))
 (x + x ^ 2.0) - 1.0 ≤ 0
 ```
 
@@ -655,7 +655,7 @@ julia> function main(functions::Vector{Function})
            for (i, f) in enumerate(functions)
                f_sym = Symbol("f_$(i)")
                register(model, f_sym, 1, f; autodiff = true)
-               add_NL_constraint(model, :($(f_sym)($(x)) <= 1))
+               add_nonlinear_constraint(model, :($(f_sym)($(x)) <= 1))
            end
            print(model)
            return
@@ -681,7 +681,7 @@ julia> function main(functions::Vector{Function})
                register(model, f_sym, 1, f; autodiff = true)
                push!(expr.args, :($(f_sym)($(x))))
            end
-           add_NL_constraint(model, :($(expr) <= 1))
+           add_nonlinear_constraint(model, :($(expr) <= 1))
            print(model)
            return
        end

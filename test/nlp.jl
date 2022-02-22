@@ -243,12 +243,12 @@ end
     # they use different pathways). It would be better to check the NodeData
     # representation directly.
 
-    @testset "all_nl_constraints" begin
+    @testset "all_nonlinear_constraints" begin
         model = Model()
         @variable(model, x)
         @NLconstraint(model, c1, x^2 <= 1)
         c2 = @NLconstraint(model, [i = 1:2], x^i >= -1)
-        @test all_nl_constraints(model) == [c1; c2]
+        @test all_nonlinear_constraints(model) == [c1; c2]
     end
 
     @testset "Parse + (binary)" begin
@@ -804,7 +804,7 @@ end
             x + y[1] * y[2] * y[3] <= 0.5
         end)
 
-        @test JuMP.num_nl_constraints(model) == 4
+        @test JuMP.num_nonlinear_constraints(model) == 4
         evaluator = JuMP.NLPEvaluator(model)
         MOI.initialize(evaluator, [:ExprGraph])
 
@@ -900,20 +900,20 @@ end
         @test jac_values ≈ [1.0, 0.0, 1.0, 3.0]
     end
 
-    @testset "add_NL_expression, set_NL_objective, and add_NL_constraint" begin
+    @testset "add_nonlinear_expression, set_nonlinear_objective, and add_nonlinear_constraint" begin
         model = Model()
         @variable(model, x)
         @variable(model, y)
         @expression(model, aff, x + 2y - 3)
         @expression(model, quad, x^2 + 2y^2 - x)
-        nlexpr = JuMP.add_NL_expression(model, :($x^2 + $y^2))
-        JuMP.set_NL_objective(model, MIN_SENSE, :(2 * $nlexpr))
-        JuMP.add_NL_constraint(model, :($x + $y <= 1))
-        JuMP.add_NL_constraint(model, :($x + $y >= 1))
-        JuMP.add_NL_constraint(model, :($x + $y == 1))
-        JuMP.add_NL_constraint(model, :(0 <= $x + $y <= 1))
-        JuMP.add_NL_constraint(model, :($aff == 1))
-        JuMP.add_NL_constraint(model, :($quad == 1))
+        nlexpr = JuMP.add_nonlinear_expression(model, :($x^2 + $y^2))
+        JuMP.set_nonlinear_objective(model, MIN_SENSE, :(2 * $nlexpr))
+        JuMP.add_nonlinear_constraint(model, :($x + $y <= 1))
+        JuMP.add_nonlinear_constraint(model, :($x + $y >= 1))
+        JuMP.add_nonlinear_constraint(model, :($x + $y == 1))
+        JuMP.add_nonlinear_constraint(model, :(0 <= $x + $y <= 1))
+        JuMP.add_nonlinear_constraint(model, :($aff == 1))
+        JuMP.add_nonlinear_constraint(model, :($quad == 1))
 
         d = JuMP.NLPEvaluator(model)
         MOI.initialize(d, [:ExprGraph])
@@ -1168,7 +1168,7 @@ end
             "sides. Reformulate as two separate constraints, or move all " *
             "variables into the central term.",
         )
-        @test_throws err add_NL_constraint(model, :($x <= $x <= 2 * $x))
+        @test_throws err add_nonlinear_constraint(model, :($x <= $x <= 2 * $x))
     end
 
     @testset "dual_start_value" begin
@@ -1177,11 +1177,11 @@ end
         @variable(model, t >= 0)
         @NLconstraint(model, 2x >= 1)
         @NLconstraint(model, t <= sqrt(x))
-        @test nl_dual_start_value(model) === nothing
-        set_nl_dual_start_value(model, [1.0, -1.0])
-        @test nl_dual_start_value(model) == [1.0, -1.0]
-        set_nl_dual_start_value(model, nothing)
-        @test nl_dual_start_value(model) === nothing
-        @test_throws(ArgumentError, set_nl_dual_start_value(model, [1.0]))
+        @test nonlinear_dual_start_value(model) === nothing
+        set_nonlinear_dual_start_value(model, [1.0, -1.0])
+        @test nonlinear_dual_start_value(model) == [1.0, -1.0]
+        set_nonlinear_dual_start_value(model, nothing)
+        @test nonlinear_dual_start_value(model) === nothing
+        @test_throws(ArgumentError, set_nonlinear_dual_start_value(model, [1.0]))
     end
 end
