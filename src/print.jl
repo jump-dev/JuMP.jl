@@ -49,17 +49,29 @@ _is_zero_for_printing(coef) = abs(coef) < 1e-10 * oneunit(coef)
 # Whether something is one or not for the purposes of printing it.
 _is_one_for_printing(coef) = _is_zero_for_printing(abs(coef) - oneunit(coef))
 
-# Helper function that rounds carefully for the purposes of printing
-# e.g.   5.3  =>  5.3
-#        1.0  =>  1
-function _string_round(x::Float64)
-    if isinteger(x)
-        return string(round(Int, x))
-    end
-    return string(x)
+function _is_zero_for_printing(coef::Complex)
+    return _is_zero_for_printing(real(coef)) &&
+           _is_zero_for_printing(imag(coef))
 end
 
-_string_round(x) = string(x)
+# Helper function that rounds carefully for the purposes of printing Reals
+# e.g.   5.3  =>  5.3
+#        1.0  =>  1
+_string_round(x::Float64) = isinteger(x) ? string(round(Int, x)) : string(x)
+
+_string_round(::typeof(abs), x::Real) = _string_round(abs(x))
+
+_sign_string(x::Real) = x < zero(x) ? " - " : " + "
+
+# Fallbacks for other number types
+
+_string_round(x::Any) = string(x)
+
+_string_round(::typeof(abs), x::Any) = _string_round(x)
+
+_sign_string(::Any) = " + "
+
+_string_round(x::Complex) = string("(", x, ")")
 
 # REPL-specific symbols
 # Anything here: https://en.wikipedia.org/wiki/Windows-1252
@@ -461,12 +473,12 @@ function function_string(mode, a::GenericAffExpr, show_constant = true)
     end
     terms = fill("", 2 * length(linear_terms(a)))
     for (elm, (coef, var)) in enumerate(linear_terms(a))
-        terms[2*elm-1] = coef < zero(coef) ? " - " : " + "
+        terms[2*elm-1] = _sign_string(coef)
         v = function_string(mode, var)
         if _is_one_for_printing(coef)
             terms[2*elm] = v
         else
-            terms[2*elm] = string(_string_round(abs(coef)), " ", v)
+            terms[2*elm] = string(_string_round(abs, coef), " ", v)
         end
     end
     terms[1] = terms[1] == " - " ? "-" : ""
@@ -474,8 +486,8 @@ function function_string(mode, a::GenericAffExpr, show_constant = true)
     if show_constant && !_is_zero_for_printing(a.constant)
         ret = string(
             ret,
-            a.constant < zero(a.constant) ? " - " : " + ",
-            _string_round(abs(a.constant)),
+            _sign_string(a.constant),
+            _string_round(abs, a.constant),
         )
     end
     return ret
@@ -489,11 +501,11 @@ function function_string(mode, q::GenericQuadExpr)
     for (elm, (coef, var1, var2)) in enumerate(quad_terms(q))
         x = function_string(mode, var1)
         y = function_string(mode, var2)
-        terms[2*elm-1] = coef < zero(coef) ? " - " : " + "
+        terms[2*elm-1] = _sign_string(coef)
         if _is_one_for_printing(coef)
             terms[2*elm] = "$x"
         else
-            terms[2*elm] = string(_string_round(abs(coef)), " ", x)
+            terms[2*elm] = string(_string_round(abs, coef), " ", x)
         end
         if x == y
             terms[2*elm] *= _math_symbol(mode, :sq)

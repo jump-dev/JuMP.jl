@@ -9,7 +9,13 @@
 #############################################################################
 
 const _JuMPTypes = Union{AbstractJuMPScalar,NonlinearExpression}
-_float(x::Number) = convert(Float64, x)
+
+_float_type(::Type{<:Real}) = Float64
+_float_type(::Type{<:UniformScaling}) = Float64
+_float_type(::Type{<:Complex}) = Complex{Float64}
+
+_float(x::Real) = convert(Float64, x)
+_float(x::Complex) = convert(Complex{Float64}, x)
 _float(J::UniformScaling) = _float(J.λ)
 
 # Overloads
@@ -33,7 +39,8 @@ function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
     if iszero(lhs)
         return zero(GenericAffExpr{Float64,typeof(rhs)})
     else
-        return _build_aff_expr(0.0, _float(lhs), rhs)
+        coef = _float(lhs)
+        return _build_aff_expr(zero(coef), coef, rhs)
     end
 end
 # _Constant--_GenericAffOrQuadExpr
@@ -204,6 +211,7 @@ function Base.:/(lhs::GenericAffExpr, rhs::AbstractVariableRef)
     return error("Cannot divide affine expression by a variable")
 end
 # AffExpr--AffExpr
+
 function Base.:+(
     lhs::GenericAffExpr{C,V},
     rhs::GenericAffExpr{C,V},
@@ -322,8 +330,8 @@ LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_JuMPTypes) = lhs * rhs
 LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_Constant) = lhs * rhs
 LinearAlgebra.dot(lhs::_Constant, rhs::_JuMPTypes) = lhs * rhs
 
-function Base.promote_rule(V::Type{<:AbstractVariableRef}, R::Type{<:Real})
-    return GenericAffExpr{Float64,V}
+function Base.promote_rule(V::Type{<:AbstractVariableRef}, R::Type{<:Number})
+    return GenericAffExpr{_float_type(R),V}
 end
 function Base.promote_rule(
     V::Type{<:AbstractVariableRef},
@@ -351,7 +359,7 @@ function Base.promote_rule(
 end
 function Base.promote_rule(
     ::Type{GenericQuadExpr{S,V}},
-    R::Type{<:Real},
+    R::Type{<:Number},
 ) where {S,V}
     return GenericQuadExpr{promote_type(S, R),V}
 end
