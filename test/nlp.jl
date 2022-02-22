@@ -1182,6 +1182,22 @@ end
         @test nonlinear_dual_start_value(model) == [1.0, -1.0]
         set_nonlinear_dual_start_value(model, nothing)
         @test nonlinear_dual_start_value(model) === nothing
-        @test_throws(ArgumentError, set_nonlinear_dual_start_value(model, [1.0]))
+        @test_throws(
+            ArgumentError,
+            set_nonlinear_dual_start_value(model, [1.0]),
+        )
+    end
+
+    @testset "nonlinear_deprecations" begin
+        model = Model()
+        @variable(model, x)
+        @test_throws(ErrorException, num_nl_constraints(model))
+        @test_throws(ErrorException, all_nl_constraints(model))
+        @test_throws(ErrorException, add_NL_constraint(model, :(x[$x] <= 1)))
+        @test_throws(ErrorException, add_NL_expression(model, :(x[$x] + 1)))
+        @test_throws(
+            ErrorException,
+            set_NL_objective(model, MOI.MIN_SENSE, :(x[$x] + 1)),
+        )
     end
 end
