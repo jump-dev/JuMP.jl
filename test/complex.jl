@@ -19,9 +19,21 @@ function test_complex_aff_expr()
     @variable(model, x)
     y = (1 + 2im) * x + 1
     @test typeof(y) == GenericAffExpr{Complex{Float64},VariableRef}
+    return
+end
+
+function test_complex_plus_variable()
+    model = Model()
+    @variable(model, x)
     y = x + im
     @test typeof(y) == GenericAffExpr{Complex{Float64},VariableRef}
     @test y == im + x
+    return
+end
+
+function test_complex_minus_variable()
+    model = Model()
+    @variable(model, x)
     y = im - x
     @test typeof(y) == GenericAffExpr{Complex{Float64},VariableRef}
     @test -y == x - im
