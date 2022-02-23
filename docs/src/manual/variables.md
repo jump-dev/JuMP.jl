@@ -1050,15 +1050,40 @@ julia> @variable(model, x[1:2, 1:2] in SymmetricMatrixSpace())
 
 Declare a matrix of JuMP variables to be skew-symmetric using
 [`SkewSymmetricMatrixSpace`](@ref):
-```jldoctest; setup=:(model=Model())
+```jldoctest skewsymmetric; setup=:(model=Model())
 julia> @variable(model, x[1:2, 1:2] in SkewSymmetricMatrixSpace())
 2×2 Matrix{AffExpr}:
  0        x[1,2]
  -x[1,2]  0
 ```
-Note that even though `x` is 2 by 2, only one decision variable is added to
-`model`; the remaining elements in `x` are linear transformations of the single
-variable.
+
+!!! note
+    Even though `x` is a 2 by 2 matrix, only one decision variable is added to
+    `model`; the remaining elements in `x` are linear transformations of the
+    single variable.
+
+Because the returned matrix `x` is `Matrix{AffExpr}`, you cannot use
+variable-related functions on its elements:
+```jldoctest skewsymmetric
+julia> set_lower_bound(x[1, 2], 0.0)
+ERROR: MethodError: no method matching set_lower_bound(::AffExpr, ::Float64)
+[...]
+```
+
+However, you can convert the matrix into one in which the upper triangular
+elements are `VariableRef` and the lower triangular elements are `AffExpr` as
+follows:
+```jldoctest skewsymmetric
+julia> y = Union{VariableRef,AffExpr}[
+           j > i ? first(keys(x[i, j].terms)) : x[i, j]
+           for i in 1:size(x, 1), j in 1:size(x, 2)
+       ]
+2×2 Matrix{Union{VariableRef, AffExpr}}:
+ 0        x[1,2]
+ -x[1,2]  0
+
+julia> set_lower_bound(y[1, 2], 0.0)
+```
 
 ### Why use variables constrained on creation?
 
