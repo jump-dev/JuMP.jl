@@ -1774,7 +1774,7 @@ The recognized positional arguments in `args` are the following:
   It creates a symmetric matrix of variable, that is, it only creates a
   new variable for `varname[i,j]` with `i ≤ j` and sets `varname[j,i]` to the
   same variable as `varname[i,j]`. It is equivalent to using
-  `varexpr in SymMatrixSpace()` as `expr`.
+  `varexpr in SymmetricMatrixSpace()` as `expr`.
 * `PSD`: The square matrix of variable is both `Symmetric` and constrained to be
   positive semidefinite. It is equivalent to using `varexpr in PSDCone()` as
   `expr`.
@@ -1948,7 +1948,7 @@ macro variable(args...)
                 "Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `$set`.",
             )
         end
-        set = :(JuMP.SymMatrixSpace())
+        set = :(JuMP.SymmetricMatrixSpace())
     end
     extra = filter(x -> (x != :PSD && x != :Symmetric), extra) # filter out PSD and sym tag
     for ex in extra
