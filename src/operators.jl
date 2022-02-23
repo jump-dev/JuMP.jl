@@ -30,10 +30,12 @@ _float(J::UniformScaling) = _float(J.λ)
 # _Constant--_Constant obviously already taken care of!
 # _Constant--VariableRef
 function Base.:+(lhs::_Constant, rhs::AbstractVariableRef)
-    return _build_aff_expr(_float(lhs), 1.0, rhs)
+    constant = _float(lhs)
+    return _build_aff_expr(constant, one(constant), rhs)
 end
 function Base.:-(lhs::_Constant, rhs::AbstractVariableRef)
-    return _build_aff_expr(_float(lhs), -1.0, rhs)
+    constant = _float(lhs)
+    return _build_aff_expr(constant, -one(constant), rhs)
 end
 function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
     if iszero(lhs)
