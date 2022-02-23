@@ -1038,9 +1038,9 @@ julia> @variable(model, x[1:2, 1:2] in PSDCone())
 ### Example: symmetric variables
 
 As an alternative to the syntax in [Symmetric variables](@ref), declare a matrix
-of JuMP variables to be symmetric using [`SymMatrixSpace`](@ref):
+of JuMP variables to be symmetric using [`SymmetricMatrixSpace`](@ref):
 ```jldoctest; setup=:(model=Model())
-julia> @variable(model, x[1:2, 1:2] in SymMatrixSpace())
+julia> @variable(model, x[1:2, 1:2] in SymmetricMatrixSpace())
 2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  x[1,1]  x[1,2]
  x[1,2]  x[2,2]

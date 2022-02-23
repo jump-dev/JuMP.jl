@@ -1,5 +1,5 @@
 """
-    SymMatrixSpace()
+    SymmetricMatrixSpace()
 
 Use in the [`@variable`](@ref) macro to constrain a matrix of variables to be
 symmetric.
@@ -7,13 +7,17 @@ symmetric.
 ## Examples
 
 ```jldoctest; setup=:(model = Model())
-julia> @variable(model, Q[1:2, 1:2] in SymMatrixSpace())
+julia> @variable(model, Q[1:2, 1:2] in SymmetricMatrixSpace())
 2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
  Q[1,1]  Q[1,2]
  Q[1,2]  Q[2,2]
 ```
 """
-struct SymMatrixSpace end
+struct SymmetricMatrixSpace end
+
+function SymMatrixSpace()
+    return error("`SymMatrixSpace` has been renamed to `SymmetricMatrixSpace`")
+end
 
 """
     SkewSymmetricMatrixSpace()
@@ -264,7 +268,7 @@ function _vectorize_variables(_error::Function, matrix::Matrix)
 end
 
 """
-    build_variable(_error::Function, variables, ::SymMatrixSpace)
+    build_variable(_error::Function, variables, ::SymmetricMatrixSpace)
 
 Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
 creating variables in `MOI.Reals`, i.e. "free" variables unless they are
@@ -278,7 +282,7 @@ This function is used by the [`@variable`](@ref) macro as follows:
 function build_variable(
     _error::Function,
     variables::Matrix{<:AbstractVariable},
-    ::SymMatrixSpace,
+    ::SymmetricMatrixSpace,
 )
     n = _square_side(_error, variables)
     set = MOI.Reals(MOI.dimension(MOI.PositiveSemidefiniteConeTriangle(n)))
