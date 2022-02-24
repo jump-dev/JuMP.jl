@@ -8,6 +8,7 @@ be re-tagged as v1.0.0.**
 
 - Breaking changes:
   - Julia 1.6 is now the minimum supported version
+  - MathOptInterface has been updated to v1.0.0
   - All previously deprecated functionality has been removed
   - `PrintMode`, `REPLMode` and `IJuliaMode` have been removed in favor of the
     MIME types `MIME"text/plain"` and `MIME"text/latex"`. Replace instances of
