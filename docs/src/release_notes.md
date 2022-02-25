@@ -1,6 +1,55 @@
 # Release notes
 
-## Version 0.22.3 (February 10, 2021)
+## Version 0.23.0 (February 25, 2022)
+
+**JuMP v0.23.0 is a breaking release. It is also a release-candidate for JuMP
+v1.0.0. That is, if no issues are found with the v0.23.0 release, then it will
+be re-tagged as v1.0.0.**
+
+- Breaking changes:
+  - Julia 1.6 is now the minimum supported version
+  - MathOptInterface has been updated to v1.0.0
+  - All previously deprecated functionality has been removed
+  - `PrintMode`, `REPLMode` and `IJuliaMode` have been removed in favor of the
+    MIME types `MIME"text/plain"` and `MIME"text/latex"`. Replace instances of
+    `::Type{REPLMode}` with `::MIME"text/plain"`, `REPLMode` with
+    `MIME("text/plain")`, `::Type{IJuliaMode}` with `::MIME"text/latex"`, and
+    `IJuliaMode` with `MIME("text/latex")`.
+  - Functions containing the `nl_` acronym have been renamed to the more
+    explicit `nonlinear_`. For example, `num_nl_constraints` is now
+    `num_nonlinear_constraints` and `set_NL_objective` is now
+    `set_nonlinear_objective`. Calls to the old functions throw an error
+    explaining the new name.
+  - `SymMatrixSpace` has been renamed to `SymmetricMatrixSpace`
+- New features:
+  - Added `nonlinear_dual_start_value` and `set_nonlinear_dual_start_value`
+  - Added preliminary support for `Complex` coefficient types
+- Bug fixes:
+  - Fixed a bug in `solution_summary`
+- Documentation, maintenance:
+  - MILP examples have been migrated from GLPK to HiGHS
+  - Fixed various typos
+  - Improved section on setting constraint start values
+
+### Troubleshooting problems when updating
+
+If you experience problems when updating, you are likely using previously
+deprecated functionality. (By default, Julia does not warn when you use
+deprecated features.)
+
+To find the deprecated features you are using, start Julia with `--depwarn=yes`:
+```
+$ julia --depwarn=yes
+```
+Then install JuMP v0.22.3:
+```julia
+julia> using Pkg
+julia> pkg"add JuMP@0.22.3"
+```
+And then run your code. Apply any suggestions, or search the release notes below
+for advice on updating a specific deprecated feature.
+
+## Version 0.22.3 (February 10, 2022)
 
 - New features:
   - There are no new features in this release.
@@ -17,7 +66,7 @@
   - Updated documentation to MOI v0.10.8
   - Updated JuliaFormatter to v0.22.2
 
-## Version 0.22.2 (January 10, 2021)
+## Version 0.22.2 (January 10, 2022)
 
 - New features:
   - The function `all_nl_constraints` now returns all nonlinear constraints
