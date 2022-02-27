@@ -1025,6 +1025,15 @@ function test_Model_error_messages(::Any, ::Any)
     return
 end
 
+function test_rational_inf_bounds()
+    model = Model()
+    u = Rational{Int}(Inf)
+    @variable(model, -u <= x <= u)
+    @test has_lower_bound(x) == false
+    @test has_upper_bound(x) == false
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

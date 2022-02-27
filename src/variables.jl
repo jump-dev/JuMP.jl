@@ -138,7 +138,7 @@ struct VariableInfo{S,T,U,V}
         if has_fix && !_isfinite(fixed_value)
             error("Unable to fix variable to $(fixed_value)")
         end
-        return new{S,T,U,V}(
+        return new{typeof(lower_bound),typeof(upper_bound),U,V}(
             has_lb,
             lower_bound,
             has_ub,
