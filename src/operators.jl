@@ -214,23 +214,31 @@ function Base.:/(lhs::GenericAffExpr, rhs::AbstractVariableRef)
 end
 # AffExpr--AffExpr
 
+_copy_convert_coef(::Type{C}, aff::GenericAffExpr{C}) where {C} = copy(aff)
+function _copy_convert_coef(::Type{T}, aff::GenericAffExpr{C,V}) where {T,C,V}
+    return convert(GenericAffExpr{T,V}, aff)
+end
+
 function Base.:+(
-    lhs::GenericAffExpr{C,V},
-    rhs::GenericAffExpr{C,V},
-) where {C,V<:_JuMPTypes}
+    lhs::GenericAffExpr{S,V},
+    rhs::GenericAffExpr{T,V},
+) where {S,T,V<:_JuMPTypes}
     if length(linear_terms(lhs)) > 50 || length(linear_terms(rhs)) > 50
         if length(linear_terms(lhs)) > 1
             operator_warn(owner_model(first(linear_terms(lhs))[2]))
         end
     end
-    return add_to_expression!(copy(lhs), rhs)
+    return add_to_expression!(
+        _copy_convert_coef(_MA.promote_operation(+, S, T), lhs),
+        rhs,
+    )
 end
 
 function Base.:-(
-    lhs::GenericAffExpr{C,V},
-    rhs::GenericAffExpr{C,V},
-) where {C,V<:_JuMPTypes}
-    result = copy(lhs)
+    lhs::GenericAffExpr{S,V},
+    rhs::GenericAffExpr{T,V},
+) where {S,T,V<:_JuMPTypes}
+    result = _copy_convert_coef(_MA.promote_operation(-, S, T), lhs)
     result.constant -= rhs.constant
     sizehint!(result, length(linear_terms(lhs)) + length(linear_terms(rhs)))
     for (coef, var) in linear_terms(rhs)
