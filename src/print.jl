@@ -312,18 +312,26 @@ function objective_function_string(mode, model::Model)
     if nlobj === nothing
         return function_string(mode, objective_function(model))
     end
-    return nl_expr_string(model, mode, nlobj)
+    return nonlinear_expr_string(model, mode, nlobj)
 end
 
 """
-    nl_constraint_string(model::Model, mode::MIME, c::_NonlinearConstraint)
+    nonlinear_constraint_string(
+        model::Model,
+        mode::MIME,
+        c::_NonlinearConstraint,
+    )
 
 Return a string representation of the nonlinear constraint `c` belonging to
 `model`, given the `mode`.
 """
-function nl_constraint_string(model::Model, mode::MIME, c::_NonlinearConstraint)
+function nonlinear_constraint_string(
+    model::Model,
+    mode::MIME,
+    c::_NonlinearConstraint,
+)
     s = _sense(c)
-    nl = nl_expr_string(model, mode, c.terms)
+    nl = nonlinear_expr_string(model, mode, c.terms)
     if s == :range
         return string(
             _string_round(c.lb),
@@ -347,6 +355,8 @@ function nl_constraint_string(model::Model, mode::MIME, c::_NonlinearConstraint)
     return string(nl, " ", rel, " ", _string_round(_rhs(c)))
 end
 
+@deprecate nl_constraint_string nonlinear_constraint_string
+
 """
     constraints_string(mode, model::AbstractModel)::Vector{String}
 
@@ -360,19 +370,19 @@ function constraints_string(mode, model::Model)
     ]
     if model.nlp_data !== nothing
         for c in model.nlp_data.nlconstr
-            push!(strings, nl_constraint_string(model, mode, c))
+            push!(strings, nonlinear_constraint_string(model, mode, c))
         end
     end
     return strings
 end
 
 """
-    nl_expr_string(model::Model, mode::MIME, c::_NonlinearExprData)
+    nonlinear_expr_string(model::Model, mode::MIME, c::_NonlinearExprData)
 
 Return a string representation of the nonlinear expression `c` belonging to
 `model`, given the `mode`.
 """
-function nl_expr_string(model::Model, mode::MIME, c::_NonlinearExprData)
+function nonlinear_expr_string(model::Model, mode::MIME, c::_NonlinearExprData)
     ex = _tape_to_expr(
         model,
         1,
@@ -388,6 +398,8 @@ function nl_expr_string(model::Model, mode::MIME, c::_NonlinearExprData)
     )
     return string(_latexify_exponentials(mode, ex))
 end
+
+@deprecate nl_expr_string nonlinear_expr_string
 
 # Change x ^ -2.0 to x ^ {-2.0}
 # x ^ (x ^ 2.0) to x ^ {x ^ {2.0}}
@@ -412,7 +424,7 @@ function _nl_subexpression_string(mode::MIME, model::Model)
     end
     strings = String[]
     for k in 1:length(model.nlp_data.nlexpr)::Int
-        expr = nl_expr_string(model, mode, model.nlp_data.nlexpr[k])
+        expr = nonlinear_expr_string(model, mode, model.nlp_data.nlexpr[k])
         if mode == MIME("text/latex")
             push!(strings, "subexpression_{$k}: $expr")
         else
@@ -574,7 +586,7 @@ function function_string(mode, constraint::AbstractConstraint)
 end
 
 function function_string(mode::MIME, p::NonlinearExpression)
-    s = nl_expr_string(p.model, mode, p.model.nlp_data.nlexpr[p.index])
+    s = nonlinear_expr_string(p.model, mode, p.model.nlp_data.nlexpr[p.index])
     return "subexpression[$(p.index)]: " * s
 end
 
@@ -734,12 +746,13 @@ end
 
 function Base.show(io::IO, c::NonlinearConstraintRef)
     expr = c.model.nlp_data.nlconstr[c.index.value]
-    return print(io, nl_constraint_string(c.model, MIME("text/plain"), expr))
+    str = nonlinear_constraint_string(c.model, MIME("text/plain"), expr)
+    return print(io, str)
 end
 
 function Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraintRef)
     expr = c.model.nlp_data.nlconstr[c.index.value]
     mode = MIME("text/latex")
-    s = _wrap_in_math_mode(nl_constraint_string(c.model, mode, expr))
+    s = _wrap_in_math_mode(nonlinear_constraint_string(c.model, mode, expr))
     return print(io, s)
 end
