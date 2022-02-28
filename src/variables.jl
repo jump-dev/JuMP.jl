@@ -12,10 +12,6 @@ not been added yet to any model. It can be added to a given `model` with
 """
 abstract type AbstractVariable end
 
-Base.conj(v::AbstractVariableRef) = v
-Base.real(v::AbstractVariableRef) = v
-Base.imag(v::AbstractVariableRef) = v
-
 # Any fields can usually be either a number or an expression
 mutable struct _VariableInfoExpr
     has_lb::Bool
