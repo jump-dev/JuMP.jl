@@ -601,8 +601,8 @@ function moi_function_type(::Type{<:GenericAffExpr{T}}) where {T}
     return MOI.ScalarAffineFunction{T}
 end
 
-function AffExpr(m::Model, f::MOI.ScalarAffineFunction)
-    aff = AffExpr(f.constant)
+function GenericAffExpr{C,VariableRef}(m::Model, f::MOI.ScalarAffineFunction) where {C}
+    aff = GenericAffExpr{C,VariableRef}(f.constant)
     for t in f.terms
         add_to_expression!(aff, t.coefficient, VariableRef(m, t.variable))
     end
