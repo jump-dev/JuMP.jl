@@ -1025,8 +1025,8 @@ function test_Model_error_messages(::Any, ::Any)
     return
 end
 
-function test_rational_inf_bounds()
-    model = Model()
+function test_rational_inf_bounds(ModelType, ::Any)
+    model = ModelType()
     u = Rational{Int}(Inf)
     @variable(model, -u <= x <= u)
     @test has_lower_bound(x) == false
