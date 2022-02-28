@@ -211,6 +211,6 @@ end
 _print_if_not_missing(io, header, ::Missing) = nothing
 _print_if_not_missing(io, header, value::Int) = println(io, header, value)
 function _print_if_not_missing(io, header, value::Real)
-    println(io, header, Printf.@sprintf("%.5f", value))
+    println(io, header, Printf.@sprintf("%.5e", value))
     return
 end

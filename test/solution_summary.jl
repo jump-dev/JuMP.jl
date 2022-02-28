@@ -76,12 +76,12 @@ end
   "solver specific string"
 
 * Candidate solution
-  Objective value      : -1.0
-  Objective bound      : 3.0
-  Dual objective value : -1.0
+  Objective value      : -1.00000e+00
+  Objective bound      : 3.00000e+00
+  Dual objective value : -1.00000e+00
 
 * Work counters
-  Solve time (sec)   : 5.00000
+  Solve time (sec)   : 5.00000e+00
   Simplex iterations : 3
   Barrier iterations : 2
   Node count         : 1
@@ -102,16 +102,16 @@ end
   "solver specific string"
 
 * Candidate solution
-  Objective value      : -1.0
-  Objective bound      : 3.0
-  Dual objective value : -1.0
+  Objective value      : -1.00000e+00
+  Objective bound      : 3.00000e+00
+  Dual objective value : -1.00000e+00
   Primal solution :
     x : 1.0
     y : 0.0
   Dual solution :
 
 * Work counters
-  Solve time (sec)   : 5.00000
+  Solve time (sec)   : 5.00000e+00
   Simplex iterations : 3
   Barrier iterations : 2
   Node count         : 1
