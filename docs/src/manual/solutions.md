@@ -77,7 +77,7 @@ julia> solution_summary(model, verbose=true)
     y[a] : 1.00000e+00
     y[b] : 1.00000e+00
   Dual solution :
-    c1 : 1.71429+00
+    c1 : 1.71429e+00
 
 * Work counters
   Solve time (sec)   : 3.86953e-04
