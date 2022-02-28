@@ -6,6 +6,24 @@
 using JuMP
 using Test
 
+@testset "Empty model" begin
+    model = Model()
+    @test sprint(show, solution_summary(model)) == """
+* Solver : No optimizer attached.
+
+* Status
+  Termination status : OPTIMIZE_NOT_CALLED
+  Primal status      : NO_SOLUTION
+  Dual status        : NO_SOLUTION
+  Message from the solver:
+  "optimize not called"
+
+* Candidate solution
+
+* Work counters
+"""
+end
+
 @testset "Print solution summary" begin
     model = Model()
     @variable(model, x <= 2.0)

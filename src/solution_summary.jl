@@ -156,7 +156,7 @@ function _show_work_counters_summary(io::IO, summary::_SolutionSummary)
     _print_if_not_missing(
         io,
         "  Solve time (sec)   : ",
-        Printf.@sprintf("%.5f", summary.solve_time),
+        summary.solve_time,
     )
     _print_if_not_missing(
         io,
@@ -209,4 +209,8 @@ function _try_get(f, model)
 end
 
 _print_if_not_missing(io, header, ::Missing) = nothing
-_print_if_not_missing(io, header, value) = println(io, header, value)
+_print_if_not_missing(io, header, value::Int) = println(io, header, value)
+function _print_if_not_missing(io, header, value::Real)
+    println(io, header, Printf.@sprintf("%.5f", value))
+    return
+end
