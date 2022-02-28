@@ -12,6 +12,10 @@ not been added yet to any model. It can be added to a given `model` with
 """
 abstract type AbstractVariable end
 
+Base.conj(v::AbstractVariableRef) = v
+Base.real(v::AbstractVariableRef) = v
+Base.imag(v::AbstractVariableRef) = v
+
 # Any fields can usually be either a number or an expression
 mutable struct _VariableInfoExpr
     has_lb::Bool
@@ -257,9 +261,6 @@ end
 Base.iszero(::VariableRef) = false
 Base.copy(v::VariableRef) = VariableRef(v.model, v.index)
 Base.broadcastable(v::VariableRef) = Ref(v)
-Base.conj(v::VariableRef) = v
-Base.real(v::VariableRef) = v
-Base.imag(v::VariableRef) = v
 
 """
     coefficient(v1::VariableRef, v2::VariableRef)
