@@ -37,7 +37,7 @@ Subject to
 
 [`solution_summary`](@ref) can be used for checking the summary of the optimization solutions.
 
-```jldoctest solutions; filter=r"[0-9]+.[0-9]+[\+-]e[0-9]+"
+```jldoctest solutions; filter=r"[0-9]+\.[0-9]+e[\+\-][0-9]+"
 julia> solution_summary(model)
 * Solver : HiGHS
 
