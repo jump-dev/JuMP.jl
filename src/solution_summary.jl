@@ -153,11 +153,7 @@ end
 
 function _show_work_counters_summary(io::IO, summary::_SolutionSummary)
     println(io, "* Work counters")
-    _print_if_not_missing(
-        io,
-        "  Solve time (sec)   : ",
-        summary.solve_time,
-    )
+    _print_if_not_missing(io, "  Solve time (sec)   : ", summary.solve_time)
     _print_if_not_missing(
         io,
         "  Simplex iterations : ",
