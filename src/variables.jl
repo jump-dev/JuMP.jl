@@ -12,10 +12,6 @@ not been added yet to any model. It can be added to a given `model` with
 """
 abstract type AbstractVariable end
 
-Base.conj(v::AbstractVariableRef) = v
-Base.real(v::AbstractVariableRef) = v
-Base.imag(v::AbstractVariableRef) = v
-
 # Any fields can usually be either a number or an expression
 mutable struct _VariableInfoExpr
     has_lb::Bool
@@ -193,6 +189,9 @@ with variables of type `V<:AbstractVariableRef` and coefficients of type `T`
 abstract type AbstractVariableRef <: AbstractJuMPScalar end
 
 variable_ref_type(v::AbstractVariableRef) = typeof(v)
+Base.conj(v::AbstractVariableRef) = v
+Base.real(v::AbstractVariableRef) = v
+Base.imag(v::AbstractVariableRef) = v
 
 """
     VariableRef <: AbstractVariableRef
