@@ -376,9 +376,7 @@ end
 
 Base.transpose(x::AbstractJuMPScalar) = x
 
-# only real scalars are supported
-Base.conj(x::AbstractJuMPScalar) = x
-
+Base.conj(x::VariableRef) = x
 # Can remove the following code once == overloading is removed
 
 function LinearAlgebra.issymmetric(x::Matrix{T}) where {T<:_JuMPTypes}

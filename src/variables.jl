@@ -254,6 +254,9 @@ end
 Base.iszero(::VariableRef) = false
 Base.copy(v::VariableRef) = VariableRef(v.model, v.index)
 Base.broadcastable(v::VariableRef) = Ref(v)
+Base.conj(v::VariableRef) = v
+Base.real(v::VariableRef) = v
+Base.imag(v::VariableRef) = v
 
 """
     coefficient(v1::VariableRef, v2::VariableRef)

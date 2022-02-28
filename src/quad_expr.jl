@@ -118,6 +118,14 @@ Base.one(q::GenericQuadExpr) = one(typeof(q))
 Base.copy(q::GenericQuadExpr) = GenericQuadExpr(copy(q.aff), copy(q.terms))
 Base.broadcastable(q::GenericQuadExpr) = Ref(q)
 
+Base.conj(a::GenericQuadExpr{<:Real}) = a
+Base.real(a::GenericQuadExpr{<:Real}) = a
+Base.imag(a::GenericQuadExpr{<:Real}) = a
+
+Base.conj(a::GenericQuadExpr{<:Complex}) = map_coefficients(conj, a)
+Base.real(a::GenericQuadExpr{<:Complex}) = map_coefficients(real, a)
+Base.imag(a::GenericQuadExpr{<:Complex}) = map_coefficients(imag, a)
+
 # Needed for cases when Julia uses `x == 0` instead of `iszero(x)` (e.g., in the
 # stdlib).
 Base.:(==)(x::GenericQuadExpr, y::Number) = isempty(x.terms) && x.aff == y
@@ -207,7 +215,22 @@ x² + x + 1
 ```
 """
 function map_coefficients(f::Function, q::GenericQuadExpr)
-    return map_coefficients_inplace!(f, copy(q))
+    # `map_coefficients(f, q.aff)` infers the coefficient type
+    # which is then picked up in the method signature of `_map_quad`
+    # and then used to build the `OrderedDict`.
+    return _map_quad(f, map_coefficients(f, q.aff), q)
+end
+function _map_quad(
+    f::Function,
+    aff::GenericAffExpr{C,V},
+    q::GenericQuadExpr,
+) where {C,V}
+    terms = OrderedDict{UnorderedPair{V},C}()
+    sizehint!(terms, length(q.terms))
+    for (key, value) in q.terms
+        terms[key] = f(value)
+    end
+    return GenericQuadExpr(aff, terms)
 end
 
 function _affine_coefficient(f::GenericQuadExpr{C,V}, variable::V) where {C,V}

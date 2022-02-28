@@ -85,6 +85,30 @@ function test_complex_print()
     return
 end
 
+function test_complex_conj()
+    model = Model()
+    @variable(model, x)
+    @test conj(x) === x
+    @test real(x) === x
+    @test imag(x) === x
+    real_aff = 2 * x + 3
+    @test conj(real_aff) === real_aff
+    @test real(real_aff) === real_aff
+    @test imag(real_aff) === real_aff
+    complex_aff = (2 + im) * x + 3 - im
+    @test conj(complex_aff) == (2 - im) * x + 3 + im
+    @test real(complex_aff) == 2x + 3
+    @test imag(complex_aff) == x - 1
+    real_quad = 4x^2 + 2 * x + 3
+    @test conj(real_quad) === real_quad
+    @test real(real_quad) === real_quad
+    @test imag(real_quad) === real_quad
+    complex_quad = (4 - 5im) * x^2 + (2 + im) * x + 3 - im
+    @test conj(complex_quad) == (4 + 5im) * x^2 + (2 - im) * x + 3 + im
+    @test real(complex_quad) == 4x^2 + 2x + 3
+    @test imag(complex_quad) == -5x^2 + x - 1
+end
+
 end
 
 TestComplexNumberSupport.runtests()
