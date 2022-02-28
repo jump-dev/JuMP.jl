@@ -126,11 +126,9 @@ function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
     if summary.verbose && summary.has_values
         println(io, "  Primal solution :")
         for variable_name in sort(collect(keys(summary.primal_solution)))
-            println(
+            _print_if_not_missing(
                 io,
-                "    ",
-                variable_name,
-                " : ",
+                "    $(variable_name) : ",
                 summary.primal_solution[variable_name],
             )
         end
@@ -138,11 +136,9 @@ function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
     if summary.verbose && summary.has_duals
         println(io, "  Dual solution :")
         for constraint_name in sort(collect(keys(summary.dual_solution)))
-            println(
+            _print_if_not_missing(
                 io,
-                "    ",
-                constraint_name,
-                " : ",
+                "    $(constraint_name) : ",
                 summary.dual_solution[constraint_name],
             )
         end

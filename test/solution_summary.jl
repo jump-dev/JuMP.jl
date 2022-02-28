@@ -106,8 +106,8 @@ end
   Objective bound      : 3.00000e+00
   Dual objective value : -1.00000e+00
   Primal solution :
-    x : 1.0
-    y : 0.0
+    x : 1.00000e+00
+    y : 0.00000e+00
   Dual solution :
 
 * Work counters
