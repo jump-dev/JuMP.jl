@@ -2,6 +2,8 @@ module TestComplexNumberSupport
 
 using JuMP
 using Test
+import MutableArithmetics
+const MA = MutableArithmetics
 
 function runtests()
     for name in names(@__MODULE__; all = true)
@@ -48,6 +50,19 @@ function test_complex_aff_expr_convert()
     @test typeof(y_int) == GenericAffExpr{Complex{Int},VariableRef}
     @test y_int == y
     @test_throws InexactError convert(AffExpr, y)
+    return
+end
+
+function test_complex_add_aff()
+    model = Model()
+    @variable(model, x)
+    real_aff = 3x - 1
+    complex_aff = (1 + 2im) * x + 1
+    @test complex_aff == MA.@rewrite((1 + 2im) * x + 1)
+    @test complex_aff == MA.@rewrite(1 + (1 + 2im) * x)
+    @test complex_aff == MA.@rewrite(1 + (2im) * x + x)
+    @test real_aff + complex_aff == complex_aff + real_aff
+    @test real_aff - complex_aff == -(complex_aff - real_aff)
     return
 end
 

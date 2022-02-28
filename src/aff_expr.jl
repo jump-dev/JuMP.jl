@@ -385,9 +385,9 @@ function add_to_expression!(aff::GenericAffExpr{C,V}, new_var::V) where {C,V}
 end
 
 function add_to_expression!(
-    aff::GenericAffExpr{C,V},
-    other::GenericAffExpr{C,V},
-) where {C,V}
+    aff::GenericAffExpr{S,V},
+    other::GenericAffExpr{T,V},
+) where {S,T,V}
     # Note: merge!() doesn't appear to call sizehint!(). Is this important?
     merge!(+, aff.terms, other.terms)
     aff.constant += other.constant
