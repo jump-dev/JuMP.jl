@@ -47,7 +47,13 @@ Base.print(io::IO, model::AbstractModel) = _print_model(io, model)
 _is_zero_for_printing(coef) = abs(coef) < 1e-10 * oneunit(coef)
 
 # Whether something is one or not for the purposes of printing it.
-_is_one_for_printing(coef) = _is_zero_for_printing(abs(coef) - oneunit(coef))
+function _is_one_for_printing(coef::Real)
+    _is_zero_for_printing(abs(coef) - oneunit(coef))
+end
+
+function _is_one_for_printing(coef::Complex)
+    _is_one_for_printing(real(coef)) && _is_zero_for_printing(imag(coef))
+end
 
 function _is_zero_for_printing(coef::Complex)
     return _is_zero_for_printing(real(coef)) &&

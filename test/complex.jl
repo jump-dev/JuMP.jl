@@ -65,6 +65,8 @@ function test_complex_print()
     @variable(model, x)
     y = (1 + 2im) * x + 1
     @test sprint(show, y) == "(1.0 + 2.0im) x + (1.0 + 0.0im)"
+    y = im * x
+    @test sprint(show, y) == "(0.0 + 1.0im) x"
     return
 end
 
