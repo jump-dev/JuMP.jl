@@ -441,13 +441,13 @@ function add_to_expression!(
 end
 
 function add_to_expression!(
-    aff::GenericAffExpr{C,V},
+    aff::GenericAffExpr{S,V},
     coef::_Constant,
-    other::GenericAffExpr{C,V},
-) where {C,V}
+    other::GenericAffExpr{T,V},
+) where {S,T,V}
     sizehint!(aff, length(linear_terms(aff)) + length(linear_terms(other)))
     for (term_coef, var) in linear_terms(other)
-        _add_or_set!(aff.terms, var, coef * term_coef)
+        _add_or_set!(aff.terms, var, convert(S, coef * term_coef))
     end
     aff.constant += coef * other.constant
     return aff

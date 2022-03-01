@@ -219,6 +219,11 @@ function _copy_convert_coef(::Type{T}, aff::GenericAffExpr{C,V}) where {T,C,V}
     return convert(GenericAffExpr{T,V}, aff)
 end
 
+_copy_convert_coef(::Type{C}, quad::GenericQuadExpr{C}) where {C} = copy(quad)
+function _copy_convert_coef(::Type{T}, quad::GenericQuadExpr{C,V}) where {T,C,V}
+    return convert(GenericQuadExpr{T,V}, quad)
+end
+
 function Base.:+(
     lhs::GenericAffExpr{S,V},
     rhs::GenericAffExpr{T,V},
@@ -303,8 +308,11 @@ function Base.:/(q::GenericQuadExpr, a::GenericAffExpr)
     return error("Cannot divide a quadratic expression by an aff. expression")
 end
 # GenericQuadExpr--GenericQuadExpr
-function Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr)
-    result = copy(q1)
+function Base.:+(q1::GenericQuadExpr{S}, q2::GenericQuadExpr{T}) where {S,T}
+    result = _copy_convert_coef(
+        _MA.promote_operation(+, S, T),
+        q1,
+    )
     for (coef, var1, var2) in quad_terms(q2)
         add_to_expression!(result, coef, var1, var2)
     end
@@ -314,8 +322,11 @@ function Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr)
     result.aff.constant += q2.aff.constant
     return result
 end
-function Base.:-(q1::GenericQuadExpr, q2::GenericQuadExpr)
-    result = copy(q1)
+function Base.:-(q1::GenericQuadExpr{S}, q2::GenericQuadExpr{T}) where {S,T}
+    result = _copy_convert_coef(
+        _MA.promote_operation(-, S, T),
+        q1,
+    )
     for (coef, var1, var2) in quad_terms(q2)
         add_to_expression!(result, -coef, var1, var2)
     end

@@ -315,9 +315,9 @@ function add_to_expression!(
 end
 
 function add_to_expression!(
-    q::GenericQuadExpr{T,S},
-    other::GenericQuadExpr{T,S},
-) where {T,S}
+    q::GenericQuadExpr{T,V},
+    other::GenericQuadExpr{S,V},
+) where {T,S,V}
     merge!(+, q.terms, other.terms)
     add_to_expression!(q.aff, other.aff)
     return q
@@ -343,30 +343,30 @@ function add_to_expression!(
 end
 
 function add_to_expression!(
-    quad::GenericQuadExpr{C},
+    quad::GenericQuadExpr,
     new_coef::_Constant,
-    new_aff::GenericAffExpr{C},
-) where {C}
+    new_aff::GenericAffExpr,
+)
     add_to_expression!(quad.aff, new_coef, new_aff)
     return quad
 end
 
 function add_to_expression!(
-    quad::GenericQuadExpr{C,V},
+    quad::GenericQuadExpr{S,V},
     coef::_Constant,
-    other::GenericQuadExpr{C,V},
-) where {C,V}
+    other::GenericQuadExpr{T,V},
+) where {S,T,V}
     for (key, term_coef) in other.terms
-        _add_or_set!(quad.terms, key, coef * term_coef)
+        _add_or_set!(quad.terms, key, convert(S, coef * term_coef))
     end
     return add_to_expression!(quad, coef, other.aff)
 end
 
 function add_to_expression!(
-    quad::GenericQuadExpr{C,V},
-    other::GenericQuadExpr{C,V},
+    quad::GenericQuadExpr,
+    other::GenericQuadExpr,
     coef::_Constant,
-) where {C,V}
+)
     return add_to_expression!(quad, coef, other)
 end
 
@@ -448,7 +448,7 @@ end
 
 function add_to_expression!(
     quad::GenericQuadExpr{C,V},
-    new_coef::C,
+    new_coef::_Constant,
     new_var1::V,
     new_var2::V,
 ) where {C,V}
@@ -456,7 +456,7 @@ function add_to_expression!(
     # previous value for UnorderedPair(new_var2, new_var1), it's key will now be
     # UnorderedPair(new_var1, new_var2) (because these are defined as equal).
     key = UnorderedPair(new_var1, new_var2)
-    _add_or_set!(quad.terms, key, new_coef)
+    _add_or_set!(quad.terms, key, convert(C, new_coef))
     return quad
 end
 
@@ -506,12 +506,31 @@ An alias for `GenericQuadExpr{Float64,VariableRef}`, the specific
     [`GenericQuadExpr`](@ref) used by JuMP.
 """
 const QuadExpr = GenericQuadExpr{Float64,VariableRef}
+
 function Base.convert(
     ::Type{GenericQuadExpr{C,V}},
     v::Union{_Constant,AbstractVariableRef,GenericAffExpr},
 ) where {C,V}
     return GenericQuadExpr(convert(GenericAffExpr{C,V}, v))
 end
+
+function Base.convert(
+    ::Type{GenericQuadExpr{C,V}},
+    quad::GenericQuadExpr{C,V},
+) where {C,V}
+    return quad
+end
+
+function Base.convert(
+    ::Type{GenericQuadExpr{T,V}},
+    quad::GenericQuadExpr{S,V},
+) where {T,S,V}
+    return GenericQuadExpr{T,V}(
+        convert(GenericAffExpr{T,V}, quad.aff),
+        convert(OrderedDict{UnorderedPair{V},T}, quad.terms),
+    )
+end
+
 GenericQuadExpr{C,V}() where {C,V} = zero(GenericQuadExpr{C,V})
 
 function check_belongs_to_model(q::GenericQuadExpr, model::AbstractModel)
