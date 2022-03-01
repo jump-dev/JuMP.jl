@@ -536,9 +536,11 @@ function _moi_quadratic_term(t::Tuple)
         index(t[3]),
     )
 end
-function MOI.ScalarQuadraticFunction(q::QuadExpr)
+function MOI.ScalarQuadraticFunction(
+    q::GenericQuadExpr{C,VariableRef},
+) where {C}
     _assert_isfinite(q)
-    qterms = MOI.ScalarQuadraticTerm{Float64}[
+    qterms = MOI.ScalarQuadraticTerm{C}[
         _moi_quadratic_term(t) for t in quad_terms(q)
     ]
     moi_aff = MOI.ScalarAffineFunction(q.aff)
@@ -551,9 +553,15 @@ function moi_function_type(::Type{<:GenericQuadExpr{T}}) where {T}
     return MOI.ScalarQuadraticFunction{T}
 end
 
-function QuadExpr(m::Model, f::MOI.ScalarQuadraticFunction)
-    quad = QuadExpr(
-        AffExpr(m, MOI.ScalarAffineFunction(f.affine_terms, f.constant)),
+function GenericQuadExpr{C,VariableRef}(
+    m::Model,
+    f::MOI.ScalarQuadraticFunction,
+) where {C}
+    quad = GenericQuadExpr{C,VariableRef}(
+        GenericAffExpr{C,VariableRef}(
+            m,
+            MOI.ScalarAffineFunction(f.affine_terms, f.constant),
+        ),
     )
     for t in f.quadratic_terms
         v1 = t.variable_1
@@ -616,13 +624,15 @@ function _fill_vqf!(
     return offset + length(quad_terms(aff))
 end
 
-function MOI.VectorQuadraticFunction(quads::Vector{QuadExpr})
+function MOI.VectorQuadraticFunction(
+    quads::Vector{GenericQuadExpr{C,VariableRef}},
+) where {C}
     num_quadratic_terms = sum(quad -> length(quad_terms(quad)), quads)
     quadratic_terms =
-        Vector{MOI.VectorQuadraticTerm{Float64}}(undef, num_quadratic_terms)
+        Vector{MOI.VectorQuadraticTerm{C}}(undef, num_quadratic_terms)
     num_lin_terms = sum(quad -> length(linear_terms(quad)), quads)
-    lin_terms = Vector{MOI.VectorAffineTerm{Float64}}(undef, num_lin_terms)
-    constants = Vector{Float64}(undef, length(quads))
+    lin_terms = Vector{MOI.VectorAffineTerm{C}}(undef, num_lin_terms)
+    constants = Vector{C}(undef, length(quads))
     quad_offset = 0
     lin_offset = 0
     for (i, quad) in enumerate(quads)
