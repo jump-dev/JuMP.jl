@@ -15,6 +15,14 @@
 const _GenericAffOrQuadExpr{C,V} =
     Union{GenericAffExpr{C,V},GenericQuadExpr{C,V}}
 
+function _change_coef(::Type{T}, ::Type{GenericAffExpr{C,V}}) where {T,C,V}
+    return GenericAffExpr{T,V}
+end
+
+function _change_coef(::Type{T}, ::Type{GenericQuadExpr{C,V}}) where {T,C,V}
+    return GenericQuadExpr{T,V}
+end
+
 # The default fallbacks to calling `op(zero(x), zero(y))` which produces allocations.
 # The compiler could avoid these allocations at runtime with constant propagation as the types
 # `x` and `y` are known at compile time but apparently it does not.
@@ -33,18 +41,20 @@ function _MA.promote_operation(
     return GenericAffExpr{_float_type(C),V}
 end
 function _MA.promote_operation(
-    ::Union{typeof(+),typeof(-),typeof(*)},
-    ::Type{<:_Constant},
-    S::Type{<:_GenericAffOrQuadExpr},
-)
-    return S
+    op::Union{typeof(+),typeof(-),typeof(*)},
+    ::Type{S},
+    A::Type{<:_GenericAffOrQuadExpr{T,V}},
+) where {S<:_Constant,T,V}
+    U = _MA.promote_operation(op, S, T)
+    return _change_coef(U, A)
 end
 function _MA.promote_operation(
-    ::Union{typeof(+),typeof(-),typeof(*)},
-    S::Type{<:_GenericAffOrQuadExpr},
-    ::Type{<:_Constant},
-)
-    return S
+    op::Union{typeof(+),typeof(-),typeof(*)},
+    A::Type{<:_GenericAffOrQuadExpr{T,V}},
+    ::Type{S},
+) where {S<:_Constant,T,V}
+    U = _MA.promote_operation(op, T, S)
+    return _change_coef(U, A)
 end
 
 function _MA.promote_operation(

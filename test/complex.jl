@@ -24,6 +24,34 @@ function test_complex_aff_expr()
     return
 end
 
+function test_complex_quad_expr()
+    model = Model()
+    @variable(model, x)
+    y = im * x^2
+    @test typeof(y) == GenericQuadExpr{Complex{Float64},VariableRef}
+    @test y == x^2 * im
+    @test x^2 + y == y + x^2
+    @test x^2 + y == MA.@rewrite(x^2 + y)
+    @test x^2 + y == MA.@rewrite(x^2 + 1 * y)
+    @test x^2 + y == MA.@rewrite(y + x^2)
+    @test x^2 + y == MA.@rewrite(y + 1 * x^2)
+    @test x^2 + y == MA.@rewrite(x^2 + im * x^2)
+
+    @test x^2 - y == -(y - x^2)
+    @test x^2 - y == MA.@rewrite(x^2 - y)
+    @test x^2 - y == MA.@rewrite(x^2 + im * y * im)
+    @test x^2 - y == MA.@rewrite(-(y - x^2))
+
+    z = x^2
+    @test y + z * im == im * z + y
+    @test y + z * im == MA.@rewrite(y + z * im)
+    @test y + z * im == MA.@rewrite(im * z + y)
+    @test y - x^2 == -x^2 + y
+    @test y - x^2 == MA.@rewrite(y - x^2)
+    @test y - x^2 == MA.@rewrite(-x^2 + y)
+    return
+end
+
 function test_complex_plus_variable()
     model = Model()
     @variable(model, x)
