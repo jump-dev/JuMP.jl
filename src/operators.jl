@@ -309,10 +309,7 @@ function Base.:/(q::GenericQuadExpr, a::GenericAffExpr)
 end
 # GenericQuadExpr--GenericQuadExpr
 function Base.:+(q1::GenericQuadExpr{S}, q2::GenericQuadExpr{T}) where {S,T}
-    result = _copy_convert_coef(
-        _MA.promote_operation(+, S, T),
-        q1,
-    )
+    result = _copy_convert_coef(_MA.promote_operation(+, S, T), q1)
     for (coef, var1, var2) in quad_terms(q2)
         add_to_expression!(result, coef, var1, var2)
     end
@@ -323,10 +320,7 @@ function Base.:+(q1::GenericQuadExpr{S}, q2::GenericQuadExpr{T}) where {S,T}
     return result
 end
 function Base.:-(q1::GenericQuadExpr{S}, q2::GenericQuadExpr{T}) where {S,T}
-    result = _copy_convert_coef(
-        _MA.promote_operation(-, S, T),
-        q1,
-    )
+    result = _copy_convert_coef(_MA.promote_operation(-, S, T), q1)
     for (coef, var1, var2) in quad_terms(q2)
         add_to_expression!(result, -coef, var1, var2)
     end
