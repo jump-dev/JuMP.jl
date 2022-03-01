@@ -395,6 +395,10 @@ const op_hint = "Are you trying to build a nonlinear problem? Make sure you use 
 for (func, _) in Calculus.symbolic_derivatives_1arg(),
     typ in [:AbstractVariableRef, :GenericAffExpr, :GenericQuadExpr]
 
+    if func == :abs2 && (typ == :AbstractVariableRef || typ == :GenericAffExpr)
+        continue
+    end
+
     errstr = "$func is not defined for type $typ. $op_hint"
     if isdefined(Base, func)
         @eval Base.$(func)(::$typ) = error($errstr)

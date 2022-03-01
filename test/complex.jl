@@ -146,6 +146,15 @@ function test_complex_conj()
     @test imag(complex_quad) == -5x^2 + x - 1
 end
 
+function test_complex_abs2()
+    model = Model()
+    @variable(model, x)
+    @test abs2(x) == x^2
+    @test abs2(x + 2im) == x^2 + 4
+    @test abs2(x + 2) == x^2 + 4x + 4
+    @test abs2(x * im + 2) == x^2 + 4
+end
+
 end
 
 TestComplexNumberSupport.runtests()
