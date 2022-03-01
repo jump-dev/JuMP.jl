@@ -1,6 +1,6 @@
 # Release notes
 
-## Version 0.23.1 (March 1, 2022)
+## Version 0.23.1 (March 2, 2022)
 
 - New deprecations:
   - `nl_expr_string` and `nl_constraint_string` have been renamed to
@@ -9,8 +9,12 @@
     users because to call them you must rely on private internals of the
     nonlinear API. Users are encouraged to use `sprint(show, x)` instead, where
     `x` is the nonlinear expression or constraint of interest.
+- New features:
+  - Added support for `Base.abs2(x)` where `x` is a variable or affine
+    expression. This is mainly useful for complex-valued constraints.
 - Bug fixes:
   - Fixed addition of complex and real affine expressions
+  - Fixed arithmetic for Complex-valued quadratic expressions
   - Fixed variable bounds passed as `Rational{Int}(Inf)`
   - Fixed printing of the coefficient `(0 + 1im)`
   - Fixed a bug when `solution_summary` is called prior to `optimize!`
