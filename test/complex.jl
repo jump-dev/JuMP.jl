@@ -82,7 +82,7 @@ function test_complex_scalar_constraint()
     @variable(model, x)
     con_ref = @constraint(model, (1 + 2im) * x == 1.0)
     @test list_of_constraint_types(model) ==
-        [(GenericAffExpr{ComplexF64,VariableRef}, MOI.EqualTo{ComplexF64})]
+          [(GenericAffExpr{ComplexF64,VariableRef}, MOI.EqualTo{ComplexF64})]
     con_obj = constraint_object(con_ref)
     @test jump_function(con_obj) == (1 + 2im) * x
     @test moi_set(con_obj) == MOI.EqualTo(1.0 + 0.0im)
