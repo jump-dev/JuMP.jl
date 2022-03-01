@@ -202,5 +202,8 @@ Return the number of results available to query after a call to
 [`optimize!`](@ref).
 """
 function result_count(model::Model)::Int
+    if termination_status(model) == MOI.OPTIMIZE_NOT_CALLED
+        return 0
+    end
     return MOI.get(model, MOI.ResultCount())
 end

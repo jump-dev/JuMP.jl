@@ -37,7 +37,7 @@ Subject to
 
 [`solution_summary`](@ref) can be used for checking the summary of the optimization solutions.
 
-```jldoctest solutions; filter=r"[0-9]+.[0-9]+"
+```jldoctest solutions; filter=r"[0-9]+\.[0-9]+e[\+\-][0-9]+"
 julia> solution_summary(model)
 * Solver : HiGHS
 
@@ -49,12 +49,12 @@ julia> solution_summary(model)
   "kOptimal"
 
 * Candidate solution
-  Objective value      : -205.14285714285714
-  Objective bound      : -0.0
-  Dual objective value : -205.1428571428571
+  Objective value      : -2.05143e+02
+  Objective bound      : -0.00000e+00
+  Dual objective value : -2.05143e+02
 
 * Work counters
-  Solve time (sec)   : 0.00068
+  Solve time (sec)   : 3.86953e-04
 
 julia> solution_summary(model, verbose=true)
 * Solver : HiGHS
@@ -69,18 +69,18 @@ julia> solution_summary(model, verbose=true)
   "kOptimal"
 
 * Candidate solution
-  Objective value      : -205.14285714285714
-  Objective bound      : -0.0
-  Dual objective value : -205.1428571428571
+  Objective value      : -2.05143e+02
+  Objective bound      : -0.00000e+00
+  Dual objective value : -2.05143e+02
   Primal solution :
-    x : 15.428571428571429
-    y[a] : 1.0
-    y[b] : 1.0
+    x : 1.54286e+01
+    y[a] : 1.00000e+00
+    y[b] : 1.00000e+00
   Dual solution :
-    c1 : 1.7142857142857142
+    c1 : 1.71429e+00
 
 * Work counters
-  Solve time (sec)   : 0.00068
+  Solve time (sec)   : 3.86953e-04
 ```
 
 ## Why did the solver stop?

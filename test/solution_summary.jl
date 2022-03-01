@@ -6,6 +6,24 @@
 using JuMP
 using Test
 
+@testset "Empty model" begin
+    model = Model()
+    @test sprint(show, solution_summary(model)) == """
+* Solver : No optimizer attached.
+
+* Status
+  Termination status : OPTIMIZE_NOT_CALLED
+  Primal status      : NO_SOLUTION
+  Dual status        : NO_SOLUTION
+  Message from the solver:
+  "optimize not called"
+
+* Candidate solution
+
+* Work counters
+"""
+end
+
 @testset "Print solution summary" begin
     model = Model()
     @variable(model, x <= 2.0)
@@ -58,12 +76,12 @@ using Test
   "solver specific string"
 
 * Candidate solution
-  Objective value      : -1.0
-  Objective bound      : 3.0
-  Dual objective value : -1.0
+  Objective value      : -1.00000e+00
+  Objective bound      : 3.00000e+00
+  Dual objective value : -1.00000e+00
 
 * Work counters
-  Solve time (sec)   : 5.00000
+  Solve time (sec)   : 5.00000e+00
   Simplex iterations : 3
   Barrier iterations : 2
   Node count         : 1
@@ -84,16 +102,16 @@ using Test
   "solver specific string"
 
 * Candidate solution
-  Objective value      : -1.0
-  Objective bound      : 3.0
-  Dual objective value : -1.0
+  Objective value      : -1.00000e+00
+  Objective bound      : 3.00000e+00
+  Dual objective value : -1.00000e+00
   Primal solution :
-    x : 1.0
-    y : 0.0
+    x : 1.00000e+00
+    y : 0.00000e+00
   Dual solution :
 
 * Work counters
-  Solve time (sec)   : 5.00000
+  Solve time (sec)   : 5.00000e+00
   Simplex iterations : 3
   Barrier iterations : 2
   Node count         : 1

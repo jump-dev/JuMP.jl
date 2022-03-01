@@ -689,6 +689,9 @@ Return the reason why the solver stopped in its own words (i.e., the
 MathOptInterface model attribute `RawStatusString`).
 """
 function raw_status(model::Model)
+    if MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED
+        return "optimize not called"
+    end
     return MOI.get(model, MOI.RawStatusString())
 end
 
