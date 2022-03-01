@@ -1,5 +1,20 @@
 # Release notes
 
+## Version 0.23.1 (March 1, 2022)
+
+- New deprecations:
+  - `nl_expr_string` and `nl_constraint_string` have been renamed to
+    `nonlinear_expr_string` and `nonlinear_constraint_string`. The old methods
+    still exist with deprecation warnings. This change should impact very few
+    users because to call them you must rely on private internals of the
+    nonlinear API. Users are encouraged to use `sprint(show, x)` instead, where
+    `x` is the nonlinear expression or constraint of interest.
+- Bug fixes:
+  - Fixed addition of complex and real affine expressions
+  - Fixed variable bounds passed as `Rational{Int}(Inf)`
+  - Fixed printing of the coefficient `(0 + 1im)`
+  - Fixed a bug when `solution_summary` is called prior to `optimize!`
+
 ## Version 0.23.0 (February 25, 2022)
 
 **JuMP v0.23.0 is a breaking release. It is also a release-candidate for JuMP
