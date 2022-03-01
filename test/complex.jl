@@ -77,7 +77,18 @@ function test_complex_vector_constraint()
     @test moi_set(con_obj) == MOI.Zeros(1)
 end
 
-function test_complex_scalar_constraint()
+function test_complex_vector_constraint()
+    model = Model()
+    @variable(model, x)
+    con_ref = @constraint(model, [(1 + 2im) * x^2 + 1] in MOI.Zeros(1))
+    @test list_of_constraint_types(model) ==
+          [(Vector{GenericQuadExpr{Complex{Float64},VariableRef}}, MOI.Zeros)]
+    con_obj = constraint_object(con_ref)
+    @test jump_function(con_obj) == [(1 + 2im) * x^2 + 1]
+    @test moi_set(con_obj) == MOI.Zeros(1)
+end
+
+function test_complex_scalar_affine_constraint()
     model = Model()
     @variable(model, x)
     con_ref = @constraint(model, (1 + 2im) * x == 1.0)
@@ -85,6 +96,18 @@ function test_complex_scalar_constraint()
           [(GenericAffExpr{ComplexF64,VariableRef}, MOI.EqualTo{ComplexF64})]
     con_obj = constraint_object(con_ref)
     @test jump_function(con_obj) == (1 + 2im) * x
+    @test moi_set(con_obj) == MOI.EqualTo(1.0 + 0.0im)
+    return
+end
+
+function test_complex_scalar_quadratic_constraint()
+    model = Model()
+    @variable(model, x)
+    con_ref = @constraint(model, (1 + 2im) * x^2 == 1.0)
+    @test list_of_constraint_types(model) ==
+          [(GenericQuadExpr{ComplexF64,VariableRef}, MOI.EqualTo{ComplexF64})]
+    con_obj = constraint_object(con_ref)
+    @test jump_function(con_obj) == (1 + 2im) * x^2
     @test moi_set(con_obj) == MOI.EqualTo(1.0 + 0.0im)
     return
 end
