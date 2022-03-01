@@ -204,6 +204,7 @@ Base.broadcastable(a::GenericAffExpr) = Ref(a)
 Base.conj(a::GenericAffExpr{<:Real}) = a
 Base.real(a::GenericAffExpr{<:Real}) = a
 Base.imag(a::GenericAffExpr{<:Real}) = a
+Base.abs2(a::GenericAffExpr{<:Real}) = a^2
 
 Base.conj(a::GenericAffExpr{<:Complex}) = map_coefficients(conj, a)
 
@@ -217,6 +218,10 @@ end
 
 Base.real(a::GenericAffExpr{<:Complex}) = _map_coefs(real, a)
 Base.imag(a::GenericAffExpr{<:Complex}) = _map_coefs(imag, a)
+function Base.abs2(a::GenericAffExpr{<:Complex})
+    imag_a = imag(a)
+    return add_to_expression!(real(a)^2, imag_a, imag_a)
+end
 
 # Needed for cases when Julia uses `x == 0` instead of `iszero(x)` (e.g., in the
 # stdlib).
