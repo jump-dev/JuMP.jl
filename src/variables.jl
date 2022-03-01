@@ -189,6 +189,9 @@ with variables of type `V<:AbstractVariableRef` and coefficients of type `T`
 abstract type AbstractVariableRef <: AbstractJuMPScalar end
 
 variable_ref_type(v::AbstractVariableRef) = typeof(v)
+Base.conj(v::AbstractVariableRef) = v
+Base.real(v::AbstractVariableRef) = v
+Base.imag(v::AbstractVariableRef) = v
 
 """
     VariableRef <: AbstractVariableRef

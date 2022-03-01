@@ -201,6 +201,23 @@ Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
 
 Base.broadcastable(a::GenericAffExpr) = Ref(a)
 
+Base.conj(a::GenericAffExpr{<:Real}) = a
+Base.real(a::GenericAffExpr{<:Real}) = a
+Base.imag(a::GenericAffExpr{<:Real}) = a
+
+Base.conj(a::GenericAffExpr{<:Complex}) = map_coefficients(conj, a)
+
+function _map_coefs(f::Function, a::GenericAffExpr{Complex{T},V}) where {T,V}
+    output = convert(GenericAffExpr{T,V}, f(a.constant))
+    for (coef, var) in linear_terms(a)
+        output.terms[var] = f(coef)
+    end
+    return output
+end
+
+Base.real(a::GenericAffExpr{<:Complex}) = _map_coefs(real, a)
+Base.imag(a::GenericAffExpr{<:Complex}) = _map_coefs(imag, a)
+
 # Needed for cases when Julia uses `x == 0` instead of `iszero(x)` (e.g., in the
 # stdlib).
 Base.:(==)(x::GenericAffExpr, y::Number) = isempty(x.terms) && x.constant == y
@@ -285,7 +302,17 @@ x + 1
 ```
 """
 function map_coefficients(f::Function, a::GenericAffExpr)
-    return map_coefficients_inplace!(f, copy(a))
+    # `map_coefficients(f, a.constant)` infers the coefficient type
+    # which is then picked up in the method signature of `_map_aff`
+    # and then used to build the `OrderedDict`.
+    return _map_aff(f, f(a.constant), a)
+end
+function _map_aff(f, constant::C, a::GenericAffExpr{T,V}) where {C,T,V}
+    terms = OrderedDict{V,C}()
+    for (coef, var) in linear_terms(a)
+        terms[var] = f(coef)
+    end
+    return GenericAffExpr(constant, terms)
 end
 
 Base.sizehint!(a::GenericAffExpr, n::Int) = sizehint!(a.terms, n)
