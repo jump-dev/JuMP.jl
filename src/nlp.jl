@@ -1979,19 +1979,19 @@ function register(
     f::Function;
     autodiff::Bool = false,
 )
-    if autodiff == false
+    autodiff == true ||
         error("If only the function is provided, must set autodiff=true")
-    end
     _validate_register_assumptions(f, s, dimension)
     _init_NLP(m)
     if dimension == 1
         fprime = x -> ForwardDiff.derivative(f, x)
+        fprimeprime = x -> ForwardDiff.derivative(fprime, x)
         _Derivatives.register_univariate_operator!(
             m.nlp_data.user_operators,
             s,
             f,
             fprime,
-            x -> ForwardDiff.derivative(fprime, x),
+            fprimeprime,
         )
     else
         m.nlp_data.largest_user_input_dimension =
@@ -2068,24 +2068,21 @@ function register(
 )
     _init_NLP(m)
     if dimension == 1
-        if autodiff == false
-            error(
-                "Currently must provide 2nd order derivatives of univariate " *
-                "functions. Try setting autodiff=true.",
-            )
-        end
+        autodiff == true || error(
+            "Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.",
+        )
         _validate_register_assumptions(∇f, s, dimension)
+        fprimeprime = x -> ForwardDiff.derivative(∇f, x)
         _Derivatives.register_univariate_operator!(
             m.nlp_data.user_operators,
             s,
             f,
             ∇f,
-            x -> ForwardDiff.derivative(∇f, x),
+            fprimeprime,
         )
     else
-        if autodiff == true
+        autodiff == false ||
             @warn("autodiff=true ignored since gradient is already provided.")
-        end
         m.nlp_data.largest_user_input_dimension =
             max(m.nlp_data.largest_user_input_dimension, dimension)
         d = _UserFunctionEvaluator(
@@ -2147,20 +2144,17 @@ function register(
     ∇f::Function,
     ∇²f::Function,
 )
-    if dimension != 1
-        error(
-            "Providing hessians for multivariate functions is not yet supported",
-        )
-    end
+    dimension == 1 || error(
+        "Providing hessians for multivariate functions is not yet supported",
+    )
     _init_NLP(m)
-    _Derivatives.register_univariate_operator!(
+    return _Derivatives.register_univariate_operator!(
         m.nlp_data.user_operators,
         s,
         f,
         ∇f,
         ∇²f,
     )
-    return
 end
 
 """
