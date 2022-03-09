@@ -1069,6 +1069,37 @@ end
         )
     end
 
+    @testset "User-defined function with variable closure after register" begin
+        model = Model()
+        @variable(model, x)
+        f(y) = y < 1 ? y : y + x
+        register(model, :f, 1, f; autodiff = true)
+        @NLobjective(model, Min, f(x))
+        d = NLPEvaluator(model)
+        MOI.initialize(d, [:Grad])
+        err = ErrorException(
+            "Expected return type of Float64 from a user-defined function, " *
+            "but got $(typeof(1.0 + x)). Make sure your user-defined " *
+            "function only depends on variables passed as arguments.",
+        )
+        @test_throws(err, MOI.eval_objective(d, [2.0]))
+    end
+
+    @testset "User-defined function returning bad type after register" begin
+        model = Model()
+        @variable(model, x)
+        f(x) = x < 1 ? x : string(x)
+        register(model, :f, 1, f; autodiff = true)
+        @NLobjective(model, Min, f(x))
+        d = NLPEvaluator(model)
+        MOI.initialize(d, [:Grad])
+        err = ErrorException(
+            "Expected return type of Float64 from a user-defined function, " *
+            "but got String.",
+        )
+        @test_throws(err, MOI.eval_objective(d, [2.0]))
+    end
+
     @testset "User-defined function returning bad type" begin
         model = Model()
         @variable(model, x)
