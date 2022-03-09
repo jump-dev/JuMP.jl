@@ -1873,7 +1873,7 @@ function _UserFunctionEvaluator(
 end
 
 """
-    _check_function_is_differentiable(
+    _validate_register_assumptions(
         f::Function,
         name::Symbol,
         dimension::Integer,
@@ -1886,15 +1886,37 @@ Because we don't know the domain of `f`, this function may return false
 negatives. But it should catch the majority of cases in which users supply
 non-differentiable functions that rely on `::Float64` assumptions.
 """
-function _check_function_is_differentiable(
+function _validate_register_assumptions(
     f::Function,
     name::Symbol,
     dimension::Integer,
 )
+    # Assumption 1: check that `f` can be called with `Float64` arguments.
+    y = 0.0
     try
-        x = fill(ForwardDiff.Dual(0.0), dimension)
-        @assert f(x...) isa ForwardDiff.Dual
-        return
+        if dimension == 1
+            y = f(0.0)
+        else
+            y = f(zeros(dimension))
+        end
+    catch
+        # We hit some other error, perhaps we called a function like log(0).
+        # Ignore for now, and hope that a useful error is shown to the user
+        # during the solve.
+    end
+    if !(y isa Real)
+        error(
+            "Expected return type of `Float64` from the user-defined " *
+            "function :$(name), but got `$(typeof(y))`.",
+        )
+    end
+    # Assumption 2: check that `f` can be differentiated using `ForwardDiff`.
+    try
+        if dimension == 1
+            ForwardDiff.derivative(f, 0.0)
+        else
+            ForwardDiff.gradient(x -> f(x...), zeros(dimension))
+        end
     catch err
         if err isa MethodError
             error(
@@ -1905,8 +1927,8 @@ function _check_function_is_differentiable(
         # We hit some other error, perhaps we called a function like log(0).
         # Return `true` for now, and hope that a useful error is shown to the
         # user during the solve.
-        return
     end
+    return
 end
 
 """
@@ -1960,7 +1982,7 @@ function register(
     if autodiff == false
         error("If only the function is provided, must set autodiff=true")
     end
-    _check_function_is_differentiable(f, s, dimension)
+    _validate_register_assumptions(f, s, dimension)
     _init_NLP(m)
     if dimension == 1
         fprime = x -> ForwardDiff.derivative(f, x)
@@ -2052,7 +2074,7 @@ function register(
                 "functions. Try setting autodiff=true.",
             )
         end
-        _check_function_is_differentiable(∇f, s, dimension)
+        _validate_register_assumptions(∇f, s, dimension)
         _Derivatives.register_univariate_operator!(
             m.nlp_data.user_operators,
             s,

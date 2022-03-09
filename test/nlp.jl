@@ -1062,8 +1062,8 @@ end
         f(x1) = x1 + x[2]
         @test_throws(
             ErrorException(
-                "Unable to register the function :f because it does not " *
-                "support differentiation via ForwardDiff.",
+                "Expected return type of `Float64` from the user-defined " *
+                "function :f, but got `AffExpr`.",
             ),
             register(model, :f, 1, f; autodiff = true),
         )
@@ -1073,15 +1073,13 @@ end
         model = Model()
         @variable(model, x)
         f(x) = string(x)
-        JuMP.register(model, :f, 1, f; autodiff = true)
-        @NLobjective(model, Min, f(x))
-        d = JuMP.NLPEvaluator(model)
-        MOI.initialize(d, [:Grad])
-        expected_exception = ErrorException(
-            "Expected return type of Float64 from a user-defined function, " *
-            "but got String.",
+        @test_throws(
+            ErrorException(
+                "Expected return type of `Float64` from the user-defined " *
+                "function :f, but got `String`.",
+            ),
+            register(model, :f, 1, f; autodiff = true),
         )
-        @test_throws expected_exception MOI.eval_objective(d, [1.0, 1.0])
     end
 
     @testset "JuMP.value on NonlinearExpressions" begin
