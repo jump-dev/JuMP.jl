@@ -1873,6 +1873,44 @@ function _UserFunctionEvaluator(
 end
 
 """
+    _check_function_is_differentiable(
+        f::Function,
+        name::Symbol,
+        dimension::Integer,
+    )
+
+A function that attempts to check if `f` is differentiable using ForwardDiff.
+and throws an informative error if it is not.
+
+Because we don't know the domain of `f`, this function may return false
+negatives. But it should catch the majority of cases in which users supply
+non-differentiable functions that rely on `::Float64` assumptions.
+"""
+function _check_function_is_differentiable(
+    f::Function,
+    name::Symbol,
+    dimension::Integer,
+)
+    try
+        x = fill(ForwardDiff.Dual(0.0), dimension)
+        @assert f(x...) isa ForwardDiff.Dual
+        return
+    catch err
+        if err isa MethodError
+            error(
+                "Unable to register the function :$name because it does not " *
+                "support differentiation via ForwardDiff.",
+            )
+
+        end
+        # We hit some other error, perhaps we called a function like log(0).
+        # Return `true` for now, and hope that a useful error is shown to the
+        # user during the solve.
+        return
+    end
+end
+
+"""
     register(
         model::Model,
         s::Symbol,
@@ -1920,19 +1958,19 @@ function register(
     f::Function;
     autodiff::Bool = false,
 )
-    autodiff == true ||
+    if autodiff == false
         error("If only the function is provided, must set autodiff=true")
+    end
+    _check_function_is_differentiable(f, s, dimension)
     _init_NLP(m)
-
     if dimension == 1
         fprime = x -> ForwardDiff.derivative(f, x)
-        fprimeprime = x -> ForwardDiff.derivative(fprime, x)
         _Derivatives.register_univariate_operator!(
             m.nlp_data.user_operators,
             s,
             f,
             fprime,
-            fprimeprime,
+            x -> ForwardDiff.derivative(fprime, x),
         )
     else
         m.nlp_data.largest_user_input_dimension =
@@ -1943,6 +1981,7 @@ function register(
             _UserFunctionEvaluator(dimension, f),
         )
     end
+    return
 end
 
 """
@@ -2008,20 +2047,24 @@ function register(
 )
     _init_NLP(m)
     if dimension == 1
-        autodiff == true || error(
-            "Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.",
-        )
-        fprimeprime = x -> ForwardDiff.derivative(∇f, x)
+        if autodiff == false
+            error(
+                "Currently must provide 2nd order derivatives of univariate " *
+                "functions. Try setting autodiff=true.",
+            )
+        end
+        _check_function_is_differentiable(∇f, s, dimension)
         _Derivatives.register_univariate_operator!(
             m.nlp_data.user_operators,
             s,
             f,
             ∇f,
-            fprimeprime,
+            x -> ForwardDiff.derivative(∇f, x),
         )
     else
-        autodiff == false ||
+        if autodiff == true
             @warn("autodiff=true ignored since gradient is already provided.")
+        end
         m.nlp_data.largest_user_input_dimension =
             max(m.nlp_data.largest_user_input_dimension, dimension)
         d = _UserFunctionEvaluator(
@@ -2035,6 +2078,7 @@ function register(
             d,
         )
     end
+    return
 end
 
 """
@@ -2082,17 +2126,20 @@ function register(
     ∇f::Function,
     ∇²f::Function,
 )
-    dimension == 1 || error(
-        "Providing hessians for multivariate functions is not yet supported",
-    )
+    if dimension != 1
+        error(
+            "Providing hessians for multivariate functions is not yet supported",
+        )
+    end
     _init_NLP(m)
-    return _Derivatives.register_univariate_operator!(
+    _Derivatives.register_univariate_operator!(
         m.nlp_data.user_operators,
         s,
         f,
         ∇f,
         ∇²f,
     )
+    return
 end
 
 """

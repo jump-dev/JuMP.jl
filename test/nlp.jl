@@ -208,6 +208,80 @@ function test_multivariate_min()
     return
 end
 
+function test_register_check_forwarddiff_univariate_f()
+    model = Model()
+    f(x::Float64) = log(x)
+    @test_throws(
+        ErrorException,
+        register(model, :f, 1, f; autodiff = true),
+    )
+    return
+end
+
+function test_register_check_forwarddiff_univariate_gradf()
+    model = Model()
+    f(x) = log(x)
+    # This is a common case, where user's type their arguments
+    ∇f(x::Float64) = 1 / x
+    @test_throws(
+        ErrorException,
+        register(model, :f, 1, f, ∇f; autodiff = true),
+    )
+    return
+end
+
+function test_register_check_forwarddiff_multivariate()
+    model = Model()
+    function f(x...)
+        # This is a common case, where user's preallocate a Float64 storage.
+        y = zeros(length(x))
+        for i in 1:length(x)
+            y[i] = log(x[i])
+        end
+        return sum(y)
+    end
+    @test_throws(
+        ErrorException,
+        register(model, :f, 3, f; autodiff = true),
+    )
+    return
+end
+
+"""
+    test_register_check_forwarddiff_multivariate_gradf()
+
+Because we disable Hessians, the functions in the multivariate case do not need
+to be differentiable.
+"""
+function test_register_check_forwarddiff_multivariate_gradf()
+    model = Model()
+    function f(x...)
+        # This is a common case, where user's preallocate a Float64 storage.
+        y = zeros(length(x))
+        for i in 1:length(x)
+            y[i] = log(x[i])
+        end
+        return sum(y)
+    end
+    function ∇f(x...)
+        # This is a common case, where user's preallocate a Float64 storage.
+        y = zeros(length(x))
+        for i in 1:length(x)
+            y[i] = 1 / x[i]
+        end
+        return sum(y)
+    end
+    register(model, :f, 3, f, ∇f)
+    return
+end
+
+@testset "register-ForwardDiff-incompatibility" begin
+    test_register_check_forwarddiff_univariate_f()
+    test_register_check_forwarddiff_univariate_gradf()
+    test_register_check_forwarddiff_multivariate()
+    test_register_check_forwarddiff_multivariate_gradf()
+end
+
 @testset "Auto-register-univariate" begin
     test_univariate_error()
     test_univariate_error_existing()
