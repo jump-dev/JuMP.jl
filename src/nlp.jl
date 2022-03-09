@@ -1901,7 +1901,6 @@ function _check_function_is_differentiable(
                 "Unable to register the function :$name because it does not " *
                 "support differentiation via ForwardDiff.",
             )
-
         end
         # We hit some other error, perhaps we called a function like log(0).
         # Return `true` for now, and hope that a useful error is shown to the

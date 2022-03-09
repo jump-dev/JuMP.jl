@@ -211,10 +211,7 @@ end
 function test_register_check_forwarddiff_univariate_f()
     model = Model()
     f(x::Float64) = log(x)
-    @test_throws(
-        ErrorException,
-        register(model, :f, 1, f; autodiff = true),
-    )
+    @test_throws(ErrorException, register(model, :f, 1, f; autodiff = true))
     return
 end
 
@@ -223,10 +220,7 @@ function test_register_check_forwarddiff_univariate_gradf()
     f(x) = log(x)
     # This is a common case, where user's type their arguments
     ∇f(x::Float64) = 1 / x
-    @test_throws(
-        ErrorException,
-        register(model, :f, 1, f, ∇f; autodiff = true),
-    )
+    @test_throws(ErrorException, register(model, :f, 1, f, ∇f; autodiff = true))
     return
 end
 
@@ -240,10 +234,7 @@ function test_register_check_forwarddiff_multivariate()
         end
         return sum(y)
     end
-    @test_throws(
-        ErrorException,
-        register(model, :f, 3, f; autodiff = true),
-    )
+    @test_throws(ErrorException, register(model, :f, 3, f; autodiff = true))
     return
 end
 
@@ -1069,17 +1060,13 @@ end
         model = Model()
         @variable(model, x[1:2])
         f(x1) = x1 + x[2]
-        JuMP.register(model, :f, 1, f; autodiff = true)
-        @NLobjective(model, Min, f(x[1]))
-        d = JuMP.NLPEvaluator(model)
-        MOI.initialize(d, [:Grad])
-        expected_exception = ErrorException(
-            "Expected return type of Float64 from a user-defined function, " *
-            "but got $(GenericAffExpr{Float64,VariableRef}). Make sure your " *
-            "user-defined function only depends on variables passed as " *
-            "arguments.",
+        @test_throws(
+            ErrorException(
+                "Unable to register the function :f because it does not " *
+                "support differentiation via ForwardDiff.",
+            ),
+            register(model, :f, 1, f; autodiff = true),
         )
-        @test_throws expected_exception MOI.eval_objective(d, [1.0, 1.0])
     end
 
     @testset "User-defined function returning bad type" begin
