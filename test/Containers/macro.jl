@@ -165,3 +165,42 @@ using Test
         @test x[(2, 2), 3] == 7
     end
 end
+
+struct _MyContainer end
+
+function Containers.container(f::Function, indices, ::Type{_MyContainer})
+    key(i::Tuple) = i
+    key(i::Tuple{T}) where {T} = i[1]
+    return Dict(key(i) => f(i...) for i in indices)
+end
+
+@testset "_MyContainer" begin
+    Containers.@container(v[i = 1:3], sin(i), container = _MyContainer)
+    @test v isa Dict{Int,Float64}
+    @test length(v) == 3
+    @test v[2] ≈ sin(2)
+    Containers.@container(w[i = 1:3, j = 1:3], i + j, container = _MyContainer)
+    @test w isa Dict{Tuple{Int,Int},Int}
+    @test length(w) == 9
+    @test w[2, 3] == 5
+    Containers.@container(
+        x[i = 1:3, j = [:a, :b]],
+        (j, i),
+        container = _MyContainer
+    )
+    @test x isa Dict{Tuple{Int,Symbol},Tuple{Symbol,Int}}
+    @test length(x) == 6
+    @test x[2, :a] == (:a, 2)
+    Containers.@container(y[i = 1:3, j = 1:i], i + j, container = _MyContainer)
+    @test y isa Dict{Tuple{Int,Int},Int}
+    @test length(y) == 6
+    @test y[2, 1] == 3
+    Containers.@container(
+        z[i = 1:3, j = 1:3; isodd(i + j)],
+        i + j,
+        container = _MyContainer
+    )
+    @test z isa Dict{Tuple{Int,Int},Int}
+    @test length(z) == 4
+    @test z[1, 2] == 3
+end
