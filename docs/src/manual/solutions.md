@@ -46,7 +46,7 @@ julia> solution_summary(model)
   Primal status      : FEASIBLE_POINT
   Dual status        : FEASIBLE_POINT
   Message from the solver:
-  "kOptimal"
+  "kHighsModelStatusOptimal"
 
 * Candidate solution
   Objective value      : -2.05143e+02
@@ -54,7 +54,9 @@ julia> solution_summary(model)
   Dual objective value : -2.05143e+02
 
 * Work counters
-  Solve time (sec)   : 3.86953e-04
+  Solve time (sec)   : 8.31557e-04
+  Simplex iterations : 2
+  Barrier iterations : 0
 
 julia> solution_summary(model, verbose=true)
 * Solver : HiGHS
@@ -66,7 +68,7 @@ julia> solution_summary(model, verbose=true)
   Result count       : 1
   Has duals          : true
   Message from the solver:
-  "kOptimal"
+  "kHighsModelStatusOptimal"
 
 * Candidate solution
   Objective value      : -2.05143e+02
@@ -80,7 +82,9 @@ julia> solution_summary(model, verbose=true)
     c1 : 1.71429e+00
 
 * Work counters
-  Solve time (sec)   : 3.86953e-04
+  Solve time (sec)   : 8.31557e-04
+  Simplex iterations : 2
+  Barrier iterations : 0
 ```
 
 ## Why did the solver stop?
@@ -113,7 +117,7 @@ Use [`raw_status`](@ref) to get a solver-specific string explaining why the
 optimization stopped:
 ```jldoctest solutions
 julia> raw_status(model)
-"kOptimal"
+"kHighsModelStatusOptimal"
 ```
 
 ## Primal solutions
