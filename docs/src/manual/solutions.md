@@ -54,7 +54,9 @@ julia> solution_summary(model)
   Dual objective value : -2.05143e+02
 
 * Work counters
-  Solve time (sec)   : 3.86953e-04
+  Solve time (sec)   : 8.31557e-04
+  Simplex iterations : 2
+  Barrier iterations : 0
 
 julia> solution_summary(model, verbose=true)
 * Solver : HiGHS
@@ -80,7 +82,9 @@ julia> solution_summary(model, verbose=true)
     c1 : 1.71429e+00
 
 * Work counters
-  Solve time (sec)   : 3.86953e-04
+  Solve time (sec)   : 8.31557e-04
+  Simplex iterations : 2
+  Barrier iterations : 0
 ```
 
 ## Why did the solver stop?
