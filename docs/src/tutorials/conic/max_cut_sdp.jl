@@ -40,13 +40,24 @@ function solve_max_cut_sdp(num_vertex, weights)
     @constraint(model, LinearAlgebra.diag(X) .== 1)
     optimize!(model)
     @assert termination_status(model) == MOI.OPTIMAL
-    ## The paper uses some linear algebra to figure out which nodes belong to
-    ## which partition of the cut. We use a simpler way, and one that is more
-    ## robust to numerical error: comparing the rows, of which every element is
-    ## ±1.
-    opt_X = value.(X)
-    cut = map(1:num_vertex) do i
-        return isapprox(opt_X[1, :], opt_X[i, :]; atol = 1e-4) ? 1.0 : -1.0
+    ## Compute the Cholesky factorization of X, i.e., X = V^T V.
+    opt_X = LinearAlgebra.Hermitian(value.(X), :U)  # Tell Julia its PSD.
+    factorization = LinearAlgebra.cholesky(opt_X, Val(true); check = false)
+    V = (factorization.P * factorization.L)'
+    ## Normalize columns.
+    for i in 1:num_vertex
+        V[:, i] ./= LinearAlgebra.norm(V[:, i])
+    end
+    ## Generate random vector on unit sphere.
+    Random.seed!(num_vertex)
+    r = rand(num_vertex)
+    r /= LinearAlgebra.norm(r)
+    ## Iterate over vertices, and assign each vertex to a side of cut.
+    cut = ones(num_vertex)
+    for i in 1:num_vertex
+        if LinearAlgebra.dot(r, V[:, i]) <= 0
+            cut[i] = -1
+        end
     end
     return cut, 0.25 * sum(laplacian .* (cut * cut'))
 end
