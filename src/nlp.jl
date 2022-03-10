@@ -1879,10 +1879,10 @@ end
         dimension::Integer,
     )
 
-A function that attempts to check if `f` is differentiable using ForwardDiff.
-and throws an informative error if it is not.
+A function that attempts to check if `f` is suitable for registration via
+[`register`](@ref) and throws an informative error if it is not.
 
-Because we don't know the domain of `f`, this function may return false
+Because we don't know the domain of `f`, this function may encounter false
 negatives. But it should catch the majority of cases in which users supply
 non-differentiable functions that rely on `::Float64` assumptions.
 """
@@ -1920,13 +1920,41 @@ function _validate_register_assumptions(
     catch err
         if err isa MethodError
             error(
-                "Unable to register the function :$name because it does not " *
-                "support differentiation via ForwardDiff.",
+                """
+                Unable to register the function :$name because it does not
+                support differentiation via ForwardDiff. Common reasons for
+                this include:
+                 * the function assumes `Float64` will be passed as input, it
+                   must work for any generic `Real` type.
+                 * the function allocates temporary storage using `zeros(3)` or
+                   similar. This defaults to `Float64`, so use `zeros(T, 3)`
+                   instead.
+                As an example, instead of:
+                ```julia
+                function my_function(x::Float64...)
+                    y = zeros(length(x))
+                    for i in 1:length(x)
+                        y[i] = x[i]^2
+                    end
+                    return sum(y)
+                end
+                ```
+                use:
+                ```julia
+                function my_function(x::T...) where {T<:Real}
+                    y = zeros(T, length(x))
+                    for i in 1:length(x)
+                        y[i] = x[i]^2
+                    end
+                    return sum(y)
+                end
+                ```
+                """,
             )
         end
         # We hit some other error, perhaps we called a function like log(0).
-        # Return `true` for now, and hope that a useful error is shown to the
-        # user during the solve.
+        # Ignore for now, and hope that a useful error is shown to the user
+        # during the solve.
     end
     return
 end
