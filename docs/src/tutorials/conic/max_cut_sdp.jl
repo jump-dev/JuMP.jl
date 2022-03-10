@@ -41,7 +41,7 @@ function solve_max_cut_sdp(num_vertex, weights)
     optimize!(model)
     @assert termination_status(model) == MOI.OPTIMAL
     ## Compute the Cholesky factorization of X, i.e., X = V^T V.
-    opt_X = LinearAlgebra.Hermitian(value.(X), :U)  # Tell Julia its PSD.
+    opt_X = LinearAlgebra.Hermitian(value.(X), :U)  # Tell Julia it's PSD.
     factorization = LinearAlgebra.cholesky(opt_X, Val(true); check = false)
     V = (factorization.P * factorization.L)'
     ## Normalize columns.
