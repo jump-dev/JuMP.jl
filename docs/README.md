@@ -37,3 +37,12 @@ $ julia --project=docs docs/make.jl
 ```
 
 The compiled documents can be viewed at `~/.julia/dev/JuMP/docs/build/index.html`.
+
+## Updating Project.toml
+
+Project.toml fixes the versions of JuMP-related packages such as MOI and the
+solvers. This is to prevent minor changes in the upstream solvers (e.g.,
+numerical differences or changes to their raw solver statuses) from causing the
+documentation builds to fail on an un-related PR.
+
+These versions should be periodically updated.
