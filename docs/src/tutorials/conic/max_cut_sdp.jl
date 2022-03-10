@@ -20,6 +20,7 @@
 
 using JuMP
 import LinearAlgebra
+import Random
 import SCS
 import Test
 
