@@ -46,7 +46,7 @@ function solve_max_cut_sdp(num_vertex, weights)
     ## ±1.
     opt_X = value.(X)
     cut = map(1:num_vertex) do i
-        return isapprox(opt_X[1, :], opt_X[i, :]; atol=1e-4) ? 1.0 : -1.0
+        return isapprox(opt_X[1, :], opt_X[i, :]; atol = 1e-4) ? 1.0 : -1.0
     end
     return cut, 0.25 * sum(laplacian .* (cut * cut'))
 end
