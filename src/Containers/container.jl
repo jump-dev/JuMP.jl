@@ -175,6 +175,6 @@ end
 function container(::Function, ::Any, D::Type)
     return error(
         "Unable to build a container with the provided type $(D). Implement " *
-        "`Containers.container`.",
+        "`Containers.container(::Function, indices, ::Type{$(D)})`.",
     )
 end

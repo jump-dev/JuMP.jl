@@ -147,7 +147,7 @@ using Test
     @testset "Invalid container" begin
         err = ErrorException(
             "Unable to build a container with the provided type $(Int). " *
-            "Implement `Containers.container`.",
+            "Implement `Containers.container(::Function, indices, ::Type{Int})`.",
         )
         @test_throws err Containers.@container(
             x[i = 1:2, j = 1:2],
