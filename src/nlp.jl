@@ -1873,6 +1873,93 @@ function _UserFunctionEvaluator(
 end
 
 """
+    _validate_register_assumptions(
+        f::Function,
+        name::Symbol,
+        dimension::Integer,
+    )
+
+A function that attempts to check if `f` is suitable for registration via
+[`register`](@ref) and throws an informative error if it is not.
+
+Because we don't know the domain of `f`, this function may encounter false
+negatives. But it should catch the majority of cases in which users supply
+non-differentiable functions that rely on `::Float64` assumptions.
+"""
+function _validate_register_assumptions(
+    f::Function,
+    name::Symbol,
+    dimension::Integer,
+)
+    # Assumption 1: check that `f` can be called with `Float64` arguments.
+    y = 0.0
+    try
+        if dimension == 1
+            y = f(0.0)
+        else
+            y = f(zeros(dimension))
+        end
+    catch
+        # We hit some other error, perhaps we called a function like log(0).
+        # Ignore for now, and hope that a useful error is shown to the user
+        # during the solve.
+    end
+    if !(y isa Real)
+        error(
+            "Expected return type of `Float64` from the user-defined " *
+            "function :$(name), but got `$(typeof(y))`.",
+        )
+    end
+    # Assumption 2: check that `f` can be differentiated using `ForwardDiff`.
+    try
+        if dimension == 1
+            ForwardDiff.derivative(f, 0.0)
+        else
+            ForwardDiff.gradient(x -> f(x...), zeros(dimension))
+        end
+    catch err
+        if err isa MethodError
+            error(
+                """
+                Unable to register the function :$name because it does not
+                support differentiation via ForwardDiff. Common reasons for
+                this include:
+                 * the function assumes `Float64` will be passed as input, it
+                   must work for any generic `Real` type.
+                 * the function allocates temporary storage using `zeros(3)` or
+                   similar. This defaults to `Float64`, so use `zeros(T, 3)`
+                   instead.
+                As an example, instead of:
+                ```julia
+                function my_function(x::Float64...)
+                    y = zeros(length(x))
+                    for i in 1:length(x)
+                        y[i] = x[i]^2
+                    end
+                    return sum(y)
+                end
+                ```
+                use:
+                ```julia
+                function my_function(x::T...) where {T<:Real}
+                    y = zeros(T, length(x))
+                    for i in 1:length(x)
+                        y[i] = x[i]^2
+                    end
+                    return sum(y)
+                end
+                ```
+                """,
+            )
+        end
+        # We hit some other error, perhaps we called a function like log(0).
+        # Ignore for now, and hope that a useful error is shown to the user
+        # during the solve.
+    end
+    return
+end
+
+"""
     register(
         model::Model,
         s::Symbol,
@@ -1922,8 +2009,8 @@ function register(
 )
     autodiff == true ||
         error("If only the function is provided, must set autodiff=true")
+    _validate_register_assumptions(f, s, dimension)
     _init_NLP(m)
-
     if dimension == 1
         fprime = x -> ForwardDiff.derivative(f, x)
         fprimeprime = x -> ForwardDiff.derivative(fprime, x)
@@ -1943,6 +2030,7 @@ function register(
             _UserFunctionEvaluator(dimension, f),
         )
     end
+    return
 end
 
 """
@@ -2011,6 +2099,7 @@ function register(
         autodiff == true || error(
             "Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.",
         )
+        _validate_register_assumptions(∇f, s, dimension)
         fprimeprime = x -> ForwardDiff.derivative(∇f, x)
         _Derivatives.register_univariate_operator!(
             m.nlp_data.user_operators,
@@ -2035,6 +2124,7 @@ function register(
             d,
         )
     end
+    return
 end
 
 """

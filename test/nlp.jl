@@ -208,6 +208,71 @@ function test_multivariate_min()
     return
 end
 
+function test_register_check_forwarddiff_univariate_f()
+    model = Model()
+    f(x::Float64) = log(x)
+    @test_throws(ErrorException, register(model, :f, 1, f; autodiff = true))
+    return
+end
+
+function test_register_check_forwarddiff_univariate_gradf()
+    model = Model()
+    f(x) = log(x)
+    # This is a common case, where user's type their arguments
+    ∇f(x::Float64) = 1 / x
+    @test_throws(ErrorException, register(model, :f, 1, f, ∇f; autodiff = true))
+    return
+end
+
+function test_register_check_forwarddiff_multivariate()
+    model = Model()
+    function f(x...)
+        # This is a common case, where user's preallocate a Float64 storage.
+        y = zeros(length(x))
+        for i in 1:length(x)
+            y[i] = log(x[i])
+        end
+        return sum(y)
+    end
+    @test_throws(ErrorException, register(model, :f, 3, f; autodiff = true))
+    return
+end
+
+"""
+    test_register_check_forwarddiff_multivariate_gradf()
+
+Because we disable Hessians, the functions in the multivariate case do not need
+to be differentiable.
+"""
+function test_register_check_forwarddiff_multivariate_gradf()
+    model = Model()
+    function f(x...)
+        # This is a common case, where user's preallocate a Float64 storage.
+        y = zeros(length(x))
+        for i in 1:length(x)
+            y[i] = log(x[i])
+        end
+        return sum(y)
+    end
+    function ∇f(x...)
+        # This is a common case, where user's preallocate a Float64 storage.
+        y = zeros(length(x))
+        for i in 1:length(x)
+            y[i] = 1 / x[i]
+        end
+        return sum(y)
+    end
+    register(model, :f, 3, f, ∇f)
+    return
+end
+
+@testset "register-ForwardDiff-incompatibility" begin
+    test_register_check_forwarddiff_univariate_f()
+    test_register_check_forwarddiff_univariate_gradf()
+    test_register_check_forwarddiff_multivariate()
+    test_register_check_forwarddiff_multivariate_gradf()
+end
+
 @testset "Auto-register-univariate" begin
     test_univariate_error()
     test_univariate_error_existing()
@@ -995,32 +1060,57 @@ end
         model = Model()
         @variable(model, x[1:2])
         f(x1) = x1 + x[2]
-        JuMP.register(model, :f, 1, f; autodiff = true)
-        @NLobjective(model, Min, f(x[1]))
-        d = JuMP.NLPEvaluator(model)
-        MOI.initialize(d, [:Grad])
-        expected_exception = ErrorException(
-            "Expected return type of Float64 from a user-defined function, " *
-            "but got $(GenericAffExpr{Float64,VariableRef}). Make sure your " *
-            "user-defined function only depends on variables passed as " *
-            "arguments.",
+        @test_throws(
+            ErrorException(
+                "Expected return type of `Float64` from the user-defined " *
+                "function :f, but got `AffExpr`.",
+            ),
+            register(model, :f, 1, f; autodiff = true),
         )
-        @test_throws expected_exception MOI.eval_objective(d, [1.0, 1.0])
+    end
+
+    @testset "User-defined function with variable closure after register" begin
+        model = Model()
+        @variable(model, x)
+        f(y) = y < 1 ? y : y + x
+        register(model, :f, 1, f; autodiff = true)
+        @NLobjective(model, Min, f(x))
+        d = NLPEvaluator(model)
+        MOI.initialize(d, [:Grad])
+        err = ErrorException(
+            "Expected return type of Float64 from a user-defined function, " *
+            "but got $(typeof(1.0 + x)). Make sure your user-defined " *
+            "function only depends on variables passed as arguments.",
+        )
+        @test_throws(err, MOI.eval_objective(d, [2.0]))
+    end
+
+    @testset "User-defined function returning bad type after register" begin
+        model = Model()
+        @variable(model, x)
+        f(x) = x < 1 ? x : string(x)
+        register(model, :f, 1, f; autodiff = true)
+        @NLobjective(model, Min, f(x))
+        d = NLPEvaluator(model)
+        MOI.initialize(d, [:Grad])
+        err = ErrorException(
+            "Expected return type of Float64 from a user-defined function, " *
+            "but got String.",
+        )
+        @test_throws(err, MOI.eval_objective(d, [2.0]))
     end
 
     @testset "User-defined function returning bad type" begin
         model = Model()
         @variable(model, x)
         f(x) = string(x)
-        JuMP.register(model, :f, 1, f; autodiff = true)
-        @NLobjective(model, Min, f(x))
-        d = JuMP.NLPEvaluator(model)
-        MOI.initialize(d, [:Grad])
-        expected_exception = ErrorException(
-            "Expected return type of Float64 from a user-defined function, " *
-            "but got String.",
+        @test_throws(
+            ErrorException(
+                "Expected return type of `Float64` from the user-defined " *
+                "function :f, but got `String`.",
+            ),
+            register(model, :f, 1, f; autodiff = true),
         )
-        @test_throws expected_exception MOI.eval_objective(d, [1.0, 1.0])
     end
 
     @testset "JuMP.value on NonlinearExpressions" begin
