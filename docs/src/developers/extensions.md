@@ -423,13 +423,13 @@ z[1]
 
     julia> @variable(model, x[1:3])
     3-element Vector{VariableRef}:
-    x[1]
-    x[2]
-    x[3]
+     x[1]
+     x[2]
+     x[3]
 
     julia> y = reverse(x)
     3-element Vector{VariableRef}:
-    x[3]
-    x[2]
-    x[1]
+     x[3]
+     x[2]
+     x[1]
     ```
