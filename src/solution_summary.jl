@@ -120,11 +120,7 @@ function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
         "  Objective bound      : ",
         summary.objective_bound,
     )
-    _print_if_not_missing(
-        io,
-        "  Objective gap        : ",
-        summary.relative_gap,
-    )
+    _print_if_not_missing(io, "  Objective gap        : ", summary.relative_gap)
     _print_if_not_missing(
         io,
         "  Dual objective value : ",
