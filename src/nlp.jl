@@ -1889,21 +1889,39 @@ function my_function(x::T...) where {T<:Real}
     return sum(y)
 end
 ```
+
+Review the stacktrace below for more information, but it can often be hard to
+understand why and where your function is failing. You can also debug this
+outside of JuMP as follows:
+```julia
+import ForwardDiff
+
+# If the input dimension is 1
+x = 1.0
+my_function(a) = a^2
+ForwardDiff.derivative(my_function, x)
+
+# If the input dimension is more than 1
+x = [1.0, 2.0]
+my_function(a, b) = a^2 + b^2
+ForwardDiff.gradient(x -> my_function(x...), x)
+```
 """
 
-_warn_ForwardDiff_MethodError(::Any) = nothing
+_intercept_ForwardDiff_MethodError(err, ::Any) = rethrow(err)
 
-function _warn_ForwardDiff_MethodError(::MethodError)
-    return @warn(
-        "JuMP's autodiff failed with a MethodError.\n\n" *
-        _FORWARD_DIFF_METHOD_ERROR_HELPER,
+function _intercept_ForwardDiff_MethodError(::MethodError, s)
+    return error(
+        "JuMP's autodiff of the user-defined function $(s) failed with a " *
+        "MethodError.\n\n$(_FORWARD_DIFF_METHOD_ERROR_HELPER)",
     )
 end
 
 function _UserFunctionEvaluator(
     dimension::Integer,
     f::Function,
-    ::Type{T} = Float64,
+    ::Type{T} = Float64;
+    name = "",
 ) where {T}
     g = x -> f(x...)
     cfg = ForwardDiff.GradientConfig(g, zeros(T, dimension))
@@ -1911,8 +1929,7 @@ function _UserFunctionEvaluator(
         try
             ForwardDiff.gradient!(out, g, y, cfg)
         catch err
-            _warn_ForwardDiff_MethodError(err)
-            rethrow(err)
+            _intercept_ForwardDiff_MethodError(err, name)
         end
     end
     return _UserFunctionEvaluator(g, ∇f, dimension)
@@ -1978,13 +1995,12 @@ function _validate_register_assumptions(
     return
 end
 
-function _checked_derivative(f::F) where {F}
+function _checked_derivative(f::F, s) where {F}
     return function(x)
         try
             return ForwardDiff.derivative(f, x)
         catch err
-            _warn_ForwardDiff_MethodError(err)
-            rethrow(err)
+            _intercept_ForwardDiff_MethodError(err, s)
         end
     end
 end
@@ -2042,7 +2058,7 @@ function register(
     _validate_register_assumptions(f, s, dimension)
     _init_NLP(m)
     if dimension == 1
-        fprime = _checked_derivative(f)
+        fprime = _checked_derivative(f, s)
         fprimeprime = x -> ForwardDiff.derivative(fprime, x)
         _Derivatives.register_univariate_operator!(
             m.nlp_data.user_operators,
@@ -2057,7 +2073,7 @@ function register(
         _Derivatives.register_multivariate_operator!(
             m.nlp_data.user_operators,
             s,
-            _UserFunctionEvaluator(dimension, f),
+            _UserFunctionEvaluator(dimension, f; name = s),
         )
     end
     return
@@ -2130,7 +2146,7 @@ function register(
             "Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.",
         )
         _validate_register_assumptions(∇f, s, dimension)
-        fprimeprime = _checked_derivative(∇f)
+        fprimeprime = _checked_derivative(∇f, s)
         _Derivatives.register_univariate_operator!(
             m.nlp_data.user_operators,
             s,
