@@ -1925,7 +1925,7 @@ function _UserFunctionEvaluator(
 ) where {T}
     g = x -> f(x...)
     cfg = ForwardDiff.GradientConfig(g, zeros(T, dimension))
-    ∇f = function(out, y)
+    ∇f = function (out, y)
         try
             ForwardDiff.gradient!(out, g, y, cfg)
         catch err
@@ -1996,7 +1996,7 @@ function _validate_register_assumptions(
 end
 
 function _checked_derivative(f::F, s) where {F}
-    return function(x)
+    return function (x)
         try
             return ForwardDiff.derivative(f, x)
         catch err
