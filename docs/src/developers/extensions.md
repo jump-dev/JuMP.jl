@@ -382,7 +382,7 @@ For example, here is a container that reverses the order of the indices:
 julia> struct Foo end
 
 julia> function Containers.container(f::Function, indices, ::Type{Foo})
-           return reverse([i => f(i...) for i in indices])
+           return reverse([f(i...) for i in indices])
        end
 
 julia> model = Model();
