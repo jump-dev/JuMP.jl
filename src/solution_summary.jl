@@ -19,6 +19,7 @@ struct _SolutionSummary
     # Candidate solution
     objective_value::Union{Missing,Float64}
     objective_bound::Union{Missing,Float64}
+    relative_gap::Union{Missing,Float64}
     dual_objective_value::Union{Missing,Float64}
     primal_solution::Union{Missing,Dict{String,Float64}}
     dual_solution::Union{Missing,Dict{String,Float64}}
@@ -66,6 +67,7 @@ function solution_summary(model::Model; verbose::Bool = false)
         has_duals(model),
         _try_get(objective_value, model),
         _try_get(objective_bound, model),
+        _try_get(relative_gap, model),
         _try_get(dual_objective_value, model),
         verbose ? _get_solution_dict(model) : missing,
         verbose ? _get_constraint_dict(model) : missing,
@@ -117,6 +119,11 @@ function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
         io,
         "  Objective bound      : ",
         summary.objective_bound,
+    )
+    _print_if_not_missing(
+        io,
+        "  Objective gap        : ",
+        summary.relative_gap,
     )
     _print_if_not_missing(
         io,

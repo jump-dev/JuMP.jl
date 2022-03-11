@@ -42,7 +42,8 @@ end
     MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
     MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
-    MOI.set(mockoptimizer, MOI.ObjectiveBound(), 3.0)
+    MOI.set(mockoptimizer, MOI.ObjectiveBound(), -3.0)
+    MOI.set(mockoptimizer, MOI.RelativeGap(), abs((-3 - -1) / -3))
     MOI.set(mockoptimizer, MOI.ResultCount(), 1)
     MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
@@ -77,7 +78,8 @@ end
 
 * Candidate solution
   Objective value      : -1.00000e+00
-  Objective bound      : 3.00000e+00
+  Objective bound      : -3.00000e+00
+  Objective gap        : 6.66667e-01
   Dual objective value : -1.00000e+00
 
 * Work counters
@@ -103,7 +105,8 @@ end
 
 * Candidate solution
   Objective value      : -1.00000e+00
-  Objective bound      : 3.00000e+00
+  Objective bound      : -3.00000e+00
+  Objective gap        : 6.66667e-01
   Dual objective value : -1.00000e+00
   Primal solution :
     x : 1.00000e+00
