@@ -1861,6 +1861,45 @@ function MOI.eval_objective_gradient(d::_UserFunctionEvaluator, grad, x)
     return nothing
 end
 
+const _FORWARD_DIFF_METHOD_ERROR_HELPER = raw"""
+Common reasons for this include:
+
+ * the function assumes `Float64` will be passed as input, it must work for any
+   generic `Real` type.
+ * the function allocates temporary storage using `zeros(3)` or similar. This
+   defaults to `Float64`, so use `zeros(T, 3)` instead.
+
+As an example, instead of:
+```julia
+function my_function(x::Float64...)
+    y = zeros(length(x))
+    for i in 1:length(x)
+        y[i] = x[i]^2
+    end
+    return sum(y)
+end
+```
+use:
+```julia
+function my_function(x::T...) where {T<:Real}
+    y = zeros(T, length(x))
+    for i in 1:length(x)
+        y[i] = x[i]^2
+    end
+    return sum(y)
+end
+```
+"""
+
+_warn_ForwardDiff_MethodError(::Any) = nothing
+
+function _warn_ForwardDiff_MethodError(::MethodError)
+    return @warn(
+        "JuMP's autodiff failed with a MethodError.\n\n" *
+        _FORWARD_DIFF_METHOD_ERROR_HELPER,
+    )
+end
+
 function _UserFunctionEvaluator(
     dimension::Integer,
     f::Function,
@@ -1868,7 +1907,14 @@ function _UserFunctionEvaluator(
 ) where {T}
     g = x -> f(x...)
     cfg = ForwardDiff.GradientConfig(g, zeros(T, dimension))
-    ∇f = (out, y) -> ForwardDiff.gradient!(out, g, y, cfg)
+    ∇f = function(out, y)
+        try
+            ForwardDiff.gradient!(out, g, y, cfg)
+        catch err
+            _warn_ForwardDiff_MethodError(err)
+            rethrow(err)
+        end
+    end
     return _UserFunctionEvaluator(g, ∇f, dimension)
 end
 
@@ -1920,36 +1966,9 @@ function _validate_register_assumptions(
     catch err
         if err isa MethodError
             error(
-                """
-                Unable to register the function :$name because it does not
-                support differentiation via ForwardDiff. Common reasons for
-                this include:
-                 * the function assumes `Float64` will be passed as input, it
-                   must work for any generic `Real` type.
-                 * the function allocates temporary storage using `zeros(3)` or
-                   similar. This defaults to `Float64`, so use `zeros(T, 3)`
-                   instead.
-                As an example, instead of:
-                ```julia
-                function my_function(x::Float64...)
-                    y = zeros(length(x))
-                    for i in 1:length(x)
-                        y[i] = x[i]^2
-                    end
-                    return sum(y)
-                end
-                ```
-                use:
-                ```julia
-                function my_function(x::T...) where {T<:Real}
-                    y = zeros(T, length(x))
-                    for i in 1:length(x)
-                        y[i] = x[i]^2
-                    end
-                    return sum(y)
-                end
-                ```
-                """,
+                "Unable to register the function :$name because it does not " *
+                "support differentiation via ForwardDiff.\n\n" *
+                _FORWARD_DIFF_METHOD_ERROR_HELPER,
             )
         end
         # We hit some other error, perhaps we called a function like log(0).
@@ -1957,6 +1976,17 @@ function _validate_register_assumptions(
         # during the solve.
     end
     return
+end
+
+function _checked_derivative(f::F) where {F}
+    return function(x)
+        try
+            return ForwardDiff.derivative(f, x)
+        catch err
+            _warn_ForwardDiff_MethodError(err)
+            rethrow(err)
+        end
+    end
 end
 
 """
@@ -2012,7 +2042,7 @@ function register(
     _validate_register_assumptions(f, s, dimension)
     _init_NLP(m)
     if dimension == 1
-        fprime = x -> ForwardDiff.derivative(f, x)
+        fprime = _checked_derivative(f)
         fprimeprime = x -> ForwardDiff.derivative(fprime, x)
         _Derivatives.register_univariate_operator!(
             m.nlp_data.user_operators,
@@ -2100,7 +2130,7 @@ function register(
             "Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.",
         )
         _validate_register_assumptions(∇f, s, dimension)
-        fprimeprime = x -> ForwardDiff.derivative(∇f, x)
+        fprimeprime = _checked_derivative(∇f)
         _Derivatives.register_univariate_operator!(
             m.nlp_data.user_operators,
             s,
