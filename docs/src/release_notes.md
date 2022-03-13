@@ -2,6 +2,10 @@
 
 ## Version 0.23.1 (March 2, 2022)
 
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.23.1).
+A summary of changes are as follows:
+
 - New deprecations:
   - `nl_expr_string` and `nl_constraint_string` have been renamed to
     `nonlinear_expr_string` and `nonlinear_constraint_string`. The old methods
@@ -24,6 +28,10 @@
 **JuMP v0.23.0 is a breaking release. It is also a release-candidate for JuMP
 v1.0.0. That is, if no issues are found with the v0.23.0 release, then it will
 be re-tagged as v1.0.0.**
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.23.0).
+A summary of changes are as follows:
 
 - Breaking changes:
   - Julia 1.6 is now the minimum supported version
@@ -70,6 +78,10 @@ for advice on updating a specific deprecated feature.
 
 ## Version 0.22.3 (February 10, 2022)
 
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.22.3).
+A summary of changes are as follows:
+
 - New features:
   - There are no new features in this release.
 - Bug fixes:
@@ -86,6 +98,10 @@ for advice on updating a specific deprecated feature.
   - Updated JuliaFormatter to v0.22.2
 
 ## Version 0.22.2 (January 10, 2022)
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.22.2).
+A summary of changes are as follows:
 
 - New features:
   - The function `all_nl_constraints` now returns all nonlinear constraints
@@ -108,21 +124,29 @@ for advice on updating a specific deprecated feature.
 
 ## Version 0.22.1 (November 29, 2021)
 
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.22.1).
+A summary of changes are as follows:
+
 - New features:
- * Export `OptimizationSense` enum, with instances: `MIN_SENSE`, `MAX_SENSE`,
-   and `FEASIBILITY_SENSE`
- * Add `Base.isempty(::Model)` to match `Base.empty(::Model)`
+  * Export `OptimizationSense` enum, with instances: `MIN_SENSE`, `MAX_SENSE`,
+    and `FEASIBILITY_SENSE`
+  * Add `Base.isempty(::Model)` to match `Base.empty(::Model)`
 - Bug fixes:
- * Fix bug in container with tuples as indices
- * Fix bug in `set_time_limit_sec`
+  * Fix bug in container with tuples as indices
+  * Fix bug in `set_time_limit_sec`
 - Documentation, maintenance
- * Add tutorial "Design patterns for larger models"
- * Remove release notes section from PDF
- * General edits of the documentation and error messages
+  * Add tutorial "Design patterns for larger models"
+  * Remove release notes section from PDF
+  * General edits of the documentation and error messages
 
 ## Version 0.22.0 (November 10, 2021)
 
 **JuMP v0.22 is a breaking release**
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.22.0).
+A summary of changes are as follows.
 
 ### Breaking changes
 
@@ -399,6 +423,10 @@ A summary of changes are as follows:
 
 ## Version 0.21.3 (June 18, 2020)
 
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.3).
+A summary of changes are as follows:
+
 - Added Special Order Sets (SOS1 and SOS2) to JuMP with default weights to ease
   the creation of such constraints (#2212).
 - Added functions `simplex_iterations`, `barrier_iterations` and `node_count`
@@ -423,6 +451,10 @@ A summary of changes are as follows:
 
 ## Version 0.21.2 (April 2, 2020)
 
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.2).
+A summary of changes are as follows:
+
 - Added `relative_gap()` to access `MOI.RelativeGap()` attribute (#2199).
 - Documentation fixes:
   * Added link to source for docstrings in the documentation (#2207).
@@ -439,9 +471,17 @@ A summary of changes are as follows:
 
 ## Version 0.21.1 (Feb 18, 2020)
 
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.1).
+A summary of changes are as follows:
+
 - Improved the clarity of the `with_optimizer` deprecation warning.
 
-## Version 0.21 (Feb 16, 2020)
+## Version 0.21.0 (Feb 16, 2020)
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.0).
+A summary of changes are as follows:
 
 Breaking changes:
 
@@ -494,6 +534,10 @@ Bug fixes:
 
 ## Version 0.20.1 (Oct 18, 2019)
 
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.20.1).
+A summary of changes are as follows:
+
 - Add sections on `@variables` and `@constraints` in the documentation (#2062).
 - Fixed product of sparse matrices for Julia v1.3 (#2063).
 - Added `set_objective_coefficient` to modify the coefficient of a linear term
@@ -502,6 +546,10 @@ Bug fixes:
   and query the time limit for the solver in seconds (#2053).
 
 ## Version 0.20.0 (Aug 24, 2019)
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.20.0).
+A summary of changes are as follows:
 
 - Documentation updates.
 - Numerous bug fixes.
@@ -522,6 +570,10 @@ Bug fixes:
   details.
 
 ## Version 0.19.2 (June 8, 2019)
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.19.2).
+A summary of changes are as follows:
 
 - Fix a bug in derivatives that could arise in models with nested nonlinear
   subexpressions.
