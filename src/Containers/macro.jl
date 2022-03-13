@@ -300,17 +300,23 @@ function container_code(
     if isempty(index_vars)
         return code
     end
-    if requested_container == :DenseAxisArray
-        requested_container = :(Containers.DenseAxisArray)
-    elseif requested_container == :SparseAxisArray
-        requested_container = :(Containers.SparseAxisArray)
-    end
     esc_index_vars = esc.(index_vars)
-    func = :(($(esc_index_vars...),) -> $code)
+    f = :(($(esc_index_vars...),) -> $code)
+    # This switch handles the four "built-in" JuMP container types, with a
+    # generic fallback for user-defined types.
     if requested_container == :Auto
-        return :(Containers.container($func, $indices))
+        return :(Containers.container($f, $indices))
+    elseif requested_container == :DenseAxisArray
+        return :(Containers.container($f, $indices, Containers.DenseAxisArray))
+    elseif requested_container == :SparseAxisArray
+        return :(Containers.container($f, $indices, Containers.SparseAxisArray))
+    elseif requested_container == :Array
+        return :(Containers.container($f, $indices, Array))
     else
-        return :(Containers.container($func, $indices, $requested_container))
+        # This is a symbol or expression from outside JuMP, so we need to escape
+        # it.
+        requested_container = esc(requested_container)
+        return :(Containers.container($f, $indices, $requested_container))
     end
 end
 

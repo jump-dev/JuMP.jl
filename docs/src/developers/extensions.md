@@ -369,3 +369,67 @@ existing example. A simple example to follow is the [JuMPExtension module](https
 in the JuMP test suite. The best example of an external JuMP extension that
 implements an [`AbstractModel`](@ref) is [InfiniteOpt.jl](https://github.com/pulsipher/InfiniteOpt.jl).
 
+## Creating new container types
+
+JuMP macros (for example, [`@variable`](@ref)) accept a `container` keyword
+argument to force the type of container that is chosen. By default, JuMP
+supports `container = Array`, `container = DenseAxisArray`,
+`container = SparseAxisArray` and `container = Auto`. You can extend support to
+user-defined types by implementing [`Containers.container`](@ref).
+
+For example, here is a container that reverses the order of the indices:
+```jldoctest extend_containers
+julia> struct Foo end
+
+julia> function Containers.container(f::Function, indices, ::Type{Foo})
+           return reverse([f(i...) for i in indices])
+       end
+
+julia> model = Model();
+
+julia> @variable(model, x[1:3], container = Foo)
+3-element Vector{VariableRef}:
+ x[3]
+ x[2]
+ x[1]
+
+julia> x[1]
+x[3]
+
+julia> @variable(model, y[1:3, 1:2], container = Foo)
+3×2 Matrix{VariableRef}:
+ y[3,2]  y[3,1]
+ y[2,2]  y[2,1]
+ y[1,2]  y[1,1]
+
+julia> y[1, 1]
+y[3,2]
+
+julia> @variable(model, z[i=1:3; isodd(i)], container = Foo)
+2-element Vector{VariableRef}:
+ z[3]
+ z[1]
+
+julia> z[2]
+z[1]
+```
+
+!!! warning
+    If you are a general user, you should not need to create a new container
+    type. Instead, consider following [User-defined containers](@ref) and create
+    a new container using standard Julia syntax. For example:
+    ```jldoctest
+    julia> model = Model();
+
+    julia> @variable(model, x[1:3])
+    3-element Vector{VariableRef}:
+     x[1]
+     x[2]
+     x[3]
+
+    julia> y = reverse(x)
+    3-element Vector{VariableRef}:
+     x[3]
+     x[2]
+     x[1]
+    ```
