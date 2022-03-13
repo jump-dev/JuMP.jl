@@ -79,7 +79,7 @@ end
 * Candidate solution
   Objective value      : -1.00000e+00
   Objective bound      : -3.00000e+00
-  Objective gap        : 6.66667e-01
+  Relative gap         : 6.66667e-01
   Dual objective value : -1.00000e+00
 
 * Work counters
@@ -106,7 +106,7 @@ end
 * Candidate solution
   Objective value      : -1.00000e+00
   Objective bound      : -3.00000e+00
-  Objective gap        : 6.66667e-01
+  Relative gap         : 6.66667e-01
   Dual objective value : -1.00000e+00
   Primal solution :
     x : 1.00000e+00
