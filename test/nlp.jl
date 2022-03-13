@@ -1315,7 +1315,7 @@ function test_user_defined_function_checked_error_univariate()
     @test g == [-2.0]
     err = ErrorException(
         "JuMP's autodiff of the user-defined function f failed with a " *
-         "MethodError.\n\n$(JuMP._FORWARD_DIFF_METHOD_ERROR_HELPER)",
+        "MethodError.\n\n$(JuMP._FORWARD_DIFF_METHOD_ERROR_HELPER)",
     )
     @test_throws(err, MOI.eval_objective_gradient(nlp, g, [2.0]))
     return
@@ -1343,7 +1343,7 @@ function test_user_defined_function_checked_error_univariate()
     @test H == [2.0]
     err = ErrorException(
         "JuMP's autodiff of the user-defined function f failed with a " *
-         "MethodError.\n\n$(JuMP._FORWARD_DIFF_METHOD_ERROR_HELPER)",
+        "MethodError.\n\n$(JuMP._FORWARD_DIFF_METHOD_ERROR_HELPER)",
     )
     @test_throws(
         err,
@@ -1373,7 +1373,7 @@ function test_user_defined_function_checked_error_multivariate()
     @test g == [-2.0, 1.0]
     err = ErrorException(
         "JuMP's autodiff of the user-defined function f failed with a " *
-         "MethodError.\n\n$(JuMP._FORWARD_DIFF_METHOD_ERROR_HELPER)",
+        "MethodError.\n\n$(JuMP._FORWARD_DIFF_METHOD_ERROR_HELPER)",
     )
     @test_throws(err, MOI.eval_objective_gradient(nlp, g, [2.0, 1.0]))
     return
