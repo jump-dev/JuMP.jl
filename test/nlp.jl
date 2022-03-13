@@ -1294,6 +1294,91 @@ function test_nonlinear_deprecations()
     return
 end
 
+function test_user_defined_function_checked_error_univariate()
+    function f(x)
+        if x >= 1
+            y = zeros(1)
+            y[1] = (x - 1)^2
+            return y[1]
+        else
+            return (x - 1)^2
+        end
+    end
+    model = Model()
+    @variable(model, x >= 0)
+    register(model, :f, 1, f; autodiff = true)
+    @NLobjective(model, Min, f(x))
+    nlp = NLPEvaluator(model)
+    MOI.initialize(nlp, Symbol[:Grad])
+    g = [NaN]
+    MOI.eval_objective_gradient(nlp, g, [0.0])
+    @test g == [-2.0]
+    err = ErrorException(
+        "JuMP's autodiff of the user-defined function f failed with a " *
+         "MethodError.\n\n$(JuMP._FORWARD_DIFF_METHOD_ERROR_HELPER)",
+    )
+    @test_throws(err, MOI.eval_objective_gradient(nlp, g, [2.0]))
+    return
+end
+
+function test_user_defined_function_checked_error_univariate()
+    f(x) = (x - 1)^2
+    function ∇f(x)
+        if x >= 1
+            y = zeros(1)
+            y[1] = 2 * (x - 1)
+            return y[1]
+        else
+            return 2 * (x - 1)
+        end
+    end
+    model = Model()
+    @variable(model, x >= 0)
+    register(model, :f, 1, f, ∇f; autodiff = true)
+    @NLobjective(model, Min, f(x))
+    nlp = NLPEvaluator(model)
+    MOI.initialize(nlp, Symbol[:Hess])
+    H = [NaN]
+    MOI.eval_hessian_lagrangian(nlp, H, [0.0], 1.0, Float64[])
+    @test H == [2.0]
+    err = ErrorException(
+        "JuMP's autodiff of the user-defined function f failed with a " *
+         "MethodError.\n\n$(JuMP._FORWARD_DIFF_METHOD_ERROR_HELPER)",
+    )
+    @test_throws(
+        err,
+        MOI.eval_hessian_lagrangian(nlp, H, [2.0], 1.0, Float64[]),
+    )
+    return
+end
+
+function test_user_defined_function_checked_error_multivariate()
+    function f(x...)
+        if x[1] >= 1
+            y = zeros(1)
+            y[1] = (x[1] - 1)^2
+            return y[1]
+        else
+            return (x[1] - 1)^2 + x[2]
+        end
+    end
+    model = Model()
+    @variable(model, x[1:2] >= 0)
+    register(model, :f, 2, f; autodiff = true)
+    @NLobjective(model, Min, f(x...))
+    nlp = NLPEvaluator(model)
+    MOI.initialize(nlp, Symbol[])
+    g = [NaN, NaN]
+    MOI.eval_objective_gradient(nlp, g, [0.0, 1.0])
+    @test g == [-2.0, 1.0]
+    err = ErrorException(
+        "JuMP's autodiff of the user-defined function f failed with a " *
+         "MethodError.\n\n$(JuMP._FORWARD_DIFF_METHOD_ERROR_HELPER)",
+    )
+    @test_throws(err, MOI.eval_objective_gradient(nlp, g, [2.0, 1.0]))
+    return
+end
+
 end
 
 TestNLP.runtests()
