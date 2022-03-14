@@ -1321,6 +1321,24 @@ function test_user_defined_function_checked_error_univariate()
     return
 end
 
+function test_user_defined_function_checked_error_univariate_other_error()
+    function f(x)
+        if typeof(x) != Float64
+            error("not differentiable")
+        end
+        return (x - 1)^2
+    end
+    model = Model()
+    @variable(model, x)
+    register(model, :f, 1, f; autodiff = true)
+    @NLobjective(model, Min, f(x))
+    nlp = NLPEvaluator(model)
+    MOI.initialize(nlp, Symbol[:Grad])
+    err = ErrorException("not differentiable")
+    @test_throws(err, MOI.eval_objective_gradient(nlp, [NaN], [2.0]))
+    return
+end
+
 function test_user_defined_function_checked_error_univariate()
     f(x) = (x - 1)^2
     function ∇f(x)
