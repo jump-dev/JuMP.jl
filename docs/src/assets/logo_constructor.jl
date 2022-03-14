@@ -265,8 +265,10 @@ function logo_with_text(;
         if verbose
             line(Point(0, margin), Point(width, margin), :stroke)
             line(Point(margin, 0), Point(margin, height), :stroke)
-            line(Point(width - margin, 0), Point(width - margin, height), :stroke)
-            line(Point(0, height - margin), Point(width, height - margin), :stroke)
+            w = width - margin
+            line(Point(w, 0), Point(w, height), :stroke)
+            h = height - margin
+            line(Point(0, h), Point(width, h), :stroke)
         end
         translate(10, 13)
         _logo_no_text(; color = color)
