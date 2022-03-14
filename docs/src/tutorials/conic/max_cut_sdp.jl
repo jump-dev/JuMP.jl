@@ -20,8 +20,27 @@
 
 using JuMP
 import LinearAlgebra
+import Random
 import SCS
 import Test
+
+"""
+    svd_cholesky(X::AbstractMatrix, rtol)
+
+Return the matrix `U` of the Cholesky decomposition of `X` as `U' * U`.
+Note that we do not use the `LinearAlgebra.cholesky` function as it it
+requires the matrix to be positive definite while `X` may be only
+positive *semi*definite.
+We use the convention `U' * U` instead of `U * U'` to be consistent with
+`LinearAlgebra.cholesky`.
+"""
+function svd_cholesky(X::AbstractMatrix)
+    F = LinearAlgebra.svd(X)
+    ## We now have `X ≈ `F.U * D² * F.U'` where:
+    D = LinearAlgebra.Diagonal(sqrt.(F.S))
+    ## So `X ≈ U' * U` where `U` is:
+    return (F.U * D)'
+end
 
 function solve_max_cut_sdp(num_vertex, weights)
     ## Calculate the (weighted) Lapacian of the graph: L = D - W.
@@ -40,24 +59,41 @@ function solve_max_cut_sdp(num_vertex, weights)
     @constraint(model, LinearAlgebra.diag(X) .== 1)
     optimize!(model)
     @assert termination_status(model) == MOI.OPTIMAL
-    ## The paper uses some linear algebra to figure out which nodes belong to
-    ## which partition of the cut. We use a simpler way, and one that is more
-    ## robust to numerical error: comparing the rows, of which every element is
-    ## ±1.
-    opt_X = value.(X)
-    cut = map(1:num_vertex) do i
-        return isapprox(opt_X[1, :], opt_X[i, :]; atol = 1e-4) ? 1.0 : -1.0
+    opt_X = value(X)
+    V = svd_cholesky(opt_X)
+    ## Generate random vector on unit sphere.
+    Random.seed!(num_vertex)
+    r = rand(size(V, 1))
+    r /= LinearAlgebra.norm(r)
+    ## Iterate over vertices, and assign each vertex to a side of cut.
+    cut = ones(num_vertex)
+    for i in 1:num_vertex
+        if LinearAlgebra.dot(r, V[:, i]) <= 0
+            cut[i] = -1
+        end
     end
+    println("Solution:")
+    print(" (S, S′) = ({")
+    print(join(findall(cut .== -1), ", "))
+    print("}, {")
+    print(join(findall(cut .== 1), ", "))
+    println("})")
+    ##  (S, S′)  = ({1}, {2, 3, 4})
     return cut, 0.25 * sum(laplacian .* (cut * cut'))
 end
 
 function example_max_cut_sdp()
+    println()
+    println("Example 1:")
     ##   [1] --- 5 --- [2]
     ##
     ## Solution:
     ##  (S, S′)  = ({1}, {2})
     cut, cutval = solve_max_cut_sdp(2, [0.0 5.0; 5.0 0.0])
     Test.@test cut[1] != cut[2]
+
+    println()
+    println("Example 2:")
     ##   [1] --- 5 --- [2]
     ##    |  \          |
     ##    |    \        |
@@ -77,6 +113,9 @@ function example_max_cut_sdp()
     cut, cutval = solve_max_cut_sdp(4, W)
     Test.@test cut[1] != cut[2]
     Test.@test cut[2] == cut[3] == cut[4]
+
+    println()
+    println("Example 3:")
     ##   [1] --- 1 --- [2]
     ##    |             |
     ##    |             |
