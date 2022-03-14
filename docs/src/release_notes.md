@@ -1,5 +1,26 @@
 # Release notes
 
+## Version 1.0.0 (March 18, 2022)
+
+**Read more about this release, along with an ackowledgement of all the
+contribtors in our [JuMP 1.0.0 is released](https://jump.dev/blog/1.0.0-release/)
+blog post.**
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.0.0).
+A summary of changes are as follows:
+
+- Breaking changes:
+  - The previously deprecated functions have been removed:
+    - `num_nl_constraints`
+    - `all_nl_constraints`
+    - `add_NL_expression`
+    - `set_NL_objective`
+    - `add_NL_constraint`
+    - `nl_expr_string`
+    - `nl_constraint_string`
+    - `SymMatrixSpace`
+
 ## Version 0.23.2 (March 14, 2022)
 
 For a detailed list of the closed issues and pull requests from this release,

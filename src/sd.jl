@@ -15,10 +15,6 @@ julia> @variable(model, Q[1:2, 1:2] in SymmetricMatrixSpace())
 """
 struct SymmetricMatrixSpace end
 
-function SymMatrixSpace()
-    return error("`SymMatrixSpace` has been renamed to `SymmetricMatrixSpace`")
-end
-
 """
     SkewSymmetricMatrixSpace()
 
