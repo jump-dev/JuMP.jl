@@ -36,9 +36,9 @@ We use the convention `U' * U` instead of `U * U'` to be consistent with
 """
 function svd_cholesky(X::AbstractMatrix)
     F = LinearAlgebra.svd(X)
-    # We now have `X ≈ `F.U * D² * F.U'` where:
+    ## We now have `X ≈ `F.U * D² * F.U'` where:
     D = LinearAlgebra.Diagonal(sqrt.(F.S))
-    # So `X ≈ U' * U` where `U` is:
+    ## So `X ≈ U' * U` where `U` is:
     return (F.U * D)'
 end
 
