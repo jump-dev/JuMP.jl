@@ -564,6 +564,8 @@ using JuMP
 
         @test JuMP.has_values(m)
         @test [1.0 2.0; 2.0 4.0] == JuMP.value.(x)
+        @test JuMP.value(x) isa Symmetric
+        @test [1.0 2.0; 2.0 4.0] == @inferred JuMP.value(x)
         @test JuMP.value(var_psd) isa Symmetric
         @test [1.0 2.0; 2.0 4.0] == @inferred JuMP.value(var_psd)
         @test JuMP.value(sym_psd) isa Symmetric

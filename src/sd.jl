@@ -347,6 +347,13 @@ function build_variable(
     )
 end
 
+function value(Q::LinearAlgebra.Symmetric{V,Matrix{V}}) where {V<:AbstractVariableRef}
+    return LinearAlgebra.Symmetric(
+        value.(LinearAlgebra.parent(Q)),
+        LinearAlgebra.sym_uplo(Q.uplo),
+    )
+end
+
 """
     build_constraint(_error::Function, Q::Symmetric{V, M},
                      ::PSDCone) where {V <: AbstractJuMPScalar,
