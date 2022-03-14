@@ -1,3 +1,7 @@
+# This script rebuilds the JuMP logos. Install Luxor using
+#
+#   import Pkg; Pkg.pkg"add Luxor@3"
+
 using Luxor
 
 """
@@ -229,30 +233,45 @@ function _jump_text_outlines(; color::String)
 end
 
 """
-    logo_with_text(; filename::String, color::String, background::Bool = false)
+    logo_with_text(;
+        filename::String,
+        color::String,
+        background::String = "",
+        verbose::Bool = false,
+    )
 
 Create the JuMP logo with the text on the right-hand side.
+
+If `verbose`, print the margin lines.
 """
 function logo_with_text(;
     filename::String,
     color::String,
     background::String = "",
+    verbose::Bool = false,
 )
-    Drawing(400, 150, filename)
-
+    width, height, margin = 415, 150, 10
+    Drawing(width, height, filename)
     if !isempty(background)
         @layer begin
             translate(O)
-            translate(200, 75)
+            translate(width / 2, height / 2)
             setcolor(background)
-            box(O, 399, 149, 10, :fill) # 1 value for all corners
+            box(O, width - 1, height - 1, 10, :fill)
         end
     end
     @layer begin
         translate(O)
-        translate(10, 15)
+        if verbose
+            line(Point(0, margin), Point(width, margin), :stroke)
+            line(Point(margin, 0), Point(margin, height), :stroke)
+            line(Point(width - margin, 0), Point(width - margin, height), :stroke)
+            line(Point(0, height - margin), Point(width, height - margin), :stroke)
+        end
+        translate(10, 13)
         _logo_no_text(; color = color)
-        translate(138, 44)
+        translate(130, 40)
+        scale(1.1)
         _jump_text_outlines(; color = color)
     end
     finish()
@@ -260,18 +279,31 @@ function logo_with_text(;
 end
 
 """
-    logo_square(; filename::String, color::String)
+    logo_square(; filename::String, color::String, verbose::Bool = false)
 
 Create the JuMP logo with the text vertically beneath the pictogram.
+
+If `verbose`, print the margin lines.
 """
-function logo_square(; filename::String, color::String)
-    Drawing(200, 200, filename)
+function logo_square(; filename::String, color::String, verbose::Bool = false)
+    N, margin, w = 200, 10, 110
+    Drawing(N, N, filename)
     @layer begin
         translate(O)
-        translate(35, 5)
+        if verbose
+            line(Point(0, margin), Point(N, margin), :stroke)
+            line(Point(margin, 0), Point(margin, N), :stroke)
+            line(Point(N - margin, 0), Point(N - margin, N), :stroke)
+            line(Point(0, N - margin), Point(N, N - margin), :stroke)
+            lhs = (N - w) / 2
+            line(Point(lhs, 0), Point(lhs, N), :stroke)
+            line(Point(N - lhs, 0), Point(N - lhs, N), :stroke)
+        end
+        translate((N - w) / 2, margin)
+        scale(0.9)
         _logo_no_text(; color = color)
-        translate(-35, 130)
-        scale(0.78)
+        translate(-50, 135)
+        scale(0.9)
         _jump_text_outlines(; color = color)
     end
     finish()
