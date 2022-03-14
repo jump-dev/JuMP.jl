@@ -1,5 +1,23 @@
 # Release notes
 
+## Version 0.23.2 (March 14, 2022)
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.23.2).
+A summary of changes are as follows:
+
+- New features:
+  - Added `relative_gap` to `solution_summary`
+  - `register` now throws an informative error if the function is not
+    differentiable using ForwardDiff. In some cases, the check in `register`
+    will encounter a false negative, and the informative error will be thrown at
+    run-time. This usually happens when the function is non-differentiable in a
+    subset of the domain.
+- Bug fixes:
+  - Fixed a scoping issue when extending the `container` keyword of containers
+- Documentation and maintenance:
+  - Docs updated to the latest version of each package
+
 ## Version 0.23.1 (March 2, 2022)
 
 For a detailed list of the closed issues and pull requests from this release,
