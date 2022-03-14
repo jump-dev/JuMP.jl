@@ -347,7 +347,9 @@ function build_variable(
     )
 end
 
-function value(Q::LinearAlgebra.Symmetric{V,Matrix{V}}) where {V<:AbstractVariableRef}
+function value(
+    Q::LinearAlgebra.Symmetric{V,Matrix{V}},
+) where {V<:AbstractVariableRef}
     return LinearAlgebra.Symmetric(
         value.(LinearAlgebra.parent(Q)),
         LinearAlgebra.sym_uplo(Q.uplo),

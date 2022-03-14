@@ -25,32 +25,24 @@ import SCS
 import Test
 
 """
-    low_rank_cholesky(X::AbstractMatrix, rtol)
+    svd_cholesky(X::AbstractMatrix, rtol)
 
-Return the matrix `U` of the low-rank Cholesky decomposition.
-More precisely, computes a decomposition of `X` as `U' * U` where the
-number of rows of `U` is the rank of `X` computed as `rank(X, rtol=rtol)`.
+Return the matrix `U` of the Cholesky decomposition of `X` as `U' * U`.
 Note that we do not use the `LinearAlgebra.cholesky` function as it it
 requires the matrix to be positive definite while `X` may be only
 positive *semi*definite.
-
-Note that we use the convention `U' * U` instead of `U * U'` to be consistent
-with `LinearAlgebra.cholesky`.
+We use the convention `U' * U` instead of `U * U'` to be consistent with
+`LinearAlgebra.cholesky`.
 """
-function low_rank_cholesky(X::AbstractMatrix, rtol)
+function svd_cholesky(X::AbstractMatrix)
     F = LinearAlgebra.svd(X)
-    # Scale tolerance by leading singular value
-    tol = F.S[1] * rtol
-    r = something(findfirst(σ² -> σ² <= tol, F.S), length(F.S) + 1) - 1
-    println("rank(X, rtol = $rtol) = $r")
-    # We now have `X ≈ L * D² * L'` where:
-    L = F.U[:, 1:r]
-    D = LinearAlgebra.Diagonal(sqrt.(F.S[1:r]))
-    # So `X ≈ U' * U` where:
-    return (L * D)'
+    # We now have `X ≈ `F.U * D² * F.U'` where:
+    D = LinearAlgebra.Diagonal(sqrt.(F.S))
+    # So `X ≈ U' * U` where `U` is:
+    return (F.U * D)'
 end
 
-function solve_max_cut_sdp(num_vertex, weights, rtol)
+function solve_max_cut_sdp(num_vertex, weights)
     ## Calculate the (weighted) Lapacian of the graph: L = D - W.
     laplacian = LinearAlgebra.diagm(0 => weights * ones(num_vertex)) - weights
     ## Solve the SDP relaxation
@@ -68,7 +60,7 @@ function solve_max_cut_sdp(num_vertex, weights, rtol)
     optimize!(model)
     @assert termination_status(model) == MOI.OPTIMAL
     opt_X = value(X)
-    V = low_rank_cholesky(opt_X, rtol)
+    V = svd_cholesky(opt_X)
     ## Generate random vector on unit sphere.
     Random.seed!(num_vertex)
     r = rand(size(V, 1))
@@ -90,17 +82,15 @@ function solve_max_cut_sdp(num_vertex, weights, rtol)
     return cut, 0.25 * sum(laplacian .* (cut * cut'))
 end
 
-function example_max_cut_sdp(rtols = [1e-4, 1e-6, 1e-8])
+function example_max_cut_sdp()
     println()
     println("Example 1:")
     ##   [1] --- 5 --- [2]
     ##
     ## Solution:
     ##  (S, S′)  = ({1}, {2})
-    for rtol in rtols
-        cut, cutval = solve_max_cut_sdp(2, [0.0 5.0; 5.0 0.0], rtol)
-        Test.@test cut[1] != cut[2]
-    end
+    cut, cutval = solve_max_cut_sdp(2, [0.0 5.0; 5.0 0.0])
+    Test.@test cut[1] != cut[2]
 
     println()
     println("Example 2:")
@@ -120,11 +110,9 @@ function example_max_cut_sdp(rtols = [1e-4, 1e-6, 1e-8])
         7.0 0.0 0.0 1.0
         6.0 1.0 1.0 0.0
     ]
-    for rtol in rtols
-        cut, cutval = solve_max_cut_sdp(4, W, rtol)
-        Test.@test cut[1] != cut[2]
-        Test.@test cut[2] == cut[3] == cut[4]
-    end
+    cut, cutval = solve_max_cut_sdp(4, W)
+    Test.@test cut[1] != cut[2]
+    Test.@test cut[2] == cut[3] == cut[4]
 
     println()
     println("Example 3:")
@@ -144,12 +132,10 @@ function example_max_cut_sdp(rtols = [1e-4, 1e-6, 1e-8])
         5.0 0.0 0.0 2.0
         0.0 9.0 2.0 0.0
     ]
-    for rtol in rtols
-        cut, cutval = solve_max_cut_sdp(4, W, rtol)
-        Test.@test cut[1] == cut[4]
-        Test.@test cut[2] == cut[3]
-        Test.@test cut[1] != cut[2]
-    end
+    cut, cutval = solve_max_cut_sdp(4, W)
+    Test.@test cut[1] == cut[4]
+    Test.@test cut[2] == cut[3]
+    Test.@test cut[1] != cut[2]
     return
 end
 
