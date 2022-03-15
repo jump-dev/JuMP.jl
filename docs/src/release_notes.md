@@ -3,7 +3,7 @@
 ## Version 1.0.0 (March 18, 2022)
 
 **Read more about this release, along with an ackowledgement of all the
-contribtors in our [JuMP 1.0.0 is released](https://jump.dev/blog/1.0.0-release/)
+contributors in our [JuMP 1.0.0 is released](https://jump.dev/blog/1.0.0-release/)
 blog post.**
 
 For a detailed list of the closed issues and pull requests from this release,
