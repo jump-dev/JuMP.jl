@@ -396,7 +396,7 @@ end
 # nonlinear function fallbacks for JuMP built-in types
 ###############################################################################
 
-const op_hint = "Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective."
+const _OP_HINT = "Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective."
 for (func, _) in Calculus.symbolic_derivatives_1arg(),
     typ in [:AbstractVariableRef, :GenericAffExpr, :GenericQuadExpr]
 
@@ -404,7 +404,7 @@ for (func, _) in Calculus.symbolic_derivatives_1arg(),
         continue
     end
 
-    errstr = "$func is not defined for type $typ. $op_hint"
+    errstr = "$func is not defined for type $typ. $_OP_HINT"
     if isdefined(Base, func)
         @eval Base.$(func)(::$typ) = error($errstr)
     end
@@ -417,11 +417,11 @@ function Base.:*(
     T<:GenericQuadExpr,
     S<:Union{AbstractVariableRef,GenericAffExpr,GenericQuadExpr},
 }
-    return error("*(::$T,::$S) is not defined. $op_hint")
+    return error("*(::$T,::$S) is not defined. $_OP_HINT")
 end
 function Base.:*(lhs::GenericQuadExpr, rhs::GenericQuadExpr)
     return error(
-        "*(::GenericQuadExpr,::GenericQuadExpr) is not defined. $op_hint",
+        "*(::GenericQuadExpr,::GenericQuadExpr) is not defined. $_OP_HINT",
     )
 end
 function Base.:*(
@@ -431,7 +431,7 @@ function Base.:*(
     T<:GenericQuadExpr,
     S<:Union{AbstractVariableRef,GenericAffExpr,GenericQuadExpr},
 }
-    return error("*(::$S,::$T) is not defined. $op_hint")
+    return error("*(::$S,::$T) is not defined. $_OP_HINT")
 end
 function Base.:/(
     ::S,
@@ -440,5 +440,5 @@ function Base.:/(
     S<:Union{_Constant,AbstractVariableRef,GenericAffExpr,GenericQuadExpr},
     T<:Union{AbstractVariableRef,GenericAffExpr,GenericQuadExpr},
 }
-    return error("/(::$S,::$T) is not defined. $op_hint")
+    return error("/(::$S,::$T) is not defined. $_OP_HINT")
 end

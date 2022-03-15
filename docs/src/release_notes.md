@@ -20,6 +20,8 @@ A summary of changes are as follows:
     - `nl_expr_string`
     - `nl_constraint_string`
     - `SymMatrixSpace`
+  - The unintentionally exported variable `JuMP.op_hint` has been renamed to the
+    unexported `JuMP._OP_HINT`
 
 ## Version 0.23.2 (March 14, 2022)
 
