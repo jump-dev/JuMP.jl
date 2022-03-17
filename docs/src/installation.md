@@ -194,17 +194,6 @@ See a complete list [here](https://www.gams.com/latest/docs/S_MAIN.html).
 Use [NEOSServer.jl](https://github.com/odow/NEOSServer.jl) to access solvers
 available through the [NEOS Server](https://neos-server.org).
 
-## Previously supported solvers
-
-The following solvers were compatible with JuMP up to release 0.18 but are
-not yet compatible with the latest version because they do not implement the
-new MathOptInterface API:
-
-- [Pajarito](https://github.com/JuliaOpt/Pajarito.jl)
-
-Please join the [Developer Chatroom](https://jump.dev/pages/governance/#developer-chatroom)
-if you have interest in reviving a previously supported solver.
-
 ## Common installation issues
 
 !!! tip
