@@ -24,6 +24,7 @@ A summary of changes are as follows:
     unexported `JuMP._OP_HINT`
 - Bug fixes:
   - Fixed a bug writing .nl files
+  - Fixed a bug broadcasting `SparseAxisArray`s
 
 ## Version 0.23.2 (March 14, 2022)
 
