@@ -1524,6 +1524,27 @@ function test_expr_index_vars()
     return
 end
 
+function test_broadcasted_SparseAxisArray_constraint()
+    model = Model()
+    @variable(model, u[i = 1:2, i:3])
+    Containers.@container(c[i = 1:2, i:3], rand())
+    cons = @constraint(model, u .<= c)
+    @test cons isa Containers.SparseAxisArray
+    @test length(cons) == 5
+    return
+end
+
+function test_broadcasted_DenseAxisArray_constraint()
+    model = Model()
+    S = 1:2
+    @variable(model, u[S])
+    Containers.@container(c[S], rand())
+    cons = @constraint(model, u .<= c)
+    @test cons isa Containers.DenseAxisArray
+    @test length(cons) == 2
+    return
+end
+
 end  # module
 
 TestMacros.runtests()

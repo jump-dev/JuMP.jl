@@ -179,10 +179,7 @@ end
 function Base.copy(
     bc::Base.Broadcast.Broadcasted{BroadcastStyle{N,K}},
 ) where {N,K}
-    dict = Dict(
-        index => bc.f(_get_arg(bc.args, index)...) for
-        index in _indices(bc.args...)
-    )
+    dict = Dict(index => _getindex(bc, index) for index in _indices(bc.args...))
     if isempty(dict) && dict isa Dict{Any,Any}
         # If `dict` is empty (e.g., because there are no indices), then
         # inference will produce a `Dict{Any,Any}`, and we won't have enough
@@ -230,6 +227,13 @@ function _indices(x::SparseAxisArray, args...)
     return indices
 end
 
+function _indices(
+    bc::Base.Broadcast.Broadcasted{BroadcastStyle{N,K}},
+    args...,
+) where {N,K}
+    return _indices(bc.args...)
+end
+
 """
     _get_arg(args::Tuple, index::Tuple)
 
@@ -246,6 +250,13 @@ _get_arg(::Tuple{}, ::Tuple) = ()
 _getindex(x::SparseAxisArray, index) = getindex(x, index...)
 _getindex(x::Any, ::Any) = x
 _getindex(x::Ref, ::Any) = x[]
+
+function _getindex(
+    bc::Base.Broadcast.Broadcasted{BroadcastStyle{N,K}},
+    index,
+) where {N,K}
+    return bc.f(_get_arg(bc.args, index)...)
+end
 
 @static if VERSION >= v"1.3"
     # `broadcast_preserving_zero_d` calls `axes(A)` which calls `size(A)` which
