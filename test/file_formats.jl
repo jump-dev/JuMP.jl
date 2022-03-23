@@ -68,7 +68,7 @@ function test_nl_nlp()
     seekstart(io)
     file = read(io, String)
     # Check that the constant 100 occurs in the file
-    @test occursin(file, "n100")
+    @test occursin("n100", file)
     return
 end
 
