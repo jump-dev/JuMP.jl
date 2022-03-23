@@ -1,6 +1,6 @@
 # Release notes
 
-## Version 1.0.0 (March 18, 2022)
+## Version 1.0.0 (March 24, 2022)
 
 **Read more about this release, along with an ackowledgement of all the
 contributors in our [JuMP 1.0.0 is released](https://jump.dev/blog/1.0.0-release/)
@@ -22,6 +22,8 @@ A summary of changes are as follows:
     - `SymMatrixSpace`
   - The unintentionally exported variable `JuMP.op_hint` has been renamed to the
     unexported `JuMP._OP_HINT`
+- Bug fixes:
+  - Fixed a bug writing .nl files
 
 ## Version 0.23.2 (March 14, 2022)
 
