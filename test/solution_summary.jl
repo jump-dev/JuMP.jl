@@ -3,10 +3,23 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+module TestSolutionSummary
+
 using JuMP
 using Test
 
-@testset "Empty model" begin
+function runtests()
+    for name in names(@__MODULE__; all = true)
+        if startswith("$(name)", "test_")
+            @testset "$(name)" begin
+                getfield(@__MODULE__, name)()
+            end
+        end
+    end
+    return
+end
+
+function test_empty_model()
     model = Model()
     @test sprint(show, solution_summary(model)) == """
 * Solver : No optimizer attached.
@@ -22,9 +35,10 @@ using Test
 
 * Work counters
 """
+    return
 end
 
-@testset "Print solution summary" begin
+function test_solution_summary()
     model = Model()
     @variable(model, x <= 2.0)
     @variable(model, y >= 0.0)
@@ -119,4 +133,9 @@ end
   Barrier iterations : 2
   Node count         : 1
 """
+    return
 end
+
+end
+
+TestSolutionSummary.runtests()
