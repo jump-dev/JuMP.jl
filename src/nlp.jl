@@ -190,12 +190,6 @@ function all_nonlinear_constraints(model::Model)
     end
 end
 
-function all_nl_constraints(::Model)
-    return error(
-        "`all_nl_constraints`` has been renamed `all_nonlinear_constraints`",
-    )
-end
-
 """
     is_valid(model::Model, c::NonlinearConstraintRef)
 
@@ -2254,12 +2248,6 @@ function add_nonlinear_expression(model::Model, ex)
     return NonlinearExpression(model, _NonlinearExprData(model, ex))
 end
 
-function add_NL_expression(::Model, ::Expr)
-    return error(
-        "`add_NL_expression` has been renamed to `add_nonlinear_expression`",
-    )
-end
-
 """
     set_nonlinear_objective(
         model::Model,
@@ -2286,12 +2274,6 @@ julia> set_nonlinear_objective(model, MIN_SENSE, :(\$(x) + \$(x)^2))
 """
 function set_nonlinear_objective(model::Model, sense::MOI.OptimizationSense, x)
     return set_objective(model, sense, _NonlinearExprData(model, x))
-end
-
-function set_NL_objective(::Model, ::MOI.OptimizationSense, ::Expr)
-    return error(
-        "`set_NL_objective` has been renamed to `set_nonlinear_objective`",
-    )
 end
 
 """
@@ -2376,10 +2358,4 @@ function add_nonlinear_constraint(model::Model, ex::Expr)
             "       expr1 == expr2",
         )
     end
-end
-
-function add_NL_constraint(::Model, ::Expr)
-    return error(
-        "`add_NL_constraint` has been renamed to `add_nonlinear_constraint`",
-    )
 end

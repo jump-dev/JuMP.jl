@@ -361,8 +361,6 @@ function nonlinear_constraint_string(
     return string(nl, " ", rel, " ", _string_round(_rhs(c)))
 end
 
-@deprecate nl_constraint_string nonlinear_constraint_string
-
 """
     constraints_string(mode, model::AbstractModel)::Vector{String}
 
@@ -404,8 +402,6 @@ function nonlinear_expr_string(model::Model, mode::MIME, c::_NonlinearExprData)
     )
     return string(_latexify_exponentials(mode, ex))
 end
-
-@deprecate nl_expr_string nonlinear_expr_string
 
 # Change x ^ -2.0 to x ^ {-2.0}
 # x ^ (x ^ 2.0) to x ^ {x ^ {2.0}}

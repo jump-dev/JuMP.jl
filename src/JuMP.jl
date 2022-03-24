@@ -603,12 +603,6 @@ function num_nonlinear_constraints(model::Model)
     return model.nlp_data !== nothing ? length(model.nlp_data.nlconstr) : 0
 end
 
-function num_nl_constraints(::Model)
-    return error(
-        "`num_nl_constraints` has been renamed to `num_nonlinear_constraints`",
-    )
-end
-
 """
     object_dictionary(model::Model)
 

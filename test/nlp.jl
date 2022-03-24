@@ -1280,20 +1280,6 @@ function test_dual_start_value()
     return
 end
 
-function test_nonlinear_deprecations()
-    model = Model()
-    @variable(model, x)
-    @test_throws(ErrorException, num_nl_constraints(model))
-    @test_throws(ErrorException, all_nl_constraints(model))
-    @test_throws(ErrorException, add_NL_constraint(model, :(x[$x] <= 1)))
-    @test_throws(ErrorException, add_NL_expression(model, :(x[$x] + 1)))
-    @test_throws(
-        ErrorException,
-        set_NL_objective(model, MOI.MIN_SENSE, :(x[$x] + 1)),
-    )
-    return
-end
-
 function test_user_defined_function_checked_error_univariate()
     function f(x)
         if x >= 1
