@@ -56,6 +56,22 @@ function test_mof_nlp()
     @test length(file["constraints"]) == 2
 end
 
+function test_nl_nlp()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    @NLobjective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
+    @NLconstraint(model, x^2 + y^2 <= 100.0)
+    @constraint(model, x + y == 10)
+    io = IOBuffer()
+    write(io, model; format = MOI.FileFormats.FORMAT_NL)
+    seekstart(io)
+    file = read(io, String)
+    # Check that the constant 100 occurs in the file
+    @test occursin("n100", file)
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

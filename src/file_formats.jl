@@ -3,6 +3,16 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+function _copy_to_bridged_model(f::Function, model::Model)
+    inner = MOI.instantiate(f; with_bridge_type = Float64)
+    MOI.copy_to(inner, model)
+    @assert inner isa MOI.Bridges.LazyBridgeOptimizer
+    if inner.model isa MOI.Utilities.CachingOptimizer
+        MOI.Utilities.attach_optimizer(inner.model)
+    end
+    return unsafe_backend(inner)
+end
+
 """
     write_to_file(
         model::Model,
@@ -20,13 +30,9 @@ function write_to_file(
     filename::String;
     format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC,
 )
-    dest = MOI.FileFormats.Model(format = format, filename = filename)
-    # We add a `full_bridge_optimizer` here because MOI.FileFormats models may not
-    # support all constraint types in a JuMP model.
-    bridged_dest = MOI.Bridges.full_bridge_optimizer(dest, Float64)
-    MOI.copy_to(bridged_dest, model)
-    # `dest` will contain the underlying model, with constraints bridged if
-    # necessary.
+    dest = _copy_to_bridged_model(model) do
+        return MOI.FileFormats.Model(format = format, filename = filename)
+    end
     MOI.write_to_file(dest, filename)
     return
 end
@@ -48,13 +54,9 @@ function Base.write(
     if format == MOI.FileFormats.FORMAT_AUTOMATIC
         error("Unable to infer the file format from an IO stream.")
     end
-    dest = MOI.FileFormats.Model(format = format)
-    # We add a `full_bridge_optimizer` here because MOI.FileFormats models may not
-    # support all constraint types in a JuMP model.
-    bridged_dest = MOI.Bridges.full_bridge_optimizer(dest, Float64)
-    MOI.copy_to(bridged_dest, model)
-    # `dest` will contain the underlying model, with constraints bridged if
-    # necessary.
+    dest = _copy_to_bridged_model(model) do
+        return MOI.FileFormats.Model(format = format)
+    end
     write(io, dest)
     return
 end
