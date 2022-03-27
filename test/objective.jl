@@ -1,27 +1,41 @@
+module TestObjective
+
 using JuMP
 using Test
 
-@static if !(:JuMPExtension in names(Main))
-    include(joinpath(@__DIR__, "JuMPExtension.jl"))
+function runtests()
+    for name in names(@__MODULE__; all = true)
+        if startswith("$(name)", "test_")
+            @testset "$(name)" begin
+                getfield(@__MODULE__, name)()
+            end
+        end
+    end
+    return
 end
 
+include(joinpath(@__DIR__, "JuMPExtension.jl"))
+
 struct DummyOptimizer <: MOI.AbstractOptimizer end
+
 MOI.is_empty(::DummyOptimizer) = true
 
-@testset "Unsupported objective_function" begin
+function test_unsupported_objective_function()
     model = Model(DummyOptimizer)
     func = MOI.VariableIndex(1)
     @test_throws ErrorException JuMP.set_objective_function(model, func)
+    return
 end
 
-@testset "Unsupported function in macro" begin
+function test_unsupported_function_in_macro()
     model = Model()
     @variable(model, x[1:2])
     exception = ErrorException(
-        "The objective function `VariableRef[x[1]," *
+        "The objective function `$VariableRef[x[1]," *
         " x[2]]` is not supported by JuMP.",
     )
     @test_throws exception @objective(model, Min, x)
+    return
 end
 
 function objectives_test(
@@ -166,3 +180,7 @@ end
 @testset "Objectives for JuMPExtension.MyModel" begin
     objectives_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
 end
+
+end  # module
+
+TestObjective.runtests()
