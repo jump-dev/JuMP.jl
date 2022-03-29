@@ -1134,6 +1134,25 @@ function test_set_inequalities(::Any, ::Any)
     return
 end
 
+function test_num_constraints(::Any, ::Any)
+    model = Model()
+    @variable(model, x >= 0, Int)
+    @constraint(model, 2x <= 1)
+    @test num_constraints(model) == 3
+    @test num_constraints(model; count_variable_in_set_constraints = false) == 1
+    return
+end
+
+function test_num_constraints_nonlinear(::Any, ::Any)
+    model = Model()
+    @variable(model, x >= 0, Int)
+    @constraint(model, 2x <= 1)
+    @NLconstraint(model, sqrt(x) <= 3)
+    @test num_constraints(model) == 4
+    @test num_constraints(model; count_variable_in_set_constraints = false) == 2
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
