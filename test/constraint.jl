@@ -1138,8 +1138,16 @@ function test_num_constraints(::Any, ::Any)
     model = Model()
     @variable(model, x >= 0, Int)
     @constraint(model, 2x <= 1)
-    @test num_constraints(model) == 3
+    @test num_constraints(model; count_variable_in_set_constraints = true) == 3
     @test num_constraints(model; count_variable_in_set_constraints = false) == 1
+    return
+end
+
+function test_num_constraints_UndefKeywordError(::Any, ::Any)
+    model = Model()
+    @variable(model, x >= 0, Int)
+    @constraint(model, 2x <= 1)
+    @test_throws UndefKeywordError num_constraints(model)
     return
 end
 
@@ -1148,7 +1156,7 @@ function test_num_constraints_nonlinear(::Any, ::Any)
     @variable(model, x >= 0, Int)
     @constraint(model, 2x <= 1)
     @NLconstraint(model, sqrt(x) <= 3)
-    @test num_constraints(model) == 4
+    @test num_constraints(model; count_variable_in_set_constraints = true) == 4
     @test num_constraints(model; count_variable_in_set_constraints = false) == 2
     return
 end

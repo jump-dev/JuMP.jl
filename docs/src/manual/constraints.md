@@ -868,15 +868,24 @@ julia> cons = all_constraints(model, VariableRef, MOI.Integer)
  x[2] integer
 ```
 
-You can also count the total number of constraints in the model:
+You can also count the total number of constraints in the model, but you must
+explicitly choose whether to count `VariableRef` constraints such as bound and
+integrality constraints:
 ```jldoctest con_access
-julia> num_constraints(model)
+julia> num_constraints(model; count_variable_in_set_constraints = true)
 5
-```
-To exclude `VariableRef` constraints such as bound and integrality constraints,
-pass `count_variable_in_set_constraints = false`:
-```jldoctest con_access
+
 julia> num_constraints(model; count_variable_in_set_constraints = false)
+1
+```
+
+If you need finer-grained control on which constraints to include, use a variant
+of:
+```jldoctest con_access
+julia> sum(
+           num_constraints(model, F, S) for
+           (F, S) in list_of_constraint_types(model) if F != VariableRef
+       )
 1
 ```
 
