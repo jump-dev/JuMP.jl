@@ -1205,10 +1205,7 @@ function list_of_constraint_types(model::Model)::Vector{Tuple{Type,Type}}
 end
 
 """
-    num_constraints(
-        model::Model;
-        count_variable_in_set_constraints::Bool,
-    )
+    num_constraints(model::Model; count_variable_in_set_constraints::Bool)
 
 Return the number of constraints in `model`.
 
@@ -1233,10 +1230,7 @@ julia> num_constraints(model; count_variable_in_set_constraints = false)
 1
 ```
 """
-function num_constraints(
-    model::Model;
-    count_variable_in_set_constraints::Bool,
-)
+function num_constraints(model::Model; count_variable_in_set_constraints::Bool)
     ret = num_nonlinear_constraints(model)
     for (F, S) in list_of_constraint_types(model)
         if F != VariableRef || count_variable_in_set_constraints
