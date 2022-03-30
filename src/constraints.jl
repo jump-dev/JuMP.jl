@@ -1209,7 +1209,7 @@ end
 
 Return the number of constraints in `model`.
 
-If `count_variable_in_set_constraints = true`, then `VariableRef` constraints
+If `count_variable_in_set_constraints == true`, then `VariableRef` constraints
 such as `VariableRef`-in-`Integer` are included. To count only the number of
 structural constraints (e.g., the rows in the constraint matrix of a linear
 program), pass `count_variable_in_set_constraints = false`.
