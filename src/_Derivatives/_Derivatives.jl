@@ -43,4 +43,6 @@ include("forward.jl")
 include("reverse.jl")
 include("subexpressions.jl")
 
+include("nlp.jl")
+
 end # module

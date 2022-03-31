@@ -291,35 +291,6 @@ function set_nonlinear_dual_start_value(model::Model, start::Nothing)
     return
 end
 
-mutable struct _FunctionStorage
-    nd::Vector{NodeData}
-    adj::SparseMatrixCSC{Bool,Int}
-    const_values::Vector{Float64}
-    forward_storage::Vector{Float64}
-    partials_storage::Vector{Float64}
-    reverse_storage::Vector{Float64}
-    grad_sparsity::Vector{Int}
-    hess_I::Vector{Int} # nonzero pattern of hessian
-    hess_J::Vector{Int}
-    rinfo::Coloring.RecoveryInfo # coloring info for hessians
-    seed_matrix::Matrix{Float64}
-    linearity::Linearity
-    dependent_subexpressions::Vector{Int} # subexpressions which this function depends on, ordered for forward pass
-end
-
-mutable struct _SubexpressionStorage
-    nd::Vector{NodeData}
-    adj::SparseMatrixCSC{Bool,Int}
-    const_values::Vector{Float64}
-    forward_storage::Vector{Float64}
-    partials_storage::Vector{Float64}
-    reverse_storage::Vector{Float64}
-    forward_storage_ϵ::Vector{Float64}
-    partials_storage_ϵ::Vector{Float64}
-    reverse_storage_ϵ::Vector{Float64}
-    linearity::Linearity
-end
-
 """
     NLPEvaluator(m::Model)
 
@@ -331,9 +302,9 @@ mutable struct NLPEvaluator <: MOI.AbstractNLPEvaluator
     model::Model
     parameter_values::Vector{Float64}
     has_nlobj::Bool
-    objective::_FunctionStorage
-    constraints::Vector{_FunctionStorage}
-    subexpressions::Vector{_SubexpressionStorage}
+    objective::_Derivatives._FunctionStorage
+    constraints::Vector{_Derivatives._FunctionStorage}
+    subexpressions::Vector{_Derivatives._SubexpressionStorage}
     subexpression_order::Vector{Int}
     subexpression_forward_values::Vector{Float64}
     subexpression_reverse_values::Vector{Float64}
@@ -374,124 +345,6 @@ mutable struct NLPEvaluator <: MOI.AbstractNLPEvaluator
     end
 end
 
-function _replace_moi_variables(
-    nd::Vector{NodeData},
-    moi_index_to_consecutive_index,
-)
-    new_nd = Vector{NodeData}(undef, length(nd))
-    for i in 1:length(nd)
-        node = nd[i]
-        if node.nodetype == MOIVARIABLE
-            new_nd[i] = NodeData(
-                VARIABLE,
-                moi_index_to_consecutive_index[_MOIVAR(node.index)],
-                node.parent,
-            )
-        else
-            new_nd[i] = node
-        end
-    end
-    return new_nd
-end
-
-function _FunctionStorage(
-    nd::Vector{NodeData},
-    const_values,
-    num_variables,
-    coloring_storage,
-    want_hess::Bool,
-    subexpressions::Vector{_SubexpressionStorage},
-    dependent_subexpressions,
-    subexpression_linearity,
-    subexpression_edgelist,
-    subexpression_variables,
-    moi_index_to_consecutive_index,
-)
-    nd = _replace_moi_variables(nd, moi_index_to_consecutive_index)
-    adj = adjmat(nd)
-    forward_storage = zeros(length(nd))
-    partials_storage = zeros(length(nd))
-    reverse_storage = zeros(length(nd))
-    empty!(coloring_storage)
-    compute_gradient_sparsity!(coloring_storage, nd)
-
-    for k in dependent_subexpressions
-        compute_gradient_sparsity!(coloring_storage, subexpressions[k].nd)
-    end
-    grad_sparsity = sort!(collect(coloring_storage))
-    empty!(coloring_storage)
-
-    if want_hess
-        # compute hessian sparsity
-        linearity = classify_linearity(nd, adj, subexpression_linearity)
-        edgelist = compute_hessian_sparsity(
-            nd,
-            adj,
-            linearity,
-            coloring_storage,
-            subexpression_edgelist,
-            subexpression_variables,
-        )
-        hess_I, hess_J, rinfo = Coloring.hessian_color_preprocess(
-            edgelist,
-            num_variables,
-            coloring_storage,
-        )
-        seed_matrix = Coloring.seed_matrix(rinfo)
-    else
-        hess_I = hess_J = Int[]
-        rinfo = Coloring.RecoveryInfo()
-        seed_matrix = Array{Float64}(undef, 0, 0)
-        linearity = [NONLINEAR]
-    end
-
-    return _FunctionStorage(
-        nd,
-        adj,
-        const_values,
-        forward_storage,
-        partials_storage,
-        reverse_storage,
-        grad_sparsity,
-        hess_I,
-        hess_J,
-        rinfo,
-        seed_matrix,
-        linearity[1],
-        dependent_subexpressions,
-    )
-end
-
-function _SubexpressionStorage(
-    nd::Vector{NodeData},
-    const_values,
-    num_variables,
-    subexpression_linearity,
-    moi_index_to_consecutive_index,
-)
-    nd = _replace_moi_variables(nd, moi_index_to_consecutive_index)
-    adj = adjmat(nd)
-    forward_storage = zeros(length(nd))
-    partials_storage = zeros(length(nd))
-    reverse_storage = zeros(length(nd))
-    linearity = classify_linearity(nd, adj, subexpression_linearity)
-
-    empty_arr = Array{Float64}(undef, 0)
-
-    return _SubexpressionStorage(
-        nd,
-        adj,
-        const_values,
-        forward_storage,
-        partials_storage,
-        reverse_storage,
-        empty_arr,
-        empty_arr,
-        empty_arr,
-        linearity[1],
-    )
-end
-
 function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     nldata::_NLPData = d.model.nlp_data
 
@@ -520,7 +373,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
         max(num_variables_, d.model.nlp_data.largest_user_input_dimension),
     )
 
-    d.constraints = _FunctionStorage[]
+    d.constraints = _Derivatives._FunctionStorage[]
     d.last_x = fill(NaN, num_variables_)
 
     d.parameter_values = nldata.nlparamvalues
@@ -550,7 +403,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     subexpression_edgelist =
         Array{Set{Tuple{Int,Int}}}(undef, length(nldata.nlexpr))
     d.subexpressions =
-        Array{_SubexpressionStorage}(undef, length(nldata.nlexpr))
+        Array{_Derivatives._SubexpressionStorage}(undef, length(nldata.nlexpr))
     d.subexpression_forward_values =
         Array{Float64}(undef, length(d.subexpressions))
     d.subexpression_reverse_values =
@@ -559,7 +412,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     empty_edgelist = Set{Tuple{Int,Int}}()
     for k in d.subexpression_order # only load expressions which actually are used
         d.subexpression_forward_values[k] = NaN
-        d.subexpressions[k] = _SubexpressionStorage(
+        d.subexpressions[k] = _Derivatives._SubexpressionStorage(
             nldata.nlexpr[k].nd,
             nldata.nlexpr[k].const_values,
             num_variables_,
@@ -618,7 +471,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
 
     if d.has_nlobj
         nd = main_expressions[1]
-        d.objective = _FunctionStorage(
+        d.objective = _Derivatives._FunctionStorage(
             nd,
             nldata.nlobj.const_values,
             num_variables_,
@@ -641,7 +494,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
         nd = main_expressions[idx]
         push!(
             d.constraints,
-            _FunctionStorage(
+            _Derivatives._FunctionStorage(
                 nd,
                 nlconstr.terms.const_values,
                 num_variables_,
