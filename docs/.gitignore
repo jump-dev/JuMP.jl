@@ -5,3 +5,5 @@ src/examples/*/*.md
 src/tutorials/*/*.md
 !src/tutorials/*/introduction.md
 src/moi/
+.vale
+.vale.ini

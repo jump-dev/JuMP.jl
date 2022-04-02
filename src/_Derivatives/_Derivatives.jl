@@ -5,11 +5,12 @@ using SparseArrays
 
 using Base.Meta
 using ForwardDiff
-import Calculus
-using SpecialFunctions  # Needed for some of the derivatives in Calculus.
 import MathOptInterface
 const MOI = MathOptInterface
 using ..JuMP
+
+# Needed for some of the univariate derivatives in univariate_expressions.jl.
+using SpecialFunctions
 
 const TAG = :jump_tag
 
@@ -33,6 +34,7 @@ import NaNMath:
     pow,
     sqrt
 
+include("univariate_expressions.jl")
 include("types.jl")
 include("conversion.jl")
 include("coloring.jl")

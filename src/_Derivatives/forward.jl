@@ -436,19 +436,11 @@ end
 
 export forward_eval_ϵ
 
-exprs = Expr[]
-for i in 1:length(univariate_operators)
-    op = univariate_operators[i]
-    deriv_expr = univariate_operator_deriv[i]
-    ex = :(return $op(x), $deriv_expr::T)
-    push!(exprs, ex)
-end
-
-function binaryswitch(ids, exprs)
+function _create_binary_switch(ids, exprs)
     if length(exprs) <= 3
         out = Expr(:if, Expr(:call, :(==), :operator_id, ids[1]), exprs[1])
         if length(exprs) > 1
-            push!(out.args, binaryswitch(ids[2:end], exprs[2:end]))
+            push!(out.args, _create_binary_switch(ids[2:end], exprs[2:end]))
         end
         return out
     else
@@ -456,54 +448,34 @@ function binaryswitch(ids, exprs)
         return Expr(
             :if,
             Expr(:call, :(<=), :operator_id, ids[mid]),
-            binaryswitch(ids[1:mid], exprs[1:mid]),
-            binaryswitch(ids[mid+1:end], exprs[mid+1:end]),
+            _create_binary_switch(ids[1:mid], exprs[1:mid]),
+            _create_binary_switch(ids[mid+1:end], exprs[mid+1:end]),
         )
     end
 end
-switchexpr = binaryswitch(1:length(exprs), exprs)
 
-@eval @inline function eval_univariate(operator_id, x::T) where {T}
-    $switchexpr
-    return error("No match for operator_id")
+let exprs = map(SYMBOLIC_UNIVARIATE_EXPRESSIONS) do arg
+        return :(return $(arg[1])(x), $(arg[2]))
+    end
+    @eval @inline function eval_univariate(operator_id, x::T) where {T}
+        $(_create_binary_switch(1:length(exprs), exprs))
+        return error("Invalid operator_id")
+    end
 end
 
-# TODO: optimize sin/cos/exp
-ids = Int[]
-exprs = Expr[]
-for i in 1:length(univariate_operators)
-    op = univariate_operators[i]
-    if op == :asec ||
-       op == :acsc ||
-       op == :asecd ||
-       op == :acscd ||
-       op == :acsch ||
-       op == :trigamma
-        # there's an abs in the derivative that Calculus can't symbolically differentiate
-        continue
+let exprs = map(SYMBOLIC_UNIVARIATE_EXPRESSIONS) do arg
+        if arg === :(nothing)  # f''(x) isn't defined
+            :(error("Invalid operator_id"))
+        else
+            :(return $(arg[3]))
+        end
     end
-    if i in 1:3 # :+, :-, :abs
-        deriv_expr = :(zero(T))
-    elseif op == :sin || op == :cos
-        deriv_expr = :(-fval)
-    elseif op == :exp
-        deriv_expr = :(fval)
-    elseif op == :rad2deg || op == :deg2rad
-        deriv_expr = :(zero(T))
-    else
-        deriv_expr = Calculus.differentiate(univariate_operator_deriv[i], :x)
+    @eval @inline function eval_univariate_2nd_deriv(
+        operator_id,
+        x::T,
+        ::T,  # TODO: we could re-use the function evaluation
+    ) where {T}
+        $(_create_binary_switch(1:length(exprs), exprs))
+        return error("Invalid operator_id")
     end
-    ex = :(return $deriv_expr::T)
-    push!(ids, i)
-    push!(exprs, ex)
-end
-switchexpr = binaryswitch(ids, exprs)
-
-@eval @inline function eval_univariate_2nd_deriv(
-    operator_id,
-    x::T,
-    fval::T,
-) where {T}
-    $switchexpr
-    return error("No match for operator_id")
 end
