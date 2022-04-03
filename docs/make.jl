@@ -181,12 +181,14 @@ const _PAGES = [
         "reference/nlp.md",
         "reference/callbacks.md",
         "reference/extensions.md",
+        "reference/nonlinear.md",
     ],
     "Background Information" =>
         ["background/algebraic_modeling_languages.md"],
     "Developer Docs" => [
         "Contributing" => "developers/contributing.md",
         "Extensions" => "developers/extensions.md",
+        "Nonlinear" => "developers/nonlinear.md",
         "Custom binaries" => "developers/custom_solver_binaries.md",
         "Style Guide" => "developers/style.md",
         "Roadmap" => "developers/roadmap.md",

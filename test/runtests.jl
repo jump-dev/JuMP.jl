@@ -16,6 +16,10 @@ t = time()
 include("Containers/Containers.jl")
 println("Containers.jl took $(round(time() - t; digits = 1)) seconds.")
 
+t = time()
+include("Nonlinear/Nonlinear.jl")
+println("Nonlinear.jl took $(round(time() - t; digits = 1)) seconds.")
+
 for file in filter(f -> endswith(f, ".jl"), readdir(@__DIR__))
     if file in [
         "runtests.jl",
