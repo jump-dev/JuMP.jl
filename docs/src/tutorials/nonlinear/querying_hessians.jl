@@ -214,7 +214,7 @@ f = constraint_object(g_1).func
 # ```
 # f(x) = Σqᵢⱼ * xᵢ * xⱼ + Σaᵢ xᵢ + c
 # ```
-# So `∇²f(x)` is the matrix formed by `[qᵢⱼ]ᵢⱼ`.
+# So `∇²f(x)` is the matrix formed by `[qᵢⱼ]ᵢⱼ` if `i != j` and `2[qᵢⱼ]ᵢⱼ` if `i = j`.
 
 variables_to_column = Dict(x[i] => i for i in 1:n)
 
@@ -269,7 +269,11 @@ function compute_optimal_hessian(model)
     add_to_hessian(H, f::Any, μ) = nothing
     function add_to_hessian(H, f::QuadExpr, μ)
         for (vars, coef) in f.terms
-            H[vmap[vars.a], vmap[vars.b]] += μ * coef
+            if vars.a != vars.b
+                H[vmap[vars.a], vmap[vars.b]] += μ * coef
+            else
+                H[vmap[vars.a], vmap[vars.b]] += 2 * μ * coef
+            end
         end
     end
     for (F, S) in list_of_constraint_types(model)
