@@ -59,6 +59,11 @@ Base.copy(::AbstractModel)
 ```
 ## I/O
 
+!!! note
+    JuMP readers and writers are not optimized for performance. The most
+    efficient way to create a JuMP problem is, usually, incrementally building
+    the model with JuMP macros.
+
 ```@docs
 write_to_file
 Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)
