@@ -196,6 +196,7 @@ before we can call [`MOI.initialize`](@ref), we need to set an
 There are two to choose from within JuMP, although other packages may add more
 options by sub-typing [`Nonlinear.AbstractAutomaticDifferentiation`](@ref):
  * [`Nonlinear.Default`](@ref)
+ * [`Nonlinear.SparseReverseMode`](@ref).
 
 If we set [`Nonlinear.Default`](@ref), then we get access to `:ExprGraph`:
 ```jldoctest nonlinear_developer
@@ -216,6 +217,52 @@ The `:ExprGraph` feature means we can call [`MOI.objective_expr`](@ref) and
 However, we cannot call gradient terms such as
 [`MOI.eval_objective_gradient`](@ref) because [`Nonlinear.Default`](@ref) does
 not know how to differentiate a nonlinear expression.
+
+If, instead, we set [`Nonlinear.SparseReverseMode`](@ref), then we get access to
+`:Grad`, the gradient of the objective function, `:Jac`, the jacobian matrix of
+the constraints, `:JacVec`, the ability to compute Jacobian-vector products, and
+`:ExprGraph`.
+```jldoctest nonlinear_developer
+julia> Nonlinear.set_differentiation_backend(
+           data,
+           Nonlinear.SparseReverseMode(),
+           [x],
+       )
+
+julia> data
+NonlinearData with available features:
+  * :Grad
+  * :Jac
+  * :JacVec
+  * :ExprGraph
+```
+
+However, before calling anything, we need to call [`MOI.initialize`](@ref):
+```jldoctest nonlinear_developer
+julia> MOI.initialize(data, [:Grad, :Jac, :JacVec, :ExprGraph])
+```
+
+Now we can call methods like [`MOI.eval_objective`](@ref):
+```jldoctest nonlinear_developer
+julia> x = [1.0]
+1-element Vector{Float64}:
+ 1.0
+
+julia> MOI.eval_objective(data, x)
+7.268073418273571
+```
+and [`MOI.eval_objective_gradient`](@ref):
+```jldoctest nonlinear_developer
+julia> grad = [NaN]
+1-element Vector{Float64}:
+ NaN
+
+julia> MOI.eval_objective_gradient(data, grad, x)
+
+julia> grad
+1-element Vector{Float64}:
+ 1.909297426825682
+ ```
 
 ## Expression-graph representation
 

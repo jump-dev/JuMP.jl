@@ -59,6 +59,7 @@ Nonlinear.eval_comparison_function
 ```@docs
 Nonlinear.AbstractAutomaticDifferentiation
 Nonlinear.Default
+Nonlinear.SparseReverseMode
 Nonlinear.set_differentiation_backend
 ```
 

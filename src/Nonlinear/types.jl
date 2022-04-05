@@ -187,3 +187,31 @@ function set_differentiation_backend(
     data.inner = nothing
     return
 end
+
+"""
+    SparseReverseMode() <: AbstractAutomaticDifferentiation
+"""
+struct SparseReverseMode <: AbstractAutomaticDifferentiation end
+
+function set_differentiation_backend(
+    data::NonlinearData,
+    ::SparseReverseMode,
+    ordered_variables::Vector{MOI.VariableIndex},
+)
+    data.inner = ReverseAD.NLPEvaluator(data, ordered_variables)
+    return
+end
+
+_bound(s::MOI.LessThan) = MOI.NLPBoundsPair(-Inf, s.upper)
+_bound(s::MOI.GreaterThan) = MOI.NLPBoundsPair(s.lower, Inf)
+_bound(s::MOI.EqualTo) = MOI.NLPBoundsPair(s.value, s.value)
+_bound(s::MOI.Interval) = MOI.NLPBoundsPair(s.lower, s.upper)
+
+function MOI.NLPBlockData(data::NonlinearData, x::Vector{MOI.VariableIndex})
+    set_differentiation_backend(data, SparseReverseMode(), x)
+    return MOI.NLPBlockData(
+        [_bound(c.set) for (_, c) in data.constraints],
+        data,
+        data.objective !== nothing,
+    )
+end

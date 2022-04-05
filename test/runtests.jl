@@ -16,9 +16,11 @@ t = time()
 include("Containers/Containers.jl")
 println("Containers.jl took $(round(time() - t; digits = 1)) seconds.")
 
-t = time()
-include("Nonlinear/Nonlinear.jl")
-println("Nonlinear.jl took $(round(time() - t; digits = 1)) seconds.")
+@testset "$file" for file in ["Nonlinear", "ReverseAD"]
+    t = time()
+    include("Nonlinear/$(file).jl")
+    println("$(file) took $(round(time() - t; digits = 1)) seconds.")
+end
 
 for file in filter(f -> endswith(f, ".jl"), readdir(@__DIR__))
     if file in [
