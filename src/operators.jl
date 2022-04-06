@@ -397,7 +397,7 @@ end
 ###############################################################################
 
 const _OP_HINT = "Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective."
-for (func, _) in Calculus.symbolic_derivatives_1arg(),
+for func in Nonlinear.DEFAULT_UNIVARIATE_OPERATORS[4:end],
     typ in [:AbstractVariableRef, :GenericAffExpr, :GenericQuadExpr]
 
     if func == :abs2 && (typ == :AbstractVariableRef || typ == :GenericAffExpr)

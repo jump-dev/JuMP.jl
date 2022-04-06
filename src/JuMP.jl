@@ -46,15 +46,14 @@ Shorthand for the MathOptInterface.Bridges package.
 """
 const MOIB = MOI.Bridges
 
-import Calculus
 import OrderedCollections.OrderedDict
-import ForwardDiff
+
+const Nonlinear = MOI.Nonlinear
+
 
 include("Containers/Containers.jl")
 
 # Exports are at the end of the file.
-
-include("utils.jl")
 
 const _MOIVAR = MOI.VariableIndex
 const _MOICON{F,S} = MOI.ConstraintIndex{F,S}
@@ -147,7 +146,7 @@ mutable struct Model <: AbstractModel
     # where kwargs get passed along to subsequent solve calls.
     optimize_hook::Any
     # TODO: Document.
-    nlp_data::Any
+    nlp_data::Union{Nothing,Nonlinear.NonlinearData}
     # Dictionary from variable and constraint names to objects.
     obj_dict::Dict{Symbol,Any}
     # Number of times we add large expressions. Incremented and checked by
@@ -616,15 +615,6 @@ end
 Returns number of variables in `model`.
 """
 num_variables(model::Model)::Int64 = MOI.get(model, MOI.NumberOfVariables())
-
-"""
-    num_nonlinear_constraints(model::Model)
-
-Returns the number of nonlinear constraints associated with the `model`.
-"""
-function num_nonlinear_constraints(model::Model)
-    return model.nlp_data !== nothing ? length(model.nlp_data.nlconstr) : 0
-end
 
 """
     object_dictionary(model::Model)
@@ -1344,35 +1334,11 @@ function operator_warn(model::Model)
     end
 end
 
-"""
-    NonlinearExpression <: AbstractJuMPScalar
-
-A struct to represent a nonlinear expression.
-
-Create an expression using [`@NLexpression`](@ref).
-"""
-struct NonlinearExpression <: AbstractJuMPScalar
-    model::Model
-    index::Int
-end
-
-"""
-    NonlinearParameter <: AbstractJuMPScalar
-
-A struct to represent a nonlinear parameter.
-
-Create a parameter using [`@NLparameter`](@ref).
-"""
-struct NonlinearParameter <: AbstractJuMPScalar
-    model::Model
-    index::Int
-end
-
 include("copy.jl")
+include("nlp.jl")
 include("operators.jl")
 include("macros.jl")
 include("optimizer_interface.jl")
-include("nlp.jl")
 include("print.jl")
 include("solution_summary.jl")
 include("lp_sensitivity2.jl")

@@ -245,7 +245,7 @@ julia> @NLconstraint(model, *(x...) <= 1.0)
 x[1] * x[2] * x[3] - 1.0 ≤ 0
 
 julia> @NLconstraint(model, *((x / 2)...) <= 0.0)
-ERROR: LoadError: Unexpected expression in (*)(x / 2...). JuMP supports splatting only symbols. For example, x... is ok, but (x + 1)..., [x; y]... and g(f(y)...) are not.
+ERROR: Unsupported use of the splatting operator. JuMP supports splatting only symbols. For example, `x...` is ok, but `(x + 1)...`, `[x; y]...` and `g(f(y)...)` are not.
 ```
 
 ## User-defined Functions

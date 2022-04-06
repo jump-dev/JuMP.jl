@@ -252,13 +252,13 @@ function test_printing_NLPEvaluator()
     io_test(
         MIME("text/plain"),
         evaluator,
-        "An NLPEvaluator with available features:\n" *
+        "NonlinearData with available features:\n" *
         "  * :Grad\n" *
         "  * :Jac\n" *
         "  * :JacVec\n" *
-        "  * :ExprGraph\n" *
         "  * :Hess\n" *
-        "  * :HessVec",
+        "  * :HessVec\n" *
+        "  * :ExprGraph",
     )
     return
 end
