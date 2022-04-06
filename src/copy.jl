@@ -285,7 +285,8 @@ function MOI.copy_to(dest::MOI.ModelLike, src::Model)
     if src.nlp_data !== nothing
         # Re-set the NLP block in-case things have changed since last
         # solve.
-        MOI.set(src, MOI.NLPBlock(), _create_nlp_block_data(src))
+        block = MOI.NLPBlockData(src.nlp_data, index.(all_variables(src)))
+        MOI.set(src, MOI.NLPBlock(), block)
     end
     return MOI.copy_to(dest, backend(src))
 end

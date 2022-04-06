@@ -141,8 +141,8 @@ function optimize!(
     # The nlp_data is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
     if model.nlp_data !== nothing
-        MOI.set(model, MOI.NLPBlock(), _create_nlp_block_data(model))
-        empty!(model.nlp_data.nlconstr_duals)
+        block = MOI.NLPBlockData(model.nlp_data, index.(all_variables(model)))
+        MOI.set(model, MOI.NLPBlock(), block)
     end
     # If the user or an extension has provided an optimize hook, call
     # that instead of solving the model ourselves
