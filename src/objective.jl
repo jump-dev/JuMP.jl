@@ -103,7 +103,7 @@ function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
     # Nonlinear objectives override regular objectives, so if there was a
     # nonlinear objective set, we must clear it.
     if model.nlp_data !== nothing
-        model.nlp_data.nlobj = nothing
+        model.nlp_data.objective = nothing
     end
     return
 end

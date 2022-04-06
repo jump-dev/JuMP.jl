@@ -321,6 +321,13 @@ function objective_function_string(mode, model::Model)
     return nonlinear_expr_string(model, mode, nlobj)
 end
 
+_set_rhs(s::MOI.LessThan) = :leq, s.upper
+_set_rhs(s::MOI.GreaterThan) = :geq, s.lower
+_set_rhs(s::MOI.EqualTo) = :eq, s.value
+_set_rhs(s::MOI.Interval) = :leq, s.upper
+_set_lhs(s::MOI.Interval) = :leq, s.lower
+_set_lhs(::Any) = nothing
+
 """
     nonlinear_constraint_string(
         model::Model,
@@ -334,31 +341,17 @@ Return a string representation of the nonlinear constraint `c` belonging to
 function nonlinear_constraint_string(
     model::Model,
     mode::MIME,
-    c::_NonlinearConstraint,
+    c::Nonlinear.ConstraintIndex,
 )
-    s = _sense(c)
-    nl = nonlinear_expr_string(model, mode, c.terms)
-    if s == :range
-        return string(
-            _string_round(c.lb),
-            " ",
-            _math_symbol(mode, :leq),
-            " ",
-            nl,
-            " ",
-            _math_symbol(mode, :leq),
-            " ",
-            _string_round(c.ub),
-        )
+    constraint = model.nlp_data.constraints[c]
+    body = nonlinear_expr_string(model, mode, constraint.expression)
+    lhs = _set_lhs(constraint.set)
+    rhs = _set_rhs(constraint.set)
+    output = "$body $(_math_symbol(mode, rhs[1])) $(_string_round(rhs[2]))"
+    if lhs === nothing
+        return output
     end
-    if s == :<=
-        rel = _math_symbol(mode, :leq)
-    elseif s == :>=
-        rel = _math_symbol(mode, :geq)
-    else
-        rel = _math_symbol(mode, :eq)
-    end
-    return string(nl, " ", rel, " ", _string_round(_rhs(c)))
+    return "$(_string_round(lhs[2])) $(_math_symbol(mode, lhs[1])) $output"
 end
 
 """
@@ -373,34 +366,90 @@ function constraints_string(mode, model::Model)
         cref in all_constraints(model, F, S)
     ]
     if model.nlp_data !== nothing
-        for c in model.nlp_data.nlconstr
-            push!(strings, nonlinear_constraint_string(model, mode, c))
+        for (index, _) in model.nlp_data.constraints
+            push!(strings, nonlinear_constraint_string(model, mode, index))
         end
     end
     return strings
 end
 
 """
-    nonlinear_expr_string(model::Model, mode::MIME, c::_NonlinearExprData)
+    nonlinear_expr_string(
+        model::Model,
+        mode::MIME,
+        c::Nonlinear.NonlinearExpression,
+    )
 
 Return a string representation of the nonlinear expression `c` belonging to
 `model`, given the `mode`.
 """
-function nonlinear_expr_string(model::Model, mode::MIME, c::_NonlinearExprData)
-    ex = _tape_to_expr(
-        model,
-        1,
-        c.nd,
-        adjmat(c.nd),
-        c.const_values,
-        [],
-        [],
-        model.nlp_data.user_operators,
-        false,
-        false,
-        mode,
-    )
-    return string(_latexify_exponentials(mode, ex))
+function nonlinear_expr_string(
+    model::Model,
+    mode::MIME,
+    c::Nonlinear.NonlinearExpression,
+)
+    expr = Nonlinear._to_expr(model.nlp_data, c; expand_subexpressions = false)
+    # Walk terms, and replace
+    #    MOI.VariableIndex => VariableRef
+    #    Nonlinear.ExpressionIndex => _NonlinearExpressionIO
+    #    Nonlinear.ParameterIndex => _NonlinearParameterIO
+    expr = _replace_expr_terms(model, mode, expr)
+    return string(_latexify_exponentials(mode, expr))
+end
+
+function _replace_expr_terms(model, mode, expr::Expr)
+    for i in 1:length(expr.args)
+        expr.args[i] = _replace_expr_terms(model, mode, expr.args[i])
+    end
+    return expr
+end
+
+_replace_expr_terms(::Any, ::Any, expr::Any) = expr
+
+_replace_expr_terms(model, ::Any, x::MOI.VariableIndex) = VariableRef(model, x)
+
+# By default, JuMP will print NonlinearExpression objects with some preamble and
+# their fill expression. But when printed nested expressions, we only want to
+# print `subexpression[i]`. To create this behavior, we create a new object and
+# overload `Base.show`, and we replace any ExpressionIndex with this new type.
+struct _NonlinearExpressionIO
+    model::Model
+    mode::MIME
+    value::Int
+end
+
+function Base.show(io::IO, x::_NonlinearExpressionIO)
+    if x.mode == MIME("text/latex")
+        return print(io, "subexpression_{$(x.value)}")
+    end
+    return print(io, "subexpression[$(x.value)]")
+end
+
+function _replace_expr_terms(model, mode, x::Nonlinear.ExpressionIndex)
+    return _NonlinearExpressionIO(model, mode, x.value)
+end
+
+# We do a similar thing for nonlinear parameters.
+struct _NonlinearParameterIO
+    model::Model
+    mode::MIME
+    value::Int
+end
+
+function Base.show(io::IO, x::_NonlinearParameterIO)
+    for (k, v) in object_dictionary(x.model)
+        if v == NonlinearParameter(x.model, x.value)
+            return print(io, "$k")
+        end
+    end
+    if x.mode == MIME("text/latex")
+        return print(io, "parameter_{$(x.value)}")
+    end
+    return print(io, "parameter[$(x.value)]")
+end
+
+function _replace_expr_terms(model, mode, x::Nonlinear.ParameterIndex)
+    return _NonlinearParameterIO(model, mode, x.value)
 end
 
 # Change x ^ -2.0 to x ^ {-2.0}
@@ -425,8 +474,8 @@ function _nl_subexpression_string(mode::MIME, model::Model)
         return String[]
     end
     strings = String[]
-    for k in 1:length(model.nlp_data.nlexpr)::Int
-        expr = nonlinear_expr_string(model, mode, model.nlp_data.nlexpr[k])
+    for (k, ex) in enumerate(model.nlp_data.expressions)
+        expr = nonlinear_expr_string(model, mode, ex)
         if mode == MIME("text/latex")
             push!(strings, "subexpression_{$k}: $expr")
         else
@@ -588,7 +637,8 @@ function function_string(mode, constraint::AbstractConstraint)
 end
 
 function function_string(mode::MIME, p::NonlinearExpression)
-    s = nonlinear_expr_string(p.model, mode, p.model.nlp_data.nlexpr[p.index])
+    expr = p.model.nlp_data.expressions[p.index]
+    s = nonlinear_expr_string(p.model, mode, expr)
     return "subexpression[$(p.index)]: " * s
 end
 
@@ -725,15 +775,6 @@ function Base.show(io::IO, ::MIME"text/latex", f::AbstractJuMPScalar)
     return print(io, _wrap_in_math_mode(function_string(MIME("text/latex"), f)))
 end
 
-function Base.show(io::IO, evaluator::NLPEvaluator)
-    _init_NLP(evaluator.model)
-    Base.print(io, "An NLPEvaluator with available features:")
-    for feat in MOI.features_available(evaluator)
-        print(io, "\n  * :", feat)
-    end
-    return
-end
-
 function Base.show(io::IO, ex::Union{NonlinearExpression,NonlinearParameter})
     return print(io, function_string(MIME("text/plain"), ex))
 end
@@ -747,14 +788,14 @@ function Base.show(
 end
 
 function Base.show(io::IO, c::NonlinearConstraintRef)
-    expr = c.model.nlp_data.nlconstr[c.index.value]
-    str = nonlinear_constraint_string(c.model, MIME("text/plain"), expr)
+    index = Nonlinear.ConstraintIndex(c.index.value)
+    str = nonlinear_constraint_string(c.model, MIME("text/plain"), index)
     return print(io, str)
 end
 
 function Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraintRef)
-    expr = c.model.nlp_data.nlconstr[c.index.value]
+    index = Nonlinear.ConstraintIndex(c.index.value)
     mode = MIME("text/latex")
-    s = _wrap_in_math_mode(nonlinear_constraint_string(c.model, mode, expr))
+    s = _wrap_in_math_mode(nonlinear_constraint_string(c.model, mode, index))
     return print(io, s)
 end

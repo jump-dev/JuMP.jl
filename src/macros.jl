@@ -1736,6 +1736,168 @@ function _reorder_parameters(args)
 end
 
 """
+    _parse_nonlinear_expression(data, x::Expr)
+
+JuMP needs to build Nonlinear expression objects in macro scope. This has two
+main challenges:
+
+ 1. We need to evaluate local variables into the expressions. This is reasonably
+    easy, anywhere we see a symbol that is not a function call, replace it by
+    esc(x).
+
+ 2. We need to identify un-registered user-defined functions so that we can
+    attempt to automatically register them if their symbolic name exists in the
+    scope. I (@odow) originally introduced the auto-registration in
+    https://github.com/jump-dev/JuMP.jl/pull/2537 to fix a common pain-point in
+    JuMP, but after working through this I believe it was a mistake. It's a lot
+    of hassle! One problem is that the design of Nonlinear has moved the
+    expression parsing from macro-expansion time to runtime. I think this is a
+    big win for readability of the system, but it means we loose access to the
+    caller's local scope. My solution to maintain backwards compatibility is to
+    check that every function call is registered before parsing the expression.
+
+
+```julia
+macro foo(data, input)
+    code, expr = _parse_nonlinear_expression(esc(data), input)
+    return quote
+        \$code
+        \$expr
+    end
+end
+
+model = NonlinearData()
+x = 2
+@foo(model, 2x + 1) == Nonlinear.parse_expression(model, :(2 * \$x + 1))
+```
+"""
+function _parse_nonlinear_expression(model, x)
+    code = quote
+        _init_NLP($model)
+    end
+    operators = Set{Tuple{Symbol,Int}}()
+    y = _parse_nonlinear_expression_inner(code, x, operators)
+    user_defined_operators = filter(operators) do (op, i)
+        if op in (:<=, :>=, :(==), :<, :>, :&&, :||)
+            return false
+        elseif i == 1 && op in Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
+            return false
+        elseif i > 1 && op in Nonlinear.DEFAULT_MULTIVARIATE_OPERATORS
+            return false
+        end
+        return true
+    end
+    if length(user_defined_operators) > 0
+        op_var = gensym()
+        push!(code.args, :($op_var = $(model).nlp_data.operators))
+        for (op, i) in collect(user_defined_operators)
+            push!(code.args, _auto_register_expression(op_var, op, i))
+        end
+    end
+    return code, y
+end
+
+function _auto_register_expression(op_var, op, i)
+    q_op = Meta.quot(op)
+    return quote
+        try
+            Nonlinear.register_operator_if_needed(
+                $op_var,
+                $q_op,
+                $i,
+                $(esc(op)),
+            )
+        catch
+        end
+        Nonlinear.assert_registered($op_var, $q_op, $i)
+    end
+end
+
+function _parse_nonlinear_expression_inner(::Any, x::Symbol, ::Any)
+    if x in (:<=, :>=, :(==), :<, :>, :&&, :||)
+        return Meta.quot(x)
+    end
+    return esc(x)
+end
+
+# Numbers and other literal constants.
+_parse_nonlinear_expression_inner(::Any, x, ::Any) = x
+
+function _is_generator(x)
+    return isexpr(x, :call) &&
+           length(x.args) >= 2 &&
+           isexpr(x.args[2], :generator)
+end
+
+function _parse_nonlinear_expression_inner(code, x::Expr, operators)
+    if isexpr(x, :block)
+        error(
+            "`begin...end` blocks are not supported in nonlinear macros. The " *
+            "nonlinear expression must be a single statement.",
+        )
+    end
+    if isexpr(x, :ref)
+        return esc(x)
+    elseif isexpr(x, :.)
+        return esc(x)
+    elseif _is_generator(x)
+        return _parse_generator_expression(code, x, operators)
+    elseif isexpr(x, Symbol("'"))
+        # Special-case the adjoint operator because it often happens with
+        # people trying to use linear algebra in macros.
+        return esc(x)
+    end
+    y = gensym()
+    y_expr = :($y = Expr($(Meta.quot(x.head))))
+    offset = 1
+    if isexpr(x, :call)
+        if !(x.args[1] isa Symbol)
+            error(
+                "Unsupported function $(x.args[1]). All function calls must " *
+                "be `Symbol`s.",
+            )
+        end
+        push!(operators, (x.args[1], length(x.args) - 1))
+        push!(y_expr.args[2].args, Meta.quot(x.args[1]))
+        offset += 1
+    end
+    for i in offset:length(x.args)
+        arg = _parse_nonlinear_expression_inner(code, x.args[i], operators)
+        push!(y_expr.args[2].args, arg)
+    end
+    push!(code.args, y_expr)
+    return y
+end
+
+function _parse_generator_expression(code, x, operators)
+    y = gensym()
+    y_expr, default = if _is_sum(x.args[1])
+        :($y = Expr(:call, :+)), 0
+    else
+        @assert _is_prod(x.args[1])
+        :($y = Expr(:call, :*)), 1
+    end
+    block = _MA.rewrite_generator(
+        x.args[2],
+        t -> begin
+            new_code = quote end
+            arg = _parse_nonlinear_expression_inner(new_code, t, operators)
+            push!(new_code.args, :(push!($y.args, $arg)))
+            new_code
+        end,
+    )
+    # Special case that was handled by JuMP in the past.
+    push!(code.args, quote
+        $y_expr
+        $block
+        if length($y.args) == 1
+            $y = $default
+        end
+    end)
+    return y
+end
+
+"""
     @variable(model, kw_args...)
 
 Add an *anonymous* variable to the model `model` described by the keyword
@@ -2052,12 +2214,13 @@ macro NLobjective(model, sense, x)
         return _macro_error(:NLobjective, (model, sense, x), __source__, str...)
     end
     sense_expr = _moi_sense(_error, sense)
-    ex = gensym()
+    esc_model = esc(model)
+    parsing_code, expr = _parse_nonlinear_expression(esc_model, x)
     code = quote
-        $ex = $(_process_NL_expr(model, x))
-        set_objective($(esc(model)), $sense_expr, $ex)
+        $parsing_code
+        set_nonlinear_objective($esc_model, $sense_expr, $expr)
     end
-    return _finalize_macro(esc(model), code, __source__)
+    return _finalize_macro(esc_model, code, __source__)
 end
 
 """
@@ -2083,14 +2246,12 @@ macro NLconstraint(m, x, args...)
     # - @NLconstraint(m, a*x <= 5)
     # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
     extra, kw_args, requestedcontainer = Containers._extract_kw_args(args)
-    (length(extra) > 1 || length(kw_args) > 0) && _error("too many arguments.")
+    if length(extra) > 1 || length(kw_args) > 0
+        _error("too many arguments.")
+    end
     # Canonicalize the arguments
     c = length(extra) == 1 ? x : gensym()
     con = length(extra) == 1 ? extra[1] : x
-
-    anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
-    variable = gensym()
-
     # Strategy: build up the code for non-macro add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
     idxvars, indices = Containers.build_ref_sets(_error, c)
@@ -2100,70 +2261,10 @@ macro NLconstraint(m, x, args...)
             "name for the index.",
         )
     end
-    # Build the constraint
-    if isexpr(con, :call) # one-sided constraint
-        # Simple comparison - move everything to the LHS
-        op = con.args[1]
-        if op == :(==)
-            lb = 0.0
-            ub = 0.0
-        elseif op == :(<=) || op == :(≤)
-            lb = -Inf
-            ub = 0.0
-        elseif op == :(>=) || op == :(≥)
-            lb = 0.0
-            ub = Inf
-        else
-            _error("expected comparison operator (<=, >=, or ==).")
-        end
-        lhs = :($(con.args[2]) - $(con.args[3]))
-        code = quote
-            c = _NonlinearConstraint($(_process_NL_expr(m, lhs)), $lb, $ub)
-            push!($esc_m.nlp_data.nlconstr, c)
-            ConstraintRef(
-                $esc_m,
-                NonlinearConstraintIndex(length($esc_m.nlp_data.nlconstr)),
-                ScalarShape(),
-            )
-        end
-    elseif isexpr(con, :comparison)
-        # ranged row
-        if (con.args[2] != :<= && con.args[2] != :≤) ||
-           (con.args[4] != :<= && con.args[4] != :≤)
-            _error(
-                "only ranged rows of the form lb <= expr <= ub are supported.",
-            )
-        end
-        lb = con.args[1]
-        ub = con.args[5]
-        code = quote
-            if !isa($(esc(lb)), Number) || !isa($(esc(ub)), Number)
-                error(
-                    "Interval constraint contains non-constant left- or " *
-                    "right-hand sides. Reformulate as two separate " *
-                    "constraints, or move all variables into the central term.",
-                )
-            end
-            c = _NonlinearConstraint(
-                $(_process_NL_expr(m, con.args[3])),
-                $(esc(lb)),
-                $(esc(ub)),
-            )
-            push!($esc_m.nlp_data.nlconstr, c)
-            ConstraintRef(
-                $esc_m,
-                NonlinearConstraintIndex(length($esc_m.nlp_data.nlconstr)),
-                ScalarShape(),
-            )
-        end
-    else
-        # Unknown
-        _error(
-            "constraints must be in one of the following forms:\n" *
-            "       expr1 <= expr2\n" *
-            "       expr1 >= expr2\n" *
-            "       expr1 == expr2",
-        )
+    parsing_code, expr = _parse_nonlinear_expression(esc_m, con)
+    code = quote
+        $parsing_code
+        add_nonlinear_constraint($esc_m, $expr)
     end
     looped =
         Containers.container_code(idxvars, indices, code, requestedcontainer)
@@ -2171,12 +2272,12 @@ macro NLconstraint(m, x, args...)
         _init_NLP($esc_m)
         $looped
     end
-    if anonvar
+    if isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
         macro_code = creation_code
     else
         macro_code = _macro_assign_and_return(
             creation_code,
-            variable,
+            gensym(),
             Containers._get_name(c),
             model_for_registering = esc_m,
         )
@@ -2221,10 +2322,6 @@ macro NLexpression(args...)
     if length(args) > 3 || length(kw_args) > 0
         _error("To many arguments ($(length(args))).")
     end
-
-    anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
-    variable = gensym()
-
     idxvars, indices = Containers.build_ref_sets(_error, c)
     if args[1] in idxvars
         _error(
@@ -2232,20 +2329,25 @@ macro NLexpression(args...)
             "different name for the index.",
         )
     end
-    code = :(NonlinearExpression($(esc(m)), $(_process_NL_expr(m, x))))
+    esc_m = esc(m)
+    parsing_code, expr = _parse_nonlinear_expression(esc_m, x)
+    code = quote
+        $parsing_code
+        add_nonlinear_expression($esc_m, $expr)
+    end
     creation_code =
         Containers.container_code(idxvars, indices, code, requestedcontainer)
-    if anonvar
+    if isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
         macro_code = creation_code
     else
         macro_code = _macro_assign_and_return(
             creation_code,
-            variable,
+            gensym(),
             Containers._get_name(c),
-            model_for_registering = esc(m),
+            model_for_registering = esc_m,
         )
     end
-    return _finalize_macro(esc(m), macro_code, __source__)
+    return _finalize_macro(esc_m, macro_code, __source__)
 end
 
 """
@@ -2363,7 +2465,7 @@ macro NLparameter(model, args...)
         if !isa($(esc(value)), Number)
             $(esc(_error))("Parameter value is not a number.")
         end
-        _new_parameter($esc_m, $(esc(value)))
+        add_nonlinear_parameter($esc_m, $(esc(value)))
     end
     creation_code = Containers.container_code(
         index_vars,
