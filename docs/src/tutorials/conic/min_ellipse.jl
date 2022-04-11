@@ -51,8 +51,8 @@ function example_minimal_ellipse()
     cs = [0.1831, 0.3295, 0.2077, 0.2362, 0.3284, 0.4931]
 
     ## Build the model under the change of variables
-    #       Psqr = P^2
-    #    q_tilde = Pq
+    ##       Psqr = P^2
+    ##    q_tilde = Pq
     model = Model(SCS.Optimizer)
 
     m = length(As)
@@ -71,7 +71,7 @@ function example_minimal_ellipse()
         if !(isreal(A) && transpose(A) == A)
             @error "Input matrices need to be real, symmetric matrices."
         end
-        
+
         @constraint(
             model,
             -[
@@ -89,14 +89,14 @@ function example_minimal_ellipse()
     @test termination_status(model) == OPTIMAL
     @test primal_status(model) == FEASIBLE_POINT
 
-    # Restore original parameterization
+    ## Restore original parameterization
     P = sqrt(value.(Psqr))
     q = P \ value.(q_tilde)
 
     @test isapprox(P, [0.423694 -0.039639; -0.039639 0.316316], atol = 1e-4)
     @test isapprox(q, [-0.396177, -0.021368], atol = 1e-4)
 
-    # Plot results
+    ## Plot results
     pl = plot(size = (600, 600))
     thetas = range(0, 2pi + 0.05, step = 0.05)
 
