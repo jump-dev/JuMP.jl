@@ -86,7 +86,7 @@
 
 # ## An example
 
-# Let's to solve the following linear programming problem using JuMP and HiGHS.
+# Let's solve the following linear programming problem using JuMP and HiGHS.
 # We will first look at the complete code to solve the problem and then go
 # through it step by step.
 
