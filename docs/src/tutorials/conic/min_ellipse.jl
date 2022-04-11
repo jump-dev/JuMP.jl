@@ -30,8 +30,8 @@ using Plots
 using Test
 
 function example_minimal_ellipse()
-    # Input ellipses, parameterized as
-    # x' A x + 2 b' x + c ≤ 0
+    ## Input ellipses, parameterized as
+    ## x' A x + 2 b' x + c ≤ 0
     As = [
         [1.2576 -0.3873; -0.3873 0.3467],
         [1.4125 -2.1777; -2.1777 6.7775],
