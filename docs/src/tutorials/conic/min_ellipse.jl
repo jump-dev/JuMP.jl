@@ -77,7 +77,6 @@ function minimal_ellipse(As, bs, cs)
 
     @assert termination_status(mdl) == OPTIMAL
     @assert primal_status(mdl) == FEASIBLE_POINT
-    @assert isapprox(objective_value(mdl), 0.132413, atol=1e-4)
 
     # Restore original parameterization
     P = sqrt(value.(Psqr))
@@ -86,6 +85,8 @@ function minimal_ellipse(As, bs, cs)
 end
 
 P, q = minimal_ellipse(As, bs, cs)
+@assert isapprox(P, [0.423694 -0.039639; -0.039639 0.316316], atol=1e-4)
+@assert isapprox(q, [-0.396177, -0.021368], atol=1e-4)
 
 # Plot results
 pl = plot(size=(600,600))
@@ -93,9 +94,9 @@ thetas = range(0, 2pi+0.05, step=0.05)
 
 for (A, b, c) in zip(As, bs, cs)
     sqrtA = sqrt(A)
-    b̃ = sqrtA\b
+    b_tilde = sqrtA\b
     alpha = b' * (A\b) - c
-    rhs = hcat(sqrt(alpha) * cos.(thetas) .- b̃[1], sqrt(alpha) * sin.(thetas) .- b̃[2])
+    rhs = hcat(sqrt(alpha) * cos.(thetas) .- b_tilde[1], sqrt(alpha) * sin.(thetas) .- b_tilde[2])
     ellipse = sqrtA\rhs'
     plot!(pl, ellipse[1, :], ellipse[2, :], label=nothing, c=:navy)
 end
