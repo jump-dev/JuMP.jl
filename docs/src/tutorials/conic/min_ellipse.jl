@@ -5,23 +5,25 @@
 
 # # Minimal ellipses
 
-# This example comes from section 8.4.1 of the book *Convex Optimization* (Boyd and Vandenberghe, 2004).
+# This example comes from section 8.4.1 of the book *Convex Optimization* (Boyd
+# and Vandenberghe, 2004).
 
-# Given a set of `m` ellipses `E(A, b, c) = { x : x' A x + 2 b' x + c ≤ 0 }`, we find the ellipse of smallest area that encloses the given ellipses.
+# Given a set of `m` ellipses `E(A, b, c) = { x : x' A x + 2 b' x + c ≤ 0 }`, we
+# find the ellipse of smallest area that encloses the given ellipses.
 
 # It is convenient to parameterize as the ellipse `{ x : || Px + q || ≤ 1 }`.
 
 # Then the optimal `P` and `q` are given by the convex program
 
-# ````
-#       maximize   log(det(P))
-
-#     subject to   t[i] ≥ 0, i = 1 ... m
-
-#                  [ P^2 - t[i] A[i]   P q - t[i] b[i]       0
-#                    P q - t[i] b[i]    -1 - t[i] c[i]    (P q)'
-#                                 0              (P q)   - P^2   ]    PSD, i = 1 ... m
-# ````
+# ```
+#   maximize log(det(P))
+#
+# subject to t[i] ≥ 0, i = 1 ... m
+#
+#            [ P^2 - t[i] A[i]   P q - t[i] b[i]       0
+#              P q - t[i] b[i]    -1 - t[i] c[i]    (P q)'
+#                           0              (P q)   - P^2  ] >= 0, PSD, i=1...m
+# ```
 # with helper variables `t[i]`. 
 
 using JuMP
@@ -49,15 +51,12 @@ function example_minimal_ellipse()
         [-0.3286, 0.557],
     ]
     cs = [0.1831, 0.3295, 0.2077, 0.2362, 0.3284, 0.4931]
-
     ## Build the model under the change of variables
     ##       Psqr = P^2
     ##    q_tilde = Pq
     model = Model(SCS.Optimizer)
-
     m = length(As)
     n, _ = size(first(As))
-
     @variable(model, Psqr[1:n, 1:n], PSD)
     @variable(model, tau[1:m] ≥ 0)
     @variable(model, q_tilde[1:n])
@@ -66,12 +65,10 @@ function example_minimal_ellipse()
         model,
         [logdetP; [Psqr[i, j] for i in 1:n for j in i:n]] in MOI.RootDetConeTriangle(n)
     )
-
     for (A, b, c, t) in zip(As, bs, cs, tau)
         if !(isreal(A) && transpose(A) == A)
             @error "Input matrices need to be real, symmetric matrices."
         end
-
         @constraint(
             model,
             -[
@@ -81,25 +78,18 @@ function example_minimal_ellipse()
             ] in PSDCone()
         )
     end
-
     @objective(model, Max, logdetP)
-
     optimize!(model)
-
     @test termination_status(model) == OPTIMAL
     @test primal_status(model) == FEASIBLE_POINT
-
     ## Restore original parameterization
     P = sqrt(value.(Psqr))
     q = P \ value.(q_tilde)
-
     @test isapprox(P, [0.423694 -0.039639; -0.039639 0.316316], atol = 1e-4)
     @test isapprox(q, [-0.396177, -0.021368], atol = 1e-4)
-
     ## Plot results
     pl = plot(size = (600, 600))
     thetas = range(0, 2pi + 0.05, step = 0.05)
-
     for (A, b, c) in zip(As, bs, cs)
         sqrtA = sqrt(A)
         b_tilde = sqrtA \ b
@@ -111,16 +101,13 @@ function example_minimal_ellipse()
         ellipse = sqrtA \ rhs'
         plot!(pl, ellipse[1, :], ellipse[2, :], label = nothing, c = :navy)
     end
-
     plot!(
         pl,
         [tuple(P \ ([cos(theta), sin(theta)] - q)...) for theta in thetas],
         c = :crimson,
         label = nothing,
     )
-
     display(pl)
-
     return P, q
 end
 
