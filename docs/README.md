@@ -46,3 +46,17 @@ numerical differences or changes to their raw solver statuses) from causing the
 documentation builds to fail on an un-related PR.
 
 These versions should be periodically updated.
+
+## Merging pull requests
+
+If you merge two pull requests which modify the documentation in close succession,
+it may happen that the second pull request finishes CI before the first. Therefore,
+the docs from the second pull request will deploy and be updated in `/dev`. However,
+when the first pull request finishes and deploys the docs, these changes will be
+overwritten because they were not in the repository when the first pull request was
+merged!
+
+For an example of this, see https://github.com/jump-dev/JuMP.jl/issues/2947.
+
+The work-around is to ensure that you never merge two pull requests which modify
+the documentation in close succession---wait 10 minutes between merges.
