@@ -55,8 +55,6 @@ include("Containers/Containers.jl")
 
 # Exports are at the end of the file.
 
-include("utils.jl")
-
 const _MOIVAR = MOI.VariableIndex
 const _MOICON{F,S} = MOI.ConstraintIndex{F,S}
 
