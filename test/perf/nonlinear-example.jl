@@ -20,10 +20,17 @@ function nlp_model()
     @NLexpression(model, expr_c1[j = 1:k], sum(x[i] * c1[j, i] for i in 1:n))
     @NLexpression(model, expr_c2[j = 1:k], sum(x[i] * c2[j, i] for i in 1:n))
     @NLconstraint(model, expr - sum(b[j] / (1 + var1)^j for j in 1:k) == 0)
-    @NLconstraint(model, expr - sum(expr_c1[j] / (1 + var2)^j for j in 1:k) == 0)
-    @NLconstraint(model, expr - sum(expr_c2[j] / (1 + var3)^j for j in 1:k) == 0)
+    @NLconstraint(
+        model,
+        expr - sum(expr_c1[j] / (1 + var2)^j for j in 1:k) == 0,
+    )
+    @NLconstraint(
+        model,
+        expr - sum(expr_c2[j] / (1 + var3)^j for j in 1:k) == 0,
+    )
     @NLconstraint(model, [j=1:k], expr_c1[j] >= b[j])
-    @time optimize!(model)
+    # @time optimize!(model)
+    return model
 end
 
 @time nlp_model()
