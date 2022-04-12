@@ -1337,6 +1337,30 @@ function test_user_defined_function_checked_error_multivariate()
     return
 end
 
+function test_register_error_autdiff_false()
+    model = Model()
+    f(x) = x^2
+    f′(x) = 2 * x
+    f′′(::Any) = 2
+    err = ErrorException(
+        "If only the function is provided, must set autodiff=true",
+    )
+    @test_throws err register(model, :f, 1, f)
+    @test_throws err register(model, :f, 1, f; autodiff = false)
+    err = ErrorException(
+        "Currently must provide 2nd order derivatives of univariate " *
+        "functions. Try setting autodiff=true.",
+    )
+    @test_throws err register(model, :f, 1, f, f′)
+    @test_throws err register(model, :f, 1, f, f′; autodiff = false)
+    register(model, :f, 1, f, f′, f′′)
+    @test_throws(
+        ErrorException("Operator f is already registered."),
+        register(model, :f, 1, f, f′, f′′),
+    )
+    return
+end
+
 end
 
 TestNLP.runtests()
