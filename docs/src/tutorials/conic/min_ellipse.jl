@@ -85,8 +85,8 @@ function example_minimal_ellipse()
     ## Restore original parameterization
     P = sqrt(value.(Psqr))
     q = P \ value.(q_tilde)
-    @test isapprox(P, [0.423694 -0.039639; -0.039639 0.316316], atol = 1e-4)
-    @test isapprox(q, [-0.396177, -0.021368], atol = 1e-4)
+    @test isapprox(P, [0.4237 -0.0396; -0.0396 0.3163], atol = 1e-3)
+    @test isapprox(q, [-0.3960, -0.0214], atol = 1e-3)
     ## Plot results
     pl = plot(size = (600, 600))
     thetas = range(0, 2pi + 0.05, step = 0.05)
