@@ -23,7 +23,6 @@
 # ```math
 # \begin{aligned}
 # \text{maximize } & \quad \log(\det(P))  \\
-
 # \text{subject to } & \quad \tau_i \geq 0, & i = 1, \ldots, m, \\
 # & \quad\begin{bmatrix}
 #     P^2 - \tau_i A_i      &  P q - \tau_i b_i   &    0     \\
