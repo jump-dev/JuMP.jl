@@ -61,6 +61,7 @@ struct UndirectedGraph
     edges::Vector{Tuple{Int,Int}}
 end
 
+<<<<<<< HEAD
 _num_vertices(g::UndirectedGraph) = length(g.offsets) - 1
 
 _num_edges(g::UndirectedGraph) = length(g.edges)
@@ -68,6 +69,15 @@ _num_edges(g::UndirectedGraph) = length(g.edges)
 _num_neighbors(i::Int, g::UndirectedGraph) = g.offsets[i+1] - g.offsets[i]
 
 _start_neighbors(i::Int, g::UndirectedGraph) = g.offsets[i]
+=======
+num_vertices(g::UndirectedGraph) = length(g.offsets) - 1
+
+num_edges(g::UndirectedGraph) = length(g.edges)
+
+num_neighbors(i::Int, g::UndirectedGraph) = g.offsets[i+1] - g.offsets[i]
+
+start_neighbors(i::Int, g::UndirectedGraph) = g.offsets[i]
+>>>>>>> 256d486ea (Tidy Coloring)
 
 function gen_adjlist(I, J, nel)
     adjcount = zeros(Int, nel)
@@ -88,7 +98,11 @@ function gen_adjlist(I, J, nel)
         offsets[k+1] = offsets[k] + adjcount[k]
     end
     fill!(adjcount, 0)
+<<<<<<< HEAD
     edges = Array{Tuple{Int,Int}}(undef, n_edges)
+=======
+    edges = Array{MyPair{Int}}(undef, n_edges)
+>>>>>>> 256d486ea (Tidy Coloring)
     adjlist = Array{Int}(undef, offsets[nel+1] - 1)
     edgeindex = Array{Int}(undef, length(adjlist))
     edge_count = 0
@@ -105,9 +119,15 @@ function gen_adjlist(I, J, nel)
         adjlist[offsets[j]+adjcount[j]] = i
         edgeindex[offsets[j]+adjcount[j]] = edge_count
         adjcount[j] += 1
+<<<<<<< HEAD
         edges[edge_count] = (i, j)
     end
     @assert edge_count == n_edges
+=======
+        edges[edge_count] = MyPair(i, j)
+    end
+    @assert edge_count == n_edge
+>>>>>>> 256d486ea (Tidy Coloring)
     return UndirectedGraph(adjlist, edgeindex, offsets, edges)
 end
 
@@ -117,7 +137,14 @@ struct _Edge
     target::Int
 end
 
+<<<<<<< HEAD
 function _prevent_cycle(
+=======
+# convert to lower triangular indices, using Pairs
+normalize(i, j) = (j > i) ? (j, i) : (i, j)
+
+function prevent_cycle(
+>>>>>>> 256d486ea (Tidy Coloring)
     v,
     w,
     x,
@@ -180,10 +207,17 @@ function acyclic_coloring(g::UndirectedGraph)
     firstVisitToTree = fill(_Edge(0, 0, 0), _num_edges(g))
     color = fill(0, _num_vertices(g))
     # disjoint set forest of edges in the graph
+<<<<<<< HEAD
     S = DataStructures.IntDisjointSets(_num_edges(g))
     @inbounds for v in 1:_num_vertices(g)
         n_neighbor = _num_neighbors(v, g)
         start_neighbor = _start_neighbors(v, g)
+=======
+    S = DataStructures.IntDisjointSets(num_edges(g))
+    @inbounds for v in 1:num_vertices(g)
+        n_neighbor = num_neighbors(v, g)
+        start_neighbor = start_neighbors(v, g)
+>>>>>>> 256d486ea (Tidy Coloring)
         for k in 0:(n_neighbor-1)
             w = g.adjlist[start_neighbor+k]
             if color[w] == 0
@@ -197,8 +231,13 @@ function acyclic_coloring(g::UndirectedGraph)
             if color[w] == 0
                 continue
             end
+<<<<<<< HEAD
             n_neighbor_w = _num_neighbors(w, g)
             start_neighbor_w = _start_neighbors(w, g)
+=======
+            n_neighbor_w = num_neighbors(w, g)
+            start_neighbor_w = start_neighbors(w, g)
+>>>>>>> 256d486ea (Tidy Coloring)
             for k2 in 0:(n_neighbor_w-1)
                 x = g.adjlist[start_neighbor_w+k2]
                 e2_idx = g.edgeindex[start_neighbor_w+k2]
@@ -241,7 +280,11 @@ function acyclic_coloring(g::UndirectedGraph)
             if color[w] == 0
                 continue
             end
+<<<<<<< HEAD
             _grow_star(v, w, e_idx, firstNeighbor, color, S)
+=======
+            grow_star(v, w, e_idx, firstNeighbor, color, S)
+>>>>>>> 256d486ea (Tidy Coloring)
         end
         for k in 0:(n_neighbor-1)
             w = g.adjlist[start_neighbor+k]
@@ -249,8 +292,13 @@ function acyclic_coloring(g::UndirectedGraph)
             if color[w] == 0
                 continue
             end
+<<<<<<< HEAD
             n_neighbor_w = _num_neighbors(w, g)
             start_neighbor_w = _start_neighbors(w, g)
+=======
+            n_neighbor_w = num_neighbors(w, g)
+            start_neighbor_w = start_neighbors(w, g)
+>>>>>>> 256d486ea (Tidy Coloring)
             for k2 in 0:(n_neighbor_w-1)
                 x = g.adjlist[start_neighbor_w+k2]
                 e2_idx = g.edgeindex[start_neighbor_w+k2]
@@ -332,8 +380,13 @@ function recovery_preprocess(
     postorder = Array{Vector{Int}}(undef, seen_twocolors)
     parents = Array{Vector{Int}}(undef, seen_twocolors)
     # temporary lookup map from global index to subgraph index
+<<<<<<< HEAD
     revmap = zeros(Int, _num_vertices(g))
     adjcount = zeros(Int, _num_vertices(g))
+=======
+    revmap = zeros(Int, num_vertices(g))
+    adjcount = zeros(Int, num_vertices(g))
+>>>>>>> 256d486ea (Tidy Coloring)
     cmap = zeros(Int, 0) # shared storage for DFS
     for idx in 1:seen_twocolors
         my_edges = sorted_edges[idx]
@@ -368,7 +421,13 @@ function recovery_preprocess(
         vec = Array{Int}(undef, offset[length(vlist)+1] - 1)
         # now fill in
         for k in 1:length(my_edges)
+<<<<<<< HEAD
             u, v = my_edges[k]
+=======
+            e = my_edges[k]
+            u = e.first
+            v = e.second
+>>>>>>> 256d486ea (Tidy Coloring)
             u_rev = revmap[u] # indices in the subgraph
             v_rev = revmap[v]
             vec[offset[u_rev]+adjcount[u]] = v_rev
@@ -418,8 +477,14 @@ function _indirect_recover_structure(rinfo::RecoveryInfo)
             if p == 0
                 continue
             end
+<<<<<<< HEAD
             k += 1
             I[k], J[k] = _normalize(vmap[v], vmap[p])
+=======
+            i, j = normalize(vmap[v], vmap[p])
+            k += 1
+            I[k], J[k] = i, j
+>>>>>>> 256d486ea (Tidy Coloring)
         end
     end
     @assert k == rinfo.nnz + N
