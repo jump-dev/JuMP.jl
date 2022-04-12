@@ -45,13 +45,6 @@ end
 
 Base.collect(v::IndexedSet) = v.nzidx[1:v.nnz]
 
-function Base.union!(v::IndexedSet, s)
-    for x in s
-        push!(v, x)
-    end
-    return
-end
-
 # compact storage for an undirected graph
 # neighbors of vertex i start at adjlist[offsets[i]]
 struct UndirectedGraph
