@@ -23,7 +23,7 @@ function nlp_model()
     @NLconstraint(model, expr - sum(expr_c1[j] / (1 + var2)^j for j in 1:k) == 0)
     @NLconstraint(model, expr - sum(expr_c2[j] / (1 + var3)^j for j in 1:k) == 0)
     @NLconstraint(model, [j=1:k], expr_c1[j] >= b[j])
-    optimize!(model)
+    @time optimize!(model)
 end
 
 @time nlp_model()
