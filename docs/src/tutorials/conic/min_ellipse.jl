@@ -14,7 +14,7 @@
 # ```
 # we find the ellipse of smallest area that encloses the given ellipses.
 
-# It is convenient to parameterize as the minimal enclosing ellipse as
+# It is convenient to parameterize the minimal enclosing ellipse as
 # ```math
 # \{ x : || Px + q || \leq 1 \}.
 # ```
@@ -55,7 +55,7 @@ As = [
     [0.9742 -0.7202; -0.7202 1.5444],
     [0.6798 -0.1424; -0.1424 0.6871],
     [0.1796 -0.1423; -0.1423 2.6181],
-]
+];
 bs = [
     [0.2722, 0.1969],
     [-1.228, -0.0521],
@@ -63,8 +63,8 @@ bs = [
     [0.0265, 0.5623],
     [-0.4301, -1.0157],
     [-0.3286, 0.557],
-]
-cs = [0.1831, 0.3295, 0.2077, 0.2362, 0.3284, 0.4931]
+];
+cs = [0.1831, 0.3295, 0.2077, 0.2362, 0.3284, 0.4931];
 
 # We visualise the ellipses using the Plots package:
 pl = plot(size = (600, 600))
@@ -91,7 +91,7 @@ n, _ = size(first(As))
 @variable(model, tau[1:m] ≥ 0)
 @variable(model, Psqr[1:n, 1:n], PSD)
 @variable(model, q_tilde[1:n])
-@variable(model, logdetP)
+@variable(model, logdetP);
 
 # Next, create the PSD constraints and objective:
 for (A, b, c, t) in zip(As, bs, cs, tau)
@@ -101,9 +101,11 @@ for (A, b, c, t) in zip(As, bs, cs, tau)
     @constraint(
         model,
         -[
+            #! format: off
             Psqr-t*A           q_tilde-t*b zeros(n, n)
             (q_tilde - t * b)' -1-t*c      q_tilde'
             zeros(n, n)        q_tilde     -Psqr
+            #! format: on
         ] in PSDCone()
     )
 end
@@ -111,8 +113,8 @@ end
 @constraint(
     model,
     [logdetP; [Psqr[i, j] for i in 1:n for j in i:n]] in MOI.RootDetConeTriangle(n)
-    )
-@objective(model, Max, logdetP)
+);
+@objective(model, Max, logdetP);
 
 # Note that here the root-determinant cone is used for constructing the objective function.
 # While the more consistent choice for the mathematical formulation is to use
@@ -121,8 +123,8 @@ end
 
 # Now, solve the program:
 optimize!(model)
-@test termination_status(model) == OPTIMAL
-@test primal_status(model) == FEASIBLE_POINT
+@test termination_status(model) == OPTIMAL;
+@test primal_status(model) == FEASIBLE_POINT;
 
 # ## Results
 # After solving the model to optimality
@@ -130,10 +132,11 @@ optimize!(model)
 P = sqrt(value.(Psqr))
 q = P \ value.(q_tilde)
 
-@test isapprox(P, [0.4237 -0.0396; -0.0396 0.3163], atol = 1e-2)
-@test isapprox(q, [-0.3960, -0.0214], atol = 1e-2)
+# We can test that we get the expected results to within approximation tolerance.
+@test isapprox(P, [0.4237 -0.0396; -0.0396 0.3163], atol = 1e-2);
+@test isapprox(q, [-0.3960, -0.0214], atol = 1e-2);
 
-# Overlaying the solution in the plot
+# Finally, overlaying the solution in the plot we see the minimal area enclosing ellipsoid.
 plot!(
     pl,
     [tuple(P \ ([cos(theta), sin(theta)] - q)...) for theta in thetas],
@@ -141,4 +144,3 @@ plot!(
     label = nothing,
 )
 plot(pl)
-# we see the minimal area enclosing ellipsoid.
