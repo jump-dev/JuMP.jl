@@ -201,22 +201,64 @@ function test_hessian_sparsity_registered_function()
     y = MOI.VariableIndex(2)
     z = MOI.VariableIndex(3)
     f(x, y) = x^2 + y^2
+    function ∇f(g, x...)
+        g[1] = 2x[1]
+        g[2] = 2x[2]
+        return
+    end
+    function ∇²f(H, x...)
+        H[1, 1] = 2
+        H[2, 2] = 2
+        return
+    end
     data = Nonlinear.NonlinearData()
-    Nonlinear.register_operator(data, :f, 2, f)
+    Nonlinear.register_operator(data, :f, 2, f, ∇f, ∇²f)
     Nonlinear.set_objective(data, :(f($x, $z) + $y^2))
     Nonlinear.set_differentiation_backend(
         data,
         Nonlinear.SparseReverseMode(),
         [x, y, z],
     )
-    # TODO(odow): re-enable when user-defined hessians are supported
-    @test_broken :Hess in MOI.features_available(data)
-    # MOI.initialize(data, [:Grad, :Jac, :Hess])
-    # @test MOI.hessian_lagrangian_structure(data) ==
-    #       [(1, 1), (2, 2), (3, 3), (3, 1)]
-    # H = fill(NaN, 4)
-    # MOI.eval_hessian_lagrangian(data, H, rand(3), 1.5, Float64[])
-    # @test H == 1.5 .* [2.0, 2.0, 2.0, 0.0]
+    @test :Hess in MOI.features_available(data)
+    MOI.initialize(data, [:Grad, :Jac, :Hess])
+    @test MOI.hessian_lagrangian_structure(data) ==
+          [(1, 1), (2, 2), (3, 3), (3, 1)]
+    H = fill(NaN, 4)
+    MOI.eval_hessian_lagrangian(data, H, rand(3), 1.5, Float64[])
+    @test H == 1.5 .* [2.0, 2.0, 2.0, 0.0]
+    return
+end
+
+function test_hessian_sparsity_registered_rosenbrock()
+    x = MOI.VariableIndex(1)
+    y = MOI.VariableIndex(2)
+    f(x...) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+    function ∇f(g, x...)
+        g[1] = 400 * x[1]^3 - 400 * x[1] * x[2] + 2 * x[1] -2
+        g[2] = 200 * (x[2] - x[1]^2)
+        return
+    end
+    function ∇²f(H, x...)
+        H[1, 1] = 1200 * x[1]^2 - 400 * x[2] + 2
+        H[1, 2] = -400 * x[1]
+        H[2, 2] = 200.0
+        return
+    end
+    data = Nonlinear.NonlinearData()
+    Nonlinear.register_operator(data, :rosenbrock, 2, f, ∇f, ∇²f)
+    Nonlinear.set_objective(data, :(rosenbrock($x, $y)))
+    Nonlinear.set_differentiation_backend(
+        data,
+        Nonlinear.SparseReverseMode(),
+        [x, y],
+    )
+    @test :Hess in MOI.features_available(data)
+    MOI.initialize(data, [:Grad, :Jac, :Hess])
+    @test MOI.hessian_lagrangian_structure(data) ==
+          [(1, 1), (2, 2), (2, 1)]
+    H = fill(NaN, 3)
+    MOI.eval_hessian_lagrangian(data, H, [1.0, 1.0], 1.5, Float64[])
+    @test H == 1.5 .* [802, 200, -400]
     return
 end
 

@@ -6,8 +6,10 @@
 function MOI.features_available(d::NLPEvaluator)
     # Check if we have any user-defined multivariate operators, in which case we
     # need to disable hessians. The result of features_available depends on this.
-    d.disable_2ndorder =
-        length(d.data.operators.registered_multivariate_operators) > 0
+    d.disable_2ndorder = any(
+        op -> op.∇²f === nothing,
+        d.data.operators.registered_multivariate_operators,
+    )
     if d.disable_2ndorder
         return [:Grad, :Jac, :JacVec]
     end
@@ -132,7 +134,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
     end
     # 10 is hardcoded upper bound to avoid excess memory allocation
     max_chunk = min(max_chunk, 10)
-    if d.want_hess || want_hess_storage
+    if want_hess_storage
         d.input_ϵ = zeros(max_chunk * N)
         d.output_ϵ = zeros(max_chunk * N)
         #
