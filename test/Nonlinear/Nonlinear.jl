@@ -4,6 +4,7 @@ using Test
 import JuMP: MOI
 import JuMP: Nonlinear
 import ForwardDiff
+import LinearAlgebra
 
 function runtests()
     for name in names(@__MODULE__; all = true)
@@ -15,6 +16,8 @@ function runtests()
     end
     return
 end
+
+_hessian(f, x) = LinearAlgebra.UpperTriangular(ForwardDiff.hessian(f, x))
 
 function test_copy()
     data = Nonlinear.NonlinearData()
@@ -533,27 +536,58 @@ function test_eval_multivariate_gradient_mult()
     return
 end
 
-function test_eval_multivariate_hessian()
+function test_eval_multivariate_hessian_prod()
     r = Nonlinear.OperatorRegistry()
+    # 1-arg *
+    x = [1.1]
+    H = LinearAlgebra.UpperTriangular(zeros(1, 1))
+    @test Nonlinear.eval_multivariate_hessian(r, :*, H, x)
+    @test H ≈ _hessian(x -> *(x[1]), x)
+    # 2-arg *
     x = [1.1, 2.2]
-    H = zeros(2, 2)
+    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
     @test (@allocated Nonlinear.eval_multivariate_hessian(r, :*, H, x)) == 0
     @test Nonlinear.eval_multivariate_hessian(r, :*, H, x)
-    @test H ≈ ForwardDiff.hessian(x -> x[1] * x[2], x)
+    @test H ≈ _hessian(x -> x[1] * x[2], x)
+    # 3-arg *
+    x = [1.1, 2.2, 3.3]
+    H = LinearAlgebra.UpperTriangular(zeros(3, 3))
+    @test Nonlinear.eval_multivariate_hessian(r, :*, H, x)
+    @test H ≈ _hessian(x -> x[1] * x[2] * x[3], x)
+    return
+end
+
+function test_eval_multivariate_hessian_exponentiation()
+    r = Nonlinear.OperatorRegistry()
+    # ^1.0
+    x = [1.1, 1.0]
+    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
     @test (@allocated Nonlinear.eval_multivariate_hessian(r, :^, H, x)) == 0
     @test Nonlinear.eval_multivariate_hessian(r, :^, H, x)
-    @test H ≈ ForwardDiff.hessian(x -> x[1]^x[2], x)
+    @test H ≈ _hessian(x -> x[1]^x[2], x)
+    # ^2.0
+    x = [1.1, 2.0]
+    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
+    @test (@allocated Nonlinear.eval_multivariate_hessian(r, :^, H, x)) == 0
+    @test Nonlinear.eval_multivariate_hessian(r, :^, H, x)
+    @test H ≈ _hessian(x -> x[1]^x[2], x)
+    # 2-arg ^
+    x = [1.1, 2.2]
+    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
+    @test (@allocated Nonlinear.eval_multivariate_hessian(r, :^, H, x)) == 0
+    @test Nonlinear.eval_multivariate_hessian(r, :^, H, x)
+    @test H ≈ _hessian(x -> x[1]^x[2], x)
+    return
+end
+
+function test_eval_multivariate_hessian_division()
+    r = Nonlinear.OperatorRegistry()
+    # 2-arg /
+    x = [1.1, 2.2]
+    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
     @test (@allocated Nonlinear.eval_multivariate_hessian(r, :/, H, x)) == 0
     @test Nonlinear.eval_multivariate_hessian(r, :/, H, x)
-    @test H ≈ ForwardDiff.hessian(x -> x[1] / x[2], x)
-    x = [1.1]
-    H = zeros(1, 1)
-    @test Nonlinear.eval_multivariate_hessian(r, :*, H, x)
-    @test H ≈ ForwardDiff.hessian(x -> *(x[1]), x)
-    x = [1.1, 2.2, 3.3]
-    H = zeros(3, 3)
-    @test Nonlinear.eval_multivariate_hessian(r, :*, H, x)
-    @test H ≈ ForwardDiff.hessian(x -> x[1] * x[2] * x[3], x)
+    @test H ≈ _hessian(x -> x[1] / x[2], x)
     return
 end
 
@@ -566,7 +600,7 @@ function test_eval_multivariate_function_registered()
     g = zeros(2)
     Nonlinear.eval_multivariate_gradient(r, :f, g, x)
     @test g ≈ [2 * x[1] + x[2], x[1] + 2 * x[2]]
-    H = zeros(2, 2)
+    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
     @test_throws(
         ErrorException,
         Nonlinear.eval_multivariate_hessian(r, :f, H, x),
@@ -591,7 +625,7 @@ function test_eval_multivariate_function_registered_grad()
     Nonlinear.eval_multivariate_gradient(r, :f, g, x)
     @test g ≈ [2 * x[1] + x[2], x[1] + 2 * x[2]]
     @test grad_calls == 1
-    H = zeros(2, 2)
+    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
     @test_throws(
         ErrorException,
         Nonlinear.eval_multivariate_hessian(r, :f, H, x),

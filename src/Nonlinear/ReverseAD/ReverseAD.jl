@@ -6,6 +6,7 @@
 module ReverseAD
 
 import ForwardDiff
+import LinearAlgebra
 import MathOptInterface
 import ..Nonlinear
 import SparseArrays

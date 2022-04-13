@@ -611,26 +611,27 @@ _nan_to_zero(x) = isnan(x) ? 0.0 : x
 function eval_multivariate_hessian(
     ::OperatorRegistry,
     op::Symbol,
-    H::AbstractMatrix{T},
+    H::LinearAlgebra.UpperTriangular{T},
     x::AbstractVector{T},
 ) where {T}
     if op in (:+, :-, :ifelse)
         return false
     end
     if op == :*
+        # f(x)    = *(x[i] for i in 1:N)
+        #
+        # ∇fᵢ(x)  = *(x[j] for j in 1:N if i != j)
+        #
+        # ∇fᵢⱼ(x) = *(x[k] for k in 1:N if i != k & j != k)
         N = length(x)
         if N == 1
-            H[1, 1] = zero(T)
+            # Hessian is zero
         elseif N == 2
-            H[1, 1] = H[2, 2] = zero(T)
-            H[1, 2] = H[2, 1] = one(T)
+            H[1, 2] = one(T)
         else
-            for i in 1:N
-                H[i, i] = zero(T)
-                for j in (i+1):N
-                    d = prod(x[k] for k in 1:N if k != i && k != j; init = 1.0)
-                    H[i, j] = H[j, i] = d
-                end
+            for i in 1:N, j in (i+1):N
+                H[i, j] =
+                    prod(x[k] for k in 1:N if k != i && k != j; init = one(T))
             end
         end
     elseif op == :^
@@ -643,16 +644,15 @@ function eval_multivariate_hessian(
         #                      .               x[1]^x[2]*log(x[1])^2
         ln = x[1] > 0 ? log(x[1]) : NaN
         if x[2] == one(T)
-            H[1, 1] = zero(T)
-            H[1, 2] = H[2, 1] = _nan_to_zero(ln + one(T))
+            H[1, 2] = _nan_to_zero(ln + one(T))
             H[2, 2] = _nan_to_zero(x[1] * ln^2)
         elseif x[2] == T(2)
             H[1, 1] = T(2)
-            H[1, 2] = H[2, 1] = _nan_to_zero(x[1] * (T(2) * ln + one(T)))
+            H[1, 2] = _nan_to_zero(x[1] * (T(2) * ln + one(T)))
             H[2, 2] = _nan_to_zero(ln^2 * x[1]^2)
         else
             H[1, 1] = x[2] * (x[2] - 1) * x[1]^(x[2] - 2)
-            H[1, 2] = H[2, 1] = _nan_to_zero(x[1]^(x[2] - 1) * (x[2] * ln + 1))
+            H[1, 2] = _nan_to_zero(x[1]^(x[2] - 1) * (x[2] * ln + 1))
             H[2, 2] = _nan_to_zero(ln^2 * x[1]^x[2])
         end
     elseif op == :/
@@ -664,8 +664,7 @@ function eval_multivariate_hessian(
         # ∇²(x) = 0.0          -1/x[2]^2
         #          .           2x[1]/x[2]^3
         d = 1 / x[2]^2
-        H[1, 1] = 0.0
-        H[1, 2] = H[2, 1] = -d
+        H[1, 2] = -d
         H[2, 2] = 2 * x[1] * d / x[2]
     else
         error(

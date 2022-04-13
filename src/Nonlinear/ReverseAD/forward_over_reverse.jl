@@ -185,6 +185,9 @@ struct HessianView <: AbstractMatrix{Float64}
         if length(x) < z
             resize!(x, z)
         end
+        for i in 1:z
+            x[i] = 0.0
+        end
         return new(x, N)
     end
 end
@@ -278,7 +281,7 @@ function _forward_eval_ϵ(
                 has_hessian = Nonlinear.eval_multivariate_hessian(
                     user_operators,
                     user_operators.multivariate_operators[node.index],
-                    H,
+                    LinearAlgebra.UpperTriangular(H),
                     f_input,
                 )
                 if has_hessian
