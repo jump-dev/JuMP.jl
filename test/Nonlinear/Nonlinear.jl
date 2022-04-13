@@ -3,6 +3,7 @@ module TestNonlinear
 using Test
 import JuMP: MOI
 import JuMP: Nonlinear
+import ForwardDiff
 
 function runtests()
     for name in names(@__MODULE__; all = true)
@@ -536,11 +537,23 @@ function test_eval_multivariate_hessian()
     r = Nonlinear.OperatorRegistry()
     x = [1.1, 2.2]
     H = zeros(2, 2)
-    # TODO(odow): implement
-    @test_throws(
-        ErrorException,
-        Nonlinear.eval_multivariate_hessian(r, :+, H, x),
-    )
+    @test (@allocated Nonlinear.eval_multivariate_hessian(r, :*, H, x)) == 0
+    @test Nonlinear.eval_multivariate_hessian(r, :*, H, x)
+    @test H ≈ ForwardDiff.hessian(x -> x[1] * x[2], x)
+    @test (@allocated Nonlinear.eval_multivariate_hessian(r, :^, H, x)) == 0
+    @test Nonlinear.eval_multivariate_hessian(r, :^, H, x)
+    @test H ≈ ForwardDiff.hessian(x -> x[1]^x[2], x)
+    @test (@allocated Nonlinear.eval_multivariate_hessian(r, :/, H, x)) == 0
+    @test Nonlinear.eval_multivariate_hessian(r, :/, H, x)
+    @test H ≈ ForwardDiff.hessian(x -> x[1] / x[2], x)
+    x = [1.1]
+    H = zeros(1, 1)
+    @test Nonlinear.eval_multivariate_hessian(r, :*, H, x)
+    @test H ≈ ForwardDiff.hessian(x -> *(x[1]), x)
+    x = [1.1, 2.2, 3.3]
+    H = zeros(3, 3)
+    @test Nonlinear.eval_multivariate_hessian(r, :*, H, x)
+    @test H ≈ ForwardDiff.hessian(x -> x[1] * x[2] * x[3], x)
     return
 end
 

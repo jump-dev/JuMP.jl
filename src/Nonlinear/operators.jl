@@ -620,12 +620,13 @@ function eval_multivariate_hessian(
         if N == 1
             H[1, 1] = zero(T)
         elseif N == 2
-            H[1, 1] = H[1, 2] = H[2, 2] = zero(T)
+            H[1, 1] = H[2, 2] = zero(T)
+            H[1, 2] = H[2, 1] = one(T)
         else
             for i in 1:N
                 H[i, i] = zero(T)
                 for j in (i+1):N
-                    d = prod(x[k] for k in 1:N if k != i && k != j)
+                    d = prod(x[k] for k in 1:N if k != i && k != j; init = 1.0)
                     H[i, j] = H[j, i] = d
                 end
             end

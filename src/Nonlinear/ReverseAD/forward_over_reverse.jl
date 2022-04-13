@@ -177,7 +177,7 @@ function _hessian_slice_inner(d, ex, input_ϵ, output_ϵ, ::Type{T}) where {T}
     return
 end
 
-struct HessianView <:AbstractMatrix{Float64}
+struct HessianView <: AbstractMatrix{Float64}
     x::Vector{Float64}
     N::Int
     function HessianView(x, N)
@@ -190,11 +190,11 @@ struct HessianView <:AbstractMatrix{Float64}
 end
 
 Base.size(x::HessianView) = (x.N, x.N)
-_linear_index(i, j) = i < j ?  _linear_index(j, i) : div((i - 1) * i, 2) + j
+_linear_index(i, j) = i < j ? _linear_index(j, i) : div((i - 1) * i, 2) + j
 Base.getindex(x::HessianView, i, j) = x.x[_linear_index(i, j)]
 Base.setindex!(x::HessianView, v, i, j) = (x.x[_linear_index(i, j)] = v)
 
-struct VectorView <:AbstractVector{Float64}
+struct VectorView <: AbstractVector{Float64}
     x::Vector{Float64}
     N::Int
     function VectorView(x, N)
