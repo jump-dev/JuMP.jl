@@ -606,6 +606,8 @@ function eval_multivariate_gradient(
     return
 end
 
+_nan_to_zero(x) = isnan(x) ? 0.0 : x
+
 function eval_multivariate_hessian(
     ::OperatorRegistry,
     op::Symbol,
@@ -632,18 +634,35 @@ function eval_multivariate_hessian(
             end
         end
     elseif op == :^
+        # f(x)   = x[1]^x[2]
+        #
+        # ∇f(x)  = x[2]*x[1]^(x[2]-1)
+        #          x[1]^x[2]*log(x[1])
+        #
+        # ∇²f(x) = x[2]*(x[2]-1)*x[1]^(x[2]-2) x[1]^(x[2]-1)*(x[2]*log(x[1])+1)
+        #                      .               x[1]^x[2]*log(x[1])^2
         ln = x[1] > 0 ? log(x[1]) : NaN
-        H[1, 1] = x[2] * (x[2] - 1) * x[1]^(x[2] - 2)
-        if isnan(ln)
-            H[1, 2] = H[2, 1] = H[2, 2] = zero(T)
+        if x[2] == one(T)
+            H[1, 1] = zero(T)
+            H[1, 2] = H[2, 1] = _nan_to_zero(ln + one(T))
+            H[2, 2] = _nan_to_zero(x[1] * ln^2)
+        elseif x[2] == T(2)
+            H[1, 1] = T(2)
+            H[1, 2] = H[2, 1] = _nan_to_zero(x[1] * (T(2) * ln + one(T)))
+            H[2, 2] = _nan_to_zero(ln^2 * x[1]^2)
         else
-            H[1, 2] = H[2, 1] = x[1]^(x[2] - 1) * (x[2] * ln + 1)
-            H[2, 2] = ln^2 * x[1]^x[2]
+            H[1, 1] = x[2] * (x[2] - 1) * x[1]^(x[2] - 2)
+            H[1, 2] = H[2, 1] = _nan_to_zero(x[1]^(x[2] - 1) * (x[2] * ln + 1))
+            H[2, 2] = _nan_to_zero(ln^2 * x[1]^x[2])
         end
     elseif op == :/
-        # x[1] / x[2]
-        #   1 / x[2]       |  (0.0)         (-1 / x[2]^2   )
-        #   -x[1] / x[2]^2 |  (-1 / x[2]^2) (2x[1] / x[2]^3)
+        # f(x)  = x[1]/x[2]
+        #
+        # ∇f(x) = 1/x[2]
+        #         -x[1]/x[2]^2
+        #
+        # ∇²(x) = 0.0          -1/x[2]^2
+        #          .           2x[1]/x[2]^3
         d = 1 / x[2]^2
         H[1, 1] = 0.0
         H[1, 2] = H[2, 1] = -d
