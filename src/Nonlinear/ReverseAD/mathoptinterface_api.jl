@@ -285,6 +285,7 @@ function MOI.eval_hessian_lagrangian_product(d::NLPEvaluator, h, x, v, σ, μ)
     for i in d.subexpression_order
         subexpr = d.subexpressions[i]
         subexpr_forward_values_ϵ[i] = _forward_eval_ϵ(
+            d,
             subexpr,
             reinterpret(T, subexpr.forward_storage_ϵ),
             reinterpret(T, subexpr.partials_storage_ϵ),
@@ -301,6 +302,7 @@ function MOI.eval_hessian_lagrangian_product(d::NLPEvaluator, h, x, v, σ, μ)
     fill!(output_ϵ, zero(T))
     if d.objective !== nothing
         _forward_eval_ϵ(
+            d,
             d.objective,
             reinterpret(T, d.forward_storage_ϵ),
             reinterpret(T, d.partials_storage_ϵ),
@@ -321,6 +323,7 @@ function MOI.eval_hessian_lagrangian_product(d::NLPEvaluator, h, x, v, σ, μ)
     end
     for (i, con) in enumerate(d.constraints)
         _forward_eval_ϵ(
+            d,
             con,
             reinterpret(T, d.forward_storage_ϵ),
             reinterpret(T, d.partials_storage_ϵ),

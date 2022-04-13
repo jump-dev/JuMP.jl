@@ -582,10 +582,10 @@ function eval_multivariate_gradient(
         else
             g[1] = x[2] * x[1]^(x[2] - one(T))
         end
-        if x[1] < zero(T)
-            g[2] = T(NaN)
-        else
+        if x[1] > zero(T)
             g[2] = x[1]^x[2] * log(x[1])
+        else
+            g[2] = T(NaN)
         end
     elseif op == :/
         @assert length(x) == 2
@@ -608,11 +608,52 @@ end
 
 function eval_multivariate_hessian(
     ::OperatorRegistry,
-    ::Symbol,
-    ::AbstractMatrix{T},
-    ::AbstractVector{T},
+    op::Symbol,
+    H::AbstractMatrix{T},
+    x::AbstractVector{T},
 ) where {T}
-    return error("Not implemented")
+    if op in (:+, :-, :ifelse)
+        return false
+    end
+    if op == :*
+        N = length(x)
+        if N == 1
+            H[1, 1] = zero(T)
+        elseif N == 2
+            H[1, 1] = H[1, 2] = H[2, 2] = zero(T)
+        else
+            for i in 1:N
+                H[i, i] = zero(T)
+                for j in (i+1):N
+                    d = prod(x[k] for k in 1:N if k != i && k != j)
+                    H[i, j] = H[j, i] = d
+                end
+            end
+        end
+    elseif op == :^
+        ln = x[1] > 0 ? log(x[1]) : NaN
+        H[1, 1] = x[2] * (x[2] - 1) * x[1]^(x[2] - 2)
+        if isnan(ln)
+            H[1, 2] = H[2, 1] = H[2, 2] = zero(T)
+        else
+            H[1, 2] = H[2, 1] = x[1]^(x[2] - 1) * (x[2] * ln + 1)
+            H[2, 2] = ln^2 * x[1]^x[2]
+        end
+    elseif op == :/
+        # x[1] / x[2]
+        #   1 / x[2]       |  (0.0)         (-1 / x[2]^2   )
+        #   -x[1] / x[2]^2 |  (-1 / x[2]^2) (2x[1] / x[2]^3)
+        d = 1 / x[2]^2
+        H[1, 1] = 0.0
+        H[1, 2] = H[2, 1] = -d
+        H[2, 2] = 2 * x[1] * d / x[2]
+    else
+        error(
+            "User-defined operators not supported for hessian " *
+            "computations",
+        )
+    end
+    return true
 end
 
 """

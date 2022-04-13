@@ -125,6 +125,7 @@ function _hessian_slice_inner(d, ex, input_ϵ, output_ϵ, ::Type{T}) where {T}
     for i in ex.dependent_subexpressions
         subexpr = d.subexpressions[i]
         subexpr_forward_values_ϵ[i] = _forward_eval_ϵ(
+            d,
             subexpr,
             _reinterpret_unsafe(T, subexpr.forward_storage_ϵ),
             _reinterpret_unsafe(T, subexpr.partials_storage_ϵ),
@@ -134,6 +135,7 @@ function _hessian_slice_inner(d, ex, input_ϵ, output_ϵ, ::Type{T}) where {T}
         )
     end
     _forward_eval_ϵ(
+        d,
         ex,
         _reinterpret_unsafe(T, d.forward_storage_ϵ),
         _reinterpret_unsafe(T, d.partials_storage_ϵ),
@@ -175,8 +177,41 @@ function _hessian_slice_inner(d, ex, input_ϵ, output_ϵ, ::Type{T}) where {T}
     return
 end
 
+struct HessianView <:AbstractMatrix{Float64}
+    x::Vector{Float64}
+    N::Int
+    function HessianView(x, N)
+        z = div(N * (N + 1), 2)
+        if length(x) < z
+            resize!(x, z)
+        end
+        return new(x, N)
+    end
+end
+
+Base.size(x::HessianView) = (x.N, x.N)
+_linear_index(i, j) = i < j ?  _linear_index(j, i) : div((i - 1) * i, 2) + j
+Base.getindex(x::HessianView, i, j) = x.x[_linear_index(i, j)]
+Base.setindex!(x::HessianView, v, i, j) = (x.x[_linear_index(i, j)] = v)
+
+struct VectorView <:AbstractVector{Float64}
+    x::Vector{Float64}
+    N::Int
+    function VectorView(x, N)
+        if length(x) < N
+            resize!(x, N)
+        end
+        return new(x, N)
+    end
+end
+
+Base.size(x::VectorView) = (x.N,)
+Base.getindex(x::VectorView, i) = x.x[i]
+Base.setindex!(x::VectorView, v, i) = (x.x[i] = v)
+
 """
     _forward_eval_ϵ(
+        d,
         ex::Union{_FunctionStorage,_SubexpressionStorage},
         storage_ϵ::AbstractVector{ForwardDiff.Partials{N,T}},
         partials_storage_ϵ::AbstractVector{ForwardDiff.Partials{N,T}},
@@ -194,6 +229,7 @@ components separate so that we don't need to recompute the real components.
 This assumes that `_reverse_model(d, x)` has already been called.
 """
 function _forward_eval_ϵ(
+    d,
     ex::Union{_FunctionStorage,_SubexpressionStorage},
     storage_ϵ::AbstractVector{ForwardDiff.Partials{N,T}},
     partials_storage_ϵ::AbstractVector{ForwardDiff.Partials{N,T}},
@@ -220,117 +256,44 @@ function _forward_eval_ϵ(
             storage_ϵ[k] = zero_ϵ
         else
             @assert node.type != Nonlinear.NODE_MOI_VARIABLE
-            ϵtmp = zero_ϵ
-            @inbounds children_idx = SparseArrays.nzrange(ex.adj, k)
-            for c_idx in children_idx
+            storage_ϵ[k] = zero_ϵ
+            children_indices = SparseArrays.nzrange(ex.adj, k)
+            for c_idx in children_indices
                 @inbounds ix = children_arr[c_idx]
-                @inbounds partial = ex.partials_storage[ix]
                 @inbounds storage_val = storage_ϵ[ix]
                 # TODO: This "if" statement can take 8% of the hessian
                 # evaluation time! Find a more efficient way.
-                if !isfinite(partial) && storage_val == zero_ϵ
+                if !isfinite(ex.partials_storage[ix]) && storage_val == zero_ϵ
                     continue
                 end
-                ϵtmp += storage_val * ex.partials_storage[ix]
+                storage_ϵ[k] += storage_val * ex.partials_storage[ix]
             end
-            storage_ϵ[k] = ϵtmp
             if node.type == Nonlinear.NODE_CALL_MULTIVARIATE
-                # TODO(odow): consider how to refactor this into Nonlinear.
-                op = node.index
-                n_children = length(children_idx)
-                if op == 3 # :*
-                    # Lazy approach for now.
-                    anyzero = false
-                    tmp_prod = one(ForwardDiff.Dual{TAG,T,N})
-                    for c_idx in children_idx
-                        ix = children_arr[c_idx]
-                        sval = ex.forward_storage[ix]
-                        gnum = ForwardDiff.Dual{TAG}(sval, storage_ϵ[ix])
-                        tmp_prod *= gnum
-                        anyzero = ifelse(sval * sval == zero(T), true, anyzero)
-                    end
-                    # By a quirk of floating-point numbers, we can have
-                    # anyzero == true && ForwardDiff.value(tmp_prod) != zero(T)
-                    if anyzero || n_children <= 2
-                        for c_idx in children_idx
-                            prod_others = one(ForwardDiff.Dual{TAG,T,N})
-                            for c_idx2 in children_idx
-                                (c_idx == c_idx2) && continue
-                                ix = children_arr[c_idx2]
-                                gnum = ForwardDiff.Dual{TAG}(
-                                    ex.forward_storage[ix],
-                                    storage_ϵ[ix],
-                                )
-                                prod_others *= gnum
+                nn = length(children_indices)
+                f_input = VectorView(d.jac_storage, nn)
+                for (i, c) in enumerate(children_indices)
+                    f_input[i] = ex.forward_storage[children_arr[c]]
+                end
+                H = HessianView(d.user_output_buffer, nn)
+                has_hessian = Nonlinear.eval_multivariate_hessian(
+                    user_operators,
+                    user_operators.multivariate_operators[node.index],
+                    H,
+                    f_input,
+                )
+                if has_hessian
+                    for (row, c) in enumerate(children_indices)
+                        ix = children_arr[c]
+                        dual = ntuple(N) do j
+                            y = 0.0
+                            for (col, ck) in enumerate(children_indices)
+                                ε = storage_ϵ[children_arr[ck]]
+                                y += H[row, col] * ε[j]
                             end
-                            partials_storage_ϵ[children_arr[c_idx]] =
-                                ForwardDiff.partials(prod_others)
+                            return y
                         end
-                    else
-                        for c_idx in children_idx
-                            ix = children_arr[c_idx]
-                            prod_others =
-                                tmp_prod / ForwardDiff.Dual{TAG}(
-                                    ex.forward_storage[ix],
-                                    storage_ϵ[ix],
-                                )
-                            partials_storage_ϵ[ix] =
-                                ForwardDiff.partials(prod_others)
-                        end
+                        partials_storage_ϵ[ix] = ForwardDiff.Partials(dual)
                     end
-                elseif op == 4 # :^
-                    @assert n_children == 2
-                    idx1 = first(children_idx)
-                    idx2 = last(children_idx)
-                    @inbounds ix1 = children_arr[idx1]
-                    @inbounds ix2 = children_arr[idx2]
-                    @inbounds base = ex.forward_storage[ix1]
-                    @inbounds base_ϵ = storage_ϵ[ix1]
-                    @inbounds exponent = ex.forward_storage[ix2]
-                    @inbounds exponent_ϵ = storage_ϵ[ix2]
-                    base_gnum = ForwardDiff.Dual{TAG}(base, base_ϵ)
-                    exponent_gnum = ForwardDiff.Dual{TAG}(exponent, exponent_ϵ)
-                    if exponent == 2
-                        partials_storage_ϵ[ix1] = 2 * base_ϵ
-                    elseif exponent == 1
-                        partials_storage_ϵ[ix1] = zero_ϵ
-                    else
-                        partials_storage_ϵ[ix1] = ForwardDiff.partials(
-                            exponent_gnum * base_gnum^(exponent_gnum - 1),
-                        )
-                    end
-                    result_gnum = ForwardDiff.Dual{TAG}(
-                        ex.forward_storage[k],
-                        storage_ϵ[k],
-                    )
-                    # TODO(odow): fix me to use NaNMath.jl instead
-                    log_base_gnum = base_gnum < 0 ? NaN : log(base_gnum)
-                    partials_storage_ϵ[ix2] =
-                        ForwardDiff.partials(result_gnum * log_base_gnum)
-                elseif op == 5 # :/
-                    @assert n_children == 2
-                    idx1 = first(children_idx)
-                    idx2 = last(children_idx)
-                    @inbounds ix1 = children_arr[idx1]
-                    @inbounds ix2 = children_arr[idx2]
-                    @inbounds numerator = ex.forward_storage[ix1]
-                    @inbounds numerator_ϵ = storage_ϵ[ix1]
-                    @inbounds denominator = ex.forward_storage[ix2]
-                    @inbounds denominator_ϵ = storage_ϵ[ix2]
-                    recip_denominator =
-                        1 / ForwardDiff.Dual{TAG}(denominator, denominator_ϵ)
-                    partials_storage_ϵ[ix1] =
-                        ForwardDiff.partials(recip_denominator)
-                    partials_storage_ϵ[ix2] = ForwardDiff.partials(
-                        -ForwardDiff.Dual{TAG}(numerator, numerator_ϵ) *
-                        recip_denominator *
-                        recip_denominator,
-                    )
-                elseif op > 6
-                    error(
-                        "User-defined operators not supported for hessian " *
-                        "computations",
-                    )
                 end
             elseif node.type == Nonlinear.NODE_CALL_UNIVARIATE
                 @inbounds child_idx = children_arr[ex.adj.colptr[k]]
