@@ -627,9 +627,41 @@ function test_eval_multivariate_function_registered_grad()
     @test grad_calls == 1
     H = LinearAlgebra.UpperTriangular(zeros(2, 2))
     @test_throws(
-        ErrorException,
+        ErrorException("Hessian is not defined for operator f"),
         Nonlinear.eval_multivariate_hessian(r, :f, H, x),
     )
+    return
+end
+
+function test_eval_multivariate_function_registered_hessian()
+    r = Nonlinear.OperatorRegistry()
+    f(x...) = x[1]^2 + x[1] * x[2] + x[2]^2
+    grad_calls = 0
+    function ∇f(g, x...)
+        grad_calls += 1
+        g[1] = 2 * x[1] + x[2]
+        g[2] = x[1] + 2 * x[2]
+        return
+    end
+    hess_calls = 0
+    function ∇²f(H, x...)
+        hess_calls += 1
+        H[1, 1] = 2.0
+        H[1, 2] = 1.0
+        H[2, 2] = 2.0
+        return
+    end
+    Nonlinear.register_operator(r, :f, 2, f, ∇f, ∇²f)
+    x = [1.1, 2.2]
+    @test Nonlinear.eval_multivariate_function(r, :f, x) ≈ f(x...)
+    g = zeros(2)
+    Nonlinear.eval_multivariate_gradient(r, :f, g, x)
+    @test g ≈ [2 * x[1] + x[2], x[1] + 2 * x[2]]
+    @test grad_calls == 1
+    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
+    @test Nonlinear.eval_multivariate_hessian(r, :f, H, x) == true
+    @test H == [2.0 1.0; 0.0 2.0]
+    @test hess_calls == 1
     return
 end
 

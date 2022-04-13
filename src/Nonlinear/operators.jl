@@ -51,12 +51,17 @@ struct _UnivariateOperator{F,F′,F′′}
     f′′::F′′
 end
 
-struct _MultivariateOperator{F,F′}
+struct _MultivariateOperator{F,F′,F′′}
     N::Int
     f::F
     ∇f::F′
-    function _MultivariateOperator{N}(f::Function, ∇f::Function) where {N}
-        return new{typeof(f),typeof(∇f)}(N, f, ∇f)
+    ∇²f::F′′
+    function _MultivariateOperator{N}(
+        f::Function,
+        ∇f::Function,
+        ∇²f::Union{Nothing,Function} = nothing,
+    ) where {N}
+        return new{typeof(f),typeof(∇f),typeof(∇²f)}(N, f, ∇f, ∇²f)
     end
 end
 
@@ -288,6 +293,20 @@ end
 
 function _MultivariateOperator{N}(::Symbol, f::Function, ∇f::Function) where {N}
     return _MultivariateOperator{N}(x -> f(x...), (g, x) -> ∇f(g, x...))
+end
+
+function _MultivariateOperator{N}(
+    ::Symbol,
+    f::Function,
+    ∇f::Function,
+    ∇²f::Function,
+) where {N}
+    return _MultivariateOperator{N}(
+        x -> f(x...),
+        (g, x) -> ∇f(g, x...),
+        (H, x) -> ∇²f(H, x...),
+
+    )
 end
 
 function register_operator(
@@ -609,7 +628,7 @@ end
 _nan_to_zero(x) = isnan(x) ? 0.0 : x
 
 function eval_multivariate_hessian(
-    ::OperatorRegistry,
+    registry::OperatorRegistry,
     op::Symbol,
     H::LinearAlgebra.UpperTriangular{T},
     x::AbstractVector{T},
@@ -667,10 +686,14 @@ function eval_multivariate_hessian(
         H[1, 2] = -d
         H[2, 2] = 2 * x[1] * d / x[2]
     else
-        error(
-            "User-defined operators not supported for hessian " *
-            "computations",
-        )
+        id = registry.multivariate_operator_to_id[op]
+        offset = id - registry.multivariate_user_operator_start
+        operator = registry.registered_multivariate_operators[offset]
+        if operator.∇²f === nothing
+            error("Hessian is not defined for operator $op")
+        end
+        @assert length(x) == operator.N
+        operator.∇²f(H, x)
     end
     return true
 end
