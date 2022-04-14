@@ -305,7 +305,6 @@ function _MultivariateOperator{N}(
         x -> f(x...),
         (g, x) -> ∇f(g, x...),
         (H, x) -> ∇²f(H, x...),
-
     )
 end
 

@@ -234,7 +234,7 @@ function test_hessian_sparsity_registered_rosenbrock()
     y = MOI.VariableIndex(2)
     f(x...) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
     function ∇f(g, x...)
-        g[1] = 400 * x[1]^3 - 400 * x[1] * x[2] + 2 * x[1] -2
+        g[1] = 400 * x[1]^3 - 400 * x[1] * x[2] + 2 * x[1] - 2
         g[2] = 200 * (x[2] - x[1]^2)
         return
     end
@@ -254,8 +254,7 @@ function test_hessian_sparsity_registered_rosenbrock()
     )
     @test :Hess in MOI.features_available(data)
     MOI.initialize(data, [:Grad, :Jac, :Hess])
-    @test MOI.hessian_lagrangian_structure(data) ==
-          [(1, 1), (2, 2), (2, 1)]
+    @test MOI.hessian_lagrangian_structure(data) == [(1, 1), (2, 2), (2, 1)]
     H = fill(NaN, 3)
     MOI.eval_hessian_lagrangian(data, H, [1.0, 1.0], 1.5, Float64[])
     @test H == 1.5 .* [802, 200, -400]
