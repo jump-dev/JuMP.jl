@@ -65,7 +65,7 @@ Packages in Julia compose well. It's common for people to pick two unrelated
 packages and use them in conjunction to create novel behavior. JuMP isn't one of
 those packages.
 
-If you want to optimize a ordinary differential equation from
+If you want to optimize an ordinary differential equation from
 [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl)
 or tune a neural network from [Flux.jl](https://github.com/FluxML/Flux.jl),
 consider using other packages such as:
