@@ -629,7 +629,7 @@ _nan_to_zero(x) = isnan(x) ? 0.0 : x
 function eval_multivariate_hessian(
     registry::OperatorRegistry,
     op::Symbol,
-    H, # ::Union{ReverseAD._UnsafeHessianView,LinearAlgebra.UpperTriangular{T}},
+    H,
     x::AbstractVector{T},
 ) where {T}
     if op in (:+, :-, :ifelse)

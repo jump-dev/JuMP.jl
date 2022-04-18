@@ -7,7 +7,6 @@ module Nonlinear
 
 import Base.Meta: isexpr
 import ForwardDiff
-import LinearAlgebra
 import MathOptInterface
 import OrderedCollections: OrderedDict
 import SparseArrays
