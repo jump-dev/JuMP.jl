@@ -49,8 +49,6 @@ const MOIB = MOI.Bridges
 import Calculus
 import OrderedCollections.OrderedDict
 import ForwardDiff
-include("_Derivatives/_Derivatives.jl")
-using ._Derivatives
 
 include("Containers/Containers.jl")
 
