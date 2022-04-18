@@ -105,8 +105,7 @@ function _eval_hessian_inner(
             @inbounds input_ϵ[idx] = zero(T)
         end
     end
-    # TODO(odow): consider reverting to a view.
-    output_slice = _VectorView(nzcount, length(ex.hess_I), pointer(H))
+    output_slice = _UnsafeVectorView(nzcount, length(ex.hess_I), pointer(H))
     Coloring.recover_from_matmat!(
         output_slice,
         ex.seed_matrix,
@@ -177,41 +176,6 @@ function _hessian_slice_inner(d, ex, input_ϵ, output_ϵ, ::Type{T}) where {T}
     return
 end
 
-struct HessianView <: AbstractMatrix{Float64}
-    x::Vector{Float64}
-    N::Int
-    function HessianView(x, N)
-        z = div(N * (N + 1), 2)
-        if length(x) < z
-            resize!(x, z)
-        end
-        for i in 1:z
-            x[i] = 0.0
-        end
-        return new(x, N)
-    end
-end
-
-Base.size(x::HessianView) = (x.N, x.N)
-_linear_index(i, j) = i < j ? _linear_index(j, i) : div((i - 1) * i, 2) + j
-Base.getindex(x::HessianView, i, j) = x.x[_linear_index(i, j)]
-Base.setindex!(x::HessianView, v, i, j) = (x.x[_linear_index(i, j)] = v)
-
-struct VectorView <: AbstractVector{Float64}
-    x::Vector{Float64}
-    N::Int
-    function VectorView(x, N)
-        if length(x) < N
-            resize!(x, N)
-        end
-        return new(x, N)
-    end
-end
-
-Base.size(x::VectorView) = (x.N,)
-Base.getindex(x::VectorView, i) = x.x[i]
-Base.setindex!(x::VectorView, v, i) = (x.x[i] = v)
-
 """
     _forward_eval_ϵ(
         d,
@@ -273,11 +237,11 @@ function _forward_eval_ϵ(
             end
             if node.type == Nonlinear.NODE_CALL_MULTIVARIATE
                 nn = length(children_indices)
-                f_input = VectorView(d.jac_storage, nn)
+                f_input = _UnsafeVectorView(d.jac_storage, nn)
                 for (i, c) in enumerate(children_indices)
                     f_input[i] = ex.forward_storage[children_arr[c]]
                 end
-                H = HessianView(d.user_output_buffer, nn)
+                H = _UnsafeHessianView(d.user_output_buffer, nn)
                 has_hessian = Nonlinear.eval_multivariate_hessian(
                     user_operators,
                     user_operators.multivariate_operators[node.index],
@@ -285,17 +249,20 @@ function _forward_eval_ϵ(
                     f_input,
                 )
                 if has_hessian
-                    for (row, c) in enumerate(children_indices)
-                        ix = children_arr[c]
-                        dual = ntuple(N) do j
+                    for (col, c) in enumerate(children_indices)
+                        dual = ntuple(Val(N)) do j
                             y = 0.0
-                            for (col, ck) in enumerate(children_indices)
-                                ε = storage_ϵ[children_arr[ck]]
-                                y += H[row, col] * ε[j]
+                            for (row, ck) in enumerate(children_indices)
+                                h = H[row, col]
+                                if !iszero(h)
+                                    ε = storage_ϵ[children_arr[ck]]
+                                    y += h * ε[j]
+                                end
                             end
                             return y
                         end
-                        partials_storage_ϵ[ix] = ForwardDiff.Partials(dual)
+                        ix = children_arr[c]
+                        partials_storage_ϵ[ix] = ForwardDiff.Partials{N,T}(dual)
                     end
                 end
             elseif node.type == Nonlinear.NODE_CALL_UNIVARIATE
