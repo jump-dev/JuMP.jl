@@ -252,7 +252,7 @@ function test_printing_NLPEvaluator()
     io_test(
         MIME("text/plain"),
         evaluator,
-        "NonlinearData with available features:\n" *
+        "Nonlinear.Evaluator with available features:\n" *
         "  * :Grad\n" *
         "  * :Jac\n" *
         "  * :JacVec\n" *

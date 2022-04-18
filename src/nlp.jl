@@ -5,7 +5,7 @@
 
 function _init_NLP(model::Model)
     if model.nlp_data === nothing
-        model.nlp_data = Nonlinear.NonlinearData()
+        model.nlp_data = Nonlinear.Model()
     end
     return
 end
@@ -29,19 +29,19 @@ function Nonlinear.check_return_type(
     )
 end
 
-function Nonlinear._parse_expression(
-    data::Nonlinear.NonlinearData,
-    expr::Nonlinear.NonlinearExpression,
+function Nonlinear.parse_expression(
+    model::Nonlinear.Model,
+    expr::Nonlinear.Expression,
     x::VariableRef,
     parent::Int,
 )
-    Nonlinear._parse_expression(data, expr, index(x), parent)
+    Nonlinear.parse_expression(model, expr, index(x), parent)
     return
 end
 
-function Nonlinear._parse_expression(
-    data::Nonlinear.NonlinearData,
-    expr::Nonlinear.NonlinearExpression,
+function Nonlinear.parse_expression(
+    model::Nonlinear.Model,
+    expr::Nonlinear.Expression,
     x::GenericAffExpr,
     parent::Int,
 )
@@ -49,58 +49,58 @@ function Nonlinear._parse_expression(
         expr.nodes,
         Nonlinear.Node(
             Nonlinear.NODE_CALL_MULTIVARIATE,
-            data.operators.multivariate_operator_to_id[:+],
+            model.operators.multivariate_operator_to_id[:+],
             parent,
         ),
     )
     sum_parent = length(expr.nodes)
     if !iszero(x.constant)
-        Nonlinear._parse_expression(data, expr, x.constant, sum_parent)
+        Nonlinear.parse_expression(model, expr, x.constant, sum_parent)
     end
     for (v, c) in x.terms
         if isone(c)
-            Nonlinear._parse_expression(data, expr, v, sum_parent)
+            Nonlinear.parse_expression(model, expr, v, sum_parent)
         else
             push!(
                 expr.nodes,
                 Nonlinear.Node(
                     Nonlinear.NODE_CALL_MULTIVARIATE,
-                    data.operators.multivariate_operator_to_id[:*],
+                    model.operators.multivariate_operator_to_id[:*],
                     sum_parent,
                 ),
             )
             mult_parent = length(expr.nodes)
-            Nonlinear._parse_expression(data, expr, c, mult_parent)
-            Nonlinear._parse_expression(data, expr, v, mult_parent)
+            Nonlinear.parse_expression(model, expr, c, mult_parent)
+            Nonlinear.parse_expression(model, expr, v, mult_parent)
         end
     end
     return
 end
 
-function Nonlinear._parse_expression(
-    data::Nonlinear.NonlinearData,
-    expr::Nonlinear.NonlinearExpression,
+function Nonlinear.parse_expression(
+    model::Nonlinear.Model,
+    expr::Nonlinear.Expression,
     x::QuadExpr,
     parent::Int,
 )
-    sum = data.operators.multivariate_operator_to_id[:+]
-    prod = data.operators.multivariate_operator_to_id[:*]
+    sum = model.operators.multivariate_operator_to_id[:+]
+    prod = model.operators.multivariate_operator_to_id[:*]
     push!(
         expr.nodes,
         Nonlinear.Node(Nonlinear.NODE_CALL_MULTIVARIATE, sum, parent),
     )
     sum_parent = length(expr.nodes)
-    Nonlinear._parse_expression(data, expr, x.aff, sum_parent)
+    Nonlinear.parse_expression(model, expr, x.aff, sum_parent)
     for (xy, c) in x.terms
         push!(
             expr.nodes,
             Nonlinear.Node(Nonlinear.NODE_CALL_MULTIVARIATE, prod, sum_parent),
         )
         mult_parent = length(expr.nodes)
-        Nonlinear._parse_expression(data, expr, xy.a, mult_parent)
-        Nonlinear._parse_expression(data, expr, xy.b, mult_parent)
+        Nonlinear.parse_expression(model, expr, xy.a, mult_parent)
+        Nonlinear.parse_expression(model, expr, xy.b, mult_parent)
         if !isone(c)
-            Nonlinear._parse_expression(data, expr, c, mult_parent)
+            Nonlinear.parse_expression(model, expr, c, mult_parent)
         end
     end
     return
@@ -170,14 +170,14 @@ struct NonlinearParameter <: AbstractJuMPScalar
     index::Int
 end
 
-function Nonlinear._parse_expression(
-    data::Nonlinear.NonlinearData,
-    expr::Nonlinear.NonlinearExpression,
+function Nonlinear.parse_expression(
+    model::Nonlinear.Model,
+    expr::Nonlinear.Expression,
     x::NonlinearParameter,
     parent::Int,
 )
     index = Nonlinear.ParameterIndex(x.index)
-    return Nonlinear._parse_expression(data, expr, index, parent)
+    return Nonlinear.parse_expression(model, expr, index, parent)
 end
 
 function add_nonlinear_parameter(model::Model, value::Real)
@@ -243,14 +243,14 @@ struct NonlinearExpression <: AbstractJuMPScalar
     index::Int
 end
 
-function Nonlinear._parse_expression(
-    data::Nonlinear.NonlinearData,
-    expr::Nonlinear.NonlinearExpression,
+function Nonlinear.parse_expression(
+    model::Nonlinear.Model,
+    expr::Nonlinear.Expression,
     x::NonlinearExpression,
     parent::Int,
 )
     index = Nonlinear.ExpressionIndex(x.index)
-    return Nonlinear._parse_expression(data, expr, index, parent)
+    return Nonlinear.parse_expression(model, expr, index, parent)
 end
 
 """
@@ -346,6 +346,41 @@ end
 
 const NonlinearConstraintRef = ConstraintRef{Model,NonlinearConstraintIndex}
 
+function _normalize_constraint_expr(lhs::Real, body, rhs::Real)
+    return Float64(lhs), body, Float64(rhs)
+end
+
+function _normalize_constraint_expr(lhs, body, rhs)
+    return error(
+        "Interval constraint contains non-constant left- or right-hand " *
+        "sides. Reformulate as two separate constraints, or move all " *
+        "variables into the central term.",
+    )
+end
+
+_normalize_constraint_expr(lhs, rhs::Real) = lhs, Float64(rhs)
+
+_normalize_constraint_expr(lhs, rhs) = Expr(:call, :-, lhs, rhs), 0.0
+
+function _expr_to_constraint(expr::Expr)
+    if isexpr(expr, :comparison)
+        @assert expr.args[2] == expr.args[4]
+        @assert expr.args[2] in (:<=, :>=)
+        lhs, body, rhs =
+            _normalize_constraint_expr(expr.args[1], expr.args[3], expr.args[5])
+        return body, MOI.Interval(lhs, rhs)
+    end
+    lhs, rhs = _normalize_constraint_expr(expr.args[2], expr.args[3])
+    if expr.args[1] == :<=
+        return :($lhs - $rhs), MOI.LessThan(0.0)
+    elseif expr.args[1] == :>=
+        return :($lhs - $rhs), MOI.GreaterThan(0.0)
+    else
+        @assert expr.args[1] == :(==)
+        return :($lhs - $rhs), MOI.EqualTo(0.0)
+    end
+end
+
 """
     add_nonlinear_constraint(model::Model, expr::Expr)
 
@@ -367,7 +402,8 @@ julia> add_nonlinear_constraint(model, :(\$(x) + \$(x)^2 <= 1))
 """
 function add_nonlinear_constraint(model::Model, ex::Expr)
     _init_NLP(model)
-    c = Nonlinear.add_constraint(model.nlp_data, ex)
+    f, set = _expr_to_constraint(ex)
+    c = Nonlinear.add_constraint(model.nlp_data, f, set)
     index = NonlinearConstraintIndex(c.value)
     return ConstraintRef(model, index, ScalarShape())
 end
@@ -418,12 +454,12 @@ Return the dual of the nonlinear constraint `c`.
 """
 function dual(c::NonlinearConstraintRef)
     _init_NLP(c.model)
-    dual = c.model.nlp_data.constraint_dual
-    if length(dual) == 0
-        append!(dual, MOI.get(c.model, MOI.NLPBlockDual()))
+    evaluator = MOI.get(c.model, MOI.NLPBlock()).evaluator::Nonlinear.Evaluator
+    if length(evaluator.constraint_dual) == 0
+        append!(evaluator.constraint_dual, MOI.get(c.model, MOI.NLPBlockDual()))
     end
     index = Nonlinear.ConstraintIndex(c.index.value)
-    return dual[Nonlinear.row(c.model.nlp_data, index)]
+    return evaluator.constraint_dual[Nonlinear.ordinal_index(evaluator, index)]
 end
 
 """
@@ -689,19 +725,28 @@ function register(
 end
 
 """
-    NLPEvaluator(model)
-
-Return an [`MOI.AbstractNLPEvaluator`](@ref) constructed from `model`.
-
-Before using, you must initialize the evaluator using [`MOI.initialize`](@ref).
-"""
-function NLPEvaluator(model::Model)
-    _init_NLP(model)
-    variables = all_variables(model)
-    Nonlinear.set_differentiation_backend(
-        model.nlp_data,
-        Nonlinear.SparseReverseMode(),
-        index.(variables),
+    NLPEvaluator(
+        model::Model,
+        differentiation_backend::Nonlinear.AbstractAutomaticDifferentiation =
+            Nonlinear.SparseReverseMode(),
     )
-    return model.nlp_data
+
+Return an [`MOI.AbstractNLPEvaluator`](@ref) constructed from `model`. Pass
+`differentiation_backend` to specify the differentiation backend used to compute
+derivatives.
+
+!!! warning
+    Before using, you must initialize the evaluator using
+    [`MOI.initialize`](@ref).
+"""
+function NLPEvaluator(
+    model::Model;
+    differentiation_backend::Nonlinear.AbstractAutomaticDifferentiation = Nonlinear.SparseReverseMode(),
+)
+    _init_NLP(model)
+    return Nonlinear.Evaluator(
+        model.nlp_data,
+        differentiation_backend,
+        index.(all_variables(model)),
+    )
 end
