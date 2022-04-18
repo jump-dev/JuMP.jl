@@ -64,9 +64,9 @@ Nonlinear.set_differentiation_backend
 
 ## Data-structure
 
- ```@docs
- Nonlinear.Node
- Nonlinear.NodeType
- Nonlinear.NonlinearExpression
- Nonlinear.adjacency_matrix
- ```
+```@docs
+Nonlinear.Node
+Nonlinear.NodeType
+Nonlinear.NonlinearExpression
+Nonlinear.adjacency_matrix
+```
