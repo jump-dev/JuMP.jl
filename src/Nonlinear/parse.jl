@@ -57,7 +57,7 @@ function _parse_univariate_expression(
     data::NonlinearData,
     expr::NonlinearExpression,
     x::Expr,
-    parent_index::Union{Symbol,Int},
+    parent_index::Int,
 )
     @assert isexpr(x, :call, 2)
     id = get(data.operators.univariate_operator_to_id, x.args[1], nothing)
@@ -78,7 +78,7 @@ function _parse_multivariate_expression(
     data::NonlinearData,
     expr::NonlinearExpression,
     x::Expr,
-    parent_index::Union{Symbol,Int},
+    parent_index::Int,
 )
     @assert isexpr(x, :call)
     id = get(data.operators.multivariate_operator_to_id, x.args[1], nothing)
@@ -102,7 +102,7 @@ function _parse_inequality_expression(
     data::NonlinearData,
     expr::NonlinearExpression,
     x::Expr,
-    parent_index::Union{Symbol,Int},
+    parent_index::Int,
 )
     operator_id = data.operators.comparison_operator_to_id[x.args[1]]
     push!(expr.nodes, Node(NODE_COMPARISON, operator_id, parent_index))
@@ -120,7 +120,7 @@ function _parse_comparison_expression(
     data::NonlinearData,
     expr::NonlinearExpression,
     x::Expr,
-    parent_index::Union{Symbol,Int},
+    parent_index::Int,
 )
     for k in 2:2:length(x.args)-1
         @assert x.args[k] == x.args[2] # don't handle a <= b >= c
@@ -138,7 +138,7 @@ function _parse_logic_expression(
     data::NonlinearData,
     expr::NonlinearExpression,
     x::Expr,
-    parent_index::Union{Symbol,Int},
+    parent_index::Int,
 )
     id = data.operators.logic_operator_to_id[x.head]
     push!(expr.nodes, Node(NODE_LOGIC, id, parent_index))

@@ -3,6 +3,23 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+"""
+    NodeType
+
+An enum describing the possible node types. Each `Node` has a `.index` field,
+which should be interpreted as follows:
+
+ * `NODE_CALL_MULTIVARIATE`: the index into `operators.multivariate_operators`
+ * `NODE_CALL_UNIVARIATE`: the index into `operators.univariate_operators`
+ * `NODE_LOGIC`: the index into `operators.logic_operators`
+ * `NODE_COMPARISON`: the index into `operators.comparison_operators`
+ * `NODE_MOI_VARIABLE`: the value of `MOI.VariableIndex(index)` in the user's
+   space of the model.
+ * `NODE_VARIABLE`: the 1-based index of the internal vector
+ * `NODE_VALUE`: the index into the `.values` field of `NonlinearExpression`
+ * `NODE_PARAMETER`: the index into `data.parameters`
+ * `NODE_SUBEXPRESSION`:  the index into `data.expressions`
+"""
 @enum(
     NodeType,
     # Index into multivariate operators
@@ -26,12 +43,25 @@
     NODE_SUBEXPRESSION,
 )
 
+"""
+    struct Node
+        type::NodeType
+        index::Int
+        parent::Int
+    end
+"""
 struct Node
     type::NodeType
     index::Int
     parent::Int
 end
 
+"""
+    struct NonlinearExpression
+        nodes::Vector{Node}
+        values::Vector{Float64}
+    end
+"""
 struct NonlinearExpression
     nodes::Vector{Node}
     values::Vector{Float64}
