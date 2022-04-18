@@ -1,3 +1,6 @@
+import Pkg
+Pkg.add(Pkg.PackageSpec(name = "MathOptInterface", rev = "od/nonlinear"))
+
 import Documenter
 import Literate
 import Test
