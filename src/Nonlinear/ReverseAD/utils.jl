@@ -95,14 +95,18 @@ end
 
 Base.size(x::_UnsafeHessianView) = (x.N, x.N)
 
-_linear_index(i, j) = i >= j ? div((i - 1) * i, 2) + j : _linear_index(j, i)
-
 function Base.getindex(x::_UnsafeHessianView, i, j)
-    return unsafe_load(x.ptr, _linear_index(i, j))
+    if i > j
+        error("Cannot get element in the lower-triangular matrix: ($i, $j)")
+    end
+    return unsafe_load(x.ptr, div((i - 1) * i, 2) + j)
 end
 
 function Base.setindex!(x::_UnsafeHessianView, value, i, j)
-    unsafe_store!(x.ptr, value, _linear_index(i, j))
+    if i > j
+        error("Cannot set element in the lower-triangular matrix: ($i, $j)")
+    end
+    unsafe_store!(x.ptr, value, div((i - 1) * i, 2) + j)
     return value
 end
 

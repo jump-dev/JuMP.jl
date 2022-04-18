@@ -236,34 +236,35 @@ function _forward_eval_ϵ(
                 storage_ϵ[k] += storage_val * ex.partials_storage[ix]
             end
             if node.type == Nonlinear.NODE_CALL_MULTIVARIATE
-                nn = length(children_indices)
-                f_input = _UnsafeVectorView(d.jac_storage, nn)
+                n_children = length(children_indices)
+                f_input = _UnsafeVectorView(d.jac_storage, n_children)
                 for (i, c) in enumerate(children_indices)
                     f_input[i] = ex.forward_storage[children_arr[c]]
                 end
-                H = _UnsafeHessianView(d.user_output_buffer, nn)
+                H = _UnsafeHessianView(d.user_output_buffer, n_children)
                 has_hessian = Nonlinear.eval_multivariate_hessian(
                     user_operators,
                     user_operators.multivariate_operators[node.index],
-                    LinearAlgebra.UpperTriangular(H),
+                    H,
                     f_input,
                 )
-                if has_hessian
-                    for (col, c) in enumerate(children_indices)
-                        dual = ntuple(Val(N)) do j
-                            y = 0.0
-                            for (row, ck) in enumerate(children_indices)
-                                h = H[row, col]
-                                if !iszero(h)
-                                    ε = storage_ϵ[children_arr[ck]]
-                                    y += h * ε[j]
-                                end
-                            end
-                            return y
+                if !has_hessian
+                    continue
+                end
+                for col in 1:n_children
+                    dual = zero(ForwardDiff.Partials{N,T})
+                    for row in 1:n_children
+                        h = row > col ? H[col, row] : H[row, col]
+                        if iszero(h)
+                            continue
                         end
-                        ix = children_arr[c]
-                        partials_storage_ϵ[ix] = ForwardDiff.Partials{N,T}(dual)
+                        i = children_arr[children_indices[row]]
+                        if !iszero(storage_ϵ[i])
+                            dual += h * storage_ϵ[i]
+                        end
                     end
+                    i = children_arr[children_indices[col]]
+                    partials_storage_ϵ[i] = dual
                 end
             elseif node.type == Nonlinear.NODE_CALL_UNIVARIATE
                 @inbounds child_idx = children_arr[ex.adj.colptr[k]]
