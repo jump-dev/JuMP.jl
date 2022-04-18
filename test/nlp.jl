@@ -832,22 +832,30 @@ end
 # This covers the code that computes Hessians in odd chunks of Hess-vec
 # products.
 function test_dense_Hessian()
+    for i in 1:18
+        _test_dense_Hessian(i)
+    end
+    return
+end
+
+function _test_dense_Hessian(N::Int)
     m = Model()
-    @variable(m, x[1:18])
-    @NLobjective(m, Min, prod(x[i] for i in 1:18))
+    @variable(m, x[1:N])
+    @NLobjective(m, Min, prod(x[i] for i in 1:N))
     d = JuMP.NLPEvaluator(m)
     MOI.initialize(d, [:Hess])
     hessian_sparsity = MOI.hessian_lagrangian_structure(d)
     V = zeros(length(hessian_sparsity))
-    values = ones(18)
+    values = ones(N)
     MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-    @test _dense_hessian(hessian_sparsity, V, 18) ≈
-          ones(18, 18) - LinearAlgebra.diagm(0 => ones(18))
+    @test _dense_hessian(hessian_sparsity, V, N) ≈
+          ones(N, N) - LinearAlgebra.diagm(0 => ones(N))
     values[1] = 0.5
     MOI.eval_hessian_lagrangian(d, V, values, 1.0, Float64[])
-    @test _dense_hessian(hessian_sparsity, V, 18) ≈ [
-        0 ones(17)'
-        ones(17) (ones(17, 17)-LinearAlgebra.diagm(0 => ones(17)))/2
+    A = (ones(N - 1, N - 1) - LinearAlgebra.diagm(0 => ones(N - 1))) / 2
+    @test _dense_hessian(hessian_sparsity, V, N) ≈ [
+        0 ones(N - 1)'
+        ones(N - 1) A
     ]
     return
 end

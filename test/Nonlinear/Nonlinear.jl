@@ -17,7 +17,7 @@ function runtests()
     return
 end
 
-_hessian(f, x) = LinearAlgebra.UpperTriangular(ForwardDiff.hessian(f, x))
+_hessian(f, x) = LinearAlgebra.LowerTriangular(ForwardDiff.hessian(f, x))
 
 function test_copy()
     data = Nonlinear.NonlinearData()
@@ -540,18 +540,18 @@ function test_eval_multivariate_hessian_prod()
     r = Nonlinear.OperatorRegistry()
     # 1-arg *
     x = [1.1]
-    H = LinearAlgebra.UpperTriangular(zeros(1, 1))
+    H = LinearAlgebra.LowerTriangular(zeros(1, 1))
     @test Nonlinear.eval_multivariate_hessian(r, :*, H, x)
     @test H ≈ _hessian(x -> *(x[1]), x)
     # 2-arg *
     x = [1.1, 2.2]
-    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
+    H = LinearAlgebra.LowerTriangular(zeros(2, 2))
     @test (@allocated Nonlinear.eval_multivariate_hessian(r, :*, H, x)) == 0
     @test Nonlinear.eval_multivariate_hessian(r, :*, H, x)
     @test H ≈ _hessian(x -> x[1] * x[2], x)
     # 3-arg *
     x = [1.1, 2.2, 3.3]
-    H = LinearAlgebra.UpperTriangular(zeros(3, 3))
+    H = LinearAlgebra.LowerTriangular(zeros(3, 3))
     @test Nonlinear.eval_multivariate_hessian(r, :*, H, x)
     @test H ≈ _hessian(x -> x[1] * x[2] * x[3], x)
     return
@@ -561,19 +561,19 @@ function test_eval_multivariate_hessian_exponentiation()
     r = Nonlinear.OperatorRegistry()
     # ^1.0
     x = [1.1, 1.0]
-    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
+    H = LinearAlgebra.LowerTriangular(zeros(2, 2))
     @test (@allocated Nonlinear.eval_multivariate_hessian(r, :^, H, x)) == 0
     @test Nonlinear.eval_multivariate_hessian(r, :^, H, x)
     @test H ≈ _hessian(x -> x[1]^x[2], x)
     # ^2.0
     x = [1.1, 2.0]
-    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
+    H = LinearAlgebra.LowerTriangular(zeros(2, 2))
     @test (@allocated Nonlinear.eval_multivariate_hessian(r, :^, H, x)) == 0
     @test Nonlinear.eval_multivariate_hessian(r, :^, H, x)
     @test H ≈ _hessian(x -> x[1]^x[2], x)
     # 2-arg ^
     x = [1.1, 2.2]
-    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
+    H = LinearAlgebra.LowerTriangular(zeros(2, 2))
     @test (@allocated Nonlinear.eval_multivariate_hessian(r, :^, H, x)) == 0
     @test Nonlinear.eval_multivariate_hessian(r, :^, H, x)
     @test H ≈ _hessian(x -> x[1]^x[2], x)
@@ -584,7 +584,7 @@ function test_eval_multivariate_hessian_division()
     r = Nonlinear.OperatorRegistry()
     # 2-arg /
     x = [1.1, 2.2]
-    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
+    H = LinearAlgebra.LowerTriangular(zeros(2, 2))
     @test (@allocated Nonlinear.eval_multivariate_hessian(r, :/, H, x)) == 0
     @test Nonlinear.eval_multivariate_hessian(r, :/, H, x)
     @test H ≈ _hessian(x -> x[1] / x[2], x)
@@ -600,7 +600,7 @@ function test_eval_multivariate_function_registered()
     g = zeros(2)
     Nonlinear.eval_multivariate_gradient(r, :f, g, x)
     @test g ≈ [2 * x[1] + x[2], x[1] + 2 * x[2]]
-    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
+    H = LinearAlgebra.LowerTriangular(zeros(2, 2))
     @test_throws(
         ErrorException,
         Nonlinear.eval_multivariate_hessian(r, :f, H, x),
@@ -625,7 +625,7 @@ function test_eval_multivariate_function_registered_grad()
     Nonlinear.eval_multivariate_gradient(r, :f, g, x)
     @test g ≈ [2 * x[1] + x[2], x[1] + 2 * x[2]]
     @test grad_calls == 1
-    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
+    H = LinearAlgebra.LowerTriangular(zeros(2, 2))
     @test_throws(
         ErrorException("Hessian is not defined for operator f"),
         Nonlinear.eval_multivariate_hessian(r, :f, H, x),
@@ -647,7 +647,7 @@ function test_eval_multivariate_function_registered_hessian()
     function ∇²f(H, x...)
         hess_calls += 1
         H[1, 1] = 2.0
-        H[1, 2] = 1.0
+        H[2, 1] = 1.0
         H[2, 2] = 2.0
         return
     end
@@ -658,9 +658,9 @@ function test_eval_multivariate_function_registered_hessian()
     Nonlinear.eval_multivariate_gradient(r, :f, g, x)
     @test g ≈ [2 * x[1] + x[2], x[1] + 2 * x[2]]
     @test grad_calls == 1
-    H = LinearAlgebra.UpperTriangular(zeros(2, 2))
+    H = LinearAlgebra.LowerTriangular(zeros(2, 2))
     @test Nonlinear.eval_multivariate_hessian(r, :f, H, x) == true
-    @test H == [2.0 1.0; 0.0 2.0]
+    @test H == [2.0 0.0; 1.0 2.0]
     @test hess_calls == 1
     return
 end

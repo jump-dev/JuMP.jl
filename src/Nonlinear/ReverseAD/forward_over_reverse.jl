@@ -227,13 +227,14 @@ function _forward_eval_ϵ(
             children_indices = SparseArrays.nzrange(ex.adj, k)
             for c_idx in children_indices
                 @inbounds ix = children_arr[c_idx]
+                @inbounds partial = ex.partials_storage[ix]
                 @inbounds storage_val = storage_ϵ[ix]
                 # TODO: This "if" statement can take 8% of the hessian
                 # evaluation time! Find a more efficient way.
-                if !isfinite(ex.partials_storage[ix]) && storage_val == zero_ϵ
+                if !isfinite(partial) && storage_val == zero_ϵ
                     continue
                 end
-                storage_ϵ[k] += storage_val * ex.partials_storage[ix]
+                storage_ϵ[k] += storage_val * partial
             end
             if node.type == Nonlinear.NODE_CALL_MULTIVARIATE
                 n_children = length(children_indices)
@@ -264,8 +265,8 @@ function _forward_eval_ϵ(
                 for col in 1:n_children
                     dual = zero(ForwardDiff.Partials{N,T})
                     for row in 1:n_children
-                        # Make sure we get the upper-triangular component.
-                        h = row > col ? H[col, row] : H[row, col]
+                        # Make sure we get the lower-triangular component.
+                        h = row >= col ? H[row, col] : H[col, row]
                         # Performance optimization: hessians can be quite sparse
                         if !iszero(h)
                             i = children_arr[children_indices[row]]

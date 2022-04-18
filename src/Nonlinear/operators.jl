@@ -645,10 +645,10 @@ function eval_multivariate_hessian(
         if N == 1
             # Hessian is zero
         elseif N == 2
-            H[1, 2] = one(T)
+            H[2, 1] = one(T)
         else
             for i in 1:N, j in (i+1):N
-                H[i, j] =
+                H[j, i] =
                     prod(x[k] for k in 1:N if k != i && k != j; init = one(T))
             end
         end
@@ -662,15 +662,15 @@ function eval_multivariate_hessian(
         #                      .               x[1]^x[2]*log(x[1])^2
         ln = x[1] > 0 ? log(x[1]) : NaN
         if x[2] == one(T)
-            H[1, 2] = _nan_to_zero(ln + one(T))
+            H[2, 1] = _nan_to_zero(ln + one(T))
             H[2, 2] = _nan_to_zero(x[1] * ln^2)
         elseif x[2] == T(2)
             H[1, 1] = T(2)
-            H[1, 2] = _nan_to_zero(x[1] * (T(2) * ln + one(T)))
+            H[2, 1] = _nan_to_zero(x[1] * (T(2) * ln + one(T)))
             H[2, 2] = _nan_to_zero(ln^2 * x[1]^2)
         else
             H[1, 1] = x[2] * (x[2] - 1) * x[1]^(x[2] - 2)
-            H[1, 2] = _nan_to_zero(x[1]^(x[2] - 1) * (x[2] * ln + 1))
+            H[2, 1] = _nan_to_zero(x[1]^(x[2] - 1) * (x[2] * ln + 1))
             H[2, 2] = _nan_to_zero(ln^2 * x[1]^x[2])
         end
     elseif op == :/
@@ -682,7 +682,7 @@ function eval_multivariate_hessian(
         # ∇²(x) = 0.0          -1/x[2]^2
         #          .           2x[1]/x[2]^3
         d = 1 / x[2]^2
-        H[1, 2] = -d
+        H[2, 1] = -d
         H[2, 2] = 2 * x[1] * d / x[2]
     else
         id = registry.multivariate_operator_to_id[op]

@@ -62,7 +62,7 @@ end
 """
     _UnsafeHessianView(x, N)
 
-Lightweight unsafe view that converts a vector `x` into the upper-triangular
+Lightweight unsafe view that converts a vector `x` into the lower-triangular
 component of a symmetric `N`-by-`N` matrix.
 
 ## Motivation
@@ -95,18 +95,19 @@ end
 
 Base.size(x::_UnsafeHessianView) = (x.N, x.N)
 
-function Base.getindex(x::_UnsafeHessianView, i, j)
-    if i > j
-        error("Cannot get element in the lower-triangular matrix: ($i, $j)")
+function _linear_index(row, col)
+    if row < col
+        error("Unable to access upper-triangular component: ($row, $col)")
     end
-    return unsafe_load(x.ptr, div((i - 1) * i, 2) + j)
+    return div((row - 1) * row, 2) + col
+end
+
+function Base.getindex(x::_UnsafeHessianView, i, j)
+    return unsafe_load(x.ptr, _linear_index(i, j))
 end
 
 function Base.setindex!(x::_UnsafeHessianView, value, i, j)
-    if i > j
-        error("Cannot set element in the lower-triangular matrix: ($i, $j)")
-    end
-    unsafe_store!(x.ptr, value, div((i - 1) * i, 2) + j)
+    unsafe_store!(x.ptr, value, _linear_index(i, j))
     return value
 end
 
