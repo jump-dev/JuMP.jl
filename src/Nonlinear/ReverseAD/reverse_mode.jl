@@ -153,6 +153,7 @@ function _forward_eval(
                 lhs = children_arr[children_idx[r-1]]
                 rhs = children_arr[children_idx[r]]
                 result &= Nonlinear.eval_comparison_function(
+                    operators,
                     operators.comparison_operators[node.index],
                     f.forward_storage[lhs],
                     f.forward_storage[rhs],
@@ -166,6 +167,7 @@ function _forward_eval(
             lhs = children_arr[children_idx[1]]
             rhs = children_arr[children_idx[2]]
             f.forward_storage[k] = Nonlinear.eval_logic_function(
+                operators,
                 operators.logic_operators[node.index],
                 f.forward_storage[lhs] == 1,
                 f.forward_storage[rhs] == 1,

@@ -425,3 +425,59 @@ user-defined functions using [`Nonlinear.register_operator`](@ref).
 [`Nonlinear.NonlinearData`](@ref) is a struct that stores the
 [`Nonlinear.OperatorRegistry`](@ref), as well as a list of parameters and
 subexpressions in the model.
+
+## ReverseAD
+
+`Nonlinear.ReverseAD` is a submodule for computing derivatives of the problem
+inside [`Nonlinear.NonlinearData`](@ref) using sparse reverse-mode automatic
+differentiation (AD).
+
+This section does not attempt to explain how sparse reverse-mode AD works, but
+instead explains why JuMP contains it's own implementation, and highlights
+notable differences from similar packages.
+
+!!! warning
+    You should not interact with `ReverseAD` directly. Instead, you should
+    create a [`Nonlinear.NonlinearData`](@ref) object, call
+    [`Nonlinear.set_differentiation_backend`](@ref) with
+    [`Nonlinear.SparseReverseMode`](@ref), and then query the MOI API methods.
+
+### Why another AD package?
+
+The JuliaDiff organization maintains a [list of packages](https://juliadiff.org)
+for doing AD in Julia. At last count, there were at least ten packages–not
+including `ReverseAD`–for reverse-mode AD in Julia. Given this multitude, why
+does JuMP maintain another implementation instead of re-using existing tooling?
+
+Here are four reasons:
+
+ * **Scale and Sparsity:** the types of functions that JuMP computes derivatives
+   of have two key characteristics: they can be very large scale (10^5 or more
+   functions across 10^5 or more variables) and they are very sparse. For large
+   problems, it is common for the hessian to have `O(n)` non-zero elements
+   instead of `O(n^2)` if it was dense. To the best of our knowledge,
+   `ReverseAD` is the only reverse-mode AD system in Julia that handles sparsity
+   by default. The lack of sparsity support is _the_ main reason why we do no
+   use a generic package.
+ * **Limited scope:** most other AD packages accept arbitrary Julia functions as
+   input and then trace an expression graph using operator overloading. This
+   means they must deal (or detect and ignore) with control flow, I/O, and other
+   vagaries of Julia. In contrast, `ReverseAD` only accepts functions in the
+   form of [`Nonlinear.NonlinearExpression`](@ref), which greatly limits the
+   range of syntax that it must deal with. By reducing the scope of what we
+   accept as input to functions relevant for mathematical optimization, we can
+   provide a simpler implementation with various performance optimizations.
+ * **Historical:** `ReverseAD` started life as [ReverseDiffSparse.jl](https://github.com/mlubin/ReverseDiffSparse.jl),
+   development of which begain in early 2014(!). This was well before the other
+   packages started development. Because we had a well-tested, working AD in
+   JuMP, there was less motivation to contribute to and explore other AD
+   packages. The lack of historical interaction also meant that other packages
+   were not optimized for the types of problems that JuMP is built for (i.e.,
+   large-scale sparse problems).
+ * **Technical debt** Prior to the introduction of `Nonlinear`, JuMP's nonlinear
+   implementation was a confusing mix of functions and types spread across the
+   code base and in the private `_Derivatives` submodule. This made it hard to
+   swap the AD system for another. The main motivation for refactoring JuMP to
+   create the `Nonlinear` submodule was to abstract the interface between JuMP
+   and the AD system, allowing us to swap-in and test new AD systems in the
+   future.

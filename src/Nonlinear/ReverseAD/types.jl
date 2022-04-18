@@ -22,7 +22,7 @@ mutable struct _SubexpressionStorage
     )
         nodes =
             _replace_moi_variables(expr.nodes, moi_index_to_consecutive_index)
-        adj = Nonlinear._adjacency_matrix(nodes)
+        adj = Nonlinear.adjacency_matrix(nodes)
         N = length(nodes)
         linearity = _classify_linearity(nodes, adj, subexpression_linearity)
         return new(
@@ -71,7 +71,7 @@ mutable struct _FunctionStorage
         moi_index_to_consecutive_index,
     )
         nodes = _replace_moi_variables(nodes, moi_index_to_consecutive_index)
-        adj = Nonlinear._adjacency_matrix(nodes)
+        adj = Nonlinear.adjacency_matrix(nodes)
         N = length(nodes)
         empty!(coloring_storage)
         _compute_gradient_sparsity!(coloring_storage, nodes)
