@@ -262,7 +262,7 @@ julia> MOI.eval_objective_gradient(data, grad, x)
 julia> grad
 1-element Vector{Float64}:
  1.909297426825682
- ```
+```
 
 ## Expression-graph representation
 
