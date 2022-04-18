@@ -237,6 +237,16 @@ function _forward_eval_ϵ(
             end
             if node.type == Nonlinear.NODE_CALL_MULTIVARIATE
                 n_children = length(children_indices)
+                op = user_operators.multivariate_operators[node.index]
+                if op == :* && n_children == 2
+                    # A performance optimization: two-argument multiplications
+                    # are quite common, so we specialize on them.
+                    i = children_arr[children_indices[1]]
+                    j = children_arr[children_indices[2]]
+                    partials_storage_ϵ[i] = storage_ϵ[j]
+                    partials_storage_ϵ[j] = storage_ϵ[i]
+                    continue
+                end
                 f_input = _UnsafeVectorView(d.jac_storage, n_children)
                 for (i, c) in enumerate(children_indices)
                     f_input[i] = ex.forward_storage[children_arr[c]]
@@ -244,7 +254,7 @@ function _forward_eval_ϵ(
                 H = _UnsafeHessianView(d.user_output_buffer, n_children)
                 has_hessian = Nonlinear.eval_multivariate_hessian(
                     user_operators,
-                    user_operators.multivariate_operators[node.index],
+                    op,
                     H,
                     f_input,
                 )
@@ -254,12 +264,11 @@ function _forward_eval_ϵ(
                 for col in 1:n_children
                     dual = zero(ForwardDiff.Partials{N,T})
                     for row in 1:n_children
+                        # Make sure we get the upper-triangular component.
                         h = row > col ? H[col, row] : H[row, col]
-                        if iszero(h)
-                            continue
-                        end
-                        i = children_arr[children_indices[row]]
-                        if !iszero(storage_ϵ[i])
+                        # Performance optimization: hessians can be quite sparse
+                        if !iszero(h)
+                            i = children_arr[children_indices[row]]
                             dual += h * storage_ϵ[i]
                         end
                     end
