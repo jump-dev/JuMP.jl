@@ -50,6 +50,8 @@ end
 
 Base.length(x::_UnsafeVectorView) = x.len
 
+Base.size(x::_UnsafeVectorView) = (x.len,)
+
 function _UnsafeVectorView(x::Vector, N::Int)
     if length(x) < N
         resize!(x, N)
@@ -88,17 +90,20 @@ valid during the usage of `_UnsafeHessianView`.
 """
 struct _UnsafeHessianView <: AbstractMatrix{Float64}
     N::Int
-    x::_UnsafeVectorView{T}
+    ptr::Ptr{Float64}
 end
 
 Base.size(x::_UnsafeHessianView) = (x.N, x.N)
 
 _linear_index(i, j) = i >= j ? div((i - 1) * i, 2) + j : _linear_index(j, i)
 
-Base.getindex(x::_UnsafeHessianView, i, j) = x.x[_linear_index(i, j)]
+function Base.getindex(x::_UnsafeHessianView, i, j)
+    return unsafe_load(x.ptr, _linear_index(i, j))
+end
 
 function Base.setindex!(x::_UnsafeHessianView, value, i, j)
-    return x[_linear_index(i, j)] = value
+    unsafe_store!(x.ptr, value, _linear_index(i, j))
+    return value
 end
 
 function _UnsafeHessianView(x::Vector, N::Int)
@@ -109,7 +114,7 @@ function _UnsafeHessianView(x::Vector, N::Int)
     for i in 1:z
         x[i] = 0.0
     end
-    return _UnsafeHessianView(N, _UnsafeVectorView(0, z, pointer(x)))
+    return _UnsafeHessianView(N, pointer(x))
 end
 
 """
