@@ -1791,25 +1791,29 @@ The recognized positional arguments in `args` are the following:
 
 ## Keyword arguments
 
-The recognized keyword arguments in `kw_args` are the following:
+Three keyword arguments are useful in all cases:
 
  * `base_name`: Sets the name prefix used to generate variable names. It
    corresponds to the variable name for scalar variable, otherwise, the
    variable names are set to `base_name[...]` for each index `...` of the axes
    `axes`.
+ * `start::Float64`: specify the value passed to `set_start_value` for each
+   variable
+ * `container`: specify the container type. See
+   [Forcing the container type](@ref variable_forcing) for more information.
+
+Other keyword arguments are needed to disambiguate sitations with anonymous
+variables:
+
  * `lower_bound::Float64`: an alternative to `x >= lb`, sets the value of the
    variable lower bound.
  * `upper_bound::Float64`: an alternative to `x <= ub`, sets the value of the
    variable upper bound.
- * `start::Float64`: specify the value passed to `set_start_value` for each
-   variable
- * `binary::Bool`: an alternative to `x, Bin`, sets whether the variable
+ * `binary::Bool`: an alternative to passing `Bin`, sets whether the variable
    is binary or not.
- * `integer::Bool`: an alternative to `y, Int`, sets whether the variable
+ * `integer::Bool`: an alternative to passing `Int`, sets whether the variable
    is integer or not.
  * `set::MOI.AbstractSet`: an alternative to using `x in set`
- * `container`: specify the container type. See
-   [Forcing the container type](@ref variable_forcing) for more information.
  * `variable_type`: used by JuMP extensions. See
    [Extend `@variable`](@ref extend_variable_macro) for more information.
 
