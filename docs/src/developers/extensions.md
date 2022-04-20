@@ -63,7 +63,7 @@ model = Model()
 [x[1], x[2]] ∈ _NewVectorSet(2)
 ```
 
-## Extend [`@variable`](@ref)
+## [Extend `@variable`](@id extend_variable_macro)
 
 Just as `Bin` and `Int` create binary and integer variables, you can extend
 the [`@variable`](@ref) macro to create new types of variables. Here is an
@@ -118,12 +118,13 @@ julia> function JuMP.add_variable(
        end
 ```
 
-Now `AddTwice` can be passed to [`@variable`](@ref) similar to `Bin` or `Int`.
-However, now it adds two variables instead of one!
+Now `AddTwice` can be passed to [`@variable`](@ref) similar to `Bin` or `Int`,
+or through the `variable_type` keyword. However, now it adds two variables
+instead of one!
 ```jldoctest new_variable
 julia> model = Model();
 
-julia> @variable(model, x[i=1:2], AddTwice, kw=i)
+julia> @variable(model, x[i=1:2], variable_type = AddTwice, kw = i)
 Can also use Base.Iterators.Pairs(:kw => 1) here.
 Can also use Base.Iterators.Pairs(:kw => 2) here.
 2-element Vector{Tuple{VariableRef, VariableRef}}:

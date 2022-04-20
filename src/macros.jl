@@ -1736,102 +1736,99 @@ function _reorder_parameters(args)
 end
 
 """
-    @variable(model, kw_args...)
-
-Add an *anonymous* variable to the model `model` described by the keyword
-arguments `kw_args` and returns the variable.
-
     @variable(model, expr, args..., kw_args...)
 
 Add a variable to the model `model` described by the expression `expr`, the
-positional arguments `args` and the keyword arguments `kw_args`. The expression
-`expr` can either be (note that in the following the symbol `<=` can be used
-instead of `≤`, the symbol `>=`can be used instead of `≥`, the symbol `in` can be
-used instead of `∈`)
+positional arguments `args` and the keyword arguments `kw_args`.
 
-* of the form `varexpr` creating variables described by `varexpr`;
-* of the form `varexpr ≤ ub` (resp. `varexpr ≥ lb`) creating variables described by
-  `varexpr` with upper bounds given by `ub` (resp. lower bounds given by `lb`);
-* of the form `varexpr == value` creating variables described by `varexpr` with
-  fixed values given by `value`; or
-* of the form `lb ≤ varexpr ≤ ub` or `ub ≥ varexpr ≥ lb` creating variables
-  described by `varexpr` with lower bounds given by `lb` and upper bounds given
-  by `ub`.
-* of the form `varexpr ∈ set` creating variables described by
-  `varexpr` constrained to belong to `set`, see [Variables constrained on creation](@ref).
+## Anonymous and named variables
 
-The expression `varexpr` can either be
+`expr` must be one of the forms:
 
-* of the form `varname` creating a scalar real variable of name `varname`;
-* of the form `varname[...]` or `[...]` creating a container of variables.
+ * Omitted, like `@variable(model)`, which creates an anonymous variable
+ * A single symbol like `@variable(model, x)`
+ * A container expression like `@variable(model, x[i=1:3])`
+ * An anoymous container expression like `@variable(model, [i=1:3])`
+
+## Bounds
+
+In addition, the expression can have bounds, such as:
+
+ * `@variable(model, x >= 0)`
+ * `@variable(model, x <= 0)`
+ * `@variable(model, x == 0)`
+ * `@variable(model, 0 <= x <= 1)`
+
+and bounds can depend on the indices of the container expressions:
+
+ * `@variable(model, -i <= x[i=1:3] <= i)`
+
+## Sets
+
+You can explicitly specify the set to which the variable belongs:
+
+ * `@variable(model, x in MOI.Interval(0.0, 1.0))`
+
+ For more information on this syntax, read
+[Variables constrained on creation](@ref).
+
+## Positional arguments
 
 The recognized positional arguments in `args` are the following:
 
-* `Bin`: Sets the variable to be binary, i.e. either 0 or 1.
-* `Int`: Sets the variable to be integer, i.e. one of ..., -2, -1, 0, 1, 2, ...
-* `Symmetric`: Only available when creating a square matrix of variables, i.e.
-  when `varexpr` is of the form `varname[1:n,1:n]` or `varname[i=1:n,j=1:n]`.
-  It creates a symmetric matrix of variable, that is, it only creates a
-  new variable for `varname[i,j]` with `i ≤ j` and sets `varname[j,i]` to the
-  same variable as `varname[i,j]`. It is equivalent to using
-  `varexpr in SymmetricMatrixSpace()` as `expr`.
-* `PSD`: The square matrix of variable is both `Symmetric` and constrained to be
-  positive semidefinite. It is equivalent to using `varexpr in PSDCone()` as
-  `expr`.
+ * `Bin`: restricts the variable to the [`MOI.ZeroOne`](@ref) set, that is,
+   `{0, 1}`. For example, `@variable(model, x, Bin)`. Note: you cannot use
+   `@variable(model, Bin)`, use the `binary` keyword instead.
+ * `Int`: restricts the variable to the set of integers, that is, ..., -2, -1,
+    0, 1, 2, ... For example, `@variable(model, x, Int)`. Note: you cannot use
+    `@variable(model, Int)`, use the `integer` keyword instead.
+ * `Symmetric`: Only available when creating a square matrix of variables, i.e.,
+   when `expr` is of the form `varname[1:n,1:n]` or `varname[i=1:n,j=1:n]`,
+   it creates a symmetric matrix of variables.
+ * `PSD`: A restrictive extension to `Symmetric` which constraints a square
+   matrix of variables to `Symmetric` and constrains to be positive
+   semidefinite.
+
+## Keyword arguments
 
 The recognized keyword arguments in `kw_args` are the following:
 
-* `base_name`: Sets the name prefix used to generate variable names. It
-  corresponds to the variable name for scalar variable, otherwise, the
-  variable names are set to `base_name[...]` for each index `...` of the axes
-  `axes`.
-* `lower_bound`: Sets the value of the variable lower bound.
-* `upper_bound`: Sets the value of the variable upper bound.
-* `start`: Sets the variable starting value used as initial guess in optimization.
-* `binary`: Sets whether the variable is binary or not.
-* `integer`: Sets whether the variable is integer or not.
-* `variable_type`: See the "Note for extending the variable macro" section below.
-* `set`: Equivalent to using `varexpr in value` as `expr` where `value` is the
-  value of the keyword argument.
-* `container`: Specify the container type.
+ * `base_name`: Sets the name prefix used to generate variable names. It
+   corresponds to the variable name for scalar variable, otherwise, the
+   variable names are set to `base_name[...]` for each index `...` of the axes
+   `axes`.
+ * `lower_bound::Float64`: an alternative to `x >= lb`, sets the value of the
+   variable lower bound.
+ * `upper_bound::Float64`: an alternative to `x <= ub`, sets the value of the
+   variable upper bound.
+ * `start::Float64`: specify the value passed to `set_start_value` for each
+   variable
+ * `binary::Bool`: an alternative to `x, Bin`, sets whether the variable
+   is binary or not.
+ * `integer::Bool`: an alternative to `y, Int`, sets whether the variable
+   is integer or not.
+ * `set::MOI.AbstractSet`: an alternative to using `x in set`
+ * `container`: specify the container type. See
+   [Forcing the container type](@ref variable_forcing) for more information.
+ * `variable_type`: used by JuMP extensions. See
+   [Extend `@variable`](@ref extend_variable_macro) for more information.
 
 ## Examples
 
 The following are equivalent ways of creating a variable `x` of name `x` with
 lower bound 0:
 ```julia
-# Specify everything in `expr`
+model = Model()
 @variable(model, x >= 0)
-# Specify the lower bound using a keyword argument
-@variable(model, x, lower_bound=0)
-# Specify everything in `kw_args`
-x = @variable(model, base_name="x", lower_bound=0)
+@variable(model, x, lower_bound = 0)
+x = @variable(model, base_name = "x", lower_bound = 0)
 ```
 
-The following are equivalent ways of creating a `DenseAxisArray` of index set
-`[:a, :b]` and with respective upper bounds 2 and 3 and names `x[a]` and `x[b]`.
-The upper bound can either be specified in `expr`:
-```jldoctest variable_macro; setup = :(using JuMP; model = Model())
-ub = Dict(:a => 2, :b => 3)
-@variable(model, x[i=keys(ub)] <= ub[i])
-
-# output
-1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
-    Dimension 1, Symbol[:a, :b]
-And data, a 2-element Array{VariableRef,1}:
- x[a]
- x[b]
-```
-or it can be specified with the `upper_bound` keyword argument:
-```jldoctest variable_macro
-@variable(model, y[i=keys(ub)], upper_bound=ub[i])
-
-# output
-1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
-    Dimension 1, Symbol[:a, :b]
-And data, a 2-element Array{VariableRef,1}:
- y[a]
- y[b]
+Other examples:
+```julia
+model = Model()
+@variable(model, x[i=1:3] <= i, Int, start = sqrt(i), lower_bound = -i)
+@variable(model, y[i=1:3], container = DenseAxisArray, set = MOI.ZeroOne())
 ```
 """
 macro variable(args...)
