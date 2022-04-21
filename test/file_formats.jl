@@ -14,10 +14,12 @@ function test_mof_file()
     @variable(model, x)
     @constraint(model, my_c, 3 * x >= 1)
     @objective(model, Min, 2 * x^2 + x + 1)
-    write_to_file(model, "my_model.mof.json")
+    # Also test that passing `kwargs` works
+    write_to_file(model, "my_model.mof.json"; print_compact = true)
     model_2 = read_from_file("my_model.mof.json")
     @test sprint(print, model) == sprint(print, model_2)
-    return rm("my_model.mof.json")
+    rm("my_model.mof.json")
+    return
 end
 
 function test_mof_io()
@@ -30,7 +32,7 @@ function test_mof_io()
         ErrorException("Unable to infer the file format from an IO stream."),
         write(io, model; format = MOI.FileFormats.FORMAT_AUTOMATIC)
     )
-    write(io, model; format = MOI.FileFormats.FORMAT_MOF)
+    write(io, model; format = MOI.FileFormats.FORMAT_MOF, print_compact = true)
     seekstart(io)
     @test_throws(
         ErrorException("Unable to infer the file format from an IO stream."),

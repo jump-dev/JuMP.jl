@@ -17,21 +17,29 @@ end
     write_to_file(
         model::Model,
         filename::String;
-        format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC
+        format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC,
+        kwargs...,
     )
 
 Write the JuMP model `model` to `filename` in the format `format`.
 
 If the filename ends in `.gz`, it will be compressed using Gzip.
 If the filename ends in `.bz2`, it will be compressed using BZip2.
+
+Other `kwargs` are passed to the `Model` constructor of the chosen format.
 """
 function write_to_file(
     model::Model,
     filename::String;
     format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC,
+    kwargs...,
 )
     dest = _copy_to_bridged_model(model) do
-        return MOI.FileFormats.Model(format = format, filename = filename)
+        return MOI.FileFormats.Model(;
+            format = format,
+            filename = filename,
+            kwargs...,
+        )
     end
     MOI.write_to_file(dest, filename)
     return
@@ -41,21 +49,25 @@ end
     Base.write(
         io::IO,
         model::Model;
-        format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_MOF
+        format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_MOF,
+        kwargs...,
     )
 
 Write the JuMP model `model` to `io` in the format `format`.
+
+Other `kwargs` are passed to the `Model` constructor of the chosen format.
 """
 function Base.write(
     io::IO,
     model::Model;
     format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_MOF,
+    kwargs...,
 )
     if format == MOI.FileFormats.FORMAT_AUTOMATIC
         error("Unable to infer the file format from an IO stream.")
     end
     dest = _copy_to_bridged_model(model) do
-        return MOI.FileFormats.Model(format = format)
+        return MOI.FileFormats.Model(; format = format, kwargs...)
     end
     write(io, dest)
     return
@@ -64,19 +76,24 @@ end
 """
     read_from_file(
         filename::String;
-        format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC
+        format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC,
+        kwargs...,
     )
 
 Return a JuMP model read from `filename` in the format `format`.
 
 If the filename ends in `.gz`, it will be uncompressed using Gzip.
 If the filename ends in `.bz2`, it will be uncompressed using BZip2.
+
+Other `kwargs` are passed to the `Model` constructor of the chosen format.
 """
 function read_from_file(
     filename::String;
     format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC,
+    kwargs...,
 )
-    src = MOI.FileFormats.Model(format = format, filename = filename)
+    src =
+        MOI.FileFormats.Model(; format = format, filename = filename, kwargs...)
     MOI.read_from_file(src, filename)
     model = Model()
     MOI.copy_to(model, src)
@@ -84,15 +101,27 @@ function read_from_file(
 end
 
 """
-    Base.read(io::IO, ::Type{Model}; format::MOI.FileFormats.FileFormat)
+    Base.read(
+        io::IO,
+        ::Type{Model};
+        format::MOI.FileFormats.FileFormat,
+        kwargs...,
+    )
 
 Return a JuMP model read from `io` in the format `format`.
+
+Other `kwargs` are passed to the `Model` constructor of the chosen format.
 """
-function Base.read(io::IO, ::Type{Model}; format::MOI.FileFormats.FileFormat)
+function Base.read(
+    io::IO,
+    ::Type{Model};
+    format::MOI.FileFormats.FileFormat,
+    kwargs...,
+)
     if format == MOI.FileFormats.FORMAT_AUTOMATIC
         error("Unable to infer the file format from an IO stream.")
     end
-    src = MOI.FileFormats.Model(format = format)
+    src = MOI.FileFormats.Model(; format = format, kwargs...)
     read!(io, src)
     model = Model()
     MOI.copy_to(model, src)
