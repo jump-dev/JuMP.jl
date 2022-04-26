@@ -1095,12 +1095,16 @@ function test_hessians_user_defined_multivariate_functions()
         H[2, 2] = 2.0
         return
     end
-    @test_throws(
-        ErrorException(
-            "Providing hessians for multivariate functions is not yet supported",
-        ),
-        register(model, :my_f, 2, my_f, my_∇f, my_∇²f),
-    )
+    register(model, :my_f, 2, my_f, my_∇f, my_∇²f)
+    @variable(model, x[1:2])
+    @NLobjective(model, Min, my_f(x[1], x[2]))
+    evaluator = NLPEvaluator(model)
+    MOI.initialize(evaluator, [:Hess])
+    H = MOI.hessian_lagrangian_structure(evaluator)
+    @test H == [(1, 1), (2, 2), (2, 1)]
+    H_nz = fill(NaN, 3)
+    MOI.eval_hessian_lagrangian(evaluator, H_nz, [1.0, 1.0], 1.5, Float64[])
+    @test H_nz == 1.5 .* [2.0, 2.0, 0.0]
     return
 end
 
@@ -1417,6 +1421,33 @@ function test_nonlinear_delete_constraint()
     @test num_nonlinear_constraints(model) == 2
     @test all_nonlinear_constraints(model) == [c[1], c[3]]
     @test is_valid.(model, c) == [true, false, true]
+    return
+end
+
+function test_user_defined_hessian()
+    f(x...) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+    function ∇f(g, x...)
+        g[1] = 400 * x[1]^3 - 400 * x[1] * x[2] + 2 * x[1] - 2
+        g[2] = 200 * (x[2] - x[1]^2)
+        return
+    end
+    function ∇²f(H, x...)
+        H[1, 1] = 1200 * x[1]^2 - 400 * x[2] + 2
+        H[2, 1] = -400 * x[1]
+        H[2, 2] = 200.0
+        return
+    end
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    register(model, :rosenbrock, 2, f, ∇f, ∇²f)
+    @NLobjective(model, Min, rosenbrock(x, y))
+    evaluator = NLPEvaluator(model)
+    MOI.initialize(evaluator, [:Hess])
+    H = MOI.hessian_lagrangian_structure(evaluator)
+    H_nz = zeros(3)
+    MOI.eval_hessian_lagrangian(evaluator, H_nz, [1.0, 1.0], 1.5, Float64[])
+    @test H_nz == 1.5 .* [802, 200, -400]
     return
 end
 

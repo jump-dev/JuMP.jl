@@ -773,11 +773,6 @@ function register(
     ∇f::Function,
     ∇²f::Function,
 )
-    if dimension > 1
-        error(
-            "Providing hessians for multivariate functions is not yet supported",
-        )
-    end
     _init_NLP(model)
     MOI.Nonlinear.register_operator(model.nlp_model, op, dimension, f, ∇f, ∇²f)
     return
