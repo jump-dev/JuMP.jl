@@ -54,7 +54,7 @@ function example_lazy_constraint()
             println("Adding $(con)")
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         elseif y_val + x_val > 3 + 1e-6
-            con = @build_constraint(y - x <= 1)
+            con = @build_constraint(y + x <= 3)
             println("Adding $(con)")
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         end
