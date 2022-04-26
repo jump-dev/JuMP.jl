@@ -629,15 +629,13 @@ julia> primal_feasibility_report(model; atol = 0.0)
 Dict{Any, Float64}()
 ```
 Calling [`primal_feasibility_report`](@ref) without the `point` argument is most
-useful when the solver reports that the solutionn is feasible, but you want to
+useful when the solver reports that the solution is feasible, but you want to
 check for violated constraints at a different tolerance level.
 
 !!! warning
-    If the problem is infeasible, calling [`primal_feasibility_report`](@ref) is
-    usually the wrong thing to do, because most solvers will not return an
-    infeasible point. To diagnose the source of infeasibility, consider using
-    [Conflicts](@ref) (for supported solvers), or comment out constraints
-    one-by-one until the problem becomes feasible.
+    To apply [`primal_feasibility_report`](@ref) to infeasible models, you must
+    also provide a candidate point (solvers generally do not provide one). To
+    diagnose the source of infeasibility, see [Conflicts](@ref).
 
 Pass `skip_mising = true` to skip constraints which contain variables that are
 not in `point`:
