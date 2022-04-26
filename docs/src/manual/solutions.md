@@ -628,9 +628,9 @@ julia> optimize!(model)
 julia> primal_feasibility_report(model; atol = 0.0)
 Dict{Any, Float64}()
 ```
-Calling [`primal_feasibility_report`](@ref) without the `point` argument is most
-useful when the solver reports that the solution is feasible, but you want to
-check for violated constraints at a different tolerance level.
+Calling [`primal_feasibility_report`](@ref) without the `point` argument is
+useful when [`primal_status`](@ref) is `FEASIBLE_POINT` or `NEARLY_FEASIBLE_POINT`,
+and you want to assess the solution quality.
 
 !!! warning
     To apply [`primal_feasibility_report`](@ref) to infeasible models, you must
