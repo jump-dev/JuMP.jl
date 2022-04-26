@@ -127,6 +127,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [Pavito.jl](https://github.com/jump-dev/Pavito.jl)                             |                                                                                  |        | MPL-2    | (MI)NLP                   |
 | [Penbmi](http://www.penopt.com/penbmi.html)                                    | [Penopt.jl](https://github.com/jump-dev/Penopt.jl/)                              |        | Comm.    | Bilinear SDP              |
 | [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)                        |                                                                                  |        | MIT      | LP, SOCP, SDP             |
+| [RAPOSa](https://raposa.usc.es/)                                               | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |   Manual  | RAPOSa      | (MI)NLP                   |
 | [SCIP](https://scipopt.org/)                                                   | [SCIP.jl](https://github.com/scipopt/SCIP.jl)                            |        | ZIB      | (MI)LP, (MI)NLP           |
 | [SCS](https://github.com/cvxgrp/scs)                                           | [SCS.jl](https://github.com/jump-dev/SCS.jl)                                     |        | MIT      | LP, SOCP, SDP             |
 | [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/jump-dev/SDPA.jl), [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl) |  | GPL | LP, SDP |
