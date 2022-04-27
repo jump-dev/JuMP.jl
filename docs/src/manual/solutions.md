@@ -625,9 +625,17 @@ To use the primal solution from a solve, omit the `point` argument:
 ```jldoctest feasibility
 julia> optimize!(model)
 
-julia> primal_feasibility_report(model)
+julia> primal_feasibility_report(model; atol = 0.0)
 Dict{Any, Float64}()
 ```
+Calling [`primal_feasibility_report`](@ref) without the `point` argument is
+useful when [`primal_status`](@ref) is `FEASIBLE_POINT` or `NEARLY_FEASIBLE_POINT`,
+and you want to assess the solution quality.
+
+!!! warning
+    To apply [`primal_feasibility_report`](@ref) to infeasible models, you must
+    also provide a candidate point (solvers generally do not provide one). To
+    diagnose the source of infeasibility, see [Conflicts](@ref).
 
 Pass `skip_mising = true` to skip constraints which contain variables that are
 not in `point`:
