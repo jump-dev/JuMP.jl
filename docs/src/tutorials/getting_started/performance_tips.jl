@@ -81,7 +81,7 @@ end
 
 # Saving the problem in `model.jl` and calling from the command line results in:
 # ```
-# \$ time julia model.jl
+# $ time julia model.jl
 # 15.78s user 0.48s system 100% cpu 16.173 total
 # ```
 # Clearly, 16 seconds is a large overhead to pay for solving this trivial model.
@@ -105,7 +105,7 @@ end
 # When Julia is run with the custom image, the run time is now 0.7 seconds
 # instead of 16:
 # ```
-# \$ time julia --sysimage customimage model.jl
+# $ time julia --sysimage customimage model.jl
 # 0.68s user 0.22s system 153% cpu 0.587 total
 # ```
 # Other performance tweaks, such as disabling bridges or using direct mode can
@@ -113,7 +113,7 @@ end
 
 # !!! note
 #     `create_sysimage` only needs to be run once, and the same sysimage can be
-#     used---to a slight detriment of performance---even if we modify
+#     used--to a slight detriment of performance--even if we modify
 #     `model.jl` or run a different file.
 
 # ## Use macros to build expressions
