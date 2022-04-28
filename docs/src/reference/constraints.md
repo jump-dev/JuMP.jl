@@ -27,6 +27,7 @@ constraint_by_name
 ```@docs
 normalized_coefficient
 set_normalized_coefficient
+set_normalized_coefficients
 
 normalized_rhs
 set_normalized_rhs
