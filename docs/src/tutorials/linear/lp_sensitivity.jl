@@ -18,7 +18,7 @@
 
 # JuMP provides a function, [`lp_sensitivity_report`](@ref), to help us compute
 # these values, but this tutorial extends that to create more informative
-# tables in the form of a dataframe.
+# tables in the form of a `DataFrame`.
 
 # ## Setup
 
@@ -69,7 +69,7 @@ report = lp_sensitivity_report(model)
 
 report[x]
 
-# indicates that the obejctive coefficient on `x`, that is, `12`, can
+# indicates that the objective coefficient on `x`, that is, `12`, can
 # decrease by `-0.333` or increase by `3.0` and the primal solution
 # `(15, 1.25)` will remain optimal. In addition:
 
@@ -144,11 +144,11 @@ constraint_df = DataFrames.DataFrame(
 
 basic = filter(row -> iszero(row.reduced_cost), variable_df)
 
-# and non-basic variables by looking for nnon-zero reduced costs:
+# and non-basic variables by looking for non-zero reduced costs:
 
 non_basic = filter(row -> !iszero(row.reduced_cost), variable_df)
 
-# we can also find constraints that are binding by looking for 0 slack:
+# we can also find constraints that are binding by looking for zero slacks:
 
 binding = filter(row -> iszero(row.slack), constraint_df)
 
