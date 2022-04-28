@@ -1440,7 +1440,7 @@ function build_variable(
     end
     if info.lower_bound isa AbstractArray
         _error("""
-               Passing arrays as variable bounds is not supported.
+               Passing arrays as variable bounds without indexing them is not supported.
 
                Instead of:
                ```julia
@@ -1458,7 +1458,7 @@ function build_variable(
                """)
     elseif info.upper_bound isa AbstractArray
         _error("""
-               Passing arrays as variable bounds is not supported.
+               Passing arrays as variable bounds without indexing them is not supported.
 
                Instead of:
                ```julia
@@ -1476,7 +1476,7 @@ function build_variable(
                """)
     elseif info.fixed_value isa AbstractArray
         _error("""
-               Passing arrays as variable bounds is not supported.
+               Passing arrays as variable bounds without indexing them is not supported.
 
                Instead of:
                ```julia
@@ -1494,7 +1494,7 @@ function build_variable(
                """)
     elseif info.start isa AbstractArray
         _error("""
-               Passing arrays as variable starts is not supported.
+               Passing arrays as variable starts without indexing them is not supported.
 
                Instead of:
                ```julia

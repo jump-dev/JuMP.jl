@@ -1285,7 +1285,7 @@ end
 
 function test_variable_vector_lowerbound()
     msg = """
-    Passing arrays as variable bounds is not supported.
+    Passing arrays as variable bounds without indexing them is not supported.
 
     Instead of:
     ```julia
@@ -1315,7 +1315,7 @@ end
 
 function test_variable_vector_upperbound()
     msg = """
-    Passing arrays as variable bounds is not supported.
+    Passing arrays as variable bounds without indexing them is not supported.
 
     Instead of:
     ```julia
@@ -1345,7 +1345,7 @@ end
 
 function test_variable_vector_fixed()
     msg = """
-    Passing arrays as variable bounds is not supported.
+    Passing arrays as variable bounds without indexing them is not supported.
 
     Instead of:
     ```julia
@@ -1375,7 +1375,7 @@ end
 
 function test_variable_vector_start()
     msg = """
-    Passing arrays as variable starts is not supported.
+    Passing arrays as variable starts without indexing them is not supported.
 
     Instead of:
     ```julia
@@ -1401,7 +1401,7 @@ end
 
 function test_variable_vector_interval()
     msg = """
-    Passing arrays as variable bounds is not supported.
+    Passing arrays as variable bounds without indexing them is not supported.
 
     Instead of:
     ```julia
