@@ -397,6 +397,10 @@ or dual feasibility of the basic solution.
 Note that not all solvers compute the basis, and for sensitivity analysis, the
 solver interface must implement `MOI.ConstraintBasisStatus`.
 
+!!! tip
+    Read the [Sensitivity analysis of a linear program](@ref) for more
+    information on sensitivity analysis.
+
 To give a simple example, we could analyze the sensitivity of the optimal
 solution to the following (non-degenerate) LP problem:
 

@@ -43,6 +43,8 @@ will help you know where to look for certain things.
    of helpful reformulations and tricks you can use when modeling linear
    programs. Look here if you are stuck trying to formulate a problem as a
    linear program.
+ * The [Sensitivity analysis of a linear program](@ref) tutorial explains how to
+   create sensitivity reports like those produced by the Excel Solver.
  * The [Callbacks](@ref callbacks_tutorial) tutorial explains how to write a
    variety of solver-independent callbacks. Look here if you want to write a
    callback.
