@@ -3,7 +3,7 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# Sensitivity analysis of a linear program
+# # Sensitivity analysis of a linear program
 
 # This tutorial explains how to use the [`lp_sensitivity_report`](@ref) function
 # to create sensitivity reports like those that are produced by the Excel
