@@ -1284,54 +1284,113 @@ function test_nlparameter_register()
 end
 
 function test_variable_vector_lowerbound()
-    msg =
-        "Passing arrays as variable bounds is not supported. Instead of " *
-        "`@variable(model, x[1:2] >= lb)`, do " *
-        "`@variable(model, x[i=1:2] >= lb[i])`. Alternatively, create " *
-        "the variable without bounds, then call `set_lower_bound.(x, lb)`"
+    msg = """
+    Passing arrays as variable bounds is not supported.
+
+    Instead of:
+    ```julia
+    @variable(model, x[1:2] >= lb)
+    ```
+    use
+    ```julia
+    @variable(model, x[i=1:2] >= lb[i])
+    ```
+    or
+    ```julia
+    @variable(model, x[1:2])
+    set_lower_bound.(x, lb)
+    ```
+    """
     model = Model()
     @test_throws_strip(
         ErrorException("In `@variable(model, x[1:2] >= [1, 2])`: $(msg)"),
         @variable(model, x[1:2] >= [1, 2]),
     )
+    @test_throws_strip(
+        ErrorException("In `@variable(model, x[1:2] .>= [1, 2])`: $(msg)"),
+        @variable(model, x[1:2] .>= [1, 2]),
+    )
     return
 end
 
 function test_variable_vector_upperbound()
-    msg =
-        "Passing arrays as variable bounds is not supported. Instead of " *
-        "`@variable(model, x[1:2] <= ub)`, do " *
-        "`@variable(model, x[i=1:2] <= ub[i])`. Alternatively, create " *
-        "the variable without bounds, then call `set_upper_bound.(x, ub)`"
+    msg = """
+    Passing arrays as variable bounds is not supported.
+
+    Instead of:
+    ```julia
+    @variable(model, x[1:2] <= ub)
+    ```
+    use
+    ```julia
+    @variable(model, x[i=1:2] <= ub[i])
+    ```
+    or
+    ```julia
+    @variable(model, x[1:2])
+    set_upper_bound.(x, ub)
+    ```
+    """
     model = Model()
     @test_throws_strip(
         ErrorException("In `@variable(model, x[1:2] <= [1, 2])`: $(msg)"),
         @variable(model, x[1:2] <= [1, 2]),
     )
+    @test_throws_strip(
+        ErrorException("In `@variable(model, x[1:2] .<= [1, 2])`: $(msg)"),
+        @variable(model, x[1:2] .<= [1, 2]),
+    )
     return
 end
 
 function test_variable_vector_fixed()
-    msg =
-        "Passing arrays as variable bounds is not supported. Instead of " *
-        "`@variable(model, x[1:2] == fx)`, do " *
-        "`@variable(model, x[i=1:2] == fx[i])`. Alternatively, create " *
-        "the variable without bounds, then call `fix.(x, fx)`"
+    msg = """
+    Passing arrays as variable bounds is not supported.
+
+    Instead of:
+    ```julia
+    @variable(model, x[1:2] == fx)
+    ```
+    use
+    ```julia
+    @variable(model, x[i=1:2] == fx[i])
+    ```
+    or
+    ```julia
+    @variable(model, x[1:2])
+    fix.(x, fx)
+    ```
+    """
     model = Model()
     @test_throws_strip(
         ErrorException("In `@variable(model, x[1:2] == [1, 2])`: $(msg)"),
         @variable(model, x[1:2] == [1, 2]),
     )
+    @test_throws_strip(
+        ErrorException("In `@variable(model, x[1:2] .== [1, 2])`: $(msg)"),
+        @variable(model, x[1:2] .== [1, 2]),
+    )
     return
 end
 
 function test_variable_vector_start()
-    msg =
-        "Passing arrays as variable starts is not supported. Instead of " *
-        "`@variable(model, x[1:2], start = x0)`, do " *
-        "`@variable(model, x[i=1:2], start = x0[i])`. Alternatively, " *
-        "create the variable without starting values, then call " *
-        "`set_start_value.(x, x0)`."
+    msg = """
+    Passing arrays as variable starts is not supported.
+
+    Instead of:
+    ```julia
+    @variable(model, x[1:2], start = x0)
+    ```
+    use
+    ```julia
+    @variable(model, x[i=1:2], start = x0[i])
+    ```
+    or
+    ```julia
+    @variable(model, x[1:2])
+    set_start_value.(x, x0)
+    ```
+    """
     model = Model()
     @test_throws_strip(
         ErrorException("In `@variable(model, x[1:2], start = [1, 2])`: $(msg)"),
@@ -1341,17 +1400,35 @@ function test_variable_vector_start()
 end
 
 function test_variable_vector_interval()
-    msg =
-        "Passing arrays as variable bounds is not supported. Instead of " *
-        "`@variable(model, x[1:2] <= ub)`, do " *
-        "`@variable(model, x[i=1:2] <= ub[i])`. Alternatively, create " *
-        "the variable without bounds, then call `set_upper_bound.(x, ub)`"
+    msg = """
+    Passing arrays as variable bounds is not supported.
+
+    Instead of:
+    ```julia
+    @variable(model, x[1:2] <= ub)
+    ```
+    use
+    ```julia
+    @variable(model, x[i=1:2] <= ub[i])
+    ```
+    or
+    ```julia
+    @variable(model, x[1:2])
+    set_upper_bound.(x, ub)
+    ```
+    """
     model = Model()
     @test_throws_strip(
         ErrorException(
             "In `@variable(model, 0 <= x[2:3, 3:4] <= rand(2, 2))`: $(msg)",
         ),
         @variable(model, 0 <= x[2:3, 3:4] <= rand(2, 2)),
+    )
+    @test_throws_strip(
+        ErrorException(
+            "In `@variable(model, 0 .<= x[2:3, 3:4] .<= rand(2, 2))`: $(msg)",
+        ),
+        @variable(model, 0 .<= x[2:3, 3:4] .<= rand(2, 2)),
     )
     return
 end

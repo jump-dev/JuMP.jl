@@ -1439,34 +1439,77 @@ function build_variable(
         )
     end
     if info.lower_bound isa AbstractArray
-        _error(
-            "Passing arrays as variable bounds is not supported. Instead of " *
-            "`@variable(model, x[1:2] >= lb)`, do " *
-            "`@variable(model, x[i=1:2] >= lb[i])`. Alternatively, create " *
-            "the variable without bounds, then call `set_lower_bound.(x, lb)`",
-        )
+        _error("""
+               Passing arrays as variable bounds is not supported.
+
+               Instead of:
+               ```julia
+               @variable(model, x[1:2] >= lb)
+               ```
+               use
+               ```julia
+               @variable(model, x[i=1:2] >= lb[i])
+               ```
+               or
+               ```julia
+               @variable(model, x[1:2])
+               set_lower_bound.(x, lb)
+               ```
+               """)
     elseif info.upper_bound isa AbstractArray
-        _error(
-            "Passing arrays as variable bounds is not supported. Instead of " *
-            "`@variable(model, x[1:2] <= ub)`, do " *
-            "`@variable(model, x[i=1:2] <= ub[i])`. Alternatively, create " *
-            "the variable without bounds, then call `set_upper_bound.(x, ub)`",
-        )
+        _error("""
+               Passing arrays as variable bounds is not supported.
+
+               Instead of:
+               ```julia
+               @variable(model, x[1:2] <= ub)
+               ```
+               use
+               ```julia
+               @variable(model, x[i=1:2] <= ub[i])
+               ```
+               or
+               ```julia
+               @variable(model, x[1:2])
+               set_upper_bound.(x, ub)
+               ```
+               """)
     elseif info.fixed_value isa AbstractArray
-        _error(
-            "Passing arrays as variable bounds is not supported. Instead of " *
-            "`@variable(model, x[1:2] == fx)`, do " *
-            "`@variable(model, x[i=1:2] == fx[i])`. Alternatively, create " *
-            "the variable without bounds, then call `fix.(x, fx)`",
-        )
+        _error("""
+               Passing arrays as variable bounds is not supported.
+
+               Instead of:
+               ```julia
+               @variable(model, x[1:2] == fx)
+               ```
+               use
+               ```julia
+               @variable(model, x[i=1:2] == fx[i])
+               ```
+               or
+               ```julia
+               @variable(model, x[1:2])
+               fix.(x, fx)
+               ```
+               """)
     elseif info.start isa AbstractArray
-        _error(
-            "Passing arrays as variable starts is not supported. Instead of " *
-            "`@variable(model, x[1:2], start = x0)`, do " *
-            "`@variable(model, x[i=1:2], start = x0[i])`. Alternatively, " *
-            "create the variable without starting values, then call " *
-            "`set_start_value.(x, x0)`.",
-        )
+        _error("""
+               Passing arrays as variable starts is not supported.
+
+               Instead of:
+               ```julia
+               @variable(model, x[1:2], start = x0)
+               ```
+               use
+               ```julia
+               @variable(model, x[i=1:2], start = x0[i])
+               ```
+               or
+               ```julia
+               @variable(model, x[1:2])
+               set_start_value.(x, x0)
+               ```
+               """)
     end
     return ScalarVariable(info)
 end
@@ -1588,7 +1631,7 @@ end
 function parse_one_operator_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
-    ::Union{Val{:<=},Val{:≤}},
+    ::Union{Val{:<=},Val{:≤},Val{:.<=},Val{:.≤}},
     upper,
 )
     _set_upper_bound_or_error(_error, infoexpr, upper)
@@ -1597,7 +1640,7 @@ end
 function parse_one_operator_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
-    ::Union{Val{:>=},Val{:≥}},
+    ::Union{Val{:>=},Val{:≥},Val{:.>=},Val{:.≥}},
     lower,
 )
     _set_lower_bound_or_error(_error, infoexpr, lower)
@@ -1606,7 +1649,7 @@ end
 function parse_one_operator_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
-    ::Val{:(==)},
+    ::Union{Val{:(==)},Val{:.==}},
     value,
 )
     _fix_or_error(_error, infoexpr, value)
@@ -1665,9 +1708,9 @@ end
 function parse_ternary_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
-    ::Union{Val{:<=},Val{:≤}},
+    ::Union{Val{:<=},Val{:≤},Val{:.<=},Val{:.≤}},
     lower,
-    ::Union{Val{:<=},Val{:≤}},
+    ::Union{Val{:<=},Val{:≤},Val{:.<=},Val{:.≤}},
     upper,
 )
     _set_lower_bound_or_error(_error, infoexpr, lower)
@@ -1677,9 +1720,9 @@ end
 function parse_ternary_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
-    ::Union{Val{:>=},Val{:≥}},
+    ::Union{Val{:>=},Val{:≥},Val{:.>=},Val{:.≥}},
     upper,
-    ::Union{Val{:>=},Val{:≥}},
+    ::Union{Val{:>=},Val{:≥},Val{:.>=},Val{:.≥}},
     lower,
 )
     return parse_ternary_variable(
