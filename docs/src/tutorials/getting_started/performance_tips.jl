@@ -76,6 +76,7 @@ model = Model(HiGHS.Optimizer)
 optimize!(model)
 open("model.log", "w") do io
     print(io, solution_summary(model; verbose = true))
+    return
 end
 
 # Saving the problem in `model.jl` and calling from the command line results in:
