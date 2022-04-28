@@ -837,6 +837,27 @@ happens at parse time, it does not always make the best choice. Just like in
 keyword. For syntax and the reason behind this, take a look at the
 [variable docs](@ref variable_forcing).
 
+### Constraints with similar indices
+
+Containers are often used to create constraints over a set of indices. However,
+you'll often have cases in which you are repeating the indices:
+```jldoctest repeated_containers; setup=:(model=Model(); @variable(model, x[1:2]); @variable(model, y[1:2]))
+julia> @constraints(model, begin
+           [i=1:2, j=1:2, k=1:2], i * x[j] <= k
+           [i=1:2, j=1:2, k=1:2], i * y[j] <= k
+       end);
+```
+This is hard to read and leads to a lot of copy-paste. A more readable way is to
+use a for-loop:
+```jldoctest repeated_containers
+julia> for i=1:2, j=1:2, k=1:2
+           @constraints(model, begin
+               i * x[j] <= k
+               i * y[j] <= k
+           end)
+       end
+```
+
 ## Accessing constraints from a model
 
 Query the types of function-in-set constraints in a model using
