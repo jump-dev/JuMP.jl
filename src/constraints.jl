@@ -711,10 +711,7 @@ function set_normalized_coefficients(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
     variable,
     new_coefficients::Vector{Tuple{Int64,T}},
-) where {
-    T,
-    F<:Union{MOI.VectorAffineFunction{T},MOI.VectorQuadraticFunction{T}},
-}
+) where {T,F<:Union{MOI.VectorAffineFunction{T},MOI.VectorQuadraticFunction{T}}}
     model = owner_model(con_ref)
     MOI.modify(
         backend(model),
