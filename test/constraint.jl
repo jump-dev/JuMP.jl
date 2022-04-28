@@ -840,20 +840,11 @@ function test_Model_change_coefficients(::Any, ::Any)
     model = Model()
     @variable(model, x)
     @constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
-    @test JuMP.isequal_canonical(
-        JuMP.constraint_object(con).func,
-        [5.0x, 4.0x],
-    )
-    set_normalized_coefficients(con, x, [(1, 3.0),])
-    @test JuMP.isequal_canonical(
-        JuMP.constraint_object(con).func,
-        [3.0x, 4.0x],
-    )
-    set_normalized_coefficients(con, x, [(1, 2.0), (2, 5.0)])
-    @test JuMP.isequal_canonical(
-        JuMP.constraint_object(con).func,
-        [2.0x, 5.0x],
-    )
+    @test JuMP.isequal_canonical(JuMP.constraint_object(con).func, [5.0x, 4.0x])
+    set_normalized_coefficients(con, x, [(Int64(1), 3.0),])
+    @test JuMP.isequal_canonical(JuMP.constraint_object(con).func, [3.0x, 4.0x])
+    set_normalized_coefficients(con, x, [(Int64(1), 2.0), (Int64(2), 5.0)])
+    @test JuMP.isequal_canonical(JuMP.constraint_object(con).func, [2.0x, 5.0x])
     return
 end
 
