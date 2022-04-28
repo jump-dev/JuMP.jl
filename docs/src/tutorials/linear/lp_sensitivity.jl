@@ -11,14 +11,16 @@
 
 # In brief, sensitivity analysis of a linear program is about asking two
 # questions:
-#  1) given an optimal solution, how much can I change the objective
-#     coefficients before a different solution becomes optimal
-#  2) given an optimal solution, how much can I change the right-hand side of a
-#     linear constraint before a different solution becomes optimal.
+#  1) Given an optimal solution, how much can I change the objective
+#     coefficients before a different solution becomes optimal?
+#  2) Given an optimal solution, how much can I change the right-hand side of a
+#     linear constraint before a different solution becomes optimal?
 
 # JuMP provides a function, [`lp_sensitivity_report`](@ref), to help us compute
 # these values, but this tutorial extends that to create more informative
 # tables in the form of a dataframe.
+
+# ## Setup
 
 # This tutorial uses the following packages:
 
@@ -39,10 +41,12 @@ model = Model(HiGHS.Optimizer)
 optimize!(model)
 solution_summary(model; verbose = true)
 
-# Features to identify include:
-#  * The objective coefficient of each variable
-#  * The right-hand side of each constraint
-#  * The optimal primal and dual solutions.
+# Can you identify:
+#  * The objective coefficient of each variable?
+#  * The right-hand side of each constraint?
+#  * The optimal primal and dual solutions?
+
+# ## Sensitivity reports
 
 # Now let's call [`lp_sensitivity_report`](@ref):
 
@@ -75,6 +79,11 @@ report[c1]
 # by 4 units, or increase by 2.85 units, aand the primal solution `(15, 1.25)`
 # will remain optimal.
 
+# ## Variable sensitivity
+
+# By themselves, the tuples aren't informative. Let's put them in context by
+# collating a range of other information about a variable:
+
 function variable_report(xi)
     return (
         name = name(xi),
@@ -97,6 +106,10 @@ x_report = variable_report(x)
 
 variable_df =
     DataFrames.DataFrame(variable_report(xi) for xi in all_variables(model))
+
+# Great! That looks just like the reports in Excel.
+
+# ## Constraint sensitivity
 
 # We can do something similar with constraints:
 
@@ -121,6 +134,8 @@ constraint_df = DataFrames.DataFrame(
     constraint_report(ci) for (F, S) in list_of_constraint_types(model) for
     ci in all_constraints(model, F, S) if F == AffExpr
 )
+
+# ## Analysis questions
 
 # Now we can use these dataframes to ask questions of the solution.
 
