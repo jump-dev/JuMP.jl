@@ -1439,77 +1439,85 @@ function build_variable(
         )
     end
     if info.lower_bound isa AbstractArray
-        _error("""
-               Passing arrays as variable bounds without indexing them is not supported.
+        _error(
+            """
+            Passing arrays as variable bounds without indexing them is not supported.
 
-               Instead of:
-               ```julia
-               @variable(model, x[1:2] >= lb)
-               ```
-               use
-               ```julia
-               @variable(model, x[i=1:2] >= lb[i])
-               ```
-               or
-               ```julia
-               @variable(model, x[1:2])
-               set_lower_bound.(x, lb)
-               ```
-               """)
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] >= lb)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] >= lb[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            set_lower_bound.(x, lb)
+            ```
+            """,
+        )
     elseif info.upper_bound isa AbstractArray
-        _error("""
-               Passing arrays as variable bounds without indexing them is not supported.
+        _error(
+            """
+            Passing arrays as variable bounds without indexing them is not supported.
 
-               Instead of:
-               ```julia
-               @variable(model, x[1:2] <= ub)
-               ```
-               use
-               ```julia
-               @variable(model, x[i=1:2] <= ub[i])
-               ```
-               or
-               ```julia
-               @variable(model, x[1:2])
-               set_upper_bound.(x, ub)
-               ```
-               """)
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] <= ub)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] <= ub[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            set_upper_bound.(x, ub)
+            ```
+            """,
+        )
     elseif info.fixed_value isa AbstractArray
-        _error("""
-               Passing arrays as variable bounds without indexing them is not supported.
+        _error(
+            """
+            Passing arrays as variable bounds without indexing them is not supported.
 
-               Instead of:
-               ```julia
-               @variable(model, x[1:2] == fx)
-               ```
-               use
-               ```julia
-               @variable(model, x[i=1:2] == fx[i])
-               ```
-               or
-               ```julia
-               @variable(model, x[1:2])
-               fix.(x, fx)
-               ```
-               """)
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] == fx)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] == fx[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            fix.(x, fx)
+            ```
+            """,
+        )
     elseif info.start isa AbstractArray
-        _error("""
-               Passing arrays as variable starts without indexing them is not supported.
+        _error(
+            """
+            Passing arrays as variable starts without indexing them is not supported.
 
-               Instead of:
-               ```julia
-               @variable(model, x[1:2], start = x0)
-               ```
-               use
-               ```julia
-               @variable(model, x[i=1:2], start = x0[i])
-               ```
-               or
-               ```julia
-               @variable(model, x[1:2])
-               set_start_value.(x, x0)
-               ```
-               """)
+            Instead of:
+            ```julia
+            @variable(model, x[1:2], start = x0)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2], start = x0[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            set_start_value.(x, x0)
+            ```
+            """,
+        )
     end
     return ScalarVariable(info)
 end
