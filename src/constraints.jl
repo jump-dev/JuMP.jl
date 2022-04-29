@@ -689,7 +689,7 @@ end
         new_coefficients::Vector{Tuple{Int64,T}},
     )
 
-Set the coefficients of `variable` in the constraint `constraint` to
+Set the coefficients of `variable` in the constraint `con_ref` to
 `new_coefficients`.
 
 Note that prior to this step, JuMP will aggregate multiple terms containing the
