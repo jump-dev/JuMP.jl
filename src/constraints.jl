@@ -704,7 +704,7 @@ con
 
 # output
 
-con : [2 x, 5x] ∈ MathOptInterface.Nonnegatives(2)
+con : [2 x, 5 x] ∈ MathOptInterface.Nonnegatives(2)
 ```
 """
 function set_normalized_coefficients(
