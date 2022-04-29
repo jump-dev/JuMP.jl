@@ -692,8 +692,8 @@ end
 Set the coefficients of `variable` in the constraint `con_ref` to
 `new_coefficients`.
 
-Note that prior to this step, JuMP will aggregate multiple terms containing the
-same variable.
+Note that prior to this step, during constraint creation, JuMP will aggregate
+multiple terms containing the same variable.
 
 ```jldoctest; setup = :(using JuMP), filter=r"≤|<="
 model = Model()
