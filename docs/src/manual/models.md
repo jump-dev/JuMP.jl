@@ -552,3 +552,9 @@ If you expected the solver to support your problem, you may have an error in you
 The list of available solvers, along with the problem types they support, is available at https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.
 [...]
 ```
+
+!!! warning
+    Another downside of direct mode is that the behavior of querying solution
+    information after modifying the problem is solver-specific. This can lead to
+    errors, or the solver silently returning an incorrect value. See
+    [OptimizeNotCalled errors](@ref) for more information.
