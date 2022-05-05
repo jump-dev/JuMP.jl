@@ -11,7 +11,7 @@
 #############################################################################
 
 import Pkg
-Pkg.add(Pkg.PackageSpec(name = "MathOptInterface", rev = "od/nonlinear"))
+Pkg.add(Pkg.PackageSpec(name = "MathOptInterface", rev = "master"))
 
 using Test
 
