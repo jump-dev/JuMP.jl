@@ -372,6 +372,11 @@ julia> termination_status(model)
 OPTIMAL::TerminationStatusCode = 1
 ```
 
+!!! warning
+    Be careful doing this! If your particular solver does not support
+    querying solution information after modification, it may silently return
+    incorrect solutions or throw an error.
+
 ```@meta
 # TODO: How to accurately measure the solve time.
 ```
