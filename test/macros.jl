@@ -1624,7 +1624,7 @@ end
 
 function test_set_string_name()
     model = Model()
-    @variable(model, w[i=1:2], set_string_name = isodd(i))
+    @variable(model, w[i = 1:2], set_string_name = isodd(i))
     @test !isempty(name(w[1]))
     @test isempty(name(w[2]))
     @test model[:w] == w
