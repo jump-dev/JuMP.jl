@@ -1624,16 +1624,19 @@ end
 
 function test_set_string_name()
     model = Model()
-    @variable(model, x, set_string_name = false)
-    @test isempty(name(x))
-    @variable(model, y[1:2], set_string_name = false)
-    @test all(isempty.(name.(y)))
-    flag = false
-    @variable(model, z, set_string_name = flag)
-    @test isempty(name(z))
     @variable(model, w[i=1:2], set_string_name = isodd(i))
     @test !isempty(name(w[1]))
     @test isempty(name(w[2]))
+    @test model[:w] == w
+    @variable(model, x, set_string_name = false)
+    @test isempty(name(x))
+    @test model[:x] == x
+    @variable(model, y[1:2], set_string_name = false)
+    @test all(isempty.(name.(y)))
+    @test model[:y] == y
+    flag = false
+    @variable(model, z, set_string_name = flag)
+    @test isempty(name(z))
     return
 end
 
