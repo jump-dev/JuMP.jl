@@ -74,6 +74,20 @@ function test_nl_nlp()
     return
 end
 
+function test_unsupported_constraint()
+    model = Model()
+    @variable(model, x[1:3])
+    @constraint(model, x in SecondOrderCone())
+    io = IOBuffer()
+    F, S = MOI.VectorOfVariables, MOI.SecondOrderCone
+    err = ErrorException(
+        "Unable to write problem to file because the chosen file format " *
+        "doesn't support constraints of the type $F-in-$S.",
+    )
+    @test_throws(err, write(io, model; format = MOI.FileFormats.FORMAT_LP))
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

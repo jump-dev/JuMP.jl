@@ -3,9 +3,24 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+function _throw_write_to_file_explanatory_message(
+    ::MOI.UnsupportedConstraint{F,S},
+) where {F,S}
+    return error(
+        "Unable to write problem to file because the chosen file format " *
+        "doesn't support constraints of the type $F-in-$S.",
+    )
+end
+
+_throw_write_to_file_explanatory_message(err) = rethrow(err)
+
 function _copy_to_bridged_model(f::Function, model::Model)
     inner = MOI.instantiate(f; with_bridge_type = Float64)
-    MOI.copy_to(inner, model)
+    try
+        MOI.copy_to(inner, model)
+    catch err
+        _throw_write_to_file_explanatory_message(err)
+    end
     @assert inner isa MOI.Bridges.LazyBridgeOptimizer
     if inner.model isa MOI.Utilities.CachingOptimizer
         MOI.Utilities.attach_optimizer(inner.model)
