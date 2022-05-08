@@ -1034,6 +1034,16 @@ function test_rational_inf_bounds(ModelType, ::Any)
     return
 end
 
+function test_Model_ConstraintRef(ModelType, ::Any)
+    model = Model()
+    @variable(model, x >= 0)
+    c = LowerBoundRef(x)
+    @constraint(model, c2, x >= 0)
+    @test VariableRef(c) == x
+    @test_throws(MethodError, VariableRef(c2))
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
