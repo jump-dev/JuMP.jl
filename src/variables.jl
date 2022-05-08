@@ -381,8 +381,6 @@ function VariableRef(
     return VariableRef(owner_model(c), MOI.VariableIndex(index(c).value))
 end
 
-
-
 # Name setter/getters
 # These functions need to be implemented for all `AbstractVariableRef`s
 """
