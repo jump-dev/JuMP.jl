@@ -2064,12 +2064,16 @@ macro variable(args...)
         end
         buildcall = :(build_variable($_error, $scalar_variables, $set))
     end
-    new_name_code = Expr(
-        :if,
-        esc(set_string_name_kw_args[1].args[2]),
-        name_code,
-        "",
-    )
+    new_name_code = if !isempty(set_string_name_kw_args)
+        Expr(
+            :if,
+            esc(set_string_name_kw_args[1].args[2]),
+            name_code,
+            "",
+        )
+    else
+        name_code
+    end
     variablecall = :(add_variable($model, $buildcall, $new_name_code))
     if isa(var, Symbol) || set !== nothing
         # The looped code is trivial here since there is a single variable
