@@ -1842,7 +1842,7 @@ The recognized positional arguments in `args` are the following:
 
 ## Keyword arguments
 
-Three keyword arguments are useful in all cases:
+Four keyword arguments are useful in all cases:
 
  * `base_name`: Sets the name prefix used to generate variable names. It
    corresponds to the variable name for scalar variable, otherwise, the
@@ -1852,6 +1852,9 @@ Three keyword arguments are useful in all cases:
    variable
  * `container`: specify the container type. See
    [Forcing the container type](@ref variable_forcing) for more information.
+ * `set_string_name::Bool = true`: control whether to set the
+   [`MOI.VariableName`](@ref) attribute. Passing `set_string_name = false` can
+   improve performance.
 
 Other keyword arguments are needed to disambiguate sitations with anonymous
 variables:
@@ -1884,6 +1887,7 @@ Other examples:
 model = Model()
 @variable(model, x[i=1:3] <= i, Int, start = sqrt(i), lower_bound = -i)
 @variable(model, y[i=1:3], container = DenseAxisArray, set = MOI.ZeroOne())
+@variable(model, z[i=1:3], set_string_name = false)
 ```
 """
 macro variable(args...)
@@ -1931,6 +1935,7 @@ macro variable(args...)
             kw.args[1] != :base_name &&
                 kw.args[1] != :variable_type &&
                 kw.args[1] != :set &&
+                kw.args[1] != :set_string_name &&
                 !_is_info_keyword(kw)
         end,
         kw_args,
@@ -1938,6 +1943,8 @@ macro variable(args...)
     base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
     variable_type_kw_args = filter(kw -> kw.args[1] == :variable_type, kw_args)
     set_kw_args = filter(kw -> kw.args[1] == :set, kw_args)
+    set_string_name_kw_args =
+        filter(kw -> kw.args[1] == :set_string_name, kw_args)
     infoexpr = _VariableInfoExpr(; _keywordify.(info_kw_args)...)
 
     # There are four cases to consider:
@@ -2057,8 +2064,13 @@ macro variable(args...)
         end
         buildcall = :(build_variable($_error, $scalar_variables, $set))
     end
-
-    variablecall = :(add_variable($model, $buildcall, $name_code))
+    new_name_code = Expr(
+        :if,
+        esc(set_string_name_kw_args[1].args[2]),
+        name_code,
+        "",
+    )
+    variablecall = :(add_variable($model, $buildcall, $new_name_code))
     if isa(var, Symbol) || set !== nothing
         # The looped code is trivial here since there is a single variable
         creation_code = variablecall
