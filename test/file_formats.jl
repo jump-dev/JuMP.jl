@@ -74,6 +74,48 @@ function test_nl_nlp()
     return
 end
 
+function test_unsupported_constraint()
+    model = Model()
+    @variable(model, x[1:3])
+    @constraint(model, x in SecondOrderCone())
+    io = IOBuffer()
+    F, S = MOI.VectorOfVariables, MOI.SecondOrderCone
+    err = ErrorException(
+        "Unable to write problem to file because the chosen file format " *
+        "doesn't support constraints of the type $F-in-$S.",
+    )
+    @test_throws(err, write(io, model; format = MOI.FileFormats.FORMAT_LP))
+    return
+end
+
+function test_unsupported_objective()
+    model = Model()
+    @variable(model, x)
+    @objective(model, Min, x^2)
+    io = IOBuffer()
+    F = MOI.ScalarQuadraticFunction{Float64}
+    err = ErrorException(
+        "Unable to write problem to file because the chosen file format " *
+        "doesn't support objective functions of the type $F",
+    )
+    @test_throws(err, write(io, model; format = MOI.FileFormats.FORMAT_LP))
+    return
+end
+
+struct _FileFormatsUnsupportedAttribute <: MOI.AbstractVariableAttribute end
+
+function test_unsupported_attribute()
+    model = Model()
+    @variable(model, x)
+    MOI.set(model, _FileFormatsUnsupportedAttribute(), x, true)
+    io = IOBuffer()
+    @test_throws(
+        MOI.UnsupportedAttribute,
+        write(io, model; format = MOI.FileFormats.FORMAT_LP),
+    )
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
