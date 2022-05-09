@@ -354,6 +354,33 @@ function VariableRef(m::Model)
     return VariableRef(m, index)
 end
 
+"""
+    VariableRef(c::ConstraintRef)
+
+Get the variable associated with a `ConstraintRef`, if `c` is a constraint on a
+single variable.
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 0)
+x
+
+julia> c = LowerBoundRef(x)
+x ≥ 0.0
+
+julia> VariableRef(c) == x
+true
+```
+"""
+function VariableRef(
+    c::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{MOI.VariableIndex}},
+)
+    return VariableRef(owner_model(c), MOI.VariableIndex(index(c).value))
+end
+
 # Name setter/getters
 # These functions need to be implemented for all `AbstractVariableRef`s
 """
