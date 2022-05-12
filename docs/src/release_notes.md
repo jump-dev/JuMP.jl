@@ -11,15 +11,16 @@ see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.0.0).
 A summary of changes are as follows:
 
 - Breaking changes:
-  - The previously deprecated functions have been removed:
-    - `num_nl_constraints`
-    - `all_nl_constraints`
-    - `add_NL_expression`
-    - `set_NL_objective`
-    - `add_NL_constraint`
-    - `nl_expr_string`
-    - `nl_constraint_string`
-    - `SymMatrixSpace`
+  - The previously deprecated functions (v0.23.0, v0.23.1) have been removed. 
+    Deprecation was to improve consistency of function names:
+    - `num_nl_constraints` (see `num_nonlinear_constraints`)
+    - `all_nl_constraints` (see `all_nonlinear_constraints`)
+    - `add_NL_expression` (see `add_nonlinear_expression`)
+    - `set_NL_objective`  (see `set_nonlinear_objective`)
+    - `add_NL_constraint` (see `add_nonlinear_constraint`)
+    - `nl_expr_string` (see `nonlinear_expr_string`)
+    - `nl_constraint_string` (see `nonlinear_constraint_string`)
+    - `SymMatrixSpace` (see `SymmetricMatrixSpace`)
   - The unintentionally exported variable `JuMP.op_hint` has been renamed to the
     unexported `JuMP._OP_HINT`
 - Bug fixes:
