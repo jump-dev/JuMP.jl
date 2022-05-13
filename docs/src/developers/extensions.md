@@ -410,7 +410,25 @@ Presolving model
 0 rows, 0 cols, 0 nonzeros
 0 rows, 0 cols, 0 nonzeros
 Presolve: Optimal
-[...]
+
+Solving report
+  Status            Optimal
+  Primal bound      2
+  Dual bound        2
+  Gap               0% (tolerance: 0.01%)
+  Solution status   feasible
+                    2 (objective)
+                    0 (bound viol.)
+                    0 (int. viol.)
+                    0 (row viol.)
+  Timing            0.00 (total)
+                    0.00 (presolve)
+                    0.00 (postsolve)
+  Nodes             0
+  LP iterations     0 (total)
+                    0 (strong br.)
+                    0 (separation)
+                    0 (heuristics)
 ```
 
 ## Creating new container types
