@@ -87,4 +87,5 @@ print_bridge_graph
 AbstractModel
 operator_warn
 error_if_direct_mode
+set_optimize_hook
 ```
