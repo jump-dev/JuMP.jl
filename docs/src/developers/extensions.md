@@ -370,6 +370,67 @@ existing example. A simple example to follow is the [JuMPExtension module](https
 in the JuMP test suite. The best example of an external JuMP extension that
 implements an [`AbstractModel`](@ref) is [InfiniteOpt.jl](https://github.com/pulsipher/InfiniteOpt.jl).
 
+## Set an `optimize!` hook
+
+Some extensions require modification to the problem after the user has finished
+constructing the problem, but before `optimize!` is called. For these
+situations, JuMP provides [`set_optimize_hook`](@ref), which lets you intercept
+the [`optimize!`](@ref) call.
+
+Here's a simple example of adding an optimize hook that extends [`optimize!`](@ref)
+to take a keyword argument `silent`:
+```jldoctest
+julia> using JuMP, HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> @variable(model, x >= 1.5, Int);
+
+julia> @objective(model, Min, x);
+
+julia> function silent_hook(model; silent::Bool)
+           if silent
+               set_silent(model)
+           else
+               unset_silent(model)
+           end
+           ## Make sure you set ignore_optimize_hook = true, or we'll
+           ## recursively enter the optimize hook!
+           return optimize!(model; ignore_optimize_hook = true)
+       end
+silent_hook (generic function with 1 method)
+
+julia> set_optimize_hook(model, silent_hook)
+silent_hook (generic function with 1 method)
+
+julia> optimize!(model; silent = true)
+
+julia> optimize!(model; silent = false)
+Presolving model
+0 rows, 0 cols, 0 nonzeros
+0 rows, 0 cols, 0 nonzeros
+Presolve: Optimal
+
+Solving report
+  Status            Optimal
+  Primal bound      2
+  Dual bound        2
+  Gap               0% (tolerance: 0.01%)
+  Solution status   feasible
+                    2 (objective)
+                    0 (bound viol.)
+                    0 (int. viol.)
+                    0 (row viol.)
+  Timing            0.00 (total)
+                    0.00 (presolve)
+                    0.00 (postsolve)
+  Nodes             0
+  LP iterations     0 (total)
+                    0 (strong br.)
+                    0 (separation)
+                    0 (heuristics)
+```
+
 ## Creating new container types
 
 JuMP macros (for example, [`@variable`](@ref)) accept a `container` keyword
