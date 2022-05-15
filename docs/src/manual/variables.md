@@ -347,7 +347,7 @@ julia> model[:x]
  my_var[2]
 ```
 
-## String names, symbolic names, and bindings
+## [String names, symbolic names, and bindings](@id variable_names_and_bindings)
 
 It's common for new users to experience confusion relating to JuMP variables.
 Part of the problem is the overloaded use of "variable" in mathematical

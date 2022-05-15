@@ -1622,7 +1622,7 @@ function test_broadcasted_DenseAxisArray_constraint()
     return
 end
 
-function test_set_string_name()
+function test_set_string_name_variables()
     model = Model()
     @variable(model, w[i = 1:2], set_string_name = isodd(i))
     @test !isempty(name(w[1]))
@@ -1637,6 +1637,25 @@ function test_set_string_name()
     flag = false
     @variable(model, z, set_string_name = flag)
     @test isempty(name(z))
+    return
+end
+
+function test_set_string_name_constraints()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, c1[i=1:2], x <= i, set_string_name = isodd(i))
+    @test !isempty(name(c1[1]))
+    @test isempty(name(c1[2]))
+    @test model[:c1] == c1
+    @constraint(model, c2, x <= 1, set_string_name = false)
+    @test isempty(name(c2))
+    @test model[:c2] == c2
+    @constraint(model, c3[i=1:2], x <= i, set_string_name = false)
+    @test all(isempty.(name.(c3)))
+    @test model[:c3] == c3
+    flag = false
+    @constraint(model, c4, x <= 1, set_string_name = flag)
+    @test isempty(name(c4))
     return
 end
 

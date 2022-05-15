@@ -159,3 +159,39 @@ model = Model()
 # If we use the [`@expression`](@ref) macro, we get many fewer allocations:
 
 @allocated @expression(model, x[1] + x[2] + x[3])
+
+# ## Disable string names
+
+# By default, JuMP creates `String` names for variables and constraints and
+# passes these to the solver. The benefit of passing names is that it improves
+# the readability of log messages from the solver (e.g., "variable x has invalid
+# bounds" instead of "variable v1203 has invalid bounds"), but for larger models
+# the overhead of passing names can be non-trivial.
+
+# Disable the passing of names from JuMP to the solver by setting
+# `set_string_name = false` in the [`@variable`](@ref) and [`@constraint`](@ref)
+# macros.
+
+model = Model();
+@variable(model, x, set_string_name = false)
+
+#-
+
+@constraint(model, c, 2x <= 1, set_string_name = false)
+
+# Note that this doesn't change now symbolic names and bindings are stored:
+
+x
+
+#-
+
+model[:x]
+
+#-
+
+x === model[:x]
+
+# !!! info
+#     For more information on the difference betweene string names, symbolic
+#     names, and bindings, see
+#     [String names, symbolic names, and bindings](@ref variable_names_and_bindings).

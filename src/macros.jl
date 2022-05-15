@@ -780,9 +780,12 @@ function _constraint_macro(
     end
 
     # Prepare the keyword arguments
-    extra_kw_args = filter(kw -> kw.args[1] != :base_name, kw_args)
+    extra_kw_args = filter(kw_args) do kw
+        return kw.args[1] != :base_name && kw.args[1] != :set_string_name
+    end
     base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
-
+    set_string_name_kw_args =
+        filter(kw -> kw.args[1] == :set_string_name, kw_args)
     # Set the base name
     name = Containers._get_name(c)
     if isempty(base_name_kw_args)
@@ -804,12 +807,17 @@ function _constraint_macro(
     _add_positional_args(buildcall, extra)
     _add_kw_args(buildcall, extra_kw_args)
     name_expr = _name_call(base_name, idxvars)
+    new_name_expr = if isempty(set_string_name_kw_args)
+        name_expr
+    else
+        Expr(:if, esc(set_string_name_kw_args[1].args[2]), name_expr, "")
+    end
     if vectorized
         # For vectorized constraints, we set every constraint to have the same
         # name.
-        constraintcall = :(add_constraint.($model, $buildcall, $name_expr))
+        constraintcall = :(add_constraint.($model, $buildcall, $new_name_expr))
     else
-        constraintcall = :(add_constraint($model, $buildcall, $name_expr))
+        constraintcall = :(add_constraint($model, $buildcall, $new_name_expr))
     end
     code = quote
         $parsecode
@@ -874,6 +882,9 @@ The recognized keyword arguments in `kw_args` are the following:
   constraint names are set to `base_name[...]` for each index `...` of the axes
   `axes`.
 * `container`: Specify the container type.
+* `set_string_name::Bool = true`: control whether to set the
+  [`MOI.Constraint`](@ref) attribute. Passing `set_string_name = false` can
+  improve performance.
 
 ## Note for extending the constraint macro
 
