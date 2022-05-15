@@ -883,7 +883,7 @@ The recognized keyword arguments in `kw_args` are the following:
   `axes`.
 * `container`: Specify the container type.
 * `set_string_name::Bool = true`: control whether to set the
-  [`MOI.Constraint`](@ref) attribute. Passing `set_string_name = false` can
+  [`MOI.ConstraintName`](@ref) attribute. Passing `set_string_name = false` can
   improve performance.
 
 ## Note for extending the constraint macro

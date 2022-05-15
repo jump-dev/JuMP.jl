@@ -179,7 +179,7 @@ model = Model();
 
 @constraint(model, c, 2x <= 1, set_string_name = false)
 
-# Note that this doesn't change now symbolic names and bindings are stored:
+# Note that this doesn't change how symbolic names and bindings are stored:
 
 x
 
@@ -192,6 +192,6 @@ model[:x]
 x === model[:x]
 
 # !!! info
-#     For more information on the difference betweene string names, symbolic
+#     For more information on the difference between string names, symbolic
 #     names, and bindings, see
 #     [String names, symbolic names, and bindings](@ref variable_names_and_bindings).
