@@ -1044,6 +1044,13 @@ function test_Model_ConstraintRef(ModelType, ::Any)
     return
 end
 
+function test_start_value_nothing(ModelType, ::Any)
+    model = ModelType()
+    @variable(model, x, start = nothing)
+    @test start_value(x) === nothing
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
