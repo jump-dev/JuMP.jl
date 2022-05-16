@@ -218,7 +218,7 @@ isapprox(1e-9, 0.0, atol = 1e-8)
 
 b = [5, 6]
 
-# Matrices can by constructed with spaces separating the columns, and semicolons
+# Matrices can be constructed with spaces separating the columns, and semicolons
 # separating the rows:
 
 A = [1.0 2.0; 3.0 4.0]
