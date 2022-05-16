@@ -835,8 +835,6 @@ function test_Model_change_coefficient(::Any, ::Any)
 end
 
 function test_Model_change_coefficients(::Any, ::Any)
-    model = JuMP.Model()
-    x = @variable(model)
     model = Model()
     @variable(model, x)
     @constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))

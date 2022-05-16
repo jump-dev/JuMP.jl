@@ -690,7 +690,8 @@ end
     )
 
 Set the coefficients of `variable` in the constraint `con_ref` to
-`new_coefficients`.
+`new_coefficients`, where each element in `new_coefficients` is a tuple which
+maps the row to a new coefficient.
 
 Note that prior to this step, during constraint creation, JuMP will aggregate
 multiple terms containing the same variable.
