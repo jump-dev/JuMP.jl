@@ -168,16 +168,17 @@ model = Model()
 # bounds" instead of "variable v1203 has invalid bounds"), but for larger models
 # the overhead of passing names can be non-trivial.
 
-# Disable the passing of names from JuMP to the solver by setting
-# `set_string_name = false` in the [`@variable`](@ref) and [`@constraint`](@ref)
-# macros.
+# Disable the creation of `String` names by setting `set_string_name = false` in
+# the [`@variable`](@ref) and [`@constraint`](@ref) macros, or by calling
+# [`set_string_names`](@ref) to disable all names for a particular model:
 
-model = Model();
-@variable(model, x, set_string_name = false)
+model = Model()
+set_string_names(model, false)
+@variable(model, x)
 
 #-
 
-@constraint(model, c, 2x <= 1, set_string_name = false)
+@constraint(model, c, 2x <= 1)
 
 # Note that this doesn't change how symbolic names and bindings are stored:
 

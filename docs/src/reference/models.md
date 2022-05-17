@@ -32,6 +32,7 @@ mode
 object_dictionary
 unregister
 latex_formulation
+set_string_names
 ```
 
 ## Working with attributes

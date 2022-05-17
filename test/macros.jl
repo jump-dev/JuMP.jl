@@ -1659,6 +1659,25 @@ function test_set_string_name_constraints()
     return
 end
 
+function test_set_string_name_model()
+    model = Model()
+    set_string_names(model, false)
+    @variable(model, w[i = 1:2], set_string_name = isodd(i))
+    @test !isempty(name(w[1]))
+    @test isempty(name(w[2]))
+    @test model[:w] == w
+    @variable(model, x)
+    @test isempty(name(x))
+    @test model[:x] == x
+    @variable(model, y[1:2])
+    @test all(isempty.(name.(y)))
+    @test model[:y] == y
+    flag = false
+    @variable(model, z, set_string_name = flag)
+    @test isempty(name(z))
+    return
+end
+
 end  # module
 
 TestMacros.runtests()
