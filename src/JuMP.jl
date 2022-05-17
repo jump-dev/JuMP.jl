@@ -431,6 +431,8 @@ function set_string_names(model::Model, value::Bool)
 end
 
 set_string_names(model::Model) = model.set_string_names
+
+set_string_names(::AbstractModel, ::Bool) = nothing
 set_string_names(::AbstractModel) = true
 
 """
