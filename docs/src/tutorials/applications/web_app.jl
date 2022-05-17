@@ -111,7 +111,6 @@ function send_request(data::Dict; endpoint::String = "solve")
             "status" => "failure",
             "code" => ret.status,
             "body" => String(ret.body),
-
         )
     end
     return JSON.parse(String(ret.body))
