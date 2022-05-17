@@ -808,7 +808,7 @@ function _constraint_macro(
     _add_kw_args(buildcall, extra_kw_args)
     name_expr = _name_call(base_name, idxvars)
     new_name_expr = if isempty(set_string_name_kw_args)
-        Expr(:if, Expr(:., model, QuoteNode(:set_string_names)), name_expr, "")
+        Expr(:if, :(set_string_names($model)), name_expr, "")
     else
         Expr(:if, esc(set_string_name_kw_args[1].args[2]), name_expr, "")
     end

@@ -430,6 +430,9 @@ function set_string_names(model::Model, value::Bool)
     return
 end
 
+set_string_names(model::Model) = model.set_string_names
+set_string_names(::AbstractModel) = true
+
 """
     solver_name(model::Model)
 
