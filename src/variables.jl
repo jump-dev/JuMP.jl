@@ -1106,12 +1106,12 @@ function _moi_constrain_variable(moi_backend::MOI.ModelLike, index, info)
     if info.integer
         _moi_add_constraint(moi_backend, index, MOI.Integer())
     end
-    if info.has_start
+    if info.has_start && info.start !== nothing
         MOI.set(
             moi_backend,
             MOI.VariablePrimalStart(),
             index,
-            Float64(info.start),
+            convert(Float64, info.start),
         )
     end
 end
