@@ -33,8 +33,8 @@ import JSON
 function endpoint_solve(params::Dict{String,Any})
     if !haskey(params, "lower_bound")
         return Dict{String,Any}(
-          "status" => "failure",
-          "reason" => "missing lower_bound param",
+            "status" => "failure",
+            "reason" => "missing lower_bound param",
         )
     end
     model = Model(HiGHS.Optimizer)
@@ -58,7 +58,7 @@ endpoint_solve(Dict{String,Any}("lower_bound" => 1.2))
 endpoint_solve(Dict{String,Any}())
 
 # For a second function, we need a function that accepts an `HTTP.Request`
-# object and returns an `HTTP.Reponse` object.
+# object and returns an `HTTP.Response` object.
 
 function serve_solve(request::HTTP.Request)
     data = JSON.parse(String(request.body))
@@ -66,27 +66,42 @@ function serve_solve(request::HTTP.Request)
     return HTTP.Response(200, JSON.json(solution))
 end
 
-# Finally, we need an HTTP server:
+# Finally, we need an HTTP server. There are a variety of ways you can do this
+# in HTTP.jl. We use an explicit `Sockets.listen` so we have manual control of
+# when we shutdown the server.
 
-router = HTTP.Router()
-HTTP.@register(router, "/solve", serve_solve)
-@async HTTP.serve(router, HTTP.ip"127.0.0.1", 8080)
+function setup_server(host, port)
+    server = HTTP.Sockets.listen(host, port)
+    @async HTTP.serve(host, port; server = server) do request
+        try
+            ## Extend the server by adding other endpoints here.
+            if request.target == "/api/solve"
+                return serve_solve(request)
+            else
+                return HTTP.Response(404, "target $(request.target) not found")
+            end
+        catch
+            return HTTP.Response(500, "internal error")
+        end
+    end
+    return server
+end
 
 # !!! info
-#     `@async` run the server in a background process. If you omit `@async`, the
-#     server will block the current Julia process. The reason we've used
-#     `@async` is so that we can demonstrate the client-side code in this
-#     tutorial without starting multiple instances of Julia.
+#     `@async` run the server in a background process. If you omit `@async`,
+#     `HTTP.serve` will block the current Julia process.
+
+server = setup_server(HTTP.ip"127.0.0.1", 8080)
 
 # ## The client side
 
 # Now that we have a server, we can send it requests via this function:
 
-function send_request(data::Dict)
+function send_request(data::Dict; endpoint::String = "solve")
     ret = HTTP.request(
         "POST",
         ## This should match the URL and endpoint we defined for our server.
-        "http://127.0.0.1:8080/solve",
+        "http://127.0.0.1:8080/api/$endpoint",
         ["Content-Type" => "application/json"],
         JSON.json(data),
     )
@@ -94,7 +109,9 @@ function send_request(data::Dict)
         ## This could happen if there are time-outs, network errors, etc.
         return Dict(
             "status" => "failure",
-            "reason" => "HTTP status = $(ret.status)",
+            "code" => ret.status,
+            "body" => String(ret.body),
+
         )
     end
     return JSON.parse(String(ret.body))
@@ -112,7 +129,14 @@ send_request(Dict("lower_bound" => 1.2))
 
 send_request(Dict("invalid_param" => 1.2))
 
+# Finally, we can shutdown our HTTP server:
+
+close(server)
+
 # ## Next steps
 
-# This tutorial has been deliberately kept simple. For more complicated
-# examples, consult the [HTTP.jl documentation](https://juliaweb.github.io/HTTP.jl/stable/).
+# For more complicated examples relating to HTTP servers, consult the
+# [HTTP.jl documentation](https://juliaweb.github.io/HTTP.jl/stable/).
+
+# To see how you can integrate this with a larger JuMP model, read
+# [Design patterns for larger models](@ref).
