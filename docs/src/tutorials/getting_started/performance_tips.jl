@@ -193,6 +193,10 @@ model[:x]
 
 x === model[:x]
 
+# But you can no longer look up the variable by the string name:
+
+variable_by_name(model, "x") === nothing
+
 # !!! info
 #     For more information on the difference between string names, symbolic
 #     names, and bindings, see

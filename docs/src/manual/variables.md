@@ -295,16 +295,16 @@ julia> x
 ```
 
 !!! tip
-    For models with millions of variables, setting the string name of each
-    variable can take a significant portion of the total time required to build
-    the model. Turn off `String` names by passing `set_string_name = false` to
-    [`@variable`](@ref):
+    For some models, setting the string name of each variable can take a
+    non-trivial portion of the total time required to build the model. Turn off
+    `String` names by passing `set_string_name = false` to [`@variable`](@ref):
     ```jldoctest
     julia> model = Model();
 
     julia> @variable(model, x, set_string_name = false)
     _[1]
     ```
+    See [Disable string names](@ref) for more information.
 
 ### Retrieve a variable by name
 
