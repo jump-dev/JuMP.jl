@@ -7,7 +7,12 @@
 
 # This tutorial demonstrates how to setup and serve JuMP models via a REST API.
 
-# First, we need the standard JuMP packages:
+# In the example app we are building, we solve a trivial mixed-integer program,
+# which is parameterized by the lower bound of a variable. To call the service,
+# users send an HTTP POST request with JSON contents indicating the lower bound.
+# The returned value is the solution of the mixed-integer program as JSON.
+
+# First, we need JuMP and a solver:
 
 using JuMP
 import HiGHS
@@ -36,6 +41,11 @@ function endpoint_solve(params::Dict{String,Any})
             "status" => "failure",
             "reason" => "missing lower_bound param",
         )
+    elseif !(params["lower_bound"] isa Real)
+        return Dict{String,Any}(
+            "status" => "failure",
+            "reason" => "lower_bound is not a number",
+        )
     end
     model = Model(HiGHS.Optimizer)
     set_silent(model)
@@ -45,7 +55,7 @@ function endpoint_solve(params::Dict{String,Any})
         "status" => "okay",
         "terminaton_status" => termination_status(model),
         "primal_status" => primal_status(model),
-        "x" => value(x),
+        "x" => has_values(model) ? value(x) : NaN,
     )
 end
 
@@ -80,7 +90,10 @@ function setup_server(host, port)
             else
                 return HTTP.Response(404, "target $(request.target) not found")
             end
-        catch
+        catch err
+            ## Log details about the exception server-side
+            @info "Unhandled exception: $err"
+            ## Return a response to the client
             return HTTP.Response(500, "internal error")
         end
     end
@@ -88,7 +101,7 @@ function setup_server(host, port)
 end
 
 # !!! info
-#     `@async` run the server in a background process. If you omit `@async`,
+#     `@async` runs the server in a background process. If you omit `@async`,
 #     `HTTP.serve` will block the current Julia process.
 
 server = setup_server(HTTP.ip"127.0.0.1", 8080)
@@ -124,9 +137,13 @@ send_request(Dict("lower_bound" => 0))
 
 send_request(Dict("lower_bound" => 1.2))
 
-#-
+# If we don't send a `lower_bound`, we get:
 
 send_request(Dict("invalid_param" => 1.2))
+
+# If we don't send a `lower_bound` that is a number, we get:
+
+send_request(Dict("lower_bound" => "1.2"))
 
 # Finally, we can shutdown our HTTP server:
 
