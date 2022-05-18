@@ -1661,7 +1661,7 @@ end
 
 function test_set_string_name_model()
     model = Model()
-    set_string_names(model, false)
+    set_string_names_on_creation(model, false)
     @variable(model, w[i = 1:2], set_string_name = isodd(i))
     @test !isempty(name(w[1]))
     @test isempty(name(w[2]))

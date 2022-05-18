@@ -170,10 +170,11 @@ model = Model()
 
 # Disable the creation of `String` names by setting `set_string_name = false` in
 # the [`@variable`](@ref) and [`@constraint`](@ref) macros, or by calling
-# [`set_string_names`](@ref) to disable all names for a particular model:
+# [`set_string_names_on_creation`](@ref) to disable all names for a particular
+# model:
 
 model = Model()
-set_string_names(model, false)
+set_string_names_on_creation(model, false)
 @variable(model, x)
 
 #-
