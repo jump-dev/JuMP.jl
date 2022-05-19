@@ -432,7 +432,6 @@ end
 
 set_string_names_on_creation(model::Model) = model.set_string_names_on_creation
 
-set_string_names_on_creation(::AbstractModel, ::Bool) = nothing
 set_string_names_on_creation(::AbstractModel) = true
 
 """
