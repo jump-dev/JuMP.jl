@@ -614,6 +614,8 @@ con : 2 x ∈ [-4.0, -2.0]
 
 ## Modify a variable coefficient
 
+### Scalar constraints
+
 To modify the coefficients for a linear term (modifying the coefficient of a
 quadratic term is not supported) in a constraint, use
 [`set_normalized_coefficient`](@ref). To query the current coefficient, use
@@ -634,6 +636,30 @@ julia> normalized_coefficient(con, x[2])
 !!! warning
     [`set_normalized_coefficient`](@ref) sets the coefficient of the normalized
     constraint. See [Normalization](@ref) for more details.
+
+### Vector constraints
+
+To modify the coefficients of a vector-valued constraint, use
+[`set_normalized_coefficients`](@ref).
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
+con : [5 x, 4 x] ∈ MathOptInterface.Nonnegatives(2)
+
+julia> set_normalized_coefficients(con, x, [(1, 3.0)])
+
+julia> con
+con : [3 x, 4 x] ∈ MathOptInterface.Nonnegatives(2)
+
+julia> set_normalized_coefficients(con, x, [(1, 2.0), (2, 5.0)])
+
+julia> con
+con : [2 x, 5 x] ∈ MathOptInterface.Nonnegatives(2)
+```
 
 ## Delete a constraint
 
