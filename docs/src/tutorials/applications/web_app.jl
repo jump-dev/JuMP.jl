@@ -106,7 +106,7 @@ end
 
 # !!! warning
 #     HTTP.jl does not serve requests on a separate thread. Therefore, a
-#     long-running will block the main thread, preventing concurrent users from
+#     long-running job will block the main thread, preventing concurrent users from
 #     submitting requests. To work-around this, read [HTTP.jl issue 798](https://github.com/JuliaWeb/HTTP.jl/issues/798)
 #     or watch [Building Microservices and Applications in Julia](https://www.youtube.com/watch?v=uLhXgt_gKJc&t=9543s)
 #     from JuliaCon 2020.
