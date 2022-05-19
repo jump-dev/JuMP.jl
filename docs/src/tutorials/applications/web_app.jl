@@ -104,6 +104,13 @@ end
 #     `@async` runs the server in a background process. If you omit `@async`,
 #     `HTTP.serve` will block the current Julia process.
 
+# !!! warning
+#     HTTP.jl does not serve requests on a separate thread. Therefore, a
+#     long-running will block the main thread, preventing concurrent users from
+#     submitting requests. To work-around this, read [HTTP.jl issue 798](https://github.com/JuliaWeb/HTTP.jl/issues/798)
+#     or watch [Building Microservices and Applications in Julia](https://www.youtube.com/watch?v=uLhXgt_gKJc&t=9543s)
+#     from JuliaCon 2020.
+
 server = setup_server(HTTP.ip"127.0.0.1", 8080)
 
 # ## The client side
