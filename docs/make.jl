@@ -158,7 +158,10 @@ const _PAGES = [
             "tutorials/algorithms/cutting_stock_column_generation.md",
             "tutorials/algorithms/tsp_lazy_constraints.md",
         ],
-        "Applications" => ["tutorials/applications/power_systems.md"],
+        "Applications" => [
+            "tutorials/applications/power_systems.md",
+            "tutorials/applications/web_app.md",
+        ],
     ],
     "Manual" => [
         "manual/models.md",
