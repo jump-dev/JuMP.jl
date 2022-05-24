@@ -294,6 +294,18 @@ julia> x
  my_var[2]
 ```
 
+!!! tip
+    For some models, setting the string name of each variable can take a
+    non-trivial portion of the total time required to build the model. Turn off
+    `String` names by passing `set_string_name = false` to [`@variable`](@ref):
+    ```jldoctest
+    julia> model = Model();
+
+    julia> @variable(model, x, set_string_name = false)
+    _[1]
+    ```
+    See [Disable string names](@ref) for more information.
+
 ### Retrieve a variable by name
 
 Retrieve a variable from a model using [`variable_by_name`](@ref):
@@ -335,7 +347,7 @@ julia> model[:x]
  my_var[2]
 ```
 
-## String names, symbolic names, and bindings
+## [String names, symbolic names, and bindings](@id variable_names_and_bindings)
 
 It's common for new users to experience confusion relating to JuMP variables.
 Part of the problem is the overloaded use of "variable" in mathematical

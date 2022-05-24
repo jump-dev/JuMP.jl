@@ -161,6 +161,9 @@ mutable struct Model <: AbstractModel
     # Enable extensions to attach arbitrary information to a JuMP model by
     # using an extension-specific symbol as a key.
     ext::Dict{Symbol,Any}
+    # A model-level option that is used as the default for the set_string_name
+    # keyword to @variable and @constraint.
+    set_string_names_on_creation::Bool
 end
 
 """
@@ -243,6 +246,7 @@ function direct_model(backend::MOI.ModelLike)
         0,
         false,
         Dict{Symbol,Any}(),
+        true,
     )
 end
 
@@ -408,6 +412,27 @@ function _try_get_solver_name(model_like)
         end
     end
 end
+
+"""
+    set_string_names_on_creation(model::Model, value::Bool)
+
+Set the default argument of the `set_string_name` keyword in the
+[`@variable`](@ref) and [`@constraint`](@ref) macros to `value`. This is used to
+determine whether to assign `String` names to all variables and constraints in
+`model`.
+
+By default, `value` is `true`. However, for larger models calling
+`set_string_names_on_creation(model, false)` can improve performance at the cost
+of reducing the readability of printing and solver log messages.
+"""
+function set_string_names_on_creation(model::Model, value::Bool)
+    model.set_string_names_on_creation = value
+    return
+end
+
+set_string_names_on_creation(model::Model) = model.set_string_names_on_creation
+
+set_string_names_on_creation(::AbstractModel) = true
 
 """
     solver_name(model::Model)

@@ -295,6 +295,20 @@ julia> con
  my_con[2] : x ≤ 2.0
 ```
 
+!!! tip
+    For some models, setting the string name of each constraint can take a
+    non-trivial portion of the total time required to build the model. Turn off
+    `String` names by passing `set_string_name = false` to [`@constraint`](@ref):
+    ```jldoctest
+    julia> model = Model();
+
+    julia> @variable(model, x);
+
+    julia> @constraint(model, con, x <= 2, set_string_name = false)
+    x <= 2.0
+    ```
+    See [Disable string names](@ref) for more information.
+
 ### Retrieve a constraint by name
 
 Retrieve a constraint from a model using [`constraint_by_name`](@ref):
