@@ -51,12 +51,16 @@ function endpoint_solve(params::Dict{String,Any})
     set_silent(model)
     @variable(model, x >= params["lower_bound"], Int)
     optimize!(model)
-    return Dict{String,Any}(
+    ret = Dict{String,Any}(
         "status" => "okay",
         "terminaton_status" => termination_status(model),
         "primal_status" => primal_status(model),
-        "x" => has_values(model) ? value(x) : NaN,
     )
+    ## Only include the `x` key if it has a value.
+    if has_values(model)
+        ret["x"] = value(x)
+    end
+    return ret
 end
 
 # When we call this, we get:
