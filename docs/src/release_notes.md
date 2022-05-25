@@ -1,5 +1,30 @@
 # Release notes
 
+## Version 1.1.0 (May 25, 2022)
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.1.0).
+A summary of changes are as follows:
+
+- New features:
+  - Added `num_constraints(::Model; count_variable_in_set_constraints)` to
+    simplify the process of counting the number of constraints in a model
+  - Added `VariableRef(::ConstraintRef)` for querying the variable associated
+    with a bound or integrality constraint.
+  - Added `set_normalized_coefficients` for modifying the variable coefficients
+    of a vector-valued constraint.
+  - Added `set_string_names_on_creation` to disable creating `String` names for
+    variables and constraints. This can improve performance.
+- Bug fixes:
+  - Fixed a bug passing `nothing` to the `start` keyword of `@variable`
+- Documentation and maintenance:
+  - New tutorials:
+    - Sensitivity analysis of a linear program
+    - Serving web apps
+  - Minimal ellipse SDP tutorial refactored and improved
+  - Docs updated to the latest version of each package
+  - Lots of minor fixes and improvements to the documentation
+
 ## Version 1.0.0 (March 24, 2022)
 
 **Read more about this release, along with an ackowledgement of all the
@@ -11,7 +36,7 @@ see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.0.0).
 A summary of changes are as follows:
 
 - Breaking changes:
-  - The previously deprecated functions (v0.23.0, v0.23.1) have been removed. 
+  - The previously deprecated functions (v0.23.0, v0.23.1) have been removed.
     Deprecation was to improve consistency of function names:
     - `num_nl_constraints` (see `num_nonlinear_constraints`)
     - `all_nl_constraints` (see `all_nonlinear_constraints`)
