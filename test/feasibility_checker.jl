@@ -150,7 +150,7 @@ function test_missing()
     @variable(model, z == 0.5)
     @constraint(model, x + y + z >= 0.5)
     report =
-        primal_feasibility_report(model, Dict(z => 0.0), skip_missing = true)
+        primal_feasibility_report(model, Dict(z => 0.0); skip_missing = true)
     @test report[FixRef(z)] == 0.5
     @test length(report) == 1
 end

@@ -93,14 +93,14 @@ end
 # Display the data
 Plots.scatter(
     Xc,
-    Yc,
+    Yc;
     label = "Clients",
     markershape = :circle,
     markercolor = :blue,
 )
 Plots.scatter!(
     Xf,
-    Yf,
+    Yf;
     label = "Facility",
     markershape = :square,
     markercolor = :white,
@@ -143,7 +143,7 @@ y_ = value.(y) .> 1 - 1e-5
 # Display clients
 p = Plots.scatter(
     Xc,
-    Yc,
+    Yc;
     markershape = :circle,
     markercolor = :blue,
     label = nothing,
@@ -153,7 +153,7 @@ p = Plots.scatter(
 mc = [(y_[j] ? :red : :white) for j in 1:n]
 Plots.scatter!(
     Xf,
-    Yf,
+    Yf;
     markershape = :square,
     markercolor = mc,
     markersize = 6,
@@ -168,7 +168,7 @@ for i in 1:m
         if x_[i, j] == 1
             Plots.plot!(
                 [Xc[i], Xf[j]],
-                [Yc[i], Yf[j]],
+                [Yc[i], Yf[j]];
                 color = :black,
                 label = nothing,
             )
@@ -223,7 +223,7 @@ q = rand(5:10, n);
 # Display the data
 Plots.scatter(
     Xc,
-    Yc,
+    Yc;
     label = nothing,
     markershape = :circle,
     markercolor = :blue,
@@ -232,7 +232,7 @@ Plots.scatter(
 
 Plots.scatter!(
     Xf,
-    Yf,
+    Yf;
     label = nothing,
     markershape = :rect,
     markercolor = :white,
@@ -275,7 +275,7 @@ y_ = value.(y) .> 1 - 1e-5;
 # Display the solution
 p = Plots.scatter(
     Xc,
-    Yc,
+    Yc;
     label = nothing,
     markershape = :circle,
     markercolor = :blue,
@@ -285,7 +285,7 @@ p = Plots.scatter(
 mc = [(y_[j] ? :red : :white) for j in 1:n]
 Plots.scatter!(
     Xf,
-    Yf,
+    Yf;
     label = nothing,
     markershape = :rect,
     markercolor = mc,
@@ -300,7 +300,7 @@ for i in 1:m
         if x_[i, j] == 1
             Plots.plot!(
                 [Xc[i], Xf[j]],
-                [Yc[i], Yf[j]],
+                [Yc[i], Yf[j]];
                 color = :black,
                 label = nothing,
             )

@@ -47,7 +47,7 @@ function test_solution_summary()
     set_optimizer(
         model,
         () -> MOI.Utilities.MockOptimizer(
-            MOI.Utilities.Model{Float64}(),
+            MOI.Utilities.Model{Float64}();
             eval_objective_value = false,
         ),
     )
@@ -103,7 +103,7 @@ function test_solution_summary()
   Node count         : 1
 """
     @test sprint(
-        (io, model) -> show(io, solution_summary(model, verbose = true)),
+        (io, model) -> show(io, solution_summary(model; verbose = true)),
         model,
     ) == """
 * Solver : Mock

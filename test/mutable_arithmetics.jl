@@ -70,11 +70,11 @@ function test_int(ModelType, ::Any)
     model = ModelType()
     @variable(model, x)
     MA.Test.int_test(
-        typeof(1x),
+        typeof(1x);
         exclude = ["int_mul", "int_add", "int_add_mul"],
     )
     return MA.Test.int_test(
-        typeof(1x^2),
+        typeof(1x^2);
         exclude = ["int_mul", "int_add", "int_add_mul"],
     )
 end
@@ -83,9 +83,9 @@ function test_scalar(ModelType, ::Any)
     model = ModelType()
     @variable(model, x)
     exclude = ["cube"]
-    MA.Test.scalar_test(x, exclude = exclude)
-    MA.Test.scalar_test(2x + 3, exclude = exclude)
-    return MA.Test.scalar_test(2x^2 + 4x + 1, exclude = exclude)
+    MA.Test.scalar_test(x; exclude = exclude)
+    MA.Test.scalar_test(2x + 3; exclude = exclude)
+    return MA.Test.scalar_test(2x^2 + 4x + 1; exclude = exclude)
 end
 
 function test_quadratic(ModelType, ::Any)
@@ -126,7 +126,7 @@ end
 function test_DenseAxisVector(ModelType, ::Any)
     model = ModelType()
     @variable(model, y[2:5])
-    return MA.Test.array_test(y, exclude = ["matrix_vector", "non_array"])
+    return MA.Test.array_test(y; exclude = ["matrix_vector", "non_array"])
 end
 
 function test_different_variables(ModelType, ::Any)

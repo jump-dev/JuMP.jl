@@ -34,7 +34,7 @@ import LinearAlgebra
 
 # For this example, we'll use the 20 most populous cities in the United States.
 
-cities = DataFrames.DataFrame(
+cities = DataFrames.DataFrame(;
     city = [
         "New York, NY",
         "Los Angeles, CA",

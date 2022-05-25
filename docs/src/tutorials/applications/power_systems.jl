@@ -143,7 +143,7 @@ function scale_generator_cost(g, scale)
 end
 
 start = time()
-c_g_scale_df = DataFrames.DataFrame(
+c_g_scale_df = DataFrames.DataFrame(;
     ## Scale factor
     scale = Float64[],
     ## Dispatch of Generator 1 [MW]
@@ -221,7 +221,7 @@ function solve_ed_inplace(
         push!(g1_out, value(g[1]))
         push!(g2_out, value(g[2]))
     end
-    df = DataFrames.DataFrame(
+    df = DataFrames.DataFrame(;
         scale = scale,
         dispatch_G1 = g1_out,
         dispatch_G2 = g2_out,
@@ -253,7 +253,7 @@ inplace_df
 # In the following example, we adjust the total demand and observed how it
 # affects wind spillage.
 
-demand_scale_df = DataFrames.DataFrame(
+demand_scale_df = DataFrames.DataFrame(;
     demand = Float64[],
     dispatch_G1 = Float64[],
     dispatch_G2 = Float64[],
@@ -399,7 +399,7 @@ println("Total cost: \$", solution.total_cost)
 # After implementing the UC model, we can now assess the interplay between the
 # minimum power output constraints on generators and wind generation.
 
-uc_df = DataFrames.DataFrame(
+uc_df = DataFrames.DataFrame(;
     demand = Float64[],
     commitment_G1 = Float64[],
     commitment_G2 = Float64[],
@@ -542,7 +542,7 @@ end
 
 Plots.plot(
     wind_cost,
-    wind_dispatch,
+    wind_dispatch;
     xlabel = "Cost",
     ylabel = "Dispatch [MW]",
     label = false,

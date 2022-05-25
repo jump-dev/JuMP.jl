@@ -94,7 +94,7 @@ csv_df = CSV.read(joinpath(DATA_DIR, "StarWars.csv"), DataFrames.DataFrame)
 
 Plots.scatter(
     csv_df.Weight,
-    csv_df.Height,
+    csv_df.Height;
     xlabel = "Weight",
     ylabel = "Height",
 )
@@ -105,7 +105,7 @@ Plots.scatter(
 
 csv_df = CSV.read(
     joinpath(DATA_DIR, "StarWars.csv"),
-    DataFrames.DataFrame,
+    DataFrames.DataFrame;
     missingstring = "NA",
 )
 
@@ -113,7 +113,7 @@ csv_df = CSV.read(
 
 Plots.scatter(
     csv_df.Weight,
-    csv_df.Height,
+    csv_df.Height;
     title = "Height vs Weight of StarWars characters",
     xlabel = "Weight",
     ylabel = "Height",
@@ -149,10 +149,10 @@ DataFrames.dropmissing!(eyecolor_count, :Eyecolor)
 
 # Then we can visualize the data:
 
-sort!(eyecolor_count, :count, rev = true)
+sort!(eyecolor_count, :count; rev = true)
 Plots.bar(
     eyecolor_count.Eyecolor,
-    eyecolor_count.count,
+    eyecolor_count.count;
     xlabel = "Eyecolor",
     ylabel = "Number of characters",
     label = false,
@@ -177,7 +177,7 @@ ss_df = CSV.read(joinpath(DATA_DIR, "Cereal.txt"), DataFrames.DataFrame)
 
 delim_df = CSV.read(
     joinpath(DATA_DIR, "Soccer.txt"),
-    DataFrames.DataFrame,
+    DataFrames.DataFrame;
     delim = "::",
 )
 

@@ -189,7 +189,7 @@ end
 #     Be careful here, for large n and p SCS could fail to converge!
 #
 n, p = 200, 10
-X, y = generate_dataset(n, p, shift = 10.0);
+X, y = generate_dataset(n, p; shift = 10.0);
 
 ## We could now solve the logistic regression problem
 λ = 10.0

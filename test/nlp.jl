@@ -431,7 +431,7 @@ function test_parse_user_defined_function_univariate()
     model = Model()
     @variable(model, x)
     user_function = x -> x
-    JuMP.register(model, :f, 1, user_function, autodiff = true)
+    JuMP.register(model, :f, 1, user_function; autodiff = true)
     @test _test_expressions_equal(
         JuMP.@_process_NL_expr(model, f(x)),
         JuMP._NonlinearExprData(model, :(f($x))),
@@ -444,7 +444,7 @@ function test_parse_user_defined_function_multivariate()
     @variable(model, x)
     @variable(model, y)
     user_function = (x, y) -> x
-    JuMP.register(model, :f, 2, user_function, autodiff = true)
+    JuMP.register(model, :f, 2, user_function; autodiff = true)
     @test _test_expressions_equal(
         JuMP.@_process_NL_expr(model, f(x, y)),
         JuMP._NonlinearExprData(model, :(f($x, $y))),
@@ -456,7 +456,7 @@ function test_parse_splatting()
     model = Model()
     @variable(model, x[1:2])
     user_function = (x, y) -> x
-    JuMP.register(model, :f, 2, user_function, autodiff = true)
+    JuMP.register(model, :f, 2, user_function; autodiff = true)
     @test _test_expressions_equal(
         JuMP.@_process_NL_expr(model, f(x...)),
         JuMP._NonlinearExprData(model, :(f($(x[1]), $(x[2])))),
@@ -788,8 +788,8 @@ function test_more_expression_graphs()
     @variable(m, y)
     ψ(x) = 1
     t(x, y) = 2
-    JuMP.register(m, :ψ, 1, ψ, autodiff = true)
-    JuMP.register(m, :t, 2, t, autodiff = true)
+    JuMP.register(m, :ψ, 1, ψ; autodiff = true)
+    JuMP.register(m, :t, 2, t; autodiff = true)
     @NLobjective(m, Min, x^y)
     @NLconstraint(m, sin(x) * cos(y) == 5)
     @NLconstraint(m, nlconstr[i = 1:2], i * x^2 == i)
@@ -904,8 +904,8 @@ function test_eval_objective_and_eval_objective_gradient()
 
     ψ(x) = sin(x)
     t(x, y) = x + 3y
-    JuMP.register(m, :ψ, 1, ψ, autodiff = true)
-    JuMP.register(m, :t, 2, t, autodiff = true)
+    JuMP.register(m, :ψ, 1, ψ; autodiff = true)
+    JuMP.register(m, :t, 2, t; autodiff = true)
 
     @NLobjective(m, Min, ex / 2 + sin(x[2]) / ψ(x[2]) + t(x[3], x[4]))
     d = JuMP.NLPEvaluator(m)
@@ -927,8 +927,8 @@ function test_eval_constraint_and_jacobians()
 
     ψ(x) = sin(x)
     t(x, y) = x + 3y
-    JuMP.register(m, :ψ, 1, ψ, autodiff = true)
-    JuMP.register(m, :t, 2, t, autodiff = true)
+    JuMP.register(m, :ψ, 1, ψ; autodiff = true)
+    JuMP.register(m, :t, 2, t; autodiff = true)
 
     @NLconstraint(m, Min, ex / 2 + sin(x[2]) / ψ(x[2]) + t(x[3], x[4]) <= 0.0)
     d = JuMP.NLPEvaluator(m)
@@ -1118,7 +1118,7 @@ end
 function test_hessians_disabled_with_user_defined_multivariate_functions()
     model = Model()
     my_f(x, y) = (x - 1)^2 + (y - 2)^2
-    JuMP.register(model, :my_f, 2, my_f, autodiff = true)
+    JuMP.register(model, :my_f, 2, my_f; autodiff = true)
     @variable(model, x[1:2])
     @NLobjective(model, Min, my_f(x[1], x[2]))
     evaluator = JuMP.NLPEvaluator(model)

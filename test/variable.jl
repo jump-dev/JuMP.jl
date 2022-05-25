@@ -46,7 +46,7 @@ function _sliceof_util(VariableRefType, x, I, J, K)
         jj = 1
     end
     idx = [length(I) == 1, length(J) == 1, length(K) == 1]
-    return dropdims(y, dims = tuple(findall(idx)...))
+    return dropdims(y; dims = tuple(findall(idx)...))
 end
 
 function test_variable_no_bound(ModelType, VariableRefType)
@@ -676,7 +676,7 @@ function _mock_reduced_cost_util(
     has_duals::Bool = var_bounds_dual !== nothing,
 )
     mockoptimizer =
-        MOIU.MockOptimizer(MOIU.Model{Float64}(), eval_objective_value = false)
+        MOIU.MockOptimizer(MOIU.Model{Float64}(); eval_objective_value = false)
     m = JuMP.direct_model(mockoptimizer)
     if var_bound_type === :lower
         @variable(m, x >= 0)

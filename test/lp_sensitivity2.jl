@@ -29,7 +29,7 @@ end
 
 function _test_sensitivity(model_string, solution)
     m = MOIU.MockOptimizer(
-        MOIU.Model{Float64}(),
+        MOIU.Model{Float64}();
         eval_variable_constraint_dual = false,
     )
     model = direct_model(m)
@@ -79,7 +79,7 @@ end
 
 function test_Error_handling()
     m = MOIU.MockOptimizer(
-        MOIU.Model{Float64}(),
+        MOIU.Model{Float64}();
         eval_variable_constraint_dual = false,
     )
     model = direct_model(m)
@@ -128,7 +128,7 @@ end
 
 function test_Degeneracy()
     m = MOIU.MockOptimizer(
-        MOIU.Model{Float64}(),
+        MOIU.Model{Float64}();
         eval_variable_constraint_dual = false,
     )
     model = direct_model(m)

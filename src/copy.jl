@@ -268,7 +268,7 @@ function copy_conflict(model::Model)
             MOI.get(model, MOI.ConstraintConflictStatus(), cref) !=
             MOI.NOT_IN_CONFLICT
     new_model, reference_map =
-        copy_model(model, filter_constraints = filter_constraints)
+        copy_model(model; filter_constraints = filter_constraints)
     return new_model, reference_map
 end
 

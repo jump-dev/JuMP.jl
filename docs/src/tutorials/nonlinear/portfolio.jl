@@ -150,7 +150,7 @@ stock_returns
 
 # Calculating the expected value of monthly return:
 
-r = Statistics.mean(stock_returns, dims = 1)
+r = Statistics.mean(stock_returns; dims = 1)
 
 # Calculating the covariance matrix Q
 

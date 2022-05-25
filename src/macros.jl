@@ -839,7 +839,7 @@ function _constraint_macro(
         macro_code = _macro_assign_and_return(
             creation_code,
             variable,
-            name,
+            name;
             model_for_registering = model,
         )
     end
@@ -1359,7 +1359,7 @@ macro expression(args...)
         macro_code = _macro_assign_and_return(
             code,
             variable,
-            Containers._get_name(c),
+            Containers._get_name(c);
             model_for_registering = m,
         )
     end
@@ -2104,7 +2104,7 @@ macro variable(args...)
         macro_code = _macro_assign_and_return(
             creation_code,
             variable,
-            name,
+            name;
             model_for_registering = model,
         )
     end
@@ -2251,7 +2251,7 @@ macro NLconstraint(m, x, args...)
         macro_code = _macro_assign_and_return(
             creation_code,
             variable,
-            Containers._get_name(c),
+            Containers._get_name(c);
             model_for_registering = esc_m,
         )
     end
@@ -2315,7 +2315,7 @@ macro NLexpression(args...)
         macro_code = _macro_assign_and_return(
             creation_code,
             variable,
-            Containers._get_name(c),
+            Containers._get_name(c);
             model_for_registering = esc(m),
         )
     end
@@ -2451,7 +2451,7 @@ macro NLparameter(model, args...)
         _macro_assign_and_return(
             creation_code,
             gensym(),
-            Containers._get_name(param),
+            Containers._get_name(param);
             model_for_registering = esc_m,
         )
     end

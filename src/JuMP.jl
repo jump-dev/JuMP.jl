@@ -207,7 +207,7 @@ model = Model(() -> Gurobi.Optimizer(env); add_bridges = false)
 """
 function Model(optimizer_factory; add_bridges::Bool = true)
     model = Model()
-    set_optimizer(model, optimizer_factory, add_bridges = add_bridges)
+    set_optimizer(model, optimizer_factory; add_bridges = add_bridges)
     return model
 end
 
@@ -1410,7 +1410,7 @@ end
 # with an underscore.
 const _EXCLUDE_SYMBOLS = [Symbol(@__MODULE__), :eval, :include]
 
-for sym in names(@__MODULE__, all = true)
+for sym in names(@__MODULE__; all = true)
     sym_string = string(sym)
     if sym in _EXCLUDE_SYMBOLS ||
        startswith(sym_string, "_") ||
