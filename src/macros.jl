@@ -169,14 +169,18 @@ Converts a sense symbol to a set `set` such that
 ## Example
 
 Once a custom set is defined you can directly create a JuMP constraint with it:
+
 ```jldoctest operator_to_set; setup = :(using JuMP)
 julia> struct CustomSet{T} <: MOI.AbstractScalarSet
            value::T
        end
 
+
 julia> Base.copy(x::CustomSet) = CustomSet(x.value)
 
+
 julia> model = Model();
+
 
 julia> @variable(model, x)
 x
@@ -187,14 +191,18 @@ x ∈ CustomSet{Float64}(1.0)
 
 However, there might be an appropriate sign that could be used in order to
 provide a more convenient syntax:
+
 ```jldoctest operator_to_set
 julia> JuMP.operator_to_set(::Function, ::Val{:⊰}) = CustomSet(0.0)
 
+
 julia> MOIU.shift_constant(set::CustomSet, value) = CustomSet(set.value + value)
+
 
 julia> cref = @constraint(model, x ⊰ 1)
 x ∈ CustomSet{Float64}(1.0)
 ```
+
 Note that the whole function is first moved to the right-hand side, then the
 sign is transformed into a set with zero constant and finally the constant is
 moved to the set with `MOIU.shift_constant`.
@@ -279,26 +287,29 @@ The entry-point for all constraint-related parsing.
 
 ## Arguments
 
- * The `_error` function is passed everywhere to provide better error messages
- * `expr` comes from the `@constraint` macro. There are two possibilities:
-    * `@constraint(model, expr)`
-    * `@constraint(model, name[args], expr)`
-   In both cases, `expr` is the main component of the constraint.
+  - The `_error` function is passed everywhere to provide better error messages
+
+  - `expr` comes from the `@constraint` macro. There are two possibilities:
+    
+      + `@constraint(model, expr)`
+      + `@constraint(model, name[args], expr)`
+        In both cases, `expr` is the main component of the constraint.
 
 ## Supported syntax
 
 JuMP currently supports the following `expr` objects:
- * `lhs <= rhs`
- * `lhs == rhs`
- * `lhs >= rhs`
- * `l <= body <= u`
- * `u >= body >= l`
- * `lhs ⟂ rhs`
- * `lhs in rhs`
- * `lhs ∈ rhs`
- * `z => {constraint}`
- * `!z => {constraint}`
-as well as all broadcasted variants.
+
+  - `lhs <= rhs`
+  - `lhs == rhs`
+  - `lhs >= rhs`
+  - `l <= body <= u`
+  - `u >= body >= l`
+  - `lhs ⟂ rhs`
+  - `lhs in rhs`
+  - `lhs ∈ rhs`
+  - `z => {constraint}`
+  - `!z => {constraint}`
+    as well as all broadcasted variants.
 
 ## Extensions
 
@@ -316,6 +327,7 @@ Implement this method to intercept the parsing of an expression with head
 `head`.
 
 !!! warning
+    
     Extending the constraint macro at parse time is an advanced operation and
     has the potential to interfere with existing JuMP syntax. Please discuss
     with the [developer chatroom](https://gitter.im/JuliaOpt/jump-dev) before
@@ -323,29 +335,29 @@ Implement this method to intercept the parsing of an expression with head
 
 ## Arguments
 
- * `_error`: a function that accepts a `String` and throws the string as an
-   error, along with some descriptive information of the macro from which it was
-   thrown.
- * `head`: the `.head` field of the `Expr` to intercept
- * `args...`: the `.args` field of the `Expr`.
+  - `_error`: a function that accepts a `String` and throws the string as an
+    error, along with some descriptive information of the macro from which it was
+    thrown.
+  - `head`: the `.head` field of the `Expr` to intercept
+  - `args...`: the `.args` field of the `Expr`.
 
 ## Returns
 
 This function must return:
 
- * `is_vectorized::Bool`: whether the expression represents a broadcasted
-   expression like `x .<= 1`
- * `parse_code::Expr`: an expression containing any setup or rewriting code that
-   needs to be called before `build_constraint`
- * `build_code::Expr`: an expression that calls `build_constraint(` or
-   `build_constraint.(` depending on `is_vectorized`.
+  - `is_vectorized::Bool`: whether the expression represents a broadcasted
+    expression like `x .<= 1`
+  - `parse_code::Expr`: an expression containing any setup or rewriting code that
+    needs to be called before `build_constraint`
+  - `build_code::Expr`: an expression that calls `build_constraint(` or
+    `build_constraint.(` depending on `is_vectorized`.
 
 ## Existing implementations
 
 JuMP currently implements:
 
-   * `::Val{:call}`, which forwards calls to [`parse_constraint_call`](@ref)
-   * `::Val{:comparison}`, which handles the special case of `l <= body <= u`.
+  - `::Val{:call}`, which forwards calls to [`parse_constraint_call`](@ref)
+  - `::Val{:comparison}`, which handles the special case of `l <= body <= u`.
 
 See also: [`parse_constraint_call`](@ref), [`build_constraint`](@ref)
 """
@@ -430,6 +442,7 @@ Implement this method to intercept the parsing of a `:call` expression with
 operator `op`.
 
 !!! warning
+    
     Extending the constraint macro at parse time is an advanced operation and
     has the potential to interfere with existing JuMP syntax. Please discuss
     with the [developer chatroom](https://gitter.im/JuliaOpt/jump-dev) before
@@ -437,21 +450,21 @@ operator `op`.
 
 ## Arguments
 
- * `_error`: a function that accepts a `String` and throws the string as an
-   error, along with some descriptive information of the macro from which it was
-   thrown.
- * `is_vectorized`: a boolean to indicate if `op` should be broadcast or not
- * `op`: the first element of the `.args` field of the `Expr` to intercept
- * `args...`: the `.args` field of the `Expr`.
+  - `_error`: a function that accepts a `String` and throws the string as an
+    error, along with some descriptive information of the macro from which it was
+    thrown.
+  - `is_vectorized`: a boolean to indicate if `op` should be broadcast or not
+  - `op`: the first element of the `.args` field of the `Expr` to intercept
+  - `args...`: the `.args` field of the `Expr`.
 
 ## Returns
 
 This function must return:
 
- * `parse_code::Expr`: an expression containing any setup or rewriting code that
-   needs to be called before `build_constraint`
- * `build_code::Expr`: an expression that calls `build_constraint(` or
-   `build_constraint.(` depending on `is_vectorized`.
+  - `parse_code::Expr`: an expression containing any setup or rewriting code that
+    needs to be called before `build_constraint`
+  - `build_code::Expr`: an expression that calls `build_constraint(` or
+    `build_constraint.(` depending on `is_vectorized`.
 
 See also: [`parse_constraint_head`](@ref), [`build_constraint`](@ref)
 """
@@ -710,6 +723,7 @@ end
     )
 
 Returns the code for the macro `@constraint args...` of syntax
+
 ```julia
 @constraint(model, con, extra_arg, kw_args...)      # single constraint
 @constraint(model, ref, con, extra_arg, kw_args...) # group of constraints
@@ -858,42 +872,43 @@ Add a group of constraints described by the expression `expr` parametrized by
 
 The expression `expr` can either be
 
-* of the form `func in set` constraining the function `func` to belong to the
-  set `set` which is either a [`MOI.AbstractSet`](https://jump.dev/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1)
-  or one of the JuMP shortcuts [`SecondOrderCone`](@ref),
-  [`RotatedSecondOrderCone`](@ref) and [`PSDCone`](@ref), e.g.
-  `@constraint(model, [1, x-1, y-2] in SecondOrderCone())` constrains the norm
-  of `[x-1, y-2]` be less than 1;
-* of the form `a sign b`, where `sign` is one of `==`, `≥`, `>=`, `≤` and
-  `<=` building the single constraint enforcing the comparison to hold for the
-  expression `a` and `b`, e.g. `@constraint(m, x^2 + y^2 == 1)` constrains `x`
-  and `y` to lie on the unit circle;
-* of the form `a ≤ b ≤ c` or `a ≥ b ≥ c` (where `≤` and `<=` (resp. `≥` and
-  `>=`) can be used interchangeably) constraining the paired the expression
-  `b` to lie between `a` and `c`;
-* of the forms `@constraint(m, a .sign b)` or
-  `@constraint(m, a .sign b .sign c)` which broadcast the constraint creation to
-  each element of the vectors.
+  - of the form `func in set` constraining the function `func` to belong to the
+    set `set` which is either a [`MOI.AbstractSet`](https://jump.dev/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1)
+    or one of the JuMP shortcuts [`SecondOrderCone`](@ref),
+    [`RotatedSecondOrderCone`](@ref) and [`PSDCone`](@ref), e.g.
+    `@constraint(model, [1, x-1, y-2] in SecondOrderCone())` constrains the norm
+    of `[x-1, y-2]` be less than 1;
+  - of the form `a sign b`, where `sign` is one of `==`, `≥`, `>=`, `≤` and
+    `<=` building the single constraint enforcing the comparison to hold for the
+    expression `a` and `b`, e.g. `@constraint(m, x^2 + y^2 == 1)` constrains `x`
+    and `y` to lie on the unit circle;
+  - of the form `a ≤ b ≤ c` or `a ≥ b ≥ c` (where `≤` and `<=` (resp. `≥` and
+    `>=`) can be used interchangeably) constraining the paired the expression
+    `b` to lie between `a` and `c`;
+  - of the forms `@constraint(m, a .sign b)` or
+    `@constraint(m, a .sign b .sign c)` which broadcast the constraint creation to
+    each element of the vectors.
 
 The recognized keyword arguments in `kw_args` are the following:
 
-* `base_name`: Sets the name prefix used to generate constraint names. It
-  corresponds to the constraint name for scalar constraints, otherwise, the
-  constraint names are set to `base_name[...]` for each index `...` of the axes
-  `axes`.
-* `container`: Specify the container type.
-* `set_string_name::Bool = true`: control whether to set the
-  [`MOI.ConstraintName`](@ref) attribute. Passing `set_string_name = false` can
-  improve performance.
+  - `base_name`: Sets the name prefix used to generate constraint names. It
+    corresponds to the constraint name for scalar constraints, otherwise, the
+    constraint names are set to `base_name[...]` for each index `...` of the axes
+    `axes`.
+  - `container`: Specify the container type.
+  - `set_string_name::Bool = true`: control whether to set the
+    [`MOI.ConstraintName`](@ref) attribute. Passing `set_string_name = false` can
+    improve performance.
 
 ## Note for extending the constraint macro
 
 Each constraint will be created using
 `add_constraint(m, build_constraint(_error, func, set))` where
-* `_error` is an error function showing the constraint call in addition to the
-  error message given as argument,
-* `func` is the expression that is constrained
-* and `set` is the set in which it is constrained to belong.
+
+  - `_error` is an error function showing the constraint call in addition to the
+    error message given as argument,
+  - `func` is the expression that is constrained
+  - and `set` is the set in which it is constrained to belong.
 
 For `expr` of the first type (i.e. `@constraint(m, func in set)`), `func` and
 `set` are passed unchanged to `build_constraint` but for the other types, they
@@ -935,7 +950,14 @@ model = Model();
 @build_constraint(2x >= 1)
 
 # output
-ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
+
+ScalarConstraint{
+    GenericAffExpr{Float64,VariableRef},
+    MathOptInterface.GreaterThan{Float64},
+}(
+    2x,
+    MathOptInterface.GreaterThan{Float64}(1.0),
+)
 ```
 """
 macro build_constraint(constraint_expr)
@@ -1232,6 +1254,7 @@ expression of JuMP variables.
 ## Examples
 
 To minimize the value of the variable `x`, do as follows:
+
 ```jldoctest @objective; setup = :(using JuMP)
 julia> model = Model()
 A JuMP Model
@@ -1249,6 +1272,7 @@ x
 ```
 
 To maximize the value of the affine expression `2x - 1`, do as follows:
+
 ```jldoctest @objective
 julia> @objective(model, Max, 2x - 1)
 2 x - 1
@@ -1256,6 +1280,7 @@ julia> @objective(model, Max, 2x - 1)
 
 To set a quadratic objective and set the objective sense programmatically, do
 as follows:
+
 ```jldoctest @objective
 julia> sense = MIN_SENSE
 MIN_SENSE::OptimizationSense = 0
@@ -1299,7 +1324,7 @@ immediately. Instead, returns the expression which can then be inserted in other
 constraints. For example:
 
 ```julia
-@expression(m, shared, sum(i*x[i] for i=1:5))
+@expression(m, shared, sum(i * x[i] for i in 1:5))
 @constraint(m, shared + y >= 5)
 @constraint(m, shared + z <= 10)
 ```
@@ -1308,13 +1333,13 @@ The `ref` accepts index sets in the same way as `@variable`, and those indices
 can be used in the construction of the expressions:
 
 ```julia
-@expression(m, expr[i=1:3], i*sum(x[j] for j=1:3))
+@expression(m, expr[i = 1:3], i * sum(x[j] for j in 1:3))
 ```
 
 Anonymous syntax is also supported:
 
 ```julia
-expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
+expr = @expression(m, [i = 1:3], i * sum(x[j] for j in 1:3))
 ```
 """
 macro expression(args...)
@@ -1385,18 +1410,19 @@ It should never be called by users of JuMP.
 
 ## Arguments
 
- * `_error`: a function to call instead of `error`. `_error` annotates the
-   error message with additional information for the user.
- * `info`: an instance of [`VariableInfo`](@ref). This has a variety of fields
-   relating to the variable such as `info.lower_bound` and `info.binary`.
- * `args`: optional additional positional arguments for extending the
-   [`@variable`](@ref) macro.
- * `kwargs`: optional keyword arguments for extending the [`@variable`](@ref)
-   macro.
+  - `_error`: a function to call instead of `error`. `_error` annotates the
+    error message with additional information for the user.
+  - `info`: an instance of [`VariableInfo`](@ref). This has a variety of fields
+    relating to the variable such as `info.lower_bound` and `info.binary`.
+  - `args`: optional additional positional arguments for extending the
+    [`@variable`](@ref) macro.
+  - `kwargs`: optional keyword arguments for extending the [`@variable`](@ref)
+    macro.
 
 See also: [`@variable`](@ref)
 
 !!! warning
+    
     Extensions should define a method with ONE positional argument to dispatch
     the call to a different method. Creating an extension that relies on
     multiple positional arguments leads to `MethodError`s if the user passes the
@@ -1407,22 +1433,28 @@ See also: [`@variable`](@ref)
 ```julia
 @variable(model, x, Foo)
 ```
+
 will call
+
 ```julia
 build_variable(_error::Function, info::VariableInfo, ::Type{Foo})
 ```
 
 Passing special-case positional arguments such as `Bin`, `Int`, and `PSD` is
 okay, along with keyword arguments:
+
 ```julia
 @variable(model, x, Int, Foo(), mykwarg = true)
 # or
 @variable(model, x, Foo(), Int, mykwarg = true)
 ```
+
 will call
+
 ```julia
 build_variable(_error::Function, info::VariableInfo, ::Foo; mykwarg)
 ```
+
 and `info.integer` will be true.
 
 Note that the order of the positional arguments does not matter.
@@ -1807,85 +1839,86 @@ positional arguments `args` and the keyword arguments `kw_args`.
 
 `expr` must be one of the forms:
 
- * Omitted, like `@variable(model)`, which creates an anonymous variable
- * A single symbol like `@variable(model, x)`
- * A container expression like `@variable(model, x[i=1:3])`
- * An anoymous container expression like `@variable(model, [i=1:3])`
+  - Omitted, like `@variable(model)`, which creates an anonymous variable
+  - A single symbol like `@variable(model, x)`
+  - A container expression like `@variable(model, x[i=1:3])`
+  - An anoymous container expression like `@variable(model, [i=1:3])`
 
 ## Bounds
 
 In addition, the expression can have bounds, such as:
 
- * `@variable(model, x >= 0)`
- * `@variable(model, x <= 0)`
- * `@variable(model, x == 0)`
- * `@variable(model, 0 <= x <= 1)`
+  - `@variable(model, x >= 0)`
+  - `@variable(model, x <= 0)`
+  - `@variable(model, x == 0)`
+  - `@variable(model, 0 <= x <= 1)`
 
 and bounds can depend on the indices of the container expressions:
 
- * `@variable(model, -i <= x[i=1:3] <= i)`
+  - `@variable(model, -i <= x[i=1:3] <= i)`
 
 ## Sets
 
 You can explicitly specify the set to which the variable belongs:
 
- * `@variable(model, x in MOI.Interval(0.0, 1.0))`
+  - `@variable(model, x in MOI.Interval(0.0, 1.0))`
 
- For more information on this syntax, read
+For more information on this syntax, read
 [Variables constrained on creation](@ref).
 
 ## Positional arguments
 
 The recognized positional arguments in `args` are the following:
 
- * `Bin`: restricts the variable to the [`MOI.ZeroOne`](@ref) set, that is,
-   `{0, 1}`. For example, `@variable(model, x, Bin)`. Note: you cannot use
-   `@variable(model, Bin)`, use the `binary` keyword instead.
- * `Int`: restricts the variable to the set of integers, that is, ..., -2, -1,
+  - `Bin`: restricts the variable to the [`MOI.ZeroOne`](@ref) set, that is,
+    `{0, 1}`. For example, `@variable(model, x, Bin)`. Note: you cannot use
+    `@variable(model, Bin)`, use the `binary` keyword instead.
+  - `Int`: restricts the variable to the set of integers, that is, ..., -2, -1,
     0, 1, 2, ... For example, `@variable(model, x, Int)`. Note: you cannot use
     `@variable(model, Int)`, use the `integer` keyword instead.
- * `Symmetric`: Only available when creating a square matrix of variables, i.e.,
-   when `expr` is of the form `varname[1:n,1:n]` or `varname[i=1:n,j=1:n]`,
-   it creates a symmetric matrix of variables.
- * `PSD`: A restrictive extension to `Symmetric` which constraints a square
-   matrix of variables to `Symmetric` and constrains to be positive
-   semidefinite.
+  - `Symmetric`: Only available when creating a square matrix of variables, i.e.,
+    when `expr` is of the form `varname[1:n,1:n]` or `varname[i=1:n,j=1:n]`,
+    it creates a symmetric matrix of variables.
+  - `PSD`: A restrictive extension to `Symmetric` which constraints a square
+    matrix of variables to `Symmetric` and constrains to be positive
+    semidefinite.
 
 ## Keyword arguments
 
 Four keyword arguments are useful in all cases:
 
- * `base_name`: Sets the name prefix used to generate variable names. It
-   corresponds to the variable name for scalar variable, otherwise, the
-   variable names are set to `base_name[...]` for each index `...` of the axes
-   `axes`.
- * `start::Float64`: specify the value passed to `set_start_value` for each
-   variable
- * `container`: specify the container type. See
-   [Forcing the container type](@ref variable_forcing) for more information.
- * `set_string_name::Bool = true`: control whether to set the
-   [`MOI.VariableName`](@ref) attribute. Passing `set_string_name = false` can
-   improve performance.
+  - `base_name`: Sets the name prefix used to generate variable names. It
+    corresponds to the variable name for scalar variable, otherwise, the
+    variable names are set to `base_name[...]` for each index `...` of the axes
+    `axes`.
+  - `start::Float64`: specify the value passed to `set_start_value` for each
+    variable
+  - `container`: specify the container type. See
+    [Forcing the container type](@ref variable_forcing) for more information.
+  - `set_string_name::Bool = true`: control whether to set the
+    [`MOI.VariableName`](@ref) attribute. Passing `set_string_name = false` can
+    improve performance.
 
 Other keyword arguments are needed to disambiguate sitations with anonymous
 variables:
 
- * `lower_bound::Float64`: an alternative to `x >= lb`, sets the value of the
-   variable lower bound.
- * `upper_bound::Float64`: an alternative to `x <= ub`, sets the value of the
-   variable upper bound.
- * `binary::Bool`: an alternative to passing `Bin`, sets whether the variable
-   is binary or not.
- * `integer::Bool`: an alternative to passing `Int`, sets whether the variable
-   is integer or not.
- * `set::MOI.AbstractSet`: an alternative to using `x in set`
- * `variable_type`: used by JuMP extensions. See
-   [Extend `@variable`](@ref extend_variable_macro) for more information.
+  - `lower_bound::Float64`: an alternative to `x >= lb`, sets the value of the
+    variable lower bound.
+  - `upper_bound::Float64`: an alternative to `x <= ub`, sets the value of the
+    variable upper bound.
+  - `binary::Bool`: an alternative to passing `Bin`, sets whether the variable
+    is binary or not.
+  - `integer::Bool`: an alternative to passing `Int`, sets whether the variable
+    is integer or not.
+  - `set::MOI.AbstractSet`: an alternative to using `x in set`
+  - `variable_type`: used by JuMP extensions. See
+    [Extend `@variable`](@ref extend_variable_macro) for more information.
 
 ## Examples
 
 The following are equivalent ways of creating a variable `x` of name `x` with
 lower bound 0:
+
 ```julia
 model = Model()
 @variable(model, x >= 0)
@@ -1894,11 +1927,12 @@ x = @variable(model, base_name = "x", lower_bound = 0)
 ```
 
 Other examples:
+
 ```julia
 model = Model()
-@variable(model, x[i=1:3] <= i, Int, start = sqrt(i), lower_bound = -i)
-@variable(model, y[i=1:3], container = DenseAxisArray, set = MOI.ZeroOne())
-@variable(model, z[i=1:3], set_string_name = false)
+@variable(model, x[i = 1:3] <= i, Int, start = sqrt(i), lower_bound = -i)
+@variable(model, y[i = 1:3], container = DenseAxisArray, set = MOI.ZeroOne())
+@variable(model, z[i = 1:3], set_string_name = false)
 ```
 """
 macro variable(args...)
@@ -2271,8 +2305,9 @@ nonlinear constraints and the objective. See also [`@expression`]. For example:
 ```
 
 Indexing over sets and anonymous expressions are also supported:
+
 ```julia
-@NLexpression(m, my_expr_1[i=1:3], sin(i * x))
+@NLexpression(m, my_expr_1[i = 1:3], sin(i * x))
 my_expr_2 = @NLexpression(m, log(1 + sum(exp(x[i])) for i in 1:2))
 ```
 """
@@ -2330,12 +2365,14 @@ with initial value set to `value`. Nonlinear parameters may be used only in
 nonlinear expressions.
 
 # Example
+
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @NLparameter(model, x == 10)
 value(x)
 
 # output
+
 10.0
 ```
 
@@ -2353,6 +2390,7 @@ x = @NLparameter(model, value = 10)
 value(x)
 
 # output
+
 10.0
 ```
 
@@ -2371,6 +2409,7 @@ model = Model()
 value(y[9])
 
 # output
+
 18.0
 ```
 
@@ -2388,6 +2427,7 @@ y = @NLparameter(model, [i = 1:10] == 2 * i)
 value(y[9])
 
 # output
+
 18.0
 ```
 """

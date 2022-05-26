@@ -16,13 +16,16 @@ Construct a `NestedIterator` using [`nested`](@ref).
 ## Example
 
 If `length(iterators) == 3`:
+
 ```julia
 x = NestedIterator(iterators, condition)
 for (i1, i2, i3) in x
     # produces (i1, i2, i3)
 end
 ```
+
 is the same as
+
 ```julia
 for i1 in iterators[1]()
     for i2 in iterator[2](i1)

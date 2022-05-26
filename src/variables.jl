@@ -184,7 +184,7 @@ end
 
 Variable returned by [`add_variable`](@ref). Affine (resp. quadratic) operations
 with variables of type `V<:AbstractVariableRef` and coefficients of type `T`
-    create a `GenericAffExpr{T,V}` (resp. `GenericQuadExpr{T,V}`).
+create a `GenericAffExpr{T,V}` (resp. `GenericQuadExpr{T,V}`).
 """
 abstract type AbstractVariableRef <: AbstractJuMPScalar end
 
@@ -212,8 +212,10 @@ end
 Returns the model to which `v` belongs.
 
 # Example
+
 ```jldoctest; setup=:(using JuMP)
 julia> model = Model();
+
 
 julia> x = @variable(model)
 _[1]
@@ -280,6 +282,7 @@ Delete the variable associated with `variable_ref` from the model `model`.
 Note that `delete` does not unregister the name from the model, so adding a new
 variable of the same name will throw an error. Use [`unregister`](@ref) to
 unregister the name after deletion as follows:
+
 ```julia
 @variable(model, x)
 delete(model, x)
@@ -365,6 +368,7 @@ single variable.
 ```jldoctest
 julia> model = Model();
 
+
 julia> @variable(model, x >= 0)
 x
 
@@ -416,13 +420,14 @@ no variable has this name attribute. Throws an error if several variables have
 ```jldoctest objective_function; setup = :(using JuMP), filter = r"Stacktrace:.*"s
 julia> model = Model();
 
+
 julia> @variable(model, x)
 x
 
 julia> variable_by_name(model, "x")
 x
 
-julia> @variable(model, base_name="x")
+julia> @variable(model, base_name = "x")
 x
 
 julia> variable_by_name(model, "x")
@@ -435,7 +440,7 @@ Stacktrace:
  [5] variable_by_name(::Model, ::String) at /home/blegat/.julia/dev/JuMP/src/variables.jl:268
  [6] top-level scope at none:0
 
-julia> var = @variable(model, base_name="y")
+julia> var = @variable(model, base_name = "y")
 y
 
 julia> variable_by_name(model, "y")
@@ -443,7 +448,9 @@ y
 
 julia> set_name(var, "z")
 
+
 julia> variable_by_name(model, "y")
+
 
 julia> variable_by_name(model, "z")
 z
@@ -1121,13 +1128,19 @@ end
 
 Variable `scalar_variables` constrained to belong to `set`.
 Adding this variable can be understood as doing:
+
 ```julia
-function JuMP.add_variable(model::Model, variable::JuMP.VariableConstrainedOnCreation, names)
+function JuMP.add_variable(
+    model::Model,
+    variable::JuMP.VariableConstrainedOnCreation,
+    names,
+)
     var_ref = JuMP.add_variable(model, variable.scalar_variable, name)
     JuMP.add_constraint(model, JuMP.VectorConstraint(var_ref, variable.set))
     return var_ref
 end
 ```
+
 but adds the variables with `MOI.add_constrained_variable(model, variable.set)`
 instead. See [the MOI documentation](https://jump.dev/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
 for the difference between adding the variables with `MOI.add_constrained_variable`
@@ -1182,14 +1195,24 @@ end
 
 Vector of variables `scalar_variables` constrained to belong to `set`.
 Adding this variable can be thought as doing:
+
 ```julia
-function JuMP.add_variable(model::Model, variable::JuMP.VariablesConstrainedOnCreation, names)
-    var_refs = JuMP.add_variable.(model, variable.scalar_variables,
-                                  JuMP.vectorize(names, variable.shape))
+function JuMP.add_variable(
+    model::Model,
+    variable::JuMP.VariablesConstrainedOnCreation,
+    names,
+)
+    var_refs =
+        JuMP.add_variable.(
+            model,
+            variable.scalar_variables,
+            JuMP.vectorize(names, variable.shape),
+        )
     JuMP.add_constraint(model, JuMP.VectorConstraint(var_refs, variable.set))
     return JuMP.reshape_vector(var_refs, variable.shape)
 end
 ```
+
 but adds the variables with `MOI.add_constrained_variables(model, variable.set)`
 instead. See [the MOI documentation](https://jump.dev/MathOptInterface.jl/v0.9.3/apireference/#Variables-1)
 for the difference between adding the variables with `MOI.add_constrained_variables`
@@ -1288,6 +1311,7 @@ Returns a list of all variables currently in the model. The variables are
 ordered by creation time.
 
 # Example
+
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @variable(model, x)
@@ -1364,29 +1388,35 @@ end
 Modifies `model` to "relax" all binary and integrality constraints on
 variables. Specifically,
 
-- Binary constraints are deleted, and variable bounds are tightened if
-  necessary to ensure the variable is constrained to the interval ``[0, 1]``.
-- Integrality constraints are deleted without modifying variable bounds.
-- An error is thrown if semi-continuous or semi-integer constraints are
-  present (support may be added for these in the future).
-- All other constraints are ignored (left in place). This includes discrete
-  constraints like SOS and indicator constraints.
+  - Binary constraints are deleted, and variable bounds are tightened if
+    necessary to ensure the variable is constrained to the interval ``[0, 1]``.
+  - Integrality constraints are deleted without modifying variable bounds.
+  - An error is thrown if semi-continuous or semi-integer constraints are
+    present (support may be added for these in the future).
+  - All other constraints are ignored (left in place). This includes discrete
+    constraints like SOS and indicator constraints.
 
 Returns a function that can be called without any arguments to restore the
 original model. The behavior of this function is undefined if additional
 changes are made to the affected variables in the meantime.
 
 # Example
+
 ```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
+
 julia> @variable(model, x, Bin);
+
 
 julia> @variable(model, 1 <= y <= 10, Int);
 
+
 julia> @objective(model, Min, x + y);
 
+
 julia> undo_relax = relax_integrality(model);
+
 
 julia> print(model)
 Min x + y
@@ -1397,6 +1427,7 @@ Subject to
  y ≤ 10.0
 
 julia> undo_relax()
+
 
 julia> print(model)
 Min x + y

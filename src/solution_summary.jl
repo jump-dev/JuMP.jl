@@ -41,12 +41,14 @@ dual solution for every constraint, excluding those with empty names.
 ## Examples
 
 When called at the REPL, the summary is automatically printed:
+
 ```julia
 julia> solution_summary(model)
 [...]
 ```
 
 Use `print` to force the printing of the summary from inside a function:
+
 ```julia
 function foo(model)
     print(solution_summary(model))

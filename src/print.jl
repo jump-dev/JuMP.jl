@@ -141,10 +141,11 @@ end
 Print a plain-text summary of `model` to `io`.
 
 For this method to work, an `AbstractModel` subtype should implement:
- * `name(::AbstractModel)`
- * `show_objective_function_summary`
- * `show_constraints_summary`
- * `show_backend_summary`
+
+  - `name(::AbstractModel)`
+  - `show_objective_function_summary`
+  - `show_constraints_summary`
+  - `show_backend_summary`
 """
 function _print_summary(io::IO, model::AbstractModel)
     println(io, name(model))
@@ -227,9 +228,10 @@ end
 Print a plain-text formulation of `model` to `io`.
 
 For this method to work, an `AbstractModel` subtype must implement:
- * `objective_function_string`
- * `constraints_string`
- * `_nl_subexpression_string`
+
+  - `objective_function_string`
+  - `constraints_string`
+  - `_nl_subexpression_string`
 """
 function _print_model(io::IO, model::AbstractModel)
     mode = MIME("text/plain")
@@ -261,9 +263,10 @@ end
 Print a LaTeX formulation of `model` to `io`.
 
 For this method to work, an `AbstractModel` subtype must implement:
- * `objective_function_string`
- * `constraints_string`
- * `_nl_subexpression_string`
+
+  - `objective_function_string`
+  - `constraints_string`
+  - `_nl_subexpression_string`
 """
 function _print_latex(io::IO, model::AbstractModel)
     mode = MIME("text/latex")

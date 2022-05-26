@@ -32,19 +32,21 @@ Euclidean distance in the corresponding set.
 
 ## Notes
 
- * If `skip_missing = true`, constraints containing variables that are not in
-   `point` will be ignored.
- * If `skip_missing = false` and a partial primal solution is provided, an error
-   will be thrown.
- * If no point is provided, the primal solution from the last time the model was
-   solved is used.
+  - If `skip_missing = true`, constraints containing variables that are not in
+    `point` will be ignored.
+  - If `skip_missing = false` and a partial primal solution is provided, an error
+    will be thrown.
+  - If no point is provided, the primal solution from the last time the model was
+    solved is used.
 
 ## Examples
 
 ```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
+
 julia> @variable(model, 0.5 <= x <= 1);
+
 
 julia> primal_feasibility_report(model, Dict(x => 0.2))
 Dict{Any,Float64} with 1 entry:
@@ -89,7 +91,9 @@ argument instead of a dictionary as the second argument.
 ```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
+
 julia> @variable(model, 0.5 <= x <= 1);
+
 
 julia> primal_feasibility_report(model) do v
            return value(v)

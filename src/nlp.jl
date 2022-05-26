@@ -124,12 +124,14 @@ end
 Return the current value stored in the nonlinear parameter `p`.
 
 # Example
+
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @NLparameter(model, p == 10)
 value(p)
 
 # output
+
 10.0
 ```
 """
@@ -141,6 +143,7 @@ value(p::NonlinearParameter) = p.model.nlp_data.nlparamvalues[p.index]::Float64
 Store the value `v` in the nonlinear parameter `p`.
 
 # Example
+
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @NLparameter(model, p == 0)
@@ -148,6 +151,7 @@ set_value(p, 5)
 value(p)
 
 # output
+
 5.0
 ```
 """
@@ -250,13 +254,18 @@ Pass `nothing` to unset a previous start.
 ```jldoctest
 julia> model = Model();
 
+
 julia> @variable(model, x[1:2]);
+
 
 julia> nl1 = @NLconstraint(model, x[1] <= sqrt(x[2]));
 
+
 julia> nl2 = @NLconstraint(model, x[1] >= exp(x[2]));
 
+
 julia> start = Dict(nl1 => -1.0, nl2 => 1.0);
+
 
 julia> start_vector = [start[con] for con in all_nonlinear_constraints(model)]
 2-element Vector{Float64}:
@@ -264,6 +273,7 @@ julia> start_vector = [start[con] for con in all_nonlinear_constraints(model)]
   1.0
 
 julia> set_nonlinear_dual_start_value(model, start_vector)
+
 
 julia> nonlinear_dual_start_value(model)
 2-element Vector{Float64}:
@@ -2016,11 +2026,11 @@ that the inputs are `Float64`.
 
 ## Notes
 
- * For this method, you must explicitly set `autodiff = true`, because no
-   user-provided gradient function `∇f` is given.
- * Second-derivative information is only computed if `dimension == 1`.
- * `s` does not have to be the same symbol as `f`, but it is generally more
-   readable if it is.
+  - For this method, you must explicitly set `autodiff = true`, because no
+    user-provided gradient function `∇f` is given.
+  - Second-derivative information is only computed if `dimension == 1`.
+  - `s` does not have to be the same symbol as `f`, but it is generally more
+    readable if it is.
 
 ## Examples
 
@@ -2091,16 +2101,16 @@ not assume that the inputs are `Float64`.
 
 ## Notes
 
- * If the function `f` is univariate (i.e., `dimension == 1`), `∇f` must return
-   a number which represents the first-order derivative of the function `f`.
- * If the function `f` is multi-variate, `∇f` must have a signature matching
-   `∇f(g::AbstractVector{T}, args::T...) where {T<:Real}`, where the first
-   argument is a vector `g` that is modified in-place with the gradient.
- * If `autodiff = true` and `dimension == 1`, use automatic differentiation to
-   compute the second-order derivative information. If `autodiff = false`, only
-   first-order derivative information will be used.
- * `s` does not have to be the same symbol as `f`, but it is generally more
-   readable if it is.
+  - If the function `f` is univariate (i.e., `dimension == 1`), `∇f` must return
+    a number which represents the first-order derivative of the function `f`.
+  - If the function `f` is multi-variate, `∇f` must have a signature matching
+    `∇f(g::AbstractVector{T}, args::T...) where {T<:Real}`, where the first
+    argument is a vector `g` that is modified in-place with the gradient.
+  - If `autodiff = true` and `dimension == 1`, use automatic differentiation to
+    compute the second-order derivative information. If `autodiff = false`, only
+    first-order derivative information will be used.
+  - `s` does not have to be the same symbol as `f`, but it is generally more
+    readable if it is.
 
 ## Examples
 
@@ -2186,11 +2196,11 @@ derivatives of the function `f` respectively.
 
 ## Notes
 
- * Because automatic differentiation is not used, you can assume the inputs are
-   all `Float64`.
- * This method will throw an error if `dimension > 1`.
- * `s` does not have to be the same symbol as `f`, but it is generally more
-   readable if it is.
+  - Because automatic differentiation is not used, you can assume the inputs are
+    all `Float64`.
+  - This method will throw an error if `dimension > 1`.
+  - `s` does not have to be the same symbol as `f`, but it is generally more
+    readable if it is.
 
 ## Examples
 
@@ -2235,7 +2245,7 @@ programmatically, and you cannot use [`@NLexpression`](@ref).
 
 ## Notes
 
- * You must interpolate the variables directly into the expression `expr`.
+  - You must interpolate the variables directly into the expression `expr`.
 
 ## Examples
 
@@ -2263,13 +2273,14 @@ programmatically, and you cannot use [`@NLobjective`](@ref).
 
 ## Notes
 
- * You must interpolate the variables directly into the expression `expr`.
- * You must use `MIN_SENSE` or `MAX_SENSE` instead of `Min` and `Max`.
+  - You must interpolate the variables directly into the expression `expr`.
+  - You must use `MIN_SENSE` or `MAX_SENSE` instead of `Min` and `Max`.
 
 ## Examples
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
 julia> set_nonlinear_objective(model, MIN_SENSE, :(\$(x) + \$(x)^2))
+
 ```
 """
 function set_nonlinear_objective(model::Model, sense::MOI.OptimizationSense, x)
@@ -2286,7 +2297,7 @@ programmatically, and you cannot use [`@NLconstraint`](@ref).
 
 ## Notes
 
- * You must interpolate the variables directly into the expression `expr`.
+  - You must interpolate the variables directly into the expression `expr`.
 
 ## Examples
 

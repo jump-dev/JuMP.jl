@@ -115,9 +115,9 @@ An expression type representing an affine expression of the form:
 
 ## Fields
 
- * `.constant`: the constant `c` in the expression.
- * `.terms`: an `OrderedDict`, with keys of `VarType` and values of `CoefType`
-   describing the sparse vector `a`.
+  - `.constant`: the constant `c` in the expression.
+  - `.terms`: an `OrderedDict`, with keys of `VarType` and values of `CoefType`
+    describing the sparse vector `a`.
 """
 mutable struct GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
     constant::CoefType
@@ -142,6 +142,7 @@ Create a [`GenericAffExpr`](@ref) by passing a constant and a vector of pairs.
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
 julia> GenericAffExpr(1.0, [x => 1.0])
 x + 1
+```
 """
 function GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
     return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv))
@@ -158,6 +159,7 @@ arguments.
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
 julia> GenericAffExpr(1.0, x => 1.0)
 x + 1
+```
 """
 function GenericAffExpr(
     constant::V,
@@ -392,15 +394,15 @@ end
 
 Updates `expression` *in place* to `expression + (*)(terms...)`. This is
 typically much more efficient than `expression += (*)(terms...)`. For example,
-`add_to_expression!(expression, a, b)` produces the same result as `expression
-+= a*b`, and `add_to_expression!(expression, a)` produces the same result as
-`expression += a`.
+`add_to_expression!(expression, a, b)` produces the same result as
+`expression += a*b`, and `add_to_expression!(expression, a)` produces the same
+result as `expression += a`.
 
 Only a few methods are defined, mostly for internal use, and only for the cases
 when (1) they can be implemented efficiently and (2) `expression` is capable of
-storing the result. For example, `add_to_expression!(::AffExpr, ::VariableRef,
-::VariableRef)` is not defined because a `GenericAffExpr` cannot store the
-product of two variables.
+storing the result. For example,
+`add_to_expression!(::AffExpr, ::VariableRef, ::VariableRef)` is not defined
+because a `GenericAffExpr` cannot store the product of two variables.
 """
 function add_to_expression! end
 

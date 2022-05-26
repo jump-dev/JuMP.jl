@@ -529,30 +529,28 @@ Solve the knapsack problem and return the optimal primal solution
 
 ## Arguments
 
- * `optimizer` : an object that can be passed to `JuMP.Model` to construct a new
-   JuMP model.
- * `data_filename` : the filename of a JSON file containing the data for the
-   problem.
- * `config` : an object to control the type of knapsack model constructed.
-   Valid options are:
-    * `BinaryKnapsackConfig()`
-    * `IntegerKnapsackConfig()`
+  - `optimizer` : an object that can be passed to `JuMP.Model` to construct a
+    new JuMP model.
+  - `data_filename` : the filename of a JSON file containing the data for the
+    problem.
+  - `config` : an object to control the type of knapsack model constructed.
+    Valid options are:
+
+      + `BinaryKnapsackConfig()`
+      + `IntegerKnapsackConfig()`
 
 ## Returns
 
- * If an optimal solution exists: a `JuMP.DenseAxisArray` that maps the `String`
-   name of each object to the number of objects to pack into the knapsack.
- * Otherwise, `nothing`, indicating that the problem does not have an optimal
-   solution.
+  - If an optimal solution exists: a `JuMP.DenseAxisArray` that maps the `String`
+    name of each object to the number of objects to pack into the knapsack.
+  - Otherwise, `nothing`, indicating that the problem does not have an optimal
+    solution.
 
 ## Examples
 
 ```julia
-solution = solve_knapsack(
-    HiGHS.Optimizer,
-    "path/to/data.json",
-    BinaryKnapsackConfig(),
-)
+solution =
+    solve_knapsack(HiGHS.Optimizer, "path/to/data.json", BinaryKnapsackConfig())
 ```
 
 ```julia

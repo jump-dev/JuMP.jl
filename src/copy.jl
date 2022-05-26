@@ -12,6 +12,7 @@ data of the new model `new_model`.
 A method should be added for any JuMP extension storing data in the `ext` field.
 
 !!! warning
+    
     Do not engage in type piracy by implementing this method for types of `data`
     that you did not define! JuMP extensions should store types that they
     define in `model.ext`, rather than regular Julia types.
@@ -112,6 +113,7 @@ will have to be provided to the new model in the [`optimize!`](@ref) call.
 In the following example, a model `model` is constructed with a variable `x` and
 a constraint `cref`. It is then copied into a model `new_model` with the new
 references assigned to `x_new` and `cref_new`.
+
 ```julia
 model = Model()
 @variable(model, x)
@@ -207,6 +209,7 @@ will have to be provided to the new model in the [`optimize!`](@ref) call.
 In the following example, a model `model` is constructed with a variable `x` and
 a constraint `cref`. It is then copied into a model `new_model` with the new
 references assigned to `x_new` and `cref_new`.
+
 ```julia
 model = Model()
 @variable(model, x)
@@ -247,6 +250,7 @@ two constraints `cref` and `cref2`. This model has no solution, as the two
 constraints are mutually exclusive. The solver is asked to compute a conflict
 with [`compute_conflict!`](@ref). The parts of `model` participating in the
 conflict are then copied into a model `new_model`.
+
 ```julia
 model = Model() # You must use a solver that supports conflict refining/IIS
 # computation, like CPLEX or Gurobi

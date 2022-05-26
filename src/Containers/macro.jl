@@ -183,28 +183,28 @@ end
 Helper function for macros to construct container objects.
 
 !!! warning
+    
     This function is for advanced users implementing JuMP extensions. See
     [`container_code`](@ref) for more details.
 
 ## Arguments
 
- * `_error`: a function that takes a `String` and throws an error, potentially
-   annotating the input string with extra information such as from which macro
-   it was thrown from. Use `error` if you do not want a modified error message.
- * `expr`: an `Expr` that specifies the container, e.g.,
-   `:(x[i = 1:3, [:red, :blue], k = S; i + k <= 6])`
+  - `_error`: a function that takes a `String` and throws an error, potentially
+    annotating the input string with extra information such as from which macro
+    it was thrown from. Use `error` if you do not want a modified error message.
+  - `expr`: an `Expr` that specifies the container, e.g.,
+    `:(x[i = 1:3, [:red, :blue], k = S; i + k <= 6])`
 
 ## Returns
 
  1. `index_vars`: a `Vector{Any}` of names for the index variables, e.g.,
     `[:i, gensym(), :k]`. These may also be expressions, like `:((i, j))` from a
     call like `:(x[(i, j) in S])`.
+
  2. `indices`: an iterator over the indices, e.g.,
+    
     ```julia
-    Containers.NestedIterators(
-        (1:3, [:red, :blue], S),
-        (i, _, k) -> i + k <= 6,
-    )
+    Containers.NestedIterators((1:3, [:red, :blue], S), (i, _, k) -> i + k <= 6)
     ```
 
 ## Examples
@@ -254,18 +254,19 @@ in conjunction with [`build_ref_sets`](@ref).
 
 ## Arguments
 
- * `index_vars::Vector{Any}`: a vector of names for the indices of the
-   container. These may also be expressions, like `:((i, j))` from a
-   call like `:(x[(i, j) in S])`.
- * `indices::Expr`: an expression that evaluates to an iterator of the indices.
- * `code`: an expression or literal constant for the value to be stored in the
-   container as a function of the named `index_vars`.
- * `requested_container`: passed to the third argument of [`container`](@ref).
-   For built-in JuMP types, choose one of `:Array`, `:DenseAxisArray`,
-   `:SparseAxisArray`, or `:Auto`. For a user-defined container, this expression
-   must evaluate to the correct type.
+  - `index_vars::Vector{Any}`: a vector of names for the indices of the
+    container. These may also be expressions, like `:((i, j))` from a
+    call like `:(x[(i, j) in S])`.
+  - `indices::Expr`: an expression that evaluates to an iterator of the indices.
+  - `code`: an expression or literal constant for the value to be stored in the
+    container as a function of the named `index_vars`.
+  - `requested_container`: passed to the third argument of [`container`](@ref).
+    For built-in JuMP types, choose one of `:Array`, `:DenseAxisArray`,
+    `:SparseAxisArray`, or `:Auto`. For a user-defined container, this expression
+    must evaluate to the correct type.
 
 !!! warning
+    
     In most cases, you should `esc(code)` before passing it to `container_code`.
 
 ## Examples
@@ -273,16 +274,11 @@ in conjunction with [`build_ref_sets`](@ref).
 ```jldoctest; setup=:(using JuMP)
 julia> macro foo(ref_sets, code)
            index_vars, indices = Containers.build_ref_sets(error, ref_sets)
-           return Containers.container_code(
-               index_vars,
-               indices,
-               esc(code),
-               :Auto,
-            )
+           return Containers.container_code(index_vars, indices, esc(code), :Auto)
        end
 @foo (macro with 1 method)
 
-julia> @foo(x[i=1:2, j=["A", "B"]], j^i)
+julia> @foo(x[i = 1:2, j = ["A", "B"]], j^i)
 2-dimensional DenseAxisArray{String,2,...} with index sets:
     Dimension 1, Base.OneTo(2)
     Dimension 2, ["A", "B"]
@@ -333,6 +329,7 @@ Same as above but the container is assigned to the variable of name `ref`.
 The type of container can be controlled by the `container` keyword.
 
 !!! note
+    
     When the index set is explicitly given as `1:n` for any expression `n`, it
     is transformed to `Base.OneTo(n)` before being given to [`container`](@ref).
 
@@ -349,6 +346,7 @@ julia> I = 1:3
 1:3
 
 julia> Containers.@container(x[i = I, j = I], i + j);
+
 
 julia> x
 2-dimensional DenseAxisArray{Int64,2,...} with index sets:

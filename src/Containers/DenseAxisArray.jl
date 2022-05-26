@@ -179,6 +179,7 @@ and the given axes. Exactly `N` axes must be provided, and their lengths must
 match `size(data)` in the corresponding dimensions.
 
 # Example
+
 ```jldoctest; setup=:(using JuMP)
 julia> array = JuMP.Containers.DenseAxisArray([1 2; 3 4], [:a, :b], 2:3)
 2-dimensional DenseAxisArray{Int64,2,...} with index sets:
@@ -210,8 +211,10 @@ Construct an uninitialized DenseAxisArray with element-type `T` indexed over the
 given axes.
 
 # Example
+
 ```jldoctest; setup=:(using JuMP)
 julia> array = JuMP.Containers.DenseAxisArray{Float64}(undef, [:a, :b], 1:2);
+
 
 julia> fill!(array, 1.0)
 2-dimensional DenseAxisArray{Float64,2,...} with index sets:

@@ -43,17 +43,25 @@ vectorization is constrained to belong to the
 ## Examples
 
 Consider the following example:
+
 ```jldoctest PSDCone; setup = :(using JuMP)
 julia> model = Model();
+
 
 julia> @variable(model, x)
 x
 
-julia> a = [ x 2x
-            2x  x];
+julia> a = [
+           x 2x
+           2x x
+       ];
 
-julia> b = [1 2
-            2 4];
+
+julia> b = [
+           1 2
+           2 4
+       ];
+
 
 julia> cref = @constraint(model, a >= b, PSDCone())
 [x - 1    2 x - 2;
@@ -69,11 +77,13 @@ julia> jump_function(constraint_object(cref))
 julia> moi_set(constraint_object(cref))
 MathOptInterface.PositiveSemidefiniteConeSquare(2)
 ```
+
 We see in the output of the last command that the matrix the vectorization of the
 matrix is constrained to belong to the `PositiveSemidefiniteConeSquare`.
 
 ```jldoctest PSDCone
 julia> using LinearAlgebra # For Symmetric
+
 
 julia> cref = @constraint(model, Symmetric(a - b) in PSDCone())
 [x - 1    2 x - 2;
@@ -88,6 +98,7 @@ julia> jump_function(constraint_object(cref))
 julia> moi_set(constraint_object(cref))
 MathOptInterface.PositiveSemidefiniteConeTriangle(2)
 ```
+
 As we see in the output of the last command, the vectorization of only the upper
 triangular part of the matrix is constrained to belong to the
 `PositiveSemidefiniteConeSquare`.
@@ -271,6 +282,7 @@ creating variables in `MOI.Reals`, i.e. "free" variables unless they are
 constrained after their creation.
 
 This function is used by the [`@variable`](@ref) macro as follows:
+
 ```julia
 @variable(model, Q[1:2, 1:2], Symmetric)
 ```
@@ -298,6 +310,7 @@ creating variables in `MOI.Reals`, i.e. "free" variables unless they are
 constrained after their creation.
 
 This function is used by the [`@variable`](@ref) macro as follows:
+
 ```julia
 @variable(model, Q[1:2, 1:2] in SkewSymmetricMatrixSpace())
 ```
@@ -324,6 +337,7 @@ Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref
 constraining the variables to be positive semidefinite.
 
 This function is used by the [`@variable`](@ref) macro as follows:
+
 ```julia
 @variable(model, Q[1:2, 1:2], PSD)
 ```
@@ -361,14 +375,17 @@ Return a `VectorConstraint` of shape [`SymmetricMatrixShape`](@ref) constraining
 the matrix `Q` to be positive semidefinite.
 
 This function is used by the [`@constraint`](@ref) macros as follows:
+
 ```julia
 @constraint(model, Symmetric(Q) in PSDCone())
 ```
+
 The form above is usually used when the entries of `Q` are affine or quadratic
 expressions, but it can also be used when the entries are variables to get the
 reference of the semidefinite constraint, e.g.,
+
 ```julia
-@variable model Q[1:2,1:2] Symmetric
+@variable model Q[1:2, 1:2] Symmetric
 # The type of `Q` is `Symmetric{VariableRef, Matrix{VariableRef}}`
 var_psd = @constraint model Q in PSDCone()
 # The `var_psd` variable contains a reference to the constraint
@@ -399,6 +416,7 @@ Return a `VectorConstraint` of shape [`SquareMatrixShape`](@ref) constraining
 the matrix `Q` to be symmetric and positive semidefinite.
 
 This function is used by the [`@constraint`](@ref) macro as follows:
+
 ```julia
 @constraint(model, Q in PSDCone())
 ```

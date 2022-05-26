@@ -28,6 +28,7 @@ for an example for which this is not the case.
 Consider polynomial constraints for which the dual is moment constraints and
 moment constraints for which the dual is polynomial constraints. Shapes for
 polynomials can be defined as follows:
+
 ```julia
 struct Polynomial
     coefficients::Vector{Float64}
@@ -36,9 +37,13 @@ end
 struct PolynomialShape <: AbstractShape
     monomials::Vector{Monomial}
 end
-JuMP.reshape_vector(x::Vector, shape::PolynomialShape) = Polynomial(x, shape.monomials)
+function JuMP.reshape_vector(x::Vector, shape::PolynomialShape)
+    return Polynomial(x, shape.monomials)
+end
 ```
+
 and a shape for moments can be defined as follows:
+
 ```julia
 struct Moments
     coefficients::Vector{Float64}
@@ -47,10 +52,14 @@ end
 struct MomentsShape <: AbstractShape
     monomials::Vector{Monomial}
 end
-JuMP.reshape_vector(x::Vector, shape::MomentsShape) = Moments(x, shape.monomials)
+function JuMP.reshape_vector(x::Vector, shape::MomentsShape)
+    return Moments(x, shape.monomials)
+end
 ```
+
 Then `dual_shape` allows the definition of the shape of the dual of polynomial
 and moment constraints:
+
 ```julia
 dual_shape(shape::PolynomialShape) = MomentsShape(shape.monomials)
 dual_shape(shape::MomentsShape) = PolynomialShape(shape.monomials)
@@ -70,6 +79,7 @@ Given a [`SymmetricMatrixShape`](@ref) of vectorized form
 `[1, 2, 3] in MOI.PositiveSemidefinieConeTriangle(2)`, the
 following code returns the set of the original constraint
 `Symmetric(Matrix[1 2; 2 3]) in PSDCone()`:
+
 ```jldoctest; setup = :(using JuMP)
 julia> reshape_set(MOI.PositiveSemidefiniteConeTriangle(2), SymmetricMatrixShape(2))
 PSDCone()
@@ -87,6 +97,7 @@ Return an object in its original shape `shape` given its vectorized form
 
 Given a [`SymmetricMatrixShape`](@ref) of vectorized form `[1, 2, 3]`, the
 following code returns the matrix `Symmetric(Matrix[1 2; 2 3])`:
+
 ```jldoctest; setup = :(using JuMP)
 julia> reshape_vector([1, 2, 3], SymmetricMatrixShape(2))
 2×2 LinearAlgebra.Symmetric{Int64,Array{Int64,2}}:

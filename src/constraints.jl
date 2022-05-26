@@ -248,6 +248,7 @@ the constraint index cannot be inferred.
 ```jldoctest objective_function; setup = :(using JuMP), filter = r"Stacktrace:.*"s
 julia> using JuMP
 
+
 julia> model = Model()
 A JuMP Model
 Feasibility problem with:
@@ -264,10 +265,12 @@ con : x² = 1.0
 
 julia> constraint_by_name(model, "kon")
 
+
 julia> constraint_by_name(model, "con")
 con : x² = 1.0
 
 julia> constraint_by_name(model, "con", AffExpr, MOI.EqualTo{Float64})
+
 
 julia> constraint_by_name(model, "con", QuadExpr, MOI.EqualTo{Float64})
 con : x² = 1.0
@@ -338,6 +341,7 @@ Delete the constraint associated with `constraint_ref` from the model `model`.
 Note that `delete` does not unregister the name from the model, so adding a new
 constraint of the same name will throw an error. Use [`unregister`](@ref) to
 unregister the name after deletion as follows:
+
 ```julia
 @constraint(model, c, 2x <= 1)
 delete(model, c)
@@ -412,6 +416,7 @@ abstract type AbstractConstraint end
 
 Constraint `constraint` that can be bridged by the bridge of type `bridge_type`.
 Adding this constraint to a model is equivalent to
+
 ```julia
 add_bridge(model, bridge_type)
 add_constraint(model, constraint)
@@ -421,19 +426,25 @@ add_constraint(model, constraint)
 
 Given a new scalar set type `CustomSet` with a bridge `CustomBridge` that can
 bridge `F`-in-`CustomSet` constraints, when the user does
+
 ```julia
 model = Model()
 @variable(model, x)
 @constraint(model, x + 1 in CustomSet())
 optimize!(model)
 ```
+
 with an optimizer that does not support `F`-in-`CustomSet` constraints, the
-constraint will not be bridged unless he manually calls `add_bridge(model,
-CustomBridge)`. In order to automatically add the `CustomBridge` to any model to
-which an `F`-in-`CustomSet` is added, simply add the following method:
+constraint will not be bridged unless he manually calls `add_bridge(model, CustomBridge)`.
+In order to automatically add the `CustomBridge` to any model to which an
+`F`-in-`CustomSet` is added, simply add the following method:
+
 ```julia
-function JuMP.build_constraint(_error::Function, func::AbstractJuMPScalar,
-                               set::CustomSet)
+function JuMP.build_constraint(
+    _error::Function,
+    func::AbstractJuMPScalar,
+    set::CustomSet,
+)
     constraint = ScalarConstraint(func, set)
     return JuMP.BridgeableConstraint(constraint, CustomBridge)
 end
@@ -444,12 +455,13 @@ end
 JuMP extensions should extend `JuMP.build_constraint` only if they also defined
 `CustomSet`, for three
 reasons:
-1. It is problematic if multiple extensions overload the same JuMP method.
-2. A missing method will not inform the users that they forgot to load the
-   extension module defining the `build_constraint` method.
-3. Defining a method where neither the function nor any of the argument types
-   are defined in the package is called [*type piracy*](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-type-piracy-1)
-   and is discouraged in the Julia style guide.
+
+ 1. It is problematic if multiple extensions overload the same JuMP method.
+ 2. A missing method will not inform the users that they forgot to load the
+    extension module defining the `build_constraint` method.
+ 3. Defining a method where neither the function nor any of the argument types
+    are defined in the package is called [*type piracy*](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-type-piracy-1)
+    and is discouraged in the Julia style guide.
 """
 struct BridgeableConstraint{C,B} <: AbstractConstraint
     constraint::C
@@ -660,7 +672,7 @@ con
 
 # output
 
-con : 4 x <= 2.0
+con:4x <= 2.0
 ```
 """
 function set_normalized_coefficient(
@@ -705,7 +717,7 @@ con
 
 # output
 
-con : [2 x, 5 x] ∈ MathOptInterface.Nonnegatives(2)
+con:[2 x, 5 x] ∈ MathOptInterface.Nonnegatives(2)
 ```
 """
 function set_normalized_coefficients(
@@ -748,15 +760,14 @@ end
 Set the right-hand side term of `constraint` to `value`.
 
 Note that prior to this step, JuMP will aggregate all constant terms onto the
-right-hand side of the constraint. For example, given a constraint `2x + 1 <=
-2`, `set_normalized_rhs(con, 4)` will create the constraint `2x <= 4`, not `2x +
-1 <= 4`.
+right-hand side of the constraint. For example, given a constraint `2x + 1 <= 2`, `set_normalized_rhs(con, 4)` will create the constraint `2x <= 4`, not `2x + 1 <= 4`.
 
 ```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x)), filter=r"≤|<="
 julia> @constraint(model, con, 2x + 1 <= 2)
 con : 2 x <= 1.0
 
 julia> set_normalized_rhs(con, 4)
+
 
 julia> con
 con : 2 x <= 4.0
@@ -834,33 +845,35 @@ Add `value` to the function constant term.
 
 Note that for scalar constraints, JuMP will aggregate all constant terms onto the
 right-hand side of the constraint so instead of modifying the function, the set
-will be translated by `-value`. For example, given a constraint `2x <=
-3`, `add_to_function_constant(c, 4)` will modify it to `2x <= -1`.
+will be translated by `-value`. For example, given a constraint `2x <= 3`, `add_to_function_constant(c, 4)` will modify it to `2x <= -1`.
 
 ## Examples
 
 For scalar constraints, the set is translated by `-value`:
+
 ```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x)), filter=r"≤|<="
 julia> @constraint(model, con, 0 <= 2x - 1 <= 2)
 con : 2 x ∈ [1.0, 3.0]
 
 julia> add_to_function_constant(con, 4)
 
+
 julia> con
 con : 2 x ∈ [-3.0, -1.0]
 ```
 
 For vector constraints, the constant is added to the function:
+
 ```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x); @variable(model, y)), filter=r"≤|<="
 julia> @constraint(model, con, [x + y, x, y] in SecondOrderCone())
 con : [x + y, x, y] ∈ MathOptInterface.SecondOrderCone(3)
 
 julia> add_to_function_constant(con, [1, 2, 2])
 
+
 julia> con
 con : [x + y + 1, x + 2, y + 2] ∈ MathOptInterface.SecondOrderCone(3)
 ```
-
 """
 function add_to_function_constant(
     constraint::ConstraintRef{<:AbstractModel},
@@ -895,6 +908,8 @@ into account in the primal value of the constraint. For instance, the constraint
 `@constraint(model, 2x + 3y + 1 == 5)` is transformed into
 `2x + 3y`-in-`MOI.EqualTo(4)` so the value returned by this function is the
 evaluation of `2x + 3y`.
+
+```
 ```
 """
 function value(
@@ -1005,14 +1020,14 @@ See also [`reduced_cost`](@ref JuMP.reduced_cost).
 
 ## Notes
 
-- The function simply translates signs from `dual` and does not validate
-  the conditions needed to guarantee the sensitivity interpretation of the
-  shadow price. The caller is responsible, e.g., for checking whether the solver
-  converged to an optimal primal-dual pair or a proof of infeasibility.
-- The computation is based on the current objective sense of the model. If this
-  has changed since the last solve, the results will be incorrect.
-- Relaxation of equality constraints (and hence the shadow price) is defined
-  based on which sense of the equality constraint is active.
+  - The function simply translates signs from `dual` and does not validate
+    the conditions needed to guarantee the sensitivity interpretation of the
+    shadow price. The caller is responsible, e.g., for checking whether the solver
+    converged to an optimal primal-dual pair or a proof of infeasibility.
+  - The computation is based on the current objective sense of the model. If this
+    has changed since the last solve, the results will be incorrect.
+  - Relaxation of equality constraints (and hence the shadow price) is defined
+    based on which sense of the equality constraint is active.
 """
 function shadow_price(con_ref::ConstraintRef{<:AbstractModel,<:_MOICON})
     return error(
@@ -1120,18 +1135,25 @@ has type `function_type` and the set has type `set_type`.
 See also [`list_of_constraint_types`](@ref) and [`all_constraints`](@ref).
 
 # Example
+
 ```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
+
 julia> @variable(model, x >= 0, Bin);
+
 
 julia> @variable(model, y);
 
+
 julia> @constraint(model, y in MOI.GreaterThan(1.0));
+
 
 julia> @constraint(model, y <= 1.0);
 
+
 julia> @constraint(model, 2x <= 1);
+
 
 julia> num_constraints(model, VariableRef, MOI.GreaterThan{Float64})
 2
@@ -1167,12 +1189,16 @@ ordered by creation time.
 See also [`list_of_constraint_types`](@ref) and [`num_constraints`](@ref).
 
 # Example
+
 ```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
+
 julia> @variable(model, x >= 0, Bin);
 
+
 julia> @constraint(model, 2x <= 1);
+
 
 julia> all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
 1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
@@ -1222,12 +1248,16 @@ and `S` is an MOI set type such that `all_constraints(model, F, S)` returns
 a nonempty list.
 
 # Example
+
 ```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
+
 julia> @variable(model, x >= 0, Bin);
 
+
 julia> @constraint(model, 2x <= 1);
+
 
 julia> list_of_constraint_types(model)
 3-element Array{Tuple{Type,Type},1}:
@@ -1260,9 +1290,12 @@ program), pass `count_variable_in_set_constraints = false`.
 ```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
+
 julia> @variable(model, x >= 0, Int);
 
+
 julia> @constraint(model, 2x <= 1);
+
 
 julia> num_constraints(model; count_variable_in_set_constraints = true)
 3

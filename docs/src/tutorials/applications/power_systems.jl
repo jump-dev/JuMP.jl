@@ -483,6 +483,7 @@ A user-defined thermal cost function in pure-Julia! You can include
 nonlinearities, and even things like control flow.
 
 !!! warning
+    
     It's still up to you to make sure that the function has a meaningful
     derivative.
 """

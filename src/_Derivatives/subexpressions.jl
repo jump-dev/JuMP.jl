@@ -40,9 +40,9 @@ as the uninitialized vector, or by explicitly computing the full
 
 ## Notes
 
-* It is important to not use recursion here, because expressions may have
-  arbitrary levels of nesting!
-* This function assumes `subexpressions` is acyclic.
+  - It is important to not use recursion here, because expressions may have
+    arbitrary levels of nesting!
+  - This function assumes `subexpressions` is acyclic.
 """
 function _topological_sort(
     starts,
@@ -100,11 +100,11 @@ Topologically sort the subexpression needed to evaluate `main_expressions`.
 
 Returns two things:
 
- * A `Vector{Int}` containing the ordered list of subexpression-indices that
-   need to be evaluated to compute all `main_expressions`
- * A `Vector{Vector{Int}}`, containing a list of ordered lists of
-   subexpression-indices that need to be evaluated to compute
-   `main_expressions[i]`.
+  - A `Vector{Int}` containing the ordered list of subexpression-indices that
+    need to be evaluated to compute all `main_expressions`
+  - A `Vector{Vector{Int}}`, containing a list of ordered lists of
+    subexpression-indices that need to be evaluated to compute
+    `main_expressions[i]`.
 
 **Warning:** This doesn't handle cyclic expressions! But this should be fine
 because we can't compute them in JuMP anyway.

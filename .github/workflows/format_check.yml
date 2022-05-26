@@ -19,7 +19,7 @@ jobs:
         run: |
           using Pkg
           # If you update the version, also update the style guide docs.
-          Pkg.add(PackageSpec(name="JuliaFormatter", version="1"))
+          Pkg.add(PackageSpec(name="JuliaFormatter", version="1.0.2"))
           using JuliaFormatter
           format("src", verbose=true)
           format("test", verbose=true)

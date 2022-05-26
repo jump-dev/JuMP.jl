@@ -76,11 +76,15 @@ attributes using [`set_optimizer_attribute`](@ref).
 ```julia
 model = Model(
     optimizer_with_attributes(
-        Gurobi.Optimizer, "Presolve" => 0, "OutputFlag" => 1
-    )
+        Gurobi.Optimizer,
+        "Presolve" => 0,
+        "OutputFlag" => 1,
+    ),
 )
 ```
+
 is equivalent to:
+
 ```julia
 model = Model(Gurobi.Optimizer)
 set_optimizer_attribute(model, "Presolve", 0)
@@ -194,12 +198,14 @@ See [`set_optimizer`](@ref) for the description of the `optimizer_factory` and
 ## Examples
 
 Create a model with the optimizer set to `Ipopt`:
+
 ```julia
 model = Model(Ipopt.Optimizer)
 ```
 
 Pass an anonymous function which creates a `Gurobi.Optimizer`, and disable
 bridges:
+
 ```julia
 env = Gurobi.Env()
 model = Model(() -> Gurobi.Optimizer(env); add_bridges = false)
@@ -225,14 +231,14 @@ outside of [`backend`](@ref) and no bridges are automatically applied to
 The absence of a cache reduces the memory footprint but, it is important to bear
 in mind the following implications of creating models using this *direct* mode:
 
-* When [`backend`](@ref) does not support an operation, such as modifying
-  constraints or adding variables/constraints after solving, an error is
-  thrown. For models created using the [`Model`](@ref) constructor, such
-  situations can be dealt with by storing the modifications in a cache and
-  loading them into the optimizer when `optimize!` is called.
-* No constraint bridging is supported by default.
-* The optimizer used cannot be changed the model is constructed.
-* The model created cannot be copied.
+  - When [`backend`](@ref) does not support an operation, such as modifying
+    constraints or adding variables/constraints after solving, an error is
+    thrown. For models created using the [`Model`](@ref) constructor, such
+    situations can be dealt with by storing the modifications in a cache and
+    loading them into the optimizer when `optimize!` is called.
+  - No constraint bridging is supported by default.
+  - The optimizer used cannot be changed the model is constructed.
+  - The model created cannot be copied.
 """
 function direct_model(backend::MOI.ModelLike)
     @assert MOI.is_empty(backend)
@@ -264,10 +270,12 @@ model = direct_model(
         Gurobi.Optimizer,
         "Presolve" => 0,
         "OutputFlag" => 1,
-    )
+    ),
 )
 ```
+
 is equivalent to:
+
 ```julia
 model = direct_model(Gurobi.Optimizer())
 set_optimizer_attribute(model, "Presolve", 0)
@@ -287,11 +295,11 @@ Base.broadcastable(model::Model) = Ref(model)
 Return the lower-level MathOptInterface model that sits underneath JuMP. This
 model depends on which operating mode JuMP is in (see [`mode`](@ref)).
 
- * If JuMP is in `DIRECT` mode (i.e., the model was created using
-   [`direct_model`](@ref)), the backend will be the optimizer passed to
-   [`direct_model`](@ref).
- * If JuMP is in `MANUAL` or `AUTOMATIC` mode, the backend is a
-   `MOI.Utilities.CachingOptimizer`.
+  - If JuMP is in `DIRECT` mode (i.e., the model was created using
+    [`direct_model`](@ref)), the backend will be the optimizer passed to
+    [`direct_model`](@ref).
+  - If JuMP is in `MANUAL` or `AUTOMATIC` mode, the backend is a
+    `MOI.Utilities.CachingOptimizer`.
 
 **This function should only be used by advanced users looking to access
 low-level MathOptInterface or solver-specific functionality.**
@@ -335,6 +343,7 @@ Second, the `unsafe_backend` may be empty, or lack some modifications made to
 the JuMP model. Thus, before calling `unsafe_backend` you should first call
 [`MOI.Utilities.attach_optimizer`](@ref) to ensure that the backend is
 synchronized with the JuMP model.
+
 ```julia
 MOI.Utilities.attach_optimizer(model)
 inner = unsafe_backend(model)
@@ -354,13 +363,16 @@ Instead of `unsafe_backend`, create a model using [`direct_model`](@ref) and
 call [`backend`](@ref) instead.
 
 For example, instead of:
+
 ```julia
 model = Model(HiGHS.Optimizer)
 @variable(model, x >= 0)
 MOI.Utilities.attach_optimizer(model)
 highs = unsafe_backend(model)
 ```
+
 Use:
+
 ```julia
 model = direct_model(HiGHS.Optimizer())
 @variable(model, x >= 0)
@@ -533,9 +545,11 @@ that are present in the model.
 
 Each node in the hyper-graph corresponds to a variable, constraint, or objective
 type.
-  * Variable nodes are indicated by `[ ]`
-  * Constraint nodes are indicated by `( )`
-  * Objective nodes are indicated by `| |`
+
+  - Variable nodes are indicated by `[ ]`
+  - Constraint nodes are indicated by `( )`
+  - Objective nodes are indicated by `| |`
+
 The number inside each pair of brackets is an index of the node in the
 hyper-graph.
 
@@ -650,6 +664,7 @@ expression can be created with the same key.
 
 Note that this will not delete the object `model[key]`; it will just remove the
 reference at `model[key]`. To delete the object, use
+
 ```julia
 delete(model, model[key])
 unregister(model, key)
@@ -678,6 +693,7 @@ julia> num_variables(model)
 1
 
 julia> unregister(model, :x)
+
 
 julia> @variable(model, x)
 x
@@ -750,10 +766,10 @@ those passed to [`optimize!`](@ref).
 
 ## Notes
 
- * The optimize hook should generally modify the model, or some external state
-   in some way, and then call `optimize!(model; ignore_optimize_hook = true)` to
-   optimize the problem, bypassing the hook.
- * Use `set_optimize_hook(model, nothing)` to unset an optimize hook.
+  - The optimize hook should generally modify the model, or some external state
+    in some way, and then call `optimize!(model; ignore_optimize_hook = true)` to
+    optimize the problem, bypassing the hook.
+  - Use `set_optimize_hook(model, nothing)` to unset an optimize hook.
 
 ## Examples
 
@@ -840,7 +856,9 @@ Given a list of `attribute => value` pairs, calls
 model = Model(Ipopt.Optimizer)
 set_optimizer_attributes(model, "tol" => 1e-4, "max_iter" => 100)
 ```
+
 is equivalent to:
+
 ```julia
 model = Model(Ipopt.Optimizer)
 set_optimizer_attribute(model, "tol", 1e-4)

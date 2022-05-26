@@ -25,12 +25,12 @@ Base.getindex(s::SensitivityReport, x::VariableRef) = s.objective[x]
 Given a linear program `model` with a current optimal basis, return a
 [`SensitivityReport`](@ref) object, which maps:
 
- - Every variable reference to a tuple `(d_lo, d_hi)::Tuple{Float64,Float64}`,
-   explaining how much the objective coefficient of the corresponding variable
-   can change by, such that the original basis remains optimal.
- - Every constraint reference to a tuple `(d_lo, d_hi)::Tuple{Float64,Float64}`,
-   explaining how much the right-hand side of the corresponding constraint can
-   change by, such that the basis remains optimal.
+  - Every variable reference to a tuple `(d_lo, d_hi)::Tuple{Float64,Float64}`,
+    explaining how much the objective coefficient of the corresponding variable
+    can change by, such that the original basis remains optimal.
+  - Every constraint reference to a tuple `(d_lo, d_hi)::Tuple{Float64,Float64}`,
+    explaining how much the right-hand side of the corresponding constraint can
+    change by, such that the basis remains optimal.
 
 Both tuples are relative, rather than absolute. So given a objective coefficient
 of `1.0` and a tuple `(-0.5, 0.5)`, the objective coefficient can range

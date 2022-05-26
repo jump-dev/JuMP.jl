@@ -134,6 +134,7 @@ The functional equivalent of the [`@objective`](@ref) macro.
 
 Sets the objective sense and objective function simultaneously, and is
 equivalent to:
+
 ```julia
 set_objective_sense(model, sense)
 set_objective_function(model, func)
@@ -197,12 +198,14 @@ julia> objective_function(model, QuadExpr)
 julia> typeof(objective_function(model, QuadExpr))
 GenericQuadExpr{Float64,VariableRef}
 ```
+
 We see with the last two commands that even if the objective function is affine,
 as it is convertible to a quadratic function, it can be queried as a quadratic
 function and the result is quadratic.
 
 However, it is not convertible to a variable.
-```jldoctest objective_function; filter = r"MathOptInterface\\."s
+
+```jldoctest objective_function; filter = r"MathOptInterface."s
 julia> objective_function(model, VariableRef)
 ERROR: InexactError: convert(MathOptInterface.VariableIndex, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[MathOptInterface.ScalarAffineTerm{Float64}(2.0, MathOptInterface.VariableIndex(1))], 1.0))
 [...]

@@ -40,10 +40,13 @@ end
     )
 
 A helper method that re-writes
+
 ```julia
 @constraint(model, X >= Y, extra)
 ```
+
 into
+
 ```julia
 @constraint(model, X - Y in extra)
 ```
@@ -67,10 +70,13 @@ end
     )
 
 A helper method that re-writes
+
 ```julia
 @constraint(model, Y <= X, extra)
 ```
+
 into
+
 ```julia
 @constraint(model, X - Y in extra)
 ```
@@ -126,8 +132,10 @@ shortcut for the `MOI.SecondOrderCone`.
 ## Examples
 
 The following constrains ``\\|(x-1, x-2)\\|_2 \\le t`` and ``t \\ge 0``:
+
 ```jldoctest; setup = :(using JuMP)
 julia> model = Model();
+
 
 julia> @variable(model, x)
 x
@@ -135,7 +143,7 @@ x
 julia> @variable(model, t)
 t
 
-julia> @constraint(model, [t, x-1, x-2] in SecondOrderCone())
+julia> @constraint(model, [t, x - 1, x - 2] in SecondOrderCone())
 [t, x - 1, x - 2] ∈ MathOptInterface.SecondOrderCone(3)
 ```
 """
@@ -153,8 +161,10 @@ euclidean norm of a vector `x` to be less than or equal to ``2tu`` where `t` and
 ## Examples
 
 The following constrains ``\\|(x-1, x-2)\\|^2_2 \\le 2tx`` and ``t, x \\ge 0``:
+
 ```jldoctest; setup = :(using JuMP)
 julia> model = Model();
+
 
 julia> @variable(model, x)
 x
@@ -162,7 +172,7 @@ x
 julia> @variable(model, t)
 t
 
-julia> @constraint(model, [t, x, x-1, x-2] in RotatedSecondOrderCone())
+julia> @constraint(model, [t, x, x - 1, x - 2] in RotatedSecondOrderCone())
 [t, x, x - 1, x - 2] ∈ MathOptInterface.RotatedSecondOrderCone(4)
 ```
 """

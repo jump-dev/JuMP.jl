@@ -49,10 +49,11 @@ end
 
 Run each micro benchmark function `N` times.
 
- * If `N == 0`, uses the `BenchmarkTools.@benchmark` macro.
- * If `N > 0`, runs the function multiple times with `@time`.
+  - If `N == 0`, uses the `BenchmarkTools.@benchmark` macro.
+  - If `N > 0`, runs the function multiple times with `@time`.
 
 !!! warning
+    
     This is not a rigorous benchmark if `N > 0`. It uses `@time`, so it doesn't
     accurately capture top-level compilation and inference. Use `N = 0` for a
     more rigorous evaluation, or use `JuMPBenchmarks.benchmark` for a comparison

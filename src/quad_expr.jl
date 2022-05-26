@@ -41,10 +41,10 @@ An expression type representing an quadratic expression of the form:
 
 ## Fields
 
- * `.aff`: an [`GenericAffExpr`](@ref) representing the affine portion of the
-   expression.
- * `.terms`: an `OrderedDict`, with keys of `UnorderedPair{VarType}` and
-   values of `CoefType`, describing the sparse list of terms `q`.
+  - `.aff`: an [`GenericAffExpr`](@ref) representing the affine portion of the
+    expression.
+  - `.terms`: an `OrderedDict`, with keys of `UnorderedPair{VarType}` and
+    values of `CoefType`, describing the sparse list of terms `q`.
 """
 mutable struct GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
     aff::GenericAffExpr{CoefType,VarType}
@@ -503,7 +503,7 @@ end
     QuadExpr
 
 An alias for `GenericQuadExpr{Float64,VariableRef}`, the specific
-    [`GenericQuadExpr`](@ref) used by JuMP.
+[`GenericQuadExpr`](@ref) used by JuMP.
 """
 const QuadExpr = GenericQuadExpr{Float64,VariableRef}
 

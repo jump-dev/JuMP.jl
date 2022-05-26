@@ -3,6 +3,7 @@
 
 always_for_in = true
 always_use_return = true
+format_docstrings = true
 margin = 80
 remove_extra_newlines = true
 separate_kwargs_with_semicolon = true
