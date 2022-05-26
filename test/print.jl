@@ -629,7 +629,7 @@ Subject to
  u[1] binary
  u[2] binary
  u[3] binary
-""",
+""";
         repl = :print,
     )
 
@@ -654,7 +654,7 @@ Objective function type: $(GenericAffExpr{Float64,VariableType})
 Model mode: AUTOMATIC
 CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
-Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""",
+Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""";
         repl = :show,
     )
 
@@ -693,7 +693,7 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""",
         " & u_{1} \\in \\{0, 1\\}\\\\\n" *
         " & u_{2} \\in \\{0, 1\\}\\\\\n" *
         " & u_{3} \\in \\{0, 1\\}\\\\\n" *
-        "\\end{aligned}",
+        "\\end{aligned}";
         repl = :print,
     )
 
@@ -716,7 +716,7 @@ Variables: 2
 Model mode: AUTOMATIC
 CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
-Names registered in the model: x, y""",
+Names registered in the model: x, y""";
         repl = :show,
     )
 
@@ -735,7 +735,7 @@ Variable: 1
 Model mode: AUTOMATIC
 CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
-Names registered in the model: x""",
+Names registered in the model: x""";
         repl = :show,
     )
     return
@@ -780,7 +780,7 @@ Subject to
  a + b - 10 c - 2 x + c1 $le 1.0
  a*b $le 2.0
  [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
-""",
+""";
         repl = :print,
     )
 
@@ -793,7 +793,7 @@ Maximization problem with:
 Variables: 13
 Objective function type: $(GenericAffExpr{Float64,VariableType})
 Constraints: 3
-Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""",
+Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""";
         repl = :show,
     )
 
@@ -805,7 +805,7 @@ Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""",
         "\\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\\n" *
         " & a\\times b \\leq 2.0\\\\\n" *
         " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\\n" *
-        "\\end{aligned}",
+        "\\end{aligned}";
         repl = :print,
     )
 
@@ -824,7 +824,7 @@ An Abstract JuMP Model
 Feasibility problem with:
 Variables: 2
 Constraint: 1
-Names registered in the model: x, y""",
+Names registered in the model: x, y""";
         repl = :show,
     )
 
@@ -840,7 +840,7 @@ An Abstract JuMP Model
 Feasibility problem with:
 Variable: 1
 Constraint: 1
-Names registered in the model: x""",
+Names registered in the model: x""";
         repl = :show,
     )
     return
@@ -866,7 +866,7 @@ Nonlinear: 1 constraint
 Model mode: AUTOMATIC
 CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
-Names registered in the model: x""",
+Names registered in the model: x""";
         repl = :show,
     )
 
@@ -879,7 +879,7 @@ Subject to
  subexpression[1] - 0.0 $eq 0
 With NL expressions
  subexpression[1]: cos(x)
-""",
+""";
         repl = :print,
     )
 
@@ -890,7 +890,7 @@ With NL expressions
         "\\max\\quad & sin(x)\\\\\n" *
         "\\text{Subject to} \\quad & subexpression_{1} - 0.0 = 0\\\\\n" *
         "\\text{With NL expressions} \\quad & subexpression_{1}: cos(x)\\\\\n" *
-        "\\end{aligned}",
+        "\\end{aligned}";
         repl = :print,
     )
     return
@@ -911,7 +911,7 @@ function test_latex_feasibility()
     io_test(
         MIME("text/latex"),
         Model(),
-        "\\begin{aligned}\n\\text{feasibility}\\\\\n\\end{aligned}",
+        "\\begin{aligned}\n\\text{feasibility}\\\\\n\\end{aligned}";
         repl = :print,
     )
     return
@@ -924,7 +924,7 @@ function test_latex_min()
     io_test(
         MIME("text/latex"),
         model,
-        "\\begin{aligned}\n\\min\\quad & x\\\\\n\\end{aligned}",
+        "\\begin{aligned}\n\\min\\quad & x\\\\\n\\end{aligned}";
         repl = :print,
     )
     return

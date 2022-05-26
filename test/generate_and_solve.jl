@@ -48,7 +48,7 @@ using JuMP
         set_optimizer(
             m,
             () -> MOIU.MockOptimizer(
-                MOIU.Model{Float64}(),
+                MOIU.Model{Float64}();
                 eval_objective_value = false,
             ),
         )
@@ -120,7 +120,7 @@ using JuMP
 
     @testset "LP (Direct mode)" begin
         mockoptimizer = MOIU.MockOptimizer(
-            MOIU.Model{Float64}(),
+            MOIU.Model{Float64}();
             eval_objective_value = false,
         )
 
@@ -197,7 +197,7 @@ using JuMP
         # Tests the solver= keyword.
         m = Model(
             () -> MOIU.MockOptimizer(
-                MOIU.Model{Float64}(),
+                MOIU.Model{Float64}();
                 eval_objective_value = false,
             ),
         )
@@ -304,7 +304,7 @@ using JuMP
         set_optimizer(
             m,
             () -> MOIU.MockOptimizer(
-                MOIU.Model{Float64}(),
+                MOIU.Model{Float64}();
                 eval_objective_value = false,
             ),
         )
@@ -405,7 +405,7 @@ using JuMP
         )
 
         mockoptimizer = MOIU.MockOptimizer(
-            MOIU.Model{Float64}(),
+            MOIU.Model{Float64}();
             eval_objective_value = false,
             eval_variable_constraint_dual = false,
         )
@@ -504,7 +504,7 @@ using JuMP
         )
 
         mockoptimizer = MOIU.MockOptimizer(
-            MOIU.Model{Float64}(),
+            MOIU.Model{Float64}();
             eval_objective_value = false,
             eval_variable_constraint_dual = false,
         )
@@ -619,7 +619,7 @@ c2: x + y <= 1.0
         set_optimizer(
             m,
             () -> MOIU.MockOptimizer(
-                MOIU.Model{Float64}(),
+                MOIU.Model{Float64}();
                 eval_objective_value = false,
             ),
         )

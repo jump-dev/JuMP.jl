@@ -174,9 +174,9 @@ function test_Check_Julia_condition_expression_parsing()
 end
 
 function test_add_positional_args()
-    call = :(f(1, a = 2))
+    call = :(f(1; a = 2))
     @test JuMP._add_positional_args(call, [:(MyObject)]) isa Nothing
-    @test call == :(f(1, $(Expr(:escape, :MyObject)), a = 2))
+    @test call == :(f(1, $(Expr(:escape, :MyObject)); a = 2))
     return
 end
 

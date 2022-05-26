@@ -310,7 +310,7 @@ optimize!(model)  # Solve for the control and state
 ## Show final cross-range of the solution
 println(
     "Final latitude θ = ",
-    round(objective_value(model) |> rad2deg, digits = 2),
+    round(objective_value(model) |> rad2deg; digits = 2),
     "°",
 )
 
@@ -327,24 +327,24 @@ nothing #hide
 
 plt_altitude = plot(
     ts,
-    value.(scaled_h),
+    value.(scaled_h);
     legend = nothing,
     title = "Altitude (100,000 ft)",
 )
 plt_longitude =
-    plot(ts, rad2deg.(value.(ϕ)), legend = nothing, title = "Longitude (deg)")
+    plot(ts, rad2deg.(value.(ϕ)); legend = nothing, title = "Longitude (deg)")
 plt_latitude =
-    plot(ts, rad2deg.(value.(θ)), legend = nothing, title = "Latitude (deg)")
+    plot(ts, rad2deg.(value.(θ)); legend = nothing, title = "Latitude (deg)")
 plt_velocity = plot(
     ts,
-    value.(scaled_v),
+    value.(scaled_v);
     legend = nothing,
     title = "Velocity (1000 ft/sec)",
 )
 plt_flight_path =
-    plot(ts, rad2deg.(value.(γ)), legend = nothing, title = "Flight Path (deg)")
+    plot(ts, rad2deg.(value.(γ)); legend = nothing, title = "Flight Path (deg)")
 plt_azimuth =
-    plot(ts, rad2deg.(value.(ψ)), legend = nothing, title = "Azimuth (deg)")
+    plot(ts, rad2deg.(value.(ψ)); legend = nothing, title = "Azimuth (deg)")
 
 plt = plot(
     plt_altitude,
@@ -352,7 +352,7 @@ plt = plot(
     plt_longitude,
     plt_flight_path,
     plt_latitude,
-    plt_azimuth,
+    plt_azimuth;
     layout = grid(3, 2),
     linewidth = 2,
     size = (700, 700),
@@ -370,19 +370,19 @@ end
 
 plt_attack_angle = plot(
     ts[1:end-1],
-    rad2deg.(value.(α)[1:end-1]),
+    rad2deg.(value.(α)[1:end-1]);
     legend = nothing,
     title = "Angle of Attack (deg)",
 )
 plt_bank_angle = plot(
     ts[1:end-1],
-    rad2deg.(value.(β)[1:end-1]),
+    rad2deg.(value.(β)[1:end-1]);
     legend = nothing,
     title = "Bank Angle (deg)",
 )
 plt_heating = plot(
     ts,
-    q.(value.(scaled_h) * 1e5, value.(scaled_v) * 1e4, value.(α)),
+    q.(value.(scaled_h) * 1e5, value.(scaled_v) * 1e4, value.(α));
     legend = nothing,
     title = "Heating (BTU/ft/ft/sec)",
 )
@@ -390,7 +390,7 @@ plt_heating = plot(
 plt = plot(
     plt_attack_angle,
     plt_bank_angle,
-    plt_heating,
+    plt_heating;
     layout = grid(3, 1),
     linewidth = 2,
     size = (700, 700),
@@ -401,7 +401,7 @@ plt = plot(
 plt = plot(
     rad2deg.(value.(ϕ)),
     rad2deg.(value.(θ)),
-    value.(scaled_h),
+    value.(scaled_h);
     linewidth = 2,
     legend = nothing,
     title = "Space Shuttle Reentry Trajectory",

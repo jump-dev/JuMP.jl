@@ -19,7 +19,7 @@ function benchmark(;
     kwargs...,
 )
     group = BenchmarkTools.BenchmarkGroup()
-    for name in names(@__MODULE__, all = true)
+    for name in names(@__MODULE__; all = true)
         if startswith("$(name)", "bench_")
             f = getfield(@__MODULE__, name)
             group[name] = BenchmarkTools.@benchmarkable $f()
@@ -59,7 +59,7 @@ Run each micro benchmark function `N` times.
     with prior benchmarks.
 """
 function run_microbenchmark(N::Int)
-    for name in sort!(names(@__MODULE__, all = true))
+    for name in sort!(names(@__MODULE__; all = true))
         if startswith("$(name)", "bench_")
             f = getfield(@__MODULE__, name)
             @info("$(name)")
@@ -339,7 +339,7 @@ function _dense_axis_constraints(key = :index)
     n = 1_000
     model = Model()
     mock = MOIU.MockOptimizer(
-        MOIU.Model{Float64}(),
+        MOIU.Model{Float64}();
         eval_variable_constraint_dual = false,
     )
     MOIU.set_mock_optimize!(
@@ -367,7 +367,7 @@ function _sparse_axis_constraints(key = :index)
     n = 1_000
     model = Model()
     mock = MOIU.MockOptimizer(
-        MOIU.Model{Float64}(),
+        MOIU.Model{Float64}();
         eval_variable_constraint_dual = false,
     )
     MOIU.set_mock_optimize!(
@@ -582,7 +582,7 @@ if length(ARGS) > 0
     end
     _run("-f") do baseline
         compare_against = findfirst(isequal("--compare"), ARGS) !== nothing
-        return JuMPBenchmarks.benchmark(
+        return JuMPBenchmarks.benchmark(;
             baseline = baseline,
             compare_against = compare_against,
         )

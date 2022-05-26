@@ -64,7 +64,7 @@ function test_result_attributes()
 end
 
 function test_result_attributes_after_empty()
-    return _test_result_attributes(test_empty = true)
+    return _test_result_attributes(; test_empty = true)
 end
 
 function fill_small_test_model!(model)
@@ -195,7 +195,7 @@ function test_optimize_hook()
     @test_throws err optimize!(m, unexpected_arg = 1)
     JuMP.set_optimize_hook(m, (m; my_new_arg = nothing) -> my_new_arg)
     @test optimize!(m) === nothing
-    @test optimize!(m, my_new_arg = 1) == 1
+    @test optimize!(m; my_new_arg = 1) == 1
 end
 
 function test_universal_fallback()
@@ -226,7 +226,7 @@ end
 function test_bridges_automatic_disabled()
     # Automatic bridging disabled with `add_bridges` keyword
     model = Model(
-        () -> MOIU.MockOptimizer(SimpleLPModel{Float64}()),
+        () -> MOIU.MockOptimizer(SimpleLPModel{Float64}());
         add_bridges = false,
     )
     @test !JuMP.bridge_constraints(model)
@@ -267,7 +267,7 @@ end
 
 function mock_factory()
     mock = MOIU.MockOptimizer(
-        MOIU.Model{Float64}(),
+        MOIU.Model{Float64}();
         eval_variable_constraint_dual = false,
     )
     function optimize!(mock)
@@ -368,7 +368,7 @@ function test_bridges_add_bridgeable_con_set_optimizer()
 end
 
 function test_bridge_graph_false()
-    model = Model(mock_factory, add_bridges = false)
+    model = Model(mock_factory; add_bridges = false)
     @variable(model, x)
     @test_throws(
         ErrorException(
@@ -507,7 +507,7 @@ function copy_model_style_mode(use_copy_model, filter_mode)
         if filter_mode
             filter_constraints = (cr) -> cr != cref
             new_model, reference_map =
-                JuMP.copy_model(model, filter_constraints = filter_constraints)
+                JuMP.copy_model(model; filter_constraints = filter_constraints)
         else
             new_model, reference_map = JuMP.copy_model(model)
         end
@@ -690,7 +690,7 @@ function test_copy_filter_array()
 
     filter_constraints = (cr) -> cr != cref[1]
     new_model, reference_map =
-        JuMP.copy_model(model, filter_constraints = filter_constraints)
+        JuMP.copy_model(model; filter_constraints = filter_constraints)
     @test num_constraints(
         new_model,
         GenericAffExpr{Float64,VariableRef},
@@ -718,7 +718,7 @@ function test_copy_filter_denseaxisarray()
 
     filter_constraints = (cr) -> cr != cref[1]
     new_model, reference_map =
-        JuMP.copy_model(model, filter_constraints = filter_constraints)
+        JuMP.copy_model(model; filter_constraints = filter_constraints)
     @test num_constraints(
         new_model,
         GenericAffExpr{Float64,VariableRef},
@@ -746,7 +746,7 @@ function test_copy_filter_sparseaxisarray()
 
     filter_constraints = (cr) -> cr != cref[1]
     new_model, reference_map =
-        JuMP.copy_model(model, filter_constraints = filter_constraints)
+        JuMP.copy_model(model; filter_constraints = filter_constraints)
     @test num_constraints(
         new_model,
         GenericAffExpr{Float64,VariableRef},
@@ -775,7 +775,7 @@ function test_copy_conflict()
     set_optimizer(
         model,
         () -> MOIU.MockOptimizer(
-            MOIU.Model{Float64}(),
+            MOIU.Model{Float64}();
             eval_objective_value = false,
         ),
     )

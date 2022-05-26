@@ -15,7 +15,7 @@ function _logo_no_text(; color::String)
     setlinecap("round")
     line(Point(20, 68), Point(120, 28), :stroke)
     line(Point(4, 120), Point(120, 4), :stroke)
-    pts = box(Point(86, 84), 40, 40, vertices = true)
+    pts = box(Point(86, 84), 40, 40; vertices = true)
     @layer begin
         setcolor(Luxor.julia_red)
         circle(pts[1], 17, :fill)
@@ -333,12 +333,12 @@ dark_color(prefix) = isempty(prefix) ? "#ffe" : "#333"
 
 for prefix in ("", "-dark")
     path = joinpath(@__DIR__, "logo$(prefix)")
-    logo_with_text(filename = "$(path)-with-text.svg", color = color(prefix))
-    logo_with_text(
+    logo_with_text(; filename = "$(path)-with-text.svg", color = color(prefix))
+    logo_with_text(;
         filename = "$(path)-with-text-background.svg",
         color = color(prefix),
         background = dark_color(prefix),
     )
-    logo_square(filename = "$(path).svg", color = color(prefix))
-    logo_no_text(filename = "$(path)-without-text.svg", color = color(prefix))
+    logo_square(; filename = "$(path).svg", color = color(prefix))
+    logo_no_text(; filename = "$(path)-without-text.svg", color = color(prefix))
 end

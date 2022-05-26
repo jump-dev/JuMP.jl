@@ -287,7 +287,7 @@ _validate_pages()
 @time Documenter.makedocs(
     sitename = "JuMP",
     authors = "The JuMP core developers and contributors",
-    format = Documenter.HTML(
+    format = Documenter.HTML(;
         # See https://github.com/JuliaDocs/Documenter.jl/issues/868
         prettyurls = get(ENV, "CI", nothing) == "true",
         analytics = "UA-44252521-1",
@@ -328,7 +328,7 @@ if _PDF
     @time Documenter.makedocs(
         sitename = "JuMP",
         authors = "The JuMP core developers and contributors",
-        format = Documenter.LaTeX(platform = latex_platform),
+        format = Documenter.LaTeX(; platform = latex_platform),
         build = "latex_build",
         pages = _PAGES,
     )
@@ -345,7 +345,7 @@ end
 #  Deploy everything in `build`
 # ==============================================================================
 
-Documenter.deploydocs(
+Documenter.deploydocs(;
     repo = "github.com/jump-dev/JuMP.jl.git",
     push_preview = true,
 )

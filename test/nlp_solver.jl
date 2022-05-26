@@ -825,8 +825,8 @@ const MOI = MathOptInterface
 
     @testset "User-defined functions" begin
         model = Model(Ipopt.Optimizer)
-        JuMP.register(model, :my_f, 2, my_f, autodiff = true)
-        JuMP.register(model, :my_square, 1, my_square, autodiff = true)
+        JuMP.register(model, :my_f, 2, my_f; autodiff = true)
+        JuMP.register(model, :my_square, 1, my_square; autodiff = true)
 
         @variable(model, x[1:2] >= 0.5)
         @NLobjective(model, Min, my_f(x[1], my_square(x[2])))
@@ -840,7 +840,7 @@ const MOI = MathOptInterface
 
     @testset "Univariate user-defined functions" begin
         model = Model(Ipopt.Optimizer)
-        JuMP.register(model, :my_square, 1, my_square, autodiff = true)
+        JuMP.register(model, :my_square, 1, my_square; autodiff = true)
 
         # Test just univariate functions because this is a path where hessians
         # are enabled.
@@ -855,7 +855,7 @@ const MOI = MathOptInterface
 
     @testset "Issue #927" begin
         model = Model(Ipopt.Optimizer)
-        JuMP.register(model, :my_f, 2, my_f, autodiff = true)
+        JuMP.register(model, :my_f, 2, my_f; autodiff = true)
         @variable(model, x)
         @NLobjective(model, Min, my_f(x, x))
         set_silent(model)

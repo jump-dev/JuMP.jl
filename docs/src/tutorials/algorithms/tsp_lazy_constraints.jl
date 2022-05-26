@@ -225,7 +225,7 @@ time_iterated
 function plot_tour(X, Y, x)
     plt = Plots.plot()
     for (i, j) in selected_edges(x, size(x, 1))
-        Plots.plot!([X[i], X[j]], [Y[i], Y[j]], legend = false)
+        Plots.plot!([X[i], X[j]], [Y[i], Y[j]]; legend = false)
     end
     return plt
 end

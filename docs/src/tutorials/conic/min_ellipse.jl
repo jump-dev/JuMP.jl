@@ -66,8 +66,8 @@ bs = [
 cs = [0.1831, 0.3295, 0.2077, 0.2362, 0.3284, 0.4931];
 
 # We visualise the ellipses using the Plots package:
-pl = plot(size = (600, 600))
-thetas = range(0, 2pi + 0.05, step = 0.05)
+pl = plot(; size = (600, 600))
+thetas = range(0, 2pi + 0.05; step = 0.05)
 for (A, b, c) in zip(As, bs, cs)
     sqrtA = sqrt(A)
     b_tilde = sqrtA \ b
@@ -77,7 +77,7 @@ for (A, b, c) in zip(As, bs, cs)
         sqrt(alpha) * sin.(thetas) .- b_tilde[2],
     )
     ellipse = sqrtA \ rhs'
-    plot!(pl, ellipse[1, :], ellipse[2, :], label = nothing, c = :navy)
+    plot!(pl, ellipse[1, :], ellipse[2, :]; label = nothing, c = :navy)
 end
 plot(pl)
 
@@ -138,7 +138,7 @@ q = P \ value.(q_tilde)
 # Finally, overlaying the solution in the plot we see the minimal area enclosing ellipsoid.
 plot!(
     pl,
-    [tuple(P \ ([cos(theta), sin(theta)] - q)...) for theta in thetas],
+    [tuple(P \ ([cos(theta), sin(theta)] - q)...) for theta in thetas];
     c = :crimson,
     label = nothing,
 )
