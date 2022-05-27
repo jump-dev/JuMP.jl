@@ -51,12 +51,14 @@ julia> solution_summary(model)
 * Candidate solution
   Objective value      : -2.05143e+02
   Objective bound      : -0.00000e+00
+  Relative gap         : Inf
   Dual objective value : -2.05143e+02
 
 * Work counters
-  Solve time (sec)   : 8.31557e-04
+  Solve time (sec)   : 6.70987e-04
   Simplex iterations : 2
   Barrier iterations : 0
+  Node count         : -1
 
 julia> solution_summary(model, verbose=true)
 * Solver : HiGHS
@@ -73,6 +75,7 @@ julia> solution_summary(model, verbose=true)
 * Candidate solution
   Objective value      : -2.05143e+02
   Objective bound      : -0.00000e+00
+  Relative gap         : Inf
   Dual objective value : -2.05143e+02
   Primal solution :
     x : 1.54286e+01
@@ -82,9 +85,10 @@ julia> solution_summary(model, verbose=true)
     c1 : 1.71429e+00
 
 * Work counters
-  Solve time (sec)   : 8.31557e-04
+  Solve time (sec)   : 6.70987e-04
   Simplex iterations : 2
   Barrier iterations : 0
+  Node count         : -1
 ```
 
 ## Why did the solver stop?

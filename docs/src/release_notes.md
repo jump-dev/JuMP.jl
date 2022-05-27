@@ -1074,7 +1074,7 @@ The following changes are primarily of interest to developers of JuMP extensions
   * On Julia 0.4 and later, variables and coefficients may be multiplied in any order within macros. That is, variable*coefficient is now valid syntax.
   * ECOS supported for solving second-order conic problems.
 
-### Nonlinear programming
+### [Nonlinear programming](@id _nonlinear_programming_release_notes)
 
   * Support for skipping model generation when solving a sequence of nonlinear models with changing data.
   * Fix a memory leak when solving a sequence of nonlinear models.
