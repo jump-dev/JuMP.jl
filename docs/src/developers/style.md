@@ -199,47 +199,57 @@ validate all assumptions that the code makes. In particular:
 
 For example:
 ```jldoctest my_sum
-julia> """
-           my_sum_defensive(x::AbstractArray{T}) where {T}
+"""
+    my_sum_defensive(x::AbstractArray{T}) where {T}
 
-       Return the sum of the elements in the abstract array `x`.
+Return the sum of the elements in the abstract array `x`.
 
-       ## Assumptions
+## Assumptions
 
-       This function makes the following assumptions:
+This function makes the following assumptions:
 
-         * That `zero(T)` is defined
-         * That `x` supports the iteration interface
-         * That  `+(::T, ::T)` is defined
-       """
-       function my_sum_defensive(x::AbstractArray{T}) where {T}
-           try
-               # Some types may not define zero.
-               @assert zero(T) isa T
-               # Check iteration supported
-               @assert iterate(x) isa Union{Nothing,Tuple{T,Int}}
-               # Check that + is defined
-               @assert zero(T) + zero(T) isa Any
-           catch err
-               error(
-                   "Unable to call my_sum_defensive(::$(typeof(x))) because " *
-                   "it failed an internal assumption",
-               )
-           end
-           y = zero(T)
-           for xi in x
-               y += xi
-           end
-           return y
-       end
+ * That `zero(T)` is defined
+ * That `x` supports the iteration interface
+ * That  `+(::T, ::T)` is defined
+"""
+function my_sum_defensive(x::AbstractArray{T}) where {T}
+    try
+        # Some types may not define zero.
+        @assert zero(T) isa T
+        # Check iteration supported
+        @assert iterate(x) isa Union{Nothing,Tuple{T,Int}}
+        # Check that + is defined
+        @assert +(zero(T), zero(T)) isa Any
+    catch err
+        error(
+            "Unable to call my_sum_defensive(::$(typeof(x))) because " *
+            "it failed an internal assumption",
+        )
+    end
+    y = zero(T)
+    for xi in x
+        y += xi
+    end
+    return y
+end
+
+# output
+
 my_sum_defensive (generic function with 1 method)
+```
 
+This function works on `Vector{Float64}`:
+```jldoctest my_sum
 julia> my_sum_defensive([1.0, 2.0, 3.0])
 6.0
-
+```
+as well as `Matrix{Rational{Int}}`:
+```jldoctest my_sum
 julia> my_sum_defensive([(1//2) + (4//3)im; (6//5) + (7//11)im])
 17//10 + 65//33*im
-
+```
+and it throws an error when the assumptions aren't met:
+```jldoctest
 julia> my_sum_defensive(['a', 'b', 'c'])
 ERROR: Unable to call my_sum_defensive(::Vector{Char}) because it failed an internal assumption
 [...]
