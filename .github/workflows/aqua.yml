@@ -17,7 +17,6 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           using Pkg
-          Pkg.add(Pkg.PackageSpec(name = "MathOptInterface", rev = "master"))
           Pkg.add(PackageSpec(name="Aqua"))
           Pkg.develop(PackageSpec(path=pwd()))
           using JuMP, Aqua

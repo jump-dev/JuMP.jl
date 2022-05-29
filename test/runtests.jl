@@ -10,9 +10,6 @@
 # test/runtests.jl
 #############################################################################
 
-import Pkg
-Pkg.add(Pkg.PackageSpec(name = "MathOptInterface", rev = "master"))
-
 using Test
 
 t = time()
