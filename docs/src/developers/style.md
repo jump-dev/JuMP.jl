@@ -51,18 +51,20 @@ format("test")
 The following sections outline extra style guide points that are not fixed
 automatically by JuliaFormatter.
 
-### Dealing with abstract types and composition
+### Abstract types and composition
 
-Specifying argument types for methods is mostly optional in Julia. The benefit
-of this is that it enables functions and types from one package to be used with
-functions and types from another package via multiple dispatch.
+Specifying types for method arguments and struct fields is mostly optional in
+Julia. The benefit of this is that it enables functions and types from one
+package to be used with functions and types from another package via multiple
+dispatch.
 
 However, abstractly typed methods have two main drawbacks:
 
  1. It's possible to find out that you are working with unexpected types deep
-    in the call chain, potentially leading to hard-to-diagnose `MethodError`s.
- 2. Untyped function arguments can lead to correctness problems if the input
-    type does not satisfy assumptions made by the author of the function.
+    in the call chain, potentially leading to hard-to-diagnose [`MethodError`s](https://docs.julialang.org/en/v1/manual/methods/#Defining-Methods).
+ 2. Untyped function arguments can lead to correctness problems if the user's
+    choice of input type does not satisfy the assumptions made by the author of
+    the function.
 
 As a motivating example, consider the following function:
 ```jldoctest my_sum
@@ -76,13 +78,14 @@ julia> function my_sum(x)
 my_sum (generic function with 1 method)
 ```
 This function contains a number of implicit assumptions about the type of `x`:
- * `x` supports 1-based indexing and implements `length`
+ * `x` supports 1-based `getindex` and implements `length`
  * The element type of `x` supports addition with `0.0`, and then with the
    result of `x + 0.0`.
 
-(As a motivating example for the second point, [`VariableRef`](@ref) plus
-`Float64` produces an [`AffExpr`](@ref). Do not assume that `+(::T, ::T)`
-produces the type `T`.)
+!!! info
+    As a motivating example for the second point, [`VariableRef`](@ref) plus
+    `Float64` produces an [`AffExpr`](@ref). Do not assume that `+(::T, ::T)`
+    produces the type `T`.
 
 `my_sum` works as expected if the user passes in `Vector{Float64}`:
 ```jldoctest my_sum
@@ -146,8 +149,8 @@ public_function(x) = _internal_function(x)
 #### Dealing with correctness
 
 Dealing with correctness is harder, because Julia has no way of formally
-specifying interfaces that abstract types must implement. Innstead, here are two
-main options that you can use when writing and interacting with generic code:
+specifying interfaces that abstract types must implement. Instead, here are two
+options that you can use when writing and interacting with generic code:
 
 **Option 1: Use concrete types and let users extend new methods.**
 
@@ -174,7 +177,7 @@ ERROR: MethodError: no method matching my_sum_option_1(::String)
 ```
 and it allows other types to be supported in future by defining new methods:
 ```jldoctest my_sum
-julia> function my_sum_option_1(x::Array{T,N}) where {T,N}
+julia> function my_sum_option_1(x::Array{T,N}) where {T<:Number,N}
            y = zero(T)
            for i in eachindex(x)
                y += x[i]
@@ -185,6 +188,12 @@ my_sum_option_1 (generic function with 2 methods)
 ```
 Importantly, these methods do not have to be defined in the original package.
 
+!!! info
+    Some usage of abstract types is okay. For example, in `my_sum_option_1`, we
+    allowed the element type, `T`, to be a subtype of `Number`. This is fairly
+    safe, but it still has an implicit assumption that `T` supports `zero(T)`
+    and `+(::T, ::T)`.
+
 **Option 2: Program defensively, and validate all assumptions.**
 
 An alternative is to program defensively, and to rigorously document and
@@ -192,9 +201,10 @@ validate all assumptions that the code makes. In particular:
 
  1. All assumptions on abstract types that aren't guaranteed by the definition
     of the abstract type (for example, optional methods without a fallback)
-    should be documented
+    should be documented.
  2. If practical, the assumptions should be checked in code, and informative
-    error messages should be provided to the user if the assumptions are not met
+    error messages should be provided to the user if the assumptions are not
+    met.
  3. Tests should cover for a range of corner cases and argument types.
 
 For example:
