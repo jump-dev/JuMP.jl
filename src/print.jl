@@ -341,7 +341,7 @@ Return a string representation of the nonlinear constraint `c` belonging to
 function nonlinear_constraint_string(
     model::Model,
     mode::MIME,
-    c::Nonlinear.ConstraintIndex,
+    c::MOI.Nonlinear.ConstraintIndex,
 )
     constraint = model.nlp_data.constraints[c]
     body = nonlinear_expr_string(model, mode, constraint.expression)
@@ -377,7 +377,7 @@ end
     nonlinear_expr_string(
         model::Model,
         mode::MIME,
-        c::Nonlinear.Expression,
+        c::MOI.Nonlinear.Expression,
     )
 
 Return a string representation of the nonlinear expression `c` belonging to
@@ -386,13 +386,13 @@ Return a string representation of the nonlinear expression `c` belonging to
 function nonlinear_expr_string(
     model::Model,
     mode::MIME,
-    c::Nonlinear.Expression,
+    c::MOI.Nonlinear.Expression,
 )
-    expr = Nonlinear.convert_to_expr(model.nlp_data, c)
+    expr = MOI.Nonlinear.convert_to_expr(model.nlp_data, c)
     # Walk terms, and replace
     #    MOI.VariableIndex => VariableRef
-    #    Nonlinear.ExpressionIndex => _NonlinearExpressionIO
-    #    Nonlinear.ParameterIndex => _NonlinearParameterIO
+    #    MOI.Nonlinear.ExpressionIndex => _NonlinearExpressionIO
+    #    MOI.Nonlinear.ParameterIndex => _NonlinearParameterIO
     expr = _replace_expr_terms(model, mode, expr)
     return string(_latexify_exponentials(mode, expr))
 end
@@ -425,7 +425,7 @@ function Base.show(io::IO, x::_NonlinearExpressionIO)
     return print(io, "subexpression[$(x.value)]")
 end
 
-function _replace_expr_terms(model, mode, x::Nonlinear.ExpressionIndex)
+function _replace_expr_terms(model, mode, x::MOI.Nonlinear.ExpressionIndex)
     return _NonlinearExpressionIO(model, mode, x.value)
 end
 
@@ -448,7 +448,7 @@ function Base.show(io::IO, x::_NonlinearParameterIO)
     return print(io, "parameter[$(x.value)]")
 end
 
-function _replace_expr_terms(model, mode, x::Nonlinear.ParameterIndex)
+function _replace_expr_terms(model, mode, x::MOI.Nonlinear.ParameterIndex)
     return _NonlinearParameterIO(model, mode, x.value)
 end
 
@@ -788,13 +788,13 @@ function Base.show(
 end
 
 function Base.show(io::IO, c::NonlinearConstraintRef)
-    index = Nonlinear.ConstraintIndex(c.index.value)
+    index = MOI.Nonlinear.ConstraintIndex(c.index.value)
     str = nonlinear_constraint_string(c.model, MIME("text/plain"), index)
     return print(io, str)
 end
 
 function Base.show(io::IO, ::MIME"text/latex", c::NonlinearConstraintRef)
-    index = Nonlinear.ConstraintIndex(c.index.value)
+    index = MOI.Nonlinear.ConstraintIndex(c.index.value)
     mode = MIME("text/latex")
     s = _wrap_in_math_mode(nonlinear_constraint_string(c.model, mode, index))
     return print(io, s)

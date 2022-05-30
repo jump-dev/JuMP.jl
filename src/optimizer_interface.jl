@@ -126,8 +126,8 @@ end
     optimize!(
         model::Model;
         ignore_optimize_hook = (model.optimize_hook === nothing),
-        differentiation_backend::Nonlinear.AbstractAutomaticDifferentiation =
-            Nonlinear.SparseReverseMode(),
+        differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation =
+            MOI.Nonlinear.SparseReverseMode(),
         kwargs...,
     )
 
@@ -144,18 +144,18 @@ arguments are provided.
 Pass `differentiation_backend` to set the `AbstractAutomaticDifferentiation`
 backend used by `MOI.Nonlinear` to compute derivatives of nonlinear programs.
 If you require only `:ExprGraph`, it is more efficient to pass
-`differentiation_backend = Nonlinear.ExprGraphOnly()`.
+`differentiation_backend = MOI.Nonlinear.ExprGraphOnly()`.
 """
 function optimize!(
     model::Model;
     ignore_optimize_hook = (model.optimize_hook === nothing),
-    differentiation_backend::Nonlinear.AbstractAutomaticDifferentiation = Nonlinear.SparseReverseMode(),
+    differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation = MOI.Nonlinear.SparseReverseMode(),
     kwargs...,
 )
     # The nlp_data is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
     if model.nlp_data !== nothing
-        evaluator = Nonlinear.Evaluator(
+        evaluator = MOI.Nonlinear.Evaluator(
             model.nlp_data,
             differentiation_backend,
             index.(all_variables(model)),

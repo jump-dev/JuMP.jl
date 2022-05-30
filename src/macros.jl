@@ -1830,7 +1830,7 @@ end
 
 model = NonlinearData()
 x = 2
-@foo(model, 2x + 1) == Nonlinear.parse_expression(model, :(2 * \$x + 1))
+@foo(model, 2x + 1) == MOI.Nonlinear.parse_expression(model, :(2 * \$x + 1))
 ```
 """
 function _parse_nonlinear_expression(model, x)
@@ -1842,9 +1842,9 @@ function _parse_nonlinear_expression(model, x)
     user_defined_operators = filter(operators) do (op, i)
         if op in (:<=, :>=, :(==), :<, :>, :&&, :||)
             return false
-        elseif i == 1 && op in Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
+        elseif i == 1 && op in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
             return false
-        elseif i > 1 && op in Nonlinear.DEFAULT_MULTIVARIATE_OPERATORS
+        elseif i > 1 && op in MOI.Nonlinear.DEFAULT_MULTIVARIATE_OPERATORS
             return false
         end
         return true
@@ -1863,7 +1863,7 @@ function _auto_register_expression(op_var, op, i)
     q_op = Meta.quot(op)
     return quote
         try
-            Nonlinear.register_operator_if_needed(
+            MOI.Nonlinear.register_operator_if_needed(
                 $op_var,
                 $q_op,
                 $i,
@@ -1871,7 +1871,7 @@ function _auto_register_expression(op_var, op, i)
             )
         catch
         end
-        Nonlinear.assert_registered($op_var, $q_op, $i)
+        MOI.Nonlinear.assert_registered($op_var, $q_op, $i)
     end
 end
 

@@ -1168,11 +1168,11 @@ function test_JuMP_extensions()
 end
 
 function test_rad2deg_and_deg2rad()
-    model = JuMP.Nonlinear.Model()
+    model = MOI.Nonlinear.Model()
     x = 1.0
     operators = model.operators
-    @test JuMP.Nonlinear.eval_univariate_hessian(operators, :rad2deg, x) == 0.0
-    @test JuMP.Nonlinear.eval_univariate_hessian(operators, :deg2rad, x) == 0.0
+    @test MOI.Nonlinear.eval_univariate_hessian(operators, :rad2deg, x) == 0.0
+    @test MOI.Nonlinear.eval_univariate_hessian(operators, :deg2rad, x) == 0.0
     return
 end
 
@@ -1277,7 +1277,7 @@ function test_user_defined_function_checked_error_univariate()
     @test g == [-2.0]
     err = ErrorException(
         "JuMP's autodiff of the user-defined function f failed with a " *
-        "MethodError.\n\n$(JuMP.Nonlinear._FORWARD_DIFF_METHOD_ERROR_HELPER)",
+        "MethodError.\n\n$(MOI.Nonlinear._FORWARD_DIFF_METHOD_ERROR_HELPER)",
     )
     @test_throws(err, MOI.eval_objective_gradient(nlp, g, [2.0]))
     return
@@ -1323,7 +1323,7 @@ function test_user_defined_function_checked_error_univariate()
     @test H == [2.0]
     err = ErrorException(
         "JuMP's autodiff of the user-defined function f failed with a " *
-        "MethodError.\n\n$(JuMP.Nonlinear._FORWARD_DIFF_METHOD_ERROR_HELPER)",
+        "MethodError.\n\n$(MOI.Nonlinear._FORWARD_DIFF_METHOD_ERROR_HELPER)",
     )
     @test_throws(
         err,
@@ -1353,7 +1353,7 @@ function test_user_defined_function_checked_error_multivariate()
     @test g == [-2.0, 1.0]
     err = ErrorException(
         "JuMP's autodiff of the user-defined function f failed with a " *
-        "MethodError.\n\n$(JuMP.Nonlinear._FORWARD_DIFF_METHOD_ERROR_HELPER)",
+        "MethodError.\n\n$(MOI.Nonlinear._FORWARD_DIFF_METHOD_ERROR_HELPER)",
     )
     @test_throws(err, MOI.eval_objective_gradient(nlp, g, [2.0, 1.0]))
     return
