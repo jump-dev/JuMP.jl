@@ -235,7 +235,7 @@ end
 
 # output
 
-my_sum_defensive (generic function with 1 method)
+my_sum_defensive
 ```
 
 This function works on `Vector{Float64}`:
@@ -249,7 +249,7 @@ julia> my_sum_defensive([(1//2) + (4//3)im; (6//5) + (7//11)im])
 17//10 + 65//33*im
 ```
 and it throws an error when the assumptions aren't met:
-```jldoctest
+```jldoctest my_sum
 julia> my_sum_defensive(['a', 'b', 'c'])
 ERROR: Unable to call my_sum_defensive(::Vector{Char}) because it failed an internal assumption
 [...]
