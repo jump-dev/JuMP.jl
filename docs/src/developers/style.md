@@ -54,9 +54,9 @@ automatically by JuliaFormatter.
 ### Abstract types and composition
 
 Specifying types for method arguments and struct fields is mostly optional in
-Julia. The benefit of this is that it enables functions and types from one
-package to be used with functions and types from another package via multiple
-dispatch.
+Julia. The benefit of abstract method arguments is that it enables functions
+and types from one package to be used with functions and types from another
+package via multiple dispatch.
 
 However, abstractly typed methods have two main drawbacks:
 
