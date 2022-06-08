@@ -58,6 +58,14 @@ function Base.size(::SparseAxisArray)
     )
 end
 
+function MutableArithmetics.broadcast_mutability(
+    x::SparseAxisArray,
+    op,
+    args::Vararg{Any,N},
+) where {N}
+    return MutableArithmetics.broadcast_mutability(typeof(x), op, typeof.(args)...)
+end
+
 # A `length` argument can be given because `IteratorSize` is `HasLength`
 function Base.similar(
     ::SparseAxisArray{S,N,K},
