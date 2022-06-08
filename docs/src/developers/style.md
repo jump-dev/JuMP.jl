@@ -84,8 +84,8 @@ This function contains a number of implicit assumptions about the type of `x`:
 
 !!! info
     As a motivating example for the second point, [`VariableRef`](@ref) plus
-    `Float64` produces an [`AffExpr`](@ref). Do not assume that `+(::T, ::T)`
-    produces the type `T`.
+    `Float64` produces an [`AffExpr`](@ref). Do not assume that `+(::A, ::B)`
+    produces the type `A` or `B`.
 
 `my_sum` works as expected if the user passes in `Vector{Float64}`:
 ```jldoctest my_sum
