@@ -58,12 +58,17 @@ function Base.size(::SparseAxisArray)
     )
 end
 
+# Needed to work-around JuMP issue #2999
 function MutableArithmetics.broadcast_mutability(
     x::SparseAxisArray,
     op,
     args::Vararg{Any,N},
 ) where {N}
-    return MutableArithmetics.broadcast_mutability(typeof(x), op, typeof.(args)...)
+    return MutableArithmetics.broadcast_mutability(
+        typeof(x),
+        op,
+        typeof.(args)...,
+    )
 end
 
 # A `length` argument can be given because `IteratorSize` is `HasLength`
