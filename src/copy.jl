@@ -152,7 +152,7 @@ function copy_model(
     new_model.optimize_hook = model.optimize_hook
 
     # TODO copy NLP data
-    if model.nlp_data !== nothing
+    if model.nlp_model !== nothing
         error(
             "copy is not supported yet for models with nonlinear constraints",
             " and/or nonlinear objective function",
@@ -282,11 +282,11 @@ function Base.deepcopy(::Model)
 end
 
 function MOI.copy_to(dest::MOI.ModelLike, src::Model)
-    if src.nlp_data !== nothing
+    if src.nlp_model !== nothing
         # Re-set the NLP block in-case things have changed since last
         # solve.
         evaluator = MOI.Nonlinear.Evaluator(
-            src.nlp_data,
+            src.nlp_model,
             MOI.Nonlinear.SparseReverseMode(),
             index.(all_variables(src)),
         )

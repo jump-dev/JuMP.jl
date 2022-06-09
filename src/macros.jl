@@ -1851,7 +1851,7 @@ function _parse_nonlinear_expression(model, x)
     end
     if length(user_defined_operators) > 0
         op_var = gensym()
-        push!(code.args, :($op_var = $(model).nlp_data.operators))
+        push!(code.args, :($op_var = $(model).nlp_model.operators))
         for (op, i) in collect(user_defined_operators)
             push!(code.args, _auto_register_expression(op_var, op, i))
         end

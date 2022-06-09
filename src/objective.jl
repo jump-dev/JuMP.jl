@@ -102,8 +102,8 @@ function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
     MOI.set(model, attr, func)
     # Nonlinear objectives override regular objectives, so if there was a
     # nonlinear objective set, we must clear it.
-    if model.nlp_data !== nothing
-        model.nlp_data.objective = nothing
+    if model.nlp_model !== nothing
+        model.nlp_model.objective = nothing
     end
     return
 end
@@ -230,7 +230,7 @@ function set_objective_coefficient(
     variable::VariableRef,
     coeff::Real,
 )
-    if model.nlp_data !== nothing && _nlp_objective_function(model) !== nothing
+    if model.nlp_model !== nothing && _nlp_objective_function(model) !== nothing
         error("A nonlinear objective is already set in the model")
     end
     coeff = convert(Float64, coeff)::Float64

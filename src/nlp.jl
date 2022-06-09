@@ -4,8 +4,8 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 function _init_NLP(model::Model)
-    if model.nlp_data === nothing
-        model.nlp_data = MOI.Nonlinear.Model()
+    if model.nlp_model === nothing
+        model.nlp_model = MOI.Nonlinear.Model()
     end
     return
 end
@@ -141,7 +141,7 @@ julia> set_nonlinear_objective(model, MIN_SENSE, :(\$(x) + \$(x)^2))
 function set_nonlinear_objective(model::Model, sense::MOI.OptimizationSense, x)
     _init_NLP(model)
     set_objective_sense(model, sense)
-    MOI.Nonlinear.set_objective(model.nlp_data, x)
+    MOI.Nonlinear.set_objective(model.nlp_model, x)
     return
 end
 
@@ -152,10 +152,10 @@ Returns the nonlinear objective function or `nothing` if no nonlinear objective
 function is set.
 """
 function _nlp_objective_function(model::Model)
-    if model.nlp_data === nothing
+    if model.nlp_model === nothing
         return nothing
     end
-    return model.nlp_data.objective
+    return model.nlp_model.objective
 end
 
 ###
@@ -186,7 +186,7 @@ end
 
 function add_nonlinear_parameter(model::Model, value::Real)
     _init_NLP(model)
-    p = MOI.Nonlinear.add_parameter(model.nlp_data, Float64(value))
+    p = MOI.Nonlinear.add_parameter(model.nlp_model, Float64(value))
     return NonlinearParameter(model, p.value)
 end
 
@@ -207,7 +207,7 @@ value(p)
 ```
 """
 function value(p::NonlinearParameter)
-    return p.model.nlp_data[MOI.Nonlinear.ParameterIndex(p.index)]
+    return p.model.nlp_model[MOI.Nonlinear.ParameterIndex(p.index)]
 end
 
 """
@@ -227,7 +227,7 @@ value(p)
 ```
 """
 function set_value(p::NonlinearParameter, value::Number)
-    p.model.nlp_data[MOI.Nonlinear.ParameterIndex(p.index)] = value
+    p.model.nlp_model[MOI.Nonlinear.ParameterIndex(p.index)] = value
     return value
 end
 
@@ -278,7 +278,7 @@ subexpression[1]: x + x ^ 2.0
 """
 function add_nonlinear_expression(model::Model, ex)
     _init_NLP(model)
-    index = MOI.Nonlinear.add_expression(model.nlp_data, ex)
+    index = MOI.Nonlinear.add_expression(model.nlp_model, ex)
     return NonlinearExpression(model, index.value)
 end
 
@@ -330,7 +330,7 @@ Evaluate `ex` using `var_value(v)` as the value for each variable `v`.
 function value(var_value::Function, ex::NonlinearExpression)
     return MOI.Nonlinear.evaluate(
         _VariableValueMap(ex.model, var_value),
-        ex.model.nlp_data,
+        ex.model.nlp_model,
         MOI.Nonlinear.ExpressionIndex(ex.index),
     )
 end
@@ -407,7 +407,7 @@ julia> add_nonlinear_constraint(model, :(\$(x) + \$(x)^2 <= 1))
 function add_nonlinear_constraint(model::Model, ex::Expr)
     _init_NLP(model)
     f, set = _expr_to_constraint(ex)
-    c = MOI.Nonlinear.add_constraint(model.nlp_data, f, set)
+    c = MOI.Nonlinear.add_constraint(model.nlp_model, f, set)
     index = NonlinearConstraintIndex(c.value)
     return ConstraintRef(model, index, ScalarShape())
 end
@@ -423,7 +423,7 @@ function is_valid(model::Model, c::NonlinearConstraintRef)
     end
     _init_NLP(model)
     index = MOI.Nonlinear.ConstraintIndex(c.index.value)
-    return MOI.is_valid(model.nlp_data, index)
+    return MOI.is_valid(model.nlp_model, index)
 end
 
 """
@@ -432,7 +432,7 @@ end
 Returns the number of nonlinear constraints associated with the `model`.
 """
 function num_nonlinear_constraints(model::Model)
-    return model.nlp_data !== nothing ? length(model.nlp_data.constraints) : 0
+    return model.nlp_model !== nothing ? length(model.nlp_model.constraints) : 0
 end
 
 """
@@ -595,7 +595,7 @@ function register(
         error("If only the function is provided, must set autodiff=true")
     end
     _init_NLP(model)
-    MOI.Nonlinear.register_operator(model.nlp_data, op, dimension, f)
+    MOI.Nonlinear.register_operator(model.nlp_model, op, dimension, f)
     return
 end
 
@@ -667,12 +667,12 @@ function register(
                 "Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.",
             )
         end
-        MOI.Nonlinear.register_operator(model.nlp_data, op, dimension, f, ∇f)
+        MOI.Nonlinear.register_operator(model.nlp_model, op, dimension, f, ∇f)
     else
         if autodiff == true
             @warn("autodiff = true ignored since gradient is already provided.")
         end
-        MOI.Nonlinear.register_operator(model.nlp_data, op, dimension, f, ∇f)
+        MOI.Nonlinear.register_operator(model.nlp_model, op, dimension, f, ∇f)
     end
     return
 end
@@ -728,7 +728,7 @@ function register(
         )
     end
     _init_NLP(model)
-    MOI.Nonlinear.register_operator(model.nlp_data, op, dimension, f, ∇f, ∇²f)
+    MOI.Nonlinear.register_operator(model.nlp_model, op, dimension, f, ∇f, ∇²f)
     return
 end
 
@@ -753,7 +753,7 @@ function NLPEvaluator(
 )
     _init_NLP(model)
     return MOI.Nonlinear.Evaluator(
-        model.nlp_data,
+        model.nlp_model,
         differentiation_backend,
         index.(all_variables(model)),
     )

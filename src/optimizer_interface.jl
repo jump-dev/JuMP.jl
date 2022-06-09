@@ -153,11 +153,11 @@ function optimize!(
     differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation = MOI.Nonlinear.SparseReverseMode(),
     kwargs...,
 )
-    # The nlp_data is not kept in sync, so re-set it here.
+    # The nlp_model is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
-    if model.nlp_data !== nothing
+    if model.nlp_model !== nothing
         evaluator = MOI.Nonlinear.Evaluator(
-            model.nlp_data,
+            model.nlp_model,
             differentiation_backend,
             index.(all_variables(model)),
         )

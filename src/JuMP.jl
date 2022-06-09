@@ -143,7 +143,7 @@ mutable struct Model <: AbstractModel
     # where kwargs get passed along to subsequent solve calls.
     optimize_hook::Any
     # TODO: Document.
-    nlp_data::Union{Nothing,MOI.Nonlinear.Model}
+    nlp_model::Union{Nothing,MOI.Nonlinear.Model}
     # Dictionary from variable and constraint names to objects.
     obj_dict::Dict{Symbol,Any}
     # Number of times we add large expressions. Incremented and checked by
@@ -584,7 +584,7 @@ function Base.empty!(model::Model)::Model
     #   message (so keeping it helps to discover inefficiencies).
     MOI.empty!(model.moi_backend)
     empty!(model.shapes)
-    model.nlp_data = nothing
+    model.nlp_model = nothing
     empty!(model.obj_dict)
     empty!(model.ext)
     model.is_model_dirty = false
@@ -601,7 +601,7 @@ apart from optimizer attributes.
 function Base.isempty(model::Model)
     MOI.is_empty(model.moi_backend) || return false
     isempty(model.shapes) || return false
-    model.nlp_data === nothing || return false
+    model.nlp_model === nothing || return false
     isempty(model.obj_dict) && isempty(model.ext) || return false
     return !model.is_model_dirty
 end
