@@ -939,6 +939,20 @@ julia> num_constraints(model; count_variable_in_set_constraints = true)
 julia> num_constraints(model; count_variable_in_set_constraints = false)
 1
 ```
+The same also applies for [`all_constraints`](@ref):
+```jldoctest con_access
+julia> all_constraints(model; include_variable_in_set_constraints = true)
+5-element Vector{ConstraintRef}:
+ x[1] + x[2] ≤ 1.0
+ x[1] ≥ 1.0
+ x[2] ≥ 2.0
+ x[1] integer
+ x[2] integer
+
+julia> all_constraints(model; include_variable_in_set_constraints = false)
+1-element Vector{ConstraintRef}:
+ x[1] + x[2] ≤ 1.0
+```
 
 If you need finer-grained control on which constraints to include, use a variant
 of:

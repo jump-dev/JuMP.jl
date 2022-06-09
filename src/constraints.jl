@@ -1280,3 +1280,51 @@ function num_constraints(model::Model; count_variable_in_set_constraints::Bool)
     end
     return ret
 end
+
+"""
+    all_constraints(model::Model; include_variable_in_set_constraints::Bool)
+
+Return a list of all constraints in `model`.
+
+If `include_variable_in_set_constraints == true`, then `VariableRef` constraints
+such as `VariableRef`-in-`Integer` are included. To return only the structural
+constraints (e.g., the rows in the constraint matrix of a linear program), pass
+`include_variable_in_set_constraints = false`.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP)
+julia> model = Model();
+
+julia> @variable(model, x >= 0, Int);
+
+julia> @constraint(model, 2x <= 1);
+
+julia> @NLconstraint(model, x^2 <= 1);
+
+julia> all_constraints(model; include_variable_in_set_constraints = true)
+4-element Vector{ConstraintRef}:
+ 2 x ≤ 1.0
+ x ≥ 0.0
+ x integer
+ x ^ 2.0 - 1.0 ≤ 0
+
+julia> all_constraints(model; include_variable_in_set_constraints = false)
+2-element Vector{ConstraintRef}:
+ 2 x ≤ 1.0
+ x ^ 2.0 - 1.0 ≤ 0
+```
+"""
+function all_constraints(
+    model::Model;
+    include_variable_in_set_constraints::Bool,
+)
+    ret = ConstraintRef[]
+    for (F, S) in list_of_constraint_types(model)
+        if F != VariableRef || include_variable_in_set_constraints
+            append!(ret, all_constraints(model, F, S))
+        end
+    end
+    append!(ret, all_nonlinear_constraints(model))
+    return ret
+end
