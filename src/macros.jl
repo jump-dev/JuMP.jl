@@ -1905,8 +1905,8 @@ function _parse_nonlinear_expression_inner(code, x::Expr, operators)
     elseif _is_generator(x)
         return _parse_generator_expression(code, x, operators)
     elseif isexpr(x, Symbol("'"))
-        # Special-case the adjoint operator because it often happens with
-        # people trying to use linear algebra in macros.
+        # Treat the adjoint operator as a special case, because people often
+        # use linear algebra in macros.
         return esc(x)
     end
     y = gensym()

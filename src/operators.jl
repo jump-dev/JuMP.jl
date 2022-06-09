@@ -397,16 +397,16 @@ end
 ###############################################################################
 
 const _OP_HINT = "Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective."
-for func in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS[4:end],
-    typ in [:AbstractVariableRef, :GenericAffExpr, :GenericQuadExpr]
-
-    if func == :abs2 && (typ == :AbstractVariableRef || typ == :GenericAffExpr)
+for f in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
+    if f in (:+, :-, :abs) || !isdefined(Base, f)
         continue
     end
-
-    errstr = "$func is not defined for type $typ. $_OP_HINT"
-    if isdefined(Base, func)
-        @eval Base.$(func)(::$typ) = error($errstr)
+    for T in (:AbstractVariableRef, :GenericAffExpr, :GenericQuadExpr)
+        if f == :abs2 && (T == :AbstractVariableRef || T == :GenericAffExpr)
+            continue
+        end
+        error_string = "$f is not defined for type $T. $_OP_HINT"
+        @eval Base.$(f)(::$T) = error($error_string)
     end
 end
 

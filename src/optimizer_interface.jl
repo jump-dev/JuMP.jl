@@ -141,8 +141,9 @@ solved as if the hook was not set. Keyword arguments `kwargs` are passed to the
 `optimize_hook`. An error is thrown if `optimize_hook` is `nothing` and keyword
 arguments are provided.
 
-Pass `differentiation_backend` to set the `AbstractAutomaticDifferentiation`
-backend used by `MOI.Nonlinear` to compute derivatives of nonlinear programs.
+Pass `differentiation_backend` to set the [`MOI.Nonlinear.AbstractAutomaticDifferentiation`](@ref)
+backend used to compute derivatives of nonlinear programs.
+
 If you require only `:ExprGraph`, it is more efficient to pass
 `differentiation_backend = MOI.Nonlinear.ExprGraphOnly()`.
 """
