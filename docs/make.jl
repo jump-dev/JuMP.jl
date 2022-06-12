@@ -291,6 +291,7 @@ _validate_pages()
         # See https://github.com/JuliaDocs/Documenter.jl/issues/868
         prettyurls = get(ENV, "CI", nothing) == "true",
         analytics = "UA-44252521-1",
+        mathengine = Documenter.MathJax2(),
         collapselevel = 1,
         assets = ["assets/extra_styles.css"],
         sidebar_sitename = false,
