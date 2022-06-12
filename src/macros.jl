@@ -1805,7 +1805,7 @@ main challenges:
 
  1. We need to evaluate local variables into the expressions. This is reasonably
     easy, anywhere we see a symbol that is not a function call, replace it by
-    esc(x).
+    `esc(x)`.
 
  2. We need to identify un-registered user-defined functions so that we can
     attempt to automatically register them if their symbolic name exists in the

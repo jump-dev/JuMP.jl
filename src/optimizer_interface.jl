@@ -126,7 +126,7 @@ end
     optimize!(
         model::Model;
         ignore_optimize_hook = (model.optimize_hook === nothing),
-        differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation =
+        _differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation =
             MOI.Nonlinear.SparseReverseMode(),
         kwargs...,
     )
@@ -141,16 +141,21 @@ solved as if the hook was not set. Keyword arguments `kwargs` are passed to the
 `optimize_hook`. An error is thrown if `optimize_hook` is `nothing` and keyword
 arguments are provided.
 
-Pass `differentiation_backend` to set the [`MOI.Nonlinear.AbstractAutomaticDifferentiation`](@ref)
-backend used to compute derivatives of nonlinear programs.
+## Experimental features
+
+These features may change or be removed in any future version of JuMP.
+
+Pass `_differentiation_backend` to set the
+[`MOI.Nonlinear.AbstractAutomaticDifferentiation`](@ref) backend used to compute
+derivatives of nonlinear programs.
 
 If you require only `:ExprGraph`, it is more efficient to pass
-`differentiation_backend = MOI.Nonlinear.ExprGraphOnly()`.
+`_differentiation_backend = MOI.Nonlinear.ExprGraphOnly()`.
 """
 function optimize!(
     model::Model;
     ignore_optimize_hook = (model.optimize_hook === nothing),
-    differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation = MOI.Nonlinear.SparseReverseMode(),
+    _differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation = MOI.Nonlinear.SparseReverseMode(),
     kwargs...,
 )
     # The nlp_model is not kept in sync, so re-set it here.
@@ -158,7 +163,7 @@ function optimize!(
     if model.nlp_model !== nothing
         evaluator = MOI.Nonlinear.Evaluator(
             model.nlp_model,
-            differentiation_backend,
+            _differentiation_backend,
             index.(all_variables(model)),
         )
         MOI.set(model, MOI.NLPBlock(), MOI.NLPBlockData(evaluator))
