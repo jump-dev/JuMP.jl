@@ -53,10 +53,10 @@ automatically by JuliaFormatter.
 
 ### Abstract types and composition
 
-Specifying types for method arguments and struct fields is mostly optional in
-Julia. The benefit of abstract method arguments is that it enables functions
-and types from one package to be used with functions and types from another
-package via multiple dispatch.
+Specifying types for method arguments is mostly optional in Julia. The benefit
+of abstract method arguments is that it enables functions and types from one
+package to be used with functions and types from another package via multiple
+dispatch.
 
 However, abstractly typed methods have two main drawbacks:
 
@@ -85,7 +85,7 @@ This function contains a number of implicit assumptions about the type of `x`:
 !!! info
     As a motivating example for the second point, [`VariableRef`](@ref) plus
     `Float64` produces an [`AffExpr`](@ref). Do not assume that `+(::A, ::B)`
-    produces the type `A` or `B`.
+    produces an instance of the type `A` or `B`.
 
 `my_sum` works as expected if the user passes in `Vector{Float64}`:
 ```jldoctest my_sum
@@ -110,7 +110,13 @@ passed by the user.
 
 #### Dealing with `MethodError`s
 
-All code must follow the `MethodError` principle:
+This section diverges from the [Julia style guide](https://docs.julialang.org/en/v1.6/manual/style-guide/#Avoid-writing-overly-specific-types),
+as well as other common guides like [SciML](https://github.com/SciML/SciMLStyle#generic-code-is-preferred-unless-code-is-known-to-be-specific).
+The following suggestions are intended to provide a friendlier experience for
+novice Julia programmers, at the cost of limiting the power and flexibility of
+advanced Julia programmers.
+
+Code should follow the `MethodError` principle:
 
 !!! info "The MethodError principle"
     A user should see a `MethodError` only for methods that they called
@@ -140,7 +146,7 @@ _internal_function(x::Integer) = x + 1
 function _internal_function(x)
     error(
         "Internal error. This probably means that you called " *
-        "public_function() with the wrong type.",
+        "`public_function()`s with the wrong type.",
     )
 end
 public_function(x) = _internal_function(x)
