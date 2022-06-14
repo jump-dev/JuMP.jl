@@ -13,7 +13,7 @@ A summary of changes are as follows:
   - Minor updates to the style guide
   - Updated to MOI v1.4.0 in the documentation
 
-  ## Version 1.1.0 (May 25, 2022)
+## Version 1.1.0 (May 25, 2022)
 
 For a detailed list of the closed issues and pull requests from this release,
 see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.1.0).
