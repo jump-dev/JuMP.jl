@@ -1282,7 +1282,10 @@ function num_constraints(model::Model; count_variable_in_set_constraints::Bool)
 end
 
 """
-    all_constraints(model::Model; include_variable_in_set_constraints::Bool)
+    all_constraints(
+        model::Model;
+        include_variable_in_set_constraints::Bool,
+    )::Vector{ConstraintRef}
 
 Return a list of all constraints in `model`.
 
@@ -1290,6 +1293,9 @@ If `include_variable_in_set_constraints == true`, then `VariableRef` constraints
 such as `VariableRef`-in-`Integer` are included. To return only the structural
 constraints (e.g., the rows in the constraint matrix of a linear program), pass
 `include_variable_in_set_constraints = false`.
+
+Note that this function is type-unstable because it returns an abstractly typed
+vector. 
 
 ## Examples
 
