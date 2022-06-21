@@ -3,6 +3,13 @@
 More information can be found in the [Nonlinear Modeling](@ref) section of the
 manual.
 
+## [Models](@id ref_nl_models)
+
+
+```@docs
+nonlinear_model
+```
+
 ## [Constraints](@id ref_nl_constraints)
 
 ```@docs

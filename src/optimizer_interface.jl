@@ -160,9 +160,9 @@ function optimize!(
 )
     # The nlp_model is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
-    if model.nlp_model !== nothing
+    if nonlinear_model(model) !== nothing
         evaluator = MOI.Nonlinear.Evaluator(
-            model.nlp_model,
+            nonlinear_model(model),
             _differentiation_backend,
             index.(all_variables(model)),
         )

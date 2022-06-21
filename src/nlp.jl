@@ -3,6 +3,25 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+"""
+    nonlinear_model(
+        model::Model;
+        force::Bool = false,
+    )::Union{MOI.Nonlinear.Model,Nothing}
+
+If `model` has nonlinear components, return a [`MOI.Nonlinear.Model`](@ref),
+otherwise return `nothing`.
+
+If `force`, always return a [`MOI.Nonlinear.Model`](@ref), and if one does not
+exist for the model, create an empty one.
+"""
+function nonlinear_model(model::Model; force::Bool = false)
+    if force
+        _init_NLP(model)
+    end
+    return model.nlp_model
+end
+
 function _init_NLP(model::Model)
     if model.nlp_model === nothing
         model.nlp_model = MOI.Nonlinear.Model()
@@ -191,6 +210,13 @@ function add_nonlinear_parameter(model::Model, value::Real)
 end
 
 """
+    index(p::NonlinearParameter)::MOI.Nonlinear.ParameterIndex
+
+Return the index of the nonlinear parameter associated with `p`.
+"""
+index(p::NonlinearParameter) = MOI.Nonlinear.ParameterIndex(p.index)
+
+"""
     value(p::NonlinearParameter)
 
 Return the current value stored in the nonlinear parameter `p`.
@@ -256,6 +282,13 @@ function MOI.Nonlinear.parse_expression(
     index = MOI.Nonlinear.ExpressionIndex(x.index)
     return MOI.Nonlinear.parse_expression(model, expr, index, parent)
 end
+
+"""
+    index(ex::NonlinearExpression)::MOI.Nonlinear.ExpressionIndex
+
+Return the index of the nonlinear expression associated with `ex`.
+"""
+index(ex::NonlinearExpression) = MOI.Nonlinear.ExpressionIndex(ex.index)
 
 """
     add_nonlinear_expression(model::Model, expr::Expr)
@@ -349,6 +382,16 @@ struct NonlinearConstraintIndex
 end
 
 const NonlinearConstraintRef = ConstraintRef{Model,NonlinearConstraintIndex}
+
+"""
+    index(c::NonlinearConstraintRef)::MOI.Nonlinear.ConstraintIndex
+
+Return the index of the nonlinear constraint associated with `c`.
+"""
+function index(c::NonlinearConstraintRef)
+    return MOI.Nonlinear.ConstraintIndex(c.index.value)
+end
+
 
 function _normalize_constraint_expr(lhs::Real, body, rhs::Real)
     return Float64(lhs), body, Float64(rhs)

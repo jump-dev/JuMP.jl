@@ -343,7 +343,7 @@ function nonlinear_constraint_string(
     mode::MIME,
     c::MOI.Nonlinear.ConstraintIndex,
 )
-    constraint = model.nlp_model.constraints[c]
+    constraint = nonlinear_model(model)[c]
     body = nonlinear_expr_string(model, mode, constraint.expression)
     lhs = _set_lhs(constraint.set)
     rhs = _set_rhs(constraint.set)
@@ -365,10 +365,8 @@ function constraints_string(mode, model::Model)
         (F, S) in list_of_constraint_types(model) for
         cref in all_constraints(model, F, S)
     ]
-    if model.nlp_model !== nothing
-        for (index, _) in model.nlp_model.constraints
-            push!(strings, nonlinear_constraint_string(model, mode, index))
-        end
+    for c in all_nonlinear_constraints(model)
+        push!(strings, nonlinear_constraint_string(model, mode, index(c)))
     end
     return strings
 end
@@ -388,7 +386,7 @@ function nonlinear_expr_string(
     mode::MIME,
     c::MOI.Nonlinear.Expression,
 )
-    expr = MOI.Nonlinear.convert_to_expr(model.nlp_model, c)
+    expr = MOI.Nonlinear.convert_to_expr(nonlinear_model(model), c)
     # Walk terms, and replace
     #    MOI.VariableIndex => VariableRef
     #    MOI.Nonlinear.ExpressionIndex => _NonlinearExpressionIO
@@ -470,11 +468,12 @@ end
 _nl_subexpression_string(::Any, ::AbstractModel) = String[]
 
 function _nl_subexpression_string(mode::MIME, model::Model)
-    if model.nlp_model === nothing
-        return String[]
-    end
+    nlp_model = nonlinear_model(model)
     strings = String[]
-    for (k, ex) in enumerate(model.nlp_model.expressions)
+    if nlp_model === nothing
+        return strings
+    end
+    for (k, ex) in enumerate(nlp_model.expressions)
         expr = nonlinear_expr_string(model, mode, ex)
         if mode == MIME("text/latex")
             push!(strings, "subexpression_{$k}: $expr")
@@ -637,7 +636,7 @@ function function_string(mode, constraint::AbstractConstraint)
 end
 
 function function_string(mode::MIME, p::NonlinearExpression)
-    expr = p.model.nlp_model.expressions[p.index]
+    expr = nonlinear_model(p.model)[index(p)]
     s = nonlinear_expr_string(p.model, mode, expr)
     return "subexpression[$(p.index)]: " * s
 end
