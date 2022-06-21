@@ -392,7 +392,6 @@ function index(c::NonlinearConstraintRef)
     return MOI.Nonlinear.ConstraintIndex(c.index.value)
 end
 
-
 function _normalize_constraint_expr(lhs::Real, body, rhs::Real)
     return Float64(lhs), body, Float64(rhs)
 end
