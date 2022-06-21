@@ -480,9 +480,10 @@ function all_nonlinear_constraints(model::Model)
     if nlp_model === nothing
         return NonlinearConstraintRef[]
     end
-    return map(keys(nlp_model.constraints)) do index
-        return ConstraintRef(model, index, ScalarShape())
-    end
+    return NonlinearConstraintRef[
+        ConstraintRef(model, index, ScalarShape()) for
+        (index, _) in nlp_model.constraints
+    ]
 end
 
 ###
