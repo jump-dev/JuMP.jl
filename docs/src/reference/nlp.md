@@ -15,7 +15,6 @@ nonlinear_model
 ```@docs
 @NLconstraint
 @NLconstraints
-NonlinearConstraintIndex
 num_nonlinear_constraints
 add_nonlinear_constraint
 all_nonlinear_constraints

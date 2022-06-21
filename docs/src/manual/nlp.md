@@ -531,8 +531,7 @@ The [`NLPEvaluator`](@ref) *does not evaluate derivatives of linear or quadratic
 constraints or objectives*.
 
 The [`index`](@ref) method applied to a nonlinear constraint reference object
-returns its index as a [`NonlinearConstraintIndex`](@ref). The `.value` field of
-[`NonlinearConstraintIndex`](@ref) stores the raw integer index. For example:
+returns its index as a [`MOI.Nonlinear.ConstraintIndex`](@ref). For example:
 
 ```jldoctest
 julia> model = Model();
@@ -544,13 +543,13 @@ julia> @NLconstraint(model, cons1, sin(x) <= 1);
 julia> @NLconstraint(model, cons2, x + 5 == 10);
 
 julia> typeof(cons1)
-NonlinearConstraintRef{ScalarShape} (alias for ConstraintRef{Model, NonlinearConstraintIndex, ScalarShape})
+NonlinearConstraintRef{ScalarShape} (alias for ConstraintRef{Model, MathOptInterface.Nonlinear.ConstraintIndex, ScalarShape})
 
 julia> index(cons1)
-NonlinearConstraintIndex(1)
+MathOptInterface.Nonlinear.ConstraintIndex(1)
 
 julia> index(cons2)
-NonlinearConstraintIndex(2)
+MathOptInterface.Nonlinear.ConstraintIndex(2)
 ```
 
 ```@meta

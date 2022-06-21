@@ -372,25 +372,14 @@ end
 ### Nonlinear constraints
 ###
 
-"""
-    NonlinearConstraintIndex(index::Int64)
+# For backwards compatibility, we need to retain the previously exported
+# `NonlinearConstraintIndex`. They both have a `.value` field, but the new
+# `Nonlinear.ConstraintIndex` is not guaranteed to be 1-based because some
+# constraints may have been deleted.
+const NonlinearConstraintIndex = MOI.Nonlinear.ConstraintIndex
 
-A struct to refer to the 1-indexed nonlinear constraint `index`.
-"""
-struct NonlinearConstraintIndex
-    value::Int64
-end
-
-const NonlinearConstraintRef = ConstraintRef{Model,NonlinearConstraintIndex}
-
-"""
-    index(c::NonlinearConstraintRef)::MOI.Nonlinear.ConstraintIndex
-
-Return the index of the nonlinear constraint associated with `c`.
-"""
-function index(c::NonlinearConstraintRef)
-    return MOI.Nonlinear.ConstraintIndex(c.index.value)
-end
+const NonlinearConstraintRef =
+    ConstraintRef{Model,MOI.Nonlinear.ConstraintIndex}
 
 function _normalize_constraint_expr(lhs::Real, body, rhs::Real)
     return Float64(lhs), body, Float64(rhs)
@@ -450,8 +439,7 @@ function add_nonlinear_constraint(model::Model, ex::Expr)
     _init_NLP(model)
     f, set = _expr_to_constraint(ex)
     c = MOI.Nonlinear.add_constraint(model.nlp_model, f, set)
-    index = NonlinearConstraintIndex(c.value)
-    return ConstraintRef(model, index, ScalarShape())
+    return ConstraintRef(model, c, ScalarShape())
 end
 
 """
@@ -474,7 +462,11 @@ end
 Returns the number of nonlinear constraints associated with the `model`.
 """
 function num_nonlinear_constraints(model::Model)
-    return model.nlp_model !== nothing ? length(model.nlp_model.constraints) : 0
+    nlp_model = nonlinear_model(model)
+    if nlp_model === nothing
+        return 0
+    end
+    return length(nlp_model.constraints)
 end
 
 """
@@ -484,8 +476,12 @@ Return a vector of all nonlinear constraint references in the model in the
 order they were added to the model.
 """
 function all_nonlinear_constraints(model::Model)
-    return map(1:num_nonlinear_constraints(model)) do i
-        return ConstraintRef(model, NonlinearConstraintIndex(i), ScalarShape())
+    nlp_model = nonlinear_model(model)
+    if nlp_model === nothing
+        return NonlinearConstraintRef[]
+    end
+    return map(keys(nlp_model.constraints)) do index
+        return ConstraintRef(model, index, ScalarShape())
     end
 end
 

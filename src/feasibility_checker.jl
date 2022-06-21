@@ -163,11 +163,7 @@ function _add_infeasible_nonlinear_constraints(
     for (i, (index, constraint)) in enumerate(evaluator.model.constraints)
         d = _distance_to_set(g[i], constraint.set)
         if d > atol
-            cref = ConstraintRef(
-                model,
-                NonlinearConstraintIndex(index.value),
-                ScalarShape(),
-            )
+            cref = ConstraintRef(model, index, ScalarShape())
             violated_constraints[cref] = d
         end
     end
