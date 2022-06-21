@@ -124,6 +124,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [NLopt](https://github.com/stevengj/nlopt)                                     | [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)                                 |        | GPL      | LP, QP, NLP               |
 | [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              |        | Apache   | LP, QP                    |
 | [PATH](http://pages.cs.wisc.edu/~ferris/path.html)                             | [PATHSolver.jl](https://github.com/chkwon/PATHSolver.jl)                 |        | MIT      | MCP                       |
+| [Pajarito.jl](https://github.com/jump-dev/Pajarito.jl)                         |                                                                                  |        | MPL-2    | (MI)NLP, (MI)SOCP, (MI)SDP |
 | [Pavito.jl](https://github.com/jump-dev/Pavito.jl)                             |                                                                                  |        | MPL-2    | (MI)NLP                   |
 | [Penbmi](http://www.penopt.com/penbmi.html)                                    | [Penopt.jl](https://github.com/jump-dev/Penopt.jl/)                              |        | Comm.    | Bilinear SDP              |
 | [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)                        |                                                                                  |        | MIT      | LP, SOCP, SDP             |
