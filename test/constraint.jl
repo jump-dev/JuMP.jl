@@ -1173,6 +1173,24 @@ function test_num_constraints_nonlinear(::Any, ::Any)
     return
 end
 
+function test_Model_all_constraints(::Any, ::Any)
+    model = Model()
+    @variable(model, x >= 0, Int)
+    c = @constraint(model, 2x <= 1)
+    nl_c = @NLconstraint(model, x^2 <= 1)
+    ret = all_constraints(model; include_variable_in_set_constraints = true)
+    @test length(ret) == 4
+    @test c in ret
+    @test nl_c in ret
+    @test IntegerRef(x) in ret
+    @test LowerBoundRef(x) in ret
+    ret = all_constraints(model; include_variable_in_set_constraints = false)
+    @test length(ret) == 2
+    @test c in ret
+    @test nl_c in ret
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
