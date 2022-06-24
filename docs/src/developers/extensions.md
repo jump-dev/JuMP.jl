@@ -24,6 +24,38 @@ JuMP provides a variety of ways to extend the basic modeling functionality.
      * [SumOfSquares.jl](https://github.com/jump-dev/SumOfSquares.jl)
      * [vOptGeneric.jl](https://github.com/vOptSolver/vOptGeneric.jl)
 
+## Compatibility
+
+When writing JuMP extensions, you should carefully consider the compatibility
+guarantees that JuMP makes. In particular:
+
+ * All functions, structs, and constants which do not begin with an underscore
+   (`_`) are public. These are always safe to use, and they should all have
+   corresponding documentation.
+ * All identifiers beginning with an underscore (`_`) are private. These are
+   not safe to use, because they may break in any JuMP release, including
+   patch releases.
+ * Unless explicitly mentioned in the documentation, all fields of a struct are
+   private. These are not safe to use, because they may break in any JuMP
+   release, including patch releases. An example of a field which is safe to use
+   is the `model.ext` extension dictionary, which is documented in
+   [The extension dictionary](@ref).
+
+In general, we strongly encourage you to use only the public API of JuMP. If you
+are missing a feature, please open a GitHub issue.
+
+However, if you _do_ use the private API (for example, because your feature
+request has not been implemented yet), then you must carefully restrict the
+versions of JuMP that your package is compatible with in the `Project.toml`
+file. The easiest way to do this is via the [hyphen specifiers](https://pkgdocs.julialang.org/v1/compatibility/).
+For example, if your package supports all JuMP versions between v1.0.0 and
+v1.1.1, do:
+```
+JuMP = "1.0.0 - 1.1.1"
+```
+Then, whenever JuMP releases a new version, you should check if your package is
+still compatible and update the bound accordingly.
+
 ## Define a new set
 
 To define a new set for JuMP, subtype `MOI.AbstractScalarSet` or
