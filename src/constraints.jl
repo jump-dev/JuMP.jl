@@ -1235,6 +1235,12 @@ julia> list_of_constraint_types(model)
  (VariableRef, MathOptInterface.GreaterThan{Float64})
  (VariableRef, MathOptInterface.ZeroOne)
 ```
+
+## Performance considerations
+
+Iterating over the list of function and set types is a type-unstable operation.
+Consider using a function barrier. See the [Performance tips for extensions](@ref)
+section of the documentation for more details.
 """
 function list_of_constraint_types(model::Model)::Vector{Tuple{Type,Type}}
     # We include an annotated return type here because Julia fails terribly at
@@ -1294,9 +1300,6 @@ such as `VariableRef`-in-`Integer` are included. To return only the structural
 constraints (e.g., the rows in the constraint matrix of a linear program), pass
 `include_variable_in_set_constraints = false`.
 
-Note that this function is type-unstable because it returns an abstractly typed
-vector. 
-
 ## Examples
 
 ```jldoctest; setup=:(using JuMP)
@@ -1320,6 +1323,13 @@ julia> all_constraints(model; include_variable_in_set_constraints = false)
  2 x ≤ 1.0
  x ^ 2.0 - 1.0 ≤ 0
 ```
+
+## Performance considerations
+
+Note that this function is type-unstable because it returns an abstractly typed
+vector. If performance is a problem, consider using [`list_of_constraint_types`](@ref)
+and a function barrier. See the [Performance tips for extensions](@ref) section
+of the documentation for more details.
 """
 function all_constraints(
     model::Model;

@@ -495,3 +495,43 @@ z[1]
      x[2]
      x[1]
     ```
+
+## Performance tips for extensions
+
+The function-in-set design of MathOptInterface causes type stability issues in
+Julia if you try to iterate over all of the constraints in a model. The easiest
+way to fix this is to use a function barrier.
+
+For example, instead of:
+```julia
+function all_names_slow(model)
+    names = Set{String}()
+    for ci in all_constraints(model)
+        push!(names, name(ci))
+    end
+    return names
+end
+```
+use:
+```julia
+function _function_barrier(names, model, ::Type{F}, ::Type{S}) where {F,S}
+    for ci in all_constraints(model, F, S)
+        push!(names, name(ci))
+    end
+    return
+end
+
+function all_names_fast(model)
+    names = Set{String}()
+    for (F, S) in list_of_constraint_types(model)
+        _function_barrier(names, model, F, S)
+    end
+    return names
+end
+```
+
+!!! note
+    It is important to explicitly type the `F` and `S` arguments. If you leave
+    them untyped, for example, `function _function_barrier(names, model, F, S)`,
+    Julia will not specialize the function calls and performance will not be
+    improved.
