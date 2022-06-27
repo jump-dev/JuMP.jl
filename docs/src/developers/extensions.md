@@ -16,7 +16,7 @@ JuMP provides a variety of ways to extend the basic modeling functionality.
     existing JuMP extensions. Examples include:
      * [BilevelJuMP.jl](https://github.com/joaquimg/BilevelJuMP.jl)
      * [Coluna.jl](https://github.com/atoptima/Coluna.jl)
-     * [InfiniteOpt.jl](https://github.com/pulsipher/InfiniteOpt.jl)
+     * [InfiniteOpt.jl](https://github.com/infiniteopt/InfiniteOpt.jl)
      * [Plasmo.jl](https://github.com/zavalab/Plasmo.jl)
      * [PolyJuMP.jl](https://github.com/jump-dev/PolyJuMP.jl)
      * [SDDP.jl](https://github.com/odow/SDDP.jl)
@@ -400,7 +400,7 @@ undocumented.
 The easiest way to extend JuMP by defining a new model type is to follow an
 existing example. A simple example to follow is the [JuMPExtension module](https://github.com/jump-dev/JuMP.jl/blob/master/test/JuMPExtension.jl)
 in the JuMP test suite. The best example of an external JuMP extension that
-implements an [`AbstractModel`](@ref) is [InfiniteOpt.jl](https://github.com/pulsipher/InfiniteOpt.jl).
+implements an [`AbstractModel`](@ref) is [InfiniteOpt.jl](https://github.com/infiniteopt/InfiniteOpt.jl).
 
 ## Set an `optimize!` hook
 
