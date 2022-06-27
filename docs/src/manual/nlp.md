@@ -572,15 +572,6 @@ which can be queried using the [`NLPEvaluator`](@ref).
 
 !!! warning
     This section requires advanced knowledge of Julia's `Expr`. You should read
-<<<<<<< HEAD
-    the [Expressions and evaluation](https://docs.julialang.org/en/v1/manual/metaprogramming/#Expressions-and-evaluation) 
-    section of the Julia documentation first.
-
-In addition to the [`@NLexpression`](@ref), [`@NLobjective`](@ref) and 
-[`@NLconstraint`](@ref) macros, it is also possible to provide Julia `Expr` 
-objects directly by using [`add_NL_expression`](@ref), 
-[`set_NL_objective`](@ref) and [`add_NL_constraint`](@ref).
-=======
     the [Expressions and evaluation](https://docs.julialang.org/en/v1/manual/metaprogramming/#Expressions-and-evaluation)
     section of the Julia documentation first.
 
@@ -588,17 +579,12 @@ In addition to the [`@NLexpression`](@ref), [`@NLobjective`](@ref) and
 [`@NLconstraint`](@ref) macros, it is also possible to provide Julia `Expr`
 objects directly by using [`add_nonlinear_expression`](@ref),
 [`set_nonlinear_objective`](@ref) and [`add_nonlinear_constraint`](@ref).
->>>>>>> 1bb9d45f9148c69638cc3c843bcd60a49022103d
 
 This input form may be useful if the expressions are generated programmatically.
 
 ### Add a nonlinear expression
 
-<<<<<<< HEAD
-Use [`add_NL_expression`](@ref) to add a nonlinear expression to the model.
-=======
 Use [`add_nonlinear_expression`](@ref) to add a nonlinear expression to the model.
->>>>>>> 1bb9d45f9148c69638cc3c843bcd60a49022103d
 
 ```jldoctest; setup=:(using JuMP; model = Model())
 julia> @variable(model, x)
@@ -607,15 +593,6 @@ x
 julia> expr = :($(x) + sin($(x)^2))
 :(x + sin(x ^ 2))
 
-<<<<<<< HEAD
-julia> expr_ref = add_NL_expression(model, expr)
-"Reference to nonlinear expression #1"
-```
-This is equivalent to
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
-julia> @NLexpression(model, expr_ref, x + sin(x^2))
-"Reference to nonlinear expression #1"
-=======
 julia> expr_ref = add_nonlinear_expression(model, expr)
 subexpression[1]: x + sin(x ^ 2.0)
 ```
@@ -623,7 +600,6 @@ This is equivalent to
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
 julia> expr_ref = @NLexpression(model, x + sin(x^2))
 subexpression[1]: x + sin(x ^ 2.0)
->>>>>>> 1bb9d45f9148c69638cc3c843bcd60a49022103d
 ```
 
 !!! note
@@ -645,11 +621,7 @@ julia> @NLobjective(model, Min, x + x^2)
 ```
 
 !!! note
-<<<<<<< HEAD
-    You must use `MOI.MIN_SENSE` or `MOI.MAX_SENSE` instead of `Min` and `Max`.
-=======
     You must use `MIN_SENSE` or `MAX_SENSE` instead of `Min` and `Max`.
->>>>>>> 1bb9d45f9148c69638cc3c843bcd60a49022103d
 
 ### Add a constraint
 
