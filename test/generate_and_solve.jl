@@ -25,32 +25,30 @@ using JuMP
         @objective(m, Min, -x)
 
         c = @constraint(m, x + y <= 1)
-
-        JuMP.set_name(JuMP.UpperBoundRef(x), "xub")
-        JuMP.set_name(JuMP.LowerBoundRef(y), "ylb")
         JuMP.set_name(c, "c")
 
         modelstring = """
         variables: x, y
         minobjective: -1.0*x
-        xub: x <= 2.0
-        ylb: y >= 0.0
+        x <= 2.0
+        y >= 0.0
         c: x + y <= 1.0
         """
 
         model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(
+        MOI.Test.util_test_models_equal(
             JuMP.backend(m).model_cache,
             model,
             ["x", "y"],
-            ["c", "xub", "ylb"],
+            ["c"],
+            [("x", MOI.LessThan(2.0)), ("y", MOI.GreaterThan(0.0))],
         )
 
         set_optimizer(
             m,
             () -> MOIU.MockOptimizer(
-                MOIU.Model{Float64}(),
+                MOIU.Model{Float64}();
                 eval_objective_value = false,
             ),
         )
@@ -93,9 +91,9 @@ using JuMP
             JuMP.optimizer_index(JuMP.LowerBoundRef(y)),
             1.0,
         )
-        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
 
         #@test JuMP.isattached(m)
         @test JuMP.has_values(m)
@@ -122,7 +120,7 @@ using JuMP
 
     @testset "LP (Direct mode)" begin
         mockoptimizer = MOIU.MockOptimizer(
-            MOIU.Model{Float64}(),
+            MOIU.Model{Float64}();
             eval_objective_value = false,
         )
 
@@ -168,9 +166,9 @@ using JuMP
             JuMP.optimizer_index(JuMP.LowerBoundRef(y)),
             1.0,
         )
-        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
 
         JuMP.optimize!(m)
 
@@ -195,40 +193,38 @@ using JuMP
         @test 1 == JuMP.node_count(m)
     end
 
-    # TODO: test Manual mode
-
     @testset "IP" begin
         # Tests the solver= keyword.
         m = Model(
             () -> MOIU.MockOptimizer(
-                MOIU.Model{Float64}(),
+                MOIU.Model{Float64}();
                 eval_objective_value = false,
             ),
-            caching_mode = MOIU.AUTOMATIC,
         )
         @variable(m, x == 1.0, Int)
         @variable(m, y, Bin)
         @objective(m, Max, x)
 
-        JuMP.set_name(JuMP.FixRef(x), "xfix")
-        JuMP.set_name(JuMP.IntegerRef(x), "xint")
-        JuMP.set_name(JuMP.BinaryRef(y), "ybin")
-
         modelstring = """
         variables: x, y
         maxobjective: x
-        xfix: x == 1.0
-        xint: x in Integer()
-        ybin: y in ZeroOne()
+        x == 1.0
+        x in Integer()
+        y in ZeroOne()
         """
 
         model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(
+        MOI.Test.util_test_models_equal(
             JuMP.backend(m).model_cache,
             model,
             ["x", "y"],
-            ["xfix", "xint", "ybin"],
+            String[],
+            [
+                ("x", MOI.EqualTo(1.0)),
+                ("x", MOI.Integer()),
+                ("y", MOI.ZeroOne()),
+            ],
         )
 
         MOIU.attach_optimizer(m)
@@ -252,9 +248,9 @@ using JuMP
             0.0,
         )
         MOI.set(mockoptimizer, MOI.DualStatus(), MOI.NO_SOLUTION)
-        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
         MOI.set(mockoptimizer, MOI.RelativeGap(), 0.0)
 
         JuMP.optimize!(m)
@@ -298,7 +294,7 @@ using JuMP
 
         model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(
+        MOI.Test.util_test_models_equal(
             JuMP.backend(m).model_cache,
             model,
             ["x", "y"],
@@ -308,7 +304,7 @@ using JuMP
         set_optimizer(
             m,
             () -> MOIU.MockOptimizer(
-                MOIU.Model{Float64}(),
+                MOIU.Model{Float64}();
                 eval_objective_value = false,
             ),
         )
@@ -351,9 +347,9 @@ using JuMP
             JuMP.optimizer_index(c3),
             3.0,
         )
-        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
 
         #@test JuMP.isattached(m)
         @test JuMP.has_values(m)
@@ -401,7 +397,7 @@ using JuMP
 
         model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(
+        MOI.Test.util_test_models_equal(
             JuMP.backend(m).model_cache,
             model,
             ["x", "y", "z"],
@@ -409,7 +405,7 @@ using JuMP
         )
 
         mockoptimizer = MOIU.MockOptimizer(
-            MOIU.Model{Float64}(),
+            MOIU.Model{Float64}();
             eval_objective_value = false,
             eval_variable_constraint_dual = false,
         )
@@ -451,9 +447,9 @@ using JuMP
             JuMP.optimizer_index(affsoc),
             [1.0, 2.0, 3.0],
         )
-        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
 
         JuMP.optimize!(m)
 
@@ -487,7 +483,7 @@ using JuMP
         set_name(var_psd, "var_psd")
         sym_psd = @constraint(m, Symmetric(x - [1.0 0.0; 0.0 1.0]) in PSDCone())
         set_name(sym_psd, "sym_psd")
-        con_psd = @SDconstraint(m, x ⪰ [1.0 0.0; 0.0 1.0])
+        con_psd = @constraint(m, x >= [1.0 0.0; 0.0 1.0], PSDCone())
         set_name(con_psd, "con_psd")
 
         modelstring = """
@@ -500,7 +496,7 @@ using JuMP
 
         model = MOIU.Model{Float64}()
         MOIU.loadfromstring!(model, modelstring)
-        MOIU.test_models_equal(
+        MOI.Test.util_test_models_equal(
             JuMP.backend(m).model_cache,
             model,
             ["x11", "x12", "x22"],
@@ -508,7 +504,7 @@ using JuMP
         )
 
         mockoptimizer = MOIU.MockOptimizer(
-            MOIU.Model{Float64}(),
+            MOIU.Model{Float64}();
             eval_objective_value = false,
             eval_variable_constraint_dual = false,
         )
@@ -556,9 +552,9 @@ using JuMP
             JuMP.optimizer_index(con_psd),
             [7.0, 8.0, 9.0, 10.0],
         )
-        MOI.set(mockoptimizer, MOI.SimplexIterations(), 1)
-        MOI.set(mockoptimizer, MOI.BarrierIterations(), 1)
-        MOI.set(mockoptimizer, MOI.NodeCount(), 1)
+        MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(1))
+        MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
 
         JuMP.optimize!(m)
 
@@ -568,6 +564,8 @@ using JuMP
 
         @test JuMP.has_values(m)
         @test [1.0 2.0; 2.0 4.0] == JuMP.value.(x)
+        @test JuMP.value(x) isa Symmetric
+        @test [1.0 2.0; 2.0 4.0] == @inferred JuMP.value(x)
         @test JuMP.value(var_psd) isa Symmetric
         @test [1.0 2.0; 2.0 4.0] == @inferred JuMP.value(var_psd)
         @test JuMP.value(sym_psd) isa Symmetric
@@ -612,16 +610,16 @@ using JuMP
             """
 variables: x, y
 maxobjective: x + y
-xub: x >= 0.0
-ylb: y >= 0.0
-c1: x <= 2.0
+x >= 0.0
+y >= 0.0
+x <= 2.0
 c2: x + y <= 1.0
 """,
         )
         set_optimizer(
             m,
             () -> MOIU.MockOptimizer(
-                MOIU.Model{Float64}(),
+                MOIU.Model{Float64}();
                 eval_objective_value = false,
             ),
         )

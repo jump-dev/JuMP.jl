@@ -24,26 +24,26 @@ There are three main changes to solve nonlinear programs in JuMP.
 
 ## Set a nonlinear objective
 
-Use [`@NLobjective`](@Ref) to set a nonlinear objective.
+Use [`@NLobjective`](@ref) to set a nonlinear objective.
 
 ```jldoctest; setup=:(model = Model(); @variable(model, x[1:2]))
 julia> @NLobjective(model, Min, exp(x[1]) - sqrt(x[2]))
 ```
 ## Add a nonlinear constraint
 
-Use [`@NLconstraint`](@Ref) to add a nonlinear constraint.
+Use [`@NLconstraint`](@ref) to add a nonlinear constraint.
 
 ```jldoctest; setup=:(model = Model(); @variable(model, x[1:2]))
 julia> @NLconstraint(model, exp(x[1]) <= 1)
 exp(x[1]) - 1.0 ≤ 0
 
 julia> @NLconstraint(model, [i = 1:2], x[i]^i >= i)
-2-element Array{ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape},1}:
+2-element Vector{NonlinearConstraintRef{ScalarShape}}:
  x[1] ^ 1.0 - 1.0 ≥ 0
  x[2] ^ 2.0 - 2.0 ≥ 0
 
 julia> @NLconstraint(model, con[i = 1:2], prod(x[j] for j = 1:i) == i)
-2-element Array{ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape},1}:
+2-element Vector{NonlinearConstraintRef{ScalarShape}}:
  (*)(x[1]) - 1.0 = 0
  x[1] * x[2] - 2.0 = 0
 ```
@@ -60,17 +60,17 @@ nonlinear terms.
 
 ```jldoctest nl_expression; setup=:(model = Model(); @variable(model, x[1:2]))
 julia> expr = @NLexpression(model, exp(x[1]) + sqrt(x[2]))
-"Reference to nonlinear expression #1"
+subexpression[1]: exp(x[1]) + sqrt(x[2])
 
 julia> my_anon_expr = @NLexpression(model, [i = 1:2], sin(x[i]))
-2-element Array{NonlinearExpression,1}:
- "Reference to nonlinear expression #2"
- "Reference to nonlinear expression #3"
+2-element Vector{NonlinearExpression}:
+ subexpression[2]: sin(x[1])
+ subexpression[3]: sin(x[2])
 
 julia> @NLexpression(model, my_expr[i = 1:2], sin(x[i]))
-2-element Array{NonlinearExpression,1}:
- "Reference to nonlinear expression #4"
- "Reference to nonlinear expression #5"
+2-element Vector{NonlinearExpression}:
+ subexpression[4]: sin(x[1])
+ subexpression[5]: sin(x[2])
 ```
 
 Nonlinear expression can be used in [`@NLobjective`](@ref), [`@NLconstraint`](@ref),
@@ -80,14 +80,14 @@ and even nested in other [`@NLexpression`](@ref)s.
 julia> @NLobjective(model, Min, expr^2 + 1)
 
 julia> @NLconstraint(model, [i = 1:2], my_expr[i] <= i)
-2-element Array{ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape},1}:
+2-element Vector{NonlinearConstraintRef{ScalarShape}}:
  subexpression[4] - 1.0 ≤ 0
  subexpression[5] - 2.0 ≤ 0
 
 julia> @NLexpression(model, nested[i = 1:2], sin(my_expr[i]))
-2-element Array{NonlinearExpression,1}:
- "Reference to nonlinear expression #6"
- "Reference to nonlinear expression #7"
+2-element Vector{NonlinearExpression}:
+ subexpression[6]: sin(subexpression[4])
+ subexpression[7]: sin(subexpression[5])
 ```
 
 ## Create a nonlinear parameter
@@ -104,9 +104,15 @@ the `==` sign.
 
 ```jldoctest nonlinear_parameters; setup=:(model = Model(); @variable(model, x))
 julia> @NLparameter(model, p[i = 1:2] == i)
-2-element Array{NonlinearParameter,1}:
- "Reference to nonlinear parameter #1"
- "Reference to nonlinear parameter #2"
+2-element Vector{NonlinearParameter}:
+ parameter[1] == 1.0
+ parameter[2] == 2.0
+```
+
+Create anonymous parameters using the `value` keyword:
+```jldoctest nonlinear_parameters
+julia> anon_parameter = @NLparameter(model, value = 1)
+parameter[3] == 1.0
 ```
 
 !!! info
@@ -119,7 +125,7 @@ parameter.
 
 ```jldoctest nonlinear_parameters
 julia> value.(p)
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  1.0
  2.0
 
@@ -127,13 +133,10 @@ julia> set_value(p[2], 3.0)
 3.0
 
 julia> value.(p)
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  1.0
  3.0
 ```
-
-!!! info
-    There is no anonymous syntax for creating parameters.
 
 Nonlinear parameters can be used *within nonlinear macros* only:
 
@@ -145,11 +148,12 @@ ERROR: MethodError: no method matching *(::NonlinearParameter, ::VariableRef)
 julia> @NLobjective(model, Max, p[1] * x)
 
 julia> @expression(model, my_expr, p[1] * x^2)
-ERROR: MethodError: no method matching *(::NonlinearParameter, ::GenericQuadExpr{Float64,VariableRef})
+ERROR: MethodError: no method matching *(::NonlinearParameter, ::QuadExpr)
+Closest candidates are:
 [...]
 
 julia> @NLexpression(model, my_nl_expr, p[1] * x^2)
-"Reference to nonlinear expression #1"
+subexpression[1]: parameter[1] * x ^ 2.0
 ```
 
 ### When to use a parameter
@@ -197,12 +201,12 @@ ERROR: sin is not defined for type AbstractVariableRef. Are you trying to build 
 [...]
 
 julia> expr = @NLexpression(model, sin(x) + 1)
-"Reference to nonlinear expression #1"
+subexpression[1]: sin(x) + 1.0
 ```
 
 ### Scalar operations only
 
-With the exception of the splatting syntax discussed below, all expressions
+Except for the splatting syntax discussed below, all expressions
 must be simple scalar operations. You cannot use `dot`, matrix-vector products,
 vector slices, etc.
 ```jldoctest nlp_scalar_only; setup=:(model = Model(); @variable(model, x[1:2]); @variable(model, y); c = [1, 2])
@@ -258,7 +262,7 @@ In addition to this list of functions, it is possible to register custom
 
 !!! tip
     JuMP will attempt to automatically register functions it detects in your
-    nonlinear expressions, which means that in most cases, manually registering
+    nonlinear expressions, which usually means manually registering
     a function is not needed. Two exceptions are if you want to provide custom
     derivatives, or if the function is not available in the scope of the
     nonlinear expression.
@@ -290,7 +294,7 @@ differentiation.
     this section, and see the guidelines at [ForwardDiff.jl](https://www.juliadiff.org/ForwardDiff.jl/release-0.10/user/limitations.html).
 
 The most common error is that your user-defined function is not generic with
-respect to the number type, i.e., don't assume that the input to the function
+respect to the number type, that is, don't assume that the input to the function
 is `Float64`.
 ```julia
 f(x::Float64) = 2 * x  # This will not work.
@@ -349,7 +353,7 @@ The above code creates a JuMP model with the objective function
 
 !!! tip
     The symbol `:my_f` doesn't have to match the name of the function `f`.
-    However, it's generally more readable if it does. Make sure you use `my_f`
+    However, it's more readable if it does. Make sure you use `my_f`
     and not `f` in the macros.
 
 !!! warning
@@ -374,7 +378,7 @@ want to provide their own routines for evaluating gradients.
 
 #### Univariate functions
 
-For univariate functions, the gradient function `∇f` should return a number that
+For univariate functions, the gradient function `∇f` returns a number that
 represents the first-order derivative:
 ```@example
 using JuMP #hide
@@ -433,7 +437,7 @@ register(model, :my_square, 1, f, ∇f, ∇²f)
 
 ### User-defined functions with vector inputs
 
-User-defined functions which take vectors as input arguments (e.g.
+User-defined functions which take vectors as input arguments (for example,
 `f(x::Vector)`) are *not* supported. Instead, use Julia's splatting syntax to
 create a function with scalar arguments. For example, instead of
 ```julia
@@ -483,10 +487,9 @@ may be expected to be within a factor of 5 of AMPL's.
 
 For some advanced use cases, one may want to directly query the derivatives of a
 JuMP model instead of handing the problem off to a solver.
-Internally, JuMP implements the `AbstractNLPEvaluator` interface from
-[MathOptInterface](https://jump.dev/MathOptInterface.jl/v0.9.1/apireference/#NLP-evaluator-methods-1).
-To obtain an NLP evaluator object from a JuMP model, use [`NLPEvaluator`](@ref).
-[`index`](@ref) returns the `MOI.VariableIndex` corresponding to a JuMP
+Internally, JuMP implements the [`MOI.AbstractNLPEvaluator`](@ref) interface. To
+obtain an NLP evaluator object from a JuMP model, use [`NLPEvaluator`](@ref).
+[`index`](@ref) returns the [`MOI.VariableIndex`](@ref) corresponding to a JuMP
 variable. `MOI.VariableIndex` itself is a type-safe wrapper for `Int64` (stored
 in the `.value` field.)
 
@@ -541,7 +544,7 @@ julia> @NLconstraint(model, cons1, sin(x) <= 1);
 julia> @NLconstraint(model, cons2, x + 5 == 10);
 
 julia> typeof(cons1)
-ConstraintRef{Model,NonlinearConstraintIndex,ScalarShape}
+NonlinearConstraintRef{ScalarShape} (alias for ConstraintRef{Model, NonlinearConstraintIndex, ScalarShape})
 
 julia> index(cons1)
 NonlinearConstraintIndex(1)
@@ -560,7 +563,7 @@ right-hand side when computing expressions. In other words, one-sided nonlinear
 constraints are always transformed to have a right-hand side of zero.
 
 This method of querying derivatives directly from a JuMP model is convenient for
-interacting with the model in a structured way, e.g., for accessing derivatives
+interacting with the model in a structured way, for example, for accessing derivatives
 of specific variables. For example, in statistical maximum likelihood estimation
 problems, one is often interested in the Hessian matrix at the optimal solution,
 which can be queried using the [`NLPEvaluator`](@ref).
@@ -569,6 +572,7 @@ which can be queried using the [`NLPEvaluator`](@ref).
 
 !!! warning
     This section requires advanced knowledge of Julia's `Expr`. You should read
+<<<<<<< HEAD
     the [Expressions and evaluation](https://docs.julialang.org/en/v1/manual/metaprogramming/#Expressions-and-evaluation) 
     section of the Julia documentation first.
 
@@ -576,12 +580,25 @@ In addition to the [`@NLexpression`](@ref), [`@NLobjective`](@ref) and
 [`@NLconstraint`](@ref) macros, it is also possible to provide Julia `Expr` 
 objects directly by using [`add_NL_expression`](@ref), 
 [`set_NL_objective`](@ref) and [`add_NL_constraint`](@ref).
+=======
+    the [Expressions and evaluation](https://docs.julialang.org/en/v1/manual/metaprogramming/#Expressions-and-evaluation)
+    section of the Julia documentation first.
+
+In addition to the [`@NLexpression`](@ref), [`@NLobjective`](@ref) and
+[`@NLconstraint`](@ref) macros, it is also possible to provide Julia `Expr`
+objects directly by using [`add_nonlinear_expression`](@ref),
+[`set_nonlinear_objective`](@ref) and [`add_nonlinear_constraint`](@ref).
+>>>>>>> 1bb9d45f9148c69638cc3c843bcd60a49022103d
 
 This input form may be useful if the expressions are generated programmatically.
 
 ### Add a nonlinear expression
 
+<<<<<<< HEAD
 Use [`add_NL_expression`](@ref) to add a nonlinear expression to the model.
+=======
+Use [`add_nonlinear_expression`](@ref) to add a nonlinear expression to the model.
+>>>>>>> 1bb9d45f9148c69638cc3c843bcd60a49022103d
 
 ```jldoctest; setup=:(using JuMP; model = Model())
 julia> @variable(model, x)
@@ -590,6 +607,7 @@ x
 julia> expr = :($(x) + sin($(x)^2))
 :(x + sin(x ^ 2))
 
+<<<<<<< HEAD
 julia> expr_ref = add_NL_expression(model, expr)
 "Reference to nonlinear expression #1"
 ```
@@ -597,6 +615,15 @@ This is equivalent to
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
 julia> @NLexpression(model, expr_ref, x + sin(x^2))
 "Reference to nonlinear expression #1"
+=======
+julia> expr_ref = add_nonlinear_expression(model, expr)
+subexpression[1]: x + sin(x ^ 2.0)
+```
+This is equivalent to
+```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+julia> expr_ref = @NLexpression(model, x + sin(x^2))
+subexpression[1]: x + sin(x ^ 2.0)
+>>>>>>> 1bb9d45f9148c69638cc3c843bcd60a49022103d
 ```
 
 !!! note
@@ -604,13 +631,13 @@ julia> @NLexpression(model, expr_ref, x + sin(x^2))
 
 ### Set the objective function
 
-Use [`set_NL_objective`](@ref) to set a nonlinear objective.
+Use [`set_nonlinear_objective`](@ref) to set a nonlinear objective.
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
 julia> expr = :($(x) + $(x)^2)
 :(x + x ^ 2)
 
-julia> set_NL_objective(model, MOI.MIN_SENSE, expr)
+julia> set_nonlinear_objective(model, MIN_SENSE, expr)
 ```
 This is equivalent to
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
@@ -618,17 +645,21 @@ julia> @NLobjective(model, Min, x + x^2)
 ```
 
 !!! note
+<<<<<<< HEAD
     You must use `MOI.MIN_SENSE` or `MOI.MAX_SENSE` instead of `Min` and `Max`.
+=======
+    You must use `MIN_SENSE` or `MAX_SENSE` instead of `Min` and `Max`.
+>>>>>>> 1bb9d45f9148c69638cc3c843bcd60a49022103d
 
 ### Add a constraint
 
-Use [`add_NL_constraint`](@ref) to add a nonlinear constraint.
+Use [`add_nonlinear_constraint`](@ref) to add a nonlinear constraint.
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
 julia> expr = :($(x) + $(x)^2)
 :(x + x ^ 2)
 
-julia> add_NL_constraint(model, :($(expr) <= 1))
+julia> add_nonlinear_constraint(model, :($(expr) <= 1))
 (x + x ^ 2.0) - 1.0 ≤ 0
 ```
 
@@ -652,7 +683,7 @@ julia> function main(functions::Vector{Function})
            for (i, f) in enumerate(functions)
                f_sym = Symbol("f_$(i)")
                register(model, f_sym, 1, f; autodiff = true)
-               add_NL_constraint(model, :($(f_sym)($(x)) <= 1))
+               add_nonlinear_constraint(model, :($(f_sym)($(x)) <= 1))
            end
            print(model)
            return
@@ -678,7 +709,7 @@ julia> function main(functions::Vector{Function})
                register(model, f_sym, 1, f; autodiff = true)
                push!(expr.args, :($(f_sym)($(x))))
            end
-           add_NL_constraint(model, :($(expr) <= 1))
+           add_nonlinear_constraint(model, :($(expr) <= 1))
            print(model)
            return
        end

@@ -24,6 +24,14 @@ struct DenseAxisArray{T,N,Ax,L<:NTuple{N,_AxisLookup}} <: AbstractArray{T,N}
     lookup::L
 end
 
+function Base.Array{T,N}(x::DenseAxisArray) where {T,N}
+    return convert(Array{T,N}, copy(x.data))
+end
+
+function Base.hash(d::DenseAxisArray, h::UInt)
+    return hash(d.data, hash(d.axes, hash(d.lookup, h)))
+end
+
 # Any -> _AxisLookup{<:Dict}: The most generic type of axis is a dictionary
 # which maps keys to their index. This works for any AbstractVector-type axis.
 
@@ -113,6 +121,56 @@ function Base.get(
     return i
 end
 
+# Implement a special case: If the axis is a vector of pairs, also allow tuples
+# as indices. This is needed due to the behavior pairs and tuples when iterating
+# through dictionaries, i.e., `x[(k, v) in d]` gets added as `x[k => v]`, even
+# though it looks to the user like they were tuples.
+
+function Base.getindex(
+    x::_AxisLookup{Dict{Pair{A,B},Int}},
+    key::Tuple{A,B},
+) where {A,B}
+    return x.data[key[1]=>key[2]]
+end
+
+function Base.getindex(
+    x::_AxisLookup{Dict{Pair{A,B},Int}},
+    keys::AbstractVector{<:Tuple{A,B}},
+) where {A,B}
+    return [x[key] for key in keys]
+end
+
+function Base.get(
+    x::_AxisLookup{Dict{Pair{A,B},Int}},
+    key::Tuple{A,B},
+    default,
+) where {A,B}
+    return get(x.data, key[1] => key[2], default)
+end
+
+_abstract_vector(x::AbstractVector) = x
+
+function _abstract_vector(x::AbstractVector{<:CartesianIndex})
+    return error(
+        "Unsupported index type `CartesianIndex` in axis: $x. Cartesian " *
+        "indices are restricted for indexing into and iterating over " *
+        "multidimensional arrays.",
+    )
+end
+
+_abstract_vector(x) = _abstract_vector([a for a in x])
+
+_abstract_vector(x::AbstractArray) = vec(x)
+
+function _abstract_vector(x::Number)
+    @warn(
+        "Axis contains one element: $x. If intended, you can safely " *
+        "ignore this warning. To explicitly pass the axis with one " *
+        "element, pass `[$x]` instead of `$x`.",
+    )
+    return _abstract_vector([x])
+end
+
 """
     DenseAxisArray(data::Array{T, N}, axes...) where {T, N}
 
@@ -136,7 +194,8 @@ julia> array[:b, 3]
 """
 function DenseAxisArray(data::Array{T,N}, axs...) where {T,N}
     @assert length(axs) == N
-    return DenseAxisArray(data, axs, build_lookup.(axs))
+    new_axes = _abstract_vector.(axs)  # Force all axes to be AbstractVector!
+    return DenseAxisArray(data, new_axes, build_lookup.(new_axes))
 end
 
 # A converter for different array types.
@@ -340,8 +399,8 @@ end
 # https://docs.julialang.org/en/v1/manual/interfaces/#man-interfaces-broadcasting
 # for implementing broadcast.
 
-function Base.BroadcastStyle(::Type{T}) where {T<:DenseAxisArray}
-    return Broadcast.ArrayStyle{T}()
+function Base.BroadcastStyle(::Type{<:DenseAxisArray})
+    return Broadcast.ArrayStyle{DenseAxisArray}()
 end
 
 function _broadcast_axes_check(x::NTuple{N}) where {N}
@@ -369,7 +428,7 @@ _broadcast_args(x::Any, tail) = (x, _broadcast_args(tail)...)
 _broadcast_args(x::DenseAxisArray, tail) = (x.data, _broadcast_args(tail)...)
 
 function Base.Broadcast.broadcasted(
-    ::Broadcast.ArrayStyle{<:DenseAxisArray},
+    ::Broadcast.ArrayStyle{DenseAxisArray},
     f,
     args...,
 )

@@ -159,11 +159,8 @@ function _check_vectorized(sense::Symbol)
     end
 end
 
-# two-argument build_constraint is used for one-sided constraints.
-# Right-hand side is zero.
-
 """
-    sense_to_set(_error::Function, ::Val{sense_symbol})
+    operator_to_set(_error::Function, ::Val{sense_symbol})
 
 Converts a sense symbol to a set `set` such that
 `@constraint(model, func sense_symbol 0)` is equivalent to
@@ -172,7 +169,7 @@ Converts a sense symbol to a set `set` such that
 ## Example
 
 Once a custom set is defined you can directly create a JuMP constraint with it:
-```jldoctest sense_to_set; setup = :(using JuMP)
+```jldoctest operator_to_set; setup = :(using JuMP)
 julia> struct CustomSet{T} <: MOI.AbstractScalarSet
            value::T
        end
@@ -190,8 +187,8 @@ x ∈ CustomSet{Float64}(1.0)
 
 However, there might be an appropriate sign that could be used in order to
 provide a more convenient syntax:
-```jldoctest sense_to_set
-julia> JuMP.sense_to_set(::Function, ::Val{:⊰}) = CustomSet(0.0)
+```jldoctest operator_to_set
+julia> JuMP.operator_to_set(::Function, ::Val{:⊰}) = CustomSet(0.0)
 
 julia> MOIU.shift_constant(set::CustomSet, value) = CustomSet(set.value + value)
 
@@ -202,125 +199,175 @@ Note that the whole function is first moved to the right-hand side, then the
 sign is transformed into a set with zero constant and finally the constant is
 moved to the set with `MOIU.shift_constant`.
 """
-function sense_to_set end
+function operator_to_set end
 
-function sense_to_set(_error::Function, ::Union{Val{:(<=)},Val{:(≤)}})
-    return MOI.LessThan(0.0)
-end
-function sense_to_set(_error::Function, ::Union{Val{:(>=)},Val{:(≥)}})
+operator_to_set(::Function, ::Union{Val{:(<=)},Val{:(≤)}}) = MOI.LessThan(0.0)
+
+function operator_to_set(::Function, ::Union{Val{:(>=)},Val{:(≥)}})
     return MOI.GreaterThan(0.0)
 end
-sense_to_set(_error::Function, ::Val{:(==)}) = MOI.EqualTo(0.0)
-function sense_to_set(_error::Function, ::Val{S}) where {S}
+
+operator_to_set(::Function, ::Val{:(==)}) = MOI.EqualTo(0.0)
+
+function operator_to_set(_error::Function, ::Val{S}) where {S}
     return _error("Unrecognized sense $S")
 end
 
-function _build_call(_error::Function, vectorized::Bool, func, set)
-    return if vectorized
-        :(build_constraint.($_error, $func, Ref($(esc(set)))))
-    else
-        :(build_constraint($_error, $func, $(esc(set))))
-    end
-end
-function parse_one_operator_constraint(
-    _error::Function,
-    vectorized::Bool,
-    ::Union{Val{:in},Val{:∈}},
-    func,
-    set,
-)
-    variable, parse_code = _MA.rewrite(func)
-    return parse_code, _build_call(_error, vectorized, variable, set)
-end
-function parse_one_operator_constraint(_error::Function, args...)
-    return _unknown_constraint_expr(_error)
+"""
+    _desparsify(x)
+
+If `x` is an `AbstractSparseArray`, return the dense equivalent, otherwise just
+return `x`.
+
+This function is used in `_build_constraint`.
+
+## Why is this needed?
+
+When broadcasting `f.(x)` over an `AbstractSparseArray` `x`, Julia first calls
+the equivalent of `f(zero(eltype(x))`. Here's an example:
+
+```julia
+julia> foo(x) = (println("Calling \$(x)"); x)
+foo (generic function with 1 method)
+
+julia> foo.(sparsevec([1, 2], [1, 2]))
+Calling 0
+Calling 1
+Calling 2
+2-element SparseVector{Int64, Int64} with 2 stored entries:
+  [1]  =  1
+  [2]  =  2
+```
+
+However, if `f` is mutating, this can have serious consequences! In our case,
+broadcasting `build_constraint` will add a new `0 = 0` constraint.
+
+Sparse arrays most-often arise when some input data to the constraint is sparse
+(e.g., a constant vector or matrix). Due to promotion and arithmetic, this
+results in a constraint function that is represented by an `AbstractSparseArray`,
+but is actually dense. Thus, we can safely `collect` the matrix into a dense
+array.
+
+If the function is sparse, it's not obvious what to do. What is the "zero"
+element of the result? What does it mean to broadcast `build_constraint` over a
+sparse array adding scalar constraints? This likely means that the user is using
+the wrong data structure. For simplicity, let's also call `collect` into a dense
+array, and wait for complaints.
+"""
+_desparsify(x::AbstractSparseArray) = collect(x)
+_desparsify(x) = x
+
+function _functionize(v::V) where {V<:AbstractVariableRef}
+    return convert(GenericAffExpr{Float64,V}, v)
 end
 
-_functionize(v::VariableRef) = convert(AffExpr, v)
-_functionize(v::AbstractArray{VariableRef}) = _functionize.(v)
+_functionize(v::AbstractArray{<:AbstractVariableRef}) = _functionize.(v)
+
+function _functionize(
+    v::LinearAlgebra.Symmetric{V},
+) where {V<:AbstractVariableRef}
+    return Symmetric(_functionize(v.data))
+end
+
 _functionize(x) = x
 _functionize(::MutableArithmetics.Zero) = 0.0
-function parse_one_operator_constraint(
-    _error::Function,
-    vectorized::Bool,
-    sense::Val,
-    lhs,
-    rhs,
-)
-    # Simple comparison - move everything to the LHS.
-    #
-    # `_functionize` deals with the pathological case where the `lhs` is a `VariableRef`
-    # and the `rhs` is a summation with no terms. `_build_call` should be passed a
-    # `GenericAffExpr` or a `GenericQuadExpr`, and not a `VariableRef` as would be the case
-    # without `_functionize`.
-    if vectorized
-        func = :($lhs .- $rhs)
-    else
-        func = :($lhs - $rhs)
-    end
-    set = sense_to_set(_error, sense)
-    variable, parse_code = _MA.rewrite(func)
-    return parse_code,
-    _build_call(_error, vectorized, :(_functionize($variable)), set)
-end
 
-function parse_constraint_expr(_error::Function, expr::Expr)
+"""
+    parse_constraint(_error::Function, expr::Expr)
+
+The entry-point for all constraint-related parsing.
+
+## Arguments
+
+ * The `_error` function is passed everywhere to provide better error messages
+ * `expr` comes from the `@constraint` macro. There are two possibilities:
+    * `@constraint(model, expr)`
+    * `@constraint(model, name[args], expr)`
+   In both cases, `expr` is the main component of the constraint.
+
+## Supported syntax
+
+JuMP currently supports the following `expr` objects:
+ * `lhs <= rhs`
+ * `lhs == rhs`
+ * `lhs >= rhs`
+ * `l <= body <= u`
+ * `u >= body >= l`
+ * `lhs ⟂ rhs`
+ * `lhs in rhs`
+ * `lhs ∈ rhs`
+ * `z => {constraint}`
+ * `!z => {constraint}`
+as well as all broadcasted variants.
+
+## Extensions
+
+The infrastructure behind `parse_constraint` is extendable. See
+[`parse_constraint_head`](@ref) and [`parse_constraint_call`](@ref) for details.
+"""
+function parse_constraint(_error::Function, expr::Expr)
     return parse_constraint_head(_error, Val(expr.head), expr.args...)
 end
-function parse_constraint_head(_error::Function, ::Val{:call}, args...)
-    return parse_constraint(_error, args...)
-end
 
-function parse_constraint(_error::Function, sense::Symbol, lhs, rhs)
-    (sense, vectorized) = _check_vectorized(sense)
-    return vectorized,
-    parse_one_operator_constraint(_error, vectorized, Val(sense), lhs, rhs)...
-end
+"""
+    parse_constraint_head(_error::Function, ::Val{head}, args...)
 
-function parse_ternary_constraint(
-    _error::Function,
-    vectorized::Bool,
-    lb,
-    ::Union{Val{:(<=)},Val{:(≤)}},
-    aff,
-    rsign::Union{Val{:(<=)},Val{:(≤)}},
-    ub,
-)
-    newaff, parseaff = _MA.rewrite(aff)
-    newlb, parselb = _MA.rewrite(lb)
-    newub, parseub = _MA.rewrite(ub)
-    if vectorized
-        buildcall = :(build_constraint.($_error, $newaff, $newlb, $newub))
-    else
-        buildcall = :(build_constraint($_error, $newaff, $newlb, $newub))
-    end
-    return parseaff, parselb, parseub, buildcall
-end
+Implement this method to intercept the parsing of an expression with head
+`head`.
 
-function parse_ternary_constraint(
-    _error::Function,
-    vectorized::Bool,
-    ub,
-    ::Union{Val{:(>=)},Val{:(≥)}},
-    aff,
-    rsign::Union{Val{:(>=)},Val{:(≥)}},
-    lb,
-)
-    return parse_ternary_constraint(
-        _error,
-        vectorized,
-        lb,
-        Val(:(<=)),
-        aff,
-        Val(:(<=)),
-        ub,
-    )
-end
+!!! warning
+    Extending the constraint macro at parse time is an advanced operation and
+    has the potential to interfere with existing JuMP syntax. Please discuss
+    with the [developer chatroom](https://gitter.im/JuliaOpt/jump-dev) before
+    publishing any code that implements these methods.
 
-function parse_ternary_constraint(_error::Function, args...)
+## Arguments
+
+ * `_error`: a function that accepts a `String` and throws the string as an
+   error, along with some descriptive information of the macro from which it was
+   thrown.
+ * `head`: the `.head` field of the `Expr` to intercept
+ * `args...`: the `.args` field of the `Expr`.
+
+## Returns
+
+This function must return:
+
+ * `is_vectorized::Bool`: whether the expression represents a broadcasted
+   expression like `x .<= 1`
+ * `parse_code::Expr`: an expression containing any setup or rewriting code that
+   needs to be called before `build_constraint`
+ * `build_code::Expr`: an expression that calls `build_constraint(` or
+   `build_constraint.(` depending on `is_vectorized`.
+
+## Existing implementations
+
+JuMP currently implements:
+
+   * `::Val{:call}`, which forwards calls to [`parse_constraint_call`](@ref)
+   * `::Val{:comparison}`, which handles the special case of `l <= body <= u`.
+
+See also: [`parse_constraint_call`](@ref), [`build_constraint`](@ref)
+"""
+function parse_constraint_head(_error::Function, ::Val{T}, args...) where {T}
     return _error(
-        "Only two-sided rows of the form lb <= expr <= ub or ub >= expr >= lb are supported.",
+        "Unsupported constraint expression: we don't know how to parse " *
+        "constraints containing expressions of type :$T.\n\nIf you are " *
+        "writing a JuMP extension, implement " *
+        "`parse_constraint_head(::Function, ::Val{:$T}, args...)",
     )
+end
+
+function parse_constraint_head(
+    _error::Function,
+    ::Val{:call},
+    op::Symbol,
+    args...,
+)
+    op, is_vectorized = _check_vectorized(op)
+    parse_code, build_call =
+        parse_constraint_call(_error, is_vectorized, Val(op), args...)
+    return is_vectorized, parse_code, build_call
 end
 
 function parse_constraint_head(
@@ -332,70 +379,155 @@ function parse_constraint_head(
     rsign::Symbol,
     ub,
 )
-    return parse_constraint(_error, lb, lsign, aff, rsign, ub)
-end
-
-function parse_constraint(
-    _error::Function,
-    lb,
-    lsign::Symbol,
-    aff,
-    rsign::Symbol,
-    ub,
-)
-    (lsign, lvectorized) = _check_vectorized(lsign)
-    (rsign, rvectorized) = _check_vectorized(rsign)
-    ((vectorized = lvectorized) == rvectorized) ||
-        _error("Signs are inconsistently vectorized")
-    parseaff, parselb, parseub, buildcall = parse_ternary_constraint(
-        _error,
-        vectorized,
-        lb,
-        Val(lsign),
-        aff,
-        Val(rsign),
-        ub,
-    )
-    parsecode = quote
-        $parseaff
-        $parselb
-        $parseub
+    lsign, lvectorized = _check_vectorized(lsign)
+    rsign, rvectorized = _check_vectorized(rsign)
+    if lvectorized != rvectorized
+        _error("Operators are inconsistently vectorized.")
     end
-    return vectorized, parsecode, buildcall
-end
-
-function _unknown_constraint_expr(_error::Function)
-    # Unknown
-    return _error(
-        "Constraints must be in one of the following forms:\n" *
-        "       expr1 <= expr2\n" *
-        "       expr1 >= expr2\n" *
-        "       expr1 == expr2\n" *
-        "       lb <= expr <= ub",
-    )
-end
-
-function parse_constraint_head(_error::Function, ::Val, args...)
-    return _unknown_constraint_expr(_error)
-end
-function parse_constraint(_error::Function, args...)
-    # Define this as the last fallback: either this is a function call that may
-    # be overridden by extensions, or a syntax that is not recognized.
-    # Multiple dispatch does not work here, due to ambiguity with:
-    #     parse_constraint(_error::Function, lb, lsign::Symbol, aff, rsign::Symbol, ub)
-    if args[1] isa Symbol
-        (sense, vectorized) = _check_vectorized(args[1])
-        vectorized,
-        parse_one_operator_constraint(
-            _error,
-            vectorized,
-            Val(sense),
-            args[2:end]...,
-        )...
+    if lsign in (:(<=), :≤) && rsign in (:(<=), :≤)
+        # Nothing. What we expect.
+    elseif lsign in (:(>=), :≥) && rsign in (:(>=), :≥)
+        # Flip lb and ub
+        lb, ub = ub, lb
     else
-        _unknown_constraint_expr(_error)
+        _error(
+            "Only two-sided rows of the form `lb <= expr <= ub` or " *
+            "`ub >= expr >= lb` are supported.",
+        )
     end
+    new_aff, parse_aff = _MA.rewrite(aff)
+    new_lb, parse_lb = _MA.rewrite(lb)
+    new_ub, parse_ub = _MA.rewrite(ub)
+    parse_code = quote
+        $parse_aff
+        $parse_lb
+        $parse_ub
+    end
+    build_call = if lvectorized
+        :(
+            build_constraint.(
+                $_error,
+                _desparsify($new_aff),
+                _desparsify($new_lb),
+                _desparsify($new_ub),
+            )
+        )
+    else
+        :(build_constraint($_error, $new_aff, $new_lb, $new_ub))
+    end
+    return lvectorized, parse_code, build_call
 end
+
+"""
+    parse_constraint_call(
+        _error::Function,
+        is_vectorized::Bool,
+        ::Val{op},
+        args...,
+    )
+
+Implement this method to intercept the parsing of a `:call` expression with
+operator `op`.
+
+!!! warning
+    Extending the constraint macro at parse time is an advanced operation and
+    has the potential to interfere with existing JuMP syntax. Please discuss
+    with the [developer chatroom](https://gitter.im/JuliaOpt/jump-dev) before
+    publishing any code that implements these methods.
+
+## Arguments
+
+ * `_error`: a function that accepts a `String` and throws the string as an
+   error, along with some descriptive information of the macro from which it was
+   thrown.
+ * `is_vectorized`: a boolean to indicate if `op` should be broadcast or not
+ * `op`: the first element of the `.args` field of the `Expr` to intercept
+ * `args...`: the `.args` field of the `Expr`.
+
+## Returns
+
+This function must return:
+
+ * `parse_code::Expr`: an expression containing any setup or rewriting code that
+   needs to be called before `build_constraint`
+ * `build_code::Expr`: an expression that calls `build_constraint(` or
+   `build_constraint.(` depending on `is_vectorized`.
+
+See also: [`parse_constraint_head`](@ref), [`build_constraint`](@ref)
+"""
+function parse_constraint_call(
+    _error::Function,
+    ::Bool,
+    ::Val{T},
+    args...,
+) where {T}
+    return _error(
+        "Unsupported constraint expression: we don't know how to parse " *
+        "constraints containing the operator $T.\n\nIf you are writing a " *
+        "JuMP extension, implement " *
+        "`parse_constraint_call(::Function, ::Bool, ::Val{$T}, args...)",
+    )
+end
+
+# `@constraint(model, func in set)`
+# `@constraint(model, func ∈ set)`
+function parse_constraint_call(
+    _error::Function,
+    vectorized::Bool,
+    ::Union{Val{:in},Val{:∈}},
+    func,
+    set,
+)
+    f, parse_code = _MA.rewrite(func)
+    build_call = if vectorized
+        :(build_constraint.($_error, _desparsify($f), Ref($(esc(set)))))
+    else
+        :(build_constraint($_error, $f, $(esc(set))))
+    end
+    return parse_code, build_call
+end
+
+"""
+    parse_constraint_call(
+        _error::Function,
+        vectorized::Bool,
+        ::Val{op},
+        lhs,
+        rhs,
+    ) where {op}
+
+Fallback handler for binary operators. These might be infix operators like
+`@constraint(model, lhs op rhs)`, or normal operators like
+`@constraint(model, op(lhs, rhs))`.
+
+In both cases, we rewrite as `lhs - rhs in operator_to_set(_error, op)`.
+
+See [`operator_to_set`](@ref) for details.
+"""
+function parse_constraint_call(
+    _error::Function,
+    vectorized::Bool,
+    operator::Val,
+    lhs,
+    rhs,
+)
+    func = vectorized ? :($lhs .- $rhs) : :($lhs - $rhs)
+    set = operator_to_set(_error, operator)
+    f, parse_code = _MA.rewrite(func)
+    # `_functionize` deals with the pathological case where the `lhs` is a
+    # `VariableRef` and the `rhs` is a summation with no terms.
+    f = :(_functionize($f))
+    build_call = if vectorized
+        :(build_constraint.($_error, _desparsify($f), Ref($(esc(set)))))
+    else
+        :(build_constraint($_error, $f, $(esc(set))))
+    end
+    return parse_code, build_call
+end
+
+###
+### Build constraints using actual data.
+###
 
 # Generic fallback.
 function build_constraint(_error::Function, func, set, args...; kwargs...)
@@ -436,9 +568,14 @@ function build_constraint(
     expr::Union{GenericAffExpr,GenericQuadExpr},
     set::MOI.AbstractScalarSet,
 )
-    offset = constant(expr)
-    add_to_expression!(expr, -offset)
-    return ScalarConstraint(expr, MOIU.shift_constant(set, -offset))
+    if MOI.Utilities.supports_shift_constant(typeof(set))
+        offset = constant(expr)
+        add_to_expression!(expr, -offset)
+        new_set = MOI.Utilities.shift_constant(set, -offset)
+        return ScalarConstraint(expr, new_set)
+    else
+        return ScalarConstraint(expr, set)
+    end
 end
 function build_constraint(
     _error::Function,
@@ -521,10 +658,23 @@ function build_constraint(
     )
 end
 
+function build_constraint(
+    _error::Function,
+    ::AbstractJuMPScalar,
+    ::Union{AbstractJuMPScalar,Real},
+    ::Union{AbstractJuMPScalar,Real},
+)
+    return _error(
+        "Interval constraint contains non-constant left- or " *
+        "right-hand sides. Reformulate as two separate " *
+        "constraints, or move all variables into the central term.",
+    )
+end
+
 # This method intercepts `@constraint(model, lb <= var <= ub)` and promotes
 # `var` to an `AffExpr` to form a `ScalarAffineFunction-in-Interval` instead of
-# `SingleVariable-in-Interval`. To create a
-# `MOI.SingleVariable`-in-`MOI.Interval`, use
+# `VariableIndex-in-Interval`. To create a
+# `MOI.VariableIndex`-in-`MOI.Interval`, use
 # `@constraint(model, var in MOI.Interval(lb, ub))`. We do this for consistency
 # with how one-sided (in)equality constraints are parsed.
 function build_constraint(
@@ -559,12 +709,11 @@ end
         args, macro_name::Symbol, parsefun::Function, source::LineNumberNode
     )
 
-Returns the code for the macro `@constraint_like args...` of syntax
+Returns the code for the macro `@constraint args...` of syntax
 ```julia
-@constraint_like(model, con, extra_arg, kw_args...)      # single constraint
-@constraint_like(model, ref, con, extra_arg, kw_args...) # group of constraints
+@constraint(model, con, extra_arg, kw_args...)      # single constraint
+@constraint(model, ref, con, extra_arg, kw_args...) # group of constraints
 ```
-where `@constraint_like` is either `@constraint` or `@SDconstraint`.
 
 The expression `con` is parsed by `parsefun` which returns a `build_constraint`
 call code that, when executed, returns an `AbstractConstraint`. The macro
@@ -601,7 +750,9 @@ function _constraint_macro(
     model = esc(pos_args[1])
     y = pos_args[2]
     extra = pos_args[3:end]
-
+    if isexpr(args[2], :block)
+        _error("Invalid syntax. Did you mean to use `@$(macro_name)s`?")
+    end
     # Determine if a reference/container argument was given by the user
     # There are six cases to consider:
     # y                                  | type of y | y.head
@@ -629,9 +780,12 @@ function _constraint_macro(
     end
 
     # Prepare the keyword arguments
-    extra_kw_args = filter(kw -> kw.args[1] != :base_name, kw_args)
+    extra_kw_args = filter(kw_args) do kw
+        return kw.args[1] != :base_name && kw.args[1] != :set_string_name
+    end
     base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
-
+    set_string_name_kw_args =
+        filter(kw -> kw.args[1] == :set_string_name, kw_args)
     # Set the base name
     name = Containers._get_name(c)
     if isempty(base_name_kw_args)
@@ -640,19 +794,9 @@ function _constraint_macro(
         base_name = esc(base_name_kw_args[1].args[2])
     end
 
-    if !isa(name, Symbol) && !anonvar
-        _error(
-            "Expression $name should not be used as a constraint name. Use the \"anonymous\" syntax $name = @constraint(model, ...) instead.",
-        )
-    end
-
-    (x.head == :block) && _error(
-        "Code block passed as constraint. Perhaps you meant to use @constraints instead?",
-    )
-
     # Strategy: build up the code for add_constraint, and if needed we will wrap
     # in a function returning `ConstraintRef`s and give it to `Containers.container`.
-    idxvars, indices = Containers._build_ref_sets(_error, c)
+    idxvars, indices = Containers.build_ref_sets(_error, c)
     if pos_args[1] in idxvars
         _error(
             "Index $(pos_args[1]) is the same symbol as the model. Use a " *
@@ -662,15 +806,18 @@ function _constraint_macro(
     vectorized, parsecode, buildcall = parsefun(_error, x)
     _add_positional_args(buildcall, extra)
     _add_kw_args(buildcall, extra_kw_args)
-    if vectorized
-        # TODO: Pass through names here.
-        constraintcall = :(add_constraint.($model, $buildcall))
+    name_expr = _name_call(base_name, idxvars)
+    new_name_expr = if isempty(set_string_name_kw_args)
+        Expr(:if, :(set_string_names_on_creation($model)), name_expr, "")
     else
-        constraintcall = :(add_constraint(
-            $model,
-            $buildcall,
-            $(_name_call(base_name, idxvars)),
-        ))
+        Expr(:if, esc(set_string_name_kw_args[1].args[2]), name_expr, "")
+    end
+    if vectorized
+        # For vectorized constraints, we set every constraint to have the same
+        # name.
+        constraintcall = :(add_constraint.($model, $buildcall, $new_name_expr))
+    else
+        constraintcall = :(add_constraint($model, $buildcall, $new_name_expr))
     end
     code = quote
         $parsecode
@@ -692,21 +839,12 @@ function _constraint_macro(
         macro_code = _macro_assign_and_return(
             creation_code,
             variable,
-            name,
+            name;
             model_for_registering = model,
         )
     end
     return _finalize_macro(model, macro_code, source)
 end
-
-"""
-    constraint_type(model::AbstractModel)
-
-Return the type of constraint references stored in `model`.
-
-This function needs to be implemented by all `AbstractModel`s
-"""
-constraint_type(m::Model) = ConstraintRef{typeof(m)}
 
 """
     @constraint(m::Model, expr, kw_args...)
@@ -744,6 +882,9 @@ The recognized keyword arguments in `kw_args` are the following:
   constraint names are set to `base_name[...]` for each index `...` of the axes
   `axes`.
 * `container`: Specify the container type.
+* `set_string_name::Bool = true`: control whether to set the
+  [`MOI.ConstraintName`](@ref) attribute. Passing `set_string_name = false` can
+  improve performance.
 
 ## Note for extending the constraint macro
 
@@ -774,125 +915,7 @@ enable this syntax by defining extensions of
 user syntax: `@constraint(model, ref[...], expr, my_arg, kw_args...)`.
 """
 macro constraint(args...)
-    return _constraint_macro(
-        args,
-        :constraint,
-        parse_constraint_expr,
-        __source__,
-    )
-end
-
-function parse_SD_constraint_expr(_error::Function, expr::Expr)
-    return parse_SD_constraint(_error, expr.args...)
-end
-function parse_SD_constraint(_error::Function, sense::Symbol, lhs, rhs)
-    # Simple comparison - move everything to the LHS
-    aff = :()
-    if sense == :⪰ || sense == :(≥) || sense == :(>=)
-        succ = lhs
-        prec = rhs
-    elseif sense == :⪯ || sense == :(≤) || sense == :(<=)
-        succ = rhs
-        prec = lhs
-    else
-        _error("Invalid sense $sense in SDP constraint")
-    end
-    if prec == 0
-        aff = succ
-    elseif succ == 0
-        aff = :(-$prec)
-    else
-        aff = :($succ - $prec)
-    end
-    vectorized = false
-    parsecode, buildcall = parse_one_operator_constraint(
-        _error,
-        false,
-        Val(:in),
-        aff,
-        :(JuMP.PSDCone()),
-    )
-    return vectorized, parsecode, buildcall
-end
-
-function parse_SD_constraint(_error::Function, args...)
-    return _error(
-        "Constraints must be in one of the following forms:\n" *
-        "       expr1 <= expr2\n" *
-        "       expr1 >= expr2",
-    )
-end
-
-"""
-    @SDconstraint(model::Model, expr)
-
-Add a semidefinite constraint described by the expression `expr`.
-
-    @SDconstraint(model::Model, ref[i=..., j=..., ...], expr)
-
-Add a group of semidefinite constraints described by the expression `expr`
-parametrized by `i`, `j`, ...
-
-The expression `expr` needs to be of the form `a sign b` where `sign` is `⪰`,
-`≥`, `>=`, `⪯`, `≤` or `<=` and `a` and `b` are `square` matrices. It constrains
-the square matrix `x` (or `-x` if the sign is `⪯`, `≤` or `<=`) to be symmetric
-and positive semidefinite where
-
-* `x = a`, if `b` is the symbol `0`,
-* `x = -b`, if `a` is the symbol `0`,
-* otherwise, `x = a - b`.
-
-By default, we check numerical symmetry of the matrix `x`, and if symmetry is
-violated by some arbitrary amount, we add explicit equality constraints.
-You can use `Symmetric(x) in PSDCone()` with the [`@constraint`](@ref) macro to
-skip these checks if you know the matrix must be symmetric; see
-[`PSDCone`](@ref) for more information.
-
-## Examples
-
-The following constrains the matrix `[x-1 2x-2; -3 x-4]` to be symmetric and
-positive semidefinite, that is, it constrains `2x-2` to be equal to `-3` and
-constrains all eigenvalues of the matrix to be nonnegative.
-```jldoctest; setup = :(using JuMP)
-julia> model = Model();
-
-julia> @variable(model, x)
-x
-
-julia> a = [x 2x
-            0  x];
-
-julia> b = [1 2
-            3 4];
-
-julia> cref = @SDconstraint(model, a ⪰ b)
-[x - 1  2 x - 2;
- -3     x - 4  ] ∈ PSDCone()
-
-julia> jump_function(constraint_object(cref))
-4-element Array{GenericAffExpr{Float64,VariableRef},1}:
- x - 1
- -3
- 2 x - 2
- x - 4
-
-julia> moi_set(constraint_object(cref))
-MathOptInterface.PositiveSemidefiniteConeSquare(2)
-```
-In the set `PositiveSemidefiniteConeSquare(2)` in the last output, `Square`
-means that the matrix is passed as a square matrix as the corresponding
-off-diagonal entries need to be constrained to be equal. A similar set
-`PositiveSemidefiniteConeTriangle` exists which only uses the upper triangular
-part of the matrix assuming that it is symmetric, see [`PSDCone`](@ref) to see
-how to use it.
-"""
-macro SDconstraint(args...)
-    return _constraint_macro(
-        args,
-        :SDconstraint,
-        parse_SD_constraint_expr,
-        __source__,
-    )
+    return _constraint_macro(args, :constraint, parse_constraint, __source__)
 end
 
 """
@@ -933,7 +956,7 @@ macro build_constraint(constraint_expr)
     end
 
     is_vectorized, parse_code, build_call =
-        parse_constraint_expr(_error, constraint_expr)
+        parse_constraint(_error, constraint_expr)
     result_variable = gensym()
     code = quote
         $parse_code
@@ -945,25 +968,17 @@ end
 
 _add_JuMP_prefix(s::Symbol) = Expr(:., JuMP, :($(QuoteNode(s))))
 
-for (mac, sym) in [
-    (:NLparameters, Symbol("@NLparameter")),
-    (:constraints, Symbol("@constraint")),
-    (:NLconstraints, Symbol("@NLconstraint")),
-    (:SDconstraints, Symbol("@SDconstraint")),
-    (:variables, Symbol("@variable")),
-    (:expressions, Symbol("@expression")),
-    (:NLexpressions, Symbol("@NLexpression")),
-]
+function _pluralize_macro(mac, sym)
     @eval begin
         macro $mac(m, x)
-            if typeof(x) != Expr || x.head != :block
+            if !(isa(x, Expr) && x.head == :block)
                 # We do a weird string interpolation here so that it gets
                 # interpolated at compile time, not run-time.
                 error("Invalid syntax for @" * $(string(mac)))
             end
             @assert isa(x.args[1], LineNumberNode)
             lastline = x.args[1]
-            code = Expr(:block)
+            code = Expr(:tuple)
             for it in x.args
                 if isa(it, LineNumberNode)
                     lastline = it
@@ -979,7 +994,7 @@ for (mac, sym) in [
                             push!(args, ex)
                         end
                     end
-                    mac = esc(
+                    macro_call = esc(
                         Expr(
                             :macrocall,
                             $(_add_JuMP_prefix(sym)),
@@ -988,26 +1003,34 @@ for (mac, sym) in [
                             args...,
                         ),
                     )
-                    push!(code.args, mac)
+                    push!(code.args, macro_call)
                 else # stand-alone symbol or expression
-                    push!(
-                        code.args,
-                        esc(
-                            Expr(
-                                :macrocall,
-                                $(_add_JuMP_prefix(sym)),
-                                lastline,
-                                m,
-                                it,
-                            ),
+                    macro_call = esc(
+                        Expr(
+                            :macrocall,
+                            $(_add_JuMP_prefix(sym)),
+                            lastline,
+                            m,
+                            it,
                         ),
                     )
+                    push!(code.args, macro_call)
                 end
             end
-            push!(code.args, :(nothing))
             return code
         end
     end
+end
+
+for (mac, sym) in [
+    (:NLparameters, Symbol("@NLparameter")),
+    (:constraints, Symbol("@constraint")),
+    (:NLconstraints, Symbol("@NLconstraint")),
+    (:variables, Symbol("@variable")),
+    (:expressions, Symbol("@expression")),
+    (:NLexpressions, Symbol("@NLexpression")),
+]
+    _pluralize_macro(mac, sym)
 end
 
 # Doc strings for the auto-generated macro pluralizations
@@ -1019,6 +1042,8 @@ Adds groups of constraints at once, in the same fashion as the
 
 The model must be the first argument, and multiple constraints can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the constraints that were defined.
 
 # Examples
 
@@ -1039,6 +1064,8 @@ Adds multiple variables to model at once, in the same fashion as the
 
 The model must be the first argument, and multiple variables can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the variables that were defined.
 
 # Examples
 
@@ -1061,8 +1088,10 @@ end)
 Adds multiple expressions to model at once, in the same fashion as the
 [`@expression`](@ref) macro.
 
-The model must be the first argument, and multiple variables can be added on
+The model must be the first argument, and multiple expressions can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the expressions that were defined.
 
 # Examples
 
@@ -1075,33 +1104,16 @@ end)
 """ :(@expressions)
 
 @doc """
-    @SDconstraints(model, args...)
-
-Adds multiple semi-definite constraints to model at once, in the same fashion as
-the [`@SDconstraint`](@ref) macro.
-
-The model must be the first argument, and multiple constraints can be added on
-multiple lines wrapped in a `begin ... end` block.
-
-# Examples
-
-```julia
-@SDconstraints(model, begin
-    A * x >= b
-    b - C * y >= 0
-end)
-```
-""" :(@SDconstraints)
-
-@doc """
      @NLparameters(model, args...)
 
- Create and return multiple nonlinear parameters attached to model `model`, in the same fashion as
- [`@NLparameter`](@ref) macro.
+Create and return multiple nonlinear parameters attached to model `model`, in
+the same fashion as [`@NLparameter`](@ref) macro.
 
- The model must be the first argument, and multiple parameters can be added on
- multiple lines wrapped in a `begin ... end` block. Distinct parameters need to be placed
- on separate lines as in the following example.
+The model must be the first argument, and multiple parameters can be added on
+multiple lines wrapped in a `begin ... end` block. Distinct parameters need to
+be placed on separate lines as in the following example.
+
+The macro returns a tuple containing the parameters that were defined.
 
 # Example
 ```jldoctest; setup=:(using JuMP)
@@ -1123,8 +1135,10 @@ value(x)
 Adds multiple nonlinear constraints to model at once, in the same fashion as
 the [`@NLconstraint`](@ref) macro.
 
-The model must be the first argument, and multiple variables can be added on
+The model must be the first argument, and multiple constraints can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the constraints that were defined.
 
 # Examples
 
@@ -1142,8 +1156,10 @@ end)
 Adds multiple nonlinear expressions to model at once, in the same fashion as the
 [`@NLexpression`](@ref) macro.
 
-The model must be the first argument, and multiple variables can be added on
+The model must be the first argument, and multiple expressions can be added on
 multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the expressions that were defined.
 
 # Examples
 
@@ -1160,7 +1176,7 @@ end)
 
 Return an expression whose value is an `MOI.OptimizationSense` corresponding
 to `sense`. Sense is either the symbol `:Min` or `:Max`, corresponding
-respectively to `MOI.MIN_SENSE` and `MOI.MAX_SENSE` or it is another symbol,
+respectively to `MIN_SENSE` and `MAX_SENSE` or it is another symbol,
 which should be the name of a variable or expression whose value is an
 `MOI.OptimizationSense`.
 In the last case, the expression throws an error using the `_error`
@@ -1168,9 +1184,9 @@ function in case the value is not an `MOI.OptimizationSense`.
 """
 function _moi_sense(_error::Function, sense)
     if sense == :Min
-        expr = MOI.MIN_SENSE
+        expr = MIN_SENSE
     elseif sense == :Max
-        expr = MOI.MAX_SENSE
+        expr = MAX_SENSE
     else
         # Refers to a variable that holds the sense.
         # TODO: Better document this behavior
@@ -1191,6 +1207,14 @@ function _throw_error_for_invalid_sense(
 )
     return sense
 end
+
+"""
+    _replace_zero(x)
+
+Replaces `_MA.Zero` with a floating point `0.0`.
+"""
+_replace_zero(::_MA.Zero) = 0.0
+_replace_zero(x) = x
 
 """
     @objective(model::Model, sense, func)
@@ -1233,7 +1257,7 @@ julia> @objective(model, Max, 2x - 1)
 To set a quadratic objective and set the objective sense programmatically, do
 as follows:
 ```jldoctest @objective
-julia> sense = MOI.MIN_SENSE
+julia> sense = MIN_SENSE
 MIN_SENSE::OptimizationSense = 0
 
 julia> @objective(model, sense, x^2 - 2x + 1)
@@ -1258,6 +1282,9 @@ macro objective(model, args...)
     newaff, parsecode = _MA.rewrite(x)
     code = quote
         $parsecode
+        # Don't leak a `_MA.Zero` if the objective expression is an empty
+        # summation, or other structure that returns `_MA.Zero()`.
+        $newaff = _replace_zero($newaff)
         set_objective($esc_model, $sense_expr, $newaff)
         $newaff
     end
@@ -1305,11 +1332,13 @@ macro expression(args...)
         _error("needs at least two arguments.")
     end
     length(kw_args) == 0 || _error("unrecognized keyword argument")
-
+    if isexpr(args[2], :block)
+        _error("Invalid syntax. Did you mean to use `@expressions`?")
+    end
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
-    idxvars, indices = Containers._build_ref_sets(_error, c)
+    idxvars, indices = Containers.build_ref_sets(_error, c)
     if args[1] in idxvars
         _error(
             "Index $(args[1]) is the same symbol as the model. Use a " *
@@ -1317,6 +1346,11 @@ macro expression(args...)
         )
     end
     code = _MA.rewrite_and_return(x)
+    code = quote
+        # Don't leak a `_MA.Zero` if the expression is an empty summation, or
+        # other structure that returns `_MA.Zero()`.
+        _replace_zero($code)
+    end
     code = Containers.container_code(idxvars, indices, code, requestedcontainer)
     # don't do anything with the model, but check that it's valid anyway
     if anonvar
@@ -1325,7 +1359,7 @@ macro expression(args...)
         macro_code = _macro_assign_and_return(
             code,
             variable,
-            Containers._get_name(c),
+            Containers._get_name(c);
             model_for_registering = m,
         )
     end
@@ -1336,50 +1370,215 @@ _esc_non_constant(x::Number) = x
 _esc_non_constant(x::Expr) = isexpr(x, :quote) ? x : esc(x)
 _esc_non_constant(x) = esc(x)
 
-# Returns the type of what `add_variable(::Model, build_variable(...))` would return where `...` represents the positional arguments.
-# Example: `@variable m [1:3] foo` will allocate an vector of element type `variable_type(m, foo)`
-# Note: it needs to be implemented by all `AbstractModel`s
-variable_type(m::Model) = VariableRef
-
 """
-    build_variable(_error::Function, info::VariableInfo; extra_kw_args...)
+    build_variable(
+        _error::Function,
+        info::VariableInfo,
+        args...;
+        kwargs...,
+    )
 
-Returns a new variable.
+Return a new [`AbstractVariable`](@ref) object.
 
-Extensions should define a method with additional positional arguments to
-dispatch the call to a different method. The return type should only depend on
-the positional arguments for `variable_type` to make sense.
+This method should only be implemented by developers creating JuMP extensions.
+It should never be called by users of JuMP.
 
-As an example, `@variable(model, x, foo)` foo will call
-`build_variable(_error, info, foo)`
+## Arguments
 
-See the [`@variable`](@ref) macro doc for more details.
+ * `_error`: a function to call instead of `error`. `_error` annotates the
+   error message with additional information for the user.
+ * `info`: an instance of [`VariableInfo`](@ref). This has a variety of fields
+   relating to the variable such as `info.lower_bound` and `info.binary`.
+ * `args`: optional additional positional arguments for extending the
+   [`@variable`](@ref) macro.
+ * `kwargs`: optional keyword arguments for extending the [`@variable`](@ref)
+   macro.
+
+See also: [`@variable`](@ref)
+
+!!! warning
+    Extensions should define a method with ONE positional argument to dispatch
+    the call to a different method. Creating an extension that relies on
+    multiple positional arguments leads to `MethodError`s if the user passes the
+    arguments in the wrong order.
+
+## Examples
+
+```julia
+@variable(model, x, Foo)
+```
+will call
+```julia
+build_variable(_error::Function, info::VariableInfo, ::Type{Foo})
+```
+
+Passing special-case positional arguments such as `Bin`, `Int`, and `PSD` is
+okay, along with keyword arguments:
+```julia
+@variable(model, x, Int, Foo(), mykwarg = true)
+# or
+@variable(model, x, Foo(), Int, mykwarg = true)
+```
+will call
+```julia
+build_variable(_error::Function, info::VariableInfo, ::Foo; mykwarg)
+```
+and `info.integer` will be true.
+
+Note that the order of the positional arguments does not matter.
 """
-function build_variable(_error::Function, info::VariableInfo; extra_kw_args...)
-    for (kwarg, _) in extra_kw_args
-        _error("Unrecognized keyword argument $kwarg")
+function build_variable(
+    _error::Function,
+    info::VariableInfo,
+    args...;
+    kwargs...,
+)
+    if length(args) > 0
+        _error(
+            "Unrecognized positional arguments: $(args). (You may have " *
+            "passed it as a positional argument, or as a keyword value to " *
+            "`variable_type`.)\n\nIf you're trying to create a JuMP " *
+            "extension, you need to implement `build_variable`. Read the " *
+            "docstring for more details.",
+        )
+    end
+    for (key, _) in kwargs
+        _error(
+            "Unrecognized keyword argument: $key.\n\nIf you're trying " *
+            "to create a JuMP extension, you need to implement " *
+            "`build_variable`. Read the docstring for more details.",
+        )
+    end
+    if info.lower_bound isa AbstractArray
+        _error(
+            """
+            Passing arrays as variable bounds without indexing them is not supported.
+
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] >= lb)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] >= lb[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            set_lower_bound.(x, lb)
+            ```
+            """,
+        )
+    elseif info.upper_bound isa AbstractArray
+        _error(
+            """
+            Passing arrays as variable bounds without indexing them is not supported.
+
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] <= ub)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] <= ub[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            set_upper_bound.(x, ub)
+            ```
+            """,
+        )
+    elseif info.fixed_value isa AbstractArray
+        _error(
+            """
+            Passing arrays as variable bounds without indexing them is not supported.
+
+            Instead of:
+            ```julia
+            @variable(model, x[1:2] == fx)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2] == fx[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            fix.(x, fx)
+            ```
+            """,
+        )
+    elseif info.start isa AbstractArray
+        _error(
+            """
+            Passing arrays as variable starts without indexing them is not supported.
+
+            Instead of:
+            ```julia
+            @variable(model, x[1:2], start = x0)
+            ```
+            use
+            ```julia
+            @variable(model, x[i=1:2], start = x0[i])
+            ```
+            or
+            ```julia
+            @variable(model, x[1:2])
+            set_start_value.(x, x0)
+            ```
+            """,
+        )
     end
     return ScalarVariable(info)
 end
 
-function build_variable(_error::Function, ::VariableInfo, args...; kwargs...)
-    return _error(
-        "Unrecognized arguments: $(join(args, ", ")). (You may have passed " *
-        "these as positional arguments, or as a keyword value to " *
-        "`variable_type`.)\n\nIf you're trying to create a JuMP extension, " *
-        "you need to implement `build_variable`.",
-    )
-end
-
 function build_variable(
-    _error::Function,
+    ::Function,
     variable::AbstractVariable,
     set::MOI.AbstractScalarSet,
 )
     return VariableConstrainedOnCreation(variable, set)
 end
+
 function build_variable(
     _error::Function,
+    variables::AbstractArray{<:ScalarVariable},
+    sets::AbstractArray{<:MOI.AbstractScalarSet},
+)
+    if length(variables) != length(sets)
+        return _error(
+            "Dimensions must match. Got a vector of scalar variables with" *
+            "$(length(variables)) elements and a vector of " *
+            "scalar sets with $(length(sets)).",
+        )
+    end
+    return VariableConstrainedOnCreation.(variables, sets)
+end
+
+function build_variable(
+    ::Function,
+    variables::AbstractArray{<:ScalarVariable},
+    set::MOI.AbstractScalarSet,
+)
+    return VariableConstrainedOnCreation.(variables, Ref(set))
+end
+
+function build_variable(
+    _error::Function,
+    ::ScalarVariable,
+    sets::AbstractArray{<:MOI.AbstractScalarSet},
+)
+    return _error(
+        "It is not possible to add a scalar variable in an Array of " *
+        "sets. Either add an Array of scalar variables in a scalar set or " *
+        "add an Array of scalar variables in an Array of scalar sets of " *
+        "the same dimension.",
+    )
+end
+
+function build_variable(
+    ::Function,
     variables::Vector{<:AbstractVariable},
     set::MOI.AbstractVectorSet,
 )
@@ -1425,6 +1624,14 @@ reverse_sense(::Val{:>=}) = Val(:<=)
 reverse_sense(::Val{:≥}) = Val(:≤)
 reverse_sense(::Val{:(==)}) = Val(:(==))
 
+function parse_variable(_error::Function, ::_VariableInfoExpr, args...)
+    return _error(
+        "Invalid syntax: your syntax is wrong, but we don't know why. " *
+        "Consult the documentation for various ways to create variables in " *
+        "JuMP.",
+    )
+end
+
 """
     parse_one_operator_variable(_error::Function, infoexpr::_VariableInfoExpr, sense::Val{S}, value) where S
 
@@ -1443,7 +1650,7 @@ end
 function parse_one_operator_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
-    ::Union{Val{:<=},Val{:≤}},
+    ::Union{Val{:<=},Val{:≤},Val{:.<=},Val{:.≤}},
     upper,
 )
     _set_upper_bound_or_error(_error, infoexpr, upper)
@@ -1452,7 +1659,7 @@ end
 function parse_one_operator_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
-    ::Union{Val{:>=},Val{:≥}},
+    ::Union{Val{:>=},Val{:≥},Val{:.>=},Val{:.≥}},
     lower,
 )
     _set_lower_bound_or_error(_error, infoexpr, lower)
@@ -1461,7 +1668,7 @@ end
 function parse_one_operator_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
-    ::Val{:(==)},
+    ::Union{Val{:(==)},Val{:.==}},
     value,
 )
     _fix_or_error(_error, infoexpr, value)
@@ -1520,9 +1727,9 @@ end
 function parse_ternary_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
-    ::Union{Val{:<=},Val{:≤}},
+    ::Union{Val{:<=},Val{:≤},Val{:.<=},Val{:.≤}},
     lower,
-    ::Union{Val{:<=},Val{:≤}},
+    ::Union{Val{:<=},Val{:≤},Val{:.<=},Val{:.≤}},
     upper,
 )
     _set_lower_bound_or_error(_error, infoexpr, lower)
@@ -1532,9 +1739,9 @@ end
 function parse_ternary_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
-    ::Union{Val{:>=},Val{:≥}},
+    ::Union{Val{:>=},Val{:≥},Val{:.>=},Val{:.≥}},
     upper,
-    ::Union{Val{:>=},Val{:≥}},
+    ::Union{Val{:>=},Val{:≥},Val{:.>=},Val{:.≥}},
     lower,
 )
     return parse_ternary_variable(
@@ -1591,102 +1798,107 @@ function _reorder_parameters(args)
 end
 
 """
-    @variable(model, kw_args...)
-
-Add an *anonymous* variable to the model `model` described by the keyword
-arguments `kw_args` and returns the variable.
-
     @variable(model, expr, args..., kw_args...)
 
 Add a variable to the model `model` described by the expression `expr`, the
-positional arguments `args` and the keyword arguments `kw_args`. The expression
-`expr` can either be (note that in the following the symbol `<=` can be used
-instead of `≤`, the symbol `>=`can be used instead of `≥`, the symbol `in` can be
-used instead of `∈`)
+positional arguments `args` and the keyword arguments `kw_args`.
 
-* of the form `varexpr` creating variables described by `varexpr`;
-* of the form `varexpr ≤ ub` (resp. `varexpr ≥ lb`) creating variables described by
-  `varexpr` with upper bounds given by `ub` (resp. lower bounds given by `lb`);
-* of the form `varexpr == value` creating variables described by `varexpr` with
-  fixed values given by `value`; or
-* of the form `lb ≤ varexpr ≤ ub` or `ub ≥ varexpr ≥ lb` creating variables
-  described by `varexpr` with lower bounds given by `lb` and upper bounds given
-  by `ub`.
-* of the form `varexpr ∈ set` creating variables described by
-  `varexpr` constrained to belong to `set`, see [Variables constrained on creation](@ref).
+## Anonymous and named variables
 
-The expression `varexpr` can either be
+`expr` must be one of the forms:
 
-* of the form `varname` creating a scalar real variable of name `varname`;
-* of the form `varname[...]` or `[...]` creating a container of variables.
+ * Omitted, like `@variable(model)`, which creates an anonymous variable
+ * A single symbol like `@variable(model, x)`
+ * A container expression like `@variable(model, x[i=1:3])`
+ * An anoymous container expression like `@variable(model, [i=1:3])`
+
+## Bounds
+
+In addition, the expression can have bounds, such as:
+
+ * `@variable(model, x >= 0)`
+ * `@variable(model, x <= 0)`
+ * `@variable(model, x == 0)`
+ * `@variable(model, 0 <= x <= 1)`
+
+and bounds can depend on the indices of the container expressions:
+
+ * `@variable(model, -i <= x[i=1:3] <= i)`
+
+## Sets
+
+You can explicitly specify the set to which the variable belongs:
+
+ * `@variable(model, x in MOI.Interval(0.0, 1.0))`
+
+ For more information on this syntax, read
+[Variables constrained on creation](@ref).
+
+## Positional arguments
 
 The recognized positional arguments in `args` are the following:
 
-* `Bin`: Sets the variable to be binary, i.e. either 0 or 1.
-* `Int`: Sets the variable to be integer, i.e. one of ..., -2, -1, 0, 1, 2, ...
-* `Symmetric`: Only available when creating a square matrix of variables, i.e.
-  when `varexpr` is of the form `varname[1:n,1:n]` or `varname[i=1:n,j=1:n]`.
-  It creates a symmetric matrix of variable, that is, it only creates a
-  new variable for `varname[i,j]` with `i ≤ j` and sets `varname[j,i]` to the
-  same variable as `varname[i,j]`. It is equivalent to using
-  `varexpr in SymMatrixSpace()` as `expr`.
-* `PSD`: The square matrix of variable is both `Symmetric` and constrained to be
-  positive semidefinite. It is equivalent to using `varexpr in PSDCone()` as
-  `expr`.
+ * `Bin`: restricts the variable to the [`MOI.ZeroOne`](@ref) set, that is,
+   `{0, 1}`. For example, `@variable(model, x, Bin)`. Note: you cannot use
+   `@variable(model, Bin)`, use the `binary` keyword instead.
+ * `Int`: restricts the variable to the set of integers, that is, ..., -2, -1,
+    0, 1, 2, ... For example, `@variable(model, x, Int)`. Note: you cannot use
+    `@variable(model, Int)`, use the `integer` keyword instead.
+ * `Symmetric`: Only available when creating a square matrix of variables, i.e.,
+   when `expr` is of the form `varname[1:n,1:n]` or `varname[i=1:n,j=1:n]`,
+   it creates a symmetric matrix of variables.
+ * `PSD`: A restrictive extension to `Symmetric` which constraints a square
+   matrix of variables to `Symmetric` and constrains to be positive
+   semidefinite.
 
-The recognized keyword arguments in `kw_args` are the following:
+## Keyword arguments
 
-* `base_name`: Sets the name prefix used to generate variable names. It
-  corresponds to the variable name for scalar variable, otherwise, the
-  variable names are set to `base_name[...]` for each index `...` of the axes
-  `axes`.
-* `lower_bound`: Sets the value of the variable lower bound.
-* `upper_bound`: Sets the value of the variable upper bound.
-* `start`: Sets the variable starting value used as initial guess in optimization.
-* `binary`: Sets whether the variable is binary or not.
-* `integer`: Sets whether the variable is integer or not.
-* `variable_type`: See the "Note for extending the variable macro" section below.
-* `set`: Equivalent to using `varexpr in value` as `expr` where `value` is the
-  value of the keyword argument.
-* `container`: Specify the container type.
+Four keyword arguments are useful in all cases:
+
+ * `base_name`: Sets the name prefix used to generate variable names. It
+   corresponds to the variable name for scalar variable, otherwise, the
+   variable names are set to `base_name[...]` for each index `...` of the axes
+   `axes`.
+ * `start::Float64`: specify the value passed to `set_start_value` for each
+   variable
+ * `container`: specify the container type. See
+   [Forcing the container type](@ref variable_forcing) for more information.
+ * `set_string_name::Bool = true`: control whether to set the
+   [`MOI.VariableName`](@ref) attribute. Passing `set_string_name = false` can
+   improve performance.
+
+Other keyword arguments are needed to disambiguate sitations with anonymous
+variables:
+
+ * `lower_bound::Float64`: an alternative to `x >= lb`, sets the value of the
+   variable lower bound.
+ * `upper_bound::Float64`: an alternative to `x <= ub`, sets the value of the
+   variable upper bound.
+ * `binary::Bool`: an alternative to passing `Bin`, sets whether the variable
+   is binary or not.
+ * `integer::Bool`: an alternative to passing `Int`, sets whether the variable
+   is integer or not.
+ * `set::MOI.AbstractSet`: an alternative to using `x in set`
+ * `variable_type`: used by JuMP extensions. See
+   [Extend `@variable`](@ref extend_variable_macro) for more information.
 
 ## Examples
 
 The following are equivalent ways of creating a variable `x` of name `x` with
 lower bound 0:
 ```julia
-# Specify everything in `expr`
+model = Model()
 @variable(model, x >= 0)
-# Specify the lower bound using a keyword argument
-@variable(model, x, lower_bound=0)
-# Specify everything in `kw_args`
-x = @variable(model, base_name="x", lower_bound=0)
+@variable(model, x, lower_bound = 0)
+x = @variable(model, base_name = "x", lower_bound = 0)
 ```
 
-The following are equivalent ways of creating a `DenseAxisArray` of index set
-`[:a, :b]` and with respective upper bounds 2 and 3 and names `x[a]` and `x[b]`.
-The upper bound can either be specified in `expr`:
-```jldoctest variable_macro; setup = :(using JuMP; model = Model())
-ub = Dict(:a => 2, :b => 3)
-@variable(model, x[i=keys(ub)] <= ub[i])
-
-# output
-1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
-    Dimension 1, Symbol[:a, :b]
-And data, a 2-element Array{VariableRef,1}:
- x[a]
- x[b]
-```
-or it can be specified with the `upper_bound` keyword argument:
-```jldoctest variable_macro
-@variable(model, y[i=keys(ub)], upper_bound=ub[i])
-
-# output
-1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
-    Dimension 1, Symbol[:a, :b]
-And data, a 2-element Array{VariableRef,1}:
- y[a]
- y[b]
+Other examples:
+```julia
+model = Model()
+@variable(model, x[i=1:3] <= i, Int, start = sqrt(i), lower_bound = -i)
+@variable(model, y[i=1:3], container = DenseAxisArray, set = MOI.ZeroOne())
+@variable(model, z[i=1:3], set_string_name = false)
 ```
 """
 macro variable(args...)
@@ -1696,7 +1908,9 @@ macro variable(args...)
     # them first(!) in the list of arguments.
     args = _reorder_parameters(args)
     model = esc(args[1])
-
+    if length(args) >= 2 && isexpr(args[2], :block)
+        _error("Invalid syntax. Did you mean to use `@variables`?")
+    end
     extra, kw_args, requestedcontainer =
         Containers._extract_kw_args(args[2:end])
 
@@ -1732,6 +1946,7 @@ macro variable(args...)
             kw.args[1] != :base_name &&
                 kw.args[1] != :variable_type &&
                 kw.args[1] != :set &&
+                kw.args[1] != :set_string_name &&
                 !_is_info_keyword(kw)
         end,
         kw_args,
@@ -1739,6 +1954,8 @@ macro variable(args...)
     base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
     variable_type_kw_args = filter(kw -> kw.args[1] == :variable_type, kw_args)
     set_kw_args = filter(kw -> kw.args[1] == :set, kw_args)
+    set_string_name_kw_args =
+        filter(kw -> kw.args[1] == :set_string_name, kw_args)
     infoexpr = _VariableInfoExpr(; _keywordify.(info_kw_args)...)
 
     # There are four cases to consider:
@@ -1757,7 +1974,6 @@ macro variable(args...)
         var = x
         set = nothing
     end
-
     anonvar = isexpr(var, :vect) || isexpr(var, :vcat) || anon_singleton
     if anonvar && explicit_comparison && set === nothing
         _error(
@@ -1771,12 +1987,6 @@ macro variable(args...)
         base_name = anonvar ? "" : string(name)
     else
         base_name = esc(base_name_kw_args[1].args[2])
-    end
-
-    if !isa(name, Symbol) && !anonvar
-        Base.error(
-            "Expression $name should not be used as a variable name. Use the \"anonymous\" syntax $name = @variable(model, ...) instead.",
-        )
     end
 
     if !isempty(set_kw_args)
@@ -1808,7 +2018,7 @@ macro variable(args...)
                 "Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `$set`.",
             )
         end
-        set = :(JuMP.SymMatrixSpace())
+        set = :(JuMP.SymmetricMatrixSpace())
     end
     extra = filter(x -> (x != :PSD && x != :Symmetric), extra) # filter out PSD and sym tag
     for ex in extra
@@ -1831,7 +2041,7 @@ macro variable(args...)
         isa(var, Expr) || _error("Expected $var to be a variable name")
         # We now build the code to generate the variables (and possibly the
         # SparseAxisArray to contain them)
-        idxvars, indices = Containers._build_ref_sets(_error, var)
+        idxvars, indices = Containers.build_ref_sets(_error, var)
         if args[1] in idxvars
             _error(
                 "Index $(args[1]) is the same symbol as the model. Use a " *
@@ -1865,8 +2075,12 @@ macro variable(args...)
         end
         buildcall = :(build_variable($_error, $scalar_variables, $set))
     end
-
-    variablecall = :(add_variable($model, $buildcall, $name_code))
+    new_name_code = if isempty(set_string_name_kw_args)
+        Expr(:if, :(set_string_names_on_creation($model)), name_code, "")
+    else
+        Expr(:if, esc(set_string_name_kw_args[1].args[2]), name_code, "")
+    end
+    variablecall = :(add_variable($model, $buildcall, $new_name_code))
     if isa(var, Symbol) || set !== nothing
         # The looped code is trivial here since there is a single variable
         creation_code = variablecall
@@ -1890,7 +2104,7 @@ macro variable(args...)
         macro_code = _macro_assign_and_return(
             creation_code,
             variable,
-            name,
+            name;
             model_for_registering = model,
         )
     end
@@ -1936,6 +2150,9 @@ macro NLconstraint(m, x, args...)
         return _macro_error(:NLconstraint, (m, x, args...), __source__, str...)
     end
     esc_m = esc(m)
+    if isexpr(x, :block)
+        _error("Invalid syntax. Did you mean to use `@NLconstraints`?")
+    end
     # Two formats:
     # - @NLconstraint(m, a*x <= 5)
     # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
@@ -1950,7 +2167,7 @@ macro NLconstraint(m, x, args...)
 
     # Strategy: build up the code for non-macro add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
-    idxvars, indices = Containers._build_ref_sets(_error, c)
+    idxvars, indices = Containers.build_ref_sets(_error, c)
     if m in idxvars
         _error(
             "Index $(m) is the same symbol as the model. Use a different " *
@@ -1994,10 +2211,12 @@ macro NLconstraint(m, x, args...)
         lb = con.args[1]
         ub = con.args[5]
         code = quote
-            if !isa($(esc(lb)), Number)
-                _error("expected ", $(string(lb)), " to be a number.")
-            elseif !isa($(esc(ub)), Number)
-                _error("expected ", $(string(ub)), " to be a number.")
+            if !isa($(esc(lb)), Number) || !isa($(esc(ub)), Number)
+                error(
+                    "Interval constraint contains non-constant left- or " *
+                    "right-hand sides. Reformulate as two separate " *
+                    "constraints, or move all variables into the central term.",
+                )
             end
             c = _NonlinearConstraint(
                 $(_process_NL_expr(m, con.args[3])),
@@ -2032,7 +2251,7 @@ macro NLconstraint(m, x, args...)
         macro_code = _macro_assign_and_return(
             creation_code,
             variable,
-            Containers._get_name(c),
+            Containers._get_name(c);
             model_for_registering = esc_m,
         )
     end
@@ -2070,6 +2289,9 @@ macro NLexpression(args...)
     elseif length(args) == 3
         m, c, x = args
     end
+    if isexpr(args[2], :block)
+        _error("Invalid syntax. Did you mean to use `@NLexpressions`?")
+    end
     if length(args) > 3 || length(kw_args) > 0
         _error("To many arguments ($(length(args))).")
     end
@@ -2077,7 +2299,7 @@ macro NLexpression(args...)
     anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
-    idxvars, indices = Containers._build_ref_sets(_error, c)
+    idxvars, indices = Containers.build_ref_sets(_error, c)
     if args[1] in idxvars
         _error(
             "Index $(args[1]) is the same symbol as the model. Use a " *
@@ -2093,7 +2315,7 @@ macro NLexpression(args...)
         macro_code = _macro_assign_and_return(
             creation_code,
             variable,
-            Containers._get_name(c),
+            Containers._get_name(c);
             model_for_registering = esc(m),
         )
     end
@@ -2117,6 +2339,23 @@ value(x)
 10.0
 ```
 
+    @NLparameter(model, value = param_value)
+
+Create and return an anonymous nonlinear parameter `param` attached to the model
+`model` with initial value set to `param_value`. Nonlinear parameters may be
+used only in nonlinear expressions.
+
+## Example
+
+```jldoctest; setup=:(using JuMP)
+model = Model()
+x = @NLparameter(model, value = 10)
+value(x)
+
+# output
+10.0
+```
+
     @NLparameter(model, param_collection[...] == value_expr)
 
 Create and return a collection of nonlinear parameters `param_collection`
@@ -2124,7 +2363,8 @@ attached to the model `model` with initial value set to `value_expr` (may
 depend on index sets).
 Uses the same syntax for specifying index sets as [`@variable`](@ref).
 
-# Example
+## Example
+
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @NLparameter(model, y[i = 1:10] == 2 * i)
@@ -2133,50 +2373,87 @@ value(y[9])
 # output
 18.0
 ```
+
+    @NLparameter(model, [...] == value_expr)
+
+Create and return an anonymous collection of nonlinear parameters attached to
+the model `model` with initial value set to `value_expr` (may depend on index
+sets). Uses the same syntax for specifying index sets as [`@variable`](@ref).
+
+## Example
+
+```jldoctest; setup=:(using JuMP)
+model = Model()
+y = @NLparameter(model, [i = 1:10] == 2 * i)
+value(y[9])
+
+# output
+18.0
+```
 """
-macro NLparameter(m, ex, extra...)
+macro NLparameter(model, args...)
+    esc_m = esc(model)
     function _error(str...)
-        return _macro_error(:NLparameter, (m, ex, extra...), __source__, str...)
+        return _macro_error(:NLparameter, (model, args...), __source__, str...)
     end
-
-    extra, kw_args, requestedcontainer = Containers._extract_kw_args(extra)
-    (length(extra) == 0 && length(kw_args) == 0) ||
-        _error("Too many arguments.")
-    if !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
-        _error("Syntax error.")
+    pos_args, kw_args, requested_container = Containers._extract_kw_args(args)
+    value = missing
+    for arg in kw_args
+        if arg.args[1] == :value
+            value = arg.args[2]
+        end
     end
-    c = ex.args[2]
-    x = ex.args[3]
-    anonvar = isexpr(c, :vect) || isexpr(c, :vcat)
-    if anonvar
+    kw_args = filter(kw -> kw.args[1] != :value, kw_args)
+    if !ismissing(value) && length(pos_args) > 0
         _error(
-            "Anonymous nonlinear parameter syntax is not currently supported.",
+            "Invalid syntax: no positional args allowed for anonymous " *
+            "parameters.",
         )
+    elseif length(pos_args) > 1
+        _error("Invalid syntax: too many positional arguments.")
+    elseif length(kw_args) > 0
+        _error("Invalid syntax: unsupported keyword arguments.")
+    elseif ismissing(value) && isexpr(pos_args[1], :block)
+        _error("Invalid syntax: did you mean to use `@NLparameters`?")
+    elseif ismissing(value)
+        ex = pos_args[1]
+        if !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
+            _error("Invalid syntax: expected syntax of form `param == value`.")
+        end
     end
-    esc_m = esc(m)
-    variable = gensym()
-
-    idxvars, indices = Containers._build_ref_sets(_error, c)
-    if m in idxvars
+    param, anon = gensym(), true
+    if ismissing(value)
+        param, value = pos_args[1].args[2], pos_args[1].args[3]
+        anon = isexpr(param, :vect) || isexpr(param, :vcat)
+    end
+    index_vars, index_values = Containers.build_ref_sets(_error, param)
+    if model in index_vars
         _error(
-            "Index $(m) is the same symbol as the model. Use a different " *
+            "Index $(model) is the same symbol as the model. Use a different " *
             "name for the index.",
         )
     end
     code = quote
-        if !isa($(esc(x)), Number)
-            _error("Expected ", $(string(x)), " to be a number.")
+        if !isa($(esc(value)), Number)
+            $(esc(_error))("Parameter value is not a number.")
         end
-        _new_parameter($esc_m, $(esc(x)))
+        _new_parameter($esc_m, $(esc(value)))
     end
-    creation_code = Containers.container_code(idxvars, indices, code, :Auto)
-
-    # TODO: NLparameters are not registered in the model because we don't yet
-    # have an anonymous version.
-    macro_code = _macro_assign_and_return(
-        creation_code,
-        variable,
-        Containers._get_name(c),
+    creation_code = Containers.container_code(
+        index_vars,
+        index_values,
+        code,
+        requested_container,
     )
+    macro_code = if anon
+        creation_code
+    else
+        _macro_assign_and_return(
+            creation_code,
+            gensym(),
+            Containers._get_name(param);
+            model_for_registering = esc_m,
+        )
+    end
     return _finalize_macro(esc_m, macro_code, __source__)
 end

@@ -10,13 +10,13 @@ function _build_indicator_constraint(
     _error::Function,
     variable::AbstractVariableRef,
     constraint::ScalarConstraint,
-    ::Type{MOI.IndicatorSet{A}},
+    ::Type{MOI.Indicator{A}},
 ) where {A}
-    set = MOI.IndicatorSet{A}(moi_set(constraint))
+    set = MOI.Indicator{A}(moi_set(constraint))
     return VectorConstraint([variable, jump_function(constraint)], set)
 end
 function _indicator_variable_set(::Function, variable::Symbol)
-    return variable, MOI.IndicatorSet{MOI.ACTIVATE_ON_ONE}
+    return variable, MOI.Indicator{MOI.ACTIVATE_ON_ONE}
 end
 function _indicator_variable_set(_error::Function, expr::Expr)
     if expr.args[1] == :¬ || expr.args[1] == :!
@@ -25,12 +25,12 @@ function _indicator_variable_set(_error::Function, expr::Expr)
                 "Invalid binary variable expression `$(expr)` for indicator constraint.",
             )
         end
-        return expr.args[2], MOI.IndicatorSet{MOI.ACTIVATE_ON_ZERO}
+        return expr.args[2], MOI.Indicator{MOI.ACTIVATE_ON_ZERO}
     else
-        return expr, MOI.IndicatorSet{MOI.ACTIVATE_ON_ONE}
+        return expr, MOI.Indicator{MOI.ACTIVATE_ON_ONE}
     end
 end
-function parse_one_operator_constraint(
+function parse_constraint_call(
     _error::Function,
     vectorized::Bool,
     ::Union{Val{:(=>)},Val{:⇒}},
@@ -45,7 +45,7 @@ function parse_one_operator_constraint(
     end
     rhs_con = rhs.args[1]
     rhs_vectorized, rhs_parsecode, rhs_buildcall =
-        parse_constraint_expr(_error, rhs_con)
+        parse_constraint(_error, rhs_con)
     if vectorized != rhs_vectorized
         _error("Inconsistent use of `.` in symbols to indicate vectorization.")
     end
@@ -71,7 +71,7 @@ end
 
 function constraint_string(
     print_mode,
-    constraint::VectorConstraint{F,<:MOI.IndicatorSet{A}},
+    constraint::VectorConstraint{F,<:MOI.Indicator{A}},
 ) where {F,A}
     # TODO Implement pretty IJulia printing
     var_str = function_string(print_mode, constraint.func[1])

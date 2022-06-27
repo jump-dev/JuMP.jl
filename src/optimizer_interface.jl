@@ -73,63 +73,53 @@ function MOIU.attach_optimizer(model::Model)
 end
 
 """
-    set_optimizer(model::Model, optimizer_factory;
-                  bridge_constraints::Bool=true)
-
+    set_optimizer(
+        model::Model,
+        optimizer_factory;
+        add_bridges::Bool = true,
+    )
 
 Creates an empty `MathOptInterface.AbstractOptimizer` instance by calling
 `optimizer_factory()` and sets it as the optimizer of `model`. Specifically,
 `optimizer_factory` must be callable with zero arguments and return an empty
 `MathOptInterface.AbstractOptimizer`.
 
-If `bridge_constraints` is true, constraints that are not supported by the
-optimizer are automatically bridged to equivalent supported constraints when
-an appropriate transformation is defined in the `MathOptInterface.Bridges`
-module or is defined in another module and is explicitly added.
+If `add_bridges` is true, constraints and objectives that are not supported by
+the optimizer are automatically bridged to equivalent supported formulation.
+Passing `add_bridges = false` can improve performance if the solver natively
+supports all of the elements in `model`.
 
-See [`set_optimizer_attributes`](@ref) and [`set_optimizer_attribute`](@ref) for setting
-solver-specific parameters of the optimizer.
+See [`set_optimizer_attributes`](@ref) and [`set_optimizer_attribute`](@ref) for
+setting solver-specific parameters of the optimizer.
 
 ## Examples
+
 ```julia
 model = Model()
-set_optimizer(model, GLPK.Optimizer)
+set_optimizer(model, HiGHS.Optimizer)
+set_optimizer(model, HiGHS.Optimizer; add_bridges = false)
 ```
 """
 function set_optimizer(
     model::Model,
     optimizer_constructor;
-    bridge_constraints::Bool = true,
+    add_bridges::Bool = true,
 )
     error_if_direct_mode(model, :set_optimizer)
-    if bridge_constraints
-        # We set `with_names=false` because the names are handled by the first
-        # caching optimizer. If `default_copy_to` without names is supported,
-        # no need for a second cache.
-        optimizer = MOI.instantiate(
-            optimizer_constructor,
-            with_bridge_type = Float64,
-            with_names = false,
-        )
+    if add_bridges
+        optimizer =
+            MOI.instantiate(optimizer_constructor; with_bridge_type = Float64)
         for bridge_type in model.bridge_types
             _moi_add_bridge(optimizer, bridge_type)
         end
     else
         optimizer = MOI.instantiate(optimizer_constructor)
     end
-    return MOIU.reset_optimizer(model, optimizer)
-end
-
-# Deprecation for JuMP v0.18 -> JuMP v0.19 transition
-export solve
-function solve(::Model)
-    return error(
-        "`solve` has been replaced by `optimize!`. Note that `solve` " *
-        "used to return a `Symbol` summarizing the solution while " *
-        "`optimize!` returns nothing and the status of the solution " *
-        "is queried using `termination_status`, `primal_status` " *
-        "and `dual_status`.",
-    )
+    # Update the backend to create a new, concretely typed CachingOptimizer
+    # using the existing `model_cache`.
+    model.moi_backend =
+        MOI.Utilities.CachingOptimizer(backend(model).model_cache, optimizer)
+    return
 end
 
 """
@@ -144,11 +134,7 @@ Keyword arguments `kwargs` are passed to the `optimize_hook`. An error is
 thrown if `optimize_hook` is `nothing` and keyword arguments are provided.
 """
 function optimize!(
-    model::Model,
-    # TODO: Remove the optimizer_factory and bridge_constraints
-    # arguments when the deprecation error below is removed.
-    optimizer_factory = nothing;
-    bridge_constraints::Bool = true,
+    model::Model;
     ignore_optimize_hook = (model.optimize_hook === nothing),
     kwargs...,
 )
@@ -158,29 +144,19 @@ function optimize!(
         MOI.set(model, MOI.NLPBlock(), _create_nlp_block_data(model))
         empty!(model.nlp_data.nlconstr_duals)
     end
-
-    if optimizer_factory !== nothing
-        # This argument was deprecated in JuMP 0.21.
-        error(
-            "The optimizer factory argument is no longer accepted by " *
-            "`optimize!`. Call `set_optimizer` before `optimize!`.",
-        )
-    end
-
     # If the user or an extension has provided an optimize hook, call
     # that instead of solving the model ourselves
     if !ignore_optimize_hook
         return model.optimize_hook(model; kwargs...)
     end
-
-    isempty(kwargs) || error(
-        "Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))",
-    )
-
+    if !isempty(kwargs)
+        error(
+            "Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))",
+        )
+    end
     if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
         throw(NoOptimizer())
     end
-
     try
         MOI.optimize!(backend(model))
     catch err
@@ -196,7 +172,7 @@ function optimize!(
             rethrow(err)
         end
     end
-
+    model.is_model_dirty = false
     return
 end
 
@@ -226,5 +202,8 @@ Return the number of results available to query after a call to
 [`optimize!`](@ref).
 """
 function result_count(model::Model)::Int
+    if termination_status(model) == MOI.OPTIMIZE_NOT_CALLED
+        return 0
+    end
     return MOI.get(model, MOI.ResultCount())
 end

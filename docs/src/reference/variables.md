@@ -1,6 +1,7 @@
 # [Variables](@id VariableAPI)
 
-More information can be found in the [Variables](@ref) section of the manual.
+More information can be found in the [Variables](@ref jump_variables) section of
+the manual.
 
 ## Macros
 

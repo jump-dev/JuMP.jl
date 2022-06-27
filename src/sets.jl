@@ -32,6 +32,91 @@ function build_constraint(
 end
 
 """
+    build_constraint(
+        _error::Function,
+        f::AbstractVector{<:AbstractJuMPScalar},
+        s::MOI.GreaterThan,
+        extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
+    )
+
+A helper method that re-writes
+```julia
+@constraint(model, X >= Y, extra)
+```
+into
+```julia
+@constraint(model, X - Y in extra)
+```
+"""
+function build_constraint(
+    _error::Function,
+    f::AbstractVector{<:AbstractJuMPScalar},
+    s::MOI.GreaterThan,
+    extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
+)
+    @assert iszero(s.lower)
+    return build_constraint(_error, f, extra)
+end
+
+"""
+    build_constraint(
+        _error::Function,
+        f::AbstractVector{<:AbstractJuMPScalar},
+        s::MOI.LessThan,
+        extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
+    )
+
+A helper method that re-writes
+```julia
+@constraint(model, Y <= X, extra)
+```
+into
+```julia
+@constraint(model, X - Y in extra)
+```
+"""
+function build_constraint(
+    _error::Function,
+    f::AbstractVector{<:AbstractJuMPScalar},
+    s::MOI.LessThan,
+    extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
+)
+    @assert iszero(s.upper)
+    new_f = _MA.operate!!(*, -1, f)
+    return build_constraint(_error, new_f, extra)
+end
+
+# Handle the case `@constraint(model, X >= 0, Set())`.
+function _MA.operate!!(
+    ::typeof(_MA.sub_mul),
+    x::AbstractArray{<:AbstractJuMPScalar},
+    y::Int,
+)
+    if !iszero(y)
+        error(
+            "Operation `sub_mul` between `$(typeof(x))` and `$(typeof(y))` " *
+            "is not allowed. You should use broadcast.",
+        )
+    end
+    return x
+end
+
+# Handle the case `@constraint(model, 0 <= X, Set())`.
+function _MA.operate!!(
+    ::typeof(_MA.sub_mul),
+    y::Int,
+    x::AbstractArray{<:AbstractJuMPScalar},
+)
+    if !iszero(y)
+        error(
+            "Operation `sub_mul` between `$(typeof(x))` and `$(typeof(y))` " *
+            "is not allowed. You should use broadcast.",
+        )
+    end
+    return _MA.operate!!(*, -1, x)
+end
+
+"""
     SecondOrderCone
 
 Second order cone object that can be used to constrain the euclidean norm of a
@@ -67,7 +152,7 @@ euclidean norm of a vector `x` to be less than or equal to ``2tu`` where `t` and
 
 ## Examples
 
-The following constrains ``\\|(x-1, x-2)\\|_2 \\le 2tx`` and ``t, x \\ge 0``:
+The following constrains ``\\|(x-1, x-2)\\|^2_2 \\le 2tx`` and ``t, x \\ge 0``:
 ```jldoctest; setup = :(using JuMP)
 julia> model = Model();
 
@@ -83,35 +168,6 @@ julia> @constraint(model, [t, x, x-1, x-2] in RotatedSecondOrderCone())
 """
 struct RotatedSecondOrderCone <: AbstractVectorSet end
 moi_set(::RotatedSecondOrderCone, dim::Int) = MOI.RotatedSecondOrderCone(dim)
-
-# Deprecation for JuMP v0.18 -> JuMP v0.19 transition
-function LinearAlgebra.norm(::AbstractVector{<:AbstractJuMPScalar})
-    return error("""
-    JuMP no longer performs automatic transformation of `norm()` expressions
-    into second-order cone constraints. They should now be expressed using the
-    `SecondOrderCone()` set.
-
-    ## Examples
-
-    ```julia
-    @constraint(model, norm(x) <= t)
-    ```
-    should now be written as:
-    ```julia
-    @constraint(model, [t; x] in SecondOrderCone())
-    ```
-
-    ```julia
-    @objective(model, Min, norm(x))
-    ```
-    should now be written as:
-    ```julia
-    t = @variable(model)
-    @constraint(model, [t; x] in SecondOrderCone())
-    @objective(model, Min, t)
-    ```
-    """)
-end
 
 """
     SOS1

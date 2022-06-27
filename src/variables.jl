@@ -90,6 +90,12 @@ function _VariableInfoExpr(;
     )
 end
 
+# It isn't sufficient to use `isfinite` below, because some bounds are given as
+# matrices. As a fallback, we define `_isfinite`, because overloading `isfinite`
+# would be type piracy.
+_isfinite(x::Number) = isfinite(x)
+_isfinite(x) = true
+
 """
     VariableInfo{S,T,U,V}
 
@@ -109,6 +115,42 @@ struct VariableInfo{S,T,U,V}
     start::V
     binary::Bool
     integer::Bool
+    function VariableInfo(
+        has_lb::Bool,
+        lower_bound::S,
+        has_ub::Bool,
+        upper_bound::T,
+        has_fix::Bool,
+        fixed_value::U,
+        has_start::Bool,
+        start::V,
+        binary::Bool,
+        integer::Bool,
+    ) where {S,T,U,V}
+        if has_lb && !_isfinite(lower_bound)
+            has_lb = false
+            lower_bound = NaN
+        end
+        if has_ub && !_isfinite(upper_bound)
+            has_ub = false
+            upper_bound = NaN
+        end
+        if has_fix && !_isfinite(fixed_value)
+            error("Unable to fix variable to $(fixed_value)")
+        end
+        return new{typeof(lower_bound),typeof(upper_bound),U,V}(
+            has_lb,
+            lower_bound,
+            has_ub,
+            upper_bound,
+            has_fix,
+            fixed_value,
+            has_start,
+            start,
+            binary,
+            integer,
+        )
+    end
 end
 
 function _constructor_expr(info::_VariableInfoExpr)
@@ -147,6 +189,10 @@ with variables of type `V<:AbstractVariableRef` and coefficients of type `T`
 abstract type AbstractVariableRef <: AbstractJuMPScalar end
 
 variable_ref_type(v::AbstractVariableRef) = typeof(v)
+Base.conj(v::AbstractVariableRef) = v
+Base.real(v::AbstractVariableRef) = v
+Base.imag(v::AbstractVariableRef) = v
+Base.abs2(v::AbstractVariableRef) = v^2
 
 """
     VariableRef <: AbstractVariableRef
@@ -170,7 +216,7 @@ Returns the model to which `v` belongs.
 julia> model = Model();
 
 julia> x = @variable(model)
-noname
+_[1]
 
 julia> owner_model(x) === model
 true
@@ -249,6 +295,7 @@ function delete(model::Model, variable_ref::VariableRef)
             "belong to the model.",
         )
     end
+    model.is_model_dirty = true
     return MOI.delete(backend(model), variable_ref.index)
 end
 
@@ -268,6 +315,7 @@ function delete(model::Model, variable_refs::Vector{VariableRef})
             "belong to the model.",
         )
     end
+    model.is_model_dirty = true
     MOI.delete(backend(model), index.(variable_refs))
     return
 end
@@ -306,6 +354,33 @@ function VariableRef(m::Model)
     return VariableRef(m, index)
 end
 
+"""
+    VariableRef(c::ConstraintRef)
+
+Get the variable associated with a `ConstraintRef`, if `c` is a constraint on a
+single variable.
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 0)
+x
+
+julia> c = LowerBoundRef(x)
+x ≥ 0.0
+
+julia> VariableRef(c) == x
+true
+```
+"""
+function VariableRef(
+    c::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{MOI.VariableIndex}},
+)
+    return VariableRef(owner_model(c), MOI.VariableIndex(index(c).value))
+end
+
 # Name setter/getters
 # These functions need to be implemented for all `AbstractVariableRef`s
 """
@@ -313,7 +388,13 @@ end
 
 Get a variable's name attribute.
 """
-name(v::VariableRef) = MOI.get(owner_model(v), MOI.VariableName(), v)::String
+function name(v::VariableRef)
+    model = owner_model(v)
+    if !MOI.supports(backend(model), MOI.VariableName(), MOI.VariableIndex)
+        return ""
+    end
+    return MOI.get(model, MOI.VariableName(), v)::String
+end
 
 """
     set_name(v::VariableRef, s::AbstractString)
@@ -385,13 +466,11 @@ function variable_by_name(model::Model, name::String)
     end
 end
 
-MOI.SingleVariable(v::VariableRef) = MOI.SingleVariable(index(v))
-function moi_function(variable::AbstractVariableRef)
-    return MOI.SingleVariable(variable)
-end
-function moi_function_type(::Type{<:AbstractVariableRef})
-    return MOI.SingleVariable
-end
+MOI.VariableIndex(v::VariableRef) = index(v)
+
+moi_function(variable::AbstractVariableRef) = index(variable)
+
+moi_function_type(::Type{<:AbstractVariableRef}) = MOI.VariableIndex
 
 # Note: No validation is performed that the variables belong to the same model.
 function MOI.VectorOfVariables(vars::Vector{VariableRef})
@@ -410,11 +489,8 @@ function jump_function(model::Model, variables::MOI.VectorOfVariables)
     return VariableRef[VariableRef(model, v) for v in variables.variables]
 end
 
-function VariableRef(model::Model, f::MOI.SingleVariable)
-    return VariableRef(model, f.variable)
-end
-jump_function_type(::Model, ::Type{MOI.SingleVariable}) = VariableRef
-function jump_function(model::Model, variable::MOI.SingleVariable)
+jump_function_type(::Model, ::Type{MOI.VariableIndex}) = VariableRef
+function jump_function(model::Model, variable::MOI.VariableIndex)
     return VariableRef(model, variable)
 end
 
@@ -442,7 +518,7 @@ function _moi_has_lower_bound(moi_backend, v::VariableRef)
 end
 
 function _lower_bound_index(v::VariableRef)
-    return _MOICON{MOI.SingleVariable,MOI.GreaterThan{Float64}}(index(v).value)
+    return _MOICON{MOI.VariableIndex,MOI.GreaterThan{Float64}}(index(v).value)
 end
 
 """
@@ -455,7 +531,15 @@ See also [`LowerBoundRef`](@ref), [`has_lower_bound`](@ref),
 [`lower_bound`](@ref), [`delete_lower_bound`](@ref).
 """
 function set_lower_bound(v::VariableRef, lower::Number)
-    return _moi_set_lower_bound(backend(owner_model(v)), v, lower)
+    if !isfinite(lower)
+        error(
+            "Unable to set lower bound to $(lower). To remove the bound, use " *
+            "`delete_lower_bound`.",
+        )
+    end
+    model = owner_model(v)
+    model.is_model_dirty = true
+    return _moi_set_lower_bound(backend(model), v, lower)
 end
 
 function _moi_set_lower_bound(moi_backend, v::VariableRef, lower::Number)
@@ -465,7 +549,7 @@ function _moi_set_lower_bound(moi_backend, v::VariableRef, lower::Number)
         MOI.set(moi_backend, MOI.ConstraintSet(), cindex, new_set)
     else
         @assert !_moi_is_fixed(moi_backend, v)
-        moi_add_constraint(moi_backend, MOI.SingleVariable(index(v)), new_set)
+        _moi_add_constraint(moi_backend, index(v), new_set)
     end
     return
 end
@@ -480,7 +564,7 @@ See also [`has_lower_bound`](@ref), [`lower_bound`](@ref),
 [`set_lower_bound`](@ref), [`delete_lower_bound`](@ref).
 """
 function LowerBoundRef(v::VariableRef)
-    moi_lb = _MOICON{MOI.SingleVariable,MOI.GreaterThan{Float64}}
+    moi_lb = _MOICON{MOI.VariableIndex,MOI.GreaterThan{Float64}}
     return ConstraintRef{Model,moi_lb,ScalarShape}(
         owner_model(v),
         _lower_bound_index(v),
@@ -541,7 +625,7 @@ function _moi_has_upper_bound(moi_backend, v::VariableRef)
 end
 
 function _upper_bound_index(v::VariableRef)
-    return _MOICON{MOI.SingleVariable,MOI.LessThan{Float64}}(index(v).value)
+    return _MOICON{MOI.VariableIndex,MOI.LessThan{Float64}}(index(v).value)
 end
 
 """
@@ -554,7 +638,15 @@ See also [`UpperBoundRef`](@ref), [`has_upper_bound`](@ref),
 [`upper_bound`](@ref), [`delete_upper_bound`](@ref).
 """
 function set_upper_bound(v::VariableRef, upper::Number)
-    return _moi_set_upper_bound(backend(owner_model(v)), v, upper)
+    if !isfinite(upper)
+        error(
+            "Unable to set upper bound to $(upper). To remove the bound, use " *
+            "`delete_upper_bound`.",
+        )
+    end
+    model = owner_model(v)
+    model.is_model_dirty = true
+    return _moi_set_upper_bound(backend(model), v, upper)
 end
 
 function _moi_set_upper_bound(moi_backend, v::VariableRef, upper::Number)
@@ -564,7 +656,7 @@ function _moi_set_upper_bound(moi_backend, v::VariableRef, upper::Number)
         MOI.set(moi_backend, MOI.ConstraintSet(), cindex, new_set)
     else
         @assert !_moi_is_fixed(moi_backend, v)
-        moi_add_constraint(moi_backend, MOI.SingleVariable(index(v)), new_set)
+        _moi_add_constraint(moi_backend, index(v), new_set)
     end
     return
 end
@@ -579,7 +671,7 @@ See also [`has_upper_bound`](@ref), [`upper_bound`](@ref),
 [`set_upper_bound`](@ref), [`delete_upper_bound`](@ref).
 """
 function UpperBoundRef(v::VariableRef)
-    moi_ub = _MOICON{MOI.SingleVariable,MOI.LessThan{Float64}}
+    moi_ub = _MOICON{MOI.VariableIndex,MOI.LessThan{Float64}}
     return ConstraintRef{Model,moi_ub,ScalarShape}(
         owner_model(v),
         _upper_bound_index(v),
@@ -639,7 +731,7 @@ function _moi_is_fixed(moi_backend, v::VariableRef)
 end
 
 function _fix_index(v::VariableRef)
-    return _MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}(index(v).value)
+    return _MOICON{MOI.VariableIndex,MOI.EqualTo{Float64}}(index(v).value)
 end
 
 """
@@ -657,7 +749,12 @@ See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix_value`](@ref),
 [`unfix`](@ref).
 """
 function fix(variable::VariableRef, value::Number; force::Bool = false)
-    return _moi_fix(backend(owner_model(variable)), variable, value, force)
+    if !isfinite(value)
+        error("Unable to fix variable to $(value)")
+    end
+    model = owner_model(variable)
+    model.is_model_dirty = true
+    return _moi_fix(backend(model), variable, value, force)
 end
 
 function _moi_fix(
@@ -688,11 +785,7 @@ function _moi_fix(
                 MOI.delete(moi_backend, _lower_bound_index(variable))
             end
         end
-        moi_add_constraint(
-            moi_backend,
-            MOI.SingleVariable(index(variable)),
-            new_set,
-        )
+        _moi_add_constraint(moi_backend, index(variable), new_set)
     end
     return
 end
@@ -736,7 +829,7 @@ See also [`is_fixed`](@ref), [`fix_value`](@ref), [`fix`](@ref),
 [`unfix`](@ref).
 """
 function FixRef(v::VariableRef)
-    moi_fix = _MOICON{MOI.SingleVariable,MOI.EqualTo{Float64}}
+    moi_fix = _MOICON{MOI.VariableIndex,MOI.EqualTo{Float64}}
     return ConstraintRef{Model,moi_fix,ScalarShape}(
         owner_model(v),
         _fix_index(v),
@@ -760,7 +853,7 @@ function _moi_is_integer(moi_backend, v::VariableRef)
 end
 
 function _integer_index(v::VariableRef)
-    return _MOICON{MOI.SingleVariable,MOI.Integer}(index(v).value)
+    return _MOICON{MOI.VariableIndex,MOI.Integer}(index(v).value)
 end
 
 """
@@ -770,8 +863,10 @@ Add an integrality constraint on the variable `variable_ref`.
 
 See also [`IntegerRef`](@ref), [`is_integer`](@ref), [`unset_integer`](@ref).
 """
-function set_integer(variable_ref::VariableRef)
-    return _moi_set_integer(backend(owner_model(variable_ref)), variable_ref)
+function set_integer(v::VariableRef)
+    model = owner_model(v)
+    model.is_model_dirty = true
+    return _moi_set_integer(backend(model), v)
 end
 
 function _moi_set_integer(moi_backend, variable_ref::VariableRef)
@@ -783,11 +878,7 @@ function _moi_set_integer(moi_backend, variable_ref::VariableRef)
             "is already binary.",
         )
     end
-    moi_add_constraint(
-        moi_backend,
-        MOI.SingleVariable(index(variable_ref)),
-        MOI.Integer(),
-    )
+    _moi_add_constraint(moi_backend, index(variable_ref), MOI.Integer())
     return
 end
 
@@ -812,7 +903,7 @@ Errors if one does not exist.
 See also [`is_integer`](@ref), [`set_integer`](@ref), [`unset_integer`](@ref).
 """
 function IntegerRef(v::VariableRef)
-    moi_int = _MOICON{MOI.SingleVariable,MOI.Integer}
+    moi_int = _MOICON{MOI.VariableIndex,MOI.Integer}
     return ConstraintRef{Model,moi_int,ScalarShape}(
         owner_model(v),
         _integer_index(v),
@@ -836,7 +927,7 @@ function _moi_is_binary(moi_backend, v::VariableRef)
 end
 
 function _binary_index(v::VariableRef)
-    return _MOICON{MOI.SingleVariable,MOI.ZeroOne}(index(v).value)
+    return _MOICON{MOI.VariableIndex,MOI.ZeroOne}(index(v).value)
 end
 
 """
@@ -847,8 +938,10 @@ Add a constraint on the variable `v` that it must take values in the set
 
 See also [`BinaryRef`](@ref), [`is_binary`](@ref), [`unset_binary`](@ref).
 """
-function set_binary(variable_ref::VariableRef)
-    return _moi_set_binary(backend(owner_model(variable_ref)), variable_ref)
+function set_binary(v::VariableRef)
+    model = owner_model(v)
+    model.is_model_dirty = true
+    return _moi_set_binary(backend(model), v)
 end
 
 function _moi_set_binary(moi_backend, variable_ref)
@@ -860,11 +953,7 @@ function _moi_set_binary(moi_backend, variable_ref)
             "is already integer.",
         )
     end
-    moi_add_constraint(
-        moi_backend,
-        MOI.SingleVariable(index(variable_ref)),
-        MOI.ZeroOne(),
-    )
+    _moi_add_constraint(moi_backend, index(variable_ref), MOI.ZeroOne())
     return
 end
 
@@ -889,7 +978,7 @@ Errors if one does not exist.
 See also [`is_binary`](@ref), [`set_binary`](@ref), [`unset_binary`](@ref).
 """
 function BinaryRef(v::VariableRef)
-    moi_bin = _MOICON{MOI.SingleVariable,MOI.ZeroOne}
+    moi_bin = _MOICON{MOI.VariableIndex,MOI.ZeroOne}
     return ConstraintRef{Model,moi_bin,ScalarShape}(
         owner_model(v),
         _binary_index(v),
@@ -944,11 +1033,11 @@ function value(v::VariableRef; result::Int = 1)::Float64
 end
 
 """
-    value(v::VariableRef, var_value::Function)
+    value(var_value::Function, v::VariableRef)
 
 Evaluate the value of the variable `v` as `var_value(v)`.
 """
-function value(v::VariableRef, var_value::Function)
+function value(var_value::Function, v::VariableRef)
     return var_value(v)
 end
 
@@ -964,8 +1053,6 @@ function has_values(model::Model; result::Int = 1)
     return primal_status(model; result = result) != MOI.NO_SOLUTION
 end
 
-Base.@deprecate setvalue(v::VariableRef, val::Number) set_start_value(v, val)
-
 """
     add_variable(m::Model, v::AbstractVariable, name::String="")
 
@@ -974,6 +1061,7 @@ Add a variable `v` to `Model m` and sets its name.
 function add_variable end
 
 function add_variable(model::Model, v::ScalarVariable, name::String = "")
+    model.is_model_dirty = true
     return _moi_add_variable(backend(model), model, v, name)
 end
 
@@ -981,7 +1069,8 @@ function _moi_add_variable(moi_backend, model, v::ScalarVariable, name::String)
     index = MOI.add_variable(moi_backend)
     var_ref = VariableRef(model, index)
     _moi_constrain_variable(moi_backend, index, v.info)
-    if !isempty(name)
+    if !isempty(name) &&
+       MOI.supports(moi_backend, MOI.VariableName(), MOI.VariableIndex)
         set_name(var_ref, name)
     end
     return var_ref
@@ -991,46 +1080,38 @@ function _moi_constrain_variable(moi_backend::MOI.ModelLike, index, info)
     # We don't call the _moi* versions (e.g., _moi_set_lower_bound) because they
     # have extra checks that are not necessary for newly created variables.
     if info.has_lb
-        moi_add_constraint(
+        _moi_add_constraint(
             moi_backend,
-            MOI.SingleVariable(index),
+            index,
             MOI.GreaterThan{Float64}(info.lower_bound),
         )
     end
     if info.has_ub
-        moi_add_constraint(
+        _moi_add_constraint(
             moi_backend,
-            MOI.SingleVariable(index),
+            index,
             MOI.LessThan{Float64}(info.upper_bound),
         )
     end
     if info.has_fix
-        moi_add_constraint(
+        _moi_add_constraint(
             moi_backend,
-            MOI.SingleVariable(index),
+            index,
             MOI.EqualTo{Float64}(info.fixed_value),
         )
     end
     if info.binary
-        moi_add_constraint(
-            moi_backend,
-            MOI.SingleVariable(index),
-            MOI.ZeroOne(),
-        )
+        _moi_add_constraint(moi_backend, index, MOI.ZeroOne())
     end
     if info.integer
-        moi_add_constraint(
-            moi_backend,
-            MOI.SingleVariable(index),
-            MOI.Integer(),
-        )
+        _moi_add_constraint(moi_backend, index, MOI.Integer())
     end
-    if info.has_start
+    if info.has_start && info.start !== nothing
         MOI.set(
             moi_backend,
             MOI.VariablePrimalStart(),
             index,
-            Float64(info.start),
+            convert(Float64, info.start),
         )
     end
 end
@@ -1072,6 +1153,14 @@ function add_variable(
         name,
     )
     return VariableRef(model, var_index)
+end
+
+function add_variable(
+    model::Model,
+    variables::AbstractArray{<:VariableConstrainedOnCreation},
+    names::AbstractArray{<:String},
+)
+    return add_variable.(model, variables, names)
 end
 
 function _moi_add_constrained_variable(
@@ -1178,7 +1267,7 @@ function reduced_cost(x::VariableRef)::Float64
             " not have duals available.",
         )
     end
-    sign = objective_sense(model) == MOI.MIN_SENSE ? 1.0 : -1.0
+    sign = objective_sense(model) == MIN_SENSE ? 1.0 : -1.0
     if is_fixed(x)
         return sign * dual(FixRef(x))
     end
@@ -1319,8 +1408,8 @@ Subject to
 ```
 """
 function relax_integrality(model::Model)
-    semicont_type = _MOICON{MOI.SingleVariable,MOI.Semicontinuous{Float64}}
-    semiint_type = _MOICON{MOI.SingleVariable,MOI.Semiinteger{Float64}}
+    semicont_type = _MOICON{MOI.VariableIndex,MOI.Semicontinuous{Float64}}
+    semiint_type = _MOICON{MOI.VariableIndex,MOI.Semiinteger{Float64}}
     for v in all_variables(model)
         if MOI.is_valid(backend(model), semicont_type(index(v).value))
             error(
@@ -1379,4 +1468,57 @@ function relax_integrality(model::Model)
         return
     end
     return unrelax
+end
+
+###
+### Error messages for common incorrect usages
+###
+
+for sym in (:(<=), :(>=), :(<), :(>))
+    msg = """Cannot evaluate `$(sym)` between a variable and a number.
+
+    There are two common mistakes that lead to this.
+
+     * You tried to write a constraint that depends on the value of a variable
+
+       For example:
+       ```julia
+       model = Model()
+       @variable(model, x[1:2])
+       if x[1] $(sym) 1
+           @constraint(model, x[2] == 0)
+       end
+       ```
+
+       You cannot write a model like this. You must formulate your problem as a
+       single optimization problem. Unfortunately, the way to do this is
+       problem-specific and depends on your choice of solver. You may be able to
+       use indicator constraints, or some other mixed-integer linear
+       reformulation. If stuck, post your problem on the community forum:
+       https://discourse.julialang.org/c/domain/opt/13
+
+     * You wrote a function that expected the value of a variable, but it was
+       passed the variable instead
+
+       For example:
+       ```julia
+       foo(x) = x $(sym) 1 ? 0 : 1 - x
+       model = Model()
+       @variable(model, x)
+       @objective(model, foo(x))
+       ```
+
+       To fix this, create a nonlinear model with a user-defined function:
+       ```julia
+       foo(x) = x $(sym) 1 ? 0 : 1 - x
+       model = Model()
+       register(model, :foo, 1, foo; autodiff = true)
+       @variable(model, x)
+       @NLobjective(model, foo(x))
+       ```
+    """
+    @eval begin
+        Base.$(sym)(::VariableRef, ::Number) = error($(msg))
+        Base.$(sym)(::Number, ::VariableRef) = error($(msg))
+    end
 end

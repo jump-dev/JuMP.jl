@@ -130,12 +130,88 @@ function set_dual_start_value(
 end
 
 """
+    set_start_value(con_ref::ConstraintRef, value)
+
+Set the primal start value ([`MOI.ConstraintPrimalStart`](@ref)) of the
+constraint `con_ref` to `value`. To remove a primal start value set it to
+`nothing`.
+
+See also [`start_value`](@ref).
+"""
+function set_start_value(
+    con_ref::ConstraintRef{
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractVectorFunction,<:MOI.AbstractVectorSet},
+    },
+    value,
+)
+    MOI.set(
+        owner_model(con_ref),
+        MOI.ConstraintPrimalStart(),
+        con_ref,
+        vectorize(value, con_ref.shape),
+    )
+    return
+end
+
+function set_start_value(
+    con_ref::ConstraintRef{
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractVectorFunction,<:MOI.AbstractVectorSet},
+    },
+    ::Nothing,
+)
+    MOI.set(owner_model(con_ref), MOI.ConstraintPrimalStart(), con_ref, nothing)
+    return
+end
+
+function set_start_value(
+    con_ref::ConstraintRef{
+        <:AbstractModel,
+        <:_MOICON{<:MOI.AbstractScalarFunction,<:MOI.AbstractScalarSet},
+    },
+    value,
+)
+    MOI.set(owner_model(con_ref), MOI.ConstraintPrimalStart(), con_ref, value)
+    return
+end
+
+"""
+    start_value(con_ref::ConstraintRef)
+
+Return the primal start value ([`MOI.ConstraintPrimalStart`](@ref)) of the
+constraint `con_ref`.
+
+Note: If no primal start value has been set, `start_value` will return
+`nothing`.
+
+See also [`set_start_value`](@ref).
+"""
+function start_value(con_ref::ConstraintRef{<:AbstractModel,<:_MOICON})
+    return reshape_vector(
+        MOI.get(owner_model(con_ref), MOI.ConstraintPrimalStart(), con_ref),
+        con_ref.shape,
+    )
+end
+
+"""
     name(con_ref::ConstraintRef)
 
 Get a constraint's name attribute.
 """
-function name(con_ref::ConstraintRef{<:AbstractModel,<:_MOICON})
-    return MOI.get(con_ref.model, MOI.ConstraintName(), con_ref)::String
+function name(con_ref::ConstraintRef{<:AbstractModel,C}) where {C<:_MOICON}
+    model = owner_model(con_ref)
+    if !MOI.supports(backend(model), MOI.ConstraintName(), C)
+        return ""
+    end
+    return MOI.get(model, MOI.ConstraintName(), con_ref)::String
+end
+
+# The name of VariableIndex constraints is empty.
+function name(
+    ::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{MOI.VariableIndex}},
+)
+    return ""
 end
 
 """
@@ -277,6 +353,7 @@ function delete(model::Model, con_ref::ConstraintRef)
             "belong to the model.",
         )
     end
+    model.is_model_dirty = true
     return MOI.delete(backend(model), index(con_ref))
 end
 
@@ -299,6 +376,7 @@ function delete(
         error("A constraint reference you are trying to delete does not" * "
             belong to the model.")
     end
+    model.is_model_dirty = true
     MOI.delete(backend(model), index.(con_refs))
     return
 end
@@ -512,31 +590,19 @@ function check_belongs_to_model(con::VectorConstraint, model)
     end
 end
 
-function moi_add_constraint(
+function _moi_add_constraint(
     model::MOI.ModelLike,
-    f::MOI.AbstractFunction,
-    s::MOI.AbstractSet,
-)
-    if !MOI.supports_constraint(model, typeof(f), typeof(s))
-        if moi_mode(model) == DIRECT
-            bridge_message = "."
-        elseif moi_bridge_constraints(model)
-            error(
-                sprint(
-                    io -> MOI.Bridges.debug(
-                        model.optimizer,
-                        typeof(f),
-                        typeof(s);
-                        io = io,
-                    ),
-                ),
-            )
-        else
-            bridge_message = ", try using `bridge_constraints=true` in the `JuMP.Model` constructor if you believe the constraint can be reformulated to constraints supported by the solver."
-        end
+    f::F,
+    s::S,
+) where {F<:MOI.AbstractFunction,S<:MOI.AbstractSet}
+    if !MOI.supports_constraint(model, F, S)
         error(
-            "Constraints of type $(typeof(f))-in-$(typeof(s)) are not supported by the solver" *
-            bridge_message,
+            "Constraints of type $(F)-in-$(S) are not supported by the " *
+            "solver.\n\nIf you expected the solver to support your problem, " *
+            "you may have an error in your formulation. Otherwise, consider " *
+            "using a different solver.\n\nThe list of available solvers, " *
+            "along with the problem types they support, is available at " *
+            "https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.",
         )
     end
     return MOI.add_constraint(model, f, s)
@@ -556,7 +622,7 @@ function add_constraint(
     # function.
     check_belongs_to_model(con, model)
     func, set = moi_function(con), moi_set(con)
-    cindex = moi_add_constraint(
+    cindex = _moi_add_constraint(
         backend(model),
         func,
         set,
@@ -566,9 +632,13 @@ function add_constraint(
         model.shapes[cindex] = cshape
     end
     con_ref = ConstraintRef(model, cindex, cshape)
-    if !isempty(name)
+    # Only set names if appropriate!
+    if !(func isa MOI.VariableIndex) &&
+       !isempty(name) &&
+       MOI.supports(backend(model), MOI.ConstraintName(), typeof(cindex))
         set_name(con_ref, name)
     end
+    model.is_model_dirty = true
     return con_ref
 end
 
@@ -602,14 +672,56 @@ function set_normalized_coefficient(
     T,
     F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
 }
+    model = owner_model(con_ref)
     MOI.modify(
-        backend(owner_model(con_ref)),
+        backend(model),
         index(con_ref),
         MOI.ScalarCoefficientChange(index(variable), convert(T, value)),
     )
+    model.is_model_dirty = true
     return
 end
-@deprecate set_coefficient set_normalized_coefficient
+
+"""
+    set_normalized_coefficients(
+        con_ref::ConstraintRef,
+        variable,
+        new_coefficients::Vector{Tuple{Int64,T}},
+    )
+
+Set the coefficients of `variable` in the constraint `con_ref` to
+`new_coefficients`, where each element in `new_coefficients` is a tuple which
+maps the row to a new coefficient.
+
+Note that prior to this step, during constraint creation, JuMP will aggregate
+multiple terms containing the same variable.
+
+```jldoctest; setup = :(using JuMP), filter=r"≤|<="
+model = Model()
+@variable(model, x)
+@constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
+set_normalized_coefficients(con, x, [(1, 2.0), (2, 5.0)])
+con
+
+# output
+
+con : [2 x, 5 x] ∈ MathOptInterface.Nonnegatives(2)
+```
+"""
+function set_normalized_coefficients(
+    con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    variable,
+    new_coefficients::Vector{Tuple{Int64,T}},
+) where {T,F<:Union{MOI.VectorAffineFunction{T},MOI.VectorQuadraticFunction{T}}}
+    model = owner_model(con_ref)
+    MOI.modify(
+        backend(model),
+        index(con_ref),
+        MOI.MultirowChange(index(variable), new_coefficients),
+    )
+    model.is_model_dirty = true
+    return
+end
 
 """
     normalized_coefficient(con_ref::ConstraintRef, variable::VariableRef)
@@ -684,7 +796,7 @@ function normalized_rhs(
     return MOI.constant(con.set)
 end
 
-function moi_add_to_function_constant(
+function _moi_add_to_function_constant(
     model::MOI.ModelLike,
     ci::MOI.ConstraintIndex{
         <:MOI.AbstractScalarFunction,
@@ -693,10 +805,16 @@ function moi_add_to_function_constant(
     value,
 )
     set = MOI.get(model, MOI.ConstraintSet(), ci)
+    if !MOI.Utilities.supports_shift_constant(typeof(set))
+        error(
+            "Unable to add to function constant for constraint type " *
+            "$(typeof(ci))",
+        )
+    end
     new_set = MOIU.shift_constant(set, convert(Float64, -value))
     return MOI.set(model, MOI.ConstraintSet(), ci, new_set)
 end
-function moi_add_to_function_constant(
+function _moi_add_to_function_constant(
     model::MOI.ModelLike,
     ci::MOI.ConstraintIndex{
         <:Union{MOI.VectorAffineFunction,MOI.VectorQuadraticFunction},
@@ -748,13 +866,11 @@ function add_to_function_constant(
     constraint::ConstraintRef{<:AbstractModel},
     value,
 )
+    model = owner_model(constraint)
     # The type of `backend(model)` is not type-stable, so we use a function
-    # barrier (`moi_add_to_function_constant`) to improve performance.
-    moi_add_to_function_constant(
-        backend(owner_model(constraint)),
-        index(constraint),
-        value,
-    )
+    # barrier (`_moi_add_to_function_constant`) to improve performance.
+    _moi_add_to_function_constant(backend(model), index(constraint), value)
+    model.is_model_dirty = true
     return
 end
 
@@ -789,17 +905,17 @@ function value(
 end
 
 """
-    value(con_ref::ConstraintRef, var_value::Function)
+    value(var_value::Function, con_ref::ConstraintRef)
 
 Evaluate the primal value of the constraint `con_ref` using `var_value(v)`
 as the value for each variable `v`.
 """
 function value(
-    con_ref::ConstraintRef{<:AbstractModel,<:_MOICON},
     var_value::Function,
+    con_ref::ConstraintRef{<:AbstractModel,<:_MOICON},
 )
     f = jump_function(constraint_object(con_ref))
-    return reshape_vector(value.(f, var_value), con_ref.shape)
+    return reshape_vector(value.(var_value, f), con_ref.shape)
 end
 
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
@@ -910,9 +1026,9 @@ function _shadow_price_less_than(dual_value, sense::MOI.OptimizationSense)
     # shadow price is nonnegative (because relaxing a constraint can only
     # improve the objective). By MOI convention, a feasible dual on a LessThan
     # set is nonpositive, so we flip the sign when maximizing.
-    if sense == MOI.MAX_SENSE
+    if sense == MAX_SENSE
         return -dual_value
-    elseif sense == MOI.MIN_SENSE
+    elseif sense == MIN_SENSE
         return dual_value
     else
         error(
@@ -925,9 +1041,9 @@ end
 function _shadow_price_greater_than(dual_value, sense::MOI.OptimizationSense)
     # By MOI convention, a feasible dual on a GreaterThan set is nonnegative,
     # so we flip the sign when minimizing. (See comment in the method above).
-    if sense == MOI.MAX_SENSE
+    if sense == MAX_SENSE
         return dual_value
-    elseif sense == MOI.MIN_SENSE
+    elseif sense == MIN_SENSE
         return -dual_value
     else
         error(
@@ -1059,11 +1175,11 @@ julia> @variable(model, x >= 0, Bin);
 julia> @constraint(model, 2x <= 1);
 
 julia> all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
-1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
  x ≥ 0.0
 
 julia> all_constraints(model, VariableRef, MOI.ZeroOne)
-1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.SingleVariable,MathOptInterface.ZeroOne},ScalarShape},1}:
+1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex,MathOptInterface.ZeroOne},ScalarShape},1}:
  x binary
 
 julia> all_constraints(model, AffExpr, MOI.LessThan{Float64})
@@ -1099,7 +1215,7 @@ end
 # information available.
 
 """
-    list_of_constraint_types(model::Model)::Vector{Tuple{DataType, DataType}}
+    list_of_constraint_types(model::Model)::Vector{Tuple{Type,Type}}
 
 Return a list of tuples of the form `(F, S)` where `F` is a JuMP function type
 and `S` is an MOI set type such that `all_constraints(model, F, S)` returns
@@ -1114,19 +1230,117 @@ julia> @variable(model, x >= 0, Bin);
 julia> @constraint(model, 2x <= 1);
 
 julia> list_of_constraint_types(model)
-3-element Array{Tuple{DataType,DataType},1}:
+3-element Array{Tuple{Type,Type},1}:
  (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
  (VariableRef, MathOptInterface.GreaterThan{Float64})
  (VariableRef, MathOptInterface.ZeroOne)
 ```
+
+## Performance considerations
+
+Iterating over the list of function and set types is a type-unstable operation.
+Consider using a function barrier. See the [Performance tips for extensions](@ref)
+section of the documentation for more details.
 """
-function list_of_constraint_types(
-    model::Model,
-)::Vector{Tuple{DataType,DataType}}
+function list_of_constraint_types(model::Model)::Vector{Tuple{Type,Type}}
     # We include an annotated return type here because Julia fails terribly at
     # inferring it, even though we annotate the type of the return vector.
-    return Tuple{DataType,DataType}[
+    return Tuple{Type,Type}[
         (jump_function_type(model, F), S) for
-        (F, S) in MOI.get(model, MOI.ListOfConstraints())
+        (F, S) in MOI.get(model, MOI.ListOfConstraintTypesPresent())
     ]
+end
+
+"""
+    num_constraints(model::Model; count_variable_in_set_constraints::Bool)
+
+Return the number of constraints in `model`.
+
+If `count_variable_in_set_constraints == true`, then `VariableRef` constraints
+such as `VariableRef`-in-`Integer` are included. To count only the number of
+structural constraints (e.g., the rows in the constraint matrix of a linear
+program), pass `count_variable_in_set_constraints = false`.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP)
+julia> model = Model();
+
+julia> @variable(model, x >= 0, Int);
+
+julia> @constraint(model, 2x <= 1);
+
+julia> num_constraints(model; count_variable_in_set_constraints = true)
+3
+
+julia> num_constraints(model; count_variable_in_set_constraints = false)
+1
+```
+"""
+function num_constraints(model::Model; count_variable_in_set_constraints::Bool)
+    ret = num_nonlinear_constraints(model)
+    for (F, S) in list_of_constraint_types(model)
+        if F != VariableRef || count_variable_in_set_constraints
+            ret += num_constraints(model, F, S)
+        end
+    end
+    return ret
+end
+
+"""
+    all_constraints(
+        model::Model;
+        include_variable_in_set_constraints::Bool,
+    )::Vector{ConstraintRef}
+
+Return a list of all constraints in `model`.
+
+If `include_variable_in_set_constraints == true`, then `VariableRef` constraints
+such as `VariableRef`-in-`Integer` are included. To return only the structural
+constraints (e.g., the rows in the constraint matrix of a linear program), pass
+`include_variable_in_set_constraints = false`.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP)
+julia> model = Model();
+
+julia> @variable(model, x >= 0, Int);
+
+julia> @constraint(model, 2x <= 1);
+
+julia> @NLconstraint(model, x^2 <= 1);
+
+julia> all_constraints(model; include_variable_in_set_constraints = true)
+4-element Vector{ConstraintRef}:
+ 2 x ≤ 1.0
+ x ≥ 0.0
+ x integer
+ x ^ 2.0 - 1.0 ≤ 0
+
+julia> all_constraints(model; include_variable_in_set_constraints = false)
+2-element Vector{ConstraintRef}:
+ 2 x ≤ 1.0
+ x ^ 2.0 - 1.0 ≤ 0
+```
+
+## Performance considerations
+
+Note that this function is type-unstable because it returns an abstractly typed
+vector. If performance is a problem, consider using [`list_of_constraint_types`](@ref)
+and a function barrier. See the [Performance tips for extensions](@ref) section
+of the documentation for more details.
+"""
+function all_constraints(
+    model::Model;
+    include_variable_in_set_constraints::Bool,
+)
+    ret = ConstraintRef[]
+    for (F, S) in list_of_constraint_types(model)
+        if F != VariableRef || include_variable_in_set_constraints
+            append!(ret, all_constraints(model, F, S))
+        end
+    end
+    append!(ret, all_nonlinear_constraints(model))
+    return ret
 end

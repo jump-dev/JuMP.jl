@@ -289,4 +289,83 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test D.data == [0 2; 1 3]
         @test D.axes == (Base.OneTo(2), Base.OneTo(2))
     end
+
+    @testset "Array" begin
+        A = DenseAxisArray([1, 3, 2], Base.OneTo(3))
+        B = @inferred Array(A)
+        @test B isa Vector{Int}
+        @test B == [1, 3, 2]
+        # Test mutating B doesn't mutate A
+        B[2] = 4
+        @test A[2] == 3
+        C = @inferred Array{Float64}(A)
+        @test C isa Vector{Float64}
+        @test C == [1.0, 3.0, 2.0]
+    end
+
+    @testset "hash" begin
+        a = [5.0 6.0; 7.0 8.0]
+        A = DenseAxisArray(a, [:a, :b], Base.OneTo(2))
+        @test hash(A) isa UInt
+        s = Set{Any}()
+        push!(s, A)
+        @test length(s) == 1
+    end
+
+    @testset "Non-AbstractArray axes" begin
+        x = [1.0, 2.0, 3.0]
+        d = Dict(:a => "a", :b => "b", :c => "c")
+        X = DenseAxisArray(x, d)
+        for (k, v) in d
+            @test X[(k, v)] in x
+            @test X[(k, v)] == X[k=>v]
+        end
+        @test_throws KeyError X[(:a, "b")]
+        @test isassigned(X, (:a, "a"))
+        @test !isassigned(X, (:a, "b"))
+        @test length(X[[(:a, "a"), (:c, "c")]]) == 2
+    end
+
+    @testset "Non-AbstractArray matrix" begin
+        x = [1.0 2.0 3.0; 1.0 2.0 3.0; 1.0 2.0 3.0]
+        d = Dict(:a => "a", :b => "b", :c => "c")
+        X = DenseAxisArray(x, d, d)
+        for (k, v) in d
+            @test X[(k, v), (k, v)] in x
+            @test X[(k, v), (k, v)] == X[k=>v, k=>v]
+        end
+        @test_throws BoundsError X[(:a, "b")]
+        @test_throws KeyError X[(:a, "b"), (:a, "a")]
+        @test_throws KeyError X[(:a, "a"), (:a, "b")]
+        @test isassigned(X, (:a, "a"), (:a, "a"))
+        @test !isassigned(X, (:a, "b"))
+        @test isassigned(X, (:a, "a"), (:b, "b"))
+        y = Array(X[:, (:a, "a")])
+        @test all(y .== y[1])
+    end
+
+    @testset "Singular axis" begin
+        x = @test_logs (:warn,) DenseAxisArray([1.1 2.2], 1, 1:2)
+        @test x[1, 2] == 2.2
+        y = @test_logs DenseAxisArray([1.1 2.2], [1], 1:2)
+        @test y[1, 2] == 2.2
+    end
+
+    @testset "CartesianIndex error" begin
+        S = CartesianIndex.([2, 4])
+        err = ErrorException(
+            "Unsupported index type `CartesianIndex` in axis: $S. Cartesian " *
+            "indices are restricted for indexing into and iterating over " *
+            "multidimensional arrays.",
+        )
+        @test_throws(err, DenseAxisArray([1.1, 2.2], S))
+    end
+
+    @testset "Matrix indices" begin
+        sources = ["A", "B", "C"]
+        sinks = ["D", "E"]
+        S = [(source, sink) for source in sources, sink in sinks]
+        x = DenseAxisArray(1:6, S)
+        @test size(x) == (6,)
+    end
 end

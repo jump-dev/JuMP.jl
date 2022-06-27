@@ -1,5 +1,5 @@
 """
-    SymMatrixSpace()
+    SymmetricMatrixSpace()
 
 Use in the [`@variable`](@ref) macro to constrain a matrix of variables to be
 symmetric.
@@ -7,13 +7,13 @@ symmetric.
 ## Examples
 
 ```jldoctest; setup=:(model = Model())
-julia> @variable(model, Q[1:2, 1:2] in SymMatrixSpace())
+julia> @variable(model, Q[1:2, 1:2] in SymmetricMatrixSpace())
 2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
  Q[1,1]  Q[1,2]
  Q[1,2]  Q[2,2]
 ```
 """
-struct SymMatrixSpace end
+struct SymmetricMatrixSpace end
 
 """
     SkewSymmetricMatrixSpace()
@@ -55,7 +55,7 @@ julia> a = [ x 2x
 julia> b = [1 2
             2 4];
 
-julia> cref = @SDconstraint(model, a ⪰ b)
+julia> cref = @constraint(model, a >= b, PSDCone())
 [x - 1    2 x - 2;
  2 x - 2  x - 4  ] ∈ PSDCone()
 
@@ -93,6 +93,27 @@ triangular part of the matrix is constrained to belong to the
 `PositiveSemidefiniteConeSquare`.
 """
 struct PSDCone end
+
+function build_constraint(
+    _error::Function,
+    f::AbstractMatrix{<:AbstractJuMPScalar},
+    s::MOI.GreaterThan,
+    extra::PSDCone,
+)
+    @assert iszero(s.lower)
+    return build_constraint(_error, f, extra)
+end
+
+function build_constraint(
+    _error::Function,
+    f::AbstractMatrix{<:AbstractJuMPScalar},
+    s::MOI.LessThan,
+    extra::PSDCone,
+)
+    @assert iszero(s.upper)
+    new_f = _MA.operate!!(*, -1, f)
+    return build_constraint(_error, new_f, extra)
+end
 
 """
     SymmetricMatrixShape
@@ -195,6 +216,20 @@ function vectorize(matrix, shape::Union{SymmetricMatrixShape,SquareMatrixShape})
     return vectorize(Matrix(matrix), shape)
 end
 
+# This is a special method because calling `Matrix(matrix)` accesses an undef
+# reference.
+function vectorize(matrix::UpperTriangular, ::SquareMatrixShape)
+    n = LinearAlgebra.checksquare(matrix)
+    return [matrix[i, j] for j in 1:n for i in 1:n]
+end
+
+# This is a special method because calling `Matrix(matrix)` accesses an undef
+# reference.
+function vectorize(matrix::LowerTriangular, ::SquareMatrixShape)
+    n = LinearAlgebra.checksquare(matrix)
+    return [matrix[i, j] for j in 1:n for i in 1:n]
+end
+
 function _square_side(_error::Function, ::Containers.SparseAxisArray)
     return _error("Cannot have index dependencies in symmetric variables.")
 end
@@ -229,7 +264,7 @@ function _vectorize_variables(_error::Function, matrix::Matrix)
 end
 
 """
-    build_variable(_error::Function, variables, ::SymMatrixSpace)
+    build_variable(_error::Function, variables, ::SymmetricMatrixSpace)
 
 Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
 creating variables in `MOI.Reals`, i.e. "free" variables unless they are
@@ -243,7 +278,7 @@ This function is used by the [`@variable`](@ref) macro as follows:
 function build_variable(
     _error::Function,
     variables::Matrix{<:AbstractVariable},
-    ::SymMatrixSpace,
+    ::SymmetricMatrixSpace,
 )
     n = _square_side(_error, variables)
     set = MOI.Reals(MOI.dimension(MOI.PositiveSemidefiniteConeTriangle(n)))
@@ -308,6 +343,15 @@ function build_variable(
     )
 end
 
+function value(
+    Q::LinearAlgebra.Symmetric{V,Matrix{V}},
+) where {V<:AbstractVariableRef}
+    return LinearAlgebra.Symmetric(
+        value.(LinearAlgebra.parent(Q)),
+        LinearAlgebra.sym_uplo(Q.uplo),
+    )
+end
+
 """
     build_constraint(_error::Function, Q::Symmetric{V, M},
                      ::PSDCone) where {V <: AbstractJuMPScalar,
@@ -345,27 +389,18 @@ function build_constraint(
 end
 
 """
-    build_constraint(_error::Function,
-                     Q::AbstractMatrix{<:AbstractJuMPScalar},
-                     ::PSDCone)
+    build_constraint(
+        _error::Function,
+        Q::AbstractMatrix{<:AbstractJuMPScalar},
+        ::PSDCone,
+    )
 
 Return a `VectorConstraint` of shape [`SquareMatrixShape`](@ref) constraining
 the matrix `Q` to be symmetric and positive semidefinite.
 
-This function is used by the [`@constraint`](@ref) and [`@SDconstraint`](@ref)
-macros as follows:
+This function is used by the [`@constraint`](@ref) macro as follows:
 ```julia
 @constraint(model, Q in PSDCone())
-@SDconstraint(model, P ⪰ Q)
-```
-The [`@constraint`](@ref) call above is usually used when the entries of `Q` are
-affine or quadratic expressions, but it can also be used when the entries are
-variables to get the reference of the semidefinite constraint, e.g.,
-```julia
-@variable model Q[1:2,1:2]
-# The type of `Q` is `Matrix{VariableRef}`
-var_psd = @constraint model Q in PSDCone()
-# The `var_psd` variable contains a reference to the constraint
 ```
 """
 function build_constraint(

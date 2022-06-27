@@ -20,7 +20,7 @@ mutable struct MyModel <: JuMP.AbstractModel
     constraints::Dict{ConstraintIndex,JuMP.AbstractConstraint}      # Map conidx -> variable
     con_to_name::Dict{ConstraintIndex,String}      # Map conidx -> name
     name_to_con::Union{Dict{String,ConstraintIndex},Nothing}                     # Map name -> conidx
-    objectivesense::MOI.OptimizationSense
+    objectivesense::OptimizationSense
     objective_function::JuMP.AbstractJuMPScalar
     obj_dict::Dict{Symbol,Any}                     # Same that JuMP.Model's field `obj_dict`
     function MyModel()
@@ -33,7 +33,7 @@ mutable struct MyModel <: JuMP.AbstractModel
             Dict{ConstraintIndex,JuMP.AbstractConstraint}(),
             Dict{ConstraintIndex,String}(),
             nothing,            # Constraints
-            MOI.FEASIBILITY_SENSE,
+            FEASIBILITY_SENSE,
             zero(JuMP.GenericAffExpr{Float64,MyVariableRef}),
             Dict{Symbol,Any}(),
         )
@@ -55,7 +55,6 @@ function Base.:(==)(v::MyVariableRef, w::MyVariableRef)
 end
 Base.broadcastable(v::MyVariableRef) = Ref(v)
 JuMP.isequal_canonical(v::MyVariableRef, w::MyVariableRef) = v == w
-JuMP.variable_type(::MyModel) = MyVariableRef
 function JuMP.add_variable(
     m::MyModel,
     v::JuMP.AbstractVariable,
@@ -337,7 +336,6 @@ end
 
 # Constraints
 const MyConstraintRef = JuMP.ConstraintRef{MyModel,ConstraintIndex}
-JuMP.constraint_type(::MyModel) = MyConstraintRef
 function JuMP.add_constraint(
     model::MyModel,
     c::JuMP.AbstractConstraint,
@@ -495,7 +493,7 @@ end
 function JuMP.constraints_string(print_mode, model::MyModel)
     strings = String[]
     # Sort by creation order, i.e. ConstraintIndex value
-    constraints = sort(collect(model.constraints), by = c -> c.first.value)
+    constraints = sort(collect(model.constraints); by = c -> c.first.value)
     for (index, constraint) in constraints
         push!(strings, JuMP.constraint_string(print_mode, constraint))
     end

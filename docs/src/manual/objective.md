@@ -76,7 +76,7 @@ julia> f = objective_function(model)
 
 julia> point = Dict(x[1] => 2.0, x[2] => 1.0);
 
-julia> value(f, z -> point[z])
+julia> value(z -> point[z], f)
 10.5
 ```
 
@@ -142,7 +142,7 @@ julia> @objective(model, Min, 2x)
 julia> objective_sense(model)
 MIN_SENSE::OptimizationSense = 0
 
-julia> set_objective_sense(model, MOI.MAX_SENSE);
+julia> set_objective_sense(model, MAX_SENSE);
 
 julia> objective_sense(model)
 MAX_SENSE::OptimizationSense = 1

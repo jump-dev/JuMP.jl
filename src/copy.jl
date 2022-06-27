@@ -7,10 +7,26 @@
     copy_extension_data(data, new_model::AbstractModel, model::AbstractModel)
 
 Return a copy of the extension data `data` of the model `model` to the extension
-data of the new model `new_model`. A method should be added for any JuMP
-extension storing data in the `ext` field.
+data of the new model `new_model`.
+
+A method should be added for any JuMP extension storing data in the `ext` field.
+
+!!! warning
+    Do not engage in type piracy by implementing this method for types of `data`
+    that you did not define! JuMP extensions should store types that they
+    define in `model.ext`, rather than regular Julia types.
 """
-function copy_extension_data end
+function copy_extension_data(data, ::AbstractModel, ::AbstractModel)
+    @warn(
+        "Model contains extension data of type $(typeof(data)) that we do " *
+        "not know how to copy.\n\nIf you are using a JuMP extension and you " *
+        "did not add data to the `model.ext` dictionary. Please open an " *
+        "issue on the GitHub repository of the JuMP extension and tell them " *
+        "to implement `JuMP.copy_extension_data`.\n\nIf you added things to " *
+        "`model.ext`, they have not been copied.",
+    )
+    return missing
+end
 
 """
     ReferenceMap
@@ -43,8 +59,10 @@ end
 
 function Base.getindex(map::ReferenceMap, expr::GenericQuadExpr)
     aff = map[expr.aff]
-    terms = [UnorderedPair(map[key.a], map[key.b]) => val for
-     (key, val) in expr.terms]
+    terms = [
+        UnorderedPair(map[key.a], map[key.b]) => val for
+        (key, val) in expr.terms
+    ]
     return GenericQuadExpr(aff, terms)
 end
 
@@ -115,26 +133,21 @@ function copy_model(
             "able to copy the constructed model.",
         )
     end
-    caching_mode = backend(model).mode
-    new_model = Model(caching_mode = caching_mode)
+    new_model = Model()
 
     # At JuMP's level, filter_constraints should work with JuMP.ConstraintRef,
     # whereas MOI.copy_to's filter_constraints works with MOI.ConstraintIndex.
-    function moi_filter_constraints(cref::MOI.ConstraintIndex)
-        jump_cref = constraint_ref_with_index(model, cref)
-        return filter_constraints(jump_cref)
+    function moi_filter(cref::MOI.ConstraintIndex)
+        return filter_constraints(constraint_ref_with_index(model, cref))
     end
-    filter = filter_constraints !== nothing ? moi_filter_constraints : nothing
+    moi_filter(::Any) = true
 
-    # Copy the MOI backend, note that variable and constraint indices may have
-    # changed, the `index_map` gives the map between the indices of
-    # `backend(model` and the indices of `backend(new_model)`.
-    index_map = MOI.copy_to(
-        backend(new_model),
-        backend(model),
-        copy_names = true,
-        filter_constraints = filter,
-    )
+    index_map = if filter_constraints === nothing
+        MOI.copy_to(backend(new_model), backend(model))
+    else
+        filtered_src = MOI.Utilities.ModelFilter(moi_filter, backend(model))
+        MOI.copy_to(backend(new_model), filtered_src)
+    end
 
     new_model.optimize_hook = model.optimize_hook
 
@@ -255,7 +268,7 @@ function copy_conflict(model::Model)
             MOI.get(model, MOI.ConstraintConflictStatus(), cref) !=
             MOI.NOT_IN_CONFLICT
     new_model, reference_map =
-        copy_model(model, filter_constraints = filter_constraints)
+        copy_model(model; filter_constraints = filter_constraints)
     return new_model, reference_map
 end
 

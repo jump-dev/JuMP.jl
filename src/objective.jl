@@ -58,7 +58,7 @@ function dual_objective_value(model::Model; result::Int = 1)::Float64
 end
 
 """
-    objective_sense(model::Model)::MathOptInterface.OptimizationSense
+    objective_sense(model::Model)::MOI.OptimizationSense
 
 Return the objective sense.
 """
@@ -67,7 +67,7 @@ function objective_sense(model::Model)
 end
 
 """
-    set_objective_sense(model::Model, sense::MathOptInterface.OptimizationSense)
+    set_objective_sense(model::Model, sense::MOI.OptimizationSense)
 
 Sets the objective sense of the model to the given sense. See
 [`set_objective_function`](@ref) to set the objective function. These are
@@ -123,10 +123,6 @@ function set_objective_function(model::Model, func::Real)
     )
 end
 
-function set_objective_function(model::AbstractModel, ::MutableArithmetics.Zero)
-    return set_objective_function(model, 0.0)
-end
-
 function set_objective_function(model::AbstractModel, func)
     return error("The objective function `$(func)` is not supported by JuMP.")
 end
@@ -148,7 +144,7 @@ set_objective_function(model, func)
 ```jldoctest; setup=:(using JuMP)
 model = Model()
 @variable(model, x)
-set_objective(model, MOI.MIN_SENSE, x)
+set_objective(model, MIN_SENSE, x)
 ```
 """
 function set_objective(model::AbstractModel, sense::MOI.OptimizationSense, func)
@@ -208,7 +204,7 @@ function and the result is quadratic.
 However, it is not convertible to a variable.
 ```jldoctest objective_function; filter = r"MathOptInterface\\."s
 julia> objective_function(model, VariableRef)
-ERROR: InexactError: convert(MathOptInterface.SingleVariable, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[MathOptInterface.ScalarAffineTerm{Float64}(2.0, MathOptInterface.VariableIndex(1))], 1.0))
+ERROR: InexactError: convert(MathOptInterface.VariableIndex, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[MathOptInterface.ScalarAffineTerm{Float64}(2.0, MathOptInterface.VariableIndex(1))], 1.0))
 [...]
 ```
 """
@@ -259,5 +255,6 @@ function set_objective_coefficient(
     else
         error("Objective function type not supported: $(obj_fct_type)")
     end
+    model.is_model_dirty = true
     return
 end

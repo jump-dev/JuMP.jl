@@ -20,7 +20,7 @@ function _build_complements_constraint(
             "$(size(F)) != $(size(x)).",
         )
     end
-    return VectorConstraint(vec([F x]), MOI.Complements(length(F)))
+    return VectorConstraint([F; x], MOI.Complements(2 * length(F)))
 end
 
 function _build_complements_constraint(
@@ -36,7 +36,7 @@ function _build_complements_constraint(
             errorf("keys of the SparseAxisArray's do not match.")
         end
     end
-    return VectorConstraint(elements, MOI.Complements(length(F)))
+    return VectorConstraint(elements, MOI.Complements(length(elements)))
 end
 
 function _build_complements_constraint(
@@ -52,7 +52,7 @@ function _build_complements_constraint(
     F::AbstractJuMPScalar,
     x::AbstractVariableRef,
 )
-    return VectorConstraint([F, x], MOI.Complements(1))
+    return VectorConstraint([F, x], MOI.Complements(2))
 end
 
 function _build_complements_constraint(
@@ -63,7 +63,7 @@ function _build_complements_constraint(
     return errorf("second term must be a variable.")
 end
 
-function parse_one_operator_constraint(
+function parse_constraint_call(
     errorf::Function,
     ::Bool,
     ::Union{Val{:complements},Val{:⟂}},

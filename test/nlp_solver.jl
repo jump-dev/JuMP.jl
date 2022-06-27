@@ -66,21 +66,21 @@ const MOI = MathOptInterface
         m = Model(Ipopt.Optimizer)
         initval = [1, 5, 5, 1]
         @variable(m, 1 <= x[i = 1:4] <= 5, start = initval[i])
-        JuMP.set_NL_objective(
+        JuMP.set_nonlinear_objective(
             m,
-            MOI.MIN_SENSE,
+            MIN_SENSE,
             :($(x[1]) * $(x[4]) * ($(x[1]) + $(x[2]) + $(x[3])) + $(x[3])),
         )
-        JuMP.add_NL_constraint(
+        JuMP.add_nonlinear_constraint(
             m,
             :($(x[1]) * $(x[2]) * $(x[3]) * $(x[4]) >= 25),
         )
-        JuMP.add_NL_constraint(
+        JuMP.add_nonlinear_constraint(
             m,
             :($(x[1])^2 + $(x[2])^2 + $(x[3])^2 + $(x[4])^2 == 40),
         )
         bad_expr = :(x[1]^2 + x[2]^2 + x[3]^2 + x[4]^2 == 40)
-        @test_throws ErrorException JuMP.add_NL_constraint(m, bad_expr)
+        @test_throws ErrorException JuMP.add_nonlinear_constraint(m, bad_expr)
 
         set_silent(m)
         JuMP.optimize!(m)
@@ -568,10 +568,10 @@ const MOI = MathOptInterface
     @testset "Two-sided constraints (no macros)" begin
         m = Model(Ipopt.Optimizer)
         @variable(m, x)
-        JuMP.set_NL_objective(m, MOI.MAX_SENSE, x)
+        JuMP.set_nonlinear_objective(m, MAX_SENSE, x)
         l = -1
         u = 1
-        JuMP.add_NL_constraint(m, :($l <= $x <= $u))
+        JuMP.add_nonlinear_constraint(m, :($l <= $x <= $u))
         set_silent(m)
         JuMP.optimize!(m)
 
@@ -580,7 +580,7 @@ const MOI = MathOptInterface
         @test JuMP.primal_status(m) == MOI.FEASIBLE_POINT
         @test JuMP.objective_value(m) ≈ u atol = 1e-6
 
-        JuMP.set_NL_objective(m, MOI.MIN_SENSE, x)
+        JuMP.set_nonlinear_objective(m, MIN_SENSE, x)
         JuMP.optimize!(m)
 
         @test JuMP.has_values(m)
@@ -825,8 +825,8 @@ const MOI = MathOptInterface
 
     @testset "User-defined functions" begin
         model = Model(Ipopt.Optimizer)
-        JuMP.register(model, :my_f, 2, my_f, autodiff = true)
-        JuMP.register(model, :my_square, 1, my_square, autodiff = true)
+        JuMP.register(model, :my_f, 2, my_f; autodiff = true)
+        JuMP.register(model, :my_square, 1, my_square; autodiff = true)
 
         @variable(model, x[1:2] >= 0.5)
         @NLobjective(model, Min, my_f(x[1], my_square(x[2])))
@@ -840,7 +840,7 @@ const MOI = MathOptInterface
 
     @testset "Univariate user-defined functions" begin
         model = Model(Ipopt.Optimizer)
-        JuMP.register(model, :my_square, 1, my_square, autodiff = true)
+        JuMP.register(model, :my_square, 1, my_square; autodiff = true)
 
         # Test just univariate functions because this is a path where hessians
         # are enabled.
@@ -855,7 +855,7 @@ const MOI = MathOptInterface
 
     @testset "Issue #927" begin
         model = Model(Ipopt.Optimizer)
-        JuMP.register(model, :my_f, 2, my_f, autodiff = true)
+        JuMP.register(model, :my_f, 2, my_f; autodiff = true)
         @variable(model, x)
         @NLobjective(model, Min, my_f(x, x))
         set_silent(model)

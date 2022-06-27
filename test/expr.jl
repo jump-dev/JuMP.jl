@@ -1,4 +1,6 @@
 using JuMP
+using LinearAlgebra
+using SparseArrays
 using Test
 
 const MA = JuMP._MA
@@ -87,10 +89,10 @@ function expressions_test(
 
     @testset "value for GenericAffExpr" begin
         expr1 = JuMP.GenericAffExpr(3.0, 3 => -5.0, 2 => 4.0)
-        @test @inferred(JuMP.value(expr1, -)) == 10.0
+        @test @inferred(JuMP.value(-, expr1)) == 10.0
         expr2 = JuMP.GenericAffExpr{Int,Int}(2)
-        @test typeof(@inferred(JuMP.value(expr2, i -> 1.0))) == Float64
-        @test @inferred(JuMP.value(expr2, i -> 1.0)) == 2.0
+        @test typeof(@inferred(JuMP.value(i -> 1.0, expr2))) == Float64
+        @test @inferred(JuMP.value(i -> 1.0, expr2)) == 2.0
     end
 
     @testset "value for GenericQuadExpr" begin
@@ -103,9 +105,9 @@ function expressions_test(
             JuMP.UnorderedPair(1, 2) => 5.0,
             JuMP.UnorderedPair(2, 2) => 6.0,
         )
-        @test typeof(@inferred(JuMP.value(expr, i -> 1.0))) == Float64
-        @test @inferred(JuMP.value(expr, i -> 1.0)) == 21
-        @test @inferred(JuMP.value(expr, i -> 2.0)) == 71
+        @test typeof(@inferred(JuMP.value(i -> 1.0, expr))) == Float64
+        @test @inferred(JuMP.value(i -> 1.0, expr)) == 21
+        @test @inferred(JuMP.value(i -> 2.0, expr)) == 71
     end
 
     @testset "add_to_expression!(::GenericAffExpr{C,V}, ::V)" begin
@@ -193,120 +195,120 @@ function expressions_test(
         @test coefficient(quad, z, z) == 0.0
     end
 
-    @testset "MA.add_mul!(ex::Number, c::Number, x::GenericAffExpr)" begin
-        aff = MA.add_mul!(1.0, 2.0, JuMP.GenericAffExpr(1.0, :a => 1.0))
+    @testset "MA.add_mul!!(ex::Number, c::Number, x::GenericAffExpr)" begin
+        aff = MA.add_mul!!(1.0, 2.0, JuMP.GenericAffExpr(1.0, :a => 1.0))
         @test JuMP.isequal_canonical(aff, JuMP.GenericAffExpr(3.0, :a => 2.0))
     end
 
-    @testset "MA.add_mul!(ex::Number, c::Number, x::GenericQuadExpr) with c == 0" begin
-        quad = MA.add_mul!(2.0, 0.0, QuadExprType())
+    @testset "MA.add_mul!!(ex::Number, c::Number, x::GenericQuadExpr) with c == 0" begin
+        quad = MA.add_mul!!(2.0, 0.0, QuadExprType())
         @test JuMP.isequal_canonical(quad, convert(QuadExprType, 2.0))
     end
 
-    @testset "MA.add_mul!(ex::Number, c::VariableRef, x::VariableRef)" begin
+    @testset "MA.add_mul!!(ex::Number, c::VariableRef, x::VariableRef)" begin
         model = ModelType()
         @variable(model, x)
         @variable(model, y)
         @test_expression_with_string MA.add_mul(5.0, x, y) "x*y + 5"
-        @test_expression_with_string MA.add_mul!(5.0, x, y) "x*y + 5"
+        @test_expression_with_string MA.add_mul!!(5.0, x, y) "x*y + 5"
     end
 
-    @testset "MA.add_mul!(ex::Number, c::T, x::T) where T<:GenericAffExpr" begin
+    @testset "MA.add_mul!!(ex::Number, c::T, x::T) where T<:GenericAffExpr" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(1.0, 2x, x + 1) "2 x² + 2 x + 1"
-        @test_expression_with_string MA.add_mul!(1.0, 2x, x + 1) "2 x² + 2 x + 1"
+        @test_expression_with_string MA.add_mul!!(1.0, 2x, x + 1) "2 x² + 2 x + 1"
     end
 
-    @testset "MA.add_mul!(ex::Number, c::GenericAffExpr{C,V}, x::V) where {C,V}" begin
+    @testset "MA.add_mul!!(ex::Number, c::GenericAffExpr{C,V}, x::V) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(1.0, 2x, x) "2 x² + 1"
-        @test_expression_with_string MA.add_mul!(1.0, 2x, x) "2 x² + 1"
+        @test_expression_with_string MA.add_mul!!(1.0, 2x, x) "2 x² + 1"
     end
 
-    @testset "MA.add_mul!(ex::Number, c::GenericQuadExpr, x::Number)" begin
+    @testset "MA.add_mul!!(ex::Number, c::GenericQuadExpr, x::Number)" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(0.0, x^2, 1.0) "x²"
-        @test_expression_with_string MA.add_mul!(0.0, x^2, 1.0) "x²"
+        @test_expression_with_string MA.add_mul!!(0.0, x^2, 1.0) "x²"
     end
 
-    @testset "MA.add_mul!(ex::Number, c::GenericQuadExpr, x::Number) with c == 0" begin
+    @testset "MA.add_mul!!(ex::Number, c::GenericQuadExpr, x::Number) with c == 0" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(0.0, x^2, 0.0) "0"
-        @test_expression_with_string MA.add_mul!(0.0, x^2, 0.0) "0"
+        @test_expression_with_string MA.add_mul!!(0.0, x^2, 0.0) "0"
     end
 
-    @testset "MA.add_mul!(aff::AffExpr,c::VariableRef,x::AffExpr)" begin
+    @testset "MA.add_mul!!(aff::AffExpr,c::VariableRef,x::AffExpr)" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(2x, x, x + 1) "x² + 3 x"
-        @test_expression_with_string MA.add_mul!(2x, x, x + 1) "x² + 3 x"
+        @test_expression_with_string MA.add_mul!!(2x, x, x + 1) "x² + 3 x"
     end
 
-    @testset "MA.add_mul!(aff::GenericAffExpr{C,V},c::GenericAffExpr{C,V},x::Number) where {C,V}" begin
+    @testset "MA.add_mul!!(aff::GenericAffExpr{C,V},c::GenericAffExpr{C,V},x::Number) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(2x, x, 1) "3 x"
-        @test_expression_with_string MA.add_mul!(2x, x, 1) "3 x"
+        @test_expression_with_string MA.add_mul!!(2x, x, 1) "3 x"
     end
 
-    @testset "MA.add_mul!(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Number) where {C,V}" begin
+    @testset "MA.add_mul!!(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Number) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(2x, x^2, 1) "x² + 2 x"
-        @test_expression_with_string MA.add_mul!(2x, x^2, 1) "x² + 2 x"
+        @test_expression_with_string MA.add_mul!!(2x, x^2, 1) "x² + 2 x"
     end
 
-    @testset "MA.add_mul!(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Number) where {C,V} with x == 0" begin
+    @testset "MA.add_mul!!(aff::GenericAffExpr{C,V}, c::GenericQuadExpr{C,V}, x::Number) where {C,V} with x == 0" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(2x, x^2, 0) "2 x"
-        @test_expression_with_string MA.add_mul!(2x, x^2, 0) "2 x"
+        @test_expression_with_string MA.add_mul!!(2x, x^2, 0) "2 x"
     end
 
-    @testset "MA.add_mul!(aff::GenericAffExpr{C,V}, c::Number, x::GenericQuadExpr{C,V}) where {C,V} with c == 0" begin
+    @testset "MA.add_mul!!(aff::GenericAffExpr{C,V}, c::Number, x::GenericQuadExpr{C,V}) where {C,V} with c == 0" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(2x, 0, x^2) "2 x"
-        @test_expression_with_string MA.add_mul!(2x, 0, x^2) "2 x"
+        @test_expression_with_string MA.add_mul!!(2x, 0, x^2) "2 x"
     end
 
-    @testset "MA.add_mul!(ex::GenericAffExpr{C,V}, c::GenericAffExpr{C,V}, x::GenericAffExpr{C,V}) where {C,V}" begin
+    @testset "MA.add_mul!!(ex::GenericAffExpr{C,V}, c::GenericAffExpr{C,V}, x::GenericAffExpr{C,V}) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(2x, x + 1, x + 0) "x² + 3 x"
-        @test_expression_with_string MA.add_mul!(2x, x + 1, x + 0) "x² + 3 x"
+        @test_expression_with_string MA.add_mul!!(2x, x + 1, x + 0) "x² + 3 x"
     end
 
-    @testset "MA.add_mul!(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::Number) where {C,V}" begin
+    @testset "MA.add_mul!!(quad::GenericQuadExpr{C,V},c::GenericAffExpr{C,V},x::Number) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(x^2, x + 1, 1) "x² + x + 1"
-        @test_expression_with_string MA.add_mul!(x^2, x + 1, 1) "x² + x + 1"
+        @test_expression_with_string MA.add_mul!!(x^2, x + 1, 1) "x² + x + 1"
     end
 
-    @testset "MA.add_mul!(quad::GenericQuadExpr{C,V},c::V,x::GenericAffExpr{C,V}) where {C,V}" begin
+    @testset "MA.add_mul!!(quad::GenericQuadExpr{C,V},c::V,x::GenericAffExpr{C,V}) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(x^2, x, x + 1) "2 x² + x"
-        @test_expression_with_string MA.add_mul!(x^2, x, x + 1) "2 x² + x"
+        @test_expression_with_string MA.add_mul!!(x^2, x, x + 1) "2 x² + x"
     end
 
-    @testset "MA.add_mul!(quad::GenericQuadExpr{C,V},c::GenericQuadExpr{C,V},x::Number) where {C,V}" begin
+    @testset "MA.add_mul!!(quad::GenericQuadExpr{C,V},c::GenericQuadExpr{C,V},x::Number) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(x^2 + x, x^2 + x, 2.0) "3 x² + 3 x"
-        @test_expression_with_string MA.add_mul!(x^2 + x, x^2 + x, 2.0) "3 x² + 3 x"
+        @test_expression_with_string MA.add_mul!!(x^2 + x, x^2 + x, 2.0) "3 x² + 3 x"
     end
 
-    @testset "MA.add_mul!(ex::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::GenericAffExpr{C,V}) where {C,V}" begin
+    @testset "MA.add_mul!!(ex::GenericQuadExpr{C,V}, c::GenericAffExpr{C,V}, x::GenericAffExpr{C,V}) where {C,V}" begin
         model = ModelType()
         @variable(model, x)
         @test_expression_with_string MA.add_mul(x^2 + x, x + 0, x + 1) "2 x² + 2 x"
-        @test_expression_with_string MA.add_mul!(x^2 + x, x + 0, x + 1) "2 x² + 2 x"
+        @test_expression_with_string MA.add_mul!!(x^2 + x, x + 0, x + 1) "2 x² + 2 x"
     end
 
     @testset "(+)(::AffExpr)" begin
@@ -350,4 +352,28 @@ end
 
 @testset "Expressions for JuMPExtension.MyModel" begin
     expressions_test(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
+end
+
+@testset "==0" begin
+    model = Model()
+    @variable(model, x)
+    @test x + 0.0 != 0.0
+    @test AffExpr(0.0) == 0.0
+    @test AffExpr(1.0) == 1.0
+    @test QuadExpr(AffExpr(0.0)) == 0.0
+    @test QuadExpr(AffExpr(1.0)) == 1.0
+    @test x^2 + 0.0 != 0.0
+end
+
+if VERSION >= v"1.6"
+    # Don't test this on Julia 1.0. There are some issues adding the sparse and
+    # diagonal matrices.
+    @testset "issue_2309" begin
+        model = Model()
+        @variable(model, x[1:10])
+        I = SparseArrays.sparse(LinearAlgebra.Diagonal(ones(10)))
+        A = I + LinearAlgebra.Diagonal(x)
+        @test A isa SparseArrays.SparseMatrixCSC
+        @test SparseArrays.nnz(A) == 10
+    end
 end

@@ -124,6 +124,8 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                 errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
                 lookupcode = quote
                     if $(esc(m)).nlp_data === nothing
+                        # No need to check for splatting here because an outer
+                        # if already checks that.
                         try
                             register(
                                 $(esc(m)),
@@ -151,6 +153,8 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                         )
                             error($errorstring2)
                         else
+                            # No need to check for splatting here because an
+                            # outer if already checks that.
                             try
                                 register(
                                     $(esc(m)),
@@ -227,9 +231,25 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                 # ... variables and constraints ...
                 ```
                 """
+                splat_error = """
+                Unrecognized function \"$(f)\" used in nonlinear expression.
+
+                You must register it as a user-defined function before building
+                the model. For example, replacing `N` with the appropriate number
+                of arguments, do:
+                ```julia
+                model = Model()
+                register(model, :$(f), N, $(f), autodiff=true)
+                # ... variables and constraints ...
+                ```
+                """
                 errorstring2 = "Incorrect number of arguments for \"$(x.args[1])\" in nonlinear expression."
+                has_splat_arg = any(arg -> isexpr(arg, :...), x.args)
                 lookupcode = quote
                     if $(esc(m)).nlp_data === nothing
+                        if $(has_splat_arg)
+                            error($splat_error)
+                        end
                         try
                             register(
                                 $(esc(m)),
@@ -257,6 +277,9 @@ function _parse_NL_expr(m, x, tapevar, parent, values)
                         )
                             error($errorstring2)
                         else
+                            if $(has_splat_arg)
+                                error($splat_error)
+                            end
                             try
                                 register(
                                     $(esc(m)),
