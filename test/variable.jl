@@ -46,7 +46,7 @@ function _sliceof_util(VariableRefType, x, I, J, K)
         jj = 1
     end
     idx = [length(I) == 1, length(J) == 1, length(K) == 1]
-    return dropdims(y, dims = tuple(findall(idx)...))
+    return dropdims(y; dims = tuple(findall(idx)...))
 end
 
 function test_variable_no_bound(ModelType, VariableRefType)
@@ -667,7 +667,7 @@ function test_Model_get_variable_coefficient(::Any, ::Any)
 end
 
 function _mock_reduced_cost_util(
-    obj_sense::MOI.OptimizationSense,
+    obj_sense::OptimizationSense,
     #obj_value::Float64,
     var_obj_coeff::Float64,
     #var_value,
@@ -676,7 +676,7 @@ function _mock_reduced_cost_util(
     has_duals::Bool = var_bounds_dual !== nothing,
 )
     mockoptimizer =
-        MOIU.MockOptimizer(MOIU.Model{Float64}(), eval_objective_value = false)
+        MOIU.MockOptimizer(MOIU.Model{Float64}(); eval_objective_value = false)
     m = JuMP.direct_model(mockoptimizer)
     if var_bound_type === :lower
         @variable(m, x >= 0)
@@ -745,13 +745,13 @@ function _mock_reduced_cost_util(
         MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
         MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     end
-
+    optimize!(m)
     return x
 end
 
 function test_Model_reduced_cost(::Any, ::Any)
-    Min = MOI.MIN_SENSE
-    Max = MOI.MAX_SENSE
+    Min = MIN_SENSE
+    Max = MAX_SENSE
     # The method should always fail if duals are not available.
     x = _mock_reduced_cost_util(Min, 1.0, :none)
     @test_throws ErrorException reduced_cost(x)
@@ -804,8 +804,8 @@ function test_Model_value_var(ModelType, ::Any)
     @variable(model, x[1:2])
     vals = Dict(x[1] => 1.0, x[2] => 2.0)
     f = vidx -> vals[vidx]
-    @test value(x[1], f) === 1.0
-    @test value(x[2], f) === 2.0
+    @test value(f, x[1]) === 1.0
+    @test value(f, x[2]) === 2.0
 end
 
 function test_Model_relax_integrality(::Any, ::Any)
@@ -946,6 +946,109 @@ function test_start_value(::Any, ::Any)
     @test start_value(x) === nothing
     set_start_value(x, 1)
     @test start_value(x) == 1.0
+end
+
+function test_Model_inf_lower_bound(::Any, ::Any)
+    for y in [-Inf, Inf, NaN]
+        model = Model()
+        @variable(model, x >= y)
+        @test !has_lower_bound(x)
+        @test_throws(
+            ErrorException(
+                "Unable to set lower bound to $y. To remove the bound, use " *
+                "`delete_lower_bound`.",
+            ),
+            set_lower_bound(x, y),
+        )
+    end
+end
+
+function test_Model_inf_upper_bound(::Any, ::Any)
+    for y in [-Inf, Inf, NaN]
+        model = Model()
+        @variable(model, x <= y)
+        @test !has_upper_bound(x)
+        @test_throws(
+            ErrorException(
+                "Unable to set upper bound to $y. To remove the bound, use " *
+                "`delete_upper_bound`.",
+            ),
+            set_upper_bound(x, y),
+        )
+    end
+end
+
+function test_Model_inf_fixed(::Any, ::Any)
+    for y in [-Inf, Inf, NaN]
+        model = Model()
+        @test_throws(
+            ErrorException("Unable to fix variable to $y"),
+            @variable(model, x == y),
+        )
+        @variable(model, x)
+        @test_throws(ErrorException("Unable to fix variable to $y"), fix(x, y))
+    end
+end
+
+struct _UnsupportedVariableName <: MOI.AbstractOptimizer end
+MOI.add_variable(::_UnsupportedVariableName) = MOI.VariableIndex(1)
+MOI.is_empty(::_UnsupportedVariableName) = true
+
+function test_Model_unsupported_VariableName(::Any, ::Any)
+    model = direct_model(_UnsupportedVariableName())
+    @variable(model, x)
+    @test x isa VariableRef
+    @test name(x) == ""
+    return
+end
+
+function test_Model_error_messages(::Any, ::Any)
+    model = Model()
+    @variable(model, x)
+    err = try
+        x >= 1
+    catch err
+        err
+    end
+    function f(s)
+        return ErrorException(
+            replace(replace(err.msg, ">= 1" => "$(s) 1"), "`>=`" => "`$(s)`"),
+        )
+    end
+    @test_throws err 1 >= x
+    @test_throws f("<=") x <= 1
+    @test_throws f("<=") 1 <= x
+    @test_throws f(">") x > 1
+    @test_throws f(">") 1 > x
+    @test_throws f("<") x < 1
+    @test_throws f("<") 1 < x
+    return
+end
+
+function test_rational_inf_bounds(ModelType, ::Any)
+    model = ModelType()
+    u = Rational{Int}(Inf)
+    @variable(model, -u <= x <= u)
+    @test has_lower_bound(x) == false
+    @test has_upper_bound(x) == false
+    return
+end
+
+function test_Model_ConstraintRef(ModelType, ::Any)
+    model = Model()
+    @variable(model, x >= 0)
+    c = LowerBoundRef(x)
+    @constraint(model, c2, x >= 0)
+    @test VariableRef(c) == x
+    @test_throws(MethodError, VariableRef(c2))
+    return
+end
+
+function test_start_value_nothing(ModelType, ::Any)
+    model = ModelType()
+    @variable(model, x, start = nothing)
+    @test start_value(x) === nothing
+    return
 end
 
 function runtests()

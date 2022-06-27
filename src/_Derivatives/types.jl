@@ -32,7 +32,7 @@ export NodeData
 # for COMPARISON, index is into lost of comparison operators
 # for EXTRA, index is extension specific
 
-const operators = [:+, :-, :*, :^, :/, :ifelse, :max, :min]
+const operators = [:+, :-, :*, :^, :/, :ifelse]
 const USER_OPERATOR_ID_START = length(operators) + 1
 
 const operator_to_id = Dict{Symbol,Int}()

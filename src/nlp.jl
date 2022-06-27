@@ -133,7 +133,7 @@ value(p)
 10.0
 ```
 """
-value(p::NonlinearParameter) = p.m.nlp_data.nlparamvalues[p.index]::Float64
+value(p::NonlinearParameter) = p.model.nlp_data.nlparamvalues[p.index]::Float64
 
 """
     set_value(p::NonlinearParameter, v::Number)
@@ -152,7 +152,7 @@ value(p)
 ```
 """
 function set_value(p::NonlinearParameter, v::Number)
-    return p.m.nlp_data.nlparamvalues[p.index] = v
+    return p.model.nlp_data.nlparamvalues[p.index] = v
 end
 
 function _NLPData()
@@ -176,28 +176,39 @@ function _init_NLP(m::Model)
     end
 end
 
+const NonlinearConstraintRef = ConstraintRef{Model,NonlinearConstraintIndex}
+
 """
-    is_valid(model::Model, c::ConstraintRef{Model,NonlinearConstraintIndex})
+    all_nonlinear_constraints(model::Model)
+
+Return a vector of all nonlinear constraint references in the model in the
+order they were added to the model.
+"""
+function all_nonlinear_constraints(model::Model)
+    return map(1:num_nonlinear_constraints(model)) do i
+        return ConstraintRef(model, NonlinearConstraintIndex(i), ScalarShape())
+    end
+end
+
+"""
+    is_valid(model::Model, c::NonlinearConstraintRef)
 
 Return `true` if `c` refers to a valid nonlinear constraint in `model`.
 """
-function is_valid(
-    model::Model,
-    c::ConstraintRef{Model,NonlinearConstraintIndex},
-)
+function is_valid(model::Model, c::NonlinearConstraintRef)
     if model !== c.model
         return false
     end
     _init_NLP(model)
-    return 1 <= c.index.value <= num_nl_constraints(model)
+    return 1 <= c.index.value <= num_nonlinear_constraints(model)
 end
 
 """
-    dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
+    dual(c::NonlinearConstraintRef)
 
 Return the dual of the nonlinear constraint `c`.
 """
-function dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
+function dual(c::NonlinearConstraintRef)
     _init_NLP(c.model)
     nldata::_NLPData = c.model.nlp_data
     # The array is cleared on every solve.
@@ -205,6 +216,79 @@ function dual(c::ConstraintRef{Model,NonlinearConstraintIndex})
         nldata.nlconstr_duals = MOI.get(c.model, MOI.NLPBlockDual())
     end
     return nldata.nlconstr_duals[c.index.value]
+end
+
+"""
+    nonlinear_dual_start_value(model::Model)
+
+Return the current value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref).
+"""
+function nonlinear_dual_start_value(model::Model)
+    return MOI.get(model, MOI.NLPBlockDualStart())
+end
+
+"""
+    set_nonlinear_dual_start_value(
+        model::Model,
+        start::Union{Nothing,Vector{Float64}},
+    )
+
+Set the value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref).
+
+The start vector corresponds to the Lagrangian duals of the nonlinear
+constraints, in the order given by [`all_nonlinear_constraints`](@ref). That is, you
+must pass a single start vector corresponding to all of the nonlinear
+constraints in a single function call; you cannot set the dual start value of
+nonlinear constraints one-by-one. The example below demonstrates how to use
+[`all_nonlinear_constraints`](@ref) to create a mapping between the nonlinear
+constraint references and the start vector.
+
+Pass `nothing` to unset a previous start.
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> nl1 = @NLconstraint(model, x[1] <= sqrt(x[2]));
+
+julia> nl2 = @NLconstraint(model, x[1] >= exp(x[2]));
+
+julia> start = Dict(nl1 => -1.0, nl2 => 1.0);
+
+julia> start_vector = [start[con] for con in all_nonlinear_constraints(model)]
+2-element Vector{Float64}:
+ -1.0
+  1.0
+
+julia> set_nonlinear_dual_start_value(model, start_vector)
+
+julia> nonlinear_dual_start_value(model)
+2-element Vector{Float64}:
+ -1.0
+  1.0
+```
+"""
+function set_nonlinear_dual_start_value(model::Model, start::Vector{Float64})
+    _init_NLP(model)
+    nldata::_NLPData = model.nlp_data
+    if length(nldata.nlconstr) != length(start)
+        throw(
+            ArgumentError(
+                "length start vector ($(length(start))) does not match the " *
+                "number of nonlinear constraints ($(length(nldata.nlconstr))).",
+            ),
+        )
+    end
+    MOI.set(model, MOI.NLPBlockDualStart(), start)
+    return
+end
+
+function set_nonlinear_dual_start_value(model::Model, start::Nothing)
+    MOI.set(model, MOI.NLPBlockDualStart(), start)
+    return
 end
 
 mutable struct _FunctionStorage
@@ -244,7 +328,7 @@ Return an `MOI.AbstractNLPEvaluator` constructed from the model `model`.
 Before using, you must initialize the evaluator using `MOI.initialize`.
 """
 mutable struct NLPEvaluator <: MOI.AbstractNLPEvaluator
-    m::Model
+    model::Model
     parameter_values::Vector{Float64}
     has_nlobj::Bool
     objective::_FunctionStorage
@@ -409,7 +493,7 @@ function _SubexpressionStorage(
 end
 
 function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
-    nldata::_NLPData = d.m.nlp_data
+    nldata::_NLPData = d.model.nlp_data
 
     for feat in requested_features
         if !(feat in MOI.features_available(d))
@@ -422,18 +506,18 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
         return
     end
 
-    num_variables_ = num_variables(d.m)
+    num_variables_ = num_variables(d.model)
 
     moi_index_to_consecutive_index = Dict(
         moi_index => consecutive_index for (consecutive_index, moi_index) in
-        enumerate(MOI.get(d.m, MOI.ListOfVariableIndices()))
+        enumerate(MOI.get(d.model, MOI.ListOfVariableIndices()))
     )
 
     d.user_output_buffer =
-        Array{Float64}(undef, d.m.nlp_data.largest_user_input_dimension)
+        Array{Float64}(undef, d.model.nlp_data.largest_user_input_dimension)
     d.jac_storage = Array{Float64}(
         undef,
-        max(num_variables_, d.m.nlp_data.largest_user_input_dimension),
+        max(num_variables_, d.model.nlp_data.largest_user_input_dimension),
     )
 
     d.constraints = _FunctionStorage[]
@@ -516,7 +600,7 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
         for k in d.subexpression_order
             ex = d.subexpressions[k]
             d.subexpressions_as_julia_expressions[k] = _tape_to_expr(
-                d.m,
+                d.model,
                 1,
                 nldata.nlexpr[k].nd,
                 ex.adj,
@@ -602,15 +686,15 @@ function MOI.initialize(d::NLPEvaluator, requested_features::Vector{Symbol})
             d.hessian_sparsity = _hessian_lagrangian_structure(d)
             # JIT warm-up
             # TODO: rewrite without MPB
-            #MathProgBase.eval_hessian_lagrangian(d, Array{Float64}(undef,length(d.hess_I)), d.m.colVal, 1.0, ones(MathProgBase.numconstr(d.m)))
+            #MathProgBase.eval_hessian_lagrangian(d, Array{Float64}(undef,length(d.hess_I)), d.model.colVal, 1.0, ones(MathProgBase.numconstr(d.model)))
         end
     end
 
     # JIT warm-up
     # TODO: rewrite without MPB
     # if :Grad in requested_features
-    #     MOI.eval_objective_gradient(d, zeros(numVar), d.m.colVal)
-    #     MOI.eval_constraint(d, zeros(MathProgBase.numconstr(d.m)), d.m.colVal)
+    #     MOI.eval_objective_gradient(d, zeros(numVar), d.model.colVal)
+    #     MOI.eval_constraint(d, zeros(MathProgBase.numconstr(d.model)), d.model.colVal)
     # end
 
     # reset timers
@@ -626,7 +710,7 @@ end
 function _recompute_disable_2ndorder(evaluator::NLPEvaluator)
     # Check if we have any user-defined operators, in which case we need to
     # disable hessians. The result of features_available depends on this.
-    nldata::_NLPData = evaluator.m.nlp_data
+    nldata::_NLPData = evaluator.model.nlp_data
     has_nlobj = nldata.nlobj !== nothing
     has_user_mv_operator = false
     for nlexpr in nldata.nlexpr
@@ -659,7 +743,7 @@ function _forward_eval_all(d::NLPEvaluator, x)
     # do a forward pass on all expressions at x
     subexpr_values = d.subexpression_forward_values
     user_operators =
-        d.m.nlp_data.user_operators::_Derivatives.UserOperatorRegistry
+        d.model.nlp_data.user_operators::_Derivatives.UserOperatorRegistry
     user_input_buffer = d.jac_storage
     user_output_buffer = d.user_output_buffer
     for k in d.subexpression_order
@@ -891,7 +975,7 @@ function MOI.eval_hessian_lagrangian_product(
     σ::Float64,                 # multiplier for objective
     μ::AbstractVector{Float64}, # multipliers for each constraint
 )
-    nldata = d.m.nlp_data::_NLPData
+    nldata = d.model.nlp_data::_NLPData
 
     if d.last_x != x
         _forward_eval_all(d, x)
@@ -1044,7 +1128,7 @@ function MOI.eval_hessian_lagrangian(
     obj_factor::Float64,             # Lagrangian multiplier for objective
     lambda::AbstractVector{Float64}, # Multipliers for each constraint
 )
-    nldata = d.m.nlp_data::_NLPData
+    nldata = d.model.nlp_data::_NLPData
 
     d.want_hess || error(
         "Hessian computations were not requested on the call to initialize!.",
@@ -1153,7 +1237,7 @@ function _hessian_slice_inner(
     zero_ϵ = zero(ForwardDiff.Partials{CHUNK,Float64})
 
     user_operators =
-        d.m.nlp_data.user_operators::_Derivatives.UserOperatorRegistry
+        d.model.nlp_data.user_operators::_Derivatives.UserOperatorRegistry
     # do a forward pass
     for expridx in ex.dependent_subexpressions
         subexpr = d.subexpressions[expridx]
@@ -1372,36 +1456,41 @@ mutable struct _VariablePrintWrapper
     v::VariableRef
     mode::Any
 end
+
 function Base.show(io::IO, v::_VariablePrintWrapper)
     return print(io, function_string(v.mode, v.v))
 end
+
 mutable struct _ParameterPrintWrapper
     model::Model
     idx::Int
     mode::Any
 end
-function Base.show(io::IO, p::_ParameterPrintWrapper)
-    relevant_parameters = filter(
-        i -> i[2] isa NonlinearParameter && i[2].index == p.idx,
-        p.model.obj_dict,
-    )
-    if length(relevant_parameters) == 1
-        par_name = first(relevant_parameters)[1]
-        print(io, par_name)
-    else
-        if p.mode == IJuliaMode
-            print(io, "parameter_{$(p.idx)}")
-        else
-            print(io, "parameter[$(p.idx)]")
+
+function Base.show(io::IO, wrapper::_ParameterPrintWrapper)
+    p = NonlinearParameter(wrapper.model, wrapper.idx)
+    for (k, v) in object_dictionary(p.model)
+        if v == p
+            print(io, k)
+            return
         end
     end
+    # No named parameter; use a generic name.
+    if wrapper.mode == MIME("text/latex")
+        print(io, "parameter_{$(p.index)}")
+    else
+        print(io, "parameter[$(p.index)]")
+    end
+    return
 end
+
 mutable struct _SubexpressionPrintWrapper
     idx::Int
     mode::Any
 end
+
 function Base.show(io::IO, s::_SubexpressionPrintWrapper)
-    if s.mode == IJuliaMode
+    if s.mode == MIME("text/latex")
         print(io, "subexpression_{$(s.idx)}")
     else
         print(io, "subexpression[$(s.idx)]")
@@ -1420,7 +1509,7 @@ function _tape_to_expr(
     user_operators::_Derivatives.UserOperatorRegistry,
     generic_variable_names::Bool,
     splat_subexpressions::Bool,
-    print_mode = REPLMode,
+    print_mode = MIME("text/plain"),
 )
     children_arr = rowvals(adj)
 
@@ -1620,14 +1709,14 @@ function MOI.objective_expr(d::NLPEvaluator)
     if d.has_nlobj
         ex = d.objective
         return _tape_to_expr(
-            d.m,
+            d.model,
             1,
-            d.m.nlp_data.nlobj.nd,
+            d.model.nlp_data.nlobj.nd,
             ex.adj,
             ex.const_values,
             d.parameter_values,
             d.subexpressions_as_julia_expressions,
-            d.m.nlp_data.user_operators,
+            d.model.nlp_data.user_operators,
             true,
             true,
         )
@@ -1638,16 +1727,16 @@ end
 
 function MOI.constraint_expr(d::NLPEvaluator, i::Integer)
     ex = d.constraints[i]
-    constr = d.m.nlp_data.nlconstr[i]
+    constr = d.model.nlp_data.nlconstr[i]
     julia_expr = _tape_to_expr(
-        d.m,
+        d.model,
         1,
         constr.terms.nd,
         ex.adj,
         ex.const_values,
         d.parameter_values,
         d.subexpressions_as_julia_expressions,
-        d.m.nlp_data.user_operators,
+        d.model.nlp_data.user_operators,
         true,
         true,
     )
@@ -1681,12 +1770,12 @@ function Base.getindex(m::_VarValueMap{T}, moi_index::Int64) where {T}
 end
 
 """
-    value(ex::NonlinearExpression, var_value::Function)
+    value(var_value::Function, ex::NonlinearExpression)
 
 Evaluate `ex` using `var_value(v)` as the value for each variable `v`.
 """
-function value(ex::NonlinearExpression, var_value::Function)
-    model = ex.m
+function value(var_value::Function, ex::NonlinearExpression)
+    model = ex.model
     nlp_data::_NLPData = model.nlp_data
     variable_values = _VarValueMap(model, var_value, Dict{Int64,Float64}())
     subexpressions = Vector{NodeData}[nl_expr.nd for nl_expr in nlp_data.nlexpr]
@@ -1744,7 +1833,9 @@ Replaces `getvalue` for most use cases.
 See also: [`result_count`](@ref).
 """
 function value(ex::NonlinearExpression; result::Int = 1)
-    return value(ex, (x) -> value(x; result = result))
+    return value(ex) do x
+        return value(x; result = result)
+    end
 end
 
 mutable struct _UserFunctionEvaluator <: MOI.AbstractNLPEvaluator
@@ -1764,15 +1855,148 @@ function MOI.eval_objective_gradient(d::_UserFunctionEvaluator, grad, x)
     return nothing
 end
 
+const _FORWARD_DIFF_METHOD_ERROR_HELPER = raw"""
+Common reasons for this include:
+
+ * the function assumes `Float64` will be passed as input, it must work for any
+   generic `Real` type.
+ * the function allocates temporary storage using `zeros(3)` or similar. This
+   defaults to `Float64`, so use `zeros(T, 3)` instead.
+
+As an example, instead of:
+```julia
+function my_function(x::Float64...)
+    y = zeros(length(x))
+    for i in 1:length(x)
+        y[i] = x[i]^2
+    end
+    return sum(y)
+end
+```
+use:
+```julia
+function my_function(x::T...) where {T<:Real}
+    y = zeros(T, length(x))
+    for i in 1:length(x)
+        y[i] = x[i]^2
+    end
+    return sum(y)
+end
+```
+
+Review the stacktrace below for more information, but it can often be hard to
+understand why and where your function is failing. You can also debug this
+outside of JuMP as follows:
+```julia
+import ForwardDiff
+
+# If the input dimension is 1
+x = 1.0
+my_function(a) = a^2
+ForwardDiff.derivative(my_function, x)
+
+# If the input dimension is more than 1
+x = [1.0, 2.0]
+my_function(a, b) = a^2 + b^2
+ForwardDiff.gradient(x -> my_function(x...), x)
+```
+"""
+
+_intercept_ForwardDiff_MethodError(err, ::Any) = rethrow(err)
+
+function _intercept_ForwardDiff_MethodError(::MethodError, s)
+    return error(
+        "JuMP's autodiff of the user-defined function $(s) failed with a " *
+        "MethodError.\n\n$(_FORWARD_DIFF_METHOD_ERROR_HELPER)",
+    )
+end
+
 function _UserFunctionEvaluator(
     dimension::Integer,
     f::Function,
-    ::Type{T} = Float64,
+    ::Type{T} = Float64;
+    name = "",
 ) where {T}
     g = x -> f(x...)
     cfg = ForwardDiff.GradientConfig(g, zeros(T, dimension))
-    ∇f = (out, y) -> ForwardDiff.gradient!(out, g, y, cfg)
+    ∇f = function (out, y)
+        try
+            ForwardDiff.gradient!(out, g, y, cfg)
+        catch err
+            _intercept_ForwardDiff_MethodError(err, name)
+        end
+    end
     return _UserFunctionEvaluator(g, ∇f, dimension)
+end
+
+"""
+    _validate_register_assumptions(
+        f::Function,
+        name::Symbol,
+        dimension::Integer,
+    )
+
+A function that attempts to check if `f` is suitable for registration via
+[`register`](@ref) and throws an informative error if it is not.
+
+Because we don't know the domain of `f`, this function may encounter false
+negatives. But it should catch the majority of cases in which users supply
+non-differentiable functions that rely on `::Float64` assumptions.
+"""
+function _validate_register_assumptions(
+    f::Function,
+    name::Symbol,
+    dimension::Integer,
+)
+    # Assumption 1: check that `f` can be called with `Float64` arguments.
+    y = 0.0
+    try
+        if dimension == 1
+            y = f(0.0)
+        else
+            y = f(zeros(dimension))
+        end
+    catch
+        # We hit some other error, perhaps we called a function like log(0).
+        # Ignore for now, and hope that a useful error is shown to the user
+        # during the solve.
+    end
+    if !(y isa Real)
+        error(
+            "Expected return type of `Float64` from the user-defined " *
+            "function :$(name), but got `$(typeof(y))`.",
+        )
+    end
+    # Assumption 2: check that `f` can be differentiated using `ForwardDiff`.
+    try
+        if dimension == 1
+            ForwardDiff.derivative(f, 0.0)
+        else
+            ForwardDiff.gradient(x -> f(x...), zeros(dimension))
+        end
+    catch err
+        if err isa MethodError
+            error(
+                "Unable to register the function :$name because it does not " *
+                "support differentiation via ForwardDiff.\n\n" *
+                _FORWARD_DIFF_METHOD_ERROR_HELPER,
+            )
+        end
+        # We hit some other error, perhaps we called a function like log(0).
+        # Ignore for now, and hope that a useful error is shown to the user
+        # during the solve.
+    end
+    return
+end
+
+function _checked_derivative(f::F, s) where {F}
+    return function (x)
+        try
+            return ForwardDiff.derivative(f, x)
+        catch err
+            _intercept_ForwardDiff_MethodError(err, s)
+        end
+    end
 end
 
 """
@@ -1825,10 +2049,10 @@ function register(
 )
     autodiff == true ||
         error("If only the function is provided, must set autodiff=true")
+    _validate_register_assumptions(f, s, dimension)
     _init_NLP(m)
-
     if dimension == 1
-        fprime = x -> ForwardDiff.derivative(f, x)
+        fprime = _checked_derivative(f, s)
         fprimeprime = x -> ForwardDiff.derivative(fprime, x)
         _Derivatives.register_univariate_operator!(
             m.nlp_data.user_operators,
@@ -1843,9 +2067,10 @@ function register(
         _Derivatives.register_multivariate_operator!(
             m.nlp_data.user_operators,
             s,
-            _UserFunctionEvaluator(dimension, f),
+            _UserFunctionEvaluator(dimension, f; name = s),
         )
     end
+    return
 end
 
 """
@@ -1914,7 +2139,8 @@ function register(
         autodiff == true || error(
             "Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.",
         )
-        fprimeprime = x -> ForwardDiff.derivative(∇f, x)
+        _validate_register_assumptions(∇f, s, dimension)
+        fprimeprime = _checked_derivative(∇f, s)
         _Derivatives.register_univariate_operator!(
             m.nlp_data.user_operators,
             s,
@@ -1938,6 +2164,7 @@ function register(
             d,
         )
     end
+    return
 end
 
 """
@@ -1999,7 +2226,7 @@ function register(
 end
 
 """
-    add_NL_expression(model::Model, expr::Expr)
+    add_nonlinear_expression(model::Model, expr::Expr)
 
 Add a nonlinear expression `expr` to `model`.
 
@@ -2013,16 +2240,20 @@ programmatically, and you cannot use [`@NLexpression`](@ref).
 ## Examples
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
-julia> add_NL_expression(model, :(\$(x) + \$(x)^2))
-"Reference to nonlinear expression #1"
+julia> add_nonlinear_expression(model, :(\$(x) + \$(x)^2))
+subexpression[1]: x + x ^ 2.0
 ```
 """
-function add_NL_expression(model::Model, ex)
+function add_nonlinear_expression(model::Model, ex)
     return NonlinearExpression(model, _NonlinearExprData(model, ex))
 end
 
 """
-    set_NL_objective(model::Model, sense::MOI.OptimizationSense, expr::Expr)
+    set_nonlinear_objective(
+        model::Model,
+        sense::MOI.OptimizationSense,
+        expr::Expr,
+    )
 
 Set the nonlinear objective of `model` to the expression `expr`, with the
 optimization sense `sense`.
@@ -2033,20 +2264,20 @@ programmatically, and you cannot use [`@NLobjective`](@ref).
 ## Notes
 
  * You must interpolate the variables directly into the expression `expr`.
- * You must use `MOI.MIN_SENSE` or `MOI.MAX_SENSE` instead of `Min` and `Max`.
+ * You must use `MIN_SENSE` or `MAX_SENSE` instead of `Min` and `Max`.
 
 ## Examples
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
-julia> set_NL_objective(model, MOI.MIN_SENSE, :(\$(x) + \$(x)^2))
+julia> set_nonlinear_objective(model, MIN_SENSE, :(\$(x) + \$(x)^2))
 ```
 """
-function set_NL_objective(model::Model, sense::MOI.OptimizationSense, x)
+function set_nonlinear_objective(model::Model, sense::MOI.OptimizationSense, x)
     return set_objective(model, sense, _NonlinearExprData(model, x))
 end
 
 """
-    add_NL_constraint(model::Model, expr::Expr)
+    add_nonlinear_constraint(model::Model, expr::Expr)
 
 Add a nonlinear constraint described by the Julia expression `ex` to `model`.
 
@@ -2060,11 +2291,11 @@ programmatically, and you cannot use [`@NLconstraint`](@ref).
 ## Examples
 
 ```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
-julia> add_NL_constraint(model, :(\$(x) + \$(x)^2 <= 1))
+julia> add_nonlinear_constraint(model, :(\$(x) + \$(x)^2 <= 1))
 (x + x ^ 2.0) - 1.0 ≤ 0
 ```
 """
-function add_NL_constraint(model::Model, ex::Expr)
+function add_nonlinear_constraint(model::Model, ex::Expr)
     _init_NLP(model)
     nl_constraints = model.nlp_data.nlconstr
     if isexpr(ex, :call) # One-sided constraint.
@@ -2104,10 +2335,12 @@ function add_NL_constraint(model::Model, ex::Expr)
         end
         lb = ex.args[1]
         ub = ex.args[5]
-        if !isa(lb, Number)
-            error(string("In (", ex, "): expected ", lb, " to be a number."))
-        elseif !isa(ub, Number)
-            error(string("In (", ex, "): expected ", ub, " to be a number."))
+        if !isa(lb, Number) || !isa(ub, Number)
+            error(
+                "Interval constraint contains non-constant left- or " *
+                "right-hand sides. Reformulate as two separate " *
+                "constraints, or move all variables into the central term.",
+            )
         end
         c = _NonlinearConstraint(_NonlinearExprData(model, ex.args[3]), lb, ub)
         push!(nl_constraints, c)

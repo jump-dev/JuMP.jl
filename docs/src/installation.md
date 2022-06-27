@@ -1,14 +1,38 @@
 # Installation Guide
 
-!!! info
-    Installation troubles? Check the [Common installation issues](@ref) section
-    below.
+This guide explains how to install Julia and  JuMP. If you have installation
+troubles, read the [Common installation issues](@ref) section below.
+
+## Install Julia
 
 JuMP is a package for [Julia](https://julialang.org). To use JuMP, first
 [download and install](https://julialang.org/downloads/) Julia.
 
-!!! note
-    This version of JuMP is compatible with Julia 1.0 and later.
+!!! tip
+    If you  are new  to Julia, read our [Getting started with Julia](@ref)
+    tutorial.
+
+### Which version should I pick?
+
+You can install the "Current stable release" or the "Long-term support (LTS)
+release".
+
+ * The "Current stable release" is the latest release of Julia. It has access to
+   newer features, and is likely faster.
+ * The "Long-term support release" is an older version of Julia that has
+   continued to receive bug and security fixes. However, it may not have the
+   latest features or performance improvements.
+
+For most users, you should install the "Current stable release", and whenever
+Julia releases a new version of the current stable release, you should update
+your version of Julia. Note that any code you write on one version of the
+current stable release will continue to work on all subsequent releases.
+
+For users in restricted software environments (e.g., your enterprise IT controls
+what software you can install), you may be better off installing the long-term
+support release because you will not have to update Julia as frequently.
+
+## Install JuMP
 
 From Julia, JuMP is installed using the built-in package manager:
 ```julia
@@ -22,11 +46,16 @@ Pkg.add("JuMP")
     [Pkg manager documentation](https://julialang.github.io/Pkg.jl/v1/environments/)
     has more information on this topic.
 
-## Installing a solver
+When we release a new version of JuMP, you can update with:
+```julia
+import Pkg
+Pkg.update("JuMP")
+```
 
-JuMP depends on solvers to solve optimization problems, and you will need to
-install one before you can solve problems with JuMP. The table below lists the
-currently available solvers.
+## Install a solver
+
+JuMP depends on solvers to solve optimization problems. Therefore, you will need
+to install one before you can solve problems with JuMP.
 
 Install a solver using the Julia package manager, replacing `"Clp"` by the
 Julia package name as appropriate.
@@ -46,11 +75,11 @@ set_optimizer_attributes(model, "LogLevel" => 1, "PrimalTolerance" => 1e-7)
 
 !!! note
     Most packages follow the `ModuleName.Optimizer` naming convention, but
-    exceptions may exist. See the README of the Julia package's Github
+    exceptions may exist. See the README of the Julia package's GitHub
     repository for more details on how to use a particular solver, including any
     solver-specific options.
 
-### Supported solvers
+## Supported solvers
 
 Most solvers are not written in Julia, and some require commercial licenses to
 use, so installation is often more complex.
@@ -86,16 +115,20 @@ The link in the `Solver` column is the corresponding Julia package.
 | [FICO Xpress](https://www.fico.com/en/products/fico-xpress-optimization-suite) | [Xpress.jl](https://github.com/jump-dev/Xpress.jl)                               | Manual | Comm.    | (MI)LP, (MI)SOCP          |
 | [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK.jl](https://github.com/jump-dev/GLPK.jl)                                   |        | GPL      | (MI)LP                    |
 | [Gurobi](https://gurobi.com)                                                   | [Gurobi.jl](https://github.com/jump-dev/Gurobi.jl)                               | Manual | Comm.    | (MI)LP, (MI)SOCP          |
-| [HiGHS](https://github.com/ERGO-Code/HiGHS)                                    | [HiGHS.jl](https://github.com/jump-dev/HiGHS.jl)                                 |        |MIT       | LP                        |
+| [HiGHS](https://github.com/ERGO-Code/HiGHS)                                    | [HiGHS.jl](https://github.com/jump-dev/HiGHS.jl)                                 |        |MIT       | (MI)LP                    |
 | [Hypatia.jl](https://github.com/chriscoey/Hypatia.jl)                          |                                                                                  |        | MIT      | LP, SOCP, SDP             |
 | [Ipopt](https://github.com/coin-or/Ipopt)                                      | [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl)                                 |        | EPL      | LP, QP, NLP               |
 | [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl)                          |                                                                                  |        | MIT      | (MI)SOCP, (MI)NLP         |
+| [MadNLP.jl](https://github.com/sshin23/MadNLP.jl)                              |                                                                                  |        | MIT      | LP, QP, NLP               |
 | [MOSEK](https://www.mosek.com/)                                                | [MosekTools.jl](https://github.com/jump-dev/MosekTools.jl)                       | Manual | Comm.    | (MI)LP, (MI)SOCP, SDP     |
 | [NLopt](https://github.com/stevengj/nlopt)                                     | [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)                                 |        | GPL      | LP, QP, NLP               |
 | [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              |        | Apache   | LP, QP                    |
 | [PATH](http://pages.cs.wisc.edu/~ferris/path.html)                             | [PATHSolver.jl](https://github.com/chkwon/PATHSolver.jl)                 |        | MIT      | MCP                       |
+| [Pajarito.jl](https://github.com/jump-dev/Pajarito.jl)                         |                                                                                  |        | MPL-2    | (MI)NLP, (MI)SOCP, (MI)SDP |
 | [Pavito.jl](https://github.com/jump-dev/Pavito.jl)                             |                                                                                  |        | MPL-2    | (MI)NLP                   |
+| [Penbmi](http://www.penopt.com/penbmi.html)                                    | [Penopt.jl](https://github.com/jump-dev/Penopt.jl/)                              |        | Comm.    | Bilinear SDP              |
 | [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)                        |                                                                                  |        | MIT      | LP, SOCP, SDP             |
+| [RAPOSa](https://raposa.usc.es/)                                               | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |   Manual  | RAPOSa      | (MI)NLP                   |
 | [SCIP](https://scipopt.org/)                                                   | [SCIP.jl](https://github.com/scipopt/SCIP.jl)                            |        | ZIB      | (MI)LP, (MI)NLP           |
 | [SCS](https://github.com/cvxgrp/scs)                                           | [SCS.jl](https://github.com/jump-dev/SCS.jl)                                     |        | MIT      | LP, SOCP, SDP             |
 | [SDPA](http://sdpa.sourceforge.net/)                                           | [SDPA.jl](https://github.com/jump-dev/SDPA.jl), [SDPAFamily.jl](https://github.com/ericphanson/SDPAFamily.jl) |  | GPL | LP, SDP |
@@ -108,7 +141,7 @@ Where:
 - LP = Linear programming
 - QP = Quadratic programming
 - SOCP = Second-order conic programming (including problems with convex
-  quadratic constraints and/or objective)
+  quadratic constraints or objective)
 - MCP = Mixed-complementarity programming
 - NLP = Nonlinear programming
 - SDP = Semidefinite programming
@@ -120,7 +153,7 @@ Where:
     file.
 
 !!! note
-    Developing a solver or solver wrapper? See [Models](@ref) and the
+    Developing a solver or solver wrapper? See [Models](@ref jump_models) and the
     [MathOptInterface docs](https://jump.dev/MathOptInterface.jl/stable/) for
     more details on how JuMP interacts with solvers. Please get in touch via the
     [Developer Chatroom](https://jump.dev/pages/governance/#developer-chatroom)
@@ -164,17 +197,6 @@ See a complete list [here](https://www.gams.com/latest/docs/S_MAIN.html).
 Use [NEOSServer.jl](https://github.com/odow/NEOSServer.jl) to access solvers
 available through the [NEOS Server](https://neos-server.org).
 
-## Previously supported solvers
-
-The following solvers were compatible with JuMP up to release 0.18 but are
-not yet compatible with the latest version because they do not implement the
-new MathOptInterface API:
-
-- [Pajarito](https://github.com/JuliaOpt/Pajarito.jl)
-
-Please join the [Developer Chatroom](https://jump.dev/pages/governance/#developer-chatroom)
-if you have interest in reviving a previously supported solver.
-
 ## Common installation issues
 
 !!! tip
@@ -190,7 +212,7 @@ form `vX.Y.Z`. You can check which versions you have installed with
 `import Pkg; Pkg.status()`.
 
 This should almost always be the most-recent release. You can check the releases
-of a package by going to the relevant Github page, and navigating to the
+of a package by going to the relevant GitHub page, and navigating to the
 "releases" page. For example, the list of JuMP releases is available at:
 [https://github.com/jump-dev/JuMP.jl/releases](https://github.com/jump-dev/JuMP.jl/releases).
 

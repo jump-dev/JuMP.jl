@@ -158,4 +158,31 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
         seekstart(io)
         @test occursin("\u22ee", read(io, String))
     end
+    @testset "hash" begin
+        a = Containers.@container([i = 1:3; i > 5], sqrt(i))
+        @test hash(a) isa UInt
+        s = Set{Any}()
+        push!(s, a)
+        @test length(s) == 1
+    end
+    @testset "size" begin
+        err = ErrorException(
+            "`Base.size` is not implemented for `SparseAxisArray` because " *
+            "although it is a subtype of `AbstractArray`, it is conceptually " *
+            "closer to a dictionary with `N`-dimensional keys. If you encounter " *
+            "this error and you didn't call `size` explicitly, it is because " *
+            "you called a method that is unsupported for `SparseAxisArray`s. " *
+            "Consult the JuMP documentation for a list of supported operations.",
+        )
+        x = Containers.@container([i = 1:3, j = i:3], i + j)
+        @test_throws err size(x)
+    end
+    @testset "empty broadcasting" begin
+        S = Any[]
+        x = Containers.@container([S, 1:2], 0, container = SparseAxisArray)
+        f(x) = 2x
+        y = f.(x)
+        @test y isa SparseAxisArray{Any,2,Tuple{Any,Int}}
+        @test isempty(y)
+    end
 end

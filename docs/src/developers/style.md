@@ -11,7 +11,8 @@ a style guide include:
   [bike-shedding](https://en.wikipedia.org/wiki/Law_of_triviality) by
   establishing basic naming and formatting conventions
 - lowering the barrier for new contributors by codifying the existing practices
-  (e.g., you can be more confident your code will pass review if you follow the style guide)
+  (e.g., you can be more confident your code will pass review if you follow the
+  style guide)
 
 In some cases, the JuMP style guide diverges from the
 [Julia style guide](https://docs.julialang.org/en/v1.0.0/manual/style-guide/).
@@ -36,8 +37,9 @@ We use the options contained in [`.JuliaFormatter.toml`](https://github.com/jump
 
 To format code, `cd` to the JuMP directory, then run:
 ```julia
-] add JuliaFormatter@0.13.2
+] add JuliaFormatter@1
 using JuliaFormatter
+format("docs")
 format("src")
 format("test")
 ```
@@ -48,27 +50,6 @@ format("test")
 
 The following sections outline extra style guide points that are not fixed
 automatically by JuliaFormatter.
-
-### Whitespace
-
-For conciseness, never use more than one blank line within a function, and never
-begin a function with a blank line.
-
-Bad:
-```julia
-function foo(x)
-    y = 2 * x
-
-
-    return y
-end
-
-function foo(x)
-
-    y = 2 * x
-    return y
-end
-```
 
 ### Juxtaposed multiplication
 
@@ -258,7 +239,7 @@ ambiguous which arguments are modified when multiple arguments are present.
 Be sure to document which arguments are modified in the method's docstring.
 
 See also the Julia style guide recommendations for
-[ordering of function arguments](https://docs.julialang.org/en/v1.0.0/manual/style-guide/#Write-functions-with-argument-ordering-similar-to-Julia's-Base-1).
+[ordering of function arguments](https://docs.julialang.org/en/v1/manual/style-guide/#Write-functions-with-argument-ordering-similar-to-Julia-Base).
 
 ### Abbreviations
 
@@ -347,6 +328,10 @@ Prefer `using ModuleName: x, p` to `import ModuleName.x, ModuleName.p` and
 `import MyModule: x, p` because the `import` versions allow method extension
 without qualifying with the module name.
 
+Similarly, `using ModuleName: ModuleName` is an acceptable substitute for
+`import ModuleName`, because it does not bring all symbols exported by
+`ModuleName` into scope. However, we prefer `import ModuleName` for consistency.
+
 ## Documentation
 
 This section describes the writing style that should be used when writing
@@ -417,12 +402,6 @@ module TestPkg
 
 using Test
 
-_helper_function() = 2
-
-function test_addition()
-    @test 1 + 1 == _helper_function()
-end
-
 function runtests()
     for name in names(@__MODULE__; all = true)
         if startswith("$(name)", "test_")
@@ -431,18 +410,20 @@ function runtests()
             end
         end
     end
+    return
 end
 
-end # TestPkg
+_helper_function() = 2
+
+function test_addition()
+    @test 1 + 1 == _helper_function()
+    return
+end
+
+end # module TestPkg
 
 TestPkg.runtests()
 ```
 
 Break the tests into multiple files, with one module per file, so that subsets
 of the codebase can be tested by calling `include` with the relevant file.
-
-## Design principles
-
-TODO: How to structure and test large JuMP models, libraries that use JuMP.
-
-For how to write a solver, see MOI.

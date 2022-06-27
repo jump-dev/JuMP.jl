@@ -5,7 +5,8 @@ using LinearAlgebra
 using SparseArrays
 using Test
 
-const MA = JuMP._MA
+# TODO(odow): Remove once upstream hygiene bug #122 in MA is fixed
+const MutableArithmetics = JuMP._MA
 
 include(joinpath(@__DIR__, "utilities.jl"))
 include(joinpath(@__DIR__, "JuMPExtension.jl"))
@@ -131,11 +132,22 @@ function test_vectorized_comparisons(ModelType, ::Any)
     @test JuMP.isequal_canonical((x'A)' + 2A * x, (x'A)' + 2B * x)
     @test JuMP.isequal_canonical((x'A)' + 2A * x, (x'B)' + 2A * x)
     @test JuMP.isequal_canonical((x'A)' + 2A * x, (x'B)' + 2B * x)
-    @test JuMP.isequal_canonical((x'A)' + 2A * x, MA.@rewrite((x'A)' + 2A * x))
-    @test JuMP.isequal_canonical((x'A)' + 2A * x, MA.@rewrite((x'B)' + 2A * x))
-    @test JuMP.isequal_canonical((x'A)' + 2A * x, MA.@rewrite((x'A)' + 2B * x))
-    @test JuMP.isequal_canonical((x'A)' + 2A * x, MA.@rewrite((x'B)' + 2B * x))
-
+    @test JuMP.isequal_canonical(
+        (x'A)' + 2A * x,
+        JuMP._MA.@rewrite((x'A)' + 2A * x),
+    )
+    @test JuMP.isequal_canonical(
+        (x'A)' + 2A * x,
+        JuMP._MA.@rewrite((x'B)' + 2A * x),
+    )
+    @test JuMP.isequal_canonical(
+        (x'A)' + 2A * x,
+        JuMP._MA.@rewrite((x'A)' + 2B * x),
+    )
+    @test JuMP.isequal_canonical(
+        (x'A)' + 2A * x,
+        JuMP._MA.@rewrite((x'B)' + 2B * x),
+    )
     cref4 = @constraint(m, -1 .<= (x'A)' + 2A * x .<= 1)
     c4 = JuMP.constraint_object.(cref4)
     f4 = map(c -> c.func, c4)
@@ -484,9 +496,9 @@ function test_dot(ModelType, ::Any)
             @test model.operator_counter == 0
             test_add = test_dot1 + test_dot2
             @test model.operator_counter == 1  # Check triggerable.
-            test_sum_value = JuMP.value(test_sum, JuMP.start_value)
-            @test test_sum_value ≈ JuMP.value(test_dot1, JuMP.start_value)
-            @test test_sum_value ≈ JuMP.value(test_dot2, JuMP.start_value)
+            test_sum_value = JuMP.value(JuMP.start_value, test_sum)
+            @test test_sum_value ≈ JuMP.value(JuMP.start_value, test_dot1)
+            @test test_sum_value ≈ JuMP.value(JuMP.start_value, test_dot2)
         end
     end
 end

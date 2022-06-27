@@ -9,7 +9,13 @@
 #############################################################################
 
 const _JuMPTypes = Union{AbstractJuMPScalar,NonlinearExpression}
-_float(x::Number) = convert(Float64, x)
+
+_float_type(::Type{<:Real}) = Float64
+_float_type(::Type{<:UniformScaling}) = Float64
+_float_type(::Type{<:Complex}) = Complex{Float64}
+
+_float(x::Real) = convert(Float64, x)
+_float(x::Complex) = convert(Complex{Float64}, x)
 _float(J::UniformScaling) = _float(J.λ)
 
 # Overloads
@@ -24,16 +30,19 @@ _float(J::UniformScaling) = _float(J.λ)
 # _Constant--_Constant obviously already taken care of!
 # _Constant--VariableRef
 function Base.:+(lhs::_Constant, rhs::AbstractVariableRef)
-    return _build_aff_expr(_float(lhs), 1.0, rhs)
+    constant = _float(lhs)
+    return _build_aff_expr(constant, one(constant), rhs)
 end
 function Base.:-(lhs::_Constant, rhs::AbstractVariableRef)
-    return _build_aff_expr(_float(lhs), -1.0, rhs)
+    constant = _float(lhs)
+    return _build_aff_expr(constant, -one(constant), rhs)
 end
 function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
     if iszero(lhs)
         return zero(GenericAffExpr{Float64,typeof(rhs)})
     else
-        return _build_aff_expr(0.0, _float(lhs), rhs)
+        coef = _float(lhs)
+        return _build_aff_expr(zero(coef), coef, rhs)
     end
 end
 # _Constant--_GenericAffOrQuadExpr
@@ -204,23 +213,37 @@ function Base.:/(lhs::GenericAffExpr, rhs::AbstractVariableRef)
     return error("Cannot divide affine expression by a variable")
 end
 # AffExpr--AffExpr
+
+_copy_convert_coef(::Type{C}, aff::GenericAffExpr{C}) where {C} = copy(aff)
+function _copy_convert_coef(::Type{T}, aff::GenericAffExpr{C,V}) where {T,C,V}
+    return convert(GenericAffExpr{T,V}, aff)
+end
+
+_copy_convert_coef(::Type{C}, quad::GenericQuadExpr{C}) where {C} = copy(quad)
+function _copy_convert_coef(::Type{T}, quad::GenericQuadExpr{C,V}) where {T,C,V}
+    return convert(GenericQuadExpr{T,V}, quad)
+end
+
 function Base.:+(
-    lhs::GenericAffExpr{C,V},
-    rhs::GenericAffExpr{C,V},
-) where {C,V<:_JuMPTypes}
+    lhs::GenericAffExpr{S,V},
+    rhs::GenericAffExpr{T,V},
+) where {S,T,V<:_JuMPTypes}
     if length(linear_terms(lhs)) > 50 || length(linear_terms(rhs)) > 50
         if length(linear_terms(lhs)) > 1
             operator_warn(owner_model(first(linear_terms(lhs))[2]))
         end
     end
-    return add_to_expression!(copy(lhs), rhs)
+    return add_to_expression!(
+        _copy_convert_coef(_MA.promote_operation(+, S, T), lhs),
+        rhs,
+    )
 end
 
 function Base.:-(
-    lhs::GenericAffExpr{C,V},
-    rhs::GenericAffExpr{C,V},
-) where {C,V<:_JuMPTypes}
-    result = copy(lhs)
+    lhs::GenericAffExpr{S,V},
+    rhs::GenericAffExpr{T,V},
+) where {S,T,V<:_JuMPTypes}
+    result = _copy_convert_coef(_MA.promote_operation(-, S, T), lhs)
     result.constant -= rhs.constant
     sizehint!(result, length(linear_terms(lhs)) + length(linear_terms(rhs)))
     for (coef, var) in linear_terms(rhs)
@@ -285,8 +308,8 @@ function Base.:/(q::GenericQuadExpr, a::GenericAffExpr)
     return error("Cannot divide a quadratic expression by an aff. expression")
 end
 # GenericQuadExpr--GenericQuadExpr
-function Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr)
-    result = copy(q1)
+function Base.:+(q1::GenericQuadExpr{S}, q2::GenericQuadExpr{T}) where {S,T}
+    result = _copy_convert_coef(_MA.promote_operation(+, S, T), q1)
     for (coef, var1, var2) in quad_terms(q2)
         add_to_expression!(result, coef, var1, var2)
     end
@@ -296,8 +319,8 @@ function Base.:+(q1::GenericQuadExpr, q2::GenericQuadExpr)
     result.aff.constant += q2.aff.constant
     return result
 end
-function Base.:-(q1::GenericQuadExpr, q2::GenericQuadExpr)
-    result = copy(q1)
+function Base.:-(q1::GenericQuadExpr{S}, q2::GenericQuadExpr{T}) where {S,T}
+    result = _copy_convert_coef(_MA.promote_operation(-, S, T), q1)
     for (coef, var1, var2) in quad_terms(q2)
         add_to_expression!(result, -coef, var1, var2)
     end
@@ -322,8 +345,8 @@ LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_JuMPTypes) = lhs * rhs
 LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_Constant) = lhs * rhs
 LinearAlgebra.dot(lhs::_Constant, rhs::_JuMPTypes) = lhs * rhs
 
-function Base.promote_rule(V::Type{<:AbstractVariableRef}, R::Type{<:Real})
-    return GenericAffExpr{Float64,V}
+function Base.promote_rule(V::Type{<:AbstractVariableRef}, R::Type{<:Number})
+    return GenericAffExpr{_float_type(R),V}
 end
 function Base.promote_rule(
     V::Type{<:AbstractVariableRef},
@@ -351,16 +374,14 @@ function Base.promote_rule(
 end
 function Base.promote_rule(
     ::Type{GenericQuadExpr{S,V}},
-    R::Type{<:Real},
+    R::Type{<:Number},
 ) where {S,V}
     return GenericQuadExpr{promote_type(S, R),V}
 end
 
 Base.transpose(x::AbstractJuMPScalar) = x
 
-# only real scalars are supported
-Base.conj(x::AbstractJuMPScalar) = x
-
+Base.conj(x::VariableRef) = x
 # Can remove the following code once == overloading is removed
 
 function LinearAlgebra.issymmetric(x::Matrix{T}) where {T<:_JuMPTypes}
@@ -375,11 +396,15 @@ end
 # nonlinear function fallbacks for JuMP built-in types
 ###############################################################################
 
-const op_hint = "Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective."
+const _OP_HINT = "Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective."
 for (func, _) in Calculus.symbolic_derivatives_1arg(),
     typ in [:AbstractVariableRef, :GenericAffExpr, :GenericQuadExpr]
 
-    errstr = "$func is not defined for type $typ. $op_hint"
+    if func == :abs2 && (typ == :AbstractVariableRef || typ == :GenericAffExpr)
+        continue
+    end
+
+    errstr = "$func is not defined for type $typ. $_OP_HINT"
     if isdefined(Base, func)
         @eval Base.$(func)(::$typ) = error($errstr)
     end
@@ -392,11 +417,11 @@ function Base.:*(
     T<:GenericQuadExpr,
     S<:Union{AbstractVariableRef,GenericAffExpr,GenericQuadExpr},
 }
-    return error("*(::$T,::$S) is not defined. $op_hint")
+    return error("*(::$T,::$S) is not defined. $_OP_HINT")
 end
 function Base.:*(lhs::GenericQuadExpr, rhs::GenericQuadExpr)
     return error(
-        "*(::GenericQuadExpr,::GenericQuadExpr) is not defined. $op_hint",
+        "*(::GenericQuadExpr,::GenericQuadExpr) is not defined. $_OP_HINT",
     )
 end
 function Base.:*(
@@ -406,7 +431,7 @@ function Base.:*(
     T<:GenericQuadExpr,
     S<:Union{AbstractVariableRef,GenericAffExpr,GenericQuadExpr},
 }
-    return error("*(::$S,::$T) is not defined. $op_hint")
+    return error("*(::$S,::$T) is not defined. $_OP_HINT")
 end
 function Base.:/(
     ::S,
@@ -415,5 +440,5 @@ function Base.:/(
     S<:Union{_Constant,AbstractVariableRef,GenericAffExpr,GenericQuadExpr},
     T<:Union{AbstractVariableRef,GenericAffExpr,GenericQuadExpr},
 }
-    return error("/(::$S,::$T) is not defined. $op_hint")
+    return error("/(::$S,::$T) is not defined. $_OP_HINT")
 end

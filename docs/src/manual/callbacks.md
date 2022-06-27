@@ -48,11 +48,11 @@ Solver-independent callback support is limited to a few solvers. This includes
 
 ## Things you can and cannot do during solver-independent callbacks
 
-There is a very limited range of things you can do during a callback. Only use
-the functions and macros explicitly stated in this page of the documentation, or
-in the [Callbacks tutorial](@ref callbacks_tutorial).
+There is a limited range of things you can do during a callback. Only use the
+functions and macros explicitly stated in this page of the documentation, or in
+the [Callbacks tutorial](@ref callbacks_tutorial).
 
-Using any other part of the JuMP API (e.g., adding a constraint with [`@constraint`](@ref)
+Using any other part of the JuMP API (for example, adding a constraint with [`@constraint`](@ref)
 or modifying a variable bound with [`set_lower_bound`](@ref)) is undefined
 behavior, and your solver may throw an error, return an incorrect solution, or
 result in a segfault that aborts Julia.
@@ -65,10 +65,15 @@ query:
 
 If you need to query any other information, use a solver-dependent callback
 instead. Each solver supporting a solver-dependent callback has information on
-how to use it in the README of their Github repository.
+how to use it in the README of their GitHub repository.
 
 If you want to modify the problem in a callback, you _must_ use a lazy
 constraint.
+
+!!! warning
+    You can only set each callback once. Calling `set` twice will over-write
+    the earlier callback. In addition, if you use a solver-independent
+    callback, you cannot set a solver-dependent callback.
 
 ## Lazy constraints
 
@@ -76,7 +81,7 @@ Lazy constraints are useful when the full set of constraints is too large to
 explicitly include in the initial formulation. When a MIP solver reaches a new
 solution, for example with a heuristic or by solving a problem at a node in
 the branch-and-bound tree, it will give the user the chance to provide
-constraint(s) that would make the current solution infeasible. For some more
+constraints that would make the current solution infeasible. For some more
 information about lazy constraints, see this [blog post by Paul Rubin](https://orinanobworld.blogspot.com/2012/08/user-cuts-versus-lazy-constraints.html).
 
 A lazy constraint callback can be set using the following syntax:
@@ -115,8 +120,8 @@ MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
 !!! warning
     Only add a lazy constraint if your primal solution violates the constraint.
     Adding the lazy constraint irrespective of feasibility may result in the
-    solver returning an incorrect solution, or lead to a large number of
-    constraints being added, slowing down the solution process.
+    solver returning an incorrect solution, or lead to many constraints being
+    added, slowing down the solution process.
     ```julia
     model = Model(GLPK.Optimizer)
     @variable(model, x <= 10, Int)
@@ -134,6 +139,12 @@ MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
     end
     MOI.set(model, MOI.LazyConstraintCallback(), good_callback_function)
     ```
+
+!!! warning
+    During the solve, a solver may visit a point that was cut off by a previous
+    lazy constraint, for example, because the earlier lazy constraint was removed
+    during presolve. However, the solver will not stop until it reaches a
+    solution that satisfies all added lazy constraints.
 
 ## User cuts
 
@@ -161,10 +172,10 @@ MOI.set(model, MOI.UserCutCallback(), my_callback_function)
 ```
 
 !!! warning
-    Your user cuts should not change the set of integer feasible solutions.
-    Equivalently, your cuts can only remove fractional solutions. If you add a
-    cut that removes an integer solution, the solver may return an incorrect
-    solution.
+    User cuts must not change the set of integer feasible solutions.
+    Equivalently, user cuts can only remove fractional solutions. If you add a
+    cut that removes an integer solution (even one that is not optimal), the
+    solver may return an incorrect solution.
 
 !!! info
     The user-cut callback _may_ be called at fractional nodes in the
@@ -179,12 +190,12 @@ than plain branch-and-bound would to tighten the bound, allowing us to fathom
 nodes quicker and to tighten the integrality gap.
 
 Some heuristics take integer solutions and explore their "local neighborhood"
-(e.g., flipping binary variables, fix some variables and solve a smaller MILP)
+(for example, flipping binary variables, fix some variables and solve a smaller MILP)
 and others take fractional solutions and attempt to round them in an
 intelligent way.
 
 You may want to add a heuristic of your own if you have some special insight
-into the problem structure that the solver is not aware of, e.g. you can
+into the problem structure that the solver is not aware of, for example, you can
 consistently take fractional solutions and intelligently guess integer
 solutions from them.
 
@@ -204,8 +215,8 @@ end
 MOI.set(model, MOI.HeuristicCallback(), my_callback_function)
 ```
 
-The third argument to `submit` should be a vector of JuMP variables, and the
-fourth argument should be a vector of values corresponding to each variable.
+The third argument to `submit` is a vector of JuMP variables, and the
+fourth argument is a vector of values corresponding to each variable.
 
 `MOI.submit` returns an enum that depends on whether the solver accepted the
 solution. The possible return codes are:

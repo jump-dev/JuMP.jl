@@ -3,23 +3,14 @@
 <img class="display-dark-only" src="assets/logo-dark-with-text.svg" alt="JuMP logo"/>
 ```
 
-[![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org)
-
 ```@meta
 # These comments do not display in the HTML output.
 # See https://github.com/JuliaDocs/Documenter.jl/issues/674.
 ```
 
-!!! warning
-    Between versions 0.18 and 0.19, JuMP underwent a major transition in its
-    underlying solver abstraction API, from
-    [MathProgBase](https://github.com/JuliaOpt/MathProgBase.jl) to
-    [MathOptInterface](https://github.com/jump-dev/MathOptInterface.jl).
-    See [NEWS.md](https://github.com/jump-dev/JuMP.jl/blob/master/NEWS.md) for
-    a comprehensive list of changes between the two versions, many of which
-    are breaking. This documentation is for JuMP/MathOptInterface.
-    For the documentation of JuMP 0.18, see
-    [here](https://jump.dev/JuMP.jl/0.18/).
+# Introduction
+
+Welcome to the documentation for JuMP!
 
 ## What is JuMP?
 
@@ -34,6 +25,8 @@ programming.
     If you aren't sure if you should use JuMP, read [Should I use JuMP?](@ref).
 
 ## Resources for getting started
+
+There are few ways to get started with JuMP:
 
 * Read the [Installation Guide](@ref).
 * Read the introductory tutorials [Getting started with Julia](@ref) and
@@ -52,7 +45,7 @@ programming.
 ## How the documentation is structured
 
 Having a high-level overview of how this documentation is structured will help
-you know where to look for certain things. There are four main parts:
+you know where to look for certain things.
 
 * **Tutorials** contain worked examples of solving problems with JuMP. Start
   here if you are new to JuMP, or you have a particular problem class you want
@@ -60,8 +53,8 @@ you know where to look for certain things. There are four main parts:
 
 * The **Manual** contains short code-snippets that explain how to achieve
   specific tasks in JuMP. Look here if you want to know how to achieve a
-  particular task, such as how to [Delete a variable](@ref) or how to
-  [Modify an objective coefficient](@ref).
+  particular task, such as how to [Delete a variable](@ref delete_a_variable) or
+  how to [Modify an objective coefficient](@ref).
 
 * The **API Reference** contains a complete list of the functions you can use in
   JuMP. Look here if you want to know how to use a particular function.
@@ -70,7 +63,15 @@ you know where to look for certain things. There are four main parts:
   provide context to JuMP. Look here if you want an understanding of what JuMP
   is and why we created it, rather than how to use it.
 
-### Citing JuMP
+* The **Developer docs** section contains information for people contributing to
+  JuMP development or writing JuMP extensions. Don't worry about this section if
+  you are using JuMP to formulate and solve problems as a user.
+
+* The **MathOptInterface** section is a self-contained copy of the documentation
+  for MathOptInterface. Look here for functions and constants beginning with
+  `MOI.`, as well as for general information on how MathOptInterface works.
+
+## Citing JuMP
 
 If you find JuMP useful in your work, we kindly request that you cite the
 following paper ([pdf](https://mlubin.github.io/pdf/jump-sirev.pdf)):
@@ -106,7 +107,7 @@ doi = {10.1287/ijoc.2014.0623},
 
 A preprint of this paper is [freely available](https://arxiv.org/abs/1312.1431).
 
----
+## NumFOCUS
 
 ![NumFOCUS logo](assets/numfocus-logo.png)
 

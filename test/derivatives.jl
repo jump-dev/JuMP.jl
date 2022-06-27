@@ -672,7 +672,7 @@ struct ΦEvaluator <: MOI.AbstractNLPEvaluator end
     dualforward(:(sin(x[1]^3) + cos(x[1] * x[2] * 4) / 5 - 2.0), [1.0, 0.0])
     dualforward(
         :(x[1] * x[2]),
-        [3.427139283036299e-206, 1.0],
+        [3.427139283036299e-206, 1.0];
         ignore_nan = true,
     )
 end

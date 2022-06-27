@@ -3,219 +3,338 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-using Base.Meta
+using Base.Meta: isexpr
 
-_get_name(c::Symbol) = c
-_get_name(c::Nothing) = ()
-_get_name(c::AbstractString) = c
+_get_name(c::Union{Symbol,AbstractString}) = c
+
 function _get_name(c::Expr)
-    if c.head == :string
-        return c
-    else
-        return c.args[1]
+    if isexpr(c, :vcat) || isexpr(c, :vect)
+        return Symbol("")  # Anonymous variable
+    elseif isexpr(c, :ref) || isexpr(c, :typed_vcat)
+        return _get_name(c.args[1])
     end
+    return error("Expression $c cannot be used as a name.")
 end
 
 """
     _extract_kw_args(args)
 
 Process the arguments to a macro, separating out the keyword arguments.
+
 Return a tuple of (flat_arguments, keyword arguments, and requested_container),
-where `requested_container` is a symbol to be passed to `parse_container`.
+where `requested_container` is a symbol to be passed to `container_code`.
 """
 function _extract_kw_args(args)
-    kw_args =
-        filter(x -> isexpr(x, :(=)) && x.args[1] != :container, collect(args))
-    flat_args = filter(x -> !isexpr(x, :(=)), collect(args))
-    requested_container = :Auto
-    for kw in args
-        if isexpr(kw, :(=)) && kw.args[1] == :container
-            requested_container = kw.args[2]
+    flat_args, kw_args, requested_container = Any[], Any[], :Auto
+    for arg in args
+        if isexpr(arg, :(=))
+            if arg.args[1] == :container
+                requested_container = arg.args[2]
+            else
+                push!(kw_args, arg)
+            end
+        else
+            push!(flat_args, arg)
         end
     end
     return flat_args, kw_args, requested_container
 end
 
-function _try_parse_idx_set(arg::Expr)
-    # [i=1] and x[i=1] parse as Expr(:vect, Expr(:(=), :i, 1)) and
-    # Expr(:ref, :x, Expr(:kw, :i, 1)) respectively.
-    if arg.head === :kw || arg.head === :(=)
-        @assert length(arg.args) == 2
-        return true, arg.args[1], arg.args[2]
-    elseif isexpr(arg, :call) && (arg.args[1] === :in || arg.args[1] === :∈)
-        return true, arg.args[2], arg.args[3]
-    else
-        return false, nothing, nothing
-    end
-end
+"""
+    _explicit_oneto(index_set)
+
+If the `index_set` matches the form of `1:N`, then return
+`Base.OneTo(index_set)`.
+"""
 function _explicit_oneto(index_set)
-    s = Meta.isexpr(index_set, :escape) ? index_set.args[1] : index_set
-    if Meta.isexpr(s, :call) &&
-       length(s.args) == 3 &&
-       s.args[1] == :(:) &&
-       s.args[2] == 1
+    s = isexpr(index_set, :escape) ? index_set.args[1] : index_set
+    if isexpr(s, :call, 3) && s.args[1] == :(:) && s.args[2] == 1
         return :(Base.OneTo($index_set))
     else
         return index_set
     end
 end
 
-function _expr_is_splat(ex::Expr)
-    if ex.head == :(...)
+"""
+    _expr_is_splat(expr)
+
+Return `true` if `expr` is a `...` expression (or an `esc`'d one).
+"""
+function _expr_is_splat(expr)
+    if isexpr(expr, :...)
         return true
-    elseif ex.head == :escape
-        return _expr_is_splat(ex.args[1])
+    elseif isexpr(expr, :escape)
+        return _expr_is_splat(expr.args[1])
     end
     return false
 end
-_expr_is_splat(::Any) = false
+
+function _parse_index_sets(_error::Function, index_vars, index_sets, arg::Expr)
+    index_var, index_set = gensym(), esc(arg)
+    if isexpr(arg, :kw, 2) || isexpr(arg, :(=), 2)
+        # Handle [i=S] and x[i=S]
+        index_var, index_set = arg.args[1], esc(arg.args[2])
+    elseif isexpr(arg, :call, 3) && (arg.args[1] === :in || arg.args[1] === :∈)
+        # Handle `i in S` and `i ∈ S`
+        index_var, index_set = arg.args[2], esc(arg.args[3])
+    end
+    if index_var in index_vars
+        _error(
+            "The index $(index_var) appears more than once. The " *
+            "index associated with each set must be unique.",
+        )
+    end
+    push!(index_vars, index_var)
+    push!(index_sets, index_set)
+    return
+end
+
+function _parse_index_sets(::Function, index_vars, index_sets, arg)
+    push!(index_vars, gensym())
+    push!(index_sets, esc(arg))
+    return
+end
 
 """
     _parse_ref_sets(expr::Expr)
 
-Helper function for macros to construct container objects. Takes an `Expr` that
-specifies the container, e.g. `:(x[i=1:3,[:red,:blue],k=S; i+k <= 6])`, and
-returns:
+Helper function for macros to construct container objects.
 
-    1. `idxvars`: Names for the index variables, e.g. `[:i, gensym(), :k]`
-    2. `idxsets`: Sets used for indexing, e.g. `[1:3, [:red,:blue], S]`
-    3. `condition`: Expr containing any conditional imposed on indexing, or `:()` if none is present
+Takes an `Expr` that specifies the container, e.g.,
+`:(x[i=1:3,[:red,:blue],k=S; i+k <= 6])`, and returns:
+
+ 1. `index_vars`: Names for the index variables, e.g. `[:i, gensym(), :k]`.
+    These may also be expressions, like `:((i, j))` from a call like
+    `:(x[(i, j) in S])`.
+ 2. `index_sets`: Sets used for indexing, e.g. `[1:3, [:red,:blue], S]`
+ 3. `condition`: Expr containing any conditional imposed on indexing, or `:()`
+    if none is present
 """
 function _parse_ref_sets(_error::Function, expr::Expr)
     c = copy(expr)
-    idxvars = Any[]
-    idxsets = Any[]
-    # `:(t[i,j;k])` is a :ref, while `:(t[i;j])` is a :typed_vcat.
-    # In both cases `:t` is the first arg.
+    index_vars, index_sets, condition = Any[], Any[], :()
+    # `:(t[i, j; k])` is a `:ref`, while `:(t[i; j])` is a `:typed_vcat`. In
+    # both cases `:t` is the first argument.
     if isexpr(c, :typed_vcat) || isexpr(c, :ref)
         popfirst!(c.args)
     end
-    condition = :()
     if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
-        # Parameters appear as plain args at the end.
+        # An expression like `t[i; k]` or `[i; k]`. The filtering condition is
+        # the second argument.
         if length(c.args) > 2
-            _error("Unsupported syntax $c.")
+            _error(
+                "Unsupported syntax $c: There can be at most one filtering " *
+                "condition, which is separated from the indices by a single " *
+                "`;`.",
+            )
         elseif length(c.args) == 2
             condition = pop!(c.args)
-        end # else no condition.
+        else
+            # expr ends in a trailing `;`, but there is no condition
+        end
     elseif isexpr(c, :ref) || isexpr(c, :vect)
-        # Parameters appear at the front.
+        # An expression like `t[i, j; k]` or `[i, j; k]`. The filtering
+        # condition is a `:parameters` expression in the first argument.
         if isexpr(c.args[1], :parameters)
-            if length(c.args[1].args) != 1
+            parameters = popfirst!(c.args)
+            if length(parameters.args) != 1
                 _error(
-                    "Invalid syntax: $c. Multiple semicolons are not " *
-                    "supported.",
+                    "Unsupported syntax $c: There can be at most one " *
+                    "filtering condition, which is separated from the " *
+                    "indices by a single `;`.",
                 )
             end
-            condition = popfirst!(c.args).args[1]
+            condition = parameters.args[1]
         end
     end
-    if isexpr(c, :vcat) || isexpr(c, :typed_vcat) || isexpr(c, :ref)
-        if isexpr(c.args[1], :parameters)
-            @assert length(c.args[1].args) == 1
-            condition = popfirst!(c.args).args[1]
-        end # else no condition.
+    for arg in c.args
+        _parse_index_sets(_error, index_vars, index_sets, arg)
     end
+    return index_vars, index_sets, condition
+end
 
-    for s in c.args
-        parse_done = false
-        if isa(s, Expr)
-            parse_done, idxvar, _idxset = _try_parse_idx_set(s::Expr)
-            if parse_done
-                idxset = esc(_idxset)
+# Catch the case that has no index sets, just a name like `x`.
+_parse_ref_sets(::Function, ::Symbol) = (Any[], Any[], :())
+
+_depends_on(ex::Expr, s::Symbol) = any(a -> _depends_on(a, s), ex.args)
+
+_depends_on(ex::Symbol, s::Symbol) = ex == s
+
+# For the case that `ex` might be an iterable literal like `4`.
+_depends_on(ex, s::Symbol) = false
+
+# For the case where the index set is compound, like `[(i, j) in S, k in i:K]`.
+_depends_on(ex1, ex2::Expr) = any(s -> _depends_on(ex1, s), ex2.args)
+
+function _has_dependent_sets(index_vars::Vector{Any}, index_sets::Vector{Any})
+    for i in 2:length(index_sets)
+        for j in 1:(i-1)
+            if _depends_on(index_sets[i], index_vars[j])
+                return true
             end
         end
-        if !parse_done # No index variable specified
-            idxvar = gensym()
-            idxset = esc(s)
-        end
-        if idxvar in idxvars
-            _error(
-                "The index $(idxvar) appears more than once. The index " *
-                "associated with each set must be unique.",
-            )
-        end
-        push!(idxvars, idxvar)
-        push!(idxsets, idxset)
     end
-    return idxvars, idxsets, condition
+    return false
 end
-_parse_ref_sets(_error::Function, expr) = (Any[], Any[], :())
 
 """
-    _build_ref_sets(_error::Function, expr)
+    build_ref_sets(_error::Function, expr)
 
-Helper function for macros to construct container objects. Takes an `Expr` that
-specifies the container, e.g. `:(x[i=1:3,[:red,:blue],k=S; i+k <= 6])`, and
-returns:
+Helper function for macros to construct container objects.
 
-    1. `idxvars`: Names for the index variables, e.g. `[:i, gensym(), :k]`
-    2. `indices`: Iterators over the indices indexing, e.g.
-       `Constainers.NestedIterators((1:3, [:red,:blue], S), (i, ##..., k) -> i + k <= 6)`.
+!!! warning
+    This function is for advanced users implementing JuMP extensions. See
+    [`container_code`](@ref) for more details.
+
+## Arguments
+
+ * `_error`: a function that takes a `String` and throws an error, potentially
+   annotating the input string with extra information such as from which macro
+   it was thrown from. Use `error` if you do not want a modified error message.
+ * `expr`: an `Expr` that specifies the container, e.g.,
+   `:(x[i = 1:3, [:red, :blue], k = S; i + k <= 6])`
+
+## Returns
+
+ 1. `index_vars`: a `Vector{Any}` of names for the index variables, e.g.,
+    `[:i, gensym(), :k]`. These may also be expressions, like `:((i, j))` from a
+    call like `:(x[(i, j) in S])`.
+ 2. `indices`: an iterator over the indices, e.g.,
+    ```julia
+    Containers.NestedIterators(
+        (1:3, [:red, :blue], S),
+        (i, _, k) -> i + k <= 6,
+    )
+    ```
+
+## Examples
+
+See [`container_code`](@ref) for a worked example.
 """
-function _build_ref_sets(_error::Function, expr)
-    idxvars, idxsets, condition = _parse_ref_sets(_error, expr)
-    if any(_expr_is_splat.(idxsets))
+function build_ref_sets(_error::Function, expr)
+    index_vars, index_sets, condition = _parse_ref_sets(_error, expr)
+    if any(_expr_is_splat, index_sets)
         _error(
-            "cannot use splatting operator `...` in the definition of an index set.",
+            "cannot use splatting operator `...` in the definition of an " *
+            "index set.",
         )
     end
-    has_dependent = has_dependent_sets(idxvars, idxsets)
-    if has_dependent || condition != :()
-        esc_idxvars = esc.(idxvars)
-        idxfuns = [
-            :(($(esc_idxvars[1:(i-1)]...),) -> $(idxsets[i])) for
-            i in 1:length(idxvars)
-        ]
-        if condition == :()
-            indices = :(Containers.nested($(idxfuns...)))
-        else
-            condition_fun = :(($(esc_idxvars...),) -> $(esc(condition)))
-            indices =
-                :(Containers.nested($(idxfuns...); condition = $condition_fun))
-        end
-    else
-        indices =
-            :(Containers.vectorized_product($(_explicit_oneto.(idxsets)...)))
+    if !_has_dependent_sets(index_vars, index_sets) && condition == :()
+        # Convert any 1:N to Base.OneTo(N)
+        new_index_sets = Containers._explicit_oneto.(index_sets)
+        indices = :(Containers.vectorized_product($(new_index_sets...)))
+        return index_vars, indices
     end
-    return idxvars, indices
-end
-
-function container_code(idxvars, indices, code, requested_container)
-    if isempty(idxvars)
-        return code
+    esc_index_vars = esc.(index_vars)
+    indices = Expr(:call, :(Containers.nested))
+    for i in 1:length(index_vars)
+        push!(
+            indices.args,
+            :(($(esc_index_vars[1:(i-1)]...),) -> $(index_sets[i])),
+        )
     end
-    if requested_container == :DenseAxisArray
-        requested_container = :(Containers.DenseAxisArray)
-    elseif requested_container == :SparseAxisArray
-        requested_container = :(Containers.SparseAxisArray)
+    if condition != :()
+        f = :(($(esc_index_vars...),) -> $(esc(condition)))
+        args = indices.args[2:end]
+        indices = :(Containers.nested($(args...); condition = $f))
     end
-    esc_idxvars = esc.(idxvars)
-    func = :(($(esc_idxvars...),) -> $code)
-    if requested_container == :Auto
-        return :(Containers.container($func, $indices))
-    else
-        return :(Containers.container($func, $indices, $requested_container))
-    end
-end
-function parse_container(_error, var, value, requested_container)
-    idxvars, indices = _build_ref_sets(_error, var)
-    return container_code(idxvars, indices, value, requested_container)
+    return index_vars, indices
 end
 
 """
-    @container([i=..., j=..., ...], expr)
+    container_code(
+        index_vars::Vector{Any},
+        indices::Expr,
+        code,
+        requested_container::Union{Symbol,Expr},
+    )
+
+Used in macros to construct a call to [`container`](@ref). This should be used
+in conjunction with [`build_ref_sets`](@ref).
+
+## Arguments
+
+ * `index_vars::Vector{Any}`: a vector of names for the indices of the
+   container. These may also be expressions, like `:((i, j))` from a
+   call like `:(x[(i, j) in S])`.
+ * `indices::Expr`: an expression that evaluates to an iterator of the indices.
+ * `code`: an expression or literal constant for the value to be stored in the
+   container as a function of the named `index_vars`.
+ * `requested_container`: passed to the third argument of [`container`](@ref).
+   For built-in JuMP types, choose one of `:Array`, `:DenseAxisArray`,
+   `:SparseAxisArray`, or `:Auto`. For a user-defined container, this expression
+   must evaluate to the correct type.
+
+!!! warning
+    In most cases, you should `esc(code)` before passing it to `container_code`.
+
+## Examples
+
+```jldoctest; setup=:(using JuMP)
+julia> macro foo(ref_sets, code)
+           index_vars, indices = Containers.build_ref_sets(error, ref_sets)
+           return Containers.container_code(
+               index_vars,
+               indices,
+               esc(code),
+               :Auto,
+            )
+       end
+@foo (macro with 1 method)
+
+julia> @foo(x[i=1:2, j=["A", "B"]], j^i)
+2-dimensional DenseAxisArray{String,2,...} with index sets:
+    Dimension 1, Base.OneTo(2)
+    Dimension 2, ["A", "B"]
+And data, a 2×2 Matrix{String}:
+ "A"   "B"
+ "AA"  "BB"
+```
+"""
+function container_code(
+    index_vars::Vector{Any},
+    indices::Expr,
+    code,
+    requested_container::Union{Symbol,Expr},
+)
+    if isempty(index_vars)
+        return code
+    end
+    esc_index_vars = esc.(index_vars)
+    f = :(($(esc_index_vars...),) -> $code)
+    # This switch handles the four "built-in" JuMP container types, with a
+    # generic fallback for user-defined types.
+    if requested_container == :Auto
+        return :(Containers.container($f, $indices))
+    elseif requested_container == :DenseAxisArray
+        return :(Containers.container($f, $indices, Containers.DenseAxisArray))
+    elseif requested_container == :SparseAxisArray
+        return :(Containers.container($f, $indices, Containers.SparseAxisArray))
+    elseif requested_container == :Array
+        return :(Containers.container($f, $indices, Array))
+    else
+        # This is a symbol or expression from outside JuMP, so we need to escape
+        # it.
+        requested_container = esc(requested_container)
+        return :(Containers.container($f, $indices, $requested_container))
+    end
+end
+
+"""
+    @container([i=..., j=..., ...], expr[, container = :Auto])
 
 Create a container with indices `i`, `j`, ... and values given by `expr` that
 may depend on the value of the indices.
 
-    @container(ref[i=..., j=..., ...], expr)
+    @container(ref[i=..., j=..., ...], expr[, container = :Auto])
 
 Same as above but the container is assigned to the variable of name `ref`.
 
-The type of container can be controlled by the `container` keyword. Note that
-when the index set is explicitly given as `1:n` for any expression `n`, it is
-transformed to `Base.OneTo(n)` before being given to [`container`](@ref).
+The type of container can be controlled by the `container` keyword.
+
+!!! note
+    When the index set is explicitly given as `1:n` for any expression `n`, it
+    is transformed to `Base.OneTo(n)` before being given to [`container`](@ref).
 
 ## Examples
 
@@ -229,7 +348,9 @@ julia> Containers.@container([i = 1:3, j = 1:3], i + j)
 julia> I = 1:3
 1:3
 
-julia> Containers.@container([i = I, j = I], i + j)
+julia> Containers.@container(x[i = I, j = I], i + j);
+
+julia> x
 2-dimensional DenseAxisArray{Int64,2,...} with index sets:
     Dimension 1, 1:3
     Dimension 2, 1:3
@@ -261,12 +382,12 @@ macro container(args...)
     @assert length(args) == 2
     @assert isempty(kw_args)
     var, value = args
-    code = parse_container(error, var, esc(value), requested_container)
-    anonvar = isexpr(var, :vect) || isexpr(var, :vcat)
-    if anonvar
+    index_vars, indices = build_ref_sets(error, var)
+    code = container_code(index_vars, indices, esc(value), requested_container)
+    if isexpr(var, :vect) || isexpr(var, :vcat)
         return code
     else
-        name = Containers._get_name(var)
+        name = _get_name(var)
         return :($(esc(name)) = $code)
     end
 end

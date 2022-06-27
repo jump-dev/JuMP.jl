@@ -1,14 +1,13 @@
 # [Constraints](@id ConstraintAPI)
 
-More information can be found in the [Constraints](@ref) section of the manual.
+More information can be found in the [Constraints](@ref jump_constraints)
+section of the manual.
 
 ## Macros
 
 ```@docs
 @constraint
 @constraints
-@SDconstraint
-@SDconstraints
 ConstraintRef
 AbstractConstraint
 ScalarConstraint
@@ -28,6 +27,7 @@ constraint_by_name
 ```@docs
 normalized_coefficient
 set_normalized_coefficient
+set_normalized_coefficients
 
 normalized_rhs
 set_normalized_rhs
@@ -71,6 +71,7 @@ SOS1
 SOS2
 SkewSymmetricMatrixSpace
 SkewSymmetricMatrixShape
+SymmetricMatrixSpace
 moi_set
 ```
 
