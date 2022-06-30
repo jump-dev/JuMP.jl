@@ -1875,7 +1875,18 @@ function _auto_register_expression(op_var, op, i)
     end
 end
 
+function _normalize_unicode(x::Symbol)
+    if x == :≤
+        return :<=
+    elseif x == :≥
+        return :>=
+    else
+        return x
+    end
+end
+
 function _parse_nonlinear_expression_inner(::Any, x::Symbol, ::Any)
+    x = _normalize_unicode(x)
     if x in (:<=, :>=, :(==), :<, :>, :&&, :||)
         return Meta.quot(x)
     end
@@ -1919,8 +1930,9 @@ function _parse_nonlinear_expression_inner(code, x::Expr, operators)
                 "be `Symbol`s.",
             )
         end
-        push!(operators, (x.args[1], length(x.args) - 1))
-        push!(y_expr.args[2].args, Meta.quot(x.args[1]))
+        op = _normalize_unicode(x.args[1])
+        push!(operators, (op, length(x.args) - 1))
+        push!(y_expr.args[2].args, Meta.quot(op))
         offset += 1
     end
     for i in offset:length(x.args)

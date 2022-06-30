@@ -1678,6 +1678,18 @@ function test_set_string_name_model()
     return
 end
 
+function test_nonlinear_unicode_operators()
+    model = Model()
+    @variable(model, x)
+    c1 = @NLconstraint(model, x^2 ≤ 1)
+    @test c1 isa ConstraintRef
+    c2 = @NLconstraint(model, x^2 ≥ 1)
+    @test c2 isa ConstraintRef
+    c3 = @NLconstraint(model, 1 ≤ x^2 ≤ 2)
+    @test c3 isa ConstraintRef
+    return
+end
+
 end  # module
 
 TestMacros.runtests()
