@@ -629,7 +629,7 @@ function _upper_bound_index(v::VariableRef)
 end
 
 """
-    set_upper_bound(v::VariableRef,upper::Number)
+    set_upper_bound(v::VariableRef, upper::Number)
 
 Set the upper bound of a variable. If one does not exist, create an upper bound
 constraint.
