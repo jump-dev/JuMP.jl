@@ -1409,7 +1409,7 @@ end
 function test_nonlinear_delete_constraint()
     model = Model()
     @variable(model, x)
-    @NLconstraint(model, c[i=1:3], x^i <= i)
+    @NLconstraint(model, c[i = 1:3], x^i <= i)
     @test num_nonlinear_constraints(model) == 3
     @test all_nonlinear_constraints(model) == [c[1], c[2], c[3]]
     @test is_valid.(model, c) == [true, true, true]
