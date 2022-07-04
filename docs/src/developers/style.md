@@ -210,11 +210,29 @@ validate all assumptions that the code makes. In particular:
     should be documented.
  2. If practical, the assumptions should be checked in code, and informative
     error messages should be provided to the user if the assumptions are not
-    met.
+    met. In general, these checks may be expensive, so you should prefer to do
+    this once, at the highest level of the call-chain.
  3. Tests should cover for a range of corner cases and argument types.
 
 For example:
 ```jldoctest my_sum
+function _validate_my_sum_defensive_assumptions(x::AbstractArray{T}) where {T}
+    try
+        # Some types may not define zero.
+        @assert zero(T) isa T
+        # Check iteration supported
+        @assert iterate(x) isa Union{Nothing,Tuple{T,Int}}
+        # Check that + is defined
+        @assert +(zero(T), zero(T)) isa Any
+    catch err
+        error(
+            "Unable to call my_sum_defensive(::$(typeof(x))) because " *
+            "it failed an internal assumption",
+        )
+    end
+    return
+end
+
 """
     my_sum_defensive(x::AbstractArray{T}) where {T}
 
@@ -229,19 +247,7 @@ This function makes the following assumptions:
  * That  `+(::T, ::T)` is defined
 """
 function my_sum_defensive(x::AbstractArray{T}) where {T}
-    try
-        # Some types may not define zero.
-        @assert zero(T) isa T
-        # Check iteration supported
-        @assert iterate(x) isa Union{Nothing,Tuple{T,Int}}
-        # Check that + is defined
-        @assert +(zero(T), zero(T)) isa Any
-    catch err
-        error(
-            "Unable to call my_sum_defensive(::$(typeof(x))) because " *
-            "it failed an internal assumption",
-        )
-    end
+    _validate_my_sum_defensive_assumptions(x)
     y = zero(T)
     for xi in x
         y += xi
