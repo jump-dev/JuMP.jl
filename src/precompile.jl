@@ -56,47 +56,5 @@ function _precompile_()
     end
 
     Base.precompile(Tuple{typeof(model_string),Type,Model})   # time: 0.25714603
-
-    # Nonlinear interface
-    Base.precompile(
-        Tuple{
-            typeof(MOI.eval_hessian_lagrangian),
-            NLPEvaluator,
-            SubArray{Float64,1,Vector{Float64},Tuple{UnitRange{Int64}},true},
-            Vector{Float64},
-            Float64,
-            SubArray{Float64,1,Vector{Float64},Tuple{UnitRange{Int64}},true},
-        },
-    )   # time: 0.83568186
-    Base.precompile(
-        Tuple{
-            typeof(MOI.eval_objective_gradient),
-            NLPEvaluator,
-            Vector{Float64},
-            Vector{Float64},
-        },
-    )   # time: 0.50052494
-    Base.precompile(Tuple{typeof(MOI.initialize),NLPEvaluator,Vector{Symbol}})   # time: 0.34357876
-    Base.precompile(Tuple{typeof(MOI.features_available),NLPEvaluator})   # time: 0.014501549
-    Base.precompile(
-        Tuple{
-            typeof(MOI.eval_constraint_jacobian),
-            NLPEvaluator,
-            SubArray{Float64,1,Vector{Float64},Tuple{UnitRange{Int64}},true},
-            Vector{Float64},
-        },
-    )   # time: 0.00857948
-    Base.precompile(
-        Tuple{
-            typeof(MOI.eval_constraint),
-            NLPEvaluator,
-            SubArray{Float64,1,Vector{Float64},Tuple{UnitRange{Int64}},true},
-            Vector{Float64},
-        },
-    )   # time: 0.003288632
-    Base.precompile(Tuple{typeof(MOI.jacobian_structure),NLPEvaluator})   # time: 0.002370995
-    Base.precompile(
-        Tuple{typeof(MOI.eval_objective),NLPEvaluator,Vector{Float64}},
-    )   # time: 0.002276394
     return
 end

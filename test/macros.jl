@@ -879,7 +879,7 @@ function test_Empty_summation_in_NLconstraints()
     model = Model()
     @variable(model, x)
     c = @NLconstraint(model, x == sum(1.0 for i in 1:0))
-    @test sprint(show, c) == "x - 0 = 0" || sprint(show, c) == "x - 0 == 0"
+    @test sprint(show, c) == "x - 0.0 = 0" || sprint(show, c) == "x - 0.0 == 0"
     return
 end
 
@@ -1675,6 +1675,18 @@ function test_set_string_name_model()
     flag = false
     @variable(model, z, set_string_name = flag)
     @test isempty(name(z))
+    return
+end
+
+function test_nonlinear_unicode_operators()
+    model = Model()
+    @variable(model, x)
+    c1 = @NLconstraint(model, x^2 ≤ 1)
+    @test c1 isa ConstraintRef
+    c2 = @NLconstraint(model, x^2 ≥ 1)
+    @test c2 isa ConstraintRef
+    c3 = @NLconstraint(model, 1 ≤ x^2 ≤ 2)
+    @test c3 isa ConstraintRef
     return
 end
 

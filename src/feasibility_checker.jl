@@ -160,11 +160,10 @@ function _add_infeasible_nonlinear_constraints(
     MOI.initialize(evaluator, Symbol[])
     g = zeros(num_nonlinear_constraints(model))
     MOI.eval_constraint(evaluator, g, point_f.(all_variables(model)))
-    for (i, con) in enumerate(model.nlp_data.nlconstr)
-        d = max(0.0, con.lb - g[i], g[i] - con.ub)
+    for (i, (index, constraint)) in enumerate(evaluator.model.constraints)
+        d = _distance_to_set(g[i], constraint.set)
         if d > atol
-            cref =
-                ConstraintRef(model, NonlinearConstraintIndex(i), ScalarShape())
+            cref = ConstraintRef(model, index, ScalarShape())
             violated_constraints[cref] = d
         end
     end

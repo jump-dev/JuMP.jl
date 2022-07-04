@@ -123,26 +123,50 @@ function set_optimizer(
 end
 
 """
-    optimize!(model::Model;
-              ignore_optimize_hook=(model.optimize_hook === nothing),
-              kwargs...)
+    optimize!(
+        model::Model;
+        ignore_optimize_hook = (model.optimize_hook === nothing),
+        _differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation =
+            MOI.Nonlinear.SparseReverseMode(),
+        kwargs...,
+    )
 
-Optimize the model. If an optimizer has not been set yet (see
-[`set_optimizer`](@ref)), a [`NoOptimizer`](@ref) error is thrown.
+Optimize the model.
 
-Keyword arguments `kwargs` are passed to the `optimize_hook`. An error is
-thrown if `optimize_hook` is `nothing` and keyword arguments are provided.
+If an optimizer has not been set yet (see [`set_optimizer`](@ref)), a
+[`NoOptimizer`](@ref) error is thrown.
+
+If `ignore_optimize_hook == true`, the optimize hook is ignored and the model is
+solved as if the hook was not set. Keyword arguments `kwargs` are passed to the
+`optimize_hook`. An error is thrown if `optimize_hook` is `nothing` and keyword
+arguments are provided.
+
+## Experimental features
+
+These features may change or be removed in any future version of JuMP.
+
+Pass `_differentiation_backend` to set the
+[`MOI.Nonlinear.AbstractAutomaticDifferentiation`](@ref) backend used to compute
+derivatives of nonlinear programs.
+
+If you require only `:ExprGraph`, it is more efficient to pass
+`_differentiation_backend = MOI.Nonlinear.ExprGraphOnly()`.
 """
 function optimize!(
     model::Model;
     ignore_optimize_hook = (model.optimize_hook === nothing),
+    _differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation = MOI.Nonlinear.SparseReverseMode(),
     kwargs...,
 )
-    # The nlp_data is not kept in sync, so re-set it here.
+    # The nlp_model is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
-    if model.nlp_data !== nothing
-        MOI.set(model, MOI.NLPBlock(), _create_nlp_block_data(model))
-        empty!(model.nlp_data.nlconstr_duals)
+    if nonlinear_model(model) !== nothing
+        evaluator = MOI.Nonlinear.Evaluator(
+            nonlinear_model(model),
+            _differentiation_backend,
+            index.(all_variables(model)),
+        )
+        MOI.set(model, MOI.NLPBlock(), MOI.NLPBlockData(evaluator))
     end
     # If the user or an extension has provided an optimize hook, call
     # that instead of solving the model ourselves

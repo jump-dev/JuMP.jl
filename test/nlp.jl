@@ -277,17 +277,6 @@ function test_register_check_forwarddiff_multivariate_gradf()
     return
 end
 
-# TODO: These are poorly designed tests because they would not catch errors
-# that affect both _process_NL_expr and _NonlinearExprData's parsing (although
-# they use different pathways). It would be better to check the NodeData
-# representation directly.
-function _test_expressions_equal(
-    ex1::JuMP._NonlinearExprData,
-    ex2::JuMP._NonlinearExprData,
-)
-    return ex1.nd == ex2.nd && ex1.const_values == ex2.const_values
-end
-
 function test_all_nonlinear_constraints()
     model = Model()
     @variable(model, x)
@@ -301,10 +290,8 @@ function test_parse_plus_binary()
     m = Model()
     @variable(m, x)
     @variable(m, y)
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(m, x + y),
-        JuMP._NonlinearExprData(m, :($x + $y)),
-    )
+    ex = @NLexpression(m, x + y)
+    @test sprint(show, ex) == "subexpression[1]: x + y"
     return
 end
 
@@ -313,10 +300,8 @@ function test_parse_plus_ternary()
     @variable(m, x)
     @variable(m, y)
     @variable(m, z)
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(m, x + y + z),
-        JuMP._NonlinearExprData(m, :($x + $y + $z)),
-    )
+    ex = @NLexpression(m, x + y + z)
+    @test sprint(show, ex) == "subexpression[1]: x + y + z"
     return
 end
 
@@ -324,10 +309,8 @@ function test_parse_mult_binary()
     m = Model()
     @variable(m, x)
     @variable(m, y)
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(m, x * y),
-        JuMP._NonlinearExprData(m, :($x * $y)),
-    )
+    ex = @NLexpression(m, x * y)
+    @test sprint(show, ex) == "subexpression[1]: x * y"
     return
 end
 
@@ -336,73 +319,58 @@ function test_parse_mult_ternary()
     @variable(m, x)
     @variable(m, y)
     @variable(m, z)
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(m, x * y * z),
-        JuMP._NonlinearExprData(m, :($x * $y * $z)),
-    )
+    ex = @NLexpression(m, x * y * z)
+    @test sprint(show, ex) == "subexpression[1]: x * y * z"
     return
 end
 
 function test_parse_exp_binary()
     m = Model()
     @variable(m, x)
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(m, x^3),
-        JuMP._NonlinearExprData(m, :($x^3)),
-    )
+    ex = @NLexpression(m, x^3)
+    @test sprint(show, ex) == "subexpression[1]: x ^ 3.0"
     return
 end
 
 function test_parse_sin()
     m = Model()
     @variable(m, x)
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(m, sin(x)),
-        JuMP._NonlinearExprData(m, :(sin($x))),
-    )
+    ex = @NLexpression(m, sin(x))
+    @test sprint(show, ex) == "subexpression[1]: sin(x)"
     return
 end
 
 function test_parse_ifelse()
     m = Model()
     @variable(m, x)
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(m, ifelse(1 == 2 || 3 == 4 && 5 == 6, x, 0.0)),
-        JuMP._NonlinearExprData(
-            m,
-            :(ifelse(1 == 2 || 3 == 4 && 5 == 6, $x, 0.0)),
-        ),
-    )
+    ex = @NLexpression(m, ifelse(1 == 2 || 3 == 4 && 5 == 6, x, 0.0))
+    @test sprint(show, ex) ==
+          "subexpression[1]: ifelse(1.0 == 2.0 || 3.0 == 4.0 && 5.0 == 6.0, x, 0.0)"
     return
 end
 
 function test_parse_ifelse_comparison()
     m = Model()
     @variable(m, x)
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(m, ifelse(1 <= 2 <= 3, x, 0.0)),
-        JuMP._NonlinearExprData(m, :(ifelse(1 <= 2 <= 3, $x, 0.0))),
-    )
+    ex = @NLexpression(m, ifelse(1 <= 2 <= 3, x, 0.0))
+    @test sprint(show, ex) ==
+          "subexpression[1]: ifelse(1.0 <= 2.0 <= 3.0, x, 0.0)"
     return
 end
 
 function test_parse_sum()
     m = Model()
     @variable(m, x[1:2])
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(m, sum(x[i] for i in 1:2)),
-        JuMP._NonlinearExprData(m, :($(x[1]) + $(x[2]))),
-    )
+    ex = @NLexpression(m, sum(x[i] for i in 1:2))
+    @test sprint(show, ex) == "subexpression[1]: x[1] + x[2]"
     return
 end
 
 function test_parse_prod()
     m = Model()
     @variable(m, x[1:2])
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(m, prod(x[i] for i in 1:2)),
-        JuMP._NonlinearExprData(m, :($(x[1]) * $(x[2]))),
-    )
+    ex = @NLexpression(m, prod(x[i] for i in 1:2))
+    @test sprint(show, ex) == "subexpression[1]: x[1] * x[2]"
     return
 end
 
@@ -410,20 +378,16 @@ function test_parse_subexpressions()
     m = Model()
     @variable(m, x)
     @NLexpression(m, ex, x^2)
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(m, ex + 1),
-        JuMP._NonlinearExprData(m, :($ex + 1)),
-    )
+    ex2 = @NLexpression(m, ex + 1)
+    @test sprint(show, ex2) == "subexpression[2]: subexpression[1] + 1.0"
     return
 end
 
 function test_parse_parameters()
     m = Model()
     @NLparameter(m, param == 10)
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(m, param + 1),
-        JuMP._NonlinearExprData(m, :($param + 1)),
-    )
+    ex = @NLexpression(m, param + 1)
+    @test sprint(show, ex) == "subexpression[1]: param + 1.0"
     return
 end
 
@@ -432,10 +396,8 @@ function test_parse_user_defined_function_univariate()
     @variable(model, x)
     user_function = x -> x
     JuMP.register(model, :f, 1, user_function; autodiff = true)
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(model, f(x)),
-        JuMP._NonlinearExprData(model, :(f($x))),
-    )
+    ex = @NLexpression(model, f(x))
+    @test sprint(show, ex) == "subexpression[1]: f(x)"
     return
 end
 
@@ -445,10 +407,8 @@ function test_parse_user_defined_function_multivariate()
     @variable(model, y)
     user_function = (x, y) -> x
     JuMP.register(model, :f, 2, user_function; autodiff = true)
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(model, f(x, y)),
-        JuMP._NonlinearExprData(model, :(f($x, $y))),
-    )
+    ex = @NLexpression(model, f(x, y))
+    @test sprint(show, ex) == "subexpression[1]: f(x, y)"
     return
 end
 
@@ -457,10 +417,8 @@ function test_parse_splatting()
     @variable(model, x[1:2])
     user_function = (x, y) -> x
     JuMP.register(model, :f, 2, user_function; autodiff = true)
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(model, f(x...)),
-        JuMP._NonlinearExprData(model, :(f($(x[1]), $(x[2])))),
-    )
+    ex = @NLexpression(model, f(x...))
+    @test sprint(show, ex) == "subexpression[1]: f(x[1], x[2])"
     return
 end
 
@@ -469,17 +427,15 @@ function test_parse_mixed_splatting()
     @variable(model, x[1:2])
     @variable(model, y)
     @variable(model, z[1:1])
-    @test _test_expressions_equal(
-        JuMP.@_process_NL_expr(model, (*)(x..., y, z...)),
-        JuMP._NonlinearExprData(model, :((*)($(x[1]), $(x[2]), $y, $(z[1])))),
-    )
+    ex = @NLexpression(model, *(x..., y, z...))
+    @test sprint(show, ex) == "subexpression[1]: x[1] * x[2] * y * z[1]"
     return
 end
 
 function test_error_splatting_non_symbols()
     model = Model()
     @variable(model, x[1:2])
-    @test_macro_throws ErrorException @NLexpression(model, (*)((x / 2)...))
+    @test_throws ErrorException @NLexpression(model, (*)((x / 2)...))
     return
 end
 
@@ -499,14 +455,14 @@ end
 function test_error_on_unexpected_splatting()
     model = Model()
     @variable(model, x[1:2])
-    @test_macro_throws ErrorException @NLexpression(model, x...)
+    @test_throws(ErrorException, @NLexpression(model, x...))
     return
 end
 
 function test_error_on_getfield_in_expression()
     model = Model()
     @variable(model, x[1:2])
-    @test_throws(
+    @test_macro_throws(
         ErrorException,
         @NLexpression(model, sum(foo.bar(i) * x[i] for i in 1:2))
     )
@@ -829,7 +785,7 @@ function test_expression_graph_for_empty_sum_and_prod()
     d = JuMP.NLPEvaluator(m)
     MOI.initialize(d, [:ExprGraph])
     xidx = x.index
-    @test MOI.constraint_expr(d, 1) == :(x[$xidx] - (0 + 1) <= 0.0)
+    @test MOI.constraint_expr(d, 1) == :((x[$xidx] - (0.0 + 1.0)) - 0.0 <= 0.0)
     return
 end
 
@@ -1126,6 +1082,28 @@ function test_hessians_disabled_with_user_defined_multivariate_functions()
     return
 end
 
+function test_hessians_user_defined_multivariate_functions()
+    model = Model()
+    my_f(x, y) = (x - 1)^2 + (y - 1)^2
+    function my_∇f(g, x, y)
+        g[1] = 2 * (x - 1)
+        g[2] = 2 * (y - 1)
+        return
+    end
+    function my_∇²f(H, x, y)
+        H[1, 1] = 2.0
+        H[2, 2] = 2.0
+        return
+    end
+    @test_throws(
+        ErrorException(
+            "Providing hessians for multivariate functions is not yet supported",
+        ),
+        register(model, :my_f, 2, my_f, my_∇f, my_∇²f),
+    )
+    return
+end
+
 function test_AffExpr_in_nonlinear()
     model = Model()
     @variable(model, x, start = 1.1)
@@ -1159,7 +1137,7 @@ function test_error_on_complex_values()
     @variable(model, x)
     c = sqrt(Complex(-1))
     expected_exception = ErrorException(
-        "Unexpected object $c (of type $(typeof(c)) in nonlinear expression.",
+        "Unexpected object $c of type $(typeof(c)) in nonlinear expression.",
     )
     @test_throws expected_exception @NLobjective(model, Min, c * x)
     return
@@ -1190,13 +1168,11 @@ function test_JuMP_extensions()
 end
 
 function test_rad2deg_and_deg2rad()
+    model = MOI.Nonlinear.Model()
     x = 1.0
-    id = JuMP._Derivatives.univariate_operator_to_id[:rad2deg]
-    y = rad2deg(x)
-    @test JuMP._Derivatives.eval_univariate_2nd_deriv(id, x, y) == 0.0
-    id = JuMP._Derivatives.univariate_operator_to_id[:deg2rad]
-    y = deg2rad(x)
-    @test JuMP._Derivatives.eval_univariate_2nd_deriv(id, x, y) == 0.0
+    operators = model.operators
+    @test MOI.Nonlinear.eval_univariate_hessian(operators, :rad2deg, x) == 0.0
+    @test MOI.Nonlinear.eval_univariate_hessian(operators, :deg2rad, x) == 0.0
     return
 end
 
@@ -1301,7 +1277,7 @@ function test_user_defined_function_checked_error_univariate()
     @test g == [-2.0]
     err = ErrorException(
         "JuMP's autodiff of the user-defined function f failed with a " *
-        "MethodError.\n\n$(JuMP._FORWARD_DIFF_METHOD_ERROR_HELPER)",
+        "MethodError.\n\n$(MOI.Nonlinear._FORWARD_DIFF_METHOD_ERROR_HELPER)",
     )
     @test_throws(err, MOI.eval_objective_gradient(nlp, g, [2.0]))
     return
@@ -1347,7 +1323,7 @@ function test_user_defined_function_checked_error_univariate()
     @test H == [2.0]
     err = ErrorException(
         "JuMP's autodiff of the user-defined function f failed with a " *
-        "MethodError.\n\n$(JuMP._FORWARD_DIFF_METHOD_ERROR_HELPER)",
+        "MethodError.\n\n$(MOI.Nonlinear._FORWARD_DIFF_METHOD_ERROR_HELPER)",
     )
     @test_throws(
         err,
@@ -1377,9 +1353,56 @@ function test_user_defined_function_checked_error_multivariate()
     @test g == [-2.0, 1.0]
     err = ErrorException(
         "JuMP's autodiff of the user-defined function f failed with a " *
-        "MethodError.\n\n$(JuMP._FORWARD_DIFF_METHOD_ERROR_HELPER)",
+        "MethodError.\n\n$(MOI.Nonlinear._FORWARD_DIFF_METHOD_ERROR_HELPER)",
     )
     @test_throws(err, MOI.eval_objective_gradient(nlp, g, [2.0, 1.0]))
+    return
+end
+
+function test_register_error_autdiff_false()
+    model = Model()
+    f(x) = x^2
+    f′(x) = 2 * x
+    f′′(::Any) = 2
+    err = ErrorException(
+        "If only the function is provided, must set autodiff=true",
+    )
+    @test_throws err register(model, :f, 1, f)
+    @test_throws err register(model, :f, 1, f; autodiff = false)
+    err = ErrorException(
+        "Currently must provide 2nd order derivatives of univariate " *
+        "functions. Try setting autodiff=true.",
+    )
+    @test_throws err register(model, :f, 1, f, f′)
+    @test_throws err register(model, :f, 1, f, f′; autodiff = false)
+    register(model, :f, 1, f, f′, f′′)
+    @test_throws(
+        ErrorException("Operator f is already registered."),
+        register(model, :f, 1, f, f′, f′′),
+    )
+    return
+end
+
+function test_nonlinear_constraint_dual()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(
+            MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        )
+    end
+    @variable(model, x)
+    c = @NLconstraint(model, x^2 <= 2)
+    @objective(model, Min, x)
+    optimize!(model)
+    mock = unsafe_backend(model)
+    block = MOI.get(model, MOI.NLPBlock())
+    MOI.initialize(block.evaluator, Symbol[])
+    MOI.set(mock, MOI.TerminationStatus(), MOI.LOCALLY_SOLVED)
+    MOI.set(mock, MOI.ResultCount(), 1)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), -sqrt(2))
+    MOI.set(mock, MOI.NLPBlockDual(), [-1 / (2 * sqrt(2))])
+    @test termination_status(model) == LOCALLY_SOLVED
+    @test isapprox(value(x), -sqrt(2), atol = 1e-6)
+    @test dual(c) == -1 / (2 * sqrt(2))
     return
 end
 
