@@ -357,12 +357,6 @@ The above code creates a JuMP model with the objective function
     and not `f` in the macros.
 
 !!! warning
-    If you use multi-variate user-defined functions, JuMP will disable
-    second-derivative information. This can lead to significant slow-downs in
-    some cases. Only use a user-defined function if you cannot write out the
-    expression algebraically in the macro.
-
-!!! warning
     User-defined functions cannot be re-registered and will not update if you
     modify the underlying Julia function. If you want to change a user-defined
     function between solves, rebuild the model or use a different name. To use
@@ -417,9 +411,11 @@ register(model, :my_square, 2, f, ∇f)
 
 ### Register a function, gradient, and hessian
 
-!!! warning
-    The ability to explicitly register a hessian is only available for
-    univariate functions.
+You can also register a function with the second-order derivative information,
+which is a scalar for univariate functions, and a symmetric matrix for
+multivariate functions.
+
+#### Univariate functions
 
 Instead of automatically differentiating the hessian, you can instead pass a
 function which returns a number representing the second-order derivative.
@@ -434,6 +430,40 @@ register(model, :my_square, 1, f, ∇f, ∇²f)
 @variable(model, x >= 0)
 @NLobjective(model, Min, my_square(x))
 ```
+
+#### Multivariate functions
+
+For multivariate functions, the hessian function `∇²f` must take an
+`AbstractMatrix` as the first argument, the lower-triangular of which is filled
+in-place:
+```@example
+using JuMP #hide
+f(x...) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+function ∇f(g, x...)
+    g[1] = 400 * x[1]^3 - 400 * x[1] * x[2] + 2 * x[1] - 2
+    g[2] = 200 * (x[2] - x[1]^2)
+    return
+end
+function ∇²f(H, x...)
+    H[1, 1] = 1200 * x[1]^2 - 400 * x[2] + 2
+    # H[1, 2] = -400 * x[1]  <-- Not needed. Fill the lower-triangular only.
+    H[2, 1] = -400 * x[1]
+    H[2, 2] = 200.0
+    return
+end
+
+model = Model()
+register(model, :rosenbrock, 2, f, ∇f, ∇²f)
+@variable(model, x[1:2])
+@NLobjective(model, Min, rosenbrock(x[1], x[2]))
+```
+
+!!! warning
+    Make sure the first argument to `∇²f` supports an `AbstractMatrix`, and do
+    not assume the input is `Float64`. You may assume the matrix is initialized
+    with zeros, so you need only to fill in the non-zero terms. The matrix type
+    passed in as `H` is very limited. You may assume only that it supports
+    `size(H)` and `setindex!`.
 
 ### User-defined functions with vector inputs
 
