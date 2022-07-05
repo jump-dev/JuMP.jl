@@ -38,7 +38,9 @@
 # a *feasibility* problem: we wish to find a feasible solution that satisfies
 # these rules. You can think of it as an optimization problem with an objective
 # of 0.
-#
+
+# ## Mixed-integer linear programming formulation
+
 # We can model this problem using 0-1 integer programming: a problem where all
 # the decision variables are binary. We'll use JuMP to create the model, and
 # then we can solve it with any integer programming solver.
@@ -154,3 +156,55 @@ sol
 # Which is the correct solution:
 
 # ![Solved Sudoku](../../assets/full_sudoku.png)
+
+# ## Constraint programming formulation
+
+# We can also model this problem using constraint programming and the
+# all-different constraint, which says that no two elements of a vector can take
+# the same value.
+
+# Because of the reformulation system in MathOptInterface, we can still solve
+# this problem using HiGHS.
+
+model = Model(HiGHS.Optimizer)
+set_silent(model)
+## HiGHS v1.2 has a bug in presolve which causes the problem to be classified as
+## infeasible.
+set_optimizer_attribute(model, "presolve", "off")
+
+# Instead of the binary variables, we directly define a 9x9 grid of integer
+# values between 1 and 9:
+
+@variable(model, 1 <= x[1:9, 1:9] <= 9, Int)
+
+# Then, we enforce that the values in each row must be all-different:
+
+@constraint(model, [i = 1:9], x[i, :] in MOI.AllDifferent(9))
+
+# That the values in each column must be all-different:
+
+@constraint(model, [j = 1:9], x[:, j] in MOI.AllDifferent(9))
+
+# And that the values in each 3x3 sub-grid must be all-different:
+
+for i in (0, 3, 6), j in (0, 3, 6)
+    @constraint(model, vec(x[i.+(1:3), j.+(1:3)]) in MOI.AllDifferent(9))
+end
+
+# Finally, as before we set the initial solution and optimize:
+
+for i in 1:9, j in 1:9
+    if init_sol[i, j] != 0
+        fix(x[i, j], init_sol[i, j]; force = true)
+    end
+end
+
+optimize!(model)
+
+# Display the solution
+
+csp_sol = round.(Int, value.(x))
+
+# Which is the same as we found before:
+
+sol == csp_sol
