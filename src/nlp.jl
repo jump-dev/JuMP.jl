@@ -457,6 +457,18 @@ function is_valid(model::Model, c::NonlinearConstraintRef)
 end
 
 """
+    delete(model::Model, c::NonlinearConstraintRef)
+
+Delete the nonlinear constraint `c` from `model`.
+"""
+function delete(model::Model, c::NonlinearConstraintRef)
+    _init_NLP(model)
+    index = MOI.Nonlinear.ConstraintIndex(c.index.value)
+    MOI.Nonlinear.delete(model.nlp_model, index)
+    return
+end
+
+"""
     num_nonlinear_constraints(model::Model)
 
 Returns the number of nonlinear constraints associated with the `model`.
