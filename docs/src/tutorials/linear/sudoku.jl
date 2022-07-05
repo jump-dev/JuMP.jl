@@ -181,11 +181,11 @@ set_optimizer_attribute(model, "presolve", "off")
 
 @constraint(model, [i = 1:9], x[i, :] in MOI.AllDifferent(9))
 
-# # That the values in each column must be all-different:
+# That the values in each column must be all-different:
 
 @constraint(model, [j = 1:9], x[:, j] in MOI.AllDifferent(9))
 
-# # And that the values in each 3x3 sub-grid must be all-different:
+# And that the values in each 3x3 sub-grid must be all-different:
 
 for i in (0, 3, 6), j in (0, 3, 6)
     @constraint(model, vec(x[i.+(1:3), j.+(1:3)]) in MOI.AllDifferent(9))
