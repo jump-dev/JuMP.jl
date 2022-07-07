@@ -216,7 +216,12 @@ validate all assumptions that the code makes. In particular:
 
 For example:
 ```jldoctest my_sum
-function _validate_my_sum_defensive_assumptions(x::AbstractArray{T}) where {T}
+"""
+    test_my_sum_defensive_assumptions(x::AbstractArray{T}) where {T}
+
+Test the assumptions made by `my_sum_defensive`.
+"""
+function test_my_sum_defensive_assumptions(x::AbstractArray{T}) where {T}
     try
         # Some types may not define zero.
         @assert zero(T) isa T
@@ -247,7 +252,7 @@ This function makes the following assumptions:
  * That  `+(::T, ::T)` is defined
 """
 function my_sum_defensive(x::AbstractArray{T}) where {T}
-    _validate_my_sum_defensive_assumptions(x)
+    test_my_sum_defensive_assumptions(x)
     y = zero(T)
     for xi in x
         y += xi
@@ -276,6 +281,10 @@ julia> my_sum_defensive(['a', 'b', 'c'])
 ERROR: Unable to call my_sum_defensive(::Vector{Char}) because it failed an internal assumption
 [...]
 ```
+
+As an alternative, you may choose not to call `test_my_sum_defensive_assumptions`
+within `my_sum_defensive`, and instead ask users of `my_sum_defensive` to call
+it in their tests.
 
 ### Juxtaposed multiplication
 
