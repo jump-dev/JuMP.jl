@@ -34,7 +34,7 @@ import Ipopt
 # \begin{array}{r l}
 # \min\limits_{x} & x_1^2 + x_2^2 + z \\
 # s.t.            & \begin{array}{r l}
-#                       z \ge \max\limits_{y} & x_1^2 y_1 + x_2^2 * y_2  - x_1 y_1^4 - 2 x_2 y_2^4 \\
+#                       z \ge \max\limits_{y} & x_1^2 y_1 + x_2^2 y_2  - x_1 y_1^4 - 2 x_2 y_2^4 \\
 #                       s.t.                  & (y_1 - 10)^2 + (y_2 - 10)^2 \le 25
 #                   \end{array} \\
 #                 & x \ge 0.
@@ -54,7 +54,7 @@ import Ipopt
 
 # ```math
 # \begin{array}{r l}
-#   V(x_1, x_z) = \max\limits_{y} & x_1^2 y_1 + x_2^2 * y_2  - x_1 y_1^4 - 2 x_2 y_2^4 \\
+#   V(x_1, x_z) = \max\limits_{y} & x_1^2 y_1 + x_2^2 y_2  - x_1 y_1^4 - 2 x_2 y_2^4 \\
 #                            s.t. & (y_1 - 10)^2 + (y_2 - 10)^2 \le 25
 # \end{array}
 # ```
@@ -74,7 +74,7 @@ function solve_lower_level(x...)
     return objective_value(model), value.(y)
 end
 
-# This function takes a guess of ``x``, and returns the optimal lower-level
+# This function takes a guess of ``x`` and returns the optimal lower-level
 # objective-value and the optimal response ``y``. The reason why we need both
 # the objective and the optimal ``y`` will be made clear shortly, but for now
 # let us define:
@@ -84,7 +84,7 @@ function V(x...)
     return f
 end
 
-# We can substitute ``V`` into our full problem to create:
+# Then, we can substitute ``V`` into our full problem to create:
 
 # ```math
 # \begin{array}{r l}
@@ -96,7 +96,8 @@ end
 # This looks like a nonlinear optimization problem with a user-defined function
 # ``V``! However, because ``V`` solves an optimization problem internally, we
 # can't use automatic differentiation to compute the first and second
-# derivatives.
+# derivatives. Instead, we can use JuMP's ability to pass callback functions
+# for the gradient and hessian instead.
 
 # First up, we need to define the gradient of ``V`` with respect to ``x``. In
 # general, this may be difficult to compute, but because ``x`` appears only in
@@ -146,14 +147,14 @@ y
 
 # This solution approach worked, but it has a performance problem: every time
 # we needed to compute the value, gradient, or hessian of ``V``, we had to
-# resolve the lower-level optimization problem! This is wasteful, because we
+# re-solve the lower-level optimization problem! This is wasteful, because we
 # will often call the gradient and hessian at the same point, and so solving the
 # problem twice with the same input repeats work unnecessarily.
 
 # We can work around this by using memoization:
 
 function memoized_solve_lower_level()
-    last_x, f, y = nothing, 0.0, [NaN, NaN]
+    last_x, f, y = nothing, NaN, [NaN, NaN]
     function _update_if_needed(x...)
         if last_x != x
             f, y = solve_lower_level(x...)
