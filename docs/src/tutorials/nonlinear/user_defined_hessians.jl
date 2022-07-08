@@ -18,15 +18,17 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  #src
 # SOFTWARE.                                                                      #src
 
-# # User-defined hessians
+# # User-defined Hessians
 
-# In this tutorial, we explain how to write a user-defined function with an
-# explicit hessian.
+# In this tutorial, we explain how to write a user-defined function (see [User-defined Functions](@ref))
+# with an explicit Hessian matrix.
 
 # This tutorial uses the following packages:
 
 using JuMP
 import Ipopt
+
+# ## Motivation
 
 # Our goal for this tutorial is to solve the bilevel optimization problem:
 
@@ -46,7 +48,9 @@ import Ipopt
 # involving variables ``y``. From the perspective of the lower-level, the
 # values of ``x`` are fixed parameters, and so the model optimizes ``y`` given
 # those fixed parameters. Simultaneously, the upper level is optimizing ``x``
-# given the response of ``yy``.
+# given the response of ``y``.
+
+# ## Decomposition
 
 # There are a few ways to solve this problem, but we are going to use a
 # nonlinear decomposition method. The first step is to write a function to
@@ -145,8 +149,10 @@ value.(x)
 _, y = solve_lower_level(value.(x)...)
 y
 
-# This solution approach worked, but it has a performance problem: every time
-# we needed to compute the value, gradient, or hessian of ``V``, we had to
+# ## Memoization
+
+# Our solution approach works, but it has a performance problem: every time
+# we need to compute the value, gradient, or hessian of ``V``, we have to
 # re-solve the lower-level optimization problem! This is wasteful, because we
 # will often call the gradient and hessian at the same point, and so solving the
 # problem twice with the same input repeats work unnecessarily.
