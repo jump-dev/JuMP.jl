@@ -51,6 +51,241 @@ format("test")
 The following sections outline extra style guide points that are not fixed
 automatically by JuliaFormatter.
 
+### Abstract types and composition
+
+Specifying types for method arguments is mostly optional in Julia. The benefit
+of abstract method arguments is that it enables functions and types from one
+package to be used with functions and types from another package via multiple
+dispatch.
+
+However, abstractly typed methods have two main drawbacks:
+
+ 1. It's possible to find out that you are working with unexpected types deep
+    in the call chain, potentially leading to hard-to-diagnose [`MethodError`s](https://docs.julialang.org/en/v1/manual/methods/#Defining-Methods).
+ 2. Untyped function arguments can lead to correctness problems if the user's
+    choice of input type does not satisfy the assumptions made by the author of
+    the function.
+
+As a motivating example, consider the following function:
+```jldoctest my_sum
+julia> function my_sum(x)
+           y = 0.0
+           for i in 1:length(x)
+               y += x[i]
+           end
+           return y
+       end
+my_sum (generic function with 1 method)
+```
+This function contains a number of implicit assumptions about the type of `x`:
+ * `x` supports 1-based `getindex` and implements `length`
+ * The element type of `x` supports addition with `0.0`, and then with the
+   result of `x + 0.0`.
+
+!!! info
+    As a motivating example for the second point, [`VariableRef`](@ref) plus
+    `Float64` produces an [`AffExpr`](@ref). Do not assume that `+(::A, ::B)`
+    produces an instance of the type `A` or `B`.
+
+`my_sum` works as expected if the user passes in `Vector{Float64}`:
+```jldoctest my_sum
+julia> my_sum([1.0, 2.0, 3.0])
+6.0
+```
+but it doesn't respect input types, for example returning a `Float64` if the
+user passes `Vector{Int}`:
+```jldoctest my_sum
+julia> my_sum([1, 2, 3])
+6.0
+```
+but it throws a `MethodError` if the user passes `String`:
+```jldoctest my_sum
+julia> my_sum("abc")
+ERROR: MethodError: no method matching +(::Float64, ::Char)
+[...]
+```
+This particular `MethodError` is hard to debug, particularly for new users,
+because it mentions `+`, `Float64`, and `Char`, none of which were called or
+passed by the user.
+
+#### Dealing with `MethodError`s
+
+This section diverges from the [Julia style guide](https://docs.julialang.org/en/v1.6/manual/style-guide/#Avoid-writing-overly-specific-types),
+as well as other common guides like [SciML](https://github.com/SciML/SciMLStyle#generic-code-is-preferred-unless-code-is-known-to-be-specific).
+The following suggestions are intended to provide a friendlier experience for
+novice Julia programmers, at the cost of limiting the power and flexibility of
+advanced Julia programmers.
+
+Code should follow the `MethodError` principle:
+
+!!! info "The MethodError principle"
+    A user should see a `MethodError` only for methods that they called
+    directly.
+
+
+Bad:
+```julia
+_internal_function(x::Integer) = x + 1
+# The user sees a MethodError for _internal_function when calling
+# public_function("a string"). This is not very helpful.
+public_function(x) = _internal_function(x)
+```
+
+Good:
+```julia
+_internal_function(x::Integer) = x + 1
+# The user sees a MethodError for public_function when calling
+# public_function("a string"). This is easy to understand.
+public_function(x::Integer) = _internal_function(x)
+```
+
+If it is hard to provide an error message at the top of the call chain,
+then the following pattern is also ok:
+```julia
+_internal_function(x::Integer) = x + 1
+function _internal_function(x)
+    error(
+        "Internal error. This probably means that you called " *
+        "`public_function()`s with the wrong type.",
+    )
+end
+public_function(x) = _internal_function(x)
+```
+
+#### Dealing with correctness
+
+Dealing with correctness is harder, because Julia has no way of formally
+specifying interfaces that abstract types must implement. Instead, here are two
+options that you can use when writing and interacting with generic code:
+
+**Option 1: Use concrete types and let users extend new methods.**
+
+In this option, explictly restrict input arguments to concrete types that
+are tested and have been validated for correctness. For example:
+```jldoctest my_sum
+julia> function my_sum_option_1(x::Vector{Float64})
+           y = 0.0
+           for i in 1:length(x)
+               y += x[i]
+           end
+           return y
+       end
+my_sum_option_1 (generic function with 1 method)
+
+julia> my_sum_option_1([1.0, 2.0, 3.0])
+6.0
+```
+
+Using concrete types satisfies the `MethodError` principle:
+```jldoctest my_sum
+julia> my_sum_option_1("abc")
+ERROR: MethodError: no method matching my_sum_option_1(::String)
+```
+and it allows other types to be supported in future by defining new methods:
+```jldoctest my_sum
+julia> function my_sum_option_1(x::Array{T,N}) where {T<:Number,N}
+           y = zero(T)
+           for i in eachindex(x)
+               y += x[i]
+           end
+           return y
+       end
+my_sum_option_1 (generic function with 2 methods)
+```
+Importantly, these methods do not have to be defined in the original package.
+
+!!! info
+    Some usage of abstract types is okay. For example, in `my_sum_option_1`, we
+    allowed the element type, `T`, to be a subtype of `Number`. This is fairly
+    safe, but it still has an implicit assumption that `T` supports `zero(T)`
+    and `+(::T, ::T)`.
+
+**Option 2: Program defensively, and validate all assumptions.**
+
+An alternative is to program defensively, and to rigorously document and
+validate all assumptions that the code makes. In particular:
+
+ 1. All assumptions on abstract types that aren't guaranteed by the definition
+    of the abstract type (for example, optional methods without a fallback)
+    should be documented.
+ 2. If practical, the assumptions should be checked in code, and informative
+    error messages should be provided to the user if the assumptions are not
+    met. In general, these checks may be expensive, so you should prefer to do
+    this once, at the highest level of the call-chain.
+ 3. Tests should cover for a range of corner cases and argument types.
+
+For example:
+```jldoctest my_sum
+"""
+    test_my_sum_defensive_assumptions(x::AbstractArray{T}) where {T}
+
+Test the assumptions made by `my_sum_defensive`.
+"""
+function test_my_sum_defensive_assumptions(x::AbstractArray{T}) where {T}
+    try
+        # Some types may not define zero.
+        @assert zero(T) isa T
+        # Check iteration supported
+        @assert iterate(x) isa Union{Nothing,Tuple{T,Int}}
+        # Check that + is defined
+        @assert +(zero(T), zero(T)) isa Any
+    catch err
+        error(
+            "Unable to call my_sum_defensive(::$(typeof(x))) because " *
+            "it failed an internal assumption",
+        )
+    end
+    return
+end
+
+"""
+    my_sum_defensive(x::AbstractArray{T}) where {T}
+
+Return the sum of the elements in the abstract array `x`.
+
+## Assumptions
+
+This function makes the following assumptions:
+
+ * That `zero(T)` is defined
+ * That `x` supports the iteration interface
+ * That  `+(::T, ::T)` is defined
+"""
+function my_sum_defensive(x::AbstractArray{T}) where {T}
+    test_my_sum_defensive_assumptions(x)
+    y = zero(T)
+    for xi in x
+        y += xi
+    end
+    return y
+end
+
+# output
+
+my_sum_defensive
+```
+
+This function works on `Vector{Float64}`:
+```jldoctest my_sum
+julia> my_sum_defensive([1.0, 2.0, 3.0])
+6.0
+```
+as well as `Matrix{Rational{Int}}`:
+```jldoctest my_sum
+julia> my_sum_defensive([(1//2) + (4//3)im; (6//5) + (7//11)im])
+17//10 + 65//33*im
+```
+and it throws an error when the assumptions aren't met:
+```jldoctest my_sum
+julia> my_sum_defensive(['a', 'b', 'c'])
+ERROR: Unable to call my_sum_defensive(::Vector{Char}) because it failed an internal assumption
+[...]
+```
+
+As an alternative, you may choose not to call `test_my_sum_defensive_assumptions`
+within `my_sum_defensive`, and instead ask users of `my_sum_defensive` to call
+it in their tests.
+
 ### Juxtaposed multiplication
 
 Only use juxtaposed multiplication when the right-hand side is a symbol.
@@ -260,42 +495,6 @@ Where possible, avoid one-letter variable names.
 Use `model = Model()` instead of `m = Model()`
 
 Exceptions are made for indices in loops.
-
-### User-facing `MethodError`
-
-Specifying argument types for methods is mostly optional in Julia, which means
-that it's possible to find out that you are working with unexpected types deep in
-the call chain. Avoid this situation or handle it with a helpful error message.
-*A user should see a `MethodError` only for methods that they called directly.*
-
-Bad:
-```julia
-_internal_function(x::Integer) = x + 1
-# The user sees a MethodError for _internal_function when calling
-# public_function("a string"). This is not very helpful.
-public_function(x) = _internal_function(x)
-```
-
-Good:
-```julia
-_internal_function(x::Integer) = x + 1
-# The user sees a MethodError for public_function when calling
-# public_function("a string"). This is easy to understand.
-public_function(x::Integer) = _internal_function(x)
-```
-
-If it is hard to provide an error message at the top of the call chain,
-then the following pattern is also ok:
-```julia
-_internal_function(x::Integer) = x + 1
-function _internal_function(x)
-    error(
-        "Internal error. This probably means that you called " *
-        "public_function() with the wrong type.",
-    )
-end
-public_function(x) = _internal_function(x)
-```
 
 ### `@enum` vs. `Symbol`
 
