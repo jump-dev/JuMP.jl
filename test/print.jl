@@ -942,6 +942,15 @@ function test_print_IJulia_with_math_operators()
     return
 end
 
+struct _UnsupportedNameOptimizer <: MOI.AbstractOptimizer end
+MOI.is_empty(::_UnsupportedNameOptimizer) = true
+
+function test_Name_direct_mode()
+    model = direct_model(_UnsupportedNameOptimizer())
+    @test name(model) == "A JuMP Model"
+    return
+end
+
 end
 
 TestPrint.runtests()
