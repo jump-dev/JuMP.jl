@@ -131,12 +131,11 @@ default if empty.
 name(model::AbstractModel) = "An Abstract JuMP Model"
 
 function name(model::Model)
-    try
+    if MOI.supports(backend(model), MOI.Name())
         ret = MOI.get(model, MOI.Name())
         return isempty(ret) ? "A JuMP Model" : ret
-    catch
-        return "A JuMP Model"
     end
+    return "A JuMP Model"
 end
 
 """
