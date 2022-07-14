@@ -21,7 +21,7 @@
 # # User-defined Hessians
 
 # In this tutorial, we explain how to write a user-defined function (see [User-defined Functions](@ref))
-# with an explicit Hessian matrix.
+# with a Hessian matrix explicitly provided by the user.
 
 # This tutorial uses the following packages:
 
@@ -34,7 +34,7 @@ import Ipopt
 
 # ```math
 # \begin{array}{r l}
-# \min\limits_{x} & x_1^2 + x_2^2 + z \\
+# \min\limits_{x,z} & x_1^2 + x_2^2 + z \\
 # s.t.            & \begin{array}{r l}
 #                       z \ge \max\limits_{y} & x_1^2 y_1 + x_2^2 y_2  - x_1 y_1^4 - 2 x_2 y_2^4 \\
 #                       s.t.                  & (y_1 - 10)^2 + (y_2 - 10)^2 \le 25
@@ -45,16 +45,16 @@ import Ipopt
 
 # This bilevel optimization problem is composed of two nested optimization
 # problems. An _upper_ level, involving variables ``x``, and a _lower_ level,
-# involving variables ``y``. From the perspective of the lower-level, the
-# values of ``x`` are fixed parameters, and so the model optimizes ``y`` given
-# those fixed parameters. Simultaneously, the upper level is optimizing ``x``
-# given the response of ``y``.
+# involving variables ``y``. From the perspective of the lower-level problem,
+# the values of ``x`` are fixed parameters, and so the model optimizes ``y``
+# given those fixed parameters. Simultaneously, the upper-level problem
+# optimizes ``x`` and ``z`` given the response of ``y``.
 
 # ## Decomposition
 
 # There are a few ways to solve this problem, but we are going to use a
 # nonlinear decomposition method. The first step is to write a function to
-# compute:
+# compute the lower-level problem:
 
 # ```math
 # \begin{array}{r l}
@@ -78,7 +78,7 @@ function solve_lower_level(x...)
     return objective_value(model), value.(y)
 end
 
-# This function takes a guess of ``x`` and returns the optimal lower-level
+# The next function takes a value of ``x`` and returns the optimal lower-level
 # objective-value and the optimal response ``y``. The reason why we need both
 # the objective and the optimal ``y`` will be made clear shortly, but for now
 # let us define:
@@ -101,7 +101,7 @@ end
 # ``V``! However, because ``V`` solves an optimization problem internally, we
 # can't use automatic differentiation to compute the first and second
 # derivatives. Instead, we can use JuMP's ability to pass callback functions
-# for the gradient and hessian instead.
+# for the gradient and Hessian instead.
 
 # First up, we need to define the gradient of ``V`` with respect to ``x``. In
 # general, this may be difficult to compute, but because ``x`` appears only in
@@ -115,7 +115,7 @@ function ∇V(g::AbstractVector, x...)
     return
 end
 
-# Second, we need to define the hessian of ``V`` with respect to ``x``. This is
+# Second, we need to define the Hessian of ``V`` with respect to ``x``. This is
 # a symmetric matrix, but in our example only the diagonal elements are
 # non-zero:
 
@@ -152,9 +152,9 @@ y
 # ## Memoization
 
 # Our solution approach works, but it has a performance problem: every time
-# we need to compute the value, gradient, or hessian of ``V``, we have to
+# we need to compute the value, gradient, or Hessian of ``V``, we have to
 # re-solve the lower-level optimization problem! This is wasteful, because we
-# will often call the gradient and hessian at the same point, and so solving the
+# will often call the gradient and Hessian at the same point, and so solving the
 # problem twice with the same input repeats work unnecessarily.
 
 # We can work around this by using memoization:
@@ -162,7 +162,7 @@ y
 function memoized_solve_lower_level()
     last_x, f, y = nothing, NaN, [NaN, NaN]
     function _update_if_needed(x...)
-        if last_x != x
+        if last_x !== x
             f, y = solve_lower_level(x...)
             last_x = x
         end
@@ -191,8 +191,8 @@ f, ∇f, ∇²f = memoized_solve_lower_level()
 
 # The function above is a little confusing, but it returns three new functions
 # `f`, `∇f`, and `∇²f`, each of which call `_update_if_needed(x...)`. This
-# function only updates the cached values of `f` and `y` if the input `x` is
-# different to what is last saw.
+# function only updates the cached values of the objective `f` and lower-level
+# primal variables `y` if the input `x` is different to its previous value.
 
 model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2] >= 0)

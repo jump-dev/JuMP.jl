@@ -462,8 +462,9 @@ register(model, :rosenbrock, 2, f, ∇f, ∇²f)
     Make sure the first argument to `∇²f` supports an `AbstractMatrix`, and do
     not assume the input is `Float64`. You may assume the matrix is initialized
     with zeros, so you need only to fill in the non-zero terms. The matrix type
-    passed in as `H` is very limited. You may assume only that it supports
-    `size(H)` and `setindex!`.
+    passed in as `H` depends on the automatic differentiation system, so it may
+    be something other than `Matrix{Float64}`. You may assume only that it
+    supports `size(H)` and `setindex!`.
 
 ### User-defined functions with vector inputs
 
