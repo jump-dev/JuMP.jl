@@ -160,13 +160,15 @@ function optimize!(
 )
     # The nlp_model is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
-    if nonlinear_model(model) !== nothing
+    if nonlinear_model(model) !== nothing && model.is_nlp_model_dirty
+        @warn("Setting NLPBLock")
         evaluator = MOI.Nonlinear.Evaluator(
             nonlinear_model(model),
             _differentiation_backend,
             index.(all_variables(model)),
         )
         MOI.set(model, MOI.NLPBlock(), MOI.NLPBlockData(evaluator))
+        model.is_nlp_model_dirty = false
     end
     # If the user or an extension has provided an optimize hook, call
     # that instead of solving the model ourselves

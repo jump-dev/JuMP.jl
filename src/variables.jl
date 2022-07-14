@@ -1062,6 +1062,7 @@ function add_variable end
 
 function add_variable(model::Model, v::ScalarVariable, name::String = "")
     model.is_model_dirty = true
+    model.is_nlp_model_dirty = true
     return _moi_add_variable(backend(model), model, v, name)
 end
 
