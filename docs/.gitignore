@@ -1,7 +1,5 @@
 build/
 latex_build/
-src/examples/*.md
-src/examples/*/*.md
 src/tutorials/*/*.md
 !src/tutorials/*/introduction.md
 src/moi/
