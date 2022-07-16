@@ -58,7 +58,7 @@ const DATA_DIR = joinpath(@__DIR__, "data")
 
 import DataFrames
 
-# !!! info What is a DataFrame?
+# !!! info "What is a DataFrame?"
 #     A DataFrame is a data structure like a table or spreadsheet. You can use
 #     it for storing and exploring a set of related data values. Think of it as
 #     a smarter array for holding tabular data.
