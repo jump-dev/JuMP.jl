@@ -498,6 +498,34 @@ function all_nonlinear_constraints(model::Model)
     ]
 end
 
+"""
+    value(c::NonlinearConstraintRef; result::Int = 1)
+
+Return the value of the `NonlinearConstraintRef` `c` associated with result
+index `result` of the most-recent solution returned by the solver.
+
+See also: [`result_count`](@ref).
+"""
+function value(c::NonlinearConstraintRef; result::Int = 1)
+    return value(c) do x
+        return value(x; result = result)
+    end
+end
+
+"""
+    value(var_value::Function, c::NonlinearConstraintRef)
+
+Evaluate `c` using `var_value(v)` as the value for each variable `v`.
+"""
+function value(var_value::Function, c::NonlinearConstraintRef)
+    index = MOI.Nonlinear.ConstraintIndex(c.index.value)
+    return MOI.Nonlinear.evaluate(
+        _VariableValueMap(c.model, var_value),
+        c.model.nlp_model,
+        c.model.nlp_model[index].expression,
+    )
+end
+
 ###
 ### Nonlinear dual solutions
 ###

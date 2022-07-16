@@ -1071,6 +1071,29 @@ function test_value_on_NonlinearExpressions()
     return
 end
 
+function test_value_on_NonlinearConstraint_varvalue()
+    model = Model()
+    @variable(model, x)
+    @NLconstraint(model, c, sin(x) <= 1.1)
+    JuMP.set_start_value(x, 2.0)
+    @test JuMP.value(JuMP.start_value, c) ≈ sin(2.0) - 1.1
+    return
+end
+
+function test_value_on_NonlinearConstraint_result()
+    model = Model()
+    @variable(model, x)
+    set_optimizer(model, () -> MOIU.MockOptimizer(MOIU.Model{Float64}()))
+    JuMP.optimize!(model)
+    mock = JuMP.unsafe_backend(model)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.ResultCount(), 2)
+    MOI.set(mock, MOI.VariablePrimal(2), JuMP.optimizer_index(x), 2.0)
+    @NLconstraint(model, c, sin(x) <= 1.1)
+    @test @inferred JuMP.value(c; result = 2) ≈ sin(2.0) - 1.1
+    return
+end
+
 function test_hessians_disabled_with_user_defined_multivariate_functions()
     model = Model()
     my_f(x, y) = (x - 1)^2 + (y - 2)^2
