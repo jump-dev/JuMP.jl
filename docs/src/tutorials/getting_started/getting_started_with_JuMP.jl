@@ -359,7 +359,7 @@ u = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
 
 # #### SparseAxisArrays
 
-# `SparseAxisArrays` are created when the indices do not form a rectangular set.
+# `SparseAxisArrays` are created when the indices do not form a Cartesian product.
 # For example, this applies when indices have a dependence upon previous indices
 # (called triangular indexing):
 
