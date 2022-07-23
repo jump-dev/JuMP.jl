@@ -306,7 +306,7 @@ Symbol("abc")
 
 # !!! tip
 #     `Symbol`s are often (ab)used to stand in for a `String` or an `Enum`, when
-#     one of the former is likely a better choice. The JuMP [Style guide](@ref)
+#     one of the latter is likely a better choice. The JuMP [Style guide](@ref)
 #     recommends reserving `Symbol`s for identifiers. See [@enum vs. Symbol](@ref)
 #     for more.
 
