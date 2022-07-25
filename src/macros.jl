@@ -1222,7 +1222,7 @@ _replace_zero(x) = x
 Set the objective sense to `sense` and objective function to `func`. The
 objective sense can be either `Min`, `Max`, `MathOptInterface.MIN_SENSE`,
 `MathOptInterface.MAX_SENSE` or `MathOptInterface.FEASIBILITY_SENSE`; see
-[`MathOptInterface.ObjectiveSense`](https://jump.dev/MathOptInterface.jl/v0.8/apireference.html#MathOptInterface.ObjectiveSense).
+[`MathOptInterface.ObjectiveSense`](https://jump.dev/MathOptInterface.jl/stable/reference/models/#MathOptInterface.ObjectiveSense).
 In order to set the sense programmatically, i.e., when `sense` is a Julia
 variable whose value is the sense, one of the three
 `MathOptInterface.ObjectiveSense` values should be used. The function `func` can
