@@ -93,6 +93,13 @@ And data, a 2-element $(Vector{Float64}):
         @test 1 .+ A == correct_answer
     end
 
+    @testset "String index set" begin
+        A = @inferred DenseAxisArray([1.0, 2.0], ["a", "b"])
+        @test (@inferred A["a"]) == (@inferred A[GenericString("a")]) == 1.0
+        @test (@inferred A[["a", "b"]]) ==
+            (@inferred A[[GenericString("a"), GenericString("b")]]) == A
+    end
+
     @testset "Mixed range/symbol index sets" begin
         A = @inferred DenseAxisArray([1 2; 3 4], 2:3, [:a, :b])
         @test size(A) == (2, 2)
@@ -248,6 +255,11 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test (@inferred C[2:3, [:a, :b]]) == C
         @test (@inferred C[2, [:a, :b]]) == DenseAxisArray([5.0, 6.0], [:a, :b])
         @test (@inferred C[2:3, :b]) == DenseAxisArray([6.0, 8.0], 2:3)
+
+        D = DenseAxisArray([5.0 6.0; 7.0 8.0], 2:3, ["a", "b"])
+        @test (@inferred D[2, GenericString("b")]) == 6.0
+        @test (@inferred D[2, [GenericString("a"), GenericString("b")]]) ==
+            DenseAxisArray([5.0, 6.0], ["a", "b"])
     end
     @testset "BitArray" begin
         x = DenseAxisArray([0 1; 1 0], [:a, :b], 1:2)

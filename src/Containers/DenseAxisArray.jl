@@ -48,17 +48,17 @@ function build_lookup(ax)
     return _AxisLookup(d)
 end
 
-Base.getindex(x::_AxisLookup{Dict{K,Int}}, key::K) where {K} = x.data[key]
+Base.getindex(x::_AxisLookup{Dict{K,Int}}, key) where {K} = x.data[key]
 Base.getindex(::_AxisLookup{Dict{K,Int}}, key::Colon) where {K} = key
 
 function Base.getindex(
     x::_AxisLookup{Dict{K,Int}},
-    keys::AbstractVector{<:K},
+    keys::AbstractVector,
 ) where {K}
     return [x[key] for key in keys]
 end
 
-function Base.get(x::_AxisLookup{Dict{K,Int}}, key::K, default) where {K}
+function Base.get(x::_AxisLookup{Dict{K,Int}}, key, default) where {K}
     return get(x.data, key, default)
 end
 
