@@ -97,7 +97,8 @@ And data, a 2-element $(Vector{Float64}):
         A = @inferred DenseAxisArray([1.0, 2.0], ["a", "b"])
         @test (@inferred A["a"]) == (@inferred A[GenericString("a")]) == 1.0
         @test (@inferred A[["a", "b"]]) ==
-              (@inferred A[[GenericString("a"), GenericString("b")]]) == A
+              (@inferred A[[GenericString("a"), GenericString("b")]]) ==
+              A
     end
 
     @testset "Mixed range/symbol index sets" begin
