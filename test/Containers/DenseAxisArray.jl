@@ -43,6 +43,7 @@ using Test
         @test isassigned(A, 2)
         @test !isassigned(A, 1)
         @test length.(axes(A)) == (2,)
+        @test_throws KeyError A["2"]
 
         correct_answer = DenseAxisArray([2.0, 3.0], 2:3)
         @test sprint(show, correct_answer) == """
