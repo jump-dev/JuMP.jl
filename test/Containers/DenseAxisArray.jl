@@ -43,6 +43,7 @@ using Test
         @test isassigned(A, 2)
         @test !isassigned(A, 1)
         @test length.(axes(A)) == (2,)
+        @test_throws KeyError A["2"]
 
         correct_answer = DenseAxisArray([2.0, 3.0], 2:3)
         @test sprint(show, correct_answer) == """
@@ -91,6 +92,14 @@ And data, a 2-element $(Vector{Float64}):
         @test plus1.(A) == correct_answer
         @test A .+ 1 == correct_answer
         @test 1 .+ A == correct_answer
+    end
+
+    @testset "String index set" begin
+        A = @inferred DenseAxisArray([1.0, 2.0], ["a", "b"])
+        @test (@inferred A["a"]) == (@inferred A[GenericString("a")]) == 1.0
+        @test (@inferred A[["a", "b"]]) ==
+              (@inferred A[[GenericString("a"), GenericString("b")]]) ==
+              A
     end
 
     @testset "Mixed range/symbol index sets" begin
@@ -248,6 +257,11 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test (@inferred C[2:3, [:a, :b]]) == C
         @test (@inferred C[2, [:a, :b]]) == DenseAxisArray([5.0, 6.0], [:a, :b])
         @test (@inferred C[2:3, :b]) == DenseAxisArray([6.0, 8.0], 2:3)
+
+        D = DenseAxisArray([5.0 6.0; 7.0 8.0], 2:3, ["a", "b"])
+        @test (@inferred D[2, GenericString("b")]) == 6.0
+        @test (@inferred D[2, [GenericString("a"), GenericString("b")]]) ==
+              DenseAxisArray([5.0, 6.0], ["a", "b"])
     end
     @testset "BitArray" begin
         x = DenseAxisArray([0 1; 1 0], [:a, :b], 1:2)
