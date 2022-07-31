@@ -65,7 +65,7 @@ end
 # Now that we have the function, its gradient, and its Hessian, we can construct
 # a JuMP model, register the function, and use it in a `@NL` macro:
 
-model = Model()
+model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2])
 register(model, :rosenbrock, 2, rosenbrock, ∇rosenbrock, ∇²rosenbrock)
 @NLobjective(model, Min, rosenbrock(x[1], x[2]))
