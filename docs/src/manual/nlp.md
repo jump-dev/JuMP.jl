@@ -459,12 +459,14 @@ register(model, :rosenbrock, 2, f, ∇f, ∇²f)
 ```
 
 !!! warning
-    Make sure the first argument to `∇²f` supports an `AbstractMatrix`, and do
-    not assume the input is `Float64`. You may assume the matrix is initialized
-    with zeros, so you need only to fill in the non-zero terms. The matrix type
-    passed in as `H` depends on the automatic differentiation system, so it may
-    be something other than `Matrix{Float64}`. You may assume only that it
-    supports `size(H)` and `setindex!`.
+    You may assume the Hessian matrix `H` is initialized with zeros, and because
+    `H` is symmetric, you need only to fill in the non-zero of the
+    lower-triangular terms. The matrix type passed in as `H` depends on the
+    automatic differentiation system, so make sure the first argument to the
+    Hessian function supports an `AbstractMatrix` (it may be something other
+    than `Matrix{Float64}`). However, you may assume only that `H` supports
+    `size(H)` and `setindex!`. Finally, the matrix is treated as dense, so the
+    performance will be poor on functions with high-dimensional input.
 
 ### User-defined functions with vector inputs
 

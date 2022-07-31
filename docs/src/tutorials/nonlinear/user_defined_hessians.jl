@@ -20,17 +20,63 @@
 
 # # User-defined Hessians
 
-# In this tutorial, we explain how to write a user-defined function (see [User-defined Functions](@ref))
-# with a Hessian matrix explicitly provided by the user.
+# In this tutorial, we explain how to write a user-defined function (see
+# [User-defined Functions](@ref)) with a Hessian matrix explicitly provided by
+# the user.
 
 # This tutorial uses the following packages:
 
 using JuMP
 import Ipopt
 
-# ## Motivation
+## Rosenbrock example
 
-# Our goal for this tutorial is to solve the bilevel optimization problem:
+# As a simple example, we first consider the Rosenbrock function:
+
+rosenbrock(x...) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+
+# which has the gradient vector:
+
+function ∇rosenbrock(g::AbstractVector, x...)
+    g[1] = 400 * x[1]^3 - 400 * x[1] * x[2] + 2 * x[1] - 2
+    g[2] = 200 * (x[2] - x[1]^2)
+    return
+end
+
+# and the Hessian matrix:
+
+function ∇²rosenbrock(H::AbstractMatrix, x...)
+    H[1, 1] = 1200 * x[1]^2 - 400 * x[2] + 2
+    # H[1, 2] = -400 * x[1] <-- not needed because Hessian is symmetric
+    H[2, 1] = -400 * x[1]
+    H[2, 2] = 200.0
+    return
+end
+
+# You may assume the Hessian matrix `H` is initialized with zeros, and
+# because it is symmetric you need only to fill in the non-zero of the
+# lower-triangular terms.
+
+# The matrix type passed in as `H` depends on the automatic differentiation
+# system, so make sure the first argument to the Hessian function supports an
+# `AbstractMatrix` (it may be something other than `Matrix{Float64}`). However,
+# you may assume only that `H` supports `size(H)` and `setindex!`.
+
+# Now that we have the function, its gradient, and its Hessian, we can construct
+# a JuMP model, register the function, and use it in a `@NL` macro:
+
+model = Model()
+@variable(model, x[1:2])
+register(model, :rosenbrock, 2, rosenbrock, ∇rosenbrock, ∇²rosenbrock)
+@NLobjective(model, Min, rosenbrock(x[1], x[2]))
+optimize!(model)
+solution_summary(model)
+
+# ## Bilevel optimization
+
+# User-defined Hessian functions can be useful when solving more complicated
+# problems. In the rest of this tutorial, our goal is to solve the bilevel
+# optimization problem:
 
 # ```math
 # \begin{array}{r l}
@@ -157,46 +203,46 @@ y
 # will often call the gradient and Hessian at the same point, and so solving the
 # problem twice with the same input repeats work unnecessarily.
 
-# We can work around this by using memoization:
+# We can work around this by using [memoization](https://en.wikipedia.org/wiki/Memoization):
 
-function memoized_solve_lower_level()
-    last_x, f, y = nothing, NaN, [NaN, NaN]
-    function _update_if_needed(x...)
-        if last_x !== x
-            f, y = solve_lower_level(x...)
-            last_x = x
-        end
-        return
-    end
-    function memoized_f(x...)
-        _update_if_needed(x...)
-        return f
-    end
-    function memoized_∇f(g::AbstractVector, x...)
-        _update_if_needed(x...)
-        g[1] = 2 * x[1] * y[1] - y[1]^4
-        g[2] = 2 * x[2] * y[2] - 2 * y[2]^4
-        return
-    end
-    function memoized_∇²f(H::AbstractMatrix, x...)
-        _update_if_needed(x...)
-        H[1, 1] = 2 * y[1]
-        H[2, 2] = 2 * y[2]
-        return
-    end
-    return memoized_f, memoized_∇f, memoized_∇²f
+mutable struct Cache
+    x::Any
+    f::Float64
+    y::Vector{Float64}
 end
 
-f, ∇f, ∇²f = memoized_solve_lower_level()
+cache = Cache(Float64[], NaN, Float64[])
 
-# The function above is a little confusing, but it returns three new functions
-# `f`, `∇f`, and `∇²f`, each of which call `_update_if_needed(x...)`. This
-# function only updates the cached values of the objective `f` and lower-level
-# primal variables `y` if the input `x` is different to its previous value.
+function _update_if_needed(cache::Cache, x...)
+    if cache.x !== x
+        cache.f, cache.y = solve_lower_level(x...)
+        cache.x = x
+    end
+    return
+end
+
+function cached_f(x...)
+    _update_if_needed(cache, x...)
+    return cache.f
+end
+
+function cached_∇f(g::AbstractVector, x...)
+    _update_if_needed(cache, x...)
+    g[1] = 2 * x[1] * cache.y[1] - cache.y[1]^4
+    g[2] = 2 * x[2] * cache.y[2] - 2 * cache.y[2]^4
+    return
+end
+
+function cached_∇²f(H::AbstractMatrix, x...)
+    _update_if_needed(cache, x...)
+    H[1, 1] = 2 * cache.y[1]
+    H[2, 2] = 2 * cache.y[2]
+    return
+end
 
 model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2] >= 0)
-register(model, :V, 2, f, ∇f, ∇²f)
+register(model, :V, 2, cached_f, cached_∇f, cached_∇²f)
 @NLobjective(model, Min, x[1]^2 + x[2]^2 + V(x[1], x[2]))
 optimize!(model)
 solution_summary(model)
