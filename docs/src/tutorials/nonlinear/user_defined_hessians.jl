@@ -29,7 +29,7 @@
 using JuMP
 import Ipopt
 
-## Rosenbrock example
+# ## Rosenbrock example
 
 # As a simple example, we first consider the Rosenbrock function:
 
@@ -70,7 +70,7 @@ model = Model(Ipopt.Optimizer)
 register(model, :rosenbrock, 2, rosenbrock, ∇rosenbrock, ∇²rosenbrock)
 @NLobjective(model, Min, rosenbrock(x[1], x[2]))
 optimize!(model)
-solution_summary(model)
+solution_summary(model; verbose = true)
 
 # ## Bilevel optimization
 
@@ -203,7 +203,8 @@ y
 # will often call the gradient and Hessian at the same point, and so solving the
 # problem twice with the same input repeats work unnecessarily.
 
-# We can work around this by using [memoization](https://en.wikipedia.org/wiki/Memoization):
+# We can work around this by using [memoization](https://en.wikipedia.org/wiki/Memoization).
+# First, we create a struct to cache the results:
 
 mutable struct Cache
     x::Any
@@ -213,6 +214,8 @@ end
 
 cache = Cache(Float64[], NaN, Float64[])
 
+# with a function to update the cache if needed:
+
 function _update_if_needed(cache::Cache, x...)
     if cache.x !== x
         cache.f, cache.y = solve_lower_level(x...)
@@ -220,6 +223,9 @@ function _update_if_needed(cache::Cache, x...)
     end
     return
 end
+
+# Then, we define cached versions of out three functions which call
+# `_updated_if_needed` and return values from the cache.
 
 function cached_f(x...)
     _update_if_needed(cache, x...)
@@ -239,6 +245,8 @@ function cached_∇²f(H::AbstractMatrix, x...)
     H[2, 2] = 2 * cache.y[2]
     return
 end
+
+# Now we're ready to setup and solve the upper level optimization problem:
 
 model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2] >= 0)
