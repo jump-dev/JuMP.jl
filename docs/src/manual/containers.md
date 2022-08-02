@@ -222,9 +222,9 @@ condition, which evaluates to `true` or `false`: `i > 1`.
 Slicing is supported:
 ```jldoctest containers_sparse
 julia> y = x[:, :B]
-JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 2, Tuple{Int64, Symbol}} with 2 entries:
-  [2, B]  =  (2, :B)
-  [3, B]  =  (3, :B)
+JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 1, Tuple{Int64}} with 2 entries:
+  [2]  =  (2, :B)
+  [3]  =  (3, :B)
 ```
 
 ### Looping
@@ -247,9 +247,9 @@ julia> swap(x::Tuple) = (last(x), first(x))
 swap (generic function with 1 method)
 
 julia> swap.(y)
-JuMP.Containers.SparseAxisArray{Tuple{Symbol, Int64}, 2, Tuple{Int64, Symbol}} with 2 entries:
-  [2, B]  =  (:B, 2)
-  [3, B]  =  (:B, 3)
+JuMP.Containers.SparseAxisArray{Tuple{Symbol, Int64}, 1, Tuple{Int64}} with 2 entries:
+  [2]  =  (:B, 2)
+  [3]  =  (:B, 3)
 ```
 
 ## Forcing the container type

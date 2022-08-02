@@ -180,11 +180,18 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
     @testset "Slicing" begin
         Containers.@container(x[i = 1:4, j = 1:2; isodd(i + j)], i + j)
         @test x[:, :] == x
-        Containers.@container(y[i = 1:1, j = 1:2; isodd(i + j)], i + j)
-        @test x[1, :] == y
-        Containers.@container(z[i = 1:4, j = 1:1; isodd(i + j)], i + j)
-        @test x[:, 1] == z
-        Containers.@container(a1[i = 1:4; isodd(i)], i)
-        @test a1[:] == a1
+        @test x[1, :] == Containers.@container(y[j = 1:2; isodd(1 + j)], 1 + j)
+        @test x[:, 1] == Containers.@container(z[i = 1:4; isodd(i + 1)], i + 1)
+        Containers.@container(y[i = 1:4; isodd(i)], i)
+        @test y[:] == y
+        z = Containers.@container([i = 1:3, j = [:A, :B]; i > 1], (i, j))
+        @test z[2, :] == Containers.@container([j = [:A, :B]; true], (2, j))
+        @test z[:, :A] == Containers.@container([i = 2:3; true], (i, :A))
+        @test z[:, :] == z
+        @test z[1:2, :A] == Containers.@container([i = 2:2; true], (i, :A))
+        @test z[2, [:A, :B]] ==
+              Containers.@container([j = [:A, :B]; true], (2, j))
+        @test z[1:2, [:A, :B]] ==
+              Containers.@container([i = 2:2, j = [:A, :B]; true], (i, j))
     end
 end

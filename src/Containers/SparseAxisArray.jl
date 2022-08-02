@@ -99,10 +99,6 @@ function _colon_error(::Colon, args...)
     )
 end
 
-_has_colon() = false
-_has_colon(::Any, args...) = _has_colon(args...)
-_has_colon(::Colon, args...) = true
-
 function Base.setindex!(
     d::SparseAxisArray{T,N,K},
     value,
@@ -126,24 +122,48 @@ function Base.getindex(
     return getindex(d, idx...)
 end
 
-_compare(::Any, ::Colon) = true
-_compare(ki::Any, i::Any) = ki == i
-
-_filter(::Tuple{}, ::Tuple{}) = true
-
-function _filter(k::Tuple, idx::Tuple)
-    return _compare(k[1], idx[1]) && _filter(Base.tail(k), Base.tail(idx))
-end
-
 function Base.getindex(d::SparseAxisArray{T,N,K}, idx...) where {T,N,K}
     if length(idx) < N
         throw(BoundsError(d, idx))
     end
-    if _has_colon(idx...)
-        new_data = Dict(k => v for (k, v) in d.data if _filter(k, idx))
-        return SparseAxisArray{T,N,K}(new_data)
+    if _is_slice(first(keys(d.data)), idx)
+        new_data = Dict(
+            _new_key(k, idx) => v for (k, v) in d.data if _filter(k, idx)
+        )
+        if length(new_data) > 0
+            return SparseAxisArray(new_data)
+        end
     end
     return getindex(d.data, idx)
+end
+
+# Methods to check whether an index is an attempt at a slice.
+_is_slice(::Any, ::Any) = false
+_is_slice(::Any, ::Colon) = true
+_is_slice(::K, ::AbstractVector{<:K}) where {K} = true
+_is_slice(::Tuple{}, ::Tuple{}) = false
+function _is_slice(k::Tuple, i::Tuple)
+    return _is_slice(k[1], i[1]) || _is_slice(Base.tail(k), Base.tail(i))
+end
+
+# Methods to check whether a key `k` is a valid subset of `idx`.
+_filter(::Any, ::Colon) = true
+_filter(ki::Any, i::Any) = ki == i
+_filter(ki::K, i::AbstractVector{<:K}) where {K} = ki in i
+_filter(::Tuple{}, ::Tuple{}) = true
+function _filter(k::Tuple, idx::Tuple)
+    return _filter(k[1], idx[1]) && _filter(Base.tail(k), Base.tail(idx))
+end
+
+# Methods to subset the key into a new key, dropping all singleton axes.
+_new_key(k, ::Any) = (k,)
+_new_key(::K, ::K) where {K} = ()
+_new_key(::Tuple{}, ::Tuple{}) = ()
+function _new_key(k::Tuple, idx::Tuple)
+    return tuple(
+        _new_key(k[1], idx[1])...,
+        _new_key(Base.tail(k), Base.tail(idx))...,
+    )
 end
 
 Base.eachindex(d::SparseAxisArray) = keys(d.data)
