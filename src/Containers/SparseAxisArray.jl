@@ -99,6 +99,10 @@ function _colon_error(::Colon, args...)
     )
 end
 
+_has_colon() = false
+_has_colon(::Any, args...) = _has_colon(args...)
+_has_colon(::Colon, args...) = true
+
 function Base.setindex!(
     d::SparseAxisArray{T,N,K},
     value,
@@ -122,11 +126,23 @@ function Base.getindex(
     return getindex(d, idx...)
 end
 
-function Base.getindex(d::SparseAxisArray{T,N}, idx...) where {T,N}
+_compare(::Any, ::Colon) = true
+_compare(ki::Any, i::Any) = ki == i
+
+_filter(::Tuple{}, ::Tuple{}) = true
+
+function _filter(k::Tuple, idx::Tuple)
+    return _compare(k[1], idx[1]) && _filter(Base.tail(k), Base.tail(idx))
+end
+
+function Base.getindex(d::SparseAxisArray{T,N,K}, idx...) where {T,N,K}
     if length(idx) < N
         throw(BoundsError(d, idx))
     end
-    _colon_error(idx...)
+    if _has_colon(idx...)
+        new_data = Dict(k => v for (k, v) in d.data if _filter(k, idx))
+        return SparseAxisArray{T,N,K}(new_data)
+    end
     return getindex(d.data, idx)
 end
 

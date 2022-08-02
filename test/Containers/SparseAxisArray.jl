@@ -4,14 +4,6 @@ using Test
 @testset "SparseAxisArray" begin
     function sparse_test(d, sum_d, d2, d3, dsqr, d_bads)
         sqr(x) = x^2
-        @testset "Colon indexing" begin
-            err = ArgumentError(
-                "Indexing with `:` is not supported by" *
-                " Containers.SparseAxisArray",
-            )
-            @test_throws err d[:, ntuple(one, ndims(d) - 1)...]
-            @test_throws err d[ntuple(i -> :a, ndims(d) - 1)..., :]
-        end
         @testset "Map" begin
             @test d == @inferred map(identity, d)
             @test dsqr == @inferred map(sqr, d)
@@ -184,5 +176,15 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
         y = f.(x)
         @test y isa SparseAxisArray{Any,2,Tuple{Any,Int}}
         @test isempty(y)
+    end
+    @testset "Slicing" begin
+        Containers.@container(x[i=1:4, j=1:2; isodd(i + j)], i + j)
+        @test x[:, :] == x
+        Containers.@container(y[i=1:1, j=1:2; isodd(i + j)], i + j)
+        @test x[1, :] == y
+        Containers.@container(z[i=1:4, j=1:1; isodd(i + j)], i + j)
+        @test x[:, 1] == z
+        Containers.@container(a1[i=1:4; isodd(i)], i)
+        @test a1[:] == a1
     end
 end
