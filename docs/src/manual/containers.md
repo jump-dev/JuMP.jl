@@ -208,7 +208,7 @@ JuMP.Containers.SparseAxisArray{Tuple{Int64, Int64}, 2, Tuple{Int64, Int64}} wit
 The `[indices; condition]` syntax is used:
 ```jldoctest containers_sparse
 julia> x = Containers.@container([i = 1:3, j = [:A, :B]; i > 1], (i, j))
-JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 2, Tuple{Int64, Symbol}} with 2 entries:
+JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 2, Tuple{Int64, Symbol}} with 4 entries:
   [2, A]  =  (2, :A)
   [2, B]  =  (2, :B)
   [3, A]  =  (3, :A)
@@ -222,7 +222,7 @@ condition, which evaluates to `true` or `false`: `i > 1`.
 Slicing is supported:
 ```jldoctest containers_sparse
 julia> y = x[:, :B]
-SparseAxisArray{Tuple{Int64, Symbol}, 2, Tuple{Int64, Symbol}} with 2 entries:
+JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 2, Tuple{Int64, Symbol}} with 2 entries:
   [2, B]  =  (2, :B)
   [3, B]  =  (3, :B)
 ```
