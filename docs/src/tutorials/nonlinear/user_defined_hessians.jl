@@ -195,7 +195,7 @@ value.(x)
 _, y = solve_lower_level(value.(x)...)
 y
 
-# ## Memoization
+# ## Improving performance
 
 # Our solution approach works, but it has a performance problem: every time
 # we need to compute the value, gradient, or Hessian of ``V``, we have to
@@ -203,16 +203,13 @@ y
 # will often call the gradient and Hessian at the same point, and so solving the
 # problem twice with the same input repeats work unnecessarily.
 
-# We can work around this by using [memoization](https://en.wikipedia.org/wiki/Memoization).
-# First, we create a struct to cache the results:
+# We can work around this by using a cache:
 
 mutable struct Cache
     x::Any
     f::Float64
     y::Vector{Float64}
 end
-
-cache = Cache(Float64[], NaN, Float64[])
 
 # with a function to update the cache if needed:
 
@@ -227,19 +224,19 @@ end
 # Then, we define cached versions of out three functions which call
 # `_updated_if_needed` and return values from the cache.
 
-function cached_f(x...)
+function cached_f(cache::Cache, x...)
     _update_if_needed(cache, x...)
     return cache.f
 end
 
-function cached_∇f(g::AbstractVector, x...)
+function cached_∇f(cache::Cache, g::AbstractVector, x...)
     _update_if_needed(cache, x...)
     g[1] = 2 * x[1] * cache.y[1] - cache.y[1]^4
     g[2] = 2 * x[2] * cache.y[2] - 2 * cache.y[2]^4
     return
 end
 
-function cached_∇²f(H::AbstractMatrix, x...)
+function cached_∇²f(cache::Cache, H::AbstractMatrix, x...)
     _update_if_needed(cache, x...)
     H[1, 1] = 2 * cache.y[1]
     H[2, 2] = 2 * cache.y[2]
@@ -250,7 +247,15 @@ end
 
 model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2] >= 0)
-register(model, :V, 2, cached_f, cached_∇f, cached_∇²f)
+cache = Cache(Float64[], NaN, Float64[])
+register(
+    model,
+    :V,
+    2,
+    (x...) -> cached_f(cache, x...),
+    (g, x...) -> cached_∇f(cache, g, x...),
+    (H, x...) -> cached_∇²f(cache, H, x...),
+)
 @NLobjective(model, Min, x[1]^2 + x[2]^2 + V(x[1], x[2]))
 optimize!(model)
 solution_summary(model)
