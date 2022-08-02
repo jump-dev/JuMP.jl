@@ -178,13 +178,13 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
         @test isempty(y)
     end
     @testset "Slicing" begin
-        Containers.@container(x[i=1:4, j=1:2; isodd(i + j)], i + j)
+        Containers.@container(x[i = 1:4, j = 1:2; isodd(i + j)], i + j)
         @test x[:, :] == x
-        Containers.@container(y[i=1:1, j=1:2; isodd(i + j)], i + j)
+        Containers.@container(y[i = 1:1, j = 1:2; isodd(i + j)], i + j)
         @test x[1, :] == y
-        Containers.@container(z[i=1:4, j=1:1; isodd(i + j)], i + j)
+        Containers.@container(z[i = 1:4, j = 1:1; isodd(i + j)], i + j)
         @test x[:, 1] == z
-        Containers.@container(a1[i=1:4; isodd(i)], i)
+        Containers.@container(a1[i = 1:4; isodd(i)], i)
         @test a1[:] == a1
     end
 end
