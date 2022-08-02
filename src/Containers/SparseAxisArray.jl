@@ -127,10 +127,9 @@ function Base.getindex(d::SparseAxisArray{T,N,K}, idx...) where {T,N,K}
         throw(BoundsError(d, idx))
     end
     if _is_slice(first(keys(d.data)), idx)
-        new_data = Dict(
-            _new_key(k, idx) => v for (k, v) in d.data if _filter(k, idx)
-        )
-        if length(new_data) > 0
+        new_data =
+            Dict(_new_key(k, idx) => v for (k, v) in d.data if _filter(k, idx))
+        if !isempty(new_data)
             return SparseAxisArray(new_data)
         end
     end
