@@ -85,20 +85,6 @@ function Base.haskey(sa::SparseAxisArray{T,1,Tuple{I}}, idx::I) where {T,I}
     return haskey(sa.data, (idx,))
 end
 
-# Error for sa[..., :, ...]
-_colon_error() = nothing
-
-_colon_error(::Any, args...) = _colon_error(args...)
-
-function _colon_error(::Colon, args...)
-    return throw(
-        ArgumentError(
-            "Indexing with `:` is not supported by" *
-            " Containers.SparseAxisArray",
-        ),
-    )
-end
-
 function Base.setindex!(
     d::SparseAxisArray{T,N,K},
     value,
@@ -107,11 +93,16 @@ function Base.setindex!(
     return setindex!(d, value, idx...)
 end
 
-function Base.setindex!(d::SparseAxisArray{T,N}, value, idx...) where {T,N}
+function Base.setindex!(d::SparseAxisArray{T,N,K}, value, idx...) where {T,N,K}
     if length(idx) < N
         throw(BoundsError(d, idx))
+    elseif _sliced_key_type(K, idx...) !== nothing
+        throw(
+            ArgumentError(
+                "Slicing is not when calling setindex! on a SparseAxisArray",
+            ),
+        )
     end
-    _colon_error(idx...)
     return setindex!(d.data, value, idx)
 end
 

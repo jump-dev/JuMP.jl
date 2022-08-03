@@ -201,4 +201,13 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
         @test z[1:2, [:A, :B]] ==
               Containers.@container([i = 2:2, j = [:A, :B]; true], (i, j))
     end
+    @testset "Slicing on set" begin
+        Containers.@container(x[i = 1:4, j = 1:2; isodd(i + j)], i + j)
+        err = ArgumentError(
+            "Slicing is not when calling setindex! on a SparseAxisArray",
+        )
+        @test_throws(err, x[:, :] = 1)
+        @test_throws(err, x[1, :] = 1)
+        @test_throws(err, x[1, 1:2] = 1)
+    end
 end
