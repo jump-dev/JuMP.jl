@@ -126,23 +126,26 @@ function Base.getindex(d::SparseAxisArray{T,N,K}, idx...) where {T,N,K}
     if length(idx) < N
         throw(BoundsError(d, idx))
     end
-    if _is_slice(first(keys(d.data)), idx)
-        new_data =
-            Dict(_new_key(k, idx) => v for (k, v) in d.data if _filter(k, idx))
-        if !isempty(new_data)
-            return SparseAxisArray(new_data)
-        end
+    K2 = _sliced_key_type(K, idx...)
+    if K2 !== nothing
+        new_data = Dict{K2,T}(
+            _sliced_key(k, idx) => v for (k, v) in d.data if _filter(k, idx)
+        )
+        return SparseAxisArray(new_data)
     end
     return getindex(d.data, idx)
 end
 
-# Methods to check whether an index is an attempt at a slice.
-_is_slice(::Any, ::Any) = false
-_is_slice(::Any, ::Colon) = true
-_is_slice(::K, ::AbstractVector{<:K}) where {K} = true
-_is_slice(::Tuple{}, ::Tuple{}) = false
-function _is_slice(k::Tuple, i::Tuple)
-    return _is_slice(k[1], i[1]) || _is_slice(Base.tail(k), Base.tail(i))
+# Method to check whether an index is an attempt at a slice.
+@generated function _sliced_key_type(::Type{K}, idx...) where {K<:Tuple}
+    expr = Expr(:curly, :Tuple)
+    for i in 1:length(idx)
+        Ki = K.parameters[i]
+        if idx[i] <: Colon || idx[i] <: AbstractVector{<:Ki}
+            push!(expr.args, Ki)
+        end
+    end
+    return length(expr.args) == 1 ? :(nothing) : expr
 end
 
 # Methods to check whether a key `k` is a valid subset of `idx`.
@@ -155,13 +158,13 @@ function _filter(k::Tuple, idx::Tuple)
 end
 
 # Methods to subset the key into a new key, dropping all singleton axes.
-_new_key(k, ::Any) = (k,)
-_new_key(::K, ::K) where {K} = ()
-_new_key(::Tuple{}, ::Tuple{}) = ()
-function _new_key(k::Tuple, idx::Tuple)
+_sliced_key(k, ::Any) = (k,)
+_sliced_key(::K, ::K) where {K} = ()
+_sliced_key(::Tuple{}, ::Tuple{}) = ()
+function _sliced_key(k::Tuple, idx::Tuple)
     return tuple(
-        _new_key(k[1], idx[1])...,
-        _new_key(Base.tail(k), Base.tail(idx))...,
+        _sliced_key(k[1], idx[1])...,
+        _sliced_key(Base.tail(k), Base.tail(idx))...,
     )
 end
 

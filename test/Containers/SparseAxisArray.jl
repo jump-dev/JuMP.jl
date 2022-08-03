@@ -182,8 +182,15 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
         @test x[:, :] == x
         @test x[1, :] == Containers.@container(y[j = 1:2; isodd(1 + j)], 1 + j)
         @test x[:, 1] == Containers.@container(z[i = 1:4; isodd(i + 1)], i + 1)
+        @test isempty(x[[1, 3], [1, 3]])
+        @test typeof(x[[1, 3], [1, 3]]) == typeof(x)
+        @test typeof(x[[1, 3], 1]) ==
+              Containers.SparseAxisArray{Int,1,Tuple{Int}}
+        @test isempty(x[[1, 3], 1])
         Containers.@container(y[i = 1:4; isodd(i)], i)
         @test y[:] == y
+        Containers.@container(y[i = 1:4; isodd(i)], i)
+        @test y[[1, 3]] == y
         z = Containers.@container([i = 1:3, j = [:A, :B]; i > 1], (i, j))
         @test z[2, :] == Containers.@container([j = [:A, :B]; true], (2, j))
         @test z[:, :A] == Containers.@container([i = 2:3; true], (i, :A))
