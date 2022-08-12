@@ -112,6 +112,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [Couenne](http://github.com/coin-or/Couenne)                                   | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | EPL      | (MI)NLP                   |
 | [CPLEX](https://www.ibm.com/analytics/cplex-optimizer/)                        | [CPLEX.jl](https://github.com/jump-dev/CPLEX.jl)                                 | Manual | Comm.    | (MI)LP, (MI)SOCP          |
 | [CSDP](https://github.com/coin-or/Csdp)                                        | [CSDP.jl](https://github.com/jump-dev/CSDP.jl)                                   |        | EPL      | LP, SDP                   |
+| [DAQP](https://github.com/darnstrom/daqp)                                      | [DAQP.jl](https://github.com/darnstrom/DAQP.jl)                                  |        | MIT      | (Mixed-binary) QP         |
 | [EAGO.jl](https://github.com/psorlab/EAGO.jl)                                  |                                                                                  |        | MIT | NLP                    |
 | [ECOS](https://github.com/ifa-ethz/ecos)                                       | [ECOS.jl](https://github.com/jump-dev/ECOS.jl)                                   |        | GPL      | LP, SOCP                  |
 | [FICO Xpress](https://www.fico.com/en/products/fico-xpress-optimization-suite) | [Xpress.jl](https://github.com/jump-dev/Xpress.jl)                               | Manual | Comm.    | (MI)LP, (MI)SOCP          |
