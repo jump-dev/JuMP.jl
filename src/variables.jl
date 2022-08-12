@@ -1227,6 +1227,21 @@ function add_variable(
     return reshape_vector(var_refs, variable.shape)
 end
 
+function add_variable(
+    model::Model,
+    variable::VariablesConstrainedOnCreation,
+    name::String,
+)
+    var_indices = _moi_add_constrained_variables(
+        backend(model),
+        variable.scalar_variables,
+        variable.set,
+        fill(name, length(variable.scalar_variables)),
+    )
+    var_refs = [VariableRef(model, var_index) for var_index in var_indices]
+    return reshape_vector(var_refs, variable.shape)
+end
+
 function _moi_add_constrained_variables(
     moi_backend::MOI.ModelLike,
     scalar_variables::Vector{<:ScalarVariable},
