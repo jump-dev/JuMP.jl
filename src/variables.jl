@@ -1212,6 +1212,15 @@ function VariablesConstrainedOnCreation(
     return VariablesConstrainedOnCreation(variables, set, VectorShape())
 end
 
+_vectorize_names(names, shape) = vectorize(names, shape)
+
+# In some cases `names` may be a "" passed in from the macros. For now, this is
+# the only case we support, so throw an assertion error if not empty.
+function _vectorize_names(name::String, ::Any)
+    @assert isempty(name)
+    return nothing
+end
+
 function add_variable(
     model::Model,
     variable::VariablesConstrainedOnCreation,
@@ -1221,7 +1230,7 @@ function add_variable(
         backend(model),
         variable.scalar_variables,
         variable.set,
-        vectorize(names, variable.shape),
+        _vectorize_names(names, variable.shape),
     )
     var_refs = [VariableRef(model, var_index) for var_index in var_indices]
     return reshape_vector(var_refs, variable.shape)
@@ -1231,7 +1240,7 @@ function _moi_add_constrained_variables(
     moi_backend::MOI.ModelLike,
     scalar_variables::Vector{<:ScalarVariable},
     set::MOI.AbstractVectorSet,
-    names::Vector{String},
+    names::Union{Vector{String},Nothing},
 )
     if set isa MOI.Reals
         var_indices = MOI.add_variables(moi_backend, MOI.dimension(set))
@@ -1241,9 +1250,11 @@ function _moi_add_constrained_variables(
     for (index, variable) in zip(var_indices, scalar_variables)
         _moi_constrain_variable(moi_backend, index, variable.info)
     end
-    for (var_index, name) in zip(var_indices, names)
-        if !isempty(name)
-            MOI.set(moi_backend, MOI.VariableName(), var_index, name)
+    if names !== nothing
+        for (var_index, name) in zip(var_indices, names)
+            if !isempty(name)
+                MOI.set(moi_backend, MOI.VariableName(), var_index, name)
+            end
         end
     end
     return var_indices
