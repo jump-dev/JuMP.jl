@@ -103,7 +103,7 @@ function test_unsupported_objective()
         "Unable to write problem to file because the chosen file format " *
         "doesn't support objective functions of the type $F",
     )
-    @test_throws(err, write(io, model; format = MOI.FileFormats.FORMAT_LP))
+    @test_throws(err, write(io, model; format = MOI.FileFormats.FORMAT_CBF))
     return
 end
 
