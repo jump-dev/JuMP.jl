@@ -493,57 +493,36 @@ cause of this infeasibility by offering a conflict, that is, a subset of the
 constraints that create this infeasibility. Depending on the solver,
 this can also be called an IIS (irreducible inconsistent subsystem).
 
-The function [`compute_conflict!`](@ref) is used to trigger the computation of
-a conflict. Once this process is finished, the attribute
-[`MOI.ConflictStatus`](@ref) returns a [`MOI.ConflictStatusCode`](@ref).
+If supported by the solver, use [`compute_conflict!`](@ref) to trigger the
+computation of a conflict. Once this process is finished, query the
+[`MOI.ConflictStatus`](@ref) attribute to check if a conflict was found.
 
-If there is a conflict, you can query from each constraint whether it
-participates in the conflict or not using the attribute
-[`MOI.ConstraintConflictStatus`](@ref), which returns a
-[`MOI.ConflictParticipationStatusCode`](@ref).
-
-To create a new model containing only the constraints that participate in the
-conflict, use [`copy_conflict`](@ref). It may be helpful to write this model
-to a file for easier debugging using [`write_to_file`](@ref).
-
-For instance, this is how you can use this functionality:
-
+If found, copy the IIS to a new model using [`copy_conflict`](@ref), which you
+can then print or write to a file for easier debugging:
 ```julia
-using JuMP
-model = Model() # You must use a solver that supports conflict refining/IIS
-# computation, like CPLEX or Gurobi
-# for example, using Gurobi; model = Model(Gurobi.Optimizer)
+using JuMP, Gurobi
+model = Model(Gurobi.Optimizer)
 @variable(model, x >= 0)
 @constraint(model, c1, x >= 2)
 @constraint(model, c2, x <= 1)
 optimize!(model)
 
-# termination_status(model) will likely be INFEASIBLE,
-# depending on the solver
-
 compute_conflict!(model)
-if MOI.get(model, MOI.ConflictStatus()) != MOI.CONFLICT_FOUND
-    error("No conflict could be found for an infeasible model.")
+if MOI.get(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
+    iis_model, _ = copy_conflict(model)
+    print(iis_model)
 end
-
-# Both constraints participate in the conflict.
-MOI.get(model, MOI.ConstraintConflictStatus(), c1)
-MOI.get(model, MOI.ConstraintConflictStatus(), c2)
-
-# Get a copy of the model with only the constraints in the conflict.
-new_model, reference_map = copy_conflict(model)
 ```
 
-Conflicting constraints can be collected in a list and printed
-as follows:
-
+If you need more control over the list of constraints that appear in the
+conflict, iterate over the list of constraints and query the
+[`MOI.ConstraintConflictStatus`](@ref) attribute:
 ```julia
-conflict_constraint_list = ConstraintRef[]
+list_of_conflicting_constraints = ConstraintRef[]
 for (F, S) in list_of_constraint_types(model)
     for con in all_constraints(model, F, S)
         if MOI.get(model, MOI.ConstraintConflictStatus(), con) == MOI.IN_CONFLICT
-            push!(conflict_constraint_list, con)
-            println(con)
+            push!(list_of_conflicting_constraints, con)
         end
     end
 end
