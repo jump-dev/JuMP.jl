@@ -12,15 +12,6 @@ function _throw_write_to_file_explanatory_message(
     )
 end
 
-function _throw_write_to_file_explanatory_message(
-    ::MOI.UnsupportedAttribute{MOI.ObjectiveFunction{F}},
-) where {F}
-    return error(
-        "Unable to write problem to file because the chosen file format " *
-        "doesn't support objective functions of the type $F",
-    )
-end
-
 _throw_write_to_file_explanatory_message(err) = rethrow(err)
 
 function _copy_to_bridged_model(f::Function, model::Model)

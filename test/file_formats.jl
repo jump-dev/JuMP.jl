@@ -93,20 +93,6 @@ function test_unsupported_constraint()
     return
 end
 
-function test_unsupported_objective()
-    model = Model()
-    @variable(model, x)
-    @objective(model, Min, x^2)
-    io = IOBuffer()
-    F = MOI.ScalarQuadraticFunction{Float64}
-    err = ErrorException(
-        "Unable to write problem to file because the chosen file format " *
-        "doesn't support objective functions of the type $F",
-    )
-    @test_throws(err, write(io, model; format = MOI.FileFormats.FORMAT_LP))
-    return
-end
-
 struct _FileFormatsUnsupportedAttribute <: MOI.AbstractVariableAttribute end
 
 function test_unsupported_attribute()
