@@ -1,5 +1,40 @@
 # Release notes
 
+## Version 1.2.0 (August 3, 2022)
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.2.0).
+
+This is a large minor release beause it significantly refactors the internal
+code for handling nonlinear programs to use the `MathOptInterface.Nonlinear`
+submodule that was introduced in MathOptInterface v1.3.0. As a consequence, the
+internal datastructure in `model.nlp_data` has been removed, as has the
+`JuMP._Derivatives` submodule. Despite the changes, the public API for nonlinear
+programming has not changed, and any code that uses only the public API and that
+worked with v1.1.1 will continue to work with v1.2.0.
+
+A summary of changes are as follows:
+
+- New features:
+  - Added `all_constraints(model; include_variable_in_set_constraints)` which
+    simplifies returning a list of all constraint indices in the model.
+  - Added the ability to delete nonlinear constraints via
+    `delete(::Model, ::NonlinearConstraintRef)`.
+  - Added the ability to provide an explicit Hessian for a multivariate
+    user-defined function.
+  - Added support for querying the primal value of a nonlinear constraint via
+    `value(::NonlinearConstraintRef)`
+- Bug fixes:
+  - Fixed a bug in `Containers.DenseAxisArray` so that it now supports indexing
+    with keys that hash to the same value, even if they are different types, for
+    example, `Int32` and `Int64`.
+  - Fixed a bug printing the model when the solver does not support `MOI.Name`.
+- Documentation and maintenance:
+  - Added a constraint programming formulation to the Sudoku tutorial.
+  - Added newly supported solvers Pajarito, Clarabel, and COPT to the
+    installation table.
+  - Fixed a variety of other miscellaneous issues in the documentation.
+
 ## Version 1.1.1 (June 14, 2022)
 
 For a detailed list of the closed issues and pull requests from this release,
