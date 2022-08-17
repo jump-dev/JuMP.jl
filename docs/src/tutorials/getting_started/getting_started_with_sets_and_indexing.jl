@@ -116,6 +116,36 @@ x["A", "D"]
 # !!! info
 #     Note how we indexed `x["A", "D"]` instead of `x[("A", "D")]` as above.
 
+# ## Sets to watch out for
+
+# JuMP supports any sets which are iterable, that is, the set `set` supports
+# a for-loop like: `[i for i in set]`. This causes a few common errors.
+
+# First, if `T = 3`, you may pass the integer `T` instead of the range `1:T`:
+model = Model()
+T = 3
+@variable(model, x[T])
+
+# Because this is a common error, a warning is printed, advising you to pass a
+# `Vector{Int}` instead:
+
+@variable(model, x_fixed[[T]])
+
+# Second, because `String`s are iterable, passing a `"abc"` as a singleton index
+# is the same as passing `['a', 'b', 'c']`:
+
+@variable(model, y["abc"])
+
+# This time, a warning is not printed (because there are occasions when this
+# behavior is desired), but the work-around is similar, pass a `Vector{String}`
+# instead:
+
+@variable(model, y_fixed[["abc"]])
+
+# !!! tip
+#     As a rule of thumb, if you want an index with one element, avoid confusion
+#     by passing `[index]` instead of `index`.
+
 # ## Set operations
 
 # Julia has built-in support for set operations such as `union`, `intersect`,
