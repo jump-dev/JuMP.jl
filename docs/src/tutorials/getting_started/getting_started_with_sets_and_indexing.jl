@@ -118,14 +118,17 @@ x["A", "D"]
 
 # ## Sets to watch out for
 
-# JuMP supports any sets which are iterable, that is, the set `set` supports
-# a for-loop like: `[i for i in set]`. This causes a few common errors.
+# JuMP supports any sets which are [iterable] (https://docs.julialang.org/en/v1/base/collections/),
+# that is, the set `set` supports a for-loop like: `[i for i in set]`. This
+# causes a few common errors.
 
-# First, if `T = 3`, you may pass the integer `T` instead of the range `1:T`:
+# First, if `T = 3`, you may pass the integer `T` by mistake instead of a range
+# like `1:T`:
 model = Model()
 T = 3
 @variable(model, x[T])
 
+# This results in a single variable being created, instead of three as desired.
 # Because this is a common error, a warning is printed, advising you to pass a
 # `Vector{Int}` instead:
 
