@@ -136,9 +136,8 @@ T = 3
 
 @variable(model, y["abc"])
 
-# This time, a warning is not printed (because there are occasions when this
-# behavior is desired), but the work-around is similar, pass a `Vector{String}`
-# instead:
+# This time, a warning is not printed, but the work-around is similar, pass a
+# `Vector{String}` instead:
 
 @variable(model, y_fixed[["abc"]])
 
