@@ -1,6 +1,6 @@
 # Release notes
 
-## Version 1.2.1 (August 23, 2022)
+## Version 1.2.1 (August 22, 2022)
 
 For a detailed list of the closed issues and pull requests from this release,
 see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.2.1).
