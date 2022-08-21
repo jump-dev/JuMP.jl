@@ -1,5 +1,13 @@
 # Release notes
 
+## Version 1.2.1 (August 23, 2022)
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.2.1).
+
+- Bug fixes:
+  - Fixed a bug when parsing two-sided nonlinear constraints
+
 ## Version 1.2.0 (August 16, 2022)
 
 For a detailed list of the closed issues and pull requests from this release,
