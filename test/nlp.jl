@@ -1474,6 +1474,17 @@ function test_user_defined_hessian()
     return
 end
 
+function test_nlp_comparison()
+    model = Model()
+    @variable(model, x)
+    c1 = @NLconstraint(model, 1 - 2 <= sin(x) <= -1 + 2)
+    @test c1 isa NonlinearConstraintRef
+    a, b = 1.0, 2.0
+    c2 = @NLconstraint(model, a / b <= sin(x) <= a * b)
+    @test c2 isa NonlinearConstraintRefs
+    @NLconstraint(model, c3[i=1:2], -i <= sin(x) <= i^2)
+    @test c3 isa Vector{<:NonlinearConstraintRef}
+    return
 end
 
 TestNLP.runtests()

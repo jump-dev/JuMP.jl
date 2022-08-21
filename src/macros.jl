@@ -1838,6 +1838,7 @@ function _parse_nonlinear_expression(model, x)
         _init_NLP($model)
     end
     operators = Set{Tuple{Symbol,Int}}()
+    _assert_constant_comparison(code, x)
     y = _parse_nonlinear_expression_inner(code, x, operators)
     user_defined_operators = filter(operators) do (op, i)
         if op in (:<=, :>=, :(==), :<, :>, :&&, :||)
@@ -1858,6 +1859,22 @@ function _parse_nonlinear_expression(model, x)
     end
     return code, y
 end
+
+# JuMP special-cases the error for constant LHS and RHS terms in a comparison
+# expression. In JuMP v1.1 and earlier, it evaluted the outer terms in the
+# current scope, and checked to see if they were Real. To keep the same behavior
+# we do the same here.
+function _assert_constant_comparison(code::Expr, expr::Expr)
+    if Meta.isexpr(expr, :comparison)
+        lhs, rhs = gensym(), gensym()
+        push!(code.args, esc(:($lhs = $(expr.args[1]))))
+        push!(code.args, esc(:($rhs = $(expr.args[5]))))
+        expr.args[1], expr.args[5] = lhs, rhs
+    end
+    return
+end
+
+_assert_constant_comparison(::Expr, ::Any) = nothing
 
 function _auto_register_expression(op_var, op, i)
     q_op = Meta.quot(op)
