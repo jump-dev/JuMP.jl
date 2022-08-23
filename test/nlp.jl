@@ -1487,6 +1487,21 @@ function test_nlp_comparison()
     return
 end
 
+function test_nonlinearparamter_index()
+    model = Model()
+    @NLparameter(model, p == 1)
+    @test index(p) isa MOI.Nonlinear.ParameterIndex
+    return
+end
+
+function test_nonlinear_model()
+    model = Model()
+    @test nonlinear_model(model) === nothing
+    @test nonlinear_model(model; force = true) isa MOI.Nonlinear.Model
+    @test nonlinear_model(model) isa MOI.Nonlinear.Model
+    return
+end
+
 end
 
 TestNLP.runtests()
