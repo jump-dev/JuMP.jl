@@ -1707,6 +1707,96 @@ function test_nonlinear_unicode_operators()
     return
 end
 
+function test_bad_model_type()
+    model = "Not a model"
+    @test_throws(
+        ErrorException(
+            "Expected model to be a JuMP model, but it has type String",
+        ),
+        @variable(model, x),
+    )
+    return
+end
+
+function test_constraint_not_enough_arguments()
+    model = Model()
+    @test_macro_throws(
+        ErrorException("In `@constraint(model)`: Not enough arguments"),
+        @constraint(model),
+    )
+    return
+end
+
+function test_objective_not_enough_arguments()
+    model = Model()
+    @test_macro_throws(
+        ErrorException(
+            "In `@objective(model, Min)`: needs three arguments: model, " *
+            "objective sense (Max or Min) and expression.",
+        ),
+        @objective(model, Min),
+    )
+    return
+end
+
+function test_expression_not_enough_arguments()
+    model = Model()
+    @test_macro_throws(
+        ErrorException(
+            "In `@expression(model)`: needs at least two arguments.",
+        ),
+        @expression(model),
+    )
+    return
+end
+
+function test_build_constraint_invalid()
+    model = Model()
+    @variable(model, x)
+    @test_macro_throws(
+        ErrorException(
+            "In `@build_constraint(x)`: Incomplete constraint specification " *
+            "x. Are you missing a comparison (<=, >=, or ==)?",
+        ),
+        @build_constraint(x),
+    )
+    return
+end
+
+function test_variable_reverse_sense()
+    model = Model()
+    @variable(model, 1 <= a)
+    @variable(model, 1 ≤ b)
+    @variable(model, 1 >= c)
+    @variable(model, 1 ≥ d)
+    @variable(model, 1 == e)
+    @test lower_bound(a) == lower_bound(b) == 1
+    @test upper_bound(c) == upper_bound(d) == 1
+    @test fix_value(e) == 1
+    return
+end
+
+function test_variable_unknown_sense()
+    model = Model()
+    @test_macro_throws(
+        ErrorException("In `@variable(model, a ⟂ 1)`: Unknown sense ⟂."),
+        @variable(model, a ⟂ 1),
+    )
+    return
+end
+
+function test_variable_anon_bounds()
+    model = Model()
+    @test_macro_throws(
+        ErrorException(
+            "In `@variable(model, [1:2] >= 0)`: Cannot use explicit bounds " *
+            "via >=, <= with an anonymous variable",
+        ),
+        @variable(model, [1:2] >= 0),
+    )
+    return
+end
+
 end  # module
 
 TestMacros.runtests()

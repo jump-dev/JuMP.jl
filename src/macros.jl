@@ -112,10 +112,6 @@ function _error_if_cannot_register(model::AbstractModel, name::Symbol)
     return
 end
 
-function _error_if_cannot_register(model::AbstractModel, name)
-    return error("Invalid name $name.")
-end
-
 """
     _macro_assign_and_return(code, variable, name;
                              model_for_registering=nothing)
