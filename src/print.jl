@@ -105,11 +105,9 @@ function _math_symbol(::MIME"text/latex", name::Symbol)
         return "\\geq"
     elseif name == :eq
         return "="
-    elseif name == :sq
-        return "^2"
     else
-        @assert name == :in
-        return "\\in"
+        @assert name == :sq
+        return "^2"
     end
 end
 
