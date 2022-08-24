@@ -240,17 +240,6 @@ function vectorize(matrix::LowerTriangular, ::SquareMatrixShape)
     return [matrix[i, j] for j in 1:n for i in 1:n]
 end
 
-function _square_side(_error::Function, ::Containers.SparseAxisArray)
-    return _error("Cannot have index dependencies in symmetric variables.")
-end
-function _square_side(_error::Function, ::Containers.DenseAxisArray)
-    return _error(
-        "Index sets for symmetric variables must be ranges of the form 1:N.",
-    )
-end
-function _square_side(_error::Function, ::Array)
-    return _error("Symmetric variables must be 2-dimensional.")
-end
 function _square_side(_error::Function, variables::Matrix)
     n, m = size(variables)
     if n != m
