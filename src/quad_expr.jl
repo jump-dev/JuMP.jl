@@ -84,13 +84,6 @@ function GenericQuadExpr(
     )
 end
 
-function GenericAffExpr{V,K}(
-    aff::GenericAffExpr{V,K},
-    kv::AbstractArray{<:Pair},
-) where {K,V}
-    return GenericQuadExpr{V,K}(aff, _new_ordered_dict(UnorderedPair{K}, V, kv))
-end
-
 function GenericQuadExpr{V,K}(aff::GenericAffExpr{V,K}, kv::Pair...) where {K,V}
     return GenericQuadExpr{V,K}(
         aff,
