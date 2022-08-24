@@ -951,6 +951,20 @@ function test_Name_direct_mode()
     return
 end
 
+function test_print_summary_min_sense()
+    model = Model()
+    @variable(model, x)
+    @objective(model, Min, x)
+    @test occursin("Minimization problem with:", sprint(show, model))
+end
+
+function test_show_latex_parameter()
+    model = Model()
+    @NLparameter(model, p == 1)
+    @test sprint((io, p) -> show(io, MIME("text/latex"), p), p) == "p == 1.0"
+    return
+end
+
 end
 
 TestPrint.runtests()
