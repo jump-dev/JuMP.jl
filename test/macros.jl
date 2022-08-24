@@ -1778,7 +1778,7 @@ end
 
 function test_variable_unknown_sense()
     model = Model()
-        @test_macro_throws(
+    @test_macro_throws(
         ErrorException("In `@variable(model, a ⟂ 1)`: Unknown sense ⟂."),
         @variable(model, a ⟂ 1),
     )
@@ -1787,7 +1787,7 @@ end
 
 function test_variable_anon_bounds()
     model = Model()
-        @test_macro_throws(
+    @test_macro_throws(
         ErrorException(
             "In `@variable(model, [1:2] >= 0)`: Cannot use explicit bounds " *
             "via >=, <= with an anonymous variable",

@@ -394,7 +394,6 @@ end
     @test y == 2 * x[1] + 4 * x[2] + 6 * x[1]^2 + 8 * x[2]^2
 end
 
-
 @testset "GenericQuadExpr_map_coefficients_inplace!" begin
     model = Model()
     @variable(model, x[1:2])
