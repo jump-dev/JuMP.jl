@@ -257,10 +257,20 @@ JuMP can write models to a variety of file-formats using [`write_to_file`](@ref)
 and [`Base.write`](@ref).
 
 For most common file formats, the file type will be detected from the extension.
-For example, here is how to write an MPS file:
+
+For example, here is how to write an [MPS file](https://en.wikipedia.org/wiki/MPS_(format)):
 ```jldoctest file_formats; setup=:(model = Model())
 julia> write_to_file(model, "model.mps")
 ```
+
+Other supported file formats include:
+
+ * `.cbf` for the [Conic Benchmark Format](https://docs.mosek.com/latest/capi/cbf-format.html)
+ * `.lp` for the [LP file format](https://docs.mosek.com/latest/capi/lp-format.html)
+ * `.mof.json` for the [MathOptFormat](https://jump.dev/MathOptFormat/)
+ * `.nl` for [AMPL's NL file format](https://en.wikipedia.org/wiki/Nl_(format))
+ * `.rew` for the [REW file format](https://www.gurobi.com/documentation/9.5/refman/rew_format.html)
+ * `.sdpa` and ".dat-s" for the [SDPA file format](http://plato.asu.edu/ftp/sdpa_format.txt)
 
 To write to a specific `io::IO`, use [`Base.write`](@ref). Specify the file type
 by passing a [`MOI.FileFormats.FileFormat`](@ref) enum.
