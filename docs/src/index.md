@@ -125,3 +125,10 @@ you should consult with your tax adviser about your particular tax situation.
 JuMP's largest expense is the annual JuMP-dev workshop. Donations will help us
 provide travel support for JuMP-dev attendees and take advantage of other
 opportunities that arise to support JuMP development.
+
+## License
+
+JuMP is licensed under the [MPL-2.0 software license](https://mozilla.org/MPL/2.0/).
+Consult the [license](https://github.com/jump-dev/JuMP.jl/blob/master/LICENSE.md)
+and the [Mozilla FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/) for more
+information.
