@@ -131,4 +131,6 @@ opportunities that arise to support JuMP development.
 JuMP is licensed under the [MPL-2.0 software license](https://mozilla.org/MPL/2.0/).
 Consult the [license](https://github.com/jump-dev/JuMP.jl/blob/master/LICENSE.md)
 and the [Mozilla FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/) for more
-information.
+information. In addition, JuMP is typically used in conjunction with solver
+packages and extensions which have their own licences. Consult their package
+repositories for the specific licenses that apply.
