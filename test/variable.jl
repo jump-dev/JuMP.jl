@@ -1051,6 +1051,32 @@ function test_start_value_nothing(ModelType, ::Any)
     return
 end
 
+function test_Model_VariableRef(::Any, ::Any)
+    model = Model()
+    x = VariableRef(model)
+    @test x isa VariableRef
+    @test name(x) == ""
+    @test num_variables(model) == 1
+    return
+end
+
+function test_Model_VariableIndex_VariableRef(::Any, ::Any)
+    model = Model()
+    @variable(model, x)
+    @test MOI.VariableIndex(x) === index(x)
+    return
+end
+
+function test_Model_VariableIndex_VariableRef_fix_with_upper_bound(::Any, ::Any)
+    model = Model()
+    @variable(model, x <= 2)
+    fix(x, 1.0; force = true)
+    @test is_fixed(x)
+    @test fix_value(x) == 1.0
+    @test !has_upper_bound(x)
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
