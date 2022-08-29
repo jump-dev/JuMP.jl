@@ -99,7 +99,8 @@ function Base.setindex!(d::SparseAxisArray{T,N,K}, value, idx...) where {T,N,K}
     elseif _sliced_key_type(K, idx...) !== nothing
         throw(
             ArgumentError(
-                "Slicing is not when calling setindex! on a SparseAxisArray",
+                "Slicing is not supported when calling `setindex!` on a" *
+                " SparseAxisArray",
             ),
         )
     end
