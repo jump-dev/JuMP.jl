@@ -85,20 +85,6 @@ function Base.haskey(sa::SparseAxisArray{T,1,Tuple{I}}, idx::I) where {T,I}
     return haskey(sa.data, (idx,))
 end
 
-# Error for sa[..., :, ...]
-_colon_error() = nothing
-
-_colon_error(::Any, args...) = _colon_error(args...)
-
-function _colon_error(::Colon, args...)
-    return throw(
-        ArgumentError(
-            "Indexing with `:` is not supported by" *
-            " Containers.SparseAxisArray",
-        ),
-    )
-end
-
 function Base.setindex!(
     d::SparseAxisArray{T,N,K},
     value,
@@ -107,11 +93,16 @@ function Base.setindex!(
     return setindex!(d, value, idx...)
 end
 
-function Base.setindex!(d::SparseAxisArray{T,N}, value, idx...) where {T,N}
+function Base.setindex!(d::SparseAxisArray{T,N,K}, value, idx...) where {T,N,K}
     if length(idx) < N
         throw(BoundsError(d, idx))
+    elseif _sliced_key_type(K, idx...) !== nothing
+        throw(
+            ArgumentError(
+                "Slicing is not when calling setindex! on a SparseAxisArray",
+            ),
+        )
     end
-    _colon_error(idx...)
     return setindex!(d.data, value, idx)
 end
 
@@ -122,12 +113,50 @@ function Base.getindex(
     return getindex(d, idx...)
 end
 
-function Base.getindex(d::SparseAxisArray{T,N}, idx...) where {T,N}
+function Base.getindex(d::SparseAxisArray{T,N,K}, idx...) where {T,N,K}
     if length(idx) < N
         throw(BoundsError(d, idx))
     end
-    _colon_error(idx...)
+    K2 = _sliced_key_type(K, idx...)
+    if K2 !== nothing
+        new_data = Dict{K2,T}(
+            _sliced_key(k, idx) => v for (k, v) in d.data if _filter(k, idx)
+        )
+        return SparseAxisArray(new_data)
+    end
     return getindex(d.data, idx)
+end
+
+# Method to check whether an index is an attempt at a slice.
+@generated function _sliced_key_type(::Type{K}, idx...) where {K<:Tuple}
+    expr = Expr(:curly, :Tuple)
+    for i in 1:length(idx)
+        Ki = K.parameters[i]
+        if idx[i] <: Colon || idx[i] <: AbstractVector{<:Ki}
+            push!(expr.args, Ki)
+        end
+    end
+    return length(expr.args) == 1 ? :(nothing) : expr
+end
+
+# Methods to check whether a key `k` is a valid subset of `idx`.
+_filter(::Any, ::Colon) = true
+_filter(ki::Any, i::Any) = ki == i
+_filter(ki::K, i::AbstractVector{<:K}) where {K} = ki in i
+_filter(::Tuple{}, ::Tuple{}) = true
+function _filter(k::Tuple, idx::Tuple)
+    return _filter(k[1], idx[1]) && _filter(Base.tail(k), Base.tail(idx))
+end
+
+# Methods to subset the key into a new key, dropping all singleton axes.
+_sliced_key(k, ::Any) = (k,)
+_sliced_key(::K, ::K) where {K} = ()
+_sliced_key(::Tuple{}, ::Tuple{}) = ()
+function _sliced_key(k::Tuple, idx::Tuple)
+    return tuple(
+        _sliced_key(k[1], idx[1])...,
+        _sliced_key(Base.tail(k), Base.tail(idx))...,
+    )
 end
 
 Base.eachindex(d::SparseAxisArray) = keys(d.data)

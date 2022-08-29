@@ -207,33 +207,32 @@ JuMP.Containers.SparseAxisArray{Tuple{Int64, Int64}, 2, Tuple{Int64, Int64}} wit
 
 The `[indices; condition]` syntax is used:
 ```jldoctest containers_sparse
-julia> x = Containers.@container([i = 1:3, j = [:A, :B]; i > 1 && j == :B], (i, j))
-JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 2, Tuple{Int64, Symbol}} with 2 entries:
+julia> x = Containers.@container([i = 1:3, j = [:A, :B]; i > 1], (i, j))
+JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 2, Tuple{Int64, Symbol}} with 4 entries:
+  [2, A]  =  (2, :A)
   [2, B]  =  (2, :B)
+  [3, A]  =  (3, :A)
   [3, B]  =  (3, :B)
 ```
 Here we have the index sets `i = 1:3, j = [:A, :B]`, followed by `;`, and then a
-condition, which evaluates to `true` or `false`: `i > 1 && j == :B`.
+condition, which evaluates to `true` or `false`: `i > 1`.
 
 ### Slicing
 
-```@meta
-# TODO: This is included so we know to update the documentation when this is fixed.
-```
-
-Slicing is not supported.
+Slicing is supported:
 ```jldoctest containers_sparse
-julia> x[:, :B]
-ERROR: ArgumentError: Indexing with `:` is not supported by Containers.SparseAxisArray
-[...]
+julia> y = x[:, :B]
+JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 1, Tuple{Int64}} with 2 entries:
+  [2]  =  (2, :B)
+  [3]  =  (3, :B)
 ```
 
 ### Looping
 
 Use `eachindex` to loop over the elements:
 ```jldoctest containers_sparse
-julia> for key in eachindex(x)
-           println(x[key])
+julia> for key in eachindex(y)
+           println(y[key])
        end
 (2, :B)
 (3, :B)
@@ -247,10 +246,10 @@ Broadcasting over a SparseAxisArray returns a SparseAxisArray
 julia> swap(x::Tuple) = (last(x), first(x))
 swap (generic function with 1 method)
 
-julia> swap.(x)
-JuMP.Containers.SparseAxisArray{Tuple{Symbol, Int64}, 2, Tuple{Int64, Symbol}} with 2 entries:
-  [2, B]  =  (:B, 2)
-  [3, B]  =  (:B, 3)
+julia> swap.(y)
+JuMP.Containers.SparseAxisArray{Tuple{Symbol, Int64}, 1, Tuple{Int64}} with 2 entries:
+  [2]  =  (:B, 2)
+  [3]  =  (:B, 3)
 ```
 
 ## Forcing the container type

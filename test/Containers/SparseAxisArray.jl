@@ -14,14 +14,6 @@ using Test
 @testset "SparseAxisArray" begin
     function sparse_test(d, sum_d, d2, d3, dsqr, d_bads)
         sqr(x) = x^2
-        @testset "Colon indexing" begin
-            err = ArgumentError(
-                "Indexing with `:` is not supported by" *
-                " Containers.SparseAxisArray",
-            )
-            @test_throws err d[:, ntuple(one, ndims(d) - 1)...]
-            @test_throws err d[ntuple(i -> :a, ndims(d) - 1)..., :]
-        end
         @testset "Map" begin
             @test d == @inferred map(identity, d)
             @test dsqr == @inferred map(sqr, d)
@@ -194,5 +186,38 @@ $(SparseAxisArray{Float64,2,Tuple{Symbol,Char}}) with 2 entries"""
         y = f.(x)
         @test y isa SparseAxisArray{Any,2,Tuple{Any,Int}}
         @test isempty(y)
+    end
+    @testset "Slicing" begin
+        Containers.@container(x[i = 1:4, j = 1:2; isodd(i + j)], i + j)
+        @test x[:, :] == x
+        @test x[1, :] == Containers.@container(y[j = 1:2; isodd(1 + j)], 1 + j)
+        @test x[:, 1] == Containers.@container(z[i = 1:4; isodd(i + 1)], i + 1)
+        @test isempty(x[[1, 3], [1, 3]])
+        @test typeof(x[[1, 3], [1, 3]]) == typeof(x)
+        @test typeof(x[[1, 3], 1]) ==
+              Containers.SparseAxisArray{Int,1,Tuple{Int}}
+        @test isempty(x[[1, 3], 1])
+        Containers.@container(y[i = 1:4; isodd(i)], i)
+        @test y[:] == y
+        Containers.@container(y[i = 1:4; isodd(i)], i)
+        @test y[[1, 3]] == y
+        z = Containers.@container([i = 1:3, j = [:A, :B]; i > 1], (i, j))
+        @test z[2, :] == Containers.@container([j = [:A, :B]; true], (2, j))
+        @test z[:, :A] == Containers.@container([i = 2:3; true], (i, :A))
+        @test z[:, :] == z
+        @test z[1:2, :A] == Containers.@container([i = 2:2; true], (i, :A))
+        @test z[2, [:A, :B]] ==
+              Containers.@container([j = [:A, :B]; true], (2, j))
+        @test z[1:2, [:A, :B]] ==
+              Containers.@container([i = 2:2, j = [:A, :B]; true], (i, j))
+    end
+    @testset "Slicing on set" begin
+        Containers.@container(x[i = 1:4, j = 1:2; isodd(i + j)], i + j)
+        err = ArgumentError(
+            "Slicing is not when calling setindex! on a SparseAxisArray",
+        )
+        @test_throws(err, x[:, :] = 1)
+        @test_throws(err, x[1, :] = 1)
+        @test_throws(err, x[1, 1:2] = 1)
     end
 end
