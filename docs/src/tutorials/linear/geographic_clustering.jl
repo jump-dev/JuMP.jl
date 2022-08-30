@@ -33,7 +33,7 @@ import HiGHS
 import LinearAlgebra
 
 # For this example, we'll use the 20 most populous cities in the United States.
-cities = DataFrames.DataFrame(;
+cities = DataFrames.DataFrame(
     Union{String,Float64}[
         "New York, NY" 8.405 40.7127 -74.0059
         "Los Angeles, CA" 3.884 34.0522 -118.2436
