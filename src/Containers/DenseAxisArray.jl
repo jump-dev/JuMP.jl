@@ -484,7 +484,6 @@ if isdefined(Base, :print_array) # 0.7 and later
     end
 end
 
-# n-dimensional arrays
 function Base.show_nd(
     io::IO,
     a::DenseAxisArray,
@@ -514,7 +513,6 @@ function Base.show_nd(
                                 @goto skip
                             end
                         end
-                        #println(io, idxs)
                         print(io, "...\n\n")
                         @goto skip
                     end
@@ -534,7 +532,7 @@ function Base.show_nd(
             println(io, "] =")
         end
         slice = view(a.data, axes(a.data, 1), axes(a.data, 2), idxs...)
-        Base.print_matrix(io, slice)
+        print_matrix(io, slice)
         print(io, idxs == map(last, tailinds) ? "" : "\n\n")
         @label skip
     end

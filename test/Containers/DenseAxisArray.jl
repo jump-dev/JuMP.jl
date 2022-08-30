@@ -392,4 +392,54 @@ And data, a 0-dimensional $(Array{Int,0}):
         x = DenseAxisArray(1:6, S)
         @test size(x) == (6,)
     end
+
+    @testset "DenseAxisArray_show_nd" begin
+        S = zeros(Int, 2, 2, 3, 3, 3)
+        for i in 1:length(S)
+            S[i] = i
+        end
+        x = DenseAxisArray(S, 1:2, 1:2, 1:3, 1:3, 1:3)
+        str = sprint((io, x) -> Base.show_nd(io, x, Base.print_matrix, true), x)
+        @test occursin("[:, :, 1, 2, 3] =\n 85  87\n 86  88\n", str)
+        str_limit = sprint(x) do io, x
+            return Base.show_nd(
+                IOContext(io, :limit => true),
+                x,
+                Base.print_matrix,
+                true,
+            )
+        end
+        @test occursin("[:, :, 1, 2, 3] =\n 85  87\n 86  88\n", str_limit)
+    end
+
+    @testset "DenseAxisArray_show_nd_limit" begin
+        S = zeros(Int, 2, 2, 3, 3, 20)
+        for i in 1:length(S)
+            S[i] = i
+        end
+        x = DenseAxisArray(S, 1:2, 1:2, 1:3, 1:3, 1:20)
+        str = sprint((io, x) -> Base.show_nd(io, x, Base.print_matrix, true), x)
+        @test occursin("[:, :, 1, 1, 3]", str)
+        @test occursin("[:, :, 1, 1, 4]", str)
+        @test occursin("[:, :, 1, 1, 17]", str)
+        @test occursin("[:, :, 1, 1, 18]", str)
+        str_limit = sprint(x) do io, x
+            return Base.show_nd(
+                IOContext(io, :limit => true),
+                x,
+                Base.print_matrix,
+                true,
+            )
+        end
+        @test occursin("[:, :, 1, 1, 3]", str_limit)
+        @test !occursin("[:, :, 1, 1, 4]", str_limit)
+        @test !occursin("[:, :, 1, 1, 17]", str_limit)
+        @test occursin("[:, :, 1, 1, 18]", str_limit)
+    end
+
+    @testset "DenseAxisArray_show_nd_empty" begin
+        x = DenseAxisArray(Int[], 1:0)
+        str = sprint((io, x) -> Base.show_nd(io, x, Base.print_matrix, true), x)
+        @test isempty(str)
+    end
 end
