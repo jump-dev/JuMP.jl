@@ -324,9 +324,10 @@ _validate_pages()
 
 function _remove_literate_footer(dir)
     for filename in _file_list(dir, dir, ".md")
+        file = read(filename, String)
         index = findfirst(
             "---\n\n!!! tip\n    This tutorial was generated using [Literate",
-            read(filename, String),
+            file,
         )
         if index !== nothing
             write(filename, file[1:(first(index)-1)])
