@@ -40,18 +40,75 @@
 using JuMP
 import HiGHS
 
-# ## General rules for debugging
+# ## Debugging Julia code
 
-#
-
-# Before all else, read the [Debugging chapter](https://benlauwens.github.io/ThinkJulia.jl/latest/book.html#chap21)
+# Read the [Debugging chapter](https://benlauwens.github.io/ThinkJulia.jl/latest/book.html#chap21)
 # in the book [ThinkJulia.jl](https://benlauwens.github.io/ThinkJulia.jl/latest/book.html).
-
-#
-
-# * Simplify the problem
+# It has a number of great tips and tricks for debugging Julia code.
 
 # ## Debugging an infeasible model
+
+# A model is infeasible if there is no primal solution that satisfies all of
+# the constraints. In general, an infeasible model means one of two things:
+#
+#  * Your problem really has no feasible solution
+#  * There is a mistake in your model.
+
+# A simple example of an infeasible model is:
+
+model = Model(HiGHS.Optimizer)
+set_silent(model)
+@variable(model, x >= 0)
+@objective(model, Max, 2x + 1)
+@constraint(model, 2x - 1 <= -2)
+
+# because the bound says that `x >= 0`, but we can rewrite the constraint to be
+# `x <= -1/2`. When the problem is infeasible, JuMP may return one of a number
+# of statuses. The most common is `INFEASIBLE`:
+
+optimize!(model)
+termination_status(model)
+
+# Depending on the solver, you may also receive `INFEASIBLE_OR_UNBOUNDED` or
+# `LOCALLY_INFEASIBLE`.
+
+# A termination status of `INFEASIBLE_OR_UNBOUNDED` means that the solver could
+# not prove if the solver was infeasible or unbounded, only that the model does
+# not have a finite feasible optimal solution.
+
+# Nonlinear optimizers such as Ipopt may return the status `LOCALLY_INFEASIBLE`.
+# This does not mean that the solver _proved_ no feasible solution exists, only
+# that it could not find one. If you know a primal feasible point, try providing
+# it as a starting point using [`set_start_value`](@ref) and re-optimize.
+
+# Common sources of infeasibility are:
+#
+#  * Invalid mathematical formulations
+#  * Incorrect units, for example, using a lower bound of megawatts and an upper
+#    bound of kilowatts
+#  * Using `+` instead of `-` in a constraint
+#  * Off-by-one and related errors, for example, using `x[t]` instead of
+#    `x[t-1]` in part of a constraint.
+
+# The simplest way to debug sources of innfeasibility is to iteratively comment
+# out a constraint (or block of constraints) and resolve the problem. When you
+# find a constraint that makes the problem infeasible when added, check the
+# constraint carefully for errors.
+
+# If the problem is still infeasible with all constraints commented out, check
+# all variable bounds. Do they use the right data?
+
+# !!! tip
+#     Some solvers also have specialized support for debugging sources of
+#     infeasibility via an [irreducible infeasible subsystem](@ref Conflicts).
+#     To see if your solver has support, try calling [`compute_conflict!`](@ref):
+#     ```julia
+#     julia> compute_conflict!(model)
+#     ERROR: ArgumentError: The optimizer HiGHS.Optimizer does not support `compute_conflict!`
+#     ```
+#     In this case, HiGHS does not support computign conflicts, but other
+#     solvers such as Gurobi and CPLEX do. If the solver does support computing
+#     conflicts, read [Conflicts](@ref) for more details.
 
 # ## Debugging an unbounded model
 
@@ -70,11 +127,14 @@ set_silent(model)
 # because we can increase `x` without limit, and the objective value `2x + 1`
 # gets better as `x` increases.
 
-# JuMP doesn't have an `UNBOUNDED` termination status. Instead, unbounded models
-# will return `DUAL_INFEASIBLE`:
+# When the problem is unbounded, JuMP may return one of a number of statuses.
+# The most common is `DUAL_INFEASIBLE`:
 
 optimize!(model)
 termination_status(model)
+
+# Depending on the solver, you may also receive `INFEASIBLE_OR_UNBOUNDED` or
+# an error code like `NORM_LIMIT`.
 
 # Common sources of unboundedness are:
 #
@@ -112,3 +172,13 @@ set_silent(model)
 
 # This new model has a finite optimal solution, so we can solve it and then look
 # for variables with large positive or negative values in the optimal solution.
+
+optimize!(model)
+for var in all_variables(model)
+    if var == objective
+        continue
+    end
+    if abs(value(var)) > 1e3
+        println("Variable `$(name(var))` may be unbounded")
+    end
+end
