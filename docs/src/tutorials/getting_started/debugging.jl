@@ -40,6 +40,21 @@
 using JuMP
 import HiGHS
 
+# ## Getting help
+
+# Debugging can be a frustrating part of modeling, particularly if you're new to
+# optimization and programming. If you're stuck, join the
+# [community forum](https://discourse.julialang.org/c/domain/opt/13) to search
+# for answers to commonly asked questions.
+
+# Before asking a new question, make sure to read the post
+# [make it easier to help you](https://discourse.julialang.org/t/please-read-make-it-easier-to-help-you/14757),
+# which contains a number of tips on how to ask a good question.
+
+# Above all else, take time to simplify your code as much as possible. The
+# fewer lines of code you can post that reproduces the same issue, the faster
+# someone can answer your question.
+
 # ## Debugging Julia code
 
 # Read the [Debugging chapter](https://benlauwens.github.io/ThinkJulia.jl/latest/book.html#chap21)
