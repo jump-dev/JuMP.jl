@@ -58,7 +58,7 @@ using HiGHS
 sudoku = Model(HiGHS.Optimizer)
 
 # Create our variables
-@variable(sudoku, x[i = 1:9, j = 1:9, k = 1:9], Bin)
+@variable(sudoku, x[i = 1:9, j = 1:9, k = 1:9], Bin);
 
 # Now we can begin to add our constraints. We'll actually start with something
 # obvious to us as humans, but what we need to enforce: that there can be only
@@ -134,7 +134,7 @@ end
 optimize!(sudoku)
 
 # Extract the values of x
-x_val = value.(x)
+x_val = value.(x);
 # Create a matrix to store the solution
 sol = zeros(Int, 9, 9)  # 9x9 matrix of integers
 for i in 1:9
@@ -175,15 +175,15 @@ set_optimizer_attribute(model, "presolve", "off")
 # Instead of the binary variables, we directly define a 9x9 grid of integer
 # values between 1 and 9:
 
-@variable(model, 1 <= x[1:9, 1:9] <= 9, Int)
+@variable(model, 1 <= x[1:9, 1:9] <= 9, Int);
 
 # Then, we enforce that the values in each row must be all-different:
 
-@constraint(model, [i = 1:9], x[i, :] in MOI.AllDifferent(9))
+@constraint(model, [i = 1:9], x[i, :] in MOI.AllDifferent(9));
 
 # That the values in each column must be all-different:
 
-@constraint(model, [j = 1:9], x[:, j] in MOI.AllDifferent(9))
+@constraint(model, [j = 1:9], x[:, j] in MOI.AllDifferent(9));
 
 # And that the values in each 3x3 sub-grid must be all-different:
 

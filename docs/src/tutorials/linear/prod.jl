@@ -172,6 +172,7 @@ function example_prod(; verbose = true)
     ]
     ## DEFINE MODEL
     prod = Model(HiGHS.Optimizer)
+    set_silent(prod)
     ## VARIABLES
     ## Average number of crews employed in each period
     @variable(prod, Crews[0:lastperiod] >= 0)
