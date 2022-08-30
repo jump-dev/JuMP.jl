@@ -277,6 +277,7 @@ function logo_with_text(;
         _jump_text_outlines(; color = color)
     end
     finish()
+    add_license(filename)
     return
 end
 
@@ -309,6 +310,7 @@ function logo_square(; filename::String, color::String, verbose::Bool = false)
         _jump_text_outlines(; color = color)
     end
     finish()
+    add_license(filename)
     return
 end
 
@@ -325,6 +327,55 @@ function logo_no_text(; filename::String, color::String)
         _logo_no_text(; color = color)
     end
     finish()
+    add_license(filename)
+    return
+end
+
+function add_license(filename)
+    header = """
+    <svg xmlns:svg="http://www.w3.org/2000/svg"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      xmlns:cc="http://creativecommons.org/ns#"
+      xmlns:dc="http://purl.org/dc/elements/1.1/"
+    """
+    footer = """
+    <metadata
+        id="metadata21">
+        <rdf:RDF>
+            <cc:Work
+                rdf:about="">
+            <dc:creator>
+                <cc:Agent>
+                <dc:title>JuMP project</dc:title>
+                </cc:Agent>
+            </dc:creator>
+            <dc:title>Logo for JuMP</dc:title>
+            <cc:license
+                rdf:resource="http://creativecommons.org/licenses/by/4.0/" />
+            <dc:description>Logo for JuMP, an algebraic modeling language and a collection of supporting packages for mathematical optimization embedded in the Julia programming language</dc:description>
+            <dc:date>August 2018</dc:date>
+            </cc:Work>
+            <cc:License
+                rdf:about="http://creativecommons.org/licenses/by/4.0/">
+            <cc:permits
+                rdf:resource="http://creativecommons.org/ns#Reproduction" />
+            <cc:permits
+                rdf:resource="http://creativecommons.org/ns#Distribution" />
+            <cc:requires
+                rdf:resource="http://creativecommons.org/ns#Notice" />
+            <cc:requires
+                rdf:resource="http://creativecommons.org/ns#Attribution" />
+            <cc:permits
+                rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+            </cc:License>
+        </rdf:RDF>
+    </metadata>
+    </svg>
+    """
+    file = read(filename, String)
+    file = replace(file, "<svg " => header)
+    file = replace(file, "</svg>" => footer)
+    write(filename, file)
     return
 end
 
