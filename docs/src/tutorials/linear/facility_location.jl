@@ -290,7 +290,6 @@ for i in 1:m, j in 1:n
             color = :black,
             label = nothing,
         )
-        break
     end
 end
 
