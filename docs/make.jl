@@ -322,7 +322,24 @@ _validate_pages()
 #  Build the LaTeX docs (if needed)
 # ==============================================================================
 
+function _remove_literate_footer(dir)
+    for filename in _file_list(dir, dir, ".md")
+        file = read(filename, String)
+        index = findfirst(
+            "---\n\n!!! tip\n    This tutorial was generated using [Literate",
+            file,
+        )
+        if index !== nothing
+            write(filename, file[1:(first(index)-1)])
+        end
+    end
+    return
+end
+
 if _PDF
+    for (root, dir, files) in walkdir(joinpath(@__DIR__, "src", "tutorials"))
+        _remove_literate_footer.(joinpath.(root, dir))
+    end
     # Remove release notes from PDF
     splice!(_PAGES, 7)   # JuMP release notes
     pop!(_PAGES[end][2]) # MOI release notes
