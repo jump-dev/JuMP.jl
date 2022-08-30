@@ -830,6 +830,49 @@ function test_nlp_data_error()
     return
 end
 
+function test_reset_optimizer()
+    direct = direct_model(
+        MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}()),
+    )
+    @test_throws(
+        ErrorException(
+            "The `$(MOI.Utilities.reset_optimizer)` function is not " *
+            "supported in DIRECT mode.",
+        ),
+        MOI.Utilities.reset_optimizer(direct),
+    )
+    inner = MOI.Utilities.Model{Float64}()
+    model = Model(() -> MOI.Utilities.MockOptimizer(inner))
+    @variable(model, x >= 0)
+    @objective(model, Min, x)
+    @test MOI.is_empty(inner)
+    MOI.Utilities.attach_optimizer(model)
+    @test !MOI.is_empty(inner)
+    MOI.Utilities.reset_optimizer(model)
+    @test MOI.is_empty(inner)
+    return
+end
+
+function test_drop_optimizer()
+    direct = direct_model(
+        MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}()),
+    )
+    @test_throws(
+        ErrorException(
+            "The `$(MOI.Utilities.drop_optimizer)` function is not supported " *
+            "in DIRECT mode.",
+        ),
+        MOI.Utilities.drop_optimizer(direct),
+    )
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    end
+    @test solver_name(model) == "Mock"
+    MOI.Utilities.drop_optimizer(model)
+    @test solver_name(model) == "No optimizer attached."
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
