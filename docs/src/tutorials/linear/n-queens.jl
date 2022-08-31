@@ -40,12 +40,13 @@ import LinearAlgebra
 N = 8
 
 model = Model(HiGHS.Optimizer)
+set_silent(model)
 
 # Next, let's create an N x N chessboard of binary values. 0 will represent an
 # empty space on the board and 1 will represent a space occupied by one of our
 # queens:
 
-@variable(model, x[1:N, 1:N], Bin)
+@variable(model, x[1:N, 1:N], Bin);
 
 # Now we can add our constraints:
 

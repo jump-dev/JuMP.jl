@@ -13,6 +13,7 @@ import Test
 
 function example_urban_plan()
     model = Model(HiGHS.Optimizer)
+    set_silent(model)
     ## x is indexed by row and column
     @variable(model, 0 <= x[1:5, 1:5] <= 1, Int)
     ## y is indexed by R or C, the points, and an index in 1:5. Note how JuMP

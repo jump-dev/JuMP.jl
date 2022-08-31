@@ -72,7 +72,7 @@ G = [
 n = size(G)[1]
 
 shortest_path = Model(HiGHS.Optimizer)
-
+set_silent(shortest_path)
 @variable(shortest_path, x[1:n, 1:n], Bin)
 # Arcs with zero cost are not a part of the path as they do no exist
 @constraint(shortest_path, [i = 1:n, j = 1:n; G[i, j] == 0], x[i, j] == 0)
@@ -127,6 +127,7 @@ G = [
 n = size(G)[1]
 
 assignment = Model(HiGHS.Optimizer)
+set_silent(assignment)
 @variable(assignment, y[1:n, 1:n], Bin)
 # One person can only be assigned to one object
 @constraint(assignment, [i = 1:n], sum(y[:, i]) == 1)

@@ -33,96 +33,30 @@ import HiGHS
 import LinearAlgebra
 
 # For this example, we'll use the 20 most populous cities in the United States.
-
-cities = DataFrames.DataFrame(;
-    city = [
-        "New York, NY",
-        "Los Angeles, CA",
-        "Chicago, IL",
-        "Houston, TX",
-        "Philadelphia, PA",
-        "Phoenix, AZ",
-        "San Antonio, TX",
-        "San Diego, CA",
-        "Dallas, TX",
-        "San Jose, CA",
-        "Austin, TX",
-        "Indianapolis, IN",
-        "Jacksonville, FL",
-        "San Francisco, CA",
-        "Columbus, OH",
-        "Charlotte, NC",
-        "Fort Worth, TX",
-        "Detroit, MI",
-        "El Paso, TX",
-        "Memphis, TN",
+cities = DataFrames.DataFrame(
+    Union{String,Float64}[
+        "New York, NY" 8.405 40.7127 -74.0059
+        "Los Angeles, CA" 3.884 34.0522 -118.2436
+        "Chicago, IL" 2.718 41.8781 -87.6297
+        "Houston, TX" 2.195 29.7604 -95.3698
+        "Philadelphia, PA" 1.553 39.9525 -75.1652
+        "Phoenix, AZ" 1.513 33.4483 -112.0740
+        "San Antonio, TX" 1.409 29.4241 -98.4936
+        "San Diego, CA" 1.355 32.7157 -117.1610
+        "Dallas, TX" 1.257 32.7766 -96.7969
+        "San Jose, CA" 0.998 37.3382 -121.8863
+        "Austin, TX" 0.885 30.2671 -97.7430
+        "Indianapolis, IN" 0.843 39.7684 -86.1580
+        "Jacksonville, FL" 0.842 30.3321 -81.6556
+        "San Francisco, CA" 0.837 37.7749 -122.4194
+        "Columbus, OH" 0.822 39.9611 -82.9987
+        "Charlotte, NC" 0.792 35.2270 -80.8431
+        "Fort Worth, TX" 0.792 32.7554 -97.3307
+        "Detroit, MI" 0.688 42.3314 -83.0457
+        "El Paso, TX" 0.674 31.7775 -106.4424
+        "Memphis, TN" 0.653 35.1495 -90.0489
     ],
-    population = [
-        8.405,
-        3.884,
-        2.718,
-        2.195,
-        1.553,
-        1.513,
-        1.409,
-        1.355,
-        1.257,
-        0.998,
-        0.885,
-        0.843,
-        0.842,
-        0.837,
-        0.822,
-        0.792,
-        0.792,
-        0.688,
-        0.674,
-        0.653,
-    ],
-    lat = [
-        40.7127,
-        34.0522,
-        41.8781,
-        29.7604,
-        39.9525,
-        33.4483,
-        29.4241,
-        32.7157,
-        32.7766,
-        37.3382,
-        30.2671,
-        39.7684,
-        30.3321,
-        37.7749,
-        39.9611,
-        35.2270,
-        32.7554,
-        42.3314,
-        31.7775,
-        35.1495,
-    ],
-    lon = [
-        -74.0059,
-        -118.2436,
-        -87.6297,
-        -95.3698,
-        -75.1652,
-        -112.0740,
-        -98.4936,
-        -117.1610,
-        -96.7969,
-        -121.8863,
-        -97.7430,
-        -86.1580,
-        -81.6556,
-        -122.4194,
-        -82.9987,
-        -80.8431,
-        -97.3307,
-        -83.0457,
-        -106.4424,
-        -90.0489,
-    ],
+    ["city", "population", "lat", "lon"],
 )
 
 # ### Model Specifics
@@ -178,12 +112,8 @@ dm = LinearAlgebra.LowerTriangular([
 model = Model(HiGHS.Optimizer)
 set_silent(model)
 #-
-
 @variable(model, x[1:n, 1:k], Bin)
-
-#-
-
-@constraint(model, [i = 1:n], sum(x[i, :]) == 1)
+@constraint(model, [i = 1:n], sum(x[i, :]) == 1);
 
 # To reduce symmetry, we fix the first city to belong to the first group.
 
