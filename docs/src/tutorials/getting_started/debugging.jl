@@ -61,6 +61,57 @@ import HiGHS
 # in the book [ThinkJulia.jl](https://benlauwens.github.io/ThinkJulia.jl/latest/book.html).
 # It has a number of great tips and tricks for debugging Julia code.
 
+# ## Debugging numerical issues
+
+# "Numerical issues" refers to a broad class of problems in which the solver
+# may return incorrect results, stall, fail to converge, or produce inconsistent
+# results.
+
+# Most solvers can experience numerical issues because they use
+# [floating-point arithmetic](https://en.wikipedia.org/wiki/Floating-point_arithmetic)
+# to perform operations such as addition, subtraction, and multiplication. These
+# operations aren't exact, and small errors can accrue between the theoretical
+# value and the value that the computer computes. For example:
+
+0.1 * 3 == 0.3
+
+# In addition, solvers use tolerances to check that constraints are satisfied,
+# so even `x` is binary, a value like `x = 1.0000001` may still be considered
+# feasible.
+
+# !!! tip
+#     Read the [Guidlines for numerical issues](https://www.gurobi.com/documentation/9.5/refman/guidelines_for_numerical_i.html)
+#     section of the Gurobi documentation, along with the
+#     [Debugging numerical problems](https://yalmip.github.io/inside/debuggingnumerics/)
+#     section of the YALMIP documentation.
+
+# ### Common sources
+
+# Common sources of numerical issues are:
+#
+#  * Very large numbers and very small numbers as problem coefficients. Exactly
+#    what "large" is depends on the solver and the problem, but in general,
+#    values above 1e6 or smaller than 1e-6 cause problems.
+#  * Nonlinear problems with functions that are not defined in parts of their
+#    domain. For example, minimizing `log(x)` where `x >= 0` is undefined when
+#    `x = 0` (a common starting value).
+
+# ### Strategies
+
+# Strategies to debug sources of numerical issues include:
+#
+#  * Rescale variables in the problem and their associated coefficients to
+#    make the magnnitues of all coefficients in the 1e-4 to 1e4 range. For
+#    example, that might mean rescaling a variable from measuring distance in
+#    centimeters to kilometers.
+#  * Try a different solver. Some solvers might be more robust than others for a
+#    particular problem.
+#  * Read the documentation of your solver, and try settings that encourage
+#    numerical robustness.
+#  * Set bounds or add constraints so that all nonlinear functions are defined
+#    across all of the feasible region. This particularly applies for functions
+#    like `1 / x` and `log(x)` which are not defined for `x = 0`.
+
 # ## Debugging an infeasible model
 
 # A model is infeasible if there is no primal solution that satisfies all of
@@ -68,6 +119,8 @@ import HiGHS
 #
 #  * Your problem really has no feasible solution
 #  * There is a mistake in your model.
+
+# ### Example
 
 # A simple example of an infeasible model is:
 
@@ -96,6 +149,8 @@ termination_status(model)
 # that it could not find one. If you know a primal feasible point, try providing
 # it as a starting point using [`set_start_value`](@ref) and re-optimize.
 
+# ### Common sources
+
 # Common sources of infeasibility are:
 #
 #  * Invalid mathematical formulations
@@ -105,13 +160,23 @@ termination_status(model)
 #  * Off-by-one and related errors, for example, using `x[t]` instead of
 #    `x[t-1]` in part of a constraint.
 
-# The simplest way to debug sources of innfeasibility is to iteratively comment
-# out a constraint (or block of constraints) and resolve the problem. When you
-# find a constraint that makes the problem infeasible when added, check the
-# constraint carefully for errors.
+# ### Strategies
 
-# If the problem is still infeasible with all constraints commented out, check
-# all variable bounds. Do they use the right data?
+# Strategies to debug sources of infeasibility include:
+
+#  * Iteratively comment out a constraint (or block of constraints) and resolve
+#    the problem. When you find a constraint that makes the problem infeasible
+#    when added, check the constraint carefully for errors.
+#  * If the problem is still infeasible with all constraints commented out,
+#    check all variable bounds. Do they use the right data?
+#  * If you have a known feasible solution, use [`primal_feasibility_report`](@ref)
+#    to evaluate the constraints and check for violations. You'll probably find
+#    that you have a typo in one of the constraints.
+#  * Try a different solver. Sometimes, solvers have bugs, and they can
+#    incorrectly report a problem as infeasible when it isn't. If you find such
+#    a case where one solver reports the problem is infeasible and another can
+#    find an optimal solution, please report it by opening an issue on the
+#    GitHub repository of the solver that reports infeasibility.
 
 # !!! tip
 #     Some solvers also have specialized support for debugging sources of
@@ -132,6 +197,8 @@ termination_status(model)
 # modeling, because all physical systems have limits. (You cannot make an
 # infinite amount of profit.)
 
+# ### Example
+
 # A simple example of an unbounded model is:
 
 model = Model(HiGHS.Optimizer)
@@ -151,13 +218,17 @@ termination_status(model)
 # Depending on the solver, you may also receive `INFEASIBLE_OR_UNBOUNDED` or
 # an error code like `NORM_LIMIT`.
 
+# ### Common sources
+
 # Common sources of unboundedness are:
 #
 #  * Using `Max` instead of `Min`
 #  * Omitting variable bounds, such as `0 <= x <= 1`
 #  * Using `+` instead of `-` in a term of the objective function.
 
-# Strategies to debug sources of unboundedness are:
+# ### Strategies
+
+# Strategies to debug sources of unboundedness include:
 
 #  * Double check whether you intended `Min` or `Max` in the [`@objective`](@ref)
 #    line.
