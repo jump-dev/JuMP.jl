@@ -443,11 +443,7 @@ And data, a 0-dimensional $(Array{Int,0}):
         @test isempty(str)
     end
     @testset "DenseAxisArray_vector_keys" begin
-        paths = [
-            [1, 2, 15, 3, 20],
-            [1, 9, 16, 20],
-            [1, 2, 20]
-        ]
+        paths = [[1, 2, 15, 3, 20], [1, 9, 16, 20], [1, 2, 20]]
         x = DenseAxisArray(1:3, paths)
         for i in 1:3
             @test x[paths[i]] == i
