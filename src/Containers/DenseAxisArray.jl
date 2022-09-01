@@ -58,6 +58,13 @@ function Base.getindex(
     return [x[key] for key in keys]
 end
 
+function Base.getindex(
+    x::_AxisLookup{Dict{K,Int}},
+    key::K,
+) where {K<:AbstractVector}
+    return x.data[key]
+end
+
 function Base.get(x::_AxisLookup{Dict{K,Int}}, key, default) where {K}
     return get(x.data, key, default)
 end
