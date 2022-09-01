@@ -1,5 +1,20 @@
 # Release notes
 
+## Version 1.2.2 (September 3, 2022)
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.2.2).
+
+- New features:
+  - Support slicing in `SparseAxisArray`
+- Bug fixes:
+  - Fixed a bug introduced in v1.2.0 that prevented `DenseAxisArray`s with
+    `Vector` keys.
+- Documentation and maintenance:
+  - Released the JuMP logos under the CC BY 4.0 license
+  - Minor tweaks to the PDF documentation
+  - Improved code coverage of a number of files
+
 ## Version 1.2.1 (August 22, 2022)
 
 For a detailed list of the closed issues and pull requests from this release,
