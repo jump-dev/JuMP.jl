@@ -152,8 +152,6 @@ mutable struct Model <: AbstractModel
     # A flag to track whether we have modified the model after calling
     # optimize!.
     is_model_dirty::Bool
-    # A flag to track whether we need to rebuild the NLP model before optimize!
-    is_nlp_model_dirty::Bool
     # Enable extensions to attach arbitrary information to a JuMP model by
     # using an extension-specific symbol as a key.
     ext::Dict{Symbol,Any}
@@ -258,7 +256,6 @@ function direct_model(backend::MOI.ModelLike)
         Dict{Symbol,Any}(),
         0,
         false,
-        true,
         Dict{Symbol,Any}(),
         true,
     )

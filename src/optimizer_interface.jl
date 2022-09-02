@@ -128,6 +128,7 @@ end
         ignore_optimize_hook = (model.optimize_hook === nothing),
         _differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation =
             MOI.Nonlinear.SparseReverseMode(),
+        _skip_nonlinear_update::Bool = false,
         kwargs...,
     )
 
@@ -156,19 +157,17 @@ function optimize!(
     model::Model;
     ignore_optimize_hook = (model.optimize_hook === nothing),
     _differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation = MOI.Nonlinear.SparseReverseMode(),
+    _skip_nonlinear_update::Bool = false,
     kwargs...,
 )
     # The nlp_model is not kept in sync, so re-set it here.
-    # TODO: Consider how to handle incremental solves.
-    if nonlinear_model(model) !== nothing && model.is_nlp_model_dirty
-        @warn("Setting NLPBLock")
+    if nonlinear_model(model) !== nothing && !_skip_nonlinear_update
         evaluator = MOI.Nonlinear.Evaluator(
             nonlinear_model(model),
             _differentiation_backend,
             index.(all_variables(model)),
         )
         MOI.set(model, MOI.NLPBlock(), MOI.NLPBlockData(evaluator))
-        model.is_nlp_model_dirty = false
     end
     # If the user or an extension has provided an optimize hook, call
     # that instead of solving the model ourselves

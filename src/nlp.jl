@@ -25,7 +25,6 @@ end
 function _init_NLP(model::Model)
     if model.nlp_model === nothing
         model.nlp_model = MOI.Nonlinear.Model()
-        model.is_nlp_model_dirty = true
     end
     return
 end
@@ -162,7 +161,6 @@ function set_nonlinear_objective(model::Model, sense::MOI.OptimizationSense, x)
     _init_NLP(model)
     set_objective_sense(model, sense)
     MOI.Nonlinear.set_objective(model.nlp_model, x)
-    model.is_nlp_model_dirty = true
     return
 end
 
@@ -208,7 +206,6 @@ end
 function add_nonlinear_parameter(model::Model, value::Real)
     _init_NLP(model)
     p = MOI.Nonlinear.add_parameter(model.nlp_model, Float64(value))
-    model.is_nlp_model_dirty = true
     return NonlinearParameter(model, p.value)
 end
 
@@ -315,7 +312,6 @@ subexpression[1]: x + x ^ 2.0
 function add_nonlinear_expression(model::Model, ex)
     _init_NLP(model)
     index = MOI.Nonlinear.add_expression(model.nlp_model, ex)
-    model.is_nlp_model_dirty = true
     return NonlinearExpression(model, index.value)
 end
 
@@ -443,7 +439,6 @@ function add_nonlinear_constraint(model::Model, ex::Expr)
     _init_NLP(model)
     f, set = _expr_to_constraint(ex)
     c = MOI.Nonlinear.add_constraint(model.nlp_model, f, set)
-    model.is_nlp_model_dirty = true
     return ConstraintRef(model, c, ScalarShape())
 end
 
@@ -470,7 +465,6 @@ function delete(model::Model, c::NonlinearConstraintRef)
     _init_NLP(model)
     index = MOI.Nonlinear.ConstraintIndex(c.index.value)
     MOI.Nonlinear.delete(model.nlp_model, index)
-    model.is_nlp_model_dirty = true
     return
 end
 
@@ -681,7 +675,6 @@ function register(
     end
     _init_NLP(model)
     MOI.Nonlinear.register_operator(model.nlp_model, op, dimension, f)
-    model.is_nlp_model_dirty = true
     return
 end
 
@@ -760,7 +753,6 @@ function register(
         end
         MOI.Nonlinear.register_operator(model.nlp_model, op, dimension, f, ∇f)
     end
-    model.is_nlp_model_dirty = true
     return
 end
 
@@ -811,7 +803,6 @@ function register(
 )
     _init_NLP(model)
     MOI.Nonlinear.register_operator(model.nlp_model, op, dimension, f, ∇f, ∇²f)
-    model.is_nlp_model_dirty = true
     return
 end
 
