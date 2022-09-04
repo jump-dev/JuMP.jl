@@ -21,10 +21,9 @@
 # # Debugging
 
 # Dealing with bugs is an unavoidable part of coding optimization models in
-# JuMP. This includes bugs related to general Julia code such as syntax errors,
-# method errors, typos, and off-by-one indexing errors, but it also includes
-# optimization-specific bugs related to the formulation and solution of your
-# model.
+# any framework, including JuMP. Sources of bugs include not only generic coding
+# errors (method errors, typos, off-by-one issue), but also semantic mistakes in
+# the formulation of the optimization problem or incorrect use of solvers.
 
 # This tutorial explains some common sources of bugs and modeling issues that
 # you might encounter when writing models in JuMP, and it suggests a variety of
@@ -85,6 +84,14 @@ import HiGHS
 #     [Debugging numerical problems](https://yalmip.github.io/inside/debuggingnumerics/)
 #     section of the YALMIP documentation.
 
+# When a solver experiences numerical issues, JuMP may return one of a number of
+# termination statuses. For example, if the solver found a solution, but
+# experienced numerical imprecision, it may return a status such as
+# `ALMOST_OPTIMAL` or `ALMOST_LOCALLY_SOLVED` indicating that the problem was
+# solved to a relaxed set of tolerances. Alternatively, the solver may return a
+# problematic status such as `NUMERICAL_ERROR`, `SLOW_PROGRESS`, or
+# `OTHER_ERROR`, indicating that it could not find a solution to the problem.
+
 # ### Common sources
 
 # Common sources of numerical issues are:
@@ -111,6 +118,40 @@ import HiGHS
 #  * Set bounds or add constraints so that all nonlinear functions are defined
 #    across all of the feasible region. This particularly applies for functions
 #    like `1 / x` and `log(x)` which are not defined for `x = 0`.
+
+# ## Debugging incorrect results
+
+# Sometimes, you might find that the solver returns an "optimal" solution that
+# is incorrect accordinng to the model you are trying to solve (perhaps the
+# solution is suboptimal, or it doesn't satisfy some of the constraints).
+
+# Incorrect results can be hard to detect and debug, because the solver gives no
+# hints that there is a problem. Indeed, the [`termination_status`](@ref) will
+# likely be `OPTIMAL`, and a solution will be available.
+
+# ### Common sources
+
+# Common sources of incorrect results are:
+#
+#  * A modeling error, so that your JuMP model does not match the formulation
+#    you have on paper
+#  * Numerical issues (see [Debugging numerical issues](@ref))
+#  * A bug in JuMP or the solver.
+
+# The probability of the issue being a bug in JuMP or the solver is much smaller
+# than a modeling error or a numerical issue. When in doubt, first assume there
+# is a bug in your code before assuming that there is a bug in JuMP.
+
+# ### Strategies
+
+# Strategies to debug sources of incorrect results include:
+
+#  * Follow the advice in [Debugging numerical issues](@ref)
+#  * Print your JuMP model to see if it matches the formulation you have on
+#    paper. Look out for incorrect signs `+` instead of `-`, and off-by-one
+#    errors such as `x[t]` instead of `x[t-1]`.
+#  * Try a different solver. If one solver succeeds where another doesn't this
+#    is a sign that the problem is a numerical issue or a bug in the solver.
 
 # ## Debugging an infeasible model
 
@@ -153,18 +194,18 @@ termination_status(model)
 
 # Common sources of infeasibility are:
 #
-#  * Invalid mathematical formulations
 #  * Incorrect units, for example, using a lower bound of megawatts and an upper
 #    bound of kilowatts
 #  * Using `+` instead of `-` in a constraint
 #  * Off-by-one and related errors, for example, using `x[t]` instead of
-#    `x[t-1]` in part of a constraint.
+#    `x[t-1]` in part of a constraint
+#  * Otherwise invalid mathematical formulations
 
 # ### Strategies
 
 # Strategies to debug sources of infeasibility include:
 
-#  * Iteratively comment out a constraint (or block of constraints) and resolve
+#  * Iteratively comment out a constraint (or block of constraints) and re-solve
 #    the problem. When you find a constraint that makes the problem infeasible
 #    when added, check the constraint carefully for errors.
 #  * If the problem is still infeasible with all constraints commented out,
@@ -193,7 +234,7 @@ termination_status(model)
 # ## Debugging an unbounded model
 
 # A model is unbounded if there is no limit on how good the objective value can
-# get. In general, an unbounded model means that you have an error in your
+# get. Most often, an unbounded model means that you have an error in your
 # modeling, because all physical systems have limits. (You cannot make an
 # infinite amount of profit.)
 
