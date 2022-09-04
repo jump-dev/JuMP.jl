@@ -1,9 +1,9 @@
 # Release notes
 
-## Version 1.2.2 (September 3, 2022)
+## Version 1.3.0 (September 5, 2022)
 
 For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.2.2).
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.3.0).
 
 - New features:
   - Support slicing in `SparseAxisArray`
