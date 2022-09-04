@@ -75,7 +75,7 @@ import HiGHS
 0.1 * 3 == 0.3
 
 # In addition, solvers use tolerances to check that constraints are satisfied,
-# so even `x` is binary, a value like `x = 1.0000001` may still be considered
+# so even if `x` is binary, a value like `x = 1.0000001` may still be considered
 # feasible.
 
 # !!! tip
@@ -122,12 +122,12 @@ import HiGHS
 # ## Debugging incorrect results
 
 # Sometimes, you might find that the solver returns an "optimal" solution that
-# is incorrect accordinng to the model you are trying to solve (perhaps the
+# is incorrect according to the model you are trying to solve (perhaps the
 # solution is suboptimal, or it doesn't satisfy some of the constraints).
 
 # Incorrect results can be hard to detect and debug, because the solver gives no
 # hints that there is a problem. Indeed, the [`termination_status`](@ref) will
-# likely be `OPTIMAL`, and a solution will be available.
+# likely be `OPTIMAL` and a solution will be available.
 
 # ### Common sources
 
