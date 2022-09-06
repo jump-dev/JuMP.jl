@@ -22,8 +22,9 @@
 
 # Dealing with bugs is an unavoidable part of coding optimization models in
 # any framework, including JuMP. Sources of bugs include not only generic coding
-# errors (method errors, typos, off-by-one issue), but also semantic mistakes in
-# the formulation of the optimization problem or incorrect use of solvers.
+# errors (method errors, typos, off-by-one issues), but also semantic mistakes
+# in the formulation of an optimization problem and the incorrect use of a
+# solver.
 
 # This tutorial explains some common sources of bugs and modeling issues that
 # you might encounter when writing models in JuMP, and it suggests a variety of
@@ -32,9 +33,9 @@
 # !!! tip
 #     This tutorial is more advanced than the other "Getting started" tutorials.
 #     It's in the "Getting started" section to give you an early preview of how
-#     to test and debug JuMP models. However, if you are new to JuMP, you may
-#     want to briefly skim the tutorial, and come back to it once you have
-#     written a few JuMP models.
+#     to debug JuMP models. However, if you are new to JuMP, you may want to
+#     briefly skim the tutorial, and come back to it once you have written a few
+#     JuMP models.
 
 using JuMP
 import HiGHS
@@ -47,7 +48,7 @@ import HiGHS
 # for answers to commonly asked questions.
 
 # Before asking a new question, make sure to read the post
-# [make it easier to help you](https://discourse.julialang.org/t/please-read-make-it-easier-to-help-you/14757),
+# [Make it easier to help you](https://discourse.julialang.org/t/please-read-make-it-easier-to-help-you/14757),
 # which contains a number of tips on how to ask a good question.
 
 # Above all else, take time to simplify your code as much as possible. The
@@ -64,7 +65,7 @@ import HiGHS
 
 # When a solver experiences an issue that prevents it from finding an optimal
 # solution (or proving that one does not exist), JuMP may return one of a number
-# of problematic termination statuses.
+# of problematic [`termination status`](@ref)es.
 
 # For example, if the solver found a solution, but experienced numerical
 # imprecision, it may return a status such as `ALMOST_OPTIMAL` or
