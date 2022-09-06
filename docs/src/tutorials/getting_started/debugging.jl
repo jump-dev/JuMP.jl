@@ -103,7 +103,7 @@ import HiGHS
 # Strategies to debug sources of solve failures include:
 #
 #  * Rescale variables in the problem and their associated coefficients to
-#    make the magnnitues of all coefficients in the 1e-4 to 1e4 range. For
+#    make the magnitudes of all coefficients in the 1e-4 to 1e4 range. For
 #    example, that might mean rescaling a variable from measuring distance in
 #    centimeters to kilometers.
 #  * Try a different solver. Some solvers might be more robust than others for a
