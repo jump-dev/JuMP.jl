@@ -33,7 +33,7 @@ julia> @NLobjective(model, Min, exp(x[1]) - sqrt(x[2]))
 
 Use [`@NLconstraint`](@ref) to add a nonlinear constraint.
 
-```jldoctest; setup=:(model = Model(); @variable(model, x[1:2]))
+```jldoctest nonlinear_constraint; setup=:(model = Model(); @variable(model, x[1:2]))
 julia> @NLconstraint(model, exp(x[1]) <= 1)
 exp(x[1]) - 1.0 ≤ 0
 
@@ -51,6 +51,11 @@ julia> @NLconstraint(model, con[i = 1:2], prod(x[j] for j = 1:i) == i)
 !!! info
     You can only create nonlinear constraints with `<=`, `>=`, and `==`.
     More general `Nonlinear`-in-`Set` constraints are not supported.
+
+Delete a nonlinear constraint using [`delete`](@ref):
+```jldoctest nonlinear_constraint
+julia> delete(model, con[1])
+```
 
 ## Create a nonlinear expression
 
@@ -88,6 +93,17 @@ julia> @NLexpression(model, nested[i = 1:2], sin(my_expr[i]))
 2-element Vector{NonlinearExpression}:
  subexpression[6]: sin(subexpression[4])
  subexpression[7]: sin(subexpression[5])
+```
+
+Use [`value`](@ref) to query the value of a nonlinear expression:
+```jldoctest nl_expression
+julia> set_start_value.(x, [1.0, 2.0])
+
+julia> value(start_value, nested[1])
+0.7456241416655579
+
+julia> sin(sin(1.0))
+0.7456241416655579
 ```
 
 ## Create a nonlinear parameter
