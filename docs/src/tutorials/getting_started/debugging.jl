@@ -65,7 +65,7 @@ import HiGHS
 
 # When a solver experiences an issue that prevents it from finding an optimal
 # solution (or proving that one does not exist), JuMP may return one of a number
-# of problematic [`termination status`](@ref)es.
+# of problematic [`termination_status`](@ref)es.
 
 # For example, if the solver found a solution, but experienced numerical
 # imprecision, it may return a status such as `ALMOST_OPTIMAL` or
