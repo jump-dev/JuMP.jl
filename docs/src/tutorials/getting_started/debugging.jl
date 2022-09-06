@@ -60,13 +60,20 @@ import HiGHS
 # in the book [ThinkJulia.jl](https://benlauwens.github.io/ThinkJulia.jl/latest/book.html).
 # It has a number of great tips and tricks for debugging Julia code.
 
-# ## Debugging numerical issues
+# ## Debugging solve failures
 
-# "Numerical issues" refers to a broad class of problems in which the solver
-# may return incorrect results, stall, fail to converge, or produce inconsistent
-# results.
+# When a solver experiences an issue that prevents it from finding an optimal
+# solution (or proving that one does not exist), JuMP may return one of a number
+# of problematic termination statuses.
 
-# Most solvers can experience numerical issues because they use
+# For example, if the solver found a solution, but experienced numerical
+# imprecision, it may return a status such as `ALMOST_OPTIMAL` or
+# `ALMOST_LOCALLY_SOLVED` indicating that the problem was solved to a relaxed
+# set of tolerances. Alternatively, the solver may return a problematic status
+# such as `NUMERICAL_ERROR`, `SLOW_PROGRESS`, or `OTHER_ERROR`, indicating that
+# it could not find a solution to the problem.
+
+# Most solvers can experience numerical imprecision because they use
 # [floating-point arithmetic](https://en.wikipedia.org/wiki/Floating-point_arithmetic)
 # to perform operations such as addition, subtraction, and multiplication. These
 # operations aren't exact, and small errors can accrue between the theoretical
@@ -74,27 +81,15 @@ import HiGHS
 
 0.1 * 3 == 0.3
 
-# In addition, solvers use tolerances to check that constraints are satisfied,
-# so even if `x` is binary, a value like `x = 1.0000001` may still be considered
-# feasible.
-
 # !!! tip
 #     Read the [Guidlines for numerical issues](https://www.gurobi.com/documentation/9.5/refman/guidelines_for_numerical_i.html)
 #     section of the Gurobi documentation, along with the
 #     [Debugging numerical problems](https://yalmip.github.io/inside/debuggingnumerics/)
 #     section of the YALMIP documentation.
 
-# When a solver experiences numerical issues, JuMP may return one of a number of
-# termination statuses. For example, if the solver found a solution, but
-# experienced numerical imprecision, it may return a status such as
-# `ALMOST_OPTIMAL` or `ALMOST_LOCALLY_SOLVED` indicating that the problem was
-# solved to a relaxed set of tolerances. Alternatively, the solver may return a
-# problematic status such as `NUMERICAL_ERROR`, `SLOW_PROGRESS`, or
-# `OTHER_ERROR`, indicating that it could not find a solution to the problem.
-
 # ### Common sources
 
-# Common sources of numerical issues are:
+# Common sources of solve failures are:
 #
 #  * Very large numbers and very small numbers as problem coefficients. Exactly
 #    what "large" is depends on the solver and the problem, but in general,
@@ -105,7 +100,7 @@ import HiGHS
 
 # ### Strategies
 
-# Strategies to debug sources of numerical issues include:
+# Strategies to debug sources of solve failures include:
 #
 #  * Rescale variables in the problem and their associated coefficients to
 #    make the magnnitues of all coefficients in the 1e-4 to 1e4 range. For
@@ -135,21 +130,24 @@ import HiGHS
 #
 #  * A modeling error, so that your JuMP model does not match the formulation
 #    you have on paper
-#  * Numerical issues (see [Debugging numerical issues](@ref))
+#  * Not accounting for the tolerances that solvers use (for example, if `x` is
+#    binary, a value like `x = 1.0000001` may still be considered feasible)
 #  * A bug in JuMP or the solver.
 
 # The probability of the issue being a bug in JuMP or the solver is much smaller
-# than a modeling error or a numerical issue. When in doubt, first assume there
-# is a bug in your code before assuming that there is a bug in JuMP.
+# than a modeling error. When in doubt, first assume there is a bug in your code
+# before assuming that there is a bug in JuMP.
 
 # ### Strategies
 
 # Strategies to debug sources of incorrect results include:
 
-#  * Follow the advice in [Debugging numerical issues](@ref)
 #  * Print your JuMP model to see if it matches the formulation you have on
 #    paper. Look out for incorrect signs `+` instead of `-`, and off-by-one
 #    errors such as `x[t]` instead of `x[t-1]`.
+#  * Check that you are not using exact comparisons like `value(x) == 1.0`;
+#    always use `isapprox(value(x), 1.0; atol = 1e-6)` where you manually
+#    specify the comparison tolerance.
 #  * Try a different solver. If one solver succeeds where another doesn't this
 #    is a sign that the problem is a numerical issue or a bug in the solver.
 
