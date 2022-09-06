@@ -97,7 +97,7 @@ julia> @NLexpression(model, nested[i = 1:2], sin(my_expr[i]))
 
 Use [`value`](@ref) to query the value of a nonlinear expression:
 ```jldoctest nl_expression
-julia> set_start_value.(x, [1.0, 2.0])
+julia> set_start_value(x[1], 1.0)
 
 julia> value(start_value, nested[1])
 0.7456241416655579
