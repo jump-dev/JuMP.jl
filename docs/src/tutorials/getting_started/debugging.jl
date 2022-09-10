@@ -61,11 +61,11 @@ import HiGHS
 # in the book [ThinkJulia.jl](https://benlauwens.github.io/ThinkJulia.jl/latest/book.html).
 # It has a number of great tips and tricks for debugging Julia code.
 
-# ## Debugging solve failures
+# ## Solve failures
 
 # When a solver experiences an issue that prevents it from finding an optimal
 # solution (or proving that one does not exist), JuMP may return one of a number
-# of problematic [`termination_status`](@ref)es.
+# of [`termination_status`](@ref)es.
 
 # For example, if the solver found a solution, but experienced numerical
 # imprecision, it may return a status such as `ALMOST_OPTIMAL` or
@@ -115,7 +115,7 @@ import HiGHS
 #    across all of the feasible region. This particularly applies for functions
 #    like `1 / x` and `log(x)` which are not defined for `x = 0`.
 
-# ## Debugging incorrect results
+# ## Incorrect results
 
 # Sometimes, you might find that the solver returns an "optimal" solution that
 # is incorrect according to the model you are trying to solve (perhaps the
