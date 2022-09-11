@@ -38,10 +38,10 @@ function Base.:-(lhs::_Constant, rhs::AbstractVariableRef)
     return _build_aff_expr(constant, -one(constant), rhs)
 end
 function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
-    if iszero(lhs)
-        return zero(GenericAffExpr{Float64,typeof(rhs)})
+    coef = _float(lhs)
+    if iszero(coef)
+        return zero(GenericAffExpr{typeof(coef),typeof(rhs)})
     else
-        coef = _float(lhs)
         return _build_aff_expr(zero(coef), coef, rhs)
     end
 end
@@ -162,7 +162,8 @@ Base.:*(lhs::GenericAffExpr, rhs::_Constant) = (*)(rhs, lhs)
 function Base.:/(lhs::GenericAffExpr, rhs::_Constant)
     return map_coefficients(c -> c / rhs, lhs)
 end
-function Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::Integer)
+
+function Base.:^(lhs::AbstractVariableRef, rhs::Integer)
     if rhs == 2
         return lhs * lhs
     elseif rhs == 1
@@ -171,10 +172,29 @@ function Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::Integer)
         return one(GenericQuadExpr{Float64,variable_ref_type(lhs)})
     else
         error(
-            "Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.",
+            "Only exponents of 0, 1, or 2 are currently supported. Are you " *
+            "trying to build a nonlinear problem? Make sure you use " *
+            "@NLconstraint/@NLobjective.",
         )
     end
 end
+
+function Base.:^(lhs::GenericAffExpr{T}, rhs::Integer) where {T}
+    if rhs == 2
+        return lhs * lhs
+    elseif rhs == 1
+        return convert(GenericQuadExpr{T,variable_ref_type(lhs)}, lhs)
+    elseif rhs == 0
+        return one(GenericQuadExpr{T,variable_ref_type(lhs)})
+    else
+        error(
+            "Only exponents of 0, 1, or 2 are currently supported. Are you " *
+            "trying to build a nonlinear problem? Make sure you use " *
+            "@NLconstraint/@NLobjective.",
+        )
+    end
+end
+
 function Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::_Constant)
     return error(
         "Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.",
