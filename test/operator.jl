@@ -549,6 +549,25 @@ function test_higher_level(ModelType, ::Any)
     end
 end
 
+function test_Model_complex_mult_variable(::Any, ::Any)
+    model = Model()
+    @variable(model, x[1:3])
+    A = rand(ComplexF64, 3,3)
+    @test (@inferred A * x) isa Vector{GenericAffExpr{ComplexF64,VariableRef}}
+    return
+end
+
+function test_Model_complex_pow(::Any, ::Any)
+    model = Model()
+    @variable(model, x)
+    y = (1.0 + 2.0im) * x
+    @test y^0 == (1.0 + 0im)
+    @test y^1 == 0 * y * y + y
+    @test y^2 == y * y
+    @test_throws ErrorException y^3
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
