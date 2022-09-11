@@ -552,7 +552,7 @@ end
 function test_Model_complex_mult_variable(::Any, ::Any)
     model = Model()
     @variable(model, x[1:3])
-    A = rand(ComplexF64, 3,3)
+    A = rand(ComplexF64, 3, 3)
     @test (@inferred A * x) isa Vector{GenericAffExpr{ComplexF64,VariableRef}}
     return
 end
