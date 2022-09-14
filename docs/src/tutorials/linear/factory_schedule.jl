@@ -259,3 +259,68 @@ StatsPlots.groupedbar(
 )
 
 # Uh oh! We can't satisfy all of the demand.
+
+## How sensitive is the solution to changes in variable cost?
+
+# Let's run another experiment, this time seeing how the optimal objective
+# value changes as we vary the variable costs of each factory.
+
+# First though, let's reset the demand to it's original level:
+
+demand_df.demand ./= 1.5
+
+# For our experiment, we're going to scale the variable costs of both factories
+# by a set of values from `0.0` to `1.5`:
+
+scale_factors = 0:0.1:1.5
+
+# At a high level, we're going to loop over the scale factors for A, then the
+# scale factors for B, rescale the input data, call our
+# `solve_factory_scheduling` example, and then store the optimal objective
+# value in the following `cost` matrix:
+
+cost = zeros(length(scale_factors), length(scale_factors));
+
+# Because we're modifying `factory_df` in-place, we need to store the original
+# vairable costs in a new column:
+
+factory_df[!, :old_variable_cost] = copy(factory_df.variable_cost);
+
+# Then, we need a function to scale the `:variable_cost` column for a particular
+# factory by a value `scale`:
+
+function scale_variable_cost(df, factory, scale)
+    rows = df.factory .== factory
+    df[rows, :variable_cost] .=
+        round.(Int, df[rows, :old_variable_cost] .* scale)
+    return
+end
+
+# Our experiment is just a nested for-loop, modifying A and B and storing the
+# cost:
+
+for (j, a) in enumerate(scale_factors)
+    scale_variable_cost(factory_df, "A", a)
+    for (i, b) in enumerate(scale_factors)
+        scale_variable_cost(factory_df, "B", b)
+        cost[i, j] = solve_factory_scheduling(demand_df, factory_df).cost
+    end
+end
+
+# Let's visualize the cost matrix:
+
+StatsPlots.contour(
+    scale_factors,
+    scale_factors,
+    cost;
+    xlabel = "Scale of factory A",
+    ylabel = "Scale of factory B",
+)
+
+# What can you infer from the solution?
+
+# !!! info
+#     The [Power Systems](@ref) tutorial explains a number of other ways you can
+#     structure a problem to perform a parametric analysis of the solution. In
+#     particular, you can use in-place modification to reduce the time it takes
+#     to build and solve the resulting models.
