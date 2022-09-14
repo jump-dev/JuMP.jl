@@ -262,14 +262,14 @@ StatsPlots.groupedbar(
 
 # Uh oh! We can't satisfy all of the demand.
 
-## How sensitive is the solution to changes in variable cost?
+# ## How sensitive is the solution to changes in variable cost?
 
 # Let's run another experiment, this time seeing how the optimal objective
 # value changes as we vary the variable costs of each factory.
 
 # First though, let's reset the demand to it's original level:
 
-demand_df.demand ./= 1.5
+demand_df.demand ./= 1.5;
 
 # For our experiment, we're going to scale the variable costs of both factories
 # by a set of values from `0.0` to `1.5`:
@@ -284,7 +284,7 @@ scale_factors = 0:0.1:1.5
 cost = zeros(length(scale_factors), length(scale_factors));
 
 # Because we're modifying `factory_df` in-place, we need to store the original
-# vairable costs in a new column:
+# variable costs in a new column:
 
 factory_df[!, :old_variable_cost] = copy(factory_df.variable_cost);
 
