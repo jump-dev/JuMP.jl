@@ -165,26 +165,23 @@ function solve_factory_scheduling(
     @variable(model, unmet_demand[months] >= 0)
     ## We use `eachrow` to loop through the rows of the dataframe and add the
     ## relevant constraints.
-    for row in eachrow(factory_df)
-        m, f = row.month, row.factory
-        @constraints(model, begin
-            production[m, f] <= row.max_production * status[m, f]
-            production[m, f] >= row.min_production * status[m, f]
-        end)
+    for r in eachrow(factory_df)
+        m, f = r.month, r.factory
+        @constraint(model, production[m, f] <= r.max_production * status[m, f])
+        @constraint(model, production[m, f] >= r.min_production * status[m, f])
     end
     @constraint(
         model,
-        [row in eachrow(demand_df)],
-        sum(production[row.month, :]) + unmet_demand[row.month] == row.demand,
+        [r in eachrow(demand_df)],
+        sum(production[r.month, :]) + unmet_demand[r.month] == r.demand,
     )
     @objective(
         model,
         Min,
-        10_000 * sum(unmet_demand) +
-        sum(
-            row.fixed_cost * status[row.month, row.factory] +
-            row.variable_cost * production[row.month, row.factory] for
-            row in eachrow(factory_df)
+        10_000 * sum(unmet_demand) + sum(
+            r.fixed_cost * status[r.month, r.factory] +
+            r.variable_cost * production[r.month, r.factory] for
+            r in eachrow(factory_df)
         )
     )
     optimize!(model)
