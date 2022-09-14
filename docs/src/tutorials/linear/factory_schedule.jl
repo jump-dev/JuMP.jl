@@ -92,8 +92,8 @@ factories_filename = joinpath(@__DIR__, "factory_schedule_factories.txt")
 
 print(read(factories_filename, String))
 
-# You can reproduce this locally by saving the contents to a new file and
-# updating `factories_filename` appropriately.
+# You can reproduce this tutorial locally by saving the contents to a new file
+# and updating `factories_filename` appropriately.
 
 # We use the `CSV` and `DataFrames` packages to read it into Julia:
 
@@ -119,10 +119,12 @@ demand_df = CSV.read(
     ignorerepeated = true,
 )
 
+# ### Data validation
+
 # Before moving on, it's always good practice to validate the data you read from
 # external sources. The more effort you spend here, the fewer issues you will
 # have later. The following function contains a few simple checks, but we could
-# add others. For example, you might want to check that none of the values are
+# add more. For example, you might want to check that none of the values are
 # too large (or too small), which might indicate a typo or a unit conversion
 # issue (perhaps the variable costs are in \$/1000 units instead of \$/unit).
 
