@@ -272,7 +272,7 @@ ERROR: Unsupported use of the splatting operator. JuMP supports splatting only s
 
 ## User-defined Functions
 
-JuMP natively supports the set of univariate and multivariate recognized by the
+JuMP natively supports the set of univariate and multivariate functions recognized by the
 `MOI.Nonlinear` submodule. In addition to this list of functions, it is possible
 to register custom *user-defined* nonlinear functions. User-defined functions
 can be used anywhere in [`@NLobjective`](@ref), [`@NLconstraint`](@ref), and
@@ -759,7 +759,7 @@ the `Expr` representation is just a single sum.
 
 The most common cause, other than a lot of tedious typing, is if you write a
 program that automatically writes a JuMP model as a text file, which you later
-execute. One example is [MINLPlib.jl](ttps://github.com/lanl-ansi/MINLPLib.jl)
+execute. One example is [MINLPlib.jl](https://github.com/lanl-ansi/MINLPLib.jl)
 which automatically transpiled models in the GAMS scalar format into JuMP
 examples.
 
