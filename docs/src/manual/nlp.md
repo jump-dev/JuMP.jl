@@ -29,6 +29,12 @@ Use [`@NLobjective`](@ref) to set a nonlinear objective.
 ```jldoctest; setup=:(model = Model(); @variable(model, x[1:2]))
 julia> @NLobjective(model, Min, exp(x[1]) - sqrt(x[2]))
 ```
+To modify a nonlinear objective, call [`@NLobjective`](@ref) again.
+
+If you set an objective with both [`@objective`](@ref) and
+[`@NLobjective`](@ref), the nonlinear objective takes precedece, and the
+[`@objective`](@ref) will be ignored.
+
 ## Add a nonlinear constraint
 
 Use [`@NLconstraint`](@ref) to add a nonlinear constraint.
@@ -266,22 +272,16 @@ ERROR: Unsupported use of the splatting operator. JuMP supports splatting only s
 
 ## User-defined Functions
 
-JuMP's library of recognized univariate functions is derived from the
-[Calculus.jl](https://github.com/johnmyleswhite/Calculus.jl) package.
+JuMP natively supports the set of univariate and multivariate recognized by the
+`MOI.Nonlinear` submodule. In addition to this list of functions, it is possible
+to register custom *user-defined* nonlinear functions. User-defined functions
+can be used anywhere in [`@NLobjective`](@ref), [`@NLconstraint`](@ref), and
+[`@NLexpression`](@ref).
 
-In addition to this list of functions, it is possible to register custom
-*user-defined* nonlinear functions.
-
-!!! tip
-    User-defined functions can be used anywhere in [`@NLobjective`](@ref),
-    [`@NLconstraint`](@ref), and [`@NLexpression`](@ref).
-
-!!! tip
-    JuMP will attempt to automatically register functions it detects in your
-    nonlinear expressions, which usually means manually registering
-    a function is not needed. Two exceptions are if you want to provide custom
-    derivatives, or if the function is not available in the scope of the
-    nonlinear expression.
+JuMP will attempt to automatically register functions it detects in your
+nonlinear expressions, which usually means manually registering a function is
+not needed. Two exceptions are if you want to provide custom derivatives, or if
+the function is not available in the scope of the nonlinear expression.
 
 !!! warning
     User-defined functions must return a scalar output. For a work-around, see
@@ -290,10 +290,9 @@ In addition to this list of functions, it is possible to register custom
 ### Automatic differentiation
 
 JuMP does not support black-box optimization, so all user-defined functions must
-provide derivatives in some form.
-
-Fortunately, JuMP supports **automatic differentiation of user-defined functions**,
-a feature to our knowledge not available in any comparable modeling systems.
+provide derivatives in some form. Fortunately, JuMP supports **automatic
+differentiation of user-defined functions**, a feature to our knowledge not
+available in any comparable modeling systems.
 
 !!! info
     Automatic differentiation is *not* finite differencing. JuMP's automatically
@@ -304,6 +303,8 @@ perform automatic differentiation; see the ForwardDiff.jl
 [documentation](https://www.juliadiff.org/ForwardDiff.jl/v0.10.2/user/limitations.html)
 for a description of how to write a function suitable for automatic
 differentiation.
+
+#### Common mistakes when writing a user-defiend function
 
 !!! warning
     Get an error like `No method matching Float64(::ForwardDiff.Dual)`? Read
@@ -433,9 +434,7 @@ multivariate functions.
 
 #### Univariate functions
 
-Instead of automatically differentiating the hessian, you can instead pass a
-function which returns a number representing the second-order derivative.
-
+Pass a function which returns a number representing the second-order derivative:
 ```@example
 using JuMP #hide
 f(x) = x^2
@@ -628,7 +627,9 @@ In addition to the [`@NLexpression`](@ref), [`@NLobjective`](@ref) and
 objects directly by using [`add_nonlinear_expression`](@ref),
 [`set_nonlinear_objective`](@ref) and [`add_nonlinear_constraint`](@ref).
 
-This input form may be useful if the expressions are generated programmatically.
+This input form may be useful if the expressions are generated programmatically,
+or if you experience compilation issues with the macro input (see
+[Known performance issues](@ref0) for more information).
 
 ### Add a nonlinear expression
 
@@ -740,5 +741,30 @@ Feasibility
 Subject to
  (f_1(x) + f_2(x)) - 1.0 ≤ 0
 ```
+
+## Known performance issues
+
+The macro-based input to JuMP's nonlinear interface can cause a performance
+issue if you:
+
+ 1. write a macro with a large number (hundreds) of terms
+ 2. call that macro from within a function instead of from the top-level in
+    global scope.
+
+The first issue does not depend on the number of resulting terms in the
+mathematical expression, but rather the number of terms in the Julia `Expr`
+representation of that expression. For example, the expression
+`sum(x[i] for i in 1:1_000_000)` contains one million mathematical terms, but
+the `Expr` representation is just a single sum.
+
+The most common cause, other than a lot of tedious typing, is if you write a
+program that automatically writes a JuMP model as a text file, which you later
+execute. One example is [MINLPlib.jl](ttps://github.com/lanl-ansi/MINLPLib.jl)
+which automatically transpiled models in the GAMS scalar format into JuMP
+examples.
+
+As a rule of thumb, if you are writing programs to automatically generate
+expressions for the JuMP macros, you should target the [Raw expression input](@ref)
+instead. For more information, read [MathOptInterface Issue#1997](https://github.com/jump-dev/MathOptInterface.jl/issues/1997).
 
 [^1]: Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", SIAM Review, [PDF](https://mlubin.github.io/pdf/jump-sirev.pdf).
