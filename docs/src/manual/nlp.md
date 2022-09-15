@@ -32,7 +32,7 @@ julia> @NLobjective(model, Min, exp(x[1]) - sqrt(x[2]))
 To modify a nonlinear objective, call [`@NLobjective`](@ref) again.
 
 If you set an objective with both [`@objective`](@ref) and
-[`@NLobjective`](@ref), the nonlinear objective takes precedece, and the
+[`@NLobjective`](@ref), the nonlinear objective takes precedence, and the
 [`@objective`](@ref) will be ignored.
 
 ## Add a nonlinear constraint
@@ -304,7 +304,7 @@ perform automatic differentiation; see the ForwardDiff.jl
 for a description of how to write a function suitable for automatic
 differentiation.
 
-#### Common mistakes when writing a user-defiend function
+#### Common mistakes when writing a user-defined function
 
 !!! warning
     Get an error like `No method matching Float64(::ForwardDiff.Dual)`? Read
@@ -629,7 +629,7 @@ objects directly by using [`add_nonlinear_expression`](@ref),
 
 This input form may be useful if the expressions are generated programmatically,
 or if you experience compilation issues with the macro input (see
-[Known performance issues](@ref0) for more information).
+[Known performance issues](@ref) for more information).
 
 ### Add a nonlinear expression
 
