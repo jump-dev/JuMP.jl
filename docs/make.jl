@@ -24,7 +24,6 @@ const _PDF = findfirst(isequal("--pdf"), ARGS) !== nothing || _IS_GITHUB_ACTIONS
 # ==============================================================================
 
 function _link_example(content)
-    content = replace(content, "@example" => "@repl")
     edit_url = match(r"EditURL = \"(.+?)\"", content)[1]
     if !_IS_GITHUB_ACTIONS
         # The link won't work locally. So hard-code in a URL.
