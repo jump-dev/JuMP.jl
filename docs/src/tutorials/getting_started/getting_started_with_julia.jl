@@ -44,7 +44,7 @@
 
 # ## The Julia REPL
 
-# The main way of interacting with Julia is via it's REPL (Read Evaluate Print
+# The main way of interacting with Julia is via its REPL (Read Evaluate Print
 # Loop). To access the REPL, start the Julia executable to arrive at the
 # `julia>` prompt, and then start coding:
 
