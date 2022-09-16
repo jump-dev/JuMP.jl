@@ -62,7 +62,8 @@
 #     ```
 #     $ julia path/to/file.jl
 #     ```
-#     Use the REPL or a notebook instead.
+#     Use the REPL or a notebook instead, and read [The "time-to-first-solve" issue](@ref)
+#     for more information.
 
 # ### Code blocks in this documentation
 
@@ -74,8 +75,8 @@
 
 # Blocks without the `julia>` can be copy-pasted into the REPL, but they are
 # used because they enable richer output like plots or LaTeX to be displayed in
-# the online and PDF versions of the documentation. If you run them from the
-# REPL you may see different output.
+# the online and [PDF](JuMP.pdf) versions of the documentation. If you run them
+# from the REPL you may see different output.
 
 # ## Where to get help
 
