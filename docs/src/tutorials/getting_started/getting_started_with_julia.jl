@@ -28,32 +28,6 @@
 #     basics of Julia. You can find resources that provide a more comprehensive
 #     introduction to Julia [here](https://julialang.org/learning/).
 
-# ## Where to get help
-
-#  * Read the documentation
-#    * JuMP [https://jump.dev/JuMP.jl/stable/](https://jump.dev/JuMP.jl/stable/)
-#    * Julia [https://docs.julialang.org/en/v1/](https://docs.julialang.org/en/v1/)
-#  * Ask (or browse) the Julia community forum: [https://discourse.julialang.org](https://discourse.julialang.org)
-#    * If the question is JuMP-related, ask in the [Optimization (Mathematical)](https://discourse.julialang.org/c/domain/opt/13)
-#      section, or tag your question with "jump"
-
-# To access the built-in help at the REPL, type `?`, followed by the name of the
-# function to lookup:
-# ```julia
-# help?> help
-# search: help schedule Channel hasfield check_belongs_to_model @threadcall AbstractChannel searchsortedlast
-#
-#  Welcome to Julia 1.6.2. The full manual is available at
-#
-#  https://docs.julialang.org
-#
-#  as well as many great tutorials and learning resources:
-#
-#  https://julialang.org/learning/
-#
-#  For help on a specific function or macro, type ? followed by its name, e.g. ?cos, or ?@time, and press enter. Type ; to enter shell mode, ] to enter package mode.
-# ```
-
 # ## Installing Julia
 
 # To install Julia, [download the latest stable release](https://julialang.org/downloads/),
@@ -65,31 +39,102 @@
 # Next, you need an IDE to develop in. VS Code is a popular choice, so follow
 # [these install instructions](https://www.julia-vscode.org/docs/stable/gettingstarted/).
 
+# Julia can also be used with [Jupyter notebooks](https://github.com/JuliaLang/IJulia.jl)
+# or the reactive notebooks of [Pluto.jl](https://github.com/fonsp/Pluto.jl).
+
+# ## The Julia REPL
+
+# The main way of interacting with Julia is via it's REPL (Read Evaluate Print
+# Loop). To access the REPL, start the Julia executable to arrive at the
+# `julia>` prompt, and then start coding:
+
+1 + 1
+
+# As your programs become larger, write a script as a text file, and then run
+# that file using:
+# ```julia
+# julia> include("path/to/file.jl")
+# ```
+
+# !!! warning
+#     Because of Julia's startup latency, running scripts from the command line
+#     like the following is slow:
+#     ```
+#     $ julia path/to/file.jl
+#     ```
+#     Use the REPL or a notebook instead.
+
+# ### Code blocks in this documentation
+
+# In this documentation you'll see a mix of code examples with and without the
+# `julia>`.
+
+# The Julia prompt is mostly used to demonstrate short code snippets, and the
+# output is exactly what you will see if run from the REPL.
+
+# Blocks without the `julia>` can be copy-pasted into the REPL, but they are
+# used because they enable richer output like plots or LaTeX to be displayed in
+# the online and PDF versions of the documentation. If you run them from the
+# REPL you may see different output.
+
+# ## Where to get help
+
+#  * Read the documentation
+#    * JuMP [https://jump.dev/JuMP.jl/stable/](https://jump.dev/JuMP.jl/stable/)
+#    * Julia [https://docs.julialang.org/en/v1/](https://docs.julialang.org/en/v1/)
+#  * Ask (or browse) the Julia community forum: [https://discourse.julialang.org](https://discourse.julialang.org)
+#    * If the question is JuMP-related, ask in the [Optimization (Mathematical)](https://discourse.julialang.org/c/domain/opt/13)
+#      section, or tag your question with "jump"
+
+# To access the built-in help at the REPL, type `?` to enter help-mode, followed
+# by the name of the function to lookup:
+# ```julia
+# help?> print
+# search: print println printstyled sprint isprint prevind parentindices precision escape_string
+#
+#   print([io::IO], xs...)
+#
+#   Write to io (or to the default output stream stdout if io is not given) a canonical
+#   (un-decorated) text representation. The representation used by print includes minimal formatting
+#   and tries to avoid Julia-specific details.
+#
+#   print falls back to calling show, so most types should just define show. Define print if your
+#   type has a separate "plain" representation. For example, show displays strings with quotes, and
+#   print displays strings without quotes.
+#
+#   string returns the output of print as a string.
+#
+#   Examples
+#   ≡≡≡≡≡≡≡≡≡≡
+#
+#   julia> print("Hello World!")
+#   Hello World!
+#   julia> io = IOBuffer();
+#
+#   julia> print(io, "Hello", ' ', :World!)
+#
+#   julia> String(take!(io))
+#   "Hello World!"
+# ```
+
 # ## Numbers and arithmetic
 
 # Since we want to solve optimization problems, we're going to be using a lot of
 # math. Luckily, Julia is great for math, with all the usual operators:
 
-@show 1 + 1
-@show 1 - 2
-@show 2 * 2
-@show 4 / 5
-@show 3^2
-nothing #hide
-
-# !!! info
-#     The `@` in front of something indicates that it is a macro, which is
-#     a special type of function. In this case, `@show` prints the expression as
-#     typed (e.g., `1 - 2`), as well as the evaluation of the expression (`-1`).
+1 + 1
+1 - 2
+2 * 2
+4 / 5
+3^2
 
 # Did you notice how Julia didn't print `.0` after some of the numbers? Julia is
 # a dynamic language, which means you never have to explicitly declare the type
 # of a variable. However, in the background, Julia is giving each variable a
 # type. Check the type of something using the `typeof` function:
 
-@show typeof(1)
-@show typeof(1.0)
-nothing #hide
+typeof(1)
+typeof(1.0)
 
 # Here `1` is an `Int64`, which is an integer with 64 bits of precision, and
 # `1.0` is a `Float64`, which is a floating point number with 64-bits of
@@ -102,11 +147,10 @@ nothing #hide
 # We create complex numbers using `im`:
 
 x = 2 + 1im
-@show real(x)
-@show imag(x)
-@show typeof(x)
-@show x * (1 - 2im)
-nothing #hide
+real(x)
+imag(x)
+typeof(x)
+x * (1 - 2im)
 
 # !!! info
 #     The curly brackets surround what we call the _parameters_ of a type. You
@@ -144,7 +188,7 @@ typeof(2π / 3)
 
 0.1 * 3 == 0.3
 
-#- A more complicated example is:
+# A more complicated example is:
 
 sin(2π / 3) == √3 / 2
 
@@ -154,9 +198,6 @@ sin(2π / 3) == √3 / 2
 # Let's see what the differences are:
 
 0.1 * 3 - 0.3
-
-#-
-
 sin(2π / 3) - √3 / 2
 
 # They are small, but not zero!
@@ -169,9 +210,6 @@ sin(2π / 3) - √3 / 2
 # Let's try that again using ≈ (`\approx + [TAB]`) instead of `==`:
 
 0.1 * 3 ≈ 0.3
-
-#-
-
 sin(2π / 3) ≈ √3 / 2
 
 # `≈` is a clever way of calling the `isapprox` function:
@@ -230,12 +268,7 @@ x = A \ b
 # !!! info
 #     Here is floating point at work again! `x` is approximately `[-4, 4.5]`.
 
-#-
-
 A * x
-
-#-
-
 A * x ≈ b
 
 # Note that when multiplying vectors and matrices, dimensions matter. For
@@ -250,9 +283,6 @@ end                         #hide
 # But multiplying transposes works:
 
 b' * b
-
-#-
-
 b * b'
 
 # ## Other common types
@@ -267,8 +297,7 @@ typeof("This is Julia")
 
 typeof("π is about 3.1415")
 
-# Use [`println`](https://docs.julialang.org/en/v1/base/io-network/#Base.println)
-# to print a string:
+# Use `println` to print a string:
 
 println("Hello, World!")
 
@@ -284,7 +313,7 @@ println("The value of x is: $(x)")
 
 println("The value of x is: $(eval(:x))")
 
-# !!! tip
+# !!! warning
 #     We used `eval` here to demonstrate how Julia links `Symbol`s to variables.
 #     However, avoid calling `eval` in your code. It is usually a sign that your
 #     code is doing something that could be more easily achieved a different
@@ -299,9 +328,6 @@ typeof(:x)
 # Convert between `String` and `Symbol` using their constructors:
 
 String(:abc)
-
-#-
-
 Symbol("abc")
 
 # !!! tip
@@ -316,9 +342,6 @@ Symbol("abc")
 # immutable collections of values. For example:
 
 t = ("hello", 1.2, :foo)
-
-#-
-
 typeof(t)
 
 # Tuples can be accessed by index, similar to arrays:
@@ -363,7 +386,7 @@ Dict("A" => 1, "B" => 2.5, "D" => 2 - 3im)
 #     Julia types form a hierarchy. Here the value type of the dictionary is
 #     `Number`, which is a generalization of `Int64`, `Float64`, and
 #     `Complex{Int}`. Leaf nodes in this hierarchy are called "concrete" types,
-#     and all others are called "Abstract". In general, having variables with
+#     and all others are called "Abstract." In general, having variables with
 #     abstract types like `Number` can lead to slower code, so you should try to
 #     make sure every element in a dictionary or vector is the same type. For
 #     example, in this case we could represent every element as a
@@ -374,13 +397,7 @@ Dict("A" => 1.0 + 0.0im, "B" => 2.5 + 0.0im, "D" => 2.0 - 3.0im)
 # Dictionaries can be nested:
 
 d2 = Dict("A" => 1, "B" => 2, "D" => Dict(:foo => 3, :bar => 4))
-
-#-
-
 d2["B"]
-
-#-
-
 d2["D"][:foo]
 
 # ## Structs
@@ -394,9 +411,6 @@ struct MyStruct
 end
 
 a = MyStruct(1, "a", Dict(2 => 3))
-
-#-
-
 a.x
 
 # By default, these are not mutable
@@ -417,11 +431,7 @@ end
 
 a = MyStructMutable(1, "a", Dict(2 => 3))
 a.x
-
-#-
-
 a.x = 2
-
 a
 
 # ## Loops
@@ -435,8 +445,6 @@ end
 
 # !!! info
 #     Ranges are constructed as `start:stop`, or `start:step:stop`.
-
-#-
 
 for i in 1.2:1.1:5.6
     println(i)
@@ -525,9 +533,6 @@ function mult(x; y = 2.0)
 end
 
 mult(4.0)
-
-#-
-
 mult(4.0; y = 5.0)
 
 # ### Anonymous functions
@@ -537,9 +542,6 @@ mult(4.0; y = 5.0)
 
 f = x -> x^2
 f(2)
-
-#-
-
 map(x -> x^2, 1:4)
 
 # ### Type parameters
@@ -559,10 +561,9 @@ function foo(x::Number)
     return x + 1
 end
 
-@show foo(2)
-@show foo(2.0)
-@show foo(1 + 1im)
-nothing #hide
+foo(2)
+foo(2.0)
+foo(1 + 1im)
 
 # But what happens if we call `foo` with something we haven't defined it for?
 
@@ -602,7 +603,7 @@ f.([1, 2, 3])
 # inside them. A good example is an array. You can modify the contents of an
 # array without having to make a new array.
 
-# In contrast, types like `Float64` are *immutable*. You can't modify the
+# In contrast, types like `Float64` are *immutable*. You cannot modify the
 # contents of a `Float64`.
 
 # This is something to be aware of when passing types into functions. For
@@ -629,9 +630,6 @@ println("immutable_type: $(immutable_type)")
 # You can check mutability with the `isimmutable` function:
 
 isimmutable([1, 2, 3])
-
-#-
-
 isimmutable(1)
 
 # ## The package manager
