@@ -12,6 +12,9 @@
 
 Welcome to the documentation for JuMP!
 
+!!! note
+    This documentation is also available in PDF format: [JuMP.pdf](JuMP.pdf).
+
 ## What is JuMP?
 
 [JuMP](https://github.com/jump-dev/JuMP.jl) is a domain-specific modeling
