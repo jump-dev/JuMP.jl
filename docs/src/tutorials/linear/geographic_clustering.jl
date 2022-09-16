@@ -111,12 +111,9 @@ dm = LinearAlgebra.LowerTriangular([
 
 model = Model(HiGHS.Optimizer)
 set_silent(model)
-#-
 @variable(model, x[1:n, 1:k], Bin)
 @constraint(model, [i = 1:n], sum(x[i, :]) == 1);
-
-# To reduce symmetry, we fix the first city to belong to the first group.
-
+## To reduce symmetry, we fix the first city to belong to the first group.
 fix(x[1, 1], 1; force = true)
 
 # The total population of a group $k$ is $Q_k = \sum_ix_{i,k}q_i$ where $q_i$ is
@@ -142,9 +139,6 @@ fix(x[1, 1], 1; force = true)
 # pair $i,j$ and every $k$:
 
 @variable(model, z[i = 1:n, j = 1:i], Bin)
-
-#-
-
 for k in 1:k, i in 1:n, j in 1:i
     @constraint(model, z[i, j] >= x[i, k] + x[j, k] - 1)
 end
@@ -152,7 +146,7 @@ end
 # We can now add an objective to our model which will simply be to minimize the
 # dot product of $z$ and our distance matrix, `dm`.
 
-@objective(model, Min, sum(dm[i, j] * z[i, j] for i in 1:n, j in 1:i))
+@objective(model, Min, sum(dm[i, j] * z[i, j] for i in 1:n, j in 1:i));
 
 # We can then call `optimize!` and review the results.
 

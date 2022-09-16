@@ -55,7 +55,9 @@ using HiGHS
 # where `i` is the row and `j` is the column.
 
 # Create a model
+
 sudoku = Model(HiGHS.Optimizer)
+set_silent(sudoku)
 
 # Create our variables
 @variable(sudoku, x[i = 1:9, j = 1:9, k = 1:9], Bin);
@@ -64,8 +66,8 @@ sudoku = Model(HiGHS.Optimizer)
 # obvious to us as humans, but what we need to enforce: that there can be only
 # one number per cell.
 
-for i in 1:9  ## For each row
-    for j in 1:9  ## and each column
+for i in 1:9  # For each row
+    for j in 1:9  # and each column
         ## Sum across all the possible digits. One and only one of the digits
         ## can be in this cell, so the sum must be equal to one.
         @constraint(sudoku, sum(x[i, j, k] for k in 1:9) == 1)
@@ -76,8 +78,8 @@ end
 # are all very similar, so much so that we can actually add them at the same
 # time.
 
-for ind in 1:9  ## Each row, OR each column
-    for k in 1:9  ## Each digit
+for ind in 1:9  # Each row, OR each column
+    for k in 1:9  # Each digit
         ## Sum across columns (j) - row constraint
         @constraint(sudoku, sum(x[ind, j, k] for j in 1:9) == 1)
         ## Sum across rows (i) - column constraint

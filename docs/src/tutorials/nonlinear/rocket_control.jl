@@ -103,7 +103,7 @@ n = 800    # Time steps
     m_f ≤ m[1:n] ≤ m_0    # Mass
     ## Control variables
     0 ≤ T[1:n] ≤ T_max    # Thrust
-end)
+end);
 
 # ## Objective
 
@@ -130,7 +130,7 @@ fix(m[n], m_f; force = true)
         ## Time of flight
         t_f, Δt * n
     end
-)
+);
 
 # ## Dynamics
 
