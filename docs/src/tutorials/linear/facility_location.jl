@@ -5,8 +5,8 @@
 
 # # The facility location problem
 
-# It was originally contributed by Mathieu Tanneau (@mtanneau) and
-# Alexis Montoison (@amontoison).
+# This tutorial was originally contributed by Mathieu Tanneau (@mtanneau) and
+# Alexis Montoison (@amontoison). It requires the following packages:
 
 using JuMP
 import HiGHS
@@ -64,11 +64,15 @@ import Random
 
 # ### Problem data
 
+# To ensure reproducility, we set the random number seed:
+
 Random.seed!(314)
 
-## number of clients
+# Here's the data we need:
+
+## Number of clients
 m = 12
-## number of facility locations
+## Number of facility locations
 n = 5
 
 ## Clients' locations
@@ -123,14 +127,13 @@ set_silent(ufl)
 # Solve the uncapacitated facility location problem with HiGHS
 
 optimize!(ufl)
-
-#-
-
 println("Optimal value: ", objective_value(ufl))
 
 # ### Visualizing the solution
 
-# The threshold 1e-5 ensure that edges between clients and facilities are drawn when x[i, j] ≈ 1.
+# The threshold 1e-5 ensure that edges between clients and facilities are drawn
+# when `x[i, j] ≈ 1`.
+
 x_ = value.(x) .> 1 - 1e-5
 y_ = value.(y) .> 1 - 1e-5
 
@@ -202,13 +205,15 @@ p
 # \end{aligned}
 # ```
 #
-# For simplicity, we will assume that there is enough capacity to serve the demand,
-#  i.e., there exists at least one feasible solution.
+# For simplicity, we will assume that there is enough capacity to serve the
+# demand, that is, there exists at least one feasible solution.
 
-# Demands
+# We need some new data:
+
+## Demands
 a = rand(1:3, m);
 
-# Capacities
+## Capacities
 q = rand(5:10, n);
 
 # Display the data
@@ -249,15 +254,12 @@ set_silent(cfl)
 # Solve the problem
 
 optimize!(cfl)
-
-#-
-
 println("Optimal value: ", objective_value(cfl))
 
 # ### Visualizing the solution
 
 # The threshold 1e-5 ensure that edges between clients and facilities are drawn
-# when x[i, j] ≈ 1.
+# when `x[i, j] ≈ 1`.
 x_ = value.(x) .> 1 - 1e-5;
 y_ = value.(y) .> 1 - 1e-5;
 

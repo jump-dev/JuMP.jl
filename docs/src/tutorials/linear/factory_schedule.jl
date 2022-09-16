@@ -16,13 +16,13 @@
 
 # ## Required packages
 
-using JuMP
+# This tutorial requires the following packages:
 
+using JuMP
 import CSV
 import DataFrames
 import HiGHS
 import StatsPlots
-
 import Test  #src
 
 # ## Formulation

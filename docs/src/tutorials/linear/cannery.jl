@@ -16,6 +16,8 @@
 
 # ## Required packages
 
+# This tutorial requires the following packages:
+
 using JuMP
 import HiGHS
 import JSON
@@ -105,17 +107,17 @@ model = Model(HiGHS.Optimizer)
 
 # Finally, our objective is to minimize the transportation distance:
 
-@objective(model, Min, sum(distance(p, m) * x[p, m] for p in P, m in M))
+@objective(model, Min, sum(distance(p, m) * x[p, m] for p in P, m in M));
 
 # ## Solution
 
-optimize!(model)
+# Let's optimize and look at the solution:
 
+optimize!(model)
 solution_summary(model)
 
 # What's the optimal shipment?
 
-println("RESULTS:")
 for p in P, m in M
     println(p, " => ", m, ": ", value(x[p, m]))
 end

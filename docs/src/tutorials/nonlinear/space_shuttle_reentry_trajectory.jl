@@ -200,7 +200,7 @@ model = Model(optimizer_with_attributes(Ipopt.Optimizer, user_options...))
     deg2rad(-89) ≤ β[1:n] ≤ deg2rad(1)  # bank angle (rad)
     ##        3.5 ≤       Δt[1:n] ≤ 4.5          # time step (sec)
     Δt[1:n] == 4.0         # time step (sec)
-end)
+end);
 
 # !!! info
 #     Above you can find two alternatives for the `Δt` variables.
@@ -316,15 +316,10 @@ println(
 
 # ### Plotting the results
 
+# Let's plot the results to visualize the optimal trajectory:
+
 using Plots
-
-#-
-
 ts = cumsum([0; value.(Δt)])[1:end-1]
-nothing #hide
-
-#-
-
 plt_altitude = plot(
     ts,
     value.(scaled_h);

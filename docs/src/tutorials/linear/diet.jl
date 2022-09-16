@@ -10,6 +10,8 @@
 
 # ## Required packages
 
+# This tutorial requires the following packages:
+
 using JuMP
 import DataFrames
 import HiGHS
@@ -92,7 +94,7 @@ model = Model(HiGHS.Optimizer)
 # Next, we create a set of decision variables `x`, indexed over the foods in the
 # `data` DataFrame. Each `x` has a lower bound of `0`.
 
-@variable(model, x[foods.name] >= 0)
+@variable(model, x[foods.name] >= 0);
 
 # Our objective is to minimize the total cost of purchasing food. We can write
 # that as a sum over the rows in `data`.
@@ -101,7 +103,7 @@ model = Model(HiGHS.Optimizer)
     model,
     Min,
     sum(food["cost"] * x[food["name"]] for food in eachrow(foods)),
-)
+);
 
 # For the next component, we need to add a constraint that our total intake of
 # each component is within the limits contained in the `limits` DataFrame.
@@ -121,12 +123,12 @@ print(model)
 
 # ## Solution
 
+# Let's optimize and take a look at the solution:
+
 optimize!(model)
-
-Test.@test primal_status(model) == FEASIBLE_POINT   #hide
-Test.@test objective_value(model) ≈ 11.8288 atol = 1e-4 #hide
-
 solution_summary(model)
+Test.@test primal_status(model) == FEASIBLE_POINT        #hide
+Test.@test objective_value(model) ≈ 11.8288 atol = 1e-4  #hide
 
 # Success! We found an optimal solution. Let's see what the optimal solution is:
 
@@ -144,15 +146,10 @@ end
 # most 6 units of milk or ice cream combined.
 
 @constraint(model, x["milk"] + x["ice cream"] <= 6)
-
-#-
-
 optimize!(model)
-
+solution_summary(model)
 Test.@test termination_status(model) == INFEASIBLE  #hide
 Test.@test primal_status(model) == NO_SOLUTION      #hide
 
-solution_summary(model)
-
-# Uh oh! There exists no feasible solution to our problem. Looks like we're stuck
-# eating ice cream for dinner.
+# Uh oh! There exists no feasible solution to our problem. Looks like we're
+# stuck eating ice cream for dinner.

@@ -37,9 +37,10 @@
 # demands, fluids in pipes,  currents in an electrical circuit, or anything
 # similar in which something travels through a network of nodes.
 
+# This tutorial requires the following packages:
+
 using JuMP
 import HiGHS
-import LinearAlgebra
 
 # ## The shortest path problem
 
@@ -53,13 +54,12 @@ import LinearAlgebra
 # ```math
 # \begin{aligned}
 # \min && \sum_{\forall e(i,j) \in E} a_{i,j} \times x_{i,j} \\
-# s.t. && b(i) = \sum_j x_{ij} - \sum_k x_{ki} = \begin{cases}
-# 1 &\mbox{if $i$ is the starting node,} \\
-# -1 &\mbox{if $i$ is the ending node,} \\
-# 0 &\mbox{otherwise.} \end{cases} \\
+# s.t. && sum_j x_{ij} - \sum_k x_{ki} = b_i \\
 # && x_{e} \in \{0,1\} && \forall e \in E
 # \end{aligned}
 # ```
+# where ``b_i`` is ``1`` if ``i`` is the starting node, ``-1`` if ``i`` is the
+# ending node, and ``0`` otherwise.
 
 G = [
     0 100 30 0 0
@@ -68,26 +68,16 @@ G = [
     0 15 0 0 50
     0 0 0 0 0
 ]
-
 n = size(G)[1]
-
+b = [1, -1, 0, 0, 0]
 shortest_path = Model(HiGHS.Optimizer)
 set_silent(shortest_path)
 @variable(shortest_path, x[1:n, 1:n], Bin)
-# Arcs with zero cost are not a part of the path as they do no exist
+## Arcs with zero cost are not a part of the path as they do no exist
 @constraint(shortest_path, [i = 1:n, j = 1:n; G[i, j] == 0], x[i, j] == 0)
-# Flow conservation constraint
-@constraint(
-    shortest_path,
-    [i = 1:n; i != 1 && i != 2],
-    sum(x[i, :]) == sum(x[:, i])
-)
-# Flow coming out of source = 1
-@constraint(shortest_path, sum(x[1, :]) - sum(x[:, 1]) == 1)
-# Flowing coming out of destination = -1 i.e. Flow entering destination = 1
-@constraint(shortest_path, sum(x[2, :]) - sum(x[:, 2]) == -1)
-@objective(shortest_path, Min, LinearAlgebra.dot(G, x))
-
+## Flow conservation constraint
+@constraint(shortest_path, [i = 1:n], sum(x[i, :]) - sum(x[:, i]) == b[i],)
+@objective(shortest_path, Min, sum(G .* x))
 optimize!(shortest_path)
 objective_value(shortest_path)
 #-
@@ -123,18 +113,15 @@ G = [
     5 0 4 3
     7 5 5 5
 ]
-
 n = size(G)[1]
-
 assignment = Model(HiGHS.Optimizer)
 set_silent(assignment)
 @variable(assignment, y[1:n, 1:n], Bin)
-# One person can only be assigned to one object
+## One person can only be assigned to one object
 @constraint(assignment, [i = 1:n], sum(y[:, i]) == 1)
-# One object can only be assigned to one person
+## One object can only be assigned to one person
 @constraint(assignment, [j = 1:n], sum(y[j, :]) == 1)
-@objective(assignment, Max, LinearAlgebra.dot(G, y))
-
+@objective(assignment, Max, sum(G .* y))
 optimize!(assignment)
 objective_value(assignment)
 #-
@@ -167,18 +154,14 @@ G = [
     0 0 0 0 0 0 0 4
     0 0 0 0 0 0 0 0
 ]
-
 n = size(G)[1]
-
 max_flow = Model(HiGHS.Optimizer)
-
 @variable(max_flow, f[1:n, 1:n] >= 0)
-# Capacity constraints
+## Capacity constraints
 @constraint(max_flow, [i = 1:n, j = 1:n], f[i, j] <= G[i, j])
-# Flow conservation constraints
+## Flow conservation constraints
 @constraint(max_flow, [i = 1:n; i != 1 && i != 8], sum(f[i, :]) == sum(f[:, i]))
 @objective(max_flow, Max, sum(f[1, :]))
-
 optimize!(max_flow)
 objective_value(max_flow)
 #-
