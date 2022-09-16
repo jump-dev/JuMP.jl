@@ -83,9 +83,7 @@ if !_FAST
         _literate_directory.(joinpath.(root, dir))
     end
     # Convert `@example` blocks into `@repl` blocks in the following files:
-    for file in [
-        joinpath("getting_started", "getting_started_with_julia.md"),
-    ]
+    for file in [joinpath("getting_started", "getting_started_with_julia.md")]
         filename = joinpath(@__DIR__, "src", "tutorials", file)
         content = read(filename, String)
         content = replace(content, "@example" => "@repl")
