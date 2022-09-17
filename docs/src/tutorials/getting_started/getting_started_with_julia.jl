@@ -75,7 +75,7 @@
 
 # Blocks without the `julia>` can be copy-pasted into the REPL, but they are
 # used because they enable richer output like plots or LaTeX to be displayed in
-# the online and [PDF](JuMP.pdf) versions of the documentation. If you run them
+# the online and [PDF](../../JuMP.pdf) versions of the documentation. If you run them
 # from the REPL you may see different output.
 
 # ## Where to get help
