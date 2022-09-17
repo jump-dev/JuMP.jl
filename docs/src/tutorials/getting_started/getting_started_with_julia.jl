@@ -351,7 +351,7 @@ d1 = Dict(1 => "A", 2 => "B", 4 => "D")
 #     Type-stuff again: `Dict{Int64,String}` is a dictionary with `Int64` keys
 #     and `String` values.
 
-# Looking up a values uses the bracket syntax:
+# Looking up a value uses the bracket syntax:
 
 d1[2]
 
