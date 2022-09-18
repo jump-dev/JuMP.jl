@@ -240,7 +240,7 @@ StatsPlots.groupedbar(
 
 # ## What happens if demand increases?
 
-# Let's run an experiment by increasing the demannd by 50% in all time periods:
+# Let's run an experiment by increasing the demand by 50% in all time periods:
 
 demand_df.demand .*= 1.5
 

@@ -83,7 +83,7 @@ import HiGHS
 0.1 * 3 == 0.3
 
 # !!! tip
-#     Read the [Guidlines for numerical issues](https://www.gurobi.com/documentation/9.5/refman/guidelines_for_numerical_i.html)
+#     Read the [Guidelines for numerical issues](https://www.gurobi.com/documentation/9.5/refman/guidelines_for_numerical_i.html)
 #     section of the Gurobi documentation, along with the
 #     [Debugging numerical problems](https://yalmip.github.io/inside/debuggingnumerics/)
 #     section of the YALMIP documentation.
@@ -226,7 +226,7 @@ termination_status(model)
 #     julia> compute_conflict!(model)
 #     ERROR: ArgumentError: The optimizer HiGHS.Optimizer does not support `compute_conflict!`
 #     ```
-#     In this case, HiGHS does not support computign conflicts, but other
+#     In this case, HiGHS does not support computing conflicts, but other
 #     solvers such as Gurobi and CPLEX do. If the solver does support computing
 #     conflicts, read [Conflicts](@ref) for more details.
 

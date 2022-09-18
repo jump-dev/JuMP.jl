@@ -5,9 +5,9 @@
 
 # # The multi-commodity flow problem
 
-# JuMP implementation of the multicommodity transportation model AMPL: A Modeling
-# Language for Mathematical Programming, 2nd ed by Robert Fourer, David Gay, and
-# Brian W. Kernighan 4-1.
+# JuMP implementation of the multi-commodity transportation model AMPL: A
+# Modeling Language for Mathematical Programming, 2nd ed by Robert Fourer, David
+# Gay, and Brian W. Kernighan 4-1.
 #
 # Originally contributed by Louis Luangkesorn, February 26, 2015.
 

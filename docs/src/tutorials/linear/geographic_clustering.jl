@@ -107,7 +107,7 @@ dm = LinearAlgebra.LowerTriangular([
 # First, we'll set up a model that leverages the Cbc solver. Next, we'll set up
 # a binary variable $x_{i,k}$ that takes the value $1$ if city $i$ is in group
 # $k$ and $0$ otherwise. Each city must be in a group, so we'll add the
-# constraint $\sum_kx_{i,k} = 1$ for every $i$.
+# constraint $\sum_k x_{i,k} = 1$ for every $i$.
 
 model = Model(HiGHS.Optimizer)
 set_silent(model)

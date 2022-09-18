@@ -68,7 +68,7 @@ model = Model()
 
 # ## Sets of numbers
 
-# Sets of numbers are useful to decribe sets that are ordered, such as years or
+# Sets of numbers are useful to describe sets that are ordered, such as years or
 # elements in a vector. The easiest way to create sets of numbers is to use
 # Julia's `range` syntax.
 

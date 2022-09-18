@@ -107,7 +107,7 @@ Alternatives to consider are:
  * [InfiniteOpt.jl](https://github.com/infiniteopt/InfiniteOpt.jl)
  * [pyomo.DAE](https://pyomo.readthedocs.io/en/stable/modeling_extensions/dae.html)
 
-### Multiobjective programs
+### Multi-objective programs
 
 If your problem has more than one objective, JuMP is not the right tool for the
 job. However, [we're working on fixing this!](https://github.com/jump-dev/JuMP.jl/issues/2099).

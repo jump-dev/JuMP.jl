@@ -28,7 +28,7 @@ see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.2.1).
 For a detailed list of the closed issues and pull requests from this release,
 see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.2.0).
 
-This is a large minor release beause it significantly refactors the internal
+This is a large minor release because it significantly refactors the internal
 code for handling nonlinear programs to use the `MathOptInterface.Nonlinear`
 submodule that was introduced in MathOptInterface v1.3.0. As a consequence, the
 internal datastructure in `model.nlp_data` has been removed, as has the
@@ -98,7 +98,7 @@ A summary of changes are as follows:
 
 ## Version 1.0.0 (March 24, 2022)
 
-**Read more about this release, along with an ackowledgement of all the
+**Read more about this release, along with an acknowledgement of all the
 contributors in our [JuMP 1.0.0 is released](https://jump.dev/blog/1.0.0-release/)
 blog post.**
 
@@ -920,7 +920,7 @@ The following changes are primarily of interest to developers of JuMP extensions
 
    * The new syntax `@constraint(model, expr in Cone)` creates the constraint ensuring that `expr` is inside `Cone`. The `Cone` argument is passed to `constructconstraint!` which enables the call to the dispatched to an extension.
    * The `@variable` macro now calls `constructvariable!` instead of directly calling the `Variable` constructor. Extra arguments and keyword arguments passed to `@variable` are passed to `constructvariable!` which enables the call to be dispatched to an extension.
-   * Refactor the internal function `conicdata` (used build the MathProgBase conic model) into smaller subfunctions to make these parts reusable by extensions.
+   * Refactor the internal function `conicdata` (used build the MathProgBase conic model) into smaller sub-functions to make these parts reusable by extensions.
 
 ## Version 0.16.2 (March 28, 2017)
 
@@ -968,7 +968,7 @@ The following changes are primarily of interest to developers of JuMP extensions
 
 ## Version 0.14.2 (December 12, 2016)
 
-  * Allow singeton anonymous variables (includes bugfix)
+  * Allow singleton anonymous variables (includes bugfix)
 
 ## Version 0.14.1 (September 12, 2016)
 
@@ -1009,7 +1009,7 @@ The following changes are primarily of interest to developers of JuMP extensions
   * Most exported methods and macros have been renamed to avoid camelCase. See the list of changes [here](https://github.com/JuliaOpt/JuMP.jl/blob/e53d0db67cde2a4b80d0c1281f4b49eb0128a1f5/src/deprecated.jl#L30). There is a 1-1 mapping from the old names to the new, and it is safe to simply replace the names to update existing models.
   * Specify variable lower/upper bounds in `@variable` using the `lowerbound` and `upperbound` keyword arguments.
   * Change name printed for variable using the `basename` keyword argument to `@variable`.
-  * New `@variables` macro allows multiline declaration of groups of variables.
+  * New `@variables` macro allows multi-line declaration of groups of variables.
   * A number of solver methods previously available only through MathProgBase are now exposed directly in JuMP. The fix was [recorded](https://youtu.be/qF1lZPJ3a5A) live!
   * Compatibility fixes with Julia 0.5.
   * The "end" indexing syntax is no longer supported within JuMPArrays which do not use 1-based indexing until upstream issues are resolved, see [here](https://github.com/JuliaOpt/JuMP.jl/issues/730).
@@ -1049,7 +1049,7 @@ The following changes are primarily of interest to developers of JuMP extensions
 
   * Julia 0.4.0 is the minimum required version for this release.
   * Fix for scoping semantics of index variables in sum{}. Index variables no longer leak into the surrounding scope.
-  * Addition of the `solve(m::Model, relaxation=true)` keyword argument to solve the standard continuous realaxation of model `m`
+  * Addition of the `solve(m::Model, relaxation=true)` keyword argument to solve the standard continuous relaxation of model `m`
   * The `getConstraintBounds()` method allows access to the lower and upper bounds of all constraints in a (nonlinear) model.
   * Update for breaking changes in MathProgBase
 

@@ -64,7 +64,7 @@ import Random
 
 # ### Problem data
 
-# To ensure reproducility, we set the random number seed:
+# To ensure reproducibility, we set the random number seed:
 
 Random.seed!(314)
 

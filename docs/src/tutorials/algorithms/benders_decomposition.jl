@@ -34,8 +34,8 @@ import Test  #src
 
 # Benders decomposition is a useful algorithm for solving convex optimization
 # problems with a large number of variables. It works best when a larger problem
-# can be decomposed into two (or more) smaller problems that are invidually much
-# easier to solve. This tutorial demonstrates Benders decomposition on the
+# can be decomposed into two (or more) smaller problems that are individually
+# much easier to solve. This tutorial demonstrates Benders decomposition on the
 # following mixed-integer linear program:
 # ```math
 # \begin{aligned}

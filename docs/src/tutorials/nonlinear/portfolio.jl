@@ -27,7 +27,7 @@
 # modern optimization techniques.
 #
 # This tutorial solves the famous Markowitz Portfolio Optimization problem with
-# data from [lecture notes from a course taught at Georgia Tech by Shabir Ahmed](https://www2.isye.gatech.edu/~sahmed/isye6669/).
+# data from [lecture notes from a course taught at Georgia Tech by Shabbir Ahmed](https://www2.isye.gatech.edu/~sahmed/isye6669/).
 
 # This tutorial uses the following packages
 using JuMP
