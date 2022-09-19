@@ -52,7 +52,7 @@ import HiGHS
 
 # ## Data
 
-# We assume our data is in the form of a text file, that has the following form.
+# We assume our data is in the form of a text file that has the following form.
 # In practice, we would obtain this text file from the user as input, but for
 # the purpose of this tutorial we're going to create it from Julia.
 
