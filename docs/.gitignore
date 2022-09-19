@@ -3,3 +3,4 @@ latex_build/
 src/tutorials/*/*.md
 !src/tutorials/*/introduction.md
 src/moi/
+src/tutorials/linear/tranp.txt
