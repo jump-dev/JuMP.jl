@@ -326,12 +326,12 @@ println("Hello, World!")
 x = 123
 println("The value of x is: $(x)")
 
-# Use triple-quotes for multiline strings
+# Use triple-quotes for multiline strings:
 
 s = """
 Here is
 a
-multine string
+multiline string
 """
 
 println(s)
