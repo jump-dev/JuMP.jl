@@ -48,7 +48,7 @@ use a custom binary are:
 
  * You want a binary with custom compilation settings (for example, debugging)
  * You want a binary with a set of dependencies that are not available on
-   Yggdrasil (for example, a commerial solver like Gurobi or CPLEX).
+   Yggdrasil (for example, a commercial solver like Gurobi or CPLEX).
 
 The following sections explain how to replace the binaries provided by a JLL
 package with the custom ones you have compiled. As a reminder, we use ECOS as an

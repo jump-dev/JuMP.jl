@@ -31,7 +31,7 @@ The JuMP style guide adopts many recommendations from the
 ### JuliaFormatter
 
 JuMP uses [JuliaFormatter.jl](https://github.com/domluna/JuliaFormatter.jl) as
-an autoformatting tool.
+an auto-formatting tool.
 
 We use the options contained in [`.JuliaFormatter.toml`](https://github.com/jump-dev/JuMP.jl/blob/master/.JuliaFormatter.toml).
 
@@ -160,7 +160,7 @@ options that you can use when writing and interacting with generic code:
 
 **Option 1: Use concrete types and let users extend new methods.**
 
-In this option, explictly restrict input arguments to concrete types that
+In this option, explicitly restrict input arguments to concrete types that
 are tested and have been validated for correctness. For example:
 ```jldoctest my_sum
 julia> function my_sum_option_1(x::Vector{Float64})

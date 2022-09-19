@@ -76,7 +76,7 @@ report[x]
 report[c1]
 
 # means that the right-hand side of the `c1` constraint (100), can decrease
-# by 4 units, or increase by 2.85 units, aand the primal solution `(15, 1.25)`
+# by 4 units, or increase by 2.85 units, and the primal solution `(15, 1.25)`
 # will remain optimal.
 
 # ## Variable sensitivity

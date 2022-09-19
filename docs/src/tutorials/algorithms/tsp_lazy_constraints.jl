@@ -47,7 +47,7 @@ import Plots
 
 # In the Traveling Salesperson Problem, we are tasked with finding a tour with
 # minimal length that visits every vertex exactly once and then returns to the
-# point of origin, that is, a *hamiltonian cycle* with minimal weight.
+# point of origin, that is, a *Hamiltonian cycle* with minimal weight.
 #
 # To model the problem, we introduce a binary variable,
 # $x_{ij} \in \{0,1\} \; \forall i, j \in V$, that indicates if edge $(i,j)$ is

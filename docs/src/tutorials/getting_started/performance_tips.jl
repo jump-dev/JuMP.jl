@@ -109,7 +109,7 @@ end
 # 0.68s user 0.22s system 153% cpu 0.587 total
 # ```
 # Other performance tweaks, such as disabling bridges or using direct mode can
-# reduce this time futher.
+# reduce this time further.
 
 # !!! note
 #     `create_sysimage` only needs to be run once, and the same sysimage can be

@@ -110,7 +110,7 @@ M = 100
 # when some other event occurs, i.e., for a binary variable $z$, we want to
 # model the implication:
 
-# $$z = 1 \implies a^Tx \leq b$$
+# $$z = 1 \implies a^\top x \leq b$$
 
 # ### Trick 1
 
@@ -164,7 +164,7 @@ M = 100
 #     ```
 
 # A semi-continuous variable is a continuous variable between bounds $[l,u]$
-# that also can assume the value zero. ie.
+# that also can assume the value zero, that is:
 # $$x \in \{0\} \cup [l,u].$$
 
 # **Example** $$x \in \{0\}\cup [1, 2]$$

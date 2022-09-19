@@ -95,7 +95,7 @@ data = get_data()
 #          & y_{j} \in \{0, 1\} & \forall j=1,\ldots,J \\
 # \end{align}
 # ```
-# The objective is to minimze the number of rolls that we use, and the two
+# The objective is to minimize the number of rolls that we use, and the two
 # constraints ensure that we respect the total width of each large roll and that
 # we satisfy demand exactly.
 
@@ -260,7 +260,7 @@ end
 
 SparseArrays.sparse(hcat(patterns...))
 
-# Nice! We found over 20 new patterns.    
+# Nice! We found over 20 new patterns.
 
 # Here's pattern 21:
 

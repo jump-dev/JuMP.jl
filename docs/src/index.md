@@ -77,7 +77,7 @@ you know where to look for certain things.
 ## Citing JuMP
 
 If you find JuMP useful in your work, we kindly request that you cite the
-following paper ([pdf](https://mlubin.github.io/pdf/jump-sirev.pdf)):
+following paper ([PDF](https://mlubin.github.io/pdf/jump-sirev.pdf)):
 
 ``` sourceCode
 @article{DunningHuchetteLubin2017,

@@ -22,8 +22,8 @@ import Test  #hide
 # Suppose we wish to cook a nutritionally balanced meal by choosing the quantity
 # of each food ``f`` to eat from a set of foods ``F`` in our kitchen.
 
-# Each food ``f`` has a cost, ``c_f``, as well as a macronutrient profile
-# ``a_{m,f}`` for each macronutrient ``m \in M``.
+# Each food ``f`` has a cost, ``c_f``, as well as a macro-nutrient profile
+# ``a_{m,f}`` for each macro-nutrient ``m \in M``.
 
 # Because we care about a nutritionally balanced meal, we set some minimum and
 # maximum limits for each nutrient, which we denote ``l_m`` and ``u_m``
@@ -64,7 +64,7 @@ foods = DataFrames.DataFrame(
 )
 
 # Here, ``F`` is `foods.name` and ``c_f`` is `foods.cost`. (We're also playing
-# a bit loose the term "macronutrient" by including calories and sodium.)
+# a bit loose the term "macro-nutrient" by including calories and sodium.)
 
 # !!! tip
 #     Although we hard-coded the data here, you could also read it in from a

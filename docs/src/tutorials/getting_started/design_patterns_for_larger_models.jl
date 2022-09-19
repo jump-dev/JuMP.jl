@@ -236,7 +236,7 @@ solve_knapsack_3(data; binary_knapsack = true)
 
 solve_knapsack_3(data; binary_knapsack = false)
 
-# ## Add configuation options via dispatch
+# ## Add configuration options via dispatch
 
 # If you get repeated requests to add different options, you'll quickly find
 # yourself in a mess of different flags and `if-else` statements. It's hard to
