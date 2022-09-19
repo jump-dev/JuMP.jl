@@ -19,6 +19,7 @@
 # This tutorial uses the following packages:
 
 using JuMP
+import DelimitedFiles
 import HiGHS
 
 # ## Formulation
