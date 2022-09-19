@@ -133,7 +133,6 @@ const _PAGES = [
             "tutorials/linear/steelT3.md",
             "tutorials/linear/sudoku.md",
             "tutorials/linear/transp.md",
-            "tutorials/linear/urban_plan.md",
             "tutorials/linear/callbacks.md",
         ],
         "Nonlinear programs" => [
