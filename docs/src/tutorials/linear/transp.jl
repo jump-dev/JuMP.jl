@@ -8,8 +8,8 @@
 # **Originally contributed by:** Louis Luangkesorn
 
 # This tutorial is an adaptation of the transportation problem described in
-# Fourer, D.M. Gay and Brian W. Kernighan, A Modeling Language for Mathematical
-# Programming, https://ampl.com/REFS/amplmod.ps.gz Appendix D.
+# [_AMPL: A Modeling Language for Mathematical Programming_](https://ampl.com/resources/the-ampl-book/),
+# by R. Fourer, D.M. Gay and B.W. Kernighan.
 
 # The purpose of this tutorial is to demonstrate how to create a JuMP model from
 # an ad-hoc structured text file.
@@ -34,7 +34,7 @@ import HiGHS
 # shipping cost.
 
 # Mathematically, we represent our set of factories by a set of origins
-# ``i \in O`` and our retail stores by a set of destinations ``j \\in D``. The
+# ``i \in O`` and our retail stores by a set of destinations ``j \in D``. The
 # maximum supply at each factory is ``s_i`` and the demand from each retail
 # store is ``d_j``. The cost of shipping one pogo stick from ``i`` to ``j`` is
 # ``c_{i,j}``.
@@ -43,10 +43,10 @@ import HiGHS
 # linear program:
 # ```math
 # \begin{aligned}
-# \min  && \sum_{i \in O, j \in D} c_{i,j} \times x_{i,j} \\
-# s.t.  && sum_{j \in D} x_{i, j} \le s_i && \forall i \in O \\
-#       && sum_{i \in O} x_{i, j} = d_j && \forall j \in D \\
-#       && x_{i, j} \ge 0 && \forall i \in O, j in D
+# \min  && \sum_{i \in O, j \in D} c_{i,j} x_{i,j} \\
+# s.t.  && \sum_{j \in D} x_{i, j} \le s_i && \forall i \in O \\
+#       && \sum_{i \in O} x_{i, j} = d_j && \forall j \in D \\
+#       && x_{i, j} \ge 0 && \forall i \in O, j \in D
 # \end{aligned}
 # ```
 
@@ -120,7 +120,7 @@ function solve_transportation_problem(data::Containers.DenseAxisArray)
     @constraint(model, [o in O], sum(x[o, :]) <= data[o, "SUPPLY"])
     @constraint(model, [d in D], sum(x[:, d]) == data["DEMAND", d])
     optimize!(model)
-    ## pretty print the solution
+    ## Pretty print the solution in the format of the input
     print("    ", join(lpad.(D, 7, ' ')))
     for o in O
         print("\n", o)
