@@ -305,7 +305,12 @@ b * b'
 # Comments can even be nested inside expressions. This is sometimes helpful when
 # documenting inputs to functions:
 
-sin(1.57 #= 1.57 is approximately π/2 =#)
+isapprox(
+    sin(π),
+    0.0;
+    #= We need an explicit atol here because we are comparing with 0 =#
+    atol = 0.001,
+)
 
 # ### Strings
 
