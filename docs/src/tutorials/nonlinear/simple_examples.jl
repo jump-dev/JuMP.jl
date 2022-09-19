@@ -114,13 +114,11 @@ function example_mle()
         sum((data[i] - μ)^2 for i in 1:n) / (2 * σ^2)
     )
     optimize!(model)
-    if verbose
-        println("μ             = ", value(μ))
-        println("mean(data)    = ", Statistics.mean(data))
-        println("σ^2           = ", value(σ)^2)
-        println("var(data)     = ", Statistics.var(data))
-        println("MLE objective = ", objective_value(model))
-    end
+    println("μ             = ", value(μ))
+    println("mean(data)    = ", Statistics.mean(data))
+    println("σ^2           = ", value(σ)^2)
+    println("var(data)     = ", Statistics.var(data))
+    println("MLE objective = ", objective_value(model))
     Test.@test value(μ) ≈ Statistics.mean(data) atol = 1e-3
     Test.@test value(σ)^2 ≈ Statistics.var(data) atol = 1e-2
     ## You can even do constrained MLE!
