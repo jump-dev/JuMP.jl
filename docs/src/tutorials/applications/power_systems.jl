@@ -443,7 +443,7 @@ commitment_plot = StatsPlots.@df(
         :demand,
         [:commitment_G1, :commitment_G2],
         labels = ["G1" "G2"],
-        title = "Committment",
+        title = "Commitment",
         legend = :bottomright,
         linewidth = 3,
         xlabel = "Demand [MW]",

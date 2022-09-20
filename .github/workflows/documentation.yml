@@ -25,7 +25,9 @@ jobs:
         run: julia --project=docs/ docs/make.jl
       - uses: errata-ai/vale-action@reviewdog
         with:
-          files: '["docs/src/*.md"]'
+          files: docs/src
           fail_on_error: true
+          filter_mode: nofilter
+          vale_flags: "--config=docs/.vale.ini"
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
