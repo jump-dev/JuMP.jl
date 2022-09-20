@@ -288,6 +288,30 @@ b * b'
 
 # ## Other common types
 
+# ### Comments
+
+# Although not technically a type, code comments begin with the `#` character:
+
+1 + 1  # This is a comment
+
+# Multiline comments begin with `#=` and end with `=#`:
+# ```julia
+# #=
+# Here is a
+# multiline comment
+# =#
+# ```
+
+# Comments can even be nested inside expressions. This is sometimes helpful when
+# documenting inputs to functions:
+
+isapprox(
+    sin(π),
+    0.0;
+    #= We need an explicit atol here because we are comparing with 0 =#
+    atol = 0.001,
+)
+
 # ### Strings
 
 # Double quotes are used for strings:
@@ -306,6 +330,16 @@ println("Hello, World!")
 
 x = 123
 println("The value of x is: $(x)")
+
+# Use triple-quotes for multiline strings:
+
+s = """
+Here is
+a
+multiline string
+"""
+
+println(s)
 
 # ### Symbols
 
