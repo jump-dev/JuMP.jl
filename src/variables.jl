@@ -1421,7 +1421,13 @@ Subject to
 function relax_integrality(model::Model)
     semicont_type = _MOICON{MOI.VariableIndex,MOI.Semicontinuous{Float64}}
     semiint_type = _MOICON{MOI.VariableIndex,MOI.Semiinteger{Float64}}
-    for v in all_variables(model)
+    # Get only the binary and integer variables, as the others don't need to be modified.
+    bin_int_constraints = vcat(
+        all_constraints(model, VariableRef, MOI.ZeroOne),
+        all_constraints(model, VariableRef, MOI.Integer),
+    )
+    bin_int_variables = VariableRef.(bin_int_constraints)
+    for v in bin_int_constraints
         if MOI.is_valid(backend(model), semicont_type(index(v).value))
             error(
                 "Support for relaxing semicontinuous constraints is not " *
@@ -1435,8 +1441,7 @@ function relax_integrality(model::Model)
         end
     end
 
-    info_pre_relaxation =
-        map(v -> (v, _info_from_variable(v)), all_variables(model))
+    info_pre_relaxation = map(v -> (v, _info_from_variable(v)), bin_int_variables)
     # We gather the info first because some solvers perform poorly when you
     # interleave queries and changes. See, e.g.,
     # https://github.com/jump-dev/Gurobi.jl/pull/301.
