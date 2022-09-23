@@ -1441,7 +1441,8 @@ function relax_integrality(model::Model)
         end
     end
 
-    info_pre_relaxation = map(v -> (v, _info_from_variable(v)), bin_int_variables)
+    info_pre_relaxation =
+        map(v -> (v, _info_from_variable(v)), bin_int_variables)
     # We gather the info first because some solvers perform poorly when you
     # interleave queries and changes. See, e.g.,
     # https://github.com/jump-dev/Gurobi.jl/pull/301.
