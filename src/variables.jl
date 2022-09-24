@@ -1419,25 +1419,17 @@ Subject to
 ```
 """
 function relax_integrality(model::Model)
-    semicont_type = _MOICON{MOI.VariableIndex,MOI.Semicontinuous{Float64}}
-    semiint_type = _MOICON{MOI.VariableIndex,MOI.Semiinteger{Float64}}
-    semicont_semiint_constraints = vcat(
-        all_constraints(model, VariableRef, MOI.ZeroOne),
-        all_constraints(model, VariableRef, MOI.Integer),
-    )
-    semicont_semiint_variables = VariableRef.(semicont_semiint_constraints)
-    for v in semicont_semiint_variables
-        if MOI.is_valid(backend(model), semicont_type(index(v).value))
-            error(
-                "Support for relaxing semicontinuous constraints is not " *
-                "yet implemented.",
-            )
-        elseif MOI.is_valid(backend(model), semiint_type(index(v).value))
-            error(
-                "Support for relaxing semi-integer constraints is not " *
-                "yet implemented.",
-            )
-        end
+    if num_constraints(model, VariableRef, MOI.Semicontinuous{Float64}) > 0
+        error(
+            "Support for relaxing semicontinuous constraints is not " *
+            "yet implemented.",
+        )
+    end
+    if num_constraints(model, VariableRef, MOI.Semiinteger{Float64}) > 0
+        error(
+            "Support for relaxing semi-integer constraints is not " *
+            "yet implemented.",
+        )
     end
 
     bin_int_constraints = vcat(
