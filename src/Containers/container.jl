@@ -181,5 +181,5 @@ end
 
 # Default to dropping names (as before)
 function container(f::Function, names, indices, D)
-    container(f, indices, D)
+    return container(f, indices, D)
 end

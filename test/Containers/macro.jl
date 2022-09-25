@@ -216,22 +216,24 @@ end
 end
 
 # Test containers that use subindex names
-struct _MyContainer2 
-    names
-    d
+struct _MyContainer2
+    names::Any
+    d::Any
 end
 
-function Containers.container(f::Function, names, indices, ::Type{_MyContainer2})
+function Containers.container(
+    f::Function,
+    names,
+    indices,
+    ::Type{_MyContainer2},
+)
     key(i::Tuple) = i
     key(i::Tuple{T}) where {T} = i[1]
-    return _MyContainer2(
-        names,    
-        Dict(key(i) => f(i...) for i in indices)
-        )
+    return _MyContainer2(names, Dict(key(i) => f(i...) for i in indices))
 end
 
 @testset "_MyContainer2" begin
     Containers.@container(v[i = 1:3], sin(i), container = _MyContainer2)
     @test v.d isa Dict{Int,Float64}
-    @test v.names == [:i,]
+    @test v.names == [:i]
 end
