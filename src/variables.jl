@@ -1419,24 +1419,26 @@ Subject to
 ```
 """
 function relax_integrality(model::Model)
-    semicont_type = _MOICON{MOI.VariableIndex,MOI.Semicontinuous{Float64}}
-    semiint_type = _MOICON{MOI.VariableIndex,MOI.Semiinteger{Float64}}
-    for v in all_variables(model)
-        if MOI.is_valid(backend(model), semicont_type(index(v).value))
-            error(
-                "Support for relaxing semicontinuous constraints is not " *
-                "yet implemented.",
-            )
-        elseif MOI.is_valid(backend(model), semiint_type(index(v).value))
-            error(
-                "Support for relaxing semi-integer constraints is not " *
-                "yet implemented.",
-            )
-        end
+    if num_constraints(model, VariableRef, MOI.Semicontinuous{Float64}) > 0
+        error(
+            "Support for relaxing semicontinuous constraints is not " *
+            "yet implemented.",
+        )
+    end
+    if num_constraints(model, VariableRef, MOI.Semiinteger{Float64}) > 0
+        error(
+            "Support for relaxing semi-integer constraints is not " *
+            "yet implemented.",
+        )
     end
 
+    bin_int_constraints = vcat(
+        all_constraints(model, VariableRef, MOI.ZeroOne),
+        all_constraints(model, VariableRef, MOI.Integer),
+    )
+    bin_int_variables = VariableRef.(bin_int_constraints)
     info_pre_relaxation =
-        map(v -> (v, _info_from_variable(v)), all_variables(model))
+        map(v -> (v, _info_from_variable(v)), bin_int_variables)
     # We gather the info first because some solvers perform poorly when you
     # interleave queries and changes. See, e.g.,
     # https://github.com/jump-dev/Gurobi.jl/pull/301.
