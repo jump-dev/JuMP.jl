@@ -307,16 +307,16 @@ function container_code(
     if requested_container == :Auto
         return :(Containers.container($f, $indices))
     elseif requested_container == :DenseAxisArray
-        return :(Containers.container($f, $indices, Containers.DenseAxisArray))
+        return :(Containers.container($f, $index_vars, $indices, Containers.DenseAxisArray))
     elseif requested_container == :SparseAxisArray
-        return :(Containers.container($f, $indices, Containers.SparseAxisArray))
+        return :(Containers.container($f, $index_vars, $indices, Containers.SparseAxisArray))
     elseif requested_container == :Array
-        return :(Containers.container($f, $indices, Array))
+        return :(Containers.container($f, $index_vars, $indices, Array))
     else
         # This is a symbol or expression from outside JuMP, so we need to escape
         # it.
         requested_container = esc(requested_container)
-        return :(Containers.container($f, $indices, $requested_container))
+        return :(Containers.container($f, $index_vars, $indices, $requested_container))
     end
 end
 

@@ -178,3 +178,8 @@ function container(::Function, ::Any, D::Type)
         "`Containers.container(::Function, indices, ::Type{$(D)})`.",
     )
 end
+
+# Default to dropping names (as before)
+function container(f::Function, names, indices, D)
+    container(f, indices, D)
+end
