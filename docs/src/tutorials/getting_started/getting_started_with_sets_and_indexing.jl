@@ -134,15 +134,15 @@ T = 3
 
 @variable(model, x_fixed[[T]])
 
-# Second, because `String`s are iterable, passing a `"abc"` as a singleton index
-# is the same as passing `['a', 'b', 'c']`:
+# Second, because `String`s are iterable, passing a `"index"` as a singleton
+# index is the same as passing `['i', 'n', 'd', 'e', 'x']`:
 
-@variable(model, y["abc"])
+@variable(model, y["index"])
 
 # This time, a warning is not printed, but the work-around is similar, pass a
 # `Vector{String}` instead:
 
-@variable(model, y_fixed[["abc"]])
+@variable(model, y_fixed[["index"]])
 
 # !!! tip
 #     As a rule of thumb, if you want an index with one element, avoid confusion
