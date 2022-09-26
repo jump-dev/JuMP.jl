@@ -151,7 +151,7 @@ T = 3
 # ## Set operations
 
 # Julia has built-in support for set operations such as `union`, `intersect`,
-# and  `setdiff`.
+# and `setdiff`.
 
 # Therefore, to create a set of all years in which the summer Olympics were
 # held, we can use:

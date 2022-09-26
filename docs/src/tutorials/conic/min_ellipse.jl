@@ -8,7 +8,7 @@
 # This example comes from section 8.4.1 of the book *Convex Optimization* by [Boyd
 # and Vandenberghe (2004)](https://web.stanford.edu/~boyd/cvxbook/).
 
-# Given a set of ``m`` ellipses of the form 
+# Given a set of ``m`` ellipses of the form
 # ```math
 # E(A, b, c) = \{ x : x' A x + 2 b' x + c \leq 0 \},
 # ```
@@ -32,8 +32,8 @@
 # \preceq 0 \text{ (PSD) } &  i=1, \ldots, m
 # \end{aligned}
 # ```
-# with helper variables ``\tau``. 
-# 
+# with helper variables ``\tau``.
+#
 # The program can be solved by using a variable representing ``P^2`` (`Psqr` in the Julia code),
 # a vector of variables ``\tilde{q}`` (`q_tilde`) in place of ``P q`` and the variables ``\tau`` (`tau[i]`).
 
@@ -47,7 +47,7 @@ using Test
 # ## Set-up
 # First, define the ``m`` input ellipses (here ``m = 6``),
 # parameterized as ``x^T A_i x + 2 b_i^T x + c \leq 0``:
-As = [
+A_s = [
     [1.2576 -0.3873; -0.3873 0.3467],
     [1.4125 -2.1777; -2.1777 6.7775],
     [1.7018 0.8141; 0.8141 1.7538],
@@ -55,7 +55,8 @@ As = [
     [0.6798 -0.1424; -0.1424 0.6871],
     [0.1796 -0.1423; -0.1423 2.6181],
 ];
-bs = [
+
+b_s = [
     [0.2722, 0.1969],
     [-1.228, -0.0521],
     [-0.4049, 1.5713],
@@ -63,12 +64,13 @@ bs = [
     [-0.4301, -1.0157],
     [-0.3286, 0.557],
 ];
-cs = [0.1831, 0.3295, 0.2077, 0.2362, 0.3284, 0.4931];
+
+c_s = [0.1831, 0.3295, 0.2077, 0.2362, 0.3284, 0.4931];
 
 # We visualise the ellipses using the Plots package:
 pl = plot(; size = (600, 600))
 thetas = range(0, 2pi + 0.05; step = 0.05)
-for (A, b, c) in zip(As, bs, cs)
+for (A, b, c) in zip(A_s, b_s, c_s)
     sqrtA = sqrt(A)
     b_tilde = sqrtA \ b
     alpha = b' * (A \ b) - c
@@ -85,15 +87,15 @@ plot(pl)
 # Now let's build the initial model, using the change-of-variables
 # `Psqr` = ``P^2`` and `q_tilde` = ``P q``:
 model = Model(SCS.Optimizer)
-m = length(As)
-n, _ = size(first(As))
+m = length(A_s)
+n, _ = size(first(A_s))
 @variable(model, tau[1:m] ≥ 0)
 @variable(model, Psqr[1:n, 1:n], PSD)
 @variable(model, q_tilde[1:n])
 @variable(model, logdetP);
 
 # Next, create the PSD constraints and objective:
-for (A, b, c, t) in zip(As, bs, cs, tau)
+for (A, b, c, t) in zip(A_s, b_s, c_s, tau)
     if !(isreal(A) && transpose(A) == A)
         @error "Input matrices need to be real, symmetric matrices."
     end
