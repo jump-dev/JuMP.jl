@@ -15,10 +15,17 @@ a `VectorizedProductIterator` and the function returns
 function default_container end
 
 """
+    container(f::Function, names, indices, c::Type{C})
+
+Create a container of type `C` with index names `names`, indices `indices` and values at given
+indices given by `f`. If this method is not specialized on `Type{C}`, it falls back to calling 
+`container(f, indices, c)` for backwards compatibility with containers not supporting index names.
+
     container(f::Function, indices, ::Type{C})
 
 Create a container of type `C` with indices `indices` and values at given
 indices given by `f`.
+
 
     container(f::Function, indices)
 
@@ -61,6 +68,10 @@ SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 5 entries:
 ```
 """
 function container end
+
+function container(f::Function, names, indices, D)
+    return container(f, indices, D)
+end
 
 function container(f::Function, indices)
     return container(f, indices, default_container(indices))
@@ -177,9 +188,4 @@ function container(::Function, ::Any, D::Type)
         "Unable to build a container with the provided type $(D). Implement " *
         "`Containers.container(::Function, indices, ::Type{$(D)})`.",
     )
-end
-
-# Default to dropping names (as before)
-function container(f::Function, names, indices, D)
-    return container(f, indices, D)
 end
