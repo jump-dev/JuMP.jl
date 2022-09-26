@@ -341,7 +341,7 @@ plt_flight_path =
 plt_azimuth =
     plot(ts, rad2deg.(value.(ψ)); legend = nothing, title = "Azimuth (deg)")
 
-plt = plot(
+plot(
     plt_altitude,
     plt_velocity,
     plt_longitude,
@@ -382,7 +382,7 @@ plt_heating = plot(
     title = "Heating (BTU/ft/ft/sec)",
 )
 
-plt = plot(
+plot(
     plt_attack_angle,
     plt_bank_angle,
     plt_heating;
@@ -393,7 +393,7 @@ plt = plot(
 
 #-
 
-plt = plot(
+plot(
     rad2deg.(value.(ϕ)),
     rad2deg.(value.(θ)),
     value.(scaled_h);

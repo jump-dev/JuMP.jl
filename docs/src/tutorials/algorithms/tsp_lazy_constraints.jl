@@ -223,11 +223,11 @@ time_iterated
 # subtour is present:
 
 function plot_tour(X, Y, x)
-    plt = Plots.plot()
+    plot = Plots.plot()
     for (i, j) in selected_edges(x, size(x, 1))
         Plots.plot!([X[i], X[j]], [Y[i], Y[j]]; legend = false)
     end
-    return plt
+    return plot
 end
 
 plot_tour(X, Y, value.(iterative_model[:x]))

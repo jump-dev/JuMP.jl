@@ -139,12 +139,12 @@ julia> function JuMP.add_variable(
            a = JuMP.add_variable(
                model,
                JuMP.ScalarVariable(duplicate.info),
-               name * "_a",
+               "$(name)_a",
             )
            b = JuMP.add_variable(
                model,
                JuMP.ScalarVariable(duplicate.info),
-               name * "_b",
+               "$(name)_b",
             )
            return (a, b)
        end
