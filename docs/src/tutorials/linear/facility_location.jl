@@ -76,10 +76,10 @@ m = 12
 n = 5
 
 ## Clients' locations
-Xc, Yc = rand(m), rand(m)
+x_c, y_c = rand(m), rand(m)
 
 ## Facilities' potential locations
-Xf, Yf = rand(n), rand(n)
+x_f, y_f = rand(n), rand(n)
 
 ## Fixed costs
 f = ones(n);
@@ -88,21 +88,21 @@ f = ones(n);
 c = zeros(m, n)
 for i in 1:m
     for j in 1:n
-        c[i, j] = LinearAlgebra.norm([Xc[i] - Xf[j], Yc[i] - Yf[j]], 2)
+        c[i, j] = LinearAlgebra.norm([x_c[i] - x_f[j], y_c[i] - y_f[j]], 2)
     end
 end
 
 # Display the data
 Plots.scatter(
-    Xc,
-    Yc;
+    x_c,
+    y_c;
     label = "Clients",
     markershape = :circle,
     markercolor = :blue,
 )
 Plots.scatter!(
-    Xf,
-    Yf;
+    x_f,
+    y_f;
     label = "Facility",
     markershape = :square,
     markercolor = :white,
@@ -114,42 +114,41 @@ Plots.scatter!(
 # ### JuMP implementation
 
 # Create a JuMP model
-ufl = Model(HiGHS.Optimizer)
-set_silent(ufl)
-@variable(ufl, y[1:n], Bin);
-@variable(ufl, x[1:m, 1:n], Bin);
+model = Model(HiGHS.Optimizer)
+set_silent(model)
+@variable(model, y[1:n], Bin);
+@variable(model, x[1:m, 1:n], Bin);
 ## Each client is served exactly once
-@constraint(ufl, client_service[i in 1:m], sum(x[i, j] for j in 1:n) == 1);
+@constraint(model, client_service[i in 1:m], sum(x[i, j] for j in 1:n) == 1);
 ## A facility must be open to serve a client
-@constraint(ufl, open_facility[i in 1:m, j in 1:n], x[i, j] <= y[j]);
-@objective(ufl, Min, f'y + sum(c .* x));
+@constraint(model, open_facility[i in 1:m, j in 1:n], x[i, j] <= y[j]);
+@objective(model, Min, f' * y + sum(c .* x));
 
 # Solve the uncapacitated facility location problem with HiGHS
 
-optimize!(ufl)
-println("Optimal value: ", objective_value(ufl))
+optimize!(model)
+println("Optimal value: ", objective_value(model))
 
 # ### Visualizing the solution
 
 # The threshold 1e-5 ensure that edges between clients and facilities are drawn
 # when `x[i, j] ≈ 1`.
-
-x_ = value.(x) .> 1 - 1e-5
-y_ = value.(y) .> 1 - 1e-5
+x_is_selected = isapprox.(value.(x), 1; atol = 1e-5);
+y_is_selected = isapprox.(value.(y), 1; atol = 1e-5);
 
 p = Plots.scatter(
-    Xc,
-    Yc;
+    x_c,
+    y_c;
     markershape = :circle,
     markercolor = :blue,
     label = nothing,
 )
 
 Plots.scatter!(
-    Xf,
-    Yf;
+    x_f,
+    y_f;
     markershape = :square,
-    markercolor = [(y_[j] ? :red : :white) for j in 1:n],
+    markercolor = [(y_is_selected[j] ? :red : :white) for j in 1:n],
     markersize = 6,
     markerstrokecolor = :red,
     markerstrokewidth = 2,
@@ -157,10 +156,10 @@ Plots.scatter!(
 )
 
 for i in 1:m, j in 1:n
-    if x_[i, j] == 1
+    if x_is_selected[i, j]
         Plots.plot!(
-            [Xc[i], Xf[j]],
-            [Yc[i], Yf[j]];
+            [x_c[i], x_f[j]],
+            [y_c[i], y_f[j]];
             color = :black,
             label = nothing,
         )
@@ -218,8 +217,8 @@ q = rand(5:10, n);
 
 # Display the data
 Plots.scatter(
-    Xc,
-    Yc;
+    x_c,
+    y_c;
     label = nothing,
     markershape = :circle,
     markercolor = :blue,
@@ -227,8 +226,8 @@ Plots.scatter(
 )
 
 Plots.scatter!(
-    Xf,
-    Yf;
+    x_f,
+    y_f;
     label = nothing,
     markershape = :rect,
     markercolor = :white,
@@ -240,33 +239,33 @@ Plots.scatter!(
 # ### JuMP implementation
 
 # Create a JuMP model
-cfl = Model(HiGHS.Optimizer)
-set_silent(cfl)
-@variable(cfl, y[1:n], Bin);
-@variable(cfl, x[1:m, 1:n], Bin);
+model = Model(HiGHS.Optimizer)
+set_silent(model)
+@variable(model, y[1:n], Bin);
+@variable(model, x[1:m, 1:n], Bin);
 ## Each client is served exactly once
-@constraint(cfl, client_service[i in 1:m], sum(x[i, :]) == 1);
+@constraint(model, client_service[i in 1:m], sum(x[i, :]) == 1);
 ## Capacity constraint
-@constraint(cfl, capacity, x'a .<= (q .* y));
+@constraint(model, capacity, x' * a .<= (q .* y));
 ## Objective
-@objective(cfl, Min, f'y + sum(c .* x));
+@objective(model, Min, f' * y + sum(c .* x));
 
 # Solve the problem
 
-optimize!(cfl)
-println("Optimal value: ", objective_value(cfl))
+optimize!(model)
+println("Optimal value: ", objective_value(model))
 
 # ### Visualizing the solution
 
 # The threshold 1e-5 ensure that edges between clients and facilities are drawn
 # when `x[i, j] ≈ 1`.
-x_ = value.(x) .> 1 - 1e-5;
-y_ = value.(y) .> 1 - 1e-5;
+x_is_selected = isapprox.(value.(x), 1; atol = 1e-5);
+y_is_selected = isapprox.(value.(y), 1; atol = 1e-5);
 
 # Display the solution
 p = Plots.scatter(
-    Xc,
-    Yc;
+    x_c,
+    y_c;
     label = nothing,
     markershape = :circle,
     markercolor = :blue,
@@ -274,21 +273,21 @@ p = Plots.scatter(
 )
 
 Plots.scatter!(
-    Xf,
-    Yf;
+    x_f,
+    y_f;
     label = nothing,
     markershape = :rect,
-    markercolor = [(y_[j] ? :red : :white) for j in 1:n],
+    markercolor = [(y_is_selected[j] ? :red : :white) for j in 1:n],
     markersize = q,
     markerstrokecolor = :red,
     markerstrokewidth = 2,
 )
 
 for i in 1:m, j in 1:n
-    if x_[i, j] == 1
+    if x_is_selected[i, j]
         Plots.plot!(
-            [Xc[i], Xf[j]],
-            [Yc[i], Yf[j]];
+            [x_c[i], x_f[j]],
+            [y_c[i], y_f[j]];
             color = :black,
             label = nothing,
         )

@@ -153,7 +153,7 @@ sort!(eyecolor_count, :count; rev = true)
 Plots.bar(
     eyecolor_count.Eyecolor,
     eyecolor_count.count;
-    xlabel = "Eyecolor",
+    xlabel = "Eye color",
     ylabel = "Number of characters",
     label = false,
 )
@@ -173,7 +173,7 @@ Plots.bar(
 
 ss_df = CSV.read(joinpath(DATA_DIR, "Cereal.txt"), DataFrames.DataFrame)
 
-# We can also specify the delimiter by passing the `delim` argument.
+# We can also specify the delimiter as follows:
 
 delim_df = CSV.read(
     joinpath(DATA_DIR, "Soccer.txt"),

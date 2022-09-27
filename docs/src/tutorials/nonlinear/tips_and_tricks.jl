@@ -64,8 +64,8 @@ naive_approach = function_calls  #src
 """
     memoize(foo::Function, n_outputs::Int)
 
-Take a function `foo` and return a vector of length `n_outputs`, where each
-element is a function that returns the `i`'th output of `foo`.
+Take a function `foo` and return a vector of length `n_outputs`, where element
+`i` is a function that returns the equivalent of `foo(x...)[i]`.
 
 To avoid duplication of work, cache the most-recent evaluations of `foo`.
 Because `foo_i` is auto-differentiated with ForwardDiff, our cache needs to

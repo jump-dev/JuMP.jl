@@ -113,15 +113,15 @@ variable_df =
 
 # We can do something similar with constraints:
 
-function constraint_report(ci)
+function constraint_report(c::ConstraintRef)
     return (
-        name = name(ci),
-        value = value(ci),
-        rhs = normalized_rhs(ci),
-        slack = normalized_rhs(ci) - value(ci),
-        shadow_price = shadow_price(ci),
-        allowed_decrease = report[ci][1],
-        allowed_increase = report[ci][2],
+        name = name(c),
+        value = value(c),
+        rhs = normalized_rhs(c),
+        slack = normalized_rhs(c) - value(c),
+        shadow_price = shadow_price(c),
+        allowed_decrease = report[c][1],
+        allowed_increase = report[c][2],
     )
 end
 

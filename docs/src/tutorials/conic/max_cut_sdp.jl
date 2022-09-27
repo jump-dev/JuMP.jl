@@ -28,7 +28,7 @@ import Test
     svd_cholesky(X::AbstractMatrix, rtol)
 
 Return the matrix `U` of the Cholesky decomposition of `X` as `U' * U`.
-Note that we do not use the `LinearAlgebra.cholesky` function as it it
+Note that we do not use the `LinearAlgebra.cholesky` function because it
 requires the matrix to be positive definite while `X` may be only
 positive *semi*definite.
 We use the convention `U' * U` instead of `U * U'` to be consistent with
@@ -43,8 +43,8 @@ function svd_cholesky(X::AbstractMatrix)
 end
 
 function solve_max_cut_sdp(num_vertex, weights)
-    ## Calculate the (weighted) Lapacian of the graph: L = D - W.
-    laplacian = LinearAlgebra.diagm(0 => weights * ones(num_vertex)) - weights
+    ## Calculate the (weighted) Laplacian of the graph: L = D - W.
+    L = LinearAlgebra.diagm(0 => weights * ones(num_vertex)) - weights
     ## Solve the SDP relaxation
     model = Model(SCS.Optimizer)
     set_silent(model)
@@ -55,7 +55,7 @@ function solve_max_cut_sdp(num_vertex, weights)
         PSD,
         start = (i == j ? 1.0 : 0.0),
     )
-    @objective(model, Max, 1 / 4 * LinearAlgebra.dot(laplacian, X))
+    @objective(model, Max, 1 / 4 * LinearAlgebra.dot(L, X))
     @constraint(model, LinearAlgebra.diag(X) .== 1)
     optimize!(model)
     @assert termination_status(model) == MOI.OPTIMAL
@@ -79,7 +79,7 @@ function solve_max_cut_sdp(num_vertex, weights)
     print(join(findall(cut .== 1), ", "))
     println("})")
     ##  (S, S′)  = ({1}, {2, 3, 4})
-    return cut, 0.25 * sum(laplacian .* (cut * cut'))
+    return cut, 0.25 * sum(L .* (cut * cut'))
 end
 
 function example_max_cut_sdp()
@@ -89,7 +89,7 @@ function example_max_cut_sdp()
     ##
     ## Solution:
     ##  (S, S′)  = ({1}, {2})
-    cut, cutval = solve_max_cut_sdp(2, [0.0 5.0; 5.0 0.0])
+    cut, cut_val = solve_max_cut_sdp(2, [0.0 5.0; 5.0 0.0])
     Test.@test cut[1] != cut[2]
 
     println()
@@ -110,7 +110,7 @@ function example_max_cut_sdp()
         7.0 0.0 0.0 1.0
         6.0 1.0 1.0 0.0
     ]
-    cut, cutval = solve_max_cut_sdp(4, W)
+    cut, cut_val = solve_max_cut_sdp(4, W)
     Test.@test cut[1] != cut[2]
     Test.@test cut[2] == cut[3] == cut[4]
 
@@ -132,7 +132,7 @@ function example_max_cut_sdp()
         5.0 0.0 0.0 2.0
         0.0 9.0 2.0 0.0
     ]
-    cut, cutval = solve_max_cut_sdp(4, W)
+    cut, cut_val = solve_max_cut_sdp(4, W)
     Test.@test cut[1] == cut[4]
     Test.@test cut[2] == cut[3]
     Test.@test cut[1] != cut[2]

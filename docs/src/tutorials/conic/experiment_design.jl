@@ -101,7 +101,7 @@ Random.seed!(1234)
 
 q = 4 # dimension of estimate space
 p = 8 # number of experimental vectors
-nmax = 3 # upper bound on lambda
+n_max = 3 # upper bound on lambda
 n = 12
 
 V = randn(q, p)
@@ -131,7 +131,7 @@ eye = Matrix{Float64}(LinearAlgebra.I, q, q);
 
 aOpt = Model(SCS.Optimizer)
 set_silent(aOpt)
-@variable(aOpt, np[1:p], lower_bound = 0, upper_bound = nmax)
+@variable(aOpt, np[1:p], lower_bound = 0, upper_bound = n_max)
 @variable(aOpt, u[1:q], lower_bound = 0)
 @constraint(aOpt, sum(np) <= n)
 for i in 1:q
@@ -174,7 +174,7 @@ value.(np)
 
 eOpt = Model(SCS.Optimizer)
 set_silent(eOpt)
-@variable(eOpt, 0 <= np[1:p] <= nmax)
+@variable(eOpt, 0 <= np[1:p] <= n_max)
 @variable(eOpt, t)
 @constraint(
     eOpt,
@@ -207,7 +207,7 @@ value.(np)
 
 dOpt = Model(SCS.Optimizer)
 set_silent(dOpt)
-@variable(dOpt, np[1:p], lower_bound = 0, upper_bound = nmax)
+@variable(dOpt, np[1:p], lower_bound = 0, upper_bound = n_max)
 @variable(dOpt, t)
 @objective(dOpt, Max, t)
 @constraint(dOpt, sum(np) <= n)
