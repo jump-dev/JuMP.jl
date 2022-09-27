@@ -105,14 +105,14 @@ m, n = length(ellipses), size(first(ellipses).A, 1)
 
 for (i, ellipse) in enumerate(ellipses)
     A, b, c = ellipse.A, ellipse.b, ellipse.c
-    X = LinearAlgebra.Symmetric([
+    X = [
         #! format: off
         (P² - τ[i] * A)   (P_q - τ[i] * b) zeros(n, n)
         (P_q - τ[i] * b)' (-1 - τ[i] * c)  P_q'
         zeros(n, n)       P_q              -P²
         #! format: on
-    ])
-    @constraint(model, X <= 0, PSDCone())
+    ]
+    @constraint(model,LinearAlgebra.Symmetric(X) <= 0, PSDCone())
 end
 
 # We cannot directly represent the objective ``\log(\det(P))``, so we introduce
