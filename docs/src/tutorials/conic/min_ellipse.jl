@@ -5,14 +5,17 @@
 
 # # Minimal ellipses
 
-# This example comes from section 8.4.1 of the book *Convex Optimization* by [Boyd
-# and Vandenberghe (2004)](https://web.stanford.edu/~boyd/cvxbook/).
+# This example comes from section 8.4.1 of the book *Convex Optimization* by
+# [Boyd and Vandenberghe (2004)](https://web.stanford.edu/~boyd/cvxbook/).
+
+# ## Formulation
 
 # Given a set of ``m`` ellipses of the form
 # ```math
 # E(A, b, c) = \{ x : x' A x + 2 b' x + c \leq 0 \},
 # ```
-# we find the ellipse of smallest area that encloses the given ellipses.
+# the minimal ellipse problem finds an ellipse with the minimum area that
+# encloses the given ellipses.
 
 # It is convenient to parameterize the minimal enclosing ellipse as
 # ```math
@@ -27,121 +30,125 @@
 # & \quad\begin{bmatrix}
 #     P^2 - \tau_i A_i      &  P q - \tau_i b_i   &    0     \\
 #     (P q - \tau_i b_i)^T  &   -1 - \tau_i c_i   &  (P q)^T \\
-#                 0  &          (P q)   & - P^2    \\
+#                 0         &          (P q)      & - P^2    \\
 # \end{bmatrix}
 # \preceq 0 \text{ (PSD) } &  i=1, \ldots, m
 # \end{aligned}
 # ```
 # with helper variables ``\tau``.
-#
-# The program can be solved by using a variable representing ``P^2`` (`Psqr` in the Julia code),
-# a vector of variables ``\tilde{q}`` (`q_tilde`) in place of ``P q`` and the variables ``\tau`` (`tau[i]`).
+
+# ## Required packages
 
 # This tutorial uses the following packages:
 
 using JuMP
-using SCS
-using Plots
-using Test
+import LinearAlgebra
+import Plots
+import SCS
+import Test  #src
 
-# ## Set-up
-# First, define the ``m`` input ellipses (here ``m = 6``),
-# parameterized as ``x^T A_i x + 2 b_i^T x + c \leq 0``:
-A_s = [
-    [1.2576 -0.3873; -0.3873 0.3467],
-    [1.4125 -2.1777; -2.1777 6.7775],
-    [1.7018 0.8141; 0.8141 1.7538],
-    [0.9742 -0.7202; -0.7202 1.5444],
-    [0.6798 -0.1424; -0.1424 0.6871],
-    [0.1796 -0.1423; -0.1423 2.6181],
+# ## Data
+
+# First, define the ``m`` input ellipses (here ``m = 6``), parameterized as
+# ``x^T A_i x + 2 b_i^T x + c \leq 0``:
+
+struct Ellipse
+    A::Matrix{Float64}
+    b::Vector{Float64}
+    c::Float64
+    function Ellipse(A::Matrix{Float64}, b::Vector{Float64}, c::Float64)
+        @assert isreal(A) && LinearAlgebra.issymmetric(A)
+        return new(A, b, c)
+    end
+end
+
+ellipses = [
+    Ellipse([1.2576 -0.3873; -0.3873 0.3467], [0.2722, 0.1969], 0.1831),
+    Ellipse([1.4125 -2.1777; -2.1777 6.7775], [-1.228, -0.0521], 0.3295),
+    Ellipse([1.7018 0.8141; 0.8141 1.7538], [-0.4049, 1.5713], 0.2077),
+    Ellipse([0.9742 -0.7202; -0.7202 1.5444], [0.0265, 0.5623], 0.2362),
+    Ellipse([0.6798 -0.1424; -0.1424 0.6871], [-0.4301, -1.0157], 0.3284),
+    Ellipse([0.1796 -0.1423; -0.1423 2.6181], [-0.3286, 0.557], 0.4931),
 ];
-
-b_s = [
-    [0.2722, 0.1969],
-    [-1.228, -0.0521],
-    [-0.4049, 1.5713],
-    [0.0265, 0.5623],
-    [-0.4301, -1.0157],
-    [-0.3286, 0.557],
-];
-
-c_s = [0.1831, 0.3295, 0.2077, 0.2362, 0.3284, 0.4931];
 
 # We visualise the ellipses using the Plots package:
-pl = plot(; size = (600, 600))
-thetas = range(0, 2pi + 0.05; step = 0.05)
-for (A, b, c) in zip(A_s, b_s, c_s)
-    sqrtA = sqrt(A)
-    b_tilde = sqrtA \ b
-    alpha = b' * (A \ b) - c
-    rhs = hcat(
-        sqrt(alpha) * cos.(thetas) .- b_tilde[1],
-        sqrt(alpha) * sin.(thetas) .- b_tilde[2],
-    )
-    ellipse = sqrtA \ rhs'
-    plot!(pl, ellipse[1, :], ellipse[2, :]; label = nothing, c = :navy)
+
+function plot_ellipse(plot, ellipse::Ellipse)
+    A, b, c = ellipse.A, ellipse.b, ellipse.c
+    θ = range(0, 2pi + 0.05; step = 0.05)
+    ## Some linear algebra to convert θ into (x,y) coordinates.
+    x_y = √A \ (√(b' * (A \ b) - c) .* hcat(cos.(θ), sin.(θ)) .- (√A \ b)')'
+    Plots.plot!(plot, x_y[1, :], x_y[2, :]; label = nothing, c = :navy)
+    return
 end
-plot(pl)
+
+plot = Plots.plot(; size = (600, 600))
+for ellipse in ellipses
+    plot_ellipse(plot, ellipse)
+end
+plot
 
 # ## Build the model
-# Now let's build the initial model, using the change-of-variables
-# `Psqr` = ``P^2`` and `q_tilde` = ``P q``:
+
+# Now let's build the model, using the change-of-variables `P²` = ``P^2`` and
+# `Pq` = ``P q``. We'll recover the true value of `P` and `q` after the solve.
+
 model = Model(SCS.Optimizer)
-m = length(A_s)
-n, _ = size(first(A_s))
-@variable(model, tau[1:m] ≥ 0)
-@variable(model, Psqr[1:n, 1:n], PSD)
-@variable(model, q_tilde[1:n])
-@variable(model, logdetP);
+set_silent(model)
+m, n = length(ellipses), size(first(ellipses).A, 1)
+@variable(model, τ[1:m] >= 0)
+@variable(model, P²[1:n, 1:n], PSD)
+@variable(model, Pq[1:n])
+nothing
 
 # Next, create the PSD constraints and objective:
-for (A, b, c, t) in zip(A_s, b_s, c_s, tau)
-    if !(isreal(A) && transpose(A) == A)
-        @error "Input matrices need to be real, symmetric matrices."
-    end
-    @constraint(
-        model,
-        -[
-            #! format: off
-            Psqr-t*A           q_tilde-t*b zeros(n, n)
-            (q_tilde - t * b)' -1-t*c      q_tilde'
-            zeros(n, n)        q_tilde     -Psqr
-            #! format: on
-        ] in PSDCone()
-    )
+
+for (i, ellipse) in enumerate(ellipses)
+    A, b, c = ellipse.A, ellipse.b, ellipse.c
+    X = [
+        #! format: off
+        (P² - τ[i] * A)  (Pq - τ[i] * b) zeros(n, n)
+        (Pq - τ[i] * b)' (-1 - τ[i] * c) Pq'
+        zeros(n, n)      Pq              -P²
+        #! format: on
+    ]
+    @constraint(model, X <= 0, PSDCone())
 end
 
+# We cannot directly represent the objective ``\log(\det(P))``, so we introduce
+# the conic reformulation:
+
+@variable(model, obj)
 @constraint(
     model,
-    [logdetP; [Psqr[i, j] for i in 1:n for j in i:n]] in MOI.RootDetConeTriangle(n)
-);
-@objective(model, Max, logdetP);
-
-# Note that here the root-determinant cone is used for constructing the objective function.
-# While the more consistent choice for the mathematical formulation is to use
-# `MOI.LogDetConeTriangle(n)` instead, `MOI.RootDetConeTriangle(n)` will produce equivalent
-# optimal solutions and is found to be more efficient for the SCS solver for this example.
+    [obj; 1; [P²[i, j] for i in 1:n for j in i:n]] in MOI.LogDetConeTriangle(n),
+)
+@objective(model, Max, obj)
 
 # Now, solve the program:
+
 optimize!(model)
-@test termination_status(model) == OPTIMAL;
-@test primal_status(model) == FEASIBLE_POINT;
+Test.@test termination_status(model) == OPTIMAL    #src
+Test.@test primal_status(model) == FEASIBLE_POINT  #src
+solution_summary(model)
 
 # ## Results
-# After solving the model to optimality
-# we can recover the original solution parameterization as
-P = sqrt(value.(Psqr))
-q = P \ value.(q_tilde)
 
-# We can test that we get the expected results to within approximation tolerance.
-@test isapprox(P, [0.4237 -0.0396; -0.0396 0.3163], atol = 1e-2);
-@test isapprox(q, [-0.3960, -0.0214], atol = 1e-2);
+# After solving the model to optimality we can recover the original solution
+# parameterization as
 
-# Finally, overlaying the solution in the plot we see the minimal area enclosing ellipsoid.
-plot!(
-    pl,
-    [tuple(P \ ([cos(theta), sin(theta)] - q)...) for theta in thetas];
+P = sqrt(value.(P²))
+q = P \ value.(Pq)
+
+# Finally, overlaying the solution in the plot we see the minimal area enclosing
+# ellipsoid:
+
+Test.@test isapprox(P, [0.4237 -0.0396; -0.0396 0.3163]; atol = 1e-2)  #src
+Test.@test isapprox(q, [-0.3960, -0.0214]; atol = 1e-2)                #src
+
+Plots.plot!(
+    plot,
+    [tuple(P \ [cos(θ) - q[1], sin(θ) - q[2]]...) for θ in 0:0.05:(2pi+0.05)];
     c = :crimson,
     label = nothing,
 )
-plot(pl)
