@@ -10,9 +10,9 @@
 
 # ## Formulation
 
-# Given a set of ``m`` ellipses of the form
+# Given a set of ``m`` ellipses of the form:
 # ```math
-# E(A, b, c) = \{ x : x' A x + 2 b' x + c \leq 0 \},
+# E(A, b, c) = \{ x : x^\top A x + 2 b^\top x + c \leq 0 \},
 # ```
 # the minimal ellipse problem finds an ellipse with the minimum area that
 # encloses the given ellipses.
@@ -22,15 +22,15 @@
 # \{ x : || Px + q || \leq 1 \}.
 # ```
 
-# Then the optimal ``P`` and ``q`` are given by the convex semidefinite program
+# Then the optimal ``P`` and ``q`` are given by the convex semidefinite program;
 # ```math
 # \begin{aligned}
 # \text{maximize } & \quad \log(\det(P))  \\
-# \text{subject to } & \quad \tau_i \geq 0, & i = 1, \ldots, m, \\
+# \text{subject to } & \quad \tau_i \geq 0, & i = 1, \ldots, m \\
 # & \quad\begin{bmatrix}
-#     P^2 - \tau_i A_i      &  P q - \tau_i b_i   &    0     \\
-#     (P q - \tau_i b_i)^T  &   -1 - \tau_i c_i   &  (P q)^T \\
-#                 0         &          (P q)      & - P^2    \\
+#     P^2 - \tau_i A_i        &  P q - \tau_i b_i   &    0        \\
+#     (P q - \tau_i b_i)^\top &   -1 - \tau_i c_i   &  (P q)^\top \\
+#                 0           &          (P q)      & - P^2       \\
 # \end{bmatrix}
 # \preceq 0 \text{ (PSD) } &  i=1, \ldots, m
 # \end{aligned}
@@ -94,36 +94,33 @@ plot
 # `P_q` = ``P q``. We'll recover the true value of `P` and `q` after the solve.
 
 model = Model(SCS.Optimizer)
+## We need to use a tighter tolerance for this example, otherwise the bounding
+## ellipse won't actually be bounding...
+set_optimizer_attribute(model, "eps_rel", 1e-6)
 set_silent(model)
 m, n = length(ellipses), size(first(ellipses).A, 1)
 @variable(model, τ[1:m] >= 0)
 @variable(model, P²[1:n, 1:n], PSD)
 @variable(model, P_q[1:n])
-nothing
-
-# Next, create the PSD constraints and objective:
 
 for (i, ellipse) in enumerate(ellipses)
     A, b, c = ellipse.A, ellipse.b, ellipse.c
-    X = [
+    X = LinearAlgebra.Symmetric([
         #! format: off
         (P² - τ[i] * A)   (P_q - τ[i] * b) zeros(n, n)
         (P_q - τ[i] * b)' (-1 - τ[i] * c)  P_q'
         zeros(n, n)       P_q              -P²
         #! format: on
-    ]
+    ])
     @constraint(model, X <= 0, PSDCone())
 end
 
 # We cannot directly represent the objective ``\log(\det(P))``, so we introduce
 # the conic reformulation:
 
-@variable(model, obj)
-@constraint(
-    model,
-    [obj; 1; [P²[i, j] for i in 1:n for j in i:n]] in MOI.LogDetConeTriangle(n),
-)
-@objective(model, Max, obj)
+@variable(model, log_det_P)
+@constraint(model, [log_det_P; 1; vec(P²)] in MOI.LogDetConeSquare(n))
+@objective(model, Max, log_det_P)
 
 # Now, solve the program:
 
@@ -134,8 +131,8 @@ solution_summary(model)
 
 # ## Results
 
-# After solving the model to optimality we can recover the original solution
-# parameterization as
+# After solving the model to optimality we can recover the solution in terms of
+# ``P`` and ``q``:
 
 P = sqrt(value.(P²))
 q = P \ value.(P_q)
