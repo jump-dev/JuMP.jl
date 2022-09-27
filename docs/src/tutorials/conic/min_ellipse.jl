@@ -91,14 +91,14 @@ plot
 # ## Build the model
 
 # Now let's build the model, using the change-of-variables `P²` = ``P^2`` and
-# `Pq` = ``P q``. We'll recover the true value of `P` and `q` after the solve.
+# `P_q` = ``P q``. We'll recover the true value of `P` and `q` after the solve.
 
 model = Model(SCS.Optimizer)
 set_silent(model)
 m, n = length(ellipses), size(first(ellipses).A, 1)
 @variable(model, τ[1:m] >= 0)
 @variable(model, P²[1:n, 1:n], PSD)
-@variable(model, Pq[1:n])
+@variable(model, P_q[1:n])
 nothing
 
 # Next, create the PSD constraints and objective:
@@ -107,9 +107,9 @@ for (i, ellipse) in enumerate(ellipses)
     A, b, c = ellipse.A, ellipse.b, ellipse.c
     X = [
         #! format: off
-        (P² - τ[i] * A)  (Pq - τ[i] * b) zeros(n, n)
-        (Pq - τ[i] * b)' (-1 - τ[i] * c) Pq'
-        zeros(n, n)      Pq              -P²
+        (P² - τ[i] * A)   (P_q - τ[i] * b) zeros(n, n)
+        (P_q - τ[i] * b)' (-1 - τ[i] * c)  P_q'
+        zeros(n, n)       P_q              -P²
         #! format: on
     ]
     @constraint(model, X <= 0, PSDCone())
@@ -138,7 +138,7 @@ solution_summary(model)
 # parameterization as
 
 P = sqrt(value.(P²))
-q = P \ value.(Pq)
+q = P \ value.(P_q)
 
 # Finally, overlaying the solution in the plot we see the minimal area enclosing
 # ellipsoid:
