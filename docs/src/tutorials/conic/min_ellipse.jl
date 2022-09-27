@@ -112,7 +112,7 @@ for (i, ellipse) in enumerate(ellipses)
         zeros(n, n)       P_q              -P²
         #! format: on
     ]
-    @constraint(model,LinearAlgebra.Symmetric(X) <= 0, PSDCone())
+    @constraint(model, LinearAlgebra.Symmetric(X) <= 0, PSDCone())
 end
 
 # We cannot directly represent the objective ``\log(\det(P))``, so we introduce
