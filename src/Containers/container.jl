@@ -17,15 +17,15 @@ function default_container end
 """
     container(f::Function, names, indices, c::Type{C})
 
-Create a container of type `C` with index names `names`, indices `indices` and values at given
-indices given by `f`. If this method is not specialized on `Type{C}`, it falls back to calling 
-`container(f, indices, c)` for backwards compatibility with containers not supporting index names.
+Create a container of type `C` with index names `names`, indices `indices` and
+values at given indices given by `f`. If this method is not specialized on
+`Type{C}`, it falls back to calling  `container(f, indices, c)` for backwards
+compatibility with containers not supporting index names.
 
     container(f::Function, indices, ::Type{C})
 
 Create a container of type `C` with indices `indices` and values at given
 indices given by `f`.
-
 
     container(f::Function, indices)
 
@@ -67,8 +67,6 @@ SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 5 entries:
   [1, 3]  =  4
 ```
 """
-function container end
-
 function container(f::Function, names, indices, D)
     return container(f, indices, D)
 end
