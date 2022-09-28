@@ -319,6 +319,14 @@ end
 # With two factors.
 
 function add_to_expression!(
+    expr::GenericQuadExpr{C,V},
+    α::_Constant,
+    β::_Constant,
+) where {C,V}
+    return add_to_expression!(expr, *(α, β))
+end
+
+function add_to_expression!(
     quad::GenericQuadExpr{C,V},
     new_coef::_Constant,
     new_var::V,
@@ -333,6 +341,15 @@ function add_to_expression!(
     new_coef::_Constant,
 ) where {C,V}
     return add_to_expression!(quad, new_coef, new_var)
+end
+
+function add_to_expression!(
+    quad::GenericQuadExpr{C,V},
+    new_coef::V,
+    new_var::V,
+) where {C,V<:Union{Number,LinearAlgebra.UniformScaling}}
+    add_to_expression!(quad.aff, new_coef, new_var)
+    return quad
 end
 
 function add_to_expression!(
@@ -388,6 +405,14 @@ function add_to_expression!(
     aff::GenericAffExpr{C,V},
     var::V,
 ) where {C,V}
+    return add_to_expression!(quad, var, aff)
+end
+
+function add_to_expression!(
+    quad::GenericQuadExpr{C,V},
+    aff::GenericAffExpr{C,V},
+    var::V,
+) where {C,V<:Union{Number,LinearAlgebra.UniformScaling}}
     return add_to_expression!(quad, var, aff)
 end
 

@@ -11,6 +11,14 @@
 #############################################################################
 
 using Test
+import JuMP
+
+@testset "Ambiguities" begin
+    # It is important to run these first, before the tests start adding methods.
+    @test isempty(Test.detect_ambiguities(JuMP))
+    # TODO(odow): there are still some ambiguities in Containers
+    # @test isempty(Test.detect_ambiguities(JuMP.Containers))
+end
 
 t = time()
 include("Containers/Containers.jl")
