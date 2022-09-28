@@ -462,7 +462,6 @@ function add_to_expression!(
     return aff
 end
 
-
 function add_to_expression!(
     aff::GenericAffExpr{S,V},
     coef::_Constant,
