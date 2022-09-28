@@ -401,13 +401,19 @@ model = Model()
 
 # #### Arrays
 
+# Create an `Array` of constraints:
+
 @constraint(model, [i = 1:3], i * x <= i + 1)
 
 # #### DenseAxisArrays
 
+# Create an `DenseAxisArray` of constraints:
+
 @constraint(model, [i = 1:2, j = 2:3], i * x <= j + 1)
 
 # #### SparseAxisArrays
+
+# Create an `SparseAxisArray` of constraints:
 
 @constraint(model, [i = 1:2, j = 1:2; i != j], i * x <= j + 1)
 
