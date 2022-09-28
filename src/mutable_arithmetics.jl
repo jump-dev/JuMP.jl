@@ -258,14 +258,6 @@ function _MA.operate!(
 ) where {N}
     return _add_sub_mul_reorder!(op, expr, x, y, z, other_args...)
 end
-# This method is missing for both affine and quadratic expressions.
-function add_to_expression!(
-    expr::_GenericAffOrQuadExpr,
-    α::_Constant,
-    β::_Constant,
-)
-    return add_to_expression!(expr, *(α, β))
-end
 
 const _AffineLike = Union{AbstractVariableRef,GenericAffExpr,_Constant}
 

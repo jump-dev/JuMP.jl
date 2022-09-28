@@ -261,6 +261,7 @@ function Base.similar(
 ) where {T,N,Ax,S}
     return construct_undef_array(S, axes)
 end
+
 # Avoid conflict with method defined in Julia Base when the axes of the
 # `DenseAxisArray` are all `Base.OneTo`:
 function Base.similar(

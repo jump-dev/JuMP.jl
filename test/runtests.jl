@@ -37,3 +37,10 @@ end
 # TODO: The hygiene test should run in a separate Julia instance where JuMP
 # hasn't been loaded via `using`.
 include("hygiene.jl")
+
+import JuMP
+@testset "Ambiguities" begin
+    @test isempty(Test.detect_ambiguities(JuMP))
+    # TODO(odow): there are still some ambiguities in Containers
+    # @test isempty(Test.detect_ambiguities(JuMP.Containers))
+end

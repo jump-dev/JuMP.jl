@@ -411,3 +411,18 @@ end
     map_coefficients_inplace!(c -> 2c, y)
     @test y == 2 * x[1] + 4 * x[2] + 6 * x[1]^2 + 8 * x[2]^2
 end
+
+@testset "expression_ambiguities" begin
+    # These tests use expressions with unusual key types so that we can test
+    # the fallback methods needed to avoid method ambiguities.
+    model = Model()
+    quad = GenericQuadExpr{Int,Int}()
+    aff = GenericAffExpr{Int,Int}(0, 1 => 1)
+    @test add_to_expression!(quad, aff, 1) isa GenericQuadExpr
+    @test quad == GenericQuadExpr{Int,Int}(aff)
+    quad = GenericQuadExpr{Int,Int}()
+    @test add_to_expression!(quad, 0, 0) isa GenericQuadExpr
+    @variable(model, x)
+    @test add_to_expression!(x + 1.0, 1.0, 2) isa GenericAffExpr
+    @test add_to_expression!(x^2, 1.0, 2) isa GenericQuadExpr
+end

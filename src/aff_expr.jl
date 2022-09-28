@@ -429,6 +429,14 @@ end
 # With two factors.
 
 function add_to_expression!(
+    expr::GenericAffExpr{C,V},
+    α::_Constant,
+    β::_Constant,
+) where {C,V}
+    return add_to_expression!(expr, *(α, β))
+end
+
+function add_to_expression!(
     aff::GenericAffExpr{C,V},
     new_coef::_Constant,
     new_var::V,
@@ -444,6 +452,16 @@ function add_to_expression!(
 ) where {C,V}
     return add_to_expression!(aff, new_coef, new_var)
 end
+
+function add_to_expression!(
+    aff::GenericAffExpr{C,V},
+    new_coef::V,
+    new_var::V,
+) where {C,V<:_Constant}
+    _add_or_set!(aff.terms, new_var, convert(C, _constant_to_number(new_coef)))
+    return aff
+end
+
 
 function add_to_expression!(
     aff::GenericAffExpr{S,V},
