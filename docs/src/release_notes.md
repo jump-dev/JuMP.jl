@@ -1,5 +1,21 @@
 # Release notes
 
+## Version 1.3.1 (September 28, 2022)
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.3.1).
+
+- Bug fixes:
+  - Fixed a performance issue in `relax_integrality`
+  - Fixed the type stability of operators with `Complex` arguments
+  - Fixed a bug which added additional `+()` terms to some nonlinear expressions
+  - Fixed potential method ambiguities with `AffExpr` and `QuadExpr` objects
+- Documentation and maintenance:
+  - Added vale as a linter for the documentation
+  - Added a tutorial on debugging JuMP models
+  - Fixed a number of typos in the documentation
+  - Many other small tweaks to the documentation
+
 ## Version 1.3.0 (September 5, 2022)
 
 For a detailed list of the closed issues and pull requests from this release,
