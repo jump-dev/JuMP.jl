@@ -85,7 +85,7 @@ if !_FAST
     # Convert `@example` blocks into `@repl` blocks in the following files:
     for file in [
         joinpath("getting_started", "getting_started_with_julia.md"),
-        joinpath("getting_started", "getting_started_with_jump.md"),
+        joinpath("getting_started", "getting_started_with_JuMP.md"),
     ]
         filename = joinpath(@__DIR__, "src", "tutorials", file)
         content = read(filename, String)
