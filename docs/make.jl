@@ -1,3 +1,5 @@
+import Pkg
+Pkg.pkg"add Documenter#master"
 import Documenter
 import Literate
 import Test
