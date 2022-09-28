@@ -9,6 +9,7 @@ see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.3.1).
   - Fixed a performance issue in `relax_integrality`
   - Fixed the type stability of operators with `Complex` arguments
   - Fixed a bug which added additional `+()` terms to some nonlinear expressions
+  - Fixed potential method ambiguities with `AffExpr` and `QuadExpr` objects
 - Documentation and maintenance:
   - Added vale as a linter for the documentation
   - Added a tutorial on debugging JuMP models
