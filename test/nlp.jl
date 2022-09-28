@@ -943,7 +943,7 @@ function test_non_macro_nonlinear_functions()
     @test MOI.constraint_expr(d, 5) ==
           :((-3.0 + x[$xidx] + 2.0 * x[$yidx]) - 1.0 == 0.0)
     @test MOI.constraint_expr(d, 6) == :(
-        (+(-1.0 * x[$xidx]) + x[$xidx] * x[$xidx] + x[$yidx] * x[$yidx] * 2.0) -
+        (-1.0 * x[$xidx] + x[$xidx] * x[$xidx] + x[$yidx] * x[$yidx] * 2.0) -
         1.0 == 0.0
     )
     return
@@ -1509,6 +1509,68 @@ function test_nonlinear_model()
     @test nonlinear_model(model) === nothing
     @test nonlinear_model(model; force = true) isa MOI.Nonlinear.Model
     @test nonlinear_model(model) isa MOI.Nonlinear.Model
+    return
+end
+
+function test_parse_expression_affexpr_empty()
+    model = Model()
+    @variable(model, x)
+    expr = AffExpr()
+    @NLexpression(model, ref, 0)
+    nlp = nonlinear_model(model)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
+function test_parse_expression_affexpr_univariate_sum()
+    model = Model()
+    @variable(model, x)
+    @expression(model, expr, 1 * x)
+    @NLexpression(model, ref, x)
+    nlp = nonlinear_model(model)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
+function test_parse_expression_affexpr_multivariate_sum()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    @expression(model, expr, x + y)
+    @NLexpression(model, ref, +(x, y))
+    nlp = nonlinear_model(model)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
+function test_parse_expression_quadexpr_empty()
+    model = Model()
+    @variable(model, x)
+    expr = QuadExpr()
+    @NLexpression(model, ref, 0)
+    nlp = nonlinear_model(model)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
+function test_parse_expression_quadexpr_univariate_sum()
+    model = Model()
+    @variable(model, x)
+    @expression(model, expr, x^2)
+    @NLexpression(model, ref, x * x)
+    nlp = nonlinear_model(model)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
+function test_parse_expression_quadexpr_multivariate_sum()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    @expression(model, expr, x^2 + y^2)
+    @NLexpression(model, ref, +(x * x, y * y))
+    nlp = nonlinear_model(model)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
     return
 end
 
