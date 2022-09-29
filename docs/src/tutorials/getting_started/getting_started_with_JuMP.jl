@@ -113,15 +113,14 @@ model = Model(HiGHS.Optimizer)
 @constraint(model, c2, 7x + 12y >= 120)
 print(model)
 optimize!(model)
-@show termination_status(model)
-@show primal_status(model)
-@show dual_status(model)
-@show objective_value(model)
-@show value(x)
-@show value(y)
-@show shadow_price(c1)
-@show shadow_price(c2)
-nothing #hide
+termination_status(model)
+primal_status(model)
+dual_status(model)
+objective_value(model)
+value(x)
+value(y)
+shadow_price(c1)
+shadow_price(c2)
 
 # ## Step-by-step
 
@@ -131,7 +130,7 @@ using JuMP
 
 # We also need to include a Julia package which provides an appropriate solver.
 # We want to use `HiGHS.Optimizer` here which is provided by the `HiGHS.jl`
-# package.
+# package:
 
 using HiGHS
 
@@ -144,7 +143,7 @@ model = Model(HiGHS.Optimizer)
 
 @variable(model, x >= 0)
 
-# They can have lower and upper bounds.
+# They can have lower and upper bounds:
 
 @variable(model, 0 <= y <= 30)
 
@@ -153,19 +152,16 @@ model = Model(HiGHS.Optimizer)
 @objective(model, Min, 12x + 20y)
 
 # Constraints are modeled using [`@constraint`](@ref). Here, `c1` and `c2` are
-# the names of our constraint.
+# the names of our constraint:
 
 @constraint(model, c1, 6x + 8y >= 100)
-
-#-
-
 @constraint(model, c2, 7x + 12y >= 120)
 
 # Call `print` to display the model:
 
 print(model)
 
-# To solve the optimization problem, call the [`optimize!`](@ref) function.
+# To solve the optimization problem, call the [`optimize!`](@ref) function:
 
 optimize!(model)
 
@@ -201,17 +197,11 @@ objective_value(model)
 # the primal solution using [`value`](@ref):
 
 value(x)
-
-#-
-
 value(y)
 
 # and the dual solution using [`shadow_price`](@ref):
 
 shadow_price(c1)
-
-#-
-
 shadow_price(c2)
 
 # That's it for our simple model. In the rest of this tutorial, we expand on
@@ -250,7 +240,7 @@ model =
 #     link to each solver's GitHub page is in the [Supported solvers](@ref)
 #     table.
 
-# You can also pass options with [`set_optimizer_attribute`](@ref)
+# You can also pass options with [`set_optimizer_attribute`](@ref):
 
 model = Model(HiGHS.Optimizer)
 set_optimizer_attribute(model, "output_flag", false)
@@ -273,7 +263,7 @@ function solve_infeasible()
     optimize!(model)
     if termination_status(model) != OPTIMAL
         @warn("The model was not solved correctly.")
-        return nothing
+        return
     end
     return value(x), value(y)
 end
@@ -303,9 +293,6 @@ model = Model()
 # `lower_bound` and `upper_bound` functions.
 
 has_upper_bound(keyword_x)
-
-#-
-
 upper_bound(keyword_x)
 
 # Note querying the value of a bound that does not exist will result in an error.
@@ -336,8 +323,8 @@ end                         #hide
 # ($l, u \in {R}^n$) as follows:
 
 n = 10
-l = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-u = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+l = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+u = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 
 @variable(model, l[i] <= x[i = 1:n] <= u[i])
 
@@ -414,13 +401,19 @@ model = Model()
 
 # #### Arrays
 
+# Create an `Array` of constraints:
+
 @constraint(model, [i = 1:3], i * x <= i + 1)
 
 # #### DenseAxisArrays
 
+# Create an `DenseAxisArray` of constraints:
+
 @constraint(model, [i = 1:2, j = 2:3], i * x <= j + 1)
 
 # #### SparseAxisArrays
+
+# Create an `SparseAxisArray` of constraints:
 
 @constraint(model, [i = 1:2, j = 1:2; i != j], i * x <= j + 1)
 
@@ -450,6 +443,7 @@ model = Model(HiGHS.Optimizer)
 @objective(model, Min, 2x + y)
 
 # Create a maximization objective using `Max`:
+
 @objective(model, Max, 2x + y)
 
 # !!! tip
@@ -471,23 +465,11 @@ model = Model(HiGHS.Optimizer)
 # ```
 
 vector_model = Model(HiGHS.Optimizer)
-
-A = [
-    1 1 9 5
-    3 5 0 8
-    2 0 6 13
-]
-
-b = [7; 3; 5]
-
-c = [1; 3; 5; 2]
-
+A = [1 1 9 5; 3 5 0 8; 2 0 6 13]
+b = [7, 3, 5]
+c = [1, 3, 5, 2]
 @variable(vector_model, x[1:4] >= 0)
 @constraint(vector_model, A * x .== b)
 @objective(vector_model, Min, c' * x)
-
 optimize!(vector_model)
-
-#-
-
 objective_value(vector_model)
