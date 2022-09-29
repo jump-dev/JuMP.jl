@@ -3,18 +3,18 @@
 <img class="display-dark-only" src="assets/logo-dark-with-text.svg" alt="JuMP logo"/>
 ```
 
-```@raw latex
-\begin{figure}[h]
-  \includegraphics[width=0.5\textwidth]{assets/logo-with-text.pdf}
-\end{figure}
-```
-
 ```@meta
 # These comments do not display in the HTML output.
 # See https://github.com/JuliaDocs/Documenter.jl/issues/674.
 ```
 
 # Introduction
+
+```@raw latex
+\begin{figure}[h]
+  \includegraphics[width=0.5\textwidth]{assets/logo-with-text.pdf}
+\end{figure}
+```
 
 Welcome to the documentation for JuMP!
 
