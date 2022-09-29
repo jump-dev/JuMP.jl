@@ -5,7 +5,7 @@
 
 # # The multi-commodity flow problem
 
-# **Originally contributed by:** Louis Luangkesorn, February 26, 2015.
+# **Originally contributed by:** Louis Luangkesorn
 
 # This tutorial is a JuMP implementation of the multi-commodity transportation
 # model described in
@@ -27,6 +27,33 @@ import Tables
 import Test  #src
 
 const DBInterface = SQLite.DBInterface
+
+# ## Formulation
+
+# The multi-commondity flow problem is a simple extension of
+# [The transportation problem](@ref) to multiple types of products. Briefly, we
+# start with the formulation of the transportation problem:
+# ```math
+# \begin{aligned}
+# \min  && \sum_{i \in O, j \in D} c_{i,j} x_{i,j} \\
+# s.t.  && \sum_{j \in D} x_{i, j} \le s_i && \forall i \in O \\
+#       && \sum_{i \in O} x_{i, j} = d_j && \forall j \in D \\
+#       && x_{i, j} \ge 0 && \forall i \in O, j \in D
+# \end{aligned}
+# ```
+# but introduce a set of products ``P``, resulting in:
+# ```math
+# \begin{aligned}
+# \min  && \sum_{i \in O, j \in D, k \in P} c_{i,j,k} x_{i,j,k} \\
+# s.t.  && \sum_{j \in D} x_{i, j, k} \le s_{i,k} && \forall i \in O, k \in P \\
+#       && \sum_{i \in O} x_{i, j, k} = d_{j,k} && \forall j \in D, k \in P \\
+#       && x_{i, j,k} \ge 0 && \forall i \in O, j \in D, k in P
+#       && \sum_{k \in P} x_{i, j} \le u_{i,j} && \forall i \in O, j \in D
+# \end{aligned}
+# ```
+# Note that the last constraint is new; it says that there is a maximum quantity
+# of goods (of any type) that can be transported from origin ``i`` to
+# destination ``j``.
 
 # ## Data
 
@@ -112,7 +139,7 @@ end
 
 demand = DBInterface.execute(db, "SELECT * FROM demand")
 for r in Tables.rows(demand)
-    @constraint(model, sum(x[:, r.destination, r.product]) >= r.demand)
+    @constraint(model, sum(x[:, r.destination, r.product]) == r.demand)
 end
 
 # !!! warning
@@ -123,19 +150,18 @@ end
 # The SQLite queries can be arbitrarily complex. For example, here's a query
 # which builds every possible origin-destination pair:
 
-od_pairs =
-    DBInterface.execute(
-        db,
-        """
-        SELECT a.location as 'origin',
-               b.location as 'destination'
-        FROM locations a
-        INNER JOIN locations b
-        ON a.type = 'origin' AND b.type = 'destination'
-        """,
-    )
+od_pairs = DBInterface.execute(
+    db,
+    """
+    SELECT a.location as 'origin',
+           b.location as 'destination'
+    FROM locations a
+    INNER JOIN locations b
+    ON a.type = 'origin' AND b.type = 'destination'
+    """,
+)
 
-# With a constraint that we cannont send more than 625 units betweenn each pair:
+# With a constraint that we cannot send more than 625 units between each pair:
 
 for r in Tables.rows(od_pairs)
     @constraint(model, sum(x[r.origin, r.destination, :]) <= 625)
