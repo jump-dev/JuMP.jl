@@ -10,6 +10,12 @@
 
 # Introduction
 
+```@raw latex
+\begin{figure}[h]
+  \includegraphics[width=0.5\textwidth]{assets/logo-with-text.pdf}
+\end{figure}
+```
+
 Welcome to the documentation for JuMP!
 
 !!! note
