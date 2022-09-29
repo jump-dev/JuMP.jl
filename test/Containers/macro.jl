@@ -223,9 +223,9 @@ end
 
 function Containers.container(
     f::Function,
-    names,
     indices,
     ::Type{_MyContainer2},
+    names,
 )
     key(i::Tuple) = i
     key(i::Tuple{T}) where {T} = i[1]

@@ -15,7 +15,7 @@ a `VectorizedProductIterator` and the function returns
 function default_container end
 
 """
-    container(f::Function, names, indices, c::Type{C})
+    container(f::Function, indices, c::Type{C}, names)
 
 Create a container of type `C` with index names `names`, indices `indices` and
 values at given indices given by `f`. If this method is not specialized on
@@ -67,7 +67,7 @@ SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 5 entries:
   [1, 3]  =  4
 ```
 """
-function container(f::Function, names, indices, D)
+function container(f::Function, indices, D, names)
     return container(f, indices, D)
 end
 
