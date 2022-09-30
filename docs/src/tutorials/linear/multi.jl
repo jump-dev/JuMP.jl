@@ -47,8 +47,8 @@ const DBInterface = SQLite.DBInterface
 # \min  && \sum_{i \in O, j \in D, k \in P} c_{i,j,k} x_{i,j,k} \\
 # s.t.  && \sum_{j \in D} x_{i, j, k} \le s_{i,k} && \forall i \in O, k \in P \\
 #       && \sum_{i \in O} x_{i, j, k} = d_{j,k} && \forall j \in D, k \in P \\
-#       && x_{i, j,k} \ge 0 && \forall i \in O, j \in D, k in P
-#       && \sum_{k \in P} x_{i, j} \le u_{i,j} && \forall i \in O, j \in D
+#       && x_{i, j,k} \ge 0 && \forall i \in O, j \in D, k \in P \\
+#       && \sum_{k \in P} x_{i, j, k} \le u_{i,j} && \forall i \in O, j \in D
 # \end{aligned}
 # ```
 # Note that the last constraint is new; it says that there is a maximum quantity
@@ -66,8 +66,8 @@ db = SQLite.DB(joinpath(@__DIR__, "multi.sqlite"))
 
 SQLite.tables(db)
 
-# We interact with the databse by executing queries, and then piping the results
-# to an appropriate table. One example is a `DataFrame`:
+# We interact with the database by executing queries, and then piping the
+# results to an appropriate table. One example is a `DataFrame`:
 
 DBInterface.execute(db, "SELECT * FROM locations") |> DataFrames.DataFrame
 
@@ -85,7 +85,7 @@ origins =
         "SELECT location FROM locations WHERE type = \"origin\"",
     ) |> Tables.rowtable
 
-# But for our pupose, we just want the list of strings:
+# But for our purpose, we just want the list of strings:
 
 origins = map(y -> y.location, origins)
 
@@ -115,12 +115,10 @@ set_silent(model)
 @variable(model, x[origins, destinations, products] >= 0)
 
 # One approach when working with databases is to extract all of the data into a
-# Julia datastructure. For example, let's pull the cost table into a DataFrame:
+# Julia datastructure. For example, let's pull the cost table into a DataFrame
+# and then construct our objective by iterating over the rows of the DataFrame:
 
 cost = DBInterface.execute(db, "SELECT * FROM cost") |> DataFrames.DataFrame
-
-# and then construct our objective by iterating over the rows of the dataframe:
-
 @objective(
     model,
     Max,
@@ -166,6 +164,8 @@ od_pairs = DBInterface.execute(
 for r in Tables.rows(od_pairs)
     @constraint(model, sum(x[r.origin, r.destination, :]) <= 625)
 end
+
+# ## Solution
 
 # Finally, we can optimize the model:
 
