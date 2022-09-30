@@ -214,3 +214,26 @@ end
     @test length(z) == 4
     @test z[1, 2] == 3
 end
+
+# Test containers that use subindex names
+struct _MyContainer2
+    names::Any
+    d::Any
+end
+
+function Containers.container(
+    f::Function,
+    indices,
+    ::Type{_MyContainer2},
+    names,
+)
+    key(i::Tuple) = i
+    key(i::Tuple{T}) where {T} = i[1]
+    return _MyContainer2(names, Dict(key(i) => f(i...) for i in indices))
+end
+
+@testset "_MyContainer2" begin
+    Containers.@container(v[i = 1:3], sin(i), container = _MyContainer2)
+    @test v.d isa Dict{Int,Float64}
+    @test v.names == [:i]
+end
