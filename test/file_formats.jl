@@ -107,6 +107,37 @@ function test_unsupported_attribute()
     return
 end
 
+function test_nl_round_trip()
+    model = Model()
+    @variable(model, 0 <= x <= 1)
+    @constraint(model, x^2 <= 2)
+    @objective(model, Max, x^2)
+    @NLconstraint(model, 2 * x >= -1)
+    @NLconstraint(model, 1 * x == 0.2)
+    @NLconstraint(model, 0 <= sin(x) <= 1)
+    write_to_file(model, "model.nl")
+    model_2 = read_from_file("model.nl")
+    nlp = nonlinear_model(model_2)
+    xi = index(x)
+    @test nlp.objective == MOI.Nonlinear.parse_expression(nlp, :($xi * $xi))
+    @test length(nlp.constraints) == 4
+    constraints = Dict(
+        MOI.LessThan(2.0) =>
+            MOI.Nonlinear.parse_expression(nlp, :($xi * $xi)),
+        MOI.GreaterThan(0.0) =>
+            MOI.Nonlinear.parse_expression(nlp, :(2 * $xi - -1)),
+        MOI.EqualTo(0.0) =>
+            MOI.Nonlinear.parse_expression(nlp, :(1 * $xi - 0.2)),
+        MOI.Interval(0.0, 1.0) =>
+            MOI.Nonlinear.parse_expression(nlp, :(sin($xi))),
+    )
+    for (_, c) in nlp.constraints
+        @test c.expression == constraints[c.set]
+    end
+    rm("model.nl")
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
