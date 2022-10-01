@@ -126,7 +126,7 @@ JuMP does not support [disciplined convex programming (DCP)](https://dcp.stanfor
 Alternatives to consider are:
 
  * [Convex.jl](https://github.com/jump-dev/Convex.jl)
- * [cvxpy [Python]](https://github.com/cvxpy/cvxpy)
+ * [CVXPY [Python]](https://github.com/cvxpy/cvxpy)
  * [YALMIP [MATLAB]](https://yalmip.github.io)
 
 !!! note
