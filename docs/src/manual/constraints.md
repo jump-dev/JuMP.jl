@@ -1110,7 +1110,7 @@ x in MathOptInterface.Semicontinuous{Float64}(1.5, 3.5)
 ```
 
 Semi-integer variables  are constrained to the set
-``x \\in \{0\} \cup \{l, l+1, \dots, u\}``.
+``x \in \{0\} \cup \{l, l+1, \dots, u\}``.
 
 Create a semi-integer variable using the `MOI.Semiinteger` set:
 ```jldoctest; setup = :(model = Model(); @variable(model, x))
