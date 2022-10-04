@@ -1363,7 +1363,6 @@ include("feasibility_checker.jl")
 using Tables
 include("tables.jl")
 
-
 # MOI contains a number of Enums that are often accessed by users such as
 # `MOI.OPTIMAL`. This piece of code re-exports them from JuMP so that users can
 # use: `MOI.OPTIMAL`, `JuMP.OPTIMAL`, or `using JuMP; OPTIMAL`.
