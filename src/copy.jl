@@ -296,5 +296,59 @@ function MOI.copy_to(dest::MOI.ModelLike, src::Model)
 end
 
 function MOI.copy_to(dest::Model, src::MOI.ModelLike)
-    return MOI.copy_to(backend(dest), src)
+    index_map = MOI.copy_to(backend(dest), src)
+    if MOI.NLPBlock() in MOI.get(src, MOI.ListOfModelAttributesSet())
+        block = MOI.get(src, MOI.NLPBlock())
+        dest.nlp_model = _nlp_model_from_nlpblock(block, block.evaluator)
+    end
+    return index_map
+end
+
+_lift_variable_from_expression(expr) = expr
+
+function _lift_variable_from_expression(expr::Expr)
+    if Meta.isexpr(expr, :ref, 2) && expr.args[1] == :x
+        return expr.args[2]
+    end
+    for i in 1:length(expr.args)
+        expr.args[i] = _lift_variable_from_expression(expr.args[i])
+    end
+    return expr
+end
+
+function _set_from_nlpboundspair(bound::MOI.NLPBoundsPair)
+    if bound.lower == bound.upper
+        return MOI.EqualTo(bound.lower)
+    elseif isfinite(bound.lower) && !isfinite(bound.upper)
+        return MOI.GreaterThan(bound.lower)
+    elseif isfinite(bound.upper) && !isfinite(bound.lower)
+        return MOI.LessThan(bound.upper)
+    else
+        return MOI.Interval(bound.lower, bound.upper)
+    end
+end
+
+function _nlp_model_from_nlpblock(block::MOI.NLPBlockData, evaluator)
+    if !(:ExprGraph in MOI.features_available(evaluator))
+        error(
+            "Unable to copy model because the nonlinear evaluator doesn't " *
+            "support :ExprGraph.",
+        )
+    end
+    MOI.initialize(evaluator, [:ExprGraph])
+    model = MOI.Nonlinear.Model()
+    for (i, bound) in enumerate(block.constraint_bounds)
+        expr = MOI.constraint_expr(evaluator, i)
+        f = Meta.isexpr(expr, :comparison) ? expr.args[3] : expr.args[2]
+        MOI.Nonlinear.add_constraint(
+            model,
+            _lift_variable_from_expression(f),
+            _set_from_nlpboundspair(bound),
+        )
+    end
+    if block.has_objective
+        expr = _lift_variable_from_expression(MOI.objective_expr(evaluator))
+        MOI.Nonlinear.set_objective(model, expr)
+    end
+    return model
 end
