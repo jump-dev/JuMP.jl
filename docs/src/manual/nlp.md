@@ -172,23 +172,6 @@ julia> value.(p)
  3.0
 ```
 
-Nonlinear parameters can be used *within nonlinear macros* only:
-
-```jldoctest nonlinear_parameters
-julia> @objective(model, Max, p[1] * x)
-ERROR: MethodError: no method matching *(::NonlinearParameter, ::VariableRef)
-[...]
-
-julia> @NLobjective(model, Max, p[1] * x)
-
-julia> @expression(model, my_expr, p[1] * x^2)
-ERROR: MethodError: no method matching *(::NonlinearParameter, ::QuadExpr)
-[...]
-
-julia> @NLexpression(model, my_nl_expr, p[1] * x^2)
-subexpression[1]: parameter[1] * x ^ 2.0
-```
-
 ### When to use a parameter
 
 Nonlinear parameters are useful when solving nonlinear models in a sequence:
@@ -219,27 +202,6 @@ nothing #hide
 
 The syntax accepted in nonlinear macros is more restricted than the syntax
 for linear and quadratic macros. We note some important points below.
-
-### No operator overloading
-
-There is no operator overloading provided to build up nonlinear expressions.
-For example, if `x` is a JuMP variable, the code `3x` will return an
-`AffExpr` object that can be used inside of future expressions and linear
-constraints. However, the code `sin(x)` is an error. All nonlinear
-expressions must be inside of macros.
-
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, x);
-
-julia> expr = sin(x) + 1
-ERROR: sin is not defined for type AbstractVariableRef. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.
-[...]
-
-julia> expr = @NLexpression(model, sin(x) + 1)
-subexpression[1]: sin(x) + 1.0
-```
 
 ### Scalar operations only
 
