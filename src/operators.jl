@@ -172,9 +172,6 @@ function Base.:*(
     end
     return result
 end
-function Base.:/(lhs::AbstractVariableRef, rhs::GenericAffExpr)
-    return error("Cannot divide a variable by an affine expression")
-end
 # AbstractVariableRef--GenericQuadExpr
 function Base.:+(v::AbstractVariableRef, q::GenericQuadExpr)
     return GenericQuadExpr(v + q.aff, copy(q.terms))
@@ -208,9 +205,10 @@ function Base.:^(lhs::AbstractVariableRef, rhs::Integer)
         return one(GenericQuadExpr{T,variable_ref_type(lhs)})
     else
         error(
-            "Only exponents of 0, 1, or 2 are currently supported. Are you " *
-            "trying to build a nonlinear problem? Make sure you use " *
-            "@NLconstraint/@NLobjective.",
+            "Invalid integer exponent detected in expression `$lhs^$rhs`: " *
+            "supported exponents are 0, 1, or 2. " *
+            "If you are trying to build a nonlinear problem, use `x^$rhs.0` " *
+            "instead of `x^$rhs`, or use `x^Float64(y)` instead of `x^y`.",
         )
     end
 end
@@ -224,18 +222,15 @@ function Base.:^(lhs::GenericAffExpr{T}, rhs::Integer) where {T}
         return one(GenericQuadExpr{T,variable_ref_type(lhs)})
     else
         error(
-            "Only exponents of 0, 1, or 2 are currently supported. Are you " *
-            "trying to build a nonlinear problem? Make sure you use " *
-            "@NLconstraint/@NLobjective.",
+            "Invalid integer exponent `$rhs` detected on an affine " *
+            "expression: supported exponents are 0, 1, or 2. " *
+            "If you are trying to build a nonlinear problem, use " *
+            "`aff^$rhs.0` instead of `aff^$rhs`, or use `aff^Float64(y)` " *
+            "instead of `aff^y`.",
         )
     end
 end
 
-function Base.:^(lhs::Union{AbstractVariableRef,GenericAffExpr}, rhs::_Constant)
-    return error(
-        "Only exponents of 0, 1, or 2 are currently supported. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.",
-    )
-end
 # GenericAffExpr--AbstractVariableRef
 function Base.:+(
     lhs::GenericAffExpr{C,V},
@@ -264,9 +259,6 @@ function Base.:*(
         add_to_expression!(result, coef, var, rhs)
     end
     return result
-end
-function Base.:/(lhs::GenericAffExpr, rhs::AbstractVariableRef)
-    return error("Cannot divide affine expression by a variable")
 end
 # AffExpr--AffExpr
 
@@ -374,24 +366,12 @@ end
 function Base.:-(q::GenericQuadExpr, v::AbstractVariableRef)
     return GenericQuadExpr(q.aff - v, copy(q.terms))
 end
-function Base.:*(q::GenericQuadExpr, v::AbstractVariableRef)
-    return error("Cannot multiply a quadratic expression by a variable")
-end
-function Base.:/(q::GenericQuadExpr, v::AbstractVariableRef)
-    return error("Cannot divide a quadratic expression by a variable")
-end
 # GenericQuadExpr--GenericAffExpr
 function Base.:+(q::GenericQuadExpr, a::GenericAffExpr)
     return GenericQuadExpr(q.aff + a, copy(q.terms))
 end
 function Base.:-(q::GenericQuadExpr, a::GenericAffExpr)
     return GenericQuadExpr(q.aff - a, copy(q.terms))
-end
-function Base.:*(q::GenericQuadExpr, a::GenericAffExpr)
-    return error("Cannot multiply a quadratic expression by an aff. expression")
-end
-function Base.:/(q::GenericQuadExpr, a::GenericAffExpr)
-    return error("Cannot divide a quadratic expression by an aff. expression")
 end
 # GenericQuadExpr--GenericQuadExpr
 function Base.:+(q1::GenericQuadExpr{S}, q2::GenericQuadExpr{T}) where {S,T}
@@ -482,60 +462,4 @@ function LinearAlgebra.issymmetric(x::Matrix{T}) where {T<:_JuMPTypes}
         isequal(x[i, j], x[j, i]) || return false
     end
     return true
-end
-
-###############################################################################
-# nonlinear function fallbacks for JuMP built-in types
-###############################################################################
-
-const _OP_HINT =
-    "Are you trying to build a nonlinear problem? Make sure you use " *
-    "@NLconstraint/@NLobjective. If you are using an `@NL` macro and you " *
-    "encountered this error message, it is because you are attempting to use " *
-    "another unsupported function which calls this method internally."
-
-for f in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
-    if f in (:+, :-, :abs) || !isdefined(Base, f)
-        continue
-    end
-    for T in (:AbstractVariableRef, :GenericAffExpr, :GenericQuadExpr)
-        if f == :abs2 && (T == :AbstractVariableRef || T == :GenericAffExpr)
-            continue
-        end
-        error_string = "$f is not defined for type $T. $_OP_HINT"
-        @eval Base.$(f)(::$T) = error($error_string)
-    end
-end
-
-function Base.:*(
-    ::T,
-    ::S,
-) where {
-    T<:GenericQuadExpr,
-    S<:Union{AbstractVariableRef,GenericAffExpr,GenericQuadExpr},
-}
-    return error("*(::$T,::$S) is not defined. $_OP_HINT")
-end
-function Base.:*(lhs::GenericQuadExpr, rhs::GenericQuadExpr)
-    return error(
-        "*(::GenericQuadExpr,::GenericQuadExpr) is not defined. $_OP_HINT",
-    )
-end
-function Base.:*(
-    ::S,
-    ::T,
-) where {
-    T<:GenericQuadExpr,
-    S<:Union{AbstractVariableRef,GenericAffExpr,GenericQuadExpr},
-}
-    return error("*(::$S,::$T) is not defined. $_OP_HINT")
-end
-function Base.:/(
-    ::S,
-    ::T,
-) where {
-    S<:Union{_Constant,AbstractVariableRef,GenericAffExpr,GenericQuadExpr},
-    T<:Union{AbstractVariableRef,GenericAffExpr,GenericQuadExpr},
-}
-    return error("/(::$S,::$T) is not defined. $_OP_HINT")
 end
