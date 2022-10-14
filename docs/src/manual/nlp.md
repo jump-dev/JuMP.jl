@@ -31,10 +31,6 @@ julia> @NLobjective(model, Min, exp(x[1]) - sqrt(x[2]))
 ```
 To modify a nonlinear objective, call [`@NLobjective`](@ref) again.
 
-If you set an objective with both [`@objective`](@ref) and
-[`@NLobjective`](@ref), the nonlinear objective takes precedence, and the
-[`@objective`](@ref) will be ignored.
-
 ## Add a nonlinear constraint
 
 Use [`@NLconstraint`](@ref) to add a nonlinear constraint.
