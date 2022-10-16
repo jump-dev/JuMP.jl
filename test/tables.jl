@@ -1,7 +1,6 @@
 module TestTableInterface
 
 using JuMP
-using Tables
 using Test
 
 function runtests()
@@ -18,6 +17,8 @@ end
 function test_denseaxisarray()
     model = Model()
     @variable(model, x[i = 4:10, j = 2002:2022] >= 0)
+    @test typeof(x) <: Containers.DenseAxisArray
+
     @objective(model, Min, sum(x))
     set_optimizer(
         model,
@@ -42,19 +43,20 @@ function test_denseaxisarray()
         )
     end
 
-    tbl = JuMP.solution_table(x, :solution, :index1, :index2)
-    @test Tables.istable(typeof(tbl))
-    @test Tables.rowaccess(typeof(tbl))
-
+    tbl = JuMP.table(value, x, :solution, :index1, :index2)
+    
     tblrow = first(tbl)
     @test eltype(tbl) == typeof(tblrow)
-    @test Tables.getcolumn(tblrow, :index1) == 4
-    @test Tables.getcolumn(tblrow, 1) == 4
+    @test tblrow.solution == 0
     @test tblrow.index1 == 4
-    @test propertynames(tblrow) == [:index1, :index2, :solution]
+    @test propertynames(tblrow) == (:index1, :index2, :solution)
 
     rows = collect(tbl)
     @test length(rows) == length(tbl)
+
+    var_tbl = JuMP.table(x, :variable, :index1, :index2)
+    @test typeof(first(var_tbl).variable) <: VariableRef
+
 end
 
 function test_array()
@@ -86,17 +88,13 @@ function test_array()
         )
     end
 
-    tbl = JuMP.solution_table(x, :solution, :index1, :index2)
-
-    @test Tables.istable(typeof(tbl))
-    @test Tables.rowaccess(typeof(tbl))
+    tbl = JuMP.table(value, x, :solution, :index1, :index2)
 
     tblrow = first(tbl)
     @test eltype(tbl) == typeof(tblrow)
-    @test Tables.getcolumn(tblrow, :index1) == 1
-    @test Tables.getcolumn(tblrow, 1) == 1
+    @test tblrow.solution == 0
     @test tblrow.index1 == 1
-    @test propertynames(tblrow) == [:index1, :index2, :solution]
+    @test propertynames(tblrow) == (:index1, :index2, :solution)
 
     rows = collect(tbl)
     @test length(rows) == length(tbl)
@@ -130,16 +128,13 @@ function test_sparseaxisarray()
         )
     end
 
-    tbl = JuMP.solution_table(x, :solution, :index1, :index2)
-    @test Tables.istable(typeof(tbl))
-    @test Tables.rowaccess(typeof(tbl))
-
+    tbl = JuMP.table(value, x, :solution, :index1, :index2)
+ 
     tblrow = first(tbl)
     @test eltype(tbl) == typeof(tblrow)
-    @test Tables.getcolumn(tblrow, :index1) == 1
-    @test Tables.getcolumn(tblrow, 1) == 1
+    @test tblrow.solution == 0
     @test tblrow.index1 == 1
-    @test propertynames(tblrow) == [:index1, :index2, :solution]
+    @test propertynames(tblrow) == (:index1, :index2, :solution)
 
     rows = collect(tbl)
     @test length(rows) == length(tbl)
@@ -202,16 +197,13 @@ function test_custom_variable()
         )
     end
 
-    tbl = JuMP.solution_table(x, :solution, :index1, :index2)
-    @test Tables.istable(typeof(tbl))
-    @test Tables.rowaccess(typeof(tbl))
-
+    tbl = JuMP.table(value, x, :solution, :index1, :index2)
+  
     tblrow = first(tbl)
     @test eltype(tbl) == typeof(tblrow)
-    @test Tables.getcolumn(tblrow, :index1) == 1
-    @test Tables.getcolumn(tblrow, 1) == 1
+    @test tblrow.solution == 0
     @test tblrow.index1 == 1
-    @test propertynames(tblrow) == [:index1, :index2, :solution]
+    @test propertynames(tblrow) == (:index1, :index2, :solution)
 end
 
 end
