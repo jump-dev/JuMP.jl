@@ -54,5 +54,6 @@ include("nested_iterator.jl")
 include("no_duplicate_dict.jl")
 include("container.jl")
 include("macro.jl")
+include("tables.jl")
 
 end

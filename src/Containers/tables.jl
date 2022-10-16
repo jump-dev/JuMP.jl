@@ -7,11 +7,11 @@ function _row_iterator(x::Array)
     return zip(eachindex(x), Iterators.product(axes(x)...))
 end
 
-function _row_iterator(x::Containers.DenseAxisArray)
+function _row_iterator(x::DenseAxisArray)
     return zip(vec(eachindex(x)), Iterators.product(axes(x)...))
 end
 
-function _row_iterator(x::Containers.SparseAxisArray)
+function _row_iterator(x::SparseAxisArray)
     return zip(eachindex(x.data), keys(x.data))
 end
 
@@ -35,7 +35,7 @@ julia> model = Model();
 
 julia> @variable(model, x[i=1:2, j=i:2] >= 0, start = i+j);
 
-julia> table(start_value, x, :start, :I, :J)
+julia> Containers.table(start_value, x, :start, :I, :J)
 3-element Vector{NamedTuple{(:I, :J, :start), Tuple{Int64, Int64, Float64}}}:
  (I = 1, J = 2, start = 3.0)
  (I = 1, J = 1, start = 2.0)
@@ -44,7 +44,7 @@ julia> table(start_value, x, :start, :I, :J)
 """
 function table(
     f::Function,
-    x::Union{Array,Containers.DenseAxisArray,Containers.SparseAxisArray},
+    x::Union{Array,DenseAxisArray,SparseAxisArray},
     value_name::Symbol,
     col_names::Symbol...,
 )
