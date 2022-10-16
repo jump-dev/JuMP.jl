@@ -24,15 +24,13 @@ function test_denseaxisarray()
     @variable(model, x[i = 4:10, j = 2002:2022] >= 0, start = 0.0)
     @test typeof(x) <: Containers.DenseAxisArray
     start_table = JuMP.table(start_value, x, :solution, :index1, :index2)
+    T = NamedTuple{(:index1, :index2, :solution),Tuple{Int,Int,Float64}}
+    @test start_table isa Vector{T}
+    @test length(start_table) == length(x)
     row = first(start_table)
-    @test eltype(start_table) == typeof(row)
-    @test row.solution == 0
-    @test row.index1 == 4
-    @test propertynames(row) == (:index1, :index2, :solution)
-    rows = collect(start_table)
-    @test length(rows) == length(start_table)
-    var_tbl = JuMP.table(x, :variable, :index1, :index2)
-    @test typeof(first(var_tbl).variable) <: VariableRef
+    @test row == (index1 = 4, index2 = 2002, solution = 0.0)
+    x_table = JuMP.table(x, :variable, :index1, :index2)
+    @test x_table[1] == (index1 = 4, index2 = 2002, variable = x[4, 2002])
     return
 end
 
@@ -41,13 +39,13 @@ function test_array()
     @variable(model, x[1:10, 1:5] >= 0, start = 0.0)
     @test typeof(x) <: Array{VariableRef}
     start_table = JuMP.table(start_value, x, :solution, :index1, :index2)
+    T = NamedTuple{(:index1, :index2, :solution),Tuple{Int,Int,Float64}}
+    @test start_table isa Vector{T}
+    @test length(start_table) == length(x)
     row = first(start_table)
-    @test eltype(start_table) == typeof(row)
-    @test row.solution == 0
-    @test row.index1 == 1
-    @test propertynames(row) == (:index1, :index2, :solution)
-    rows = collect(start_table)
-    @test length(rows) == length(start_table)
+    @test row == (index1 = 1, index2 = 1, solution = 0.0)
+    x_table = JuMP.table(x, :variable, :index1, :index2)
+    @test x_table[1] == (index1 = 1, index2 = 1, variable = x[1, 1])
     return
 end
 
@@ -56,13 +54,12 @@ function test_sparseaxisarray()
     @variable(model, x[i = 1:10, j = 1:5; i + j <= 8] >= 0, start = 0)
     @test typeof(x) <: Containers.SparseAxisArray
     start_table = JuMP.table(start_value, x, :solution, :index1, :index2)
-    row = first(start_table)
-    @test eltype(start_table) == typeof(row)
-    @test row.solution == 0.0
-    @test row.index1 == 1
-    @test propertynames(row) == (:index1, :index2, :solution)
-    rows = collect(start_table)
-    @test length(rows) == length(start_table)
+    T = NamedTuple{(:index1, :index2, :solution),Tuple{Int,Int,Float64}}
+    @test start_table isa Vector{T}
+    @test length(start_table) == length(x)
+    @test (index1 = 1, index2 = 1, solution = 0.0) in start_table
+    x_table = JuMP.table(x, :variable, :index1, :index2)
+    @test (index1 = 1, index2 = 1, variable = x[1, 1]) in x_table
     return
 end
 
@@ -110,12 +107,14 @@ function test_custom_variable()
         container = Containers.DenseAxisArray,
         start = 0.0,
     )
+    @test typeof(x) <: Containers.DenseAxisArray
     start_table = JuMP.table(start_value, x, :solution, :index1, :index2)
-    row = first(start_table)
-    @test eltype(start_table) == typeof(row)
-    @test row.solution == 0.0
-    @test row.index1 == 1
-    @test propertynames(row) == (:index1, :index2, :solution)
+    T = NamedTuple{(:index1, :index2, :solution),Tuple{Int,Int,Float64}}
+    @test start_table isa Vector{T}
+    @test length(start_table) == length(x)
+    @test (index1 = 1, index2 = 100, solution = 0.0) in start_table
+    x_table = JuMP.table(x, :variable, :index1, :index2)
+    @test (index1 = 1, index2 = 100, variable = x[1, 100]) in x_table
     return
 end
 
