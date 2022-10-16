@@ -26,7 +26,7 @@ result of `f(x[i])`.
 !!! info
     A `Vector` of `NamedTuple`s implements the [Tables.jl](https://github.com/JuliaData/Tables.jl)
     interface, and so the result can be used as input for any function
-    that consumes a 'Tables.jl' compatible source. 
+    that consumes a 'Tables.jl' compatible source.
 
 ## Example
 
@@ -43,9 +43,9 @@ julia> table(start_value, x, :start, :I, :J)
 ```
 """
 function table(
-    f::Function, 
-    x::Union{Array,Containers.DenseAxisArray,Containers.SparseAxisArray}, 
-    value_name::Symbol, 
+    f::Function,
+    x::Union{Array,Containers.DenseAxisArray,Containers.SparseAxisArray},
+    value_name::Symbol,
     col_names::Symbol...,
 )
     got, want = length(col_names), ndims(x)
