@@ -326,7 +326,7 @@ Use [`Containers.table`](@ref) to convert the `SparseAxisArray` into a
 [Tables.jl](https://github.com/JuliaData/Tables.jl) compatible
 `Vector{<:NamedTuple}`:
 
-```jldoctest containers_dense
+```jldoctest containers_sparse
 julia> table = Containers.table(x, :I, :J, :value)
 4-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Symbol, Tuple{Int64, Symbol}}}}:
  (I = 3, J = :B, value = (3, :B))
@@ -338,7 +338,7 @@ julia> table = Containers.table(x, :I, :J, :value)
 Because it supports the [Tables.jl](https://github.com/JuliaData/Tables.jl)
 interface, you can pass it to any function which accepts a table as input:
 
-```jldoctest containers_dense
+```jldoctest containers_sparse
 julia> import DataFrames;
 
 julia> DataFrames.DataFrame(table)
