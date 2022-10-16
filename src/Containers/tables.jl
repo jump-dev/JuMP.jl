@@ -43,7 +43,7 @@ function table(
 )
     got, want = length(names), ndims(x) + 1
     if got != want
-        error("Invalid number column names provided: Got $got, expected $want.")
+        error("Invalid number of column names provided: Got $got, expected $want.")
     end
     return [NamedTuple{names}((args..., f(x[i]))) for (i, args) in _rows(x)]
 end
