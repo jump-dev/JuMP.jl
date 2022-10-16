@@ -1,49 +1,61 @@
-function _row_iterator(x::Union{Array,Containers.DenseAxisArray})
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+function _row_iterator(x::Array)
     return zip(eachindex(x), Iterators.product(axes(x)...))
+end
+
+function _row_iterator(x::Containers.DenseAxisArray)
+    return zip(vec(eachindex(x)), Iterators.product(axes(x)...))
 end
 
 function _row_iterator(x::Containers.SparseAxisArray)
     return zip(eachindex(x.data), keys(x.data))
 end
 
-_columns(x::Union{Array, Containers.DenseAxisArray}) = length(axes(x))
-_columns(x::Containers.SparseAxisArray{T,N,K}) where {T,N,K} = N
-
-
-function table(x, name::Symbol, col_names::Symbol...)
-    return table(identity, x, name, col_names...)
-end
-
 """
-    table(f::Function, x, name, colnames...)
+    table([f::Function=identity,] x, value_name::Symbol, col_names::Symbol...)
 
-Applies the function `f` to all elements of the variable container `x`
-and returns the result as a `Vector` of `NamedTuple`s using the provided
-names.
+Applies the function `f` to all elements of the variable container `x`,
+returning the result as a `Vector` of `NamedTuple`s, where `col_names`
+are used for the correspondig axis names, and `value_name` is used for the
+result of `f(x[i])`.
 
-A `Vector` of `NamedTuple`s implements the 'Tables.jl' interface
-and can be used as input for anything that consumes a 'Tables.jl' 
-compatible source. 
+!!! info
+    A `Vector` of `NamedTuple`s implements the [Tables.jl](https://github.com/JuliaData/Tables.jl)
+    interface, and so the result can be used as input for any function
+    that consumes a 'Tables.jl' compatible source. 
 
 ## Example
-```julia
-model = Model()
-@variable(model, x[1:10, 2000:2020] >= 0)
-[...]
-optimize!(model)
-tbl = table(value, x, :solution_value, :car, :year)
+
+```jldoctest; setup=:(using JuMP)
+julia> model = Model();
+
+julia> @variable(model, x[i=1:2, j=i:2] >= 0, start = i+j);
+
+julia> table(start_value, x, :start, :I, :J)
+3-element Vector{NamedTuple{(:I, :J, :start), Tuple{Int64, Int64, Float64}}}:
+ (I = 1, J = 2, start = 3.0)
+ (I = 1, J = 1, start = 2.0)
+ (I = 2, J = 2, start = 4.0)
 ```
 """
 function table(
     f::Function, 
     x::Union{Array,Containers.DenseAxisArray,Containers.SparseAxisArray}, 
-    name::Symbol, 
+    value_name::Symbol, 
     col_names::Symbol...,
 )
-    if length(col_names) < _columns(x)
-        error("Not enough column names provided")
+    got, want = length(col_names), ndims(x)
+    if got != want
+        error("Invalid number column names provided: Got $got, expected $want.")
     end
+    C = (col_names..., value_name)
+    return [NamedTuple{C}((args..., f(x[i]))) for (i, args) in _row_iterator(x)]
+end
 
-    C = (col_names..., name)
-    return vec([NamedTuple{C}((args..., f(x[i]))) for (i, args) in _row_iterator(x)])
+function table(x, value_name::Symbol, col_names::Symbol...)
+    return table(identity, x, value_name, col_names...)
 end
