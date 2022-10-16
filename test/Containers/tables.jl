@@ -23,13 +23,13 @@ function test_denseaxisarray()
     model = Model()
     @variable(model, x[i = 4:10, j = 2002:2022] >= 0, start = 0.0)
     @test typeof(x) <: Containers.DenseAxisArray
-    start_table = Containers.table(start_value, x, :solution, :index1, :index2)
+    start_table = Containers.table(start_value, x, :index1, :index2, :solution)
     T = NamedTuple{(:index1, :index2, :solution),Tuple{Int,Int,Float64}}
     @test start_table isa Vector{T}
     @test length(start_table) == length(x)
     row = first(start_table)
     @test row == (index1 = 4, index2 = 2002, solution = 0.0)
-    x_table = Containers.table(x, :variable, :index1, :index2)
+    x_table = Containers.table(x, :index1, :index2, :variable)
     @test x_table[1] == (index1 = 4, index2 = 2002, variable = x[4, 2002])
     return
 end
@@ -38,13 +38,13 @@ function test_array()
     model = Model()
     @variable(model, x[1:10, 1:5] >= 0, start = 0.0)
     @test typeof(x) <: Array{VariableRef}
-    start_table = Containers.table(start_value, x, :solution, :index1, :index2)
+    start_table = Containers.table(start_value, x, :index1, :index2, :solution)
     T = NamedTuple{(:index1, :index2, :solution),Tuple{Int,Int,Float64}}
     @test start_table isa Vector{T}
     @test length(start_table) == length(x)
     row = first(start_table)
     @test row == (index1 = 1, index2 = 1, solution = 0.0)
-    x_table = Containers.table(x, :variable, :index1, :index2)
+    x_table = Containers.table(x, :index1, :index2, :variable)
     @test x_table[1] == (index1 = 1, index2 = 1, variable = x[1, 1])
     return
 end
@@ -53,12 +53,12 @@ function test_sparseaxisarray()
     model = Model()
     @variable(model, x[i = 1:10, j = 1:5; i + j <= 8] >= 0, start = 0)
     @test typeof(x) <: Containers.SparseAxisArray
-    start_table = Containers.table(start_value, x, :solution, :index1, :index2)
+    start_table = Containers.table(start_value, x, :index1, :index2, :solution)
     T = NamedTuple{(:index1, :index2, :solution),Tuple{Int,Int,Float64}}
     @test start_table isa Vector{T}
     @test length(start_table) == length(x)
     @test (index1 = 1, index2 = 1, solution = 0.0) in start_table
-    x_table = Containers.table(x, :variable, :index1, :index2)
+    x_table = Containers.table(x, :index1, :index2, :variable)
     @test (index1 = 1, index2 = 1, variable = x[1, 1]) in x_table
     return
 end
@@ -66,9 +66,9 @@ end
 function test_col_name_error()
     model = Model()
     @variable(model, x[1:2, 1:2])
-    @test_throws ErrorException table(x, :y, :a)
-    @test_throws ErrorException table(x, :y, :a, :b, :c)
-    @test table(x, :y, :a, :b) isa Vector{<:NamedTuple}
+    @test_throws ErrorException Containers.table(x, :y, :a)
+    @test_throws ErrorException Containers.table(x, :y, :a, :b, :c)
+    @test Containers.table(x, :y, :a, :b) isa Vector{<:NamedTuple}
     return
 end
 
@@ -108,12 +108,12 @@ function test_custom_variable()
         start = 0.0,
     )
     @test typeof(x) <: Containers.DenseAxisArray
-    start_table = Containers.table(start_value, x, :solution, :index1, :index2)
+    start_table = Containers.table(start_value, x, :index1, :index2, :solution)
     T = NamedTuple{(:index1, :index2, :solution),Tuple{Int,Int,Float64}}
     @test start_table isa Vector{T}
     @test length(start_table) == length(x)
     @test (index1 = 1, index2 = 100, solution = 0.0) in start_table
-    x_table = Containers.table(x, :variable, :index1, :index2)
+    x_table = Containers.table(x, :index1, :index2, :variable)
     @test (index1 = 1, index2 = 100, variable = x[1, 100]) in x_table
     return
 end

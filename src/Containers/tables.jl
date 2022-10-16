@@ -3,25 +3,19 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-function _row_iterator(x::Array)
-    return zip(eachindex(x), Iterators.product(axes(x)...))
-end
+_rows(x::Array) = zip(eachindex(x), Iterators.product(axes(x)...))
 
-function _row_iterator(x::DenseAxisArray)
-    return zip(vec(eachindex(x)), Iterators.product(axes(x)...))
-end
+_rows(x::DenseAxisArray) = zip(vec(eachindex(x)), Iterators.product(axes(x)...))
 
-function _row_iterator(x::SparseAxisArray)
-    return zip(eachindex(x.data), keys(x.data))
-end
+_rows(x::SparseAxisArray) = zip(eachindex(x.data), keys(x.data))
 
 """
-    table([f::Function=identity,] x, value_name::Symbol, col_names::Symbol...)
+    table([f::Function=identity,] x, names::Symbol...)
 
 Applies the function `f` to all elements of the variable container `x`,
-returning the result as a `Vector` of `NamedTuple`s, where `col_names`
-are used for the correspondig axis names, and `value_name` is used for the
-result of `f(x[i])`.
+returning the result as a `Vector` of `NamedTuple`s, where `names` are used for
+the corresponding axis names. If `x` is an `N`-dimensional array, there must be
+`N+1` names, so that the last name corresponds to the result of `f(x[i])`.
 
 !!! info
     A `Vector` of `NamedTuple`s implements the [Tables.jl](https://github.com/JuliaData/Tables.jl)
@@ -35,27 +29,23 @@ julia> model = Model();
 
 julia> @variable(model, x[i=1:2, j=i:2] >= 0, start = i+j);
 
-julia> Containers.table(start_value, x, :start, :I, :J)
-3-element Vector{NamedTuple{(:I, :J, :start), Tuple{Int64, Int64, Float64}}}:
- (I = 1, J = 2, start = 3.0)
- (I = 1, J = 1, start = 2.0)
- (I = 2, J = 2, start = 4.0)
+julia> Containers.table(start_value, x, :i, :j, :start)
+3-element Vector{NamedTuple{(:i, :j, :start), Tuple{Int64, Int64, Float64}}}:
+ (i = 1, j = 2, start = 3.0)
+ (i = 1, j = 1, start = 2.0)
+ (i = 2, j = 2, start = 4.0)
 ```
 """
 function table(
     f::Function,
     x::Union{Array,DenseAxisArray,SparseAxisArray},
-    value_name::Symbol,
-    col_names::Symbol...,
+    names::Symbol...,
 )
-    got, want = length(col_names), ndims(x)
+    got, want = length(names), ndims(x) + 1
     if got != want
         error("Invalid number column names provided: Got $got, expected $want.")
     end
-    C = (col_names..., value_name)
-    return [NamedTuple{C}((args..., f(x[i]))) for (i, args) in _row_iterator(x)]
+    return [NamedTuple{names}((args..., f(x[i]))) for (i, args) in _rows(x)]
 end
 
-function table(x, value_name::Symbol, col_names::Symbol...)
-    return table(identity, x, value_name, col_names...)
-end
+table(x, names::Symbol...) = table(identity, x, names...)

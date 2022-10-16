@@ -142,7 +142,7 @@ end
 # We can also use the function [`Containers.table`](@ref) to easily convert the
 # result into a DataFrame:
 
-table = Containers.table(value, x, :quantity, :food)
+table = Containers.table(value, x, :food, :quantity)
 solution = DataFrames.DataFrame(table)
 
 # This makes it easy to perform analyses our solution:
