@@ -1,3 +1,8 @@
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 module TestTableInterface
 
 using JuMP
@@ -16,128 +21,49 @@ end
 
 function test_denseaxisarray()
     model = Model()
-    @variable(model, x[i = 4:10, j = 2002:2022] >= 0)
+    @variable(model, x[i = 4:10, j = 2002:2022] >= 0, start = 0.0)
     @test typeof(x) <: Containers.DenseAxisArray
-
-    @objective(model, Min, sum(x))
-    set_optimizer(
-        model,
-        () -> MOI.Utilities.MockOptimizer(
-            MOI.Utilities.Model{Float64}();
-            eval_objective_value = false,
-        ),
-    )
-    optimize!(model)
-    mockoptimizer = JuMP.unsafe_backend(model)
-    MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
-    MOI.set(mockoptimizer, MOI.ResultCount(), 1)
-    MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-
-    for ind in eachindex(x)
-        MOI.set(
-            mockoptimizer,
-            MOI.VariablePrimal(),
-            JuMP.optimizer_index(x[ind]),
-            0.0,
-        )
-    end
-
-    tbl = JuMP.table(value, x, :solution, :index1, :index2)
-    
+    tbl = JuMP.table(start_value, x, :solution, :index1, :index2)
     tblrow = first(tbl)
     @test eltype(tbl) == typeof(tblrow)
     @test tblrow.solution == 0
     @test tblrow.index1 == 4
     @test propertynames(tblrow) == (:index1, :index2, :solution)
-
     rows = collect(tbl)
     @test length(rows) == length(tbl)
-
     var_tbl = JuMP.table(x, :variable, :index1, :index2)
     @test typeof(first(var_tbl).variable) <: VariableRef
-
+    return
 end
 
 function test_array()
     model = Model()
-    @variable(model, x[1:10, 1:5] >= 0)
+    @variable(model, x[1:10, 1:5] >= 0, start = 0.0)
     @test typeof(x) <: Array{VariableRef}
-
-    @objective(model, Min, sum(x))
-    set_optimizer(
-        model,
-        () -> MOI.Utilities.MockOptimizer(
-            MOI.Utilities.Model{Float64}();
-            eval_objective_value = false,
-        ),
-    )
-    optimize!(model)
-    mockoptimizer = JuMP.unsafe_backend(model)
-    MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
-    MOI.set(mockoptimizer, MOI.ResultCount(), 1)
-    MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-
-    for ind in eachindex(x)
-        MOI.set(
-            mockoptimizer,
-            MOI.VariablePrimal(),
-            JuMP.optimizer_index(x[ind]),
-            0.0,
-        )
-    end
-
-    tbl = JuMP.table(value, x, :solution, :index1, :index2)
-
+    tbl = JuMP.table(start_value, x, :solution, :index1, :index2)
     tblrow = first(tbl)
     @test eltype(tbl) == typeof(tblrow)
     @test tblrow.solution == 0
     @test tblrow.index1 == 1
     @test propertynames(tblrow) == (:index1, :index2, :solution)
-
     rows = collect(tbl)
     @test length(rows) == length(tbl)
+    return
 end
 
 function test_sparseaxisarray()
     model = Model()
-    @variable(model, x[i = 1:10, j = 1:5; i + j <= 8] >= 0)
+    @variable(model, x[i = 1:10, j = 1:5; i + j <= 8] >= 0, start = 0)
     @test typeof(x) <: Containers.SparseAxisArray
-    @objective(model, Min, sum(x))
-    set_optimizer(
-        model,
-        () -> MOI.Utilities.MockOptimizer(
-            MOI.Utilities.Model{Float64}();
-            eval_objective_value = false,
-        ),
-    )
-    optimize!(model)
-    mockoptimizer = JuMP.unsafe_backend(model)
-    MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
-    MOI.set(mockoptimizer, MOI.ResultCount(), 1)
-    MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-
-    for ind in eachindex(x)
-        MOI.set(
-            mockoptimizer,
-            MOI.VariablePrimal(),
-            JuMP.optimizer_index(x[ind]),
-            0.0,
-        )
-    end
-
-    tbl = JuMP.table(value, x, :solution, :index1, :index2)
- 
+    tbl = JuMP.table(start_value, x, :solution, :index1, :index2)
     tblrow = first(tbl)
     @test eltype(tbl) == typeof(tblrow)
-    @test tblrow.solution == 0
+    @test tblrow.solution == 0.0
     @test tblrow.index1 == 1
     @test propertynames(tblrow) == (:index1, :index2, :solution)
-
     rows = collect(tbl)
     @test length(rows) == length(tbl)
+    return
 end
 
 # Mockup of custom variable type
@@ -150,7 +76,9 @@ struct _MockVariableRef <: JuMP.AbstractVariableRef
 end
 
 JuMP.name(v::_MockVariableRef) = JuMP.name(v.vref)
+
 JuMP.owner_model(v::_MockVariableRef) = JuMP.owner_model(v.vref)
+
 JuMP.value(v::_MockVariableRef) = JuMP.value(v.vref)
 
 struct _Mock end
@@ -170,40 +98,16 @@ function test_custom_variable()
         model,
         x[i = 1:3, j = 100:102] >= 0,
         _Mock(),
-        container = Containers.DenseAxisArray
+        container = Containers.DenseAxisArray,
+        start = 0.0,
     )
-
-    @objective(model, Min, 0)
-    set_optimizer(
-        model,
-        () -> MOI.Utilities.MockOptimizer(
-            MOI.Utilities.Model{Float64}();
-            eval_objective_value = false,
-        ),
-    )
-    optimize!(model)
-    mockoptimizer = JuMP.unsafe_backend(model)
-    MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
-    MOI.set(mockoptimizer, MOI.ResultCount(), 1)
-    MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-
-    for ind in eachindex(x)
-        MOI.set(
-            mockoptimizer,
-            MOI.VariablePrimal(),
-            JuMP.optimizer_index(x[ind].vref),
-            0.0,
-        )
-    end
-
-    tbl = JuMP.table(value, x, :solution, :index1, :index2)
-  
+    tbl = JuMP.table(start_value, x, :solution, :index1, :index2)
     tblrow = first(tbl)
     @test eltype(tbl) == typeof(tblrow)
-    @test tblrow.solution == 0
+    @test tblrow.solution == 0.0
     @test tblrow.index1 == 1
     @test propertynames(tblrow) == (:index1, :index2, :solution)
+    return
 end
 
 end
