@@ -108,13 +108,13 @@ function test_custom_variable()
         start = 0.0,
     )
     @test typeof(x) <: Containers.DenseAxisArray
-    start_table = Containers.table(start_value, x, :index1, :index2, :solution)
-    T = NamedTuple{(:index1, :index2, :solution),Tuple{Int,Int,Float64}}
+    start_table = Containers.table(start_value, x)
+    T = NamedTuple{(:x1, :x2, :y),Tuple{Int,Int,Float64}}
     @test start_table isa Vector{T}
     @test length(start_table) == length(x)
-    @test (index1 = 1, index2 = 100, solution = 0.0) in start_table
-    x_table = Containers.table(x, :index1, :index2, :variable)
-    @test (index1 = 1, index2 = 100, variable = x[1, 100]) in x_table
+    @test (x1 = 1, x2 = 100, y = 0.0) in start_table
+    x_table = Containers.table(x)
+    @test (x1 = 1, x2 = 100, y = x[1, 100]) in x_table
     return
 end
 
