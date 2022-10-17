@@ -10,12 +10,14 @@ _rows(x::DenseAxisArray) = zip(vec(eachindex(x)), Iterators.product(axes(x)...))
 _rows(x::SparseAxisArray) = zip(eachindex(x.data), keys(x.data))
 
 """
-    table([f::Function=identity,] x, names::Symbol...)
+    table([f::Function=identity,] x, [names::Symbol...])
 
 Applies the function `f` to all elements of the variable container `x`,
 returning the result as a `Vector` of `NamedTuple`s, where `names` are used for
 the corresponding axis names. If `x` is an `N`-dimensional array, there must be
 `N+1` names, so that the last name corresponds to the result of `f(x[i])`.
+
+If `names` are omitted, then the default names are `(:x1, :x2, ..., :xN, :y)`.
 
 !!! info
     A `Vector` of `NamedTuple`s implements the [Tables.jl](https://github.com/JuliaData/Tables.jl)
@@ -34,6 +36,12 @@ julia> Containers.table(start_value, x, :i, :j, :start)
  (i = 1, j = 2, start = 3.0)
  (i = 1, j = 1, start = 2.0)
  (i = 2, j = 2, start = 4.0)
+
+julia> Containers.table(x)
+3-element Vector{NamedTuple{(:x1, :x2, :y), Tuple{Int64, Int64, VariableRef}}}:
+ (x1 = 1, x2 = 2, y = x[1,2])
+ (x1 = 1, x2 = 1, y = x[1,1])
+ (x1 = 2, x2 = 2, y = x[2,2])
 ```
 """
 function table(
@@ -41,6 +49,9 @@ function table(
     x::Union{Array,DenseAxisArray,SparseAxisArray},
     names::Symbol...,
 )
+    if length(names) == 0
+        return table(f, x, [Symbol("x$i") for i in 1:ndims(x)]..., :y)
+    end
     got, want = length(names), ndims(x) + 1
     if got != want
         error(
