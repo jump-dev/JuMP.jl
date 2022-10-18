@@ -10,14 +10,16 @@ _rows(x::DenseAxisArray) = zip(vec(eachindex(x)), Iterators.product(axes(x)...))
 _rows(x::SparseAxisArray) = zip(eachindex(x.data), keys(x.data))
 
 """
-    rowtable([f::Function=identity,] x, [names::Symbol...])
+    rowtable([f::Function=identity,] x; [header::Vector{Symbol} = Symbol[]])
 
 Applies the function `f` to all elements of the variable container `x`,
-returning the result as a `Vector` of `NamedTuple`s, where `names` are used for
-the corresponding axis names. If `x` is an `N`-dimensional array, there must be
-`N+1` names, so that the last name corresponds to the result of `f(x[i])`.
+returning the result as a `Vector` of `NamedTuple`s, where `header` is a vector
+containing the corresponding axis names.
 
-If `names` are omitted, then the default names are `(:x1, :x2, ..., :xN, :y)`.
+If `x` is an `N`-dimensional array, there must be `N+1` names, so that the last
+name corresponds to the result of `f(x[i])`.
+
+If `header` is left empty, then the default header is `[:x1, :x2, ..., :xN, :y]`.
 
 !!! info
     A `Vector` of `NamedTuple`s implements the [Tables.jl](https://github.com/JuliaData/Tables.jl)
@@ -31,7 +33,7 @@ julia> model = Model();
 
 julia> @variable(model, x[i=1:2, j=i:2] >= 0, start = i+j);
 
-julia> Containers.rowtable(start_value, x, :i, :j, :start)
+julia> Containers.rowtable(start_value, x; header = [:i, :j, :start])
 3-element Vector{NamedTuple{(:i, :j, :start), Tuple{Int64, Int64, Float64}}}:
  (i = 1, j = 2, start = 3.0)
  (i = 1, j = 1, start = 2.0)
@@ -46,19 +48,21 @@ julia> Containers.rowtable(x)
 """
 function rowtable(
     f::Function,
-    x::Union{Array,DenseAxisArray,SparseAxisArray},
-    names::Symbol...,
+    x::Union{Array,DenseAxisArray,SparseAxisArray};
+    header::Vector{Symbol} = Symbol[],
 )
-    if length(names) == 0
-        return rowtable(f, x, [Symbol("x$i") for i in 1:ndims(x)]..., :y)
+    if isempty(header)
+        header = Symbol[Symbol("x$i") for i in 1:ndims(x)]
+        push!(header, :y)
     end
-    got, want = length(names), ndims(x) + 1
+    got, want = length(header), ndims(x) + 1
     if got != want
         error(
             "Invalid number of column names provided: Got $got, expected $want.",
         )
     end
+    names = tuple(header...)
     return [NamedTuple{names}((args..., f(x[i]))) for (i, args) in _rows(x)]
 end
 
-rowtable(x, names::Symbol...) = rowtable(identity, x, names...)
+rowtable(x; kwargs...) = rowtable(identity, x; kwargs...)

@@ -142,7 +142,7 @@ end
 # We can also use the function [`Containers.rowtable`](@ref) to easily convert
 # the result into a DataFrame:
 
-table = Containers.rowtable(value, x, :food, :quantity)
+table = Containers.rowtable(value, x; header = [:food, :quantity])
 solution = DataFrames.DataFrame(table)
 
 # This makes it easy to perform analyses our solution:
