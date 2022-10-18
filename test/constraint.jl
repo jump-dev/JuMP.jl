@@ -1201,6 +1201,17 @@ function test_Model_all_constraints(::Any, ::Any)
     return
 end
 
+function test_Model_relax_constraints(::Any, ::Any)
+    model = Model()
+    @variable(model, x)
+    @constraint(model, c1, x≤1)
+    @test is_valid(model, c1)
+    unrelax = relax_constraint(model, c1)
+    @test !is_valid(model, c1)
+    unrelax()
+    @test is_valid(model, model[:c1])
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")
