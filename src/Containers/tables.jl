@@ -10,7 +10,7 @@ _rows(x::DenseAxisArray) = zip(vec(eachindex(x)), Iterators.product(axes(x)...))
 _rows(x::SparseAxisArray) = zip(eachindex(x.data), keys(x.data))
 
 """
-    table([f::Function=identity,] x, [names::Symbol...])
+    rowtable([f::Function=identity,] x, [names::Symbol...])
 
 Applies the function `f` to all elements of the variable container `x`,
 returning the result as a `Vector` of `NamedTuple`s, where `names` are used for
@@ -31,26 +31,26 @@ julia> model = Model();
 
 julia> @variable(model, x[i=1:2, j=i:2] >= 0, start = i+j);
 
-julia> Containers.table(start_value, x, :i, :j, :start)
+julia> Containers.rowtable(start_value, x, :i, :j, :start)
 3-element Vector{NamedTuple{(:i, :j, :start), Tuple{Int64, Int64, Float64}}}:
  (i = 1, j = 2, start = 3.0)
  (i = 1, j = 1, start = 2.0)
  (i = 2, j = 2, start = 4.0)
 
-julia> Containers.table(x)
+julia> Containers.rowtable(x)
 3-element Vector{NamedTuple{(:x1, :x2, :y), Tuple{Int64, Int64, VariableRef}}}:
  (x1 = 1, x2 = 2, y = x[1,2])
  (x1 = 1, x2 = 1, y = x[1,1])
  (x1 = 2, x2 = 2, y = x[2,2])
 ```
 """
-function table(
+function rowtable(
     f::Function,
     x::Union{Array,DenseAxisArray,SparseAxisArray},
     names::Symbol...,
 )
     if length(names) == 0
-        return table(f, x, [Symbol("x$i") for i in 1:ndims(x)]..., :y)
+        return rowtable(f, x, [Symbol("x$i") for i in 1:ndims(x)]..., :y)
     end
     got, want = length(names), ndims(x) + 1
     if got != want
@@ -61,4 +61,4 @@ function table(
     return [NamedTuple{names}((args..., f(x[i]))) for (i, args) in _rows(x)]
 end
 
-table(x, names::Symbol...) = table(identity, x, names...)
+rowtable(x, names::Symbol...) = rowtable(identity, x, names...)

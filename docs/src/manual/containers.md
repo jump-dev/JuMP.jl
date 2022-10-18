@@ -104,12 +104,12 @@ julia> swap.(x)
 
 ### Tables
 
-Use [`Containers.table`](@ref) to convert the `Array` into a
+Use [`Containers.rowtable`](@ref) to convert the `Array` into a
 [Tables.jl](https://github.com/JuliaData/Tables.jl) compatible
 `Vector{<:NamedTuple}`:
 
 ```jldoctest containers_array
-julia> table = Containers.table(x, :I, :J, :value)
+julia> table = Containers.rowtable(x, :I, :J, :value)
 6-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Int64, Tuple{Int64, Int64}}}}:
  (I = 1, J = 1, value = (1, 1))
  (I = 2, J = 1, value = (2, 1))
@@ -229,12 +229,12 @@ julia> x.data
 
 ### Tables
 
-Use [`Containers.table`](@ref) to convert the `DenseAxisArray` into a
+Use [`Containers.rowtable`](@ref) to convert the `DenseAxisArray` into a
 [Tables.jl](https://github.com/JuliaData/Tables.jl) compatible
 `Vector{<:NamedTuple}`:
 
 ```jldoctest containers_dense
-julia> table = Containers.table(x, :I, :J, :value)
+julia> table = Containers.rowtable(x, :I, :J, :value)
 4-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Symbol, Tuple{Int64, Symbol}}}}:
  (I = 1, J = :A, value = (1, :A))
  (I = 2, J = :A, value = (2, :A))
@@ -322,12 +322,12 @@ JuMP.Containers.SparseAxisArray{Tuple{Symbol, Int64}, 1, Tuple{Int64}} with 2 en
 
 ### Tables
 
-Use [`Containers.table`](@ref) to convert the `SparseAxisArray` into a
+Use [`Containers.rowtable`](@ref) to convert the `SparseAxisArray` into a
 [Tables.jl](https://github.com/JuliaData/Tables.jl) compatible
 `Vector{<:NamedTuple}`:
 
 ```jldoctest containers_sparse
-julia> table = Containers.table(x, :I, :J, :value)
+julia> table = Containers.rowtable(x, :I, :J, :value)
 4-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Symbol, Tuple{Int64, Symbol}}}}:
  (I = 3, J = :B, value = (3, :B))
  (I = 2, J = :A, value = (2, :A))

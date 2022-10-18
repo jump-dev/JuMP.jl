@@ -139,10 +139,10 @@ end
 # That's a lot of milk and ice cream! And sadly, we only get `0.6` of a
 # hamburger.
 
-# We can also use the function [`Containers.table`](@ref) to easily convert the
-# result into a DataFrame:
+# We can also use the function [`Containers.rowtable`](@ref) to easily convert
+# the result into a DataFrame:
 
-table = Containers.table(value, x, :food, :quantity)
+table = Containers.rowtable(value, x, :food, :quantity)
 solution = DataFrames.DataFrame(table)
 
 # This makes it easy to perform analyses our solution:
