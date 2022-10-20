@@ -79,8 +79,8 @@ julia> jump_function(constraint_object(cref))
 julia> moi_set(constraint_object(cref))
 MathOptInterface.PositiveSemidefiniteConeSquare(2)
 ```
-We see in the output of the last command that the matrix the vectorization of the
-matrix is constrained to belong to the `PositiveSemidefiniteConeSquare`.
+We see in the output of the last command that the vectorization of the matrix
+is constrained to belong to the `PositiveSemidefiniteConeSquare`.
 
 ```jldoctest PSDCone
 julia> using LinearAlgebra # For Symmetric
