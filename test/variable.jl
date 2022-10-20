@@ -1077,6 +1077,80 @@ function test_Model_VariableIndex_VariableRef_fix_with_upper_bound(::Any, ::Any)
     return
 end
 
+function test_Hermitian_PSD(::Any, ::Any)
+    model = Model()
+    @variable(model, Q[1:2, 1:2] in HermitianPSDCone())
+    @test num_variables(model) == 4
+    v = all_variables(model)
+    _test_variable_name_util(v[1], "real(Q[1,1])")
+    @test Q[1, 1] == 1v[1]
+    _test_variable_name_util(v[2], "real(Q[1,2])")
+    _test_variable_name_util(v[4], "imag(Q[1,2])")
+    @test Q[1, 2] == v[2] + v[4] * im
+    _test_variable_name_util(v[3], "real(Q[2,2])")
+    @test Q[2, 2] == 1v[3]
+    @test Q[2, 1] == conj(Q[1, 2])
+end
+
+function test_Hermitian_PSD_errors(ModelType, ::Any)
+    model = ModelType()
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
+        lower_bound = (i + j) * im
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
+        upper_bound = (i + j) * im
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
+        start = (i + j) * im
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
+        integer = i > j
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
+        Bool
+    )
+end
+
+function test_Hermitian_PSD_keyword(::Any, ::Any)
+    model = Model()
+    @variable(
+        model,
+        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
+        integer = i != j,
+        lower_bound = (i + j) + (i - j) * im,
+        upper_bound = i * j + (j - i) * im
+    )
+    v = all_variables(model)
+    @test !is_integer(v[1])
+    @test is_integer(v[2])
+    @test !is_integer(v[3])
+    @test is_integer(v[4])
+    for i in 1:2, j in 1:2
+        @test value(lower_bound, H[i, j]) == (i + j) + (i - j) * im
+    end
+    for i in 1:2, j in 1:2
+        @test value(upper_bound, H[i, j]) == (i * j) + (j - i) * im
+    end
+    @variable(
+        model,
+        T[i = 1:2, j = 1:2] in HermitianPSDCone(),
+        start = (i + j) + (j - i) * im
+    )
+    for i in 1:2, j in 1:2
+        @test value(start_value, T[i, j]) == (i + j) + (j - i) * im
+    end
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

@@ -72,6 +72,7 @@ SOS2
 SkewSymmetricMatrixSpace
 SkewSymmetricMatrixShape
 SymmetricMatrixSpace
+HermitianMatrixShape
 moi_set
 ```
 

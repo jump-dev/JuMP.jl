@@ -415,3 +415,141 @@ function build_constraint(
         shape,
     )
 end
+
+"""
+    HermitianPSDCone
+
+Hermitian positive semidefinite cone object that can be used to create a
+hermitian positive semidefinite square matrix in the [`@variable`](@ref)
+macro.
+
+## Examples
+
+Consider the following example:
+```jldoctest PSDCone; setup = :(using JuMP)
+julia> model = Model();
+
+julia> @variable(model, H[1:3, 1:3] in HermitianPSDCone())
+3×3 Matrix{GenericAffExpr{ComplexF64, VariableRef}}:
+ real(H[1,1])                                real(H[1,2]) + (0.0 + 1.0im) imag(H[1,2])   real(H[1,3]) + (0.0 + 1.0im) imag(H[1,3])
+ real(H[1,2]) + (-0.0 - 1.0im) imag(H[1,2])  real(H[2,2])                                real(H[2,3]) + (0.0 + 1.0im) imag(H[2,3])
+ real(H[1,3]) + (-0.0 - 1.0im) imag(H[1,3])  real(H[2,3]) + (-0.0 - 1.0im) imag(H[2,3])  real(H[3,3])
+```
+We see in the output of the last command that the matrix the vectorization of the
+matrix is constrained to belong to the `PositiveSemidefiniteConeSquare`.
+"""
+struct HermitianPSDCone end
+
+"""
+    SymmetricMatrixShape
+
+Shape object for a hermitian square matrix of `side_dimension` rows and
+columns. The vectorized form corresponds to
+[`MathOptInterface.HermitianPositiveSemidefiniteConeTriangle`](@ref).
+"""
+struct HermitianMatrixShape <: AbstractShape
+    side_dimension::Int
+end
+
+function vectorize(matrix::Matrix, ::HermitianMatrixShape)
+    n = LinearAlgebra.checksquare(matrix)
+    return vcat(
+        vectorize(_real.(matrix), SymmetricMatrixShape(n)),
+        vectorize(
+            _imag.(matrix[1:(end-1), 2:end]),
+            SymmetricMatrixShape(n - 1),
+        ),
+    )
+end
+
+function reshape_vector(v::Vector{T}, shape::HermitianMatrixShape) where {T}
+    NewType = _MA.promote_operation(_MA.add_mul, T, Complex{Bool}, T)
+    n = shape.side_dimension
+    matrix = Matrix{NewType}(undef, n, n)
+    real_k = 0
+    imag_k = MOI.dimension(MOI.PositiveSemidefiniteConeTriangle(n))
+    for j in 1:n
+        for i in 1:(j-1)
+            real_k += 1
+            imag_k += 1
+            matrix[i, j] = v[real_k] + im * v[imag_k]
+            matrix[j, i] = v[real_k] - im * v[imag_k]
+        end
+        real_k += 1
+        matrix[j, j] = v[real_k]
+    end
+    return matrix
+end
+
+function _mapinfo(f::Function, v::JuMP.ScalarVariable)
+    info = v.info
+    return ScalarVariable(
+        VariableInfo(
+            info.has_lb,
+            f(info.lower_bound),
+            info.has_ub,
+            f(info.upper_bound),
+            info.has_fix,
+            f(info.fixed_value),
+            info.has_start,
+            f(info.start),
+            info.binary,
+            info.integer,
+        ),
+    )
+end
+
+_real(s::String) = string("real(", s, ")")
+_imag(s::String) = string("imag(", s, ")")
+
+_real(v::ScalarVariable) = _mapinfo(real, v)
+_imag(v::ScalarVariable) = _mapinfo(imag, v)
+_conj(v::ScalarVariable) = _mapinfo(conj, v)
+function _isreal(v::ScalarVariable)
+    info = v.info
+    return isreal(info.lower_bound) &&
+           isreal(info.upper_bound) &&
+           isreal(info.fixed_value) &&
+           isreal(info.start)
+end
+
+function _vectorize_complex_variables(_error::Function, matrix::Matrix)
+    n = LinearAlgebra.checksquare(matrix)
+    for j in 1:n
+        if !_isreal(matrix[j, j])
+            _error(
+                "Non-real bounds or starting values for diagonal of hermitian variable.",
+            )
+        end
+        for i in 1:j
+            if matrix[i, j] != _conj(matrix[j, i])
+                _error(
+                    "Non-conjugate bounds, integrality or starting values for hermitian variable.",
+                )
+            end
+        end
+    end
+    return vectorize(matrix, HermitianMatrixShape(n))
+end
+
+_is_binary(v::ScalarVariable) = v.info.binary
+
+function build_variable(
+    _error::Function,
+    variables::Matrix{<:AbstractVariable},
+    ::HermitianPSDCone,
+)
+    n = _square_side(_error, variables)
+    set = MOI.HermitianPositiveSemidefiniteConeTriangle(n)
+    shape = HermitianMatrixShape(n)
+    if any(_is_binary, variables)
+        # We would then need to fix the imaginary value to zero. Let's wait to
+        # see if there is need for such complication first.
+        _error("Binary variable in hermitian matrix is not supported.")
+    end
+    return VariablesConstrainedOnCreation(
+        _vectorize_complex_variables(_error, variables),
+        set,
+        shape,
+    )
+end
