@@ -1120,6 +1120,7 @@ function test_Hermitian_PSD_errors(ModelType, ::Any)
         H[i = 1:2, j = 1:2] in HermitianPSDCone(),
         Bin
     )
+    return
 end
 
 function test_Hermitian_PSD_keyword(::Any, ::Any)
