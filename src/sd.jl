@@ -426,7 +426,7 @@ macro.
 ## Examples
 
 Consider the following example:
-```jldoctest PSDCone; setup = :(using JuMP)
+```jldoctest; setup = :(using JuMP)
 julia> model = Model();
 
 julia> @variable(model, H[1:3, 1:3] in HermitianPSDCone())
