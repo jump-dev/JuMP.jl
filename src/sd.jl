@@ -420,7 +420,7 @@ end
     HermitianPSDCone
 
 Hermitian positive semidefinite cone object that can be used to create a
-hermitian positive semidefinite square matrix in the [`@variable`](@ref)
+Hermitian positive semidefinite square matrix in the [`@variable`](@ref)
 macro.
 
 ## Examples
