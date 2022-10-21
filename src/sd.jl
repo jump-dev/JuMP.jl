@@ -446,6 +446,10 @@ julia> @variable(model, H[1:3, 1:3] in HermitianPSDCone())
   imag(H[1,2])
   imag(H[1,3])
   imag(H[2,3])
+
+julia> all_constraints(model, Vector{VariableRef}, MOI.HermitianPositiveSemidefiniteConeTriangle)
+1-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.HermitianPositiveSemidefiniteConeTriangle}}}:
+ [real(H[1,1]), real(H[1,2]), real(H[2,2]), real(H[1,3]), real(H[2,3]), real(H[3,3]), imag(H[1,2]), imag(H[1,3]), imag(H[2,3])] in MathOptInterface.HermitianPositiveSemidefiniteConeTriangle(3)
 ```
 We see in the output of the last commands that 9 real variables were created.
 The matrix `H` contrains affine expressions in terms of these 9 variables that
