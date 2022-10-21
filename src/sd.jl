@@ -441,7 +441,7 @@ matrix is constrained to belong to the `PositiveSemidefiniteConeSquare`.
 struct HermitianPSDCone end
 
 """
-    SymmetricMatrixShape
+    HermitianMatrixShape
 
 Shape object for a hermitian square matrix of `side_dimension` rows and
 columns. The vectorized form corresponds to
