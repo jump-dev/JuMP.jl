@@ -434,16 +434,29 @@ julia> @variable(model, H[1:3, 1:3] in HermitianPSDCone())
  real(H[1,1])                                real(H[1,2]) + (0.0 + 1.0im) imag(H[1,2])   real(H[1,3]) + (0.0 + 1.0im) imag(H[1,3])
  real(H[1,2]) + (-0.0 - 1.0im) imag(H[1,2])  real(H[2,2])                                real(H[2,3]) + (0.0 + 1.0im) imag(H[2,3])
  real(H[1,3]) + (-0.0 - 1.0im) imag(H[1,3])  real(H[2,3]) + (-0.0 - 1.0im) imag(H[2,3])  real(H[3,3])
+
+ julia> v = all_variables(model)
+ 9-element Vector{VariableRef}:
+  real(H[1,1])
+  real(H[1,2])
+  real(H[2,2])
+  real(H[1,3])
+  real(H[2,3])
+  real(H[3,3])
+  imag(H[1,2])
+  imag(H[1,3])
+  imag(H[2,3])
 ```
-We see in the output of the last command that the matrix the vectorization of the
-matrix is constrained to belong to the `PositiveSemidefiniteConeSquare`.
+We see in the output of the last commands that 9 real variables were created.
+The matrix `H` contrains affine expressions in terms of these 9 variables that
+parametrize a Hermitian matrix.
 """
 struct HermitianPSDCone end
 
 """
     HermitianMatrixShape
 
-Shape object for a hermitian square matrix of `side_dimension` rows and
+Shape object for a Hermitian square matrix of `side_dimension` rows and
 columns. The vectorized form corresponds to
 [`MOI.HermitianPositiveSemidefiniteConeTriangle`](@ref).
 """
@@ -518,13 +531,13 @@ function _vectorize_complex_variables(_error::Function, matrix::Matrix)
     for j in 1:n
         if !_isreal(matrix[j, j])
             _error(
-                "Non-real bounds or starting values for diagonal of hermitian variable.",
+                "Non-real bounds or starting values for diagonal of Hermitian variable.",
             )
         end
         for i in 1:j
             if matrix[i, j] != _conj(matrix[j, i])
                 _error(
-                    "Non-conjugate bounds, integrality or starting values for hermitian variable.",
+                    "Non-conjugate bounds, integrality or starting values for Hermitian variable.",
                 )
             end
         end
@@ -545,7 +558,7 @@ function build_variable(
     if any(_is_binary, variables)
         # We would then need to fix the imaginary value to zero. Let's wait to
         # see if there is need for such complication first.
-        _error("Binary variable in hermitian matrix is not supported.")
+        _error("Binary variable in Hermitian matrix is not supported.")
     end
     return VariablesConstrainedOnCreation(
         _vectorize_complex_variables(_error, variables),
