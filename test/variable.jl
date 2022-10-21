@@ -1090,6 +1090,7 @@ function test_Hermitian_PSD(::Any, ::Any)
     _test_variable_name_util(v[3], "real(Q[2,2])")
     @test Q[2, 2] == 1v[3]
     @test Q[2, 1] == conj(Q[1, 2])
+    return
 end
 
 function test_Hermitian_PSD_errors(ModelType, ::Any)
