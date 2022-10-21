@@ -1151,6 +1151,7 @@ function test_Hermitian_PSD_keyword(::Any, ::Any)
     for i in 1:2, j in 1:2
         @test value(start_value, T[i, j]) == (i + j) + (j - i) * im
     end
+    return
 end
 
 function runtests()
