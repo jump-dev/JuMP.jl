@@ -445,7 +445,7 @@ struct HermitianPSDCone end
 
 Shape object for a hermitian square matrix of `side_dimension` rows and
 columns. The vectorized form corresponds to
-[`MathOptInterface.HermitianPositiveSemidefiniteConeTriangle`](@ref).
+[`MOI.HermitianPositiveSemidefiniteConeTriangle`](@ref).
 """
 struct HermitianMatrixShape <: AbstractShape
     side_dimension::Int
