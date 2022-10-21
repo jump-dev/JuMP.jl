@@ -1117,7 +1117,7 @@ function test_Hermitian_PSD_errors(ModelType, ::Any)
     @test_throws ErrorException @variable(
         model,
         H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        Bool
+        Bin
     )
 end
 
