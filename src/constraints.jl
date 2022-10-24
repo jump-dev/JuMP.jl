@@ -1345,27 +1345,28 @@ function all_constraints(
     return ret
 end
 
-
 function relax_constraint(model::Model, constraint::ConstraintRef)
-    relax_constraint(model, [constraint])
+    return relax_constraint(model, [constraint])
 end
 
-function relax_constraint(model::Model, constraints::Vector{T}) where {T <: ConstraintRef}
+function relax_constraint(
+    model::Model,
+    constraints::Vector{T},
+) where {T<:ConstraintRef}
     if !all(is_valid.(model, constraints))
         error("Cannot relax constraint(s) because they are not valid.")
     end
     con_objs = zip(JuMP.constraint_object.(constraints), name.(constraints))
     for c in constraints
         n = Symbol(name(c))
-        delete(model,c)
+        delete(model, c)
         unregister(model, n)
     end
     function undo!()
-        for (c,n) in con_objs
-            JuMP.add_constraint(model, c,n)
-            model[Symbol(n)] =  constraint_by_name(model,n)
+        for (c, n) in con_objs
+            JuMP.add_constraint(model, c, n)
+            model[Symbol(n)] = constraint_by_name(model, n)
         end
     end
     return undo!
 end
-
