@@ -965,6 +965,14 @@ function test_show_latex_parameter()
     return
 end
 
+function test_minus_one_complex_aff_expr()
+    model = Model()
+    @variable(model, x)
+    f = 1.0im * x + 1.0im
+    @test sprint(show, im * f) == "(-1.0 + 0.0im) x + (-1.0 + 0.0im)"
+    return
+end
+
 end
 
 TestPrint.runtests()
