@@ -1204,7 +1204,7 @@ end
 function test_Model_relax_constraints(::Any, ::Any)
     model = Model()
     @variable(model, x)
-    @constraint(model, c1, x≤1)
+    @constraint(model, c1, x ≤ 1)
     @test is_valid(model, c1)
     unrelax = relax_constraint(model, c1)
     @test !is_valid(model, c1)
