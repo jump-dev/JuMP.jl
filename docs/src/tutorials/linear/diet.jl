@@ -139,6 +139,16 @@ end
 # That's a lot of milk and ice cream! And sadly, we only get `0.6` of a
 # hamburger.
 
+# We can also use the function [`Containers.rowtable`](@ref) to easily convert
+# the result into a DataFrame:
+
+table = Containers.rowtable(value, x; header = [:food, :quantity])
+solution = DataFrames.DataFrame(table)
+
+# This makes it easy to perform analyses our solution:
+
+filter!(row -> row.quantity > 0.0, solution)
+
 # ## Problem modification
 
 # JuMP makes it easy to take an existing model and modify it by adding extra
