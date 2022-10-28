@@ -8,7 +8,7 @@ see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.4.0).
 - New features:
   - Added `Containers.rowtable(x)` which converts a container into a vector of
     `NamedTuple`s to support the Tables.jl interface. This simplifies converting
-    `DenseAxisArray` and `SparseAxisArray` objects into tablular forms such as a
+    `DenseAxisArray` and `SparseAxisArray` objects into tabular forms such as a
     dataframe.
   - Added a new method to `Containers.container` so that index names are passed
     to the container.
