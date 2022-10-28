@@ -1957,9 +1957,6 @@ function _parse_nonlinear_expression_inner(code, x::Expr, operators)
 end
 
 function _parse_generator_expression(code, x, operators)
-    if Meta.isexpr(x, :flatten)
-        return _parse_generator_expression(code, x.args[1], operators)
-    end
     y = gensym()
     y_expr, default = if _is_sum(x.args[1])
         :($y = Expr(:call, :+)), 0
