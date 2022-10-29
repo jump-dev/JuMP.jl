@@ -15,6 +15,8 @@ module TestModels
 using JuMP
 using Test
 
+import Dates
+
 # Simple LP model not supporting Interval
 MOIU.@model(
     SimpleLPModel,
