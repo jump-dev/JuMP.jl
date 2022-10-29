@@ -17,6 +17,7 @@ For more information, go to https://jump.dev.
 """
 module JuMP
 
+import Dates
 using LinearAlgebra
 using SparseArrays
 
@@ -922,6 +923,21 @@ See also: [`set_silent`](@ref).
 """
 function unset_silent(model::Model)
     return MOI.set(model, MOI.Silent(), false)
+end
+
+"""
+    set_time_limit(model::Model, limit::Dates.Period)
+
+Set the time limit of the solver.
+
+Can be unset using [`unset_time_limit_sec`](@ref).
+
+See also: [`set_time_limit_sec`](@ref), [`unset_time_limit_sec`](@ref), and
+[`time_limit_sec`](@ref).
+"""
+function set_time_limit(model::Model, limit::Dates.Period)
+    limit_sec = 1e-9 * Dates.value(floor(limit, Dates.Nanosecond))
+    return set_time_limit_sec(model, limit_sec)
 end
 
 """

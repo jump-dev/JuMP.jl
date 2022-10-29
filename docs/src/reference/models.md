@@ -45,6 +45,7 @@ set_optimizer_attribute
 set_optimizer_attributes
 set_silent
 unset_silent
+set_time_limit
 set_time_limit_sec
 unset_time_limit_sec
 time_limit_sec

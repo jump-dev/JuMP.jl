@@ -478,6 +478,25 @@ function test_set_retrieve_time_limit()
     return
 end
 
+function test_set_time_limit()
+    mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+    model = Model(() -> MOIU.MockOptimizer(mock))
+    for (limit, value) in [
+        Dates.Hour(1) => 3600.0,
+        Dates.Hour(2) => 7200.0,
+        Dates.Minute(1) => 60.0,
+        Dates.Minute(3) => 180.0,
+        Dates.Second(1) => 1.0,
+        Dates.Second(71) => 71.0,
+        Dates.Millisecond(60) => 0.06,
+        Dates.Millisecond(121) => 0.121,
+    ]
+        JuMP.set_time_limit(model, limit)
+        @test JuMP.time_limit_sec(model) ≈ value
+    end
+    return
+end
+
 struct DummyExtensionData
     model::JuMP.Model
 end

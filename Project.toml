@@ -4,6 +4,7 @@ repo = "https://github.com/jump-dev/JuMP.jl.git"
 version = "1.4.0"
 
 [deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
