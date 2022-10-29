@@ -1912,7 +1912,7 @@ _parse_nonlinear_expression_inner(::Any, x, ::Any) = x
 function _is_generator(x)
     return isexpr(x, :call) &&
            length(x.args) >= 2 &&
-           isexpr(x.args[2], :generator)
+           (isexpr(x.args[2], :generator) || isexpr(x.args[2], :flatten))
 end
 
 function _parse_nonlinear_expression_inner(code, x::Expr, operators)
