@@ -1,5 +1,28 @@
 # Release notes
 
+## Version 1.4.0 (October 29, 2022)
+
+For a detailed list of the closed issues and pull requests from this release,
+see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.4.0).
+
+- New features:
+  - Added `Containers.rowtable(x)` which converts a container into a vector of
+    `NamedTuple`s to support the Tables.jl interface. This simplifies converting
+    `DenseAxisArray` and `SparseAxisArray` objects into tabular forms such as a
+    dataframe.
+  - Added a new method to `Containers.container` so that index names are passed
+    to the container.
+- Bug fixes:
+  - Fixed a bug in `copy_to(dest::Model, src::MOI.ModelLike)` when `src` has
+    nonlinear components.
+  - Fixed the printing of `(-1.0 + 0.0im)` coefficients in complex expressions.
+  - Fixed a parsing bug in nonlinear expressions with generator statements that
+    contain multiple `for` statements.
+- Documentation and maintenance:
+  - Converted the multi-commodity flow tutorial to use an SQLite database
+  - Fixed a number of typos in the documentation
+  - Improved various style aspects of the PDF documentation
+
 ## Version 1.3.1 (September 28, 2022)
 
 For a detailed list of the closed issues and pull requests from this release,
