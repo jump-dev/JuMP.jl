@@ -247,6 +247,21 @@ julia> time_limit_sec(model)
 Inf
 ```
 
+To avoid making unit-conversion mistakes with [`set_time_limit_sec`](@ref),
+consider converting a `Dates.Period` object to seconds:
+
+```jldoctest time_limit
+julia> import Dates
+
+julia> seconds(x::Dates.Period) = 1e-9 * Dates.value(floor(x, Dates.Nanosecond))
+seconds (generic function with 1 method)
+
+julia> set_time_limit_sec(model, seconds(Dates.Hour(1)))
+
+julia> time_limit_sec(model)
+3600.0
+```
+
 !!! info
     Some solvers do not support time limits. In these cases, an error will be
     thrown.
