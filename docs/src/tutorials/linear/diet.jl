@@ -126,9 +126,9 @@ print(model)
 # Let's optimize and take a look at the solution:
 
 optimize!(model)
-solution_summary(model)
 Test.@test primal_status(model) == FEASIBLE_POINT        #hide
 Test.@test objective_value(model) ≈ 11.8288 atol = 1e-4  #hide
+solution_summary(model)
 
 # Success! We found an optimal solution. Let's see what the optimal solution is:
 
@@ -157,9 +157,9 @@ filter!(row -> row.quantity > 0.0, solution)
 
 @constraint(model, x["milk"] + x["ice cream"] <= 6)
 optimize!(model)
-solution_summary(model)
 Test.@test termination_status(model) == INFEASIBLE  #hide
 Test.@test primal_status(model) == NO_SOLUTION      #hide
+solution_summary(model)
 
 # Uh oh! There exists no feasible solution to our problem. Looks like we're
 # stuck eating ice cream for dinner.
