@@ -232,7 +232,7 @@ julia> unset_silent(model)
 
 Use [`set_time_limit_sec`](@ref), [`unset_time_limit_sec`](@ref), and
 [`time_limit_sec`](@ref) to manage time limits.
-```jldoctest
+```jldoctest time_limit
 julia> model = Model(HiGHS.Optimizer);
 
 julia> set_time_limit_sec(model, 60.0)
@@ -253,7 +253,7 @@ consider converting a `Dates.Period` object to seconds:
 ```jldoctest time_limit
 julia> import Dates
 
-julia> seconds(x::Dates.Period) = 1e-9 * Dates.value(floor(x, Dates.Nanosecond))
+julia> seconds(x::Dates.Period) = Dates.value(round(x, Dates.Second))
 seconds (generic function with 1 method)
 
 julia> set_time_limit_sec(model, seconds(Dates.Hour(1)))
