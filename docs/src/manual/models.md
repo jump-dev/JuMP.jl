@@ -253,7 +253,7 @@ consider converting a `Dates.Period` object to seconds:
 ```jldoctest time_limit
 julia> import Dates
 
-julia> seconds(x::Dates.Period) = Dates.value(round(x, Dates.Second))
+julia> seconds(x::Dates.Period) = 1e-3 * Dates.value(round(x, Dates.Millisecond))
 seconds (generic function with 1 method)
 
 julia> set_time_limit_sec(model, seconds(Dates.Hour(1)))
