@@ -247,9 +247,8 @@ julia> time_limit_sec(model)
 Inf
 ```
 
-To avoid making unit-conversion mistakes with [`set_time_limit_sec`](@ref),
-consider converting a `Dates.Period` object to seconds:
-
+If your time limit is encoded as a `Dates.Period` object, use the following code
+to convert it to `Float64` for [`set_time_limit_sec`](@ref):
 ```jldoctest time_limit
 julia> import Dates
 
