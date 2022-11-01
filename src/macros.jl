@@ -617,6 +617,18 @@ end
 
 function build_constraint(
     _error::Function,
+    ::AbstractArray,
+    ::AbstractVector,
+    ::AbstractVector,
+)
+    return _error(
+        "Unexpected vectors in scalar constraint. Did you mean to use the dot ",
+        "comparison operators `l .<= f(x) .<= u` instead?",
+    )
+end
+
+function build_constraint(
+    _error::Function,
     x::Matrix,
     set::MOI.AbstractVectorSet,
 )
