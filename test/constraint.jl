@@ -118,6 +118,25 @@ function test_AffExpr_vectorized_constraints(ModelType, ::Any)
     @test c[2].set == MOI.EqualTo(3.0)
 end
 
+function test_AffExpr_vectorized_interval_constraints(ModelType, ::Any)
+    model = ModelType()
+    @variable(model, x[1:2])
+    err = ErrorException(
+        "In `@constraint(model, b <= x <= b)`: Unexpected vectors in " *
+        "scalar constraint. Did you mean to use the dot comparison " *
+        "operators `l .<= f(x) .<= u` instead?",
+    )
+    b = [5.0, 6.0]
+    @test_throws_strip err @constraint(model, b <= x <= b)
+    cref = @constraint(model, b .<= x .<= b)
+    c = JuMP.constraint_object.(cref)
+    for i in 1:2
+        @test JuMP.isequal_canonical(c[i].func, 1.0 * x[i])
+        @test c[i].set == MOI.Interval(b[i], b[i])
+    end
+    return
+end
+
 function test_AffExpr_vector_constraints(ModelType, ::Any)
     model = ModelType()
     cref = @constraint(model, [1, 2] in MOI.Zeros(2))
