@@ -619,7 +619,7 @@ function build_constraint(
     _error::Function,
     ::AbstractArray,
     ::AbstractVector,
-    ::AbstractVector
+    ::AbstractVector,
 )
     return _error(
         "Unexpected vectors in scalar constraint. Did you mean to use the dot ",
@@ -743,6 +743,7 @@ function _constraint_macro(
     source::LineNumberNode,
 )
     _error(str...) = _macro_error(macro_name, args, source, str...)
+
     # The positional args can't be `args` otherwise `_error` excludes keyword args
     pos_args, kw_args, requestedcontainer = Containers._extract_kw_args(args)
 
