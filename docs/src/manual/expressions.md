@@ -195,7 +195,7 @@ julia> @variable(model, y)
 y
 
 julia> ex = @expression(model, x^2 + 2 * x * y + y^2 + x + y - 1)
-x² + 2 y*x + y² + x + y - 1
+x² + 2 x*y + y² + x + y - 1
 ```
 
 ### Operator overloading
