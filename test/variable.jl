@@ -1154,6 +1154,16 @@ function test_Hermitian_PSD_keyword(::Any, ::Any)
     return
 end
 
+function test_Hermitian_PSD_anon(::Any, ::Any)
+    model = Model()
+    x = @variable(model, [1:2, 1:2] in HermitianPSDCone())
+    @test sprint(show, x[1, 1]) ==  "_[1]"
+    @test sprint(show, x[1, 2]) ==  "_[2] + (0.0 + 1.0im) _[4]"
+    @test sprint(show, x[2, 1]) ==  "_[2] + (-0.0 - 1.0im) _[4]"
+    @test sprint(show, x[2, 2]) ==  "_[3]"
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

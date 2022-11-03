@@ -516,8 +516,18 @@ function _mapinfo(f::Function, v::JuMP.ScalarVariable)
     )
 end
 
-_real(s::String) = string("real(", s, ")")
-_imag(s::String) = string("imag(", s, ")")
+function _real(s::String)
+    if isempty(s)
+        return s
+    end
+    return string("real(", s, ")")
+end
+function _imag(s::String)
+    if isempty(s)
+        return s
+    end
+    return string("imag(", s, ")")
+end
 
 _real(v::ScalarVariable) = _mapinfo(real, v)
 _imag(v::ScalarVariable) = _mapinfo(imag, v)
