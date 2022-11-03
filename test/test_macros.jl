@@ -619,7 +619,7 @@ end
 function test_Error_on_unexpected_comparison()
     m = Model()
     @variable(m, x)
-    @test_macro_throws ErrorException @expression(m, x <= 1)
+    @test_throws ErrorException @expression(m, x <= 1)
     return
 end
 

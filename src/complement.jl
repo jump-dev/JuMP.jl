@@ -70,6 +70,6 @@ function parse_constraint_call(
     F,
     x,
 )
-    f, parse_code = _MA.rewrite(F)
+    f, parse_code = _MA.rewrite(F; move_factors_into_sums = false)
     return parse_code, :(_build_complements_constraint($errorf, $f, $(esc(x))))
 end

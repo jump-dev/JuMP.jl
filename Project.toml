@@ -21,7 +21,7 @@ JuMPDimensionalDataExt = "DimensionalData"
 [compat]
 DimensionalData = "0.24"
 MathOptInterface = "1.18"
-MutableArithmetics = "1"
+MutableArithmetics = "1.1"
 OrderedCollections = "1"
 SnoopPrecompile = "1"
 julia = "1.6"
