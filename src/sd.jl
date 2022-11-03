@@ -522,6 +522,7 @@ function _real(s::String)
     end
     return string("real(", s, ")")
 end
+
 function _imag(s::String)
     if isempty(s)
         return s
