@@ -462,6 +462,17 @@ function test_get_optimizer_attribute()
     @test JuMP.get_optimizer_attribute(model, "aaa") == "bbb"
 end
 
+function test_optimizer_attribute_abstract_string()
+    mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+    model = Model(() -> MOIU.MockOptimizer(mock))
+    attribute = "abc"
+    abstract_str = @views attribute[1:end]
+    JuMP.set_optimizer_attribute(model, abstract_str, "x")
+    @test JuMP.get_optimizer_attribute(model, abstract_str) == "x"
+    @test JuMP.get_optimizer_attribute(model, attribute) == "x"
+    return
+end
+
 function test_set_retrieve_time_limit()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
