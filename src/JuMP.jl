@@ -804,6 +804,12 @@ function set_optimizer_attribute(model::Model, name::String, value)
     return
 end
 
+# This method is needed for string types like String15 coming from a DataFrame.
+function set_optimizer_attribute(model::Model, name::AbstractString, value)
+    set_optimizer_attribute(model, String(name), value)
+    return
+end
+
 """
     set_optimizer_attribute(
         model::Model,
@@ -876,6 +882,11 @@ See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
 """
 function get_optimizer_attribute(model::Model, name::String)
     return get_optimizer_attribute(model, MOI.RawOptimizerAttribute(name))
+end
+
+# This method is needed for string types like String15 coming from a DataFrame.
+function get_optimizer_attribute(model::Model, name::AbstractString)
+    return get_optimizer_attribute(model, String(name))
 end
 
 """
