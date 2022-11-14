@@ -88,12 +88,12 @@ function example_user_cut_constraint()
     function my_callback_function(cb_data)
         callback_called = true
         x_vals = callback_value.(Ref(cb_data), x)
-        accumulated = sum(item_weights[i] for i = 1:N if x_vals[i] > 1e-4)
+        accumulated = sum(item_weights[i] for i in 1:N if x_vals[i] > 1e-4)
         println("Called with accumulated = $(accumulated)")
-        n_terms = sum(1 for i = 1:N if x_vals[i] > 1e-4)
+        n_terms = sum(1 for i in 1:N if x_vals[i] > 1e-4)
         if accumulated > 10
             con = @build_constraint(
-                sum(x[i] for i = 1:N if x_vals[i] > 0.5) <= n_terms - 1
+                sum(x[i] for i in 1:N if x_vals[i] > 0.5) <= n_terms - 1
             )
             println("Adding $(con)")
             MOI.submit(model, MOI.UserCut(cb_data), con)
