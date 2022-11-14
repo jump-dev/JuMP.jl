@@ -884,6 +884,25 @@ function test_drop_optimizer()
     return
 end
 
+function test_optimizer_attribute_get_set()
+    opt = optimizer_with_attributes() do
+        return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    end
+    @test get_optimizer_attribute(opt, MOI.Silent()) === nothing
+    set_optimizer_attribute(opt, MOI.Silent(), true)
+    @test get_optimizer_attribute(opt, MOI.Silent()) == true
+    attr_a = MOI.RawOptimizerAttribute("a")
+    @test get_optimizer_attribute(opt, attr_a) === nothing
+    @test get_optimizer_attribute(opt, "a") === nothing
+    set_optimizer_attribute(opt, attr_a, 1.0)
+    @test get_optimizer_attribute(opt, attr_a) == 1.0
+    @test get_optimizer_attribute(opt, "a") == 1.0
+    set_optimizer_attribute(opt, "a", 2.0)
+    @test get_optimizer_attribute(opt, attr_a) == 2.0
+    @test get_optimizer_attribute(opt, "a") == 2.0
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

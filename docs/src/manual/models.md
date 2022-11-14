@@ -159,6 +159,22 @@ julia> get_optimizer_attribute(model, "output_flag")
 false
 ```
 
+You can also modify attributes within an [`optimizer_with_attributes`](@ref)
+object:
+```jldoctest
+julia> solver = optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => true);
+
+julia> get_optimizer_attribute(solver, "output_flag")
+true
+
+julia> set_optimizer_attribute(solver, "output_flag", false)
+
+julia> get_optimizer_attribute(solver, "output_flag")
+false
+
+julia> model = Model(solver);
+```
+
 ## Print the model
 
 By default, `show(model)` will print a summary of the problem:

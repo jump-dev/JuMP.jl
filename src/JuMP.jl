@@ -93,6 +93,48 @@ function optimizer_with_attributes(optimizer_constructor, args::Pair...)
     return MOI.OptimizerWithAttributes(optimizer_constructor, args...)
 end
 
+# TODO(odow): these two methods can be simplified in a future release of MOI to
+# MOI.set(opt, attr, value) and MOI.get(opt, attr).
+
+function set_optimizer_attribute(
+    opt::MOI.OptimizerWithAttributes,
+    attr::MOI.AbstractOptimizerAttribute,
+    value,
+)
+    for (i, (param, _)) in enumerate(opt.params)
+        if param == attr
+            opt.params[i] = attr => value
+            return
+        end
+    end
+    push!(opt.params, attr => value)
+    return
+end
+
+function get_optimizer_attribute(
+    opt::MOI.OptimizerWithAttributes,
+    attr::MOI.AbstractOptimizerAttribute,
+)
+    for (param, value) in opt.params
+        if param == attr
+            return value
+        end
+    end
+    return nothing
+end
+
+function set_optimizer_attribute(
+    opt::MOI.OptimizerWithAttributes,
+    attr::String,
+    value,
+)
+    return set_optimizer_attribute(opt, MOI.RawOptimizerAttribute(attr), value)
+end
+
+function get_optimizer_attribute(opt::MOI.OptimizerWithAttributes, attr::String)
+    return get_optimizer_attribute(opt, MOI.RawOptimizerAttribute(attr))
+end
+
 include("shapes.jl")
 
 # Model
