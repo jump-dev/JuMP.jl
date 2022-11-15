@@ -552,7 +552,7 @@ function _vectorize_complex_variables(_error::Function, matrix::Matrix)
         for i in 1:j
             if matrix[i, j] != _conj(matrix[j, i])
                 _error(
-                    "Non-conjugate bounds, integrality or starting values for Hermitian variable.",
+                    "Non-conjugate bounds or starting values for Hermitian variable.",
                 )
             end
         end
@@ -561,6 +561,7 @@ function _vectorize_complex_variables(_error::Function, matrix::Matrix)
 end
 
 _is_binary(v::ScalarVariable) = v.info.binary
+_is_integer(v::ScalarVariable) = v.info.integer
 
 function build_variable(
     _error::Function,
@@ -570,10 +571,10 @@ function build_variable(
     n = _square_side(_error, variables)
     set = MOI.HermitianPositiveSemidefiniteConeTriangle(n)
     shape = HermitianMatrixShape(n)
-    if any(_is_binary, variables)
+    if any(_is_binary, variables) || any(_is_integer, variables)
         # We would then need to fix the imaginary value to zero. Let's wait to
         # see if there is need for such complication first.
-        _error("Binary variable in Hermitian matrix is not supported.")
+        _error("Binary or integer variables in a Hermitian matrix is not supported.")
     end
     return VariablesConstrainedOnCreation(
         _vectorize_complex_variables(_error, variables),

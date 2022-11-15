@@ -1120,23 +1120,33 @@ function test_Hermitian_PSD_errors(ModelType, ::Any)
         H[i = 1:2, j = 1:2] in HermitianPSDCone(),
         Bin
     )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
+        Int,
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
+        integer = i != j,
+    )
     return
 end
 
 function test_Hermitian_PSD_keyword(::Any, ::Any)
     model = Model()
-    @variable(
+    @test_throws ErrorException @variable(
         model,
         H[i = 1:2, j = 1:2] in HermitianPSDCone(),
         integer = i != j,
+    )
+    @variable(
+        model,
+        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
         lower_bound = (i + j) + (i - j) * im,
         upper_bound = i * j + (j - i) * im
     )
     v = all_variables(model)
-    @test !is_integer(v[1])
-    @test is_integer(v[2])
-    @test !is_integer(v[3])
-    @test is_integer(v[4])
     for i in 1:2, j in 1:2
         @test value(lower_bound, H[i, j]) == (i + j) + (i - j) * im
     end
