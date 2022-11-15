@@ -80,13 +80,10 @@ function serve_solve(request::HTTP.Request)
     return HTTP.Response(200, JSON.json(solution))
 end
 
-# Finally, we need an HTTP server. There are a variety of ways you can do this
-# in HTTP.jl. We use an explicit `Sockets.listen` so we have manual control of
-# when we shutdown the server.
+# Finally, we need an HTTP server.
 
 function setup_server(host, port)
-    server = HTTP.Sockets.listen(host, port)
-    @async HTTP.serve(host, port; server = server) do request
+    return HTTP.serve!(host, port) do request
         try
             ## Extend the server by adding other endpoints here.
             if request.target == "/api/solve"
@@ -101,12 +98,7 @@ function setup_server(host, port)
             return HTTP.Response(500, "internal error")
         end
     end
-    return server
 end
-
-# !!! info
-#     `@async` runs the server in a background process. If you omit `@async`,
-#     `HTTP.serve` will block the current Julia process.
 
 # !!! warning
 #     HTTP.jl does not serve requests on a separate thread. Therefore, a
