@@ -137,7 +137,7 @@ let id = 0
 end
 
 function test_Check_Julia_generator_expression_parsing()
-    sumexpr = :(sum(x[i, j] * y[i, j] for i = 1:N, j in 1:M if i != j))
+    sumexpr = :(sum(x[i, j] * y[i, j] for i in 1:N, j in 1:M if i != j))
     @test sumexpr.head == :call
     @test sumexpr.args[1] == :sum
     @test sumexpr.args[2].head == :generator

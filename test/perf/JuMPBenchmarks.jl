@@ -221,12 +221,12 @@ function _macro_linear(N::Int)
                 sum(
                     sum(
                         N * i * j * k * y[i, j, k] + x[i, j] for
-                        k = 1:N if i != j && j != k
+                        k in 1:N if i != j && j != k
                     ) for j in 1:N
                 ) for i in 1:N
             ) + sum(
-                sum(x[i, j] for j = 1:5N if j % i == 3) for
-                i = 1:10N if i <= N * z
+                sum(x[i, j] for j in 1:5N if j % i == 3) for
+                i in 1:10N if i <= N * z
             )
         )
     end
@@ -252,12 +252,12 @@ function _macro_quad(N::Int)
                 sum(
                     sum(
                         N * i * j * k * y[i, j, k] * x[i, j] for
-                        k = 1:N if i != j && j != k
+                        k in 1:N if i != j && j != k
                     ) for j in 1:N
                 ) for i in 1:N
             ) + sum(
-                sum(x[i, j] for j = 1:5N if j % i == 3) for
-                i = 1:10N if i <= N * z
+                sum(x[i, j] for j in 1:5N if j % i == 3) for
+                i in 1:10N if i <= N * z
             )
         )
     end

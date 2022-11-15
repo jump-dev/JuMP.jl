@@ -649,15 +649,15 @@ function test_sum_constraint(ModelType, ::Any)
     C = [1 2 3; 4 5 6; 7 8 9]
 
     @test_expression sum(C[i, j] * x[i, j] for i in 1:2, j in 2:3)
-    @test_expression sum(C[i, j] * x[i, j] for i = 1:3, j in 1:3 if i != j) - y
+    @test_expression sum(C[i, j] * x[i, j] for i in 1:3, j in 1:3 if i != j) - y
     @test JuMP.isequal_canonical(
         @expression(model, sum(C[i, j] * x[i, j] for i in 1:3, j in 1:i)),
         sum(C[i, j] * x[i, j] for i in 1:3 for j in 1:i),
     )
     @test_expression sum(C[i, j] * x[i, j] for i in 1:3 for j in 1:i)
-    @test_expression sum(C[i, j] * x[i, j] for i = 1:3 if true for j in 1:i)
+    @test_expression sum(C[i, j] * x[i, j] for i in 1:3 if true for j in 1:i)
     @test_expression sum(
-        C[i, j] * x[i, j] for i = 1:3 if true for j = 1:i if true
+        C[i, j] * x[i, j] for i in 1:3 if true for j in 1:i if true
     )
     @test_expression sum(0 * x[i, 1] for i in 1:3)
     @test_expression sum(0 * x[i, 1] + y for i in 1:3)
