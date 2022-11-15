@@ -83,7 +83,8 @@ end
 # Finally, we need an HTTP server.
 
 function setup_server(host, port)
-    return HTTP.serve!(host, port) do request
+    server = HTTP.Sockets.listen(host, port)
+    HTTP.serve!(host, port; server = server) do request
         try
             ## Extend the server by adding other endpoints here.
             if request.target == "/api/solve"
@@ -98,6 +99,7 @@ function setup_server(host, port)
             return HTTP.Response(500, "internal error")
         end
     end
+    return server
 end
 
 # !!! warning
