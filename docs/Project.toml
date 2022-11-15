@@ -1,5 +1,4 @@
 [deps]
-BitFlags = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
@@ -22,12 +21,11 @@ Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-BitFlags = "=0.1.5"
 CSV = "0.10"
 DataFrames = "=1.4.2"
 Documenter = "0.27.9"
 GLPK = "=1.1.0"
-HTTP = "=1.5.2"
+HTTP = "1"
 HiGHS = "=1.2.0"
 Interpolations = "0.14"
 Ipopt = "=1.1.0"
