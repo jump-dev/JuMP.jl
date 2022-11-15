@@ -80,7 +80,9 @@ function serve_solve(request::HTTP.Request)
     return HTTP.Response(200, JSON.json(solution))
 end
 
-# Finally, we need an HTTP server.
+# Finally, we need an HTTP server. There are a variety of ways you can do this
+# in HTTP.jl. We use an explicit `Sockets.listen` so we have manual control of
+# when we shutdown the server.
 
 function setup_server(host, port)
     server = HTTP.Sockets.listen(host, port)
