@@ -574,7 +574,9 @@ function build_variable(
     if any(_is_binary, variables) || any(_is_integer, variables)
         # We would then need to fix the imaginary value to zero. Let's wait to
         # see if there is need for such complication first.
-        _error("Binary or integer variables in a Hermitian matrix is not supported.")
+        _error(
+            "Binary or integer variables in a Hermitian matrix is not supported.",
+        )
     end
     return VariablesConstrainedOnCreation(
         _vectorize_complex_variables(_error, variables),
