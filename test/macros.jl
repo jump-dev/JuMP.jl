@@ -137,7 +137,7 @@ let id = 0
 end
 
 function test_Check_Julia_generator_expression_parsing()
-    sumexpr = :(sum(x[i, j] * y[i, j] for i = 1:N, j in 1:M if i != j))
+    sumexpr = :(sum(x[i, j] * y[i, j] for i in 1:N, j in 1:M if i != j))
     @test sumexpr.head == :call
     @test sumexpr.args[1] == :sum
     @test sumexpr.args[2].head == :generator
@@ -1794,6 +1794,24 @@ function test_variable_anon_bounds()
         ),
         @variable(model, [1:2] >= 0),
     )
+    return
+end
+
+function test_nonlinear_flatten_expressions()
+    model = Model()
+    @variable(model, x[1:2, 1:2])
+    a = @NLexpression(model, sum(x[i, j] for i in 1:2, j in 1:2))
+    @test string(a) == "subexpression[1]: x[1,1] + x[1,2] + x[2,1] + x[2,2]"
+    b = @NLexpression(model, sum(x[i, j] for i in 1:2 for j in 1:2))
+    @test string(b) == "subexpression[2]: x[1,1] + x[1,2] + x[2,1] + x[2,2]"
+    c = @NLexpression(model, sum(x[i, j] for i in 1:2 for j in i:2))
+    @test string(c) == "subexpression[3]: x[1,1] + x[1,2] + x[2,2]"
+    d = @NLexpression(
+        model,
+        sum(k * x[i, j] for i in 1:2 for j in i:2 for k in 2:3),
+    )
+    @test string(d) ==
+          "subexpression[4]: 2.0 * x[1,1] + 3.0 * x[1,1] + 2.0 * x[1,2] + 3.0 * x[1,2] + 2.0 * x[2,2] + 3.0 * x[2,2]"
     return
 end
 

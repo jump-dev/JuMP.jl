@@ -617,6 +617,18 @@ end
 
 function build_constraint(
     _error::Function,
+    ::AbstractArray,
+    ::AbstractVector,
+    ::AbstractVector,
+)
+    return _error(
+        "Unexpected vectors in scalar constraint. Did you mean to use the dot ",
+        "comparison operators `l .<= f(x) .<= u` instead?",
+    )
+end
+
+function build_constraint(
+    _error::Function,
     x::Matrix,
     set::MOI.AbstractVectorSet,
 )
@@ -1912,7 +1924,7 @@ _parse_nonlinear_expression_inner(::Any, x, ::Any) = x
 function _is_generator(x)
     return isexpr(x, :call) &&
            length(x.args) >= 2 &&
-           isexpr(x.args[2], :generator)
+           (isexpr(x.args[2], :generator) || isexpr(x.args[2], :flatten))
 end
 
 function _parse_nonlinear_expression_inner(code, x::Expr, operators)

@@ -86,7 +86,7 @@ end
 
 function setup_server(host, port)
     server = HTTP.Sockets.listen(host, port)
-    @async HTTP.serve(host, port; server = server) do request
+    HTTP.serve!(host, port; server = server) do request
         try
             ## Extend the server by adding other endpoints here.
             if request.target == "/api/solve"
@@ -103,10 +103,6 @@ function setup_server(host, port)
     end
     return server
 end
-
-# !!! info
-#     `@async` runs the server in a background process. If you omit `@async`,
-#     `HTTP.serve` will block the current Julia process.
 
 # !!! warning
 #     HTTP.jl does not serve requests on a separate thread. Therefore, a

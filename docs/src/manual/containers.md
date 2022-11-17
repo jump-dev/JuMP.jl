@@ -102,6 +102,42 @@ julia> swap.(x)
  (1, 2)  (2, 2)  (3, 2)
 ```
 
+### Tables
+
+Use [`Containers.rowtable`](@ref) to convert the `Array` into a
+[Tables.jl](https://github.com/JuliaData/Tables.jl) compatible
+`Vector{<:NamedTuple}`:
+
+```jldoctest containers_array
+julia> table = Containers.rowtable(x; header = [:I, :J, :value])
+6-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Int64, Tuple{Int64, Int64}}}}:
+ (I = 1, J = 1, value = (1, 1))
+ (I = 2, J = 1, value = (2, 1))
+ (I = 1, J = 2, value = (1, 2))
+ (I = 2, J = 2, value = (2, 2))
+ (I = 1, J = 3, value = (1, 3))
+ (I = 2, J = 3, value = (2, 3))
+```
+
+Because it supports the [Tables.jl](https://github.com/JuliaData/Tables.jl)
+interface, you can pass it to any function which accepts a table as input:
+
+```jldoctest containers_array
+julia> import DataFrames;
+
+julia> DataFrames.DataFrame(table)
+6×3 DataFrame
+ Row │ I      J      value
+     │ Int64  Int64  Tuple…
+─────┼──────────────────────
+   1 │     1      1  (1, 1)
+   2 │     2      1  (2, 1)
+   3 │     1      2  (1, 2)
+   4 │     2      2  (2, 2)
+   5 │     1      3  (1, 3)
+   6 │     2      3  (2, 3)
+```
+
 ## DenseAxisArray
 
 A [`Containers.DenseAxisArray`](@ref) is created when the index sets are
@@ -191,6 +227,38 @@ julia> x.data
  (2, :A)  (2, :B)
 ```
 
+### Tables
+
+Use [`Containers.rowtable`](@ref) to convert the `DenseAxisArray` into a
+[Tables.jl](https://github.com/JuliaData/Tables.jl) compatible
+`Vector{<:NamedTuple}`:
+
+```jldoctest containers_dense
+julia> table = Containers.rowtable(x; header = [:I, :J, :value])
+4-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Symbol, Tuple{Int64, Symbol}}}}:
+ (I = 1, J = :A, value = (1, :A))
+ (I = 2, J = :A, value = (2, :A))
+ (I = 1, J = :B, value = (1, :B))
+ (I = 2, J = :B, value = (2, :B))
+```
+
+Because it supports the [Tables.jl](https://github.com/JuliaData/Tables.jl)
+interface, you can pass it to any function which accepts a table as input:
+
+```jldoctest containers_dense
+julia> import DataFrames;
+
+julia> DataFrames.DataFrame(table)
+4×3 DataFrame
+ Row │ I      J       value
+     │ Int64  Symbol  Tuple…
+─────┼────────────────────────
+   1 │     1  A       (1, :A)
+   2 │     2  A       (2, :A)
+   3 │     1  B       (1, :B)
+   4 │     2  B       (2, :B)
+```
+
 ## SparseAxisArray
 
 A [`Containers.SparseAxisArray`](@ref) is created when the index sets are
@@ -250,6 +318,38 @@ julia> swap.(y)
 JuMP.Containers.SparseAxisArray{Tuple{Symbol, Int64}, 1, Tuple{Int64}} with 2 entries:
   [2]  =  (:B, 2)
   [3]  =  (:B, 3)
+```
+
+### Tables
+
+Use [`Containers.rowtable`](@ref) to convert the `SparseAxisArray` into a
+[Tables.jl](https://github.com/JuliaData/Tables.jl) compatible
+`Vector{<:NamedTuple}`:
+
+```jldoctest containers_sparse
+julia> table = Containers.rowtable(x; header = [:I, :J, :value])
+4-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Symbol, Tuple{Int64, Symbol}}}}:
+ (I = 3, J = :B, value = (3, :B))
+ (I = 2, J = :A, value = (2, :A))
+ (I = 2, J = :B, value = (2, :B))
+ (I = 3, J = :A, value = (3, :A))
+```
+
+Because it supports the [Tables.jl](https://github.com/JuliaData/Tables.jl)
+interface, you can pass it to any function which accepts a table as input:
+
+```jldoctest containers_sparse
+julia> import DataFrames;
+
+julia> DataFrames.DataFrame(table)
+4×3 DataFrame
+ Row │ I      J       value
+     │ Int64  Symbol  Tuple…
+─────┼────────────────────────
+   1 │     3  B       (3, :B)
+   2 │     2  A       (2, :A)
+   3 │     2  B       (2, :B)
+   4 │     3  A       (3, :A)
 ```
 
 ## Forcing the container type

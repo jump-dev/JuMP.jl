@@ -126,9 +126,9 @@ print(model)
 # Let's optimize and take a look at the solution:
 
 optimize!(model)
-solution_summary(model)
 Test.@test primal_status(model) == FEASIBLE_POINT        #hide
 Test.@test objective_value(model) ≈ 11.8288 atol = 1e-4  #hide
+solution_summary(model)
 
 # Success! We found an optimal solution. Let's see what the optimal solution is:
 
@@ -139,6 +139,16 @@ end
 # That's a lot of milk and ice cream! And sadly, we only get `0.6` of a
 # hamburger.
 
+# We can also use the function [`Containers.rowtable`](@ref) to easily convert
+# the result into a DataFrame:
+
+table = Containers.rowtable(value, x; header = [:food, :quantity])
+solution = DataFrames.DataFrame(table)
+
+# This makes it easy to perform analyses our solution:
+
+filter!(row -> row.quantity > 0.0, solution)
+
 # ## Problem modification
 
 # JuMP makes it easy to take an existing model and modify it by adding extra
@@ -147,9 +157,9 @@ end
 
 @constraint(model, x["milk"] + x["ice cream"] <= 6)
 optimize!(model)
-solution_summary(model)
 Test.@test termination_status(model) == INFEASIBLE  #hide
 Test.@test primal_status(model) == NO_SOLUTION      #hide
+solution_summary(model)
 
 # Uh oh! There exists no feasible solution to our problem. Looks like we're
 # stuck eating ice cream for dinner.

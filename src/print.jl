@@ -51,9 +51,7 @@ function _is_one_for_printing(coef)
     return _is_zero_for_printing(abs(coef) - oneunit(coef))
 end
 
-function _is_one_for_printing(coef::Complex)
-    return _is_one_for_printing(real(coef)) && _is_zero_for_printing(imag(coef))
-end
+_is_one_for_printing(coef::Complex{T}) where {T} = coef == one(T)
 
 function _is_zero_for_printing(coef::Complex)
     return _is_zero_for_printing(real(coef)) &&

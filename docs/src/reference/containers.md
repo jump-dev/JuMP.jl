@@ -7,6 +7,7 @@ Containers
 Containers.DenseAxisArray
 Containers.SparseAxisArray
 Containers.container
+Containers.rowtable
 Containers.default_container
 Containers.@container
 Containers.VectorizedProductIterator

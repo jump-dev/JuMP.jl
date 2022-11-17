@@ -118,6 +118,25 @@ function test_AffExpr_vectorized_constraints(ModelType, ::Any)
     @test c[2].set == MOI.EqualTo(3.0)
 end
 
+function test_AffExpr_vectorized_interval_constraints(ModelType, ::Any)
+    model = ModelType()
+    @variable(model, x[1:2])
+    err = ErrorException(
+        "In `@constraint(model, b <= x <= b)`: Unexpected vectors in " *
+        "scalar constraint. Did you mean to use the dot comparison " *
+        "operators `l .<= f(x) .<= u` instead?",
+    )
+    b = [5.0, 6.0]
+    @test_throws_strip err @constraint(model, b <= x <= b)
+    cref = @constraint(model, b .<= x .<= b)
+    c = JuMP.constraint_object.(cref)
+    for i in 1:2
+        @test JuMP.isequal_canonical(c[i].func, 1.0 * x[i])
+        @test c[i].set == MOI.Interval(b[i], b[i])
+    end
+    return
+end
+
 function test_AffExpr_vector_constraints(ModelType, ::Any)
     model = ModelType()
     cref = @constraint(model, [1, 2] in MOI.Zeros(2))
@@ -630,15 +649,15 @@ function test_sum_constraint(ModelType, ::Any)
     C = [1 2 3; 4 5 6; 7 8 9]
 
     @test_expression sum(C[i, j] * x[i, j] for i in 1:2, j in 2:3)
-    @test_expression sum(C[i, j] * x[i, j] for i = 1:3, j in 1:3 if i != j) - y
+    @test_expression sum(C[i, j] * x[i, j] for i in 1:3, j in 1:3 if i != j) - y
     @test JuMP.isequal_canonical(
         @expression(model, sum(C[i, j] * x[i, j] for i in 1:3, j in 1:i)),
         sum(C[i, j] * x[i, j] for i in 1:3 for j in 1:i),
     )
     @test_expression sum(C[i, j] * x[i, j] for i in 1:3 for j in 1:i)
-    @test_expression sum(C[i, j] * x[i, j] for i = 1:3 if true for j in 1:i)
+    @test_expression sum(C[i, j] * x[i, j] for i in 1:3 if true for j in 1:i)
     @test_expression sum(
-        C[i, j] * x[i, j] for i = 1:3 if true for j = 1:i if true
+        C[i, j] * x[i, j] for i in 1:3 if true for j in 1:i if true
     )
     @test_expression sum(0 * x[i, 1] for i in 1:3)
     @test_expression sum(0 * x[i, 1] + y for i in 1:3)
