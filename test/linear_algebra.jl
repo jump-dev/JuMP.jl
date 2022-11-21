@@ -80,22 +80,22 @@ for T in (
             return
         end
     end
-end
-
-function test_matmul_lower_triangular()
-    model = Model()
-    @variable(model, x[1:2, 1:2])
-    b = [1.0, 2.0]
-    @test_broken LinearAlgebra.LowerTriangular(x) * b isa Vector{AffExpr}
-    return
-end
-
-function test_matmul_upper_triangular()
-    model = Model()
-    @variable(model, x[1:2, 1:2])
-    b = [1.0, 2.0]
-    @test_broken LinearAlgebra.UpperTriangular(x) * b isa Vector{AffExpr}
-    return
+    if T != :Hermitian
+        matvec = Symbol("test_$(T)_matvec")
+        test_broken = T in (:LowerTriangular, :UpperTriangular)
+        @eval begin
+            function $matvec()
+                model = Model()
+                @variable(model, x[1:2, 1:2])
+                if $test_broken
+                    @test_broken $f(x) * [1.0, 2.0] isa Vector{AffExpr}
+                else
+                    @test $f(x) * [1.0, 2.0] isa Vector{AffExpr}
+                end
+                return
+            end
+        end
+    end
 end
 
 end  # module
