@@ -31,6 +31,29 @@ function runtests()
     return
 end
 
+function _test_matvec(model, A, b)
+    expr_vec = @expression(model, A * b)
+    expr_adj = @expression(model, b' * A)
+    @test size(expr_vec) == (2,)
+    @test size(expr_adj) == (1, 2)
+    if expr_vec isa AbstractArray{Float64}
+        @test A * b ≈ expr_vec
+        @test b' * A ≈ expr_adj
+    else
+        for i in 1:2
+            @test isequal_canonical(
+                expr_vec[i],
+                sum(A[i, j] * b[j] for j in 1:2),
+            )
+            @test isequal_canonical(
+                expr_adj[i],
+                sum(b[j] * A[j, i] for j in 1:2),
+            )
+        end
+    end
+    return
+end
+
 for T in (
     :Adjoint,
     :Diagonal,
@@ -45,55 +68,50 @@ for T in (
 )
     f = getfield(LinearAlgebra, T)
     macro_matvec = Symbol("test_$(T)_macro_matvec")
+    matvec = Symbol("test_$(T)_matvec")
+    matvec_alloc = Symbol("test_$(T)_matvec_alloc")
+    test_broken = T in (:LowerTriangular, :UpperTriangular)
     @eval begin
         function $macro_matvec()
             model = Model()
             @variable(model, x[1:2, 1:2])
             for X in (x, [1.0 2.0; 3.0 4.0])
                 if X isa Matrix{VariableRef} && $f == LinearAlgebra.Hermitian
-                    # Cannot call f(X) for this wrapper type.
-                    continue
+                    continue  # Cannot call f(X) for this wrapper type.
                 end
-                A = $f(X)
-                for b in ([1.0, 2.0], x[:, 1], x[:, 1] .+ [1.0, 2.0])
-                    expr_vec = @expression(model, A * b)
-                    expr_adj = @expression(model, b' * A)
-                    @test size(expr_vec) == (2,)
-                    @test size(expr_adj) == (1, 2)
-                    if expr_vec isa AbstractArray{Float64}
-                        @test A * b ≈ expr_vec
-                        @test b' * A ≈ expr_adj
-                    else
-                        for i in 1:2
-                            @test isequal_canonical(
-                                expr_vec[i],
-                                sum(A[i, j] * b[j] for j in 1:2),
-                            )
-                            @test isequal_canonical(
-                                expr_adj[i],
-                                sum(b[j] * A[j, i] for j in 1:2),
-                            )
-                        end
-                    end
-                end
+                _test_matvec(model, $f(X), [1.0, 2.0])
+                _test_matvec(model, $f(X), x[:, 1])
+                _test_matvec(model, $f(X), x[:, 1] .+ [1.0, 2.0])
             end
             return
         end
-    end
-    if T != :Hermitian
-        matvec = Symbol("test_$(T)_matvec")
-        test_broken = T in (:LowerTriangular, :UpperTriangular)
-        @eval begin
-            function $matvec()
-                model = Model()
-                @variable(model, x[1:2, 1:2])
-                if $test_broken
-                    @test_broken $f(x) * [1.0, 2.0] isa Vector{AffExpr}
-                else
-                    @test $f(x) * [1.0, 2.0] isa Vector{AffExpr}
-                end
+        function $matvec()
+            if $f == LinearAlgebra.Hermitian
+                return  # Cannot call f(X) for this wrapper type.
+            end
+            model = Model()
+            @variable(model, x[1:2, 1:2])
+            if $test_broken
+                @test_broken $f(x) * [1.0, 2.0] isa Vector{AffExpr}
+            else
+                @test $f(x) * [1.0, 2.0] isa Vector{AffExpr}
+            end
+            return
+        end
+        function $matvec_alloc()
+            if $test_broken || $f == LinearAlgebra.Hermitian
                 return
             end
+            model = Model()
+            @variable(model, x[1:2, 1:2])
+            A, b = $f(x), [1.0, 2.0]
+            alloc_macro = @allocated(@expression(model, A * b))
+            # This is a bit of a weird one: we want to test that A * b in
+            # the REPL is efficient. We can do that by checking that there
+            # are the same number (or fewer) of allocations as the macro, in
+            # the hope that the macro is efficient.
+            @test @allocated(A * b) <= alloc_macro
+            return
         end
     end
 end
