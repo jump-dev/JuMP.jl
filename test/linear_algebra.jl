@@ -39,6 +39,7 @@ for T in (
     :Transpose,
     :LowerTriangular,
     :UpperTriangular,
+    # TODO(odow): wrapper type that needs oneunit(VariableRef).
     # :UnitLowerTriangular,
     # :UnitUpperTriangular,
 )
@@ -48,13 +49,8 @@ for T in (
         function $macro_matvec()
             model = Model()
             @variable(model, x[1:2, 1:2])
-            for X in (x, [1.0 2.0; 3.0 1.0])
-                skips = (
-                    LinearAlgebra.Hermitian,
-                    LinearAlgebra.UnitUpperTriangular,
-                    LinearAlgebra.UnitUpperTriangular,
-                )
-                if X isa Matrix{VariableRef} && $f in skips
+            for X in (x, [1.0 2.0; 3.0 4.0])
+                if X isa Matrix{VariableRef} && $f == LinearAlgebra.Hermitian
                     # Cannot call f(X) for this wrapper type.
                     continue
                 end
