@@ -1260,8 +1260,39 @@ function _moi_add_constrained_variables(
     return var_indices
 end
 
+"""
+    ComplexPlane
+
+Complex plane object that can be used to create a complex variable in the
+[`@variable`](@ref) macro.
+
+## Examples
+
+Consider the following example:
+```jldoctest; setup = :(using JuMP)
+julia> model = Model();
+
+julia> @variable(model, x in ComplexPlane())
+real(x) + (0.0 + 1.0im) imag(x)
+
+julia> v = all_variables(model)
+2-element Vector{VariableRef}:
+ real(x)
+ imag(x)
+```
+We see in the output of the last command that 2 real variables were created.
+The Julia variable `x` binds to an affine expressions in terms of these 2
+variables that parametrize the complex plane.
+"""
 struct ComplexPlane end
 
+"""
+    ComplexVariable{S,T,U,V} <: AbstractVariable
+
+A struct used when adding complex variables.
+
+See also: [`ComplexPlane`](@ref).
+"""
 struct ComplexVariable{S,T,U,V} <: AbstractVariable
     info::VariableInfo{S,T,U,V}
 end
