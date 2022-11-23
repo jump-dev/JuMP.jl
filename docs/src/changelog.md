@@ -1,39 +1,48 @@
+```@meta
+CurrentModule = JuMP
+```
+
 # Release notes
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Version 1.4.0 (October 29, 2022)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.4.0).
+### Added
 
-- New features:
   - Added `Containers.rowtable(x)` which converts a container into a vector of
     `NamedTuple`s to support the Tables.jl interface. This simplifies converting
     `DenseAxisArray` and `SparseAxisArray` objects into tabular forms such as a
     dataframe.
   - Added a new method to `Containers.container` so that index names are passed
     to the container.
-- Bug fixes:
+
+### Fixed
+
   - Fixed a bug in `copy_to(dest::Model, src::MOI.ModelLike)` when `src` has
     nonlinear components.
   - Fixed the printing of `(-1.0 + 0.0im)` coefficients in complex expressions.
   - Fixed a parsing bug in nonlinear expressions with generator statements that
     contain multiple `for` statements.
-- Documentation and maintenance:
+
+### Other
+
   - Converted the multi-commodity flow tutorial to use an SQLite database
   - Fixed a number of typos in the documentation
   - Improved various style aspects of the PDF documentation
 
 ## Version 1.3.1 (September 28, 2022)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.3.1).
+### Fixed
 
-- Bug fixes:
   - Fixed a performance issue in `relax_integrality`
   - Fixed the type stability of operators with `Complex` arguments
   - Fixed a bug which added additional `+()` terms to some nonlinear expressions
   - Fixed potential method ambiguities with `AffExpr` and `QuadExpr` objects
-- Documentation and maintenance:
+
+### Other
+
   - Added vale as a linter for the documentation
   - Added a tutorial on debugging JuMP models
   - Fixed a number of typos in the documentation
@@ -41,31 +50,30 @@ see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.3.1).
 
 ## Version 1.3.0 (September 5, 2022)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.3.0).
+### Added
 
-- New features:
   - Support slicing in `SparseAxisArray`
-- Bug fixes:
+
+### Fixed
+
   - Fixed a bug introduced in v1.2.0 that prevented `DenseAxisArray`s with
     `Vector` keys.
-- Documentation and maintenance:
+
+### Other
+
   - Released the JuMP logos under the CC BY 4.0 license
   - Minor tweaks to the PDF documentation
   - Improved code coverage of a number of files
 
 ## Version 1.2.1 (August 22, 2022)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.2.1).
+### Fixed
 
-- Bug fixes:
   - Fixed a bug when parsing two-sided nonlinear constraints
 
 ## Version 1.2.0 (August 16, 2022)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.2.0).
+### Breaking
 
 This is a large minor release because it significantly refactors the internal
 code for handling nonlinear programs to use the `MathOptInterface.Nonlinear`
@@ -75,9 +83,8 @@ internal datastructure in `model.nlp_data` has been removed, as has the
 programming has not changed, and any code that uses only the public API and that
 worked with v1.1.1 will continue to work with v1.2.0.
 
-A summary of changes are as follows:
+### Added
 
-- New features:
   - Added `all_constraints(model; include_variable_in_set_constraints)` which
     simplifies returning a list of all constraint indices in the model.
   - Added the ability to delete nonlinear constraints via
@@ -86,12 +93,16 @@ A summary of changes are as follows:
     user-defined function.
   - Added support for querying the primal value of a nonlinear constraint via
     `value(::NonlinearConstraintRef)`
-- Bug fixes:
+
+### Fixed
+
   - Fixed a bug in `Containers.DenseAxisArray` so that it now supports indexing
     with keys that hash to the same value, even if they are different types, for
     example, `Int32` and `Int64`.
   - Fixed a bug printing the model when the solver does not support `MOI.Name`.
-- Documentation and maintenance:
+
+### Other
+
   - Added a constraint programming formulation to the Sudoku tutorial.
   - Added newly supported solvers Pajarito, Clarabel, and COPT to the
     installation table.
@@ -99,24 +110,16 @@ A summary of changes are as follows:
 
 ## Version 1.1.1 (June 14, 2022)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.1.1).
-A summary of changes are as follows:
+### Other
 
-- New features:
-  - There are no new features or bug fixes.
-- Documentation and maintenance:
   - Fixed problem displaying LaTeX in the documentation
   - Minor updates to the style guide
   - Updated to MOI v1.4.0 in the documentation
 
 ## Version 1.1.0 (May 25, 2022)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.1.0).
-A summary of changes are as follows:
+### Added
 
-- New features:
   - Added `num_constraints(::Model; count_variable_in_set_constraints)` to
     simplify the process of counting the number of constraints in a model
   - Added `VariableRef(::ConstraintRef)` for querying the variable associated
@@ -125,9 +128,13 @@ A summary of changes are as follows:
     of a vector-valued constraint.
   - Added `set_string_names_on_creation` to disable creating `String` names for
     variables and constraints. This can improve performance.
-- Bug fixes:
+
+### Fixed
+
   - Fixed a bug passing `nothing` to the `start` keyword of `@variable`
-- Documentation and maintenance:
+
+### Other
+
   - New tutorials:
     - Sensitivity analysis of a linear program
     - Serving web apps
@@ -141,11 +148,8 @@ A summary of changes are as follows:
 contributors in our [JuMP 1.0.0 is released](https://jump.dev/blog/1.0.0-release/)
 blog post.**
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v1.0.0).
-A summary of changes are as follows:
+### Breaking
 
-- Breaking changes:
   - The previously deprecated functions (v0.23.0, v0.23.1) have been removed.
     Deprecation was to improve consistency of function names:
     - `num_nl_constraints` (see `num_nonlinear_constraints`)
@@ -158,45 +162,49 @@ A summary of changes are as follows:
     - `SymMatrixSpace` (see `SymmetricMatrixSpace`)
   - The unintentionally exported variable `JuMP.op_hint` has been renamed to the
     unexported `JuMP._OP_HINT`
-- Bug fixes:
+
+### Fixed
+
   - Fixed a bug writing .nl files
   - Fixed a bug broadcasting `SparseAxisArray`s
 
 ## Version 0.23.2 (March 14, 2022)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.23.2).
-A summary of changes are as follows:
+### Added
 
-- New features:
   - Added `relative_gap` to `solution_summary`
   - `register` now throws an informative error if the function is not
     differentiable using ForwardDiff. In some cases, the check in `register`
     will encounter a false negative, and the informative error will be thrown at
     run-time. This usually happens when the function is non-differentiable in a
     subset of the domain.
-- Bug fixes:
+
+### Fixed
+
   - Fixed a scoping issue when extending the `container` keyword of containers
-- Documentation and maintenance:
+
+### Other
+
   - Docs updated to the latest version of each package
 
 ## Version 0.23.1 (March 2, 2022)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.23.1).
-A summary of changes are as follows:
+### Deprecated
 
-- New deprecations:
   - `nl_expr_string` and `nl_constraint_string` have been renamed to
     `nonlinear_expr_string` and `nonlinear_constraint_string`. The old methods
     still exist with deprecation warnings. This change should impact very few
     users because to call them you must rely on private internals of the
     nonlinear API. Users are encouraged to use `sprint(show, x)` instead, where
     `x` is the nonlinear expression or constraint of interest.
-- New features:
+
+### Added
+
   - Added support for `Base.abs2(x)` where `x` is a variable or affine
     expression. This is mainly useful for complex-valued constraints.
-- Bug fixes:
+
+### Fixed
+
   - Fixed addition of complex and real affine expressions
   - Fixed arithmetic for Complex-valued quadratic expressions
   - Fixed variable bounds passed as `Rational{Int}(Inf)`
@@ -209,11 +217,8 @@ A summary of changes are as follows:
 v1.0.0. That is, if no issues are found with the v0.23.0 release, then it will
 be re-tagged as v1.0.0.**
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.23.0).
-A summary of changes are as follows:
+### Breaking
 
-- Breaking changes:
   - Julia 1.6 is now the minimum supported version
   - MathOptInterface has been updated to v1.0.0
   - All previously deprecated functionality has been removed
@@ -228,12 +233,18 @@ A summary of changes are as follows:
     `set_nonlinear_objective`. Calls to the old functions throw an error
     explaining the new name.
   - `SymMatrixSpace` has been renamed to `SymmetricMatrixSpace`
-- New features:
+
+### Added
+
   - Added `nonlinear_dual_start_value` and `set_nonlinear_dual_start_value`
   - Added preliminary support for `Complex` coefficient types
-- Bug fixes:
+
+### Fixed
+
   - Fixed a bug in `solution_summary`
-- Documentation, maintenance:
+
+### Other
+
   - MILP examples have been migrated from GLPK to HiGHS
   - Fixed various typos
   - Improved section on setting constraint start values
@@ -258,17 +269,14 @@ for advice on updating a specific deprecated feature.
 
 ## Version 0.22.3 (February 10, 2022)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.22.3).
-A summary of changes are as follows:
+### Fixed
 
-- New features:
-  - There are no new features in this release.
-- Bug fixes:
   - Fixed a reproducibility issue in the TSP tutorial
   - Fixed a reproducibility issue in the `max_cut_sdp` tutorial
   - Fixed a bug broadcasting an empty SparseAxisArray
-- Documentation, maintenance:
+
+### Other
+
   - Added a warning and improved documentation for the modify-then-query case
   - Fixed a typo in the docstring of `RotatedSecondOrderCone`
   - Added Aqua.jl as a check for code health
@@ -279,11 +287,8 @@ A summary of changes are as follows:
 
 ## Version 0.22.2 (January 10, 2022)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.22.2).
-A summary of changes are as follows:
+### Added
 
-- New features:
   - The function `all_nl_constraints` now returns all nonlinear constraints
     in a model
   - `start_value` and `set_start_value` can now be used to get and set the
@@ -293,10 +298,14 @@ A summary of changes are as follows:
   - Anonymous variables are now printed as `_[i]` where `i` is the index of the
     variable instead of `noname`. Calling `name(x)` still returns `""` so this
     is non-breaking.
-- Bug fixes:
+
+### Fixed
+
   - Fixed handling of `min` and `max` in nonlinear expressions
   - CartesianIndex is no longer allowed as a key for DenseAxisArrays.
-- Documentation, maintenance:
+
+### Other
+
   - Improved the performance of GenericAffExpr
   - Added a tutorial on the Travelling Salesperson Problem
   - Added a tutorial on querying the Hessian of a nonlinear program
@@ -304,18 +313,19 @@ A summary of changes are as follows:
 
 ## Version 0.22.1 (November 29, 2021)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.22.1).
-A summary of changes are as follows:
+### Added
 
-- New features:
   * Export `OptimizationSense` enum, with instances: `MIN_SENSE`, `MAX_SENSE`,
     and `FEASIBILITY_SENSE`
   * Add `Base.isempty(::Model)` to match `Base.empty(::Model)`
-- Bug fixes:
+
+### Fixed
+
   * Fix bug in container with tuples as indices
   * Fix bug in `set_time_limit_sec`
-- Documentation, maintenance
+
+### Other
+
   * Add tutorial "Design patterns for larger models"
   * Remove release notes section from PDF
   * General edits of the documentation and error messages
@@ -324,16 +334,12 @@ A summary of changes are as follows:
 
 **JuMP v0.22 is a breaking release**
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.22.0).
-A summary of changes are as follows.
-
-### Breaking changes
+### Breaking
 
 JuMP 0.22 contains a number of breaking changes. However, these should be
 invisible for the majority of users. You will mostly encounter these breaking
 changes if you: wrote a JuMP extension, accessed `backend(model)`, or called
- `@SDconstraint`.
+`@SDconstraint`.
 
 The breaking changes are as follows:
 
@@ -388,7 +394,7 @@ The breaking changes are as follows:
    have been refactored in a breaking way. Consult the Extensions documentation
    for more details and examples.
 
-### New features
+### Added
 
  * The `TerminationStatusCode` and `ResultStatusCode` enums are now exported
    by JuMP. Prefer `termination_status(model) == OPTIMAL` instead of
@@ -405,16 +411,8 @@ The breaking changes are as follows:
    now be written as `@constraint(model, x >= y, MOI.Nonnegatives())`.
  * Names are now set for vectorized constraints.
 
-### Documentation, maintenance and performance
+### Fixed
 
- * The documentation is now available as a PDF.
- * The documentation now includes a full copy of the MathOptInterface
-   documentation to make it easy to link concepts between the docs. (The
-   MathOptInterface documentation has also been significantly improved.)
- * The documentation contains a large number of improvements and clarifications
-   on a range of topics. Thanks to @sshin23, @DilumAluthge, and @jlwether.
- * The documentation is now built with Julia 1.6 instead of 1.0.
- * Various error messages have been improved to be more readable.
  * Fixed a performance issue when `show` was called on a `SparseAxisArray` with
    a large number of elements.
  * Fixed a bug displaying barrier and simplex iterations in `solution_summary`.
@@ -432,27 +430,37 @@ The breaking changes are as follows:
    `LinearAlgebra` and `SparseArrays`.
  * Fixed a bug when registering a user-defined function with splatting.
 
+### Other
+
+ * The documentation is now available as a PDF.
+ * The documentation now includes a full copy of the MathOptInterface
+   documentation to make it easy to link concepts between the docs. (The
+   MathOptInterface documentation has also been significantly improved.)
+ * The documentation contains a large number of improvements and clarifications
+   on a range of topics. Thanks to @sshin23, @DilumAluthge, and @jlwether.
+ * The documentation is now built with Julia 1.6 instead of 1.0.
+ * Various error messages have been improved to be more readable.
+
 ## Version 0.21.10 (September 4, 2021)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.10).
-A summary of changes are as follows:
+### Added
 
-- New features:
-  * Add `add_NL_expression`
+  * Added `add_NL_expression`
   * `add_NL_xxx` functions now support `AffExpr` and `QuadExpr` as terms
-- Documentation, maintenance and performance:
-  * Fix bug in `solution_summary`
-  * Fix bug in `relax_integrality`
-  * Improve error message in `lp_sensitivity_report`
+
+### Fixed
+
+  * Fixed a bug in `solution_summary`
+  * Fixed a bug in `relax_integrality`
+
+### Other
+
+  * Improved error message in `lp_sensitivity_report`
 
 ## Version 0.21.9 (August 1, 2021)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.9).
-A summary of changes are as follows:
+### Added
 
-- New features:
   * Containers now support arbitrary container types by passing the type to the
     `container` keyword and overloading `Containers.container`.
   * `is_valid` now supports nonlinear constraints
@@ -461,29 +469,27 @@ A summary of changes are as follows:
   * Nonlinear parameters now support the plural `@NLparameters` macro.
   * Containers (e.g., `DenseAxisArray`) can now be used in vector-valued
     constraints.
-- Documentation, maintenance and performance:
+
+### Other
+
   * Various improvements to the documentation.
 
 ## Version 0.21.8 (May 8, 2021)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.8).
-A summary of changes are as follows:
+### Added
 
-- New features:
   * The `@constraint` macro is now extendable in the same way as `@variable`.
   * `AffExpr` and `QuadExpr` can now be used in nonlinear macros.
-- Bug fixes:
+
+### Fixed
+
   * Fixed a bug in `lp_sensitivity_report`.
   * Fixed an inference issue when creating empty `SparseAxisArray`s.
 
 ## Version 0.21.7 (April 12, 2021)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.7).
-A summary of changes are as follows:
+### Added
 
-- New features:
   * Added `primal_feasibility_report`, which can be used to check whether a
     primal point satisfies primal feasibility.
   * Added `coefficient`, which returns the coefficient associated with a
@@ -500,7 +506,9 @@ A summary of changes are as follows:
     encourage the manual registration.
   * DenseAxisArray's now support broadcasting over multiple arrays.
   * Container indices can now be iterators of `Base.SizeUnknown`.
-- Bug fixes:
+
+### Fixed
+
   * Fixed bug in `rad2deg` and `deg2rad` in nonlinear expressions.
   * Fixed a MethodError bug in `Containers` when forcing container type.
   * Allow partial slicing of a DenseAxisArray, resolving an issue from 2014!
@@ -509,7 +517,9 @@ A summary of changes are as follows:
     in the REPL) not the latex formulation. Use `print(model)` to print the latex
     formulation.
   * Fixed a bug when copying models containing nested arrays.
-- Documentation, performance improvements, and general maintenance:
+
+### Other
+
   * Tutorials are now part of the documentation, and more refactoring has taken
     place.
   * Added JuliaFormatter added as a code formatter.
@@ -520,11 +530,8 @@ A summary of changes are as follows:
 
 ## Version 0.21.6 (January 29, 2021)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.6).
-A summary of changes are as follows:
+### Added
 
-- New features:
   * Added support for skew symmetric variables via
     `@variable(model, X[1:2, 1:2] in SkewSymmetricMatrixSpace())`.
   * `lp_sensitivity_report` has been added which significantly improves the
@@ -542,7 +549,9 @@ A summary of changes are as follows:
   * Added `print_bridge_graph` to visualize the bridging graph generated by
     MathOptInterface.
   * Improved error message for containers with duplicate indices.
-- Bug fixes:
+
+### Fixed
+
   * Various fixes to pass tests on Julia 1.6.
   * Fixed a bug in the printing of nonlinear expressions in IJulia.
   * Fixed a bug when nonlinear expressions are passed to user-defined functions.
@@ -553,7 +562,9 @@ A summary of changes are as follows:
     large number of elements.
   * Removed an unnecessary type assertion in `list_of_constraint_types`.
   * Fixed a bug when copying models with registered expressions.
-- Documentation and general maintenance:
+
+### Other
+
   * The documentation has been significantly overhauled. It now has distinct
     sections for the manual, API reference, and examples. The existing examples
     in `/examples` have now been moved to `/docs/src/examples` and rewritten
@@ -567,45 +578,38 @@ A summary of changes are as follows:
 
 ## Version 0.21.5 (September 18, 2020)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.5).
-A summary of changes are as follows:
+### Fixed
 
-- Fix deprecation warnings
-- Throw `DimensionMismatch` for incompatibly sized functions and sets
-- Unify treatment of `keys(x)` on JuMP containers
+  * Fixed deprecation warnings
+  * Throw `DimensionMismatch` for incompatibly sized functions and sets
+  * Unify treatment of `keys(x)` on JuMP containers
 
 ## Version 0.21.4 (September 14, 2020)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.4).
-A summary of changes are as follows:
+### Added
 
-- New features:
   * Add debug info when adding unsupported constraints
   * Add `relax_integrality` for solving continuous relaxation
   * Allow querying constraint conflicts
-- Bug fixes:
+
+### Fixed
+
   * Dispatch on `Real` for `MOI.submit`
   * Implement `copy` for `CustomSet` in tests
   * Don't export private macros
   * Fix invalid assertion in nonlinear
-- Error if constraint has `NaN` right-hand side
-- Improve speed of tests
+  * Error if constraint has `NaN` right-hand side
+  * Improve speed of tests
   * Lots of work modularizing files in `/test`
-- Improve line numbers in macro error messages
-- Print nonlinear subexpressions
-- Various documentation updates
-- Dependency updates:
-  * Datastructures 0.18
-  * MathOptFormat v0.5
-  * Prep for MathOptInterface 0.9.15
+  * Improve line numbers in macro error messages
+  * Print nonlinear subexpressions
+  * Various documentation updates
+  * Dependency updates:
+    * Datastructures 0.18
+    * MathOptFormat v0.5
+    * Prep for MathOptInterface 0.9.15
 
 ## Version 0.21.3 (June 18, 2020)
-
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.3).
-A summary of changes are as follows:
 
 - Added Special Order Sets (SOS1 and SOS2) to JuMP with default weights to ease
   the creation of such constraints (#2212).
@@ -631,10 +635,6 @@ A summary of changes are as follows:
 
 ## Version 0.21.2 (April 2, 2020)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.2).
-A summary of changes are as follows:
-
 - Added `relative_gap()` to access `MOI.RelativeGap()` attribute (#2199).
 - Documentation fixes:
   * Added link to source for docstrings in the documentation (#2207).
@@ -643,7 +643,9 @@ A summary of changes are as follows:
 - Implementation of methods for Base functions:
   * Implemented `Base.empty!` for `JuMP.Model` (#2198).
   * Implemented `Base.conj` for JuMP scalar types (#2209).
-- Bug fixes:
+
+### Fixed
+
   * Fixed sum of expression with scalar product in macro (#2178).
   * Fixed writing of nonlinear models to MathOptFormat (#2181).
   * Fixed construction of empty SparseAxisArray (#2179).
@@ -651,19 +653,11 @@ A summary of changes are as follows:
 
 ## Version 0.21.1 (Feb 18, 2020)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.1).
-A summary of changes are as follows:
-
 - Improved the clarity of the `with_optimizer` deprecation warning.
 
 ## Version 0.21.0 (Feb 16, 2020)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.21.0).
-A summary of changes are as follows:
-
-Breaking changes:
+### Breaking
 
 - Deprecated `with_optimizer` (#2090, #2084, #2141). You can replace
   `with_optimizer` by either nothing, `optimizer_with_attributes` or a closure:
@@ -692,7 +686,7 @@ Breaking changes:
 - Calling `deepcopy(::AbstractModel)` now throws an error.
 - The constraint name is now printed in the model string (#2108).
 
-New features:
+### Added
 
 - Added support for solver-independent and solver-specific callbacks (#2101).
 - Added `write_to_file` and `read_from_file`, supported formats are CBF, LP,
@@ -708,15 +702,11 @@ New features:
 - Improved error on complex values in NLP (#1978).
 - Added an example of column generation (#2010).
 
-Bug fixes:
+### Fixed
 
 - Incorrect coefficients generated when using Symmetric variables (#2102)
 
 ## Version 0.20.1 (Oct 18, 2019)
-
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.20.1).
-A summary of changes are as follows:
 
 - Add sections on `@variables` and `@constraints` in the documentation (#2062).
 - Fixed product of sparse matrices for Julia v1.3 (#2063).
@@ -726,10 +716,6 @@ A summary of changes are as follows:
   and query the time limit for the solver in seconds (#2053).
 
 ## Version 0.20.0 (Aug 24, 2019)
-
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.20.0).
-A summary of changes are as follows:
 
 - Documentation updates.
 - Numerous bug fixes.
@@ -751,10 +737,6 @@ A summary of changes are as follows:
 
 ## Version 0.19.2 (June 8, 2019)
 
-For a detailed list of the closed issues and pull requests from this release,
-see the [tag notes](https://github.com/jump-dev/JuMP.jl/releases/tag/v0.19.2).
-A summary of changes are as follows:
-
 - Fix a bug in derivatives that could arise in models with nested nonlinear
   subexpressions.
 
@@ -767,7 +749,7 @@ A summary of changes are as follows:
 
 **JuMP 0.19 contains significant breaking changes.**
 
-Breaking changes:
+### Breaking
 
 - JuMP's abstraction layer for communicating with solvers changed from
   [MathProgBase](https://github.com/JuliaOpt/MathProgBase.jl) (MPB) to
@@ -857,7 +839,7 @@ Breaking changes:
   variables, e.g., `value.(x)` instead of `getvalue(x)` for collections. (Use
   `value(x)` when `x` is a scalar object.)
 
-New features:
+### Added
 
 - Splatting (like `f(x...)`) is recognized in restricted settings in nonlinear
   expressions.
@@ -890,6 +872,8 @@ New features:
 - Direct mode and manual mode provide explicit control over when copies of a
   model are stored or regenerated. See the corresponding
   [documentation](https://www.juliaopt.org/JuMP.jl/dev/solvers/).
+
+### Regressions
 
 There are known regressions from JuMP 0.18 that will be addressed in a future
 release (0.19.x or later):
@@ -1034,7 +1018,6 @@ The following changes are primarily of interest to developers of JuMP extensions
   * Document Xpress interface developed by @joaquimg, Joaquim Dias Garcia
   * Minor bug and deprecation fixes (Thanks @odow, @jrevels)
 
-
 ## Version 0.13.2 (May 16, 2016)
 
   * Compatibility update for MathProgBase
@@ -1161,7 +1144,6 @@ The following changes are primarily of interest to developers of JuMP extensions
   * New default procedure for setting initial values in nonlinear optimization: project zero onto the variable bounds.
   * Small bug fixes.
 
-
 ## Version 0.7.3 (January 14, 2015)
 
   * Fix a method ambiguity conflict with Compose.jl (cosmetic fix)
@@ -1205,7 +1187,6 @@ The following changes are primarily of interest to developers of JuMP extensions
 
   * Fix a bug in multiplying two AffExpr objects.
 
-
 ## Version 0.6.2 (October 11, 2014)
 
   * Further improvements and bug fixes for printing.
@@ -1242,6 +1223,7 @@ The following changes are primarily of interest to developers of JuMP extensions
   * Fix a bug in printing models
 
 ## Version 0.5.6 (September 2, 2014)
+
   * Add support for semicontinuous and semi-integer variables for those solvers that support them.
     - **Breaking change**: Syntax for `Variable()` constructor has changed (use of this interface remains discouraged)
   * Update for breaking changes in MathProgBase
@@ -1255,7 +1237,6 @@ The following changes are primarily of interest to developers of JuMP extensions
   * Update for breaking change in MathProgBase which reduces loading times for `using JuMP`
   * Fix error when MIPs not solved to optimality
 
-
 ## Version 0.5.3 (May 21, 2014)
 
   * Update for breaking change in ReverseDiffSparse
@@ -1263,7 +1244,6 @@ The following changes are primarily of interest to developers of JuMP extensions
 ## Version 0.5.2 (May 9, 2014)
 
   * Fix compatibility with Julia 0.3 prerelease
-
 
 ## Version 0.5.1 (May 5, 2014)
 
@@ -1314,11 +1294,14 @@ The following changes are primarily of interest to developers of JuMP extensions
 
 ## Version 0.2.0 (December 15, 2013)
 
- * Breaking changes:
+### Breaking
+
    * Objective sense is specified in `setObjective` instead of in the `Model`
      constructor.
    * `lpsolver` and `mipsolver` merged into single `solver` option.
- * New features:
+
+### Added
+
    * Problem modification with efficient LP restarts and MIP warm-starts.
    * Relatedly, column-wise modeling now supported.
    * Solver-independent callbacks supported. Currently we support only
