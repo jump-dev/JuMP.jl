@@ -498,7 +498,6 @@ function reshape_vector(v::Vector{T}, shape::HermitianMatrixShape) where {T}
     return matrix
 end
 
-
 function _vectorize_complex_variables(_error::Function, matrix::Matrix)
     n = LinearAlgebra.checksquare(matrix)
     for j in 1:n

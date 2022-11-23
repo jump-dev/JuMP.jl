@@ -1106,17 +1106,9 @@ end
 
 function test_complex_variable_errors(ModelType, ::Any)
     model = ModelType()
-    @test_throws ErrorException @variable(
-        model,
-        x in ComplexPlane(),
-        Int,
-    )
-    @test_throws ErrorException @variable(
-        model,
-        x in ComplexPlane(),
-        Bin,
-    )
- end
+    @test_throws ErrorException @variable(model, x in ComplexPlane(), Int)
+    @test_throws ErrorException @variable(model, x in ComplexPlane(), Bin)
+end
 
 function test_Hermitian_PSD(::Any, ::Any)
     model = Model()
