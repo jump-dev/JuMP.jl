@@ -14,62 +14,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `Containers.rowtable(x)` which converts a container into a vector of
     `NamedTuple`s to support the Tables.jl interface. This simplifies converting
     `DenseAxisArray` and `SparseAxisArray` objects into tabular forms such as a
-    dataframe.
+    dataframe (#3104)
   - Added a new method to `Containers.container` so that index names are passed
-    to the container.
+    to the container (#3088)
 
 ### Fixed
 
   - Fixed a bug in `copy_to(dest::Model, src::MOI.ModelLike)` when `src` has
-    nonlinear components.
-  - Fixed the printing of `(-1.0 + 0.0im)` coefficients in complex expressions.
+    nonlinear components (#3101)
+  - Fixed the printing of `(-1.0 + 0.0im)` coefficients in complex expressions
+    (#3112)
   - Fixed a parsing bug in nonlinear expressions with generator statements that
-    contain multiple `for` statements.
+    contain multiple `for` statements (#3116)
 
 ### Other
 
-  - Converted the multi-commodity flow tutorial to use an SQLite database
-  - Fixed a number of typos in the documentation
-  - Improved various style aspects of the PDF documentation
+  - Converted the multi-commodity flow tutorial to use an SQLite database (#3098)
+  - Fixed a number of typos in the documentation (#3103) (#3107) (#3018)
+  - Improved various style aspects of the PDF documentation (#3095) (#3098)
+    (#3102)
 
 ## Version 1.3.1 (September 28, 2022)
 
 ### Fixed
 
-  - Fixed a performance issue in `relax_integrality`
-  - Fixed the type stability of operators with `Complex` arguments
+  - Fixed a performance issue in `relax_integrality` (#3087)
+  - Fixed the type stability of operators with `Complex` arguments (#3072)
   - Fixed a bug which added additional `+()` terms to some nonlinear expressions
+    (#3091)
   - Fixed potential method ambiguities with `AffExpr` and `QuadExpr` objects
+    (#3092)
 
 ### Other
 
-  - Added vale as a linter for the documentation
-  - Added a tutorial on debugging JuMP models
-  - Fixed a number of typos in the documentation
-  - Many other small tweaks to the documentation
+  - Added [vale](https://vale.sh) as a linter for the documentation (#3080)
+  - Added a tutorial on debugging JuMP models (#3043)
+  - Fixed a number of typos in the documentation (#3079) (#3083)
+  - Many other small tweaks to the documentation (#3068) (#3073) (#3074) (#3075)
+    (3076) (#3077) (#3078) (#3081) (#3082) (#3084) (#3085) (#3089)
 
 ## Version 1.3.0 (September 5, 2022)
 
 ### Added
 
-  - Support slicing in `SparseAxisArray`
+  - Support slicing in `SparseAxisArray` (#3031)
 
 ### Fixed
 
   - Fixed a bug introduced in v1.2.0 that prevented `DenseAxisArray`s with
-    `Vector` keys.
+    `Vector` keys (#3064)
 
 ### Other
 
-  - Released the JuMP logos under the CC BY 4.0 license
-  - Minor tweaks to the PDF documentation
-  - Improved code coverage of a number of files
+  - Released the JuMP logos under the CC BY 4.0 license (#3063)
+  - Minor tweaks to the documentation (#3054) (#3056) (#3057) (#3060) (#3061)
+    (#3065)
+  - Improved code coverage of a number of files (#3048) (#3049) (#3050) (#3051)
+    (#3052) (#3053) (#3058) (#3059)
 
 ## Version 1.2.1 (August 22, 2022)
 
 ### Fixed
 
-  - Fixed a bug when parsing two-sided nonlinear constraints
+  - Fixed a bug when parsing two-sided nonlinear constraints (#3045)
+
+### Other
+
+  - Add docs clarifyinng iterable sets of a singleton (#3044)
 
 ## Version 1.2.0 (August 16, 2022)
 

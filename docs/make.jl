@@ -214,17 +214,20 @@ const _PAGES = [
 
 function fix_release_line(
     line::String,
-    url::String = "https://github.com/jump-dev/JuMP.jl"
+    url::String = "https://github.com/jump-dev/JuMP.jl",
 )
     # (#XXXX) -> ([#XXXX](url/issue/XXXX))
     while (m = match(r"\(\#([0-9]+)\)", line)) !== nothing
-       id = m.captures[1]
-       line = replace(line, m.match => "([#$id]($url/issues/$id))")
+        id = m.captures[1]
+        line = replace(line, m.match => "([#$id]($url/issues/$id))")
     end
     # ## Version X.Y.Z -> [Version X.Y.Z](url/releases/tag/vX.Y.Z)
     while (m = match(r"\#\# Version ([0-9]+.[0-9]+.[0-9]+)", line)) !== nothing
         tag = m.captures[1]
-        line = replace(line, m.match => "## [Version $tag]($url/releases/tag/v$tag)")
+        line = replace(
+            line,
+            m.match => "## [Version $tag]($url/releases/tag/v$tag)",
+        )
     end
     return line
 end
