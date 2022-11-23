@@ -93,48 +93,6 @@ function optimizer_with_attributes(optimizer_constructor, args::Pair...)
     return MOI.OptimizerWithAttributes(optimizer_constructor, args...)
 end
 
-# TODO(odow): these two methods can be simplified in a future release of MOI to
-# MOI.set(opt, attr, value) and MOI.get(opt, attr).
-
-function set_optimizer_attribute(
-    opt::MOI.OptimizerWithAttributes,
-    attr::MOI.AbstractOptimizerAttribute,
-    value,
-)
-    for (i, (param, _)) in enumerate(opt.params)
-        if param == attr
-            opt.params[i] = attr => value
-            return
-        end
-    end
-    push!(opt.params, attr => value)
-    return
-end
-
-function get_optimizer_attribute(
-    opt::MOI.OptimizerWithAttributes,
-    attr::MOI.AbstractOptimizerAttribute,
-)
-    for (param, value) in opt.params
-        if param == attr
-            return value
-        end
-    end
-    return nothing
-end
-
-function set_optimizer_attribute(
-    opt::MOI.OptimizerWithAttributes,
-    attr::String,
-    value,
-)
-    return set_optimizer_attribute(opt, MOI.RawOptimizerAttribute(attr), value)
-end
-
-function get_optimizer_attribute(opt::MOI.OptimizerWithAttributes, attr::String)
-    return get_optimizer_attribute(opt, MOI.RawOptimizerAttribute(attr))
-end
-
 include("shapes.jl")
 
 # Model
@@ -826,7 +784,11 @@ function solve_time(model::Model)
 end
 
 """
-    set_optimizer_attribute(model::Model, name::String, value)
+    set_optimizer_attribute(
+        model::Union{Model,MOI.OptimizerWithAttributes},
+        name::String,
+        value,
+    )
 
 Sets solver-specific attribute identified by `name` to `value`.
 
@@ -841,20 +803,28 @@ set_optimizer_attribute(model, "SolverSpecificAttributeName", true)
 
 See also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
 """
-function set_optimizer_attribute(model::Model, name::String, value)
+function set_optimizer_attribute(
+    model::Union{Model,MOI.OptimizerWithAttributes},
+    name::String,
+    value,
+)
     set_optimizer_attribute(model, MOI.RawOptimizerAttribute(name), value)
     return
 end
 
 # This method is needed for string types like String15 coming from a DataFrame.
-function set_optimizer_attribute(model::Model, name::AbstractString, value)
+function set_optimizer_attribute(
+    model::Union{Model,MOI.OptimizerWithAttributes},
+    name::AbstractString,
+    value,
+)
     set_optimizer_attribute(model, String(name), value)
     return
 end
 
 """
     set_optimizer_attribute(
-        model::Model,
+        model::Union{Model,MOI.OptimizerWithAttributes},
         attr::MOI.AbstractOptimizerAttribute,
         value,
     )
@@ -870,7 +840,7 @@ set_optimizer_attribute(model, MOI.Silent(), true)
 See also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
 """
 function set_optimizer_attribute(
-    model::Model,
+    model::Union{Model,MOI.OptimizerWithAttributes},
     attr::MOI.AbstractOptimizerAttribute,
     value,
 )
@@ -879,7 +849,10 @@ function set_optimizer_attribute(
 end
 
 """
-    set_optimizer_attributes(model::Model, pairs::Pair...)
+    set_optimizer_attributes(
+        model::Union{Model,MOI.OptimizerWithAttributes},
+        pairs::Pair...,
+    )
 
 Given a list of `attribute => value` pairs, calls
 `set_optimizer_attribute(model, attribute, value)` for each pair.
@@ -899,7 +872,10 @@ set_optimizer_attribute(model, "max_iter", 100)
 
 See also: [`set_optimizer_attribute`](@ref), [`get_optimizer_attribute`](@ref).
 """
-function set_optimizer_attributes(model::Model, pairs::Pair...)
+function set_optimizer_attributes(
+    model::Union{Model,MOI.OptimizerWithAttributes},
+    pairs::Pair...,
+)
     for (name, value) in pairs
         set_optimizer_attribute(model, name, value)
     end
@@ -907,7 +883,10 @@ function set_optimizer_attributes(model::Model, pairs::Pair...)
 end
 
 """
-    get_optimizer_attribute(model, name::String)
+    get_optimizer_attribute(
+        model::Union{Model,MOI.OptimizerWithAttributes},
+        name::String,
+    )
 
 Return the value associated with the solver-specific attribute named `name`.
 
@@ -922,18 +901,25 @@ get_optimizer_attribute(model, "SolverSpecificAttributeName")
 
 See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
 """
-function get_optimizer_attribute(model::Model, name::String)
+function get_optimizer_attribute(
+    model::Union{Model,MOI.OptimizerWithAttributes},
+    name::String,
+)
     return get_optimizer_attribute(model, MOI.RawOptimizerAttribute(name))
 end
 
 # This method is needed for string types like String15 coming from a DataFrame.
-function get_optimizer_attribute(model::Model, name::AbstractString)
+function get_optimizer_attribute(
+    model::Union{Model,MOI.OptimizerWithAttributes},
+    name::AbstractString,
+)
     return get_optimizer_attribute(model, String(name))
 end
 
 """
     get_optimizer_attribute(
-        model::Model, attr::MOI.AbstractOptimizerAttribute
+        model::Union{Model,MOI.OptimizerWithAttributes},
+        attr::MOI.AbstractOptimizerAttribute,
     )
 
 Return the value of the solver-specific attribute `attr` in `model`.
@@ -947,7 +933,7 @@ get_optimizer_attribute(model, MOI.Silent())
 See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
 """
 function get_optimizer_attribute(
-    model::Model,
+    model::Union{Model,MOI.OptimizerWithAttributes},
     attr::MOI.AbstractOptimizerAttribute,
 )
     return MOI.get(model, attr)
