@@ -1269,19 +1269,21 @@ Complex plane object that can be used to create a complex variable in the
 ## Examples
 
 Consider the following example:
+
 ```jldoctest; setup = :(using JuMP)
 julia> model = Model();
 
 julia> @variable(model, x in ComplexPlane())
 real(x) + (0.0 + 1.0im) imag(x)
 
-julia> v = all_variables(model)
+julia> all_variables(model)
 2-element Vector{VariableRef}:
  real(x)
  imag(x)
 ```
-We see in the output of the last command that 2 real variables were created.
-The Julia variable `x` binds to an affine expressions in terms of these 2
+
+We see in the output of the last command that two real variables were created.
+The Julia variable `x` binds to an affine expression in terms of these two
 variables that parametrize the complex plane.
 """
 struct ComplexPlane end
@@ -1341,8 +1343,11 @@ function _imag(s::String)
 end
 
 _real(v::ScalarVariable) = _mapinfo(real, v)
+
 _imag(v::ScalarVariable) = _mapinfo(imag, v)
+
 _conj(v::ScalarVariable) = _mapinfo(conj, v)
+
 function _isreal(v::ScalarVariable)
     info = v.info
     return isreal(info.lower_bound) &&
@@ -1350,7 +1355,9 @@ function _isreal(v::ScalarVariable)
            isreal(info.fixed_value) &&
            isreal(info.start)
 end
+
 _is_binary(v::ScalarVariable) = v.info.binary
+
 _is_integer(v::ScalarVariable) = v.info.integer
 
 function JuMP.add_variable(
