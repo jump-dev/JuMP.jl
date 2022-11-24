@@ -4,3 +4,4 @@ src/tutorials/*/*.md
 !src/tutorials/*/introduction.md
 src/moi/
 src/tutorials/linear/transp.txt
+src/release_notes.md
