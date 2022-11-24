@@ -7,6 +7,30 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.5.0 (Unreleased)
+
+### Added
+
+  - Add [`HermitianPSDCone`](@ref) (#3109)
+  - Add support for `OptimizerWithAttributes` in [`set_optimizer_attribute`](@ref)
+    and [`get_optimizer_attribute`](@ref) (#3129)
+
+### Fixed
+
+  - Fixed error message for vectorized interval constraints (#3123)
+  - Fixed passing `AbstractString` to [`set_optimizer_attribute`](@ref) (#3127)
+
+### Other
+
+  - Update package versions used in docs (#3119) (#3133)
+  - Fixed output of diet tutorial (#3120)
+  - Explain how to use `Dates.period` in [`set_time_limit_sec`](@ref) (#3121)
+  - Update to JuliaFormatter v1.0.15 (#3130)
+  - Fixed HTTP server example in web_app.jl (#3131)
+  - Update docs to build with Documenter#master (#3094)
+  - Add tests for LinearAlgebra operations (#3132)
+  - Tidy these release notes (#3135)
+
 ## Version 1.4.0 (October 29, 2022)
 
 ### Added
