@@ -7,7 +7,7 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Version 1.5.0 (Unreleased)
+## Unreleased
 
 ### Added
 
@@ -25,22 +25,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Update package versions used in docs (#3119) (#3133)
   - Fixed output of diet tutorial (#3120)
   - Explain how to use `Dates.period` in [`set_time_limit_sec`](@ref) (#3121)
-  - Update to JuliaFormatter v1.0.15 (#3130)
-  - Fixed HTTP server example in web_app.jl (#3131)
-  - Update docs to build with Documenter#master (#3094)
-  - Add tests for LinearAlgebra operations (#3132)
+  - Update to `JuliaFormatter` v1.0.15 (#3130)
+  - Fixed `HTTP` server example in web_app.jl (#3131)
+  - Update docs to build with `Documenter#master` (#3094)
+  - Add tests for `LinearAlgebra` operations (#3132)
   - Tidy these release notes (#3135)
 
 ## Version 1.4.0 (October 29, 2022)
 
 ### Added
 
-  - Added `Containers.rowtable(x)` which converts a container into a vector of
-    `NamedTuple`s to support the Tables.jl interface. This simplifies converting
-    `DenseAxisArray` and `SparseAxisArray` objects into tabular forms such as a
-    dataframe (#3104)
-  - Added a new method to `Containers.container` so that index names are passed
-    to the container (#3088)
+  - Added [`Containers.rowtable`](@ref) which converts a container into a vector
+    of `NamedTuple`s to support the Tables.jl interface. This simplifies
+    converting [`Containers.DenseAxisArray`](@ref) and [`Containers.SparseAxisArray`](@ref)
+    objects into tabular forms such as a DataFrame (#3104)
+  - Added a new method to [`Containers.container`](@ref so that index names are
+    passed to the container (#3088)
 
 ### Fixed
 
@@ -75,7 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added a tutorial on debugging JuMP models (#3043)
   - Fixed a number of typos in the documentation (#3079) (#3083)
   - Many other small tweaks to the documentation (#3068) (#3073) (#3074) (#3075)
-    (3076) (#3077) (#3078) (#3081) (#3082) (#3084) (#3085) (#3089)
+    (#3076) (#3077) (#3078) (#3081) (#3082) (#3084) (#3085) (#3089)
 
 ## Version 1.3.0 (September 5, 2022)
 
