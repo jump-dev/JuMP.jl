@@ -78,10 +78,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   - Fixed a bug when parsing two-sided nonlinear constraints (#3045)
 
-### Other
-
-  - Add docs clarifyinng iterable sets of a singleton (#3044)
-
 ## Version 1.2.0 (August 16, 2022)
 
 ### Breaking
