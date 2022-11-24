@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     of `NamedTuple`s to support the Tables.jl interface. This simplifies
     converting [`Containers.DenseAxisArray`](@ref) and [`Containers.SparseAxisArray`](@ref)
     objects into tabular forms such as a DataFrame (#3104)
-  - Added a new method to [`Containers.container`](@ref so that index names are
+  - Added a new method to [`Containers.container`](@ref) so that index names are
     passed to the container (#3088)
 
 ### Fixed
