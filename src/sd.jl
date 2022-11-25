@@ -498,49 +498,6 @@ function reshape_vector(v::Vector{T}, shape::HermitianMatrixShape) where {T}
     return matrix
 end
 
-function _mapinfo(f::Function, v::JuMP.ScalarVariable)
-    info = v.info
-    return ScalarVariable(
-        VariableInfo(
-            info.has_lb,
-            f(info.lower_bound),
-            info.has_ub,
-            f(info.upper_bound),
-            info.has_fix,
-            f(info.fixed_value),
-            info.has_start,
-            f(info.start),
-            info.binary,
-            info.integer,
-        ),
-    )
-end
-
-function _real(s::String)
-    if isempty(s)
-        return s
-    end
-    return string("real(", s, ")")
-end
-
-function _imag(s::String)
-    if isempty(s)
-        return s
-    end
-    return string("imag(", s, ")")
-end
-
-_real(v::ScalarVariable) = _mapinfo(real, v)
-_imag(v::ScalarVariable) = _mapinfo(imag, v)
-_conj(v::ScalarVariable) = _mapinfo(conj, v)
-function _isreal(v::ScalarVariable)
-    info = v.info
-    return isreal(info.lower_bound) &&
-           isreal(info.upper_bound) &&
-           isreal(info.fixed_value) &&
-           isreal(info.start)
-end
-
 function _vectorize_complex_variables(_error::Function, matrix::Matrix)
     n = LinearAlgebra.checksquare(matrix)
     for j in 1:n
@@ -559,9 +516,6 @@ function _vectorize_complex_variables(_error::Function, matrix::Matrix)
     end
     return vectorize(matrix, HermitianMatrixShape(n))
 end
-
-_is_binary(v::ScalarVariable) = v.info.binary
-_is_integer(v::ScalarVariable) = v.info.integer
 
 function build_variable(
     _error::Function,

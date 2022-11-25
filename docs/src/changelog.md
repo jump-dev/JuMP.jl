@@ -11,7 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-  - Add [`HermitianPSDCone`](@ref) (#3109)
+  - Add support for complex-valued variables:
+    * [`HermitianPSDCone`](@ref) (#3109)
+    * [`ComplexPlane`](@ref) and [`ComplexVariable`](@ref) (#3134)
   - Add support for `OptimizerWithAttributes` in [`set_optimizer_attribute`](@ref)
     and [`get_optimizer_attribute`](@ref) (#3129)
 

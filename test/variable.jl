@@ -1077,6 +1077,39 @@ function test_Model_VariableIndex_VariableRef_fix_with_upper_bound(::Any, ::Any)
     return
 end
 
+function test_complex_variable(::Any, ::Any)
+    model = Model()
+    @variable(
+        model,
+        x in ComplexPlane(),
+        start = 5 + 6im,
+        lower_bound = 1 + 2im,
+        upper_bound = 3 + 4im
+    )
+    xr = first(x.terms).first
+    xi = collect(x.terms)[2].first
+    @test lower_bound(xr) == 1
+    @test upper_bound(xr) == 3
+    @test start_value(xr) == 5
+    @test lower_bound(xi) == 2
+    @test upper_bound(xi) == 4
+    @test start_value(xi) == 6
+    @test num_variables(model) == 2
+    v = all_variables(model)
+    @test xr == v[1]
+    @test name(v[1]) == "real(x)"
+    @test xi == v[2]
+    @test name(v[2]) == "imag(x)"
+    @test x == v[1] + v[2] * im
+    @test conj(x) == v[1] - v[2] * im
+end
+
+function test_complex_variable_errors(ModelType, ::Any)
+    model = ModelType()
+    @test_throws ErrorException @variable(model, x in ComplexPlane(), Int)
+    @test_throws ErrorException @variable(model, x in ComplexPlane(), Bin)
+end
+
 function test_Hermitian_PSD(::Any, ::Any)
     model = Model()
     @variable(model, Q[1:2, 1:2] in HermitianPSDCone())

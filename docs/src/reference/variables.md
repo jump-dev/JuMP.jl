@@ -23,6 +23,8 @@ check_belongs_to_model
 VariableNotOwned
 VariableConstrainedOnCreation
 VariablesConstrainedOnCreation
+ComplexPlane
+ComplexVariable
 ```
 
 ## Names

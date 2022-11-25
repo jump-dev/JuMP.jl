@@ -1261,6 +1261,123 @@ function _moi_add_constrained_variables(
 end
 
 """
+    ComplexPlane
+
+Complex plane object that can be used to create a complex variable in the
+[`@variable`](@ref) macro.
+
+## Examples
+
+Consider the following example:
+
+```jldoctest; setup = :(using JuMP)
+julia> model = Model();
+
+julia> @variable(model, x in ComplexPlane())
+real(x) + (0.0 + 1.0im) imag(x)
+
+julia> all_variables(model)
+2-element Vector{VariableRef}:
+ real(x)
+ imag(x)
+```
+
+We see in the output of the last command that two real variables were created.
+The Julia variable `x` binds to an affine expression in terms of these two
+variables that parametrize the complex plane.
+"""
+struct ComplexPlane end
+
+"""
+    ComplexVariable{S,T,U,V} <: AbstractVariable
+
+A struct used when adding complex variables.
+
+See also: [`ComplexPlane`](@ref).
+"""
+struct ComplexVariable{S,T,U,V} <: AbstractVariable
+    info::VariableInfo{S,T,U,V}
+end
+
+function build_variable(_error::Function, v::ScalarVariable, ::ComplexPlane)
+    if _is_binary(v) || _is_integer(v)
+        # We would then need to fix the imaginary value to zero. Let's wait to
+        # see if there is need for such complication first.
+        _error(
+            "Creation of binary or integer complex variable is not supported.",
+        )
+    end
+    return ComplexVariable(v.info)
+end
+
+function _mapinfo(f::Function, v::JuMP.ScalarVariable)
+    info = v.info
+    return ScalarVariable(
+        VariableInfo(
+            info.has_lb,
+            f(info.lower_bound),
+            info.has_ub,
+            f(info.upper_bound),
+            info.has_fix,
+            f(info.fixed_value),
+            info.has_start,
+            f(info.start),
+            info.binary,
+            info.integer,
+        ),
+    )
+end
+
+function _real(s::String)
+    if isempty(s)
+        return s
+    end
+    return string("real(", s, ")")
+end
+
+function _imag(s::String)
+    if isempty(s)
+        return s
+    end
+    return string("imag(", s, ")")
+end
+
+_real(v::ScalarVariable) = _mapinfo(real, v)
+
+_imag(v::ScalarVariable) = _mapinfo(imag, v)
+
+_conj(v::ScalarVariable) = _mapinfo(conj, v)
+
+function _isreal(v::ScalarVariable)
+    info = v.info
+    return isreal(info.lower_bound) &&
+           isreal(info.upper_bound) &&
+           isreal(info.fixed_value) &&
+           isreal(info.start)
+end
+
+_is_binary(v::ScalarVariable) = v.info.binary
+
+_is_integer(v::ScalarVariable) = v.info.integer
+
+function JuMP.add_variable(
+    model::JuMP.Model,
+    v::ComplexVariable,
+    name::String = "",
+)
+    model.is_model_dirty = true
+    var = JuMP.ScalarVariable(v.info)
+    real_part = add_variable(model, _real(var), _real(name))
+    imag_part = add_variable(model, _imag(var), _imag(name))
+    # Efficiently build `real_part + imag_part * im`
+    return GenericAffExpr{ComplexF64,JuMP.VariableRef}(
+        zero(ComplexF64),
+        real_part => one(ComplexF64),
+        imag_part => convert(ComplexF64, im),
+    )
+end
+
+"""
     reduced_cost(x::VariableRef)::Float64
 
 Return the reduced cost associated with variable `x`.
