@@ -96,12 +96,10 @@ end
 function _show_status_summary(io::IO, summary::_SolutionSummary)
     println(io, "* Status")
     println(io, "  Termination status : ", summary.termination_status)
-    println(io, "  Primal status      : ", summary.primal_status)
-    println(io, "  Dual status        : ", summary.dual_status)
-    if summary.verbose
-        println(io, "  Result count       : ", summary.result_count)
-        println(io, "  Has duals          : ", summary.has_duals)
-    end
+    println(io, "  Result count       : ", summary.result_count)
+    println(io, "  Solution #1 (default)")
+    println(io, "    Primal status    : ", summary.primal_status)
+    println(io, "    Dual status      : ", summary.dual_status)
     println(io, "  Message from the solver:")
     println(io, "  \"", summary.raw_status, "\"")
     println(io)

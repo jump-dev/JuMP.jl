@@ -43,8 +43,10 @@ julia> solution_summary(model)
 
 * Status
   Termination status : OPTIMAL
-  Primal status      : FEASIBLE_POINT
-  Dual status        : FEASIBLE_POINT
+  Result count       : 1
+  Solution #1 (default)
+    Primal status    : FEASIBLE_POINT
+    Dual status      : FEASIBLE_POINT
   Message from the solver:
   "kHighsModelStatusOptimal"
 
@@ -65,10 +67,10 @@ julia> solution_summary(model, verbose=true)
 
 * Status
   Termination status : OPTIMAL
-  Primal status      : FEASIBLE_POINT
-  Dual status        : FEASIBLE_POINT
   Result count       : 1
-  Has duals          : true
+  Solution #1 (default)
+    Primal status    : FEASIBLE_POINT
+    Dual status      : FEASIBLE_POINT
   Message from the solver:
   "kHighsModelStatusOptimal"
 

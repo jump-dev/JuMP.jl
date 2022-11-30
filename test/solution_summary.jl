@@ -26,8 +26,10 @@ function test_empty_model()
 
 * Status
   Termination status : OPTIMIZE_NOT_CALLED
-  Primal status      : NO_SOLUTION
-  Dual status        : NO_SOLUTION
+  Result count       : 0
+  Solution #1 (default)
+    Primal status    : NO_SOLUTION
+    Dual status      : NO_SOLUTION
   Message from the solver:
   "optimize not called"
 
@@ -85,8 +87,10 @@ function test_solution_summary()
 
 * Status
   Termination status : OPTIMAL
-  Primal status      : FEASIBLE_POINT
-  Dual status        : FEASIBLE_POINT
+  Result count       : 1
+  Solution #1 (default)
+    Primal status    : FEASIBLE_POINT
+    Dual status      : FEASIBLE_POINT
   Message from the solver:
   "solver specific string"
 
@@ -110,10 +114,10 @@ function test_solution_summary()
 
 * Status
   Termination status : OPTIMAL
-  Primal status      : FEASIBLE_POINT
-  Dual status        : FEASIBLE_POINT
   Result count       : 1
-  Has duals          : true
+  Solution #1 (default)
+    Primal status    : FEASIBLE_POINT
+    Dual status      : FEASIBLE_POINT
   Message from the solver:
   "solver specific string"
 
