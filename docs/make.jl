@@ -229,6 +229,11 @@ function fix_release_line(
             m.match => "## [Version $tag]($url/releases/tag/v$tag)",
         )
     end
+    # ## vX.Y.Z -> [vX.Y.Z](url/releases/tag/vX.Y.Z)
+    while (m = match(r"\#\# (v[0-9]+.[0-9]+.[0-9]+)", line)) !== nothing
+        tag = m.captures[1]
+        line = replace(line, m.match => "## [$tag]($url/releases/tag/$tag)")
+    end
     return line
 end
 
@@ -245,15 +250,16 @@ end
 # ==============================================================================
 
 function _add_moi_pages()
+    moi_dir = joinpath(@__DIR__, "src", "moi")
+    try
+        rm(moi_dir; recursive = true)
+    catch
+    end
     moi_docs = joinpath(dirname(dirname(pathof(MOI))), "docs")
-    cp(
-        joinpath(moi_docs, "src"),
-        joinpath(@__DIR__, "src", "moi");
-        force = true,
-    )
+    cp(joinpath(moi_docs, "src"), moi_dir; force = true)
     # Files in `moi_docs` are probably in read-only mode (`0o444`). Let's give
     # ourselves write permission.
-    chmod(joinpath(@__DIR__, "src", "moi"), 0o777; recursive = true)
+    chmod(moi_dir, 0o777; recursive = true)
     make = read(joinpath(moi_docs, "make.jl"), String)
     # Match from `_PAGES = [` until the start of in `# =====`
     s = strip(match(r"_PAGES = (\[.+?)\#"s, make)[1])
@@ -275,20 +281,29 @@ function _add_moi_pages()
     !!! warning
         This documentation in this section is a copy of the official
         MathOptInterface documentation available at
-        [https://jump.dev/MathOptInterface.jl/v1.10.0](https://jump.dev/MathOptInterface.jl/v1.10.0).
+        [https://jump.dev/MathOptInterface.jl/v1.11.0](https://jump.dev/MathOptInterface.jl/v1.11.0).
         It is included here to make it easier to link concepts between JuMP and
         MathOptInterface.
     """
-    index_filename = joinpath(@__DIR__, "src", "moi", "index.md")
+    index_filename = joinpath(moi_dir, "index.md")
     content = replace(read(index_filename, String), src => dest)
     write(index_filename, content)
+    open(joinpath(moi_dir, "changelog.md"), "r") do in_io
+        open(joinpath(moi_dir, "release_notes.md"), "w") do out_io
+            for line in readlines(in_io; keep = true)
+                write(
+                    out_io,
+                    fix_release_line(
+                        line,
+                        "https://github.com/jump-dev/MathOptInterface.jl",
+                    ),
+                )
+            end
+        end
+    end
     return
 end
 
-try
-    rm(joinpath(@__DIR__, "src", "moi"); recursive = true)
-catch
-end
 _add_moi_pages()
 
 # ==============================================================================
