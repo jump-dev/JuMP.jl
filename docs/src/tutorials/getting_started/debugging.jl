@@ -164,7 +164,7 @@ import HiGHS
 
 # A simple example of an infeasible model is:
 
-model = Model(HiGHS.Optimizer)
+model = Model(HiGHS.Optimizer);
 set_silent(model)
 @variable(model, x >= 0)
 @objective(model, Max, 2x + 1)
@@ -235,9 +235,9 @@ termination_status(model)
 # Another strategy to debug sources of infeasibility is the
 # [`penalty_relaxation`](@ref) function.
 #
-# The penalty relaxation modifies constraints of the form ``f(x) \\in S`` into
-# ``f(x) + y - z \\in S``, where ``y, z \\ge 0``, and then it introduces a
-# penalty term into the objective of ``a \\times (y + z)`` (if minimizing, else
+# The penalty relaxation modifies constraints of the form ``f(x) \in S`` into
+# ``f(x) + y - z \in S``, where ``y, z \ge 0``, and then it introduces a
+# penalty term into the objective of ``a \times (y + z)`` (if minimizing, else
 # ``-a``), where ``a`` is a penalty.
 
 map = penalty_relaxation(model)
@@ -286,7 +286,7 @@ end
 
 # A simple example of an unbounded model is:
 
-model = Model(HiGHS.Optimizer)
+model = Model(HiGHS.Optimizer);
 set_silent(model)
 @variable(model, x >= 0)
 @objective(model, Max, 2x + 1)
@@ -333,7 +333,7 @@ termination_status(model)
 # the variable must be less-than or equal to the expression of the objective
 # function. For example:
 
-model = Model(HiGHS.Optimizer)
+model = Model(HiGHS.Optimizer);
 set_silent(model)
 @variable(model, x >= 0)
 ## @objective(model, Max, 2x + 1)
