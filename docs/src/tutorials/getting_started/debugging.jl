@@ -250,7 +250,7 @@ map = penalty_relaxation(model)
 optimize!(model)
 termination_status(model)
 
-# Iterate over the contents of `map` to see which connstraints are violated:
+# Iterate over the contents of `map` to see which constraints are violated:
 
 for (con, penalty) in map
     violation = value(penalty)
