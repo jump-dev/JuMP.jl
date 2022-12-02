@@ -1366,7 +1366,7 @@ See [`MOI.Utilities.ScalarPenaltyRelaxation`](@ref) for details of the
 reformulation.
 
 For each constraint `ci`, the penalty passed to
-[`MoI.Utilities.ScalarPenaltyRelaxation`](@ref) is `get(penalties, ci, default)`.
+[`MOI.Utilities.ScalarPenaltyRelaxation`](@ref) is `get(penalties, ci, default)`.
 If the value is `nothing`, because `ci` does not exist in `penalties` and
 `default = nothing`, then the constraint is skipped.
 
