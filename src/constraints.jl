@@ -1423,7 +1423,6 @@ Subject to
  c1 : 2 x ≤ -1.0
  _[2] ≥ 0.0
 ```
-
 """
 function penalty_relaxation(
     model::Model,
@@ -1441,7 +1440,7 @@ function penalty_relaxation(
         MOI.Utilities.PenaltyRelaxation(moi_penalties; default = default),
     )
     return Dict(
-        ConstraintRef(model, k, ScalarShape()) => jump_function(model, v) for
+        constraint_ref_with_index(model, k) => jump_function(model, v) for
         (k, v) in map
     )
 end

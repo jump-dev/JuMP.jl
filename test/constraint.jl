@@ -1260,7 +1260,7 @@ function test_Model_penalty_relaxation_constant(::Any, ::Any)
     @test isempty(map)
     @constraint(model, c1, x <= 1)
     @constraint(model, c2, x == 0)
-    map = penalty_relaxation(model, default = 2)
+    map = penalty_relaxation(model; default = 2)
     @test length(map) == 2
     @test map[c1] isa AffExpr
     @test map[c2] isa AffExpr
