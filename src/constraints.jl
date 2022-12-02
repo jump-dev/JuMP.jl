@@ -1344,3 +1344,108 @@ function all_constraints(
     append!(ret, all_nonlinear_constraints(model))
     return ret
 end
+
+"""
+    penalty_relaxation(
+        model::Model,
+        [penalties::Dict];
+        [default::Union{Nothing,Real} = nothing,]
+    )
+
+Destructively modify the model in-place to create a penalized relaxation of the
+constraints.
+
+!!! warning
+    This is a destructive routine that modifies the model in-place. If you don't
+    want to modify the original model, use [`copy_model`](@ref) to create a copy
+    before calling [`penalty_relaxation`](@ref).
+
+## Reformulation
+
+See [`Utilities.ScalarPenaltyRelaxation`](@ref) for details of the
+reformulation.
+
+For each constraint `ci`, the penalty passed to
+[`Utilities.ScalarPenaltyRelaxation`](@ref) is `get(penalties, ci, default)`. If
+the value is `nothing`, because `ci` does not exist in `penalties` and
+`default = nothing`, then the constraint is skipped.
+
+## Return value
+
+This function returns a `Dict{ConstraintRef,AffExpr}` that maps each constraint
+index to the corresponding `y + z` as an [`AffExpr`](@ref). In an optimal
+solution, query the value of these functions to compute the violation of each
+constraint.
+
+## Relax a subset of constraints
+
+To relax a subset of constraints, pass a `penalties` dictionary and set
+`default = nothing`.
+
+## Examples
+
+```jldoctest
+julia> function new_model()
+           model = Model()
+           @variable(model, x)
+           @objective(model, Max, 2x + 1)
+           @constraint(model, c1, 2x - 1 <= -2)
+           @constraint(model, c2, 3x >= 0)
+           return model
+       end
+new_model (generic function with 1 method)
+
+julia> model_1 = new_model();
+
+julia> penalty_relaxation(model_1; default = 2.0)
+Dict{ConstraintRef{Model, C, ScalarShape} where C, AffExpr} with 2 entries:
+  c1 : 2 x - _[3] ≤ -1.0 => _[3]
+  c2 : 3 x + _[2] ≥ 0.0  => _[2]
+
+julia> print(model_1)
+Max 2 x - 2 _[2] - 2 _[3] + 1
+Subject to
+ c2 : 3 x + _[2] ≥ 0.0
+ c1 : 2 x - _[3] ≤ -1.0
+ _[2] ≥ 0.0
+ _[3] ≥ 0.0
+
+julia> model_2 = new_model();
+
+julia> penalty_relaxation(model_2, Dict(model_2[:c2] => 3.0))
+Dict{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.GreaterThan{Float64}}, ScalarShape}, AffExpr} with 1 entry:
+  c2 : 3 x + _[2] ≥ 0.0 => _[2]
+
+julia> print(model_2)
+Max 2 x - 3 _[2] + 1
+Subject to
+ c2 : 3 x + _[2] ≥ 0.0
+ c1 : 2 x ≤ -1.0
+ _[2] ≥ 0.0
+```
+
+"""
+function penalty_relaxation(
+    model::Model,
+    penalties::Dict;
+    default::Union{Nothing,Real} = nothing,
+)
+    if default !== nothing
+        default = Float64(default)
+    end
+    moi_penalties = Dict{MOI.ConstraintIndex,Float64}(
+        index(k) => Float64(v) for (k, v) in penalties
+    )
+    map = MOI.modify(
+        backend(model),
+        MOI.Utilities.PenaltyRelaxation(moi_penalties; default = default),
+    )
+    return Dict(
+        ConstraintRef(model, k, ScalarShape()) => jump_function(model, v) for
+        (k, v) in map
+    )
+end
+
+function penalty_relaxation(model::Model; default::Real = 1.0)
+    return penalty_relaxation(model, Dict(); default = default)
+end

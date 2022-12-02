@@ -168,7 +168,7 @@ model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variable(model, x >= 0)
 @objective(model, Max, 2x + 1)
-@constraint(model, 2x - 1 <= -2)
+@constraint(model, con, 2x - 1 <= -2)
 
 # because the bound says that `x >= 0`, but we can rewrite the constraint to be
 # `x <= -1/2`. When the problem is infeasible, JuMP may return one of a number
@@ -229,6 +229,51 @@ termination_status(model)
 #     In this case, HiGHS does not support computing conflicts, but other
 #     solvers such as Gurobi and CPLEX do. If the solver does support computing
 #     conflicts, read [Conflicts](@ref) for more details.
+
+# ### PenaltyRelaxation
+
+# Another strategy to debug sources of infeasibility is the
+# [`penalty_relaxation`](@ref) function.
+#
+# The penalty relaxation modifies constraints of the form ``f(x) \\in S`` into
+# ``f(x) + y - z \\in S``, where ``y, z \\ge 0``, and then it introduces a
+# penalty term into the objective of ``a \\times (y + z)`` (if minimizing, else
+# ``-a``), where ``a`` is a penalty.
+
+map = penalty_relaxation(model)
+
+# Here `map` is a dictionary which maps constraint indices to an affine
+# expression representing ``(y + z)``.
+
+# If we optimize the relaxed model, this time we get a feasible solution:
+
+optimize!(model)
+termination_status(model)
+
+# Iterate over the contents of `map` to see which connstraints are violated:
+
+for (con, penalty) in map
+    violation = value(penalty)
+    if violation > 0
+        println("Constraint `$(name(con))` is violated by $violation")
+    end
+end
+
+# Once you find a violated constraint in the relaxed problem, take a look to see
+# if there is a typo or other common mistake in that particular constraint.
+
+# Consult the docstring [`penalty_relaxation`](@ref) for information on how to
+# modify the penalty cost term `a`, either for every constraint in the model or
+# a particular subset of the constraints.
+
+# When using [`penalty_relaxation`](@ref), you should be aware that:
+#
+#  * Variable bounds and integrality restrictions are not relaxed. If the
+#    problem is still infeasible after calling [`penalty_relaxation`](@ref),
+#    check the variable bounds.
+#  * You cannot undo the penalty relaxation. If you need an unmodified model,
+#    rebuild the problem, or call [`copy_model`](@ref) before calling
+#    [`penalty_relaxation`](@ref).
 
 # ## Debugging an unbounded model
 
