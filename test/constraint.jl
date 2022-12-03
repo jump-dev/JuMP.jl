@@ -1220,14 +1220,14 @@ function test_Model_all_constraints(::Any, ::Any)
     return
 end
 
-function test_Model_penalty_relaxation_default(::Any, ::Any)
+function test_Model_penalty_relaxation!_default(::Any, ::Any)
     model = Model()
     @variable(model, x >= 0)
-    map = penalty_relaxation(model)
+    map = penalty_relaxation!(model)
     @test isempty(map)
     @constraint(model, c1, x <= 1)
     @constraint(model, c2, x == 0)
-    map = penalty_relaxation(model)
+    map = penalty_relaxation!(model)
     @test length(map) == 2
     @test map[c1] isa AffExpr
     @test map[c2] isa AffExpr
@@ -1237,13 +1237,13 @@ function test_Model_penalty_relaxation_default(::Any, ::Any)
     return
 end
 
-function test_Model_penalty_relaxation_max(::Any, ::Any)
+function test_Model_penalty_relaxation!_max(::Any, ::Any)
     model = Model()
     @variable(model, x >= 0)
     @constraint(model, c1, x <= 1)
     @constraint(model, c2, x == 0)
     @objective(model, Max, 1.0 * x + 2.5)
-    map = penalty_relaxation(model)
+    map = penalty_relaxation!(model)
     @test length(map) == 2
     @test map[c1] isa AffExpr
     @test map[c2] isa AffExpr
@@ -1253,14 +1253,14 @@ function test_Model_penalty_relaxation_max(::Any, ::Any)
     return
 end
 
-function test_Model_penalty_relaxation_constant(::Any, ::Any)
+function test_Model_penalty_relaxation!_constant(::Any, ::Any)
     model = Model()
     @variable(model, x >= 0)
-    map = penalty_relaxation(model)
+    map = penalty_relaxation!(model)
     @test isempty(map)
     @constraint(model, c1, x <= 1)
     @constraint(model, c2, x == 0)
-    map = penalty_relaxation(model; default = 2)
+    map = penalty_relaxation!(model; default = 2)
     @test length(map) == 2
     @test map[c1] isa AffExpr
     @test map[c2] isa AffExpr
@@ -1270,14 +1270,14 @@ function test_Model_penalty_relaxation_constant(::Any, ::Any)
     return
 end
 
-function test_Model_penalty_relaxation_specific(::Any, ::Any)
+function test_Model_penalty_relaxation!_specific(::Any, ::Any)
     model = Model()
     @variable(model, x >= 0)
-    map = penalty_relaxation(model)
+    map = penalty_relaxation!(model)
     @test isempty(map)
     @constraint(model, c1, x <= 1)
     @constraint(model, c2, x == 0)
-    map = penalty_relaxation(model, Dict(c1 => 3.0))
+    map = penalty_relaxation!(model, Dict(c1 => 3.0))
     @test length(map) == 1
     @test map[c1] isa AffExpr
     @test num_variables(model) == 2
@@ -1286,14 +1286,14 @@ function test_Model_penalty_relaxation_specific(::Any, ::Any)
     return
 end
 
-function test_Model_penalty_relaxation_specific_with_default(::Any, ::Any)
+function test_Model_penalty_relaxation!_specific_with_default(::Any, ::Any)
     model = Model()
     @variable(model, x >= 0)
-    map = penalty_relaxation(model)
+    map = penalty_relaxation!(model)
     @test isempty(map)
     @constraint(model, c1, x <= 1)
     @constraint(model, c2, x == 0)
-    map = penalty_relaxation(model, Dict(c1 => 3.0); default = 1)
+    map = penalty_relaxation!(model, Dict(c1 => 3.0); default = 1)
     @test length(map) == 2
     @test map[c1] isa AffExpr
     @test num_variables(model) == 4
