@@ -232,7 +232,7 @@ julia> all_variables(model)
 and a `Vector{VariableRef}-in-MOI.HermitianPositiveSemidefiniteConeTriangle`
 constraint:
 
-```jldoctest hermitian_psd_conne
+```jldoctest hermitian_psd_cone
 julia> num_constraints(model, Vector{VariableRef}, MOI.HermitianPositiveSemidefiniteConeTriangle)
 1
 ```
