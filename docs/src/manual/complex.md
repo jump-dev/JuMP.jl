@@ -229,6 +229,18 @@ julia> all_variables(model)
  imag(H[2,3])
 ```
 
+and a `Vector{VariableRef}-in-MOI.HermitianPositiveSemidefiniteConeTriangle`
+constraint:
+
+```jldoctest hermitian_psd_conne
+julia> num_constraints(model, Vector{VariableRef}, MOI.HermitianPositiveSemidefiniteConeTriangle)
+1
+```
+
+The [`MOI.HermitianPositiveSemidefiniteConeTriangle`](@ref) set can be
+efficiently bridged to [`MOI.PositiveSemidefiniteConeTriangle`](@ref), so it can
+be solved by any solver that supports PSD constraints.
+
 Each element of `H` is an affine expression with `Complex{Float64}`-valued
 coefficients:
 
