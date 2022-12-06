@@ -211,7 +211,10 @@ Base.conj(a::GenericAffExpr{<:Complex}) = map_coefficients(conj, a)
 function _map_coefs(f::Function, a::GenericAffExpr{Complex{T},V}) where {T,V}
     output = convert(GenericAffExpr{T,V}, f(a.constant))
     for (coef, var) in linear_terms(a)
-        output.terms[var] = f(coef)
+        new_coef = f(coef)
+        if !iszero(new_coef)
+            output.terms[var] = new_coef
+        end
     end
     return output
 end

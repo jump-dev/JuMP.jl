@@ -160,6 +160,14 @@ function test_complex_print()
     return
 end
 
+function test_complex_print_zeros()
+    model = Model()
+    @variable(model, x in ComplexPlane())
+    @test sprint(show, real(x)) == "real(x)"
+    @test sprint(show, imag(x)) == "imag(x)"
+    return
+end
+
 function test_complex_conj()
     model = Model()
     @variable(model, x)
