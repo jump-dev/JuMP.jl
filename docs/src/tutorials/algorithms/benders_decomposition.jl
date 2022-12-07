@@ -142,8 +142,9 @@ M = -1000;
 # !!! warning
 #     This is a basic implementation for pedagogical purposes. We haven't
 #     discussed Benders feasibility cuts, or any of the computational tricks
-#     that are required to build a performative implementation for large-scale
-#     problems.
+#     that are required to build a performant implementation for large-scale
+#     problems. See [In-place iterative method](@ref) for one improvement that
+#     helps computation time.
 
 # We start by formulating the first-stage subproblem:
 
@@ -288,3 +289,91 @@ x_optimal = value.(x)
 optimal_ret = solve_subproblem(x_optimal)
 Test.@test optimal_ret.y == [0.0, 0.0]  #src
 y_optimal = optimal_ret.y
+
+# ## In-place iterative method
+
+# Our implementation of the iterative method has a problem: every time we need
+# to solve the subproblem, we must rebuild it from scratch. This is expensive,
+# and it can be the bottleneck in the solution process. We can improve our
+# implementation by using re-using the subproblem between solves.
+
+# First, we create our first-stage problem as usual:
+
+model = Model(GLPK.Optimizer)
+@variable(model, x[1:dim_x] >= 0, Int)
+@variable(model, θ >= M)
+@objective(model, Min, c_1' * x + θ)
+print(model)
+
+# Then, instead of building the subproblem in a function, we build it once here:
+
+subproblem = Model(GLPK.Optimizer)
+@variable(subproblem, x_copy[1:dim_x])
+@variable(subproblem, y[1:dim_y] >= 0)
+@constraint(subproblem, A_1 * x_copy + A_2 * y .<= b)
+@objective(subproblem, Min, c_2' * y)
+print(subproblem)
+
+# This formulation is slighty different. We have included a copy of the x
+# variables, `x_copy`, and used `x_copy` in the left-hand side of the
+# constraints.
+
+# Our function to solve the subproblem is also slightly different. First, we
+# need to fix the value of the `x_copy` variables to the value of `x` from the
+# first-stage problem, and second, we compute the dual using the
+# [`reduced_cost`](@ref) of `x_copy`, not the dual of the linear constraints:
+
+function solve_subproblem(model, x)
+    fix.(model[:x_copy], x)
+    optimize!(model)
+    @assert termination_status(model) == OPTIMAL
+    return (
+        obj = objective_value(model),
+        y = value.(model[:y]),
+        π = reduced_cost.(model[:x_copy]),
+    )
+end
+
+# Now we're ready to iterate our in-place Benders decomposition, but this time
+# the cut computation is slightly different. Because we used
+# [`reduced_cost`](@ref) on the `x_copy` variables, the value of `π` is a valid
+# subgradient on the objective of `subproblem` with respect to `x`. Therefore,
+# we don't need to multiply the duals by `-A_1`, and so our cut uses `ret.π'`
+# instead of `-ret.π' * A_1`:
+
+println("Iteration  Lower Bound  Upper Bound          Gap")
+for k in 1:MAXIMUM_ITERATIONS
+    optimize!(model)
+    lower_bound = objective_value(model)
+    x_k = value.(x)
+    ret = solve_subproblem(subproblem, x_k)
+    upper_bound = c_1' * x_k + ret.obj
+    gap = (upper_bound - lower_bound) / upper_bound
+    print_iteration(k, lower_bound, upper_bound, gap)
+    if gap < ABSOLUTE_OPTIMALITY_GAP
+        println("Terminating with the optimal solution")
+        break
+    end
+    cut = @constraint(model, θ >= ret.obj + ret.π' * (x .- x_k))
+    @info "Adding the cut $(cut)"
+end
+
+# Finally, we can obtain the optimal solution:
+
+optimize!(model)
+Test.@test value.(x) == [0.0, 1.0]  #src
+x_optimal = value.(x)
+
+#-
+
+optimal_ret = solve_subproblem(subproblem, x_optimal)
+Test.@test optimal_ret.y == [0.0, 0.0]  #src
+y_optimal = optimal_ret.y
+
+# For larger problems, the benefit of re-using the same subproblem and not
+# needing to multiply the duals by `A_1` in the cut coefficient usually
+# outweights the cost of needing a copy of the `x` variables in the subproblem.
+
+# As a secondary benefit, because we no longer need an explicit representation
+# of `A_1` in the cut, we can build the `model` and `subproblem` formulations
+# using arbitrary JuMP syntax; they do not need to be in matrix form.

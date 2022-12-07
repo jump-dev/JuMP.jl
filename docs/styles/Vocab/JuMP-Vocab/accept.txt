@@ -81,6 +81,7 @@ rhs
 satisfiability
 scalarization(?s)
 [Ss]emi(continuous|integer|definite)
+subgradient
 subtour(?s)
 tl
 unboundedness
