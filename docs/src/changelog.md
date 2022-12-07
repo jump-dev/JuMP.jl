@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Add tests for `LinearAlgebra` operations (#3132)
   - Tidy these release notes (#3135)
   - Added documentation for [Complex number support](@ref) (#3141)
+  - Removed the "workforce scheduling" and "steelT3" tutorials (#3143)
 
 ## Version 1.4.0 (October 29, 2022)
 
