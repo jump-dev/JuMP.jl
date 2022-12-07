@@ -134,7 +134,6 @@ const _PAGES = [
             "tutorials/linear/n-queens.md",
             "tutorials/linear/lp_sensitivity.md",
             "tutorials/linear/network_flows.md",
-            "tutorials/linear/steelT3.md",
             "tutorials/linear/sudoku.md",
             "tutorials/linear/transp.md",
             "tutorials/linear/callbacks.md",
