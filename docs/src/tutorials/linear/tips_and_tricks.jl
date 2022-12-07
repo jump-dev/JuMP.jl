@@ -30,6 +30,90 @@
 
 using JuMP
 
+# ## Absolute value
+
+# To model the absolute value function ``t \ge |x|``, there are a few options.
+# In all cases, these reformulations only work if you are minimizing ``t``
+# "down" into ``|x|``. They do not work if you are trying to maximize ``|x|``.
+
+# ### Option 1
+
+# This option adds two linear inequality constraints:
+
+model = Model();
+@variable(model, x)
+@variable(model, t)
+@constraint(model, t >= x)
+@constraint(model, t >= -x)
+
+# ### Option 2
+
+# This option uses two non-negative variables and forms expressions for ``x``
+# and ``t``:
+
+model = Model();
+@variable(model, z[1:2] >= 0)
+@expression(model, t, z[1] + z[2])
+@expression(model, x, z[1] - z[2])
+
+# ### Option 3
+
+# This option uses [`MOI.NormOneCone`](@ref) and lets JuMP choose the
+# reformulation:
+
+model = Model();
+@variable(model, x)
+@variable(model, t)
+@constraint(model, [t; x] in MOI.NormOneCone(2))
+
+# ## L1-norm
+
+# To model ``\min ||x||_1``, that is, ``\min \sum\limits_i |x_i|``, use the
+# [`MOI.NormOneCone`](@ref):
+
+model = Model();
+@variable(model, x[1:3])
+@variable(model, t)
+@constraint(model, [t; x] in MOI.NormOneCone(1 + length(x)))
+@objective(model, Min, t)
+
+# ## Infinity-norm
+
+# To model ``\min ||x||_\infty``, that is, ``\min \max\limits_i |x_i|``, use the
+# [`MOI.NormInfinityCone`](@ref):
+
+model = Model();
+@variable(model, x[1:3])
+@variable(model, t)
+@constraint(model, [t; x] in MOI.NormInfinityCone(1 + length(x)))
+@objective(model, Min, t)
+
+# ## Max
+
+# To model ``t \ge \max\{x, y\}``, do:
+
+model = Model();
+@variable(model, t)
+@variable(model, x)
+@variable(model, y)
+@constraint(model, t >= x)
+@constraint(model, t >= y)
+
+# This reformulation does not work for ``t \ge \min\{x, y\}``.
+
+# ## Max
+
+# To model ``t \le \min\{x, y\}``, do:
+
+model = Model();
+@variable(model, t)
+@variable(model, x)
+@variable(model, y)
+@constraint(model, t <= x)
+@constraint(model, t <= y)
+
+# This reformulation does not work for ``t \le \max\{x, y\}``.
+
 # ## Boolean operators
 
 # Binary variables can be used to construct logical operators. Here are some
@@ -39,7 +123,7 @@ using JuMP
 
 # $$x_3 = x_1 \lor x_2$$
 
-model = Model()
+model = Model();
 @variable(model, x[1:3], Bin)
 @constraints(model, begin
     x[1] <= x[3]
@@ -51,7 +135,7 @@ end)
 
 # $$x_3 = x_1 \land x_2$$
 
-model = Model()
+model = Model();
 @variable(model, x[1:3], Bin)
 @constraints(model, begin
     x[3] <= x[1]
@@ -63,7 +147,7 @@ end)
 
 # $$x_1 \neg x_2$$
 
-model = Model()
+model = Model();
 @variable(model, x[1:2], Bin)
 @constraint(model, x[1] == 1 - x[2])
 
@@ -71,7 +155,7 @@ model = Model()
 
 # $$x_1 \implies x_2$$
 
-model = Model()
+model = Model();
 @variable(model, x[1:2], Bin)
 @constraint(model, x[1] <= x[2])
 
@@ -89,7 +173,7 @@ model = Model()
 
 # **Example** Either $x_1 \leq 1$ or $x_2 \leq 2$.
 
-model = Model()
+model = Model();
 @variable(model, x[1:2])
 @variable(model, y, Bin)
 M = 100
@@ -118,14 +202,14 @@ M = 100
 
 # **Example** $x_1 + x_2 \leq 1$ if $z = 1$.
 
-model = Model()
+model = Model();
 @variable(model, x[1:2])
 @variable(model, z, Bin)
 @constraint(model, z => {sum(x) <= 1})
 
 # **Example** $x_1 + x_2 \leq 1$ if $z = 0$.
 
-model = Model()
+model = Model();
 @variable(model, x[1:2])
 @variable(model, z, Bin)
 @constraint(model, !z => {sum(x) <= 1})
@@ -137,7 +221,7 @@ model = Model()
 
 # **Example** $x_1 + x_2 \leq 1$ if $z = 1$.
 
-model = Model()
+model = Model();
 @variable(model, x[1:2])
 @variable(model, z, Bin)
 M = 100
@@ -145,7 +229,7 @@ M = 100
 
 # **Example** $x_1 + x_2 \leq 1$ if $z = 0$.
 
-model = Model()
+model = Model();
 @variable(model, x[1:2])
 @variable(model, z, Bin)
 M = 100
@@ -169,7 +253,7 @@ M = 100
 
 # **Example** $$x \in \{0\}\cup [1, 2]$$
 
-model = Model()
+model = Model();
 @variable(model, x in MOI.Semicontinuous(1.0, 2.0))
 
 # ## Semi-integer variables
@@ -178,7 +262,7 @@ model = Model()
 # bounds $[l,u]$ and can also assume the value zero:
 # $$x \in \{0\} \cup [l, u] \cap \mathbb{Z}.$$
 
-model = Model()
+model = Model();
 @variable(model, x in MOI.Semiinteger(5.0, 10.0))
 
 # ## Special Ordered Sets of Type I
@@ -190,7 +274,7 @@ model = Model()
 # variables. In other words, we have to choose at most one from a set of
 # possibilities.
 
-model = Model()
+model = Model();
 @variable(model, x[1:3], Bin)
 @constraint(model, x in SOS1())
 
@@ -208,7 +292,7 @@ model = Model()
 # at most two can be non-zero, and if two are non-zero these must be consecutive
 # in their ordering.
 
-model = Model()
+model = Model();
 @variable(model, x[1:3])
 @constraint(model, x in SOS2([3.0, 1.0, 2.0]))
 
@@ -234,7 +318,7 @@ ŷ = x̂ .^ 2
 # as convex combinations of `x̂` and `ŷ`.
 
 N = length(x̂)
-model = Model()
+model = Model();
 @variable(model, -1 <= x <= 2)
 @variable(model, y)
 @variable(model, 0 <= λ[1:N] <= 1)
