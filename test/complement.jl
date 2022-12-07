@@ -31,7 +31,7 @@ function test_scalar_complements()
     return
 end
 
-function test_scalar_ ⟂ ()
+function test_scalar_perp()
     model = Model()
     @variable(model, x >= 0)
     @variable(model, y >= 0)
@@ -52,7 +52,7 @@ function test_scalar_error_x_F()
         ),
         @constraint(model, x ⟂ 2x - 1)
     )
-    return returnn
+    return
 end
 
 function test_scalar_error_F_F()
@@ -78,7 +78,7 @@ function test_vector_complements()
     return
 end
 
-function test_vector_ ⟂ ()
+function test_vector_perp()
     model = Model()
     @variable(model, x[1:2] >= 0)
     @variable(model, y[1:2] >= 0)
@@ -138,7 +138,7 @@ function test_sparse_complements()
     return
 end
 
-function test_sparse_ ⟂ ()
+function test_sparse_perp()
     model = Model()
     @variable(model, x[i = 1:3; isodd(i)] >= 0)
     @constraint(model, c, 2x .- 1 ⟂ x)
