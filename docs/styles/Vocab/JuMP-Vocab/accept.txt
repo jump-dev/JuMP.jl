@@ -41,6 +41,7 @@ missingstring
 multiline
 namespace
 param
+performant
 [Pp]recompil(ation|(e(?d)))
 Printf
 preprint
