@@ -41,6 +41,7 @@ missingstring
 multiline
 namespace
 param
+performant
 [Pp]recompil(ation|(e(?d)))
 Printf
 preprint
@@ -81,6 +82,7 @@ rhs
 satisfiability
 scalarization(?s)
 [Ss]emi(continuous|integer|definite)
+subgradient
 subtour(?s)
 tl
 unboundedness
