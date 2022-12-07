@@ -7,7 +7,7 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v1.5.0 (December 8, 2022)
 
 ### Added
 
@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
-  - Update package versions used in docs (#3119) (#3133)
+  - Update package versions used in docs (#3119) (#3133) (#3139)
   - Fixed output of diet tutorial (#3120)
   - Explain how to use `Dates.period` in [`set_time_limit_sec`](@ref) (#3121)
   - Update to `JuliaFormatter` v1.0.15 (#3130)
@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Update docs to build with `Documenter#master` (#3094)
   - Add tests for `LinearAlgebra` operations (#3132)
   - Tidy these release notes (#3135)
+  - Added documentation for [Complex number support](@ref) (#3141)
+  - Removed the "workforce scheduling" and "steelT3" tutorials (#3143)
 
 ## Version 1.4.0 (October 29, 2022)
 
