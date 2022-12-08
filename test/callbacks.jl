@@ -3,12 +3,25 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+module TestCallbacks
+
 using JuMP
 using Test
 
+function runtests()
+    for name in names(@__MODULE__; all = true)
+        if startswith("$(name)", "test_")
+            @testset "$(name)" begin
+                getfield(@__MODULE__, name)()
+            end
+        end
+    end
+    return
+end
+
 struct DummyCallbackData end
 
-@testset "LazyConstraint" begin
+function test_LazyConstraint()
     mock = MOI.Utilities.MockOptimizer(
         MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
     )
@@ -28,9 +41,10 @@ struct DummyCallbackData end
     @test length(c[1][1].terms) == 1
     @test c[1][1].terms[1].coefficient == 1.0
     @test c[1][2] == MOI.LessThan(2.0)
+    return
 end
 
-@testset "UserCut" begin
+function test_UserCut()
     mock = MOI.Utilities.MockOptimizer(
         MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
     )
@@ -43,9 +57,10 @@ end
     @test length(c) == 1
     @test c[1][1] ≈ moi_function(1.0 * x)
     @test c[1][2] == MOI.LessThan(2.0)
+    return
 end
 
-@testset "HeuristicSolution" begin
+function test_HeuristicSolution()
     mock = MOI.Utilities.MockOptimizer(
         MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
     )
@@ -65,9 +80,10 @@ end
     @test length(c) == 2
     @test c[2][1] == [index(x)]
     @test c[2][2] == [1.0]
+    return
 end
 
-@testset "callback_value" begin
+function test_callback_value()
     mock = MOI.Utilities.MockOptimizer(
         MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
     )
@@ -87,9 +103,10 @@ end
     @test callback_value(cb, expr) == 2
     quad_expr = expr^2
     @test callback_value(cb, quad_expr) == 4
+    return
 end
 
-@testset "callback_node_status" begin
+function test_callback_node_status()
     mock = MOI.Utilities.MockOptimizer(
         MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
     )
@@ -109,4 +126,9 @@ end
     )
     optimize!(model)
     @test callback_node_status(cb, model) == MOI.CALLBACK_NODE_STATUS_INTEGER
+    return
 end
+
+end  # module
+
+TestCallbacks.runtests()
