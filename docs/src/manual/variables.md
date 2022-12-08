@@ -608,6 +608,20 @@ julia> start_value(y)
 2.0
 ```
 
+The `start` keyword argument can depend on the indices of a variable container:
+
+```jldoctest; setup=:(model=Model())
+julia> @variable(model, z[i = 1:2], start = i^2)
+2-element Vector{VariableRef}:
+ z[1]
+ z[2]
+
+julia> start_value.(z)
+2-element Vector{Float64}:
+ 1.0
+ 4.0
+```
+
 !!! warning
     Some solvers do not support start values. If a solver does not support start
     values, an `MathOptInterface.UnsupportedAttribute{MathOptInterface.VariablePrimalStart}`
