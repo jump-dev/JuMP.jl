@@ -1346,7 +1346,7 @@ function all_constraints(
 end
 
 """
-    penalty_relaxation!(
+    relax_with_penalty!(
         model::Model,
         [penalties::Dict{ConstraintRef,Float64}];
         [default::Union{Nothing,Real} = nothing,]
@@ -1358,7 +1358,7 @@ constraints.
 !!! warning
     This is a destructive routine that modifies the model in-place. If you don't
     want to modify the original model, use [`copy_model`](@ref) to create a copy
-    before calling [`penalty_relaxation!`](@ref).
+    before calling [`relax_with_penalty!`](@ref).
 
 ## Reformulation
 
@@ -1397,7 +1397,7 @@ new_model (generic function with 1 method)
 
 julia> model_1 = new_model();
 
-julia> penalty_relaxation!(model_1; default = 2.0)
+julia> relax_with_penalty!(model_1; default = 2.0)
 Dict{ConstraintRef{Model, C, ScalarShape} where C, AffExpr} with 2 entries:
   c1 : 2 x - _[3] ≤ -1.0 => _[3]
   c2 : 3 x + _[2] ≥ 0.0  => _[2]
@@ -1412,7 +1412,7 @@ Subject to
 
 julia> model_2 = new_model();
 
-julia> penalty_relaxation!(model_2, Dict(model_2[:c2] => 3.0))
+julia> relax_with_penalty!(model_2, Dict(model_2[:c2] => 3.0))
 Dict{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.GreaterThan{Float64}}, ScalarShape}, AffExpr} with 1 entry:
   c2 : 3 x + _[2] ≥ 0.0 => _[2]
 
@@ -1424,7 +1424,7 @@ Subject to
  _[2] ≥ 0.0
 ```
 """
-function penalty_relaxation!(
+function relax_with_penalty!(
     model::Model,
     penalties::Dict;
     default::Union{Nothing,Real} = nothing,
@@ -1445,6 +1445,6 @@ function penalty_relaxation!(
     )
 end
 
-function penalty_relaxation!(model::Model; default::Real = 1.0)
-    return penalty_relaxation!(model, Dict(); default = default)
+function relax_with_penalty!(model::Model; default::Real = 1.0)
+    return relax_with_penalty!(model, Dict(); default = default)
 end

@@ -230,17 +230,17 @@ termination_status(model)
 #     solvers such as Gurobi and CPLEX do. If the solver does support computing
 #     conflicts, read [Conflicts](@ref) for more details.
 
-# ### PenaltyRelaxation
+# ### Penalty relaxation
 
 # Another strategy to debug sources of infeasibility is the
-# [`penalty_relaxation!`](@ref) function.
+# [`relax_with_penalty!`](@ref) function.
 #
 # The penalty relaxation modifies constraints of the form ``f(x) \in S`` into
 # ``f(x) + y - z \in S``, where ``y, z \ge 0``, and then it introduces a
 # penalty term into the objective of ``a \times (y + z)`` (if minimizing, else
 # ``-a``), where ``a`` is a penalty.
 
-map = penalty_relaxation!(model)
+map = relax_with_penalty!(model)
 
 # Here `map` is a dictionary which maps constraint indices to an affine
 # expression representing ``(y + z)``.
@@ -262,18 +262,18 @@ end
 # Once you find a violated constraint in the relaxed problem, take a look to see
 # if there is a typo or other common mistake in that particular constraint.
 
-# Consult the docstring [`penalty_relaxation!`](@ref) for information on how to
+# Consult the docstring [`relax_with_penalty!`](@ref) for information on how to
 # modify the penalty cost term `a`, either for every constraint in the model or
 # a particular subset of the constraints.
 
-# When using [`penalty_relaxation!`](@ref), you should be aware that:
+# When using [`relax_with_penalty!`](@ref), you should be aware that:
 #
 #  * Variable bounds and integrality restrictions are not relaxed. If the
-#    problem is still infeasible after calling [`penalty_relaxation!`](@ref),
+#    problem is still infeasible after calling [`relax_with_penalty!`](@ref),
 #    check the variable bounds.
 #  * You cannot undo the penalty relaxation. If you need an unmodified model,
 #    rebuild the problem, or call [`copy_model`](@ref) before calling
-#    [`penalty_relaxation!`](@ref).
+#    [`relax_with_penalty!`](@ref).
 
 # ## Debugging an unbounded model
 
