@@ -151,7 +151,6 @@ function test_solution_summary()
 
 * Candidate solution
   Objective value      : -0.00000e+00
-
 """
 
     summary = solution_summary(model; result = 2, verbose = true)
@@ -169,7 +168,6 @@ function test_solution_summary()
   Primal solution :
     x : 0.00000e+00
     y : 0.00000e+00
-
 """
 
     summary = solution_summary(model; result = 3)
@@ -183,7 +181,6 @@ function test_solution_summary()
   Dual status        : NO_SOLUTION
 
 * Candidate solution
-
 """
     return
 end

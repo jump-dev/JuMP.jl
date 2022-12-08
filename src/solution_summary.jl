@@ -165,11 +165,11 @@ function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
             )
         end
     end
-    println(io)
     return
 end
 
 function _show_work_counters_summary(io::IO, summary::_SolutionSummary)
+    println(io)
     println(io, "* Work counters")
     _print_if_not_missing(io, "  Solve time (sec)   : ", summary.solve_time)
     _print_if_not_missing(
