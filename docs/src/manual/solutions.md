@@ -35,18 +35,18 @@ Subject to
 
 ## Solutions summary
 
-[`solution_summary`](@ref) can be used for checking the summary of the optimization solutions.
+[`solution_summary`](@ref) can be used for checking the summary of the
+optimization solutions.
 
 ```jldoctest solutions; filter=r"[0-9]+\.[0-9]+e[\+\-][0-9]+"
 julia> solution_summary(model)
 * Solver : HiGHS
 
 * Status
+  Result             : 1 of 1
   Termination status : OPTIMAL
-  Result count       : 1
-  Solution #1 (default)
-    Primal status    : FEASIBLE_POINT
-    Dual status      : FEASIBLE_POINT
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
   Message from the solver:
   "kHighsModelStatusOptimal"
 
@@ -62,15 +62,14 @@ julia> solution_summary(model)
   Barrier iterations : 0
   Node count         : -1
 
-julia> solution_summary(model, verbose=true)
+julia> solution_summary(model; verbose = true)
 * Solver : HiGHS
 
 * Status
+  Result             : 1 of 1
   Termination status : OPTIMAL
-  Result count       : 1
-  Solution #1 (default)
-    Primal status    : FEASIBLE_POINT
-    Dual status      : FEASIBLE_POINT
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
   Message from the solver:
   "kHighsModelStatusOptimal"
 
@@ -535,9 +534,10 @@ end
 Some solvers support returning multiple solutions. You can check how many
 solutions are available to query using [`result_count`](@ref).
 
-Functions for querying the solutions, for example, [`primal_status`](@ref) and
-[`value`](@ref), all take an additional keyword argument `result` which can be
-used to specify which result to return.
+Functions for querying the solutions, for example, [`primal_status`](@ref),
+[`dual_status`](@ref), [`value`](@ref), [`dual`](@ref), and [`solution_summary`](@ref)
+all take an additional keyword argument `result` which can be used to specify
+which result to return.
 
 !!! warning
     Even if [`termination_status`](@ref) is `OPTIMAL`, some of the returned
@@ -560,6 +560,7 @@ end
 an_optimal_solution = value.(x; result = 1)
 optimal_objective = objective_value(model; result = 1)
 for i in 2:result_count(model)
+    print(solution_summary(model; result = i))
     @assert has_values(model; result = i)
     println("Solution $(i) = ", value.(x; result = i))
     obj = objective_value(model; result = i)
