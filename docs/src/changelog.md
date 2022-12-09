@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+ - Added a `result` keyword argument to [`solution_summary`] to allow
+   summarizing models with multiple solutions (#3138)
+
 ### Other
 
  - Added Benders tutorial with in-place resolves (#3145)
