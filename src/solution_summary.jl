@@ -103,16 +103,8 @@ end
 
 function _show_status_summary(io::IO, summary::_SolutionSummary)
     println(io, "* Status")
-    println(
-        io,
-        "  Result             : ",
-        summary.result,
-        " of ",
-        summary.result_count,
-    )
+    println(io, "  Result count       : ", summary.result_count)
     println(io, "  Termination status : ", summary.termination_status)
-    println(io, "  Primal status      : ", summary.primal_status)
-    println(io, "  Dual status        : ", summary.dual_status)
     if summary.result == 1
         println(io, "  Message from the solver:")
         println(io, "  \"", summary.raw_status, "\"")
@@ -122,21 +114,23 @@ function _show_status_summary(io::IO, summary::_SolutionSummary)
 end
 
 function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
-    println(io, "* Candidate solution")
+    println(io, "* Candidate solution (result #$(summary.result))")
+    println(io, "  Primal status      : ", summary.primal_status)
+    println(io, "  Dual status        : ", summary.dual_status)
     _print_if_not_missing(
         io,
-        "  Objective value      : ",
+        "  Objective value    : ",
         summary.objective_value,
     )
     if summary.result == 1
         _print_if_not_missing(
             io,
-            "  Objective bound      : ",
+            "  Objective bound    : ",
             summary.objective_bound,
         )
         _print_if_not_missing(
             io,
-            "  Relative gap         : ",
+            "  Relative gap       : ",
             summary.relative_gap,
         )
     end

@@ -25,14 +25,14 @@ function test_empty_model()
 * Solver : No optimizer attached.
 
 * Status
-  Result             : 1 of 0
+  Result count       : 0
   Termination status : OPTIMIZE_NOT_CALLED
-  Primal status      : NO_SOLUTION
-  Dual status        : NO_SOLUTION
   Message from the solver:
   "optimize not called"
 
-* Candidate solution
+* Candidate solution (result #1)
+  Primal status      : NO_SOLUTION
+  Dual status        : NO_SOLUTION
 
 * Work counters
 """
@@ -90,17 +90,17 @@ function test_solution_summary()
 * Solver : Mock
 
 * Status
-  Result             : 1 of 2
+  Result count       : 2
   Termination status : OPTIMAL
-  Primal status      : FEASIBLE_POINT
-  Dual status        : FEASIBLE_POINT
   Message from the solver:
   "solver specific string"
 
-* Candidate solution
-  Objective value      : -1.00000e+00
-  Objective bound      : -3.00000e+00
-  Relative gap         : 6.66667e-01
+* Candidate solution (result #1)
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Objective value    : -1.00000e+00
+  Objective bound    : -3.00000e+00
+  Relative gap       : 6.66667e-01
   Dual objective value : -1.00000e+00
 
 * Work counters
@@ -115,17 +115,17 @@ function test_solution_summary()
 * Solver : Mock
 
 * Status
-  Result             : 1 of 2
+  Result count       : 2
   Termination status : OPTIMAL
-  Primal status      : FEASIBLE_POINT
-  Dual status        : FEASIBLE_POINT
   Message from the solver:
   "solver specific string"
 
-* Candidate solution
-  Objective value      : -1.00000e+00
-  Objective bound      : -3.00000e+00
-  Relative gap         : 6.66667e-01
+* Candidate solution (result #1)
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Objective value    : -1.00000e+00
+  Objective bound    : -3.00000e+00
+  Relative gap       : 6.66667e-01
   Dual objective value : -1.00000e+00
   Primal solution :
     x : 1.00000e+00
@@ -144,13 +144,13 @@ function test_solution_summary()
 * Solver : Mock
 
 * Status
-  Result             : 2 of 2
+  Result count       : 2
   Termination status : OPTIMAL
+
+* Candidate solution (result #2)
   Primal status      : FEASIBLE_POINT
   Dual status        : NO_SOLUTION
-
-* Candidate solution
-  Objective value      : -0.00000e+00
+  Objective value    : -0.00000e+00
 """
 
     summary = solution_summary(model; result = 2, verbose = true)
@@ -158,13 +158,13 @@ function test_solution_summary()
 * Solver : Mock
 
 * Status
-  Result             : 2 of 2
+  Result count       : 2
   Termination status : OPTIMAL
+
+* Candidate solution (result #2)
   Primal status      : FEASIBLE_POINT
   Dual status        : NO_SOLUTION
-
-* Candidate solution
-  Objective value      : -0.00000e+00
+  Objective value    : -0.00000e+00
   Primal solution :
     x : 0.00000e+00
     y : 0.00000e+00
@@ -175,12 +175,12 @@ function test_solution_summary()
 * Solver : Mock
 
 * Status
-  Result             : 3 of 2
+  Result count       : 2
   Termination status : OPTIMAL
+
+* Candidate solution (result #3)
   Primal status      : NO_SOLUTION
   Dual status        : NO_SOLUTION
-
-* Candidate solution
 """
     return
 end

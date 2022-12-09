@@ -43,17 +43,17 @@ julia> solution_summary(model)
 * Solver : HiGHS
 
 * Status
-  Result             : 1 of 1
+  Result count       : 1
   Termination status : OPTIMAL
-  Primal status      : FEASIBLE_POINT
-  Dual status        : FEASIBLE_POINT
   Message from the solver:
   "kHighsModelStatusOptimal"
 
-* Candidate solution
-  Objective value      : -2.05143e+02
-  Objective bound      : -0.00000e+00
-  Relative gap         : Inf
+* Candidate solution (result #1)
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Objective value    : -2.05143e+02
+  Objective bound    : -0.00000e+00
+  Relative gap       : Inf
   Dual objective value : -2.05143e+02
 
 * Work counters
@@ -66,17 +66,17 @@ julia> solution_summary(model; verbose = true)
 * Solver : HiGHS
 
 * Status
-  Result             : 1 of 1
+  Result count       : 1
   Termination status : OPTIMAL
-  Primal status      : FEASIBLE_POINT
-  Dual status        : FEASIBLE_POINT
   Message from the solver:
   "kHighsModelStatusOptimal"
 
-* Candidate solution
-  Objective value      : -2.05143e+02
-  Objective bound      : -0.00000e+00
-  Relative gap         : Inf
+* Candidate solution (result #1)
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Objective value    : -2.05143e+02
+  Objective bound    : -0.00000e+00
+  Relative gap       : Inf
   Dual objective value : -2.05143e+02
   Primal solution :
     x : 1.54286e+01
