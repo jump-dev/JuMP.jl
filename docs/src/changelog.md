@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+ - Add [`relax_with_penalty!`](@ref), which is a useful tool when debugging
+   infeasible models (#3140)
+
 ### Other
 
  - Added Benders tutorial with in-place resolves (#3145)
