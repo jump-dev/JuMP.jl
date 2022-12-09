@@ -25,13 +25,14 @@ function test_empty_model()
 * Solver : No optimizer attached.
 
 * Status
+  Result count       : 0
   Termination status : OPTIMIZE_NOT_CALLED
-  Primal status      : NO_SOLUTION
-  Dual status        : NO_SOLUTION
   Message from the solver:
   "optimize not called"
 
-* Candidate solution
+* Candidate solution (result #1)
+  Primal status      : NO_SOLUTION
+  Dual status        : NO_SOLUTION
 
 * Work counters
 """
@@ -52,48 +53,54 @@ function test_solution_summary()
         ),
     )
     optimize!(model)
-    mockoptimizer = JuMP.unsafe_backend(model)
-    MOI.set(mockoptimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
-    MOI.set(mockoptimizer, MOI.RawStatusString(), "solver specific string")
-    MOI.set(mockoptimizer, MOI.ObjectiveValue(), -1.0)
-    MOI.set(mockoptimizer, MOI.ObjectiveBound(), -3.0)
-    MOI.set(mockoptimizer, MOI.RelativeGap(), abs((-3 - -1) / -3))
-    MOI.set(mockoptimizer, MOI.ResultCount(), 1)
-    MOI.set(mockoptimizer, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(mockoptimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
-    MOI.set(mockoptimizer, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
-    MOI.set(mockoptimizer, MOI.ConstraintDual(), JuMP.optimizer_index(c), -1.0)
+    mock = JuMP.unsafe_backend(model)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.RawStatusString(), "solver specific string")
+    MOI.set(mock, MOI.ObjectiveValue(1), -1.0)
+    MOI.set(mock, MOI.ObjectiveValue(2), -0.0)
+    MOI.set(mock, MOI.ObjectiveBound(), -3.0)
+    MOI.set(mock, MOI.RelativeGap(), abs((-3 - -1) / -3))
+    MOI.set(mock, MOI.ResultCount(), 2)
+    MOI.set(mock, MOI.PrimalStatus(1), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.DualStatus(1), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.VariablePrimal(1), JuMP.optimizer_index(x), 1.0)
+    MOI.set(mock, MOI.VariablePrimal(1), JuMP.optimizer_index(y), 0.0)
+    MOI.set(mock, MOI.ConstraintDual(1), JuMP.optimizer_index(c), -1.0)
     MOI.set(
-        mockoptimizer,
+        mock,
         MOI.ConstraintDual(),
         JuMP.optimizer_index(JuMP.UpperBoundRef(x)),
         0.0,
     )
     MOI.set(
-        mockoptimizer,
+        mock,
         MOI.ConstraintDual(),
         JuMP.optimizer_index(JuMP.LowerBoundRef(y)),
         1.0,
     )
-    MOI.set(mockoptimizer, MOI.SimplexIterations(), Int64(3))
-    MOI.set(mockoptimizer, MOI.BarrierIterations(), Int64(2))
-    MOI.set(mockoptimizer, MOI.NodeCount(), Int64(1))
-    MOI.set(mockoptimizer, MOI.SolveTimeSec(), 5.0)
+    MOI.set(mock, MOI.PrimalStatus(2), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.DualStatus(2), MOI.NO_SOLUTION)
+    MOI.set(mock, MOI.VariablePrimal(2), JuMP.optimizer_index(x), 0.0)
+    MOI.set(mock, MOI.VariablePrimal(2), JuMP.optimizer_index(y), 0.0)
+    MOI.set(mock, MOI.SimplexIterations(), Int64(3))
+    MOI.set(mock, MOI.BarrierIterations(), Int64(2))
+    MOI.set(mock, MOI.NodeCount(), Int64(1))
+    MOI.set(mock, MOI.SolveTimeSec(), 5.0)
     @test sprint(show, solution_summary(model)) == """
 * Solver : Mock
 
 * Status
+  Result count       : 2
   Termination status : OPTIMAL
-  Primal status      : FEASIBLE_POINT
-  Dual status        : FEASIBLE_POINT
   Message from the solver:
   "solver specific string"
 
-* Candidate solution
-  Objective value      : -1.00000e+00
-  Objective bound      : -3.00000e+00
-  Relative gap         : 6.66667e-01
+* Candidate solution (result #1)
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Objective value    : -1.00000e+00
+  Objective bound    : -3.00000e+00
+  Relative gap       : 6.66667e-01
   Dual objective value : -1.00000e+00
 
 * Work counters
@@ -102,25 +109,23 @@ function test_solution_summary()
   Barrier iterations : 2
   Node count         : 1
 """
-    @test sprint(
-        (io, model) -> show(io, solution_summary(model; verbose = true)),
-        model,
-    ) == """
+
+    summary = solution_summary(model; verbose = true)
+    @test sprint(show, summary) == """
 * Solver : Mock
 
 * Status
+  Result count       : 2
   Termination status : OPTIMAL
-  Primal status      : FEASIBLE_POINT
-  Dual status        : FEASIBLE_POINT
-  Result count       : 1
-  Has duals          : true
   Message from the solver:
   "solver specific string"
 
-* Candidate solution
-  Objective value      : -1.00000e+00
-  Objective bound      : -3.00000e+00
-  Relative gap         : 6.66667e-01
+* Candidate solution (result #1)
+  Primal status      : FEASIBLE_POINT
+  Dual status        : FEASIBLE_POINT
+  Objective value    : -1.00000e+00
+  Objective bound    : -3.00000e+00
+  Relative gap       : 6.66667e-01
   Dual objective value : -1.00000e+00
   Primal solution :
     x : 1.00000e+00
@@ -132,6 +137,50 @@ function test_solution_summary()
   Simplex iterations : 3
   Barrier iterations : 2
   Node count         : 1
+"""
+
+    summary = solution_summary(model; result = 2)
+    @test sprint(show, summary) == """
+* Solver : Mock
+
+* Status
+  Result count       : 2
+  Termination status : OPTIMAL
+
+* Candidate solution (result #2)
+  Primal status      : FEASIBLE_POINT
+  Dual status        : NO_SOLUTION
+  Objective value    : -0.00000e+00
+"""
+
+    summary = solution_summary(model; result = 2, verbose = true)
+    @test sprint(show, summary) == """
+* Solver : Mock
+
+* Status
+  Result count       : 2
+  Termination status : OPTIMAL
+
+* Candidate solution (result #2)
+  Primal status      : FEASIBLE_POINT
+  Dual status        : NO_SOLUTION
+  Objective value    : -0.00000e+00
+  Primal solution :
+    x : 0.00000e+00
+    y : 0.00000e+00
+"""
+
+    summary = solution_summary(model; result = 3)
+    @test sprint(show, summary) == """
+* Solver : Mock
+
+* Status
+  Result count       : 2
+  Termination status : OPTIMAL
+
+* Candidate solution (result #3)
+  Primal status      : NO_SOLUTION
+  Dual status        : NO_SOLUTION
 """
     return
 end

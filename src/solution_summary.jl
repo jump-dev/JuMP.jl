@@ -6,6 +6,7 @@
 import Printf
 
 struct _SolutionSummary
+    result::Int
     verbose::Bool
     solver::String
     # Status
@@ -31,9 +32,10 @@ struct _SolutionSummary
 end
 
 """
-    solution_summary(model::Model; verbose::Bool = false)
+    solution_summary(model::Model; result::Int = 1, verbose::Bool = false)
 
-Return a struct that can be used print a summary of the solution.
+Return a struct that can be used print a summary of the solution in result
+`result`.
 
 If `verbose=true`, write out the primal solution for every variable and the
 dual solution for every constraint, excluding those with empty names.
@@ -54,23 +56,27 @@ function foo(model)
 end
 ```
 """
-function solution_summary(model::Model; verbose::Bool = false)
+function solution_summary(model::Model; result::Int = 1, verbose::Bool = false)
+    num_results = result_count(model)
+    has_primal = has_values(model; result = result)
+    has_dual = has_duals(model; result = result)
     return _SolutionSummary(
+        result,
         verbose,
         solver_name(model),
         termination_status(model),
-        primal_status(model),
-        dual_status(model),
+        primal_status(model; result = result),
+        dual_status(model; result = result),
         raw_status(model),
-        result_count(model),
-        has_values(model),
-        has_duals(model),
-        _try_get(objective_value, model),
+        num_results,
+        has_primal,
+        has_dual,
+        _try_get(m -> objective_value(m; result = result), model),
         _try_get(objective_bound, model),
         _try_get(relative_gap, model),
-        _try_get(dual_objective_value, model),
-        verbose ? _get_solution_dict(model) : missing,
-        verbose ? _get_constraint_dict(model) : missing,
+        _try_get(m -> dual_objective_value(m; result = result), model),
+        verbose && has_primal ? _get_solution_dict(model, result) : missing,
+        verbose && has_dual ? _get_constraint_dict(model, result) : missing,
         _try_get(solve_time, model),
         _try_get(barrier_iterations, model),
         _try_get(simplex_iterations, model),
@@ -89,38 +95,45 @@ function Base.show(io::IO, summary::_SolutionSummary)
     println(io)
     _show_status_summary(io, summary)
     _show_candidate_solution_summary(io, summary)
-    _show_work_counters_summary(io, summary)
+    if summary.result == 1
+        _show_work_counters_summary(io, summary)
+    end
     return
 end
 
 function _show_status_summary(io::IO, summary::_SolutionSummary)
     println(io, "* Status")
+    println(io, "  Result count       : ", summary.result_count)
     println(io, "  Termination status : ", summary.termination_status)
-    println(io, "  Primal status      : ", summary.primal_status)
-    println(io, "  Dual status        : ", summary.dual_status)
-    if summary.verbose
-        println(io, "  Result count       : ", summary.result_count)
-        println(io, "  Has duals          : ", summary.has_duals)
+    if summary.result == 1
+        println(io, "  Message from the solver:")
+        println(io, "  \"", summary.raw_status, "\"")
     end
-    println(io, "  Message from the solver:")
-    println(io, "  \"", summary.raw_status, "\"")
     println(io)
     return
 end
 
 function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
-    println(io, "* Candidate solution")
+    println(io, "* Candidate solution (result #$(summary.result))")
+    println(io, "  Primal status      : ", summary.primal_status)
+    println(io, "  Dual status        : ", summary.dual_status)
     _print_if_not_missing(
         io,
-        "  Objective value      : ",
+        "  Objective value    : ",
         summary.objective_value,
     )
-    _print_if_not_missing(
-        io,
-        "  Objective bound      : ",
-        summary.objective_bound,
-    )
-    _print_if_not_missing(io, "  Relative gap         : ", summary.relative_gap)
+    if summary.result == 1
+        _print_if_not_missing(
+            io,
+            "  Objective bound    : ",
+            summary.objective_bound,
+        )
+        _print_if_not_missing(
+            io,
+            "  Relative gap       : ",
+            summary.relative_gap,
+        )
+    end
     _print_if_not_missing(
         io,
         "  Dual objective value : ",
@@ -146,11 +159,11 @@ function _show_candidate_solution_summary(io::IO, summary::_SolutionSummary)
             )
         end
     end
-    println(io)
     return
 end
 
 function _show_work_counters_summary(io::IO, summary::_SolutionSummary)
+    println(io)
     println(io, "* Work counters")
     _print_if_not_missing(io, "  Solve time (sec)   : ", summary.solve_time)
     _print_if_not_missing(
@@ -167,28 +180,24 @@ function _show_work_counters_summary(io::IO, summary::_SolutionSummary)
     return
 end
 
-function _get_solution_dict(model)
+function _get_solution_dict(model, result)
     dict = Dict{String,Float64}()
-    if has_values(model)
-        for x in all_variables(model)
-            variable_name = name(x)
-            if !isempty(variable_name)
-                dict[variable_name] = value(x)
-            end
+    for x in all_variables(model)
+        variable_name = name(x)
+        if !isempty(variable_name)
+            dict[variable_name] = value(x; result = result)
         end
     end
     return dict
 end
 
-function _get_constraint_dict(model)
+function _get_constraint_dict(model, result)
     dict = Dict{String,Float64}()
-    if has_duals(model)
-        for (F, S) in list_of_constraint_types(model)
-            for constraint in all_constraints(model, F, S)
-                constraint_name = name(constraint)
-                if !isempty(constraint_name)
-                    dict[constraint_name] = dual(constraint)
-                end
+    for (F, S) in list_of_constraint_types(model)
+        for constraint in all_constraints(model, F, S)
+            constraint_name = name(constraint)
+            if !isempty(constraint_name)
+                dict[constraint_name] = dual(constraint; result = result)
             end
         end
     end
