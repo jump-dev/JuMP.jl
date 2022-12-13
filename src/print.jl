@@ -612,9 +612,9 @@ function function_string(
     A::AbstractMatrix{<:AbstractJuMPScalar},
 )
     str = "\\begin{bmatrix}\n"
-    for i in 1:size(A, 1)
+    for i in axes(A, 1)
         line = ""
-        for j in 1:size(A, 2)
+        for j in axes(A, 2)
             if j != 1
                 line *= " & "
             end

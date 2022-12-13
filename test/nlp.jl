@@ -250,7 +250,7 @@ function test_register_check_forwarddiff_multivariate()
     function f(x...)
         # This is a common case, where user's preallocate a Float64 storage.
         y = zeros(length(x))
-        for i in 1:length(x)
+        for i in eachindex(x)
             y[i] = log(x[i])
         end
         return sum(y)
@@ -270,7 +270,7 @@ function test_register_check_forwarddiff_multivariate_gradf()
     function f(x...)
         # This is a common case, where user's preallocate a Float64 storage.
         y = zeros(length(x))
-        for i in 1:length(x)
+        for i in eachindex(x)
             y[i] = log(x[i])
         end
         return sum(y)
@@ -278,7 +278,7 @@ function test_register_check_forwarddiff_multivariate_gradf()
     function ∇f(x...)
         # This is a common case, where user's preallocate a Float64 storage.
         y = zeros(length(x))
-        for i in 1:length(x)
+        for i in eachindex(x)
             y[i] = 1 / x[i]
         end
         return sum(y)
