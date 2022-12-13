@@ -10,6 +10,7 @@
 
 module TestComplexNumberSupport
 
+using LinearAlgebra
 using JuMP
 using Test
 import MutableArithmetics
@@ -199,6 +200,31 @@ function test_complex_abs2()
     @test abs2(x + 2im) == x^2 + 4
     @test abs2(x + 2) == x^2 + 4x + 4
     @test abs2(x * im + 2) == x^2 + 4
+end
+
+function test_hermitian()
+    model = Model()
+    @variable(model, x)
+    A = [3  1im
+         -1im 2x]
+    @test A isa Matrix{GenericAffExpr{ComplexF64,VariableRef}}
+    A = [3x^2  1im
+         -1im 2x]
+    @test A isa Matrix{GenericQuadExpr{ComplexF64,VariableRef}}
+    A = [3x  1im
+         -1im 2x^2]
+    @test A isa Matrix{GenericQuadExpr{ComplexF64,VariableRef}}
+    A = [3x  1im
+         -1im 2x]
+    @test A isa Matrix{GenericAffExpr{ComplexF64,VariableRef}}
+    @test isequal_canonical(A', A)
+    H = Hermitian(A)
+    @test H isa Hermitian{GenericAffExpr{ComplexF64,VariableRef},Matrix{GenericAffExpr{ComplexF64,VariableRef}}}
+    @test isequal_canonical(A[1, 2], adjoint(A[2, 1]))
+    @test isequal_canonical(H[1, 2], adjoint(H[2, 1]))
+    for i in 1:2, j in 1:2
+        @test isequal_canonical(A[i, j], H[i, j])
+    end
 end
 
 end

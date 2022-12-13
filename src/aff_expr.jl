@@ -244,11 +244,7 @@ coefficient(::GenericAffExpr{C,V}, ::V, ::V) where {C,V} = zero(C)
 Remove terms in the affine expression with `0` coefficients.
 """
 function drop_zeros!(expr::GenericAffExpr)
-    for (key, coef) in expr.terms
-        if iszero(coef)
-            delete!(expr.terms, key)
-        end
-    end
+    _drop_zeros!(expr.terms)
     return
 end
 
@@ -496,16 +492,24 @@ end
 
 Base.hash(aff::GenericAffExpr, h::UInt) = hash(aff.constant, hash(aff.terms, h))
 
+function _drop_zeros!(terms::OrderedDict)
+    for (var, coef) in terms
+        if iszero(coef)
+            delete!(terms, var)
+        elseif coef isa Complex && iszero(imag(coef))
+            terms[var] = real(coef)
+        end
+     end
+end
+
 function SparseArrays.dropzeros(aff::GenericAffExpr)
     result = copy(aff)
-    for (coef, var) in linear_terms(aff)
-        if iszero(coef)
-            delete!(result.terms, var)
-        end
-    end
-    if iszero(result.constant)
+    _drop_zeros!(result.terms)
+   if iszero(result.constant)
         # This is to work around isequal(0.0, -0.0) == false.
         result.constant = zero(typeof(result.constant))
+    elseif result.constant isa Complex && iszero(imag(result.constant))
+        result.constant = real(result.constant)
     end
     return result
 end

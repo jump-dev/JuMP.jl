@@ -382,9 +382,15 @@ function Base.promote_rule(
 end
 function Base.promote_rule(
     ::Type{GenericAffExpr{S,V}},
-    R::Type{<:Real},
+    R::Type{<:Number},
 ) where {S,V}
     return GenericAffExpr{promote_type(S, R),V}
+end
+function Base.promote_rule(
+    ::Type{<:GenericAffExpr{S,V}},
+    ::Type{<:GenericAffExpr{T,V}},
+) where {S,T,V}
+    return GenericAffExpr{promote_type(S, T),V}
 end
 function Base.promote_rule(
     ::Type{<:GenericAffExpr{S,V}},
