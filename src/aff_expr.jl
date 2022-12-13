@@ -499,13 +499,14 @@ function _drop_zeros!(terms::OrderedDict)
         elseif coef isa Complex && iszero(imag(coef))
             terms[var] = real(coef)
         end
-     end
+    end
+    return
 end
 
 function SparseArrays.dropzeros(aff::GenericAffExpr)
     result = copy(aff)
     _drop_zeros!(result.terms)
-   if iszero(result.constant)
+    if iszero(result.constant)
         # This is to work around isequal(0.0, -0.0) == false.
         result.constant = zero(typeof(result.constant))
     elseif result.constant isa Complex && iszero(imag(result.constant))
