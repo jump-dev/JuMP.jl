@@ -10,10 +10,12 @@
 
 module TestComplexNumberSupport
 
-using LinearAlgebra
 using JuMP
 using Test
+
+import LinearAlgebra
 import MutableArithmetics
+
 const MA = MutableArithmetics
 
 function runtests()
@@ -205,26 +207,24 @@ end
 function test_hermitian()
     model = Model()
     @variable(model, x)
-    A = [3  1im
-         -1im 2x]
+    A = [3 1im; -1im 2x]
     @test A isa Matrix{GenericAffExpr{ComplexF64,VariableRef}}
-    A = [3x^2  1im
-         -1im 2x]
+    A = [3x^2 1im; -1im 2x]
     @test A isa Matrix{GenericQuadExpr{ComplexF64,VariableRef}}
-    A = [3x  1im
-         -1im 2x^2]
+    A = [3x 1im; -1im 2x^2]
     @test A isa Matrix{GenericQuadExpr{ComplexF64,VariableRef}}
-    A = [3x  1im
-         -1im 2x]
+    A = [3x 1im; -1im 2x]
     @test A isa Matrix{GenericAffExpr{ComplexF64,VariableRef}}
     @test isequal_canonical(A', A)
-    H = Hermitian(A)
-    @test H isa Hermitian{GenericAffExpr{ComplexF64,VariableRef},Matrix{GenericAffExpr{ComplexF64,VariableRef}}}
-    @test isequal_canonical(A[1, 2], adjoint(A[2, 1]))
-    @test isequal_canonical(H[1, 2], adjoint(H[2, 1]))
+    H = LinearAlgebra.Hermitian(A)
+    T = GenericAffExpr{ComplexF64,VariableRef}
+    @test H isa LinearAlgebra.Hermitian{T,Matrix{T}}
+    @test isequal_canonical(A[1, 2], LinearAlgebra.adjoint(A[2, 1]))
+    @test isequal_canonical(H[1, 2], LinearAlgebra.adjoint(H[2, 1]))
     for i in 1:2, j in 1:2
         @test isequal_canonical(A[i, j], H[i, j])
     end
+    return
 end
 
 end
