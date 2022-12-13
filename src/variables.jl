@@ -1352,8 +1352,10 @@ function _imag(s::String)
 end
 
 _real(v::ScalarVariable) = _mapinfo(real, v)
+_real(scalar::AbstractJuMPScalar) = real(scalar)
 
 _imag(v::ScalarVariable) = _mapinfo(imag, v)
+_imag(scalar::AbstractJuMPScalar) = imag(scalar)
 
 _conj(v::ScalarVariable) = _mapinfo(conj, v)
 

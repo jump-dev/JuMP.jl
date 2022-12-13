@@ -222,10 +222,6 @@ function reshape_set(::MOI.PositiveSemidefiniteConeSquare, ::SquareMatrixShape)
 end
 vectorize(matrix::Matrix, ::SquareMatrixShape) = vec(matrix)
 
-function vectorize(matrix, shape::Union{SymmetricMatrixShape,SquareMatrixShape})
-    return vectorize(Matrix(matrix), shape)
-end
-
 # This is a special method because calling `Matrix(matrix)` accesses an undef
 # reference.
 function vectorize(matrix::UpperTriangular, ::SquareMatrixShape)
@@ -468,6 +464,10 @@ struct HermitianMatrixShape <: AbstractShape
     side_dimension::Int
 end
 
+function vectorize(matrix, shape::Union{SymmetricMatrixShape,SquareMatrixShape,HermitianMatrixShape})
+    return vectorize(Matrix(matrix), shape)
+end
+
 function vectorize(matrix::Matrix, ::HermitianMatrixShape)
     n = LinearAlgebra.checksquare(matrix)
     return vcat(
@@ -477,6 +477,13 @@ function vectorize(matrix::Matrix, ::HermitianMatrixShape)
             SymmetricMatrixShape(n - 1),
         ),
     )
+end
+
+function reshape_set(
+    ::MOI.HermitianPositiveSemidefiniteConeTriangle,
+    ::HermitianMatrixShape,
+)
+    return HermitianPSDCone()
 end
 
 function reshape_vector(v::Vector{T}, shape::HermitianMatrixShape) where {T}
@@ -535,6 +542,33 @@ function build_variable(
     return VariablesConstrainedOnCreation(
         _vectorize_complex_variables(_error, variables),
         set,
+        shape,
+    )
+end
+
+"""
+    build_constraint(_error::Function, Q::Hermitian{V, M},
+                     ::HermitianPSDCone) where {V <: AbstractJuMPScalar,
+                                                M <: AbstractMatrix{V}}
+
+Return a `VectorConstraint` of shape [`HermitianMatrixShape`](@ref) constraining
+the matrix `Q` to be hermitian positive semidefinite.
+
+This function is used by the [`@constraint`](@ref) macros as follows:
+```julia
+@constraint(model, Hermitian(Q) in HermitianPSDCone())
+```
+"""
+function build_constraint(
+    ::Function,
+    Q::Hermitian{V,M},
+    ::HermitianPSDCone,
+) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
+    n = LinearAlgebra.checksquare(Q)
+    shape = HermitianMatrixShape(n)
+    return VectorConstraint(
+        vectorize(Q, shape),
+        MOI.HermitianPositiveSemidefiniteConeTriangle(n),
         shape,
     )
 end
