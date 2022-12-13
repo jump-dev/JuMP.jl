@@ -395,7 +395,7 @@ And data, a 0-dimensional $(Array{Int,0}):
 
     @testset "DenseAxisArray_show_nd" begin
         S = zeros(Int, 2, 2, 3, 3, 3)
-        for i in 1:length(S)
+        for i in eachindex(S)
             S[i] = i
         end
         x = DenseAxisArray(S, 1:2, 1:2, 1:3, 1:3, 1:3)
@@ -414,7 +414,7 @@ And data, a 0-dimensional $(Array{Int,0}):
 
     @testset "DenseAxisArray_show_nd_limit" begin
         S = zeros(Int, 2, 2, 3, 3, 20)
-        for i in 1:length(S)
+        for i in eachindex(S)
             S[i] = i
         end
         x = DenseAxisArray(S, 1:2, 1:2, 1:3, 1:3, 1:20)

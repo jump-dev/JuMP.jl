@@ -71,7 +71,7 @@ function get_data()
         6.6 49
         5.1 42
     ]
-    return Data([Piece(data[i, 1], data[i, 2]) for i in 1:size(data, 1)], 100.0)
+    return Data([Piece(data[i, 1], data[i, 2]) for i in axes(data, 1)], 100.0)
 end
 
 data = get_data()
