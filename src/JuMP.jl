@@ -1055,9 +1055,10 @@ Base.ndims(::AbstractJuMPScalar) = 0
 
 # These are required to create symmetric containers of AbstractJuMPScalars.
 LinearAlgebra.symmetric_type(::Type{T}) where {T<:AbstractJuMPScalar} = T
+LinearAlgebra.hermitian_type(::Type{T}) where {T<:AbstractJuMPScalar} = T
 LinearAlgebra.symmetric(scalar::AbstractJuMPScalar, ::Symbol) = scalar
-# This is required for linear algebra operations involving transposes.
-LinearAlgebra.adjoint(scalar::AbstractJuMPScalar) = scalar
+LinearAlgebra.hermitian(scalar::AbstractJuMPScalar, ::Symbol) = adjoint(scalar)
+LinearAlgebra.adjoint(scalar::AbstractJuMPScalar) = conj(scalar)
 
 """
     owner_model(s::AbstractJuMPScalar)

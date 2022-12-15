@@ -148,11 +148,7 @@ Remove terms in the quadratic expression with `0` coefficients.
 """
 function drop_zeros!(expr::GenericQuadExpr)
     drop_zeros!(expr.aff)
-    for (key, coef) in expr.terms
-        if iszero(coef)
-            delete!(expr.terms, key)
-        end
-    end
+    _drop_zeros!(expr.terms)
     return
 end
 
@@ -497,11 +493,7 @@ Base.hash(quad::GenericQuadExpr, h::UInt) = hash(quad.aff, hash(quad.terms, h))
 
 function SparseArrays.dropzeros(quad::GenericQuadExpr)
     quad_terms = copy(quad.terms)
-    for (key, value) in quad.terms
-        if iszero(value)
-            delete!(quad_terms, key)
-        end
-    end
+    _drop_zeros!(quad_terms)
     return GenericQuadExpr(dropzeros(quad.aff), quad_terms)
 end
 
