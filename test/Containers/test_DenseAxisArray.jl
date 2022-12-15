@@ -478,4 +478,121 @@ function test_DenseAxisArray_vector_keys()
     return
 end
 
+function test_containers_denseaxisarray_setindex_vector()
+    A = Containers.DenseAxisArray(zeros(3), 1:3)
+    A[2:3] .= 1.0
+    @test A.data == [0.0, 1.0, 1.0]
+    A = Containers.DenseAxisArray(zeros(3), 1:3)
+    A[[2, 3]] .= 1.0
+    @test A.data == [0.0, 1.0, 1.0]
+    A = Containers.DenseAxisArray(zeros(3), 1:3)
+    A[[1, 3]] .= 1.0
+    @test A.data == [1.0, 0.0, 1.0]
+    A = Containers.DenseAxisArray(zeros(3), 1:3)
+    A[[2]] .= 1.0
+    @test A.data == [0.0, 1.0, 0.0]
+    A[2:3] = Containers.DenseAxisArray([2.0, 3.0], 2:3)
+    @test A.data == [0.0, 2.0, 3.0]
+    A = Containers.DenseAxisArray(zeros(3), 1:3)
+    A[:] .= 1.0
+    @test A.data == [1.0, 1.0, 1.0]
+    return
+end
+
+function test_containers_denseaxisarray_setindex_matrix()
+    A = Containers.DenseAxisArray(zeros(3, 3), 1:3, [:a, :b, :c])
+    A[:, [:a, :b]] .= 1.0
+    @test A.data == [1.0 1.0 0.0; 1.0 1.0 0.0; 1.0 1.0 0.0]
+    A = Containers.DenseAxisArray(zeros(3, 3), 1:3, [:a, :b, :c])
+    A[2:3, [:a, :b]] .= 1.0
+    @test A.data == [0.0 0.0 0.0; 1.0 1.0 0.0; 1.0 1.0 0.0]
+    A = Containers.DenseAxisArray(zeros(3, 3), 1:3, [:a, :b, :c])
+    A[3:3, [:a, :b]] .= 1.0
+    @test A.data == [0.0 0.0 0.0; 0.0 0.0 0.0; 1.0 1.0 0.0]
+    A = Containers.DenseAxisArray(zeros(3, 3), 1:3, [:a, :b, :c])
+    A[[1, 3], [:a, :b]] .= 1.0
+    @test A.data == [1.0 1.0 0.0; 0.0 0.0 0.0; 1.0 1.0 0.0]
+    A = Containers.DenseAxisArray(zeros(3, 3), 1:3, [:a, :b, :c])
+    A[[1, 3], [:a, :c]] .= 1.0
+    @test A.data == [1.0 0.0 1.0; 0.0 0.0 0.0; 1.0 0.0 1.0]
+    return
+end
+
+function test_containers_denseaxisarray_view()
+    A = Containers.DenseAxisArray(zeros(3, 3), 1:3, [:a, :b, :c])
+    B = view(A, :, [:a, :b])
+    @test_throws KeyError view(A, :, [:d])
+    @test size(B) == (3, 2)
+    @test B[1, :a] == A[1, :a]
+    @test B[3, :a] == A[3, :a]
+    # Views are weird, because we can still access the underlying array?
+    @test B[3, :c] == A[3, :c]
+    @test sprint(show, B) == sprint(show, B.data)
+    @test sprint(Base.print_array, B) == sprint(show, B.data)
+    @test sprint(Base.summary, B) ==
+          "view(::DenseAxisArray, 1:3, [:a, :b]), over"
+    return
+end
+
+function test_containers_denseaxisarray_jump_3151()
+    D = Containers.DenseAxisArray(zeros(3), [:a, :b, :c])
+    E = Containers.DenseAxisArray(ones(3), [:a, :b, :c])
+    I = [:a, :b]
+    D[I] = E[I]
+    @test D.data == [1.0, 1.0, 0.0]
+    D = Containers.DenseAxisArray(zeros(3), [:a, :b, :c])
+    I = [:b, :c]
+    D[I] = E[I]
+    @test D.data == [0.0, 1.0, 1.0]
+    D = Containers.DenseAxisArray(zeros(3), [:a, :b, :c])
+    I = [:a, :c]
+    D[I] = E[I]
+    @test D.data == [1.0, 0.0, 1.0]
+    return
+end
+
+function test_containers_denseaxisarray_view_operations()
+    c = Containers.@container([i = 1:4, j = 2:3], i + 2 * j)
+    d = view(c, 2:3, :)
+    @test sum(c) == 60
+    @test sum(d) == 30
+    d .= 1
+    @test sum(d) == 4
+    @test sum(c) == 34
+    return
+end
+
+function test_containers_denseaxisarray_view_addition()
+    c = Containers.@container([i = 1:4, j = 2:3], i + 2 * j)
+    d = view(c, 2:3, :)
+    @test_throws MethodError d + d
+    return
+end
+
+function test_containers_denseaxisarray_setindex_invalid()
+    c = Containers.@container([i = 1:4, j = 2:3], 0)
+    d = Containers.@container([i = 1:4, j = 2:3], i + 2 * j)
+    setindex!(c, d, 1:4, 2:3)
+    @test c == d
+    c .= 0
+    setindex!(c, d, 1:4, 2:2)
+    @test c == Containers.@container([i = 1:4, j = 2:3], (4 + i) * (j == 2))
+    d = Containers.@container([i = 5:6, j = 2:3], i + 2 * j)
+    @test_throws KeyError setindex!(c, d, 1:4, 2:3)
+    return
+end
+
+function test_containers_denseaxisarray_setindex_keys()
+    c = Containers.@container([i = 1:4, j = 2:3], 0)
+    for (i, k) in enumerate(keys(c))
+        c[k] = c[k] + i
+    end
+    @test c == Containers.@container([i = 1:4, j = 2:3], 4 * (j - 2) + i)
+    for (i, k) in enumerate(keys(c))
+        c[k] = c[k] + i
+    end
+    @test c == Containers.@container([i = 1:4, j = 2:3], 2 * (4 * (j - 2) + i))
+    return
+end
+
 end  # module
