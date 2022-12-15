@@ -15,6 +15,7 @@ using Test
 
 import LinearAlgebra
 import MutableArithmetics
+import SparseArrays
 
 const MA = MutableArithmetics
 
@@ -223,6 +224,22 @@ function test_hermitian()
     @test isequal_canonical(H[1, 2], LinearAlgebra.adjoint(H[2, 1]))
     for i in 1:2, j in 1:2
         @test isequal_canonical(A[i, j], H[i, j])
+    end
+    return
+end
+
+function test_complex_sparse_arrays_dropzeros()
+    model = Model()
+    @variable(model, x)
+    a = 2.0 + 1.0im
+    for rhs in (0.0 + 0.0im, 0.0 - 0.0im, -0.0 + 0.0im, -0.0 + -0.0im)
+        # We need to explicitly set the .constant field to avoid a conversion to
+        # 0.0 + 0.0im
+        expr = a * x
+        expr.constant = rhs
+        @test isequal(SparseArrays.dropzeros(expr), a * x)
+        expr.constant = 1.0 + rhs
+        @test isequal(SparseArrays.dropzeros(expr), a * x + 1.0)
     end
     return
 end
