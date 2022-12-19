@@ -33,6 +33,7 @@ normalized_rhs
 set_normalized_rhs
 
 add_to_function_constant
+relax_with_penalty!
 ```
 
 ## Deletion

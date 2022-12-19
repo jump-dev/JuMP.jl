@@ -164,11 +164,11 @@ import HiGHS
 
 # A simple example of an infeasible model is:
 
-model = Model(HiGHS.Optimizer)
+model = Model(HiGHS.Optimizer);
 set_silent(model)
 @variable(model, x >= 0)
 @objective(model, Max, 2x + 1)
-@constraint(model, 2x - 1 <= -2)
+@constraint(model, con, 2x - 1 <= -2)
 
 # because the bound says that `x >= 0`, but we can rewrite the constraint to be
 # `x <= -1/2`. When the problem is infeasible, JuMP may return one of a number
@@ -230,6 +230,51 @@ termination_status(model)
 #     solvers such as Gurobi and CPLEX do. If the solver does support computing
 #     conflicts, read [Conflicts](@ref) for more details.
 
+# ### Penalty relaxation
+
+# Another strategy to debug sources of infeasibility is the
+# [`relax_with_penalty!`](@ref) function.
+#
+# The penalty relaxation modifies constraints of the form ``f(x) \in S`` into
+# ``f(x) + y - z \in S``, where ``y, z \ge 0``, and then it introduces a
+# penalty term into the objective of ``a \times (y + z)`` (if minimizing, else
+# ``-a``), where ``a`` is a penalty.
+
+map = relax_with_penalty!(model)
+
+# Here `map` is a dictionary which maps constraint indices to an affine
+# expression representing ``(y + z)``.
+
+# If we optimize the relaxed model, this time we get a feasible solution:
+
+optimize!(model)
+termination_status(model)
+
+# Iterate over the contents of `map` to see which constraints are violated:
+
+for (con, penalty) in map
+    violation = value(penalty)
+    if violation > 0
+        println("Constraint `$(name(con))` is violated by $violation")
+    end
+end
+
+# Once you find a violated constraint in the relaxed problem, take a look to see
+# if there is a typo or other common mistake in that particular constraint.
+
+# Consult the docstring [`relax_with_penalty!`](@ref) for information on how to
+# modify the penalty cost term `a`, either for every constraint in the model or
+# a particular subset of the constraints.
+
+# When using [`relax_with_penalty!`](@ref), you should be aware that:
+#
+#  * Variable bounds and integrality restrictions are not relaxed. If the
+#    problem is still infeasible after calling [`relax_with_penalty!`](@ref),
+#    check the variable bounds.
+#  * You cannot undo the penalty relaxation. If you need an unmodified model,
+#    rebuild the problem, or call [`copy_model`](@ref) before calling
+#    [`relax_with_penalty!`](@ref).
+
 # ## Debugging an unbounded model
 
 # A model is unbounded if there is no limit on how good the objective value can
@@ -241,7 +286,7 @@ termination_status(model)
 
 # A simple example of an unbounded model is:
 
-model = Model(HiGHS.Optimizer)
+model = Model(HiGHS.Optimizer);
 set_silent(model)
 @variable(model, x >= 0)
 @objective(model, Max, 2x + 1)
@@ -288,7 +333,7 @@ termination_status(model)
 # the variable must be less-than or equal to the expression of the objective
 # function. For example:
 
-model = Model(HiGHS.Optimizer)
+model = Model(HiGHS.Optimizer);
 set_silent(model)
 @variable(model, x >= 0)
 ## @objective(model, Max, 2x + 1)

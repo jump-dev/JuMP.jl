@@ -1220,6 +1220,88 @@ function test_Model_all_constraints(::Any, ::Any)
     return
 end
 
+function test_Model_relax_with_penalty!_default(::Any, ::Any)
+    model = Model()
+    @variable(model, x >= 0)
+    map = relax_with_penalty!(model)
+    @test isempty(map)
+    @constraint(model, c1, x <= 1)
+    @constraint(model, c2, x == 0)
+    map = relax_with_penalty!(model)
+    @test length(map) == 2
+    @test map[c1] isa AffExpr
+    @test map[c2] isa AffExpr
+    @test num_variables(model) == 4
+    @test objective_sense(model) == MOI.MIN_SENSE
+    @test objective_function(model) == map[c1] + map[c2]
+    return
+end
+
+function test_Model_relax_with_penalty!_max(::Any, ::Any)
+    model = Model()
+    @variable(model, x >= 0)
+    @constraint(model, c1, x <= 1)
+    @constraint(model, c2, x == 0)
+    @objective(model, Max, 1.0 * x + 2.5)
+    map = relax_with_penalty!(model)
+    @test length(map) == 2
+    @test map[c1] isa AffExpr
+    @test map[c2] isa AffExpr
+    @test num_variables(model) == 4
+    @test objective_sense(model) == MOI.MAX_SENSE
+    @test objective_function(model) == x + 2.5 - map[c1] - map[c2]
+    return
+end
+
+function test_Model_relax_with_penalty!_constant(::Any, ::Any)
+    model = Model()
+    @variable(model, x >= 0)
+    map = relax_with_penalty!(model)
+    @test isempty(map)
+    @constraint(model, c1, x <= 1)
+    @constraint(model, c2, x == 0)
+    map = relax_with_penalty!(model; default = 2)
+    @test length(map) == 2
+    @test map[c1] isa AffExpr
+    @test map[c2] isa AffExpr
+    @test num_variables(model) == 4
+    @test objective_sense(model) == MOI.MIN_SENSE
+    @test objective_function(model) == 2.0 * map[c1] + 2.0 * map[c2]
+    return
+end
+
+function test_Model_relax_with_penalty!_specific(::Any, ::Any)
+    model = Model()
+    @variable(model, x >= 0)
+    map = relax_with_penalty!(model)
+    @test isempty(map)
+    @constraint(model, c1, x <= 1)
+    @constraint(model, c2, x == 0)
+    map = relax_with_penalty!(model, Dict(c1 => 3.0))
+    @test length(map) == 1
+    @test map[c1] isa AffExpr
+    @test num_variables(model) == 2
+    @test objective_sense(model) == MOI.MIN_SENSE
+    @test objective_function(model) == 3.0 * map[c1]
+    return
+end
+
+function test_Model_relax_with_penalty!_specific_with_default(::Any, ::Any)
+    model = Model()
+    @variable(model, x >= 0)
+    map = relax_with_penalty!(model)
+    @test isempty(map)
+    @constraint(model, c1, x <= 1)
+    @constraint(model, c2, x == 0)
+    map = relax_with_penalty!(model, Dict(c1 => 3.0); default = 1)
+    @test length(map) == 2
+    @test map[c1] isa AffExpr
+    @test num_variables(model) == 4
+    @test objective_sense(model) == MOI.MIN_SENSE
+    @test objective_function(model) == 3 * map[c1] + map[c2]
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

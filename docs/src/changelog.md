@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  - Added a `result` keyword argument to [`solution_summary`] to allow
    summarizing models with multiple solutions (#3138)
+ - Add [`relax_with_penalty!`](@ref), which is a useful tool when debugging
+   infeasible models (#3140)
 
 ### Other
 
