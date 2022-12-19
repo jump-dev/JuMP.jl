@@ -903,6 +903,22 @@ function test_optimizer_attribute_get_set()
     return
 end
 
+function test_optimize_not_called_warning()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(
+            MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        )
+    end
+    @variable(model, x >= 0)
+    @constraint(model, c, 2x <= 1)
+    optimize!(model)
+    set_start_value(x, 0.0)
+    @test_logs (:warn,) (@test_throws OptimizeNotCalled objective_value(model))
+    @test_logs (:warn,) (@test_throws OptimizeNotCalled value(x))
+    @test_logs (:warn,) (@test_throws OptimizeNotCalled value(c))
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

@@ -1247,6 +1247,12 @@ function MOI.get(
     if !MOI.is_set_by_optimize(attr)
         return MOI.get(backend(model), attr, index(v))
     elseif model.is_model_dirty && mode(model) != DIRECT
+        @warn(
+            "The model has been modified since the last call to `optimize!` (" *
+            "or `optimize!` has not been called yet). If you are iteratively " *
+            "querying solution information and modifying a model, query all " *
+            "the results first, then modify the model.",
+        )
         throw(OptimizeNotCalled())
     end
     return _moi_get_result(backend(model), attr, index(v))
@@ -1261,6 +1267,12 @@ function MOI.get(
     if !MOI.is_set_by_optimize(attr)
         return MOI.get(backend(model), attr, index(cr))
     elseif model.is_model_dirty && mode(model) != DIRECT
+        @warn(
+            "The model has been modified since the last call to `optimize!` (" *
+            "or `optimize!` has not been called yet). If you are iteratively " *
+            "querying solution information and modifying a model, query all " *
+            "the results first, then modify the model.",
+        )
         throw(OptimizeNotCalled())
     end
     return _moi_get_result(backend(model), attr, index(cr))
