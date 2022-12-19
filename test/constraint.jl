@@ -1312,21 +1312,19 @@ function test_Hermitian_PSD_constraint(ModelType, VariableRefType)
     return
 end
 
-function test_SDP_errors(ModelType, VariableRefType)
+function test_HermitianPSDCone_errors(ModelType, VariableRefType)
     model = ModelType()
     @variable(model, x)
     @variable(model, y)
-    # Test fallback and account for different Julia version behavior
-    if VariableRefType == VariableRef
-        var_str = " VariableRef"
-    else
+    var_str = " VariableRef"
+    if VariableRefType != VariableRef
         var_str = " Main.TestConstraint.JuMPExtension.MyVariableRef"
     end
     err = ErrorException(
         "In `@constraint(model, Hermitian([x 1im; -1im -y]) in HermitianPSDCone(), unknown_kw = 1)`:" *
         " Unrecognized constraint building format. Tried to invoke " *
         "`build_constraint(error, GenericAffExpr{ComplexF64,$var_str}[" *
-        "x (0.0 + 1.0im); (0.0 + 1.0im) (-1.0 + 0.0im) y], HermitianPSDCone(); unknown_kw = 1)`, but no " *
+        "x (0.0 + 1.0im); (0.0 - 1.0im) (-1.0 - 0.0im) y], HermitianPSDCone(); unknown_kw = 1)`, but no " *
         "such method exists. This is due to specifying an unrecognized " *
         "function, constraint set, and/or extra positional/keyword " *
         "arguments.\n\nIf you're trying to create a JuMP extension, you " *
