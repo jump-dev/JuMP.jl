@@ -464,7 +464,10 @@ struct HermitianMatrixShape <: AbstractShape
     side_dimension::Int
 end
 
-function vectorize(matrix, shape::Union{SymmetricMatrixShape,SquareMatrixShape,HermitianMatrixShape})
+function vectorize(
+    matrix,
+    shape::Union{SymmetricMatrixShape,SquareMatrixShape,HermitianMatrixShape},
+)
     return vectorize(Matrix(matrix), shape)
 end
 
@@ -547,12 +550,14 @@ function build_variable(
 end
 
 """
-    build_constraint(_error::Function, Q::Hermitian{V, M},
-                     ::HermitianPSDCone) where {V <: AbstractJuMPScalar,
-                                                M <: AbstractMatrix{V}}
+    build_constraint(
+        _error::Function,
+        Q::Hermitian{V,M},
+        ::HermitianPSDCone,
+    ) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
 
 Return a `VectorConstraint` of shape [`HermitianMatrixShape`](@ref) constraining
-the matrix `Q` to be hermitian positive semidefinite.
+the matrix `Q` to be Hermitian positive semidefinite.
 
 This function is used by the [`@constraint`](@ref) macros as follows:
 ```julia

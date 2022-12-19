@@ -1290,12 +1290,12 @@ function test_Model_relax_with_penalty!_specific_with_default(::Any, ::Any)
 end
 
 function test_Hermitian_PSD_constraint(ModelType, VariableRefType)
-    m = ModelType()
-    @variable(m, x)
-    @variable(m, y)
-    @variable(m, w)
-
-    @constraint(m, href, Hermitian([x 1im; -1im -y] - [1 x + w * im; x - w * im -2]) in HermitianPSDCone())
+    model = ModelType()
+    @variable(model, x)
+    @variable(model, y)
+    @variable(model, w)
+    A = [x 1im; -1im -y] - [1 x + w * im; x - w * im -2]
+    @constraint(model, href, Hermitian(A) in HermitianPSDCone())
     _test_constraint_name_util(
         href,
         "href",
@@ -1309,8 +1309,7 @@ function test_Hermitian_PSD_constraint(ModelType, VariableRefType)
     @test JuMP.isequal_canonical(c.func[4], 1 - w)
     @test c.set == MOI.HermitianPositiveSemidefiniteConeTriangle(2)
     @test c.shape isa JuMP.HermitianMatrixShape
-
-   return
+    return
 end
 
 function test_SDP_errors(ModelType, VariableRefType)

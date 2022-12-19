@@ -684,7 +684,10 @@ in_set_string(::MIME"text/latex", ::MOI.ZeroOne) = "\\in \\{0, 1\\}"
 in_set_string(::MIME"text/plain", ::MOI.Integer) = "integer"
 in_set_string(::MIME"text/latex", ::MOI.Integer) = "\\in \\mathbb{Z}"
 
-function in_set_string(mode, set::Union{PSDCone,HermitianPSDCone,MOI.AbstractSet})
+function in_set_string(
+    mode,
+    set::Union{PSDCone,HermitianPSDCone,MOI.AbstractSet},
+)
     # Use an `if` here instead of multiple dispatch to avoid ambiguity errors.
     if mode == MIME("text/plain")
         return _math_symbol(mode, :in) * " $(set)"

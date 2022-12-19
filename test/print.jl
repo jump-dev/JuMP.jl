@@ -973,6 +973,17 @@ function test_minus_one_complex_aff_expr()
     return
 end
 
+function test_print_hermitian_psd_cone()
+    model = Model()
+    @variable(model, x[1:2, 1:2])
+    c = @constraint(model, Hermitian(x) in HermitianPSDCone())
+    @test sprint(io -> show(io, MIME("text/plain"), c)) ==
+          "[x[1,1]                (1.0 + 1.0im) x[1,2];\n (1.0 - 1.0im) x[1,2]  x[2,2]] ∈ HermitianPSDCone()"
+    @test sprint(io -> show(io, MIME("text/latex"), c)) ==
+          "\$\$ \\begin{bmatrix}\nx_{1,1} & (1.0 + 1.0im) x_{1,2}\\\\\n(1.0 - 1.0im) x_{1,2} & x_{2,2}\\\\\n\\end{bmatrix} \\in \\text{HermitianPSDCone()} \$\$"
+    return
+end
+
 end
 
 TestPrint.runtests()
