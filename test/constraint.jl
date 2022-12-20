@@ -1294,7 +1294,7 @@ function test_Hermitian_PSD_constraint(ModelType, VariableRefType)
     @variable(model, x)
     @variable(model, y)
     @variable(model, w)
-    A = [x 1im; -1im -y] - [1 x + w * im; x - w * im -2]
+    A = [x 1im; -1im -y] - [1 (x+w*im); (x-w*im) -2]
     @constraint(model, href, Hermitian(A) in HermitianPSDCone())
     _test_constraint_name_util(
         href,
