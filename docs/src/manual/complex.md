@@ -260,7 +260,7 @@ macro:
 julia> model = Model();
 
 julia> @variable(model, H[1:2, 1:2], Symmetric)
-2×2 Symmetric{VariableRef, Matrix{VariableRef}}:
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  H[1,1]  H[1,2]
  H[1,2]  H[2,2]
 
