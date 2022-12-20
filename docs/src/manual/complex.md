@@ -251,3 +251,22 @@ GenericAffExpr{ComplexF64, VariableRef}
 julia> typeof(H[2, 1])
 GenericAffExpr{ComplexF64, VariableRef}
 ```
+
+## Hermitian PSD constraints
+
+The [`HermitianPSDCone`](@ref) can also be used in the [`@constraint`](@ref)
+macro:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, H[1:2, 1:2], Symmetric)
+2×2 Symmetric{VariableRef, Matrix{VariableRef}}:
+ H[1,1]  H[1,2]
+ H[1,2]  H[2,2]
+
+julia> import LinearAlgebra
+
+julia> @constraint(model, LinearAlgebra.Hermitian(H) in HermitianPSDCone())
+[H[1,1]                (1.0 + 1.0im) H[1,2];
+ (1.0 - 1.0im) H[1,2]  H[2,2]] ∈ HermitianPSDCone()
+```

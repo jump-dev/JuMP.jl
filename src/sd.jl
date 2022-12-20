@@ -417,7 +417,7 @@ end
 
 Hermitian positive semidefinite cone object that can be used to create a
 Hermitian positive semidefinite square matrix in the [`@variable`](@ref)
-macro.
+and [`@constraint`](@ref) macros.
 
 ## Examples
 
