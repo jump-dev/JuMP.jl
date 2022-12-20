@@ -1008,7 +1008,6 @@ Return `true` if the variable has a start value set otherwise return `false`.
 See also [`set_start_value`](@ref).
 """
 has_start_value(v::VariableRef)::Bool = start_value(v) !== nothing
-    return MOI.get(owner_model(v), MOI.VariablePrimalStart(), v) !== nothing
 
 """
     set_start_value(variable::VariableRef, value::Union{Real,Nothing})
