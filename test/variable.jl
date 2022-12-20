@@ -220,8 +220,9 @@ function test_variable_starts_set_get(ModelType, ::Any)
     JuMP.set_start_value.(x, x0)
     @test JuMP.start_value.(x) == x0
     @test JuMP.start_value.([x[1], x[2], x[3]]) == x0
-
+    @test JuMP.has_start_value(x[1]) == true
     @variable(model, y[1:3, 1:2])
+    @test JuMP.has_start_value(y[1,1]) == false
     @test_throws DimensionMismatch JuMP.set_start_value.(y, collect(1:6))
 end
 
