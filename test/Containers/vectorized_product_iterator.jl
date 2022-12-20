@@ -8,27 +8,44 @@
 # See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
+module TestContainersVectorizedProductIterator
+
 using JuMP.Containers
 using Test
 
-@testset "Vectorized Product Iterator" begin
-    I = [
-        1 2
-        3 4
-    ]
+function runtests()
+    for name in names(@__MODULE__; all = true)
+        if startswith("$(name)", "test_")
+            @testset "$(name)" begin
+                getfield(@__MODULE__, name)()
+            end
+        end
+    end
+    return
+end
+
+function test_VectorizedProductIterator()
+    I = [1 2; 3 4]
     @test isempty(Containers.vectorized_product(2, I, 1:0))
     @test isempty(collect(Containers.vectorized_product(2, I, 1:0)))
     @test collect(Containers.vectorized_product(2, I)) ==
           [(2, 1) (2, 3) (2, 2) (2, 4)]
+    return
 end
 
-@testset "Unknown size" begin
+function test_unknown_size()
     f = Iterators.filter(k -> isodd(k), 1:10)
     v = Containers.vectorized_product(f)
     @test axes(v) == (Base.OneTo(5),)
+    return
 end
 
-@testset "Infinite size" begin
+function test_infinite_size()
     f = Iterators.repeated(1)
     @test_throws ErrorException Containers.vectorized_product(f)
+    return
 end
+
+end  # module
+
+TestContainersVectorizedProductIterator.runtests()
