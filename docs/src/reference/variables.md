@@ -38,6 +38,7 @@ variable_by_name
 ## Start values
 
 ```@docs
+has_start_value
 set_start_value
 start_value
 ```

@@ -247,7 +247,8 @@ function JuMP.unfix(vref::MyVariableRef)
     )
 end
 function JuMP.start_value(vref::MyVariableRef)::Union{Nothing,Float64}
-    return variable_info(vref).start
+    info = variable_info(vref)
+    return info.has_start ? info.start : nothing
 end
 function JuMP.set_start_value(vref::MyVariableRef, start)
     info = variable_info(vref)

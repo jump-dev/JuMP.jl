@@ -1001,6 +1001,15 @@ function start_value(v::VariableRef)::Union{Nothing,Float64}
 end
 
 """
+    has_start_value(variable::AbstractVariableRef)
+
+Return `true` if the variable has a start value set otherwise return `false`.
+
+See also [`set_start_value`](@ref).
+"""
+has_start_value(v::AbstractVariableRef)::Bool = start_value(v) !== nothing
+
+"""
     set_start_value(variable::VariableRef, value::Union{Real,Nothing})
 
 Set the start value (MOI attribute `VariablePrimalStart`) of the `variable` to
