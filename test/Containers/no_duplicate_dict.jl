@@ -8,10 +8,23 @@
 # See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
+module TestContainersNoDuplicateDict
+
 using JuMP.Containers
 using Test
 
-@testset "Iterator with constant eltype" begin
+function runtests()
+    for name in names(@__MODULE__; all = true)
+        if startswith("$(name)", "test_")
+            @testset "$(name)" begin
+                getfield(@__MODULE__, name)()
+            end
+        end
+    end
+    return
+end
+
+function test_iterator_with_constant_eltype()
     f(ij) = ij => sum(ij)
     g = Base.Generator(f, Iterators.product(1:2, 1:2))
     dict = Containers.NoDuplicateDict(g)
@@ -28,8 +41,10 @@ using Test
     @test_throws err Containers.NoDuplicateDict(g)
     g = Base.Generator(f, [(1, 2), (1, 2)])
     @test_throws err Containers.NoDuplicateDict(g)
+    return
 end
-@testset "Iterator with varying eltype" begin
+
+function test_iterator_with_varying_eltype()
     f(ij) = ij => ==(ij...) ? nothing : 1.0
     g = Base.Generator(f, Iterators.product(1:2, 1:2))
     dict = Containers.NoDuplicateDict(g)
@@ -50,4 +65,9 @@ end
     @test_throws err Containers.NoDuplicateDict(g)
     g = Base.Generator(f, [(1, 1), (1, 1)])
     @test_throws err Containers.NoDuplicateDict(g)
+    return
 end
+
+end  # module
+
+TestContainersNoDuplicateDict.runtests()
