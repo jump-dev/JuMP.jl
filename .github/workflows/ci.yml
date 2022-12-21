@@ -49,6 +49,8 @@ jobs:
         with:
           depwarn: error
       - uses: julia-actions/julia-processcoverage@v1
+        with:
+          directories: src
       - uses: codecov/codecov-action@v1
         with:
           file: lcov.info
