@@ -259,14 +259,19 @@ macro:
 ```jldoctest
 julia> model = Model();
 
-julia> @variable(model, H[1:2, 1:2], Symmetric)
-2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
- H[1,1]  H[1,2]
- H[1,2]  H[2,2]
+julia> @variable(model, x[1:2])
+2-element Vector{VariableRef}:
+ x[1]
+ x[2]
 
 julia> import LinearAlgebra
 
-julia> @constraint(model, LinearAlgebra.Hermitian(H) in HermitianPSDCone())
-[H[1,1]                (1.0 + 1.0im) H[1,2];
- (1.0 - 1.0im) H[1,2]  H[2,2]] ∈ HermitianPSDCone()
+julia> H = LinearAlgebra.Hermitian([x[1] 1im; -1im -x[2]])
+2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ x[1]           (0.0 + 1.0im)
+ (0.0 - 1.0im)  (-1.0 - 0.0im) x[2]
+
+julia> @constraint(model, H in HermitianPSDCone())
+[x[1]           (0.0 + 1.0im);
+ (0.0 - 1.0im)  (-1.0 + 0.0im) x[2]] ∈ HermitianPSDCone()
 ```

@@ -222,6 +222,10 @@ function reshape_set(::MOI.PositiveSemidefiniteConeSquare, ::SquareMatrixShape)
 end
 vectorize(matrix::Matrix, ::SquareMatrixShape) = vec(matrix)
 
+function vectorize(matrix, shape::Union{SymmetricMatrixShape,SquareMatrixShape})
+    return vectorize(Matrix(matrix), shape)
+end
+
 # This is a special method because calling `Matrix(matrix)` accesses an undef
 # reference.
 function vectorize(matrix::UpperTriangular, ::SquareMatrixShape)
@@ -464,10 +468,7 @@ struct HermitianMatrixShape <: AbstractShape
     side_dimension::Int
 end
 
-function vectorize(
-    matrix,
-    shape::Union{SymmetricMatrixShape,SquareMatrixShape,HermitianMatrixShape},
-)
+function vectorize(matrix, shape::HermitianMatrixShape)
     return vectorize(Matrix(matrix), shape)
 end
 
