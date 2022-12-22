@@ -101,7 +101,7 @@ model = Model();
 
 # This reformulation does not work for ``t \ge \min\{x, y\}``.
 
-# ## Max
+# ## Min
 
 # To model ``t \le \min\{x, y\}``, do:
 
