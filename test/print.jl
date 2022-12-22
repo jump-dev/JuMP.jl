@@ -975,13 +975,13 @@ end
 
 function test_print_hermitian_psd_cone()
     model = Model()
-    @variable(model, x[1:2, 1:2])
+    @variable(model, x[1:2])
     in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
-    c = @constraint(model, Hermitian(x) in HermitianPSDCone())
+    c = @constraint(model, Hermitian([x[1] 1im; -1im x[2]]) in HermitianPSDCone())
     @test sprint(io -> show(io, MIME("text/plain"), c)) ==
-          "[x[1,1]                (1.0 + 1.0im) x[1,2];\n (1.0 - 1.0im) x[1,2]  x[2,2]] $in_sym HermitianPSDCone()"
+          "[x[1]           (0.0 + 1.0im);\n (0.0 - 1.0im)  x[2]] $in_sym $(HermitianPSDCone())"
     @test sprint(io -> show(io, MIME("text/latex"), c)) ==
-          "\$\$ \\begin{bmatrix}\nx_{1,1} & (1.0 + 1.0im) x_{1,2}\\\\\n(1.0 - 1.0im) x_{1,2} & x_{2,2}\\\\\n\\end{bmatrix} \\in \\text{HermitianPSDCone()} \$\$"
+          "\$\$ \\begin{bmatrix}\nx_{1} & (0.0 + 1.0im)\\\\\n(0.0 - 1.0im) & x_{2}\\\\\n\\end{bmatrix} \\in \\text{$(HermitianPSDCone())} \$\$"
     return
 end
 
