@@ -17,6 +17,8 @@ using JuMP
 using LinearAlgebra
 using Test
 
+include(joinpath(@__DIR__, "JuMPExtension.jl"))
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if startswith("$(name)", "test_")
@@ -24,11 +26,17 @@ function runtests()
                 getfield(@__MODULE__, name)()
             end
         end
+        if startswith("$(name)", "test_extension_")
+            @testset "$(name)-JuMPExtension" begin
+                getfield(@__MODULE__, name)(
+                    JuMPExtension.MyModel,
+                    JuMPExtension.MyVariableRef,
+                )
+            end
+        end
     end
     return
 end
-
-include(joinpath(@__DIR__, "JuMPExtension.jl"))
 
 # Helper function to test IO methods work correctly
 function _io_test_show(::MIME"text/plain", obj, exp_str)
@@ -398,173 +406,181 @@ function test_printing_custom_constraint()
     return
 end
 
-function _test_printing(ModelType::Type{<:JuMP.AbstractModel})
-    @testset "VariableRef" begin
-        m = ModelType()
-        @variable(m, 0 <= x <= 2)
+function test_extension_printing_variable_ref(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    m = ModelType()
+    @variable(m, 0 <= x <= 2)
+    @test JuMP.name(x) == "x"
+    io_test(MIME("text/plain"), x, "x")
+    io_test(MIME("text/latex"), x, "x")
 
-        @test JuMP.name(x) == "x"
-        io_test(MIME("text/plain"), x, "x")
-        io_test(MIME("text/latex"), x, "x")
-
-        JuMP.set_name(x, "x2")
-        @test JuMP.name(x) == "x2"
-        io_test(MIME("text/plain"), x, "x2")
-        io_test(MIME("text/latex"), x, "x2")
-
-        JuMP.set_name(x, "")
-        @test JuMP.name(x) == ""
-        if x isa VariableRef
-            io_test(MIME("text/plain"), x, "_[1]")
-            io_test(MIME("text/latex"), x, "{\\_}_{1}")
-        else
-            io_test(MIME("text/plain"), x, "anon")
-            io_test(MIME("text/latex"), x, "anon")
-        end
-        @variable(m, z[1:2, 3:5])
-        @test JuMP.name(z[1, 3]) == "z[1,3]"
-        io_test(MIME("text/plain"), z[1, 3], "z[1,3]")
-        io_test(MIME("text/latex"), z[1, 3], "z_{1,3}")
-        @test JuMP.name(z[2, 4]) == "z[2,4]"
-        io_test(MIME("text/plain"), z[2, 4], "z[2,4]")
-        io_test(MIME("text/latex"), z[2, 4], "z_{2,4}")
-        @test JuMP.name(z[2, 5]) == "z[2,5]"
-        io_test(MIME("text/plain"), z[2, 5], "z[2,5]")
-        io_test(MIME("text/latex"), z[2, 5], "z_{2,5}")
-
-        @variable(m, w[3:9, ["red", "blue", "green"]])
-        @test JuMP.name(w[7, "green"]) == "w[7,green]"
-        io_test(MIME("text/plain"), w[7, "green"], "w[7,green]")
-        io_test(MIME("text/latex"), w[7, "green"], "w_{7,green}")
-
-        rng = 2:5
-        @variable(m, v[rng, rng, rng, rng, rng, rng, rng])
-        a_v = v[4, 5, 2, 3, 2, 2, 4]
-        @test JuMP.name(a_v) == "v[4,5,2,3,2,2,4]"
-        io_test(MIME("text/plain"), a_v, "v[4,5,2,3,2,2,4]")
-        io_test(MIME("text/latex"), a_v, "v_{4,5,2,3,2,2,4}")
+    JuMP.set_name(x, "x2")
+    @test JuMP.name(x) == "x2"
+    io_test(MIME("text/plain"), x, "x2")
+    io_test(MIME("text/latex"), x, "x2")
+    JuMP.set_name(x, "")
+    @test JuMP.name(x) == ""
+    if x isa VariableRef
+        io_test(MIME("text/plain"), x, "_[1]")
+        io_test(MIME("text/latex"), x, "{\\_}_{1}")
+    else
+        io_test(MIME("text/plain"), x, "anon")
+        io_test(MIME("text/latex"), x, "anon")
     end
-
-    @testset "base_name keyword argument" begin
-        m = ModelType()
-        @variable(m, x, base_name = "foo")
-        @variable(m, y[1:3], base_name = "bar")
-        num = 123
-        @variable(m, z[[:red, :blue]], base_name = "color_$num")
-        @variable(m, v[1:2, 1:2], PSD, base_name = string("i", "$num", num))
-        @variable(m, w[1:3, 1:3], Symmetric, base_name = "symm")
-
-        io_test(MIME("text/plain"), x, "foo")
-        io_test(MIME("text/latex"), x, "foo")
-        io_test(MIME("text/plain"), y[2], "bar[2]")
-        io_test(MIME("text/latex"), y[2], "bar_{2}")
-        io_test(MIME("text/plain"), z[:red], "color_123[red]")
-        io_test(MIME("text/latex"), z[:red], "color\\_123_{red}")
-        io_test(MIME("text/plain"), v[2, 1], "i123123[1,2]")
-        io_test(MIME("text/latex"), v[2, 1], "i123123_{1,2}")
-        io_test(MIME("text/plain"), w[1, 3], "symm[1,3]")
-        io_test(MIME("text/latex"), w[1, 3], "symm_{1,3}")
-    end
-
-    @testset "VectorOfVariable constraints" begin
-        ge = JuMP._math_symbol(MIME("text/plain"), :geq)
-        in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
-        model = ModelType()
-        @variable(model, x)
-        @variable(model, y)
-        zero_constr = @constraint(model, [x, y] in MOI.Zeros(2))
-
-        io_test(
-            MIME("text/plain"),
-            zero_constr,
-            "[x, y] $in_sym MathOptInterface.Zeros(2)",
-        )
-        # TODO: Test in IJulia mode and do nice printing for Zeros().
-    end
-
-    @testset "Scalar AffExpr constraints" begin
-        le = JuMP._math_symbol(MIME("text/plain"), :leq)
-        ge = JuMP._math_symbol(MIME("text/plain"), :geq)
-        eq = JuMP._math_symbol(MIME("text/plain"), :eq)
-        in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
-
-        model = ModelType()
-        @variable(model, x)
-        @constraint(model, linear_le, x + 0 <= 1)
-        @constraint(model, linear_ge, x + 0 >= 1)
-        @constraint(model, linear_eq, x + 0 == 1)
-        @constraint(model, linear_range, -1 <= x + 0 <= 1)
-        linear_noname = @constraint(model, x + 0 <= 1)
-
-        io_test(MIME("text/plain"), linear_le, "linear_le : x $le 1.0")
-        io_test(MIME("text/plain"), linear_eq, "linear_eq : x $eq 1.0")
-        io_test(
-            MIME("text/plain"),
-            linear_range,
-            "linear_range : x $in_sym [-1.0, 1.0]",
-        )
-        io_test(MIME("text/plain"), linear_noname, "x $le 1.0")
-
-        # io_test doesn't work here because constraints print with a mix of math
-        # and non-math.
-        @test sprint(show, "text/latex", linear_le) ==
-              "linear_le : \$ x \\leq 1.0 \$"
-        @test sprint(show, "text/latex", linear_ge) ==
-              "linear_ge : \$ x \\geq 1.0 \$"
-        @test sprint(show, "text/latex", linear_eq) ==
-              "linear_eq : \$ x = 1.0 \$"
-        @test sprint(show, "text/latex", linear_range) ==
-              "linear_range : \$ x \\in \\[-1.0, 1.0\\] \$"
-        @test sprint(show, "text/latex", linear_noname) ==
-              "\$\$ x \\leq 1.0 \$\$"
-    end
-
-    @testset "Vector AffExpr constraints" begin
-        in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
-
-        model = ModelType()
-        @variable(model, x)
-        @constraint(model, soc_constr, [x - 1, x + 1] in SecondOrderCone())
-
-        io_test(
-            MIME("text/plain"),
-            soc_constr,
-            "soc_constr : " *
-            "[x - 1, x + 1] $in_sym MathOptInterface.SecondOrderCone(2)",
-        )
-
-        # TODO: Test in IJulia mode.
-    end
-
-    @testset "Scalar QuadExpr constraints" begin
-        in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
-        le = JuMP._math_symbol(MIME("text/plain"), :leq)
-        sq = JuMP._math_symbol(MIME("text/plain"), :sq)
-
-        model = ModelType()
-        @variable(model, x)
-        quad_constr = @constraint(model, 2x^2 <= 1)
-
-        io_test(MIME("text/plain"), quad_constr, "2 x$sq $le 1.0")
-        # TODO: Test in IJulia mode.
-    end
-    @testset "Scalar Indicator constraints" begin
-        le = JuMP._math_symbol(MIME("text/plain"), :leq)
-
-        model = ModelType()
-        @variable(model, x, Bin)
-        @variable(model, y)
-        ind_constr = @constraint(model, !x => {y <= 1})
-
-        io_test(MIME("text/plain"), ind_constr, "!x => {y $le 1.0}")
-        # TODO: Test in IJulia mode.
-    end
+    @variable(m, z[1:2, 3:5])
+    @test JuMP.name(z[1, 3]) == "z[1,3]"
+    io_test(MIME("text/plain"), z[1, 3], "z[1,3]")
+    io_test(MIME("text/latex"), z[1, 3], "z_{1,3}")
+    @test JuMP.name(z[2, 4]) == "z[2,4]"
+    io_test(MIME("text/plain"), z[2, 4], "z[2,4]")
+    io_test(MIME("text/latex"), z[2, 4], "z_{2,4}")
+    @test JuMP.name(z[2, 5]) == "z[2,5]"
+    io_test(MIME("text/plain"), z[2, 5], "z[2,5]")
+    io_test(MIME("text/latex"), z[2, 5], "z_{2,5}")
+    @variable(m, w[3:9, ["red", "blue", "green"]])
+    @test JuMP.name(w[7, "green"]) == "w[7,green]"
+    io_test(MIME("text/plain"), w[7, "green"], "w[7,green]")
+    io_test(MIME("text/latex"), w[7, "green"], "w_{7,green}")
+    rng = 2:5
+    @variable(m, v[rng, rng, rng, rng, rng, rng, rng])
+    a_v = v[4, 5, 2, 3, 2, 2, 4]
+    @test JuMP.name(a_v) == "v[4,5,2,3,2,2,4]"
+    io_test(MIME("text/plain"), a_v, "v[4,5,2,3,2,2,4]")
+    io_test(MIME("text/latex"), a_v, "v_{4,5,2,3,2,2,4}")
     return
 end
 
-test_printing_Model() = _test_printing(Model)
+function test_extension_printing_base_name_keyword_argument(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    m = ModelType()
+    @variable(m, x, base_name = "foo")
+    @variable(m, y[1:3], base_name = "bar")
+    num = 123
+    @variable(m, z[[:red, :blue]], base_name = "color_$num")
+    @variable(m, v[1:2, 1:2], PSD, base_name = string("i", "$num", num))
+    @variable(m, w[1:3, 1:3], Symmetric, base_name = "symm")
+    io_test(MIME("text/plain"), x, "foo")
+    io_test(MIME("text/latex"), x, "foo")
+    io_test(MIME("text/plain"), y[2], "bar[2]")
+    io_test(MIME("text/latex"), y[2], "bar_{2}")
+    io_test(MIME("text/plain"), z[:red], "color_123[red]")
+    io_test(MIME("text/latex"), z[:red], "color\\_123_{red}")
+    io_test(MIME("text/plain"), v[2, 1], "i123123[1,2]")
+    io_test(MIME("text/latex"), v[2, 1], "i123123_{1,2}")
+    io_test(MIME("text/plain"), w[1, 3], "symm[1,3]")
+    io_test(MIME("text/latex"), w[1, 3], "symm_{1,3}")
+    return
+end
 
-test_printing_MyModel() = _test_printing(JuMPExtension.MyModel)
+function test_extension_printing_vectorofvariables(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    ge = JuMP._math_symbol(MIME("text/plain"), :geq)
+    in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
+    model = ModelType()
+    @variable(model, x)
+    @variable(model, y)
+    zero_constr = @constraint(model, [x, y] in MOI.Zeros(2))
+    io_test(
+        MIME("text/plain"),
+        zero_constr,
+        "[x, y] $in_sym MathOptInterface.Zeros(2)",
+    )
+    # TODO: Test in IJulia mode and do nice printing for Zeros().
+    return
+end
+
+function test_extension_printing_scalaraffinefunction_constraints(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    le = JuMP._math_symbol(MIME("text/plain"), :leq)
+    ge = JuMP._math_symbol(MIME("text/plain"), :geq)
+    eq = JuMP._math_symbol(MIME("text/plain"), :eq)
+    in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
+    model = ModelType()
+    @variable(model, x)
+    @constraint(model, linear_le, x + 0 <= 1)
+    @constraint(model, linear_ge, x + 0 >= 1)
+    @constraint(model, linear_eq, x + 0 == 1)
+    @constraint(model, linear_range, -1 <= x + 0 <= 1)
+    linear_noname = @constraint(model, x + 0 <= 1)
+    io_test(MIME("text/plain"), linear_le, "linear_le : x $le 1.0")
+    io_test(MIME("text/plain"), linear_eq, "linear_eq : x $eq 1.0")
+    io_test(
+        MIME("text/plain"),
+        linear_range,
+        "linear_range : x $in_sym [-1.0, 1.0]",
+    )
+    io_test(MIME("text/plain"), linear_noname, "x $le 1.0")
+    # io_test doesn't work here because constraints print with a mix of math
+    # and non-math.
+    @test sprint(show, "text/latex", linear_le) ==
+          "linear_le : \$ x \\leq 1.0 \$"
+    @test sprint(show, "text/latex", linear_ge) ==
+          "linear_ge : \$ x \\geq 1.0 \$"
+    @test sprint(show, "text/latex", linear_eq) == "linear_eq : \$ x = 1.0 \$"
+    @test sprint(show, "text/latex", linear_range) ==
+          "linear_range : \$ x \\in \\[-1.0, 1.0\\] \$"
+    @test sprint(show, "text/latex", linear_noname) == "\$\$ x \\leq 1.0 \$\$"
+    return
+end
+
+function test_extension_printing_vectoraffinefunction_constraints(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
+    model = ModelType()
+    @variable(model, x)
+    @constraint(model, soc_constr, [x - 1, x + 1] in SecondOrderCone())
+    io_test(
+        MIME("text/plain"),
+        soc_constr,
+        "soc_constr : " *
+        "[x - 1, x + 1] $in_sym MathOptInterface.SecondOrderCone(2)",
+    )
+    # TODO: Test in IJulia mode.
+    return
+end
+
+function test_extension_printing_scalarquadraticfunction_constraints(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
+    le = JuMP._math_symbol(MIME("text/plain"), :leq)
+    sq = JuMP._math_symbol(MIME("text/plain"), :sq)
+
+    model = ModelType()
+    @variable(model, x)
+    quad_constr = @constraint(model, 2x^2 <= 1)
+
+    io_test(MIME("text/plain"), quad_constr, "2 x$sq $le 1.0")
+    # TODO: Test in IJulia mode.
+    return
+end
+
+function test_extension_printing_indicator_constraints(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    le = JuMP._math_symbol(MIME("text/plain"), :leq)
+
+    model = ModelType()
+    @variable(model, x, Bin)
+    @variable(model, y)
+    ind_constr = @constraint(model, !x => {y <= 1})
+
+    io_test(MIME("text/plain"), ind_constr, "!x => {y $le 1.0}")
+    # TODO: Test in IJulia mode.
+    return
+end
 
 # Test printing of models of type `ModelType` for which the model is stored in
 # an MOI backend
