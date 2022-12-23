@@ -1289,6 +1289,55 @@ function test_Model_relax_with_penalty!_specific_with_default(::Any, ::Any)
     return
 end
 
+function test_Hermitian_PSD_constraint(ModelType, VariableRefType)
+    model = ModelType()
+    @variable(model, x)
+    @variable(model, y)
+    @variable(model, w)
+    A = [x 1im; -1im -y] - [1 (x+w*im); (x-w*im) -2]
+    @constraint(model, href, Hermitian(A) in HermitianPSDCone())
+    _test_constraint_name_util(
+        href,
+        "href",
+        Vector{AffExpr},
+        MOI.HermitianPositiveSemidefiniteConeTriangle,
+    )
+    c = JuMP.constraint_object(href)
+    @test JuMP.isequal_canonical(c.func[1], x - 1)
+    @test JuMP.isequal_canonical(c.func[2], -x)
+    @test JuMP.isequal_canonical(c.func[3], 2 - y)
+    @test JuMP.isequal_canonical(c.func[4], 1 - w)
+    @test c.set == MOI.HermitianPositiveSemidefiniteConeTriangle(2)
+    @test c.shape isa JuMP.HermitianMatrixShape
+    return
+end
+
+function test_HermitianPSDCone_errors(ModelType, VariableRefType)
+    model = ModelType()
+    @variable(model, x)
+    @variable(model, y)
+    aff_str = "$(GenericAffExpr{ComplexF64,VariableRefType})"
+    err = ErrorException(
+        "In `@constraint(model, Hermitian([x 1im; -1im -y]) in HermitianPSDCone(), unknown_kw = 1)`:" *
+        " Unrecognized constraint building format. Tried to invoke " *
+        "`build_constraint(error, $aff_str[" *
+        "x (0.0 + 1.0im); (0.0 - 1.0im) (-1.0 - 0.0im) y], $(HermitianPSDCone()); unknown_kw = 1)`, but no " *
+        "such method exists. This is due to specifying an unrecognized " *
+        "function, constraint set, and/or extra positional/keyword " *
+        "arguments.\n\nIf you're trying to create a JuMP extension, you " *
+        "need to implement `build_constraint` to accomodate these arguments.",
+    )
+    @test_throws_strip(
+        err,
+        @constraint(
+            model,
+            Hermitian([x 1im; -1im -y]) in HermitianPSDCone(),
+            unknown_kw = 1,
+        ),
+    )
+    return
+end
+
 function runtests()
     for name in names(@__MODULE__; all = true)
         if !startswith("$(name)", "test_")

@@ -203,7 +203,7 @@ Base.broadcastable(a::GenericAffExpr) = Ref(a)
 
 Base.conj(a::GenericAffExpr{<:Real}) = a
 Base.real(a::GenericAffExpr{<:Real}) = a
-Base.imag(a::GenericAffExpr{<:Real}) = a
+Base.imag(a::GenericAffExpr{<:Real}) = zero(a)
 Base.abs2(a::GenericAffExpr{<:Real}) = a^2
 
 Base.conj(a::GenericAffExpr{<:Complex}) = map_coefficients(conj, a)

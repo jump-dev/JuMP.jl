@@ -177,11 +177,11 @@ function test_complex_conj()
     @variable(model, x)
     @test conj(x) === x
     @test real(x) === x
-    @test imag(x) === x
+    @test imag(x) == 0
     real_aff = 2 * x + 3
     @test conj(real_aff) === real_aff
     @test real(real_aff) === real_aff
-    @test imag(real_aff) === real_aff
+    @test imag(real_aff) == 0
     complex_aff = (2 + im) * x + 3 - im
     @test conj(complex_aff) == (2 - im) * x + 3 + im
     @test real(complex_aff) == 2x + 3
@@ -241,6 +241,19 @@ function test_complex_sparse_arrays_dropzeros()
         expr.constant = 1.0 + rhs
         @test isequal(SparseArrays.dropzeros(expr), a * x + 1.0)
     end
+    return
+end
+
+function test_complex_hermitian_constraint()
+    model = Model()
+    @variable(model, x[1:2, 1:2])
+    H = LinearAlgebra.Hermitian(x)
+    @test vectorize(H, HermitianMatrixShape(2)) ==
+          [x[1, 1], x[1, 2], x[2, 2], 0.0]
+    @constraint(model, c, H in HermitianPSDCone())
+    @test constraint_object(c).func == [x[1, 1], x[1, 2], x[2, 2], 0.0]
+    @test function_string(MIME("text/plain"), constraint_object(c)) ==
+          "[x[1,1]  x[1,2];\n x[1,2]  x[2,2]]"
     return
 end
 

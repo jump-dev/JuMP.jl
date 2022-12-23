@@ -191,7 +191,7 @@ abstract type AbstractVariableRef <: AbstractJuMPScalar end
 variable_ref_type(v::AbstractVariableRef) = typeof(v)
 Base.conj(v::AbstractVariableRef) = v
 Base.real(v::AbstractVariableRef) = v
-Base.imag(v::AbstractVariableRef) = v
+Base.imag(v::AbstractVariableRef) = zero(v)
 Base.abs2(v::AbstractVariableRef) = v^2
 
 """
@@ -1352,8 +1352,10 @@ function _imag(s::String)
 end
 
 _real(v::ScalarVariable) = _mapinfo(real, v)
+_real(scalar::AbstractJuMPScalar) = real(scalar)
 
 _imag(v::ScalarVariable) = _mapinfo(imag, v)
+_imag(scalar::AbstractJuMPScalar) = imag(scalar)
 
 _conj(v::ScalarVariable) = _mapinfo(conj, v)
 
