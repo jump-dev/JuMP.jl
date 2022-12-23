@@ -193,17 +193,19 @@ they should be unique values. The *k*th element in the set corresponds to the
 for a description of SOS constraints and their potential uses.
 This is a shortcut for the `MathOptInterface.SOS1` set.
 """
-struct SOS1 <: AbstractVectorSet
-    weights::Vector{Float64}
-    function SOS1(weights::AbstractVector = Float64[])
-        return new(convert(Vector{Float64}, weights))
+struct SOS1{T} <: AbstractVectorSet
+    weights::Vector{T}
+    function SOS1{T}(weights::AbstractVector = T[]) where {T}
+        return new{T}(convert(Vector{T}, weights))
     end
 end
-function moi_set(set::SOS1, dim::Int)
+SOS1() = SOS1{Int}()
+SOS1(weights) = SOS1{eltype(weights)}(weights)
+function moi_set(set::SOS1{T}, dim::Int) where {T}
     if length(set.weights) == 0
-        return MOI.SOS1(collect(1:1.0:dim))
+        return MOI.SOS1{T}(collect(1:dim))
     elseif length(set.weights) == dim
-        return MOI.SOS1(set.weights)
+        return MOI.SOS1{T}(set.weights)
     else
         error("Weight vector in SOS1 is not of length $(dim).")
     end
@@ -222,17 +224,19 @@ See [here](http://lpsolve.sourceforge.net/5.5/SOS.htm) for a description of SOS
 constraints and their potential uses.
 This is a shortcut for the `MathOptInterface.SOS2` set.
 """
-struct SOS2 <: AbstractVectorSet
-    weights::Vector{Float64}
-    function SOS2(weights::AbstractVector = Float64[])
-        return new(convert(Vector{Float64}, weights))
+struct SOS2{T} <: AbstractVectorSet
+    weights::Vector{T}
+    function SOS2{T}(weights::AbstractVector = T[]) where {T}
+        return new{T}(convert(Vector{T}, weights))
     end
 end
-function moi_set(set::SOS2, dim::Int)
+SOS2() = SOS2{Int}()
+SOS2(weights) = SOS2{eltype(weights)}(weights)
+function moi_set(set::SOS2{T}, dim::Int) where {T}
     if length(set.weights) == 0
-        return MOI.SOS2(collect(1:1.0:dim))
+        return MOI.SOS2{T}(collect(1:dim))
     elseif length(set.weights) == dim
-        return MOI.SOS2(set.weights)
+        return MOI.SOS2{T}(set.weights)
     else
         error("Weight vector in SOS2 is not of length $(dim).")
     end

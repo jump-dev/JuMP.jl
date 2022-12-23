@@ -361,7 +361,7 @@ _desparsify(x::SparseArrays.AbstractSparseArray) = collect(x)
 _desparsify(x) = x
 
 function _functionize(v::V) where {V<:AbstractVariableRef}
-    return convert(GenericAffExpr{Float64,V}, v)
+    return convert(GenericAffExpr{value_type(V),V}, v)
 end
 
 _functionize(v::AbstractArray{<:AbstractVariableRef}) = _functionize.(v)
@@ -373,7 +373,7 @@ function _functionize(
 end
 
 _functionize(x) = x
-_functionize(::_MA.Zero) = 0.0
+_functionize(::_MA.Zero) = false
 
 """
     parse_constraint(_error::Function, expr::Expr)
@@ -641,7 +641,13 @@ function build_constraint(
     args...;
     kwargs...,
 )
-    return build_constraint(_error, f, MOI.GreaterThan(0.0), args...; kwargs...)
+    return build_constraint(
+        _error,
+        f,
+        MOI.GreaterThan(false),
+        args...;
+        kwargs...,
+    )
 end
 
 function build_constraint(
@@ -651,11 +657,11 @@ function build_constraint(
     args...;
     kwargs...,
 )
-    return build_constraint(_error, f, MOI.LessThan(0.0), args...; kwargs...)
+    return build_constraint(_error, f, MOI.LessThan(false), args...; kwargs...)
 end
 
 function build_constraint(_error::Function, f, set::Zeros, args...; kwargs...)
-    return build_constraint(_error, f, MOI.EqualTo(0.0), args...; kwargs...)
+    return build_constraint(_error, f, MOI.EqualTo(false), args...; kwargs...)
 end
 
 function build_constraint(
@@ -697,7 +703,7 @@ end
 function build_constraint(
     _error::Function,
     func,
-    set::Union{MOI.AbstractScalarSet,MOI.AbstractVectorSet},
+    ::Union{MOI.AbstractScalarSet,MOI.AbstractVectorSet},
 )
     return _error(
         "Unable to add the constraint because we don't recognize " *
@@ -706,20 +712,27 @@ function build_constraint(
 end
 
 function build_constraint(
-    _error::Function,
-    v::AbstractJuMPScalar,
+    ::Function,
+    v::Union{AbstractJuMPScalar},
     set::MOI.AbstractScalarSet,
 )
     return ScalarConstraint(v, set)
 end
+function _clear_constant!(expr::Union{GenericAffExpr,GenericQuadExpr})
+    offset = constant(expr)
+    add_to_expression!(expr, -offset)
+    return expr, offset
+end
+function _clear_constant!(α::Number)
+    return zero(α), α
+end
 function build_constraint(
-    _error::Function,
-    expr::Union{GenericAffExpr,GenericQuadExpr},
+    ::Function,
+    expr::Union{Number,GenericAffExpr,GenericQuadExpr},
     set::MOI.AbstractScalarSet,
 )
     if MOI.Utilities.supports_shift_constant(typeof(set))
-        offset = constant(expr)
-        add_to_expression!(expr, -offset)
+        expr, offset = _clear_constant!(expr)
         new_set = MOI.Utilities.shift_constant(set, -offset)
         return ScalarConstraint(expr, new_set)
     else
@@ -728,32 +741,18 @@ function build_constraint(
 end
 function build_constraint(
     _error::Function,
-    α::Number,
-    set::MOI.AbstractScalarSet,
-)
-    return build_constraint(_error, convert(AffExpr, α), set)
-end
-function build_constraint(
-    _error::Function,
     ::_MA.Zero,
     set::MOI.AbstractScalarSet,
 )
-    return build_constraint(_error, zero(AffExpr), set)
+    return build_constraint(_error, false, set)
 end
 
 function build_constraint(
     ::Function,
-    x::AbstractVector{<:AbstractJuMPScalar},
+    x::AbstractVector{<:Union{Number,AbstractJuMPScalar}},
     set::MOI.AbstractVectorSet,
 )
     return VectorConstraint(x, set)
-end
-function build_constraint(
-    _error::Function,
-    a::Vector{<:Number},
-    set::MOI.AbstractVectorSet,
-)
-    return build_constraint(_error, convert(Vector{AffExpr}, a), set)
 end
 
 function build_constraint(
@@ -814,7 +813,10 @@ function build_constraint(
     return build_constraint(
         _error,
         func,
-        MOI.Interval(Float64(lb), Float64(ub)),
+        MOI.Interval(
+            convert(value_type(variable_ref_type(func)), lb),
+            convert(value_type(variable_ref_type(func)), ub),
+        ),
     )
 end
 
@@ -843,24 +845,79 @@ function build_constraint(
     lb::Real,
     ub::Real,
 )
-    return build_constraint(_error, 1.0func, lb, ub)
+    return build_constraint(
+        _error,
+        one(value_type(typeof(func))) * func,
+        lb,
+        ub,
+    )
 end
 
 function build_constraint(
     ::Function,
-    x::AbstractVector{<:AbstractJuMPScalar},
+    x::AbstractVector{T},
     set::MOI.SOS1,
-)
-    return VectorConstraint(x, MOI.SOS1{Float64}(set.weights))
+) where {T<:AbstractJuMPScalar}
+    return VectorConstraint(
+        x,
+        MOI.SOS1{value_type(variable_ref_type(T))}(set.weights),
+    )
 end
 
 function build_constraint(
     ::Function,
-    x::AbstractVector{<:AbstractJuMPScalar},
+    x::AbstractVector{T},
     set::MOI.SOS2,
-)
-    return VectorConstraint(x, MOI.SOS2{Float64}(set.weights))
+) where {T<:AbstractJuMPScalar}
+    return VectorConstraint(
+        x,
+        MOI.SOS2{value_type(variable_ref_type(T))}(set.weights),
+    )
 end
+
+model_convert(model, set::MOI.AbstractVectorSet) = set
+
+function model_convert(model, set::MOI.AbstractScalarSet)
+    T = value_type(typeof(model))
+    if MOI.Utilities.supports_shift_constant(typeof(set))
+        return MOI.Utilities.shift_constant(set, zero(T))
+    else
+        return set
+    end
+end
+
+model_convert(model, func::AbstractJuMPScalar) = func
+
+function model_convert(model, α::Number)
+    T = value_type(typeof(model))
+    V = variable_ref_type(model)
+    C = _complex_convert_type(T, typeof(α))
+    return convert(GenericAffExpr{C,V}, α)
+end
+
+function model_convert(model, con::BridgeableConstraint)
+    return BridgeableConstraint(
+        model_convert(model, con.constraint),
+        con.bridge_type,
+    )
+end
+
+function model_convert(model, con::ScalarConstraint)
+    return ScalarConstraint(
+        model_convert(model, con.func),
+        model_convert(model, con.set),
+    )
+end
+
+function model_convert(model, con::VectorConstraint)
+    return VectorConstraint(
+        model_convert.(model, con.func),
+        model_convert(model, con.set),
+        con.shape,
+    )
+end
+
+model_convert(model, con) = con
 
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
@@ -969,6 +1026,11 @@ function _constraint_macro(
     vectorized, parsecode, buildcall = parsefun(_error, x)
     _add_positional_args(buildcall, extra)
     _add_kw_args(buildcall, extra_kw_args)
+    if vectorized
+        buildcall = :(model_convert.($model, $buildcall))
+    else
+        buildcall = :(model_convert($model, $buildcall))
+    end
     name_expr = _name_call(base_name, idxvars)
     new_name_expr = if isempty(set_string_name_kw_args)
         Expr(:if, :(set_string_names_on_creation($model)), name_expr, "")
@@ -1010,11 +1072,11 @@ function _constraint_macro(
 end
 
 """
-    @constraint(m::Model, expr, kw_args...)
+    @constraint(m::GenericModel, expr, kw_args...)
 
 Add a constraint described by the expression `expr`.
 
-    @constraint(m::Model, ref[i=..., j=..., ...], expr, kw_args...)
+    @constraint(m::GenericModel, ref[i=..., j=..., ...], expr, kw_args...)
 
 Add a group of constraints described by the expression `expr` parametrized by
 `i`, `j`, ...
@@ -1438,11 +1500,11 @@ end
 
 Replaces `_MA.Zero` with a floating point `0.0`.
 """
-_replace_zero(::_MA.Zero) = 0.0
+_replace_zero(::_MA.Zero) = false
 _replace_zero(x) = x
 
 """
-    @objective(model::Model, sense, func)
+    @objective(model::GenericModel, sense, func)
 
 Set the objective sense to `sense` and objective function to `func`. The
 objective sense can be either `Min`, `Max`, `MOI.MIN_SENSE`, `MOI.MAX_SENSE` or
@@ -1901,8 +1963,8 @@ Update `infoexr` for a variable expression in the `@variable` macro of the form 
 function parse_one_operator_variable end
 
 function parse_one_operator_variable(
-    _error::Function,
-    infoexpr::_VariableInfoExpr,
+    ::Function,
+    ::_VariableInfoExpr,
     ::Union{Val{:in},Val{:∈}},
     set,
 )
@@ -2102,7 +2164,7 @@ function _reorder_parameters(args)
 end
 
 """
-    _parse_nonlinear_expression(model::Model, x::Expr)
+    _parse_nonlinear_expression(model::GenericModel, x::Expr)
 
 JuMP needs to build Nonlinear expression objects in macro scope. This has two
 main challenges:
@@ -2699,7 +2761,7 @@ macro NLobjective(model, sense, x)
 end
 
 """
-    @NLconstraint(model::Model, expr)
+    @NLconstraint(model::GenericModel, expr)
 
 Add a constraint described by the nonlinear expression `expr`. See also
 [`@constraint`](@ref). For example:

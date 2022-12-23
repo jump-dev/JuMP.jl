@@ -135,7 +135,7 @@ using JuMP
 using HiGHS
 
 # JuMP builds problems incrementally in a `Model` object. Create a model by
-# passing an optimizer to the [`Model`](@ref) function:
+# passing an optimizer to the [`Model`](@ref GenericModel) function:
 
 model = Model(HiGHS.Optimizer)
 

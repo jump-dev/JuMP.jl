@@ -927,7 +927,7 @@ julia> dual_start_value(con)
 julia> set_dual_start_value(con, 2)
 
 julia> dual_start_value(con)
-2.0
+2
 ```
 
 Vector-valued constraints require a vector:

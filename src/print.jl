@@ -71,7 +71,9 @@ end
 # Helper function that rounds carefully for the purposes of printing Reals
 # e.g.   5.3  =>  5.3
 #        1.0  =>  1
-_string_round(x::Float64) = isinteger(x) ? string(round(Int, x)) : string(x)
+function _string_round(x::Union{Float32,Float64})
+    return isinteger(x) ? string(round(Int, x)) : string(x)
+end
 
 _string_round(::typeof(abs), x::Real) = _string_round(abs(x))
 
@@ -180,7 +182,7 @@ default if empty.
 """
 name(model::AbstractModel) = "An Abstract JuMP Model"
 
-function name(model::Model)
+function name(model::GenericModel)
     if MOI.supports(backend(model), MOI.Name())
         ret = MOI.get(model, MOI.Name())
         return isempty(ret) ? "A JuMP Model" : ret
@@ -228,7 +230,7 @@ end
 
 Write to `io` a summary of the objective function type.
 """
-function show_objective_function_summary(io::IO, model::Model)
+function show_objective_function_summary(io::IO, model::GenericModel)
     nlobj = _nlp_objective_function(model)
     print(io, "Objective function type: ")
     if nlobj === nothing
@@ -244,7 +246,7 @@ end
 
 Write to `io` a summary of the number of constraints.
 """
-function show_constraints_summary(io::IO, model::Model)
+function show_constraints_summary(io::IO, model::GenericModel)
     for (F, S) in list_of_constraint_types(model)
         n = num_constraints(model, F, S)
         println(io, "`$F`-in-`$S`: $n constraint", _plural(n))
@@ -257,13 +259,13 @@ function show_constraints_summary(io::IO, model::Model)
 end
 
 """
-    show_backend_summary(io::IO, model::Model)
+    show_backend_summary(io::IO, model::GenericModel)
 
 Print a summary of the optimizer backing `model`.
 
 `AbstractModel`s should implement this method.
 """
-function show_backend_summary(io::IO, model::Model)
+function show_backend_summary(io::IO, model::GenericModel)
     model_mode = mode(model)
     println(io, "Model mode: ", model_mode)
     if model_mode == MANUAL || model_mode == AUTOMATIC
@@ -366,7 +368,7 @@ end
 
 Return a `String` describing the objective function of the model.
 """
-function objective_function_string(mode, model::Model)
+function objective_function_string(mode, model::GenericModel)
     nlobj = _nlp_objective_function(model)
     if nlobj === nothing
         return function_string(mode, objective_function(model))
@@ -383,7 +385,7 @@ _set_lhs(::Any) = nothing
 
 """
     nonlinear_constraint_string(
-        model::Model,
+        model::GenericModel,
         mode::MIME,
         c::_NonlinearConstraint,
     )
@@ -392,7 +394,7 @@ Return a string representation of the nonlinear constraint `c` belonging to
 `model`, given the `mode`.
 """
 function nonlinear_constraint_string(
-    model::Model,
+    model::GenericModel,
     mode::MIME,
     c::MOI.Nonlinear.ConstraintIndex,
 )
@@ -412,7 +414,7 @@ end
 
 Return a list of `String`s describing each constraint of the model.
 """
-function constraints_string(mode, model::Model)
+function constraints_string(mode, model::GenericModel)
     strings = String[
         constraint_string(mode, cref; in_math_mode = true) for
         (F, S) in list_of_constraint_types(model) for
@@ -426,7 +428,7 @@ end
 
 """
     nonlinear_expr_string(
-        model::Model,
+        model::GenericModel,
         mode::MIME,
         c::MOI.Nonlinear.Expression,
     )
@@ -435,7 +437,7 @@ Return a string representation of the nonlinear expression `c` belonging to
 `model`, given the `mode`.
 """
 function nonlinear_expr_string(
-    model::Model,
+    model::GenericModel,
     mode::MIME,
     c::MOI.Nonlinear.Expression,
 )
@@ -464,7 +466,7 @@ _replace_expr_terms(model, ::Any, x::MOI.VariableIndex) = VariableRef(model, x)
 # print `subexpression[i]`. To create this behavior, we create a new object and
 # overload `Base.show`, and we replace any ExpressionIndex with this new type.
 struct _NonlinearExpressionIO
-    model::Model
+    model::GenericModel
     mode::MIME
     value::Int
 end
@@ -482,7 +484,7 @@ end
 
 # We do a similar thing for nonlinear parameters.
 struct _NonlinearParameterIO
-    model::Model
+    model::GenericModel
     mode::MIME
     value::Int
 end
@@ -520,7 +522,7 @@ end
 
 _nl_subexpression_string(::Any, ::AbstractModel) = String[]
 
-function _nl_subexpression_string(mode::MIME, model::Model)
+function _nl_subexpression_string(mode::MIME, model::GenericModel)
     nlp_model = nonlinear_model(model)
     strings = String[]
     if nlp_model === nothing
@@ -539,9 +541,11 @@ end
 
 anonymous_name(::Any, x::AbstractVariableRef) = "anon"
 
-anonymous_name(::MIME"text/plain", x::VariableRef) = "_[$(index(x).value)]"
+function anonymous_name(::MIME"text/plain", x::GenericVariableRef)
+    return "_[$(index(x).value)]"
+end
 
-function anonymous_name(::MIME"text/latex", x::VariableRef)
+function anonymous_name(::MIME"text/latex", x::GenericVariableRef)
     return "{\\_}_{$(index(x).value)}"
 end
 

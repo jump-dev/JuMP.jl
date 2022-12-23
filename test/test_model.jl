@@ -549,7 +549,7 @@ function test_set_retrieve_time_limit()
 end
 
 struct DummyExtensionData
-    model::Model
+    model::GenericModel
 end
 function JuMP.copy_extension_data(
     data::DummyExtensionData,

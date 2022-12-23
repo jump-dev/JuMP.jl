@@ -67,6 +67,7 @@ struct MyVariableRef <: JuMP.AbstractVariableRef
     idx::Int
 end
 
+JuMP.variable_ref_type(::Union{MyModel,Type{MyModel}}) = MyVariableRef
 Base.copy(v::MyVariableRef) = v
 
 function Base.:(==)(v::MyVariableRef, w::MyVariableRef)

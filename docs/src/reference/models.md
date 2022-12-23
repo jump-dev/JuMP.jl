@@ -6,7 +6,7 @@ the manual.
 ## Constructors
 
 ```@docs
-Model
+GenericModel
 direct_model
 ```
 
@@ -26,13 +26,14 @@ backend
 unsafe_backend
 name(::AbstractModel)
 solver_name
-Base.empty!(::Model)
-Base.isempty(::Model)
+Base.empty!(::GenericModel)
+Base.isempty(::GenericModel)
 mode
 object_dictionary
 unregister
 latex_formulation
 set_string_names_on_creation
+value_type
 ```
 
 ## Working with attributes
@@ -57,7 +58,7 @@ set_optimizer_attributes
 ## Copying
 
 ```@docs
-ReferenceMap
+GenericReferenceMap
 copy_model
 copy_extension_data
 Base.copy(::AbstractModel)
@@ -66,17 +67,17 @@ Base.copy(::AbstractModel)
 
 ```@docs
 write_to_file
-Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)
+Base.write(::IO, ::GenericModel; ::MOI.FileFormats.FileFormat)
 read_from_file
-Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)
+Base.read(::IO, ::Type{GenericModel{T}}; ::MOI.FileFormats.FileFormat) where {T}
 ```
 
 ## Caching Optimizer
 
 ```@docs
-MOIU.reset_optimizer(::JuMP.Model)
-MOIU.drop_optimizer(::JuMP.Model)
-MOIU.attach_optimizer(::JuMP.Model)
+MOIU.reset_optimizer(::JuMP.GenericModel)
+MOIU.drop_optimizer(::JuMP.GenericModel)
+MOIU.attach_optimizer(::JuMP.GenericModel)
 ```
 
 ## Bridge tools

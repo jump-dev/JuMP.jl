@@ -34,6 +34,18 @@ end
 
 Kokako.run_tests(MODULES_TO_TEST)
 
+# `Float32` is cheaper to test than `BigFloat` and is enough
+# for the purpose of testing that the types don't get promoted to `Float64`
+Kokako.run_tests(
+    MODULES_TO_TEST,
+    JuMP.GenericModel{Float32},
+    JuMP.GenericVariableRef{Float32};
+    test_prefix = "test_extension_",
+    include_names = Dict(
+        "test_mutable_arithmetics.jl" => ["test_extension_promote_operation"],
+    ),
+)
+
 Kokako.run_tests(
     MODULES_TO_TEST,
     JuMPExtension.MyModel,

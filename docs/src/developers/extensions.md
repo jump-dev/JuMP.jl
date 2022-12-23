@@ -340,7 +340,7 @@ julia> function JuMP.add_constraint(
        end
 
 julia> @constraint(model, my_con, 2x <= 1, MyTag("my_prefix"))
-my_prefix[my_con] : 2 x - 1 ≤ 0
+my_prefix[my_con] : 2 x - 1 ≤ false
 ```
 
 ## The extension dictionary
