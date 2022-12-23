@@ -414,9 +414,9 @@ end
 
 function add_to_expression!(
     quad::GenericQuadExpr{C,V},
-    lhs::GenericAffExpr{C,V},
-    rhs::GenericAffExpr{C,V},
-) where {C,V}
+    lhs::GenericAffExpr{S,V},
+    rhs::GenericAffExpr{T,V},
+) where {C,S,T,V}
     lhs_length = length(linear_terms(lhs))
     rhs_length = length(linear_terms(rhs))
 

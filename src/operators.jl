@@ -47,18 +47,23 @@ function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
 end
 # _Constant--_GenericAffOrQuadExpr
 function Base.:+(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
-    result = _MA.mutable_copy(rhs)
+    # If `lhs` is complex and `rhs` has real coefficients then the conversion is needed
+    T = _MA.promote_operation(+, typeof(lhs), typeof(rhs))
+    result = _MA.mutable_copy(convert(T, rhs))
     add_to_expression!(result, lhs)
     return result
 end
 function Base.:-(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
-    result = -rhs
+    # If `lhs` is complex and `rhs` has real coefficients then the conversion is needed
+    T = _MA.promote_operation(+, typeof(lhs), typeof(rhs))
+    result = convert(T, -rhs)
     add_to_expression!(result, lhs)
     return result
 end
 function Base.:*(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     if iszero(lhs)
-        return zero(rhs)
+        # If `lhs` is complex and `rhs` has real coefficients, `zero(rhs)` would not work
+        return zero(_MA.promote_operation(*, typeof(lhs), typeof(rhs)))
     else
         α = _constant_to_number(lhs)
         return map_coefficients(c -> α * c, rhs)
@@ -273,10 +278,10 @@ function Base.:-(
 end
 
 function Base.:*(
-    lhs::GenericAffExpr{C,V},
-    rhs::GenericAffExpr{C,V},
-) where {C,V<:_JuMPTypes}
-    result = zero(GenericQuadExpr{C,V})
+    lhs::GenericAffExpr{S,V},
+    rhs::GenericAffExpr{T,V},
+) where {S,T,V<:_JuMPTypes}
+    result = zero(GenericQuadExpr{_MA.promote_sum_mul(S, T),V})
     add_to_expression!(result, lhs, rhs)
     return result
 end
