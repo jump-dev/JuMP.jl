@@ -63,7 +63,9 @@ end
 function Base.:*(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     if iszero(lhs)
         # If `lhs` is complex and `rhs` has real coefficients, `zero(rhs)` would not work
-        return zero(_MA.promote_operation(*, _float_type(typeof(lhs)), typeof(rhs)))
+        return zero(
+            _MA.promote_operation(*, _float_type(typeof(lhs)), typeof(rhs)),
+        )
     else
         α = _constant_to_number(lhs)
         return map_coefficients(c -> α * c, rhs)
