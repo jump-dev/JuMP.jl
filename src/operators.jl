@@ -11,7 +11,7 @@
 const _JuMPTypes = Union{AbstractJuMPScalar,NonlinearExpression}
 
 _float_type(::Type{<:Real}) = Float64
-_float_type(::Type{<:UniformScaling}) = Float64
+_float_type(::Type{UniformScaling{T}}) where {T} = _float_type(T)
 _float_type(::Type{<:Complex}) = Complex{Float64}
 
 _float(x::Real) = convert(Float64, x)
@@ -48,14 +48,14 @@ end
 # _Constant--_GenericAffOrQuadExpr
 function Base.:+(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     # If `lhs` is complex and `rhs` has real coefficients then the conversion is needed
-    T = _MA.promote_operation(+, typeof(lhs), typeof(rhs))
+    T = _MA.promote_operation(+, _float_type(typeof(lhs)), typeof(rhs))
     result = _MA.mutable_copy(convert(T, rhs))
     add_to_expression!(result, lhs)
     return result
 end
 function Base.:-(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     # If `lhs` is complex and `rhs` has real coefficients then the conversion is needed
-    T = _MA.promote_operation(+, typeof(lhs), typeof(rhs))
+    T = _MA.promote_operation(+, _float_type(typeof(lhs)), typeof(rhs))
     result = convert(T, -rhs)
     add_to_expression!(result, lhs)
     return result
@@ -63,7 +63,7 @@ end
 function Base.:*(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     if iszero(lhs)
         # If `lhs` is complex and `rhs` has real coefficients, `zero(rhs)` would not work
-        return zero(_MA.promote_operation(*, typeof(lhs), typeof(rhs)))
+        return zero(_MA.promote_operation(*, _float_type(typeof(lhs)), typeof(rhs)))
     else
         α = _constant_to_number(lhs)
         return map_coefficients(c -> α * c, rhs)
