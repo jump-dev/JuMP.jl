@@ -1419,20 +1419,20 @@ function test_extension_Hermitian_PSD_constraint(
     @variable(model, y)
     @variable(model, w)
     A = [x 1im; -1im -y] - [1 (x+w*im); (x-w*im) -2]
-    @constraint(model, href, Hermitian(A) in HermitianPSDCone())
+    @constraint(model, href, LinearAlgebra.Hermitian(A) in HermitianPSDCone())
     _test_constraint_name_util(
         href,
         "href",
         Vector{GenericAffExpr{ComplexF64,VariableRefType}},
         MOI.HermitianPositiveSemidefiniteConeTriangle,
     )
-    c = JuMP.constraint_object(href)
-    @test JuMP.isequal_canonical(c.func[1], x - 1)
-    @test JuMP.isequal_canonical(c.func[2], -x)
-    @test JuMP.isequal_canonical(c.func[3], 2 - y)
-    @test JuMP.isequal_canonical(c.func[4], 1 - w)
+    c = constraint_object(href)
+    @test isequal_canonical(c.func[1], x - 1)
+    @test isequal_canonical(c.func[2], -x)
+    @test isequal_canonical(c.func[3], 2 - y)
+    @test isequal_canonical(c.func[4], 1 - w)
     @test c.set == MOI.HermitianPositiveSemidefiniteConeTriangle(2)
-    @test c.shape isa JuMP.HermitianMatrixShape
+    @test c.shape isa HermitianMatrixShape
     return
 end
 
