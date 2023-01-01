@@ -1423,7 +1423,7 @@ function test_extension_Hermitian_PSD_constraint(
     _test_constraint_name_util(
         href,
         "href",
-        Vector{GenericAffExpr{ComplexF64,VariableRefType}},
+        Vector{GenericAffExpr{Float64,VariableRefType}},
         MOI.HermitianPositiveSemidefiniteConeTriangle,
     )
     c = constraint_object(href)
