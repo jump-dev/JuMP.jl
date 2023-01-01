@@ -7,22 +7,34 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## Version v1.6.0 (January 1, 2023)
 
 ### Added
 
  - Added a `result` keyword argument to [`solution_summary`] to allow
    summarizing models with multiple solutions (#3138)
- - Add [`relax_with_penalty!`](@ref), which is a useful tool when debugging
+ - Added [`relax_with_penalty!`](@ref), which is a useful tool when debugging
    infeasible models (#3140)
+ - Added [`has_start_value`](@ref) (#3157)
+ - Added support for [`HermitianPSDCone`](@ref) in constraints (#3154)
+
+### Fixed
+
+ - Fixed promotion of complex expressions (#3150) (#3164)
 
 ### Other
 
  - Added Benders tutorial with in-place resolves (#3145)
  - Added more [Tips and tricks](@id linear_tips_and_tricks) for linear programs
-   (#3144)
+   (#3144) (#3163)
  - Clarified documentation that `start` can depend on the indices of a
    variable container (#3148)
+ - Replace instances of `length` and `size` by the recommended `eachindex` and
+   `axes` (#3149)
+ - Added a warning explaining why the model is dirty when accessing solution
+   results from a modified model (#3156)
+ - Clarify documentation that `PSD` ensures a symmetric matrix (#3159)
+ - Maintenance of the JuMP test suite (#3146) (#3158) (#3162)
 
 ## Version 1.5.0 (December 8, 2022)
 
