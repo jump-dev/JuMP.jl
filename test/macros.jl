@@ -12,7 +12,11 @@ module TestMacros
 
 using JuMP
 using Test
+
 import SparseArrays
+
+include(joinpath(@__DIR__, "utilities.jl"))
+include(joinpath(@__DIR__, "JuMPExtension.jl"))
 
 function runtests()
     for name in names(@__MODULE__; all = true)
@@ -21,12 +25,17 @@ function runtests()
                 getfield(@__MODULE__, name)()
             end
         end
+        if startswith("$(name)", "test_extension_")
+            @testset "$(name)-JuMPExtension" begin
+                getfield(@__MODULE__, name)(
+                    JuMPExtension.MyModel,
+                    JuMPExtension.MyVariableRef,
+                )
+            end
+        end
     end
     return
 end
-
-include(joinpath(@__DIR__, "utilities.jl"))
-include(joinpath(@__DIR__, "JuMPExtension.jl"))
 
 struct NewVariable <: JuMP.AbstractVariable
     info::JuMP.VariableInfo
@@ -146,7 +155,6 @@ function test_Check_Julia_generator_expression_parsing()
     @test sumexpr.args[2].args[2].args[1] == :(i != j)
     @test sumexpr.args[2].args[2].args[2] == :(i = 1:N)
     @test sumexpr.args[2].args[2].args[3] == :(j = 1:M)
-
     sumexpr = :(sum(x[i, j] * y[i, j] for i in 1:N, j in 1:M))
     @test sumexpr.head == :call
     @test sumexpr.args[1] == :sum
@@ -198,7 +206,7 @@ function test_MutableArithmetics_Zero_Issue_2087()
     return
 end
 
-function test_Extension_variables_constrained_on_creation_2594()
+function test_variables_constrained_on_creation_2594()
     model = Model()
     @variable(model, 0 <= x <= 1, NewVariable, Bin)
     @test lower_bound(x) == 0
@@ -211,7 +219,7 @@ function test_Extension_variables_constrained_on_creation_2594()
     return
 end
 
-function test_Extension_of_variable_with_build_variable_1029()
+function test_of_variable_with_build_variable_1029()
     m = Model()
     names = Dict{MyVariableTuple,String}()
     m.ext[:names] = names
@@ -238,7 +246,6 @@ function test_Extension_of_variable_with_build_variable_1029()
     @test info.start == 3
     @test names[x] == "x"
     @test test_kw == 1
-
     @variable(m, y[1:3] >= 0, MyVariableTuple, test_kw = 2)
     @test isa(y, Vector{<:MyVariableTuple})
     for i in 1:3
@@ -257,7 +264,6 @@ function test_Extension_of_variable_with_build_variable_1029()
         @test names[y[i]] == "y[$i]"
         @test test_kw == 2
     end
-
     z = @variable(
         m,
         variable_type = MyVariableTuple,
@@ -282,7 +288,10 @@ function test_Extension_of_variable_with_build_variable_1029()
     return
 end
 
-function test_build_constraint_keyword_test(ModelType = Model)
+function test_extension_build_constraint_keyword_test(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x)
     cref1 = @constraint(model, [1, x, x] in PowerCone(0.5))
@@ -292,11 +301,10 @@ function test_build_constraint_keyword_test(ModelType = Model)
     return
 end
 
-function test_MyModel_build_constraint_keyword_test()
-    return test_build_constraint_keyword_test(JuMPExtension.MyModel)
-end
-
-function test_build_constraint_extra_arg_test(ModelType = Model)
+function test_extension_build_constraint_extra_arg_test(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x)
     cref = @constraint(model, x == 0, MyConstrType)
@@ -315,11 +323,10 @@ function test_build_constraint_extra_arg_test(ModelType = Model)
     return
 end
 
-function test_MyModel_build_constraint_extra_arg_test()
-    return test_build_constraint_extra_arg_test(JuMPExtension.MyModel)
-end
-
-function test_custom_expression_test(ModelType = Model)
+function test_extension_custom_expression_test(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x)
     @constraint(model, con_ref, x := CustomType())
@@ -329,11 +336,10 @@ function test_custom_expression_test(ModelType = Model)
     return
 end
 
-function test_MyModel_custom_expression_test()
-    return test_custom_expression_test(JuMPExtension.MyModel)
-end
-
-function test_custom_function_test(ModelType = Model)
+function test_extension_custom_function_test(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x)
     @constraint(model, con_ref, f(x))
@@ -344,11 +350,7 @@ function test_custom_function_test(ModelType = Model)
     return
 end
 
-function test_MyModel_custom_function_test()
-    return test_custom_function_test(JuMPExtension.MyModel)
-end
-
-function test_build_constraint_on_variable(
+function test_extension_build_constraint_on_variable(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
@@ -363,68 +365,54 @@ function test_build_constraint_on_variable(
     return
 end
 
-function test_MyModel_build_constraint_on_variable()
-    return test_build_constraint_on_variable(
-        JuMPExtension.MyModel,
-        JuMPExtension.MyVariableRef,
-    )
-end
-
-function test_Check_constraint_basics(ModelType = Model)
+function test_extension_check_constraint_basics(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     m = ModelType()
     @variable(m, w)
     @variable(m, x)
     @variable(m, y)
     @variable(m, z)
     t = 10.0
-
     cref = @constraint(m, 3x - y == 3.3(w + 2z) + 5)
     c = JuMP.constraint_object(cref)
     @test JuMP.isequal_canonical(c.func, 3 * x - y - 3.3 * w - 6.6 * z)
     @test c.set == MOI.EqualTo(5.0)
-
     cref = @constraint(m, 3x - y == (w + 2z) * 3.3 + 5)
     c = JuMP.constraint_object(cref)
     @test JuMP.isequal_canonical(c.func, 3 * x - y - 3.3 * w - 6.6 * z)
     @test c.set == MOI.EqualTo(5.0)
-
     cref = @constraint(m, (x + y) / 2 == 1)
     c = JuMP.constraint_object(cref)
     @test JuMP.isequal_canonical(c.func, 0.5 * x + 0.5 * y)
     @test c.set == MOI.EqualTo(1.0)
-
     cref = @constraint(m, -1 <= x - y <= t)
     c = JuMP.constraint_object(cref)
     @test JuMP.isequal_canonical(c.func, x - y)
     @test c.set == MOI.Interval(-1.0, t)
-
     cref = @constraint(m, -1 <= x + 1 <= 1)
     c = JuMP.constraint_object(cref)
     @test JuMP.isequal_canonical(c.func, 1x)
     @test c.set == MOI.Interval(-2.0, 0.0)
-
     cref = @constraint(m, -1 <= x <= 1)
     c = JuMP.constraint_object(cref)
     @test c.func isa JuMP.GenericAffExpr
     @test JuMP.isequal_canonical(c.func, 1x)
     @test c.set == MOI.Interval(-1.0, 1.0)
-
     cref = @constraint(m, -1 <= x <= sum(0.5 for i in 1:2))
     c = JuMP.constraint_object(cref)
     @test c.func isa JuMP.GenericAffExpr
     @test JuMP.isequal_canonical(c.func, 1x)
     @test c.set == MOI.Interval(-1.0, 1.0)
-
     cref = @constraint(m, 1 >= x >= 0)
     c = JuMP.constraint_object(cref)
     @test c.func isa JuMP.GenericAffExpr
     @test JuMP.isequal_canonical(c.func, 1x)
     @test c.set == MOI.Interval(0.0, 1.0)
-
     @test_throws ErrorException @constraint(m, x <= t <= y)
     @test_throws ErrorException @constraint(m, 0 <= Dict() <= 1)
     @test_macro_throws ErrorException @constraint(1 <= x <= 2, foo = :bar)
-
     @test JuMP.isequal_canonical(
         @expression(m, 3x - y - 3.3(w + 2z) + 5),
         3 * x - y - 3.3 * w - 6.6 * z + 5,
@@ -433,50 +421,45 @@ function test_Check_constraint_basics(ModelType = Model)
         @expression(m, quad, (w + 3) * (2x + 1) + 10),
         2 * w * x + 6 * x + w + 13,
     )
-
     cref = @constraint(m, 3 + 5 * 7 <= 0)
     c = JuMP.constraint_object(cref)
     @test JuMP.isequal_canonical(c.func, zero(AffExpr))
     @test c.set == MOI.LessThan(-38.0)
+    return
 end
 
-function test_MyModel_Check_constraint_basics()
-    return test_Check_constraint_basics(JuMPExtension.MyModel)
-end
-
-function test_Unicode_comparison_operators(ModelType = Model)
+function test_extension_Unicode_comparison_operators(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x)
     @variable(model, y)
     t = 10.0
-
     cref = @constraint(model, (x + y) / 2 ≥ 1)
     c = JuMP.constraint_object(cref)
     @test JuMP.isequal_canonical(c.func, 0.5 * x + 0.5 * y)
     @test c.set == MOI.GreaterThan(1.0)
-
     cref = @constraint(model, (x + y) / 2 ≤ 1)
     c = JuMP.constraint_object(cref)
     @test JuMP.isequal_canonical(c.func, 0.5 * x + 0.5 * y)
     @test c.set == MOI.LessThan(1.0)
-
     cref = @constraint(model, -1 ≤ x - y ≤ t)
     c = JuMP.constraint_object(cref)
     @test JuMP.isequal_canonical(c.func, x - y)
     @test c.set == MOI.Interval(-1.0, t)
-
     cref = @constraint(model, 1 ≥ x ≥ 0)
     c = JuMP.constraint_object(cref)
     @test c.func isa JuMP.GenericAffExpr
     @test JuMP.isequal_canonical(c.func, 1 * x)
     @test c.set == MOI.Interval(0.0, 1.0)
+    return
 end
 
-function test_MyModel_Unicode_comparison_operators()
-    return test_Unicode_comparison_operators(JuMPExtension.MyModel)
-end
-
-function test_constraint_naming(ModelType = Model)
+function test_extension_constraint_naming(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x)
     cref = @constraint(model, x == 0)
@@ -494,11 +477,10 @@ function test_constraint_naming(ModelType = Model)
     return
 end
 
-function test_MyModel_constraint_naming()
-    return test_constraint_naming(JuMPExtension.MyModel)
-end
-
-function test_build_constraint_scalar_inequality(ModelType = Model)
+function test_extension_build_constraint_scalar_inequality(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x)
     con = @build_constraint(3x == 1)
@@ -508,11 +490,10 @@ function test_build_constraint_scalar_inequality(ModelType = Model)
     return
 end
 
-function test_MyModel_build_constraint_scalar_inequality()
-    return test_build_constraint_scalar_inequality(JuMPExtension.MyModel)
-end
-
-function test_build_constraint_function_in_set(ModelType = Model)
+function test_extension_build_constraint_function_in_set(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x[1:2])
     con = @build_constraint(x in JuMP.SecondOrderCone())
@@ -522,11 +503,10 @@ function test_build_constraint_function_in_set(ModelType = Model)
     return
 end
 
-function test_MyModel_build_constraint_function_in_set()
-    return test_build_constraint_function_in_set(JuMPExtension.MyModel)
-end
-
-function test_build_constraint_SOS1(ModelType = Model)
+function test_extension_build_constraint_SOS1(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x[1:3])
     con = @build_constraint(x in JuMP.SOS1())
@@ -544,11 +524,10 @@ function test_build_constraint_SOS1(ModelType = Model)
     return
 end
 
-function test_MyModel_build_constraint_SOS1()
-    return test_build_constraint_SOS1(JuMPExtension.MyModel)
-end
-
-function test_build_constraint_SOS2(ModelType = Model)
+function test_extension_build_constraint_SOS2(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x[1:3])
     con = @build_constraint(x in JuMP.SOS2())
@@ -566,11 +545,10 @@ function test_build_constraint_SOS2(ModelType = Model)
     return
 end
 
-function test_MyModel_build_constraint_SOS2()
-    return test_build_constraint_SOS2(JuMPExtension.MyModel)
-end
-
-function test_build_constraint_broadcast(ModelType = Model)
+function test_extension_build_constraint_broadcast(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x[1:2])
     ub = [1.0, 2.0]
@@ -583,19 +561,14 @@ function test_build_constraint_broadcast(ModelType = Model)
     return
 end
 
-function test_MyModel_build_constraint_broadcast()
-    return test_build_constraint_broadcast(JuMPExtension.MyModel)
-end
-
-function test_build_constraint_error(ModelType = Model)
+function test_extension_extension_build_constraint_error(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x)
     @test_macro_throws ErrorException @build_constraint(2x + 1)
     return
-end
-
-function test_MyModel_build_constraint_error()
-    return test_build_constraint_error(JuMPExtension.MyModel)
 end
 
 function test_Promotion_of_SOS_sets()

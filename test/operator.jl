@@ -11,58 +11,90 @@
 module TestOperators
 
 using JuMP
-using LinearAlgebra
-using SparseArrays
 using Test
 
-# TODO(odow): Remove once upstream hygiene bug #122 in MA is fixed
-const MutableArithmetics = JuMP._MA
+import LinearAlgebra
+import SparseArrays
 
 include(joinpath(@__DIR__, "utilities.jl"))
 include(joinpath(@__DIR__, "JuMPExtension.jl"))
 
-# For "DimensionMismatch when performing vector-matrix multiplication with custom types #988"
-import Base: +, *
+function runtests()
+    for name in names(@__MODULE__; all = true)
+        if startswith("$(name)", "test_")
+            @testset "$(name)" begin
+                getfield(@__MODULE__, name)()
+            end
+        end
+        if startswith("$(name)", "test_extension_")
+            @testset "$(name)-JuMPExtension" begin
+                getfield(@__MODULE__, name)(
+                    JuMPExtension.MyModel,
+                    JuMPExtension.MyVariableRef,
+                )
+            end
+        end
+    end
+    return
+end
+
 struct MyType{T}
     a::T
 end
+
 struct MySumType{T}
     a::T
 end
+
 Base.copy(t::MyType) = t
+
 Base.zero(::Type{MyType{T}}) where {T} = MyType(zero(T))
+
 Base.one(::Type{MyType{T}}) where {T} = MyType(one(T))
+
 Base.zero(::Type{MySumType{T}}) where {T} = MySumType(zero(T))
+
 Base.zero(::MySumType{T}) where {T} = MySumType(zero(T))
+
 Base.transpose(t::MyType) = MyType(t.a)
+
 Base.transpose(t::MySumType) = MySumType(t.a)
+
 LinearAlgebra.adjoint(t::Union{MyType,MySumType}) = t
-function +(
+
+function Base.:(+)(
     t1::MyT,
     t2::MyS,
 ) where {MyT<:Union{MyType,MySumType},MyS<:Union{MyType,MySumType}}
     return MySumType(t1.a + t2.a)
 end
-*(t1::MyType{S}, t2::T) where {S,T} = MyType(t1.a * t2)
-*(t1::S, t2::MyType{T}) where {S,T} = MyType(t1 * t2.a)
-*(t1::MyType{S}, t2::MyType{T}) where {S,T} = MyType(t1.a * t2.a)
+
+Base.:(*)(t1::MyType{S}, t2::T) where {S,T} = MyType(t1.a * t2)
+
+Base.:(*)(t1::S, t2::MyType{T}) where {S,T} = MyType(t1 * t2.a)
+
+Base.:(*)(t1::MyType{S}, t2::MyType{T}) where {S,T} = MyType(t1.a * t2.a)
 
 function JuMP.isequal_canonical(t::MySumType, s::MySumType)
-    return JuMP.isequal_canonical(t.a, s.a)
+    return isequal_canonical(t.a, s.a)
 end
+
 function JuMP.isequal_canonical(
     x::AbstractArray{<:MySumType},
     y::AbstractArray{<:MySumType},
 )
-    return size(x) == size(y) && all(JuMP.isequal_canonical.(x, y))
+    return size(x) == size(y) && all(isequal_canonical.(x, y))
 end
 
-function test_promotion(ModelType, VariableRefType)
+function test_extension_promotion(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     m = ModelType()
     I = Int
     V = VariableRefType
-    A = JuMP.GenericAffExpr{Float64,VariableRefType}
-    Q = JuMP.GenericQuadExpr{Float64,VariableRefType}
+    A = GenericAffExpr{Float64,VariableRefType}
+    Q = GenericQuadExpr{Float64,VariableRefType}
     @test promote_type(V, I) == A
     @test promote_type(I, V) == A
     @test promote_type(A, I) == A
@@ -75,30 +107,43 @@ function test_promotion(ModelType, VariableRefType)
     @test promote_type(A, Q) == Q
     @test promote_type(Q, V) == Q
     @test promote_type(V, Q) == Q
+    return
 end
 
-function test_broadcast_division_error(ModelType, ::Any)
+function test_extension_broadcast_division_error(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x[1:2, 1:2])
     A = [1 2; 3 4]
-    B = sparse(A)
-    y = SparseMatrixCSC(2, 2, copy(B.colptr), copy(B.rowval), vec(x))
+    B = SparseArrays.sparse(A)
+    y = SparseArrays.SparseMatrixCSC(
+        2,
+        2,
+        copy(B.colptr),
+        copy(B.rowval),
+        vec(x),
+    )
     @test_throws ErrorException A ./ x
     @test_throws ErrorException B ./ x
     @test_throws ErrorException A ./ y
     @test_throws ErrorException B ./ y
-
     # TODO: Refactor to avoid calling the internal JuMP function
     # `_densify_with_jump_eltype`.
-    #z = JuMP._densify_with_jump_eltype((2 .* y) ./ 3)
-    #@test JuMP.isequal_canonical((2 .* x) ./ 3, z)
-    #z = JuMP._densify_with_jump_eltype(2 * (y ./ 3))
-    #@test JuMP.isequal_canonical(2 .* (x ./ 3), z)
-    #z = JuMP._densify_with_jump_eltype((x[1,1],) .* B)
-    #@test JuMP.isequal_canonical((x[1,1],) .* A, z)
+    #z = _densify_with_jump_eltype((2 .* y) ./ 3)
+    #@test isequal_canonical((2 .* x) ./ 3, z)
+    #z = _densify_with_jump_eltype(2 * (y ./ 3))
+    #@test isequal_canonical(2 .* (x ./ 3), z)
+    #z = _densify_with_jump_eltype((x[1,1],) .* B)
+    #@test isequal_canonical((x[1,1],) .* A, z)
+    return
 end
 
-function test_vectorized_comparisons(ModelType, ::Any)
+function test_extension_vectorized_comparisons(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     m = ModelType()
     @variable(m, x[1:3])
     A = [
@@ -106,12 +151,12 @@ function test_vectorized_comparisons(ModelType, ::Any)
         0 4 5
         6 0 7
     ]
-    B = sparse(A)
+    B = SparseArrays.sparse(A)
     # force vector output
     cref1 = @constraint(m, reshape(x, (1, 3)) * A * x .>= 1)
-    c1 = JuMP.constraint_object.(cref1)
+    c1 = constraint_object.(cref1)
     f1 = map(c -> c.func, c1)
-    @test JuMP.isequal_canonical(
+    @test isequal_canonical(
         f1,
         [
             x[1] * x[1] +
@@ -123,72 +168,58 @@ function test_vectorized_comparisons(ModelType, ::Any)
         ],
     )
     @test all(c -> c.set.lower == 1, c1)
-
     cref2 = @constraint(m, x' * A * x >= 1)
-    c2 = JuMP.constraint_object.(cref2)
-    @test JuMP.isequal_canonical(f1[1], c2.func)
-
+    c2 = constraint_object.(cref2)
+    @test isequal_canonical(f1[1], c2.func)
     mat = [
         3x[1] + 12x[3] + 4x[2]
         2x[1] + 12x[2] + 10x[3]
         15x[1] + 5x[2] + 21x[3]
     ]
-
     cref3 = @constraint(m, (x'A)' + 2A * x .<= 1)
-    c3 = JuMP.constraint_object.(cref3)
+    c3 = constraint_object.(cref3)
     f3 = map(c -> c.func, c3)
-    @test JuMP.isequal_canonical(f3, mat)
+    @test isequal_canonical(f3, mat)
     @test all(c -> c.set.upper == 1, c3)
-    @test JuMP.isequal_canonical((x'A)' + 2A * x, (x'A)' + 2B * x)
-    @test JuMP.isequal_canonical((x'A)' + 2A * x, (x'B)' + 2A * x)
-    @test JuMP.isequal_canonical((x'A)' + 2A * x, (x'B)' + 2B * x)
-    @test JuMP.isequal_canonical(
-        (x'A)' + 2A * x,
-        JuMP._MA.@rewrite((x'A)' + 2A * x),
-    )
-    @test JuMP.isequal_canonical(
-        (x'A)' + 2A * x,
-        JuMP._MA.@rewrite((x'B)' + 2A * x),
-    )
-    @test JuMP.isequal_canonical(
-        (x'A)' + 2A * x,
-        JuMP._MA.@rewrite((x'A)' + 2B * x),
-    )
-    @test JuMP.isequal_canonical(
-        (x'A)' + 2A * x,
-        JuMP._MA.@rewrite((x'B)' + 2B * x),
-    )
+    @test isequal_canonical((x'A)' + 2A * x, (x'A)' + 2B * x)
+    @test isequal_canonical((x'A)' + 2A * x, (x'B)' + 2A * x)
+    @test isequal_canonical((x'A)' + 2A * x, (x'B)' + 2B * x)
+    @test isequal_canonical((x'A)' + 2A * x, JuMP._MA.@rewrite((x'A)' + 2A * x))
+    @test isequal_canonical((x'A)' + 2A * x, JuMP._MA.@rewrite((x'B)' + 2A * x))
+    @test isequal_canonical((x'A)' + 2A * x, JuMP._MA.@rewrite((x'A)' + 2B * x))
+    @test isequal_canonical((x'A)' + 2A * x, JuMP._MA.@rewrite((x'B)' + 2B * x))
     cref4 = @constraint(m, -1 .<= (x'A)' + 2A * x .<= 1)
-    c4 = JuMP.constraint_object.(cref4)
+    c4 = constraint_object.(cref4)
     f4 = map(c -> c.func, c4)
-    @test JuMP.isequal_canonical(f4, mat)
+    @test isequal_canonical(f4, mat)
     @test all(c -> c.set.lower == -1, c4)
     @test all(c -> c.set.upper == 1, c4)
-
     cref5 = @constraint(m, -[1:3;] .<= (x'A)' + 2A * x .<= 1)
-    c5 = JuMP.constraint_object.(cref5)
+    c5 = constraint_object.(cref5)
     f5 = map(c -> c.func, c5)
-    @test JuMP.isequal_canonical(f5, mat)
+    @test isequal_canonical(f5, mat)
     @test map(c -> c.set.lower, c5) == -[1:3;]
     @test all(c -> c.set.upper == 1, c4)
-
     cref6 = @constraint(m, -[1:3;] .<= (x'A)' + 2A * x .<= [3:-1:1;])
-    c6 = JuMP.constraint_object.(cref6)
+    c6 = constraint_object.(cref6)
     f6 = map(c -> c.func, c6)
-    @test JuMP.isequal_canonical(f6, mat)
+    @test isequal_canonical(f6, mat)
     @test map(c -> c.set.lower, c6) == -[1:3;]
     @test map(c -> c.set.upper, c6) == [3:-1:1;]
-
     cref7 = @constraint(m, -[1:3;] .<= (x'A)' + 2A * x .<= 3)
-    c7 = JuMP.constraint_object.(cref7)
+    c7 = constraint_object.(cref7)
     f7 = map(c -> c.func, c7)
-    @test JuMP.isequal_canonical(f7, mat)
+    @test isequal_canonical(f7, mat)
     @test map(c -> c.set.lower, c7) == -[1:3;]
     @test all(c -> c.set.upper == 3, c7)
+    return
 end
 
-function test_custom_dimension_mismatch(ModelType, VariableRefType)
-    ElemT = MySumType{JuMP.GenericAffExpr{Float64,VariableRefType}}
+function test_extension_custom_dimension_mismatch(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    ElemT = MySumType{GenericAffExpr{Float64,VariableRefType}}
     model = ModelType()
     @variable(model, Q[1:3, 1:3], PSD)
     x = [MyType(1), MyType(2), MyType(3)]
@@ -196,21 +227,25 @@ function test_custom_dimension_mismatch(ModelType, VariableRefType)
     z = x' * Q
     @test y isa Vector{ElemT}
     @test size(y) == (3,)
-    @test z isa Adjoint{ElemT,<:Any}
+    @test z isa LinearAlgebra.Adjoint{ElemT,<:Any}
     @test size(z) == (1, 3)
     for i in 1:3
         # Q is symmetric
-        a = zero(JuMP.GenericAffExpr{Float64,VariableRefType})
+        a = zero(GenericAffExpr{Float64,VariableRefType})
         a += Q[1, i]
         a += 2Q[2, i]
         a += 3Q[3, i]
         # Q[1,i] + 2Q[2,i] + 3Q[3,i] is rearranged as 2 Q[2,3] + Q[1,3] + 3 Q[3,3]
         @test z[i].a == y[i].a == a
     end
+    return
 end
 
-function test_matrix_multiplication(ModelType, VariableRefType)
-    ElemT = MySumType{JuMP.GenericAffExpr{Float64,VariableRefType}}
+function test_extension_matrix_multiplication(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    ElemT = MySumType{GenericAffExpr{Float64,VariableRefType}}
     model = ModelType()
     @variable(model, Q[1:3, 1:3], PSD)
     X = MyType.((1:3)' .+ (1:3))
@@ -222,7 +257,7 @@ function test_matrix_multiplication(ModelType, VariableRefType)
     @test size(Y) == (3, 3)
     @test Z isa Matrix{ElemT}
     @test size(Z) == (3, 3)
-    @test JuMP.isequal_canonical(Z', Y)
+    @test isequal_canonical(Z', Y)
     @test_expression Q * X'
     Y = Q * X'
     @test_expression X * Q
@@ -231,10 +266,14 @@ function test_matrix_multiplication(ModelType, VariableRefType)
     @test size(Y) == (3, 3)
     @test Z isa Matrix{ElemT}
     @test size(Z) == (3, 3)
-    @test JuMP.isequal_canonical(Z', Y)
+    @test isequal_canonical(Z', Y)
+    return
 end
 
-function test_operator_warn(ModelType, ::Any)
+function test_extension_operator_warn(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable model x[1:51]
     # JuMPExtension does not have the `operator_counter` field
@@ -247,36 +286,43 @@ function test_operator_warn(ModelType, ::Any)
         # The following check verifies that this test covers the code incrementing `operator_counter`
         @test model.operator_counter == 1
     end
+    return
 end
 
-function test_uniform_scaling(ModelType, ::Any)
+function test_extension_uniform_scaling(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, x)
-    @test_expression_with_string x + 2I "x + 2"
-    @test_expression_with_string (x + 1) + I "x + 2"
-    @test_expression_with_string x - 2I "x - 2"
-    @test_expression_with_string (x - 1) - I "x - 2"
-    @test_expression_with_string 2I + x "x + 2"
-    @test_expression_with_string I + (x + 1) "x + 2"
-    @test_expression_with_string 2I - x "-x + 2"
-    @test_expression_with_string (2im * I) - x "(-1.0 - 0.0im) x + (0.0 + 2.0im)"
-    @test_expression_with_string I - (x - 1) "-x + 2"
-    @test_expression_with_string (I * im) - (x - 1) "(-1.0 + 0.0im) x + (1.0 + 1.0im)"
-    @test_expression_with_string I * x "x"
-    @test_expression_with_string (I * im) * x "(0.0 + 1.0im) x"
-    @test_expression_with_string I * (x + 1) "x + 1"
-    @test_expression_with_string (I * im) * (x + 1) "(0.0 + 1.0im) x + (0.0 + 1.0im)"
-    @test_expression_with_string (x + 1) * I "x + 1"
-    @test_expression_with_string (x + 1) * (I * im) "(0.0 + 1.0im) x + (0.0 + 1.0im)"
+    @test_expression_with_string x + 2 * LinearAlgebra.I "x + 2"
+    @test_expression_with_string (x + 1) + LinearAlgebra.I "x + 2"
+    @test_expression_with_string x - 2 * LinearAlgebra.I "x - 2"
+    @test_expression_with_string (x - 1) - LinearAlgebra.I "x - 2"
+    @test_expression_with_string 2 * LinearAlgebra.I + x "x + 2"
+    @test_expression_with_string LinearAlgebra.I + (x + 1) "x + 2"
+    @test_expression_with_string 2 * LinearAlgebra.I - x "-x + 2"
+    @test_expression_with_string (2im * LinearAlgebra.I) - x "(-1.0 - 0.0im) x + (0.0 + 2.0im)"
+    @test_expression_with_string LinearAlgebra.I - (x - 1) "-x + 2"
+    @test_expression_with_string (LinearAlgebra.I * im) - (x - 1) "(-1.0 + 0.0im) x + (1.0 + 1.0im)"
+    @test_expression_with_string LinearAlgebra.I * x "x"
+    @test_expression_with_string (LinearAlgebra.I * im) * x "(0.0 + 1.0im) x"
+    @test_expression_with_string LinearAlgebra.I * (x + 1) "x + 1"
+    @test_expression_with_string (LinearAlgebra.I * im) * (x + 1) "(0.0 + 1.0im) x + (0.0 + 1.0im)"
+    @test_expression_with_string (x + 1) * LinearAlgebra.I "x + 1"
+    @test_expression_with_string (x + 1) * (LinearAlgebra.I * im) "(0.0 + 1.0im) x + (0.0 + 1.0im)"
+    return
 end
 
-function test_basic_operators(ModelType, ::Any)
+function test_extension_basic_operators(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, w)
     @variable(model, x)
     @variable(model, y)
     @variable(model, z)
-
     aff = @inferred 7.1 * x + 2.5
     @test_expression_with_string 7.1 * x + 2.5 "7.1 x + 2.5"
     aff2 = @inferred 1.2 * y + 1.2
@@ -286,18 +332,20 @@ function test_basic_operators(ModelType, ::Any)
     q2 = @inferred 8 * x * z + aff2
     @test_expression_with_string 8 * x * z + aff2 "8 x*z + 1.2 y + 1.2"
     @test_expression_with_string 2 * x * x + 1 * y * y + z + 3 "2 x² + y² + z + 3"
+    return
 end
 
-function test_basic_operators_number(ModelType, ::Any)
+function test_extension_basic_operators_number(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, w)
     @variable(model, x)
     @variable(model, y)
     @variable(model, z)
-
     aff = @inferred 7.1 * x + 2.5
     q = @inferred 2.5 * y * z + aff
-
     # 1-1 Number--Number
     # ???
     # 1-2 Number--Variable
@@ -315,18 +363,20 @@ function test_basic_operators_number(ModelType, ::Any)
     @test_expression_with_string 1.5 - q "-2.5 y*z - 7.1 x - 1"
     @test_expression_with_string 2 * q "5 y*z + 14.2 x + 5"
     @test_throws ErrorException 2 / q
+    return
 end
 
-function test_basic_operators_variable(ModelType, ::Any)
+function test_extension_basic_operators_variable(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, w)
     @variable(model, x)
     @variable(model, y)
     @variable(model, z)
-
     aff = @inferred 7.1 * x + 2.5
     q = @inferred 2.5 * y * z + aff
-
     # 2-0 Variable unary
     @test (+x) === x
     @test_expression_with_string -x "-x"
@@ -363,15 +413,18 @@ function test_basic_operators_variable(ModelType, ::Any)
     @test_throws ErrorException w / q
     @test transpose(x) === x
     @test conj(x) === x
+    return
 end
 
-function test_basic_operators_affexpr(ModelType, ::Any)
+function test_extension_basic_operators_affexpr(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, w)
     @variable(model, x)
     @variable(model, y)
     @variable(model, z)
-
     aff = @inferred 7.1 * x + 2.5
     aff2 = @inferred 1.2 * y + 1.2
     q = @inferred 2.5 * y * z + aff
@@ -417,15 +470,18 @@ function test_basic_operators_affexpr(ModelType, ::Any)
     @test_throws ErrorException aff2 / q
     @test transpose(aff) === aff
     @test conj(aff) === aff
+    return
 end
 
-function test_basic_operators_quadexpr(ModelType, ::Any)
+function test_extension_basic_operators_quadexpr(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, w)
     @variable(model, x)
     @variable(model, y)
     @variable(model, z)
-
     aff = @inferred 7.1 * x + 2.5
     aff2 = @inferred 1.2 * y + 1.2
     q = @inferred 2.5 * y * z + aff
@@ -457,44 +513,43 @@ function test_basic_operators_quadexpr(ModelType, ::Any)
     @test_throws ErrorException q / q2
     @test transpose(q) === q
     @test conj(q) === q
+    return
 end
 
-function test_dot(ModelType, ::Any)
+function test_extension_dot(ModelType = Model, VariableRefType = VariableRef)
     model = ModelType()
     @variable(model, 0 ≤ x[1:3] ≤ 1)
-
-    @test_expression_with_string dot(x[1], x[1]) "x[1]²"
-    @test_expression_with_string dot(2, x[1]) "2 x[1]"
-    @test_expression_with_string dot(x[1], 2) "2 x[1]"
-
+    @test_expression_with_string LinearAlgebra.dot(x[1], x[1]) "x[1]²"
+    @test_expression_with_string LinearAlgebra.dot(2, x[1]) "2 x[1]"
+    @test_expression_with_string LinearAlgebra.dot(x[1], 2) "2 x[1]"
     c = vcat(1:3)
-    @test_expression_with_string dot(c, x) "x[1] + 2 x[2] + 3 x[3]"
-    @test_expression_with_string dot(x, c) "x[1] + 2 x[2] + 3 x[3]"
-
+    @test_expression_with_string LinearAlgebra.dot(c, x) "x[1] + 2 x[2] + 3 x[3]"
+    @test_expression_with_string LinearAlgebra.dot(x, c) "x[1] + 2 x[2] + 3 x[3]"
     A = [1 3; 2 4]
     @variable(model, 1 ≤ y[1:2, 1:2] ≤ 1)
-    @test_expression_with_string dot(A, y) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
-    @test_expression_with_string dot(y, A) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
-
+    @test_expression_with_string LinearAlgebra.dot(A, y) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
+    @test_expression_with_string LinearAlgebra.dot(y, A) "y[1,1] + 2 y[2,1] + 3 y[1,2] + 4 y[2,2]"
     B = ones(2, 2, 2)
     @variable(model, 0 ≤ z[1:2, 1:2, 1:2] ≤ 1)
-    @test_expression_with_string dot(B, z) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
-    @test_expression_with_string dot(z, B) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
-
-    @objective(model, Max, dot(x, ones(3)) - dot(y, ones(2, 2)))
+    @test_expression_with_string LinearAlgebra.dot(B, z) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+    @test_expression_with_string LinearAlgebra.dot(z, B) "z[1,1,1] + z[2,1,1] + z[1,2,1] + z[2,2,1] + z[1,1,2] + z[2,1,2] + z[1,2,2] + z[2,2,2]"
+    @objective(
+        model,
+        Max,
+        LinearAlgebra.dot(x, ones(3)) - LinearAlgebra.dot(y, ones(2, 2))
+    )
     for i in 1:3
-        JuMP.set_start_value(x[i], 1)
+        set_start_value(x[i], 1)
     end
     for i in 1:2, j in 1:2
-        JuMP.set_start_value(y[i, j], 1)
+        set_start_value(y[i, j], 1)
     end
     for i in 1:2, j in 1:2, k in 1:2
-        JuMP.set_start_value(z[i, j, k], 1)
+        set_start_value(z[i, j, k], 1)
     end
-    @test dot(c, JuMP.start_value.(x)) ≈ 6
-    @test dot(A, JuMP.start_value.(y)) ≈ 10
-    @test dot(B, JuMP.start_value.(z)) ≈ 8
-
+    @test LinearAlgebra.dot(c, start_value.(x)) ≈ 6
+    @test LinearAlgebra.dot(A, start_value.(y)) ≈ 10
+    @test LinearAlgebra.dot(B, start_value.(z)) ≈ 8
     if ModelType <: Model
         # Only `Model` is guaranteed to have `operator_counter`, so
         # only test for that case.
@@ -504,21 +559,25 @@ function test_dot(ModelType, ::Any)
             model = ModelType()
             @test model.operator_counter == 0
             @variable(model, x[1:100])
-            JuMP.set_start_value.(x, 1:100)
+            set_start_value.(x, 1:100)
             @expression(model, test_sum, sum(x[i] * i for i in 1:100))
-            @expression(model, test_dot1, dot(x, 1:100))
-            @expression(model, test_dot2, dot(1:100, x))
+            @expression(model, test_dot1, LinearAlgebra.dot(x, 1:100))
+            @expression(model, test_dot2, LinearAlgebra.dot(1:100, x))
             @test model.operator_counter == 0
             test_add = test_dot1 + test_dot2
             @test model.operator_counter == 1  # Check triggerable.
-            test_sum_value = JuMP.value(JuMP.start_value, test_sum)
-            @test test_sum_value ≈ JuMP.value(JuMP.start_value, test_dot1)
-            @test test_sum_value ≈ JuMP.value(JuMP.start_value, test_dot2)
+            test_sum_value = value(start_value, test_sum)
+            @test test_sum_value ≈ value(start_value, test_dot1)
+            @test test_sum_value ≈ value(start_value, test_dot2)
         end
     end
+    return
 end
 
-function test_higher_level(ModelType, ::Any)
+function test_extension_higher_level(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
     model = ModelType()
     @variable(model, 0 ≤ matrix[1:3, 1:3] ≤ 1, start = 1)
     @testset "sum(j::DenseAxisArray{Variable})" begin
@@ -526,7 +585,7 @@ function test_higher_level(ModelType, ::Any)
     end
 
     @testset "sum(j::DenseAxisArray{T}) where T<:Real" begin
-        @test sum(JuMP.start_value.(matrix)) ≈ 9
+        @test sum(start_value.(matrix)) ≈ 9
     end
     @testset "sum(j::Array{VariableRef})" begin
         @test string(sum(matrix[1:3, 1:3])) == string(sum(matrix))
@@ -550,11 +609,12 @@ function test_higher_level(ModelType, ::Any)
         @test occursin("x[3]", string(sum(x)))
     end
     @testset "sum(j::JuMPDict{T}) where T<:Real" begin
-        @test sum(JuMP.start_value.(x)) == 2
+        @test sum(start_value.(x)) == 2
     end
+    return
 end
 
-function test_Model_complex_mult_variable(::Any, ::Any)
+function test_complex_mult_variable()
     model = Model()
     @variable(model, x[1:3])
     A = rand(ComplexF64, 3, 3)
@@ -562,7 +622,7 @@ function test_Model_complex_mult_variable(::Any, ::Any)
     return
 end
 
-function test_Model_complex_pow(::Any, ::Any)
+function test_complex_pow()
     model = Model()
     @variable(model, x)
     y = (1.0 + 2.0im) * x
@@ -571,21 +631,6 @@ function test_Model_complex_pow(::Any, ::Any)
     @test y^2 == y * y
     @test_throws ErrorException y^3
     return
-end
-
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if !startswith("$(name)", "test_")
-            continue
-        end
-        f = getfield(@__MODULE__, name)
-        @testset "$(name)" begin
-            f(Model, VariableRef)
-        end
-        @testset "$(name)-JuMPExtension" begin
-            f(JuMPExtension.MyModel, JuMPExtension.MyVariableRef)
-        end
-    end
 end
 
 end
