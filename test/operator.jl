@@ -259,10 +259,15 @@ function test_uniform_scaling(ModelType, ::Any)
     @test_expression_with_string 2I + x "x + 2"
     @test_expression_with_string I + (x + 1) "x + 2"
     @test_expression_with_string 2I - x "-x + 2"
+    @test_expression_with_string (2im * I) - x "(-1.0 - 0.0im) x + (0.0 + 2.0im)"
     @test_expression_with_string I - (x - 1) "-x + 2"
+    @test_expression_with_string (I * im) - (x - 1) "(-1.0 + 0.0im) x + (1.0 + 1.0im)"
     @test_expression_with_string I * x "x"
+    @test_expression_with_string (I * im) * x "(0.0 + 1.0im) x"
     @test_expression_with_string I * (x + 1) "x + 1"
+    @test_expression_with_string (I * im) * (x + 1) "(0.0 + 1.0im) x + (0.0 + 1.0im)"
     @test_expression_with_string (x + 1) * I "x + 1"
+    @test_expression_with_string (x + 1) * (I * im) "(0.0 + 1.0im) x + (0.0 + 1.0im)"
 end
 
 function test_basic_operators(ModelType, ::Any)

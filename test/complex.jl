@@ -35,6 +35,10 @@ function test_complex_aff_expr()
     @variable(model, x)
     y = (1 + 2im) * x + 1
     @test typeof(y) == GenericAffExpr{Complex{Float64},VariableRef}
+    @test 1im + x == 1im + 1 * x
+    @test 1im + x == 1im + (1 + 0im) * x
+    @test 1im - x == -(1 + 0im)x + 1im
+    @test 1im - 1 * x == -1 * x + 1im
     return
 end
 

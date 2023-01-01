@@ -53,25 +53,27 @@ function promote_operation_test(op::Function, x::Type, y::Type)
 end
 
 function test_promote_operation(ModelType, VariableRefType)
-    AffExprType = JuMP.GenericAffExpr{Float64,VariableRefType}
-    QuadExprType = JuMP.GenericQuadExpr{Float64,VariableRefType}
-    for op in [+, -, *]
-        for T in [Int, Float64]
-            promote_operation_test(op, T, VariableRefType)
-            promote_operation_test(op, VariableRefType, T)
-            promote_operation_test(op, T, AffExprType)
-            promote_operation_test(op, AffExprType, T)
-            promote_operation_test(op, T, QuadExprType)
-            promote_operation_test(op, QuadExprType, T)
-        end
-        promote_operation_test(op, VariableRefType, VariableRefType)
-        promote_operation_test(op, VariableRefType, AffExprType)
-        promote_operation_test(op, AffExprType, VariableRefType)
-        if op != *
-            promote_operation_test(op, VariableRefType, QuadExprType)
-            promote_operation_test(op, QuadExprType, VariableRefType)
-            promote_operation_test(op, AffExprType, QuadExprType)
-            promote_operation_test(op, QuadExprType, AffExprType)
+    for S in [Float64, ComplexF64]
+        AffExprType = JuMP.GenericAffExpr{S,VariableRefType}
+        QuadExprType = JuMP.GenericQuadExpr{S,VariableRefType}
+        for op in [+, -, *]
+            for T in [Int, S]
+                promote_operation_test(op, T, VariableRefType)
+                promote_operation_test(op, VariableRefType, T)
+                promote_operation_test(op, T, AffExprType)
+                promote_operation_test(op, AffExprType, T)
+                promote_operation_test(op, T, QuadExprType)
+                promote_operation_test(op, QuadExprType, T)
+            end
+            promote_operation_test(op, VariableRefType, VariableRefType)
+            promote_operation_test(op, VariableRefType, AffExprType)
+            promote_operation_test(op, AffExprType, VariableRefType)
+            if op != *
+                promote_operation_test(op, VariableRefType, QuadExprType)
+                promote_operation_test(op, QuadExprType, VariableRefType)
+                promote_operation_test(op, AffExprType, QuadExprType)
+                promote_operation_test(op, QuadExprType, AffExprType)
+            end
         end
     end
 end
@@ -79,14 +81,17 @@ end
 function test_int(ModelType, ::Any)
     model = ModelType()
     @variable(model, x)
-    MA.Test.int_test(
-        typeof(1x);
-        exclude = ["int_mul", "int_add", "int_add_mul"],
-    )
-    return MA.Test.int_test(
-        typeof(1x^2);
-        exclude = ["int_mul", "int_add", "int_add_mul"],
-    )
+    for a in [1, 1im]
+        MA.Test.int_test(
+            typeof(a * x);
+            exclude = ["int_mul", "int_add", "int_add_mul"],
+        )
+        MA.Test.int_test(
+            typeof(a * x^2);
+            exclude = ["int_mul", "int_add", "int_add_mul"],
+        )
+    end
+    return
 end
 
 function test_scalar(ModelType, ::Any)
@@ -94,8 +99,11 @@ function test_scalar(ModelType, ::Any)
     @variable(model, x)
     exclude = ["cube"]
     MA.Test.scalar_test(x; exclude = exclude)
-    MA.Test.scalar_test(2x + 3; exclude = exclude)
-    return MA.Test.scalar_test(2x^2 + 4x + 1; exclude = exclude)
+    for a in [2, 2im]
+        MA.Test.scalar_test(a * x + 3; exclude = exclude)
+        MA.Test.scalar_test(a * x^2 + 4x + 1; exclude = exclude)
+    end
+    return
 end
 
 function test_quadratic(ModelType, ::Any)
@@ -143,7 +151,6 @@ function test_different_variables(ModelType, ::Any)
     model = ModelType()
     x = @variable(model)
     y = DummyVariableRef()
-    aff = x + 1
     function _promote_test(a, b)
         A = typeof(a)
         B = typeof(b)
@@ -153,7 +160,10 @@ function test_different_variables(ModelType, ::Any)
         @test MA.promote_operation(-, B, A) == DummyExpr
     end
     _promote_test(x, y)
-    return _promote_test(aff, y)
+    for aff in [x + 1, x + im]
+        _promote_test(aff, y)
+    end
+    return
 end
 
 function runtests()
