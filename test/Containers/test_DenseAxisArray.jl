@@ -525,8 +525,7 @@ function test_containers_denseaxisarray_view()
     @test size(B) == (3, 2)
     @test B[1, :a] == A[1, :a]
     @test B[3, :a] == A[3, :a]
-    # Views are weird, because we can still access the underlying array?
-    @test B[3, :c] == A[3, :c]
+    @test_throws KeyError B[3, :c]
     @test sprint(show, B) == sprint(show, B.data)
     @test sprint(Base.print_array, B) == sprint(show, B.data)
     @test sprint(Base.summary, B) ==
@@ -566,6 +565,13 @@ function test_containers_denseaxisarray_view_addition()
     c = Containers.@container([i = 1:4, j = 2:3], i + 2 * j)
     d = view(c, 2:3, :)
     @test_throws MethodError d + d
+    return
+end
+
+function test_containers_denseaxisarray_view_colon()
+    c = Containers.@container([i = 1:4, j = 2:3], i + 2 * j)
+    d = view(c, 2:3, :)
+    @test d[:, 2] == Containers.@container([i = 2:3], i + 2 * 2)
     return
 end
 

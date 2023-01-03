@@ -353,8 +353,6 @@ function Base.setindex!(
     value::DenseAxisArray{T,N},
     args...,
 ) where {T,N}
-    @show args
-    @show Base.to_index(A, args)
     for key in Base.product(args...)
         A[key...] = value[key...]
     end
@@ -583,7 +581,7 @@ Base.repeat(x::DenseAxisArray; kwargs...) = repeat(x.data; kwargs...)
 
 _get_subaxis(::Colon, b) = b
 
-function _get_subaxis(a, b)
+function _get_subaxis(a::AbstractVector, b)
     for ai in a
         if !(ai in b)
             throw(KeyError(ai))
@@ -591,6 +589,14 @@ function _get_subaxis(a, b)
     end
     return a
 end
+
+function _get_subaxis(a::T, b::AbstractVector{T}) where {T}
+    if !(a in b)
+        throw(KeyError(a))
+    end
+    return a
+end
+
 struct DenseAxisArrayView{T,N,D,A} <: AbstractArray{T,N}
     data::D
     axes::A
@@ -598,7 +604,7 @@ struct DenseAxisArrayView{T,N,D,A} <: AbstractArray{T,N}
         x::Containers.DenseAxisArray{T,N},
         args...,
     ) where {T,N}
-        axis = tuple([_get_subaxis(a, b) for (a, b) in zip(args, axes(x))]...)
+        axis = _get_subaxis.(args, axes(x))
         return new{T,N,typeof(x),typeof(axis)}(x, axis)
     end
 end
@@ -612,15 +618,20 @@ Base.size(x::DenseAxisArrayView) = length.(x.axes)
 Base.axes(x::DenseAxisArrayView) = x.axes
 
 function Base.getindex(x::DenseAxisArrayView, args...)
-    return getindex(x.data, args...)
+    y = _get_subaxis.(args, x.axes)
+    return getindex(x.data, y...)
 end
+
+Base.getindex(a::DenseAxisArrayView, k::DenseAxisArrayKey) = a[k.I...]
 
 function Base.setindex!(x::DenseAxisArrayView, args...)
     return setindex!(x.data, args...)
 end
 
 function Base.eachindex(A::DenseAxisArrayView)
-    return DenseAxisArrayKey.(Base.product(A.axes...))
+    # Return a generator so that we lazily evaluate the product instead of
+    # collecting into a vector.
+    return (DenseAxisArrayKey(k) for k in Base.product(A.axes...))
 end
 
 Base.show(io::IO, x::DenseAxisArrayView) = print(io, x.data)
