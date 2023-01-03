@@ -8,74 +8,41 @@
 # See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
-using Test
+import JuMP
+import Test
 
-# Run these tests only if the user does not specify a particular file to run.
-if isempty(ARGS)
-    # It is important to run these test _before_ any other packages are loaded.
-    include("hygiene.jl")
-    import JuMP
-    @test isempty(Test.detect_ambiguities(JuMP))
-    # TODO(odow): there are still some ambiguities in Containers
-    # @test isempty(Test.detect_ambiguities(JuMP.Containers))
-end
+# It is important to test this _before_ calling `include_modules_to_test`
+# because some of the tests introduce new ambiguities.
+Test.@test isempty(Test.detect_ambiguities(JuMP))
+# TODO(odow): there are still some ambiguities in Containers
+# @test isempty(Test.detect_ambiguities(JuMP.Containers))
 
-function run_tests(
-    mod::Module,
-    args...;
-    test_prefix::String = "test_",
-    include_names::Vector{String} = String[""],
-    exclude_names::Vector{String} = String[],
-)
-    for name in names(mod; all = true)
-        test_function, test_name = getfield(mod, name), string(name)
-        if !(test_function isa Function)
-            continue
-        elseif !startswith(test_name, test_prefix)
-            continue
-        elseif !any(needle -> occursin(needle, test_name), include_names)
-            continue
-        elseif any(needle -> occursin(needle, test_name), exclude_names)
-            continue
-        end
-        @testset "$name" begin
-            test_function(args...)
-        end
-    end
-    return
-end
+include("Kokako.jl")
 
-const FILES_TO_TEST = String[]
+const MODULES_TO_TEST = Kokako.include_modules_to_test(@__DIR__)
 
-if isempty(ARGS)
-    for (root, dirs, files) in walkdir(@__DIR__)
-        for file in files
-            if startswith(file, "test_") && endswith(file, ".jl")
-                push!(FILES_TO_TEST, joinpath(root, file))
-            end
-        end
-    end
-else
-    append!(FILES_TO_TEST, ARGS)
-end
+###
+### Default tests
+###
+
+@info "Running default tests"
+
+Kokako.run_tests(MODULES_TO_TEST)
+
+###
+### Test JuMPExtensions
+###
+
+@info "Running JuMPExtension tests"
 
 include(joinpath(@__DIR__, "JuMPExtension.jl"))
 
-const EXTENSION_INCLUDES = Dict(
-    "test_mutable_arithmetics.jl" => ["test_extension_promote_operation"],
+Kokako.run_tests(
+    MODULES_TO_TEST,
+    JuMPExtension.MyModel,
+    JuMPExtension.MyVariableRef;
+    test_prefix = "test_extension_",
+    include_names = Dict(
+        "test_mutable_arithmetics.jl" => ["test_extension_promote_operation"],
+    ),
 )
-
-for filename in FILES_TO_TEST
-    file = last(split(filename, "/"))
-    mod = include(filename)
-    @testset "$file" begin
-        run_tests(mod)  # Test default tests
-        run_tests(  # Test JuMPExtension
-            mod,
-            JuMPExtension.MyModel,
-            JuMPExtension.MyVariableRef;
-            test_prefix = "test_extension_",
-            include_names = get(EXTENSION_INCLUDES, file, [""]),
-        )
-    end
-end
