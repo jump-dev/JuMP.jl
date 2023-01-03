@@ -16,19 +16,7 @@ using Test
 import LinearAlgebra
 import SparseArrays
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$name", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
 include(joinpath(@__DIR__, "utilities.jl"))
-include(joinpath(@__DIR__, "JuMPExtension.jl"))
 
 function test_univariate_error()
     model = Model()
@@ -1192,15 +1180,16 @@ function test_SpecialFunctions()
     return
 end
 
+struct MyModel <: AbstractModel end
+
 function test_JuMP_extensions()
-    model = JuMPExtension.MyModel()
-    @variable(model, x)
+    model = MyModel()
     err = ErrorException(
         "Encountered an error parsing nonlinear expression: we don't support " *
         "models of type $(typeof(model)). In general, JuMP's nonlinear features " *
         "don't work with JuMP-extensions.",
     )
-    @test_throws(err, @NLexpression(model, sqrt(x)))
+    @test_throws err JuMP._init_NLP(model)
     return
 end
 
@@ -1575,5 +1564,3 @@ function test_parse_expression_quadexpr_multivariate_sum()
 end
 
 end
-
-TestNLP.runtests()

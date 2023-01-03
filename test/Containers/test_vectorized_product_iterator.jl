@@ -13,17 +13,6 @@ module TestContainersVectorizedProductIterator
 using JuMP.Containers
 using Test
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
 function test_VectorizedProductIterator()
     I = [1 2; 3 4]
     @test isempty(Containers.vectorized_product(2, I, 1:0))
@@ -47,5 +36,3 @@ function test_infinite_size()
 end
 
 end  # module
-
-TestContainersVectorizedProductIterator.runtests()

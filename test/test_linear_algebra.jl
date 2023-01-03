@@ -20,17 +20,6 @@ using Test
 using JuMP
 import LinearAlgebra
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
 function _test_matvec(model, A, b)
     expr_vec = @expression(model, A * b)
     expr_adj = @expression(model, b' * A)
@@ -117,5 +106,3 @@ for T in (
 end
 
 end  # module
-
-TestLinearAlgebra.runtests()

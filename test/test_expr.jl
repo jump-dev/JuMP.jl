@@ -19,26 +19,6 @@ import SparseArrays
 const MA = JuMP._MA
 
 include(joinpath(@__DIR__, "utilities.jl"))
-include(joinpath(@__DIR__, "JuMPExtension.jl"))
-
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-        if startswith("$(name)", "test_extension_")
-            @testset "$(name)-JuMPExtension" begin
-                getfield(@__MODULE__, name)(
-                    JuMPExtension.MyModel,
-                    JuMPExtension.MyVariableRef,
-                )
-            end
-        end
-    end
-    return
-end
 
 # For "expression^3 and unary*"
 struct PowVariable <: JuMP.AbstractVariableRef
@@ -462,5 +442,3 @@ function test_expression_ambiguities()
 end
 
 end  # TestExpr
-
-TestExpr.runtests()

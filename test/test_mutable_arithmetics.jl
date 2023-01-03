@@ -13,34 +13,6 @@ module TestMutableArithmetics
 using JuMP
 using Test
 
-include(joinpath(@__DIR__, "JuMPExtension.jl"))
-
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-        if startswith("$(name)", "test_extension_")
-            # Note(odow): We disable JuMPExtension tests for MutableArithmetics
-            # because they take far to looooooong. MutableArithmetics is a
-            # tested package. We're also testing that it works with JuMP. We
-            # don't need to double up on our tests.
-            if name != "test_promote_operation"
-                continue
-            end
-            @testset "$(name)-JuMPExtension" begin
-                getfield(@__MODULE__, name)(
-                    JuMPExtension.MyModel,
-                    JuMPExtension.MyVariableRef,
-                )
-            end
-        end
-    end
-    return
-end
-
 struct DummyVariableRef <: JuMP.AbstractVariableRef end
 
 JuMP.name(::DummyVariableRef) = "dummy"
@@ -216,5 +188,3 @@ function test_extension_different_variables(
 end
 
 end
-
-TestMutableArithmetics.runtests()

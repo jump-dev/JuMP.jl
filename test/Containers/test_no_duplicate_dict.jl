@@ -13,17 +13,6 @@ module TestContainersNoDuplicateDict
 using JuMP.Containers
 using Test
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
 function test_iterator_with_constant_eltype()
     f(ij) = ij => sum(ij)
     g = Base.Generator(f, Iterators.product(1:2, 1:2))
@@ -69,5 +58,3 @@ function test_iterator_with_varying_eltype()
 end
 
 end  # module
-
-TestContainersNoDuplicateDict.runtests()

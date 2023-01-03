@@ -9,17 +9,6 @@ using Test
 using JuMP
 import LinearAlgebra
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
 struct TestSensitivitySolution
     primal::Float64
     dual::Float64
@@ -501,5 +490,3 @@ function test_Free_variable()
 end
 
 end  # module
-
-TestLPSensitivity.runtests()

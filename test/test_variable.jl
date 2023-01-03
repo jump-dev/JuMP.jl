@@ -19,26 +19,6 @@ using Test
 import LinearAlgebra
 
 include(joinpath(@__DIR__, "utilities.jl"))
-include(joinpath(@__DIR__, "JuMPExtension.jl"))
-
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-        if startswith("$(name)", "test_extension_")
-            @testset "$(name)-JuMPExtension" begin
-                getfield(@__MODULE__, name)(
-                    JuMPExtension.MyModel,
-                    JuMPExtension.MyVariableRef,
-                )
-            end
-        end
-    end
-    return
-end
 
 function _test_variable_name_util(variable, s_name)
     @test s_name == @inferred name(variable)
@@ -1343,5 +1323,3 @@ function test_Hermitian_PSD_anon()
 end
 
 end  # module TestVariable
-
-TestVariable.runtests()

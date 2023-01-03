@@ -19,25 +19,6 @@ using Test
 
 include(joinpath(@__DIR__, "JuMPExtension.jl"))
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-        if startswith("$(name)", "test_extension_")
-            @testset "$(name)-JuMPExtension" begin
-                getfield(@__MODULE__, name)(
-                    JuMPExtension.MyModel,
-                    JuMPExtension.MyVariableRef,
-                )
-            end
-        end
-    end
-    return
-end
-
 # Helper function to test IO methods work correctly
 function _io_test_show(::MIME"text/plain", obj, exp_str)
     @test sprint(show, obj) == exp_str
@@ -1003,5 +984,3 @@ function test_print_hermitian_psd_cone()
 end
 
 end
-
-TestPrint.runtests()

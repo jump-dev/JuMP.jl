@@ -19,17 +19,6 @@ import SparseArrays
 
 const MA = MutableArithmetics
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
 function test_complex_aff_expr()
     model = Model()
     @variable(model, x)
@@ -262,5 +251,3 @@ function test_complex_hermitian_constraint()
 end
 
 end
-
-TestComplexNumberSupport.runtests()

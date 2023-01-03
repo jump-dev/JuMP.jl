@@ -16,26 +16,6 @@ using Test
 import SparseArrays
 
 include(joinpath(@__DIR__, "utilities.jl"))
-include(joinpath(@__DIR__, "JuMPExtension.jl"))
-
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-        if startswith("$(name)", "test_extension_")
-            @testset "$(name)-JuMPExtension" begin
-                getfield(@__MODULE__, name)(
-                    JuMPExtension.MyModel,
-                    JuMPExtension.MyVariableRef,
-                )
-            end
-        end
-    end
-    return
-end
 
 struct NewVariable <: JuMP.AbstractVariable
     info::JuMP.VariableInfo
@@ -1789,5 +1769,3 @@ function test_nonlinear_flatten_expressions()
 end
 
 end  # module
-
-TestMacros.runtests()
