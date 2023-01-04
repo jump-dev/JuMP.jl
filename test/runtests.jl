@@ -14,6 +14,7 @@ import Test
 # It is important to test this _before_ calling `include_modules_to_test`
 # because some of the tests introduce new ambiguities.
 Test.@test isempty(Test.detect_ambiguities(JuMP))
+
 # TODO(odow): there are still some ambiguities in Containers
 # @test isempty(Test.detect_ambiguities(JuMP.Containers))
 
@@ -21,21 +22,14 @@ include("Kokako.jl")
 
 const MODULES_TO_TEST = Kokako.include_modules_to_test(@__DIR__)
 
-###
-### Default tests
-###
+include(joinpath(@__DIR__, "JuMPExtension.jl"))
 
-@info "Running default tests"
+if isempty(ARGS)
+    # JuMPExtension.jl also contains some tests.
+    push!(MODULES_TO_TEST, "JuMPExtension.jl" => JuMPExtension)
+end
 
 Kokako.run_tests(MODULES_TO_TEST)
-
-###
-### Test JuMPExtensions
-###
-
-@info "Running JuMPExtension tests"
-
-include(joinpath(@__DIR__, "JuMPExtension.jl"))
 
 Kokako.run_tests(
     MODULES_TO_TEST,

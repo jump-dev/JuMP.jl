@@ -250,14 +250,22 @@ function test_extension_matrix_multiplication(
     return
 end
 
-function test_operator_warn()
-    model = Model()
+function test_extension_operator_warn(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable model x[1:51]
-    @test model.operator_counter == 0
-    # Triggers the increment of operator_counter since sum(x) has more than 50
-    # terms.
+    # JuMPExtension does not have the `operator_counter` field
+    if ModelType <: Model
+        @test model.operator_counter == 0
+    end
+    # Triggers the increment of operator_counter since sum(x) has more than 50 terms
     @test_expression(sum(x) + 2x[1])
-    @test model.operator_counter == 1
+    if ModelType <: Model
+        # The following check verifies that this test covers the code incrementing `operator_counter`
+        @test model.operator_counter == 1
+    end
     return
 end
 

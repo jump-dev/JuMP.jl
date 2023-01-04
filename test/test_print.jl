@@ -17,8 +17,6 @@ using JuMP
 using LinearAlgebra
 using Test
 
-include(joinpath(@__DIR__, "JuMPExtension.jl"))
-
 # Helper function to test IO methods work correctly
 function _io_test_show(::MIME"text/plain", obj, exp_str)
     @test sprint(show, obj) == exp_str
@@ -732,111 +730,6 @@ Variable: 1
 Model mode: AUTOMATIC
 CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
-Names registered in the model: x""";
-        repl = :show,
-    )
-    return
-end
-
-# Test printing of models of type `ModelType` for which the model is stored in
-# its JuMP form, e.g., as `AbstractVariable`s and `AbstractConstraint`s.
-# This is used by `JuMPExtension` but can also be used by external packages such
-# as `StructJuMP`, see https://github.com/jump-dev/JuMP.jl/issues/1711
-function test_model_extension_printing()
-    ModelType = JuMPExtension.MyModel
-    repl(s) = JuMP._math_symbol(MIME("text/plain"), s)
-    le, inset = repl(:leq), repl(:in)
-    #------------------------------------------------------------------
-
-    model_1 = ModelType()
-    @variable(model_1, a >= 1)
-    @variable(model_1, b <= 1)
-    @variable(model_1, -1 <= c <= 1)
-    @variable(model_1, a1 >= 1, Int)
-    @variable(model_1, b1 <= 1, Int)
-    @variable(model_1, -1 <= c1 <= 1, Int)
-    @variable(model_1, x, Bin)
-    @variable(model_1, y)
-    @variable(model_1, z, Int)
-    @variable(model_1, u[1:3], Bin)
-    @variable(model_1, fi == 9)
-    @objective(model_1, Max, a - b + 2a1 - 10x)
-    @constraint(model_1, a + b - 10c - 2x + c1 <= 1)
-    @constraint(model_1, a * b <= 2)
-    @constraint(model_1, [1 - a; u] in SecondOrderCone())
-
-    VariableType = typeof(a)
-
-    # TODO variable constraints
-    io_test(
-        MIME("text/plain"),
-        model_1,
-        """
-Max a - b + 2 a1 - 10 x
-Subject to
- a + b - 10 c - 2 x + c1 $le 1.0
- a*b $le 2.0
- [-a + 1, u[1], u[2], u[3]] $inset MathOptInterface.SecondOrderCone(4)
-""";
-        repl = :print,
-    )
-
-    io_test(
-        MIME("text/plain"),
-        model_1,
-        """
-An Abstract JuMP Model
-Maximization problem with:
-Variables: 13
-Objective function type: $(GenericAffExpr{Float64,VariableType})
-Constraints: 3
-Names registered in the model: a, a1, b, b1, c, c1, fi, u, x, y, z""";
-        repl = :show,
-    )
-
-    io_test(
-        MIME("text/latex"),
-        model_1,
-        "\\begin{aligned}\n" *
-        "\\max\\quad & a - b + 2 a1 - 10 x\\\\\n" *
-        "\\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\\n" *
-        " & a\\times b \\leq 2.0\\\\\n" *
-        " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\\n" *
-        "\\end{aligned}";
-        repl = :print,
-    )
-
-    #------------------------------------------------------------------
-
-    model_2 = ModelType()
-    @variable(model_2, x, Bin)
-    @variable(model_2, y, Int)
-    @constraint(model_2, x * y <= 1)
-
-    io_test(
-        MIME("text/plain"),
-        model_2,
-        """
-An Abstract JuMP Model
-Feasibility problem with:
-Variables: 2
-Constraint: 1
-Names registered in the model: x, y""";
-        repl = :show,
-    )
-
-    model_3 = ModelType()
-    @variable(model_3, x)
-    @constraint(model_3, x <= 3)
-
-    io_test(
-        MIME("text/plain"),
-        model_3,
-        """
-An Abstract JuMP Model
-Feasibility problem with:
-Variable: 1
-Constraint: 1
 Names registered in the model: x""";
         repl = :show,
     )
