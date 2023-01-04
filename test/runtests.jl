@@ -31,6 +31,7 @@ for file in filter(f -> endswith(f, ".jl"), readdir(@__DIR__))
         "JuMPExtension.jl",
         "nlp_solver.jl",
         "hygiene.jl",
+        "nonnegative_bridge.jl",
     ]
         continue
     end
