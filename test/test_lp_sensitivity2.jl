@@ -58,7 +58,7 @@ function _test_sensitivity(model_string, solution)
         end
     end
     sens = lp_sensitivity_report(model)
-    @testset "$(s_key)" for (s_key, val) in solution
+    for (s_key, val) in solution
         key = obj_map[s_key]
         @test sens[key][1] ≈ val.range[1]
         @test sens[key][2] ≈ val.range[2]
