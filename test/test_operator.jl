@@ -565,9 +565,7 @@ function test_extension_higher_level(
     # "sum(j::Array{VariableRef})"
     @test string(sum(matrix[1:3, 1:3])) == string(sum(matrix))
     # "sum(affs::Array{AffExpr})"
-    @test_expression_with_string sum([
-        2 * matrix[i, j] for i in 1:3, j in 1:3
-    ]) "2 matrix[1,1] + 2 matrix[2,1] + 2 matrix[3,1] + 2 matrix[1,2] + 2 matrix[2,2] + 2 matrix[3,2] + 2 matrix[1,3] + 2 matrix[2,3] + 2 matrix[3,3]"
+    @test_expression_with_string sum([2 * matrix[i, j] for i in 1:3, j in 1:3]) "2 matrix[1,1] + 2 matrix[2,1] + 2 matrix[3,1] + 2 matrix[1,2] + 2 matrix[2,2] + 2 matrix[3,2] + 2 matrix[1,3] + 2 matrix[2,3] + 2 matrix[3,3]"
     # "sum(quads::Array{QuadExpr})"
     @test_expression_with_string sum([
         2 * matrix[i, j]^2 for i in 1:3, j in 1:3
