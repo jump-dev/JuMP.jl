@@ -253,12 +253,13 @@ end
 
 Base.isempty(A::DenseAxisArray) = isempty(A.data)
 
-# We specify `Ax` for the type of `axes` to avoid conflict where `axes` has type `Tuple{Vararg{Int,N}}`.
+# We specify `Ax` for the type of `axes` to avoid conflict where `axes` has type
+# `Tuple{Vararg{Int,N}}`.
 function Base.similar(
     A::DenseAxisArray{T,N,Ax},
     ::Type{S},
     axes::Ax,
-) where {T,N,Ax,S}
+) where {T,N,Ax<:Tuple{<:AbstractVector},S}
     return construct_undef_array(S, axes)
 end
 
@@ -297,11 +298,13 @@ function _is_assigned(A::DenseAxisArray{T,N}, idx...) where {T,N}
     end
     return false
 end
+
 function Base.isassigned(A::DenseAxisArray{T,N}, idx...) where {T,N}
     return _is_assigned(A, idx...)
 end
+
 # For ambiguity
-function Base.isassigned(A::DenseAxisArray{T,N}, idx::Int...) where {T,N}
+function Base.isassigned(A::DenseAxisArray{T,N}, idx::Integer...) where {T,N}
     return _is_assigned(A, idx...)
 end
 

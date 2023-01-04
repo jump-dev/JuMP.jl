@@ -234,4 +234,17 @@ function test_slicing_on_set()
     return
 end
 
+function test_ambiguity_broadcast_preserving_zero_d()
+    Containers.@container(x[i=1:2, j=i:3], i + j)
+    @test Broadcast.broadcast_preserving_zero_d(*, x, x) == x .* x
+    return
+end
+
+function test_ambuguity_BroadcastStyleUnknown()
+    Containers.@container(x[i=1:2, j=i:3], i + j)
+    style = Base.BroadcastStyle(typeof(x))
+    @test_throws ArgumentError Base.BroadcastStyle(style, Broadcast.Unknown())
+    return
+end
+
 end  # module
