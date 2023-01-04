@@ -530,27 +530,25 @@ function test_extension_dot(ModelType = Model, VariableRefType = VariableRef)
     @test LinearAlgebra.dot(c, start_value.(x)) ≈ 6
     @test LinearAlgebra.dot(A, start_value.(y)) ≈ 10
     @test LinearAlgebra.dot(B, start_value.(z)) ≈ 8
-    if ModelType <: Model
-        # Only `Model` is guaranteed to have `operator_counter`, so
-        # only test for that case.
-        @testset "dot doesn't trigger operator_counter" begin
-            # Check that dot is not falling back to default, inefficient
-            # addition (JuMP PR #943).
-            model = ModelType()
-            @test model.operator_counter == 0
-            @variable(model, x[1:100])
-            set_start_value.(x, 1:100)
-            @expression(model, test_sum, sum(x[i] * i for i in 1:100))
-            @expression(model, test_dot1, LinearAlgebra.dot(x, 1:100))
-            @expression(model, test_dot2, LinearAlgebra.dot(1:100, x))
-            @test model.operator_counter == 0
-            test_add = test_dot1 + test_dot2
-            @test model.operator_counter == 1  # Check triggerable.
-            test_sum_value = value(start_value, test_sum)
-            @test test_sum_value ≈ value(start_value, test_dot1)
-            @test test_sum_value ≈ value(start_value, test_dot2)
-        end
-    end
+    return
+end
+
+function test_model_dot_fallback()
+    # Check that dot is not falling back to default, inefficient
+    # addition (JuMP PR #943).
+    model = Model()
+    @test model.operator_counter == 0
+    @variable(model, x[1:100])
+    set_start_value.(x, 1:100)
+    @expression(model, test_sum, sum(x[i] * i for i in 1:100))
+    @expression(model, test_dot1, LinearAlgebra.dot(x, 1:100))
+    @expression(model, test_dot2, LinearAlgebra.dot(1:100, x))
+    @test model.operator_counter == 0
+    test_add = test_dot1 + test_dot2
+    @test model.operator_counter == 1  # Check triggerable.
+    test_sum_value = value(start_value, test_sum)
+    @test test_sum_value ≈ value(start_value, test_dot1)
+    @test test_sum_value ≈ value(start_value, test_dot2)
     return
 end
 
@@ -560,37 +558,27 @@ function test_extension_higher_level(
 )
     model = ModelType()
     @variable(model, 0 ≤ matrix[1:3, 1:3] ≤ 1, start = 1)
-    @testset "sum(j::DenseAxisArray{Variable})" begin
-        @test_expression_with_string sum(matrix) "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
-    end
-
-    @testset "sum(j::DenseAxisArray{T}) where T<:Real" begin
-        @test sum(start_value.(matrix)) ≈ 9
-    end
-    @testset "sum(j::Array{VariableRef})" begin
-        @test string(sum(matrix[1:3, 1:3])) == string(sum(matrix))
-    end
-    @testset "sum(affs::Array{AffExpr})" begin
-        @test_expression_with_string sum([
-            2 * matrix[i, j] for i in 1:3, j in 1:3
-        ]) "2 matrix[1,1] + 2 matrix[2,1] + 2 matrix[3,1] + 2 matrix[1,2] + 2 matrix[2,2] + 2 matrix[3,2] + 2 matrix[1,3] + 2 matrix[2,3] + 2 matrix[3,3]"
-    end
-    @testset "sum(quads::Array{QuadExpr})" begin
-        @test_expression_with_string sum([
-            2 * matrix[i, j]^2 for i in 1:3, j in 1:3
-        ]) "2 matrix[1,1]² + 2 matrix[2,1]² + 2 matrix[3,1]² + 2 matrix[1,2]² + 2 matrix[2,2]² + 2 matrix[3,2]² + 2 matrix[1,3]² + 2 matrix[2,3]² + 2 matrix[3,3]²"
-    end
+    # "sum(j::DenseAxisArray{Variable})"
+    @test_expression_with_string sum(matrix) "matrix[1,1] + matrix[2,1] + matrix[3,1] + matrix[1,2] + matrix[2,2] + matrix[3,2] + matrix[1,3] + matrix[2,3] + matrix[3,3]"
+    # "sum(j::DenseAxisArray{T}) where T<:Real"
+    @test sum(start_value.(matrix)) ≈ 9
+    # "sum(j::Array{VariableRef})"
+    @test string(sum(matrix[1:3, 1:3])) == string(sum(matrix))
+    # "sum(affs::Array{AffExpr})"
+    @test_expression_with_string sum([2 * matrix[i, j] for i in 1:3, j in 1:3]) "2 matrix[1,1] + 2 matrix[2,1] + 2 matrix[3,1] + 2 matrix[1,2] + 2 matrix[2,2] + 2 matrix[3,2] + 2 matrix[1,3] + 2 matrix[2,3] + 2 matrix[3,3]"
+    # "sum(quads::Array{QuadExpr})"
+    @test_expression_with_string sum([
+        2 * matrix[i, j]^2 for i in 1:3, j in 1:3
+    ]) "2 matrix[1,1]² + 2 matrix[2,1]² + 2 matrix[3,1]² + 2 matrix[1,2]² + 2 matrix[2,2]² + 2 matrix[3,2]² + 2 matrix[1,3]² + 2 matrix[2,3]² + 2 matrix[3,3]²"
     S = [1, 3]
     @variable(model, x[S], start = 1)
-    @testset "sum(j::JuMPDict{VariableRef})" begin
-        @test_expression sum(x)
-        @test length(string(sum(x))) == 11 # order depends on hashing
-        @test occursin("x[1]", string(sum(x)))
-        @test occursin("x[3]", string(sum(x)))
-    end
-    @testset "sum(j::JuMPDict{T}) where T<:Real" begin
-        @test sum(start_value.(x)) == 2
-    end
+    # "sum(j::JuMPDict{VariableRef})"
+    @test_expression sum(x)
+    @test length(string(sum(x))) == 11 # order depends on hashing
+    @test occursin("x[1]", string(sum(x)))
+    @test occursin("x[3]", string(sum(x)))
+    # "sum(j::JuMPDict{T}) where T<:Real"
+    @test sum(start_value.(x)) == 2
     return
 end
 
