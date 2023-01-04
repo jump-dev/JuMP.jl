@@ -16,32 +16,12 @@ using Test
 import LinearAlgebra
 
 include(joinpath(@__DIR__, "utilities.jl"))
-include(joinpath(@__DIR__, "JuMPExtension.jl"))
-
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-        if startswith("$(name)", "test_extension_")
-            @testset "$(name)-JuMPExtension" begin
-                getfield(@__MODULE__, name)(
-                    JuMPExtension.MyModel,
-                    JuMPExtension.MyVariableRef,
-                )
-            end
-        end
-    end
-    return
-end
 
 function _test_constraint_name_util(constraint, s_name, F::Type, S::Type)
     @test s_name == @inferred name(constraint)
     model = constraint.model
     @test constraint.index == constraint_by_name(model, s_name).index
-    if !(model isa JuMPExtension.MyModel)
+    if model isa Model
         @test constraint.index == constraint_by_name(model, s_name, F, S).index
     end
     return
@@ -1463,5 +1443,3 @@ function test_extension_HermitianPSDCone_errors(
 end
 
 end
-
-TestConstraint.runtests()

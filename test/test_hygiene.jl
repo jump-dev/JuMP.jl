@@ -3,21 +3,22 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-# hygiene.jl
-# Make sure that our macros have good hygiene
+module TestHygiene
 
-module M
-using LinearAlgebra
-using Test
+import LinearAlgebra
 import JuMP
+import Test
+
+# Check that the non-prefixed `Model` is not available in the current scope
+Test.@test_throws UndefVarError Model
 
 model = JuMP.Model()
-sense = JuMP.MathOptInterface.MIN_SENSE
+sense = JuMP.MOI.MIN_SENSE
 JuMP.@variable(model, x >= 0)
 r = 3:5
 JuMP.@variable(model, y[i = r] <= i)
 JuMP.@variable(model, z[i = 1:2, j = 1:2], Symmetric)
-@test z isa LinearAlgebra.Symmetric
+Test.@test z isa LinearAlgebra.Symmetric
 
 JuMP.@constraint(model, x + sum(j * y[j] for j in r) <= 1)
 JuMP.@constraint(model, sum(y[j] for j in r if j == 4) <= 1)
@@ -51,9 +52,9 @@ model = JuMP.Model()
 i = 10
 j = 10
 JuMP.@expression(model, ex[j = 2:3], sum(i for i in 1:j))
-@test ex[2] == 3
-@test ex[3] == 6
-@test i == 10
-@test j == 10
+Test.@test ex[2] == 3
+Test.@test ex[3] == 6
+Test.@test i == 10
+Test.@test j == 10
 
 end

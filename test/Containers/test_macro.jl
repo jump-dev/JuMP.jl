@@ -13,17 +13,6 @@ module TestContainersMacro
 using JuMP.Containers
 using Test
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
 function test_Array()
     Containers.@container(x[i = 1:3], i^2)
     @test x isa Vector{Int}
@@ -243,5 +232,3 @@ function test__MyContainer2()
 end
 
 end  # module
-
-TestContainersMacro.runtests()

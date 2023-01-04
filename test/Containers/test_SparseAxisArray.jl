@@ -13,17 +13,6 @@ module TestContainersSparseAxisArray
 using JuMP.Containers
 using Test
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
 function _util_sparse_test(d, sum_d, d2, d3, dsqr, d_bads)
     sqr(x) = x^2
     # map
@@ -246,5 +235,3 @@ function test_slicing_on_set()
 end
 
 end  # module
-
-TestContainersSparseAxisArray.runtests()

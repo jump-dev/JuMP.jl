@@ -8,17 +8,6 @@ module TestTableInterface
 using JuMP
 using Test
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
 function test_denseaxisarray()
     model = Model()
     @variable(model, x[i = 4:10, j = 2002:2022] >= 0, start = 0.0)
@@ -122,5 +111,3 @@ function test_custom_variable()
 end
 
 end
-
-TestTableInterface.runtests()

@@ -20,17 +20,6 @@ using LinearAlgebra
 using JuMP
 using Test
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
 function test_generate_solve_LP()
     m = Model()
     @variable(m, x <= 2.0)
@@ -564,5 +553,3 @@ c2: x + y <= 1.0
 end
 
 end  # module
-
-TestGenerateAndSolve.runtests()

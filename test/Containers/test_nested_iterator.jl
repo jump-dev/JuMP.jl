@@ -13,17 +13,6 @@ module TestContainersNestedIterator
 using JuMP.Containers
 using Test
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
 function test_NestedIterator()
     iterators = (() -> 1:3, i -> 1:i)
     condition = (i, j) -> j > i
@@ -44,5 +33,3 @@ function test_StackOverflow_2335()
 end
 
 end  # module
-
-TestContainersNestedIterator.runtests()

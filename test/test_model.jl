@@ -919,17 +919,4 @@ function test_optimize_not_called_warning()
     return
 end
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if !startswith("$(name)", "test_")
-            continue
-        end
-        @testset "$(name)" begin
-            getfield(@__MODULE__, name)()
-        end
-    end
-end
-
 end  # module TestModels
-
-TestModels.runtests()

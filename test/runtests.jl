@@ -7,42 +7,36 @@
 # An algebraic modeling language for Julia
 # See https://github.com/jump-dev/JuMP.jl
 #############################################################################
-# test/runtests.jl
-#############################################################################
 
-using Test
 import JuMP
+import Test
 
-@testset "Ambiguities" begin
-    # It is important to run these first, before the tests start adding methods.
-    @test isempty(Test.detect_ambiguities(JuMP))
-    # TODO(odow): there are still some ambiguities in Containers
-    # @test isempty(Test.detect_ambiguities(JuMP.Containers))
+# It is important to test this _before_ calling `include_modules_to_test`
+# because some of the tests introduce new ambiguities.
+Test.@test isempty(Test.detect_ambiguities(JuMP))
+
+# TODO(odow): there are still some ambiguities in Containers
+# @test isempty(Test.detect_ambiguities(JuMP.Containers))
+
+include("Kokako.jl")
+
+const MODULES_TO_TEST = Kokako.include_modules_to_test(JuMP)
+
+include(joinpath(@__DIR__, "JuMPExtension.jl"))
+
+if isempty(ARGS)
+    # JuMPExtension.jl also contains some tests.
+    push!(MODULES_TO_TEST, "JuMPExtension.jl" => JuMPExtension)
 end
 
-t = time()
-include("Containers/Containers.jl")
-println("Containers.jl took $(round(time() - t; digits = 1)) seconds.")
+Kokako.run_tests(MODULES_TO_TEST)
 
-for file in filter(f -> endswith(f, ".jl"), readdir(@__DIR__))
-    if file in [
-        "runtests.jl",
-        "utilities.jl",
-        "JuMPExtension.jl",
-        "nlp_solver.jl",
-        "hygiene.jl",
-        "nonnegative_bridge.jl",
-    ]
-        continue
-    end
-
-    @testset "$(file)" begin
-        t = time()
-        include(file)
-        println("$(file) took $(round(time() - t; digits = 1)) seconds.")
-    end
-end
-
-# TODO: The hygiene test should run in a separate Julia instance where JuMP
-# hasn't been loaded via `using`.
-include("hygiene.jl")
+Kokako.run_tests(
+    MODULES_TO_TEST,
+    JuMPExtension.MyModel,
+    JuMPExtension.MyVariableRef;
+    test_prefix = "test_extension_",
+    include_names = Dict(
+        "test_mutable_arithmetics.jl" => ["test_extension_promote_operation"],
+    ),
+)

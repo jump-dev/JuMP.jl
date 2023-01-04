@@ -13,17 +13,6 @@ module TestContainersDenseAxisArray
 using JuMP.Containers
 using Test
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$(name)", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
 function test_undef_constructor()
     A = @inferred DenseAxisArray{Int}(undef, [:a, :b], 1:2)
     @test isassigned(A, :a, 1)  # Because the eltype is Int, isassigned=true.
@@ -490,5 +479,3 @@ function test_DenseAxisArray_vector_keys()
 end
 
 end  # module
-
-TestContainersDenseAxisArray.runtests()
