@@ -691,22 +691,24 @@ function test_extension_nonsensical_SDP_constraint(
             "for symmetric variable.",
         )
     end
-    # Hack to work around an annoying change in Julia expression printing.
-    index_set = VERSION < v"1.1" ? "i=1:2, j=1:2" : "i = 1:2, j = 1:2"
     @test_throws_strip(
-        _ErrorException("@variable(m, foo[$index_set] >= Y[i, j], PSD)"),
+        _ErrorException("@variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], PSD)"),
         @variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], PSD),
     )
     @test_throws_strip(
-        _ErrorException("@variable(m, foo[$index_set] <= Y[i, j], PSD)"),
+        _ErrorException("@variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], PSD)"),
         @variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], PSD),
     )
     @test_throws_strip(
-        _ErrorException("@variable(m, foo[$index_set] >= Y[i, j], Symmetric)"),
+        _ErrorException(
+            "@variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], Symmetric)",
+        ),
         @variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], Symmetric),
     )
     @test_throws_strip(
-        _ErrorException("@variable(m, foo[$index_set] <= Y[i, j], Symmetric)"),
+        _ErrorException(
+            "@variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], Symmetric)",
+        ),
         @variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], Symmetric),
     )
     return
