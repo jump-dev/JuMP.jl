@@ -20,7 +20,7 @@ Test.@test isempty(Test.detect_ambiguities(JuMP))
 
 include("Kokako.jl")
 
-const MODULES_TO_TEST = Kokako.include_modules_to_test(@__DIR__)
+const MODULES_TO_TEST = Kokako.include_modules_to_test(JuMP)
 
 include(joinpath(@__DIR__, "JuMPExtension.jl"))
 

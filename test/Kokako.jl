@@ -92,15 +92,14 @@ function run_tests(
 end
 
 """
-    include_modules_to_test(dir::String)::Vector{Pair{String,Module}}
-    include_modules_to_test(dir::String, files::Vector{String})::Vector{Pair{String,Module}}
+    include_modules_to_test(dir::String[, files::Vector{String}])
 
 Find and include all modules in Julia source files beginning with `test_` that
 are contained within `dir` (including subdirectories), or in the explicit list
 of filenames `files` that are relative to `dir`.
 
-Returns a vector mapping the filename to the included module that can be passed
-to `run_tests`.
+Returns a `Vector{Pair{String,Module}}` mapping the filename to the included
+module that can be passed to `run_tests`.
 
 !!! warning
     Because this function calls `Base.include`, this function _must_ be called
@@ -132,6 +131,17 @@ function include_modules_to_test(dir::String, files::Vector{String})
         push!(modules, file => Base.include(Main, joinpath(dir, file)))
     end
     return modules
+end
+
+"""
+    include_modules_to_test(package::Module)
+
+Calls `include_modules_to_test(dir)` where `dir` is the `/test` directory of the
+package `package`.
+"""
+function include_modules_to_test(package::Module)
+    dir = joinpath(dirname(dirname(pathof(package))), "test")
+    return include_modules_to_test(dir)
 end
 
 end  # module
