@@ -631,6 +631,10 @@ end
 function Base.eachindex(A::DenseAxisArrayView)
     # Return a generator so that we lazily evaluate the product instead of
     # collecting into a vector.
+    #
+    # In future, we might want to return the appropriate matrix of
+    # `CartesianIndex` to avoid having to do the lookups with
+    # `DenseAxisArrayKey`.
     return (DenseAxisArrayKey(k) for k in Base.product(A.axes...))
 end
 
