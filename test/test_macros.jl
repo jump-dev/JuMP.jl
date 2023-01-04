@@ -957,10 +957,9 @@ end
 function test_Model_as_index()
     m = Model()
     @variable(m, x)
-    index_set = VERSION < v"1.1" ? "m=1:2" : "m = 1:2"
     msg = "Index m is the same symbol as the model. Use a different name for the index."
     @test_macro_throws(
-        ErrorException("In `@variable(m, y[$(index_set)] <= m)`: $(msg)"),
+        ErrorException("In `@variable(m, y[m = 1:2] <= m)`: $(msg)"),
         @variable(m, y[m = 1:2] <= m),
     )
     @test_macro_throws(
@@ -982,7 +981,7 @@ function test_Model_as_index()
         @NLexpression(m, [m = 1:2], x),
     )
     @test_macro_throws(
-        ErrorException("In `@NLparameter(m, p[$(index_set)] == m)`: $(msg)"),
+        ErrorException("In `@NLparameter(m, p[m = 1:2] == m)`: $(msg)"),
         @NLparameter(m, p[m = 1:2] == m),
     )
     return
