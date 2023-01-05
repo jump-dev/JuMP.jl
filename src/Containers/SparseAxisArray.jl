@@ -190,6 +190,16 @@ function Base.BroadcastStyle(
     return style
 end
 
+# Fix ambiguity
+function Base.BroadcastStyle(::BroadcastStyle, ::Base.Broadcast.Unknown)
+    return throw(
+        ArgumentError(
+            "Cannot broadcast Containers.SparseAxisArray with" *
+            " another array of different type",
+        ),
+    )
+end
+
 # The fallback uses `axes` but recommend in the docstring to create a custom
 # method for custom style if needed.
 function Base.Broadcast.instantiate(
@@ -301,6 +311,7 @@ function Base.Broadcast.broadcast_preserving_zero_d(
 )
     return broadcast(f, A, As...)
 end
+
 # Called by `2 * A`
 function Base.Broadcast.broadcast_preserving_zero_d(
     f,
@@ -309,6 +320,16 @@ function Base.Broadcast.broadcast_preserving_zero_d(
     As...,
 )
     return broadcast(f, x, A, As...)
+end
+
+# Fix an ambiguity if the user calls with multiple SparseAxisArray
+function Base.Broadcast.broadcast_preserving_zero_d(
+    f,
+    A::SparseAxisArray,
+    B::SparseAxisArray,
+    args...,
+)
+    return broadcast(f, A, B, args...)
 end
 
 ########

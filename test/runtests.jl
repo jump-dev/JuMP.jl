@@ -13,10 +13,13 @@ import Test
 
 # It is important to test this _before_ calling `include_modules_to_test`
 # because some of the tests introduce new ambiguities.
-Test.@test isempty(Test.detect_ambiguities(JuMP))
-
-# TODO(odow): there are still some ambiguities in Containers
-# @test isempty(Test.detect_ambiguities(JuMP.Containers))
+if VERSION < v"1.8"
+    # In Julia v1.6.x is one ambiguity with a method in StaticArrays that we
+    # can't easily work-around without importing StaticArrays.
+    Test.@test length(Test.detect_ambiguities(JuMP; recursive = true)) == 1
+else
+    Test.@test isempty(Test.detect_ambiguities(JuMP; recursive = true))
+end
 
 include("Kokako.jl")
 

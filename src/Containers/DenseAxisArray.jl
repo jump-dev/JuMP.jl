@@ -253,12 +253,13 @@ end
 
 Base.isempty(A::DenseAxisArray) = isempty(A.data)
 
-# We specify `Ax` for the type of `axes` to avoid conflict where `axes` has type `Tuple{Vararg{Int,N}}`.
+# We specify `Ax` for the type of `axes` to avoid conflict where `axes` has type
+# `Tuple{Vararg{Int,N}}`.
 function Base.similar(
     A::DenseAxisArray{T,N,Ax},
     ::Type{S},
     axes::Ax,
-) where {T,N,Ax,S}
+) where {T,N,Ax<:Tuple{<:AbstractVector},S}
     return construct_undef_array(S, axes)
 end
 
@@ -297,12 +298,24 @@ function _is_assigned(A::DenseAxisArray{T,N}, idx...) where {T,N}
     end
     return false
 end
-function Base.isassigned(A::DenseAxisArray{T,N}, idx...) where {T,N}
-    return _is_assigned(A, idx...)
-end
-# For ambiguity
-function Base.isassigned(A::DenseAxisArray{T,N}, idx::Int...) where {T,N}
-    return _is_assigned(A, idx...)
+
+Base.isassigned(A::DenseAxisArray, idx...) = _is_assigned(A, idx...)
+
+# For ambiguity with DenseAxisArray and Integer keys
+Base.isassigned(A::DenseAxisArray, idx::Integer...) = _is_assigned(A, idx...)
+
+if VERSION >= v"1.9.0-DEV"
+    # Disallow indexing with a mix of integers and Cartesian indices
+    function Base.isassigned(
+        A::DenseAxisArray,
+        i::Union{Integer,CartesianIndex}...,
+    )
+        return false
+    end
+
+    function Base.isassigned(A::DenseAxisArray, i::CartesianIndex)
+        return isassigned(A.data, i)
+    end
 end
 
 Base.eachindex(A::DenseAxisArray) = CartesianIndices(size(A.data))
@@ -343,7 +356,16 @@ Base.getindex(A::DenseAxisArray, idx::CartesianIndex) = A.data[idx]
 function Base.setindex!(A::DenseAxisArray{T,N}, v, idx...) where {T,N}
     return A.data[Base.to_index(A, idx)...] = v
 end
-Base.setindex!(A::DenseAxisArray, v, idx::CartesianIndex) = A.data[idx] = v
+
+function Base.setindex!(
+    A::DenseAxisArray{T},
+    v::T,
+    idx::CartesianIndex,
+) where {T}
+    A.data[idx] = v
+    return
+end
+
 function Base.IndexStyle(::Type{DenseAxisArray{T,N,Ax}}) where {T,N,Ax}
     return IndexAnyCartesian()
 end
@@ -374,7 +396,11 @@ end
 Base.getindex(k::DenseAxisArrayKey, args...) = getindex(k.I, args...)
 Base.getindex(a::DenseAxisArray, k::DenseAxisArrayKey) = a[k.I...]
 
-function Base.setindex!(A::DenseAxisArray, value, key::DenseAxisArrayKey)
+function Base.setindex!(
+    A::DenseAxisArray{T},
+    value::T,
+    key::DenseAxisArrayKey,
+) where {T}
     return setindex!(A, value, key.I...)
 end
 
@@ -579,9 +605,9 @@ Base.repeat(x::DenseAxisArray; kwargs...) = repeat(x.data; kwargs...)
 ### view
 ###
 
-_get_subaxis(::Colon, b) = b
+_get_subaxis(::Colon, b::AbstractVector) = b
 
-function _get_subaxis(a::AbstractVector, b)
+function _get_subaxis(a::AbstractVector, b::AbstractVector)
     for ai in a
         if !(ai in b)
             throw(KeyError(ai))
