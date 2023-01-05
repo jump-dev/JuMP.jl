@@ -299,14 +299,15 @@ function _is_assigned(A::DenseAxisArray{T,N}, idx...) where {T,N}
     return false
 end
 
-function Base.isassigned(A::DenseAxisArray{T,N}, idx...) where {T,N}
-    return _is_assigned(A, idx...)
-end
+Base.isassigned(A::DenseAxisArray, idx...) = _is_assigned(A, idx...)
 
-# For ambiguity
-function Base.isassigned(A::DenseAxisArray{T,N}, idx::Integer...) where {T,N}
-    return _is_assigned(A, idx...)
-end
+# For ambiguity with DenseAxisArray and Integer keys
+Base.isassigned(A::DenseAxisArray, idx::Integer...) = _is_assigned(A, idx...)
+
+# Disallow indexing with a mix of integers and Cartesian indices
+Base.isassigned(A::DenseAxisArray, i::Union{Integer,CartesianIndex}...) = false
+
+Base.isassigned(A::DenseAxisArray, i::CartesianIndex) = isassigned(A.data, i)
 
 Base.eachindex(A::DenseAxisArray) = CartesianIndices(size(A.data))
 
