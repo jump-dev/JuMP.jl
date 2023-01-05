@@ -348,6 +348,17 @@ function Base.IndexStyle(::Type{DenseAxisArray{T,N,Ax}}) where {T,N,Ax}
     return IndexAnyCartesian()
 end
 
+function Base.setindex!(
+    A::DenseAxisArray{T,N},
+    value::DenseAxisArray{T,N},
+    args...,
+) where {T,N}
+    for key in Base.product(args...)
+        A[key...] = value[key...]
+    end
+    return A
+end
+
 ########
 # Keys #
 ########
@@ -362,6 +373,10 @@ struct DenseAxisArrayKey{T<:Tuple}
 end
 Base.getindex(k::DenseAxisArrayKey, args...) = getindex(k.I, args...)
 Base.getindex(a::DenseAxisArray, k::DenseAxisArrayKey) = a[k.I...]
+
+function Base.setindex!(A::DenseAxisArray, value, key::DenseAxisArrayKey)
+    return setindex!(A, value, key.I...)
+end
 
 struct DenseAxisArrayKeys{T<:Tuple,S<:DenseAxisArrayKey,N} <: AbstractArray{S,N}
     product_iter::Base.Iterators.ProductIterator{T}
@@ -559,3 +574,74 @@ end
 # but some users may depend on it's functionality so we have a work-around
 # instead of just breaking code.
 Base.repeat(x::DenseAxisArray; kwargs...) = repeat(x.data; kwargs...)
+
+###
+### view
+###
+
+_get_subaxis(::Colon, b) = b
+
+function _get_subaxis(a::AbstractVector, b)
+    for ai in a
+        if !(ai in b)
+            throw(KeyError(ai))
+        end
+    end
+    return a
+end
+
+function _get_subaxis(a::T, b::AbstractVector{T}) where {T}
+    if !(a in b)
+        throw(KeyError(a))
+    end
+    return a
+end
+
+struct DenseAxisArrayView{T,N,D,A} <: AbstractArray{T,N}
+    data::D
+    axes::A
+    function DenseAxisArrayView(
+        x::Containers.DenseAxisArray{T,N},
+        args...,
+    ) where {T,N}
+        axis = _get_subaxis.(args, axes(x))
+        return new{T,N,typeof(x),typeof(axis)}(x, axis)
+    end
+end
+
+function Base.view(A::Containers.DenseAxisArray, args...)
+    return DenseAxisArrayView(A, args...)
+end
+
+Base.size(x::DenseAxisArrayView) = length.(x.axes)
+
+Base.axes(x::DenseAxisArrayView) = x.axes
+
+function Base.getindex(x::DenseAxisArrayView, args...)
+    y = _get_subaxis.(args, x.axes)
+    return getindex(x.data, y...)
+end
+
+Base.getindex(a::DenseAxisArrayView, k::DenseAxisArrayKey) = a[k.I...]
+
+function Base.setindex!(x::DenseAxisArrayView, args...)
+    return setindex!(x.data, args...)
+end
+
+function Base.eachindex(A::DenseAxisArrayView)
+    # Return a generator so that we lazily evaluate the product instead of
+    # collecting into a vector.
+    #
+    # In future, we might want to return the appropriate matrix of
+    # `CartesianIndex` to avoid having to do the lookups with
+    # `DenseAxisArrayKey`.
+    return (DenseAxisArrayKey(k) for k in Base.product(A.axes...))
+end
+
+Base.show(io::IO, x::DenseAxisArrayView) = print(io, x.data)
+
+Base.print_array(io::IO, x::DenseAxisArrayView) = show(io, x)
+
+function Base.summary(io::IO, x::DenseAxisArrayView)
+    return print(io, "view(::DenseAxisArray, ", join(x.axes, ", "), "), over")
+end
