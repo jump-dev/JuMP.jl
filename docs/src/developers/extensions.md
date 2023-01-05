@@ -402,6 +402,26 @@ existing example. A simple example to follow is the [JuMPExtension module](https
 in the JuMP test suite. The best example of an external JuMP extension that
 implements an [`AbstractModel`](@ref) is [InfiniteOpt.jl](https://github.com/infiniteopt/InfiniteOpt.jl).
 
+### Testing JuMP extensions
+
+The JuMP test suite contains a large number of tests for JuMP extensions. You
+can run these tests by copying the MIT-licensed [`Kokako.jl`](https://github.com/jump-dev/JuMP.jl/blob/master/test/Kokako.jl)
+file in the JuMP tests into your `/test` folder, and then adding this snippet to
+your `/test/runtests.jl` file:
+
+```julia
+using MyJuMPExtension
+import JuMP
+include("Kokako.jl")
+const MODULES_TO_TEST = Kokako.include_modules_to_test(JuMP)
+Kokako.run_tests(
+    MODULES_TO_TEST,
+    MyJuMPExtension.MyModel,
+    MyJuMPExtension.MyVariableRef;
+    test_prefix = "test_extension_",
+)
+```
+
 ## Set an `optimize!` hook
 
 Some extensions require modification to the problem after the user has finished
