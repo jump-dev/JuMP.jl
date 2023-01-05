@@ -605,9 +605,11 @@ function test_ambiguity_isassigned()
     x = DenseAxisArray([:a, :b, :c], 2:4)
     @test !isassigned(x, 1)
     @test isassigned(x, 2)
-    @test isassigned(x, CartesianIndex(1))
-    @test isassigned(x, CartesianIndex(2, 1))
-    @test isassigned(x, CartesianIndex(2, 1), 1)
+    if VERSION >= v"1.9.0-DEV"
+        @test isassigned(x, CartesianIndex(1))
+        @test isassigned(x, CartesianIndex(2, 1))
+        @test !isassigned(x, CartesianIndex(2, 1), 1)
+    end
     return
 end
 
