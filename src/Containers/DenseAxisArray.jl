@@ -356,7 +356,16 @@ Base.getindex(A::DenseAxisArray, idx::CartesianIndex) = A.data[idx]
 function Base.setindex!(A::DenseAxisArray{T,N}, v, idx...) where {T,N}
     return A.data[Base.to_index(A, idx)...] = v
 end
-Base.setindex!(A::DenseAxisArray, v, idx::CartesianIndex) = A.data[idx] = v
+
+function Base.setindex!(
+    A::DenseAxisArray{T},
+    v::T,
+    idx::CartesianIndex,
+) where {T}
+    A.data[idx] = v
+    return
+end
+
 function Base.IndexStyle(::Type{DenseAxisArray{T,N,Ax}}) where {T,N,Ax}
     return IndexAnyCartesian()
 end
@@ -387,7 +396,11 @@ end
 Base.getindex(k::DenseAxisArrayKey, args...) = getindex(k.I, args...)
 Base.getindex(a::DenseAxisArray, k::DenseAxisArrayKey) = a[k.I...]
 
-function Base.setindex!(A::DenseAxisArray, value, key::DenseAxisArrayKey)
+function Base.setindex!(
+    A::DenseAxisArray{T},
+    value::T,
+    key::DenseAxisArrayKey,
+) where {T}
     return setindex!(A, value, key.I...)
 end
 
@@ -592,9 +605,9 @@ Base.repeat(x::DenseAxisArray; kwargs...) = repeat(x.data; kwargs...)
 ### view
 ###
 
-_get_subaxis(::Colon, b) = b
+_get_subaxis(::Colon, b::AbstractVector) = b
 
-function _get_subaxis(a::AbstractVector, b)
+function _get_subaxis(a::AbstractVector, b::AbstractVector)
     for ai in a
         if !(ai in b)
             throw(KeyError(ai))
