@@ -3,6 +3,10 @@
 # Use of this source code is governed by an MIT-style license that can be found
 # at https://opensource.org/licenses/MIT.
 
+# !!! note "Info for JuMP developers"
+#     If you remove this file from JuMP.jl, be sure to update the documentation
+#     in `/docs/src/developers/extensions.md`.
+
 module Kokako
 
 import Test
