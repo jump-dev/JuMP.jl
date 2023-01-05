@@ -312,10 +312,8 @@ if VERSION >= v"1.9.0-DEV"
     )
         return false
     end
-    function Base.isassigned(
-        A::DenseAxisArray,
-        i::CartesianIndex,
-    )
+
+    function Base.isassigned(A::DenseAxisArray, i::CartesianIndex)
         return isassigned(A.data, i)
     end
 end
