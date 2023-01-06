@@ -26,7 +26,7 @@ end
 Return the best known bound on the optimal objective value after a call to
 `optimize!(model)`.
 """
-function objective_bound(model::Model)
+function objective_bound(model::Model)::Union{Float64,Vector{Float64}}
     return MOI.get(model, MOI.ObjectiveBound())
 end
 
@@ -38,7 +38,10 @@ most-recent solution returned by the solver.
 
 See also: [`result_count`](@ref).
 """
-function objective_value(model::Model; result::Int = 1)
+function objective_value(
+    model::Model;
+    result::Int = 1,
+)::Union{Float64,Vector{Float64}}
     return MOI.get(model, MOI.ObjectiveValue(result))
 end
 
