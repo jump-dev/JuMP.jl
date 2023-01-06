@@ -26,7 +26,7 @@ end
 Return the best known bound on the optimal objective value after a call to
 `optimize!(model)`.
 """
-function objective_bound(model::Model)::Float64
+function objective_bound(model::Model)
     return MOI.get(model, MOI.ObjectiveBound())
 end
 
@@ -38,7 +38,7 @@ most-recent solution returned by the solver.
 
 See also: [`result_count`](@ref).
 """
-function objective_value(model::Model; result::Int = 1)::Float64
+function objective_value(model::Model; result::Int = 1)
     return MOI.get(model, MOI.ObjectiveValue(result))
 end
 
@@ -90,7 +90,7 @@ functions; the recommended way to set the objective is with the
 """
 function set_objective_function end
 
-function set_objective_function(model::Model, func::MOI.AbstractScalarFunction)
+function set_objective_function(model::Model, func::MOI.AbstractFunction)
     attr = MOI.ObjectiveFunction{typeof(func)}()
     if !MOI.supports(backend(model), attr)
         error(
@@ -121,6 +121,16 @@ function set_objective_function(model::Model, func::Real)
             Float64(func),
         ),
     )
+end
+
+function set_objective_function(
+    model::Model,
+    func::AbstractVector{<:AbstractJuMPScalar},
+)
+    for f in func
+        check_belongs_to_model(f, model)
+    end
+    return set_objective_function(model, moi_function(func))
 end
 
 function set_objective_function(model::AbstractModel, func)
