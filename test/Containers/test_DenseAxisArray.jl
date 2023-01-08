@@ -550,6 +550,20 @@ function test_containers_denseaxisarray_jump_3151()
     return
 end
 
+function test_containers_denseaxisarray_view_drops_dimension()
+    x = Containers.@container([i = 4:6, j = [:A, :B]], (i, j))
+    y = @view x[5:6, :A]
+    @test axes(y) == (5:6,)
+    @test (@inferred y[5]) == (5, :A)
+    @test (@inferred y[6]) == (6, :A)
+    x = Containers.@container([i = 4:6, j = [:A, :B], k = 1:3], (i, j, k))
+    y = @view x[5:6, :A, 1:2]
+    @test axes(y) == (5:6, 1:2)
+    @test (@inferred y[5, 1]) == (5, :A, 1)
+    @test (@inferred y[6, 2]) == (6, :A, 2)
+    return
+end
+
 function test_containers_denseaxisarray_view_operations()
     c = Containers.@container([i = 1:4, j = 2:3], i + 2 * j)
     d = view(c, 2:3, :)
@@ -610,6 +624,17 @@ function test_ambiguity_isassigned()
         @test isassigned(x, CartesianIndex(2, 1))
         @test !isassigned(x, CartesianIndex(2, 1), 1)
     end
+    return
+end
+
+function test_containers_denseaxisarray_view_axes_n()
+    x = Containers.@container([i = 4:6, j = [:A, :B]], (i, j))
+    y = @view x[5:6, :A]
+    @test sprint(show, MIME("text/plain"), y) isa String
+    @test axes(y) == (5:6,)
+    @test axes(y, 1) == 5:6
+    @test all(ismissing, axes(y, 2))
+    @test length(axes(y, 2)) == 1
     return
 end
 
