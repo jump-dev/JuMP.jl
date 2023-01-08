@@ -750,7 +750,10 @@ function _constraint_macro(
     # Initial check of the positional arguments and get the model
     if length(pos_args) < 2
         if length(kw_args) > 0
-            _error("Not enough positional arguments")
+            _error(
+                "No constraint expression detected. If you are trying to " *
+                "construct an equality constraint, use `==` instead of `=`.",
+            )
         else
             _error("Not enough arguments")
         end
