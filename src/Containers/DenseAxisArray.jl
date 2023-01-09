@@ -626,11 +626,9 @@ end
 struct DenseAxisArrayView{T,N,D,A} <: AbstractArray{T,N}
     data::D
     axes::A
-    function DenseAxisArrayView(
-        x::Containers.DenseAxisArray{T,N},
-        args...,
-    ) where {T,N}
+    function DenseAxisArrayView(x::DenseAxisArray{T}, args...) where {T}
         axis = _get_subaxis.(args, axes(x))
+        N = length(_type_stable_axes(axis))
         return new{T,N,typeof(x),typeof(axis)}(x, axis)
     end
 end
@@ -639,19 +637,61 @@ function Base.view(A::Containers.DenseAxisArray, args...)
     return DenseAxisArrayView(A, args...)
 end
 
-Base.size(x::DenseAxisArrayView) = length.(x.axes)
+Base.size(x::DenseAxisArrayView) = length.(axes(x))
 
-Base.axes(x::DenseAxisArrayView) = x.axes
+_type_stable_axes(x::Tuple) = _type_stable_axes(first(x), Base.tail(x))
+_type_stable_axes(::Tuple{}) = ()
+_type_stable_axes(::Any, tail) = _type_stable_axes(tail)
+function _type_stable_axes(x::AbstractVector, tail)
+    return (x, _type_stable_axes(tail)...)
+end
+
+Base.axes(x::DenseAxisArrayView) = _type_stable_axes(x.axes)
+
+function _type_stable_args(axis::AbstractVector, ::Colon, axes, args)
+    return (axis, _type_stable_args(axes, args)...)
+end
+
+function _type_stable_args(axis::AbstractVector, arg, axes, args)
+    if !(arg in axis)
+        throw(KeyError(arg))
+    end
+    return (arg, _type_stable_args(axes, args)...)
+end
+
+function _type_stable_args(axis::Any, arg, axes, args)
+    return (axis, _type_stable_args(axes, tuple(arg, args...))...)
+end
+
+function _type_stable_args(axes::Tuple, args::Tuple)
+    return _type_stable_args(
+        first(axes),
+        first(args),
+        Base.tail(axes),
+        Base.tail(args),
+    )
+end
+
+_type_stable_args(axes::Tuple, ::Tuple{}) = axes
 
 function Base.getindex(x::DenseAxisArrayView, args...)
-    y = _get_subaxis.(args, x.axes)
-    return getindex(x.data, y...)
+    indices = _type_stable_args(x.axes, args)
+    return getindex(x.data, indices...)
 end
 
 Base.getindex(a::DenseAxisArrayView, k::DenseAxisArrayKey) = a[k.I...]
 
-function Base.setindex!(x::DenseAxisArrayView, args...)
-    return setindex!(x.data, args...)
+function Base.setindex!(
+    a::DenseAxisArrayView{T},
+    value::T,
+    k::DenseAxisArrayKey,
+) where {T}
+    return setindex!(a, value, k.I...)
+end
+
+function Base.setindex!(x::DenseAxisArrayView{T}, value::T, args...) where {T}
+    indices = _type_stable_args(x.axes, args)
+    return setindex!(x.data, value, indices...)
 end
 
 function Base.eachindex(A::DenseAxisArrayView)
@@ -661,7 +701,7 @@ function Base.eachindex(A::DenseAxisArrayView)
     # In future, we might want to return the appropriate matrix of
     # `CartesianIndex` to avoid having to do the lookups with
     # `DenseAxisArrayKey`.
-    return (DenseAxisArrayKey(k) for k in Base.product(A.axes...))
+    return (DenseAxisArrayKey(k) for k in Base.product(axes(A)...))
 end
 
 Base.show(io::IO, x::DenseAxisArrayView) = print(io, x.data)
