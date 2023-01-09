@@ -1779,4 +1779,23 @@ function test_nonlinear_flatten_expressions()
     return
 end
 
+function test_variable_Bool_argument()
+    model = Model()
+    err = ErrorException(
+        "In `@variable(model, x, Bool)`: " *
+        "Unsupported positional argument `Bool`. If you intended to create a " *
+        "`{0, 1}` decision variable, use `Bin` instead. For example, " *
+        "`@variable(model, x, Bin)` or `@variable(model, x, binary = true)`.",
+    )
+    @test_macro_throws(err, @variable(model, x, Bool))
+    err = ErrorException(
+        "In `@variable(model, x, Bool = true)`: " *
+        "Unsupported keyword argument: $key.\n\nIf you intended to " *
+        "create a `{0, 1}` decision variable, use the `binary` keyword " *
+        "argument instead: `@variable(model, x, binary = true)`.",
+    )
+    @test_macro_throws(err, @variable(model, x, Bool = true))
+    return
+end
+
 end  # module

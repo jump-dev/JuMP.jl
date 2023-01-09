@@ -1454,6 +1454,13 @@ function build_variable(
         )
     end
     for (key, _) in kwargs
+        if key == :Bool
+            _error(
+            "Unsupported keyword argument: $key.\n\nIf you intended to " *
+            "create a `{0, 1}` decision variable, use the `binary` keyword " *
+            "argument instead: `@variable(model, x, binary = true)`.",
+        )
+        end
         _error(
             "Unrecognized keyword argument: $key.\n\nIf you're trying " *
             "to create a JuMP extension, you need to implement " *
@@ -1542,6 +1549,19 @@ function build_variable(
         )
     end
     return ScalarVariable(info)
+end
+
+function build_variable(
+    _error::Function,
+    info::VariableInfo,
+    ::Type{Bool};
+    kwargs...,
+)
+    return _error(
+        "Unsupported positional argument `Bool`. If you intended to create a " *
+        "`{0, 1}` decision variable, use `Bin` instead. For example, " *
+        "`@variable(model, x, Bin)` or `@variable(model, x, binary = true)`.",
+    )
 end
 
 function build_variable(
