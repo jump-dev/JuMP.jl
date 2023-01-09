@@ -1679,6 +1679,18 @@ function test_constraint_not_enough_arguments()
     return
 end
 
+function test_constraint_no_constraint_expression_detected()
+    model = Model()
+    @variable(model, x)
+    err = ErrorException(
+        "In `@constraint(model, x = 2)`: No constraint expression detected. " *
+        "If you are trying to construct an equality constraint, use `==` " *
+        "instead of `=`.",
+    )
+    @test_macro_throws(err, @constraint(model, x = 2))
+    return
+end
+
 function test_objective_not_enough_arguments()
     model = Model()
     @test_macro_throws(
