@@ -1456,10 +1456,10 @@ function build_variable(
     for (key, _) in kwargs
         if key == :Bool
             _error(
-            "Unsupported keyword argument: $key.\n\nIf you intended to " *
-            "create a `{0, 1}` decision variable, use the `binary` keyword " *
-            "argument instead: `@variable(model, x, binary = true)`.",
-        )
+                "Unsupported keyword argument: $key.\n\nIf you intended to " *
+                "create a `{0, 1}` decision variable, use the `binary` keyword " *
+                "argument instead: `@variable(model, x, binary = true)`.",
+            )
         end
         _error(
             "Unrecognized keyword argument: $key.\n\nIf you're trying " *
