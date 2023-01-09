@@ -90,13 +90,17 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     l_B = @view std_form.lower[basis.basic_cols]
     u_B = @view std_form.upper[basis.basic_cols]
 
-    B_fact = LinearAlgebra.lu(B)
-    d = Dict{Int,Vector{Float64}}(
-        # We call `collect` here because some Julia versions are missing sparse
-        # matrix \ sparse vector fallbacks.
-        j => B_fact \ collect(std_form.A[:, j]) for
-        j in 1:length(basis.basic_cols) if basis.basic_cols[j] == false
-    )
+    d = Dict{Int,Vector{Float64}}()
+    if size(B, 1) > 0
+        B_fact = LinearAlgebra.lu(B)
+        for j in 1:length(basis.basic_cols)
+            if basis.basic_cols[j] == false
+                # We call `collect` here because some Julia versions are missing
+                # sparse matrix \ sparse vector fallbacks.
+                d[j] = B_fact \ collect(std_form.A[:, j])
+            end
+        end
+    end
 
     report = SensitivityReport(
         Dict{ConstraintRef,Tuple{Float64,Float64}}(),
