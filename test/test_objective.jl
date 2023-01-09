@@ -26,12 +26,11 @@ end
 
 function test_unsupported_function_in_macro()
     model = Model()
-    @variable(model, x[1:2])
-    exception = ErrorException(
-        "The objective function `$VariableRef[x[1]," *
-        " x[2]]` is not supported by JuMP.",
+    @variable(model, x[1:2, 1:2])
+    @test_throws(
+        ErrorException("The objective function `$x` is not supported by JuMP."),
+        @objective(model, Min, x),
     )
-    @test_throws exception @objective(model, Min, x)
     return
 end
 
