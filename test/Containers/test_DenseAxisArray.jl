@@ -633,8 +633,7 @@ function test_containers_denseaxisarray_view_axes_n()
     @test sprint(show, MIME("text/plain"), y) isa String
     @test axes(y) == (5:6,)
     @test axes(y, 1) == 5:6
-    @test all(ismissing, axes(y, 2))
-    @test length(axes(y, 2)) == 1
+    @test axes(y, 2) == Base.OneTo(1)
     return
 end
 

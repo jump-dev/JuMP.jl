@@ -626,11 +626,9 @@ end
 struct DenseAxisArrayView{T,N,D,A} <: AbstractArray{T,N}
     data::D
     axes::A
-    function DenseAxisArrayView(
-        x::Containers.DenseAxisArray{T,N},
-        args...,
-    ) where {T,N}
+    function DenseAxisArrayView(x::DenseAxisArray{T}, args...) where {T}
         axis = _get_subaxis.(args, axes(x))
+        N = length(_type_stable_axes(axis))
         return new{T,N,typeof(x),typeof(axis)}(x, axis)
     end
 end
@@ -649,9 +647,6 @@ function _type_stable_axes(x::AbstractVector, tail)
 end
 
 Base.axes(x::DenseAxisArrayView) = _type_stable_axes(x.axes)
-
-# A fallback used by parts of Base.
-Base.axes(x::DenseAxisArrayView, i::Int) = get(axes(x), i, [missing])
 
 function _type_stable_args(axis::AbstractVector, ::Colon, axes, args)
     return (axis, _type_stable_args(axes, args)...)
