@@ -82,9 +82,10 @@ function set_objective_sense(model::Model, sense::MOI.OptimizationSense)
 end
 
 """
-    set_objective_function(
-        model::Model,
-        func::Union{AbstractJuMPScalar, MathOptInterface.AbstractScalarFunction})
+    set_objective_function(model::Model, func::MOI.AbstractFunction)
+    set_objective_function(model::Model, func::AbstractJuMPScalar)
+    set_objective_function(model::Model, func::Real)
+    set_objective_function(model::Model, func::Vector{<:AbstractJuMPScalar})
 
 Sets the objective function of the model to the given function. See
 [`set_objective_sense`](@ref) to set the objective sense. These are low-level
@@ -178,10 +179,13 @@ function objective_function_type(model::Model)
 end
 
 """
-    objective_function(model::Model,
-                   T::Type{<:AbstractJuMPScalar}=objective_function_type(model))
+    objective_function(
+        model::Model,
+        T::Type = objective_function_type(model),
+    )
 
 Return an object of type `T` representing the objective function.
+
 Error if the objective is not convertible to type `T`.
 
 ## Examples
@@ -223,12 +227,19 @@ ERROR: InexactError: convert(MathOptInterface.VariableIndex, MathOptInterface.Sc
 """
 function objective_function(
     model::Model,
-    FunType::Type{<:AbstractJuMPScalar} = objective_function_type(model),
-)
-    MOIFunType = moi_function_type(FunType)
-    func =
-        MOI.get(backend(model), MOI.ObjectiveFunction{MOIFunType}())::MOIFunType
+    ::Type{F},
+) where {F<:MOI.AbstractFunction}
+    func = MOI.get(backend(model), MOI.ObjectiveFunction{F}())::F
     return jump_function(model, func)
+end
+
+function objective_function(model::Model, ::Type{T}) where {T}
+    return objective_function(model, moi_function_type(T))
+end
+
+function objective_function(model::Model)
+    F = MOI.get(backend(model), MOI.ObjectiveFunctionType())
+    return objective_function(model, F)
 end
 
 """
