@@ -8,6 +8,9 @@
 # See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
+import Pkg
+Pkg.pkg"add MathOptInterface#od/vector-optimization"
+
 import JuMP
 import Test
 

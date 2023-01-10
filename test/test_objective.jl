@@ -189,4 +189,42 @@ function test_extension_objective_constant(
     return
 end
 
+function test_extension_objective_vector_of_variables(
+    ModelType = Model,
+    VariableType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x[1:2])
+    @objective(model, Min, x)
+    @test isequal_canonical(objective_function(model), x)
+    @test isequal_canonical(objective_function(model, typeof(x)), x)
+    return
+end
+
+function test_extension_objective_vector_affine_function(
+    ModelType = Model,
+    VariableType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x[1:2])
+    f = 1.0 .* x .+ [2.0, 3.0]
+    @objective(model, Min, f)
+    @test isequal_canonical(objective_function(model), f)
+    @test isequal_canonical(objective_function(model, typeof(f)), f)
+    return
+end
+
+function test_extension_objective_vector_quadratic_function(
+    ModelType = Model,
+    VariableType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x[1:2])
+    f = 1.0 .* x .* x .+ [2.0, 3.0] .* x + [4.0, 5.0]
+    @objective(model, Min, f)
+    @test isequal_canonical(objective_function(model), f)
+    @test isequal_canonical(objective_function(model, typeof(f)), f)
+    return
+end
+
 end  # module

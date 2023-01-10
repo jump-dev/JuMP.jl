@@ -35,7 +35,10 @@ mutable struct MyModel <: JuMP.AbstractModel
     con_to_name::Dict{ConstraintIndex,String}
     name_to_con::Union{Dict{String,ConstraintIndex},Nothing}
     objective_sense::JuMP.MOI.OptimizationSense
-    objective_function::JuMP.AbstractJuMPScalar
+    objective_function::Union{
+        JuMP.AbstractJuMPScalar,
+        Vector{<:JuMP.AbstractJuMPScalar},
+    }
     obj_dict::Dict{Symbol,Any}
     function MyModel()
         return new(
@@ -447,7 +450,10 @@ function JuMP.num_constraints(
     end
 end
 
-function JuMP.set_objective_function(m::MyModel, f::JuMP.AbstractJuMPScalar)
+function JuMP.set_objective_function(
+    m::MyModel,
+    f::Union{JuMP.AbstractJuMPScalar,Vector{<:JuMP.AbstractJuMPScalar}},
+)
     m.objective_function = f
     return
 end

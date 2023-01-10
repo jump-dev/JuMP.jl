@@ -552,4 +552,42 @@ c2: x + y <= 1.0
     return
 end
 
+function test_generate_solve_vector_objective()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    end
+    @variable(model, x >= 0.0)
+    @variable(model, y >= 1.0)
+    @objective(model, Min, [x, y])
+    optimize!(model)
+    mock = unsafe_backend(model)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.RawStatusString(), "Optimal")
+    MOI.set(mock, MOI.ResultCount(), 1)
+    MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.DualStatus(), MOI.NO_SOLUTION)
+    # MOI.set(mock, MOI.ObjectiveValue(), [0.0, 1.0])
+    MOI.set(mock, MOI.ObjectiveBound(), [0.0, 1.0])
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 0.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(y), 1.0)
+    @test sprint(print, solution_summary(model)) == """
+* Solver : Mock
+
+* Status
+  Result count       : 1
+  Termination status : OPTIMAL
+  Message from the solver:
+  "Optimal"
+
+* Candidate solution (result #1)
+  Primal status      : FEASIBLE_POINT
+  Dual status        : NO_SOLUTION
+  Objective value    : [0.00000e+00,1.00000e+00]
+  Objective bound    : [0.00000e+00,1.00000e+00]
+
+* Work counters
+"""
+    return
+end
+
 end  # module
