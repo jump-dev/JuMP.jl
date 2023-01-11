@@ -1212,6 +1212,15 @@ function test_complex_variable()
     return
 end
 
+function test_complex_variable()
+    model = Model()
+    @variable(model, x[1:2] in ComplexPlane())
+    @test x[1] isa GenericAffExpr{ComplexF64,VariableRef}
+    @test x[2] isa GenericAffExpr{ComplexF64,VariableRef}
+    @test num_variables(model) == 4
+    return
+end
+
 function test_extension_complex_variable_errors(
     ModelType = Model,
     VariableRefType = VariableRef,
