@@ -42,18 +42,12 @@ Shorthand for the MathOptInterface.Utilities package.
 """
 const MOIU = MOI.Utilities
 
-"""
-    MOIB
-
-Shorthand for the MathOptInterface.Bridges package.
-"""
+# TODO(odow): remove this constant
 const MOIB = MOI.Bridges
 
 include("Containers/Containers.jl")
 
 # Exports are at the end of the file.
-
-const _MOICON{F,S} = MOI.ConstraintIndex{F,S}
 
 """
     optimizer_with_attributes(optimizer_constructor, attrs::Pair...)
@@ -133,7 +127,7 @@ mutable struct Model <: AbstractModel
     # In DIRECT mode, will hold an AbstractOptimizer.
     moi_backend::MOI.AbstractOptimizer
     # List of shapes of constraints that are not `ScalarShape` or `VectorShape`.
-    shapes::Dict{_MOICON,AbstractShape}
+    shapes::Dict{MOI.ConstraintIndex,AbstractShape}
     # List of bridges to add in addition to the ones added in
     # `MOI.Bridges.full_bridge_optimizer`. With `BridgeableConstraint`, the
     # same bridge may be added many times so we store them in a `Set` instead
@@ -249,7 +243,7 @@ function direct_model(backend::MOI.ModelLike)
     @assert MOI.is_empty(backend)
     return Model(
         backend,
-        Dict{_MOICON,AbstractShape}(),
+        Dict{MOI.ConstraintIndex,AbstractShape}(),
         Set{Any}(),
         nothing,
         nothing,
@@ -390,7 +384,10 @@ function unsafe_backend(model::MOIU.CachingOptimizer)
     return unsafe_backend(model.optimizer)
 end
 
-unsafe_backend(model::MOIB.LazyBridgeOptimizer) = unsafe_backend(model.model)
+function unsafe_backend(model::MOI.Bridges.LazyBridgeOptimizer)
+    return unsafe_backend(model.model)
+end
+
 unsafe_backend(model::MOI.ModelLike) = model
 
 _moi_mode(::MOI.ModelLike) = DIRECT
