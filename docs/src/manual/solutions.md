@@ -305,7 +305,7 @@ If you are iteratively querying solution information and modifying a model,
 query all the results first, then modify the problem.
 
 For example, instead of:
-```jldoctest; filter = r"\@ JuMP.+/src/JuMP.jl"
+```jldoctest; filter = r"\@ JuMP.+/src/JuMP.jl:[0-9]+"
 julia> model = Model(HiGHS.Optimizer);
 
 julia> set_silent(model)
@@ -321,7 +321,7 @@ julia> set_upper_bound(x, 1)
 
 julia> x_val = value(x)
 ┌ Warning: The model has been modified since the last call to `optimize!` (or `optimize!` has not been called yet). If you are iteratively querying solution information and modifying a model, query all the results first, then modify the model.
-└ @ JuMP ~/work/JuMP.jl/JuMP.jl/src/JuMP.jl:1250
+└ @ JuMP ~/work/JuMP.jl/JuMP.jl/src/JuMP.jl:1247
 ERROR: OptimizeNotCalled()
 Stacktrace:
 [...]
