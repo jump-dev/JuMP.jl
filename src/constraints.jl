@@ -20,6 +20,13 @@ struct ConstraintRef{M<:AbstractModel,C,Shape<:AbstractShape}
 end
 
 """
+    index(cr::ConstraintRef)::MOI.ConstraintIndex
+
+Return the index of the constraint that corresponds to `cr` in the MOI backend.
+"""
+index(cr::ConstraintRef) = cr.index
+
+"""
     struct ConstraintNotOwned{C <: ConstraintRef} <: Exception
         constraint_ref::C
     end

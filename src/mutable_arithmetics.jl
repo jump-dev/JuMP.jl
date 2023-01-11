@@ -23,9 +23,10 @@ function _change_coef(::Type{T}, ::Type{GenericQuadExpr{C,V}}) where {T,C,V}
     return GenericQuadExpr{T,V}
 end
 
-# The default fallbacks to calling `op(zero(x), zero(y))` which produces allocations.
-# The compiler could avoid these allocations at runtime with constant propagation as the types
-# `x` and `y` are known at compile time but apparently it does not.
+# The default fallbacks to calling `op(zero(x), zero(y))` which produces
+# allocations. The compiler could avoid these allocations at runtime with
+# constant propagation as the types `x` and `y` are known at compile time, but
+# apparently it does not.
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
     C::Type{<:_Constant},
@@ -33,6 +34,7 @@ function _MA.promote_operation(
 )
     return GenericAffExpr{_float_type(C),V}
 end
+
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
     V::Type{<:AbstractVariableRef},
@@ -40,6 +42,7 @@ function _MA.promote_operation(
 )
     return GenericAffExpr{_float_type(C),V}
 end
+
 function _MA.promote_operation(
     op::Union{typeof(+),typeof(-),typeof(*)},
     ::Type{S},
@@ -48,6 +51,7 @@ function _MA.promote_operation(
     U = _MA.promote_operation(op, S, T)
     return _change_coef(U, A)
 end
+
 function _MA.promote_operation(
     op::Union{typeof(+),typeof(-),typeof(*)},
     A::Type{<:_GenericAffOrQuadExpr{T,V}},
@@ -64,6 +68,7 @@ function _MA.promote_operation(
 ) where {V<:AbstractVariableRef}
     return GenericAffExpr{Float64,V}
 end
+
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-)},
     ::Type{V},
@@ -71,6 +76,7 @@ function _MA.promote_operation(
 ) where {C,V<:AbstractVariableRef}
     return S
 end
+
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-)},
     S::Type{<:_GenericAffOrQuadExpr{C,V}},
@@ -78,6 +84,7 @@ function _MA.promote_operation(
 ) where {C,V<:AbstractVariableRef}
     return S
 end
+
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-)},
     ::Type{A},
@@ -85,6 +92,7 @@ function _MA.promote_operation(
 ) where {A<:_GenericAffOrQuadExpr}
     return A
 end
+
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-)},
     ::Type{<:GenericAffExpr{T,V}},
@@ -92,6 +100,7 @@ function _MA.promote_operation(
 ) where {T,V}
     return GenericQuadExpr{T,V}
 end
+
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-)},
     ::Type{<:GenericQuadExpr{T,V}},
@@ -107,6 +116,7 @@ function _MA.promote_operation(
 ) where {V<:AbstractVariableRef}
     return GenericQuadExpr{Float64,V}
 end
+
 function _MA.promote_operation(
     ::typeof(*),
     ::Type{V},
@@ -114,6 +124,7 @@ function _MA.promote_operation(
 ) where {T,V<:AbstractVariableRef}
     return GenericQuadExpr{T,V}
 end
+
 function _MA.promote_operation(
     ::typeof(*),
     ::Type{GenericAffExpr{T,V}},
@@ -134,6 +145,7 @@ function _MA.scaling(aff::GenericAffExpr{C}) where {C}
     end
     return _MA.scaling(aff.constant)
 end
+
 function _MA.scaling(quad::GenericQuadExpr{C}) where {C}
     if !isempty(quad.terms)
         throw(InexactError("Cannot convert `$quad` to `$C`."))
@@ -142,6 +154,7 @@ function _MA.scaling(quad::GenericQuadExpr{C}) where {C}
 end
 
 _MA.mutability(::Type{<:_GenericAffOrQuadExpr}) = _MA.IsMutable()
+
 function _MA.mutable_copy(expr::_GenericAffOrQuadExpr)
     return map_coefficients(_MA.copy_if_mutable, expr)
 end
@@ -151,11 +164,13 @@ function _MA.operate!(::typeof(zero), aff::GenericAffExpr)
     aff.constant = _MA.zero!!(aff.constant)
     return aff
 end
+
 function _MA.operate!(::typeof(one), aff::GenericAffExpr)
     empty!(aff.terms)
     aff.constant = _MA.one!!(aff.constant)
     return aff
 end
+
 function _MA.operate!(
     op::Union{typeof(zero),typeof(one)},
     quad::GenericQuadExpr,
@@ -176,6 +191,7 @@ end
 function _MA.operate!(::typeof(+), expr::_GenericAffOrQuadExpr, x)
     return add_to_expression!(expr, x)
 end
+
 function _MA.operate!(::typeof(-), expr::_GenericAffOrQuadExpr, x)
     return add_to_expression!(expr, -1, x)
 end
@@ -191,6 +207,7 @@ function _MA.operate!(
 )
     return add_to_expression!(expr, x)
 end
+
 function _MA.operate!(
     ::typeof(_MA.add_mul),
     expr::_GenericAffOrQuadExpr,
@@ -199,6 +216,7 @@ function _MA.operate!(
 )
     return add_to_expression!(expr, x, y)
 end
+
 function _MA.operate!(
     ::typeof(_MA.sub_mul),
     expr::_GenericAffOrQuadExpr,
@@ -206,6 +224,7 @@ function _MA.operate!(
 )
     return add_to_expression!(expr, -1.0, x)
 end
+
 function _MA.operate!(
     ::typeof(_MA.sub_mul),
     expr::_GenericAffOrQuadExpr,
@@ -214,6 +233,7 @@ function _MA.operate!(
 )
     return add_to_expression!(expr, -x, y)
 end
+
 # It is less costly to negate a constant than a JuMP scalar
 function _MA.operate!(
     ::typeof(_MA.sub_mul),
@@ -248,6 +268,7 @@ end
     coef = Expr(:call, :*, [:(args[$i]) for i in setdiff(1:n, idx)]...)
     return :(_MA.operate!(op, expr, $coef, args[$idx]))
 end
+
 function _MA.operate!(
     op::_MA.AddSubMul,
     expr::_GenericAffOrQuadExpr,
@@ -259,8 +280,6 @@ function _MA.operate!(
     return _add_sub_mul_reorder!(op, expr, x, y, z, other_args...)
 end
 
-const _AffineLike = Union{AbstractVariableRef,GenericAffExpr,_Constant}
-
 # `add_mul(expr, args...)` defaults to `muladd(args..., expr)` which gives
 # `*(args...) + expr`. If `expr isa AbstractJuMPScalar`, this reorders the terms.
 # The following implementation avoids this issue and is also more efficient.
@@ -269,6 +288,7 @@ function _MA.add_mul(lhs::AbstractJuMPScalar, x::_Scalar, y::_Scalar)
     expr = _MA.operate(convert, T, lhs)
     return _MA.operate!(_MA.add_mul, expr, x, y)
 end
+
 function _MA.add_mul(
     lhs::AbstractJuMPScalar,
     x::_Scalar,
@@ -285,11 +305,13 @@ function _MA.add_mul(
     expr = _MA.operate(convert, T, lhs)
     return _MA.operate!(_MA.add_mul, expr, x, y, args...)
 end
+
 function _MA.sub_mul(lhs::AbstractJuMPScalar, x::_Scalar, y::_Scalar)
     T = _MA.promote_operation(_MA.sub_mul, typeof(lhs), typeof(x), typeof(y))
     expr = _MA.operate(convert, T, lhs)
     return _MA.operate!(_MA.sub_mul, expr, x, y)
 end
+
 function _MA.sub_mul(
     lhs::AbstractJuMPScalar,
     x::_Scalar,
