@@ -1388,6 +1388,22 @@ function JuMP.add_variable(
     )
 end
 
+function build_variable(
+    _error::Function,
+    variables::AbstractArray{<:ScalarVariable},
+    set::ComplexPlane,
+)
+    return build_variable.(_error, variables, Ref(set))
+end
+
+function add_variable(
+    model::Model,
+    variables::AbstractArray{<:ComplexVariable},
+    name::Union{<:AbstractArray{String},String} = "",
+)
+    return add_variable.(model, variables, name)
+end
+
 """
     reduced_cost(x::VariableRef)::Float64
 
