@@ -15,8 +15,6 @@
 # Operator overloads in src/operators.jl
 #############################################################################
 
-import OrderedCollections
-
 function _add_or_set!(dict::OrderedDict{K,V}, k::K, v::V) where {K,V}
     # Adding zero terms to this dictionary leads to unacceptable performance
     # degradations. See, e.g., https://github.com/jump-dev/JuMP.jl/issues/1946.
@@ -528,8 +526,8 @@ function isequal_canonical(
     aff::GenericAffExpr{C,V},
     other::GenericAffExpr{C,V},
 ) where {C,V}
-    aff_nozeros = dropzeros(aff)
-    other_nozeros = dropzeros(other)
+    aff_nozeros = SparseArrays.dropzeros(aff)
+    other_nozeros = SparseArrays.dropzeros(other)
     # Note: This depends on equality of OrderedDicts ignoring order.
     # This is the current behavior, but it seems questionable.
     return isequal(aff_nozeros, other_nozeros)

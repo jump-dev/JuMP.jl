@@ -618,7 +618,7 @@ function function_string(
             if j != 1
                 line *= " & "
             end
-            if A isa Symmetric && i > j
+            if A isa LinearAlgebra.Symmetric && i > j
                 line *= "\\cdot"
             else
                 line *= function_string(mode, A[i, j])

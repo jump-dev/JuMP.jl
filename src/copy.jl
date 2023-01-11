@@ -307,7 +307,7 @@ end
 _lift_variable_from_expression(expr) = expr
 
 function _lift_variable_from_expression(expr::Expr)
-    if Meta.isexpr(expr, :ref, 2) && expr.args[1] == :x
+    if isexpr(expr, :ref, 2) && expr.args[1] == :x
         return expr.args[2]
     end
     for i in 1:length(expr.args)
@@ -339,7 +339,7 @@ function _nlp_model_from_nlpblock(block::MOI.NLPBlockData, evaluator)
     model = MOI.Nonlinear.Model()
     for (i, bound) in enumerate(block.constraint_bounds)
         expr = MOI.constraint_expr(evaluator, i)
-        f = Meta.isexpr(expr, :comparison) ? expr.args[3] : expr.args[2]
+        f = isexpr(expr, :comparison) ? expr.args[3] : expr.args[2]
         MOI.Nonlinear.add_constraint(
             model,
             _lift_variable_from_expression(f),

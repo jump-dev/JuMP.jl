@@ -3,8 +3,6 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-using Base.Meta
-
 _is_sum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
 _is_prod(s::Symbol) = (s == :prod) || (s == :∏)
 
@@ -250,7 +248,7 @@ sparse array adding scalar constraints? This likely means that the user is using
 the wrong data structure. For simplicity, let's also call `collect` into a dense
 array, and wait for complaints.
 """
-_desparsify(x::AbstractSparseArray) = collect(x)
+_desparsify(x::SparseArrays.AbstractSparseArray) = collect(x)
 _desparsify(x) = x
 
 function _functionize(v::V) where {V<:AbstractVariableRef}
@@ -262,7 +260,7 @@ _functionize(v::AbstractArray{<:AbstractVariableRef}) = _functionize.(v)
 function _functionize(
     v::LinearAlgebra.Symmetric{V},
 ) where {V<:AbstractVariableRef}
-    return Symmetric(_functionize(v.data))
+    return LinearAlgebra.Symmetric(_functionize(v.data))
 end
 
 _functionize(x) = x
@@ -1896,7 +1894,7 @@ end
 # current scope, and checked to see if they were Real. To keep the same behavior
 # we do the same here.
 function _assert_constant_comparison(code::Expr, expr::Expr)
-    if Meta.isexpr(expr, :comparison)
+    if isexpr(expr, :comparison)
         lhs, rhs = gensym(), gensym()
         push!(code.args, esc(:($lhs = $(expr.args[1]))))
         push!(code.args, esc(:($rhs = $(expr.args[5]))))
@@ -1908,7 +1906,7 @@ end
 _assert_constant_comparison(::Expr, ::Any) = nothing
 
 function _auto_register_expression(op_var, op, i)
-    q_op = Meta.quot(op)
+    q_op = quot(op)
     return quote
         try
             MOI.Nonlinear.register_operator_if_needed(
@@ -1936,7 +1934,7 @@ end
 function _parse_nonlinear_expression_inner(::Any, x::Symbol, ::Any)
     x = _normalize_unicode(x)
     if x in (:<=, :>=, :(==), :<, :>, :&&, :||)
-        return Meta.quot(x)
+        return quot(x)
     end
     return esc(x)
 end
@@ -1969,7 +1967,7 @@ function _parse_nonlinear_expression_inner(code, x::Expr, operators)
         return esc(x)
     end
     y = gensym()
-    y_expr = :($y = Expr($(Meta.quot(x.head))))
+    y_expr = :($y = Expr($(quot(x.head))))
     offset = 1
     if isexpr(x, :call)
         if !(x.args[1] isa Symbol)
@@ -1980,7 +1978,7 @@ function _parse_nonlinear_expression_inner(code, x::Expr, operators)
         end
         op = _normalize_unicode(x.args[1])
         push!(operators, (op, length(x.args) - 1))
-        push!(y_expr.args[2].args, Meta.quot(op))
+        push!(y_expr.args[2].args, quot(op))
         offset += 1
     end
     for i in offset:length(x.args)

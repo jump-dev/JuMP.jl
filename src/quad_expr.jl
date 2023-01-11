@@ -494,7 +494,7 @@ Base.hash(quad::GenericQuadExpr, h::UInt) = hash(quad.aff, hash(quad.terms, h))
 function SparseArrays.dropzeros(quad::GenericQuadExpr)
     quad_terms = copy(quad.terms)
     _drop_zeros!(quad_terms)
-    return GenericQuadExpr(dropzeros(quad.aff), quad_terms)
+    return GenericQuadExpr(SparseArrays.dropzeros(quad.aff), quad_terms)
 end
 
 # Check if two QuadExprs are equal regardless of the order, and after dropping zeros.
@@ -503,8 +503,8 @@ function isequal_canonical(
     quad::GenericQuadExpr{CoefType,VarType},
     other::GenericQuadExpr{CoefType,VarType},
 ) where {CoefType,VarType}
-    quad_nozeros = dropzeros(quad)
-    other_nozeros = dropzeros(other)
+    quad_nozeros = SparseArrays.dropzeros(quad)
+    other_nozeros = SparseArrays.dropzeros(other)
     return isequal(quad_nozeros, other_nozeros)
 end
 

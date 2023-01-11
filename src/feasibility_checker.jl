@@ -3,8 +3,6 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-using LinearAlgebra
-
 function _last_primal_solution(model::Model)
     if !has_values(model)
         error(
