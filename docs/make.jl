@@ -1,5 +1,5 @@
 import Pkg
-Pkg.pkg"add Documenter#0150642"
+Pkg.pkg"add Documenter#30baed5"
 import Documenter
 import Literate
 import Test
