@@ -11,12 +11,12 @@
 const _JuMPTypes = Union{AbstractJuMPScalar,NonlinearExpression}
 
 _float_type(::Type{<:Real}) = Float64
-_float_type(::Type{UniformScaling{T}}) where {T} = _float_type(T)
+_float_type(::Type{LinearAlgebra.UniformScaling{T}}) where {T} = _float_type(T)
 _float_type(::Type{<:Complex}) = Complex{Float64}
 
 _float(x::Real) = convert(Float64, x)
 _float(x::Complex) = convert(Complex{Float64}, x)
-_float(J::UniformScaling) = _float(J.λ)
+_float(J::LinearAlgebra.UniformScaling) = _float(J.λ)
 
 # Overloads
 #
@@ -303,7 +303,7 @@ end
 Base.:+(lhs::GenericQuadExpr) = lhs
 Base.:-(lhs::GenericQuadExpr) = map_coefficients(-, lhs)
 # GenericQuadExpr--_Constant
-# We don't do `+rhs` as `UniformScaling` does not support unary `+`
+# We don't do `+rhs` as `LinearAlgebra.UniformScaling` does not support unary `+`
 Base.:+(lhs::GenericQuadExpr, rhs::_Constant) = (+)(rhs, lhs)
 Base.:-(lhs::GenericQuadExpr, rhs::_Constant) = (+)(-rhs, lhs)
 Base.:*(lhs::GenericQuadExpr, rhs::_Constant) = (*)(rhs, lhs)

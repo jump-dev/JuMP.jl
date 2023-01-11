@@ -581,7 +581,7 @@ See also [`LowerBoundRef`](@ref), [`has_lower_bound`](@ref),
 [`lower_bound`](@ref), [`set_lower_bound`](@ref).
 """
 function delete_lower_bound(variable_ref::VariableRef)
-    JuMP.delete(owner_model(variable_ref), LowerBoundRef(variable_ref))
+    delete(owner_model(variable_ref), LowerBoundRef(variable_ref))
     return
 end
 
@@ -688,7 +688,7 @@ See also [`UpperBoundRef`](@ref), [`has_upper_bound`](@ref),
 [`upper_bound`](@ref), [`set_upper_bound`](@ref).
 """
 function delete_upper_bound(variable_ref::VariableRef)
-    JuMP.delete(owner_model(variable_ref), UpperBoundRef(variable_ref))
+    delete(owner_model(variable_ref), UpperBoundRef(variable_ref))
     return
 end
 
@@ -799,7 +799,7 @@ See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix_value`](@ref),
 [`fix`](@ref).
 """
 function unfix(variable_ref::VariableRef)
-    JuMP.delete(owner_model(variable_ref), FixRef(variable_ref))
+    delete(owner_model(variable_ref), FixRef(variable_ref))
     return
 end
 
@@ -890,7 +890,7 @@ Remove the integrality constraint on the variable `variable_ref`.
 See also [`IntegerRef`](@ref), [`is_integer`](@ref), [`set_integer`](@ref).
 """
 function unset_integer(variable_ref::VariableRef)
-    JuMP.delete(owner_model(variable_ref), IntegerRef(variable_ref))
+    delete(owner_model(variable_ref), IntegerRef(variable_ref))
     return
 end
 
@@ -965,7 +965,7 @@ Remove the binary constraint on the variable `variable_ref`.
 See also [`BinaryRef`](@ref), [`is_binary`](@ref), [`set_binary`](@ref).
 """
 function unset_binary(variable_ref::VariableRef)
-    JuMP.delete(owner_model(variable_ref), BinaryRef(variable_ref))
+    delete(owner_model(variable_ref), BinaryRef(variable_ref))
     return
 end
 
@@ -1131,9 +1131,13 @@ end
 Variable `scalar_variables` constrained to belong to `set`.
 Adding this variable can be understood as doing:
 ```julia
-function JuMP.add_variable(model::Model, variable::JuMP.VariableConstrainedOnCreation, names)
-    var_ref = JuMP.add_variable(model, variable.scalar_variable, name)
-    JuMP.add_constraint(model, JuMP.VectorConstraint(var_ref, variable.set))
+function JuMP.add_variable(
+    model::Model,
+    variable::VariableConstrainedOnCreation,
+    names,
+)
+    var_ref = add_variable(model, variable.scalar_variable, name)
+    add_constraint(model, VectorConstraint(var_ref, variable.set))
     return var_ref
 end
 ```
@@ -1192,11 +1196,15 @@ end
 Vector of variables `scalar_variables` constrained to belong to `set`.
 Adding this variable can be thought as doing:
 ```julia
-function JuMP.add_variable(model::Model, variable::JuMP.VariablesConstrainedOnCreation, names)
-    var_refs = JuMP.add_variable.(model, variable.scalar_variables,
-                                  JuMP.vectorize(names, variable.shape))
-    JuMP.add_constraint(model, JuMP.VectorConstraint(var_refs, variable.set))
-    return JuMP.reshape_vector(var_refs, variable.shape)
+function JuMP.add_variable(
+    model::Model,
+    variable::VariablesConstrainedOnCreation,
+    names,
+)
+    v_names = vectorize(names, variable.shape)
+    var_refs = add_variable.(model, variable.scalar_variables, v_names)
+    add_constraint(model, VectorConstraint(var_refs, variable.set))
+    return reshape_vector(var_refs, variable.shape)
 end
 ```
 but adds the variables with `MOI.add_constrained_variables(model, variable.set)`
@@ -1319,7 +1327,7 @@ function build_variable(_error::Function, v::ScalarVariable, ::ComplexPlane)
     return ComplexVariable(v.info)
 end
 
-function _mapinfo(f::Function, v::JuMP.ScalarVariable)
+function _mapinfo(f::Function, v::ScalarVariable)
     info = v.info
     return ScalarVariable(
         VariableInfo(
@@ -1371,17 +1379,13 @@ _is_binary(v::ScalarVariable) = v.info.binary
 
 _is_integer(v::ScalarVariable) = v.info.integer
 
-function JuMP.add_variable(
-    model::JuMP.Model,
-    v::ComplexVariable,
-    name::String = "",
-)
+function add_variable(model::Model, v::ComplexVariable, name::String = "")
     model.is_model_dirty = true
-    var = JuMP.ScalarVariable(v.info)
+    var = ScalarVariable(v.info)
     real_part = add_variable(model, _real(var), _real(name))
     imag_part = add_variable(model, _imag(var), _imag(name))
     # Efficiently build `real_part + imag_part * im`
-    return GenericAffExpr{ComplexF64,JuMP.VariableRef}(
+    return GenericAffExpr{ComplexF64,VariableRef}(
         zero(ComplexF64),
         real_part => one(ComplexF64),
         imag_part => convert(ComplexF64, im),

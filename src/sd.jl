@@ -148,7 +148,7 @@ function reshape_vector(
             matrix[j, i] = matrix[i, j] = vectorized_form[k]
         end
     end
-    return Symmetric(matrix)
+    return LinearAlgebra.Symmetric(matrix)
 end
 function reshape_set(
     ::MOI.PositiveSemidefiniteConeTriangle,
@@ -228,14 +228,14 @@ end
 
 # This is a special method because calling `Matrix(matrix)` accesses an undef
 # reference.
-function vectorize(matrix::UpperTriangular, ::SquareMatrixShape)
+function vectorize(matrix::LinearAlgebra.UpperTriangular, ::SquareMatrixShape)
     n = LinearAlgebra.checksquare(matrix)
     return [matrix[i, j] for j in 1:n for i in 1:n]
 end
 
 # This is a special method because calling `Matrix(matrix)` accesses an undef
 # reference.
-function vectorize(matrix::LowerTriangular, ::SquareMatrixShape)
+function vectorize(matrix::LinearAlgebra.LowerTriangular, ::SquareMatrixShape)
     n = LinearAlgebra.checksquare(matrix)
     return [matrix[i, j] for j in 1:n for i in 1:n]
 end
@@ -352,9 +352,11 @@ function value(
 end
 
 """
-    build_constraint(_error::Function, Q::Symmetric{V, M},
-                     ::PSDCone) where {V <: AbstractJuMPScalar,
-                                       M <: AbstractMatrix{V}}
+    build_constraint(
+        _error::Function,
+        Q::LinearAlgebra.Symmetric{V, M},
+        ::PSDCone,
+    ) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
 
 Return a `VectorConstraint` of shape [`SymmetricMatrixShape`](@ref) constraining
 the matrix `Q` to be positive semidefinite.
@@ -375,7 +377,7 @@ var_psd = @constraint model Q in PSDCone()
 """
 function build_constraint(
     _error::Function,
-    Q::Symmetric{V,M},
+    Q::LinearAlgebra.Symmetric{V,M},
     ::PSDCone,
 ) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
     n = LinearAlgebra.checksquare(Q)
@@ -553,7 +555,7 @@ end
 """
     build_constraint(
         _error::Function,
-        Q::Hermitian{V,M},
+        Q::LinearAlgebra.Hermitian{V,M},
         ::HermitianPSDCone,
     ) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
 
@@ -562,12 +564,12 @@ the matrix `Q` to be Hermitian positive semidefinite.
 
 This function is used by the [`@constraint`](@ref) macros as follows:
 ```julia
-@constraint(model, Hermitian(Q) in HermitianPSDCone())
+@constraint(model, LinearAlgebra.Hermitian(Q) in HermitianPSDCone())
 ```
 """
 function build_constraint(
     ::Function,
-    Q::Hermitian{V,M},
+    Q::LinearAlgebra.Hermitian{V,M},
     ::HermitianPSDCone,
 ) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
     n = LinearAlgebra.checksquare(Q)

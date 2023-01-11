@@ -17,13 +17,16 @@ For more information, go to https://jump.dev.
 """
 module JuMP
 
-using LinearAlgebra
-using SparseArrays
-
-import MutableArithmetics
-const _MA = MutableArithmetics
-
+import Base.Meta: isexpr, quot
+import LinearAlgebra
 import MathOptInterface
+import MutableArithmetics
+import OrderedCollections
+import OrderedCollections: OrderedDict
+import Printf
+import SparseArrays
+
+const _MA = MutableArithmetics
 
 """
     MOI
@@ -46,13 +49,10 @@ Shorthand for the MathOptInterface.Bridges package.
 """
 const MOIB = MOI.Bridges
 
-import OrderedCollections.OrderedDict
-
 include("Containers/Containers.jl")
 
 # Exports are at the end of the file.
 
-const _MOIVAR = MOI.VariableIndex
 const _MOICON{F,S} = MOI.ConstraintIndex{F,S}
 
 """
@@ -531,7 +531,7 @@ function add_bridge(
     push!(model.bridge_types, BridgeType)
     # The type of `backend(model)` is not type-stable, so we use a function
     # barrier (`_moi_add_bridge`) to improve performance.
-    _moi_add_bridge(JuMP.backend(model), BridgeType)
+    _moi_add_bridge(backend(model), BridgeType)
     return
 end
 
@@ -1073,10 +1073,10 @@ Base.isempty(::AbstractJuMPScalar) = false
 
 # Check if two arrays of AbstractJuMPScalars are equal. Useful for testing.
 function isequal_canonical(
-    x::AbstractArray{<:JuMP.AbstractJuMPScalar},
-    y::AbstractArray{<:JuMP.AbstractJuMPScalar},
+    x::AbstractArray{<:AbstractJuMPScalar},
+    y::AbstractArray{<:AbstractJuMPScalar},
 )
-    return size(x) == size(y) && all(JuMP.isequal_canonical.(x, y))
+    return size(x) == size(y) && all(isequal_canonical.(x, y))
 end
 
 include("constraints.jl")
@@ -1310,9 +1310,9 @@ function MOI.set(
     return MOI.set(backend(model), attr, index(cr), value)
 end
 
-const _Constant = Union{Number,UniformScaling}
+const _Constant = Union{Number,LinearAlgebra.UniformScaling}
 _constant_to_number(x::Number) = x
-_constant_to_number(J::UniformScaling) = J.λ
+_constant_to_number(J::LinearAlgebra.UniformScaling) = J.λ
 
 # GenericAffineExpression, AffExpr, AffExprConstraint
 include("aff_expr.jl")
@@ -1336,15 +1336,23 @@ include("sd.jl")
     Base.getindex(m::JuMP.AbstractModel, name::Symbol)
 
 To allow easy accessing of JuMP Variables and Constraints via `[]` syntax.
-Returns the variable, or group of variables, or constraint, or group of constraints, of the given name which were added to the model. This errors if multiple variables or constraints share the same name.
+
+Returns the variable, or group of variables, or constraint, or group of
+constraints, of the given name which were added to the model. This errors if
+multiple variables or constraints share the same name.
 """
-function Base.getindex(m::JuMP.AbstractModel, name::Symbol)
+function Base.getindex(m::AbstractModel, name::Symbol)
     obj_dict = object_dictionary(m)
     if !haskey(obj_dict, name)
         throw(KeyError(name))
     elseif obj_dict[name] === nothing
         error(
-            "There are multiple variables and/or constraints named $name that are already attached to this model. If creating variables programmatically, use the anonymous variable syntax x = @variable(m, [1:N], ...). If creating constraints programmatically, use the anonymous constraint syntax con = @constraint(m, ...).",
+            "There are multiple variables and/or constraints named $name " *
+            "that are already attached to this model. If creating variables " *
+            "programmatically, use the anonymous variable syntax " *
+            "`x = @variable(m, [1:N], ...)`. If creating constraints " *
+            "programmatically, use the anonymous constraint syntax " *
+            "`con = @constraint(m, ...)`.",
         )
     else
         return obj_dict[name]
@@ -1354,7 +1362,8 @@ end
 """
     Base.setindex!(m::JuMP.AbstractModel, value, name::Symbol)
 
-stores the object `value` in the model `m` using so that it can be accessed via `getindex`.  Can be called with `[]` syntax.
+Stores the object `value` in the model `m` using so that it can be accessed via
+`getindex`.  Can be called with `[]` syntax.
 """
 function Base.setindex!(model::AbstractModel, value, name::Symbol)
     # if haskey(object_dictionary(model), name)

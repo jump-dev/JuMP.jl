@@ -738,7 +738,7 @@ function normalized_coefficient(
     T,
     F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
 }
-    con = JuMP.constraint_object(con_ref)
+    con = constraint_object(con_ref)
     return _affine_coefficient(con.func, variable)
 end
 
