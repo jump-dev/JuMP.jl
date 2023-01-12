@@ -518,7 +518,9 @@ function _moi_has_lower_bound(moi_backend, v::VariableRef)
 end
 
 function _lower_bound_index(v::VariableRef)
-    return _MOICON{MOI.VariableIndex,MOI.GreaterThan{Float64}}(index(v).value)
+    return MOI.ConstraintIndex{MOI.VariableIndex,MOI.GreaterThan{Float64}}(
+        index(v).value,
+    )
 end
 
 """
@@ -564,7 +566,7 @@ See also [`has_lower_bound`](@ref), [`lower_bound`](@ref),
 [`set_lower_bound`](@ref), [`delete_lower_bound`](@ref).
 """
 function LowerBoundRef(v::VariableRef)
-    moi_lb = _MOICON{MOI.VariableIndex,MOI.GreaterThan{Float64}}
+    moi_lb = MOI.ConstraintIndex{MOI.VariableIndex,MOI.GreaterThan{Float64}}
     return ConstraintRef{Model,moi_lb,ScalarShape}(
         owner_model(v),
         _lower_bound_index(v),
@@ -625,7 +627,9 @@ function _moi_has_upper_bound(moi_backend, v::VariableRef)
 end
 
 function _upper_bound_index(v::VariableRef)
-    return _MOICON{MOI.VariableIndex,MOI.LessThan{Float64}}(index(v).value)
+    return MOI.ConstraintIndex{MOI.VariableIndex,MOI.LessThan{Float64}}(
+        index(v).value,
+    )
 end
 
 """
@@ -671,7 +675,7 @@ See also [`has_upper_bound`](@ref), [`upper_bound`](@ref),
 [`set_upper_bound`](@ref), [`delete_upper_bound`](@ref).
 """
 function UpperBoundRef(v::VariableRef)
-    moi_ub = _MOICON{MOI.VariableIndex,MOI.LessThan{Float64}}
+    moi_ub = MOI.ConstraintIndex{MOI.VariableIndex,MOI.LessThan{Float64}}
     return ConstraintRef{Model,moi_ub,ScalarShape}(
         owner_model(v),
         _upper_bound_index(v),
@@ -731,7 +735,9 @@ function _moi_is_fixed(moi_backend, v::VariableRef)
 end
 
 function _fix_index(v::VariableRef)
-    return _MOICON{MOI.VariableIndex,MOI.EqualTo{Float64}}(index(v).value)
+    return MOI.ConstraintIndex{MOI.VariableIndex,MOI.EqualTo{Float64}}(
+        index(v).value,
+    )
 end
 
 """
@@ -829,7 +835,7 @@ See also [`is_fixed`](@ref), [`fix_value`](@ref), [`fix`](@ref),
 [`unfix`](@ref).
 """
 function FixRef(v::VariableRef)
-    moi_fix = _MOICON{MOI.VariableIndex,MOI.EqualTo{Float64}}
+    moi_fix = MOI.ConstraintIndex{MOI.VariableIndex,MOI.EqualTo{Float64}}
     return ConstraintRef{Model,moi_fix,ScalarShape}(
         owner_model(v),
         _fix_index(v),
@@ -853,7 +859,7 @@ function _moi_is_integer(moi_backend, v::VariableRef)
 end
 
 function _integer_index(v::VariableRef)
-    return _MOICON{MOI.VariableIndex,MOI.Integer}(index(v).value)
+    return MOI.ConstraintIndex{MOI.VariableIndex,MOI.Integer}(index(v).value)
 end
 
 """
@@ -903,7 +909,7 @@ Errors if one does not exist.
 See also [`is_integer`](@ref), [`set_integer`](@ref), [`unset_integer`](@ref).
 """
 function IntegerRef(v::VariableRef)
-    moi_int = _MOICON{MOI.VariableIndex,MOI.Integer}
+    moi_int = MOI.ConstraintIndex{MOI.VariableIndex,MOI.Integer}
     return ConstraintRef{Model,moi_int,ScalarShape}(
         owner_model(v),
         _integer_index(v),
@@ -927,7 +933,7 @@ function _moi_is_binary(moi_backend, v::VariableRef)
 end
 
 function _binary_index(v::VariableRef)
-    return _MOICON{MOI.VariableIndex,MOI.ZeroOne}(index(v).value)
+    return MOI.ConstraintIndex{MOI.VariableIndex,MOI.ZeroOne}(index(v).value)
 end
 
 """
@@ -978,7 +984,7 @@ Errors if one does not exist.
 See also [`is_binary`](@ref), [`set_binary`](@ref), [`unset_binary`](@ref).
 """
 function BinaryRef(v::VariableRef)
-    moi_bin = _MOICON{MOI.VariableIndex,MOI.ZeroOne}
+    moi_bin = MOI.ConstraintIndex{MOI.VariableIndex,MOI.ZeroOne}
     return ConstraintRef{Model,moi_bin,ScalarShape}(
         owner_model(v),
         _binary_index(v),

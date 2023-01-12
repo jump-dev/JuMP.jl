@@ -17,8 +17,8 @@ VectorConstraint
 ## Names
 
 ```@docs
-name(::ConstraintRef{Model,<:JuMP._MOICON})
-set_name(::ConstraintRef{Model,<:JuMP._MOICON}, ::String)
+name(::ConstraintRef{Model,<:JuMP.MOI.ConstraintIndex})
+set_name(::ConstraintRef{Model,<:JuMP.MOI.ConstraintIndex}, ::String)
 constraint_by_name
 ```
 
