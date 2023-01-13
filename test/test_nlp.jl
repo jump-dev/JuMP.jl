@@ -372,6 +372,40 @@ function test_parse_prod()
     return
 end
 
+function test_parse_minimum()
+    model = Model()
+    @variable(model, x[1:2])
+    ex = @NLexpression(model, minimum(x[i] for i in 1:2))
+    @test sprint(show, ex) == "subexpression[1]: min(x[1], x[2])"
+    ex2 = @NLexpression(model, minimum(x[i] for i in 1:0))
+    @test sprint(show, ex2) == "subexpression[2]: Inf"
+    return
+end
+
+function test_parse_maximum()
+    model = Model()
+    @variable(model, x[1:2])
+    ex = @NLexpression(model, maximum(x[i] for i in 1:2))
+    @test sprint(show, ex) == "subexpression[1]: max(x[1], x[2])"
+    ex2 = @NLexpression(model, maximum(x[i] for i in 1:0))
+    @test sprint(show, ex2) == "subexpression[2]: -Inf"
+    return
+end
+
+function test_parse_unsupported_generator()
+    model = Model()
+    @variable(model, x[1:2])
+    @test_macro_throws(
+        ErrorException("Unsupported generator `:min`"),
+        @NLexpression(model, min(x[i] for i in 1:2)),
+    )
+    @test_macro_throws(
+        ErrorException("Unsupported generator `:max`"),
+        @NLexpression(model, max(x[i] for i in 1:2)),
+    )
+    return
+end
+
 function test_parse_subexpressions()
     m = Model()
     @variable(m, x)

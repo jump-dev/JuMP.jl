@@ -5,8 +5,6 @@
 
 _is_sum(s::Symbol) = (s == :sum) || (s == :∑) || (s == :Σ)
 _is_prod(s::Symbol) = (s == :prod) || (s == :∏)
-_is_max(s::Symbol) = (s == :max)
-_is_min(s::Symbol) = (s == :min)
 
 """
     _add_kw_args(call, kw_args)
@@ -1997,12 +1995,12 @@ function _parse_generator_expression(code, x, operators)
         :($y = Expr(:call, :+)), 0
     elseif _is_prod(x.args[1])
         :($y = Expr(:call, :*)), 1
-    elseif _is_max(x.args[1])
+    elseif x.args[1] == :maximum
         :($y = Expr(:call, :max)), -Inf
-    elseif _is_min(x.args[1])
-        :($y = Expr(:call, :max)), Inf
+    elseif x.args[1] == :minimum
+        :($y = Expr(:call, :min)), Inf
     else
-        error("Unsupported generator $(x.args[1]).")
+        error("Unsupported generator `:$(x.args[1])`")
     end
     block = _MA.rewrite_generator(
         x.args[2],
