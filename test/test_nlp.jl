@@ -377,8 +377,10 @@ function test_parse_minimum()
     @variable(model, x[1:2])
     ex = @NLexpression(model, minimum(x[i] for i in 1:2))
     @test sprint(show, ex) == "subexpression[1]: min(x[1], x[2])"
-    ex2 = @NLexpression(model, minimum(x[i] for i in 1:0))
-    @test sprint(show, ex2) == "subexpression[2]: Inf"
+    err = ArgumentError(
+        "reducing over an empty collection in `minimum` is not allowed",
+    )
+    @test_throws err @NLexpression(model, minimum(x[i] for i in 1:0))
     return
 end
 
@@ -387,8 +389,10 @@ function test_parse_maximum()
     @variable(model, x[1:2])
     ex = @NLexpression(model, maximum(x[i] for i in 1:2))
     @test sprint(show, ex) == "subexpression[1]: max(x[1], x[2])"
-    ex2 = @NLexpression(model, maximum(x[i] for i in 1:0))
-    @test sprint(show, ex2) == "subexpression[2]: -Inf"
+    err = ArgumentError(
+        "reducing over an empty collection in `maximum` is not allowed",
+    )
+    @test_throws err @NLexpression(model, maximum(x[i] for i in 1:0))
     return
 end
 

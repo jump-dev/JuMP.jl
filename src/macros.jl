@@ -1996,9 +1996,9 @@ function _parse_generator_expression(code, x, operators)
     elseif _is_prod(x.args[1])
         :($y = Expr(:call, :*)), 1
     elseif x.args[1] == :maximum
-        :($y = Expr(:call, :max)), -Inf
+        :($y = Expr(:call, :max)), nothing
     elseif x.args[1] == :minimum
-        :($y = Expr(:call, :min)), Inf
+        :($y = Expr(:call, :min)), nothing
     else
         error("Unsupported generator `:$(x.args[1])`")
     end
@@ -2012,11 +2012,16 @@ function _parse_generator_expression(code, x, operators)
         end,
     )
     # Special case that was handled by JuMP in the past.
+    error_string = "reducing over an empty collection in `$(x.args[1])` is not allowed"
     push!(code.args, quote
         $y_expr
         $block
         if length($y.args) == 1
-            $y = $default
+            if $default === nothing
+                throw(ArgumentError($error_string))
+            else
+                $y = $default
+            end
         end
     end)
     return y
