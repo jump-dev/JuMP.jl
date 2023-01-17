@@ -251,6 +251,36 @@ function _copy_convert_coef(::Type{T}, quad::GenericQuadExpr{C,V}) where {T,C,V}
     return convert(GenericQuadExpr{T,V}, quad)
 end
 
+"""
+    operator_warn(model::AbstractModel)
+    operator_warn(model::Model)
+
+This function is called on the model whenever two affine expressions are added
+together without using `destructive_add!`, and at least one of the two
+expressions has more than 50 terms.
+
+For the case of `Model`, if this function is called more than 20,000 times then
+a warning is generated once.
+"""
+operator_warn(::AbstractModel) = nothing
+
+function operator_warn(model::Model)
+    model.operator_counter += 1
+    if model.operator_counter > 20000
+        @warn(
+            "The addition operator has been used on JuMP expressions a large " *
+            "number of times. This warning is safe to ignore but may " *
+            "indicate that model generation is slower than necessary. For " *
+            "performance reasons, you should not add expressions in a loop. " *
+            "Instead of x += y, use add_to_expression!(x,y) to modify x in " *
+            "place. If y is a single variable, you may also use " *
+            "add_to_expression!(x, coef, y) for x += coef*y.",
+            maxlog = 1
+        )
+    end
+    return
+end
+
 function Base.:+(
     lhs::GenericAffExpr{S,V},
     rhs::GenericAffExpr{T,V},

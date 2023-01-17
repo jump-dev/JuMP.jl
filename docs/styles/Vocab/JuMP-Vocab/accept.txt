@@ -50,6 +50,7 @@ README
 recurse
 reimplemented
 src
+Stacktrace
 subexpression(?s)
 TODO
 transpiled

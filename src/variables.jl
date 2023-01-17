@@ -4,6 +4,13 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 """
+    num_variables(model::Model)::Int64
+
+Returns number of variables in `model`.
+"""
+num_variables(model::Model)::Int64 = MOI.get(model, MOI.NumberOfVariables())
+
+"""
     AbstractVariable
 
 Variable returned by [`build_variable`](@ref). It represents a variable that has
@@ -258,6 +265,18 @@ end
 Base.iszero(::VariableRef) = false
 Base.copy(v::VariableRef) = VariableRef(v.model, v.index)
 Base.broadcastable(v::VariableRef) = Ref(v)
+
+Base.zero(v::AbstractVariableRef) = zero(typeof(v))
+
+function Base.zero(::Type{V}) where {V<:AbstractVariableRef}
+    return zero(GenericAffExpr{Float64,V})
+end
+
+Base.one(v::AbstractVariableRef) = one(typeof(v))
+
+function Base.one(::Type{V}) where {V<:AbstractVariableRef}
+    return one(GenericAffExpr{Float64,V})
+end
 
 """
     coefficient(v1::VariableRef, v2::VariableRef)
