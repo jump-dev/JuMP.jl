@@ -814,7 +814,13 @@ using SnoopPrecompile
     # at lowering time, not much of this would get precompiled without `@eval`
     @eval begin
         let
-            model = Model(() -> MOI.Utilities.MockOptimizer(MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}())))
+            model = Model(
+                () -> MOI.Utilities.MockOptimizer(
+                    MOI.Utilities.UniversalFallback(
+                        MOI.Utilities.Model{Float64}(),
+                    ),
+                ),
+            )
             @variable(model, x >= 0)
             @variable(model, 0 <= y <= 3)
             @objective(model, Min, 12x + 20y)
