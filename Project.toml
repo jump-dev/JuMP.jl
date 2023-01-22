@@ -9,12 +9,14 @@ MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
 OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+SnoopPrecompile = "66db9d55-30c0-4569-8b51-7e840670fc0c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 MathOptInterface = "1.11"
 MutableArithmetics = "1"
 OrderedCollections = "1"
+SnoopPrecompile = "1"
 julia = "1.6"
 
 [extras]

@@ -807,6 +807,30 @@ for sym in names(@__MODULE__; all = true)
     @eval export $sym
 end
 
+using SnoopPrecompile
+
+@precompile_all_calls begin
+    # Because lots of the work is done by macros, and macros are expanded
+    # at lowering time, not much of this would get precompiled without `@eval`
+    @eval begin
+        let
+            model = Model(
+                () -> MOI.Utilities.MockOptimizer(
+                    MOI.Utilities.UniversalFallback(
+                        MOI.Utilities.Model{Float64}(),
+                    ),
+                ),
+            )
+            @variable(model, x >= 0)
+            @variable(model, 0 <= y <= 3)
+            @objective(model, Min, 12x + 20y)
+            @constraint(model, c1, 6x + 8y >= 100)
+            @constraint(model, c2, 7x + 12y >= 120)
+            optimize!(model)
+        end
+    end
+end
+
 include("precompile.jl")
 _precompile_()
 
