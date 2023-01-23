@@ -827,7 +827,7 @@ using SnoopPrecompile
             @constraint(model, c1, 6x + 8y >= 100)
             @constraint(model, c2, 7x + 12y >= 120)
             @constraint(model, [x, y, x] in SecondOrderCone())
-            @constraint(model, [1.0 * x y; y x] >= 0, PSDCone())
+            @constraint(model, [1.0*x y; y x] >= 0, PSDCone())
             @constraint(model, 1.0 * x ⟂ y)
             optimize!(model)
         end
