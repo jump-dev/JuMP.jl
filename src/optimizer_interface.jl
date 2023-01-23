@@ -397,7 +397,7 @@ set_optimizer(model, HiGHS.Optimizer; add_bridges = false)
 """
 function set_optimizer(
     model::Model,
-    optimizer_constructor;
+    (@nospecialize optimizer_constructor);
     add_bridges::Bool = true,
 )
     error_if_direct_mode(model, :set_optimizer)
