@@ -807,9 +807,24 @@ for sym in names(@__MODULE__; all = true)
     @eval export $sym
 end
 
-using SnoopPrecompile
+# !!! note
+#
+#     The next codeblock is a SnoopPrecompile workflow that gets run when
+#     JuMP.jl is precompiled. Methods that are called here will be cached so
+#     that they do not need to be compiled in every session.
+#
+#     One downside of the design of JuMP (from the perspective of compilation)
+#     is that the API has a large surface area, that is, there are many
+#     combinations of function-in-set, and they get compiled individually.
+#
+#     The model below attempts to construct a very diverse model that utilizes
+#     most of JuMP's machinery, but if you find a particular model has a bad
+#     time-to-first solve (TTFX), then we likely need to add a new type of
+#     constraint or objective to the precompile model.
 
-@precompile_all_calls begin
+import SnoopPrecompile
+
+SnoopPrecompile.@precompile_all_calls begin
     # Because lots of the work is done by macros, and macros are expanded
     # at lowering time, not much of this would get precompiled without `@eval`
     @eval begin
@@ -821,15 +836,54 @@ using SnoopPrecompile
                     ),
                 ),
             )
-            @variable(model, x >= 0)
-            @variable(model, 0 <= y <= 3)
-            @objective(model, Min, 12x + 20y)
-            @constraint(model, c1, 6x + 8y >= 100)
-            @constraint(model, c2, 7x + 12y >= 120)
-            @constraint(model, [x, y, x] in SecondOrderCone())
-            @constraint(model, [1.0*x y; y x] >= 0, PSDCone())
-            @constraint(model, 1.0 * x ⟂ y)
+            @variables(model, begin
+                x1
+                0 <= x2 <= 1
+                x3 == 2
+                x4, Bin
+                x5, Int
+                x6[1:3]
+                x7[2:3]
+                x8[i = 1:3; isodd(i)], (start = i)
+            end)
+            @expressions(model, begin
+                a, x1 + x2
+                b, x1^2 + x2
+            end)
+            @constraints(model, begin
+                c1, a >= 0
+                c2, a <= 0
+                c3, a == 0
+                c4, 0 <= a <= 1
+                c5, b >= 0
+                c6, b <= 0
+                c7, b == 0
+                c8, 0 <= b <= 1
+                [x1, x2, x1] in SecondOrderCone()
+                [1.0*x1 x2; x2 x1] >= 0, PSDCone()
+                1.0 * x1 ⟂ x2
+            end)
+            @objective(model, Min, x1)
+            @objective(model, Max, a)
+            @objective(model, Min, b)
+            @NLconstraint(model, sin(x1) + sin(a) + sin(b) <= 1)
+            @NLparameter(model, p == 2)
+            @NLexpression(model, expr, x1^p)
+            @NLobjective(model, Min, expr)
             optimize!(model)
+            # This block could sit in MOI, but it's a public API at the JuMP
+            # level, so it can go here.
+            d = NLPEvaluator(model)
+            MOI.initialize(d, [:Grad, :Jac, :Hess])
+            g = zeros(num_nonlinear_constraints(model))
+            x = zeros(num_variables(model))
+            MOI.eval_objective(d, x)
+            MOI.eval_constraint(d, g, x)
+            MOI.eval_objective_gradient(d, g, x)
+            J = zeros(length(MOI.jacobian_structure(d)))
+            MOI.eval_constraint_jacobian(d, J, x)
+            H = zeros(length(MOI.hessian_lagrangian_structure(d)))
+            MOI.eval_hessian_lagrangian(d, H, x, 1.0, g)
         end
     end
 end
