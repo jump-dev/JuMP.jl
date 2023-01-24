@@ -847,12 +847,12 @@ SnoopPrecompile.@precompile_all_calls begin
                 x8[i = 1:3; isodd(i)], (start = i)
             end)
             @expressions(model, begin
-                a, x1 + x2
-                b, x1^2 + x2
+                a, -1 + x1 + x2
+                b, 1 + x1^2 + x2
             end)
             @constraints(model, begin
                 c1, a >= 0
-                c2[i=2:3, j=["a"]], a <= i
+                c2[i = 2:3, j = ["a"]], a <= i
                 c3, a == 0
                 c4, 0 <= a <= 1
                 c5, b >= 0
