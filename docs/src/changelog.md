@@ -7,6 +7,32 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version v1.7.0 (January 25, 2023)
+
+### Added
+
+ - Added support for `view` of a `Containers.DenseAxisArray` (#3152) (#3180)
+ - Added support for containers of variables in [`ComplexPlane`](@ref) (#3184)
+ - Added support for `minimum` and `maximum` generators in nonlinear expressions
+   (#3189)
+ - Added `SnoopPrecompile` statements that reduce the time-to-first-solve in
+   Julia 1.9 (#3193) (#3195) (#3196) (#3197)
+
+### Other
+
+ - Large refactoring of the tests (#3166) (#3167) (33168) (#3169) (#3170) (#3171)
+ - Remove unreachable code due to `VERSION` checks (#3172)
+ - Document how to test JuMP extensions (#3174)
+ - Fix method ambiguities in `Containers` (#3173)
+ - Improve error message that is thrown when `=` is used instead of `==` in
+   the [`@constraint`](@ref) macro (#3178)
+ - Improve the error message when `Bool` is used instead of `Bin` in the
+   [`@variable`](@ref) macro (#3180)
+ - Update versions of the documentation (#3185)
+ - Tidy the import of packages and remove unnecessary prefixes (#3186) (#3187)
+ - Refactor `src/JuMP.jl` by moving methods into more relevant files (#3188)
+ - Fix docstring of [`Model`](@ref) not appearing in the documentation (#3198)
+
 ## Version v1.6.0 (January 1, 2023)
 
 ### Added
