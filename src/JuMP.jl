@@ -77,11 +77,6 @@ An abstract type that should be subtyped for users creating JuMP extensions.
 """
 abstract type AbstractModel end
 
-"""
-    Model
-
-A mathematical model of an optimization problem.
-"""
 mutable struct Model <: AbstractModel
     # In MANUAL and AUTOMATIC modes, CachingOptimizer.
     # In DIRECT mode, will hold an AbstractOptimizer.
