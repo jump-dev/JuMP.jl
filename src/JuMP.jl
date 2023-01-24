@@ -837,7 +837,7 @@ SnoopPrecompile.@precompile_all_calls begin
                 ),
             )
             @variables(model, begin
-                x1
+                x1 >= 0
                 0 <= x2 <= 1
                 x3 == 2
                 x4, Bin
@@ -847,12 +847,12 @@ SnoopPrecompile.@precompile_all_calls begin
                 x8[i = 1:3; isodd(i)], (start = i)
             end)
             @expressions(model, begin
-                a, x1 + x2
-                b, x1^2 + x2
+                a, -1 + x1 + x2
+                b, 1 + x1^2 + x2
             end)
             @constraints(model, begin
                 c1, a >= 0
-                c2, a <= 0
+                c2[i = 2:3, j = ["a"]], a <= i
                 c3, a == 0
                 c4, 0 <= a <= 1
                 c5, b >= 0
@@ -866,24 +866,33 @@ SnoopPrecompile.@precompile_all_calls begin
             @objective(model, Min, x1)
             @objective(model, Max, a)
             @objective(model, Min, b)
-            @NLconstraint(model, sin(x1) + sin(a) + sin(b) <= 1)
+            @NLconstraint(model, c9, 1 * sin(x1) + 2.0 * sin(a) + sin(b) <= 1)
             @NLparameter(model, p == 2)
             @NLexpression(model, expr, x1^p)
-            @NLobjective(model, Min, expr)
+            @NLobjective(model, Min, 1 + expr)
             optimize!(model)
             # This block could sit in MOI, but it's a public API at the JuMP
             # level, so it can go here.
+            #
+            # We evaluate with a `view` because it's a common type for solvers
+            # like Ipopt to use.
             d = NLPEvaluator(model)
+            MOI.features_available(d)
             MOI.initialize(d, [:Grad, :Jac, :Hess])
             g = zeros(num_nonlinear_constraints(model))
+            v_g = view(g, 1:length(g))
             x = zeros(num_variables(model))
             MOI.eval_objective(d, x)
             MOI.eval_constraint(d, g, x)
+            MOI.eval_constraint(d, v_g, x)
             MOI.eval_objective_gradient(d, g, x)
             J = zeros(length(MOI.jacobian_structure(d)))
             MOI.eval_constraint_jacobian(d, J, x)
+            v_J = view(J, 1:length(J))
+            MOI.eval_constraint_jacobian(d, v_J, x)
             H = zeros(length(MOI.hessian_lagrangian_structure(d)))
-            MOI.eval_hessian_lagrangian(d, H, x, 1.0, g)
+            v_H = view(H, 1:length(H))
+            MOI.eval_hessian_lagrangian(d, v_H, x, 1.0, v_g)
         end
     end
 end
