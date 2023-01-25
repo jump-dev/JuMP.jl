@@ -458,6 +458,11 @@ silent_hook (generic function with 1 method)
 julia> optimize!(model; silent = true)
 
 julia> optimize!(model; silent = false)
+Solution has               num          max          sum
+Col     infeasibilities      0            0            0
+Integer infeasibilities      0            0            0
+Row     infeasibilities      0            0            0
+Row     residuals            0            0            0
 Presolving model
 0 rows, 0 cols, 0 nonzeros
 0 rows, 0 cols, 0 nonzeros
