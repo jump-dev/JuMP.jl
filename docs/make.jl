@@ -1,5 +1,6 @@
 import Pkg
 Pkg.pkg"add Documenter#71e9f40"
+Pkg.pkg"add MathOptInterface#od/vector-optimization"
 import Documenter
 import Literate
 import Test
