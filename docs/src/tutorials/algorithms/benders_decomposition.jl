@@ -154,7 +154,7 @@ model = Model(GLPK.Optimizer)
 @objective(model, Min, c_1' * x + θ)
 print(model)
 
-# FOr the next step, we need a function that takes a first-stage candidate
+# For the next step, we need a function that takes a first-stage candidate
 # solution `x` and returns the optimal solution from the second-stage
 # subproblem:
 
