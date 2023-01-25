@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
- - Large refactoring of the tests (#3166) (#3167) (33168) (#3169) (#3170) (#3171)
+ - Large refactoring of the tests (#3166) (#3167) (#3168) (#3169) (#3170) (#3171)
  - Remove unreachable code due to `VERSION` checks (#3172)
  - Document how to test JuMP extensions (#3174)
  - Fix method ambiguities in `Containers` (#3173)
