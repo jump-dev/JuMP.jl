@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
- - Added support for `view` of a `Containers.DenseAxisArray` (#3152) (#3180)
+ - Added support for `view` of a [`Containers.DenseAxisArray`](@ref) (#3152) (#3180)
  - Added support for containers of variables in [`ComplexPlane`](@ref) (#3184)
  - Added support for `minimum` and `maximum` generators in nonlinear expressions
    (#3189)
@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
- - Added a `result` keyword argument to [`solution_summary`] to allow
+ - Added a `result` keyword argument to [`solution_summary`](@ref) to allow
    summarizing models with multiple solutions (#3138)
  - Added [`relax_with_penalty!`](@ref), which is a useful tool when debugging
    infeasible models (#3140)
@@ -69,8 +69,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Add support for complex-valued variables:
     * [`HermitianPSDCone`](@ref) (#3109)
     * [`ComplexPlane`](@ref) and [`ComplexVariable`](@ref) (#3134)
-  - Add support for `OptimizerWithAttributes` in [`set_optimizer_attribute`](@ref)
-    and [`get_optimizer_attribute`](@ref) (#3129)
+  - Add support for [`MOI.OptimizerWithAttributes`](@ref) in
+    [`set_optimizer_attribute`](@ref) and [`get_optimizer_attribute`](@ref) (#3129)
 
 ### Fixed
 
