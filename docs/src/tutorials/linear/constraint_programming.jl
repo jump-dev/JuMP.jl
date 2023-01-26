@@ -36,7 +36,7 @@ value.(x)
 # ## BinPacking
 
 # The [`MOI.BinPacking`](@ref) set can be used to divide up a set of items into
-# different groups, such that the sum of their weigts does not exceed the
+# different groups, such that the sum of their weights does not exceed the
 # capacity of a bin.
 
 weights, capacity = Float64[1, 1, 2, 2, 3], 3.0;
@@ -154,8 +154,8 @@ value(n), value.(x)
 # number of distinct elements in a set of variables that have a value equal to
 # another variable.
 
-# For example, to count the number `n` of occurances of `y` in the vector `x`,
-# use:
+# For example, to count the number `n` of times that `y` appears in the vector
+# `x`, use:
 
 model = Model(HiGHS.Optimizer)
 set_silent(model)
@@ -170,7 +170,7 @@ value(n), value(y), value.(x)
 # Here `n` is strictly greater than the count, and there is no limit on how
 # large `n` could be. For example, `n = 100` is also a feasible solution. The
 # only constraint is that `n` cannot be equal to or smaller than the number of
-# occurances.
+# times that `y` appears.
 
 # ## Table
 
