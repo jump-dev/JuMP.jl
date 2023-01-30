@@ -40,9 +40,14 @@ function test_reified_inconsistent()
     model = Model()
     @variable(model, x)
     @variable(model, z, Bin)
+    expr = if VERSION < v"1.8"
+        "\$(Expr(:(:=), :z, :({x .== 1})))"
+    else
+        "z := {x .== 1}"
+    end
     @test_macro_throws(
         ErrorException(
-            "In `@constraint(model, \$(Expr(:(:=), :z, :({x .== 1}))))`: " *
+            "In `@constraint(model, $expr)`: " *
             "vectorized constraints cannot be used with reification.",
         ),
         @constraint(model, z := {x .== 1})
@@ -54,9 +59,14 @@ function test_reified_no_curly_bracket()
     model = Model()
     @variable(model, x)
     @variable(model, z, Bin)
+    expr = if VERSION < v"1.8"
+        "\$(Expr(:(:=), :z, :(x == 1)))"
+    else
+        "z := x .== 1"
+    end
     @test_macro_throws(
         ErrorException(
-            "In `@constraint(model, \$(Expr(:(:=), :z, :(x == 1))))`: " *
+            "In `@constraint(model, $expr)`: " *
             "Invalid right-hand side `x == 1` of reified constraint. " *
             "Expected constraint surrounded by `{` and `}`.",
         ),
