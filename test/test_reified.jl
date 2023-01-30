@@ -40,11 +40,7 @@ function test_reified_inconsistent()
     model = Model()
     @variable(model, x)
     @variable(model, z, Bin)
-    expr = if VERSION < v"1.8"
-        "\$(Expr(:(:=), :z, :({x .== 1})))"
-    else
-        "z := {x .== 1}"
-    end
+    expr = :(z := {x .== 1})
     @test_macro_throws(
         ErrorException(
             "In `@constraint(model, $expr)`: " *
@@ -59,11 +55,7 @@ function test_reified_no_curly_bracket()
     model = Model()
     @variable(model, x)
     @variable(model, z, Bin)
-    expr = if VERSION < v"1.8"
-        "\$(Expr(:(:=), :z, :(x == 1)))"
-    else
-        "z := x .== 1"
-    end
+    expr = :(z := x == 1)
     @test_macro_throws(
         ErrorException(
             "In `@constraint(model, $expr)`: " *
