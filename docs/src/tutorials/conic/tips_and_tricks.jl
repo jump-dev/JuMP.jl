@@ -189,7 +189,7 @@ set_silent(model)
 @objective(model, Max, -t)
 @constraint(model, sum(x) == 1)
 @constraint(model, A * x .<= b)
-@constraint(model, [t; ones(n); x] in MOI.RelativeEntropyCone(2n+1))
+@constraint(model, [t; ones(n); x] in MOI.RelativeEntropyCone(2n + 1))
 optimize!(model)
 objective_value(model)
 
