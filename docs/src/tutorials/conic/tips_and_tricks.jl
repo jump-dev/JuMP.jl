@@ -49,15 +49,13 @@ nothing            # hide
 #     A good resource for learning more about functions which can be modeled
 #     using cones is the [MOSEK Modeling Cookbook](https://docs.mosek.com/modeling-cookbook/index.html).
 
-# ## What is a cone?
+# ## Background theory
 
 # A subset $C$ of a vector space $V$ is a cone if $\forall x \in C$ and positive
 # scalars $\lambda > 0$, the product $\lambda x \in C$.
 
 # A cone $C$ is a convex cone if $\lambda x + (1 - \lambda) y \in C$, for any
 # $\lambda \in [0, 1]$, and any $x, y \in C$.
-
-# ## What is a conic program?
 
 # Conic programming problems are convex optimization problems in which a convex
 # function is minimized over the intersection of an affine subspace and a convex
@@ -85,65 +83,63 @@ nothing            # hide
 
 # ## Second-Order Cone
 
-# The Second-Order Cone (or Lorentz Cone) of dimension $n$ is of the form:
+# The [`SecondOrderCone`](@ref) (or Lorentz Cone) of dimension $n$ is a cone of
+# the form:
 # ```math
-# Q^n = \{ (t, x) \in \mathbb{R}^n : t \ge ||x||_2 \}
+# K_{soc} = \{ (t, x) \in \mathbb{R}^n : t \ge ||x||_2 \}
 # ```
 
-# ### Example
+# It is most commonly used to represent the L2-norm of the vector $x$:
 
-# Minimize the L2 norm of a vector $x$.
-
-model = Model()
+model = Model(SCS.Optimizer)
+set_silent(model)
 @variable(model, x[1:3])
-@variable(model, norm_x)
-@constraint(model, [norm_x; x] in SecondOrderCone())
-@objective(model, Min, norm_x)
+@variable(model, t)
+@constraint(model, sum(x) == 1)
+@constraint(model, [t; x] in SecondOrderCone())
+@objective(model, Min, t)
+optimize!(model)
+value(t), value.(x)
 
 # ## Rotated Second-Order Cone
 
 # A Second-Order Cone rotated by $\pi/4$ in the $(x_1,x_2)$ plane is called a
-# Rotated Second-Order Cone. It is of the form:
+# [`RotatedSecondOrderCone`](@ref). It is a cone of the form:
 # ```math
-# Q_r^n = \{ (t,u,x) \in \mathbb{R}^n : 2tu \ge ||x||_2^2, t,u \ge 0 \}
+# K_{rsoc} = \{ (t,u,x) \in \mathbb{R}^n : 2tu \ge ||x||_2^2, t,u \ge 0 \}
 # ```
 
-# ### Example
+# When `u = 0.5`, it represents the sum of squares of a vector $x$:
 
-# Given a set of predictors $x$, and observations $y$, find the parameter
-# $\theta$ that minimizes the sum of squares loss between $y_i$ and
-# $\theta x_i$.
-
-x = [1.0, 2.0, 3.0, 4.0]
-y = [0.45, 1.04, 1.51, 1.97]
-model = Model()
+data = [1.0, 2.0, 3.0, 4.0]
+target = [0.45, 1.04, 1.51, 1.97]
+model = Model(SCS.Optimizer)
+set_silent(model)
 @variable(model, θ)
-@variable(model, loss)
-@constraint(model, [loss; 0.5; θ .* x .- y] in RotatedSecondOrderCone())
-@objective(model, Min, loss)
+@variable(model, t)
+@variable(model, u == 0.5)
+@expression(model, residuals, θ * data .- target)
+@constraint(model, [t; u; residuals] in RotatedSecondOrderCone())
+@objective(model, Min, t)
+optimize!(model)
+value(θ), value(t)
 
 # ## Exponential Cone
 
-# An Exponential Cone is a set of the form:
+# The [`MOI.ExponentialCone`](@ref) is a set of the form:
 
 # ```math
 # K_{exp} = \{ (x,y,z) \in \mathbb{R}^3 : y \exp (x/y) \le z, y > 0 \}
 # ```
 
-model = Model()
-@variable(model, x[1:3] >= 0)
-@constraint(model, x in MOI.ExponentialCone())
-@objective(model, Min, x[3])
-
-# ### Example: Entropy Maximization
-
-# The entropy maximization problem consists of maximizing the entropy function,
+# It can be used to model problems involving `log` and `exp`. For example, the
+# entropy maximization problem consists of maximizing the entropy function,
 # $H(x) = -x\log{x}$ subject to linear inequality constraints.
 
 # ```math
 # \begin{aligned}
 # & \max & - \sum_{i=1}^n x_i \log x_i \\
-# & \;\;\text{s.t.} & \mathbf{1}' x = 1 \\
+# & \;\;\text{s.t.} & \mathbf{1}^\top x = 1 \\
 # & & Ax \leq b
 # \end{aligned}
 # ```
@@ -166,11 +162,8 @@ model = Model()
 # \end{aligned}
 # ```
 
-n = 15
-m = 10
-A = randn(m, n)
-b = rand(m, 1)
-
+m, n = 10, 15
+A, b = randn(m, n), rand(m, 1)
 model = Model(SCS.Optimizer)
 set_silent(model)
 @variable(model, t[1:n])
@@ -178,14 +171,54 @@ set_silent(model)
 @objective(model, Max, sum(t))
 @constraint(model, sum(x) == 1)
 @constraint(model, A * x .<= b)
-@constraint(model, con[i = 1:n], [t[i], x[i], 1] in MOI.ExponentialCone())
+@constraint(model, [i = 1:n], [t[i], x[i], 1] in MOI.ExponentialCone())
 optimize!(model)
-
-#-
-
 objective_value(model)
 
-# ### Positive Semidefinite Cone
+# The [`MOI.ExponentialCone`](@ref) has a dual, the [`MOI.DualExponentialCone`](@ref),
+# that offers an alternative formulation that can be more efficient for some
+# formulations.
+
+# There is also the [`MOI.RelativeEntropyCone`](@ref) for explicitly encoding
+# the relative entropy function
+
+model = Model(SCS.Optimizer)
+set_silent(model)
+@variable(model, t)
+@variable(model, x[1:n])
+@objective(model, Max, -t)
+@constraint(model, sum(x) == 1)
+@constraint(model, A * x .<= b)
+@constraint(model, [t; ones(n); x] in MOI.RelativeEntropyCone(2n+1))
+optimize!(model)
+objective_value(model)
+
+# ## PowerCone
+
+# The [`MOI.PowerCone`](@ref) is a three-dimensional set parameterized by a
+# scalar value `α`. It has the form:
+# ```math
+# K_{p} = \{ (x,y,z) \in \mathbb{R}^3 : x^{\alpha} y^{1-\alpha} \ge |z|, x \ge 0, y \ge 0 \}
+# ```
+
+# The power cone permits a number of reformulations. For example, when ``p > 1``,
+# we can model ``t \ge x^p`` using the power cone ``(t, 1, x)`` with
+# ``\alpha = 1 / p``. Thus, to model ``t \ge x^3`` with ``x \ge 0``
+
+model = Model(SCS.Optimizer)
+set_silent(model)
+@variable(model, t)
+@variable(model, x >= 1.5)
+@constraint(model, [t, 1, x] in MOI.PowerCone(1 / 3))
+@objective(model, Min, t)
+optimize!(model)
+value(t), value(x)
+
+# The [`MOI.PowerCone`](@ref) has a dual, the [`MOI.DualPowerCone`](@ref),
+# that offers an alternative formulation that can be more efficient for some
+# formulations.
+
+# ## Positive Semidefinite Cone
 
 # The set of positive semidefinite matrices (PSD) of dimension $n$ form a cone
 # in $\mathbb{R}^n$. We write this set mathematically as:
@@ -221,12 +254,24 @@ set_silent(model)
 @variable(model, t)
 @objective(model, Min, t)
 @constraint(model, t .* I - A in PSDCone())
-
 optimize!(model)
-
-#-
-
 objective_value(model)
+
+# ## GeometricMeanCone
+
+# The [`MOI.GeometricMeanCone`](@ref) is a cone of the form:
+# ```math
+# K_{geo} = \{ (t, x) \in \mathbb{R}^n : x \ge 0, t \le \sqrt[n-1]{x_1 x_2 \cdots x_{n-1}} \}
+# ```
+
+model = Model(SCS.Optimizer)
+set_silent(model)
+@variable(model, x[1:4])
+@variable(model, t)
+@constraint(model, sum(x) == 1)
+@constraint(model, [t; x] in MOI.GeometricMeanCone(5))
+optimize!(model)
+value(t), value.(x)
 
 # ## Other Cones and Functions
 
