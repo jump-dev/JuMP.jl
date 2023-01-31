@@ -349,8 +349,9 @@ function test_extension_indicator_constraint(
     @variable(model, x)
     @variable(model, y)
     for cref in [
-        @constraint(model, a => {x + 2y <= 1}),
+        @constraint(model, a => {x + 2y <= 1})
         @constraint(model, a ⇒ {x + 2y ≤ 1})
+        @constraint(model, a --> {x + 2y ≤ 1})
     ]
         c = constraint_object(cref)
         @test c.func == [a, x + 2y]
@@ -359,6 +360,7 @@ function test_extension_indicator_constraint(
     for cref in [
         @constraint(model, !b => {2x + y <= 1})
         @constraint(model, ¬b ⇒ {2x + y ≤ 1})
+        @constraint(model, ¬b --> {2x + y ≤ 1})
         # This returns a vector of constraints that is concatenated.
         @constraint(model, ![b, b] .=> {[2x + y, 2x + y] .≤ 1})
     ]
