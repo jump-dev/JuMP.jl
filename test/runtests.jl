@@ -8,6 +8,9 @@
 # See https://github.com/jump-dev/JuMP.jl
 #############################################################################
 
+import Pkg
+Pkg.pkg"add MathOptInterface#od/nlp-expr"
+
 import JuMP
 import Test
 
