@@ -15,9 +15,11 @@ function _build_indicator_constraint(
     set = MOI.Indicator{A}(moi_set(constraint))
     return VectorConstraint([variable, jump_function(constraint)], set)
 end
+
 function _indicator_variable_set(::Function, variable::Symbol)
     return variable, MOI.Indicator{MOI.ACTIVATE_ON_ONE}
 end
+
 function _indicator_variable_set(_error::Function, expr::Expr)
     if expr.args[1] == :¬ || expr.args[1] == :!
         if length(expr.args) != 2
@@ -30,6 +32,12 @@ function _indicator_variable_set(_error::Function, expr::Expr)
         return expr, MOI.Indicator{MOI.ACTIVATE_ON_ONE}
     end
 end
+
+function parse_constraint_head(_error::Function, ::Val{:(-->)}, lhs, rhs)
+    code, call = parse_constraint_call(_error, false, Val(:(=>)), lhs, rhs)
+    return false, code, call
+end
+
 function parse_constraint_call(
     _error::Function,
     vectorized::Bool,

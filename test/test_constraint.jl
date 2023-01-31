@@ -350,17 +350,19 @@ function test_extension_indicator_constraint(
     @variable(model, y)
     for cref in [
         @constraint(model, a => {x + 2y <= 1}),
-        @constraint(model, a ⇒ {x + 2y ≤ 1})
+        @constraint(model, a ⇒ {x + 2y ≤ 1}),
+        @constraint(model, a --> {x + 2y ≤ 1}),
     ]
         c = constraint_object(cref)
         @test c.func == [a, x + 2y]
         @test c.set == MOI.Indicator{MOI.ACTIVATE_ON_ONE}(MOI.LessThan(1.0))
     end
     for cref in [
-        @constraint(model, !b => {2x + y <= 1})
-        @constraint(model, ¬b ⇒ {2x + y ≤ 1})
+        @constraint(model, !b => {2x + y <= 1}),
+        @constraint(model, ¬b ⇒ {2x + y ≤ 1}),
+        @constraint(model, ¬b --> {2x + y ≤ 1}),
         # This returns a vector of constraints that is concatenated.
-        @constraint(model, ![b, b] .=> {[2x + y, 2x + y] .≤ 1})
+        @constraint(model, ![b, b] .=> {[2x + y, 2x + y] .≤ 1}),
     ]
         c = constraint_object(cref)
         @test c.func == [b, 2x + y]
