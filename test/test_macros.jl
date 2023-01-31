@@ -88,7 +88,7 @@ end
 
 struct CustomType end
 
-function JuMP.parse_constraint_head(_error::Function, ::Val{:≔}, lhs, rhs)
+function JuMP.parse_constraint_head(_error::Function, ::Val{:(:=)}, lhs, rhs)
     return false, :(), :(build_constraint($_error, $(esc(lhs)), $(esc(rhs))))
 end
 
@@ -309,7 +309,7 @@ function test_extension_custom_expression_test(
 )
     model = ModelType()
     @variable(model, x)
-    @constraint(model, con_ref, x ≔ CustomType())
+    @constraint(model, con_ref, x := CustomType())
     con = JuMP.constraint_object(con_ref)
     @test jump_function(con) == x
     @test moi_set(con) isa CustomSet
