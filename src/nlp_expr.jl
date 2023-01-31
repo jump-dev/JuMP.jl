@@ -141,29 +141,61 @@ end
 
 # JuMP interop
 
-function set_objective_function(model::Model, expr::NonlinearExpr)
-    nlp = nonlinear_model(model; force = true)
-    MOI.Nonlinear.set_objective(nlp, expr)
-    return
+# TODO
+check_belongs_to_model(::NonlinearExpr, ::Model) = true
+
+function moi_function(f::NonlinearExpr)
+    ret = MOI.ScalarNonlinearFunction{Float64}(f.head, Any[])
+    stack = Tuple{MOI.ScalarNonlinearFunction{Float64},Any}[]
+    for arg in reverse(f.args)
+        push!(stack, (ret, arg))
+    end
+    while !isempty(stack)
+        parent, arg = pop!(stack)
+        if arg isa NonlinearExpr
+            new_ret = MOI.ScalarNonlinearFunction{Float64}(arg.head, Any[])
+            push!(parent.args, new_ret)
+            for child in reverse(arg.args)
+                push!(stack, (new_ret, child))
+            end
+        elseif arg isa Number
+            push!(parent.args, arg)
+        else
+            push!(parent.args, moi_function(arg))
+        end
+    end
+    return ret
 end
 
-function add_constraint(
-    model::Model,
-    con::ScalarConstraint{NonlinearExpr,S},
-    name::String,
-) where {
-    S<:Union{
-        MOI.LessThan{Float64},
-        MOI.GreaterThan{Float64},
-        MOI.EqualTo{Float64},
-        MOI.Interval{Float64},
-    },
-}
-    nlp = nonlinear_model(model; force = true)
-    index = MOI.Nonlinear.add_constraint(nlp, con.func, con.set)
-    con_ref = ConstraintRef(model, index, ScalarShape())
-    set_name(con_ref, name)
-    return con_ref
+function jump_function(model::Model, f::MOI.ScalarNonlinearFunction)
+    ret = NonlinearExpr(f.head, Any[])
+    stack = Tuple{NonlinearExpr,Any}[]
+    for arg in reverse(f.args)
+        push!(stack, (ret, arg))
+    end
+    while !isempty(stack)
+        parent, arg = pop!(stack)
+        if arg isa MOI.ScalarNonlinearFunction
+            new_ret = NonlinearExpr(arg.head, Any[])
+            push!(parent.args, new_ret)
+            for child in reverse(arg.args)
+                push!(stack, (new_ret, child))
+            end
+        elseif arg isa Number
+            push!(parent.args, arg)
+        else
+            push!(parent.args, jump_function(model, arg))
+        end
+    end
+    return ret
+end
+
+function jump_function_type(::Model, ::Type{<:MOI.ScalarNonlinearFunction})
+    return NonlinearExpr
+end
+
+function moi_function_type(::Type{NonlinearExpr})
+    return MOI.ScalarNonlinearFunction{Float64}
 end
 
 function constraint_object(c::NonlinearConstraintRef)

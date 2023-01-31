@@ -8,17 +8,6 @@ module TestNLPExpr
 using JuMP
 using Test
 
-function runtests()
-    for name in names(@__MODULE__; all = true)
-        if startswith("$name", "test_")
-            @testset "$(name)" begin
-                getfield(@__MODULE__, name)()
-            end
-        end
-    end
-    return
-end
-
 function test_univariate_operators()
     model = Model()
     @variable(model, x)
@@ -59,7 +48,7 @@ function test_objective()
     model = Model()
     @variable(model, x)
     @objective(model, Min, 2.0 * sin(x)^2 + cos(x) / x)
-    @test JuMP._nlp_objective_function(model) isa MOI.Nonlinear.Expression
+    @test objective_function(model) isa NonlinearExpr
     return
 end
 
@@ -178,7 +167,7 @@ function test_constraint_name()
     @test name(c) == "c"
     set_name(c, "d")
     @test name(c) == "d"
-    @test startswith(string(c), "d: ")
+    @test startswith(string(c), "d : ")
     return
 end
 
@@ -186,9 +175,9 @@ function test_constraint_lessthan()
     model = Model()
     @variable(model, x)
     @constraint(model, c, 2.0 * sin(x)^2 + cos(x) / x <= 1)
-    nlp = nonlinear_model(model)
-    @test nlp[index(c)] isa MOI.Nonlinear.Constraint
-    @test nlp[index(c)].set == MOI.LessThan(0.0)
+    obj = constraint_object(c)
+    @test isequal_canonical(obj.func, 2.0 * sin(x)^2 + cos(x) / x - 1)
+    @test obj.set == MOI.LessThan(0.0)
     return
 end
 
@@ -196,9 +185,9 @@ function test_constraint_greaterthan()
     model = Model()
     @variable(model, x)
     @constraint(model, c, 2.0 * sin(x)^2 + cos(x) / x >= 1)
-    nlp = nonlinear_model(model)
-    @test nlp[index(c)] isa MOI.Nonlinear.Constraint
-    @test nlp[index(c)].set == MOI.GreaterThan(0.0)
+    obj = constraint_object(c)
+    @test isequal_canonical(obj.func, 2.0 * sin(x)^2 + cos(x) / x - 1)
+    @test obj.set == MOI.GreaterThan(0.0)
     return
 end
 
@@ -206,9 +195,9 @@ function test_constraint_equalto()
     model = Model()
     @variable(model, x)
     @constraint(model, c, 2.0 * sin(x)^2 + cos(x) / x == 1)
-    nlp = nonlinear_model(model)
-    @test nlp[index(c)] isa MOI.Nonlinear.Constraint
-    @test nlp[index(c)].set == MOI.EqualTo(0.0)
+    obj = constraint_object(c)
+    @test isequal_canonical(obj.func, 2.0 * sin(x)^2 + cos(x) / x - 1)
+    @test obj.set == MOI.EqualTo(0.0)
     return
 end
 
@@ -216,9 +205,9 @@ function test_constraint_interval()
     model = Model()
     @variable(model, x)
     @constraint(model, c, 0 <= 2.0 * sin(x)^2 + cos(x) / x <= 1)
-    nlp = nonlinear_model(model)
-    @test nlp[index(c)] isa MOI.Nonlinear.Constraint
-    @test nlp[index(c)].set == MOI.Interval(0.0, 1.0)
+    obj = constraint_object(c)
+    @test isequal_canonical(obj.func, 2.0 * sin(x)^2 + cos(x) / x)
+    @test obj.set == MOI.Interval(0.0, 1.0)
     return
 end
 
@@ -237,11 +226,7 @@ function test_nonlinear_matrix_algebra()
     model = Model()
     @variable(model, X[1:3, 1:3], Symmetric)
     @objective(model, Max, sum(X^4 .- X^3))
-    nlp = nonlinear_model(model)
-    Y = [0.1 0.2 0.3; 0.2 0.4 0.5; 0.3 0.5 0.6]
-    data = Dict(index(X[i, j]) => Y[i, j] for i in 1:3 for j in 1:i)
-    obj = MOI.Nonlinear.evaluate(data, nlp, nlp.objective)
-    @test obj ≈ sum(Y^4 .- Y^3)
+    @test objective_function(model) isa NonlinearExpr
     return
 end
 
@@ -343,6 +328,4 @@ function test_expr_mle()
     return
 end
 
-end
-
-TestNLPExpr.runtests()
+end  # module

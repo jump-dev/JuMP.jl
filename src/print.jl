@@ -866,10 +866,6 @@ end
 function Base.show(io::IO, c::NonlinearConstraintRef)
     index = MOI.Nonlinear.ConstraintIndex(c.index.value)
     str = nonlinear_constraint_string(c.model, MIME("text/plain"), index)
-    n = name(c)
-    if !isempty(n)
-        print(io, n, ": ")
-    end
     return print(io, str)
 end
 
