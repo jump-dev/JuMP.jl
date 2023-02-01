@@ -326,10 +326,70 @@ julia> coefficient(ex, x)
 
 ## Nonlinear expressions
 
-Nonlinear expressions can be constructed only using the [`@NLexpression`](@ref)
-macro and can be used only in [`@NLobjective`](@ref), [`@NLconstraint`](@ref),
-and other [`@NLexpression`](@ref)s. For more details, see the [Nonlinear
-Modeling](@ref) section.
+Nonlinear expressions in JuMP are represented by a [`NonlinearExpr`](@ref)
+object.
+
+### Constructors
+
+Nonlinear expressions can be created using the [`NonlinearExpr`](@ref)
+constructors:
+
+```jldoctest nonlinear_expressions
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> expr = NonlinearExpr(:sin, Any[x])
+sin(x)
+```
+
+or via operator overloading:
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> expr = sin(x)
+sin(x)
+```
+
+### Fields
+
+Each [`NonlinearExpr`](@ref) has two fields.
+
+The `.head` field is a `Symbol` that represents the operator being called:
+
+```jldoctest nonlinear_expressions
+julia> expr.head
+:sin
+```
+
+The `.args` field is a `Vector{Any}` containing the arguments to the operator:
+
+```jldoctest nonlinear_expressions
+julia> expr.args
+1-element Vector{Any}:
+ x
+```
+
+### Supported arguments
+
+Nonlinear expressions can contain a mix of numbers, [`AffExpr`](@ref),
+[`QuadExpr`](@ref), and other [`NonlinearExpr`](@ref):
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> aff = x + 1;
+
+julia> quad = x^2 + x;
+
+julia> expr = cos(x) * sin(quad) + aff
++(*(cos(x), sin(x² + x)), x + 1)
+```
 
 ## Initializing arrays
 
