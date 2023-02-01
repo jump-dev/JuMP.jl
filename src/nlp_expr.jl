@@ -310,3 +310,21 @@ function _MA.promote_operation(
 )
     return NonlinearExpr
 end
+
+function moi_function(x::Vector{<:AbstractJuMPScalar})
+    return MOI.VectorNonlinearFunction{Float64}(
+        Any[moi_function(xi) for xi in x],
+    )
+end
+
+function moi_function_type(::Type{<:Vector{<:AbstractJuMPScalar}})
+    return MOI.VectorNonlinearFunction{Float64}
+end
+
+function jump_function(model::Model, f::MOI.VectorNonlinearFunction)
+    return AbstractJuMPScalar[jump_function(model, arg) for arg in f.args]
+end
+
+function jump_function_type(::Model, ::Type{<:MOI.VectorNonlinearFunction})
+    return Vector{AbstractJuMPScalar}
+end
