@@ -1543,10 +1543,22 @@ function _info_from_variable(v::VariableRef)
 end
 
 """
-    relax_integrality(model::Model)
+    relax_integrality(model::Model; fix::Union{Nothing,Function} = nothing)
 
 Modifies `model` to "relax" all binary and integrality constraints on
-variables. Specifically,
+variables. In addition, if `fix` is passed a function, then the discrete
+variables are fixed to the value of `fix(x)`.
+
+To fix the model at the last optimal solution, use
+`relax_integrality(model; fix = value)`.
+
+## Return
+
+Returns a function that can be called without any arguments to restore the
+original model. The behavior of this function is undefined if additional
+changes are made to the affected variables in the meantime.
+
+## Notes
 
 - Binary constraints are deleted, and variable bounds are tightened if
   necessary to ensure the variable is constrained to the interval ``[0, 1]``.
@@ -1556,17 +1568,14 @@ variables. Specifically,
 - All other constraints are ignored (left in place). This includes discrete
   constraints like SOS and indicator constraints.
 
-Returns a function that can be called without any arguments to restore the
-original model. The behavior of this function is undefined if additional
-changes are made to the affected variables in the meantime.
+## Example
 
-# Example
 ```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
-julia> @variable(model, x, Bin);
+julia> @variable(model, x, Bin, start = 1);
 
-julia> @variable(model, 1 <= y <= 10, Int);
+julia> @variable(model, 1 <= y <= 10, Int, start = 2);
 
 julia> @objective(model, Min, x + y);
 
@@ -1589,9 +1598,27 @@ Subject to
  y ≤ 10.0
  y integer
  x binary
+
+julia> undo_relax = relax_integrality(model; fix = start_value);
+
+julia> print(model)
+Min x + y
+Subject to
+ x = 1.0
+ y = 2.0
+
+julia> undo_relax()
+
+julia> print(model)
+Min x + y
+Subject to
+ y ≥ 1.0
+ y ≤ 10.0
+ y integer
+ x binary
 ```
 """
-function relax_integrality(model::Model)
+function relax_integrality(model::Model; fix::Union{Nothing,Function} = nothing)
     if num_constraints(model, VariableRef, MOI.Semicontinuous{Float64}) > 0
         error(
             "Support for relaxing semicontinuous constraints is not " *
@@ -1604,18 +1631,17 @@ function relax_integrality(model::Model)
             "yet implemented.",
         )
     end
-
-    bin_int_constraints = vcat(
+    discrete_variable_constraints = vcat(
         all_constraints(model, VariableRef, MOI.ZeroOne),
         all_constraints(model, VariableRef, MOI.Integer),
     )
-    bin_int_variables = VariableRef.(bin_int_constraints)
-    info_pre_relaxation =
-        map(v -> (v, _info_from_variable(v)), bin_int_variables)
-    # We gather the info first because some solvers perform poorly when you
-    # interleave queries and changes. See, e.g.,
-    # https://github.com/jump-dev/Gurobi.jl/pull/301.
-    for (v, info) in info_pre_relaxation
+    # We gather the info first because we cannot modify-then-query.
+    info_pre_relaxation = map(VariableRef.(discrete_variable_constraints)) do v
+        solution = fix === nothing ? nothing : fix(v)
+        return (v, solution, _info_from_variable(v))
+    end
+    # Now we can modify.
+    for (v, solution, info) in info_pre_relaxation
         if info.integer
             unset_integer(v)
         elseif info.binary
@@ -1630,24 +1656,37 @@ function relax_integrality(model::Model)
                 )
             end
         end
+        if solution !== nothing
+            JuMP.fix(v, solution; force = true)
+        end
     end
     function unrelax()
-        for (v, info) in info_pre_relaxation
+        for (v, solution, info) in info_pre_relaxation
+            if solution !== nothing
+                unfix(v)
+            end
+            if info.has_lb
+                set_lower_bound(v, info.lower_bound)
+            end
+            if info.has_ub
+                set_upper_bound(v, info.upper_bound)
+            end
             if info.integer
                 set_integer(v)
-            elseif info.binary
+            end
+            if info.binary
                 set_binary(v)
-                if !info.has_fix
-                    if info.has_lb
-                        set_lower_bound(v, info.lower_bound)
-                    else
-                        delete_lower_bound(v)
-                    end
-                    if info.has_ub
-                        set_upper_bound(v, info.upper_bound)
-                    else
-                        delete_upper_bound(v)
-                    end
+            end
+            # Now a special case: when binary variables are relaxed, we add
+            # [0, 1] bounds, but only if the variable was not previously fixed
+            # and we did not provide a fixed value, and a bound did not already
+            # exist. In this case, delete the new bounds that we added.
+            if solution === nothing && info.binary && !info.has_fix
+                if !info.has_lb
+                    delete_lower_bound(v)
+                end
+                if !info.has_ub
+                    delete_upper_bound(v)
                 end
             end
         end

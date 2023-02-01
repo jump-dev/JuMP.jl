@@ -1331,4 +1331,28 @@ function test_Hermitian_PSD_anon()
     return
 end
 
+function test_relax_integrality_fix()
+    model = Model()
+    @variable(model, x, Bin, start = 1)
+    @variable(model, 1 <= y <= 10, Int, start = 2)
+    @objective(model, Min, x + y)
+    @test sprint(print, model) ==
+          "Min x + y\nSubject to\n y ≥ 1.0\n y ≤ 10.0\n y integer\n x binary\n"
+    undo_relax = relax_integrality(model; fix = start_value)
+    @test sprint(print, model) == "Min x + y\nSubject to\n x = 1.0\n y = 2.0\n"
+    undo_relax()
+    @test sprint(print, model) ==
+          "Min x + y\nSubject to\n y ≥ 1.0\n y ≤ 10.0\n y integer\n x binary\n"
+    return
+end
+
+function test_relax_integrality_fix_value()
+    model = Model()
+    @variable(model, x, Bin, start = 1)
+    @variable(model, 1 <= y <= 10, Int, start = 2)
+    @objective(model, Min, x + y)
+    @test_throws OptimizeNotCalled relax_integrality(model; fix = value)
+    return
+end
+
 end  # module TestVariable
