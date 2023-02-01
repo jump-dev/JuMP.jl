@@ -105,7 +105,7 @@ undo = relax_integrality(model; fix = value);
 # !!! tip
 #     Afer calling [`relax_integrality`](@ref), you can set a new solver with
 #     [`set_optimizer`](@ref) if your mixed-integer solver does not support
-#     computing a dual solutio.
+#     computing a dual solution.
 
 print(model)
 
