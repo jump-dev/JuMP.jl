@@ -1342,7 +1342,8 @@ function test_relax_integrality_fix()
     @test sprint(print, model) ==
           "Min x + y\nSubject to\n y $ge 1.0\n y $le 10.0\n y integer\n x binary\n"
     undo_relax = relax_integrality(model; fix = start_value)
-    @test sprint(print, model) == "Min x + y\nSubject to\n x $eq 1.0\n y $eq 2.0\n"
+    @test sprint(print, model) ==
+          "Min x + y\nSubject to\n x $eq 1.0\n y $eq 2.0\n"
     undo_relax()
     @test sprint(print, model) ==
           "Min x + y\nSubject to\n y $ge 1.0\n y $le 10.0\n y integer\n x binary\n"
