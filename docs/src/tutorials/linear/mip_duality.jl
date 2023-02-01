@@ -67,6 +67,7 @@ dual_status(model)
 discrete_values = value.(dispatch)
 fix.(dispatch, discrete_values; force = true)
 unset_binary.(dispatch)
+print(model)
 
 # Now if we re-solve the problem, we obtain a `FEASIBLE_POINT` for the dual:
 
@@ -82,6 +83,7 @@ dual(power_balance)
 
 unfix.(dispatch)
 set_binary.(dispatch)
+print(model)
 
 # ## Use `relax_integrality`
 
@@ -95,10 +97,19 @@ dual_status(model)
 
 #-
 
-undo = relax_integrality(model; fix = value)
+undo = relax_integrality(model; fix = value);
 
 # Here `undo` is a function that, when called with no arguments, returns the
 # model to the original mixed-integer formulation.
+
+# !!! tip
+#     Afer calling [`relax_integrality`](@ref), you can set a new solver with
+#     [`set_optimizer`](@ref) if your mixed-integer solver does not support
+#     computing a dual solutio.
+
+print(model)
+
+#-
 
 optimize!(model)
 dual_status(model)
@@ -110,7 +121,4 @@ dual(power_balance)
 # Finally, call `undo` to revert the reformulation
 
 undo()
-
-# We can check that it worked by printing the model:
-
 print(model)
