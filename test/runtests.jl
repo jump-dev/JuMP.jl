@@ -9,7 +9,7 @@
 #############################################################################
 
 import Pkg
-Pkg.pkg"add MathOptInterface#od/vector-optimization"
+Pkg.pkg"add MathOptInterface#master"
 
 import JuMP
 import Test

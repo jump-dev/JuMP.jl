@@ -180,7 +180,7 @@ In most cases, multi-objective optimization solvers will return multiple
 solutions, corresponding to points on the Pareto frontier. See [Multiple solutions](@ref)
 for information on how to query and work with multiple solutions.
 
-Note that you can must set a single objective sense, that is, you cannot have
+Note that you must set a single objective sense, that is, you cannot have
 both minimization and maximization objectives. Work around this limitation by
 choosing `Min` and negating any objectives you want to maximize:
 
