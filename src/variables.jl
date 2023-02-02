@@ -1543,22 +1543,10 @@ function _info_from_variable(v::VariableRef)
 end
 
 """
-    relax_integrality(model::Model; fix::Union{Nothing,Function} = nothing)
+    relax_integrality(model::Model)
 
 Modifies `model` to "relax" all binary and integrality constraints on
-variables. In addition, if `fix` is passed a function, then the discrete
-variables are fixed to the value of `fix(x)`.
-
-To fix the model at the last optimal solution, use
-`relax_integrality(model; fix = value)`.
-
-## Return
-
-Returns a function that can be called without any arguments to restore the
-original model. The behavior of this function is undefined if additional
-changes are made to the affected variables in the meantime.
-
-## Notes
+variables. Specifically,
 
 - Binary constraints are deleted, and variable bounds are tightened if
   necessary to ensure the variable is constrained to the interval ``[0, 1]``.
@@ -1568,14 +1556,17 @@ changes are made to the affected variables in the meantime.
 - All other constraints are ignored (left in place). This includes discrete
   constraints like SOS and indicator constraints.
 
-## Example
+Returns a function that can be called without any arguments to restore the
+original model. The behavior of this function is undefined if additional
+changes are made to the affected variables in the meantime.
 
+# Example
 ```jldoctest; setup=:(using JuMP)
 julia> model = Model();
 
-julia> @variable(model, x, Bin, start = 1);
+julia> @variable(model, x, Bin);
 
-julia> @variable(model, 1 <= y <= 10, Int, start = 2);
+julia> @variable(model, 1 <= y <= 10, Int);
 
 julia> @objective(model, Min, x + y);
 
@@ -1598,8 +1589,41 @@ Subject to
  y ≤ 10.0
  y integer
  x binary
+```
+"""
+relax_integrality(model::Model) = _relax_or_fix_integrality(nothing, model)
 
-julia> undo_relax = relax_integrality(model; fix = start_value);
+"""
+    fix_discrete_variables([var_value::Function = value,] model::Mode)
+
+Modifies `model` to convert all binary and integer variables to continuous
+variables with fixed bounds of `var_value(x)`.
+
+## Return
+
+Returns a function that can be called without any arguments to restore the
+original model. The behavior of this function is undefined if additional
+changes are made to the affected variables in the meantime.
+
+## Notes
+
+- An error is thrown if semi-continuous or semi-integer constraints are
+  present (support may be added for these in the future).
+- All other constraints are ignored (left in place). This includes discrete
+  constraints like SOS and indicator constraints.
+
+## Example
+
+```jldoctest; setup=:(using JuMP)
+julia> model = Model();
+
+julia> @variable(model, x, Bin, start = 1);
+
+julia> @variable(model, 1 <= y <= 10, Int, start = 2);
+
+julia> @objective(model, Min, x + y);
+
+julia> undo_relax = fix_discrete_variables(start_value, model);
 
 julia> print(model)
 Min x + y
@@ -1618,7 +1642,16 @@ Subject to
  x binary
 ```
 """
-function relax_integrality(model::Model; fix::Union{Nothing,Function} = nothing)
+function fix_discrete_variables(var_value::Function, model::Model)
+    return _relax_or_fix_integrality(var_value, model)
+end
+
+fix_discrete_variables(model::Model) = fix_discrete_variables(value, model)
+
+function _relax_or_fix_integrality(
+    var_value::Union{Nothing,Function},
+    model::Model,
+)
     if num_constraints(model, VariableRef, MOI.Semicontinuous{Float64}) > 0
         error(
             "Support for relaxing semicontinuous constraints is not " *
@@ -1637,7 +1670,7 @@ function relax_integrality(model::Model; fix::Union{Nothing,Function} = nothing)
     )
     # We gather the info first because we cannot modify-then-query.
     info_pre_relaxation = map(VariableRef.(discrete_variable_constraints)) do v
-        solution = fix === nothing ? nothing : fix(v)
+        solution = var_value === nothing ? nothing : var_value(v)
         return (v, solution, _info_from_variable(v))
     end
     # Now we can modify.
@@ -1657,7 +1690,7 @@ function relax_integrality(model::Model; fix::Union{Nothing,Function} = nothing)
             end
         end
         if solution !== nothing
-            JuMP.fix(v, solution; force = true)
+            fix(v, solution; force = true)
         end
     end
     function unrelax()

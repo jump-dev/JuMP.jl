@@ -95,6 +95,7 @@ BinaryRef
 
 ```@docs
 relax_integrality
+fix_discrete_variables
 ```
 
 ## Extensions

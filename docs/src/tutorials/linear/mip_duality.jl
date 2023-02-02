@@ -85,26 +85,26 @@ unfix.(dispatch)
 set_binary.(dispatch)
 print(model)
 
-# ## Use `relax_integrality`
+# ## Use `fix_discrete_variables`
 
 # Manually choosing the variables to relax and fix works for our small example,
 # but it becomes more difficult in problems with a larger number of binary and
 # integer variables. To automate the process we just did manually, JuMP provides
-# a `fix` keyword argument to [`relax_integrality`](@ref) function:
+# the [`fix_discrete_variables`](@ref) function:
 
 optimize!(model)
 dual_status(model)
 
 #-
 
-undo = relax_integrality(model; fix = value);
+undo = fix_discrete_variables(model);
 
 # Here `undo` is a function that, when called with no arguments, returns the
 # model to the original mixed-integer formulation.
 
 # !!! tip
-#     Afer calling [`relax_integrality`](@ref), you can set a new solver with
-#     [`set_optimizer`](@ref) if your mixed-integer solver does not support
+#     Afer calling [`fix_discrete_variables`](@ref), you can set a new solver
+#     with [`set_optimizer`](@ref) if your mixed-integer solver does not support
 #     computing a dual solutio.
 
 print(model)

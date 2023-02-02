@@ -1331,7 +1331,7 @@ function test_Hermitian_PSD_anon()
     return
 end
 
-function test_relax_integrality_fix()
+function test_fix_discrete_variables()
     le = JuMP._math_symbol(MIME("text/plain"), :leq)
     ge = JuMP._math_symbol(MIME("text/plain"), :geq)
     eq = JuMP._math_symbol(MIME("text/plain"), :eq)
@@ -1341,7 +1341,7 @@ function test_relax_integrality_fix()
     @objective(model, Min, x + y)
     @test sprint(print, model) ==
           "Min x + y\nSubject to\n y $ge 1.0\n y $le 10.0\n y integer\n x binary\n"
-    undo_relax = relax_integrality(model; fix = start_value)
+    undo_relax = fix_discrete_variables(start_value, model)
     @test sprint(print, model) ==
           "Min x + y\nSubject to\n x $eq 1.0\n y $eq 2.0\n"
     undo_relax()
@@ -1350,12 +1350,12 @@ function test_relax_integrality_fix()
     return
 end
 
-function test_relax_integrality_fix_value()
+function test_fix_discrete_variables_value()
     model = Model()
     @variable(model, x, Bin, start = 1)
     @variable(model, 1 <= y <= 10, Int, start = 2)
     @objective(model, Min, x + y)
-    @test_throws OptimizeNotCalled relax_integrality(model; fix = value)
+    @test_throws OptimizeNotCalled fix_discrete_variables(model)
     return
 end
 
