@@ -1594,7 +1594,7 @@ Subject to
 relax_integrality(model::Model) = _relax_or_fix_integrality(nothing, model)
 
 """
-    fix_discrete_variables([var_value::Function = value,] model::Mode)
+    fix_discrete_variables([var_value::Function = value,] model::Model)
 
 Modifies `model` to convert all binary and integer variables to continuous
 variables with fixed bounds of `var_value(x)`.
