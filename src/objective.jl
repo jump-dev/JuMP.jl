@@ -26,8 +26,8 @@ end
 Return the best known bound on the optimal objective value after a call to
 `optimize!(model)`.
 
-In the case of a vector-valued objective, this returns the nadir point, that is,
-the point obtained if each objective was optimized independently.
+In the case of a vector-valued objective, this returns the utopian point, that
+is, the point obtained if each objective was optimized independently.
 """
 function objective_bound(model::Model)::Union{Float64,Vector{Float64}}
     return MOI.get(model, MOI.ObjectiveBound())
