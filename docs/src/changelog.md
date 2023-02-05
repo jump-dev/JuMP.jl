@@ -7,7 +7,7 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Version v1.7.0 (January 25, 2023)
+## Version 1.7.0 (January 25, 2023)
 
 ### Added
 
@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Refactor `src/JuMP.jl` by moving methods into more relevant files (#3188)
  - Fix docstring of [`Model`](@ref) not appearing in the documentation (#3198)
 
-## Version v1.6.0 (January 1, 2023)
+## Version 1.6.0 (January 1, 2023)
 
 ### Added
 
