@@ -79,7 +79,7 @@ limits = DataFrames.DataFrame(
         "fat" 0 65
         "sodium" 0 1779
     ],
-    ["name", "min", "max"],
+    ["nutrient", "min", "max"],
 )
 
 # ## JuMP formulation
@@ -90,12 +90,14 @@ limits = DataFrames.DataFrame(
 # HiGHS as our optimizer:
 
 model = Model(HiGHS.Optimizer)
+set_silent(model)
 
 # Next, we create a set of decision variables `x`, with one element for each row
 # in the DataFrame. Each `x` has a lower bound of `0`, and we store the vector
 # as a new column `x` in the DataFrame `foods`:
 
-foods.x = @variable(model, x[1:size(foods, 1)] >= 0);
+@variable(model, x[foods.name] >= 0)
+foods.x = Array(x)
 
 # Our objective is to minimize the total cost of purchasing food:
 
@@ -104,9 +106,11 @@ foods.x = @variable(model, x[1:size(foods, 1)] >= 0);
 # For the next component, we need to add a constraint that our total intake of
 # each component is within the limits contained in the `limits` DataFrame:
 
-for row in eachrow(limits)
-    @constraint(model, row.min <= sum(foods[!, row.name] .* foods.x) <= row.max)
-end
+@constraint(
+    model,
+    [row in eachrow(limits)],
+    row.min <= sum(foods[!, row.nutrient] .* foods.x) <= row.max,
+);
 
 # What does our model look like?
 
@@ -146,7 +150,8 @@ filter!(row -> row.quantity > 0.0, solution)
 # constraints. Let's see what happens if we add a constraint that we can buy at
 # most 6 units of milk or ice cream combined.
 
-is_dairy = (foods.name .== "milk") .| (foods.name .== "ice cream")
+dairy_foods = ["milk", "ice cream"]
+is_dairy = map(name -> name in dairy_foods, foods.name)
 @constraint(model, sum(foods[is_dairy, :x]) <= 6)
 optimize!(model)
 Test.@test termination_status(model) == INFEASIBLE  #hide
