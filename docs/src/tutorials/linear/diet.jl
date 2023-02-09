@@ -91,30 +91,21 @@ limits = DataFrames.DataFrame(
 
 model = Model(HiGHS.Optimizer)
 
-# Next, we create a set of decision variables `x`, indexed over the foods in the
-# `data` DataFrame. Each `x` has a lower bound of `0`.
+# Next, we create a set of decision variables `x`, with one element for each row
+# in the DataFrame. Each `x` has a lower bound of `0`, and we store the vector
+# as a new column `x` in the DataFrame `foods`:
 
-@variable(model, x[foods.name] >= 0);
+foods.x = @variable(model, x[1:size(foods, 1)] >= 0);
 
-# Our objective is to minimize the total cost of purchasing food. We can write
-# that as a sum over the rows in `data`.
+# Our objective is to minimize the total cost of purchasing food:
 
-@objective(
-    model,
-    Min,
-    sum(food["cost"] * x[food["name"]] for food in eachrow(foods)),
-);
+@objective(model, Min, sum(foods.cost .* foods.x));
 
 # For the next component, we need to add a constraint that our total intake of
-# each component is within the limits contained in the `limits` DataFrame.
-# To make this more readable, we introduce a JuMP `@expression`
+# each component is within the limits contained in the `limits` DataFrame:
 
-for limit in eachrow(limits)
-    intake = @expression(
-        model,
-        sum(food[limit["name"]] * x[food["name"]] for food in eachrow(foods)),
-    )
-    @constraint(model, limit.min <= intake <= limit.max)
+for row in eachrow(limits)
+    @constraint(model, row.min <= sum(foods[!, row.name] .* foods.x) <= row.max)
 end
 
 # What does our model look like?
@@ -132,8 +123,8 @@ solution_summary(model)
 
 # Success! We found an optimal solution. Let's see what the optimal solution is:
 
-for food in foods.name
-    println(food, " = ", value(x[food]))
+for row in eachrow(foods)
+    println(row.name, " = ", value(row.x))
 end
 
 # That's a lot of milk and ice cream! And sadly, we only get `0.6` of a
@@ -155,7 +146,8 @@ filter!(row -> row.quantity > 0.0, solution)
 # constraints. Let's see what happens if we add a constraint that we can buy at
 # most 6 units of milk or ice cream combined.
 
-@constraint(model, x["milk"] + x["ice cream"] <= 6)
+is_dairy = (foods.name .== "milk") .| (foods.name .== "ice cream")
+@constraint(model, sum(foods[is_dairy, :x]) <= 6)
 optimize!(model)
 Test.@test termination_status(model) == INFEASIBLE  #hide
 Test.@test primal_status(model) == NO_SOLUTION      #hide
