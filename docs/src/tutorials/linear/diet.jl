@@ -93,11 +93,15 @@ model = Model(HiGHS.Optimizer)
 set_silent(model)
 
 # Next, we create a set of decision variables `x`, with one element for each row
-# in the DataFrame. Each `x` has a lower bound of `0`, and we store the vector
-# as a new column `x` in the DataFrame `foods`:
+# in the DataFrame, and each `x` has a lower bound of `0`:
 
 @variable(model, x[foods.name] >= 0)
+
+# To simplify things later on, we store the vector as a new column `x` in the
+# DataFrame `foods`:
+
 foods.x = Array(x)
+foods
 
 # Our objective is to minimize the total cost of purchasing food:
 
