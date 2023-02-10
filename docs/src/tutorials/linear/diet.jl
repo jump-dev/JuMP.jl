@@ -101,7 +101,6 @@ set_silent(model)
 # DataFrame `foods`:
 
 foods.x = Array(x)
-foods
 
 # Our objective is to minimize the total cost of purchasing food:
 
