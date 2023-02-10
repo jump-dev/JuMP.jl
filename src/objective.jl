@@ -26,7 +26,10 @@ end
 Return the best known bound on the optimal objective value after a call to
 `optimize!(model)`.
 
-In the case of a vector-valued objective, this returns the utopian point, that
+For scalar-valued objectives, this function returns a `Float64`. For
+vector-valued objectives, it returns a `Vector{Float64}`.
+
+In the case of a vector-valued objective, this returns the ideal point, that
 is, the point obtained if each objective was optimized independently.
 """
 function objective_bound(model::Model)::Union{Float64,Vector{Float64}}
