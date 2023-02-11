@@ -176,6 +176,10 @@ julia> f = objective_function(model)
  2 x[2]
 ```
 
+!!! tip
+    The [Multi-objective knapsack](@ref) tutorial is a worked example of
+    solving a multi-objective integer program.
+
 In most cases, multi-objective optimization solvers will return multiple
 solutions, corresponding to points on the Pareto frontier. See [Multiple solutions](@ref)
 for information on how to query and work with multiple solutions.

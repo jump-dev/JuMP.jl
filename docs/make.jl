@@ -1,5 +1,6 @@
 import Pkg
 Pkg.pkg"add Documenter#71e9f40"
+Pkg.pkg"add https://github.com/jump-dev/MultiObjectiveAlgorithms.jl"
 import Documenter
 import Literate
 import Test
@@ -131,6 +132,7 @@ const _PAGES = [
             "tutorials/linear/factory_schedule.md",
             "tutorials/linear/finance.md",
             "tutorials/linear/geographic_clustering.md",
+            "tutorials/linear/multi_objective_knapsack.md",
             "tutorials/linear/knapsack.md",
             "tutorials/linear/multi.md",
             "tutorials/linear/n-queens.md",
