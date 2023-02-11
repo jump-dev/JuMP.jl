@@ -185,7 +185,7 @@ for i in 1:result_count(model)
     Plots.annotate!(y[1] - 1, y[2], (i, 10))
 end
 ideal_point = objective_bound(model)
-Plots.scatter!([ideal[1]], [ideal[2]]; label = "Ideal point")
+Plots.scatter!([ideal_point[1]], [ideal_point[2]]; label = "Ideal point")
 
 # Visualizing the objective space lets the decision maker choose a solution that
 # suits their personal preferences. For example, result `#7` is close to the
