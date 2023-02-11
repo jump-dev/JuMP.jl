@@ -134,6 +134,7 @@ set_silent(model)
 # method:
 
 set_optimizer_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
+set_optimizer_attribute(model, MOA.ObjectiveAbsoluteTolerance(1), 1)
 
 # Let's solve the problem and see the solution
 
