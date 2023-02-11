@@ -56,6 +56,7 @@ TODO
 transpiled
 [Uu]ntyped
 [xy]label
+[xy]lims
 
 % JuMP-related vocab
 [Bb]ilevel

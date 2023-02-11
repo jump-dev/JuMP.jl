@@ -37,7 +37,7 @@ import Test  #hide
 # \begin{aligned}
 # \max & \sum\limits_{i \in I} p_i x_i \\
 # \text{s.t.}\ \ & \sum\limits_{i \in I} w_i x_i \le c\\
-# & x_i \ge 0, && \forall i \in I
+# & x_i \in \{0, 1\} && \forall i \in I
 # \end{aligned}
 # ```
 # where ``x_i`` is ``1`` if we pack item ``i`` into the knapsack and ``0``
@@ -53,7 +53,7 @@ import Test  #hide
 # \max & \sum\limits_{i \in I} p_i x_i \\
 #      & \sum\limits_{i \in I} r_i x_i \\
 # \text{s.t.}\ \ & \sum\limits_{i \in I} w_i x_i \le c\\
-# & x_i \ge 0, && \forall i \in I
+# & x_i \in \{0, 1\} && \forall i \in I
 # \end{aligned}
 # ```
 
