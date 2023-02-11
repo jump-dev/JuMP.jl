@@ -177,7 +177,7 @@ julia> f = objective_function(model)
 ```
 
 !!! tip
-    The [Multi-objective knapsack](@ref) tutorial is a worked example of
+    The [Multi-objective knapsack](@ref) tutorial provides an example of
     solving a multi-objective integer program.
 
 In most cases, multi-objective optimization solvers will return multiple

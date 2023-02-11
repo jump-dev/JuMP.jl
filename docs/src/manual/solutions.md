@@ -574,7 +574,7 @@ end
 ```
 
 !!! tip
-    The [Multi-objective knapsack](@ref) tutorial includes an example of
+    The [Multi-objective knapsack](@ref) tutorial provides an example of
     querying multiple solutions.
 
 ## Checking feasibility of solutions

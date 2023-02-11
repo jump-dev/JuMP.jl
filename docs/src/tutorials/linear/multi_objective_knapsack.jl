@@ -165,7 +165,7 @@ value(profit_expr; result = 5)
 
 # ## Visualizing objective space
 
-# Unlike single-objective optimization problem, multi-objective optimization
+# Unlike single-objective optimization problems, multi-objective optimization
 # problems do not have a single optimal solution. Instead, the solutions
 # returned represent possible trade-offs that the decision maker can choose
 # between the two objectives. A common way to visualize this is by plotting
