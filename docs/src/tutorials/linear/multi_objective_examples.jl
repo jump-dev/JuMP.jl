@@ -19,9 +19,9 @@ import MultiObjectiveAlgorithms as MOA
 # ## Bi-objective linear problem
 
 # This is example is taken from Example 6.3 (from Steuer, 1985), page 154 of
-# Multicriteria Optimization (2nd edt), M. Ehrgott, Springer 2005. It was
-# adapted from [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl) by
-# [@xgandibleux].
+# Multicriteria Optimization (2nd ed), M. Ehrgott, Springer 2005. The code was
+# adapted from an example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl)
+# by [@xgandibleux](https://github.com/xgandibleux).
 
 model = Model()
 set_silent(model)
@@ -48,9 +48,9 @@ end
 # ## Bi-objective linear assignment problem
 
 # This is example is taken from Example 9.38 (from Ulungu and Teghem, 1994),
-# page 255 of Multicriteria Optimization (2nd edt), M. Ehrgott, Springer 2005.
-# It was adapted from [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl)
-# by [@xgandibleux].
+# page 255 of Multicriteria Optimization (2nd ed), M. Ehrgott, Springer 2005.
+# The code was adapted from an example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl)
+# by [@xgandibleux](https://github.com/xgandibleux).
 
 C1 = [5 1 4 7; 6 2 2 6; 2 8 4 4; 3 5 7 1]
 C2 = [3 6 4 2; 1 3 8 3; 5 2 2 3; 4 2 3 5]
@@ -77,8 +77,9 @@ end
 # ## Bi-objective shortest path problem
 
 # This is example is taken from Exercise 9.5 page 269 of Multicriteria
-# Optimization (2nd edt), M. Ehrgott, Springer 2005. It was adapted from
-# [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl) by [@xgandibleux].
+# Optimization (2nd edt), M. Ehrgott, Springer 2005. The code was adapted from
+# an example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl) by
+# [@xgandibleux](https://github.com/xgandibleux).
 
 M = 50
 C1 = [
@@ -116,10 +117,10 @@ solution_summary(model)
 for i in 1:result_count(model)
     print(i, ": z = ", round.(Int, objective_value(model; result = i)), " | ")
     X = round.(Int, value.(x; result = i))
-    print("Path: ")
+    print("Path:")
     for ind in findall(val -> val ≈ 1, X)
         i, j = ind.I
-        print(" $i->$j ")
+        print(" $i->$j")
     end
     println()
 end
