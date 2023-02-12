@@ -739,6 +739,7 @@ include("quad_expr.jl")
 include("nlp.jl")
 include("macros.jl")
 include("optimizer_interface.jl")
+include("parameters.jl")    # todo: this needs to come after `optimizer_interface.jl` since it uses `optimize!` - should that be moved to the lower block?
 
 # These includes are self-contained and can go in any order, except that
 # operators.jl must come after mutable_arithmetics.jl
