@@ -60,7 +60,7 @@ import Test  #hide
 # ## Data
 
 # The data for this example was taken from [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl),
-# and the original author was [@xgandibleux].
+# and the original author was [@xgandibleux](https://github.com/xgandibleux).
 
 profit = [77, 94, 71, 63, 96, 82, 85, 75, 72, 91, 99, 63, 84, 87, 79, 94, 90]
 desire = [65, 90, 90, 77, 95, 84, 70, 94, 66, 92, 74, 97, 60, 60, 65, 97, 93]
