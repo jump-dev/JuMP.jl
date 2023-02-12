@@ -133,6 +133,7 @@ const _PAGES = [
             "tutorials/linear/finance.md",
             "tutorials/linear/geographic_clustering.md",
             "tutorials/linear/multi_objective_knapsack.md",
+            "tutorials/linear/multi_objective_examples.md",
             "tutorials/linear/knapsack.md",
             "tutorials/linear/multi.md",
             "tutorials/linear/n-queens.md",

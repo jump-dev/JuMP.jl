@@ -59,6 +59,9 @@ import Test  #hide
 
 # ## Data
 
+# _The data for this example was taken from [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl),
+# and the original author was [@xgandibleux]._
+
 # For the data in our problem, we create a new struct, `Item`, to store the
 # profit, desire, and weight.
 
