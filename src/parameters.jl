@@ -2,7 +2,6 @@ import SparseArrays
 import LinearAlgebra
 import OrderedCollections
 
-
 """
     AffineVariableUpdate
 
@@ -12,7 +11,7 @@ struct AffineVariableUpdate
     # This keeps the constant term.
     constant::Float64
     # This keeps the multiplicative factors for each param in the linear term.
-    params::SparseArrays.SparseVector{Float64, UInt64}
+    params::SparseArrays.SparseVector{Float64,UInt64}
 end
 
 """
@@ -37,7 +36,7 @@ temporal (not bound to a ConstraintRef) `AffineVariableUpdate`s.
 struct ParametricConstraint{S} <: AbstractConstraint
     f::AffExpr
     s::S
-    temporal_update_links::Dict{VariableRef, AffineVariableUpdate}
+    temporal_update_links::Dict{VariableRef,AffineVariableUpdate}
 end
 
 """
@@ -83,10 +82,10 @@ function JuMP.build_constraint(
     terms = f.terms
 
     model = nothing # todo: extract the model somehow so that it doesn't default to `nothing`
-    n_param = 0  
+    n_param = 0
 
     # We expect as many updates as there are quadratic terms.
-    updates = Dict{VariableRef, AffineVariableUpdate}()
+    updates = Dict{VariableRef,AffineVariableUpdate}()
     sizehint!(updates, length(terms))
 
     for (vars, coeff) in terms
@@ -103,9 +102,12 @@ function JuMP.build_constraint(
             if !haskey(updates, vars.b)
                 # Construct a AffineVariableUpdate, based on the constant
                 # (the affine term of the variabel) and a zeroed sparse vector.
-                updates[vars.b] = AffineVariableUpdate(get(affine.terms, vars.b, 0.0), SparseArrays.spzeros(n_param))
+                updates[vars.b] = AffineVariableUpdate(
+                    get(affine.terms, vars.b, 0.0),
+                    SparseArrays.spzeros(n_param),
+                )
             end
-            
+
             # Add the coefficient of the quadratic term to the entry of
             # the sparse vector corresponding to the correct parameter.
             # Basically, for `2.0 * p * x`, this remembers the mapping
@@ -116,7 +118,10 @@ function JuMP.build_constraint(
             updates[vars.b].params[v_a.index] += coeff
         elseif v_b !== nothing
             if !haskey(updates, vars.a)
-                updates[vars.a] = AffineVariableUpdate(get(affine.terms, vars.a, 0.0), SparseArrays.spzeros(n_param))
+                updates[vars.a] = AffineVariableUpdate(
+                    get(affine.terms, vars.a, 0.0),
+                    SparseArrays.spzeros(n_param),
+                )
             end
 
             updates[vars.a].params[v_b.index] += coeff
@@ -145,11 +150,8 @@ function JuMP.add_constraint(
     name::String,
 )
     # todo: handle the name
-    
-    constr = add_constraint(
-        model,
-        ScalarConstraint(con.f, con.s)
-    )
+
+    constr = add_constraint(model, ScalarConstraint(con.f, con.s))
 
     # Add all update links, now bound to the constructed constraint.
     for (k, v) in con.temporal_update_links
@@ -184,7 +186,10 @@ end
 Evaluate the affine update calculation given by `update` on the current
 global state of all parameters (as defined by `param_values`)
 """
-function _eval_var_coeff(update::AffineVariableUpdate, param_values::Vector{Float64})
+function _eval_var_coeff(
+    update::AffineVariableUpdate,
+    param_values::Vector{Float64},
+)
     return update.constant + _mmdot(update.params, param_values)
 end
 
@@ -206,7 +211,11 @@ function _finalize_parameters(model::JuMP.Model)
         #     be, ul.constraint,
         #     MOI.ScalarCoefficientChange(ul.variable, eval_var_coeff(model, ul.update))
         # )
-        set_normalized_coefficient(ul.constraint, ul.variable, _eval_var_coeff(ul.update, param_values))
+        set_normalized_coefficient(
+            ul.constraint,
+            ul.variable,
+            _eval_var_coeff(ul.update, param_values),
+        )
     end
     # model.is_model_dirty = true       # this is used if MOI.modify(...) is used
 
@@ -225,13 +234,14 @@ function enable_parameters!(model::JuMP.Model)
     set_optimize_hook(model, _finalize_parameters)
 
     # todo: these could be part of `Model` (like `set_string_names_on_creation`)
-    model.ext[:__parameters] = OrderedCollections.OrderedDict{VariableRef, ParameterData}()
+    model.ext[:__parameters] =
+        OrderedCollections.OrderedDict{VariableRef,ParameterData}()
     model.ext[:__links] = Vector{AffineUpdateLink}()
 
     return nothing
 end
 
-function _set_value(parameter::VariableRef, value::Float64; fix::Bool=true)
+function _set_value(parameter::VariableRef, value::Float64; fix::Bool = true)
     # todo: this could be done only once if this is called by broadcasting
     model = owner_model(parameter)
     if !haskey(model.ext[:__parameters], parameter)
@@ -242,7 +252,7 @@ function _set_value(parameter::VariableRef, value::Float64; fix::Bool=true)
     model.ext[:__parameters][parameter].value = value
 
     # If we need fixing, update the constraint.
-    fix && JuMP.fix(parameter, value; force=true)
+    fix && JuMP.fix(parameter, value; force = true)
 
     # todo: modify the objective function here to fix all parameter values
     return nothing
@@ -256,7 +266,13 @@ inserts a MOI.EqualTo, that fixes the value of the corresponding `VariableRef`.
 Fixing decreases performance and is only necessary for parameters that are not
 only used as multiplicative parameters (e.g. on the RHS of a constraint).
 """
-JuMP.set_value(parameter::VariableRef, value::Float64; fix::Bool=true) = _set_value(parameter, value; fix=fix)
+function JuMP.set_value(
+    parameter::VariableRef,
+    value::Float64;
+    fix::Bool = true,
+)
+    return _set_value(parameter, value; fix = fix)
+end
 
 """
     @pexpression(...)
@@ -328,40 +344,68 @@ macro parameter(args...)
     kw_args = Dict(kw.args[1] => kw.args[2] for kw in kw_args)
 
     if !(length(flat_args) in [2, 3])
-        _error("Wrong number of arguments. Did you miss the initial parameter value?")
+        _error(
+            "Wrong number of arguments. Did you miss the initial parameter value?",
+        )
     end
     # todo: properly catch misconfigurations of arguments
     # if !(flat_args[end] isa Number) and !(flat_args[end] isa Vector)
     #     _error("Wrong arguments. Did you miss the initial parameter value?")
     # end
     _vector_scalar_get(_scalar::Number, ::Int64) = _scalar
-    _vector_scalar_get(_vector::Vector{T} where T<:Number, i::Int64) = _vector[i]
+    function _vector_scalar_get(_vector::Vector{T} where {T<:Number}, i::Int64)
+        return _vector[i]
+    end
 
     # todo: fix this mess
     if get(kw_args, :fix, true)
-        return esc(quote
-            _var = $JuMP.@variable($(flat_args[1:(end-1)]...))
-            if _var isa Vector
-                for i in eachindex(_var)
-                    $(flat_args[1]).ext[:__parameters][_var[i]] = ParameterData(UInt64(length($(flat_args[1]).ext[:__parameters]) + 1), $_vector_scalar_get($(flat_args[end]), i))
+        return esc(
+            quote
+                _var = $JuMP.@variable($(flat_args[1:(end-1)]...))
+                if _var isa Vector
+                    for i in eachindex(_var)
+                        $(flat_args[1]).ext[:__parameters][_var[i]] =
+                            ParameterData(
+                                UInt64(
+                                    length($(flat_args[1]).ext[:__parameters]) +
+                                    1,
+                                ),
+                                $_vector_scalar_get($(flat_args[end]), i),
+                            )
+                    end
+                else
+                    $(flat_args[1]).ext[:__parameters][_var] = ParameterData(
+                        UInt64(length($(flat_args[1]).ext[:__parameters]) + 1),
+                        $(flat_args[end]),
+                    )
+                    $JuMP.fix(_var, $(flat_args[end]); force = true)
                 end
-            else
-                $(flat_args[1]).ext[:__parameters][_var] = ParameterData(UInt64(length($(flat_args[1]).ext[:__parameters]) + 1), $(flat_args[end]))
-                $JuMP.fix(_var, $(flat_args[end]); force=true)
-            end
-            _var
-        end)
+                _var
+            end,
+        )
     else
-        return esc(quote
-            _var = $JuMP.@variable($(flat_args[1:(end-1)]...))
-            if _var isa Vector
-                for i in eachindex(_var)
-                    $(flat_args[1]).ext[:__parameters][_var[i]] = ParameterData(UInt64(length($(flat_args[1]).ext[:__parameters]) + 1), $_vector_scalar_get($(flat_args[end]), i))
+        return esc(
+            quote
+                _var = $JuMP.@variable($(flat_args[1:(end-1)]...))
+                if _var isa Vector
+                    for i in eachindex(_var)
+                        $(flat_args[1]).ext[:__parameters][_var[i]] =
+                            ParameterData(
+                                UInt64(
+                                    length($(flat_args[1]).ext[:__parameters]) +
+                                    1,
+                                ),
+                                $_vector_scalar_get($(flat_args[end]), i),
+                            )
+                    end
+                else
+                    $(flat_args[1]).ext[:__parameters][_var] = ParameterData(
+                        UInt64(length($(flat_args[1]).ext[:__parameters]) + 1),
+                        $(flat_args[end]),
+                    )
                 end
-            else
-                $(flat_args[1]).ext[:__parameters][_var] = ParameterData(UInt64(length($(flat_args[1]).ext[:__parameters]) + 1), $(flat_args[end]))
-            end
-            _var
-        end)
+                _var
+            end,
+        )
     end
 end
