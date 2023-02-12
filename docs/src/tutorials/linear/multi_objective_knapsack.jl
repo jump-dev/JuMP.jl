@@ -59,37 +59,18 @@ import Test  #hide
 
 # ## Data
 
-# _The data for this example was taken from [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl),
-# and the original author was [@xgandibleux]._
+# The data for this example was taken from [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl),
+# and the original author was [@xgandibleux].
 
-# For the data in our problem, we create a new struct, `Item`, to store the
-# profit, desire, and weight.
-
-struct Item
-    index::Int
-    profit::Float64
-    desire::Float64
-    weight::Float64
-end
-
-# Then we create a random instance of data:
-
-N = 17
-items =
-    Item.(
-        1:N,
-        [77, 94, 71, 63, 96, 82, 85, 75, 72, 91, 99, 63, 84, 87, 79, 94, 90],
-        [65, 90, 90, 77, 95, 84, 70, 94, 66, 92, 74, 97, 60, 60, 65, 97, 93],
-        [80, 87, 68, 72, 66, 77, 99, 85, 70, 93, 98, 72, 100, 89, 67, 86, 91],
-    )
-
-# We also need the capacity of our knapsack:
-
-capacity = 900.0
+profit = [77, 94, 71, 63, 96, 82, 85, 75, 72, 91, 99, 63, 84, 87, 79, 94, 90]
+desire = [65, 90, 90, 77, 95, 84, 70, 94, 66, 92, 74, 97, 60, 60, 65, 97, 93]
+weight = [80, 87, 68, 72, 66, 77, 99, 85, 70, 93, 98, 72, 100, 89, 67, 86, 91]
+capacity = 900
+N = length(profit)
 
 # Comparing the capacity to the total weight of all the items:
 
-capacity / sum(i.weight for i in items)
+capacity / sum(weight)
 
 # shows that we can take approximately 64% of the items.
 
@@ -99,8 +80,8 @@ capacity / sum(i.weight for i in items)
 # versa).
 
 Plots.scatter(
-    [i.profit for i in items],
-    [i.desire for i in items];
+    profit,
+    desire;
     xlabel = "Profit",
     ylabel = "Desire",
     legend = false,
@@ -115,9 +96,9 @@ Plots.scatter(
 
 model = Model()
 @variable(model, x[1:N], Bin)
-@constraint(model, sum(i.weight * x[i.index] for i in items) <= capacity)
-@expression(model, profit_expr, sum(i.profit * x[i.index] for i in items))
-@expression(model, desire_expr, sum(i.desire * x[i.index] for i in items))
+@constraint(model, sum(weight[i] * x[i] for i in 1:N) <= capacity)
+@expression(model, profit_expr, sum(profit[i] * x[i] for i in 1:N))
+@expression(model, desire_expr, sum(desire[i] * x[i] for i in 1:N))
 @objective(model, Max, [profit_expr, desire_expr])
 
 # Note how we form a multi-objective program by passing a vector of scalar
@@ -137,7 +118,6 @@ set_silent(model)
 # method:
 
 set_optimizer_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
-set_optimizer_attribute(model, MOA.ObjectiveAbsoluteTolerance(1), 1)
 
 # Let's solve the problem and see the solution
 
