@@ -273,7 +273,7 @@ end
 function _set_value(parameter::VariableRef, value::Float64; fix::Bool = true)
     # todo: this could be done only once if this is called by broadcasting
     model = owner_model(parameter)
-    if !haskey(model.ext[:__parameters].parameter, parameter)
+    if !haskey(model.ext[:__parameters].parameters, parameter)
         error("Can not set value on a non-parameter.")
     end
 
