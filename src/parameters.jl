@@ -2,7 +2,6 @@ import SparseArrays
 import LinearAlgebra
 import OrderedCollections
 
-
 """
     ParameterData
 
@@ -173,7 +172,10 @@ function JuMP.add_constraint(
 
     # Add all update links, now bound to the constructed constraint.
     for (k, v) in con.temporal_update_links
-        push!(model.ext[:__parameters].constraint_links, AffineUpdateLink(constr, k, v))
+        push!(
+            model.ext[:__parameters].constraint_links,
+            AffineUpdateLink(constr, k, v),
+        )
     end
 
     return constr
@@ -220,7 +222,8 @@ that is subject to a registered `AffineVariableUpdate` in a `ParametricConstrain
 function _finalize_parameters(model::JuMP.Model)
     # Collect the values of all parameters into a vector. Since
     # `model.ext[:__parameters]` is an `OrderedDict`, this unambiguous.
-    param_values = collect(it[2].value for it in model.ext[:__parameters].parameters)
+    param_values =
+        collect(it[2].value for it in model.ext[:__parameters].parameters)
 
     # Update all coefficients.
     @inbounds @simd for ul in model.ext[:__parameters].constraint_links
@@ -264,7 +267,7 @@ function enable_parameters!(model::JuMP.Model)
     model.ext[:__parameters] = ParametricModelData(
         OrderedCollections.OrderedDict{VariableRef,ParameterData}(),
         Vector{AffineUpdateLink}(),
-        Vector{AffineUpdateLink}()
+        Vector{AffineUpdateLink}(),
     )
 
     return nothing
@@ -396,17 +399,23 @@ macro parameter(args...)
                         $(flat_args[1]).ext[:__parameters].parameters[_var[i]] =
                             ParameterData(
                                 UInt64(
-                                    length($(flat_args[1]).ext[:__parameters].parameters) +
-                                    1,
+                                    length(
+                                        $(flat_args[1]).ext[:__parameters].parameters,
+                                    ) + 1,
                                 ),
                                 $_vector_scalar_get($(flat_args[end]), i),
                             )
                     end
                 else
-                    $(flat_args[1]).ext[:__parameters].parameters[_var] = ParameterData(
-                        UInt64(length($(flat_args[1]).ext[:__parameters].parameters) + 1),
-                        $(flat_args[end]),
-                    )
+                    $(flat_args[1]).ext[:__parameters].parameters[_var] =
+                        ParameterData(
+                            UInt64(
+                                length(
+                                    $(flat_args[1]).ext[:__parameters].parameters,
+                                ) + 1,
+                            ),
+                            $(flat_args[end]),
+                        )
                     $JuMP.fix(_var, $(flat_args[end]); force = true)
                 end
                 _var
@@ -421,17 +430,23 @@ macro parameter(args...)
                         $(flat_args[1]).ext[:__parameters].parameters[_var[i]] =
                             ParameterData(
                                 UInt64(
-                                    length($(flat_args[1]).ext[:__parameters].parameters) +
-                                    1,
+                                    length(
+                                        $(flat_args[1]).ext[:__parameters].parameters,
+                                    ) + 1,
                                 ),
                                 $_vector_scalar_get($(flat_args[end]), i),
                             )
                     end
                 else
-                    $(flat_args[1]).ext[:__parameters].parameters[_var] = ParameterData(
-                        UInt64(length($(flat_args[1]).ext[:__parameters].parameters) + 1),
-                        $(flat_args[end]),
-                    )
+                    $(flat_args[1]).ext[:__parameters].parameters[_var] =
+                        ParameterData(
+                            UInt64(
+                                length(
+                                    $(flat_args[1]).ext[:__parameters].parameters,
+                                ) + 1,
+                            ),
+                            $(flat_args[end]),
+                        )
                 end
                 _var
             end,
@@ -513,7 +528,10 @@ function _prepare_parametric_objective(model::AbstractModel, func)
 
     empty!(model.ext[:__parameters].objective_links)
     for (k, v) in updates
-        push!(model.ext[:__parameters].objective_links, AffineObjectiveUpdateLink(k, v))
+        push!(
+            model.ext[:__parameters].objective_links,
+            AffineObjectiveUpdateLink(k, v),
+        )
     end
 
     return set_objective_function(model, affine)
@@ -521,13 +539,17 @@ end
 
 function _parametric_min(model::AbstractModel, ::Type{ParametricMin}, func)
     set_objective_sense(model, MOI.MIN_SENSE)
-    _prepare_parametric_objective(model, func)
+    return _prepare_parametric_objective(model, func)
 end
 
 function _parametric_max(model::AbstractModel, ::Type{ParametricMax}, func)
     set_objective_sense(model, MOI.MAX_SENSE)
-    _prepare_parametric_objective(model, func)
+    return _prepare_parametric_objective(model, func)
 end
 
-JuMP.set_objective(model::AbstractModel, ::Type{ParametricMin}, func) = _parametric_min(model, ParametricMin, func)
-JuMP.set_objective(model::AbstractModel, ::Type{ParametricMax}, func) = _parametric_max(model, ParametricMax, func)
+function JuMP.set_objective(model::AbstractModel, ::Type{ParametricMin}, func)
+    return _parametric_min(model, ParametricMin, func)
+end
+function JuMP.set_objective(model::AbstractModel, ::Type{ParametricMax}, func)
+    return _parametric_max(model, ParametricMax, func)
+end
