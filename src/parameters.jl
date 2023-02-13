@@ -1,12 +1,18 @@
 import SparseArrays
 import LinearAlgebra
 import OrderedCollections
+using JuMP
 
 
-struct ParametricModelData
-    parameters::OrderedCollections.OrderedDict{VariableRef,ParameterData}
-    constraint_links::Vector{AffineUpdateLink}
-    objective_links::Vector{AffineUpdateLink}
+"""
+    ParameterData
+
+Representation of the data associated with a parameter (its `value`). Keeps
+the incremental `index` to efficiently construct the affine update calculation.
+"""
+mutable struct ParameterData
+    index::UInt64
+    value::Float64
 end
 
 """
@@ -34,6 +40,23 @@ struct AffineUpdateLink
 end
 
 """
+    AffineObjectiveUpdateLink
+
+A single update to the objective, calculating the coefficient of `variable`
+following the affine update calculation represented by `update`
+"""
+struct AffineObjectiveUpdateLink
+    variable::VariableRef
+    update::AffineVariableUpdate
+end
+
+struct ParametricModelData
+    parameters::OrderedCollections.OrderedDict{VariableRef,ParameterData}
+    constraint_links::Vector{AffineUpdateLink}
+    objective_links::Vector{AffineObjectiveUpdateLink}
+end
+
+"""
     ParametricConstraint
 
 Parametric constraint type, that allows using parameters (in the form of VariableRef)
@@ -44,17 +67,6 @@ struct ParametricConstraint{S} <: AbstractConstraint
     f::AffExpr
     s::S
     temporal_update_links::Dict{VariableRef,AffineVariableUpdate}
-end
-
-"""
-    ParameterData
-
-Representation of the data associated with a parameter (its `value`). Keeps
-the incremental `index` to efficiently construct the affine update calculation.
-"""
-mutable struct ParameterData
-    index::UInt64
-    value::Float64
 end
 
 """
@@ -162,7 +174,7 @@ function JuMP.add_constraint(
 
     # Add all update links, now bound to the constructed constraint.
     for (k, v) in con.temporal_update_links
-        push!(model.ext[:__parameters].cosntraint_links, AffineUpdateLink(constr, k, v))
+        push!(model.ext[:__parameters].constraint_links, AffineUpdateLink(constr, k, v))
     end
 
     return constr
@@ -226,6 +238,15 @@ function _finalize_parameters(model::JuMP.Model)
     end
     # model.is_model_dirty = true       # this is used if MOI.modify(...) is used
 
+    # Update the objective function
+    @inbounds @simd for ul in model.ext[:__parameters].objective_links
+        set_objective_coefficient(
+            model,
+            ul.variable,
+            _eval_var_coeff(ul.update, param_values),
+        )
+    end
+
     return optimize!(model; ignore_optimize_hook = true)
 end
 
@@ -241,8 +262,9 @@ function enable_parameters!(model::JuMP.Model)
     set_optimize_hook(model, _finalize_parameters)
 
     # todo: these could be part of `Model` (like `set_string_names_on_creation`)
-    model.ext[:__parameters] = ParameterData(
+    model.ext[:__parameters] = ParametricModelData(
         OrderedCollections.OrderedDict{VariableRef,ParameterData}(),
+        Vector{AffineUpdateLink}(),
         Vector{AffineUpdateLink}()
     )
 
@@ -375,7 +397,7 @@ macro parameter(args...)
                         $(flat_args[1]).ext[:__parameters].parameters[_var[i]] =
                             ParameterData(
                                 UInt64(
-                                    length($(flat_args[1]).ext[:__parameters]) +
+                                    length($(flat_args[1]).ext[:__parameters].parameters) +
                                     1,
                                 ),
                                 $_vector_scalar_get($(flat_args[end]), i),
@@ -383,7 +405,7 @@ macro parameter(args...)
                     end
                 else
                     $(flat_args[1]).ext[:__parameters].parameters[_var] = ParameterData(
-                        UInt64(length($(flat_args[1]).ext[:__parameters].parameter) + 1),
+                        UInt64(length($(flat_args[1]).ext[:__parameters].parameters) + 1),
                         $(flat_args[end]),
                     )
                     $JuMP.fix(_var, $(flat_args[end]); force = true)
@@ -400,7 +422,7 @@ macro parameter(args...)
                         $(flat_args[1]).ext[:__parameters].parameters[_var[i]] =
                             ParameterData(
                                 UInt64(
-                                    length($(flat_args[1]).ext[:__parameters].parameter) +
+                                    length($(flat_args[1]).ext[:__parameters].parameters) +
                                     1,
                                 ),
                                 $_vector_scalar_get($(flat_args[end]), i),
@@ -408,7 +430,7 @@ macro parameter(args...)
                     end
                 else
                     $(flat_args[1]).ext[:__parameters].parameters[_var] = ParameterData(
-                        UInt64(length($(flat_args[1]).ext[:__parameters].parameter) + 1),
+                        UInt64(length($(flat_args[1]).ext[:__parameters].parameters) + 1),
                         $(flat_args[end]),
                     )
                 end
@@ -417,3 +439,96 @@ macro parameter(args...)
         )
     end
 end
+
+# ==================
+# the following is not properly documented since there is probably a
+# better way to hook into objective creation
+# 
+# additionally, we should use `@pobjective`, and that should handle
+# converting (e.g.) from `Min` to `ParametricMin` automatically
+
+struct ParametricMin <: MOI.AbstractModelAttribute end
+struct ParametricMax <: MOI.AbstractModelAttribute end
+
+function JuMP._moi_sense(_error::Function, sense)
+    if sense == :Min
+        expr = MIN_SENSE
+    elseif sense == :Max
+        expr = MAX_SENSE
+    else
+        # Refers to a variable that holds the sense.
+        # TODO: Better document this behavior
+        expr = esc(sense)
+    end
+    # todo: catch invalid senses again and add the sense properly above
+    return :($expr)# :(_throw_error_for_invalid_sense($_error, $expr))
+end
+
+function _prepare_parametric_objective(model::AbstractModel, func)
+    affine = func.aff
+    terms = func.terms
+
+    n_param = length(model.ext[:__parameters].parameters)
+
+    # We expect as many updates as there are quadratic terms.
+    updates = Dict{VariableRef,AffineVariableUpdate}()
+    sizehint!(updates, length(terms))
+
+    for (vars, coeff) in terms
+        # Look up ParameterData for both involved variables.
+        v_a = get(model.ext[:__parameters].parameters, vars.a, nothing)
+        v_b = get(model.ext[:__parameters].parameters, vars.b, nothing)
+
+        if v_a !== nothing
+            if !haskey(updates, vars.b)
+                # Construct a AffineVariableUpdate, based on the constant
+                # (the affine term of the variabel) and a zeroed sparse vector.
+                updates[vars.b] = AffineVariableUpdate(
+                    get(affine.terms, vars.b, 0.0),
+                    SparseArrays.spzeros(n_param),
+                )
+            end
+
+            # Add the coefficient of the quadratic term to the entry of
+            # the sparse vector corresponding to the correct parameter.
+            # Basically, for `2.0 * p * x`, this remembers the mapping
+            #   x -> p -> 2.0
+            # later telling us that the coefficient of `x` can be
+            # calculated as:
+            #   constant + 2.0 * `p`
+            updates[vars.b].params[v_a.index] += coeff
+        elseif v_b !== nothing
+            if !haskey(updates, vars.a)
+                updates[vars.a] = AffineVariableUpdate(
+                    get(affine.terms, vars.a, 0.0),
+                    SparseArrays.spzeros(n_param),
+                )
+            end
+
+            updates[vars.a].params[v_b.index] += coeff
+        else
+            # Both involved variables are "free" and not a parameter.
+            _error("At least one parameter is not properly registered.")
+        end
+    end
+
+    empty!(model.ext[:__parameters].objective_links)
+    for (k, v) in updates
+        push!(model.ext[:__parameters].objective_links, AffineObjectiveUpdateLink(k, v))
+    end
+
+    return set_objective_function(model, affine)
+end
+
+function _parametric_min(model::AbstractModel, ::Type{ParametricMin}, func)
+    set_objective_sense(model, MOI.MIN_SENSE)
+    _prepare_parametric_objective(model, func)
+end
+
+function _parametric_max(model::AbstractModel, ::Type{ParametricMax}, func)
+    set_objective_sense(model, MOI.MAX_SENSE)
+    _prepare_parametric_objective(model, func)
+end
+
+JuMP.set_objective(model::AbstractModel, ::Type{ParametricMin}, func) = _parametric_min(model, ParametricMin, func)
+JuMP.set_objective(model::AbstractModel, ::Type{ParametricMax}, func) = _parametric_max(model, ParametricMax, func)
