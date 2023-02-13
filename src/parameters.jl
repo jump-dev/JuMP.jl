@@ -2,6 +2,13 @@ import SparseArrays
 import LinearAlgebra
 import OrderedCollections
 
+
+struct ParametricModelData
+    parameters::OrderedCollections.OrderedDict{VariableRef,ParameterData}
+    constraint_links::Vector{AffineUpdateLink}
+    objective_links::Vector{AffineUpdateLink}
+end
+
 """
     AffineVariableUpdate
 
@@ -91,12 +98,12 @@ function JuMP.build_constraint(
     for (vars, coeff) in terms
         if isnothing(model)
             model = owner_model(vars.a)
-            n_param = length(model.ext[:__parameters])
+            n_param = length(model.ext[:__parameters].parameters)
         end
 
         # Look up ParameterData for both involved variables.
-        v_a = get(model.ext[:__parameters], vars.a, nothing)
-        v_b = get(model.ext[:__parameters], vars.b, nothing)
+        v_a = get(model.ext[:__parameters].parameters, vars.a, nothing)
+        v_b = get(model.ext[:__parameters].parameters, vars.b, nothing)
 
         if v_a !== nothing
             if !haskey(updates, vars.b)
@@ -155,7 +162,7 @@ function JuMP.add_constraint(
 
     # Add all update links, now bound to the constructed constraint.
     for (k, v) in con.temporal_update_links
-        push!(model.ext[:__links], AffineUpdateLink(constr, k, v))
+        push!(model.ext[:__parameters].cosntraint_links, AffineUpdateLink(constr, k, v))
     end
 
     return constr
@@ -202,10 +209,10 @@ that is subject to a registered `AffineVariableUpdate` in a `ParametricConstrain
 function _finalize_parameters(model::JuMP.Model)
     # Collect the values of all parameters into a vector. Since
     # `model.ext[:__parameters]` is an `OrderedDict`, this unambiguous.
-    param_values = collect(it[2].value for it in model.ext[:__parameters])
+    param_values = collect(it[2].value for it in model.ext[:__parameters].parameters)
 
     # Update all coefficients.
-    @inbounds @simd for ul in model.ext[:__links]
+    @inbounds @simd for ul in model.ext[:__parameters].constraint_links
         # todo: somehow this results in less allocations but more time (be = backend(model) previously):
         # MOI.modify(
         #     be, ul.constraint,
@@ -234,9 +241,10 @@ function enable_parameters!(model::JuMP.Model)
     set_optimize_hook(model, _finalize_parameters)
 
     # todo: these could be part of `Model` (like `set_string_names_on_creation`)
-    model.ext[:__parameters] =
-        OrderedCollections.OrderedDict{VariableRef,ParameterData}()
-    model.ext[:__links] = Vector{AffineUpdateLink}()
+    model.ext[:__parameters] = ParameterData(
+        OrderedCollections.OrderedDict{VariableRef,ParameterData}(),
+        Vector{AffineUpdateLink}()
+    )
 
     return nothing
 end
@@ -244,12 +252,12 @@ end
 function _set_value(parameter::VariableRef, value::Float64; fix::Bool = true)
     # todo: this could be done only once if this is called by broadcasting
     model = owner_model(parameter)
-    if !haskey(model.ext[:__parameters], parameter)
-        error("nope!")
+    if !haskey(model.ext[:__parameters].parameter, parameter)
+        error("Can not set value on a non-parameter.")
     end
 
     # Change the value of the parameter.
-    model.ext[:__parameters][parameter].value = value
+    model.ext[:__parameters].parameters[parameter].value = value
 
     # If we need fixing, update the constraint.
     fix && JuMP.fix(parameter, value; force = true)
@@ -364,7 +372,7 @@ macro parameter(args...)
                 _var = $JuMP.@variable($(flat_args[1:(end-1)]...))
                 if _var isa Vector
                     for i in eachindex(_var)
-                        $(flat_args[1]).ext[:__parameters][_var[i]] =
+                        $(flat_args[1]).ext[:__parameters].parameters[_var[i]] =
                             ParameterData(
                                 UInt64(
                                     length($(flat_args[1]).ext[:__parameters]) +
@@ -374,8 +382,8 @@ macro parameter(args...)
                             )
                     end
                 else
-                    $(flat_args[1]).ext[:__parameters][_var] = ParameterData(
-                        UInt64(length($(flat_args[1]).ext[:__parameters]) + 1),
+                    $(flat_args[1]).ext[:__parameters].parameters[_var] = ParameterData(
+                        UInt64(length($(flat_args[1]).ext[:__parameters].parameter) + 1),
                         $(flat_args[end]),
                     )
                     $JuMP.fix(_var, $(flat_args[end]); force = true)
@@ -389,18 +397,18 @@ macro parameter(args...)
                 _var = $JuMP.@variable($(flat_args[1:(end-1)]...))
                 if _var isa Vector
                     for i in eachindex(_var)
-                        $(flat_args[1]).ext[:__parameters][_var[i]] =
+                        $(flat_args[1]).ext[:__parameters].parameters[_var[i]] =
                             ParameterData(
                                 UInt64(
-                                    length($(flat_args[1]).ext[:__parameters]) +
+                                    length($(flat_args[1]).ext[:__parameters].parameter) +
                                     1,
                                 ),
                                 $_vector_scalar_get($(flat_args[end]), i),
                             )
                     end
                 else
-                    $(flat_args[1]).ext[:__parameters][_var] = ParameterData(
-                        UInt64(length($(flat_args[1]).ext[:__parameters]) + 1),
+                    $(flat_args[1]).ext[:__parameters].parameters[_var] = ParameterData(
+                        UInt64(length($(flat_args[1]).ext[:__parameters].parameter) + 1),
                         $(flat_args[end]),
                     )
                 end
