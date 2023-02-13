@@ -88,6 +88,10 @@ print(model)
 optimize!(model)
 solution_summary(model)
 
+# The items chosen are
+
+items_chosen = [i for i in 1:5 if value(x[i]) > 0.5]
+
 # After working interactively, it is good practice to implement 
 # your model in a function.
 # A function can be used to ensure that the model is given
