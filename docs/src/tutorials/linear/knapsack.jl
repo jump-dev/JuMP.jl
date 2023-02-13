@@ -130,11 +130,7 @@ function solve_knapsack_problem(;
     return
 end
 
-solve_knapsack_problem(;
-    profit = profit,
-    weight = weight,
-    capacity = capacity,
-)
+solve_knapsack_problem(; profit = profit, weight = weight, capacity = capacity)
 
 # We observe that the chosen items (1, 4 and 5) have the best 
 # profit to weight ratio for in this particular example.
