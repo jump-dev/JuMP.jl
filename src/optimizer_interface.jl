@@ -720,6 +720,13 @@ function MOI.get(
     return _moi_get_result(backend(model), attr, index(v))
 end
 
+function get_variable_attribute(
+    attr::MOI.AbstractVariableAttribute,
+    v::VariableRef,
+)
+    MOI.get(owner_model(v), attr)
+end
+
 function MOI.get(
     model::Model,
     attr::MOI.AbstractConstraintAttribute,
@@ -738,6 +745,13 @@ function MOI.get(
         throw(OptimizeNotCalled())
     end
     return _moi_get_result(backend(model), attr, index(cr))
+end
+
+function get_constraint_attribute(
+    attr::MOI.AbstractConstraintAttribute,
+    cr::ConstraintRef,
+)
+    MOI.get(owner_model(cr), attr)
 end
 
 function MOI.set(m::Model, attr::MOI.AbstractOptimizerAttribute, value)
@@ -761,6 +775,14 @@ function MOI.set(
     return MOI.set(backend(model), attr, index(v), value)
 end
 
+function set_variable_attribute(
+    attr::MOI.AbstractVariableAttribute,
+    v::VariableRef,
+    value,
+)
+    MOI.set(owner_model(v), attr, value)
+end
+
 function MOI.set(
     model::Model,
     attr::MOI.AbstractConstraintAttribute,
@@ -770,6 +792,14 @@ function MOI.set(
     check_belongs_to_model(cr, model)
     model.is_model_dirty = true
     return MOI.set(backend(model), attr, index(cr), value)
+end
+
+function set_constraint_attribute(
+    attr::MOI.AbstractConstraintAttribute,
+    cr::ConstraintRef,
+    value,
+)
+    MOI.set(owner_model(cr), attr, value)
 end
 
 _moi_optimizer_index(model::MOI.AbstractOptimizer, index::MOI.Index) = index
