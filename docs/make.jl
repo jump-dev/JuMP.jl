@@ -163,6 +163,7 @@ const _PAGES = [
             "tutorials/conic/max_cut_sdp.md",
             "tutorials/conic/min_distortion.md",
             "tutorials/conic/min_ellipse.md",
+            "tutorials/conic/ellipse_approx.md",
             "tutorials/conic/robust_uncertainty.md",
         ],
         "Algorithms" => [
