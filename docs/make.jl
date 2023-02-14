@@ -1,6 +1,5 @@
 import Pkg
 Pkg.pkg"add Documenter#71e9f40"
-Pkg.pkg"add https://github.com/jump-dev/MultiObjectiveAlgorithms.jl"
 import Documenter
 import Literate
 import Test
