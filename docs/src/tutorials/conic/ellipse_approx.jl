@@ -14,9 +14,11 @@
 # of the book *Lectures on Modern Convex Optimization* by
 # [Ben-Tal and Nemirovski (2001)](http://epubs.siam.org/doi/book/10.1137/1.9780898718829).
 
+# For a related example, see also the [Minimal ellipses](@ref) tutorial.
+
 # ## Problem formulation
 
-# Suppose that we are given set ``S`` of ``m`` points in ``n``-dimensional space:
+# Suppose that we are given a set ``S`` consisting of ``m`` points in ``n``-dimensional space:
 # ```math
 # \mathcal{S} = \{ x_1, \ldots, x_m \} \subset \mathbb{R}^n
 # ```
@@ -42,7 +44,7 @@
 # \end{aligned}
 # ```
 # with matrix variable ``Z``, vector variable ``z`` and real variables ``t, s``.
-# The optimal solution ``(t_*, Z_*, z_*, s_*)`` gives the solution
+# The optimal solution ``(t_*, Z_*, z_*, s_*)`` gives the optimal ellipse data as
 # ```math
 # D = Z_*, \quad c = Z_*^{-1} z_*.
 # ```
@@ -60,7 +62,7 @@ import Test  #src
 
 # ## Data
 
-# We need some ``m`` points 
+# We first need to generate some points to work with.
 
 function generate_point_cloud(
     m;       # number of 2-dimensional points
@@ -79,7 +81,7 @@ end
 # For the sake of this example, let's take ``m = 600``:
 S = generate_point_cloud(600)
 
-# We will visualise the points using the Plots package:
+# We will visualise the points (and ellipse) using the Plots package:
 
 function plot_point_cloud(plot, S; r = 1.1 * maximum(abs.(S)), colour = :green)
     Plots.scatter!(
@@ -109,29 +111,29 @@ model = Model(SCS.Optimizer)
 ## ellipse won't actually be bounding...
 set_optimizer_attribute(model, "eps_rel", 1e-6)
 set_silent(model)
-m, n = length(ellipses), size(first(ellipses).A, 1)
-@variable(model, τ[1:m] >= 0)
-@variable(model, P²[1:n, 1:n], PSD)
-@variable(model, P_q[1:n])
+m, n = size(S)
+@variable(model, z[1:n])
+@variable(model, Z[1:n, 1:n], PSD)
+@variable(model, t)
+@variable(model, s)
 
-for (i, ellipse) in enumerate(ellipses)
-    A, b, c = ellipse.A, ellipse.b, ellipse.c
-    X = [
-        #! format: off
-        (P² - τ[i] * A)   (P_q - τ[i] * b) zeros(n, n)
-        (P_q - τ[i] * b)' (-1 - τ[i] * c)  P_q'
-        zeros(n, n)       P_q              -P²
-        #! format: on
-    ]
-    @constraint(model, LinearAlgebra.Symmetric(X) <= 0, PSDCone())
+X = [
+    s z'
+    z Z
+]
+@constraint(model, LinearAlgebra.Symmetric(X) >= 0, PSDCone())
+
+for i in 1:m
+    x = S[i, :]
+    @constraint(model, (x' * Z * x) - (2 * x' * z) + s <= 1)
 end
 
-# We cannot directly represent the objective ``\log(\det(P))``, so we introduce
+# We cannot directly represent the objective ``(\det(Z))^{\frac{1}{n}}``, so we introduce
 # the conic reformulation:
 
-@variable(model, log_det_P)
-@constraint(model, [log_det_P; 1; vec(P²)] in MOI.LogDetConeSquare(n))
-@objective(model, Max, log_det_P)
+@variable(model, nth_root_det_Z)
+@constraint(model, [nth_root_det_Z; vec(Z)] in MOI.RootDetConeSquare(n))
+@objective(model, Max, nth_root_det_Z)
 
 # Now, solve the program:
 
@@ -143,16 +145,19 @@ solution_summary(model)
 # ## Results
 
 # After solving the model to optimality we can recover the solution in terms of
-# ``P`` and ``q``:
+# ``D`` and ``c``:
 
-P = sqrt(value.(P²))
-q = P \ value.(P_q)
+D = value.(Z)
+c = D \ value.(z)
 
-# Finally, overlaying the solution in the plot we see the minimal area enclosing
+# Finally, overlaying the solution in the plot we see the minimal volume approximating
 # ellipsoid:
 
-Test.@test isapprox(P, [0.4237 -0.0396; -0.0396 0.3163]; atol = 1e-2)  #src
-Test.@test isapprox(q, [-0.3960, -0.0214]; atol = 1e-2)                #src
+Test.@test isapprox(D, [0.00707 -0.0102; -0.0102173 0.0175624]; atol = 1e-2)  #src
+Test.@test isapprox(c, [-3.24802, -1.842825]; atol = 1e-2)                    #src
+
+P = sqrt(D)
+q = -P * c
 
 Plots.plot!(
     plot,
