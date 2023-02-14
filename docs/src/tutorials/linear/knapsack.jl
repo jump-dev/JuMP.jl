@@ -49,15 +49,17 @@ import Test
 
 # where there is a choice between ``n`` items, with item ``i`` having weight ``w_i``,
 # profit ``c_i`` and a decision variable ``x_i`` equal to 1 if the item is chosen
-# and 0 if not.
+# and 0 if not. 
+# The capacity is a single real number ``C`` of the same number type as the 
+# individual weights.
 
 # ## Data
 
-# The data for the problem is two vectors (one for the profits
+# The data for the problem consists of two vectors (one for the profits
 # and one for the weights) along with a capacity.
 # For our example, we use a capacity of 10 units
 capacity = 10;
-# and vector data
+# and the vector data
 profit = [5, 3, 2, 7, 4];
 weight = [2, 8, 4, 2, 5];
 
@@ -69,7 +71,7 @@ weight = [2, 8, 4, 2, 5];
 # ultimately be called to solve the model, once it's constructed.
 model = Model(HiGHS.Optimizer)
 
-# Next we need the decision variables for which items are chosen.
+# Next we need the decision variables representing which items are chosen.
 @variable(model, x[1:5], Bin)
 
 # We now want to constrain those variables so that their combined
@@ -137,4 +139,4 @@ end
 solve_knapsack_problem(; profit = profit, weight = weight, capacity = capacity)
 
 # We observe that the chosen items (1, 4 and 5) have the best 
-# profit to weight ratio for in this particular example.
+# profit to weight ratio in this particular example.
