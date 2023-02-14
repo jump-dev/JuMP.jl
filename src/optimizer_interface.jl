@@ -724,7 +724,7 @@ function get_variable_attribute(
     attr::MOI.AbstractVariableAttribute,
     v::VariableRef,
 )
-    MOI.get(owner_model(v), attr)
+    MOI.get(owner_model(v), attr, v)
 end
 
 function MOI.get(
@@ -751,7 +751,7 @@ function get_constraint_attribute(
     attr::MOI.AbstractConstraintAttribute,
     cr::ConstraintRef,
 )
-    MOI.get(owner_model(cr), attr)
+    MOI.get(owner_model(cr), attr, cr)
 end
 
 function MOI.set(m::Model, attr::MOI.AbstractOptimizerAttribute, value)
@@ -780,7 +780,7 @@ function set_variable_attribute(
     v::VariableRef,
     value,
 )
-    MOI.set(owner_model(v), attr, value)
+    MOI.set(owner_model(v), attr, v, value)
 end
 
 function MOI.set(
@@ -799,7 +799,7 @@ function set_constraint_attribute(
     cr::ConstraintRef,
     value,
 )
-    MOI.set(owner_model(cr), attr, value)
+    MOI.set(owner_model(cr), attr, cr, value)
 end
 
 _moi_optimizer_index(model::MOI.AbstractOptimizer, index::MOI.Index) = index
