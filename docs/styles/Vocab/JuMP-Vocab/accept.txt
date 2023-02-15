@@ -62,6 +62,7 @@ transpiled
 [Cc]anonicaliz(e|ation|ing)
 DAE(?s)
 [Dd]et
+[Ee]xtremal
 functionize
 geomean
 infeasibilities
@@ -155,6 +156,7 @@ Maurer
 Mehdi
 Mittelman
 Montoison
+Nemirovski
 Pacaud
 [Rr]osenbrock
 Schermer
