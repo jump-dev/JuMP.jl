@@ -801,7 +801,7 @@ end
     set_attribute(x::VariableRef, attr::MOI.AbstractVariableAttribute, value)
     set_attribute(cr::ConstraintRef, attr::MOI.AbstractConstraintAttribute, value)
 
-Set an MOI attribute from in the model.
+Set an MOI attribute in the model.
 
 This is equivalent to calling [`MOI.set`](@ref) with the associated MOI model,
 variable, or constraint index.
