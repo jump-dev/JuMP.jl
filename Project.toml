@@ -1,7 +1,7 @@
 name = "JuMP"
 uuid = "4076af6c-e467-56ae-b986-b466b2749572"
 repo = "https://github.com/jump-dev/JuMP.jl.git"
-version = "1.7.0"
+version = "1.8.0"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -13,7 +13,7 @@ SnoopPrecompile = "66db9d55-30c0-4569-8b51-7e840670fc0c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
-MathOptInterface = "1.11"
+MathOptInterface = "1.12"
 MutableArithmetics = "1"
 OrderedCollections = "1"
 SnoopPrecompile = "1"
