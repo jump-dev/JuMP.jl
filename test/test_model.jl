@@ -922,7 +922,7 @@ function test_optimize_not_called_warning()
     return
 end
 
-function test_model_attributes()
+function test_get_set_attribute_model()
     model = Model()
     @test get_attribute(model, MOI.Name()) == ""
     set_attribute(model, MOI.Name(), "Test")
@@ -930,7 +930,18 @@ function test_model_attributes()
     return
 end
 
-function test_variable_attributes()
+function test_get_set_attribute_optimizer()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(
+            MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        )
+    end
+    set_attribute(model, MOI.Silent(), true)
+    @test get_attribute(model, MOI.Silent()) == true
+    return
+end
+
+function test_get_set_attribute_variable()
     model = Model()
     @variable(model, x)
     @test get_attribute(x, MOI.VariableName()) == "x"
@@ -939,7 +950,7 @@ function test_variable_attributes()
     return
 end
 
-function test_constraint_attributes()
+function test_get_set_attribute_constraint()
     model = Model()
     @variable(model, x)
     @constraint(model, c, 2 * x <= 1)

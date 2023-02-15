@@ -776,6 +776,7 @@ end
 
 """
     get_attribute(model::Model, attr::MOI.AbstractModelAttribute)
+    get_attribute(model::Model, attr::MOI.AbstractOptimizerAttribute)
     get_attribute(x::VariableRef, attr::MOI.AbstractVariableAttribute)
     get_attribute(cr::ConstraintRef, attr::MOI.AbstractConstraintAttribute)
 
@@ -784,7 +785,10 @@ Query an MOI attribute from the model.
 This is equivalent to calling [`MOI.get`](@ref) with the associated MOI model,
 variable, or constraint index.
 """
-function get_attribute(model::Model, attr::MOI.AbstractModelAttribute)
+function get_attribute(
+    model::Model,
+    attr::Union{MOI.AbstractModelAttribute,MOI.AbstractOptimizerAttribute},
+)
     return MOI.get(model, attr)
 end
 
@@ -798,6 +802,7 @@ end
 
 """
     set_attribute(model::Model, attr::MOI.AbstractModelAttribute, value)
+    set_attribute(model::Model, attr::MOI.AbstractOptimizerAttribute, value)
     set_attribute(x::VariableRef, attr::MOI.AbstractVariableAttribute, value)
     set_attribute(cr::ConstraintRef, attr::MOI.AbstractConstraintAttribute, value)
 
@@ -806,7 +811,11 @@ Set an MOI attribute in the model.
 This is equivalent to calling [`MOI.set`](@ref) with the associated MOI model,
 variable, or constraint index.
 """
-function set_attribute(model::Model, attr::MOI.AbstractModelAttribute, value)
+function set_attribute(
+    model::Model,
+    attr::Union{MOI.AbstractModelAttribute,MOI.AbstractOptimizerAttribute},
+    value,
+)
     MOI.set(model, attr, value)
     return
 end
