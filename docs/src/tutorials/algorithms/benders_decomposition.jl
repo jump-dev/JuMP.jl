@@ -270,7 +270,7 @@ function my_callback(cb_data)
     return
 end
 
-MOI.set(lazy_model, MOI.LazyConstraintCallback(), my_callback)
+set_attribute(lazy_model, MOI.LazyConstraintCallback(), my_callback)
 
 # Now when we optimize!, our callback is run:
 

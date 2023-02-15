@@ -109,7 +109,7 @@ function my_callback_function(cb_data)
         MOI.submit(model, MOI.LazyConstraint(cb_data), con)
     end
 end
-MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
+set_attribute(model, MOI.LazyConstraintCallback(), my_callback_function)
 ```
 
 !!! info
@@ -137,7 +137,7 @@ MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         end
     end
-    MOI.set(model, MOI.LazyConstraintCallback(), good_callback_function)
+    set_attribute(model, MOI.LazyConstraintCallback(), good_callback_function)
     ```
 
 !!! warning
@@ -168,7 +168,7 @@ function my_callback_function(cb_data)
     con = @build_constraint(x <= floor(x_val))
     MOI.submit(model, MOI.UserCut(cb_data), con)
 end
-MOI.set(model, MOI.UserCutCallback(), my_callback_function)
+set_attribute(model, MOI.UserCutCallback(), my_callback_function)
 ```
 
 !!! warning
@@ -212,7 +212,7 @@ function my_callback_function(cb_data)
     )
     println("I submitted a heuristic solution, and the status was: ", status)
 end
-MOI.set(model, MOI.HeuristicCallback(), my_callback_function)
+set_attribute(model, MOI.HeuristicCallback(), my_callback_function)
 ```
 
 The third argument to `submit` is a vector of JuMP variables, and the

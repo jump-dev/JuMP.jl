@@ -434,9 +434,12 @@ function test_set_silent()
     JuMP.set_silent(model)
     @test MOI.get(backend(model), MOI.Silent())
     @test MOI.get(model, MOI.Silent())
+    @test get_attribute(model, MOI.Silent())
     JuMP.unset_silent(model)
     @test !MOI.get(backend(model), MOI.Silent())
     @test !MOI.get(model, MOI.Silent())
+    @test !get_attribute(model, MOI.Silent())
+    return
 end
 
 function test_set_optimizer_attribute()
@@ -916,6 +919,33 @@ function test_optimize_not_called_warning()
     @test_logs (:warn,) (@test_throws OptimizeNotCalled objective_value(model))
     @test_logs (:warn,) (@test_throws OptimizeNotCalled value(x))
     @test_logs (:warn,) (@test_throws OptimizeNotCalled value(c))
+    return
+end
+
+function test_model_attributes()
+    model = Model()
+    @test get_attribute(model, MOI.Name()) == ""
+    set_attribute(model, MOI.Name(), "Test")
+    @test get_attribute(model, MOI.Name()) == "Test"
+    return
+end
+
+function test_variable_attributes()
+    model = Model()
+    @variable(model, x)
+    @test get_attribute(x, MOI.VariableName()) == "x"
+    set_attribute(x, MOI.VariableName(), "y")
+    @test get_attribute(x, MOI.VariableName()) == "y"
+    return
+end
+
+function test_constraint_attributes()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, c, 2 * x <= 1)
+    @test get_attribute(c, MOI.ConstraintName()) == "c"
+    set_attribute(c, MOI.ConstraintName(), "y")
+    @test get_attribute(c, MOI.ConstraintName()) == "y"
     return
 end
 

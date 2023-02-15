@@ -720,13 +720,6 @@ function MOI.get(
     return _moi_get_result(backend(model), attr, index(v))
 end
 
-function get_variable_attribute(
-    attr::MOI.AbstractVariableAttribute,
-    v::VariableRef,
-)
-    return MOI.get(owner_model(v), attr, v)
-end
-
 function MOI.get(
     model::Model,
     attr::MOI.AbstractConstraintAttribute,
@@ -747,21 +740,16 @@ function MOI.get(
     return _moi_get_result(backend(model), attr, index(cr))
 end
 
-function get_constraint_attribute(
-    attr::MOI.AbstractConstraintAttribute,
-    cr::ConstraintRef,
-)
-    return MOI.get(owner_model(cr), attr, cr)
-end
-
 function MOI.set(m::Model, attr::MOI.AbstractOptimizerAttribute, value)
     m.is_model_dirty = true
-    return MOI.set(backend(m), attr, value)
+    MOI.set(backend(m), attr, value)
+    return
 end
 
 function MOI.set(m::Model, attr::MOI.AbstractModelAttribute, value)
     m.is_model_dirty = true
-    return MOI.set(backend(m), attr, value)
+    MOI.set(backend(m), attr, value)
+    return
 end
 
 function MOI.set(
@@ -775,15 +763,6 @@ function MOI.set(
     return MOI.set(backend(model), attr, index(v), value)
 end
 
-function set_variable_attribute(
-    attr::MOI.AbstractVariableAttribute,
-    v::VariableRef,
-    value,
-)
-    MOI.set(owner_model(v), attr, v, value)
-    return
-end
-
 function MOI.set(
     model::Model,
     attr::MOI.AbstractConstraintAttribute,
@@ -795,9 +774,55 @@ function MOI.set(
     return MOI.set(backend(model), attr, index(cr), value)
 end
 
-function set_constraint_attribute(
-    attr::MOI.AbstractConstraintAttribute,
+"""
+    get_attribute(model::Model, attr::MOI.AbstractModelAttribute)
+    get_attribute(x::VariableRef, attr::MOI.AbstractVariableAttribute)
+    get_attribute(cr::ConstraintRef, attr::MOI.AbstractConstraintAttribute)
+
+Query an MOI attribute from the model.
+
+This is equivalent to calling [`MOI.get`](@ref) with the associated MOI model,
+variable, or constraint index.
+"""
+function get_attribute(model::Model, attr::MOI.AbstractModelAttribute)
+    return MOI.get(model, attr)
+end
+
+function get_attribute(x::VariableRef, attr::MOI.AbstractVariableAttribute)
+    return MOI.get(owner_model(x), attr, x)
+end
+
+function get_attribute(cr::ConstraintRef, attr::MOI.AbstractConstraintAttribute)
+    return MOI.get(owner_model(cr), attr, cr)
+end
+
+"""
+    set_attribute(model::Model, attr::MOI.AbstractModelAttribute, value)
+    set_attribute(x::VariableRef, attr::MOI.AbstractVariableAttribute, value)
+    set_attribute(cr::ConstraintRef, attr::MOI.AbstractConstraintAttribute, value)
+
+Set an MOI attribute from in the model.
+
+This is equivalent to calling [`MOI.set`](@ref) with the associated MOI model,
+variable, or constraint index.
+"""
+function set_attribute(model::Model, attr::MOI.AbstractModelAttribute, value)
+    MOI.set(model, attr, value)
+    return
+end
+
+function set_attribute(
+    x::VariableRef,
+    attr::MOI.AbstractVariableAttribute,
+    value,
+)
+    MOI.set(owner_model(x), attr, x, value)
+    return
+end
+
+function set_attribute(
     cr::ConstraintRef,
+    attr::MOI.AbstractConstraintAttribute,
     value,
 )
     MOI.set(owner_model(cr), attr, cr, value)

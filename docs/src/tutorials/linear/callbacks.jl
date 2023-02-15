@@ -59,7 +59,7 @@ function example_lazy_constraint()
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         end
     end
-    MOI.set(model, MOI.LazyConstraintCallback(), my_callback_function)
+    set_attribute(model, MOI.LazyConstraintCallback(), my_callback_function)
     optimize!(model)
     Test.@test termination_status(model) == OPTIMAL    #src
     Test.@test primal_status(model) == FEASIBLE_POINT  #src
@@ -99,7 +99,7 @@ function example_user_cut_constraint()
             MOI.submit(model, MOI.UserCut(cb_data), con)
         end
     end
-    MOI.set(model, MOI.UserCutCallback(), my_callback_function)
+    set_attribute(model, MOI.UserCutCallback(), my_callback_function)
     optimize!(model)
     Test.@test termination_status(model) == OPTIMAL  #src
     Test.@test primal_status(model) == FEASIBLE_POINT  #src
@@ -134,7 +134,7 @@ function example_heuristic_solution()
             MOI.HEURISTIC_SOLUTION_REJECTED,    #src
         )                                       #src
     end
-    MOI.set(model, MOI.HeuristicCallback(), my_callback_function)
+    set_attribute(model, MOI.HeuristicCallback(), my_callback_function)
     optimize!(model)
     Test.@test termination_status(model) == OPTIMAL  #src
     Test.@test primal_status(model) == FEASIBLE_POINT  #src
@@ -173,7 +173,7 @@ function example_solver_dependent_callback()
             MOI.submit(model, MOI.LazyConstraint(cb_data), con)
         end
     end
-    MOI.set(model, GLPK.CallbackFunction(), my_callback_function)
+    set_attribute(model, GLPK.CallbackFunction(), my_callback_function)
     optimize!(model)
     Test.@test termination_status(model) == OPTIMAL  #src
     Test.@test primal_status(model) == FEASIBLE_POINT  #src
