@@ -573,6 +573,10 @@ for i in 2:result_count(model)
 end
 ```
 
+!!! tip
+    The [Multi-objective knapsack](@ref) tutorial provides an example of
+    querying multiple solutions.
+
 ## Checking feasibility of solutions
 
 To check the feasibility of a primal solution, use

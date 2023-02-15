@@ -131,6 +131,8 @@ const _PAGES = [
             "tutorials/linear/factory_schedule.md",
             "tutorials/linear/finance.md",
             "tutorials/linear/geographic_clustering.md",
+            "tutorials/linear/multi_objective_knapsack.md",
+            "tutorials/linear/multi_objective_examples.md",
             "tutorials/linear/knapsack.md",
             "tutorials/linear/multi.md",
             "tutorials/linear/n-queens.md",
@@ -285,7 +287,7 @@ function _add_moi_pages()
     !!! warning
         This documentation in this section is a copy of the official
         MathOptInterface documentation available at
-        [https://jump.dev/MathOptInterface.jl/v1.11.5](https://jump.dev/MathOptInterface.jl/v1.11.5).
+        [https://jump.dev/MathOptInterface.jl/v1.12.0](https://jump.dev/MathOptInterface.jl/v1.20.0).
         It is included here to make it easier to link concepts between JuMP and
         MathOptInterface.
     """

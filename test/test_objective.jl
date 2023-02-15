@@ -26,12 +26,11 @@ end
 
 function test_unsupported_function_in_macro()
     model = Model()
-    @variable(model, x[1:2])
-    exception = ErrorException(
-        "The objective function `$VariableRef[x[1]," *
-        " x[2]]` is not supported by JuMP.",
+    @variable(model, x[1:2, 1:2])
+    @test_throws(
+        ErrorException("The objective function `$x` is not supported by JuMP."),
+        @objective(model, Min, x),
     )
-    @test_throws exception @objective(model, Min, x)
     return
 end
 
@@ -187,6 +186,44 @@ function test_extension_objective_constant(
         GenericAffExpr{Float64,VariableType}(3.0),
         objective_function(model, GenericAffExpr{Float64,VariableType}),
     )
+    return
+end
+
+function test_extension_objective_vector_of_variables(
+    ModelType = Model,
+    VariableType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x[1:2])
+    @objective(model, Min, x)
+    @test isequal_canonical(objective_function(model), x)
+    @test isequal_canonical(objective_function(model, typeof(x)), x)
+    return
+end
+
+function test_extension_objective_vector_affine_function(
+    ModelType = Model,
+    VariableType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x[1:2])
+    f = 1.0 .* x .+ [2.0, 3.0]
+    @objective(model, Min, f)
+    @test isequal_canonical(objective_function(model), f)
+    @test isequal_canonical(objective_function(model, typeof(f)), f)
+    return
+end
+
+function test_extension_objective_vector_quadratic_function(
+    ModelType = Model,
+    VariableType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x[1:2])
+    f = 1.0 .* x .* x .+ [2.0, 3.0] .* x + [4.0, 5.0]
+    @objective(model, Min, f)
+    @test isequal_canonical(objective_function(model), f)
+    @test isequal_canonical(objective_function(model, typeof(f)), f)
     return
 end
 

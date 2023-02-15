@@ -157,3 +157,84 @@ julia> @objective(model, Min, 2x)
 julia> @objective(model, Max, objective_function(model))
 2 x
 ```
+
+## Set a vector-valued objective
+
+Define a multi-objective optimization problem by passing a vector of objectives:
+
+```jldoctest; setup = :(model=Model())
+julia> @variable(model, x[1:2]);
+
+julia> @objective(model, Min, [1 + x[1], 2 * x[2]])
+2-element Vector{AffExpr}:
+ x[1] + 1
+ 2 x[2]
+
+julia> f = objective_function(model)
+2-element Vector{AffExpr}:
+ x[1] + 1
+ 2 x[2]
+```
+
+!!! tip
+    The [Multi-objective knapsack](@ref) tutorial provides an example of
+    solving a multi-objective integer program.
+
+In most cases, multi-objective optimization solvers will return multiple
+solutions, corresponding to points on the Pareto frontier. See [Multiple solutions](@ref)
+for information on how to query and work with multiple solutions.
+
+Note that you must set a single objective sense, that is, you cannot have
+both minimization and maximization objectives. Work around this limitation by
+choosing `Min` and negating any objectives you want to maximize:
+
+```jldoctest; setup = :(model=Model())
+julia> @variable(model, x[1:2]);
+
+julia> @expression(model, obj1, 1 + x[1])
+x[1] + 1
+
+julia> @expression(model, obj2, 2 * x[1])
+2 x[1]
+
+julia> @objective(model, Min, [obj1, -obj2])
+2-element Vector{AffExpr}:
+ x[1] + 1
+ -2 x[1]
+```
+
+Defining your objectives as expressions allows flexibility in how you can solve
+variations of the same problem, with some objectives removed and constrained to
+be no worse that a fixed value.
+
+```jldoctest; setup = :(model=Model())
+julia> @variable(model, x[1:2]);
+
+julia> @expression(model, obj1, 1 + x[1])
+x[1] + 1
+
+julia> @expression(model, obj2, 2 * x[1])
+2 x[1]
+
+julia> @expression(model, obj3, x[1] + x[2])
+x[1] + x[2]
+
+julia> @objective(model, Min, [obj1, obj2, obj3])  # Three-objective problem
+3-element Vector{AffExpr}:
+ x[1] + 1
+ 2 x[1]
+ x[1] + x[2]
+
+julia> # optimize!(model), look at the solution, talk to stakeholders, then
+       # decide you want to solve a new problem where the third objective is
+       # removed and constrained to be better than 2.0.
+       nothing
+
+julia> @objective(model, Min, [obj1, obj2])   # Two-objective problem
+2-element Vector{AffExpr}:
+ x[1] + 1
+ 2 x[1]
+
+julia> @constraint(model, obj3 <= 2.0)
+x[1] + x[2] ≤ 2.0
+```

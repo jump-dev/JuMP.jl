@@ -16,8 +16,8 @@ struct _SolutionSummary
     has_values::Bool
     has_duals::Bool
     # Candidate solution
-    objective_value::Union{Missing,Float64}
-    objective_bound::Union{Missing,Float64}
+    objective_value::Union{Missing,Float64,Vector{Float64}}
+    objective_bound::Union{Missing,Float64,Vector{Float64}}
     relative_gap::Union{Missing,Float64}
     dual_objective_value::Union{Missing,Float64}
     primal_solution::Union{Missing,Dict{String,Float64}}
@@ -214,5 +214,11 @@ _print_if_not_missing(io, header, ::Missing) = nothing
 _print_if_not_missing(io, header, value::Int) = println(io, header, value)
 function _print_if_not_missing(io, header, value::Real)
     println(io, header, Printf.@sprintf("%.5e", value))
+    return
+end
+
+function _print_if_not_missing(io, header, value::Vector{<:Real})
+    array = join([Printf.@sprintf("%.5e", v) for v in value], ",")
+    println(io, header, "[", array, "]")
     return
 end
