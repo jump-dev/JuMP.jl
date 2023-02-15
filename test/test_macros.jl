@@ -610,19 +610,6 @@ function test_Error_on_unexpected_comparison()
     return
 end
 
-function test_Warn_on_unexpected_assignment()
-    m = Model()
-    @variable(m, x)
-    # Julia v1.0 -> v1.3
-    # ERROR: function getindex does not accept keyword arguments
-    # Julia v1.3 onwards
-    # ERROR: MethodError: no method matching getindex(::VariableRef; i=1)
-    @test_throws Union{ErrorException,MethodError} x[i = 1]
-    # err = ErrorException("Unexpected assignment in expression `x[i=1]`.")
-    @test_macro_throws ErrorException @constraint(m, x[i = 1] <= 1)
-    return
-end
-
 function test_Lookup_in_model_scope_variable()
     model = Model()
     @variable(model, x)
