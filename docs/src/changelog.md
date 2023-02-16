@@ -7,6 +7,36 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.8.0 (February 16, 2023)
+
+### Added
+
+ - Added `-->` syntax support for indicator constraints. The old syntax of `=>`
+   remains supported (#3207)
+ - Added `<-->` syntax for reified constraints. For now, few solvers support
+   reified constraints (#3206)
+ - Added [`fix_discrete_variables`](@ref). This is most useful for computing the
+   dual of a mixed-integer program (#3208)
+ - Added support for vector-valued objectives. For details, see the
+   [Multi-objective knapsack](@ref) tutorial (#3176)
+
+### Fixed
+
+ - Fix a bug in [`lp_sensitivity_report`](@ref) by switching to an explicit
+   LU factorization of the basis matrix (#3182)
+ - Fixed a bug that prevented `[; kwarg]` arguments in macros (#3220)
+
+### Other
+
+ - Minor fixes to the documentation (#3200) (#3201) (#3203) (#3210)
+ - Added tutorial [Constraint programming](@ref) (#3202)
+ - Added more examples to [Tips and Tricks](@ref conic_tips_and_tricks)
+ - Remove `_distance_to_set` in favor of `MOI.Utilities.distance_to_set` (#3209)
+ - Improve [The diet problem](@ref) tutorial by adding the variable as a column
+   in the dataframe (#3213)
+ - Improve [The knapsack problem example](@ref) tutorial (#3216) (#3217)
+ - Added the [Ellipsoid approximation](@ref) tutorial (#3218)
+
 ## Version 1.7.0 (January 25, 2023)
 
 ### Added
