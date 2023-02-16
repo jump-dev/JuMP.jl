@@ -742,7 +742,6 @@ function get_attribute(cr::ConstraintRef, attr::MOI.AbstractConstraintAttribute)
     return MOI.get(owner_model(cr), attr, cr)
 end
 
-
 """
     get_attribute(
         model::Union{Model,MOI.OptimizerWithAttributes},
