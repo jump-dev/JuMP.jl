@@ -240,10 +240,10 @@ model =
 #     link to each solver's GitHub page is in the [Supported solvers](@ref)
 #     table.
 
-# You can also pass options with [`set_optimizer_attribute`](@ref):
+# You can also pass options with [`set_attribute`](@ref):
 
 model = Model(HiGHS.Optimizer)
-set_optimizer_attribute(model, "output_flag", false)
+set_attribute(model, "output_flag", false)
 
 # ## Solution basics
 

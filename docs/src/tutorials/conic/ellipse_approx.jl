@@ -109,7 +109,7 @@ plot
 model = Model(SCS.Optimizer)
 ## We need to use a tighter tolerance for this example, otherwise the bounding
 ## ellipse won't actually be bounding...
-set_optimizer_attribute(model, "eps_rel", 1e-6)
+set_attribute(model, "eps_rel", 1e-6)
 set_silent(model)
 m, n = size(S)
 @variable(model, z[1:n])

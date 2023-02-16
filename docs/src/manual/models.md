@@ -148,14 +148,14 @@ CachingOptimizer state: EMPTY_OPTIMIZER
 Solver name: HiGHS
 ```
 
-Alternatively, use [`set_optimizer_attribute`](@ref) to set an attribute after
+Alternatively, use [`set_attribute`](@ref) to set an attribute after
 the model has been created:
 ```jldoctest
 julia> model = Model(HiGHS.Optimizer);
 
-julia> set_optimizer_attribute(model, "output_flag", false)
+julia> set_attribute(model, "output_flag", false)
 
-julia> get_optimizer_attribute(model, "output_flag")
+julia> get_attribute(model, "output_flag")
 false
 ```
 
@@ -164,12 +164,12 @@ object:
 ```jldoctest
 julia> solver = optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => true);
 
-julia> get_optimizer_attribute(solver, "output_flag")
+julia> get_attribute(solver, "output_flag")
 true
 
-julia> set_optimizer_attribute(solver, "output_flag", false)
+julia> set_attribute(solver, "output_flag", false)
 
-julia> get_optimizer_attribute(solver, "output_flag")
+julia> get_attribute(solver, "output_flag")
 false
 
 julia> model = Model(solver);

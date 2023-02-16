@@ -30,7 +30,7 @@ set_silent(model)
 @objective(model, Min, [3x1 + x2, -x1 - 2x2])
 @constraint(model, 3x1 - x2 <= 6)
 set_optimizer(model, () -> MOA.Optimizer(HiGHS.Optimizer))
-set_optimizer_attribute(
+set_attribute(
     model,
     MOA.Algorithm(),
     MOA.Lexicographic(; all_permutations = true),
@@ -62,7 +62,7 @@ set_silent(model)
 @constraint(model, [i = 1:n], sum(x[i, :]) == 1)
 @constraint(model, [j = 1:n], sum(x[:, j]) == 1)
 set_optimizer(model, () -> MOA.Optimizer(HiGHS.Optimizer))
-set_optimizer_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
+set_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
 optimize!(model)
 solution_summary(model)
 
@@ -106,7 +106,7 @@ set_silent(model)
 @constraint(model, sum(x[:, n]) == 1)
 @constraint(model, [i = 2:n-1], sum(x[i, :]) - sum(x[:, i]) == 0)
 set_optimizer(model, () -> MOA.Optimizer(HiGHS.Optimizer))
-set_optimizer_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
+set_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
 optimize!(model)
 solution_summary(model)
 

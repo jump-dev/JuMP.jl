@@ -65,12 +65,13 @@ Pkg.add("Clp")
 ```
 
 Once installed, you can use Clp as a solver with JuMP as follows, using
-[`set_optimizer_attributes`](@ref) to set solver-specific options:
+[`set_attribute`](@ref) to set solver-specific options:
 ```julia
 using JuMP
 using Clp
 model = Model(Clp.Optimizer)
-set_optimizer_attributes(model, "LogLevel" => 1, "PrimalTolerance" => 1e-7)
+set_attribute(model, "LogLevel" => 1)
+set_attribute(model, "PrimalTolerance" => 1e-7)
 ```
 
 !!! note

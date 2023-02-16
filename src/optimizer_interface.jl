@@ -11,7 +11,7 @@ it is equivalent to `MOI.OptimizerWithAttributes`.
 
 When provided to the `Model` constructor or to [`set_optimizer`](@ref), it
 creates an optimizer by calling `optimizer_constructor()`, and then sets the
-attributes using [`set_optimizer_attribute`](@ref).
+attributes using [`set_attribute`](@ref).
 
 ## Example
 
@@ -25,8 +25,8 @@ model = Model(
 is equivalent to:
 ```julia
 model = Model(Gurobi.Optimizer)
-set_optimizer_attribute(model, "Presolve", 0)
-set_optimizer_attribute(model, "OutputFlag", 1)
+set_attribute(model, "Presolve", 0)
+set_attribute(model, "OutputFlag", 1)
 ```
 
 ## Note
@@ -34,8 +34,7 @@ set_optimizer_attribute(model, "OutputFlag", 1)
 The string names of the attributes are specific to each solver. One should
 consult the solver's documentation to find the attributes of interest.
 
-See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref),
-[`get_optimizer_attribute`](@ref).
+See also: [`set_attribute`](@ref), [`get_attribute`](@ref).
 """
 function optimizer_with_attributes(optimizer_constructor, args::Pair...)
     return MOI.OptimizerWithAttributes(optimizer_constructor, args...)
@@ -44,50 +43,14 @@ end
 """
     set_optimizer_attribute(
         model::Union{Model,MOI.OptimizerWithAttributes},
-        name::String,
-        value,
-    )
-
-Sets solver-specific attribute identified by `name` to `value`.
-
-Note that this is equivalent to
-`set_optimizer_attribute(model, MOI.RawOptimizerAttribute(name), value)`.
-
-## Example
-
-```julia
-set_optimizer_attribute(model, "SolverSpecificAttributeName", true)
-```
-
-See also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
-"""
-function set_optimizer_attribute(
-    model::Union{Model,MOI.OptimizerWithAttributes},
-    name::String,
-    value,
-)
-    set_optimizer_attribute(model, MOI.RawOptimizerAttribute(name), value)
-    return
-end
-
-# This method is needed for string types like String15 coming from a DataFrame.
-function set_optimizer_attribute(
-    model::Union{Model,MOI.OptimizerWithAttributes},
-    name::AbstractString,
-    value,
-)
-    set_optimizer_attribute(model, String(name), value)
-    return
-end
-
-"""
-    set_optimizer_attribute(
-        model::Union{Model,MOI.OptimizerWithAttributes},
-        attr::MOI.AbstractOptimizerAttribute,
+        attr::Union{AbstractString,MOI.AbstractOptimizerAttribute},
         value,
     )
 
 Set the solver-specific attribute `attr` in `model` to `value`.
+
+If `attr` is an `AbstractString`, this is equivalent to
+`set_optimizer_attribute(model, MOI.RawOptimizerAttribute(name), value)`.
 
 ## Example
 
@@ -97,14 +60,7 @@ set_optimizer_attribute(model, MOI.Silent(), true)
 
 See also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
 """
-function set_optimizer_attribute(
-    model::Union{Model,MOI.OptimizerWithAttributes},
-    attr::MOI.AbstractOptimizerAttribute,
-    value,
-)
-    MOI.set(model, attr, value)
-    return
-end
+set_optimizer_attribute(model, attr, value) = set_attribute(model, attr, value)
 
 """
     set_optimizer_attributes(
@@ -135,7 +91,7 @@ function set_optimizer_attributes(
     pairs::Pair...,
 )
     for (name, value) in pairs
-        set_optimizer_attribute(model, name, value)
+        set_attribute(model, name, value)
     end
     return
 end
@@ -143,12 +99,12 @@ end
 """
     get_optimizer_attribute(
         model::Union{Model,MOI.OptimizerWithAttributes},
-        name::String,
+        attr::Union{AbstractString,MOI.AbstractOptimizerAttribute},
     )
 
-Return the value associated with the solver-specific attribute named `name`.
+Return the value associated with the solver-specific attribute `attr`.
 
-Note that this is equivalent to
+If `attr` is an `AbstractString`, this is equivalent to
 `get_optimizer_attribute(model, MOI.RawOptimizerAttribute(name))`.
 
 ## Example
@@ -159,43 +115,7 @@ get_optimizer_attribute(model, "SolverSpecificAttributeName")
 
 See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
 """
-function get_optimizer_attribute(
-    model::Union{Model,MOI.OptimizerWithAttributes},
-    name::String,
-)
-    return get_optimizer_attribute(model, MOI.RawOptimizerAttribute(name))
-end
-
-# This method is needed for string types like String15 coming from a DataFrame.
-function get_optimizer_attribute(
-    model::Union{Model,MOI.OptimizerWithAttributes},
-    name::AbstractString,
-)
-    return get_optimizer_attribute(model, String(name))
-end
-
-"""
-    get_optimizer_attribute(
-        model::Union{Model,MOI.OptimizerWithAttributes},
-        attr::MOI.AbstractOptimizerAttribute,
-    )
-
-Return the value of the solver-specific attribute `attr` in `model`.
-
-## Example
-
-```julia
-get_optimizer_attribute(model, MOI.Silent())
-```
-
-See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
-"""
-function get_optimizer_attribute(
-    model::Union{Model,MOI.OptimizerWithAttributes},
-    attr::MOI.AbstractOptimizerAttribute,
-)
-    return MOI.get(model, attr)
-end
+get_optimizer_attribute(model, attr) = get_attribute(model, attr)
 
 """
     set_silent(model::Model)
@@ -384,8 +304,8 @@ the optimizer are automatically bridged to equivalent supported formulation.
 Passing `add_bridges = false` can improve performance if the solver natively
 supports all of the elements in `model`.
 
-See [`set_optimizer_attributes`](@ref) and [`set_optimizer_attribute`](@ref) for
-setting solver-specific parameters of the optimizer.
+See [`set_attribute`](@ref) for setting solver-specific parameters of the
+optimizer.
 
 ## Examples
 
@@ -777,17 +697,25 @@ end
 """
     get_attribute(model::Model, attr::MOI.AbstractModelAttribute)
     get_attribute(model::Model, attr::MOI.AbstractOptimizerAttribute)
+    get_attribute(
+        model::MOI.OptimizerWithAttributes,
+        attr::MOI.AbstractOptimizerAttribute,
+    )
     get_attribute(x::VariableRef, attr::MOI.AbstractVariableAttribute)
     get_attribute(cr::ConstraintRef, attr::MOI.AbstractConstraintAttribute)
 
-Query an MOI attribute from the model.
+Query an MOI attribute.
 
 This is equivalent to calling [`MOI.get`](@ref) with the associated MOI model,
 variable, or constraint index.
 """
+function get_attribute(model::Model, attr::MOI.AbstractModelAttribute)
+    return MOI.get(model, attr)
+end
+
 function get_attribute(
-    model::Model,
-    attr::Union{MOI.AbstractModelAttribute,MOI.AbstractOptimizerAttribute},
+    model::Union{Model,MOI.OptimizerWithAttributes},
+    attr::MOI.AbstractOptimizerAttribute,
 )
     return MOI.get(model, attr)
 end
@@ -798,6 +726,21 @@ end
 
 function get_attribute(cr::ConstraintRef, attr::MOI.AbstractConstraintAttribute)
     return MOI.get(owner_model(cr), attr, cr)
+end
+
+function get_attribute(
+    model::Union{Model,MOI.OptimizerWithAttributes},
+    name::String,
+)
+    return get_attribute(model, MOI.RawOptimizerAttribute(name))
+end
+
+# This method is needed for string types like String15 coming from a DataFrame.
+function get_attribute(
+    model::Union{Model,MOI.OptimizerWithAttributes},
+    name::AbstractString,
+)
+    return get_attribute(model, String(name))
 end
 
 """
@@ -813,7 +756,16 @@ variable, or constraint index.
 """
 function set_attribute(
     model::Model,
-    attr::Union{MOI.AbstractModelAttribute,MOI.AbstractOptimizerAttribute},
+    attr::MOI.AbstractModelAttribute,
+    value,
+)
+    MOI.set(model, attr, value)
+    return
+end
+
+function set_attribute(
+    model::Union{Model,MOI.OptimizerWithAttributes},
+    attr::MOI.AbstractOptimizerAttribute,
     value,
 )
     MOI.set(model, attr, value)
@@ -835,6 +787,25 @@ function set_attribute(
     value,
 )
     MOI.set(owner_model(cr), attr, cr, value)
+    return
+end
+
+function set_attribute(
+    model::Union{Model,MOI.OptimizerWithAttributes},
+    name::String,
+    value,
+)
+    set_attribute(model, MOI.RawOptimizerAttribute(name), value)
+    return
+end
+
+# This method is needed for string types like String15 coming from a DataFrame.
+function set_attribute(
+    model::Union{Model,MOI.OptimizerWithAttributes},
+    name::AbstractString,
+    value,
+)
+    set_attribute(model, String(name), value)
     return
 end
 

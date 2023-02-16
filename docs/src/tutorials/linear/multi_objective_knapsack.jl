@@ -117,7 +117,7 @@ set_silent(model)
 # multiobjective optimization problems. One option is the epsilon-constraint
 # method:
 
-set_optimizer_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
+set_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
 
 # Let's solve the problem and see the solution
 

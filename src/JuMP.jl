@@ -230,8 +230,8 @@ model = direct_model(
 is equivalent to:
 ```julia
 model = direct_model(Gurobi.Optimizer())
-set_optimizer_attribute(model, "Presolve", 0)
-set_optimizer_attribute(model, "OutputFlag", 1)
+set_attribute(model, "Presolve", 0)
+set_attribute(model, "OutputFlag", 1)
 ```
 """
 function direct_model(factory::MOI.OptimizerWithAttributes)
