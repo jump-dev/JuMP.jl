@@ -52,6 +52,10 @@ Set the solver-specific attribute `attr` in `model` to `value`.
 If `attr` is an `AbstractString`, this is equivalent to
 `set_optimizer_attribute(model, MOI.RawOptimizerAttribute(name), value)`.
 
+!!! compat
+    This method will remain in all v1.X releases of JuMP, but it may be removed
+    in a future v2.0 release. We recommend using [`set_attribute`](@ref) instead.
+
 ## Example
 
 ```julia
@@ -70,6 +74,11 @@ set_optimizer_attribute(model, attr, value) = set_attribute(model, attr, value)
 
 Given a list of `attribute => value` pairs, calls
 `set_optimizer_attribute(model, attribute, value)` for each pair.
+
+!!! compat
+    This method will remain in all v1.X releases of JuMP, but it may be removed
+    in a future v2.0 release. We recommend using multiple calls to
+    [`set_attribute`](@ref) instead.
 
 ## Example
 
@@ -106,6 +115,10 @@ Return the value associated with the solver-specific attribute `attr`.
 
 If `attr` is an `AbstractString`, this is equivalent to
 `get_optimizer_attribute(model, MOI.RawOptimizerAttribute(name))`.
+
+!!! compat
+    This method will remain in all v1.X releases of JuMP, but it may be removed
+    in a future v2.0 release. We recommend using [`get_attribute`](@ref) instead.
 
 ## Example
 
@@ -696,27 +709,28 @@ end
 
 """
     get_attribute(model::Model, attr::MOI.AbstractModelAttribute)
-    get_attribute(model::Model, attr::MOI.AbstractOptimizerAttribute)
-    get_attribute(
-        model::MOI.OptimizerWithAttributes,
-        attr::MOI.AbstractOptimizerAttribute,
-    )
     get_attribute(x::VariableRef, attr::MOI.AbstractVariableAttribute)
     get_attribute(cr::ConstraintRef, attr::MOI.AbstractConstraintAttribute)
 
-Query an MOI attribute.
+Get the value of a solver-specifc attribute `attr`.
 
-This is equivalent to calling [`MOI.get`](@ref) with the associated MOI model,
-variable, or constraint index.
+This is equivalent to calling [`MOI.get`](@ref) with the associated MOI model
+and, for variables and constraints, with the associated [`MOI.VariableIndex`](@ref)
+or [`MOI.ConstraintIndex`](@ref).
+
+## Example
+
+```julia
+using JuMP
+model = Model()
+@variable(model, x)
+@constraint(model, c, 2 * x <= 1)
+get_attribute(model, MOI.Name())
+get_attribute(x, MOI.VariableName())
+get_attribute(c, MOI.ConstraintName())
+```
 """
 function get_attribute(model::Model, attr::MOI.AbstractModelAttribute)
-    return MOI.get(model, attr)
-end
-
-function get_attribute(
-    model::Union{Model,MOI.OptimizerWithAttributes},
-    attr::MOI.AbstractOptimizerAttribute,
-)
     return MOI.get(model, attr)
 end
 
@@ -726,6 +740,39 @@ end
 
 function get_attribute(cr::ConstraintRef, attr::MOI.AbstractConstraintAttribute)
     return MOI.get(owner_model(cr), attr, cr)
+end
+
+
+"""
+    get_attribute(
+        model::Union{Model,MOI.OptimizerWithAttributes},
+        attr::Union{AbstractString,MOI.AbstractOptimizerAttribute},
+    )
+
+Get the value of a solver-specifc attribute `attr`.
+
+This is equivalent to calling [`MOI.get`](@ref) with the associated MOI model.
+
+If `attr` is an `AbstractString`, it is converted to
+[`MOI.RawOptimizerAttribute`](@ref).
+
+## Example
+
+```julia
+using JuMP, HiGHS
+opt = optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => 0)
+model = Model(HiGHS.Optimizer)
+get_attribute(model, "output_flag")
+get_attribute(model, MOI.RawOptimizerAttribute("output_flag"))
+get_attribute(opt, "output_flag")
+get_attribute(opt, MOI.RawOptimizerAttribute("output_flag"))
+```
+"""
+function get_attribute(
+    model::Union{Model,MOI.OptimizerWithAttributes},
+    attr::MOI.AbstractOptimizerAttribute,
+)
+    return MOI.get(model, attr)
 end
 
 function get_attribute(
@@ -745,29 +792,28 @@ end
 
 """
     set_attribute(model::Model, attr::MOI.AbstractModelAttribute, value)
-    set_attribute(model::Model, attr::MOI.AbstractOptimizerAttribute, value)
     set_attribute(x::VariableRef, attr::MOI.AbstractVariableAttribute, value)
     set_attribute(cr::ConstraintRef, attr::MOI.AbstractConstraintAttribute, value)
 
-Set an MOI attribute in the model.
+Set the value of a solver-specifc attribute `attr` to `value`.
 
-This is equivalent to calling [`MOI.set`](@ref) with the associated MOI model,
-variable, or constraint index.
+This is equivalent to calling [`MOI.set`](@ref) with the associated MOI model
+and, for variables and constraints, with the associated [`MOI.VariableIndex`](@ref)
+or [`MOI.ConstraintIndex`](@ref).
+
+## Example
+
+```julia
+using JuMP
+model = Model()
+@variable(model, x)
+@constraint(model, c, 2 * x <= 1)
+set_attribute(model, MOI.Name(), "model_new")
+set_attribute(x, MOI.VariableName(), "x_new")
+set_attribute(c, MOI.ConstraintName(), "c_new")
+```
 """
-function set_attribute(
-    model::Model,
-    attr::MOI.AbstractModelAttribute,
-    value,
-)
-    MOI.set(model, attr, value)
-    return
-end
-
-function set_attribute(
-    model::Union{Model,MOI.OptimizerWithAttributes},
-    attr::MOI.AbstractOptimizerAttribute,
-    value,
-)
+function set_attribute(model::Model, attr::MOI.AbstractModelAttribute, value)
     MOI.set(model, attr, value)
     return
 end
@@ -787,6 +833,41 @@ function set_attribute(
     value,
 )
     MOI.set(owner_model(cr), attr, cr, value)
+    return
+end
+
+"""
+    set_attribute(
+        model::Union{Model,MOI.OptimizerWithAttributes},
+        attr::Union{AbstractString,MOI.AbstractOptimizerAttribute},
+        value,
+    )
+
+Set the value of a solver-specifc attribute `attr` to `value`.
+
+This is equivalent to calling [`MOI.set`](@ref) with the associated MOI model.
+
+If `attr` is an `AbstractString`, it is converted to
+[`MOI.RawOptimizerAttribute`](@ref).
+
+## Example
+
+```julia
+using JuMP, HiGHS
+opt = optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => 0)
+model = Model(HiGHS.Optimizer)
+set_attribute(model, "output_flag", 1)
+set_attribute(model, MOI.RawOptimizerAttribute("output_flag"), 1)
+set_attribute(opt, "output_flag", 1)
+set_attribute(opt, MOI.RawOptimizerAttribute("output_flag"), 1)
+```
+"""
+function set_attribute(
+    model::Union{Model,MOI.OptimizerWithAttributes},
+    attr::MOI.AbstractOptimizerAttribute,
+    value,
+)
+    MOI.set(model, attr, value)
     return
 end
 
