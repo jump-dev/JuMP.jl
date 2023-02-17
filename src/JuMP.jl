@@ -29,10 +29,14 @@ import SparseArrays
 # We can't use import MutableArithmetics as _MA because of a bug in MA.
 const _MA = MutableArithmetics
 
-export MOI  # Explicitly export this
+"""
+    MOIU
 
-# TODO(odow): remove these exported constants
+Shorthand for the MathOptInterface.Utilities package.
+"""
 const MOIU = MOI.Utilities
+
+# TODO(odow): remove this constant
 const MOIB = MOI.Bridges
 
 # Exports are at the end of the file.
@@ -126,9 +130,9 @@ Use [`set_optimizer`](@ref) to set the optimizer before calling
 [`optimize!`](@ref).
 """
 function Model()
-    caching_opt = MOI.Utilities.CachingOptimizer(
-        MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
-        MOI.Utilities.AUTOMATIC,
+    caching_opt = MOIU.CachingOptimizer(
+        MOIU.UniversalFallback(MOIU.Model{Float64}()),
+        MOIU.AUTOMATIC,
     )
     return direct_model(caching_opt)
 end
@@ -319,8 +323,8 @@ highs = backend(model)  # No need to call `attach_optimizer`.
 """
 unsafe_backend(model::Model) = unsafe_backend(backend(model))
 
-function unsafe_backend(model::MOI.Utilities.CachingOptimizer)
-    if MOI.Utilities.state(model) == MOI.Utilities.NO_OPTIMIZER
+function unsafe_backend(model::MOIU.CachingOptimizer)
+    if MOIU.state(model) == MOIU.NO_OPTIMIZER
         error(
             "Unable to get backend optimizer because CachingOptimizer is " *
             "in state `NO_OPTIMIZER`. Call [`set_optimizer`](@ref) first.",
@@ -337,8 +341,8 @@ unsafe_backend(model::MOI.ModelLike) = model
 
 _moi_mode(::MOI.ModelLike) = DIRECT
 
-function _moi_mode(model::MOI.Utilities.CachingOptimizer)
-    return model.mode == MOI.Utilities.AUTOMATIC ? AUTOMATIC : MANUAL
+function _moi_mode(model::MOIU.CachingOptimizer)
+    return model.mode == MOIU.AUTOMATIC ? AUTOMATIC : MANUAL
 end
 
 """
@@ -376,7 +380,7 @@ set_string_names_on_creation(::AbstractModel) = true
 
 _moi_bridge_constraints(::MOI.ModelLike) = false
 
-function _moi_bridge_constraints(model::MOI.Utilities.CachingOptimizer)
+function _moi_bridge_constraints(model::MOIU.CachingOptimizer)
     return model.optimizer isa MOI.Bridges.LazyBridgeOptimizer
 end
 
@@ -420,7 +424,7 @@ function _moi_add_bridge(
 end
 
 function _moi_add_bridge(
-    caching_opt::MOI.Utilities.CachingOptimizer,
+    caching_opt::MOIU.CachingOptimizer,
     BridgeType::Type{<:MOI.Bridges.AbstractBridge},
 )
     _moi_add_bridge(caching_opt.optimizer, BridgeType)
@@ -483,7 +487,7 @@ function _moi_print_bridge_graph(io::IO, model::MOI.Bridges.LazyBridgeOptimizer)
     return MOI.Bridges.print_graph(io, model)
 end
 
-function _moi_print_bridge_graph(io::IO, model::MOI.Utilities.CachingOptimizer)
+function _moi_print_bridge_graph(io::IO, model::MOIU.CachingOptimizer)
     return _moi_print_bridge_graph(io, model.optimizer)
 end
 
@@ -792,6 +796,11 @@ for sym in names(@__MODULE__; all = true)
     end
     @eval export $sym
 end
+
+# We need to explicitly export `MOI` because it was exported in previous
+# versions, and it is not now because we use `import MathOptInterface as MOI`.
+export MOI
+
 
 # !!! note
 #

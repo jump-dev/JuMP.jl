@@ -37,7 +37,7 @@ reference of the corresponding reference of the original model.
 """
 struct ReferenceMap
     model::Model
-    index_map::MOI.Utilities.IndexMap
+    index_map::MOIU.IndexMap
 end
 
 function Base.getindex(map::ReferenceMap, vref::VariableRef)

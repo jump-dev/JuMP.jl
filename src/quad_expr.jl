@@ -626,7 +626,7 @@ function jump_function(
     f::MOI.VectorQuadraticFunction{T},
 ) where {T}
     return GenericQuadExpr{T,VariableRef}[
-        GenericQuadExpr{T,VariableRef}(model, f) for f in MOI.Utilities.eachscalar(f)
+        GenericQuadExpr{T,VariableRef}(model, f) for f in MOIU.eachscalar(f)
     ]
 end
 

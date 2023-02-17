@@ -45,9 +45,9 @@ function _precompile_()
         Base.precompile(
             _moi_add_constraint,
             (
-                MOI.Utilities.CachingOptimizer{
+                MOIU.CachingOptimizer{
                     MOI.AbstractOptimizer,
-                    MOI.Utilities.UniversalFallback{MOI.Utilities.Model{Float64}},
+                    MOIU.UniversalFallback{MOIU.Model{Float64}},
                 },
                 F,
                 S,
