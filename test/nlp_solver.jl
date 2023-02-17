@@ -23,7 +23,7 @@
 
 using Ipopt, JuMP
 using Test
-using MathOptInterface as MOI
+import MathOptInterface as MOI
 
 @testset "NLP solver tests" begin
     @testset "HS071" begin
