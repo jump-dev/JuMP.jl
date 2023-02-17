@@ -287,7 +287,7 @@ Returns `"SolverName() attribute not implemented by the optimizer."` if the
 attribute is not implemented.
 """
 function solver_name(model::Model)
-    if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
+    if mode(model) != DIRECT && MOI.Utilities.state(backend(model)) == MOI.Utilities.NO_OPTIMIZER
         return "No optimizer attached."
     end
     return _try_get_solver_name(backend(model))
@@ -312,58 +312,58 @@ end
 # These methods directly map to CachingOptimizer methods.
 
 """
-    MOIU.reset_optimizer(model::Model, optimizer::MOI.AbstractOptimizer)
+    MOI.Utilities.reset_optimizer(model::Model, optimizer::MOI.AbstractOptimizer)
 
-Call `MOIU.reset_optimizer` on the backend of `model`.
+Call `MOI.Utilities.reset_optimizer` on the backend of `model`.
 
 Cannot be called in direct mode.
 """
-function MOIU.reset_optimizer(
+function MOI.Utilities.reset_optimizer(
     model::Model,
     optimizer::MOI.AbstractOptimizer,
     ::Bool = true,
 )
     error_if_direct_mode(model, :reset_optimizer)
-    MOIU.reset_optimizer(backend(model), optimizer)
+    MOI.Utilities.reset_optimizer(backend(model), optimizer)
     return
 end
 
 """
-    MOIU.reset_optimizer(model::Model)
+    MOI.Utilities.reset_optimizer(model::Model)
 
-Call `MOIU.reset_optimizer` on the backend of `model`.
+Call `MOI.Utilities.reset_optimizer` on the backend of `model`.
 
 Cannot be called in direct mode.
 """
-function MOIU.reset_optimizer(model::Model)
+function MOI.Utilities.reset_optimizer(model::Model)
     error_if_direct_mode(model, :reset_optimizer)
-    MOIU.reset_optimizer(backend(model))
+    MOI.Utilities.reset_optimizer(backend(model))
     return
 end
 
 """
-    MOIU.drop_optimizer(model::Model)
+    MOI.Utilities.drop_optimizer(model::Model)
 
-Call `MOIU.drop_optimizer` on the backend of `model`.
+Call `MOI.Utilities.drop_optimizer` on the backend of `model`.
 
 Cannot be called in direct mode.
 """
-function MOIU.drop_optimizer(model::Model)
+function MOI.Utilities.drop_optimizer(model::Model)
     error_if_direct_mode(model, :drop_optimizer)
-    MOIU.drop_optimizer(backend(model))
+    MOI.Utilities.drop_optimizer(backend(model))
     return
 end
 
 """
-    MOIU.attach_optimizer(model::Model)
+    MOI.Utilities.attach_optimizer(model::Model)
 
-Call `MOIU.attach_optimizer` on the backend of `model`.
+Call `MOI.Utilities.attach_optimizer` on the backend of `model`.
 
 Cannot be called in direct mode.
 """
-function MOIU.attach_optimizer(model::Model)
+function MOI.Utilities.attach_optimizer(model::Model)
     error_if_direct_mode(model, :attach_optimizer)
-    MOIU.attach_optimizer(backend(model))
+    MOI.Utilities.attach_optimizer(backend(model))
     return
 end
 
@@ -473,7 +473,7 @@ function optimize!(
             "Unrecognized keyword arguments: $(join([k[1] for k in kwargs], ", "))",
         )
     end
-    if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
+    if mode(model) != DIRECT && MOI.Utilities.state(backend(model)) == MOI.Utilities.NO_OPTIMIZER
         throw(NoOptimizer())
     end
     try
@@ -507,7 +507,7 @@ model attribute. Then, the status for each constraint can be queried with
 the `MOI.ConstraintConflictStatus` attribute.
 """
 function compute_conflict!(model::Model)
-    if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
+    if mode(model) != DIRECT && MOI.Utilities.state(backend(model)) == MOI.Utilities.NO_OPTIMIZER
         throw(NoOptimizer())
     end
     MOI.compute_conflict!(backend(model))
@@ -671,8 +671,8 @@ function _moi_get_result(model::MOI.ModelLike, args...)
     return MOI.get(model, args...)
 end
 
-function _moi_get_result(model::MOIU.CachingOptimizer, args...)
-    if MOIU.state(model) == MOIU.NO_OPTIMIZER
+function _moi_get_result(model::MOI.Utilities.CachingOptimizer, args...)
+    if MOI.Utilities.state(model) == MOI.Utilities.NO_OPTIMIZER
         throw(NoOptimizer())
     elseif MOI.get(model, MOI.TerminationStatus()) == MOI.OPTIMIZE_NOT_CALLED
         throw(OptimizeNotCalled())
@@ -774,17 +774,17 @@ end
 
 _moi_optimizer_index(model::MOI.AbstractOptimizer, index::MOI.Index) = index
 
-function _moi_optimizer_index(model::MOIU.CachingOptimizer, index::MOI.Index)
-    if MOIU.state(model) == MOIU.NO_OPTIMIZER
+function _moi_optimizer_index(model::MOI.Utilities.CachingOptimizer, index::MOI.Index)
+    if MOI.Utilities.state(model) == MOI.Utilities.NO_OPTIMIZER
         throw(NoOptimizer())
-    elseif MOIU.state(model) == MOIU.EMPTY_OPTIMIZER
+    elseif MOI.Utilities.state(model) == MOI.Utilities.EMPTY_OPTIMIZER
         error(
             "There is no `optimizer_index` as the optimizer is not ",
             "synchronized with the cached model. Call ",
-            "`MOIU.attach_optimizer(model)` to synchronize it.",
+            "`MOI.Utilities.attach_optimizer(model)` to synchronize it.",
         )
     end
-    @assert MOIU.state(model) == MOIU.ATTACHED_OPTIMIZER
+    @assert MOI.Utilities.state(model) == MOI.Utilities.ATTACHED_OPTIMIZER
     return _moi_optimizer_index(
         model.optimizer,
         model.model_to_optimizer_map[index],

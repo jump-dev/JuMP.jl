@@ -213,7 +213,7 @@ function show_backend_summary(io::IO, model::Model)
     model_mode = mode(model)
     println(io, "Model mode: ", model_mode)
     if model_mode == MANUAL || model_mode == AUTOMATIC
-        println(io, "CachingOptimizer state: ", MOIU.state(backend(model)))
+        println(io, "CachingOptimizer state: ", MOI.Utilities.state(backend(model)))
     end
     # The last print shouldn't have a new line
     print(io, "Solver name: ", solver_name(model))

@@ -857,7 +857,7 @@ function _moi_add_to_function_constant(
             "$(typeof(ci))",
         )
     end
-    new_set = MOIU.shift_constant(set, convert(Float64, -value))
+    new_set = MOI.Utilities.shift_constant(set, convert(Float64, -value))
     return MOI.set(model, MOI.ConstraintSet(), ci, new_set)
 end
 function _moi_add_to_function_constant(

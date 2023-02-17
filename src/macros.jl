@@ -184,14 +184,14 @@ provide a more convenient syntax:
 ```jldoctest operator_to_set
 julia> JuMP.operator_to_set(::Function, ::Val{:⊰}) = CustomSet(0.0)
 
-julia> MOIU.shift_constant(set::CustomSet, value) = CustomSet(set.value + value)
+julia> MOI.Utilities.shift_constant(set::CustomSet, value) = CustomSet(set.value + value)
 
 julia> cref = @constraint(model, x ⊰ 1)
 x ∈ CustomSet{Float64}(1.0)
 ```
 Note that the whole function is first moved to the right-hand side, then the
 sign is transformed into a set with zero constant and finally the constant is
-moved to the set with `MOIU.shift_constant`.
+moved to the set with `MOI.Utilities.shift_constant`.
 """
 function operator_to_set end
 
@@ -264,7 +264,7 @@ function _functionize(
 end
 
 _functionize(x) = x
-_functionize(::MutableArithmetics.Zero) = 0.0
+_functionize(::_MA.Zero) = 0.0
 
 """
     parse_constraint(_error::Function, expr::Expr)
@@ -580,7 +580,7 @@ function build_constraint(
 end
 function build_constraint(
     _error::Function,
-    ::MutableArithmetics.Zero,
+    ::_MA.Zero,
     set::MOI.AbstractScalarSet,
 )
     return build_constraint(_error, zero(AffExpr), set)

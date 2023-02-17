@@ -243,8 +243,7 @@ M = 100
 #     MathOptInterface.jl package. We recommend making this more explicit in
 #     your code by adding the following lines:
 #     ```julia
-#     import MathOptInterface
-#     const MOI = MathOptInterface
+#     import MathOptInterface as MOI
 #     ```
 
 # A semi-continuous variable is a continuous variable between bounds $[l,u]$
