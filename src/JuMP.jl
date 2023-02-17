@@ -801,7 +801,6 @@ end
 # versions, and it is not now because we use `import MathOptInterface as MOI`.
 export MOI
 
-
 # !!! note
 #
 #     The next codeblock is a SnoopPrecompile workflow that gets run when
