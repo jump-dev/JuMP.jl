@@ -927,6 +927,8 @@ function test_get_set_attribute_model()
     @test get_attribute(model, MOI.Name()) == ""
     set_attribute(model, MOI.Name(), "Test")
     @test get_attribute(model, MOI.Name()) == "Test"
+    set_attributes(model, MOI.Name() => "Test2")
+    @test get_attribute(model, MOI.Name()) == "Test2"
     return
 end
 
@@ -938,6 +940,21 @@ function test_get_set_attribute_optimizer()
     end
     set_attribute(model, MOI.Silent(), true)
     @test get_attribute(model, MOI.Silent()) == true
+    set_attributes(model, MOI.Silent() => false)
+    @test get_attribute(model, MOI.Silent()) == false
+    return
+end
+
+function test_get_set_attribute_optimizer_with_attributes()
+    optimizer = optimizer_with_attributes() do
+        return MOI.Utilities.MockOptimizer(
+            MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        )
+    end
+    set_attribute(optimizer, MOI.Silent(), true)
+    @test get_attribute(optimizer, MOI.Silent()) == true
+    set_attributes(optimizer, MOI.Silent() => false)
+    @test get_attribute(optimizer, MOI.Silent()) == false
     return
 end
 
@@ -947,6 +964,8 @@ function test_get_set_attribute_variable()
     @test get_attribute(x, MOI.VariableName()) == "x"
     set_attribute(x, MOI.VariableName(), "y")
     @test get_attribute(x, MOI.VariableName()) == "y"
+    set_attributes(x, MOI.VariableName() => "x")
+    @test get_attribute(x, MOI.VariableName()) == "x"
     return
 end
 
@@ -957,6 +976,8 @@ function test_get_set_attribute_constraint()
     @test get_attribute(c, MOI.ConstraintName()) == "c"
     set_attribute(c, MOI.ConstraintName(), "y")
     @test get_attribute(c, MOI.ConstraintName()) == "y"
+    set_attributes(c, MOI.ConstraintName() => "c")
+    @test get_attribute(c, MOI.ConstraintName()) == "c"
     return
 end
 

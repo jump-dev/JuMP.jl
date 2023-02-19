@@ -77,8 +77,7 @@ Given a list of `attribute => value` pairs, calls
 
 !!! compat
     This method will remain in all v1.X releases of JuMP, but it may be removed
-    in a future v2.0 release. We recommend using multiple calls to
-    [`set_attribute`](@ref) instead.
+    in a future v2.0 release. We recommend using [`set_attributes`](@ref) instead.
 
 ## Example
 
@@ -886,6 +885,50 @@ function set_attribute(
     value,
 )
     set_attribute(model, String(name), value)
+    return
+end
+
+"""
+    set_attributes(
+        destination::Union{
+            Model,
+            MOI.OptimizerWithAttributes,
+            VariableRef,
+            ConstraintRef,
+        },
+        pairs::Pair...,
+    )
+
+Given a list of `attribute => value` pairs, calls
+`set_attribute(destination, attribute, value)` for each pair.
+
+## Example
+
+```julia
+model = Model(Ipopt.Optimizer)
+set_attributes(model, "tol" => 1e-4, "max_iter" => 100)
+```
+is equivalent to:
+```julia
+model = Model(Ipopt.Optimizer)
+set_attribute(model, "tol", 1e-4)
+set_attribute(model, "max_iter", 100)
+```
+
+See also: [`set_attribute`](@ref), [`get_attribute`](@ref).
+"""
+function set_attributes(
+    destination::Union{
+        Model,
+        MOI.OptimizerWithAttributes,
+        VariableRef,
+        ConstraintRef,
+    },
+    pairs::Pair...,
+)
+    for (name, value) in pairs
+        set_attribute(destination, name, value)
+    end
     return
 end
 

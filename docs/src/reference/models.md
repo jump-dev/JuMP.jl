@@ -42,6 +42,7 @@ set_optimizer
 optimizer_with_attributes
 get_attribute
 set_attribute
+set_attributes
 set_silent
 unset_silent
 set_time_limit_sec
