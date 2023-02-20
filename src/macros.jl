@@ -1945,7 +1945,7 @@ _parse_nonlinear_expression_inner(::Any, x, ::Any) = x
 function _is_generator(x)
     return isexpr(x, :call) &&
            length(x.args) >= 2 &&
-           (isexpr(x.args[2], :generator) || isexpr(x.args[2], :flatten))
+           (isexpr(x.args[end], :generator) || isexpr(x.args[end], :flatten))
 end
 
 function _parse_nonlinear_expression_inner(code, x::Expr, operators)
@@ -2002,8 +2002,28 @@ function _parse_generator_expression(code, x, operators)
     else
         error("Unsupported generator `:$(x.args[1])`")
     end
+    body = x.args[2]
+    # foo(generator; init = value)
+    if Meta.isexpr(x.args[2], :parameters)
+        for kw in x.args[2].args
+            if !Meta.isexpr(kw, :kw) || kw.args[1] != :init
+                error("Unsupported nonlinear expression: $x")
+            end
+            default = esc(kw.args[2])
+        end
+        body = x.args[3]
+    end
+    # foo(generator, init = value)
+    if Meta.isexpr(x.args[2], :generator, 3)
+        kw = x.args[2].args[3]
+        if !Meta.isexpr(kw, :(=), 2) || kw.args[1] != :init
+            error("Unsupported nonlinear expression: $x")
+        end
+        pop!(x.args[2].args)
+        default = esc(kw.args[2])
+    end
     block = _MA.rewrite_generator(
-        x.args[2],
+        body,
         t -> begin
             new_code = quote end
             arg = _parse_nonlinear_expression_inner(new_code, t, operators)
