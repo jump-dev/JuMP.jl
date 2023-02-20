@@ -1797,6 +1797,12 @@ function test_nonlinear_generator_init_sum()
     y = 3
     a = @NLexpression(model, sum(x for i in 1:0; init = y))
     @test string(a) == "subexpression[4]: 3.0"
+    a = @NLexpression(model, sum(x for i in 1:0, j in 1:0; init = 1))
+    @test string(a) == "subexpression[5]: 1.0"
+    a = @NLexpression(model, sum(x for i in 1:2, j in 1:2; init = 3))
+    @test string(a) == "subexpression[6]: x + x + x + x"
+    a = @NLexpression(model, sum(x for i in 1:2, j in 1:0; init = 3))
+    @test string(a) == "subexpression[7]: 3.0"
     return
 end
 
@@ -1830,6 +1836,17 @@ function test_nonlinear_generator_init_min()
     return
 end
 
+function test_nonlinear_generator_bad_init()
+    model = Model()
+    @variable(model, x)
+    expr = :(sum((x for i = 1:1); bad_init = 3))
+    @test_macro_throws(
+        ErrorException("Unsupported nonlinear expression: $expr"),
+        @NLexpression(model, sum(x for i in 1:1; bad_init = 3))
+    )
+    return
+end
+
 #!format: off
 
 function test_nonlinear_generator_pos_init_sum()
@@ -1844,12 +1861,6 @@ function test_nonlinear_generator_pos_init_sum()
     y = 3
     a = @NLexpression(model, sum(x for i in 1:0, init = y))
     @test string(a) == "subexpression[4]: 3.0"
-    a = @NLexpression(model, sum(x for i in 1:0, j in 1:0; init = 1))
-    @test string(a) == "subexpression[5]: 1.0"
-    a = @NLexpression(model, sum(x for i in 1:2, j in 1:2; init = 3))
-    @test string(a) == "subexpression[6]: x + x + x + x"
-    a = @NLexpression(model, sum(x for i in 1:2, j in 1:0; init = 3))
-    @test string(a) == "subexpression[7]: 3.0"
     return
 end
 
