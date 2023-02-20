@@ -2016,11 +2016,10 @@ function _parse_generator_expression(code, x, operators)
     # foo(generator, init = value)
     if Meta.isexpr(x.args[2], :generator, 3)
         kw = x.args[2].args[3]
-        if !Meta.isexpr(kw, :(=), 2) || kw.args[1] != :init
-            error("Unsupported nonlinear expression: $x")
+        if Meta.isexpr(kw, :(=), 2) && kw.args[1] == :init
+            pop!(x.args[2].args)
+            default = esc(kw.args[2])
         end
-        pop!(x.args[2].args)
-        default = esc(kw.args[2])
     end
     block = _MA.rewrite_generator(
         body,

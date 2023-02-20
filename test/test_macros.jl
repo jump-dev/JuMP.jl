@@ -1830,6 +1830,8 @@ function test_nonlinear_generator_init_min()
     return
 end
 
+#!format: off
+
 function test_nonlinear_generator_pos_init_sum()
     model = Model()
     @variable(model, x)
@@ -1842,6 +1844,12 @@ function test_nonlinear_generator_pos_init_sum()
     y = 3
     a = @NLexpression(model, sum(x for i in 1:0, init = y))
     @test string(a) == "subexpression[4]: 3.0"
+    a = @NLexpression(model, sum(x for i in 1:0, j in 1:0; init = 1))
+    @test string(a) == "subexpression[5]: 1.0"
+    a = @NLexpression(model, sum(x for i in 1:2, j in 1:2; init = 3))
+    @test string(a) == "subexpression[6]: x + x + x + x"
+    a = @NLexpression(model, sum(x for i in 1:2, j in 1:0; init = 3))
+    @test string(a) == "subexpression[7]: 3.0"
     return
 end
 
@@ -1874,5 +1882,7 @@ function test_nonlinear_generator_pos_init_min()
     @test string(a) == "subexpression[4]: 2.0"
     return
 end
+
+#!format: on
 
 end  # module
