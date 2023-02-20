@@ -1839,7 +1839,7 @@ end
 function test_nonlinear_generator_bad_init()
     model = Model()
     @variable(model, x)
-    expr = :(sum((x for i = 1:1); bad_init = 3))
+    expr = :(sum((x for i in 1:1); bad_init = 3))
     @test_macro_throws(
         ErrorException("Unsupported nonlinear expression: $expr"),
         @NLexpression(model, sum(x for i in 1:1; bad_init = 3))
