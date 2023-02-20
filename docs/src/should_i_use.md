@@ -12,7 +12,7 @@ You should use JuMP if you have a constrained optimization problem for which you
 can formulate using the language of mathematical programming, that is:
 
  * a set of decision variables
- * a scalar objective function
+ * a scalar- or vector-valued objective function
  * a set of constraints.
 
 Key reasons to use JuMP include:
@@ -109,15 +109,6 @@ Alternatives to consider are:
    [CasADi.jl](https://github.com/ichatzinikolaidis/CasADi.jl)
  * [InfiniteOpt.jl](https://github.com/infiniteopt/InfiniteOpt.jl)
  * [pyomo.DAE [Python]](https://pyomo.readthedocs.io/en/stable/modeling_extensions/dae.html)
-
-### Multiobjective programs
-
-If your problem has more than one objective, JuMP is not the right tool for the
-job. However, [we're working on fixing this!](https://github.com/jump-dev/JuMP.jl/issues/2099).
-
-Alternatives to consider are:
-
- * [vOptGeneric.jl](https://github.com/vOptSolver/vOptGeneric.jl)
 
 ### Disciplined convex programming
 
