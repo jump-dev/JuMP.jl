@@ -25,10 +25,10 @@ represent broad themes that we see as areas in which JuMP could be improved.
    [https://github.com/jump-dev/JuMP.jl/issues/2227](https://github.com/jump-dev/JuMP.jl/issues/2227)
    JuMP has a strong focus on linear, conic and nonlinear optimization problems.
    We want to add better support for constraint programming.
- - <s>Add support for multiobjective problems:</s>
+ - **Done [#3176](https://github.com/jump-dev/JuMP.jl/pull/3176)** Add support for multiobjective problems:
    [https://github.com/jump-dev/JuMP.jl/issues/2099](https://github.com/jump-dev/JuMP.jl/issues/2099)
    JuMP is restricted to problems with scalar-valued objectives. We want to
-   extend this to vector-valued problems. **Done [#3176](https://github.com/jump-dev/JuMP.jl/pull/3176)**
+   extend this to vector-valued problems.
  - Refactor the internal code of JuMP's macros. The code in `src/macros.jl` is
    some of the oldest part of JuMP and is difficult to read, modify, and extend.
    We should overhaul the internals of JuMP's macros---without making
