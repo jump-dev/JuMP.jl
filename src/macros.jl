@@ -2044,7 +2044,7 @@ function _parse_generator_expression(code, x, operators)
     push!(code.args, quote
         $y_expr
         $block
-        if length($y.args) == 1 || ($has_init && length($y.args) == 2)
+        if length($y.args) == $(has_init ? 2 : 1)
             if $default === nothing
                 throw(ArgumentError($error_string))
             else
