@@ -200,22 +200,38 @@ solution_summary(model)
 # The algorithm found 50 different solutions. Let's plot them to see how they
 # differ:
 
-objective_space = Plots.scatter(
+objective_space = Plots.hline([50]; label = "Scalar solution", linecolor = :red)
+Plots.vline!(objective_space, [22634.4]; label = "", linecolor = :red)
+Plots.scatter!(
+    objective_space,
     [value(variance; result = i) for i in 1:result_count(model)],
     [value(expected_return; result = i) for i in 1:result_count(model)];
     xlabel = "Variance",
-    ylabel = "Return",
+    ylabel = "Expected Return",
     label = "",
+    title = "Objective space",
+    markercolor = "white",
+    markersize = 5,
+    legend = :bottomright,
 )
 for i in 1:result_count(model)
     y = objective_value(model; result = i)
-    Plots.annotate!(objective_space, y[1], -y[2], (i, 4))
+    Plots.annotate!(objective_space, y[1], -y[2], (i, 3))
 end
+
 decision_space = StatsPlots.groupedbar(
     vcat([value.(x; result = i)' for i in 1:result_count(model)]...);
     bar_position = :stack,
     label = ["IBM" "WMT" "SEHI"],
     xlabel = "Solution #",
     ylabel = "Investment (\$)",
+    title = "Decision space",
 )
-Plots.plot(objective_space, decision_space; layout = (2, 1))
+Plots.plot(objective_space, decision_space; layout = (2, 1), size = (600, 600))
+
+# Perhaps our trade-off wasn't so bad after all! Our original solution
+# corresponded to picking a solution #17. If we buy more SEHI, we can increase
+# the return, but the variance also increases. If we buy less SEHI, such as a
+# solution like #5 or #6, then we can achieve the corresponding return without
+# deploying all of our capital. We should also note that at no point should we
+# buy WMT.
