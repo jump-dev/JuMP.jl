@@ -39,7 +39,7 @@ will help you know where to look for certain things.
    new to JuMP.
    * [Rocket Control](@ref)
    * [Optimal control for a Space Shuttle reentry trajectory](@ref)
-   * [Quadratic portfolio optimization](@ref)
+   * [Portfolio optimization](@ref)
  * The [Tips and tricks](@ref nonlinear_tips_and_tricks) tutorial contains a
    number of helpful reformulations and tricks you can use when modeling
    nonlinear programs. Look here if you are stuck trying to formulate a problem
