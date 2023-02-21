@@ -10,8 +10,119 @@
 
 using JuMP
 import LinearAlgebra
+import Random
 import SCS
 import Test
+
+# ## Maximum cut via SDP
+
+# The [maximum cut problem](https://en.wikipedia.org/wiki/Maximum_cut) is a
+# classical example in graph theory, where we seek to partition a graph into
+# two complementary sets, such that the weight of edges between the two sets is
+# maximized. This problem is NP-hard, but it is possible to obtain an
+# approximate solution using the semidefinite programming relxation:
+#
+#     max   0.25 * L•X
+#     s.t.  diag(X) == e
+#           X ≽ 0
+#
+# where `L` is the weighted graph Laplacian. For more details, see:
+#
+# Goemans, M. X., & Williamson, D. P. (1995). Improved approximation algorithms
+# for maximum cut and satisfiability problems using semidefinite programming.
+# Journal of the ACM (JACM), 42(6), 1115-1145.
+
+"""
+    svd_cholesky(X::AbstractMatrix, rtol)
+
+Return the matrix `U` of the Cholesky decomposition of `X` as `U' * U`.
+Note that we do not use the `LinearAlgebra.cholesky` function because it
+requires the matrix to be positive definite while `X` may be only
+positive *semi*definite.
+
+We use the convention `U' * U` instead of `U * U'` to be consistent with
+`LinearAlgebra.cholesky`.
+"""
+function svd_cholesky(X::AbstractMatrix)
+    F = LinearAlgebra.svd(X)
+    ## We now have `X ≈ `F.U * D² * F.U'` where:
+    D = LinearAlgebra.Diagonal(sqrt.(F.S))
+    ## So `X ≈ U' * U` where `U` is:
+    return (F.U * D)'
+end
+
+function solve_max_cut_sdp(weights)
+    N = size(weights, 1)
+    ## Calculate the (weighted) Laplacian of the graph: L = D - W.
+    L = LinearAlgebra.diagm(0 => weights * ones(N)) - weights
+    model = Model(SCS.Optimizer)
+    set_silent(model)
+    @variable(model, X[1:N, 1:N], PSD)
+    for i in 1:N
+        set_start_value(X[i, i], 1.0)
+    end
+    @objective(model, Max, 0.25 * LinearAlgebra.dot(L, X))
+    @constraint(model, LinearAlgebra.diag(X) .== 1)
+    optimize!(model)
+    V = svd_cholesky(value(X))
+    Random.seed!(N)
+    r = rand(N)
+    r /= LinearAlgebra.norm(r)
+    cut = [LinearAlgebra.dot(r, V[:, i]) > 0 for i in 1:N]
+    println(
+        "Solution:\n (S, S′) = ({",
+        join(findall(cut), ", "),
+        "}, {",
+        join(findall(.!cut), ", "),
+        "})",
+    )
+    return cut
+end
+
+# Given the graph
+# ```raw
+# [1] --- 5 --- [2]
+# ```
+# The solution is `(S, S′)  = ({1}, {2})`
+
+cut = solve_max_cut_sdp([0 5; 5 0])
+
+Test.@test cut[1] != cut[2]  #src
+
+# Given the graph
+# ```raw
+# [1] --- 5 --- [2]
+#  |  \          |
+#  |    \        |
+#  7      6      1
+#  |        \    |
+#  |          \  |
+# [3] --- 1 --- [4]
+# ```
+# The solution is `(S, S′)  = ({1}, {2, 3, 4})`
+
+cut = solve_max_cut_sdp([0 5 7 6; 5 0 0 1; 7 0 0 1; 6 1 1 0])
+
+Test.@test cut[1] != cut[2]            #src
+Test.@test cut[2] == cut[3] == cut[4]  #src
+
+# Given the graph
+# ```raw
+# [1] --- 1 --- [2]
+#  |             |
+#  |             |
+#  5             9
+#  |             |
+#  |             |
+# [3] --- 2 --- [4]
+# ```
+# The solution is `(S, S′)  = ({1, 4}, {2, 3})`
+
+cut = solve_max_cut_sdp([0 1 5 0; 1 0 0 9; 5 0 0 2; 0 9 2 0])
+
+Test.@test cut[1] == cut[4]  #src
+Test.@test cut[2] == cut[3]  #src
+Test.@test cut[1] != cut[2]  #src
 
 # ## K-means clustering via SDP
 
