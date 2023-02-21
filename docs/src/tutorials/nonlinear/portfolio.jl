@@ -180,7 +180,7 @@ value(r' * x)
 # expected return. To explore this problem space, we can instead formulate our
 # portfolio optimization problem with two objectives:
 #
-#  1. to mimimize the variance
+#  1. to minimize the variance
 #  2. to maximize the expected return
 
 model = Model(() -> MOA.Optimizer(Ipopt.Optimizer))
