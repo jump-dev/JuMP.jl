@@ -264,7 +264,7 @@ function _functionize(
 end
 
 _functionize(x) = x
-_functionize(::MutableArithmetics.Zero) = 0.0
+_functionize(::_MA.Zero) = 0.0
 
 """
     parse_constraint(_error::Function, expr::Expr)
@@ -580,7 +580,7 @@ function build_constraint(
 end
 function build_constraint(
     _error::Function,
-    ::MutableArithmetics.Zero,
+    ::_MA.Zero,
     set::MOI.AbstractScalarSet,
 )
     return build_constraint(_error, zero(AffExpr), set)

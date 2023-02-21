@@ -19,21 +19,17 @@ module JuMP
 
 import Base.Meta: isexpr, quot
 import LinearAlgebra
-import MathOptInterface
+import MathOptInterface as MOI
 import MutableArithmetics
 import OrderedCollections
 import OrderedCollections: OrderedDict
 import Printf
 import SparseArrays
 
+# We can't use import MutableArithmetics as _MA because of a bug in MA.
+# Fixed in MutableArithmetics v1.2.3, but would require bumping the compat
+# bound so we can keep it as this until necessary.
 const _MA = MutableArithmetics
-
-"""
-    MOI
-
-Shorthand for the MathOptInterface package.
-"""
-const MOI = MathOptInterface
 
 """
     MOIU
@@ -802,6 +798,10 @@ for sym in names(@__MODULE__; all = true)
     end
     @eval export $sym
 end
+
+# We need to explicitly export `MOI` because it was exported in previous
+# versions, and it is not now because we use `import MathOptInterface as MOI`.
+export MOI
 
 # !!! note
 #

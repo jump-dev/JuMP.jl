@@ -134,8 +134,7 @@ import SCS
 #     MathOptInterface.jl package. We recommend making this more explicit in
 #     your code by adding the following lines:
 #     ```julia
-#     import MathOptInterface
-#     const MOI = MathOptInterface
+#     import MathOptInterface as MOI
 #     ```
 
 Random.seed!(2713);

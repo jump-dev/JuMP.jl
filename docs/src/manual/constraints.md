@@ -987,8 +987,7 @@ functions and sets, read [Standard form problem](@ref).
     We use `MOI` as an alias for the `MathOptInterface` module. This alias is
     defined by `using JuMP`. You may also define it in your code as follows:
     ```julia
-    import MathOptInterface
-    const MOI = MathOptInterface
+    import MathOptInterface as MOI
     ```
 
 For example, the following two constraints are equivalent:

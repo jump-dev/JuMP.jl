@@ -196,9 +196,9 @@ Hopefully you agree that the macro version is much easier to read!
 In the third step, JuMP converts the functional form of the problem, i.e.,
 `nonalgebraic_knapsack`, into the MathOptInterface API:
 ```jldoctest
-julia> using MathOptInterface, HiGHS
+julia> import MathOptInterface as MOI
 
-julia> const MOI = MathOptInterface;
+julia> import HiGHS
 
 julia> function mathoptinterface_knapsack(optimizer, c, w, b)
            n = length(c)
