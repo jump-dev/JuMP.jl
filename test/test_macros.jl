@@ -1785,4 +1785,121 @@ function test_variable_Bool_argument()
     return
 end
 
+function test_nonlinear_generator_init_sum()
+    model = Model()
+    @variable(model, x)
+    a = @NLexpression(model, sum(x for i in 1:1; init = 0))
+    @test string(a) == "subexpression[1]: +x"
+    a = @NLexpression(model, sum(x for i in 1:0; init = 0))
+    @test string(a) == "subexpression[2]: 0.0"
+    a = @NLexpression(model, sum(x for i in 1:0; init = 1))
+    @test string(a) == "subexpression[3]: 1.0"
+    y = 3
+    a = @NLexpression(model, sum(x for i in 1:0; init = y))
+    @test string(a) == "subexpression[4]: 3.0"
+    a = @NLexpression(model, sum(x for i in 1:0, j in 1:0; init = 1))
+    @test string(a) == "subexpression[5]: 1.0"
+    a = @NLexpression(model, sum(x for i in 1:2, j in 1:2; init = 3))
+    @test string(a) == "subexpression[6]: 3.0 + x + x + x + x"
+    a = @NLexpression(model, sum(x for i in 1:2, j in 1:0; init = 3))
+    @test string(a) == "subexpression[7]: 3.0"
+    a = @NLexpression(model, sum(x for i in 1:1; init = 2.5))
+    @test string(a) == "subexpression[8]: 2.5 + x"
+    return
+end
+
+function test_nonlinear_generator_init_prod()
+    model = Model()
+    @variable(model, x)
+    a = @NLexpression(model, prod(x for i in 1:1; init = 0))
+    @test string(a) == "subexpression[1]: 0.0 * x"
+    a = @NLexpression(model, prod(x for i in 1:0; init = 1))
+    @test string(a) == "subexpression[2]: 1.0"
+    y = 3
+    a = @NLexpression(model, prod(x for i in 1:0; init = y))
+    @test string(a) == "subexpression[3]: 3.0"
+    a = @NLexpression(model, prod(x for i in 1:0; init = 2))
+    @test string(a) == "subexpression[4]: 2.0"
+    a = @NLexpression(model, prod(x for i in 1:1; init = 2.5))
+    @test string(a) == "subexpression[5]: 2.5 * x"
+    return
+end
+
+function test_nonlinear_generator_init_min()
+    model = Model()
+    @variable(model, x)
+    a = @NLexpression(model, minimum(x for i in 1:1; init = 0))
+    @test string(a) == "subexpression[1]: min(0.0, x)"
+    a = @NLexpression(model, minimum(x for i in 1:0; init = 1))
+    @test string(a) == "subexpression[2]: 1.0"
+    y = 3
+    a = @NLexpression(model, minimum(x for i in 1:0; init = y))
+    @test string(a) == "subexpression[3]: 3.0"
+    a = @NLexpression(model, minimum(x for i in 1:0; init = 2))
+    @test string(a) == "subexpression[4]: 2.0"
+    a = @NLexpression(model, minimum(x for i in 1:1; init = -2))
+    @test string(a) == "subexpression[5]: min(-2.0, x)"
+    return
+end
+
+function test_nonlinear_generator_bad_init()
+    model = Model()
+    @variable(model, x)
+    expr = :(sum((x for i in 1:1); bad_init = 3))
+    @test_macro_throws(
+        ErrorException("Unsupported nonlinear expression: $expr"),
+        @NLexpression(model, sum(x for i in 1:1; bad_init = 3))
+    )
+    return
+end
+
+#!format: off
+
+function test_nonlinear_generator_pos_init_sum()
+    model = Model()
+    @variable(model, x)
+    a = @NLexpression(model, sum(x for i in 1:1, init = 1))
+    @test string(a) == "subexpression[1]: 1.0 + x"
+    a = @NLexpression(model, sum(x for i in 1:0, init = 0))
+    @test string(a) == "subexpression[2]: 0.0"
+    a = @NLexpression(model, sum(x for i in 1:0, init = 1))
+    @test string(a) == "subexpression[3]: 1.0"
+    y = 3
+    a = @NLexpression(model, sum(x for i in 1:0, init = y))
+    @test string(a) == "subexpression[4]: 3.0"
+    return
+end
+
+function test_nonlinear_generator_pos_init_prod()
+    model = Model()
+    @variable(model, x)
+    a = @NLexpression(model, prod(x for i in 1:1, init = 0))
+    @test string(a) == "subexpression[1]: 0.0 * x"
+    a = @NLexpression(model, prod(x for i in 1:0, init = 1))
+    @test string(a) == "subexpression[2]: 1.0"
+    y = 3
+    a = @NLexpression(model, prod(x for i in 1:0, init = y))
+    @test string(a) == "subexpression[3]: 3.0"
+    a = @NLexpression(model, prod(x for i in 1:0, init = 2))
+    @test string(a) == "subexpression[4]: 2.0"
+    return
+end
+
+function test_nonlinear_generator_pos_init_min()
+    model = Model()
+    @variable(model, x)
+    a = @NLexpression(model, minimum(x for i in 1:1, init = 0))
+    @test string(a) == "subexpression[1]: min(0.0, x)"
+    a = @NLexpression(model, minimum(x for i in 1:0, init = 1))
+    @test string(a) == "subexpression[2]: 1.0"
+    y = 3
+    a = @NLexpression(model, minimum(x for i in 1:0, init = y))
+    @test string(a) == "subexpression[3]: 3.0"
+    a = @NLexpression(model, minimum(x for i in 1:0, init = 2))
+    @test string(a) == "subexpression[4]: 2.0"
+    return
+end
+
+#!format: on
+
 end  # module
