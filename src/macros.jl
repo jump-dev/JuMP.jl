@@ -2003,13 +2003,18 @@ function _parse_generator_expression(code, x, operators)
         error("Unsupported generator `:$(x.args[1])`")
     end
     body = x.args[2]
+    has_init = false
     # foo(generator; init = value)
     if Meta.isexpr(x.args[2], :parameters)
         for kw in x.args[2].args
             if !Meta.isexpr(kw, :kw) || kw.args[1] != :init
                 error("Unsupported nonlinear expression: $x")
             end
-            default = esc(kw.args[2])
+            if kw.args[2] != default
+                default = esc(kw.args[2])
+                push!(y_expr.args[2].args, default)
+                has_init = true
+            end
         end
         body = x.args[3]
     end
@@ -2018,7 +2023,11 @@ function _parse_generator_expression(code, x, operators)
         kw = x.args[2].args[3]
         if Meta.isexpr(kw, :(=), 2) && kw.args[1] == :init
             pop!(x.args[2].args)
-            default = esc(kw.args[2])
+            if kw.args[2] != default
+                default = esc(kw.args[2])
+                push!(y_expr.args[2].args, default)
+                has_init = true
+            end
         end
     end
     block = _MA.rewrite_generator(
@@ -2035,7 +2044,7 @@ function _parse_generator_expression(code, x, operators)
     push!(code.args, quote
         $y_expr
         $block
-        if length($y.args) == 1
+        if length($y.args) == 1 || ($has_init && length($y.args) == 2)
             if $default === nothing
                 throw(ArgumentError($error_string))
             else
