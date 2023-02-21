@@ -27,7 +27,7 @@ function example_k_means_clustering()
     set_silent(model)
     @variable(model, Z[1:m, 1:m] >= 0, PSD)
     @objective(model, Min, LinearAlgebra.tr(W * (LinearAlgebra.I - Z)))
-    @constraint(model, [i=1:m], sum(Z[i, :]) .== 1)
+    @constraint(model, [i = 1:m], sum(Z[i, :]) .== 1)
     @constraint(model, LinearAlgebra.tr(Z) == num_clusters)
     optimize!(model)
     Z_val = value.(Z)
@@ -132,10 +132,7 @@ function example_minimum_distortion()
     @variable(model, Q[1:4, 1:4], PSD)
     for i in 1:4, j in (i+1):4
         @constraint(model, D[i, j]^2 <= Q[i, i] + Q[j, j] - 2 * Q[i, j])
-        @constraint(
-            model,
-            Q[i, i] + Q[j, j] - 2 * Q[i, j] <= c² * D[i, j]^2
-        )
+        @constraint(model, Q[i, i] + Q[j, j] - 2 * Q[i, j] <= c² * D[i, j]^2)
     end
     @objective(model, Min, c²)
     optimize!(model)
