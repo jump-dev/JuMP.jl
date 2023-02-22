@@ -58,7 +58,11 @@ end
 
 function _literate_directory(dir)
     for filename in _file_list(dir, dir, ".md")
-        if !endswith(filename, "introduction.md")
+        if endswith(filename, "introduction.md")
+            continue
+        elseif endswith(filename, "parallelism.md")
+            continue
+        else
             rm(filename)
         end
     end
@@ -168,6 +172,7 @@ const _PAGES = [
             "tutorials/algorithms/benders_decomposition.md",
             "tutorials/algorithms/cutting_stock_column_generation.md",
             "tutorials/algorithms/tsp_lazy_constraints.md",
+            "tutorials/algorithms/parallelism.md",
         ],
         "Applications" => [
             "tutorials/applications/power_systems.md",
