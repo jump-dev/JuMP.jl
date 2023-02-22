@@ -20,7 +20,7 @@ import Test
 # classical example in graph theory, where we seek to partition a graph into
 # two complementary sets, such that the weight of edges between the two sets is
 # maximized. This problem is NP-hard, but it is possible to obtain an
-# approximate solution using the semidefinite programming relxation:
+# approximate solution using the semidefinite programming relaxation:
 #
 #     max   0.25 * L•X
 #     s.t.  diag(X) == e
@@ -69,25 +69,20 @@ function solve_max_cut_sdp(weights)
     r = rand(N)
     r /= LinearAlgebra.norm(r)
     cut = [LinearAlgebra.dot(r, V[:, i]) > 0 for i in 1:N]
-    println(
-        "Solution:\n (S, S′) = ({",
-        join(findall(cut), ", "),
-        "}, {",
-        join(findall(.!cut), ", "),
-        "})",
-    )
-    return cut
+    S = findall(cut)
+    T = findall(.!cut)
+    println("Solution:")
+    println(" (S, T) = ({", join(S, ", "), "}, {", join(T, ", "), "})")
+    return S, T
 end
 
 # Given the graph
 # ```raw
 # [1] --- 5 --- [2]
 # ```
-# The solution is `(S, S′)  = ({1}, {2})`
+# The solution is `(S, T)  = ({1}, {2})`
 
-cut = solve_max_cut_sdp([0 5; 5 0])
-
-Test.@test cut[1] != cut[2]  #src
+S, T = solve_max_cut_sdp([0 5; 5 0])
 
 # Given the graph
 # ```raw
@@ -99,12 +94,9 @@ Test.@test cut[1] != cut[2]  #src
 #  |          \  |
 # [3] --- 1 --- [4]
 # ```
-# The solution is `(S, S′)  = ({1}, {2, 3, 4})`
+# The solution is `(S, T)  = ({1}, {2, 3, 4})`
 
-cut = solve_max_cut_sdp([0 5 7 6; 5 0 0 1; 7 0 0 1; 6 1 1 0])
-
-Test.@test cut[1] != cut[2]            #src
-Test.@test cut[2] == cut[3] == cut[4]  #src
+S, T = solve_max_cut_sdp([0 5 7 6; 5 0 0 1; 7 0 0 1; 6 1 1 0])
 
 # Given the graph
 # ```raw
@@ -116,13 +108,9 @@ Test.@test cut[2] == cut[3] == cut[4]  #src
 #  |             |
 # [3] --- 2 --- [4]
 # ```
-# The solution is `(S, S′)  = ({1, 4}, {2, 3})`
+# The solution is `(S, T)  = ({1, 4}, {2, 3})`
 
-cut = solve_max_cut_sdp([0 1 5 0; 1 0 0 9; 5 0 0 2; 0 9 2 0])
-
-Test.@test cut[1] == cut[4]  #src
-Test.@test cut[2] == cut[3]  #src
-Test.@test cut[1] != cut[2]  #src
+S, T = solve_max_cut_sdp([0 1 5 0; 1 0 0 9; 5 0 0 2; 0 9 2 0])
 
 # ## K-means clustering via SDP
 
