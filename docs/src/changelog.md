@@ -7,7 +7,7 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Version 1.8.1 (February 22, 2023)
+## Version 1.8.1 (February 23, 2023)
 
 ### Fixed
 
@@ -18,8 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Use and document `import MathOptInterface as MOI` (#3222)
  - Removed references in documentation to multiobjective optimization being
    unsupported (#3223)
+ - Added tutorial on multi-objective portfolio optimization (#3227)
  - Refactored some of the conic tutorials (#3229)
  - Fixed typos in the documentation (#3230)
+ - Added tutorial on parallelism (#3231)
 
 ## Version 1.8.0 (February 16, 2023)
 
