@@ -44,6 +44,7 @@ Threads.nthreads()
 ids = Int[]
 @time begin
     Threads.@threads for i in 1:Threads.nthreads()
+        global ids
         push!(ids, Threads.threadid())
         sleep(1.0)
     end
@@ -72,11 +73,11 @@ import Distributed
 # using `Distributed.addprocs`:
 
 import Pkg
-project_path = Pkg.project().path
-Distributed.addprocs(4; exeflags = "--project=$project_path")
+project = Pkg.project()
+workers = Distributed.addprocs(4; exeflags = "--project=$(project.path)")
 
 # !!! warning
-#     Not loading the environment with `--project` is a common mistake.
+#     Not loading the parent environment with `--project` is a common mistake.
 
 # The added processes are "worker" processes that we can use to do computation
 # with. They are orchestrated by the process with the id `1`. You can check
@@ -222,4 +223,3 @@ Distributed.@everywhere begin
 end
 
 solutions = Distributed.pmap(solve_model_with_right_hand_side, 1:10)
-

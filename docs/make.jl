@@ -65,8 +65,12 @@ function _literate_directory(dir)
     for filename in _file_list(dir, dir, ".jl")
         # `include` the file to test it before `#src` lines are removed. It is
         # in a testset to isolate local variables between files.
-        Test.@testset "$(filename)" begin
-            _include_sandbox(filename)
+        if !endswith(filename, "parallelism.jl")
+            # Skip parallelism because evaluating it here can add too many
+            # workers.
+            Test.@testset "$(filename)" begin
+                _include_sandbox(filename)
+            end
         end
         Literate.markdown(
             filename,
