@@ -54,7 +54,7 @@ import HiGHS
 # ```math
 # \begin{aligned}
 # \min && \sum_{\forall e(i,j) \in E} a_{i,j} \times x_{i,j} \\
-# s.t. && sum_j x_{ij} - \sum_k x_{ki} = b_i \\
+# s.t. && \sum_j x_{ij} - \sum_k x_{ki} = b_i && \forall i\\
 # && x_{e} \in \{0,1\} && \forall e \in E
 # \end{aligned}
 # ```
