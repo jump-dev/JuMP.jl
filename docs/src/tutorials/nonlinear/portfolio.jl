@@ -166,11 +166,11 @@ value.(x)
 
 # So we spend \$497 on IBM, and \$503 on SEHI. This results in a variance of:
 
-value(x' * Q * x)
+scalar_variance = value(x' * Q * x)
 
 # and an expected return of:
 
-value(r' * x)
+scalar_return = value(r' * x)
 
 # ## Multi-objective portfolio optimization
 
@@ -182,11 +182,25 @@ value(r' * x)
 #
 #  1. to minimize the variance
 #  2. to maximize the expected return
+#
+# The solution to this biobjective problem is the
+# [efficient frontier](https://en.wikipedia.org/wiki/Efficient_frontier) of
+# modern portfolio theory, and each point in the solution is a point with the
+# best return for a fixed level of risk.
 
 model = Model(() -> MOA.Optimizer(Ipopt.Optimizer))
+set_silent(model)
+
+# We also need to choose a solution algorithm for `MOA`. For our problem, the
+# efficient frontier will have an infinite number of solutions. Since we cannot
+# find all of the solutions, we choose an approximation algorithm and limit the
+# number of solution points that are returned:
+
 set_optimizer_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
 set_optimizer_attribute(model, MOA.SolutionLimit(), 50)
-set_silent(model)
+
+# Now we can define the rest of the model:
+
 @variable(model, x[1:3] >= 0)
 @constraint(model, sum(x) <= 1000)
 @expression(model, variance, x' * Q * x)
@@ -200,8 +214,12 @@ solution_summary(model)
 # The algorithm found 50 different solutions. Let's plot them to see how they
 # differ:
 
-objective_space = Plots.hline([50]; label = "Scalar solution", linecolor = :red)
-Plots.vline!(objective_space, [22634.4]; label = "", linecolor = :red)
+objective_space = Plots.hline(
+    [scalar_return];
+    label = "Single-objective solution",
+    linecolor = :red,
+)
+Plots.vline!(objective_space, [scalar_variance]; label = "", linecolor = :red)
 Plots.scatter!(
     objective_space,
     [value(variance; result = i) for i in 1:result_count(model)],
