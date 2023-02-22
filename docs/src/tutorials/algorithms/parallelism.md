@@ -18,9 +18,11 @@ multiple physical machines, such as in a high-performance computing cluster.
 
 Choosing and understanding the type of parallelism you are using is important
 because the code you write for each type is different, and there are different
-limitations and benefits to each approach.
+limitations and benefits to each approach. However, the best choice is highly
+problem dependent, so you may want to experiment with both approaches to
+determine what works for your situation.
 
-## Multi-threading
+### Multi-threading
 
 To use multi-threading with Julia, you must either start Julia with the
 command line flag `--threads=N`, or you must set the `JULIA_NUM_THREADS`
@@ -56,7 +58,7 @@ julia> @time begin
 
 This for-loop sleeps for `1` second on each iteration. Thus, if it had
 executed sequentially, it should have taken the same number of seconds as
-there are threads availabe. Instead, it took only 1 second, showing that the
+there are threads available. Instead, it took only 1 second, showing that the
 iterations were executed simultaneously. We can verify this by checking the
 `Threads.threadid()` of the thread that executed each iteration:
 
@@ -73,7 +75,7 @@ julia> ids
     For more information, read the Julia documentation
     [Multi-Threading](https://docs.julialang.org/en/v1/manual/multi-threading/#man-multithreading).
 
-## Distributed computing
+### Distributed computing
 
 To use distributed computing with Julia, use the `Distributed` package:
 
@@ -82,7 +84,7 @@ julia> import Distributed
 ````
 
 Like multi-threading, we need to tell Julia how many processes to add. We can
-do this either by starting Jlia with the `-p N` command line argument, or by
+do this either by starting Julia with the `-p N` command line argument, or by
 using `Distributed.addprocs`:
 
 ````julia
@@ -111,7 +113,7 @@ julia> Distributed.myid()
 ````
 
 As a general rule, to get maximum performance you should add as many processes
-as you have logical cores avaiable.
+as you have logical cores available.
 
 Unlike the `for`-loop approach of multi-threading, distributed computing
 extends the Julia `map` function to a "parallel-map" function
@@ -133,10 +135,10 @@ Stacktrace:
 [...]
 ````
 
-Unforunately, if you try this code directly, you will get an error message
+Unfortunately, if you try this code directly, you will get an error message
 that says `On worker 2: UndefVarError: hard_work not defined`. The error is
 thrown because, although process `1` knows what the `hard_work` function is,
-the worker processes do not know what it is.
+the worker processes do not.
 
 To fix the error, we need to use `Distributed.@everywhere`, which evaluates
 the code on every process:
@@ -211,13 +213,12 @@ end
 ```
 
 This will not work, and attempting to do so may error, crash Julia or produce
-incorrect results. The reason is because most solvers are written in C,
+incorrect results.
 
 ## Using parallelism the right way
 
 To use parallelism with JuMP, the simplest rule to remember is that each
-worker, both threads and distributed processes, must all have their own
-instance of a JuMP model.
+worker must have its own instance of a JuMP model.
 
 ### With multi-threading
 
@@ -291,3 +292,18 @@ julia> solutions = Distributed.pmap(solve_model_with_right_hand_side, 1:10)
   9.0
  10.0
 ````
+
+## Other types of parallelism
+
+### GPU
+
+JuMP does not support GPU programming, and few solvers support execution on a
+GPU.
+
+### Parallelism within the solver
+
+Many solvers use parallelism internally. For example, commercial solvers like
+[Gurobi](https://github.com/jump-dev/Gurobi.jl) and [CPLEX](https://github.com/jump-dev/CPLEX.jl)
+both parallelize the search in branch-and-bound. Solvers supporting internal
+parallelism will typically support the [`MOI.NumberOfThreads`](@ref) attribute,
+which you can set using [`set_optimizer_attribute`](@ref).
