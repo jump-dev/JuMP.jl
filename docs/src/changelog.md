@@ -7,6 +7,22 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.8.1 (February 23, 2023)
+
+### Fixed
+
+ - Fixed support for `init` in nonlinear generator expressions (#3226)
+
+### Other
+
+ - Use and document `import MathOptInterface as MOI` (#3222)
+ - Removed references in documentation to multiobjective optimization being
+   unsupported (#3223)
+ - Added tutorial on multi-objective portfolio optimization (#3227)
+ - Refactored some of the conic tutorials (#3229)
+ - Fixed typos in the documentation (#3230)
+ - Added tutorial on parallelism (#3231)
+
 ## Version 1.8.0 (February 16, 2023)
 
 ### Added
@@ -22,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
- - Fix a bug in [`lp_sensitivity_report`](@ref) by switching to an explicit
+ - Fixed a bug in [`lp_sensitivity_report`](@ref) by switching to an explicit
    LU factorization of the basis matrix (#3182)
  - Fixed a bug that prevented `[; kwarg]` arguments in macros (#3220)
 
