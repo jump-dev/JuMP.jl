@@ -15,9 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
- - Remove references in documentation to multiobjective optimization being
-   unsupported (#3223)
  - Use and document `import MathOptInterface as MOI` (#3222)
+ - Removed references in documentation to multiobjective optimization being
+   unsupported (#3223)
+ - Refactored some of the conic tutorials (#3229)
+ - Fixed typos in the documentation (#3230)
 
 ## Version 1.8.0 (February 16, 2023)
 
