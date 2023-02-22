@@ -58,19 +58,19 @@ end
 
 function _literate_directory(dir)
     for filename in _file_list(dir, dir, ".md")
-        if !endswith(filename, "introduction.md")
+        if endswith(filename, "introduction.md")
+            continue
+        elseif endswith(filename, "parallelism.md")
+            continue
+        else
             rm(filename)
         end
     end
     for filename in _file_list(dir, dir, ".jl")
         # `include` the file to test it before `#src` lines are removed. It is
         # in a testset to isolate local variables between files.
-        if !endswith(filename, "parallelism.jl")
-            # Skip parallelism because evaluating it here can add too many
-            # workers.
-            Test.@testset "$(filename)" begin
-                _include_sandbox(filename)
-            end
+        Test.@testset "$(filename)" begin
+            _include_sandbox(filename)
         end
         Literate.markdown(
             filename,
