@@ -26,6 +26,9 @@ import OrderedCollections: OrderedDict
 import Printf
 import SparseArrays
 
+# For backward compatibility before the next breaking release, we keep the old name around.
+const MathOptInterface = MOI
+
 # We can't use import MutableArithmetics as _MA because of a bug in MA.
 # Fixed in MutableArithmetics v1.2.3, but would require bumping the compat
 # bound so we can keep it as this until necessary.
