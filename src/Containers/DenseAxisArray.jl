@@ -22,6 +22,7 @@ struct DenseAxisArray{T,N,Ax,L<:NTuple{N,_AxisLookup}} <: AbstractArray{T,N}
     data::Array{T,N}
     axes::Ax
     lookup::L
+    names::NTuple{N,Symbol}
 end
 
 function Base.Array{T,N}(x::DenseAxisArray) where {T,N}
@@ -200,15 +201,20 @@ julia> array[:b, 3]
 4
 ```
 """
-function DenseAxisArray(data::Array{T,N}, axs...) where {T,N}
-    @assert length(axs) == N
-    new_axes = _abstract_vector.(axs)  # Force all axes to be AbstractVector!
-    return DenseAxisArray(data, new_axes, build_lookup.(new_axes))
+function DenseAxisArray(
+    data::Array{T,N},
+    axes...;
+    names::Union{Nothing,NTuple{N,Symbol}} = nothing,
+) where {T,N}
+    @assert length(axes) == N
+    new_axes = _abstract_vector.(axes)  # Force all axes to be AbstractVector!
+    names = something(names, ntuple(i -> Symbol("#$i"), N))
+    return DenseAxisArray(data, new_axes, build_lookup.(new_axes), names)
 end
 
 # A converter for different array types.
-function DenseAxisArray(data::AbstractArray, axes...)
-    return DenseAxisArray(collect(data), axes...)
+function DenseAxisArray(data::AbstractArray, axes...; kwargs...)
+    return DenseAxisArray(collect(data), axes...; kwargs...)
 end
 
 """
@@ -245,12 +251,17 @@ And data, a 2×2 Array{Float64,2}:
  1.0  1.0
 ```
 """
-function DenseAxisArray{T}(::UndefInitializer, axs...) where {T}
-    return construct_undef_array(T, axs)
+function DenseAxisArray{T}(::UndefInitializer, args...; kwargs...) where {T}
+    return construct_undef_array(T, args; kwargs...)
 end
 
-function construct_undef_array(::Type{T}, axs::Tuple{Vararg{Any,N}}) where {T,N}
-    return DenseAxisArray(Array{T,N}(undef, length.(axs)...), axs...)
+function construct_undef_array(
+    ::Type{T},
+    args::Tuple{Vararg{Any,N}};
+    kwargs...
+) where {T,N}
+    data = Array{T,N}(undef, length.(args)...)
+    return DenseAxisArray(data, args...; kwargs...)
 end
 
 Base.isempty(A::DenseAxisArray) = isempty(A.data)
@@ -344,8 +355,34 @@ end
 _is_range(::Any) = false
 _is_range(::Union{Vector{Int},Colon}) = true
 
-function Base.getindex(A::DenseAxisArray{T,N}, idx...) where {T,N}
-    new_indices = Base.to_index(A, idx)
+function Base.getindex(A::DenseAxisArray{T,N}, args...; kwargs...) where {T,N}
+    if !isempty(args) && !isempty(kwargs)
+        error("Cannot index with mix of positional and keyword arguments")
+    end
+    if !isempty(args)
+        return _get_index_positional(A, args...)
+    else
+        return _get_index_keyword(A; kwargs...)
+    end
+end
+
+function _get_index_keyword(A::DenseAxisArray{T,N}; kwargs...) where {T,N}
+    args = ntuple(N) do i
+        kw = keys(kwargs)[i]
+        if A.names[i] != kw
+            error(
+                "Invalid index $kw in position $i. When using keyword " *
+                "indexing, the indices must match the exact name and order " *
+                "used when creating the container.",
+            )
+        end
+        return kwargs[i]
+    end
+    return _get_index_positional(A, args...)
+end
+
+function _get_index_positional(A::DenseAxisArray{T,N}, args...) where {T,N}
+    new_indices = Base.to_index(A, args)
     if !any(_is_range, new_indices)
         return A.data[new_indices...]::T
     end

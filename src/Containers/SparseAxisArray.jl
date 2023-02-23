@@ -37,6 +37,12 @@ julia> array[:b, 3]
 """
 struct SparseAxisArray{T,N,K<:NTuple{N,Any}} <: AbstractArray{T,N}
     data::Dict{K,T}
+    names::NTuple{N,Symbol}
+end
+
+function SparseAxisArray(d::Dict{K,T}) where {T,N,K<:NTuple{N,Any}}
+    names = ntuple(i -> Symbol("#$i"), N)
+    return SparseAxisArray(d, names)
 end
 
 Base.length(sa::SparseAxisArray) = length(sa.data)
@@ -114,18 +120,44 @@ function Base.getindex(
     return getindex(d, idx...)
 end
 
-function Base.getindex(d::SparseAxisArray{T,N,K}, idx...) where {T,N,K}
-    if length(idx) < N
-        throw(BoundsError(d, idx))
+function Base.getindex(d::SparseAxisArray, args...; kwargs...)
+    if !isempty(args) && !isempty(kwargs)
+        error("Cannot index with mix of positional and keyword arguments")
     end
-    K2 = _sliced_key_type(K, idx...)
+    if !isempty(args)
+        return _get_index_positional(d, args...)
+    else
+        return _get_index_keyword(d; kwargs...)
+    end
+end
+
+function _get_index_keyword(d::SparseAxisArray{T,N,K}; kwargs...) where {T,N,K}
+    args = ntuple(N) do i
+        kw = keys(kwargs)[i]
+        if d.names[i] != kw
+            error(
+                "Invalid index $kw in position $i. When using keyword " *
+                "indexing, the indices must match the exact name and order " *
+                "used when creating the container.",
+            )
+        end
+        return kwargs[i]
+    end
+    return _get_index_positional(d, args...)
+end
+
+function _get_index_positional(d::SparseAxisArray{T,N,K}, args...) where {T,N,K}
+    if length(args) < N
+        throw(BoundsError(d, args))
+    end
+    K2 = _sliced_key_type(K, args...)
     if K2 !== nothing
         new_data = Dict{K2,T}(
-            _sliced_key(k, idx) => v for (k, v) in d.data if _filter(k, idx)
+            _sliced_key(k, args) => v for (k, v) in d.data if _filter(k, args)
         )
         return SparseAxisArray(new_data)
     end
-    return getindex(d.data, idx)
+    return getindex(d.data, args)
 end
 
 # Method to check whether an index is an attempt at a slice.
