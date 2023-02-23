@@ -147,7 +147,9 @@ Iain
 Jiming
 Joaquim
 Kernighan
+Kallus
 Latorre
+Linial
 Luangkesorn
 Lubin
 Madani
@@ -159,6 +161,7 @@ Mittelman
 Montoison
 Nemirovski
 Pacaud
+Peng
 [Rr]osenbrock
 Schermer
 Shabbir
@@ -167,6 +170,7 @@ Stigler
 Taccari
 Tanneau
 Vandenberghe
+Wei
 Wollenberg
 Yu
 Yury
