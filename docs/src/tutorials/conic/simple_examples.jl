@@ -3,7 +3,7 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # Simple SPD examples
+# # Simple semidefinite programming examples
 
 # This tutorial is a collection of examples of small conic programs from the field of
 # [semidefinite programming](https://en.wikipedia.org/wiki/Semidefinite_programming) (SDP).
