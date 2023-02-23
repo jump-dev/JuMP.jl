@@ -3,10 +3,12 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # Simple examples
+# # Simple semidefinite programming examples
 
-# This tutorial is a collection of examples of small conic programs. It uses
-# the following packages:
+# This tutorial is a collection of examples of small conic programs from the field of
+# [semidefinite programming](https://en.wikipedia.org/wiki/Semidefinite_programming) (SDP).
+#
+# This tutorial makes use of the following packages:
 
 using JuMP
 import LinearAlgebra
@@ -21,15 +23,17 @@ import Test
 # two complementary sets, such that the weight of edges between the two sets is
 # maximized. This problem is NP-hard, but it is possible to obtain an
 # approximate solution using the semidefinite programming relaxation:
+# ```math
+#     \text{max}  \quad   0.25 L•X \\
+#     \text{    s.t.} \quad   \mathrm{diag}(X) = e \\
+#                  \qquad X \succeq 0
+# ```
+# where ``L`` is the weighted graph Laplacian and ``e`` is a vector of ones.
+# For more details, see:
 #
-#     max   0.25 * L•X
-#     s.t.  diag(X) == e
-#           X ≽ 0
-#
-# where `L` is the weighted graph Laplacian. For more details, see:
-#
-# Goemans, M. X., & Williamson, D. P. (1995). Improved approximation algorithms
-# for maximum cut and satisfiability problems using semidefinite programming.
+# Goemans, M. X., & Williamson, D. P. (1995). 
+# [_Improved approximation algorithms for maximum cut and satisfiability problems
+# using semidefinite programming._](https://doi.org/10.1145/227683.227684)
 # Journal of the ACM (JACM), 42(6), 1115-1145.
 
 """
@@ -114,6 +118,14 @@ S, T = solve_max_cut_sdp([0 1 5 0; 1 0 0 9; 5 0 0 2; 0 9 2 0])
 
 # ## K-means clustering via SDP
 
+# Given a set of points ``a_1, \ldots, a_m``  in ``\mathbb{R}^n``, allocate them to ``k`` clusters.
+#
+# For more details, see:
+# 
+# Peng, J., & Wei, Y. (2007).
+# [_Approximating k-means-type clustering via semidefinite programming_](https://doi.org/10.1137/050641983).
+# SIAM Journal on Optimization, 18(1), 186-205.
+
 function example_k_means_clustering()
     a = [[2.0, 2.0], [2.5, 2.1], [7.0, 7.0], [2.2, 2.3], [6.8, 7.0], [7.2, 7.5]]
     m = length(a)
@@ -152,18 +164,23 @@ example_k_means_clustering()
 
 # ## The correlation problem
 
-# Given three random variables A, B, C and given bounds on two of the three
+# Given three random variables ``A``, ``B``, and ``C``, and given bounds on two of the three
 # correlation coefficients:
+# ```math
+#     -0.2 \leq \rho_{AB} \leq -0.1 \\
+#     0.4  \leq \rho_{BC} \leq  0.5
+# ```
+# our problem is to determine upper and lower bounds on other correlation coefficient ``\rho_{AC}``.
 #
-#     -0.2 <= ρ_AB <= -0.1
-#     0.4 <= ρ_BC <=  0.5
-#
-# We can use the following property of the correlations to determine bounds on
-# ρ_AC by solving a SDP:
-#
-#     |  1    ρ_AB  ρ_AC |
-#     | ρ_AB   1    ρ_BC |  ≽ 0
-#     | ρ_AC  ρ_BC   1   |
+# We solve an SDP to make use of the following positive semidefinite property
+# of the correlation matrix:
+# ```math
+# \begin{bmatrix}
+#       1   &  ρ_{AB} &  ρ_{AC} \\
+#      ρ_{AB} &  1    &  ρ_{BC}  \\
+#      ρ_{AC} &  ρ_{BC} &  1   
+# \end{bmatrix} \succeq 0
+# ```
 
 function example_correlation_problem()
     model = Model(SCS.Optimizer)
@@ -190,43 +207,66 @@ example_correlation_problem()
 # ## The minimum distortion problem
 
 # This example arises from computational geometry, in particular the problem of
-# embedding a general finite metric space into a euclidean space.
+# embedding a general finite metric space into a Euclidean space.
 #
-# It is known that the 4-point metric space defined by the star graph:
-#
-#     x
-#      \\
-#       x — x
-#      /
-#     x
-#
-# where distances are computed by length of the shortest path between vertices,
-# cannot be exactly embedded into a euclidean space of any dimension.
+# It is known that the 4-point metric space defined by the star graph
+# ```raw
+#   [1]
+#     \
+#      1
+#       \
+#       [0] —- 1 -- [2]
+#       /
+#      1
+#     /
+#   [3]
+# ```
+# cannot be exactly embedded into a Euclidean space of any dimension,
+# where distances are computed by length of the shortest path between vertices.
+# A distance-preserving embedding would require the three leaf nodes to form
+# an equilateral triangle of side length 2, with the centre node (0) mapped to
+# an equidistant point at distance 1; this is impossible since the
+# [triangle inequality](https://en.wikipedia.org/wiki/Triangle_inequality)
+# in Euclidean space implies all points would need to be simultaneously
+# [collinear](https://en.wikipedia.org/wiki/Collinearity).
 #
 # Here we will formulate and solve an SDP to compute the best possible embedding,
-# that is, the embedding f() that minimizes the distortion c such that
+# that is, the embedding ``f`` assigning each vertex ``v`` to a vector ``f(v)``
+# that minimizes the distortion ``c`` such that
+# ```math
+#     D[a, b] \leq ||f(a) - f(b)|| \leq c \; D[a, b]
+# ```
+# for all edges ``(a, b)`` in the graph, where ``D[a, b]`` is the distance in the graph metric space.
 #
-#     (1 / c) * D(a, b) ≤ ||f(a) - f(b)|| ≤ D(a, b)
+# Any embedding ``f`` can be characterized by a Gram matrix ``Q``, which is PSD and
+# such that
+# ```math
+#     ||f(a) - f(b)||^2 = Q[a, a] + Q[b, b] - 2 Q[a, b]
+# ```
+# We therefore impose the constraint
+# ```math
+#     D[a, b]^2 ≤ Q[a, a] + Q[b, b] - 2 Q[a, b] ≤ c^2 \; D[a, b]^2
+# ```
+# for all edges ``(a, b)`` in the graph and minimize ``c^2``, 
+# which gives us the SDP formulation below.
+# For more details, see:
 #
-# for all points (a, b), where D(a, b) is the distance in the metric space.
-#
-# Any embedding can be characterized by its Gram matrix Q, which is PSD, and
-#
-#     ||f(a) - f(b)||^2 = Q[a, a] + Q[b, b] - 2 * Q[a, b]
-#
-# We can therefore constrain
-#
-#     D[i, j]^2 ≤ Q[i, i] + Q[j, j] - 2 * Q[i, j] ≤ c^2 * D[i, j]^2
-#
-# and minimize c^2, which gives us the SDP formulation below.
-#
-# For more detail, see "Lectures on discrete geometry" by J. Matoušek, Springer,
-# 2002, pp. 378-379.
+# J. Matoušek (2002), [_Lectures on discrete geometry_](https://doi.org/10.1007/978-1-4613-0039-7),
+# Springer, pp. 378-379
+# 
+#  N. Linial (2002), 
+# _[Finite metric spaces--combinatorics, geometry and algorithms](https://arxiv.org/abs/math/0304466)_,
+# Proceedings of the ICM, Vol. 3, 573-586
 
 function example_minimum_distortion()
     model = Model(SCS.Optimizer)
     set_silent(model)
-    D = [0.0 1.0 1.0 1.0; 1.0 0.0 2.0 2.0; 1.0 2.0 0.0 2.0; 1.0 2.0 2.0 0.0]
+    D = [
+        0.0 1.0 1.0 1.0
+        1.0 0.0 2.0 2.0
+        1.0 2.0 0.0 2.0
+        1.0 2.0 2.0 0.0
+    ]
     @variable(model, c² >= 1.0)
     @variable(model, Q[1:4, 1:4], PSD)
     for i in 1:4, j in (i+1):4
@@ -245,9 +285,13 @@ example_minimum_distortion()
 
 # ## Robust uncertainty sets
 
-# This example computes the Value at Risk for a data-driven uncertainty set;
-# see "Data-Driven Robust Optimization" (Bertsimas 2013), Section 6.1 for
-# details. Closed-form expressions for the optimal value are available.
+# This example computes the Value at Risk for a data-driven uncertainty set.
+# Closed-form expressions for the optimal value are available.
+# For more details, see:
+
+# Bertsimas, D., Gupta, V., & Kallus, N. (2018). 
+# [_Data-driven robust optimization._](https://doi.org/10.1007/s10107-017-1125-8)
+# Mathematical Programming, 167, 235-292.
 
 function example_robust_uncertainty_sets()
     R, d, 𝛿, ɛ = 1, 3, 0.05, 0.05
