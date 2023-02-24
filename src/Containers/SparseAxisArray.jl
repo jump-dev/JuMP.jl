@@ -66,7 +66,7 @@ end
 
 # A `length` argument can be given because `IteratorSize` is `HasLength`
 function Base.similar(
-    ::SparseAxisArray{S,N,K},
+    sa::SparseAxisArray{S,N,K},
     ::Type{T},
     length::Integer = 0,
 ) where {S,T,N,K}
@@ -74,7 +74,7 @@ function Base.similar(
     if !iszero(length)
         sizehint!(d, length)
     end
-    return SparseAxisArray(d)
+    return SparseAxisArray(d, sa.names)
 end
 
 Base.mapreduce(f, op, sa::SparseAxisArray) = mapreduce(f, op, values(sa.data))
@@ -155,7 +155,8 @@ function _get_index_positional(d::SparseAxisArray{T,N,K}, args...) where {T,N,K}
         new_data = Dict{K2,T}(
             _sliced_key(k, args) => v for (k, v) in d.data if _filter(k, args)
         )
-        return SparseAxisArray(new_data, _sliced_name(K, d.names, args))
+        names = _sliced_key_name(K, d.names, args...)
+        return SparseAxisArray(new_data, names)
     end
     return getindex(d.data, args)
 end
@@ -170,6 +171,20 @@ end
         end
     end
     return length(expr.args) == 1 ? :(nothing) : expr
+end
+
+@generated function _sliced_key_name(
+    ::Type{K},
+    names,
+    args...,
+) where {K<:Tuple}
+    expr = Expr(:tuple)
+    for i in 1:length(args)
+        if args[i] <: Colon || args[i] <: AbstractVector{<:(K.parameters[i])}
+            push!(expr.args, Expr(:ref, :names, i))
+        end
+    end
+    return isempty(expr.args) ? nothing : expr
 end
 
 # Methods to check whether a key `k` is a valid subset of `idx`.
@@ -189,17 +204,6 @@ function _sliced_key(k::Tuple, idx::Tuple)
     return tuple(
         _sliced_key(k[1], idx[1])...,
         _sliced_key(Base.tail(k), Base.tail(idx))...,
-    )
-end
-
-_sliced_name(::Type{K}, name::Symbol, ::Colon) where {K} = (name,)
-_sliced_name(::Type{K}, name::Symbol, ::AbstractVector{K}) where {K} = (name,)
-_sliced_name(::Type{K}, ::Symbol, ::Any) where {K} = ()
-_sliced_name(::Type{K}, ::Tuple{}, ::Tuple{}) where {K} = ()
-function _sliced_name(::Type{K}, names::Tuple, args::Tuple) where {K}
-    return tuple(
-        _sliced_name(K, names[1], args[1])...,
-        _sliced_name(K, Base.tail(names), Base.tail(args))...,
     )
 end
 
