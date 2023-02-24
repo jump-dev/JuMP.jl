@@ -173,14 +173,11 @@ end
     return length(expr.args) == 1 ? :(nothing) : expr
 end
 
-@generated function _sliced_key_name(
-    ::Type{K},
-    names,
-    args...,
-) where {K<:Tuple}
+@generated function _sliced_key_name(::Type{K}, names, args...) where {K<:Tuple}
     expr = Expr(:tuple)
     for i in 1:length(args)
-        if args[i] <: Colon || args[i] <: AbstractVector{<:(K.parameters[i])}
+        Ki = K.parameters[i]
+        if args[i] <: Colon || args[i] <: AbstractVector{<:Ki}
             push!(expr.args, Expr(:ref, :names, i))
         end
     end
