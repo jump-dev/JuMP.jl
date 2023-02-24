@@ -387,7 +387,8 @@ function _get_index_positional(A::DenseAxisArray{T,N}, args...) where {T,N}
         return A.data[new_indices...]::T
     end
     new_axes = _getindex_recurse(A.axes, new_indices, _is_range)
-    return DenseAxisArray(A.data[new_indices...], new_axes...)
+    names = A.names[findall(_is_range, new_indices)]
+    return DenseAxisArray(A.data[new_indices...], new_axes...; names = names)
 end
 
 Base.getindex(A::DenseAxisArray, idx::CartesianIndex) = A.data[idx]

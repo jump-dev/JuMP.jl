@@ -675,4 +675,11 @@ function test_containers_denseaxisarray_kwarg_indexing()
     return
 end
 
+function test_containers_denseaxisarray_kwarg_indexing_slicing()
+    Containers.@container(x[i = 2:3, j = 1:2], i + j)
+    y = x[i = 2, j = :]
+    @test y[j = 2] == 4
+    return
+end
+
 end  # module

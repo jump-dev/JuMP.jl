@@ -155,7 +155,7 @@ function _get_index_positional(d::SparseAxisArray{T,N,K}, args...) where {T,N,K}
         new_data = Dict{K2,T}(
             _sliced_key(k, args) => v for (k, v) in d.data if _filter(k, args)
         )
-        return SparseAxisArray(new_data)
+        return SparseAxisArray(new_data, _sliced_name(K, d.names, args))
     end
     return getindex(d.data, args)
 end
@@ -189,6 +189,17 @@ function _sliced_key(k::Tuple, idx::Tuple)
     return tuple(
         _sliced_key(k[1], idx[1])...,
         _sliced_key(Base.tail(k), Base.tail(idx))...,
+    )
+end
+
+_sliced_name(::Type{K}, name::Symbol, ::Colon) where {K} = (name,)
+_sliced_name(::Type{K}, name::Symbol, ::AbstractVector{K}) where {K} = (name,)
+_sliced_name(::Type{K}, ::Symbol, ::Any) where {K} = ()
+_sliced_name(::Type{K}, ::Tuple{}, ::Tuple{}) where {K} = ()
+function _sliced_name(::Type{K}, names::Tuple, args::Tuple) where {K}
+    return tuple(
+        _sliced_name(K, names[1], args[1])...,
+        _sliced_name(K, Base.tail(names), Base.tail(args))...,
     )
 end
 
