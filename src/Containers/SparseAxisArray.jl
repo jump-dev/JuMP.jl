@@ -258,7 +258,7 @@ function Base.copy(
         # type information to call SparseAxisArray(dict). As a work-around, we
         # explicitly construct the type of the resulting SparseAxisArray.
         # For more, see JuMP issue #2867.
-        return SparseAxisArray{Any,N,K}(dict)
+        return SparseAxisArray{Any,N,K}(dict, ntuple(i -> Symbol("#$i"), N))
     end
     return SparseAxisArray(dict)
 end

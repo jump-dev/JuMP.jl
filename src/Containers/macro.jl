@@ -311,7 +311,6 @@ function container_code(
         esc(requested_container)
     end
     return :(Containers.container($f, $indices, $container_type, $index_vars))
-
 end
 
 """

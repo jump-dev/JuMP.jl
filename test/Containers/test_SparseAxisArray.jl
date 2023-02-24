@@ -248,7 +248,11 @@ function test_ambuguity_BroadcastStyleUnknown()
 end
 
 function test_containers_sparseaxisarray_kwarg_indexing()
-    Containers.@container(x[i=2:3, j=1:2], i + j, container = SparseAxisArray)
+    Containers.@container(
+        x[i = 2:3, j = 1:2],
+        i + j,
+        container = SparseAxisArray
+    )
     for i in (2, 3, 2:2, 2:3, :), j in (1, 2, 1:2, 1:1, 2:2, :)
         @test x[i = i, j = j] == x[i, j]
         @test_throws ErrorException x[j = j, i = i]
@@ -259,7 +263,7 @@ function test_containers_sparseaxisarray_kwarg_indexing()
             "indices must match the exact name and order used when creating " *
             "the container.",
         ),
-        x[j=1, i=2],
+        x[j = 1, i = 2],
     )
     @test_throws(
         ErrorException(
@@ -267,20 +271,20 @@ function test_containers_sparseaxisarray_kwarg_indexing()
             "indices must match the exact name and order used when creating " *
             "the container.",
         ),
-        x[i=2, k=2],
+        x[i = 2, k = 2],
     )
     @test_throws(
         ErrorException(
             "Cannot index with mix of positional and keyword arguments",
         ),
-        x[i=2, 2],
+        x[i = 2, 2],
     )
-    Containers.@container(y[i=2:3, 1:2], i, container = SparseAxisArray)
+    Containers.@container(y[i = 2:3, 1:2], i, container = SparseAxisArray)
     @test_throws(
         ErrorException(
             "Cannot index with mix of positional and keyword arguments",
         ),
-        y[i=2, 2],
+        y[i = 2, 2],
     )
     return
 end

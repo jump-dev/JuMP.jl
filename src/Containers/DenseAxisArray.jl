@@ -258,7 +258,7 @@ end
 function construct_undef_array(
     ::Type{T},
     args::Tuple{Vararg{Any,N}};
-    kwargs...
+    kwargs...,
 ) where {T,N}
     data = Array{T,N}(undef, length.(args)...)
     return DenseAxisArray(data, args...; kwargs...)
@@ -503,26 +503,37 @@ function _broadcast_axes_check(x::NTuple{N}) where {N}
     return axes
 end
 
-_broadcast_axes(x::Tuple) = _broadcast_axes(first(x), Base.tail(x))
-_broadcast_axes(::Tuple{}) = ()
-_broadcast_axes(::Any, tail) = _broadcast_axes(tail)
-function _broadcast_axes(x::DenseAxisArray, tail)
-    return ((x.axes, x.lookup), _broadcast_axes(tail)...)
+_broadcast_args(f, x::Tuple) = _broadcast_args(f, first(x), Base.tail(x))
+
+_broadcast_args(f, ::Tuple{}) = ()
+
+_broadcast_args(f::Val{:axes}, x::Any, tail) = _broadcast_args(f, tail)
+
+function _broadcast_args(f::Val{:axes}, x::DenseAxisArray, tail)
+    return ((x.axes, x.lookup), _broadcast_args(f, tail)...)
 end
 
-_broadcast_args(x::Tuple) = _broadcast_args(first(x), Base.tail(x))
-_broadcast_args(::Tuple{}) = ()
-_broadcast_args(x::Any, tail) = (x, _broadcast_args(tail)...)
-_broadcast_args(x::DenseAxisArray, tail) = (x.data, _broadcast_args(tail)...)
+_broadcast_args(f::Val{:data}, x::Any, tail) = (x, _broadcast_args(f, tail)...)
+
+function _broadcast_args(f::Val{:data}, x::DenseAxisArray, tail)
+    return (x.data, _broadcast_args(f, tail)...)
+end
+
+_broadcast_args(f::Val{:names}, x::Any, tail) = _broadcast_args(f, tail)
+
+function _broadcast_args(f::Val{:names}, x::DenseAxisArray, tail)
+    return (x.names, _broadcast_args(f, tail)...)
+end
 
 function Base.Broadcast.broadcasted(
     ::Broadcast.ArrayStyle{DenseAxisArray},
     f,
     args...,
 )
-    axes_lookup = _broadcast_axes_check(_broadcast_axes(args))
-    new_args = _broadcast_args(args)
-    return DenseAxisArray(broadcast(f, new_args...), axes_lookup...)
+    axes, lookup = _broadcast_axes_check(_broadcast_args(Val(:axes), args))
+    new_args = _broadcast_args(Val(:data), args)
+    names = _broadcast_args(Val(:names), args)
+    return DenseAxisArray(broadcast(f, new_args...), axes, lookup, first(names))
 end
 
 ########
