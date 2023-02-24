@@ -256,7 +256,11 @@ function subtour_elimination_callback(cb_data)
     MOI.submit(lazy_model, MOI.LazyConstraint(cb_data), con)
     return
 end
-MOI.set(lazy_model, MOI.LazyConstraintCallback(), subtour_elimination_callback)
+set_attribute(
+    lazy_model,
+    MOI.LazyConstraintCallback(),
+    subtour_elimination_callback,
+)
 optimize!(lazy_model)
 objective_value(lazy_model)
 

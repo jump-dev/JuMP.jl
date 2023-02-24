@@ -511,7 +511,7 @@ model = Model(Gurobi.Optimizer)
 optimize!(model)
 
 compute_conflict!(model)
-if MOI.get(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
+if get_attribute(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
     iis_model, _ = copy_conflict(model)
     print(iis_model)
 end
@@ -524,7 +524,7 @@ conflict, iterate over the list of constraints and query the
 list_of_conflicting_constraints = ConstraintRef[]
 for (F, S) in list_of_constraint_types(model)
     for con in all_constraints(model, F, S)
-        if MOI.get(model, MOI.ConstraintConflictStatus(), con) == MOI.IN_CONFLICT
+        if get_attribute(con, MOI.ConstraintConflictStatus()) == MOI.IN_CONFLICT
             push!(list_of_conflicting_constraints, con)
         end
     end

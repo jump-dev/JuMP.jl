@@ -434,9 +434,12 @@ function test_set_silent()
     JuMP.set_silent(model)
     @test MOI.get(backend(model), MOI.Silent())
     @test MOI.get(model, MOI.Silent())
+    @test get_attribute(model, MOI.Silent())
     JuMP.unset_silent(model)
     @test !MOI.get(backend(model), MOI.Silent())
     @test !MOI.get(model, MOI.Silent())
+    @test !get_attribute(model, MOI.Silent())
+    return
 end
 
 function test_set_optimizer_attribute()
@@ -916,6 +919,65 @@ function test_optimize_not_called_warning()
     @test_logs (:warn,) (@test_throws OptimizeNotCalled objective_value(model))
     @test_logs (:warn,) (@test_throws OptimizeNotCalled value(x))
     @test_logs (:warn,) (@test_throws OptimizeNotCalled value(c))
+    return
+end
+
+function test_get_set_attribute_model()
+    model = Model()
+    @test get_attribute(model, MOI.Name()) == ""
+    set_attribute(model, MOI.Name(), "Test")
+    @test get_attribute(model, MOI.Name()) == "Test"
+    set_attributes(model, MOI.Name() => "Test2")
+    @test get_attribute(model, MOI.Name()) == "Test2"
+    return
+end
+
+function test_get_set_attribute_optimizer()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(
+            MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        )
+    end
+    set_attribute(model, MOI.Silent(), true)
+    @test get_attribute(model, MOI.Silent()) == true
+    set_attributes(model, MOI.Silent() => false)
+    @test get_attribute(model, MOI.Silent()) == false
+    return
+end
+
+function test_get_set_attribute_optimizer_with_attributes()
+    optimizer = optimizer_with_attributes() do
+        return MOI.Utilities.MockOptimizer(
+            MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        )
+    end
+    set_attribute(optimizer, MOI.Silent(), true)
+    @test get_attribute(optimizer, MOI.Silent()) == true
+    set_attributes(optimizer, MOI.Silent() => false)
+    @test get_attribute(optimizer, MOI.Silent()) == false
+    return
+end
+
+function test_get_set_attribute_variable()
+    model = Model()
+    @variable(model, x)
+    @test get_attribute(x, MOI.VariableName()) == "x"
+    set_attribute(x, MOI.VariableName(), "y")
+    @test get_attribute(x, MOI.VariableName()) == "y"
+    set_attributes(x, MOI.VariableName() => "x")
+    @test get_attribute(x, MOI.VariableName()) == "x"
+    return
+end
+
+function test_get_set_attribute_constraint()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, c, 2 * x <= 1)
+    @test get_attribute(c, MOI.ConstraintName()) == "c"
+    set_attribute(c, MOI.ConstraintName(), "y")
+    @test get_attribute(c, MOI.ConstraintName()) == "y"
+    set_attributes(c, MOI.ConstraintName() => "c")
+    @test get_attribute(c, MOI.ConstraintName()) == "c"
     return
 end
 

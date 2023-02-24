@@ -40,14 +40,17 @@ set_string_names_on_creation
 ```@docs
 set_optimizer
 optimizer_with_attributes
-get_optimizer_attribute
-set_optimizer_attribute
-set_optimizer_attributes
+get_attribute
+set_attribute
+set_attributes
 set_silent
 unset_silent
 set_time_limit_sec
 unset_time_limit_sec
 time_limit_sec
+get_optimizer_attribute
+set_optimizer_attribute
+set_optimizer_attributes
 ```
 
 ## Copying
