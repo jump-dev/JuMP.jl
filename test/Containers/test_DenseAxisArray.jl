@@ -679,6 +679,10 @@ function test_containers_denseaxisarray_kwarg_indexing_slicing()
     Containers.@container(x[i = 2:3, j = 1:2], i + j)
     y = x[i = 2, j = :]
     @test y[j = 2] == 4
+    y = x[i = :, j = 1]
+    @test y[i = 3] == 4
+    y = x[i = :, j = :]
+    @test y[i = 3, j = 1] == 4
     return
 end
 
