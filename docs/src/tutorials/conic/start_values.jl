@@ -9,6 +9,10 @@
 # solution. This can improve performance, particularly if you are repeatedly
 # solving a sequence of related problems.
 
+# !!! tip
+#     See [`set_start_values`](@ref) for a generic implementation of this
+#     function that was added to JuMP after this tutorial was written.
+
 # In this tutorial, we demonstrate how to write a function that sets the primal
 # and dual starts as the optimal solution stored in a model. It is intended to
 # be a starting point for which you can modify if you want to do something
