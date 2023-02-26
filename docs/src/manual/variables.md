@@ -636,6 +636,7 @@ julia> start_value.(z)
     x_solution = value.(x)
     set_start_value.(x, x_solution)
     ```
+    Alternatively, use [`set_start_values`](@ref).
 
 ## [Delete a variable](@id delete_a_variable)
 
