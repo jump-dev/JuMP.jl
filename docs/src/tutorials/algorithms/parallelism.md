@@ -46,10 +46,10 @@ The easiest way to use multi-threading in Julia is by placing the
 
 ````julia
 julia> @time begin
-           ids = Int[]
+           ids = zeros(Threads.nthreads())
            Threads.@threads for i in 1:Threads.nthreads()
                global ids
-               push!(ids, Threads.threadid())
+               ids[i] = Threads.threadid()
                sleep(1.0)
            end
        end
@@ -66,14 +66,18 @@ iterations were executed simultaneously. We can verify this by checking the
 julia> ids
 4-element Vector{Int64}:
  1
- 4
  2
  3
+ 4
 ````
 
-!!! tip
-    For more information, read the Julia documentation
-    [Multi-Threading](https://docs.julialang.org/en/v1/manual/multi-threading/#man-multithreading).
+!!! warn
+    When working with threads, you need to avoid race conditions, in which two
+    threads attempt to write to the same variable at the same time. In the above
+    example we avoided a race condition by pre-allocating the `ids` vector, so
+    that no two threads will attempt to write to the same `ids[i]` element at
+    the same time. See the [Mult-threading](https://docs.julialang.org/en/v1/manual/multi-threading/)
+    section of the Julia documentation for more details.
 
 ### Distributed computing
 
@@ -204,11 +208,11 @@ model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variable(model, x)
 @objective(model, Min, x)
-solutions = Float64[]
+solutions = zeros(10)
 Threads.@threads for i in 1:10
     set_lower_bound(x, i)
     optimize!(model)
-    push!(solutions, objective_value(model))
+    solutions[i] = objective_value(model)
 end
 ```
 
@@ -230,8 +234,7 @@ julia> using JuMP
 
 julia> import HiGHS
 
-julia> solutions = Float64[]
-Float64[]
+julia> solutions = zeros(10);
 
 julia> Threads.@threads for i in 1:10
            model = Model(HiGHS.Optimizer)
@@ -240,19 +243,21 @@ julia> Threads.@threads for i in 1:10
            @objective(model, Min, x)
            set_lower_bound(x, i)
            optimize!(model)
-           push!(solutions, objective_value(model))
+           solutions[i] = objective_value(model)
        end
 
 julia> solutions
-8-element Vector{Float64}:
- 9.0
- 1.0
- 7.0
- 4.0
- 8.0
- 5.0
- 3.0
- 6.0
+10-element Vector{Float64}:
+  1.0
+  2.0
+  3.0
+  4.0
+  5.0
+  6.0
+  7.0
+  8.0
+  9.0
+ 10.0
 ````
 
 ### With distributed computing
