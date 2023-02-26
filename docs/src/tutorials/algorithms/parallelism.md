@@ -210,13 +210,13 @@ model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variable(model, x)
 @objective(model, Min, x)
-solutions = Float64[]
+solutions = Pair{Int,Float64}[]
 my_lock = Threads.ReentrantLock()
 Threads.@threads for i in 1:10
     set_lower_bound(x, i)
     optimize!(model)
     Threads.lock(my_lock) do
-        push!(solutions, objective_value(model))
+        push!(solutions, i => objective_value(model))
     end
 end
 ```
@@ -239,7 +239,7 @@ julia> using JuMP
 
 julia> import HiGHS
 
-julia> solutions = Float64[];
+julia> solutions = Pair{Int,Float64}[]
 
 julia> my_lock = Threads.ReentrantLock();
 
@@ -251,22 +251,22 @@ julia> Threads.@threads for i in 1:10
            set_lower_bound(x, i)
            optimize!(model)
            Threads.lock(my_lock) do
-               push!(solutions, objective_value(model))
+               push!(solutions, i => objective_value(model))
            end
        end
 
 julia> solutions
-10-element Vector{Float64}:
-  7.0
-  1.0
-  9.0
-  2.0
-  8.0
-  3.0
- 10.0
-  4.0
-  5.0
-  6.0
+10-element Vector{Pair{Int64, Float64}}:
+  7 => 7.0
+  4 => 4.0
+  1 => 1.0
+  9 => 9.0
+  5 => 5.0
+  8 => 8.0
+ 10 => 10.0
+  2 => 2.0
+  6 => 6.0
+  3 => 3.0
 ````
 
 ### With distributed computing
