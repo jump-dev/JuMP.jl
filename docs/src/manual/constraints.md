@@ -781,7 +781,8 @@ julia> dual_start_value(con)
 
 !!! tip
     To simplify setting start values for all variables and constraints in a
-    model, see [`set_start_values`](@ref). The [Primal and dual warm-starts](@ref) also gives a detailed description of how to iterate over constraints
+    model, see [`set_start_values`](@ref). The [Primal and dual warm-starts](@ref)
+    tutorial also gives a detailed description of how to iterate over constraints
     in the model to set custom start values.
 
 ## Constraint containers
