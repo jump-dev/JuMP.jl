@@ -1047,8 +1047,7 @@ function set_start_values(
     constraint_dual_start::Union{Nothing,Function} = dual,
     nonlinear_dual_start::Union{Nothing,Function} = nonlinear_dual_start_value,
 )
-    ## Store a mapping of the variable primal solution
-    variable_primal = Dict()
+    variable_primal = Dict{VariableRef,Float64}()
     support_variable_primal = MOI.supports(
         backend(model),
         MOI.VariablePrimalStart(),
@@ -1059,32 +1058,10 @@ function set_start_values(
             variable_primal[x] = variable_primal_start(x)
         end
     end
-    # In the following, we loop through every constraint and store a mapping
-    # from the constraint index to a tuple containing the primal and dual
-    # solutions.
-    constraint_primal, constraint_dual = Dict(), Dict()
+    constraint_primal = Dict{ConstraintRef,Float64}()
+    constraint_dual = Dict{ConstraintRef,Float64}()
     for (F, S) in list_of_constraint_types(model)
-        # We add a try-catch here because some constraint types might not
-        # support getting the primal or dual solution.
-        CI = MOI.ConstraintIndex{moi_function_type(F),S}
-        support_constraint_primal = MOI.supports(
-            backend(model),
-            MOI.ConstraintPrimalStart(),
-            CI,
-        )
-        support_constraint_dual = MOI.supports(
-            backend(model),
-            MOI.ConstraintDualStart(),
-            CI,
-        )
-        for ci in all_constraints(model, F, S)
-            if support_constraint_primal && constraint_primal_start !== nothing
-                constraint_primal[ci] = constraint_primal_start(ci)
-            end
-            if support_constraint_dual && constraint_dual_start !== nothing
-                constraint_dual[ci] = constraint_dual_start(ci)
-            end
-        end
+        _get_start_values(model, F, S, constraint_primal, constraint_dual)
     end
     if nonlinear_dual_start !== nothing && num_nonlinear_constraints(model) > 0
         if MOI.supports(backend(model), MOI.NLPBlockDualStart())
@@ -1092,7 +1069,6 @@ function set_start_values(
             set_nonlinear_dual_start_value(model, nlp_dual_start)
         end
     end
-    ## Now we can loop through our cached solutions and set the starting values.
     for (x, primal_start) in variable_primal
         set_start_value(x, primal_start)
     end
@@ -1101,6 +1077,29 @@ function set_start_values(
     end
     for (ci, dual_start) in constraint_dual
         set_dual_start_value(ci, dual_start)
+    end
+    return
+end
+
+function _get_start_values(
+    model,
+    ::Type{F},
+    ::Type{S},
+    constraint_primal,
+    constraint_dual,
+) where {F,S}
+    CI = MOI.ConstraintIndex{moi_function_type(F),S}
+    support_constraint_primal =
+        MOI.supports(moi_model, MOI.ConstraintPrimalStart(), CI)
+    support_constraint_dual =
+        MOI.supports(moi_model, MOI.ConstraintDualStart(), CI)
+    for ci in all_constraints(model, F, S)
+        if support_constraint_primal && constraint_primal_start !== nothing
+            constraint_primal[ci] = constraint_primal_start(ci)
+        end
+        if support_constraint_dual && constraint_dual_start !== nothing
+            constraint_dual[ci] = constraint_dual_start(ci)
+        end
     end
     return
 end
