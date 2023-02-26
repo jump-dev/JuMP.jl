@@ -1088,6 +1088,7 @@ function _get_start_values(
     constraint_primal,
     constraint_dual,
 ) where {F,S}
+    moi_model = backend(model)
     CI = MOI.ConstraintIndex{moi_function_type(F),S}
     support_constraint_primal =
         MOI.supports(moi_model, MOI.ConstraintPrimalStart(), CI)
