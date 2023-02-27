@@ -78,7 +78,7 @@ julia> ids
     When working with threads, you need to avoid race conditions, in which two
     threads attempt to write to the same variable at the same time. In the above
     example we avoided a race condition by using `ReentrantLock`. See the
-    [Mult-threading](https://docs.julialang.org/en/v1/manual/multi-threading/)
+    [Multi-threading](https://docs.julialang.org/en/v1/manual/multi-threading/)
     section of the Julia documentation for more details.
 
 ### Distributed computing
@@ -125,7 +125,7 @@ Unlike the `for`-loop approach of multi-threading, distributed computing
 extends the Julia `map` function to a "parallel-map" function
 `Distributed.pmap`. For each element in the list of arguments to map over,
 Julia will copy the element to an idle worker process and evaluate the
-function passing the element as an input argument.
+function, passing the element as an input argument.
 
 ````julia
 julia> function hard_work(i::Int)
