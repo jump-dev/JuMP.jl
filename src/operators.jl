@@ -459,7 +459,12 @@ end
 # nonlinear function fallbacks for JuMP built-in types
 ###############################################################################
 
-const _OP_HINT = "Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective."
+const _OP_HINT =
+    "Are you trying to build a nonlinear problem? Make sure you use " *
+    "@NLconstraint/@NLobjective. If you are using an `@NL` macro and you " *
+    "encountered this error message, it is because you are attempting to use " *
+    "another unsupported function which calls this method internally."
+
 for f in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
     if f in (:+, :-, :abs) || !isdefined(Base, f)
         continue
