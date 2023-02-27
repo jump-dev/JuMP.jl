@@ -47,13 +47,16 @@ The easiest way to use multi-threading in Julia is by placing the
 ````julia
 julia> @time begin
            ids = Int[]
+           my_lock = Threads.ReentrantLock()
            Threads.@threads for i in 1:Threads.nthreads()
-               global ids
-               push!(ids, Threads.threadid())
+               global ids, my_lock
+               Threads.lock(my_lock) do
+                   push!(ids, Threads.threadid())
+               end
                sleep(1.0)
            end
        end
-  1.050600 seconds (47.75 k allocations: 3.093 MiB, 4.40% compilation time)s
+  1.037087 seconds (31.32 k allocations: 1.836 MiB, 2.02% compilation time)
 ````
 
 This for-loop sleeps for `1` second on each iteration. Thus, if it had
@@ -65,15 +68,18 @@ iterations were executed simultaneously. We can verify this by checking the
 ````julia
 julia> ids
 4-element Vector{Int64}:
- 1
- 4
  2
+ 4
+ 1
  3
 ````
 
-!!! tip
-    For more information, read the Julia documentation
-    [Multi-Threading](https://docs.julialang.org/en/v1/manual/multi-threading/#man-multithreading).
+!!! warn
+    When working with threads, you need to avoid race conditions, in which two
+    threads attempt to write to the same variable at the same time. In the above
+    example we avoided a race condition by using `ReentrantLock`. See the
+    [Mult-threading](https://docs.julialang.org/en/v1/manual/multi-threading/)
+    section of the Julia documentation for more details.
 
 ### Distributed computing
 
@@ -204,11 +210,14 @@ model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variable(model, x)
 @objective(model, Min, x)
-solutions = Float64[]
+solutions = Pair{Int,Float64}[]
+my_lock = Threads.ReentrantLock()
 Threads.@threads for i in 1:10
     set_lower_bound(x, i)
     optimize!(model)
-    push!(solutions, objective_value(model))
+    Threads.lock(my_lock) do
+        push!(solutions, i => objective_value(model))
+    end
 end
 ```
 
@@ -230,8 +239,9 @@ julia> using JuMP
 
 julia> import HiGHS
 
-julia> solutions = Float64[]
-Float64[]
+julia> solutions = Pair{Int,Float64}[]
+
+julia> my_lock = Threads.ReentrantLock();
 
 julia> Threads.@threads for i in 1:10
            model = Model(HiGHS.Optimizer)
@@ -240,19 +250,23 @@ julia> Threads.@threads for i in 1:10
            @objective(model, Min, x)
            set_lower_bound(x, i)
            optimize!(model)
-           push!(solutions, objective_value(model))
+           Threads.lock(my_lock) do
+               push!(solutions, i => objective_value(model))
+           end
        end
 
 julia> solutions
-8-element Vector{Float64}:
- 9.0
- 1.0
- 7.0
- 4.0
- 8.0
- 5.0
- 3.0
- 6.0
+10-element Vector{Pair{Int64, Float64}}:
+  7 => 7.0
+  4 => 4.0
+  1 => 1.0
+  9 => 9.0
+  5 => 5.0
+  8 => 8.0
+ 10 => 10.0
+  2 => 2.0
+  6 => 6.0
+  3 => 3.0
 ````
 
 ### With distributed computing
