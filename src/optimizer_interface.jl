@@ -1061,7 +1061,15 @@ function set_start_values(
     constraint_primal = Dict{ConstraintRef,Float64}()
     constraint_dual = Dict{ConstraintRef,Float64}()
     for (F, S) in list_of_constraint_types(model)
-        _get_start_values(model, F, S, constraint_primal, constraint_dual)
+        _get_start_values(
+            model,
+            F,
+            S,
+            constraint_primal,
+            constraint_primal_start,
+            constraint_dual,
+            constraint_dual_start,
+        )
     end
     if nonlinear_dual_start !== nothing && num_nonlinear_constraints(model) > 0
         if MOI.supports(backend(model), MOI.NLPBlockDualStart())
@@ -1086,7 +1094,9 @@ function _get_start_values(
     ::Type{F},
     ::Type{S},
     constraint_primal,
+    constraint_primal_start::Union{Nothing,Function},
     constraint_dual,
+    constraint_dual_start::Union{Nothing,Function},
 ) where {F,S}
     moi_model = backend(model)
     CI = MOI.ConstraintIndex{moi_function_type(F),S}
