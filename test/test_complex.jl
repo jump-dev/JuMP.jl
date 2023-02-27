@@ -19,6 +19,11 @@ import SparseArrays
 
 const MA = MutableArithmetics
 
+function _test_dot(a, b)
+    @test LinearAlgebra.dot(a, b) == conj(a) * b
+    @test LinearAlgebra.dot(b, a) == conj(b) * a
+end
+
 function test_complex_aff_expr()
     model = Model()
     @variable(model, x)
@@ -28,6 +33,8 @@ function test_complex_aff_expr()
     @test 1im + x == 1im + (1 + 0im) * x
     @test 1im - x == -(1 + 0im)x + 1im
     @test 1im - 1 * x == -1 * x + 1im
+    _test_dot(4 - 5im, y)
+    _test_dot((3 - 7im) * x + 2 - im, y)
     return
 end
 

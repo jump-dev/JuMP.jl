@@ -398,9 +398,9 @@ end
 # Base Julia's generic fallback vecdot, aka dot, requires that dot, aka LinearAlgebra.dot, be defined
 # for scalars, so instead of defining them one-by-one, we will
 # fallback to the multiplication operator
-LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_JuMPTypes) = lhs * rhs
-LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_Constant) = lhs * rhs
-LinearAlgebra.dot(lhs::_Constant, rhs::_JuMPTypes) = lhs * rhs
+LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_JuMPTypes) = conj(lhs) * rhs
+LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_Constant) = conj(lhs) * rhs
+LinearAlgebra.dot(lhs::_Constant, rhs::_JuMPTypes) = conj(lhs) * rhs
 
 function Base.promote_rule(V::Type{<:AbstractVariableRef}, R::Type{<:Number})
     return GenericAffExpr{_float_type(R),V}
