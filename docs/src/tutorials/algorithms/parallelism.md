@@ -4,7 +4,7 @@ The purpose of this tutorial is to give a brief overview of parallelism in
 Julia as it pertains to JuMP, and to explain some of the things to be aware of
 when writing parallel algorithms involving JuMP models.
 
-## Multi-threading and Distributed computing
+## Multi-threading and distributed computing
 
 There are two main types of parallelism in Julia:
 
