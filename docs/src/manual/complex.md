@@ -207,10 +207,10 @@ JuMP supports creating matrices where are Hermitian.
 julia> model = Model();
 
 julia> @variable(model, H[1:3, 1:3] in HermitianPSDCone())
-3×3 Matrix{GenericAffExpr{ComplexF64, VariableRef}}:
- real(H[1,1])                                …  real(H[1,3]) + (0.0 + 1.0im) imag(H[1,3])
- real(H[1,2]) + (-0.0 - 1.0im) imag(H[1,2])     real(H[2,3]) + (0.0 + 1.0im) imag(H[2,3])
- real(H[1,3]) + (-0.0 - 1.0im) imag(H[1,3])     real(H[3,3])
+3×3 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ real(H[1,1])                               …  real(H[1,3]) + (0.0 + 1.0im) imag(H[1,3])
+ real(H[1,2]) + (0.0 - 1.0im) imag(H[1,2])     real(H[2,3]) + (0.0 + 1.0im) imag(H[2,3])
+ real(H[1,3]) + (0.0 - 1.0im) imag(H[1,3])     real(H[3,3])
 ```
 
 Behind the scenes, JuMP has created nine real-valued decision variables:
@@ -273,7 +273,7 @@ julia> H = LinearAlgebra.Hermitian([x[1] 1im; -1im -x[2]])
 
 julia> @constraint(model, H in HermitianPSDCone())
 [x[1]           (0.0 + 1.0im);
- (0.0 - 1.0im)  (-1.0 + 0.0im) x[2]] ∈ HermitianPSDCone()
+ (0.0 - 1.0im)  (-1.0 - 0.0im) x[2]] ∈ HermitianPSDCone()
 ```
 
 !!! note
