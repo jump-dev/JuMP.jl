@@ -53,8 +53,6 @@ E = [@variable(model, [1:d, 1:d] in HermitianPSDCone()) for i in 1:N-1]
 E_n = LinearAlgebra.Hermitian(LinearAlgebra.I - sum(E))
 @constraint(model, E_n in HermitianPSDCone())
 push!(E, E_n)
-@objective(model, Max, real(LinearAlgebra.dot(states, E)) / n)
+@objective(model, Max, real(LinearAlgebra.dot(states, E)) / N)
 optimize!(model)
 objective_value(model)
-
-
