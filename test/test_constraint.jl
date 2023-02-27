@@ -1439,7 +1439,7 @@ function test_extension_Hermitian_PSD_constraint(
     )
     d = dual(href)
     @test d isa Hermitian
-    @test parent(d) == [1 2 + 4im; 2 - 4im 3]
+    @test parent(d) == [1 2+4im; 2-4im 3]
     return
 end
 
