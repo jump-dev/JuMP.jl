@@ -743,7 +743,7 @@ function _constraint_macro(
     _error(str...) = _macro_error(macro_name, args, source, str...)
 
     # The positional args can't be `args` otherwise `_error` excludes keyword args
-    pos_args, kw_args, requestedcontainer = Containers._extract_kw_args(args)
+    pos_args, kw_args, requested_container = Containers._extract_kw_args(args)
 
     # Initial check of the positional arguments and get the model
     if length(pos_args) < 2
@@ -834,7 +834,7 @@ function _constraint_macro(
     end
 
     creation_code =
-        Containers.container_code(idxvars, indices, code, requestedcontainer)
+        Containers.container_code(idxvars, indices, code, requested_container)
 
     if anonvar
         # Anonymous constraint, no need to register it in the model-level
@@ -1328,7 +1328,7 @@ expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
 """
 macro expression(args...)
     _error(str...) = _macro_error(:expression, args, __source__, str...)
-    args, kw_args, requestedcontainer = Containers._extract_kw_args(args)
+    args, kw_args, requested_container = Containers._extract_kw_args(args)
     if length(args) == 3
         m = esc(args[1])
         c = args[2]
@@ -1360,7 +1360,7 @@ macro expression(args...)
         # other structure that returns `_MA.Zero()`.
         _replace_zero($code)
     end
-    code = Containers.container_code(idxvars, indices, code, requestedcontainer)
+    code = Containers.container_code(idxvars, indices, code, requested_container)
     # don't do anything with the model, but check that it's valid anyway
     if anonvar
         macro_code = code
@@ -2169,7 +2169,7 @@ macro variable(args...)
     if length(args) >= 2 && isexpr(args[2], :block)
         _error("Invalid syntax. Did you mean to use `@variables`?")
     end
-    extra, kw_args, requestedcontainer =
+    extra, kw_args, requested_container =
         Containers._extract_kw_args(args[2:end])
 
     # if there is only a single non-keyword argument, this is an anonymous
@@ -2312,7 +2312,7 @@ macro variable(args...)
                 idxvars,
                 indices,
                 name_code,
-                requestedcontainer,
+                requested_container,
             )
         end
     end
@@ -2328,7 +2328,7 @@ macro variable(args...)
                 idxvars,
                 indices,
                 buildcall,
-                requestedcontainer,
+                requested_container,
             )
         end
         buildcall = :(build_variable($_error, $scalar_variables, $set))
@@ -2347,7 +2347,7 @@ macro variable(args...)
             idxvars,
             indices,
             variablecall,
-            requestedcontainer,
+            requested_container,
         )
     end
 
@@ -2415,7 +2415,7 @@ macro NLconstraint(m, x, args...)
     # Two formats:
     # - @NLconstraint(m, a*x <= 5)
     # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
-    extra, kw_args, requestedcontainer = Containers._extract_kw_args(args)
+    extra, kw_args, requested_container = Containers._extract_kw_args(args)
     if length(extra) > 1 || length(kw_args) > 0
         _error("too many arguments.")
     end
@@ -2437,7 +2437,7 @@ macro NLconstraint(m, x, args...)
         add_nonlinear_constraint($esc_m, $expr)
     end
     looped =
-        Containers.container_code(idxvars, indices, code, requestedcontainer)
+        Containers.container_code(idxvars, indices, code, requested_container)
     creation_code = quote
         _init_NLP($esc_m)
         $looped
@@ -2475,7 +2475,7 @@ my_expr_2 = @NLexpression(m, log(1 + sum(exp(x[i])) for i in 1:2))
 """
 macro NLexpression(args...)
     _error(str...) = _macro_error(:NLexpression, args, __source__, str...)
-    args, kw_args, requestedcontainer = Containers._extract_kw_args(args)
+    args, kw_args, requested_container = Containers._extract_kw_args(args)
     if length(args) <= 1
         _error(
             "To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.",
@@ -2506,7 +2506,7 @@ macro NLexpression(args...)
         add_nonlinear_expression($esc_m, $expr)
     end
     creation_code =
-        Containers.container_code(idxvars, indices, code, requestedcontainer)
+        Containers.container_code(idxvars, indices, code, requested_container)
     if isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
         macro_code = creation_code
     else
