@@ -383,7 +383,6 @@ function Base.getindex(A::DenseAxisArray{T,N}, args...; kwargs...) where {T,N}
     new_axes = _getindex_recurse(A.axes, new_indices, _is_range)
     names = A.names[findall(_is_range, new_indices)]
     return DenseAxisArray(A.data[new_indices...], new_axes...; names = names)
-
 end
 
 Base.getindex(A::DenseAxisArray, idx::CartesianIndex) = A.data[idx]
