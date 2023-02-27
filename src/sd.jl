@@ -508,7 +508,7 @@ function reshape_vector(v::Vector{T}, shape::HermitianMatrixShape) where {T}
         real_k += 1
         matrix[j, j] = v[real_k]
     end
-    return matrix
+    return LinearAlgebra.Hermitian(matrix)
 end
 
 function _vectorize_complex_variables(_error::Function, matrix::Matrix)

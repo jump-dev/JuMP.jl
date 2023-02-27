@@ -642,7 +642,8 @@ function test_extension_variables_constrained_on_creation(
     @variable(model, set = MOI.Semiinteger(1.0, 2.0))
     @test num_constraints(model, typeof(z), MOI.Semiinteger{Float64}) == 2
 
-    @variable(model, [1:3, 1:3] in PSDCone())
+    X = @variable(model, [1:3, 1:3] in PSDCone())
+    @test X isa LinearAlgebra.Symmetric
     @test num_constraints(
         model,
         typeof(x),
@@ -1233,17 +1234,20 @@ end
 
 function test_Hermitian_PSD()
     model = Model()
-    @variable(model, Q[1:2, 1:2] in HermitianPSDCone())
+    @variable(model, H[1:2, 1:2] in HermitianPSDCone())
+    @test H isa LinearAlgebra.Hermitian
+    Q = parent(H)
     @test num_variables(model) == 4
     v = all_variables(model)
-    _test_variable_name_util(v[1], "real(Q[1,1])")
+    _test_variable_name_util(v[1], "real(H[1,1])")
     @test Q[1, 1] == 1v[1]
-    _test_variable_name_util(v[2], "real(Q[1,2])")
-    _test_variable_name_util(v[4], "imag(Q[1,2])")
+    _test_variable_name_util(v[2], "real(H[1,2])")
+    _test_variable_name_util(v[4], "imag(H[1,2])")
     @test Q[1, 2] == v[2] + v[4] * im
-    _test_variable_name_util(v[3], "real(Q[2,2])")
+    _test_variable_name_util(v[3], "real(H[2,2])")
     @test Q[2, 2] == 1v[3]
     @test Q[2, 1] == conj(Q[1, 2])
+    @test H[2, 1] == conj(H[1, 2])
     return
 end
 
@@ -1323,11 +1327,17 @@ end
 
 function test_Hermitian_PSD_anon()
     model = Model()
-    x = @variable(model, [1:2, 1:2] in HermitianPSDCone())
+    y = @variable(model, [1:2, 1:2] in HermitianPSDCone())
+    @test y isa LinearAlgebra.Hermitian
+    x = parent(y)
     @test sprint(show, x[1, 1]) == "_[1]"
+    @test sprint(show, y[1, 1]) == "_[1]"
     @test sprint(show, x[1, 2]) == "_[2] + (0.0 + 1.0im) _[4]"
+    @test sprint(show, y[1, 2]) == "_[2] + (0.0 + 1.0im) _[4]"
     @test sprint(show, x[2, 1]) == "_[2] + (-0.0 - 1.0im) _[4]"
+    @test sprint(show, y[2, 1]) == "_[2] + (0.0 - 1.0im) _[4]"
     @test sprint(show, x[2, 2]) == "_[3]"
+    @test sprint(show, y[2, 2]) == "_[3]"
     return
 end
 
