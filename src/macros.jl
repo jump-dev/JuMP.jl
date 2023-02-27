@@ -1360,12 +1360,8 @@ macro expression(args...)
         # other structure that returns `_MA.Zero()`.
         _replace_zero($code)
     end
-    code = Containers.container_code(
-        idxvars,
-        indices,
-        code,
-        requested_container,
-    )
+    code =
+        Containers.container_code(idxvars, indices, code, requested_container)
     # don't do anything with the model, but check that it's valid anyway
     if anonvar
         macro_code = code
