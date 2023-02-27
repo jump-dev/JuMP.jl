@@ -7,6 +7,16 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.8.2 (February 27, 2023)
+
+### Fixed
+
+ - Fixed dot product between complex JuMP expression and number (#3244)
+
+### Other
+
+ - Polish simple SDP examples (#3232)
+
 ## Version 1.8.1 (February 23, 2023)
 
 ### Fixed
