@@ -1399,6 +1399,14 @@ function test_extension_Hermitian_PSD_constraint(
     VariableRefType = VariableRef,
 )
     model = ModelType()
+    set_optimizer(
+        model,
+        () -> MOIU.MockOptimizer(
+            MOIU.Model{Float64}();
+            eval_objective_value = false,
+            eval_variable_constraint_dual = false,
+        ),
+    )
     @variable(model, x)
     @variable(model, y)
     @variable(model, w)
@@ -1417,6 +1425,21 @@ function test_extension_Hermitian_PSD_constraint(
     @test isequal_canonical(c.func[4], 1 - w)
     @test c.set == MOI.HermitianPositiveSemidefiniteConeTriangle(2)
     @test c.shape isa HermitianMatrixShape
+    MOIU.attach_optimizer(model)
+    model.is_model_dirty = false
+    mock_optimizer = unsafe_backend(model).model
+    MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    F = MOI.VectorAffineFunction{Float64}
+    MOI.set(
+        mock_optimizer,
+        MOI.ConstraintDual(),
+        optimizer_index(href),
+        1:MOI.dimension(c.set),
+    )
+    d = dual(href)
+    @test d isa Hermitian
+    @test parent(d) == [1 2 + 4im; 2 - 4im 3]
     return
 end
 

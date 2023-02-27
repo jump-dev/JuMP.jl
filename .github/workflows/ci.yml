@@ -47,6 +47,11 @@ jobs:
             ${{ runner.os }}-test-${{ env.cache-name }}-
             ${{ runner.os }}-test-
             ${{ runner.os }}-
+      - name: MOI#hermitian_model
+        shell: julia --project=@. {0}
+        run: |
+          using Pkg
+          Pkg.add(PackageSpec(name="MathOptInterface", rev="bl/hermitian_model"))
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
         with:
