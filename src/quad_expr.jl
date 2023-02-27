@@ -114,10 +114,15 @@ Base.broadcastable(q::GenericQuadExpr) = Ref(q)
 Base.conj(a::GenericQuadExpr{<:Real}) = a
 Base.real(a::GenericQuadExpr{<:Real}) = a
 Base.imag(a::GenericQuadExpr{<:Real}) = a
+Base.isreal(::GenericQuadExpr{<:Real}) = true
 
 Base.conj(a::GenericQuadExpr{<:Complex}) = map_coefficients(conj, a)
 Base.real(a::GenericQuadExpr{<:Complex}) = map_coefficients(real, a)
 Base.imag(a::GenericQuadExpr{<:Complex}) = map_coefficients(imag, a)
+
+function Base.isreal(x::GenericQuadExpr{<:Complex})
+    return isreal(x.aff) && all(isreal, values(x.terms))
+end
 
 # Needed for cases when Julia uses `x == 0` instead of `iszero(x)` (e.g., in the
 # stdlib).

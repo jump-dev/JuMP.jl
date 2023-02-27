@@ -257,4 +257,20 @@ function test_complex_hermitian_constraint()
     return
 end
 
+function test_isreal()
+    model = Model()
+    @variable(model, x[1:2])
+    @test isreal(x[1])
+    @test isreal(2 * x[1] + 3) == true
+    @test isreal(2 * x[1] + 3 * x[2]) == true
+    @test isreal(2 * x[1] + 3 * x[2] + 4) == true
+    @test isreal(2 * x[1] + 0im) == true
+    @test isreal(2 * x[1] + 1im) == false
+    @test isreal(2im * x[1] + 1) == false
+    @test isreal(x[1] * x[2] + 1) == true
+    @test isreal(x[1] * x[2] + 1im) == false
+    @test isreal(x[1] * x[2] * 1im + 2) == false
+    return
+end
+
 end

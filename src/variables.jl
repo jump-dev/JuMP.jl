@@ -200,6 +200,7 @@ Base.conj(v::AbstractVariableRef) = v
 Base.real(v::AbstractVariableRef) = v
 Base.imag(v::AbstractVariableRef) = zero(v)
 Base.abs2(v::AbstractVariableRef) = v^2
+Base.isreal(::AbstractVariableRef) = true
 
 """
     VariableRef <: AbstractVariableRef
