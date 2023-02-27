@@ -377,7 +377,7 @@ julia> x[i = 2, j = :A]
 (2, :A)
 
 julia> x[i = 2:3, j = :A]
-SparseAxisArray{Tuple{Int64, Symbol}, 1, Tuple{Int64}} with 2 entries:
+JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 1, Tuple{Int64}} with 2 entries:
   [2]  =  (2, :A)
   [3]  =  (3, :A)
 ```
