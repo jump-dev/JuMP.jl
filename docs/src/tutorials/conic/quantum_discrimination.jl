@@ -19,18 +19,18 @@ using JuMP
 import LinearAlgebra
 import SCS
 
-# ## formulation
+# ## Formulation
 
 # A `d`-dimensional quantum state, ``\rho``, can be defined by a complex-valued
 # Hermitian matrix with a trace of `1`. Assume we have `N` `d`-dimensional
-# quantum states, ``\{\rho_i}_{i=1}^n``, each of which is equally likely.
+# quantum states, ``\{\rho_i\}_{i=1}^n``, each of which is equally likely.
 
 # The goal of the Quantum state discrimination problem is to choose a set of
 # positive-operator-valued-measures (POVMs), ``E_i`` such that if we observe
 # ``E_i`` then the most probable state that we are in is ``\rho_i``.
 
 # Each POVM ``E_i`` is a complex-valued Hermitian matrix, and there is a
-# requirement that ``\sum\limits E_i = \mathbf{I}``.
+# requirement that ``\sum\limits_{i=1}^N E_i = \mathbf{I}``.
 
 # To choose the set of POVMs, we want to maximize the probability that we guess
 # the quantum state corrrectly. This can be formulated as the following
@@ -38,9 +38,10 @@ import SCS
 
 # ```math
 # \begin{aligned}
-# \max\limits_{E} \;\; & \\mathbb{E}_i[ tr(\rho_i \times E_i)] \\
-# \text{s.t.}     \;\; & \sum\limits_i E_i = \mathbf{I} \\
-#                      & E_i \succeq 0 \forall i.
+# \max\limits_{E} \;\; & \mathbb{E}_i[ tr(\rho_i \times E_i)] \\
+# \text{s.t.}     \;\; & \sum\limits_{i=1}^N E_i = \mathbf{I} \\
+#                      & E_i \succeq 0 \forall i = 1,\ldots,N.
+# \end{aligned}
 # ```
 
 # ## Data
