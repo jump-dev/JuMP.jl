@@ -675,6 +675,38 @@ function test_containers_denseaxisarray_kwarg_indexing()
     return
 end
 
+function test_containers_denseaxisarray_kwarg_setindex()
+    Containers.@container(x[i = 2:3, j = 1:2], i + j)
+    for i in 2:3, j in 1:2
+        @test x[i = i, j = j] == i + j
+        x[i = i, j = j] = i + j + 2
+        @test x[i = i, j = j] == i + j + 2
+    end
+    @test_throws(
+        ErrorException(
+            "Invalid index j in position 1. When using keyword indexing, the " *
+            "indices must match the exact name and order used when creating " *
+            "the container.",
+        ),
+        x[j = 1, i = 2] = 2,
+    )
+    @test_throws(
+        ErrorException(
+            "Invalid index k in position 2. When using keyword indexing, the " *
+            "indices must match the exact name and order used when creating " *
+            "the container.",
+        ),
+        x[i = 2, k = 2] = 2,
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot index with mix of positional and keyword arguments",
+        ),
+        x[i = 2, 2] = 3,
+    )
+    return
+end
+
 function test_containers_denseaxisarray_kwarg_indexing_slicing()
     Containers.@container(x[i = 2:3, j = 1:2], i + j)
     y = x[i = 2, j = :]
@@ -685,5 +717,83 @@ function test_containers_denseaxisarray_kwarg_indexing_slicing()
     @test y[i = 3, j = 1] == 4
     return
 end
+
+function test_containers_denseaxisarrayview_kwarg_indexing()
+    Containers.@container(a[i = 2:3, j = 1:2], i + j)
+    x = view(a, :, :)
+    for i in (2, 3, 2:2, 2:3, :), j in (1, 2, 1:2, 1:1, 2:2, :)
+        @test x[i = i, j = j] == x[i, j]
+        @test_throws ErrorException x[j = j, i = i]
+    end
+    @test_throws(
+        ErrorException(
+            "Invalid index j in position 1. When using keyword indexing, the " *
+            "indices must match the exact name and order used when creating " *
+            "the container.",
+        ),
+        x[j = 1, i = 2],
+    )
+    @test_throws(
+        ErrorException(
+            "Invalid index k in position 2. When using keyword indexing, the " *
+            "indices must match the exact name and order used when creating " *
+            "the container.",
+        ),
+        x[i = 2, k = 2],
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot index with mix of positional and keyword arguments",
+        ),
+        x[i = 2, 2],
+    )
+    return
+end
+
+function test_containers_denseaxisarrayview_kwarg_indexing_slicing()
+    Containers.@container(a[i = 2:3, j = 1:2], i + j)
+    x = view(a, :, :)
+    y = x[i = 2, j = :]
+    @test y[j = 2] == 4
+    y = x[i = :, j = 1]
+    @test y[i = 3] == 4
+    y = x[i = :, j = :]
+    @test y[i = 3, j = 1] == 4
+    return
+end
+
+function test_containers_denseaxisarrayview_kwarg_setindex()
+    Containers.@container(a[i = 2:3, j = 1:2], i + j)
+    x = view(a, :, :)
+    for i in 2:3, j in 1:2
+        @test x[i = i, j = j] == i + j
+        x[i = i, j = j] = i + j + 2
+        @test x[i = i, j = j] == i + j + 2
+    end
+    @test_throws(
+        ErrorException(
+            "Invalid index j in position 1. When using keyword indexing, the " *
+            "indices must match the exact name and order used when creating " *
+            "the container.",
+        ),
+        x[j = 1, i = 2] = 2,
+    )
+    @test_throws(
+        ErrorException(
+            "Invalid index k in position 2. When using keyword indexing, the " *
+            "indices must match the exact name and order used when creating " *
+            "the container.",
+        ),
+        x[i = 2, k = 2] = 2,
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot index with mix of positional and keyword arguments",
+        ),
+        x[i = 2, 2] = 3,
+    )
+    return
+end
+
 
 end  # module

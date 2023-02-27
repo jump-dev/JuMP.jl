@@ -355,19 +355,8 @@ end
 _is_range(::Any) = false
 _is_range(::Union{Vector{Int},Colon}) = true
 
-function Base.getindex(A::DenseAxisArray{T,N}, args...; kwargs...) where {T,N}
-    if !isempty(args) && !isempty(kwargs)
-        error("Cannot index with mix of positional and keyword arguments")
-    end
-    if !isempty(args)
-        return _get_index_positional(A, args...)
-    else
-        return _get_index_keyword(A; kwargs...)
-    end
-end
-
-function _get_index_keyword(A::DenseAxisArray{T,N}; kwargs...) where {T,N}
-    args = ntuple(N) do i
+function _kwargs_to_args(A::DenseAxisArray{T,N}; kwargs...) where {T,N}
+    return ntuple(N) do i
         kw = keys(kwargs)[i]
         if A.names[i] != kw
             error(
@@ -378,10 +367,15 @@ function _get_index_keyword(A::DenseAxisArray{T,N}; kwargs...) where {T,N}
         end
         return kwargs[i]
     end
-    return _get_index_positional(A, args...)
 end
 
-function _get_index_positional(A::DenseAxisArray{T,N}, args...) where {T,N}
+function Base.getindex(A::DenseAxisArray{T,N}, args...; kwargs...) where {T,N}
+    if !isempty(kwargs)
+        if !isempty(args)
+            error("Cannot index with mix of positional and keyword arguments")
+        end
+        return getindex(A, _kwargs_to_args(A; kwargs...)...)
+    end
     new_indices = Base.to_index(A, args)
     if !any(_is_range, new_indices)
         return A.data[new_indices...]::T
@@ -389,12 +383,24 @@ function _get_index_positional(A::DenseAxisArray{T,N}, args...) where {T,N}
     new_axes = _getindex_recurse(A.axes, new_indices, _is_range)
     names = A.names[findall(_is_range, new_indices)]
     return DenseAxisArray(A.data[new_indices...], new_axes...; names = names)
+
 end
 
 Base.getindex(A::DenseAxisArray, idx::CartesianIndex) = A.data[idx]
 
-function Base.setindex!(A::DenseAxisArray{T,N}, v, idx...) where {T,N}
-    return A.data[Base.to_index(A, idx)...] = v
+function Base.setindex!(
+    A::DenseAxisArray{T,N},
+    v,
+    args...;
+    kwargs...,
+) where {T,N}
+    if !isempty(kwargs)
+        if !isempty(args)
+            error("Cannot index with mix of positional and keyword arguments")
+        end
+        return setindex!(A, v, _kwargs_to_args(A; kwargs...)...)
+    end
+    return A.data[Base.to_index(A, args)...] = v
 end
 
 function Base.setindex!(
@@ -699,12 +705,18 @@ end
 
 Base.axes(x::DenseAxisArrayView) = _type_stable_axes(x.axes)
 
+_is_subaxis(key::K, axis::AbstractVector{K}) where {K} = key in axis
+
+function _is_subaxis(key::AbstractVector{K}, axis::AbstractVector{K}) where {K}
+    return all(k -> k in axis, key)
+end
+
 function _type_stable_args(axis::AbstractVector, ::Colon, axes, args)
     return (axis, _type_stable_args(axes, args)...)
 end
 
 function _type_stable_args(axis::AbstractVector, arg, axes, args)
-    if !(arg in axis)
+    if !_is_subaxis(arg, axis)
         throw(KeyError(arg))
     end
     return (arg, _type_stable_args(axes, args)...)
@@ -725,7 +737,27 @@ end
 
 _type_stable_args(axes::Tuple, ::Tuple{}) = axes
 
-function Base.getindex(x::DenseAxisArrayView, args...)
+function _kwargs_to_args(A::DenseAxisArrayView{T,N}; kwargs...) where {T,N}
+    return ntuple(N) do i
+        kw = keys(kwargs)[i]
+        if A.data.names[i] != kw
+            error(
+                "Invalid index $kw in position $i. When using keyword " *
+                "indexing, the indices must match the exact name and order " *
+                "used when creating the container.",
+            )
+        end
+        return kwargs[i]
+    end
+end
+
+function Base.getindex(x::DenseAxisArrayView, args...; kwargs...)
+    if !isempty(kwargs)
+        if !isempty(args)
+            error("Cannot index with mix of positional and keyword arguments")
+        end
+        return getindex(x, _kwargs_to_args(x; kwargs...)...)
+    end
     indices = _type_stable_args(x.axes, args)
     return getindex(x.data, indices...)
 end
@@ -740,7 +772,18 @@ function Base.setindex!(
     return setindex!(a, value, k.I...)
 end
 
-function Base.setindex!(x::DenseAxisArrayView{T}, value::T, args...) where {T}
+function Base.setindex!(
+    x::DenseAxisArrayView{T},
+    value::T,
+    args...;
+    kwargs...,
+) where {T}
+    if !isempty(kwargs)
+        if !isempty(args)
+            error("Cannot index with mix of positional and keyword arguments")
+        end
+        return setindex!(x, value, _kwargs_to_args(x; kwargs...)...)
+    end
     indices = _type_stable_args(x.axes, args)
     return setindex!(x.data, value, indices...)
 end

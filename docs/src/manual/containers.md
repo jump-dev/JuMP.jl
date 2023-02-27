@@ -259,6 +259,22 @@ julia> DataFrames.DataFrame(table)
    4 │     2  B       (2, :B)
 ```
 
+### Keyword indexing
+
+Keyword indexing can be used if all of the indices are named:
+
+```jldoctest containers_dense
+julia> x[i = 1, j = :A]
+(1, :A)
+
+julia> x[i = 1:2, j = :A]
+1-dimensional DenseAxisArray{Tuple{Int64, Symbol},1,...} with index sets:
+    Dimension 1, [1, 2]
+And data, a 2-element Vector{Tuple{Int64, Symbol}}:
+ (1, :A)
+ (2, :A)
+```
+
 ## SparseAxisArray
 
 A [`Containers.SparseAxisArray`](@ref) is created when the index sets are
@@ -350,6 +366,20 @@ julia> DataFrames.DataFrame(table)
    2 │     2  A       (2, :A)
    3 │     2  B       (2, :B)
    4 │     3  A       (3, :A)
+```
+
+### Keyword indexing
+
+Keyword indexing can be used if all of the indices are named:
+
+```jldoctest containers_sparse
+julia> x[i = 2, j = :A]
+(2, :A)
+
+julia> x[i = 2:3, j = :A]
+SparseAxisArray{Tuple{Int64, Symbol}, 1, Tuple{Int64}} with 2 entries:
+  [2]  =  (2, :A)
+  [3]  =  (3, :A)
 ```
 
 ## Forcing the container type

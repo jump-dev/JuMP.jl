@@ -99,40 +99,8 @@ function Base.setindex!(
     return setindex!(d, value, idx...)
 end
 
-function Base.setindex!(d::SparseAxisArray{T,N,K}, value, idx...) where {T,N,K}
-    if length(idx) < N
-        throw(BoundsError(d, idx))
-    elseif _sliced_key_type(K, idx...) !== nothing
-        throw(
-            ArgumentError(
-                "Slicing is not supported when calling `setindex!` on a" *
-                " SparseAxisArray",
-            ),
-        )
-    end
-    return setindex!(d.data, value, idx)
-end
-
-function Base.getindex(
-    d::SparseAxisArray{T,N,K},
-    idx::K,
-) where {T,N,K<:NTuple{N,Any}}
-    return getindex(d, idx...)
-end
-
-function Base.getindex(d::SparseAxisArray, args...; kwargs...)
-    if !isempty(args) && !isempty(kwargs)
-        error("Cannot index with mix of positional and keyword arguments")
-    end
-    if !isempty(args)
-        return _get_index_positional(d, args...)
-    else
-        return _get_index_keyword(d; kwargs...)
-    end
-end
-
-function _get_index_keyword(d::SparseAxisArray{T,N,K}; kwargs...) where {T,N,K}
-    args = ntuple(N) do i
+function _kwargs_to_args(d::SparseAxisArray{T,N}; kwargs...) where {T,N}
+    return ntuple(N) do i
         kw = keys(kwargs)[i]
         if d.names[i] != kw
             error(
@@ -143,10 +111,51 @@ function _get_index_keyword(d::SparseAxisArray{T,N,K}; kwargs...) where {T,N,K}
         end
         return kwargs[i]
     end
-    return _get_index_positional(d, args...)
 end
 
-function _get_index_positional(d::SparseAxisArray{T,N,K}, args...) where {T,N,K}
+function Base.setindex!(
+    d::SparseAxisArray{T,N,K},
+    value,
+    args...;
+    kwargs...,
+) where {T,N,K}
+    if !isempty(kwargs)
+        if !isempty(args)
+            error("Cannot index with mix of positional and keyword arguments")
+        end
+        return setindex!(d, value, _kwargs_to_args(d; kwargs...)...)
+    end
+    if length(args) < N
+        throw(BoundsError(d, args))
+    elseif _sliced_key_type(K, args...) !== nothing
+        throw(
+            ArgumentError(
+                "Slicing is not supported when calling `setindex!` on a" *
+                " SparseAxisArray",
+            ),
+        )
+    end
+    return setindex!(d.data, value, args)
+end
+
+function Base.getindex(
+    d::SparseAxisArray{T,N,K},
+    idx::K,
+) where {T,N,K<:NTuple{N,Any}}
+    return getindex(d, idx...)
+end
+
+function Base.getindex(
+    d::SparseAxisArray{T,N,K},
+    args...;
+    kwargs...,
+) where {T,N,K}
+    if !isempty(kwargs)
+        if !isempty(args)
+            error("Cannot index with mix of positional and keyword arguments")
+        end
+        return getindex(d, _kwargs_to_args(d; kwargs...)...)
+    end
     if length(args) < N
         throw(BoundsError(d, args))
     end
