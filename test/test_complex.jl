@@ -14,10 +14,10 @@ using JuMP
 using Test
 
 import LinearAlgebra
-import MutableArithmetics
+import MutableArithmetics as MA
 import SparseArrays
 
-const MA = MutableArithmetics
+include(joinpath(@__DIR__, "utilities.jl"))
 
 function _test_dot(a, b)
     @test LinearAlgebra.dot(a, b) == conj(a) * b
@@ -270,6 +270,55 @@ function test_isreal()
     @test isreal(x[1] * x[2] + 1) == true
     @test isreal(x[1] * x[2] + 1im) == false
     @test isreal(x[1] * x[2] * 1im + 2) == false
+    return
+end
+
+function test_complex_hermitian_constraint_nonhermitian_syntax()
+    model = Model()
+    @variable(model, x[1:2, 1:2])
+    @test_throws_strip(
+        ErrorException(
+            "In `@constraint(model, x in HermitianPSDCone())`: the matrix is " *
+            "not Hermitian.",
+        ),
+        @constraint(model, x in HermitianPSDCone()),
+    )
+    return
+end
+
+function test_complex_hermitian_constraint_greaterthan_inequality_syntax()
+    model = Model()
+    @variable(model, x[1:2, 1:2])
+    H = LinearAlgebra.Hermitian(x)
+    @constraint(model, c, H >= 0, HermitianPSDCone())
+    @test constraint_object(c).func == [x[1, 1], x[1, 2], x[2, 2], 0.0]
+    @test function_string(MIME("text/plain"), constraint_object(c)) ==
+          "[x[1,1]  x[1,2];\n x[1,2]  x[2,2]]"
+    @test_throws_strip(
+        ErrorException(
+            "In `@constraint(model, x >= 0, HermitianPSDCone())`: the matrix " *
+            "is not Hermitian.",
+        ),
+        @constraint(model, x >= 0, HermitianPSDCone()),
+    )
+    return
+end
+
+function test_complex_hermitian_constraint_lessthan_inequality_syntax()
+    model = Model()
+    @variable(model, x[1:2, 1:2])
+    H = LinearAlgebra.Hermitian(x)
+    @constraint(model, c, 0 <= H, HermitianPSDCone())
+    @test constraint_object(c).func == [x[1, 1], x[1, 2], x[2, 2], 0.0]
+    @test function_string(MIME("text/plain"), constraint_object(c)) ==
+        "[x[1,1]  x[1,2];\n x[1,2]  x[2,2]]"
+    @test_throws_strip(
+        ErrorException(
+            "In `@constraint(model, 0 <= x, HermitianPSDCone())`: the matrix " *
+            "is not Hermitian.",
+        ),
+        @constraint(model, 0 <= x, HermitianPSDCone()),
+    )
     return
 end
 
