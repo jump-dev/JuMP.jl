@@ -283,6 +283,9 @@ function test_complex_hermitian_constraint_nonhermitian_syntax()
         ),
         @constraint(model, x in HermitianPSDCone()),
     )
+    H = [x[1, 1] x[1, 2]; x[1, 2] x[2, 2]]
+    @constraint(model, c, H in HermitianPSDCone())
+    @test constraint_object(c).func == [x[1, 1], x[1, 2], x[2, 2], 0]
     return
 end
 

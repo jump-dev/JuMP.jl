@@ -275,8 +275,3 @@ julia> @constraint(model, H in HermitianPSDCone())
 [x[1]           (0.0 + 1.0im);
  (0.0 - 1.0im)  (-1.0 - 0.0im) x[2]] ∈ HermitianPSDCone()
 ```
-
-!!! note
-    The matrix `H` in `H in HermitianPSDCone()` must be a `LinearAlgebra.Hermitian`
-    matrix type. A `build_constraint` error will be thrown if the matrix is
-    a different matrix type.
