@@ -23,7 +23,7 @@ import SCS
 
 # A `d`-dimensional quantum state, ``\rho``, can be defined by a complex-valued
 # Hermitian matrix with a trace of `1`. Assume we have `N` `d`-dimensional
-# quantum states, ``\{\rho_i\}_{i=1}^n``, each of which is equally likely.
+# quantum states, ``\{\rho_i\}_{i=1}^N``, each of which is equally likely.
 
 # The goal of the Quantum state discrimination problem is to choose a set of
 # positive-operator-valued-measures (POVMs), ``E_i`` such that if we observe
@@ -106,16 +106,16 @@ solution = [value.(e) for e in E]
 
 # ## Alternative formulation
 
-# The formulation above includes `n` Hermitian matrices, and a set of linear
-# equality constraints. We can simplify the problem by replacing `E[n]` with
-# ``I - \sum E_i``, where ``I`` is the identity matrix. This results in:
+# The formulation above includes `N` Hermitian matrices and a set of linear
+# equality constraints. We can simplify the problem by replacing ``E_N`` with
+# ``E_N = I - \sum\limits_{i=1}^{N-1} E_i``. This results in:
 
 model = Model(SCS.Optimizer)
 set_silent(model)
 E = [@variable(model, [1:d, 1:d] in HermitianPSDCone()) for i in 1:N-1]
-E_n = LinearAlgebra.Hermitian(LinearAlgebra.I - sum(E))
-@constraint(model, E_n in HermitianPSDCone())
-push!(E, E_n)
+E_N = LinearAlgebra.Hermitian(LinearAlgebra.I - sum(E))
+@constraint(model, E_N in HermitianPSDCone())
+push!(E, E_N)
 
 # The objective can also be simplified, by observing that it is equivalent to:
 

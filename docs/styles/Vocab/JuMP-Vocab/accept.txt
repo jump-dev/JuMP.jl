@@ -78,6 +78,7 @@ nl|NL
 overfitting
 parameteriz(ing|ation)
 perp
+POVMs
 [Pp]recompil(ation|(e(?d)))
 [Pp]resolve
 Relatedly
