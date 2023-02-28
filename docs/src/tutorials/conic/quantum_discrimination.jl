@@ -38,7 +38,7 @@ import SCS
 
 # ```math
 # \begin{aligned}
-# \max\limits_{E} \;\; & \mathbb{E}_i[ \operatorname{tr}(\rho_i  E_i)] \\
+# \max\limits_{E} \;\; & \frac{1}{N} \sum\limits_{i=1}^N \operatorname{tr}(\rho_i  E_i) \\
 # \text{s.t.}     \;\; & \sum\limits_{i=1}^N E_i = \mathbf{I} \\
 #                      & E_i \succeq 0 \; \forall i = 1,\ldots,N.
 # \end{aligned}
@@ -78,9 +78,9 @@ E = [@variable(model, [1:d, 1:d] in HermitianPSDCone()) for i in 1:N]
 # in which 2-dimensional slices of the array are Hermitian matrices.
 
 # We also need to enforce the constraint that
-# ``\sum\limits_i E_i = \mathbf{I}``:
+# ``\sum\limits_{i=1}^N E_i = \mathbf{I}``:
 
-@constraint(model, sum(E) .== LinearAlgebra.I)
+@constraint(model, sum(E[i] for i in 1:N) .== LinearAlgebra.I)
 
 # This constraint is a complex-valued equality constraint. In the solver, it
 # will be decomposed onto two types of equality constraints: one to enforce
@@ -100,7 +100,17 @@ E = [@variable(model, [1:d, 1:d] in HermitianPSDCone()) for i in 1:N]
 optimize!(model)
 solution_summary(model)
 
-# The optimal POVM is:
+# The probability of guessing correctly is:
+
+objective_value(model)
+
+# When `N = 2`, there is a known analytical solution of:
+
+0.5 + 0.25 * sum(LinearAlgebra.svdvals(ρ[1] - ρ[2]))
+
+# proving that we found the optimal solution.
+
+# Finally, the optimal POVM is:
 
 solution = [value.(e) for e in E]
 
@@ -125,3 +135,7 @@ push!(E, E_N)
 
 optimize!(model)
 solution_summary(model)
+
+#-
+
+objective_value(model)
