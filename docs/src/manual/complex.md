@@ -10,7 +10,7 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
 # Complex number support
 
 JuMP has a limited range of support for complex-valued variables and
-constraints. Since no current solvers natively support complex-valued variables
+constraints. Since no current solvers other than SeDuMi natively support complex-valued variables
 and constraints, JuMP reformulates all complex expressions into their real and
 imaginary parts.
 
