@@ -100,6 +100,9 @@ function Base.setindex!(
 end
 
 function _kwargs_to_args(d::SparseAxisArray{T,N}; kwargs...) where {T,N}
+    if length(kwargs) != N
+        throw(BoundsError(d, kwargs))
+    end
     return ntuple(N) do i
         kw = keys(kwargs)[i]
         if d.names[i] != kw

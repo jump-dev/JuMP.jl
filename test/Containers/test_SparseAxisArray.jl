@@ -286,6 +286,8 @@ function test_containers_sparseaxisarray_kwarg_indexing()
         ),
         y[i = 2, 2],
     )
+    @test_throws(BoundsError, y[i = 2] = 1)
+    @test_throws(BoundsError, y[2] = 1)
     return
 end
 
