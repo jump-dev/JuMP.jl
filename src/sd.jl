@@ -585,7 +585,7 @@ function build_constraint(
     _error::Function,
     Q::AbstractMatrix{<:AbstractJuMPScalar},
     set::HermitianPSDCone,
-) where {V}
+)
     if !LinearAlgebra.ishermitian(Q)
         _error("the matrix is not Hermitian.")
     end
@@ -597,7 +597,7 @@ function build_constraint(
     Q::AbstractMatrix{<:AbstractJuMPScalar},
     set::Union{MOI.GreaterThan,MOI.LessThan},
     extra::HermitianPSDCone,
-) where {V}
+)
     if !LinearAlgebra.ishermitian(Q)
         _error("the matrix is not Hermitian.")
     end

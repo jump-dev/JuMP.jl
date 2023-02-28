@@ -311,7 +311,7 @@ function test_complex_hermitian_constraint_lessthan_inequality_syntax()
     @constraint(model, c, 0 <= H, HermitianPSDCone())
     @test constraint_object(c).func == [x[1, 1], x[1, 2], x[2, 2], 0.0]
     @test function_string(MIME("text/plain"), constraint_object(c)) ==
-        "[x[1,1]  x[1,2];\n x[1,2]  x[2,2]]"
+          "[x[1,1]  x[1,2];\n x[1,2]  x[2,2]]"
     @test_throws_strip(
         ErrorException(
             "In `@constraint(model, 0 <= x, HermitianPSDCone())`: the matrix " *
