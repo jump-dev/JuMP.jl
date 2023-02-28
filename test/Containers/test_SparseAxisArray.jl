@@ -337,10 +337,7 @@ function test_containers_sparseaxisarray_kwarg_setindex()
         ),
         x[i = 2, 2] = 3,
     )
-    @test_throws(
-        BoundsError,
-        x[i = 2] = 3,
-    )
+    @test_throws(BoundsError, x[i = 2] = 3)
     return
 end
 
