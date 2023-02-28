@@ -48,6 +48,7 @@ unset_silent
 set_time_limit_sec
 unset_time_limit_sec
 time_limit_sec
+set_start_values
 get_optimizer_attribute
 set_optimizer_attribute
 set_optimizer_attributes

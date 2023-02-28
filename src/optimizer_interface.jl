@@ -980,3 +980,137 @@ function optimizer_index(x::Union{VariableRef,ConstraintRef{Model}})
     end
     return _moi_optimizer_index(backend(model), index(x))
 end
+
+"""
+    set_start_values(
+        model::Model;
+        variable_primal_start::Union{Nothing,Function} = value,
+        constraint_primal_start::Union{Nothing,Function} = value,
+        constraint_dual_start::Union{Nothing,Function} = dual,
+        nonlinear_dual_start::Union{Nothing,Function} = nonlinear_dual_start_value,
+    )
+
+Set the primal and dual starting values in `model` using the functions provided.
+
+If any keyword argument is `nothing`, the corresponding start value is skipped.
+
+If the optimizer does not support setting the starting value, the value will be
+skipped.
+
+## `variable_primal_start`
+
+This function controls the primal starting solution for the variables. It is
+equivalent to calling [`set_start_value`](@ref) for each variable, or setting
+the [`MOI.VariablePrimalStart`](@ref) attribute.
+
+If it is a function, it must have the form `variable_primal_start(x::VariableRef)`
+that maps each variable `x` to the starting primal value.
+
+The default is [`value`](@ref).
+
+## `constraint_primal_start`
+
+This function controls the primal starting solution for the constraints. It is
+equivalent to calling [`set_start_value`](@ref) for each constraint, or setting
+the [`MOI.ConstraintPrimalStart`](@ref) attribute.
+
+If it is a function, it must have the form `constraint_primal_start(ci::ConstraintRef)`
+that maps each constraint `ci` to the starting primal value.
+
+The default is [`value`](@ref).
+
+## `constraint_dual_start`
+
+This function controls the dual starting solution for the constraints. It is
+equivalent to calling [`set_dual_start_value`](@ref) for each constraint, or
+setting the [`MOI.ConstraintDualStart`](@ref) attribute.
+
+If it is a function, it must have the form `constraint_dual_start(ci::ConstraintRef)`
+that maps each constraint `ci` to the starting dual value.
+
+The default is [`dual`](@ref).
+
+## `nonlinear_dual_start`
+
+This function controls the dual starting solution for the nonlinear constraints
+It is equivalent to calling [`set_nonlinear_dual_start_value`](@ref).
+
+If it is a function, it must have the form `nonlinear_dual_start(model::Model)`
+that returns a vector corresponding to the dual start of the constraints.
+
+The default is [`nonlinear_dual_start_value`](@ref).
+"""
+function set_start_values(
+    model::Model;
+    variable_primal_start::Union{Nothing,Function} = value,
+    constraint_primal_start::Union{Nothing,Function} = value,
+    constraint_dual_start::Union{Nothing,Function} = dual,
+    nonlinear_dual_start::Union{Nothing,Function} = nonlinear_dual_start_value,
+)
+    variable_primal = Dict{VariableRef,Float64}()
+    support_variable_primal = MOI.supports(
+        backend(model),
+        MOI.VariablePrimalStart(),
+        MOI.VariableIndex,
+    )
+    if support_variable_primal && variable_primal_start !== nothing
+        for x in all_variables(model)
+            variable_primal[x] = variable_primal_start(x)
+        end
+    end
+    constraint_primal = Dict{ConstraintRef,Float64}()
+    constraint_dual = Dict{ConstraintRef,Float64}()
+    for (F, S) in list_of_constraint_types(model)
+        _get_start_values(
+            model,
+            F,
+            S,
+            constraint_primal,
+            constraint_primal_start,
+            constraint_dual,
+            constraint_dual_start,
+        )
+    end
+    if nonlinear_dual_start !== nothing && num_nonlinear_constraints(model) > 0
+        if MOI.supports(backend(model), MOI.NLPBlockDualStart())
+            nlp_dual_start = nonlinear_dual_start(model)
+            set_nonlinear_dual_start_value(model, nlp_dual_start)
+        end
+    end
+    for (x, primal_start) in variable_primal
+        set_start_value(x, primal_start)
+    end
+    for (ci, primal_start) in constraint_primal
+        set_start_value(ci, primal_start)
+    end
+    for (ci, dual_start) in constraint_dual
+        set_dual_start_value(ci, dual_start)
+    end
+    return
+end
+
+function _get_start_values(
+    model,
+    ::Type{F},
+    ::Type{S},
+    constraint_primal,
+    constraint_primal_start::Union{Nothing,Function},
+    constraint_dual,
+    constraint_dual_start::Union{Nothing,Function},
+) where {F,S}
+    moi_model = backend(model)
+    CI = MOI.ConstraintIndex{moi_function_type(F),S}
+    support_constraint_primal =
+        MOI.supports(moi_model, MOI.ConstraintPrimalStart(), CI)
+    support_constraint_dual =
+        MOI.supports(moi_model, MOI.ConstraintDualStart(), CI)
+    for ci in all_constraints(model, F, S)
+        if support_constraint_primal && constraint_primal_start !== nothing
+            constraint_primal[ci] = constraint_primal_start(ci)
+        end
+        if support_constraint_dual && constraint_dual_start !== nothing
+            constraint_dual[ci] = constraint_dual_start(ci)
+        end
+    end
+    return
+end

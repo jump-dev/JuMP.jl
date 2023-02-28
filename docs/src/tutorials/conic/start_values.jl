@@ -9,10 +9,17 @@
 # solution. This can improve performance, particularly if you are repeatedly
 # solving a sequence of related problems.
 
+# !!! tip
+#     See [`set_start_values`](@ref) for a generic implementation of this
+#     function that was added to JuMP after this tutorial was written.
+
 # In this tutorial, we demonstrate how to write a function that sets the primal
 # and dual starts as the optimal solution stored in a model. It is intended to
 # be a starting point for which you can modify if you want to do something
 # similar in your own code.
+
+# !!! warning
+#     This tutorial does not set start values for nonlinear models.
 
 # This tutorial uses the following packages:
 
@@ -73,3 +80,10 @@ optimize!(model)
 
 # Now the optimization terminates after 0 iterations because our starting point
 # is already optimal.
+
+# Note that some solvers do not support setting some parts of the starting
+# solution, for example, they may support only `set_start_value` for variables.
+# If you encounter an `UnsupportedSupported` attribute error for
+# [`MOI.VariablePrimalStart`](@ref), [`MOI.ConstraintPrimalStart`](@ref), or
+# [`MOI.ConstraintDualStart`](@ref), comment out the corresponding part of the
+# `set_optimal_start_values` function.

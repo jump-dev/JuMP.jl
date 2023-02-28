@@ -981,4 +981,56 @@ function test_get_set_attribute_constraint()
     return
 end
 
+function test_set_start_values()
+    model = Model()
+    @variable(model, x >= 0, Int)
+    @constraint(model, c, 2 * x <= 1)
+    @NLconstraint(model, nl, x^2 <= 1)
+    @test_throws OptimizeNotCalled set_start_values(model)
+    set_start_values(
+        model;
+        variable_primal_start = x -> Float64(index(x).value) + 0.1,
+        constraint_primal_start = c -> Float64(index(c).value) + 0.2,
+        constraint_dual_start = c -> Float64(index(c).value) + 0.3,
+        nonlinear_dual_start = m -> fill(0.4, num_nonlinear_constraints(m)),
+    )
+    @test start_value(x) == index(x).value + 0.1
+    @test start_value(c) == index(c).value + 0.2
+    @test dual_start_value(c) == index(c).value + 0.3
+    @test nonlinear_dual_start_value(model) == [0.4]
+    # Only dual start
+    model = Model()
+    @variable(model, x >= 0, Int)
+    @constraint(model, c, 2 * x <= 1)
+    @NLconstraint(model, nl, x^2 <= 1)
+    set_start_values(
+        model;
+        variable_primal_start = nothing,
+        constraint_primal_start = nothing,
+        constraint_dual_start = c -> Float64(index(c).value) + 0.5,
+        nonlinear_dual_start = m -> fill(0.6, num_nonlinear_constraints(m)),
+    )
+    @test start_value(x) === nothing
+    @test start_value(c) === nothing
+    @test dual_start_value(c) == index(c).value + 0.5
+    @test nonlinear_dual_start_value(model) == [0.6]
+    # Only primal start
+    model = Model()
+    @variable(model, x >= 0, Int)
+    @constraint(model, c, 2 * x <= 1)
+    @NLconstraint(model, nl, x^2 <= 1)
+    set_start_values(
+        model;
+        variable_primal_start = x -> Float64(index(x).value) + 0.7,
+        constraint_primal_start = c -> Float64(index(c).value) + 0.8,
+        constraint_dual_start = nothing,
+        nonlinear_dual_start = nothing,
+    )
+    @test start_value(x) === index(x).value + 0.7
+    @test start_value(c) === index(c).value + 0.8
+    @test dual_start_value(c) === nothing
+    @test nonlinear_dual_start_value(model) === nothing
+    return
+end
+
 end  # module TestModels
