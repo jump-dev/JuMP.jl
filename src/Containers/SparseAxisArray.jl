@@ -125,7 +125,7 @@ function Base.setindex!(
         end
         return setindex!(d, value, _kwargs_to_args(d; kwargs...)...)
     end
-    if length(args) < N
+    if length(args) != N
         throw(BoundsError(d, args))
     elseif _sliced_key_type(K, args...) !== nothing
         throw(

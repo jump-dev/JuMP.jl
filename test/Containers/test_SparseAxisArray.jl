@@ -304,4 +304,44 @@ function test_containers_sparseaxisarray_kwarg_indexing_slicing()
     return
 end
 
+function test_containers_sparseaxisarray_kwarg_setindex()
+    Containers.@container(
+        x[i = 2:3, j = 1:2],
+        i + j,
+        container = SparseAxisArray,
+    )
+    for i in 2:3, j in 1:2
+        @test x[i = i, j = j] == i + j
+        x[i = i, j = j] = i + j + 2
+        @test x[i = i, j = j] == i + j + 2
+    end
+    @test_throws(
+        ErrorException(
+            "Invalid index j in position 1. When using keyword indexing, the " *
+            "indices must match the exact name and order used when creating " *
+            "the container.",
+        ),
+        x[j = 1, i = 2] = 2,
+    )
+    @test_throws(
+        ErrorException(
+            "Invalid index k in position 2. When using keyword indexing, the " *
+            "indices must match the exact name and order used when creating " *
+            "the container.",
+        ),
+        x[i = 2, k = 2] = 2,
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot index with mix of positional and keyword arguments",
+        ),
+        x[i = 2, 2] = 3,
+    )
+    @test_throws(
+        BoundsError,
+        x[i = 2] = 3,
+    )
+    return
+end
+
 end  # module

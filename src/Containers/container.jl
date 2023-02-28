@@ -14,25 +14,23 @@ a `VectorizedProductIterator` and the function returns
 """
 function default_container end
 
+"""
+    AutoContainerType
+
+Pass `AutoContainerType` to [`container`](@ref) to let the container type be
+chosen based on the type of the indices using [`default_container`](@ref).
+"""
 struct AutoContainerType end
 
 """
-    container(f::Function, indices, c::Type{C}, names)
+    container(f::Function, indices[[, ::Type{C} = AutoContainerType], names])
 
 Create a container of type `C` with index names `names`, indices `indices` and
-values at given indices given by `f`. If this method is not specialized on
-`Type{C}`, it falls back to calling  `container(f, indices, c)` for backwards
-compatibility with containers not supporting index names.
+values at given indices given by `f`.
 
-    container(f::Function, indices, ::Type{C})
-
-Create a container of type `C` with indices `indices` and values at given
-indices given by `f`.
-
-    container(f::Function, indices)
-
-Create a container with indices `indices` and values at given indices given by
-`f`. The type of container used is determined by [`default_container`](@ref).
+If the method with `names` is not specialized on `Type{C}`, it falls back to
+calling  `container(f, indices, c)` for backwards compatibility with containers
+not supporting index names.
 
 ## Example
 
