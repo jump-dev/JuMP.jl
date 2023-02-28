@@ -780,14 +780,13 @@ end
 function test_Plural_failures()
     model = Model()
     @test_macro_throws MethodError @variables(model)
-    @test_macro_throws(
-        ErrorException("Invalid syntax for @variables"),
-        @variables(model, x),
+    err = ErrorException(
+        "Invalid syntax for @variables. The second argument must be a `begin end` " *
+        "block. For example:\n" *
+        "```julia\n@variables(model, begin\n    # ... lines here ...\nend)\n```.",
     )
-    @test_macro_throws(
-        ErrorException("Invalid syntax for @variables"),
-        @variables(model, x >= 0),
-    )
+    @test_macro_throws err @variables(model, x)
+    @test_macro_throws err @variables(model, x >= 0)
     @test_macro_throws MethodError @variables(model, x >= 0, Bin)
     return
 end

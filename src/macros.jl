@@ -978,12 +978,16 @@ end
 _add_JuMP_prefix(s::Symbol) = Expr(:., JuMP, :($(QuoteNode(s))))
 
 function _pluralize_macro(mac, sym)
+    error_message =
+        "Invalid syntax for @$mac. The second argument must be a `begin end` " *
+        "block. For example:\n" *
+        "```julia\n@$mac(model, begin\n    # ... lines here ...\nend)\n```."
     @eval begin
         macro $mac(m, x)
             if !(isa(x, Expr) && x.head == :block)
                 # We do a weird string interpolation here so that it gets
                 # interpolated at compile time, not run-time.
-                error("Invalid syntax for @" * $(string(mac)))
+                error($error_message)
             end
             @assert isa(x.args[1], LineNumberNode)
             lastline = x.args[1]
