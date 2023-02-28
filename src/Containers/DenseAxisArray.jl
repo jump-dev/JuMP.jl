@@ -736,10 +736,17 @@ end
 
 _type_stable_args(axes::Tuple, ::Tuple{}) = axes
 
+function _fixed_indices(view_axes::Tuple, axes::Tuple)
+    return filter(ntuple(i -> i, length(view_axes))) do i
+        return !(typeof(view_axes[i]) <: eltype(axes[i]))
+    end
+end
+
 function _kwargs_to_args(A::DenseAxisArrayView{T,N}; kwargs...) where {T,N}
+    non_default_indices = _fixed_indices(A.axes, A.data.axes)
     return ntuple(N) do i
         kw = keys(kwargs)[i]
-        if A.data.names[i] != kw
+        if A.data.names[non_default_indices[i]] != kw
             error(
                 "Invalid index $kw in position $i. When using keyword " *
                 "indexing, the indices must match the exact name and order " *

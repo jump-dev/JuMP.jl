@@ -750,6 +750,23 @@ function test_containers_denseaxisarrayview_kwarg_indexing()
     return
 end
 
+function test_containers_denseaxisarrayview_kwarg_indexing_drop_dim()
+    Containers.@container(a[i = 2:3, j = 1:2], i + j)
+    x = view(a, 2, 1:2)
+    for j in (1, 2, 1:2, 1:1, 2:2, :)
+        @test x[j = j] == x[j]
+    end
+    @test_throws(
+        ErrorException(
+            "Invalid index i in position 1. When using keyword indexing, the " *
+            "indices must match the exact name and order used when creating " *
+            "the container.",
+        ),
+        x[i = 2],
+    )
+    return
+end
+
 function test_containers_denseaxisarrayview_kwarg_indexing_slicing()
     Containers.@container(a[i = 2:3, j = 1:2], i + j)
     x = view(a, :, :)
