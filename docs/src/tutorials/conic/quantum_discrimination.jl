@@ -8,7 +8,7 @@
 # This tutorial solves the problem of [quantum state discrimination](https://en.wikipedia.org/wiki/Quantum_state_discrimination).
 
 # The purpose of this tutorial to demonstrate how to solve problems involving
-# complex-valued decision variables and the [`HermitianPSDCone`(@ref). See
+# complex-valued decision variables and the [`HermitianPSDCone`](@ref). See
 # [Complex number support](@ref) for more details.
 
 # ## Required packages
