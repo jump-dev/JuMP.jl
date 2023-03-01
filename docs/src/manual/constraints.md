@@ -1057,7 +1057,7 @@ JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.Constraint
     If you have many index dimensions and a large amount of sparsity, read
     [Performance considerations](@ref).
 
-### Forcing the container type
+### [Forcing the container type](@id constraint_forcing)
 
 When creating a container of constraints, JuMP will attempt to choose the
 tightest container type that can store the constraints. However, because this

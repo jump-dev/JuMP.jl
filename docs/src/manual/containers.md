@@ -138,6 +138,16 @@ julia> DataFrames.DataFrame(table)
    6 │     2      3  (2, 3)
 ```
 
+### Keyword indexing
+
+Keyword indexing cannot be used and will throw a `MethodError`:
+
+```jldoctest containers_array
+julia> x[i = 2, j = 2]
+ERROR: MethodError: no method matching getindex(::Matrix{Tuple{Int64, Int64}}; i=2, j=2)
+[...]
+```
+
 ## DenseAxisArray
 
 A [`Containers.DenseAxisArray`](@ref) is created when the index sets are
@@ -382,7 +392,7 @@ JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 1, Tuple{Int64}} with 2 en
   [3]  =  (3, :A)
 ```
 
-## Forcing the container type
+## [Forcing the container type](@id container_forcing)
 
 Pass `container = T` to use `T` as the container. For example:
 ```jldoctest; filter=r"\([1-2], [1-2]\) \=\> [2-4]"
