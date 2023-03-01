@@ -5,12 +5,12 @@
 
 # # Ellipsoid approximation
 
-# This example considers the problem of computing _extremal ellipsoids_:
-# finding ellipsoids that best approximate a given set.
-# Our example will focus on outer approximations of finite sets
-# of points.
+# This tutorial considers the problem of computing _extremal ellipsoids_:
+# finding ellipsoids that best approximate a given set. As an extension, we show
+# how to use JuMP to inspect the bridges were used, and how to explore
+# alternate formulations.
 
-# This example comes from section 4.9 "Applications VII: Extremal Ellipsoids"
+# The model comes from Section 4.9 "Applications VII: Extremal Ellipsoids"
 # of the book *Lectures on Modern Convex Optimization* by
 # [Ben-Tal and Nemirovski (2001)](http://epubs.siam.org/doi/book/10.1137/1.9780898718829).
 
@@ -165,3 +165,108 @@ Plots.plot!(
     c = :crimson,
     label = nothing,
 )
+
+# ## Alternative formulations
+
+# The formulation of `model` uses [`MOI.RootDetConeSquare`](@ref). However,
+# because SCS does not natively support this cone, JuMP automatically
+# reformulates the problem into an equivalent problem that SCS _does_ support.
+# You can see the reformulation that JuMP chose using [`print_active_bridges`](@ref):
+
+print_active_bridges(model)
+
+# There's a lot going on here, but the first bullet is:
+# ```raw
+# * Unsupported objective: MOI.VariableIndex
+# |  bridged by:
+# |   MOIB.Objective.FunctionizeBridge{Float64}
+# |  introduces:
+# |   * Supported objective: MOI.ScalarAffineFunction{Float64}
+# ```
+# This says that SCS does not support a `MOI.VariableIndex` objective function,
+# and that JuMP used a [`MOI.Bridges.Objective.FunctionizeBridge`](@ref) to
+# convert it into a `MOI.ScalarAffineFunction{Float64}` objective function.
+# We can leave JuMP to do the reformulation, or we can rewrite out model to
+# have an objective function that SCS natively supports:
+
+@objective(model, Max, 1.0 * nth_root_det_Z + 0.0)
+
+# Re-printing the active bridges:
+
+print_active_bridges(model)
+
+# we get `* Supported objective: MOI.ScalarAffineFunction{Float64}`. We can
+# manually implement some other reformulations to change our model to something
+# that SCS more closely supports by:
+#
+#  * Replacing the [`MOI.VectorOfVariables`](@ref) in [`MOI.PositiveSemidefiniteConeTriangle`](@ref)
+#    constraint `Z[1:n, 1:n], PSD` with the [`MOI.VectorAffineFunction`](@ref)
+#    in [`MOI.PositiveSemidefiniteConeTriangle`](@ref) `Z >= 0, PSDCone()`.
+#
+#  * Replacing the [`MOI.ScalarAffineFunction`](@ref) in [`MOI.GreaterThan`](@ref)
+#    constraints with [`MOI.VectorAffineFunction`](@ref) in [`MOI.Nonnegatives`](@ref)
+#
+#  * Replacing the [`MOI.RootDetConeSquare`](@ref) constriant with
+#    [`MOI.RootDetConeTriangle`](@ref).
+
+# Note that we still need to bridge [`MOI.PositiveSemidefiniteConeTriangle`](@ref)
+# constraints because SCS uses an internal `SCS.ScaledPSDCone` set instead.
+
+model = Model(SCS.Optimizer)
+set_attribute(model, "eps_rel", 1e-6)
+set_silent(model)
+@variables(model, begin
+    z[1:n]
+    Z[1:n, 1:n], Symmetric
+    t
+    s
+    nth_root_det_Z
+end)
+@expressions(model, begin
+    f_nonneg, [1 - (S[i, :]' * Z * S[i, :]) + (2 * S[i, :]' * z) - s for i in 1:m]
+    f_root, vcat(nth_root_det_Z, [Z[i, j] for i in 1:n for j in i:n])
+end);
+@constraints(model, begin
+    Z >= 0, PSDCone()
+    LinearAlgebra.Symmetric([s z'; z Z]) >= 0, PSDCone()
+    f_nonneg in MOI.Nonnegatives(m)
+    f_root in MOI.RootDetConeTriangle(n)
+end);
+@objective(model, Max, 1.0 * nth_root_det_Z + 0.0)
+optimize!(model)
+simplified_solve_time = solve_time(model)
+
+# This formulation gives the much smaller graph:
+
+print_active_bridges(model)
+
+# The last bullet shows how JuMP reformulated the [`MOI.RootDetConeTriangle`](@ref)
+# constraint by adding a mixed of [`MOI.PositiveSemidefiniteConeTriangle`](@ref)
+# and [`MOI.GeometricMeanCone`](@ref) constraints. Because SCS doesn't natively
+# support the [`MOI.GeometricMeanCone`](@ref), these were further bridged using
+# a [`MOI.Bridges.Constraint.GeoMeanToPowerBridge`](@ref) bridge in series of
+# [`MOI.PowerCone`](@ref) constraints. However, there are many other ways that
+# a [`MOI.GeometricMeanCone`](@ref) can be reformulated into something that SCS
+# supports. Let's see what happens if we use [`remove_bridge`](@ref) to remove
+# the [`MOI.Bridges.Constraint.GeoMeanToPowerBridge`](@ref):
+
+remove_bridge(model, MOI.Bridges.Constraint.GeoMeanToPowerBridge)
+optimize!(model)
+
+# This time, the solve only took:
+
+no_geomean_to_power_bridge_solve_time = solve_time(model)
+
+# Why was the solve time different?
+
+print_active_bridges(model)
+
+# This time, JuMP used a [`MOI.Bridges.GeoMeanBridge`](@ref) to reformulate the
+# constraint into a set of [`MOI.RotatedSecondOrderCone`](@ref) constraints,
+# that were further reformulated into a set of supported
+# [`MOI.SecondOrderCone`](@ref) constraints. It seems that for this particular
+# model, the [`MOI.SecondOrderCone`](@ref) formulation is more efficient.
+
+# In general though, the performance of a particular reformulation is problem-
+# and solver-specific. Therefore, JuMP chooses to minimize number of bridges in
+# the default reformulation.

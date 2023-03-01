@@ -402,55 +402,70 @@ function bridge_constraints(model::Model)
     return _moi_bridge_constraints(backend(model))
 end
 
-function _moi_add_bridge(
-    model::Nothing,
-    BridgeType::Type{<:MOI.Bridges.AbstractBridge},
-)
-    # No optimizer is attached, the bridge will be added when one is attached
-    return
-end
+# No optimizer is attached.
+_moi_call_bridge_function(::Function, ::Nothing, args...) = nothing
 
-function _moi_add_bridge(::MOI.ModelLike, ::Type{<:MOI.Bridges.AbstractBridge})
+function _moi_call_bridge_function(::Function, ::MOI.ModelLike, args...)
     return error(
-        "Cannot add bridge if `add_bridges` was set to `false` in the `Model` ",
+        "Cannot use bridge if `add_bridges` was set to `false` in the `Model` ",
         "constructor.",
     )
 end
 
-function _moi_add_bridge(
-    bridge_opt::MOI.Bridges.LazyBridgeOptimizer,
-    BridgeType::Type{<:MOI.Bridges.AbstractBridge},
+function _moi_call_bridge_function(
+    f::Function,
+    model::MOI.Bridges.LazyBridgeOptimizer,
+    args...,
 )
-    MOI.Bridges.add_bridge(bridge_opt, BridgeType{Float64})
-    return
+    return f(model, args...)
 end
 
-function _moi_add_bridge(
-    caching_opt::MOIU.CachingOptimizer,
-    BridgeType::Type{<:MOI.Bridges.AbstractBridge},
+function _moi_call_bridge_function(
+    f::Function,
+    model::MOI.Utilities.CachingOptimizer,
+    args...,
 )
-    _moi_add_bridge(caching_opt.optimizer, BridgeType)
-    return
+    return _moi_call_bridge_function(f, model.optimizer, args...)
 end
 
 """
-     add_bridge(
-        model::Model,
-        BridgeType::Type{<:MOI.Bridges.AbstractBridge},
+     add_bridge(model::Model, BT::Type{<:MOI.Bridges.AbstractBridge})
+
+Add `BT` to the list of bridges that can be used to transform unsupported
+constraints into an equivalent formulation using only constraints supported by
+the optimizer.
+
+See also: [`remove_bridge`](@ref).
+"""
+function add_bridge(model::Model, BT::Type{<:MOI.Bridges.AbstractBridge})
+    push!(model.bridge_types, BT)
+    _moi_call_bridge_function(
+        MOI.Bridges.add_bridge,
+        backend(model),
+        BT{Float64},
     )
+    return
+end
 
-Add `BridgeType` to the list of bridges that can be used to transform
-unsupported constraints into an equivalent formulation using only constraints
-supported by the optimizer.
 """
-function add_bridge(
-    model::Model,
-    BridgeType::Type{<:MOI.Bridges.AbstractBridge},
-)
-    push!(model.bridge_types, BridgeType)
-    # The type of `backend(model)` is not type-stable, so we use a function
-    # barrier (`_moi_add_bridge`) to improve performance.
-    _moi_add_bridge(backend(model), BridgeType)
+     remove_bridge(model::Model, BT::Type{<:MOI.Bridges.AbstractBridge})
+
+Remove `BT` to the list of bridges that can be used to transform unsupported
+constraints into an equivalent formulation using only constraints supported by
+the optimizer.
+
+See also: [`add_bridge`](@ref).
+"""
+function remove_bridge(model::Model, BT::Type{<:MOI.Bridges.AbstractBridge})
+    delete!(model.bridge_types, BT)
+    _moi_call_bridge_function(
+        MOI.Bridges.remove_bridge,
+        backend(model),
+        BT{Float64},
+    )
+    if mode(model) != DIRECT
+        MOI.Utilities.reset_optimizer(model)
+    end
     return
 end
 
@@ -460,6 +475,12 @@ end
 Print the hyper-graph containing all variable, constraint, and objective types
 that could be obtained by bridging the variables, constraints, and objectives
 that are present in the model.
+
+!!! warning
+    This function is intended for advanced users. If you want to see only the
+    bridges that are currently used, use [`print_active_bridges`](@ref) instead.
+
+## Explanation of output
 
 Each node in the hyper-graph corresponds to a variable, constraint, or objective
 type.
@@ -477,28 +498,27 @@ For more information, see Legat, B., Dowson, O., Garcia, J., and Lubin, M.
 (2020).  "MathOptInterface: a data structure for mathematical optimization
 problems." URL: [https://arxiv.org/abs/2002.03447](https://arxiv.org/abs/2002.03447)
 """
+function print_bridge_graph(io::IO, model::Model)
+    return _moi_call_bridge_function(backend(model)) do m
+        return MOI.Bridges.print_graph(io, m)
+    end
+end
+
 print_bridge_graph(model::Model) = print_bridge_graph(Base.stdout, model)
 
-function print_bridge_graph(io::IO, model::Model)
-    # The type of `backend(model)` is not type-stable, so we use a function
-    # barrier (`_moi_print_bridge_graph`) to improve performance.
-    return _moi_print_bridge_graph(io, backend(model))
+"""
+    print_active_bridges([io::IO = stdout,] model::Model)
+
+Print a list of the variable, constraint, and objective bridges that are
+currently used in the model.
+"""
+function print_active_bridges(io::IO, model::Model)
+    return _moi_call_bridge_function(backend(model)) do m
+        return MOI.Bridges.print_active_bridges(io, m)
+    end
 end
 
-function _moi_print_bridge_graph(io::IO, model::MOI.Bridges.LazyBridgeOptimizer)
-    return MOI.Bridges.print_graph(io, model)
-end
-
-function _moi_print_bridge_graph(io::IO, model::MOIU.CachingOptimizer)
-    return _moi_print_bridge_graph(io, model.optimizer)
-end
-
-function _moi_print_bridge_graph(::IO, ::MOI.ModelLike)
-    return error(
-        "Cannot print bridge graph if `add_bridges` was set to `false` in " *
-        "the `Model` constructor.",
-    )
-end
+print_active_bridges(model::Model) = print_active_bridges(Base.stdout, model)
 
 """
     empty!(model::Model)::Model

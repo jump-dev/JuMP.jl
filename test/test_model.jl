@@ -304,6 +304,20 @@ function test_bridges_add_before_con_set_optimizer()
     @test 2.0 == @inferred JuMP.dual(c)
 end
 
+function test_bridges_remove_bridge()
+    model = Model(mock_factory)
+    add_bridge(model, NonnegativeBridge)
+    @variable(model, x)
+    c = @constraint(model, x in Nonnegative())
+    optimize!(model)
+    @test 1.0 == @inferred value(x)
+    @test 1.0 == @inferred value(c)
+    @test 2.0 == @inferred dual(c)
+    remove_bridge(model, NonnegativeBridge)
+    @test_throws MOI.UnsupportedConstraint optimize!(model)
+    return
+end
+
 function test_bridges_add_after_con_model_optimizer()
     model = Model(mock_factory)
     @variable(model, x)
@@ -372,14 +386,14 @@ function test_bridge_graph_false()
     @variable(model, x)
     @test_throws(
         ErrorException(
-            "Cannot add bridge if `add_bridges` was set to `false` in " *
+            "Cannot use bridge if `add_bridges` was set to `false` in " *
             "the `Model` constructor.",
         ),
         add_bridge(model, NonnegativeBridge)
     )
     @test_throws(
         ErrorException(
-            "Cannot print bridge graph if `add_bridges` was set to " *
+            "Cannot use bridge if `add_bridges` was set to " *
             "`false` in the `Model` constructor.",
         ),
         print_bridge_graph(model)
