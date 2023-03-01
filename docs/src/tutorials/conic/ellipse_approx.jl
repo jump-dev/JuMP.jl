@@ -222,10 +222,8 @@ set_silent(model)
     s
     nth_root_det_Z
 end)
-@expressions(model, begin
-    f_nonneg, [1 - (S[i, :]' * Z * S[i, :]) + (2 * S[i, :]' * z) - s for i in 1:m]
-    f_root, vcat(nth_root_det_Z, [Z[i, j] for i in 1:n for j in i:n])
-end);
+f_nonneg = [1 - (S[i, :]' * Z * S[i, :]) + (2 * S[i, :]' * z) - s for i in 1:m]
+f_root = vcat(nth_root_det_Z, [Z[i, j] for i in 1:n for j in i:n])
 @constraints(model, begin
     Z >= 0, PSDCone()
     LinearAlgebra.Symmetric([s z'; z Z]) >= 0, PSDCone()
