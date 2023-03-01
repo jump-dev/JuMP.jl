@@ -738,6 +738,45 @@ Subject to
  (f_1(x) + f_2(x)) - 1.0 ≤ 0
 ```
 
+### Registered functions with a variable number of arguments
+
+User defined functions require a fixed number of input arguments. However,
+sometimes you will want to use a registered function like:
+```jldoctest nlp_register_variable_arguments
+julia> f(x...) = sum(exp(x[i]^2) for i in 1:length(x));
+```
+with different numbers of arguments.
+
+The solution is to register the same function `f` for each unique number of
+input arguments, making sure to use a unique name each time. For example:
+
+```jldoctest nlp_register_variable_arguments
+julia> A = [[1], [1, 2], [2, 3, 4], [1, 3, 4, 5]];
+
+julia> model = Model();
+
+julia> @variable(model, x[1:5]);
+
+julia> funcs = Set{Symbol}();
+
+julia> for a in A
+           key = Symbol("f$(length(a))")
+           if !(key in funcs)
+               push!(funcs, key)
+               register(model, key, length(a), f; autodiff = true)
+           end
+           add_nonlinear_constraint(model, :($key($(x[a]...)) <= 1))
+       end
+
+julia> print(model)
+Feasibility
+Subject to
+ f1(x[1]) - 1.0 ≤ 0
+ f2(x[1], x[2]) - 1.0 ≤ 0
+ f3(x[2], x[3], x[4]) - 1.0 ≤ 0
+ f4(x[1], x[3], x[4], x[5]) - 1.0 ≤ 0
+```
+
 ## Known performance issues
 
 The macro-based input to JuMP's nonlinear interface can cause a performance
