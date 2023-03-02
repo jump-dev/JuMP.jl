@@ -259,4 +259,5 @@ print_active_bridges(model)
 
 # In general though, the performance of a particular reformulation is problem-
 # and solver-specific. Therefore, JuMP chooses to minimize the number of bridges in
-# the default reformulation.
+# the default reformulation, leaving you to explore alternative formulations
+# using the tools and techniques shown in this tutorial.
