@@ -1429,12 +1429,7 @@ function test_extension_Hermitian_PSD_constraint()
     MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     F = MOI.VectorAffineFunction{Float64}
     for (i, v) in enumerate(all_variables(model))
-        MOI.set(
-            mock_optimizer,
-            MOI.VariablePrimal(),
-            optimizer_index(v),
-            i,
-        )
+        MOI.set(mock_optimizer, MOI.VariablePrimal(), optimizer_index(v), i)
     end
     H = value(href)
     @test H isa LinearAlgebra.Hermitian
