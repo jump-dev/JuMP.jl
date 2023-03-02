@@ -304,6 +304,38 @@ function test_bridges_add_before_con_set_optimizer()
     @test 2.0 == @inferred dual(c)
 end
 
+function test_bridges_remove_bridge()
+    model = Model(mock_factory)
+    add_bridge(model, NonnegativeBridge)
+    @variable(model, x)
+    c = @constraint(model, x in Nonnegative())
+    optimize!(model)
+    @test 1.0 == @inferred value(x)
+    @test 1.0 == @inferred value(c)
+    @test 2.0 == @inferred dual(c)
+    remove_bridge(model, NonnegativeBridge)
+    @test_throws MOI.UnsupportedConstraint optimize!(model)
+    return
+end
+
+function test_bridges_print_active_bridge()
+    model = Model(mock_factory)
+    add_bridge(model, NonnegativeBridge)
+    @variable(model, x)
+    c = @constraint(model, x in Nonnegative())
+    optimize!(model)
+    print_active_bridges(model)
+    @test sprint(print_active_bridges, model) == """
+ * Supported objective: MOI.ScalarAffineFunction{Float64}
+ * Unsupported constraint: MOI.VariableIndex-in-Main.TestModels.Nonnegative
+ |  bridged by:
+ |   Main.TestModels.NonnegativeBridge{Float64, MOI.VariableIndex}
+ |  introduces:
+ |   * Supported constraint: MOI.VariableIndex-in-MOI.GreaterThan{Float64}
+"""
+    return
+end
+
 function test_bridges_add_after_con_model_optimizer()
     model = Model(mock_factory)
     @variable(model, x)
@@ -372,14 +404,14 @@ function test_bridge_graph_false()
     @variable(model, x)
     @test_throws(
         ErrorException(
-            "Cannot add bridge if `add_bridges` was set to `false` in " *
+            "Cannot use bridge if `add_bridges` was set to `false` in " *
             "the `Model` constructor.",
         ),
         add_bridge(model, NonnegativeBridge)
     )
     @test_throws(
         ErrorException(
-            "Cannot print bridge graph if `add_bridges` was set to " *
+            "Cannot use bridge if `add_bridges` was set to " *
             "`false` in the `Model` constructor.",
         ),
         print_bridge_graph(model)
