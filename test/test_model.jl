@@ -318,6 +318,24 @@ function test_bridges_remove_bridge()
     return
 end
 
+function test_bridges_print_active_bridge()
+    model = Model(mock_factory)
+    add_bridge(model, NonnegativeBridge)
+    @variable(model, x)
+    c = @constraint(model, x in Nonnegative())
+    optimize!(model)
+    print_active_bridges(model)
+    @test sprint(print_active_bridges, model) == """
+ * Supported objective: MOI.ScalarAffineFunction{Float64}
+ * Unsupported constraint: MOI.VariableIndex-in-Main.TestModels.Nonnegative
+ |  bridged by:
+ |   Main.TestModels.NonnegativeBridge{Float64, MOI.VariableIndex}
+ |  introduces:
+ |   * Supported constraint: MOI.VariableIndex-in-MOI.GreaterThan{Float64}
+"""
+    return
+end
+
 function test_bridges_add_after_con_model_optimizer()
     model = Model(mock_factory)
     @variable(model, x)
