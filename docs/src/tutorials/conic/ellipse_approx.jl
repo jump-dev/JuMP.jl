@@ -18,7 +18,7 @@
 
 # ## Problem formulation
 
-# Suppose that we are given a set ``S`` consisting of ``m`` points in
+# Suppose that we are given a set ``\mathcal{S}`` consisting of ``m`` points in
 # ``n``-dimensional space:
 # ```math
 # \mathcal{S} = \{ x_1, \ldots, x_m \} \subset \mathbb{R}^n
@@ -28,18 +28,20 @@
 # ```math
 # E(D, c) = \{ x : (x - c)^\top D ( x - c) \leq 1 \},
 # ```
-# contains ``\mathcal{S}`` and and has the smallest possible volume.
+# contains ``\mathcal{S}`` and has the smallest possible volume.
 
 # The optimal ``D`` and ``c`` are given by the optimization problem:
 # ```math
 # \begin{aligned}
 # \max        \quad & t                                                                    \\
-# \text{s.t.} \quad & Z                                                    \; & \succeq \; 0 \\
+# \text{s.t.} \quad & t \; \leq \; \sqrt[n]\det(Z)                                         \\
 #                   & \begin{bmatrix} s & z^\top \\ z & Z \\ \end{bmatrix} \; & \succeq \; 0 \\
-#                   & x_i^\top Z x_i - 2x_i^\top z + s                     \; & \leq \; 0    &  i=1, \ldots, m \\
-#                   & t \\ge \sqrt[n]\det(Z),
+#                   & Z                                                    \; & \succeq \; 0 \\
+#                   & x_i^\top Z x_i - 2x_i^\top z + s                     \; & \leq \; 1    & \quad i=1, \ldots, m
 # \end{aligned}
 # ```
+# in the matrix variable ``Z``, vector variable ``z`` and real variables ``t, s``.
+#
 # The optimal ellipse is given by ``D = Z_*`` and ``c = Z_*^{-1} z_*``.
 
 # ## Required packages
@@ -258,5 +260,5 @@ print_active_bridges(model)
 # model, the [`MOI.SecondOrderCone`](@ref) formulation is more efficient.
 
 # In general though, the performance of a particular reformulation is problem-
-# and solver-specific. Therefore, JuMP chooses to minimize number of bridges in
+# and solver-specific. Therefore, JuMP chooses to minimize the number of bridges in
 # the default reformulation.
