@@ -112,7 +112,8 @@ m, n = size(S)
 @constraint(model, LinearAlgebra.Symmetric([s z'; z Z]) >= 0, PSDCone())
 @constraint(
     model,
-    [i in 1:m], (S[i, :]' * Z * S[i, :]) - (2 * S[i, :]' * z) + s <= 1,
+    [i in 1:m],
+    (S[i, :]' * Z * S[i, :]) - (2 * S[i, :]' * z) + s <= 1,
 )
 
 # We cannot directly represent the objective ``(\det(Z))^{\frac{1}{n}}``, so we introduce
@@ -209,11 +210,12 @@ set_silent(model)
     t
 end)
 f_nonneg = [1 - (S[i, :]' * Z * S[i, :]) + (2 * S[i, :]' * z) - s for i in 1:m]
+f_root = vcat(t, [Z[i, j] for j in 1:n for i in 1:j])
 @constraints(model, begin
     Z >= 0, PSDCone()
     LinearAlgebra.Symmetric([s z'; z Z]) >= 0, PSDCone()
     f_nonneg in MOI.Nonnegatives(m)
-    vcat(t, [Z[i, j] for i in 1:n for j in i:n]) in MOI.RootDetConeTriangle(n)
+    f_root in MOI.RootDetConeTriangle(n)
 end);
 @objective(model, Max, 1.0 * t + 0.0)
 optimize!(model)
