@@ -1394,11 +1394,8 @@ function test_relax_with_penalty!_specific_with_default()
     return
 end
 
-function test_extension_Hermitian_PSD_constraint(
-    ModelType = Model,
-    VariableRefType = VariableRef,
-)
-    model = ModelType()
+function test_extension_Hermitian_PSD_constraint()
+    model = Model()
     set_optimizer(
         model,
         () -> MOIU.MockOptimizer(
@@ -1415,7 +1412,7 @@ function test_extension_Hermitian_PSD_constraint(
     _test_constraint_name_util(
         href,
         "href",
-        Vector{GenericAffExpr{Float64,VariableRefType}},
+        Vector{GenericAffExpr{Float64,VariableRef}},
         MOI.HermitianPositiveSemidefiniteConeTriangle,
     )
     c = constraint_object(href)
