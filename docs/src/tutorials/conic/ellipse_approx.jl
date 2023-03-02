@@ -28,7 +28,7 @@
 # ```math
 # E(D, c) = \{ x : (x - c)^\top D ( x - c) \leq 1 \},
 # ```
-# contains ``\mathcal{S}`` and and has the smallest possible volume.
+# contains ``\mathcal{S}`` and has the smallest possible volume.
 
 # The optimal ``D`` and ``c`` are given by the optimization problem:
 # ```math
