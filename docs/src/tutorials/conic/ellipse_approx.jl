@@ -40,9 +40,8 @@
 #                   & x_i^\top Z x_i - 2x_i^\top z + s                     \; & \leq \; 1    & \quad i=1, \ldots, m
 # \end{aligned}
 # ```
-# in the matrix variable ``Z``, vector variable ``z`` and real variables ``t, s``.
-#
-# The optimal ellipse is given by ``D = Z_*`` and ``c = Z_*^{-1} z_*``.
+# in the matrix variable ``Z``, vector variable ``z`` and real variables ``t, s``,
+# and where ``D = Z_*`` and ``c = Z_*^{-1} z_*``.
 
 # ## Required packages
 
