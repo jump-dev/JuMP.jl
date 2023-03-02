@@ -1427,7 +1427,7 @@ function test_extension_Hermitian_PSD_constraint(
     @test c.shape isa HermitianMatrixShape
     MOIU.attach_optimizer(model)
     model.is_model_dirty = false
-    mock_optimizer = unsafe_backend(model).model
+    mock_optimizer = unsafe_backend(model)
     MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     F = MOI.VectorAffineFunction{Float64}
