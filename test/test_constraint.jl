@@ -1431,15 +1431,26 @@ function test_extension_Hermitian_PSD_constraint(
     MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     F = MOI.VectorAffineFunction{Float64}
+    for (i, v) in enumerate(all_variables(model))
+        MOI.set(
+            mock_optimizer,
+            MOI.VariablePrimal(),
+            optimizer_index(v),
+            i,
+        )
+    end
+    H = value(href)
+    @test H isa LinearAlgebra.Hermitian
+    @test parent(H) == [0 -1-2im; -1+2im 0]
     MOI.set(
         mock_optimizer,
         MOI.ConstraintDual(),
         optimizer_index(href),
         1:MOI.dimension(c.set),
     )
-    d = dual(href)
-    @test d isa Hermitian
-    @test parent(d) == [1 2+4im; 2-4im 3]
+    H = dual(href)
+    @test H isa LinearAlgebra.Hermitian
+    @test parent(H) == [1 2+4im; 2-4im 3]
     return
 end
 
