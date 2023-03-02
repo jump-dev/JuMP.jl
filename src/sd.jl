@@ -580,3 +580,47 @@ function build_constraint(
         shape,
     )
 end
+
+function build_constraint(
+    _error::Function,
+    Q::AbstractMatrix{<:AbstractJuMPScalar},
+    set::HermitianPSDCone,
+)
+    if !LinearAlgebra.ishermitian(Q)
+        _error("the matrix is not Hermitian.")
+    end
+    return build_constraint(_error, LinearAlgebra.Hermitian(Q), set)
+end
+
+function build_constraint(
+    _error::Function,
+    Q::AbstractMatrix{<:AbstractJuMPScalar},
+    set::Union{MOI.GreaterThan,MOI.LessThan},
+    extra::HermitianPSDCone,
+)
+    if !LinearAlgebra.ishermitian(Q)
+        _error("the matrix is not Hermitian.")
+    end
+    return build_constraint(_error, LinearAlgebra.Hermitian(Q), set, extra)
+end
+
+function build_constraint(
+    _error::Function,
+    f::LinearAlgebra.Hermitian{V,<:AbstractMatrix{V}},
+    s::MOI.GreaterThan,
+    extra::HermitianPSDCone,
+) where {V<:AbstractJuMPScalar}
+    @assert iszero(s.lower)
+    return build_constraint(_error, f, extra)
+end
+
+function build_constraint(
+    _error::Function,
+    f::LinearAlgebra.Hermitian{V,<:AbstractMatrix{V}},
+    s::MOI.LessThan,
+    extra::HermitianPSDCone,
+) where {V<:AbstractJuMPScalar}
+    @assert iszero(s.upper)
+    new_f = _MA.operate!!(*, -1, f)
+    return build_constraint(_error, new_f, extra)
+end
