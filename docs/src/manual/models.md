@@ -493,12 +493,12 @@ By default [`Model`](@ref) will create a `CachingOptimizer` in `AUTOMATIC` mode.
 
 ### LazyBridgeOptimizer
 
-The second layer that JuMP applies automatically is a `LazyBridgeOptimizer`. A
-`LazyBridgeOptimizer` is an MOI layer that attempts to transform the problem
-from the formulation provided by the user into an equivalent problem supported
-by the solver. This may involve adding new variables and constraints to the
-optimizer. The transformations are selected from a set of known recipes called
-_bridges_.
+The second layer that JuMP applies automatically is a [`MOI.Bridges.LazyBridgeOptimizer`](@ref).
+A [`MOI.Bridges.LazyBridgeOptimizer`](@ref) is an MOI layer that attempts to
+transform the problem from the formulation provided by the user into an
+equivalent problem supported by the solver. This may involve adding new
+variables and constraints to the optimizer. The transformations are selected
+from a set of known recipes called _bridges_.
 
 A common example of a bridge is one that splits an interval constraint like
 `@constraint(model, 1 <= x + y <= 2)` into two constraints,
@@ -522,6 +522,11 @@ with model cache MOIU.UniversalFallback{MOIU.Model{Float64}}
   fallback for MOIU.Model{Float64}
 with optimizer A HiGHS model with 0 columns and 0 rows.
 ```
+
+Bridges can be added and removed from a [`MOI.Bridges.LazyBridgeOptimizer`](@ref)
+using [`add_bridge`](@ref) and [`remove_bridge`](@ref). Use
+[`print_active_bridges`](@ref) to see which bridges are used to reformulate the
+model. Read the [Ellipsoid approximation](@ref) tutorial for more details.
 
 ### Unsafe backend
 

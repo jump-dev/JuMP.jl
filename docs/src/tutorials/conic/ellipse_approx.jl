@@ -214,6 +214,7 @@ Z_upper = [Z[i, j] for j in 1:n for i in 1:j]
 ## The former @objective(model, Max, t)
 @objective(model, Max, 1.0 * t + 0.0)
 optimize!(model)
+Test.@test isapprox(D, value.(Z); atol = 1e-6)  #src
 solve_time_1 = solve_time(model)
 
 # This formulation gives the much smaller graph:
