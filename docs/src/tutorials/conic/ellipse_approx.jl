@@ -107,7 +107,7 @@ m, n = size(S)
 @constraint(
     model,
     [i in 1:m],
-    (S[i, :]' * Z * S[i, :]) - (2 * S[i, :]' * z) + s <= 1,
+    S[i, :]' * Z * S[i, :] - 2 * S[i, :]' * z + s <= 1,
 )
 @constraint(model, [t; vec(Z)] in MOI.RootDetConeSquare(n))
 @objective(model, Max, t)
@@ -205,14 +205,14 @@ set_silent(model)
 @constraint(model, Z >= 0, PSDCone())
 ## The former [s z'; z Z] >= 0, PSDCone()
 @constraint(model, LinearAlgebra.Symmetric([s z'; z Z]) >= 0, PSDCone())
-## The former constraint (S[i, :]' * Z * S[i, :]) - (2 * S[i, :]' * z) + s <= 1
-f = [1 - (S[i, :]' * Z * S[i, :]) + (2 * S[i, :]' * z) - s for i in 1:m]
+## The former constraint S[i, :]' * Z * S[i, :] - 2 * S[i, :]' * z + s <= 1
+f = [1 - S[i, :]' * Z * S[i, :] + 2 * S[i, :]' * z - s for i in 1:m]
 @constraint(model, f in MOI.Nonnegatives(m))
 ## The former constraint [t; vec(Z)] in MOI.RootDetConeSquare(n)
 Z_upper = [Z[i, j] for j in 1:n for i in 1:j]
-@constraint(model, 1 * vcat(t, Z_upper) .+ 0.0 in MOI.RootDetConeTriangle(n))
+@constraint(model, 1 * vcat(t, Z_upper) .+ 0 in MOI.RootDetConeTriangle(n))
 ## The former @objective(model, Max, t)
-@objective(model, Max, 1.0 * t + 0.0)
+@objective(model, Max, 1 * t + 0)
 optimize!(model)
 Test.@test isapprox(D, value.(Z); atol = 1e-6)  #src
 solve_time_1 = solve_time(model)
