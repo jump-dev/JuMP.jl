@@ -18,7 +18,7 @@
 
 # ## Problem formulation
 
-# Suppose that we are given a set ``S`` consisting of ``m`` points in
+# Suppose that we are given a set ``\mathcal{S}`` consisting of ``m`` points in
 # ``n``-dimensional space:
 # ```math
 # \mathcal{S} = \{ x_1, \ldots, x_m \} \subset \mathbb{R}^n
@@ -258,5 +258,5 @@ print_active_bridges(model)
 # model, the [`MOI.SecondOrderCone`](@ref) formulation is more efficient.
 
 # In general though, the performance of a particular reformulation is problem-
-# and solver-specific. Therefore, JuMP chooses to minimize number of bridges in
+# and solver-specific. Therefore, JuMP chooses to minimize the number of bridges in
 # the default reformulation.
