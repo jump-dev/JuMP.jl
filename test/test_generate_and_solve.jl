@@ -26,7 +26,7 @@ function test_generate_solve_LP()
     @variable(m, y >= 0.0)
     @objective(m, Min, -x)
     c = @constraint(m, x + y <= 1)
-    JuMP.set_name(c, "c")
+    set_name(c, "c")
     modelstring = """
     variables: x, y
     minobjective: -1.0*x
@@ -37,7 +37,7 @@ function test_generate_solve_LP()
     model = MOI.Utilities.Model{Float64}()
     MOI.Utilities.loadfromstring!(model, modelstring)
     MOI.Test.util_test_models_equal(
-        JuMP.backend(m).model_cache,
+        backend(m).model_cache,
         model,
         ["x", "y"],
         ["c"],
@@ -50,49 +50,39 @@ function test_generate_solve_LP()
             eval_objective_value = false,
         ),
     )
-    JuMP.optimize!(m)
-    mock = JuMP.unsafe_backend(m)
+    optimize!(m)
+    mock = unsafe_backend(m)
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock, MOI.RawStatusString(), "solver specific string")
     MOI.set(mock, MOI.ObjectiveValue(), -1.0)
     MOI.set(mock, MOI.ResultCount(), 1)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
-    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(c), -1.0)
-    MOI.set(
-        mock,
-        MOI.ConstraintDual(),
-        JuMP.optimizer_index(JuMP.UpperBoundRef(x)),
-        0.0,
-    )
-    MOI.set(
-        mock,
-        MOI.ConstraintDual(),
-        JuMP.optimizer_index(JuMP.LowerBoundRef(y)),
-        1.0,
-    )
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 1.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(y), 0.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c), -1.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(UpperBoundRef(x)), 0.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(LowerBoundRef(y)), 1.0)
     MOI.set(mock, MOI.SimplexIterations(), Int64(1))
     MOI.set(mock, MOI.BarrierIterations(), Int64(1))
     MOI.set(mock, MOI.NodeCount(), Int64(1))
-    @test JuMP.has_values(m)
-    @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
-    @test "solver specific string" == JuMP.raw_status(m)
-    @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
-    @test 1.0 == @inferred JuMP.value(x)
-    @test 0.0 == @inferred JuMP.value(y)
-    @test 1.0 == @inferred JuMP.value(x + y)
-    @test 1.0 == @inferred JuMP.value(c)
-    @test -1.0 == JuMP.objective_value(m)
-    @test -1.0 == @inferred JuMP.dual_objective_value(m)
-    @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m)
-    @test -1.0 == @inferred JuMP.dual(c)
-    @test 0.0 == @inferred JuMP.dual(JuMP.UpperBoundRef(x))
-    @test 1.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(y))
-    @test 1 == JuMP.simplex_iterations(m)
-    @test 1 == JuMP.barrier_iterations(m)
-    @test 1 == JuMP.node_count(m)
+    @test has_values(m)
+    @test MOI.OPTIMAL == @inferred termination_status(m)
+    @test "solver specific string" == raw_status(m)
+    @test MOI.FEASIBLE_POINT == @inferred primal_status(m)
+    @test 1.0 == @inferred value(x)
+    @test 0.0 == @inferred value(y)
+    @test 1.0 == @inferred value(x + y)
+    @test 1.0 == @inferred value(c)
+    @test -1.0 == objective_value(m)
+    @test -1.0 == @inferred dual_objective_value(m)
+    @test MOI.FEASIBLE_POINT == @inferred dual_status(m)
+    @test -1.0 == @inferred dual(c)
+    @test 0.0 == @inferred dual(UpperBoundRef(x))
+    @test 1.0 == @inferred dual(LowerBoundRef(y))
+    @test 1 == simplex_iterations(m)
+    @test 1 == barrier_iterations(m)
+    @test 1 == node_count(m)
     return
 end
 
@@ -101,7 +91,7 @@ function test_generate_solve_LP_direct_mode()
         MOI.Utilities.Model{Float64}();
         eval_objective_value = false,
     )
-    m = JuMP.direct_model(mock)
+    m = direct_model(mock)
     @variable(m, x <= 2.0)
     @variable(m, y >= 0.0)
     @objective(m, Min, -x)
@@ -112,40 +102,30 @@ function test_generate_solve_LP_direct_mode()
     MOI.set(mock, MOI.ResultCount(), 1)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
-    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(c), -1.0)
-    MOI.set(
-        mock,
-        MOI.ConstraintDual(),
-        JuMP.optimizer_index(JuMP.UpperBoundRef(x)),
-        0.0,
-    )
-    MOI.set(
-        mock,
-        MOI.ConstraintDual(),
-        JuMP.optimizer_index(JuMP.LowerBoundRef(y)),
-        1.0,
-    )
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 1.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(y), 0.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c), -1.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(UpperBoundRef(x)), 0.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(LowerBoundRef(y)), 1.0)
     MOI.set(mock, MOI.SimplexIterations(), Int64(1))
     MOI.set(mock, MOI.BarrierIterations(), Int64(1))
     MOI.set(mock, MOI.NodeCount(), Int64(1))
-    JuMP.optimize!(m)
-    @test JuMP.has_values(m)
-    @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
-    @test "solver specific string" == JuMP.raw_status(m)
-    @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
-    @test 1.0 == @inferred JuMP.value(x)
-    @test 0.0 == @inferred JuMP.value(y)
-    @test 1.0 == @inferred JuMP.value(x + y)
-    @test -1.0 == JuMP.objective_value(m)
-    @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m)
-    @test -1.0 == @inferred JuMP.dual(c)
-    @test 0.0 == @inferred JuMP.dual(JuMP.UpperBoundRef(x))
-    @test 1.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(y))
-    @test 1 == JuMP.simplex_iterations(m)
-    @test 1 == JuMP.barrier_iterations(m)
-    @test 1 == JuMP.node_count(m)
+    optimize!(m)
+    @test has_values(m)
+    @test MOI.OPTIMAL == @inferred termination_status(m)
+    @test "solver specific string" == raw_status(m)
+    @test MOI.FEASIBLE_POINT == @inferred primal_status(m)
+    @test 1.0 == @inferred value(x)
+    @test 0.0 == @inferred value(y)
+    @test 1.0 == @inferred value(x + y)
+    @test -1.0 == objective_value(m)
+    @test MOI.FEASIBLE_POINT == @inferred dual_status(m)
+    @test -1.0 == @inferred dual(c)
+    @test 0.0 == @inferred dual(UpperBoundRef(x))
+    @test 1.0 == @inferred dual(LowerBoundRef(y))
+    @test 1 == simplex_iterations(m)
+    @test 1 == barrier_iterations(m)
+    @test 1 == node_count(m)
     return
 end
 
@@ -169,39 +149,39 @@ function test_generate_solve_IP()
     model = MOI.Utilities.Model{Float64}()
     MOI.Utilities.loadfromstring!(model, modelstring)
     MOI.Test.util_test_models_equal(
-        JuMP.backend(m).model_cache,
+        backend(m).model_cache,
         model,
         ["x", "y"],
         String[],
         [("x", MOI.EqualTo(1.0)), ("x", MOI.Integer()), ("y", MOI.ZeroOne())],
     )
     MOI.Utilities.attach_optimizer(m)
-    mock = JuMP.unsafe_backend(m)
+    mock = unsafe_backend(m)
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock, MOI.RawStatusString(), "solver specific string")
     MOI.set(mock, MOI.ObjectiveValue(), 1.0)
     MOI.set(mock, MOI.ResultCount(), 1)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 1.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(y), 0.0)
     MOI.set(mock, MOI.DualStatus(), MOI.NO_SOLUTION)
     MOI.set(mock, MOI.SimplexIterations(), Int64(1))
     MOI.set(mock, MOI.BarrierIterations(), Int64(1))
     MOI.set(mock, MOI.NodeCount(), Int64(1))
     MOI.set(mock, MOI.RelativeGap(), 0.0)
-    JuMP.optimize!(m)
-    @test JuMP.has_values(m)
-    @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
-    @test "solver specific string" == JuMP.raw_status(m)
-    @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
-    @test 1.0 == @inferred JuMP.value(x)
-    @test 0.0 == @inferred JuMP.value(y)
-    @test 1.0 == JuMP.objective_value(m)
-    @test 1 == JuMP.simplex_iterations(m)
-    @test 1 == JuMP.barrier_iterations(m)
-    @test 1 == JuMP.node_count(m)
-    @test 0.0 == @inferred JuMP.relative_gap(m)
-    @test !JuMP.has_duals(m)
+    optimize!(m)
+    @test has_values(m)
+    @test MOI.OPTIMAL == @inferred termination_status(m)
+    @test "solver specific string" == raw_status(m)
+    @test MOI.FEASIBLE_POINT == @inferred primal_status(m)
+    @test 1.0 == @inferred value(x)
+    @test 0.0 == @inferred value(y)
+    @test 1.0 == objective_value(m)
+    @test 1 == simplex_iterations(m)
+    @test 1 == barrier_iterations(m)
+    @test 1 == node_count(m)
+    @test 0.0 == @inferred relative_gap(m)
+    @test !has_duals(m)
     return
 end
 
@@ -223,7 +203,7 @@ function test_generate_solve_QCQP()
     model = MOI.Utilities.Model{Float64}()
     MOI.Utilities.loadfromstring!(model, modelstring)
     MOI.Test.util_test_models_equal(
-        JuMP.backend(m).model_cache,
+        backend(m).model_cache,
         model,
         ["x", "y"],
         ["c1", "c2", "c3"],
@@ -235,38 +215,38 @@ function test_generate_solve_QCQP()
             eval_objective_value = false,
         ),
     )
-    JuMP.optimize!(m)
-    mock = JuMP.unsafe_backend(m)
+    optimize!(m)
+    mock = unsafe_backend(m)
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock, MOI.RawStatusString(), "solver specific string")
     MOI.set(mock, MOI.ObjectiveValue(), -1.0)
     MOI.set(mock, MOI.ResultCount(), 1)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
-    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(c1), -1.0)
-    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(c2), 2.0)
-    MOI.set(mock, MOI.ConstraintDual(), JuMP.optimizer_index(c3), 3.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 1.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(y), 0.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c1), -1.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c2), 2.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c3), 3.0)
     MOI.set(mock, MOI.SimplexIterations(), Int64(1))
     MOI.set(mock, MOI.BarrierIterations(), Int64(1))
     MOI.set(mock, MOI.NodeCount(), Int64(1))
-    @test JuMP.has_values(m)
-    @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
-    @test "solver specific string" == JuMP.raw_status(m)
-    @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
-    @test 1.0 == @inferred JuMP.value(x)
-    @test 0.0 == @inferred JuMP.value(y)
-    @test -1.0 == JuMP.objective_value(m)
-    @test 5.0 == @inferred JuMP.dual_objective_value(m)
-    @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m)
-    @test -1.0 == @inferred JuMP.dual(c1)
-    @test 2.0 == @inferred JuMP.dual(c2)
-    @test 3.0 == @inferred JuMP.dual(c3)
-    @test 2.0 == @inferred JuMP.value(2 * x + 3 * y * x)
-    @test 1 == JuMP.simplex_iterations(m)
-    @test 1 == JuMP.barrier_iterations(m)
-    @test 1 == JuMP.node_count(m)
+    @test has_values(m)
+    @test MOI.OPTIMAL == @inferred termination_status(m)
+    @test "solver specific string" == raw_status(m)
+    @test MOI.FEASIBLE_POINT == @inferred primal_status(m)
+    @test 1.0 == @inferred value(x)
+    @test 0.0 == @inferred value(y)
+    @test -1.0 == objective_value(m)
+    @test 5.0 == @inferred dual_objective_value(m)
+    @test MOI.FEASIBLE_POINT == @inferred dual_status(m)
+    @test -1.0 == @inferred dual(c1)
+    @test 2.0 == @inferred dual(c2)
+    @test 3.0 == @inferred dual(c3)
+    @test 2.0 == @inferred value(2 * x + 3 * y * x)
+    @test 1 == simplex_iterations(m)
+    @test 1 == barrier_iterations(m)
+    @test 1 == node_count(m)
     return
 end
 
@@ -292,7 +272,7 @@ function test_generate_solve_SOC()
     model = MOI.Utilities.Model{Float64}()
     MOI.Utilities.loadfromstring!(model, modelstring)
     MOI.Test.util_test_models_equal(
-        JuMP.backend(m).model_cache,
+        backend(m).model_cache,
         model,
         ["x", "y", "z"],
         ["varsoc", "affsoc", "rotsoc"],
@@ -309,38 +289,38 @@ function test_generate_solve_SOC()
     MOI.set(mock, MOI.ResultCount(), 1)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x), 1.0)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(y), 0.0)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(z), 0.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 1.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(y), 0.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(z), 0.0)
     MOI.set(
         mock,
         MOI.ConstraintDual(),
-        JuMP.optimizer_index(varsoc),
+        optimizer_index(varsoc),
         [-1.0, -2.0, -3.0],
     )
     MOI.set(
         mock,
         MOI.ConstraintDual(),
-        JuMP.optimizer_index(affsoc),
+        optimizer_index(affsoc),
         [1.0, 2.0, 3.0],
     )
     MOI.set(mock, MOI.SimplexIterations(), Int64(1))
     MOI.set(mock, MOI.BarrierIterations(), Int64(1))
     MOI.set(mock, MOI.NodeCount(), Int64(1))
-    JuMP.optimize!(m)
-    @test JuMP.has_values(m)
-    @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
-    @test "solver specific string" == JuMP.raw_status(m)
-    @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
-    @test 1.0 == @inferred JuMP.value(x)
-    @test 0.0 == @inferred JuMP.value(y)
-    @test 0.0 == @inferred JuMP.value(z)
-    @test JuMP.has_duals(m)
-    @test [-1.0, -2.0, -3.0] == @inferred JuMP.dual(varsoc)
-    @test [1.0, 2.0, 3.0] == @inferred JuMP.dual(affsoc)
-    @test 1 == JuMP.simplex_iterations(m)
-    @test 1 == JuMP.barrier_iterations(m)
-    @test 1 == JuMP.node_count(m)
+    optimize!(m)
+    @test has_values(m)
+    @test MOI.OPTIMAL == @inferred termination_status(m)
+    @test "solver specific string" == raw_status(m)
+    @test MOI.FEASIBLE_POINT == @inferred primal_status(m)
+    @test 1.0 == @inferred value(x)
+    @test 0.0 == @inferred value(y)
+    @test 0.0 == @inferred value(z)
+    @test has_duals(m)
+    @test [-1.0, -2.0, -3.0] == @inferred dual(varsoc)
+    @test [1.0, 2.0, 3.0] == @inferred dual(affsoc)
+    @test 1 == simplex_iterations(m)
+    @test 1 == barrier_iterations(m)
+    @test 1 == node_count(m)
     return
 end
 
@@ -367,7 +347,7 @@ function test_generate_solve_SDP()
     model = MOI.Utilities.Model{Float64}()
     MOI.Utilities.loadfromstring!(model, modelstring)
     MOI.Test.util_test_models_equal(
-        JuMP.backend(m).model_cache,
+        backend(m).model_cache,
         model,
         ["x11", "x12", "x22"],
         ["var_psd", "sym_psd", "con_psd"],
@@ -384,54 +364,54 @@ function test_generate_solve_SDP()
     MOI.set(mock, MOI.ResultCount(), 1)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x[1, 1]), 1.0)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x[1, 2]), 2.0)
-    MOI.set(mock, MOI.VariablePrimal(), JuMP.optimizer_index(x[2, 2]), 4.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x[1, 1]), 1.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x[1, 2]), 2.0)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x[2, 2]), 4.0)
     MOI.set(
         mock,
         MOI.ConstraintDual(),
-        JuMP.optimizer_index(var_psd),
+        optimizer_index(var_psd),
         [1.0, 2.0, 3.0],
     )
     MOI.set(
         mock,
         MOI.ConstraintDual(),
-        JuMP.optimizer_index(sym_psd),
+        optimizer_index(sym_psd),
         [4.0, 5.0, 6.0],
     )
     MOI.set(
         mock,
         MOI.ConstraintDual(),
-        JuMP.optimizer_index(con_psd),
+        optimizer_index(con_psd),
         [7.0, 8.0, 9.0, 10.0],
     )
     MOI.set(mock, MOI.SimplexIterations(), Int64(1))
     MOI.set(mock, MOI.BarrierIterations(), Int64(1))
     MOI.set(mock, MOI.NodeCount(), Int64(1))
-    JuMP.optimize!(m)
-    @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
-    @test "solver specific string" == JuMP.raw_status(m)
-    @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m)
-    @test JuMP.has_values(m)
-    @test [1.0 2.0; 2.0 4.0] == JuMP.value.(x)
-    @test JuMP.value(x) isa Symmetric
-    @test [1.0 2.0; 2.0 4.0] == @inferred JuMP.value(x)
-    @test JuMP.value(var_psd) isa Symmetric
-    @test [1.0 2.0; 2.0 4.0] == @inferred JuMP.value(var_psd)
-    @test JuMP.value(sym_psd) isa Symmetric
-    @test [0.0 2.0; 2.0 3.0] == @inferred JuMP.value(sym_psd)
-    @test JuMP.value(con_psd) isa Matrix
-    @test [0.0 2.0; 2.0 3.0] == @inferred JuMP.value(con_psd)
-    @test JuMP.has_duals(m)
-    @test JuMP.dual(var_psd) isa Symmetric
-    @test [1.0 2.0; 2.0 3.0] == @inferred JuMP.dual(var_psd)
-    @test JuMP.dual(sym_psd) isa Symmetric
-    @test [4.0 5.0; 5.0 6.0] == @inferred JuMP.dual(sym_psd)
-    @test JuMP.dual(con_psd) isa Matrix
-    @test [7.0 9.0; 8.0 10.0] == @inferred JuMP.dual(con_psd)
-    @test 1 == JuMP.simplex_iterations(m)
-    @test 1 == JuMP.barrier_iterations(m)
-    @test 1 == JuMP.node_count(m)
+    optimize!(m)
+    @test MOI.OPTIMAL == @inferred termination_status(m)
+    @test "solver specific string" == raw_status(m)
+    @test MOI.FEASIBLE_POINT == @inferred primal_status(m)
+    @test has_values(m)
+    @test [1.0 2.0; 2.0 4.0] == value.(x)
+    @test value(x) isa Symmetric
+    @test [1.0 2.0; 2.0 4.0] == @inferred value(x)
+    @test value(var_psd) isa Symmetric
+    @test [1.0 2.0; 2.0 4.0] == @inferred value(var_psd)
+    @test value(sym_psd) isa Symmetric
+    @test [0.0 2.0; 2.0 3.0] == @inferred value(sym_psd)
+    @test value(con_psd) isa Matrix
+    @test [0.0 2.0; 2.0 3.0] == @inferred value(con_psd)
+    @test has_duals(m)
+    @test dual(var_psd) isa Symmetric
+    @test [1.0 2.0; 2.0 3.0] == @inferred dual(var_psd)
+    @test dual(sym_psd) isa Symmetric
+    @test [4.0 5.0; 5.0 6.0] == @inferred dual(sym_psd)
+    @test dual(con_psd) isa Matrix
+    @test [7.0 9.0; 8.0 10.0] == @inferred dual(con_psd)
+    @test 1 == simplex_iterations(m)
+    @test 1 == barrier_iterations(m)
+    @test 1 == node_count(m)
     return
 end
 
@@ -444,7 +424,7 @@ function test_generate_solve_unsupported_nonlinear_problems()
         "The solver does not support nonlinear problems " *
         "(i.e., NLobjective and NLconstraint).",
     )
-    @test_throws err JuMP.optimize!(model)
+    @test_throws err optimize!(model)
     return
 end
 
@@ -474,81 +454,72 @@ c2: x + y <= 1.0
             eval_objective_value = false,
         ),
     )
-    JuMP.optimize!(m)
-    mock = JuMP.unsafe_backend(m)
+    optimize!(m)
+    mock = unsafe_backend(m)
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock, MOI.ResultCount(), 2)
     aff_expr = @expression(m, x + y)
     quad_expr = @expression(m, x * y)
     nl_expr = @NLexpression(m, log(x + y))
-    @test JuMP.result_count(m) == 2
+    @test result_count(m) == 2
     MOI.set(mock, MOI.PrimalStatus(1), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(1), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.ObjectiveValue(1), 1.0)
     MOI.set(mock, MOI.DualObjectiveValue(1), 1.0)
-    MOI.set(mock, MOI.VariablePrimal(1), JuMP.optimizer_index(x), 1.0)
-    MOI.set(mock, MOI.VariablePrimal(1), JuMP.optimizer_index(y), 0.0)
-    MOI.set(mock, MOI.ConstraintDual(1), JuMP.optimizer_index(c1), 0.0)
-    MOI.set(mock, MOI.ConstraintDual(1), JuMP.optimizer_index(c2), -1.0)
-    @test MOI.OPTIMAL == @inferred JuMP.termination_status(m)
-    @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m, result = 1)
-    @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m, result = 1)
-    @test 1.0 == JuMP.objective_value(m; result = 1)
-    @test 1.0 == @inferred JuMP.dual_objective_value(m, result = 1)
-    @test 1.0 == @inferred JuMP.value(x, result = 1)
-    @test 0.0 == @inferred JuMP.value(y, result = 1)
-    @test 1.0 == @inferred JuMP.value(aff_expr, result = 1)
-    @test 0.0 == @inferred JuMP.value(quad_expr, result = 1)
-    @test 0.0 == @inferred JuMP.value(nl_expr, result = 1)
-    @test 1.0 == @inferred JuMP.value(c2, result = 1)
-    @test 0.0 == @inferred JuMP.dual(c1, result = 1)
-    @test -1.0 == @inferred JuMP.dual(c2, result = 1)
-    @test 0.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(x), result = 1)
-    @test 0.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(y), result = 1)
+    MOI.set(mock, MOI.VariablePrimal(1), optimizer_index(x), 1.0)
+    MOI.set(mock, MOI.VariablePrimal(1), optimizer_index(y), 0.0)
+    MOI.set(mock, MOI.ConstraintDual(1), optimizer_index(c1), 0.0)
+    MOI.set(mock, MOI.ConstraintDual(1), optimizer_index(c2), -1.0)
+    @test MOI.OPTIMAL == @inferred termination_status(m)
+    @test MOI.FEASIBLE_POINT == @inferred primal_status(m, result = 1)
+    @test MOI.FEASIBLE_POINT == @inferred dual_status(m, result = 1)
+    @test 1.0 == objective_value(m; result = 1)
+    @test 1.0 == @inferred dual_objective_value(m, result = 1)
+    @test 1.0 == @inferred value(x, result = 1)
+    @test 0.0 == @inferred value(y, result = 1)
+    @test 1.0 == @inferred value(aff_expr, result = 1)
+    @test 0.0 == @inferred value(quad_expr, result = 1)
+    @test 0.0 == @inferred value(nl_expr, result = 1)
+    @test 1.0 == @inferred value(c2, result = 1)
+    @test 0.0 == @inferred dual(c1, result = 1)
+    @test -1.0 == @inferred dual(c2, result = 1)
+    @test 0.0 == @inferred dual(LowerBoundRef(x), result = 1)
+    @test 0.0 == @inferred dual(LowerBoundRef(y), result = 1)
     MOI.set(mock, MOI.PrimalStatus(2), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(2), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.ObjectiveValue(2), 1.0)
     MOI.set(mock, MOI.DualObjectiveValue(2), 1.0)
-    MOI.set(mock, MOI.VariablePrimal(2), JuMP.optimizer_index(x), 0.0)
-    MOI.set(mock, MOI.VariablePrimal(2), JuMP.optimizer_index(y), 1.0)
-    MOI.set(mock, MOI.ConstraintDual(2), JuMP.optimizer_index(c1), 0.0)
-    MOI.set(mock, MOI.ConstraintDual(2), JuMP.optimizer_index(c2), -1.0)
-    @test MOI.FEASIBLE_POINT == @inferred JuMP.primal_status(m, result = 2)
-    @test MOI.FEASIBLE_POINT == @inferred JuMP.dual_status(m, result = 2)
-    @test 1.0 == JuMP.objective_value(m; result = 2)
-    @test 1.0 == @inferred JuMP.dual_objective_value(m, result = 2)
-    @test 0.0 == @inferred JuMP.value(x, result = 2)
-    @test 1.0 == @inferred JuMP.value(y, result = 2)
-    @test 1.0 == @inferred JuMP.value(aff_expr, result = 2)
-    @test 0.0 == @inferred JuMP.value(quad_expr, result = 2)
-    @test 0.0 == @inferred JuMP.value(nl_expr, result = 2)
-    @test 1.0 == @inferred JuMP.value(c2, result = 2)
-    @test 0.0 == @inferred JuMP.dual(c1, result = 2)
-    @test -1.0 == @inferred JuMP.dual(c2, result = 2)
-    @test 0.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(x), result = 2)
-    @test 0.0 == @inferred JuMP.dual(JuMP.LowerBoundRef(y), result = 2)
-    @test MOI.NO_SOLUTION == @inferred JuMP.primal_status(m, result = 3)
-    @test MOI.NO_SOLUTION == @inferred JuMP.dual_status(m, result = 3)
-    @test_throws MOI.ResultIndexBoundsError JuMP.objective_value(m, result = 3)
-    @test_throws MOI.ResultIndexBoundsError JuMP.dual_objective_value(
-        m,
-        result = 3,
-    )
-    @test_throws MOI.ResultIndexBoundsError JuMP.value(x, result = 3)
-    @test_throws MOI.ResultIndexBoundsError JuMP.value(aff_expr, result = 3)
-    @test_throws MOI.ResultIndexBoundsError JuMP.value(quad_expr, result = 3)
-    @test_throws MOI.ResultIndexBoundsError JuMP.value(nl_expr, result = 3)
-    @test_throws MOI.ResultIndexBoundsError JuMP.value(c2, result = 3)
-    @test_throws MOI.ResultIndexBoundsError JuMP.dual(c1, result = 3)
-    @test_throws MOI.ResultIndexBoundsError JuMP.dual(c2, result = 3)
-    @test_throws MOI.ResultIndexBoundsError JuMP.dual(
-        JuMP.LowerBoundRef(x),
-        result = 3,
-    )
-    @test_throws MOI.ResultIndexBoundsError JuMP.dual(
-        JuMP.LowerBoundRef(y),
-        result = 3,
-    )
+    MOI.set(mock, MOI.VariablePrimal(2), optimizer_index(x), 0.0)
+    MOI.set(mock, MOI.VariablePrimal(2), optimizer_index(y), 1.0)
+    MOI.set(mock, MOI.ConstraintDual(2), optimizer_index(c1), 0.0)
+    MOI.set(mock, MOI.ConstraintDual(2), optimizer_index(c2), -1.0)
+    @test MOI.FEASIBLE_POINT == @inferred primal_status(m, result = 2)
+    @test MOI.FEASIBLE_POINT == @inferred dual_status(m, result = 2)
+    @test 1.0 == objective_value(m; result = 2)
+    @test 1.0 == @inferred dual_objective_value(m, result = 2)
+    @test 0.0 == @inferred value(x, result = 2)
+    @test 1.0 == @inferred value(y, result = 2)
+    @test 1.0 == @inferred value(aff_expr, result = 2)
+    @test 0.0 == @inferred value(quad_expr, result = 2)
+    @test 0.0 == @inferred value(nl_expr, result = 2)
+    @test 1.0 == @inferred value(c2, result = 2)
+    @test 0.0 == @inferred dual(c1, result = 2)
+    @test -1.0 == @inferred dual(c2, result = 2)
+    @test 0.0 == @inferred dual(LowerBoundRef(x), result = 2)
+    @test 0.0 == @inferred dual(LowerBoundRef(y), result = 2)
+    @test MOI.NO_SOLUTION == @inferred primal_status(m, result = 3)
+    @test MOI.NO_SOLUTION == @inferred dual_status(m, result = 3)
+    @test_throws MOI.ResultIndexBoundsError objective_value(m, result = 3)
+    @test_throws MOI.ResultIndexBoundsError dual_objective_value(m, result = 3)
+    @test_throws MOI.ResultIndexBoundsError value(x, result = 3)
+    @test_throws MOI.ResultIndexBoundsError value(aff_expr, result = 3)
+    @test_throws MOI.ResultIndexBoundsError value(quad_expr, result = 3)
+    @test_throws MOI.ResultIndexBoundsError value(nl_expr, result = 3)
+    @test_throws MOI.ResultIndexBoundsError value(c2, result = 3)
+    @test_throws MOI.ResultIndexBoundsError dual(c1, result = 3)
+    @test_throws MOI.ResultIndexBoundsError dual(c2, result = 3)
+    @test_throws MOI.ResultIndexBoundsError dual(LowerBoundRef(x), result = 3)
+    @test_throws MOI.ResultIndexBoundsError dual(LowerBoundRef(y), result = 3)
     return
 end
 

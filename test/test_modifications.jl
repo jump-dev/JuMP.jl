@@ -170,8 +170,8 @@ function test_status_caching()
         model,
         () -> MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}()),
     )
-    JuMP.optimize!(model)
-    mock = JuMP.unsafe_backend(model)
+    optimize!(model)
+    mock = unsafe_backend(model)
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
@@ -196,9 +196,9 @@ function test_status_caching()
     @test termination_status(model) == MOI.OPTIMIZE_NOT_CALLED
     @test dual_status(model) == MOI.NO_SOLUTION
     @test primal_status(model) == MOI.NO_SOLUTION
-    @test_throws JuMP.OptimizeNotCalled() value(x)
-    @test_throws JuMP.OptimizeNotCalled() dual(c)
-    @test_throws JuMP.OptimizeNotCalled() objective_value(model)
+    @test_throws OptimizeNotCalled() value(x)
+    @test_throws OptimizeNotCalled() dual(c)
+    @test_throws OptimizeNotCalled() objective_value(model)
     return
 end
 
@@ -208,7 +208,7 @@ function test_status_direct()
     @variable(model, x)
     @constraint(model, c, x == 1.2)
     @objective(model, Min, x - 0.1)
-    JuMP.optimize!(model)
+    optimize!(model)
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock, MOI.PrimalStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
