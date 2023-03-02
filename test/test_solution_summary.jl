@@ -42,7 +42,7 @@ function test_solution_summary()
         ),
     )
     optimize!(model)
-    mock = JuMP.unsafe_backend(model)
+    mock = unsafe_backend(model)
     MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
     MOI.set(mock, MOI.RawStatusString(), "solver specific string")
     MOI.set(mock, MOI.ObjectiveValue(1), -1.0)
@@ -52,25 +52,15 @@ function test_solution_summary()
     MOI.set(mock, MOI.ResultCount(), 2)
     MOI.set(mock, MOI.PrimalStatus(1), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(1), MOI.FEASIBLE_POINT)
-    MOI.set(mock, MOI.VariablePrimal(1), JuMP.optimizer_index(x), 1.0)
-    MOI.set(mock, MOI.VariablePrimal(1), JuMP.optimizer_index(y), 0.0)
-    MOI.set(mock, MOI.ConstraintDual(1), JuMP.optimizer_index(c), -1.0)
-    MOI.set(
-        mock,
-        MOI.ConstraintDual(),
-        JuMP.optimizer_index(JuMP.UpperBoundRef(x)),
-        0.0,
-    )
-    MOI.set(
-        mock,
-        MOI.ConstraintDual(),
-        JuMP.optimizer_index(JuMP.LowerBoundRef(y)),
-        1.0,
-    )
+    MOI.set(mock, MOI.VariablePrimal(1), optimizer_index(x), 1.0)
+    MOI.set(mock, MOI.VariablePrimal(1), optimizer_index(y), 0.0)
+    MOI.set(mock, MOI.ConstraintDual(1), optimizer_index(c), -1.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(UpperBoundRef(x)), 0.0)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(LowerBoundRef(y)), 1.0)
     MOI.set(mock, MOI.PrimalStatus(2), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.DualStatus(2), MOI.NO_SOLUTION)
-    MOI.set(mock, MOI.VariablePrimal(2), JuMP.optimizer_index(x), 0.0)
-    MOI.set(mock, MOI.VariablePrimal(2), JuMP.optimizer_index(y), 0.0)
+    MOI.set(mock, MOI.VariablePrimal(2), optimizer_index(x), 0.0)
+    MOI.set(mock, MOI.VariablePrimal(2), optimizer_index(y), 0.0)
     MOI.set(mock, MOI.SimplexIterations(), Int64(3))
     MOI.set(mock, MOI.BarrierIterations(), Int64(2))
     MOI.set(mock, MOI.NodeCount(), Int64(1))

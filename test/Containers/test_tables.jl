@@ -65,28 +65,28 @@ function test_col_name_error()
 end
 
 # Mockup of custom variable type
-struct _MockVariable <: JuMP.AbstractVariable
-    var::JuMP.ScalarVariable
+struct _MockVariable <: AbstractVariable
+    var::ScalarVariable
 end
 
-struct _MockVariableRef <: JuMP.AbstractVariableRef
+struct _MockVariableRef <: AbstractVariableRef
     vref::VariableRef
 end
 
-JuMP.name(v::_MockVariableRef) = JuMP.name(v.vref)
+JuMP.name(v::_MockVariableRef) = name(v.vref)
 
-JuMP.owner_model(v::_MockVariableRef) = JuMP.owner_model(v.vref)
+JuMP.owner_model(v::_MockVariableRef) = owner_model(v.vref)
 
-JuMP.start_value(v::_MockVariableRef) = JuMP.start_value(v.vref)
+JuMP.start_value(v::_MockVariableRef) = start_value(v.vref)
 
 struct _Mock end
 
-function JuMP.build_variable(::Function, info::JuMP.VariableInfo, _::_Mock)
-    return _MockVariable(JuMP.ScalarVariable(info))
+function JuMP.build_variable(::Function, info::VariableInfo, _::_Mock)
+    return _MockVariable(ScalarVariable(info))
 end
 
 function JuMP.add_variable(model::Model, x::_MockVariable, name::String)
-    variable = JuMP.add_variable(model, x.var, name)
+    variable = add_variable(model, x.var, name)
     return _MockVariableRef(variable)
 end
 

@@ -40,7 +40,7 @@ end
 include("nonnegative_bridge.jl")
 
 function _test_result_attributes(; test_empty = false)
-    err = JuMP.OptimizeNotCalled()
+    err = OptimizeNotCalled()
     model = Model(() -> MOIU.MockOptimizer(SimpleLPModel{Float64}()))
     @variable(model, x)
     c = @constraint(model, x ≤ 0)
@@ -51,12 +51,12 @@ function _test_result_attributes(; test_empty = false)
         empty!(model)
         @test isempty(model)
     end
-    @test_throws err JuMP.objective_value(model)
-    @test_throws err JuMP.dual_objective_value(model)
-    @test_throws err JuMP.objective_bound(model)
-    @test_throws err JuMP.value(x)
-    @test_throws err JuMP.value(c)
-    @test_throws err JuMP.dual(c)
+    @test_throws err objective_value(model)
+    @test_throws err dual_objective_value(model)
+    @test_throws err objective_bound(model)
+    @test_throws err value(x)
+    @test_throws err value(c)
+    @test_throws err dual(c)
 end
 
 function test_result_attributes()
@@ -87,11 +87,11 @@ function test_nooptimizer()
     @variable(model, x)
     @test_throws err optimizer_index(x)
     cref = @constraint(model, x == 1)
-    @test_throws err JuMP.optimizer_index(cref)
-    @test_throws err JuMP.optimize!(model)
-    @test_throws OptimizeNotCalled() JuMP.value(x)
-    @test_throws OptimizeNotCalled() JuMP.value(cref)
-    @test_throws OptimizeNotCalled() JuMP.dual(cref)
+    @test_throws err optimizer_index(cref)
+    @test_throws err optimize!(model)
+    @test_throws OptimizeNotCalled() value(x)
+    @test_throws OptimizeNotCalled() value(cref)
+    @test_throws OptimizeNotCalled() dual(cref)
     return
 end
 
@@ -100,7 +100,7 @@ function test_empty!_model()
     backend_type = typeof(backend(model))
     model.optimize_hook === nothing
     hook(m) = nothing
-    JuMP.set_optimize_hook(model, hook)
+    set_optimize_hook(model, hook)
     @test model.optimize_hook === hook
     @test fill_small_test_model!(model) === model
     @test_throws ErrorException fill_small_test_model!(model)
@@ -126,7 +126,7 @@ function test_hygiene_variable()
     @variable(model_x, x)
     model_y = Model()
     @variable(model_y, y)
-    err = JuMP.VariableNotOwned(y)
+    err = VariableNotOwned(y)
     @test_throws err @constraint(model_x, y in MOI.EqualTo(1.0))
     @test_throws err @constraint(model_x, [x, y] in MOI.Zeros(2))
     @test_throws err @objective(model_x, Min, y)
@@ -137,7 +137,7 @@ function test_hygiene_linear()
     @variable(model_x, x)
     model_y = Model()
     @variable(model_y, y)
-    err = JuMP.VariableNotOwned(y)
+    err = VariableNotOwned(y)
 
     @test_throws err @constraint(model_x, x + y == 1)
     @test_throws err @constraint(model_x, [x, x + y] in MOI.Zeros(2))
@@ -150,7 +150,7 @@ function test_hygiene_quadratic()
     @variable(model_x, x)
     model_y = Model()
     @variable(model_y, y)
-    err = JuMP.VariableNotOwned(y)
+    err = VariableNotOwned(y)
 
     @test_throws err @constraint(model_x, x * y >= 1)
     @test_throws err @constraint(model_x, [x, x * y] in MOI.Zeros(2))
@@ -167,10 +167,10 @@ function test_hygiene_attribute()
     @variable(model_x, x)
     model_y = Model()
     @variable(model_y, y)
-    err = JuMP.VariableNotOwned(y)
+    err = VariableNotOwned(y)
 
     cy = @constraint(model_y, y in MOI.EqualTo(1.0))
-    cerr = JuMP.ConstraintNotOwned(cy)
+    cerr = ConstraintNotOwned(cy)
 
     @test_throws err MOI.get(model_x, MOI.VariablePrimalStart(), y)
     @test_throws cerr MOI.get(model_x, MOI.ConstraintPrimalStart(), cy)
@@ -185,7 +185,7 @@ function test_optimize_hook()
     function hook(m)
         return called = true
     end
-    JuMP.set_optimize_hook(m, hook)
+    set_optimize_hook(m, hook)
     @test !called
     optimize!(m)
     @test called
@@ -193,7 +193,7 @@ function test_optimize_hook()
     m = Model()
     err = ErrorException("Unrecognized keyword arguments: unexpected_arg")
     @test_throws err optimize!(m, unexpected_arg = 1)
-    JuMP.set_optimize_hook(m, (m; my_new_arg = nothing) -> my_new_arg)
+    set_optimize_hook(m, (m; my_new_arg = nothing) -> my_new_arg)
     @test optimize!(m) === nothing
     @test optimize!(m; my_new_arg = 1) == 1
 end
@@ -207,20 +207,20 @@ end
 function test_bridges_automatic()
     # optimizer not supporting Interval
     model = Model(() -> MOIU.MockOptimizer(SimpleLPModel{Float64}()))
-    @test JuMP.bridge_constraints(model)
-    @test JuMP.backend(model) isa MOIU.CachingOptimizer
-    @test JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer
-    @test JuMP.backend(model).optimizer.model isa MOIU.MockOptimizer
+    @test bridge_constraints(model)
+    @test backend(model) isa MOIU.CachingOptimizer
+    @test backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer
+    @test backend(model).optimizer.model isa MOIU.MockOptimizer
     @variable model x
     cref = @constraint model 0 <= x + 1 <= 1
-    @test cref isa JuMP.ConstraintRef{
-        JuMP.Model,
+    @test cref isa ConstraintRef{
+        Model,
         MOI.ConstraintIndex{
             MOI.ScalarAffineFunction{Float64},
             MOI.Interval{Float64},
         },
     }
-    return JuMP.optimize!(model)
+    return optimize!(model)
 end
 
 function test_bridges_automatic_disabled()
@@ -229,9 +229,9 @@ function test_bridges_automatic_disabled()
         () -> MOIU.MockOptimizer(SimpleLPModel{Float64}());
         add_bridges = false,
     )
-    @test !JuMP.bridge_constraints(model)
-    @test JuMP.backend(model) isa MOIU.CachingOptimizer
-    @test !(JuMP.backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer)
+    @test !bridge_constraints(model)
+    @test backend(model) isa MOIU.CachingOptimizer
+    @test !(backend(model).optimizer isa MOI.Bridges.LazyBridgeOptimizer)
     @variable model x
     F = MOI.ScalarAffineFunction{Float64}
     S = MOI.Interval{Float64}
@@ -249,8 +249,8 @@ end
 function test_bridges_direct()
     # No bridge automatically added in Direct mode
     optimizer = MOIU.MockOptimizer(SimpleLPModel{Float64}())
-    model = JuMP.direct_model(optimizer)
-    @test !JuMP.bridge_constraints(model)
+    model = direct_model(optimizer)
+    @test !bridge_constraints(model)
     @variable model x
     F = MOI.ScalarAffineFunction{Float64}
     S = MOI.Interval{Float64}
@@ -284,24 +284,24 @@ end
 function test_bridges_add_before_con_model_optimizer()
     model = Model(mock_factory)
     @variable(model, x)
-    JuMP.add_bridge(model, NonnegativeBridge)
+    add_bridge(model, NonnegativeBridge)
     c = @constraint(model, x in Nonnegative())
-    JuMP.optimize!(model)
-    @test 1.0 == @inferred JuMP.value(x)
-    @test 1.0 == @inferred JuMP.value(c)
-    @test 2.0 == @inferred JuMP.dual(c)
+    optimize!(model)
+    @test 1.0 == @inferred value(x)
+    @test 1.0 == @inferred value(c)
+    @test 2.0 == @inferred dual(c)
 end
 
 function test_bridges_add_before_con_set_optimizer()
     model = Model()
     @variable(model, x)
     c = @constraint(model, x in Nonnegative())
-    JuMP.add_bridge(model, NonnegativeBridge)
+    add_bridge(model, NonnegativeBridge)
     set_optimizer(model, mock_factory)
-    JuMP.optimize!(model)
-    @test 1.0 == @inferred JuMP.value(x)
-    @test 1.0 == @inferred JuMP.value(c)
-    @test 2.0 == @inferred JuMP.dual(c)
+    optimize!(model)
+    @test 1.0 == @inferred value(x)
+    @test 1.0 == @inferred value(c)
+    @test 2.0 == @inferred dual(c)
 end
 
 function test_bridges_add_after_con_model_optimizer()
@@ -320,12 +320,12 @@ function test_bridges_add_after_con_model_optimizer()
         @test occursin("are not supported", err.msg)
     end
     @test flag
-    JuMP.add_bridge(model, NonnegativeBridge)
+    add_bridge(model, NonnegativeBridge)
     c = @constraint(model, x in Nonnegative())
-    JuMP.optimize!(model)
-    @test 1.0 == @inferred JuMP.value(x)
-    @test 1.0 == @inferred JuMP.value(c)
-    @test 2.0 == @inferred JuMP.dual(c)
+    optimize!(model)
+    @test 1.0 == @inferred value(x)
+    @test 1.0 == @inferred value(c)
+    @test 2.0 == @inferred dual(c)
 end
 
 function test_bridges_add_after_con_set_optimizer()
@@ -334,12 +334,12 @@ function test_bridges_add_after_con_set_optimizer()
     @variable(model, x)
     c = @constraint(model, x in Nonnegative())
     set_optimizer(model, mock_factory)
-    @test_throws err JuMP.optimize!(model)
-    JuMP.add_bridge(model, NonnegativeBridge)
-    JuMP.optimize!(model)
-    @test 1.0 == @inferred JuMP.value(x)
-    @test 1.0 == @inferred JuMP.value(c)
-    @test 2.0 == @inferred JuMP.dual(c)
+    @test_throws err optimize!(model)
+    add_bridge(model, NonnegativeBridge)
+    optimize!(model)
+    @test 1.0 == @inferred value(x)
+    @test 1.0 == @inferred value(c)
+    @test 2.0 == @inferred dual(c)
 end
 
 function test_bridges_add_bridgeable_con_model_optimizer()
@@ -348,10 +348,10 @@ function test_bridges_add_bridgeable_con_model_optimizer()
     constraint = ScalarConstraint(x, Nonnegative())
     bc = BridgeableConstraint(constraint, NonnegativeBridge)
     c = add_constraint(model, bc)
-    JuMP.optimize!(model)
-    @test 1.0 == @inferred JuMP.value(x)
-    @test 1.0 == @inferred JuMP.value(c)
-    @test 2.0 == @inferred JuMP.dual(c)
+    optimize!(model)
+    @test 1.0 == @inferred value(x)
+    @test 1.0 == @inferred value(c)
+    @test 2.0 == @inferred dual(c)
 end
 
 function test_bridges_add_bridgeable_con_set_optimizer()
@@ -361,10 +361,10 @@ function test_bridges_add_bridgeable_con_set_optimizer()
     bc = BridgeableConstraint(constraint, NonnegativeBridge)
     c = add_constraint(model, bc)
     set_optimizer(model, mock_factory)
-    JuMP.optimize!(model)
-    @test 1.0 == @inferred JuMP.value(x)
-    @test 1.0 == @inferred JuMP.value(c)
-    @test 2.0 == @inferred JuMP.dual(c)
+    optimize!(model)
+    @test 1.0 == @inferred value(x)
+    @test 1.0 == @inferred value(c)
+    @test 2.0 == @inferred dual(c)
 end
 
 function test_bridge_graph_false()
@@ -422,20 +422,20 @@ end
 
 function test_solver_name()
     model = Model()
-    @test "No optimizer attached." == @inferred JuMP.solver_name(model)
+    @test "No optimizer attached." == @inferred solver_name(model)
 
     model = Model(() -> MOIU.MockOptimizer(SimpleLPModel{Float64}()))
-    @test "Mock" == @inferred JuMP.solver_name(model)
+    @test "Mock" == @inferred solver_name(model)
 end
 
 function test_set_silent()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
-    JuMP.set_silent(model)
+    set_silent(model)
     @test MOI.get(backend(model), MOI.Silent())
     @test MOI.get(model, MOI.Silent())
     @test get_attribute(model, MOI.Silent())
-    JuMP.unset_silent(model)
+    unset_silent(model)
     @test !MOI.get(backend(model), MOI.Silent())
     @test !MOI.get(model, MOI.Silent())
     @test !get_attribute(model, MOI.Silent())
@@ -445,7 +445,7 @@ end
 function test_set_optimizer_attribute()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
-    @test JuMP.set_optimizer_attribute(model, "aaa", "bbb") === nothing
+    @test set_optimizer_attribute(model, "aaa", "bbb") === nothing
     @test MOI.get(backend(model), MOI.RawOptimizerAttribute("aaa")) == "bbb"
     @test MOI.get(model, MOI.RawOptimizerAttribute("aaa")) == "bbb"
 end
@@ -453,7 +453,7 @@ end
 function test_set_optimizer_attributes()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
-    JuMP.set_optimizer_attributes(model, "aaa" => "bbb", "abc" => 10)
+    set_optimizer_attributes(model, "aaa" => "bbb", "abc" => 10)
     @test MOI.get(model, MOI.RawOptimizerAttribute("aaa")) == "bbb"
     @test MOI.get(model, MOI.RawOptimizerAttribute("abc")) == 10
 end
@@ -461,8 +461,8 @@ end
 function test_get_optimizer_attribute()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
-    @test JuMP.set_optimizer_attribute(model, "aaa", "bbb") === nothing
-    @test JuMP.get_optimizer_attribute(model, "aaa") == "bbb"
+    @test set_optimizer_attribute(model, "aaa", "bbb") === nothing
+    @test get_optimizer_attribute(model, "aaa") == "bbb"
 end
 
 function test_optimizer_attribute_abstract_string()
@@ -470,40 +470,40 @@ function test_optimizer_attribute_abstract_string()
     model = Model(() -> MOIU.MockOptimizer(mock))
     attribute = "abc"
     abstract_str = @views attribute[1:end]
-    JuMP.set_optimizer_attribute(model, abstract_str, "x")
-    @test JuMP.get_optimizer_attribute(model, abstract_str) == "x"
-    @test JuMP.get_optimizer_attribute(model, attribute) == "x"
+    set_optimizer_attribute(model, abstract_str, "x")
+    @test get_optimizer_attribute(model, abstract_str) == "x"
+    @test get_optimizer_attribute(model, attribute) == "x"
     return
 end
 
 function test_set_retrieve_time_limit()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = Model(() -> MOIU.MockOptimizer(mock))
-    JuMP.set_time_limit_sec(model, 12.0)
-    @test JuMP.time_limit_sec(model) == 12.0
-    JuMP.set_time_limit_sec(model, nothing)
-    @test JuMP.time_limit_sec(model) === nothing
-    JuMP.set_time_limit_sec(model, 12.0)
-    JuMP.unset_time_limit_sec(model)
-    @test JuMP.time_limit_sec(model) === nothing
+    set_time_limit_sec(model, 12.0)
+    @test time_limit_sec(model) == 12.0
+    set_time_limit_sec(model, nothing)
+    @test time_limit_sec(model) === nothing
+    set_time_limit_sec(model, 12.0)
+    unset_time_limit_sec(model)
+    @test time_limit_sec(model) === nothing
     # Test setting something other than `Float64`.
-    JuMP.set_time_limit_sec(model, 0x0a)
-    @test JuMP.time_limit_sec(model) == 10.0
+    set_time_limit_sec(model, 0x0a)
+    @test time_limit_sec(model) == 10.0
     return
 end
 
 struct DummyExtensionData
-    model::JuMP.Model
+    model::Model
 end
 function JuMP.copy_extension_data(
     data::DummyExtensionData,
-    new_model::JuMP.AbstractModel,
-    model::JuMP.AbstractModel,
+    new_model::AbstractModel,
+    model::AbstractModel,
 )
     @test data.model === model
     return DummyExtensionData(new_model)
 end
-function dummy_optimizer_hook(::JuMP.AbstractModel) end
+function dummy_optimizer_hook(::AbstractModel) end
 
 function copy_model_style_mode(use_copy_model, filter_mode)
     model = Model()
@@ -521,15 +521,15 @@ function copy_model_style_mode(use_copy_model, filter_mode)
         if filter_mode
             filter_constraints = (cr) -> cr != cref
             new_model, reference_map =
-                JuMP.copy_model(model; filter_constraints = filter_constraints)
+                copy_model(model; filter_constraints = filter_constraints)
         else
-            new_model, reference_map = JuMP.copy_model(model)
+            new_model, reference_map = copy_model(model)
         end
     else
         new_model = copy(model)
         reference_map = Dict{
-            Union{JuMP.VariableRef,JuMP.ConstraintRef},
-            Union{JuMP.VariableRef,JuMP.ConstraintRef},
+            Union{VariableRef,ConstraintRef},
+            Union{VariableRef,ConstraintRef},
         }()
         reference_map[w[1]] = new_model[:w][1]
         reference_map[w[2]] = new_model[:w][2]
@@ -543,39 +543,35 @@ function copy_model_style_mode(use_copy_model, filter_mode)
     @test new_model.optimize_hook === dummy_optimizer_hook
     @test new_model.ext[:dummy].model === new_model
     x_new = reference_map[x]
-    @test JuMP.owner_model(x_new) === new_model
-    @test "x" == @inferred JuMP.name(x_new)
+    @test owner_model(x_new) === new_model
+    @test "x" == @inferred name(x_new)
     y_new = reference_map[y]
-    @test JuMP.owner_model(y_new) === new_model
-    @test "y" == @inferred JuMP.name(y_new)
+    @test owner_model(y_new) === new_model
+    @test "y" == @inferred name(y_new)
     z_new = reference_map[z]
-    @test JuMP.owner_model(z_new) === new_model
-    @test "z" == @inferred JuMP.name(z_new)
+    @test owner_model(z_new) === new_model
+    @test "z" == @inferred name(z_new)
     if use_copy_model
-        @test reference_map[JuMP.LowerBoundRef(x)] ==
-              @inferred JuMP.LowerBoundRef(x_new)
-        @test reference_map[JuMP.BinaryRef(x)] ==
-              @inferred JuMP.BinaryRef(x_new)
-        @test reference_map[JuMP.UpperBoundRef(y)] ==
-              @inferred JuMP.UpperBoundRef(y_new)
-        @test reference_map[JuMP.IntegerRef(y)] ==
-              @inferred JuMP.IntegerRef(y_new)
-        @test reference_map[JuMP.FixRef(z)] == @inferred JuMP.FixRef(z_new)
+        @test reference_map[LowerBoundRef(x)] == @inferred LowerBoundRef(x_new)
+        @test reference_map[BinaryRef(x)] == @inferred BinaryRef(x_new)
+        @test reference_map[UpperBoundRef(y)] == @inferred UpperBoundRef(y_new)
+        @test reference_map[IntegerRef(y)] == @inferred IntegerRef(y_new)
+        @test reference_map[FixRef(z)] == @inferred FixRef(z_new)
     end
 
     cref2_1_new = reference_map[cref2[1]]
     @test cref2_1_new.model === new_model
-    @test "cref2[1]" == @inferred JuMP.name(cref2_1_new)
+    @test "cref2[1]" == @inferred name(cref2_1_new)
     cref2_2_new = reference_map[cref2[2]]
     @test cref2_2_new.model === new_model
-    @test "cref2[2]" == @inferred JuMP.name(cref2_2_new)
+    @test "cref2[2]" == @inferred name(cref2_2_new)
 
     if filter_mode
-        @test_throws KeyError JuMP.object_dictionary(new_model)[JuMP.name(cref)]
+        @test_throws KeyError object_dictionary(new_model)[name(cref)]
     else
         cref_new = reference_map[cref]
         @test cref_new.model === new_model
-        @test "cref" == @inferred JuMP.name(cref_new)
+        @test "cref" == @inferred name(cref_new)
     end
 end
 
@@ -595,8 +591,8 @@ end
 
 function test_copy_direct_mode()
     mock = MOIU.MockOptimizer(MOIU.Model{Float64}())
-    model = JuMP.direct_model(mock)
-    @test_throws ErrorException JuMP.copy(model)
+    model = direct_model(mock)
+    @test_throws ErrorException copy(model)
 end
 
 function test_direct_mode_using_OptimizerWithAttributes()
@@ -607,7 +603,7 @@ function test_direct_mode_using_OptimizerWithAttributes()
     end
 
     optimizer = optimizer_with_attributes(fake_optimizer, "a" => 1, "b" => 2)
-    model = JuMP.direct_model(optimizer)
+    model = direct_model(optimizer)
     @test model.moi_backend isa MOIU.MockOptimizer
     @test MOI.get(model.moi_backend, MOI.RawOptimizerAttribute("a")) == 1
     @test MOI.get(model.moi_backend, MOI.RawOptimizerAttribute("b")) == 2
@@ -704,7 +700,7 @@ function test_copy_filter_array()
 
     filter_constraints = (cr) -> cr != cref[1]
     new_model, reference_map =
-        JuMP.copy_model(model; filter_constraints = filter_constraints)
+        copy_model(model; filter_constraints = filter_constraints)
     @test num_constraints(
         new_model,
         GenericAffExpr{Float64,VariableRef},
@@ -712,12 +708,12 @@ function test_copy_filter_array()
     ) == 1
 
     x1_new = reference_map[x[1]]
-    @test JuMP.owner_model(x1_new) === new_model
-    @test "x[1]" == @inferred JuMP.name(x1_new)
+    @test owner_model(x1_new) === new_model
+    @test "x[1]" == @inferred name(x1_new)
 
     cref_2_new = reference_map[cref[2]]
     @test cref_2_new.model === new_model
-    @test "cref[2]" == @inferred JuMP.name(cref_2_new)
+    @test "cref[2]" == @inferred name(cref_2_new)
 end
 
 function test_copy_filter_denseaxisarray()
@@ -732,7 +728,7 @@ function test_copy_filter_denseaxisarray()
 
     filter_constraints = (cr) -> cr != cref[1]
     new_model, reference_map =
-        JuMP.copy_model(model; filter_constraints = filter_constraints)
+        copy_model(model; filter_constraints = filter_constraints)
     @test num_constraints(
         new_model,
         GenericAffExpr{Float64,VariableRef},
@@ -740,12 +736,12 @@ function test_copy_filter_denseaxisarray()
     ) == 1
 
     x1_new = reference_map[x[1]]
-    @test JuMP.owner_model(x1_new) === new_model
-    @test "x[1]" == @inferred JuMP.name(x1_new)
+    @test owner_model(x1_new) === new_model
+    @test "x[1]" == @inferred name(x1_new)
 
     cref_2_new = reference_map[cref[2]]
     @test cref_2_new.model === new_model
-    @test "cref[2]" == @inferred JuMP.name(cref_2_new)
+    @test "cref[2]" == @inferred name(cref_2_new)
 end
 
 function test_copy_filter_sparseaxisarray()
@@ -760,7 +756,7 @@ function test_copy_filter_sparseaxisarray()
 
     filter_constraints = (cr) -> cr != cref[1]
     new_model, reference_map =
-        JuMP.copy_model(model; filter_constraints = filter_constraints)
+        copy_model(model; filter_constraints = filter_constraints)
     @test num_constraints(
         new_model,
         GenericAffExpr{Float64,VariableRef},
@@ -768,12 +764,12 @@ function test_copy_filter_sparseaxisarray()
     ) == 1
 
     x1_new = reference_map[x[1]]
-    @test JuMP.owner_model(x1_new) === new_model
-    @test "x[1]" == @inferred JuMP.name(x1_new)
+    @test owner_model(x1_new) === new_model
+    @test "x[1]" == @inferred name(x1_new)
 
     cref_2_new = reference_map[cref[2]]
     @test cref_2_new.model === new_model
-    @test "cref[2]" == @inferred JuMP.name(cref_2_new)
+    @test "cref[2]" == @inferred name(cref_2_new)
 end
 
 function test_copy_conflict()
@@ -793,25 +789,25 @@ function test_copy_conflict()
             eval_objective_value = false,
         ),
     )
-    JuMP.optimize!(model)
+    optimize!(model)
 
-    mockoptimizer = JuMP.backend(model).optimizer.model
+    mockoptimizer = backend(model).optimizer.model
     MOI.set(mockoptimizer, MOI.TerminationStatus(), INFEASIBLE)
     MOI.set(mockoptimizer, MOI.ConflictStatus(), MOI.CONFLICT_FOUND)
     MOI.set(
         mockoptimizer,
         MOI.ConstraintConflictStatus(),
-        JuMP.optimizer_index(cref[1]),
+        optimizer_index(cref[1]),
         MOI.IN_CONFLICT,
     )
     MOI.set(
         mockoptimizer,
         MOI.ConstraintConflictStatus(),
-        JuMP.optimizer_index(cref[2]),
+        optimizer_index(cref[2]),
         MOI.NOT_IN_CONFLICT,
     )
 
-    new_model, reference_map = JuMP.copy_conflict(model)
+    new_model, reference_map = copy_conflict(model)
     @test num_constraints(
         new_model,
         GenericAffExpr{Float64,VariableRef},
@@ -819,12 +815,12 @@ function test_copy_conflict()
     ) == 1
 
     x1_new = reference_map[x[1]]
-    @test JuMP.owner_model(x1_new) === new_model
-    @test "x[1]" == @inferred JuMP.name(x1_new)
+    @test owner_model(x1_new) === new_model
+    @test "x[1]" == @inferred name(x1_new)
 
     cref_1_new = reference_map[cref[1]]
     @test cref_1_new.model === new_model
-    @test "cref[1]" == @inferred JuMP.name(cref_1_new)
+    @test "cref[1]" == @inferred name(cref_1_new)
 end
 
 function test_nlp_data_error()

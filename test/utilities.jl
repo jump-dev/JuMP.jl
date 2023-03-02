@@ -12,11 +12,9 @@
 #############################################################################
 
 macro test_expression(expr)
-    return esc(
-        quote
-            @test JuMP.isequal_canonical(@expression(model, $expr), $expr)
-        end,
-    )
+    return esc(quote
+        @test isequal_canonical(@expression(model, $expr), $expr)
+    end)
 end
 
 macro test_expression_with_string(expr, str)
@@ -24,10 +22,7 @@ macro test_expression_with_string(expr, str)
         quote
             realized_expr = @inferred $expr
             @test string(realized_expr) == $str
-            @test JuMP.isequal_canonical(
-                @expression(model, $expr),
-                realized_expr,
-            )
+            @test isequal_canonical(@expression(model, $expr), realized_expr)
         end,
     )
 end

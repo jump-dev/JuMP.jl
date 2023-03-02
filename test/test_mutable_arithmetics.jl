@@ -13,7 +13,7 @@ module TestMutableArithmetics
 using JuMP
 using Test
 
-struct DummyVariableRef <: JuMP.AbstractVariableRef end
+struct DummyVariableRef <: AbstractVariableRef end
 
 JuMP.name(::DummyVariableRef) = "dummy"
 
@@ -21,28 +21,28 @@ struct DummyExpr end
 
 function Base.:(+)(
     ::GenericAffExpr{Float64,DummyVariableRef},
-    ::JuMP.AbstractJuMPScalar,
+    ::AbstractJuMPScalar,
 )
     return DummyExpr()
 end
 
 function Base.:(+)(
-    ::JuMP.AbstractJuMPScalar,
-    ::JuMP.GenericAffExpr{Float64,DummyVariableRef},
+    ::AbstractJuMPScalar,
+    ::GenericAffExpr{Float64,DummyVariableRef},
 )
     return DummyExpr()
 end
 
 function Base.:(-)(
     ::GenericAffExpr{Float64,DummyVariableRef},
-    ::JuMP.AbstractJuMPScalar,
+    ::AbstractJuMPScalar,
 )
     return DummyExpr()
 end
 
 function Base.:(-)(
-    ::JuMP.AbstractJuMPScalar,
-    ::JuMP.GenericAffExpr{Float64,DummyVariableRef},
+    ::AbstractJuMPScalar,
+    ::GenericAffExpr{Float64,DummyVariableRef},
 )
     return DummyExpr()
 end
@@ -59,8 +59,8 @@ function test_extension_promote_operation(
     VariableRefType = VariableRef,
 )
     for S in [Float64, ComplexF64]
-        AffExprType = JuMP.GenericAffExpr{S,VariableRefType}
-        QuadExprType = JuMP.GenericQuadExpr{S,VariableRefType}
+        AffExprType = GenericAffExpr{S,VariableRefType}
+        QuadExprType = GenericQuadExpr{S,VariableRefType}
         for op in [+, -, *]
             for T in [Int, S]
                 promote_operation_test(op, T, VariableRefType)

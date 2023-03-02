@@ -21,7 +21,7 @@ const MA = JuMP._MA
 include(joinpath(@__DIR__, "utilities.jl"))
 
 # For "expression^3 and unary*"
-struct PowVariable <: JuMP.AbstractVariableRef
+struct PowVariable <: AbstractVariableRef
     pow::Int
 end
 
@@ -59,7 +59,7 @@ function test_extension_drop_zeros!_GenericAffExpr(
     @variable(m, x[1:2])
     expr = x[1] + x[2] - x[2] + 1
     @test !isequal(expr, x[1] + 1)
-    JuMP.drop_zeros!(expr)
+    drop_zeros!(expr)
     @test isequal(expr, x[1] + 1)
     return
 end
@@ -105,7 +105,7 @@ function test_extension_drop_zeros!_GenericQuadExpr(
     @variable(m, x[1:2])
     expr = x[1]^2 + x[2]^2 - x[2]^2 + x[1] + x[2] - x[2] + 1
     @test !isequal(expr, x[1]^2 + x[1] + 1)
-    JuMP.drop_zeros!(expr)
+    drop_zeros!(expr)
     @test isequal(expr, x[1]^2 + x[1] + 1)
     return
 end
@@ -125,44 +125,44 @@ function test_extension_iszero_GenericQuadExpr(
 end
 
 function test_value_GenericAffExpr()
-    expr1 = JuMP.GenericAffExpr(3.0, 3 => -5.0, 2 => 4.0)
-    @test @inferred(JuMP.value(-, expr1)) == 10.0
-    expr2 = JuMP.GenericAffExpr{Int,Int}(2)
-    @test typeof(@inferred(JuMP.value(i -> 1.0, expr2))) == Float64
-    @test @inferred(JuMP.value(i -> 1.0, expr2)) == 2.0
+    expr1 = GenericAffExpr(3.0, 3 => -5.0, 2 => 4.0)
+    @test @inferred(value(-, expr1)) == 10.0
+    expr2 = GenericAffExpr{Int,Int}(2)
+    @test typeof(@inferred(value(i -> 1.0, expr2))) == Float64
+    @test @inferred(value(i -> 1.0, expr2)) == 2.0
     return
 end
 
 function test_value_GenericQuadExpr()
     # 1 + 2x(1) + 3x(2)
-    affine_term = JuMP.GenericAffExpr(1.0, 1 => 2.0, 2 => 3.0)
+    affine_term = GenericAffExpr(1.0, 1 => 2.0, 2 => 3.0)
     # 1 + 2x(1) + 3x(2) + 4x(1)^2 + 5x(1)*x(2) + 6x(2)^2
-    expr = JuMP.GenericQuadExpr(
+    expr = GenericQuadExpr(
         affine_term,
-        JuMP.UnorderedPair(1, 1) => 4.0,
-        JuMP.UnorderedPair(1, 2) => 5.0,
-        JuMP.UnorderedPair(2, 2) => 6.0,
+        UnorderedPair(1, 1) => 4.0,
+        UnorderedPair(1, 2) => 5.0,
+        UnorderedPair(2, 2) => 6.0,
     )
-    @test typeof(@inferred(JuMP.value(i -> 1.0, expr))) == Float64
-    @test @inferred(JuMP.value(i -> 1.0, expr)) == 21
-    @test @inferred(JuMP.value(i -> 2.0, expr)) == 71
+    @test typeof(@inferred(value(i -> 1.0, expr))) == Float64
+    @test @inferred(value(i -> 1.0, expr)) == 21
+    @test @inferred(value(i -> 2.0, expr)) == 71
     return
 end
 
 function test_add_to_expression_GenericAffExpr_V()
-    aff = JuMP.GenericAffExpr(1.0, :a => 2.0)
-    @test JuMP.isequal_canonical(
-        JuMP.add_to_expression!(aff, :b),
-        JuMP.GenericAffExpr(1.0, :a => 2.0, :b => 1.0),
+    aff = GenericAffExpr(1.0, :a => 2.0)
+    @test isequal_canonical(
+        add_to_expression!(aff, :b),
+        GenericAffExpr(1.0, :a => 2.0, :b => 1.0),
     )
     return
 end
 
 function test_add_to_expression_GenericAffExpr_C()
-    aff = JuMP.GenericAffExpr(1.0, :a => 2.0)
-    @test JuMP.isequal_canonical(
-        JuMP.add_to_expression!(aff, 1.0),
-        JuMP.GenericAffExpr(2.0, :a => 2.0),
+    aff = GenericAffExpr(1.0, :a => 2.0)
+    @test isequal_canonical(
+        add_to_expression!(aff, 1.0),
+        GenericAffExpr(2.0, :a => 2.0),
     )
     return
 end
@@ -268,12 +268,12 @@ function test_extension_MA_add_mul(
     @variable(model, x)
     @variable(model, y)
     # MA.add_mul!!(ex::Number, c::Number, x::GenericAffExpr)
-    aff = MA.add_mul!!(1.0, 2.0, JuMP.GenericAffExpr(1.0, :a => 1.0))
-    @test JuMP.isequal_canonical(aff, JuMP.GenericAffExpr(3.0, :a => 2.0))
+    aff = MA.add_mul!!(1.0, 2.0, GenericAffExpr(1.0, :a => 1.0))
+    @test isequal_canonical(aff, GenericAffExpr(3.0, :a => 2.0))
     # MA.add_mul!!(ex::Number, c::Number, x::GenericQuadExpr) with c == 0
     QuadExprType = GenericQuadExpr{Float64,VariableRefType}
     quad = MA.add_mul!!(2.0, 0.0, QuadExprType())
-    @test JuMP.isequal_canonical(quad, convert(QuadExprType, 2.0))
+    @test isequal_canonical(quad, convert(QuadExprType, 2.0))
     # MA.add_mul!!(ex::Number, c::VariableRef, x::VariableRef)"
     @test_expression_with_string MA.add_mul(5.0, x, y) "x*y + 5"
     @test_expression_with_string MA.add_mul!!(5.0, x, y) "x*y + 5"

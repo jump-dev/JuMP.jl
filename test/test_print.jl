@@ -40,15 +40,15 @@ end
 
 function _io_test_print(::MIME"text/plain", obj::AbstractModel, exp_str)
     @test sprint(print, obj) == exp_str
-    @test JuMP.model_string(MIME("text/plain"), obj) == exp_str
+    @test model_string(MIME("text/plain"), obj) == exp_str
     return
 end
 
 function _io_test_print(::MIME"text/latex", obj::AbstractModel, exp_str)
-    model = JuMP.latex_formulation(obj)
+    model = latex_formulation(obj)
     @test sprint(io -> show(io, MIME("text/latex"), model)) ==
           string("\$\$ ", exp_str, " \$\$")
-    @test JuMP.model_string(MIME("text/latex"), obj) ==
+    @test model_string(MIME("text/latex"), obj) ==
           string("\$\$ ", exp_str, " \$\$")
     # TODO(odow): I don't know how to test an IJulia display without adding
     # IJulia as a test-dependency, so just print and check it doesn't error.
@@ -79,8 +79,8 @@ Base.:(*)(α::Float64, u::UnitNumber) = UnitNumber(α * u.α)
 Base.abs(u::UnitNumber) = UnitNumber(abs(u.α))
 Base.isless(u::UnitNumber, v::UnitNumber) = isless(u.α, v.α)
 
-# Used to test extensibility of JuMP printing for `JuMP.AbstractConstraint`
-struct CustomConstraint{S<:JuMP.AbstractShape} <: JuMP.AbstractConstraint
+# Used to test extensibility of JuMP printing for `AbstractConstraint`
+struct CustomConstraint{S<:AbstractShape} <: AbstractConstraint
     function_str::String
     in_set_str::String
     shape::S
@@ -98,7 +98,7 @@ struct CustomIndex
 end
 
 function JuMP.add_constraint(
-    model::JuMP.Model,
+    model::Model,
     constraint::CustomConstraint,
     name::String,
 )
@@ -109,20 +109,18 @@ function JuMP.add_constraint(
     constraints = model.ext[:custom_constraints]
     push!(constraints, constraint)
     push!(model.ext[:custom_names], name)
-    return JuMP.ConstraintRef(
+    return ConstraintRef(
         model,
         CustomIndex(length(constraints)),
         constraint.shape,
     )
 end
 
-function JuMP.constraint_object(
-    cref::JuMP.ConstraintRef{JuMP.Model,CustomIndex},
-)
+function JuMP.constraint_object(cref::ConstraintRef{Model,CustomIndex})
     return cref.model.ext[:custom_constraints][cref.index.value]
 end
 
-function JuMP.name(cref::JuMP.ConstraintRef{JuMP.Model,CustomIndex})
+function JuMP.name(cref::ConstraintRef{Model,CustomIndex})
     return cref.model.ext[:custom_names][cref.index.value]
 end
 
@@ -199,7 +197,7 @@ function test_printing_expression_unit_coefficient_type()
     @variable m y
     u = UnitNumber(2.0)
     z = UnitNumber(0.0)
-    aff = JuMP.GenericAffExpr(zero(u), x => u, y => zero(u))
+    aff = GenericAffExpr(zero(u), x => u, y => zero(u))
     io_test(MIME("text/plain"), aff, "$u x + $z y")
     io_test(MIME("text/latex"), aff, "$u x + $z y")
     drop_zeros!(aff)
@@ -235,7 +233,7 @@ end
 
 function test_printing_NLPEvaluator()
     model = Model()
-    evaluator = JuMP.NLPEvaluator(model)
+    evaluator = NLPEvaluator(model)
     io_test(
         MIME("text/plain"),
         evaluator,
@@ -375,9 +373,8 @@ end
 function test_printing_custom_constraint()
     model = Model()
     function test_constraint(function_str, in_set_str, name)
-        constraint =
-            CustomConstraint(function_str, in_set_str, JuMP.ScalarShape())
-        cref = JuMP.add_constraint(model, constraint, name)
+        constraint = CustomConstraint(function_str, in_set_str, ScalarShape())
+        cref = add_constraint(model, constraint, name)
         @test string(cref) == "$name : $function_str $in_set_str"
     end
     test_constraint("fun", "set", "name")
@@ -391,16 +388,16 @@ function test_extension_printing_variable_ref(
 )
     m = ModelType()
     @variable(m, 0 <= x <= 2)
-    @test JuMP.name(x) == "x"
+    @test name(x) == "x"
     io_test(MIME("text/plain"), x, "x")
     io_test(MIME("text/latex"), x, "x")
 
-    JuMP.set_name(x, "x2")
-    @test JuMP.name(x) == "x2"
+    set_name(x, "x2")
+    @test name(x) == "x2"
     io_test(MIME("text/plain"), x, "x2")
     io_test(MIME("text/latex"), x, "x2")
-    JuMP.set_name(x, "")
-    @test JuMP.name(x) == ""
+    set_name(x, "")
+    @test name(x) == ""
     if x isa VariableRef
         io_test(MIME("text/plain"), x, "_[1]")
         io_test(MIME("text/latex"), x, "{\\_}_{1}")
@@ -409,23 +406,23 @@ function test_extension_printing_variable_ref(
         io_test(MIME("text/latex"), x, "anon")
     end
     @variable(m, z[1:2, 3:5])
-    @test JuMP.name(z[1, 3]) == "z[1,3]"
+    @test name(z[1, 3]) == "z[1,3]"
     io_test(MIME("text/plain"), z[1, 3], "z[1,3]")
     io_test(MIME("text/latex"), z[1, 3], "z_{1,3}")
-    @test JuMP.name(z[2, 4]) == "z[2,4]"
+    @test name(z[2, 4]) == "z[2,4]"
     io_test(MIME("text/plain"), z[2, 4], "z[2,4]")
     io_test(MIME("text/latex"), z[2, 4], "z_{2,4}")
-    @test JuMP.name(z[2, 5]) == "z[2,5]"
+    @test name(z[2, 5]) == "z[2,5]"
     io_test(MIME("text/plain"), z[2, 5], "z[2,5]")
     io_test(MIME("text/latex"), z[2, 5], "z_{2,5}")
     @variable(m, w[3:9, ["red", "blue", "green"]])
-    @test JuMP.name(w[7, "green"]) == "w[7,green]"
+    @test name(w[7, "green"]) == "w[7,green]"
     io_test(MIME("text/plain"), w[7, "green"], "w[7,green]")
     io_test(MIME("text/latex"), w[7, "green"], "w_{7,green}")
     rng = 2:5
     @variable(m, v[rng, rng, rng, rng, rng, rng, rng])
     a_v = v[4, 5, 2, 3, 2, 2, 4]
-    @test JuMP.name(a_v) == "v[4,5,2,3,2,2,4]"
+    @test name(a_v) == "v[4,5,2,3,2,2,4]"
     io_test(MIME("text/plain"), a_v, "v[4,5,2,3,2,2,4]")
     io_test(MIME("text/latex"), a_v, "v_{4,5,2,3,2,2,4}")
     return
@@ -791,7 +788,7 @@ function test_SingleVariable_constraints()
     model = Model()
     @variable(model, x >= 10)
     zero_one = @constraint(model, x in MOI.ZeroOne())
-    io_test(MIME("text/plain"), JuMP.LowerBoundRef(x), "x $ge 10.0")
+    io_test(MIME("text/plain"), LowerBoundRef(x), "x $ge 10.0")
     io_test(MIME("text/plain"), zero_one, "x binary")
     # TODO: Test in IJulia mode
     return
