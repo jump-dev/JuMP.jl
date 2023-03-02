@@ -34,13 +34,13 @@
 # ```math
 # \begin{aligned}
 # \max        \quad & t                                                                    \\
-# \text{s.t.} \quad & Z                                                    \; & \succeq \; 0 \\
-#                   & \begin{bmatrix} s & z^\top \\ z & Z \\ \end{bmatrix} \; & \succeq \; 0 \\
-#                   & x_i^\top Z x_i - 2x_i^\top z + s                     \; & \leq \; 0    &  i=1, \ldots, m \\
-#                   & t \\ge \sqrt[n]\det(Z),
+# \text{s.t.} \quad & Z \succeq 0 \\
+#                   & \begin{bmatrix} s & z^\top \\ z & Z \\ \end{bmatrix} \succeq 0 \\
+#                   & x_i^\top Z x_i - 2x_i^\top z + s \leq 0    & \quad i=1, \ldots, m \\
+#                   & t \ge \sqrt[n]{\det(Z)},
 # \end{aligned}
 # ```
-# The optimal ellipse is given by ``D = Z_*`` and ``c = Z_*^{-1} z_*``.
+# where ``D = Z_*`` and ``c = Z_*^{-1} z_*``.
 
 # ## Required packages
 
