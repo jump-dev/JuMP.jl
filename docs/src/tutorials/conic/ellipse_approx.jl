@@ -55,8 +55,8 @@
 
 using JuMP
 import LinearAlgebra
-import Random
 import Plots
+import Random
 import SCS
 import Test  #src
 
@@ -79,27 +79,21 @@ function generate_point_cloud(
 end
 
 # For the sake of this example, let's take ``m = 600``:
-S = generate_point_cloud(600)
+S = generate_point_cloud(600);
 
 # We will visualise the points (and ellipse) using the Plots package:
 
-function plot_point_cloud(plot, S; r = 1.1 * maximum(abs.(S)), colour = :green)
-    Plots.scatter!(
-        plot,
-        S[:, 1],
-        S[:, 2];
-        xlim = (-r, r),
-        ylim = (-r, r),
-        label = nothing,
-        c = colour,
-        shape = :x,
-    )
-    return
-end
-
-plot = Plots.plot(; size = (600, 600))
-plot_point_cloud(plot, S)
-plot
+r = 1.1 * maximum(abs.(S))
+plot = Plots.scatter(
+    S[:, 1],
+    S[:, 2];
+    xlim = (-r, r),
+    ylim = (-r, r),
+    label = nothing,
+    c = :green,
+    shape = :x,
+    size = (600, 600),
+)
 
 # ## JuMP formulation
 
@@ -114,26 +108,19 @@ set_silent(model)
 m, n = size(S)
 @variable(model, z[1:n])
 @variable(model, Z[1:n, 1:n], PSD)
-@variable(model, t)
 @variable(model, s)
-
-X = [
-    s z'
-    z Z
-]
-@constraint(model, LinearAlgebra.Symmetric(X) >= 0, PSDCone())
-
-for i in 1:m
-    x = S[i, :]
-    @constraint(model, (x' * Z * x) - (2 * x' * z) + s <= 1)
-end
+@constraint(model, LinearAlgebra.Symmetric([s z'; z Z]) >= 0, PSDCone())
+@constraint(
+    model,
+    [i in 1:m], (S[i, :]' * Z * S[i, :]) - (2 * S[i, :]' * z) + s <= 1,
+)
 
 # We cannot directly represent the objective ``(\det(Z))^{\frac{1}{n}}``, so we introduce
 # the conic reformulation:
 
-@variable(model, nth_root_det_Z)
-@constraint(model, [nth_root_det_Z; vec(Z)] in MOI.RootDetConeSquare(n))
-@objective(model, Max, nth_root_det_Z)
+@variable(model, t)
+@constraint(model, [t; vec(Z)] in MOI.RootDetConeSquare(n))
+@objective(model, Max, t)
 
 # Now, solve the program:
 
@@ -189,7 +176,7 @@ print_active_bridges(model)
 # We can leave JuMP to do the reformulation, or we can rewrite out model to
 # have an objective function that SCS natively supports:
 
-@objective(model, Max, 1.0 * nth_root_det_Z + 0.0)
+@objective(model, Max, 1.0 * t + 0.0)
 
 # Re-printing the active bridges:
 
@@ -218,21 +205,19 @@ set_silent(model)
 @variables(model, begin
     z[1:n]
     Z[1:n, 1:n], Symmetric
-    t
     s
-    nth_root_det_Z
+    t
 end)
 f_nonneg = [1 - (S[i, :]' * Z * S[i, :]) + (2 * S[i, :]' * z) - s for i in 1:m]
-f_root = vcat(nth_root_det_Z, [Z[i, j] for i in 1:n for j in i:n])
 @constraints(model, begin
     Z >= 0, PSDCone()
     LinearAlgebra.Symmetric([s z'; z Z]) >= 0, PSDCone()
     f_nonneg in MOI.Nonnegatives(m)
-    f_root in MOI.RootDetConeTriangle(n)
+    vcat(t, [Z[i, j] for i in 1:n for j in i:n]) in MOI.RootDetConeTriangle(n)
 end);
-@objective(model, Max, 1.0 * nth_root_det_Z + 0.0)
+@objective(model, Max, 1.0 * t + 0.0)
 optimize!(model)
-simplified_solve_time = solve_time(model)
+solve_time_1 = solve_time(model)
 
 # This formulation gives the much smaller graph:
 
@@ -251,17 +236,21 @@ print_active_bridges(model)
 remove_bridge(model, MOI.Bridges.Constraint.GeoMeanToPowerBridge)
 optimize!(model)
 
-# This time, the solve only took:
+# This time, the solve took:
 
-no_geomean_to_power_bridge_solve_time = solve_time(model)
+solve_time_2 = solve_time(model)
+
+# where previously it took
+
+solve_time_1
 
 # Why was the solve time different?
 
 print_active_bridges(model)
 
-# This time, JuMP used a [`MOI.Bridges.GeoMeanBridge`](@ref) to reformulate the
-# constraint into a set of [`MOI.RotatedSecondOrderCone`](@ref) constraints,
-# that were further reformulated into a set of supported
+# This time, JuMP used a [`MOI.Bridges.Constraint.GeoMeanBridge`](@ref) to
+# reformulate the constraint into a set of [`MOI.RotatedSecondOrderCone`](@ref)
+# constraints, that were further reformulated into a set of supported
 # [`MOI.SecondOrderCone`](@ref) constraints. It seems that for this particular
 # model, the [`MOI.SecondOrderCone`](@ref) formulation is more efficient.
 
