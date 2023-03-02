@@ -185,7 +185,7 @@ print_active_bridges(model)
 #
 #  * Replacing the [`MOI.ScalarAffineFunction`](@ref) in [`MOI.GreaterThan`](@ref)
 #    constraints with the vectorized equivalent of
-#   [`MOI.VectorAffineFunction`](@ref) in [`MOI.Nonnegatives`](@ref)
+#    [`MOI.VectorAffineFunction`](@ref) in [`MOI.Nonnegatives`](@ref)
 #
 #  * Replacing the [`MOI.VectorOfVariables`](@ref) in [`MOI.RootDetConeSquare`](@ref)
 #    constraint with [`MOI.VectorAffineFunction`](@ref) in
@@ -226,7 +226,7 @@ print_active_bridges(model)
 # and [`MOI.GeometricMeanCone`](@ref) constraints.
 
 # Because SCS doesn't natively support the [`MOI.GeometricMeanCone`](@ref),
-# these constraintns were further bridged using a [`MOI.Bridges.Constraint.GeoMeanToPowerBridge`](@ref)
+# these constraints were further bridged using a [`MOI.Bridges.Constraint.GeoMeanToPowerBridge`](@ref)
 # to a series of [`MOI.PowerCone`](@ref) constraints.
 
 # However, there are many other ways that a [`MOI.GeometricMeanCone`](@ref) can
