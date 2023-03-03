@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Document how to register function with varying number of input arguments
    (#3258)
  - Tidy tests by removing unneeded `JuMP.` prefixes (#3260)
- - Clarified the introduction to [`Complex number support`](@ref) tutorial (#3262)
+ - Clarified the introduction to the [Complex number support](@ref) tutorial (#3262)
  - Fixed typos in the Documentation (#3263)
 
 ## Version 1.8.2 (February 27, 2023)
