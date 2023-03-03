@@ -1394,7 +1394,7 @@ function test_relax_with_penalty!_specific_with_default()
     return
 end
 
-function test_extension_Hermitian_PSD_constraint()
+function test_Hermitian_PSD_constraint()
     model = Model()
     set_optimizer(
         model,
