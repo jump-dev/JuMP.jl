@@ -33,7 +33,7 @@ import SCS
 # requirement that ``\sum\limits_{i=1}^N E_i = \mathbf{I}``.
 
 # To choose a POVM, we want to maximize the probability that we guess
-# the quantum state corrrectly. This can be formulated as the following
+# the quantum state correctly. This can be formulated as the following
 # optimization problem:
 
 # ```math
