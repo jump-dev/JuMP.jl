@@ -16,15 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    although the `_optimizer_` functions remain for backward compatibility. (#3219)
  - Added [`set_start_values`](@ref) for setting all supported start values in a
    model (#3238)
- - Add support for the inequality syntax `@constraint(model, H >= 0, HermitianPSDCone())`
-   for [`HermitianPSDCone`](@ref) (#3256)
  - Add [`remove_bridge`](@ref) and [`print_active_bridges`](@ref) (#3259)
 
 ### Fixed
 
  - The matrix returned by a variable in [`HermitianPSDCone`](@ref) is now a
    `LinearAlgebra.Hermitian` matrix. This is potentially breaking if you have
-   written code to assume the return is a `Matrix`. (#3245)
+   written code to assume the return is a `Matrix`. (#3245) (#3246)
  - Fixed missing support for `Base.isreal` of expressions (#3252)
 
 ### Other
@@ -41,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Document how to register function with varying number of input arguments
    (#3258)
  - Tidy tests by removing unneeded `JuMP.` prefixes (#3260)
+ - Clarified the introduction to [`Complex number support`](@ref) tutorial (#3262)
+ - Fixed typos in the Documentation (#3263)
 
 ## Version 1.8.2 (February 27, 2023)
 
