@@ -1394,11 +1394,16 @@ function test_relax_with_penalty!_specific_with_default()
     return
 end
 
-function test_extension_Hermitian_PSD_constraint(
-    ModelType = Model,
-    VariableRefType = VariableRef,
-)
-    model = ModelType()
+function test_Hermitian_PSD_constraint()
+    model = Model()
+    set_optimizer(
+        model,
+        () -> MOIU.MockOptimizer(
+            MOIU.Model{Float64}();
+            eval_objective_value = false,
+            eval_variable_constraint_dual = false,
+        ),
+    )
     @variable(model, x)
     @variable(model, y)
     @variable(model, w)
@@ -1407,7 +1412,7 @@ function test_extension_Hermitian_PSD_constraint(
     _test_constraint_name_util(
         href,
         "href",
-        Vector{GenericAffExpr{Float64,VariableRefType}},
+        Vector{GenericAffExpr{Float64,VariableRef}},
         MOI.HermitianPositiveSemidefiniteConeTriangle,
     )
     c = constraint_object(href)
@@ -1417,6 +1422,27 @@ function test_extension_Hermitian_PSD_constraint(
     @test isequal_canonical(c.func[4], 1 - w)
     @test c.set == MOI.HermitianPositiveSemidefiniteConeTriangle(2)
     @test c.shape isa HermitianMatrixShape
+    MOIU.attach_optimizer(model)
+    model.is_model_dirty = false
+    mock_optimizer = unsafe_backend(model)
+    MOI.set(mock_optimizer, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock_optimizer, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    F = MOI.VectorAffineFunction{Float64}
+    for (i, v) in enumerate(all_variables(model))
+        MOI.set(mock_optimizer, MOI.VariablePrimal(), optimizer_index(v), i)
+    end
+    H = value(href)
+    @test H isa LinearAlgebra.Hermitian
+    @test parent(H) == [0 -1-2im; -1+2im 0]
+    MOI.set(
+        mock_optimizer,
+        MOI.ConstraintDual(),
+        optimizer_index(href),
+        1:MOI.dimension(c.set),
+    )
+    H = dual(href)
+    @test H isa LinearAlgebra.Hermitian
+    @test parent(H) == [1 2+4im; 2-4im 3]
     return
 end
 
