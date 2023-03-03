@@ -44,7 +44,7 @@ import Test  #hide
 # otherwise.
 
 # For this tutorial, we extend the single-objective knapsack problem by adding
-# another objective: given a desirablility rating, ``r_i``, we wish to maximize
+# another objective: given a desirability rating, ``r_i``, we wish to maximize
 # the total desirability of the items in our knapsack. Thus, our mathematical
 # formulation is now:
 

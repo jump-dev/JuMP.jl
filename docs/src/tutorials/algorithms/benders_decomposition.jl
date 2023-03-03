@@ -314,7 +314,7 @@ subproblem = Model(GLPK.Optimizer)
 @objective(subproblem, Min, c_2' * y)
 print(subproblem)
 
-# This formulation is slighty different. We have included a copy of the x
+# This formulation is slightly different. We have included a copy of the x
 # variables, `x_copy`, and used `x_copy` in the left-hand side of the
 # constraints.
 

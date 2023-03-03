@@ -76,9 +76,9 @@ end
 # ## Bi-objective shortest path problem
 
 # This is example is taken from Exercise 9.5 page 269 of Multicriteria
-# Optimization (2nd edt), M. Ehrgott, Springer 2005. The code was adapted from
-# an example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl) by
-# [@xgandibleux](https://github.com/xgandibleux).
+# Optimization (2nd edition), M. Ehrgott, Springer 2005. The code was adapted
+# from an example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl)
+# by [@xgandibleux](https://github.com/xgandibleux).
 
 M = 50
 C1 = [
