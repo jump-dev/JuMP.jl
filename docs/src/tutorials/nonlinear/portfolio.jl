@@ -183,7 +183,7 @@ scalar_return = value(r' * x)
 #  1. to minimize the variance
 #  2. to maximize the expected return
 #
-# The solution to this biobjective problem is the
+# The solution to this bi-objective problem is the
 # [efficient frontier](https://en.wikipedia.org/wiki/Efficient_frontier) of
 # modern portfolio theory, and each point in the solution is a point with the
 # best return for a fixed level of risk.

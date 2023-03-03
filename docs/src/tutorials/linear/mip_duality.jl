@@ -103,7 +103,7 @@ undo = fix_discrete_variables(model);
 # model to the original mixed-integer formulation.
 
 # !!! tip
-#     Afer calling [`fix_discrete_variables`](@ref), you can set a new solver
+#     After calling [`fix_discrete_variables`](@ref), you can set a new solver
 #     with [`set_optimizer`](@ref) if your mixed-integer solver does not support
 #     computing a dual solution.
 

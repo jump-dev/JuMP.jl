@@ -18,7 +18,7 @@ using JuMP
 import HiGHS
 
 # We also need [HTTP.jl](https://github.com/JuliaWeb/HTTP.jl) to act as our
-# REST server, and [JSON.jl](https://github.com/JuliaIO/JSON.jl) to marshall
+# REST server, and [JSON.jl](https://github.com/JuliaIO/JSON.jl) to marshal
 # data.
 
 import HTTP
