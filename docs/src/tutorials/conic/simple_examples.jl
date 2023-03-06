@@ -167,10 +167,10 @@ example_k_means_clustering()
 # Given three random variables ``A``, ``B``, and ``C``, and given bounds on two of the three
 # correlation coefficients:
 # ```math
-#     -0.2 \leq \rho_{AB} \leq -0.1 \\
-#     0.4  \leq \rho_{BC} \leq  0.5
+#     -0.2 \leq ρ_{AB} \leq -0.1 \\
+#     0.4  \leq ρ_{BC} \leq  0.5
 # ```
-# our problem is to determine upper and lower bounds on other correlation coefficient ``\rho_{AC}``.
+# our problem is to determine upper and lower bounds on other correlation coefficient ``ρ_{AC}``.
 #
 # We solve an SDP to make use of the following positive semidefinite property
 # of the correlation matrix:
