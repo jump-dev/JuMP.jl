@@ -7,7 +7,7 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Version 1.9.0 (March 6, 2023)
+## Version 1.9.0 (March 7, 2023)
 
 ### Added
 
@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    (#3258)
  - Tidy tests by removing unneeded `JuMP.` prefixes (#3260)
  - Clarified the introduction to the [Complex number support](@ref) tutorial (#3262)
- - Fixed typos in the Documentation (#3263)
+ - Fixed typos in the Documentation (#3263) (#3266) (#3268) (#3269)
 
 ## Version 1.8.2 (February 27, 2023)
 
