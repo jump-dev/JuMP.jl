@@ -241,8 +241,10 @@ inplace_df = solve_economic_dispatch_inplace(
 )
 print(string("elapsed time: ", time() - start, " seconds"))
 
-# Adjusting specific constraints or the objective function is faster than
-# re-building the entire model.
+# For small models, adjusting specific constraints or the objective function is
+# sometimes faster and sometimes slower than re-building the entire model.
+# However, as the problem size increases, updating the model in-place is usually
+# faster.
 
 inplace_df
 
