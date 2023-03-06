@@ -360,7 +360,7 @@ function solve_unit_commitment(generators::Vector, wind, scenario)
     model = Model(HiGHS.Optimizer)
     set_silent(model)
     N = length(generators)
-    @variable(model, generators[i].min <= g[i = 1:N] <= generators[i].max)
+    @variable(model, 0 <= g[i = 1:N] <= generators[i].max)
     @variable(model, 0 <= w <= scenario.wind)
     @constraint(model, sum(g[i] for i in 1:N) + w == scenario.demand)
     ## !!! New: add binary on-off variables for each generator
