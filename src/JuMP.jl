@@ -437,10 +437,55 @@ set_string_names_on_creation(::AbstractModel) = true
 """
     enable_container_keyword_indexing(model::Model, value::Bool)
 
-Set the default argument of the `enable_container_keyword_indexing` keyword in
-the macros to `value`. This is used to determine whether keyword indexing is
-allowed for [`Containers.DenseAxisArray`](@ref) and
-[`Containers.SparseAxisArray`](@ref).
+Set the default argument of the `enable_keyword_indexing` keyword in the
+[`Containers.@container`](@ref) macro to `value`.
+
+The default is used to determine whether keyword indexing is allowed for objects
+of types [`Containers.DenseAxisArray`](@ref) and [`Containers.SparseAxisArray`](@ref).
+
+Indexing with keyword arguments has a small performance hit, but it can lead to
+more readable code, particularly with variables like
+`@variable(model, x[factory = 1:3, customer = 1:3])`, where
+`x[factory = 1, customer = 3]` is more readable than `x[1, 3]`.
+
+!!! warning
+    Keyword indexing does _not_ work for `Array` objects. As a work-around,
+    pass `container = DenseAxisArray` to force the container type.
+
+## Example
+
+```jldoctest
+julia> using JuMP
+
+julia> model = Model();
+
+julia> @variable(model, x[i = 2:3])
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, 2:3
+And data, a 2-element Vector{VariableRef}:
+ x[2]
+ x[3]
+
+julia> x[i = 2]
+ERROR: Keyword indexing is disabled. To enable, pass `enable_keyword_indexing = true` to the `Containers.@container` macro, or call `JuMP.enable_container_keyword_indexing(model, true)` before calling any JuMP macros like `@variable`.
+Stacktrace:
+[...]
+
+julia> model = Model();
+
+julia> enable_container_keyword_indexing(model, true)
+
+julia> @variable(model, x[i = 1:3], container = DenseAxisArray)
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, 1:3
+And data, a 3-element Vector{VariableRef}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> x[i = 2]
+x[2]
+```
 """
 function enable_container_keyword_indexing(model::Model, value::Bool)
     model.enable_container_keyword_indexing = value
