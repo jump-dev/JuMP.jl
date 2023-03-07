@@ -518,7 +518,7 @@ julia> Containers.@container(
            i + j,
            enable_keyword_indexing = true,
        )
-SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 6 entries:
+JuMP.Containers.SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 6 entries:
   [2, 1]  =  3
   [3, 1]  =  4
   [3, 2]  =  5
@@ -527,7 +527,7 @@ SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 6 entries:
   [4, 3]  =  7
 
 julia> y[i = 2:4, j = 1]
-SparseAxisArray{Int64, 1, Tuple{Int64}} with 3 entries:
+JuMP.Containers.SparseAxisArray{Int64, 1, Tuple{Int64}} with 3 entries:
   [2]  =  3
   [3]  =  4
   [4]  =  5
