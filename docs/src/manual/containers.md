@@ -488,22 +488,20 @@ JuMP.Containers.SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 2 entries:
 
 ## Keyword indexing
 
-Opt-in to the experimental keyword indexing syntax by setting
-`Containers.ENABLE_KEYWORD_INDEXING` to true:
+Opt-in to the experimental keyword indexing syntax by passing
+`enable_keyword_indexing = true` to the [`Containers.@container`](@ref) macro,
+or call [`enable_container_keyword_indexing`](@ref).
+
+Keyword indexing lets you uses the named indices of [`Containers.DenseAxisArray`](@ref)
+and [`Containers.SparseAxisArray`](@ref) as keyword arguments when indexing a
+container:
 
 ```jldoctest container_kwarg_indexing
-julia> using JuMP.Containers
-
-julia> Containers.ENABLE_KEYWORD_INDEXING[] = true
-true
-```
-
-Keyword indexing lets you uses the named indices of
-[`Containers.DenseAxisArray`](@ref) and [`Containers.SparseAxisArray`](@ref)
-as keyword arguments when indexing a container:
-
-```jldoctest container_kwarg_indexing
-julia> Containers.@container(x[i=2:4, j=1:3], i + j)
+julia> Containers.@container(
+           x[i=2:4, j=1:3],
+           i + j,
+           enable_keyword_indexing = true,
+       )
 2-dimensional DenseAxisArray{Int64,2,...} with index sets:
     Dimension 1, 2:4
     Dimension 2, Base.OneTo(3)
@@ -515,7 +513,11 @@ And data, a 3×3 Matrix{Int64}:
 julia> x[i = 2, j = 1]
 3
 
-julia> Containers.@container(y[i=2:4, j=1:3; i > j], i + j)
+julia> Containers.@container(
+           y[i=2:4, j=1:3; i > j],
+           i + j,
+           enable_keyword_indexing = true,
+       )
 SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 6 entries:
   [2, 1]  =  3
   [3, 1]  =  4
@@ -529,13 +531,47 @@ SparseAxisArray{Int64, 1, Tuple{Int64}} with 3 entries:
   [2]  =  3
   [3]  =  4
   [4]  =  5
+
+julia> using JuMP
+
+julia> model = Model();
+
+julia> @variable(model, x[i = 2:3])
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, 2:3
+And data, a 2-element Vector{VariableRef}:
+ x[2]
+ x[3]
+
+julia> x[i = 2]
+ERROR: Keyword indexing is disabled. To enable, pass `enable_keyword_indexing = true` to the `Containers.@container` macro, or call `JuMP.enable_container_keyword_indexing(model, true)` before calling any JuMP macros like `@variable`.
+Stacktrace:
+[...]
+
+julia> model = Model();
+
+julia> enable_container_keyword_indexing(model, true)
+
+julia> @variable(model, x[i = 2:3])
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, 2:3
+And data, a 2-element Vector{VariableRef}:
+ x[2]
+ x[3]
+
+julia> x[i = 2]
+x[2]
 ```
 
-The main reason this syntax is currently experimental is that it does not work
-for `Array`
+The main reason this syntax is currently opt-in is that it does not work for
+`Array`:
 
 ```jldoctest container_kwarg_indexing
-julia> Containers.@container(z[i=1:4, j=1:3], i + j)
+julia> Containers.@container(
+           z[i=1:4, j=1:3],
+           i + j,
+           enable_keyword_indexing = true,
+       )
 4×3 Matrix{Int64}:
  2  3  4
  3  4  5

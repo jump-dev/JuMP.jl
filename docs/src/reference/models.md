@@ -33,6 +33,7 @@ object_dictionary
 unregister
 latex_formulation
 set_string_names_on_creation
+enable_container_keyword_indexing
 ```
 
 ## Working with attributes
