@@ -352,7 +352,7 @@ julia> DataFrames.DataFrame(table)
    4 │     3  A       (3, :A)
 ```
 
-## [Forcing the container type](@id container_forcing)
+## Forcing the container type
 
 Pass `container = T` to use `T` as the container. For example:
 ```jldoctest; filter=r"\([1-2], [1-2]\) \=\> [2-4]"
