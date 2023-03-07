@@ -10,7 +10,7 @@ embedded in [Julia](https://julialang.org/). You can find out more about us by
 visiting [jump.dev](https://jump.dev).
 
 
-**Latest Release**: [![version](https://juliahub.com/docs/JuMP/DmXqY/1.8.1/version.svg)](https://juliahub.com/ui/Packages/JuMP/DmXqY/1.8.2) (`release-1.0` branch):
+**Latest Release**: [![version](https://juliahub.com/docs/JuMP/DmXqY/1.9.0/version.svg)](https://juliahub.com/ui/Packages/JuMP/DmXqY/1.9.0) (`release-1.0` branch):
   * Installation via the Julia package manager:
     * `import Pkg; Pkg.add("JuMP")`
   * Get help:
