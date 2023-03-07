@@ -441,4 +441,19 @@ function test_expression_ambiguities()
     return
 end
 
+function test_keyword_indexing()
+    model = Model()
+    @variable(model, y)
+    @expression(model, x[i=2:3], i * y + i)
+    @test_throws ErrorException x[i = 2]
+    model = Model()
+    enable_container_keyword_indexing(model, true)
+    @variable(model, y)
+    @expression(model, x[i=2:3], i * y + i)
+    for arg in (2, 3, 2:3, 3:3, :)
+        @test x[i = arg] == x[arg]
+    end
+    return
+end
+
 end  # TestExpr

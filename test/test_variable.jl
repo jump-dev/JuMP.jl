@@ -1408,4 +1408,25 @@ function test_fix_discrete_variables_value()
     return
 end
 
+function test_keyword_indexing_disabled()
+    model = Model()
+    @variable(model, x[i = 2:3])
+    @test_throws ErrorException x[i = 2]
+    @variable(model, y[i = 1:3])
+    @test_throws MethodError y[i = 2]
+    return
+end
+
+function test_keyword_indexing_enabled()
+    model = Model()
+    enable_container_keyword_indexing(model, true)
+    @variable(model, x[i = 2:3])
+    for arg in (2, 3, 2:3, 3:3, :)
+        @test x[i = arg] == x[arg]
+    end
+    @variable(model, y[i = 1:3])
+    @test_throws MethodError y[i = 1]
+    return
+end
+
 end  # module TestVariable

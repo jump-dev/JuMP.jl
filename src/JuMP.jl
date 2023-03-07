@@ -103,6 +103,7 @@ mutable struct Model <: AbstractModel
     # A model-level option that is used as the default for the set_string_name
     # keyword to @variable and @constraint.
     set_string_names_on_creation::Bool
+    enable_container_keyword_indexing::Bool
 end
 
 function Base.getproperty(model::Model, name::Symbol)
@@ -208,6 +209,7 @@ function direct_model(backend::MOI.ModelLike)
         false,
         Dict{Symbol,Any}(),
         true,
+        false,
     )
 end
 
@@ -431,6 +433,25 @@ end
 set_string_names_on_creation(model::Model) = model.set_string_names_on_creation
 
 set_string_names_on_creation(::AbstractModel) = true
+
+"""
+    enable_container_keyword_indexing(model::Model, value::Bool)
+
+Set the default argument of the `enable_container_keyword_indexing` keyword in
+the macros to `value`. This is used to determine whether keyword indexing is
+allowed for [`Containers.DenseAxisArray`](@ref) and
+[`Containers.SparseAxisArray`](@ref).
+"""
+function enable_container_keyword_indexing(model::Model, value::Bool)
+    model.enable_container_keyword_indexing = value
+    return
+end
+
+function enable_container_keyword_indexing(model::Model)
+    return model.enable_container_keyword_indexing
+end
+
+enable_container_keyword_indexing(::AbstractModel) = true
 
 _moi_bridge_constraints(::MOI.ModelLike) = false
 

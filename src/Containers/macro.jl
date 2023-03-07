@@ -239,7 +239,8 @@ end
         index_vars::Vector{Any},
         indices::Expr,
         code,
-        requested_container::Union{Symbol,Expr},
+        requested_container::Union{Symbol,Expr};
+        pass_names::Union{Bool,Expr},
     )
 
 Used in macros to construct a call to [`container`](@ref). This should be used
@@ -288,7 +289,8 @@ function container_code(
     index_vars::Vector{Any},
     indices::Expr,
     code,
-    requested_container::Union{Symbol,Expr},
+    requested_container::Union{Symbol,Expr};
+    pass_names::Union{Bool,Expr} = false,
 )
     if isempty(index_vars)
         return code
@@ -308,9 +310,13 @@ function container_code(
     else
         # This is a symbol or expression from outside JuMP, so we need to escape
         # it.
+        pass_names = true
         esc(requested_container)
     end
-    return :(Containers.container($f, $indices, $container_type, $index_vars))
+    return quote
+        names = $pass_names ? $index_vars : nothing
+        Containers.container($f, $indices, $container_type, names)
+    end
 end
 
 """
@@ -371,12 +377,23 @@ JuMP.Containers.SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 6 entries:
 ```
 """
 macro container(args...)
-    args, kw_args, requested_container = _extract_kw_args(args)
+    args, kwargs, requested_container = _extract_kw_args(args)
     @assert length(args) == 2
-    @assert isempty(kw_args)
+    enable_keyword_indexing = false
+    for kw in kwargs
+        @assert Meta.isexpr(kw, :(=), 2)
+        @assert kw.args[1] == :enable_keyword_indexing
+        enable_keyword_indexing = kw.args[2]
+    end
     var, value = args
     index_vars, indices = build_ref_sets(error, var)
-    code = container_code(index_vars, indices, esc(value), requested_container)
+    code = container_code(
+        index_vars,
+        indices,
+        esc(value),
+        requested_container;
+        pass_names = enable_keyword_indexing,
+    )
     if isexpr(var, :vect) || isexpr(var, :vcat)
         return code
     else

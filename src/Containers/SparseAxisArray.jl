@@ -37,12 +37,11 @@ julia> array[:b, 3]
 """
 struct SparseAxisArray{T,N,K<:NTuple{N,Any}} <: AbstractArray{T,N}
     data::Dict{K,T}
-    names::NTuple{N,Symbol}
+    names::Union{Nothing,NTuple{N,Symbol}}
 end
 
 function SparseAxisArray(d::Dict{K,T}) where {T,N,K<:NTuple{N,Any}}
-    names = ntuple(i -> Symbol("#$i"), N)
-    return SparseAxisArray(d, names)
+    return SparseAxisArray(d, nothing)
 end
 
 Base.length(sa::SparseAxisArray) = length(sa.data)
@@ -100,7 +99,7 @@ function Base.setindex!(
 end
 
 function _kwargs_to_args(d::SparseAxisArray{T,N}; kwargs...) where {T,N}
-    _check_keyword_indexing_allowed()
+    _check_keyword_indexing_allowed(d.names)
     if length(kwargs) != N
         throw(BoundsError(d, kwargs))
     end
@@ -185,6 +184,8 @@ end
     end
     return length(expr.args) == 1 ? :(nothing) : expr
 end
+
+_sliced_key_name(::Type{K}, ::Nothing, args...) where {K<:Tuple} = nothing
 
 @generated function _sliced_key_name(::Type{K}, names, args...) where {K<:Tuple}
     expr = Expr(:tuple)
