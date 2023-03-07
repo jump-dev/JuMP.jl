@@ -356,6 +356,7 @@ _is_range(::Any) = false
 _is_range(::Union{Vector{Int},Colon}) = true
 
 function _kwargs_to_args(A::DenseAxisArray{T,N}; kwargs...) where {T,N}
+    _check_keyword_indexing_allowed()
     return ntuple(N) do i
         kw = keys(kwargs)[i]
         if A.names[i] != kw
@@ -743,6 +744,7 @@ function _fixed_indices(view_axes::Tuple, axes::Tuple)
 end
 
 function _kwargs_to_args(A::DenseAxisArrayView{T,N}; kwargs...) where {T,N}
+    _check_keyword_indexing_allowed()
     non_default_indices = _fixed_indices(A.axes, A.data.axes)
     return ntuple(N) do i
         kw = keys(kwargs)[i]

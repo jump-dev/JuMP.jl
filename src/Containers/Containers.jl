@@ -25,6 +25,24 @@ Base.IndexStyle(::IndexAnyCartesian, ::IndexAnyCartesian) = IndexAnyCartesian()
 
 export DenseAxisArray, SparseAxisArray
 
+"""
+    ENABLE_KEYWORD_INDEXING
+
+`JuMP.Containers.ENABLE_KEYWORD_INDEXING[] = true` to opt-in to the keyword
+indexing of [`DenseAxisArray`](@ref) and [`SparseAxisArray`](@ref).
+"""
+const ENABLE_KEYWORD_INDEXING = Ref{Bool}(false)
+
+function _check_keyword_indexing_allowed()
+    if !ENABLE_KEYWORD_INDEXING[]
+        error(
+            "Keyword indexing is disabled. Set " *
+            "`JuMP.Containers.ENABLE_KEYWORD_INDEXING[] = true` to enable.",
+        )
+    end
+    return
+end
+
 include("DenseAxisArray.jl")
 include("SparseAxisArray.jl")
 

@@ -100,6 +100,7 @@ function Base.setindex!(
 end
 
 function _kwargs_to_args(d::SparseAxisArray{T,N}; kwargs...) where {T,N}
+    _check_keyword_indexing_allowed()
     if length(kwargs) != N
         throw(BoundsError(d, kwargs))
     end

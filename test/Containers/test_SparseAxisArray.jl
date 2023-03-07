@@ -248,6 +248,7 @@ function test_ambuguity_BroadcastStyleUnknown()
 end
 
 function test_containers_sparseaxisarray_kwarg_indexing()
+    Containers.ENABLE_KEYWORD_INDEXING[] = true
     Containers.@container(
         x[i = 2:3, j = 1:2],
         i + j,
@@ -292,6 +293,7 @@ function test_containers_sparseaxisarray_kwarg_indexing()
 end
 
 function test_containers_sparseaxisarray_kwarg_indexing_slicing()
+    Containers.ENABLE_KEYWORD_INDEXING[] = true
     Containers.@container(
         x[i = 2:3, j = 1:2],
         i + j,
@@ -307,6 +309,7 @@ function test_containers_sparseaxisarray_kwarg_indexing_slicing()
 end
 
 function test_containers_sparseaxisarray_kwarg_setindex()
+    Containers.ENABLE_KEYWORD_INDEXING[] = true
     Containers.@container(
         x[i = 2:3, j = 1:2],
         i + j,
@@ -340,6 +343,13 @@ function test_containers_sparseaxisarray_kwarg_setindex()
         x[i = 2, 2] = 3,
     )
     @test_throws(BoundsError, x[i = 2] = 3)
+    return
+end
+
+function test_keyword_indexing_false_SparseAxisArray()
+    Containers.ENABLE_KEYWORD_INDEXING[] = false
+    Containers.@container(x[i=2:3; isodd(i)], i)
+    @test_throws ErrorException x[i=3]
     return
 end
 

@@ -368,30 +368,6 @@ z[2, 1]
 
 w[2:3, ["red", "blue"]]
 
-# If all axes are named, you can use keyword indexing for extra readability:
-
-z[i = 2, j = :]
-
-# If names are omitted, an error is thrown:
-
-try                         #hide
-    w[i = 1, j = "red"]
-catch err                   #hide
-    showerror(stderr, err)  #hide
-end                         #hide
-
-# !!! warning
-#     Keyword indexing does not work for `Array`, so `x[i = 1]` will throw an
-#     error.
-
-# As a work-around, pass `DenseAxisArray` to the `container` keyword.
-
-@variable(model, a_dense[i = 1:2, j = 1:2], container = DenseAxisArray)
-
-#-
-
-a_dense[i = 1, j = 2]
-
 # See [Forcing the container type](@ref variable_forcing) for more details.
 
 # #### SparseAxisArrays
@@ -415,10 +391,6 @@ u[1, 2]
 #-
 
 v[[3, 6]]
-
-# If all axes are named, you can use keyword indexing for extra readability:
-
-v[i = 3]
 
 # ### Integrality
 

@@ -138,16 +138,6 @@ julia> DataFrames.DataFrame(table)
    6 │     2      3  (2, 3)
 ```
 
-### Keyword indexing
-
-Keyword indexing cannot be used and will throw a `MethodError`:
-
-```jldoctest containers_array
-julia> x[i = 2, j = 2]
-ERROR: MethodError: no method matching getindex(::Matrix{Tuple{Int64, Int64}}; i=2, j=2)
-[...]
-```
-
 ## DenseAxisArray
 
 A [`Containers.DenseAxisArray`](@ref) is created when the index sets are
@@ -269,22 +259,6 @@ julia> DataFrames.DataFrame(table)
    4 │     2  B       (2, :B)
 ```
 
-### Keyword indexing
-
-Keyword indexing can be used if all of the indices are named:
-
-```jldoctest containers_dense
-julia> x[i = 1, j = :A]
-(1, :A)
-
-julia> x[i = 1:2, j = :A]
-1-dimensional DenseAxisArray{Tuple{Int64, Symbol},1,...} with index sets:
-    Dimension 1, [1, 2]
-And data, a 2-element Vector{Tuple{Int64, Symbol}}:
- (1, :A)
- (2, :A)
-```
-
 ## SparseAxisArray
 
 A [`Containers.SparseAxisArray`](@ref) is created when the index sets are
@@ -376,20 +350,6 @@ julia> DataFrames.DataFrame(table)
    2 │     2  A       (2, :A)
    3 │     2  B       (2, :B)
    4 │     3  A       (3, :A)
-```
-
-### Keyword indexing
-
-Keyword indexing can be used if all of the indices are named:
-
-```jldoctest containers_sparse
-julia> x[i = 2, j = :A]
-(2, :A)
-
-julia> x[i = 2:3, j = :A]
-JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 1, Tuple{Int64}} with 2 entries:
-  [2]  =  (2, :A)
-  [3]  =  (3, :A)
 ```
 
 ## [Forcing the container type](@id container_forcing)
@@ -524,4 +484,65 @@ julia> Containers.@container([i = 1:2, j = 1:4; condition(i, j)], i + j)
 JuMP.Containers.SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 2 entries:
   [1, 2]  =  3
   [1, 4]  =  5
+```
+
+## Keyword indexing
+
+Opt-in to the experimental keyword indexing syntax by setting
+`Containers.ENABLE_KEYWORD_INDEXING` to true:
+
+```jldoctest container_kwarg_indexing
+julia> using JuMP.Containers
+
+julia> Containers.ENABLE_KEYWORD_INDEXING[] = true
+true
+```
+
+Keyword indexing lets you uses the named indices of
+[`Containers.DenseAxisArray`](@ref) and [`Containers.SparseAxisArray`](@ref)
+as keyword arguments when indexing a container:
+
+```jldoctest container_kwarg_indexing
+julia> Containers.@container(x[i=2:4, j=1:3], i + j)
+2-dimensional DenseAxisArray{Int64,2,...} with index sets:
+    Dimension 1, 2:4
+    Dimension 2, Base.OneTo(3)
+And data, a 3×3 Matrix{Int64}:
+ 3  4  5
+ 4  5  6
+ 5  6  7
+
+julia> x[i = 2, j = 1]
+3
+
+julia> Containers.@container(y[i=2:4, j=1:3; i > j], i + j)
+SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 6 entries:
+  [2, 1]  =  3
+  [3, 1]  =  4
+  [3, 2]  =  5
+  [4, 1]  =  5
+  [4, 2]  =  6
+  [4, 3]  =  7
+
+julia> y[i = 2:4, j = 1]
+SparseAxisArray{Int64, 1, Tuple{Int64}} with 3 entries:
+  [2]  =  3
+  [3]  =  4
+  [4]  =  5
+```
+
+The main reason this syntax is currently experimental is that it does not work
+for `Array`
+
+```jldoctest container_kwarg_indexing
+julia> Containers.@container(z[i=1:4, j=1:3], i + j)
+4×3 Matrix{Int64}:
+ 2  3  4
+ 3  4  5
+ 4  5  6
+ 5  6  7
+
+julia> z[i = 2, j = 1]
+ERROR: MethodError: no method matching getindex(::Matrix{Int64}; i=2, j=1)
+[...]
 ```
