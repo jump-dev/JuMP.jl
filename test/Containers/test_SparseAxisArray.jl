@@ -348,8 +348,8 @@ end
 
 function test_keyword_indexing_false_SparseAxisArray()
     Containers.ENABLE_KEYWORD_INDEXING[] = false
-    Containers.@container(x[i=2:3; isodd(i)], i)
-    @test_throws ErrorException x[i=3]
+    Containers.@container(x[i = 2:3; isodd(i)], i)
+    @test_throws ErrorException x[i = 3]
     return
 end
 

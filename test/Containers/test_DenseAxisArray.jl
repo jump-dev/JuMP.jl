@@ -821,16 +821,16 @@ end
 
 function test_keyword_indexing_false_DenseAxisArray()
     Containers.ENABLE_KEYWORD_INDEXING[] = false
-    Containers.@container(x[i=2:3], i)
-    @test_throws ErrorException x[i=2]
+    Containers.@container(x[i = 2:3], i)
+    @test_throws ErrorException x[i = 2]
     return
 end
 
 function test_keyword_indexing_false_DenseAxisArrayView()
     Containers.ENABLE_KEYWORD_INDEXING[] = false
-    Containers.@container(x[i=2:4], i)
+    Containers.@container(x[i = 2:4], i)
     y = view(x, 3:4)
-    @test_throws ErrorException y[i=3]
+    @test_throws ErrorException y[i = 3]
     return
 end
 
