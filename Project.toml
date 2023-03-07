@@ -13,7 +13,7 @@ SnoopPrecompile = "66db9d55-30c0-4569-8b51-7e840670fc0c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
-MathOptInterface = "1.12"
+MathOptInterface = "1.13"
 MutableArithmetics = "1"
 OrderedCollections = "1"
 SnoopPrecompile = "1"
