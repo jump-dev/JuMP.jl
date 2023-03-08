@@ -134,7 +134,7 @@ the constraint object `con_vector` or `con_scalar`.
    the broadcast `.==`.
 
 JuMP reformulates both constraints into the other form if needed by the solver,
-but choosing right format for a particular solver is more efficient.
+but choosing the right format for a particular solver is more efficient.
 
 You can also use `<=`, `.<=` , `>=`, and `.>=` as comparison operators in the
 constraint.
