@@ -285,16 +285,8 @@ know the type of the function and set since its returned type can be inferred
 while for the method above (i.e. without `F` and `S`), the exact return type of
 the constraint index cannot be inferred.
 
-```jldoctest objective_function; setup = :(using JuMP), filter = r"Stacktrace:.*"s
-julia> using JuMP
-
-julia> model = Model()
-A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+```jldoctest objective_function; filter = r"Stacktrace:.*"s
+julia> model = Model();
 
 julia> @variable(model, x)
 x
@@ -697,16 +689,19 @@ Note that prior to this step, JuMP will aggregate multiple terms containing the
 same variable. For example, given a constraint `2x + 3x <= 2`,
 `set_normalized_coefficient(con, x, 4)` will create the constraint `4x <= 2`.
 
-```jldoctest; setup = :(using JuMP), filter=r"≤|<="
-model = Model()
-@variable(model, x)
-@constraint(model, con, 2x + 3x <= 2)
-set_normalized_coefficient(con, x, 4)
-con
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
 
-# output
+julia> @variable(model, x)
+x
 
-con : 4 x <= 2.0
+julia> @constraint(model, con, 2x + 3x <= 2)
+con : 5 x ≤ 2.0
+
+julia> set_normalized_coefficient(con, x, 4)
+
+julia> con
+con : 4 x ≤ 2.0
 ```
 """
 function set_normalized_coefficient(
@@ -742,15 +737,18 @@ maps the row to a new coefficient.
 Note that prior to this step, during constraint creation, JuMP will aggregate
 multiple terms containing the same variable.
 
-```jldoctest; setup = :(using JuMP), filter=r"≤|<="
-model = Model()
-@variable(model, x)
-@constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
-set_normalized_coefficients(con, x, [(1, 2.0), (2, 5.0)])
-con
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
 
-# output
+julia> @variable(model, x)
+x
 
+julia> @constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
+con : [5 x, 4 x] ∈ MathOptInterface.Nonnegatives(2)
+
+julia> set_normalized_coefficients(con, x, [(1, 2.0), (2, 5.0)])
+
+julia> con
 con : [2 x, 5 x] ∈ MathOptInterface.Nonnegatives(2)
 ```
 """
@@ -798,7 +796,11 @@ right-hand side of the constraint. For example, given a constraint `2x + 1 <=
 2`, `set_normalized_rhs(con, 4)` will create the constraint `2x <= 4`, not `2x +
 1 <= 4`.
 
-```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x)), filter=r"≤|<="
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @constraint(model, con, 2x + 1 <= 2)
 con : 2 x <= 1.0
 
@@ -886,7 +888,11 @@ will be translated by `-value`. For example, given a constraint `2x <=
 ## Examples
 
 For scalar constraints, the set is translated by `-value`:
-```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x)), filter=r"≤|<="
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @constraint(model, con, 0 <= 2x - 1 <= 2)
 con : 2 x ∈ [1.0, 3.0]
 
@@ -897,7 +903,13 @@ con : 2 x ∈ [-3.0, -1.0]
 ```
 
 For vector constraints, the constant is added to the function:
-```jldoctest; setup = :(using JuMP; model = Model(); @variable(model, x); @variable(model, y)), filter=r"≤|<="
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
 julia> @constraint(model, con, [x + y, x, y] in SecondOrderCone())
 con : [x + y, x, y] ∈ MathOptInterface.SecondOrderCone(3)
 
@@ -1180,7 +1192,7 @@ has type `function_type` and the set has type `set_type`.
 See also [`list_of_constraint_types`](@ref) and [`all_constraints`](@ref).
 
 # Example
-```jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x >= 0, Bin);
@@ -1227,7 +1239,7 @@ ordered by creation time.
 See also [`list_of_constraint_types`](@ref) and [`num_constraints`](@ref).
 
 # Example
-```jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x >= 0, Bin);
@@ -1286,7 +1298,7 @@ and `S` is an MOI set type such that `all_constraints(model, F, S)` returns
 a nonempty list.
 
 # Example
-```jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x >= 0, Bin);
@@ -1327,7 +1339,7 @@ program), pass `count_variable_in_set_constraints = false`.
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x >= 0, Int);
@@ -1366,7 +1378,7 @@ constraints (e.g., the rows in the constraint matrix of a linear program), pass
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x >= 0, Int);

@@ -384,7 +384,7 @@ julia> Containers.@container([i=1:3, j=1:5], i + j)
  4  5  6  7  8
 ```
 or an instance of `Base.OneTo`:
-```jldoctest; setup=:(model = Model())
+```jldoctest
 julia> set = Base.OneTo(3)
 Base.OneTo(3)
 

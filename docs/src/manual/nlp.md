@@ -26,7 +26,11 @@ There are three main changes to solve nonlinear programs in JuMP.
 
 Use [`@NLobjective`](@ref) to set a nonlinear objective.
 
-```jldoctest; setup=:(model = Model(); @variable(model, x[1:2]))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
 julia> @NLobjective(model, Min, exp(x[1]) - sqrt(x[2]))
 ```
 To modify a nonlinear objective, call [`@NLobjective`](@ref) again.
@@ -35,7 +39,11 @@ To modify a nonlinear objective, call [`@NLobjective`](@ref) again.
 
 Use [`@NLconstraint`](@ref) to add a nonlinear constraint.
 
-```jldoctest nonlinear_constraint; setup=:(model = Model(); @variable(model, x[1:2]))
+```jldoctest nonlinear_constraint
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
 julia> @NLconstraint(model, exp(x[1]) <= 1)
 exp(x[1]) - 1.0 ≤ 0
 
@@ -65,7 +73,11 @@ Use [`@NLexpression`](@ref) to create nonlinear expression objects. The syntax
 is identical to [`@expression`](@ref), except that the expression can contain
 nonlinear terms.
 
-```jldoctest nl_expression; setup=:(model = Model(); @variable(model, x[1:2]))
+```jldoctest nl_expression
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
 julia> expr = @NLexpression(model, exp(x[1]) + sqrt(x[2]))
 subexpression[1]: exp(x[1]) + sqrt(x[2])
 
@@ -120,7 +132,11 @@ expressions.
 The initial value of the parameter must be provided on the right-hand side of
 the `==` sign.
 
-```jldoctest nonlinear_parameters; setup=:(model = Model(); @variable(model, x))
+```jldoctest nonlinear_parameters
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @NLparameter(model, p[i = 1:2] == i)
 2-element Vector{NonlinearParameter}:
  parameter[1] == 1.0
@@ -213,7 +229,11 @@ For example, if `x` is a JuMP variable, the code `3x` will return an
 constraints. However, the code `sin(x)` is an error. All nonlinear
 expressions must be inside of macros.
 
-```jldoctest; setup=:(model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> expr = sin(x) + 1
 ERROR: sin is not defined for type AbstractVariableRef. Are you trying to build a nonlinear problem? Make sure you use @NLconstraint/@NLobjective.
 [...]
@@ -227,7 +247,15 @@ subexpression[1]: sin(x) + 1.0
 Except for the splatting syntax discussed below, all expressions
 must be simple scalar operations. You cannot use `dot`, matrix-vector products,
 vector slices, etc.
-```jldoctest nlp_scalar_only; setup=:(model = Model(); @variable(model, x[1:2]); @variable(model, y); c = [1, 2])
+```jldoctest nlp_scalar_only
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> @variable(model, y);
+
+julia> c = [1, 2];
+
 julia> @NLobjective(model, Min, c' * x + 3y)
 ERROR: Unexpected array [1 2] in nonlinear expression. Nonlinear expressions may contain only scalar expressions.
 [...]
@@ -631,7 +659,9 @@ or if you experience compilation issues with the macro input (see
 
 Use [`add_nonlinear_expression`](@ref) to add a nonlinear expression to the model.
 
-```jldoctest; setup=:(using JuMP; model = Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x)
 x
 
@@ -642,7 +672,11 @@ julia> expr_ref = add_nonlinear_expression(model, expr)
 subexpression[1]: x + sin(x ^ 2.0)
 ```
 This is equivalent to
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> expr_ref = @NLexpression(model, x + sin(x^2))
 subexpression[1]: x + sin(x ^ 2.0)
 ```
@@ -654,14 +688,22 @@ subexpression[1]: x + sin(x ^ 2.0)
 
 Use [`set_nonlinear_objective`](@ref) to set a nonlinear objective.
 
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> expr = :($(x) + $(x)^2)
 :(x + x ^ 2)
 
 julia> set_nonlinear_objective(model, MIN_SENSE, expr)
 ```
 This is equivalent to
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @NLobjective(model, Min, x + x^2)
 ```
 
@@ -672,7 +714,11 @@ julia> @NLobjective(model, Min, x + x^2)
 
 Use [`add_nonlinear_constraint`](@ref) to add a nonlinear constraint.
 
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> expr = :($(x) + $(x)^2)
 :(x + x ^ 2)
 
@@ -681,7 +727,11 @@ julia> add_nonlinear_constraint(model, :($(expr) <= 1))
 ```
 
 This is equivalent to
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @NLconstraint(model, Min, x + x^2 <= 1)
 (x + x ^ 2.0) - 1.0 ≤ 0
 ```

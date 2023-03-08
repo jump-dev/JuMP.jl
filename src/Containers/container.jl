@@ -34,7 +34,7 @@ Create a container with indices `indices` and values at given indices given by
 
 ## Examples
 
-```@jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> Containers.container((i, j) -> i + j, Containers.vectorized_product(Base.OneTo(3), Base.OneTo(3)))
 3×3 Array{Int64,2}:
  2  3  4

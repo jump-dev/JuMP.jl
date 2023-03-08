@@ -164,10 +164,13 @@ set_objective_function(model, func)
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP)
-model = Model()
-@variable(model, x)
-set_objective(model, MIN_SENSE, x)
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> set_objective(model, MIN_SENSE, x)
 ```
 """
 function set_objective(model::AbstractModel, sense::MOI.OptimizationSense, func)
@@ -199,14 +202,8 @@ Error if the objective is not convertible to type `T`.
 
 ## Examples
 
-```jldoctest objective_function; setup = :(using JuMP)
-julia> model = Model()
-A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+```jldoctest objective_function
+julia> model = Model();
 
 julia> @variable(model, x)
 x

@@ -594,7 +594,9 @@ See also: [`object_dictionary`](@ref).
 
 ## Examples
 
-```jldoctest; setup=:(model = Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x)
 x
 

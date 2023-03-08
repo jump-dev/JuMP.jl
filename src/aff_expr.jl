@@ -137,7 +137,11 @@ Create a [`GenericAffExpr`](@ref) by passing a constant and a vector of pairs.
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> GenericAffExpr(1.0, [x => 1.0])
 x + 1
 """
@@ -153,7 +157,11 @@ arguments.
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> GenericAffExpr(1.0, x => 1.0)
 x + 1
 """
@@ -267,7 +275,11 @@ See also: [`map_coefficients`](@ref)
 
 ## Example
 
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> a = GenericAffExpr(1.0, x => 1.0)
 x + 1
 
@@ -297,7 +309,11 @@ See also: [`map_coefficients_inplace!`](@ref)
 
 ## Example
 
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> a = GenericAffExpr(1.0, x => 1.0)
 x + 1
 

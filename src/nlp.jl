@@ -153,7 +153,11 @@ programmatically, and you cannot use [`@NLobjective`](@ref).
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> set_nonlinear_objective(model, MIN_SENSE, :(\$(x) + \$(x)^2))
 ```
 """
@@ -223,12 +227,13 @@ Return the current value stored in the nonlinear parameter `p`.
 
 # Example
 
-```jldoctest; setup=:(using JuMP)
-model = Model()
-@NLparameter(model, p == 10)
-value(p)
+```jldoctest
+julia> model = Model();
 
-# output
+julia> @NLparameter(model, p == 10)
+p == 10.0
+
+julia> value(p)
 10.0
 ```
 """
@@ -242,13 +247,16 @@ end
 Store the value `v` in the nonlinear parameter `p`.
 
 # Example
-```jldoctest; setup=:(using JuMP)
-model = Model()
-@NLparameter(model, p == 0)
-set_value(p, 5)
-value(p)
+```jldoctest
+julia> model = Model();
 
-# output
+julia> @NLparameter(model, p == 0)
+p == 0.0
+
+julia> set_value(p, 5)
+5
+
+julia> value(p)
 5.0
 ```
 """
@@ -304,7 +312,11 @@ programmatically, and you cannot use [`@NLexpression`](@ref).
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> add_nonlinear_expression(model, :(\$(x) + \$(x)^2))
 subexpression[1]: x + x ^ 2.0
 ```
@@ -430,7 +442,11 @@ programmatically, and you cannot use [`@NLconstraint`](@ref).
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> add_nonlinear_constraint(model, :(\$(x) + \$(x)^2 <= 1))
 (x + x ^ 2.0) - 1.0 ≤ 0
 ```
@@ -647,20 +663,34 @@ that the inputs are `Float64`.
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP)
-model = Model()
-@variable(model, x)
-f(x::T) where {T<:Real} = x^2
-register(model, :foo, 1, f; autodiff = true)
-@NLobjective(model, Min, foo(x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> f(x::T) where {T<:Real} = x^2
+f (generic function with 1 method)
+
+julia> register(model, :foo, 1, f; autodiff = true)
+
+julia> @NLobjective(model, Min, foo(x))
 ```
 
-```jldoctest; setup=:(using JuMP)
-model = Model()
-@variable(model, x[1:2])
-g(x::T, y::T) where {T<:Real} = x * y
-register(model, :g, 2, g; autodiff = true)
-@NLobjective(model, Min, g(x[1], x[2]))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2])
+2-element Vector{VariableRef}:
+ x[1]
+ x[2]
+
+julia> g(x::T, y::T) where {T<:Real} = x * y
+g (generic function with 1 method)
+
+julia> register(model, :g, 2, g; autodiff = true)
+
+julia> @NLobjective(model, Min, g(x[1], x[2]))
 ```
 """
 function register(
@@ -709,26 +739,44 @@ not assume that the inputs are `Float64`.
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP)
-model = Model()
-@variable(model, x)
-f(x::T) where {T<:Real} = x^2
-∇f(x::T) where {T<:Real} = 2 * x
-register(model, :foo, 1, f, ∇f; autodiff = true)
-@NLobjective(model, Min, foo(x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> f(x::T) where {T<:Real} = x^2
+f (generic function with 1 method)
+
+julia> ∇f(x::T) where {T<:Real} = 2 * x
+∇f (generic function with 1 method)
+
+julia> register(model, :foo, 1, f, ∇f; autodiff = true)
+
+julia> @NLobjective(model, Min, foo(x))
 ```
 
-```jldoctest; setup=:(using JuMP)
-model = Model()
-@variable(model, x[1:2])
-g(x::T, y::T) where {T<:Real} = x * y
-function ∇g(g::AbstractVector{T}, x::T, y::T) where {T<:Real}
-    g[1] = y
-    g[2] = x
-    return
-end
-register(model, :g, 2, g, ∇g; autodiff = true)
-@NLobjective(model, Min, g(x[1], x[2]))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2])
+2-element Vector{VariableRef}:
+ x[1]
+ x[2]
+
+julia> g(x::T, y::T) where {T<:Real} = x * y
+g (generic function with 1 method)
+
+julia> function ∇g(g::AbstractVector{T}, x::T, y::T) where {T<:Real}
+           g[1] = y
+           g[2] = x
+           return
+       end
+∇g (generic function with 1 method)
+
+julia> register(model, :g, 2, g, ∇g)
+
+julia> @NLobjective(model, Min, g(x[1], x[2]))
 ```
 """
 function register(
@@ -783,14 +831,25 @@ derivatives of the function `f` respectively.
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP)
-model = Model()
-@variable(model, x)
-f(x::Float64) = x^2
-∇f(x::Float64) = 2 * x
-∇²f(x::Float64) = 2.0
-register(model, :foo, 1, f, ∇f, ∇²f)
-@NLobjective(model, Min, foo(x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> f(x::Float64) = x^2
+f (generic function with 1 method)
+
+julia> ∇f(x::Float64) = 2 * x
+∇f (generic function with 1 method)
+
+julia> ∇²f(x::Float64) = 2.0
+∇²f (generic function with 1 method)
+
+julia> register(model, :foo, 1, f, ∇f, ∇²f)
+
+julia> @NLobjective(model, Min, foo(x))
+
 ```
 """
 function register(

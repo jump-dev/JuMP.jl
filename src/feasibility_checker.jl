@@ -39,7 +39,7 @@ Euclidean distance in the corresponding set.
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, 0.5 <= x <= 1);
@@ -84,7 +84,7 @@ argument instead of a dictionary as the second argument.
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, 0.5 <= x <= 1);

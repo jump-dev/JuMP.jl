@@ -136,7 +136,7 @@ shortcut for the `MOI.SecondOrderCone`.
 ## Examples
 
 The following constrains ``\\|(x-1, x-2)\\|_2 \\le t`` and ``t \\ge 0``:
-```jldoctest; setup = :(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x)
@@ -163,7 +163,7 @@ euclidean norm of a vector `x` to be less than or equal to ``2tu`` where `t` and
 ## Examples
 
 The following constrains ``\\|(x-1, x-2)\\|^2_2 \\le 2tx`` and ``t, x \\ge 0``:
-```jldoctest; setup = :(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x)
