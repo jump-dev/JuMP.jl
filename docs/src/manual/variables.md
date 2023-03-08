@@ -79,7 +79,9 @@ variables. We'll cover some brief syntax here; read the [Variable containers](@r
 section for more details.
 
 You can create arrays of JuMP variables:
-```jldoctest; setup=:(model = Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[1:2, 1:2])
 2×2 Matrix{VariableRef}:
  x[1,1]  x[1,2]
@@ -90,7 +92,9 @@ x[1,2]
 ```
 
 Index sets can be named, and bounds can depend on those names:
-```jldoctest; setup=:(model = Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, sqrt(i) <= x[i = 1:3] <= i^2)
 3-element Vector{VariableRef}:
  x[1]
@@ -102,7 +106,9 @@ x[2]
 ```
 
 Sets can be any Julia type that supports iteration:
-```jldoctest; setup=:(model = Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[i = 2:3, j = 1:2:3, ["red", "blue"]] >= 0)
 3-dimensional DenseAxisArray{VariableRef,3,...} with index sets:
     Dimension 1, 2:3
@@ -122,7 +128,9 @@ x[2,1,red]
 ```
 
 Sets can depend upon previous indices:
-```jldoctest; setup=:(model = Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, u[i = 1:2, j = i:3])
 JuMP.Containers.SparseAxisArray{VariableRef, 2, Tuple{Int64, Int64}} with 5 entries:
   [1, 1]  =  u[1,1]
@@ -132,7 +140,9 @@ JuMP.Containers.SparseAxisArray{VariableRef, 2, Tuple{Int64, Int64}} with 5 entr
   [2, 3]  =  u[2,3]
 ```
 and we can filter elements in the sets using the `;` syntax:
-```jldoctest; setup=:(model = Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, v[i = 1:9; mod(i, 3) == 0])
 JuMP.Containers.SparseAxisArray{VariableRef, 1, Tuple{Int64}} with 3 entries:
   [3]  =  v[3]
@@ -215,7 +225,9 @@ A common reason for encountering this error is adding variables in a loop.
 
 As a work-around, JuMP provides *anonymous* variables. Create a scalar valued
 anonymous variable by omitting the name argument:
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> x = @variable(model)
 _[1]
 ```
@@ -228,7 +240,9 @@ the variable.
 
 Create a container of anonymous JuMP variables by dropping the name in front of
 the `[`:
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> y = @variable(model, [1:2])
 2-element Vector{VariableRef}:
  _[1]
@@ -238,7 +252,9 @@ julia> y = @variable(model, [1:2])
 The `<=` and `>=` short-hand cannot be used to set bounds on scalar-valued
 anonymous JuMP variables. Instead, use the `lower_bound` and `upper_bound`
 keywords:
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> x_lower = @variable(model, lower_bound = 1.0)
 _[1]
 
@@ -506,7 +522,9 @@ julia> fix_value(x)
 Binary variables are constrained to the set ``x \in \{0, 1\}``.
 
 Create a binary variable by passing `Bin` as an optional positional argument:
-```jldoctest variables_binary; setup=:(model=Model())
+```jldoctest variables_binary
+julia> model = Model();
+
 julia> @variable(model, x, Bin)
 x
 ```
@@ -525,12 +543,16 @@ false
 ```
 
 Binary variables can also be created by setting the `binary` keyword to `true`:
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x, binary=true)
 x
 ```
 or by using [`set_binary`](@ref):
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x)
 x
 
@@ -542,7 +564,9 @@ julia> set_binary(x)
 Integer variables are constrained to the set ``x \in \mathbb{Z}``.
 
 Create an integer variable by passing `Int` as an optional positional argument:
-```jldoctest variables_integer; setup=:(model=Model())
+```jldoctest variables_integer
+julia> model = Model();
+
 julia> @variable(model, x, Int)
 x
 ```
@@ -562,12 +586,16 @@ false
 
 Integer variables can also be created by setting the `integer` keyword to
 `true`:
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x, integer=true)
 x
 ```
 or by using [`set_integer`](@ref):
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x)
 x
 
@@ -590,7 +618,9 @@ or a warmstart) for each variable:
 The starting value of a variable can be queried using [`start_value`](@ref). If
 no start value has been set, [`start_value`](@ref) will return `nothing`.
 
-```jldoctest variables_start; setup=:(model=Model())
+```jldoctest variables_start
+julia> model = Model();
+
 julia> @variable(model, x)
 x
 
@@ -610,7 +640,9 @@ julia> start_value(y)
 
 The `start` keyword argument can depend on the indices of a variable container:
 
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, z[i = 1:2], start = i^2)
 2-element Vector{VariableRef}:
  z[1]
@@ -643,7 +675,9 @@ julia> start_value.(z)
 Use [`delete`](@ref) to delete a variable from a model. Use [`is_valid`](@ref)
 to check if a variable belongs to a model and has not been deleted.
 
-```jldoctest variables_delete; setup=:(model=Model())
+```jldoctest variables_delete
+julia> model = Model();
+
 julia> @variable(model, x)
 x
 
@@ -704,7 +738,9 @@ explain each of these in the following.
 We have already seen the creation of an array of JuMP variables with the
 `x[1:2]` syntax. This can be extended to create multi-dimensional
 arrays of JuMP variables. For example:
-```jldoctest variables_arrays; setup=:(model=Model())
+```jldoctest variables_arrays
+julia> model = Model();
+
 julia> @variable(model, x[1:2, 1:2])
 2×2 Matrix{VariableRef}:
  x[1,1]  x[1,2]
@@ -723,7 +759,9 @@ julia> x[2, :]
 ```
 
 Variable bounds can depend upon the indices:
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[i=1:2, j=1:2] >= 2i + j)
 2×2 Matrix{VariableRef}:
  x[1,1]  x[1,2]
@@ -749,7 +787,9 @@ product or a location. The syntax is the same as that above, except with an
 arbitrary vector as an index as opposed to a one-based range. The biggest
 difference is that instead of returning an `Array` of JuMP variables, JuMP will
 return a `DenseAxisArray`. For example:
-```jldoctest variables_jump_arrays; setup=:(model=Model())
+```jldoctest variables_jump_arrays
+julia> model = Model();
+
 julia> @variable(model, x[1:2, [:A,:B]])
 2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
     Dimension 1, Base.OneTo(2)
@@ -773,7 +813,9 @@ And data, a 2-element Vector{VariableRef}:
 ```
 
 Bounds can depend upon indices:
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[i=2:3, j=1:2:3] >= 0.5i + j)
 2-dimensional DenseAxisArray{VariableRef,2,...} with index sets:
     Dimension 1, 2:3
@@ -797,7 +839,9 @@ The third container type that JuMP natively supports is `SparseAxisArray`.
 These arrays are created when the indices do not form a rectangular set.
 For example, this applies when indices have a dependence upon previous
 indices (called *triangular indexing*). JuMP supports this as follows:
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[i=1:2, j=i:2])
 JuMP.Containers.SparseAxisArray{VariableRef, 2, Tuple{Int64, Int64}} with 3 entries:
   [1, 1]  =  x[1,1]
@@ -808,7 +852,9 @@ JuMP.Containers.SparseAxisArray{VariableRef, 2, Tuple{Int64, Int64}} with 3 entr
 We can also conditionally create variables via a JuMP-specific syntax. This
 syntax appends a comparison check that depends upon the named indices and is
 separated from the indices by a semi-colon (`;`). For example:
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[i=1:4; mod(i, 2)==0])
 JuMP.Containers.SparseAxisArray{VariableRef, 1, Tuple{Int64}} with 2 entries:
   [2]  =  x[2]
@@ -822,7 +868,9 @@ evaluates the conditional for each combination. If there are many index
 dimensions and a large amount of sparsity, this can be inefficient.
 
 For example:
-```jldoctest; setup=:(model=Model()), filter=r"[0-9\.]+ seconds.+"
+```jldoctest; filter=r"[0-9\.]+ seconds.+"
+julia> model = Model();
+
 julia> N = 10
 10
 
@@ -869,7 +917,9 @@ tightest container type that can store the JuMP variables. Thus, it will prefer
 to create an Array before a DenseAxisArray and a DenseAxisArray before a
 SparseAxisArray. However, because this happens at compile time, JuMP does not
 always make the best choice. To illustrate this, consider the following example:
-```jldoctest variable_force_container; setup=:(model=Model())
+```jldoctest variable_force_container
+julia> model = Model();
+
 julia> A = 1:2
 1:2
 
@@ -907,7 +957,9 @@ of JuMP variables.
 
 For example, the following code creates a dictionary with symmetric matrices as
 the values:
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> variables = Dict{Symbol,Array{VariableRef,2}}(
            key => @variable(model, [1:2, 1:2], Symmetric, base_name = "$(key)")
            for key in [:A, :B]
@@ -948,7 +1000,9 @@ model[:x]
 Declare a square matrix of JuMP variables to be positive semidefinite by passing
 `PSD` as an optional positional argument:
 
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[1:2, 1:2], PSD)
 2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  x[1,1]  x[1,2]
@@ -968,7 +1022,9 @@ Declare a square matrix of JuMP variables to be symmetric (but not necessarily
 positive semidefinite) by passing `Symmetric`  as an optional positional
 argument:
 
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[1:2, 1:2], Symmetric)
 2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  x[1,1]  x[1,2]
@@ -979,7 +1035,9 @@ julia> @variable(model, x[1:2, 1:2], Symmetric)
 
 If you have many [`@variable`](@ref) calls, JuMP provides the macro
 [`@variables`](@ref) that can improve readability:
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variables(model, begin
            x
            y[i=1:2] >= i, (start = i, base_name = "Y_$i")
@@ -1024,7 +1082,9 @@ constraining variables on creation.
 
 For example, the following creates a vector of variables that belong to the
 [`SecondOrderCone`](@ref):
-```jldoctest constrained_variables; setup=:(model=Model())
+```jldoctest constrained_variables
+julia> model = Model();
+
 julia> @variable(model, y[1:3] in SecondOrderCone())
 3-element Vector{VariableRef}:
  y[1]
@@ -1058,7 +1118,9 @@ x = @variable(model, [1:3], set = SecondOrderCone())
 
 An alternative to the syntax in [Semidefinite variables](@ref), declare a matrix
 of JuMP variables to be positive semidefinite using [`PSDCone`](@ref):
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[1:2, 1:2] in PSDCone())
 2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  x[1,1]  x[1,2]
@@ -1069,7 +1131,9 @@ julia> @variable(model, x[1:2, 1:2] in PSDCone())
 
 As an alternative to the syntax in [Symmetric variables](@ref), declare a matrix
 of JuMP variables to be symmetric using [`SymmetricMatrixSpace`](@ref):
-```jldoctest; setup=:(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[1:2, 1:2] in SymmetricMatrixSpace())
 2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  x[1,1]  x[1,2]
@@ -1080,7 +1144,9 @@ julia> @variable(model, x[1:2, 1:2] in SymmetricMatrixSpace())
 
 Declare a matrix of JuMP variables to be skew-symmetric using
 [`SkewSymmetricMatrixSpace`](@ref):
-```jldoctest skewsymmetric; setup=:(model=Model())
+```jldoctest skewsymmetric
+julia> model = Model();
+
 julia> @variable(model, x[1:2, 1:2] in SkewSymmetricMatrixSpace())
 2×2 Matrix{AffExpr}:
  0        x[1,2]

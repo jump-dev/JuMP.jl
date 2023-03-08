@@ -62,7 +62,11 @@ vector of ([`UnorderedPair`](@ref), coefficient) pairs.
 
 ## Example
 
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> GenericQuadExpr(GenericAffExpr(1.0, x => 2.0), [UnorderedPair(x, x) => 3.0])
 3 x² + 2 x + 1
 ```
@@ -167,7 +171,11 @@ See also: [`map_coefficients`](@ref)
 
 ## Example
 
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> a = @expression(model, x^2 + x + 1)
 x² + x + 1
 
@@ -197,7 +205,11 @@ See also: [`map_coefficients_inplace!`](@ref)
 
 ## Example
 
-```jldoctest; setup=:(using JuMP; model = Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> a = @expression(model, x^2 + x + 1)
 x² + x + 1
 

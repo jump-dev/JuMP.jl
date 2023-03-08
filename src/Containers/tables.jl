@@ -28,7 +28,7 @@ If `header` is left empty, then the default header is `[:x1, :x2, ..., :xN, :y]`
 
 ## Example
 
-```jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x[i=1:2, j=i:2] >= 0, start = i+j);

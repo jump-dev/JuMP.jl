@@ -289,7 +289,9 @@ and [`Base.write`](@ref).
 For most common file formats, the file type will be detected from the extension.
 
 For example, here is how to write an [MPS file](https://en.wikipedia.org/wiki/MPS_(format)):
-```jldoctest file_formats; setup=:(model = Model())
+```jldoctest file_formats
+julia> model = Model();
+
 julia> write_to_file(model, "model.mps")
 ```
 
@@ -304,7 +306,11 @@ Other supported file formats include:
 
 To write to a specific `io::IO`, use [`Base.write`](@ref). Specify the file type
 by passing a [`MOI.FileFormats.FileFormat`](@ref) enum.
-```jldoctest file_formats; setup=:(model = Model(); io = IOBuffer())
+```jldoctest file_formats
+julia> model = Model();
+
+julia> io = IOBuffer();
+
 julia> write(io, model; format = MOI.FileFormats.FORMAT_MPS)
 ```
 

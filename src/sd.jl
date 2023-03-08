@@ -16,7 +16,9 @@ symmetric.
 
 ## Examples
 
-```jldoctest; setup=:(model = Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, Q[1:2, 1:2] in SymmetricMatrixSpace())
 2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
  Q[1,1]  Q[1,2]
@@ -33,8 +35,13 @@ skew-symmetric.
 
 ## Examples
 
-```jldoctest; setup=:(model = Model())
-@variable(model, Q[1:2, 1:2] in SkewSymmetricMatrixSpace())
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, Q[1:2, 1:2] in SkewSymmetricMatrixSpace())
+2×2 Matrix{AffExpr}:
+ 0        Q[1,2]
+ -Q[1,2]  0
 ```
 """
 struct SkewSymmetricMatrixSpace end
@@ -53,7 +60,7 @@ vectorization is constrained to belong to the
 ## Examples
 
 Consider the following example:
-```jldoctest PSDCone; setup = :(using JuMP)
+```jldoctest PSDCone
 julia> model = Model();
 
 julia> @variable(model, x)
@@ -428,7 +435,7 @@ and [`@constraint`](@ref) macros.
 ## Examples
 
 Consider the following example:
-```jldoctest; setup = :(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, H[1:3, 1:3] in HermitianPSDCone())

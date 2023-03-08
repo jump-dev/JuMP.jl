@@ -17,13 +17,21 @@ functions, see [Nonlinear Modeling](@ref).
 Use the [`@objective`](@ref) macro to set a linear objective function.
 
 Use `Min` to create a minimization objective:
-```jldoctest; setup = :(model=Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @objective(model, Min, 2x + 1)
 2 x + 1
 ```
 
 Use `Max` to create a maximization objective:
-```jldoctest; setup = :(model=Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @objective(model, Max, 2x + 1)
 2 x + 1
 ```
@@ -33,13 +41,19 @@ julia> @objective(model, Max, 2x + 1)
 Use the [`@objective`](@ref) macro to set a quadratic objective function.
 
 Use `^2` to have a variable squared:
-```jldoctest; setup = :(model=Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @objective(model, Min, x^2 + 2x + 1)
 x² + 2 x + 1
 ```
 
 You can also have bilinear terms between variables:
-```jldoctest; setup = :(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x)
 x
 
@@ -53,7 +67,11 @@ x*y + x + y
 ## Query the objective function
 
 Use [`objective_function`](@ref) to return the current objective function.
-```jldoctest; setup = :(model=Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @objective(model, Min, 2x + 1)
 2 x + 1
 
@@ -65,7 +83,9 @@ julia> objective_function(model)
 
 Use [`value`](@ref) to evaluate an objective function at a point specifying values for variables.
 
-```jldoctest; setup = :(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[1:2]);
 
 julia> @objective(model, Min, 2x[1]^2 + x[1] + 0.5*x[2])
@@ -83,7 +103,11 @@ julia> value(z -> point[z], f)
 ## Query the objective sense
 
 Use [`objective_sense`](@ref) to return the current objective sense.
-```jldoctest; setup = :(model=Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @objective(model, Min, 2x + 1)
 2 x + 1
 
@@ -95,7 +119,11 @@ MIN_SENSE::OptimizationSense = 0
 
 To modify an objective, call [`@objective`](@ref) with the new objective
 function.
-```jldoctest; setup = :(model=Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @objective(model, Min, 2x)
 2 x
 
@@ -105,7 +133,11 @@ julia> @objective(model, Max, -2x)
 
 Alternatively, use [`set_objective_function`](@ref).
 
-```jldoctest; setup = :(model=Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @objective(model, Min, 2x)
 2 x
 
@@ -118,7 +150,11 @@ julia> set_objective_function(model, new_objective)
 ## Modify an objective coefficient
 
 Use [`set_objective_coefficient`](@ref) to modify an objective coefficient.
-```jldoctest; setup = :(model=Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @objective(model, Min, 2x)
 2 x
 
@@ -135,7 +171,11 @@ julia> objective_function(model)
 ## Modify the objective sense
 
 Use [`set_objective_sense`](@ref) to modify the objective sense.
-```jldoctest; setup = :(model=Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @objective(model, Min, 2x)
 2 x
 
@@ -150,7 +190,11 @@ MAX_SENSE::OptimizationSense = 1
 
 Alternatively, call [`@objective`](@ref) and pass the existing objective
 function.
-```jldoctest; setup = :(model=Model(); @variable(model, x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
 julia> @objective(model, Min, 2x)
 2 x
 
@@ -162,7 +206,9 @@ julia> @objective(model, Max, objective_function(model))
 
 Define a multi-objective optimization problem by passing a vector of objectives:
 
-```jldoctest; setup = :(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[1:2]);
 
 julia> @objective(model, Min, [1 + x[1], 2 * x[2]])
@@ -188,7 +234,9 @@ Note that you must set a single objective sense, that is, you cannot have
 both minimization and maximization objectives. Work around this limitation by
 choosing `Min` and negating any objectives you want to maximize:
 
-```jldoctest; setup = :(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[1:2]);
 
 julia> @expression(model, obj1, 1 + x[1])
@@ -207,7 +255,9 @@ Defining your objectives as expressions allows flexibility in how you can solve
 variations of the same problem, with some objectives removed and constrained to
 be no worse that a fixed value.
 
-```jldoctest; setup = :(model=Model())
+```jldoctest
+julia> model = Model();
+
 julia> @variable(model, x[1:2]);
 
 julia> @expression(model, obj1, 1 + x[1])

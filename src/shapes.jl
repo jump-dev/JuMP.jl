@@ -70,7 +70,8 @@ Given a [`SymmetricMatrixShape`](@ref) of vectorized form
 `[1, 2, 3] in MOI.PositiveSemidefinieConeTriangle(2)`, the
 following code returns the set of the original constraint
 `Symmetric(Matrix[1 2; 2 3]) in PSDCone()`:
-```jldoctest; setup = :(using JuMP)
+
+```jldoctest
 julia> reshape_set(MOI.PositiveSemidefiniteConeTriangle(2), SymmetricMatrixShape(2))
 PSDCone()
 ```
@@ -87,7 +88,8 @@ Return an object in its original shape `shape` given its vectorized form
 
 Given a [`SymmetricMatrixShape`](@ref) of vectorized form `[1, 2, 3]`, the
 following code returns the matrix `Symmetric(Matrix[1 2; 2 3])`:
-```jldoctest; setup = :(using JuMP)
+
+```jldoctest
 julia> reshape_vector([1, 2, 3], SymmetricMatrixShape(2))
 2×2 LinearAlgebra.Symmetric{Int64,Array{Int64,2}}:
  1  2

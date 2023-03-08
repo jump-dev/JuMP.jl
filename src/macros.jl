@@ -16,7 +16,7 @@ of a macro with [`Containers._extract_kw_args`](@ref).
 
 ## Examples
 
-```jldoctest; setup = :(using JuMP)
+```jldoctest
 julia> call = :(f(1, a=2))
 :(f(1, a=2))
 
@@ -44,7 +44,7 @@ additional positional arguments to `call`s that already have keyword arguments.
 
 ## Examples
 
-```jldoctest; setup = :(using JuMP)
+```jldoctest
 julia> call = :(f(1, a=2))
 :(f(1, a = 2))
 
@@ -163,7 +163,7 @@ Converts a sense symbol to a set `set` such that
 ## Example
 
 Once a custom set is defined you can directly create a JuMP constraint with it:
-```jldoctest operator_to_set; setup = :(using JuMP)
+```jldoctest operator_to_set
 julia> struct CustomSet{T} <: MOI.AbstractScalarSet
            value::T
        end
@@ -938,13 +938,13 @@ create arrays of `ScalarConstraint` or `VectorConstraint`.
 
 ## Examples
 
-```jldoctest; setup = :(using JuMP)
-model = Model();
-@variable(model, x);
-@build_constraint(2x >= 1)
+```jldoctest
+julia> model = Model();
 
-# output
-ScalarConstraint{GenericAffExpr{Float64,VariableRef},MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
+julia> @variable(model, x);
+
+julia> @build_constraint(2x >= 1)
+ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
 ```
 """
 macro build_constraint(constraint_expr)
@@ -1106,7 +1106,7 @@ multiple lines wrapped in a `begin ... end` block.
 
 The macro returns a tuple containing the expressions that were defined.
 
-# Examples
+## Example
 
 ```julia
 @expressions(model, begin
@@ -1128,16 +1128,17 @@ be placed on separate lines as in the following example.
 
 The macro returns a tuple containing the parameters that were defined.
 
-# Example
-```jldoctest; setup=:(using JuMP)
-model = Model()
-@NLparameters(model, begin
-    x == 10
-    b == 156
-end)
-value(x)
+## Example
 
-# output
+```jldoctest
+julia> model = Model();
+
+julia> @NLparameters(model, begin
+           x == 10
+           b == 156
+       end);
+
+julia> value(x)
 10.0
 ```
  """ :(@NLparameters)
@@ -1245,14 +1246,8 @@ expression of JuMP variables.
 ## Examples
 
 To minimize the value of the variable `x`, do as follows:
-```jldoctest @objective; setup = :(using JuMP)
-julia> model = Model()
-A JuMP Model
-Feasibility problem with:
-Variables: 0
-Model mode: AUTOMATIC
-CachingOptimizer state: NO_OPTIMIZER
-Solver name: No optimizer attached.
+```jldoctest @objective
+julia> model = Model();
 
 julia> @variable(model, x)
 x
@@ -2533,12 +2528,13 @@ with initial value set to `value`. Nonlinear parameters may be used only in
 nonlinear expressions.
 
 # Example
-```jldoctest; setup=:(using JuMP)
-model = Model()
-@NLparameter(model, x == 10)
-value(x)
+```jldoctest
+julia> model = Model();
 
-# output
+julia> @NLparameter(model, x == 10)
+x == 10.0
+
+julia> value(x)
 10.0
 ```
 
@@ -2550,12 +2546,13 @@ used only in nonlinear expressions.
 
 ## Example
 
-```jldoctest; setup=:(using JuMP)
-model = Model()
-x = @NLparameter(model, value = 10)
-value(x)
+```jldoctest
+julia> model = Model();
 
-# output
+julia> x = @NLparameter(model, value = 10)
+parameter[1] == 10.0
+
+julia> value(x)
 10.0
 ```
 
@@ -2568,13 +2565,17 @@ Uses the same syntax for specifying index sets as [`@variable`](@ref).
 
 ## Example
 
-```jldoctest; setup=:(using JuMP)
-model = Model()
-@NLparameter(model, y[i = 1:10] == 2 * i)
-value(y[9])
+```jldoctest
+julia> model = Model();
 
-# output
-18.0
+julia> @NLparameter(model, y[i = 1:3] == 2 * i)
+3-element Vector{NonlinearParameter}:
+ parameter[1] == 2.0
+ parameter[2] == 4.0
+ parameter[3] == 6.0
+
+julia> value(y[2])
+4.0
 ```
 
     @NLparameter(model, [...] == value_expr)
@@ -2585,13 +2586,17 @@ sets). Uses the same syntax for specifying index sets as [`@variable`](@ref).
 
 ## Example
 
-```jldoctest; setup=:(using JuMP)
-model = Model()
-y = @NLparameter(model, [i = 1:10] == 2 * i)
-value(y[9])
+```jldoctest
+julia> model = Model();
 
-# output
-18.0
+julia> y = @NLparameter(model, [i = 1:3] == 2 * i)
+3-element Vector{NonlinearParameter}:
+ parameter[1] == 2.0
+ parameter[2] == 4.0
+ parameter[3] == 6.0
+
+julia> value(y[2])
+4.0
 ```
 """
 macro NLparameter(model, args...)

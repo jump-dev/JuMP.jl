@@ -268,7 +268,7 @@ in conjunction with [`build_ref_sets`](@ref).
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> macro foo(ref_sets, code)
            index_vars, indices = Containers.build_ref_sets(error, ref_sets)
            return Containers.container_code(
@@ -351,7 +351,7 @@ The type of container can be controlled by the `container` keyword.
 
 ## Examples
 
-```jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> Containers.@container([i = 1:3, j = 1:3], i + j)
 3×3 Array{Int64,2}:
  2  3  4

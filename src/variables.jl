@@ -220,7 +220,7 @@ end
 Returns the model to which `v` belongs.
 
 # Example
-```jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> x = @variable(model)
@@ -433,7 +433,7 @@ Returns the reference of the variable with name attribute `name` or `Nothing` if
 no variable has this name attribute. Throws an error if several variables have
 `name` as their name attribute.
 
-```jldoctest objective_function; setup = :(using JuMP), filter = r"Stacktrace:.*"s
+```jldoctest objective_function; filter = r"Stacktrace:.*"s
 julia> model = Model();
 
 julia> @variable(model, x)
@@ -1313,7 +1313,7 @@ Complex plane object that can be used to create a complex variable in the
 
 Consider the following example:
 
-```jldoctest; setup = :(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x in ComplexPlane())
@@ -1473,15 +1473,15 @@ Returns a list of all variables currently in the model. The variables are
 ordered by creation time.
 
 # Example
-```jldoctest; setup=:(using JuMP)
-model = Model()
-@variable(model, x)
-@variable(model, y)
-all_variables(model)
+```jldoctest
+julia> model = Model();
 
-# output
+julia> @variable(model, x);
 
-2-element Array{VariableRef,1}:
+julia> @variable(model, y);
+
+julia> all_variables(model)
+2-element Vector{VariableRef}:
  x
  y
 ```
@@ -1562,7 +1562,7 @@ original model. The behavior of this function is undefined if additional
 changes are made to the affected variables in the meantime.
 
 # Example
-```jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x, Bin);
@@ -1615,7 +1615,7 @@ changes are made to the affected variables in the meantime.
 
 ## Example
 
-```jldoctest; setup=:(using JuMP)
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x, Bin, start = 1);
