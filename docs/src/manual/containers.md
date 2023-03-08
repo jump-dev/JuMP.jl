@@ -488,15 +488,19 @@ JuMP.Containers.SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 2 entries:
 
 ## Keyword indexing
 
-Opt-in to the experimental keyword indexing syntax by passing
-`enable_keyword_indexing = true` to the [`Containers.@container`](@ref) macro,
-or call [`enable_container_keyword_indexing`](@ref).
-
+JuMP v1.10.0 added experimental support for keyword indexing of
+[`Containers.DenseAxisArray`](@ref) and [`Containers.SparseAxisArray`](@ref).
 Keyword indexing lets you uses the named indices of [`Containers.DenseAxisArray`](@ref)
 and [`Containers.SparseAxisArray`](@ref) as keyword arguments when indexing a
-container:
+container.
 
-```jldoctest container_kwarg_indexing
+### The container macro
+
+For containers constructed using the [`Containers.@container`](@ref) macro,
+opt-in to the keyword indexing syntax by passing
+`enable_keyword_indexing = true`:
+
+```jldoctest
 julia> Containers.@container(
            x[i=2:4, j=1:3],
            i + j,
@@ -531,7 +535,14 @@ JuMP.Containers.SparseAxisArray{Int64, 1, Tuple{Int64}} with 3 entries:
   [2]  =  3
   [3]  =  4
   [4]  =  5
+```
 
+### The JuMP macros
+
+For containers constructed using the JuMP macros like [`@variable`](@ref),
+opt-in using [`enable_container_keyword_indexing`](@ref):
+
+```jldoctest
 julia> using JuMP
 
 julia> model = Model();
@@ -563,12 +574,14 @@ julia> x[i = 2]
 x[2]
 ```
 
-The main reason this syntax is currently opt-in is that it does not work for
+### Limitations
+
+The keyword indexing syntax is currently opt-in because it does not work for
 `Array`:
 
-```jldoctest container_kwarg_indexing
+```jldoctest
 julia> Containers.@container(
-           z[i=1:4, j=1:3],
+           x[i=1:4, j=1:3],
            i + j,
            enable_keyword_indexing = true,
        )
@@ -578,7 +591,36 @@ julia> Containers.@container(
  4  5  6
  5  6  7
 
-julia> z[i = 2, j = 1]
+julia> x[i = 2, j = 1]
 ERROR: MethodError: no method matching getindex(::Matrix{Int64}; i=2, j=1)
 [...]
+```
+
+Work-around this limitation by forcing the container type:
+
+```jldoctest
+julia> model = Model();
+
+julia> enable_container_keyword_indexing(model, true)
+
+julia> @variable(model, x[i = 1:3])
+3-element Vector{VariableRef}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> x[i = 2]
+ERROR: MethodError: no method matching getindex(::Vector{VariableRef}; i=2)
+[...]
+
+julia> @variable(model, y[i = 1:3], container = DenseAxisArray)
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, Base.OneTo(3)
+And data, a 3-element Vector{VariableRef}:
+ y[1]
+ y[2]
+ y[3]
+
+julia> y[i = 2]
+y[2]
 ```
