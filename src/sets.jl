@@ -45,7 +45,7 @@ end
     build_constraint(
         _error::Function,
         f::AbstractVector{<:AbstractJuMPScalar},
-        s::MOI.GreaterThan,
+        ::Nonnegatives,
         extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
     )
 
@@ -61,10 +61,9 @@ into
 function build_constraint(
     _error::Function,
     f::AbstractVector{<:AbstractJuMPScalar},
-    s::MOI.GreaterThan,
+    ::Nonnegatives,
     extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
 )
-    @assert iszero(s.lower)
     return build_constraint(_error, f, extra)
 end
 
@@ -72,7 +71,7 @@ end
     build_constraint(
         _error::Function,
         f::AbstractVector{<:AbstractJuMPScalar},
-        s::MOI.LessThan,
+        ::Nonpositives,
         extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
     )
 
@@ -88,10 +87,9 @@ into
 function build_constraint(
     _error::Function,
     f::AbstractVector{<:AbstractJuMPScalar},
-    s::MOI.LessThan,
+    ::Nonpositives,
     extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
 )
-    @assert iszero(s.upper)
     new_f = _MA.operate!!(*, -1, f)
     return build_constraint(_error, new_f, extra)
 end
@@ -105,7 +103,9 @@ function _MA.operate!!(
     if !iszero(y)
         error(
             "Operation `sub_mul` between `$(typeof(x))` and `$(typeof(y))` " *
-            "is not allowed. You should use broadcast.",
+            "is not allowed. This most often happens when you write a " *
+            "constraint like `x >= y` where `x` is an array and `y` is a " *
+            "constant. Use the broadcast syntax `x .- y >= 0` instead.",
         )
     end
     return x
@@ -119,8 +119,10 @@ function _MA.operate!!(
 )
     if !iszero(y)
         error(
-            "Operation `sub_mul` between `$(typeof(x))` and `$(typeof(y))` " *
-            "is not allowed. You should use broadcast.",
+            "Operation `sub_mul` between `$(typeof(y))` and `$(typeof(x))` " *
+            "is not allowed. This most often happens when you write a " *
+            "constraint like `x >= y` where `x` is a constant and `y` is an " *
+            "array. Use the broadcast syntax `x .- y >= 0` instead.",
         )
     end
     return _MA.operate!!(*, -1, x)

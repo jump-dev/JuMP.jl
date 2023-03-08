@@ -193,19 +193,100 @@ Note that the whole function is first moved to the right-hand side, then the
 sign is transformed into a set with zero constant and finally the constant is
 moved to the set with `MOIU.shift_constant`.
 """
-function operator_to_set end
-
-operator_to_set(::Function, ::Union{Val{:(<=)},Val{:(≤)}}) = MOI.LessThan(0.0)
-
-function operator_to_set(::Function, ::Union{Val{:(>=)},Val{:(≥)}})
-    return MOI.GreaterThan(0.0)
-end
-
-operator_to_set(::Function, ::Val{:(==)}) = MOI.EqualTo(0.0)
-
 function operator_to_set(_error::Function, ::Val{S}) where {S}
     return _error("Unrecognized sense $S")
 end
+
+"""
+    Nonnegatives()
+
+The JuMP equivalent of the [`MOI.Nonnegatives`](@ref) set, in which the
+dimension is inferred from the corresponding function.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2])
+2-element Vector{VariableRef}:
+ x[1]
+ x[2]
+
+julia> @constraint(model, x in Nonnegatives())
+[x[1], x[2]] ∈ MathOptInterface.Nonnegatives(2)
+
+julia> A = [1 2; 3 4];
+
+julia> b = [5, 6];
+
+julia> @constraint(model, A * x >= b)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Nonnegatives(2)
+```
+"""
+struct Nonnegatives end
+
+"""
+    Nonpositives()
+
+The JuMP equivalent of the [`MOI.Nonpositives`](@ref) set, in which the
+dimension is inferred from the corresponding function.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2])
+2-element Vector{VariableRef}:
+    x[1]
+    x[2]
+
+julia> @constraint(model, x in Nonpositives())
+[x[1], x[2]] ∈ MathOptInterface.Nonpositives(2)
+
+julia> A = [1 2; 3 4];
+
+julia> b = [5, 6];
+
+julia> @constraint(model, A * x <= b)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Nonpositives(2)
+```
+"""
+struct Nonpositives end
+
+"""
+    Zeros()
+
+The JuMP equivalent of the [`MOI.Zeros`](@ref) set, in which the dimension is
+inferred from the corresponding function.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2])
+2-element Vector{VariableRef}:
+    x[1]
+    x[2]
+
+julia> @constraint(model, x in Zeros())
+[x[1], x[2]] ∈ MathOptInterface.Zeros(2)
+
+julia> A = [1 2; 3 4];
+
+julia> b = [5, 6];
+
+julia> @constraint(model, A * x == b)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Zeros(2)
+```
+"""
+struct Zeros end
+
+operator_to_set(::Function, ::Union{Val{:(<=)},Val{:(≤)}}) = Nonpositives()
+operator_to_set(::Function, ::Union{Val{:(>=)},Val{:(≥)}}) = Nonnegatives()
+operator_to_set(::Function, ::Val{:(==)}) = Zeros()
 
 """
     _desparsify(x)
@@ -506,8 +587,8 @@ function parse_constraint_call(
     rhs,
 )
     func = vectorized ? :($lhs .- $rhs) : :($lhs - $rhs)
-    set = operator_to_set(_error, operator)
     f, parse_code = _MA.rewrite(func)
+    set = operator_to_set(_error, operator)
     # `_functionize` deals with the pathological case where the `lhs` is a
     # `VariableRef` and the `rhs` is a summation with no terms.
     f = :(_functionize($f))
@@ -522,6 +603,50 @@ end
 ###
 ### Build constraints using actual data.
 ###
+
+function build_constraint(
+    _error::Function,
+    f,
+    set::Nonnegatives,
+    args...;
+    kwargs...,
+)
+    return build_constraint(_error, f, MOI.GreaterThan(0.0), args...; kwargs...)
+end
+
+function build_constraint(
+    _error::Function,
+    f,
+    set::Nonpositives,
+    args...;
+    kwargs...,
+)
+    return build_constraint(_error, f, MOI.LessThan(0.0), args...; kwargs...)
+end
+
+function build_constraint(_error::Function, f, set::Zeros, args...; kwargs...)
+    return build_constraint(_error, f, MOI.EqualTo(0.0), args...; kwargs...)
+end
+
+function build_constraint(
+    _error::Function,
+    f::AbstractVector,
+    set::Nonnegatives,
+)
+    return build_constraint(_error, f, MOI.Nonnegatives(length(f)))
+end
+
+function build_constraint(
+    _error::Function,
+    f::AbstractVector,
+    set::Nonpositives,
+)
+    return build_constraint(_error, f, MOI.Nonpositives(length(f)))
+end
+
+function build_constraint(_error::Function, f::AbstractVector, set::Zeros)
+    return build_constraint(_error, f, MOI.Zeros(length(f)))
+end
 
 # Generic fallback.
 function build_constraint(_error::Function, func, set, args...; kwargs...)
@@ -607,9 +732,8 @@ function build_constraint(
     set::MOI.AbstractScalarSet,
 )
     return _error(
-        "Unexpected vector in scalar constraint. Did you mean to use",
-        " the dot comparison operators like .==, .<=, and .>=",
-        " instead?",
+        "Unexpected vector in scalar constraint. The left- and right-hand " *
+        "sides of the constraint must have the same dimension.",
     )
 end
 

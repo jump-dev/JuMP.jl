@@ -65,6 +65,9 @@ dual_start_value
 ## Special sets
 
 ```@docs
+Nonnegatives
+Nonpositives
+Zeros
 SecondOrderCone
 RotatedSecondOrderCone
 PSDCone
