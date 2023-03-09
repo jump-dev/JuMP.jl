@@ -621,11 +621,11 @@ julia> solution_summary(model; result = 1)
   Relative gap       : Inf
   Dual objective value : -9.00000e+00
 
- * Work counters
-   Solve time (sec)   : 1.82720e-03
-   Simplex iterations : 1
-   Barrier iterations : 0
-   Node count         : -1
+* Work counters
+  Solve time (sec)   : 1.82720e-03
+  Simplex iterations : 1
+  Barrier iterations : 0
+  Node count         : -1
 
 julia> for i in 1:result_count(model)
            println("Solution $i")
