@@ -20,12 +20,15 @@
 
 # # Nested optimization problems
 
-# In this tutorial, we explain how to write a user-defined function (see
-# [User-defined Functions](@ref)) with a Hessian matrix explicitly provided by
-# the user. User-defined Hessian functions can be useful when solving more complicated
-# problems, such as bilevel or nested optimization problems.
+# In this tutorial we explain how to write a *nested* optimization problem,
+# where an *outer* problem uses the results from the optimization of an *inner*
+# subproblem.
+# We describe how to define a user-defined function to handle the decomposition
+# of the inner problem inside the outer one. Finally, we show how to improve
+# the performance by using a cache that avoids resolving the inner problem.
 #
-# For a simpler example, see the [User-defined Hessians](@ref) tutorial.
+# For a simpler example of writing a user-defined function, 
+# see the [User-defined Hessians](@ref) tutorial.
 
 # This tutorial uses the following packages:
 
@@ -128,6 +131,10 @@ function ∇²V(H::AbstractMatrix, x...)
     H[2, 2] = 2 * y[2]
     return
 end
+
+# !!! info
+#     Providing an explicit Hessian function is optional
+#     if first derivatives are already available.
 
 # We now have enough to define our bilevel optimization problem:
 
