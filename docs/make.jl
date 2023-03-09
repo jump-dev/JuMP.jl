@@ -156,6 +156,7 @@ const _PAGES = [
             "tutorials/nonlinear/space_shuttle_reentry_trajectory.md",
             "tutorials/nonlinear/tips_and_tricks.md",
             "tutorials/nonlinear/user_defined_hessians.md",
+            "tutorials/nonlinear/nested_problems.md",
             "tutorials/nonlinear/querying_hessians.md",
         ],
         "Conic programs" => [
