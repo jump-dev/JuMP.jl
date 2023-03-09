@@ -870,7 +870,7 @@ Add a group of constraints described by the expression `expr` parametrized by
 The expression `expr` can either be
 
 * of the form `func in set` constraining the function `func` to belong to the
-  set `set` which is either a [`MOI.AbstractSet`](https://jump.dev/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1)
+  set `set` which is either a [`MOI.AbstractSet`](@ref)
   or one of the JuMP shortcuts [`SecondOrderCone`](@ref),
   [`RotatedSecondOrderCone`](@ref) and [`PSDCone`](@ref), e.g.
   `@constraint(model, [1, x-1, y-2] in SecondOrderCone())` constrains the norm
@@ -1293,14 +1293,12 @@ _replace_zero(x) = x
     @objective(model::Model, sense, func)
 
 Set the objective sense to `sense` and objective function to `func`. The
-objective sense can be either `Min`, `Max`, `MathOptInterface.MIN_SENSE`,
-`MathOptInterface.MAX_SENSE` or `MathOptInterface.FEASIBILITY_SENSE`; see
-[`MathOptInterface.ObjectiveSense`](https://jump.dev/MathOptInterface.jl/stable/reference/models/#MathOptInterface.ObjectiveSense).
+objective sense can be either `Min`, `Max`, `MOI.MIN_SENSE`, `MOI.MAX_SENSE` or
+`MOI.FEASIBILITY_SENSE`; see [`MOI.ObjectiveSense`](@ref).
+
 In order to set the sense programmatically, i.e., when `sense` is a Julia
-variable whose value is the sense, one of the three
-`MathOptInterface.ObjectiveSense` values should be used. The function `func` can
-be a single JuMP variable, an affine expression of JuMP variables or a quadratic
-expression of JuMP variables.
+variable whose value is the sense, one of the three `MOI.ObjectiveSense` values
+should be used.
 
 ## Example
 

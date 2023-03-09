@@ -62,7 +62,7 @@ If `attr` is an `AbstractString`, this is equivalent to
     This method will remain in all v1.X releases of JuMP, but it may be removed
     in a future v2.0 release. We recommend using [`set_attribute`](@ref) instead.
 
-sSee also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
+See also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
 
 ## Example
 
