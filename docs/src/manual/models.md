@@ -118,17 +118,20 @@ environment or a path to a binary executable. For these solvers, you can pass
 a function to [`Model`](@ref) which takes zero arguments and returns an instance
 of the optimizer.
 
-A common use-case for this is passing an environment to Gurobi:
-```julia
-julia> grb_env = Gurobi.Env();
+A common use-case for this is passing an environment or sub-solver to the
+optimizer:
+```jldoctest
+julia> import HiGHS
 
-julia> model = Model(() -> Gurobi.Optimizer(grb_env))
+julia> import MultiObjectiveAlgorithms as MOA
+
+julia> model = Model(() -> MOA.Optimizer(HiGHS.Optimizer))
 A JuMP Model
 Feasibility problem with:
 Variables: 0
 Model mode: AUTOMATIC
 CachingOptimizer state: EMPTY_OPTIMIZER
-Solver name: Gurobi
+Solver name: MOA[algorithm=MultiObjectiveAlgorithms.Lexicographic, optimizer=HiGHS]
 ```
 
 ## [Solver options](@id solver_options)

@@ -149,16 +149,21 @@ See [`set_optimizer`](@ref) for the description of the `optimizer_factory` and
 
 ## Example
 
-Create a model with the optimizer set to `Ipopt`:
-```julia
-model = Model(Ipopt.Optimizer)
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> solver_name(model)
+"Ipopt"
 ```
 
-Pass an anonymous function which creates a `Gurobi.Optimizer`, and disable
-bridges:
-```julia
-env = Gurobi.Env()
-model = Model(() -> Gurobi.Optimizer(env); add_bridges = false)
+```jldoctest
+julia> import HiGHS
+
+julia> import MultiObjectiveAlgorithms as MOA
+
+julia> model = Model(() -> MOA.Optimizer(HiGHS.Optimizer); add_bridges = false);
 ```
 """
 function Model((@nospecialize optimizer_factory); add_bridges::Bool = true)
@@ -214,20 +219,34 @@ object created by [`optimizer_with_attributes`](@ref).
 
 ## Example
 
-```julia
-model = direct_model(
-    optimizer_with_attributes(
-        Gurobi.Optimizer,
-        "Presolve" => 0,
-        "OutputFlag" => 1,
-    )
-)
+```jldoctest
+julia> import HiGHS
+
+julia> optimizer = optimizer_with_attributes(
+           HiGHS.Optimizer,
+           "presolve" => "off",
+           MOI.Silent() => true,
+       );
+
+julia> model = direct_model(optimizer)
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: DIRECT
+Solver name: HiGHS
 ```
 is equivalent to:
-```julia
-model = direct_model(Gurobi.Optimizer())
-set_attribute(model, "Presolve", 0)
-set_attribute(model, "OutputFlag", 1)
+```jldoctest
+julia> model = direct_model(HiGHS.Optimizer())
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: DIRECT
+Solver name: HiGHS
+
+julia> set_attribute(model, "presolve", "off")
+
+julia> set_attribute(model, MOI.Silent(), true)
 ```
 """
 function direct_model(factory::MOI.OptimizerWithAttributes)

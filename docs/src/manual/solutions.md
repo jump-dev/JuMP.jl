@@ -177,8 +177,8 @@ Broadcast [`value`](@ref) over containers:
 ```jldoctest solutions
 julia> value.(y)
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
-    Dimension 1, Symbol[:a, :b]
-And data, a 2-element Array{Float64,1}:
+    Dimension 1, [:a, :b]
+And data, a 2-element Vector{Float64}:
  1.0
  1.0
 ```
@@ -235,8 +235,8 @@ julia> dual(LowerBoundRef(x))
 
 julia> dual.(UpperBoundRef.(y))
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
-    Dimension 1, Symbol[:a, :b]
-And data, a 2-element Array{Float64,1}:
+    Dimension 1, [:a, :b]
+And data, a 2-element Vector{Float64}:
  -0.5714285714285694
   0.0
 ```
@@ -255,12 +255,12 @@ julia> shadow_price(c1)
 1.7142857142857142
 
 julia> reduced_cost(x)
-0.0
+-0.0
 
 julia> reduced_cost.(y)
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
-    Dimension 1, Symbol[:a, :b]
-And data, a 2-element Array{Float64,1}:
+    Dimension 1, [:a, :b]
+And data, a 2-element Vector{Float64}:
   0.5714285714285694
  -0.0
 ```
@@ -500,32 +500,62 @@ computation of a conflict. Once this process is finished, query the
 If found, copy the IIS to a new model using [`copy_conflict`](@ref), which you
 can then print or write to a file for easier debugging:
 ```julia
-using JuMP, Gurobi
-model = Model(Gurobi.Optimizer)
-@variable(model, x >= 0)
-@constraint(model, c1, x >= 2)
-@constraint(model, c2, x <= 1)
-optimize!(model)
+julia> using JuMP
 
-compute_conflict!(model)
-if get_attribute(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
-    iis_model, _ = copy_conflict(model)
-    print(iis_model)
-end
+julia> import Gurobi
+
+julia> model = Model(Gurobi.Optimizer)
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: EMPTY_OPTIMIZER
+Solver name: Gurobi
+
+julia> set_silent(model)
+
+julia> @variable(model, x >= 0)
+x
+
+julia> @constraint(model, c1, x >= 2)
+c1 : x ≥ 2.0
+
+julia> @constraint(model, c2, x <= 1)
+c2 : x ≤ 1.0
+
+julia> optimize!(model)
+
+julia> compute_conflict!(model)
+
+julia> if get_attribute(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
+           iis_model, _ = copy_conflict(model)
+           print(iis_model)
+       end
+Feasibility
+Subject to
+ c1 : x ≥ 2.0
+ c2 : x ≤ 1.0
 ```
 
 If you need more control over the list of constraints that appear in the
 conflict, iterate over the list of constraints and query the
 [`MOI.ConstraintConflictStatus`](@ref) attribute:
 ```julia
-list_of_conflicting_constraints = ConstraintRef[]
-for (F, S) in list_of_constraint_types(model)
-    for con in all_constraints(model, F, S)
-        if get_attribute(con, MOI.ConstraintConflictStatus()) == MOI.IN_CONFLICT
-            push!(list_of_conflicting_constraints, con)
-        end
-    end
-end
+julia> list_of_conflicting_constraints = ConstraintRef[]
+ConstraintRef[]
+
+julia> for (F, S) in list_of_constraint_types(model)
+           for con in all_constraints(model, F, S)
+               if get_attribute(con, MOI.ConstraintConflictStatus()) == MOI.IN_CONFLICT
+                   push!(list_of_conflicting_constraints, con)
+               end
+           end
+       end
+
+julia> list_of_conflicting_constraints
+2-element Vector{ConstraintRef}:
+ c1 : x ≥ 2.0
+ c2 : x ≤ 1.0
 ```
 
 ## Multiple solutions
@@ -545,33 +575,76 @@ which result to return.
     Use [`objective_value`](@ref) to assess the quality of the remaining
     solutions.
 
-```julia
-using JuMP
-model = Model()
-@variable(model, x[1:10] >= 0)
-# ... other constraints ...
-optimize!(model)
+```jldoctest; filter=r"Solve time.+"
+julia> using JuMP
 
-if termination_status(model) != OPTIMAL
-    error("The model was not solved correctly.")
-end
+julia> import MultiObjectiveAlgorithms as MOA
 
-an_optimal_solution = value.(x; result = 1)
-optimal_objective = objective_value(model; result = 1)
-for i in 2:result_count(model)
-    print(solution_summary(model; result = i))
-    @assert has_values(model; result = i)
-    println("Solution $(i) = ", value.(x; result = i))
-    obj = objective_value(model; result = i)
-    println("Objective $(i) = ", obj)
-    if isapprox(obj, optimal_objective; atol = 1e-8)
-        print("Solution $(i) is also optimal!")
-    end
-end
+julia> import HiGHS
+
+julia> model = Model(() -> MOA.Optimizer(HiGHS.Optimizer));
+
+julia> set_attribute(model, MOA.Algorithm(), MOA.Dichotomy())
+
+julia> set_silent(model)
+
+julia> @variable(model, x1 >= 0)
+x1
+
+julia> @variable(model, 0 <= x2 <= 3)
+x2
+
+julia> @objective(model, Min, [3x1 + x2, -x1 - 2x2])
+2-element Vector{AffExpr}:
+ 3 x1 + x2
+ -x1 - 2 x2
+
+julia> @constraint(model, 3x1 - x2 <= 6)
+3 x1 - x2 ≤ 6.0
+
+julia> optimize!(model)
+
+julia> solution_summary(model; result = 1)
+* Solver : MOA[algorithm=MultiObjectiveAlgorithms.Dichotomy, optimizer=HiGHS]
+
+* Status
+  Result count       : 3
+  Termination status : OPTIMAL
+  Message from the solver:
+  "Solve complete. Found 3 solution(s)"
+
+* Candidate solution (result #1)
+  Primal status      : FEASIBLE_POINT
+  Dual status        : NO_SOLUTION
+  Objective value    : [0.00000e+00,0.00000e+00]
+  Objective bound    : [0.00000e+00,-9.00000e+00]
+  Relative gap       : Inf
+  Dual objective value : -9.00000e+00
+
+ * Work counters
+   Solve time (sec)   : 1.82720e-03
+   Simplex iterations : 1
+   Barrier iterations : 0
+   Node count         : -1
+
+julia> for i in 1:result_count(model)
+           println("Solution $i")
+           println("   x = ", value.([x1, x2]; result = i))
+           println(" obj = ", objective_value(model; result = i))
+       end
+Solution 1
+   x = [0.0, 0.0]
+ obj = [0.0, 0.0]
+Solution 2
+   x = [0.0, 3.0]
+ obj = [3.0, -6.0]
+Solution 3
+   x = [3.0, 3.0]
+ obj = [12.0, -9.0]
 ```
 
 !!! tip
-    The [Multi-objective knapsack](@ref) tutorial provides an example of
+    The [Multi-objective knapsack](@ref) tutorial provides more examples of
     querying multiple solutions.
 
 ## Checking feasibility of solutions

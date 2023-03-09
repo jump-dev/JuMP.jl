@@ -169,6 +169,8 @@ aforementioned [blog post](https://orinanobworld.blogspot.com/2012/08/user-cuts-
 A user-cut callback can be set using the following syntax:
 
 ```jldoctest
+julia> import GLPK
+
 julia> model = Model(GLPK.Optimizer);
 
 julia> @variable(model, x <= 10.5, Int)
@@ -218,6 +220,8 @@ solutions from them.
 A heuristic solution callback can be set using the following syntax:
 
 ```jldoctest
+julia> import GLPK
+
 julia> model = Model(GLPK.Optimizer);
 
 julia> @variable(model, x <= 10.5, Int)

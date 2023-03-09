@@ -13,28 +13,34 @@ When provided to the `Model` constructor or to [`set_optimizer`](@ref), it
 creates an optimizer by calling `optimizer_constructor()`, and then sets the
 attributes using [`set_attribute`](@ref).
 
-## Example
-
-```julia
-model = Model(
-    optimizer_with_attributes(
-        Gurobi.Optimizer, "Presolve" => 0, "OutputFlag" => 1
-    )
-)
-```
-is equivalent to:
-```julia
-model = Model(Gurobi.Optimizer)
-set_attribute(model, "Presolve", 0)
-set_attribute(model, "OutputFlag", 1)
-```
+See also: [`set_attribute`](@ref), [`get_attribute`](@ref).
 
 ## Note
 
 The string names of the attributes are specific to each solver. One should
 consult the solver's documentation to find the attributes of interest.
 
-See also: [`set_attribute`](@ref), [`get_attribute`](@ref).
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> optimizer = optimizer_with_attributes(
+           HiGHS.Optimizer, "presolve" => "off", MOI.Silent() => true,
+       );
+
+julia> model = Model(optimizer);
+```
+
+is equivalent to:
+
+```jldoctest
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_attribute(model, "presolve", "off")
+
+julia> set_attribute(model, MOI.Silent(), true)
+```
 """
 function optimizer_with_attributes(optimizer_constructor, args::Pair...)
     return MOI.OptimizerWithAttributes(optimizer_constructor, args...)
