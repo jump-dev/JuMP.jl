@@ -15,7 +15,7 @@ Construct a `NestedIterator` using [`nested`](@ref).
 
 ## Example
 
-```jdoctest nested_iterator_docstring
+```jldoctest nested_iterator_docstring
 julia> iterators = (() -> 1:2, (i,) -> ["A", "B"]);
 
 julia> condition = (i, j) -> isodd(i) || j == "B";
@@ -30,7 +30,7 @@ julia> for (i, j) in x
 (2, "B")
 ```
 is the same as
-```jldocstring nested_iterator_docstring
+```jldoctest nested_iterator_docstring
 julia> for i in iterators[1]()
            for j in iterators[2](i)
                if condition(i, j)
