@@ -185,7 +185,8 @@ Construct a JuMP array with the underlying data specified by the `data` array
 and the given axes. Exactly `N` axes must be provided, and their lengths must
 match `size(data)` in the corresponding dimensions.
 
-# Example
+## Example
+
 ```jldoctest
 julia> array = Containers.DenseAxisArray([1 2; 3 4], [:a, :b], 2:3)
 2-dimensional DenseAxisArray{Int64,2,...} with index sets:
@@ -216,7 +217,8 @@ end
 Construct an uninitialized DenseAxisArray with element-type `T` indexed over the
 given axes.
 
-# Example
+## Example
+
 ```jldoctest
 julia> array = Containers.DenseAxisArray{Float64}(undef, [:a, :b], 1:2);
 

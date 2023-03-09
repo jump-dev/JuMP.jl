@@ -38,24 +38,41 @@ of the solver used to compute the basis.
 
 Note: interval constraints are NOT supported.
 
-# Example
+## Example
 
-    model = Model(HiGHS.Optimizer)
-    @variable(model, -1 <= x <= 2)
-    @objective(model, Min, x)
-    optimize!(model)
-    report = lp_sensitivity_report(model; atol = 1e-7)
-    dx_lo, dx_hi = report[x]
-    println(
-        "The objective coefficient of `x` can decrease by \$dx_lo or " *
-        "increase by \$dx_hi."
-    )
-    c = LowerBoundRef(x)
-    dRHS_lo, dRHS_hi = report[c]
-    println(
-        "The lower bound of `x` can decrease by \$dRHS_lo or increase " *
-        "by \$dRHS_hi."
-    )
+```jldoctest
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, -1 <= x <= 2)
+x
+
+julia> @objective(model, Min, x)
+x
+
+julia> optimize!(model)
+
+julia> report = lp_sensitivity_report(model; atol = 1e-7);
+
+julia> dx_lo, dx_hi = report[x]
+(-1.0, Inf)
+
+julia> println(
+           "The objective coefficient of `x` can decrease by \$dx_lo or " *
+           "increase by \$dx_hi."
+       )
+The objective coefficient of `x` can decrease by -1.0 or increase by Inf.
+
+julia> dRHS_lo, dRHS_hi = report[LowerBoundRef(x)]
+(-Inf, 3.0)
+
+julia> println(
+           "The lower bound of `x` can decrease by \$dRHS_lo or increase " *
+           "by \$dRHS_hi."
+       )
+The lower bound of `x` can decrease by -Inf or increase by 3.0.
+```
 """
 function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     if !_is_lp(model)

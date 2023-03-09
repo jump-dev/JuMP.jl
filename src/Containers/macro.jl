@@ -197,15 +197,10 @@ Helper function for macros to construct container objects.
  1. `index_vars`: a `Vector{Any}` of names for the index variables, e.g.,
     `[:i, gensym(), :k]`. These may also be expressions, like `:((i, j))` from a
     call like `:(x[(i, j) in S])`.
- 2. `indices`: an iterator over the indices, e.g.,
-    ```julia
-    Containers.NestedIterators(
-        (1:3, [:red, :blue], S),
-        (i, _, k) -> i + k <= 6,
-    )
-    ```
+ 2. `indices`: an iterator over the indices, for example,
+    [`Containers.NestedIterator`](@ref)
 
-## Examples
+## Example
 
 See [`container_code`](@ref) for a worked example.
 """
@@ -266,7 +261,7 @@ in conjunction with [`build_ref_sets`](@ref).
 !!! warning
     In most cases, you should `esc(code)` before passing it to `container_code`.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> macro foo(ref_sets, code)
@@ -349,7 +344,7 @@ The type of container can be controlled by the `container` keyword.
     When the index set is explicitly given as `1:n` for any expression `n`, it
     is transformed to `Base.OneTo(n)` before being given to [`container`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> Containers.@container([i = 1:3, j = 1:3], i + j)

@@ -13,28 +13,34 @@ When provided to the `Model` constructor or to [`set_optimizer`](@ref), it
 creates an optimizer by calling `optimizer_constructor()`, and then sets the
 attributes using [`set_attribute`](@ref).
 
-## Example
-
-```julia
-model = Model(
-    optimizer_with_attributes(
-        Gurobi.Optimizer, "Presolve" => 0, "OutputFlag" => 1
-    )
-)
-```
-is equivalent to:
-```julia
-model = Model(Gurobi.Optimizer)
-set_attribute(model, "Presolve", 0)
-set_attribute(model, "OutputFlag", 1)
-```
+See also: [`set_attribute`](@ref), [`get_attribute`](@ref).
 
 ## Note
 
 The string names of the attributes are specific to each solver. One should
 consult the solver's documentation to find the attributes of interest.
 
-See also: [`set_attribute`](@ref), [`get_attribute`](@ref).
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> optimizer = optimizer_with_attributes(
+           HiGHS.Optimizer, "presolve" => "off", MOI.Silent() => true,
+       );
+
+julia> model = Model(optimizer);
+```
+
+is equivalent to:
+
+```jldoctest
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_attribute(model, "presolve", "off")
+
+julia> set_attribute(model, MOI.Silent(), true)
+```
 """
 function optimizer_with_attributes(optimizer_constructor, args::Pair...)
     return MOI.OptimizerWithAttributes(optimizer_constructor, args...)
@@ -56,13 +62,15 @@ If `attr` is an `AbstractString`, this is equivalent to
     This method will remain in all v1.X releases of JuMP, but it may be removed
     in a future v2.0 release. We recommend using [`set_attribute`](@ref) instead.
 
+See also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
+
 ## Example
 
-```julia
-set_optimizer_attribute(model, MOI.Silent(), true)
-```
+```jldoctest
+julia> model = Model();
 
-See also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
+julia> set_optimizer_attribute(model, MOI.Silent(), true)
+```
 """
 set_optimizer_attribute(model, attr, value) = set_attribute(model, attr, value)
 
@@ -79,20 +87,27 @@ Given a list of `attribute => value` pairs, calls
     This method will remain in all v1.X releases of JuMP, but it may be removed
     in a future v2.0 release. We recommend using [`set_attributes`](@ref) instead.
 
+See also: [`set_optimizer_attribute`](@ref), [`get_optimizer_attribute`](@ref).
+
 ## Example
 
-```julia
-model = Model(Ipopt.Optimizer)
-set_optimizer_attributes(model, "tol" => 1e-4, "max_iter" => 100)
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> set_optimizer_attributes(model, "tol" => 1e-4, "max_iter" => 100)
 ```
 is equivalent to:
-```julia
-model = Model(Ipopt.Optimizer)
-set_optimizer_attribute(model, "tol", 1e-4)
-set_optimizer_attribute(model, "max_iter", 100)
-```
+```jldoctest
+julia> import Ipopt
 
-See also: [`set_optimizer_attribute`](@ref), [`get_optimizer_attribute`](@ref).
+julia> model = Model(Ipopt.Optimizer);
+
+julia> set_optimizer_attribute(model, "tol", 1e-4)
+
+julia> set_optimizer_attribute(model, "max_iter", 100)
+```
 """
 function set_optimizer_attributes(
     model::Union{Model,MOI.OptimizerWithAttributes},
@@ -119,13 +134,18 @@ If `attr` is an `AbstractString`, this is equivalent to
     This method will remain in all v1.X releases of JuMP, but it may be removed
     in a future v2.0 release. We recommend using [`get_attribute`](@ref) instead.
 
+See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
+
 ## Example
 
-```julia
-get_optimizer_attribute(model, "SolverSpecificAttributeName")
-```
+```jldoctest
+julia> import Ipopt
 
-See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
+julia> model = Model(Ipopt.Optimizer);
+
+julia> get_optimizer_attribute(model, MOI.Silent())
+false
+```
 """
 get_optimizer_attribute(model, attr) = get_attribute(model, attr)
 
@@ -319,12 +339,16 @@ supports all of the elements in `model`.
 See [`set_attribute`](@ref) for setting solver-specific parameters of the
 optimizer.
 
-## Examples
+## Example
 
-```julia
-model = Model()
-set_optimizer(model, HiGHS.Optimizer)
-set_optimizer(model, HiGHS.Optimizer; add_bridges = false)
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model();
+
+julia> set_optimizer(model, () -> HiGHS.Optimizer())
+
+julia> set_optimizer(model, HiGHS.Optimizer; add_bridges = false)
 ```
 """
 function set_optimizer(
@@ -723,14 +747,23 @@ or [`MOI.ConstraintIndex`](@ref).
 
 ## Example
 
-```julia
-using JuMP
-model = Model()
-@variable(model, x)
-@constraint(model, c, 2 * x <= 1)
-get_attribute(model, MOI.Name())
-get_attribute(x, MOI.VariableName())
-get_attribute(c, MOI.ConstraintName())
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, c, 2 * x <= 1)
+c : 2 x ≤ 1.0
+
+julia> get_attribute(model, MOI.Name())
+""
+
+julia> get_attribute(x, MOI.VariableName())
+"x"
+
+julia> get_attribute(c, MOI.ConstraintName())
+"c"
 ```
 """
 function get_attribute(model::Model, attr::MOI.AbstractModelAttribute)
@@ -760,14 +793,24 @@ If `attr` is an `AbstractString`, it is converted to
 
 ## Example
 
-```julia
-using JuMP, HiGHS
-opt = optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => 0)
-model = Model(HiGHS.Optimizer)
-get_attribute(model, "output_flag")
-get_attribute(model, MOI.RawOptimizerAttribute("output_flag"))
-get_attribute(opt, "output_flag")
-get_attribute(opt, MOI.RawOptimizerAttribute("output_flag"))
+```jldoctest
+julia> import HiGHS
+
+julia> opt = optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => true);
+
+julia> model = Model(opt);
+
+julia> get_attribute(model, "output_flag")
+true
+
+julia> get_attribute(model, MOI.RawOptimizerAttribute("output_flag"))
+true
+
+julia> get_attribute(opt, "output_flag")
+true
+
+julia> get_attribute(opt, MOI.RawOptimizerAttribute("output_flag"))
+true
 ```
 """
 function get_attribute(
@@ -805,14 +848,20 @@ or [`MOI.ConstraintIndex`](@ref).
 
 ## Example
 
-```julia
-using JuMP
-model = Model()
-@variable(model, x)
-@constraint(model, c, 2 * x <= 1)
-set_attribute(model, MOI.Name(), "model_new")
-set_attribute(x, MOI.VariableName(), "x_new")
-set_attribute(c, MOI.ConstraintName(), "c_new")
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, c, 2 * x <= 1)
+c : 2 x ≤ 1.0
+
+julia> set_attribute(model, MOI.Name(), "model_new")
+
+julia> set_attribute(x, MOI.VariableName(), "x_new")
+
+julia> set_attribute(c, MOI.ConstraintName(), "c_new")
 ```
 """
 function set_attribute(model::Model, attr::MOI.AbstractModelAttribute, value)
@@ -854,14 +903,20 @@ If `attr` is an `AbstractString`, it is converted to
 
 ## Example
 
-```julia
-using JuMP, HiGHS
-opt = optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => 0)
-model = Model(HiGHS.Optimizer)
-set_attribute(model, "output_flag", 1)
-set_attribute(model, MOI.RawOptimizerAttribute("output_flag"), 1)
-set_attribute(opt, "output_flag", 1)
-set_attribute(opt, MOI.RawOptimizerAttribute("output_flag"), 1)
+```jldoctest
+julia> import HiGHS
+
+julia> opt = optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => false);
+
+julia> model = Model(opt);
+
+julia> set_attribute(model, "output_flag", false)
+
+julia> set_attribute(model, MOI.RawOptimizerAttribute("output_flag"), true)
+
+julia> set_attribute(opt, "output_flag", true)
+
+julia> set_attribute(opt, MOI.RawOptimizerAttribute("output_flag"), false)
 ```
 """
 function set_attribute(
@@ -906,20 +961,27 @@ end
 Given a list of `attribute => value` pairs, calls
 `set_attribute(destination, attribute, value)` for each pair.
 
+See also: [`set_attribute`](@ref), [`get_attribute`](@ref).
+
 ## Example
 
-```julia
-model = Model(Ipopt.Optimizer)
-set_attributes(model, "tol" => 1e-4, "max_iter" => 100)
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> set_attributes(model, "tol" => 1e-4, "max_iter" => 100)
 ```
 is equivalent to:
-```julia
-model = Model(Ipopt.Optimizer)
-set_attribute(model, "tol", 1e-4)
-set_attribute(model, "max_iter", 100)
-```
+```jldoctest
+julia> import Ipopt
 
-See also: [`set_attribute`](@ref), [`get_attribute`](@ref).
+julia> model = Model(Ipopt.Optimizer);
+
+julia> set_attribute(model, "tol", 1e-4)
+
+julia> set_attribute(model, "max_iter", 100)
+```
 """
 function set_attributes(
     destination::Union{

@@ -14,7 +14,7 @@ escaping the expressions. The elements of `kw_args` should be expressions of the
 form `:(key = value)`. The `kw_args` vector can be extracted from the arguments
 of a macro with [`Containers._extract_kw_args`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> call = :(f(1, a=2))
@@ -42,7 +42,7 @@ were extracted via [`Containers._extract_kw_args`](@ref) and had appropriate
 arguments filtered out (e.g., the model argument). This is able to incorporate
 additional positional arguments to `call`s that already have keyword arguments.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> call = :(f(1, a=2))
@@ -220,11 +220,13 @@ This function is used in `_build_constraint`.
 When broadcasting `f.(x)` over an `AbstractSparseArray` `x`, Julia first calls
 the equivalent of `f(zero(eltype(x))`. Here's an example:
 
-```julia
+```jldoctest
+julia> import SparseArrays
+
 julia> foo(x) = (println("Calling \$(x)"); x)
 foo (generic function with 1 method)
 
-julia> foo.(sparsevec([1, 2], [1, 2]))
+julia> foo.(SparseArrays.sparsevec([1, 2], [1, 2]))
 Calling 0
 Calling 1
 Calling 2
@@ -868,7 +870,7 @@ Add a group of constraints described by the expression `expr` parametrized by
 The expression `expr` can either be
 
 * of the form `func in set` constraining the function `func` to belong to the
-  set `set` which is either a [`MOI.AbstractSet`](https://jump.dev/MathOptInterface.jl/v0.6.2/apireference.html#Sets-1)
+  set `set` which is either a [`MOI.AbstractSet`](@ref)
   or one of the JuMP shortcuts [`SecondOrderCone`](@ref),
   [`RotatedSecondOrderCone`](@ref) and [`PSDCone`](@ref), e.g.
   `@constraint(model, [1, x-1, y-2] in SecondOrderCone())` constrains the norm
@@ -936,7 +938,7 @@ machinery as [`@constraint`](@ref) but without adding the constraint to a model.
 Constraints using broadcast operators like `x .<= 1` are also supported and will
 create arrays of `ScalarConstraint` or `VectorConstraint`.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1058,14 +1060,33 @@ multiple lines wrapped in a `begin ... end` block.
 
 The macro returns a tuple containing the constraints that were defined.
 
-# Examples
+## Example
 
-```julia
-@constraints(model, begin
-    x >= 1
-    y - w <= 2
-    sum_to_one[i=1:3], z[i] + y == 1
-end)
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, w);
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
+julia> @variable(model, z[1:3]);
+
+julia> @constraints(model, begin
+           x >= 1
+           y - w <= 2
+           sum_to_one[i=1:3], z[i] + y == 1
+       end);
+
+julia> print(model)
+Feasibility
+Subject to
+ sum_to_one[1] : y + z[1] = 1.0
+ sum_to_one[2] : y + z[2] = 1.0
+ sum_to_one[3] : y + z[3] = 1.0
+ x ≥ 1.0
+ -w + y ≤ 2.0
 ```
 """ :(@constraints)
 
@@ -1080,14 +1101,17 @@ multiple lines wrapped in a `begin ... end` block.
 
 The macro returns a tuple containing the variables that were defined.
 
-# Examples
+## Example
 
-```julia
-@variables(model, begin
-    x
-    y[i = 1:2] >= 0, (start = i)
-    z, Bin, (start = 0, base_name = "Z")
-end)
+```jldoctest
+julia> model = Model();
+
+julia> @variables(model, begin
+           x
+           y[i = 1:2] >= 0, (start = i)
+           z, Bin, (start = 0, base_name = "Z")
+       end)
+(x, VariableRef[y[1], y[2]], Z)
 ```
 
 !!! note
@@ -1108,11 +1132,22 @@ The macro returns a tuple containing the expressions that were defined.
 
 ## Example
 
-```julia
-@expressions(model, begin
-    my_expr, x^2 + y^2
-    my_expr_1[i = 1:2], a[i] - z[i]
-end)
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
+julia> @variable(model, z[1:2]);
+
+julia> a = [4, 5];
+
+julia> @expressions(model, begin
+           my_expr, x^2 + y^2
+           my_expr_1[i = 1:2], a[i] - z[i]
+       end)
+(x² + y², AffExpr[-z[1] + 4, -z[2] + 5])
 ```
 """ :(@expressions)
 
@@ -1154,13 +1189,26 @@ multiple lines wrapped in a `begin ... end` block.
 
 The macro returns a tuple containing the constraints that were defined.
 
-# Examples
+## Example
 
-```julia
-@NLconstraints(model, begin
-    t >= sqrt(x^2 + y^2)
-    [i = 1:2], z[i] <= log(a[i])
-end)
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
+julia> @variable(model, t);
+
+julia> @variable(model, z[1:2]);
+
+julia> a = [4, 5];
+
+julia> @NLconstraints(model, begin
+           t >= sqrt(x^2 + y^2)
+           [i = 1:2], z[i] <= log(a[i])
+       end)
+((t - sqrt(x ^ 2.0 + y ^ 2.0)) - 0.0 ≥ 0, NonlinearConstraintRef{ScalarShape}[(z[1] - log(4.0)) - 0.0 ≤ 0, (z[2] - log(5.0)) - 0.0 ≤ 0])
 ```
 """ :(@NLconstraints)
 
@@ -1175,13 +1223,24 @@ multiple lines wrapped in a `begin ... end` block.
 
 The macro returns a tuple containing the expressions that were defined.
 
-# Examples
+## Example
 
-```julia
-@NLexpressions(model, begin
-    my_expr, sqrt(x^2 + y^2)
-    my_expr_1[i = 1:2], log(a[i]) - z[i]
-end)
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
+julia> @variable(model, z[1:2]);
+
+julia> a = [4, 5];
+
+julia> @NLexpressions(model, begin
+           my_expr, sqrt(x^2 + y^2)
+           my_expr_1[i = 1:2], log(a[i]) - z[i]
+       end)
+(subexpression[1]: sqrt(x ^ 2.0 + y ^ 2.0), NonlinearExpression[subexpression[2]: log(4.0) - z[1], subexpression[3]: log(5.0) - z[2]])
 ```
 """ :(@NLexpressions)
 
@@ -1234,16 +1293,14 @@ _replace_zero(x) = x
     @objective(model::Model, sense, func)
 
 Set the objective sense to `sense` and objective function to `func`. The
-objective sense can be either `Min`, `Max`, `MathOptInterface.MIN_SENSE`,
-`MathOptInterface.MAX_SENSE` or `MathOptInterface.FEASIBILITY_SENSE`; see
-[`MathOptInterface.ObjectiveSense`](https://jump.dev/MathOptInterface.jl/stable/reference/models/#MathOptInterface.ObjectiveSense).
-In order to set the sense programmatically, i.e., when `sense` is a Julia
-variable whose value is the sense, one of the three
-`MathOptInterface.ObjectiveSense` values should be used. The function `func` can
-be a single JuMP variable, an affine expression of JuMP variables or a quadratic
-expression of JuMP variables.
+objective sense can be either `Min`, `Max`, `MOI.MIN_SENSE`, `MOI.MAX_SENSE` or
+`MOI.FEASIBILITY_SENSE`; see [`MOI.ObjectiveSense`](@ref).
 
-## Examples
+In order to set the sense programmatically, i.e., when `sense` is a Julia
+variable whose value is the sense, one of the three `MOI.ObjectiveSense` values
+should be used.
+
+## Example
 
 To minimize the value of the variable `x`, do as follows:
 ```jldoctest @objective
@@ -1304,25 +1361,48 @@ end
 
 Efficiently builds a linear or quadratic expression but does not add to model
 immediately. Instead, returns the expression which can then be inserted in other
-constraints. For example:
+constraints.
 
-```julia
-@expression(m, shared, sum(i*x[i] for i=1:5))
-@constraint(m, shared + y >= 5)
-@constraint(m, shared + z <= 10)
+## Example
+
+```jldoctest expression_docstring
+julia> model = Model();
+
+julia> @variable(model, x[1:5]);
+
+julia> @variable(model, y);
+
+julia> @variable(model, z);
+
+julia> @expression(model, shared, sum(i * x[i] for i in 1:5))
+x[1] + 2 x[2] + 3 x[3] + 4 x[4] + 5 x[5]
+
+julia> @constraint(model, shared + y >= 5)
+x[1] + 2 x[2] + 3 x[3] + 4 x[4] + 5 x[5] + y ≥ 5.0
+
+julia> @constraint(model, shared + z <= 10)
+x[1] + 2 x[2] + 3 x[3] + 4 x[4] + 5 x[5] + z ≤ 10.0
 ```
 
 The `ref` accepts index sets in the same way as `@variable`, and those indices
 can be used in the construction of the expressions:
 
-```julia
-@expression(m, expr[i=1:3], i*sum(x[j] for j=1:3))
+```jldoctest expression_docstring
+julia> @expression(model, expr[i = 1:3], i * sum(x[j] for j in 1:3))
+3-element Vector{AffExpr}:
+ x[1] + x[2] + x[3]
+ 2 x[1] + 2 x[2] + 2 x[3]
+ 3 x[1] + 3 x[2] + 3 x[3]
 ```
 
 Anonymous syntax is also supported:
 
-```julia
-expr = @expression(m, [i=1:3], i*sum(x[j] for j=1:3))
+```jldoctest expression_docstring
+julia> expr = @expression(model, [i in 1:3], i * sum(x[j] for j in 1:3))
+3-element Vector{AffExpr}:
+ x[1] + x[2] + x[3]
+ 2 x[1] + 2 x[2] + 2 x[3]
+ 3 x[1] + 3 x[2] + 3 x[3]
 ```
 """
 macro expression(args...)
@@ -1411,7 +1491,7 @@ See also: [`@variable`](@ref)
     multiple positional arguments leads to `MethodError`s if the user passes the
     arguments in the wrong order.
 
-## Examples
+## Example
 
 ```julia
 @variable(model, x, Foo)
@@ -1827,7 +1907,7 @@ function _reorder_parameters(args)
 end
 
 """
-    _parse_nonlinear_expression(data, x::Expr)
+    _parse_nonlinear_expression(model::Model, x::Expr)
 
 JuMP needs to build Nonlinear expression objects in macro scope. This has two
 main challenges:
@@ -1846,21 +1926,6 @@ main challenges:
     big win for readability of the system, but it means we loose access to the
     caller's local scope. My solution to maintain backwards compatibility is to
     check that every function call is registered before parsing the expression.
-
-
-```julia
-macro foo(data, input)
-    code, expr = _parse_nonlinear_expression(esc(data), input)
-    return quote
-        \$code
-        \$expr
-    end
-end
-
-model = NonlinearData()
-x = 2
-@foo(model, 2x + 1) == MOI.Nonlinear.parse_expression(model, :(2 * \$x + 1))
-```
 """
 function _parse_nonlinear_expression(model, x)
     code = quote
@@ -2140,23 +2205,55 @@ variables:
  * `variable_type`: used by JuMP extensions. See
    [Extend `@variable`](@ref extend_variable_macro) for more information.
 
-## Examples
+## Example
 
 The following are equivalent ways of creating a variable `x` of name `x` with
 lower bound 0:
-```julia
-model = Model()
-@variable(model, x >= 0)
-@variable(model, x, lower_bound = 0)
-x = @variable(model, base_name = "x", lower_bound = 0)
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 0)
+x
+```
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, lower_bound = 0)
+x
+```
+
+```jldoctest
+julia> model = Model();
+
+julia> x = @variable(model, base_name = "x", lower_bound = 0)
+x
 ```
 
 Other examples:
-```julia
-model = Model()
-@variable(model, x[i=1:3] <= i, Int, start = sqrt(i), lower_bound = -i)
-@variable(model, y[i=1:3], container = DenseAxisArray, set = MOI.ZeroOne())
-@variable(model, z[i=1:3], set_string_name = false)
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[i=1:3] <= i, Int, start = sqrt(i), lower_bound = -i)
+3-element Vector{VariableRef}:
+ x[1]
+ x[2]
+ x[3]
+
+julia> @variable(model, y[i=1:3], container = DenseAxisArray, set = MOI.ZeroOne())
+1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+    Dimension 1, Base.OneTo(3)
+And data, a 3-element Vector{VariableRef}:
+ y[1]
+ y[2]
+ y[3]
+
+julia> @variable(model, z[i=1:3], set_string_name = false)
+3-element Vector{VariableRef}:
+ _[7]
+ _[8]
+ _[9]
 ```
 """
 macro variable(args...)
@@ -2375,9 +2472,20 @@ end
 Add a nonlinear objective to `model` with optimization sense `sense`.
 `sense` must be `Max` or `Min`.
 
-# Example
+## Example
 
-    @NLobjective(model, Max, 2x + 1 + sin(x))
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @NLobjective(model, Max, 2x + 1 + sin(x))
+
+julia> print(model)
+Max 2.0 * x + 1.0 + sin(x)
+Subject to
+```
 """
 macro NLobjective(model, sense, x)
     function _error(str...)
@@ -2394,14 +2502,25 @@ macro NLobjective(model, sense, x)
 end
 
 """
-    @NLconstraint(m::Model, expr)
+    @NLconstraint(model::Model, expr)
 
 Add a constraint described by the nonlinear expression `expr`. See also
 [`@constraint`](@ref). For example:
 
-```julia
-@NLconstraint(model, sin(x) <= 1)
-@NLconstraint(model, [i = 1:3], sin(i * x) <= 1 / i)
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @NLconstraint(model, sin(x) <= 1)
+sin(x) - 1.0 ≤ 0
+
+julia> @NLconstraint(model, [i = 1:3], sin(i * x) <= 1 / i)
+3-element Vector{NonlinearConstraintRef{ScalarShape}}:
+ (sin(1.0 * x) - 1.0 / 1.0) - 0.0 ≤ 0
+ (sin(2.0 * x) - 1.0 / 2.0) - 0.0 ≤ 0
+ (sin(3.0 * x) - 1.0 / 3.0) - 0.0 ≤ 0
 ```
 """
 macro NLconstraint(m, x, args...)
@@ -2461,16 +2580,34 @@ end
 Efficiently build a nonlinear expression which can then be inserted in other
 nonlinear constraints and the objective. See also [`@expression`]. For example:
 
-```julia
-@NLexpression(model, my_expr, sin(x)^2 + cos(x^2))
-@NLconstraint(model, my_expr + y >= 5)
-@NLobjective(model, Min, my_expr)
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @variable(model, y)
+y
+
+julia> @NLexpression(model, my_expr, sin(x)^2 + cos(x^2))
+subexpression[1]: sin(x) ^ 2.0 + cos(x ^ 2.0)
+
+julia> @NLconstraint(model, my_expr + y >= 5)
+(subexpression[1] + y) - 5.0 ≥ 0
+
+julia> @NLobjective(model, Min, my_expr)
 ```
 
 Indexing over sets and anonymous expressions are also supported:
-```julia
-@NLexpression(m, my_expr_1[i=1:3], sin(i * x))
-my_expr_2 = @NLexpression(m, log(1 + sum(exp(x[i])) for i in 1:2))
+```jldoctest
+julia> @NLexpression(model, my_expr_1[i=1:3], sin(i * x))
+3-element Vector{NonlinearExpression}:
+ subexpression[2]: sin(1.0 * x)
+ subexpression[3]: sin(2.0 * x)
+ subexpression[4]: sin(3.0 * x)
+
+julia> my_expr_2 = @NLexpression(model, log(1 + sum(exp(my_expr_1[i]) for i in 1:2)))
+subexpression[5]: log(1.0 + (exp(subexpression[2]) + exp(subexpression[3])))
 ```
 """
 macro NLexpression(args...)
@@ -2527,7 +2664,8 @@ Create and return a nonlinear parameter `param` attached to the model `model`
 with initial value set to `value`. Nonlinear parameters may be used only in
 nonlinear expressions.
 
-# Example
+## Example
+
 ```jldoctest
 julia> model = Model();
 

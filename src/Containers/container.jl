@@ -32,7 +32,7 @@ indices given by `f`.
 Create a container with indices `indices` and values at given indices given by
 `f`. The type of container used is determined by [`default_container`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> Containers.container((i, j) -> i + j, Containers.vectorized_product(Base.OneTo(3), Base.OneTo(3)))

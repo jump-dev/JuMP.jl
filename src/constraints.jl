@@ -369,14 +369,31 @@ Delete the constraint associated with `constraint_ref` from the model `model`.
 
 Note that `delete` does not unregister the name from the model, so adding a new
 constraint of the same name will throw an error. Use [`unregister`](@ref) to
-unregister the name after deletion as follows:
-```julia
-@constraint(model, c, 2x <= 1)
-delete(model, c)
-unregister(model, :c)
-```
+unregister the name after deletion.
 
-See also: [`unregister`](@ref)
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, c, 2x <= 1)
+c : 2 x ≤ 1.0
+
+julia> delete(model, c)
+
+julia> unregister(model, :c)
+
+julia> print(model)
+Feasibility
+Subject to
+
+julia> model[:c]
+ERROR: KeyError: key :c not found
+Stacktrace:
+[...]
+```
 """
 function delete(model::Model, con_ref::ConstraintRef)
     if model !== con_ref.model
@@ -443,13 +460,14 @@ abstract type AbstractConstraint end
     end
 
 Constraint `constraint` that can be bridged by the bridge of type `bridge_type`.
-Adding this constraint to a model is equivalent to
+Adding this constraint to a model is equivalent to:
+
 ```julia
 add_bridge(model, bridge_type)
 add_constraint(model, constraint)
 ```
 
-## Examples
+## Example
 
 Given a new scalar set type `CustomSet` with a bridge `CustomBridge` that can
 bridge `F`-in-`CustomSet` constraints, when the user does
@@ -464,24 +482,27 @@ constraint will not be bridged unless he manually calls `add_bridge(model,
 CustomBridge)`. In order to automatically add the `CustomBridge` to any model to
 which an `F`-in-`CustomSet` is added, simply add the following method:
 ```julia
-function JuMP.build_constraint(_error::Function, func::AbstractJuMPScalar,
-                               set::CustomSet)
+function JuMP.build_constraint(
+    _error::Function,
+    func::AbstractJuMPScalar,
+    set::CustomSet,
+)
     constraint = ScalarConstraint(func, set)
-    return JuMP.BridgeableConstraint(constraint, CustomBridge)
+    return BridgeableConstraint(constraint, CustomBridge)
 end
 ```
 
-### Note
+## Note
 
 JuMP extensions should extend `JuMP.build_constraint` only if they also defined
-`CustomSet`, for three
-reasons:
-1. It is problematic if multiple extensions overload the same JuMP method.
-2. A missing method will not inform the users that they forgot to load the
-   extension module defining the `build_constraint` method.
-3. Defining a method where neither the function nor any of the argument types
-   are defined in the package is called [*type piracy*](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-type-piracy-1)
-   and is discouraged in the Julia style guide.
+`CustomSet`, for three reasons:
+
+ 1. It is problematic if multiple extensions overload the same JuMP method.
+ 2. A missing method will not inform the users that they forgot to load the
+    extension module defining the `build_constraint` method.
+ 3. Defining a method where neither the function nor any of the argument types
+    are defined in the package is called [*type piracy*](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-type-piracy-1)
+    and is discouraged in the Julia style guide.
 """
 struct BridgeableConstraint{C,B} <: AbstractConstraint
     constraint::C
@@ -885,7 +906,7 @@ right-hand side of the constraint so instead of modifying the function, the set
 will be translated by `-value`. For example, given a constraint `2x <=
 3`, `add_to_function_constant(c, 4)` will modify it to `2x <= -1`.
 
-## Examples
+## Example
 
 For scalar constraints, the set is translated by `-value`:
 ```jldoctest; filter=r"≤|<="
@@ -953,7 +974,6 @@ into account in the primal value of the constraint. For instance, the constraint
 `@constraint(model, 2x + 3y + 1 == 5)` is transformed into
 `2x + 3y`-in-`MOI.EqualTo(4)` so the value returned by this function is the
 evaluation of `2x + 3y`.
-```
 """
 function value(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex};
@@ -1191,7 +1211,8 @@ has type `function_type` and the set has type `set_type`.
 
 See also [`list_of_constraint_types`](@ref) and [`all_constraints`](@ref).
 
-# Example
+## Example
+
 ```jldoctest
 julia> model = Model();
 
@@ -1238,7 +1259,8 @@ ordered by creation time.
 
 See also [`list_of_constraint_types`](@ref) and [`num_constraints`](@ref).
 
-# Example
+## Example
+
 ```jldoctest
 julia> model = Model();
 
@@ -1297,7 +1319,8 @@ Return a list of tuples of the form `(F, S)` where `F` is a JuMP function type
 and `S` is an MOI set type such that `all_constraints(model, F, S)` returns
 a nonempty list.
 
-# Example
+## Example
+
 ```jldoctest
 julia> model = Model();
 
@@ -1337,7 +1360,7 @@ such as `VariableRef`-in-`Integer` are included. To count only the number of
 structural constraints (e.g., the rows in the constraint matrix of a linear
 program), pass `count_variable_in_set_constraints = false`.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1376,7 +1399,7 @@ such as `VariableRef`-in-`Integer` are included. To return only the structural
 constraints (e.g., the rows in the constraint matrix of a linear program), pass
 `include_variable_in_set_constraints = false`.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1458,7 +1481,7 @@ constraint.
 To relax a subset of constraints, pass a `penalties` dictionary and set
 `default = nothing`.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> function new_model()

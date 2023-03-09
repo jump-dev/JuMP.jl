@@ -151,7 +151,7 @@ programmatically, and you cannot use [`@NLobjective`](@ref).
  * You must interpolate the variables directly into the expression `expr`.
  * You must use `MIN_SENSE` or `MAX_SENSE` instead of `Min` and `Max`.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -225,7 +225,7 @@ index(p::NonlinearParameter) = MOI.Nonlinear.ParameterIndex(p.index)
 
 Return the current value stored in the nonlinear parameter `p`.
 
-# Example
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -246,7 +246,8 @@ end
 
 Store the value `v` in the nonlinear parameter `p`.
 
-# Example
+## Example
+
 ```jldoctest
 julia> model = Model();
 
@@ -310,7 +311,7 @@ programmatically, and you cannot use [`@NLexpression`](@ref).
 
  * You must interpolate the variables directly into the expression `expr`.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -440,7 +441,7 @@ programmatically, and you cannot use [`@NLconstraint`](@ref).
 
  * You must interpolate the variables directly into the expression `expr`.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -592,7 +593,7 @@ constraint references and the start vector.
 
 Pass `nothing` to unset a previous start.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -661,7 +662,7 @@ that the inputs are `Float64`.
  * `op` does not have to be the same symbol as `f`, but it is generally more
    readable if it is.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -737,7 +738,7 @@ not assume that the inputs are `Float64`.
  * `s` does not have to be the same symbol as `f`, but it is generally more
    readable if it is.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -829,7 +830,7 @@ derivatives of the function `f` respectively.
  * `s` does not have to be the same symbol as `f`, but it is generally more
    readable if it is.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();

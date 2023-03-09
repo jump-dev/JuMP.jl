@@ -156,13 +156,10 @@ end
 The functional equivalent of the [`@objective`](@ref) macro.
 
 Sets the objective sense and objective function simultaneously, and is
-equivalent to:
-```julia
-set_objective_sense(model, sense)
-set_objective_function(model, func)
-```
+equivalent to calling [`set_objective_sense`](@ref) and
+[`set_objective_function`](@ref) separately.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -200,7 +197,7 @@ Return an object of type `T` representing the objective function.
 
 Error if the objective is not convertible to type `T`.
 
-## Examples
+## Example
 
 ```jldoctest objective_function
 julia> model = Model();

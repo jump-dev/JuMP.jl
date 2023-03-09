@@ -232,7 +232,7 @@ true
 To reduce the likelihood of accidental bugs, and because JuMP registers
 constraints inside a model, creating two constraints with the same name is an
 error:
-```julia
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x)

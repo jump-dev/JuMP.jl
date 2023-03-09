@@ -568,30 +568,64 @@ in the `.value` field.)
 For example:
 
 ```jldoctest derivatives
-raw_index(v::MOI.VariableIndex) = v.value
-model = Model()
-@variable(model, x)
-@variable(model, y)
-@NLobjective(model, Min, sin(x) + sin(y))
-values = zeros(2)
-x_index = raw_index(JuMP.index(x))
-y_index = raw_index(JuMP.index(y))
-values[x_index] = 2.0
-values[y_index] = 3.0
-d = NLPEvaluator(model)
-MOI.initialize(d, [:Grad])
-MOI.eval_objective(d, values) # == sin(2.0) + sin(3.0)
+julia> raw_index(v::MOI.VariableIndex) = v.value
+raw_index (generic function with 1 method)
 
-# output
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @variable(model, y)
+y
+
+julia> @NLobjective(model, Min, sin(x) + sin(y))
+
+julia> values = zeros(2)
+2-element Vector{Float64}:
+ 0.0
+ 0.0
+
+julia> x_index = raw_index(JuMP.index(x))
+1
+
+julia> y_index = raw_index(JuMP.index(y))
+2
+
+julia> values[x_index] = 2.0
+2.0
+
+julia> values[y_index] = 3.0
+3.0
+
+julia> d = NLPEvaluator(model)
+Nonlinear.Evaluator with available features:
+  * :Grad
+  * :Jac
+  * :JacVec
+  * :Hess
+  * :HessVec
+  * :ExprGraph
+
+julia> MOI.initialize(d, [:Grad])
+
+julia> MOI.eval_objective(d, values)
 1.0504174348855488
-```
 
-```jldoctest derivatives
-∇f = zeros(2)
-MOI.eval_objective_gradient(d, ∇f, values)
-(∇f[x_index], ∇f[y_index]) # == (cos(2.0), cos(3.0))
+julia> sin(2.0) + sin(3.0)
+1.0504174348855488
 
-# output
+julia> ∇f = zeros(2)
+2-element Vector{Float64}:
+ 0.0
+ 0.0
+
+julia> MOI.eval_objective_gradient(d, ∇f, values)
+
+julia> ∇f[x_index], ∇f[y_index]
+(-0.4161468365471424, -0.9899924966004454)
+
+julia> cos(2.0), cos(3.0)
 (-0.4161468365471424, -0.9899924966004454)
 ```
 

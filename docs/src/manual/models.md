@@ -118,17 +118,20 @@ environment or a path to a binary executable. For these solvers, you can pass
 a function to [`Model`](@ref) which takes zero arguments and returns an instance
 of the optimizer.
 
-A common use-case for this is passing an environment to Gurobi:
-```julia
-julia> grb_env = Gurobi.Env();
+A common use-case for this is passing an environment or sub-solver to the
+optimizer:
+```jldoctest
+julia> import HiGHS
 
-julia> model = Model(() -> Gurobi.Optimizer(grb_env))
+julia> import MultiObjectiveAlgorithms as MOA
+
+julia> model = Model(() -> MOA.Optimizer(HiGHS.Optimizer))
 A JuMP Model
 Feasibility problem with:
 Variables: 0
 Model mode: AUTOMATIC
 CachingOptimizer state: EMPTY_OPTIMIZER
-Solver name: Gurobi
+Solver name: MOA[algorithm=MultiObjectiveAlgorithms.Lexicographic, optimizer=HiGHS]
 ```
 
 ## [Solver options](@id solver_options)
@@ -590,18 +593,20 @@ A HiGHS model with 0 columns and 0 rows.
 A downside of direct mode is that there is no bridging layer. Therefore, only
 constraints which are natively supported by the solver are supported. For
 example, `HiGHS.jl` does not implement quadratic constraints:
-```julia direct_mode
+```jldoctest direct_mode
 julia> model = direct_model(HiGHS.Optimizer());
+
+julia> set_silent(model)
 
 julia> @variable(model, x[1:2]);
 
 julia> @constraint(model, x[1]^2 + x[2]^2 <= 2)
-ERROR: Constraints of type MathOptInterface.MathOptInterface.ScalarQuadraticFunction{Float64}-in-MathOptInterface.LessThan{Float64} are not supported by the solver.
+ERROR: Constraints of type MathOptInterface.ScalarQuadraticFunction{Float64}-in-MathOptInterface.LessThan{Float64} are not supported by the solver.
 
 If you expected the solver to support your problem, you may have an error in your formulation. Otherwise, consider using a different solver.
 
 The list of available solvers, along with the problem types they support, is available at https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.
-[...]
+Stacktrace:
 ```
 
 !!! warning
