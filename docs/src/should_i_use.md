@@ -42,7 +42,7 @@ Key reasons to use JuMP include:
      can be embedded in commercial software that complies with the terms of the
      license.
  - Speed
-   - Benchmarking has shown that JuMP can create problems at similar speeds to
+   - Benchmarking has shown that JuMP can solve problems at similar speeds to
      special-purpose modeling languages such as [AMPL](https://ampl.com/).
    - JuMP communicates with most solvers in memory, avoiding the need to write
      intermediary files.
