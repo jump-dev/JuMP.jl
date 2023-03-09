@@ -23,7 +23,8 @@
 # In this tutorial we explain how to write a *nested* optimization problem,
 # where an *outer* problem uses the results from the optimization of an *inner*
 # subproblem.
-# We describe how to define a user-defined function to handle the decomposition
+#
+# To model the problem, we define a user-defined function to handle the decomposition
 # of the inner problem inside the outer one. Finally, we show how to improve
 # the performance by using a cache that avoids resolving the inner problem.
 #
