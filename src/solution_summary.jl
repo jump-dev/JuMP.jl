@@ -38,20 +38,52 @@ Return a struct that can be used print a summary of the solution in result
 If `verbose=true`, write out the primal solution for every variable and the
 dual solution for every constraint, excluding those with empty names.
 
-## Examples
+## Example
 
 When called at the REPL, the summary is automatically printed:
-```julia
+```jldoctest
+julia> model = Model();
+
 julia> solution_summary(model)
-[...]
+* Solver : No optimizer attached.
+
+* Status
+  Result count       : 0
+  Termination status : OPTIMIZE_NOT_CALLED
+  Message from the solver:
+  "optimize not called"
+
+* Candidate solution (result #1)
+  Primal status      : NO_SOLUTION
+  Dual status        : NO_SOLUTION
+
+* Work counters
 ```
 
 Use `print` to force the printing of the summary from inside a function:
-```julia
-function foo(model)
-    print(solution_summary(model))
-    return
-end
+```jldoctest
+julia> model = Model();
+
+julia> function foo(model)
+           print(solution_summary(model))
+           return
+       end
+foo (generic function with 1 method)
+
+julia> foo(model)
+* Solver : No optimizer attached.
+
+* Status
+  Result count       : 0
+  Termination status : OPTIMIZE_NOT_CALLED
+  Message from the solver:
+  "optimize not called"
+
+* Candidate solution (result #1)
+  Primal status      : NO_SOLUTION
+  Dual status        : NO_SOLUTION
+
+* Work counters
 ```
 """
 function solution_summary(model::Model; result::Int = 1, verbose::Bool = false)

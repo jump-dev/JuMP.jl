@@ -47,8 +47,18 @@ Create a [`NestedIterator`](@ref).
 
 ## Example
 
-```julia
-nested(1:2, ["A", "B"]; condition = (i, j) -> isodd(i) || j == "B")
+```jldoctest
+julia> iterator = Containers.nested(
+           () -> 1:2,
+           (i,) -> ["A", "B"];
+           condition = (i, j) -> isodd(i) || j == "B",
+       );
+
+julia> collect(iterator)
+3-element Vector{Tuple{Int64, String}}:
+ (1, "A")
+ (1, "B")
+ (2, "B")
 ```
 """
 function nested(iterators...; condition = (args...) -> true)

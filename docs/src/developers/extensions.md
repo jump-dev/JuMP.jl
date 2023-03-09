@@ -62,18 +62,18 @@ To define a new set for JuMP, subtype `MOI.AbstractScalarSet` or
 `MOI.AbstractVectorSet` and implement `Base.copy` for the set. That's it!
 
 ```jldoctest define_new_set
-struct _NewVectorSet <: MOI.AbstractVectorSet
-    dimension::Int
-end
-Base.copy(x::_NewVectorSet) = x
+julia> struct NewMOIVectorSet <: MOI.AbstractVectorSet
+           dimension::Int
+       end
 
-model = Model()
-@variable(model, x[1:2])
-@constraint(model, x in _NewVectorSet(2))
+julia> Base.copy(x::NewMOIVectorSet) = x
 
-# output
+julia> model = Model();
 
-[x[1], x[2]] ∈ _NewVectorSet(2)
+julia> @variable(model, x[1:2]);
+
+julia> @constraint(model, x in NewMOIVectorSet(2))
+[x[1], x[2]] ∈ NewMOIVectorSet(2)
 ```
 
 However, for vector-sets, this requires the user to specify the dimension
@@ -83,16 +83,12 @@ You can make a more user-friendly set by subtyping [`AbstractVectorSet`](@ref)
 and implementing [`moi_set`](@ref).
 
 ```jldoctest define_new_set
-struct NewVectorSet <: JuMP.AbstractVectorSet end
-JuMP.moi_set(::NewVectorSet, dim::Int) = _NewVectorSet(dim)
+julia> struct NewVectorSet <: JuMP.AbstractVectorSet end
 
-model = Model()
-@variable(model, x[1:2])
-@constraint(model, x in NewVectorSet())
+julia> JuMP.moi_set(::NewVectorSet, dim::Int) = NewMOIVectorSet(dim)
 
-# output
-
-[x[1], x[2]] ∈ _NewVectorSet(2)
+julia> @constraint(model, x in NewVectorSet())
+[x[1], x[2]] ∈ NewMOIVectorSet(2)
 ```
 
 ## [Extend `@variable`](@id extend_variable_macro)

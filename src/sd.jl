@@ -14,7 +14,7 @@
 Use in the [`@variable`](@ref) macro to constrain a matrix of variables to be
 symmetric.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -33,7 +33,7 @@ struct SymmetricMatrixSpace end
 Use in the [`@variable`](@ref) macro to constrain a matrix of variables to be
 skew-symmetric.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -57,7 +57,7 @@ to the `MOI.PositiveSemidefiniteConeTriangle` set, otherwise its column
 vectorization is constrained to belong to the
 `MOI.PositiveSemidefiniteConeSquare` set.
 
-## Examples
+## Example
 
 Consider the following example:
 ```jldoctest PSDCone
@@ -277,8 +277,13 @@ creating variables in `MOI.Reals`, i.e. "free" variables unless they are
 constrained after their creation.
 
 This function is used by the [`@variable`](@ref) macro as follows:
-```julia
-@variable(model, Q[1:2, 1:2], Symmetric)
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, Q[1:2, 1:2], Symmetric)
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ Q[1,1]  Q[1,2]
+ Q[1,2]  Q[2,2]
 ```
 """
 function build_variable(
@@ -304,8 +309,13 @@ creating variables in `MOI.Reals`, i.e. "free" variables unless they are
 constrained after their creation.
 
 This function is used by the [`@variable`](@ref) macro as follows:
-```julia
-@variable(model, Q[1:2, 1:2] in SkewSymmetricMatrixSpace())
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, Q[1:2, 1:2] in SkewSymmetricMatrixSpace())
+2×2 Matrix{AffExpr}:
+ 0        Q[1,2]
+ -Q[1,2]  0
 ```
 """
 function build_variable(
@@ -330,8 +340,13 @@ Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref
 constraining the variables to be positive semidefinite.
 
 This function is used by the [`@variable`](@ref) macro as follows:
-```julia
-@variable(model, Q[1:2, 1:2], PSD)
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, Q[1:2, 1:2], PSD)
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ Q[1,1]  Q[1,2]
+ Q[1,2]  Q[2,2]
 ```
 """
 function build_variable(
@@ -369,17 +384,32 @@ Return a `VectorConstraint` of shape [`SymmetricMatrixShape`](@ref) constraining
 the matrix `Q` to be positive semidefinite.
 
 This function is used by the [`@constraint`](@ref) macros as follows:
-```julia
-@constraint(model, Symmetric(Q) in PSDCone())
+```jldoctest
+julia> import LinearAlgebra
+
+julia> model = Model();
+
+julia> @variable(model, Q[1:2, 1:2]);
+
+julia> @constraint(model, LinearAlgebra.Symmetric(Q) in PSDCone())
+[Q[1,1]  Q[1,2];
+ Q[1,2]  Q[2,2]] ∈ PSDCone()
 ```
+
 The form above is usually used when the entries of `Q` are affine or quadratic
 expressions, but it can also be used when the entries are variables to get the
 reference of the semidefinite constraint, e.g.,
-```julia
-@variable model Q[1:2,1:2] Symmetric
-# The type of `Q` is `Symmetric{VariableRef, Matrix{VariableRef}}`
-var_psd = @constraint model Q in PSDCone()
-# The `var_psd` variable contains a reference to the constraint
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, Q[1:2, 1:2], Symmetric)
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
+ Q[1,1]  Q[1,2]
+ Q[1,2]  Q[2,2]
+
+julia> @constraint(model, Q in PSDCone())
+[Q[1,1]  Q[1,2];
+ Q[1,2]  Q[2,2]] ∈ PSDCone()
 ```
 """
 function build_constraint(
@@ -407,8 +437,14 @@ Return a `VectorConstraint` of shape [`SquareMatrixShape`](@ref) constraining
 the matrix `Q` to be symmetric and positive semidefinite.
 
 This function is used by the [`@constraint`](@ref) macro as follows:
-```julia
-@constraint(model, Q in PSDCone())
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, Q[1:2, 1:2]);
+
+julia> @constraint(model, Q in PSDCone())
+[Q[1,1]  Q[1,2];
+ Q[2,1]  Q[2,2]] ∈ PSDCone()
 ```
 """
 function build_constraint(
@@ -432,7 +468,7 @@ Hermitian positive semidefinite cone object that can be used to create a
 Hermitian positive semidefinite square matrix in the [`@variable`](@ref)
 and [`@constraint`](@ref) macros.
 
-## Examples
+## Example
 
 Consider the following example:
 ```jldoctest
@@ -570,8 +606,16 @@ Return a `VectorConstraint` of shape [`HermitianMatrixShape`](@ref) constraining
 the matrix `Q` to be Hermitian positive semidefinite.
 
 This function is used by the [`@constraint`](@ref) macros as follows:
-```julia
-@constraint(model, LinearAlgebra.Hermitian(Q) in HermitianPSDCone())
+```jldoctest
+julia> import LinearAlgebra
+
+julia> model = Model();
+
+julia> @variable(model, Q[1:2, 1:2]);
+
+julia> @constraint(model, LinearAlgebra.Hermitian(Q) in HermitianPSDCone())
+[Q[1,1]  Q[1,2];
+ Q[1,2]  Q[2,2]] ∈ HermitianPSDCone()
 ```
 """
 function build_constraint(

@@ -38,24 +38,26 @@ of the solver used to compute the basis.
 
 Note: interval constraints are NOT supported.
 
-# Example
+## Example
 
-    model = Model(HiGHS.Optimizer)
-    @variable(model, -1 <= x <= 2)
-    @objective(model, Min, x)
-    optimize!(model)
-    report = lp_sensitivity_report(model; atol = 1e-7)
-    dx_lo, dx_hi = report[x]
-    println(
-        "The objective coefficient of `x` can decrease by \$dx_lo or " *
-        "increase by \$dx_hi."
-    )
-    c = LowerBoundRef(x)
-    dRHS_lo, dRHS_hi = report[c]
-    println(
-        "The lower bound of `x` can decrease by \$dRHS_lo or increase " *
-        "by \$dRHS_hi."
-    )
+```julia
+model = Model(HiGHS.Optimizer)
+@variable(model, -1 <= x <= 2)
+@objective(model, Min, x)
+optimize!(model)
+report = lp_sensitivity_report(model; atol = 1e-7)
+dx_lo, dx_hi = report[x]
+println(
+    "The objective coefficient of `x` can decrease by \$dx_lo or " *
+    "increase by \$dx_hi."
+)
+c = LowerBoundRef(x)
+dRHS_lo, dRHS_hi = report[c]
+println(
+    "The lower bound of `x` can decrease by \$dRHS_lo or increase " *
+    "by \$dRHS_hi."
+)
+```
 """
 function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     if !_is_lp(model)

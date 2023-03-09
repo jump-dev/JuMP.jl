@@ -107,19 +107,28 @@ constructor. Moreover, independently on whether an optimizer was provided at
 model construction, the new model will have no optimizer, i.e., an optimizer
 will have to be provided to the new model in the [`optimize!`](@ref) call.
 
-## Examples
+## Example
 
 In the following example, a model `model` is constructed with a variable `x` and
 a constraint `cref`. It is then copied into a model `new_model` with the new
 references assigned to `x_new` and `cref_new`.
-```julia
-model = Model()
-@variable(model, x)
-@constraint(model, cref, x == 2)
 
-new_model, reference_map = copy_model(model)
-x_new = reference_map[x]
-cref_new = reference_map[cref]
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, cref, x == 2)
+cref : x = 2.0
+
+julia> new_model, reference_map = copy_model(model);
+
+julia> x_new = reference_map[x]
+x
+
+julia> cref_new = reference_map[cref]
+cref : x = 2.0
 ```
 """
 function copy_model(
@@ -202,19 +211,28 @@ constructor. Moreover, independently on whether an optimizer was provided at
 model construction, the new model will have no optimizer, i.e., an optimizer
 will have to be provided to the new model in the [`optimize!`](@ref) call.
 
-## Examples
+## Example
 
 In the following example, a model `model` is constructed with a variable `x` and
 a constraint `cref`. It is then copied into a model `new_model` with the new
 references assigned to `x_new` and `cref_new`.
-```julia
-model = Model()
-@variable(model, x)
-@constraint(model, cref, x == 2)
 
-new_model = copy(model)
-x_new = model[:x]
-cref_new = model[:cref]
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, cref, x == 2)
+cref : x = 2.0
+
+julia> new_model = copy(model);
+
+julia> x_new = model[:x]
+x
+
+julia> cref_new = model[:cref]
+cref : x = 2.0
 ```
 """
 function Base.copy(model::AbstractModel)
@@ -240,13 +258,14 @@ constructor. Moreover, independently on whether an optimizer was provided at
 model construction, the new model will have no optimizer, i.e., an optimizer
 will have to be provided to the new model in the [`optimize!`](@ref) call.
 
-## Examples
+## Example
 
 In the following example, a model `model` is constructed with a variable `x` and
 two constraints `cref` and `cref2`. This model has no solution, as the two
 constraints are mutually exclusive. The solver is asked to compute a conflict
 with [`compute_conflict!`](@ref). The parts of `model` participating in the
 conflict are then copied into a model `new_model`.
+
 ```julia
 model = Model() # You must use a solver that supports conflict refining/IIS
 # computation, like CPLEX or Gurobi

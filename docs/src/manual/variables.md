@@ -38,16 +38,24 @@ contexts.
 Create variables using the [`@variable`](@ref) macro. When creating a variable,
 you can also specify variable bounds:
 ```jldoctest variables_2
-model = Model()
-@variable(model, x_free)
-@variable(model, x_lower >= 0)
-@variable(model, x_upper <= 1)
-@variable(model, 2 <= x_interval <= 3)
-@variable(model, x_fixed == 4)
-print(model)
+julia> model = Model();
 
-# output
+julia> @variable(model, x_free)
+x_free
 
+julia> @variable(model, x_lower >= 0)
+x_lower
+
+julia> @variable(model, x_upper <= 1)
+x_upper
+
+julia> @variable(model, 2 <= x_interval <= 3)
+x_interval
+
+julia> @variable(model, x_fixed == 4)
+x_fixed
+
+julia> print(model)
 Feasibility
 Subject to
  x_fixed = 4.0
@@ -203,7 +211,7 @@ Subject to
 
 To reduce the likelihood of accidental bugs, and because JuMP registers
 variables inside a model, creating two variables with the same name is an error:
-```julia
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x)
@@ -868,7 +876,7 @@ evaluates the conditional for each combination. If there are many index
 dimensions and a large amount of sparsity, this can be inefficient.
 
 For example:
-```jldoctest; filter=r"[0-9\.]+ seconds.+"
+```jldoctest variable_performance_considerations; filter=r"[0-9\.]+ seconds.+"
 julia> model = Model();
 
 julia> N = 10
@@ -895,17 +903,26 @@ And data, a 2-element Vector{VariableRef}:
 ```
 
 The first option is slower because it is equivalent to:
-```julia
-x1 = Dict()
-for i in 1:N
-    for j in 1:N
-        for k in 1:N
-            if (i, j, k) in S
-                x1[i, j, k] = @variable(model)
-            end
-        end
-    end
-end
+```jldoctest variable_performance_considerations
+julia> model = Model();
+
+julia> x1 = Dict{NTuple{3,Int},VariableRef}()
+Dict{Tuple{Int64, Int64, Int64}, VariableRef}()
+
+julia> for i in 1:N
+           for j in 1:N
+               for k in 1:N
+                   if (i, j, k) in S
+                       x1[i, j, k] = @variable(model, base_name = "x1[$i,$j,$k]")
+                   end
+               end
+           end
+       end
+
+julia> x1
+Dict{Tuple{Int64, Int64, Int64}, VariableRef} with 2 entries:
+  (1, 1, 1)    => x1[1,1,1]
+  (10, 10, 10) => x1[10,10,10]
 ```
 If performance is a concern, explicitly construct the set of indices instead of
 using the filtering syntax.
@@ -981,13 +998,16 @@ model = Model()
 This is not possible with the built-in JuMP container types. However, you can
 use regular Julia types instead:
 ```jldoctest
-model = Model()
-x = model[:x] = @variable(model, [1:2], lower_bound = 0, base_name = "x")
-append!(x, @variable(model, [1:2], lower_bound = 0, base_name = "y"))
-model[:x]
+julia> model = Model();
 
-# output
+julia> x = model[:x] = @variable(model, [1:2], lower_bound = 0, base_name = "x")
+2-element Vector{VariableRef}:
+ x[1]
+ x[2]
 
+julia> append!(x, @variable(model, [1:2], lower_bound = 0, base_name = "y"));
+
+julia> model[:x]
 4-element Vector{VariableRef}:
  x[1]
  x[2]
@@ -1065,10 +1085,15 @@ separate calls for variable creation and the adding of any bound or integrality
 constraints.
 
 For example, `@variable(model, x >= 0, Int)`, is equivalent to:
-```julia
-@variable(model, x)
-set_lower_bound(x, 0.0)
-set_integer(x)
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> set_lower_bound(x, 0.0)
+
+julia> set_integer(x)
 ```
 Importantly, the bound and integrality constraints are added _after_ the
 variable has been created.
@@ -1106,8 +1131,14 @@ julia> @constraint(model, x in SecondOrderCone())
 
 An alternate syntax to `x in Set` is to use the `set` keyword of
 [`@variable`](@ref). This is most useful when creating anonymous variables:
-```julia
-x = @variable(model, [1:3], set = SecondOrderCone())
+```jldoctest constrained_variables
+julia> model = Model();
+
+julia> x = @variable(model, [1:3], set = SecondOrderCone())
+3-element Vector{VariableRef}:
+ _[1]
+ _[2]
+ _[3]
 ```
 
 !!! note

@@ -37,7 +37,7 @@ Euclidean distance in the corresponding set.
  * If no point is provided, the primal solution from the last time the model was
    solved is used.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -82,7 +82,7 @@ end
 A form of `primal_feasibility_report` where a function is passed as the first
 argument instead of a dictionary as the second argument.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();

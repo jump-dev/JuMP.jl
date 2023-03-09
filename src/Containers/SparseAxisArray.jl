@@ -16,7 +16,7 @@ entries are defined. The entries with indices `idx = (i1, i2, ..., iN)` in
 `map(f, sa::SparseAxisArray)` or `f.(sa::SparseAxisArray)` has the same sparsity
 structure than `sa` even if `f(zero(T))` is not zero.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> dict = Dict((:a, 2) => 1.0, (:a, 3) => 2.0, (:b, 3) => 3.0)

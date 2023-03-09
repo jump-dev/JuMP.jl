@@ -219,7 +219,8 @@ end
 
 Returns the model to which `v` belongs.
 
-# Example
+## Example
+
 ```jldoctest
 julia> model = Model();
 
@@ -299,14 +300,31 @@ Delete the variable associated with `variable_ref` from the model `model`.
 
 Note that `delete` does not unregister the name from the model, so adding a new
 variable of the same name will throw an error. Use [`unregister`](@ref) to
-unregister the name after deletion as follows:
-```julia
-@variable(model, x)
-delete(model, x)
-unregister(model, :x)
+unregister the name after deletion.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> delete(model, x)
+
+julia> unregister(model, :x)
+
+julia> print(model)
+Feasibility
+Subject to
+
+julia> model[:x]
+ERROR: KeyError: key :x not found
+Stacktrace:
+[...]
 ```
 
-See also: [`unregister`](@ref)
+
 """
 function delete(model::Model, variable_ref::VariableRef)
     if model !== owner_model(variable_ref)
@@ -380,7 +398,7 @@ end
 Get the variable associated with a `ConstraintRef`, if `c` is a constraint on a
 single variable.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1155,6 +1173,7 @@ end
     VariablesConstrainedOnCreation <: AbstractVariable
 
 Variable `scalar_variables` constrained to belong to `set`.
+
 Adding this variable can be understood as doing:
 ```julia
 function JuMP.add_variable(
@@ -1309,7 +1328,7 @@ end
 Complex plane object that can be used to create a complex variable in the
 [`@variable`](@ref) macro.
 
-## Examples
+## Example
 
 Consider the following example:
 
@@ -1472,7 +1491,8 @@ end
 Returns a list of all variables currently in the model. The variables are
 ordered by creation time.
 
-# Example
+## Example
+
 ```jldoctest
 julia> model = Model();
 
@@ -1561,7 +1581,8 @@ Returns a function that can be called without any arguments to restore the
 original model. The behavior of this function is undefined if additional
 changes are made to the affected variables in the meantime.
 
-# Example
+## Example
+
 ```jldoctest
 julia> model = Model();
 

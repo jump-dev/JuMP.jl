@@ -86,30 +86,39 @@ information about lazy constraints, see this [blog post by Paul Rubin](https://o
 
 A lazy constraint callback can be set using the following syntax:
 
-```julia
-model = Model(GLPK.Optimizer)
-@variable(model, x <= 10, Int)
-@objective(model, Max, x)
-function my_callback_function(cb_data)
-    status = callback_node_status(cb_data, model)
-    if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL
-        # `callback_value(cb_data, x)` is not integer (to some tolerance).
-        # If, for example, your lazy constraint generator requires an
-        # integer-feasible primal solution, you can add a `return` here.
-        return
-    elseif status == MOI.CALLBACK_NODE_STATUS_INTEGER
-        # `callback_value(cb_data, x)` is integer (to some tolerance).
-    else
-        @assert status == MOI.CALLBACK_NODE_STATUS_UNKNOWN
-        # `callback_value(cb_data, x)` might be fractional or integer.
-    end
-    x_val = callback_value(cb_data, x)
-    if x_val > 2 + 1e-6
-        con = @build_constraint(x <= 2)
-        MOI.submit(model, MOI.LazyConstraint(cb_data), con)
-    end
-end
-set_attribute(model, MOI.LazyConstraintCallback(), my_callback_function)
+```jldoctest
+julia> import GLPK
+
+julia> model = Model(GLPK.Optimizer);
+
+julia> @variable(model, x <= 10, Int)
+x
+
+julia> @objective(model, Max, x)
+x
+
+julia> function my_callback_function(cb_data)
+           status = callback_node_status(cb_data, model)
+           if status == MOI.CALLBACK_NODE_STATUS_FRACTIONAL
+               # `callback_value(cb_data, x)` is not integer (to some tolerance).
+               # If, for example, your lazy constraint generator requires an
+               # integer-feasible primal solution, you can add a `return` here.
+               return
+           elseif status == MOI.CALLBACK_NODE_STATUS_INTEGER
+               # `callback_value(cb_data, x)` is integer (to some tolerance).
+           else
+               @assert status == MOI.CALLBACK_NODE_STATUS_UNKNOWN
+               # `callback_value(cb_data, x)` might be fractional or integer.
+           end
+           x_val = callback_value(cb_data, x)
+           if x_val > 2 + 1e-6
+               con = @build_constraint(x <= 2)
+               MOI.submit(model, MOI.LazyConstraint(cb_data), con)
+           end
+       end
+my_callback_function (generic function with 1 method)
+
+julia> set_attribute(model, MOI.LazyConstraintCallback(), my_callback_function)
 ```
 
 !!! info
@@ -159,16 +168,23 @@ aforementioned [blog post](https://orinanobworld.blogspot.com/2012/08/user-cuts-
 
 A user-cut callback can be set using the following syntax:
 
-```julia
-model = Model(GLPK.Optimizer)
-@variable(model, x <= 10.5, Int)
-@objective(model, Max, x)
-function my_callback_function(cb_data)
-    x_val = callback_value(cb_data, x)
-    con = @build_constraint(x <= floor(x_val))
-    MOI.submit(model, MOI.UserCut(cb_data), con)
-end
-set_attribute(model, MOI.UserCutCallback(), my_callback_function)
+```jldoctest
+julia> model = Model(GLPK.Optimizer);
+
+julia> @variable(model, x <= 10.5, Int)
+x
+
+julia> @objective(model, Max, x)
+x
+
+julia> function my_callback_function(cb_data)
+           x_val = callback_value(cb_data, x)
+           con = @build_constraint(x <= floor(x_val))
+           MOI.submit(model, MOI.UserCut(cb_data), con)
+       end
+my_callback_function (generic function with 1 method)
+
+julia> set_attribute(model, MOI.UserCutCallback(), my_callback_function)
 ```
 
 !!! warning
@@ -201,18 +217,25 @@ solutions from them.
 
 A heuristic solution callback can be set using the following syntax:
 
-```julia
-model = Model(GLPK.Optimizer)
-@variable(model, x <= 10.5, Int)
-@objective(model, Max, x)
-function my_callback_function(cb_data)
-    x_val = callback_value(cb_data, x)
-    status = MOI.submit(
-        model, MOI.HeuristicSolution(cb_data), [x], [floor(Int, x_val)]
-    )
-    println("I submitted a heuristic solution, and the status was: ", status)
-end
-set_attribute(model, MOI.HeuristicCallback(), my_callback_function)
+```jldoctest
+julia> model = Model(GLPK.Optimizer);
+
+julia> @variable(model, x <= 10.5, Int)
+x
+
+julia> @objective(model, Max, x)
+x
+
+julia> function my_callback_function(cb_data)
+           x_val = callback_value(cb_data, x)
+           status = MOI.submit(
+               model, MOI.HeuristicSolution(cb_data), [x], [floor(Int, x_val)]
+           )
+           println("I submitted a heuristic solution, and the status was: ", status)
+       end
+my_callback_function (generic function with 1 method)
+
+julia> set_attribute(model, MOI.HeuristicCallback(), my_callback_function)
 ```
 
 The third argument to `submit` is a vector of JuMP variables, and the

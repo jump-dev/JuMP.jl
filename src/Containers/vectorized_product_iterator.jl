@@ -58,10 +58,15 @@ _collect(x) = _collect(Base.IteratorSize(x), x)
 
 Created a [`VectorizedProductIterator`](@ref).
 
-## Examples
+## Example
 
-```julia
-vectorized_product(1:2, ["A", "B"])
+```jldoctest
+julia> iterator = Containers.vectorized_product(1:2, ["A", "B"]);
+
+julia> collect(iterator)
+2×2 Matrix{Tuple{Int64, String}}:
+ (1, "A")  (1, "B")
+ (2, "A")  (2, "B")
 ```
 """
 function vectorized_product(iterators...)

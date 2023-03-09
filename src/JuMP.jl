@@ -147,7 +147,7 @@ Return a new JuMP model with the provided optimizer and bridge settings.
 See [`set_optimizer`](@ref) for the description of the `optimizer_factory` and
 `add_bridges` arguments.
 
-## Examples
+## Example
 
 Create a model with the optimizer set to `Ipopt`:
 ```julia
@@ -592,7 +592,7 @@ unregister(model, key)
 
 See also: [`object_dictionary`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -688,7 +688,7 @@ those passed to [`optimize!`](@ref).
    optimize the problem, bypassing the hook.
  * Use `set_optimize_hook(model, nothing)` to unset an optimize hook.
 
-## Examples
+## Example
 
 ```julia
 model = Model()

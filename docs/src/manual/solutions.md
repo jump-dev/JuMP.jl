@@ -11,19 +11,18 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
 This section of the manual describes how to access a solved solution to a
 problem. It uses the following model as an example:
 ```jldoctest solutions
-model = Model(HiGHS.Optimizer)
-set_silent(model)
-@variable(model, x >= 0)
-@variable(model, y[[:a, :b]] <= 1)
-@objective(model, Max, -12x - 20y[:a])
-@expression(model, my_expr, 6x + 8y[:a])
-@constraint(model, my_expr >= 100)
-@constraint(model, c1, 7x + 12y[:a] >= 120)
-optimize!(model)
-print(model)
-
-# output
-
+julia> begin
+           model = Model(HiGHS.Optimizer)
+           set_silent(model)
+           @variable(model, x >= 0)
+           @variable(model, y[[:a, :b]] <= 1)
+           @objective(model, Max, -12x - 20y[:a])
+           @expression(model, my_expr, 6x + 8y[:a])
+           @constraint(model, my_expr >= 100)
+           @constraint(model, c1, 7x + 12y[:a] >= 120)
+           optimize!(model)
+           print(model)
+       end
 Max -12 x - 20 y[a]
 Subject to
  6 x + 8 y[a] ≥ 100.0
@@ -169,13 +168,13 @@ julia> dual_objective_value(model)
 ### Primal solution values
 
 If the solver has a primal solution to return, use [`value`](@ref) to access it:
-```julia solutions
+```jldoctest solutions
 julia> value(x)
 15.428571428571429
 ```
 
 Broadcast [`value`](@ref) over containers:
-```julia solutions
+```jldoctest solutions
 julia> value.(y)
 1-dimensional DenseAxisArray{Float64,1,...} with index sets:
     Dimension 1, Symbol[:a, :b]
@@ -223,14 +222,14 @@ true
 ### Dual solution values
 
 If the solver has a dual solution to return, use [`dual`](@ref) to access it:
-```julia solutions
+```jldoctest solutions
 julia> dual(c1)
 1.7142857142857142
 ```
 
 Query the duals of variable bounds using [`LowerBoundRef`](@ref),
 [`UpperBoundRef`](@ref), and [`FixRef`](@ref):
-```julia solutions
+```jldoctest solutions
 julia> dual(LowerBoundRef(x))
 0.0
 
@@ -251,7 +250,7 @@ And data, a 2-element Array{Float64,1}:
     want the textbook definition, you probably want to use [`shadow_price`](@ref)
     and [`reduced_cost`](@ref) instead.
 
-```julia solutions
+```jldoctest solutions
 julia> shadow_price(c1)
 1.7142857142857142
 
@@ -271,23 +270,22 @@ And data, a 2-element Array{Float64,1}:
 The recommended workflow for solving a model and querying the solution is
 something like the following:
 ```jldoctest solutions
-if termination_status(model) == OPTIMAL
-    println("Solution is optimal")
-elseif termination_status(model) == TIME_LIMIT && has_values(model)
-    println("Solution is suboptimal due to a time limit, but a primal solution is available")
-else
-    error("The model was not solved correctly.")
-end
-println("  objective value = ", objective_value(model))
-if primal_status(model) == FEASIBLE_POINT
-    println("  primal solution: x = ", value(x))
-end
-if dual_status(model) == FEASIBLE_POINT
-    println("  dual solution: c1 = ", dual(c1))
-end
-
-# output
-
+julia> begin
+           if termination_status(model) == OPTIMAL
+               println("Solution is optimal")
+           elseif termination_status(model) == TIME_LIMIT && has_values(model)
+               println("Solution is suboptimal due to a time limit, but a primal solution is available")
+           else
+               error("The model was not solved correctly.")
+           end
+           println("  objective value = ", objective_value(model))
+           if primal_status(model) == FEASIBLE_POINT
+               println("  primal solution: x = ", value(x))
+           end
+           if dual_status(model) == FEASIBLE_POINT
+               println("  dual solution: c1 = ", dual(c1))
+           end
+       end
 Solution is optimal
   objective value = -205.14285714285714
   primal solution: x = 15.428571428571429
@@ -417,18 +415,17 @@ To give a simple example, we could analyze the sensitivity of the optimal
 solution to the following (non-degenerate) LP problem:
 
 ```jldoctest solutions_sensitivity
-model = Model(HiGHS.Optimizer)
-set_silent(model)
-@variable(model, x[1:2])
-set_lower_bound(x[2], -0.5)
-set_upper_bound(x[2], 0.5)
-@constraint(model, c1, x[1] + x[2] <= 1)
-@constraint(model, c2, x[1] - x[2] <= 1)
-@objective(model, Max, x[1])
-print(model)
-
-# output
-
+julia> begin
+           model = Model(HiGHS.Optimizer)
+           set_silent(model)
+           @variable(model, x[1:2])
+           set_lower_bound(x[2], -0.5)
+           set_upper_bound(x[2], 0.5)
+           @constraint(model, c1, x[1] + x[2] <= 1)
+           @constraint(model, c2, x[1] - x[2] <= 1)
+           @objective(model, Max, x[1])
+           print(model)
+       end
 Max x[1]
 Subject to
  c1 : x[1] + x[2] ≤ 1.0

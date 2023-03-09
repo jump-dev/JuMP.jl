@@ -590,18 +590,20 @@ A HiGHS model with 0 columns and 0 rows.
 A downside of direct mode is that there is no bridging layer. Therefore, only
 constraints which are natively supported by the solver are supported. For
 example, `HiGHS.jl` does not implement quadratic constraints:
-```julia direct_mode
+```jldoctest direct_mode
 julia> model = direct_model(HiGHS.Optimizer());
+
+julia> set_silent(model)
 
 julia> @variable(model, x[1:2]);
 
 julia> @constraint(model, x[1]^2 + x[2]^2 <= 2)
-ERROR: Constraints of type MathOptInterface.MathOptInterface.ScalarQuadraticFunction{Float64}-in-MathOptInterface.LessThan{Float64} are not supported by the solver.
+ERROR: Constraints of type MathOptInterface.ScalarQuadraticFunction{Float64}-in-MathOptInterface.LessThan{Float64} are not supported by the solver.
 
 If you expected the solver to support your problem, you may have an error in your formulation. Otherwise, consider using a different solver.
 
 The list of available solvers, along with the problem types they support, is available at https://jump.dev/JuMP.jl/stable/installation/#Supported-solvers.
-[...]
+Stacktrace:
 ```
 
 !!! warning

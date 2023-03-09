@@ -23,7 +23,7 @@ Returns the shape of the dual space of the space of objects of shape `shape`. By
 default, the `dual_shape` of a shape is itself. See the examples section below
 for an example for which this is not the case.
 
-## Examples
+## Example
 
 Consider polynomial constraints for which the dual is moment constraints and
 moment constraints for which the dual is polynomial constraints. Shapes for
@@ -64,7 +64,7 @@ dual_shape(shape::AbstractShape) = shape
 Return a set in its original shape `shape` given its vectorized form
 `vectorized_form`.
 
-## Examples
+## Example
 
 Given a [`SymmetricMatrixShape`](@ref) of vectorized form
 `[1, 2, 3] in MOI.PositiveSemidefinieConeTriangle(2)`, the
@@ -84,7 +84,7 @@ function reshape_set end
 Return an object in its original shape `shape` given its vectorized form
 `vectorized_form`.
 
-## Examples
+## Example
 
 Given a [`SymmetricMatrixShape`](@ref) of vectorized form `[1, 2, 3]`, the
 following code returns the matrix `Symmetric(Matrix[1 2; 2 3])`:

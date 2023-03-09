@@ -56,13 +56,15 @@ If `attr` is an `AbstractString`, this is equivalent to
     This method will remain in all v1.X releases of JuMP, but it may be removed
     in a future v2.0 release. We recommend using [`set_attribute`](@ref) instead.
 
+sSee also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
+
 ## Example
 
-```julia
-set_optimizer_attribute(model, MOI.Silent(), true)
-```
+```jldoctest
+julia> model = Model();
 
-See also: [`set_optimizer_attributes`](@ref), [`get_optimizer_attribute`](@ref).
+julia> set_optimizer_attribute(model, MOI.Silent(), true)
+```
 """
 set_optimizer_attribute(model, attr, value) = set_attribute(model, attr, value)
 
@@ -319,7 +321,7 @@ supports all of the elements in `model`.
 See [`set_attribute`](@ref) for setting solver-specific parameters of the
 optimizer.
 
-## Examples
+## Example
 
 ```julia
 model = Model()
@@ -723,14 +725,23 @@ or [`MOI.ConstraintIndex`](@ref).
 
 ## Example
 
-```julia
-using JuMP
-model = Model()
-@variable(model, x)
-@constraint(model, c, 2 * x <= 1)
-get_attribute(model, MOI.Name())
-get_attribute(x, MOI.VariableName())
-get_attribute(c, MOI.ConstraintName())
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, c, 2 * x <= 1)
+c : 2 x ≤ 1.0
+
+julia> get_attribute(model, MOI.Name())
+""
+
+julia> get_attribute(x, MOI.VariableName())
+"x"
+
+julia> get_attribute(c, MOI.ConstraintName())
+"c"
 ```
 """
 function get_attribute(model::Model, attr::MOI.AbstractModelAttribute)
@@ -806,13 +817,19 @@ or [`MOI.ConstraintIndex`](@ref).
 ## Example
 
 ```julia
-using JuMP
-model = Model()
-@variable(model, x)
-@constraint(model, c, 2 * x <= 1)
-set_attribute(model, MOI.Name(), "model_new")
-set_attribute(x, MOI.VariableName(), "x_new")
-set_attribute(c, MOI.ConstraintName(), "c_new")
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, c, 2 * x <= 1)
+c : 2 x ≤ 1.0
+
+julia> set_attribute(model, MOI.Name(), "model_new")
+
+julia> set_attribute(x, MOI.VariableName(), "x_new")
+
+julia> set_attribute(c, MOI.ConstraintName(), "c_new")
 ```
 """
 function set_attribute(model::Model, attr::MOI.AbstractModelAttribute, value)
@@ -906,6 +923,8 @@ end
 Given a list of `attribute => value` pairs, calls
 `set_attribute(destination, attribute, value)` for each pair.
 
+See also: [`set_attribute`](@ref), [`get_attribute`](@ref).
+
 ## Example
 
 ```julia
@@ -918,8 +937,6 @@ model = Model(Ipopt.Optimizer)
 set_attribute(model, "tol", 1e-4)
 set_attribute(model, "max_iter", 100)
 ```
-
-See also: [`set_attribute`](@ref), [`get_attribute`](@ref).
 """
 function set_attributes(
     destination::Union{

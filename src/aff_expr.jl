@@ -135,7 +135,7 @@ variable_ref_type(::GenericAffExpr{C,V}) where {C,V} = V
 
 Create a [`GenericAffExpr`](@ref) by passing a constant and a vector of pairs.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -144,6 +144,7 @@ julia> @variable(model, x);
 
 julia> GenericAffExpr(1.0, [x => 1.0])
 x + 1
+```
 """
 function GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
     return GenericAffExpr{V,K}(constant, _new_ordered_dict(K, V, kv))
@@ -155,7 +156,7 @@ end
 Create a [`GenericAffExpr`](@ref) by passing a constant and pairs of additional
 arguments.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -164,6 +165,7 @@ julia> @variable(model, x);
 
 julia> GenericAffExpr(1.0, x => 1.0)
 x + 1
+```
 """
 function GenericAffExpr(
     constant::V,
