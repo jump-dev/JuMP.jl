@@ -87,20 +87,27 @@ Given a list of `attribute => value` pairs, calls
     This method will remain in all v1.X releases of JuMP, but it may be removed
     in a future v2.0 release. We recommend using [`set_attributes`](@ref) instead.
 
+See also: [`set_optimizer_attribute`](@ref), [`get_optimizer_attribute`](@ref).
+
 ## Example
 
-```julia
-model = Model(Ipopt.Optimizer)
-set_optimizer_attributes(model, "tol" => 1e-4, "max_iter" => 100)
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> set_optimizer_attributes(model, "tol" => 1e-4, "max_iter" => 100)
 ```
 is equivalent to:
-```julia
-model = Model(Ipopt.Optimizer)
-set_optimizer_attribute(model, "tol", 1e-4)
-set_optimizer_attribute(model, "max_iter", 100)
-```
+```jldoctest
+julia> import Ipopt
 
-See also: [`set_optimizer_attribute`](@ref), [`get_optimizer_attribute`](@ref).
+julia> model = Model(Ipopt.Optimizer);
+
+julia> set_optimizer_attribute(model, "tol", 1e-4)
+
+julia> set_optimizer_attribute(model, "max_iter", 100)
+```
 """
 function set_optimizer_attributes(
     model::Union{Model,MOI.OptimizerWithAttributes},
@@ -127,13 +134,18 @@ If `attr` is an `AbstractString`, this is equivalent to
     This method will remain in all v1.X releases of JuMP, but it may be removed
     in a future v2.0 release. We recommend using [`get_attribute`](@ref) instead.
 
+See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
+
 ## Example
 
-```julia
-get_optimizer_attribute(model, "SolverSpecificAttributeName")
-```
+```jldoctest
+julia> import Ipopt
 
-See also: [`set_optimizer_attribute`](@ref), [`set_optimizer_attributes`](@ref).
+julia> model = Model(Ipopt.Optimizer);
+
+julia> get_optimizer_attribute(model, MOI.Silent())
+false
+```
 """
 get_optimizer_attribute(model, attr) = get_attribute(model, attr)
 
@@ -329,10 +341,14 @@ optimizer.
 
 ## Example
 
-```julia
-model = Model()
-set_optimizer(model, HiGHS.Optimizer)
-set_optimizer(model, HiGHS.Optimizer; add_bridges = false)
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model();
+
+julia> set_optimizer(model, () -> HiGHS.Optimizer())
+
+julia> set_optimizer(model, HiGHS.Optimizer; add_bridges = false)
 ```
 """
 function set_optimizer(
@@ -777,14 +793,24 @@ If `attr` is an `AbstractString`, it is converted to
 
 ## Example
 
-```julia
-using JuMP, HiGHS
-opt = optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => 0)
-model = Model(HiGHS.Optimizer)
-get_attribute(model, "output_flag")
-get_attribute(model, MOI.RawOptimizerAttribute("output_flag"))
-get_attribute(opt, "output_flag")
-get_attribute(opt, MOI.RawOptimizerAttribute("output_flag"))
+```jldoctest
+julia> import HiGHS
+
+julia> opt = optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => true);
+
+julia> model = Model(opt);
+
+julia> get_attribute(model, "output_flag")
+true
+
+julia> get_attribute(model, MOI.RawOptimizerAttribute("output_flag"))
+true
+
+julia> get_attribute(opt, "output_flag")
+true
+
+julia> get_attribute(opt, MOI.RawOptimizerAttribute("output_flag"))
+true
 ```
 """
 function get_attribute(
@@ -822,7 +848,7 @@ or [`MOI.ConstraintIndex`](@ref).
 
 ## Example
 
-```julia
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x)
@@ -877,14 +903,20 @@ If `attr` is an `AbstractString`, it is converted to
 
 ## Example
 
-```julia
-using JuMP, HiGHS
-opt = optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => 0)
-model = Model(HiGHS.Optimizer)
-set_attribute(model, "output_flag", 1)
-set_attribute(model, MOI.RawOptimizerAttribute("output_flag"), 1)
-set_attribute(opt, "output_flag", 1)
-set_attribute(opt, MOI.RawOptimizerAttribute("output_flag"), 1)
+```jldoctest
+julia> import HiGHS
+
+julia> opt = optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => false);
+
+julia> model = Model(opt);
+
+julia> set_attribute(model, "output_flag", false)
+
+julia> set_attribute(model, MOI.RawOptimizerAttribute("output_flag"), true)
+
+julia> set_attribute(opt, "output_flag", true)
+
+julia> set_attribute(opt, MOI.RawOptimizerAttribute("output_flag"), false)
 ```
 """
 function set_attribute(
@@ -933,15 +965,22 @@ See also: [`set_attribute`](@ref), [`get_attribute`](@ref).
 
 ## Example
 
-```julia
-model = Model(Ipopt.Optimizer)
-set_attributes(model, "tol" => 1e-4, "max_iter" => 100)
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> set_attributes(model, "tol" => 1e-4, "max_iter" => 100)
 ```
 is equivalent to:
-```julia
-model = Model(Ipopt.Optimizer)
-set_attribute(model, "tol", 1e-4)
-set_attribute(model, "max_iter", 100)
+```jldoctest
+julia> import Ipopt
+
+julia> model = Model(Ipopt.Optimizer);
+
+julia> set_attribute(model, "tol", 1e-4)
+
+julia> set_attribute(model, "max_iter", 100)
 ```
 """
 function set_attributes(

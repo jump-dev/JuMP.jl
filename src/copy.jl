@@ -261,24 +261,41 @@ will have to be provided to the new model in the [`optimize!`](@ref) call.
 ## Example
 
 In the following example, a model `model` is constructed with a variable `x` and
-two constraints `cref` and `cref2`. This model has no solution, as the two
+two constraints `c1` and `c2`. This model has no solution, as the two
 constraints are mutually exclusive. The solver is asked to compute a conflict
 with [`compute_conflict!`](@ref). The parts of `model` participating in the
-conflict are then copied into a model `new_model`.
+conflict are then copied into a model `iis_model`.
 
 ```julia
-model = Model() # You must use a solver that supports conflict refining/IIS
-# computation, like CPLEX or Gurobi
-@variable(model, x)
-@constraint(model, cref, x >= 2)
-@constraint(model, cref2, x <= 1)
+julia> using JuMP
 
-compute_conflict!(model)
-if MOI.get(model, MOI.ConflictStatus()) != MOI.CONFLICT_FOUND
-    error("No conflict could be found for an infeasible model.")
-end
+julia> import Gurobi
 
-new_model, reference_map = copy_conflict(model)
+julia> model = Model(Gurobi.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x >= 0)
+x
+
+julia> @constraint(model, c1, x >= 2)
+c1 : x ≥ 2.0
+
+julia> @constraint(model, c2, x <= 1)
+c2 : x ≤ 1.0
+
+julia> optimize!(model)
+
+julia> compute_conflict!(model)
+
+julia> if get_attribute(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
+           iis_model, reference_map = copy_conflict(model)
+           print(iis_model)
+       end
+Feasibility
+Subject to
+ c1 : x ≥ 2.0
+ c2 : x ≤ 1.0
 ```
 """
 function copy_conflict(model::Model)

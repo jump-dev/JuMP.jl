@@ -310,9 +310,22 @@ Second, the `unsafe_backend` may be empty, or lack some modifications made to
 the JuMP model. Thus, before calling `unsafe_backend` you should first call
 [`MOI.Utilities.attach_optimizer`](@ref) to ensure that the backend is
 synchronized with the JuMP model.
-```julia
-MOI.Utilities.attach_optimizer(model)
-inner = unsafe_backend(model)
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer)
+A JuMP Model
+Feasibility problem with:
+Variables: 0
+Model mode: AUTOMATIC
+CachingOptimizer state: EMPTY_OPTIMIZER
+Solver name: HiGHS
+
+julia> MOI.Utilities.attach_optimizer(model)
+
+julia> inner = unsafe_backend(model)
+A HiGHS model with 0 columns and 0 rows.
 ```
 
 Moreover, if you modify the JuMP model, the reference you have to the backend
@@ -329,17 +342,37 @@ Instead of `unsafe_backend`, create a model using [`direct_model`](@ref) and
 call [`backend`](@ref) instead.
 
 For example, instead of:
-```julia
-model = Model(HiGHS.Optimizer)
-@variable(model, x >= 0)
-MOI.Utilities.attach_optimizer(model)
-highs = unsafe_backend(model)
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x >= 0)
+x
+
+julia> MOI.Utilities.attach_optimizer(model)
+
+julia> highs = unsafe_backend(model)
+A HiGHS model with 1 columns and 0 rows.
 ```
+
 Use:
-```julia
-model = direct_model(HiGHS.Optimizer())
-@variable(model, x >= 0)
-highs = backend(model)  # No need to call `attach_optimizer`.
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = direct_model(HiGHS.Optimizer());
+
+julia> set_silent(model)
+
+julia> @variable(model, x >= 0)
+x
+
+julia> highs = backend(model)  # No need to call `attach_optimizer`.
+A HiGHS model with 1 columns and 0 rows.
 ```
 """
 unsafe_backend(model::Model) = unsafe_backend(backend(model))
@@ -603,13 +636,9 @@ Unregister the name `key` from `model` so that a new variable, constraint, or
 expression can be created with the same key.
 
 Note that this will not delete the object `model[key]`; it will just remove the
-reference at `model[key]`. To delete the object, use
-```julia
-delete(model, model[key])
-unregister(model, key)
-```
+reference at `model[key]`. To delete the object, use [`delete`](@ref) as well.
 
-See also: [`object_dictionary`](@ref).
+See also: [`delete`](@ref), [`object_dictionary`](@ref).
 
 ## Example
 
@@ -709,14 +738,26 @@ those passed to [`optimize!`](@ref).
 
 ## Example
 
-```julia
-model = Model()
-function my_hook(model::Model; kwargs...)
-    print(kwargs)
-    return optimize!(model; ignore_optimize_hook = true)
-end
-set_optimize_hook(model, my_hook)
-optimize!(model; test_arg = true)
+```jldoctest
+julia> model = Model();
+
+julia> function my_hook(model::Model; kwargs...)
+           println(kwargs)
+           println("Calling with `ignore_optimize_hook = true`")
+           optimize!(model; ignore_optimize_hook = true)
+           return
+       end
+my_hook (generic function with 1 method)
+
+julia> set_optimize_hook(model, my_hook)
+my_hook (generic function with 1 method)
+
+julia> optimize!(model; test_arg = true)
+Base.Iterators.Pairs{Symbol, Bool, Tuple{Symbol}, NamedTuple{(:test_arg,), Tuple{Bool}}}(:test_arg => 1)
+Calling with `ignore_optimize_hook = true`
+ERROR: NoOptimizer()
+Stacktrace:
+[...]
 ```
 """
 set_optimize_hook(model::Model, f) = (model.optimize_hook = f)

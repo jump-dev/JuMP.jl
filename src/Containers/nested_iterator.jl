@@ -15,24 +15,32 @@ Construct a `NestedIterator` using [`nested`](@ref).
 
 ## Example
 
-If `length(iterators) == 3`:
-```julia
-x = NestedIterator(iterators, condition)
-for (i1, i2, i3) in x
-    # produces (i1, i2, i3)
-end
+```jdoctest nested_iterator_docstring
+julia> iterators = (() -> 1:2, (i,) -> ["A", "B"]);
+
+julia> condition = (i, j) -> isodd(i) || j == "B";
+
+julia> x = Containers.NestedIterator(iterators, condition);
+
+julia> for (i, j) in x
+           println((i, j))
+       end
+(1, "A")
+(1, "B")
+(2, "B")
 ```
 is the same as
-```julia
-for i1 in iterators[1]()
-    for i2 in iterator[2](i1)
-        for i3 in iterator[3](i1, i2)
-            if condition(i1, i2, i3)
-                # produces (i1, i2, i3)
-            end
-        end
-    end
-end
+```jldocstring nested_iterator_docstring
+julia> for i in iterators[1]()
+           for j in iterators[2](i)
+               if condition(i, j)
+                   println((i, j))
+               end
+           end
+       end
+(1, "A")
+(1, "B")
+(2, "B")
 ```
 """
 struct NestedIterator{T,C}
