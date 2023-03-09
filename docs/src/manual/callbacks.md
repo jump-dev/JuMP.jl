@@ -152,9 +152,7 @@ julia> set_attribute(model, MOI.LazyConstraintCallback(), my_callback_function)
 !!! warning
     During the solve, a solver may visit a point that was cut off by a previous
     lazy constraint, for example, because the earlier lazy constraint was removed
-    during presolve. If this happens, you must re-add the lazy constraint. The
-    solver will not stop until it reaches a solution that satisfies all added
-    lazy constraints.
+    during presolve. If this happens, you must re-add the lazy constraint.
 
 ## User cuts
 
