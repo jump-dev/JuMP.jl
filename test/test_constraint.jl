@@ -113,9 +113,27 @@ function test_extension_AffExpr_vectorized_constraints(
     model = ModelType()
     @variable(model, x)
     err = ErrorException(
-        "In `@constraint(model, [x, 2x] == [1 - x, 3])`: Unexpected vector in scalar constraint. Did you mean to use the dot comparison operators like .==, .<=, and .>= instead?",
+        "In `@constraint(model, [x, 2x] in MOI.EqualTo(1.0))`: " *
+        "Unexpected vector in scalar constraint. The left- and right-hand " *
+        "sides of the constraint must have the same dimension.",
     )
-    @test_throws_strip err @constraint(model, [x, 2x] == [1 - x, 3])
+    @test_throws_strip err @constraint(model, [x, 2x] in MOI.EqualTo(1.0))
+    T = typeof([x, 2x])
+    err = ErrorException(
+        "Operation `sub_mul` between `$T` and `$Int` is not " *
+        "allowed. This most often happens when you write a constraint like " *
+        "`x >= y` where `x` is an array and `y` is a constant. Use the " *
+        "broadcast syntax `x .- y >= 0` instead.",
+    )
+    @test_throws err @constraint(model, [x, 2x] == 1)
+    err = ErrorException(
+        "Operation `sub_mul` between `$Int` and `$T` is not " *
+        "allowed. This most often happens when you write a constraint like " *
+        "`x >= y` where `x` is a constant and `y` is an array. Use the " *
+        "broadcast syntax `x .- y >= 0` instead.",
+    )
+    a = 1
+    @test_throws err @constraint(model, a == [x, 2x])
     @test_macro_throws ErrorException begin
         @constraint(model, [x == 1 - x, 2x == 3])
     end
@@ -1469,6 +1487,60 @@ function test_extension_HermitianPSDCone_errors(
         err,
         @constraint(model, H in HermitianPSDCone(), unknown_kw = 1),
     )
+    return
+end
+
+function test_extension_Nonnegatives(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x[1:2])
+    @constraint(model, c1, x in Nonnegatives())
+    con = constraint_object(c1)
+    @test con.func == x
+    @test con.set == MOI.Nonnegatives(2)
+    A = [1 2; 3 4]
+    b = [5, 6]
+    @constraint(model, c2, A * x >= b)
+    con = constraint_object(c2)
+    @test con.func == A * x - b
+    @test con.set == MOI.Nonnegatives(2)
+    return
+end
+
+function test_extension_Nonpositives(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x[1:2])
+    @constraint(model, c1, x in Nonpositives())
+    con = constraint_object(c1)
+    @test con.func == x
+    @test con.set == MOI.Nonpositives(2)
+    A = [1 2; 3 4]
+    b = [5, 6]
+    @constraint(model, c2, A * x <= b)
+    con = constraint_object(c2)
+    @test con.func == A * x - b
+    @test con.set == MOI.Nonpositives(2)
+    return
+end
+
+function test_extension_Zeros(ModelType = Model, VariableRefType = VariableRef)
+    model = ModelType()
+    @variable(model, x[1:2])
+    @constraint(model, c1, x in Zeros())
+    con = constraint_object(c1)
+    @test con.func == x
+    @test con.set == MOI.Zeros(2)
+    A = [1 2; 3 4]
+    b = [5, 6]
+    @constraint(model, c2, A * x == b)
+    con = constraint_object(c2)
+    @test con.func == A * x - b
+    @test con.set == MOI.Zeros(2)
     return
 end
 

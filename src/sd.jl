@@ -114,20 +114,18 @@ struct PSDCone end
 function build_constraint(
     _error::Function,
     f::AbstractMatrix{<:AbstractJuMPScalar},
-    s::MOI.GreaterThan,
+    ::Nonnegatives,
     extra::PSDCone,
 )
-    @assert iszero(s.lower)
     return build_constraint(_error, f, extra)
 end
 
 function build_constraint(
     _error::Function,
     f::AbstractMatrix{<:AbstractJuMPScalar},
-    s::MOI.LessThan,
+    ::Nonpositives,
     extra::PSDCone,
 )
-    @assert iszero(s.upper)
     new_f = _MA.operate!!(*, -1, f)
     return build_constraint(_error, new_f, extra)
 end

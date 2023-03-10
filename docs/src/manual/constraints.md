@@ -115,16 +115,36 @@ julia> b = [5, 6]
  5
  6
 
-julia> @constraint(model, con, A * x .== b)
+julia> @constraint(model, con_vector, A * x == b)
+con_vector : [x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Zeros(2)
+
+julia> @constraint(model, con_scalar, A * x .== b)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
- con : x[1] + 2 x[2] = 5.0
- con : 3 x[1] + 4 x[2] = 6.0
+ con_scalar : x[1] + 2 x[2] = 5.0
+ con_scalar : 3 x[1] + 4 x[2] = 6.0
 ```
 
-!!! note
-    Make sure to use [Julia's dot syntax](https://docs.julialang.org/en/v1/manual/functions/index.html#man-vectorized-1)
-    in front of the comparison operators (for example, `.==`, `.>=`, and `.<=`). If you
-    use a comparison without the dot, an error will be thrown.
+The two constraints, `==` and `.==` are similar, but subtly different. The first
+creates a single constraint that is a [`MOI.VectorAffineFunction`](@ref) in
+[`MOI.Zeros`](@ref) constraint. The second creates a vector of
+[`MOI.ScalarAffineFunction`](@ref) in [`MOI.EqualTo`](@ref) constraints.
+
+Which formulation to choose depends on the solver, and what you want to do with
+the constraint object `con_vector` or `con_scalar`.
+
+ * If you are using a conic solver, expect the dual of `con_vector` to be a
+   `Vector{Float64}`, and do not intend to delete a row in the constraint,
+   choose the `==` formulation.
+ * If you are using a solver that expects a list of scalar constraints, for
+   example HiGHS, or you wish to delete part of the constraint or access a
+   single row of the constraint, for example, `dual(con_scalar[2])`, then use
+   the broadcast `.==`.
+
+JuMP reformulates both constraints into the other form if needed by the solver,
+but choosing the right format for a particular solver is more efficient.
+
+You can also use `<=`, `.<=` , `>=`, and `.>=` as comparison operators in the
+constraint.
 
 ### Containers of constraints
 
@@ -1126,7 +1146,7 @@ julia> @constraint(model, x - y in MOI.Nonnegatives(2))
 Non-zero constants are not supported in this syntax:
 ```jldoctest set_inequality
 julia> @constraint(model, x >= 1, MOI.Nonnegatives(2))
-ERROR: Operation `sub_mul` between `Vector{VariableRef}` and `Int64` is not allowed. You should use broadcast.
+ERROR: Operation `sub_mul` between `Vector{VariableRef}` and `Int64` is not allowed. This most often happens when you write a constraint like `x >= y` where `x` is an array and `y` is a constant. Use the broadcast syntax `x .- y >= 0` instead.
 Stacktrace:
 [...]
 ```
