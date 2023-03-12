@@ -630,22 +630,14 @@ function build_constraint(
     )
 end
 
-function build_constraint(
-    _error::Function,
-    H::LinearAlgebra.Hermitian,
-    ::Zeros,
-)
+function build_constraint(_error::Function, H::LinearAlgebra.Hermitian, ::Zeros)
     n = LinearAlgebra.checksquare(H)
     shape = HermitianMatrixShape(n)
     x = vectorize(H, shape)
     return build_constraint(error, x, MOI.Zeros(length(x)))
 end
 
-function build_constraint(
-    _error::Function,
-    f::LinearAlgebra.Symmetric,
-    ::Zeros,
-)
+function build_constraint(_error::Function, f::LinearAlgebra.Symmetric, ::Zeros)
     n = LinearAlgebra.checksquare(f)
     shape = SymmetricMatrixShape(n)
     x = vectorize(f, shape)
