@@ -637,4 +637,17 @@ function test_containers_denseaxisarray_view_axes_n()
     return
 end
 
+function test_containers_denseaxisarray_vector_any()
+    key_1 = Any[Any["a", 1], "b"]
+    key_2 = Any[Any["a", 2], "c"]
+    K = Any[key_1, key_2]
+    Containers.@container(x[k = K], k[1][2])
+    @test axes(x) == (K,)
+    @test x[key_1] == 1
+    @test x[key_2] == 2
+    @test x[Any[key_2, key_1]] ==
+          Containers.DenseAxisArray([2, 1], Any[key_2, key_1])
+    return
+end
+
 end  # module

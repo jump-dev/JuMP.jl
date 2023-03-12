@@ -60,9 +60,15 @@ end
 
 function Base.getindex(
     x::_AxisLookup{Dict{K,Int}},
-    key::K,
-) where {K<:AbstractVector}
-    return x.data[key]
+    key::T,
+) where {T<:AbstractVector,K>:T}
+    # In this method, we can't tell if `keys` is an actual key, or a vector of
+    # keys. One common cause happens when `K` is `Any`. To ensure correctness,
+    # we need to slightly expensive check if `keys` is a key.
+    if haskey(x.data, key)
+        return x.data[key]
+    end
+    return [x[k] for k in key]
 end
 
 function Base.get(x::_AxisLookup{Dict{K,Int}}, key, default) where {K}
