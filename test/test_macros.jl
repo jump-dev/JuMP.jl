@@ -1894,4 +1894,35 @@ end
 
 #!format: on
 
+function test_matrix_in_vector_set()
+    model = Model()
+    @variable(model, X[1:2, 1:2])
+    A = [1 2; 3 4]
+    @test_throws_strip(
+        ErrorException(
+            "In `@constraint(model, X >= A)`: Unsupported matrix in " *
+            "vector-valued set. Did you mean to use the broadcasting syntax " *
+            "`.>=` instead?",
+        ),
+        @constraint(model, X >= A),
+    )
+    @test_throws_strip(
+        ErrorException(
+            "In `@constraint(model, X <= A)`: Unsupported matrix in " *
+            "vector-valued set. Did you mean to use the broadcasting syntax " *
+            "`.<=` instead?",
+        ),
+        @constraint(model, X <= A),
+    )
+    @test_throws_strip(
+        ErrorException(
+            "In `@constraint(model, X == A)`: Unsupported matrix in " *
+            "vector-valued set. Did you mean to use the broadcasting syntax " *
+            "`.==` instead?",
+        ),
+        @constraint(model, X == A),
+    )
+    return
+end
+
 end  # module

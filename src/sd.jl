@@ -629,3 +629,46 @@ function build_constraint(
         shape,
     )
 end
+
+function build_constraint(
+    _error::Function,
+    H::LinearAlgebra.Hermitian,
+    ::Zeros,
+)
+    n = LinearAlgebra.checksquare(H)
+    shape = HermitianMatrixShape(n)
+    x = vectorize(H, shape)
+    return build_constraint(error, x, MOI.Zeros(length(x)))
+end
+
+function build_constraint(
+    _error::Function,
+    f::LinearAlgebra.Symmetric,
+    ::Zeros,
+)
+    n = LinearAlgebra.checksquare(f)
+    shape = SymmetricMatrixShape(n)
+    x = vectorize(f, shape)
+    return build_constraint(error, x, MOI.Zeros(length(x)))
+end
+
+function build_constraint(_error::Function, ::AbstractMatrix, ::Nonnegatives)
+    return _error(
+        "Unsupported matrix in vector-valued set. Did you mean to use the " *
+        "broadcasting syntax `.>=` instead?",
+    )
+end
+
+function build_constraint(_error::Function, ::AbstractMatrix, ::Nonpositives)
+    return _error(
+        "Unsupported matrix in vector-valued set. Did you mean to use the " *
+        "broadcasting syntax `.<=` instead?",
+    )
+end
+
+function build_constraint(_error::Function, ::AbstractMatrix, ::Zeros)
+    return _error(
+        "Unsupported matrix in vector-valued set. Did you mean to use the " *
+        "broadcasting syntax `.==` instead?",
+    )
+end
