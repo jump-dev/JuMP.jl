@@ -317,11 +317,11 @@ function container_code(
         names = if $keyword_indexing === missing
             $index_vars
         elseif $keyword_indexing === true
-            _ForceEnableKeywordIndexing($index_vars)
+            $_ForceEnableKeywordIndexing($index_vars)
         else
             nothing
         end
-        Containers.container($f, $indices, $container_type, names)
+        $container($f, $indices, $container_type, names)
     end
 end
 
