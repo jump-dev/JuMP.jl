@@ -647,14 +647,18 @@ end
 function build_constraint(_error::Function, ::AbstractMatrix, ::Nonnegatives)
     return _error(
         "Unsupported matrix in vector-valued set. Did you mean to use the " *
-        "broadcasting syntax `.>=` instead?",
+        "broadcasting syntax `.>=` instead? Alternatively, perhaps you are " *
+        "missing a set argument like `@constraint(model, X >= 0, PSDCone())` " *
+        "or `@constraint(model, X >= 0, HermmitianPSDCone())`.",
     )
 end
 
 function build_constraint(_error::Function, ::AbstractMatrix, ::Nonpositives)
     return _error(
         "Unsupported matrix in vector-valued set. Did you mean to use the " *
-        "broadcasting syntax `.<=` instead?",
+        "broadcasting syntax `.<=` instead? Alternatively, perhaps you are " *
+        "missing a set argument like `@constraint(model, X <= 0, PSDCone())` " *
+        "or `@constraint(model, X <= 0, HermmitianPSDCone())`.",
     )
 end
 

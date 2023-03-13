@@ -1900,17 +1900,21 @@ function test_matrix_in_vector_set()
     A = [1 2; 3 4]
     @test_throws_strip(
         ErrorException(
-            "In `@constraint(model, X >= A)`: Unsupported matrix in " *
-            "vector-valued set. Did you mean to use the broadcasting syntax " *
-            "`.>=` instead?",
+            "In `@constraint(model, X >= A)`: " *
+            "Unsupported matrix in vector-valued set. Did you mean to use the " *
+            "broadcasting syntax `.>=` instead? Alternatively, perhaps you are " *
+            "missing a set argument like `@constraint(model, X >= 0, PSDCone())` " *
+            "or `@constraint(model, X >= 0, HermmitianPSDCone())`.",
         ),
         @constraint(model, X >= A),
     )
     @test_throws_strip(
         ErrorException(
-            "In `@constraint(model, X <= A)`: Unsupported matrix in " *
-            "vector-valued set. Did you mean to use the broadcasting syntax " *
-            "`.<=` instead?",
+            "In `@constraint(model, X <= A)`: " *
+            "Unsupported matrix in vector-valued set. Did you mean to use the " *
+            "broadcasting syntax `.<=` instead? Alternatively, perhaps you are " *
+            "missing a set argument like `@constraint(model, X <= 0, PSDCone())` " *
+            "or `@constraint(model, X <= 0, HermmitianPSDCone())`.",
         ),
         @constraint(model, X <= A),
     )
