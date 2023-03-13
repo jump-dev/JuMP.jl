@@ -964,7 +964,7 @@ function _constraint_macro(
         indices,
         code,
         requested_container;
-        pass_names = :(enable_container_keyword_indexing($model)),
+        keyword_indexing = :(enable_keyword_indexing($model)),
     )
 
     if anonvar
@@ -1573,7 +1573,7 @@ macro expression(args...)
         indices,
         code,
         requested_container;
-        pass_names = :(enable_container_keyword_indexing($m)),
+        keyword_indexing = :(enable_keyword_indexing($m)),
     )
     # don't do anything with the model, but check that it's valid anyway
     if anonvar
@@ -2544,7 +2544,7 @@ macro variable(args...)
                 indices,
                 name_code,
                 requested_container;
-                pass_names = :(enable_container_keyword_indexing($model)),
+                keyword_indexing = :(enable_keyword_indexing($model)),
             )
         end
     end
@@ -2561,7 +2561,7 @@ macro variable(args...)
                 indices,
                 buildcall,
                 requested_container;
-                pass_names = :(enable_container_keyword_indexing($model)),
+                keyword_indexing = :(enable_keyword_indexing($model)),
             )
         end
         buildcall = :(build_variable($_error, $scalar_variables, $set))
@@ -2581,7 +2581,7 @@ macro variable(args...)
             indices,
             variablecall,
             requested_container;
-            pass_names = :(enable_container_keyword_indexing($model)),
+            keyword_indexing = :(enable_keyword_indexing($model)),
         )
     end
 
@@ -2697,7 +2697,7 @@ macro NLconstraint(m, x, args...)
         indices,
         code,
         requested_container;
-        pass_names = :(enable_container_keyword_indexing($esc_m)),
+        keyword_indexing = :(enable_keyword_indexing($esc_m)),
     )
     creation_code = quote
         _init_NLP($esc_m)
@@ -2789,7 +2789,7 @@ macro NLexpression(args...)
         indices,
         code,
         requested_container;
-        pass_names = :(enable_container_keyword_indexing($esc_m)),
+        keyword_indexing = :(enable_keyword_indexing($esc_m)),
     )
     if isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
         macro_code = creation_code
@@ -2937,7 +2937,7 @@ macro NLparameter(model, args...)
         index_values,
         code,
         requested_container;
-        pass_names = :(enable_container_keyword_indexing($esc_m)),
+        keyword_indexing = :(enable_keyword_indexing($esc_m)),
     )
     macro_code = if anon
         creation_code

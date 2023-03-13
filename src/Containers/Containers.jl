@@ -31,7 +31,7 @@ function _check_keyword_indexing_allowed(::Nothing)
     return error(
         "Keyword indexing is disabled. To enable, pass " *
         "`enable_keyword_indexing = true` to the `Containers.@container` " *
-        "macro, or call `JuMP.enable_container_keyword_indexing(model, true)` " *
+        "macro, or call `JuMP.enable_keyword_indexing(model, true)` " *
         "before calling any JuMP macros like `@variable`.",
     )
 end

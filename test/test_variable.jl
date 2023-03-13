@@ -1419,7 +1419,7 @@ end
 
 function test_keyword_indexing_enabled()
     model = Model()
-    enable_container_keyword_indexing(model, true)
+    enable_keyword_indexing(model, true)
     @variable(model, x[i = 2:3])
     for arg in (2, 3, 2:3, 3:3, :)
         @test x[i = arg] == x[arg]

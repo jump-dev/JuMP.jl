@@ -240,7 +240,7 @@ end
         indices::Expr,
         code,
         requested_container::Union{Symbol,Expr};
-        pass_names::Union{Bool,Expr},
+        keyword_indexing::Union{Bool,Expr},
     )
 
 Used in macros to construct a call to [`container`](@ref). This should be used
@@ -290,7 +290,7 @@ function container_code(
     indices::Expr,
     code,
     requested_container::Union{Symbol,Expr};
-    pass_names::Union{Bool,Expr} = false,
+    keyword_indexing::Union{Bool,Symbol,Expr} = false,
 )
     if isempty(index_vars)
         return code
@@ -310,11 +310,17 @@ function container_code(
     else
         # This is a symbol or expression from outside JuMP, so we need to escape
         # it.
-        pass_names = true
+        keyword_indexing = missing
         esc(requested_container)
     end
     return quote
-        names = $pass_names ? $index_vars : nothing
+        names = if $keyword_indexing === missing
+            $index_vars
+        elseif $keyword_indexing === true
+            _ForceEnableKeywordIndexing($index_vars)
+        else
+            nothing
+        end
         Containers.container($f, $indices, $container_type, names)
     end
 end
@@ -383,7 +389,7 @@ macro container(args...)
     for kw in kwargs
         @assert Meta.isexpr(kw, :(=), 2)
         @assert kw.args[1] == :enable_keyword_indexing
-        enable_keyword_indexing = kw.args[2]
+        enable_keyword_indexing = esc(kw.args[2])
     end
     var, value = args
     index_vars, indices = build_ref_sets(error, var)
@@ -392,7 +398,7 @@ macro container(args...)
         indices,
         esc(value),
         requested_container;
-        pass_names = enable_keyword_indexing,
+        keyword_indexing = enable_keyword_indexing,
     )
     if isexpr(var, :vect) || isexpr(var, :vcat)
         return code

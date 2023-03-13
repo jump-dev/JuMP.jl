@@ -103,7 +103,7 @@ mutable struct Model <: AbstractModel
     # A model-level option that is used as the default for the set_string_name
     # keyword to @variable and @constraint.
     set_string_names_on_creation::Bool
-    enable_container_keyword_indexing::Bool
+    enable_keyword_indexing::Bool
 end
 
 function Base.getproperty(model::Model, name::Symbol)
@@ -435,7 +435,7 @@ set_string_names_on_creation(model::Model) = model.set_string_names_on_creation
 set_string_names_on_creation(::AbstractModel) = true
 
 """
-    enable_container_keyword_indexing(model::Model, value::Bool)
+    enable_keyword_indexing(model::Model, value::Bool)
 
 Set the default argument of the `enable_keyword_indexing` keyword in the
 [`Containers.@container`](@ref) macro to `value`.
@@ -467,13 +467,13 @@ And data, a 2-element Vector{VariableRef}:
  x[3]
 
 julia> x[i = 2]
-ERROR: Keyword indexing is disabled. To enable, pass `enable_keyword_indexing = true` to the `Containers.@container` macro, or call `JuMP.enable_container_keyword_indexing(model, true)` before calling any JuMP macros like `@variable`.
+ERROR: Keyword indexing is disabled. To enable, pass `enable_keyword_indexing = true` to the `Containers.@container` macro, or call `JuMP.enable_keyword_indexing(model, true)` before calling any JuMP macros like `@variable`.
 Stacktrace:
 [...]
 
 julia> model = Model();
 
-julia> enable_container_keyword_indexing(model, true)
+julia> enable_keyword_indexing(model, true)
 
 julia> @variable(model, x[i = 1:3], container = DenseAxisArray)
 1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
@@ -487,16 +487,21 @@ julia> x[i = 2]
 x[2]
 ```
 """
-function enable_container_keyword_indexing(model::Model, value::Bool)
-    model.enable_container_keyword_indexing = value
+function enable_keyword_indexing(model::Model, value::Bool)
+    model.enable_keyword_indexing = value
     return
 end
 
-function enable_container_keyword_indexing(model::Model)
-    return model.enable_container_keyword_indexing
+function enable_keyword_indexing(model::Model)
+    return model.enable_keyword_indexing
 end
 
-enable_container_keyword_indexing(::AbstractModel) = true
+enable_keyword_indexing(::AbstractModel) = true
+
+function _enable_keyword_indexing_value(model)
+    # We need three-valued logic.
+    return enable_keyword_indexing(model) ? missing : false
+end
 
 _moi_bridge_constraints(::MOI.ModelLike) = false
 

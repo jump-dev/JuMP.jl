@@ -447,7 +447,7 @@ function test_keyword_indexing()
     @expression(model, x[i = 2:3], i * y + i)
     @test_throws ErrorException x[i = 2]
     model = Model()
-    enable_container_keyword_indexing(model, true)
+    enable_keyword_indexing(model, true)
     @variable(model, y)
     @expression(model, x[i = 2:3], i * y + i)
     for arg in (2, 3, 2:3, 3:3, :)

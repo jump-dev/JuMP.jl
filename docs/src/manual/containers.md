@@ -540,7 +540,7 @@ JuMP.Containers.SparseAxisArray{Int64, 1, Tuple{Int64}} with 3 entries:
 ### The JuMP macros
 
 For containers constructed using the JuMP macros like [`@variable`](@ref),
-opt-in using [`enable_container_keyword_indexing`](@ref):
+opt-in using [`enable_keyword_indexing`](@ref):
 
 ```jldoctest
 julia> using JuMP
@@ -555,13 +555,13 @@ And data, a 2-element Vector{VariableRef}:
  x[3]
 
 julia> x[i = 2]
-ERROR: Keyword indexing is disabled. To enable, pass `enable_keyword_indexing = true` to the `Containers.@container` macro, or call `JuMP.enable_container_keyword_indexing(model, true)` before calling any JuMP macros like `@variable`.
+ERROR: Keyword indexing is disabled. To enable, pass `enable_keyword_indexing = true` to the `Containers.@container` macro, or call `JuMP.enable_keyword_indexing(model, true)` before calling any JuMP macros like `@variable`.
 Stacktrace:
 [...]
 
 julia> model = Model();
 
-julia> enable_container_keyword_indexing(model, true)
+julia> enable_keyword_indexing(model, true)
 
 julia> @variable(model, x[i = 2:3])
 1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
@@ -585,14 +585,8 @@ julia> Containers.@container(
            i + j,
            enable_keyword_indexing = true,
        )
-4×3 Matrix{Int64}:
- 2  3  4
- 3  4  5
- 4  5  6
- 5  6  7
-
-julia> x[i = 2, j = 1]
-ERROR: MethodError: no method matching getindex(::Matrix{Int64}; i=2, j=1)
+ERROR: Keyword indexing is not supported with Array.
+Stacktrace:
 [...]
 ```
 
@@ -601,7 +595,7 @@ Work-around this limitation by forcing the container type:
 ```jldoctest
 julia> model = Model();
 
-julia> enable_container_keyword_indexing(model, true)
+julia> enable_keyword_indexing(model, true)
 
 julia> @variable(model, x[i = 1:3])
 3-element Vector{VariableRef}:
