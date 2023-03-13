@@ -223,11 +223,10 @@ value(t), value(x)
 # can be modeled using a set of power cones. See the [Mosek Modeling Cookbook](https://docs.mosek.com/modeling-cookbook/powo.html#p-norm-cones)
 # for the derivation.
 
-function p_norm(x0::Vector, p)
-    N = length(x0)
+function p_norm(x::Vector, p)
+    N = length(x)
     model = Model(SCS.Optimizer)
     set_silent(model)
-    @variable(model, x[i = 1:N] == x0[i])
     @variable(model, r[1:N])
     @variable(model, t)
     @constraint(model, [i = 1:N], [r[i], t, x[i]] in MOI.PowerCone(1 / p))
@@ -237,8 +236,8 @@ function p_norm(x0::Vector, p)
     return value(t)
 end
 
-x0 = rand(5);
-LinearAlgebra.norm(x0, 4), p_norm(x0, 4)
+x = rand(5);
+LinearAlgebra.norm(x, 4), p_norm(x, 4)
 
 # ## Positive Semidefinite Cone
 
