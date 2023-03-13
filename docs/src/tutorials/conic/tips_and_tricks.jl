@@ -220,7 +220,7 @@ value(t), value(x)
 # ## P-Norm
 
 # The p-norm ``||x||_p = \left(\sum\limits_{i} |x_i|^p\right)^{\frac{1}{p}}``
-# can be modeled using a set of power cones. See the [Mosek Modeling Cookbook](https://docs.mosek.com/modeling-cookbook/powo.html#p-norm-cones)
+# can be modeled using [`MOI.PowerCone`](@ref)s. See the [Mosek Modeling Cookbook](https://docs.mosek.com/modeling-cookbook/powo.html#p-norm-cones)
 # for the derivation.
 
 function p_norm(x::Vector, p)
