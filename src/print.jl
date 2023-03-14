@@ -686,7 +686,14 @@ in_set_string(::MIME"text/latex", ::MOI.Integer) = "\\in \\mathbb{Z}"
 
 function in_set_string(
     mode,
-    set::Union{PSDCone,HermitianPSDCone,MOI.AbstractSet},
+    set::Union{
+        PSDCone,
+        HermitianPSDCone,
+        Zeros,
+        Nonnegatives,
+        Nonpositives,
+        MOI.AbstractSet,
+    },
 )
     # Use an `if` here instead of multiple dispatch to avoid ambiguity errors.
     if mode == MIME("text/plain")

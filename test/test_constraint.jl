@@ -1554,6 +1554,8 @@ function test_hermitian_in_zeros()
     @test isequal_canonical(con.func[3], real(H[2, 2]) - 1)
     @test isequal_canonical(con.func[4], imag(H[1, 2]))
     @test con.set == MOI.Zeros(4)
+    @test occursin("Zeros()", sprint(show, c))
+    @test value(x -> 1.0, c) isa LinearAlgebra.Hermitian
     return
 end
 
@@ -1566,6 +1568,8 @@ function test_symmetric_in_zeros()
     @test isequal_canonical(con.func[2], H[1, 2] - 0)
     @test isequal_canonical(con.func[3], H[2, 2] - 1)
     @test con.set == MOI.Zeros(3)
+    @test occursin("Zeros()", sprint(show, c))
+    @test value(x -> 1.0, c) isa LinearAlgebra.Symmetric
     return
 end
 
