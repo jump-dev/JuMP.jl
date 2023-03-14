@@ -669,6 +669,8 @@ end
 function build_constraint(_error::Function, ::AbstractMatrix, ::Zeros)
     return _error(
         "Unsupported matrix in vector-valued set. Did you mean to use the " *
-        "broadcasting syntax `.==` instead?",
+        "broadcasting syntax `.==` for element-wise equality? Alternatively, " *
+        "this syntax is supported in the special case that the matrices are " *
+        "`LinearAlgebra.Symmetric` or `LinearAlgebra.Hermitian`.",
     )
 end

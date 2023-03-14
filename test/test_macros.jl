@@ -1920,9 +1920,11 @@ function test_matrix_in_vector_set()
     )
     @test_throws_strip(
         ErrorException(
-            "In `@constraint(model, X == A)`: Unsupported matrix in " *
-            "vector-valued set. Did you mean to use the broadcasting syntax " *
-            "`.==` instead?",
+            "In `@constraint(model, X == A)`: " *
+            "Unsupported matrix in vector-valued set. Did you mean to use the " *
+            "broadcasting syntax `.==` for element-wise equality? Alternatively, " *
+            "this syntax is supported in the special case that the matrices are " *
+            "`LinearAlgebra.Symmetric` or `LinearAlgebra.Hermitian`.",
         ),
         @constraint(model, X == A),
     )
