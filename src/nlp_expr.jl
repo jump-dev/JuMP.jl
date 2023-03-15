@@ -3,6 +3,69 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+"""
+    NonlinearExpr(head::Symbol, args::Vector{Any})
+    NonlinearExpr(head::Symbol, args::Any...)
+
+The scalar-valued nonlinear function `head(args...)`, represented as a symbolic
+expression tree, with the call operator `head` and ordered arguments in `args`.
+
+## `head`
+
+The `head::Symbol` must be an operator supported by the model.
+
+The default list of supported univariate operators is given by:
+
+ * [`MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS`](@ref)
+
+and the default list of supported multivariate operators is given by:
+
+ * [`MOI.Nonlinear.DEFAULT_MULTIVARIATE_OPERATORS`](@ref)
+
+Additional operators can be registered by setting a [`MOI.UserDefinedFunction`](@ref)
+attribute.
+
+See the full list of operators supported by a [`MOI.ModelLike`](@ref) by
+querying [MOI.ListOfSupportedNonlinearOperators`](@ref).
+
+## `args`
+
+The vector `args` contains the arguments to the nonlinear function. If the
+operator is univariate, it must contain one element. Otherwise, it may contain
+multiple elements. Each element must be one of the following:
+
+ * A constant value of type `T<:Number`
+ * A [`VariableRef`](@ref)
+ * An [`AffExpr`](@ref)
+ * A [`QuadExpr`](@ref)
+ * A [`NonlinearExpr`](@ref)
+
+## Unsupported operators
+
+If the optimizer does not support `head`, an [`MOI.UnsupportedNonlinearOperator`](@ref)
+error will be thrown.
+
+There is no guarantee about when this error will be thrown; it may be thrown
+when the function is first added to the model, or it may be thrown when
+[`optimize!`](@ref) is called.
+
+## Example
+
+To represent the function ``f(x) = sin(x)^2``, do:
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> f = sin(x)^2
+^(sin(x), 2.0)
+
+julia> f = NonlinearExpr(:^, NonlinearExpr(:sin, x), 2.0)
+^(sin(x), 2.0)
+```
+"""
 struct NonlinearExpr <: AbstractJuMPScalar
     head::Symbol
     args::Vector{Any}
@@ -145,15 +208,15 @@ end
 check_belongs_to_model(::NonlinearExpr, ::Model) = true
 
 function moi_function(f::NonlinearExpr)
-    ret = MOI.ScalarNonlinearFunction{Float64}(f.head, Any[])
-    stack = Tuple{MOI.ScalarNonlinearFunction{Float64},Any}[]
+    ret = MOI.ScalarNonlinearFunction(f.head, Any[])
+    stack = Tuple{MOI.ScalarNonlinearFunction,Any}[]
     for arg in reverse(f.args)
         push!(stack, (ret, arg))
     end
     while !isempty(stack)
         parent, arg = pop!(stack)
         if arg isa NonlinearExpr
-            new_ret = MOI.ScalarNonlinearFunction{Float64}(arg.head, Any[])
+            new_ret = MOI.ScalarNonlinearFunction(arg.head, Any[])
             push!(parent.args, new_ret)
             for child in reverse(arg.args)
                 push!(stack, (new_ret, child))
@@ -194,9 +257,7 @@ function jump_function_type(::Model, ::Type{<:MOI.ScalarNonlinearFunction})
     return NonlinearExpr
 end
 
-function moi_function_type(::Type{NonlinearExpr})
-    return MOI.ScalarNonlinearFunction{Float64}
-end
+moi_function_type(::Type{NonlinearExpr}) = MOI.ScalarNonlinearFunction
 
 function constraint_object(c::NonlinearConstraintRef)
     nlp = nonlinear_model(c.model)
@@ -309,22 +370,4 @@ function _MA.promote_operation(
     ::Type{NonlinearExpr},
 )
     return NonlinearExpr
-end
-
-function moi_function(x::Vector{<:AbstractJuMPScalar})
-    return MOI.VectorNonlinearFunction{Float64}(
-        Any[moi_function(xi) for xi in x],
-    )
-end
-
-function moi_function_type(::Type{<:Vector{<:AbstractJuMPScalar}})
-    return MOI.VectorNonlinearFunction{Float64}
-end
-
-function jump_function(model::Model, f::MOI.VectorNonlinearFunction)
-    return AbstractJuMPScalar[jump_function(model, arg) for arg in f.args]
-end
-
-function jump_function_type(::Model, ::Type{<:MOI.VectorNonlinearFunction})
-    return Vector{AbstractJuMPScalar}
 end
