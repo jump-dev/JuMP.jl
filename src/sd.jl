@@ -629,3 +629,48 @@ function build_constraint(
         shape,
     )
 end
+
+function build_constraint(_error::Function, H::LinearAlgebra.Hermitian, ::Zeros)
+    n = LinearAlgebra.checksquare(H)
+    shape = HermitianMatrixShape(n)
+    x = vectorize(H, shape)
+    return VectorConstraint(x, MOI.Zeros(length(x)), shape)
+end
+
+reshape_set(s::MOI.Zeros, ::HermitianMatrixShape) = Zeros()
+
+function build_constraint(_error::Function, f::LinearAlgebra.Symmetric, ::Zeros)
+    n = LinearAlgebra.checksquare(f)
+    shape = SymmetricMatrixShape(n)
+    x = vectorize(f, shape)
+    return VectorConstraint(x, MOI.Zeros(length(x)), shape)
+end
+
+reshape_set(::MOI.Zeros, ::SymmetricMatrixShape) = Zeros()
+
+function build_constraint(_error::Function, ::AbstractMatrix, ::Nonnegatives)
+    return _error(
+        "Unsupported matrix in vector-valued set. Did you mean to use the " *
+        "broadcasting syntax `.>=` instead? Alternatively, perhaps you are " *
+        "missing a set argument like `@constraint(model, X >= 0, PSDCone())` " *
+        "or `@constraint(model, X >= 0, HermmitianPSDCone())`.",
+    )
+end
+
+function build_constraint(_error::Function, ::AbstractMatrix, ::Nonpositives)
+    return _error(
+        "Unsupported matrix in vector-valued set. Did you mean to use the " *
+        "broadcasting syntax `.<=` instead? Alternatively, perhaps you are " *
+        "missing a set argument like `@constraint(model, X <= 0, PSDCone())` " *
+        "or `@constraint(model, X <= 0, HermmitianPSDCone())`.",
+    )
+end
+
+function build_constraint(_error::Function, ::AbstractMatrix, ::Zeros)
+    return _error(
+        "Unsupported matrix in vector-valued set. Did you mean to use the " *
+        "broadcasting syntax `.==` for element-wise equality? Alternatively, " *
+        "this syntax is supported in the special case that the matrices are " *
+        "`LinearAlgebra.Symmetric` or `LinearAlgebra.Hermitian`.",
+    )
+end

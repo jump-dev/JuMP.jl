@@ -93,7 +93,7 @@ my_q : x[1]² + x[2]² - t² <= 0.0
     quadratic, prefer adding quadratic constraints using [`@constraint`](@ref),
     rather than [`@NLconstraint`](@ref).
 
-### Vectorized constraints
+## Vectorized constraints
 
 You can also add constraints to JuMP using vectorized linear algebra. For
 example:
@@ -146,7 +146,99 @@ but choosing the right format for a particular solver is more efficient.
 You can also use `<=`, `.<=` , `>=`, and `.>=` as comparison operators in the
 constraint.
 
-### Containers of constraints
+```jldoctest con_vector
+julia> @constraint(model, A * x <= b)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Nonpositives(2)
+
+julia> @constraint(model, A * x .<= b)
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ x[1] + 2 x[2] ≤ 5.0
+ 3 x[1] + 4 x[2] ≤ 6.0
+
+julia> @constraint(model, A * x >= b)
+[x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Nonnegatives(2)
+
+julia> @constraint(model, A * x .>= b)
+2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}:
+ x[1] + 2 x[2] ≥ 5.0
+ 3 x[1] + 4 x[2] ≥ 6.0
+```
+
+### Vectorized matrix constraints
+
+In most cases, you cannot use the non-broadcasting syntax for general matrices.
+For example:
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, X[1:2, 1:2])
+2×2 Matrix{VariableRef}:
+ X[1,1]  X[1,2]
+ X[2,1]  X[2,2]
+
+julia> @constraint(model, X >= 0)
+ERROR: At none:1: `@constraint(model, X >= 0)`: Unsupported matrix in vector-valued set. Did you mean to use the broadcasting syntax `.>=` instead? Alternatively, perhaps you are missing a set argument like `@constraint(model, X >= 0, PSDCone())` or `@constraint(model, X >= 0, HermmitianPSDCone())`.
+Stacktrace:
+[...]
+```
+
+Instead, to represent matrix inequalities you must always use the element-wise
+broadcasting `.==`, `.>=`, or `.<=`, or use the [Set inequality syntax](@ref).
+
+There are two exceptions: if the result of the left-hand side minus the
+right-hand side is a `LinearAlgebra.Symmetric` matrix or a `LinearAlgebra.Hermitian`
+matrix, you may use the non-broadcasting equality syntax:
+
+```jldoctest con_symmetric_zeros
+julia> using LinearAlgebra
+
+julia> model = Model();
+
+julia> @variable(model, X[1:2, 1:2], Symmetric)
+2×2 Symmetric{VariableRef, Matrix{VariableRef}}:
+ X[1,1]  X[1,2]
+ X[1,2]  X[2,2]
+
+julia> @constraint(model, X == LinearAlgebra.I)
+[X[1,1] - 1  X[1,2];
+ X[1,2]      X[2,2] - 1] ∈ Zeros()
+```
+
+Despite the model showing the matrix in [`Zeros`](@ref), this will add only
+three rows to the constraint matrix because the symmetric constraints are
+redundant. In contrast, the broadcasting syntax adds four linear constraints:
+
+```jldoctest con_symmetric_zeros
+julia> @constraint(model, X .== LinearAlgebra.I)
+2×2 Matrix{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
+ X[1,1] = 1.0  X[1,2] = 0.0
+ X[1,2] = 0.0  X[2,2] = 1.0
+```
+
+The same holds for `LinearAlgebra.Hermitian` matrices:
+
+```jldoctest con_hermitian_zeros
+julia> using LinearAlgebra
+
+julia> model = Model();
+
+julia> @variable(model, X[1:2, 1:2] in HermitianPSDCone())
+2×2 Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ real(X[1,1])                               …  real(X[1,2]) + (0.0 + 1.0im) imag(X[1,2])
+ real(X[1,2]) + (0.0 - 1.0im) imag(X[1,2])     real(X[2,2])
+
+julia> @constraint(model, X == LinearAlgebra.I)
+[real(X[1,1]) + (-1.0 - 0.0im)              real(X[1,2]) + (0.0 + 1.0im) imag(X[1,2]);
+ real(X[1,2]) + (0.0 - 1.0im) imag(X[1,2])  real(X[2,2]) + (-1.0 - 0.0im)] ∈ Zeros()
+
+julia> @constraint(model, X .== LinearAlgebra.I)
+2×2 Matrix{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{ComplexF64}, MathOptInterface.EqualTo{ComplexF64}}, ScalarShape}}:
+ real(X[1,1]) = 1.0 - 0.0im                               …  real(X[1,2]) + (0.0 + 1.0im) imag(X[1,2]) = 0.0 - 0.0im
+ real(X[1,2]) + (0.0 - 1.0im) imag(X[1,2]) = 0.0 + 0.0im     real(X[2,2]) = 1.0 - 0.0im
+```
+
+## Containers of constraints
 
 The [`@constraint`](@ref) macro supports creating collections of constraints.
 We'll cover some brief syntax here; read the [Constraint containers](@ref)
