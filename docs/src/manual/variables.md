@@ -49,7 +49,7 @@ VariableRef
 julia> num_variables(model)
 1
 ```
-Here `x` is a Julia variable that is bound to the JuMP `VariableRef` struct, and
+Here `x` is a Julia variable that is bound to a [`VariableRef`](@ref) object, and
 we have added 1 decision variable to our model.
 
 To make the binding more explicit, we could have written:
