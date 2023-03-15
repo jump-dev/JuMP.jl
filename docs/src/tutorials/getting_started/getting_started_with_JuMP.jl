@@ -143,7 +143,15 @@ model = Model(HiGHS.Optimizer)
 
 @variable(model, x >= 0)
 
-# They can have lower and upper bounds:
+# !!! info
+#     The macro creates a new Julia object, `x`, in the current scope. We could
+#     have made this more explicit by writing:
+#     ```julia
+#     x = @variable(model, x >= 0)
+#     ```
+#     but the macro does this automatically for us to save writing `x` twice.
+
+# Variables can have lower and upper bounds:
 
 @variable(model, 0 <= y <= 30)
 

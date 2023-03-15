@@ -35,8 +35,33 @@ contexts.
 
 ## Create a variable
 
-Create variables using the [`@variable`](@ref) macro. When creating a variable,
-you can also specify variable bounds:
+Create variables using the [`@variable`](@ref) macro:
+
+```jldoctest variables
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> typeof(x)
+VariableRef
+
+julia> num_variables(model)
+1
+```
+Here `x` is a Julia variable that is bound to a [`VariableRef`](@ref) object, and
+we have added 1 decision variable to our model.
+
+To make the binding more explicit, we could have written:
+```jldoctest variables
+julia> model = Model();
+
+julia> x = @variable(model, x)
+x
+```
+but there is no need to in general; the macro does it for us.
+
+When creating a variable, you can also specify variable bounds:
 ```jldoctest variables_2
 julia> model = Model();
 
