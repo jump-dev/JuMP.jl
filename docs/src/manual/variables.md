@@ -41,8 +41,10 @@ Create variables using the [`@variable`](@ref) macro:
 julia> model = Model();
 
 julia> @variable(model, x)
+x
 
 julia> typeof(x)
+VariableRef
 
 julia> num_variables(model)
 1
