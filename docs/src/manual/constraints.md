@@ -186,11 +186,9 @@ Stacktrace:
 Instead, to represent matrix inequalities you must always use the element-wise
 broadcasting `.==`, `.>=`, or `.<=`, or use the [Set inequality syntax](@ref).
 
-There are two exceptions.
-
-First, if the result of the left-hand side minus the right-hand side is a
-`LinearAlgebra.Symmetric` matrix or a `LinearAlgebra.Hermitian` matrix, you may
-use the non-broadcasting equality syntax:
+There are two exceptions: if the result of the left-hand side minus the
+right-hand side is a `LinearAlgebra.Symmetric` matrix or a `LinearAlgebra.Hermitian`
+matrix, you may use the non-broadcasting equality syntax:
 
 ```jldoctest con_symmetric_zeros
 julia> using LinearAlgebra
