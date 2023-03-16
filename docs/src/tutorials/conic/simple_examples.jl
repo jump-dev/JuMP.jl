@@ -243,12 +243,16 @@ example_correlation_problem()
 # ```math
 #     ||f(a) - f(b)||^2 = Q[a, a] + Q[b, b] - 2 Q[a, b]
 # ```
+# The matrix entry ``Q[a,b]`` represents the inner product of ``f(a)`` with ``f(b)``.
+#
 # We therefore impose the constraint
 # ```math
-#     D[a, b]^2 ≤ Q[a, a] + Q[b, b] - 2 Q[a, b] ≤ c^2 \; D[a, b]^2
+#     D[a, b]^2 \leq Q[a, a] + Q[b, b] - 2 Q[a, b] \leq c^2 \; D[a, b]^2
 # ```
 # for all edges ``(a, b)`` in the graph and minimize ``c^2``, 
 # which gives us the SDP formulation below.
+# Since we may choose any point to be the origin, we fix the first vertex at 0.
+#
 # For more details, see:
 #
 # J. Matoušek (2002), [_Lectures on discrete geometry_](https://doi.org/10.1007/978-1-4613-0039-7),
@@ -273,12 +277,31 @@ function example_minimum_distortion()
         @constraint(model, D[i, j]^2 <= Q[i, i] + Q[j, j] - 2 * Q[i, j])
         @constraint(model, Q[i, i] + Q[j, j] - 2 * Q[i, j] <= c² * D[i, j]^2)
     end
+    fix(Q[1, 1], 0)
     @objective(model, Min, c²)
     optimize!(model)
     Test.@test termination_status(model) == OPTIMAL
     Test.@test primal_status(model) == FEASIBLE_POINT
     Test.@test objective_value(model) ≈ 4 / 3 atol = 1e-4
-    return
+    # Recover the minimal distorted embedding:
+    X = [zeros(3) sqrt(value.(Q)[2:end, 2:end])]
+    p = plot(
+        X[1, :],
+        X[2, :],
+        X[3, :];
+        seriestype = :mesh3d,
+        connections = ([0, 0, 0, 1], [1, 2, 3, 2], [2, 3, 1, 3]),
+        legend = false,
+        fillalpha = 0.1,
+        lw = 3,
+        ratio = :equal,
+        xlim = (-1.1, 1.1),
+        ylim = (-1.1, 1.1),
+        zlim = (-1.5, 1.0),
+        zticks = -1:1,
+        camera = (60, 30),
+    )
+    return p
 end
 
 example_minimum_distortion()
