@@ -22,7 +22,7 @@
 
 # # Optimal control for a Space Shuttle reentry trajectory
 
-# **Originally Contributed by**: Henrique Ferrolho
+# **This tutorial was originally contributed by Henrique Ferrolho.**
 
 # This tutorial demonstrates how to compute a reentry trajectory for the
 # [Space Shuttle](https://en.wikipedia.org/wiki/Space_Shuttle),
@@ -102,7 +102,7 @@
 
 # As explained in the book, our goal is to maximize the final cross-range,
 # which is equivalent to maximizing the final latitude of the vehicle,
-# i.e., $J = \theta(t_F)$.
+# that is, $J = \theta(t_F)$.
 
 # ![Max cross-range shuttle reentry](../../assets/space_shuttle.png)
 
@@ -116,7 +116,7 @@
 # or [trapezoidal](http://en.wikipedia.org/wiki/Trapezoidal_rule) integration.
 
 # !!! warning
-#     Do not try to actually land a Space Shuttle using this notebook! There's
+#     Do not try to actually land a Space Shuttle using this notebook. There's
 #     no mesh refinement going on, which can lead to unrealistic trajectories
 #     having position and velocity errors with orders of magnitude $10^4$ ft and
 #     $10^2$ ft/sec, respectively.

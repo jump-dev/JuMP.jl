@@ -20,7 +20,7 @@
 
 # # [Tips and Tricks](@id conic_tips_and_tricks)
 
-# **Originally Contributed by**: Arpit Bhatia
+# **This tutorial was originally contributed by Arpit Bhatia.**
 
 # This tutorial is aimed at providing a simplistic introduction to conic
 # programming using JuMP.

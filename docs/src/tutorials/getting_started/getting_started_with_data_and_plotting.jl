@@ -121,7 +121,7 @@ Plots.scatter(
     ylims = (0, 3),
 )
 
-# Better!
+# That looks better.
 
 # !!! tip
 #     Read the [CSV documentation](https://csv.juliadata.org/stable/) for other
@@ -351,7 +351,7 @@ set_silent(model)
 @constraint(model, [d in C], passport_data[!, d]' * x >= 1)
 model
 
-# Now optimize!
+# Now optimize:
 
 optimize!(model)
 
@@ -375,9 +375,9 @@ for c in C
     end
 end
 
-# Interesting! We need some passports, like New Zealand and the United States,
-# which have widespread access to a large number of countries. However, we also
-# need passports like North Korea which only have visa-free access to a very
+# We need some passports, like New Zealand and the United States, which have
+# widespread access to a large number of countries. However, we also need
+# passports like North Korea which only have visa-free access to a very
 # limited number of countries.
 
 # !!! note

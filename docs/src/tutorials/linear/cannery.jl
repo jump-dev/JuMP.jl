@@ -5,7 +5,7 @@
 
 # # The cannery problem
 
-# _Original author: Louis Luangkesorn, January 30, 2015._
+# **This tutorial was originally contributed by Louis Luangkesorn.**
 
 # This tutorial solves the cannery problem from Dantzig,
 # _Linear Programming and Extensions_, Princeton University Press, Princeton,

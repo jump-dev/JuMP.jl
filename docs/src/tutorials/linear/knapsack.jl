@@ -5,7 +5,7 @@
 
 # # The knapsack problem example
 
-# The purpose of this example is demonstrate how to formulate and solve a 
+# The purpose of this example is demonstrate how to formulate and solve a
 # simple optimization problem.
 # We use the knapsack problem for this purpose.
 
@@ -19,7 +19,7 @@ import Test
 
 # ## Formulation
 
-# The simple [knapsack problem](https://en.wikipedia.org/wiki/Knapsack_problem) 
+# The simple [knapsack problem](https://en.wikipedia.org/wiki/Knapsack_problem)
 # is a well-known type of optimization problem: given a set of items and
 # a container with a fixed capacity, choose a subset of items having the greatest combined
 # value that will fit within the container without exceeding the capacity.
@@ -49,8 +49,8 @@ import Test
 
 # where there is a choice between ``n`` items, with item ``i`` having weight ``w_i``,
 # profit ``c_i`` and a decision variable ``x_i`` equal to 1 if the item is chosen
-# and 0 if not. 
-# The capacity is a single real number ``C`` of the same number type as the 
+# and 0 if not.
+# The capacity is a single real number ``C`` of the same number type as the
 # individual weights.
 
 # ## Data
@@ -78,11 +78,11 @@ model = Model(HiGHS.Optimizer)
 # weight is less than or equal to the given capacity.
 @constraint(model, sum(weight[i] * x[i] for i in 1:5) <= capacity)
 
-# Finally, we set an objective: maximise the combined profit of the 
+# Finally, we set an objective: maximise the combined profit of the
 # selected items.
 @objective(model, Max, sum(profit[i] * x[i] for i in 1:5))
 
-# Let's print a human-readable description of the model and 
+# Let's print a human-readable description of the model and
 # check that the model looks as expected:
 print(model)
 
@@ -94,7 +94,7 @@ solution_summary(model)
 
 items_chosen = [i for i in 1:5 if value(x[i]) > 0.5]
 
-# After working interactively, it is good practice to implement 
+# After working interactively, it is good practice to implement
 # your model in a function.
 # A function can be used to ensure that the model is given
 # well-defined input data by validation checks, and that the
@@ -138,5 +138,5 @@ end
 
 solve_knapsack_problem(; profit = profit, weight = weight, capacity = capacity)
 
-# We observe that the chosen items (1, 4 and 5) have the best 
+# We observe that the chosen items (1, 4, and 5) have the best
 # profit to weight ratio in this particular example.

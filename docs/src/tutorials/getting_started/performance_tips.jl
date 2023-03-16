@@ -28,7 +28,7 @@
 
 # The first thing to do is read the [Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/index.html)
 # section of the Julia manual. The most important rule is to avoid global
-# variables! This is particularly important if you're learning JuMP after using
+# variables. This is particularly important if you're learning JuMP after using
 # a language like MATLAB.
 
 using JuMP  # hide
@@ -137,7 +137,7 @@ end
 # c = b + x[3]
 # ```
 # Since we only care about `c`, the `a` and `b` expressions are not needed and
-# constructing them slows the program down!
+# constructing them slows the program down.
 
 # JuMP's macros rewrite the expressions to operate in-place and avoid these
 # extra copies. Because they allocate less memory, they are faster, particularly
@@ -164,7 +164,7 @@ model = Model()
 
 # By default, JuMP creates `String` names for variables and constraints and
 # passes these to the solver. The benefit of passing names is that it improves
-# the readability of log messages from the solver (e.g., "variable x has invalid
+# the readability of log messages from the solver (for example, "variable x has invalid
 # bounds" instead of "variable v1203 has invalid bounds"), but for larger models
 # the overhead of passing names can be non-trivial.
 

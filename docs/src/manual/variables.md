@@ -269,7 +269,7 @@ the variable.
 
 !!! warning
     The index of the variable may not correspond to the column of the variable
-    in the solver!
+    in the solver.
 
 Create a container of anonymous JuMP variables by dropping the name in front of
 the `[`:

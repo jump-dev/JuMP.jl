@@ -260,7 +260,7 @@ end
 
 SparseArrays.sparse(hcat(patterns...))
 
-# Nice! We found over 20 new patterns.
+# We found over 20 new patterns.
 
 # Here's pattern 21:
 

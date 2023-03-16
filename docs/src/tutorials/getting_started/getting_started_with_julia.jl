@@ -185,7 +185,7 @@ typeof(2π / 3)
 # approximation of a real number using 64-bits of information.
 
 # Because it is an approximation, things we know hold true in mathematics don't
-# hold true in a computer! For example:
+# hold true in a computer. For example:
 
 0.1 * 3 == 0.3
 
@@ -201,7 +201,7 @@ sin(2π / 3) == √3 / 2
 0.1 * 3 - 0.3
 sin(2π / 3) - √3 / 2
 
-# They are small, but not zero!
+# They are small, but not zero.
 
 # One way of explaining this difference is to consider how we would write
 # `1 / 3` and `2 / 3` using only four digits after the decimal point. We would
@@ -242,7 +242,7 @@ isapprox(1e-9, 0.0; atol = 1e-8)
 
 1 + 1e-16 == 1
 
-# It even turns out that floating point numbers aren't associative!
+# It even turns out that floating point numbers aren't associative:
 
 (1 + 1e-16) - 1e-16 == 1 + (1e-16 - 1e-16)
 
@@ -267,7 +267,7 @@ A = [1.0 2.0; 3.0 4.0]
 x = A \ b
 
 # !!! info
-#     Here is floating point at work again! `x` is approximately `[-4, 4.5]`.
+#     Here is floating point at work again; `x` is approximately `[-4, 4.5]`.
 
 A * x
 A * x ≈ b
@@ -344,7 +344,7 @@ println(s)
 # ### Symbols
 
 # Julia `Symbol`s are a data structure from the compiler that represent Julia
-# identifiers (i.e., variable names).
+# identifiers (that is, variable names).
 
 println("The value of x is: $(eval(:x))")
 
@@ -608,7 +608,7 @@ catch err                   #hide
     showerror(stderr, err)  #hide
 end                         #hide
 
-# We get a dreaded `MethodError`! A `MethodError` means that you passed a
+# A `MethodError` means that you passed a
 # function something that didn't match the type that it was expecting. In this
 # case, the error message says that it doesn't know how to handle an
 # `Vector{Int64}`, but it does know how to handle `Float64`, `Int64`, and
@@ -622,7 +622,7 @@ end                         #hide
 
 # In the example above, we didn't define what to do if `f` was passed a
 # `Vector`. Luckily, Julia provides a convenient syntax for mapping `f`
-# element-wise over arrays! Just add a `.` between the name of the function and
+# element-wise over arrays. Just add a `.` between the name of the function and
 # the opening `(`. This works for _any_ function, including functions with
 # multiple arguments. For example:
 
@@ -630,7 +630,7 @@ f.([1, 2, 3])
 
 # !!! tip
 #     Get a `MethodError` when calling a function that takes a `Vector`,
-#     `Matrix`, or `Array`? Try broadcasting it!
+#     `Matrix`, or `Array`? Try broadcasting.
 
 # ## Mutable vs immutable objects
 

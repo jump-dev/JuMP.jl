@@ -1,6 +1,6 @@
 # How to contribute to JuMP
 
-Welcome! This document explains some ways you can contribute to JuMP.
+Welcome, this document explains some ways you can contribute to JuMP.
 
 ## Code of Conduct
 
@@ -17,7 +17,7 @@ use the forum to discuss possible feature requests and bugs before raising a
 GitHub issue (more on this below).
 
 Aside from asking questions, the easiest way you can contribute to JuMP is to
-help answer questions on the forum!
+help answer questions on the forum.
 
 ## Join the developer chatroom
 
@@ -30,7 +30,7 @@ have in mind, and we can point you in the right direction.
 Chances are, if you asked (or answered) a question on the community forum, then
 it is a sign that the [documentation](https://jump.dev/JuMP.jl/dev/) could be
 improved. Moreover, since it is your question, you are probably the best-placed
-person to improve it!
+person to improve it.
 
 The docs are written in Markdown and are built using
 [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl).
@@ -68,7 +68,7 @@ before posting. You can also find a copy of that info
 
 ## Contribute code to JuMP
 
-Finally, you can also contribute code to JuMP!
+Finally, you can also contribute code to JuMP.
 
 !!! warning
     If you do not have experience with Git, GitHub, and Julia development, the
@@ -95,7 +95,7 @@ JuMP.
 
 !!! tip
     At this point, remember to be patient and polite; you may get a _lot_ of
-    comments on your issue! However, do not be afraid! Comments mean that people are
+    comments on your issue. However, do not be afraid. Comments mean that people are
     willing to help you improve the code that you are contributing to JuMP.
 
 **Step 2: fork JuMP**
@@ -211,7 +211,7 @@ and follow the instructions that pop up to open a pull request.
 **Step 8: respond to comments**
 
 At this point, remember to be patient and polite; you may get a _lot_ of
-comments on your pull request! However, do not be afraid! A lot of comments
+comments on your pull request. However, do not be afraid. A lot of comments
 means that people are willing to help you improve the code that you are
 contributing to JuMP.
 
@@ -222,7 +222,7 @@ automatically update.
 **Step 9: cleaning up**
 
 Once the PR is merged, clean-up your Git repository ready for the
-next contribution!
+next contribution.
 ```
 $ cd ~/.julia/dev/JuMP
 
@@ -232,8 +232,6 @@ $ git pull
 ```
 
 !!! note
-    If you have suggestions to improve this guide, please make a pull request!
+    If you have suggestions to improve this guide, please make a pull request.
     It's particularly helpful if you do this after your first pull request
     because you'll know all the parts that could be explained better.
-
-Thanks for contributing to JuMP!

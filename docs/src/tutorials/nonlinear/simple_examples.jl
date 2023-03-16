@@ -46,9 +46,11 @@ example_rosenbrock()
 # documentation for any purpose and without fee is hereby granted, provided that
 # the above copyright notice appear in all copies and that the copyright notice
 # and this permission notice appear in all supporting documentation.
-
-# Source: H. Maurer and H.D. Mittelman, "The non-linear beam via optimal control
-# with bound state variables", Optimal Control Applications and Methods 12, pp.
+#
+# Source:
+#
+# H. Maurer and H.D. Mittelman, "The non-linear beam via optimal control
+# with bound state variables," Optimal Control Applications and Methods 12, pp.
 # 19-31, 1991.
 
 function example_clnlbeam()
