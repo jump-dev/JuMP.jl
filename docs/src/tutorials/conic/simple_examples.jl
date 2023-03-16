@@ -284,9 +284,9 @@ function example_minimum_distortion()
     Test.@test termination_status(model) == OPTIMAL
     Test.@test primal_status(model) == FEASIBLE_POINT
     Test.@test objective_value(model) ≈ 4 / 3 atol = 1e-4
-    # Recover the minimal distorted embedding:
+    ## Recover the minimal distorted embedding:
     X = [zeros(3) sqrt(value.(Q)[2:end, 2:end])]
-    p = Plots.plot(
+    return Plots.plot(
         X[1, :],
         X[2, :],
         X[3, :];
@@ -302,7 +302,6 @@ function example_minimum_distortion()
         zticks = -1:1,
         camera = (60, 30),
     )
-    return p
 end
 
 example_minimum_distortion()
