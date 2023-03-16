@@ -12,9 +12,9 @@
 
 using JuMP
 import LinearAlgebra
+import Plots
 import Random
 import SCS
-import Plots
 import Test
 
 # ## Maximum cut via SDP
