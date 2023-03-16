@@ -14,6 +14,7 @@ using JuMP
 import LinearAlgebra
 import Random
 import SCS
+import Plots
 import Test
 
 # ## Maximum cut via SDP
@@ -285,7 +286,7 @@ function example_minimum_distortion()
     Test.@test objective_value(model) ≈ 4 / 3 atol = 1e-4
     # Recover the minimal distorted embedding:
     X = [zeros(3) sqrt(value.(Q)[2:end, 2:end])]
-    p = plot(
+    p = Plots.plot(
         X[1, :],
         X[2, :],
         X[3, :];
