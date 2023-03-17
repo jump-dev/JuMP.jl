@@ -47,6 +47,25 @@ julia> @variable(model, Q[1:2, 1:2] in SkewSymmetricMatrixSpace())
 struct SkewSymmetricMatrixSpace end
 
 """
+    HermitianMatrixSpace()
+
+Use in the [`@variable`](@ref) macro to constrain a matrix of variables to be
+hermitian.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, Q[1:2, 1:2] in HermitianMatrixSpace())
+2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ real(Q[1,1])                               real(Q[1,2]) + (0.0 + 1.0im) imag(Q[1,2])
+ real(Q[1,2]) + (0.0 - 1.0im) imag(Q[1,2])  real(Q[2,2])
+```
+"""
+struct HermitianMatrixSpace end
+
+"""
     PSDCone
 
 Positive semidefinite cone object that can be used to constrain a square matrix
@@ -326,6 +345,38 @@ function build_variable(
     shape = SkewSymmetricMatrixShape(n)
     return VariablesConstrainedOnCreation(
         vectorize(variables, SkewSymmetricMatrixShape(n)),
+        set,
+        shape,
+    )
+end
+
+"""
+    build_variable(_error::Function, variables, ::HermitianMatrixSpace)
+
+Return a `VariablesConstrainedOnCreation` of shape [`HermitianMatrixShape`](@ref)
+creating variables in `MOI.Reals`, i.e. "free" variables unless they are
+constrained after their creation.
+
+This function is used by the [`@variable`](@ref) macro as follows:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, Q[1:2, 1:2] in HermitianMatrixSpace())
+2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ real(Q[1,1])                               real(Q[1,2]) + (0.0 + 1.0im) imag(Q[1,2])
+ real(Q[1,2]) + (0.0 - 1.0im) imag(Q[1,2])  real(Q[2,2])
+```
+"""
+function build_variable(
+    _error::Function,
+    variables::Matrix{<:AbstractVariable},
+    ::HermitianMatrixSpace,
+)
+    n = _square_side(_error, variables)
+    set = MOI.Reals(MOI.dimension(MOI.HermitianPositiveSemidefiniteConeTriangle(n)))
+    shape = HermitianMatrixShape(n)
+    return VariablesConstrainedOnCreation(
+        _vectorize_variables(_error, variables),
         set,
         shape,
     )
