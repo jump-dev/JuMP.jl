@@ -2499,7 +2499,15 @@ macro variable(args...)
         end
         set = :(JuMP.SymmetricMatrixSpace())
     end
-    extra = filter(x -> (x != :PSD && x != :Symmetric), extra) # filter out PSD and sym tag
+    if any(t -> (t == :Hermitian), extra)
+        if set !== nothing
+            _error(
+                "Cannot specify `Hermitian` when the set is already specified, the variable is constrained to belong to `$set`.",
+            )
+        end
+        set = :(JuMP.HermitianMatrixSpace())
+    end
+    extra = filter(x -> (x != :PSD && x != :Symmetric && x != :Hermitian), extra) # filter out PSD, Symmetric and Hermitian tags
     for ex in extra
         if ex == :Int
             _set_integer_or_error(_error, infoexpr)
