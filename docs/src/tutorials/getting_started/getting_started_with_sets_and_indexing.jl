@@ -13,8 +13,8 @@
 # In contrast, because tools like AMPL are stand-alone software packages, they
 # had to define their own syntax for set construction and manipulation. Indeed,
 # the [AMPL Book](https://ampl.com/resources/the-ampl-book/chapter-downloads/)
-# has two entire chapters devoted to sets and indexing (V: Simple Sets and
-# Indexing, and VI: Compound Sets and Indexing).
+# has two entire chapters devoted to sets and indexing (Chapter 5, "Simple Sets
+# and Indexing," and Chapter 6, "Compound Sets and Indexing").
 
 # The purpose of this tutorial is to demonstrate a variety of ways in which you
 # can construct and manipulate sets for optimization models.
@@ -161,7 +161,7 @@ cancelled = [1916, 1940, 1944, 2020]
 off_year = [2021]
 olympic_years = union(setdiff(baseline, cancelled), off_year)
 
-# You can also find the number of elements (i.e., the cardinality) in a set
+# You can also find the number of elements (that is, the cardinality) in a set
 # using `length`:
 
 length(olympic_years)
@@ -248,7 +248,7 @@ model = Model()
 @objective(model, Min, sum(distances[i...] * x[i] for i in eachindex(x)))
 
 # !!! note
-#     The `i...` is called  a "splat". It converts a tuple like `(1, 2)` into
+#     The `i...` is called  a "splat." It converts a tuple like `(1, 2)` into
 #     two indices like `distances[1, 2]`.
 
 # ### Converting to a different data structure

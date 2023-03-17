@@ -378,7 +378,7 @@ OPTIMAL::TerminationStatusCode = 1
 ```
 
 !!! warning
-    Be careful doing this! If your particular solver does not support
+    Be careful doing this. If your particular solver does not support
     querying solution information after modification, it may silently return
     incorrect solutions or throw an error.
 
@@ -570,7 +570,7 @@ which result to return.
 
 !!! warning
     Even if [`termination_status`](@ref) is `OPTIMAL`, some of the returned
-    solutions may be suboptimal! However, if the solver found at least one
+    solutions may be suboptimal. However, if the solver found at least one
     optimal solution, then `result = 1` will always return an optimal solution.
     Use [`objective_value`](@ref) to assess the quality of the remaining
     solutions.

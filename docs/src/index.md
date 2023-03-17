@@ -16,7 +16,7 @@
 \end{figure}
 ```
 
-Welcome to the documentation for JuMP!
+Welcome to the documentation for JuMP.
 
 !!! note
     This documentation is also available in PDF format: [JuMP.pdf](JuMP.pdf).
@@ -31,7 +31,7 @@ linear, mixed-integer, second-order conic, semidefinite, and nonlinear
 programming.
 
 !!! tip
-    If you aren't sure if you should use JuMP, read [Should I use JuMP?](@ref).
+    If you aren't sure if you should use JuMP, read [Should you use JuMP?](@ref).
 
 ## Resources for getting started
 

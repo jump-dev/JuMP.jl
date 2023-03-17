@@ -552,8 +552,9 @@ solvers, see their respective documentation for performance tips.
 The function evaluation time, on the other hand, is the responsibility of the
 modeling language. JuMP computes derivatives by using reverse-mode automatic
 differentiation with graph coloring methods for exploiting sparsity of the
-Hessian matrix [^1]. As a conservative bound, JuMP's performance here currently
-may be expected to be within a factor of 5 of AMPL's.
+Hessian matrix. As a conservative bound, JuMP's performance here currently
+may be expected to be within a factor of 5 of AMPL's. Our [paper in
+SIAM Review](https://mlubin.github.io/pdf/jump-sirev.pdf) has more details.
 
 ## Querying derivatives from a JuMP model
 
@@ -885,5 +886,3 @@ examples.
 As a rule of thumb, if you are writing programs to automatically generate
 expressions for the JuMP macros, you should target the [Raw expression input](@ref)
 instead. For more information, read [MathOptInterface Issue#1997](https://github.com/jump-dev/MathOptInterface.jl/issues/1997).
-
-[^1]: Dunning, Huchette, and Lubin, "JuMP: A Modeling Language for Mathematical Optimization", SIAM Review, [PDF](https://mlubin.github.io/pdf/jump-sirev.pdf).

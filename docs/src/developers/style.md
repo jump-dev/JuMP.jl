@@ -11,7 +11,7 @@ a style guide include:
   [bike-shedding](https://en.wikipedia.org/wiki/Law_of_triviality) by
   establishing basic naming and formatting conventions
 - lowering the barrier for new contributors by codifying the existing practices
-  (e.g., you can be more confident your code will pass review if you follow the
+  (for example, you can be more confident your code will pass review if you follow the
   style guide)
 
 In some cases, the JuMP style guide diverges from the
@@ -24,7 +24,7 @@ The JuMP style guide adopts many recommendations from the
 !!! info
     The style guide is always a work in progress, and not all JuMP code
     follows the rules. When modifying JuMP, please fix the style violations
-    of the surrounding code (i.e., leave the code tidier than when you
+    of the surrounding code (that is, leave the code tidier than when you
     started). If large changes are needed, consider separating them into
     another PR.
 
@@ -158,7 +158,7 @@ Dealing with correctness is harder, because Julia has no way of formally
 specifying interfaces that abstract types must implement. Instead, here are two
 options that you can use when writing and interacting with generic code:
 
-**Option 1: Use concrete types and let users extend new methods.**
+**Option 1: use concrete types and let users extend new methods.**
 
 In this option, explicitly restrict input arguments to concrete types that
 are tested and have been validated for correctness. For example:
@@ -200,7 +200,7 @@ Importantly, these methods do not have to be defined in the original package.
     safe, but it still has an implicit assumption that `T` supports `zero(T)`
     and `+(::T, ::T)`.
 
-**Option 2: Program defensively, and validate all assumptions.**
+**Option 2: program defensively, and validate all assumptions.**
 
 An alternative is to program defensively, and to rigorously document and
 validate all assumptions that the code makes. In particular:
@@ -448,10 +448,10 @@ end
 
 ### Use of underscores within names
 
-The Julia style guide recommends avoiding underscores "when readable", for
+The Julia style guide recommends avoiding underscores "when readable," for
 example, `haskey`, `isequal`, `remotecall`, and `remotecall_fetch`. This
 convention creates the potential for unnecessary bikeshedding and also forces
-the user to recall the presence/absence of an underscore, e.g., "was that
+the user to recall the presence/absence of an underscore, for example, "was that
 argument named `basename` or `base_name`?". For consistency, *always use
 underscores* in variable names and function names to separate words.
 
@@ -461,7 +461,7 @@ Julia has a convention of appending `!` to a function name if the function
 modifies its arguments. We recommend to:
 
 - Omit `!` when the name itself makes it clear that modification is taking
-  place, e.g., `add_constraint` and `set_name`. We depart from the Julia style
+  place, for example, `add_constraint` and `set_name`. We depart from the Julia style
   guide because `!` does not provide a reader with any additional information
   in this case, and adherence to this convention is not uniform even in base
   Julia itself (consider `Base.println` and `Base.finalize`).
@@ -479,8 +479,8 @@ See also the Julia style guide recommendations for
 ### Abbreviations
 
 Abbreviate names to make the code more readable, not to save typing.
-Don't arbitrarily delete letters from a word to abbreviate it (e.g., `indx`).
-Use abbreviations consistently within a body of code (e.g., do not mix
+Don't arbitrarily delete letters from a word to abbreviate it (for example, `indx`).
+Use abbreviations consistently within a body of code (for example, do not mix
 `con` and `constr`, `idx` and `indx`).
 
 Common abbreviations:
@@ -503,10 +503,10 @@ are explicitly enumerated (like `enum` in C/C++). `Symbol`s are lightweight
 strings that are used to represent identifiers in Julia (for example, `:x`).
 
 `@enum` provides type safety and can have docstrings attached to explain the
-possible values. Use `@enum`s when applicable, e.g., for reporting statuses.
+possible values. Use `@enum`s when applicable, for example, for reporting statuses.
 Use strings to provide long-form additional information like error messages.
 
-Use of `Symbol` should typically be reserved for identifiers, e.g., for lookup
+Use of `Symbol` should typically be reserved for identifiers, for example, for lookup
 in the JuMP model (`model[:my_variable]`).
 
 ### `using` vs. `import`
@@ -544,7 +544,7 @@ points more specific to Julia and documentation that use [Documenter](https://gi
 
  - Be concise
  - Use lists instead of long sentences
- - Use numbered lists when describing a sequence, e.g., (1) do X, (2) then Y
+ - Use numbered lists when describing a sequence, for example, (1) do X, (2) then Y
  - Use bullet points when the items are not ordered
  - Example code should be covered by doctests
  - When a word is a Julia symbol and not an English word, enclose it with
@@ -566,7 +566,7 @@ points more specific to Julia and documentation that use [Documenter](https://gi
 - Every exported object needs a docstring
 - All examples in docstrings should be [`jldoctests`](https://juliadocs.github.io/Documenter.jl/stable/man/doctests/)
 - Always use complete English sentences with proper punctuation
-- Do not terminate lists with punctuation (e.g., as in this doc)
+- Do not terminate lists with punctuation (for example, as in this doc)
 
 Here is an example:
 ````julia

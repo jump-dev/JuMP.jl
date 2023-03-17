@@ -20,7 +20,7 @@
 
 # # [Tips and tricks](@id linear_tips_and_tricks)
 
-# **Originally Contributed by**: Arpit Bhatia
+# **This tutorial was originally contributed by Arpit Bhatia.**
 
 # !!! tip
 #     A good source of tips is the [Mosek Modeling Cookbook](https://docs.mosek.com/modeling-cookbook/mio.html).
@@ -191,7 +191,7 @@ M = 100
 # ### Problem
 
 # Suppose we want to model that a certain linear inequality must be satisfied
-# when some other event occurs, i.e., for a binary variable $z$, we want to
+# when some other event occurs, that is, for a binary variable $z$, we want to
 # model the implication:
 
 # $$z = 1 \implies a^\top x \leq b$$
@@ -264,9 +264,9 @@ model = Model();
 model = Model();
 @variable(model, x in MOI.Semiinteger(5.0, 10.0))
 
-# ## Special Ordered Sets of Type I
+# ## Special Ordered Sets of Type 1
 
-# A Special Ordered Set of Type I is a set of variables, at most one of which
+# A Special Ordered Set of Type 1 is a set of variables, at most one of which
 # can take a non-zero value, all others being at 0.
 #
 # They most frequently apply where a set of variables are actually binary
@@ -285,7 +285,7 @@ model = Model();
 # weight vector, although not used directly in the constraint, can help the
 # solver make a better decision in the solution process.
 
-# ## [Special Ordered Sets of Type II](@id tip_sos2)
+# ## [Special Ordered Sets of Type 2](@id tip_sos2)
 
 # A Special Ordered Set of type 2 is a set of non-negative variables, of which
 # at most two can be non-zero, and if two are non-zero these must be consecutive

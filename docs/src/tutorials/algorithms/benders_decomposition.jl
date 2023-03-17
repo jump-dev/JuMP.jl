@@ -20,7 +20,7 @@
 
 # # [Benders decomposition](@id benders_decomposition_classical)
 
-# **Originally Contributed by**: Shuvomoy Das Gupta
+# **This tutorial was originally contributed by Shuvomoy Das Gupta.**
 
 # This tutorial describes how to implement [Benders decomposition](https://en.wikipedia.org/wiki/Benders_decomposition)
 # in JuMP. It uses the following packages:

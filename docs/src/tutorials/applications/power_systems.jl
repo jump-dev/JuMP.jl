@@ -5,7 +5,7 @@
 
 # # Power Systems
 
-# **Originally Contributed by**: Yury Dvorkin and Miles Lubin
+# **This tutorial was originally contributed by Yury Dvorkin and Miles Lubin.**
 
 # This tutorial demonstrates how to formulate basic power systems engineering
 # models in JuMP.
@@ -52,7 +52,7 @@ import StatsPlots
 #   where $d^f$ is the demand forecast.
 
 # Further reading on ED models can be found in A. J. Wood, B. F. Wollenberg, and
-# G. B. Sheblé, "Power Generation, Operation and Control", Wiley, 2013.
+# G. B. Sheblé, "Power Generation, Operation and Control," Wiley, 2013.
 
 # Define some input data about the test system.
 
@@ -178,7 +178,7 @@ c_g_scale_df
 # Note that in the previous exercise we entirely rebuilt the optimization model
 # at every iteration of the internal loop, which incurs an additional
 # computational burden. This burden can be alleviated if instead of re-building
-# the entire model, we modify a specific constraint(s) or the objective
+# the entire model, we modify the constraints or objective
 # function, as it shown in the example below.
 
 # Compare the computing time in case of the above and below models.
@@ -254,7 +254,7 @@ inplace_df
 # assumes that all generators must be dispatched at least at their minimum power
 # output limit. This approach is not cost efficient and may lead to absurd
 # decisions. For example, if $d = \sum_{i \in I} g^{\min}_{i}$, the wind power
-# injection must be zero, i.e. all available wind generation is spilled, to meet
+# injection must be zero, that is, all available wind generation is spilled, to meet
 # the minimum power output constraints on generators.
 
 # In the following example, we adjust the total demand and observed how it
@@ -329,15 +329,15 @@ Plots.plot(dispatch_plot, wind_plot)
 
 # For further reading on the interplay between wind generation and the minimum
 # power output constraints of generators, we refer interested readers to R.
-# Baldick, "Wind and Energy Markets: A Case Study of Texas," IEEE Systems
+# Baldick, "Wind and energy markets: a case study of Texas," IEEE Systems
 # Journal, vol. 6, pp. 27-34, 2012.
 
 # ## Unit commitment
 
 # The Unit Commitment (UC) model can be obtained from ED model by introducing
 # binary variable associated with each generator. This binary variable can
-# attain two values: if it is "1", the generator is synchronized and, thus, can
-# be dispatched, otherwise, i.e. if the binary variable is "0", that generator
+# attain two values: if it is "1," the generator is synchronized and, thus, can
+# be dispatched, otherwise, that is, if the binary variable is "0," that generator
 # is not synchronized and its power output is set to 0.
 
 # To obtain the mathematical formulation of the UC model, we will modify the

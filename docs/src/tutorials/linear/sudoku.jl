@@ -20,10 +20,10 @@
 
 # # Sudoku
 
-# **Originally Contributed by**: Iain Dunning
+# **This tutorial was originally contributed by Iain Dunning.**
 
 # [Sudoku](http://en.wikipedia.org/wiki/Sudoku) is a popular number puzzle. The
-# goal is to place the digits 1,...,9 on a nine-by-nine grid, with some of the
+# goal is to place the digits 1 to 9 on a nine-by-nine grid, with some of the
 # digits already filled in. Your solution must satisfy the following rules:
 #
 # * The numbers 1 to 9 must appear in each 3x3 square
@@ -96,7 +96,7 @@ for i in 1:3:7
     for j in 1:3:7
         for k in 1:9
             ## i is the top left row, j is the top left column.
-            ## We'll sum from i to i+2, e.g. i=4, r=4, 5, 6.
+            ## We'll sum from i to i+2, for example, i=4, r=4, 5, 6.
             @constraint(
                 sudoku,
                 sum(x[r, c, k] for r in i:(i+2), c in j:(j+2)) == 1

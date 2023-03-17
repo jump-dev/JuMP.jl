@@ -126,4 +126,4 @@ println("Memoized approach: function_calls = $(function_calls)")
 Test.@test function_calls <= naive_approach / 2 + 1  #src
 
 # Compared to the naive approach, the memoized approach requires half as many
-# function evaluations!
+# function evaluations.

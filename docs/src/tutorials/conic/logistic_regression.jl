@@ -22,7 +22,7 @@
 
 # # Logistic regression
 
-# **Originally Contributed by**: François Pacaud
+# **This tutorial was originally contributed by François Pacaud.**
 
 # This tutorial shows how to solve a logistic regression problem
 # with JuMP. Logistic regression is a well known method in machine learning,
@@ -185,7 +185,7 @@ end
 # We generate the dataset.
 #
 # !!! warning
-#     Be careful here, for large n and p SCS could fail to converge!
+#     Be careful here, for large n and p SCS could fail to converge.
 #
 n, p = 200, 10
 X, y = generate_dataset(n, p; shift = 10.0);

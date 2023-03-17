@@ -10,7 +10,7 @@
 # how to use JuMP to inspect the bridges that were used, and how to explore
 # alternative formulations.
 
-# The model comes from Section 4.9 "Applications VII: Extremal Ellipsoids"
+# The model comes from Section 4.9 "Applications VII: extremal ellipsoids"
 # of the book *Lectures on Modern Convex Optimization* by
 # [Ben-Tal and Nemirovski (2001)](http://epubs.siam.org/doi/book/10.1137/1.9780898718829).
 

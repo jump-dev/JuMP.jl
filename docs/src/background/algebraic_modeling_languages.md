@@ -189,11 +189,11 @@ julia> nonalgebraic_knapsack([1, 2], [0.5, 0.5], 1.25)
  2.0
 ```
 
-Hopefully you agree that the macro version is much easier to read!
+Hopefully you agree that the macro version is much easier to read.
 
 ### Part III: JuMP to MathOptInterface
 
-In the third step, JuMP converts the functional form of the problem, i.e.,
+In the third step, JuMP converts the functional form of the problem, that is,
 `nonalgebraic_knapsack`, into the MathOptInterface API:
 ```jldoctest
 julia> import MathOptInterface as MOI
@@ -234,7 +234,7 @@ formulation that we started with.
 ### Step IV: MathOptInterface to HiGHS
 
 As a final step, the [HiGHS.jl](https://github.com/jump-dev/HiGHS.jl) package
-converts the MathOptInterface form, i.e., `mathoptinterface_knapsack`, into a
+converts the MathOptInterface form, that is, `mathoptinterface_knapsack`, into a
 HiGHS-specific API:
 ```jldoctest
 julia> using HiGHS

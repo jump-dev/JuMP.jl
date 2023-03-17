@@ -5,7 +5,7 @@
 
 # # The multi-commodity flow problem
 
-# **Originally contributed by:** Louis Luangkesorn
+# **This tutorial was originally contributed by Louis Luangkesorn.**
 
 # This tutorial is a JuMP implementation of the multi-commodity transportation
 # model described in

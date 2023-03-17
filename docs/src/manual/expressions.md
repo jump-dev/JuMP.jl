@@ -328,8 +328,7 @@ julia> coefficient(ex, x)
 
 Nonlinear expressions can be constructed only using the [`@NLexpression`](@ref)
 macro and can be used only in [`@NLobjective`](@ref), [`@NLconstraint`](@ref),
-and other [`@NLexpression`](@ref)s. Moreover, quadratic and affine expressions
-cannot be used in the nonlinear macros. For more details, see the [Nonlinear
+and other [`@NLexpression`](@ref)s. For more details, see the [Nonlinear
 Modeling](@ref) section.
 
 ## Initializing arrays

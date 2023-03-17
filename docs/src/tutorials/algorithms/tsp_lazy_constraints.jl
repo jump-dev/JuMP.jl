@@ -20,7 +20,7 @@
 
 # # [Traveling Salesperson Problem](@id tsp_lazy)
 
-# **Originally Contributed by**: Daniel Schermer
+# **This tutorial was originally contributed by Daniel Schermer.**
 
 # This tutorial describes how to implement the
 # [Traveling Salesperson Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem)
@@ -184,11 +184,11 @@ subtour(x::AbstractMatrix{VariableRef}) = subtour(value.(x))
 # An iterative way of eliminating subtours is the following.
 
 # However, it is reasonable to assume that this is not the most efficient way:
-# Whenever a new subtour elimination constraint is added to the model, the
+# whenever a new subtour elimination constraint is added to the model, the
 # optimization has to start from the very beginning.
 
 # That way, the solver will repeatedly discard useful information encountered
-# during previous solves (e.g., all cuts, the incumbent solution, or lower
+# during previous solves (for example, all cuts, the incumbent solution, or lower
 # bounds).
 
 # !!! info

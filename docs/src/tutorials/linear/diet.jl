@@ -5,7 +5,7 @@
 
 # # The diet problem
 
-# This tutorial solves the classic "diet problem", also known as the
+# This tutorial solves the classic "diet problem," also known as the
 # [Stigler diet](https://en.wikipedia.org/wiki/Stigler_diet).
 
 # ## Required packages
@@ -128,13 +128,13 @@ Test.@test primal_status(model) == FEASIBLE_POINT        #hide
 Test.@test objective_value(model) ≈ 11.8288 atol = 1e-4  #hide
 solution_summary(model)
 
-# Success! We found an optimal solution. Let's see what the optimal solution is:
+# We found an optimal solution. Let's see what the optimal solution is:
 
 for row in eachrow(foods)
     println(row.name, " = ", value(row.x))
 end
 
-# That's a lot of milk and ice cream! And sadly, we only get `0.6` of a
+# That's a lot of milk and ice cream, and sadly, we only get `0.6` of a
 # hamburger.
 
 # We can also use the function [`Containers.rowtable`](@ref) to easily convert
@@ -161,5 +161,5 @@ Test.@test termination_status(model) == INFEASIBLE  #hide
 Test.@test primal_status(model) == NO_SOLUTION      #hide
 solution_summary(model)
 
-# Uh oh! There exists no feasible solution to our problem. Looks like we're
-# stuck eating ice cream for dinner.
+# There exists no feasible solution to our problem. Looks like we're stuck
+# eating ice cream for dinner.

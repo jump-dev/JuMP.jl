@@ -5,8 +5,11 @@
 
 # # The facility location problem
 
-# This tutorial was originally contributed by Mathieu Tanneau (@mtanneau) and
-# Alexis Montoison (@amontoison). It requires the following packages:
+# **This tutorial was originally contributed by Mathieu Tanneau and Alexis Montoison.**
+
+# ## Required packages
+
+# This tutorial requires the following packages:
 
 using JuMP
 import HiGHS
@@ -173,7 +176,7 @@ p
 # ### Problem formulation
 #
 # The capacitated variant introduces a capacity constraint on each facility,
-# i.e., clients have a certain level of demand to be served, while each facility
+# that is, clients have a certain level of demand to be served, while each facility
 # only has finite capacity which cannot be exceeded.
 #
 # Specifically,

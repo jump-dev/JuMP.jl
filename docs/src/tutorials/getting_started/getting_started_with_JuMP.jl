@@ -462,7 +462,7 @@ model = Model(HiGHS.Optimizer)
 # ## Vectorized syntax
 
 # We can also add constraints and an objective to JuMP using vectorized linear
-# algebra. We'll illustrate this by solving an LP in standard form i.e.
+# algebra. We'll illustrate this by solving an LP in standard form that is,
 
 # ```math
 # \begin{aligned}

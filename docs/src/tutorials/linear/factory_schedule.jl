@@ -5,7 +5,7 @@
 
 # # The factory schedule example
 
-# This tutorial was originally contributed by `@Crghilardi`.
+# **This tutorial was originally contributed by `@Crghilardi`.**
 
 # This tutorial is a Julia translation of Part 5 from [Introduction to Linear
 # Programming with Python](https://github.com/benalexkeen/Introduction-to-linear-programming).
@@ -236,7 +236,7 @@ StatsPlots.groupedbar(
     color = ["#20326c" "#4063d8" "#a0b1ec"],
 )
 
-# Note that we don't have any unmet demand!
+# Note that we don't have any unmet demand.
 
 # ## What happens if demand increases?
 
@@ -260,7 +260,7 @@ StatsPlots.groupedbar(
     color = ["#20326c" "#4063d8" "#a0b1ec"],
 )
 
-# Uh oh! We can't satisfy all of the demand.
+# Uh oh, we can't satisfy all of the demand.
 
 # ## How sensitive is the solution to changes in variable cost?
 

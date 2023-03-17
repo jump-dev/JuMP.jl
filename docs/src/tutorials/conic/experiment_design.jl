@@ -20,7 +20,7 @@
 
 # # Experiment design
 
-# **Originally Contributed by**: Arpit Bhatia, Chris Coey
+# **This tutorial was originally contributed by Arpit Bhatia and Chris Coey.**
 
 # This tutorial covers experiment design examples (D-optimal, A-optimal, and
 # E-optimal) from section 7.5 of the book [Convex Optimization](https://doi.org/10.1017/CBO9780511804441)
@@ -50,7 +50,7 @@ Random.seed!(1234)
 
 # Given the menu of possible choices for experiments, $v_{1}, \ldots, v_{p}$,
 # and the total number $m$ of experiments to be carried out, choose the numbers
-# of each type of experiment, i.e., $m_{1}, \ldots, m_{p}$ to make the error
+# of each type of experiment, that is, $m_{1}, \ldots, m_{p}$ to make the error
 # covariance $E$ small (in  some sense).
 
 # The variables $m_{1}, \ldots, m_{p}$ must, of course, be integers and sum to
@@ -151,7 +151,7 @@ value.(np)
 # ## E-optimal design
 
 # In $E$ -optimal design, we minimize the norm of the error covariance matrix,
-# i.e. the maximum eigenvalue of $E$.
+# that is, the maximum eigenvalue of $E$.
 
 # Since the diameter (twice the longest semi-axis) of the confidence ellipsoid
 # $\mathcal{E}$ is proportional to $\|E\|_{2}^{1 / 2}$, minimizing $\|E\|_{2}$
