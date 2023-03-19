@@ -445,7 +445,9 @@ function test_linear_algebra_scaling_matrix()
     model = Model()
     @variable(model, x)
     A = [1 2; 3 4]
-    @test @expression(model, A + x * I(2)) == A + x * I(2) == A + [1 0; 0 1] * x
+    I = LinearAlgebra.I(2)
+    @test @expression(model, A + x * I) == A + x * I == A + x * [1 0; 0 1]
+    @test @expression(model, A + I * x) == A + I * x == A + [1 0; 0 1] * x
     return
 end
 
