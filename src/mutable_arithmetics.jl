@@ -133,6 +133,14 @@ function _MA.promote_operation(
     return GenericQuadExpr{T,V}
 end
 
+function _MA.promote_operation(
+    ::typeof(*),
+    ::Type{T},
+    ::Type{LinearAlgebra.Diagonal{Bool,Vector{Bool}}}, # LinearAlgebra.I(N)
+) where {T<:AbstractJuMPScalar}
+    return LinearAlgebra.Diagonal{T,Vector{T}}
+end
+
 function _MA.isequal_canonical(x::T, y::T) where {T<:AbstractJuMPScalar}
     return isequal_canonical(x, y)
 end

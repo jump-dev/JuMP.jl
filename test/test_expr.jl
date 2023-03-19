@@ -441,4 +441,12 @@ function test_expression_ambiguities()
     return
 end
 
+function test_linear_algebra_scaling_matrix()
+    model = Model()
+    @variable(model, x)
+    A = [1 2; 3 4]
+    @test @expression(model, A + x * I(2)) == A + x * I(2) == A + [1 0; 0 1] * x
+    return
+end
+
 end  # TestExpr
