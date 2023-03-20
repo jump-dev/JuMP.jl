@@ -60,14 +60,13 @@ following paper ([preprint](https://arxiv.org/abs/2206.03866)):
     title = {JuMP 1.0: Recent improvements to a modeling language for mathematical optimization},
     journal = {Mathematical Programming C},
     year = {2023},
-    note = {To appear.},
-    doi = {10.48550/arXiv.2206.03866}
+    note = {To appear.}
 }
 ```
 
 For earlier works, see:
 
- * Our paper in SIAM Review ([journal](https://dx.doi.org/10.1137/15M1020575), [preprint](https://mlubin.github.io/pdf/jump-sirev.pdf)):
+ * Our paper in SIAM Review ([journal](https://dx.doi.org/10.1137/15M1020575), [pdf](https://mlubin.github.io/pdf/jump-sirev.pdf)):
    ```bibtex
    @article{DunningHuchetteLubin2017,
        author = {Iain Dunning and Joey Huchette and Miles Lubin},
