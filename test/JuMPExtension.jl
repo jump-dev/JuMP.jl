@@ -111,7 +111,8 @@ function JuMP.add_variable(
             JuMP.vectorize(names, variable.shape),
         )
     if !isa(variable.set, JuMP.MOI.Reals)
-        JuMP.add_constraint(model, JuMP.VectorConstraint(var_refs, variable.set))
+        constraint = JuMP.VectorConstraint(var_refs, variable.set)
+        JuMP.add_constraint(model, constraint)
     end
     return JuMP.reshape_vector(var_refs, variable.shape)
 end
@@ -435,14 +436,16 @@ end
 
 function JuMP.all_constraints(
     model::MyModel,
-    function_type::Type,
-    set_type::Type{<:JuMP.MOI.AbstractSet},
-)
-    return JuMP.ConstraintRef[
-        JuMP.ConstraintRef(model, index, JuMP.shape(c))
-        for (index, c) in model.constraints
-        if typeof(JuMP.jump_function(c)) == function_type && typeof(JuMP.moi_set(c)) == set_type
-    ]
+    ::Type{F},
+    ::Type{S},
+) where {F,S<:JuMP.MOI.AbstractSet}
+    constraints = JuMP.ConstraintRef[]
+    for (index, c) in model.constraints
+        if JuMP.jump_function(c) isa F && JuMP.moi_set(c) isa S
+            push!(constraints, JuMP.ConstraintRef(model, index, JuMP.shape(c)))
+        end
+    end
+    return connstraints
 end
 
 function JuMP.constraint_object(cref::MyConstraintRef)
@@ -471,11 +474,11 @@ end
 
 function JuMP.num_constraints(
     model::MyModel;
-    count_variable_in_set_constraints,
+    count_variable_in_set_constraints::Bool,
 )
     return count(values(model.constraints)) do con
-        display(con)
-        return count_variable_in_set_constraints && typeof(JuMP.moi_set(con)) != MyVariableRef 
+        is_variable_set = JuMP.moi_set(con) isa MyVariableRef
+        return count_variable_in_set_constraints && is_variable_set
     end
 end
 

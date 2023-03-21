@@ -372,6 +372,13 @@ function build_variable(
     variables::Matrix{<:AbstractVariable},
     ::HermitianMatrixSpace,
 )
+    if any(_is_binary, variables) || any(_is_integer, variables)
+        # We would then need to fix the imaginary value to zero. Let's wait to
+        # see if there is need for such complication first.
+        _error(
+            "Binary or integer variables in a Hermitian matrix are not supported.",
+        )
+    end
     n = _square_side(_error, variables)
     set = MOI.Reals(
         MOI.dimension(MOI.HermitianPositiveSemidefiniteConeTriangle(n)),

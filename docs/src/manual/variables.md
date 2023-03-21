@@ -1241,17 +1241,19 @@ julia> set_lower_bound(y[1, 2], 0.0)
 
 Declare a matrix of JuMP variables to be Hermitian positive semidefinite using
 [`HermitianPSDCone`](@ref):
+
 ```jldoctest hermitian_psd
 julia> model = Model();
 
 julia> @variable(model, H[1:2, 1:2] in HermitianPSDCone())
 2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
- real(x[1,1])                               …  real(x[1,2]) + (0.0 + 1.0im) imag(x[1,2])
- real(x[1,2]) + (0.0 - 1.0im) imag(x[1,2])     real(x[2,2])
+ real(H[1,1])                               …  real(H[1,2]) + (0.0 + 1.0im) imag(H[1,2])
+ real(H[1,2]) + (0.0 - 1.0im) imag(H[1,2])     real(H[2,2])
 ```
-This adds 4 real variables in the
+
+This adds 4 real variables in the [`MOI.HermitianPositiveSemidefiniteConeTriangle`](@ref):
+
 ```jldoctest hermitian_psd
-[`MOI.HermitianPositiveSemidefiniteConeTriangle`](@ref):
 julia> first(all_constraints(model, Vector{VariableRef}, MOI.HermitianPositiveSemidefiniteConeTriangle))
 [real(H[1,1]), real(H[1,2]), real(H[2,2]), imag(H[1,2])] ∈ MathOptInterface.HermitianPositiveSemidefiniteConeTriangle(2)
 ```

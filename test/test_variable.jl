@@ -1321,7 +1321,7 @@ function test_extension_Hermitian_errors(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
-    _test_Hermitian_errors(ModelType(), HermitianMatrixShape())
+    _test_Hermitian_errors(ModelType(), HermitianMatrixSpace())
     return
 end
 
