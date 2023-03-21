@@ -378,7 +378,7 @@ function build_variable(
     )
     shape = HermitianMatrixShape(n)
     return VariablesConstrainedOnCreation(
-        _vectorize_variables(_error, variables),
+        _vectorize_complex_variables(_error, variables),
         set,
         shape,
     )
