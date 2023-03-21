@@ -58,7 +58,7 @@ following paper ([preprint](https://arxiv.org/abs/2206.03866)):
 @article{Lubin2023,
     author = {Miles Lubin and Oscar Dowson and Joaquim Dias Garcia and Joey Huchette and Beno{\^i}t Legat and Juan Pablo Vielma},
     title = {JuMP 1.0: Recent improvements to a modeling language for mathematical optimization},
-    journal = {Mathematical Programming C},
+    journal = {Mathematical Programming Computation},
     year = {2023},
     note = {In press.}
 }
