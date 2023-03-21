@@ -44,7 +44,7 @@ mutable struct MyModel <: JuMP.AbstractModel
     function MyModel()
         return new(
             0,
-            Dict{Int,JuMP.AbstractVariable}(),
+            OrderedCollections.OrderedDict{Int,JuMP.ScalarVariable}(),
             Dict{Int,String}(),
             nothing,
             0,
