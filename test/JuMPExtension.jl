@@ -445,7 +445,7 @@ function JuMP.all_constraints(
             push!(constraints, JuMP.ConstraintRef(model, index, JuMP.shape(c)))
         end
     end
-    return connstraints
+    return constraints
 end
 
 function JuMP.constraint_object(cref::MyConstraintRef)
