@@ -52,38 +52,47 @@ feature requests, etc.
 ## Citing JuMP
 
 If you find JuMP useful in your work, we kindly request that you cite the
-following paper ([pdf](https://mlubin.github.io/pdf/jump-sirev.pdf)):
+following paper ([preprint](https://arxiv.org/abs/2206.03866)):
 
 ```bibtex
-@article{DunningHuchetteLubin2017,
-    author = {Iain Dunning and Joey Huchette and Miles Lubin},
-    title = {JuMP: A Modeling Language for Mathematical Optimization},
-    journal = {SIAM Review},
-    volume = {59},
-    number = {2},
-    pages = {295-320},
-    year = {2017},
-    doi = {10.1137/15M1020575},
+@article{Lubin2023,
+    author = {Miles Lubin and Oscar Dowson and Joaquim Dias Garcia and Joey Huchette and Beno{\^i}t Legat and Juan Pablo Vielma},
+    title = {JuMP 1.0: Recent improvements to a modeling language for mathematical optimization},
+    journal = {Mathematical Programming Computation},
+    year = {2023},
+    note = {In press.}
 }
 ```
 
-For an earlier work where we presented a prototype implementation of JuMP, see
-[here](https://dx.doi.org/10.1287/ijoc.2014.0623):
+For earlier works, see:
 
-```bibtex
-@article{LubinDunningIJOC,
-    author = {Miles Lubin and Iain Dunning},
-    title = {Computing in Operations Research Using Julia},
-    journal = {INFORMS Journal on Computing},
-    volume = {27},
-    number = {2},
-    pages = {238-248},
-    year = {2015},
-    doi = {10.1287/ijoc.2014.0623},
-}
-```
+ * Our paper in SIAM Review ([journal](https://dx.doi.org/10.1137/15M1020575), [pdf](https://mlubin.github.io/pdf/jump-sirev.pdf)):
+   ```bibtex
+   @article{DunningHuchetteLubin2017,
+       author = {Iain Dunning and Joey Huchette and Miles Lubin},
+       title = {JuMP: A Modeling Language for Mathematical Optimization},
+       journal = {SIAM Review},
+       volume = {59},
+       number = {2},
+       pages = {295-320},
+       year = {2017},
+       doi = {10.1137/15M1020575},
+   }
+   ```
 
-A preprint of this paper is [freely available](https://arxiv.org/abs/1312.1431).
+ * Our paper in IJOC ([journal](https://dx.doi.org/10.1287/ijoc.2014.0623), [preprint](https://arxiv.org/abs/1312.1431)):
+   ```bibtex
+   @article{LubinDunningIJOC,
+       author = {Miles Lubin and Iain Dunning},
+       title = {Computing in Operations Research Using Julia},
+       journal = {INFORMS Journal on Computing},
+       volume = {27},
+       number = {2},
+       pages = {238-248},
+       year = {2015},
+       doi = {10.1287/ijoc.2014.0623},
+   }
+   ```
 
 ---
 
