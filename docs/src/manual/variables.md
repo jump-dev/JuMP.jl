@@ -1237,6 +1237,38 @@ julia> y = Union{VariableRef,AffExpr}[
 julia> set_lower_bound(y[1, 2], 0.0)
 ```
 
+### Example: Hermitian positive semidefinite variables
+
+Declare a matrix of JuMP variables to be Hermitian positive semidefinite using
+[`HermitianPSDCone`](@ref):
+```jldoctest hermitian_psd
+julia> model = Model();
+
+julia> @variable(model, H[1:2, 1:2] in HermitianPSDCone())
+2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ real(H[1,1])                               real(H[1,2]) + (0.0 + 1.0im) imag(H[1,2])
+ real(H[1,2]) + (0.0 - 1.0im) imag(H[1,2])  real(H[2,2])
+```
+This adds 4 real variables in the
+```jldoctest hermitian_psd
+[`MOI.HermitianPositiveSemidefiniteConeTriangle`](@ref):
+julia> first(all_constraints(model, Vector{VariableRef}, MOI.HermitianPositiveSemidefiniteConeTriangle))
+[real(H[1,1]), real(H[1,2]), real(H[2,2]), imag(H[1,2])] ∈ MathOptInterface.HermitianPositiveSemidefiniteConeTriangle(2)
+```
+
+### Example: Hermitian variables
+
+Declare a matrix of JuMP variables to be Hermitian using
+[`HermitianMatrixSpace`](@ref):
+```jldoctest hermitian
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2] in HermitianMatrixSpace())
+2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ real(H[1,1])                               real(H[1,2]) + (0.0 + 1.0im) imag(H[1,2])
+ real(H[1,2]) + (0.0 - 1.0im) imag(H[1,2])  real(H[2,2])
+```
+
 ### Why use variables constrained on creation?
 
 For most users, it does not matter if you use the constrained on creation

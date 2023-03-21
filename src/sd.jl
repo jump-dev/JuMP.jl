@@ -373,7 +373,9 @@ function build_variable(
     ::HermitianMatrixSpace,
 )
     n = _square_side(_error, variables)
-    set = MOI.Reals(MOI.dimension(MOI.HermitianPositiveSemidefiniteConeTriangle(n)))
+    set = MOI.Reals(
+        MOI.dimension(MOI.HermitianPositiveSemidefiniteConeTriangle(n)),
+    )
     shape = HermitianMatrixShape(n)
     return VariablesConstrainedOnCreation(
         _vectorize_variables(_error, variables),
