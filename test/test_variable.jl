@@ -1232,9 +1232,7 @@ function test_extension_complex_variable_errors(
     return
 end
 
-function test_Hermitian_PSD()
-    model = Model()
-    @variable(model, H[1:2, 1:2] in HermitianPSDCone())
+function _test_Hermitian(model, H)
     @test H isa LinearAlgebra.Hermitian
     Q = parent(H)
     @test num_variables(model) == 4
@@ -1248,6 +1246,82 @@ function test_Hermitian_PSD()
     @test Q[2, 2] == 1v[3]
     @test Q[2, 1] == conj(Q[1, 2])
     @test H[2, 1] == conj(H[1, 2])
+end
+
+function test_extension_variable_Hermitian(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, H[1:2, 1:2] in HermitianMatrixSpace())
+    _test_Hermitian(model, H)
+    @test num_constraints(model; count_variable_in_set_constraints = true) == 0
+    return
+end
+
+function test_extension_Hermitian_PSD(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, H[1:2, 1:2] in HermitianPSDCone())
+    _test_Hermitian(model, H)
+    con_refs = all_constraints(
+        model,
+        Vector{VariableRefType},
+        MOI.HermitianPositiveSemidefiniteConeTriangle,
+    )
+    @test length(con_refs) == 1
+    con = constraint_object(con_refs[1])
+    @test jump_function(con) == all_variables(model)
+    @test moi_set(con) == MOI.HermitianPositiveSemidefiniteConeTriangle(2)
+    return
+end
+
+function _test_Hermitian_errors(model, set)
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        lower_bound = (i + j) * im
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        upper_bound = (i + j) * im
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        start = (i + j) * im
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        integer = i > j
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        Bin
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        Int,
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        integer = i != j,
+    )
+    return
+end
+
+function test_extension_Hermitian_errors(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    _test_Hermitian_errors(ModelType(), HermitianMatrixSpace())
     return
 end
 
@@ -1255,42 +1329,7 @@ function test_extension_Hermitian_PSD_errors(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
-    model = ModelType()
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        lower_bound = (i + j) * im
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        upper_bound = (i + j) * im
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        start = (i + j) * im
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        integer = i > j
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        Bin
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        Int,
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        integer = i != j,
-    )
+    _test_Hermitian_errors(ModelType(), HermitianPSDCone())
     return
 end
 
