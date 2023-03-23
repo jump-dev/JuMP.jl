@@ -252,7 +252,6 @@ function test_containers_sparseaxisarray_kwarg_indexing()
         x[i = 2:3, j = 1:2],
         i + j,
         container = SparseAxisArray,
-        enable_keyword_indexing = true,
     )
     for i in (2, 3, 2:2, 2:3, :), j in (1, 2, 1:2, 1:1, 2:2, :)
         @test x[i = i, j = j] == x[i, j]
@@ -280,12 +279,7 @@ function test_containers_sparseaxisarray_kwarg_indexing()
         ),
         x[i = 2, 2],
     )
-    Containers.@container(
-        y[i = 2:3, 1:2],
-        i,
-        container = SparseAxisArray,
-        enable_keyword_indexing = true,
-    )
+    Containers.@container(y[i = 2:3, 1:2], i, container = SparseAxisArray,)
     @test_throws(
         ErrorException(
             "Cannot index with mix of positional and keyword arguments",
@@ -302,7 +296,6 @@ function test_containers_sparseaxisarray_kwarg_indexing_slicing()
         x[i = 2:3, j = 1:2],
         i + j,
         container = SparseAxisArray,
-        enable_keyword_indexing = true,
     )
     y = x[i = 2, j = :]
     @test y[j = 2] == 4
@@ -318,7 +311,6 @@ function test_containers_sparseaxisarray_kwarg_setindex()
         x[i = 2:3, j = 1:2],
         i + j,
         container = SparseAxisArray,
-        enable_keyword_indexing = true,
     )
     for i in 2:3, j in 1:2
         @test x[i = i, j = j] == i + j
@@ -348,12 +340,6 @@ function test_containers_sparseaxisarray_kwarg_setindex()
         x[i = 2, 2] = 3,
     )
     @test_throws(BoundsError, x[i = 2] = 3)
-    return
-end
-
-function test_keyword_indexing_false_SparseAxisArray()
-    Containers.@container(x[i = 2:3; isodd(i)], i)
-    @test_throws ErrorException x[i = 3]
     return
 end
 

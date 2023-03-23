@@ -103,7 +103,6 @@ mutable struct Model <: AbstractModel
     # A model-level option that is used as the default for the set_string_name
     # keyword to @variable and @constraint.
     set_string_names_on_creation::Bool
-    enable_keyword_indexing::Bool
 end
 
 function Base.getproperty(model::Model, name::Symbol)
@@ -209,7 +208,6 @@ function direct_model(backend::MOI.ModelLike)
         false,
         Dict{Symbol,Any}(),
         true,
-        false,
     )
 end
 
@@ -433,75 +431,6 @@ end
 set_string_names_on_creation(model::Model) = model.set_string_names_on_creation
 
 set_string_names_on_creation(::AbstractModel) = true
-
-"""
-    enable_keyword_indexing(model::Model, value::Bool)
-
-Set the default argument of the `enable_keyword_indexing` keyword in the
-[`Containers.@container`](@ref) macro to `value`.
-
-The default is used to determine whether keyword indexing is allowed for objects
-of types [`Containers.DenseAxisArray`](@ref) and [`Containers.SparseAxisArray`](@ref).
-
-Indexing with keyword arguments has a small performance hit, but it can lead to
-more readable code, particularly with variables like
-`@variable(model, x[factory = 1:3, customer = 1:3])`, where
-`x[factory = 1, customer = 3]` is more readable than `x[1, 3]`.
-
-!!! warning
-    Keyword indexing does _not_ work for `Array` objects. As a work-around,
-    pass `container = DenseAxisArray` to force the container type.
-
-## Example
-
-```jldoctest
-julia> using JuMP
-
-julia> model = Model();
-
-julia> @variable(model, x[i = 2:3])
-1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
-    Dimension 1, 2:3
-And data, a 2-element Vector{VariableRef}:
- x[2]
- x[3]
-
-julia> x[i = 2]
-ERROR: Keyword indexing is disabled. To enable, pass `enable_keyword_indexing = true` to the `Containers.@container` macro, or call `JuMP.enable_keyword_indexing(model, true)` before calling any JuMP macros like `@variable`.
-Stacktrace:
-[...]
-
-julia> model = Model();
-
-julia> enable_keyword_indexing(model, true)
-
-julia> @variable(model, x[i = 1:3], container = DenseAxisArray)
-1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
-    Dimension 1, 1:3
-And data, a 3-element Vector{VariableRef}:
- x[1]
- x[2]
- x[3]
-
-julia> x[i = 2]
-x[2]
-```
-"""
-function enable_keyword_indexing(model::Model, value::Bool)
-    model.enable_keyword_indexing = value
-    return
-end
-
-function enable_keyword_indexing(model::Model)
-    return model.enable_keyword_indexing
-end
-
-enable_keyword_indexing(::AbstractModel) = true
-
-function _enable_keyword_indexing_value(model)
-    # We need three-valued logic.
-    return enable_keyword_indexing(model) ? missing : false
-end
 
 _moi_bridge_constraints(::MOI.ModelLike) = false
 
@@ -844,6 +773,39 @@ to be redirected to a method in MA that handles type promotion more carefully
 work for JuMP types) and exploits the mutability of `AffExpr` and `QuadExpr`.
 """
 abstract type AbstractJuMPScalar <: _MA.AbstractMutable end
+
+function _get_index_keyword_indexing_error()
+    return ErrorException(
+        """
+        Indexing an `Array` with keyword arguments is not supported.
+
+        Indexing with keyword arguments _is_ supported for `Container.DenseAxisArray`
+        (and `Container.SparseAxisArray`).
+
+        Force the container type by passing `container = DenseAxisArray` or to any of
+        the JuMP macros. For example:
+
+        ```julia
+        julia> model = Model();
+
+        julia> @variable(model, x[i=1:3], container = DenseAxisArray)
+        1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+            Dimension 1, Base.OneTo(3)
+        And data, a 3-element Vector{VariableRef}:
+        x[1]
+        x[2]
+        x[3]
+
+        julia> x[i=2]
+        x[2]
+        ```
+        """,
+    )
+end
+
+function Base.getindex(x::Array{<:AbstractJuMPScalar}; kwargs...)
+    return throw(_get_index_keyword_indexing_error())
+end
 
 """
     owner_model(s::AbstractJuMPScalar)

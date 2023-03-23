@@ -638,11 +638,7 @@ function test_containers_denseaxisarray_view_axes_n()
 end
 
 function test_containers_denseaxisarray_kwarg_indexing()
-    Containers.@container(
-        x[i = 2:3, j = 1:2],
-        i + j,
-        enable_keyword_indexing = true,
-    )
+    Containers.@container(x[i = 2:3, j = 1:2], i + j,)
     for i in (2, 3, 2:2, 2:3, :), j in (1, 2, 1:2, 1:1, 2:2, :)
         @test x[i = i, j = j] == x[i, j]
         @test_throws ErrorException x[j = j, i = i]
@@ -680,11 +676,7 @@ function test_containers_denseaxisarray_kwarg_indexing()
 end
 
 function test_containers_denseaxisarray_kwarg_setindex()
-    Containers.@container(
-        x[i = 2:3, j = 1:2],
-        i + j,
-        enable_keyword_indexing = true,
-    )
+    Containers.@container(x[i = 2:3, j = 1:2], i + j,)
     for i in 2:3, j in 1:2
         @test x[i = i, j = j] == i + j
         x[i = i, j = j] = i + j + 2
@@ -716,11 +708,7 @@ function test_containers_denseaxisarray_kwarg_setindex()
 end
 
 function test_containers_denseaxisarray_kwarg_indexing_slicing()
-    Containers.@container(
-        x[i = 2:3, j = 1:2],
-        i + j,
-        enable_keyword_indexing = true,
-    )
+    Containers.@container(x[i = 2:3, j = 1:2], i + j,)
     y = x[i = 2, j = :]
     @test y[j = 2] == 4
     y = x[i = :, j = 1]
@@ -731,11 +719,7 @@ function test_containers_denseaxisarray_kwarg_indexing_slicing()
 end
 
 function test_containers_denseaxisarrayview_kwarg_indexing()
-    Containers.@container(
-        a[i = 2:3, j = 1:2],
-        i + j,
-        enable_keyword_indexing = true,
-    )
+    Containers.@container(a[i = 2:3, j = 1:2], i + j,)
     x = view(a, :, :)
     for i in (2, 3, 2:2, 2:3, :), j in (1, 2, 1:2, 1:1, 2:2, :)
         @test x[i = i, j = j] == x[i, j]
@@ -767,11 +751,7 @@ function test_containers_denseaxisarrayview_kwarg_indexing()
 end
 
 function test_containers_denseaxisarrayview_kwarg_indexing_drop_dim()
-    Containers.@container(
-        a[i = 2:3, j = 1:2],
-        i + j,
-        enable_keyword_indexing = true,
-    )
+    Containers.@container(a[i = 2:3, j = 1:2], i + j,)
     x = view(a, 2, 1:2)
     for j in (1, 2, 1:2, 1:1, 2:2, :)
         @test x[j = j] == x[j]
@@ -788,11 +768,7 @@ function test_containers_denseaxisarrayview_kwarg_indexing_drop_dim()
 end
 
 function test_containers_denseaxisarrayview_kwarg_indexing_slicing()
-    Containers.@container(
-        a[i = 2:3, j = 1:2],
-        i + j,
-        enable_keyword_indexing = true,
-    )
+    Containers.@container(a[i = 2:3, j = 1:2], i + j,)
     x = view(a, :, :)
     y = x[i = 2, j = :]
     @test y[j = 2] == 4
@@ -804,11 +780,7 @@ function test_containers_denseaxisarrayview_kwarg_indexing_slicing()
 end
 
 function test_containers_denseaxisarrayview_kwarg_setindex()
-    Containers.@container(
-        a[i = 2:3, j = 1:2],
-        i + j,
-        enable_keyword_indexing = true,
-    )
+    Containers.@container(a[i = 2:3, j = 1:2], i + j,)
     x = view(a, :, :)
     for i in 2:3, j in 1:2
         @test x[i = i, j = j] == i + j
@@ -837,24 +809,6 @@ function test_containers_denseaxisarrayview_kwarg_setindex()
         ),
         x[i = 2, 2] = 3,
     )
-    return
-end
-
-function test_keyword_indexing_false_DenseAxisArray()
-    Containers.@container(x[i = 2:3], i)
-    @test_throws ErrorException x[i = 2]
-    Containers.@container(x[i = 2:3], i, enable_keyword_indexing = false)
-    @test_throws ErrorException x[i = 2]
-    return
-end
-
-function test_keyword_indexing_false_DenseAxisArrayView()
-    Containers.@container(x[i = 2:4], i)
-    y = view(x, 3:4)
-    @test_throws ErrorException y[i = 3]
-    Containers.@container(x[i = 2:4], i, enable_keyword_indexing = false)
-    y = view(x, 3:4)
-    @test_throws ErrorException y[i = 3]
     return
 end
 

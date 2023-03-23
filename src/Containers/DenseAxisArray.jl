@@ -22,7 +22,7 @@ struct DenseAxisArray{T,N,Ax,L<:NTuple{N,_AxisLookup}} <: AbstractArray{T,N}
     data::Array{T,N}
     axes::Ax
     lookup::L
-    names::Union{Nothing,NTuple{N,Symbol}}
+    names::NTuple{N,Symbol}
 end
 
 function Base.Array{T,N}(x::DenseAxisArray) where {T,N}
@@ -208,6 +208,7 @@ function DenseAxisArray(
 ) where {T,N}
     @assert length(axes) == N
     new_axes = _abstract_vector.(axes)  # Force all axes to be AbstractVector!
+    names = something(names, ntuple(n -> Symbol("#$n"), N))
     return DenseAxisArray(data, new_axes, build_lookup.(new_axes), names)
 end
 
@@ -355,7 +356,6 @@ _is_range(::Any) = false
 _is_range(::Union{Vector{Int},Colon}) = true
 
 function _kwargs_to_args(A::DenseAxisArray{T,N}; kwargs...) where {T,N}
-    _check_keyword_indexing_allowed(A.names)
     return ntuple(N) do i
         kw = keys(kwargs)[i]
         if A.names[i] != kw
@@ -381,11 +381,7 @@ function Base.getindex(A::DenseAxisArray{T,N}, args...; kwargs...) where {T,N}
         return A.data[new_indices...]::T
     end
     new_axes = _getindex_recurse(A.axes, new_indices, _is_range)
-    names = if A.names === nothing
-        nothing
-    else
-        A.names[findall(_is_range, new_indices)]
-    end
+    names = A.names[findall(_is_range, new_indices)]
     return DenseAxisArray(A.data[new_indices...], new_axes...; names = names)
 end
 
@@ -747,7 +743,6 @@ function _fixed_indices(view_axes::Tuple, axes::Tuple)
 end
 
 function _kwargs_to_args(A::DenseAxisArrayView{T,N}; kwargs...) where {T,N}
-    _check_keyword_indexing_allowed(A.data.names)
     non_default_indices = _fixed_indices(A.axes, A.data.axes)
     return ntuple(N) do i
         kw = keys(kwargs)[i]

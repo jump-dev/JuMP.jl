@@ -71,34 +71,8 @@ function container(f::Function, indices, D, names)
     return container(f, indices, D)
 end
 
-struct _ForceEnableKeywordIndexing{T}
-    names::T
-end
-
 function container(f::Function, indices, ::Type{AutoContainerType}, names)
     return container(f, indices, default_container(indices), names)
-end
-
-function container(
-    f::Function,
-    indices,
-    ::Type{AutoContainerType},
-    names::_ForceEnableKeywordIndexing,
-)
-    return container(f, indices, default_container(indices), names)
-end
-
-function container(f::Function, indices, D, names::_ForceEnableKeywordIndexing)
-    return container(f, indices, D, names.names)
-end
-
-function container(
-    ::Function,
-    ::Any,
-    ::Type{Array},
-    ::_ForceEnableKeywordIndexing,
-)
-    return error("Keyword indexing is not supported with Array.")
 end
 
 function container(f::Function, indices)

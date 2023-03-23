@@ -1061,4 +1061,29 @@ function test_set_start_values()
     return
 end
 
+function test_keyword_getindex()
+    err = JuMP._get_index_keyword_indexing_error()
+    model = Model()
+    @variable(model, x[i = 1:2])
+    # Vector{VariableRef}
+    @test_throws err x[i = 1]
+    @test_throws err x[i = 2]
+    @test_throws err x[i = :]
+    @test_throws err x[i = 1:2]
+    # Matrix{VariableRef}
+    @variable(model, y[i = 1:2, j = 1:2])
+    @test_throws err y[i = 1]
+    @test_throws err y[i = 2, j = 2]
+    # Vector{AffExpr}
+    @expression(model, ex[i = 1:2], x[i] + i)
+    @test_throws err ex[i = 1]
+    @test_throws err ex[i = 2, j = 2]
+    # Vector{ConstraintRef}
+    @constraint(model, c[i = 1:2], x[i] + i <= 1)
+    @test_throws err c[i = 1]
+    @test_throws err c[i = 1:2]
+    @test_throws err c[i = :]
+    return
+end
+
 end  # module TestModels

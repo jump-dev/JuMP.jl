@@ -231,19 +231,4 @@ function test__MyContainer2()
     return
 end
 
-function test_enable_keyword_indexing()
-    flag = missing
-    Containers.@container(y[i = 1:2], i, enable_keyword_indexing = flag)
-    @test y isa Vector{Int}
-    @test_throws MethodError y[i = 1]
-    @test_throws(
-        ErrorException("Keyword indexing is not supported with Array."),
-        Containers.@container(y[i = 1:2], i, enable_keyword_indexing = true),
-    )
-    Containers.@container(y[i = 1:2], i, enable_keyword_indexing = false)
-    @test y isa Vector{Int}
-    @test_throws MethodError y[i = 1]
-    return
-end
-
 end  # module

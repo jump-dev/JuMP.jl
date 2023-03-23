@@ -259,6 +259,22 @@ julia> DataFrames.DataFrame(table)
    4 │     2  B       (2, :B)
 ```
 
+### Keyword indexing
+
+If all axes are named, you can use keyword indexing:
+
+```jldoctest containers_dense
+julia> x[i = 2, j = :A]
+(2, :A)
+
+julia> x[i = :, j = :B]
+1-dimensional DenseAxisArray{Tuple{Int64, Symbol},1,...} with index sets:
+    Dimension 1, Base.OneTo(2)
+And data, a 2-element Vector{Tuple{Int64, Symbol}}:
+ (1, :B)
+ (2, :B)
+```
+
 ## SparseAxisArray
 
 A [`Containers.SparseAxisArray`](@ref) is created when the index sets are
@@ -350,6 +366,20 @@ julia> DataFrames.DataFrame(table)
    2 │     2  A       (2, :A)
    3 │     2  B       (2, :B)
    4 │     3  A       (3, :A)
+```
+
+### Keyword indexing
+
+If all axes are named, you can use keyword indexing:
+
+```jldoctest containers_sparse
+julia> x[i = 2, j = :A]
+(2, :A)
+
+julia> x[i = :, j = :B]
+JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 1, Tuple{Int64}} with 2 entries:
+  [2]  =  (2, :B)
+  [3]  =  (3, :B)
 ```
 
 ## Forcing the container type
@@ -484,137 +514,4 @@ julia> Containers.@container([i = 1:2, j = 1:4; condition(i, j)], i + j)
 JuMP.Containers.SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 2 entries:
   [1, 2]  =  3
   [1, 4]  =  5
-```
-
-## Keyword indexing
-
-JuMP v1.10.0 added experimental support for keyword indexing of
-[`Containers.DenseAxisArray`](@ref) and [`Containers.SparseAxisArray`](@ref).
-Keyword indexing lets you uses the named indices of [`Containers.DenseAxisArray`](@ref)
-and [`Containers.SparseAxisArray`](@ref) as keyword arguments when indexing a
-container.
-
-### The container macro
-
-For containers constructed using the [`Containers.@container`](@ref) macro,
-opt-in to the keyword indexing syntax by passing
-`enable_keyword_indexing = true`:
-
-```jldoctest
-julia> Containers.@container(
-           x[i=2:4, j=1:3],
-           i + j,
-           enable_keyword_indexing = true,
-       )
-2-dimensional DenseAxisArray{Int64,2,...} with index sets:
-    Dimension 1, 2:4
-    Dimension 2, Base.OneTo(3)
-And data, a 3×3 Matrix{Int64}:
- 3  4  5
- 4  5  6
- 5  6  7
-
-julia> x[i = 2, j = 1]
-3
-
-julia> Containers.@container(
-           y[i=2:4, j=1:3; i > j],
-           i + j,
-           enable_keyword_indexing = true,
-       )
-JuMP.Containers.SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 6 entries:
-  [2, 1]  =  3
-  [3, 1]  =  4
-  [3, 2]  =  5
-  [4, 1]  =  5
-  [4, 2]  =  6
-  [4, 3]  =  7
-
-julia> y[i = 2:4, j = 1]
-JuMP.Containers.SparseAxisArray{Int64, 1, Tuple{Int64}} with 3 entries:
-  [2]  =  3
-  [3]  =  4
-  [4]  =  5
-```
-
-### The JuMP macros
-
-For containers constructed using the JuMP macros like [`@variable`](@ref),
-opt-in using [`enable_keyword_indexing`](@ref):
-
-```jldoctest
-julia> using JuMP
-
-julia> model = Model();
-
-julia> @variable(model, x[i = 2:3])
-1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
-    Dimension 1, 2:3
-And data, a 2-element Vector{VariableRef}:
- x[2]
- x[3]
-
-julia> x[i = 2]
-ERROR: Keyword indexing is disabled. To enable, pass `enable_keyword_indexing = true` to the `Containers.@container` macro, or call `JuMP.enable_keyword_indexing(model, true)` before calling any JuMP macros like `@variable`.
-Stacktrace:
-[...]
-
-julia> model = Model();
-
-julia> enable_keyword_indexing(model, true)
-
-julia> @variable(model, x[i = 2:3])
-1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
-    Dimension 1, 2:3
-And data, a 2-element Vector{VariableRef}:
- x[2]
- x[3]
-
-julia> x[i = 2]
-x[2]
-```
-
-### Limitations
-
-The keyword indexing syntax is currently opt-in because it does not work for
-`Array`:
-
-```jldoctest
-julia> Containers.@container(
-           x[i=1:4, j=1:3],
-           i + j,
-           enable_keyword_indexing = true,
-       )
-ERROR: Keyword indexing is not supported with Array.
-Stacktrace:
-[...]
-```
-
-Work-around this limitation by forcing the container type:
-
-```jldoctest
-julia> model = Model();
-
-julia> enable_keyword_indexing(model, true)
-
-julia> @variable(model, x[i = 1:3])
-3-element Vector{VariableRef}:
- x[1]
- x[2]
- x[3]
-
-julia> x[i = 2]
-ERROR: MethodError: no method matching getindex(::Vector{VariableRef}; i=2)
-[...]
-
-julia> @variable(model, y[i = 1:3], container = DenseAxisArray)
-1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
-    Dimension 1, Base.OneTo(3)
-And data, a 3-element Vector{VariableRef}:
- y[1]
- y[2]
- y[3]
-
-julia> y[i = 2]
-y[2]
 ```

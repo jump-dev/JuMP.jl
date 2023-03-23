@@ -239,8 +239,7 @@ end
         index_vars::Vector{Any},
         indices::Expr,
         code,
-        requested_container::Union{Symbol,Expr};
-        keyword_indexing::Union{Bool,Expr},
+        requested_container::Union{Symbol,Expr},
     )
 
 Used in macros to construct a call to [`container`](@ref). This should be used
@@ -289,8 +288,7 @@ function container_code(
     index_vars::Vector{Any},
     indices::Expr,
     code,
-    requested_container::Union{Symbol,Expr};
-    keyword_indexing::Union{Bool,Symbol,Expr} = false,
+    requested_container::Union{Symbol,Expr},
 )
     if isempty(index_vars)
         return code
@@ -310,19 +308,9 @@ function container_code(
     else
         # This is a symbol or expression from outside JuMP, so we need to escape
         # it.
-        keyword_indexing = missing
         esc(requested_container)
     end
-    return quote
-        names = if $keyword_indexing === missing
-            $index_vars
-        elseif $keyword_indexing === true
-            $_ForceEnableKeywordIndexing($index_vars)
-        else
-            nothing
-        end
-        $container($f, $indices, $container_type, names)
-    end
+    return Expr(:call, container, f, indices, container_type, index_vars)
 end
 
 """
@@ -383,23 +371,12 @@ JuMP.Containers.SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 6 entries:
 ```
 """
 macro container(args...)
-    args, kwargs, requested_container = _extract_kw_args(args)
+    args, kw_args, requested_container = _extract_kw_args(args)
     @assert length(args) == 2
-    enable_keyword_indexing = false
-    for kw in kwargs
-        @assert Meta.isexpr(kw, :(=), 2)
-        @assert kw.args[1] == :enable_keyword_indexing
-        enable_keyword_indexing = esc(kw.args[2])
-    end
+    @assert isempty(kw_args)
     var, value = args
     index_vars, indices = build_ref_sets(error, var)
-    code = container_code(
-        index_vars,
-        indices,
-        esc(value),
-        requested_container;
-        keyword_indexing = enable_keyword_indexing,
-    )
+    code = container_code(index_vars, indices, esc(value), requested_container)
     if isexpr(var, :vect) || isexpr(var, :vcat)
         return code
     else

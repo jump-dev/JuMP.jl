@@ -19,6 +19,10 @@ struct ConstraintRef{M<:AbstractModel,C,Shape<:AbstractShape}
     shape::Shape
 end
 
+function Base.getindex(x::Array{<:ConstraintRef}; kwargs...)
+    return throw(_get_index_keyword_indexing_error())
+end
+
 """
     index(cr::ConstraintRef)::MOI.ConstraintIndex
 

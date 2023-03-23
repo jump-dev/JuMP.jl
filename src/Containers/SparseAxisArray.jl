@@ -37,11 +37,11 @@ julia> array[:b, 3]
 """
 struct SparseAxisArray{T,N,K<:NTuple{N,Any}} <: AbstractArray{T,N}
     data::Dict{K,T}
-    names::Union{Nothing,NTuple{N,Symbol}}
+    names::NTuple{N,Symbol}
 end
 
 function SparseAxisArray(d::Dict{K,T}) where {T,N,K<:NTuple{N,Any}}
-    return SparseAxisArray(d, nothing)
+    return SparseAxisArray(d, ntuple(n -> Symbol("#$n"), N))
 end
 
 Base.length(sa::SparseAxisArray) = length(sa.data)
@@ -99,7 +99,6 @@ function Base.setindex!(
 end
 
 function _kwargs_to_args(d::SparseAxisArray{T,N}; kwargs...) where {T,N}
-    _check_keyword_indexing_allowed(d.names)
     if length(kwargs) != N
         throw(BoundsError(d, kwargs))
     end
@@ -284,7 +283,7 @@ function Base.copy(
         # type information to call SparseAxisArray(dict). As a work-around, we
         # explicitly construct the type of the resulting SparseAxisArray.
         # For more, see JuMP issue #2867.
-        return SparseAxisArray{Any,N,K}(dict, nothing)
+        return SparseAxisArray{Any,N,K}(dict, ntuple(n -> Symbol("#$n"), N))
     end
     return SparseAxisArray(dict)
 end
