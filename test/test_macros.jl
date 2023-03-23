@@ -1931,4 +1931,12 @@ function test_matrix_in_vector_set()
     return
 end
 
+function test_hermitian_variable_tag()
+    model = Model()
+    @variable(model, x[1:3, 1:3], Hermitian)
+    @test x isa LinearAlgebra.Hermitian
+    @test num_variables(model) == 9
+    return
+end
+
 end  # module

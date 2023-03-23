@@ -2432,7 +2432,6 @@ macro variable(args...)
     )
     base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
     variable_type_kw_args = filter(kw -> kw.args[1] == :variable_type, kw_args)
-    set_kw_args = filter(kw -> kw.args[1] == :set, kw_args)
     set_string_name_kw_args =
         filter(kw -> kw.args[1] == :set_string_name, kw_args)
     infoexpr = _VariableInfoExpr(; _keywordify.(info_kw_args)...)
@@ -2467,47 +2466,34 @@ macro variable(args...)
     else
         base_name = esc(base_name_kw_args[1].args[2])
     end
-
-    if !isempty(set_kw_args)
-        if length(set_kw_args) > 1
-            _error(
-                "`set` keyword argument was given $(length(set_kw_args)) times.",
-            )
-        end
+    set_kw_args = filter(kw -> kw.args[1] == :set, kw_args)
+    if length(set_kw_args) == 1
         if set !== nothing
             _error(
-                "Cannot specify set twice, it was already set to `$set` so the `set` keyword argument is not allowed.",
+                "Cannot use set keyword because the variable is already " *
+                "constrained to `$set`.",
             )
         end
         set = esc(set_kw_args[1].args[2])
+    elseif length(set_kw_args) > 1
+        _error("`set` keyword argument was given $(length(set_kw_args)) times.")
     end
-
-    # process keyword arguments
-    if any(t -> (t == :PSD), extra)
-        if set !== nothing
-            _error(
-                "Cannot specify set twice, it was already set to `$set` so the `PSD` argument is not allowed.",
-            )
+    for (sym, cone) in (
+        :PSD => PSDCone(),
+        :Symmetric => SymmetricMatrixSpace(),
+        :Hermitian => HermitianMatrixSpace(),
+    )
+        if any(isequal(sym), extra)
+            if set !== nothing
+                _error(
+                    "Cannot pass `$sym` as a positional argument because the " *
+                    "variable is already constrained to `$set`.",
+                )
+            end
+            set = cone
+            filter!(!isequal(sym), extra)
         end
-        set = :(JuMP.PSDCone())
     end
-    if any(t -> (t == :Symmetric), extra)
-        if set !== nothing
-            _error(
-                "Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `$set`.",
-            )
-        end
-        set = :(JuMP.SymmetricMatrixSpace())
-    end
-    if any(t -> (t == :Hermitian), extra)
-        if set !== nothing
-            _error(
-                "Cannot specify `Hermitian` when the set is already specified, the variable is constrained to belong to `$set`.",
-            )
-        end
-        set = :(JuMP.HermitianMatrixSpace())
-    end
-    extra = filter(x -> (x != :PSD && x != :Symmetric && x != :Hermitian), extra) # filter out PSD, Symmetric and Hermitian tags
     for ex in extra
         if ex == :Int
             _set_integer_or_error(_error, infoexpr)

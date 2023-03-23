@@ -1260,8 +1260,17 @@ julia> first(all_constraints(model, Vector{VariableRef}, MOI.HermitianPositiveSe
 
 ### Example: Hermitian variables
 
-Declare a matrix of JuMP variables to be Hermitian using
-[`HermitianMatrixSpace`](@ref):
+Declare a matrix of JuMP variables to be Hermitian using the `Hermitian` tag:
+```jldoctest hermitian
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2], Hermitian)
+2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ real(x[1,1])                               …  real(x[1,2]) + (0.0 + 1.0im) imag(x[1,2])
+ real(x[1,2]) + (0.0 - 1.0im) imag(x[1,2])     real(x[2,2])
+```
+
+This is equivalent to declaring the variable in [`HermitianMatrixSpace`](@ref):
 ```jldoctest hermitian
 julia> model = Model();
 
