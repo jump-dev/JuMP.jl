@@ -19,8 +19,8 @@ import MultiObjectiveAlgorithms as MOA
 # ## Bi-objective linear problem
 
 # This is example is taken from Example 6.3 (from Steuer, 1985), page 154 of
-# Multicriteria Optimization (2nd ed), M. Ehrgott, Springer 2005. The code was
-# adapted from an example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl)
+# Ehrgott, M. (2005). _Multicriteria Optimization_. Springer, Berlin. The code
+# was adapted from an example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl)
 # by [@xgandibleux](https://github.com/xgandibleux).
 
 model = Model()
@@ -48,7 +48,7 @@ end
 # ## Bi-objective linear assignment problem
 
 # This is example is taken from Example 9.38 (from Ulungu and Teghem, 1994),
-# page 255 of Multicriteria Optimization (2nd ed), M. Ehrgott, Springer 2005.
+# page 255 of Ehrgott, M. (2005). _Multicriteria Optimization_. Springer, Berlin.
 # The code was adapted from an example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl)
 # by [@xgandibleux](https://github.com/xgandibleux).
 
@@ -75,10 +75,10 @@ end
 
 # ## Bi-objective shortest path problem
 
-# This is example is taken from Exercise 9.5 page 269 of Multicriteria
-# Optimization (2nd edition), M. Ehrgott, Springer 2005. The code was adapted
-# from an example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl)
-# by [@xgandibleux](https://github.com/xgandibleux).
+# This is example is taken from Exercise 9.5 page 269 of Ehrgott, M. (2005).
+# _Multicriteria Optimization_. Springer, Berlin. The code was adapted from an
+# example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl) by
+# [@xgandibleux](https://github.com/xgandibleux).
 
 M = 50
 C1 = [
