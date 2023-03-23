@@ -7,6 +7,7 @@ section of the manual.
 
 ```@docs
 AbstractVectorSet
+AbstractScalarSet
 ```
 
 ## Extend `@variable`

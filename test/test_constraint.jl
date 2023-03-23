@@ -1573,4 +1573,26 @@ function test_symmetric_in_zeros()
     return
 end
 
+function test_semicontinuous()
+    model = Model()
+    @variable(model, x in Semicontinuous(2, 3))
+    @variable(model, y)
+    c = @constraint(model, y + 1 in Semicontinuous(2.5, 3))
+    c_obj = constraint_object(c)
+    @test isequal_canonical(c_obj.func, y + 1)
+    @test c_obj.set == MOI.Semicontinuous(2.5, 3.0)
+    return
+end
+
+function test_semiinteger()
+    model = Model()
+    @variable(model, x in Semiinteger(2, 3))
+    @variable(model, y)
+    c = @constraint(model, y + 1 in Semiinteger(2.5, 3))
+    c_obj = constraint_object(c)
+    @test isequal_canonical(c_obj.func, y + 1)
+    @test c_obj.set == MOI.Semiinteger(2.5, 3.0)
+    return
+end
+
 end

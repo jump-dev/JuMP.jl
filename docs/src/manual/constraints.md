@@ -1301,26 +1301,26 @@ julia> @constraint(model, [t; u; x] in RotatedSecondOrderCone())
 Semi-continuous variables are constrained to the set
 ``x \in \{0\} \cup [l, u]``.
 
-Create a semi-continuous variable using the `MOI.Semicontinuous` set:
+Create a semi-continuous variable using the [`Semicontinuous`](@ref) set:
 ```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> @constraint(model, x in MOI.Semicontinuous(1.5, 3.5))
+julia> @constraint(model, x in Semicontinuous(1.5, 3.5))
 x in MathOptInterface.Semicontinuous{Float64}(1.5, 3.5)
 ```
 
 Semi-integer variables  are constrained to the set
 ``x \in \{0\} \cup \{l, l+1, \dots, u\}``.
 
-Create a semi-integer variable using the `MOI.Semiinteger` set:
+Create a semi-integer variable using the [`Semiinteger`](@ref) set:
 ```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> @constraint(model, x in MOI.Semiinteger(1.0, 3.0))
+julia> @constraint(model, x in Semiinteger(1.0, 3.0))
 x in MathOptInterface.Semiinteger{Float64}(1.0, 3.0)
 ```
 

@@ -80,6 +80,8 @@ SymmetricMatrixSpace
 HermitianMatrixSpace
 HermitianMatrixShape
 moi_set
+Semicontinuous
+Semiinteger
 ```
 
 ## Printing

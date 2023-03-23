@@ -237,3 +237,102 @@ function moi_set(set::SOS2, dim::Int)
         error("Weight vector in SOS2 is not of length $(dim).")
     end
 end
+
+"""
+    AbstractScalarSet
+
+An abstract type for defining new scalar sets in JuMP.
+
+Implement `moi_set(::AbstractScalarSet)` to convert the type into an MOI set.
+
+See also: [`moi_set`](@ref).
+"""
+abstract type AbstractScalarSet end
+
+function build_variable(
+    _error::Function,
+    variable::AbstractVariable,
+    set::AbstractScalarSet,
+)
+    return VariableConstrainedOnCreation(variable, moi_set(set))
+end
+
+function build_constraint(
+    _error::Function,
+    func::AbstractJuMPScalar,
+    set::AbstractScalarSet,
+)
+    return build_constraint(_error, func, moi_set(set))
+end
+
+"""
+    Semicontinuous(lower, upper)
+
+A short-cut for the [`MOI.Semicontinuous`](@ref) set.
+
+This short-cut is useful because it automatically promotes `lower` and `upper`
+to the same type, and converts them into the element type supported by the JuMP
+model.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x in Semicontinuous(1, 2))
+x
+
+julia> print(model)
+Feasibility
+Subject to
+ x ∈ MathOptInterface.Semicontinuous{Float64}(1.0, 2.0)
+```
+"""
+struct Semicontinuous{T} <: AbstractScalarSet
+    lower::T
+    upper::T
+    function Semicontinuous(lower, upper)
+        new_lower, new_upper = promote(lower, upper)
+        return new{typeof(new_lower)}(new_lower, new_upper)
+    end
+end
+
+function moi_set(set::Semicontinuous)
+    return MOI.Semicontinuous{Float64}(set.lower, set.upper)
+end
+
+"""
+    Semiinteger(lower, upper)
+
+A short-cut for the [`MOI.Semiinteger`](@ref) set.
+
+This short-cut is useful because it automatically promotes `lower` and `upper`
+to the same type, and converts them into the element type supported by the JuMP
+model.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x in Semiinteger(3, 5))
+x
+
+julia> print(model)
+Feasibility
+Subject to
+ x ∈ MathOptInterface.Semiinteger{Float64}(3.0, 5.0)
+```
+"""
+struct Semiinteger{T} <: AbstractScalarSet
+    lower::T
+    upper::T
+    function Semiinteger(lower, upper)
+        new_lower, new_upper = promote(lower, upper)
+        return new{typeof(new_lower)}(new_lower, new_upper)
+    end
+end
+
+function moi_set(set::Semiinteger)
+    return MOI.Semiinteger{Float64}(set.lower, set.upper)
+end
