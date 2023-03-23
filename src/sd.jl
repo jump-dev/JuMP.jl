@@ -372,13 +372,6 @@ function build_variable(
     variables::Matrix{<:AbstractVariable},
     ::HermitianMatrixSpace,
 )
-    if any(_is_binary, variables) || any(_is_integer, variables)
-        # We would then need to fix the imaginary value to zero. Let's wait to
-        # see if there is need for such complication first.
-        _error(
-            "Binary or integer variables in a Hermitian matrix are not supported.",
-        )
-    end
     n = _square_side(_error, variables)
     set = MOI.Reals(
         MOI.dimension(MOI.HermitianPositiveSemidefiniteConeTriangle(n)),
@@ -613,6 +606,13 @@ function reshape_vector(v::Vector{T}, shape::HermitianMatrixShape) where {T}
 end
 
 function _vectorize_complex_variables(_error::Function, matrix::Matrix)
+    if any(_is_binary, matrix) || any(_is_integer, matrix)
+        # We would then need to fix the imaginary value to zero. Let's wait to
+        # see if there is need for such complication first.
+        _error(
+            "Binary or integer variables in a Hermitian matrix are not supported.",
+        )
+    end
     n = LinearAlgebra.checksquare(matrix)
     for j in 1:n
         if !_isreal(matrix[j, j])
@@ -639,13 +639,6 @@ function build_variable(
     n = _square_side(_error, variables)
     set = MOI.HermitianPositiveSemidefiniteConeTriangle(n)
     shape = HermitianMatrixShape(n)
-    if any(_is_binary, variables) || any(_is_integer, variables)
-        # We would then need to fix the imaginary value to zero. Let's wait to
-        # see if there is need for such complication first.
-        _error(
-            "Binary or integer variables in a Hermitian matrix is not supported.",
-        )
-    end
     return VariablesConstrainedOnCreation(
         _vectorize_complex_variables(_error, variables),
         set,
