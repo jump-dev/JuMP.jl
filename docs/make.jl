@@ -1,5 +1,5 @@
 import Pkg
-Pkg.pkg"add Documenter#71e9f40"
+Pkg.pkg"add Documenter#633a95a"
 import Documenter
 import Literate
 import Test
@@ -285,12 +285,14 @@ function _add_moi_pages()
     !!! note
         This documentation is also available in PDF format:
         [MathOptInterface.pdf](MathOptInterface.pdf)."""
+    status = sprint(io -> Pkg.status("MathOptInterface"; io = io))
+    version = match(r"(v[0-9].[0-9]+.[0-9]+)", status)[1]
     dest = """# [Introduction](@id moi_documentation)
 
     !!! warning
         This documentation in this section is a copy of the official
         MathOptInterface documentation available at
-        [https://jump.dev/MathOptInterface.jl/v1.13.1](https://jump.dev/MathOptInterface.jl/v1.13.1).
+        [https://jump.dev/MathOptInterface.jl/$version](https://jump.dev/MathOptInterface.jl/$version).
         It is included here to make it easier to link concepts between JuMP and
         MathOptInterface.
     """
