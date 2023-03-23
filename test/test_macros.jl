@@ -13,6 +13,7 @@ module TestMacros
 using JuMP
 using Test
 
+import LinearAlgebra
 import SparseArrays
 
 include(joinpath(@__DIR__, "utilities.jl"))
