@@ -253,7 +253,7 @@ M = 100
 # **Example** $$x \in \{0\}\cup [1, 2]$$
 
 model = Model();
-@variable(model, x in MOI.Semicontinuous(1.0, 2.0))
+@variable(model, x in Semicontinuous(1.0, 2.0))
 
 # ## Semi-integer variables
 
@@ -262,7 +262,7 @@ model = Model();
 # $$x \in \{0\} \cup [l, u] \cap \mathbb{Z}.$$
 
 model = Model();
-@variable(model, x in MOI.Semiinteger(5.0, 10.0))
+@variable(model, x in Semiinteger(5.0, 10.0))
 
 # ## Special Ordered Sets of Type 1
 
