@@ -1256,6 +1256,17 @@ function _test_Hermitian(model, H)
     @test H[2, 1] == conj(H[1, 2])
 end
 
+function test_extension_variable_Hermitian_tag(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, H[1:2, 1:2], Hermitian)
+    _test_Hermitian(model, H)
+    @test num_constraints(model; count_variable_in_set_constraints = true) == 0
+    return
+end
+
 function test_extension_variable_Hermitian(
     ModelType = Model,
     VariableRefType = VariableRef,
