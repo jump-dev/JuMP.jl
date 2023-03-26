@@ -13,6 +13,7 @@ module TestMacros
 using JuMP
 using Test
 
+import LinearAlgebra
 import SparseArrays
 
 include(joinpath(@__DIR__, "utilities.jl"))
@@ -1928,6 +1929,14 @@ function test_matrix_in_vector_set()
         ),
         @constraint(model, X == A),
     )
+    return
+end
+
+function test_hermitian_variable_tag()
+    model = Model()
+    @variable(model, x[1:3, 1:3], Hermitian)
+    @test x isa LinearAlgebra.Hermitian
+    @test num_variables(model) == 9
     return
 end
 
