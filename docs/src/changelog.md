@@ -15,8 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    support vector-valued inequality syntax in the JuMP macros (#3273)
  - Added special support for `LinearAlgebra.Symmetric` and `LinearAlgebra.Hermitian`
    matrices in [`Zeros`](@ref) constraints (#3281) (#3296)
- - Added [`HermitianMatrixSpace`](@ref) for generating a matrix of variables
-   that is Hermitian (#3292)
+ - Added [`HermitianMatrixSpace`](@ref) and the `Hermitian` tag for generating a
+   matrix of variables that is Hermitian (#3292) (#3293)
  - Added [`Semicontinuous`](@ref) and [`Semiinteger`](@ref) (#3302)
 
 ### Fixed
@@ -27,12 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  - Split out the [Nested optimization problems](@ref) tutorial (#3274)
  - Updated doctests to ensure none have hidden state (#3275) (#3276)
- - Clarify how lazy constraints may revisit points (#3278)
+ - Clarified how lazy constraints may revisit points (#3278)
  - Added [P-Norm](@ref) example (#3282)
- - Clarify docs that macros create new bindings (#3284)
+ - Clarified docs that macros create new bindings (#3284)
  - Fixed threading example (#3283)
  - Added plot to [The minimum distortion problem](@ref) (#3288)
- - Add Google style rules for Vale and fixed warnings (#3285)
+ - Added Google style rules for Vale and fixed warnings (#3285)
  - Added citation for the JuMP 1.0 paper (#3294)
  - Updated package versions in the documentation (#3298)
  - Added comment for the order in which start values must be set (#3303)
