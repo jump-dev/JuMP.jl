@@ -782,7 +782,7 @@ function _get_index_keyword_indexing_error()
         Indexing with keyword arguments _is_ supported for `Container.DenseAxisArray`
         (and `Container.SparseAxisArray`).
 
-        Force the container type by passing `container = DenseAxisArray` or to any of
+        Force the container type by passing `container = DenseAxisArray` to any of
         the JuMP macros. For example:
 
         ```julia

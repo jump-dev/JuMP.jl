@@ -184,8 +184,6 @@ end
     return length(expr.args) == 1 ? :(nothing) : expr
 end
 
-_sliced_key_name(::Type{K}, ::Nothing, args...) where {K<:Tuple} = nothing
-
 @generated function _sliced_key_name(::Type{K}, names, args...) where {K<:Tuple}
     expr = Expr(:tuple)
     for i in 1:length(args)
