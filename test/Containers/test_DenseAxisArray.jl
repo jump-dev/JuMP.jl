@@ -650,4 +650,24 @@ function test_containers_denseaxisarray_vector_any()
     return
 end
 
+function test_containers_denseaxisarray_ambiguous_slice()
+    K = Any[Any["a"], Any["b"], Any[Any["a"], Any["b"]]]
+    Containers.@container(x[k = K], length(k))
+    @test axes(x) == (K,)
+    @test x[Any["a"]] == 1
+    @test x[Any["b"]] == 1
+    new_key = Any[Any["b"], Any["a"]]
+    @test x[new_key] == Containers.DenseAxisArray([1, 1], new_key)
+    key = reverse(new_key)
+    @test_throws(
+        ErrorException(
+            "ambiguous use of getindex with key $key. We cannot tell if " *
+            "you meant to return the single element corresponding to the " *
+            "key, or a slice for each element in the key.",
+        ),
+        x[key],
+    )
+    return
+end
+
 end  # module
