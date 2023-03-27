@@ -20,6 +20,9 @@ struct ConstraintRef{M<:AbstractModel,C,Shape<:AbstractShape}
 end
 
 function Base.getindex(x::Array{<:ConstraintRef}; kwargs...)
+    if isempty(kwargs)
+        throw(BoundsError(x, tuple()))
+    end
     return throw(_get_index_keyword_indexing_error())
 end
 

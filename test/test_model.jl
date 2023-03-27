@@ -1070,19 +1070,23 @@ function test_keyword_getindex()
     @test_throws err x[i = 2]
     @test_throws err x[i = :]
     @test_throws err x[i = 1:2]
+    @test_throws BoundsError x[]
     # Matrix{VariableRef}
     @variable(model, y[i = 1:2, j = 1:2])
     @test_throws err y[i = 1]
     @test_throws err y[i = 2, j = 2]
+    @test_throws BoundsError y[]
     # Vector{AffExpr}
     @expression(model, ex[i = 1:2], x[i] + i)
     @test_throws err ex[i = 1]
     @test_throws err ex[i = 2, j = 2]
+    @test_throws BoundsError ex[]
     # Vector{ConstraintRef}
     @constraint(model, c[i = 1:2], x[i] + i <= 1)
     @test_throws err c[i = 1]
     @test_throws err c[i = 1:2]
     @test_throws err c[i = :]
+    @test_throws BoundsError c[]
     return
 end
 
