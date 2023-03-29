@@ -1,59 +1,63 @@
-[Alpine]
-  user = "lanl-ansi"
+# [Alpine]
+#   user = "lanl-ansi"
 [AmplNLWriter]
 [BARON]
 [Cbc]
-[CDCS]
-  user = "oxfordcontrol"
-[CDDLib]
-  user = "JuliaPolyhedra"
-[Clarabel]
-  user = "oxfordcontrol"
+# [CDCS]
+#   user = "oxfordcontrol"
+# [CDDLib]
+#   user = "JuliaPolyhedra"
+# [Clarabel]
+#   user = "oxfordcontrol"
 [Clp]
-[COPT]
-  user = "COPT-Public"
-[COSMO]
-  user = "oxfordcontrol"
+# [COPT]
+#   user = "COPT-Public"
+# [COSMO]
+#   user = "oxfordcontrol"
 [CPLEX]
 [CSDP]
-[DAQP]
-  user = "darnstrom"
-  rev = "main"
-[EAGO]
-  user = "PSORLab"
+# [DAQP]
+#   user = "darnstrom"
+#   rev = "main"
+[DiffOpt]
+[Dualization]
+# [EAGO]
+#   user = "PSORLab"
 [ECOS]
-[GAMS]
-  user = "GAMS-dev"
+# [GAMS]
+#   user = "GAMS-dev"
 [GLPK]
 [Gurobi]
 [HiGHS]
-[Hypatia]
-  user = "chriscoey"
+# [Hypatia]
+#   user = "chriscoey"
 [Ipopt]
-[Juniper]
-  user = "lanl-ansi"
+# [Juniper]
+#   user = "lanl-ansi"
 [KNITRO]
-[MadNLP]
-  user = "MadNLP"
+# [MadNLP]
+#   user = "MadNLP"
+[MiniZinc]
 [MosekTools]
-[NLopt]
-  user = "JuliaOpt"
-[OSQP]
-  user = "osqp"
-[PATHSolver]
-  user = "chkwon"
+[MultiObjectiveAlgorithms]
+# [NLopt]
+#   user = "JuliaOpt"
+# [OSQP]
+#   user = "osqp"
+# [PATHSolver]
+#   user = "chkwon"
 [Pajarito]
 [Pavito]
 [Penopt]
-[ProxSDP]
-  user = "mariohsouto"
-[SCIP]
-  user = "scipopt"
+# [ProxSDP]
+#   user = "mariohsouto"
+# [SCIP]
+#   user = "scipopt"
 [SCS]
 [SDPA]
 [SDPNAL]
 [SDPT3]
 [SeDuMi]
-[Tulip]
-  user = "ds4dm"
+# [Tulip]
+#   user = "ds4dm"
 [Xpress]
