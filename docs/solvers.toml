@@ -1,0 +1,59 @@
+[Alpine]
+  user = "lanl-ansi"
+[AmplNLWriter]
+[BARON]
+[Cbc]
+[CDCS]
+  user = "oxfordcontrol"
+[CDDLib]
+  user = "JuliaPolyhedra"
+[Clarabel]
+  user = "oxfordcontrol"
+[Clp]
+[COPT]
+  user = "COPT-Public"
+[COSMO]
+  user = "oxfordcontrol"
+[CPLEX]
+[CSDP]
+[DAQP]
+  user = "darnstrom"
+  rev = "main"
+[EAGO]
+  user = "PSORLab"
+[ECOS]
+[GAMS]
+  user = "GAMS-dev"
+[GLPK]
+[Gurobi]
+[HiGHS]
+[Hypatia]
+  user = "chriscoey"
+[Ipopt]
+[Juniper]
+  user = "lanl-ansi"
+[KNITRO]
+[MadNLP]
+  user = "MadNLP"
+[MosekTools]
+[NLopt]
+  user = "JuliaOpt"
+[OSQP]
+  user = "osqp"
+[PATHSolver]
+  user = "chkwon"
+[Pajarito]
+[Pavito]
+[Penopt]
+[ProxSDP]
+  user = "mariohsouto"
+[SCIP]
+  user = "scipopt"
+[SCS]
+[SDPA]
+[SDPNAL]
+[SDPT3]
+[SeDuMi]
+[Tulip]
+  user = "ds4dm"
+[Xpress]

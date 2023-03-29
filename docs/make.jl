@@ -1,8 +1,10 @@
 import Pkg
 Pkg.pkg"add Documenter#633a95a"
 import Documenter
+import Downloads
 import Literate
 import Test
+import TOML
 
 using JuMP
 const MathOptInterface = MOI
@@ -101,6 +103,29 @@ if !_FAST
         write(filename, content)
     end
 end
+
+# ==============================================================================
+#  Add solver README
+# ==============================================================================
+
+const _SOLVER_DIR = joinpath(@__DIR__, "src", "solvers")
+if isdir(_SOLVER_DIR)
+    rm(_SOLVER_DIR; recursive = true)
+end
+mkdir(_SOLVER_DIR)
+const _LIST_OF_SOLVERS = String[]
+for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "solvers.toml"))
+    user = get(data, "user", "jump-dev")
+    repo = "$solver.jl"
+    tag = get(data, "rev", "master")
+    filename = get(data, "filename", "README.md")
+    Downloads.download(
+        "https://raw.githubusercontent.com/$user/$repo/$tag/$filename",
+        joinpath(@__DIR__, "src", "solvers", "$solver.md"),
+    )
+    push!(_LIST_OF_SOLVERS, "solvers/$solver.md")
+end
+sort!(_LIST_OF_SOLVERS)
 
 # ==============================================================================
 #  JuMP documentation structure
@@ -214,6 +239,7 @@ const _PAGES = [
         "Style Guide" => "developers/style.md",
         "Roadmap" => "developers/roadmap.md",
     ],
+    "Solvers" => _LIST_OF_SOLVERS,
     "release_notes.md",
 ]
 
