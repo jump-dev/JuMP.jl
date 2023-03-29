@@ -327,6 +327,14 @@ end                         #hide
 
 @variable(model, a[1:2, 1:2])
 
+# Index elements in `a` as follows:
+
+a[1, 1]
+
+#-
+
+a[2, :]
+
 # Create an n-dimensional variable $x \in {R}^n$ with bounds $l \le x \le u$
 # ($l, u \in {R}^n$) as follows:
 
@@ -352,6 +360,16 @@ u = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 
 @variable(model, w[1:5, ["red", "blue"]] <= 1)
 
+# Index elements in a `DenseAxisArray` as follows:
+
+z[2, 1]
+
+#-
+
+w[2:3, ["red", "blue"]]
+
+# See [Forcing the container type](@ref variable_forcing) for more details.
+
 # #### SparseAxisArrays
 
 # `SparseAxisArrays` are created when the indices do not form a Cartesian product.
@@ -365,6 +383,14 @@ u = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 # semi-colon `;`:
 
 @variable(model, v[i = 1:9; mod(i, 3) == 0])
+
+# Index elements in a `DenseAxisArray` as follows:
+
+u[1, 2]
+
+#-
+
+v[[3, 6]]
 
 # ### Integrality
 
