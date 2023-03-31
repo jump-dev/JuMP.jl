@@ -1,8 +1,10 @@
 # [Alpine]
 #   user = "lanl-ansi"
 [AmplNLWriter]
+    rev = "od/readme"
 [BARON]
 [Cbc]
+    rev = "od/readme"
 # [CDCS]
 #   user = "oxfordcontrol"
 # [CDDLib]
@@ -10,11 +12,13 @@
 # [Clarabel]
 #   user = "oxfordcontrol"
 [Clp]
+    rev = "od/readme"
 # [COPT]
 #   user = "COPT-Public"
 # [COSMO]
 #   user = "oxfordcontrol"
 [CPLEX]
+    rev = "od/readme"
 [CSDP]
 # [DAQP]
 #   user = "darnstrom"
