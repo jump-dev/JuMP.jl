@@ -3,6 +3,7 @@
 [AmplNLWriter]
     rev = "od/readme"
 [BARON]
+    rev = "od/readme"
 [Cbc]
     rev = "od/readme"
 # [CDCS]

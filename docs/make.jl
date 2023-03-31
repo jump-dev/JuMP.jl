@@ -437,7 +437,7 @@ if _PDF
         _remove_literate_footer.(joinpath.(root, dir))
     end
     # Remove release notes from PDF
-    splice!(_PAGES, 8)   # JuMP release notes
+    splice!(_PAGES, 7:8)   # Solvers and JuMP release notes
     pop!(_PAGES[end][2]) # MOI release notes
     latex_platform = _IS_GITHUB_ACTIONS ? "docker" : "native"
     @time Documenter.makedocs(
