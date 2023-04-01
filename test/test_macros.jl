@@ -1733,7 +1733,9 @@ function test_constraint_unsupported_operator()
     model = Model()
     @variable(model, x)
     @test_macro_throws(
-        ErrorException("In `@constraint(model, x ⊕ 1)`: unsupported operator ⊕"),
+        ErrorException(
+            "In `@constraint(model, x ⊕ 1)`: unsupported operator ⊕",
+        ),
         @constraint(model, x ⊕ 1),
     )
     return
