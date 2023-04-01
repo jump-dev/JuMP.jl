@@ -7,7 +7,7 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Version 1.10.0 (In development)
+## Version 1.10.0 (April 2, 2023)
 
 ### Added
 
@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Added [`HermitianMatrixSpace`](@ref) and the `Hermitian` tag for generating a
    matrix of variables that is Hermitian (#3292) (#3293)
  - Added [`Semicontinuous`](@ref) and [`Semiinteger`](@ref) (#3302)
+ - Added support for keyword indexing of containers (#3237)
 
 ### Fixed
 
