@@ -194,7 +194,33 @@ sign is transformed into a set with zero constant and finally the constant is
 moved to the set with `MOIU.shift_constant`.
 """
 function operator_to_set(_error::Function, ::Val{S}) where {S}
-    return _error("Unrecognized sense $S")
+    return _error("unsupported operator $S")
+end
+
+function operator_to_set(_error::Function, ::Val{:>})
+    return _error(
+        "unsupported operator `>`.\n\n" *
+        "JuMP does not support strict inequalities, use `>=` instead.\n\n" *
+        "If you require a strict inequality, you will need to use a " *
+        "tolerance. For example, instead of `x > 1`, do `x >= 1 + 1e-4`. " *
+        "If the constraint must take integer values, use a tolerance of " *
+        "`1.0`. If the constraint may take continuous values, note that this " *
+        "work-around can cause numerical issues, and your constraint may not " *
+        "hold exactly.",
+    )
+end
+
+function operator_to_set(_error::Function, ::Val{:<})
+    return _error(
+        "unsupported operator `<`.\n\n" *
+        "JuMP does not support strict inequalities, use `<=` instead.\n\n" *
+        "If you require a strict inequality, you will need to use a " *
+        "tolerance. For example, instead of `x < 1`, do `x <= 1 - 1e-4`. " *
+        "If the constraint must take integer values, use a tolerance of " *
+        "`1.0`. If the constraint may take continuous values, note that this " *
+        "work-around can cause numerical issues, and your constraint may not " *
+        "hold exactly.",
+    )
 end
 
 """
@@ -468,8 +494,10 @@ function parse_constraint_head(
         lb, ub = ub, lb
     else
         _error(
-            "Only two-sided rows of the form `lb <= expr <= ub` or " *
-            "`ub >= expr >= lb` are supported.",
+            "unsupported mix of comparison operators " *
+            "`$lb $lsign ... $rsign $ub`.\n\n" *
+            "Two-sided rows must of the form `$lb <= ... <= $ub` or " *
+            "`$ub >= ... >= $lb`.",
         )
     end
     new_aff, parse_aff = _MA.rewrite(aff)
@@ -1907,13 +1935,50 @@ function parse_one_operator_variable(
     _fix_or_error(_error, infoexpr, value)
     return
 end
+
 function parse_one_operator_variable(
     _error::Function,
-    infoexpr::_VariableInfoExpr,
+    ::_VariableInfoExpr,
     ::Val{S},
-    value,
+    ::Any,
 ) where {S}
-    return _error("Unknown sense $S.")
+    return _error("unsupported operator $S")
+end
+
+function parse_one_operator_variable(
+    _error::Function,
+    ::_VariableInfoExpr,
+    ::Val{:>},
+    ::Any,
+)
+    return _error(
+        "unsupported operator `>`.\n\n" *
+        "JuMP does not support strict inequalities, use `>=` instead.\n\n" *
+        "If you require a strict inequality, you will need to use a " *
+        "tolerance. For example, instead of `x > 1`, do `x >= 1 + 1e-4`. " *
+        "If the variable must take integer values, use a tolerance of " *
+        "`1.0`. If the variable may take continuous values, note that this " *
+        "work-around can cause numerical issues, and your bound may not " *
+        "hold exactly.",
+    )
+end
+
+function parse_one_operator_variable(
+    _error::Function,
+    ::_VariableInfoExpr,
+    ::Val{:<},
+    ::Any,
+)
+    return _error(
+        "unsupported operator `<`.\n\n" *
+        "JuMP does not support strict inequalities, use `<=` instead.\n\n" *
+        "If you require a strict inequality, you will need to use a " *
+        "tolerance. For example, instead of `x < 1`, do `x <= 1 - 1e-4`. " *
+        "If the variable must take integer values, use a tolerance of " *
+        "`1.0`. If the variable may take continuous values, note that this " *
+        "work-around can cause numerical issues, and your bound may not " *
+        "hold exactly.",
+    )
 end
 
 # There is not way to determine at parsing time which of lhs or rhs is the
@@ -1986,16 +2051,22 @@ function parse_ternary_variable(
         upper,
     )
 end
+
 function parse_ternary_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
-    ::Val,
-    lvalue,
-    ::Val,
-    rvalue,
-)
-    return _error("Use the form lb <= ... <= ub.")
+    ::Val{A},
+    lb,
+    ::Val{B},
+    ub,
+) where {A,B}
+    return _error(
+        "unsupported mix of comparison operators `$lb $A ... $B $ub`.\n\n" *
+        "Two-sided variable bounds must of the form `$lb <= ... <= $ub` or " *
+        "`$ub >= ... >= $lb`.",
+    )
 end
+
 function parse_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
