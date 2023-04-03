@@ -25,6 +25,7 @@
 [Ipopt]
     rev = "od/readme"
 [KNITRO]
+    rev = "od/readme"
 [MiniZinc]
     rev = "od/readme"
 [MosekTools]
@@ -40,7 +41,9 @@
 [SDPNAL]
 [SDPT3]
 [SeDuMi]
+    rev = "od/readme"
 [Xpress]
+    rev = "od/readme"
 
 # =========================== Non-jump-dev packages ========================== #
 
