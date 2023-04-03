@@ -6,9 +6,10 @@ arXiv
 backports
 bikeshedding
 blogposts
-camelCase
 broadcasted
 [Bb]ugfix(?(es))
+camelCase
+codecov
 compat
 dataframe(?s)
 datastructure
@@ -16,6 +17,7 @@ destructuring
 discretized
 docstring(?s)
 doctest(?s)
+embeddable
 [Ee]num(?s)
 errored
 flamegraph
@@ -28,6 +30,7 @@ jll|JLL
 [Mm]ultiline
 [Mm]ulticriteria
 namespace
+orthant
 performant
 [Pp]recompil(ation|(e(?d)))
 preprint
@@ -92,6 +95,7 @@ Clp
 CPLEXLink
 Couenne
 Divio
+embotech
 [Ee]cos
 JSONSchema
 GLPK
@@ -104,7 +108,9 @@ MOI
 Mosek
 MOSEK
 Pajarito
+Pardiso
 PATHSolver
+Pavito
 Penbmi
 puzzlor
 RAPOSa
@@ -116,6 +122,7 @@ Baldick
 Bertsimas
 Betts
 Bhatia
+Borchers
 Cholesky
 Coey
 Dantzig

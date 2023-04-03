@@ -1,75 +1,82 @@
-# [Alpine]
-#   user = "lanl-ansi"
+# ============================= jump-dev packages ============================ #
+
 [AmplNLWriter]
     rev = "od/readme"
 [BARON]
     rev = "od/readme"
 [Cbc]
     rev = "od/readme"
-# [CDCS]
-#   user = "oxfordcontrol"
-# [CDDLib]
-#   user = "JuliaPolyhedra"
-# [Clarabel]
-#   user = "oxfordcontrol"
 [Clp]
     rev = "od/readme"
-# [COPT]
-#   user = "COPT-Public"
-# [COSMO]
-#   user = "oxfordcontrol"
 [CPLEX]
     rev = "od/readme"
 [CSDP]
     rev = "od/readme"
-# [DAQP]
-#   user = "darnstrom"
-#   rev = "main"
-# [DiffOpt]
-# [Dualization]
-# [EAGO]
-#   user = "PSORLab"
+[DiffOpt]
+[Dualization]
 [ECOS]
     rev = "od/readme"
-# [GAMS]
-#   user = "GAMS-dev"
 [GLPK]
     rev = "od/readme"
 [Gurobi]
     rev = "od/readme"
 [HiGHS]
     rev = "od/readme"
-# [Hypatia]
-#   user = "chriscoey"
 [Ipopt]
     rev = "od/readme"
-# [Juniper]
-#   user = "lanl-ansi"
 [KNITRO]
-# [MadNLP]
-#   user = "MadNLP"
 [MiniZinc]
     rev = "od/readme"
 [MosekTools]
 [MultiObjectiveAlgorithms]
+[Pajarito]
+    rev = "main"
+[Pavito]
+[Penopt]
+[SCS]
+    rev = "od/readme"
+[SDPA]
+[SDPNAL]
+[SDPT3]
+[SeDuMi]
+[Xpress]
+
+# =========================== Non-jump-dev packages ========================== #
+
+# [Alpine]
+#   user = "lanl-ansi"
+# [CDCS]
+#   user = "oxfordcontrol"
+# [CDDLib]
+#   user = "JuliaPolyhedra"
+# [Clarabel]
+#   user = "oxfordcontrol"
+# [COPT]
+#   user = "COPT-Public"
+# [COSMO]
+#   user = "oxfordcontrol"
+# [DAQP]
+#   user = "darnstrom"
+#   rev = "main"
+# [EAGO]
+#   user = "PSORLab"
+# [GAMS]
+#   user = "GAMS-dev"
+# [Hypatia]
+#   user = "chriscoey"
+# [Juniper]
+#   user = "lanl-ansi"
+# [MadNLP]
+#   user = "MadNLP"
 # [NLopt]
 #   user = "JuliaOpt"
 # [OSQP]
 #   user = "osqp"
 # [PATHSolver]
 #   user = "chkwon"
-[Pajarito]
-[Pavito]
-[Penopt]
 # [ProxSDP]
 #   user = "mariohsouto"
 # [SCIP]
 #   user = "scipopt"
-[SCS]
-[SDPA]
-[SDPNAL]
-[SDPT3]
-[SeDuMi]
 # [Tulip]
 #   user = "ds4dm"
-[Xpress]
