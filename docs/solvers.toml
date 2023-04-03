@@ -25,8 +25,8 @@
 # [DAQP]
 #   user = "darnstrom"
 #   rev = "main"
-[DiffOpt]
-[Dualization]
+# [DiffOpt]
+# [Dualization]
 # [EAGO]
 #   user = "PSORLab"
 [ECOS]
@@ -38,15 +38,18 @@
 [Gurobi]
     rev = "od/readme"
 [HiGHS]
+    rev = "od/readme"
 # [Hypatia]
 #   user = "chriscoey"
 [Ipopt]
+    rev = "od/readme"
 # [Juniper]
 #   user = "lanl-ansi"
 [KNITRO]
 # [MadNLP]
 #   user = "MadNLP"
 [MiniZinc]
+    rev = "od/readme"
 [MosekTools]
 [MultiObjectiveAlgorithms]
 # [NLopt]
