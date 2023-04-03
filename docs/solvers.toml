@@ -51,7 +51,17 @@
 [Xpress]
     rev = "od/readme"
 
+# ======================= Updated non-jump-dev packages ====================== #
+
+[NEOSServer]
+  user = "odow"
+  rev = "od/readme"
+[PATHSolver]
+  user = "chkwon"
+  rev = "od/readme"
+  
 # =========================== Non-jump-dev packages ========================== #
+
 [Alpine]
   user = "lanl-ansi"
 [CDCS]
@@ -81,8 +91,6 @@
   user = "JuliaOpt"
 [OSQP]
   user = "osqp"
-[PATHSolver]
-  user = "chkwon"
 [ProxSDP]
   user = "mariohsouto"
 [SCIP]
