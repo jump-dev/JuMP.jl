@@ -21,6 +21,7 @@
 [CPLEX]
     rev = "od/readme"
 [CSDP]
+    rev = "od/readme"
 # [DAQP]
 #   user = "darnstrom"
 #   rev = "main"
@@ -29,10 +30,13 @@
 # [EAGO]
 #   user = "PSORLab"
 [ECOS]
+    rev = "od/readme"
 # [GAMS]
 #   user = "GAMS-dev"
 [GLPK]
+    rev = "od/readme"
 [Gurobi]
+    rev = "od/readme"
 [HiGHS]
 # [Hypatia]
 #   user = "chriscoey"
