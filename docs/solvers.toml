@@ -33,10 +33,11 @@
 [MultiObjectiveAlgorithms]
     rev = "od/readme"
 [Pajarito]
-    rev = "main"
+    rev = "od/readme"
 [Pavito]
-# [Penopt] odow doesn't feel like this is ready for primetime
-#     rev = "od/readme"
+    rev = "od/readme"
+[Penopt]
+    rev = "od/readme"
 [SCS]
     rev = "od/readme"
 [SDPA]
