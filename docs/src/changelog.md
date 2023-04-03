@@ -7,6 +7,38 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.10.0 (April 3, 2023)
+
+### Added
+
+ - Added [`Nonnegatives`](@ref), [`Nonpositives`](@ref) and [`Zeros`](@ref), and
+   support vector-valued inequality syntax in the JuMP macros (#3273)
+ - Added special support for `LinearAlgebra.Symmetric` and `LinearAlgebra.Hermitian`
+   matrices in [`Zeros`](@ref) constraints (#3281) (#3296)
+ - Added [`HermitianMatrixSpace`](@ref) and the `Hermitian` tag for generating a
+   matrix of variables that is Hermitian (#3292) (#3293)
+ - Added [`Semicontinuous`](@ref) and [`Semiinteger`](@ref) (#3302)
+ - Added support for keyword indexing of containers (#3237)
+
+### Fixed
+
+ - Fixed `[compat]` bound for MathOptInterface in `Project.toml` (#3272)
+
+### Other
+
+ - Split out the [Nested optimization problems](@ref) tutorial (#3274)
+ - Updated doctests to ensure none have hidden state (#3275) (#3276)
+ - Clarified how lazy constraints may revisit points (#3278)
+ - Added [P-Norm](@ref) example (#3282)
+ - Clarified docs that macros create new bindings (#3284)
+ - Fixed threading example (#3283)
+ - Added plot to [The minimum distortion problem](@ref) (#3288)
+ - Added Google style rules for Vale and fixed warnings (#3285)
+ - Added citation for the JuMP 1.0 paper (#3294)
+ - Updated package versions in the documentation (#3298)
+ - Added comment for the order in which start values must be set (#3303)
+ - Improved error message for unrecognized constraint operators (#3311)
+
 ## Version 1.9.0 (March 7, 2023)
 
 ### Added
