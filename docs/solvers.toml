@@ -29,12 +29,14 @@
 [MiniZinc]
     rev = "od/readme"
 [MosekTools]
+    rev = "od/readme"
 [MultiObjectiveAlgorithms]
     rev = "od/readme"
 [Pajarito]
     rev = "main"
 [Pavito]
-[Penopt]
+# [Penopt] odow doesn't feel like this is ready for primetime
+#     rev = "od/readme"
 [SCS]
     rev = "od/readme"
 [SDPA]
