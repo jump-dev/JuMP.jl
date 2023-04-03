@@ -123,9 +123,10 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "solvers.toml"))
         "https://raw.githubusercontent.com/$user/$repo/$tag/$filename",
         joinpath(@__DIR__, "src", "solvers", "$solver.md"),
     )
-    push!(_LIST_OF_SOLVERS, "solvers/$solver.md")
+    push!(_LIST_OF_SOLVERS, "$user/$solver.jl" => "solvers/$solver.md")
 end
-sort!(_LIST_OF_SOLVERS)
+# Sort, with jump-dev repos at the start.
+sort!(_LIST_OF_SOLVERS; by = x -> (!startswith(x, "jump-dev/"), x))
 
 # ==============================================================================
 #  JuMP documentation structure
