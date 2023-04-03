@@ -29,6 +29,7 @@
     rev = "od/readme"
 [MosekTools]
 [MultiObjectiveAlgorithms]
+    rev = "od/readme"
 [Pajarito]
     rev = "main"
 [Pavito]
