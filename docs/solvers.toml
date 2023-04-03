@@ -51,41 +51,40 @@
     rev = "od/readme"
 
 # =========================== Non-jump-dev packages ========================== #
-
-# [Alpine]
-#   user = "lanl-ansi"
-# [CDCS]
-#   user = "oxfordcontrol"
-# [CDDLib]
-#   user = "JuliaPolyhedra"
-# [Clarabel]
-#   user = "oxfordcontrol"
-# [COPT]
-#   user = "COPT-Public"
-# [COSMO]
-#   user = "oxfordcontrol"
-# [DAQP]
-#   user = "darnstrom"
-#   rev = "main"
-# [EAGO]
-#   user = "PSORLab"
-# [GAMS]
-#   user = "GAMS-dev"
-# [Hypatia]
-#   user = "chriscoey"
-# [Juniper]
-#   user = "lanl-ansi"
-# [MadNLP]
-#   user = "MadNLP"
-# [NLopt]
-#   user = "JuliaOpt"
-# [OSQP]
-#   user = "osqp"
-# [PATHSolver]
-#   user = "chkwon"
-# [ProxSDP]
-#   user = "mariohsouto"
-# [SCIP]
-#   user = "scipopt"
-# [Tulip]
-#   user = "ds4dm"
+[Alpine]
+  user = "lanl-ansi"
+[CDCS]
+  user = "oxfordcontrol"
+[CDDLib]
+  user = "JuliaPolyhedra"
+[Clarabel]
+  user = "oxfordcontrol"
+[COPT]
+  user = "COPT-Public"
+[COSMO]
+  user = "oxfordcontrol"
+[DAQP]
+  user = "darnstrom"
+  rev = "main"
+[EAGO]
+  user = "PSORLab"
+[GAMS]
+  user = "GAMS-dev"
+[Hypatia]
+  user = "chriscoey"
+[Juniper]
+  user = "lanl-ansi"
+[MadNLP]
+  user = "MadNLP"
+[NLopt]
+  user = "JuliaOpt"
+[OSQP]
+  user = "osqp"
+[PATHSolver]
+  user = "chkwon"
+[ProxSDP]
+  user = "mariohsouto"
+[SCIP]
+  user = "scipopt"
+[Tulip]
+  user = "ds4dm"
