@@ -7,7 +7,7 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Version 1.10.0 (April 2, 2023)
+## Version 1.10.0 (April 3, 2023)
 
 ### Added
 
@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Added citation for the JuMP 1.0 paper (#3294)
  - Updated package versions in the documentation (#3298)
  - Added comment for the order in which start values must be set (#3303)
+ - Improved error message for unrecognized constraint operators (#3311)
 
 ## Version 1.9.0 (March 7, 2023)
 
