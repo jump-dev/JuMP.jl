@@ -12,8 +12,8 @@
     rev = "od/readme"
 [CSDP]
     rev = "od/readme"
-[DiffOpt]
-[Dualization]
+# [DiffOpt]
+# [Dualization]
 [ECOS]
     rev = "od/readme"
 [GLPK]
@@ -40,8 +40,11 @@
 [SCS]
     rev = "od/readme"
 [SDPA]
+    rev = "od/readme"
 [SDPNAL]
+    rev = "od/readme"
 [SDPT3]
+    rev = "od/readme"
 [SeDuMi]
     rev = "od/readme"
 [Xpress]
