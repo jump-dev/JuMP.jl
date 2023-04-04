@@ -85,7 +85,7 @@
 #   user = "MadNLP"
 [NEOSServer]
   user = "odow"
-  rev = "od/readme"
+  rev = "v1.0.2"
   filename = "README.md"
 # [NLopt]
 #   user = "JuliaOpt"
