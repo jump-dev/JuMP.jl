@@ -251,7 +251,7 @@ isapprox(1e-9, 0.0; atol = 1e-8)
 
 # ## Vectors, matrices and arrays
 
-# Similar to Matlab, Julia has native support for vectors, matrices and tensors;
+# Similar to MATLAB, Julia has native support for vectors, matrices and tensors;
 # all of which are represented by arrays of different dimensions. Vectors are
 # constructed by comma-separated elements surrounded by square brackets:
 
@@ -491,12 +491,12 @@ for (key, value) in Dict("A" => 1, "B" => 2.5, "D" => 2 - 3im)
     println("$(key): $(value)")
 end
 
-# Note that in contrast to vector languages like Matlab and R, loops do not
+# Note that in contrast to vector languages like MATLAB and R, loops do not
 # result in a significant performance degradation in Julia.
 
 # ## Control flow
 
-# Julia control flow is similar to Matlab, using the keywords
+# Julia control flow is similar to MATLAB, using the keywords
 # `if-elseif-else-end`, and the logical operators `||` and `&&` for **or** and
 # **and** respectively:
 

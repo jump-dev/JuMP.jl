@@ -77,6 +77,7 @@ satisfiability
 scalarization(?s)
 [Ss]emi(continuous|integer|definite)
 subgradient
+subproblem(?s)
 subtour(?s)
 unboundedness
 unregister
@@ -95,7 +96,7 @@ Clp
 CPLEXLink
 Couenne
 Divio
-embotech
+Embotech
 [Ee]cos
 JSONSchema
 GLPK
