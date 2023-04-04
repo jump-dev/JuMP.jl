@@ -35,8 +35,33 @@ contexts.
 
 ## Create a variable
 
-Create variables using the [`@variable`](@ref) macro. When creating a variable,
-you can also specify variable bounds:
+Create variables using the [`@variable`](@ref) macro:
+
+```jldoctest variables
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> typeof(x)
+VariableRef
+
+julia> num_variables(model)
+1
+```
+Here `x` is a Julia variable that is bound to a [`VariableRef`](@ref) object, and
+we have added 1 decision variable to our model.
+
+To make the binding more explicit, we could have written:
+```jldoctest variables
+julia> model = Model();
+
+julia> x = @variable(model, x)
+x
+```
+but there is no need to in general; the macro does it for us.
+
+When creating a variable, you can also specify variable bounds:
 ```jldoctest variables_2
 julia> model = Model();
 
@@ -244,7 +269,7 @@ the variable.
 
 !!! warning
     The index of the variable may not correspond to the column of the variable
-    in the solver!
+    in the solver.
 
 Create a container of anonymous JuMP variables by dropping the name in front of
 the `[`:
@@ -1210,6 +1235,49 @@ julia> y = Union{VariableRef,AffExpr}[
  -x[1,2]  0
 
 julia> set_lower_bound(y[1, 2], 0.0)
+```
+
+### Example: Hermitian positive semidefinite variables
+
+Declare a matrix of JuMP variables to be Hermitian positive semidefinite using
+[`HermitianPSDCone`](@ref):
+
+```jldoctest hermitian_psd
+julia> model = Model();
+
+julia> @variable(model, H[1:2, 1:2] in HermitianPSDCone())
+2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ real(H[1,1])                               …  real(H[1,2]) + (0.0 + 1.0im) imag(H[1,2])
+ real(H[1,2]) + (0.0 - 1.0im) imag(H[1,2])     real(H[2,2])
+```
+
+This adds 4 real variables in the [`MOI.HermitianPositiveSemidefiniteConeTriangle`](@ref):
+
+```jldoctest hermitian_psd
+julia> first(all_constraints(model, Vector{VariableRef}, MOI.HermitianPositiveSemidefiniteConeTriangle))
+[real(H[1,1]), real(H[1,2]), real(H[2,2]), imag(H[1,2])] ∈ MathOptInterface.HermitianPositiveSemidefiniteConeTriangle(2)
+```
+
+### Example: Hermitian variables
+
+Declare a matrix of JuMP variables to be Hermitian using the `Hermitian` tag:
+```jldoctest hermitian
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2], Hermitian)
+2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ real(x[1,1])                               …  real(x[1,2]) + (0.0 + 1.0im) imag(x[1,2])
+ real(x[1,2]) + (0.0 - 1.0im) imag(x[1,2])     real(x[2,2])
+```
+
+This is equivalent to declaring the variable in [`HermitianMatrixSpace`](@ref):
+```jldoctest hermitian
+julia> model = Model();
+
+julia> @variable(model, x[1:2, 1:2] in HermitianMatrixSpace())
+2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ real(x[1,1])                               …  real(x[1,2]) + (0.0 + 1.0im) imag(x[1,2])
+ real(x[1,2]) + (0.0 - 1.0im) imag(x[1,2])     real(x[2,2])
 ```
 
 ### Why use variables constrained on creation?

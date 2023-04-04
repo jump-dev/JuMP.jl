@@ -5,7 +5,7 @@
 
 # # Rocket Control
 
-# **Originally Contributed by**: Iain Dunning
+# **This tutorial was originally contributed by Iain Dunning.**
 
 # This tutorial shows how to solve a nonlinear rocketry control problem.
 # The problem was drawn from the [COPS3](https://www.mcs.anl.gov/~more/cops/cops3.pdf)

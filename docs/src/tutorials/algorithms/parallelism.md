@@ -246,6 +246,7 @@ julia> my_lock = Threads.ReentrantLock();
 julia> Threads.@threads for i in 1:10
            model = Model(HiGHS.Optimizer)
            set_silent(model)
+           set_attribute(model, MOI.NumberOfThreads(), 1)
            @variable(model, x)
            @objective(model, Min, x)
            set_lower_bound(x, i)
@@ -268,6 +269,11 @@ julia> solutions
   6 => 6.0
   3 => 3.0
 ````
+
+!!! warning
+    For some solvers, it may be necessary to limit the number of threads used
+    internally by the solver to 1 by setting the [`MOI.NumberOfThreads`](@ref)
+    attribute.
 
 ### With distributed computing
 
@@ -320,4 +326,4 @@ Many solvers use parallelism internally. For example, commercial solvers like
 [Gurobi](https://github.com/jump-dev/Gurobi.jl) and [CPLEX](https://github.com/jump-dev/CPLEX.jl)
 both parallelize the search in branch-and-bound. Solvers supporting internal
 parallelism will typically support the [`MOI.NumberOfThreads`](@ref) attribute,
-which you can set using [`set_optimizer_attribute`](@ref).
+which you can set using [`set_attribute`](@ref).

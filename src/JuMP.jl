@@ -774,6 +774,42 @@ work for JuMP types) and exploits the mutability of `AffExpr` and `QuadExpr`.
 """
 abstract type AbstractJuMPScalar <: _MA.AbstractMutable end
 
+function _get_index_keyword_indexing_error()
+    return ErrorException(
+        """
+        Indexing an `Array` with keyword arguments is not supported.
+
+        Indexing with keyword arguments _is_ supported for `Container.DenseAxisArray`
+        (and `Container.SparseAxisArray`).
+
+        Force the container type by passing `container = DenseAxisArray` to any of
+        the JuMP macros. For example:
+
+        ```julia
+        julia> model = Model();
+
+        julia> @variable(model, x[i=1:3], container = DenseAxisArray)
+        1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
+            Dimension 1, Base.OneTo(3)
+        And data, a 3-element Vector{VariableRef}:
+        x[1]
+        x[2]
+        x[3]
+
+        julia> x[i=2]
+        x[2]
+        ```
+        """,
+    )
+end
+
+function Base.getindex(x::Array{<:AbstractJuMPScalar}; kwargs...)
+    if isempty(kwargs)
+        throw(BoundsError(x, tuple()))
+    end
+    return throw(_get_index_keyword_indexing_error())
+end
+
 """
     owner_model(s::AbstractJuMPScalar)
 

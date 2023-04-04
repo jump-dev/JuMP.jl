@@ -82,7 +82,7 @@ However, if your model is already supported by the solver, bridges add latency
 (read [The "time-to-first-solve" issue](@ref)). This is particularly noticeable
 for small models.
 
-To reduce the "time-to-first-solve", try passing `add_bridges = false`.
+To reduce the "time-to-first-solve,s" try passing `add_bridges = false`.
 ```jldoctest
 julia> model = Model(HiGHS.Optimizer; add_bridges = false);
 ```
@@ -93,7 +93,7 @@ julia> model = Model();
 julia> set_optimizer(model, HiGHS.Optimizer; add_bridges = false)
 ```
 
-However, be wary! If your model and solver combination needs bridges, an error
+However, be wary. If your model and solver combination needs bridges, an error
 will be thrown:
 ```jldoctest
 julia> model = Model(SCS.Optimizer; add_bridges = false);
@@ -221,7 +221,8 @@ $$ \begin{aligned}
 ```
 
 In IJulia (and Documenter), ending a cell in with [`latex_formulation`](@ref)
-will render the model in LaTeX!
+will render the model in LaTeX:
+
 ```@example
 using JuMP                # hide
 model = Model()           # hide
@@ -440,7 +441,7 @@ with optimizer MOIB.LazyBridgeOptimizer{HiGHS.Optimizer}
   with inner model A HiGHS model with 0 columns and 0 rows.
 ```
 
-Uh oh! Even though we passed a `HiGHS.Optimizer`, the backend is a much more
+Uh oh. Even though we passed a `HiGHS.Optimizer`, the backend is a much more
 complicated object.
 
 ### CachingOptimizer

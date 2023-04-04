@@ -20,7 +20,7 @@
 
 # # Network flow problems
 
-# **Originally Contributed by**: Arpit Bhatia
+# **This tutorial was originally contributed by Arpit Bhatia.**
 
 # In graph theory, a flow network (also known as a transportation network) is a
 # directed graph where each edge has a capacity and each edge receives a flow.

@@ -20,7 +20,7 @@
 
 # # Financial modeling problems
 
-# **Originally Contributed by**: Arpit Bhatia
+# **This tutorial was originally contributed by Arpit Bhatia.**
 
 # Optimization models play an increasingly important role in financial
 # decisions. Many computational finance problems can be solved efficiently using

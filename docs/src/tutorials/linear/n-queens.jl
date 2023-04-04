@@ -20,7 +20,7 @@
 
 # # N-Queens
 
-# **Originally Contributed by**: Matthew Helm ([with help from @mtanneau on Julia Discourse](https://discourse.julialang.org/t/which-jump-jl-solver-for-this-problem/43350/17?u=mthelm85))
+# **This tutorial was originally contributed by Matthew Helm and Mathieu Tanneau.**
 
 # The N-Queens problem involves placing N queens on an N x N chessboard such
 # that none of the queens attacks another. In chess, a queen can move
@@ -62,7 +62,7 @@ for i in -(N - 1):(N-1)
     @constraint(model, sum(LinearAlgebra.diag(reverse(x; dims = 1), i)) <= 1)
 end
 
-# That's it! We are ready to put our model to work and see if it is able to find
+# We are ready to put our model to work and see if it is able to find
 # a feasible solution:
 
 optimize!(model)

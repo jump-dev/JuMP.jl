@@ -19,6 +19,13 @@ struct ConstraintRef{M<:AbstractModel,C,Shape<:AbstractShape}
     shape::Shape
 end
 
+function Base.getindex(x::Array{<:ConstraintRef}; kwargs...)
+    if isempty(kwargs)
+        throw(BoundsError(x, tuple()))
+    end
+    return throw(_get_index_keyword_indexing_error())
+end
+
 """
     index(cr::ConstraintRef)::MOI.ConstraintIndex
 
@@ -545,6 +552,10 @@ Return the set of the constraint `constraint` in the function-in-set form as a
     moi_set(s::AbstractVectorSet, dim::Int)
 
 Returns the MOI set of dimension `dim` corresponding to the JuMP set `s`.
+
+    moi_set(s::AbstractScalarSet)
+
+Returns the MOI set corresponding to the JuMP set `s`.
 """
 moi_set(constraint::AbstractConstraint) = constraint.set
 

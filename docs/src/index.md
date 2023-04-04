@@ -16,7 +16,7 @@
 \end{figure}
 ```
 
-Welcome to the documentation for JuMP!
+Welcome to the documentation for JuMP.
 
 !!! note
     This documentation is also available in PDF format: [JuMP.pdf](JuMP.pdf).
@@ -31,7 +31,7 @@ linear, mixed-integer, second-order conic, semidefinite, and nonlinear
 programming.
 
 !!! tip
-    If you aren't sure if you should use JuMP, read [Should I use JuMP?](@ref).
+    If you aren't sure if you should use JuMP, read [Should you use JuMP?](@ref).
 
 ## Resources for getting started
 
@@ -83,38 +83,17 @@ you know where to look for certain things.
 ## Citing JuMP
 
 If you find JuMP useful in your work, we kindly request that you cite the
-following paper ([PDF](https://mlubin.github.io/pdf/jump-sirev.pdf)):
+following paper ([preprint](https://arxiv.org/abs/2206.03866)):
 
-``` sourceCode
-@article{DunningHuchetteLubin2017,
-author = {Iain Dunning and Joey Huchette and Miles Lubin},
-title = {JuMP: A Modeling Language for Mathematical Optimization},
-journal = {SIAM Review},
-volume = {59},
-number = {2},
-pages = {295-320},
-year = {2017},
-doi = {10.1137/15M1020575},
+```bibtex
+@article{Lubin2023,
+    author = {Miles Lubin and Oscar Dowson and Joaquim Dias Garcia and Joey Huchette and Beno{\^i}t Legat and Juan Pablo Vielma},
+    title = {JuMP 1.0: Recent improvements to a modeling language for mathematical optimization},
+    journal = {Mathematical Programming Computation},
+    year = {2023},
+    note = {In press.}
 }
 ```
-
-For an earlier work where we presented a prototype implementation of JuMP, see
-[here](https://dx.doi.org/10.1287/ijoc.2014.0623):
-
-``` sourceCode
-@article{LubinDunningIJOC,
-author = {Miles Lubin and Iain Dunning},
-title = {Computing in Operations Research Using Julia},
-journal = {INFORMS Journal on Computing},
-volume = {27},
-number = {2},
-pages = {238-248},
-year = {2015},
-doi = {10.1287/ijoc.2014.0623},
-}
-```
-
-A preprint of this paper is [freely available](https://arxiv.org/abs/1312.1431).
 
 ## NumFOCUS
 

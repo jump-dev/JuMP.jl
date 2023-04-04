@@ -589,42 +589,50 @@ function test_extension_variable_skewsymmetric(
     return
 end
 
+function test_extension_variables_constrained_on_creation_errors(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @test_macro_throws(
+        ErrorException(
+            "In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: " *
+            "Cannot use set keyword because the variable is already " *
+            "constrained to `$(Expr(:escape, :(SecondOrderCone())))`.",
+        ),
+        @variable(model, x[1:2] in SecondOrderCone(), set = PSDCone()),
+    )
+    @test_macro_throws(
+        ErrorException(
+            "In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`: " *
+            "Cannot pass `PSD` as a positional argument because the variable " *
+            "is already constrained to `$(Expr(:escape, :(SecondOrderCone())))`.",
+        ),
+        @variable(model, x[1:2] in SecondOrderCone(), PSD),
+    )
+    @test_macro_throws(
+        ErrorException(
+            "In `@variable(model, x[1:2, 1:2], PSD, Symmetric)`: " *
+            "Cannot pass `Symmetric` as a positional argument because the " *
+            "variable is already constrained to `$(PSDCone())`.",
+        ),
+        @variable(model, x[1:2, 1:2], PSD, Symmetric),
+    )
+    @test_macro_throws(
+        ErrorException(
+            "In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`: " *
+            "`set` keyword argument was given 2 times.",
+        ),
+        @variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone()),
+    )
+    return
+end
+
 function test_extension_variables_constrained_on_creation(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
     model = ModelType()
-
-    err = ErrorException(
-        "In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `set` keyword argument is not allowed.",
-    )
-    @test_macro_throws err @variable(
-        model,
-        x[1:2] in SecondOrderCone(),
-        set = PSDCone()
-    )
-    err = ErrorException(
-        "In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`: Cannot specify set twice, it was already set to `\$(Expr(:escape, :(SecondOrderCone())))` so the `PSD` argument is not allowed.",
-    )
-    @test_macro_throws err @variable(model, x[1:2] in SecondOrderCone(), PSD)
-    err = ErrorException(
-        "In `@variable(model, x[1:2] in SecondOrderCone(), Symmetric)`: Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `\$(Expr(:escape, :(SecondOrderCone())))`.",
-    )
-    @test_macro_throws err @variable(
-        model,
-        x[1:2] in SecondOrderCone(),
-        Symmetric
-    )
-    err = ErrorException(
-        "In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`: `set` keyword argument was given 2 times.",
-    )
-    @test_macro_throws err @variable(
-        model,
-        x[1:2],
-        set = SecondOrderCone(),
-        set = PSDCone()
-    )
-
     @variable(model, x[1:2] in SecondOrderCone())
     @test num_constraints(model, typeof(x), MOI.SecondOrderCone) == 1
     @test name(x[1]) == "x[1]"
@@ -1232,9 +1240,7 @@ function test_extension_complex_variable_errors(
     return
 end
 
-function test_Hermitian_PSD()
-    model = Model()
-    @variable(model, H[1:2, 1:2] in HermitianPSDCone())
+function _test_Hermitian(model, H)
     @test H isa LinearAlgebra.Hermitian
     Q = parent(H)
     @test num_variables(model) == 4
@@ -1248,6 +1254,93 @@ function test_Hermitian_PSD()
     @test Q[2, 2] == 1v[3]
     @test Q[2, 1] == conj(Q[1, 2])
     @test H[2, 1] == conj(H[1, 2])
+end
+
+function test_extension_variable_Hermitian_tag(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, H[1:2, 1:2], Hermitian)
+    _test_Hermitian(model, H)
+    @test num_constraints(model; count_variable_in_set_constraints = true) == 0
+    return
+end
+
+function test_extension_variable_Hermitian(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, H[1:2, 1:2] in HermitianMatrixSpace())
+    _test_Hermitian(model, H)
+    @test num_constraints(model; count_variable_in_set_constraints = true) == 0
+    return
+end
+
+function test_extension_Hermitian_PSD(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, H[1:2, 1:2] in HermitianPSDCone())
+    _test_Hermitian(model, H)
+    con_refs = all_constraints(
+        model,
+        Vector{VariableRefType},
+        MOI.HermitianPositiveSemidefiniteConeTriangle,
+    )
+    @test length(con_refs) == 1
+    con = constraint_object(con_refs[1])
+    @test jump_function(con) == all_variables(model)
+    @test moi_set(con) == MOI.HermitianPositiveSemidefiniteConeTriangle(2)
+    return
+end
+
+function _test_Hermitian_errors(model, set)
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        lower_bound = (i + j) * im
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        upper_bound = (i + j) * im
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        start = (i + j) * im
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        integer = i > j
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        Bin
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        Int,
+    )
+    @test_throws ErrorException @variable(
+        model,
+        H[i = 1:2, j = 1:2] in set,
+        integer = i != j,
+    )
+    return
+end
+
+function test_extension_Hermitian_errors(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    _test_Hermitian_errors(ModelType(), HermitianMatrixSpace())
     return
 end
 
@@ -1255,42 +1348,7 @@ function test_extension_Hermitian_PSD_errors(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
-    model = ModelType()
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        lower_bound = (i + j) * im
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        upper_bound = (i + j) * im
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        start = (i + j) * im
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        integer = i > j
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        Bin
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        Int,
-    )
-    @test_throws ErrorException @variable(
-        model,
-        H[i = 1:2, j = 1:2] in HermitianPSDCone(),
-        integer = i != j,
-    )
+    _test_Hermitian_errors(ModelType(), HermitianPSDCone())
     return
 end
 

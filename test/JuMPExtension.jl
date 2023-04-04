@@ -20,6 +20,7 @@ module JuMPExtension
 
 import JuMP
 import Test
+import OrderedCollections
 
 struct ConstraintIndex
     value::Int
@@ -27,7 +28,7 @@ end
 
 mutable struct MyModel <: JuMP.AbstractModel
     next_var_index::Int
-    variables::Dict{Int,JuMP.ScalarVariable}      # Map varidx -> variable
+    variables::OrderedCollections.OrderedDict{Int,JuMP.ScalarVariable}      # Map varidx -> variable
     var_to_name::Dict{Int,String}
     name_to_var::Union{Dict{String,Int},Nothing}
     next_con_index::Int
@@ -43,7 +44,7 @@ mutable struct MyModel <: JuMP.AbstractModel
     function MyModel()
         return new(
             0,
-            Dict{Int,JuMP.AbstractVariable}(),
+            OrderedCollections.OrderedDict{Int,JuMP.ScalarVariable}(),
             Dict{Int,String}(),
             nothing,
             0,
@@ -109,7 +110,10 @@ function JuMP.add_variable(
             variable.scalar_variables,
             JuMP.vectorize(names, variable.shape),
         )
-    JuMP.add_constraint(model, JuMP.VectorConstraint(var_refs, variable.set))
+    if !isa(variable.set, JuMP.MOI.Reals)
+        constraint = JuMP.VectorConstraint(var_refs, variable.set)
+        JuMP.add_constraint(model, constraint)
+    end
     return JuMP.reshape_vector(var_refs, variable.shape)
 end
 
@@ -127,6 +131,10 @@ end
 
 function JuMP.is_valid(model::MyModel, vref::MyVariableRef)
     return model === vref.model && vref.idx in keys(model.variables)
+end
+
+function JuMP.all_variables(model::MyModel)
+    return [MyVariableRef(model, idx) for idx in keys(model.variables)]
 end
 
 JuMP.num_variables(m::MyModel) = length(m.variables)
@@ -426,6 +434,20 @@ function JuMP.is_valid(model::MyModel, constraint_ref::MyConstraintRef)
            haskey(model.constraints, constraint_ref.index)
 end
 
+function JuMP.all_constraints(
+    model::MyModel,
+    ::Type{F},
+    ::Type{S},
+) where {F,S<:JuMP.MOI.AbstractSet}
+    constraints = JuMP.ConstraintRef[]
+    for (index, c) in model.constraints
+        if JuMP.jump_function(c) isa F && JuMP.moi_set(c) isa S
+            push!(constraints, JuMP.ConstraintRef(model, index, JuMP.shape(c)))
+        end
+    end
+    return constraints
+end
+
 function JuMP.constraint_object(cref::MyConstraintRef)
     return cref.model.constraints[cref.index]
 end
@@ -447,6 +469,16 @@ function JuMP.num_constraints(
 ) where {F<:JuMP.AbstractJuMPScalar}
     return count(values(model.constraints)) do con
         return con isa JuMP.VectorConstraint{F,S}
+    end
+end
+
+function JuMP.num_constraints(
+    model::MyModel;
+    count_variable_in_set_constraints::Bool,
+)
+    return count(values(model.constraints)) do con
+        is_variable_set = JuMP.moi_set(con) isa MyVariableRef
+        return count_variable_in_set_constraints && is_variable_set
     end
 end
 

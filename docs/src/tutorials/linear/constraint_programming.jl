@@ -31,8 +31,6 @@ set_silent(model)
 optimize!(model)
 value.(x)
 
-# No two elements in `x` should have the same value!
-
 # ## BinPacking
 
 # The [`MOI.BinPacking`](@ref) set can be used to divide up a set of items into

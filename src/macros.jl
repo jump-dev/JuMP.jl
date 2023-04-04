@@ -194,7 +194,33 @@ sign is transformed into a set with zero constant and finally the constant is
 moved to the set with `MOIU.shift_constant`.
 """
 function operator_to_set(_error::Function, ::Val{S}) where {S}
-    return _error("Unrecognized sense $S")
+    return _error("unsupported operator $S")
+end
+
+function operator_to_set(_error::Function, ::Val{:>})
+    return _error(
+        "unsupported operator `>`.\n\n" *
+        "JuMP does not support strict inequalities, use `>=` instead.\n\n" *
+        "If you require a strict inequality, you will need to use a " *
+        "tolerance. For example, instead of `x > 1`, do `x >= 1 + 1e-4`. " *
+        "If the constraint must take integer values, use a tolerance of " *
+        "`1.0`. If the constraint may take continuous values, note that this " *
+        "work-around can cause numerical issues, and your constraint may not " *
+        "hold exactly.",
+    )
+end
+
+function operator_to_set(_error::Function, ::Val{:<})
+    return _error(
+        "unsupported operator `<`.\n\n" *
+        "JuMP does not support strict inequalities, use `<=` instead.\n\n" *
+        "If you require a strict inequality, you will need to use a " *
+        "tolerance. For example, instead of `x < 1`, do `x <= 1 - 1e-4`. " *
+        "If the constraint must take integer values, use a tolerance of " *
+        "`1.0`. If the constraint may take continuous values, note that this " *
+        "work-around can cause numerical issues, and your constraint may not " *
+        "hold exactly.",
+    )
 end
 
 """
@@ -468,8 +494,10 @@ function parse_constraint_head(
         lb, ub = ub, lb
     else
         _error(
-            "Only two-sided rows of the form `lb <= expr <= ub` or " *
-            "`ub >= expr >= lb` are supported.",
+            "unsupported mix of comparison operators " *
+            "`$lb $lsign ... $rsign $ub`.\n\n" *
+            "Two-sided rows must of the form `$lb <= ... <= $ub` or " *
+            "`$ub >= ... >= $lb`.",
         )
     end
     new_aff, parse_aff = _MA.rewrite(aff)
@@ -1907,13 +1935,50 @@ function parse_one_operator_variable(
     _fix_or_error(_error, infoexpr, value)
     return
 end
+
 function parse_one_operator_variable(
     _error::Function,
-    infoexpr::_VariableInfoExpr,
+    ::_VariableInfoExpr,
     ::Val{S},
-    value,
+    ::Any,
 ) where {S}
-    return _error("Unknown sense $S.")
+    return _error("unsupported operator $S")
+end
+
+function parse_one_operator_variable(
+    _error::Function,
+    ::_VariableInfoExpr,
+    ::Val{:>},
+    ::Any,
+)
+    return _error(
+        "unsupported operator `>`.\n\n" *
+        "JuMP does not support strict inequalities, use `>=` instead.\n\n" *
+        "If you require a strict inequality, you will need to use a " *
+        "tolerance. For example, instead of `x > 1`, do `x >= 1 + 1e-4`. " *
+        "If the variable must take integer values, use a tolerance of " *
+        "`1.0`. If the variable may take continuous values, note that this " *
+        "work-around can cause numerical issues, and your bound may not " *
+        "hold exactly.",
+    )
+end
+
+function parse_one_operator_variable(
+    _error::Function,
+    ::_VariableInfoExpr,
+    ::Val{:<},
+    ::Any,
+)
+    return _error(
+        "unsupported operator `<`.\n\n" *
+        "JuMP does not support strict inequalities, use `<=` instead.\n\n" *
+        "If you require a strict inequality, you will need to use a " *
+        "tolerance. For example, instead of `x < 1`, do `x <= 1 - 1e-4`. " *
+        "If the variable must take integer values, use a tolerance of " *
+        "`1.0`. If the variable may take continuous values, note that this " *
+        "work-around can cause numerical issues, and your bound may not " *
+        "hold exactly.",
+    )
 end
 
 # There is not way to determine at parsing time which of lhs or rhs is the
@@ -1986,16 +2051,22 @@ function parse_ternary_variable(
         upper,
     )
 end
+
 function parse_ternary_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
-    ::Val,
-    lvalue,
-    ::Val,
-    rvalue,
-)
-    return _error("Use the form lb <= ... <= ub.")
+    ::Val{A},
+    lb,
+    ::Val{B},
+    ub,
+) where {A,B}
+    return _error(
+        "unsupported mix of comparison operators `$lb $A ... $B $ub`.\n\n" *
+        "Two-sided variable bounds must of the form `$lb <= ... <= $ub` or " *
+        "`$ub >= ... >= $lb`.",
+    )
 end
+
 function parse_variable(
     _error::Function,
     infoexpr::_VariableInfoExpr,
@@ -2432,7 +2503,6 @@ macro variable(args...)
     )
     base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
     variable_type_kw_args = filter(kw -> kw.args[1] == :variable_type, kw_args)
-    set_kw_args = filter(kw -> kw.args[1] == :set, kw_args)
     set_string_name_kw_args =
         filter(kw -> kw.args[1] == :set_string_name, kw_args)
     infoexpr = _VariableInfoExpr(; _keywordify.(info_kw_args)...)
@@ -2467,39 +2537,34 @@ macro variable(args...)
     else
         base_name = esc(base_name_kw_args[1].args[2])
     end
-
-    if !isempty(set_kw_args)
-        if length(set_kw_args) > 1
-            _error(
-                "`set` keyword argument was given $(length(set_kw_args)) times.",
-            )
-        end
+    set_kw_args = filter(kw -> kw.args[1] == :set, kw_args)
+    if length(set_kw_args) == 1
         if set !== nothing
             _error(
-                "Cannot specify set twice, it was already set to `$set` so the `set` keyword argument is not allowed.",
+                "Cannot use set keyword because the variable is already " *
+                "constrained to `$set`.",
             )
         end
         set = esc(set_kw_args[1].args[2])
+    elseif length(set_kw_args) > 1
+        _error("`set` keyword argument was given $(length(set_kw_args)) times.")
     end
-
-    # process keyword arguments
-    if any(t -> (t == :PSD), extra)
-        if set !== nothing
-            _error(
-                "Cannot specify set twice, it was already set to `$set` so the `PSD` argument is not allowed.",
-            )
+    for (sym, cone) in (
+        :PSD => PSDCone(),
+        :Symmetric => SymmetricMatrixSpace(),
+        :Hermitian => HermitianMatrixSpace(),
+    )
+        if any(isequal(sym), extra)
+            if set !== nothing
+                _error(
+                    "Cannot pass `$sym` as a positional argument because the " *
+                    "variable is already constrained to `$set`.",
+                )
+            end
+            set = cone
+            filter!(!isequal(sym), extra)
         end
-        set = :(JuMP.PSDCone())
     end
-    if any(t -> (t == :Symmetric), extra)
-        if set !== nothing
-            _error(
-                "Cannot specify `Symmetric` when the set is already specified, the variable is constrained to belong to `$set`.",
-            )
-        end
-        set = :(JuMP.SymmetricMatrixSpace())
-    end
-    extra = filter(x -> (x != :PSD && x != :Symmetric), extra) # filter out PSD and sym tag
     for ex in extra
         if ex == :Int
             _set_integer_or_error(_error, infoexpr)

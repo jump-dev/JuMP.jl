@@ -59,7 +59,7 @@ still compatible and update the bound accordingly.
 ## Define a new set
 
 To define a new set for JuMP, subtype `MOI.AbstractScalarSet` or
-`MOI.AbstractVectorSet` and implement `Base.copy` for the set. That's it!
+`MOI.AbstractVectorSet` and implement `Base.copy` for the set.
 
 ```jldoctest define_new_set
 julia> struct NewMOIVectorSet <: MOI.AbstractVectorSet
@@ -148,7 +148,8 @@ julia> function JuMP.add_variable(
 
 Now `AddTwice` can be passed to [`@variable`](@ref) similar to `Bin` or `Int`,
 or through the `variable_type` keyword. However, now it adds two variables
-instead of one!
+instead of one.
+
 ```jldoctest new_variable
 julia> model = Model();
 
@@ -249,7 +250,7 @@ Rewriting my_equal_to to ==
 ```
 
 !!! tip
-    When parsing a constraint you can recurse into sub-constraint (e.g., the
+    When parsing a constraint you can recurse into sub-constraint (for example, the
     `{expr}` in `z => {x <= 1}`) by calling [`parse_constraint`](@ref).
 
 ### Build
@@ -262,7 +263,7 @@ parse time, or it may mean implementing a method which handles additional
 positional arguments.
 
 [`build_constraint`](@ref) must return an [`AbstractConstraint`](@ref), which
-can either be an [`AbstractConstraint`](@ref) already supported by JuMP, e.g., `ScalarConstraint` or `VectorConstraint`, or a custom
+can either be an [`AbstractConstraint`](@ref) already supported by JuMP, for example, `ScalarConstraint` or `VectorConstraint`, or a custom
 [`AbstractConstraint`](@ref) with a corresponding [`add_constraint`](@ref)
 method (see [Add](@ref extension_add_constraint)).
 
@@ -293,8 +294,8 @@ my_con : x ≤ 2.0
 
 !!! note
     Only a single positional argument can be given to a particular constraint.
-    Extensions that seek to pass multiple arguments (e.g., `Foo` and `Bar`)
-    should combine them into one argument type (e.g., `FooBar`).
+    Extensions that seek to pass multiple arguments (for example, `Foo` and `Bar`)
+    should combine them into one argument type (for example, `FooBar`).
 
 ### [Add](@id extension_add_constraint)
 

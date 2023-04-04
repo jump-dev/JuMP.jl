@@ -20,7 +20,7 @@
 
 # # Geographical clustering
 
-# **Originally Contributed by**: Matthew Helm ([with help from Mathieu Tanneau on Julia Discourse](https://discourse.julialang.org/t/which-jump-jl-solver-for-this-problem/43350/17?u=mthelm85))
+# **This tutorial was originally contributed by Matthew Helm and Mathieu Tanneau.**
 
 # The goal of this exercise is to cluster $n$ cities into $k$ groups, minimizing
 # the total pairwise distance between cities *and* ensuring that the variance in

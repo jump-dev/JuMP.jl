@@ -1143,6 +1143,9 @@ function set_start_values(
             set_nonlinear_dual_start_value(model, nlp_dual_start)
         end
     end
+    # It's important that we set the variables first, before setting the
+    # constraint starts. This is because some bridges, like Constraint.QuadtoSOC,
+    # make use of the variable starts when transforming the constraint starts.
     for (x, primal_start) in variable_primal
         set_start_value(x, primal_start)
     end

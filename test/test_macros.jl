@@ -13,6 +13,7 @@ module TestMacros
 using JuMP
 using Test
 
+import LinearAlgebra
 import SparseArrays
 
 include(joinpath(@__DIR__, "utilities.jl"))
@@ -1480,8 +1481,8 @@ function test_parse_constraint_head_inconsistent_signs()
     @variable(model, x)
     err = ErrorException(
         "In `@constraint(model, 1 >= x <= 2)`: " *
-        "Only two-sided rows of the form `lb <= expr <= ub` or " *
-        "`ub >= expr >= lb` are supported.",
+        "unsupported mix of comparison operators `1 >= ... <= 2`.\n\n" *
+        "Two-sided rows must of the form `1 <= ... <= 2` or `2 >= ... >= 1`.",
     )
     @test_macro_throws(err, @constraint(model, 1 >= x <= 2))
     return
@@ -1719,11 +1720,23 @@ function test_variable_reverse_sense()
     return
 end
 
-function test_variable_unknown_sense()
+function test_variable_unsupported_operator()
     model = Model()
     @test_macro_throws(
-        ErrorException("In `@variable(model, a ⟂ 1)`: Unknown sense ⟂."),
-        @variable(model, a ⟂ 1),
+        ErrorException("In `@variable(model, x ⊕ 1)`: unsupported operator ⊕"),
+        @variable(model, x ⊕ 1),
+    )
+    return
+end
+
+function test_constraint_unsupported_operator()
+    model = Model()
+    @variable(model, x)
+    @test_macro_throws(
+        ErrorException(
+            "In `@constraint(model, x ⊕ 1)`: unsupported operator ⊕",
+        ),
+        @constraint(model, x ⊕ 1),
     )
     return
 end
@@ -1893,5 +1906,126 @@ function test_nonlinear_generator_pos_init_min()
 end
 
 #!format: on
+
+function test_matrix_in_vector_set()
+    model = Model()
+    @variable(model, X[1:2, 1:2])
+    A = [1 2; 3 4]
+    @test_throws_strip(
+        ErrorException(
+            "In `@constraint(model, X >= A)`: " *
+            "Unsupported matrix in vector-valued set. Did you mean to use the " *
+            "broadcasting syntax `.>=` instead? Alternatively, perhaps you are " *
+            "missing a set argument like `@constraint(model, X >= 0, PSDCone())` " *
+            "or `@constraint(model, X >= 0, HermmitianPSDCone())`.",
+        ),
+        @constraint(model, X >= A),
+    )
+    @test_throws_strip(
+        ErrorException(
+            "In `@constraint(model, X <= A)`: " *
+            "Unsupported matrix in vector-valued set. Did you mean to use the " *
+            "broadcasting syntax `.<=` instead? Alternatively, perhaps you are " *
+            "missing a set argument like `@constraint(model, X <= 0, PSDCone())` " *
+            "or `@constraint(model, X <= 0, HermmitianPSDCone())`.",
+        ),
+        @constraint(model, X <= A),
+    )
+    @test_throws_strip(
+        ErrorException(
+            "In `@constraint(model, X == A)`: " *
+            "Unsupported matrix in vector-valued set. Did you mean to use the " *
+            "broadcasting syntax `.==` for element-wise equality? Alternatively, " *
+            "this syntax is supported in the special case that the matrices are " *
+            "`LinearAlgebra.Symmetric` or `LinearAlgebra.Hermitian`.",
+        ),
+        @constraint(model, X == A),
+    )
+    return
+end
+
+function test_hermitian_variable_tag()
+    model = Model()
+    @variable(model, x[1:3, 1:3], Hermitian)
+    @test x isa LinearAlgebra.Hermitian
+    @test num_variables(model) == 9
+    return
+end
+
+function test_unsupported_operator_errors()
+    model = Model()
+    @test_macro_throws(
+        ErrorException(
+            "In `@variable(model, x > 0)`: " *
+            "unsupported operator `>`.\n\n" *
+            "JuMP does not support strict inequalities, use `>=` instead.\n\n" *
+            "If you require a strict inequality, you will need to use a " *
+            "tolerance. For example, instead of `x > 1`, do `x >= 1 + 1e-4`. " *
+            "If the variable must take integer values, use a tolerance of " *
+            "`1.0`. If the variable may take continuous values, note that this " *
+            "work-around can cause numerical issues, and your bound may not " *
+            "hold exactly.",
+        ),
+        @variable(model, x > 0),
+    )
+    @test_macro_throws(
+        ErrorException(
+            "In `@variable(model, x < 0)`: " *
+            "unsupported operator `<`.\n\n" *
+            "JuMP does not support strict inequalities, use `<=` instead.\n\n" *
+            "If you require a strict inequality, you will need to use a " *
+            "tolerance. For example, instead of `x < 1`, do `x <= 1 - 1e-4`. " *
+            "If the variable must take integer values, use a tolerance of " *
+            "`1.0`. If the variable may take continuous values, note that this " *
+            "work-around can cause numerical issues, and your bound may not " *
+            "hold exactly.",
+        ),
+        @variable(model, x < 0),
+    )
+    @variable(model, x)
+    @test_macro_throws(
+        ErrorException(
+            "In `@constraint(model, x > 0)`: " *
+            "unsupported operator `>`.\n\n" *
+            "JuMP does not support strict inequalities, use `>=` instead.\n\n" *
+            "If you require a strict inequality, you will need to use a " *
+            "tolerance. For example, instead of `x > 1`, do `x >= 1 + 1e-4`. " *
+            "If the constraint must take integer values, use a tolerance of " *
+            "`1.0`. If the constraint may take continuous values, note that this " *
+            "work-around can cause numerical issues, and your constraint may not " *
+            "hold exactly.",
+        ),
+        @constraint(model, x > 0),
+    )
+    @test_macro_throws(
+        ErrorException(
+            "In `@constraint(model, x < 0)`: " *
+            "unsupported operator `<`.\n\n" *
+            "JuMP does not support strict inequalities, use `<=` instead.\n\n" *
+            "If you require a strict inequality, you will need to use a " *
+            "tolerance. For example, instead of `x < 1`, do `x <= 1 - 1e-4`. " *
+            "If the constraint must take integer values, use a tolerance of " *
+            "`1.0`. If the constraint may take continuous values, note that this " *
+            "work-around can cause numerical issues, and your constraint may not " *
+            "hold exactly.",
+        ),
+        @constraint(model, x < 0),
+    )
+    return
+end
+
+function test_unsupported_ternary_operator()
+    model = Model()
+    @test_macro_throws(
+        ErrorException(
+            "In `@variable(model, 1 < x < 2)`: " *
+            "unsupported mix of comparison operators `1 < ... < 2`.\n\n" *
+            "Two-sided variable bounds must of the form `1 <= ... <= 2` or " *
+            "`2 >= ... >= 1`.",
+        ),
+        @variable(model, 1 < x < 2),
+    )
+    return
+end
 
 end  # module

@@ -5,7 +5,7 @@
 
 # # The transportation problem
 
-# **Originally contributed by:** Louis Luangkesorn
+# **This tutorial was originally contributed by Louis Luangkesorn.**
 
 # This tutorial is an adaptation of the transportation problem described in
 # [_AMPL: A Modeling Language for Mathematical Programming_](https://ampl.com/resources/the-ampl-book/),

@@ -47,6 +47,25 @@ julia> @variable(model, Q[1:2, 1:2] in SkewSymmetricMatrixSpace())
 struct SkewSymmetricMatrixSpace end
 
 """
+    HermitianMatrixSpace()
+
+Use in the [`@variable`](@ref) macro to constrain a matrix of variables to be
+hermitian.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, Q[1:2, 1:2] in HermitianMatrixSpace())
+2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ real(Q[1,1])                               real(Q[1,2]) + (0.0 + 1.0im) imag(Q[1,2])
+ real(Q[1,2]) + (0.0 - 1.0im) imag(Q[1,2])  real(Q[2,2])
+```
+"""
+struct HermitianMatrixSpace end
+
+"""
     PSDCone
 
 Positive semidefinite cone object that can be used to constrain a square matrix
@@ -332,6 +351,40 @@ function build_variable(
 end
 
 """
+    build_variable(_error::Function, variables, ::HermitianMatrixSpace)
+
+Return a `VariablesConstrainedOnCreation` of shape [`HermitianMatrixShape`](@ref)
+creating variables in `MOI.Reals`, i.e. "free" variables unless they are
+constrained after their creation.
+
+This function is used by the [`@variable`](@ref) macro as follows:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, Q[1:2, 1:2] in HermitianMatrixSpace())
+2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ real(Q[1,1])                               real(Q[1,2]) + (0.0 + 1.0im) imag(Q[1,2])
+ real(Q[1,2]) + (0.0 - 1.0im) imag(Q[1,2])  real(Q[2,2])
+```
+"""
+function build_variable(
+    _error::Function,
+    variables::Matrix{<:AbstractVariable},
+    ::HermitianMatrixSpace,
+)
+    n = _square_side(_error, variables)
+    set = MOI.Reals(
+        MOI.dimension(MOI.HermitianPositiveSemidefiniteConeTriangle(n)),
+    )
+    shape = HermitianMatrixShape(n)
+    return VariablesConstrainedOnCreation(
+        _vectorize_complex_variables(_error, variables),
+        set,
+        shape,
+    )
+end
+
+"""
     build_variable(_error::Function, variables, ::PSDCone)
 
 Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
@@ -553,6 +606,13 @@ function reshape_vector(v::Vector{T}, shape::HermitianMatrixShape) where {T}
 end
 
 function _vectorize_complex_variables(_error::Function, matrix::Matrix)
+    if any(_is_binary, matrix) || any(_is_integer, matrix)
+        # We would then need to fix the imaginary value to zero. Let's wait to
+        # see if there is need for such complication first.
+        _error(
+            "Binary or integer variables in a Hermitian matrix are not supported.",
+        )
+    end
     n = LinearAlgebra.checksquare(matrix)
     for j in 1:n
         if !_isreal(matrix[j, j])
@@ -579,13 +639,6 @@ function build_variable(
     n = _square_side(_error, variables)
     set = MOI.HermitianPositiveSemidefiniteConeTriangle(n)
     shape = HermitianMatrixShape(n)
-    if any(_is_binary, variables) || any(_is_integer, variables)
-        # We would then need to fix the imaginary value to zero. Let's wait to
-        # see if there is need for such complication first.
-        _error(
-            "Binary or integer variables in a Hermitian matrix is not supported.",
-        )
-    end
     return VariablesConstrainedOnCreation(
         _vectorize_complex_variables(_error, variables),
         set,
@@ -627,5 +680,50 @@ function build_constraint(
         vectorize(Q, shape),
         MOI.HermitianPositiveSemidefiniteConeTriangle(n),
         shape,
+    )
+end
+
+function build_constraint(_error::Function, H::LinearAlgebra.Hermitian, ::Zeros)
+    n = LinearAlgebra.checksquare(H)
+    shape = HermitianMatrixShape(n)
+    x = vectorize(H, shape)
+    return VectorConstraint(x, MOI.Zeros(length(x)), shape)
+end
+
+reshape_set(s::MOI.Zeros, ::HermitianMatrixShape) = Zeros()
+
+function build_constraint(_error::Function, f::LinearAlgebra.Symmetric, ::Zeros)
+    n = LinearAlgebra.checksquare(f)
+    shape = SymmetricMatrixShape(n)
+    x = vectorize(f, shape)
+    return VectorConstraint(x, MOI.Zeros(length(x)), shape)
+end
+
+reshape_set(::MOI.Zeros, ::SymmetricMatrixShape) = Zeros()
+
+function build_constraint(_error::Function, ::AbstractMatrix, ::Nonnegatives)
+    return _error(
+        "Unsupported matrix in vector-valued set. Did you mean to use the " *
+        "broadcasting syntax `.>=` instead? Alternatively, perhaps you are " *
+        "missing a set argument like `@constraint(model, X >= 0, PSDCone())` " *
+        "or `@constraint(model, X >= 0, HermmitianPSDCone())`.",
+    )
+end
+
+function build_constraint(_error::Function, ::AbstractMatrix, ::Nonpositives)
+    return _error(
+        "Unsupported matrix in vector-valued set. Did you mean to use the " *
+        "broadcasting syntax `.<=` instead? Alternatively, perhaps you are " *
+        "missing a set argument like `@constraint(model, X <= 0, PSDCone())` " *
+        "or `@constraint(model, X <= 0, HermmitianPSDCone())`.",
+    )
+end
+
+function build_constraint(_error::Function, ::AbstractMatrix, ::Zeros)
+    return _error(
+        "Unsupported matrix in vector-valued set. Did you mean to use the " *
+        "broadcasting syntax `.==` for element-wise equality? Alternatively, " *
+        "this syntax is supported in the special case that the matrices are " *
+        "`LinearAlgebra.Symmetric` or `LinearAlgebra.Hermitian`.",
     )
 end

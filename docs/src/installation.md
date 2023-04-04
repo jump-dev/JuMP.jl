@@ -9,13 +9,13 @@ JuMP is a package for [Julia](https://julialang.org). To use JuMP, first
 [download and install](https://julialang.org/downloads/) Julia.
 
 !!! tip
-    If you  are new  to Julia, read our [Getting started with Julia](@ref)
+    If you are new to Julia, read our [Getting started with Julia](@ref)
     tutorial.
 
-### Which version should I pick?
+### Choosing a version
 
 You can install the "Current stable release" or the "Long-term support (LTS)
-release".
+release."
 
  * The "Current stable release" is the latest release of Julia. It has access to
    newer features, and is likely faster.
@@ -23,14 +23,15 @@ release".
    continued to receive bug and security fixes. However, it may not have the
    latest features or performance improvements.
 
-For most users, you should install the "Current stable release", and whenever
+For most users, you should install the "Current stable release," and whenever
 Julia releases a new version of the current stable release, you should update
 your version of Julia. Note that any code you write on one version of the
 current stable release will continue to work on all subsequent releases.
 
-For users in restricted software environments (e.g., your enterprise IT controls
-what software you can install), you may be better off installing the long-term
-support release because you will not have to update Julia as frequently.
+For users in restricted software environments (for example, your enterprise IT
+controls what software you can install), you may be better off installing the
+long-term support release because you will not have to update Julia as
+frequently.
 
 ## Install JuMP
 
@@ -119,7 +120,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [FICO Xpress](https://www.fico.com/en/products/fico-xpress-optimization-suite) | [Xpress.jl](https://github.com/jump-dev/Xpress.jl)                               | Manual | Comm.    | (MI)LP, (MI)SOCP          |
 | [GLPK](http://www.gnu.org/software/glpk/)                                      | [GLPK.jl](https://github.com/jump-dev/GLPK.jl)                                   |        | GPL      | (MI)LP                    |
 | [Gurobi](https://gurobi.com)                                                   | [Gurobi.jl](https://github.com/jump-dev/Gurobi.jl)                               | Manual | Comm.    | (MI)LP, (MI)SOCP          |
-| [HiGHS](https://github.com/ERGO-Code/HiGHS)                                    | [HiGHS.jl](https://github.com/jump-dev/HiGHS.jl)                                 |        |MIT       | (MI)LP                    |
+| [HiGHS](https://github.com/ERGO-Code/HiGHS)                                    | [HiGHS.jl](https://github.com/jump-dev/HiGHS.jl)                                 |        |MIT       | (MI)LP, QP                |
 | [Hypatia.jl](https://github.com/chriscoey/Hypatia.jl)                          |                                                                                  |        | MIT      | LP, SOCP, SDP             |
 | [Ipopt](https://github.com/coin-or/Ipopt)                                      | [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl)                                 |        | EPL      | LP, QP, NLP               |
 | [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl)                          |                                                                                  |        | MIT      | (MI)SOCP, (MI)NLP         |
@@ -153,7 +154,7 @@ Where:
 
 !!! note
     Developed a solver or solver wrapper? This table is open for new
-    contributions! Start by making a pull request to edit the [installation.md](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/installation.md)
+    contributions. Start by making a pull request to edit the [installation.md](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/installation.md)
     file.
 
 !!! note
@@ -235,7 +236,7 @@ previously worked no longer works.
 
 This usually happens because the new package is not compatible with the latest
 version of JuMP. Therefore, the package manager rolls-back JuMP to an earlier
-version! Here's an example.
+version. Here's an example.
 
 First, we add JuMP:
 ```julia
@@ -263,4 +264,4 @@ for this is that JuMPeR doesn't support a version of JuMP newer than `0.18.6`.
 
 !!! tip
     Pay careful attention to the output of the package manager when adding new
-    packages, especially when you see a package being downgraded!
+    packages, especially when you see a package being downgraded.

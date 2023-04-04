@@ -63,7 +63,7 @@ value.(x)
 
 # The downsides include:
 #  * all variables are global (read [Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/))
-#  * it is easy to introduce errors, e.g., having `profit` and `weight` be
+#  * it is easy to introduce errors, for example, having `profit` and `weight` be
 #    vectors of different lengths, or not match `N`
 #  * the solution, `x[i]`, is hard to interpret without knowing the order in
 #    which we provided the data.
@@ -205,7 +205,7 @@ data = read_data(data_filename)
 
 # At this point, we have data in a file format which we can load and solve a
 # single problem. For many users, this might be sufficient. However, at some
-# point you may be asked to add features like "but what if I want to take more
+# point you may be asked to add features like "but what if we want to take more
 # than one of a particular item?"
 
 # If this is the first time that you've been asked to add a feature, adding
@@ -648,7 +648,7 @@ end
 # JuMP models, so consider this tutorial a starting point, rather than a
 # comprehensive list of all the possible ways to structure JuMP models.  If you
 # are embarking on a large project that uses JuMP, a good next step is to
-# look at ways people have written large JuMP projects "in the wild".
+# look at ways people have written large JuMP projects "in the wild."
 
 # Here are some good examples (all co-incidentally related to energy):
 # * AnyMOD.jl

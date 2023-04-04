@@ -20,7 +20,7 @@
 
 # # Portfolio optimization
 
-# **Originally Contributed by**: Arpit Bhatia
+# **This tutorial was originally contributed by Arpit Bhatia.**
 
 # Optimization models play an increasingly important role in financial
 # decisions. Many computational finance problems can be solved efficiently using
@@ -52,7 +52,7 @@ import StatsPlots
 # the prevailing market prices at the end of the month.
 #
 # As a rational investor, we hope to make some profit out of this endeavor,
-# i.e., the return on our investment should be positive.
+# that is, the return on our investment should be positive.
 #
 # Suppose we bought a stock at $p$ dollars per share in the beginning of the
 # month, and sold it off at $s$ dollars per share at the end of the month. Then
@@ -247,7 +247,7 @@ decision_space = StatsPlots.groupedbar(
 )
 Plots.plot(objective_space, decision_space; layout = (2, 1), size = (600, 600))
 
-# Perhaps our trade-off wasn't so bad after all! Our original solution
+# Perhaps our trade-off wasn't so bad after all. Our original solution
 # corresponded to picking a solution #17. If we buy more SEHI, we can increase
 # the return, but the variance also increases. If we buy less SEHI, such as a
 # solution like #5 or #6, then we can achieve the corresponding return without

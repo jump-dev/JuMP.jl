@@ -37,6 +37,11 @@ julia> array[:b, 3]
 """
 struct SparseAxisArray{T,N,K<:NTuple{N,Any}} <: AbstractArray{T,N}
     data::Dict{K,T}
+    names::NTuple{N,Symbol}
+end
+
+function SparseAxisArray(d::Dict{K,T}) where {T,N,K<:NTuple{N,Any}}
+    return SparseAxisArray(d, ntuple(n -> Symbol("#$n"), N))
 end
 
 Base.length(sa::SparseAxisArray) = length(sa.data)
@@ -60,7 +65,7 @@ end
 
 # A `length` argument can be given because `IteratorSize` is `HasLength`
 function Base.similar(
-    ::SparseAxisArray{S,N,K},
+    sa::SparseAxisArray{S,N,K},
     ::Type{T},
     length::Integer = 0,
 ) where {S,T,N,K}
@@ -68,7 +73,7 @@ function Base.similar(
     if !iszero(length)
         sizehint!(d, length)
     end
-    return SparseAxisArray(d)
+    return SparseAxisArray(d, sa.names)
 end
 
 Base.mapreduce(f, op, sa::SparseAxisArray) = mapreduce(f, op, values(sa.data))
@@ -93,10 +98,38 @@ function Base.setindex!(
     return setindex!(d, value, idx...)
 end
 
-function Base.setindex!(d::SparseAxisArray{T,N,K}, value, idx...) where {T,N,K}
-    if length(idx) < N
-        throw(BoundsError(d, idx))
-    elseif _sliced_key_type(K, idx...) !== nothing
+function _kwargs_to_args(d::SparseAxisArray{T,N}; kwargs...) where {T,N}
+    if length(kwargs) != N
+        throw(BoundsError(d, kwargs))
+    end
+    return ntuple(N) do i
+        kw = keys(kwargs)[i]
+        if d.names[i] != kw
+            error(
+                "Invalid index $kw in position $i. When using keyword " *
+                "indexing, the indices must match the exact name and order " *
+                "used when creating the container.",
+            )
+        end
+        return kwargs[i]
+    end
+end
+
+function Base.setindex!(
+    d::SparseAxisArray{T,N,K},
+    value,
+    args...;
+    kwargs...,
+) where {T,N,K}
+    if !isempty(kwargs)
+        if !isempty(args)
+            error("Cannot index with mix of positional and keyword arguments")
+        end
+        return setindex!(d, value, _kwargs_to_args(d; kwargs...)...)
+    end
+    if length(args) != N
+        throw(BoundsError(d, args))
+    elseif _sliced_key_type(K, args...) !== nothing
         throw(
             ArgumentError(
                 "Slicing is not supported when calling `setindex!` on a" *
@@ -104,7 +137,7 @@ function Base.setindex!(d::SparseAxisArray{T,N,K}, value, idx...) where {T,N,K}
             ),
         )
     end
-    return setindex!(d.data, value, idx)
+    return setindex!(d.data, value, args)
 end
 
 function Base.getindex(
@@ -114,18 +147,29 @@ function Base.getindex(
     return getindex(d, idx...)
 end
 
-function Base.getindex(d::SparseAxisArray{T,N,K}, idx...) where {T,N,K}
-    if length(idx) < N
-        throw(BoundsError(d, idx))
+function Base.getindex(
+    d::SparseAxisArray{T,N,K},
+    args...;
+    kwargs...,
+) where {T,N,K}
+    if !isempty(kwargs)
+        if !isempty(args)
+            error("Cannot index with mix of positional and keyword arguments")
+        end
+        return getindex(d, _kwargs_to_args(d; kwargs...)...)
     end
-    K2 = _sliced_key_type(K, idx...)
+    if length(args) < N
+        throw(BoundsError(d, args))
+    end
+    K2 = _sliced_key_type(K, args...)
     if K2 !== nothing
         new_data = Dict{K2,T}(
-            _sliced_key(k, idx) => v for (k, v) in d.data if _filter(k, idx)
+            _sliced_key(k, args) => v for (k, v) in d.data if _filter(k, args)
         )
-        return SparseAxisArray(new_data)
+        names = _sliced_key_name(K, d.names, args...)
+        return SparseAxisArray(new_data, names)
     end
-    return getindex(d.data, idx)
+    return getindex(d.data, args)
 end
 
 # Method to check whether an index is an attempt at a slice.
@@ -138,6 +182,17 @@ end
         end
     end
     return length(expr.args) == 1 ? :(nothing) : expr
+end
+
+@generated function _sliced_key_name(::Type{K}, names, args...) where {K<:Tuple}
+    expr = Expr(:tuple)
+    for i in 1:length(args)
+        Ki = K.parameters[i]
+        if args[i] <: Colon || args[i] <: AbstractVector{<:Ki}
+            push!(expr.args, Expr(:ref, :names, i))
+        end
+    end
+    return isempty(expr.args) ? nothing : expr
 end
 
 # Methods to check whether a key `k` is a valid subset of `idx`.
@@ -226,7 +281,7 @@ function Base.copy(
         # type information to call SparseAxisArray(dict). As a work-around, we
         # explicitly construct the type of the resulting SparseAxisArray.
         # For more, see JuMP issue #2867.
-        return SparseAxisArray{Any,N,K}(dict)
+        return SparseAxisArray{Any,N,K}(dict, ntuple(n -> Symbol("#$n"), N))
     end
     return SparseAxisArray(dict)
 end

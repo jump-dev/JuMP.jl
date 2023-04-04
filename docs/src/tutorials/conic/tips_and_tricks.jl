@@ -20,7 +20,7 @@
 
 # # [Tips and Tricks](@id conic_tips_and_tricks)
 
-# **Originally Contributed by**: Arpit Bhatia
+# **This tutorial was originally contributed by Arpit Bhatia.**
 
 # This tutorial is aimed at providing a simplistic introduction to conic
 # programming using JuMP.
@@ -216,6 +216,28 @@ value(t), value(x)
 # The [`MOI.PowerCone`](@ref) has a dual, the [`MOI.DualPowerCone`](@ref),
 # that offers an alternative formulation that can be more efficient for some
 # formulations.
+
+# ## P-Norm
+
+# The p-norm ``||x||_p = \left(\sum\limits_{i} |x_i|^p\right)^{\frac{1}{p}}``
+# can be modeled using [`MOI.PowerCone`](@ref)s. See the [Mosek Modeling Cookbook](https://docs.mosek.com/modeling-cookbook/powo.html#p-norm-cones)
+# for the derivation.
+
+function p_norm(x::Vector, p)
+    N = length(x)
+    model = Model(SCS.Optimizer)
+    set_silent(model)
+    @variable(model, r[1:N])
+    @variable(model, t)
+    @constraint(model, [i = 1:N], [r[i], t, x[i]] in MOI.PowerCone(1 / p))
+    @constraint(model, sum(r) == t)
+    @objective(model, Min, t)
+    optimize!(model)
+    return value(t)
+end
+
+x = rand(5);
+LinearAlgebra.norm(x, 4), p_norm(x, 4)
 
 # ## Positive Semidefinite Cone
 

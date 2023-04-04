@@ -77,8 +77,11 @@ SOS2
 SkewSymmetricMatrixSpace
 SkewSymmetricMatrixShape
 SymmetricMatrixSpace
+HermitianMatrixSpace
 HermitianMatrixShape
 moi_set
+Semicontinuous
+Semiinteger
 ```
 
 ## Printing

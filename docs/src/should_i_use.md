@@ -1,4 +1,4 @@
-# Should I use JuMP?
+# Should you use JuMP?
 
 JuMP is an [algebraic modeling language](@ref algebraic-modeling-language) for
 mathematical optimization written in the [Julia language](https://julialang.org).
@@ -6,7 +6,7 @@ mathematical optimization written in the [Julia language](https://julialang.org)
 This page explains when you should consider using JuMP, and importantly, when
 you should _not_ use JuMP.
 
-## When should I use JuMP?
+## When should you use JuMP?
 
 You should use JuMP if you have a constrained optimization problem for which you
 can formulate using the language of mathematical programming, that is:
@@ -52,7 +52,7 @@ Key reasons to use JuMP include:
    - JuMP provides access to solver-independent and solver-dependent
      [Callbacks](@ref callbacks_manual).
 
-## When should I not use JuMP?
+## When should you not use JuMP?
 
 JuMP supports a broad range of optimization classes. However, there are still
 some that it doesn't support, or that are better supported by other software

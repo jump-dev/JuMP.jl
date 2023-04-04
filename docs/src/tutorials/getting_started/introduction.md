@@ -8,7 +8,7 @@ basics of Julia and JuMP.
 Having a high-level overview of how this part of the documentation is structured
 will help you know where to look for certain things.
 
- * The "Getting started with ..." tutorials are basic introductions to different
+ * The "Getting started with" tutorials are basic introductions to different
    aspects of JuMP and Julia. If you are new to JuMP and Julia, start by reading
    them in the following order:
    * [Getting started with Julia](@ref)

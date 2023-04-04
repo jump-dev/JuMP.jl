@@ -28,7 +28,7 @@
 # of the inner problem inside the outer one. Finally, we show how to improve
 # the performance by using a cache that avoids resolving the inner problem.
 #
-# For a simpler example of writing a user-defined function, 
+# For a simpler example of writing a user-defined function,
 # see the [User-defined Hessians](@ref) tutorial.
 
 # This tutorial uses the following packages:
@@ -164,7 +164,7 @@ y
 
 # Our solution approach works, but it has a performance problem: every time
 # we need to compute the value, gradient, or Hessian of ``V``, we have to
-# re-solve the lower-level optimization problem! This is wasteful, because we
+# re-solve the lower-level optimization problem. This is wasteful, because we
 # will often call the gradient and Hessian at the same point, and so solving the
 # problem twice with the same input repeats work unnecessarily.
 

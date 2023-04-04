@@ -11,10 +11,10 @@
 
 # In brief, sensitivity analysis of a linear program is about asking two
 # questions:
-#  1) Given an optimal solution, how much can I change the objective
-#     coefficients before a different solution becomes optimal?
-#  2) Given an optimal solution, how much can I change the right-hand side of a
-#     linear constraint before a different solution becomes optimal?
+#  1) Given an optimal solution, how much can the objective coefficients change
+#     by before a different solution becomes optimal?
+#  2) Given an optimal solution, how much can the right-hand side of a linear
+#     constraint change by before a different solution becomes optimal?
 
 # JuMP provides a function, [`lp_sensitivity_report`](@ref), to help us compute
 # these values, but this tutorial extends that to create more informative
@@ -106,8 +106,6 @@ x_report = variable_report(x)
 
 variable_df =
     DataFrames.DataFrame(variable_report(xi) for xi in all_variables(model))
-
-# Great! That looks just like the reports in Excel.
 
 # ## Constraint sensitivity
 

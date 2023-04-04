@@ -143,7 +143,15 @@ model = Model(HiGHS.Optimizer)
 
 @variable(model, x >= 0)
 
-# They can have lower and upper bounds:
+# !!! info
+#     The macro creates a new Julia object, `x`, in the current scope. We could
+#     have made this more explicit by writing:
+#     ```julia
+#     x = @variable(model, x >= 0)
+#     ```
+#     but the macro does this automatically for us to save writing `x` twice.
+
+# Variables can have lower and upper bounds:
 
 @variable(model, 0 <= y <= 30)
 
@@ -319,6 +327,14 @@ end                         #hide
 
 @variable(model, a[1:2, 1:2])
 
+# Index elements in `a` as follows:
+
+a[1, 1]
+
+#-
+
+a[2, :]
+
 # Create an n-dimensional variable $x \in {R}^n$ with bounds $l \le x \le u$
 # ($l, u \in {R}^n$) as follows:
 
@@ -344,6 +360,16 @@ u = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 
 @variable(model, w[1:5, ["red", "blue"]] <= 1)
 
+# Index elements in a `DenseAxisArray` as follows:
+
+z[2, 1]
+
+#-
+
+w[2:3, ["red", "blue"]]
+
+# See [Forcing the container type](@ref variable_forcing) for more details.
+
 # #### SparseAxisArrays
 
 # `SparseAxisArrays` are created when the indices do not form a Cartesian product.
@@ -357,6 +383,14 @@ u = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 # semi-colon `;`:
 
 @variable(model, v[i = 1:9; mod(i, 3) == 0])
+
+# Index elements in a `DenseAxisArray` as follows:
+
+u[1, 2]
+
+#-
+
+v[[3, 6]]
 
 # ### Integrality
 
@@ -454,7 +488,7 @@ model = Model(HiGHS.Optimizer)
 # ## Vectorized syntax
 
 # We can also add constraints and an objective to JuMP using vectorized linear
-# algebra. We'll illustrate this by solving an LP in standard form i.e.
+# algebra. We'll illustrate this by solving an LP in standard form that is,
 
 # ```math
 # \begin{aligned}

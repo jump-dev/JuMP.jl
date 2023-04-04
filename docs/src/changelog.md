@@ -7,6 +7,38 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.10.0 (April 3, 2023)
+
+### Added
+
+ - Added [`Nonnegatives`](@ref), [`Nonpositives`](@ref) and [`Zeros`](@ref), and
+   support vector-valued inequality syntax in the JuMP macros (#3273)
+ - Added special support for `LinearAlgebra.Symmetric` and `LinearAlgebra.Hermitian`
+   matrices in [`Zeros`](@ref) constraints (#3281) (#3296)
+ - Added [`HermitianMatrixSpace`](@ref) and the `Hermitian` tag for generating a
+   matrix of variables that is Hermitian (#3292) (#3293)
+ - Added [`Semicontinuous`](@ref) and [`Semiinteger`](@ref) (#3302)
+ - Added support for keyword indexing of containers (#3237)
+
+### Fixed
+
+ - Fixed `[compat]` bound for MathOptInterface in `Project.toml` (#3272)
+
+### Other
+
+ - Split out the [Nested optimization problems](@ref) tutorial (#3274)
+ - Updated doctests to ensure none have hidden state (#3275) (#3276)
+ - Clarified how lazy constraints may revisit points (#3278)
+ - Added [P-Norm](@ref) example (#3282)
+ - Clarified docs that macros create new bindings (#3284)
+ - Fixed threading example (#3283)
+ - Added plot to [The minimum distortion problem](@ref) (#3288)
+ - Added Google style rules for Vale and fixed warnings (#3285)
+ - Added citation for the JuMP 1.0 paper (#3294)
+ - Updated package versions in the documentation (#3298)
+ - Added comment for the order in which start values must be set (#3303)
+ - Improved error message for unrecognized constraint operators (#3311)
+
 ## Version 1.9.0 (March 7, 2023)
 
 ### Added
@@ -550,7 +582,7 @@ The breaking changes are as follows:
    warning. This catches a common error in which users write
    `@variable(model, x[length(S)])` instead of
    `@variable(model, x[1:length(S)])`.
- * The `caching_mode` argument to `Model`, e.g.,
+ * The `caching_mode` argument to `Model`, for example,
    `Model(caching_mode = MOIU.MANUAL)` mode has been removed. For more control
    over the optimizer, use `direct_model` instead.
  * The previously deprecated `lp_objective_perturbation_range` and
@@ -648,7 +680,7 @@ The breaking changes are as follows:
   * Added `unsafe_backend` for querying the inner-most optimizer of a JuMP
     model.
   * Nonlinear parameters now support the plural `@NLparameters` macro.
-  * Containers (e.g., `DenseAxisArray`) can now be used in vector-valued
+  * Containers (for example, `DenseAxisArray`) can now be used in vector-valued
     constraints.
 
 ### Other
@@ -692,7 +724,7 @@ The breaking changes are as follows:
 
   * Fixed bug in `rad2deg` and `deg2rad` in nonlinear expressions.
   * Fixed a MethodError bug in `Containers` when forcing container type.
-  * Allow partial slicing of a DenseAxisArray, resolving an issue from 2014!
+  * Allow partial slicing of a DenseAxisArray, resolving an issue from 2014.
   * Fixed a bug printing variable names in IJulia.
   * Ending an IJulia cell with `model` now prints a summary of the model (like
     in the REPL) not the latex formulation. Use `print(model)` to print the latex
@@ -948,7 +980,7 @@ The breaking changes are as follows:
 - Solvers are no longer added to a model via `Model(solver = XXX(kwargs...))`.
   Instead use `Model(with_optimizer(XXX, kwargs...))`. For example, `Model(with_optimizer(Gurobi.Optimizer, OutputFlag=0))`.
 
-- JuMP containers (e.g., the objects returned by `@variable`) have been
+- JuMP containers (for example, the objects returned by `@variable`) have been
   redesigned. `Containers.SparseAxisArray` replaces `JuMPDict`, `JuMPArray` was
   rewritten (inspired by `AxisArrays`) and renamed `Containers.DenseAxisArray`,
   and you can now request a container type with the `container=` keyword to the
@@ -960,7 +992,7 @@ The breaking changes are as follows:
   values
   [here](https://www.juliaopt.org/MathOptInterface.jl/stable/apireference.html#Termination-Status-1).
   The MOI statuses are much richer than the MPB statuses and can be used to
-  distinguish between previously indistinguishable cases (e.g. did the solver
+  distinguish between previously indistinguishable cases (for example, did the solver
   have a feasible solution when it stopped because of the time limit?).
 
 - Starting values are separate from result values. Use `value` to query
@@ -1017,7 +1049,7 @@ The breaking changes are as follows:
   [style recommendations](https://www.juliaopt.org/JuMP.jl/dev/style/).
 
 - We rely on broadcasting syntax to apply accessors to collections of
-  variables, e.g., `value.(x)` instead of `getvalue(x)` for collections. (Use
+  variables, for example, `value.(x)` instead of `getvalue(x)` for collections. (Use
   `value(x)` when `x` is a scalar object.)
 
 ### Added
@@ -1030,7 +1062,7 @@ The breaking changes are as follows:
 - The documentation has been completely rewritten using docstrings and
   Documenter.
 
-- Support for modeling mixed conic and quadratic models (e.g., conic models
+- Support for modeling mixed conic and quadratic models (for example, conic models
   with quadratic objectives and bi-linear matrix inequalities).
 
 - Significantly improved support for modeling new types of constraints and for
@@ -1038,7 +1070,7 @@ The breaking changes are as follows:
 
 - Support for providing dual warm starts.
 
-- Improved support for accessing solver-specific attributes (e.g., the
+- Improved support for accessing solver-specific attributes (for example, the
   irreducible inconsistent subsystem).
 
 - Explicit control of whether symmetry-enforcing constraints are added to PSD
@@ -1070,11 +1102,11 @@ release (0.19.x or later):
 
 - We do not yet have an implementation of solver-specific callbacks.
 
-- The column generation syntax in `@variable` has been removed (i.e., the
+- The column generation syntax in `@variable` has been removed (that is, the
   `objective`, `coefficients`, and `inconstraints` keyword arguments). Support
   for column generation will be re-introduced in a future release.
 
-- The ability to solve the continuous relaxation (i.e. via
+- The ability to solve the continuous relaxation (that is, via
   `solve(model; relaxation = true)`) is not yet reimplemented ([issue](https://github.com/JuliaOpt/JuMP.jl/issues/1611)).
 
 ## Version 0.18.5 (December 1, 2018)
@@ -1154,11 +1186,11 @@ The following changes are primarily of interest to developers of JuMP extensions
 
   * Julia 0.5.0 is the minimum required version for this release.
   * Document support for BARON solver
-  * Enable info callbacks in more states than before, e.g. for recording solutions.
+  * Enable info callbacks in more states than before, for example, for recording solutions.
     New `when` argument to `addinfocallback` ([#814](https://github.com/JuliaOpt/JuMP.jl/pull/814), thanks @yeesian)
   * Improved support for anonymous variables. This includes new warnings for potentially confusing use of the traditional non-anonymous syntax:
     * When multiple variables in a model are given the same name
-    * When non-symbols are used as names, e.g., `@variable(m, x[1][1:N])`
+    * When non-symbols are used as names, for example, `@variable(m, x[1][1:N])`
   * Improvements in iterating over JuMP containers ([#836](https://github.com/JuliaOpt/JuMP.jl/pull/836), thanks @IssamT)
   * Support for writing variable names in .lp file output (Thanks @leethargo)
   * Support for querying duals to SDP problems (Thanks @blegat)
@@ -1183,7 +1215,7 @@ The following changes are primarily of interest to developers of JuMP extensions
 ## Version 0.14.0 (August 7, 2016)
 
   * Compatibility with Julia 0.5 and ForwardDiff 0.2
-  * Support for "anonymous" variables, constraints, expressions, and parameters, e.g.,
+  * Support for "anonymous" variables, constraints, expressions, and parameters, for example,
     `x = @variable(m, [1:N])` instead of `@variable(m, x[1:N])`
   * Support for retrieving constraints from a model by name via `getconstraint`
   * `@NLconstraint` now returns constraint references (as expected).
@@ -1213,7 +1245,7 @@ The following changes are primarily of interest to developers of JuMP extensions
   * Specify variable lower/upper bounds in `@variable` using the `lowerbound` and `upperbound` keyword arguments.
   * Change name printed for variable using the `basename` keyword argument to `@variable`.
   * New `@variables` macro allows multi-line declaration of groups of variables.
-  * A number of solver methods previously available only through MathProgBase are now exposed directly in JuMP. The fix was [recorded](https://youtu.be/qF1lZPJ3a5A) live!
+  * A number of solver methods previously available only through MathProgBase are now exposed directly in JuMP. The fix was [recorded](https://youtu.be/qF1lZPJ3a5A) live.
   * Compatibility fixes with Julia 0.5.
   * The "end" indexing syntax is no longer supported within JuMPArrays which do not use 1-based indexing until upstream issues are resolved, see [here](https://github.com/JuliaOpt/JuMP.jl/issues/730).
 
@@ -1228,7 +1260,7 @@ The following changes are primarily of interest to developers of JuMP extensions
 ## Version 0.12.0 (February 27, 2016)
 
   * The automatic differentiation functionality has been completely rewritten with a number of user-facing changes:
-      - `@defExpr` and `@defNLExpr` now take the model as the first argument. The previous one-argument version of `@defExpr` is deprecated; all expressions should be named. E.g., replace `@defExpr(2x+y)` with `@defExpr(jump_model, my_expr, 2x+y)`.
+      - `@defExpr` and `@defNLExpr` now take the model as the first argument. The previous one-argument version of `@defExpr` is deprecated; all expressions should be named. For example, replace `@defExpr(2x+y)` with `@defExpr(jump_model, my_expr, 2x+y)`.
       - JuMP no longer uses Julia's variable binding rules for efficiently re-solving a sequence of nonlinear models. Instead, we have introduced nonlinear parameters. This is a breaking change, so we have added a warning message when we detect models that may depend on the old behavior.
       - Support for user-defined functions integrated within nonlinear JuMP expressions.
   * Replaced iteration over `AffExpr` with `Number`-like scalar iteration; previous iteration behavior is now available via `linearterms(::AffExpr)`.
@@ -1273,7 +1305,7 @@ The following changes are primarily of interest to developers of JuMP extensions
 
 ## Version 0.10.0 (August 31, 2015)
 
-  * Support (on Julia 0.4 and later) for conditions in indexing `@defVar` and `@addConstraint` constructs, e.g. `@defVar(m, x[i=1:5,j=1:5; i+j >= 3])`
+  * Support (on Julia 0.4 and later) for conditions in indexing `@defVar` and `@addConstraint` constructs, for example, `@defVar(m, x[i=1:5,j=1:5; i+j >= 3])`
   * Support for vectorized operations on Variables and expressions. See the documentation for details.
   * New `getVar()` method to access variables in a model by name
   * Support for semidefinite programming.
@@ -1300,7 +1332,7 @@ The following changes are primarily of interest to developers of JuMP extensions
 
 ## Version 0.9.0 (April 18, 2015)
 
-  * Comparison operators for constructing constraints (e.g. `2x >= 1`) have been deprecated. Instead, construct the constraints explicitly in
+  * Comparison operators for constructing constraints (for example, `2x >= 1`) have been deprecated. Instead, construct the constraints explicitly in
     the `@addConstraint` macro to add them to the model, or in the `@LinearConstraint` macro to create a stand-alone linear constraint instance.
   * `getValue()` method implemented to compute the value of a nonlinear subexpression
   * JuMP is now released under the Mozilla Public License version 2.0 (was previously LGPL). MPL is a copyleft license which is less restrictive than LGPL, especially for embedding JuMP within other applications.
@@ -1332,7 +1364,7 @@ The following changes are primarily of interest to developers of JuMP extensions
 ## Version 0.7.2 (January 9, 2015)
 
   * Fix a bug in `sum(::JuMPDict)`
-  * Added the `setCategory` function to change a variables category (e.g. continuous or binary)
+  * Added the `setCategory` function to change a variables category (for example, continuous or binary)
   after construction, and `getCategory` to retrieve the variable category.
 
 ## Version 0.7.1 (January 2, 2015)
@@ -1392,7 +1424,7 @@ The following changes are primarily of interest to developers of JuMP extensions
   * New solver interfaces: ECOS, NLopt, and nonlinear support for MOSEK
   * New option to control whether the lazy constraint callback is executed at each node in the B&B tree or just when feasible solutions are found
   * Add support for semicontinuous and semi-integer variables for those solvers that support them.
-  * Add support for index dependencies (e.g. triangular indexing) in `@defVar`, `@addConstraint`, and `@defExpr` (e.g. `@defVar(m, x[i=1:10,j=i:10])`).
+  * Add support for index dependencies (for example, triangular indexing) in `@defVar`, `@addConstraint`, and `@defExpr` (for example, `@defVar(m, x[i=1:10,j=i:10])`).
     - This required some changes to the internal structure of JuMP containers, which may break code that explicitly stored `JuMPDict` objects.
 
 ## Version 0.5.8 (September 24, 2014)
@@ -1492,7 +1524,7 @@ The following changes are primarily of interest to developers of JuMP extensions
 ## Version 0.1.2 (November 16, 2013)
 
   * Bug fixes for printing, improved error messages.
-  * Allow `AffExpr` to be used in macros; e.g.,
+  * Allow `AffExpr` to be used in macros; for example,
     `ex = y + z; @addConstraint(m, x + 2*ex <= 3)`
 
 ## Version 0.1.1 (October 23, 2013)

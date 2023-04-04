@@ -22,6 +22,7 @@ struct DenseAxisArray{T,N,Ax,L<:NTuple{N,_AxisLookup}} <: AbstractArray{T,N}
     data::Array{T,N}
     axes::Ax
     lookup::L
+    names::NTuple{N,Symbol}
 end
 
 function Base.Array{T,N}(x::DenseAxisArray) where {T,N}
@@ -212,15 +213,20 @@ julia> array[:b, 3]
 4
 ```
 """
-function DenseAxisArray(data::Array{T,N}, axs...) where {T,N}
-    @assert length(axs) == N
-    new_axes = _abstract_vector.(axs)  # Force all axes to be AbstractVector!
-    return DenseAxisArray(data, new_axes, build_lookup.(new_axes))
+function DenseAxisArray(
+    data::Array{T,N},
+    axes...;
+    names::Union{Nothing,NTuple{N,Symbol}} = nothing,
+) where {T,N}
+    @assert length(axes) == N
+    new_axes = _abstract_vector.(axes)  # Force all axes to be AbstractVector!
+    names = something(names, ntuple(n -> Symbol("#$n"), N))
+    return DenseAxisArray(data, new_axes, build_lookup.(new_axes), names)
 end
 
 # A converter for different array types.
-function DenseAxisArray(data::AbstractArray, axes...)
-    return DenseAxisArray(collect(data), axes...)
+function DenseAxisArray(data::AbstractArray, axes...; kwargs...)
+    return DenseAxisArray(collect(data), axes...; kwargs...)
 end
 
 """
@@ -257,12 +263,17 @@ And data, a 2×2 Array{Float64,2}:
  1.0  1.0
 ```
 """
-function DenseAxisArray{T}(::UndefInitializer, axs...) where {T}
-    return construct_undef_array(T, axs)
+function DenseAxisArray{T}(::UndefInitializer, args...; kwargs...) where {T}
+    return construct_undef_array(T, args; kwargs...)
 end
 
-function construct_undef_array(::Type{T}, axs::Tuple{Vararg{Any,N}}) where {T,N}
-    return DenseAxisArray(Array{T,N}(undef, length.(axs)...), axs...)
+function construct_undef_array(
+    ::Type{T},
+    args::Tuple{Vararg{Any,N}};
+    kwargs...,
+) where {T,N}
+    data = Array{T,N}(undef, length.(args)...)
+    return DenseAxisArray(data, args...; kwargs...)
 end
 
 Base.isempty(A::DenseAxisArray) = isempty(A.data)
@@ -356,19 +367,51 @@ end
 _is_range(::Any) = false
 _is_range(::Union{Vector{Int},Colon}) = true
 
-function Base.getindex(A::DenseAxisArray{T,N}, idx...) where {T,N}
-    new_indices = Base.to_index(A, idx)
+function _kwargs_to_args(A::DenseAxisArray{T,N}; kwargs...) where {T,N}
+    return ntuple(N) do i
+        kw = keys(kwargs)[i]
+        if A.names[i] != kw
+            error(
+                "Invalid index $kw in position $i. When using keyword " *
+                "indexing, the indices must match the exact name and order " *
+                "used when creating the container.",
+            )
+        end
+        return kwargs[i]
+    end
+end
+
+function Base.getindex(A::DenseAxisArray{T,N}, args...; kwargs...) where {T,N}
+    if !isempty(kwargs)
+        if !isempty(args)
+            error("Cannot index with mix of positional and keyword arguments")
+        end
+        return getindex(A, _kwargs_to_args(A; kwargs...)...)
+    end
+    new_indices = Base.to_index(A, args)
     if !any(_is_range, new_indices)
         return A.data[new_indices...]::T
     end
     new_axes = _getindex_recurse(A.axes, new_indices, _is_range)
-    return DenseAxisArray(A.data[new_indices...], new_axes...)
+    names = A.names[findall(_is_range, new_indices)]
+    return DenseAxisArray(A.data[new_indices...], new_axes...; names = names)
 end
 
 Base.getindex(A::DenseAxisArray, idx::CartesianIndex) = A.data[idx]
 
-function Base.setindex!(A::DenseAxisArray{T,N}, v, idx...) where {T,N}
-    return A.data[Base.to_index(A, idx)...] = v
+function Base.setindex!(
+    A::DenseAxisArray{T,N},
+    v,
+    args...;
+    kwargs...,
+) where {T,N}
+    if !isempty(kwargs)
+        if !isempty(args)
+            error("Cannot index with mix of positional and keyword arguments")
+        end
+        return setindex!(A, v, _kwargs_to_args(A; kwargs...)...)
+    end
+    return A.data[Base.to_index(A, args)...] = v
 end
 
 function Base.setindex!(
@@ -478,26 +521,37 @@ function _broadcast_axes_check(x::NTuple{N}) where {N}
     return axes
 end
 
-_broadcast_axes(x::Tuple) = _broadcast_axes(first(x), Base.tail(x))
-_broadcast_axes(::Tuple{}) = ()
-_broadcast_axes(::Any, tail) = _broadcast_axes(tail)
-function _broadcast_axes(x::DenseAxisArray, tail)
-    return ((x.axes, x.lookup), _broadcast_axes(tail)...)
+_broadcast_args(f, x::Tuple) = _broadcast_args(f, first(x), Base.tail(x))
+
+_broadcast_args(f, ::Tuple{}) = ()
+
+_broadcast_args(f::Val{:axes}, x::Any, tail) = _broadcast_args(f, tail)
+
+function _broadcast_args(f::Val{:axes}, x::DenseAxisArray, tail)
+    return ((x.axes, x.lookup), _broadcast_args(f, tail)...)
 end
 
-_broadcast_args(x::Tuple) = _broadcast_args(first(x), Base.tail(x))
-_broadcast_args(::Tuple{}) = ()
-_broadcast_args(x::Any, tail) = (x, _broadcast_args(tail)...)
-_broadcast_args(x::DenseAxisArray, tail) = (x.data, _broadcast_args(tail)...)
+_broadcast_args(f::Val{:data}, x::Any, tail) = (x, _broadcast_args(f, tail)...)
+
+function _broadcast_args(f::Val{:data}, x::DenseAxisArray, tail)
+    return (x.data, _broadcast_args(f, tail)...)
+end
+
+_broadcast_args(f::Val{:names}, x::Any, tail) = _broadcast_args(f, tail)
+
+function _broadcast_args(f::Val{:names}, x::DenseAxisArray, tail)
+    return (x.names, _broadcast_args(f, tail)...)
+end
 
 function Base.Broadcast.broadcasted(
     ::Broadcast.ArrayStyle{DenseAxisArray},
     f,
     args...,
 )
-    axes_lookup = _broadcast_axes_check(_broadcast_axes(args))
-    new_args = _broadcast_args(args)
-    return DenseAxisArray(broadcast(f, new_args...), axes_lookup...)
+    axes, lookup = _broadcast_axes_check(_broadcast_args(Val(:axes), args))
+    new_args = _broadcast_args(Val(:data), args)
+    names = _broadcast_args(Val(:names), args)
+    return DenseAxisArray(broadcast(f, new_args...), axes, lookup, first(names))
 end
 
 ########
@@ -662,12 +716,18 @@ end
 
 Base.axes(x::DenseAxisArrayView) = _type_stable_axes(x.axes)
 
+_is_subaxis(key::K, axis::AbstractVector{K}) where {K} = key in axis
+
+function _is_subaxis(key::AbstractVector{K}, axis::AbstractVector{K}) where {K}
+    return all(k -> k in axis, key)
+end
+
 function _type_stable_args(axis::AbstractVector, ::Colon, axes, args)
     return (axis, _type_stable_args(axes, args)...)
 end
 
 function _type_stable_args(axis::AbstractVector, arg, axes, args)
-    if !(arg in axis)
+    if !_is_subaxis(arg, axis)
         throw(KeyError(arg))
     end
     return (arg, _type_stable_args(axes, args)...)
@@ -688,7 +748,34 @@ end
 
 _type_stable_args(axes::Tuple, ::Tuple{}) = axes
 
-function Base.getindex(x::DenseAxisArrayView, args...)
+function _fixed_indices(view_axes::Tuple, axes::Tuple)
+    return filter(ntuple(i -> i, length(view_axes))) do i
+        return !(typeof(view_axes[i]) <: eltype(axes[i]))
+    end
+end
+
+function _kwargs_to_args(A::DenseAxisArrayView{T,N}; kwargs...) where {T,N}
+    non_default_indices = _fixed_indices(A.axes, A.data.axes)
+    return ntuple(N) do i
+        kw = keys(kwargs)[i]
+        if A.data.names[non_default_indices[i]] != kw
+            error(
+                "Invalid index $kw in position $i. When using keyword " *
+                "indexing, the indices must match the exact name and order " *
+                "used when creating the container.",
+            )
+        end
+        return kwargs[i]
+    end
+end
+
+function Base.getindex(x::DenseAxisArrayView, args...; kwargs...)
+    if !isempty(kwargs)
+        if !isempty(args)
+            error("Cannot index with mix of positional and keyword arguments")
+        end
+        return getindex(x, _kwargs_to_args(x; kwargs...)...)
+    end
     indices = _type_stable_args(x.axes, args)
     return getindex(x.data, indices...)
 end
@@ -703,7 +790,18 @@ function Base.setindex!(
     return setindex!(a, value, k.I...)
 end
 
-function Base.setindex!(x::DenseAxisArrayView{T}, value::T, args...) where {T}
+function Base.setindex!(
+    x::DenseAxisArrayView{T},
+    value::T,
+    args...;
+    kwargs...,
+) where {T}
+    if !isempty(kwargs)
+        if !isempty(args)
+            error("Cannot index with mix of positional and keyword arguments")
+        end
+        return setindex!(x, value, _kwargs_to_args(x; kwargs...)...)
+    end
     indices = _type_stable_args(x.axes, args)
     return setindex!(x.data, value, indices...)
 end
