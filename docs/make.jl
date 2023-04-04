@@ -119,10 +119,35 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "solvers.toml"))
     repo = "$solver.jl"
     tag = get(data, "rev", "master")
     filename = get(data, "filename", "README.md")
+    out_filename = joinpath(@__DIR__, "src", "solvers", "$solver.md")
     Downloads.download(
         "https://raw.githubusercontent.com/$user/$repo/$tag/$filename",
-        joinpath(@__DIR__, "src", "solvers", "$solver.md"),
+        out_filename,
     )
+    if get(data, "has_html", false) == true
+        # Very simple detector of HTML to wrap in ```@raw html
+        lines = readlines(out_filename)
+        open(out_filename, "w") do io
+            closing_tag = nothing
+            for line in lines
+                tag = if startswith(line, "<img")
+                    "/>"
+                else
+                    m = match(r"\<([a-z0-9]+)", line)
+                    m === nothing ? nothing : "</$(m[1])>"
+                end
+                if closing_tag === nothing && tag !== nothing
+                    println(io, "```@raw html")
+                    closing_tag = tag
+                end
+                println(io, line)
+                if closing_tag !== nothing && endswith(line, closing_tag)
+                    println(io, "```")
+                    closing_tag = nothing
+                end
+            end
+        end
+    end
     push!(_LIST_OF_SOLVERS, "$user/$solver.jl" => "solvers/$solver.md")
 end
 # Sort, with jump-dev repos at the start.

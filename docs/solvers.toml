@@ -32,6 +32,7 @@
     rev = "od/readme"
 [MultiObjectiveAlgorithms]
     rev = "od/readme"
+    has_html = true
 [Pajarito]
     rev = "od/readme"
 [Pavito]
@@ -70,19 +71,23 @@
   user = "JuliaPolyhedra"
 [Clarabel]
   user = "oxfordcontrol"
+  has_html = true
 [COPT]
   user = "COPT-Public"
 [COSMO]
   user = "oxfordcontrol"
+  has_html = true
 [DAQP]
   user = "darnstrom"
   rev = "main"
 [EAGO]
   user = "PSORLab"
+  has_html = true
 [GAMS]
   user = "GAMS-dev"
 [Hypatia]
   user = "chriscoey"
+  has_html = true
 [Juniper]
   user = "lanl-ansi"
 [MadNLP]
