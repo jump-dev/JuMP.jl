@@ -113,7 +113,7 @@ if isdir(_SOLVER_DIR)
     rm(_SOLVER_DIR; recursive = true)
 end
 mkdir(_SOLVER_DIR)
-const _LIST_OF_SOLVERS = String[]
+const _LIST_OF_SOLVERS = Pair{String,String}[]
 for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "solvers.toml"))
     user = get(data, "user", "jump-dev")
     repo = "$solver.jl"
@@ -126,7 +126,7 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "solvers.toml"))
     push!(_LIST_OF_SOLVERS, "$user/$solver.jl" => "solvers/$solver.md")
 end
 # Sort, with jump-dev repos at the start.
-sort!(_LIST_OF_SOLVERS; by = x -> (!startswith(x, "jump-dev/"), x))
+sort!(_LIST_OF_SOLVERS; by = x -> (!startswith(x[1], "jump-dev/"), x[1]))
 
 # ==============================================================================
 #  JuMP documentation structure
