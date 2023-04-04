@@ -12,8 +12,8 @@
     rev = "od/readme"
 [CSDP]
     rev = "od/readme"
-# [DiffOpt]
-# [Dualization]
+[DiffOpt]
+[Dualization]
 [ECOS]
     rev = "od/readme"
 [GLPK]
@@ -54,51 +54,48 @@
 
 # ======================= Updated non-jump-dev packages ====================== #
 
+# [Alpine]
+#   user = "lanl-ansi"
+# [CDCS]
+#   user = "oxfordcontrol"
+# [CDDLib]
+#   user = "JuliaPolyhedra"
+# [Clarabel]
+#   user = "oxfordcontrol"
+#   has_html = true
+# [COPT]
+#   user = "COPT-Public"
+# [COSMO]
+#   user = "oxfordcontrol"
+#   has_html = true
+# [DAQP]
+#   user = "darnstrom"
+#   rev = "main"
+# [EAGO]
+#   user = "PSORLab"
+# [GAMS]
+#   user = "GAMS-dev"
+# [Hypatia]
+#   user = "chriscoey"
+# [Juniper]
+#   user = "lanl-ansi"
+# [MadNLP]
+#   user = "MadNLP"
 [NEOSServer]
   user = "odow"
   rev = "od/readme"
+  filename = "README.md"
+# [NLopt]
+#   user = "JuliaOpt"
+# [OSQP]
+#   user = "osqp"
 [PATHSolver]
   user = "chkwon"
   rev = "od/readme"
-  
-# =========================== Non-jump-dev packages ========================== #
-
-[Alpine]
-  user = "lanl-ansi"
-[CDCS]
-  user = "oxfordcontrol"
-[CDDLib]
-  user = "JuliaPolyhedra"
-[Clarabel]
-  user = "oxfordcontrol"
-  has_html = true
-[COPT]
-  user = "COPT-Public"
-[COSMO]
-  user = "oxfordcontrol"
-  has_html = true
-[DAQP]
-  user = "darnstrom"
-  rev = "main"
-[EAGO]
-  user = "PSORLab"
-  has_html = true
-[GAMS]
-  user = "GAMS-dev"
-[Hypatia]
-  user = "chriscoey"
-  has_html = true
-[Juniper]
-  user = "lanl-ansi"
-[MadNLP]
-  user = "MadNLP"
-[NLopt]
-  user = "JuliaOpt"
-[OSQP]
-  user = "osqp"
-[ProxSDP]
-  user = "mariohsouto"
-[SCIP]
-  user = "scipopt"
-[Tulip]
-  user = "ds4dm"
+  filename = "README.md"
+# [ProxSDP]
+#   user = "mariohsouto"
+# [SCIP]
+#   user = "scipopt"
+# [Tulip]
+#   user = "ds4dm"
