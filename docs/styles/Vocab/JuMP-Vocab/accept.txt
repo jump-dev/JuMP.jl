@@ -96,7 +96,7 @@ Clp
 CPLEXLink
 Couenne
 Divio
-Embotech
+[Ee]mbotech
 [Ee]cos
 JSONSchema
 GLPK

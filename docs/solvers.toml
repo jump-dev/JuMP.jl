@@ -13,7 +13,9 @@
 [CSDP]
     rev = "od/readme"
 [DiffOpt]
+    rev = "od/readme"
 [Dualization]
+    rev = "od/readme"
 [ECOS]
     rev = "od/readme"
 [GLPK]
