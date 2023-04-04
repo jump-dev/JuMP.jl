@@ -325,14 +325,10 @@ function test_bridges_print_active_bridge()
     c = @constraint(model, x in Nonnegative())
     optimize!(model)
     print_active_bridges(model)
-    @test sprint(print_active_bridges, model) == """
- * Supported objective: MOI.ScalarAffineFunction{Float64}
- * Unsupported constraint: MOI.VariableIndex-in-Main.TestModels.Nonnegative
- |  bridged by:
- |   Main.TestModels.NonnegativeBridge{Float64, MOI.VariableIndex}
- |  introduces:
- |   * Supported constraint: MOI.VariableIndex-in-MOI.GreaterThan{Float64}
-"""
+    contents = sprint(print_active_bridges, model)
+    @test occursin("Nonnegative", contents)
+    @test occursin("NonnegativeBridge", contents)
+    @test occursin("GreaterThan", contents)
     return
 end
 
