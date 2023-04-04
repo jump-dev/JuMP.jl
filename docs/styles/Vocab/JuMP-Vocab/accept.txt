@@ -104,6 +104,7 @@ GZip
 Ipopt
 Knitro
 KNITRO
+MATLAB
 MOI
 Mosek
 MOSEK
@@ -112,8 +113,11 @@ Pardiso
 PATHSolver
 Pavito
 Penbmi
+Penopt
 puzzlor
 RAPOSa
+SDPAFamily
+SDPNAL
 Xpress
 
 % People
