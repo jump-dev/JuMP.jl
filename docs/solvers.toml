@@ -46,9 +46,9 @@
 [SDPA]
     rev = "5d15d3c292cd25b461f524aaaf8eb5ecb8e08b0d"
 [SDPNAL]
-    rev = "87b516fd3db316de8aa12681295138df335feed4"
+    rev = "00a3fa19f4e1235587948113b0b681da17f4dab5"
 [SDPT3]
-    rev = "02f69fb87941691722176f77a48933ff7f7a78b4"
+    rev = "b565aac2a58818090d521f2340e71f597688e4fb"
 [SeDuMi]
     rev = "47b4497cab3ce59ec7f65cff455bb2014981d4b4"
 [Xpress]
