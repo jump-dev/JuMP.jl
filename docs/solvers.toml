@@ -1,9 +1,9 @@
 # ============================= jump-dev packages ============================ #
 
 [AmplNLWriter]
-    rev = "od/readme"
+    rev = "v1.1.0"
 [BARON]
-    rev = "od/readme"
+    rev = "f5f4c9c8f27e0ef8644d65fb956f3bca5305b45e"
 [Cbc]
     rev = "a78e129"
 [Clp]
@@ -21,7 +21,7 @@
 [GLPK]
     rev = "dd835dc425fe8995d965da8a57b4a3a1764cf8da"
 [Gurobi]
-    rev = "od/readme"
+    rev = "72ee279373d7559e32050c35735d3fc803a7bb12"
 [HiGHS]
     rev = "b0ab8361558fc63873a5cf380d335409f02d8863"
 [Ipopt]
@@ -38,19 +38,19 @@
 [Pajarito]
     rev = "od/readme"
 [Pavito]
-    rev = "od/readme"
+    rev = "c0f3d81d9e9fff2963b872cf84fea35bfcf8b1d1"
 [Penopt]
-    rev = "od/readme"
+    rev = "486f07d3f3a11f12012ea3ada702a3ee55c8fdc5"
 [SCS]
-    rev = "od/readme"
+    rev = "ef7cb4e38e987fcbbdeebd50bd4c211633328150"
 [SDPA]
     rev = "5d15d3c292cd25b461f524aaaf8eb5ecb8e08b0d"
 [SDPNAL]
     rev = "87b516fd3db316de8aa12681295138df335feed4"
 [SDPT3]
-    rev = "od/readme"
+    rev = "02f69fb87941691722176f77a48933ff7f7a78b4"
 [SeDuMi]
-    rev = "od/readme"
+    rev = "47b4497cab3ce59ec7f65cff455bb2014981d4b4"
 [Xpress]
     rev = "od/readme"
 
@@ -93,7 +93,7 @@
 #   user = "osqp"
 [PATHSolver]
   user = "chkwon"
-  rev = "od/readme"
+  rev = "08848c165747695e7a4dcbb86a657e2347ca7149"
   filename = "README.md"
 # [ProxSDP]
 #   user = "mariohsouto"
