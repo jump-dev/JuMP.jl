@@ -1086,4 +1086,18 @@ function test_keyword_getindex()
     return
 end
 
+function test_getindex_no_arg()
+    model = Model()
+    @variable(model, x)
+    y = [x]
+    @test y[] === x
+    ex = x + 1
+    y = reshape([ex], 1, 1, 1)
+    @test y[] === ex
+    c = @constraint(model, x >= 1)
+    y = [c]
+    @test y[] === c
+    return
+end
+
 end  # module TestModels
