@@ -12,8 +12,8 @@
     rev = "8e6f2112e9cc433085ed77de6712f715edead8fc"
 [CSDP]
     rev = "3a2e4c7c48af7660a5ba258a4cb6549ab0970366"
-[DiffOpt]
-    rev = "od/readme"
+# [DiffOpt]
+#     rev = "od/readme"
 [Dualization]
     rev = "13974285d5ed6f678e4b96aafb764dad5238aac0"
 [ECOS]
@@ -54,7 +54,7 @@
 [Xpress]
     rev = "b98347c49ba05953e29e5a1ef27d0d161780e19d"
 
-# ======================= Updated non-jump-dev packages ====================== #
+# =========================== non-jump-dev packages ========================== #
 
 # [Alpine]
 #   user = "lanl-ansi"

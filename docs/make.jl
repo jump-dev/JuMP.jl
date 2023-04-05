@@ -117,7 +117,7 @@ const _LIST_OF_SOLVERS = Pair{String,String}[]
 for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "solvers.toml"))
     user = get(data, "user", "jump-dev")
     repo = "$solver.jl"
-    tag = get(data, "rev", "master")
+    tag = data["rev"]
     filename = get(data, "filename", "README.md")
     out_filename = joinpath(@__DIR__, "src", "solvers", "$solver.md")
     Downloads.download(
