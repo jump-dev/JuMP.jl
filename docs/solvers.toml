@@ -15,7 +15,7 @@
 [DiffOpt]
     rev = "od/readme"
 [Dualization]
-    rev = "od/readme"
+    rev = "13974285d5ed6f678e4b96aafb764dad5238aac0"
 [ECOS]
     rev = "80d1a927b05b04360b7a8e6800f5ae13bc6a1494"
 [GLPK]
@@ -25,18 +25,18 @@
 [HiGHS]
     rev = "b0ab8361558fc63873a5cf380d335409f02d8863"
 [Ipopt]
-    rev = "od/readme"
+    rev = "v1.2.1"
 [KNITRO]
     rev = "3fb7c61e886b1b06d9f5cd646e194da638c93355"
 [MiniZinc]
-    rev = "od/readme"
+    rev = "21d5829c2838959e2ec2d2952495c83f43b271b7"
 [MosekTools]
-    rev = "od/readme"
+    rev = "e2ed9bc174c6aaa68e457077529d49be52ecbc37"
 [MultiObjectiveAlgorithms]
     rev = "b4413a1ef3b7d28045cedba4e68e5e4959c8bb12"
     has_html = true
 [Pajarito]
-    rev = "od/readme"
+    rev = "2c008ee52bff34c41ebd394e2daae9eb32387e4b"
 [Pavito]
     rev = "c0f3d81d9e9fff2963b872cf84fea35bfcf8b1d1"
 [Penopt]
