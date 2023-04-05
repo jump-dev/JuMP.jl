@@ -5,13 +5,13 @@
 [BARON]
     rev = "f5f4c9c8f27e0ef8644d65fb956f3bca5305b45e"
 [Cbc]
-    rev = "a78e129"
+    rev = "a78e129e32f11b5c00ee8acea75c3b2204b8297f"
 [Clp]
-    rev = "3358ee6"
+    rev = "3358ee69d9918ab011d5a9aa6201ec50d1bad2a4"
 [CPLEX]
-    rev = "8e6f211"
+    rev = "8e6f2112e9cc433085ed77de6712f715edead8fc"
 [CSDP]
-    rev = "3a2e4c7"
+    rev = "3a2e4c7c48af7660a5ba258a4cb6549ab0970366"
 [DiffOpt]
     rev = "od/readme"
 [Dualization]
@@ -52,7 +52,7 @@
 [SeDuMi]
     rev = "47b4497cab3ce59ec7f65cff455bb2014981d4b4"
 [Xpress]
-    rev = "od/readme"
+    rev = "b98347c49ba05953e29e5a1ef27d0d161780e19d"
 
 # ======================= Updated non-jump-dev packages ====================== #
 
