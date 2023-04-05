@@ -637,6 +637,39 @@ function test_containers_denseaxisarray_view_axes_n()
     return
 end
 
+function test_containers_denseaxisarray_vector_any()
+    key_1 = Any[Any["a", 1], "b"]
+    key_2 = Any[Any["a", 2], "c"]
+    K = Any[key_1, key_2]
+    Containers.@container(x[k = K], k[1][2])
+    @test axes(x) == (K,)
+    @test x[key_1] == 1
+    @test x[key_2] == 2
+    @test x[Any[key_2, key_1]] ==
+          Containers.DenseAxisArray([2, 1], Any[key_2, key_1])
+    return
+end
+
+function test_containers_denseaxisarray_ambiguous_slice()
+    K = Any[Any["a"], Any["b"], Any[Any["a"], Any["b"]]]
+    Containers.@container(x[k = K], length(k))
+    @test axes(x) == (K,)
+    @test x[Any["a"]] == 1
+    @test x[Any["b"]] == 1
+    new_key = Any[Any["b"], Any["a"]]
+    @test x[new_key] == Containers.DenseAxisArray([1, 1], new_key)
+    key = reverse(new_key)
+    @test_throws(
+        ErrorException(
+            "ambiguous use of getindex with key $key. We cannot tell if " *
+            "you meant to return the single element corresponding to the " *
+            "key, or a slice for each element in the key.",
+        ),
+        x[key],
+    )
+    return
+end
+
 function test_containers_denseaxisarray_kwarg_indexing()
     Containers.@container(x[i = 2:3, j = 1:2], i + j,)
     for i in (2, 3, 2:2, 2:3, :), j in (1, 2, 1:2, 1:1, 2:2, :)
