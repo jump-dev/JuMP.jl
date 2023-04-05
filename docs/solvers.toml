@@ -5,35 +5,35 @@
 [BARON]
     rev = "od/readme"
 [Cbc]
-    rev = "od/readme"
+    rev = "a78e129"
 [Clp]
-    rev = "od/readme"
+    rev = "3358ee6"
 [CPLEX]
-    rev = "od/readme"
+    rev = "8e6f211"
 [CSDP]
-    rev = "od/readme"
+    rev = "3a2e4c7"
 [DiffOpt]
     rev = "od/readme"
 [Dualization]
     rev = "od/readme"
 [ECOS]
-    rev = "od/readme"
+    rev = "80d1a927b05b04360b7a8e6800f5ae13bc6a1494"
 [GLPK]
-    rev = "od/readme"
+    rev = "dd835dc425fe8995d965da8a57b4a3a1764cf8da"
 [Gurobi]
     rev = "od/readme"
 [HiGHS]
-    rev = "od/readme"
+    rev = "b0ab8361558fc63873a5cf380d335409f02d8863"
 [Ipopt]
     rev = "od/readme"
 [KNITRO]
-    rev = "od/readme"
+    rev = "3fb7c61e886b1b06d9f5cd646e194da638c93355"
 [MiniZinc]
     rev = "od/readme"
 [MosekTools]
     rev = "od/readme"
 [MultiObjectiveAlgorithms]
-    rev = "od/readme"
+    rev = "b4413a1ef3b7d28045cedba4e68e5e4959c8bb12"
     has_html = true
 [Pajarito]
     rev = "od/readme"
@@ -44,9 +44,9 @@
 [SCS]
     rev = "od/readme"
 [SDPA]
-    rev = "od/readme"
+    rev = "5d15d3c292cd25b461f524aaaf8eb5ecb8e08b0d"
 [SDPNAL]
-    rev = "od/readme"
+    rev = "87b516fd3db316de8aa12681295138df335feed4"
 [SDPT3]
     rev = "od/readme"
 [SeDuMi]
