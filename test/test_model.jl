@@ -1061,7 +1061,7 @@ function test_model_quad_to_soc_start_values()
     inner = MOI.Utilities.MockOptimizer(
         MOI.Bridges.Constraint.QuadtoSOC{Float64}(
             MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
-        )
+        ),
     )
     model = direct_model(inner)
     @variable(model, x)
