@@ -611,11 +611,7 @@ end
 
 Print a list of bridges required to add a variable constrained to the set `S`.
 """
-function print_active_bridges(
-    io::IO,
-    model::Model,
-    S::Type{<:MOI.AbstractSet},
-)
+function print_active_bridges(io::IO, model::Model, S::Type{<:MOI.AbstractSet})
     return _moi_call_bridge_function(backend(model)) do m
         return MOI.Bridges.print_active_bridges(io, m, S)
     end
