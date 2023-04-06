@@ -1057,6 +1057,26 @@ function test_set_start_values()
     return
 end
 
+function test_model_quad_to_soc_start_values()
+    inner = MOI.Utilities.MockOptimizer(
+        MOI.Bridges.Constraint.QuadtoSOC{Float64}(
+            MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}()),
+        )
+    )
+    model = direct_model(inner)
+    @variable(model, x)
+    @constraint(model, c, x^2 <= 0)
+    @test_throws ErrorException set_start_value(c, 0.0)
+    set_start_values(
+        model;
+        variable_primal_start = x -> 1.0,
+        constraint_primal_start = x -> 1.0,
+        constraint_dual_start = x -> 1.0,
+    )
+    @test start_value(c) == 1.0
+    return
+end
+
 function test_keyword_getindex()
     err = JuMP._get_index_keyword_indexing_error()
     model = Model()
