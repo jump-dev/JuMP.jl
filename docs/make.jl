@@ -108,20 +108,15 @@ end
 #  Add solver README
 # ==============================================================================
 
-const _SOLVER_DIR = joinpath(@__DIR__, "src", "solvers")
-if isdir(_SOLVER_DIR)
-    rm(_SOLVER_DIR; recursive = true)
-end
-mkdir(_SOLVER_DIR)
 const _LIST_OF_SOLVERS = Pair{String,String}[]
-for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "solvers.toml"))
+const _LIST_OF_EXTENSIONS = Pair{String,String}[]
+for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
     user = get(data, "user", "jump-dev")
-    repo = "$solver.jl"
     tag = data["rev"]
     filename = get(data, "filename", "README.md")
-    out_filename = joinpath(@__DIR__, "src", "solvers", "$solver.md")
+    out_filename = joinpath(@__DIR__, "src", "packages", "$solver.md")
     Downloads.download(
-        "https://raw.githubusercontent.com/$user/$repo/$tag/$filename",
+        "https://raw.githubusercontent.com/$user/$solver.jl/$tag/$filename",
         out_filename,
     )
     if get(data, "has_html", false) == true
@@ -148,10 +143,17 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "solvers.toml"))
             end
         end
     end
-    push!(_LIST_OF_SOLVERS, "$user/$solver.jl" => "solvers/$solver.md")
+    if get(data, "extension", false)
+        push!(_LIST_OF_EXTENSIONS, "$user/$solver.jl" => "packages/$solver.md")
+    else
+        push!(_LIST_OF_SOLVERS, "$user/$solver.jl" => "packages/$solver.md")
+    end
 end
 # Sort, with jump-dev repos at the start.
 sort!(_LIST_OF_SOLVERS; by = x -> (!startswith(x[1], "jump-dev/"), x[1]))
+sort!(_LIST_OF_EXTENSIONS; by = x -> (!startswith(x[1], "jump-dev/"), x[1]))
+pushfirst!(_LIST_OF_SOLVERS, "Introduction" => "packages/solvers.md")
+pushfirst!(_LIST_OF_EXTENSIONS, "Introduction" => "packages/extensions.md")
 
 # ==============================================================================
 #  JuMP documentation structure
@@ -266,7 +268,8 @@ const _PAGES = [
         "Roadmap" => "developers/roadmap.md",
     ],
     "Solvers" => _LIST_OF_SOLVERS,
-    "release_notes.md",
+    "Extensions" => _LIST_OF_EXTENSIONS,
+    # "release_notes.md",  # To be added later
 ]
 
 # ==============================================================================
@@ -386,7 +389,7 @@ function _validate_pages()
     doc_src = joinpath(@__DIR__, "src", "")
     for (root, dir, files) in walkdir(doc_src)
         for file in files
-            if file == "changelog.md"
+            if file == "changelog.md" || file == "release_notes.md"
                 continue
             end
             filename = replace(joinpath(root, file), doc_src => "")
@@ -437,7 +440,7 @@ _validate_pages()
     # ==========================================================================
     # Skip doctests if --fast provided.
     doctest = _FIX ? :fix : !_FAST,
-    pages = _PAGES,
+    pages = vcat(_PAGES, "release_notes.md"),
 )
 
 # ==============================================================================
@@ -462,9 +465,11 @@ if _PDF
     for (root, dir, files) in walkdir(joinpath(@__DIR__, "src", "tutorials"))
         _remove_literate_footer.(joinpath.(root, dir))
     end
-    # Remove release notes from PDF
-    splice!(_PAGES, 7:8)   # Solvers and JuMP release notes
-    pop!(_PAGES[end][2]) # MOI release notes
+    moi = pop!(PAGES)   # remove /MathOptInterface
+    pop!(moi[2])        # remove /MathOptInterface/release_notes.md
+    pop!(_PAGES)        # remove /Extensions
+    pop!(_PAGES)        # remove /Solvers
+    push!(_PAGES, moi)  # Re-add /MathOptInterface
     latex_platform = _IS_GITHUB_ACTIONS ? "docker" : "native"
     @time Documenter.makedocs(
         sitename = "JuMP",

@@ -14,6 +14,7 @@
     rev = "3a2e4c7c48af7660a5ba258a4cb6549ab0970366"
 # [DiffOpt]
 #     rev = "od/readme"
+#     extension = true
 [Dualization]
     rev = "13974285d5ed6f678e4b96aafb764dad5238aac0"
 [ECOS]
@@ -99,5 +100,11 @@
 #   user = "mariohsouto"
 # [SCIP]
 #   user = "scipopt"
+[SDDP]
+    user = "odow"
+    rev = "da0a53ddc32eb4800d4ad03c2086023d4d980ea8"
+    filename = "README.md"
+    has_html = true
+    extension = true
 # [Tulip]
 #   user = "ds4dm"
