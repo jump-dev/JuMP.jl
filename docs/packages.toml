@@ -102,7 +102,7 @@
 #   user = "scipopt"
 [SDDP]
     user = "odow"
-    rev = "da0a53ddc32eb4800d4ad03c2086023d4d980ea8"
+    rev = "ac47986f026ff94d512f85d1e850cc6a9df4f963"
     filename = "README.md"
     has_html = true
     extension = true
