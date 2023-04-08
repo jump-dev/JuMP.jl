@@ -420,7 +420,7 @@ v[[3, 6]]
 
 # ## Constraint basics
 
-# We'll need a need a new model to explain some of the constraint  basics:
+# We'll need a new model to explain some of the constraint  basics:
 
 model = Model()
 @variable(model, x)
