@@ -87,7 +87,6 @@
 [NEOSServer]
   user = "odow"
   rev = "v1.0.2"
-  filename = "README.md"
 # [NLopt]
 #   user = "JuliaOpt"
 # [OSQP]
@@ -95,15 +94,14 @@
 [PATHSolver]
   user = "chkwon"
   rev = "08848c165747695e7a4dcbb86a657e2347ca7149"
-  filename = "README.md"
 # [ProxSDP]
 #   user = "mariohsouto"
-# [SCIP]
-#   user = "scipopt"
+[SCIP]
+  user = "scipopt"
+  rev = "f0331894b76140b15cc570458aeb54b31ab8fa0b"
 [SDDP]
     user = "odow"
     rev = "ac47986f026ff94d512f85d1e850cc6a9df4f963"
-    filename = "README.md"
     has_html = true
     extension = true
 # [Tulip]
