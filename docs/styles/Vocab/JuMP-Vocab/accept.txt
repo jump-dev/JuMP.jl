@@ -149,11 +149,15 @@ Jiming
 Joaquim
 Kernighan
 Kallus
+Kaluba
+Kapelevich
 Latorre
+Legat
 Linial
 Luangkesorn
 Lubin
 Madani
+Marek
 Markowitz
 Mathieu
 Maurer
@@ -173,8 +177,10 @@ Stigler
 Taccari
 Tanneau
 Teghem
+Tillmann
 Ulungu
 Vandenberghe
+Vielma
 Wei
 Wollenberg
 Yu
