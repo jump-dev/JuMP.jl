@@ -42,6 +42,9 @@
     rev = "c0f3d81d9e9fff2963b872cf84fea35bfcf8b1d1"
 [Penopt]
     rev = "486f07d3f3a11f12012ea3ada702a3ee55c8fdc5"
+[PolyJuMP]
+    rev = "od/readme"
+    extension = true
 [SCS]
     rev = "ef7cb4e38e987fcbbdeebd50bd4c211633328150"
 [SDPA]
@@ -52,6 +55,9 @@
     rev = "b565aac2a58818090d521f2340e71f597688e4fb"
 [SeDuMi]
     rev = "47b4497cab3ce59ec7f65cff455bb2014981d4b4"
+[SumOfSquares]
+    rev = "od/readme"
+    extension = true
 [Xpress]
     rev = "b98347c49ba05953e29e5a1ef27d0d161780e19d"
 
