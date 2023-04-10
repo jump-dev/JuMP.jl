@@ -26,7 +26,7 @@ Additional operators can be registered by setting a [`MOI.UserDefinedFunction`](
 attribute.
 
 See the full list of operators supported by a [`MOI.ModelLike`](@ref) by
-querying [MOI.ListOfSupportedNonlinearOperators`](@ref).
+querying [`MOI.ListOfSupportedNonlinearOperators`](@ref).
 
 ## `args`
 
