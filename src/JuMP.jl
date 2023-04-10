@@ -570,7 +570,56 @@ function print_active_bridges(io::IO, model::Model)
     end
 end
 
-print_active_bridges(model::Model) = print_active_bridges(Base.stdout, model)
+"""
+    print_active_bridges([io::IO = stdout,] model::Model, ::Type{F}) where {F}
+
+Print a list of bridges required for an objective function of type `F`.
+"""
+function print_active_bridges(io::IO, model::Model, ::Type{F}) where {F}
+    return _moi_call_bridge_function(backend(model)) do m
+        return MOI.Bridges.print_active_bridges(io, m, moi_function_type(F))
+    end
+end
+
+"""
+    print_active_bridges(
+        [io::IO = stdout,]
+        model::Model,
+        F::Type,
+        S::Type{<:MOI.AbstractSet},
+    )
+
+Print a list of bridges required for a constraint of type `F`-in-`S`.
+"""
+function print_active_bridges(
+    io::IO,
+    model::Model,
+    F::Type,
+    S::Type{<:MOI.AbstractSet},
+)
+    return _moi_call_bridge_function(backend(model)) do m
+        return MOI.Bridges.print_active_bridges(io, m, moi_function_type(F), S)
+    end
+end
+
+"""
+    print_active_bridges(
+        [io::IO = stdout,]
+        model::Model,
+        S::Type{<:MOI.AbstractSet},
+    )
+
+Print a list of bridges required to add a variable constrained to the set `S`.
+"""
+function print_active_bridges(io::IO, model::Model, S::Type{<:MOI.AbstractSet})
+    return _moi_call_bridge_function(backend(model)) do m
+        return MOI.Bridges.print_active_bridges(io, m, S)
+    end
+end
+
+function print_active_bridges(model::Model, args...)
+    return print_active_bridges(Base.stdout, model, args...)
+end
 
 """
     empty!(model::Model)::Model

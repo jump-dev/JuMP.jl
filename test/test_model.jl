@@ -332,6 +332,34 @@ function test_bridges_print_active_bridge()
     return
 end
 
+function test_bridges_print_active_bridge_objective()
+    model = Model(mock_factory)
+    add_bridge(model, NonnegativeBridge)
+    contents = sprint(print_active_bridges, model, VariableRef)
+    @test occursin(" * Supported", contents)
+    @test occursin("objective", contents)
+    @test occursin("VariableIndex", contents)
+    return
+end
+
+function test_bridges_print_active_bridge_constraint()
+    model = Model(mock_factory)
+    add_bridge(model, NonnegativeBridge)
+    contents = sprint(print_active_bridges, model, VariableRef, Nonnegative)
+    @test occursin("Nonnegative", contents)
+    @test occursin("NonnegativeBridge", contents)
+    @test occursin("GreaterThan", contents)
+    return
+end
+
+function test_bridges_print_active_bridge_variable()
+    model = Model(mock_factory)
+    contents = sprint(print_active_bridges, model, MOI.ZeroOne)
+    @test occursin(" * Supported", contents)
+    @test occursin("ZeroOne", contents)
+    return
+end
+
 function test_bridges_add_after_con_model_optimizer()
     model = Model(mock_factory)
     @variable(model, x)
