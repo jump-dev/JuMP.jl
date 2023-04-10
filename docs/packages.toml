@@ -104,7 +104,7 @@
 #   user = "mariohsouto"
 [SCIP]
   user = "scipopt"
-  rev = "f0331894b76140b15cc570458aeb54b31ab8fa0b"
+  rev = "f4227ecac9f6984996ba3b22519982d24f54a245"
 [SDDP]
     user = "odow"
     rev = "ac47986f026ff94d512f85d1e850cc6a9df4f963"
