@@ -854,6 +854,9 @@ end
 
 function Base.getindex(x::Array{<:AbstractJuMPScalar}; kwargs...)
     if isempty(kwargs)
+        if length(x) == 1
+            return first(x)
+        end
         throw(BoundsError(x, tuple()))
     end
     return throw(_get_index_keyword_indexing_error())
