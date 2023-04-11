@@ -6,3 +6,6 @@ src/tutorials/*/*.md
 src/moi/
 src/tutorials/linear/transp.txt
 src/release_notes.md
+src/packages/*.md
+!src/packages/solvers.md
+!src/packages/extensions.md

@@ -1,8 +1,10 @@
 import Pkg
 Pkg.pkg"add Documenter#633a95a"
 import Documenter
+import Downloads
 import Literate
 import Test
+import TOML
 
 using JuMP
 const MathOptInterface = MOI
@@ -101,6 +103,57 @@ if !_FAST
         write(filename, content)
     end
 end
+
+# ==============================================================================
+#  Add solver README
+# ==============================================================================
+
+const _LIST_OF_SOLVERS = Pair{String,String}[]
+const _LIST_OF_EXTENSIONS = Pair{String,String}[]
+for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
+    user = get(data, "user", "jump-dev")
+    tag = data["rev"]
+    filename = get(data, "filename", "README.md")
+    out_filename = joinpath(@__DIR__, "src", "packages", "$solver.md")
+    Downloads.download(
+        "https://raw.githubusercontent.com/$user/$solver.jl/$tag/$filename",
+        out_filename,
+    )
+    if get(data, "has_html", false) == true
+        # Very simple detector of HTML to wrap in ```@raw html
+        lines = readlines(out_filename)
+        open(out_filename, "w") do io
+            closing_tag = nothing
+            for line in lines
+                tag = if startswith(line, "<img")
+                    "/>"
+                else
+                    m = match(r"\<([a-z0-9]+)", line)
+                    m === nothing ? nothing : "</$(m[1])>"
+                end
+                if closing_tag === nothing && tag !== nothing
+                    println(io, "```@raw html")
+                    closing_tag = tag
+                end
+                println(io, line)
+                if closing_tag !== nothing && endswith(line, closing_tag)
+                    println(io, "```")
+                    closing_tag = nothing
+                end
+            end
+        end
+    end
+    if get(data, "extension", false)
+        push!(_LIST_OF_EXTENSIONS, "$user/$solver.jl" => "packages/$solver.md")
+    else
+        push!(_LIST_OF_SOLVERS, "$user/$solver.jl" => "packages/$solver.md")
+    end
+end
+# Sort, with jump-dev repos at the start.
+sort!(_LIST_OF_SOLVERS; by = x -> (!startswith(x[1], "jump-dev/"), x[1]))
+sort!(_LIST_OF_EXTENSIONS; by = x -> (!startswith(x[1], "jump-dev/"), x[1]))
+pushfirst!(_LIST_OF_SOLVERS, "Introduction" => "packages/solvers.md")
+pushfirst!(_LIST_OF_EXTENSIONS, "Introduction" => "packages/extensions.md")
 
 # ==============================================================================
 #  JuMP documentation structure
@@ -214,7 +267,9 @@ const _PAGES = [
         "Style Guide" => "developers/style.md",
         "Roadmap" => "developers/roadmap.md",
     ],
-    "release_notes.md",
+    "Solvers" => _LIST_OF_SOLVERS,
+    "Extensions" => _LIST_OF_EXTENSIONS,
+    # "release_notes.md",  # To be added later
 ]
 
 # ==============================================================================
@@ -334,7 +389,7 @@ function _validate_pages()
     doc_src = joinpath(@__DIR__, "src", "")
     for (root, dir, files) in walkdir(doc_src)
         for file in files
-            if file == "changelog.md"
+            if file == "changelog.md" || file == "release_notes.md"
                 continue
             end
             filename = replace(joinpath(root, file), doc_src => "")
@@ -385,7 +440,7 @@ _validate_pages()
     # ==========================================================================
     # Skip doctests if --fast provided.
     doctest = _FIX ? :fix : !_FAST,
-    pages = _PAGES,
+    pages = vcat(_PAGES, "release_notes.md"),
 )
 
 # ==============================================================================
@@ -410,9 +465,11 @@ if _PDF
     for (root, dir, files) in walkdir(joinpath(@__DIR__, "src", "tutorials"))
         _remove_literate_footer.(joinpath.(root, dir))
     end
-    # Remove release notes from PDF
-    splice!(_PAGES, 7)   # JuMP release notes
-    pop!(_PAGES[end][2]) # MOI release notes
+    moi = pop!(_PAGES)   # remove /MathOptInterface
+    pop!(moi[2])        # remove /MathOptInterface/release_notes.md
+    pop!(_PAGES)        # remove /Extensions
+    pop!(_PAGES)        # remove /Solvers
+    push!(_PAGES, moi)  # Re-add /MathOptInterface
     latex_platform = _IS_GITHUB_ACTIONS ? "docker" : "native"
     @time Documenter.makedocs(
         sitename = "JuMP",

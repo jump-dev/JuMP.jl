@@ -6,9 +6,10 @@ arXiv
 backports
 bikeshedding
 blogposts
-camelCase
 broadcasted
 [Bb]ugfix(?(es))
+camelCase
+codecov
 compat
 dataframe(?s)
 datastructure
@@ -16,6 +17,7 @@ destructuring
 discretized
 docstring(?s)
 doctest(?s)
+embeddable
 [Ee]num(?s)
 errored
 flamegraph
@@ -28,6 +30,7 @@ jll|JLL
 [Mm]ultiline
 [Mm]ulticriteria
 namespace
+orthant
 performant
 [Pp]recompil(ation|(e(?d)))
 preprint
@@ -74,6 +77,7 @@ satisfiability
 scalarization(?s)
 [Ss]emi(continuous|integer|definite)
 subgradient
+subproblem(?s)
 subtour(?s)
 unboundedness
 unregister
@@ -92,6 +96,8 @@ Clp
 CPLEXLink
 Couenne
 Divio
+Dualization
+[Ee]mbotech
 [Ee]cos
 JSONSchema
 GLPK
@@ -100,14 +106,20 @@ GZip
 Ipopt
 Knitro
 KNITRO
+MATLAB
 MOI
 Mosek
 MOSEK
 Pajarito
+Pardiso
 PATHSolver
+Pavito
 Penbmi
+Penopt
 puzzlor
 RAPOSa
+SDPAFamily
+SDPNAL
 Xpress
 
 % People
@@ -116,6 +128,7 @@ Baldick
 Bertsimas
 Betts
 Bhatia
+Borchers
 Cholesky
 Coey
 Dantzig
@@ -136,11 +149,15 @@ Jiming
 Joaquim
 Kernighan
 Kallus
+Kaluba
+Kapelevich
 Latorre
+Legat
 Linial
 Luangkesorn
 Lubin
 Madani
+Marek
 Markowitz
 Mathieu
 Maurer
@@ -160,8 +177,10 @@ Stigler
 Taccari
 Tanneau
 Teghem
+Tillmann
 Ulungu
 Vandenberghe
+Vielma
 Wei
 Wollenberg
 Yu

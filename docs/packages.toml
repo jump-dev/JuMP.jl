@@ -1,0 +1,114 @@
+# ============================= jump-dev packages ============================ #
+
+[AmplNLWriter]
+    rev = "v1.1.0"
+[BARON]
+    rev = "f5f4c9c8f27e0ef8644d65fb956f3bca5305b45e"
+[Cbc]
+    rev = "a78e129e32f11b5c00ee8acea75c3b2204b8297f"
+[Clp]
+    rev = "3358ee69d9918ab011d5a9aa6201ec50d1bad2a4"
+[CPLEX]
+    rev = "8e6f2112e9cc433085ed77de6712f715edead8fc"
+[CSDP]
+    rev = "3a2e4c7c48af7660a5ba258a4cb6549ab0970366"
+[DiffOpt]
+    rev = "cd24703fc929960197da28fe13ab4abf074f0022"
+    extension = true
+[Dualization]
+    rev = "13974285d5ed6f678e4b96aafb764dad5238aac0"
+[ECOS]
+    rev = "80d1a927b05b04360b7a8e6800f5ae13bc6a1494"
+[GLPK]
+    rev = "dd835dc425fe8995d965da8a57b4a3a1764cf8da"
+[Gurobi]
+    rev = "72ee279373d7559e32050c35735d3fc803a7bb12"
+[HiGHS]
+    rev = "b0ab8361558fc63873a5cf380d335409f02d8863"
+[Ipopt]
+    rev = "v1.2.1"
+[KNITRO]
+    rev = "3fb7c61e886b1b06d9f5cd646e194da638c93355"
+[MiniZinc]
+    rev = "21d5829c2838959e2ec2d2952495c83f43b271b7"
+[MosekTools]
+    rev = "e2ed9bc174c6aaa68e457077529d49be52ecbc37"
+[MultiObjectiveAlgorithms]
+    rev = "b4413a1ef3b7d28045cedba4e68e5e4959c8bb12"
+    has_html = true
+[Pajarito]
+    rev = "2c008ee52bff34c41ebd394e2daae9eb32387e4b"
+[Pavito]
+    rev = "c0f3d81d9e9fff2963b872cf84fea35bfcf8b1d1"
+[Penopt]
+    rev = "486f07d3f3a11f12012ea3ada702a3ee55c8fdc5"
+[PolyJuMP]
+    rev = "0832380ae36ec66ebe4cbc9555ba351d67096693"
+    extension = true
+[SCS]
+    rev = "ef7cb4e38e987fcbbdeebd50bd4c211633328150"
+[SDPA]
+    rev = "5d15d3c292cd25b461f524aaaf8eb5ecb8e08b0d"
+[SDPNAL]
+    rev = "00a3fa19f4e1235587948113b0b681da17f4dab5"
+[SDPT3]
+    rev = "b565aac2a58818090d521f2340e71f597688e4fb"
+[SeDuMi]
+    rev = "47b4497cab3ce59ec7f65cff455bb2014981d4b4"
+[SumOfSquares]
+    rev = "0a3055533684d3ddf5d80162d2a6acf5acdf4373"
+    extension = true
+[Xpress]
+    rev = "b98347c49ba05953e29e5a1ef27d0d161780e19d"
+
+# =========================== non-jump-dev packages ========================== #
+
+# [Alpine]
+#   user = "lanl-ansi"
+# [CDCS]
+#   user = "oxfordcontrol"
+# [CDDLib]
+#   user = "JuliaPolyhedra"
+# [Clarabel]
+#   user = "oxfordcontrol"
+#   has_html = true
+# [COPT]
+#   user = "COPT-Public"
+# [COSMO]
+#   user = "oxfordcontrol"
+#   has_html = true
+# [DAQP]
+#   user = "darnstrom"
+#   rev = "main"
+# [EAGO]
+#   user = "PSORLab"
+# [GAMS]
+#   user = "GAMS-dev"
+# [Hypatia]
+#   user = "chriscoey"
+# [Juniper]
+#   user = "lanl-ansi"
+# [MadNLP]
+#   user = "MadNLP"
+[NEOSServer]
+  user = "odow"
+  rev = "v1.0.2"
+# [NLopt]
+#   user = "JuliaOpt"
+# [OSQP]
+#   user = "osqp"
+[PATHSolver]
+  user = "chkwon"
+  rev = "08848c165747695e7a4dcbb86a657e2347ca7149"
+# [ProxSDP]
+#   user = "mariohsouto"
+[SCIP]
+  user = "scipopt"
+  rev = "f4227ecac9f6984996ba3b22519982d24f54a245"
+[SDDP]
+    user = "odow"
+    rev = "ac47986f026ff94d512f85d1e850cc6a9df4f963"
+    has_html = true
+    extension = true
+# [Tulip]
+#   user = "ds4dm"
