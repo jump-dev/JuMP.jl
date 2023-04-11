@@ -12,9 +12,9 @@
     rev = "8e6f2112e9cc433085ed77de6712f715edead8fc"
 [CSDP]
     rev = "3a2e4c7c48af7660a5ba258a4cb6549ab0970366"
-# [DiffOpt]
-#     rev = "od/readme"
-#     extension = true
+[DiffOpt]
+    rev = "cd24703fc929960197da28fe13ab4abf074f0022"
+    extension = true
 [Dualization]
     rev = "13974285d5ed6f678e4b96aafb764dad5238aac0"
 [ECOS]
