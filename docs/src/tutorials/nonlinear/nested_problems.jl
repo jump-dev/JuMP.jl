@@ -43,7 +43,7 @@ import Ipopt
 # \begin{array}{r l}
 # \min\limits_{x,z} & x_1^2 + x_2^2 + z \\
 # s.t.            & \begin{array}{r l}
-#                       z \ge \max\limits_{y} & x_1^2 y_1 + x_2^2 y_2  - x_1 y_1^4 - 2 x_2 y_2^4 \\
+#                       z = \max\limits_{y} & x_1^2 y_1 + x_2^2 y_2  - x_1 y_1^4 - 2 x_2 y_2^4 \\
 #                       s.t.                  & (y_1 - 10)^2 + (y_2 - 10)^2 \le 25
 #                   \end{array} \\
 #                 & x \ge 0.
