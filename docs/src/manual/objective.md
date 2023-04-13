@@ -64,6 +64,19 @@ julia> @objective(model, Max, x * y + x + y)
 x*y + x + y
 ```
 
+## Set a nonlinear objective
+
+Use the [`@objective`](@ref) macro to set a nonlinear objective function:
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x <= 1);
+
+julia> @objective(model, Max, log(x))
+log(x)
+```
+
 ## Query the objective function
 
 Use [`objective_function`](@ref) to return the current objective function.

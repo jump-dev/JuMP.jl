@@ -1601,4 +1601,52 @@ function test_parse_expression_quadexpr_multivariate_sum()
     return
 end
 
+function test_parse_expression_nonlinearexpr_call()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    f = NonlinearExpr(:ifelse, Any[x, 0, y])
+    @NLexpression(model, ref, f)
+    nlp = nonlinear_model(model)
+    expr = :(ifelse($x, 0, $y))
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
+function test_parse_expression_nonlinearexpr_or()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    f = NonlinearExpr(:||, Any[x, y])
+    @NLexpression(model, ref, f)
+    nlp = nonlinear_model(model)
+    expr = :($x || $y)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
+function test_parse_expression_nonlinearexpr_and()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    f = NonlinearExpr(:&&, Any[x, y])
+    @NLexpression(model, ref, f)
+    nlp = nonlinear_model(model)
+    expr = :($x && $y)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
+function test_parse_expression_nonlinearexpr_unsupported()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    f = NonlinearExpr(:foo, Any[x, y])
+    @test_throws(
+        MOI.UnsupportedNonlinearOperator,
+        @NLexpression(model, ref, f),
+    )
+    return
+end
+
 end

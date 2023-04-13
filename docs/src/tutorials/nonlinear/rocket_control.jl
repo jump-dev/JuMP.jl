@@ -120,7 +120,7 @@ fix(m[n], m_f; force = true)
 
 # ## Forces
 
-@NLexpressions(
+@expressions(
     rocket,
     begin
         ## Drag(h,v) = Dc v^2 exp( -hc * (h - h0) / h0 )
@@ -137,17 +137,17 @@ fix(m[n], m_f; force = true)
 for j in 2:n
     ## h' = v
     ## Rectangular integration
-    ## @NLconstraint(rocket, h[j] == h[j - 1] + Δt * v[j - 1])
+    ## @constraint(rocket, h[j] == h[j - 1] + Δt * v[j - 1])
     ## Trapezoidal integration
-    @NLconstraint(rocket, h[j] == h[j-1] + 0.5 * Δt * (v[j] + v[j-1]))
+    @constraint(rocket, h[j] == h[j-1] + 0.5 * Δt * (v[j] + v[j-1]))
     ## v' = (T-D(h,v))/m - g(h)
     ## Rectangular integration
-    ## @NLconstraint(
+    ## @constraint(
     ##     rocket,
     ##     v[j] == v[j - 1] + Δt *((T[j - 1] - drag[j - 1]) / m[j - 1] - grav[j - 1])
     ## )
     ## Trapezoidal integration
-    @NLconstraint(
+    @constraint(
         rocket,
         v[j] ==
         v[j-1] +
@@ -160,9 +160,9 @@ for j in 2:n
     )
     ## m' = -T/c
     ## Rectangular integration
-    ## @NLconstraint(rocket, m[j] == m[j - 1] - Δt * T[j - 1] / c)
+    ## @constraint(rocket, m[j] == m[j - 1] - Δt * T[j - 1] / c)
     ## Trapezoidal integration
-    @NLconstraint(rocket, m[j] == m[j-1] - 0.5 * Δt * (T[j] + T[j-1]) / c)
+    @constraint(rocket, m[j] == m[j-1] - 0.5 * Δt * (T[j] + T[j-1]) / c)
 end
 
 # Solve for the control and state

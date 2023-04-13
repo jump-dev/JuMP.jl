@@ -19,6 +19,7 @@ module JuMP
 
 import Base.Meta: isexpr, quot
 import LinearAlgebra
+import MacroTools
 import MathOptInterface as MOI
 import MutableArithmetics
 import OrderedCollections

@@ -74,10 +74,10 @@ function solve_lower_level(x...)
     model = Model(Ipopt.Optimizer)
     set_silent(model)
     @variable(model, y[1:2])
-    @NLobjective(
+    @objective(
         model,
         Max,
-        x[1]^2 * y[1] + x[2]^2 * y[2] - x[1] * y[1]^4 - 2 * x[2] * y[2]^4,
+        x[1]^2 * y[1] + x[2]^2 * y[2] - x[1] * y[1]^4.0 - 2 * x[2] * y[2]^4.0,
     )
     @constraint(model, (y[1] - 10)^2 + (y[2] - 10)^2 <= 25)
     optimize!(model)
@@ -141,8 +141,8 @@ end
 
 model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2] >= 0)
-register(model, :V, 2, V, ∇V, ∇²V)
-@NLobjective(model, Min, x[1]^2 + x[2]^2 + V(x[1], x[2]))
+@register(model, f_V, 2, V, ∇V, ∇²V)
+@objective(model, Min, x[1]^2 + x[2]^2 + f_V(x[1], x[2]))
 optimize!(model)
 solution_summary(model)
 
@@ -213,15 +213,15 @@ end
 model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2] >= 0)
 cache = Cache(Float64[], NaN, Float64[])
-register(
+@register(
     model,
-    :V,
+    f_V,
     2,
     (x...) -> cached_f(cache, x...),
     (g, x...) -> cached_∇f(cache, g, x...),
     (H, x...) -> cached_∇²f(cache, H, x...),
 )
-@NLobjective(model, Min, x[1]^2 + x[2]^2 + V(x[1], x[2]))
+@objective(model, Min, x[1]^2 + x[2]^2 + f_V(x[1], x[2]))
 optimize!(model)
 solution_summary(model)
 

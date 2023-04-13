@@ -21,7 +21,7 @@
 # # User-defined Hessians
 
 # In this tutorial, we explain how to write a user-defined function (see
-# [User-defined Functions](@ref)) with a Hessian matrix explicitly provided by
+# [User-defined functions](@ref)) with a Hessian matrix explicitly provided by
 # the user.
 #
 # For a more advanced example, see [Nested optimization problems](@ref).
@@ -65,11 +65,11 @@ end
 # you may assume only that `H` supports `size(H)` and `setindex!`.
 
 # Now that we have the function, its gradient, and its Hessian, we can construct
-# a JuMP model, register the function, and use it in a `@NL` macro:
+# a JuMP model, register the function, and use it in a macro:
 
 model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2])
-register(model, :rosenbrock, 2, rosenbrock, ∇rosenbrock, ∇²rosenbrock)
-@NLobjective(model, Min, rosenbrock(x[1], x[2]))
+@register(model, f_rosenbrock, 2, rosenbrock, ∇rosenbrock, ∇²rosenbrock)
+@objective(model, Min, f_rosenbrock(x[1], x[2]))
 optimize!(model)
 solution_summary(model; verbose = true)
