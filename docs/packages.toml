@@ -24,7 +24,7 @@
 [Gurobi]
     rev = "72ee279373d7559e32050c35735d3fc803a7bb12"
 [HiGHS]
-    rev = "b0ab8361558fc63873a5cf380d335409f02d8863"
+    rev = "v1.5.1"
 [Ipopt]
     rev = "v1.2.1"
 [KNITRO]
@@ -37,7 +37,7 @@
     rev = "b4413a1ef3b7d28045cedba4e68e5e4959c8bb12"
     has_html = true
 [Pajarito]
-    rev = "2c008ee52bff34c41ebd394e2daae9eb32387e4b"
+    rev = "v0.8.2"
 [Pavito]
     rev = "c0f3d81d9e9fff2963b872cf84fea35bfcf8b1d1"
 [Penopt]
@@ -54,12 +54,12 @@
 [SDPT3]
     rev = "b565aac2a58818090d521f2340e71f597688e4fb"
 [SeDuMi]
-    rev = "47b4497cab3ce59ec7f65cff455bb2014981d4b4"
+    rev = "v0.4.2"
 [SumOfSquares]
     rev = "0a3055533684d3ddf5d80162d2a6acf5acdf4373"
     extension = true
 [Xpress]
-    rev = "b98347c49ba05953e29e5a1ef27d0d161780e19d"
+    rev = "v0.16.1"
 
 # =========================== non-jump-dev packages ========================== #
 
@@ -107,7 +107,7 @@
   rev = "f4227ecac9f6984996ba3b22519982d24f54a245"
 [SDDP]
     user = "odow"
-    rev = "ac47986f026ff94d512f85d1e850cc6a9df4f963"
+    rev = "1.1.4"
     has_html = true
     extension = true
 # [Tulip]
