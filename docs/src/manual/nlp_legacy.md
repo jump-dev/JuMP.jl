@@ -260,7 +260,7 @@ julia> @NLconstraint(model, *((x / 2)...) <= 0.0)
 ERROR: Unsupported use of the splatting operator. JuMP supports splatting only symbols. For example, `x...` is ok, but `(x + 1)...`, `[x; y]...` and `g(f(y)...)` are not.
 ```
 
-## User-defined Functions
+## [User-defined Functions](@id legacy_user_defined_functions)
 
 JuMP natively supports the set of univariate and multivariate functions recognized by the
 `MOI.Nonlinear` submodule. In addition to this list of functions, it is possible

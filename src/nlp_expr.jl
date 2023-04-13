@@ -313,7 +313,7 @@ function jump_function(model::Model, expr::MOI.Nonlinear.Expression)
 end
 
 function value(f::Function, expr::NonlinearExpr)
-    error("TODO")
+    return error("TODO")
 end
 
 # MutableArithmetics.jl
