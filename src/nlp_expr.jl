@@ -312,6 +312,10 @@ function jump_function(model::Model, expr::MOI.Nonlinear.Expression)
     return parsed[1]
 end
 
+function value(f::Function, expr::NonlinearExpr)
+    error("TODO")
+end
+
 # MutableArithmetics.jl
 
 # These converts are used in the {add,sub}mul definition for AbstractJuMPScalar.

@@ -344,6 +344,7 @@ const _PAGES = [
         "manual/nlp.md",
         "manual/callbacks.md",
         "manual/complex.md",
+        "manual/nlp_legacy.md",
     ],
     jump_api_reference,
     "Background Information" =>

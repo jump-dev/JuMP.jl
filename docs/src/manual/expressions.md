@@ -391,6 +391,47 @@ julia> expr = cos(x) * sin(quad) + aff
 +(*(cos(x), sin(x² + x)), x + 1)
 ```
 
+### NL macro
+
+Some nonlinear expressions cannot be created via operator overloading. For
+example, to minimize the likelihood of bugs in user-code, we have not overloaded
+comparisons such as `<` and `>=` between JuMP objects:
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> x < 1
+ERROR: Cannot evaluate `<` between a variable and a number.
+[...]
+```
+
+Instead, wrap the expression in the [`@NL`](@ref) macro:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> expr = @NL(x < 1)
+<(x, 1)
+```
+
+For technical reasons, other operators that are not overloaded include `||`,
+`&&`, and `ifelse`.
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> expr = @NL(ifelse(@NL(@NL(x < -1) || @NL(x >= 1)), x^2, 0.0))
+ifelse(||(<(x, -1), >=(x, 1)), x², 0.0)
+```
+
+Note how [`@NL`](@ref) macros can be nested, and parentheses are needed to
+disambiguate the syntax.
+
 ## Initializing arrays
 
 JuMP implements `zero(AffExpr)` and `one(AffExpr)` to support various functions
