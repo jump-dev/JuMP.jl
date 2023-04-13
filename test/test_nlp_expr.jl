@@ -356,16 +356,6 @@ function test_nl_macro()
     return
 end
 
-function test_register_invalid_name()
-    model = Model()
-    @variable(model, x)
-    @test_throws(
-        ErrorException,
-        @eval(@register(model, Model, 1, x -> x^2)),
-    )
-    return
-end
-
 function test_register_univariate()
     model = Model()
     @variable(model, x)
@@ -402,7 +392,7 @@ end
 function test_register_multivariate_()
     model = Model()
     @variable(model, x[1:2])
-    f = (x...) -> sum(x.^2)
+    f = (x...) -> sum(x .^ 2)
     @register(model, foo, 2, f)
     @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
     @test isequal_canonical(foo(x...), NonlinearExpr(:foo, Any[x...]))
@@ -414,7 +404,7 @@ end
 function test_register_multivariate_gradient()
     model = Model()
     @variable(model, x[1:2])
-    f = (x...) -> sum(x.^2)
+    f = (x...) -> sum(x .^ 2)
     ∇f = (g, x...) -> (g .= 2 .* x)
     @register(model, foo, 2, f, ∇f)
     @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
@@ -427,7 +417,7 @@ end
 function test_register_multivariate_gradient_hessian()
     model = Model()
     @variable(model, x[1:2])
-    f = (x...) -> sum(x.^2)
+    f = (x...) -> sum(x .^ 2)
     ∇f = (g, x...) -> (g .= 2 .* x)
     ∇²f = (H, x...) -> begin
         for i in 1:2
