@@ -152,12 +152,11 @@ function _get_node_type(data, x)
     if id !== nothing
         return id, MOI.Nonlinear.NODE_LOGIC
     end
-    return nothing, nothing
+    return throw(MOI.UnsupportedNonlinearOperator(x.head))
 end
 
 function _parse_without_recursion_inner(stack, data, expr, x, parent)
     id, node_type = _get_node_type(data, x)
-    @assert node_type !== nothing
     push!(expr.nodes, MOI.Nonlinear.Node(node_type, id, parent))
     parent = length(expr.nodes)
     for i in length(x):-1:1  # Args need to be pushed onto the stack in reverse
@@ -483,7 +482,12 @@ function _to_nl(expr)
         comparison = Expr(:ref, Any, lhs, rhs)
         return Expr(:call, NonlinearExpr, Meta.quot(:&&), comparison)
     else
-        error("Unsupported operation")
+        error(
+            "Unable to convert expression to `NonlinearExpr`: $expr\n\nThe " *
+            "`@NL` macro must be used on a single function call. If the " *
+            "expression above is not what you intended, try using " *
+            "parentheses to disambiguate the parsing of the expression.",
+        )
     end
 end
 

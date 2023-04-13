@@ -343,6 +343,102 @@ function test_nl_macro()
         @NL(ifelse(x, 1, 2)),
         NonlinearExpr(:ifelse, Any[x, 1, 2]),
     )
+    expr = :(x[])
+    @test_throws(
+        ErrorException(
+            "Unable to convert expression to `NonlinearExpr`: $expr\n\nThe " *
+            "`@NL` macro must be used on a single function call. If the " *
+            "expression above is not what you intended, try using " *
+            "parentheses to disambiguate the parsing of the expression.",
+        ),
+        JuMP._to_nl(expr)
+    )
+    return
+end
+
+function test_register_invalid_name()
+    model = Model()
+    @variable(model, x)
+    @test_throws(
+        ErrorException,
+        @eval(@register(model, Model, 1, x -> x^2)),
+    )
+    return
+end
+
+function test_register_univariate()
+    model = Model()
+    @variable(model, x)
+    @register(model, f, 1, x -> x^2)
+    @test isequal_canonical(@expression(model, f(x)), f(x))
+    @test isequal_canonical(f(x), NonlinearExpr(:f, Any[x]))
+    attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
+    @test MOI.UserDefinedFunction(:f, 1) in attrs
+    return
+end
+
+function test_register_univariate_gradient()
+    model = Model()
+    @variable(model, x)
+    @register(model, f, 1, x -> x^2, x -> 2 * x)
+    @test isequal_canonical(@expression(model, f(x)), f(x))
+    @test isequal_canonical(f(x), NonlinearExpr(:f, Any[x]))
+    attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
+    @test MOI.UserDefinedFunction(:f, 1) in attrs
+    return
+end
+
+function test_register_univariate_gradient_hessian()
+    model = Model()
+    @variable(model, x)
+    @register(model, f, 1, x -> x^2, x -> 2 * x, x -> 2.0)
+    @test isequal_canonical(@expression(model, f(x)), f(x))
+    @test isequal_canonical(f(x), NonlinearExpr(:f, Any[x]))
+    attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
+    @test MOI.UserDefinedFunction(:f, 1) in attrs
+    return
+end
+
+function test_register_multivariate_()
+    model = Model()
+    @variable(model, x[1:2])
+    f = (x...) -> sum(x.^2)
+    @register(model, foo, 2, f)
+    @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
+    @test isequal_canonical(foo(x...), NonlinearExpr(:foo, Any[x...]))
+    attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
+    @test MOI.UserDefinedFunction(:foo, 2) in attrs
+    return
+end
+
+function test_register_multivariate_gradient()
+    model = Model()
+    @variable(model, x[1:2])
+    f = (x...) -> sum(x.^2)
+    ∇f = (g, x...) -> (g .= 2 .* x)
+    @register(model, foo, 2, f, ∇f)
+    @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
+    @test isequal_canonical(foo(x...), NonlinearExpr(:foo, Any[x...]))
+    attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
+    @test MOI.UserDefinedFunction(:foo, 2) in attrs
+    return
+end
+
+function test_register_multivariate_gradient_hessian()
+    model = Model()
+    @variable(model, x[1:2])
+    f = (x...) -> sum(x.^2)
+    ∇f = (g, x...) -> (g .= 2 .* x)
+    ∇²f = (H, x...) -> begin
+        for i in 1:2
+            H[i, i] = 2.0
+        end
+    end
+    @register(model, foo, 2, f, ∇f, ∇²f)
+    @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
+    @test isequal_canonical(foo(x...), NonlinearExpr(:foo, Any[x...]))
+    attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
+    @test MOI.UserDefinedFunction(:foo, 2) in attrs
     return
 end
 
