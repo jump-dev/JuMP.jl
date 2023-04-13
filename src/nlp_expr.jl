@@ -495,5 +495,5 @@ overloading. This is most useful for creating nonlinear expressions for
 operators like `ifelse`, `||`, and `&&`, which cannot be overloaded.
 """
 macro NL(expr)
-    return _to_nl(expr)
+    return esc(_to_nl(expr))
 end
