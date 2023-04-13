@@ -242,11 +242,7 @@ set_start_value.(all_variables(model), vec(initial_guess))
 
 ## Helper functions
 @expression(model, c_L[j = 1:n], a₀ + a₁ * rad2deg(α[j]))
-@expression(
-    model,
-    c_D[j = 1:n],
-    b₀ + b₁ * rad2deg(α[j]) + b₂ * rad2deg(α[j])^2
-)
+@expression(model, c_D[j = 1:n], b₀ + b₁ * rad2deg(α[j]) + b₂ * rad2deg(α[j])^2)
 @expression(model, ρ[j = 1:n], ρ₀ * exp(-h[j] / hᵣ))
 @expression(model, D[j = 1:n], 0.5 * c_D[j] * S * ρ[j] * v[j]^2)
 @expression(model, L[j = 1:n], 0.5 * c_L[j] * S * ρ[j] * v[j]^2)
