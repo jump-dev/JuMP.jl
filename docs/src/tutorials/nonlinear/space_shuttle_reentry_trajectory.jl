@@ -237,38 +237,38 @@ initial_guess = mapreduce(transpose, vcat, interp_linear.(1:n))
 set_start_value.(all_variables(model), vec(initial_guess))
 
 ## Functions to restore `h` and `v` to their true scale
-@NLexpression(model, h[j = 1:n], scaled_h[j] * 1e5)
-@NLexpression(model, v[j = 1:n], scaled_v[j] * 1e4)
+@expression(model, h[j = 1:n], scaled_h[j] * 1e5)
+@expression(model, v[j = 1:n], scaled_v[j] * 1e4)
 
 ## Helper functions
-@NLexpression(model, c_L[j = 1:n], a₀ + a₁ * rad2deg(α[j]))
-@NLexpression(
+@expression(model, c_L[j = 1:n], a₀ + a₁ * rad2deg(α[j]))
+@expression(
     model,
     c_D[j = 1:n],
     b₀ + b₁ * rad2deg(α[j]) + b₂ * rad2deg(α[j])^2
 )
-@NLexpression(model, ρ[j = 1:n], ρ₀ * exp(-h[j] / hᵣ))
-@NLexpression(model, D[j = 1:n], 0.5 * c_D[j] * S * ρ[j] * v[j]^2)
-@NLexpression(model, L[j = 1:n], 0.5 * c_L[j] * S * ρ[j] * v[j]^2)
-@NLexpression(model, r[j = 1:n], Rₑ + h[j])
-@NLexpression(model, g[j = 1:n], μ / r[j]^2)
+@expression(model, ρ[j = 1:n], ρ₀ * exp(-h[j] / hᵣ))
+@expression(model, D[j = 1:n], 0.5 * c_D[j] * S * ρ[j] * v[j]^2)
+@expression(model, L[j = 1:n], 0.5 * c_L[j] * S * ρ[j] * v[j]^2)
+@expression(model, r[j = 1:n], Rₑ + h[j])
+@expression(model, g[j = 1:n], μ / r[j]^2)
 
 ## Motion of the vehicle as a differential-algebraic system of equations (DAEs)
-@NLexpression(model, δh[j = 1:n], v[j] * sin(γ[j]))
-@NLexpression(
+@expression(model, δh[j = 1:n], v[j] * sin(γ[j]))
+@expression(
     model,
     δϕ[j = 1:n],
     (v[j] / r[j]) * cos(γ[j]) * sin(ψ[j]) / cos(θ[j])
 )
-@NLexpression(model, δθ[j = 1:n], (v[j] / r[j]) * cos(γ[j]) * cos(ψ[j]))
-@NLexpression(model, δv[j = 1:n], -(D[j] / m) - g[j] * sin(γ[j]))
-@NLexpression(
+@expression(model, δθ[j = 1:n], (v[j] / r[j]) * cos(γ[j]) * cos(ψ[j]))
+@expression(model, δv[j = 1:n], -(D[j] / m) - g[j] * sin(γ[j]))
+@expression(
     model,
     δγ[j = 1:n],
     (L[j] / (m * v[j])) * cos(β[j]) +
     cos(γ[j]) * ((v[j] / r[j]) - (g[j] / v[j]))
 )
-@NLexpression(
+@expression(
     model,
     δψ[j = 1:n],
     (1 / (m * v[j] * cos(γ[j]))) * L[j] * sin(β[j]) +
@@ -281,20 +281,20 @@ for j in 2:n
 
     if integration_rule == "rectangular"
         ## Rectangular integration
-        @NLconstraint(model, h[j] == h[i] + Δt[i] * δh[i])
-        @NLconstraint(model, ϕ[j] == ϕ[i] + Δt[i] * δϕ[i])
-        @NLconstraint(model, θ[j] == θ[i] + Δt[i] * δθ[i])
-        @NLconstraint(model, v[j] == v[i] + Δt[i] * δv[i])
-        @NLconstraint(model, γ[j] == γ[i] + Δt[i] * δγ[i])
-        @NLconstraint(model, ψ[j] == ψ[i] + Δt[i] * δψ[i])
+        @constraint(model, h[j] == h[i] + Δt[i] * δh[i])
+        @constraint(model, ϕ[j] == ϕ[i] + Δt[i] * δϕ[i])
+        @constraint(model, θ[j] == θ[i] + Δt[i] * δθ[i])
+        @constraint(model, v[j] == v[i] + Δt[i] * δv[i])
+        @constraint(model, γ[j] == γ[i] + Δt[i] * δγ[i])
+        @constraint(model, ψ[j] == ψ[i] + Δt[i] * δψ[i])
     elseif integration_rule == "trapezoidal"
         ## Trapezoidal integration
-        @NLconstraint(model, h[j] == h[i] + 0.5 * Δt[i] * (δh[j] + δh[i]))
-        @NLconstraint(model, ϕ[j] == ϕ[i] + 0.5 * Δt[i] * (δϕ[j] + δϕ[i]))
-        @NLconstraint(model, θ[j] == θ[i] + 0.5 * Δt[i] * (δθ[j] + δθ[i]))
-        @NLconstraint(model, v[j] == v[i] + 0.5 * Δt[i] * (δv[j] + δv[i]))
-        @NLconstraint(model, γ[j] == γ[i] + 0.5 * Δt[i] * (δγ[j] + δγ[i]))
-        @NLconstraint(model, ψ[j] == ψ[i] + 0.5 * Δt[i] * (δψ[j] + δψ[i]))
+        @constraint(model, h[j] == h[i] + 0.5 * Δt[i] * (δh[j] + δh[i]))
+        @constraint(model, ϕ[j] == ϕ[i] + 0.5 * Δt[i] * (δϕ[j] + δϕ[i]))
+        @constraint(model, θ[j] == θ[i] + 0.5 * Δt[i] * (δθ[j] + δθ[i]))
+        @constraint(model, v[j] == v[i] + 0.5 * Δt[i] * (δv[j] + δv[i]))
+        @constraint(model, γ[j] == γ[i] + 0.5 * Δt[i] * (δγ[j] + δγ[i]))
+        @constraint(model, ψ[j] == ψ[i] + 0.5 * Δt[i] * (δψ[j] + δψ[i]))
     else
         @error "Unexpected integration rule '$(integration_rule)'"
     end

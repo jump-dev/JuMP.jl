@@ -513,17 +513,17 @@ function solve_nonlinear_economic_dispatch(
     if silent
         set_silent(model)
     end
-    register(model, :tcf, 1, thermal_cost_function; autodiff = true)
+    @register(model, tcf, 1, thermal_cost_function)
     N = length(generators)
     @variable(model, generators[i].min <= g[i = 1:N] <= generators[i].max)
     @variable(model, 0 <= w <= scenario.wind)
-    @NLobjective(
+    @objective(
         model,
         Min,
         sum(generators[i].variable_cost * tcf(g[i]) for i in 1:N) +
         wind.variable_cost * w,
     )
-    @NLconstraint(model, sum(g[i] for i in 1:N) + sqrt(w) == scenario.demand)
+    @constraint(model, sum(g[i] for i in 1:N) + sqrt(w) == scenario.demand)
     optimize!(model)
     return (
         g = value.(g),
