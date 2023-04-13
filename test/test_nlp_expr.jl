@@ -328,4 +328,22 @@ function test_expr_mle()
     return
 end
 
+function test_nl_macro()
+    model = Model()
+    @variable(model, x)
+    @test isequal_canonical(@NL(x < 0), NonlinearExpr(:<, Any[x, 0]))
+    @test isequal_canonical(@NL(0 >= x), NonlinearExpr(:>=, Any[0, x]))
+    @test isequal_canonical(
+        @NL(0 < x <= 1),
+        NonlinearExpr(:&&, Any[@NL(0 < x), @NL(x <= 1)]),
+    )
+    @test isequal_canonical(@NL(x || 1), NonlinearExpr(:||, Any[x, 1]))
+    @test isequal_canonical(@NL(x && 1), NonlinearExpr(:&&, Any[x, 1]))
+    @test isequal_canonical(
+        @NL(ifelse(x, 1, 2)),
+        NonlinearExpr(:ifelse, Any[x, 1, 2]),
+    )
+    return
+end
+
 end  # module

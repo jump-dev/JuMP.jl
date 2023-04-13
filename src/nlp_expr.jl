@@ -135,15 +135,29 @@ function MOI.Nonlinear.parse_expression(
     return
 end
 
-function _parse_without_recursion_inner(stack, data, expr, x, parent)
+function _get_node_type(data, x)
     id = get(data.operators.univariate_operator_to_id, x.head, nothing)
-    node_type = if length(x) == 1 && id !== nothing
-        MOI.Nonlinear.NODE_CALL_UNIVARIATE
-    else
-        id = get(data.operators.multivariate_operator_to_id, x.head, nothing)
-        @assert id !== nothing
-        MOI.Nonlinear.NODE_CALL_MULTIVARIATE
+    if length(x) == 1 && id !== nothing
+        return id, MOI.Nonlinear.NODE_CALL_UNIVARIATE
     end
+    id = get(data.operators.multivariate_operator_to_id, x.head, nothing)
+    if id !== nothing
+        return id, MOI.Nonlinear.NODE_CALL_MULTIVARIATE
+    end
+    id = get(data.operators.comparison_operator_to_id, x.head, nothing)
+    if id !== nothing
+        return id, MOI.Nonlinear.NODE_COMPARISON
+    end
+    id = get(data.operators.logic_operator_to_id, x.head, nothing)
+    if id !== nothing
+        return id, MOI.Nonlinear.NODE_LOGIC
+    end
+    return nothing, nothing
+end
+
+function _parse_without_recursion_inner(stack, data, expr, x, parent)
+    id, node_type = _get_node_type(data, x)
+    @assert node_type !== nothing
     push!(expr.nodes, MOI.Nonlinear.Node(node_type, id, parent))
     parent = length(expr.nodes)
     for i in length(x):-1:1  # Args need to be pushed onto the stack in reverse
@@ -370,4 +384,116 @@ function _MA.promote_operation(
     ::Type{NonlinearExpr},
 )
     return NonlinearExpr
+end
+
+"""
+    UserDefinedFunction(
+        model::Model,
+        op::Symbol,
+        dim::Int,
+        f::Function,
+        [∇f::Function,]
+        [∇²f::Function,]
+    )
+
+Add a user-definend function with `dim` input arguments to `model` and associate
+it with the operator `op`.
+
+The function `f` evaluates the function. The optional function `∇f` evaluates
+the first derivative, and the optional function `∇²f` evaluates the second
+derivative. `∇²f` may be provided only if `∇f` is also provided.
+"""
+struct UserDefinedFunction
+    head::Symbol
+end
+
+function UserDefinedFunction(model::Model, op::Symbol, dim::Int, args...)
+    MOI.set(model, MOI.UserDefinedFunction(op, dim), args)
+    return UserDefinedFunction(op)
+end
+
+(f::UserDefinedFunction)(args...) = NonlinearExpr(f.head, Any[a for a in args])
+
+"""
+    @register(model, operator, dim, args...)
+
+Register a user-defined function in `model`, and create a new variable in the
+current scope `operator`
+[`UserDefinedFunction`](@ref).
+
+## Non-macro version
+
+This macro is provided as helpful syntax that matches the style of the rest of
+the JuMP macros. However, you may also create user-defined functions outside the
+macros using [`UserDefinedFunction`](@ref). For example:
+
+```julia
+julia> model = Model();
+
+julia> @register(model, f, 1, x -> x^2)
+UserDefinedFunction(:f)
+```
+is equivalent to
+```julia
+julia> model = Model();
+
+julia> f = UserDefinedFunction(model, :f, 1, x -> x^2)
+UserDefinedFunction(:f)
+```
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> f(x::Float64) = x^2
+f (generic function with 1 method)
+
+julia> ∇f(x::Float64) = 2 * x
+∇f (generic function with 1 method)
+
+julia> ∇²f(x::Float64) = 2.0
+∇²f (generic function with 1 method)
+
+julia> @register(model, foo, 1, f, ∇f, ∇²f)
+
+julia> @NLobjective(model, Min, foo(x))
+
+```
+"""
+macro register(model, op, args...)
+    op_sym = Meta.quot(op)
+    rhs = Expr(:call, UserDefinedFunction, esc(model), op_sym, esc.(args)...)
+    return Expr(:(=), esc(op), rhs)
+end
+
+function _to_nl(expr)
+    if Meta.isexpr(expr, :call)
+        args = Expr(:ref, Any, expr.args[2:end]...)
+        return Expr(:call, NonlinearExpr, Meta.quot(expr.args[1]), args)
+    elseif Meta.isexpr(expr, :||) || Meta.isexpr(expr, :&&)
+        args = Expr(:ref, Any, expr.args...)
+        return Expr(:call, NonlinearExpr, Meta.quot(expr.head), args)
+    elseif Meta.isexpr(expr, :comparison, 5)
+        lhs = _to_nl(Expr(:call, expr.args[2], expr.args[1], expr.args[3]))
+        rhs = _to_nl(Expr(:call, expr.args[4], expr.args[3], expr.args[5]))
+        comparison = Expr(:ref, Any, lhs, rhs)
+        return Expr(:call,  NonlinearExpr, Meta.quot(:&&), comparison)
+    else
+        error("Unsupported operation")
+    end
+end
+
+"""
+    @NL(expr)
+
+Evaluate an expression as a [`NonlinearExpr`](@ref) without using operator
+overloading. This is most useful for creating nonlinear expressions for
+operators like `ifelse`, `||`, and `&&`, which cannot be overloaded.
+"""
+macro NL(expr)
+    return _to_nl(expr)
 end
