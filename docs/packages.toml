@@ -107,7 +107,7 @@
   rev = "f4227ecac9f6984996ba3b22519982d24f54a245"
 [SDDP]
     user = "odow"
-    rev = "1.1.4"
+    rev = "v1.1.4"
     has_html = true
     extension = true
 # [Tulip]
