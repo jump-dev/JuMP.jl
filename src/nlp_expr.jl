@@ -481,7 +481,7 @@ function _to_nl(expr)
         lhs = _to_nl(Expr(:call, expr.args[2], expr.args[1], expr.args[3]))
         rhs = _to_nl(Expr(:call, expr.args[4], expr.args[3], expr.args[5]))
         comparison = Expr(:ref, Any, lhs, rhs)
-        return Expr(:call,  NonlinearExpr, Meta.quot(:&&), comparison)
+        return Expr(:call, NonlinearExpr, Meta.quot(:&&), comparison)
     else
         error("Unsupported operation")
     end
