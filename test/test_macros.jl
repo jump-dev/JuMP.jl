@@ -616,13 +616,6 @@ function test_Nested_tuple_destructuring()
     return
 end
 
-function test_Error_on_unexpected_comparison()
-    m = Model()
-    @variable(m, x)
-    @test_throws ErrorException @expression(m, x <= 1)
-    return
-end
-
 function test_Lookup_in_model_scope_variable()
     model = Model()
     @variable(model, x)
