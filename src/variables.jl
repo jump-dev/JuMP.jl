@@ -1870,7 +1870,7 @@ end
 for sym in (:(<=), :(>=), :(<), :(>))
     msg = """Cannot evaluate `$(sym)` between a variable and a number.
 
-    There are two common mistakes that lead to this.
+    There are three common mistakes that lead to this.
 
      * You tried to write a constraint that depends on the value of a variable
 
@@ -1898,16 +1898,32 @@ for sym in (:(<=), :(>=), :(<), :(>))
        foo(x) = x $(sym) 1 ? 0 : 1 - x
        model = Model()
        @variable(model, x)
-       @objective(model, foo(x))
+       @expression(model, foo(x))
        ```
 
        To fix this, create a nonlinear model with a user-defined function:
        ```julia
        foo(x) = x $(sym) 1 ? 0 : 1 - x
        model = Model()
-       register(model, :foo, 1, foo; autodiff = true)
+       @register(model, my_foo, 1, foo)
        @variable(model, x)
-       @NLobjective(model, foo(x))
+       @expression(model, my_foo(x))
+       ```
+
+     * You created a logical nonlinear expression without using [`@NL`](@ref)
+
+       For example:
+       ```julia
+       model = Model()
+       @variable(model, x)
+       @expression(model, ifelse(x $sym 0, x, 0))
+       ```
+
+       To fix this, wrap the expression in the [`@NL`](@ref) macro:
+       ```julia
+       model = Model()
+       @variable(model, x)
+       @expression(model, @NL(ifelse(x $sym 0, x, 0)))
        ```
     """
     @eval begin

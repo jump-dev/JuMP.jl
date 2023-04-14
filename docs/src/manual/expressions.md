@@ -425,12 +425,9 @@ julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> expr = @NL(ifelse(@NL(@NL(x < -1) || @NL(x >= 1)), x^2, 0.0))
+julia> expr = @NL(ifelse(x < -1 || x >= 1, x^2, 0.0))
 ifelse(||(<(x, -1), >=(x, 1)), x², 0.0)
 ```
-
-Note how [`@NL`](@ref) macros can be nested, and parentheses are needed to
-disambiguate the syntax.
 
 ## Initializing arrays
 

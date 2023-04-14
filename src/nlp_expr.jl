@@ -473,25 +473,32 @@ macro register(model, op, args...)
     return Expr(:(=), esc(op), rhs)
 end
 
-function _to_nl(expr)
-    if Meta.isexpr(expr, :call)
+const _REWRITE = (:ifelse, :<, :>, :(==), :(>=), :(<=))
+
+_walk_and_replace_logical_expressions(expr) = expr
+
+function _walk_and_replace_logical_expressions(expr::Expr)
+    for (i, arg) in enumerate(expr.args)
+        expr.args[i] = _walk_and_replace_logical_expressions(arg)
+    end
+    if Meta.isexpr(expr, :call) && expr.args[1] in _REWRITE
         args = Expr(:ref, Any, expr.args[2:end]...)
         return Expr(:call, NonlinearExpr, Meta.quot(expr.args[1]), args)
     elseif Meta.isexpr(expr, :||) || Meta.isexpr(expr, :&&)
         args = Expr(:ref, Any, expr.args...)
         return Expr(:call, NonlinearExpr, Meta.quot(expr.head), args)
     elseif Meta.isexpr(expr, :comparison, 5)
-        lhs = _to_nl(Expr(:call, expr.args[2], expr.args[1], expr.args[3]))
-        rhs = _to_nl(Expr(:call, expr.args[4], expr.args[3], expr.args[5]))
-        comparison = Expr(:ref, Any, lhs, rhs)
+        lhs = Expr(:call, expr.args[2], expr.args[1], expr.args[3])
+        rhs = Expr(:call, expr.args[4], expr.args[3], expr.args[5])
+        comparison = Expr(
+            :ref,
+            Any,
+            _walk_and_replace_logical_expressions(lhs),
+            _walk_and_replace_logical_expressions(rhs),
+        )
         return Expr(:call, NonlinearExpr, Meta.quot(:&&), comparison)
     else
-        error(
-            "Unable to convert expression to `NonlinearExpr`: $expr\n\nThe " *
-            "`@NL` macro must be used on a single function call. If the " *
-            "expression above is not what you intended, try using " *
-            "parentheses to disambiguate the parsing of the expression.",
-        )
+        return expr
     end
 end
 
@@ -503,5 +510,5 @@ overloading. This is most useful for creating nonlinear expressions for
 operators like `ifelse`, `||`, and `&&`, which cannot be overloaded.
 """
 macro NL(expr)
-    return esc(_to_nl(expr))
+    return esc(_walk_and_replace_logical_expressions(expr))
 end

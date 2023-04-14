@@ -343,15 +343,10 @@ function test_nl_macro()
         @NL(ifelse(x, 1, 2)),
         NonlinearExpr(:ifelse, Any[x, 1, 2]),
     )
-    expr = :(x[])
-    @test_throws(
-        ErrorException(
-            "Unable to convert expression to `NonlinearExpr`: $expr\n\nThe " *
-            "`@NL` macro must be used on a single function call. If the " *
-            "expression above is not what you intended, try using " *
-            "parentheses to disambiguate the parsing of the expression.",
-        ),
-        JuMP._to_nl(expr)
+    @test isequal_canonical(@NL(x + 1), x + 1)
+    @test isequal_canonical(
+        @NL(ifelse(x > 0, x^2, sin(x))),
+        NonlinearExpr(:ifelse, Any[@NL(x > 0), x^2, sin(x)]),
     )
     return
 end
