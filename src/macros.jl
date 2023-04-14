@@ -474,6 +474,17 @@ function parse_constraint_head(
     return is_vectorized, parse_code, build_call
 end
 
+"""
+    _rewrite_expression(expr)
+
+A helper function so that we can change how we rewrite expressions in a single
+place and have it cascade to all locations in the JuMP macros that rewrite
+expressions.
+"""
+function _rewrite_expression(expr)
+    return _MA.rewrite(expr; move_factors_into_sums = false)
+end
+
 function parse_constraint_head(
     _error::Function,
     ::Val{:comparison},
@@ -501,9 +512,9 @@ function parse_constraint_head(
             "`$ub >= ... >= $lb`.",
         )
     end
-    new_aff, parse_aff = _MA.rewrite(aff; move_factors_into_sums = false)
-    new_lb, parse_lb = _MA.rewrite(lb; move_factors_into_sums = false)
-    new_ub, parse_ub = _MA.rewrite(ub; move_factors_into_sums = false)
+    new_aff, parse_aff = _rewrite_expression(aff)
+    new_lb, parse_lb = _rewrite_expression(lb)
+    new_ub, parse_ub = _rewrite_expression(ub)
     parse_code = quote
         $parse_aff
         $parse_lb
@@ -584,7 +595,7 @@ function parse_constraint_call(
     func,
     set,
 )
-    f, parse_code = _MA.rewrite(func; move_factors_into_sums = false)
+    f, parse_code = _rewrite_expression(func)
     build_call = if vectorized
         :(build_constraint.($_error, _desparsify($f), Ref($(esc(set)))))
     else
@@ -618,7 +629,7 @@ function parse_constraint_call(
     rhs,
 )
     func = vectorized ? :($lhs .- $rhs) : :($lhs - $rhs)
-    f, parse_code = _MA.rewrite(func; move_factors_into_sums = false)
+    f, parse_code = _rewrite_expression(func)
     set = operator_to_set(_error, operator)
     # `_functionize` deals with the pathological case where the `lhs` is a
     # `VariableRef` and the `rhs` is a summation with no terms.
@@ -1583,7 +1594,7 @@ macro objective(model, args...)
     end
     sense, x = args
     sense_expr = _moi_sense(_error, sense)
-    newaff, parsecode = _MA.rewrite(x; move_factors_into_sums = false)
+    newaff, parsecode = _rewrite_expression(x)
     code = quote
         $parsecode
         # Don't leak a `_MA.Zero` if the objective expression is an empty
