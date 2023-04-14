@@ -474,6 +474,47 @@ function parse_constraint_head(
     return is_vectorized, parse_code, build_call
 end
 
+_ifelse(a, x, y) = ifelse(a, x, y)
+_and(x, y) = x && y
+_or(x, y) = x || y
+_less_than(x, y) = x < y
+_greater_than(x, y) = x > y
+_less_equal(x, y) = x <= y
+_greater_equal(x, y) = x >= y
+_equal_to(x, y) = x == y
+
+function _rewrite_to_jump_logic(x)
+    if Meta.isexpr(x, :call)
+        op = if x.args[1] == :ifelse
+            return Expr(:call, _ifelse, x.args[2:end]...)
+        elseif x.args[1] == :<
+            return Expr(:call, _less_than, x.args[2:end]...)
+        elseif x.args[1] == :>
+            return Expr(:call, _greater_than, x.args[2:end]...)
+        elseif x.args[1] == :<=
+            return Expr(:call, _less_equal, x.args[2:end]...)
+        elseif x.args[1] == :>=
+            return Expr(:call, _greater_equal, x.args[2:end]...)
+        elseif x.args[1] == :(==)
+            return Expr(:call, _equal_to, x.args[2:end]...)
+        end
+    elseif Meta.isexpr(x, :||)
+        return Expr(:call, _or, x.args...)
+    elseif Meta.isexpr(x, :&&)
+        return Expr(:call, _and, x.args...)
+    elseif Meta.isexpr(x, :comparison)
+        lhs = Expr(:call, x.args[2], x.args[1], x.args[3])
+        rhs = Expr(:call, x.args[4], x.args[3], x.args[5])
+        return Expr(
+            :call,
+            _and,
+            _rewrite_to_jump_logic(lhs),
+            _rewrite_to_jump_logic(rhs),
+        )
+    end
+    return x
+end
+
 """
     _rewrite_expression(expr)
 
@@ -482,7 +523,8 @@ place and have it cascade to all locations in the JuMP macros that rewrite
 expressions.
 """
 function _rewrite_expression(expr)
-    return _MA.rewrite(expr; move_factors_into_sums = false)
+    new_expr = MacroTools.postwalk(_rewrite_to_jump_logic, expr)
+    return _MA.rewrite(new_expr; move_factors_into_sums = false)
 end
 
 function parse_constraint_head(
@@ -1683,8 +1725,9 @@ macro expression(args...)
             "different name for the index.",
         )
     end
-    code = _MA.rewrite_and_return(x; move_factors_into_sums = false)
+    expr_var, build_code = _rewrite_expression(x)
     code = quote
+        $build_code
         # Don't leak a `_MA.Zero` if the expression is an empty summation, or
         # other structure that returns `_MA.Zero()`.
         _replace_zero($m, $code)

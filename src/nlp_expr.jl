@@ -215,6 +215,31 @@ for f in (:+, :-, :*, :^, :/, :atan)
     end
 end
 
+_ifelse(a::AbstractJuMPScalar, x, y) = NonlinearExpr(:ifelse, Any[a, x, y])
+
+for (f, op) in (
+    :_and => :&&,
+    :_or => :||,
+    :_less_than => :(<),
+    :_greater_than => :(>),
+    :_less_equal => :(<=),
+    :_greater_equal => :(>=),
+    :_equal_to => :(==),
+)
+    op = Meta.quot(op)
+    @eval begin
+        function $(f)(x::AbstractJuMPScalar, y)
+            return NonlinearExpr($op, x, y)
+        end
+        function $(f)(x, y::AbstractJuMPScalar)
+            return NonlinearExpr($op, x, y)
+        end
+        function $(f)(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
+            return NonlinearExpr($op, x, y)
+        end
+    end
+end
+
 # JuMP interop
 
 # TODO
@@ -471,44 +496,4 @@ macro register(model, op, args...)
     op_sym = Meta.quot(op)
     rhs = Expr(:call, UserDefinedFunction, esc(model), op_sym, esc.(args)...)
     return Expr(:(=), esc(op), rhs)
-end
-
-const _REWRITE = (:ifelse, :<, :>, :(==), :(>=), :(<=))
-
-_walk_and_replace_logical_expressions(expr) = expr
-
-function _walk_and_replace_logical_expressions(expr::Expr)
-    for (i, arg) in enumerate(expr.args)
-        expr.args[i] = _walk_and_replace_logical_expressions(arg)
-    end
-    if Meta.isexpr(expr, :call) && expr.args[1] in _REWRITE
-        args = Expr(:ref, Any, expr.args[2:end]...)
-        return Expr(:call, NonlinearExpr, Meta.quot(expr.args[1]), args)
-    elseif Meta.isexpr(expr, :||) || Meta.isexpr(expr, :&&)
-        args = Expr(:ref, Any, expr.args...)
-        return Expr(:call, NonlinearExpr, Meta.quot(expr.head), args)
-    elseif Meta.isexpr(expr, :comparison, 5)
-        lhs = Expr(:call, expr.args[2], expr.args[1], expr.args[3])
-        rhs = Expr(:call, expr.args[4], expr.args[3], expr.args[5])
-        comparison = Expr(
-            :ref,
-            Any,
-            _walk_and_replace_logical_expressions(lhs),
-            _walk_and_replace_logical_expressions(rhs),
-        )
-        return Expr(:call, NonlinearExpr, Meta.quot(:&&), comparison)
-    else
-        return expr
-    end
-end
-
-"""
-    @NL(expr)
-
-Evaluate an expression as a [`NonlinearExpr`](@ref) without using operator
-overloading. This is most useful for creating nonlinear expressions for
-operators like `ifelse`, `||`, and `&&`, which cannot be overloaded.
-"""
-macro NL(expr)
-    return esc(_walk_and_replace_logical_expressions(expr))
 end

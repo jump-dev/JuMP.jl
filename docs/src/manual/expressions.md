@@ -407,13 +407,13 @@ ERROR: Cannot evaluate `<` between a variable and a number.
 [...]
 ```
 
-Instead, wrap the expression in the [`@NL`](@ref) macro:
+Instead, wrap the expression in the [`@expression`](@ref) macro:
 ```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> expr = @NL(x < 1)
+julia> expr = @expression(x < 1)
 <(x, 1)
 ```
 
@@ -425,7 +425,7 @@ julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> expr = @NL(ifelse(x < -1 || x >= 1, x^2, 0.0))
+julia> expr = @expression(model, ifelse(x < -1 || x >= 1, x^2, 0.0))
 ifelse(||(<(x, -1), >=(x, 1)), x², 0.0)
 ```
 
