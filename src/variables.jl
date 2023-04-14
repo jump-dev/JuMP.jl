@@ -1867,8 +1867,9 @@ end
 ### Error messages for common incorrect usages
 ###
 
-for sym in (:(<=), :(>=), :(<), :(>))
-    msg = """Cannot evaluate `$(sym)` between a variable and a number.
+function _logic_error_exception(sym::Symbol)
+    return ErrorException("""
+    Cannot evaluate `$(sym)` between a variable and a number.
 
     There are three common mistakes that lead to this.
 
@@ -1916,18 +1917,21 @@ for sym in (:(<=), :(>=), :(<), :(>))
        ```julia
        model = Model()
        @variable(model, x)
-       @expression(model, ifelse(x $sym 0, x, 0))
+       @expression(model, ifelse(x $sym 1, x, 0))
        ```
 
        To fix this, wrap the expression in the [`@NL`](@ref) macro:
        ```julia
        model = Model()
        @variable(model, x)
-       @expression(model, @NL(ifelse(x $sym 0, x, 0)))
-       ```
-    """
+       @expression(model, @NL(ifelse(x $sym 1, x, 0)))
+       ```""")
+end
+
+for sym in (:(<=), :(>=), :(<), :(>))
+    err = _logic_error_exception(sym)
     @eval begin
-        Base.$(sym)(::GenericVariableRef, ::Number) = error($(msg))
-        Base.$(sym)(::Number, ::GenericVariableRef) = error($(msg))
+        Base.$(sym)(::GenericVariableRef, ::Number) = throw($err)
+        Base.$(sym)(::Number, ::GenericVariableRef) = throw($err)
     end
 end
