@@ -413,7 +413,7 @@ julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> expr = @expression(x < 1)
+julia> expr = @expression(model, x < 1)
 <(x, 1)
 ```
 
