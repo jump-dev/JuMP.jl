@@ -1427,4 +1427,16 @@ function test_fix_discrete_variables_value()
     return
 end
 
+function test_string_names_set_on_creation_constrained_on_creation()
+    model = Model()
+    set_string_names_on_creation(model, false)
+    @variable(model, x in MOI.ZeroOne())
+    @test x isa VariableRef
+    @test isempty(name(x))
+    @variable(model, y[1:2] in MOI.ZeroOne())
+    @test y[1] isa VariableRef
+    @test all(isempty, name.(y))
+    return
+end
+
 end  # module TestVariable
