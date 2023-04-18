@@ -38,43 +38,62 @@ function _set_lower_bound_or_error(
     info::_VariableInfoExpr,
     lower,
 )
-    info.has_lb && _error("Cannot specify variable lower_bound twice")
+    if info.has_lb
+        _error("Cannot specify variable lower_bound twice")
+    end
     info.has_lb = true
-    return info.lower_bound = lower
+    info.lower_bound = lower
+    return
 end
+
 function _set_upper_bound_or_error(
     _error::Function,
     info::_VariableInfoExpr,
     upper,
 )
-    info.has_ub && _error("Cannot specify variable upper_bound twice")
+    if info.has_ub
+        _error("Cannot specify variable upper_bound twice")
+    end
     info.has_ub = true
-    return info.upper_bound = upper
+    info.upper_bound = upper
+    return
 end
+
 function _fix_or_error(_error::Function, info::_VariableInfoExpr, value)
-    info.has_fix && _error("Cannot specify variable fixed value twice")
+    if info.has_fix
+        _error("Cannot specify variable fixed value twice")
+    end
     info.has_fix = true
-    return info.fixed_value = value
+    info.fixed_value = value
+    return
 end
+
 function _set_binary_or_error(_error::Function, info::_VariableInfoExpr)
-    info.binary === false ||
+    if info.binary
         _error("'Bin' and 'binary' keyword argument cannot both be specified.")
-    return info.binary = true
+    end
+    info.binary = true
+    return
 end
+
 function _set_integer_or_error(_error::Function, info::_VariableInfoExpr)
-    info.integer === false ||
+    if info.integer
         _error("'Int' and 'integer' keyword argument cannot both be specified.")
-    return info.integer = true
+    end
+    info.integer = true
+    return
 end
 
 function _is_info_keyword(kw::Expr)
     return kw.args[1] in [:lower_bound, :upper_bound, :start, :binary, :integer]
 end
+
 # :(start = 0)     -> (:start, 0)
 # :(start = i + 1) -> (:start, :($(Expr(:escape, :(i + 1)))))
 function _keywordify(kw::Expr)
     return (kw.args[1], _esc_non_constant(kw.args[2]))
 end
+
 function _VariableInfoExpr(;
     lower_bound = NaN,
     upper_bound = NaN,
@@ -234,7 +253,7 @@ true
 owner_model(v::AbstractVariableRef) = v.model
 
 """
-    struct VariableNotOwned{V <: AbstractVariableRef} <: Exception
+    struct VariableNotOwned{V<:AbstractVariableRef} <: Exception
         variable::V
     end
 
@@ -323,8 +342,6 @@ ERROR: KeyError: key :x not found
 Stacktrace:
 [...]
 ```
-
-
 """
 function delete(model::Model, variable_ref::VariableRef)
     if model !== owner_model(variable_ref)
@@ -334,7 +351,8 @@ function delete(model::Model, variable_ref::VariableRef)
         )
     end
     model.is_model_dirty = true
-    return MOI.delete(backend(model), variable_ref.index)
+    MOI.delete(backend(model), variable_ref.index)
+    return
 end
 
 """
@@ -364,10 +382,8 @@ end
 Return `true` if `variable` refers to a valid variable in `model`.
 """
 function is_valid(model::Model, variable_ref::VariableRef)
-    return (
-        model === owner_model(variable_ref) &&
-        MOI.is_valid(backend(model), variable_ref.index)
-    )
+    return model === owner_model(variable_ref) &&
+           MOI.is_valid(backend(model), variable_ref.index)
 end
 
 # The default hash is slow. It's important for the performance of AffExpr to
@@ -376,6 +392,7 @@ end
 function Base.hash(v::VariableRef, h::UInt)
     return hash(objectid(owner_model(v)), hash(v.index.value, h))
 end
+
 function Base.isequal(v1::VariableRef, v2::VariableRef)
     return owner_model(v1) === owner_model(v2) && v1.index == v2.index
 end
@@ -440,16 +457,21 @@ end
 Set a variable's name attribute.
 """
 function set_name(v::VariableRef, s::String)
-    return MOI.set(owner_model(v), MOI.VariableName(), v, s)
+    MOI.set(owner_model(v), MOI.VariableName(), v, s)
+    return
 end
 
 """
-    variable_by_name(model::AbstractModel,
-                     name::String)::Union{AbstractVariableRef, Nothing}
+    variable_by_name(
+        model::AbstractModel,
+        name::String,
+    )::Union{AbstractVariableRef,Nothing}
 
 Returns the reference of the variable with name attribute `name` or `Nothing` if
 no variable has this name attribute. Throws an error if several variables have
 `name` as their name attribute.
+
+## Examples
 
 ```jldoctest objective_function; filter = r"Stacktrace:.*"s
 julia> model = Model();
@@ -497,11 +519,10 @@ u[2]
 """
 function variable_by_name(model::Model, name::String)
     index = MOI.get(backend(model), MOI.VariableIndex, name)
-    if index isa Nothing
+    if index === nothing
         return nothing
-    else
-        return VariableRef(model, index)
     end
+    return VariableRef(model, index)
 end
 
 MOI.VariableIndex(v::VariableRef) = index(v)
@@ -514,20 +535,25 @@ moi_function_type(::Type{<:AbstractVariableRef}) = MOI.VariableIndex
 function MOI.VectorOfVariables(vars::Vector{VariableRef})
     return MOI.VectorOfVariables(index.(vars))
 end
+
 function moi_function(variables::Vector{<:AbstractVariableRef})
     return MOI.VectorOfVariables(variables)
 end
+
 function moi_function_type(::Type{<:Vector{<:AbstractVariableRef}})
     return MOI.VectorOfVariables
 end
+
 function jump_function_type(::Model, ::Type{MOI.VectorOfVariables})
     return Vector{VariableRef}
 end
+
 function jump_function(model::Model, variables::MOI.VectorOfVariables)
     return VariableRef[VariableRef(model, v) for v in variables.variables]
 end
 
 jump_function_type(::Model, ::Type{MOI.VariableIndex}) = VariableRef
+
 function jump_function(model::Model, variable::MOI.VariableIndex)
     return VariableRef(model, variable)
 end
@@ -579,7 +605,8 @@ function set_lower_bound(v::VariableRef, lower::Number)
     end
     model = owner_model(v)
     model.is_model_dirty = true
-    return _moi_set_lower_bound(backend(model), v, lower)
+    _moi_set_lower_bound(backend(model), v, lower)
+    return
 end
 
 function _moi_set_lower_bound(moi_backend, v::VariableRef, lower::Number)
@@ -604,12 +631,7 @@ See also [`has_lower_bound`](@ref), [`lower_bound`](@ref),
 [`set_lower_bound`](@ref), [`delete_lower_bound`](@ref).
 """
 function LowerBoundRef(v::VariableRef)
-    moi_lb = MOI.ConstraintIndex{MOI.VariableIndex,MOI.GreaterThan{Float64}}
-    return ConstraintRef{Model,moi_lb,ScalarShape}(
-        owner_model(v),
-        _lower_bound_index(v),
-        ScalarShape(),
-    )
+    return ConstraintRef(owner_model(v), _lower_bound_index(v), ScalarShape())
 end
 
 """
@@ -637,12 +659,8 @@ function lower_bound(v::VariableRef)
     if !has_lower_bound(v)
         error("Variable $(v) does not have a lower bound.")
     end
-    cset = MOI.get(
-        owner_model(v),
-        MOI.ConstraintSet(),
-        LowerBoundRef(v),
-    )::MOI.GreaterThan{Float64}
-    return cset.lower
+    set = MOI.get(owner_model(v), MOI.ConstraintSet(), LowerBoundRef(v))
+    return set.lower::Float64
 end
 
 # upper bounds
@@ -688,7 +706,8 @@ function set_upper_bound(v::VariableRef, upper::Number)
     end
     model = owner_model(v)
     model.is_model_dirty = true
-    return _moi_set_upper_bound(backend(model), v, upper)
+    _moi_set_upper_bound(backend(model), v, upper)
+    return
 end
 
 function _moi_set_upper_bound(moi_backend, v::VariableRef, upper::Number)
@@ -713,12 +732,7 @@ See also [`has_upper_bound`](@ref), [`upper_bound`](@ref),
 [`set_upper_bound`](@ref), [`delete_upper_bound`](@ref).
 """
 function UpperBoundRef(v::VariableRef)
-    moi_ub = MOI.ConstraintIndex{MOI.VariableIndex,MOI.LessThan{Float64}}
-    return ConstraintRef{Model,moi_ub,ScalarShape}(
-        owner_model(v),
-        _upper_bound_index(v),
-        ScalarShape(),
-    )
+    return ConstraintRef(owner_model(v), _upper_bound_index(v), ScalarShape())
 end
 
 """
@@ -746,12 +760,8 @@ function upper_bound(v::VariableRef)
     if !has_upper_bound(v)
         error("Variable $(v) does not have an upper bound.")
     end
-    cset = MOI.get(
-        owner_model(v),
-        MOI.ConstraintSet(),
-        UpperBoundRef(v),
-    )::MOI.LessThan{Float64}
-    return cset.upper
+    set = MOI.get(owner_model(v), MOI.ConstraintSet(), UpperBoundRef(v))
+    return set.upper::Float64
 end
 
 # fixed value
@@ -798,7 +808,8 @@ function fix(variable::VariableRef, value::Number; force::Bool = false)
     end
     model = owner_model(variable)
     model.is_model_dirty = true
-    return _moi_fix(backend(model), variable, value, force)
+    _moi_fix(backend(model), variable, value, force)
+    return
 end
 
 function _moi_fix(
@@ -855,12 +866,8 @@ Return the value to which a variable is fixed. Error if one does not exist.
 See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix`](@ref), [`unfix`](@ref).
 """
 function fix_value(v::VariableRef)
-    cset = MOI.get(
-        owner_model(v),
-        MOI.ConstraintSet(),
-        FixRef(v),
-    )::MOI.EqualTo{Float64}
-    return cset.value
+    set = MOI.get(owner_model(v), MOI.ConstraintSet(), FixRef(v))
+    return set.value::Float64
 end
 
 """
@@ -873,12 +880,7 @@ See also [`is_fixed`](@ref), [`fix_value`](@ref), [`fix`](@ref),
 [`unfix`](@ref).
 """
 function FixRef(v::VariableRef)
-    moi_fix = MOI.ConstraintIndex{MOI.VariableIndex,MOI.EqualTo{Float64}}
-    return ConstraintRef{Model,moi_fix,ScalarShape}(
-        owner_model(v),
-        _fix_index(v),
-        ScalarShape(),
-    )
+    return ConstraintRef(owner_model(v), _fix_index(v), ScalarShape())
 end
 
 """
@@ -910,7 +912,8 @@ See also [`IntegerRef`](@ref), [`is_integer`](@ref), [`unset_integer`](@ref).
 function set_integer(v::VariableRef)
     model = owner_model(v)
     model.is_model_dirty = true
-    return _moi_set_integer(backend(model), v)
+    _moi_set_integer(backend(model), v)
+    return
 end
 
 function _moi_set_integer(moi_backend, variable_ref::VariableRef)
@@ -947,12 +950,7 @@ Errors if one does not exist.
 See also [`is_integer`](@ref), [`set_integer`](@ref), [`unset_integer`](@ref).
 """
 function IntegerRef(v::VariableRef)
-    moi_int = MOI.ConstraintIndex{MOI.VariableIndex,MOI.Integer}
-    return ConstraintRef{Model,moi_int,ScalarShape}(
-        owner_model(v),
-        _integer_index(v),
-        ScalarShape(),
-    )
+    return ConstraintRef(owner_model(v), _integer_index(v), ScalarShape())
 end
 
 """
@@ -985,7 +983,8 @@ See also [`BinaryRef`](@ref), [`is_binary`](@ref), [`unset_binary`](@ref).
 function set_binary(v::VariableRef)
     model = owner_model(v)
     model.is_model_dirty = true
-    return _moi_set_binary(backend(model), v)
+    _moi_set_binary(backend(model), v)
+    return
 end
 
 function _moi_set_binary(moi_backend, variable_ref)
@@ -1022,12 +1021,7 @@ Errors if one does not exist.
 See also [`is_binary`](@ref), [`set_binary`](@ref), [`unset_binary`](@ref).
 """
 function BinaryRef(v::VariableRef)
-    moi_bin = MOI.ConstraintIndex{MOI.VariableIndex,MOI.ZeroOne}
-    return ConstraintRef{Model,moi_bin,ScalarShape}(
-        owner_model(v),
-        _binary_index(v),
-        ScalarShape(),
-    )
+    return ConstraintRef(owner_model(v), _binary_index(v), ScalarShape())
 end
 
 """
@@ -1069,6 +1063,7 @@ function set_start_value(variable::VariableRef, value::Union{Nothing,Float64})
     MOI.set(owner_model(variable), MOI.VariablePrimalStart(), variable, value)
     return
 end
+
 set_start_value(x::VariableRef, v::Number) = set_start_value(x, Float64(v))
 
 """
@@ -1288,7 +1283,7 @@ _vectorize_names(names, shape) = vectorize(names, shape)
 # the only case we support, so throw an assertion error if not empty.
 function _vectorize_names(name::String, ::Any)
     @assert isempty(name)
-    return nothing
+    return
 end
 
 function add_variable(
@@ -1421,11 +1416,10 @@ _imag(scalar::AbstractJuMPScalar) = imag(scalar)
 _conj(v::ScalarVariable) = _mapinfo(conj, v)
 
 function _isreal(v::ScalarVariable)
-    info = v.info
-    return isreal(info.lower_bound) &&
-           isreal(info.upper_bound) &&
-           isreal(info.fixed_value) &&
-           isreal(info.start)
+    return isreal(v.info.lower_bound) &&
+           isreal(v.info.upper_bound) &&
+           isreal(v.info.fixed_value) &&
+           isreal(v.info.start)
 end
 
 _is_binary(v::ScalarVariable) = v.info.binary
