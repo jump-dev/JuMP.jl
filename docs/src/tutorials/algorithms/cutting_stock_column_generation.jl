@@ -308,3 +308,9 @@ end
 
 Test.@test sum(ceil.(Int, value.(x))) == 334  #src
 total_rolls = sum(ceil.(Int, value.(x)))
+
+# Note that this may not be the global minimum because we are not adding new
+# columns during the solution of the mixed-integer problem `model` (an algorithm
+# known as [branch and price](https://en.wikipedia.org/wiki/Branch_and_price)).
+# Nevertheless, the column generation algorithm typically finds good integer
+# feasible solutions to an otherwise intractable optimization problem.
