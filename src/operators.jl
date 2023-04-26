@@ -204,12 +204,7 @@ function Base.:^(lhs::AbstractVariableRef, rhs::Integer)
     elseif rhs == 0
         return one(GenericQuadExpr{T,variable_ref_type(lhs)})
     else
-        error(
-            "Invalid integer exponent detected in expression `$lhs^$rhs`: " *
-            "supported exponents are 0, 1, or 2. " *
-            "If you are trying to build a nonlinear problem, use `x^$rhs.0` " *
-            "instead of `x^$rhs`, or use `x^Float64(y)` instead of `x^y`.",
-        )
+        return NonlinearExpr(:^, Any[lhs, rhs])
     end
 end
 
@@ -221,13 +216,7 @@ function Base.:^(lhs::GenericAffExpr{T}, rhs::Integer) where {T}
     elseif rhs == 0
         return one(GenericQuadExpr{T,variable_ref_type(lhs)})
     else
-        error(
-            "Invalid integer exponent `$rhs` detected on an affine " *
-            "expression: supported exponents are 0, 1, or 2. " *
-            "If you are trying to build a nonlinear problem, use " *
-            "`aff^$rhs.0` instead of `aff^$rhs`, or use `aff^Float64(y)` " *
-            "instead of `aff^y`.",
-        )
+        return NonlinearExpr(:^, Any[lhs, rhs])
     end
 end
 
