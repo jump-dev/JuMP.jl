@@ -174,7 +174,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Other
 
  - Added Benders tutorial with in-place resolves (#3145)
- - Added more [Tips and tricks](@id linear_tips_and_tricks) for linear programs
+ - Added more [Tips and tricks](@ref linear_tips_and_tricks) for linear programs
    (#3144) (#3163)
  - Clarified documentation that `start` can depend on the indices of a
    variable container (#3148)
