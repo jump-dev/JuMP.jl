@@ -3,41 +3,44 @@
 [AmplNLWriter]
     rev = "v1.1.0"
 [BARON]
-    rev = "f5f4c9c8f27e0ef8644d65fb956f3bca5305b45e"
+    rev = "1e98de4d9065a07c517f30498d435fda82fc3c80"
 [Cbc]
-    rev = "a78e129e32f11b5c00ee8acea75c3b2204b8297f"
+    rev = "v1.1.1"
 [Clp]
-    rev = "3358ee69d9918ab011d5a9aa6201ec50d1bad2a4"
+    rev = "v1.0.3"
 [CPLEX]
-    rev = "8e6f2112e9cc433085ed77de6712f715edead8fc"
+    rev = "v1.0.0"
 [CSDP]
     rev = "3a2e4c7c48af7660a5ba258a4cb6549ab0970366"
 [DiffOpt]
-    rev = "cd24703fc929960197da28fe13ab4abf074f0022"
+    rev = "v0.4.2"
     extension = true
 [Dualization]
     rev = "13974285d5ed6f678e4b96aafb764dad5238aac0"
 [ECOS]
-    rev = "80d1a927b05b04360b7a8e6800f5ae13bc6a1494"
+    rev = "v1.1.1"
 [GLPK]
-    rev = "dd835dc425fe8995d965da8a57b4a3a1764cf8da"
+    rev = "v1.1.2"
 [Gurobi]
-    rev = "72ee279373d7559e32050c35735d3fc803a7bb12"
+    rev = "v1.0.1"
 [HiGHS]
     rev = "v1.5.1"
 [Ipopt]
     rev = "v1.2.1"
 [KNITRO]
-    rev = "3fb7c61e886b1b06d9f5cd646e194da638c93355"
+    rev = "4c56de7684c42dd3c83c5fbc515ae1f424eed524"
 [MiniZinc]
     rev = "21d5829c2838959e2ec2d2952495c83f43b271b7"
 [MosekTools]
-    rev = "e2ed9bc174c6aaa68e457077529d49be52ecbc37"
+    rev = "v0.14.0"
 [MultiObjectiveAlgorithms]
-    rev = "b4413a1ef3b7d28045cedba4e68e5e4959c8bb12"
+    rev = "v1.0.0"
     has_html = true
 [Pajarito]
     rev = "v0.8.2"
+[ParametricOptInterface]
+    rev = "1721e7b07bd1991238802a438ecb5af566d4b555"
+    extension = true
 [Pavito]
     rev = "c0f3d81d9e9fff2963b872cf84fea35bfcf8b1d1"
 [Penopt]
@@ -46,9 +49,9 @@
     rev = "0832380ae36ec66ebe4cbc9555ba351d67096693"
     extension = true
 [SCS]
-    rev = "ef7cb4e38e987fcbbdeebd50bd4c211633328150"
+    rev = "v1.1.4"
 [SDPA]
-    rev = "5d15d3c292cd25b461f524aaaf8eb5ecb8e08b0d"
+    rev = "v0.5.0"
 [SDPNAL]
     rev = "00a3fa19f4e1235587948113b0b681da17f4dab5"
 [SDPT3]
@@ -56,7 +59,7 @@
 [SeDuMi]
     rev = "v0.4.2"
 [SumOfSquares]
-    rev = "0a3055533684d3ddf5d80162d2a6acf5acdf4373"
+    rev = "44b40b4d533b851a7804b19ec554d62c86b6e9b5"
     extension = true
 [Xpress]
     rev = "v0.16.1"
@@ -99,12 +102,12 @@
 #   user = "osqp"
 [PATHSolver]
   user = "chkwon"
-  rev = "08848c165747695e7a4dcbb86a657e2347ca7149"
+  rev = "v1.4.2"
 # [ProxSDP]
 #   user = "mariohsouto"
 [SCIP]
   user = "scipopt"
-  rev = "f4227ecac9f6984996ba3b22519982d24f54a245"
+  rev = "44e0bff587208fb4e0779db440f4104bc0bba2ec"
 [SDDP]
     user = "odow"
     rev = "v1.1.4"
