@@ -144,10 +144,10 @@ The arguments to [`@register`](@ref) are:
     modify the underlying Julia function. If you want to change a user-defined
     function between solves, rebuild the model or use a different name.
 
-### UserDefinedFunction
+### Registered functions without macros
 
 The [`@register`](@ref) macro is syntactic sugar for the
-[`UserDefinedFunction`](@ref) method. Thus, the non-macro version of the
+[`add_user_defined_function`](@ref) method. Thus, the non-macro version of the
 preceeding example is:
 
 ```@repl
