@@ -266,6 +266,7 @@ const _PAGES = [
         "Custom binaries" => "developers/custom_solver_binaries.md",
         "Style Guide" => "developers/style.md",
         "Roadmap" => "developers/roadmap.md",
+        "Release process" => "developers/release_process.md",
     ],
     "Solvers" => _LIST_OF_SOLVERS,
     "Extensions" => _LIST_OF_EXTENSIONS,
