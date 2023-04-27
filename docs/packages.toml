@@ -12,7 +12,7 @@
 #
 # When the JuMP documentation builds, the `docs/make.jl` script will fetch a
 # file for each package from the URL:
-#   https://raw.githubusercontent.com/[user]/[PackageName].jl/rev/[filename]
+#   https://raw.githubusercontent.com/[user]/[PackageName].jl/[rev]/[filename]
 # and add it to the `Solvers` section (if `extension = false`) or the
 # `Extensions` section (if `extension = true`) of the JuMP documentation.
 #
@@ -25,7 +25,7 @@
 # If you develop a new solver or extension, please add it to this list.
 #
 # Periodically, we will bump the `rev` of each package to reflect recent
-# changes. If any solver or extension becomes unmaintainend or incompatible with
+# changes. If any solver or extension becomes unmaintained or incompatible with
 # the latest version of JuMP or MathOptInterface, we reserve the right to 
 # temporarily remove it from the list until it is updated again.
 
