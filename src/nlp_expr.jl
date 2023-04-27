@@ -415,7 +415,47 @@ function _MA.promote_operation(
 end
 
 """
-    UserDefinedFunction(
+    UserDefinedFunction(head::Symbol)
+
+A struct representing a user-defined function named `head`. This function must
+have already been added to the model using [`add_user_defined_function`](@ref)
+or [`@register`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> f(x::Float64) = x^2
+f (generic function with 1 method)
+
+julia> ∇f(x::Float64) = 2 * x
+∇f (generic function with 1 method)
+
+julia> ∇²f(x::Float64) = 2.0
+∇²f (generic function with 1 method)
+
+julia> add_user_defined_function(model, :foo, 1, f, ∇f, ∇²f)
+UserDefinedFunction(:foo)
+
+julia> bar = UserDefinedFunction(:foo)
+UserDefinedFunction(:foo)
+
+julia> @objective(model, Min, bar(x))
+foo(x)
+```
+"""
+struct UserDefinedFunction
+    head::Symbol
+end
+
+(f::UserDefinedFunction)(args...) = NonlinearExpr(f.head, Any[a for a in args])
+
+"""
+    add_user_defined_function(
         model::Model,
         op::Symbol,
         dim::Int,
@@ -430,44 +470,41 @@ it with the operator `op`.
 The function `f` evaluates the function. The optional function `∇f` evaluates
 the first derivative, and the optional function `∇²f` evaluates the second
 derivative. `∇²f` may be provided only if `∇f` is also provided.
-"""
-struct UserDefinedFunction
-    head::Symbol
-end
 
-function UserDefinedFunction(model::Model, op::Symbol, dim::Int, args...)
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> f(x::Float64) = x^2
+f (generic function with 1 method)
+
+julia> ∇f(x::Float64) = 2 * x
+∇f (generic function with 1 method)
+
+julia> ∇²f(x::Float64) = 2.0
+∇²f (generic function with 1 method)
+
+julia> foo = add_user_defined_function(model, :foo, 1, f, ∇f, ∇²f)
+UserDefinedFunction(:foo)
+
+julia> @objective(model, Min, foo(x))
+foo(x)
+```
+"""
+function add_user_defined_function(model::Model, op::Symbol, dim::Int, args...)
     MOI.set(model, MOI.UserDefinedFunction(op, dim), args)
     return UserDefinedFunction(op)
 end
 
-(f::UserDefinedFunction)(args...) = NonlinearExpr(f.head, Any[a for a in args])
-
 """
     @register(model, operator, dim, args...)
 
-Register a user-defined function in `model`, and create a new variable in the
-current scope `operator`
-[`UserDefinedFunction`](@ref).
-
-## Non-macro version
-
-This macro is provided as helpful syntax that matches the style of the rest of
-the JuMP macros. However, you may also create user-defined functions outside the
-macros using [`UserDefinedFunction`](@ref). For example:
-
-```julia
-julia> model = Model();
-
-julia> @register(model, f, 1, x -> x^2)
-UserDefinedFunction(:f)
-```
-is equivalent to
-```julia
-julia> model = Model();
-
-julia> f = UserDefinedFunction(model, :f, 1, x -> x^2)
-UserDefinedFunction(:f)
-```
+Register a user-defined function in `model`, and create a new variable
+[`UserDefinedFunction`](@ref) called `operator` in the current scope.
 
 ## Example
 
@@ -487,13 +524,39 @@ julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
 julia> @register(model, foo, 1, f, ∇f, ∇²f)
+UserDefinedFunction(:foo)
 
-julia> @NLobjective(model, Min, foo(x))
+julia> @objective(model, Min, foo(x))
+foo(x)
+```
 
+## Non-macro version
+
+This macro is provided as helpful syntax that matches the style of the rest of
+the JuMP macros. However, you may also create user-defined functions outside the
+macros using [`add_user_defined_function`](@ref). For example:
+
+```julia
+julia> model = Model();
+
+julia> @register(model, f, 1, x -> x^2)
+UserDefinedFunction(:f)
+```
+is equivalent to
+```julia
+julia> model = Model();
+
+julia> f = add_user_defined_function(model, :f, 1, x -> x^2)
+UserDefinedFunction(:f)
 ```
 """
 macro register(model, op, args...)
-    op_sym = Meta.quot(op)
-    rhs = Expr(:call, UserDefinedFunction, esc(model), op_sym, esc.(args)...)
+    rhs = Expr(
+        :call,
+        add_user_defined_function,
+        esc(model),
+        Meta.quot(op),
+        esc.(args)...,
+    )
     return Expr(:(=), esc(op), rhs)
 end

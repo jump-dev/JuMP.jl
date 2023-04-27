@@ -154,8 +154,8 @@ preceeding example is:
 square(x) = x^2
 f(x, y) = (x - 1)^2 + (y - 2)^2
 model = Model();
-my_square = UserDefinedFunction(model, :my_square, 1, square)
-my_f = UserDefinedFunction(model, :my_f, 2, f)
+my_square = add_user_defined_function(model, :my_square, 1, square)
+my_f = add_user_defined_function(model, :my_f, 2, f)
 @variable(model, x[1:2]);
 @objective(model, Min, my_f(x[1], my_square(x[2])))
 ```
@@ -169,7 +169,7 @@ julia> @register(model, square, 1, square)
 ```
 will error because it is equivalent to:
 ```julia
-julia> square = UserDefinedFunction(model, :square, 1, square)
+julia> square = add_user_defined_function(model, :square, 1, square)
 ERROR: invalid redefinition of constant square
 Stacktrace:
 [...]
