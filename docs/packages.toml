@@ -1,3 +1,34 @@
+# Each element in this TOML file has the format:
+#
+# [PackageName]
+#    user = "jump-dev"
+#    rev = ""
+#    extension = false
+#    has_html = false
+#    filename = "README.md"
+#
+# All fields except `rev` are optional, and the default values are those given
+# above.
+#
+# When the JuMP documentation builds, the `docs/make.jl` script will fetch a
+# file for each package from the URL:
+#   https://raw.githubusercontent.com/[user]/[PackageName].jl/[rev]/[filename]
+# and add it to the `Solvers` section (if `extension = false`) or the
+# `Extensions` section (if `extension = true`) of the JuMP documentation.
+#
+# Files _must_ be written in Documenter-compatible Markdown, and they _should_
+# follow the style of the READMEs of the jump-dev packages.
+#
+# The `rev` _must_ be a fixed git reference, such as a commit SHA or a tag. It 
+# must not be a relative reference such as a branch name.
+#
+# If you develop a new solver or extension, please add it to this list.
+#
+# Periodically, we will bump the `rev` of each package to reflect recent
+# changes. If any solver or extension becomes unmaintained or incompatible with
+# the latest version of JuMP or MathOptInterface, we reserve the right to 
+# temporarily remove it from the list until it is updated again.
+
 # ============================= jump-dev packages ============================ #
 
 [AmplNLWriter]
