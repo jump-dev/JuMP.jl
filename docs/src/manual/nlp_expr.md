@@ -122,6 +122,7 @@ User-defined functions can be used anywhere in [`@objective`](@ref),
 Register a user-defined function using the [`@register`](@ref) macro:
 
 ```@repl
+using JuMP  # hide
 square(x) = x^2
 f(x, y) = (x - 1)^2 + (y - 2)^2
 model = Model();
@@ -151,6 +152,7 @@ The [`@register`](@ref) macro is syntactic sugar for the
 preceding example is:
 
 ```@repl
+using JuMP  # hide
 square(x) = x^2
 f(x, y) = (x - 1)^2 + (y - 2)^2
 model = Model();
@@ -180,6 +182,7 @@ Second, you can construct and use [`UserDefinedFunction`](@ref)s outside the
 macros.
 
 ```@repl
+using JuMP  # hide
 square(x) = x^2
 model = Model();
 @register(model, my_square, 1, square)
@@ -205,6 +208,7 @@ For univariate functions, a gradient function `∇f` returns a number that
 represents the first-order derivative. You may, in addition, pass a third
 function which returns a number representing the second-order derivative:
 ```@repl
+using JuMP  # hide
 f(x) = x^2
 ∇f(x) = 2x
 ∇²f(x) = 2
@@ -222,6 +226,7 @@ vector as the first argument that is filled in-place. The hessian function,
 `∇²f`, must take an `AbstractMatrix` as the first argument, the lower-triangular
 of which is filled in-place:
 ```@repl
+using JuMP  # hide
 f(x...) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 function ∇f(g::AbstractVector{T}, x::T...) where {T}
     g[1] = 400 * x[1]^3 - 400 * x[1] * x[2] + 2 * x[1] - 2
@@ -269,6 +274,7 @@ f(x...) = sum(x[i]^i for i in 1:length(x))
 
 This function `f` can be used in a JuMP model as follows:
 ```@repl
+using JuMP  # hide
 model = Model();
 @variable(model, x[1:5])
 f(x::Vector) = sum(x[i]^i for i in 1:length(x))
