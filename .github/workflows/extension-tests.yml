@@ -13,6 +13,7 @@ jobs:
         include:
           - package: 'InfiniteOpt'
           - package: 'PolyJuMP'
+          - package: 'PowerModels'
           - package: 'SDDP'
           - package: 'SumOfSquares'
     steps:
