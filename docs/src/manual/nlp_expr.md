@@ -107,15 +107,174 @@ julia> sin(sin(1.0))
 
 ## User-defined Functions
 
-JuMP natively supports the set of univariate and multivariate functions
-recognized by the `MOI.Nonlinear` submodule. In addition to this list of
-functions, it is possible to register custom *user-defined* nonlinear functions.
+In addition to the univariate and multivariate functions recognized by the
+`MOI.Nonlinear` submodule, JuMP supports *user-defined* nonlinear functions.
+
 User-defined functions can be used anywhere in [`@objective`](@ref),
 [`@constraint`](@ref), and [`@expression`](@ref).
 
 !!! warning
     User-defined functions must return a scalar output. For a work-around, see
     [User-defined functions with vector outputs](@ref).
+
+### Register a function
+
+Register a user-defined function using the [`@register`](@ref) macro:
+
+```@repl
+square(x) = x^2
+f(x, y) = (x - 1)^2 + (y - 2)^2
+model = Model();
+@register(model, my_square, 1, square)
+@register(model, my_f, 2, f)
+@variable(model, x[1:2]);
+@objective(model, Min, my_f(x[1], my_square(x[2])))
+```
+
+The arguments to [`@register`](@ref) are:
+
+ 1. The model in which the function is registered.
+ 2. A Julia symbol object which serves as the name of the user-defined function
+    in JuMP expressions. This name must not be the same as that of the function.
+ 3. The number of scalar input arguments that the function takes.
+ 4. A Julia method which computes the function.
+
+!!! warning
+    User-defined functions cannot be re-registered and will not update if you
+    modify the underlying Julia function. If you want to change a user-defined
+    function between solves, rebuild the model or use a different name.
+
+### UserDefinedFunction
+
+The [`@register`](@ref) macro is syntactic sugar for the
+[`UserDefinedFunction`](@ref) method. Thus, the non-macro version of the
+preceeding example is:
+
+```@repl
+square(x) = x^2
+f(x, y) = (x - 1)^2 + (y - 2)^2
+model = Model();
+my_square = UserDefinedFunction(model, :my_square, 1, square)
+my_f = UserDefinedFunction(model, :my_f, 2, f)
+@variable(model, x[1:2]);
+@objective(model, Min, my_f(x[1], my_square(x[2])))
+```
+
+This has two important consequences.
+
+First, you cannot register a user-defined function with the same name as an
+existing function. For example, a call to [`@register`](@ref) like:
+```julia
+julia> @register(model, square, 1, square)
+```
+will error because it is equivalent to:
+```julia
+julia> square = UserDefinedFunction(model, :square, 1, square)
+ERROR: invalid redefinition of constant square
+Stacktrace:
+[...]
+```
+and `square` already exists as a Julia function.
+
+Second, you can construct and use [`UserDefinedFunction`](@ref)s outside the
+macros.
+
+```@repl
+square(x) = x^2
+model = Model();
+@register(model, my_square, 1, square)
+@variable(model, x)
+typeof(my_square)
+x_squared = my_square(1)
+typeof(x_squared)
+my_square_2 = UserDefinedFunction(:my_square)
+my_square_2(x_squared)
+```
+
+### Register gradients and hessians
+
+By default, JuMP will use automatic differentiation to compute the gradient and
+hessian of user-defined functions. If your function is not amenable to
+automatic differentiation, or you can compute analytic derivatives, you may pass
+additional arguments to [`@register`](@ref) to compute the first- and
+second-derivatives.
+
+#### Univariate functions
+
+For univariate functions, a gradient function `∇f` returns a number that
+represents the first-order derivative. You may, in addition, pass a third
+function which returns a number representing the second-order derivative:
+```@repl
+f(x) = x^2
+∇f(x) = 2x
+∇²f(x) = 2
+model = Model();
+# Providing ∇²f is optional
+@register(model, my_square, 1, f, ∇f, ∇²f)
+@variable(model, x)
+@objective(model, Min, my_square(x))
+```
+
+#### Multivariate functions
+
+For multivariate functions, the gradient function `∇f` must take a gradient
+vector as the first argument that is filled in-place. The hessian function,
+`∇²f`, must take an `AbstractMatrix` as the first argument, the lower-triangular
+of which is filled in-place:
+```@repl
+f(x...) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
+function ∇f(g::AbstractVector{T}, x::T...) where {T}
+    g[1] = 400 * x[1]^3 - 400 * x[1] * x[2] + 2 * x[1] - 2
+    g[2] = 200 * (x[2] - x[1]^2)
+    return
+end
+function ∇²f(H::AbstractMatrix{T}, x::T...) where {T}
+    H[1, 1] = 1200 * x[1]^2 - 400 * x[2] + 2
+    # H[1, 2] = -400 * x[1]  <-- Not needed. Fill the lower-triangular only.
+    H[2, 1] = -400 * x[1]
+    H[2, 2] = 200.0
+    return
+end
+model = Model();
+# Providing ∇²f is optional
+@register(model, rosenbrock, 2, f, ∇f, ∇²f)
+@variable(model, x[1:2])
+@objective(model, Min, rosenbrock(x[1], x[2]))
+```
+
+Make sure the first argument to `∇f` supports an `AbstractVector`, and do
+not assume the input is `Float64`.
+
+You may assume the Hessian matrix `H` is initialized with zeros, and because `H`
+is symmetric, you need only to fill in the non-zero of the lower-triangular
+terms. The matrix type passed in as `H` depends on the automatic differentiation
+system, so make sure the first argument to the Hessian function supports an
+`AbstractMatrix` (it may be something other than `Matrix{Float64}`). Moreover,
+you may assume only that `H` supports `size(H)` and `setindex!`. Finally, the
+matrix is treated as dense, so the performance will be poor on functions with
+high-dimensional input.
+
+### User-defined functions with vector inputs
+
+User-defined functions which take vectors as input arguments (for example,
+`f(x::Vector)`) are *not* supported. Instead, use Julia's splatting syntax to
+create a function with scalar arguments. For example, instead of:
+```julia
+f(x::Vector) = sum(x[i]^i for i in 1:length(x))
+```
+define:
+```julia
+f(x...) = sum(x[i]^i for i in 1:length(x))
+```
+
+This function `f` can be used in a JuMP model as follows:
+```@repl
+model = Model();
+@variable(model, x[1:5])
+f(x::Vector) = sum(x[i]^i for i in 1:length(x))
+@register(model, my_f, 5, (x...) -> f(collect(x)))
+@objective(model, Min, my_f(x...))
+```
 
 ### Automatic differentiation
 
@@ -167,160 +326,6 @@ function good_f(x::T...) where {T<:Real}
     end
     return sum(y)
 end
-```
-
-### Register a function
-
-To register a user-defined function with derivatives computed by
-automatic differentiation, use the [`@register`](@ref) macro as in the following
-example:
-
-```@example
-using JuMP #hide
-square(x) = x^2
-f(x, y) = (x - 1)^2 + (y - 2)^2
-model = Model()
-@register(model, my_square, 1, square)
-@register(model, my_f, 2, f)
-@variable(model, x[1:2] >= 0.5)
-@objective(model, Min, my_f(x[1], my_square(x[2])))
-```
-
-The above code creates a JuMP model with the objective function
-`(x[1] - 1)^2 + (x[2]^2 - 2)^2`. The arguments to [`@register`](@ref) are:
- 1. The model for which the functions are registered.
- 2. A Julia symbol object which serves as the name of the user-defined function
-    in JuMP expressions.
- 3. The number of input arguments that the function takes.
- 4. The Julia method which computes the function
-
-!!! warning
-    User-defined functions cannot be re-registered and will not update if you
-    modify the underlying Julia function. If you want to change a user-defined
-    function between solves, rebuild the model or use a different name. To use
-    a different name programmatically, see [Raw expression input](@ref).
-
-### Register a function and gradient
-
-Forward-mode automatic differentiation as implemented by ForwardDiff.jl has a
-computational cost that scales linearly with the number of input dimensions. As
-such, it is not the most efficient way to compute gradients of user-defined
-functions if the number of input arguments is large. In this case, users may
-want to provide their own routines for evaluating gradients.
-
-#### Univariate functions
-
-For univariate functions, the gradient function `∇f` returns a number that
-represents the first-order derivative:
-```@example
-using JuMP #hide
-f(x) = x^2
-∇f(x) = 2x
-model = Model()
-@register(model, my_square, 1, f, ∇f)
-@variable(model, x >= 0)
-@objective(model, Min, my_square(x))
-```
-
-#### Multivariate functions
-
-For multivariate functions, the gradient function `∇f` must take a gradient
-vector as the first argument that is filled in-place:
-```@example
-using JuMP #hide
-f(x, y) = (x - 1)^2 + (y - 2)^2
-function ∇f(g::AbstractVector{T}, x::T, y::T) where {T}
-    g[1] = 2 * (x - 1)
-    g[2] = 2 * (y - 2)
-    return
-end
-model = Model()
-@register(model, my_square, 2, f, ∇f)
-@variable(model, x[1:2] >= 0)
-@objective(model, Min, my_square(x[1], x[2]))
-```
-
-!!! warning
-    Make sure the first argument to `∇f` supports an `AbstractVector`, and do
-    not assume the input is `Float64`.
-
-### Register a function, gradient, and hessian
-
-You can also register a function with the second-order derivative information,
-which is a scalar for univariate functions, and a symmetric matrix for
-multivariate functions.
-
-#### Univariate functions
-
-Pass a function which returns a number representing the second-order derivative:
-```@example
-using JuMP #hide
-f(x) = x^2
-∇f(x) = 2x
-∇²f(x) = 2
-model = Model()
-@register(model, my_square, 1, f, ∇f, ∇²f)
-@variable(model, x >= 0)
-@objective(model, Min, my_square(x))
-```
-
-#### Multivariate functions
-
-For multivariate functions, the hessian function `∇²f` must take an
-`AbstractMatrix` as the first argument, the lower-triangular of which is filled
-in-place:
-```@example
-using JuMP #hide
-f(x...) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
-function ∇f(g, x...)
-    g[1] = 400 * x[1]^3 - 400 * x[1] * x[2] + 2 * x[1] - 2
-    g[2] = 200 * (x[2] - x[1]^2)
-    return
-end
-function ∇²f(H, x...)
-    H[1, 1] = 1200 * x[1]^2 - 400 * x[2] + 2
-    # H[1, 2] = -400 * x[1]  <-- Not needed. Fill the lower-triangular only.
-    H[2, 1] = -400 * x[1]
-    H[2, 2] = 200.0
-    return
-end
-model = Model()
-@register(model, rosenbrock, 2, f, ∇f, ∇²f)
-@variable(model, x[1:2])
-@objective(model, Min, rosenbrock(x[1], x[2]))
-```
-
-!!! warning
-    You may assume the Hessian matrix `H` is initialized with zeros, and because
-    `H` is symmetric, you need only to fill in the non-zero of the
-    lower-triangular terms. The matrix type passed in as `H` depends on the
-    automatic differentiation system, so make sure the first argument to the
-    Hessian function supports an `AbstractMatrix` (it may be something other
-    than `Matrix{Float64}`). However, you may assume only that `H` supports
-    `size(H)` and `setindex!`. Finally, the matrix is treated as dense, so the
-    performance will be poor on functions with high-dimensional input.
-
-### User-defined functions with vector inputs
-
-User-defined functions which take vectors as input arguments (for example,
-`f(x::Vector)`) are *not* supported. Instead, use Julia's splatting syntax to
-create a function with scalar arguments. For example, instead of
-```julia
-f(x::Vector) = sum(x[i]^i for i in 1:length(x))
-```
-define:
-```julia
-f(x...) = sum(x[i]^i for i in 1:length(x))
-```
-
-This function `f` can be used in a JuMP model as follows:
-```@example
-using JuMP #hide
-model = Model()
-@variable(model, x[1:5] >= 0)
-f(x...) = sum(x[i]^i for i in 1:length(x))
-@register(model, my_f, 5, f)
-@objective(model, Min, my_f(x...))
 ```
 
 ## Factors affecting solution time
