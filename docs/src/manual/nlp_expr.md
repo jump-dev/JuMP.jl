@@ -148,7 +148,7 @@ The arguments to [`@register`](@ref) are:
 
 The [`@register`](@ref) macro is syntactic sugar for the
 [`add_user_defined_function`](@ref) method. Thus, the non-macro version of the
-preceeding example is:
+preceding example is:
 
 ```@repl
 square(x) = x^2
