@@ -1471,11 +1471,7 @@ function test_extension_HermitianPSDCone_errors(
     model = ModelType()
     @variable(model, x)
     @variable(model, y)
-<<<<<<< HEAD
     aff_str = "$(GenericAffExpr{ComplexF64,VariableRefType})"
-=======
-    aff_str = "$AffExprType"
->>>>>>> 20919d4a (Improve printing of complex numbers)
     err = ErrorException(
         "In `@constraint(model, H in HermitianPSDCone(), unknown_kw = 1)`:" *
         " Unrecognized constraint building format. Tried to invoke " *
