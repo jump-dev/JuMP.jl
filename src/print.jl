@@ -51,7 +51,10 @@ function _is_one_for_printing(coef)
     return _is_zero_for_printing(abs(coef) - oneunit(coef))
 end
 
-_is_one_for_printing(coef::Complex{T}) where {T} = coef == one(T)
+function _is_one_for_printing(coef::Complex{T}) where {T}
+    r, i = reim(coef)
+    return _is_one_for_printing(r) && _is_zero_for_printing(i)
+end
 
 function _is_zero_for_printing(coef::Complex)
     return _is_zero_for_printing(real(coef)) &&
@@ -67,6 +70,28 @@ _string_round(::typeof(abs), x::Real) = _string_round(abs(x))
 
 _sign_string(x::Real) = x < zero(x) ? " - " : " + "
 
+function _string_round(::typeof(abs), x::Complex)
+    r, i = reim(x)
+    if _is_zero_for_printing(r)
+        return _string_round(Complex(r, abs(i)))
+    elseif _is_zero_for_printing(i)
+        return _string_round(Complex(abs(r), i))
+    else
+        return _string_round(x)
+    end
+end
+
+function _sign_string(x::Complex)
+    r, i = reim(x)
+    if _is_zero_for_printing(r)
+        return _sign_string(i)
+    elseif _is_zero_for_printing(i)
+        return _sign_string(r)
+    else
+        return " + "
+    end
+end
+
 # Fallbacks for other number types
 
 _string_round(x::Any) = string(x)
@@ -75,7 +100,29 @@ _string_round(::typeof(abs), x::Any) = _string_round(x)
 
 _sign_string(::Any) = " + "
 
-_string_round(x::Complex) = string("(", x, ")")
+function _string_round(x::Complex)
+    r, i = reim(x)
+    r_str = _string_round(r)
+    if _is_zero_for_printing(i)
+        return r_str
+    elseif _is_zero_for_printing(r)
+        if _is_one_for_printing(i)
+            if i < 0
+                return "-im"
+            else
+                return "im"
+            end
+        else
+            return string(_string_round(i), "im")
+        end
+    end
+    if _is_one_for_printing(i)
+        i_str = "im"
+    else
+        i_str = string(_string_round(abs, i), "im")
+    end
+    return string("(", r_str, _sign_string(i_str), i_str, ")")
+end
 
 # REPL-specific symbols
 # Anything here: https://en.wikipedia.org/wiki/Windows-1252
