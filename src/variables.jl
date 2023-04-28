@@ -1777,7 +1777,7 @@ for sym in (:(<=), :(>=), :(<), :(>))
        problem-specific and depends on your choice of solver. You may be able to
        use indicator constraints, or some other mixed-integer linear
        reformulation. If stuck, post your problem on the community forum:
-       https://discourse.julialang.org/c/domain/opt/13
+       https://jump.dev/forum
 
      * You wrote a function that expected the value of a variable, but it was
        passed the variable instead

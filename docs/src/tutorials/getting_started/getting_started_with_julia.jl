@@ -352,8 +352,8 @@ println("The value of x is: $(eval(:x))")
 #     We used `eval` here to demonstrate how Julia links `Symbol`s to variables.
 #     However, avoid calling `eval` in your code. It is usually a sign that your
 #     code is doing something that could be more easily achieved a different
-#     way. The [Community Forum](https://discourse.julialang.org/c/domain/opt/13)
-#     is a good place to ask for advice on alternative approaches.
+#     way. The [Community Forum](https://jump.dev/forum) is a good place to ask
+#     for advice on alternative approaches.
 
 typeof(:x)
 

@@ -221,8 +221,8 @@ of a package by going to the relevant GitHub page, and navigating to the
 "releases" page. For example, the list of JuMP releases is available at:
 [https://github.com/jump-dev/JuMP.jl/releases](https://github.com/jump-dev/JuMP.jl/releases).
 
-If you post on the [community forum](https://discourse.julialang.org/c/domain/opt/13),
-please include the output of `Pkg.status()`!
+If you post on the [community forum](https://jump.dev/forum), please include the
+output of `Pkg.status()`.
 
 ### Unsatisfiable requirements detected
 

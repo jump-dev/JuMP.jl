@@ -10,7 +10,7 @@ By participating, you are expected to uphold this code.
 
 ## Join the community forum
 
-First up, join the [community forum](https://discourse.julialang.org/c/domain/opt).
+First up, join the [community forum](https://jump.dev/forum).
 
 The forum is a good place to ask questions about how to use JuMP. You can also
 use the forum to discuss possible feature requests and bugs before raising a
@@ -22,7 +22,7 @@ help answer questions on the forum.
 ## Join the developer chatroom
 
 If you're interested in contributing code to JuMP, the next place to join is the
-[developer chatroom](https://gitter.im/JuliaOpt/JuMP-dev). Let us know what you
+[developer chatroom](https://jump.dev/chatroom). Let us know what you
 have in mind, and we can point you in the right direction.
 
 ## Improve the documentation
@@ -48,7 +48,7 @@ change locally and then use Git to submit a pull request. (See
 
 !!! tip
     If you need any help, come join the
-    [developer chatroom](https://gitter.im/JuliaOpt/JuMP-dev) and we will walk
+    [developer chatroom](https://jump.dev/chatroom) and we will walk
     you through the process.
 
 ## File a bug report
@@ -62,7 +62,7 @@ before posting. You can also find a copy of that info
 
 !!! tip
     If you're unsure whether you have a real bug, post on the
-    [community forum](https://discourse.julialang.org/c/domain/opt)
+    [community forum](https://jump.dev/forum)
     first. Someone will either help you fix the problem, or let you know the
     most appropriate place to open a bug report.
 
@@ -78,7 +78,7 @@ Finally, you can also contribute code to JuMP.
      * [Git and GitHub](https://try.github.io/)
      * [Git](https://git-scm.com/book/en/v2)
      * [Julia package development](https://docs.julialang.org/en/v1/stdlib/Pkg/#Developing-packages-1)
-    If you need any help, come join the [developer chatroom](https://gitter.im/JuliaOpt/JuMP-dev)
+    If you need any help, come join the [developer chatroom](https://jump.dev/chatroom)
     and we will walk you through the process.
 
 Once you are familiar with Git and GitHub, the workflow for contributing code to

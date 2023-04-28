@@ -15,7 +15,7 @@ visiting [jump.dev](https://jump.dev).
     * `import Pkg; Pkg.add("JuMP")`
   * Get help:
     * Read the [Documentation](https://jump.dev/JuMP.jl/stable/): [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://jump.dev/JuMP.jl/stable/)
-    * Ask a question on the [Community forum]
+    * Ask a question on the [Community forum](https://jump.dev/forum)
   * Testing status:
     * Github Actions: [![Build Status](https://github.com/jump-dev/JuMP.jl/workflows/CI/badge.svg?branch=release-1.0)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI)
   * [![deps](https://juliahub.com/docs/JuMP/deps.svg)](https://juliahub.com/ui/Packages/JuMP/DmXqY?t=2)
@@ -25,7 +25,7 @@ visiting [jump.dev](https://jump.dev).
     * `import Pkg; Pkg.add(Pkg.PackageSpec(name="JuMP", rev="master"))`
   * Get help:
     * Read the [Documentation](https://jump.dev/JuMP.jl/dev/): [![In Development](https://img.shields.io/badge/docs-dev-blue.svg)](https://jump.dev/JuMP.jl/dev/)
-    * Join the [Developer chatroom](https://gitter.im/JuliaOpt/JuMP-dev)
+    * Join the [Developer chatroom](https://jump.dev/chatroom)
     * Read the [NEWS](https://github.com/jump-dev/JuMP.jl/tree/master/NEWS.md)
   * Testing status:
     * Github Actions: [![Build Status](https://github.com/jump-dev/JuMP.jl/workflows/CI/badge.svg?branch=master)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI)
@@ -33,13 +33,11 @@ visiting [jump.dev](https://jump.dev).
 
 ## Need help?
 
-Use the [Community forum] to search for answers to previously asked questions,
-or ask a new question.
+Use the [Community forum](https://jump.dev/forum) to search for answers to
+previously asked questions, or ask a new question.
 
 The post [Please read: make it easier to help you](https://discourse.julialang.org/t/please-read-make-it-easier-to-help-you/14757),
 describes the best practices for asking a question.
-
-[Community forum]: https://discourse.julialang.org/c/domain/opt
 
 ## Bug reports
 

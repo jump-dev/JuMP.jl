@@ -194,8 +194,8 @@ process.
 
 !!! tip
     Looking for help to make your code run faster? Ask for help on the
-    [community forum](https://discourse.julialang.org/c/domain/opt/13). Make
-    sure to include a reproducible example of your code.
+    [community forum](https://jump.dev/forum). Make sure to include a
+    reproducible example of your code.
 
 ### With a single JuMP model
 

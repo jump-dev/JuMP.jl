@@ -35,7 +35,7 @@ bug reports are ok, but demands are not. Along these lines, it's important to
 keep in mind that, unless stated otherwise, JuMP's interfaces to commercial
 solvers are maintained by volunteers who find them useful. Pull requests are
 always welcomed. Please check out our [contributing guide](https://github.com/jump-dev/JuMP.jl/blob/master/CONTRIBUTING.md).
-You can also reach out in the [developer chatroom](https://gitter.im/JuliaOpt/JuMP-dev)
+You can also reach out in the [developer chatroom](https://jump.dev/chatroom)
 with questions about how to get started.
 
 ## Any concerns?
