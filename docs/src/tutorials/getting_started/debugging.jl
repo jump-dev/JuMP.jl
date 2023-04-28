@@ -44,8 +44,8 @@ import HiGHS
 
 # Debugging can be a frustrating part of modeling, particularly if you're new to
 # optimization and programming. If you're stuck, join the
-# [community forum](https://discourse.julialang.org/c/domain/opt/13) to search
-# for answers to commonly asked questions.
+# [community forum](https://jump.dev/forum) to search for answers to commonly
+# asked questions.
 
 # Before asking a new question, make sure to read the post
 # [Make it easier to help you](https://discourse.julialang.org/t/please-read-make-it-easier-to-help-you/14757),

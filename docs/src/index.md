@@ -45,7 +45,7 @@ There are few ways to get started with JuMP:
   using nonlinear programming.
 
 !!! tip
-    Need help? Join the [community forum](https://discourse.julialang.org/c/domain/opt/13)
+    Need help? Join the [community forum](https://jump.dev/forum)
     to search for answers to commonly asked questions.
 
     Before asking a question, make sure to read the post [make it easier to help you](https://discourse.julialang.org/t/psa-make-it-easier-to-help-you/14757),
