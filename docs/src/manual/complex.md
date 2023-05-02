@@ -21,7 +21,7 @@ Create a complex-valued variable using [`ComplexPlane`](@ref):
 julia> model = Model();
 
 julia> @variable(model, x in ComplexPlane())
-real(x) + im imag(x)
+real(x) + imag(x) im
 ```
 
 Note that `x` is not a [`VariableRef`](@ref); instead, it is an affine
@@ -64,7 +64,7 @@ To create an anonymous variable, use the `set` keyword argument:
 julia> model = Model();
 
 julia> x = @variable(model, set = ComplexPlane())
-_[1] + im _[2]
+_[1] + _[2] im
 ```
 
 ## Complex-valued variable bounds
@@ -85,7 +85,7 @@ julia> @variable(
            upper_bound = 2.0 + 3.0im,
            start = 4im,
        )
-real(x) + im imag(x)
+real(x) + imag(x) im
 
 julia> vars = all_variables(model)
 2-element Vector{VariableRef}:
@@ -207,9 +207,9 @@ julia> model = Model();
 
 julia> @variable(model, H[1:3, 1:3] in HermitianPSDCone())
 3×3 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
- real(H[1,1])                    …  real(H[1,3]) + im imag(H[1,3])
- real(H[1,2]) - im imag(H[1,2])     real(H[2,3]) + im imag(H[2,3])
- real(H[1,3]) - im imag(H[1,3])     real(H[3,3])
+ real(H[1,1])                    …  real(H[1,3]) + imag(H[1,3]) im
+ real(H[1,2]) - imag(H[1,2]) im     real(H[2,3]) + imag(H[2,3]) im
+ real(H[1,3]) - imag(H[1,3]) im     real(H[3,3])
 ```
 
 Behind the scenes, JuMP has created nine real-valued decision variables:

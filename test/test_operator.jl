@@ -286,11 +286,11 @@ function test_extension_uniform_scaling(
     @test_expression_with_string LinearAlgebra.I - (x - 1) "-x + 2"
     @test_expression_with_string (LinearAlgebra.I * im) - (x - 1) "-x + (1 + im)"
     @test_expression_with_string LinearAlgebra.I * x "x"
-    @test_expression_with_string (LinearAlgebra.I * im) * x "im x"
+    @test_expression_with_string (LinearAlgebra.I * im) * x "x im"
     @test_expression_with_string LinearAlgebra.I * (x + 1) "x + 1"
-    @test_expression_with_string (LinearAlgebra.I * im) * (x + 1) "im x + im"
+    @test_expression_with_string (LinearAlgebra.I * im) * (x + 1) "x im + im"
     @test_expression_with_string (x + 1) * LinearAlgebra.I "x + 1"
-    @test_expression_with_string (x + 1) * (LinearAlgebra.I * im) "im x + im"
+    @test_expression_with_string (x + 1) * (LinearAlgebra.I * im) "x im + im"
     return
 end
 

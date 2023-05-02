@@ -160,7 +160,7 @@ function test_complex_print()
     y = (1 + 2im) * x + 1
     @test sprint(show, y) == "(1 + 2im) x + 1"
     y = im * x
-    @test sprint(show, y) == "im x"
+    @test sprint(show, y) == "x im"
     return
 end
 

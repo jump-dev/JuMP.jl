@@ -850,11 +850,17 @@ function test_show_latex_parameter()
     return
 end
 
-function test_minus_one_complex_aff_expr()
+function test_complex_expr()
     model = Model()
     @variable(model, x)
+    @variable(model, y)
     f = 1.0im * x + 1.0im
     @test sprint(show, im * f) == "-x - 1"
+    @test sprint(show, -f) == "-x im - im"
+    @test sprint(show, f * x) == "x² im + x im"
+    @test sprint(show, f * y) == "x*y im + y im"
+    @test sprint(show, f + y) == "x im + y + im"
+    @test sprint(show, 2f) == "2im x + 2im"
     return
 end
 
