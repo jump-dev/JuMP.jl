@@ -847,8 +847,8 @@ end
 
 function test_sum_dims()
     Containers.@container(
-        x[i=1:2, j=1:2],
-        i+j,
+        x[i = 1:2, j = 1:2],
+        i + j,
         container = DenseAxisArray,
     )
     @test_throws(
