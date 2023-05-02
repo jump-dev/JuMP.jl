@@ -827,8 +827,11 @@ end
 function Base.sum(
     f::Function,
     x::Union{DenseAxisArray,DenseAxisArrayView};
-    dims::Int,
+    dims = Colon(),
 )
+    if dims == Colon()
+        return sum(f(xi) for xi in x)
+    end
     return error(
         "`sum(x::DenseAxisArray; dims)` is not supported. Convert the array " *
         "to an `Array` using `sum(Array(x); dims=$dims)`, or use an explicit " *
@@ -836,6 +839,6 @@ function Base.sum(
     )
 end
 
-function Base.sum(x::Union{DenseAxisArray,DenseAxisArrayView}; dims::Int)
+function Base.sum(x::Union{DenseAxisArray,DenseAxisArrayView}; dims = Colon())
     return sum(identity, x; dims = dims)
 end
