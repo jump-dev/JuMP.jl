@@ -846,7 +846,11 @@ function test_containers_denseaxisarrayview_kwarg_setindex()
 end
 
 function test_sum_dims()
-    Containers.@container(x[i=1:2, j=1:2], i+j, container = DenseAxisArray)
+    Containers.@container(
+        x[i=1:2, j=1:2],
+        i+j,
+        container = DenseAxisArray,
+    )
     @test_throws(
         ErrorException(
             "`sum(x::DenseAxisArray; dims)` is not supported. Convert the array " *
