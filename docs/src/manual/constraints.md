@@ -43,16 +43,16 @@ julia> model = Model();
 julia> @variable(model, x[1:3]);
 
 julia> @constraint(model, c1, sum(x) <= 1)
-c1 : x[1] + x[2] + x[3] ≤ 1.0
+c1 : x[1] + x[2] + x[3] ≤ 1
 
 julia> @constraint(model, c2, x[1] + 2 * x[3] >= 2)
-c2 : x[1] + 2 x[3] ≥ 2.0
+c2 : x[1] + 2 x[3] ≥ 2
 
 julia> @constraint(model, c3, sum(i * x[i] for i in 1:3) == 3)
-c3 : x[1] + 2 x[2] + 3 x[3] = 3.0
+c3 : x[1] + 2 x[2] + 3 x[3] = 3
 
 julia> @constraint(model, c4, 4 <= 2 * x[2] <= 5)
-c4 : 2 x[2] ∈ [4.0, 5.0]
+c4 : 2 x[2] ∈ [4, 5]
 ```
 
 ### Normalization
@@ -66,7 +66,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> @constraint(model, c, 2x + 1 <= 4x + 4)
-c : -2 x <= 3.0
+c : -2 x ≤ 3
 ```
 
 ### [Add a quadratic constraint](@id quad_constraints)
@@ -85,7 +85,7 @@ julia> @variable(model, t >= 0)
 t
 
 julia> @constraint(model, my_q, x[1]^2 + x[2]^2 <= t^2)
-my_q : x[1]² + x[2]² - t² <= 0.0
+my_q : x[1]² + x[2]² - t² ≤ 0
 ```
 
 !!! tip
@@ -120,8 +120,8 @@ con_vector : [x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Zeros
 
 julia> @constraint(model, con_scalar, A * x .== b)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
- con_scalar : x[1] + 2 x[2] = 5.0
- con_scalar : 3 x[1] + 4 x[2] = 6.0
+ con_scalar : x[1] + 2 x[2] = 5
+ con_scalar : 3 x[1] + 4 x[2] = 6
 ```
 
 The two constraints, `==` and `.==` are similar, but subtly different. The first
@@ -152,16 +152,16 @@ julia> @constraint(model, A * x <= b)
 
 julia> @constraint(model, A * x .<= b)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- x[1] + 2 x[2] ≤ 5.0
- 3 x[1] + 4 x[2] ≤ 6.0
+ x[1] + 2 x[2] ≤ 5
+ 3 x[1] + 4 x[2] ≤ 6
 
 julia> @constraint(model, A * x >= b)
 [x[1] + 2 x[2] - 5, 3 x[1] + 4 x[2] - 6] ∈ MathOptInterface.Nonnegatives(2)
 
 julia> @constraint(model, A * x .>= b)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}:
- x[1] + 2 x[2] ≥ 5.0
- 3 x[1] + 4 x[2] ≥ 6.0
+ x[1] + 2 x[2] ≥ 5
+ 3 x[1] + 4 x[2] ≥ 6
 ```
 
 ### Vectorized matrix constraints
@@ -212,8 +212,8 @@ redundant. In contrast, the broadcasting syntax adds four linear constraints:
 ```jldoctest con_symmetric_zeros
 julia> @constraint(model, X .== LinearAlgebra.I)
 2×2 Matrix{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.EqualTo{Float64}}, ScalarShape}}:
- X[1,1] = 1.0  X[1,2] = 0.0
- X[1,2] = 0.0  X[2,2] = 1.0
+ X[1,1] = 1  X[1,2] = 0
+ X[1,2] = 0  X[2,2] = 1
 ```
 
 The same holds for `LinearAlgebra.Hermitian` matrices:
@@ -234,8 +234,8 @@ julia> @constraint(model, X == LinearAlgebra.I)
 
 julia> @constraint(model, X .== LinearAlgebra.I)
 2×2 Matrix{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{ComplexF64}, MathOptInterface.EqualTo{ComplexF64}}, ScalarShape}}:
- real(X[1,1]) = 1.0 - 0.0im                               …  real(X[1,2]) + (0.0 + 1.0im) imag(X[1,2]) = 0.0 - 0.0im
- real(X[1,2]) + (0.0 - 1.0im) imag(X[1,2]) = 0.0 + 0.0im     real(X[2,2]) = 1.0 - 0.0im
+ real(X[1,1]) = (1.0 - 0.0im)                               …  real(X[1,2]) + (0.0 + 1.0im) imag(X[1,2]) = (0.0 - 0.0im)
+ real(X[1,2]) + (0.0 - 1.0im) imag(X[1,2]) = (0.0 + 0.0im)     real(X[2,2]) = (1.0 - 0.0im)
 ```
 
 ## Containers of constraints
@@ -252,12 +252,12 @@ julia> @variable(model, x[1:3]);
 
 julia> @constraint(model, c[i=1:3], x[i] <= i^2)
 3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- c[1] : x[1] ≤ 1.0
- c[2] : x[2] ≤ 4.0
- c[3] : x[3] ≤ 9.0
+ c[1] : x[1] ≤ 1
+ c[2] : x[2] ≤ 4
+ c[3] : x[3] ≤ 9
 
 julia> c[2]
-c[2] : x[2] ≤ 4.0
+c[2] : x[2] ≤ 4
 ```
 
 Sets can be any Julia type that supports iteration:
@@ -271,11 +271,11 @@ julia> @constraint(model, c[i=2:3, ["red", "blue"]], x[i] <= i^2)
     Dimension 1, 2:3
     Dimension 2, ["red", "blue"]
 And data, a 2×2 Matrix{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- c[2,red] : x[2] ≤ 4.0  c[2,blue] : x[2] ≤ 4.0
- c[3,red] : x[3] ≤ 9.0  c[3,blue] : x[3] ≤ 9.0
+ c[2,red] : x[2] ≤ 4  c[2,blue] : x[2] ≤ 4
+ c[3,red] : x[3] ≤ 9  c[3,blue] : x[3] ≤ 9
 
 julia> c[2, "red"]
-c[2,red] : x[2] ≤ 4.0
+c[2,red] : x[2] ≤ 4
 ```
 
 Sets can depend upon previous indices:
@@ -286,12 +286,12 @@ julia> @variable(model, x[1:3]);
 
 julia> @constraint(model, c[i=1:3, j=i:3], x[i] <= j)
 JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}, 2, Tuple{Int64, Int64}} with 6 entries:
-  [1, 1]  =  c[1,1] : x[1] ≤ 1.0
-  [1, 2]  =  c[1,2] : x[1] ≤ 2.0
-  [1, 3]  =  c[1,3] : x[1] ≤ 3.0
-  [2, 2]  =  c[2,2] : x[2] ≤ 2.0
-  [2, 3]  =  c[2,3] : x[2] ≤ 3.0
-  [3, 3]  =  c[3,3] : x[3] ≤ 3.0
+  [1, 1]  =  c[1,1] : x[1] ≤ 1
+  [1, 2]  =  c[1,2] : x[1] ≤ 2
+  [1, 3]  =  c[1,3] : x[1] ≤ 3
+  [2, 2]  =  c[2,2] : x[2] ≤ 2
+  [2, 3]  =  c[2,3] : x[2] ≤ 3
+  [3, 3]  =  c[3,3] : x[3] ≤ 3
 ```
 and you can filter elements in the sets using the `;` syntax:
 ```jldoctest
@@ -301,9 +301,9 @@ julia> @variable(model, x[1:9]);
 
 julia> @constraint(model, c[i=1:9; mod(i, 3) == 0], x[i] <= i)
 JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}, 1, Tuple{Int64}} with 3 entries:
-  [3]  =  c[3] : x[3] ≤ 3.0
-  [6]  =  c[6] : x[6] ≤ 6.0
-  [9]  =  c[9] : x[9] ≤ 9.0
+  [3]  =  c[3] : x[3] ≤ 3
+  [6]  =  c[6] : x[6] ≤ 6
+  [9]  =  c[9] : x[9] ≤ 9
 ```
 
 ## Registered constraints
@@ -323,7 +323,7 @@ julia> @variable(model, x)
 x
 
 julia> @constraint(model, my_c, 2x <= 1)
-my_c : 2 x ≤ 1.0
+my_c : 2 x ≤ 1
 
 julia> model
 A JuMP Model
@@ -351,7 +351,7 @@ julia> @variable(model, x)
 x
 
 julia> @constraint(model, c, 2x <= 1)
-c : 2 x <= 1.0
+c : 2 x ≤ 1
 
 julia> @constraint(model, c, 2x <= 1)
 ERROR: An object of name c is already attached to this model. If this
@@ -375,7 +375,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> c = @constraint(model, 2x <= 1)
-2 x <= 1.0
+2 x ≤ 1
 ```
 
 Create a container of anonymous constraints by dropping the name in front of
@@ -387,9 +387,9 @@ julia> @variable(model, x[1:3]);
 
 julia> c = @constraint(model, [i = 1:3], x[i] <= i)
 3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- x[1] ≤ 1.0
- x[2] ≤ 2.0
- x[3] ≤ 3.0
+ x[1] ≤ 1
+ x[2] ≤ 2
+ x[3] ≤ 3
 ```
 
 ## Constraint names
@@ -403,7 +403,7 @@ and [`set_name(::JuMP.ConstraintRef, ::String)`](@ref):
 julia> model = Model(); @variable(model, x);
 
 julia> @constraint(model, con, x <= 1)
-con : x <= 1.0
+con : x ≤ 1
 
 julia> name(con)
 "con"
@@ -411,7 +411,7 @@ julia> name(con)
 julia> set_name(con, "my_con_name")
 
 julia> con
-my_con_name : x <= 1.0
+my_con_name : x ≤ 1
 ```
 
 Override the default choice of name using the `base_name` keyword:
@@ -420,8 +420,8 @@ julia> model = Model(); @variable(model, x);
 
 julia> con = @constraint(model, [i=1:2], x <= i, base_name = "my_con")
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- my_con[1] : x ≤ 1.0
- my_con[2] : x ≤ 2.0
+ my_con[1] : x ≤ 1
+ my_con[2] : x ≤ 2
 ```
 
 Note that names apply to each element of the container, not to the container of
@@ -434,8 +434,8 @@ julia> set_name(con[1], "c")
 
 julia> con
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- c : x ≤ 1.0
- my_con[2] : x ≤ 2.0
+ c : x ≤ 1
+ my_con[2] : x ≤ 2
 ```
 
 !!! tip
@@ -448,7 +448,7 @@ julia> con
     julia> @variable(model, x);
 
     julia> @constraint(model, con, x <= 2, set_string_name = false)
-    x <= 2.0
+    x ≤ 2
     ```
     See [Disable string names](@ref) for more information.
 
@@ -457,7 +457,7 @@ julia> con
 Retrieve a constraint from a model using [`constraint_by_name`](@ref):
 ```jldoctest constraint_name_vector
 julia> constraint_by_name(model, "c")
-c : x ≤ 1.0
+c : x ≤ 1
 ```
 
 If the name is not present, `nothing` will be returned:
@@ -472,8 +472,8 @@ julia> model = Model(); @variable(model, x);
 
 julia> con = @constraint(model, [i=1:2], x <= i, base_name = "my_con")
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- my_con[1] : x ≤ 1.0
- my_con[2] : x ≤ 2.0
+ my_con[1] : x ≤ 1
+ my_con[2] : x ≤ 2
 
 julia> constraint_by_name(model, "my_con")
 ```
@@ -485,13 +485,13 @@ julia> model = Model(); @variable(model, x);
 
 julia> model[:con] = @constraint(model, [i=1:2], x <= i, base_name = "my_con")
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- my_con[1] : x ≤ 1.0
- my_con[2] : x ≤ 2.0
+ my_con[1] : x ≤ 1
+ my_con[2] : x ≤ 2
 
 julia> model[:con]
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- my_con[1] : x ≤ 1.0
- my_con[2] : x ≤ 2.0
+ my_con[1] : x ≤ 1
+ my_con[2] : x ≤ 2
 ```
 
 ## String names, symbolic names, and bindings
@@ -525,7 +525,7 @@ julia> @variable(model, x)
 x
 
 julia> c_binding = @constraint(model, 2x <= 1, base_name = "c")
-c : 2 x <= 1.0
+c : 2 x ≤ 1
 
 julia> model
 A JuMP Model
@@ -541,13 +541,13 @@ julia> c
 ERROR: UndefVarError: c not defined
 
 julia> c_binding
-c : 2 x <= 1.0
+c : 2 x ≤ 1
 
 julia> name(c_binding)
 "c"
 
 julia> model[:c_register] = c_binding
-c : 2 x <= 1.0
+c : 2 x ≤ 1
 
 julia> model
 A JuMP Model
@@ -560,7 +560,7 @@ Solver name: No optimizer attached.
 Names registered in the model: c_register, x
 
 julia> model[:c_register]
-c : 2 x <= 1.0
+c : 2 x ≤ 1
 
 julia> model[:c_register] === c_binding
 true
@@ -582,13 +582,13 @@ julia> @constraints(model, begin
            2x <= 1
            c, x >= -1
        end)
-(2 x ≤ 1.0, c : x ≥ -1.0)
+(2 x ≤ 1, c : x ≥ -1)
 
 julia> print(model)
 Feasibility
 Subject to
- c : x ≥ -1.0
- 2 x ≤ 1.0
+ c : x ≥ -1
+ 2 x ≤ 1
 ```
 The [`@constraints`](@ref) macro returns a tuple of the constraints that were
 defined.
@@ -621,7 +621,7 @@ julia> @variable(model, x)
 x
 
 julia> @constraint(model, con, x <= 1)
-con : x <= 1.0
+con : x ≤ 1
 
 julia> @objective(model, Min, -2x)
 -2 x
@@ -705,12 +705,12 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> @constraint(model, con, 2x <= 1)
-con : 2 x <= 1.0
+con : 2 x ≤ 1
 
 julia> set_normalized_rhs(con, 3)
 
 julia> con
-con : 2 x <= 3.0
+con : 2 x ≤ 3
 
 julia> normalized_rhs(con)
 3.0
@@ -740,7 +740,7 @@ julia> @variable(model, const_term)
 const_term
 
 julia> @constraint(model, con, 2x <= const_term + 1)
-con : 2 x - const_term <= 1.0
+con : 2 x - const_term ≤ 1
 
 julia> fix(const_term, 1.0)
 ```
@@ -763,12 +763,12 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> @constraint(model, con, 2x <= 1)
-con : 2 x <= 1.0
+con : 2 x ≤ 1
 
 julia> add_to_function_constant(con, 2)
 
 julia> con
-con : 2 x <= -1.0
+con : 2 x ≤ -1
 
 julia> normalized_rhs(con)
 -1.0
@@ -781,12 +781,12 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> @constraint(model, con, 0 <= 2x + 1 <= 2)
-con : 2 x ∈ [-1.0, 1.0]
+con : 2 x ∈ [-1, 1]
 
 julia> add_to_function_constant(con, 3)
 
 julia> con
-con : 2 x ∈ [-4.0, -2.0]
+con : 2 x ∈ [-4, -2]
 ```
 
 ## Modify a variable coefficient
@@ -803,12 +803,12 @@ julia> model = Model();
 julia> @variable(model, x[1:2]);
 
 julia> @constraint(model, con, 2x[1] + x[2] <= 1)
-con : 2 x[1] + x[2] ≤ 1.0
+con : 2 x[1] + x[2] ≤ 1
 
 julia> set_normalized_coefficient(con, x[2], 0)
 
 julia> con
-con : 2 x[1] ≤ 1.0
+con : 2 x[1] ≤ 1
 
 julia> normalized_coefficient(con, x[2])
 0.0
@@ -853,7 +853,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> @constraint(model, con, 2x <= 1)
-con : 2 x <= 1.0
+con : 2 x ≤ 1
 
 julia> is_valid(model, con)
 true
@@ -885,7 +885,7 @@ reference:
 julia> unregister(model, :con)
 
 julia> @constraint(model, con, 2x <= 1)
-con : 2 x <= 1.0
+con : 2 x ≤ 1
 ```
 
 !!! info
@@ -913,7 +913,7 @@ julia> @variable(model, x)
 x
 
 julia> @constraint(model, con, x >= 10)
-con : x ≥ 10.0
+con : x ≥ 10
 
 julia> start_value(con)
 
@@ -981,21 +981,21 @@ julia> @variable(model, x);
 
 julia> @constraint(model, con[i = 1:3], i * x <= i + 1)
 3-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- con[1] : x ≤ 2.0
- con[2] : 2 x ≤ 3.0
- con[3] : 3 x ≤ 4.0
+ con[1] : x ≤ 2
+ con[2] : 2 x ≤ 3
+ con[3] : 3 x ≤ 4
 ```
 JuMP returns references to the three constraints in an `Array` that is bound to
 the Julia variable `con`. This array can be accessed and sliced as you would
 with any Julia array:
 ```jldoctest constraint_arrays
 julia> con[1]
-con[1] : x <= 2.0
+con[1] : x ≤ 2
 
 julia> con[2:3]
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- con[2] : 2 x ≤ 3.0
- con[3] : 3 x ≤ 4.0
+ con[2] : 2 x ≤ 3
+ con[3] : 3 x ≤ 4
 ```
 
 Anonymous containers can also be constructed by dropping the name (for example, `con`)
@@ -1003,8 +1003,8 @@ before the square brackets:
 ```jldoctest constraint_arrays
 julia> con = @constraint(model, [i = 1:2], i * x <= i + 1)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- x ≤ 2.0
- 2 x ≤ 3.0
+ x ≤ 2
+ 2 x ≤ 3
 ```
 
 Just like [`@variable`](@ref), JuMP will form an `Array` of constraints when it
@@ -1031,8 +1031,8 @@ julia> @constraint(model, con[i = 1:2, j = 2:3], i * x <= j + 1)
     Dimension 1, Base.OneTo(2)
     Dimension 2, 2:3
 And data, a 2×2 Matrix{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- con[1,2] : x ≤ 3.0    con[1,3] : x ≤ 4.0
- con[2,2] : 2 x ≤ 3.0  con[2,3] : 2 x ≤ 4.0
+ con[1,2] : x ≤ 3    con[1,3] : x ≤ 4
+ con[2,2] : 2 x ≤ 3  con[2,3] : 2 x ≤ 4
 ```
 
 ### SparseAxisArrays
@@ -1049,8 +1049,8 @@ julia> @variable(model, x);
 
 julia> @constraint(model, con[i = 1:2, j = 1:2; i != j], i * x <= j + 1)
 JuMP.Containers.SparseAxisArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}, 2, Tuple{Int64, Int64}} with 2 entries:
-  [1, 2]  =  con[1,2] : x ≤ 3.0
-  [2, 1]  =  con[2,1] : 2 x ≤ 2.0
+  [1, 2]  =  con[1,2] : x ≤ 3
+  [2, 1]  =  con[2,1] : 2 x ≤ 2
 ```
 
 !!! warning
@@ -1138,15 +1138,15 @@ The same also applies for [`all_constraints`](@ref):
 ```jldoctest con_access
 julia> all_constraints(model; include_variable_in_set_constraints = true)
 5-element Vector{ConstraintRef}:
- x[1] + x[2] ≤ 1.0
- x[1] ≥ 1.0
- x[2] ≥ 2.0
+ x[1] + x[2] ≤ 1
+ x[1] ≥ 1
+ x[2] ≥ 2
  x[1] integer
  x[2] integer
 
 julia> all_constraints(model; include_variable_in_set_constraints = false)
 1-element Vector{ConstraintRef}:
- x[1] + x[2] ≤ 1.0
+ x[1] + x[2] ≤ 1
 ```
 
 If you need finer-grained control on which constraints to include, use a variant
@@ -1192,10 +1192,10 @@ julia> model = Model();
 julia> @variable(model, x[1:3]);
 
 julia> @constraint(model, 2 * x[1] <= 1)
-2 x[1] ≤ 1.0
+2 x[1] ≤ 1
 
 julia> @constraint(model, 2 * x[1] in MOI.LessThan(1.0))
-2 x[1] ≤ 1.0
+2 x[1] ≤ 1
 ```
 
 You can also use any set defined by MathOptInterface:
@@ -1395,14 +1395,14 @@ julia> @variable(model, a, Bin)
 a
 
 julia> @constraint(model, a => {x + y <= 1})
-a => {x + y ≤ 1.0}
+a => {x + y ≤ 1}
 ```
 
 If the constraint must hold when `a` is zero, add `!` or `¬` before the binary
 variable;
 ```jldoctest indicator
 julia> @constraint(model, !a => {x + y <= 1})
-!a => {x + y ≤ 1.0}
+!a => {x + y ≤ 1}
 ```
 
 ## Semidefinite constraints

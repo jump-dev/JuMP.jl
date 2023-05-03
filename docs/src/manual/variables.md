@@ -83,11 +83,11 @@ x_fixed
 julia> print(model)
 Feasibility
 Subject to
- x_fixed = 4.0
- x_lower ≥ 0.0
- x_interval ≥ 2.0
- x_upper ≤ 1.0
- x_interval ≤ 3.0
+ x_fixed = 4
+ x_lower ≥ 0
+ x_interval ≥ 2
+ x_upper ≤ 1
+ x_interval ≤ 3
 ```
 
 !!! warning
@@ -1093,8 +1093,8 @@ julia> @variables(model, begin
 julia> print(model)
 Feasibility
 Subject to
- Y_1[1] ≥ 1.0
- Y_2[2] ≥ 2.0
+ Y_1[1] ≥ 1
+ Y_2[2] ≥ 2
  z binary
 ```
 The [`@variables`](@ref) macro returns a tuple of the variables that were

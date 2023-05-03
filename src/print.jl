@@ -658,24 +658,26 @@ Return a `String` representing the membership to the set `set` using print mode
 function in_set_string end
 
 function in_set_string(mode::MIME, set::MOI.LessThan)
-    return string(_math_symbol(mode, :leq), " ", set.upper)
+    return string(_math_symbol(mode, :leq), " ", _string_round(set.upper))
 end
 
 function in_set_string(mode::MIME, set::MOI.GreaterThan)
-    return string(_math_symbol(mode, :geq), " ", set.lower)
+    return string(_math_symbol(mode, :geq), " ", _string_round(set.lower))
 end
 
 function in_set_string(mode::MIME, set::MOI.EqualTo)
-    return string(_math_symbol(mode, :eq), " ", set.value)
+    return string(_math_symbol(mode, :eq), " ", _string_round(set.value))
 end
 
 function in_set_string(::MIME"text/latex", set::MOI.Interval)
-    return string("\\in \\[", set.lower, ", ", set.upper, "\\]")
+    lower, upper = _string_round(set.lower), _string_round(set.upper)
+    return string("\\in \\[", lower, ", ", upper, "\\]")
 end
 
 function in_set_string(mode::MIME"text/plain", set::MOI.Interval)
     in = _math_symbol(mode, :in)
-    return string("$in [", set.lower, ", ", set.upper, "]")
+    lower, upper = _string_round(set.lower), _string_round(set.upper)
+    return string("$in [", lower, ", ", upper, "]")
 end
 
 in_set_string(::MIME"text/plain", ::MOI.ZeroOne) = "binary"

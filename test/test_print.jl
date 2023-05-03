@@ -486,24 +486,24 @@ function test_extension_printing_scalaraffinefunction_constraints(
     @constraint(model, linear_eq, x + 0 == 1)
     @constraint(model, linear_range, -1 <= x + 0 <= 1)
     linear_noname = @constraint(model, x + 0 <= 1)
-    io_test(MIME("text/plain"), linear_le, "linear_le : x $le 1.0")
-    io_test(MIME("text/plain"), linear_eq, "linear_eq : x $eq 1.0")
+    io_test(MIME("text/plain"), linear_le, "linear_le : x $le 1")
+    io_test(MIME("text/plain"), linear_eq, "linear_eq : x $eq 1")
     io_test(
         MIME("text/plain"),
         linear_range,
-        "linear_range : x $in_sym [-1.0, 1.0]",
+        "linear_range : x $in_sym [-1, 1]",
     )
-    io_test(MIME("text/plain"), linear_noname, "x $le 1.0")
+    io_test(MIME("text/plain"), linear_noname, "x $le 1")
     # io_test doesn't work here because constraints print with a mix of math
     # and non-math.
     @test sprint(show, "text/latex", linear_le) ==
-          "linear_le : \$ x \\leq 1.0 \$"
+          "linear_le : \$ x \\leq 1 \$"
     @test sprint(show, "text/latex", linear_ge) ==
-          "linear_ge : \$ x \\geq 1.0 \$"
-    @test sprint(show, "text/latex", linear_eq) == "linear_eq : \$ x = 1.0 \$"
+          "linear_ge : \$ x \\geq 1 \$"
+    @test sprint(show, "text/latex", linear_eq) == "linear_eq : \$ x = 1 \$"
     @test sprint(show, "text/latex", linear_range) ==
-          "linear_range : \$ x \\in \\[-1.0, 1.0\\] \$"
-    @test sprint(show, "text/latex", linear_noname) == "\$\$ x \\leq 1.0 \$\$"
+          "linear_range : \$ x \\in \\[-1, 1\\] \$"
+    @test sprint(show, "text/latex", linear_noname) == "\$\$ x \\leq 1 \$\$"
     return
 end
 
@@ -537,7 +537,7 @@ function test_extension_printing_scalarquadraticfunction_constraints(
     @variable(model, x)
     quad_constr = @constraint(model, 2x^2 <= 1)
 
-    io_test(MIME("text/plain"), quad_constr, "2 x$sq $le 1.0")
+    io_test(MIME("text/plain"), quad_constr, "2 x$sq $le 1")
     # TODO: Test in IJulia mode.
     return
 end
@@ -553,7 +553,7 @@ function test_extension_printing_indicator_constraints(
     @variable(model, y)
     ind_constr = @constraint(model, !x => {y <= 1})
 
-    io_test(MIME("text/plain"), ind_constr, "!x => {y $le 1.0}")
+    io_test(MIME("text/plain"), ind_constr, "!x => {y $le 1}")
     # TODO: Test in IJulia mode.
     return
 end
@@ -595,8 +595,8 @@ function test_model_printing()
         """
 Max a - b + 2 a1 - 10 x
 Subject to
- con : a + b - 10 c + c1 - 2 x $le 1.0
- a*b $le 2.0
+ con : a + b - 10 c + c1 - 2 x $le 1
+ a*b $le 2
  [a  b;
   b  x] $inset $(PSDCone())
  [a, b, c] $inset $(MOI.PositiveSemidefiniteConeTriangle(2))
@@ -604,15 +604,15 @@ Subject to
   c  x] $inset $(PSDCone())
  [a, b, c, x] $inset $(MOI.PositiveSemidefiniteConeSquare(2))
  soc : [-a + 1, u[1], u[2], u[3]] $inset $(MOI.SecondOrderCone(4))
- fi $eq 9.0
- a $ge 1.0
- c $ge -1.0
- a1 $ge 1.0
- c1 $ge -1.0
- b $le 1.0
- c $le 1.0
- b1 $le 1.0
- c1 $le 1.0
+ fi $eq 9
+ a $ge 1
+ c $ge -1
+ a1 $ge 1
+ c1 $ge -1
+ b $le 1
+ c $le 1
+ b1 $le 1
+ c1 $le 1
  a1 integer
  b1 integer
  c1 integer
@@ -655,8 +655,8 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""";
         model_1,
         "\\begin{aligned}\n" *
         "\\max\\quad & a - b + 2 a1 - 10 x\\\\\n" *
-        "\\text{Subject to} \\quad & a + b - 10 c + c1 - 2 x \\leq 1.0\\\\\n" *
-        " & a\\times b \\leq 2.0\\\\\n" *
+        "\\text{Subject to} \\quad & a + b - 10 c + c1 - 2 x \\leq 1\\\\\n" *
+        " & a\\times b \\leq 2\\\\\n" *
         " & \\begin{bmatrix}\n" *
         "a & b\\\\\n" *
         "\\cdot & x\\\\\n" *
@@ -668,15 +668,15 @@ Names registered in the model: a, a1, b, b1, c, c1, con, fi, soc, u, x, y, z""";
         "\\end{bmatrix} \\in \\text{$(PSDCone())}\\\\\n" *
         " & [a, b, c, x] \\in \\text{MathOptInterface.PositiveSemidefiniteConeSquare(2)}\\\\\n" *
         " & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\\n" *
-        " & fi = 9.0\\\\\n" *
-        " & a \\geq 1.0\\\\\n" *
-        " & c \\geq -1.0\\\\\n" *
-        " & a1 \\geq 1.0\\\\\n" *
-        " & c1 \\geq -1.0\\\\\n" *
-        " & b \\leq 1.0\\\\\n" *
-        " & c \\leq 1.0\\\\\n" *
-        " & b1 \\leq 1.0\\\\\n" *
-        " & c1 \\leq 1.0\\\\\n" *
+        " & fi = 9\\\\\n" *
+        " & a \\geq 1\\\\\n" *
+        " & c \\geq -1\\\\\n" *
+        " & a1 \\geq 1\\\\\n" *
+        " & c1 \\geq -1\\\\\n" *
+        " & b \\leq 1\\\\\n" *
+        " & c \\leq 1\\\\\n" *
+        " & b1 \\leq 1\\\\\n" *
+        " & c1 \\leq 1\\\\\n" *
         " & a1 \\in \\mathbb{Z}\\\\\n" *
         " & b1 \\in \\mathbb{Z}\\\\\n" *
         " & c1 \\in \\mathbb{Z}\\\\\n" *
@@ -788,7 +788,7 @@ function test_SingleVariable_constraints()
     model = Model()
     @variable(model, x >= 10)
     zero_one = @constraint(model, x in MOI.ZeroOne())
-    io_test(MIME("text/plain"), LowerBoundRef(x), "x $ge 10.0")
+    io_test(MIME("text/plain"), LowerBoundRef(x), "x $ge 10")
     io_test(MIME("text/plain"), zero_one, "x binary")
     # TODO: Test in IJulia mode
     return

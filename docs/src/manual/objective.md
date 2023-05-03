@@ -286,5 +286,5 @@ julia> @objective(model, Min, [obj1, obj2])   # Two-objective problem
  2 x[1]
 
 julia> @constraint(model, obj3 <= 2.0)
-x[1] + x[2] ≤ 2.0
+x[1] + x[2] ≤ 2
 ```
