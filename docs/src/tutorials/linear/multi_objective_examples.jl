@@ -30,11 +30,7 @@ set_silent(model)
 @objective(model, Min, [3x1 + x2, -x1 - 2x2])
 @constraint(model, 3x1 - x2 <= 6)
 set_optimizer(model, () -> MOA.Optimizer(HiGHS.Optimizer))
-set_attribute(
-    model,
-    MOA.Algorithm(),
-    MOA.Lexicographic(; all_permutations = true),
-)
+set_attribute(model, MOA.Algorithm(), MOA.Lexicographic())
 optimize!(model)
 solution_summary(model)
 

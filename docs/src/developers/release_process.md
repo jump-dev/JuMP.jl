@@ -5,6 +5,8 @@ has accumulated a number of manual steps.
 
 ## Pre-release checks and updates
 
+Before making a release:
+
  * Check that the pinned packages in `docs/Project.toml` are updated. We pin the
    versions so that changes in the solvers (changes in printing, small numeric
    changes) do not break the printing of the JuMP docs in arbitrary commits.
@@ -15,6 +17,10 @@ has accumulated a number of manual steps.
    are compatible with the latest JuMP and MathOptInterface releases.
 
  * Update `docs/src/changelog.md`.
+
+ * Run [`.github/workflows/extension-tests.yml`](https://github.com/jump-dev/JuMP.jl/actions/workflows/extension-tests.yml)
+   using a `workflow_dispatch` trigger to check for any changes in JuMP that
+   broke extensions.
 
  * Change the version number in `Project.toml`, and update the links in
    README.md.
