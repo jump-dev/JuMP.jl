@@ -7,6 +7,36 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.11.0 (May 4, 2023)
+
+### Added
+
+ - Added new methods to [`print_active_bridges`](@ref) for printing a particular
+   objective, constraint, or variable (#3316)
+
+### Fixed
+
+ - Fixed tests for MOI v1.14.0 release (#3312)
+ - Fixed indexing containers when an axis is `Vector{Any}` that contains a
+   `Vector{Any}` element (#3280)
+ - Fixed `getindex(::AbstractJuMPScalar)` which is called for an expression like
+   `x[]` (#3314)
+ - Fixed bug in `set_string_names_on_creation` with a vector of variables
+   (#3322)
+ - Fixed bug in `memoize` function in nonlinear documentation (#3337)
+
+### Other
+
+ - Fixed typos in the documentation (#3317) (#3318) (#3328)
+ - Added a test for the order of setting start values (#3315)
+ - Added READMEs of solvers and extensions to the docs (#3309) (#3320) (#3327)
+   (#3329) (#3333)
+ - Style improvements to `src/variables.jl` (#3324)
+ - Clarify that column generation does not find global optimum (#3325)
+ - Add a GitHub actions workflow for testing extensions prior to release (#3331)
+ - Document the release process for JuMP (#3334)
+ - Fix links to discourse and chatroom (#3335)
+
 ## Version 1.10.0 (April 3, 2023)
 
 ### Added
