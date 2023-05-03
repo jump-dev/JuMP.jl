@@ -1410,8 +1410,7 @@ function test_fix_discrete_variables()
     @test sprint(print, model) ==
           "Min x + y\nSubject to\n y $ge 1\n y $le 10\n y integer\n x binary\n"
     undo_relax = fix_discrete_variables(start_value, model)
-    @test sprint(print, model) ==
-          "Min x + y\nSubject to\n x $eq 1\n y $eq 2\n"
+    @test sprint(print, model) == "Min x + y\nSubject to\n x $eq 1\n y $eq 2\n"
     undo_relax()
     @test sprint(print, model) ==
           "Min x + y\nSubject to\n y $ge 1\n y $le 10\n y integer\n x binary\n"
