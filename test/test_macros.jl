@@ -722,9 +722,9 @@ function test_AffExpr_in_macros()
     con1 = @constraint(model, 3 * temp - x - 2 >= 0)
     con2 = @constraint(model, (2 + 2) * ((3 + 4) * (1 + a)) == 0)
     con3 = @constraint(model, 1 + 0 * temp == 0)
-    @test string(con1) == "2 x + 6 y $ge -1.0"
-    @test string(con2) == "28 x $eq -28.0"
-    @test string(con3) == "0 $eq -1.0"
+    @test string(con1) == "2 x + 6 y $ge -1"
+    @test string(con2) == "28 x $eq -28"
+    @test string(con3) == "0 $eq -1"
     return
 end
 
@@ -741,10 +741,10 @@ function test_constraints()
     @test string(model) ==
           "Feasibility\n" *
           "Subject to\n" *
-          " x + y[1] $eq 1.0\n" *
-          " ref[1] : 2 y[1] $ge 1.0\n" *
-          " ref[2] : y[1] + y[2] $ge 2.0\n" *
-          " ref[3] : y[1] + y[3] $ge 3.0\n"
+          " x + y[1] $eq 1\n" *
+          " ref[1] : 2 y[1] $ge 1\n" *
+          " ref[2] : y[1] + y[2] $ge 2\n" *
+          " ref[3] : y[1] + y[3] $ge 3\n"
     return
 end
 

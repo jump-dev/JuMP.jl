@@ -496,10 +496,8 @@ function test_extension_printing_scalaraffinefunction_constraints(
     io_test(MIME("text/plain"), linear_noname, "x $le 1")
     # io_test doesn't work here because constraints print with a mix of math
     # and non-math.
-    @test sprint(show, "text/latex", linear_le) ==
-          "linear_le : \$ x \\leq 1 \$"
-    @test sprint(show, "text/latex", linear_ge) ==
-          "linear_ge : \$ x \\geq 1 \$"
+    @test sprint(show, "text/latex", linear_le) == "linear_le : \$ x \\leq 1 \$"
+    @test sprint(show, "text/latex", linear_ge) == "linear_ge : \$ x \\geq 1 \$"
     @test sprint(show, "text/latex", linear_eq) == "linear_eq : \$ x = 1 \$"
     @test sprint(show, "text/latex", linear_range) ==
           "linear_range : \$ x \\in \\[-1, 1\\] \$"
