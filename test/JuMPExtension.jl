@@ -646,16 +646,16 @@ function test_model_extension_printing()
     Test.@test JuMP.model_string(MIME("text/plain"), model_1) == """
 Max a - b + 2 a1 - 10 x
 Subject to
- a + b - 10 c - 2 x + c1 $(repl(:leq)) 1.0
- a*b $(repl(:leq)) 2.0
+ a + b - 10 c - 2 x + c1 $(repl(:leq)) 1
+ a*b $(repl(:leq)) 2
  [-a + 1, u[1], u[2], u[3]] $(repl(:in)) MathOptInterface.SecondOrderCone(4)
 """
 
     Test.@test JuMP.model_string(MIME("text/latex"), model_1) == """
 \$\$ \\begin{aligned}
 \\max\\quad & a - b + 2 a1 - 10 x\\\\
-\\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1.0\\\\
- & a\\times b \\leq 2.0\\\\
+\\text{Subject to} \\quad & a + b - 10 c - 2 x + c1 \\leq 1\\\\
+ & a\\times b \\leq 2\\\\
  & [-a + 1, u_{1}, u_{2}, u_{3}] \\in \\text{MathOptInterface.SecondOrderCone(4)}\\\\
 \\end{aligned} \$\$"""
 
