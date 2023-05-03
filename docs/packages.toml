@@ -150,4 +150,4 @@
     user = "infiniteopt"
     rev = "c280bf81cb8144077faec11d16bad7b5a09b0f6f" # TODO update once new version is tagged (before this is merged)
     filename = "docs/jump/README.md"
-    extension = "true"
+    extension = true
