@@ -146,3 +146,8 @@
     extension = true
 # [Tulip]
 #   user = "ds4dm"
+[InfiniteOpt]
+    user = "infiniteopt"
+    rev = "dfa1fcfbf9183e4bc8ba130a8f7b60e9ef4911d7" # TODO update once new version is tagged (before this is merged)
+    filename = "docs/jump/README.md"
+    extension = "true"
