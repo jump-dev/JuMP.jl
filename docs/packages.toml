@@ -120,6 +120,11 @@
 #   user = "GAMS-dev"
 # [Hypatia]
 #   user = "chriscoey"
+[InfiniteOpt]
+  user = "infiniteopt"
+  rev = "v0.5.7"
+  filename = "docs/jump/README.md"
+  extension = true
 # [Juniper]
 #   user = "lanl-ansi"
 # [MadNLP]
