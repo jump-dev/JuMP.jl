@@ -154,20 +154,24 @@ end
 # Catch the case that has no index sets, just a name like `x`.
 _parse_ref_sets(::Function, ::Symbol) = (Any[], Any[], :())
 
-_depends_on(ex::Expr, s::Symbol) = any(a -> _depends_on(a, s), ex.args)
+depends_on(ex::Expr, s::Symbol) = any(Base.Fix2(depends_on, s), ex.args)
 
-_depends_on(ex::Symbol, s::Symbol) = ex == s
+depends_on(ex::Symbol, s::Symbol) = ex == s
 
 # For the case that `ex` might be an iterable literal like `4`.
-_depends_on(ex, s::Symbol) = false
+depends_on(ex, s::Symbol) = false
+
+depends_on(ex, s::QuoteNode) = depends_on(ex, s.value)
+
+depends_on(ex, ::Any) = false
 
 # For the case where the index set is compound, like `[(i, j) in S, k in i:K]`.
-_depends_on(ex1, ex2::Expr) = any(s -> _depends_on(ex1, s), ex2.args)
+depends_on(ex1, ex2::Expr) = any(Base.Fix1(depends_on, ex1), ex2.args)
 
 function _has_dependent_sets(index_vars::Vector{Any}, index_sets::Vector{Any})
     for i in 2:length(index_sets)
         for j in 1:(i-1)
-            if _depends_on(index_sets[i], index_vars[j])
+            if depends_on(index_sets[i], index_vars[j])
                 return true
             end
         end

@@ -2616,6 +2616,14 @@ macro variable(args...)
                 buildcall,
                 requested_container,
             )
+            if any(Base.Fix2(Containers.depends_on, set), idxvars)
+                set = Containers.container_code(
+                    idxvars,
+                    indices,
+                    set,
+                    requested_container,
+                )
+            end
         end
         buildcall = :(build_variable($_error, $scalar_variables, $set))
     end

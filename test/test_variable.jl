@@ -1438,4 +1438,25 @@ function test_string_names_set_on_creation_constrained_on_creation()
     return
 end
 
+function test_dependent_set_variable_macro()
+    for C in (Array, Containers.DenseAxisArray, Containers.SparseAxisArray)
+        model = Model()
+        @variable(model, x[i=1:3] in MOI.EqualTo(1.0 * i), container = C)
+        @test all(is_fixed.(x))
+        @test [fix_value(x[i]) for i in 1:3] == [1.0, 2.0, 3.0]
+    end
+    for C in (Array, Containers.DenseAxisArray, Containers.SparseAxisArray)
+        model = Model()
+        @variable(model, x[i=1:3] in MOI.ZeroOne(), container = C)
+        @test all(is_binary.(x))
+    end
+    for C in (Array, Containers.DenseAxisArray, Containers.SparseAxisArray)
+        model = Model()
+        @variable(model, x[i=1:3] in MOI.GreaterThan(sqrt(i)), container = C)
+        @test all(has_lower_bound.(x))
+        @test [lower_bound(x[i]) for i in 1:3] == sqrt.([1.0, 2.0, 3.0])
+    end
+    return
+end
+
 end  # module TestVariable
