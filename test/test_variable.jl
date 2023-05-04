@@ -1408,13 +1408,12 @@ function test_fix_discrete_variables()
     @variable(model, 1 <= y <= 10, Int, start = 2)
     @objective(model, Min, x + y)
     @test sprint(print, model) ==
-          "Min x + y\nSubject to\n y $ge 1.0\n y $le 10.0\n y integer\n x binary\n"
+          "Min x + y\nSubject to\n y $ge 1\n y $le 10\n y integer\n x binary\n"
     undo_relax = fix_discrete_variables(start_value, model)
-    @test sprint(print, model) ==
-          "Min x + y\nSubject to\n x $eq 1.0\n y $eq 2.0\n"
+    @test sprint(print, model) == "Min x + y\nSubject to\n x $eq 1\n y $eq 2\n"
     undo_relax()
     @test sprint(print, model) ==
-          "Min x + y\nSubject to\n y $ge 1.0\n y $le 10.0\n y integer\n x binary\n"
+          "Min x + y\nSubject to\n y $ge 1\n y $le 10\n y integer\n x binary\n"
     return
 end
 

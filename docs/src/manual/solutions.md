@@ -25,11 +25,11 @@ julia> begin
        end
 Max -12 x - 20 y[a]
 Subject to
- 6 x + 8 y[a] ≥ 100.0
- c1 : 7 x + 12 y[a] ≥ 120.0
- x ≥ 0.0
- y[a] ≤ 1.0
- y[b] ≤ 1.0
+ 6 x + 8 y[a] ≥ 100
+ c1 : 7 x + 12 y[a] ≥ 120
+ x ≥ 0
+ y[a] ≤ 1
+ y[b] ≤ 1
 ```
 
 ## Solutions summary
@@ -428,8 +428,8 @@ julia> begin
        end
 Max x[1]
 Subject to
- c1 : x[1] + x[2] ≤ 1.0
- c2 : x[1] - x[2] ≤ 1.0
+ c1 : x[1] + x[2] ≤ 1
+ c2 : x[1] - x[2] ≤ 1
  x[2] ≥ -0.5
  x[2] ≤ 0.5
 ```
@@ -600,7 +600,7 @@ julia> @objective(model, Min, [3x1 + x2, -x1 - 2x2])
  -x1 - 2 x2
 
 julia> @constraint(model, 3x1 - x2 <= 6)
-3 x1 - x2 ≤ 6.0
+3 x1 - x2 ≤ 6
 
 julia> optimize!(model)
 

@@ -202,7 +202,7 @@ as LaTeX.
 julia> print(model)
 Max x
 Subject to
- x ≥ 0.0
+ x ≥ 0
 ```
 
 !!! warning
@@ -216,7 +216,7 @@ Use [`latex_formulation`](@ref) to display the model in LaTeX form.
 julia> latex_formulation(model)
 $$ \begin{aligned}
 \max\quad & x\\
-\text{Subject to} \quad & x \geq 0.0\\
+\text{Subject to} \quad & x \geq 0\\
 \end{aligned} $$
 ```
 

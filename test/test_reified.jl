@@ -44,7 +44,7 @@ function test_reified_equal_to()
     @variable(model, z, Bin)
     c = @constraint(model, z <--> {x == 1})
     eq_sym = JuMP._math_symbol(MIME("text/plain"), :eq)
-    @test sprint(show, c) == "z <--> {x $eq_sym 1.0}"
+    @test sprint(show, c) == "z <--> {x $eq_sym 1}"
     obj = constraint_object(c)
     @test obj.func == AffExpr[z, x]
     @test obj.set == MOI.Reified(MOI.EqualTo(1.0))

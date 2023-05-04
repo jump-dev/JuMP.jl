@@ -214,7 +214,7 @@ julia> function JuMP.parse_constraint_head(
 
 julia> @constraint(model, x + x := 1.0)
 Rewriting := as ==
-2 x = 1.0
+2 x = 1
 ```
 
 [`parse_constraint_call`](@ref) should be implemented to intercept an expression
@@ -246,7 +246,7 @@ julia> function JuMP.parse_constraint_call(
 
 julia> @constraint(model, my_equal_to(x + x, 1.0))
 Rewriting my_equal_to to ==
-2 x = 1.0
+2 x = 1
 ```
 
 !!! tip
@@ -289,7 +289,7 @@ julia> function JuMP.build_constraint(
        end
 
 julia> @constraint(model, my_con, x == 0, MyConstrType, d = 2)
-my_con : x ≤ 2.0
+my_con : x ≤ 2
 ```
 
 !!! note
@@ -340,7 +340,7 @@ julia> function JuMP.add_constraint(
        end
 
 julia> @constraint(model, my_con, 2x <= 1, MyTag("my_prefix"))
-my_prefix[my_con] : 2 x - 1 ≤ 0.0
+my_prefix[my_con] : 2 x - 1 ≤ 0
 ```
 
 ## The extension dictionary

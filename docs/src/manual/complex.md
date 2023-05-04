@@ -125,7 +125,7 @@ julia> set_silent(model)
 julia> @variable(model, x[1:2]);
 
 julia> @constraint(model, (1 + 2im) * x[1] + 3 * x[2] == 4 + 5im)
-(1.0 + 2.0im) x[1] + (3.0 + 0.0im) x[2] = 4.0 + 5.0im
+(1.0 + 2.0im) x[1] + (3.0 + 0.0im) x[2] = (4.0 + 5.0im)
 
 julia> optimize!(model)
 
@@ -145,10 +145,10 @@ julia> set_silent(model)
 julia> @variable(model, x[1:2]);
 
 julia> @constraint(model, 1 * x[1] + 3 * x[2] == 4)  # real component
-x[1] + 3 x[2] = 4.0
+x[1] + 3 x[2] = 4
 
 julia> @constraint(model, 2 * x[1] == 5)  # imag component
-2 x[1] = 5.0
+2 x[1] = 5
 
 julia> optimize!(model)
 
@@ -168,7 +168,7 @@ julia> set_silent(model)
 julia> @variable(model, x in ComplexPlane());
 
 julia> @constraint(model, (1 + 2im) * x + 3 * x == 4 + 5im)
-(4.0 + 2.0im) real(x) + (-2.0 + 4.0im) imag(x) = 4.0 + 5.0im
+(4.0 + 2.0im) real(x) + (-2.0 + 4.0im) imag(x) = (4.0 + 5.0im)
 
 julia> optimize!(model)
 
@@ -188,10 +188,10 @@ julia> @variable(model, x_real);
 julia> @variable(model, x_imag);
 
 julia> @constraint(model, x_real - 2 * x_imag + 3 * x_real == 4)
-4 x_real - 2 x_imag = 4.0
+4 x_real - 2 x_imag = 4
 
 julia> @constraint(model, x_imag + 2 * x_real + 3 * x_imag == 5)
-2 x_real + 4 x_imag = 5.0
+2 x_real + 4 x_imag = 5
 
 julia> optimize!(model)
 
