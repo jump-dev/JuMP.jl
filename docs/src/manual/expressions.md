@@ -391,7 +391,7 @@ julia> expr = cos(x) * sin(quad) + aff
 +(*(cos(x), sin(x² + x)), x + 1)
 ```
 
-### NL macro
+### Limitations
 
 Some nonlinear expressions cannot be created via operator overloading. For
 example, to minimize the likelihood of bugs in user-code, we have not overloaded

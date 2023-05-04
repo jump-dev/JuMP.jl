@@ -76,8 +76,8 @@ julia> @expression(model, my_expr[i = 1:2], sin(x[i]))
  sin(x[2])
 ```
 
-Nonlinear expression can be used in [`@objective`](@ref), [`@constraint`](@ref),
-and even nested in other [`@expression`](@ref)s.
+A [`NonlinearExpr`](@ref) can be used in [`@objective`](@ref),
+[`@constraint`](@ref), and even nested in other [`@expression`](@ref)s.
 
 ```jldoctest nl_expression
 julia> @objective(model, Min, expr^2 + 1)
