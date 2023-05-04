@@ -38,12 +38,12 @@ julia> model = Model();
 julia> @variable(model, x[1:2]);
 
 julia> @constraint(model, exp(x[1]) <= 1)
--(exp(x[1]), 1.0) ≤ 0.0
+-(exp(x[1]), 1.0) ≤ 0
 
 julia> @constraint(model, con[i = 1:2], 2^x[i] >= i)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarNonlinearFunction, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}:
- con[1] : -(^(2.0, x[1]), 1.0) ≥ 0.0
- con[2] : -(^(2.0, x[2]), 2.0) ≥ 0.0
+ con[1] : -(^(2.0, x[1]), 1.0) ≥ 0
+ con[2] : -(^(2.0, x[2]), 2.0) ≥ 0
 ```
 
 Delete a nonlinear constraint using [`delete`](@ref):
@@ -85,24 +85,13 @@ julia> @objective(model, Min, expr^2 + 1)
 
 julia> @constraint(model, [i = 1:2], my_expr[i] <= i)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarNonlinearFunction, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- -(sin(x[1]), 1.0) ≤ 0.0
- -(sin(x[2]), 2.0) ≤ 0.0
+ -(sin(x[1]), 1.0) ≤ 0
+ -(sin(x[2]), 2.0) ≤ 0
 
 julia> @expression(model, nested[i = 1:2], sin(my_expr[i]))
 2-element Vector{NonlinearExpr}:
  sin(sin(x[1]))
  sin(sin(x[2]))
-```
-
-Use [`value`](@ref) to query the value of a nonlinear expression:
-```jldoctest nl_expression
-julia> set_start_value(x[1], 1.0)
-
-julia> 0.7456241416655579 # value(start_value, nested[1])  # TODO
-0.7456241416655579
-
-julia> sin(sin(1.0))
-0.7456241416655579
 ```
 
 ## User-defined Functions

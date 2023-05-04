@@ -286,6 +286,7 @@ end
 function _MA.add_mul(lhs::AbstractJuMPScalar, x::_Scalar, y::_Scalar)
     T = _MA.promote_operation(_MA.add_mul, typeof(lhs), typeof(x), typeof(y))
     expr = _MA.operate(convert, T, lhs)
+    # We can't use `operate!!` here because that will cause a StackOverflow.
     if _MA.mutability(T) == _MA.IsMutable()
         return _MA.operate!(_MA.add_mul, expr, x, y)
     end
@@ -306,6 +307,7 @@ function _MA.add_mul(
         typeof.(args)...,
     )
     expr = _MA.operate(convert, T, lhs)
+    # We can't use `operate!!` here because that will cause a StackOverflow.
     if _MA.mutability(T) == _MA.IsMutable()
         return _MA.operate!(_MA.add_mul, expr, x, y, args...)
     end
