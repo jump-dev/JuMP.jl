@@ -823,3 +823,22 @@ Base.print_array(io::IO, x::DenseAxisArrayView) = show(io, x)
 function Base.summary(io::IO, x::DenseAxisArrayView)
     return print(io, "view(::DenseAxisArray, ", join(x.axes, ", "), "), over")
 end
+
+function Base.sum(
+    f::F,
+    x::Union{DenseAxisArray,DenseAxisArrayView};
+    dims = Colon(),
+) where {F<:Function}
+    if dims == Colon()
+        return sum(f(xi) for xi in x)
+    end
+    return error(
+        "`sum(x::DenseAxisArray; dims)` is not supported. Convert the array " *
+        "to an `Array` using `sum(Array(x); dims=$dims)`, or use an explicit " *
+        "for-loop summation instead.",
+    )
+end
+
+function Base.sum(x::Union{DenseAxisArray,DenseAxisArrayView}; dims = Colon())
+    return sum(identity, x; dims = dims)
+end
