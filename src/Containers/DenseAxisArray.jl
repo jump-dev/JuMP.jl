@@ -825,10 +825,10 @@ function Base.summary(io::IO, x::DenseAxisArrayView)
 end
 
 function Base.sum(
-    f::Function,
+    f::F,
     x::Union{DenseAxisArray,DenseAxisArrayView};
     dims = Colon(),
-)
+) where {F<:Function}
     if dims == Colon()
         return sum(f(xi) for xi in x)
     end
