@@ -1476,7 +1476,7 @@ function test_extension_HermitianPSDCone_errors(
         "In `@constraint(model, H in HermitianPSDCone(), unknown_kw = 1)`:" *
         " Unrecognized constraint building format. Tried to invoke " *
         "`build_constraint(error, $aff_str[" *
-        "x (0.0 + 1.0im); (0.0 - 1.0im) (-1.0 - 0.0im) y], $(HermitianPSDCone()); unknown_kw = 1)`, but no " *
+        "x im; -im -y], $(HermitianPSDCone()); unknown_kw = 1)`, but no " *
         "such method exists. This is due to specifying an unrecognized " *
         "function, constraint set, and/or extra positional/keyword " *
         "arguments.\n\nIf you're trying to create a JuMP extension, you " *

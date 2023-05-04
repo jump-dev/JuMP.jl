@@ -225,17 +225,17 @@ julia> model = Model();
 
 julia> @variable(model, X[1:2, 1:2] in HermitianPSDCone())
 2×2 Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
- real(X[1,1])                               …  real(X[1,2]) + (0.0 + 1.0im) imag(X[1,2])
- real(X[1,2]) + (0.0 - 1.0im) imag(X[1,2])     real(X[2,2])
+ real(X[1,1])                    real(X[1,2]) + imag(X[1,2]) im
+ real(X[1,2]) - imag(X[1,2]) im  real(X[2,2])
 
 julia> @constraint(model, X == LinearAlgebra.I)
-[real(X[1,1]) + (-1.0 - 0.0im)              real(X[1,2]) + (0.0 + 1.0im) imag(X[1,2]);
- real(X[1,2]) + (0.0 - 1.0im) imag(X[1,2])  real(X[2,2]) + (-1.0 - 0.0im)] ∈ Zeros()
+[real(X[1,1]) - 1                real(X[1,2]) + imag(X[1,2]) im;
+ real(X[1,2]) - imag(X[1,2]) im  real(X[2,2]) - 1] ∈ Zeros()
 
 julia> @constraint(model, X .== LinearAlgebra.I)
 2×2 Matrix{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{ComplexF64}, MathOptInterface.EqualTo{ComplexF64}}, ScalarShape}}:
- real(X[1,1]) = (1.0 - 0.0im)                               …  real(X[1,2]) + (0.0 + 1.0im) imag(X[1,2]) = (0.0 - 0.0im)
- real(X[1,2]) + (0.0 - 1.0im) imag(X[1,2]) = (0.0 + 0.0im)     real(X[2,2]) = (1.0 - 0.0im)
+ real(X[1,1]) = 1                    real(X[1,2]) + imag(X[1,2]) im = 0
+ real(X[1,2]) - imag(X[1,2]) im = 0  real(X[2,2]) = 1
 ```
 
 ## Containers of constraints

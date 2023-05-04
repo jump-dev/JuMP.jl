@@ -21,7 +21,7 @@ Create a complex-valued variable using [`ComplexPlane`](@ref):
 julia> model = Model();
 
 julia> @variable(model, x in ComplexPlane())
-real(x) + (0.0 + 1.0im) imag(x)
+real(x) + imag(x) im
 ```
 
 Note that `x` is not a [`VariableRef`](@ref); instead, it is an affine
@@ -64,7 +64,7 @@ To create an anonymous variable, use the `set` keyword argument:
 julia> model = Model();
 
 julia> x = @variable(model, set = ComplexPlane())
-_[1] + (0.0 + 1.0im) _[2]
+_[1] + _[2] im
 ```
 
 ## Complex-valued variable bounds
@@ -85,7 +85,7 @@ julia> @variable(
            upper_bound = 2.0 + 3.0im,
            start = 4im,
        )
-real(x) + (0.0 + 1.0im) imag(x)
+real(x) + imag(x) im
 
 julia> vars = all_variables(model)
 2-element Vector{VariableRef}:
@@ -125,7 +125,7 @@ julia> set_silent(model)
 julia> @variable(model, x[1:2]);
 
 julia> @constraint(model, (1 + 2im) * x[1] + 3 * x[2] == 4 + 5im)
-(1.0 + 2.0im) x[1] + (3.0 + 0.0im) x[2] = (4.0 + 5.0im)
+(1 + 2im) x[1] + 3 x[2] = (4 + 5im)
 
 julia> optimize!(model)
 
@@ -168,7 +168,7 @@ julia> set_silent(model)
 julia> @variable(model, x in ComplexPlane());
 
 julia> @constraint(model, (1 + 2im) * x + 3 * x == 4 + 5im)
-(4.0 + 2.0im) real(x) + (-2.0 + 4.0im) imag(x) = (4.0 + 5.0im)
+(4 + 2im) real(x) + (-2 + 4im) imag(x) = (4 + 5im)
 
 julia> optimize!(model)
 
@@ -207,9 +207,9 @@ julia> model = Model();
 
 julia> @variable(model, H[1:3, 1:3] in HermitianPSDCone())
 3×3 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
- real(H[1,1])                               …  real(H[1,3]) + (0.0 + 1.0im) imag(H[1,3])
- real(H[1,2]) + (0.0 - 1.0im) imag(H[1,2])     real(H[2,3]) + (0.0 + 1.0im) imag(H[2,3])
- real(H[1,3]) + (0.0 - 1.0im) imag(H[1,3])     real(H[3,3])
+ real(H[1,1])                    …  real(H[1,3]) + imag(H[1,3]) im
+ real(H[1,2]) - imag(H[1,2]) im     real(H[2,3]) + imag(H[2,3]) im
+ real(H[1,3]) - imag(H[1,3]) im     real(H[3,3])
 ```
 
 Behind the scenes, JuMP has created nine real-valued decision variables:
@@ -267,12 +267,12 @@ julia> import LinearAlgebra
 
 julia> H = LinearAlgebra.Hermitian([x[1] 1im; -1im -x[2]])
 2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
- x[1]           (0.0 + 1.0im)
- (0.0 - 1.0im)  (-1.0 - 0.0im) x[2]
+ x[1]  im
+ -im   -x[2]
 
 julia> @constraint(model, H in HermitianPSDCone())
-[x[1]           (0.0 + 1.0im);
- (0.0 - 1.0im)  (-1.0 - 0.0im) x[2]] ∈ HermitianPSDCone()
+[x[1]  im;
+ -im   -x[2]] ∈ HermitianPSDCone()
 ```
 
 !!! note

@@ -51,11 +51,21 @@ function _is_one_for_printing(coef)
     return _is_zero_for_printing(abs(coef) - oneunit(coef))
 end
 
-_is_one_for_printing(coef::Complex{T}) where {T} = coef == one(T)
+function _is_one_for_printing(coef::Complex{T}) where {T}
+    r, i = reim(coef)
+    return _is_one_for_printing(r) && _is_zero_for_printing(i)
+end
 
 function _is_zero_for_printing(coef::Complex)
     return _is_zero_for_printing(real(coef)) &&
            _is_zero_for_printing(imag(coef))
+end
+
+_is_im_for_printing(coef) = false
+
+function _is_im_for_printing(coef::Complex)
+    r, i = reim(coef)
+    return _is_zero_for_printing(r) && _is_one_for_printing(i)
 end
 
 # Helper function that rounds carefully for the purposes of printing Reals
@@ -67,6 +77,28 @@ _string_round(::typeof(abs), x::Real) = _string_round(abs(x))
 
 _sign_string(x::Real) = x < zero(x) ? " - " : " + "
 
+function _string_round(::typeof(abs), x::Complex)
+    r, i = reim(x)
+    if _is_zero_for_printing(r)
+        return _string_round(Complex(r, abs(i)))
+    elseif _is_zero_for_printing(i)
+        return _string_round(Complex(abs(r), i))
+    else
+        return _string_round(x)
+    end
+end
+
+function _sign_string(x::Complex)
+    r, i = reim(x)
+    if _is_zero_for_printing(r)
+        return _sign_string(i)
+    elseif _is_zero_for_printing(i)
+        return _sign_string(r)
+    else
+        return " + "
+    end
+end
+
 # Fallbacks for other number types
 
 _string_round(x::Any) = string(x)
@@ -75,7 +107,29 @@ _string_round(::typeof(abs), x::Any) = _string_round(x)
 
 _sign_string(::Any) = " + "
 
-_string_round(x::Complex) = string("(", x, ")")
+function _string_round(x::Complex)
+    r, i = reim(x)
+    r_str = _string_round(r)
+    if _is_zero_for_printing(i)
+        return r_str
+    elseif _is_zero_for_printing(r)
+        if _is_one_for_printing(i)
+            if i < 0
+                return "-im"
+            else
+                return "im"
+            end
+        else
+            return string(_string_round(i), "im")
+        end
+    end
+    if _is_one_for_printing(i)
+        i_str = "im"
+    else
+        i_str = string(_string_round(abs, i), "im")
+    end
+    return string("(", r_str, _sign_string(i_str), i_str, ")")
+end
 
 # REPL-specific symbols
 # Anything here: https://en.wikipedia.org/wiki/Windows-1252
@@ -527,6 +581,16 @@ function function_string(mode::MIME"text/latex", v::AbstractVariableRef)
     return var_name
 end
 
+function _term_string(coef, factor)
+    if _is_one_for_printing(coef)
+        return factor
+    elseif _is_im_for_printing(coef)
+        return string(factor, " ", _string_round(abs, coef))
+    else
+        return string(_string_round(abs, coef), " ", factor)
+    end
+end
+
 # TODO(odow): remove show_constant in JuMP 1.0
 function function_string(mode, a::GenericAffExpr, show_constant = true)
     if length(linear_terms(a)) == 0
@@ -535,12 +599,7 @@ function function_string(mode, a::GenericAffExpr, show_constant = true)
     terms = fill("", 2 * length(linear_terms(a)))
     for (elm, (coef, var)) in enumerate(linear_terms(a))
         terms[2*elm-1] = _sign_string(coef)
-        v = function_string(mode, var)
-        if _is_one_for_printing(coef)
-            terms[2*elm] = v
-        else
-            terms[2*elm] = string(_string_round(abs, coef), " ", v)
-        end
+        terms[2*elm] = _term_string(coef, function_string(mode, var))
     end
     terms[1] = terms[1] == " - " ? "-" : ""
     ret = join(terms)
@@ -563,17 +622,13 @@ function function_string(mode, q::GenericQuadExpr)
         x = function_string(mode, var1)
         y = function_string(mode, var2)
         terms[2*elm-1] = _sign_string(coef)
-        if _is_one_for_printing(coef)
-            terms[2*elm] = "$x"
-        else
-            terms[2*elm] = string(_string_round(abs, coef), " ", x)
-        end
         if x == y
-            terms[2*elm] *= _math_symbol(mode, :sq)
+            factor = x * _math_symbol(mode, :sq)
         else
             times = mode == MIME("text/latex") ? "\\times " : "*"
-            terms[2*elm] *= string(times, y)
+            factor = string(x, times, y)
         end
+        terms[2*elm] = _term_string(coef, factor)
     end
     terms[1] = terms[1] == " - " ? "-" : ""
     ret = join(terms)

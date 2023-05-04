@@ -1390,10 +1390,10 @@ function test_Hermitian_PSD_anon()
     x = parent(y)
     @test sprint(show, x[1, 1]) == "_[1]"
     @test sprint(show, y[1, 1]) == "_[1]"
-    @test sprint(show, x[1, 2]) == "_[2] + (0.0 + 1.0im) _[4]"
-    @test sprint(show, y[1, 2]) == "_[2] + (0.0 + 1.0im) _[4]"
-    @test sprint(show, x[2, 1]) == "_[2] + (-0.0 - 1.0im) _[4]"
-    @test sprint(show, y[2, 1]) == "_[2] + (0.0 - 1.0im) _[4]"
+    @test sprint(show, x[1, 2]) == "_[2] + _[4] im"
+    @test sprint(show, y[1, 2]) == "_[2] + _[4] im"
+    @test sprint(show, x[2, 1]) == "_[2] - _[4] im"
+    @test sprint(show, y[2, 1]) == "_[2] - _[4] im"
     @test sprint(show, x[2, 2]) == "_[3]"
     @test sprint(show, y[2, 2]) == "_[3]"
     return

@@ -850,11 +850,17 @@ function test_show_latex_parameter()
     return
 end
 
-function test_minus_one_complex_aff_expr()
+function test_complex_expr()
     model = Model()
     @variable(model, x)
+    @variable(model, y)
     f = 1.0im * x + 1.0im
-    @test sprint(show, im * f) == "(-1.0 + 0.0im) x + (-1.0 + 0.0im)"
+    @test sprint(show, im * f) == "-x - 1"
+    @test sprint(show, -f) == "-x im - im"
+    @test sprint(show, f * x) == "x² im + x im"
+    @test sprint(show, f * y) == "x*y im + y im"
+    @test sprint(show, f + y) == "x im + y + im"
+    @test sprint(show, 2f) == "2im x + 2im"
     return
 end
 
@@ -865,9 +871,9 @@ function test_print_hermitian_psd_cone()
     H = Hermitian([x[1] 1im; -1im x[2]])
     c = @constraint(model, H in HermitianPSDCone())
     @test sprint(io -> show(io, MIME("text/plain"), c)) ==
-          "[x[1]           (0.0 + 1.0im);\n (0.0 - 1.0im)  x[2]] $in_sym $(HermitianPSDCone())"
+          "[x[1]  im;\n -im   x[2]] $in_sym $(HermitianPSDCone())"
     @test sprint(io -> show(io, MIME("text/latex"), c)) ==
-          "\$\$ \\begin{bmatrix}\nx_{1} & (0.0 + 1.0im)\\\\\n(0.0 - 1.0im) & x_{2}\\\\\n\\end{bmatrix} \\in \\text{$(HermitianPSDCone())} \$\$"
+          "\$\$ \\begin{bmatrix}\nx_{1} & im\\\\\n-im & x_{2}\\\\\n\\end{bmatrix} \\in \\text{$(HermitianPSDCone())} \$\$"
     return
 end
 

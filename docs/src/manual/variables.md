@@ -1247,8 +1247,8 @@ julia> model = Model();
 
 julia> @variable(model, H[1:2, 1:2] in HermitianPSDCone())
 2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
- real(H[1,1])                               …  real(H[1,2]) + (0.0 + 1.0im) imag(H[1,2])
- real(H[1,2]) + (0.0 - 1.0im) imag(H[1,2])     real(H[2,2])
+ real(H[1,1])                    real(H[1,2]) + imag(H[1,2]) im
+ real(H[1,2]) - imag(H[1,2]) im  real(H[2,2])
 ```
 
 This adds 4 real variables in the [`MOI.HermitianPositiveSemidefiniteConeTriangle`](@ref):
@@ -1266,8 +1266,8 @@ julia> model = Model();
 
 julia> @variable(model, x[1:2, 1:2], Hermitian)
 2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
- real(x[1,1])                               …  real(x[1,2]) + (0.0 + 1.0im) imag(x[1,2])
- real(x[1,2]) + (0.0 - 1.0im) imag(x[1,2])     real(x[2,2])
+ real(x[1,1])                    real(x[1,2]) + imag(x[1,2]) im
+ real(x[1,2]) - imag(x[1,2]) im  real(x[2,2])
 ```
 
 This is equivalent to declaring the variable in [`HermitianMatrixSpace`](@ref):
@@ -1276,8 +1276,8 @@ julia> model = Model();
 
 julia> @variable(model, x[1:2, 1:2] in HermitianMatrixSpace())
 2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
- real(x[1,1])                               …  real(x[1,2]) + (0.0 + 1.0im) imag(x[1,2])
- real(x[1,2]) + (0.0 - 1.0im) imag(x[1,2])     real(x[2,2])
+ real(x[1,1])                    real(x[1,2]) + imag(x[1,2]) im
+ real(x[1,2]) - imag(x[1,2]) im  real(x[2,2])
 ```
 
 ### Why use variables constrained on creation?
