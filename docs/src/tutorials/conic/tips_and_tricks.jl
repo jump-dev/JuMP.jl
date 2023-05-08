@@ -133,7 +133,7 @@ value(θ), value(t)
 
 # ### Exponential
 
-# To model ``exp(x) \\le z``, use `(x, 1, z)`:
+# To model ``\exp(x) \le z``, use `(x, 1, z)`:
 
 model = Model(SCS.Optimizer)
 set_silent(model)
@@ -146,7 +146,7 @@ value(z), exp(1.5)
 
 # ### Logarithm
 
-# To model ``x \\le log(z)``, use `(x, 1, z)`:
+# To model ``x \le \log(z)``, use `(x, 1, z)`:
 
 model = Model(SCS.Optimizer)
 set_silent(model)
@@ -159,7 +159,7 @@ value(x), log(1.5)
 
 # ### Log-sum-exp
 
-# To model ``t \\ge log\\left(\\sum e^{x_i}\\right)``, use:
+# To model ``t \ge \log\left(\sum e^{x_i}\right)``, use:
 
 N = 3
 x0 = rand(N)
