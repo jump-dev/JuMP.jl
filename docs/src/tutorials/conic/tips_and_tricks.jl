@@ -116,9 +116,8 @@ model = Model(SCS.Optimizer)
 set_silent(model)
 @variable(model, θ)
 @variable(model, t)
-@variable(model, u == 0.5)
 @expression(model, residuals, θ * data .- target)
-@constraint(model, [t; u; residuals] in RotatedSecondOrderCone())
+@constraint(model, [t; 0.5; residuals] in RotatedSecondOrderCone())
 @objective(model, Min, t)
 optimize!(model)
 value(θ), value(t)
@@ -130,9 +129,54 @@ value(θ), value(t)
 # ```math
 # K_{exp} = \{ (x,y,z) \in \mathbb{R}^3 : y \exp (x/y) \le z, y > 0 \}
 # ```
+# It can be used to model problems involving `log` and `exp`.
 
-# It can be used to model problems involving `log` and `exp`. For example, the
-# entropy maximization problem consists of maximizing the entropy function,
+# ### Exponential
+
+# To model ``exp(x) \\le z``, use `(x, 1, z)`:
+
+model = Model(SCS.Optimizer)
+set_silent(model)
+@variable(model, x == 1.5)
+@variable(model, z)
+@objective(model, Min, z)
+@constraint(model, [x, 1, z] in MOI.ExponentialCone())
+optimize!(model)
+value(z), exp(1.5)
+
+# ### Logarithm
+
+# To model ``x \\le log(z)``, use `(x, 1, z)`:
+
+model = Model(SCS.Optimizer)
+set_silent(model)
+@variable(model, x)
+@variable(model, z == 1.5)
+@objective(model, Max, x)
+@constraint(model, [x, 1, z] in MOI.ExponentialCone())
+optimize!(model)
+value(x), log(1.5)
+
+# ### Log-sum-exp
+
+# To model ``t \\ge log\\left(\\sum e^{x_i}\\right)``, use:
+
+N = 3
+x0 = rand(N)
+model = Model(SCS.Optimizer)
+set_silent(model)
+@variable(model, x[i=1:N] == x0[i])
+@variable(model, t)
+@objective(model, Min, t)
+@variable(model, u[1:N])
+@constraint(model, sum(u) <= 1)
+@constraint(model, [i=1:N], [x[i] - t, 1, u[i]] in MOI.ExponentialCone())
+optimize!(model)
+value(t), log(sum(exp.(x0)))
+
+# ### Entropy
+
+# The entropy maximization problem consists of maximizing the entropy function,
 # $H(x) = -x\log{x}$ subject to linear inequality constraints.
 
 # ```math
