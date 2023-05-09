@@ -46,7 +46,7 @@ done in the same commit, or separately. The last commit should have the message
 
 ## Post-release
 
- - [ ] Once the tag is created, pdate the relevant `release-` branch. The latest
+ - [ ] Once the tag is created, update the relevant `release-` branch. The latest
        release branch at the time of writing is `release-1.0` (we haven't
        back-ported any patches that needed to create a `release-1.Y` branch). To
        to update the release branch with the v1.10.0 tag, do:
