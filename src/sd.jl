@@ -180,7 +180,7 @@ function reshape_set(
 )
     return PSDCone()
 end
-function vectorize(matrix::Matrix, ::SymmetricMatrixShape)
+function vectorize(matrix, ::SymmetricMatrixShape)
     n = LinearAlgebra.checksquare(matrix)
     return [matrix[i, j] for j in 1:n for i in 1:j]
 end
@@ -219,7 +219,7 @@ function reshape_vector(
     return matrix
 end
 
-function vectorize(matrix::Matrix, ::SkewSymmetricMatrixShape)
+function vectorize(matrix, ::SkewSymmetricMatrixShape)
     n = LinearAlgebra.checksquare(matrix)
     return [matrix[i, j] for j in 1:n for i in 1:j-1]
 end
@@ -246,7 +246,7 @@ function reshape_set(::MOI.PositiveSemidefiniteConeSquare, ::SquareMatrixShape)
 end
 vectorize(matrix::Matrix, ::SquareMatrixShape) = vec(matrix)
 
-function vectorize(matrix, shape::Union{SymmetricMatrixShape,SquareMatrixShape})
+function vectorize(matrix, shape::SquareMatrixShape)
     return vectorize(Matrix(matrix), shape)
 end
 
@@ -564,11 +564,7 @@ struct HermitianMatrixShape <: AbstractShape
     side_dimension::Int
 end
 
-function vectorize(matrix, shape::HermitianMatrixShape)
-    return vectorize(Matrix(matrix), shape)
-end
-
-function vectorize(matrix::Matrix, ::HermitianMatrixShape)
+function vectorize(matrix, ::HermitianMatrixShape)
     n = LinearAlgebra.checksquare(matrix)
     return vcat(
         vectorize(_real.(matrix), SymmetricMatrixShape(n)),
