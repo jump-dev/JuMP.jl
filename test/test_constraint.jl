@@ -14,6 +14,7 @@ using JuMP
 using Test
 
 import LinearAlgebra
+import SparseArrays
 
 include(joinpath(@__DIR__, "utilities.jl"))
 
@@ -1592,6 +1593,16 @@ function test_semiinteger()
     c_obj = constraint_object(c)
     @test isequal_canonical(c_obj.func, y + 1)
     @test c_obj.set == MOI.Semiinteger(2.5, 3.0)
+    return
+end
+
+function test_symmetric_vectorize_allocations()
+    model = Model()
+    @variable(model, x[1:2])
+    C = SparseArrays.sparse([0 1; 0 0])
+    X = LinearAlgebra.Symmetric(C - SparseArrays.spdiagm(x))
+    @constraint(model, X in PSDCone())  # Once for compilation
+    @test (@allocated @constraint(model, X in PSDCone())) <= 944
     return
 end
 
