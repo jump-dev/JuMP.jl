@@ -106,10 +106,11 @@ function test_extension_broadcast_division_error(
         copy(B.rowval),
         vec(x),
     )
-    @test A ./ x isa Matrix{NonlinearExpr}
-    @test B ./ x isa SparseArrays.SparseMatrixCSC{NonlinearExpr,Int}
-    @test A ./ y isa SparseArrays.SparseMatrixCSC{NonlinearExpr,Int}
-    @test B ./ y isa SparseArrays.SparseMatrixCSC{NonlinearExpr,Int}
+    NonlinearExprType = NonlinearExpr{VariableRefType}
+    @test A ./ x isa Matrix{NonlinearExprType}
+    @test B ./ x isa SparseArrays.SparseMatrixCSC{NonlinearExprType,Int}
+    @test A ./ y isa SparseArrays.SparseMatrixCSC{NonlinearExprType,Int}
+    @test B ./ y isa SparseArrays.SparseMatrixCSC{NonlinearExprType,Int}
     # TODO: Refactor to avoid calling the internal JuMP function
     # `_densify_with_jump_eltype`.
     #z = _densify_with_jump_eltype((2 .* y) ./ 3)

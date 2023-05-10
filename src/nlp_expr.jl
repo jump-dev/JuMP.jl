@@ -327,7 +327,7 @@ function jump_function_type(::Model, ::Type{<:MOI.ScalarNonlinearFunction})
     return NonlinearExpr
 end
 
-moi_function_type(::Type{NonlinearExpr}) = MOI.ScalarNonlinearFunction
+moi_function_type(::Type{<:NonlinearExpr}) = MOI.ScalarNonlinearFunction
 
 function constraint_object(c::NonlinearConstraintRef)
     nlp = nonlinear_model(c.model)
@@ -430,26 +430,26 @@ end
 
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
-    ::Type{NonlinearExpr},
+    ::Type{NonlinearExpr{V}},
     ::Type{<:AbstractJuMPScalar},
-)
-    return NonlinearExpr
+) where {V}
+    return NonlinearExpr{V}
 end
 
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
     ::Type{<:AbstractJuMPScalar},
-    ::Type{NonlinearExpr},
-)
-    return NonlinearExpr
+    ::Type{NonlinearExpr{V}},
+) where {V}
+    return NonlinearExpr{V}
 end
 
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
-    ::Type{NonlinearExpr},
-    ::Type{NonlinearExpr},
-)
-    return NonlinearExpr
+    ::Type{NonlinearExpr{V}},
+    ::Type{NonlinearExpr{V}},
+) where {V}
+    return NonlinearExpr{V}
 end
 
 """

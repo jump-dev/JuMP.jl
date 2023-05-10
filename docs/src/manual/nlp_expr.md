@@ -66,12 +66,12 @@ julia> expr = @expression(model, exp(x[1]) + sqrt(x[2]))
 +(exp(x[1]), sqrt(x[2]))
 
 julia> my_anon_expr = @expression(model, [i = 1:2], sin(x[i]))
-2-element Vector{NonlinearExpr}:
+2-element Vector{NonlinearExpr{VariableRef}}:
  sin(x[1])
  sin(x[2])
 
 julia> @expression(model, my_expr[i = 1:2], sin(x[i]))
-2-element Vector{NonlinearExpr}:
+2-element Vector{NonlinearExpr{VariableRef}}:
  sin(x[1])
  sin(x[2])
 ```
@@ -89,7 +89,7 @@ julia> @constraint(model, [i = 1:2], my_expr[i] <= i)
  -(sin(x[2]), 2.0) ≤ 0
 
 julia> @expression(model, nested[i = 1:2], sin(my_expr[i]))
-2-element Vector{NonlinearExpr}:
+2-element Vector{NonlinearExpr{VariableRef}}:
  sin(sin(x[1]))
  sin(sin(x[2]))
 ```
