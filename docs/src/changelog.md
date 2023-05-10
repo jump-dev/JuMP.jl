@@ -7,6 +7,24 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.11.1 (May 12, 2023)
+
+### Fixed
+
+ - Fixed a poor error message when `sum(::DenseAxisArray; dims)` was called
+   (#3338)
+ - Fixed support for dependent sets in the [`@variable`](@ref) macro (#3344)
+ - Fixed a performance bug when vectorizing sparse symmetric matrices (#3349)
+
+### Other
+
+ - Improved the printing of complex numbers (#3332)
+ - When printing, sets which contain constants ending in `.0` now print as
+   integers. This follows the behavior of constants in functions (#3341)
+ - Added `InfiniteOpt` to the extensions documentation (#3343)
+ - Added more documentation for the exponential cone (#3345) (#3347)
+ - Added checklists for developers (#3346)
+
 ## Version 1.11.0 (May 3, 2023)
 
 ### Added
