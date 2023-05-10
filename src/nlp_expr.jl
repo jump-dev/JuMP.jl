@@ -4,11 +4,14 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 """
-    NonlinearExpr(head::Symbol, args::Vector{Any})
-    NonlinearExpr(head::Symbol, args::Any...)
+    NonlinearExpr{V}(head::Symbol, args::Vector{Any})
+    NonlinearExpr{V}(head::Symbol, args::Any...)
 
 The scalar-valued nonlinear function `head(args...)`, represented as a symbolic
 expression tree, with the call operator `head` and ordered arguments in `args`.
+
+`V` is the type of [`AbstractVariableRef`](@ref) present in the expression, and
+is used to help dispatch JuMP extensions.
 
 ## `head`
 
@@ -32,13 +35,16 @@ querying [`MOI.ListOfSupportedNonlinearOperators`](@ref).
 
 The vector `args` contains the arguments to the nonlinear function. If the
 operator is univariate, it must contain one element. Otherwise, it may contain
-multiple elements. Each element must be one of the following:
+multiple elements.
 
- * A constant value of type `T<:Number`
- * A [`VariableRef`](@ref)
- * An [`AffExpr`](@ref)
- * A [`QuadExpr`](@ref)
- * A [`NonlinearExpr`](@ref)
+Given a subtype of [`AbstractVariableRef`](@ref), `V`, for `NonlinearExpr{V}`,
+each element must be one of the following:
+
+ * A constant value of type `<:Number`
+ * A `V`
+ * A [`GenericAffExpr{C,V}`](@ref)
+ * A [`GenericQuadExpr{C,V}`](@ref)
+ * A [`NonlinearExpr{V}`](@ref)
 
 ## Unsupported operators
 
@@ -66,15 +72,35 @@ julia> f = NonlinearExpr(:^, NonlinearExpr(:sin, x), 2.0)
 ^(sin(x), 2.0)
 ```
 """
-struct NonlinearExpr <: AbstractJuMPScalar
+struct NonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
     head::Symbol
     args::Vector{Any}
+
+    function NonlinearExpr(head::Symbol, args::Vector{Any})
+        index = findfirst(Base.Fix2(isa, AbstractJuMPScalar), args)
+        if index === nothing
+            error(
+                "Unable to create a nonlinear expression because it did not " *
+                "contain any JuMP scalars. head = $head, args = $args.",
+            )
+        end
+        return new{variable_ref_type(args[index])}(head, args)
+    end
+
+    function NonlinearExpr{V}(
+        head::Symbol,
+        args::Vector{Any},
+    ) where {V<:AbstractVariableRef}
+        return new{V}(head, args)
+    end
 end
+
+variable_ref_type(::NonlinearExpr{V}) where {V} = V
 
 # We include this method so that we can refactor the internal representation of
 # NonlinearExpr without having to rewrite the method overloads.
-function NonlinearExpr(head::Symbol, args...)
-    return NonlinearExpr(head, Any[args...])
+function NonlinearExpr{V}(head::Symbol, args...) where {V<:AbstractVariableRef}
+    return NonlinearExpr{V}(head, Any[args...])
 end
 
 Base.length(x::NonlinearExpr) = length(x.args)
@@ -167,9 +193,9 @@ end
 
 # Method definitions
 
-Base.zero(::Type{NonlinearExpr}) = NonlinearExpr(:+, 0.0)
+Base.zero(::Type{NonlinearExpr{V}}) where {V} = NonlinearExpr{V}(:+, 0.0)
 
-Base.one(::Type{NonlinearExpr}) = NonlinearExpr(:+, 1.0)
+Base.one(::Type{NonlinearExpr{V}}) where {V} = NonlinearExpr{V}(:+, 1.0)
 
 # Univariate operators
 
@@ -178,14 +204,18 @@ for f in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
     if f == :+
         continue  # We don't need this.
     elseif f == :-
-        @eval Base.:-(x::NonlinearExpr) = NonlinearExpr(:-, x)
+        @eval Base.:-(x::NonlinearExpr{V}) where {V} = NonlinearExpr{V}(:-, x)
     elseif isdefined(Base, f)
-        @eval Base.$(f)(x::AbstractJuMPScalar) = NonlinearExpr($op, x)
+        @eval function Base.$(f)(x::AbstractJuMPScalar)
+            return NonlinearExpr{variable_ref_type(x)}($op, x)
+        end
     elseif isdefined(MOI.Nonlinear, :SpecialFunctions)
         # The operator is defined in some other package.
         SF = MOI.Nonlinear.SpecialFunctions
         if isdefined(SF, f)
-            @eval $(SF).$(f)(x::AbstractJuMPScalar) = NonlinearExpr($op, x)
+            @eval function $(SF).$(f)(x::AbstractJuMPScalar)
+                return NonlinearExpr{variable_ref_type(x)}($op, x)
+            end
         end
     end
 end
@@ -203,19 +233,21 @@ for f in (:+, :-, :*, :^, :/, :atan)
     @eval begin
         function Base.$(f)(x::AbstractJuMPScalar, y::_Constant)
             rhs = convert(Float64, _constant_to_number(y))
-            return NonlinearExpr($op, x, rhs)
+            return NonlinearExpr{variable_ref_type(x)}($op, x, rhs)
         end
         function Base.$(f)(x::_Constant, y::AbstractJuMPScalar)
             lhs = convert(Float64, _constant_to_number(x))
-            return NonlinearExpr($op, lhs, y)
+            return NonlinearExpr{variable_ref_type(y)}($op, lhs, y)
         end
         function Base.$(f)(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
-            return NonlinearExpr($op, x, y)
+            return NonlinearExpr{variable_ref_type(x)}($op, x, y)
         end
     end
 end
 
-_ifelse(a::AbstractJuMPScalar, x, y) = NonlinearExpr(:ifelse, Any[a, x, y])
+function _ifelse(a::AbstractJuMPScalar, x, y)
+    return NonlinearExpr{variable_ref_type(a)}(:ifelse, Any[a, x, y])
+end
 
 for (f, op) in (
     :_and => :&&,
@@ -229,13 +261,13 @@ for (f, op) in (
     op = Meta.quot(op)
     @eval begin
         function $(f)(x::AbstractJuMPScalar, y)
-            return NonlinearExpr($op, x, y)
+            return NonlinearExpr{variable_ref_type(x)}($op, x, y)
         end
         function $(f)(x, y::AbstractJuMPScalar)
-            return NonlinearExpr($op, x, y)
+            return NonlinearExpr{variable_ref_type(y)}($op, x, y)
         end
         function $(f)(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
-            return NonlinearExpr($op, x, y)
+            return NonlinearExpr{variable_ref_type(x)}($op, x, y)
         end
     end
 end
@@ -269,7 +301,7 @@ function moi_function(f::NonlinearExpr)
 end
 
 function jump_function(model::Model, f::MOI.ScalarNonlinearFunction)
-    ret = NonlinearExpr(f.head, Any[])
+    ret = NonlinearExpr{VariableRef}(f.head, Any[])
     stack = Tuple{NonlinearExpr,Any}[]
     for arg in reverse(f.args)
         push!(stack, (ret, arg))
@@ -277,7 +309,7 @@ function jump_function(model::Model, f::MOI.ScalarNonlinearFunction)
     while !isempty(stack)
         parent, arg = pop!(stack)
         if arg isa MOI.ScalarNonlinearFunction
-            new_ret = NonlinearExpr(arg.head, Any[])
+            new_ret = NonlinearExpr{VariableRef}(arg.head, Any[])
             push!(parent.args, new_ret)
             for child in reverse(arg.args)
                 push!(stack, (new_ret, child))
@@ -311,12 +343,12 @@ function jump_function(model::Model, expr::MOI.Nonlinear.Expression)
     for i in length(expr.nodes):-1:1
         node = expr.nodes[i]
         parsed[i] = if node.type == MOI.Nonlinear.NODE_CALL_UNIVARIATE
-            NonlinearExpr(
+            NonlinearExpr{VariableRef}(
                 nlp.operators.univariate_operators[node.index],
                 parsed[rowvals[SparseArrays.nzrange(adj, i)[1]]],
             )
         elseif node.type == MOI.Nonlinear.NODE_CALL_MULTIVARIATE
-            NonlinearExpr(
+            NonlinearExpr{VariableRef}(
                 nlp.operators.multivariate_operators[node.index],
                 Any[parsed[rowvals[j]] for j in SparseArrays.nzrange(adj, i)],
             )
@@ -345,15 +377,18 @@ end
 
 # These converts are used in the {add,sub}mul definition for AbstractJuMPScalar.
 
-Base.convert(::Type{NonlinearExpr}, x::AbstractVariableRef) = x
+Base.convert(::Type{<:NonlinearExpr}, x::AbstractVariableRef) = x
 
-function Base.convert(::Type{NonlinearExpr}, x::GenericAffExpr)
+function Base.convert(
+    ::Type{<:NonlinearExpr},
+    x::GenericAffExpr{C,V},
+) where {C,V}
     args = Any[]
     for (variable, coef) in x.terms
         if isone(coef)
             push!(args, variable)
         elseif !iszero(coef)
-            push!(args, NonlinearExpr(:*, coef, variable))
+            push!(args, NonlinearExpr{V}(:*, coef, variable))
         end
     end
     if !iszero(x.constant) || isempty(args)
@@ -362,23 +397,26 @@ function Base.convert(::Type{NonlinearExpr}, x::GenericAffExpr)
     if length(args) == 1
         return args[1]
     end
-    return NonlinearExpr(:+, args)
+    return NonlinearExpr{V}(:+, args)
 end
 
-function Base.convert(::Type{NonlinearExpr}, x::GenericQuadExpr)
+function Base.convert(
+    ::Type{<:NonlinearExpr},
+    x::GenericQuadExpr{C,V},
+) where {C,V}
     args = Any[]
     for (variable, coef) in x.aff.terms
         if isone(coef)
             push!(args, variable)
         elseif !iszero(coef)
-            push!(args, NonlinearExpr(:*, coef, variable))
+            push!(args, NonlinearExpr{V}(:*, coef, variable))
         end
     end
     for (pair, coef) in x.terms
         if isone(coef)
-            push!(args, NonlinearExpr(:*, pair.a, pair.b))
+            push!(args, NonlinearExpr{V}(:*, pair.a, pair.b))
         elseif !iszero(coef)
-            push!(args, NonlinearExpr(:*, coef, pair.a, pair.b))
+            push!(args, NonlinearExpr{V}(:*, coef, pair.a, pair.b))
         end
     end
     if !iszero(x.aff.constant) || isempty(args)
@@ -387,7 +425,7 @@ function Base.convert(::Type{NonlinearExpr}, x::GenericQuadExpr)
     if length(args) == 1
         return args[1]
     end
-    return NonlinearExpr(:+, args)
+    return NonlinearExpr{V}(:+, args)
 end
 
 function _MA.promote_operation(

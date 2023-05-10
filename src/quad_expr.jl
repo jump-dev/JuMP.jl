@@ -52,6 +52,7 @@ mutable struct GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
 end
 
 variable_ref_type(::Type{GenericQuadExpr{C,V}}) where {C,V} = V
+variable_ref_type(::GenericQuadExpr{C,V}) where {C,V} = V
 
 """
     GenericQuadExpr(

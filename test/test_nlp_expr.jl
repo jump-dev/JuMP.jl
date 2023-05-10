@@ -75,8 +75,9 @@ end
 function test_flatten_nary()
     model = Model()
     @variable(model, x)
-    @test string(zero(NonlinearExpr) + 1) == "+(+(0.0), 1.0)"
-    @test string(zero(NonlinearExpr) + x) == "+(+(0.0), x)"
+    z = zero(NonlinearExpr{VariableRef})
+    @test string(z + 1) == "+(+(0.0), 1.0)"
+    @test string(z + x) == "+(+(0.0), x)"
     @test string(sin(x) + sin(x) + 1) == "+(+(sin(x), sin(x)), 1.0)"
     @test string(sin(x) + sin(x) + x) == "+(+(sin(x), sin(x)), x)"
     @test string(sin(x) * sin(x) * 1) == "*(*(sin(x), sin(x)), 1.0)"
@@ -85,8 +86,8 @@ function test_flatten_nary()
 end
 
 function test_zero_one()
-    @test string(zero(NonlinearExpr)) == "+(0.0)"
-    @test string(one(NonlinearExpr)) == "+(1.0)"
+    @test string(zero(NonlinearExpr{VariableRef})) == "+(0.0)"
+    @test string(one(NonlinearExpr{VariableRef})) == "+(1.0)"
     return
 end
 
@@ -215,7 +216,7 @@ function test_user_defined_function_overload()
     model = Model()
     @variable(model, x)
     f(x::Real) = x^2
-    f(x::AbstractJuMPScalar) = NonlinearExpr(:f, x)
+    f(x::AbstractJuMPScalar) = NonlinearExpr{variable_ref_type(x)}(:f, x)
     register(model, :f, 1, f; autodiff = true)
     @test string(@expression(model, f(x))) == "f(x)"
     @test string(f(x) + f(x)) == "+(f(x), f(x))"
@@ -450,6 +451,18 @@ function test_register_multivariate_gradient_hessian()
     @test isequal_canonical(foo(x...), NonlinearExpr(:foo, Any[x...]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:foo, 2) in attrs
+    return
+end
+
+function test_expression_no_variable()
+    head, args = :sin, Any[1]
+    @test_throws(
+        ErrorException(
+            "Unable to create a nonlinear expression because it did not " *
+            "contain any JuMP scalars. head = $head, args = $args.",
+        ),
+        NonlinearExpr(head, args),
+    )
     return
 end
 
