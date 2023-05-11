@@ -432,7 +432,7 @@ function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
     ::Type{NonlinearExpr{V}},
     ::Type{<:AbstractJuMPScalar},
-) where {V}
+) where {V<:AbstractVariableRef}
     return NonlinearExpr{V}
 end
 
@@ -440,7 +440,7 @@ function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
     ::Type{<:AbstractJuMPScalar},
     ::Type{NonlinearExpr{V}},
-) where {V}
+) where {V<:AbstractVariableRef}
     return NonlinearExpr{V}
 end
 
@@ -448,8 +448,18 @@ function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
     ::Type{NonlinearExpr{V}},
     ::Type{NonlinearExpr{V}},
-) where {V}
+) where {V<:AbstractVariableRef}
     return NonlinearExpr{V}
+end
+
+function _MA.promote_operation(
+    ::Union{typeof(+),typeof(-),typeof(*)},
+    ::Type{NonlinearExpr{U}},
+    ::Type{NonlinearExpr{V}},
+) where {U<:AbstractVariableRef,V<:AbstractVariableRef}
+    return error(
+        "Unable to promote two different types of nonlinear expression",
+    )
 end
 
 """

@@ -8,52 +8,64 @@ module TestNLPExpr
 using JuMP
 using Test
 
-function test_univariate_operators()
-    model = Model()
+function test_extension_univariate_operators(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     for f in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
         if f in (:+, :-, :abs2)
             op = getfield(Base, f)
-            @test op(sin(x)) isa NonlinearExpr
+            @test op(sin(x)) isa NonlinearExpr{VariableRefType}
         elseif isdefined(Base, f)
             op = getfield(Base, f)
-            @test op(x) isa NonlinearExpr
+            @test op(x) isa NonlinearExpr{VariableRefType}
         elseif isdefined(MOI.Nonlinear.SpecialFunctions, f)
             op = getfield(MOI.Nonlinear.SpecialFunctions, f)
-            @test op(x) isa NonlinearExpr
+            @test op(x) isa NonlinearExpr{VariableRefType}
         end
     end
     return
 end
 
-function test_binary_operators()
-    model = Model()
+function test_binary_operators(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     num, aff, quad, nlp = 1.0, 1.0 + x, x^2, sin(x)
     for op in (+, -, *, /), a in (num, x, aff, quad, nlp)
-        @test op(a, nlp) isa NonlinearExpr
-        @test op(nlp, a) isa NonlinearExpr
+        @test op(a, nlp) isa NonlinearExpr{VariableRefType}
+        @test op(nlp, a) isa NonlinearExpr{VariableRefType}
     end
     for op in (*, /), a in (x, aff)
-        @test op(a, quad) isa NonlinearExpr
-        @test op(quad, a) isa NonlinearExpr
+        @test op(a, quad) isa NonlinearExpr{VariableRefType}
+        @test op(quad, a) isa NonlinearExpr{VariableRefType}
     end
     for a in (num, x, aff, quad), b in (x, aff, quad)
-        @test /(a, b) isa NonlinearExpr
+        @test /(a, b) isa NonlinearExpr{VariableRefType}
     end
     return
 end
 
-function test_objective()
-    model = Model()
+function test_extension_objective(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     @objective(model, Min, 2.0 * sin(x)^2 + cos(x) / x)
-    @test objective_function(model) isa NonlinearExpr
+    @test objective_function(model) isa NonlinearExpr{VariableRefType}
     return
 end
 
-function test_expression()
-    model = Model()
+function test_extension_expression(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     @variable(model, y[1:3])
     @test string(@expression(model, *(y...))) == "*(y[1]*y[2], y[3])"
@@ -72,10 +84,13 @@ function test_expression()
     return
 end
 
-function test_flatten_nary()
-    model = Model()
+function test_extension_flatten_nary(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
-    z = zero(NonlinearExpr{VariableRef})
+    z = zero(NonlinearExpr{VariableRefType})
     @test string(z + 1) == "+(+(0.0), 1.0)"
     @test string(z + x) == "+(+(0.0), x)"
     @test string(sin(x) + sin(x) + 1) == "+(+(sin(x), sin(x)), 1.0)"
@@ -85,22 +100,31 @@ function test_flatten_nary()
     return
 end
 
-function test_zero_one()
-    @test string(zero(NonlinearExpr{VariableRef})) == "+(0.0)"
-    @test string(one(NonlinearExpr{VariableRef})) == "+(1.0)"
+function test_extension_zero_one(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    @test string(zero(NonlinearExpr{VariableRefType})) == "+(0.0)"
+    @test string(one(NonlinearExpr{VariableRefType})) == "+(1.0)"
     return
 end
 
-function test_latex()
-    model = Model()
+function test_extension_latex(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     @test function_string(MIME("text/latex"), sin(x)) == "\\textsf{sin(x)}"
     @test function_string(MIME("text/plain"), sin(x)) == "sin(x)"
     return
 end
 
-function test_expression_addmul()
-    model = Model()
+function test_extension_expression_addmul(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     @test string(@expression(model, x + 3 * sin(x))) == "+(x, *(3.0, sin(x)))"
     @test string(@expression(model, 2 * x + 3 * sin(x))) ==
@@ -115,8 +139,11 @@ function test_expression_addmul()
     return
 end
 
-function test_expression_submul()
-    model = Model()
+function test_extension_expression_submul(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     @test string(@expression(model, x - 3 * sin(x))) == "-(x, *(3.0, sin(x)))"
     @test string(@expression(model, 2 * x - 3 * sin(x))) ==
@@ -131,10 +158,13 @@ function test_expression_submul()
     return
 end
 
-function test_aff_expr_convert()
-    model = Model()
+function test_extension_aff_expr_convert(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
-    _to_string(x) = string(convert(NonlinearExpr, x))
+    _to_string(x) = string(convert(NonlinearExpr{VariableRefType}, x))
     @test _to_string(AffExpr(0.0)) == "0.0"
     @test _to_string(AffExpr(1.0)) == "1.0"
     @test _to_string(x + 1) == "+(x, 1.0)"
@@ -143,10 +173,13 @@ function test_aff_expr_convert()
     return
 end
 
-function test_quad_expr_convert()
-    model = Model()
+function test_extension_quad_expr_convert(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
-    _to_string(x) = string(convert(NonlinearExpr, x))
+    _to_string(x) = string(convert(NonlinearExpr{VariableRefType}, x))
     @test _to_string(QuadExpr(AffExpr(0.0))) == "0.0"
     @test _to_string(QuadExpr(AffExpr(1.0))) == "1.0"
     @test _to_string(x^2 + 1) == "+(*(x, x), 1.0)"
@@ -161,8 +194,11 @@ function test_quad_expr_convert()
     return
 end
 
-function test_constraint_name()
-    model = Model()
+function test_extension_constraint_name(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     @constraint(model, c, sin(x) <= 1)
     @test name(c) == "c"
@@ -172,8 +208,11 @@ function test_constraint_name()
     return
 end
 
-function test_constraint_lessthan()
-    model = Model()
+function test_extension_constraint_lessthan(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     @constraint(model, c, 2.0 * sin(x)^2 + cos(x) / x <= 1)
     obj = constraint_object(c)
@@ -182,8 +221,11 @@ function test_constraint_lessthan()
     return
 end
 
-function test_constraint_greaterthan()
-    model = Model()
+function test_extension_constraint_greaterthan(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     @constraint(model, c, 2.0 * sin(x)^2 + cos(x) / x >= 1)
     obj = constraint_object(c)
@@ -192,8 +234,11 @@ function test_constraint_greaterthan()
     return
 end
 
-function test_constraint_equalto()
-    model = Model()
+function test_extension_constraint_equalto(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     @constraint(model, c, 2.0 * sin(x)^2 + cos(x) / x == 1)
     obj = constraint_object(c)
@@ -202,8 +247,11 @@ function test_constraint_equalto()
     return
 end
 
-function test_constraint_interval()
-    model = Model()
+function test_extension_constraint_interval(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     @constraint(model, c, 0 <= 2.0 * sin(x)^2 + cos(x) / x <= 1)
     obj = constraint_object(c)
@@ -216,18 +264,21 @@ function test_user_defined_function_overload()
     model = Model()
     @variable(model, x)
     f(x::Real) = x^2
-    f(x::AbstractJuMPScalar) = NonlinearExpr{variable_ref_type(x)}(:f, x)
+    f(x::AbstractJuMPScalar) = NonlinearExpr{VariableRef}(:f, x)
     register(model, :f, 1, f; autodiff = true)
     @test string(@expression(model, f(x))) == "f(x)"
     @test string(f(x) + f(x)) == "+(f(x), f(x))"
     return
 end
 
-function test_nonlinear_matrix_algebra()
-    model = Model()
+function test_extension_nonlinear_matrix_algebra(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, X[1:3, 1:3], Symmetric)
     @objective(model, Max, sum(X^4 .- X^3))
-    @test objective_function(model) isa NonlinearExpr
+    @test objective_function(model) isa NonlinearExpr{VariableRefType}
     return
 end
 
@@ -235,14 +286,17 @@ end
 This test checks that we can work with expressions of arbitrary depth. Don't use
 recursion!
 """
-function test_recursion_stackoverflow()
-    model = Model()
+function test_extension_recursion_stackoverflow(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     expr = sin(x)
     for _ in 1:20_000
         expr = sin(expr)
     end
-    @test @objective(model, Min, expr) isa NonlinearExpr
+    @test @objective(model, Min, expr) isa NonlinearExpr{VariableRefType}
     @test string(expr) isa String
     return
 end
@@ -313,10 +367,13 @@ function test_constraint_object()
     return
 end
 
-function test_expr_mle()
+function test_extension_expr_mle(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     data = [1.0, 2.0, 4.0, 8.0]
     n = length(data)
-    model = Model()
     @variable(model, x)
     @variable(model, y)
     obj = @expression(
@@ -329,8 +386,11 @@ function test_expr_mle()
     return
 end
 
-function test_nl_macro()
-    model = Model()
+function test_extension_nl_macro(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
     @variable(model, x)
     @test isequal_canonical(
         @expression(model, ifelse(x, 1, 2)),
