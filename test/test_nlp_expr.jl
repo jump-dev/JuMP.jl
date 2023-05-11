@@ -90,13 +90,50 @@ function test_extension_flatten_nary(
 )
     model = ModelType()
     @variable(model, x)
-    z = zero(NonlinearExpr{VariableRefType})
-    @test string(z + 1) == "+(+(0.0), 1.0)"
-    @test string(z + x) == "+(+(0.0), x)"
-    @test string(sin(x) + sin(x) + 1) == "+(+(sin(x), sin(x)), 1.0)"
-    @test string(sin(x) + sin(x) + x) == "+(+(sin(x), sin(x)), x)"
-    @test string(sin(x) * sin(x) * 1) == "*(*(sin(x), sin(x)), 1.0)"
-    @test string(sin(x) * sin(x) * x) == "*(*(sin(x), sin(x)), x)"
+    expr_plus = NonlinearExpr{VariableRefType}(:+, Any[x])
+    expr_mult = NonlinearExpr{VariableRefType}(:*, Any[x])
+    expr_sin = NonlinearExpr{VariableRefType}(:sin, Any[x])
+    @test string(+(expr_plus, 1)) == "+(x, 1.0)"
+    @test string(+(1, expr_plus)) == "+(1.0, x)"
+    @test string(+(expr_plus, x)) == "+(x, x)"
+    @test string(+(expr_sin, x)) == "+(sin(x), x)"
+    @test string(+(x, expr_plus)) == "+(x, x)"
+    @test string(+(x, expr_sin)) == "+(x, sin(x))"
+    @test string(+(expr_plus, expr_plus)) == "+(x, x)"
+    @test string(+(expr_plus, expr_sin)) == "+(x, sin(x))"
+    @test string(+(expr_sin, expr_plus)) == "+(sin(x), x)"
+    @test string(+(expr_sin, expr_sin)) == "+(sin(x), sin(x))"
+    @test string(*(expr_mult, 2)) == "*(x, 2.0)"
+    @test string(*(2, expr_mult)) == "*(2.0, x)"
+    @test string(*(expr_mult, x)) == "*(x, x)"
+    @test string(*(expr_sin, x)) == "*(sin(x), x)"
+    @test string(*(x, expr_mult)) == "*(x, x)"
+    @test string(*(x, expr_sin)) == "*(x, sin(x))"
+    @test string(*(expr_mult, expr_mult)) == "*(x, x)"
+    @test string(*(expr_mult, expr_sin)) == "*(x, sin(x))"
+    @test string(*(expr_sin, expr_mult)) == "*(sin(x), x)"
+    @test string(*(expr_sin, expr_sin)) == "*(sin(x), sin(x))"
+    return
+end
+
+function test_extension_error_associative(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    if VariableRefType == VariableRef
+        return
+    end
+    model1 = ModelType()
+    @variable(model1, x1)
+    model2 = Model()
+    @variable(model2, x2)
+    @test_throws(
+        ErrorException(
+            "Unable to call + with nonlinear expressions of different " *
+            "variable type",
+        ),
+        +(sin(x1), sin(x2)),
+    )
     return
 end
 

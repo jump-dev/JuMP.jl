@@ -245,6 +245,57 @@ for f in (:+, :-, :*, :^, :/, :atan)
     end
 end
 
+# Thse n-ary operators are associative. Instead of creating deeply nested
+# binary trees, flatten arguments where possible.
+for f in (:+, :*)
+    op = Meta.quot(f)
+    @eval begin
+        function Base.$f(x::NonlinearExpr{V}, y::_Constant) where {V}
+            y2 = convert(Float64, _constant_to_number(y))
+            if x.head == $op
+                return NonlinearExpr{V}($op, vcat(x.args, y2))
+            end
+            return NonlinearExpr{V}($op, x, y2)
+        end
+        function Base.$f(x::_Constant, y::NonlinearExpr{V}) where {V}
+            x2 = convert(Float64, _constant_to_number(x))
+            if y.head == $op
+                return NonlinearExpr{V}($op, vcat(x2, y.args))
+            end
+            return NonlinearExpr{V}($op, x2, y)
+        end
+        function Base.$f(x::NonlinearExpr{V}, y::AbstractJuMPScalar) where {V}
+            if x.head == $op
+                return NonlinearExpr{V}($op, vcat(x.args, y))
+            end
+            return NonlinearExpr{V}($op, x, y)
+        end
+        function Base.$f(x::AbstractJuMPScalar, y::NonlinearExpr{V}) where {V}
+            if y.head == $op
+                return NonlinearExpr{V}($op, vcat(x, y.args))
+            end
+            return NonlinearExpr{V}($op, x, y)
+        end
+        function Base.$f(x::NonlinearExpr{V}, y::NonlinearExpr{V}) where {V}
+            if x.head == $op && y.head == $op
+                return NonlinearExpr{V}($op, vcat(x.args, y.args))
+            elseif x.head == $op
+                return NonlinearExpr{V}($op, vcat(x.args, y))
+            elseif y.head == $op
+                return NonlinearExpr{V}($op, vcat(x, y.args))
+            end
+            return NonlinearExpr{V}($op, x, y)
+        end
+        function Base.$f(x::NonlinearExpr{U}, y::NonlinearExpr{V}) where {U,V}
+            return error(
+                "Unable to call ",
+                $op,
+                " with nonlinear expressions of different variable type",
+            )
+        end
+    end
+end
+
 function _ifelse(a::AbstractJuMPScalar, x, y)
     return NonlinearExpr{variable_ref_type(a)}(:ifelse, Any[a, x, y])
 end
