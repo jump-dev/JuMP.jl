@@ -718,6 +718,7 @@ function build_constraint(
 )
     return ScalarConstraint(v, set)
 end
+
 function _clear_constant!(expr::Union{GenericAffExpr,GenericQuadExpr})
     offset = constant(expr)
     add_to_expression!(expr, -offset)
