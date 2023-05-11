@@ -728,6 +728,7 @@ end
 function _clear_constant!(α::Number)
     return zero(α), α
 end
+
 function build_constraint(
     ::Function,
     expr::Union{Number,GenericAffExpr,GenericQuadExpr},
