@@ -24,6 +24,7 @@ build_variable
 ```@docs
 build_constraint
 add_constraint
+model_convert
 AbstractShape
 shape
 reshape_vector

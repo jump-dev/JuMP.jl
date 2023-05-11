@@ -878,6 +878,31 @@ function build_constraint(
     )
 end
 
+"""
+    model_convert(model, con::AbstractConstraint)
+
+Convert the coefficients and constants of functions and sets of `con` to
+`value_type(typeof(model))`.
+
+    model_convert(model, set::MOI.AbstractSet)
+
+Convert the constants of `set` to `value_type(typeof(model))`.
+
+    model_convert(model, func::Union{Number,AbstractJuMPScalar})
+
+Convert the coefficients and constants of `func` to
+`value_type(typeof(model))`.
+
+!!! note
+    In the `@constraint` macro, a constraint with first built with
+    [`build_constraint`](@ref), as [`build_constraint`](@ref) does not
+    have the `model` as argument, the coefficients or constants of the
+    function or set might be different that `value_type(model)`.
+    These are converted in `model_convert` before the constraint is
+    passed to [`add_constraint`](@ref).
+"""
+function model_convert end
+
 model_convert(model, set::MOI.AbstractVectorSet) = set
 
 function model_convert(model, set::MOI.AbstractScalarSet)
