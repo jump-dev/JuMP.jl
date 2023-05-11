@@ -1068,7 +1068,7 @@ See also: [`result_count`](@ref), [`shadow_price`](@ref).
 function dual(
     con_ref::ConstraintRef{M,<:MOI.ConstraintIndex};
     result::Int = 1,
-) where {M}
+) where {M<:AbstractModel}
     return reshape_vector(
         _constraint_dual(con_ref, result, value_type(M)),
         dual_shape(con_ref.shape),
