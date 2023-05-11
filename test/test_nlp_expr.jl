@@ -29,7 +29,7 @@ function test_extension_univariate_operators(
     return
 end
 
-function test_binary_operators(
+function test_extension_binary_operators(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
@@ -109,10 +109,7 @@ function test_extension_zero_one(
     return
 end
 
-function test_extension_latex(
-    ModelType = Model,
-    VariableRefType = VariableRef,
-)
+function test_extension_latex(ModelType = Model, VariableRefType = VariableRef)
     model = ModelType()
     @variable(model, x)
     @test function_string(MIME("text/latex"), sin(x)) == "\\textsf{sin(x)}"
