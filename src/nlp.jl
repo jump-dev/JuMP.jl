@@ -5,7 +5,7 @@
 
 """
     nonlinear_model(
-        model::GenericModel;
+        model::Model;
         force::Bool = false,
     )::Union{MOI.Nonlinear.Model,Nothing}
 
@@ -15,14 +15,14 @@ otherwise return `nothing`.
 If `force`, always return a [`MOI.Nonlinear.Model`](@ref), and if one does not
 exist for the model, create an empty one.
 """
-function nonlinear_model(model::GenericModel; force::Bool = false)
+function nonlinear_model(model::Model; force::Bool = false)
     if force
         _init_NLP(model)
     end
     return model.nlp_model
 end
 
-function _init_NLP(model::GenericModel)
+function _init_NLP(model::Model)
     if model.nlp_model === nothing
         model.nlp_model = MOI.Nonlinear.Model()
     end
@@ -51,7 +51,7 @@ end
 function MOI.Nonlinear.parse_expression(
     model::MOI.Nonlinear.Model,
     expr::MOI.Nonlinear.Expression,
-    x::GenericVariableRef,
+    x::VariableRef,
     parent::Int,
 )
     MOI.Nonlinear.parse_expression(model, expr, index(x), parent)
@@ -61,16 +61,16 @@ end
 function MOI.Nonlinear.parse_expression(
     model::MOI.Nonlinear.Model,
     expr::MOI.Nonlinear.Expression,
-    x::GenericAffExpr{T},
+    x::AffExpr,
     parent::Int,
-) where {T}
+)
     sum_id = model.operators.multivariate_operator_to_id[:+]
     prod_id = model.operators.multivariate_operator_to_id[:*]
     call_multi = MOI.Nonlinear.NODE_CALL_MULTIVARIATE
     n_terms = length(x.terms) + !iszero(x.constant)
     if n_terms == 0
         # If `x` is empty, then substitute `0.0` as the expression.
-        MOI.Nonlinear.parse_expression(model, expr, zero(T), parent)
+        MOI.Nonlinear.parse_expression(model, expr, 0.0, parent)
         return
     elseif n_terms == 1
         # If `x` contains 1 term, then we don't need the leading `+` operator.
@@ -97,16 +97,16 @@ end
 function MOI.Nonlinear.parse_expression(
     model::MOI.Nonlinear.Model,
     expr::MOI.Nonlinear.Expression,
-    x::GenericQuadExpr{T},
+    x::QuadExpr,
     parent::Int,
-) where {T}
+)
     sum_id = model.operators.multivariate_operator_to_id[:+]
     prod_id = model.operators.multivariate_operator_to_id[:*]
     call_multi = MOI.Nonlinear.NODE_CALL_MULTIVARIATE
     n_terms = length(x.terms) + !iszero(x.aff)
     if n_terms == 0
         # If `x` is empty, then substitute `0.0` as the expression.
-        MOI.Nonlinear.parse_expression(model, expr, zero(T), parent)
+        MOI.Nonlinear.parse_expression(model, expr, 0.0, parent)
         return
     elseif n_terms == 1
         # If `x` contains 1 term, then we don't need the leading `+` operator.
@@ -135,7 +135,7 @@ end
 
 """
     set_nonlinear_objective(
-        model::GenericModel,
+        model::Model,
         sense::MOI.OptimizationSense,
         expr::Expr,
     )
@@ -161,11 +161,7 @@ julia> @variable(model, x);
 julia> set_nonlinear_objective(model, MIN_SENSE, :(\$(x) + \$(x)^2))
 ```
 """
-function set_nonlinear_objective(
-    model::GenericModel,
-    sense::MOI.OptimizationSense,
-    x,
-)
+function set_nonlinear_objective(model::Model, sense::MOI.OptimizationSense, x)
     _init_NLP(model)
     set_objective_sense(model, sense)
     MOI.Nonlinear.set_objective(model.nlp_model, x)
@@ -173,12 +169,12 @@ function set_nonlinear_objective(
 end
 
 """
-    _nlp_objective_function(model::GenericModel)
+    _nlp_objective_function(model::Model)
 
 Returns the nonlinear objective function or `nothing` if no nonlinear objective
 function is set.
 """
-function _nlp_objective_function(model::GenericModel)
+function _nlp_objective_function(model::Model)
     if model.nlp_model === nothing
         return nothing
     end
@@ -197,7 +193,7 @@ A struct to represent a nonlinear parameter.
 Create a parameter using [`@NLparameter`](@ref).
 """
 struct NonlinearParameter <: AbstractJuMPScalar
-    model::GenericModel
+    model::Model
     index::Int
 end
 
@@ -211,9 +207,9 @@ function MOI.Nonlinear.parse_expression(
     return MOI.Nonlinear.parse_expression(model, expr, index, parent)
 end
 
-function add_nonlinear_parameter(model::GenericModel{T}, value::Real) where {T}
+function add_nonlinear_parameter(model::Model, value::Real)
     _init_NLP(model)
-    p = MOI.Nonlinear.add_parameter(model.nlp_model, convert(T, value))
+    p = MOI.Nonlinear.add_parameter(model.nlp_model, Float64(value))
     return NonlinearParameter(model, p.value)
 end
 
@@ -282,7 +278,7 @@ A struct to represent a nonlinear expression.
 Create an expression using [`@NLexpression`](@ref).
 """
 struct NonlinearExpression <: AbstractJuMPScalar
-    model::GenericModel
+    model::Model
     index::Int
 end
 
@@ -304,7 +300,7 @@ Return the index of the nonlinear expression associated with `ex`.
 index(ex::NonlinearExpression) = MOI.Nonlinear.ExpressionIndex(ex.index)
 
 """
-    add_nonlinear_expression(model::GenericModel, expr::Expr)
+    add_nonlinear_expression(model::Model, expr::Expr)
 
 Add a nonlinear expression `expr` to `model`.
 
@@ -326,7 +322,7 @@ julia> add_nonlinear_expression(model, :(\$(x) + \$(x)^2))
 subexpression[1]: x + x ^ 2.0
 ```
 """
-function add_nonlinear_expression(model::GenericModel, ex)
+function add_nonlinear_expression(model::Model, ex)
     _init_NLP(model)
     index = MOI.Nonlinear.add_expression(model.nlp_model, ex)
     return NonlinearExpression(model, index.value)
@@ -349,7 +345,7 @@ function value(ex::NonlinearExpression; result::Int = 1)
 end
 
 """
-    _VariableValueMap{T,F}
+    _VariableValueMap{F}
 
 A lazy cache used for computing the primal variable solution in `value`.
 
@@ -357,12 +353,12 @@ This avoids the need to rewrite the nonlinear expressions from MOI_VARIABLE to
 VARIABLE, as well as eagerly computing the `var_value` for every variable. We
 use a `cache` so we don't have to recompute variables we have already seen.
 """
-struct _VariableValueMap{T,F} <: AbstractDict{MOI.VariableIndex,T}
-    model::GenericModel{T}
+struct _VariableValueMap{F} <: AbstractDict{MOI.VariableIndex,T}
+    model::Model
     value::F
-    cache::Dict{MOI.VariableIndex,T}
-    function _VariableValueMap(model::GenericModel{T}, value::F) where {T,F}
-        return new{T,F}(model, value, Dict{MOI.VariableIndex,T}())
+    cache::Dict{MOI.VariableIndex,Float64}
+    function _VariableValueMap(model::Model, value::F) where {F}
+        return new{F}(model, value, Dict{MOI.VariableIndex,Float64}())
     end
 end
 
@@ -398,16 +394,11 @@ const NonlinearConstraintIndex = MOI.Nonlinear.ConstraintIndex
 const NonlinearConstraintRef =
     ConstraintRef{Model,MOI.Nonlinear.ConstraintIndex}
 
-function _normalize_constraint_expr(
-    ::Type{T},
-    lhs::Real,
-    body,
-    rhs::Real,
-) where {T}
-    return convert(T, lhs), body, convert(T, rhs)
+function _normalize_constraint_expr(lhs::Real, body, rhs::Real)
+    return Float64(lhs), body, Float64(rhs)
 end
 
-function _normalize_constraint_expr(::Type, lhs, body, rhs)
+function _normalize_constraint_expr(lhs, body, rhs)
     return error(
         "Interval constraint contains non-constant left- or right-hand " *
         "sides. Reformulate as two separate constraints, or move all " *
@@ -415,39 +406,35 @@ function _normalize_constraint_expr(::Type, lhs, body, rhs)
     )
 end
 
-function _normalize_constraint_expr(::Type{T}, lhs, rhs::Real) where {T}
-    return lhs, convert(T, rhs)
+function _normalize_constraint_expr(lhs, rhs::Real) where {T}
+    return lhs, Float64(rhs)
 end
 
-function _normalize_constraint_expr(::Type{T}, lhs, rhs) where {T}
-    return Expr(:call, :-, lhs, rhs), zero(T)
+function _normalize_constraint_expr(lhs, rhs) where {T}
+    return Expr(:call, :-, lhs, rhs), 0.0
 end
 
-function _expr_to_constraint(::Type{T}, expr::Expr) where {T}
+function _expr_to_constraint(expr::Expr)
     if isexpr(expr, :comparison)
         @assert expr.args[2] == expr.args[4]
         @assert expr.args[2] in (:<=, :>=)
-        lhs, body, rhs = _normalize_constraint_expr(
-            T,
-            expr.args[1],
-            expr.args[3],
-            expr.args[5],
-        )
+        lhs, body, rhs =
+            _normalize_constraint_expr(expr.args[1], expr.args[3], expr.args[5])
         return body, MOI.Interval(lhs, rhs)
     end
-    lhs, rhs = _normalize_constraint_expr(T, expr.args[2], expr.args[3])
+    lhs, rhs = _normalize_constraint_expr(expr.args[2], expr.args[3])
     if expr.args[1] == :<=
-        return :($lhs - $rhs), MOI.LessThan(zero(T))
+        return :($lhs - $rhs), MOI.LessThan(0.0)
     elseif expr.args[1] == :>=
-        return :($lhs - $rhs), MOI.GreaterThan(zero(T))
+        return :($lhs - $rhs), MOI.GreaterThan(0.0)
     else
         @assert expr.args[1] == :(==)
-        return :($lhs - $rhs), MOI.EqualTo(zero(T))
+        return :($lhs - $rhs), MOI.EqualTo(0.0)
     end
 end
 
 """
-    add_nonlinear_constraint(model::GenericModel, expr::Expr)
+    add_nonlinear_constraint(model::Model, expr::Expr)
 
 Add a nonlinear constraint described by the Julia expression `ex` to `model`.
 
@@ -469,19 +456,19 @@ julia> add_nonlinear_constraint(model, :(\$(x) + \$(x)^2 <= 1))
 (x + x ^ 2.0) - 1.0 ≤ 0
 ```
 """
-function add_nonlinear_constraint(model::GenericModel{T}, ex::Expr) where {T}
+function add_nonlinear_constraint(model::Model, ex::Expr)
     _init_NLP(model)
-    f, set = _expr_to_constraint(T, ex)
+    f, set = _expr_to_constraint(ex)
     c = MOI.Nonlinear.add_constraint(model.nlp_model, f, set)
     return ConstraintRef(model, c, ScalarShape())
 end
 
 """
-    is_valid(model::GenericModel, c::NonlinearConstraintRef)
+    is_valid(model::Model, c::NonlinearConstraintRef)
 
 Return `true` if `c` refers to a valid nonlinear constraint in `model`.
 """
-function is_valid(model::GenericModel, c::NonlinearConstraintRef)
+function is_valid(model::Model, c::NonlinearConstraintRef)
     if model !== c.model
         return false
     end
@@ -491,11 +478,11 @@ function is_valid(model::GenericModel, c::NonlinearConstraintRef)
 end
 
 """
-    delete(model::GenericModel, c::NonlinearConstraintRef)
+    delete(model::Model, c::NonlinearConstraintRef)
 
 Delete the nonlinear constraint `c` from `model`.
 """
-function delete(model::GenericModel, c::NonlinearConstraintRef)
+function delete(model::Model, c::NonlinearConstraintRef)
     _init_NLP(model)
     index = MOI.Nonlinear.ConstraintIndex(c.index.value)
     MOI.Nonlinear.delete(model.nlp_model, index)
@@ -503,11 +490,11 @@ function delete(model::GenericModel, c::NonlinearConstraintRef)
 end
 
 """
-    num_nonlinear_constraints(model::GenericModel)
+    num_nonlinear_constraints(model::Model)
 
 Returns the number of nonlinear constraints associated with the `model`.
 """
-function num_nonlinear_constraints(model::GenericModel)
+function num_nonlinear_constraints(model::Model)
     nlp_model = nonlinear_model(model)
     if nlp_model === nothing
         return 0
@@ -516,12 +503,12 @@ function num_nonlinear_constraints(model::GenericModel)
 end
 
 """
-    all_nonlinear_constraints(model::GenericModel)
+    all_nonlinear_constraints(model::Model)
 
 Return a vector of all nonlinear constraint references in the model in the
 order they were added to the model.
 """
-function all_nonlinear_constraints(model::GenericModel)
+function all_nonlinear_constraints(model::Model)
     nlp_model = nonlinear_model(model)
     if nlp_model === nothing
         return NonlinearConstraintRef[]
@@ -584,17 +571,17 @@ function dual(c::NonlinearConstraintRef)
 end
 
 """
-    nonlinear_dual_start_value(model::GenericModel)
+    nonlinear_dual_start_value(model::Model)
 
 Return the current value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref).
 """
-function nonlinear_dual_start_value(model::GenericModel)
+function nonlinear_dual_start_value(model::Model)
     return MOI.get(model, MOI.NLPBlockDualStart())
 end
 
 """
     set_nonlinear_dual_start_value(
-        model::GenericModel{T},
+        model::Model{T},
         start::Union{Nothing,Vector{T}},
     ) where {T}
 
@@ -637,7 +624,7 @@ julia> nonlinear_dual_start_value(model)
 ```
 """
 function set_nonlinear_dual_start_value(
-    model::GenericModel{T},
+    model::Model{T},
     start::Vector{T},
 ) where {T}
     _init_NLP(model)
@@ -654,14 +641,14 @@ function set_nonlinear_dual_start_value(
     return
 end
 
-function set_nonlinear_dual_start_value(model::GenericModel, start::Nothing)
+function set_nonlinear_dual_start_value(model::Model, start::Nothing)
     MOI.set(model, MOI.NLPBlockDualStart(), start)
     return
 end
 
 """
     register(
-        model::GenericModel{T},
+        model::Model{T},
         op::Symbol,
         dimension::Integer,
         f::Function;
@@ -715,7 +702,7 @@ julia> @NLobjective(model, Min, g(x[1], x[2]))
 ```
 """
 function register(
-    model::GenericModel,
+    model::Model,
     op::Symbol,
     dimension::Integer,
     f::Function;
@@ -731,7 +718,7 @@ end
 
 """
     register(
-        model::GenericModel{T},
+        model::Model{T},
         s::Symbol,
         dimension::Integer,
         f::Function,
@@ -801,7 +788,7 @@ julia> @NLobjective(model, Min, g(x[1], x[2]))
 ```
 """
 function register(
-    model::GenericModel,
+    model::Model,
     op::Symbol,
     dimension::Integer,
     f::Function,
@@ -827,7 +814,7 @@ end
 
 """
     register(
-        model::GenericModel{T},
+        model::Model{T},
         s::Symbol,
         dimension::Integer,
         f::Function,
@@ -874,7 +861,7 @@ julia> @NLobjective(model, Min, foo(x))
 ```
 """
 function register(
-    model::GenericModel,
+    model::Model,
     op::Symbol,
     dimension::Integer,
     f::Function,
@@ -888,7 +875,7 @@ end
 
 """
     NLPEvaluator(
-        model::GenericModel,
+        model::Model,
         _differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation =
             MOI.Nonlinear.SparseReverseMode(),
     )
@@ -907,7 +894,7 @@ Pass `_differentiation_backend` to specify the differentiation backend used to
 compute derivatives.
 """
 function NLPEvaluator(
-    model::GenericModel;
+    model::Model;
     _differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation = MOI.Nonlinear.SparseReverseMode(),
 )
     _init_NLP(model)

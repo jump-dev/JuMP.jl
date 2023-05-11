@@ -79,8 +79,6 @@ abstract type AbstractModel end
 Return the return type of [`value`](@ref) for variables of that model. It
 defaults to `Float64` if it is not implemented.
 """
-function value_type end
-
 value_type(::Type{<:AbstractModel}) = Float64
 
 mutable struct GenericModel{T} <: AbstractModel

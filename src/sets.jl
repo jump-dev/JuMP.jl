@@ -230,6 +230,8 @@ struct SOS2{T} <: AbstractVectorSet
         return new{T}(convert(Vector{T}, weights))
     end
 end
+# `Int` is chosen as a placeholder, and it is replaced by the `value_type`
+# converted by `model_convert` when adding to the model.
 SOS2() = SOS2{Int}()
 SOS2(weights) = SOS2{eltype(weights)}(weights)
 function moi_set(set::SOS2{T}, dim::Int) where {T}
@@ -301,8 +303,8 @@ struct Semicontinuous{T} <: AbstractScalarSet
     end
 end
 
-function moi_set(set::Semicontinuous)
-    return MOI.Semicontinuous{Float64}(set.lower, set.upper)
+function moi_set(set::Semicontinuous{T}) where {T}
+    return MOI.Semicontinuous{T}(set.lower, set.upper)
 end
 
 """
@@ -337,6 +339,6 @@ struct Semiinteger{T} <: AbstractScalarSet
     end
 end
 
-function moi_set(set::Semiinteger)
-    return MOI.Semiinteger{Float64}(set.lower, set.upper)
+function moi_set(set::Semiinteger{T}) where {T}
+    return MOI.Semiinteger{T}(set.lower, set.upper)
 end
