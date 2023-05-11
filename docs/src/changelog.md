@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Fixed a poor error message when `sum(::DenseAxisArray; dims)` was called
    (#3338)
  - Fixed support for dependent sets in the [`@variable`](@ref) macro (#3344)
- - Fixed a performance bug when vectorizing sparse symmetric matrices (#3349)
+ - Fixed a performance bug in constraints with sparse symmetric matrices (#3349)
 
 ### Other
 
