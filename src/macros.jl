@@ -724,6 +724,7 @@ function _clear_constant!(expr::Union{GenericAffExpr,GenericQuadExpr})
     add_to_expression!(expr, -offset)
     return expr, offset
 end
+
 function _clear_constant!(α::Number)
     return zero(α), α
 end
