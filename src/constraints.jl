@@ -994,7 +994,7 @@ evaluation of `2x + 3y`.
 function value(
     con_ref::ConstraintRef{M,<:MOI.ConstraintIndex};
     result::Int = 1,
-) where {M}
+) where {M<:AbstractModel}
     return reshape_vector(
         _constraint_primal(con_ref, result, value_type(M)),
         con_ref.shape,
