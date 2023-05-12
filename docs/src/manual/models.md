@@ -198,6 +198,10 @@ GenericAffExpr{Rational{BigInt}, GenericVariableRef{Rational{BigInt}}}
 Note that this should mostly be used if the underlying solver actually solves
 the problem using a number type different from `Float64`.
 
+!!! warning
+    [Nonlinear Modeling](@ref) is currently only supported with `Float64` number
+    type.
+
 ## Print the model
 
 By default, `show(model)` will print a summary of the problem:
