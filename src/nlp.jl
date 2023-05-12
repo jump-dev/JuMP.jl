@@ -406,13 +406,9 @@ function _normalize_constraint_expr(lhs, body, rhs)
     )
 end
 
-function _normalize_constraint_expr(lhs, rhs::Real)
-    return lhs, Float64(rhs)
-end
+_normalize_constraint_expr(lhs, rhs::Real) = lhs, Float64(rhs)
 
-function _normalize_constraint_expr(lhs, rhs)
-    return Expr(:call, :-, lhs, rhs), 0.0
-end
+_normalize_constraint_expr(lhs, rhs) = Expr(:call, :-, lhs, rhs), 0.0
 
 function _expr_to_constraint(expr::Expr)
     if isexpr(expr, :comparison)
@@ -623,7 +619,7 @@ julia> nonlinear_dual_start_value(model)
   1.0
 ```
 """
-function set_nonlinear_dual_start_value(model::Model, start::Vector)
+function set_nonlinear_dual_start_value(model::Model, start::Vector{Float64})
     _init_NLP(model)
     N = num_nonlinear_constraints(model)
     if length(start) != N
@@ -656,7 +652,7 @@ Register the user-defined function `f` that takes `dimension` arguments in
 `model` as the symbol `op`.
 
 The function `f` must support all subtypes of `Real` as arguments. Do not assume
-that the inputs are `T`.
+that the inputs are `Float64`.
 
 ## Notes
 
@@ -727,7 +723,7 @@ Register the user-defined function `f` that takes `dimension` arguments in
 `model` as the symbol `s`. In addition, provide a gradient function `∇f`.
 
 The functions `f`and `∇f` must support all subtypes of `Real` as arguments. Do
-not assume that the inputs are `T`.
+not assume that the inputs are `Float64`.
 
 ## Notes
 
@@ -811,13 +807,13 @@ end
 
 """
     register(
-        model::Model{T},
+        model::Model,
         s::Symbol,
         dimension::Integer,
         f::Function,
         ∇f::Function,
         ∇²f::Function,
-    ) where {T}
+    )
 
 Register the user-defined function `f` that takes `dimension` arguments in
 `model` as the symbol `s`. In addition, provide a gradient function `∇f` and a
@@ -829,7 +825,7 @@ derivatives of the function `f` respectively.
 ## Notes
 
  * Because automatic differentiation is not used, you can assume the inputs are
-   all `T`.
+   all `Float64`.
  * This method will throw an error if `dimension > 1`.
  * `s` does not have to be the same symbol as `f`, but it is generally more
    readable if it is.
