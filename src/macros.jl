@@ -742,6 +742,7 @@ function build_constraint(
         return ScalarConstraint(expr, set)
     end
 end
+
 function build_constraint(
     _error::Function,
     ::_MA.Zero,
