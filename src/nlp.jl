@@ -353,11 +353,11 @@ This avoids the need to rewrite the nonlinear expressions from MOI_VARIABLE to
 VARIABLE, as well as eagerly computing the `var_value` for every variable. We
 use a `cache` so we don't have to recompute variables we have already seen.
 """
-struct _VariableValueMap{F} <: AbstractDict{MOI.VariableIndex,T}
+struct _VariableValueMap{F} <: AbstractDict{MOI.VariableIndex,Float64}
     model::Model
     value::F
     cache::Dict{MOI.VariableIndex,Float64}
-    function _VariableValueMap(model::Model, value::F) where {F}
+    function _VariableValueMap(model, value::F) where {F}
         return new{F}(model, value, Dict{MOI.VariableIndex,Float64}())
     end
 end
@@ -406,11 +406,11 @@ function _normalize_constraint_expr(lhs, body, rhs)
     )
 end
 
-function _normalize_constraint_expr(lhs, rhs::Real) where {T}
+function _normalize_constraint_expr(lhs, rhs::Real)
     return lhs, Float64(rhs)
 end
 
-function _normalize_constraint_expr(lhs, rhs) where {T}
+function _normalize_constraint_expr(lhs, rhs)
     return Expr(:call, :-, lhs, rhs), 0.0
 end
 
@@ -581,9 +581,9 @@ end
 
 """
     set_nonlinear_dual_start_value(
-        model::Model{T},
-        start::Union{Nothing,Vector{T}},
-    ) where {T}
+        model::Model,
+        start::Union{Nothing,Vector{Float64}},
+    )
 
 Set the value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref).
 
@@ -623,10 +623,7 @@ julia> nonlinear_dual_start_value(model)
   1.0
 ```
 """
-function set_nonlinear_dual_start_value(
-    model::Model{T},
-    start::Vector{T},
-) where {T}
+function set_nonlinear_dual_start_value(model::Model, start::Vector)
     _init_NLP(model)
     N = num_nonlinear_constraints(model)
     if length(start) != N
@@ -648,12 +645,12 @@ end
 
 """
     register(
-        model::Model{T},
+        model::Model,
         op::Symbol,
         dimension::Integer,
         f::Function;
         autodiff:Bool = false,
-    ) where {T}
+    )
 
 Register the user-defined function `f` that takes `dimension` arguments in
 `model` as the symbol `op`.
@@ -718,13 +715,13 @@ end
 
 """
     register(
-        model::Model{T},
+        model::Model,
         s::Symbol,
         dimension::Integer,
         f::Function,
         ∇f::Function;
         autodiff:Bool = false,
-    ) where {T}
+    )
 
 Register the user-defined function `f` that takes `dimension` arguments in
 `model` as the symbol `s`. In addition, provide a gradient function `∇f`.
