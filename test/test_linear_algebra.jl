@@ -59,7 +59,9 @@ for T in (
     macro_matvec = Symbol("test_$(T)_macro_matvec")
     matvec = Symbol("test_$(T)_matvec")
     matvec_alloc = Symbol("test_$(T)_matvec_alloc")
-    test_broken = T in (:LowerTriangular, :UpperTriangular)
+    test_broken =
+        VERSION < v"1.10.0-DEV.1278" &&
+        T in (:LowerTriangular, :UpperTriangular)
     @eval begin
         function $macro_matvec()
             model = Model()
