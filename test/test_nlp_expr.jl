@@ -560,4 +560,39 @@ function test_expression_no_variable()
     return
 end
 
+function test_value_expression()
+    model = Model()
+    @variable(model, x)
+    f = x -> 1.1
+    @test value(f, sin(x)) ≈ sin(1.1)
+    @test value(f, sin(x) + cos(x)) ≈ sin(1.1) + cos(1.1)
+    @test value(f, x^1.3 / x) ≈ 1.1^1.3 / 1.1
+    @test value(f, @expression(model, ifelse(x > 1, 1, 2))) ≈ 1
+    @test value(f, @expression(model, ifelse(x < 1, 1, 2))) ≈ 2
+    @test value(f, @expression(model, ifelse(x < 1 || x > 2, 1, 2))) ≈ 2
+    @test value(f, @expression(model, ifelse(x < 1 && x > 2, 1, 2))) ≈ 2
+    @test value(f, sin(x + 1)) ≈ sin(1.1 + 1)
+    @test value(f, sin(x^2 + x + 1)) ≈ sin(1.1^2 + 1.1 + 1)
+    foo(x) = (x - 1)^2
+    bar(x, y) = sqrt(x - y)
+    @register(model, my_foo, 1, foo)
+    @register(model, my_bar, 2, bar)
+    @test value(f, my_foo(x)) ≈ (1.1 - 1)^2
+    @test value(f, my_foo(x + 1)) ≈ (1.1 + 1 - 1)^2
+    @test value(f, my_foo(x^2 + 1)) ≈ (1.1^2 + 1 - 1)^2
+    @test value(f, my_foo(x^2 + x + 1)) ≈ (1.1^2 + 1.1 + 1 - 1)^2
+    y = QuadExpr(x + 1)
+    @test value(f, my_foo(y)) ≈ (value(f, y) - 1)^2
+    @test value(f, my_bar(2.2, x)) ≈ sqrt(2.2 - 1.1)
+    bad_udf = UserDefinedFunction(:bad_udf)
+    @test_throws(
+        ErrorException(
+            "Unable to evaluate nonlinear operator bad_udf because it is not " *
+            "registered",
+        ),
+        value(f, bad_udf(x)),
+    )
+    return
+end
+
 end  # module

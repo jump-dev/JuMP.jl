@@ -325,8 +325,27 @@ end
 
 # JuMP interop
 
-# TODO
-check_belongs_to_model(::NonlinearExpr, ::Model) = true
+function owner_model(expr::NonlinearExpr)
+    for arg in expr.args
+        if !(arg isa AbstractJuMPScalar)
+            continue
+        end
+        model = owner_model(arg)
+        if model !== nothing
+            return model
+        end
+    end
+    return nothing
+end
+
+function check_belongs_to_model(expr::NonlinearExpr, model::AbstractModel)
+    for arg in expr.args
+        if arg isa AbstractJuMPScalar
+            check_belongs_to_model(arg, model)
+        end
+    end
+    return
+end
 
 function moi_function(f::NonlinearExpr)
     ret = MOI.ScalarNonlinearFunction(f.head, Any[])
@@ -421,7 +440,73 @@ function jump_function(model::Model, expr::MOI.Nonlinear.Expression)
 end
 
 function value(f::Function, expr::NonlinearExpr)
-    return error("TODO")
+    return _evaluate_expr(MOI.Nonlinear.OperatorRegistry(), f, expr)
+end
+
+function value(a::NonlinearExpr; result::Int = 1)
+    return value(a) do x
+        return value(x; result = result)
+    end
+end
+
+function _evaluate_expr(
+    ::MOI.Nonlinear.OperatorRegistry,
+    f::Function,
+    expr::AbstractJuMPScalar,
+)
+    return value(f, expr)
+end
+
+function _evaluate_expr(
+    ::MOI.Nonlinear.OperatorRegistry,
+    ::Function,
+    expr::Real,
+)
+    return convert(Float64, expr)
+end
+
+function _evaluate_user_defined_function(registry, f, expr::NonlinearExpr)
+    model = owner_model(expr)
+    op, nargs = expr.head, length(expr.args)
+    udf = MOI.get(model, MOI.UserDefinedFunction(op, nargs))
+    if udf === nothing
+        return error(
+            "Unable to evaluate nonlinear operator $op because it is not " *
+            "registered",
+        )
+    end
+    args = [_evaluate_expr(registry, f, arg) for arg in expr.args]
+    return first(udf)(args...)
+end
+
+function _evaluate_expr(
+    registry::MOI.Nonlinear.OperatorRegistry,
+    f::Function,
+    expr::NonlinearExpr,
+)
+    op = expr.head
+    # TODO(odow): uses private function
+    if !MOI.Nonlinear._is_registered(registry, op, length(expr.args))
+        return _evaluate_user_defined_function(registry, f, expr)
+    end
+    if length(expr.args) == 1 && haskey(registry.univariate_operator_to_id, op)
+        arg = _evaluate_expr(registry, f, expr.args[1])
+        return MOI.Nonlinear.eval_univariate_function(registry, op, arg)
+    elseif haskey(registry.multivariate_operator_to_id, op)
+        args = [_evaluate_expr(registry, f, arg) for arg in expr.args]
+        return MOI.Nonlinear.eval_multivariate_function(registry, op, args)
+    elseif haskey(registry.logic_operator_to_id, op)
+        @assert length(expr.args) == 2
+        x = _evaluate_expr(registry, f, expr.args[1])
+        y = _evaluate_expr(registry, f, expr.args[2])
+        return MOI.Nonlinear.eval_logic_function(registry, op, x, y)
+    else
+        @assert haskey(registry.comparison_operator_to_id, op)
+        @assert length(expr.args) == 2
+        x = _evaluate_expr(registry, f, expr.args[1])
+        y = _evaluate_expr(registry, f, expr.args[2])
+        return MOI.Nonlinear.eval_comparison_function(registry, op, x, y)
+    end
 end
 
 # MutableArithmetics.jl

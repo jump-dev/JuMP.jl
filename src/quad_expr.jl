@@ -52,7 +52,17 @@ mutable struct GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
 end
 
 variable_ref_type(::Type{GenericQuadExpr{C,V}}) where {C,V} = V
-variable_ref_type(::GenericQuadExpr{C,V}) where {C,V} = V
+
+function owner_model(x::GenericQuadExpr)
+    model = owner_model(x.aff)
+    if model !== nothing
+        return model
+    elseif !isempty(x.terms)
+        pair = first(keys(x.terms))
+        return owner_model(pair.a)
+    end
+    return nothing
+end
 
 """
     GenericQuadExpr(
