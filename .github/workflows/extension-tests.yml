@@ -36,5 +36,6 @@ jobs:
         shell: julia --color=yes {0}
         run: |
           import Pkg
+          Pkg.develop(Pkg.PackageSpec(; path = pwd()))
           Pkg.develop(ENV["PACKAGE"])
           Pkg.test(ENV["PACKAGE"])
