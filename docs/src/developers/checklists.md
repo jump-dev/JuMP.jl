@@ -65,18 +65,19 @@ Use the following checklist when adding a new solver to the JuMP documentation.
 ````
 ## Basic
 
- - [ ] The solver is a registered Julia package
- - [ ] The solver has a MathOptInterface wrapper
- - [ ] The tests call `MOI.Test.runtests`. Some test excludes are permissible,
-       but the reason for skipping a particular test should be documented.
- - [ ] The README and/or documentation provides an example of how to use the
-       solver with JuMP
+ - [ ] Check that the solver is a registered Julia package
+ - [ ] Check that the solver has a MathOptInterface wrapper
+ - [ ] Check that the tests call `MOI.Test.runtests`. Some test excludes are
+       permissible, but the reason for skipping a particular test should be
+       documented.
+ - [ ] Check that the README and/or documentation provides an example of how to
+       use the solver with JuMP
 
 ## Documentation
 
- - [ ] A new row is added to the table in `docs/src/installation.md`
+ - [ ] Add a new row to the table in `docs/src/installation.md`
 
 ## Optional
 
- - [ ] Package metadata is added to `docs/packages.toml`
+ - [ ] Add package metadata to `docs/packages.toml`
 ````
