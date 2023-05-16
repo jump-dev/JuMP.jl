@@ -57,3 +57,26 @@ done in the same commit, or separately. The last commit should have the message
        git push
        ```
 ````
+
+## Adding a new solver to the documentation
+
+Use the following checklist when adding a new solver to the JuMP documentation.
+
+````
+## Basic
+
+ - [ ] The solver is a registered Julia package
+ - [ ] The solver has a MathOptInterface wrapper
+ - [ ] The tests call `MOI.Test.runtests`. Some test excludes are permissible,
+       but the reason for skipping a particular test should be documented.
+ - [ ] The README and/or documentation provides an example of how to use the
+       solver with JuMP
+
+## Documentation
+
+ - [ ] A new row is added to the table in `docs/src/installation.md`
+
+## Optional
+
+ - [ ] Package metadata is added to `docs/packages.toml`
+````
