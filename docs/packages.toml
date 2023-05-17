@@ -148,8 +148,9 @@
 [PATHSolver]
     user = "chkwon"
     rev = "v1.4.2"
-# [ProxSDP]
-#   user = "mariohsouto"
+[ProxSDP]
+    user = "mariohsouto"
+    rev = "v1.8.3"
 [SCIP]
     user = "scipopt"
     rev = "44e0bff587208fb4e0779db440f4104bc0bba2ec"
