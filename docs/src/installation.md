@@ -154,8 +154,9 @@ Where:
 
 !!! note
     Developed a solver or solver wrapper? This table is open for new
-    contributions. Start by making a pull request to edit the [installation.md](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/installation.md)
-    file.
+    contributions. Edit the [installation.md](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/installation.md)
+    file, and use the checklist [Adding a new solver to the documentation](@ref)
+    when opening the pull request.
 
 !!! note
     Developing a solver or solver wrapper? See [Models](@ref jump_models) and the
