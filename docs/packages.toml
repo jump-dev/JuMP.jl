@@ -151,5 +151,6 @@
     rev = "v1.1.4"
     has_html = true
     extension = true
-# [Tulip]
-#   user = "ds4dm"
+[Tulip]
+    user = "ds4dm"
+    rev = "v0.9.5"
