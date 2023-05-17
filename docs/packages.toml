@@ -116,8 +116,9 @@
 #   rev = "main"
 # [EAGO]
 #   user = "PSORLab"
-# [GAMS]
-#   user = "GAMS-dev"
+[GAMS]
+    user = "GAMS-dev"
+    rev = "v0.4.1"
 # [Hypatia]
 #   user = "chriscoey"
 [InfiniteOpt]
