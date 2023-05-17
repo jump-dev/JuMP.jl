@@ -123,29 +123,30 @@
     rev = "a779e4b5ce6df9cc98679b22fb96f131225a3fb5"  
     has_html = true
 [InfiniteOpt]
-  user = "infiniteopt"
-  rev = "v0.5.7"
-  filename = "docs/jump/README.md"
-  extension = true
+    user = "infiniteopt"
+    rev = "v0.5.7"
+    filename = "docs/jump/README.md"
+    extension = true
 # [Juniper]
 #   user = "lanl-ansi"
 # [MadNLP]
 #   user = "MadNLP"
 [NEOSServer]
-  user = "odow"
-  rev = "v1.0.2"
+    user = "odow"
+    rev = "v1.0.2"
 # [NLopt]
 #   user = "JuliaOpt"
-# [OSQP]
-#   user = "osqp"
+[OSQP]
+    user = "osqp"
+    rev = "v0.8.0"
 [PATHSolver]
-  user = "chkwon"
-  rev = "v1.4.2"
+    user = "chkwon"
+    rev = "v1.4.2"
 # [ProxSDP]
 #   user = "mariohsouto"
 [SCIP]
-  user = "scipopt"
-  rev = "44e0bff587208fb4e0779db440f4104bc0bba2ec"
+    user = "scipopt"
+    rev = "44e0bff587208fb4e0779db440f4104bc0bba2ec"
 [SDDP]
     user = "odow"
     rev = "v1.1.4"
