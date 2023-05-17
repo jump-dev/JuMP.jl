@@ -106,18 +106,44 @@ end
 Base.length(x::NonlinearExpr) = length(x.args)
 Base.getindex(x::NonlinearExpr, i::Int) = x.args[i]
 
+const _PREFIX_OPERATORS = (
+    :+,
+    :-,
+    :*,
+    :/,
+    :^,
+    :||,
+    :&&,
+    :>,
+    :<,
+    :(<=),
+    :(>=),
+    :(==),
+)
+
 function function_string(::MIME"text/plain", x::NonlinearExpr)
     io, stack, is_open = IOBuffer(), Any[x], true
     while !isempty(stack)
         arg = pop!(stack)
-        if !is_open && arg != ')'
-            print(io, ", ")
-        end
-        if arg isa NonlinearExpr
-            print(io, arg.head, "(")
-            push!(stack, ')')
-            for i in length(arg):-1:1
-                push!(stack, arg[i])
+        if arg isa Symbol
+            print(io, " ", arg, " ")
+        elseif arg isa NonlinearExpr
+            if arg.head in _PREFIX_OPERATORS && length(arg) > 1
+                print(io, "(")
+                push!(stack, ')')
+                for i in length(arg):-1:2
+                    push!(stack, arg[i])
+                    push!(stack, arg.head)
+                end
+                push!(stack, arg[1])
+            else
+                print(io, arg.head, "(")
+                push!(stack, ')')
+                for i in length(arg):-1:2
+                    push!(stack, arg[i])
+                    push!(stack, ", ")
+                end
+                push!(stack, arg[1])
             end
         else
             print(io, arg)

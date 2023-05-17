@@ -23,7 +23,7 @@ julia> model = Model();
 julia> @variable(model, x[1:2]);
 
 julia> @objective(model, Min, exp(x[1]) - sqrt(x[2]))
--(exp(x[1]), sqrt(x[2]))
+(exp(x[1]) - sqrt(x[2]))
 ```
 
 To modify a nonlinear objective, call [`@objective`](@ref) again.
@@ -38,12 +38,12 @@ julia> model = Model();
 julia> @variable(model, x[1:2]);
 
 julia> @constraint(model, exp(x[1]) <= 1)
--(exp(x[1]), 1.0) ≤ 0
+(exp(x[1]) - 1.0) ≤ 0
 
 julia> @constraint(model, con[i = 1:2], 2^x[i] >= i)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarNonlinearFunction, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}:
- con[1] : -(^(2.0, x[1]), 1.0) ≥ 0
- con[2] : -(^(2.0, x[2]), 2.0) ≥ 0
+ con[1] : ((2.0 ^ x[1]) - 1.0) ≥ 0
+ con[2] : ((2.0 ^ x[2]) - 2.0) ≥ 0
 ```
 
 Delete a nonlinear constraint using [`delete`](@ref):
@@ -63,7 +63,7 @@ julia> model = Model();
 julia> @variable(model, x[1:2]);
 
 julia> expr = @expression(model, exp(x[1]) + sqrt(x[2]))
-+(exp(x[1]), sqrt(x[2]))
+(exp(x[1]) + sqrt(x[2]))
 
 julia> my_anon_expr = @expression(model, [i = 1:2], sin(x[i]))
 2-element Vector{NonlinearExpr{VariableRef}}:
@@ -81,12 +81,12 @@ A [`NonlinearExpr`](@ref) can be used in [`@objective`](@ref),
 
 ```jldoctest nl_expression
 julia> @objective(model, Min, expr^2 + 1)
-+(^(+(exp(x[1]), sqrt(x[2])), 2.0), 1.0)
+(((exp(x[1]) + sqrt(x[2])) ^ 2.0) + 1.0)
 
 julia> @constraint(model, [i = 1:2], my_expr[i] <= i)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarNonlinearFunction, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- -(sin(x[1]), 1.0) ≤ 0
- -(sin(x[2]), 2.0) ≤ 0
+ (sin(x[1]) - 1.0) ≤ 0
+ (sin(x[2]) - 2.0) ≤ 0
 
 julia> @expression(model, nested[i = 1:2], sin(my_expr[i]))
 2-element Vector{NonlinearExpr{VariableRef}}:
