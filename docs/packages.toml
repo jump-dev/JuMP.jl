@@ -118,8 +118,10 @@
 #   user = "PSORLab"
 # [GAMS]
 #   user = "GAMS-dev"
-# [Hypatia]
-#   user = "chriscoey"
+[Hypatia]
+    user = "chriscoey"
+    rev = "a779e4b5ce6df9cc98679b22fb96f131225a3fb5"  
+    has_html = true
 [InfiniteOpt]
   user = "infiniteopt"
   rev = "v0.5.7"
