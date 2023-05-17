@@ -548,6 +548,20 @@ function test_register_multivariate_gradient_hessian()
     return
 end
 
+function test_register_errors()
+    model = Model()
+    @test_throws(
+        ErrorException(
+            "Unable to register user defined function foo: invalid number of " *
+            "functions provided. Got 0, but expected 1 (if function only), " *
+            "2 (if function and gradient), or 3 (if function, gradient, and " *
+            "hesssian provided)",
+        ),
+        @register(model, foo, 2),
+    )
+    return
+end
+
 function test_expression_no_variable()
     head, args = :sin, Any[1]
     @test_throws(

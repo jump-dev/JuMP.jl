@@ -705,7 +705,24 @@ julia> @objective(model, Min, foo(x))
 foo(x)
 ```
 """
-function add_user_defined_function(model::Model, op::Symbol, dim::Int, args...)
+function add_user_defined_function(
+    model::Model,
+    op::Symbol,
+    dim::Int,
+    args::Vararg{Function,N},
+) where {N}
+    if !(1 <= N <= 3)
+        error(
+            "Unable to register user defined function $op: invalid number of " *
+            "functions provided. Got $N, but expected 1 (if function only), " *
+            "2 (if function and gradient), or 3 (if function, gradient, and " *
+            "hesssian provided)",
+        )
+    end
+    # TODO(odow): we could add other checks here, but we won't for now because
+    # down-stream solvers in MOI can add their own checks, and any solver using
+    # MOI.Nonlinear will automatically check for autodiff and common mistakes
+    # and throw a nice informative error.
     MOI.set(model, MOI.UserDefinedFunction(op, dim), args)
     return UserDefinedFunction(op)
 end
