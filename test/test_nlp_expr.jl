@@ -556,7 +556,7 @@ function test_register_errors()
     model = Model()
     @test_throws(
         ErrorException(
-            "Unable to register user defined function foo: invalid number of " *
+            "Unable to register user-defined function foo: invalid number of " *
             "functions provided. Got 0, but expected 1 (if function only), " *
             "2 (if function and gradient), or 3 (if function, gradient, and " *
             "hesssian provided)",

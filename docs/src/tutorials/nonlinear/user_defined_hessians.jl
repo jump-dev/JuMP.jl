@@ -21,7 +21,7 @@
 # # User-defined Hessians
 
 # In this tutorial, we explain how to write a user-defined function (see
-# [User-defined Functions](@ref)) with a Hessian matrix explicitly provided by
+# [User-defined functions](@ref)) with a Hessian matrix explicitly provided by
 # the user.
 #
 # For a more advanced example, see [Nested optimization problems](@ref).

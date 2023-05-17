@@ -724,7 +724,7 @@ function add_user_defined_function(
 ) where {N}
     if !(1 <= N <= 3)
         error(
-            "Unable to register user defined function $op: invalid number of " *
+            "Unable to register user-defined function $op: invalid number of " *
             "functions provided. Got $N, but expected 1 (if function only), " *
             "2 (if function and gradient), or 3 (if function, gradient, and " *
             "hesssian provided)",
