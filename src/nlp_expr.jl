@@ -106,20 +106,8 @@ end
 Base.length(x::NonlinearExpr) = length(x.args)
 Base.getindex(x::NonlinearExpr, i::Int) = x.args[i]
 
-const _PREFIX_OPERATORS = (
-    :+,
-    :-,
-    :*,
-    :/,
-    :^,
-    :||,
-    :&&,
-    :>,
-    :<,
-    :(<=),
-    :(>=),
-    :(==),
-)
+const _PREFIX_OPERATORS =
+    (:+, :-, :*, :/, :^, :||, :&&, :>, :<, :(<=), :(>=), :(==))
 
 function function_string(::MIME"text/plain", x::NonlinearExpr)
     io, stack, is_open = IOBuffer(), Any[x], true
