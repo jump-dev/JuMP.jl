@@ -151,6 +151,10 @@ function test_extension_latex(ModelType = Model, VariableRefType = VariableRef)
     @variable(model, x)
     @test function_string(MIME("text/latex"), sin(x)) == "\\textsf{sin(x)}"
     @test function_string(MIME("text/plain"), sin(x)) == "sin(x)"
+
+    @expression(model, g, ifelse(x > 0, sin(x), x + cos(x)^2))
+    @test function_string(MIME("text/latex"), g) ==
+          raw"\textsf{ifelse}\left({\left({x} > {0}\right)}, {\textsf{sin}\left({x}\right)}, {\left({x} + {\left({\textsf{cos}\left({x}\right)} ^ {2.0}\right)}\right)}\right)"
     return
 end
 

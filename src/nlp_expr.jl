@@ -110,23 +110,21 @@ const _PREFIX_OPERATORS =
     (:+, :-, :*, :/, :^, :||, :&&, :>, :<, :(<=), :(>=), :(==))
 
 function function_string(::MIME"text/plain", x::NonlinearExpr)
-    io, stack, is_open = IOBuffer(), Any[x], true
+    io, stack = IOBuffer(), Any[x]
     while !isempty(stack)
         arg = pop!(stack)
-        if arg isa Symbol
-            print(io, " ", arg, " ")
-        elseif arg isa NonlinearExpr
+        if arg isa NonlinearExpr
             if arg.head in _PREFIX_OPERATORS && length(arg) > 1
                 print(io, "(")
-                push!(stack, ')')
+                push!(stack, ")")
                 for i in length(arg):-1:2
                     push!(stack, arg[i])
-                    push!(stack, arg.head)
+                    push!(stack, " $(arg.head) ")
                 end
                 push!(stack, arg[1])
             else
                 print(io, arg.head, "(")
-                push!(stack, ')')
+                push!(stack, ")")
                 for i in length(arg):-1:2
                     push!(stack, arg[i])
                     push!(stack, ", ")
@@ -136,14 +134,39 @@ function function_string(::MIME"text/plain", x::NonlinearExpr)
         else
             print(io, arg)
         end
-        is_open = arg isa NonlinearExpr
     end
     seekstart(io)
     return read(io, String)
 end
 
-function function_string(::MIME"text/latex", expr::NonlinearExpr)
-    return "\\textsf{$(function_string(MIME("text/plain"), expr))}"
+function function_string(::MIME"text/latex", x::NonlinearExpr)
+    io, stack = IOBuffer(), Any[x]
+    while !isempty(stack)
+        arg = pop!(stack)
+        if arg isa NonlinearExpr
+            if arg.head in _PREFIX_OPERATORS && length(arg) > 1
+                print(io, "\\left({")
+                push!(stack, "}\\right)")
+                for i in length(arg):-1:2
+                    push!(stack, arg[i])
+                    push!(stack, "} $(arg.head) {")
+                end
+                push!(stack, arg[1])
+            else
+                print(io, "\\textsf{", arg.head, "}\\left({")
+                push!(stack, "}\\right)")
+                for i in length(arg):-1:2
+                    push!(stack, arg[i])
+                    push!(stack, "}, {")
+                end
+                push!(stack, arg[1])
+            end
+        else
+            print(io, arg)
+        end
+    end
+    seekstart(io)
+    return read(io, String)
 end
 
 _isequal(x, y) = x == y
