@@ -567,7 +567,7 @@ function _remove_literate_footer(dir)
     return
 end
 
-if false # _PDF
+if _PDF
     for (root, dir, files) in walkdir(joinpath(@__DIR__, "src", "tutorials"))
         _remove_literate_footer.(joinpath.(root, dir))
     end

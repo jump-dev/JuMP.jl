@@ -106,13 +106,11 @@ julia> sin(sin(1.0))
 0.7456241416655579
 ```
 
-## User-defined Functions
+## User-defined functions
 
-In addition to the univariate and multivariate functions recognized by the
-`MOI.Nonlinear` submodule, JuMP supports *user-defined* nonlinear functions.
-
-User-defined functions can be used anywhere in [`@objective`](@ref),
-[`@constraint`](@ref), and [`@expression`](@ref).
+In addition to a standard list of univariate and multivariate functions
+recognized by the `MOI.Nonlinear` submodule, JuMP supports *user-defined*
+Julia functions.
 
 !!! warning
     User-defined functions must return a scalar output. For a work-around, see
@@ -123,7 +121,7 @@ User-defined functions can be used anywhere in [`@objective`](@ref),
 Register a user-defined function using the [`@register`](@ref) macro:
 
 ```@repl
-using JuMP  # hide
+using JuMP
 square(x) = x^2
 f(x, y) = (x - 1)^2 + (y - 2)^2
 model = Model();
@@ -153,7 +151,7 @@ The [`@register`](@ref) macro is syntactic sugar for the
 preceding example is:
 
 ```@repl
-using JuMP  # hide
+using JuMP
 square(x) = x^2
 f(x, y) = (x - 1)^2 + (y - 2)^2
 model = Model();
@@ -183,22 +181,22 @@ Second, you can construct and use [`UserDefinedFunction`](@ref)s outside the
 macros.
 
 ```@repl
-using JuMP  # hide
+using JuMP
 square(x) = x^2
 model = Model();
 @register(model, my_square, 1, square)
 @variable(model, x)
 typeof(my_square)
-x_squared = my_square(1)
+x_squared = my_square(x)
 typeof(x_squared)
 my_square_2 = UserDefinedFunction(:my_square)
 my_square_2(x_squared)
 ```
 
-### Register gradients and hessians
+### Register gradients and Hessians
 
 By default, JuMP will use automatic differentiation to compute the gradient and
-hessian of user-defined functions. If your function is not amenable to
+Hessian of user-defined functions. If your function is not amenable to
 automatic differentiation, or you can compute analytic derivatives, you may pass
 additional arguments to [`@register`](@ref) to compute the first- and
 second-derivatives.
@@ -209,25 +207,24 @@ For univariate functions, a gradient function `∇f` returns a number that
 represents the first-order derivative. You may, in addition, pass a third
 function which returns a number representing the second-order derivative:
 ```@repl
-using JuMP  # hide
+using JuMP
 f(x) = x^2
 ∇f(x) = 2x
 ∇²f(x) = 2
 model = Model();
-# Providing ∇²f is optional
-@register(model, my_square, 1, f, ∇f, ∇²f)
+@register(model, my_square, 1, f, ∇f, ∇²f)  # Providing ∇²f is optional
 @variable(model, x)
 @objective(model, Min, my_square(x))
 ```
 
 #### Multivariate functions
 
-For multivariate functions, the gradient function `∇f` must take a gradient
-vector as the first argument that is filled in-place. The hessian function,
-`∇²f`, must take an `AbstractMatrix` as the first argument, the lower-triangular
-of which is filled in-place:
+For multivariate functions, the gradient function `∇f` must take an
+`AbstractVector` as the first argument that is filled in-place. The Hessian
+function, `∇²f`, must take an `AbstractMatrix` as the first argument, the
+lower-triangular of which is filled in-place:
 ```@repl
-using JuMP  # hide
+using JuMP
 f(x...) = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 function ∇f(g::AbstractVector{T}, x::T...) where {T}
     g[1] = 400 * x[1]^3 - 400 * x[1] * x[2] + 2 * x[1] - 2
@@ -242,14 +239,10 @@ function ∇²f(H::AbstractMatrix{T}, x::T...) where {T}
     return
 end
 model = Model();
-# Providing ∇²f is optional
-@register(model, rosenbrock, 2, f, ∇f, ∇²f)
+@register(model, rosenbrock, 2, f, ∇f, ∇²f)  # Providing ∇²f is optional
 @variable(model, x[1:2])
 @objective(model, Min, rosenbrock(x[1], x[2]))
 ```
-
-Make sure the first argument to `∇f` supports an `AbstractVector`, and do
-not assume the input is `Float64`.
 
 You may assume the Hessian matrix `H` is initialized with zeros, and because `H`
 is symmetric, you need only to fill in the non-zero of the lower-triangular
@@ -273,9 +266,9 @@ define:
 f(x...) = sum(x[i]^i for i in 1:length(x))
 ```
 
-This function `f` can be used in a JuMP model as follows:
+Another approach is to define the splatted function as an anonymous function:
 ```@repl
-using JuMP  # hide
+using JuMP
 model = Model();
 @variable(model, x[1:5])
 f(x::Vector) = sum(x[i]^i for i in 1:length(x))
@@ -286,9 +279,8 @@ f(x::Vector) = sum(x[i]^i for i in 1:length(x))
 ### Automatic differentiation
 
 JuMP does not support black-box optimization, so all user-defined functions must
-provide derivatives in some form. Fortunately, JuMP supports **automatic
-differentiation of user-defined functions**, a feature to our knowledge not
-available in any comparable modeling systems.
+provide derivatives in some form. Fortunately, JuMP supports automatic
+differentiation of user-defined functions.
 
 !!! info
     Automatic differentiation is *not* finite differencing. JuMP's automatically
