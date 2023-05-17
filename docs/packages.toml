@@ -120,7 +120,7 @@
 #   user = "GAMS-dev"
 [Hypatia]
     user = "chriscoey"
-    rev = "v0.7.2"  
+    rev = "a779e4b5ce6df9cc98679b22fb96f131225a3fb5"  
     has_html = true
 [InfiniteOpt]
   user = "infiniteopt"
