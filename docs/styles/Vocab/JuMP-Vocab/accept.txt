@@ -90,7 +90,9 @@ AMPL
 Appveyor
 Artelys
 Bonmin
+BONMIN
 Cbc
+CBC
 Clarabel
 Clp
 CPLEXLink
@@ -102,8 +104,10 @@ Dualization
 JSONSchema
 GLPK
 Gurobi
+GUROBI
 GZip
 Ipopt
+IPOPT
 Knitro
 KNITRO
 MATLAB
@@ -121,6 +125,7 @@ RAPOSa
 SDPAFamily
 SDPNAL
 Xpress
+XPRESS
 
 % People
 Arpit
