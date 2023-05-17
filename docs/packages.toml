@@ -97,8 +97,9 @@
 
 # =========================== non-jump-dev packages ========================== #
 
-# [Alpine]
-#   user = "lanl-ansi"
+[Alpine]
+    user = "lanl-ansi"
+    rev = "v0.5.4"
 # [CDCS]
 #   user = "oxfordcontrol"
 # [CDDLib]
@@ -125,8 +126,9 @@
   rev = "v0.5.7"
   filename = "docs/jump/README.md"
   extension = true
-# [Juniper]
-#   user = "lanl-ansi"
+[Juniper]
+    user = "lanl-ansi"
+    rev = "v0.9.0"
 # [MadNLP]
 #   user = "MadNLP"
 [NEOSServer]
