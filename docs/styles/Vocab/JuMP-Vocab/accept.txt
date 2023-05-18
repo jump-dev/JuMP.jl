@@ -103,6 +103,7 @@ JSONSchema
 GLPK
 Gurobi
 GZip
+Hypatia
 Ipopt
 Knitro
 KNITRO
