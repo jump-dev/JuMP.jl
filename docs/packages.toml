@@ -106,8 +106,9 @@
 # [Clarabel]
 #   user = "oxfordcontrol"
 #   has_html = true
-# [COPT]
-#   user = "COPT-Public"
+[COPT]
+    user = "COPT-Public"
+    rev = "2d93e079645eff773552bb5da44c3024450fe990"
 # [COSMO]
 #   user = "oxfordcontrol"
 #   has_html = true
