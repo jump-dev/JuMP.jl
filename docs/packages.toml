@@ -101,8 +101,9 @@
 #   user = "lanl-ansi"
 # [CDCS]
 #   user = "oxfordcontrol"
-# [CDDLib]
-#   user = "JuliaPolyhedra"
+[CDDLib]
+    user = "JuliaPolyhedra"
+    rev = "df5b9db8a3d898d3192e503e63dd15e6fb653e25"
 # [Clarabel]
 #   user = "oxfordcontrol"
 #   has_html = true
