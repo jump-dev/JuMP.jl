@@ -7,7 +7,7 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Version 1.11.1 (May 17, 2023)
+## Version 1.11.1 (May 19, 2023)
 
 ### Fixed
 
@@ -23,7 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    integers. This follows the behavior of constants in functions (#3341)
  - Added `InfiniteOpt` to the extensions documentation (#3343)
  - Added more documentation for the exponential cone (#3345) (#3347)
- - Added checklists for developers (#3346)
+ - Added checklists for developers (#3346) (#3355)
+ - Fixed test support upcoming Julia nightly (#3351)
+ - Fixed `extension-tests.yml` action (#3353)
+ - Add more solvers to the documentation (#3359) (#3361) (#3362)
 
 ## Version 1.11.0 (May 3, 2023)
 
