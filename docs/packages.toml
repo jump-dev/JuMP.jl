@@ -138,7 +138,7 @@
 #   user = "JuliaOpt"
 [OSQP]
     user = "osqp"
-    rev = "v0.8.0"
+    rev = "443706e34c2619acbe65281c60bbe850ca4a8fac"
 [PATHSolver]
     user = "chkwon"
     rev = "v1.4.2"
