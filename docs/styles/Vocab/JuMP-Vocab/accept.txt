@@ -14,6 +14,7 @@ compat
 dataframe(?s)
 datastructure
 destructuring
+dev
 discretized
 docstring(?s)
 doctest(?s)
@@ -76,7 +77,9 @@ Relatedly
 rhs
 satisfiability
 scalarization(?s)
+SDP(?s)
 [Ss]emi(continuous|integer|definite)
+SOCP(?s)
 subgradient
 subproblem(?s)
 subtour(?s)
@@ -95,6 +98,8 @@ Cbc
 Clarabel
 Clp
 CPLEXLink
+COSMO
+COSMOAccelerators
 Couenne
 Divio
 Dualization
