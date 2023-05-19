@@ -104,15 +104,17 @@
 #   user = "oxfordcontrol"
 # [CDDLib]
 #   user = "JuliaPolyhedra"
-# [Clarabel]
-#   user = "oxfordcontrol"
-#   has_html = true
+[Clarabel]
+    user = "oxfordcontrol"
+    rev = "v0.5.0"
+    has_html = true
 [COPT]
     user = "COPT-Public"
     rev = "2d93e079645eff773552bb5da44c3024450fe990"
-# [COSMO]
-#   user = "oxfordcontrol"
-#   has_html = true
+[COSMO]
+    user = "oxfordcontrol"
+    rev = "v0.8.7"
+    has_html = true
 # [DAQP]
 #   user = "darnstrom"
 #   rev = "main"
