@@ -5,7 +5,7 @@
 
 """
     nonlinear_model(
-        model::Model;
+        model::GenericModel;
         force::Bool = false,
     )::Union{MOI.Nonlinear.Model,Nothing}
 
@@ -15,7 +15,7 @@ otherwise return `nothing`.
 If `force`, always return a [`MOI.Nonlinear.Model`](@ref), and if one does not
 exist for the model, create an empty one.
 """
-function nonlinear_model(model::Model; force::Bool = false)
+function nonlinear_model(model::GenericModel; force::Bool = false)
     if force
         _init_NLP(model)
     end
@@ -486,11 +486,11 @@ function delete(model::Model, c::NonlinearConstraintRef)
 end
 
 """
-    num_nonlinear_constraints(model::Model)
+    num_nonlinear_constraints(model::GenericModel)
 
 Returns the number of nonlinear constraints associated with the `model`.
 """
-function num_nonlinear_constraints(model::Model)
+function num_nonlinear_constraints(model::GenericModel)
     nlp_model = nonlinear_model(model)
     if nlp_model === nothing
         return 0

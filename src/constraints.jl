@@ -577,8 +577,10 @@ representing the function and the `set` field contains the MOI set.
 See also the [documentation](@ref Constraints) on JuMP's representation of
 constraints for more background.
 """
-struct ScalarConstraint{F<:Union{Number,AbstractJuMPScalar},S<:MOI.AbstractScalarSet} <:
-       AbstractConstraint
+struct ScalarConstraint{
+    F<:Union{Number,AbstractJuMPScalar},
+    S<:MOI.AbstractScalarSet,
+} <: AbstractConstraint
     func::F
     set::S
 end
