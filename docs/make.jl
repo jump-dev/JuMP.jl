@@ -125,6 +125,9 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
         open(out_filename, "w") do io
             closing_tag = nothing
             for line in lines
+                for ext in ("svg", "png")
+                    line = replace(line, ".$ext\"" => ".$ext?raw=true\"")
+                end
                 tag = if startswith(line, "<img")
                     "/>"
                 else
@@ -142,6 +145,7 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
                 end
             end
         end
+
     end
     if get(data, "extension", false)
         push!(_LIST_OF_EXTENSIONS, "$user/$solver.jl" => "packages/$solver.md")
