@@ -51,6 +51,7 @@ unexported
 % JuMP-related vocab
 [Bb]ilevel
 [Cc]anonicaliz(e|ation|ing)
+convexification
 DAE(?s)
 [Dd]et
 [Ee]xtremal
@@ -106,6 +107,7 @@ GLPK
 Gurobi
 GUROBI
 GZip
+Hypatia
 Ipopt
 IPOPT
 Knitro
