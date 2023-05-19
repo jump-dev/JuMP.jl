@@ -99,7 +99,7 @@
 
 [Alpine]
     user = "lanl-ansi"
-    rev = "dc016532bf0bafd8af84f6c2cea94822886e9024"
+    rev = "32757b2568acfe71257e41ed4122a120717a6460"
 # [CDCS]
 #   user = "oxfordcontrol"
 # [CDDLib]
@@ -131,7 +131,7 @@
     extension = true
 [Juniper]
     user = "lanl-ansi"
-    rev = "5ed3313ab1d4c6dfa7812daed6d9924d91ed8a40"
+    rev = "62532341586d447f19c7360715333ba62a42bea9"
 # [MadNLP]
 #   user = "MadNLP"
 [NEOSServer]
