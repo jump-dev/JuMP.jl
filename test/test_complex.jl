@@ -14,10 +14,10 @@ using JuMP
 using Test
 
 import LinearAlgebra
-import MutableArithmetics
+import MutableArithmetics as MA
 import SparseArrays
 
-const MA = MutableArithmetics
+include(joinpath(@__DIR__, "utilities.jl"))
 
 function _test_dot(a, b)
     @test LinearAlgebra.dot(a, b) == conj(a) * b
@@ -270,6 +270,39 @@ function test_isreal()
     @test isreal(x[1] * x[2] + 1) == true
     @test isreal(x[1] * x[2] + 1im) == false
     @test isreal(x[1] * x[2] * 1im + 2) == false
+    return
+end
+
+function test_numerically_hermitian_matrix()
+    model = Model()
+    @variable(model, X[1:2, 1:2] in HermitianPSDCone())
+    @variable(model, t)
+    Y = X + LinearAlgebra.I(2) * t
+    @test LinearAlgebra.ishermitian(Y)
+    @test !(Y isa LinearAlgebra.Hermitian)
+    c = @constraint(model, Y in JuMP.HermitianPSDCone())
+    @test c isa ConstraintRef
+    return
+end
+
+function test_numerically_hermitian_matrix_error()
+    model = Model()
+    @variable(model, X[1:2, 1:2])
+    @variable(model, t)
+    Y = X + LinearAlgebra.I(2) * t
+    @test !LinearAlgebra.ishermitian(Y)
+    @test !(Y isa LinearAlgebra.Hermitian)
+    @test_macro_throws(
+        ErrorException(
+            "In `@constraint(model, Y in HermitianPSDCone())`: " *
+            "Unable to add matrix in HermitianPSDCone because the matrix is " *
+            "not Hermitian. If this error was unexpected, check the matrix " *
+            "for errors, or wrap the matrix `H` in " *
+            "`LinearAlgebra.Hermitian(H)` to force JuMP to treat the matrix " *
+            "as Hermitian.",
+        ),
+        @constraint(model, Y in HermitianPSDCone())
+    )
     return
 end
 
