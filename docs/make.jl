@@ -125,15 +125,19 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
         open(out_filename, "w") do io
             closing_tag = nothing
             for line in lines
-                for suffix in ("", "#gh-light-mode-only", "#gh-dark-mode-only")
-                    for ext in ("svg", "png", "gif")
-                        line = replace(
-                            line,
-                            ".$ext$suffix\"" => ".$ext?raw=true$suffix\"",
-                        )
-                    end
+                line = replace(
+                    line,
+                    "#gh-light-mode-only\"" => "\" class=\"display-light-only\"",
+                )
+                line = replace(
+                    line,
+                    "#gh-dark-mode-only\"" => "\" class=\"display-dark-only\"",
+                )
+                for ext in ("svg", "png", "gif")
+                    line = replace(line, ".$ext\"" => ".$ext?raw=true\"")
                 end
-                line = replace(line, "\$\$" => "\$")
+                line = replace(line, "\$\$\n\\begin" => "```math\n\\begin")
+                line = replace(line, "\}\n\$\$" => "\}\n```")
                 tag = if startswith(line, "<img")
                     "/>"
                 else
