@@ -100,6 +100,7 @@ Clp
 CPLEXLink
 COSMO
 COSMOAccelerators
+cosmo
 Couenne
 Divio
 Dualization
