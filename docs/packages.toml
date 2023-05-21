@@ -113,7 +113,7 @@
     rev = "2d93e079645eff773552bb5da44c3024450fe990"
 [COSMO]
     user = "oxfordcontrol"
-    rev = "v0.8.7"
+    rev = "c95bf89f111a83f52febf326615a091ad0418f00"
     has_html = true
 # [DAQP]
 #   user = "darnstrom"
