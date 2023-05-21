@@ -292,7 +292,7 @@ function test_numerically_hermitian_matrix_error()
     Y = X + LinearAlgebra.I(2) * t
     @test !LinearAlgebra.ishermitian(Y)
     @test !(Y isa LinearAlgebra.Hermitian)
-    @test_macro_throws(
+    @test_throws_strip(
         ErrorException(
             "In `@constraint(model, Y in HermitianPSDCone())`: " *
             "Unable to add matrix in HermitianPSDCone because the matrix is " *
