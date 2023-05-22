@@ -113,9 +113,9 @@
 # [COSMO]
 #   user = "oxfordcontrol"
 #   has_html = true
-# [DAQP]
-#   user = "darnstrom"
-#   rev = "main"
+[DAQP]
+    user = "darnstrom"
+    rev = "70623ed816916a0f3c3a51b65b166efae364b98d"
 # [EAGO]
 #   user = "PSORLab"
 # [GAMS]
