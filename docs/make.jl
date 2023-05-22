@@ -124,7 +124,23 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
         lines = readlines(out_filename)
         open(out_filename, "w") do io
             closing_tag = nothing
+            math_open = false
             for line in lines
+                line = replace(
+                    line,
+                    "#gh-light-mode-only\"" => "\" class=\"display-light-only\"",
+                )
+                line = replace(
+                    line,
+                    "#gh-dark-mode-only\"" => "\" class=\"display-dark-only\"",
+                )
+                for ext in ("svg", "png", "gif")
+                    line = replace(line, ".$ext\"" => ".$ext?raw=true\"")
+                end
+                if line == "\$\$"
+                    line = math_open ? "```" : "```math"
+                    math_open = !math_open
+                end
                 tag = if startswith(line, "<img")
                     "/>"
                 else
