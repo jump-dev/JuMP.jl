@@ -713,7 +713,7 @@ end
 
 function build_constraint(
     ::Function,
-    v::Union{AbstractJuMPScalar},
+    v::AbstractJuMPScalar,
     set::MOI.AbstractScalarSet,
 )
     return ScalarConstraint(v, set)
@@ -880,73 +880,70 @@ function build_constraint(
 end
 
 """
-    model_convert(model, con::AbstractConstraint)
+    model_convert(
+        model::AbstractModel,
+        rhs::Union{
+            AbstractConstraint,
+            Number,
+            AbstractJuMPScalar,
+            MOI.AbstractSet,
+        },
+    )
 
-Convert the coefficients and constants of functions and sets of `con` to
-`value_type(typeof(model))`.
+Convert the coefficients and constants of functions and sets in the `rhs` to the
+coefficient type `value_type(typeof(model))`.
 
-    model_convert(model, set::MOI.AbstractSet)
+## Purpose
 
-Convert the constants of `set` to `value_type(typeof(model))`.
+Creating and adding a constraint is a two-step process. The first step calls
+[`build_constraint`](@ref), and the result of that is passed to
+[`add_constraint`](@ref).
 
-    model_convert(model, func::Union{Number,AbstractJuMPScalar})
+However, because [`build_constraint`](@ref) does not take the `model` as an
+argument, the coefficients and constants of the function or set might be
+different than `value_type(typeof(model))`.
 
-Convert the coefficients and constants of `func` to
-`value_type(typeof(model))`.
-
-!!! note
-    In the `@constraint` macro, a constraint with first built with
-    [`build_constraint`](@ref), as [`build_constraint`](@ref) does not
-    have the `model` as argument, the coefficients or constants of the
-    function or set might be different that `value_type(model)`.
-    These are converted in `model_convert` before the constraint is
-    passed to [`add_constraint`](@ref).
+Therefore, the result of [`build_constraint`](@ref) is converted in a call to
+`model_convert` before the result is passed to [`add_constraint`](@ref).
 """
-function model_convert end
+model_convert(::AbstractModel, rhs::Any) = rhs
 
-model_convert(model, set::MOI.AbstractVectorSet) = set
-
-function model_convert(model, set::MOI.AbstractScalarSet)
-    T = value_type(typeof(model))
+function model_convert(model::AbstractModel, set::MOI.AbstractScalarSet)
     if MOI.Utilities.supports_shift_constant(typeof(set))
+        T = value_type(typeof(model))
         return MOI.Utilities.shift_constant(set, zero(T))
-    else
-        return set
     end
+    return set
 end
 
-model_convert(model, func::AbstractJuMPScalar) = func
-
-function model_convert(model, α::Number)
+function model_convert(model::AbstractModel, α::Number)
     T = value_type(typeof(model))
     V = variable_ref_type(model)
     C = _complex_convert_type(T, typeof(α))
     return convert(GenericAffExpr{C,V}, α)
 end
 
-function model_convert(model, con::BridgeableConstraint)
+function model_convert(model::AbstractModel, con::BridgeableConstraint)
     return BridgeableConstraint(
         model_convert(model, con.constraint),
         con.bridge_type,
     )
 end
 
-function model_convert(model, con::ScalarConstraint)
+function model_convert(model::AbstractModel, con::ScalarConstraint)
     return ScalarConstraint(
         model_convert(model, con.func),
         model_convert(model, con.set),
     )
 end
 
-function model_convert(model, con::VectorConstraint)
+function model_convert(model::AbstractModel, con::VectorConstraint)
     return VectorConstraint(
         model_convert.(model, con.func),
         model_convert(model, con.set),
         con.shape,
     )
 end
-
-model_convert(model, con) = con
 
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
@@ -1525,12 +1522,12 @@ function _throw_error_for_invalid_sense(
 end
 
 """
-    _replace_zero(x)
+    _replace_zero(model::M, x) where {M<:AbstractModel}
 
-Replaces `_MA.Zero` with a floating point `0.0`.
+Replaces `_MA.Zero` with a floating point `zero(value_type(M))`.
 """
-_replace_zero(::_MA.Zero) = false
-_replace_zero(x) = x
+_replace_zero(::M, ::_MA.Zero) where {M<:AbstractModel} = zero(value_type(M))
+_replace_zero(::AbstractModel, x::Any) = x
 
 """
     @objective(model::GenericModel, sense, func)
@@ -1592,7 +1589,7 @@ macro objective(model, args...)
         $parsecode
         # Don't leak a `_MA.Zero` if the objective expression is an empty
         # summation, or other structure that returns `_MA.Zero()`.
-        $newaff = _replace_zero($newaff)
+        $newaff = _replace_zero($esc_model, $newaff)
         set_objective($esc_model, $sense_expr, $newaff)
         $newaff
     end
@@ -1680,7 +1677,7 @@ macro expression(args...)
     code = quote
         # Don't leak a `_MA.Zero` if the expression is an empty summation, or
         # other structure that returns `_MA.Zero()`.
-        _replace_zero($code)
+        _replace_zero($m, $code)
     end
     code =
         Containers.container_code(idxvars, indices, code, requested_container)

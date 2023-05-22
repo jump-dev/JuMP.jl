@@ -199,8 +199,9 @@ struct SOS1{T} <: AbstractVectorSet
         return new{T}(convert(Vector{T}, weights))
     end
 end
-SOS1() = SOS1{Int}()
-SOS1(weights) = SOS1{eltype(weights)}(weights)
+
+SOS1(weights::AbstractVector = Int[]) = SOS1{eltype(weights)}(weights)
+
 function moi_set(set::SOS1{T}, dim::Int) where {T}
     if length(set.weights) == 0
         return MOI.SOS1{T}(collect(1:dim))
@@ -230,10 +231,11 @@ struct SOS2{T} <: AbstractVectorSet
         return new{T}(convert(Vector{T}, weights))
     end
 end
+
 # `Int` is chosen as a placeholder, and it is replaced by the `value_type`
 # converted by `model_convert` when adding to the model.
-SOS2() = SOS2{Int}()
-SOS2(weights) = SOS2{eltype(weights)}(weights)
+SOS2(weights::AbstractVector = Int[]) = SOS2{eltype(weights)}(weights)
+
 function moi_set(set::SOS2{T}, dim::Int) where {T}
     if length(set.weights) == 0
         return MOI.SOS2{T}(collect(1:dim))

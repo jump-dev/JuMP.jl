@@ -339,8 +339,16 @@ julia> function JuMP.add_constraint(
             )
        end
 
+julia> function JuMP.model_convert(model::AbstractModel, rhs::MyConstraint)
+           return MyConstraint(
+                rhs.name,
+                model_convert(model, rhs.f),
+                model_convert(model, rhs.s),
+           )
+       end
+
 julia> @constraint(model, my_con, 2x <= 1, MyTag("my_prefix"))
-my_prefix[my_con] : 2 x - 1 ≤ false
+my_prefix[my_con] : 2 x - 1 ≤ 0
 ```
 
 ## The extension dictionary

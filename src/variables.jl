@@ -8,8 +8,9 @@
 
 Returns number of variables in `model`.
 """
-num_variables(model::GenericModel)::Int64 =
-    MOI.get(model, MOI.NumberOfVariables())
+function num_variables(model::GenericModel)::Int64
+    return MOI.get(model, MOI.NumberOfVariables())
+end
 
 """
     AbstractVariable
@@ -239,6 +240,7 @@ end
 const VariableRef = GenericVariableRef{Float64}
 
 value_type(::Type{GenericVariableRef{T}}) where {T} = T
+
 function variable_ref_type(
     ::Union{GenericModel{T},Type{GenericModel{T}}},
 ) where {T}
@@ -298,9 +300,11 @@ function check_belongs_to_model(v::AbstractVariableRef, model::AbstractModel)
 end
 
 Base.iszero(::GenericVariableRef) = false
+
 function Base.copy(v::GenericVariableRef{T}) where {T}
     return GenericVariableRef{T}(v.model, v.index)
 end
+
 Base.broadcastable(v::GenericVariableRef) = Ref(v)
 
 Base.zero(v::AbstractVariableRef) = zero(typeof(v))
@@ -333,6 +337,7 @@ function coefficient(
         return zero(T)
     end
 end
+
 function coefficient(
     ::GenericVariableRef{T},
     ::GenericVariableRef{T},
@@ -443,10 +448,6 @@ index(v::GenericVariableRef) = v.index
 function GenericVariableRef{T}(model::GenericModel{T}) where {T}
     index = MOI.add_variable(backend(model))
     return GenericVariableRef{T}(model, index)
-end
-
-function GenericVariableRef(model::GenericModel{T}) where {T}
-    return GenericVariableRef{T}(model)
 end
 
 """
@@ -1137,11 +1138,6 @@ function set_start_value(
         variable,
         _convert_if_something(T, value),
     )
-    return
-end
-
-function set_start_value(x::GenericVariableRef{T}, v::Number) where {T}
-    set_start_value(x, convert(T, v))
     return
 end
 
