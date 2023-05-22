@@ -92,6 +92,7 @@ Artelys
 Bonmin
 Cbc
 cdd
+CDD
 cddlib
 CDDLib
 Clarabel
