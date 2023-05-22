@@ -103,7 +103,7 @@
 #   user = "oxfordcontrol"
 [CDDLib]
     user = "JuliaPolyhedra"
-    rev = "9d1bde20d5efba15b9557dbb1782fcf390562c2b"
+    rev = "9700752f849845bc8d8477928baf3df920daadd6"
 # [Clarabel]
 #   user = "oxfordcontrol"
 #   has_html = true
