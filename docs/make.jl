@@ -124,6 +124,7 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
         lines = readlines(out_filename)
         open(out_filename, "w") do io
             closing_tag = nothing
+            math_open = false
             for line in lines
                 line = replace(
                     line,
@@ -136,8 +137,10 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
                 for ext in ("svg", "png", "gif")
                     line = replace(line, ".$ext\"" => ".$ext?raw=true\"")
                 end
-                line = replace(line, "\$\$\n\\begin" => "```math\n\\begin")
-                line = replace(line, "\}\n\$\$" => "\}\n```")
+                if line == "\$\$"
+                    line = math_open ? "```" : "```math"
+                    math_open = !math_open
+                end
                 tag = if startswith(line, "<img")
                     "/>"
                 else
