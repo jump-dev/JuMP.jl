@@ -114,7 +114,7 @@
 #   has_html = true
 [DAQP]
     user = "darnstrom"
-    rev = "v0.4.2"
+    rev = "70623ed816916a0f3c3a51b65b166efae364b98d"
 # [EAGO]
 #   user = "PSORLab"
 # [GAMS]
