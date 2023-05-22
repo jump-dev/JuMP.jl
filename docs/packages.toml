@@ -115,9 +115,9 @@
     user = "oxfordcontrol"
     rev = "c95bf89f111a83f52febf326615a091ad0418f00"
     has_html = true
-# [DAQP]
-#   user = "darnstrom"
-#   rev = "main"
+[DAQP]
+    user = "darnstrom"
+    rev = "70623ed816916a0f3c3a51b65b166efae364b98d"
 # [EAGO]
 #   user = "PSORLab"
 # [GAMS]
@@ -154,7 +154,7 @@
     rev = "44e0bff587208fb4e0779db440f4104bc0bba2ec"
 [SDDP]
     user = "odow"
-    rev = "v1.1.4"
+    rev = "v1.5.0"
     has_html = true
     extension = true
 # [Tulip]
