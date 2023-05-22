@@ -693,6 +693,7 @@ function add_constraint(
     con::AbstractConstraint,
     name::String = "",
 )
+    con = model_convert(model, con)
     # The type of backend(model) is unknown so we directly redirect to another
     # function.
     check_belongs_to_model(con, model)
