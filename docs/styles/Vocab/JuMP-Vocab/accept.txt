@@ -92,6 +92,10 @@ Appveyor
 Artelys
 Bonmin
 Cbc
+cdd
+CDD
+cddlib
+CDDLib
 Clarabel
 Clp
 CPLEXLink
@@ -166,6 +170,7 @@ Maurer
 Mehdi
 Mittelman
 Montoison
+Motzkin
 Nemhauser
 Nemirovski
 Pacaud

@@ -102,8 +102,9 @@
     rev = "32757b2568acfe71257e41ed4122a120717a6460"
 # [CDCS]
 #   user = "oxfordcontrol"
-# [CDDLib]
-#   user = "JuliaPolyhedra"
+[CDDLib]
+    user = "JuliaPolyhedra"
+    rev = "9700752f849845bc8d8477928baf3df920daadd6"
 # [Clarabel]
 #   user = "oxfordcontrol"
 #   has_html = true
