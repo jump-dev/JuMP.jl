@@ -684,16 +684,11 @@ function build_constraint(
     Q::AbstractMatrix{<:AbstractJuMPScalar},
     cone::HermitianPSDCone,
 )
-    if !LinearAlgebra.ishermitian(Q)
-        _error(
-            "Unable to add matrix in HermitianPSDCone because the matrix is " *
-            "not Hermitian. If this error was unexpected, check the matrix " *
-            "for errors, or wrap the matrix `H` in " *
-            "`LinearAlgebra.Hermitian(H)` to force JuMP to treat the " *
-            "matrix as Hermitian.",
-        )
-    end
-    return build_constraint(_error, LinearAlgebra.Hermitian(Q), cone)
+    return _error(
+        "Unable to add matrix in HermitianPSDCone because the matrix is " *
+        "not a subtype of `LinearAlgebra.Hermitian`. To fix, wrap the matrix " *
+        "`H` in `LinearAlgebra.Hermitian(H)`.",
+    )
 end
 
 function build_constraint(_error::Function, H::LinearAlgebra.Hermitian, ::Zeros)
