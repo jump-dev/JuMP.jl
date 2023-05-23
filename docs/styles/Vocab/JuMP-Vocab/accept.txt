@@ -132,6 +132,7 @@ PATHSolver
 Pavito
 Penbmi
 Penopt
+Plasmo
 puzzlor
 RAPOSa
 SDPAFamily
@@ -162,7 +163,7 @@ Henrique
 Holy
 Huchette
 Iain
-Jalving
+[Jj]alving
 Jiming
 Joaquim
 Kernighan
