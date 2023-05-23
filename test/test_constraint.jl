@@ -37,12 +37,12 @@ function test_extension_VariableIndex_constraints(
     @variable(m, x)
     # x <= 10.0 doesn't translate to a SingleVariable constraint because
     # the LHS is first subtracted to form x - 10.0 <= 0.
-    @constraint(m, cref, x in MOI.LessThan{T}(10))
+    @constraint(m, cref, x in MOI.LessThan(10))
     c = constraint_object(cref)
     @test c.func == x
     @test c.set == MOI.LessThan(T(10))
     @variable(m, y[1:2])
-    @constraint(m, cref2[i = 1:2], y[i] in MOI.LessThan{T}(i))
+    @constraint(m, cref2[i = 1:2], y[i] in MOI.LessThan(i))
     c = constraint_object(cref2[1])
     @test c.func == y[1]
     @test c.set == MOI.LessThan(T(1))
@@ -105,7 +105,7 @@ function test_extension_AffExpr_scalar_constraints(
     @test c.set == MOI.EqualTo(-one(T))
     cref = @constraint(model, 2 == 1)
     c = constraint_object(cref)
-    @test isequal_canonical(c.func, zero(AffExpr))
+    @test isequal_canonical(c.func, zero(AffExprType))
     @test c.set == MOI.EqualTo(-one(T))
     return
 end
@@ -182,8 +182,8 @@ function test_extension_AffExpr_vector_constraints(
     model = ModelType()
     cref = @constraint(model, [1, 2] in MOI.Zeros(2))
     c = constraint_object(cref)
-    @test isequal_canonical(c.func[1], zero(AffExpr) + 1)
-    @test isequal_canonical(c.func[2], zero(AffExpr) + 2)
+    @test isequal_canonical(c.func[1], zero(AffExprType) + 1)
+    @test isequal_canonical(c.func[2], zero(AffExprType) + 2)
     @test c.set == MOI.Zeros(2)
     @test c.shape isa VectorShape
     @test_throws DimensionMismatch @constraint(model, [1, 2] in MOI.Zeros(3))
@@ -587,7 +587,7 @@ function test_extension_SDP_errors(
         "In `@constraint(model, [x 1; 1 -y] >= [1 x; x -2], PSDCone(), unknown_kw = 1)`:" *
         " Unrecognized constraint building format. Tried to invoke " *
         "`build_constraint(error, $(aff_str)[x - " *
-        "1 -x + 1; -x + 1 -y + 2], $(MOI.GreaterThan(0.0)), $(PSDCone()); unknown_kw = 1)`, but no " *
+        "1 -x + 1; -x + 1 -y + 2], $(MOI.GreaterThan(false)), $(PSDCone()); unknown_kw = 1)`, but no " *
         "such method exists. This is due to specifying an unrecognized " *
         "function, constraint set, and/or extra positional/keyword " *
         "arguments.\n\nIf you're trying to create a JuMP extension, you " *
