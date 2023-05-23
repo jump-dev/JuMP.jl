@@ -9,7 +9,7 @@ blogposts
 broadcasted
 [Bb]ugfix(?(es))
 camelCase
-codecov
+[Cc]odecov
 compat
 dataframe(?s)
 datastructure
