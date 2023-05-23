@@ -1020,7 +1020,7 @@ function _constraint_primal(
         },
     },
     result::Int,
-)::Float64
+)
     return MOI.get(con_ref.model, MOI.ConstraintPrimal(result), con_ref)
 end
 function _constraint_primal(
@@ -1032,7 +1032,7 @@ function _constraint_primal(
         },
     },
     result,
-)::Vector{Float64}
+)
     return MOI.get(con_ref.model, MOI.ConstraintPrimal(result), con_ref)
 end
 
@@ -1078,7 +1078,7 @@ function _constraint_dual(
         },
     },
     result::Int,
-)::Float64
+)
     return MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref)
 end
 function _constraint_dual(
@@ -1090,7 +1090,7 @@ function _constraint_dual(
         },
     },
     result::Int,
-)::Vector{Float64}
+)
     return MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref)
 end
 
