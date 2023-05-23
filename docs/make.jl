@@ -222,6 +222,7 @@ const _PAGES = [
             "tutorials/conic/min_ellipse.md",
             "tutorials/conic/ellipse_approx.md",
             "tutorials/conic/quantum_discrimination.md",
+            "tutorials/conic/optimal_power_flow.md",
         ],
         "Algorithms" => [
             "tutorials/algorithms/benders_decomposition.md",
