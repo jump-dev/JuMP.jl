@@ -104,8 +104,9 @@
     user = "joaquimg"
     rev = "146a6a93a5fac60faaf68e87c4592f585c79c6e9"
     extension = true
-# [CDCS]
-#   user = "oxfordcontrol"
+[CDCS]
+    user = "oxfordcontrol"
+    rev = "6d165e8e8f59b14e36e99c8efb19f0e775bbd292"
 [CDDLib]
     user = "JuliaPolyhedra"
     rev = "9700752f849845bc8d8477928baf3df920daadd6"
