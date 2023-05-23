@@ -1010,29 +1010,19 @@ function value(
     return reshape_vector(value.(var_value, f), con_ref.shape)
 end
 
+_eltype(::Type{F}) where {F} = Any
+_eltype(::Type{MOI.VariableIndex}) = Float64
+_eltype(::Type{MOI.ScalarAffineFunction{T}}) where {T} = T
+_eltype(::Type{MOI.ScalarQuadraticFunction{T}}) where {T} = T
+_eltype(::Type{MOI.VectorOfVariables}) = Vector{Float64}
+_eltype(::Type{MOI.VectorAffineFunction{T}}) where {T} = Vector{T}
+_eltype(::Type{MOI.VectorQuadraticFunction{T}}) where {T} = Vector{T}
+
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
 function _constraint_primal(
-    con_ref::ConstraintRef{
-        <:AbstractModel,
-        <:MOI.ConstraintIndex{
-            <:MOI.AbstractScalarFunction,
-            <:MOI.AbstractScalarSet,
-        },
-    },
+    con_ref::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
     result::Int,
-)
-    return MOI.get(con_ref.model, MOI.ConstraintPrimal(result), con_ref)
-end
-function _constraint_primal(
-    con_ref::ConstraintRef{
-        <:AbstractModel,
-        <:MOI.ConstraintIndex{
-            <:MOI.AbstractVectorFunction,
-            <:MOI.AbstractVectorSet,
-        },
-    },
-    result,
-)
+)::_eltype(F) where {F,S}
     return MOI.get(con_ref.model, MOI.ConstraintPrimal(result), con_ref)
 end
 
@@ -1068,29 +1058,11 @@ function dual(
     )
 end
 
-# Returns the value of MOI.ConstraintPrimal in a type-stable way
+# Returns the value of MOI.ConstraintDual in a type-stable way
 function _constraint_dual(
-    con_ref::ConstraintRef{
-        <:AbstractModel,
-        <:MOI.ConstraintIndex{
-            <:MOI.AbstractScalarFunction,
-            <:MOI.AbstractScalarSet,
-        },
-    },
+    con_ref::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
     result::Int,
-)
-    return MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref)
-end
-function _constraint_dual(
-    con_ref::ConstraintRef{
-        <:AbstractModel,
-        <:MOI.ConstraintIndex{
-            <:MOI.AbstractVectorFunction,
-            <:MOI.AbstractVectorSet,
-        },
-    },
-    result::Int,
-)
+)::_eltype(F) where {F,S}
     return MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref)
 end
 
