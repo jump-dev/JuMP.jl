@@ -74,7 +74,7 @@ end
 """
     primal_feasibility_report(
         point::Function,
-        model::GenericModel{t};
+        model::GenericModel{T};
         atol::T = zero(T),
         skip_missing::Bool = false,
     ) where {T}
