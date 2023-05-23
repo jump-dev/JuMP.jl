@@ -150,7 +150,7 @@
     rev = "v1.4.2"
 [ProxSDP]
     user = "mariohsouto"
-    rev = "d092018eff3983699964dd20faf8b8902a7a2359"
+    rev = "de648be90e63a69b8d8e4f82371760065d242fe9"
 [SCIP]
     user = "scipopt"
     rev = "44e0bff587208fb4e0779db440f4104bc0bba2ec"
