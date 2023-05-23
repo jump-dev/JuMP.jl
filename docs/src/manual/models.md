@@ -321,7 +321,7 @@ julia> write(io, model; format = MOI.FileFormats.FORMAT_MPS)
 ## Read a model from file
 
 JuMP models can be created from file formats using [`read_from_file`](@ref) and
-[`Base.read`](@ref).
+`Base.read`.
 
 ```jldoctest file_formats
 julia> model = read_from_file("model.mps")

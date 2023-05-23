@@ -10,13 +10,20 @@
 
 const _JuMPTypes = Union{AbstractJuMPScalar,NonlinearExpression}
 
-_float_type(::Type{<:Real}) = Float64
-_float_type(::Type{LinearAlgebra.UniformScaling{T}}) where {T} = _float_type(T)
-_float_type(::Type{<:Complex}) = Complex{Float64}
+_complex_convert_type(::Type{T}, ::Type{<:Real}) where {T} = T
+function _complex_convert_type(
+    ::Type{T},
+    ::Type{<:LinearAlgebra.UniformScaling{S}},
+) where {T,S}
+    return _complex_convert_type(T, S)
+end
+_complex_convert_type(::Type{T}, ::Type{<:Complex}) where {T} = Complex{T}
 
-_float(x::Real) = convert(Float64, x)
-_float(x::Complex) = convert(Complex{Float64}, x)
-_float(J::LinearAlgebra.UniformScaling) = _float(J.λ)
+_complex_convert(::Type{T}, x::Real) where {T} = convert(T, x)
+_complex_convert(::Type{T}, x::Complex) where {T} = convert(Complex{T}, x)
+function _complex_convert(::Type{T}, J::LinearAlgebra.UniformScaling) where {T}
+    return _complex_convert(T, J.λ)
+end
 
 # Overloads
 #
@@ -30,15 +37,15 @@ _float(J::LinearAlgebra.UniformScaling) = _float(J.λ)
 # _Constant--_Constant obviously already taken care of!
 # _Constant--VariableRef
 function Base.:+(lhs::_Constant, rhs::AbstractVariableRef)
-    constant = _float(lhs)
+    constant = _complex_convert(value_type(typeof(rhs)), lhs)
     return _build_aff_expr(constant, one(constant), rhs)
 end
 function Base.:-(lhs::_Constant, rhs::AbstractVariableRef)
-    constant = _float(lhs)
+    constant = _complex_convert(value_type(typeof(rhs)), lhs)
     return _build_aff_expr(constant, -one(constant), rhs)
 end
 function Base.:*(lhs::_Constant, rhs::AbstractVariableRef)
-    coef = _float(lhs)
+    coef = _complex_convert(value_type(typeof(rhs)), lhs)
     if iszero(coef)
         return zero(GenericAffExpr{typeof(coef),typeof(rhs)})
     else
@@ -48,55 +55,76 @@ end
 # _Constant--_GenericAffOrQuadExpr
 function Base.:+(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     # If `lhs` is complex and `rhs` has real coefficients then the conversion is needed
-    T = _MA.promote_operation(+, _float_type(typeof(lhs)), typeof(rhs))
+    T = _MA.promote_operation(
+        +,
+        _complex_convert_type(value_type(variable_ref_type(rhs)), typeof(lhs)),
+        typeof(rhs),
+    )
     result = _MA.mutable_copy(convert(T, rhs))
     add_to_expression!(result, lhs)
     return result
 end
 function Base.:-(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
     # If `lhs` is complex and `rhs` has real coefficients then the conversion is needed
-    T = _MA.promote_operation(+, _float_type(typeof(lhs)), typeof(rhs))
+    T = _MA.promote_operation(
+        +,
+        _complex_convert_type(value_type(variable_ref_type(rhs)), typeof(lhs)),
+        typeof(rhs),
+    )
     result = convert(T, -rhs)
     add_to_expression!(result, lhs)
     return result
 end
 function Base.:*(lhs::_Constant, rhs::_GenericAffOrQuadExpr)
+    T = value_type(variable_ref_type(rhs))
     if iszero(lhs)
         # If `lhs` is complex and `rhs` has real coefficients, `zero(rhs)` would not work
         return zero(
-            _MA.promote_operation(*, _float_type(typeof(lhs)), typeof(rhs)),
+            _MA.promote_operation(
+                *,
+                _complex_convert_type(T, typeof(lhs)),
+                typeof(rhs),
+            ),
         )
     else
-        α = _constant_to_number(lhs)
-        return map_coefficients(c -> α * c, rhs)
+        return map_coefficients(Base.Fix1(*, _complex_convert(T, lhs)), rhs)
     end
 end
 
 # AbstractVariableRef (or, AbstractJuMPScalar)
 # TODO: What is the role of AbstractJuMPScalar??
 Base.:+(lhs::AbstractJuMPScalar) = lhs
-Base.:-(lhs::AbstractVariableRef) = _build_aff_expr(0.0, -1.0, lhs)
+function Base.:-(lhs::AbstractVariableRef)
+    T = value_type(typeof(lhs))
+    return _build_aff_expr(zero(T), -one(T), lhs)
+end
 Base.:*(lhs::AbstractJuMPScalar) = lhs # make this more generic so extensions don't have to define unary multiplication for our macros
 # AbstractVariableRef--_Constant
 Base.:+(lhs::AbstractVariableRef, rhs::_Constant) = (+)(rhs, lhs)
 Base.:-(lhs::AbstractVariableRef, rhs::_Constant) = (+)(-rhs, lhs)
 Base.:*(lhs::AbstractVariableRef, rhs::_Constant) = (*)(rhs, lhs)
-Base.:/(lhs::AbstractVariableRef, rhs::_Constant) = (*)(1.0 / rhs, lhs)
+function Base.:/(lhs::AbstractVariableRef, rhs::_Constant)
+    T = value_type(typeof(lhs))
+    return (*)(inv(convert(T, rhs)), lhs)
+end
 # AbstractVariableRef--AbstractVariableRef
 function Base.:+(lhs::V, rhs::V) where {V<:AbstractVariableRef}
-    return _build_aff_expr(0.0, 1.0, lhs, 1.0, rhs)
+    T = value_type(V)
+    return _build_aff_expr(zero(T), one(T), lhs, one(T), rhs)
 end
 function Base.:-(lhs::V, rhs::V) where {V<:AbstractVariableRef}
+    T = value_type(V)
     if lhs == rhs
-        return zero(GenericAffExpr{Float64,V})
+        return zero(GenericAffExpr{T,V})
     else
-        return _build_aff_expr(0.0, 1.0, lhs, -1.0, rhs)
+        return _build_aff_expr(zero(T), one(T), lhs, -one(T), rhs)
     end
 end
 function Base.:*(lhs::V, rhs::V) where {V<:AbstractVariableRef}
+    T = value_type(V)
     return GenericQuadExpr(
-        GenericAffExpr{Float64,V}(),
-        UnorderedPair(lhs, rhs) => 1.0,
+        GenericAffExpr{T,V}(),
+        UnorderedPair(lhs, rhs) => one(T),
     )
 end
 # AbstractVariableRef--GenericAffExpr
@@ -171,12 +199,13 @@ function Base.:/(lhs::GenericAffExpr, rhs::_Constant)
 end
 
 function Base.:^(lhs::AbstractVariableRef, rhs::Integer)
+    T = value_type(typeof(lhs))
     if rhs == 2
         return lhs * lhs
     elseif rhs == 1
-        return convert(GenericQuadExpr{Float64,variable_ref_type(lhs)}, lhs)
+        return convert(GenericQuadExpr{T,variable_ref_type(lhs)}, lhs)
     elseif rhs == 0
-        return one(GenericQuadExpr{Float64,variable_ref_type(lhs)})
+        return one(GenericQuadExpr{T,variable_ref_type(lhs)})
     else
         error(
             "Only exponents of 0, 1, or 2 are currently supported. Are you " *
@@ -253,7 +282,7 @@ end
 
 """
     operator_warn(model::AbstractModel)
-    operator_warn(model::Model)
+    operator_warn(model::GenericModel)
 
 This function is called on the model whenever two affine expressions are added
 together without using `destructive_add!`, and at least one of the two
@@ -264,7 +293,7 @@ a warning is generated once.
 """
 operator_warn(::AbstractModel) = nothing
 
-function operator_warn(model::Model)
+function operator_warn(model::GenericModel)
     model.operator_counter += 1
     if model.operator_counter > 20000
         @warn(
@@ -403,7 +432,7 @@ LinearAlgebra.dot(lhs::_JuMPTypes, rhs::_Constant) = conj(lhs) * rhs
 LinearAlgebra.dot(lhs::_Constant, rhs::_JuMPTypes) = conj(lhs) * rhs
 
 function Base.promote_rule(V::Type{<:AbstractVariableRef}, R::Type{<:Number})
-    return GenericAffExpr{_float_type(R),V}
+    return GenericAffExpr{_complex_convert_type(value_type(V), R),V}
 end
 function Base.promote_rule(
     V::Type{<:AbstractVariableRef},
@@ -444,7 +473,7 @@ end
 
 Base.transpose(x::AbstractJuMPScalar) = x
 
-Base.conj(x::VariableRef) = x
+Base.conj(x::GenericVariableRef) = x
 # Can remove the following code once == overloading is removed
 
 function LinearAlgebra.issymmetric(x::Matrix{T}) where {T<:_JuMPTypes}

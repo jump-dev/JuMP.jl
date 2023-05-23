@@ -51,6 +51,8 @@ mutable struct GenericQuadExpr{CoefType,VarType} <: AbstractJuMPScalar
     terms::OrderedDict{UnorderedPair{VarType},CoefType}
 end
 
+variable_ref_type(::Type{GenericQuadExpr{C,V}}) where {C,V} = V
+
 """
     GenericQuadExpr(
         aff::GenericAffExpr{V,K},
@@ -530,7 +532,7 @@ end
     QuadExpr
 
 An alias for `GenericQuadExpr{Float64,VariableRef}`, the specific
-    [`GenericQuadExpr`](@ref) used by JuMP.
+[`GenericQuadExpr`](@ref) used by JuMP.
 """
 const QuadExpr = GenericQuadExpr{Float64,VariableRef}
 
@@ -583,8 +585,8 @@ function _moi_quadratic_term(t::Tuple)
     )
 end
 function MOI.ScalarQuadraticFunction(
-    q::GenericQuadExpr{C,VariableRef},
-) where {C}
+    q::GenericQuadExpr{C,GenericVariableRef{T}},
+) where {C,T}
     _assert_isfinite(q)
     qterms = MOI.ScalarQuadraticTerm{C}[
         _moi_quadratic_term(t) for t in quad_terms(q)
@@ -599,12 +601,12 @@ function moi_function_type(::Type{<:GenericQuadExpr{T}}) where {T}
     return MOI.ScalarQuadraticFunction{T}
 end
 
-function GenericQuadExpr{C,VariableRef}(
-    m::Model,
+function GenericQuadExpr{C,GenericVariableRef{T}}(
+    m::GenericModel{T},
     f::MOI.ScalarQuadraticFunction,
-) where {C}
-    quad = GenericQuadExpr{C,VariableRef}(
-        GenericAffExpr{C,VariableRef}(
+) where {C,T}
+    quad = GenericQuadExpr{C,GenericVariableRef{T}}(
+        GenericAffExpr{C,GenericVariableRef{T}}(
             m,
             MOI.ScalarAffineFunction(f.affine_terms, f.constant),
         ),
@@ -616,34 +618,40 @@ function GenericQuadExpr{C,VariableRef}(
         if v1 == v2
             coef /= 2
         end
-        add_to_expression!(quad, coef, VariableRef(m, v1), VariableRef(m, v2))
+        add_to_expression!(
+            quad,
+            coef,
+            GenericVariableRef{T}(m, v1),
+            GenericVariableRef{T}(m, v2),
+        )
     end
     return quad
 end
 function jump_function_type(
-    ::Model,
-    ::Type{MOI.ScalarQuadraticFunction{T}},
-) where {T}
-    return GenericQuadExpr{T,VariableRef}
+    ::GenericModel{T},
+    ::Type{MOI.ScalarQuadraticFunction{C}},
+) where {C,T}
+    return GenericQuadExpr{C,GenericVariableRef{T}}
 end
 function jump_function(
-    model::Model,
-    f::MOI.ScalarQuadraticFunction{T},
-) where {T}
-    return GenericQuadExpr{T,VariableRef}(model, f)
+    model::GenericModel{T},
+    f::MOI.ScalarQuadraticFunction{C},
+) where {C,T}
+    return GenericQuadExpr{C,GenericVariableRef{T}}(model, f)
 end
 function jump_function_type(
-    ::Model,
-    ::Type{MOI.VectorQuadraticFunction{T}},
-) where {T}
-    return Vector{GenericQuadExpr{T,VariableRef}}
+    ::GenericModel{T},
+    ::Type{MOI.VectorQuadraticFunction{C}},
+) where {C,T}
+    return Vector{GenericQuadExpr{C,GenericVariableRef{T}}}
 end
 function jump_function(
-    model::Model,
-    f::MOI.VectorQuadraticFunction{T},
-) where {T}
-    return GenericQuadExpr{T,VariableRef}[
-        GenericQuadExpr{T,VariableRef}(model, f) for f in MOIU.eachscalar(f)
+    model::GenericModel{T},
+    f::MOI.VectorQuadraticFunction{C},
+) where {C,T}
+    return GenericQuadExpr{C,GenericVariableRef{T}}[
+        GenericQuadExpr{C,GenericVariableRef{T}}(model, f) for
+        f in MOIU.eachscalar(f)
     ]
 end
 
@@ -671,8 +679,8 @@ function _fill_vqf!(
 end
 
 function MOI.VectorQuadraticFunction(
-    quads::Vector{GenericQuadExpr{C,VariableRef}},
-) where {C}
+    quads::Vector{GenericQuadExpr{C,GenericVariableRef{T}}},
+) where {C,T}
     num_quadratic_terms = sum(quad -> length(quad_terms(quad)), quads)
     quadratic_terms =
         Vector{MOI.VectorQuadraticTerm{C}}(undef, num_quadratic_terms)

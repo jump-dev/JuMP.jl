@@ -14,8 +14,8 @@ end
 
 _throw_write_to_file_explanatory_message(err) = rethrow(err)
 
-function _copy_to_bridged_model(f::Function, model::Model)
-    inner = MOI.instantiate(f; with_bridge_type = Float64)
+function _copy_to_bridged_model(f::Function, model::GenericModel{T}) where {T}
+    inner = MOI.instantiate(f; with_bridge_type = T)
     try
         MOI.copy_to(inner, model)
     catch err
@@ -30,7 +30,7 @@ end
 
 """
     write_to_file(
-        model::Model,
+        model::GenericModel,
         filename::String;
         format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC,
         kwargs...,
@@ -44,7 +44,7 @@ If the filename ends in `.bz2`, it will be compressed using BZip2.
 Other `kwargs` are passed to the `Model` constructor of the chosen format.
 """
 function write_to_file(
-    model::Model,
+    model::GenericModel,
     filename::String;
     format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_AUTOMATIC,
     kwargs...,
@@ -63,7 +63,7 @@ end
 """
     Base.write(
         io::IO,
-        model::Model;
+        model::GenericModel;
         format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_MOF,
         kwargs...,
     )
@@ -74,7 +74,7 @@ Other `kwargs` are passed to the `Model` constructor of the chosen format.
 """
 function Base.write(
     io::IO,
-    model::Model;
+    model::GenericModel;
     format::MOI.FileFormats.FileFormat = MOI.FileFormats.FORMAT_MOF,
     kwargs...,
 )
@@ -110,7 +110,9 @@ function read_from_file(
     src =
         MOI.FileFormats.Model(; format = format, filename = filename, kwargs...)
     MOI.read_from_file(src, filename)
-    model = Model()
+    # TODO(odow): what number type to choose? Are there any non-Float64 file
+    # formats?
+    model = GenericModel{Float64}()
     MOI.copy_to(model, src)
     return model
 end
@@ -118,7 +120,7 @@ end
 """
     Base.read(
         io::IO,
-        ::Type{Model};
+        ::Type{<:GenericModel};
         format::MOI.FileFormats.FileFormat,
         kwargs...,
     )
@@ -129,16 +131,16 @@ Other `kwargs` are passed to the `Model` constructor of the chosen format.
 """
 function Base.read(
     io::IO,
-    ::Type{Model};
+    ::Type{GenericModel{T}};
     format::MOI.FileFormats.FileFormat,
     kwargs...,
-)
+) where {T}
     if format == MOI.FileFormats.FORMAT_AUTOMATIC
         error("Unable to infer the file format from an IO stream.")
     end
     src = MOI.FileFormats.Model(; format = format, kwargs...)
     read!(io, src)
-    model = Model()
+    model = GenericModel{T}()
     MOI.copy_to(model, src)
     return model
 end

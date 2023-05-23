@@ -268,8 +268,8 @@ function test_extension_MA_add_mul(
     @variable(model, x)
     @variable(model, y)
     # MA.add_mul!!(ex::Number, c::Number, x::GenericAffExpr)
-    aff = MA.add_mul!!(1.0, 2.0, GenericAffExpr(1.0, :a => 1.0))
-    @test isequal_canonical(aff, GenericAffExpr(3.0, :a => 2.0))
+    aff = MA.add_mul!!(1.0, 2.0, GenericAffExpr(1.0, x => 1.0))
+    @test isequal_canonical(aff, GenericAffExpr(3.0, x => 2.0))
     # MA.add_mul!!(ex::Number, c::Number, x::GenericQuadExpr) with c == 0
     QuadExprType = GenericQuadExpr{Float64,VariableRefType}
     quad = MA.add_mul!!(2.0, 0.0, QuadExprType())

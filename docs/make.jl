@@ -204,19 +204,23 @@ jump_api_reference = DocumenterReference.automatic_reference_documentation(;
     subdirectory = "api",
     modules = [
         JuMP => [
-            "Base.empty!(::Model)" => DocumenterReference.DOCTYPE_FUNCTION,
-            "Base.isempty(::Model)" => DocumenterReference.DOCTYPE_FUNCTION,
+            "Base.empty!(::GenericModel)" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
+            "Base.isempty(::GenericModel)" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
             "Base.copy(::AbstractModel)" =>
                 DocumenterReference.DOCTYPE_FUNCTION,
-            "Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)" =>
+            "Base.write(::IO, ::GenericModel; ::MOI.FileFormats.FileFormat)" =>
                 DocumenterReference.DOCTYPE_FUNCTION,
-            "Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)" =>
+            # Documenter tries to add `read(::IO, ::Type)` instead of this
+            # specific method
+            # "Base.read(::IO, ::Type{<:GenericModel}; ::MOI.FileFormats.FileFormat)" =>
+            #     DocumenterReference.DOCTYPE_FUNCTION,
+            "MOI.Utilities.reset_optimizer(::GenericModel)" =>
                 DocumenterReference.DOCTYPE_FUNCTION,
-            "MOI.Utilities.reset_optimizer(::Model)" =>
+            "MOI.Utilities.drop_optimizer(::GenericModel)" =>
                 DocumenterReference.DOCTYPE_FUNCTION,
-            "MOI.Utilities.drop_optimizer(::Model)" =>
-                DocumenterReference.DOCTYPE_FUNCTION,
-            "MOI.Utilities.attach_optimizer(::Model)" =>
+            "MOI.Utilities.attach_optimizer(::GenericModel)" =>
                 DocumenterReference.DOCTYPE_FUNCTION,
         ],
         JuMP.Containers => [

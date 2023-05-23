@@ -8,24 +8,24 @@
 
 See [`lp_sensitivity_report`](@ref).
 """
-struct SensitivityReport
-    rhs::Dict{ConstraintRef,Tuple{Float64,Float64}}
-    objective::Dict{VariableRef,Tuple{Float64,Float64}}
+struct SensitivityReport{T}
+    rhs::Dict{ConstraintRef,Tuple{T,T}}
+    objective::Dict{GenericVariableRef{T},Tuple{T,T}}
 end
 
 Base.getindex(s::SensitivityReport, c::ConstraintRef) = s.rhs[c]
-Base.getindex(s::SensitivityReport, x::VariableRef) = s.objective[x]
+Base.getindex(s::SensitivityReport, x::GenericVariableRef) = s.objective[x]
 
 """
-    lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)::SensitivityReport
+    lp_sensitivity_report(model::GenericModel{T}; atol::T = Base.rtoldefault(T))::SensitivityReport{T} where {T}
 
 Given a linear program `model` with a current optimal basis, return a
 [`SensitivityReport`](@ref) object, which maps:
 
- - Every variable reference to a tuple `(d_lo, d_hi)::Tuple{Float64,Float64}`,
+ - Every variable reference to a tuple `(d_lo, d_hi)::Tuple{T,T}`,
    explaining how much the objective coefficient of the corresponding variable
    can change by, such that the original basis remains optimal.
- - Every constraint reference to a tuple `(d_lo, d_hi)::Tuple{Float64,Float64}`,
+ - Every constraint reference to a tuple `(d_lo, d_hi)::Tuple{T,T}`,
    explaining how much the right-hand side of the corresponding constraint can
    change by, such that the basis remains optimal.
 
@@ -74,7 +74,10 @@ julia> println(
 The lower bound of `x` can decrease by -Inf or increase by 3.0.
 ```
 """
-function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
+function lp_sensitivity_report(
+    model::GenericModel{T};
+    atol::T = Base.rtoldefault(T),
+) where {T}
     if !_is_lp(model)
         error(
             "Unable to compute LP sensitivity because model is not a linear " *
@@ -109,7 +112,7 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     else
         zeros(Float64, (0, 0))
     end
-    d = Dict{Int,Vector{Float64}}(
+    d = Dict{Int,Vector{T}}(
         # We call `collect` here because some Julia versions are missing sparse
         # matrix \ sparse vector fallbacks.
         j => B_fact \ collect(std_form.A[:, j]) for
@@ -117,8 +120,8 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     )
 
     report = SensitivityReport(
-        Dict{ConstraintRef,Tuple{Float64,Float64}}(),
-        Dict{VariableRef,Tuple{Float64,Float64}}(),
+        Dict{ConstraintRef,Tuple{T,T}}(),
+        Dict{GenericVariableRef{T},Tuple{T,T}}(),
     )
 
     ###
@@ -160,7 +163,7 @@ function lp_sensitivity_report(model::Model; atol::Float64 = 1e-8)
     ### Compute objective sensitivity
     ###
 
-    π = Dict{Int,Float64}(
+    π = Dict{Int,T}(
         i => reduced_cost(var) for
         (var, i) in std_form.columns if basis.variables[i] != MOI.BASIC
     )
@@ -301,16 +304,16 @@ function _compute_rhs_range(d_B, x_B, l_B, u_B, atol)
 end
 
 """
-    _is_lp(model::Model)
+    _is_lp(model::GenericModel)
 
 Return `true` if `model` is a linear program.
 """
-function _is_lp(model::Model)
+function _is_lp(model::GenericModel)
     for (F, S) in list_of_constraint_types(model)
         # TODO(odow): support Interval constraints.
         if !(S <: Union{MOI.LessThan,MOI.GreaterThan,MOI.EqualTo})
             return false
-        elseif !(F <: Union{VariableRef,GenericAffExpr})
+        elseif !(F <: Union{GenericVariableRef,GenericAffExpr})
             return false
         end
     end
@@ -318,7 +321,7 @@ function _is_lp(model::Model)
 end
 
 """
-    _standard_form_matrix(model::Model)
+    _standard_form_matrix(model::GenericModel)
 
 Given a problem:
 
@@ -332,12 +335,12 @@ Return the standard form:
 
 `columns` maps the variable references to column indices.
 """
-function _standard_form_matrix(model::Model)
+function _standard_form_matrix(model::GenericModel{T}) where {T}
     columns = Dict(var => i for (i, var) in enumerate(all_variables(model)))
     n = length(columns)
-    c_l, c_u = fill(-Inf, n), fill(Inf, n)
-    r_l, r_u = Float64[], Float64[]
-    I, J, V = Int[], Int[], Float64[]
+    c_l, c_u = fill(typemin(T), n), fill(typemax(T), n)
+    r_l, r_u = T[], T[]
+    I, J, V = Int[], Int[], T[]
     bound_constraints = ConstraintRef[]
     affine_constraints = ConstraintRef[]
     for (F, S) in list_of_constraint_types(model)
@@ -368,20 +371,20 @@ function _standard_form_matrix(model::Model)
 end
 
 function _fill_standard_form(
-    model::Model,
-    x::Dict{VariableRef,Int},
+    model::GenericModel{T},
+    x::Dict{GenericVariableRef{T},Int},
     bound_constraints::Vector{ConstraintRef},
     ::Vector{ConstraintRef},
-    F::Type{VariableRef},
+    F::Type{GenericVariableRef{T}},
     S::Type,
-    c_l::Vector{Float64},
-    c_u::Vector{Float64},
-    ::Vector{Float64},
-    ::Vector{Float64},
+    c_l::Vector{T},
+    c_u::Vector{T},
+    ::Vector{T},
+    ::Vector{T},
     ::Vector{Int},
     ::Vector{Int},
-    ::Vector{Float64},
-)
+    ::Vector{T},
+) where {T}
     for c in all_constraints(model, F, S)
         push!(bound_constraints, c)
         c_obj = constraint_object(c)
@@ -394,20 +397,20 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(
-    model::Model,
-    x::Dict{VariableRef,Int},
+    model::GenericModel{T},
+    x::Dict{GenericVariableRef{T},Int},
     ::Vector{ConstraintRef},
     affine_constraints::Vector{ConstraintRef},
     F::Type{<:GenericAffExpr},
     S::Type,
-    ::Vector{Float64},
-    ::Vector{Float64},
-    r_l::Vector{Float64},
-    r_u::Vector{Float64},
+    ::Vector{T},
+    ::Vector{T},
+    r_l::Vector{T},
+    r_u::Vector{T},
     I::Vector{Int},
     J::Vector{Int},
-    V::Vector{Float64},
-)
+    V::Vector{T},
+) where {T}
     for c in all_constraints(model, F, S)
         push!(affine_constraints, c)
         c_obj = constraint_object(c)
@@ -423,7 +426,7 @@ function _fill_standard_form(
         end
         push!(I, row)
         push!(J, length(x) + row)
-        push!(V, -1.0)
+        push!(V, -one(T))
     end
     return
 end
@@ -432,7 +435,7 @@ _convert_nonbasic_status(::MOI.LessThan) = MOI.NONBASIC_AT_UPPER
 _convert_nonbasic_status(::MOI.GreaterThan) = MOI.NONBASIC_AT_LOWER
 _convert_nonbasic_status(::Any) = MOI.NONBASIC
 
-function _try_get_constraint_basis_status(model::Model, constraint)
+function _try_get_constraint_basis_status(model::GenericModel, constraint)
     try
         return MOI.get(model, MOI.ConstraintBasisStatus(), constraint)
     catch
@@ -444,7 +447,7 @@ function _try_get_constraint_basis_status(model::Model, constraint)
     end
 end
 
-function _try_get_variable_basis_status(model::Model, variable)
+function _try_get_variable_basis_status(model::GenericModel, variable)
     try
         return MOI.get(model, MOI.VariableBasisStatus(), variable)
     catch
@@ -461,7 +464,7 @@ _nonbasic_at_lower(::Any) = MOI.BASIC
 _nonbasic_at_upper(::MOI.LessThan) = MOI.NONBASIC_AT_UPPER
 _nonbasic_at_upper(::Any) = MOI.BASIC
 
-function _standard_form_basis(model::Model, std_form)
+function _standard_form_basis(model::GenericModel, std_form)
     variable_status = fill(MOI.BASIC, length(std_form.columns))
     bound_status = fill(MOI.BASIC, length(std_form.bounds))
     constraint_status = fill(MOI.BASIC, length(std_form.constraints))
