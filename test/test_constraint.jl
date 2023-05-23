@@ -1457,7 +1457,7 @@ function test_Hermitian_PSD_constraint()
         mock_optimizer,
         MOI.ConstraintDual(),
         optimizer_index(href),
-        1:MOI.dimension(c.set),
+        collect(1.0:1.0:MOI.dimension(c.set)),
     )
     H = dual(href)
     @test H isa LinearAlgebra.Hermitian
