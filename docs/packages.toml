@@ -100,6 +100,10 @@
 [Alpine]
     user = "lanl-ansi"
     rev = "32757b2568acfe71257e41ed4122a120717a6460"
+[BilevelJuMP]
+    user = "joaquimg"
+    rev = "1572c9fc60773ca0cdfadba07f7cd265a1217a37"
+    extension = true
 # [CDCS]
 #   user = "oxfordcontrol"
 [CDDLib]
