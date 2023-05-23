@@ -57,7 +57,7 @@ using HiGHS  # hide
 # At present, the majority of the latency problems are caused by JuMP's bridging
 # mechanism. If you only use constraints that are natively supported by the
 # solver, you can disable bridges by passing `add_bridges = false` to
-# [`Model`](@ref).
+# [`Model`](@ref GenericModel).
 
 model = Model(HiGHS.Optimizer; add_bridges = false)
 

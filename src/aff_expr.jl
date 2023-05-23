@@ -122,13 +122,7 @@ mutable struct GenericAffExpr{CoefType,VarType} <: AbstractJuMPScalar
     terms::OrderedDict{VarType,CoefType}
 end
 
-"""
-    variable_ref_type(::GenericAffExpr{C, V}) where {C, V}
-
-A helper function used internally by JuMP and some JuMP extensions. Returns the
-variable type `V` from a [`GenericAffExpr`](@ref)
-"""
-variable_ref_type(::GenericAffExpr{C,V}) where {C,V} = V
+variable_ref_type(::Type{GenericAffExpr{C,V}}) where {C,V} = V
 
 """
     GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
@@ -418,8 +412,8 @@ typically much more efficient than `expression += (*)(terms...)`. For example,
 
 Only a few methods are defined, mostly for internal use, and only for the cases
 when (1) they can be implemented efficiently and (2) `expression` is capable of
-storing the result. For example, `add_to_expression!(::AffExpr, ::VariableRef,
-::VariableRef)` is not defined because a `GenericAffExpr` cannot store the
+storing the result. For example, `add_to_expression!(::AffExpr, ::GenericVariableRef,
+::GenericVariableRef)` is not defined because a `GenericAffExpr` cannot store the
 product of two variables.
 """
 function add_to_expression! end
@@ -629,7 +623,9 @@ end
 # Note: No validation is performed that the variables in the AffExpr belong to
 # the same model. The verification is done in `check_belongs_to_model` which
 # should be called before calling `MOI.ScalarAffineFunction`.
-function MOI.ScalarAffineFunction(a::GenericAffExpr{C,VariableRef}) where {C}
+function MOI.ScalarAffineFunction(
+    a::GenericAffExpr{C,<:GenericVariableRef},
+) where {C}
     _assert_isfinite(a)
     terms = MOI.ScalarAffineTerm{C}[
         MOI.ScalarAffineTerm(t[1], index(t[2])) for t in linear_terms(a)
@@ -679,41 +675,55 @@ function moi_function_type(::Type{<:GenericAffExpr{T}}) where {T}
     return MOI.ScalarAffineFunction{T}
 end
 
-function GenericAffExpr{C,VariableRef}(
-    m::Model,
+function GenericAffExpr{C,GenericVariableRef{T}}(
+    m::GenericModel{T},
     f::MOI.ScalarAffineFunction,
-) where {C}
-    aff = GenericAffExpr{C,VariableRef}(f.constant)
+) where {C,T}
+    aff = GenericAffExpr{C,GenericVariableRef{T}}(f.constant)
     for t in f.terms
-        add_to_expression!(aff, t.coefficient, VariableRef(m, t.variable))
+        add_to_expression!(
+            aff,
+            t.coefficient,
+            GenericVariableRef(m, t.variable),
+        )
     end
     return aff
 end
 
 function jump_function_type(
-    ::Model,
-    ::Type{MOI.ScalarAffineFunction{T}},
-) where {T}
-    return GenericAffExpr{T,VariableRef}
+    ::GenericModel{T},
+    ::Type{MOI.ScalarAffineFunction{C}},
+) where {C,T}
+    return GenericAffExpr{C,GenericVariableRef{T}}
 end
 
-function jump_function(model::Model, f::MOI.ScalarAffineFunction{T}) where {T}
-    return GenericAffExpr{T,VariableRef}(model, f)
+function jump_function(
+    model::GenericModel{T},
+    f::MOI.ScalarAffineFunction{C},
+) where {C,T}
+    return GenericAffExpr{C,GenericVariableRef{T}}(model, f)
 end
 
 function jump_function_type(
-    ::Model,
-    ::Type{MOI.VectorAffineFunction{T}},
-) where {T}
-    return Vector{GenericAffExpr{T,VariableRef}}
+    ::GenericModel{T},
+    ::Type{MOI.VectorAffineFunction{C}},
+) where {C,T}
+    return Vector{GenericAffExpr{C,GenericVariableRef{T}}}
 end
 
-function jump_function(model::Model, f::MOI.VectorAffineFunction{T}) where {T}
-    ret = GenericAffExpr{T,VariableRef}[]
+function jump_function(
+    model::GenericModel{T},
+    f::MOI.VectorAffineFunction{C},
+) where {T,C}
+    ret = GenericAffExpr{C,GenericVariableRef{T}}[]
     for scalar_f in MOIU.eachscalar(f)
-        g = GenericAffExpr{T,VariableRef}(scalar_f.constant)
+        g = GenericAffExpr{C,GenericVariableRef{T}}(scalar_f.constant)
         for t in scalar_f.terms
-            add_to_expression!(g, t.coefficient, VariableRef(model, t.variable))
+            add_to_expression!(
+                g,
+                t.coefficient,
+                GenericVariableRef(model, t.variable),
+            )
         end
         push!(ret, g)
     end
@@ -750,8 +760,8 @@ function _fill_vaf!(
 end
 
 function MOI.VectorAffineFunction(
-    affs::Vector{GenericAffExpr{C,VariableRef}},
-) where {C}
+    affs::Vector{GenericAffExpr{C,GenericVariableRef{T}}},
+) where {C,T}
     len = 0
     for aff in affs
         len += length(linear_terms(aff))

@@ -44,7 +44,7 @@ julia> @variable(model, x)
 x
 
 julia> typeof(x)
-VariableRef
+VariableRef (alias for GenericVariableRef{Float64})
 
 julia> num_variables(model)
 1
@@ -1230,7 +1230,7 @@ julia> y = Union{VariableRef,AffExpr}[
            j > i ? first(keys(x[i, j].terms)) : x[i, j]
            for i in 1:size(x, 1), j in 1:size(x, 2)
        ]
-2×2 Matrix{Union{VariableRef, AffExpr}}:
+2×2 Matrix{Union{AffExpr, VariableRef}}:
  0        x[1,2]
  -x[1,2]  0
 

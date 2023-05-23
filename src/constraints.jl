@@ -300,7 +300,7 @@ con : x² = 1.0
 """
 function constraint_by_name end
 
-function constraint_by_name(model::Model, name::String)
+function constraint_by_name(model::GenericModel, name::String)
     index = MOI.get(backend(model), MOI.ConstraintIndex, name)
     if index isa Nothing
         return nothing
@@ -310,7 +310,7 @@ function constraint_by_name(model::Model, name::String)
 end
 
 function constraint_by_name(
-    model::Model,
+    model::GenericModel,
     name::String,
     F::Type{<:MOI.AbstractFunction},
     S::Type{<:MOI.AbstractSet},
@@ -323,7 +323,7 @@ function constraint_by_name(
     end
 end
 function constraint_by_name(
-    model::Model,
+    model::GenericModel,
     name::String,
     F::Type{<:Union{ScalarType,Vector{ScalarType}}},
     S::Type,
@@ -356,7 +356,7 @@ function constraint_ref_with_index(
 end
 
 """
-    delete(model::Model, con_ref::ConstraintRef)
+    delete(model::GenericModel, con_ref::ConstraintRef)
 
 Delete the constraint associated with `constraint_ref` from the model `model`.
 
@@ -388,7 +388,7 @@ Stacktrace:
 [...]
 ```
 """
-function delete(model::Model, con_ref::ConstraintRef)
+function delete(model::GenericModel, con_ref::ConstraintRef)
     if model !== con_ref.model
         error(
             "The constraint reference you are trying to delete does not " *
@@ -400,7 +400,7 @@ function delete(model::Model, con_ref::ConstraintRef)
 end
 
 """
-    delete(model::Model, con_refs::Vector{<:ConstraintRef})
+    delete(model::GenericModel, con_refs::Vector{<:ConstraintRef})
 
 Delete the constraints associated with `con_refs` from the model `model`.
 Solvers may implement specialized methods for deleting multiple constraints of
@@ -411,7 +411,7 @@ method.
 See also: [`unregister`](@ref)
 """
 function delete(
-    model::Model,
+    model::GenericModel,
     con_refs::Vector{<:ConstraintRef{<:AbstractModel}},
 )
     if any(c -> model !== c.model, con_refs)
@@ -424,11 +424,11 @@ function delete(
 end
 
 """
-    is_valid(model::Model, con_ref::ConstraintRef{<:AbstractModel})
+    is_valid(model::GenericModel, con_ref::ConstraintRef{<:AbstractModel})
 
 Return `true` if `constraint_ref` refers to a valid constraint in `model`.
 """
-function is_valid(model::Model, con_ref::ConstraintRef{<:AbstractModel})
+function is_valid(model::GenericModel, con_ref::ConstraintRef{<:AbstractModel})
     return (
         model === con_ref.model && MOI.is_valid(backend(model), con_ref.index)
     )
@@ -516,7 +516,7 @@ struct BridgeableConstraint{C,B,T} <: AbstractConstraint
 end
 
 function add_constraint(
-    model::Model,
+    model::GenericModel,
     con::BridgeableConstraint,
     name::String = "",
 )
@@ -678,12 +678,12 @@ function _moi_add_constraint(
 end
 
 """
-    add_constraint(model::Model, con::AbstractConstraint, name::String="")
+    add_constraint(model::GenericModel, con::AbstractConstraint, name::String="")
 
 Add a constraint `con` to `Model model` and sets its name.
 """
 function add_constraint(
-    model::Model,
+    model::GenericModel,
     con::AbstractConstraint,
     name::String = "",
 )
@@ -712,7 +712,7 @@ function add_constraint(
 end
 
 """
-    set_normalized_coefficient(con_ref::ConstraintRef, variable::VariableRef, value)
+    set_normalized_coefficient(con_ref::ConstraintRef, variable::GenericVariableRef, value)
 
 Set the coefficient of `variable` in the constraint `constraint` to `value`.
 
@@ -799,7 +799,7 @@ function set_normalized_coefficients(
 end
 
 """
-    normalized_coefficient(con_ref::ConstraintRef, variable::VariableRef)
+    normalized_coefficient(con_ref::ConstraintRef, variable::GenericVariableRef)
 
 Return the coefficient associated with `variable` in `constraint` after JuMP has
 normalized the constraint into its standard form. See also
@@ -890,7 +890,7 @@ function _moi_add_to_function_constant(
             "$(typeof(ci))",
         )
     end
-    new_set = MOIU.shift_constant(set, convert(Float64, -value))
+    new_set = MOIU.shift_constant(set, -value)
     return MOI.set(model, MOI.ConstraintSet(), ci, new_set)
 end
 function _moi_add_to_function_constant(
@@ -971,7 +971,7 @@ Return the primal value of constraint `con_ref` associated with result index
 
 That is, if `con_ref` is the reference of a constraint `func`-in-`set`, it
 returns the value of `func` evaluated at the value of the variables (given by
-[`value(::VariableRef)`](@ref)).
+[`value(::GenericVariableRef)`](@ref)).
 
 Use [`has_values`](@ref) to check if a result exists before asking for values.
 
@@ -1012,10 +1012,12 @@ end
 Return the value type of the function.
 """
 _value_type(::Any, ::Type{F}) where {F} = Any
-_value_type(::Any, ::Type{MOI.VariableIndex}) = Float64
+_value_type(::Type{M}, ::Type{MOI.VariableIndex}) where {M} = value_type(M)
 _value_type(::Any, ::Type{MOI.ScalarAffineFunction{T}}) where {T} = T
 _value_type(::Any, ::Type{MOI.ScalarQuadraticFunction{T}}) where {T} = T
-_value_type(::Any, ::Type{MOI.VectorOfVariables}) = Vector{Float64}
+function _value_type(::Type{M}, ::Type{MOI.VectorOfVariables}) where {M}
+    return Vector{value_type(M)}
+end
 _value_type(::Any, ::Type{MOI.VectorAffineFunction{T}}) where {T} = Vector{T}
 _value_type(::Any, ::Type{MOI.VectorQuadraticFunction{T}}) where {T} = Vector{T}
 
@@ -1028,14 +1030,14 @@ function _constraint_primal(
 end
 
 """
-    has_duals(model::Model; result::Int = 1)
+    has_duals(model::GenericModel; result::Int = 1)
 
 Return `true` if the solver has a dual solution in result index `result`
 available to query, otherwise return `false`.
 
 See also [`dual`](@ref), [`shadow_price`](@ref), and [`result_count`](@ref).
 """
-function has_duals(model::Model; result::Int = 1)
+function has_duals(model::GenericModel; result::Int = 1)
     return dual_status(model; result = result) != MOI.NO_SOLUTION
 end
 
@@ -1191,7 +1193,7 @@ function _error_if_not_concrete_type(t::Type{Vector{ElT}}) where {ElT}
 end
 
 """
-    num_constraints(model::Model, function_type, set_type)::Int64
+    num_constraints(model::GenericModel, function_type, set_type)::Int64
 
 Return the number of constraints currently in the model where the function
 has type `function_type` and the set has type `set_type`.
@@ -1224,7 +1226,7 @@ julia> num_constraints(model, AffExpr, MOI.LessThan{Float64})
 ```
 """
 function num_constraints(
-    model::Model,
+    model::GenericModel,
     function_type::Type{
         <:Union{AbstractJuMPScalar,Vector{<:AbstractJuMPScalar}},
     },
@@ -1238,7 +1240,7 @@ function num_constraints(
 end
 
 """
-    all_constraints(model::Model, function_type, set_type)::Vector{<:ConstraintRef}
+    all_constraints(model::GenericModel, function_type, set_type)::Vector{<:ConstraintRef}
 
 Return a list of all constraints currently in the model where the function
 has type `function_type` and the set has type `set_type`. The constraints are
@@ -1269,7 +1271,7 @@ julia> all_constraints(model, AffExpr, MOI.LessThan{Float64})
 ```
 """
 function all_constraints(
-    model::Model,
+    model::GenericModel,
     function_type::Type{
         <:Union{AbstractJuMPScalar,Vector{<:AbstractJuMPScalar}},
     },
@@ -1281,13 +1283,13 @@ function all_constraints(
     f_type = moi_function_type(function_type)
     if set_type <: MOI.AbstractScalarSet
         constraint_ref_type = ConstraintRef{
-            Model,
+            typeof(model),
             MOI.ConstraintIndex{f_type,set_type},
             ScalarShape,
         }
     else
         constraint_ref_type =
-            ConstraintRef{Model,MOI.ConstraintIndex{f_type,set_type}}
+            ConstraintRef{typeof(model),MOI.ConstraintIndex{f_type,set_type}}
     end
     result = constraint_ref_type[]
     for idx in MOI.get(model, MOI.ListOfConstraintIndices{f_type,set_type}())
@@ -1300,7 +1302,7 @@ end
 # information available.
 
 """
-    list_of_constraint_types(model::Model)::Vector{Tuple{Type,Type}}
+    list_of_constraint_types(model::GenericModel)::Vector{Tuple{Type,Type}}
 
 Return a list of tuples of the form `(F, S)` where `F` is a JuMP function type
 and `S` is an MOI set type such that `all_constraints(model, F, S)` returns
@@ -1328,7 +1330,7 @@ Iterating over the list of function and set types is a type-unstable operation.
 Consider using a function barrier. See the [Performance tips for extensions](@ref)
 section of the documentation for more details.
 """
-function list_of_constraint_types(model::Model)::Vector{Tuple{Type,Type}}
+function list_of_constraint_types(model::GenericModel)::Vector{Tuple{Type,Type}}
     # We include an annotated return type here because Julia fails terribly at
     # inferring it, even though we annotate the type of the return vector.
     return Tuple{Type,Type}[
@@ -1338,7 +1340,7 @@ function list_of_constraint_types(model::Model)::Vector{Tuple{Type,Type}}
 end
 
 """
-    num_constraints(model::Model; count_variable_in_set_constraints::Bool)
+    num_constraints(model::GenericModel; count_variable_in_set_constraints::Bool)
 
 Return the number of constraints in `model`.
 
@@ -1363,10 +1365,13 @@ julia> num_constraints(model; count_variable_in_set_constraints = false)
 1
 ```
 """
-function num_constraints(model::Model; count_variable_in_set_constraints::Bool)
+function num_constraints(
+    model::GenericModel{T};
+    count_variable_in_set_constraints::Bool,
+) where {T}
     ret = num_nonlinear_constraints(model)
     for (F, S) in list_of_constraint_types(model)
-        if F != VariableRef || count_variable_in_set_constraints
+        if F != GenericVariableRef{T} || count_variable_in_set_constraints
             ret += num_constraints(model, F, S)
         end
     end
@@ -1375,7 +1380,7 @@ end
 
 """
     all_constraints(
-        model::Model;
+        model::GenericModel;
         include_variable_in_set_constraints::Bool,
     )::Vector{ConstraintRef}
 
@@ -1418,12 +1423,12 @@ and a function barrier. See the [Performance tips for extensions](@ref) section
 of the documentation for more details.
 """
 function all_constraints(
-    model::Model;
+    model::GenericModel{T};
     include_variable_in_set_constraints::Bool,
-)
+) where {T}
     ret = ConstraintRef[]
     for (F, S) in list_of_constraint_types(model)
-        if F != VariableRef || include_variable_in_set_constraints
+        if F != GenericVariableRef{T} || include_variable_in_set_constraints
             append!(ret, all_constraints(model, F, S))
         end
     end
@@ -1433,10 +1438,10 @@ end
 
 """
     relax_with_penalty!(
-        model::Model,
-        [penalties::Dict{ConstraintRef,Float64}];
+        model::GenericModel{T},
+        [penalties::Dict{ConstraintRef,T}];
         [default::Union{Nothing,Real} = nothing,]
-    )
+    ) where {T}
 
 Destructively modify the model in-place to create a penalized relaxation of the
 constraints.
@@ -1511,15 +1516,15 @@ Subject to
 ```
 """
 function relax_with_penalty!(
-    model::Model,
+    model::GenericModel{T},
     penalties::Dict;
     default::Union{Nothing,Real} = nothing,
-)
+) where {T}
     if default !== nothing
-        default = Float64(default)
+        default = convert(T, default)
     end
-    moi_penalties = Dict{MOI.ConstraintIndex,Float64}(
-        index(k) => Float64(v) for (k, v) in penalties
+    moi_penalties = Dict{MOI.ConstraintIndex,T}(
+        index(k) => convert(T, v) for (k, v) in penalties
     )
     map = MOI.modify(
         backend(model),
@@ -1531,6 +1536,9 @@ function relax_with_penalty!(
     )
 end
 
-function relax_with_penalty!(model::Model; default::Real = 1.0)
+function relax_with_penalty!(
+    model::GenericModel{T};
+    default::Real = one(T),
+) where {T}
     return relax_with_penalty!(model, Dict(); default = default)
 end

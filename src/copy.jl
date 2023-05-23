@@ -29,26 +29,28 @@ function copy_extension_data(data, ::AbstractModel, ::AbstractModel)
 end
 
 """
-    ReferenceMap
+    GenericReferenceMap{T}
 
 Mapping between variable and constraint reference of a model and its copy. The
 reference of the copied model can be obtained by indexing the map with the
 reference of the corresponding reference of the original model.
 """
-struct ReferenceMap
-    model::Model
+struct GenericReferenceMap{T}
+    model::GenericModel{T}
     index_map::MOIU.IndexMap
 end
 
-function Base.getindex(map::ReferenceMap, vref::VariableRef)
-    return VariableRef(map.model, map.index_map[index(vref)])
+const ReferenceMap = GenericReferenceMap{Float64}
+
+function Base.getindex(map::GenericReferenceMap, vref::GenericVariableRef)
+    return GenericVariableRef(map.model, map.index_map[index(vref)])
 end
 
-function Base.getindex(map::ReferenceMap, cref::ConstraintRef)
+function Base.getindex(map::GenericReferenceMap, cref::ConstraintRef)
     return ConstraintRef(map.model, map.index_map[index(cref)], cref.shape)
 end
 
-function Base.getindex(map::ReferenceMap, expr::GenericAffExpr)
+function Base.getindex(map::GenericReferenceMap, expr::GenericAffExpr)
     result = zero(expr)
     for (coef, var) in linear_terms(expr)
         add_to_expression!(result, coef, map[var])
@@ -57,7 +59,7 @@ function Base.getindex(map::ReferenceMap, expr::GenericAffExpr)
     return result
 end
 
-function Base.getindex(map::ReferenceMap, expr::GenericQuadExpr)
+function Base.getindex(map::GenericReferenceMap, expr::GenericQuadExpr)
     aff = map[expr.aff]
     terms = [
         UnorderedPair(map[key.a], map[key.b]) => val for
@@ -66,9 +68,11 @@ function Base.getindex(map::ReferenceMap, expr::GenericQuadExpr)
     return GenericQuadExpr(aff, terms)
 end
 
-Base.getindex(map::ReferenceMap, val::AbstractArray) = getindex.(map, val)
+function Base.getindex(map::GenericReferenceMap, val::AbstractArray)
+    return getindex.(map, val)
+end
 
-Base.broadcastable(reference_map::ReferenceMap) = Ref(reference_map)
+Base.broadcastable(reference_map::GenericReferenceMap) = Ref(reference_map)
 
 # Return a Boolean if the filtering function (1st argument) indicates that the whole value should
 # be copied over.
@@ -87,13 +91,13 @@ function _should_copy_complete_object(
 end # all(filter_constraints.(value))
 
 """
-    copy_model(model::Model; filter_constraints::Union{Nothing, Function}=nothing)
+    copy_model(model::GenericModel; filter_constraints::Union{Nothing, Function}=nothing)
 
-Return a copy of the model `model` and a [`ReferenceMap`](@ref) that can be used
-to obtain the variable and constraint reference of the new model corresponding
-to a given `model`'s reference. A [`Base.copy(::AbstractModel)`](@ref) method
-has also been implemented, it is similar to `copy_model` but does not return
-the reference map.
+Return a copy of the model `model` and a [`GenericReferenceMap`](@ref) that can
+be used to obtain the variable and constraint reference of the new model
+corresponding to a given `model`'s reference. A
+[`Base.copy(::AbstractModel)`](@ref) method has also been implemented, it is
+similar to `copy_model` but does not return the reference map.
 
 If the `filter_constraints` argument is given, only the constraints for which
 this function returns `true` will be copied. This function is given a
@@ -102,7 +106,7 @@ constraint reference as argument.
 ## Note
 
 Model copy is not supported in `DIRECT` mode, i.e. when a model is constructed
-using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
+using the [`direct_model`](@ref) constructor instead of the [`GenericModel`](@ref)
 constructor. Moreover, independently on whether an optimizer was provided at
 model construction, the new model will have no optimizer, i.e., an optimizer
 will have to be provided to the new model in the [`optimize!`](@ref) call.
@@ -132,9 +136,9 @@ cref : x = 2.0
 ```
 """
 function copy_model(
-    model::Model;
+    model::GenericModel{T};
     filter_constraints::Union{Nothing,Function} = nothing,
-)
+) where {T}
     if mode(model) == DIRECT
         error(
             "Cannot copy a model in `DIRECT` mode. Use the `Model` ",
@@ -142,7 +146,7 @@ function copy_model(
             "able to copy the constructed model.",
         )
     end
-    new_model = Model()
+    new_model = GenericModel{T}()
 
     # At JuMP's level, filter_constraints should work with JuMP.ConstraintRef,
     # whereas MOI.copy_to's filter_constraints works with MOI.ConstraintIndex.
@@ -168,7 +172,7 @@ function copy_model(
         )
     end
 
-    reference_map = ReferenceMap(new_model, index_map)
+    reference_map = GenericReferenceMap(new_model, index_map)
 
     for (name, value) in object_dictionary(model)
         if _should_copy_complete_object(filter_constraints, value)
@@ -206,7 +210,7 @@ and its copy.
 ## Note
 
 Model copy is not supported in `DIRECT` mode, i.e. when a model is constructed
-using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
+using the [`direct_model`](@ref) constructor instead of the [`GenericModel`](@ref)
 constructor. Moreover, independently on whether an optimizer was provided at
 model construction, the new model will have no optimizer, i.e., an optimizer
 will have to be provided to the new model in the [`optimize!`](@ref) call.
@@ -241,11 +245,12 @@ function Base.copy(model::AbstractModel)
 end
 
 """
-    copy_conflict(model::Model)
+    copy_conflict(model::GenericModel)
 
 Return a copy of the current conflict for the model `model` and a
-[`ReferenceMap`](@ref) that can be used to obtain the variable and constraint
-reference of the new model corresponding to a given `model`'s reference.
+[`GenericReferenceMap`](@ref) that can be used to obtain the variable and
+constraint reference of the new model corresponding to a given `model`'s
+reference.
 
 This is a convenience function that provides a filtering function for
 [`copy_model`](@ref).
@@ -253,7 +258,7 @@ This is a convenience function that provides a filtering function for
 ## Note
 
 Model copy is not supported in `DIRECT` mode, i.e. when a model is constructed
-using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
+using the [`direct_model`](@ref) constructor instead of the [`GenericModel`](@ref)
 constructor. Moreover, independently on whether an optimizer was provided at
 model construction, the new model will have no optimizer, i.e., an optimizer
 will have to be provided to the new model in the [`optimize!`](@ref) call.
@@ -298,7 +303,7 @@ Subject to
  c2 : x ≤ 1.0
 ```
 """
-function copy_conflict(model::Model)
+function copy_conflict(model::GenericModel)
     filter_constraints =
         (cref) ->
             MOI.get(model, MOI.ConstraintConflictStatus(), cref) !=
@@ -311,13 +316,13 @@ end
 # Calling `deepcopy` over a JuMP model is not supported, nor planned to be
 # supported, because it would involve making a deep copy of the underlying
 # solver (behind a C pointer).
-function Base.deepcopy(::Model)
+function Base.deepcopy(::GenericModel)
     return error(
         "`JuMP.Model` does not support `deepcopy` as the reference to the underlying solver cannot be deep copied, use `copy` instead.",
     )
 end
 
-function MOI.copy_to(dest::MOI.ModelLike, src::Model)
+function MOI.copy_to(dest::MOI.ModelLike, src::GenericModel)
     if nonlinear_model(src) !== nothing
         # Re-set the NLP block in-case things have changed since last
         # solve.
@@ -331,7 +336,7 @@ function MOI.copy_to(dest::MOI.ModelLike, src::Model)
     return MOI.copy_to(dest, backend(src))
 end
 
-function MOI.copy_to(dest::Model, src::MOI.ModelLike)
+function MOI.copy_to(dest::GenericModel, src::MOI.ModelLike)
     index_map = MOI.copy_to(backend(dest), src)
     if MOI.NLPBlock() in MOI.get(src, MOI.ListOfModelAttributesSet())
         block = MOI.get(src, MOI.NLPBlock())

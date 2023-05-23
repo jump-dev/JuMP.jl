@@ -650,7 +650,7 @@ julia> @NLconstraint(model, cons1, sin(x) <= 1);
 julia> @NLconstraint(model, cons2, x + 5 == 10);
 
 julia> typeof(cons1)
-NonlinearConstraintRef{ScalarShape} (alias for ConstraintRef{Model, MathOptInterface.Nonlinear.ConstraintIndex, ScalarShape})
+NonlinearConstraintRef{ScalarShape} (alias for ConstraintRef{GenericModel{Float64}, MathOptInterface.Nonlinear.ConstraintIndex, ScalarShape})
 
 julia> index(cons1)
 MathOptInterface.Nonlinear.ConstraintIndex(1)

@@ -23,7 +23,7 @@ well as which solver to use and even solution information.
 
 ## Create a model
 
-Create a model by passing an optimizer to [`Model`](@ref):
+Create a model by passing an optimizer to [`GenericModel`](@ref):
 ```jldoctest
 julia> model = Model(HiGHS.Optimizer)
 A JuMP Model
@@ -56,7 +56,7 @@ julia> set_optimizer(model, HiGHS.Optimizer)
 ### What is the difference?
 
 For most models, there is no difference between passing the optimizer to
-[`Model`](@ref), and calling [`set_optimizer`](@ref).
+[`GenericModel`](@ref), and calling [`set_optimizer`](@ref).
 
 However, if an optimizer does not support a constraint in the model, the timing
 of when an error will be thrown can differ:
@@ -66,7 +66,7 @@ of when an error will be thrown can differ:
  * If you call [`set_optimizer`](@ref), an error will be thrown when you try to
    solve the model via [`optimize!`](@ref).
 
-Therefore, most users should pass an optimizer to [`Model`](@ref) because it
+Therefore, most users should pass an optimizer to [`GenericModel`](@ref) because it
 provides the earliest warning that your solver is not suitable for the model you
 are trying to build. However, if you are modifying a problem by adding and
 deleting different constraint types, you may need to use
@@ -115,7 +115,7 @@ The list of available solvers, along with the problem types they support, is ava
 
 Some solvers accept (or require) positional arguments such as a license
 environment or a path to a binary executable. For these solvers, you can pass
-a function to [`Model`](@ref) which takes zero arguments and returns an instance
+a function to [`GenericModel`](@ref) which takes zero arguments and returns an instance
 of the optimizer.
 
 A common use-case for this is passing an environment or sub-solver to the
@@ -416,7 +416,7 @@ reduced_cost(x)  # Works
     want to skip this section. You don't need to know how JuMP manages problems
     behind the scenes to create and solve JuMP models.
 
-A JuMP [`Model`](@ref) is a thin layer around a *backend* of type
+A JuMP [`GenericModel`](@ref) is a thin layer around a *backend* of type
 [`MOI.ModelLike`](@ref) that stores the optimization problem and acts as the
 optimization solver.
 
@@ -424,7 +424,7 @@ However, if you construct a model like `Model(HiGHS.Optimizer)`, the backend is
 not a `HiGHS.Optimizer`, but a more complicated object.
 
 From JuMP, the MOI backend can be accessed using the [`backend`](@ref) function.
-Let's see what the [`backend`](@ref) of a JuMP [`Model`](@ref) is:
+Let's see what the [`backend`](@ref) of a JuMP [`GenericModel`](@ref) is:
 ```jldoctest models_backends
 julia> model = Model(HiGHS.Optimizer);
 
@@ -499,7 +499,7 @@ A `CachingOptimizer` has two modes of operation:
   [`MOIU.attach_optimizer(::JuMP.Model)`](@ref). Attempting to perform
   an operation in the incorrect state results in an error.
 
-By default [`Model`](@ref) will create a `CachingOptimizer` in `AUTOMATIC` mode.
+By default [`GenericModel`](@ref) will create a `CachingOptimizer` in `AUTOMATIC` mode.
 
 ### LazyBridgeOptimizer
 

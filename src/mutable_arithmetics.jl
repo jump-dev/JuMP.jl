@@ -32,7 +32,7 @@ function _MA.promote_operation(
     C::Type{<:_Constant},
     V::Type{<:AbstractVariableRef},
 )
-    return GenericAffExpr{_float_type(C),V}
+    return GenericAffExpr{_complex_convert_type(value_type(V), C),V}
 end
 
 function _MA.promote_operation(
@@ -40,7 +40,7 @@ function _MA.promote_operation(
     V::Type{<:AbstractVariableRef},
     C::Type{<:_Constant},
 )
-    return GenericAffExpr{_float_type(C),V}
+    return GenericAffExpr{_complex_convert_type(value_type(V), C),V}
 end
 
 function _MA.promote_operation(
@@ -66,7 +66,7 @@ function _MA.promote_operation(
     ::Type{V},
     ::Type{V},
 ) where {V<:AbstractVariableRef}
-    return GenericAffExpr{Float64,V}
+    return GenericAffExpr{value_type(V),V}
 end
 
 function _MA.promote_operation(
@@ -114,7 +114,7 @@ function _MA.promote_operation(
     ::Type{V},
     ::Type{V},
 ) where {V<:AbstractVariableRef}
-    return GenericQuadExpr{Float64,V}
+    return GenericQuadExpr{value_type(V),V}
 end
 
 function _MA.promote_operation(
@@ -219,10 +219,10 @@ end
 
 function _MA.operate!(
     ::typeof(_MA.sub_mul),
-    expr::_GenericAffOrQuadExpr,
+    expr::_GenericAffOrQuadExpr{T},
     x::_Scalar,
-)
-    return add_to_expression!(expr, -1.0, x)
+) where {T}
+    return add_to_expression!(expr, -one(T), x)
 end
 
 function _MA.operate!(

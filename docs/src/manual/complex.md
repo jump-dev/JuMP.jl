@@ -52,10 +52,10 @@ expression representing each variable:
 
 ```jldoctest complex_variables
 julia> typeof(real(x))
-AffExpr (alias for GenericAffExpr{Float64, VariableRef})
+AffExpr (alias for GenericAffExpr{Float64, GenericVariableRef{Float64}})
 
 julia> typeof(imag(x))
-AffExpr (alias for GenericAffExpr{Float64, VariableRef})
+AffExpr (alias for GenericAffExpr{Float64, GenericVariableRef{Float64}})
 ```
 
 To create an anonymous variable, use the `set` keyword argument:

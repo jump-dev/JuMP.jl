@@ -5,7 +5,7 @@
 
 """
     nonlinear_model(
-        model::Model;
+        model::GenericModel;
         force::Bool = false,
     )::Union{MOI.Nonlinear.Model,Nothing}
 
@@ -15,14 +15,14 @@ otherwise return `nothing`.
 If `force`, always return a [`MOI.Nonlinear.Model`](@ref), and if one does not
 exist for the model, create an empty one.
 """
-function nonlinear_model(model::Model; force::Bool = false)
+function nonlinear_model(model::GenericModel; force::Bool = false)
     if force
         _init_NLP(model)
     end
     return model.nlp_model
 end
 
-function _init_NLP(model::Model)
+function _init_NLP(model::GenericModel{Float64})
     if model.nlp_model === nothing
         model.nlp_model = MOI.Nonlinear.Model()
     end
@@ -51,7 +51,7 @@ end
 function MOI.Nonlinear.parse_expression(
     model::MOI.Nonlinear.Model,
     expr::MOI.Nonlinear.Expression,
-    x::VariableRef,
+    x::GenericVariableRef{Float64},
     parent::Int,
 )
     MOI.Nonlinear.parse_expression(model, expr, index(x), parent)
@@ -61,7 +61,7 @@ end
 function MOI.Nonlinear.parse_expression(
     model::MOI.Nonlinear.Model,
     expr::MOI.Nonlinear.Expression,
-    x::GenericAffExpr,
+    x::AffExpr,
     parent::Int,
 )
     sum_id = model.operators.multivariate_operator_to_id[:+]
@@ -345,7 +345,7 @@ function value(ex::NonlinearExpression; result::Int = 1)
 end
 
 """
-    _VariableValueMap{T,F}
+    _VariableValueMap{F}
 
 A lazy cache used for computing the primal variable solution in `value`.
 
@@ -353,18 +353,18 @@ This avoids the need to rewrite the nonlinear expressions from MOI_VARIABLE to
 VARIABLE, as well as eagerly computing the `var_value` for every variable. We
 use a `cache` so we don't have to recompute variables we have already seen.
 """
-struct _VariableValueMap{F} <: AbstractDict{MOI.VariableIndex,Float64}
-    model::Model
+struct _VariableValueMap{F,T} <: AbstractDict{MOI.VariableIndex,T}
+    model::GenericModel{T}
     value::F
-    cache::Dict{MOI.VariableIndex,Float64}
-    function _VariableValueMap(model, value::F) where {F}
-        return new{F}(model, value, Dict{MOI.VariableIndex,Float64}())
+    cache::Dict{MOI.VariableIndex,T}
+    function _VariableValueMap(model::GenericModel{T}, value::F) where {T,F}
+        return new{F,T}(model, value, Dict{MOI.VariableIndex,T}())
     end
 end
 
 function Base.getindex(map::_VariableValueMap, index::MOI.VariableIndex)
     return get!(map.cache, index) do
-        return map.value(VariableRef(map.model, index))
+        return map.value(GenericVariableRef(map.model, index))
     end
 end
 
@@ -486,11 +486,11 @@ function delete(model::Model, c::NonlinearConstraintRef)
 end
 
 """
-    num_nonlinear_constraints(model::Model)
+    num_nonlinear_constraints(model::GenericModel)
 
 Returns the number of nonlinear constraints associated with the `model`.
 """
-function num_nonlinear_constraints(model::Model)
+function num_nonlinear_constraints(model::GenericModel)
     nlp_model = nonlinear_model(model)
     if nlp_model === nothing
         return 0

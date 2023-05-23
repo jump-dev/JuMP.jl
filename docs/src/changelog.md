@@ -205,7 +205,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Update versions of the documentation (#3185)
  - Tidy the import of packages and remove unnecessary prefixes (#3186) (#3187)
  - Refactor `src/JuMP.jl` by moving methods into more relevant files (#3188)
- - Fix docstring of [`Model`](@ref) not appearing in the documentation (#3198)
+ - Fix docstring of `Model` not appearing in the documentation (#3198)
 
 ## Version 1.6.0 (January 1, 2023)
 

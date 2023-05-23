@@ -17,8 +17,8 @@ VariableRef
 num_variables
 all_variables
 owner_model
-index(::VariableRef)
-optimizer_index(::VariableRef)
+index(::GenericVariableRef)
+optimizer_index(::GenericVariableRef)
 check_belongs_to_model
 VariableNotOwned
 VariableConstrainedOnCreation
