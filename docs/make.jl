@@ -125,7 +125,7 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
     EditURL = "https://github.com/$user/$solver.jl/blob/$tag/$filename"
     ```
     """
-    open(outfilename, "w") do io
+    open(out_filename, "w") do io
         write(io, header)
         write(io, contents)
         return
