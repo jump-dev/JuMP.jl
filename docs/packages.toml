@@ -153,6 +153,11 @@
 [PATHSolver]
     user = "chkwon"
     rev = "v1.4.2"
+[Plasmo]
+    user = "plasmo-dev"
+    rev = "37f80fe96781dc647b3a5e0ed26b9eb0a994bc4a"
+    has_html = true
+    extension = true
 [ProxSDP]
     user = "mariohsouto"
     rev = "de648be90e63a69b8d8e4f82371760065d242fe9"
