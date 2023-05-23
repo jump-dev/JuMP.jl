@@ -151,6 +151,7 @@
 [ProxSDP]
     user = "mariohsouto"
     rev = "de648be90e63a69b8d8e4f82371760065d242fe9"
+    has_html = true
 [SCIP]
     user = "scipopt"
     rev = "44e0bff587208fb4e0779db440f4104bc0bba2ec"
