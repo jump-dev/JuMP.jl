@@ -98,7 +98,7 @@ struct CustomIndex
 end
 
 function JuMP.add_constraint(
-    model::Model,
+    model::GenericModel,
     constraint::CustomConstraint,
     name::String,
 )
@@ -398,7 +398,7 @@ function test_extension_printing_variable_ref(
     io_test(MIME("text/latex"), x, "x2")
     set_name(x, "")
     @test name(x) == ""
-    if x isa VariableRef
+    if x isa GenericVariableRef
         io_test(MIME("text/plain"), x, "_[1]")
         io_test(MIME("text/latex"), x, "{\\_}_{1}")
     else
