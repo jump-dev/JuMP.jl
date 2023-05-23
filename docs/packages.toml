@@ -102,7 +102,7 @@
     rev = "32757b2568acfe71257e41ed4122a120717a6460"
 [BilevelJuMP]
     user = "joaquimg"
-    rev = "1572c9fc60773ca0cdfadba07f7cd265a1217a37"
+    rev = "146a6a93a5fac60faaf68e87c4592f585c79c6e9"
     extension = true
 # [CDCS]
 #   user = "oxfordcontrol"
