@@ -58,6 +58,7 @@ DAE(?s)
 [Ee]xtremal
 functionize
 geomean
+hypergraph
 infeasibilities
 (lin|mixint|quad)prog
 (log|root)det
@@ -67,6 +68,9 @@ minimizers
 nl|NL
 [Nn]onconvex
 [Nn]on(posi|nega)tiv(e|es|ity)
+[Oo]ptigraph(?s)
+[Oo]ptinode(?s)
+[Oo]ptiedge(?s)
 overfitting
 parameteriz(ing|ation)
 perp
@@ -141,6 +145,7 @@ Bertsimas
 Betts
 Bhatia
 Borchers
+Cao
 Cholesky
 Coey
 Dantzig
@@ -157,12 +162,14 @@ Henrique
 Holy
 Huchette
 Iain
+Jalving
 Jiming
 Joaquim
 Kernighan
 Kallus
 Kaluba
 Kapelevich
+Kibaek
 Latorre
 Legat
 Linial
@@ -187,6 +194,7 @@ Shabbir
 Shuvomoy
 Steuer
 Stigler
+Sungho
 Taccari
 Tanneau
 Teghem
@@ -196,5 +204,7 @@ Vandenberghe
 Vielma
 Wei
 Wollenberg
+Yankai
 Yu
 Yury
+Zavala
