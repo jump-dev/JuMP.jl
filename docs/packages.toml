@@ -102,7 +102,7 @@
     rev = "32757b2568acfe71257e41ed4122a120717a6460"
 [CDCS]
     user = "oxfordcontrol"
-    rev = "v0.2.0"
+    rev = "6d165e8e8f59b14e36e99c8efb19f0e775bbd292"
 [CDDLib]
     user = "JuliaPolyhedra"
     rev = "9700752f849845bc8d8477928baf3df920daadd6"
