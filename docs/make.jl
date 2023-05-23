@@ -119,6 +119,17 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
         "https://raw.githubusercontent.com/$user/$solver.jl/$tag/$filename",
         out_filename,
     )
+    contents = read(out_filename, String)
+    header = """
+    ```@meta
+    EditURL = "https://github.com/$user/$solver.jl/blob/$tag/$filename"
+    ```
+    """
+    open(outfilename, "w") do io
+        write(io, header)
+        write(io, contents)
+        return
+    end
     if get(data, "has_html", false) == true
         # Very simple detector of HTML to wrap in ```@raw html
         lines = readlines(out_filename)
@@ -320,6 +331,7 @@ end
 
 open(joinpath(@__DIR__, "src", "changelog.md"), "r") do in_io
     open(joinpath(@__DIR__, "src", "release_notes.md"), "w") do out_io
+        write(out_io, "```@meta\nEditURL = \"../changelog.md\"\n```\n")
         for line in readlines(in_io; keep = true)
             write(out_io, fix_release_line(line))
         end
