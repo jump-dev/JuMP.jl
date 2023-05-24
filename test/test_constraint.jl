@@ -1606,4 +1606,91 @@ function test_symmetric_vectorize_allocations()
     return
 end
 
+function test_eltype_for_constraint_primal_float64()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    end
+    @variable(model, x >= 0)
+    c1 = LowerBoundRef(x)
+    @constraint(model, c2, 1.0 * x == 1.0)
+    @constraint(model, c3, 1.0 * x^2 == 1.0)
+    @constraint(model, c4, [x] in Zeros())
+    @constraint(model, c5, [1.0 * x] == [1.0])
+    @constraint(model, c6, [x^2] == [1.0])
+    MOI.Utilities.attach_optimizer(model)
+    mock = unsafe_backend(model)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 0.5)
+    optimize!(model)
+    @test JuMP._eltype(Int) == Any  # For any user-defined functions.
+    @test @inferred(value(c1)) == 0.5
+    @test @inferred(value(c2)) == 0.5
+    @test @inferred(value(c3)) == 0.25
+    @test @inferred(value(c4)) == [0.5]
+    @test @inferred(value(c5)) == [0.5 - 1]
+    @test @inferred(value(c6)) == [0.25 - 1]
+    return
+end
+
+function test_eltype_for_constraint_dual_float64()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(
+            MOI.Utilities.Model{Float64}();
+            eval_variable_constraint_dual = false,
+        )
+    end
+    @variable(model, x >= 0)
+    c1 = LowerBoundRef(x)
+    @constraint(model, c2, 1.0 * x == 1.0)
+    @constraint(model, c3, 1.0 * x^2 == 1.0)
+    @constraint(model, c4, [x] in Zeros())
+    @constraint(model, c5, [1.0 * x] == [1.0])
+    @constraint(model, c6, [x^2] == [1.0])
+    MOI.Utilities.attach_optimizer(model)
+    mock = unsafe_backend(model)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c1), 0.5)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c2), 0.5)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c3), 0.5)
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c4), [0.5])
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c5), [0.5])
+    MOI.set(mock, MOI.ConstraintDual(), optimizer_index(c6), [0.5])
+    optimize!(model)
+    @test @inferred(dual(c1)) == 0.5
+    @test @inferred(dual(c2)) == 0.5
+    @test @inferred(dual(c3)) == 0.5
+    @test @inferred(dual(c4)) == [0.5]
+    @test @inferred(dual(c5)) == [0.5]
+    @test @inferred(dual(c6)) == [0.5]
+    return
+end
+
+function test_eltype_for_constraint_primal_complex_float64()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    end
+    @variable(model, x in ComplexPlane())
+    @constraint(model, c2, 1.0 * x == 1.0 + 2im)
+    @constraint(model, c3, 1.0 * x^2 == 1.0 + 2im)
+    @constraint(model, c4, [x] in Zeros())
+    @constraint(model, c5, [1.0 * x] == [1.0 + 2im])
+    @constraint(model, c6, [x^2] == [1.0 + 2im])
+    MOI.Utilities.attach_optimizer(model)
+    mock = unsafe_backend(model)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
+    x_re, x_im = first(keys(real(x).terms)), first(keys(imag(x).terms))
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x_re), 0.5)
+    MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x_im), 0.25)
+    optimize!(model)
+    @test @inferred(value(c2)) == (0.5 + 0.25im)
+    @test @inferred(value(c3)) == (0.5 + 0.25im)^2
+    @test @inferred(value(c4)) == [(0.5 + 0.25im)]
+    @test @inferred(value(c5)) == [(0.5 + 0.25im) - (1 + 2im)]
+    @test @inferred(value(c6)) == [(0.5 + 0.25im)^2 - (1 + 2im)]
+    return
+end
+
 end
