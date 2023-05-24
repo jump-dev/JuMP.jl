@@ -19,8 +19,15 @@ OrderedCollections = "1"
 SnoopPrecompile = "1"
 julia = "1.6"
 
+[extensions]
+JuMPDimensionalDataExt = "DimensionalData"
+
 [extras]
+DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["DimensionalData", "Test"]
+
+[weakdeps]
+DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
