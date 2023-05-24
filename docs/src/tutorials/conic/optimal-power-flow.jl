@@ -51,22 +51,22 @@ import Test
 # ![Nine Nodes](../../assets/case9mod.png)
 
 # For future reference, let's name the number of nodes in the network:
-N = 9 
+N = 9
 
 # The network data can be summarised as follows.
 
 # Generation power bounds (active and reactive):
-P_G_lb = sparsevec([1 ,2, 3], [ 10,  10,  10], N)
+P_G_lb = sparsevec([1, 2, 3], [10, 10, 10], N)
 P_G_ub = sparsevec([1, 2, 3], [250, 300, 270], N)
 
-Q_G_lb = sparsevec([1, 2, 3], [-5,   -5,  -5], N)
+Q_G_lb = sparsevec([1, 2, 3], [-5, -5, -5], N)
 Q_G_ub = sparsevec([1, 2, 3], [300, 300, 300], N)
 
 # Power demand levels (active, reactive and complex form):
 P_D_fx = sparsevec([5, 7, 9], [54, 60, 75], N)
 Q_D_fx = sparsevec([5, 7, 9], [18, 21, 30], N)
 
-S_D_fx = P_D_fx + im*Q_D_fx
+S_D_fx = P_D_fx + im * Q_D_fx
 
 # The key decision variables here are the real power injections ``P^G`` and
 # reactive power injections ``Q^G``over the allowed range of the generators.
@@ -88,7 +88,7 @@ S_D_fx = P_D_fx + im*Q_D_fx
 model = Model(Ipopt.Optimizer)
 set_silent(model)
 
-@variable(model, P_G_lb[i] <= P_G[i=1:N] <= P_G_ub[i])
+@variable(model, P_G_lb[i] <= P_G[i = 1:N] <= P_G_ub[i])
 
 #! format: off 
 @objective(model, Min,
@@ -164,9 +164,9 @@ A = sparse(df_br.F_BUS, 1:M, 1, N, M) + sparse(df_br.T_BUS, 1:M, -1, N, M)
 # We form the network impedance vector
 z = (df_br.BR_R .+ im * df_br.BR_X) / baseMVA
 # and the branch line-charging susceptance
-y_sh = 1/2 * (im * df_br.BR_Bc) * baseMVA
+y_sh = 1 / 2 * (im * df_br.BR_Bc) * baseMVA
 # and then the *bus admittance* matrix is defined as
-Y = A * spdiagm(1 ./ z) * A' + spdiagm(diag( A * spdiagm(y_sh) * A' ))
+Y = A * spdiagm(1 ./ z) * A' + spdiagm(diag(A * spdiagm(y_sh) * A'))
 
 # (The second term looks more complicated because we only want to add the diagonal elements in the calculation;
 # the line-charging is used only in the nodal voltage terms and not the line voltage terms.)
@@ -186,17 +186,19 @@ set_silent(model)
 
 # Create the nodal power generation variables:
 @variable(model, S_G[1:N] in ComplexPlane())
-P_G = real(S_G); Q_G = imag(S_G);
+P_G = real(S_G);
+Q_G = imag(S_G);
 
 # Generators should operate over a prescribed range:
-@constraint(model, [i=1:N], P_G_lb[i] <= P_G[i] <= P_G_ub[i])
-@constraint(model, [i=1:N], Q_G_lb[i] <= Q_G[i] <= Q_G_ub[i])
+@constraint(model, [i = 1:N], P_G_lb[i] <= P_G[i] <= P_G_ub[i])
+@constraint(model, [i = 1:N], Q_G_lb[i] <= Q_G[i] <= Q_G_ub[i])
 
 # **Demand**
 
 # Create the nodal power demand variables:
 @variable(model, S_D[1:N] in ComplexPlane())
-P_D = real(S_D); Q_D = imag(S_D);
+P_D = real(S_D);
+Q_D = imag(S_D);
 
 # The loads in this model are assumed to be fixed and of constant-power type:
 @constraint(model, S_D .== S_D_fx)
@@ -205,7 +207,7 @@ P_D = real(S_D); Q_D = imag(S_D);
 @variable(model, V[1:N] in ComplexPlane(), start = 1.0 + 0.0im)
 
 # Operational constraints for maintaining voltage magnitude levels:
-@constraint(model, [i=1:N], 0.9^2 <= real(V[i])^2 + imag(V[i])^2 <= 1.1^2)
+@constraint(model, [i = 1:N], 0.9^2 <= real(V[i])^2 + imag(V[i])^2 <= 1.1^2)
 
 # Fixing the imaginary component of a _slack bus_ to zero sets its complex voltage angle to 0,
 # which serves as an origin or reference value for all other complex voltage angles.
@@ -216,16 +218,16 @@ fix(variable_by_name(model, "imag(V[1])"), 0)
 
 # The current at a node is an expression representing a generalised version of Ohm's law and
 # [Kirchhoff's circuit laws](https://en.wikipedia.org/wiki/Kirchhoff%27s_circuit_laws):
-I_Node = Y*V
+I_Node = Y * V
 
 # Network power flow from each node is the product of voltage and current,
 # generalised here for the complex case,
 # represents the power exchanged with the network:
-S_Node = diagm(V)*conj(I_Node)
+S_Node = diagm(V) * conj(I_Node)
 
 # The power flow equations express a conservation of energy (power) principle, where
 # power generated less the power consumed must balance the power exchanged with the network:
-@constraint(model, [i=1:N], S_G[i] - S_D[i] == (diagm(V)*conj(I_Node))[i])
+@constraint(model, [i = 1:N], S_G[i] - S_D[i] == (diagm(V)*conj(I_Node))[i])
 
 # **Objective**
 
@@ -236,14 +238,20 @@ S_Node = diagm(V)*conj(I_Node)
 +    0.085*P_G[2]^2 + 1.2*P_G[2] + 600
 +   0.1225*P_G[3]^2 +     P_G[3] + 335
 )
-#! format: off 
+#! format: on
 
 optimize!(model)
 solution_summary(model)
-println("Objective value (feasible solution): $(round(objective_value(model), digits=2))")
+println(
+    "Objective value (feasible solution): $(round(objective_value(model), digits=2))",
+)
 
 # We can see the voltage state variable solution:
-DataFrame(Bus = 1:N, Magnitude = round.(abs.(value.(V)), digits=2), AngleDeg = round.(rad2deg.(angle.(value.(V))), digits=2))
+DataFrame(;
+    Bus = 1:N,
+    Magnitude = round.(abs.(value.(V)), digits = 2),
+    AngleDeg = round.(rad2deg.(angle.(value.(V))), digits = 2),
+)
 
 # ## Relaxations and better objective bounds
 # The IPOPT solver uses an interior-point algorithm. It has local optimality guarantees, but is unable to certify
@@ -252,7 +260,7 @@ DataFrame(Bus = 1:N, Magnitude = round.(abs.(value.(V)), digits=2), AngleDeg = r
 # and different solvers (such as Gurobi, SCIP and GLOMIQO) are also able to verify this. 
 
 # The techniques of *convex relaxations* can also be used to bring our current best lower bound:
-objval_better_lb
+println("Objective value (better lower bound): $(objval_better_lb)")
 
 # ## References and further resources
 
