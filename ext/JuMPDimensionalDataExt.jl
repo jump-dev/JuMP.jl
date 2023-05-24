@@ -24,7 +24,7 @@ function JuMP.Containers.container(
     return DimensionalData.DimArray(map(i -> f(i...), indices), dims)
 end
 
-# TODO: imporve error for nested iterators
+# TODO: improve error for nested iterators
 function JuMP.Containers.container(
     f::Function, 
     indices::JuMP.Containers.NestedIterator,

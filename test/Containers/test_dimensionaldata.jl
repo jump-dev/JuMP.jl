@@ -18,7 +18,7 @@ function test_dimension_data_integration()
     @variable(model, x[i = 2:4, j = ["a", "b"]], container = DimArray)
     @test x isa DimArray
     @test_throws(
-        ArgumentError,
+        MethodError,
         @variable(model, z[i = 1:3, j = i:2], container = DimArray),
     )
     @test_throws(
