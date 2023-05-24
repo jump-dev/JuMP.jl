@@ -5,7 +5,7 @@
 
 # # Optimal power flow
 
-# **This tutorial was originally contributed by James Foster (@jd-foster).**
+# *This tutorial was originally contributed by James Foster (@jd-foster).*
 
 # This tutorial formulates and solves an optimal power flow problem,
 # a much-studied nonlinear problem from the field of electrical engineering.
@@ -220,7 +220,7 @@ Q_G = imag(S_G);
 # Fixing the imaginary component of a _slack bus_ to zero sets its complex voltage angle to 0,
 # which serves as an origin or reference value for all other complex voltage angles.
 # Here we're using node 1 as the nominated slack bus:
-fix(variable_by_name(model, "imag(V[1])"), 0)
+@constraint(model, imag(V[1]) == 0)
 
 # **Power flow constraints**
 
@@ -228,9 +228,8 @@ fix(variable_by_name(model, "imag(V[1])"), 0)
 # [Kirchhoff's circuit laws](https://en.wikipedia.org/wiki/Kirchhoff%27s_circuit_laws):
 I_Node = Y * V
 
-# Network power flow from each node is the product of voltage and current,
-# in its generalised complex form here,
-# represents the power exchanged with the network:
+# This next expression represents the power exchanged with the network from each node.
+# It is the product of nodal voltage and current but in its generalised complex form here:
 S_Node = LinearAlgebra.diagm(V) * conj(I_Node)
 
 # The power flow equations express a conservation of energy (power) principle, where
@@ -284,7 +283,7 @@ println("Objective value (better lower bound): $(objval_better_lb)")
 # In Advances and Trends in Optimization with Engineering Applications, 187–205. MOS-SIAM Series on Optimization.
 # Society for Industrial and Applied Mathematics, 2017. 
 
-# Bukhsh, W. A., Grothey, A., McKinnon, K. I., & Trodden, P. A.
+# **Bukhsh**, W. A., Grothey, A., McKinnon, K. I., & Trodden, P. A.
 # [_Local solutions of the optimal power flow problem._](https://doi.org/10.1109/TPWRS.2013.2274577)
 # IEEE Transactions on Power Systems, 28(4), 4780-4788 (2013).
 
