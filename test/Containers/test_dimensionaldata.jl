@@ -5,8 +5,10 @@
 
 module TestContainersDimensionalData
 
-using JuMP
+using Test
+
 using DimensionalData
+using JuMP
     
 function test_dimension_data_integration()
     if !isdefined(Base, :get_extension)
