@@ -9,10 +9,9 @@ using Test
 
 using DimensionalData
 using JuMP
-    
 function test_dimension_data_integration()
     if !isdefined(Base, :get_extension)
-        return
+        return  # Skip this test on Julia versions before v1.9
     end
     model = Model()
     @variable(model, x[i = 2:4, j = ["a", "b"]], container = DimArray)
