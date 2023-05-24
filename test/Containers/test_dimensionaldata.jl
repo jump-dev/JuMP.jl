@@ -26,6 +26,6 @@ function test_dimension_data_integration()
         @variable(model, w[1:3, j = 1:2], container = DimArray),
     )
     return
-end   
+end
 
 end

@@ -13,7 +13,7 @@ function JuMP.Containers.container(
     indices::JuMP.Containers.VectorizedProductIterator,
     c::Type{DimensionalData.DimArray},
     names,
-) where {F}
+) where {F<:Function}
     for i in names
         if i isa Symbol && !Base.isidentifier(i)
             # A symbol was created automatically by JuMP.
