@@ -27,9 +27,9 @@
 using JuMP
 import Ipopt
 import SCS
-import LinearAlgebra: diag, diagm
-import SparseArrays: sparse, spdiagm, sparsevec
-import DataFrames: DataFrame, rename
+import LinearAlgebra
+import SparseArrays
+import DataFrames
 import Test
 
 # ## Formulation
@@ -53,20 +53,21 @@ import Test
 # For future reference, let's name the number of nodes in the network:
 N = 9
 
-# The network data can be summarised as follows.
+# The network data can be summarised using a small number of arrays.
+# With the `sparsevec` function from the `SparseArrays` standard library package
+# we can just give the indices and values of the non-zero data points:
 
-# Generation power bounds (active and reactive):
-P_G_lb = sparsevec([1, 2, 3], [10, 10, 10], N)
-P_G_ub = sparsevec([1, 2, 3], [250, 300, 270], N)
+# _Generation power lower (`lb`) and upper (`ub`) bounds (active and reactive)_
+P_Gen_lb = SparseArrays.sparsevec([1, 2, 3], [10, 10, 10], N)
+P_Gen_ub = SparseArrays.sparsevec([1, 2, 3], [250, 300, 270], N)
 
-Q_G_lb = sparsevec([1, 2, 3], [-5, -5, -5], N)
-Q_G_ub = sparsevec([1, 2, 3], [300, 300, 300], N)
+Q_Gen_lb = SparseArrays.sparsevec([1, 2, 3], [-5, -5, -5], N)
+Q_Gen_ub = SparseArrays.sparsevec([1, 2, 3], [300, 300, 300], N)
 
-# Power demand levels (active, reactive and complex form):
-P_D_fx = sparsevec([5, 7, 9], [54, 60, 75], N)
-Q_D_fx = sparsevec([5, 7, 9], [18, 21, 30], N)
-
-S_D_fx = P_D_fx + im * Q_D_fx
+# _Power demand levels (active, reactive and complex form)_
+P_Demand = SparseArrays.sparsevec([5, 7, 9], [54, 60, 75], N)
+Q_Demand = SparseArrays.sparsevec([5, 7, 9], [18, 21, 30], N)
+S_Demand = P_Demand + im * Q_Demand
 
 # The key decision variables here are the real power injections ``P^G`` and
 # reactive power injections ``Q^G``over the allowed range of the generators.
@@ -88,19 +89,26 @@ S_D_fx = P_D_fx + im * Q_D_fx
 model = Model(Ipopt.Optimizer)
 set_silent(model)
 
-@variable(model, P_G_lb[i] <= P_G[i = 1:N] <= P_G_ub[i])
+@variable(model, P_Gen_lb[i] <= P_G[i = 1:N] <= P_Gen_ub[i])
 
-#! format: off 
-@objective(model, Min,
-      0.11*P_G[1]^2 +   5*P_G[1] + 150
-+    0.085*P_G[2]^2 + 1.2*P_G[2] + 600
-+   0.1225*P_G[3]^2 +     P_G[3] + 335)
-#! format: off 
+@objective(
+    model,
+    Min,
+    0.11 * P_G[1]^2 +
+    5 * P_G[1] +
+    150 +
+    0.085 * P_G[2]^2 +
+    1.2 * P_G[2] +
+    600 +
+    0.1225 * P_G[3]^2 +
+    P_G[3] +
+    335
+)
 
 # Even before solving, we can substitute the lower bound on each generator's real power range 
 # (all 10, as it turns out in this case)
 
-objval_basic_lb = value(z -> Dict(zip(P_G, P_G_lb))[z], objective_function(model));
+objval_basic_lb = value(lower_bound, objective_function(model));
 println("Objective value (basic lower bound): $(objval_basic_lb)")
 
 # to see that we can do no better than an objective cost of 1188.75.
@@ -109,10 +117,10 @@ println("Objective value (basic lower bound): $(objval_basic_lb)")
 # In fact, we can get a quick but even better estimate from the direct observation that the
 # real power generated must meet or exceed the real power demand.
 
-@constraint(model, sum(P_G) >= sum(P_D_fx))
+@constraint(model, sum(P_G) >= sum(P_Demand))
 optimize!(model)
 
-objval_better_lb =round(objective_value(model), digits=2)
+objval_better_lb = round(objective_value(model); digits = 2)
 println("Objective value (better lower bound): $(objval_better_lb)")
 
 # Power must flow from one or more generation nodes through the transmission lines
@@ -131,22 +139,19 @@ println("Objective value (better lower bound): $(objval_better_lb)")
 # Let's assemble the data we need for writing the complex power flow constraints. 
 # The data for the problem consists of a list of the real and imaginary parts of the line impedance.
 # We obtain from the `case9mod` MATPOWER test case `branch data` the following data table:
-#! format: off 
-ColName=[ :F_BUS, :T_BUS, :BR_R  ,:BR_X   ,:BR_Bc ];
-  Lines=[(   1,      4,   0,      0.0576,  0,    )
-         (   4,      5,   0.017,  0.092,   0.158 )
-         (   6,      5,   0.039,  0.17,    0.358 )
-         (   3,      6,   0,      0.0586,  0,    )
-         (   6,      7,   0.0119, 0.1008,  0.209 )
-         (   8,      7,   0.0085, 0.072,   0.149 )
-         (   2,      8,   0,      0.0625,  0,    )
-         (   8,      9,   0.032,  0.161,   0.306 )
-         (   4,      9,   0.01,   0.085,   0.176 )
-
-];
-#! format: on
+df_br = DataFrames.DataFrame([
+    (1, 4, 0.0, 0.0576, 0.0),
+    (4, 5, 0.017, 0.092, 0.158),
+    (6, 5, 0.039, 0.17, 0.358),
+    (3, 6, 0.0, 0.0586, 0.0),
+    (6, 7, 0.0119, 0.1008, 0.209),
+    (8, 7, 0.0085, 0.072, 0.149),
+    (2, 8, 0.0, 0.0625, 0.0),
+    (8, 9, 0.032, 0.161, 0.306),
+    (4, 9, 0.01, 0.085, 0.176),
+]);
 # Let's make this into a more accessible `DataFrame`:
-df_br = rename(DataFrame(Lines), ColName)
+DataFrames.rename!(df_br, [:F_BUS, :T_BUS, :BR_R, :BR_X, :BR_Bc])
 
 # The first two columns describe the network, supplying the *from* and *to* connection points of the lines.
 # The last three columns give the branch resistance, branch reactance and *line-charging susceptance*.
@@ -154,19 +159,24 @@ df_br = rename(DataFrame(Lines), ColName)
 # We will also need to reference the `baseMVA` number (used for re-scaling):
 baseMVA = 100;
 # and the number of lines:
-M = length(Lines)
+M = size(df_br, 1)
 
 # From the first two columns of the branch data table,
 # we can create a sparse [incidence matrix](https://en.wikipedia.org/wiki/Incidence_matrix)
 # that simplifies handling of the network layout:
-A = sparse(df_br.F_BUS, 1:M, 1, N, M) + sparse(df_br.T_BUS, 1:M, -1, N, M)
+A =
+    SparseArrays.sparse(df_br.F_BUS, 1:M, 1, N, M) +
+    SparseArrays.sparse(df_br.T_BUS, 1:M, -1, N, M)
 
 # We form the network impedance vector
 z = (df_br.BR_R .+ im * df_br.BR_X) / baseMVA
 # and the branch line-charging susceptance
 y_sh = 1 / 2 * (im * df_br.BR_Bc) * baseMVA
 # and then the *bus admittance* matrix is defined as
-Y = A * spdiagm(1 ./ z) * A' + spdiagm(diag(A * spdiagm(y_sh) * A'))
+Y =
+    A * SparseArrays.spdiagm(1 ./ z) * A' + SparseArrays.spdiagm(
+        LinearAlgebra.diag(A * SparseArrays.spdiagm(y_sh) * A'),
+    )
 
 # (The second term looks more complicated because we only want to add the diagonal elements in the calculation;
 # the line-charging is used only in the nodal voltage terms and not the line voltage terms.)
@@ -190,18 +200,16 @@ P_G = real(S_G);
 Q_G = imag(S_G);
 
 # Generators should operate over a prescribed range:
-@constraint(model, [i = 1:N], P_G_lb[i] <= P_G[i] <= P_G_ub[i])
-@constraint(model, [i = 1:N], Q_G_lb[i] <= Q_G[i] <= Q_G_ub[i])
+@constraint(model, [i = 1:N], P_Gen_lb[i] <= P_G[i] <= P_Gen_ub[i])
+@constraint(model, [i = 1:N], Q_Gen_lb[i] <= Q_G[i] <= Q_Gen_ub[i])
 
 # **Demand**
 
 # Create the nodal power demand variables:
 @variable(model, S_D[1:N] in ComplexPlane())
-P_D = real(S_D);
-Q_D = imag(S_D);
 
 # The loads in this model are assumed to be fixed and of constant-power type:
-@constraint(model, S_D .== S_D_fx)
+@constraint(model, S_D .== S_Demand)
 
 # We need the system state variables, complex nodal voltages:
 @variable(model, V[1:N] in ComplexPlane(), start = 1.0 + 0.0im)
@@ -221,33 +229,40 @@ fix(variable_by_name(model, "imag(V[1])"), 0)
 I_Node = Y * V
 
 # Network power flow from each node is the product of voltage and current,
-# generalised here for the complex case,
+# in its generalised complex form here,
 # represents the power exchanged with the network:
-S_Node = diagm(V) * conj(I_Node)
+S_Node = LinearAlgebra.diagm(V) * conj(I_Node)
 
 # The power flow equations express a conservation of energy (power) principle, where
 # power generated less the power consumed must balance the power exchanged with the network:
-@constraint(model, [i = 1:N], S_G[i] - S_D[i] == (diagm(V)*conj(I_Node))[i])
+@constraint(model, S_G - S_D .== S_Node)
 
 # **Objective**
 
 # Quadratic cost of real power (as above):
-#! format: off 
-@objective(model, Min,
-      0.11*P_G[1]^2 +   5*P_G[1] + 150
-+    0.085*P_G[2]^2 + 1.2*P_G[2] + 600
-+   0.1225*P_G[3]^2 +     P_G[3] + 335
+@objective(
+    model,
+    Min,
+    0.11 * P_G[1]^2 +
+    5 * P_G[1] +
+    150 +
+    0.085 * P_G[2]^2 +
+    1.2 * P_G[2] +
+    600 +
+    0.1225 * P_G[3]^2 +
+    P_G[3] +
+    335
 )
-#! format: on
 
 optimize!(model)
+Test.@test isapprox(objective_value(model), 3087.84, atol = 1e-2)  #src
 solution_summary(model)
 println(
     "Objective value (feasible solution): $(round(objective_value(model), digits=2))",
 )
 
 # We can see the voltage state variable solution:
-DataFrame(;
+DataFrames.DataFrame(;
     Bus = 1:N,
     Magnitude = round.(abs.(value.(V)), digits = 2),
     AngleDeg = round.(rad2deg.(angle.(value.(V))), digits = 2),
@@ -256,10 +271,10 @@ DataFrame(;
 # ## Relaxations and better objective bounds
 # The IPOPT solver uses an interior-point algorithm. It has local optimality guarantees, but is unable to certify
 # whether the solution is globally optimal. The solution we found is indeed globally optimal.
-# The work to verify this has been done in Krasko and Rebennack (2017),
+# The work to verify this has been done in Bukhsh et al. (2013) and Krasko and Rebennack (2017),
 # and different solvers (such as Gurobi, SCIP and GLOMIQO) are also able to verify this. 
 
-# The techniques of *convex relaxations* can also be used to bring our current best lower bound:
+# The techniques of *convex relaxations* can also be used to improve on our current best lower bound:
 println("Objective value (better lower bound): $(objval_better_lb)")
 
 # ## References and further resources
@@ -268,6 +283,10 @@ println("Objective value (better lower bound): $(objval_better_lb)")
 # [_Chapter 15: Global Optimization: Optimal Power Flow Problem._](https://doi.org/10.1137/1.9781611974683.ch15)
 # In Advances and Trends in Optimization with Engineering Applications, 187–205. MOS-SIAM Series on Optimization.
 # Society for Industrial and Applied Mathematics, 2017. 
+
+# Bukhsh, W. A., Grothey, A., McKinnon, K. I., & Trodden, P. A.
+# [_Local solutions of the optimal power flow problem._](https://doi.org/10.1109/TPWRS.2013.2274577)
+# IEEE Transactions on Power Systems, 28(4), 4780-4788 (2013).
 
 # [**Test case `case9mod`**](https://www.maths.ed.ac.uk/optenergy/LocalOpt/9busnetwork.html):
 # from the
