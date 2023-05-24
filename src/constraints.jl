@@ -87,25 +87,8 @@ end
 
 # Returns the value of MOI.ConstraintDualStart in a type-stable way
 function _dual_start(
-    con_ref::ConstraintRef{
-        <:AbstractModel,
-        <:MOI.ConstraintIndex{
-            <:MOI.AbstractScalarFunction,
-            <:MOI.AbstractScalarSet,
-        },
-    },
-)::Union{Nothing,Float64}
-    return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
-end
-function _dual_start(
-    con_ref::ConstraintRef{
-        <:AbstractModel,
-        <:MOI.ConstraintIndex{
-            <:MOI.AbstractVectorFunction,
-            <:MOI.AbstractVectorSet,
-        },
-    },
-)::Union{Nothing,Vector{Float64}}
+    con_ref::ConstraintRef{M, MOI.ConstraintIndex{F,S}},
+)::Union{Nothing,_value_type(M,F)} where {M<:AbstractModel,F,S}
     return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
 end
 
@@ -1010,19 +993,24 @@ function value(
     return reshape_vector(value.(var_value, f), con_ref.shape)
 end
 
-_eltype(::Type{F}) where {F} = Any
-_eltype(::Type{MOI.VariableIndex}) = Float64
-_eltype(::Type{MOI.ScalarAffineFunction{T}}) where {T} = T
-_eltype(::Type{MOI.ScalarQuadraticFunction{T}}) where {T} = T
-_eltype(::Type{MOI.VectorOfVariables}) = Vector{Float64}
-_eltype(::Type{MOI.VectorAffineFunction{T}}) where {T} = Vector{T}
-_eltype(::Type{MOI.VectorQuadraticFunction{T}}) where {T} = Vector{T}
+"""
+    _value_type(::Type{<:AbstractModel}, ::Type{<:AbstractFunction})
+
+Return the value type of the function.
+"""
+_value_type(::Any, ::Type{F}) where {F} = Any
+_value_type(::Any, ::Type{MOI.VariableIndex}) = Float64
+_value_type(::Any, ::Type{MOI.ScalarAffineFunction{T}}) where {T} = T
+_value_type(::Any, ::Type{MOI.ScalarQuadraticFunction{T}}) where {T} = T
+_value_type(::Any, ::Type{MOI.VectorOfVariables}) = Vector{Float64}
+_value_type(::Any, ::Type{MOI.VectorAffineFunction{T}}) where {T} = Vector{T}
+_value_type(::Any, ::Type{MOI.VectorQuadraticFunction{T}}) where {T} = Vector{T}
 
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
 function _constraint_primal(
-    con_ref::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
+    con_ref::ConstraintRef{M,MOI.ConstraintIndex{F,S}},
     result::Int,
-)::_eltype(F) where {F,S}
+)::_value_type(M, F) where {M<:AbstractModel,F,S}
     return MOI.get(con_ref.model, MOI.ConstraintPrimal(result), con_ref)
 end
 
@@ -1060,9 +1048,9 @@ end
 
 # Returns the value of MOI.ConstraintDual in a type-stable way
 function _constraint_dual(
-    con_ref::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
+    con_ref::ConstraintRef{M,MOI.ConstraintIndex{F,S}},
     result::Int,
-)::_eltype(F) where {F,S}
+)::_value_type(M, F) where {M<:AbstractModel,F,S}
     return MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref)
 end
 
