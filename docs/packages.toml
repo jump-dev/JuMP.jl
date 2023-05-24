@@ -140,9 +140,8 @@
 [NEOSServer]
     user = "odow"
     rev = "v1.0.2"
-[NLopt]
-    user = "JuliaOpt"
-    rev = "v0.6.5"
+# [NLopt]                   # Hard-coded in the file docs/src/packages/NLopt.md
+#     user = "JuliaOpt"
 [OSQP]
     user = "osqp"
     rev = "443706e34c2619acbe65281c60bbe850ca4a8fac"
