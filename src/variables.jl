@@ -8,8 +8,9 @@
 
 Returns number of variables in `model`.
 """
-num_variables(model::GenericModel)::Int64 =
-    MOI.get(model, MOI.NumberOfVariables())
+function num_variables(model::GenericModel)::Int64
+    return MOI.get(model, MOI.NumberOfVariables())
+end
 
 """
     AbstractVariable
@@ -302,9 +303,11 @@ function check_belongs_to_model(v::AbstractVariableRef, model::AbstractModel)
 end
 
 Base.iszero(::GenericVariableRef) = false
+
 function Base.copy(v::GenericVariableRef{T}) where {T}
     return GenericVariableRef{T}(v.model, v.index)
 end
+
 Base.broadcastable(v::GenericVariableRef) = Ref(v)
 
 Base.zero(v::AbstractVariableRef) = zero(typeof(v))
@@ -1136,11 +1139,6 @@ function set_start_value(
         variable,
         _convert_if_something(T, value),
     )
-    return
-end
-
-function set_start_value(x::GenericVariableRef{T}, v::Number) where {T}
-    set_start_value(x, convert(T, v))
     return
 end
 
