@@ -1623,7 +1623,7 @@ function test_eltype_for_constraint_primal_float64()
     MOI.set(mock, MOI.DualStatus(), MOI.FEASIBLE_POINT)
     MOI.set(mock, MOI.VariablePrimal(), optimizer_index(x), 0.5)
     optimize!(model)
-    @test JuMP._eltype(Int) == Any  # For any user-defined functions.
+    @test JuMP._value_type(Model, Int) == Any  # For any user-defined functions.
     @test @inferred(value(c1)) == 0.5
     @test @inferred(value(c2)) == 0.5
     @test @inferred(value(c3)) == 0.25

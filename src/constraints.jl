@@ -87,8 +87,8 @@ end
 
 # Returns the value of MOI.ConstraintDualStart in a type-stable way
 function _dual_start(
-    con_ref::ConstraintRef{M, MOI.ConstraintIndex{F,S}},
-)::Union{Nothing,_value_type(M,F)} where {M<:AbstractModel,F,S}
+    con_ref::ConstraintRef{M,MOI.ConstraintIndex{F,S}},
+)::Union{Nothing,_value_type(M, F)} where {M<:AbstractModel,F,S}
     return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
 end
 
