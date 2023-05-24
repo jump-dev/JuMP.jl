@@ -144,8 +144,12 @@ Calls `include_modules_to_test(dir)` where `dir` is the `/test` directory of the
 package `package`.
 """
 function include_modules_to_test(package::Module)
-    dir = joinpath(dirname(dirname(pathof(package))), "test")
-    return include_modules_to_test(dir)
+    root = dirname(dirname(pathof(package)))
+    modules = include_modules_to_test(joinpath(root, "test"))
+    if VERSION >= v"1.9"
+        append!(modules, include_modules_to_test(joinpath(root, "ext")))
+    end
+    return modules
 end
 
 end  # module
