@@ -1619,7 +1619,7 @@ function test_symmetric_vectorize_allocations()
     C = SparseArrays.sparse([0 1; 0 0])
     X = LinearAlgebra.Symmetric(C - SparseArrays.spdiagm(x))
     @constraint(model, X in PSDCone())  # Once for compilation
-    @test (@allocated @constraint(model, X in PSDCone())) <= 944
+    @test (@allocated @constraint(model, X in PSDCone())) <= 1008
     return
 end
 

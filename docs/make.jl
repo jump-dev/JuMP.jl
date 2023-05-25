@@ -310,6 +310,7 @@ const _PAGES = [
             "tutorials/conic/tips_and_tricks.md",
             "tutorials/conic/simple_examples.md",
             "tutorials/conic/dualization.md",
+            "tutorials/conic/arbitrary_precision.md",
             "tutorials/conic/logistic_regression.md",
             "tutorials/conic/experiment_design.md",
             "tutorials/conic/min_ellipse.md",
