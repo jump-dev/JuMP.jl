@@ -225,11 +225,7 @@ set_silent(model)
     upper_bound = P_Gen_ub[i] + Q_Gen_ub[i] * im,
 )
 
-# Create the nodal power demand variables:
-
-@variable(model, S_D[1:N] in ComplexPlane())
-
-# We need  complex nodal voltages (the system state variables):
+# We need complex nodal voltages (the system state variables):
 
 @variable(model, V[1:N] in ComplexPlane(), start = 1.0 + 0.0im)
 
@@ -301,7 +297,51 @@ DataFrames.DataFrame(;
 # The techniques of *convex relaxations* can also be used to improve on our
 # current best lower bound:
 
-## println("Objective value (better lower bound): $(objval_better_lb)")
+println("Objective value (better lower bound): $better_lower_bound")
+
+# To this end, observe that the nonlinear constraints in the AC-OPF formulation
+# are quadratic equalities for power flow along with quadratic voltage inequalities.
+
+# Let's linearise these constraints by first making the substitution ``W = V V^*`` where
+# ```math
+#     W = V V^* \quad \iff  \quad W_{ii} = | V_i |^2, \quad W_{ik} = V_i \; \overline{V_k}, \quad \forall i, \, k \in \{ 1, \ldots, N \}
+# ```
+# and where ``V^*`` is the [conjugate transpose](https://en.wikipedia.org/wiki/Conjugate_transpose) of ``V``.
+
+# On the face of it, this turns a quadratic voltage bound constraint like
+# ```math
+#     v_L \leq |V_i |^2  \leq v_U, \quad i  \in \{ 1, \ldots, N \} 
+# ```
+# for some real ``v_L`` and ``v_U`` into a simple two-sided bound
+# ```math
+#     v_L \leq W_{ii}  \leq v_U
+# ```
+# while a quadratic expression like the nodal power term
+# ```math
+#     S^{Node}_i = V_i \overline{(YV)_i}
+# ```
+# becomes a linear combination
+# ```math
+#     S^{Node}_i = (E_{ii} Y) \bullet W.
+# ```
+# Note that ``A \bullet B`` is the [Frobenius inner product](https://en.wikipedia.org/wiki/Frobenius_inner_product)
+# of two complex matrices.
+
+# Of course, we've shifted the nonlinearity onto the equality constraint ``W = V V^*``
+# and it is this constraint we now relax using semidefinite programming to
+# ```math
+#     W \succeq V V^*
+# ```
+# where ``W`` is a Hermitian matrix of decision variables we're introducing
+# and the relation ``\succeq`` is the ordering in the Hermitian positive semidefinite cone.
+
+# The above constraint is equivalent to
+# ```math
+#     \begin{bmatrix} 1 & V^* \\ V & W \\ \end{bmatrix} \succeq 0
+# ```
+# by the theory of the [Schur complement](https://en.wikipedia.org/wiki/Schur_complement).
+
+# Putting it all together we get the following semidefinite relaxation of the AC-OPF problem:
 
 # ## References and further resources
 
