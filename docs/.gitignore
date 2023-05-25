@@ -10,4 +10,3 @@ src/packages/*.md
 !src/packages/solvers.md
 !src/packages/extensions.md
 !src/packages/NLopt.md
-src/api.md

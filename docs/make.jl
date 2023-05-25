@@ -234,7 +234,7 @@ function build_api_reference(mod, src_dir, sub_dir; extras = Any[])
     println(ref_io, "# API")
     println(ref_io)
     println(ref_io, "| NAME | KIND |")
-    println(ref_io, "| ---- | ---- |")
+    println(ref_io, "| :--- | :--- |")
     reference = Any["Overview"=>"$sub_dir/$mod.md"]
     for (key, type) in vcat(_exported_symbols(mod), extras)
         if key isa Symbol
@@ -252,7 +252,7 @@ function build_api_reference(mod, src_dir, sub_dir; extras = Any[])
             return write(io, "```@docs\n$key\n```")
         end
         push!(reference, Documenter.hide("`$key`" => "$sub_dir/$key.md"))
-        println(ref_io, " | [`$key`](@ref) | `$type` | ")
+        println(ref_io, "| [`$key`](@ref) | `$type` |")
     end
     close(ref_io)
     return reference
