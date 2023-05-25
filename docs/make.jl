@@ -221,7 +221,7 @@ function build_api_reference(mod, src_dir, sub_dir; extras = Dict())
     println(ref_io, "# API")
     println(ref_io)
     data = _exported_symbols(mod)
-    reference = Any["Overview"=>"$subdir/$mod.md"]
+    reference = Any["Overview"=>"$sub_dir/$mod.md"]
     for (key, list) in (
         "Macros" => data.macros,
         "Functions" => data.functions,
