@@ -216,7 +216,7 @@ function _exported_symbols(mod)
     return (; macros, functions, structs, constants)
 end
 
-function build_api_reference(mod, src_dir, sub_dir)
+function build_api_reference(mod, src_dir, sub_dir; extras = Dict())
     ref_io = open(joinpath(src_dir, "api.md"), "w")
     println(ref_io, "# API")
     println(ref_io)
@@ -226,11 +226,11 @@ function build_api_reference(mod, src_dir, sub_dir)
         "Macros" => data.macros,
         "Functions" => data.functions,
         "Structs" => data.structs,
-        # "Constants" => data.constants,
+        "Constants" => Any[], # data.constants,
     )
         println(ref_io, "## $key\n")
         items = Any[]
-        for m in list
+        for m in vcat(sort(list), get(extras, key, Any[]))
             open(joinpath(src_dir, sub_dir, "$m.md"), "w") do io
                 return write(io, "```@docs\n$m\n```")
             end
@@ -244,7 +244,24 @@ function build_api_reference(mod, src_dir, sub_dir)
     return reference
 end
 
-api_reference = build_api_reference(JuMP, joinpath(@__DIR__, "src"), "api")
+api_reference = build_api_reference(
+    JuMP,
+    joinpath(@__DIR__, "src"),
+    "api";
+    extras = Dict(
+        "Constants" => ["AUTOMATIC", "MANUAL", "DIRECT"],
+        "Functions" => [
+            "Base.empty!(::Model)",
+            "Base.isempty(::Model)",
+            "Base.copy(::AbstractModel)",
+            "Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)",
+            "Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)",
+            "MOIU.reset_optimizer(::JuMP.Model)",
+            "MOIU.drop_optimizer(::JuMP.Model)",
+            "MOIU.attach_optimizer(::JuMP.Model)",
+        ]
+    ),
+)
 
 # ==============================================================================
 #  JuMP documentation structure
@@ -339,8 +356,7 @@ const _PAGES = [
         "manual/callbacks.md",
         "manual/complex.md",
     ],
-    "API Reference" =>
-        vcat(api_reference, "reference/models.md", "reference/containers.md"),
+    "API Reference" => vcat(api_reference, "reference/containers.md"),
     "Background Information" =>
         ["background/algebraic_modeling_languages.md"],
     "Developer Docs" => [
