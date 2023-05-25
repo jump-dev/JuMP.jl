@@ -9,11 +9,12 @@ blogposts
 broadcasted
 [Bb]ugfix(?(es))
 camelCase
-codecov
+[Cc]odecov
 compat
 dataframe(?s)
 datastructure
 destructuring
+dev
 discretized
 docstring(?s)
 doctest(?s)
@@ -57,6 +58,7 @@ DAE(?s)
 [Ee]xtremal
 functionize
 geomean
+hypergraph
 infeasibilities
 (lin|mixint|quad)prog
 (log|root)det
@@ -66,6 +68,9 @@ minimizers
 nl|NL
 [Nn]onconvex
 [Nn]on(posi|nega)tiv(e|es|ity)
+[Oo]ptigraph(?s)
+[Oo]ptinode(?s)
+[Oo]ptiedge(?s)
 overfitting
 parameteriz(ing|ation)
 perp
@@ -76,7 +81,9 @@ Relatedly
 rhs
 satisfiability
 scalarization(?s)
+SDP(?s)
 [Ss]emi(continuous|integer|definite)
+SOCP(?s)
 subgradient
 subproblem(?s)
 subtour(?s)
@@ -93,9 +100,16 @@ Appveyor
 Artelys
 Bonmin
 Cbc
+cdd
+CDD
+cddlib
+CDDLib
 Clarabel
 Clp
 CPLEXLink
+COSMO
+COSMOAccelerators
+cosmo
 Couenne
 Divio
 Dualization
@@ -119,6 +133,7 @@ PATHSolver
 Pavito
 Penbmi
 Penopt
+Plasmo
 puzzlor
 RAPOSa
 SDPAFamily
@@ -134,6 +149,7 @@ Bhatia
 Biegler
 Borchers
 Bukhsh
+Cao
 Cholesky
 Coey
 Dantzig
@@ -151,6 +167,7 @@ Henrique
 Holy
 Huchette
 Iain
+[Jj]alving
 Jiming
 Joaquim
 Kernighan
@@ -158,6 +175,7 @@ Kallus
 Kaluba
 Kapelevich
 Krasko
+Kibaek
 Latorre
 Legat
 Linial
@@ -171,6 +189,7 @@ Maurer
 Mehdi
 Mittelman
 Montoison
+Motzkin
 Nemhauser
 Nemirovski
 Pacaud
@@ -182,6 +201,7 @@ Shabbir
 Shuvomoy
 Steuer
 Stigler
+Sungho
 Taccari
 Tanneau
 Teghem
@@ -191,5 +211,7 @@ Vandenberghe
 Vielma
 Wei
 Wollenberg
+Yankai
 Yu
 Yury
+Zavala

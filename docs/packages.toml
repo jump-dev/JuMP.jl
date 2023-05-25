@@ -100,22 +100,30 @@
 [Alpine]
     user = "lanl-ansi"
     rev = "32757b2568acfe71257e41ed4122a120717a6460"
-# [CDCS]
-#   user = "oxfordcontrol"
-# [CDDLib]
-#   user = "JuliaPolyhedra"
-# [Clarabel]
-#   user = "oxfordcontrol"
-#   has_html = true
+[BilevelJuMP]
+    user = "joaquimg"
+    rev = "146a6a93a5fac60faaf68e87c4592f585c79c6e9"
+    extension = true
+[CDCS]
+    user = "oxfordcontrol"
+    rev = "6d165e8e8f59b14e36e99c8efb19f0e775bbd292"
+[CDDLib]
+    user = "JuliaPolyhedra"
+    rev = "9700752f849845bc8d8477928baf3df920daadd6"
+[Clarabel]
+    user = "oxfordcontrol"
+    rev = "v0.5.0"
+    has_html = true
 [COPT]
     user = "COPT-Public"
     rev = "2d93e079645eff773552bb5da44c3024450fe990"
-# [COSMO]
-#   user = "oxfordcontrol"
-#   has_html = true
-# [DAQP]
-#   user = "darnstrom"
-#   rev = "main"
+[COSMO]
+    user = "oxfordcontrol"
+    rev = "c95bf89f111a83f52febf326615a091ad0418f00"
+    has_html = true
+[DAQP]
+    user = "darnstrom"
+    rev = "70623ed816916a0f3c3a51b65b166efae364b98d"
 # [EAGO]
 #   user = "PSORLab"
 # [GAMS]
@@ -137,16 +145,23 @@
 [NEOSServer]
     user = "odow"
     rev = "v1.0.2"
-# [NLopt]
-#   user = "JuliaOpt"
+# [NLopt]                   # Hard-coded in the file docs/src/packages/NLopt.md
+#     user = "JuliaOpt"
 [OSQP]
     user = "osqp"
     rev = "443706e34c2619acbe65281c60bbe850ca4a8fac"
 [PATHSolver]
     user = "chkwon"
     rev = "v1.4.2"
-# [ProxSDP]
-#   user = "mariohsouto"
+[Plasmo]
+    user = "plasmo-dev"
+    rev = "37f80fe96781dc647b3a5e0ed26b9eb0a994bc4a"
+    has_html = true
+    extension = true
+[ProxSDP]
+    user = "mariohsouto"
+    rev = "de648be90e63a69b8d8e4f82371760065d242fe9"
+    has_html = true
 [SCIP]
     user = "scipopt"
     rev = "44e0bff587208fb4e0779db440f4104bc0bba2ec"
@@ -155,5 +170,6 @@
     rev = "v1.5.0"
     has_html = true
     extension = true
-# [Tulip]
-#   user = "ds4dm"
+[Tulip]
+    user = "ds4dm"
+    rev = "069cdda082dfde31ef7ee935c96e833a3b96b33c"
