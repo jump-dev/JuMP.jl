@@ -221,7 +221,7 @@ function build_api_reference(mod, src_dir, sub_dir)
     println(ref_io, "# API")
     println(ref_io)
     data = _exported_symbols(mod)
-    reference = Any["Overview" => "api.md"]
+    reference = Any["Overview"=>"api.md"]
     for (key, list) in (
         "Macros" => data.macros,
         "Functions" => data.functions,
@@ -232,7 +232,7 @@ function build_api_reference(mod, src_dir, sub_dir)
         items = Any[]
         for m in list
             open(joinpath(src_dir, sub_dir, "$m.md"), "w") do io
-                write(io, "```@docs\n$m\n```")
+                return write(io, "```@docs\n$m\n```")
             end
             push!(items, "`$m`" => "$sub_dir/$m.md")
             println(ref_io, " - [`$m`](@ref)")
@@ -339,19 +339,8 @@ const _PAGES = [
         "manual/callbacks.md",
         "manual/complex.md",
     ],
-    "API Reference" => api_reference,
-    "Other API Reference" => [
-        "reference/models.md",
-        # "reference/variables.md",
-        # "reference/expressions.md",
-        # "reference/objectives.md",
-        # "reference/constraints.md",
-        "reference/containers.md",
-        # "reference/solutions.md",
-        # "reference/nlp.md",
-        # "reference/callbacks.md",
-        # "reference/extensions.md",
-    ],
+    "API Reference" =>
+        vcat(api_reference, "reference/models.md", "reference/containers.md"),
     "Background Information" =>
         ["background/algebraic_modeling_languages.md"],
     "Developer Docs" => [
@@ -511,7 +500,7 @@ function _validate_pages()
     return
 end
 
-# _validate_pages()
+_validate_pages()
 
 # ==============================================================================
 #  Build the HTML docs
