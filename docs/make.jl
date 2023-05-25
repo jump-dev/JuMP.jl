@@ -217,11 +217,11 @@ function _exported_symbols(mod)
 end
 
 function build_api_reference(mod, src_dir, sub_dir; extras = Dict())
-    ref_io = open(joinpath(src_dir, "api.md"), "w")
+    ref_io = open(joinpath(src_dir, sub_dir, "$mod.md"), "w")
     println(ref_io, "# API")
     println(ref_io)
     data = _exported_symbols(mod)
-    reference = Any["Overview"=>"api.md"]
+    reference = Any["Overview"=>"$mod.md"]
     for (key, list) in (
         "Macros" => data.macros,
         "Functions" => data.functions,
@@ -256,10 +256,25 @@ api_reference = build_api_reference(
             "Base.copy(::AbstractModel)",
             "Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)",
             "Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)",
-            "MOIU.reset_optimizer(::JuMP.Model)",
-            "MOIU.drop_optimizer(::JuMP.Model)",
-            "MOIU.attach_optimizer(::JuMP.Model)",
-        ]
+            "MOI.Utilities.reset_optimizer(::Model)",
+            "MOI.Utilities.drop_optimizer(::Model)",
+            "MOI.Utilities.attach_optimizer(::Model)",
+            "Containers.container",
+            "Containers.rowtable",
+            "Containers.default_container",
+            "Containers.vectorized_product",
+            "Containers.nested",
+            "Containers.build_ref_sets",
+            "Containers.container_code",
+        ],
+        "Macros" => ["Containers.@container"],
+        "Structs" => [
+            "Containers.DenseAxisArray",
+            "Containers.SparseAxisArray",
+            "Containers.AutoContainerType",
+            "Containers.VectorizedProductIterator",
+            "Containers.NestedIterator",
+        ],
     ),
 )
 
