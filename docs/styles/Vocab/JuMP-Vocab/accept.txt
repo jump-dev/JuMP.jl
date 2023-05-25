@@ -80,6 +80,7 @@ scalarization(?s)
 subgradient
 subproblem(?s)
 subtour(?s)
+susceptance
 unboundedness
 unregister
 [Uu]ncapacitated
@@ -130,7 +131,9 @@ Baldick
 Bertsimas
 Betts
 Bhatia
+Biegler
 Borchers
+Bukhsh
 Cholesky
 Coey
 Dantzig
@@ -142,6 +145,7 @@ Ferrolho
 Fourer
 Garfinkel
 Goemans
+Grothey
 Hande
 Henrique
 Holy
@@ -153,6 +157,7 @@ Kernighan
 Kallus
 Kaluba
 Kapelevich
+Krasko
 Latorre
 Legat
 Linial
@@ -170,6 +175,7 @@ Nemhauser
 Nemirovski
 Pacaud
 Peng
+Rebennack
 [Rr]osenbrock
 Schermer
 Shabbir
