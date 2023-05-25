@@ -513,7 +513,10 @@ _add_moi_pages()
 # ==============================================================================
 
 # For Documenter.hide arguments
-function _add_to_set(set::Set{String}, arg::Tuple{Bool,String,String,Vector{Any}})
+function _add_to_set(
+    set::Set{String},
+    arg::Tuple{Bool,String,String,Vector{Any}},
+)
     _add_to_set(set, arg[3])
     return
 end
