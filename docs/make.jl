@@ -512,6 +512,11 @@ _add_moi_pages()
 #  Check that we have included all the markdown files in _PAGES!
 # ==============================================================================
 
+# For Documenter.hide arguments
+function _add_to_set(set::Set{String}, arg::Tuple{Bool,String,String,Vector{Any}})
+    _add_to_set(set, arg[3])
+    return
+end
 _add_to_set(set, filename::String) = push!(set, filename)
 _add_to_set(set, filename::Pair) = _add_to_set(set, filename[2])
 _add_to_set(set, filename::Vector) = _add_to_set.(Ref(set), filename)
