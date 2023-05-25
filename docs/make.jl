@@ -197,48 +197,62 @@ pushfirst!(_LIST_OF_EXTENSIONS, "Introduction" => "packages/extensions.md")
 # ==============================================================================
 
 function _exported_symbols(mod)
-    macros = Symbol[]
-    functions = Symbol[]
-    structs = Symbol[]
-    constants = Symbol[]
+    contents = Pair{Symbol,String}[]
     for n in names(mod)
         f = getfield(mod, n)
-        if startswith("$f", "@")
-            push!(macros, n)
-        elseif f isa Function
-            push!(functions, n)
+        f_str = string(f)
+        if startswith(f_str, "@")
+            push!(contents, n => "macro")
+        elseif startswith(f_str, "Abstract")
+            push!(contents, n => "abstract type")
         elseif f isa Type
-            push!(structs, n)
+            push!(contents, n => "struct")
+        elseif f isa Function
+            if islowercase(f_str[1])
+                push!(contents, n => "function")
+            else
+                push!(contents, n => "struct")
+            end
+        elseif f isa Module
+            # Skip
         else
-            push!(constants, n)
+            push!(contents, n => "constant")
         end
     end
-    return (; macros, functions, structs, constants)
+    order = Dict(
+        "macro" => 1,
+        "function" => 2,
+        "abstract type" => 3,
+        "struct" => 4,
+        "constant" => 5,
+    )
+    return sort(contents; by = x -> (order[x[2]], "$(x[1])"))
 end
 
-function build_api_reference(mod, src_dir, sub_dir; extras = Dict())
+function build_api_reference(mod, src_dir, sub_dir; extras = Any[])
     ref_io = open(joinpath(src_dir, sub_dir, "$mod.md"), "w")
     println(ref_io, "# API")
     println(ref_io)
-    data = _exported_symbols(mod)
+    println(ref_io, "| NAME | KIND |")
+    println(ref_io, "| ---- | ---- |")
     reference = Any["Overview"=>"$sub_dir/$mod.md"]
-    for (key, list) in (
-        "Macros" => data.macros,
-        "Functions" => data.functions,
-        "Structs" => data.structs,
-        "Constants" => Any[], # data.constants,
-    )
-        println(ref_io, "## $key\n")
-        items = Any[]
-        for m in vcat(sort(list), get(extras, key, Any[]))
-            open(joinpath(src_dir, sub_dir, "$m.md"), "w") do io
-                return write(io, "```@docs\n$m\n```")
+    for (key, type) in vcat(_exported_symbols(mod), extras)
+        if key isa Symbol
+            doc = Base.Docs.doc(Base.Docs.Binding(mod, key))
+            if occursin("No documentation found.", string(doc))
+                if type == "constant"
+                    @warn("Skipping $key")
+                    continue
+                else
+                    error("Documentation missing for $key")
+                end
             end
-            push!(items, "`$m`" => "$sub_dir/$m.md")
-            println(ref_io, " - [`$m`](@ref)")
         end
-        println(ref_io)
-        push!(reference, key => items)
+        open(joinpath(src_dir, sub_dir, "$key.md"), "w") do io
+            return write(io, "```@docs\n$key\n```")
+        end
+        push!(reference, Documenter.hide("`$key`" => "$sub_dir/$key.md"))
+        println(ref_io, " | [`$key`](@ref) | `$type` | ")
     end
     close(ref_io)
     return reference
@@ -248,34 +262,29 @@ api_reference = build_api_reference(
     JuMP,
     joinpath(@__DIR__, "src"),
     "api";
-    extras = Dict(
-        "Constants" => ["AUTOMATIC", "MANUAL", "DIRECT"],
-        "Functions" => [
-            "Base.empty!(::Model)",
-            "Base.isempty(::Model)",
-            "Base.copy(::AbstractModel)",
-            "Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)",
-            "Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)",
-            "MOI.Utilities.reset_optimizer(::Model)",
-            "MOI.Utilities.drop_optimizer(::Model)",
-            "MOI.Utilities.attach_optimizer(::Model)",
-            "Containers.container",
-            "Containers.rowtable",
-            "Containers.default_container",
-            "Containers.vectorized_product",
-            "Containers.nested",
-            "Containers.build_ref_sets",
-            "Containers.container_code",
-        ],
-        "Macros" => ["Containers.@container"],
-        "Structs" => [
-            "Containers.DenseAxisArray",
-            "Containers.SparseAxisArray",
-            "Containers.AutoContainerType",
-            "Containers.VectorizedProductIterator",
-            "Containers.NestedIterator",
-        ],
-    ),
+    extras = [
+        "Base.empty!(::Model)" => "function",
+        "Base.isempty(::Model)" => "function",
+        "Base.copy(::AbstractModel)" => "function",
+        "Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)" => "function",
+        "Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)" => "function",
+        "MOI.Utilities.reset_optimizer(::Model)" => "function",
+        "MOI.Utilities.drop_optimizer(::Model)" => "function",
+        "MOI.Utilities.attach_optimizer(::Model)" => "function",
+        "Containers.@container" => "macro",
+        "Containers.container" => "function",
+        "Containers.rowtable" => "function",
+        "Containers.default_container" => "function",
+        "Containers.nested" => "function",
+        "Containers.vectorized_product" => "function",
+        "Containers.build_ref_sets" => "function",
+        "Containers.container_code" => "function",
+        "Containers.AutoContainerType" => "struct",
+        "Containers.DenseAxisArray" => "struct",
+        "Containers.NestedIterator" => "struct",
+        "Containers.SparseAxisArray" => "struct",
+        "Containers.VectorizedProductIterator" => "struct",
+    ],
 )
 
 # ==============================================================================
