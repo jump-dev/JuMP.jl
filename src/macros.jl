@@ -1896,6 +1896,12 @@ reverse_sense(::Val{:>=}) = Val(:<=)
 reverse_sense(::Val{:≥}) = Val(:≤)
 reverse_sense(::Val{:(==)}) = Val(:(==))
 
+"""
+    parse_variable(_error::Function, ::_VariableInfoExpr, args...)
+
+A hook for extensions to intercept the parsing of inequality constraints in the
+[`@variable`](@ref) macro.
+"""
 function parse_variable(_error::Function, ::_VariableInfoExpr, args...)
     return _error(
         "Invalid syntax: your syntax is wrong, but we don't know why. " *
@@ -2032,6 +2038,14 @@ function parse_variable(
     )
     return var, set
 end
+
+"""
+    parse_ternary_variable(_error, variable_info, lhs_sense, lhs, rhs_sense, rhs)
+
+A hook for JuMP extensiosn to intercept the parsing of a `:comparison`
+expression, which has the form `lhs lhs_sense variable rhs_sense rhs`.
+"""
+function parse_ternary_variable end
 
 function parse_ternary_variable(
     _error::Function,

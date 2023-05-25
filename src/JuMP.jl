@@ -983,6 +983,17 @@ for name in instances(TerminationStatusCode)
     @eval const $(Symbol(name)) = $(name)
 end
 
+"""
+    OptimizationSense
+
+An enum of possible senses for [`MOI.ObjectiveSense`](@ref).
+
+Possible values are:
+
+ * `MIN_SENSE`
+ * `MAX_SENSE`
+ * `FEASIBILITY_SENSE`
+"""
 const OptimizationSense = MOI.OptimizationSense
 for name in instances(OptimizationSense)
     @eval const $(Symbol(name)) = $(name)

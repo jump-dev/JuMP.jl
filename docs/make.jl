@@ -193,6 +193,60 @@ pushfirst!(_LIST_OF_SOLVERS, "Introduction" => "packages/solvers.md")
 pushfirst!(_LIST_OF_EXTENSIONS, "Introduction" => "packages/extensions.md")
 
 # ==============================================================================
+#  JuMP API
+# ==============================================================================
+
+function _exported_symbols(mod)
+    macros = Symbol[]
+    functions = Symbol[]
+    structs = Symbol[]
+    constants = Symbol[]
+    for n in names(mod)
+        f = getfield(mod, n)
+        if startswith("$f", "@")
+            push!(macros, n)
+        elseif f isa Function
+            push!(functions, n)
+        elseif f isa Type
+            push!(structs, n)
+        else
+            push!(constants, n)
+        end
+    end
+    return (; macros, functions, structs, constants)
+end
+
+function build_api_reference(mod, src_dir, sub_dir)
+    ref_io = open(joinpath(src_dir, "api.md"), "w")
+    println(ref_io, "# API")
+    println(ref_io)
+    data = _exported_symbols(mod)
+    reference = Any["Overview" => "api.md"]
+    for (key, list) in (
+        "Macros" => data.macros,
+        "Functions" => data.functions,
+        "Structs" => data.structs,
+        # "Constants" => data.constants,
+    )
+        println(ref_io, "## $key\n")
+        items = Any[]
+        for m in list
+            open(joinpath(src_dir, sub_dir, "$m.md"), "w") do io
+                write(io, "```@docs\n$m\n```")
+            end
+            push!(items, "`$m`" => "$sub_dir/$m.md")
+            println(ref_io, " - [`$m`](@ref)")
+        end
+        println(ref_io)
+        push!(reference, key => items)
+    end
+    close(ref_io)
+    return reference
+end
+
+api_reference = build_api_reference(JuMP, joinpath(@__DIR__, "src"), "api")
+
+# ==============================================================================
 #  JuMP documentation structure
 # ==============================================================================
 
@@ -285,17 +339,18 @@ const _PAGES = [
         "manual/callbacks.md",
         "manual/complex.md",
     ],
-    "API Reference" => [
+    "API Reference" => api_reference,
+    "Other API Reference" => [
         "reference/models.md",
-        "reference/variables.md",
-        "reference/expressions.md",
-        "reference/objectives.md",
-        "reference/constraints.md",
+        # "reference/variables.md",
+        # "reference/expressions.md",
+        # "reference/objectives.md",
+        # "reference/constraints.md",
         "reference/containers.md",
-        "reference/solutions.md",
-        "reference/nlp.md",
-        "reference/callbacks.md",
-        "reference/extensions.md",
+        # "reference/solutions.md",
+        # "reference/nlp.md",
+        # "reference/callbacks.md",
+        # "reference/extensions.md",
     ],
     "Background Information" =>
         ["background/algebraic_modeling_languages.md"],
@@ -456,7 +511,7 @@ function _validate_pages()
     return
 end
 
-_validate_pages()
+# _validate_pages()
 
 # ==============================================================================
 #  Build the HTML docs

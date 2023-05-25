@@ -207,6 +207,11 @@ function MOI.Nonlinear.parse_expression(
     return MOI.Nonlinear.parse_expression(model, expr, index, parent)
 end
 
+"""
+    add_nonlinear_parameter(model::Model, value::Real)
+
+Add an anonymous parameter to the model.
+"""
 function add_nonlinear_parameter(model::Model, value::Real)
     _init_NLP(model)
     p = MOI.Nonlinear.add_parameter(model.nlp_model, Float64(value))
@@ -391,6 +396,9 @@ end
 # constraints may have been deleted.
 const NonlinearConstraintIndex = MOI.Nonlinear.ConstraintIndex
 
+"""
+    NonlinearConstraintRef
+"""
 const NonlinearConstraintRef =
     ConstraintRef{Model,MOI.Nonlinear.ConstraintIndex}
 
