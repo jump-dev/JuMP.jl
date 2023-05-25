@@ -1846,10 +1846,21 @@ function build_variable(
     return VariablesConstrainedOnCreation(variables, set)
 end
 
+# This method is needed because Julia v1.10 prints LineNumberNode in the string
+# representation of an expression.
+function _strip_LineNumberNode(x::Expr)
+    if Meta.isexpr(x, :block)
+        return Expr(:block, filter(!Base.Fix2(isa, LineNumberNode), x.args)...)
+    end
+    return x
+end
+
+_strip_LineNumberNode(x) = x
+
 function _macro_error(macroname, args, source, str...)
+    str_args = join(_strip_LineNumberNode.(args), ", ")
     return error(
-        "At $(source.file):$(source.line): " *
-        "`@$macroname($(join(args, ", ")))`: ",
+        "At $(source.file):$(source.line): `@$macroname($str_args)`: ",
         str...,
     )
 end
