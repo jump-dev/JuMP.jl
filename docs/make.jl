@@ -249,7 +249,7 @@ function build_api_reference(mod, src_dir, sub_dir; extras = Any[])
             end
         end
         open(joinpath(src_dir, sub_dir, "$key.md"), "w") do io
-            return write(io, "# `$key`\n\n```@docs\n$key\n```")
+            return write(io, "```@docs\n$key\n```")
         end
         push!(reference, Documenter.hide("`$key`" => "$sub_dir/$key.md"))
         println(ref_io, "| [`$key`](@ref) | `$type` |")
@@ -614,6 +614,14 @@ if _PDF
     pop!(_PAGES)        # remove /Extensions
     pop!(_PAGES)        # remove /Solvers
     push!(_PAGES, moi)  # Re-add /MathOptInterface
+    section_title, contents = _PAGES[4]
+    @assert section_title[1] == "API Reference"
+    # The `api_reference[2]` is a big list of docstrings. By default, they'll
+    # show up at the `\chapter` level. That's too high.
+    _PAGES[4] = section_title => [
+        contents[1],
+        "Docstrings" => contents[2:end],
+    ]
     latex_platform = _IS_GITHUB_ACTIONS ? "docker" : "native"
     @time Documenter.makedocs(
         sitename = "JuMP",
