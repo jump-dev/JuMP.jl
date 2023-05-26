@@ -618,7 +618,7 @@ if _PDF
     @assert section_title == "API Reference"
     # `contents` is a big list of docstrings. By default, they'll
     # show up at the `\chapter` level. That's too high.
-    _PAGES[4] = section_title => ["Docstrings" => [contents[2:end]]]
+    _PAGES[4] = section_title => ["Docstrings" => ["JuMP" => contents[2:end]]]
     latex_platform = _IS_GITHUB_ACTIONS ? "docker" : "native"
     @time Documenter.makedocs(
         sitename = "JuMP",
