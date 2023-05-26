@@ -10,11 +10,9 @@ overview of the types of extensions that are possible to write with JuMP.
 Packages beginning with `jump-dev/` are developed and maintained by the
 JuMP developers.
 
-Packages that do not begin with `jump-dev/` are developed independently, and the
-JuMP developers have no affiliation with their developers or control over their
-contents. The README files from each solver are taken directly from the GitHub
-repository of each package. They are included here for the benefit of users
-reading a single unified set of documentation.
+Packages that do not begin with `jump-dev/` are developed independently. The
+developers of these packages requested or consented to the inclusion of their
+README contents in the JuMP documentation for the benefit of users.
 
 ## Adding new extensions
 
