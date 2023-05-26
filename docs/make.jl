@@ -249,7 +249,7 @@ function build_api_reference(mod, src_dir, sub_dir; extras = Any[])
             end
         end
         open(joinpath(src_dir, sub_dir, "$key.md"), "w") do io
-            return write(io, "```@docs\n$key\n```")
+            return write(io, "# `$key`\n\n```@docs\n$key\n```")
         end
         push!(reference, Documenter.hide("`$key`" => "$sub_dir/$key.md"))
         println(ref_io, "| [`$key`](@ref) | `$type` |")
