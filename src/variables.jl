@@ -235,7 +235,7 @@ Base.abs2(v::AbstractVariableRef) = v^2
 Base.isreal(::AbstractVariableRef) = true
 
 """
-    GenericVariableRef <: AbstractVariableRef
+    GenericVariableRef{T} <: AbstractVariableRef
 
 Holds a reference to the model and the corresponding MOI.VariableIndex.
 """
