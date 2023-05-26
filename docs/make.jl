@@ -615,8 +615,8 @@ if _PDF
     pop!(_PAGES)        # remove /Solvers
     push!(_PAGES, moi)  # Re-add /MathOptInterface
     section_title, contents = _PAGES[4]
-    @assert section_title[1] == "API Reference"
-    # The `api_reference[2]` is a big list of docstrings. By default, they'll
+    @assert section_title == "API Reference"
+    # `contents` is a big list of docstrings. By default, they'll
     # show up at the `\chapter` level. That's too high.
     _PAGES[4] = section_title => [
         contents[1],
