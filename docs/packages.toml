@@ -116,7 +116,7 @@
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "2d93e079645eff773552bb5da44c3024450fe990"
+    rev = "b283cab933501c39195a273c78ddeac236cc2f3f"
 [COSMO]
     user = "oxfordcontrol"
     rev = "c95bf89f111a83f52febf326615a091ad0418f00"
