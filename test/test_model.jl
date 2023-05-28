@@ -414,8 +414,13 @@ function test_bridges_add_bridgeable_con_set_optimizer()
     model = Model()
     @variable(model, x)
     constraint = ScalarConstraint(x, Nonnegative())
-    bc = BridgeableConstraint(constraint, NonnegativeBridge)
+    bc = BridgeableConstraint(
+        constraint,
+        NonnegativeBridge;
+        value_type = Float64,
+    )
     c = add_constraint(model, bc)
+    @test NonnegativeBridge{Float64} in model.bridge_types
     set_optimizer(model, mock_factory)
     optimize!(model)
     @test 1.0 == @inferred value(x)
