@@ -504,7 +504,7 @@ JuMP extensions should extend `JuMP.build_constraint` only if they also defined
 struct BridgeableConstraint{C,B,T} <: AbstractConstraint
     constraint::C
     bridge_type::B
-    value_type::T
+    value_type::Type{T}
 
     function BridgeableConstraint(
         constraint::C,

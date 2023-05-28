@@ -1166,14 +1166,14 @@ function test_bridges_add_remove_value_type()
     add_bridge(
         model,
         MOI.Bridges.Constraint.NumberConversionBridge;
-        value_type = Int
+        value_type = Int,
     )
     BT = MOI.Bridges.Constraint.NumberConversionBridge{Int}
     @test BT in model.bridge_types
     remove_bridge(
         model,
         MOI.Bridges.Constraint.NumberConversionBridge;
-        value_type = Int
+        value_type = Int,
     )
     @test !(BT in model.bridge_types)
     @test isempty(model.bridge_types)
