@@ -1148,4 +1148,31 @@ function test_getindex_no_arg()
     return
 end
 
+function test_bridges_add_remove_value_type()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    end
+    add_bridge(model, MOI.Bridges.Constraint.NumberConversionBridge)
+    BT = MOI.Bridges.Constraint.NumberConversionBridge{Float64}
+    @test BT in model.bridge_types
+    remove_bridge(model, MOI.Bridges.Constraint.NumberConversionBridge)
+    @test !(BT in model.bridge_types)
+    @test isempty(model.bridge_types)
+    add_bridge(
+        model,
+        MOI.Bridges.Constraint.NumberConversionBridge;
+        value_type = Int
+    )
+    BT = MOI.Bridges.Constraint.NumberConversionBridge{Int}
+    @test BT in model.bridge_types
+    remove_bridge(
+        model,
+        MOI.Bridges.Constraint.NumberConversionBridge;
+        value_type = Int
+    )
+    @test !(BT in model.bridge_types)
+    @test isempty(model.bridge_types)
+    return
+end
+
 end  # module TestModels
