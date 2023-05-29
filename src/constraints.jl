@@ -450,15 +450,15 @@ abstract type AbstractConstraint end
     BridgeableConstraint(
         constraint::C,
         bridge_type::B;
-        value_type::Type{T} = Float64,
+        coefficient_type::Type{T} = Float64,
     ) where {C<:AbstractConstraint,B<:MOI.Bridges.AbstractBridge,T}
 
 An [`AbstractConstraint`](@ref) representinng that `constraint` that can be
-bridged by the bridge of type `bridge_type{value_type}`.
+bridged by the bridge of type `bridge_type{coefficient_type}`.
 
 Adding a `BridgeableConstraint` to a model is equivalent to:
 ```julia
-add_bridge(model, bridge_type; value_type = value_type)
+add_bridge(model, bridge_type; coefficient_type = coefficient_type)
 add_constraint(model, constraint)
 ```
 
@@ -504,12 +504,12 @@ JuMP extensions should extend `JuMP.build_constraint` only if they also defined
 struct BridgeableConstraint{C,B,T} <: AbstractConstraint
     constraint::C
     bridge_type::B
-    value_type::Type{T}
+    coefficient_type::Type{T}
 
     function BridgeableConstraint(
         constraint::C,
         bridge_type::B;
-        value_type::Type{T} = Float64,
+        coefficient_type::Type{T} = Float64,
     ) where {C,B,T}
         return new{C,B,T}(constraint, bridge_type, T)
     end
@@ -520,7 +520,7 @@ function add_constraint(
     con::BridgeableConstraint,
     name::String = "",
 )
-    add_bridge(model, con.bridge_type; value_type = con.value_type)
+    add_bridge(model, con.bridge_type; coefficient_type = con.coefficient_type)
     return add_constraint(model, con.constraint, name)
 end
 

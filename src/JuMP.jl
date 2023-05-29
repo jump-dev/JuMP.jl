@@ -484,7 +484,7 @@ end
     add_bridge(
         model::Model,
         BT::Type{<:MOI.Bridges.AbstractBridge};
-        value_type::Type{T} = Float64,
+        coefficient_type::Type{T} = Float64,
     ) where {T}
 
 Add `BT{T}` to the list of bridges that can be used to transform unsupported
@@ -503,14 +503,14 @@ julia> add_bridge(model, MOI.Bridges.Constraint.SOCtoNonConvexQuadBridge)
 julia> add_bridge(
            model,
            MOI.Bridges.Constraint.NumberConversionBridge;
-           value_type = Complex{Float64}
+           coefficient_type = Complex{Float64}
        )
 ```
 """
 function add_bridge(
     model::Model,
     BT::Type{<:MOI.Bridges.AbstractBridge};
-    value_type::Type{T} = Float64,
+    coefficient_type::Type{T} = Float64,
 ) where {T}
     push!(model.bridge_types, BT{T})
     _moi_call_bridge_function(MOI.Bridges.add_bridge, backend(model), BT{T})
@@ -521,7 +521,7 @@ end
     remove_bridge(
         model::Model,
         BT::Type{<:MOI.Bridges.AbstractBridge};
-        value_type::Type{T} = Float64,
+        coefficient_type::Type{T} = Float64,
     ) where {T}
 
 Remove `BT{T}` from the list of bridges that can be used to transform
@@ -542,20 +542,20 @@ julia> remove_bridge(model, MOI.Bridges.Constraint.SOCtoNonConvexQuadBridge)
 julia> add_bridge(
            model,
            MOI.Bridges.Constraint.NumberConversionBridge;
-           value_type = Complex{Float64}
+           coefficient_type = Complex{Float64}
        )
 
 julia> remove_bridge(
         model,
         MOI.Bridges.Constraint.NumberConversionBridge;
-        value_type = Complex{Float64}
+        coefficient_type = Complex{Float64}
     )
 ```
 """
 function remove_bridge(
     model::Model,
     BT::Type{<:MOI.Bridges.AbstractBridge};
-    value_type::Type{T} = Float64,
+    coefficient_type::Type{T} = Float64,
 ) where {T}
     delete!(model.bridge_types, BT{T})
     _moi_call_bridge_function(MOI.Bridges.remove_bridge, backend(model), BT{T})

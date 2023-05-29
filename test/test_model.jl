@@ -417,7 +417,7 @@ function test_bridges_add_bridgeable_con_set_optimizer()
     bc = BridgeableConstraint(
         constraint,
         NonnegativeBridge;
-        value_type = Float64,
+        coefficient_type = Float64,
     )
     c = add_constraint(model, bc)
     @test NonnegativeBridge{Float64} in model.bridge_types
@@ -1153,7 +1153,7 @@ function test_getindex_no_arg()
     return
 end
 
-function test_bridges_add_remove_value_type()
+function test_bridges_add_remove_coefficient_type()
     model = Model() do
         return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
     end
@@ -1166,14 +1166,14 @@ function test_bridges_add_remove_value_type()
     add_bridge(
         model,
         MOI.Bridges.Constraint.NumberConversionBridge;
-        value_type = Int,
+        coefficient_type = Int,
     )
     BT = MOI.Bridges.Constraint.NumberConversionBridge{Int}
     @test BT in model.bridge_types
     remove_bridge(
         model,
         MOI.Bridges.Constraint.NumberConversionBridge;
-        value_type = Int,
+        coefficient_type = Int,
     )
     @test !(BT in model.bridge_types)
     @test isempty(model.bridge_types)
