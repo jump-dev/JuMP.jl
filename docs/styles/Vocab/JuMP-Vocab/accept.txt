@@ -63,6 +63,7 @@ infeasibilities
 (lin|mixint|quad)prog
 (log|root)det
 (L|Q|MI|MIC)P(?s)
+linearize
 minimizers
 [Mm]ultiobjective
 nl|NL
@@ -159,6 +160,7 @@ Ehrgott
 Farkas
 Ferrolho
 Fourer
+Frobenius
 Garfinkel
 Goemans
 Grothey
@@ -197,6 +199,7 @@ Peng
 Rebennack
 [Rr]osenbrock
 Schermer
+Schur
 Shabbir
 Shuvomoy
 Steuer
