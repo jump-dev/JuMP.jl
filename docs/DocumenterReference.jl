@@ -64,9 +64,10 @@ function automatic_reference_documentation(
     extras::Vector{Pair{String,DocType}} = Pair{String,DocType}[],
 )
     config = _Config(current_module, root, subdirectory, extras)
-    pages = Any["Overview" => "$subdirectory/$current_module.md"]
+    pages = Any["Overview"=>"$subdirectory/$current_module.md"]
     _iterate_over_symbols(config) do key, type
         push!(pages, Documenter.hide("`$key`" => "$subdirectory/$key.md"))
+        return
     end
     push!(CONFIG, config)
     return pages
@@ -161,6 +162,7 @@ function _build_api_page(document::Documenter.Document, config::_Config)
     _iterate_over_symbols(config) do key, type
         _add_page(document, "$subdir/$key.md", "```@docs\n$key\n```\n")
         overview_md *= "| [`$key`](@ref) | `$(_to_string(type))` |\n"
+        return
     end
     _add_page(document, "$subdir/$(config.current_module).md", overview_md)
     return
