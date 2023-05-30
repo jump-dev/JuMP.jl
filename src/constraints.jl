@@ -449,7 +449,7 @@ abstract type AbstractConstraint end
 """
     BridgeableConstraint(
         constraint::C,
-        bridge_type::B;
+        bridge_type::Type{B};
         coefficient_type::Type{T} = Float64,
     ) where {C<:AbstractConstraint,B<:MOI.Bridges.AbstractBridge,T}
 
