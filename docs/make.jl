@@ -196,94 +196,44 @@ pushfirst!(_LIST_OF_EXTENSIONS, "Introduction" => "packages/extensions.md")
 #  JuMP API
 # ==============================================================================
 
-function _exported_symbols(mod)
-    contents = Pair{Symbol,String}[]
-    for n in names(mod)
-        f = getfield(mod, n)
-        f_str = string(f)
-        if startswith(f_str, "@")
-            push!(contents, n => "macro")
-        elseif startswith(f_str, "Abstract")
-            push!(contents, n => "abstract type")
-        elseif f isa Type
-            push!(contents, n => "struct")
-        elseif f isa Function
-            if islowercase(f_str[1])
-                push!(contents, n => "function")
-            else
-                push!(contents, n => "struct")
-            end
-        elseif f isa Module
-            # Skip
-        else
-            push!(contents, n => "constant")
-        end
-    end
-    order = Dict(
-        "macro" => 1,
-        "function" => 2,
-        "abstract type" => 3,
-        "struct" => 4,
-        "constant" => 5,
-    )
-    return sort(contents; by = x -> (order[x[2]], "$(x[1])"))
-end
+include(joinpath(@__DIR__, "DocumenterReference.jl"))
 
-function build_api_reference(mod, src_dir, sub_dir; extras = Any[])
-    ref_io = open(joinpath(src_dir, sub_dir, "$mod.md"), "w")
-    println(ref_io, "# API")
-    println(ref_io)
-    println(ref_io, "| NAME | KIND |")
-    println(ref_io, "| :--- | :--- |")
-    reference = Any["Overview"=>"$sub_dir/$mod.md"]
-    for (key, type) in vcat(_exported_symbols(mod), extras)
-        if key isa Symbol
-            doc = Base.Docs.doc(Base.Docs.Binding(mod, key))
-            if occursin("No documentation found.", string(doc))
-                if type == "constant"
-                    @warn("Skipping $key")
-                    continue
-                else
-                    error("Documentation missing for $key")
-                end
-            end
-        end
-        open(joinpath(src_dir, sub_dir, "$key.md"), "w") do io
-            return write(io, "```@docs\n$key\n```")
-        end
-        push!(reference, Documenter.hide("`$key`" => "$sub_dir/$key.md"))
-        println(ref_io, "| [`$key`](@ref) | `$type` |")
-    end
-    close(ref_io)
-    return reference
-end
-
-api_reference = build_api_reference(
-    JuMP,
-    joinpath(@__DIR__, "src"),
-    "api";
+jump_api_documentation = DocumenterReference.automatic_reference_documentation(
+    JuMP;
+    root = joinpath(@__DIR__, "src"),
+    subdirectory = "api",
     extras = [
-        "Base.empty!(::Model)" => "function",
-        "Base.isempty(::Model)" => "function",
-        "Base.copy(::AbstractModel)" => "function",
-        "Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)" => "function",
-        "Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)" => "function",
-        "MOI.Utilities.reset_optimizer(::Model)" => "function",
-        "MOI.Utilities.drop_optimizer(::Model)" => "function",
-        "MOI.Utilities.attach_optimizer(::Model)" => "function",
-        "Containers.@container" => "macro",
-        "Containers.container" => "function",
-        "Containers.rowtable" => "function",
-        "Containers.default_container" => "function",
-        "Containers.nested" => "function",
-        "Containers.vectorized_product" => "function",
-        "Containers.build_ref_sets" => "function",
-        "Containers.container_code" => "function",
-        "Containers.AutoContainerType" => "struct",
-        "Containers.DenseAxisArray" => "struct",
-        "Containers.NestedIterator" => "struct",
-        "Containers.SparseAxisArray" => "struct",
-        "Containers.VectorizedProductIterator" => "struct",
+        "Base.empty!(::Model)" => DocumenterReference.DOCTYPE_FUNCTION,
+        "Base.isempty(::Model)" => DocumenterReference.DOCTYPE_FUNCTION,
+        "Base.copy(::AbstractModel)" =>
+            DocumenterReference.DOCTYPE_FUNCTION,
+        "Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)" =>
+            DocumenterReference.DOCTYPE_FUNCTION,
+        "Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)" =>
+            DocumenterReference.DOCTYPE_FUNCTION,
+        "MOI.Utilities.reset_optimizer(::Model)" =>
+            DocumenterReference.DOCTYPE_FUNCTION,
+        "MOI.Utilities.drop_optimizer(::Model)" =>
+            DocumenterReference.DOCTYPE_FUNCTION,
+        "MOI.Utilities.attach_optimizer(::Model)" =>
+            DocumenterReference.DOCTYPE_FUNCTION,
+        "Containers.@container" => DocumenterReference.DOCTYPE_MACRO,
+        "Containers.container" => DocumenterReference.DOCTYPE_FUNCTION,
+        "Containers.rowtable" => DocumenterReference.DOCTYPE_FUNCTION,
+        "Containers.default_container" =>
+            DocumenterReference.DOCTYPE_FUNCTION,
+        "Containers.nested" => DocumenterReference.DOCTYPE_FUNCTION,
+        "Containers.vectorized_product" =>
+            DocumenterReference.DOCTYPE_FUNCTION,
+        "Containers.build_ref_sets" => DocumenterReference.DOCTYPE_FUNCTION,
+        "Containers.container_code" => DocumenterReference.DOCTYPE_FUNCTION,
+        "Containers.AutoContainerType" =>
+            DocumenterReference.DOCTYPE_STRUCT,
+        "Containers.DenseAxisArray" => DocumenterReference.DOCTYPE_STRUCT,
+        "Containers.NestedIterator" => DocumenterReference.DOCTYPE_STRUCT,
+        "Containers.SparseAxisArray" => DocumenterReference.DOCTYPE_STRUCT,
+        "Containers.VectorizedProductIterator" =>
+            DocumenterReference.DOCTYPE_STRUCT,
     ],
 )
 
@@ -380,7 +330,7 @@ const _PAGES = [
         "manual/callbacks.md",
         "manual/complex.md",
     ],
-    "API Reference" => api_reference,
+    "API Reference" => jump_api_documentation,
     "Background Information" =>
         ["background/algebraic_modeling_languages.md"],
     "Developer Docs" => [
