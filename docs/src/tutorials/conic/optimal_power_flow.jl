@@ -28,10 +28,10 @@
 # This tutorial requires the following packages:
 
 using JuMP
+import Clarabel
 import DataFrames
 import Ipopt
 import LinearAlgebra
-import SCS
 import SparseArrays
 import Test
 
@@ -59,13 +59,13 @@ import Test
 
 # For future reference, let's name the number of nodes in the network:
 
-N = 9
+N = 9;
 
 # The network data can be summarised using a small number of arrays. Using the
 # `sparsevec` function from the `SparseArrays` standard library package, we can
 # give the indices and values of the non-zero data points:
 
-# _Generation power bounds: lower (`lb`) and upper (`ub`)_
+# _Generation power: lower (`lb`) and upper (`ub`)_ bounds
 
 ## Active
 P_Gen_lb = SparseArrays.sparsevec([1, 2, 3], [10, 10, 10], N)
@@ -73,7 +73,8 @@ P_Gen_ub = SparseArrays.sparsevec([1, 2, 3], [250, 300, 270], N)
 ## Reactive
 Q_Gen_lb = SparseArrays.sparsevec([1, 2, 3], [-5, -5, -5], N)
 Q_Gen_ub = SparseArrays.sparsevec([1, 2, 3], [300, 300, 300], N)
-## _Power demand levels (real, reactive, and complex form)_
+
+# _Power demand levels (real, reactive, and complex form)_
 P_Demand = SparseArrays.sparsevec([5, 7, 9], [54, 60, 75], N)
 Q_Demand = SparseArrays.sparsevec([5, 7, 9], [18, 21, 30], N)
 S_Demand = P_Demand + im * Q_Demand
@@ -273,7 +274,7 @@ P_G = real(S_G)
     (0.11 * P_G[1]^2 + 5 * P_G[1] + 150) +
     (0.085 * P_G[2]^2 + 1.2 * P_G[2] + 600) +
     (0.1225 * P_G[3]^2 + P_G[3] + 335),
-)
+);
 
 # We're finally ready to solve our nonlinear AC-OPF problem:
 
@@ -286,7 +287,7 @@ solution_summary(model)
 objval_solution = round(objective_value(model); digits = 2)
 println("Objective value (feasible solution) : $(objval_solution)")
 
-# We can see the solution's voltages:
+# The solution's complex voltage values in polar form are:
 
 DataFrames.DataFrame(;
     Bus = 1:N,
@@ -338,44 +339,23 @@ better_lower_bound
 # of two complex matrices, while ``E_{kn}`` denotes the _matrix unit_ with a single
 # nonzero entry of 1 in row ``k`` and column ``n``.
 
-E(k, n) = SparseArrays.sparse([k], [n], 1, N, N)
+E(k, n) = SparseArrays.sparse([k], [n], 1, N, N);
 
-# Of course, we've shifted the nonlinearity into the equality constraint ``W = V V^*``
-# but it is this constraint we will now relax using semidefinite programming.
+# Of course, we've shifted the nonlinearity into the equality constraint ``W = V V^*``:
+# it is this constraint we will now relax using semidefinite programming.
 
 # In the first instance, we will relax ``W = V V^*`` to
 # ```math
 #     W \succeq 0
 # ```
-# where ``W`` is a Hermitian matrix of decision variables we're introducing
+# where  we now introduce ``W`` as a new Hermitian matrix of decision variables
 # and the relation ``\succeq`` is the ordering in the Hermitian positive semidefinite cone.
-# This enables us to write down a relaxation without using complex voltage variables.
-
-# In the second instance, we will make use of complex voltages and relax ``W = V V^*`` to
-# ```math
-#     W \succeq V V^*
-# ```
-# The above constraint is equivalent to
-# ```math
-#     \begin{bmatrix} 1 & V^* \\ V & W \\ \end{bmatrix} \succeq 0
-# ```
-# by the theory of the [Schur complement](https://en.wikipedia.org/wiki/Schur_complement).
-
-# We can be a little more precise: we only need consider the constraints of ``W = V V^*`` 
-# that correspond to the actual lines in the network, a set described by pairs of nodes
-# given by:
-
-Lines = [
-    Tuple.(eachrow(df_br[:, [:F_BUS, :T_BUS]]))
-    Tuple.(eachrow(df_br[:, [:T_BUS, :F_BUS]]))
-]
+# This enables us to write down a relaxation with or without complex voltage variables.
 
 # Putting it all together we get the following semidefinite relaxations of the AC-OPF problem:
 
-# #### First SDP relaxation (``W`` variables):
-model = Model(SCS.Optimizer)
-set_silent(model)
-MOI.set(model, MOI.RawOptimizerAttribute("max_iters"), 1_000_000)
+# #### First SDP relaxation (``W`` variables alone):
+model = Model(Clarabel.Optimizer)
 
 @variable(
     model,
@@ -385,6 +365,105 @@ MOI.set(model, MOI.RawOptimizerAttribute("max_iters"), 1_000_000)
 )
 
 @variable(model, W[1:N, 1:N] in HermitianPSDCone())
+
+@constraint(model, [i in 1:N], 0.9^2 <= real(W[i, i]) <= 1.1^2)
+
+S_Node_Relax = [LinearAlgebra.tr((conj(Y) * E(i, i)) * W) for i in 1:N]
+
+@constraint(model, S_G - S_Demand .== S_Node_Relax)
+
+P_G = real(S_G)
+@objective(
+    model,
+    Min,
+    (0.11 * P_G[1]^2 + 5 * P_G[1] + 150) +
+    (0.085 * P_G[2]^2 + 1.2 * P_G[2] + 600) +
+    (0.1225 * P_G[3]^2 + P_G[3] + 335),
+)
+
+optimize!(model)
+
+#- 
+
+first_relaxation_lower_bound = round(objective_value(model); digits = 2)
+println("Objective value (W relax. lower bound): $first_relaxation_lower_bound")
+
+Test.@test in(termination_status(model), [OPTIMAL, ALMOST_OPTIMAL])         #src
+Test.@test in(primal_status(model), [FEASIBLE_POINT, NEARLY_FEASIBLE_POINT]) #src
+Test.@test isapprox(first_relaxation_lower_bound, 2753.04; rtol = 1e-3)  #src
+
+# We can more easily see the solution by filtering out the noisy data
+# arising from solver tolerances:
+
+W_1 = SparseArrays.sparse(round.(value.(W); digits = 1))
+
+Test.@test iszero(imag(LinearAlgebra.diag(W_1))) #src
+
+# with corresponding voltage magnitudes
+
+V_magnitude_approx = real.(sqrt.(LinearAlgebra.diag(W_1)));
+DataFrames.DataFrame(;
+    Bus = 1:N,
+    Magnitude = round.(V_magnitude_approx, digits = 2),
+)
+
+# We can be a little more precise: we could only consider the constraints of ``W = V V^*`` 
+# that correspond to the actual lines in the network, a set described by pairs of nodes
+# given by:
+
+Lines = [
+    Tuple.(eachrow(df_br[:, [:F_BUS, :T_BUS]]))
+    Tuple.(eachrow(df_br[:, [:T_BUS, :F_BUS]]))
+];
+
+# but we will use the dense variable formulation in what follows.
+
+# In the second instance, we will make use of complex voltages and relax ``W = V V^*`` to
+# ```math
+#     W \succeq V V^* .
+# ```
+# The above constraint is equivalent to
+# ```math
+#     \begin{bmatrix} 1 & V^* \\ V & W \\ \end{bmatrix} \succeq 0
+# ```
+# by the theory of the [Schur complement](https://en.wikipedia.org/wiki/Schur_complement).
+# This matrix inequality implies a number of second-order cone constraints by taking 
+# certain ``2 \times 2`` minors of the matrix for each ``i  \in \{ 1, \ldots, N \}``:
+# ```math
+#     \begin{bmatrix} 1 & V_i^* \\ V_i & W_{ii} \\ \end{bmatrix} \succeq 0
+# ```
+# is equivalent to the real second-order cone inequality
+# ```math
+#   \operatorname{real}(W_{ii}) \geq \operatorname{real}(V_i)^2 + \operatorname{imag}(V_i)^2.
+# ```
+# We include these implied constraints as well for demonstration purposes.
+
+# #### Second SDP relaxation (``W`` and ``V`` variables):
+model = Model(Clarabel.Optimizer)
+
+@variable(
+    model,
+    S_G[i = 1:N] in ComplexPlane(),
+    lower_bound = P_Gen_lb[i] + Q_Gen_lb[i] * im,
+    upper_bound = P_Gen_ub[i] + Q_Gen_ub[i] * im,
+)
+
+@variable(model, W[1:N, 1:N] in ComplexPlane())
+@constraint(model, [i = 1:N], real(W[i, i]) >= 0)
+@constraint(model, [i = 1:N], imag(W[i, i]) == 0)
+
+@variable(model, V[1:N] in ComplexPlane(), start = 1.0 + 0.0im)
+@constraint(model, imag(V[1]) == 0)
+
+@constraint(model, LinearAlgebra.Hermitian([1 V'; V W]) in HermitianPSDCone())
+
+## 2 x 2 minor inequalities:
+@constraint(
+    model,
+    [i = 1:N],
+    [1 // 2; real(W[i, i]); [real(V[i]); imag(V[i])]] in
+    RotatedSecondOrderCone()
+)
 
 @constraint(model, [i in 1:N], 0.9^2 <= real(W[i, i]) <= 1.1^2)
 
@@ -404,59 +483,9 @@ P_G = real(S_G)
 @constraint(model, sum(P_G) >= sum(P_Demand))
 
 optimize!(model)
-first_relaxation_lower_bound = round(objective_value(model); digits = 2)
-println("Objective value (W relax. lower bound): $first_relaxation_lower_bound")
 
-Test.@test termination_status(model) == OPTIMAL    #src
-Test.@test primal_status(model) == FEASIBLE_POINT  #src
-Test.@test isapprox(first_relaxation_lower_bound, 2733.35; rtol = 1e-2)  #src
+#-
 
-# We can more easily see the solution by filtering the noise arising from solver tolerances:
-W_1 = SparseArrays.sparse(round.(value.(W); digits = 2))
-# and recover an approximation to the voltage variables as
-value.(W[1, :]) / sqrt(value.(W[1, 1]))
-# with corresponding voltage magnitudes
-real.(sqrt.(LinearAlgebra.diag(W_1)))
-
-Test.@test iszero(imag(LinearAlgebra.diag(W_1))) #src
-
-# This is little better than our improved bound approach: however, we have some additional approximate
-# information about voltages.
-
-# #### Second SDP relaxation (``W`` and ``V`` variables):
-model = Model(SCS.Optimizer)
-set_silent(model)
-
-@variable(
-    model,
-    S_G[i = 1:N] in ComplexPlane(),
-    lower_bound = P_Gen_lb[i] + Q_Gen_lb[i] * im,
-    upper_bound = P_Gen_ub[i] + Q_Gen_ub[i] * im,
-)
-
-@variable(model, W[1:N, 1:N] in HermitianPSDCone())
-@variable(model, V[1:N] in ComplexPlane(), start = 1.0 + 0.0im)
-@constraint(model, imag(V[1]) == 0)
-
-@constraint(model, LinearAlgebra.Hermitian([1 V'; V W]) in HermitianPSDCone())
-
-@constraint(model, [i in 1:N], real(V[i])^2 + imag(V[i])^2 <= 1.1^2)
-@constraint(model, [i in 1:N], 0.9^2 <= real(W[i, i]) <= 1.1^2)
-
-S_Node_Relax = [LinearAlgebra.tr((conj(Y) * E(i, i)) * W) for i in 1:N]
-
-@constraint(model, S_G - S_Demand .== S_Node_Relax)
-
-P_G = real(S_G)
-@objective(
-    model,
-    Min,
-    (0.11 * P_G[1]^2 + 5 * P_G[1] + 150) +
-    (0.085 * P_G[2]^2 + 1.2 * P_G[2] + 600) +
-    (0.1225 * P_G[3]^2 + P_G[3] + 335),
-)
-
-optimize!(model)
 second_relaxation_lower_bound = round(objective_value(model); digits = 2)
 println(
     "Objective value (W & V relax. lower bound): $second_relaxation_lower_bound",
@@ -464,12 +493,25 @@ println(
 
 Test.@test in(termination_status(model), [OPTIMAL, ALMOST_OPTIMAL])         #src
 Test.@test in(primal_status(model), [FEASIBLE_POINT, NEARLY_FEASIBLE_POINT]) #src
+Test.@test isapprox(second_relaxation_lower_bound, 2733.55; rtol = 1e-3)  #src
 
-# We can more easily see the solution by filtering the noise arising from solver tolerances:
-W_2 = SparseArrays.sparse(round.(value.(W); digits = 2))
+# We can more easily see solution values by rounding out noisy data
 
-# And recover the approximation to the voltage variables as
-real.(sqrt.(LinearAlgebra.diag(W_2)))
+W_2 = SparseArrays.sparse(round.(value.(W); digits = 6))
+
+# and recover an approximation to the voltage magnitudes as
+
+V_magnitude_approx = sqrt.(abs.(LinearAlgebra.diag(W_2)))
+DataFrames.DataFrame(;
+    Bus = 1:N,
+    Magnitude = round.(V_magnitude_approx, digits = 2),
+)
+
+# The first relaxation has the advantage of compactness in variables and constraints.
+# While the second relaxation as given does not give a better bound than the first relaxation
+# (but takes roughly half the iterations to compute a solution)
+# it has the advantage that we can work directly with complex voltages to extend the formulation,
+# strengthen the relaxation and gain additional approximate information about the voltage variables.
 
 # ## References and further resources
 
