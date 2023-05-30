@@ -449,9 +449,9 @@ abstract type AbstractConstraint end
 """
     BridgeableConstraint(
         constraint::C,
-        bridge_type::Type{B};
+        bridge_type::B;
         coefficient_type::Type{T} = Float64,
-    ) where {C<:AbstractConstraint,B<:MOI.Bridges.AbstractBridge,T}
+    ) where {C<:AbstractConstraint,B<:Type{<:MOI.Bridges.AbstractBridge},T}
 
 An [`AbstractConstraint`](@ref) representinng that `constraint` that can be
 bridged by the bridge of type `bridge_type{coefficient_type}`.
