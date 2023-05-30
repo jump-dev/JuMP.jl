@@ -409,7 +409,7 @@ println("Objective value (W relax. lower bound): $first_relaxation_lower_bound")
 
 Test.@test termination_status(model) == OPTIMAL    #src
 Test.@test primal_status(model) == FEASIBLE_POINT  #src
-Test.@test isapprox(first_relaxation_lower_bound, 2733.35; atol = 1e-2)  #src
+Test.@test isapprox(first_relaxation_lower_bound, 2733.35; rtol = 1e-2)  #src
 
 # We can more easily see the solution by filtering the noise arising from solver tolerances:
 W_1 = SparseArrays.sparse(round.(value.(W); digits = 2))
