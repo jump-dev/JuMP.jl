@@ -877,4 +877,24 @@ function test_print_hermitian_psd_cone()
     return
 end
 
+function test_print_complex_string_round()
+    @test JuMP._string_round(1.0 + 0.0im) == "1"
+    @test JuMP._string_round(-1.0 + 0.0im) == "-1"
+    @test JuMP._string_round(1.0 - 0.0im) == "1"
+    @test JuMP._string_round(-1.0 - 0.0im) == "-1"
+    @test JuMP._string_round(0.0 + 1.0im) == "im"
+    @test JuMP._string_round(-0.0 + 1.0im) == "im"
+    @test JuMP._string_round(0.0 - 1.0im) == "-im"
+    @test JuMP._string_round(-0.0 - 1.0im) == "-im"
+    @test JuMP._string_round(1.0 + 2.0im) == "(1 + 2im)"
+    @test JuMP._string_round(1.0 - 2.0im) == "(1 - 2im)"
+    @test JuMP._string_round(-1.0 + 2.0im) == "(-1 + 2im)"
+    @test JuMP._string_round(-1.0 - 2.0im) == "(-1 - 2im)"
+    @test JuMP._string_round(1.0 + 1.0im) == "(1 + im)"
+    @test JuMP._string_round(1.0 - 1.0im) == "(1 - im)"
+    @test JuMP._string_round(-1.0 + 1.0im) == "(-1 + im)"
+    @test JuMP._string_round(-1.0 - 1.0im) == "(-1 - im)"
+    return
+end
+
 end

@@ -122,13 +122,11 @@ function _string_round(x::Complex)
         else
             return string(_string_round(i), "im")
         end
-    end
-    if _is_one_for_printing(i)
-        i_str = "im"
+    elseif _is_one_for_printing(i)
+        return string("(", r_str, _sign_string(i), "im)")
     else
-        i_str = string(_string_round(abs, i), "im")
+        return string("(", r_str, _sign_string(i), _string_round(abs, i), "im)")
     end
-    return string("(", r_str, _sign_string(i_str), i_str, ")")
 end
 
 # REPL-specific symbols
