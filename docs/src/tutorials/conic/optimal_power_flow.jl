@@ -91,16 +91,16 @@ S_Demand = P_Demand + im * Q_Demand
 # minimize is:
 # ```math
 # \begin{align}
-#     \min \;\; & \; 0.11 \;\; (P^G_1)^2 +   5 P^G_1 + 150  \\
-#        + \;\; & 0.085 \; (P^G_2)^2 + 1.2 P^G_2 + 600  \\
-#          \;\; & 0.1225 \;  (P^G_3)^2 +     P^G_3 + 335 \\
+#     \min      & + 0.11 \;\; (P^G_1)^2 +   5 P^G_1 + 150  \\
+#               & +  0.085 \; (P^G_2)^2 + 1.2 P^G_2 + 600  \\
+#               & + 0.1225 \;  (P^G_3)^2 +     P^G_3 + 335 \\
 # \end{align}
 # ```
 # Let's create an initial JuMP model with some of this data:
 
 model = Model(Ipopt.Optimizer)
 set_silent(model)
-@variable(model, P_Gen_lb[i] <= P_G[i = 1:N] <= P_Gen_ub[i])
+@variable(model, P_Gen_lb[i] <= P_G[i in 1:N] <= P_Gen_ub[i])
 @objective(
     model,
     Min,
@@ -461,8 +461,7 @@ model = Model(Clarabel.Optimizer)
 @constraint(
     model,
     [i = 1:N],
-    [1 // 2; real(W[i, i]); [real(V[i]); imag(V[i])]] in
-    RotatedSecondOrderCone()
+    [0.5, real(W[i, i]), real(V[i]), imag(V[i])] in RotatedSecondOrderCone()
 )
 
 @constraint(model, [i in 1:N], 0.9^2 <= real(W[i, i]) <= 1.1^2)
