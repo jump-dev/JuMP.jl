@@ -160,7 +160,7 @@ function _build_api_page(document::Documenter.Document, config::_Config)
     """
     _iterate_over_symbols(config) do key, type
         _add_page(document, "$subdir/$key.md", "```@docs\n$key\n```\n")
-        overview_md *= "| [`$key`](@ref) | `$(_to_string(type))` |"
+        overview_md *= "| [`$key`](@ref) | `$(_to_string(type))` |\n"
     end
     _add_page(document, "$subdir/$(config.current_module).md", overview_md)
     return
