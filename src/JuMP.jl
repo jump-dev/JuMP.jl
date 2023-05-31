@@ -481,40 +481,84 @@ function _moi_call_bridge_function(
 end
 
 """
-     add_bridge(model::Model, BT::Type{<:MOI.Bridges.AbstractBridge})
+    add_bridge(
+        model::Model,
+        BT::Type{<:MOI.Bridges.AbstractBridge};
+        coefficient_type::Type{T} = Float64,
+    ) where {T}
 
-Add `BT` to the list of bridges that can be used to transform unsupported
+Add `BT{T}` to the list of bridges that can be used to transform unsupported
 constraints into an equivalent formulation using only constraints supported by
 the optimizer.
 
 See also: [`remove_bridge`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> add_bridge(model, MOI.Bridges.Constraint.SOCtoNonConvexQuadBridge)
+
+julia> add_bridge(
+           model,
+           MOI.Bridges.Constraint.NumberConversionBridge;
+           coefficient_type = Complex{Float64}
+       )
+```
 """
-function add_bridge(model::Model, BT::Type{<:MOI.Bridges.AbstractBridge})
-    push!(model.bridge_types, BT)
-    _moi_call_bridge_function(
-        MOI.Bridges.add_bridge,
-        backend(model),
-        BT{Float64},
-    )
+function add_bridge(
+    model::Model,
+    BT::Type{<:MOI.Bridges.AbstractBridge};
+    coefficient_type::Type{T} = Float64,
+) where {T}
+    push!(model.bridge_types, BT{T})
+    _moi_call_bridge_function(MOI.Bridges.add_bridge, backend(model), BT{T})
     return
 end
 
 """
-     remove_bridge(model::Model, BT::Type{<:MOI.Bridges.AbstractBridge})
+    remove_bridge(
+        model::Model,
+        BT::Type{<:MOI.Bridges.AbstractBridge};
+        coefficient_type::Type{T} = Float64,
+    ) where {T}
 
-Remove `BT` to the list of bridges that can be used to transform unsupported
-constraints into an equivalent formulation using only constraints supported by
-the optimizer.
+Remove `BT{T}` from the list of bridges that can be used to transform
+unsupported constraints into an equivalent formulation using only constraints
+supported by the optimizer.
 
 See also: [`add_bridge`](@ref).
-"""
-function remove_bridge(model::Model, BT::Type{<:MOI.Bridges.AbstractBridge})
-    delete!(model.bridge_types, BT)
-    _moi_call_bridge_function(
-        MOI.Bridges.remove_bridge,
-        backend(model),
-        BT{Float64},
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> add_bridge(model, MOI.Bridges.Constraint.SOCtoNonConvexQuadBridge)
+
+julia> remove_bridge(model, MOI.Bridges.Constraint.SOCtoNonConvexQuadBridge)
+
+julia> add_bridge(
+           model,
+           MOI.Bridges.Constraint.NumberConversionBridge;
+           coefficient_type = Complex{Float64}
+       )
+
+julia> remove_bridge(
+        model,
+        MOI.Bridges.Constraint.NumberConversionBridge;
+        coefficient_type = Complex{Float64}
     )
+```
+"""
+function remove_bridge(
+    model::Model,
+    BT::Type{<:MOI.Bridges.AbstractBridge};
+    coefficient_type::Type{T} = Float64,
+) where {T}
+    delete!(model.bridge_types, BT{T})
+    _moi_call_bridge_function(MOI.Bridges.remove_bridge, backend(model), BT{T})
     if mode(model) != DIRECT
         MOI.Utilities.reset_optimizer(model)
     end
