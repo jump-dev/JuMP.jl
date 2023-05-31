@@ -300,12 +300,14 @@ solution_summary(model)
 objval_solution = round(objective_value(model); digits = 2)
 println("Objective value (feasible solution) : $(objval_solution)")
 
-# The solution's complex voltage values in polar form are:
+# The solution's power generation (in rectangular form)
+# and complex voltage values (in polar form using degrees) are:
 
 DataFrames.DataFrame(;
     Bus = 1:N,
-    Magnitude = round.(abs.(value.(V)), digits = 2),
-    AngleDeg = round.(rad2deg.(angle.(value.(V))), digits = 2),
+    ComplexPowerGen = round.(value.(S_G); digits = 2),
+    VoltageMagnitude = round.(abs.(value.(V)), digits = 2),
+    VoltageAngle_Deg = round.(rad2deg.(angle.(value.(V))), digits = 2),
 )
 
 # ## Relaxations and better objective bounds
@@ -355,12 +357,17 @@ better_lower_bound
 E(k, n) = SparseArrays.sparse([k], [n], 1, N, N);
 
 # Of course, we've shifted the nonlinearity into the equality constraint ``W = V V^*``:
-# it is this constraint we will now relax using semidefinite programming.
+# it is this constraint we will now relax using two different semidefinite programming
+# approaches, one with the complex voltage variables ``V`` and the other one without. 
+
+# #### First SDP relaxation (``W`` and ``V`` variables)
 
 # In the first instance, we will make use of complex voltages and relax ``W = V V^*`` to
 # ```math
-#     W \succeq V V^* .
+#     W \succeq V V^*
 # ```
+# where the relation ``\succeq`` is the ordering in the Hermitian positive semidefinite cone.
+
 # The above constraint is equivalent to
 # ```math
 #     \begin{bmatrix} 1 & V^* \\ V & W \\ \end{bmatrix} \succeq 0
@@ -371,24 +378,14 @@ E(k, n) = SparseArrays.sparse([k], [n], 1, N, N);
 # ```math
 #     \begin{bmatrix} 1 & V_i^* \\ V_i & W_{ii} \\ \end{bmatrix} \succeq 0
 # ```
-# is equivalent to the real second-order cone inequality
+# which is equivalent to the real second-order cone inequality
 # ```math
 #   \operatorname{real}(W_{ii}) \geq \operatorname{real}(V_i)^2 + \operatorname{imag}(V_i)^2.
 # ```
 # We include these implied constraints as well for demonstration purposes.
 
-# Note that we could be a little more precise by only relaxing the constraints of ``W = V V^*``
-# that correspond to the actual lines in the network, a set described by pairs of nodes
-# given by:
+# Putting it all together we get the following semidefinite relaxation of the AC-OPF problem:
 
-Lines = [
-    Tuple.(eachrow(df_br[:, [:F_BUS, :T_BUS]]))
-    Tuple.(eachrow(df_br[:, [:T_BUS, :F_BUS]]))
-];
-
-# For further information on exploiting sparsity see Jabr (2012).
-
-# #### First SDP relaxation (``W`` and ``V`` variables):
 model = Model(Clarabel.Optimizer)
 
 @variable(
@@ -453,17 +450,28 @@ DataFrames.DataFrame(;
     AngleDeg = round.(rad2deg.(angle.(value.(V))), digits = 2),
 )
 
+# Note that we could be a little more precise by only relaxing the constraints of ``W = V V^*``
+# that correspond to the actual lines in the network, a set described by pairs of nodes
+# given by:
+
+Lines = [
+    Tuple.(eachrow(df_br[:, [:F_BUS, :T_BUS]]))
+    Tuple.(eachrow(df_br[:, [:T_BUS, :F_BUS]]))
+];
+
+# For further information on exploiting sparsity see Jabr (2012).
+
+# #### Second SDP relaxation (``W`` variables alone)
+
 # In the second instance, we will relax ``W = V V^*`` to
 # ```math
 #     W \succeq 0
 # ```
-# where  we now introduce ``W`` as a new Hermitian matrix of decision variables
-# and the relation ``\succeq`` is the ordering in the Hermitian positive semidefinite cone.
-# This enables us to write down a relaxation with or without complex voltage variables.
+# where we now introduce ``W`` as a new Hermitian matrix of decision variables.
+# This enables us to write down a relaxation without complex voltage variables.
 
-# Putting it all together we get the following semidefinite relaxations of the AC-OPF problem:
+# With this modification we get the following semidefinite relaxation of the AC-OPF problem:
 
-# #### Second SDP relaxation (``W`` variables alone):
 model = Model(Clarabel.Optimizer)
 
 @variable(
