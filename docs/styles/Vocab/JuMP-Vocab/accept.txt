@@ -63,6 +63,7 @@ infeasibilities
 (lin|mixint|quad)prog
 (log|root)det
 (L|Q|MI|MIC)P(?s)
+linearize
 minimizers
 [Mm]ultiobjective
 nl|NL
@@ -87,6 +88,7 @@ SOCP(?s)
 subgradient
 subproblem(?s)
 subtour(?s)
+susceptance
 unboundedness
 unregister
 [Uu]ncapacitated
@@ -145,7 +147,9 @@ Baldick
 Bertsimas
 Betts
 Bhatia
+Biegler
 Borchers
+Bukhsh
 Cao
 Cholesky
 Coey
@@ -156,13 +160,16 @@ Ehrgott
 Farkas
 Ferrolho
 Fourer
+Frobenius
 Garfinkel
 Goemans
+Grothey
 Hande
 Henrique
 Holy
 Huchette
 Iain
+Jabr
 [Jj]alving
 Jiming
 Joaquim
@@ -170,6 +177,7 @@ Kernighan
 Kallus
 Kaluba
 Kapelevich
+Krasko
 Kibaek
 Latorre
 Legat
@@ -189,8 +197,10 @@ Nemhauser
 Nemirovski
 Pacaud
 Peng
+Rebennack
 [Rr]osenbrock
 Schermer
+Schur
 Shabbir
 Shuvomoy
 Steuer

@@ -1,5 +1,6 @@
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+Clarabel = "61c947e1-3e6d-4ee4-985a-eec8c727bd6e"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
@@ -26,6 +27,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 CSV = "0.10"
+Clarabel = "0.5"
 DataFrames = "1"
 Documenter = "0.27.9, 0.28"
 GLPK = "=1.1.2"
