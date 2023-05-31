@@ -15,15 +15,20 @@
 # to obtaining a good estimate of the objective value at the global optimum
 # through the use of semidefinite programming.
 
-# The purpose of this tutorial is to highlight JuMP's ability to directly
+# One main purpose of this tutorial is to highlight JuMP's ability to directly
 # formulate problems involving complex-valued decision variables and complex
 # matrix cones such as the  [`HermitianPSDCone`](@ref) object.
 
 # For another example of modeling with complex decision variables, see the
 # [Quantum state discrimination](@ref) tutorial, and see the
 # [Complex number support](@ref) section of the manual for more details.
-# The Julia/JuMP package [PowerModels.jl](https://lanl-ansi.github.io/PowerModels.jl/stable/) 
-# provides an open-source framework to a broad range of power flow model formulations
+
+# This tutorial takes a matrix-oriented approach focused on network nodes
+# that simplifies the construction of semidefinite programs.
+# Another approach is to formulate the problem focusing on network lines
+# where it is easier to work with flow constraints. A general approach is provided by
+# the Julia/JuMP package [PowerModels.jl](https://lanl-ansi.github.io/PowerModels.jl/stable/),
+# an open-source framework to a broad range of power flow model formulations
 # along with utilities for working with detailed network data.
 
 # ## Required packages
@@ -36,7 +41,7 @@ import DataFrames
 import Ipopt
 import LinearAlgebra
 import SparseArrays
-import Test
+import Test #src
 
 # ## Initial formulation
 
@@ -45,7 +50,7 @@ import Test
 # generators while meeting constraints on the safe limits of network components?
 
 # We'll use the 9-_node_ network test case `case9mod` to explore this problem.
-# The graph of the network, shown here, has nine nodes (or _buses_) with three each used for
+# The graph of the network, shown here, has three nodes (or _buses_) each for
 # the different purposes of generation ``G`` (nodes 1, 2, and 3), trans-shipment
 # (nodes 4, 6, and 8), and demand ``D`` (nodes 5, 7, and 9).
 
@@ -70,7 +75,7 @@ N = 9;
 
 # _Generation power: lower (`lb`) and upper (`ub`)_ bounds
 
-## Active
+## Real
 P_Gen_lb = SparseArrays.sparsevec([1, 2, 3], [10, 10, 10], N)
 P_Gen_ub = SparseArrays.sparsevec([1, 2, 3], [250, 300, 270], N)
 ## Reactive
@@ -94,7 +99,7 @@ S_Demand = P_Demand + im * Q_Demand
 # minimize is:
 # ```math
 # \begin{align}
-#     \min      & + 0.11 \;\; (P^G_1)^2 +   5 P^G_1 + 150  \\
+#     \min      &    0.11 \;\; (P^G_1)^2 +   5 P^G_1 + 150  \\
 #               & +  0.085 \; (P^G_2)^2 + 1.2 P^G_2 + 600  \\
 #               & + 0.1225 \;  (P^G_3)^2 +     P^G_3 + 335 \\
 # \end{align}
@@ -246,11 +251,15 @@ set_silent(model)
 # and operational constraints for maintaining voltage magnitude levels:
 @constraint(model, [i in 1:N], 0.9^2 <= real(V[i])^2 + imag(V[i])^2 <= 1.1^2)
 
-# Fixing the imaginary component of a _slack bus_ to zero sets its complex
-# voltage angle to 0, which serves as an origin or reference value for all other
-# complex voltage angles. Here we're using node 1 as the nominated slack bus:
+# We also need to fix an origin or _reference angle_ from which all other
+# complex voltage angles (arguments) are determined.
+# Here we will use node 1 as the nominated _reference bus_.
+# Fixing the imaginary component of a reference bus to zero sets its complex
+# voltage angle to 0, while constraining the real part to be non-negative
+# disallows equivalent solutions that are just a reflection by 180 degrees:
 
-@constraint(model, imag(V[1]) == 0)
+@constraint(model, imag(V[1]) == 0);
+@constraint(model, real(V[1]) >= 0);
 
 # The current at a node is ``I^{Node} = YV``, representing a generalised version of
 # Ohm's law and [Kirchhoff's circuit laws](https://en.wikipedia.org/wiki/Kirchhoff%27s_circuit_laws):
@@ -348,81 +357,7 @@ E(k, n) = SparseArrays.sparse([k], [n], 1, N, N);
 # Of course, we've shifted the nonlinearity into the equality constraint ``W = V V^*``:
 # it is this constraint we will now relax using semidefinite programming.
 
-# In the first instance, we will relax ``W = V V^*`` to
-# ```math
-#     W \succeq 0
-# ```
-# where  we now introduce ``W`` as a new Hermitian matrix of decision variables
-# and the relation ``\succeq`` is the ordering in the Hermitian positive semidefinite cone.
-# This enables us to write down a relaxation with or without complex voltage variables.
-
-# Putting it all together we get the following semidefinite relaxations of the AC-OPF problem:
-
-# #### First SDP relaxation (``W`` variables alone):
-model = Model(Clarabel.Optimizer)
-
-@variable(
-    model,
-    S_G[i = 1:N] in ComplexPlane(),
-    lower_bound = P_Gen_lb[i] + Q_Gen_lb[i] * im,
-    upper_bound = P_Gen_ub[i] + Q_Gen_ub[i] * im,
-)
-
-@variable(model, W[1:N, 1:N] in HermitianPSDCone())
-
-@constraint(model, [i in 1:N], 0.9^2 <= real(W[i, i]) <= 1.1^2)
-
-S_Node_Relax = [LinearAlgebra.tr((conj(Y) * E(i, i)) * W) for i in 1:N]
-
-@constraint(model, S_G - S_Demand .== S_Node_Relax)
-
-P_G = real(S_G)
-@objective(
-    model,
-    Min,
-    (0.11 * P_G[1]^2 + 5 * P_G[1] + 150) +
-    (0.085 * P_G[2]^2 + 1.2 * P_G[2] + 600) +
-    (0.1225 * P_G[3]^2 + P_G[3] + 335),
-)
-
-optimize!(model)
-
-#- 
-
-first_relaxation_lower_bound = round(objective_value(model); digits = 2)
-println("Objective value (W relax. lower bound): $first_relaxation_lower_bound")
-
-Test.@test in(termination_status(model), [OPTIMAL, ALMOST_OPTIMAL])         #src
-Test.@test in(primal_status(model), [FEASIBLE_POINT, NEARLY_FEASIBLE_POINT]) #src
-Test.@test isapprox(first_relaxation_lower_bound, 2753.04; rtol = 1e-3)  #src
-
-# We can more easily see the solution by filtering out the noisy data
-# arising from solver tolerances:
-
-W_1 = SparseArrays.sparse(round.(value.(W); digits = 1))
-
-Test.@test iszero(imag(LinearAlgebra.diag(W_1))) #src
-
-# with corresponding voltage magnitudes
-
-V_magnitude_approx = real.(sqrt.(LinearAlgebra.diag(W_1)));
-DataFrames.DataFrame(;
-    Bus = 1:N,
-    Magnitude = round.(V_magnitude_approx, digits = 2),
-)
-
-# We can be a little more precise: we could only consider the constraints of ``W = V V^*`` 
-# that correspond to the actual lines in the network, a set described by pairs of nodes
-# given by:
-
-Lines = [
-    Tuple.(eachrow(df_br[:, [:F_BUS, :T_BUS]]))
-    Tuple.(eachrow(df_br[:, [:T_BUS, :F_BUS]]))
-];
-
-# but we will use the dense variable formulation in what follows.
-
-# In the second instance, we will make use of complex voltages and relax ``W = V V^*`` to
+# In the first instance, we will make use of complex voltages and relax ``W = V V^*`` to
 # ```math
 #     W \succeq V V^* .
 # ```
@@ -442,7 +377,18 @@ Lines = [
 # ```
 # We include these implied constraints as well for demonstration purposes.
 
-# #### Second SDP relaxation (``W`` and ``V`` variables):
+# Note that we could be a little more precise by only relaxing the constraints of ``W = V V^*``
+# that correspond to the actual lines in the network, a set described by pairs of nodes
+# given by:
+
+Lines = [
+    Tuple.(eachrow(df_br[:, [:F_BUS, :T_BUS]]))
+    Tuple.(eachrow(df_br[:, [:T_BUS, :F_BUS]]))
+];
+
+# For further information on exploiting sparsity see Jabr (2012).
+
+# #### First SDP relaxation (``W`` and ``V`` variables):
 model = Model(Clarabel.Optimizer)
 
 @variable(
@@ -452,12 +398,13 @@ model = Model(Clarabel.Optimizer)
     upper_bound = P_Gen_ub[i] + Q_Gen_ub[i] * im,
 )
 
-@variable(model, W[1:N, 1:N] in ComplexPlane())
-@constraint(model, [i = 1:N], real(W[i, i]) >= 0)
-@constraint(model, [i = 1:N], imag(W[i, i]) == 0)
+@variable(model, W[1:N, 1:N] in HermitianPSDCone())
+@constraint(model, [i in 1:N], 0.9^2 <= real(W[i, i]) <= 1.1^2)
 
 @variable(model, V[1:N] in ComplexPlane(), start = 1.0 + 0.0im)
+@constraint(model, real(V[1]) >= 0)
 @constraint(model, imag(V[1]) == 0)
+@constraint(model, 0.9 <= real(V[1]) <= 1.1)
 
 @constraint(model, LinearAlgebra.Hermitian([1 V'; V W]) in HermitianPSDCone())
 
@@ -468,6 +415,65 @@ model = Model(Clarabel.Optimizer)
     [0.5, real(W[i, i]), real(V[i]), imag(V[i])] in RotatedSecondOrderCone()
 )
 
+S_Node_Relax = [LinearAlgebra.tr((conj(Y) * E(i, i)) * W) for i in 1:N]
+
+@constraint(model, S_G - S_Demand .== S_Node_Relax)
+
+P_G = real(S_G)
+@objective(
+    model,
+    Min,
+    (0.11 * P_G[1]^2 + 5 * P_G[1] + 150) +
+    (0.085 * P_G[2]^2 + 1.2 * P_G[2] + 600) +
+    (0.1225 * P_G[3]^2 + P_G[3] + 335),
+)
+
+optimize!(model)
+
+#-
+
+first_relaxation_lower_bound = round(objective_value(model); digits = 2)
+println(
+    "Objective value (W & V relax. lower bound): $first_relaxation_lower_bound",
+)
+
+Test.@test in(termination_status(model), [OPTIMAL, ALMOST_OPTIMAL])         #src
+Test.@test in(primal_status(model), [FEASIBLE_POINT, NEARLY_FEASIBLE_POINT]) #src
+Test.@test isapprox(first_relaxation_lower_bound, 2753.04; rtol = 1e-3)  #src
+
+# We can more easily see solution values by rounding out noisy data
+
+W_1 = SparseArrays.sparse(round.(value.(W); digits = 2))
+
+# and recover an approximation to the voltage variables as
+
+DataFrames.DataFrame(;
+    Bus = 1:N,
+    Magnitude = round.(abs.(value.(V)), digits = 2),
+    AngleDeg = round.(rad2deg.(angle.(value.(V))), digits = 2),
+)
+
+# In the second instance, we will relax ``W = V V^*`` to
+# ```math
+#     W \succeq 0
+# ```
+# where  we now introduce ``W`` as a new Hermitian matrix of decision variables
+# and the relation ``\succeq`` is the ordering in the Hermitian positive semidefinite cone.
+# This enables us to write down a relaxation with or without complex voltage variables.
+
+# Putting it all together we get the following semidefinite relaxations of the AC-OPF problem:
+
+# #### Second SDP relaxation (``W`` variables alone):
+model = Model(Clarabel.Optimizer)
+
+@variable(
+    model,
+    S_G[i = 1:N] in ComplexPlane(),
+    lower_bound = P_Gen_lb[i] + Q_Gen_lb[i] * im,
+    upper_bound = P_Gen_ub[i] + Q_Gen_ub[i] * im,
+)
+
+@variable(model, W[1:N, 1:N] in HermitianPSDCone())
 @constraint(model, [i in 1:N], 0.9^2 <= real(W[i, i]) <= 1.1^2)
 
 S_Node_Relax = [LinearAlgebra.tr((conj(Y) * E(i, i)) * W) for i in 1:N]
@@ -483,49 +489,55 @@ P_G = real(S_G)
     (0.1225 * P_G[3]^2 + P_G[3] + 335),
 )
 
-@constraint(model, sum(P_G) >= sum(P_Demand))
-
 optimize!(model)
 
-#-
+#- 
 
 second_relaxation_lower_bound = round(objective_value(model); digits = 2)
 println(
-    "Objective value (W & V relax. lower bound): $second_relaxation_lower_bound",
+    "Objective value (W relax. lower bound): $second_relaxation_lower_bound",
 )
 
 Test.@test in(termination_status(model), [OPTIMAL, ALMOST_OPTIMAL])         #src
 Test.@test in(primal_status(model), [FEASIBLE_POINT, NEARLY_FEASIBLE_POINT]) #src
-Test.@test isapprox(second_relaxation_lower_bound, 2733.55; rtol = 1e-3)  #src
+Test.@test isapprox(second_relaxation_lower_bound, 2753.04; rtol = 1e-3)  #src
 
-# We can more easily see solution values by rounding out noisy data
+# We can more easily see the solution by filtering out the noisy data
+# arising from solver tolerances:
 
-W_2 = SparseArrays.sparse(round.(value.(W); digits = 6))
+W_2 = SparseArrays.sparse(round.(value.(W); digits = 1))
 
-# and recover an approximation to the voltage magnitudes as
+Test.@test iszero(imag(LinearAlgebra.diag(W_2))) #src
 
-V_magnitude_approx = sqrt.(abs.(LinearAlgebra.diag(W_2)))
+# with corresponding voltage magnitude estimates
+
+V_magnitude_approx = real.(sqrt.(LinearAlgebra.diag(W_2)));
 DataFrames.DataFrame(;
     Bus = 1:N,
     Magnitude = round.(V_magnitude_approx, digits = 2),
 )
 
-# The first relaxation has the advantage of compactness in variables and constraints.
-# While the second relaxation as given does not give a better bound than the first relaxation
-# (but takes roughly half the iterations to compute a solution)
-# it has the advantage that we can work directly with complex voltages to extend the formulation,
-# strengthen the relaxation and gain additional approximate information about the voltage variables.
+# The first relaxation has the advantage that we can work directly with complex voltages
+# to extend the formulation, strengthen the relaxation and gain additional approximate
+# information about the voltage variables.
+
+# The second relaxation has the advantage of compactness in variables and constraints
+# while giving the same objective lower bound as the first relaxation.
 
 # ## References and further resources
+
+# **Bukhsh**, W. A., Grothey, A., McKinnon, K. I., & Trodden, P. A.
+# [_Local solutions of the optimal power flow problem._](https://doi.org/10.1109/TPWRS.2013.2274577)
+# IEEE Transactions on Power Systems, 28(4), 4780-4788 (2013).
+
+# **Jabr**, R. A.
+# [_Exploiting sparsity in SDP relaxations of the OPF problem._](https://doi.org/10.1109/TPWRS.2011.2170772)
+# IEEE Transactions on Power Systems, 27(2), 1138-1139 (2011).
 
 # **Krasko**, V., & S. **Rebennack**.
 # [_Chapter 15: Global Optimization: Optimal Power Flow Problem._](https://doi.org/10.1137/1.9781611974683.ch15)
 # In Advances and Trends in Optimization with Engineering Applications, 187—205. MOS-SIAM Series on Optimization.
 # Society for Industrial and Applied Mathematics, 2017.
-
-# **Bukhsh**, W. A., Grothey, A., McKinnon, K. I., & Trodden, P. A.
-# [_Local solutions of the optimal power flow problem._](https://doi.org/10.1109/TPWRS.2013.2274577)
-# IEEE Transactions on Power Systems, 28(4), 4780-4788 (2013).
 
 # [**Test case `case9mod`**](https://www.maths.ed.ac.uk/optenergy/LocalOpt/9busnetwork.html):
 # from the
