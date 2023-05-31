@@ -22,6 +22,9 @@
 # For another example of modeling with complex decision variables, see the
 # [Quantum state discrimination](@ref) tutorial, and see the
 # [Complex number support](@ref) section of the manual for more details.
+# The Julia/JuMP package [PowerModels.jl](https://lanl-ansi.github.io/PowerModels.jl/stable/) 
+# provides an open-source framework to a broad range of power flow model formulations
+# along with utilities for working with detailed network data.
 
 # ## Required packages
 
@@ -41,16 +44,16 @@ import Test
 # following question: what is the most cost-effective operation of electricity
 # generators while meeting constraints on the safe limits of network components?
 
-# The graph of the network shown here has nine nodes, with three each used for
+# We'll use the 9-_node_ network test case `case9mod` to explore this problem.
+# The graph of the network, shown here, has nine nodes (or _buses_) with three each used for
 # the different purposes of generation ``G`` (nodes 1, 2, and 3), trans-shipment
 # (nodes 4, 6, and 8), and demand ``D`` (nodes 5, 7, and 9).
 
 # ![Nine Nodes](../../assets/case9mod.png)
 
-# We're using the 9-_bus_ network test case `case9mod` to explore this problem.
-# This test case is a version of the [MATPOWER](https://matpower.org/) test case
-# `case9` ([archive](https://github.com/MATPOWER/matpower/tree/master/data))
-# that has been modified by Bukhsh et al. (2013) for their test case archive of
+# This example is a modified version of the [MATPOWER](https://matpower.org/)
+# test case `case9` ([archive](https://github.com/MATPOWER/matpower/tree/master/data))
+# created by Bukhsh et al. (2013) for their test case archive of
 # optimal power flow problems with local optima. This test case is also
 # extensively evaluated in Krasko and Rebennack (2017).
 
@@ -205,7 +208,8 @@ Y_sh = SparseArrays.spdiagm(
     LinearAlgebra.diag(A * SparseArrays.spdiagm(y_sh) * A'),
 )
 
-# (This second one looks more complicated because we only want to add the
+# (The construction of the shunt admittance matrix `Y_sh` looks 
+# somewhat more complicated than `Y_0` because we only want to add the
 # diagonal elements in the calculation; the line-charging is used only in the
 # nodal voltage terms and not the line voltage terms.)
 
@@ -537,7 +541,7 @@ DataFrames.DataFrame(;
 
 # **PowerModels.jl**:
 # the Julia/JuMP package [PowerModels.jl](https://lanl-ansi.github.io/PowerModels.jl/stable/) provides
-# an interface to a wide range of power flow formulations along with utilities for working with detailed network data.
+# an open-source framework for a broad range of power flow formulations along with utilities for working with detailed network data.
 
 # **Ipopt solver**:
 # Wächter, A., Biegler, L.
