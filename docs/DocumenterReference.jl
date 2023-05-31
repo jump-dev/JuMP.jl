@@ -113,7 +113,7 @@ function _iterate_over_symbols(f, config)
             doc = Base.Docs.doc(Base.Docs.Binding(current_module, key))
             if occursin("No documentation found.", string(doc))
                 if type == DOCTYPE_CONSTANT
-                    continue
+                    continue  # It's okay not to document every constant.
                 else
                     error("Documentation missing for $key")
                 end
@@ -141,7 +141,7 @@ end
 function _add_page(document::Documenter.Document, filename, contents)
     mdpage = Markdown.parse(contents)
     document.blueprint.pages[filename] = Documenter.Page(
-        filename, # source,
+        filename, # source, gets ignored because of `EditURL = nothing`.
         "$(document.user.build)/$filename", # build,
         "$(document.user.build)/", # workdir,
         mdpage.content,
@@ -154,13 +154,29 @@ end
 function _build_api_page(document::Documenter.Document, config::_Config)
     subdir = config.subdirectory
     overview_md = """
+    ```@meta
+    EditURL = nothing
+    ```
+
     # [API](@id DocumenterReference_$(config.current_module))
 
     | NAME | KIND |
     | :--- | :--- |
     """
     _iterate_over_symbols(config) do key, type
-        _add_page(document, "$subdir/$key.md", "```@docs\n$key\n```\n")
+        _add_page(
+            document,
+            "$subdir/$key.md",
+            """
+            ```@meta
+            EditURL = nothing
+            ```
+
+            ```@docs
+            $key
+            ```
+            """,
+        )
         overview_md *= "| [`$key`](@ref) | `$(_to_string(type))` |\n"
         return
     end
