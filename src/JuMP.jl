@@ -81,7 +81,7 @@ defaults to `Float64` if it is not implemented.
 """
 value_type(::Type{<:AbstractModel}) = Float64
 
-mutable struct GenericModel{T} <: AbstractModel
+mutable struct GenericModel{T<:Real} <: AbstractModel
     # In MANUAL and AUTOMATIC modes, CachingOptimizer.
     # In DIRECT mode, will hold an AbstractOptimizer.
     moi_backend::MOI.AbstractOptimizer
@@ -132,33 +132,38 @@ function Base.getproperty(model::GenericModel, name::Symbol)
     return getfield(model, name)
 end
 
-"""
-    GenericModel{T}()
-
-Return a new JuMP model of value type `T` without any optimizer; the model is
-stored in a cache.
-
-Use [`set_optimizer`](@ref) to set the optimizer before calling
-[`optimize!`](@ref).
-"""
-function GenericModel{T}() where {T}
-    caching_opt = MOIU.CachingOptimizer(
-        MOIU.UniversalFallback(MOIU.Model{T}()),
-        MOIU.AUTOMATIC,
-    )
-    return direct_model(caching_opt, T)
-end
-
 const Model = GenericModel{Float64}
 
 """
-    GenericModel{T}(optimizer_factory; add_bridges::Bool = true) where {T}
+    Model(
+        [optimizer_factory;]
+        add_bridges::Bool = true,
+        value_type::Type{T} = Float64,
+    ) where {T<:Real}
 
-Return a new JuMP model with the provided optimizer, bridge settings and
-[`value_type`](@ref) `T`.
+Create a new instance of a JuMP model.
 
-See [`set_optimizer`](@ref) for the description of the `optimizer_factory` and
-`add_bridges` arguments.
+If `optimizer_factory` is provided, the model is initialized with thhe optimizer
+returned by `MOI.instantiate(optimizer_factory)`.
+
+If `optimizer_factory` is not provided, use [`set_optimizer`](@ref) to set the
+optimizer before calling [`optimize!`](@ref).
+
+If `add_bridges`, JuMP adds a [`MOI.Bridges.LazyBridgeOptimizer`](@ref) to
+automatically reformulate the problem into a form supported by the optimizer.
+
+## `value_type`
+
+Passing a value type other than `Float64` is an advanced operation. The value
+type must match that expected by the chosen optimizer. Consult the optimizers
+documentation for details.
+
+If not documented, assume that the optimizer supports only `Float64`.
+
+Choosing an unsupported value type will throw an [`MOI.UnsupportedConstraint`](@ref)
+or an [`MOI.UnsupportedAttribute`](@ref) error, the timing of which (during the
+model construction or during a call to [`optimize!`](@ref)) depends on how the
+solver is interfaced to JuMP.
 
 ## Example
 
@@ -169,32 +174,43 @@ julia> model = Model(Ipopt.Optimizer);
 
 julia> solver_name(model)
 "Ipopt"
-```
 
-```jldoctest
 julia> import HiGHS
 
 julia> import MultiObjectiveAlgorithms as MOA
 
 julia> model = Model(() -> MOA.Optimizer(HiGHS.Optimizer); add_bridges = false);
+
+julia> model = Model(; value_type = Int);
+
+julia> typeof(model)
+GenericModel{Int}
 ```
 """
-function GenericModel{T}(
-    (@nospecialize optimizer_factory);
+function Model(
+    (@nospecialize optimizer_factory) = nothing;
     add_bridges::Bool = true,
-) where {T}
-    model = GenericModel{T}()
-    set_optimizer(model, optimizer_factory; add_bridges = add_bridges)
+    value_type::Type{T} = Float64,
+) where {T<:Real}
+    inner = MOI.Utilities.UniversalFallback(MOI.Utilities.Model{T}())
+    cache = MOI.Utilities.CachingOptimizer(inner, MOI.Utilities.AUTOMATIC)
+    model = direct_model(cache; value_type = value_type)
+    if optimizer_factory !== nothing
+        set_optimizer(model, optimizer_factory; add_bridges = add_bridges)
+    end
     return model
 end
 
 """
-    direct_model(backend::MOI.ModelLike, T::Type = Float64)
+    direct_model(
+        backend::MOI.ModelLike;
+        value_type::Type{T} = Float64,
+    ) where {T<:Real}
 
 Return a new JuMP model using [`backend`](@ref) to store the model and solve it.
 
-As opposed to the [`GenericModel`](@ref) constructor, no cache of the model is stored
-outside of [`backend`](@ref) and no bridges are automatically applied to
+As opposed to the [`Model`](@ref) constructor, no cache of the model is
+stored outside of [`backend`](@ref) and no bridges are automatically applied to
 [`backend`](@ref).
 
 ## Notes
@@ -204,14 +220,17 @@ in mind the following implications of creating models using this *direct* mode:
 
 * When [`backend`](@ref) does not support an operation, such as modifying
   constraints or adding variables/constraints after solving, an error is
-  thrown. For models created using the [`GenericModel`](@ref) constructor, such
+  thrown. For models created using the [`Model`](@ref) constructor, such
   situations can be dealt with by storing the modifications in a cache and
   loading them into the optimizer when `optimize!` is called.
 * No constraint bridging is supported by default.
 * The optimizer used cannot be changed the model is constructed.
 * The model created cannot be copied.
 """
-function direct_model(backend::MOI.ModelLike, T::Type = Float64)
+function direct_model(
+    backend::MOI.ModelLike;
+    value_type::Type{T} = Float64,
+) where {T<:Real}
     @assert MOI.is_empty(backend)
     return GenericModel{T}(
         backend,

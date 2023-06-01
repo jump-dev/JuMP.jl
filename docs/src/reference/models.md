@@ -6,7 +6,7 @@ the manual.
 ## Constructors
 
 ```@docs
-GenericModel
+Model
 direct_model
 ```
 

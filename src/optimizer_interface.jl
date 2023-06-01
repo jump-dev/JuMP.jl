@@ -615,7 +615,7 @@ struct OptimizeNotCalled <: Exception end
 """
     struct NoOptimizer <: Exception end
 
-No optimizer is set. The optimizer can be provided to the [`GenericModel`](@ref)
+No optimizer is set. The optimizer can be provided to the [`Model`](@ref)
 constructor or by calling [`set_optimizer`](@ref).
 """
 struct NoOptimizer <: Exception end

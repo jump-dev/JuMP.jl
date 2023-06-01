@@ -140,7 +140,7 @@ function Base.read(
     end
     src = MOI.FileFormats.Model(; format = format, kwargs...)
     read!(io, src)
-    model = GenericModel{T}()
+    model = Model(; value_type = T)
     MOI.copy_to(model, src)
     return model
 end

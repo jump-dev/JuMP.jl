@@ -106,7 +106,7 @@ constraint reference as argument.
 ## Note
 
 Model copy is not supported in `DIRECT` mode, i.e. when a model is constructed
-using the [`direct_model`](@ref) constructor instead of the [`GenericModel`](@ref)
+using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
 constructor. Moreover, independently on whether an optimizer was provided at
 model construction, the new model will have no optimizer, i.e., an optimizer
 will have to be provided to the new model in the [`optimize!`](@ref) call.
@@ -146,7 +146,7 @@ function copy_model(
             "able to copy the constructed model.",
         )
     end
-    new_model = GenericModel{T}()
+    new_model = Model(; value_type = T)
 
     # At JuMP's level, filter_constraints should work with JuMP.ConstraintRef,
     # whereas MOI.copy_to's filter_constraints works with MOI.ConstraintIndex.
@@ -210,7 +210,7 @@ and its copy.
 ## Note
 
 Model copy is not supported in `DIRECT` mode, i.e. when a model is constructed
-using the [`direct_model`](@ref) constructor instead of the [`GenericModel`](@ref)
+using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
 constructor. Moreover, independently on whether an optimizer was provided at
 model construction, the new model will have no optimizer, i.e., an optimizer
 will have to be provided to the new model in the [`optimize!`](@ref) call.
@@ -258,7 +258,7 @@ This is a convenience function that provides a filtering function for
 ## Note
 
 Model copy is not supported in `DIRECT` mode, i.e. when a model is constructed
-using the [`direct_model`](@ref) constructor instead of the [`GenericModel`](@ref)
+using the [`direct_model`](@ref) constructor instead of the [`Model`](@ref)
 constructor. Moreover, independently on whether an optimizer was provided at
 model construction, the new model will have no optimizer, i.e., an optimizer
 will have to be provided to the new model in the [`optimize!`](@ref) call.
