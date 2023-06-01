@@ -15,6 +15,7 @@ import MarkdownAST
     DOCTYPE_CONSTANT,
     DOCTYPE_FUNCTION,
     DOCTYPE_MACRO,
+    DOCTYPE_MODULE,
     DOCTYPE_STRUCT,
 )
 
@@ -22,7 +23,7 @@ struct _Config
     current_module::Module
     root::String
     subdirectory::String
-    extras::Vector{Pair{String,DocType}}
+    modules::Dict{Module,<:Vector}
 end
 
 const CONFIG = _Config[]
@@ -32,11 +33,10 @@ abstract type APIBuilder <: Documenter.Builder.DocumentPipeline end
 Documenter.Selectors.order(::Type{APIBuilder}) = 0.0
 
 """
-    automatic_reference_documentation(
-        current_module::Module;
+    automatic_reference_documentation(;
         root::String,
         subdirectory::String,
-        extras::Vector{Pair{String,DocType}} = Pair{String,DocType}[],
+        modules::Dict{Module,Vector{Pair{String,DocType}}},
     )
 
 Automatically creates the API reference documentation for `current_module` and
@@ -48,25 +48,51 @@ returns a `Vector` which can be used in the `pages` argument of
  * `current_module`: the module from which to create an API reference.
  * `subdirectory`: the directory relative to the documentation root in which to
    write the API files.
- * `extras`: a vector of non-exported docstrings to include in the API
-   reference. Each element is a pair which maps the docstring signature to a
-   [`DocumenterReference.DocType`](@ref) enum.
+ * `modules`: a dictionary mapping modules to a vector of non-exported
+   docstrings to include in the API reference. Each element is a pair which maps
+   the docstring signature to a [`DocumenterReference.DocType`](@ref) enum.
 
 ## Multiple instances
 
 Each time you call this function, a new object is added to the global variable
 `DocumenterReference.CONFIG`.
 """
-function automatic_reference_documentation(
+function automatic_reference_documentation(;
+    root::String,
+    subdirectory::String,
+    modules::Vector,
+)
+    _to_extras(m::Module) = m => Any[]
+    _to_extras(m::Pair) = m
+    _modules = Dict(_to_extras(m) for m in modules)
+    list_of_pages = Any[]
+    for m in modules
+        current_module = first(_to_extras(m))
+        pages = _automatic_reference_documentation(
+            current_module;
+            root,
+            subdirectory,
+            modules = _modules,
+            list_of_pages,
+        )
+        push!(list_of_pages, "$current_module" => pages)
+    end
+    return "API Reference" => list_of_pages
+end
+
+function _automatic_reference_documentation(
     current_module::Module;
     root::String,
     subdirectory::String,
-    extras::Vector{Pair{String,DocType}} = Pair{String,DocType}[],
+    modules::Dict{Module,<:Vector},
+    list_of_pages::Vector{Any},
 )
-    config = _Config(current_module, root, subdirectory, extras)
+    config = _Config(current_module, root, subdirectory, modules)
     pages = Any["Overview"=>"$subdirectory/$current_module.md"]
     _iterate_over_symbols(config) do key, type
-        push!(pages, Documenter.hide("`$key`" => "$subdirectory/$key.md"))
+        if type != DOCTYPE_MODULE
+            push!(pages, Documenter.hide("`$key`" => "$subdirectory/$key.md"))
+        end
         return
     end
     push!(CONFIG, config)
@@ -91,12 +117,13 @@ function _exported_symbols(mod)
                 push!(contents, n => DOCTYPE_STRUCT)
             end
         elseif f isa Module
-            # Skip
+            push!(contents, n => DOCTYPE_MODULE)
         else
             push!(contents, n => DOCTYPE_CONSTANT)
         end
     end
     order = Dict(
+        DOCTYPE_MODULE => 0,
         DOCTYPE_MACRO => 1,
         DOCTYPE_FUNCTION => 2,
         DOCTYPE_ABSTRACT_TYPE => 3,
@@ -108,11 +135,17 @@ end
 
 function _iterate_over_symbols(f, config)
     current_module = config.current_module
-    for (key, type) in vcat(_exported_symbols(current_module), config.extras)
+    modules = get(config.modules, config.current_module, Any[])
+    for (key, type) in vcat(_exported_symbols(current_module), modules)
         if key isa Symbol
             doc = Base.Docs.doc(Base.Docs.Binding(current_module, key))
             if occursin("No documentation found.", string(doc))
-                if type == DOCTYPE_CONSTANT
+                if type == DOCTYPE_MODULE
+                    mod = getfield(current_module, key)
+                    if mod == current_module || !haskey(config.modules, mod)
+                        continue
+                    end
+                elseif type == DOCTYPE_CONSTANT
                     continue  # It's okay not to document every constant.
                 else
                     error("Documentation missing for $key")
@@ -133,6 +166,8 @@ function _to_string(x::DocType)
         return "function"
     elseif x == DOCTYPE_MACRO
         return "macro"
+    elseif x == DOCTYPE_MODULE
+        return "module"
     elseif x == DOCTYPE_STRUCT
         return "struct"
     end
@@ -158,12 +193,32 @@ function _build_api_page(document::Documenter.Document, config::_Config)
     EditURL = nothing
     ```
 
-    # [API](@id DocumenterReference_$(config.current_module))
+    # [$(config.current_module)](@id DocumenterReference_$(config.current_module))
+
+    This table lists the public API of `$(config.current_module)`.
+
+    Load all of the public the API into the current scope with:
+    ```julia
+    using $(config.current_module)
+    ```
+    Alternatively, load only the module with:
+    ```julia
+    import $(config.current_module)
+    ```
+    and then prefix all calls with `$(config.current_module).` to create
+    `$(config.current_module).<NAME>`.
 
     | NAME | KIND |
     | :--- | :--- |
     """
     _iterate_over_symbols(config) do key, type
+        if type == DOCTYPE_MODULE
+            if getfield(config.current_module, key) != config.current_module
+                ref = "DocumenterReference_$(config.current_module).$key"
+                overview_md *= "| [`$key`](@ref $ref) | `$(_to_string(type))` |\n"
+            end
+            return
+        end
         _add_page(
             document,
             "$subdir/$key.md",
@@ -173,7 +228,7 @@ function _build_api_page(document::Documenter.Document, config::_Config)
             ```
 
             ```@docs
-            $key
+            $(config.current_module).$key
             ```
             """,
         )

@@ -9,11 +9,12 @@ Pkg.pkg"add Documenter#740ba6304c940801eafdc18b069e4609bf3923a6"
 import Documenter
 import Downloads
 import Literate
+import MathOptInterface
 import Test
 import TOML
 
 using JuMP
-const MathOptInterface = MOI
+using JuMP.Containers
 
 # Pass --fast as an argument to skip rebuilding the examples and running
 # doctests. Only use this argument to rapidly test small changes to the
@@ -198,42 +199,44 @@ pushfirst!(_LIST_OF_EXTENSIONS, "Introduction" => "packages/extensions.md")
 
 include(joinpath(@__DIR__, "DocumenterReference.jl"))
 
-jump_api_documentation = DocumenterReference.automatic_reference_documentation(
-    JuMP;
+jump_api_reference = DocumenterReference.automatic_reference_documentation(;
     root = joinpath(@__DIR__, "src"),
     subdirectory = "api",
-    extras = [
-        "Base.empty!(::Model)" => DocumenterReference.DOCTYPE_FUNCTION,
-        "Base.isempty(::Model)" => DocumenterReference.DOCTYPE_FUNCTION,
-        "Base.copy(::AbstractModel)" =>
-            DocumenterReference.DOCTYPE_FUNCTION,
-        "Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)" =>
-            DocumenterReference.DOCTYPE_FUNCTION,
-        "Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)" =>
-            DocumenterReference.DOCTYPE_FUNCTION,
-        "MOI.Utilities.reset_optimizer(::Model)" =>
-            DocumenterReference.DOCTYPE_FUNCTION,
-        "MOI.Utilities.drop_optimizer(::Model)" =>
-            DocumenterReference.DOCTYPE_FUNCTION,
-        "MOI.Utilities.attach_optimizer(::Model)" =>
-            DocumenterReference.DOCTYPE_FUNCTION,
-        "Containers.@container" => DocumenterReference.DOCTYPE_MACRO,
-        "Containers.container" => DocumenterReference.DOCTYPE_FUNCTION,
-        "Containers.rowtable" => DocumenterReference.DOCTYPE_FUNCTION,
-        "Containers.default_container" =>
-            DocumenterReference.DOCTYPE_FUNCTION,
-        "Containers.nested" => DocumenterReference.DOCTYPE_FUNCTION,
-        "Containers.vectorized_product" =>
-            DocumenterReference.DOCTYPE_FUNCTION,
-        "Containers.build_ref_sets" => DocumenterReference.DOCTYPE_FUNCTION,
-        "Containers.container_code" => DocumenterReference.DOCTYPE_FUNCTION,
-        "Containers.AutoContainerType" =>
-            DocumenterReference.DOCTYPE_STRUCT,
-        "Containers.DenseAxisArray" => DocumenterReference.DOCTYPE_STRUCT,
-        "Containers.NestedIterator" => DocumenterReference.DOCTYPE_STRUCT,
-        "Containers.SparseAxisArray" => DocumenterReference.DOCTYPE_STRUCT,
-        "Containers.VectorizedProductIterator" =>
-            DocumenterReference.DOCTYPE_STRUCT,
+    modules = [
+        JuMP => [
+            "Base.empty!(::Model)" => DocumenterReference.DOCTYPE_FUNCTION,
+            "Base.isempty(::Model)" => DocumenterReference.DOCTYPE_FUNCTION,
+            "Base.copy(::AbstractModel)" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
+            "Base.write(::IO, ::Model; ::MOI.FileFormats.FileFormat)" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
+            "Base.read(::IO, ::Type{Model}; ::MOI.FileFormats.FileFormat)" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
+            "MOI.Utilities.reset_optimizer(::Model)" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
+            "MOI.Utilities.drop_optimizer(::Model)" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
+            "MOI.Utilities.attach_optimizer(::Model)" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
+        ],
+        JuMP.Containers => [
+            # TODO(odow): consider exporting these from JuMP.Containers.
+            "Containers.@container" => DocumenterReference.DOCTYPE_MACRO,
+            "Containers.container" => DocumenterReference.DOCTYPE_FUNCTION,
+            "Containers.rowtable" => DocumenterReference.DOCTYPE_FUNCTION,
+            "Containers.default_container" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
+            "Containers.nested" => DocumenterReference.DOCTYPE_FUNCTION,
+            "Containers.vectorized_product" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
+            "Containers.build_ref_sets" => DocumenterReference.DOCTYPE_FUNCTION,
+            "Containers.container_code" => DocumenterReference.DOCTYPE_FUNCTION,
+            "Containers.AutoContainerType" =>
+                DocumenterReference.DOCTYPE_STRUCT,
+            "Containers.NestedIterator" => DocumenterReference.DOCTYPE_STRUCT,
+            "Containers.VectorizedProductIterator" =>
+                DocumenterReference.DOCTYPE_STRUCT,
+        ],
     ],
 )
 
@@ -330,7 +333,7 @@ const _PAGES = [
         "manual/callbacks.md",
         "manual/complex.md",
     ],
-    "API Reference" => jump_api_documentation,
+    jump_api_reference,
     "Background Information" =>
         ["background/algebraic_modeling_languages.md"],
     "Developer Docs" => [
@@ -568,7 +571,7 @@ if _PDF
     @assert section_title == "API Reference"
     # `contents` is a big list of docstrings. By default, they'll
     # show up at the `\chapter` level. That's too high.
-    _PAGES[4] = section_title => ["Docstrings" => ["JuMP" => contents[2:end]]]
+    _PAGES[4] = section_title => ["Docstrings" => contents]
     latex_platform = _IS_GITHUB_ACTIONS ? "docker" : "native"
     @time Documenter.makedocs(
         sitename = "JuMP",
