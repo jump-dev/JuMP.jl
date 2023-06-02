@@ -8,6 +8,7 @@ the manual.
 ```@docs
 Model
 direct_model
+GenericModel
 ```
 
 ## Enums
