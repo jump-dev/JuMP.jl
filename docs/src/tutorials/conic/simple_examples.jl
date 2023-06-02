@@ -373,7 +373,6 @@ function example_theta_problem()
         end
     end
     @constraint(model, LinearAlgebra.tr(LinearAlgebra.I * X) == 1)
-
     J = ones(Int, 5, 5)
     @objective(model, Max, LinearAlgebra.dot(J, X))
     optimize!(model)
