@@ -169,12 +169,12 @@ function set_nonlinear_objective(model::Model, sense::MOI.OptimizationSense, x)
 end
 
 """
-    _nlp_objective_function(model::Model)
+    _nlp_objective_function(model::GenericModel)
 
 Returns the nonlinear objective function or `nothing` if no nonlinear objective
 function is set.
 """
-function _nlp_objective_function(model::Model)
+function _nlp_objective_function(model::GenericModel)
     if model.nlp_model === nothing
         return nothing
     end
@@ -507,12 +507,12 @@ function num_nonlinear_constraints(model::GenericModel)
 end
 
 """
-    all_nonlinear_constraints(model::Model)
+    all_nonlinear_constraints(model::GenericModel)
 
 Return a vector of all nonlinear constraint references in the model in the
 order they were added to the model.
 """
-function all_nonlinear_constraints(model::Model)
+function all_nonlinear_constraints(model::GenericModel)
     nlp_model = nonlinear_model(model)
     if nlp_model === nothing
         return NonlinearConstraintRef[]

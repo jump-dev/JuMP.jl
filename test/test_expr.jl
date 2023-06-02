@@ -195,8 +195,9 @@ function test_extension_linear_terms_empty_AffExpr(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
+    T = value_type(ModelType)
     k = 0
-    aff = zero(GenericAffExpr{Float64,VariableRefType})
+    aff = zero(GenericAffExpr{T,VariableRefType})
     @test length(linear_terms(aff)) == 0
     for (coeff, var) in linear_terms(aff)
         k += 1
@@ -233,14 +234,15 @@ function test_extension_coefficient_QuadExpr_VariableRefType(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
+    T = value_type(ModelType)
     m = ModelType()
     x = @variable(m, x)
     y = @variable(m, y)
     z = @variable(m, z)
-    quad = @expression(m, 6.0 * x^2 + 5.0 * x * y + 2.0 * y + 3.0 * x)
-    @test coefficient(quad, x) == 3.0
-    @test coefficient(quad, y) == 2.0
-    @test coefficient(quad, z) == 0.0
+    quad = @expression(m, T(6) * x^2 + T(5) * x * y + T(2) * y + T(3) * x)
+    @test coefficient(quad, x) == T(3)
+    @test coefficient(quad, y) == T(2)
+    @test coefficient(quad, z) == T(0)
     return
 end
 
@@ -248,15 +250,16 @@ function test_extension_coefficient_QuadExpr_VariableRefType_VariableRefType(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
+    T = value_type(ModelType)
     m = ModelType()
     x = @variable(m, x)
     y = @variable(m, y)
     z = @variable(m, z)
-    quad = @expression(m, 6.0 * x^2 + 5.0 * x * y + 2.0 * y + 3.0 * x)
-    @test coefficient(quad, x, y) == 5.0
-    @test coefficient(quad, x, x) == 6.0
+    quad = @expression(m, T(6) * x^2 + T(5) * x * y + T(2) * y + T(3) * x)
+    @test coefficient(quad, x, y) == T(5)
+    @test coefficient(quad, x, x) == T(6)
     @test coefficient(quad, x, y) == coefficient(quad, y, x)
-    @test coefficient(quad, z, z) == 0.0
+    @test coefficient(quad, z, z) == T(0)
     return
 end
 
@@ -264,31 +267,32 @@ function test_extension_MA_add_mul(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
+    T = value_type(ModelType)
     model = ModelType()
     @variable(model, x)
     @variable(model, y)
     # MA.add_mul!!(ex::Number, c::Number, x::GenericAffExpr)
-    aff = MA.add_mul!!(1.0, 2.0, GenericAffExpr(1.0, x => 1.0))
-    @test isequal_canonical(aff, GenericAffExpr(3.0, x => 2.0))
+    aff = MA.add_mul!!(1, 2, GenericAffExpr(T(1), x => T(1)))
+    @test isequal_canonical(aff, GenericAffExpr(T(3), x => T(2)))
     # MA.add_mul!!(ex::Number, c::Number, x::GenericQuadExpr) with c == 0
-    QuadExprType = GenericQuadExpr{Float64,VariableRefType}
-    quad = MA.add_mul!!(2.0, 0.0, QuadExprType())
-    @test isequal_canonical(quad, convert(QuadExprType, 2.0))
+    QuadExprType = GenericQuadExpr{T,VariableRefType}
+    quad = MA.add_mul!!(2, 0, QuadExprType())
+    @test isequal_canonical(quad, convert(QuadExprType, 2))
     # MA.add_mul!!(ex::Number, c::VariableRef, x::VariableRef)"
-    @test_expression_with_string MA.add_mul(5.0, x, y) "x*y + 5"
-    @test_expression_with_string MA.add_mul!!(5.0, x, y) "x*y + 5"
+    @test_expression_with_string MA.add_mul(5, x, y) "x*y + 5"
+    @test_expression_with_string MA.add_mul!!(5, x, y) "x*y + 5"
     # MA.add_mul!!(ex::Number, c::T, x::T) where T<:GenericAffExpr" begin
-    @test_expression_with_string MA.add_mul(1.0, 2x, x + 1) "2 x² + 2 x + 1"
-    @test_expression_with_string MA.add_mul!!(1.0, 2x, x + 1) "2 x² + 2 x + 1"
+    @test_expression_with_string MA.add_mul(1, 2x, x + 1) "2 x² + 2 x + 1"
+    @test_expression_with_string MA.add_mul!!(1, 2x, x + 1) "2 x² + 2 x + 1"
     # MA.add_mul!!(ex::Number, c::GenericAffExpr{C,V}, x::V) where {C,V}" begin
-    @test_expression_with_string MA.add_mul(1.0, 2x, x) "2 x² + 1"
-    @test_expression_with_string MA.add_mul!!(1.0, 2x, x) "2 x² + 1"
+    @test_expression_with_string MA.add_mul(1, 2x, x) "2 x² + 1"
+    @test_expression_with_string MA.add_mul!!(1, 2x, x) "2 x² + 1"
     # MA.add_mul!!(ex::Number, c::GenericQuadExpr, x::Number)" begin
-    @test_expression_with_string MA.add_mul(0.0, x^2, 1.0) "x²"
-    @test_expression_with_string MA.add_mul!!(0.0, x^2, 1.0) "x²"
+    @test_expression_with_string MA.add_mul(0, x^2, 1) "x²"
+    @test_expression_with_string MA.add_mul!!(0, x^2, 1) "x²"
     # MA.add_mul!!(ex::Number, c::GenericQuadExpr, x::Number) with c == 0" begin
-    @test_expression_with_string MA.add_mul(0.0, x^2, 0.0) "0"
-    @test_expression_with_string MA.add_mul!!(0.0, x^2, 0.0) "0"
+    @test_expression_with_string MA.add_mul(0, x^2, 0) "0"
+    @test_expression_with_string MA.add_mul!!(0, x^2, 0) "0"
     # MA.add_mul!!(aff::AffExpr,c::VariableRef,x::AffExpr)" begin
     @test_expression_with_string MA.add_mul(2x, x, x + 1) "x² + 3 x"
     @test_expression_with_string MA.add_mul!!(2x, x, x + 1) "x² + 3 x"

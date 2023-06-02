@@ -71,7 +71,9 @@ end
 # Helper function that rounds carefully for the purposes of printing Reals
 # e.g.   5.3  =>  5.3
 #        1.0  =>  1
-_string_round(x::Float64) = isinteger(x) ? string(round(Int, x)) : string(x)
+function _string_round(x::Union{Float32,Float64})
+    return isinteger(x) ? string(round(Int, x)) : string(x)
+end
 
 _string_round(::typeof(abs), x::Real) = _string_round(abs(x))
 
