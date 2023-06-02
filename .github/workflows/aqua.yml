@@ -18,7 +18,6 @@ jobs:
         run: |
           using Pkg
           Pkg.add(PackageSpec(name="Aqua"))
-          Pkg.pkg"add MathOptInterface#master"
           Pkg.develop(PackageSpec(path=pwd()))
           using JuMP, Aqua
           Aqua.test_all(JuMP; ambiguities = false)
