@@ -73,7 +73,6 @@ function automatic_reference_documentation(;
             root,
             subdirectory,
             modules = _modules,
-            list_of_pages,
         )
         push!(list_of_pages, "$current_module" => pages)
     end
@@ -85,18 +84,9 @@ function _automatic_reference_documentation(
     root::String,
     subdirectory::String,
     modules::Dict{Module,<:Vector},
-    list_of_pages::Vector{Any},
 )
-    config = _Config(current_module, root, subdirectory, modules)
-    pages = Any["Overview"=>"$subdirectory/$current_module.md"]
-    _iterate_over_symbols(config) do key, type
-        if type != DOCTYPE_MODULE
-            push!(pages, Documenter.hide("`$key`" => "$subdirectory/$key.md"))
-        end
-        return
-    end
-    push!(CONFIG, config)
-    return pages
+    push!(CONFIG, _Config(current_module, root, subdirectory, modules))
+    return "$subdirectory/$current_module.md"
 end
 
 function _exported_symbols(mod)
@@ -173,19 +163,6 @@ function _to_string(x::DocType)
     end
 end
 
-function _add_page(document::Documenter.Document, filename, contents)
-    mdpage = Markdown.parse(contents)
-    document.blueprint.pages[filename] = Documenter.Page(
-        filename, # source, gets ignored because of `EditURL = nothing`.
-        "$(document.user.build)/$filename", # build,
-        "$(document.user.build)/", # workdir,
-        mdpage.content,
-        Documenter.Globals(),
-        convert(MarkdownAST.Node, mdpage),
-    )
-    return
-end
-
 function _build_api_page(document::Documenter.Document, config::_Config)
     subdir = config.subdirectory
     overview_md = """
@@ -195,7 +172,7 @@ function _build_api_page(document::Documenter.Document, config::_Config)
 
     # [$(config.current_module)](@id DocumenterReference_$(config.current_module))
 
-    This table lists the public API of `$(config.current_module)`.
+    This page lists the public API of `$(config.current_module)`.
 
     Load all of the public the API into the current scope with:
     ```julia
@@ -208,9 +185,12 @@ function _build_api_page(document::Documenter.Document, config::_Config)
     and then prefix all calls with `$(config.current_module).` to create
     `$(config.current_module).<NAME>`.
 
+    ## Overview
+
     | NAME | KIND |
     | :--- | :--- |
     """
+    list_of_docstrings = String[]
     _iterate_over_symbols(config) do key, type
         if type == DOCTYPE_MODULE
             if getfield(config.current_module, key) != config.current_module
@@ -219,23 +199,23 @@ function _build_api_page(document::Documenter.Document, config::_Config)
             end
             return
         end
-        _add_page(
-            document,
-            "$subdir/$key.md",
-            """
-            ```@meta
-            EditURL = nothing
-            ```
-
-            ```@docs
-            $(config.current_module).$key
-            ```
-            """,
+        push!(
+            list_of_docstrings,
+            "## `$key`\n\n```@docs\n$(config.current_module).$key\n```\n\n",
         )
         overview_md *= "| [`$key`](@ref) | `$(_to_string(type))` |\n"
         return
     end
-    _add_page(document, "$subdir/$(config.current_module).md", overview_md)
+    md_page = Markdown.parse(overview_md * join(list_of_docstrings, "\n"))
+    filename = "$subdir/$(config.current_module).md"
+    document.blueprint.pages[filename] = Documenter.Page(
+        filename, # source, gets ignored because of `EditURL = nothing`.
+        "$(document.user.build)/$filename", # build,
+        "$(document.user.build)/", # workdir,
+        md_page.content,
+        Documenter.Globals(),
+        convert(MarkdownAST.Node, md_page),
+    )
     return
 end
 
