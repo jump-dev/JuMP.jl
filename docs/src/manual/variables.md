@@ -437,7 +437,7 @@ CachingOptimizer state: NO_OPTIMIZER
 Solver name: No optimizer attached.
 
 julia> x
-ERROR: UndefVarError: x not defined
+ERROR: UndefVarError: `x` not defined
 
 julia> x_binding
 x
@@ -464,7 +464,7 @@ julia> model[:x_register] === x_binding
 true
 
 julia> x
-ERROR: UndefVarError: x not defined
+ERROR: UndefVarError: `x` not defined
 ```
 
 ## Create, delete, and modify variable bounds

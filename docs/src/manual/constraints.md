@@ -538,7 +538,7 @@ Solver name: No optimizer attached.
 Names registered in the model: x
 
 julia> c
-ERROR: UndefVarError: c not defined
+ERROR: UndefVarError: `c` not defined
 
 julia> c_binding
 c : 2 x ≤ 1
@@ -566,7 +566,7 @@ julia> model[:c_register] === c_binding
 true
 
 julia> c
-ERROR: UndefVarError: c not defined
+ERROR: UndefVarError: `c` not defined
 ```
 
 ## The `@constraints` macro
