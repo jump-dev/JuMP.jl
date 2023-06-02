@@ -571,7 +571,7 @@ if _PDF
     for (root, dir, files) in walkdir(joinpath(@__DIR__, "src", "tutorials"))
         _remove_literate_footer.(joinpath.(root, dir))
     end
-    moi = pop!(_PAGES)  # remove /MathOptInterface
+    moi = pop!(_PAGES)   # remove /MathOptInterface
     pop!(moi[2])        # remove /MathOptInterface/release_notes.md
     pop!(_PAGES)        # remove /Extensions
     pop!(_PAGES)        # remove /Solvers
