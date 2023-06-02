@@ -359,7 +359,6 @@ function example_theta_problem()
     model = Model(SCS.Optimizer)
     set_silent(model)
     E = [(1, 2), (2, 3), (3, 4), (4, 5), (5, 1)]
-
     @variable(model, X[1:5, 1:5], PSD)
     for i in 1:5
         for j in (i+1):5
