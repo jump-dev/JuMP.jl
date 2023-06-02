@@ -52,6 +52,7 @@ unexported
 % JuMP-related vocab
 [Bb]ilevel
 [Cc]anonicaliz(e|ation|ing)
+[Cc]ombinatorics
 convexification
 DAE(?s)
 [Dd]et
@@ -144,6 +145,7 @@ Xpress
 % People
 Arpit
 Baldick
+Barvinok
 Bertsimas
 Betts
 Bhatia

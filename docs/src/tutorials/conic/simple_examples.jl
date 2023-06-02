@@ -306,6 +306,86 @@ end
 
 example_minimum_distortion()
 
+# ## Lovász numbers
+
+# The [Lovász number](https://en.wikipedia.org/wiki/Lov%C3%A1sz_number)
+# of a graph, also known as Lovász's theta-function, is a number that
+# lies between two important and related numbers that are computationally
+# hard to determine, namely the chromatic and clique numbers of the graph.
+# It is possible however to efficient compute the Lovász number as the
+# optimal value of a semidefinite program.
+
+# Consider the pentagon graph:
+# ```raw
+#      [5]
+#     /   \    
+#    /     \     
+#  [1]     [4]
+#   |       |
+#   |       |  
+#  [2] --- [3]
+# ```
+# with five vertices and edges. Its Lovász number is known to be precisely
+# ``\sqrt{5} \approx 2.236``, lying between 2 (the largest clique size) and
+# 3 (the smallest number needed for a vertex coloring).
+
+# Let ``i, \, j`` be integers such that ``1 \leq i < j \leq 5``.
+# We define ``A^{ij}`` to be the ``5 \times 5`` symmetric
+# matrix with entries ``(i,j)`` and ``(j,i)`` equal to 1, with all other entries 0.
+# Let  ``E`` be the graph's edge set; in this example, ``E`` contains
+# (1,2), (2,3), (3,4), (4,5), (5,1)
+# and their transposes. The Lovász number can be computed from the program 
+# ```math
+# \begin{align}
+#     \text{max}      & \quad    J • X & \\
+#     \text{    s.t.} & \quad A^{ij} • X = 0 \text{ for all } (i,j) \notin E   \\
+#                     & \quad I • X = 1 \\
+#                     & \quad X \succeq 0
+# \end{align}
+# ```
+# where ``J`` is the matrix filled with ones, and ``I`` is the identity matrix.
+#
+# For more details, see:
+#
+# Barvinok, A. (2002).
+# A course in convexity,
+# American Mathematical Society (Vol. 54), pp. 182-185.
+#
+# Knuth, D. E. (1994), 
+# [_The sandwich theorem_](https://doi.org/10.37236%2F1193), 
+# Electronic Journal of Combinatorics, Volume 1, Issue 1, A1.
+
+function example_theta_problem()
+    model = Model(SCS.Optimizer)
+    set_silent(model)
+    E = [(1, 2), (2, 3), (3, 4), (4, 5), (5, 1)]
+
+    @variable(model, X[1:5, 1:5], PSD)
+
+    for i in 1:5
+        for j in (i+1):5
+            if !((i, j) in E || (j, i) in E)
+                A = zeros(Int, 5, 5)
+                A[i, j] = 1
+                A[j, i] = 1
+                @constraint(model, LinearAlgebra.dot(A, X) == 0)
+            end
+        end
+    end
+    @constraint(model, LinearAlgebra.dot(LinearAlgebra.I, X) == 1)
+
+    J = ones(Int, 5, 5)
+    @objective(model, Max, LinearAlgebra.dot(J, X))
+    optimize!(model)
+    Test.@test termination_status(model) == OPTIMAL
+    Test.@test primal_status(model) == FEASIBLE_POINT
+    Test.@test objective_value(model) ≈ sqrt(5) rtol = 1e-4
+    println("The Lovász number is: $(objective_value(model))")
+    return
+end
+
+example_theta_problem()
+
 # ## Robust uncertainty sets
 
 # This example computes the Value at Risk for a data-driven uncertainty set.
