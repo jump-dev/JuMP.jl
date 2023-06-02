@@ -184,26 +184,16 @@ function _build_api_page(document::Documenter.Document, config::_Config)
     ```
     and then prefix all calls with `$(config.current_module).` to create
     `$(config.current_module).<NAME>`.
-
-    ## Overview
-
-    | NAME | KIND |
-    | :--- | :--- |
     """
     list_of_docstrings = String[]
     _iterate_over_symbols(config) do key, type
         if type == DOCTYPE_MODULE
-            if getfield(config.current_module, key) != config.current_module
-                ref = "DocumenterReference_$(config.current_module).$key"
-                overview_md *= "| [`$key`](@ref $ref) | `$(_to_string(type))` |\n"
-            end
             return
         end
         push!(
             list_of_docstrings,
             "## `$key`\n\n```@docs\n$(config.current_module).$key\n```\n\n",
         )
-        overview_md *= "| [`$key`](@ref) | `$(_to_string(type))` |\n"
         return
     end
     md_page = Markdown.parse(overview_md * join(list_of_docstrings, "\n"))
