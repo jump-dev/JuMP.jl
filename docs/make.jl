@@ -229,11 +229,14 @@ jump_api_reference = DocumenterReference.automatic_reference_documentation(;
             "Containers.nested" => DocumenterReference.DOCTYPE_FUNCTION,
             "Containers.vectorized_product" =>
                 DocumenterReference.DOCTYPE_FUNCTION,
-            "Containers.build_ref_sets" => DocumenterReference.DOCTYPE_FUNCTION,
-            "Containers.container_code" => DocumenterReference.DOCTYPE_FUNCTION,
+            "Containers.build_ref_sets" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
+            "Containers.container_code" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
             "Containers.AutoContainerType" =>
                 DocumenterReference.DOCTYPE_STRUCT,
-            "Containers.NestedIterator" => DocumenterReference.DOCTYPE_STRUCT,
+            "Containers.NestedIterator" =>
+                DocumenterReference.DOCTYPE_STRUCT,
             "Containers.VectorizedProductIterator" =>
                 DocumenterReference.DOCTYPE_STRUCT,
         ],
