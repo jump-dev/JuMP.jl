@@ -476,8 +476,8 @@ Lines = [
 # With this modification we get the following semidefinite relaxation of the AC-OPF problem:
 
 model = Model(Clarabel.Optimizer)
-set_optimizer_attribute(model, "tol_gap_rel", 1e-4) #src
-set_optimizer_attribute(model, "tol_feas", 1e-4) #src
+set_optimizer_attribute(model, "tol_gap_rel", 5e-4) #src
+set_optimizer_attribute(model, "tol_feas", 5e-4) #src
 set_optimizer_attribute(model, "tol_ktratio", 5e-3) #src
 
 @variable(
