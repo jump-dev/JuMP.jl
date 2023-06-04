@@ -58,7 +58,7 @@ following paper ([preprint](https://arxiv.org/abs/2206.03866)):
     title = {JuMP 1.0: Recent improvements to a modeling language for mathematical optimization},
     journal = {Mathematical Programming Computation},
     year = {2023},
-    note = {In press.}
+    doi = {10.1007/s12532-023-00239-3}
 }
 ```
 
