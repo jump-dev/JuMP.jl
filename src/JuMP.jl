@@ -978,10 +978,152 @@ for name in instances(ResultStatusCode)
     @eval const $(Symbol(name)) = $(name)
 end
 
+@doc(
+    "`NO_SOLUTION::ResultStatusCode`: see [`ResultStatusCode`](@ref) for a description",
+    NO_SOLUTION,
+)
+@doc(
+    "`FEASIBLE_POINT::ResultStatusCode`: see [`ResultStatusCode`](@ref) for a description",
+    FEASIBLE_POINT,
+)
+@doc(
+    "`NEARLY_FEASIBLE_POINT::ResultStatusCode`: see [`ResultStatusCode`](@ref) for a description",
+    NEARLY_FEASIBLE_POINT,
+)
+@doc(
+    "`INFEASIBLE_POINT::ResultStatusCode`: see [`ResultStatusCode`](@ref) for a description",
+    INFEASIBLE_POINT,
+)
+@doc(
+    "`INFEASIBILITY_CERTIFICATE::ResultStatusCode`: see [`ResultStatusCode`](@ref) for a description",
+    INFEASIBILITY_CERTIFICATE,
+)
+@doc(
+    "`NEARLY_INFEASIBILITY_CERTIFICATE::ResultStatusCode`: see [`ResultStatusCode`](@ref) for a description",
+    NEARLY_INFEASIBILITY_CERTIFICATE,
+)
+@doc(
+    "`REDUCTION_CERTIFICATE::ResultStatusCode`: see [`ResultStatusCode`](@ref) for a description",
+    REDUCTION_CERTIFICATE,
+)
+@doc(
+    "`NEARLY_REDUCTION_CERTIFICATE::ResultStatusCode`: see [`ResultStatusCode`](@ref) for a description",
+    NEARLY_REDUCTION_CERTIFICATE,
+)
+@doc(
+    "`UNKNOWN_RESULT_STATUS::ResultStatusCode`: see [`ResultStatusCode`](@ref) for a description",
+    UNKNOWN_RESULT_STATUS,
+)
+@doc(
+    "`OTHER_RESULT_STATUS::ResultStatusCode`: see [`ResultStatusCode`](@ref) for a description",
+    OTHER_RESULT_STATUS,
+)
+
 const TerminationStatusCode = MOI.TerminationStatusCode
 for name in instances(TerminationStatusCode)
     @eval const $(Symbol(name)) = $(name)
 end
+
+@doc(
+    "`OPTIMIZE_NOT_CALLED::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    OPTIMIZE_NOT_CALLED,
+)
+@doc(
+    "`OPTIMAL::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    OPTIMAL,
+)
+@doc(
+    "`INFEASIBLE::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    INFEASIBLE,
+)
+@doc(
+    "`DUAL_INFEASIBLE::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    DUAL_INFEASIBLE,
+)
+@doc(
+    "`LOCALLY_SOLVED::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    LOCALLY_SOLVED,
+)
+@doc(
+    "`LOCALLY_INFEASIBLE::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    LOCALLY_INFEASIBLE,
+)
+@doc(
+    "`INFEASIBLE_OR_UNBOUNDED::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    INFEASIBLE_OR_UNBOUNDED,
+)
+@doc(
+    "`ALMOST_OPTIMAL::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    ALMOST_OPTIMAL,
+)
+@doc(
+    "`ALMOST_INFEASIBLE::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    ALMOST_INFEASIBLE,
+)
+@doc(
+    "`ALMOST_DUAL_INFEASIBLE::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    ALMOST_DUAL_INFEASIBLE,
+)
+@doc(
+    "`ALMOST_LOCALLY_SOLVED::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    ALMOST_LOCALLY_SOLVED,
+)
+@doc(
+    "`ITERATION_LIMIT::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    ITERATION_LIMIT,
+)
+@doc(
+    "`TIME_LIMIT::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    TIME_LIMIT,
+)
+@doc(
+    "`NODE_LIMIT::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    NODE_LIMIT,
+)
+@doc(
+    "`SOLUTION_LIMIT::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    SOLUTION_LIMIT,
+)
+@doc(
+    "`MEMORY_LIMIT::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    MEMORY_LIMIT,
+)
+@doc(
+    "`OBJECTIVE_LIMIT::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    OBJECTIVE_LIMIT,
+)
+@doc(
+    "`NORM_LIMIT::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    NORM_LIMIT,
+)
+@doc(
+    "`OTHER_LIMIT::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    OTHER_LIMIT,
+)
+@doc(
+    "`SLOW_PROGRESS::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    SLOW_PROGRESS,
+)
+@doc(
+    "`NUMERICAL_ERROR::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    NUMERICAL_ERROR,
+)
+@doc(
+    "`INVALID_MODEL::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    INVALID_MODEL,
+)
+@doc(
+    "`INVALID_OPTION::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    INVALID_OPTION,
+)
+@doc(
+    "`INTERRUPTED::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    INTERRUPTED,
+)
+@doc(
+    "`OTHER_ERROR::TerminationStatusCode`: see [`TerminationStatusCode`](@ref) for a description",
+    OTHER_ERROR,
+)
 
 """
     OptimizationSense
@@ -990,14 +1132,29 @@ An enum of possible senses for [`MOI.ObjectiveSense`](@ref).
 
 Possible values are:
 
- * `MIN_SENSE`
- * `MAX_SENSE`
- * `FEASIBILITY_SENSE`
+ * [`MIN_SENSE`](@ref)
+ * [`MAX_SENSE`](@ref)
+ * [`FEASIBILITY_SENSE`](@ref)
 """
 const OptimizationSense = MOI.OptimizationSense
 for name in instances(OptimizationSense)
     @eval const $(Symbol(name)) = $(name)
 end
+
+@doc(
+    "`MIN_SENSE::OptimizationSense`: the goal is to minimize the objective function",
+    MIN_SENSE,
+)
+
+@doc(
+    "`MAX_SENSE::OptimizationSense`: the goal is to maximize the objective function",
+    MAX_SENSE,
+)
+
+@doc(
+    "`FEASIBILITY_SENSE::OptimizationSense`: the model does not have an objective function",
+    FEASIBILITY_SENSE,
+)
 
 # JuMP exports everything except internal symbols, which are defined as those
 # whose name starts with an underscore. Macros whose names start with

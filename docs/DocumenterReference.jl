@@ -135,8 +135,6 @@ function _iterate_over_symbols(f, config)
                     if mod == current_module || !haskey(config.modules, mod)
                         continue
                     end
-                elseif type == DOCTYPE_CONSTANT
-                    continue  # It's okay not to document every constant.
                 else
                     error("Documentation missing for $key")
                 end
