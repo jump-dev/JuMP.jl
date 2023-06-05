@@ -28,8 +28,8 @@ import SCS
 # The first is the _standard_ conic form:
 # ```math
 # \begin{align}
-#     \min_{x \in \mathbb{R}^n} & c^\top x \\
-#               \;\;\text{s.t.} & A x = b  \\
+#     \min_{x \in \mathbb{R}^n} \; & c^\top x \\
+#               \;\;\text{s.t.} \; & A x = b  \\
 #                               & x \in \mathcal{K}
 # \end{align}
 # ```
@@ -39,8 +39,8 @@ import SCS
 # The second is the _geometric_ conic form:
 # ```math
 # \begin{align}
-#     \min_{x \in \mathbb{R}^n} & c^\top x \\
-#               \;\;\text{s.t.} & A x - b \in \mathcal{K}
+#     \min_{x \in \mathbb{R}^n} \; & c^\top x \\
+#               \;\;\text{s.t.} \; & A x - b \in \mathcal{K}
 # \end{align}
 # ```
 # in which an affine function $Ax - b$ belongs to a cone $\mathcal{K}$ and the
@@ -51,8 +51,8 @@ import SCS
 # variables $y$:
 # ```math
 # \begin{align}
-#     \min_{x \in \mathbb{R}^n} & c^\top x \\
-#               \;\;\text{s.t.} & [A -I] [x; y] = b \\
+#     \min_{x \in \mathbb{R}^n} \; & c^\top x \\
+#               \;\;\text{s.t.} \; & [A -I] [x; y] = b \\
 #                               & [x; y] \in \mathbb{R}^n \times \mathcal{K}
 # \end{align}
 # ```
