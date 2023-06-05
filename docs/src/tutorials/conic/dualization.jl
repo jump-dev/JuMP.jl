@@ -5,7 +5,7 @@
 
 # # Dualization
 
-# The purpose of this tutorial is to explain how to use [Dualization.j](@ref) to
+# The purpose of this tutorial is to explain how to use [Dualization.jl](@ref) to
 # improve the performance of some conic optimization models. There are two
 # important takeaways:
 #
@@ -23,7 +23,7 @@ import SCS
 
 # ## Background
 
-# Conic optimization solvers typically accept one of two input formulations:
+# Conic optimization solvers typically accept one of two input formulations.
 
 # The first is the _standard_ conic form:
 # ```math
@@ -88,7 +88,7 @@ import SCS
 # then the dual problem is in geometric conic form, and vice versa. Morever, the
 # primal and dual may have a different number of variables and constraints,
 # although which one is smaller depends on the problem. Therefore, instead of
-# reformulating the problem problem from one form to the other, it can be more
+# reformulating the problem from one form to the other, it can be more
 # efficient to solve the dual instead of the primal.
 
 # To demonstrate, we use a variation of the [Maximum cut via SDP](@ref) example.
@@ -176,7 +176,7 @@ objective_value(model_dual)
 # automatically formulates the dual of an input problem, solves the dual
 # problem, and then reports the primal solution back to the user.
 
-# To demonstrate, we use `Dualization.dual_optimizer` to solve `model_primal`;
+# To demonstrate, we use `Dualization.dual_optimizer` to solve `model_primal`:
 
 set_optimizer(model_primal, Dualization.dual_optimizer(SCS.Optimizer))
 optimize!(model_primal)
