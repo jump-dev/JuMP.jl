@@ -172,6 +172,11 @@ function _build_api_page(document::Documenter.Document, config::_Config)
 
     This page lists the public API of `$(config.current_module)`.
 
+    !!! info
+        This page is an unstructured list of the $(config.current_module) API. For a
+        more structured overview, read the Manual or Tutorial parts of this
+        documentation.
+
     Load all of the public the API into the current scope with:
     ```julia
     using $(config.current_module)
