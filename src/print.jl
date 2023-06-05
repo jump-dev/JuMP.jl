@@ -808,17 +808,16 @@ function constraint_string(
     constraint_object::AbstractConstraint;
     in_math_mode::Bool = false,
 )
-    prefix = isempty(constraint_name) ? "" : constraint_name * " : "
     constraint_str = constraint_string(mode, constraint_object)
     if mode == MIME("text/latex")
+        # Do not print names in text/latex mode.
         if in_math_mode
             return constraint_str
-        elseif isempty(prefix)
-            return _wrap_in_math_mode(constraint_str)
         else
-            return prefix * _wrap_in_inline_math_mode(constraint_str)
+            return _wrap_in_math_mode(constraint_str)
         end
     end
+    prefix = isempty(constraint_name) ? "" : constraint_name * " : "
     return prefix * constraint_str
 end
 
