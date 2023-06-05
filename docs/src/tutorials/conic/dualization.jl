@@ -127,6 +127,7 @@ print(model_dual)
 
 set_optimizer(model_primal, SCS.Optimizer)
 optimize!(model_primal)
+nothing
 
 # (There are five rows in the constraint matrix because SCS expects problems in
 # geometric conic form, and so JuMP has reformulated the `X, PSD` variable
