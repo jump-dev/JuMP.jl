@@ -1,5 +1,11 @@
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 import Pkg
-Pkg.pkg"add Documenter#633a95a"
+Pkg.pkg"add Documenter#740ba6304c940801eafdc18b069e4609bf3923a6"
+
 import Documenter
 import Downloads
 import Literate
@@ -522,6 +528,7 @@ if _PDF
         format = Documenter.LaTeX(; platform = latex_platform),
         build = "latex_build",
         pages = _PAGES,
+        debug = true,
     )
     # Hack for deploying: copy the pdf (and only the PDF) into the HTML build
     # directory! We don't want to copy everything in `latex_build` because it
