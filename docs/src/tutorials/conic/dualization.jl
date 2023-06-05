@@ -19,7 +19,7 @@
 
 using JuMP
 import Dualization
-import SCS
+import Clarabel
 
 # ## Background
 
@@ -125,9 +125,11 @@ print(model_dual)
 # (`variables n: 3`), five rows in the constraint matrix (`constraints m: 5`),
 # and five non-zeros in the matrix (`nnz(A): 5`):
 
-set_optimizer(model_primal, SCS.Optimizer)
+set_optimizer(model_primal, Clarabel.Optimizer)
+
+#-
+
 optimize!(model_primal)
-nothing
 
 # (There are five rows in the constraint matrix because SCS expects problems in
 # geometric conic form, and so JuMP has reformulated the `X, PSD` variable
@@ -149,7 +151,10 @@ objective_value(model_primal)
 # (`variables n: 2`), three rows in the constraint matrix (`constraints m: 3`),
 # and two non-zeros in the matrix (`nnz(A): 2`):
 
-set_optimizer(model_dual, SCS.Optimizer)
+set_optimizer(model_dual, Clarabel.Optimizer)
+
+#-
+
 optimize!(model_dual)
 
 # and the solution we obtain is:
@@ -179,7 +184,10 @@ objective_value(model_dual)
 
 # To demonstrate, we use `Dualization.dual_optimizer` to solve `model_primal`:
 
-set_optimizer(model_primal, Dualization.dual_optimizer(SCS.Optimizer))
+set_optimizer(model_primal, Dualization.dual_optimizer(Clarabel.Optimizer))
+
+#-
+
 optimize!(model_primal)
 
 # The performance is the same as if we solved `model_dual`, and the correct
@@ -194,9 +202,18 @@ dual.(primal_c)
 # Moreover, if we use `dual_optimizer` on `model_dual`, then we get the same
 # performance as if we had solved `model_primal`:
 
-set_optimizer(model_dual, Dualization.dual_optimizer(SCS.Optimizer))
+set_optimizer(model_dual, Dualization.dual_optimizer(Clarabel.Optimizer))
+
+#-
+
 optimize!(model_dual)
+
+#-
+
 dual.(dual_c)
+
+#-
+
 value.(y)
 
 # ## When to use `dual_optimizer`
