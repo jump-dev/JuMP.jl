@@ -201,7 +201,7 @@ value.(y)
 # ## When to use `dual_optimizer`
 
 # Because it can make the problem larger or smaller, depending on the problem
-# and the choice of solver, there is is no definitive rule on when you should
+# and the choice of solver, there is no definitive rule on when you should
 # use `dual_optimizer`. However, you should try `dual_optimizer` if your conic
 # optimization problem takes a long time to solve, or if you need to repeatedly
 # solve similarly structured problems with different data. In some cases solving
