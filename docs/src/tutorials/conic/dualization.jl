@@ -15,7 +15,7 @@
 #  2. Solving the dual of a conic model can be more efficient than solving the
 #     primal.
 
-# This tutorial uses the following packges
+# This tutorial uses the following packages
 
 using JuMP
 import Dualization
@@ -60,7 +60,7 @@ import SCS
 # rewrite the equality constraint as a function belonging to the `{0}` cone:
 # ```math
 # \begin{align}
-#     \min_{x \in \mathbb{R}^n} & c^\top x \\
+#     \min_{x \in \mathbb{R}^n} \; & c^\top x \\
 #               \;\;\text{s.t.} & [A; I] x - [b; 0] \in \{0\} \times \mathcal{K}
 # \end{align}
 # ```
@@ -85,7 +85,7 @@ import SCS
 # of conic duality, see [Duality](@ref).
 
 # A useful observation is that if the primal problem is in standard conic form,
-# then the dual problem is in geometric conic form, and vice versa. Morever, the
+# then the dual problem is in geometric conic form, and vice versa. Moreover, the
 # primal and dual may have a different number of variables and constraints,
 # although which one is smaller depends on the problem. Therefore, instead of
 # reformulating the problem from one form to the other, it can be more
