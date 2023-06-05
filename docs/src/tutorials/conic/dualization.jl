@@ -53,7 +53,7 @@ import SCS
 # \begin{align}
 #     \min_{x \in \mathbb{R}^n} & c^\top x \\
 #               \;\;\text{s.t.} & [A -I] [x; y] = b \\
-#                               & [x; y] \in \mathbb{R}^n \cross \mathcal{K}
+#                               & [x; y] \in \mathbb{R}^n \times \mathcal{K}
 # \end{align}
 # ```
 # and to go from the standard conic form to the geometric conic form, we can
@@ -61,7 +61,7 @@ import SCS
 # ```math
 # \begin{align}
 #     \min_{x \in \mathbb{R}^n} & c^\top x \\
-#               \;\;\text{s.t.} & [A; I] x - [b; 0] \in {0}\cross \mathcal{K}
+#               \;\;\text{s.t.} & [A; I] x - [b; 0] \in \{0\} \times \mathcal{K}
 # \end{align}
 # ```
 
