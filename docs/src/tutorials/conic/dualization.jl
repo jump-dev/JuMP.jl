@@ -14,6 +14,9 @@
 #     and constraints.
 #  2. Solving the dual of a conic model can be more efficient than solving the
 #     primal.
+#
+# [Dualization.jl](@ref) is a package which fixes these problems, allowing you
+# to solve the dual instead of the primal with a one-line change to your code.
 
 # This tutorial uses the following packages
 
@@ -70,9 +73,9 @@ import SCS
 # conic form solver (or vice versa), then JuMP will automatically reformulate
 # the problem into the correct formulation.
 
-# From a practical perspective though, the geometric to standard reformulation is
-# particularly problematic, because the additional slack variables and
-# constraints can make the problem much larger and therefore harder to solve.
+# From a practical perspective though, the reformulations are because the
+# additional slack variables and constraints can make the problem much larger
+# and therefore harder to solve.
 
 # You should also note many problems contain a mix of conic constraints and
 # variables, and so they do not neatly fall into one of the two formulations. In
@@ -127,7 +130,6 @@ print(model_dual)
 
 set_optimizer(model_primal, SCS.Optimizer)
 optimize!(model_primal)
-Base.Libc.flush_cstdio()  #hide
 
 # (There are five rows in the constraint matrix because SCS expects problems in
 # geometric conic form, and so JuMP has reformulated the `X, PSD` variable
@@ -151,7 +153,6 @@ objective_value(model_primal)
 
 set_optimizer(model_dual, SCS.Optimizer)
 optimize!(model_dual)
-Base.Libc.flush_cstdio()  #hide
 
 # and the solution we obtain is:
 
@@ -165,10 +166,10 @@ value.(y)
 
 objective_value(model_dual)
 
-# The problems are small enough that it isn't meaningful to compare the solve
-# times, but in general, we should expect the dual problem to solve faster
-# because it contains fewer variables and constraints. The difference is
-# particularly noticeable on large-scale optimization problems.
+# This particular problem is small enough that it isn't meaningful to compare
+# the solve times, but in general, we should expect `model_dual` to solve faster
+# than `model_primal` because it contains fewer variables and constraints. The
+# difference is particularly noticeable on large-scale optimization problems.
 
 # ## `dual_optimizer`
 
@@ -182,7 +183,6 @@ objective_value(model_dual)
 
 set_optimizer(model_primal, Dualization.dual_optimizer(SCS.Optimizer))
 optimize!(model_primal)
-Base.Libc.flush_cstdio()  #hide
 
 # The performance is the same as if we solved `model_dual`, and the correct
 # solution is returned to `X`:
@@ -198,7 +198,6 @@ dual.(primal_c)
 
 set_optimizer(model_dual, Dualization.dual_optimizer(SCS.Optimizer))
 optimize!(model_dual)
-Base.Libc.flush_cstdio()  #hide
 
 #-
 
