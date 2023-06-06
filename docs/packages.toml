@@ -140,8 +140,10 @@
 [Juniper]
     user = "lanl-ansi"
     rev = "62532341586d447f19c7360715333ba62a42bea9"
-# [MadNLP]
-#   user = "MadNLP"
+[MadNLP]
+    user = "MadNLP"
+    rev = "389561354a774441cd5e6b3aa5fffee102ed222e"
+    has_html = true
 [NEOSServer]
     user = "odow"
     rev = "v1.0.2"

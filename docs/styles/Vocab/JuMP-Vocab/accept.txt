@@ -140,6 +140,7 @@ puzzlor
 RAPOSa
 SDPAFamily
 SDPNAL
+Umfpack
 Xpress
 
 % People
@@ -203,6 +204,7 @@ Rebennack
 [Rr]osenbrock
 Schermer
 Schur
+Schwarz
 Shabbir
 Shuvomoy
 Steuer
