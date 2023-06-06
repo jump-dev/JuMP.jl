@@ -206,6 +206,45 @@ dual.(dual_c)
 
 value.(y)
 
+# ## A mixed example
+
+# The [Maximum cut via SDP](@ref) example is nicely defined because the primal
+# is in standard conic form and the dual is in geometric conic form. However,
+# many practical models contain a mix of the two formulations. One example is
+# [The minimum distortion problem](@ref):
+
+D = [0 1 1 1; 1 0 2 2; 1 2 0 2; 1 2 2 0]
+model = Model()
+@variable(model, c²)
+@variable(model, Q[1:4, 1:4], PSD)
+@objective(model, Min, c²)
+for i in 1:4, j in (i+1):4
+    @constraint(model, D[i, j]^2 <= Q[i, i] + Q[j, j] - 2 * Q[i, j])
+    @constraint(model, Q[i, i] + Q[j, j] - 2 * Q[i, j] <= c² * D[i, j]^2)
+end
+@constraint(model, Q[1, 1] == 0)
+@constraint(model, c² >= 1)
+
+# In this formulation, the `Q` variable is of the form $x\in\mathcal{K}$, but
+# there is also a free variable, `c²`, a linear equality constraint,
+# `Q[1, 1] == 0`, and some linear inequality constraints. Rather than attempting
+# to derive the formulation that JuMP would pass to SCS and its dual, the
+# simplest solution is to try solving the problem with and without
+# `dual_optimizer` to see which formulation is most efficient.
+
+set_optimizer(model, SCS.Optimizer)
+optimize!(model)
+
+#-
+set_optimizer(model, Dualization.dual_optimizer(SCS.Optimizer))
+optimize!(model)
+
+# For this problem, SCS reports that the primal has
+# `variables n: 11, constraints m: 24` and that the dual has
+# `variables n: 14, constraints m: 24`. Therefore, we should probably use the
+# primal formulation because it has fewer variables and the same number of
+# constraints.
+
 # ## When to use `dual_optimizer`
 
 # Because it can make the problem larger or smaller, depending on the problem
@@ -214,3 +253,5 @@ value.(y)
 # optimization problem takes a long time to solve, or if you need to repeatedly
 # solve similarly structured problems with different data. In some cases solving
 # the dual instead of the primal can make a large difference.
+
+
