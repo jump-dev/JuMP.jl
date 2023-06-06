@@ -254,4 +254,3 @@ optimize!(model)
 # solve similarly structured problems with different data. In some cases solving
 # the dual instead of the primal can make a large difference.
 
-
