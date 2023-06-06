@@ -52,7 +52,7 @@ import SCS
 # ```math
 # \begin{align}
 #     \min_{x \in \mathbb{R}^n} \; & c^\top x \\
-#               \;\;\text{s.t.} \; & [A -I] [x; y] = b \\
+#               \;\;\text{s.t.} \; & \begin{bmatrix}A & -I\end{bmatrix} [x; y] = b \\
 #                               & [x; y] \in \mathbb{R}^n \times \mathcal{K}
 # \end{align}
 # ```
@@ -70,7 +70,7 @@ import SCS
 # conic form solver (or vice versa), then JuMP will automatically reformulate
 # the problem into the correct formulation.
 
-# From a practical perspective though, the geometric to conic reformulation is
+# From a practical perspective though, the geometric to standard reformulation is
 # particularly problematic, because the additional slack variables and
 # constraints can make the problem much larger and therefore harder to solve.
 
