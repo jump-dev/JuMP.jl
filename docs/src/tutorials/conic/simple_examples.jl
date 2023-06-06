@@ -170,7 +170,7 @@ function example_k_means_clustering()
     return model
 end
 
-sdp_model_dict[:k_means_clustering] = example_k_means_clustering()
+sdp_model_dict[:k_means_clustering] = example_k_means_clustering();
 
 # ## The correlation problem
 
@@ -436,16 +436,17 @@ sdp_model_dict[:robust_uncertainty_sets] = example_robust_uncertainty_sets();
 
 # It may be more efficient to solve the dual of a conic program rather than
 # the original formulation.
-# Comparing the numbers of variables and constraints in the primal formulations
+# We can compare the numbers of variables and constraints in the primal formulations
 # given here and in the dual formulation provided by the [Dualization.jl](@ref) package:
 
 println("Model Name \t   #PrimalVars #Cons #DualVars #DualCons")
 println("------------------------------------------------------------")
 for (sym, model) in sdp_model_dict
-    # Skip models with constraints types not yet supported:
+    ## Skip models with constraints types not yet supported:
     if sym in [:correlation_problem, :robust_uncertainty_sets]
         continue
     end
+    dual_model = Dualization.dualize(model)
     println(
         rpad(string(sym), 20),
         "\t",
@@ -453,14 +454,11 @@ for (sym, model) in sdp_model_dict
         "\t",
         num_constraints(model; count_variable_in_set_constraints = true),
         "\t",
-        num_variables(Dualization.dualize(model)),
+        num_variables(dual_model),
         "\t",
-        num_constraints(
-            Dualization.dualize(model);
-            count_variable_in_set_constraints = true,
-        ),
+        num_constraints(dual_model; count_variable_in_set_constraints = true),
     )
 end
 
-# we observe that the dual formulation can have fewer variables and constraints.
+# We observe that the dual formulation can have fewer variables and constraints.
 # For more details see the [Dualization](@ref) tutorial .
