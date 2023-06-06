@@ -69,7 +69,7 @@ model = Model(SCS.Optimizer)
 optimize!(model)
 Base.Libc.flush_cstdio()  #hide
 
-# By looking at the log, we can see that SCS took 100 iterations to find the optimal
+# By looking at the log, we can see that SCS took 75 iterations to find the optimal
 # solution. Now we set the optimal solution as our starting point:
 
 set_optimal_start_values(model)
