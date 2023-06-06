@@ -47,7 +47,7 @@
     rev = "v0.4.2"
     extension = true
 [Dualization]
-    rev = "13974285d5ed6f678e4b96aafb764dad5238aac0"
+    rev = "v0.5.8"
 [ECOS]
     rev = "v1.1.1"
 [GLPK]
@@ -55,15 +55,15 @@
 [Gurobi]
     rev = "v1.0.1"
 [HiGHS]
-    rev = "v1.5.1"
+    rev = "v1.5.2"
 [Ipopt]
-    rev = "v1.2.1"
+    rev = "v1.4.0"
 [KNITRO]
     rev = "4c56de7684c42dd3c83c5fbc515ae1f424eed524"
 [MiniZinc]
-    rev = "21d5829c2838959e2ec2d2952495c83f43b271b7"
+    rev = "v0.2.2"
 [MosekTools]
-    rev = "v0.14.0"
+    rev = "v0.15.0"
 [MultiObjectiveAlgorithms]
     rev = "v1.0.0"
     has_html = true
@@ -80,7 +80,7 @@
     rev = "0832380ae36ec66ebe4cbc9555ba351d67096693"
     extension = true
 [SCS]
-    rev = "v1.1.4"
+    rev = "v1.2.0"
 [SDPA]
     rev = "v0.5.0"
 [SDPNAL]
@@ -112,7 +112,7 @@
     rev = "9700752f849845bc8d8477928baf3df920daadd6"
 [Clarabel]
     user = "oxfordcontrol"
-    rev = "v0.5.0"
+    rev = "v0.5.1"
     has_html = true
 [COPT]
     user = "COPT-Public"
@@ -130,7 +130,7 @@
 #   user = "GAMS-dev"
 [Hypatia]
     user = "chriscoey"
-    rev = "a779e4b5ce6df9cc98679b22fb96f131225a3fb5"  
+    rev = "v0.7.3"
     has_html = true
 [InfiniteOpt]
     user = "infiniteopt"
