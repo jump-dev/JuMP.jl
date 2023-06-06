@@ -24,6 +24,12 @@ MathOptInterface, many of these solvers support a much wider range of exotic
 cones than they natively support. Solvers supporting discrete variables start
 with "(MI)" in the list of [Supported solvers](@ref).
 
+!!! tip
+    Duality plays a large role in solving conic optimization models. Depending
+    on the solver, it can be more efficient to solve the dual instead of the
+    primal. If performance is an issue, see the [Dualization](@ref) tutorial for
+    more details.
+
 ## How these tutorials are structured
 
 Having a high-level overview of how this part of the documentation is structured
