@@ -253,4 +253,3 @@ optimize!(model)
 # optimization problem takes a long time to solve, or if you need to repeatedly
 # solve similarly structured problems with different data. In some cases solving
 # the dual instead of the primal can make a large difference.
-
