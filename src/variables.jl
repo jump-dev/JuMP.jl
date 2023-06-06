@@ -1274,6 +1274,15 @@ function VariablesConstrainedOnCreation(
     variables::Vector{<:AbstractVariable},
     set::MOI.AbstractVectorSet,
 )
+    if length(variables) != MOI.dimension(set)
+        throw(
+            DimensionMismatch(
+                "Unable to add variables constrained on creation: " *
+                "the number of variables, $(length(variables)), does not " *
+                "match the output dimension of the set, $(MOI.dimension(set)).",
+            ),
+        )
+    end
     return VariablesConstrainedOnCreation(variables, set, VectorShape())
 end
 
