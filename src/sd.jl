@@ -679,6 +679,18 @@ function build_constraint(
     )
 end
 
+function build_constraint(
+    _error::Function,
+    Q::AbstractMatrix{<:AbstractJuMPScalar},
+    cone::HermitianPSDCone,
+)
+    return _error(
+        "Unable to add matrix in HermitianPSDCone because the matrix is " *
+        "not a subtype of `LinearAlgebra.Hermitian`. To fix, wrap the matrix " *
+        "`H` in `LinearAlgebra.Hermitian(H)`.",
+    )
+end
+
 function build_constraint(_error::Function, H::LinearAlgebra.Hermitian, ::Zeros)
     n = LinearAlgebra.checksquare(H)
     shape = HermitianMatrixShape(n)

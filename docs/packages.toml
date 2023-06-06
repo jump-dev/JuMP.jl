@@ -47,7 +47,7 @@
     rev = "v0.4.2"
     extension = true
 [Dualization]
-    rev = "13974285d5ed6f678e4b96aafb764dad5238aac0"
+    rev = "v0.5.8"
 [ECOS]
     rev = "v1.1.1"
 [GLPK]
@@ -55,15 +55,15 @@
 [Gurobi]
     rev = "v1.0.1"
 [HiGHS]
-    rev = "v1.5.1"
+    rev = "v1.5.2"
 [Ipopt]
-    rev = "v1.2.1"
+    rev = "v1.4.0"
 [KNITRO]
     rev = "4c56de7684c42dd3c83c5fbc515ae1f424eed524"
 [MiniZinc]
-    rev = "21d5829c2838959e2ec2d2952495c83f43b271b7"
+    rev = "ec190bb1b59f5ebc20415bbaa140cab062be9fc0"
 [MosekTools]
-    rev = "v0.14.0"
+    rev = "v0.15.0"
 [MultiObjectiveAlgorithms]
     rev = "v1.0.0"
     has_html = true
@@ -80,7 +80,7 @@
     rev = "0832380ae36ec66ebe4cbc9555ba351d67096693"
     extension = true
 [SCS]
-    rev = "v1.1.4"
+    rev = "v1.2.0"
 [SDPA]
     rev = "v0.5.0"
 [SDPNAL]
@@ -100,29 +100,37 @@
 [Alpine]
     user = "lanl-ansi"
     rev = "32757b2568acfe71257e41ed4122a120717a6460"
-# [CDCS]
-#   user = "oxfordcontrol"
-# [CDDLib]
-#   user = "JuliaPolyhedra"
-# [Clarabel]
-#   user = "oxfordcontrol"
-#   has_html = true
+[BilevelJuMP]
+    user = "joaquimg"
+    rev = "146a6a93a5fac60faaf68e87c4592f585c79c6e9"
+    extension = true
+[CDCS]
+    user = "oxfordcontrol"
+    rev = "6d165e8e8f59b14e36e99c8efb19f0e775bbd292"
+[CDDLib]
+    user = "JuliaPolyhedra"
+    rev = "9700752f849845bc8d8477928baf3df920daadd6"
+[Clarabel]
+    user = "oxfordcontrol"
+    rev = "v0.5.1"
+    has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "2d93e079645eff773552bb5da44c3024450fe990"
-# [COSMO]
-#   user = "oxfordcontrol"
-#   has_html = true
-# [DAQP]
-#   user = "darnstrom"
-#   rev = "main"
+    rev = "b283cab933501c39195a273c78ddeac236cc2f3f"
+[COSMO]
+    user = "oxfordcontrol"
+    rev = "c95bf89f111a83f52febf326615a091ad0418f00"
+    has_html = true
+[DAQP]
+    user = "darnstrom"
+    rev = "70623ed816916a0f3c3a51b65b166efae364b98d"
 # [EAGO]
 #   user = "PSORLab"
 # [GAMS]
 #   user = "GAMS-dev"
 [Hypatia]
     user = "chriscoey"
-    rev = "a779e4b5ce6df9cc98679b22fb96f131225a3fb5"  
+    rev = "v0.7.3"
     has_html = true
 [InfiniteOpt]
     user = "infiniteopt"
@@ -139,16 +147,23 @@
 [NEOSServer]
     user = "odow"
     rev = "v1.0.2"
-# [NLopt]
-#   user = "JuliaOpt"
+# [NLopt]                   # Hard-coded in the file docs/src/packages/NLopt.md
+#     user = "JuliaOpt"
 [OSQP]
     user = "osqp"
     rev = "443706e34c2619acbe65281c60bbe850ca4a8fac"
 [PATHSolver]
     user = "chkwon"
     rev = "v1.4.2"
-# [ProxSDP]
-#   user = "mariohsouto"
+[Plasmo]
+    user = "plasmo-dev"
+    rev = "37f80fe96781dc647b3a5e0ed26b9eb0a994bc4a"
+    has_html = true
+    extension = true
+[ProxSDP]
+    user = "mariohsouto"
+    rev = "de648be90e63a69b8d8e4f82371760065d242fe9"
+    has_html = true
 [SCIP]
     user = "scipopt"
     rev = "44e0bff587208fb4e0779db440f4104bc0bba2ec"
@@ -157,5 +172,6 @@
     rev = "v1.5.0"
     has_html = true
     extension = true
-# [Tulip]
-#   user = "ds4dm"
+[Tulip]
+    user = "ds4dm"
+    rev = "069cdda082dfde31ef7ee935c96e833a3b96b33c"

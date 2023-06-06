@@ -87,25 +87,8 @@ end
 
 # Returns the value of MOI.ConstraintDualStart in a type-stable way
 function _dual_start(
-    con_ref::ConstraintRef{
-        <:AbstractModel,
-        <:MOI.ConstraintIndex{
-            <:MOI.AbstractScalarFunction,
-            <:MOI.AbstractScalarSet,
-        },
-    },
-)::Union{Nothing,Float64}
-    return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
-end
-function _dual_start(
-    con_ref::ConstraintRef{
-        <:AbstractModel,
-        <:MOI.ConstraintIndex{
-            <:MOI.AbstractVectorFunction,
-            <:MOI.AbstractVectorSet,
-        },
-    },
-)::Union{Nothing,Vector{Float64}}
+    con_ref::ConstraintRef{M,MOI.ConstraintIndex{F,S}},
+)::Union{Nothing,_value_type(M, F)} where {M<:AbstractModel,F,S}
     return MOI.get(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref)
 end
 
@@ -464,23 +447,25 @@ to be attached to a model.
 abstract type AbstractConstraint end
 
 """
-    struct BridgeableConstraint{C, B} <: AbstractConstraint
-        constraint::C
-        bridge_type::B
-    end
+    BridgeableConstraint(
+        constraint::C,
+        bridge_type::B;
+        coefficient_type::Type{T} = Float64,
+    ) where {C<:AbstractConstraint,B<:Type{<:MOI.Bridges.AbstractBridge},T}
 
-Constraint `constraint` that can be bridged by the bridge of type `bridge_type`.
-Adding this constraint to a model is equivalent to:
+An [`AbstractConstraint`](@ref) representinng that `constraint` that can be
+bridged by the bridge of type `bridge_type{coefficient_type}`.
 
+Adding a `BridgeableConstraint` to a model is equivalent to:
 ```julia
-add_bridge(model, bridge_type)
+add_bridge(model, bridge_type; coefficient_type = coefficient_type)
 add_constraint(model, constraint)
 ```
 
 ## Example
 
 Given a new scalar set type `CustomSet` with a bridge `CustomBridge` that can
-bridge `F`-in-`CustomSet` constraints, when the user does
+bridge `F`-in-`CustomSet` constraints, when the user does:
 ```julia
 model = Model()
 @variable(model, x)
@@ -488,9 +473,11 @@ model = Model()
 optimize!(model)
 ```
 with an optimizer that does not support `F`-in-`CustomSet` constraints, the
-constraint will not be bridged unless he manually calls `add_bridge(model,
-CustomBridge)`. In order to automatically add the `CustomBridge` to any model to
-which an `F`-in-`CustomSet` is added, simply add the following method:
+constraint will not be bridged unless they first call
+`add_bridge(model, CustomBridge)`.
+
+In order to automatically add the `CustomBridge` to any model to
+which an `F`-in-`CustomSet` is added, add the following method:
 ```julia
 function JuMP.build_constraint(
     _error::Function,
@@ -514,9 +501,18 @@ JuMP extensions should extend `JuMP.build_constraint` only if they also defined
     are defined in the package is called [*type piracy*](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Avoid-type-piracy-1)
     and is discouraged in the Julia style guide.
 """
-struct BridgeableConstraint{C,B} <: AbstractConstraint
+struct BridgeableConstraint{C,B,T} <: AbstractConstraint
     constraint::C
     bridge_type::B
+    coefficient_type::Type{T}
+
+    function BridgeableConstraint(
+        constraint::C,
+        bridge_type::B;
+        coefficient_type::Type{T} = Float64,
+    ) where {C,B,T}
+        return new{C,B,T}(constraint, bridge_type, T)
+    end
 end
 
 function add_constraint(
@@ -524,7 +520,7 @@ function add_constraint(
     con::BridgeableConstraint,
     name::String = "",
 )
-    add_bridge(model, con.bridge_type)
+    add_bridge(model, con.bridge_type; coefficient_type = con.coefficient_type)
     return add_constraint(model, con.constraint, name)
 end
 
@@ -1010,29 +1006,24 @@ function value(
     return reshape_vector(value.(var_value, f), con_ref.shape)
 end
 
+"""
+    _value_type(::Type{<:AbstractModel}, ::Type{<:AbstractFunction})
+
+Return the value type of the function.
+"""
+_value_type(::Any, ::Type{F}) where {F} = Any
+_value_type(::Any, ::Type{MOI.VariableIndex}) = Float64
+_value_type(::Any, ::Type{MOI.ScalarAffineFunction{T}}) where {T} = T
+_value_type(::Any, ::Type{MOI.ScalarQuadraticFunction{T}}) where {T} = T
+_value_type(::Any, ::Type{MOI.VectorOfVariables}) = Vector{Float64}
+_value_type(::Any, ::Type{MOI.VectorAffineFunction{T}}) where {T} = Vector{T}
+_value_type(::Any, ::Type{MOI.VectorQuadraticFunction{T}}) where {T} = Vector{T}
+
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
 function _constraint_primal(
-    con_ref::ConstraintRef{
-        <:AbstractModel,
-        <:MOI.ConstraintIndex{
-            <:MOI.AbstractScalarFunction,
-            <:MOI.AbstractScalarSet,
-        },
-    },
+    con_ref::ConstraintRef{M,MOI.ConstraintIndex{F,S}},
     result::Int,
-)::Float64
-    return MOI.get(con_ref.model, MOI.ConstraintPrimal(result), con_ref)
-end
-function _constraint_primal(
-    con_ref::ConstraintRef{
-        <:AbstractModel,
-        <:MOI.ConstraintIndex{
-            <:MOI.AbstractVectorFunction,
-            <:MOI.AbstractVectorSet,
-        },
-    },
-    result,
-)::Vector{Float64}
+)::_value_type(M, F) where {M<:AbstractModel,F,S}
     return MOI.get(con_ref.model, MOI.ConstraintPrimal(result), con_ref)
 end
 
@@ -1068,29 +1059,11 @@ function dual(
     )
 end
 
-# Returns the value of MOI.ConstraintPrimal in a type-stable way
+# Returns the value of MOI.ConstraintDual in a type-stable way
 function _constraint_dual(
-    con_ref::ConstraintRef{
-        <:AbstractModel,
-        <:MOI.ConstraintIndex{
-            <:MOI.AbstractScalarFunction,
-            <:MOI.AbstractScalarSet,
-        },
-    },
+    con_ref::ConstraintRef{M,MOI.ConstraintIndex{F,S}},
     result::Int,
-)::Float64
-    return MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref)
-end
-function _constraint_dual(
-    con_ref::ConstraintRef{
-        <:AbstractModel,
-        <:MOI.ConstraintIndex{
-            <:MOI.AbstractVectorFunction,
-            <:MOI.AbstractVectorSet,
-        },
-    },
-    result::Int,
-)::Vector{Float64}
+)::_value_type(M, F) where {M<:AbstractModel,F,S}
     return MOI.get(con_ref.model, MOI.ConstraintDual(result), con_ref)
 end
 

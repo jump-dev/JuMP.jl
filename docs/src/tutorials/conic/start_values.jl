@@ -68,9 +68,8 @@ model = Model(SCS.Optimizer)
 @objective(model, Max, sum(i * x[i] for i in 1:3))
 optimize!(model)
 
-# By looking at the log (not shown in Documenter due to a bug), we can see that
-# SCS took 100 iterations to find the optimal solution. Now we set the optimal
-# solution as our starting point:
+# By looking at the log, we can see that SCS took 75 iterations to find the optimal
+# solution. Now we set the optimal solution as our starting point:
 
 set_optimal_start_values(model)
 

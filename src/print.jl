@@ -122,13 +122,11 @@ function _string_round(x::Complex)
         else
             return string(_string_round(i), "im")
         end
-    end
-    if _is_one_for_printing(i)
-        i_str = "im"
+    elseif _is_one_for_printing(i)
+        return string("(", r_str, _sign_string(i), "im)")
     else
-        i_str = string(_string_round(abs, i), "im")
+        return string("(", r_str, _sign_string(i), _string_round(abs, i), "im)")
     end
-    return string("(", r_str, _sign_string(i_str), i_str, ")")
 end
 
 # REPL-specific symbols
@@ -810,17 +808,16 @@ function constraint_string(
     constraint_object::AbstractConstraint;
     in_math_mode::Bool = false,
 )
-    prefix = isempty(constraint_name) ? "" : constraint_name * " : "
     constraint_str = constraint_string(mode, constraint_object)
     if mode == MIME("text/latex")
+        # Do not print names in text/latex mode.
         if in_math_mode
             return constraint_str
-        elseif isempty(prefix)
-            return _wrap_in_math_mode(constraint_str)
         else
-            return prefix * _wrap_in_inline_math_mode(constraint_str)
+            return _wrap_in_math_mode(constraint_str)
         end
     end
+    prefix = isempty(constraint_name) ? "" : constraint_name * " : "
     return prefix * constraint_str
 end
 

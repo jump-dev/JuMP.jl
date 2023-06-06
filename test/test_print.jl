@@ -496,11 +496,11 @@ function test_extension_printing_scalaraffinefunction_constraints(
     io_test(MIME("text/plain"), linear_noname, "x $le 1")
     # io_test doesn't work here because constraints print with a mix of math
     # and non-math.
-    @test sprint(show, "text/latex", linear_le) == "linear_le : \$ x \\leq 1 \$"
-    @test sprint(show, "text/latex", linear_ge) == "linear_ge : \$ x \\geq 1 \$"
-    @test sprint(show, "text/latex", linear_eq) == "linear_eq : \$ x = 1 \$"
+    @test sprint(show, "text/latex", linear_le) == "\$\$ x \\leq 1 \$\$"
+    @test sprint(show, "text/latex", linear_ge) == "\$\$ x \\geq 1 \$\$"
+    @test sprint(show, "text/latex", linear_eq) == "\$\$ x = 1 \$\$"
     @test sprint(show, "text/latex", linear_range) ==
-          "linear_range : \$ x \\in \\[-1, 1\\] \$"
+          "\$\$ x \\in \\[-1, 1\\] \$\$"
     @test sprint(show, "text/latex", linear_noname) == "\$\$ x \\leq 1 \$\$"
     return
 end
@@ -874,6 +874,26 @@ function test_print_hermitian_psd_cone()
           "[x[1]  im;\n -im   x[2]] $in_sym $(HermitianPSDCone())"
     @test sprint(io -> show(io, MIME("text/latex"), c)) ==
           "\$\$ \\begin{bmatrix}\nx_{1} & im\\\\\n-im & x_{2}\\\\\n\\end{bmatrix} \\in \\text{$(HermitianPSDCone())} \$\$"
+    return
+end
+
+function test_print_complex_string_round()
+    @test JuMP._string_round(1.0 + 0.0im) == "1"
+    @test JuMP._string_round(-1.0 + 0.0im) == "-1"
+    @test JuMP._string_round(1.0 - 0.0im) == "1"
+    @test JuMP._string_round(-1.0 - 0.0im) == "-1"
+    @test JuMP._string_round(0.0 + 1.0im) == "im"
+    @test JuMP._string_round(-0.0 + 1.0im) == "im"
+    @test JuMP._string_round(0.0 - 1.0im) == "-im"
+    @test JuMP._string_round(-0.0 - 1.0im) == "-im"
+    @test JuMP._string_round(1.0 + 2.0im) == "(1 + 2im)"
+    @test JuMP._string_round(1.0 - 2.0im) == "(1 - 2im)"
+    @test JuMP._string_round(-1.0 + 2.0im) == "(-1 + 2im)"
+    @test JuMP._string_round(-1.0 - 2.0im) == "(-1 - 2im)"
+    @test JuMP._string_round(1.0 + 1.0im) == "(1 + im)"
+    @test JuMP._string_round(1.0 - 1.0im) == "(1 - im)"
+    @test JuMP._string_round(-1.0 + 1.0im) == "(-1 + im)"
+    @test JuMP._string_round(-1.0 - 1.0im) == "(-1 - im)"
     return
 end
 

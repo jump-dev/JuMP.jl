@@ -414,8 +414,13 @@ function test_bridges_add_bridgeable_con_set_optimizer()
     model = Model()
     @variable(model, x)
     constraint = ScalarConstraint(x, Nonnegative())
-    bc = BridgeableConstraint(constraint, NonnegativeBridge)
+    bc = BridgeableConstraint(
+        constraint,
+        NonnegativeBridge;
+        coefficient_type = Float64,
+    )
     c = add_constraint(model, bc)
+    @test NonnegativeBridge{Float64} in model.bridge_types
     set_optimizer(model, mock_factory)
     optimize!(model)
     @test 1.0 == @inferred value(x)
@@ -1145,6 +1150,33 @@ function test_getindex_no_arg()
     c = @constraint(model, x >= 1)
     y = [c]
     @test y[] === c
+    return
+end
+
+function test_bridges_add_remove_coefficient_type()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    end
+    add_bridge(model, MOI.Bridges.Constraint.NumberConversionBridge)
+    BT = MOI.Bridges.Constraint.NumberConversionBridge{Float64}
+    @test BT in model.bridge_types
+    remove_bridge(model, MOI.Bridges.Constraint.NumberConversionBridge)
+    @test !(BT in model.bridge_types)
+    @test isempty(model.bridge_types)
+    add_bridge(
+        model,
+        MOI.Bridges.Constraint.NumberConversionBridge;
+        coefficient_type = Int,
+    )
+    BT = MOI.Bridges.Constraint.NumberConversionBridge{Int}
+    @test BT in model.bridge_types
+    remove_bridge(
+        model,
+        MOI.Bridges.Constraint.NumberConversionBridge;
+        coefficient_type = Int,
+    )
+    @test !(BT in model.bridge_types)
+    @test isempty(model.bridge_types)
     return
 end
 
