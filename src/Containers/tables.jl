@@ -50,7 +50,7 @@ function rowtable(
     f::Function,
     x::Union{Array,DenseAxisArray,SparseAxisArray};
     header::Vector{Symbol} = Symbol[],
-)
+)::Vector{<:NamedTuple}
     if isempty(header)
         header = Symbol[Symbol("x$i") for i in 1:ndims(x)]
         push!(header, :y)
@@ -61,8 +61,8 @@ function rowtable(
             "Invalid number of column names provided: Got $got, expected $want.",
         )
     end
-    names = tuple(header...)
-    return [NamedTuple{names}((args..., f(x[i]))) for (i, args) in _rows(x)]
+    elements = [(args..., x[i]) for (i, args) in Containers._rows(x)]
+    return NamedTuple{tuple(header...)}.(elements)
 end
 
 rowtable(x; kwargs...) = rowtable(identity, x; kwargs...)
