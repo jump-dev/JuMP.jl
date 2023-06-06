@@ -176,8 +176,7 @@ objective_value(model_dual)
 # Manually deriving the conic dual is difficult and error-prone. The package
 # [Dualization.jl](@ref) provides the `Dualization.dual_optimizer` meta-solver,
 # which wraps any MathOptInterface-compatible solver in an interface that
-# automatically formulates the dual of an input problem, solves the dual
-# problem, and then reports the primal solution back to the user.
+# automatically formulates and solves the dual of an input problem.
 
 # To demonstrate, we use `Dualization.dual_optimizer` to solve `model_primal`:
 
