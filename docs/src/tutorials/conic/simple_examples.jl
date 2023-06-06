@@ -11,11 +11,16 @@
 # This tutorial makes use of the following packages:
 
 using JuMP
+import Dualization
 import LinearAlgebra
 import Plots
 import Random
 import SCS
 import Test
+
+# We will define a dictionary to collect our simple models for later inspection:
+
+sdp_model_dict = Dict{Symbol,JuMP.Model}()
 
 # ## Maximum cut via SDP
 
@@ -78,7 +83,7 @@ function solve_max_cut_sdp(weights)
     T = findall(.!cut)
     println("Solution:")
     println(" (S, T) = ({", join(S, ", "), "}, {", join(T, ", "), "})")
-    return S, T
+    return S, T, model
 end
 
 # Given the graph
@@ -87,7 +92,8 @@ end
 # ```
 # The solution is `(S, T)  = ({1}, {2})`
 
-S, T = solve_max_cut_sdp([0 5; 5 0])
+S, T, _ = solve_max_cut_sdp([0 5; 5 0]);
+S, T
 
 # Given the graph
 # ```raw
@@ -101,7 +107,8 @@ S, T = solve_max_cut_sdp([0 5; 5 0])
 # ```
 # The solution is `(S, T)  = ({1}, {2, 3, 4})`
 
-S, T = solve_max_cut_sdp([0 5 7 6; 5 0 0 1; 7 0 0 1; 6 1 1 0])
+S, T, _ = solve_max_cut_sdp([0 5 7 6; 5 0 0 1; 7 0 0 1; 6 1 1 0]);
+S, T
 
 # Given the graph
 # ```raw
@@ -115,7 +122,9 @@ S, T = solve_max_cut_sdp([0 5 7 6; 5 0 0 1; 7 0 0 1; 6 1 1 0])
 # ```
 # The solution is `(S, T)  = ({1, 4}, {2, 3})`
 
-S, T = solve_max_cut_sdp([0 1 5 0; 1 0 0 9; 5 0 0 2; 0 9 2 0])
+S, T, sdp_model_dict[:max_cut] =
+    solve_max_cut_sdp([0 1 5 0; 1 0 0 9; 5 0 0 2; 0 9 2 0]);
+S, T
 
 # ## K-means clustering via SDP
 
@@ -158,10 +167,10 @@ function example_k_means_clustering()
             end
         end
     end
-    return
+    return model
 end
 
-example_k_means_clustering()
+sdp_model_dict[:k_means_clustering] = example_k_means_clustering()
 
 # ## The correlation problem
 
@@ -200,10 +209,10 @@ function example_correlation_problem()
     optimize!(model)
     println("A lower bound for ρ_AC is $(value(ρ["A", "C"]))")
     Test.@test value(ρ["A", "C"]) ≈ -0.978 atol = 1e-3  #src
-    return
+    return model
 end
 
-example_correlation_problem()
+sdp_model_dict[:correlation_problem] = example_correlation_problem();
 
 # ## The minimum distortion problem
 
@@ -286,7 +295,8 @@ function example_minimum_distortion()
     Test.@test objective_value(model) ≈ 4 / 3 atol = 1e-4
     ## Recover the minimal distorted embedding:
     X = [zeros(3) sqrt(value.(Q)[2:end, 2:end])]
-    return Plots.plot(
+    return model,
+    Plots.plot(
         X[1, :],
         X[2, :],
         X[3, :];
@@ -304,7 +314,8 @@ function example_minimum_distortion()
     )
 end
 
-example_minimum_distortion()
+sdp_model_dict[:minimum_distortion], plot = example_minimum_distortion();
+plot
 
 # ## Lovász numbers
 
@@ -378,10 +389,10 @@ function example_theta_problem()
     Test.@test primal_status(model) == FEASIBLE_POINT
     Test.@test objective_value(model) ≈ sqrt(5) rtol = 1e-4
     println("The Lovász number is: $(objective_value(model))")
-    return
+    return model
 end
 
-example_theta_problem()
+sdp_model_dict[:theta_problem] = example_theta_problem();
 
 # ## Robust uncertainty sets
 
@@ -416,7 +427,40 @@ function example_robust_uncertainty_sets()
         sqrt((1 - ɛ) / ɛ) *
         sqrt(c' * (Σhat + Γ2(𝛿 / 2, N) * LinearAlgebra.I) * c)
     Test.@test objective_value(model) ≈ exact atol = 1e-2
-    return
+    return model
 end
 
-example_robust_uncertainty_sets()
+sdp_model_dict[:robust_uncertainty_sets] = example_robust_uncertainty_sets();
+
+# ## Comparison to dual formulation
+
+# It may be more efficient to solve the dual of a conic program rather than
+# the original formulation.
+# Comparing the numbers of variables and constraints in the primal formulations
+# given here and in the dual formulation provided by the [Dualization.jl](@ref) package:
+
+println("Model Name \t   #PrimalVars #Cons #DualVars #DualCons")
+println("------------------------------------------------------------")
+for (sym, model) in sdp_model_dict
+    # Skip models with constraints types not yet supported:
+    if sym in [:correlation_problem, :robust_uncertainty_sets]
+        continue
+    end
+    println(
+        rpad(string(sym), 20),
+        "\t",
+        num_variables(model),
+        "\t",
+        num_constraints(model; count_variable_in_set_constraints = true),
+        "\t",
+        num_variables(Dualization.dualize(model)),
+        "\t",
+        num_constraints(
+            Dualization.dualize(model);
+            count_variable_in_set_constraints = true,
+        ),
+    )
+end
+
+# we observe that the dual formulation can have fewer variables and constraints.
+# For more details see the [Dualization](@ref) tutorial .
