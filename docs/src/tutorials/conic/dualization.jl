@@ -73,7 +73,7 @@ import SCS
 # conic form solver (or vice versa), then JuMP will automatically reformulate
 # the problem into the correct formulation.
 
-# From a practical perspective though, the reformulations are because the
+# From a practical perspective though, the reformulations are problematic because the
 # additional slack variables and constraints can make the problem much larger
 # and therefore harder to solve.
 
