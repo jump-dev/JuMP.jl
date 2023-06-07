@@ -345,10 +345,10 @@ Use [`Containers.rowtable`](@ref) to convert the `SparseAxisArray` into a
 ```jldoctest containers_sparse
 julia> table = Containers.rowtable(x; header = [:I, :J, :value])
 4-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Symbol, Tuple{Int64, Symbol}}}}:
- (I = 3, J = :B, value = (3, :B))
  (I = 2, J = :A, value = (2, :A))
  (I = 2, J = :B, value = (2, :B))
  (I = 3, J = :A, value = (3, :A))
+ (I = 3, J = :B, value = (3, :B))
 ```
 
 Because it supports the [Tables.jl](https://github.com/JuliaData/Tables.jl)
@@ -362,10 +362,10 @@ julia> DataFrames.DataFrame(table)
  Row │ I      J       value
      │ Int64  Symbol  Tuple…
 ─────┼────────────────────────
-   1 │     3  B       (3, :B)
-   2 │     2  A       (2, :A)
-   3 │     2  B       (2, :B)
-   4 │     3  A       (3, :A)
+   1 │     2  A       (2, :A)
+   2 │     2  B       (2, :B)
+   3 │     3  A       (3, :A)
+   4 │     3  B       (3, :B)
 ```
 
 ### Keyword indexing
