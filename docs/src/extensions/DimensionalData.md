@@ -2,8 +2,7 @@
 
 [DimensionalData.jl](https://github.com/rafaqz/DimensionalData.jl) provides
 tools and abstractions for working with rectangular arrays that have named
-dimensions, and optionally a lookup index. It provides no-cost abstractions for
-named indexing, and fast index lookups.
+dimensions.
 
 !!! compat
     Using the DimensionalData extension with JuMP requires Julia v1.9 or later.
