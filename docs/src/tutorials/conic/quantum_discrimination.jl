@@ -114,6 +114,12 @@ objective_value(model)
 
 solution = [value.(e) for e in E]
 
+# !!! tip
+#     Duality plays a large role in solving conic optimization models. Depending
+#     on the solver, it can be more efficient to solve the dual of this problem
+#     instead of the primal. If performance is an issue, see the [Dualization](@ref)
+#     tutorial for more details.
+
 # ## Alternative formulation
 
 # The formulation above includes `N` Hermitian matrices and a set of linear
