@@ -196,7 +196,7 @@ push!(
 sort!(_LIST_OF_SOLVERS; by = x -> (!startswith(x[1], "jump-dev/"), x[1]))
 sort!(_LIST_OF_EXTENSIONS; by = x -> (!startswith(x[1], "jump-dev/"), x[1]))
 pushfirst!(_LIST_OF_SOLVERS, "Introduction" => "packages/solvers.md")
-pushfirst!(_LIST_OF_EXTENSIONS, "Introduction" => "extensions/extensions.md")
+pushfirst!(_LIST_OF_EXTENSIONS, "Introduction" => "extensions/introduction.md")
 
 # ==============================================================================
 #  JuMP API
