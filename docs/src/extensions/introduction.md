@@ -19,3 +19,13 @@ README contents in the JuMP documentation for the benefit of users.
 Written an extension? Add it to this section of the JuMP documentation by making
 a pull request to the [`docs/packages.toml`](https://github.com/jump-dev/JuMP.jl/blob/master/docs/packages.toml)
 file.
+
+## Weak dependencies
+
+Some extensions listed in this section are implemented using the [weak dependency](https://pkgdocs.julialang.org/v1/creating-packages/#Weak-dependencies)
+feature added to Julia in v1.9. These extensions are activated if and only if
+you have `JuMP` and the other package loaded into your current scope with
+`using` or `import`.
+
+!!! compat
+    Using a weak dependency requires Julia v1.9 or later.
