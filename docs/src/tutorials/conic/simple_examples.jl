@@ -11,6 +11,7 @@
 # This tutorial makes use of the following packages:
 
 using JuMP
+import Dualization
 import LinearAlgebra
 import Plots
 import Random
@@ -56,11 +57,11 @@ function svd_cholesky(X::AbstractMatrix)
     return (F.U * D)'
 end
 
-function solve_max_cut_sdp(weights)
+function solve_max_cut_sdp(weights, solver; verbose = true)
     N = size(weights, 1)
     ## Calculate the (weighted) Laplacian of the graph: L = D - W.
     L = LinearAlgebra.diagm(0 => weights * ones(N)) - weights
-    model = Model(SCS.Optimizer)
+    model = Model(solver)
     set_silent(model)
     @variable(model, X[1:N, 1:N], PSD)
     for i in 1:N
@@ -76,9 +77,11 @@ function solve_max_cut_sdp(weights)
     cut = [LinearAlgebra.dot(r, V[:, i]) > 0 for i in 1:N]
     S = findall(cut)
     T = findall(.!cut)
-    println("Solution:")
-    println(" (S, T) = ({", join(S, ", "), "}, {", join(T, ", "), "})")
-    return S, T
+    if verbose
+        println("Solution:")
+        println(" (S, T) = ({", join(S, ", "), "}, {", join(T, ", "), "})")
+    end
+    return S, T, model
 end
 
 # Given the graph
@@ -87,7 +90,8 @@ end
 # ```
 # The solution is `(S, T)  = ({1}, {2})`
 
-S, T = solve_max_cut_sdp([0 5; 5 0])
+S, T, _ = solve_max_cut_sdp([0 5; 5 0], SCS.Optimizer);
+S, T
 
 # Given the graph
 # ```raw
@@ -101,7 +105,9 @@ S, T = solve_max_cut_sdp([0 5; 5 0])
 # ```
 # The solution is `(S, T)  = ({1}, {2, 3, 4})`
 
-S, T = solve_max_cut_sdp([0 5 7 6; 5 0 0 1; 7 0 0 1; 6 1 1 0])
+graph_4 = [0 5 7 6; 5 0 0 1; 7 0 0 1; 6 1 1 0]
+S, T, _ = solve_max_cut_sdp(graph_4, SCS.Optimizer);
+S, T
 
 # Given the graph
 # ```raw
@@ -115,7 +121,8 @@ S, T = solve_max_cut_sdp([0 5 7 6; 5 0 0 1; 7 0 0 1; 6 1 1 0])
 # ```
 # The solution is `(S, T)  = ({1, 4}, {2, 3})`
 
-S, T = solve_max_cut_sdp([0 1 5 0; 1 0 0 9; 5 0 0 2; 0 9 2 0])
+S, T, _ = solve_max_cut_sdp([0 1 5 0; 1 0 0 9; 5 0 0 2; 0 9 2 0]);
+S, T
 
 # ## K-means clustering via SDP
 
@@ -127,7 +134,7 @@ S, T = solve_max_cut_sdp([0 1 5 0; 1 0 0 9; 5 0 0 2; 0 9 2 0])
 # [_Approximating k-means-type clustering via semidefinite programming_](https://doi.org/10.1137/050641983).
 # SIAM Journal on Optimization, 18(1), 186-205.
 
-function example_k_means_clustering()
+function example_k_means_clustering(solver; verbose = true)
     a = [[2.0, 2.0], [2.5, 2.1], [7.0, 7.0], [2.2, 2.3], [6.8, 7.0], [7.2, 7.5]]
     m = length(a)
     num_clusters = 2
@@ -135,7 +142,7 @@ function example_k_means_clustering()
     for i in 1:m, j in i+1:m
         W[i, j] = W[j, i] = exp(-LinearAlgebra.norm(a[i] - a[j]) / 1.0)
     end
-    model = Model(SCS.Optimizer)
+    model = Model(solver)
     set_silent(model)
     @variable(model, Z[1:m, 1:m] >= 0, PSD)
     @objective(model, Min, LinearAlgebra.tr(W * (LinearAlgebra.I - Z)))
@@ -148,20 +155,24 @@ function example_k_means_clustering()
     for i in 1:m
         if !(i in visited)
             current_cluster += 1
-            println("Cluster $current_cluster")
+            if verbose
+                println("Cluster $current_cluster")
+            end
             for j in i:m
                 if isapprox(Z_val[i, i], Z_val[i, j]; atol = 1e-3)
-                    println(a[j])
+                    if verbose
+                        println(a[j])
+                    end
                     push!(visited, j)
                     Test.@test solution[j] == current_cluster  #src
                 end
             end
         end
     end
-    return
+    return model
 end
 
-example_k_means_clustering()
+example_k_means_clustering(SCS.Optimizer);
 
 # ## The correlation problem
 
@@ -183,8 +194,8 @@ example_k_means_clustering()
 # \end{bmatrix} \succeq 0
 # ```
 
-function example_correlation_problem()
-    model = Model(SCS.Optimizer)
+function example_correlation_problem(solver; verbose = true)
+    model = Model(solver)
     set_silent(model)
     @variable(model, X[1:3, 1:3], PSD)
     S = ["A", "B", "C"]
@@ -194,16 +205,20 @@ function example_correlation_problem()
     @constraint(model, 0.4 <= ρ["B", "C"] <= 0.5)
     @objective(model, Max, ρ["A", "C"])
     optimize!(model)
-    println("An upper bound for ρ_AC is $(value(ρ["A", "C"]))")
+    if verbose
+        println("An upper bound for ρ_AC is $(value(ρ["A", "C"]))")
+    end
     Test.@test value(ρ["A", "C"]) ≈ 0.87195 atol = 1e-4  #src
     @objective(model, Min, ρ["A", "C"])
     optimize!(model)
-    println("A lower bound for ρ_AC is $(value(ρ["A", "C"]))")
+    if verbose
+        println("A lower bound for ρ_AC is $(value(ρ["A", "C"]))")
+    end
     Test.@test value(ρ["A", "C"]) ≈ -0.978 atol = 1e-3  #src
-    return
+    return model
 end
 
-example_correlation_problem()
+example_correlation_problem(SCS.Optimizer);
 
 # ## The minimum distortion problem
 
@@ -263,8 +278,8 @@ example_correlation_problem()
 # _[Finite metric spaces--combinatorics, geometry and algorithms](https://arxiv.org/abs/math/0304466)_,
 # Proceedings of the ICM, Vol. 3, 573-586
 
-function example_minimum_distortion()
-    model = Model(SCS.Optimizer)
+function example_minimum_distortion(solver)
+    model = Model(solver)
     set_silent(model)
     D = [
         0.0 1.0 1.0 1.0
@@ -286,7 +301,8 @@ function example_minimum_distortion()
     Test.@test objective_value(model) ≈ 4 / 3 atol = 1e-4
     ## Recover the minimal distorted embedding:
     X = [zeros(3) sqrt(value.(Q)[2:end, 2:end])]
-    return Plots.plot(
+    return model,
+    Plots.plot(
         X[1, :],
         X[2, :],
         X[3, :];
@@ -304,7 +320,8 @@ function example_minimum_distortion()
     )
 end
 
-example_minimum_distortion()
+_, p = example_minimum_distortion(SCS.Optimizer);
+p
 
 # ## Lovász numbers
 
@@ -355,8 +372,8 @@ example_minimum_distortion()
 # [_The sandwich theorem_](https://doi.org/10.37236%2F1193), 
 # Electronic Journal of Combinatorics, Volume 1, Issue 1, A1.
 
-function example_theta_problem()
-    model = Model(SCS.Optimizer)
+function example_theta_problem(solver; verbose = true)
+    model = Model(solver)
     set_silent(model)
     E = [(1, 2), (2, 3), (3, 4), (4, 5), (5, 1)]
     @variable(model, X[1:5, 1:5], PSD)
@@ -377,11 +394,13 @@ function example_theta_problem()
     Test.@test termination_status(model) == OPTIMAL
     Test.@test primal_status(model) == FEASIBLE_POINT
     Test.@test objective_value(model) ≈ sqrt(5) rtol = 1e-4
-    println("The Lovász number is: $(objective_value(model))")
-    return
+    if verbose
+        println("The Lovász number is: $(objective_value(model))")
+    end
+    return model
 end
 
-example_theta_problem()
+example_theta_problem(SCS.Optimizer);
 
 # ## Robust uncertainty sets
 
@@ -393,14 +412,14 @@ example_theta_problem()
 # [_Data-driven robust optimization._](https://doi.org/10.1007/s10107-017-1125-8)
 # Mathematical Programming, 167, 235-292.
 
-function example_robust_uncertainty_sets()
+function example_robust_uncertainty_sets(solver)
     R, d, 𝛿, ɛ = 1, 3, 0.05, 0.05
     N = ceil((2 + 2 * log(2 / 𝛿))^2) + 1
     c, μhat, M = randn(d), rand(d), rand(d, d)
     Σhat = 1 / (d - 1) * (M - ones(d) * μhat')' * (M - ones(d) * μhat')
     Γ1(𝛿, N) = R / sqrt(N) * (2 + sqrt(2 * log(1 / 𝛿)))
     Γ2(𝛿, N) = 2 * R^2 / sqrt(N) * (2 + sqrt(2 * log(2 / 𝛿)))
-    model = Model(SCS.Optimizer)
+    model = Model(solver)
     set_silent(model)
     @variable(model, Σ[1:d, 1:d], PSD)
     @variable(model, u[1:d])
@@ -416,7 +435,58 @@ function example_robust_uncertainty_sets()
         sqrt((1 - ɛ) / ɛ) *
         sqrt(c' * (Σhat + Γ2(𝛿 / 2, N) * LinearAlgebra.I) * c)
     Test.@test objective_value(model) ≈ exact atol = 1e-2
-    return
+    return model
 end
 
-example_robust_uncertainty_sets()
+example_robust_uncertainty_sets(SCS.Optimizer);
+
+# ## Comparison to dual formulation
+
+# It may be more efficient to solve the dual of a conic program rather than
+# the original formulation.
+# We can compare the numbers of variables and constraints in the primal formulations
+# given here and in the dual formulation provided by the [Dualization.jl](@ref) package:
+
+function _num_variables(model::MOI.ModelLike)
+    return MOI.get(model, MOI.NumberOfVariables())
+end
+function _num_constraints(model::MOI.ModelLike)
+    return sum(
+        MOI.get(model, MOI.NumberOfConstraints{F,S}())
+        for (F, S) in MOI.get(model, MOI.ListOfConstraintTypesPresent())
+    )
+end
+
+println("Model Name \t   #PrimalVars #Cons #DualVars #DualCons")
+println("------------------------------------------------------------")
+for (name, example) in [
+    ("Maximum cut", solver -> solve_max_cut_sdp(graph_4, solver, verbose=false)[3]),
+    ("K-means", solver -> example_k_means_clustering(solver, verbose=false)),
+    ("Correlation", solver -> example_correlation_problem(solver, verbose=false)),
+    ("Minimum distortion", solver -> example_minimum_distortion(solver)[1]),
+    ("Theta", solver -> example_theta_problem(solver, verbose=false)),
+    ("Robust", example_robust_uncertainty_sets),
+]
+    solver = optimizer_with_attributes(
+        SCS.Optimizer,
+        MOI.Silent() => true,
+    )
+    model = example(SCS.Optimizer)
+    scs = backend(model).optimizer.model
+    dual_model = example(Dualization.dual_optimizer(SCS.Optimizer))
+    dual_scs = backend(dual_model).optimizer.model.optimizer.dual_problem.dual_model.model
+    println(
+        rpad(name, 20),
+        "\t",
+        _num_variables(scs),
+        "\t",
+        _num_constraints(scs),
+        "\t",
+        _num_variables(dual_scs),
+        "\t",
+        _num_constraints(dual_scs),
+    )
+end
+
+# We observe that the dual formulation can have fewer variables and constraints.
+# For more details see the [Dualization](@ref) tutorial .
