@@ -85,9 +85,14 @@ function dual_start_value(
     return reshape_vector(_dual_start(con_ref), dual_shape(con_ref.shape))
 end
 
-function _value_type(::Type{<:AbstractModel}, ::Type{F}) where {F}
+function _value_type(
+    ::Type{<:AbstractModel},
+    ::Type{F},
+) where {F<:MOI.AbstractFunction}
     return MOI.Utilities.value_type(Float64, F)
 end
+
+_value_type(::Any, ::Any) = Any
 
 # Returns the value of MOI.ConstraintDualStart in a type-stable way
 function _dual_start(
