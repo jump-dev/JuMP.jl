@@ -980,12 +980,19 @@ function _eval_instances_in_jump(moi_enum)
         eval(Expr(:const, Expr(:(=), name, enum)))
         # Documentation is not copied for a `const` expression of an object, so
         # we need to manually set the docstring in this `@__MODULE__`.
-        Docs.doc!(
-            @__MODULE__,
-            Docs.Binding(@__MODULE__, name),
-            Docs.docstr(Docs.Binding(MOI, name)),
-            Union{},
+        docstr = Docs.docstr(Docs.Binding(MOI, name))
+        d = Docs.DocStr(
+            docstr.text,
+            nothing,
+            Dict{Symbol,Any}(
+                :typesig => Union{},
+                :module => @__MODULE__,
+                :linenumber => @__LINE__,
+                :binding => getfield(@__MODULE__, name),
+                :path => @__FILE__,
+            ),
         )
+        Docs.doc!(@__MODULE__, Docs.Binding(@__MODULE__, name), d, Union{})
     end
     return
 end
