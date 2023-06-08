@@ -1165,7 +1165,7 @@ function _moi_constrain_variable(moi_backend::MOI.ModelLike, index, info)
 end
 
 """
-    VariablesConstrainedOnCreation <: AbstractVariable
+    VariableConstrainedOnCreation <: AbstractVariable
 
 Variable `scalar_variables` constrained to belong to `set`.
 
