@@ -1459,4 +1459,13 @@ function test_dependent_set_variable_macro()
     return
 end
 
+function test_variable_dimension_mismatch()
+    model = Model()
+    @test_throws(
+        DimensionMismatch,
+        @variable(model, x[1:2] in MOI.SecondOrderCone(3)),
+    )
+    return
+end
+
 end  # module TestVariable

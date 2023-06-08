@@ -183,7 +183,6 @@ julia> @NLobjective(model, Max, p[1] * x)
 
 julia> @expression(model, my_expr, p[1] * x^2)
 ERROR: MethodError: no method matching *(::NonlinearParameter, ::QuadExpr)
-Closest candidates are:
 [...]
 
 julia> @NLexpression(model, my_nl_expr, p[1] * x^2)

@@ -11,11 +11,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - package: 'Alpine'
+          - package: 'BilevelJuMP'
           - package: 'InfiniteOpt'
+          - package: 'LinearFractional'
+          - package: 'Plasmo'
           - package: 'PolyJuMP'
           - package: 'PowerModels'
           - package: 'SDDP'
+          - package: 'SetProg'
+          - package: 'SparseVariables'
           - package: 'SumOfSquares'
+          - package: 'UnitJuMP'
     steps:
       - uses: actions/checkout@v3
       - uses: julia-actions/setup-julia@v1

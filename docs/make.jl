@@ -1,5 +1,11 @@
+#  Copyright 2017, Iain Dunning, Joey Huchette, Miles Lubin, and contributors
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 import Pkg
-Pkg.pkg"add Documenter#633a95a"
+Pkg.pkg"add Documenter#740ba6304c940801eafdc18b069e4609bf3923a6"
+
 import Documenter
 import Downloads
 import Literate
@@ -104,6 +110,16 @@ if !_FAST
     end
 end
 
+function _add_edit_url(filename, url)
+    contents = read(filename, String)
+    open(filename, "w") do io
+        write(io, "```@meta\nEditURL = \"$url\"\n```\n\n")
+        write(io, contents)
+        return
+    end
+    return
+end
+
 # ==============================================================================
 #  Add solver README
 # ==============================================================================
@@ -119,12 +135,32 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
         "https://raw.githubusercontent.com/$user/$solver.jl/$tag/$filename",
         out_filename,
     )
+    _add_edit_url(
+        out_filename,
+        "https://github.com/$user/$solver.jl/blob/$tag/$filename",
+    )
     if get(data, "has_html", false) == true
         # Very simple detector of HTML to wrap in ```@raw html
         lines = readlines(out_filename)
         open(out_filename, "w") do io
             closing_tag = nothing
+            math_open = false
             for line in lines
+                line = replace(
+                    line,
+                    "#gh-light-mode-only\"" => "\" class=\"display-light-only\"",
+                )
+                line = replace(
+                    line,
+                    "#gh-dark-mode-only\"" => "\" class=\"display-dark-only\"",
+                )
+                for ext in ("svg", "png", "gif")
+                    line = replace(line, ".$ext\"" => ".$ext?raw=true\"")
+                end
+                if line == "\$\$"
+                    line = math_open ? "```" : "```math"
+                    math_open = !math_open
+                end
                 tag = if startswith(line, "<img")
                     "/>"
                 else
@@ -149,6 +185,7 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
         push!(_LIST_OF_SOLVERS, "$user/$solver.jl" => "packages/$solver.md")
     end
 end
+push!(_LIST_OF_SOLVERS, "JuliaOpt/NLopt.jl" => "packages/NLopt.md")
 # Sort, with jump-dev repos at the start.
 sort!(_LIST_OF_SOLVERS; by = x -> (!startswith(x[1], "jump-dev/"), x[1]))
 sort!(_LIST_OF_EXTENSIONS; by = x -> (!startswith(x[1], "jump-dev/"), x[1]))
@@ -217,6 +254,7 @@ const _PAGES = [
             "tutorials/conic/start_values.md",
             "tutorials/conic/tips_and_tricks.md",
             "tutorials/conic/simple_examples.md",
+            "tutorials/conic/dualization.md",
             "tutorials/conic/logistic_regression.md",
             "tutorials/conic/experiment_design.md",
             "tutorials/conic/min_ellipse.md",
@@ -231,6 +269,7 @@ const _PAGES = [
         ],
         "Applications" => [
             "tutorials/applications/power_systems.md",
+            "tutorials/applications/optimal_power_flow.md",
             "tutorials/applications/web_app.md",
         ],
     ],
@@ -302,13 +341,21 @@ function fix_release_line(
     return line
 end
 
-open(joinpath(@__DIR__, "src", "changelog.md"), "r") do in_io
-    open(joinpath(@__DIR__, "src", "release_notes.md"), "w") do out_io
-        for line in readlines(in_io; keep = true)
-            write(out_io, fix_release_line(line))
+function _fix_release_lines(changelog, release_notes, args...)
+    open(release_notes, "w") do io
+        for line in readlines(changelog; keep = true)
+            write(io, fix_release_line(line, args...))
         end
     end
+    return
 end
+
+_fix_release_lines(
+    joinpath(@__DIR__, "src", "changelog.md"),
+    joinpath(@__DIR__, "src", "release_notes.md"),
+)
+
+_add_edit_url(joinpath(@__DIR__, "src", "release_notes.md"), "changelog.md")
 
 # ==============================================================================
 #  Embed MathOptInterface.jl documentation
@@ -355,15 +402,19 @@ function _add_moi_pages()
     index_filename = joinpath(moi_dir, "index.md")
     content = replace(read(index_filename, String), src => dest)
     write(index_filename, content)
-    open(joinpath(moi_dir, "changelog.md"), "r") do in_io
-        open(joinpath(moi_dir, "release_notes.md"), "w") do out_io
-            for line in readlines(in_io; keep = true)
-                write(
-                    out_io,
-                    fix_release_line(
-                        line,
-                        "https://github.com/jump-dev/MathOptInterface.jl",
-                    ),
+    _fix_release_lines(
+        joinpath(moi_dir, "changelog.md"),
+        joinpath(moi_dir, "release_notes.md"),
+        "https://github.com/jump-dev/MathOptInterface.jl",
+    )
+    for (root, dirs, files) in walkdir(moi_dir)
+        for file in files
+            if endswith(file, ".md")
+                filename = joinpath(root, file)
+                moi_filename = replace(filename, moi_dir => "")
+                _add_edit_url(
+                    filename,
+                    "https://github.com/jump-dev/MathOptInterface.jl/blob/$version/docs/src$moi_filename",
                 )
             end
         end
@@ -478,6 +529,7 @@ if _PDF
         format = Documenter.LaTeX(; platform = latex_platform),
         build = "latex_build",
         pages = _PAGES,
+        debug = true,
     )
     # Hack for deploying: copy the pdf (and only the PDF) into the HTML build
     # directory! We don't want to copy everything in `latex_build` because it

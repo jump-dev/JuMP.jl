@@ -154,8 +154,8 @@ instead of one.
 julia> model = Model();
 
 julia> @variable(model, x[i=1:2], variable_type = AddTwice, kw = i)
-Can also use Base.Iterators.Pairs(:kw => 1) here.
-Can also use Base.Iterators.Pairs(:kw => 2) here.
+Can also use Base.Pairs(:kw => 1) here.
+Can also use Base.Pairs(:kw => 2) here.
 2-element Vector{Tuple{VariableRef, VariableRef}}:
  (x[1]_a, x[1]_b)
  (x[2]_a, x[2]_b)
