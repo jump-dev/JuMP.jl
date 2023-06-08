@@ -85,6 +85,15 @@ function dual_start_value(
     return reshape_vector(_dual_start(con_ref), dual_shape(con_ref.shape))
 end
 
+function _value_type(
+    ::Type{<:AbstractModel},
+    ::Type{F},
+) where {F<:MOI.AbstractFunction}
+    return MOI.Utilities.value_type(Float64, F)
+end
+
+_value_type(::Any, ::Any) = Any
+
 # Returns the value of MOI.ConstraintDualStart in a type-stable way
 function _dual_start(
     con_ref::ConstraintRef{M,MOI.ConstraintIndex{F,S}},
@@ -1005,19 +1014,6 @@ function value(
     f = jump_function(constraint_object(con_ref))
     return reshape_vector(value.(var_value, f), con_ref.shape)
 end
-
-"""
-    _value_type(::Type{<:AbstractModel}, ::Type{<:AbstractFunction})
-
-Return the value type of the function.
-"""
-_value_type(::Any, ::Type{F}) where {F} = Any
-_value_type(::Any, ::Type{MOI.VariableIndex}) = Float64
-_value_type(::Any, ::Type{MOI.ScalarAffineFunction{T}}) where {T} = T
-_value_type(::Any, ::Type{MOI.ScalarQuadraticFunction{T}}) where {T} = T
-_value_type(::Any, ::Type{MOI.VectorOfVariables}) = Vector{Float64}
-_value_type(::Any, ::Type{MOI.VectorAffineFunction{T}}) where {T} = Vector{T}
-_value_type(::Any, ::Type{MOI.VectorQuadraticFunction{T}}) where {T} = Vector{T}
 
 # Returns the value of MOI.ConstraintPrimal in a type-stable way
 function _constraint_primal(
