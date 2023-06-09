@@ -30,11 +30,10 @@ done in the same commit, or separately. The last commit should have the message
  - [ ] Change the version number in `Project.toml`
  - [ ] Update the links in README.md
  - [ ] The commit messages in this PR do not contain `[ci skip]`
-       (See [Documenter#965](https://github.com/JuliaDocs/Documenter.jl/issues/965).)
 
 ## The release
 
- - [ ] After merging this pull request, comment `@JuliaRegistrator register` in
+ - [ ] After merging this pull request, comment `[at]JuliaRegistrator register` in
        the GitHub commit. This should automatically publish a new version to the
        Julia registry, as well as create a tag, and rebuild the documentation
        for this tag.
