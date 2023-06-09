@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  - Fixed error message for matrix in [`HermitianPSDCone`](@ref) (#3369)
  - Fixed `EditURL` for custom documentation pages (#3373)
- - Fixed returnn type annotations for [`MOI.ConstraintPrimal`](@ref) and
+ - Fixed return type annotations for [`MOI.ConstraintPrimal`](@ref) and
    [`MOI.ConstraintDual`](@ref) (#3381)
  - Fixed printing change in Julia nightly (#3391)
  - Fixed printing of `Complex` coefficients (#3397)
