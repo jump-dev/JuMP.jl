@@ -57,7 +57,7 @@
 [HiGHS]
     rev = "v1.5.2"
 [Ipopt]
-    rev = "v1.4.0"
+    rev = "v1.4.1"
 [KNITRO]
     rev = "4c56de7684c42dd3c83c5fbc515ae1f424eed524"
 [MiniZinc]
@@ -68,7 +68,7 @@
     rev = "v1.0.0"
     has_html = true
 [Pajarito]
-    rev = "v0.8.2"
+    rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
     rev = "1721e7b07bd1991238802a438ecb5af566d4b555"
     extension = true
