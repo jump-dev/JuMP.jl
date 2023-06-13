@@ -9,6 +9,13 @@
 #############################################################################
 
 """
+    vectorize(matrix::AbstractMatrix, ::Shape)
+
+Convert the `matrix` into a vector according to `Shape`.
+"""
+function vectorize end
+
+"""
     SymmetricMatrixSpace()
 
 Use in the [`@variable`](@ref) macro to constrain a matrix of variables to be

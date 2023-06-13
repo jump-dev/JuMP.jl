@@ -535,6 +535,11 @@ function _nl_subexpression_string(mode::MIME, model::Model)
     return strings
 end
 
+"""
+    anonymous_name(::MIME, x::AbstractVariableRef)
+
+The name to use for an anonymous variable `x` when printing.
+"""
 anonymous_name(::Any, x::AbstractVariableRef) = "anon"
 
 anonymous_name(::MIME"text/plain", x::VariableRef) = "_[$(index(x).value)]"
