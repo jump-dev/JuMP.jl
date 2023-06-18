@@ -34,7 +34,7 @@
 [AmplNLWriter]
     rev = "v1.1.0"
 [BARON]
-    rev = "1e98de4d9065a07c517f30498d435fda82fc3c80"
+    rev = "v0.8.1"
 [Cbc]
     rev = "v1.1.1"
 [Clp]
