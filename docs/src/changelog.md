@@ -7,6 +7,48 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.12.0 (June 19, 2023)
+
+### Added
+
+ - Added `coefficient_type` keyword argument to [`add_bridge`](@ref) and
+   [`remove_bridge`](@ref) (#3394)
+
+### Fixed
+
+ - Fixed error message for matrix in [`HermitianPSDCone`](@ref) (#3369)
+ - Fixed `EditURL` for custom documentation pages (#3373)
+ - Fixed return type annotations for [`MOI.ConstraintPrimal`](@ref) and
+   [`MOI.ConstraintDual`](@ref) (#3381)
+ - Fixed printing change in Julia nightly (#3391)
+ - Fixed printing of `Complex` coefficients (#3397)
+ - Fixed printing of constraints in `text/latex` mode (#3405)
+ - Fixed performance issue in [`Containers.rowtable`](@ref) (#3410)
+ - Fixed bug when variables added to set of wrong dimension (#3411)
+
+### Other
+
+ - Added more solver READMEs to the documentation (#3358) (#3360) (#3364)
+   (#3365) (#3366) (#3368) (#3372) (#3374) (#3376) (#3379) (#3387) (#3389)
+ - Added StatusSwitchingQP.jl to the installation table (#3354)
+ - Updated checklist for adding a new solver (#3370)
+ - Updated `extension-tests.yml` action (#3371) (#3375)
+ - Color logs in GitHub actions (#3392)
+ - Added new tutorials
+   - [Optimal power flow](@ref) (#3395) (#3412)
+   - [Lovász numbers](@ref) (#3399)
+   - [Dualization](@ref) (#3402)
+ - Updated JuMP paper citation (#3400)
+ - Changed GitHub action to upload LaTeX logs when building documentation
+   (#3403)
+ - Fixed printing of SCS log in documentation (#3406)
+ - Updated solver versions (#3407)
+ - Updated documentation to use Julia v1.9 (#3398)
+ - Replaced `_value_type` with `MOI.Utilities.value_type` (#3414)
+ - Fixed a typo in docstring (#3415)
+ - Refactored API documentation (#3386)
+ - Updated SCIP license (#3420)
+
 ## Version 1.11.1 (May 19, 2023)
 
 ### Fixed
