@@ -524,7 +524,13 @@ expressions.
 """
 function _rewrite_expression(expr)
     new_expr = MacroTools.postwalk(_rewrite_to_jump_logic, expr)
-    return _MA.rewrite(new_expr; move_factors_into_sums = false)
+    new_aff, parse_aff = _MA.rewrite(new_expr; move_factors_into_sums = false)
+    ret = gensym()
+    code = quote
+        $parse_aff
+        $ret = $flatten($new_aff)
+    end
+    return ret, code
 end
 
 function parse_constraint_head(

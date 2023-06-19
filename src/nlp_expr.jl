@@ -282,56 +282,65 @@ for f in (:+, :-, :*, :^, :/, :atan)
     end
 end
 
-# Thse n-ary operators are associative. Instead of creating deeply nested
-# binary trees, flatten arguments where possible.
-for f in (:+, :*)
-    op = Meta.quot(f)
-    @eval begin
-        function Base.$f(x::NonlinearExpr{V}, y::_Constant) where {V}
-            y2 = convert(Float64, _constant_to_number(y))
-            if x.head == $op
-                return NonlinearExpr{V}($op, vcat(x.args, y2))
+function _MA.operate!!(
+    ::typeof(_MA.add_mul),
+    x::NonlinearExpr,
+    y::AbstractJuMPScalar,
+)
+    if x.head == :+
+        push!(x.args, y)
+        return x
+    end
+    return +(x, y)
+end
+
+"""
+    flatten(expr::NonlinearExpr)
+
+Flatten a nonlinear expression by lifting nested `+` and `*` nodes into a single
+n-ary operation.
+
+## Motivation
+
+Nonlinear expressions created using operator overloading can be deeply nested
+and unbalanced. For example, `prod(x for i in 1:4)` creates
+`*(x, *(x, *(x, x)))` instead of the more preferable `*(x, x, x, x)`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> y = prod(x for i in 1:4)
+((x² * x) * x)
+
+julia> flatten(y)
+(x² * x * x)
+```
+"""
+function flatten(expr::NonlinearExpr{V}) where {V}
+    if !(expr.head in (:+, :*))
+        return expr
+    end
+    args = Any[]
+    nodes_to_visit = Any[arg for arg in reverse(expr.args)]
+    while !isempty(nodes_to_visit)
+        arg = pop!(nodes_to_visit)
+        if arg isa NonlinearExpr && arg.head == expr.head
+            for n in reverse(arg.args)
+                push!(nodes_to_visit, n)
             end
-            return NonlinearExpr{V}($op, x, y2)
-        end
-        function Base.$f(x::_Constant, y::NonlinearExpr{V}) where {V}
-            x2 = convert(Float64, _constant_to_number(x))
-            if y.head == $op
-                return NonlinearExpr{V}($op, vcat(x2, y.args))
-            end
-            return NonlinearExpr{V}($op, x2, y)
-        end
-        function Base.$f(x::NonlinearExpr{V}, y::AbstractJuMPScalar) where {V}
-            if x.head == $op
-                return NonlinearExpr{V}($op, vcat(x.args, y))
-            end
-            return NonlinearExpr{V}($op, x, y)
-        end
-        function Base.$f(x::AbstractJuMPScalar, y::NonlinearExpr{V}) where {V}
-            if y.head == $op
-                return NonlinearExpr{V}($op, vcat(x, y.args))
-            end
-            return NonlinearExpr{V}($op, x, y)
-        end
-        function Base.$f(x::NonlinearExpr{V}, y::NonlinearExpr{V}) where {V}
-            if x.head == $op && y.head == $op
-                return NonlinearExpr{V}($op, vcat(x.args, y.args))
-            elseif x.head == $op
-                return NonlinearExpr{V}($op, vcat(x.args, y))
-            elseif y.head == $op
-                return NonlinearExpr{V}($op, vcat(x, y.args))
-            end
-            return NonlinearExpr{V}($op, x, y)
-        end
-        function Base.$f(x::NonlinearExpr{U}, y::NonlinearExpr{V}) where {U,V}
-            return error(
-                "Unable to call ",
-                $op,
-                " with nonlinear expressions of different variable type",
-            )
+        else
+            push!(args, flatten(arg))
         end
     end
+    return NonlinearExpr{V}(expr.head, args)
 end
+
+flatten(expr) = expr
 
 function _ifelse(a::AbstractJuMPScalar, x, y)
     return NonlinearExpr{variable_ref_type(a)}(:ifelse, Any[a, x, y])
