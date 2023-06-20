@@ -319,25 +319,36 @@ julia> y = prod(x for i in 1:4)
 
 julia> flatten(y)
 (x² * x * x)
+
+julia> flatten(sin(y))
+sin((x² * x * x))
 ```
 """
 function flatten(expr::NonlinearExpr{V}) where {V}
-    if !(expr.head in (:+, :*))
-        return expr
-    end
-    args = Any[]
-    nodes_to_visit = Any[arg for arg in reverse(expr.args)]
+    root = NonlinearExpr{V}(expr.head, Any[])
+    nodes_to_visit = Any[(root, arg) for arg in reverse(expr.args)]
     while !isempty(nodes_to_visit)
-        arg = pop!(nodes_to_visit)
-        if arg isa NonlinearExpr && arg.head == expr.head
+        parent, arg = pop!(nodes_to_visit)
+        if !(arg isa NonlinearExpr)
+            # Not a nonlinear expression, so can use recursion.
+            push!(parent.args, flatten(arg))
+        elseif parent.head in (:+, :*) && arg.head == parent.head
+            # A special case: the arg can be lifted to an n-ary argument of the
+            # parent.
             for n in reverse(arg.args)
-                push!(nodes_to_visit, n)
+                push!(nodes_to_visit, (parent, n))
             end
         else
-            push!(args, flatten(arg))
+            # The default case for nonlinear expressions. Put the args on the
+            # stack, so that we may walk them later.
+            for n in reverse(arg.args)
+                push!(nodes_to_visit, (arg, n))
+            end
+            empty!(arg.args)
+            push!(parent.args, arg)
         end
     end
-    return NonlinearExpr{V}(expr.head, args)
+    return root
 end
 
 flatten(expr) = expr

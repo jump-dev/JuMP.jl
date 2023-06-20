@@ -114,6 +114,8 @@ function test_extension_flatten_nary(
     @test to_string(*(expr_mult, expr_sin)) == "(x * sin(x))"
     @test to_string(*(expr_sin, expr_mult)) == "(sin(x) * x)"
     @test to_string(*(expr_sin, expr_sin)) == "(sin(x) * sin(x))"
+    @test to_string(sin(+(expr_plus, 1))) == "sin((x + 1.0))"
+    @test to_string(sin(*(expr_mult, expr_mult))) == "sin((x * x))"
     return
 end
 
