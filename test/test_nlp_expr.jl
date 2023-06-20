@@ -593,4 +593,15 @@ function test_value_expression()
     return
 end
 
+function test_show_nonlinear_model()
+    model = Model()
+    @variable(model, x >= -1)
+    @objective(model, Min, exp(x))
+    @constraint(model, sin(x) <= 0)
+    str = sprint(show, model)
+    @test occursin("`NonlinearExpr{VariableRef}`-in-", str)
+    @test occursin("Objective function type: NonlinearExpr{VariableRef}", str)
+    return
+end
+
 end  # module

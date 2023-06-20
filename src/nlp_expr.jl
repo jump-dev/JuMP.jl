@@ -440,7 +440,7 @@ function jump_function(model::Model, f::MOI.ScalarNonlinearFunction)
 end
 
 function jump_function_type(::Model, ::Type{<:MOI.ScalarNonlinearFunction})
-    return NonlinearExpr
+    return NonlinearExpr{VariableRef}
 end
 
 moi_function_type(::Type{<:NonlinearExpr}) = MOI.ScalarNonlinearFunction
