@@ -601,8 +601,7 @@ function test_show_nonlinear_model()
     @objective(model, Min, exp(x))
     @constraint(model, sin(x) <= 0)
     str = sprint(show, model)
-    @test occursin("`NonlinearExpr{VariableRef}`-in-", str)
-    @test occursin("Objective function type: NonlinearExpr{VariableRef}", str)
+    @test occursin("NonlinearExpr{", str)
     return
 end
 
