@@ -54,8 +54,8 @@ following paper ([preprint](https://arxiv.org/abs/2206.03866)):
 
 ```bibtex
 @article{Lubin2023,
-    author = {Miles Lubin and Oscar Dowson and Joaquim Dias Garcia and Joey Huchette and Beno{\^i}t Legat and Juan Pablo Vielma},
-    title = {JuMP 1.0: Recent improvements to a modeling language for mathematical optimization},
+    author = {Miles Lubin and Oscar Dowson and Joaquim {Dias Garcia} and Joey Huchette and Beno{\^i}t Legat and Juan Pablo Vielma},
+    title = {{JuMP} 1.0: {R}ecent improvements to a modeling language for mathematical optimization},
     journal = {Mathematical Programming Computation},
     year = {2023},
     doi = {10.1007/s12532-023-00239-3}
@@ -68,7 +68,7 @@ For earlier works, see:
    ```bibtex
    @article{DunningHuchetteLubin2017,
        author = {Iain Dunning and Joey Huchette and Miles Lubin},
-       title = {JuMP: A Modeling Language for Mathematical Optimization},
+       title = {{JuMP}: {A} {M}odeling {L}anguage for {M}athematical {O}ptimization},
        journal = {SIAM Review},
        volume = {59},
        number = {2},
@@ -82,7 +82,7 @@ For earlier works, see:
    ```bibtex
    @article{LubinDunningIJOC,
        author = {Miles Lubin and Iain Dunning},
-       title = {Computing in Operations Research Using Julia},
+       title = {{C}omputing in {O}perations {R}esearch {U}sing {J}ulia},
        journal = {INFORMS Journal on Computing},
        volume = {27},
        number = {2},
