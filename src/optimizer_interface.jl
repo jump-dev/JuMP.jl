@@ -1152,7 +1152,7 @@ function set_start_values(
         set_dual_start_value(ci, dual_start)
     end
     # Needed for models which bridge `min f(x)` into `min t; t >= f(x)`.
-    MOI.set(model, MOI.Bridges.Objective.SlackBridgePrimalDualStart(), true)
+    MOI.set(model, MOI.Bridges.Objective.SlackBridgePrimalDualStart(), nothing)
     return
 end
 
