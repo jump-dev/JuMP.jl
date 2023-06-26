@@ -1225,6 +1225,7 @@ ERROR: MethodError: no method matching set_lower_bound(::AffExpr, ::Float64)
 Instead, you can convert an upper-triangular elements to a variable as follows:
 ```jldoctest skewsymmetric
 julia> to_variable(x::AffExpr) = first(keys(x.terms))
+to_variable (generic function with 1 method)
 
 julia> to_variable(x[1, 2])
 x[1,2]
