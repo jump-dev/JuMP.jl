@@ -1222,19 +1222,15 @@ ERROR: MethodError: no method matching set_lower_bound(::AffExpr, ::Float64)
 [...]
 ```
 
-However, you can convert the matrix into one in which the upper triangular
-elements are `VariableRef` and the lower triangular elements are `AffExpr` as
-follows:
+Instead, you can convert an upper-triangular elements to a variable as follows:
 ```jldoctest skewsymmetric
-julia> y = Union{VariableRef,AffExpr}[
-           j > i ? first(keys(x[i, j].terms)) : x[i, j]
-           for i in 1:size(x, 1), j in 1:size(x, 2)
-       ]
-2×2 Matrix{Union{VariableRef, AffExpr}}:
- 0        x[1,2]
- -x[1,2]  0
+julia> to_variable(x::AffExpr) = first(keys(x.terms))
+to_variable (generic function with 1 method)
 
-julia> set_lower_bound(y[1, 2], 0.0)
+julia> to_variable(x[1, 2])
+x[1,2]
+
+julia> set_lower_bound(to_variable(x[1, 2]), 0.0)
 ```
 
 ### Example: Hermitian positive semidefinite variables
