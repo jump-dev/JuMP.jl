@@ -781,7 +781,7 @@ end
 
 function build_constraint(
     _error::Function,
-    x::Matrix,
+    x::AbstractMatrix,
     set::MOI.AbstractVectorSet,
 )
     return _error(
@@ -793,10 +793,7 @@ end
 function build_constraint(
     _error::Function,
     ::Matrix,
-    T::Union{
-        MOI.PositiveSemidefiniteConeSquare,
-        MOI.PositiveSemidefiniteConeTriangle,
-    },
+    T::MOI.PositiveSemidefiniteConeTriangle,
 )
     return _error("instead of `$(T)`, use `JuMP.PSDCone()`.")
 end

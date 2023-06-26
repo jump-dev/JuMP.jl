@@ -137,25 +137,6 @@ triangular part of the matrix is constrained to belong to the
 """
 struct PSDCone end
 
-function build_constraint(
-    _error::Function,
-    f::AbstractMatrix{<:AbstractJuMPScalar},
-    ::Nonnegatives,
-    extra::PSDCone,
-)
-    return build_constraint(_error, f, extra)
-end
-
-function build_constraint(
-    _error::Function,
-    f::AbstractMatrix{<:AbstractJuMPScalar},
-    ::Nonpositives,
-    extra::PSDCone,
-)
-    new_f = _MA.operate!!(*, -1, f)
-    return build_constraint(_error, new_f, extra)
-end
-
 """
     SymmetricMatrixShape
 
@@ -167,6 +148,7 @@ lower-left triangular part given row by row).
 struct SymmetricMatrixShape <: AbstractShape
     side_dimension::Int
 end
+
 function reshape_vector(
     vectorized_form::Vector{T},
     shape::SymmetricMatrixShape,
@@ -181,12 +163,14 @@ function reshape_vector(
     end
     return LinearAlgebra.Symmetric(matrix)
 end
+
 function reshape_set(
     ::MOI.PositiveSemidefiniteConeTriangle,
     ::SymmetricMatrixShape,
 )
     return PSDCone()
 end
+
 function vectorize(matrix, ::SymmetricMatrixShape)
     n = LinearAlgebra.checksquare(matrix)
     return [matrix[i, j] for j in 1:n for i in 1:j]
@@ -414,12 +398,7 @@ function build_variable(
 )
     n = _square_side(_error, variables)
     set = MOI.PositiveSemidefiniteConeTriangle(n)
-    shape = SymmetricMatrixShape(n)
-    return VariablesConstrainedOnCreation(
-        _vectorize_variables(_error, variables),
-        set,
-        shape,
-    )
+    return build_variable(_error, variables, set)
 end
 
 function value(
@@ -476,12 +455,7 @@ function build_constraint(
     ::PSDCone,
 ) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
     n = LinearAlgebra.checksquare(Q)
-    shape = SymmetricMatrixShape(n)
-    return VectorConstraint(
-        vectorize(Q, shape),
-        MOI.PositiveSemidefiniteConeTriangle(n),
-        shape,
-    )
+    return build_constraint(_error, Q, MOI.PositiveSemidefiniteConeTriangle(n))
 end
 
 """
@@ -511,12 +485,7 @@ function build_constraint(
     ::PSDCone,
 )
     n = LinearAlgebra.checksquare(Q)
-    shape = SquareMatrixShape(n)
-    return VectorConstraint(
-        vectorize(Q, shape),
-        MOI.PositiveSemidefiniteConeSquare(n),
-        shape,
-    )
+    return build_constraint(_error, Q, MOI.PositiveSemidefiniteConeSquare(n))
 end
 
 """
@@ -741,4 +710,61 @@ function build_constraint(_error::Function, ::AbstractMatrix, ::Zeros)
         "this syntax is supported in the special case that the matrices are " *
         "`LinearAlgebra.Symmetric` or `LinearAlgebra.Hermitian`.",
     )
+end
+
+function build_constraint(
+    _error::Function,
+    Q::LinearAlgebra.Symmetric{V,M},
+    set::MOI.AbstractSymmetricMatrixSetTriangle,
+) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
+    n = LinearAlgebra.checksquare(Q)
+    shape = SymmetricMatrixShape(n)
+    return VectorConstraint(vectorize(Q, shape), set, shape)
+end
+
+function build_constraint(
+    _error::Function,
+    Q::AbstractMatrix{<:AbstractJuMPScalar},
+    set::MOI.AbstractSymmetricMatrixSetSquare,
+)
+    n = LinearAlgebra.checksquare(Q)
+    shape = SquareMatrixShape(n)
+    return VectorConstraint(vectorize(Q, shape), set, shape)
+end
+
+function build_constraint(
+    _error::Function,
+    f::AbstractMatrix{<:AbstractJuMPScalar},
+    ::Nonnegatives,
+    extra::Union{
+        MOI.AbstractSymmetricMatrixSetTriangle,
+        MOI.AbstractSymmetricMatrixSetSquare,
+        PSDCone,
+    },
+)
+    return build_constraint(_error, f, extra)
+end
+
+function build_constraint(
+    _error::Function,
+    f::AbstractMatrix{<:AbstractJuMPScalar},
+    ::Nonpositives,
+    extra::Union{
+        MOI.AbstractSymmetricMatrixSetTriangle,
+        MOI.AbstractSymmetricMatrixSetSquare,
+        PSDCone,
+    },
+)
+    new_f = _MA.operate!!(*, -1, f)
+    return build_constraint(_error, new_f, extra)
+end
+
+function build_variable(
+    _error::Function,
+    variables::Matrix{<:AbstractVariable},
+    set::MOI.AbstractSymmetricMatrixSetTriangle,
+)
+    n = _square_side(_error, variables)
+    x = _vectorize_variables(_error, variables)
+    return VariablesConstrainedOnCreation(x, set, SymmetricMatrixShape(n))
 end

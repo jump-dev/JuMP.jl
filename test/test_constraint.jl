@@ -653,15 +653,6 @@ function test_extension_PSD_constraint_errors(
     model = ModelType()
     @variable(model, X[1:2, 1:2])
     err = ErrorException(
-        "In `@constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))`:" *
-        " instead of `MathOptInterface.PositiveSemidefiniteConeSquare(2)`," *
-        " use `JuMP.PSDCone()`.",
-    )
-    @test_throws_strip(
-        err,
-        @constraint(model, X in MOI.PositiveSemidefiniteConeSquare(2))
-    )
-    err = ErrorException(
         "In `@constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))`:" *
         " instead of `MathOptInterface.PositiveSemidefiniteConeTriangle(2)`," *
         " use `JuMP.PSDCone()`.",
