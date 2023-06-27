@@ -51,6 +51,13 @@ function build_constraint(
     return VectorConstraint(args, moi_set(set, length(args)), shape)
 end
 
+function build_constraint(error_fn::Function, f::Tuple, set::AbstractVectorSet)
+    return error_fn(
+        "The tuple function $(typeof(f)) is not supported for a set of type " *
+        "$(typeof(set)). Try concatenating the elements into a vector instead.",
+    )
+end
+
 """
     build_constraint(
         _error::Function,

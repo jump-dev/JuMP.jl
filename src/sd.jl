@@ -820,17 +820,6 @@ end
 
 function build_constraint(
     error_fn::Function,
-    f::Tuple,
-    set::AbstractVectorSet,
-)
-    return error_fn(
-        "The tuple function $(typeof(f)) is not supported for a set of type " *
-        "$(typeof(set)). Try concatenating the elements into a vector instead.",
-    )
-end
-
-function build_constraint(
-    error_fn::Function,
     f::Tuple{Vararg{Union{Real,AbstractJuMPScalar,AbstractVector}}},
     set::MOI.AbstractVectorSet,
 )

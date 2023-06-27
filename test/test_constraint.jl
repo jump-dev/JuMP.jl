@@ -1729,21 +1729,15 @@ function test_tuple_shape_vector()
         @test reshape_vector(obj.func, obj.shape) == (u, v, w)
         @test reshape_set(obj.set, obj.shape) == obj.set
     end
-    for set in (
-        MOI.SecondOrderCone(4),
-        SecondOrderCone(),
-        MOI.GeometricMeanCone(4),
-    )
+    for set in
+        (MOI.SecondOrderCone(4), SecondOrderCone(), MOI.GeometricMeanCone(4))
         c = @constraint(model, (t, x) in set)
         obj = constraint_object(c)
         @test obj.func == [t; x]
         @test reshape_vector(obj.func, obj.shape) == (t, x)
         @test reshape_set(obj.set, obj.shape) == obj.set
     end
-    for set in (
-        MOI.RotatedSecondOrderCone(5),
-        RotatedSecondOrderCone(),
-    )
+    for set in (MOI.RotatedSecondOrderCone(5), RotatedSecondOrderCone())
         c = @constraint(model, (t, u, x) in set)
         obj = constraint_object(c)
         @test obj.func == [t; u; x]
