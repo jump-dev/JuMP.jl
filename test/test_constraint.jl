@@ -1782,7 +1782,7 @@ function test_tuple_shape_unsupported_error()
     @variable(model, t)
     @variable(model, x[1:2])
     err = ErrorException(
-        "In ` @constraint(model, (t,) in MOI.ZeroOne())`: " *
+        "In `@constraint(model, (t,) in MOI.ZeroOne())`: " *
         "The tuple function $(Tuple{VariableRef}) is not supported for " *
         "a set of type $(MOI.ZeroOne).",
     )
