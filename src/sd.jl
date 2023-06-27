@@ -798,7 +798,7 @@ function reshape_vector(v::Vector{T}, shape::TupleShape) where {T}
     out = Any[]
     offset = 0
     for (s, dimension) in shape.shapes
-        push!(out, reshape_vector(v[offset .+ (1:dimension)], s))
+        push!(out, reshape_vector(v[offset.+(1:dimension)], s))
         offset += dimension
     end
     return tuple(out...)
