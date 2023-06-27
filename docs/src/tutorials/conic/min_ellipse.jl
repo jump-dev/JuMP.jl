@@ -119,7 +119,7 @@ end
 # the conic reformulation:
 
 @variable(model, log_det_P)
-@constraint(model, [log_det_P; 1; vec(P²)] in MOI.LogDetConeSquare(n))
+@constraint(model, (log_det_P, 1, P²) in MOI.LogDetConeSquare(n))
 @objective(model, Max, log_det_P)
 
 # Now, solve the program:

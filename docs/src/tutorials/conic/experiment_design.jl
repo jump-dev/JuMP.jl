@@ -210,11 +210,8 @@ set_silent(dOpt)
 @variable(dOpt, t)
 @objective(dOpt, Max, t)
 @constraint(dOpt, sum(np) <= n)
-E = V * LinearAlgebra.diagm(0 => np ./ n) * V'
-@constraint(
-    dOpt,
-    [t, 1, (E[i, j] for i in 1:q for j in 1:i)...] in MOI.LogDetConeTriangle(q)
-)
+E = LinearAlgebra.Symmetric(V * LinearAlgebra.diagm(0 => np ./ n) * V')
+@constraint(dOpt, (t, 1.0, E) in MOI.LogDetConeTriangle(q))
 optimize!(dOpt)
 objective_value(dOpt)
 #-

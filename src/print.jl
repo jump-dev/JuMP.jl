@@ -696,6 +696,10 @@ function function_string(
     return str * "\\end{bmatrix}"
 end
 
+function function_string(mime::MIME, f::Tuple)
+    return string("(", join([function_string(mime, fi) for fi in f], ", "), ")")
+end
+
 function function_string(mode, constraint::AbstractConstraint)
     f = reshape_vector(jump_function(constraint), shape(constraint))
     return function_string(mode, f)

@@ -112,6 +112,8 @@ Shape of scalar constraints.
 """
 struct ScalarShape <: AbstractShape end
 reshape_vector(α, ::ScalarShape) = α
+reshape_vector(x::Vector, ::ScalarShape) = first(x)
+vectorize(x, ::ScalarShape) = x
 
 """
     VectorShape

@@ -877,6 +877,20 @@ function test_print_hermitian_psd_cone()
     return
 end
 
+function test_print_rootdetcone()
+    model = Model()
+    @variable(model, t)
+    @variable(model, X[1:2, 1:2], Symmetric)
+    in_sym = JuMP._math_symbol(MIME("text/plain"), :in)
+    set = MOI.RootDetConeTriangle(2)
+    c = @constraint(model, (t, X) in set)
+    @test sprint(io -> show(io, MIME("text/plain"), c)) ==
+          "(t, [X[1,1]  X[1,2];\n X[1,2]  X[2,2]]) $in_sym $set"
+    @test sprint(io -> show(io, MIME("text/latex"), c)) ==
+          "\$\$ (t, \\begin{bmatrix}\nX_{1,1} & X_{1,2}\\\\\n\\cdot & X_{2,2}\\\\\n\\end{bmatrix}) \\in \\text{$set} \$\$"
+    return
+end
+
 function test_print_complex_string_round()
     @test JuMP._string_round(1.0 + 0.0im) == "1"
     @test JuMP._string_round(-1.0 + 0.0im) == "-1"

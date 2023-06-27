@@ -1710,4 +1710,34 @@ function test_eltype_for_constraint_primal_complex_float64()
     return
 end
 
+function test_tuple_shape()
+    model = Model()
+    @variable(model, t)
+    @variable(model, u)
+    @variable(model, X[1:2, 1:2])
+    Y = LinearAlgebra.Symmetric(X)
+    U = [X[i, j] for j in 1:2 for i in 1:j]
+    c = @constraint(model, (t, X) in MOI.RootDetConeSquare(2))
+    obj = constraint_object(c)
+    @test obj.func == [t; vec(X)]
+    @test reshape_vector(obj.func, obj.shape) == (t, X)
+    @test reshape_set(obj.set, obj.shape) == obj.set
+    c = @constraint(model, (t, Y) in MOI.RootDetConeTriangle(2))
+    obj = constraint_object(c)
+    @test obj.func == [t; U]
+    @test reshape_vector(obj.func, obj.shape) == (t, Y)
+    @test reshape_set(obj.set, obj.shape) == obj.set
+    c = @constraint(model, (t, u, X) in MOI.LogDetConeSquare(2))
+    obj = constraint_object(c)
+    @test obj.func == [t; u; vec(X)]
+    @test reshape_vector(obj.func, obj.shape) == (t, u, X)
+    @test reshape_set(obj.set, obj.shape) == obj.set
+    c = @constraint(model, (t, u, Y) in MOI.LogDetConeTriangle(2))
+    obj = constraint_object(c)
+    @test obj.func == [t; u; U]
+    @test reshape_vector(obj.func, obj.shape) == (t, u, Y)
+    @test reshape_set(obj.set, obj.shape) == obj.set
+    return
+end
+
 end

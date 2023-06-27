@@ -768,3 +768,97 @@ function build_variable(
     x = _vectorize_variables(_error, variables)
     return VariablesConstrainedOnCreation(x, set, SymmetricMatrixShape(n))
 end
+
+"""
+    TupleShape(args::Pair{<:AbstractShape,Int}...) <: AbstractShape
+
+A shape for representing tuple-valued functions, where each element of the tuple
+is a different [`AbstractShape`](@ref) mapped to the number of scalar elements
+in that shape.
+
+## Example
+
+```jldoctest
+julia> shape = TupleShape(ScalarShape() => 1, SymmetricMatrixShape(2) => 3);
+```
+"""
+struct TupleShape{T} <: AbstractShape
+    shapes::T
+    TupleShape(args::Pair{<:AbstractShape,Int}...) = new{typeof(args)}(args)
+end
+
+function vectorize(f::Tuple, shape::TupleShape)
+    vectors = [vectorize(fi, si[1]) for (fi, si) in zip(f, shape.shapes)]
+    return reduce(vcat, vectors)
+end
+
+reshape_set(set::MOI.AbstractVectorSet, ::TupleShape) = set
+
+function reshape_vector(v::Vector{T}, shape::TupleShape) where {T}
+    out = Any[]
+    offset = 0
+    for (s, dimension) in shape.shapes
+        push!(out, reshape_vector(v[offset .+ (1:dimension)], s))
+        offset += dimension
+    end
+    return tuple(out...)
+end
+
+function build_constraint(
+    error_fn::Function,
+    f::Tuple{<:Union{Real,AbstractJuMPScalar},<:LinearAlgebra.Symmetric},
+    set::MOI.RootDetConeTriangle,
+)
+    n = LinearAlgebra.checksquare(f[2])
+    shape = TupleShape(
+        ScalarShape() => 1,
+        SymmetricMatrixShape(n) => div(n * (n + 1), 2),
+    )
+    return VectorConstraint(vectorize(f, shape), set, shape)
+end
+
+function build_constraint(
+    error_fn::Function,
+    f::Tuple{<:Union{Real,AbstractJuMPScalar},<:AbstractMatrix},
+    set::MOI.RootDetConeSquare,
+)
+    n = LinearAlgebra.checksquare(f[2])
+    shape = TupleShape(ScalarShape() => 1, SquareMatrixShape(n) => n^2)
+    return VectorConstraint(vectorize(f, shape), set, shape)
+end
+
+function build_constraint(
+    error_fn::Function,
+    f::Tuple{
+        <:Union{Real,AbstractJuMPScalar},
+        <:Union{Real,AbstractJuMPScalar},
+        <:LinearAlgebra.Symmetric,
+    },
+    set::MOI.LogDetConeTriangle,
+)
+    n = LinearAlgebra.checksquare(f[3])
+    shape = TupleShape(
+        ScalarShape() => 1,
+        ScalarShape() => 1,
+        SymmetricMatrixShape(n) => div(n * (n + 1), 2),
+    )
+    return VectorConstraint(vectorize(f, shape), set, shape)
+end
+
+function build_constraint(
+    error_fn::Function,
+    f::Tuple{
+        <:Union{Real,AbstractJuMPScalar},
+        <:Union{Real,AbstractJuMPScalar},
+        <:AbstractMatrix,
+    },
+    set::MOI.LogDetConeSquare,
+)
+    n = LinearAlgebra.checksquare(f[3])
+    shape = TupleShape(
+        ScalarShape() => 1,
+        ScalarShape() => 1,
+        SquareMatrixShape(n) => n^2,
+    )
+    return VectorConstraint(vectorize(f, shape), set, shape)
+end
