@@ -1110,6 +1110,20 @@ function test_model_quad_to_soc_start_values()
     return
 end
 
+function test_SlackBridgePrimalDualStart()
+    inner = MOI.Utilities.UniversalFallback(MOI.Utilities.Model{Float64}())
+    mock = MOI.Utilities.MockOptimizer(inner)
+    model = direct_model(MOI.Bridges.Objective.Slack{Float64}(mock))
+    @variable(model, x, start = 1.0)
+    @objective(model, Min, x^2)
+    set_start_values(model; variable_primal_start = start_value)
+    F, S = MOI.ScalarQuadraticFunction{Float64}, MOI.LessThan{Float64}
+    ci = first(MOI.get(inner, MOI.ListOfConstraintIndices{F,S}()))
+    @test MOI.get(inner, MOI.ConstraintPrimalStart(), ci) == 0.0
+    @test MOI.get(inner, MOI.ConstraintDualStart(), ci) == -1.0
+    return
+end
+
 function test_keyword_getindex()
     err = JuMP._get_index_keyword_indexing_error()
     model = Model()
