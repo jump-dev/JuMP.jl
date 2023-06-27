@@ -209,7 +209,10 @@ set_silent(model)
 f = [1 - S[i, :]' * Z * S[i, :] + 2 * S[i, :]' * z - s for i in 1:m]
 @constraint(model, f in MOI.Nonnegatives(m))
 ## The former constraint (t, Z) in MOI.RootDetConeSquare(n)
-@constraint(model, (1.0 * t, 1.0 .* Z) in MOI.RootDetConeTriangle(n))
+@constraint(
+    model,
+    (1.0 * t, LinearAlgebra.Symmetric(1.0 .* Z)) in MOI.RootDetConeTriangle(n),
+)
 ## The former @objective(model, Max, t)
 @objective(model, Max, 1 * t + 0)
 optimize!(model)
