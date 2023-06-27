@@ -41,6 +41,16 @@ function build_constraint(
     return build_constraint(_error, func, moi_set(set, length(func)))
 end
 
+function build_constraint(
+    error_fn::Function,
+    f::Tuple{Vararg{Union{Real,AbstractJuMPScalar,AbstractVector},N}},
+    set::AbstractVectorSet,
+) where {N}
+    shape = TupleShape(_shape_from_function.(f)...)
+    args = vectorize(f, shape)
+    return VectorConstraint(args, moi_set(set, length(args)), shape)
+end
+
 """
     build_constraint(
         _error::Function,
