@@ -1779,14 +1779,23 @@ end
 
 function test_tuple_shape_unsupported_error()
     model = Model()
-    @variable(model, X[1:2, 1:2])
+    @variable(model, t)
+    @variable(model, x[1:2])
     err = ErrorException(
-        "In `@constraint(model, (X,) in PSDCone())`: " *
-        "The tuple function Tuple{Matrix{VariableRef}} is not supported for " *
-        "a set of type PSDCone. Try concatenating the elements into a " *
-        "vector instead.",
+        "In ` @constraint(model, (t,) in MOI.ZeroOne())`: " *
+        "The tuple function $(Tuple{VariableRef}) is not supported for " *
+        "a set of type $(MOI.ZeroOne).",
     )
-    @test_throws_strip err @constraint(model, (X,) in PSDCone())
+    @test_throws_strip err @constraint(model, (t,) in MOI.ZeroOne())
+    err = ErrorException(
+        "In `@constraint(model, ((x[1], x[2]),) in MOI.SOS1([1.0, 2.0]))`: " *
+        "The tuple function $(Tuple{Tuple{VariableRef, VariableRef}}) is not " *
+        "supported for a set of type $(MOI.SOS1{Float64}).",
+    )
+    @test_throws_strip(
+        err,
+        @constraint(model, ((x[1], x[2]),) in MOI.SOS1([1.0, 2.0])),
+    )
     return
 end
 

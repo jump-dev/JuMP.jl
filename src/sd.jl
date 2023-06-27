@@ -814,7 +814,7 @@ function build_constraint(
 )
     return error_fn(
         "The tuple function $(typeof(f)) is not supported for a set of type " *
-        "$(typeof(set)). Try concatenating the elements into a vector instead.",
+        "$(typeof(set)).",
     )
 end
 
