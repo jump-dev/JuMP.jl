@@ -1710,7 +1710,50 @@ function test_eltype_for_constraint_primal_complex_float64()
     return
 end
 
-function test_tuple_shape()
+function test_tuple_shape_vector()
+    model = Model()
+    @variable(model, t)
+    @variable(model, x[1:3])
+    @variable(model, u)
+    @variable(model, v)
+    @variable(model, w)
+    for set in (
+        MOI.ExponentialCone(),
+        MOI.DualExponentialCone(),
+        MOI.PowerCone(0.5),
+        MOI.DualPowerCone(0.5),
+    )
+        c = @constraint(model, (u, v, w) in set)
+        obj = constraint_object(c)
+        @test obj.func == [u, v, w]
+        @test reshape_vector(obj.func, obj.shape) == (u, v, w)
+        @test reshape_set(obj.set, obj.shape) == obj.set
+    end
+    for set in (
+        MOI.SecondOrderCone(4),
+        SecondOrderCone(),
+        MOI.GeometricMeanCone(4),
+    )
+        c = @constraint(model, (t, x) in set)
+        obj = constraint_object(c)
+        @test obj.func == [t; x]
+        @test reshape_vector(obj.func, obj.shape) == (t, x)
+        @test reshape_set(obj.set, obj.shape) == obj.set
+    end
+    for set in (
+        MOI.RotatedSecondOrderCone(5),
+        RotatedSecondOrderCone(),
+    )
+        c = @constraint(model, (t, u, x) in set)
+        obj = constraint_object(c)
+        @test obj.func == [t; u; x]
+        @test reshape_vector(obj.func, obj.shape) == (t, u, x)
+        @test reshape_set(obj.set, obj.shape) == obj.set
+    end
+    return
+end
+
+function test_tuple_shape_det_cone()
     model = Model()
     @variable(model, t)
     @variable(model, u)
@@ -1737,6 +1780,19 @@ function test_tuple_shape()
     @test obj.func == [t; u; U]
     @test reshape_vector(obj.func, obj.shape) == (t, u, Y)
     @test reshape_set(obj.set, obj.shape) == obj.set
+    return
+end
+
+function test_tuple_shape_unsupported_error()
+    model = Model()
+    @variable(model, X[1:2, 1:2])
+    err = ErrorException(
+        "In `@constraint(model, (X,) in PSDCone())`: " *
+        "The tuple function Tuple{Matrix{VariableRef}} is not supported for " *
+        "a set of type PSDCone. Try concatenating the elements into a " *
+        "vector instead.",
+    )
+    @test_throws_strip err @constraint(model, (X,) in PSDCone())
     return
 end
 

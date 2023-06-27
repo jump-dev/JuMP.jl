@@ -804,6 +804,35 @@ function reshape_vector(v::Vector{T}, shape::TupleShape) where {T}
     return tuple(out...)
 end
 
+_shape_from_function(::Union{Real,AbstractJuMPScalar}) = ScalarShape() => 1
+_shape_from_function(x::AbstractVector) = VectorShape() => length(x)
+
+function build_constraint(error_fn::Function, f::Tuple, set)
+    return error_fn(
+        "The tuple function $(typeof(f)) is not supported for a set of type " *
+        "$(typeof(set)). Try concatenating the elements into a vector instead.",
+    )
+end
+
+function build_constraint(
+    error_fn::Function,
+    f::Tuple{Vararg{<:Union{Real,AbstractJuMPScalar,AbstractVector},N}},
+    set::MOI.AbstractVectorSet,
+) where {N}
+    shape = TupleShape(_shape_from_function.(f)...)
+    return VectorConstraint(vectorize(f, shape), set, shape)
+end
+
+function build_constraint(
+    error_fn::Function,
+    f::Tuple{Vararg{<:Union{Real,AbstractJuMPScalar,AbstractVector},N}},
+    set::AbstractVectorSet,
+) where {N}
+    shape = TupleShape(_shape_from_function.(f)...)
+    args = vectorize(f, shape)
+    return VectorConstraint(args, moi_set(set, length(args)), shape)
+end
+
 function build_constraint(
     error_fn::Function,
     f::Tuple{<:Union{Real,AbstractJuMPScalar},<:LinearAlgebra.Symmetric},
