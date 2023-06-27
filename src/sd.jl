@@ -807,7 +807,22 @@ end
 _shape_from_function(::Union{Real,AbstractJuMPScalar}) = ScalarShape() => 1
 _shape_from_function(x::AbstractVector) = VectorShape() => length(x)
 
-function build_constraint(error_fn::Function, f::Tuple, set)
+function build_constraint(
+    error_fn::Function,
+    f::Tuple,
+    set::Union{MOI.AbstractScalarSet,MOI.AbstractVectorSet},
+)
+    return error_fn(
+        "The tuple function $(typeof(f)) is not supported for a set of type " *
+        "$(typeof(set)). Try concatenating the elements into a vector instead.",
+    )
+end
+
+function build_constraint(
+    error_fn::Function,
+    f::Tuple,
+    set::AbstractVectorSet,
+)
     return error_fn(
         "The tuple function $(typeof(f)) is not supported for a set of type " *
         "$(typeof(set)). Try concatenating the elements into a vector instead.",
