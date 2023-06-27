@@ -160,6 +160,7 @@ Dantzig
 Das
 Dvorkin
 Ehrgott
+Erlangen
 Farkas
 Ferrolho
 Fourer
@@ -167,6 +168,7 @@ Frobenius
 Garfinkel
 Goemans
 Grothey
+Habibi
 Hande
 Henrique
 Holy
@@ -193,6 +195,7 @@ Markowitz
 Mathieu
 Maurer
 Mehdi
+Michal
 Mittelman
 Montoison
 Motzkin
@@ -207,8 +210,10 @@ Schur
 Schwarz
 Shabbir
 Shuvomoy
+Soodeh
 Steuer
 Stigler
+Stingl
 Sungho
 Taccari
 Tanneau
