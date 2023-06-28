@@ -265,6 +265,17 @@ function test_bridges_direct()
     @test_throws err @constraint model 0 <= x + 1 <= 1
 end
 
+function test_direct_generic_model()
+    opt = () -> MOI.Utilities.MockOptimizer(MOI.Utilities.Model{BigFloat}())
+    model = direct_generic_model(BigFloat, optimizer_with_attributes(opt))
+    @test model isa GenericModel{BigFloat}
+    @test isa(
+        backend(model),
+        MOI.Utilities.MockOptimizer{MOI.Utilities.Model{BigFloat}},
+    )
+    return
+end
+
 function mock_factory()
     mock = MOIU.MockOptimizer(
         MOIU.Model{Float64}();
@@ -554,7 +565,7 @@ function test_set_retrieve_time_limit()
 end
 
 struct DummyExtensionData
-    model::Model
+    model::GenericModel
 end
 function JuMP.copy_extension_data(
     data::DummyExtensionData,

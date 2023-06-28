@@ -44,7 +44,7 @@ julia> @variable(model, x)
 x
 
 julia> typeof(x)
-VariableRef
+VariableRef (alias for GenericVariableRef{Float64})
 
 julia> num_variables(model)
 1

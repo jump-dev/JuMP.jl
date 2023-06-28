@@ -70,11 +70,12 @@ function test_extension_promotion(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
+    T = value_type(ModelType)
     m = ModelType()
     I = Int
     V = VariableRefType
-    A = GenericAffExpr{Float64,VariableRefType}
-    Q = GenericQuadExpr{Float64,VariableRefType}
+    A = GenericAffExpr{T,VariableRefType}
+    Q = GenericQuadExpr{T,VariableRefType}
     @test promote_type(V, I) == A
     @test promote_type(I, V) == A
     @test promote_type(A, I) == A
@@ -199,7 +200,8 @@ function test_extension_custom_dimension_mismatch(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
-    ElemT = MySumType{GenericAffExpr{Float64,VariableRefType}}
+    T = value_type(ModelType)
+    ElemT = MySumType{GenericAffExpr{T,VariableRefType}}
     model = ModelType()
     @variable(model, Q[1:3, 1:3], PSD)
     x = [MyType(1), MyType(2), MyType(3)]
@@ -211,7 +213,7 @@ function test_extension_custom_dimension_mismatch(
     @test size(z) == (1, 3)
     for i in 1:3
         # Q is symmetric
-        a = zero(GenericAffExpr{Float64,VariableRefType})
+        a = zero(GenericAffExpr{T,VariableRefType})
         a += Q[1, i]
         a += 2Q[2, i]
         a += 3Q[3, i]
@@ -225,7 +227,8 @@ function test_extension_matrix_multiplication(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
-    ElemT = MySumType{GenericAffExpr{Float64,VariableRefType}}
+    T = value_type(ModelType)
+    ElemT = MySumType{GenericAffExpr{T,VariableRefType}}
     model = ModelType()
     @variable(model, Q[1:3, 1:3], PSD)
     X = MyType.((1:3)' .+ (1:3))
@@ -350,28 +353,31 @@ function test_extension_basic_operators_variable(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
+    T = value_type(ModelType)
     model = ModelType()
     @variable(model, w)
     @variable(model, x)
     @variable(model, y)
     @variable(model, z)
-    aff = @inferred 7.1 * x + 2.5
-    q = @inferred 2.5 * y * z + aff
+    β = T(71) / T(10)
+    aff = @inferred β * x + T(25) / T(10)
+    q = @inferred T(25) / T(10) * y * z + aff
     # 2-0 Variable unary
     @test (+x) === x
     @test_expression_with_string -x "-x"
     # 2-1 Variable--Number
-    @test_expression_with_string w + 4.13 "w + 4.13"
-    @test_expression_with_string w - 4.13 "w - 4.13"
-    @test_expression_with_string w * 4.13 "4.13 w"
-    @test_expression_with_string w / 2.00 "0.5 w"
+    α = T(413) / T(100)
+    @test_expression_with_string w + α "w + 4.13"
+    @test_expression_with_string w - α "w - 4.13"
+    @test_expression_with_string w * α "4.13 w"
+    @test_expression_with_string w / T(2) "0.5 w"
     @test w == w
     @test_expression_with_string x * y - 1 "x*y - 1"
     @test_expression_with_string x^2 "x²"
     @test_expression_with_string x^1 "x"
     @test_expression_with_string x^0 "1"
     @test_throws ErrorException x^3
-    @test_throws ErrorException x^1.5
+    @test_throws ErrorException x^(T(15) / T(10))
     # 2-2 Variable--Variable
     @test_expression_with_string w + x "w + x"
     @test_expression_with_string w - x "w - x"
@@ -385,7 +391,7 @@ function test_extension_basic_operators_variable(
     @test_expression_with_string z * aff "7.1 z*x + 2.5 z"
     @test_throws ErrorException z / aff
     @test_throws MethodError z ≤ aff
-    @test_expression_with_string 7.1 * x - aff "0 x - 2.5"
+    @test_expression_with_string β * x - aff "0 x - 2.5"
     # 2-4 Variable--QuadExpr
     @test_expression_with_string w + q "2.5 y*z + w + 7.1 x + 2.5"
     @test_expression_with_string w - q "-2.5 y*z + w - 7.1 x - 2.5"
@@ -400,14 +406,15 @@ function test_extension_basic_operators_affexpr(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
+    T = value_type(ModelType)
     model = ModelType()
     @variable(model, w)
     @variable(model, x)
     @variable(model, y)
     @variable(model, z)
-    aff = @inferred 7.1 * x + 2.5
-    aff2 = @inferred 1.2 * y + 1.2
-    q = @inferred 2.5 * y * z + aff
+    aff = @inferred T(71) / T(10) * x + T(25) / T(10)
+    aff2 = @inferred T(12) / T(10) * y + T(12) / T(10)
+    q = @inferred T(25) / T(10) * y * z + aff
     # 3-0 AffExpr unary
     @test_expression_with_string +aff "7.1 x + 2.5"
     @test_expression_with_string -aff "-7.1 x - 2.5"

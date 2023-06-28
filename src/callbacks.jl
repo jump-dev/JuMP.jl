@@ -9,12 +9,12 @@
 #############################################################################
 
 """
-    callback_node_status(cb_data, model::Model)
+    callback_node_status(cb_data, model::GenericModel)
 
 Return an [`MOI.CallbackNodeStatusCode`](@ref) enum, indicating if the current
 primal solution available from [`callback_value`](@ref) is integer feasible.
 """
-function callback_node_status(cb_data, model::Model)
+function callback_node_status(cb_data, model::GenericModel)
     # TODO(odow):
     # MOI defines `is_set_by_optimize(::CallbackNodeStatus) = true`.
     # This causes problems for JuMP because it checks the termination_status to
@@ -28,14 +28,14 @@ function callback_node_status(cb_data, model::Model)
 end
 
 """
-    callback_value(cb_data, x::VariableRef)
+    callback_value(cb_data, x::GenericVariableRef)
 
 Return the primal solution of a variable inside a callback.
 
 `cb_data` is the argument to the callback function, and the type is dependent on
 the solver.
 """
-function callback_value(cb_data, x::VariableRef)
+function callback_value(cb_data, x::GenericVariableRef)
     # TODO(odow):
     # MOI defines `is_set_by_optimize(::CallbackVariablePrimal) = true`.
     # This causes problems for JuMP because it checks the termination_status to
@@ -67,24 +67,28 @@ function callback_value(cb_data, expr::Union{GenericAffExpr,GenericQuadExpr})
     end
 end
 
-function MOI.submit(model::Model, cb::MOI.LazyConstraint, con::ScalarConstraint)
+function MOI.submit(
+    model::GenericModel,
+    cb::MOI.LazyConstraint,
+    con::ScalarConstraint,
+)
     return MOI.submit(backend(model), cb, moi_function(con.func), con.set)
 end
 
-function MOI.submit(model::Model, cb::MOI.UserCut, con::ScalarConstraint)
+function MOI.submit(model::GenericModel, cb::MOI.UserCut, con::ScalarConstraint)
     return MOI.submit(backend(model), cb, moi_function(con.func), con.set)
 end
 
 function MOI.submit(
-    model::Model,
+    model::GenericModel{T},
     cb::MOI.HeuristicSolution,
-    variables::Vector{VariableRef},
+    variables::Vector{GenericVariableRef{T}},
     values::Vector{<:Real},
-)
+) where {T}
     return MOI.submit(
         backend(model),
         cb,
         index.(variables),
-        convert(Vector{Float64}, values),
+        convert(Vector{T}, values),
     )
 end

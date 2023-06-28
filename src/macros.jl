@@ -361,7 +361,7 @@ _desparsify(x::SparseArrays.AbstractSparseArray) = collect(x)
 _desparsify(x) = x
 
 function _functionize(v::V) where {V<:AbstractVariableRef}
-    return convert(GenericAffExpr{Float64,V}, v)
+    return convert(GenericAffExpr{value_type(V),V}, v)
 end
 
 _functionize(v::AbstractArray{<:AbstractVariableRef}) = _functionize.(v)
@@ -697,7 +697,7 @@ end
 function build_constraint(
     _error::Function,
     func,
-    set::Union{MOI.AbstractScalarSet,MOI.AbstractVectorSet},
+    ::Union{MOI.AbstractScalarSet,MOI.AbstractVectorSet},
 )
     return _error(
         "Unable to add the constraint because we don't recognize " *
@@ -811,7 +811,10 @@ function build_constraint(
     return build_constraint(
         _error,
         func,
-        MOI.Interval(Float64(lb), Float64(ub)),
+        MOI.Interval(
+            convert(value_type(variable_ref_type(func)), lb),
+            convert(value_type(variable_ref_type(func)), ub),
+        ),
     )
 end
 
@@ -1007,11 +1010,11 @@ function _constraint_macro(
 end
 
 """
-    @constraint(m::Model, expr, kw_args...)
+    @constraint(m::GenericModel, expr, kw_args...)
 
 Add a constraint described by the expression `expr`.
 
-    @constraint(m::Model, ref[i=..., j=..., ...], expr, kw_args...)
+    @constraint(m::GenericModel, ref[i=..., j=..., ...], expr, kw_args...)
 
 Add a group of constraints described by the expression `expr` parametrized by
 `i`, `j`, ...
@@ -1439,7 +1442,7 @@ _replace_zero(::_MA.Zero) = 0.0
 _replace_zero(x) = x
 
 """
-    @objective(model::Model, sense, func)
+    @objective(model::GenericModel, sense, func)
 
 Set the objective sense to `sense` and objective function to `func`. The
 objective sense can be either `Min`, `Max`, `MOI.MIN_SENSE`, `MOI.MAX_SENSE` or
@@ -1915,8 +1918,8 @@ Update `infoexr` for a variable expression in the `@variable` macro of the form 
 function parse_one_operator_variable end
 
 function parse_one_operator_variable(
-    _error::Function,
-    infoexpr::_VariableInfoExpr,
+    ::Function,
+    ::_VariableInfoExpr,
     ::Union{Val{:in},Val{:∈}},
     set,
 )
@@ -2124,7 +2127,7 @@ function _reorder_parameters(args)
 end
 
 """
-    _parse_nonlinear_expression(model::Model, x::Expr)
+    _parse_nonlinear_expression(model::GenericModel, x::Expr)
 
 JuMP needs to build Nonlinear expression objects in macro scope. This has two
 main challenges:
@@ -2721,7 +2724,7 @@ macro NLobjective(model, sense, x)
 end
 
 """
-    @NLconstraint(model::Model, expr)
+    @NLconstraint(model::GenericModel, expr)
 
 Add a constraint described by the nonlinear expression `expr`. See also
 [`@constraint`](@ref). For example:

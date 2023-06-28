@@ -85,7 +85,7 @@ function JuMP.build_variable(::Function, info::VariableInfo, _::_Mock)
     return _MockVariable(ScalarVariable(info))
 end
 
-function JuMP.add_variable(model::Model, x::_MockVariable, name::String)
+function JuMP.add_variable(model::GenericModel, x::_MockVariable, name::String)
     variable = add_variable(model, x.var, name)
     return _MockVariableRef(variable)
 end

@@ -10,18 +10,18 @@
 # This file contains objective-related functions
 
 """
-    relative_gap(model::Model)
+    relative_gap(model::GenericModel)
 
 Return the final relative optimality gap after a call to `optimize!(model)`.
 Exact value depends upon implementation of MathOptInterface.RelativeGap()
 by the particular solver used for optimization.
 """
-function relative_gap(model::Model)::Float64
+function relative_gap(model::GenericModel{T})::T where {T}
     return MOI.get(model, MOI.RelativeGap())
 end
 
 """
-    objective_bound(model::Model)
+    objective_bound(model::GenericModel)
 
 Return the best known bound on the optimal objective value after a call to
 `optimize!(model)`.
@@ -32,12 +32,12 @@ vector-valued objectives, it returns a `Vector{Float64}`.
 In the case of a vector-valued objective, this returns the _ideal point_, that
 is, the point obtained if each objective was optimized independently.
 """
-function objective_bound(model::Model)::Union{Float64,Vector{Float64}}
+function objective_bound(model::GenericModel{T})::Union{T,Vector{T}} where {T}
     return MOI.get(model, MOI.ObjectiveBound())
 end
 
 """
-    objective_value(model::Model; result::Int = 1)
+    objective_value(model::GenericModel; result::Int = 1)
 
 Return the objective value associated with result index `result` of the
 most-recent solution returned by the solver.
@@ -48,14 +48,14 @@ vector-valued objectives, it returns a `Vector{Float64}`.
 See also: [`result_count`](@ref).
 """
 function objective_value(
-    model::Model;
+    model::GenericModel{T};
     result::Int = 1,
-)::Union{Float64,Vector{Float64}}
+)::Union{T,Vector{T}} where {T}
     return MOI.get(model, MOI.ObjectiveValue(result))
 end
 
 """
-    dual_objective_value(model::Model; result::Int = 1)
+    dual_objective_value(model::GenericModel; result::Int = 1)
 
 Return the value of the objective of the dual problem associated with result
 index `result` of the most-recent solution returned by the solver.
@@ -65,36 +65,39 @@ not support this attribute.
 
 See also: [`result_count`](@ref).
 """
-function dual_objective_value(model::Model; result::Int = 1)::Float64
+function dual_objective_value(
+    model::GenericModel{T};
+    result::Int = 1,
+)::T where {T}
     return MOI.get(model, MOI.DualObjectiveValue(result))
 end
 
 """
-    objective_sense(model::Model)::MOI.OptimizationSense
+    objective_sense(model::GenericModel)::MOI.OptimizationSense
 
 Return the objective sense.
 """
-function objective_sense(model::Model)
+function objective_sense(model::GenericModel)
     return MOI.get(model, MOI.ObjectiveSense())::MOI.OptimizationSense
 end
 
 """
-    set_objective_sense(model::Model, sense::MOI.OptimizationSense)
+    set_objective_sense(model::GenericModel, sense::MOI.OptimizationSense)
 
 Sets the objective sense of the model to the given sense. See
 [`set_objective_function`](@ref) to set the objective function. These are
 low-level functions; the recommended way to set the objective is with the
 [`@objective`](@ref) macro.
 """
-function set_objective_sense(model::Model, sense::MOI.OptimizationSense)
+function set_objective_sense(model::GenericModel, sense::MOI.OptimizationSense)
     return MOI.set(model, MOI.ObjectiveSense(), sense)
 end
 
 """
-    set_objective_function(model::Model, func::MOI.AbstractFunction)
-    set_objective_function(model::Model, func::AbstractJuMPScalar)
-    set_objective_function(model::Model, func::Real)
-    set_objective_function(model::Model, func::Vector{<:AbstractJuMPScalar})
+    set_objective_function(model::GenericModel, func::MOI.AbstractFunction)
+    set_objective_function(model::GenericModel, func::AbstractJuMPScalar)
+    set_objective_function(model::GenericModel, func::Real)
+    set_objective_function(model::GenericModel, func::Vector{<:AbstractJuMPScalar})
 
 Sets the objective function of the model to the given function. See
 [`set_objective_sense`](@ref) to set the objective sense. These are low-level
@@ -103,7 +106,7 @@ functions; the recommended way to set the objective is with the
 """
 function set_objective_function end
 
-function set_objective_function(model::Model, func::MOI.AbstractFunction)
+function set_objective_function(model::GenericModel, func::MOI.AbstractFunction)
     attr = MOI.ObjectiveFunction{typeof(func)}()
     if !MOI.supports(backend(model), attr)
         error(
@@ -121,23 +124,20 @@ function set_objective_function(model::Model, func::MOI.AbstractFunction)
     return
 end
 
-function set_objective_function(model::Model, func::AbstractJuMPScalar)
+function set_objective_function(model::GenericModel, func::AbstractJuMPScalar)
     check_belongs_to_model(func, model)
     return set_objective_function(model, moi_function(func))
 end
 
-function set_objective_function(model::Model, func::Real)
+function set_objective_function(model::GenericModel{T}, func::Real) where {T}
     return set_objective_function(
         model,
-        MOI.ScalarAffineFunction(
-            MOI.ScalarAffineTerm{Float64}[],
-            Float64(func),
-        ),
+        MOI.ScalarAffineFunction(MOI.ScalarAffineTerm{T}[], convert(T, func)),
     )
 end
 
 function set_objective_function(
-    model::Model,
+    model::GenericModel,
     func::AbstractVector{<:AbstractJuMPScalar},
 )
     for f in func
@@ -176,11 +176,11 @@ function set_objective(model::AbstractModel, sense::MOI.OptimizationSense, func)
 end
 
 """
-    objective_function_type(model::Model)::AbstractJuMPScalar
+    objective_function_type(model::GenericModel)::AbstractJuMPScalar
 
 Return the type of the objective function.
 """
-function objective_function_type(model::Model)
+function objective_function_type(model::GenericModel)
     return jump_function_type(
         model,
         MOI.get(backend(model), MOI.ObjectiveFunctionType()),
@@ -189,7 +189,7 @@ end
 
 """
     objective_function(
-        model::Model,
+        model::GenericModel,
         T::Type = objective_function_type(model),
     )
 
@@ -229,40 +229,40 @@ ERROR: InexactError: convert(MathOptInterface.VariableIndex, MathOptInterface.Sc
 ```
 """
 function objective_function(
-    model::Model,
+    model::GenericModel,
     ::Type{F},
 ) where {F<:MOI.AbstractFunction}
     func = MOI.get(backend(model), MOI.ObjectiveFunction{F}())::F
     return jump_function(model, func)
 end
 
-function objective_function(model::Model, ::Type{T}) where {T}
+function objective_function(model::GenericModel, ::Type{T}) where {T}
     return objective_function(model, moi_function_type(T))
 end
 
-function objective_function(model::Model)
+function objective_function(model::GenericModel)
     F = MOI.get(backend(model), MOI.ObjectiveFunctionType())
     return objective_function(model, F)
 end
 
 """
-    set_objective_coefficient(model::Model, variable::VariableRef, coefficient::Real)
+    set_objective_coefficient(model::GenericModel, variable::GenericVariableRef, coefficient::Real)
 
 Set the linear objective coefficient associated with `Variable` to `coefficient`.
 
 Note: this function will throw an error if a nonlinear objective is set.
 """
 function set_objective_coefficient(
-    model::Model,
-    variable::VariableRef,
+    model::GenericModel{T},
+    variable::GenericVariableRef{T},
     coeff::Real,
-)
+) where {T}
     if _nlp_objective_function(model) !== nothing
         error("A nonlinear objective is already set in the model")
     end
-    coeff = convert(Float64, coeff)::Float64
+    coeff = convert(T, coeff)::T
     obj_fct_type = objective_function_type(model)
-    if obj_fct_type == VariableRef
+    if obj_fct_type == GenericVariableRef{T}
         # Promote the objective function to be an affine expression.
         current_obj = objective_function(model)
         if index(current_obj) == index(variable)
@@ -273,7 +273,8 @@ function set_objective_coefficient(
                 add_to_expression!(coeff * variable, current_obj),
             )
         end
-    elseif obj_fct_type == AffExpr || obj_fct_type == QuadExpr
+    elseif obj_fct_type == GenericAffExpr{T,GenericVariableRef{T}} ||
+           obj_fct_type == GenericQuadExpr{T,GenericVariableRef{T}}
         MOI.modify(
             backend(model),
             MOI.ObjectiveFunction{moi_function_type(obj_fct_type)}(),

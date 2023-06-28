@@ -51,14 +51,15 @@ function test_extension_variable_no_bound(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
+    T = value_type(ModelType)
     model = ModelType()
     @variable(model, nobounds)
     @test !has_lower_bound(nobounds)
     @test !has_upper_bound(nobounds)
     @test !is_fixed(nobounds)
     _test_variable_name_util(nobounds, "nobounds")
-    @test zero(nobounds) isa GenericAffExpr{Float64,VariableRefType}
-    @test one(nobounds) isa GenericAffExpr{Float64,VariableRefType}
+    @test zero(nobounds) isa GenericAffExpr{T,VariableRefType}
+    @test one(nobounds) isa GenericAffExpr{T,VariableRefType}
     return
 end
 
@@ -431,17 +432,18 @@ function test_extension_variable_macro_return_type(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
+    T = value_type(ModelType)
     model = ModelType()
-    @variable(model, x[1:3, 1:4, 1:2], start = 0.0)
+    @variable(model, x[1:3, 1:4, 1:2], start = T(0))
     @test typeof(x) == Array{VariableRefType,3}
-    @test typeof(start_value.(x)) == Array{Float64,3}
-    @variable(model, y[1:0], start = 0.0)
+    @test typeof(start_value.(x)) == Array{T,3}
+    @variable(model, y[1:0], start = T(0))
     @test typeof(y) == Vector{VariableRefType}
     # No type to infer for an empty collection.
-    @test typeof(start_value.(y)) == Vector{Union{Nothing,Float64}}
-    @variable(model, z[1:4], start = 0.0)
+    @test typeof(start_value.(y)) == Vector{Union{Nothing,T}}
+    @variable(model, z[1:4], start = T(0))
     @test typeof(z) == Vector{VariableRefType}
-    @test typeof(start_value.(z)) == Vector{Float64}
+    @test typeof(start_value.(z)) == Vector{T}
     return
 end
 
@@ -449,12 +451,13 @@ function test_extension_variable_start_value_on_empty(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
+    T = value_type(ModelType)
     model = ModelType()
     @variable(model, x[1:4, 1:0, 1:3], start = 0)  # Array{VariableRef}
     @variable(model, y[1:4, 2:1, 1:3], start = 0)  # DenseAxisArray
     @variable(model, z[1:4, Set(), 1:3], start = 0)  # SparseAxisArray
 
-    @test start_value.(x) == Array{Float64}(undef, 4, 0, 3)
+    @test start_value.(x) == Array{T}(undef, 4, 0, 3)
     # TODO: Decide what to do here. I don't know if we still need to test this
     #       given broadcast syntax.
     # @test typeof(start_value(y)) <: DenseAxisArray{Float64}
