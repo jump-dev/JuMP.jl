@@ -140,7 +140,7 @@ end
 
 Create a new instance of a JuMP model.
 
-If `optimizer_factory` is provided, the model is initialized with thhe optimizer
+If `optimizer_factory` is provided, the model is initialized with the optimizer
 returned by `MOI.instantiate(optimizer_factory)`.
 
 If `optimizer_factory` is not provided, use [`set_optimizer`](@ref) to set the
