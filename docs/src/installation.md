@@ -124,6 +124,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [Hypatia.jl](https://github.com/chriscoey/Hypatia.jl)                          |                                                                                  |        | MIT      | LP, SOCP, SDP             |
 | [Ipopt](https://github.com/coin-or/Ipopt)                                      | [Ipopt.jl](https://github.com/jump-dev/Ipopt.jl)                                 |        | EPL      | LP, QP, NLP               |
 | [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl)                          |                                                                                  |        | MIT      | (MI)SOCP, (MI)NLP         |
+| [Loraine.jl](https://github.com/kocvara/Loraine.jl)                            |                                                                                  |        | MIT      | LP, SDP                   |
 | [MadNLP.jl](https://github.com/sshin23/MadNLP.jl)                              |                                                                                  |        | MIT      | LP, QP, NLP               |
 | [MOSEK](https://www.mosek.com/)                                                | [MosekTools.jl](https://github.com/jump-dev/MosekTools.jl)                       | Manual | Comm.    | (MI)LP, (MI)SOCP, SDP     |
 | [NLopt](https://github.com/stevengj/nlopt)                                     | [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)                                 |        | GPL      | LP, QP, NLP               |
