@@ -204,7 +204,7 @@ function Base.:^(lhs::AbstractVariableRef, rhs::Integer)
     elseif rhs == 0
         return one(GenericQuadExpr{T,variable_ref_type(lhs)})
     else
-        return NonlinearExpr(:^, Any[lhs, rhs])
+        return GenericNonlinearExpr(:^, Any[lhs, rhs])
     end
 end
 
@@ -216,7 +216,7 @@ function Base.:^(lhs::GenericAffExpr{T}, rhs::Integer) where {T}
     elseif rhs == 0
         return one(GenericQuadExpr{T,variable_ref_type(lhs)})
     else
-        return NonlinearExpr(:^, Any[lhs, rhs])
+        return GenericNonlinearExpr(:^, Any[lhs, rhs])
     end
 end
 

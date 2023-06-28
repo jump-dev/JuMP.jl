@@ -6,7 +6,14 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Nonlinear Modeling
+# [Nonlinear Modeling](@id new_nonlinear_interface)
+
+!!! warning
+    This page describes an experimental nonlinear interface to JuMP. The API
+    described below is stable, and it will not break with future 1.X releases of
+    JuMP. However, solver support may be limited, and there may be gaps in
+    functionality compared with [Nonlinear Modeling](@ref). To report a bug, or
+    request a missing feature, please [open an issue](https://github.com/jump-dev/JuMP.jl/issues/new/choose).
 
 JuMP has support for general smooth nonlinear (convex and nonconvex)
 optimization problems. JuMP is able to provide exact, sparse second-order
@@ -23,7 +30,7 @@ julia> model = Model();
 julia> @variable(model, x[1:2]);
 
 julia> @objective(model, Min, exp(x[1]) - sqrt(x[2]))
-(exp(x[1]) - sqrt(x[2]))
+exp(x[1]) - sqrt(x[2])
 ```
 
 To modify a nonlinear objective, call [`@objective`](@ref) again.
@@ -38,12 +45,12 @@ julia> model = Model();
 julia> @variable(model, x[1:2]);
 
 julia> @constraint(model, exp(x[1]) <= 1)
-(exp(x[1]) - 1.0) ≤ 0
+exp(x[1]) - 1.0 ≤ 0
 
 julia> @constraint(model, con[i = 1:2], 2^x[i] >= i)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarNonlinearFunction, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}:
- con[1] : ((2.0 ^ x[1]) - 1.0) ≥ 0
- con[2] : ((2.0 ^ x[2]) - 2.0) ≥ 0
+ con[1] : (2.0 ^ x[1]) - 1.0 ≥ 0
+ con[2] : (2.0 ^ x[2]) - 2.0 ≥ 0
 ```
 
 Delete a nonlinear constraint using [`delete`](@ref):
@@ -63,15 +70,15 @@ julia> model = Model();
 julia> @variable(model, x[1:2]);
 
 julia> expr = @expression(model, exp(x[1]) + sqrt(x[2]))
-(exp(x[1]) + sqrt(x[2]))
+exp(x[1]) + sqrt(x[2])
 
 julia> my_anon_expr = @expression(model, [i = 1:2], sin(x[i]))
-2-element Vector{NonlinearExpr{VariableRef}}:
+2-element Vector{NonlinearExpr}:
  sin(x[1])
  sin(x[2])
 
 julia> @expression(model, my_expr[i = 1:2], sin(x[i]))
-2-element Vector{NonlinearExpr{VariableRef}}:
+2-element Vector{NonlinearExpr}:
  sin(x[1])
  sin(x[2])
 ```
@@ -81,15 +88,15 @@ A [`NonlinearExpr`](@ref) can be used in [`@objective`](@ref),
 
 ```jldoctest nl_expression
 julia> @objective(model, Min, expr^2 + 1)
-(((exp(x[1]) + sqrt(x[2])) ^ 2.0) + 1.0)
+((exp(x[1]) + sqrt(x[2])) ^ 2.0) + 1.0
 
 julia> @constraint(model, [i = 1:2], my_expr[i] <= i)
 2-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarNonlinearFunction, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
- (sin(x[1]) - 1.0) ≤ 0
- (sin(x[2]) - 2.0) ≤ 0
+ sin(x[1]) - 1.0 ≤ 0
+ sin(x[2]) - 2.0 ≤ 0
 
 julia> @expression(model, nested[i = 1:2], sin(my_expr[i]))
-2-element Vector{NonlinearExpr{VariableRef}}:
+2-element Vector{NonlinearExpr}:
  sin(sin(x[1]))
  sin(sin(x[2]))
 ```
@@ -326,26 +333,3 @@ function good_f(x::T...) where {T<:Real}
     return sum(y)
 end
 ```
-
-## Factors affecting solution time
-
-The execution time when solving a nonlinear programming problem can be divided
-into two parts, the time spent in the optimization algorithm (the solver) and
-the time spent evaluating the nonlinear functions and corresponding derivatives.
-Ipopt explicitly displays these two timings in its output, for example:
-
-```
-Total CPU secs in IPOPT (w/o function evaluations)   =      7.412
-Total CPU secs in NLP function evaluations           =      2.083
-```
-
-For Ipopt in particular, one can improve the performance by installing advanced
-sparse linear algebra packages, see [Installation Guide](@ref). For other
-solvers, see their respective documentation for performance tips.
-
-The function evaluation time, on the other hand, is the responsibility of the
-modeling language. JuMP computes derivatives by using reverse-mode automatic
-differentiation with graph coloring methods for exploiting sparsity of the
-Hessian matrix. As a conservative bound, JuMP's performance here currently
-may be expected to be within a factor of 5 of AMPL's. Our [paper in
-SIAM Review](https://mlubin.github.io/pdf/jump-sirev.pdf) has more details.

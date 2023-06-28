@@ -388,7 +388,7 @@ julia> aff = x + 1;
 julia> quad = x^2 + x;
 
 julia> expr = cos(x) * sin(quad) + aff
-((cos(x) * sin(x² + x)) + x + 1)
+(cos(x) * sin(x² + x)) + (x + 1)
 ```
 
 ### Limitations
@@ -414,7 +414,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> expr = @expression(model, x < 1)
-(x < 1)
+x < 1
 ```
 
 For technical reasons, other operators that are not overloaded include `||`,
@@ -426,7 +426,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> expr = @expression(model, ifelse(x < -1 || x >= 1, x^2, 0.0))
-ifelse(((x < -1) || (x >= 1)), x², 0.0)
+ifelse((x < -1) || (x >= 1), x², 0.0)
 ```
 
 ## Initializing arrays
