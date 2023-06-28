@@ -427,8 +427,9 @@ function moi_function(f::NonlinearExpr)
     return ret
 end
 
-function jump_function(model::Model, f::MOI.ScalarNonlinearFunction)
-    ret = NonlinearExpr{VariableRef}(f.head, Any[])
+function jump_function(model::GenericModel, f::MOI.ScalarNonlinearFunction)
+    V = variable_ref_type(typeof(model))
+    ret = NonlinearExpr{V}(f.head, Any[])
     stack = Tuple{NonlinearExpr,Any}[]
     for arg in reverse(f.args)
         push!(stack, (ret, arg))
@@ -436,7 +437,7 @@ function jump_function(model::Model, f::MOI.ScalarNonlinearFunction)
     while !isempty(stack)
         parent, arg = pop!(stack)
         if arg isa MOI.ScalarNonlinearFunction
-            new_ret = NonlinearExpr{VariableRef}(arg.head, Any[])
+            new_ret = NonlinearExpr{V}(arg.head, Any[])
             push!(parent.args, new_ret)
             for child in reverse(arg.args)
                 push!(stack, (new_ret, child))
@@ -450,8 +451,11 @@ function jump_function(model::Model, f::MOI.ScalarNonlinearFunction)
     return ret
 end
 
-function jump_function_type(::Model, ::Type{<:MOI.ScalarNonlinearFunction})
-    return NonlinearExpr{VariableRef}
+function jump_function_type(
+    model::GenericModel,
+    ::Type{<:MOI.ScalarNonlinearFunction},
+)
+    return NonlinearExpr{variable_ref_type(typeof(model))}
 end
 
 moi_function_type(::Type{<:NonlinearExpr}) = MOI.ScalarNonlinearFunction
@@ -462,7 +466,8 @@ function constraint_object(c::NonlinearConstraintRef)
     return ScalarConstraint(jump_function(c.model, data.expression), data.set)
 end
 
-function jump_function(model::Model, expr::MOI.Nonlinear.Expression)
+function jump_function(model::GenericModel, expr::MOI.Nonlinear.Expression)
+    V = variable_ref_type(typeof(model))
     nlp = nonlinear_model(model)
     parsed = Vector{Any}(undef, length(expr.nodes))
     adj = MOI.Nonlinear.adjacency_matrix(expr.nodes)
@@ -470,17 +475,17 @@ function jump_function(model::Model, expr::MOI.Nonlinear.Expression)
     for i in length(expr.nodes):-1:1
         node = expr.nodes[i]
         parsed[i] = if node.type == MOI.Nonlinear.NODE_CALL_UNIVARIATE
-            NonlinearExpr{VariableRef}(
+            NonlinearExpr{V}(
                 nlp.operators.univariate_operators[node.index],
                 parsed[rowvals[SparseArrays.nzrange(adj, i)[1]]],
             )
         elseif node.type == MOI.Nonlinear.NODE_CALL_MULTIVARIATE
-            NonlinearExpr{VariableRef}(
+            NonlinearExpr{V}(
                 nlp.operators.multivariate_operators[node.index],
                 Any[parsed[rowvals[j]] for j in SparseArrays.nzrange(adj, i)],
             )
         elseif node.type == MOI.Nonlinear.NODE_MOI_VARIABLE
-            VariableRef(model, MOI.VariableIndex(node.index))
+            V(model, MOI.VariableIndex(node.index))
         elseif node.type == MOI.Nonlinear.NODE_PARAMETER
             NonlinearParameter(model, node.index)
         elseif node.type == MOI.Nonlinear.NODE_SUBEXPRESSION
@@ -737,7 +742,7 @@ foo(x)
 ```
 """
 function add_user_defined_function(
-    model::Model,
+    model::GenericModel,
     op::Symbol,
     dim::Int,
     args::Vararg{Function,N},

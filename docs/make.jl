@@ -341,7 +341,7 @@ const _PAGES = [
         "manual/objective.md",
         "manual/containers.md",
         "manual/solutions.md",
-        "manual/nlp_expr.md",
+        "manual/nlp.md",
         "manual/callbacks.md",
         "manual/complex.md",
     ],
@@ -502,9 +502,6 @@ function _validate_pages()
                 continue
             end
             filename = replace(joinpath(root, file), doc_src => "")
-            if filename == "manual/nlp.md"
-                continue
-            end
             if endswith(filename, ".md") && !(filename in set)
                 push!(missing_files, filename)
             end
