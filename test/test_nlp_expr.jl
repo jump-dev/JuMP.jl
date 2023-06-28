@@ -70,6 +70,8 @@ function test_extension_expression(
     @variable(model, y[1:3])
     @test string(@expression(model, *(y...))) == "(y[1]*y[2] * y[3])"
     @test string(@expression(model, sin(x))) == "sin(x)"
+    @test string(@expression(model, ifelse(x >= 0, x, 0))) ==
+          "ifelse((x >= 0), x, 0)"
     @test string(@expression(model, 2^x)) == "(2.0 ^ x)"
     @test string(@expression(model, x^x)) == "(x ^ x)"
     @test string(@expression(model, sin(x)^2)) == "(sin(x) ^ 2.0)"
@@ -592,6 +594,43 @@ function test_value_expression()
         ),
         value(f, bad_udf(x)),
     )
+    return
+end
+
+function test_value_result()
+    model = Model() do
+        return MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    end
+    @variable(model, x)
+    optimize!(model)
+    mock = unsafe_backend(model)
+    MOI.set(mock, MOI.TerminationStatus(), MOI.OPTIMAL)
+    MOI.set(mock, MOI.ResultCount(), 2)
+    MOI.set(mock, MOI.PrimalStatus(1), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.PrimalStatus(2), MOI.FEASIBLE_POINT)
+    MOI.set(mock, MOI.VariablePrimal(1), optimizer_index(x), 1.1)
+    MOI.set(mock, MOI.VariablePrimal(2), optimizer_index(x), 2.2)
+    f = sin(x)
+    @test value(f; result = 1) ≈ sin(1.1)
+    @test value(f; result = 2) ≈ sin(2.2)
+    return
+end
+
+function test_nonlinear_expr_owner_model()
+    model = Model()
+    @variable(model, x)
+    f = NonlinearExpr(:sin, Any[x])
+    # This shouldn't happen in regular code, but let's test against it to check
+    # we get something similar to AffExpr and QuadExpr.
+    empty!(f.args)
+    @test owner_model(f) === nothing
+    return
+end
+
+function test_operate_shortcut_ma_operate!!_add_mul()
+    model = Model()
+    @variable(model, x)
+    @expression(model, sum(sin(x) for i in 1:3))
     return
 end
 

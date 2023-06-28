@@ -1649,4 +1649,17 @@ function test_parse_expression_nonlinearexpr_unsupported()
     return
 end
 
+function test_parse_expression_nonlinearexpr_nested_comparison()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    f = NonlinearExpr(:||, Any[x, y])
+    g = NonlinearExpr(:&&, Any[f, x])
+    @NLexpression(model, ref, g)
+    nlp = nonlinear_model(model)
+    expr = :(($x || $y) && $x)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
 end

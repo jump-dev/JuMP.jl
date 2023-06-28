@@ -77,7 +77,7 @@ function solve_lower_level(x...)
     @objective(
         model,
         Max,
-        x[1]^2 * y[1] + x[2]^2 * y[2] - x[1] * y[1]^4.0 - 2 * x[2] * y[2]^4.0,
+        x[1]^2 * y[1] + x[2]^2 * y[2] - x[1] * y[1]^4 - 2 * x[2] * y[2]^4,
     )
     @constraint(model, (y[1] - 10)^2 + (y[2] - 10)^2 <= 25)
     optimize!(model)
