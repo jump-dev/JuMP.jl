@@ -301,7 +301,7 @@ end
 # AbstractArray interface
 
 Base.size(A::DenseAxisArray) = size(A.data)
-function Base.LinearIndices(A::DenseAxisArray)
+function Base.LinearIndices(::DenseAxisArray)
     return error("DenseAxisArray does not support this operation.")
 end
 Base.axes(A::DenseAxisArray) = A.axes
@@ -585,20 +585,18 @@ function Base.summary(io::IO, A::DenseAxisArray)
     end
     return print(io, "And data, a ", summary(A.data))
 end
-function _summary(io, A::DenseAxisArray{T,N}) where {T,N}
+function _summary(io, ::DenseAxisArray{T,N}) where {T,N}
     return println(
         io,
         "$N-dimensional DenseAxisArray{$T,$N,...} with index sets:",
     )
 end
 
-if isdefined(Base, :print_array) # 0.7 and later
-    function Base.print_array(io::IO, X::DenseAxisArray{T,1}) where {T}
-        return Base.print_matrix(io, X.data)
-    end
-    function Base.print_array(io::IO, X::DenseAxisArray{T,2}) where {T}
-        return Base.print_matrix(io, X.data)
-    end
+function Base.print_array(io::IO, X::DenseAxisArray{T,1}) where {T}
+    return Base.print_matrix(io, X.data)
+end
+function Base.print_array(io::IO, X::DenseAxisArray{T,2}) where {T}
+    return Base.print_matrix(io, X.data)
 end
 
 function Base.show_nd(
