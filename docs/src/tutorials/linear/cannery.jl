@@ -25,14 +25,17 @@ import Test  #src
 
 # ## Formulation
 
-# The cannery problem assumes we are optimizing the shipment of cans from
-# production plants ``p \in P`` to markets ``m \in M``.
+# The cannery problem assumes we are optimizing the shipment of cases of 
+# cans from production plants ``p \in P`` to markets ``m \in M``.
 
-# Each production plant ``p`` has a capacity, ``c_p``, and each market ``m``
-# has a demand ``d_m``. The distance from plant to market is ``d_{p,m}``.
+# Each production plant ``p`` has a capacity ``c_p``, and each market ``m``
+# has a demand ``d_m``. The shipping cost per case of cans from plant ``p`` 
+# to market ``m`` is ``d_{p,m}``.
 
-# With a little effort, we can formulate our problem as the following linear
-# program:
+# We wish to find the distribution plan ``x_{p,m}``, the number of cases of cans
+# to ship from plant ``p`` to market ``m``, for ``p \in P`` and ``m \in M``  
+# that minimizes the shipping costs. We can formulate our problem as the
+# following linear program:
 # ```math
 # \begin{aligned}
 # \min & \sum\limits_{p \in P}\sum\limits_{m \in M} d_{p,m} x_{p,m} \\
