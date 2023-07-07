@@ -32,8 +32,8 @@ import Test  #src
 # has a demand ``d_m``. The shipping cost per case of cans from plant ``p`` 
 # to market ``m`` is ``d_{p,m}``.
 
-# We wish to find the distribution plan ``x_{p,m}`` (the # of cases of cans
-# to ship from plant ``p`` to market ``m``) for ``p \in P`` and ``m \in M``  
+# We wish to find the distribution plan ``x_{p,m}``, the number of cases of cans
+# to ship from plant ``p`` to market ``m``, for ``p \in P`` and ``m \in M``  
 # that minimizes the shipping costs. We can formulate our problem as the
 # following linear program:
 # ```math
