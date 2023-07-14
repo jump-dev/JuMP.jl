@@ -21,7 +21,7 @@
 # # Nested optimization problems
 
 # In this tutorial we explain how to write a *nested* optimization problem,
-# where an *upper* problem uses the results from the optimization of an *lower*
+# where an *upper* problem uses the results from the optimization of a *lower*
 # subproblem.
 #
 # To model the problem, we define a user-defined function to handle the decomposition
