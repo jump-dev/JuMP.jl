@@ -21,12 +21,12 @@
 # # Nested optimization problems
 
 # In this tutorial we explain how to write a *nested* optimization problem,
-# where an *outer* problem uses the results from the optimization of an *inner*
+# where an *upper* problem uses the results from the optimization of a *lower*
 # subproblem.
 #
 # To model the problem, we define a user-defined function to handle the decomposition
-# of the inner problem inside the outer one. Finally, we show how to improve
-# the performance by using a cache that avoids resolving the inner problem.
+# of the lower problem inside the upper one. Finally, we show how to improve
+# the performance by using a cache that avoids resolving the lower problem.
 #
 # For a simpler example of writing a user-defined function,
 # see the [User-defined Hessians](@ref) tutorial.
