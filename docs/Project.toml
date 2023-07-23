@@ -1,4 +1,5 @@
 [deps]
+CDDLib = "3391f64e-dcde-5f30-b752-e11513730f60"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 Clarabel = "61c947e1-3e6d-4ee4-985a-eec8c727bd6e"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
@@ -29,6 +30,7 @@ Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+CDDLib = "=0.9.2"
 CSV = "0.10"
 Clarabel = "=0.5.1"
 DataFrames = "1"

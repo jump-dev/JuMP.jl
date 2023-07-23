@@ -373,7 +373,7 @@ function _functionize(
 end
 
 _functionize(x) = x
-_functionize(::_MA.Zero) = 0.0
+_functionize(::_MA.Zero) = false
 
 """
     parse_constraint(_error::Function, expr::Expr)
@@ -641,7 +641,13 @@ function build_constraint(
     args...;
     kwargs...,
 )
-    return build_constraint(_error, f, MOI.GreaterThan(0.0), args...; kwargs...)
+    return build_constraint(
+        _error,
+        f,
+        MOI.GreaterThan(false),
+        args...;
+        kwargs...,
+    )
 end
 
 function build_constraint(
@@ -651,11 +657,11 @@ function build_constraint(
     args...;
     kwargs...,
 )
-    return build_constraint(_error, f, MOI.LessThan(0.0), args...; kwargs...)
+    return build_constraint(_error, f, MOI.LessThan(false), args...; kwargs...)
 end
 
 function build_constraint(_error::Function, f, set::Zeros, args...; kwargs...)
-    return build_constraint(_error, f, MOI.EqualTo(0.0), args...; kwargs...)
+    return build_constraint(_error, f, MOI.EqualTo(false), args...; kwargs...)
 end
 
 function build_constraint(
@@ -706,54 +712,51 @@ function build_constraint(
 end
 
 function build_constraint(
-    _error::Function,
+    ::Function,
     v::AbstractJuMPScalar,
     set::MOI.AbstractScalarSet,
 )
     return ScalarConstraint(v, set)
 end
+
+function _clear_constant!(expr::Union{GenericAffExpr,GenericQuadExpr})
+    offset = constant(expr)
+    add_to_expression!(expr, -offset)
+    return expr, offset
+end
+
+function _clear_constant!(α::Number)
+    return zero(α), α
+end
+
 function build_constraint(
-    _error::Function,
-    expr::Union{GenericAffExpr,GenericQuadExpr},
+    ::Function,
+    expr::Union{Number,GenericAffExpr,GenericQuadExpr},
     set::MOI.AbstractScalarSet,
 )
     if MOI.Utilities.supports_shift_constant(typeof(set))
-        offset = constant(expr)
-        add_to_expression!(expr, -offset)
+        expr, offset = _clear_constant!(expr)
         new_set = MOI.Utilities.shift_constant(set, -offset)
         return ScalarConstraint(expr, new_set)
     else
         return ScalarConstraint(expr, set)
     end
 end
-function build_constraint(
-    _error::Function,
-    α::Number,
-    set::MOI.AbstractScalarSet,
-)
-    return build_constraint(_error, convert(AffExpr, α), set)
-end
+
 function build_constraint(
     _error::Function,
     ::_MA.Zero,
     set::MOI.AbstractScalarSet,
 )
-    return build_constraint(_error, zero(AffExpr), set)
+    return build_constraint(_error, false, set)
 end
 
 function build_constraint(
     ::Function,
-    x::AbstractVector{<:AbstractJuMPScalar},
+    x::AbstractVector{<:Union{Number,AbstractJuMPScalar}},
     set::MOI.AbstractVectorSet,
 )
     return VectorConstraint(x, set)
-end
-function build_constraint(
-    _error::Function,
-    a::Vector{<:Number},
-    set::MOI.AbstractVectorSet,
-)
-    return build_constraint(_error, convert(Vector{AffExpr}, a), set)
 end
 
 function build_constraint(
@@ -843,23 +846,100 @@ function build_constraint(
     lb::Real,
     ub::Real,
 )
-    return build_constraint(_error, 1.0func, lb, ub)
+    return build_constraint(
+        _error,
+        one(value_type(typeof(func))) * func,
+        lb,
+        ub,
+    )
 end
 
 function build_constraint(
     ::Function,
-    x::AbstractVector{<:AbstractJuMPScalar},
+    x::AbstractVector{T},
     set::MOI.SOS1,
-)
-    return VectorConstraint(x, MOI.SOS1{Float64}(set.weights))
+) where {T<:AbstractJuMPScalar}
+    return VectorConstraint(
+        x,
+        MOI.SOS1{value_type(variable_ref_type(T))}(set.weights),
+    )
 end
 
 function build_constraint(
     ::Function,
-    x::AbstractVector{<:AbstractJuMPScalar},
+    x::AbstractVector{T},
     set::MOI.SOS2,
-)
-    return VectorConstraint(x, MOI.SOS2{Float64}(set.weights))
+) where {T<:AbstractJuMPScalar}
+    return VectorConstraint(
+        x,
+        MOI.SOS2{value_type(variable_ref_type(T))}(set.weights),
+    )
+end
+
+"""
+    model_convert(
+        model::AbstractModel,
+        rhs::Union{
+            AbstractConstraint,
+            Number,
+            AbstractJuMPScalar,
+            MOI.AbstractSet,
+        },
+    )
+
+Convert the coefficients and constants of functions and sets in the `rhs` to the
+coefficient type `value_type(typeof(model))`.
+
+## Purpose
+
+Creating and adding a constraint is a two-step process. The first step calls
+[`build_constraint`](@ref), and the result of that is passed to
+[`add_constraint`](@ref).
+
+However, because [`build_constraint`](@ref) does not take the `model` as an
+argument, the coefficients and constants of the function or set might be
+different than `value_type(typeof(model))`.
+
+Therefore, the result of [`build_constraint`](@ref) is converted in a call to
+`model_convert` before the result is passed to [`add_constraint`](@ref).
+"""
+model_convert(::AbstractModel, rhs::Any) = rhs
+
+function model_convert(model::AbstractModel, set::MOI.AbstractScalarSet)
+    if MOI.Utilities.supports_shift_constant(typeof(set))
+        T = value_type(typeof(model))
+        return MOI.Utilities.shift_constant(set, zero(T))
+    end
+    return set
+end
+
+function model_convert(model::AbstractModel, α::Number)
+    T = value_type(typeof(model))
+    V = variable_ref_type(model)
+    C = _complex_convert_type(T, typeof(α))
+    return convert(GenericAffExpr{C,V}, α)
+end
+
+function model_convert(model::AbstractModel, con::BridgeableConstraint)
+    return BridgeableConstraint(
+        model_convert(model, con.constraint),
+        con.bridge_type,
+    )
+end
+
+function model_convert(model::AbstractModel, con::ScalarConstraint)
+    return ScalarConstraint(
+        model_convert(model, con.func),
+        model_convert(model, con.set),
+    )
+end
+
+function model_convert(model::AbstractModel, con::VectorConstraint)
+    return VectorConstraint(
+        model_convert.(model, con.func),
+        model_convert(model, con.set),
+        con.shape,
+    )
 end
 
 # TODO: update 3-argument @constraint macro to pass through names like @variable
@@ -969,6 +1049,11 @@ function _constraint_macro(
     vectorized, parsecode, buildcall = parsefun(_error, x)
     _add_positional_args(buildcall, extra)
     _add_kw_args(buildcall, extra_kw_args)
+    if vectorized
+        buildcall = :(model_convert.($model, $buildcall))
+    else
+        buildcall = :(model_convert($model, $buildcall))
+    end
     name_expr = _name_call(base_name, idxvars)
     new_name_expr = if isempty(set_string_name_kw_args)
         Expr(:if, :(set_string_names_on_creation($model)), name_expr, "")
@@ -1434,12 +1519,12 @@ function _throw_error_for_invalid_sense(
 end
 
 """
-    _replace_zero(x)
+    _replace_zero(model::M, x) where {M<:AbstractModel}
 
-Replaces `_MA.Zero` with a floating point `0.0`.
+Replaces `_MA.Zero` with a floating point `zero(value_type(M))`.
 """
-_replace_zero(::_MA.Zero) = 0.0
-_replace_zero(x) = x
+_replace_zero(::M, ::_MA.Zero) where {M<:AbstractModel} = zero(value_type(M))
+_replace_zero(::AbstractModel, x::Any) = x
 
 """
     @objective(model::GenericModel, sense, func)
@@ -1501,7 +1586,7 @@ macro objective(model, args...)
         $parsecode
         # Don't leak a `_MA.Zero` if the objective expression is an empty
         # summation, or other structure that returns `_MA.Zero()`.
-        $newaff = _replace_zero($newaff)
+        $newaff = _replace_zero($esc_model, $newaff)
         set_objective($esc_model, $sense_expr, $newaff)
         $newaff
     end
@@ -1589,7 +1674,7 @@ macro expression(args...)
     code = quote
         # Don't leak a `_MA.Zero` if the expression is an empty summation, or
         # other structure that returns `_MA.Zero()`.
-        _replace_zero($code)
+        _replace_zero($m, $code)
     end
     code =
         Containers.container_code(idxvars, indices, code, requested_container)

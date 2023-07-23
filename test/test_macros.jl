@@ -411,7 +411,7 @@ function test_extension_check_constraint_basics(
     )
     cref = @constraint(m, 3 + 5 * 7 <= 0)
     c = constraint_object(cref)
-    @test isequal_canonical(c.func, zero(AffExpr))
+    @test isequal_canonical(c.func, zero(AffExprType))
     @test c.set == MOI.LessThan(-T(38))
     return
 end

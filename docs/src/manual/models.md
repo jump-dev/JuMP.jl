@@ -178,6 +178,34 @@ false
 julia> model = Model(solver);
 ```
 
+## Changing the number types
+
+By default, the coefficients of affine and quadratic expressions are numbers
+of type either `Float64` or `Complex{Float64}` (see [Complex number support](@ref)).
+
+The type `Float64` can be changed using the [`GenericModel`](@ref) constructor:
+
+```jldoctest
+julia> model = GenericModel{Rational{BigInt}}();
+
+julia> @variable(model, x)
+x
+
+julia> @expression(model, expr, 1 // 3 * x)
+1//3 x
+
+julia> typeof(expr)
+GenericAffExpr{Rational{BigInt}, GenericVariableRef{Rational{BigInt}}}
+```
+
+Using a `value_type` other than `Float64` is an advanced operation and should be
+used only if the underlying solver actually solves the problem using the
+provided value type.
+
+!!! warning
+    [Nonlinear Modeling](@ref) is currently restricted to the `Float64` number
+    type.
+
 ## Print the model
 
 By default, `show(model)` will print a summary of the problem:
