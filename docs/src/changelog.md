@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
  - Added support for generic number type (#3377) (#3385)
- - Added fallback for [`MOI.AbstractSymmetricMatrixSet`](@ref) (#3424)
+ - Added fallback for [`MOI.AbstractSymmetricMatrixSetTriangle`](@ref) and
+   [`MOI.AbstractSymmetricMatrixSetSquare`](@ref) (#3424)
 
 ### Fixed
 
@@ -26,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Added Loraine.jl to the installation table (#3426)
  - Removed Penopt.jl from packages.toml (#3428)
  - Improved problem statement in cannery example of tutorial (#3430)
- - Minor cleanups in [`DenseAxisArray`](@ref) implementation (#3429)
+ - Minor cleanups in [`Containers.DenseAxisArray`](@ref) implementation (#3429)
  - Changed `nested_problems.jl`: outer/inner to upper/lower (#3433)
  - Removed second SDP relaxation due to unreliable numerics in OPF tutorial
    (#3432)
