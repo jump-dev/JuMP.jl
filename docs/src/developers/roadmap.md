@@ -16,7 +16,7 @@ represent broad themes that we see as areas in which JuMP could be improved.
    - [https://github.com/jump-dev/JuMP.jl/issues/2788](https://github.com/jump-dev/JuMP.jl/issues/2788)
    - [https://github.com/jump-dev/MathOptInterface.jl/issues/846](https://github.com/jump-dev/MathOptInterface.jl/issues/846)
    - [https://github.com/jump-dev/MathOptInterface.jl/issues/1397](https://github.com/jump-dev/MathOptInterface.jl/issues/1397)
- - Add support for coefficient types other than `Float64`:
+ - **Done [#3385](https://github.com/jump-dev/JuMP.jl/pull/3385)** Add support for coefficient types other than `Float64`:
    [https://github.com/jump-dev/JuMP.jl/issues/2025](https://github.com/jump-dev/JuMP.jl/issues/2025)
    Since the very beginning, JuMP has hard-coded the coefficient type as
    `Float64`. This has made it impossible to support solvers which can use other
