@@ -7,6 +7,30 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.13.0 (July 24, 2023)
+
+### Added
+
+ - Added support for generic number type (#3377) (#3385)
+ - Added fallback for [`MOI.AbstractSymmetricMatrixSet`](@ref) (#3424)
+
+### Fixed
+
+ - Fixed [`set_start_values`](@ref) with
+   [`MOI.Bridge.Objective.SlackBridge`](@ref) (#3422)
+ - Fixed flakey doctest in `variables.md` (#3425)
+ - Fixed names on `CITATION.bib` (#3423)
+
+### Other
+
+ - Added Loraine.jl to the installation table (#3426)
+ - Removed Penopt.jl from packages.toml (#3428)
+ - Improved problem statement in cannery example of tutorial (#3430)
+ - Minor cleanups in [`DenseAxisArray`](@ref) implementation (#3429)
+ - Changed `nested_problems.jl` : outer/inner to upper/lower (#3433)
+ - Removed second SDP relaxation due to unreliable numerics in OPF tutorial
+   (#3432)
+
 ## Version 1.12.0 (June 19, 2023)
 
 ### Added
