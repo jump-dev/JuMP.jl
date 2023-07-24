@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
  - Fixed [`set_start_values`](@ref) with
-   [`MOI.Bridge.Objective.SlackBridge`](@ref) (#3422)
+   [`MOI.Bridges.Objective.SlackBridge`](@ref) (#3422)
  - Fixed flakey doctest in `variables.md` (#3425)
  - Fixed names on `CITATION.bib` (#3423)
 
@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Removed Penopt.jl from packages.toml (#3428)
  - Improved problem statement in cannery example of tutorial (#3430)
  - Minor cleanups in [`DenseAxisArray`](@ref) implementation (#3429)
- - Changed `nested_problems.jl` : outer/inner to upper/lower (#3433)
+ - Changed `nested_problems.jl`: outer/inner to upper/lower (#3433)
  - Removed second SDP relaxation due to unreliable numerics in OPF tutorial
    (#3432)
 
