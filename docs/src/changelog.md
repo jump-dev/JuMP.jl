@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Improved problem statement in cannery example of tutorial (#3430)
  - Minor cleanups in [`Containers.DenseAxisArray`](@ref) implementation (#3429)
  - Changed `nested_problems.jl`: outer/inner to upper/lower (#3433)
- - Removed second SDP relaxation due to unreliable numerics in OPF tutorial
+ - Removed second SDP relaxation in OPF tutorial
    (#3432)
 
 ## Version 1.12.0 (June 19, 2023)
