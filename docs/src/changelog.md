@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
- - Added support for generic number type (#3377) (#3385)
+ - Added support for generic number types (#3377) (#3385)
  - Added fallback for [`MOI.AbstractSymmetricMatrixSetTriangle`](@ref) and
    [`MOI.AbstractSymmetricMatrixSetSquare`](@ref) (#3424)
 
