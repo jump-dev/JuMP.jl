@@ -923,7 +923,8 @@ end
 function model_convert(model::AbstractModel, con::BridgeableConstraint)
     return BridgeableConstraint(
         model_convert(model, con.constraint),
-        con.bridge_type,
+        con.bridge_type;
+        con.coefficient_type,
     )
 end
 
