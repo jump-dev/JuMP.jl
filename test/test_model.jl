@@ -422,7 +422,7 @@ function test_bridges_add_bridgeable_con_model_optimizer()
 end
 
 function test_macro_bridgeable()
-    model = Model(mock_factory)
+    model = Model()
     @variable(model, x)
     @constraint(model, x in BridgeMe{Int,Nonnegative}(Nonnegative()))
     @test NonnegativeBridge{Int} in model.bridge_types
