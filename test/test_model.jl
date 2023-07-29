@@ -421,6 +421,13 @@ function test_bridges_add_bridgeable_con_model_optimizer()
     @test 2.0 == @inferred dual(c)
 end
 
+function test_macro_bridgeable()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, x in BridgeMe{Int,Nonnegative}(Nonnegative()))
+    @test NonnegativeBridge{Int} in model.bridge_types
+end
+
 function test_bridges_add_bridgeable_con_set_optimizer()
     model = Model()
     @variable(model, x)

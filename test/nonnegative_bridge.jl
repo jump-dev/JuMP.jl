@@ -17,6 +17,22 @@ struct Nonnegative <: MOI.AbstractScalarSet end
 
 MOI.copy(set::Nonnegative) = set
 
+struct BridgeMe{T,S}
+    set::S
+end
+
+function JuMP.build_constraint(
+    error::Function,
+    f,
+    set::BridgeMe{T,Nonnegative},
+) where {T}
+    return BridgeableConstraint(
+        JuMP.build_constraint(error, f, set.set),
+        NonnegativeBridge;
+        coefficient_type = T,
+    )
+end
+
 """
     NonnegativeBridge{T}
 
