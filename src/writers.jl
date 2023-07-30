@@ -3,7 +3,12 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 if VERSION ≥ v"0.7-"
-    const print_shortest = Base.Grisu.print_shortest
+    if isdefined(Base, :Grisu)
+        import Base.Grisu
+    else
+        import Grisu
+    end
+    const print_shortest = Grisu.print_shortest
 end
 
 function writeMPS(m::Model, fname::AbstractString)

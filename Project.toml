@@ -7,6 +7,7 @@ version = "0.18.6"
 Calculus = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Grisu = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 MathProgBase = "fdba3010-5040-5b88-9595-932c9decdf73"
 ReverseDiffSparse = "89212889-6d3f-5f97-b412-7825138f6c9c"
 
