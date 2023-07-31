@@ -187,11 +187,16 @@ for (solver, data) in TOML.parsefile(joinpath(@__DIR__, "packages.toml"))
     end
 end
 push!(_LIST_OF_SOLVERS, "JuliaOpt/NLopt.jl" => "packages/NLopt.md")
+push!(
+    _LIST_OF_EXTENSIONS,
+    "rafaqz/DimensionalData.jl" => "extensions/DimensionalData.md",
+)
+
 # Sort, with jump-dev repos at the start.
 sort!(_LIST_OF_SOLVERS; by = x -> (!startswith(x[1], "jump-dev/"), x[1]))
 sort!(_LIST_OF_EXTENSIONS; by = x -> (!startswith(x[1], "jump-dev/"), x[1]))
 pushfirst!(_LIST_OF_SOLVERS, "Introduction" => "packages/solvers.md")
-pushfirst!(_LIST_OF_EXTENSIONS, "Introduction" => "packages/extensions.md")
+pushfirst!(_LIST_OF_EXTENSIONS, "Introduction" => "extensions/introduction.md")
 
 # ==============================================================================
 #  JuMP API
