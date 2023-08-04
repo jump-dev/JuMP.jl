@@ -13,6 +13,12 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 SnoopPrecompile = "66db9d55-30c0-4569-8b51-7e840670fc0c"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
+[weakdeps]
+DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
+
+[extensions]
+JuMPDimensionalDataExt = "DimensionalData"
+
 [compat]
 DimensionalData = "0.24"
 MacroTools = "0.5"
@@ -22,15 +28,9 @@ OrderedCollections = "1"
 SnoopPrecompile = "1"
 julia = "1.6"
 
-[extensions]
-JuMPDimensionalDataExt = "DimensionalData"
-
 [extras]
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["DimensionalData", "Test"]
-
-[weakdeps]
-DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"

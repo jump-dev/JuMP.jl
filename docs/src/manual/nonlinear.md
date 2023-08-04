@@ -326,26 +326,3 @@ function good_f(x::T...) where {T<:Real}
     return sum(y)
 end
 ```
-
-## Factors affecting solution time
-
-The execution time when solving a nonlinear programming problem can be divided
-into two parts, the time spent in the optimization algorithm (the solver) and
-the time spent evaluating the nonlinear functions and corresponding derivatives.
-Ipopt explicitly displays these two timings in its output, for example:
-
-```
-Total CPU secs in IPOPT (w/o function evaluations)   =      7.412
-Total CPU secs in NLP function evaluations           =      2.083
-```
-
-For Ipopt in particular, one can improve the performance by installing advanced
-sparse linear algebra packages, see [Installation Guide](@ref). For other
-solvers, see their respective documentation for performance tips.
-
-The function evaluation time, on the other hand, is the responsibility of the
-modeling language. JuMP computes derivatives by using reverse-mode automatic
-differentiation with graph coloring methods for exploiting sparsity of the
-Hessian matrix. As a conservative bound, JuMP's performance here currently
-may be expected to be within a factor of 5 of AMPL's. Our [paper in
-SIAM Review](https://mlubin.github.io/pdf/jump-sirev.pdf) has more details.
