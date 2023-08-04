@@ -239,7 +239,7 @@ function test_extension_constraint_lessthan(
     @constraint(model, c, 2.0 * sin(x)^2 + cos(x) / x <= 1)
     obj = constraint_object(c)
     @test isequal_canonical(obj.func, 2.0 * sin(x)^2 + cos(x) / x - 1)
-    @test obj.set == MOI.LessThan(0.0)
+    @test obj.set == MOI.LessThan(zero(value_type(ModelType)))
     return
 end
 
@@ -252,7 +252,7 @@ function test_extension_constraint_greaterthan(
     @constraint(model, c, 2.0 * sin(x)^2 + cos(x) / x >= 1)
     obj = constraint_object(c)
     @test isequal_canonical(obj.func, 2.0 * sin(x)^2 + cos(x) / x - 1)
-    @test obj.set == MOI.GreaterThan(0.0)
+    @test obj.set == MOI.GreaterThan(zero(value_type(ModelType)))
     return
 end
 
@@ -265,7 +265,7 @@ function test_extension_constraint_equalto(
     @constraint(model, c, 2.0 * sin(x)^2 + cos(x) / x == 1)
     obj = constraint_object(c)
     @test isequal_canonical(obj.func, 2.0 * sin(x)^2 + cos(x) / x - 1)
-    @test obj.set == MOI.EqualTo(0.0)
+    @test obj.set == MOI.EqualTo(zero(value_type(ModelType)))
     return
 end
 
@@ -278,7 +278,8 @@ function test_extension_constraint_interval(
     @constraint(model, c, 0 <= 2.0 * sin(x)^2 + cos(x) / x <= 1)
     obj = constraint_object(c)
     @test isequal_canonical(obj.func, 2.0 * sin(x)^2 + cos(x) / x)
-    @test obj.set == MOI.Interval(0.0, 1.0)
+    T = value_type(ModelType)
+    @test obj.set == MOI.Interval(zero(T), one(T))
     return
 end
 

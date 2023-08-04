@@ -172,22 +172,7 @@ julia> value.(p)
  3.0
 ```
 
-Nonlinear parameters can be used *within nonlinear macros* only:
-
-```jldoctest nonlinear_parameters
-julia> @objective(model, Max, p[1] * x)
-ERROR: MethodError: no method matching *(::NonlinearParameter, ::VariableRef)
-[...]
-
-julia> @NLobjective(model, Max, p[1] * x)
-
-julia> @expression(model, my_expr, p[1] * x^2)
-ERROR: MethodError: no method matching *(::NonlinearParameter, ::QuadExpr)
-[...]
-
-julia> @NLexpression(model, my_nl_expr, p[1] * x^2)
-subexpression[1]: parameter[1] * x ^ 2.0
-```
+Nonlinear parameters must be used *within nonlinear macros* only.
 
 ### When to use a parameter
 
