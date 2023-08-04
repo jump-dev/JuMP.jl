@@ -5,6 +5,7 @@
 
 import Pkg
 Pkg.pkg"add Documenter#740ba6304c940801eafdc18b069e4609bf3923a6"
+
 import Documenter
 import Downloads
 import Literate
@@ -341,9 +342,10 @@ const _PAGES = [
         "manual/objective.md",
         "manual/containers.md",
         "manual/solutions.md",
-        "manual/nlp.md",
+        "manual/nonlinear.md",
         "manual/callbacks.md",
         "manual/complex.md",
+        "manual/nlp.md",
     ],
     jump_api_reference,
     "Background Information" =>

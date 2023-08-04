@@ -1736,7 +1736,7 @@ macro expression(args...)
         $build_code
         # Don't leak a `_MA.Zero` if the expression is an empty summation, or
         # other structure that returns `_MA.Zero()`.
-        _replace_zero($m, $code)
+        _replace_zero($m, $expr_var)
     end
     code =
         Containers.container_code(idxvars, indices, code, requested_container)
