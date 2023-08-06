@@ -68,21 +68,21 @@ function test_extension_expression(
     model = ModelType()
     @variable(model, x)
     @variable(model, y[1:3])
-    @test string(@expression(model, *(y...))) == "(y[1]*y[2] * y[3])"
+    @test string(@expression(model, *(y...))) == "(y[1]*y[2]) * y[3]"
     @test string(@expression(model, sin(x))) == "sin(x)"
     @test string(@expression(model, ifelse(x >= 0, x, 0))) ==
-          "ifelse((x >= 0), x, 0)"
-    @test string(@expression(model, 2^x)) == "(2.0 ^ x)"
-    @test string(@expression(model, x^x)) == "(x ^ x)"
-    @test string(@expression(model, sin(x)^2)) == "(sin(x) ^ 2.0)"
-    @test string(@expression(model, sin(x)^2.0)) == "(sin(x) ^ 2.0)"
-    @test string(@expression(model, 2 * sin(x)^2.0)) == "(2.0 * (sin(x) ^ 2.0))"
-    @test string(@expression(model, 1 + sin(x))) == "(1.0 + sin(x))"
-    @test string(@expression(model, 1 + 2 * sin(x))) == "(1.0 + (2.0 * sin(x)))"
+          "ifelse(x >= 0, x, 0)"
+    @test string(@expression(model, 2^x)) == "2.0 ^ x"
+    @test string(@expression(model, x^x)) == "x ^ x"
+    @test string(@expression(model, sin(x)^2)) == "sin(x) ^ 2.0"
+    @test string(@expression(model, sin(x)^2.0)) == "sin(x) ^ 2.0"
+    @test string(@expression(model, 2 * sin(x)^2.0)) == "2.0 * (sin(x) ^ 2.0)"
+    @test string(@expression(model, 1 + sin(x))) == "1.0 + sin(x)"
+    @test string(@expression(model, 1 + 2 * sin(x))) == "1.0 + (2.0 * sin(x))"
     @test string(@expression(model, 2.0 * sin(x)^2 + cos(x) / x)) ==
-          "((2.0 * (sin(x) ^ 2.0)) + (cos(x) / x))"
+          "(2.0 * (sin(x) ^ 2.0)) + (cos(x) / x)"
     @test string(@expression(model, 2.0 * sin(x)^2 - cos(x) / x)) ==
-          "((2.0 * (sin(x) ^ 2.0)) - (cos(x) / x))"
+          "(2.0 * (sin(x) ^ 2.0)) - (cos(x) / x)"
     return
 end
 
@@ -96,28 +96,28 @@ function test_extension_flatten_nary(
     expr_mult = NonlinearExpr{VariableRefType}(:*, Any[x])
     expr_sin = NonlinearExpr{VariableRefType}(:sin, Any[x])
     to_string(x) = string(flatten(x))
-    @test to_string(+(expr_plus, 1)) == "(x + 1.0)"
-    @test to_string(+(1, expr_plus)) == "(1.0 + x)"
-    @test to_string(+(expr_plus, x)) == "(x + x)"
-    @test to_string(+(expr_sin, x)) == "(sin(x) + x)"
-    @test to_string(+(x, expr_plus)) == "(x + x)"
-    @test to_string(+(x, expr_sin)) == "(x + sin(x))"
-    @test to_string(+(expr_plus, expr_plus)) == "(x + x)"
-    @test to_string(+(expr_plus, expr_sin)) == "(x + sin(x))"
-    @test to_string(+(expr_sin, expr_plus)) == "(sin(x) + x)"
-    @test to_string(+(expr_sin, expr_sin)) == "(sin(x) + sin(x))"
-    @test to_string(*(expr_mult, 2)) == "(x * 2.0)"
-    @test to_string(*(2, expr_mult)) == "(2.0 * x)"
-    @test to_string(*(expr_mult, x)) == "(x * x)"
-    @test to_string(*(expr_sin, x)) == "(sin(x) * x)"
-    @test to_string(*(x, expr_mult)) == "(x * x)"
-    @test to_string(*(x, expr_sin)) == "(x * sin(x))"
-    @test to_string(*(expr_mult, expr_mult)) == "(x * x)"
-    @test to_string(*(expr_mult, expr_sin)) == "(x * sin(x))"
-    @test to_string(*(expr_sin, expr_mult)) == "(sin(x) * x)"
-    @test to_string(*(expr_sin, expr_sin)) == "(sin(x) * sin(x))"
-    @test to_string(sin(+(expr_plus, 1))) == "sin((x + 1.0))"
-    @test to_string(sin(*(expr_mult, expr_mult))) == "sin((x * x))"
+    @test to_string(+(expr_plus, 1)) == "x + 1.0"
+    @test to_string(+(1, expr_plus)) == "1.0 + x"
+    @test to_string(+(expr_plus, x)) == "x + x"
+    @test to_string(+(expr_sin, x)) == "sin(x) + x"
+    @test to_string(+(x, expr_plus)) == "x + x"
+    @test to_string(+(x, expr_sin)) == "x + sin(x)"
+    @test to_string(+(expr_plus, expr_plus)) == "x + x"
+    @test to_string(+(expr_plus, expr_sin)) == "x + sin(x)"
+    @test to_string(+(expr_sin, expr_plus)) == "sin(x) + x"
+    @test to_string(+(expr_sin, expr_sin)) == "sin(x) + sin(x)"
+    @test to_string(*(expr_mult, 2)) == "x * 2.0"
+    @test to_string(*(2, expr_mult)) == "2.0 * x"
+    @test to_string(*(expr_mult, x)) == "x * x"
+    @test to_string(*(expr_sin, x)) == "sin(x) * x"
+    @test to_string(*(x, expr_mult)) == "x * x"
+    @test to_string(*(x, expr_sin)) == "x * sin(x)"
+    @test to_string(*(expr_mult, expr_mult)) == "x * x"
+    @test to_string(*(expr_mult, expr_sin)) == "x * sin(x)"
+    @test to_string(*(expr_sin, expr_mult)) == "sin(x) * x"
+    @test to_string(*(expr_sin, expr_sin)) == "sin(x) * sin(x)"
+    @test to_string(sin(+(expr_plus, 1))) == "sin(x + 1.0)"
+    @test to_string(sin(*(expr_mult, expr_mult))) == "sin(x * x)"
     return
 end
 
@@ -148,16 +148,16 @@ function test_extension_expression_addmul(
 )
     model = ModelType()
     @variable(model, x)
-    @test string(@expression(model, x + 3 * sin(x))) == "(x + (3.0 * sin(x)))"
+    @test string(@expression(model, x + 3 * sin(x))) == "x + (3.0 * sin(x))"
     @test string(@expression(model, 2 * x + 3 * sin(x))) ==
-          "(2 x + (3.0 * sin(x)))"
+          "(2 x) + (3.0 * sin(x))"
     @test string(@expression(model, x^2 + 3 * sin(x))) ==
-          "($(x^2) + (3.0 * sin(x)))"
+          "($(x^2)) + (3.0 * sin(x))"
     @test string(@expression(model, sin(x) + 3 * sin(x))) ==
-          "(sin(x) + (3.0 * sin(x)))"
-    @test string(@expression(model, sin(x) + 3 * x)) == "(sin(x) + 3 x)"
+          "sin(x) + (3.0 * sin(x))"
+    @test string(@expression(model, sin(x) + 3 * x)) == "sin(x) + (3 x)"
     @test string(@expression(model, sin(x) + 3 * x * x)) ==
-          "(sin(x) + 3 $(x^2))"
+          "sin(x) + (3 $(x^2))"
     return
 end
 
@@ -167,16 +167,16 @@ function test_extension_expression_submul(
 )
     model = ModelType()
     @variable(model, x)
-    @test string(@expression(model, x - 3 * sin(x))) == "(x - (3.0 * sin(x)))"
+    @test string(@expression(model, x - 3 * sin(x))) == "x - (3.0 * sin(x))"
     @test string(@expression(model, 2 * x - 3 * sin(x))) ==
-          "(2 x - (3.0 * sin(x)))"
+          "(2 x) - (3.0 * sin(x))"
     @test string(@expression(model, x^2 - 3 * sin(x))) ==
-          "($(x^2) - (3.0 * sin(x)))"
+          "($(x^2)) - (3.0 * sin(x))"
     @test string(@expression(model, sin(x) - 3 * sin(x))) ==
-          "(sin(x) - (3.0 * sin(x)))"
-    @test string(@expression(model, sin(x) - 3 * x)) == "(sin(x) - 3 x)"
+          "sin(x) - (3.0 * sin(x))"
+    @test string(@expression(model, sin(x) - 3 * x)) == "sin(x) - (3 x)"
     @test string(@expression(model, sin(x) - 3 * x * x)) ==
-          "(sin(x) - 3 $(x^2))"
+          "sin(x) - (3 $(x^2))"
     return
 end
 
@@ -189,9 +189,9 @@ function test_extension_aff_expr_convert(
     _to_string(x) = string(convert(NonlinearExpr{VariableRefType}, x))
     @test _to_string(AffExpr(0.0)) == "0.0"
     @test _to_string(AffExpr(1.0)) == "1.0"
-    @test _to_string(x + 1) == "(x + 1.0)"
-    @test _to_string(2x + 1) == "((2.0 * x) + 1.0)"
-    @test _to_string(2x) == "(2.0 * x)"
+    @test _to_string(x + 1) == "x + 1.0"
+    @test _to_string(2x + 1) == "(2.0 * x) + 1.0"
+    @test _to_string(2x) == "2.0 * x"
     return
 end
 
@@ -204,15 +204,15 @@ function test_extension_quad_expr_convert(
     _to_string(x) = string(convert(NonlinearExpr{VariableRefType}, x))
     @test _to_string(QuadExpr(AffExpr(0.0))) == "0.0"
     @test _to_string(QuadExpr(AffExpr(1.0))) == "1.0"
-    @test _to_string(x^2 + 1) == "((x * x) + 1.0)"
-    @test _to_string(2x^2 + 1) == "((2.0 * x * x) + 1.0)"
-    @test _to_string(2x^2) == "(2.0 * x * x)"
-    @test _to_string(x^2 + x + 1) == "(x + (x * x) + 1.0)"
-    @test _to_string(2x^2 + x + 1) == "(x + (2.0 * x * x) + 1.0)"
-    @test _to_string(2x^2 + x) == "(x + (2.0 * x * x))"
-    @test _to_string(x^2 + 2x + 1) == "((2.0 * x) + (x * x) + 1.0)"
-    @test _to_string(2x^2 + 2x + 1) == "((2.0 * x) + (2.0 * x * x) + 1.0)"
-    @test _to_string(2x^2 + 2x) == "((2.0 * x) + (2.0 * x * x))"
+    @test _to_string(x^2 + 1) == "(x * x) + 1.0"
+    @test _to_string(2x^2 + 1) == "(2.0 * x * x) + 1.0"
+    @test _to_string(2x^2) == "2.0 * x * x"
+    @test _to_string(x^2 + x + 1) == "x + (x * x) + 1.0"
+    @test _to_string(2x^2 + x + 1) == "x + (2.0 * x * x) + 1.0"
+    @test _to_string(2x^2 + x) == "x + (2.0 * x * x)"
+    @test _to_string(x^2 + 2x + 1) == "(2.0 * x) + (x * x) + 1.0"
+    @test _to_string(2x^2 + 2x + 1) == "(2.0 * x) + (2.0 * x * x) + 1.0"
+    @test _to_string(2x^2 + 2x) == "(2.0 * x) + (2.0 * x * x)"
     return
 end
 
@@ -290,7 +290,8 @@ function test_user_defined_function_overload()
     f(x::AbstractJuMPScalar) = NonlinearExpr{VariableRef}(:f, x)
     register(model, :f, 1, f; autodiff = true)
     @test string(@expression(model, f(x))) == "f(x)"
-    @test string(f(x) + f(x)) == "(f(x) + f(x))"
+    @test string(f(x) + f(x)) == "f(x) + f(x)"
+    @test string(1 / (f(x) + f(x))) == "1.0 / (f(x) + f(x))"
     return
 end
 
@@ -330,7 +331,7 @@ function test_nlparameter_interaction()
     @NLparameter(model, p == 1)
     e = x + p
     @test e isa NonlinearExpr
-    @test string(e) == "(x + $p)"
+    @test string(e) == "x + ($p)"
     return
 end
 
@@ -340,7 +341,7 @@ function test_nlexpression_interaction()
     @NLexpression(model, expr, sin(x))
     e = x + expr
     @test e isa NonlinearExpr
-    @test string(e) == "(x + $expr)"
+    @test string(e) == "x + ($expr)"
     return
 end
 
@@ -374,7 +375,7 @@ function test_jump_function_nonlinearexpr()
     @NLexpression(model, expr1, sin(p + x))
     @NLexpression(model, expr2, sin(expr1))
     nlp = nonlinear_model(model)
-    @test string(jump_function(model, nlp[index(expr1)])) == "sin(($p + $x))"
+    @test string(jump_function(model, nlp[index(expr1)])) == "sin(($p) + $x)"
     @test string(jump_function(model, nlp[index(expr2)])) == "sin($expr1)"
     return
 end
@@ -405,7 +406,7 @@ function test_extension_expr_mle(
         sum((data[i] - x)^2 for i in 1:n) / (2 * y^2)
     )
     @test string(obj) ==
-          "((2.0 * log((1.0 / 2 $(y^2)))) - (4 $(x^2) - 30 x + 85 / 2 $(y^2)))"
+          "(2.0 * log(1.0 / (2 $(y^2)))) - ((4 $(x^2) - 30 x + 85) / (2 $(y^2)))"
     return
 end
 

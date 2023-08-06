@@ -66,10 +66,10 @@ julia> @variable(model, x)
 x
 
 julia> f = sin(x)^2
-^(sin(x), 2.0)
+sin(x) ^ 2.0
 
-julia> f = NonlinearExpr(:^, NonlinearExpr(:sin, x), 2.0)
-^(sin(x), 2.0)
+julia> f = NonlinearExpr{VariableRef}(:^, NonlinearExpr{VariableRef}(:sin, x), 2.0)
+sin(x) ^ 2.0
 ```
 """
 struct NonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
@@ -109,17 +109,33 @@ Base.getindex(x::NonlinearExpr, i::Int) = x.args[i]
 const _PREFIX_OPERATORS =
     (:+, :-, :*, :/, :^, :||, :&&, :>, :<, :(<=), :(>=), :(==))
 
+_needs_parentheses(::Union{Number,AbstractVariableRef}) = false
+_needs_parentheses(::Any) = true
+function _needs_parentheses(x::NonlinearExpr)
+    return x.head in _PREFIX_OPERATORS && length(x) > 1
+end
+
 function function_string(::MIME"text/plain", x::NonlinearExpr)
     io, stack = IOBuffer(), Any[x]
     while !isempty(stack)
         arg = pop!(stack)
         if arg isa NonlinearExpr
             if arg.head in _PREFIX_OPERATORS && length(arg) > 1
-                print(io, "(")
-                push!(stack, ")")
+                if _needs_parentheses(arg[1])
+                    print(io, "(")
+                end
+                if _needs_parentheses(arg.args[end])
+                    push!(stack, ")")
+                end
                 for i in length(arg):-1:2
                     push!(stack, arg[i])
+                    if _needs_parentheses(arg.args[i])
+                        push!(stack, "(")
+                    end
                     push!(stack, " $(arg.head) ")
+                    if _needs_parentheses(arg.args[i-1])
+                        push!(stack, ")")
+                    end
                 end
                 push!(stack, arg[1])
             else
@@ -315,13 +331,13 @@ julia> @variable(model, x)
 x
 
 julia> y = prod(x for i in 1:4)
-((x² * x) * x)
+((x²) * x) * x
 
 julia> flatten(y)
-(x² * x * x)
+(x²) * x * x
 
 julia> flatten(sin(y))
-sin((x² * x * x))
+sin((x²) * x * x)
 ```
 """
 function flatten(expr::NonlinearExpr{V}) where {V}
