@@ -106,7 +106,7 @@ function test_extension_broadcast_division_error(
         copy(B.rowval),
         vec(x),
     )
-    NonlinearExprType = NonlinearExpr{VariableRefType}
+    NonlinearExprType = GenericNonlinearExpr{VariableRefType}
     @test A ./ x isa Matrix{NonlinearExprType}
     @test B ./ x isa SparseArrays.SparseMatrixCSC{NonlinearExprType,Int}
     @test A ./ y isa SparseArrays.SparseMatrixCSC{NonlinearExprType,Int}
@@ -621,7 +621,7 @@ function test_complex_pow()
     @test y^0 == (1.0 + 0im)
     @test y^1 == 0 * y * y + y
     @test y^2 == y * y
-    @test isequal_canonical(y^3, NonlinearExpr(:^, Any[y, 3]))
+    @test isequal_canonical(y^3, GenericNonlinearExpr(:^, Any[y, 3]))
     return
 end
 

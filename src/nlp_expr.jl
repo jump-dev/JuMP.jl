@@ -4,8 +4,8 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 """
-    NonlinearExpr{V}(head::Symbol, args::Vector{Any})
-    NonlinearExpr{V}(head::Symbol, args::Any...)
+    GenericNonlinearExpr{V}(head::Symbol, args::Vector{Any})
+    GenericNonlinearExpr{V}(head::Symbol, args::Any...)
 
 The scalar-valued nonlinear function `head(args...)`, represented as a symbolic
 expression tree, with the call operator `head` and ordered arguments in `args`.
@@ -37,14 +37,14 @@ The vector `args` contains the arguments to the nonlinear function. If the
 operator is univariate, it must contain one element. Otherwise, it may contain
 multiple elements.
 
-Given a subtype of [`AbstractVariableRef`](@ref), `V`, for `NonlinearExpr{V}`,
+Given a subtype of [`AbstractVariableRef`](@ref), `V`, for `GenericNonlinearExpr{V}`,
 each element must be one of the following:
 
  * A constant value of type `<:Number`
  * A `V`
  * A [`GenericAffExpr{C,V}`](@ref)
  * A [`GenericQuadExpr{C,V}`](@ref)
- * A [`NonlinearExpr{V}`](@ref)
+ * A [`GenericNonlinearExpr{V}`](@ref)
 
 ## Unsupported operators
 
@@ -68,15 +68,19 @@ x
 julia> f = sin(x)^2
 sin(x) ^ 2.0
 
-julia> f = NonlinearExpr{VariableRef}(:^, NonlinearExpr{VariableRef}(:sin, x), 2.0)
+julia> f = GenericNonlinearExpr{VariableRef}(
+           :^,
+           GenericNonlinearExpr{VariableRef}(:sin, x),
+           2.0,
+       )
 sin(x) ^ 2.0
 ```
 """
-struct NonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
+struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
     head::Symbol
     args::Vector{Any}
 
-    function NonlinearExpr(head::Symbol, args::Vector{Any})
+    function GenericNonlinearExpr(head::Symbol, args::Vector{Any})
         index = findfirst(Base.Fix2(isa, AbstractJuMPScalar), args)
         if index === nothing
             error(
@@ -87,7 +91,7 @@ struct NonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
         return new{variable_ref_type(args[index])}(head, args)
     end
 
-    function NonlinearExpr{V}(
+    function GenericNonlinearExpr{V}(
         head::Symbol,
         args::Vector{Any},
     ) where {V<:AbstractVariableRef}
@@ -95,31 +99,42 @@ struct NonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
     end
 end
 
-variable_ref_type(::NonlinearExpr{V}) where {V} = V
+"""
+    NonlinearExpr
+
+Alias for `GenericNonlinearExpr{VariableRef}`, the specific
+[`GenericNonlinearExpr`](@ref) used by JuMP.
+"""
+const NonlinearExpr = GenericNonlinearExpr{VariableRef}
+
+variable_ref_type(::GenericNonlinearExpr{V}) where {V} = V
 
 # We include this method so that we can refactor the internal representation of
-# NonlinearExpr without having to rewrite the method overloads.
-function NonlinearExpr{V}(head::Symbol, args...) where {V<:AbstractVariableRef}
-    return NonlinearExpr{V}(head, Any[args...])
+# GenericNonlinearExpr without having to rewrite the method overloads.
+function GenericNonlinearExpr{V}(
+    head::Symbol,
+    args...,
+) where {V<:AbstractVariableRef}
+    return GenericNonlinearExpr{V}(head, Any[args...])
 end
 
-Base.length(x::NonlinearExpr) = length(x.args)
-Base.getindex(x::NonlinearExpr, i::Int) = x.args[i]
+Base.length(x::GenericNonlinearExpr) = length(x.args)
+Base.getindex(x::GenericNonlinearExpr, i::Int) = x.args[i]
 
 const _PREFIX_OPERATORS =
     (:+, :-, :*, :/, :^, :||, :&&, :>, :<, :(<=), :(>=), :(==))
 
 _needs_parentheses(::Union{Number,AbstractVariableRef}) = false
 _needs_parentheses(::Any) = true
-function _needs_parentheses(x::NonlinearExpr)
+function _needs_parentheses(x::GenericNonlinearExpr)
     return x.head in _PREFIX_OPERATORS && length(x) > 1
 end
 
-function function_string(::MIME"text/plain", x::NonlinearExpr)
+function function_string(::MIME"text/plain", x::GenericNonlinearExpr)
     io, stack = IOBuffer(), Any[x]
     while !isempty(stack)
         arg = pop!(stack)
-        if arg isa NonlinearExpr
+        if arg isa GenericNonlinearExpr
             if arg.head in _PREFIX_OPERATORS && length(arg) > 1
                 if _needs_parentheses(arg[1])
                     print(io, "(")
@@ -155,11 +170,11 @@ function function_string(::MIME"text/plain", x::NonlinearExpr)
     return read(io, String)
 end
 
-function function_string(::MIME"text/latex", x::NonlinearExpr)
+function function_string(::MIME"text/latex", x::GenericNonlinearExpr)
     io, stack = IOBuffer(), Any[x]
     while !isempty(stack)
         arg = pop!(stack)
-        if arg isa NonlinearExpr
+        if arg isa GenericNonlinearExpr
             if arg.head in _PREFIX_OPERATORS && length(arg) > 1
                 print(io, "\\left({")
                 push!(stack, "}\\right)")
@@ -188,7 +203,7 @@ end
 _isequal(x, y) = x == y
 _isequal(x::T, y::T) where {T<:AbstractJuMPScalar} = isequal_canonical(x, y)
 
-function isequal_canonical(x::NonlinearExpr, y::NonlinearExpr)
+function isequal_canonical(x::GenericNonlinearExpr, y::GenericNonlinearExpr)
     return x.head == y.head &&
            length(x) == length(y) &&
            all(i -> _isequal(x[i], y[i]), 1:length(x))
@@ -197,17 +212,17 @@ end
 function MOI.Nonlinear.parse_expression(
     data::MOI.Nonlinear.Model,
     expr::MOI.Nonlinear.Expression,
-    x::NonlinearExpr,
+    x::GenericNonlinearExpr,
     parent::Int,
 )
     stack = Tuple{Int,Any}[(parent, x)]
     while !isempty(stack)
         parent_node, arg = pop!(stack)
-        if arg isa NonlinearExpr
+        if arg isa GenericNonlinearExpr
             _parse_without_recursion_inner(stack, data, expr, arg, parent_node)
         else
-            # We can use recursion here, because NonlinearExpr only occur in
-            # other NonlinearExpr.
+            # We can use recursion here, because GenericNonlinearExpr only occur in
+            # other GenericNonlinearExpr.
             MOI.Nonlinear.parse_expression(data, expr, arg, parent_node)
         end
     end
@@ -246,9 +261,13 @@ end
 
 # Method definitions
 
-Base.zero(::Type{NonlinearExpr{V}}) where {V} = NonlinearExpr{V}(:+, 0.0)
+function Base.zero(::Type{GenericNonlinearExpr{V}}) where {V}
+    return GenericNonlinearExpr{V}(:+, 0.0)
+end
 
-Base.one(::Type{NonlinearExpr{V}}) where {V} = NonlinearExpr{V}(:+, 1.0)
+function Base.one(::Type{GenericNonlinearExpr{V}}) where {V}
+    return GenericNonlinearExpr{V}(:+, 1.0)
+end
 
 # Univariate operators
 
@@ -257,17 +276,19 @@ for f in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
     if f == :+
         continue  # We don't need this.
     elseif f == :-
-        @eval Base.:-(x::NonlinearExpr{V}) where {V} = NonlinearExpr{V}(:-, x)
+        @eval function Base.:-(x::GenericNonlinearExpr{V}) where {V}
+            return GenericNonlinearExpr{V}(:-, x)
+        end
     elseif isdefined(Base, f)
         @eval function Base.$(f)(x::AbstractJuMPScalar)
-            return NonlinearExpr{variable_ref_type(x)}($op, x)
+            return GenericNonlinearExpr{variable_ref_type(x)}($op, x)
         end
     elseif isdefined(MOI.Nonlinear, :SpecialFunctions)
         # The operator is defined in some other package.
         SF = MOI.Nonlinear.SpecialFunctions
         if isdefined(SF, f)
             @eval function $(SF).$(f)(x::AbstractJuMPScalar)
-                return NonlinearExpr{variable_ref_type(x)}($op, x)
+                return GenericNonlinearExpr{variable_ref_type(x)}($op, x)
             end
         end
     end
@@ -286,21 +307,21 @@ for f in (:+, :-, :*, :^, :/, :atan)
     @eval begin
         function Base.$(f)(x::AbstractJuMPScalar, y::_Constant)
             rhs = convert(Float64, _constant_to_number(y))
-            return NonlinearExpr{variable_ref_type(x)}($op, x, rhs)
+            return GenericNonlinearExpr{variable_ref_type(x)}($op, x, rhs)
         end
         function Base.$(f)(x::_Constant, y::AbstractJuMPScalar)
             lhs = convert(Float64, _constant_to_number(x))
-            return NonlinearExpr{variable_ref_type(y)}($op, lhs, y)
+            return GenericNonlinearExpr{variable_ref_type(y)}($op, lhs, y)
         end
         function Base.$(f)(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
-            return NonlinearExpr{variable_ref_type(x)}($op, x, y)
+            return GenericNonlinearExpr{variable_ref_type(x)}($op, x, y)
         end
     end
 end
 
 function _MA.operate!!(
     ::typeof(_MA.add_mul),
-    x::NonlinearExpr,
+    x::GenericNonlinearExpr,
     y::AbstractJuMPScalar,
 )
     if x.head == :+
@@ -311,7 +332,7 @@ function _MA.operate!!(
 end
 
 """
-    flatten(expr::NonlinearExpr)
+    flatten(expr::GenericNonlinearExpr)
 
 Flatten a nonlinear expression by lifting nested `+` and `*` nodes into a single
 n-ary operation.
@@ -340,12 +361,12 @@ julia> flatten(sin(y))
 sin((x²) * x * x)
 ```
 """
-function flatten(expr::NonlinearExpr{V}) where {V}
-    root = NonlinearExpr{V}(expr.head, Any[])
+function flatten(expr::GenericNonlinearExpr{V}) where {V}
+    root = GenericNonlinearExpr{V}(expr.head, Any[])
     nodes_to_visit = Any[(root, arg) for arg in reverse(expr.args)]
     while !isempty(nodes_to_visit)
         parent, arg = pop!(nodes_to_visit)
-        if !(arg isa NonlinearExpr)
+        if !(arg isa GenericNonlinearExpr)
             # Not a nonlinear expression, so can use recursion.
             push!(parent.args, flatten(arg))
         elseif parent.head in (:+, :*) && arg.head == parent.head
@@ -370,7 +391,7 @@ end
 flatten(expr) = expr
 
 function _ifelse(a::AbstractJuMPScalar, x, y)
-    return NonlinearExpr{variable_ref_type(a)}(:ifelse, Any[a, x, y])
+    return GenericNonlinearExpr{variable_ref_type(a)}(:ifelse, Any[a, x, y])
 end
 
 for (f, op) in (
@@ -385,20 +406,20 @@ for (f, op) in (
     op = Meta.quot(op)
     @eval begin
         function $(f)(x::AbstractJuMPScalar, y)
-            return NonlinearExpr{variable_ref_type(x)}($op, x, y)
+            return GenericNonlinearExpr{variable_ref_type(x)}($op, x, y)
         end
         function $(f)(x, y::AbstractJuMPScalar)
-            return NonlinearExpr{variable_ref_type(y)}($op, x, y)
+            return GenericNonlinearExpr{variable_ref_type(y)}($op, x, y)
         end
         function $(f)(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
-            return NonlinearExpr{variable_ref_type(x)}($op, x, y)
+            return GenericNonlinearExpr{variable_ref_type(x)}($op, x, y)
         end
     end
 end
 
 # JuMP interop
 
-function owner_model(expr::NonlinearExpr)
+function owner_model(expr::GenericNonlinearExpr)
     for arg in expr.args
         if !(arg isa AbstractJuMPScalar)
             continue
@@ -411,7 +432,10 @@ function owner_model(expr::NonlinearExpr)
     return nothing
 end
 
-function check_belongs_to_model(expr::NonlinearExpr, model::AbstractModel)
+function check_belongs_to_model(
+    expr::GenericNonlinearExpr,
+    model::AbstractModel,
+)
     for arg in expr.args
         if arg isa AbstractJuMPScalar
             check_belongs_to_model(arg, model)
@@ -420,7 +444,7 @@ function check_belongs_to_model(expr::NonlinearExpr, model::AbstractModel)
     return
 end
 
-function moi_function(f::NonlinearExpr)
+function moi_function(f::GenericNonlinearExpr)
     ret = MOI.ScalarNonlinearFunction(f.head, Any[])
     stack = Tuple{MOI.ScalarNonlinearFunction,Any}[]
     for arg in reverse(f.args)
@@ -428,7 +452,7 @@ function moi_function(f::NonlinearExpr)
     end
     while !isempty(stack)
         parent, arg = pop!(stack)
-        if arg isa NonlinearExpr
+        if arg isa GenericNonlinearExpr
             new_ret = MOI.ScalarNonlinearFunction(arg.head, Any[])
             push!(parent.args, new_ret)
             for child in reverse(arg.args)
@@ -445,15 +469,15 @@ end
 
 function jump_function(model::GenericModel, f::MOI.ScalarNonlinearFunction)
     V = variable_ref_type(typeof(model))
-    ret = NonlinearExpr{V}(f.head, Any[])
-    stack = Tuple{NonlinearExpr,Any}[]
+    ret = GenericNonlinearExpr{V}(f.head, Any[])
+    stack = Tuple{GenericNonlinearExpr,Any}[]
     for arg in reverse(f.args)
         push!(stack, (ret, arg))
     end
     while !isempty(stack)
         parent, arg = pop!(stack)
         if arg isa MOI.ScalarNonlinearFunction
-            new_ret = NonlinearExpr{V}(arg.head, Any[])
+            new_ret = GenericNonlinearExpr{V}(arg.head, Any[])
             push!(parent.args, new_ret)
             for child in reverse(arg.args)
                 push!(stack, (new_ret, child))
@@ -471,10 +495,10 @@ function jump_function_type(
     model::GenericModel,
     ::Type{<:MOI.ScalarNonlinearFunction},
 )
-    return NonlinearExpr{variable_ref_type(typeof(model))}
+    return GenericNonlinearExpr{variable_ref_type(typeof(model))}
 end
 
-moi_function_type(::Type{<:NonlinearExpr}) = MOI.ScalarNonlinearFunction
+moi_function_type(::Type{<:GenericNonlinearExpr}) = MOI.ScalarNonlinearFunction
 
 function constraint_object(c::NonlinearConstraintRef)
     nlp = nonlinear_model(c.model)
@@ -491,12 +515,12 @@ function jump_function(model::GenericModel, expr::MOI.Nonlinear.Expression)
     for i in length(expr.nodes):-1:1
         node = expr.nodes[i]
         parsed[i] = if node.type == MOI.Nonlinear.NODE_CALL_UNIVARIATE
-            NonlinearExpr{V}(
+            GenericNonlinearExpr{V}(
                 nlp.operators.univariate_operators[node.index],
                 parsed[rowvals[SparseArrays.nzrange(adj, i)[1]]],
             )
         elseif node.type == MOI.Nonlinear.NODE_CALL_MULTIVARIATE
-            NonlinearExpr{V}(
+            GenericNonlinearExpr{V}(
                 nlp.operators.multivariate_operators[node.index],
                 Any[parsed[rowvals[j]] for j in SparseArrays.nzrange(adj, i)],
             )
@@ -517,11 +541,11 @@ function jump_function(model::GenericModel, expr::MOI.Nonlinear.Expression)
     return parsed[1]
 end
 
-function value(f::Function, expr::NonlinearExpr)
+function value(f::Function, expr::GenericNonlinearExpr)
     return _evaluate_expr(MOI.Nonlinear.OperatorRegistry(), f, expr)
 end
 
-function value(a::NonlinearExpr; result::Int = 1)
+function value(a::GenericNonlinearExpr; result::Int = 1)
     return value(a) do x
         return value(x; result = result)
     end
@@ -543,7 +567,11 @@ function _evaluate_expr(
     return convert(Float64, expr)
 end
 
-function _evaluate_user_defined_function(registry, f, expr::NonlinearExpr)
+function _evaluate_user_defined_function(
+    registry,
+    f,
+    expr::GenericNonlinearExpr,
+)
     model = owner_model(expr)
     op, nargs = expr.head, length(expr.args)
     udf = MOI.get(model, MOI.UserDefinedFunction(op, nargs))
@@ -560,7 +588,7 @@ end
 function _evaluate_expr(
     registry::MOI.Nonlinear.OperatorRegistry,
     f::Function,
-    expr::NonlinearExpr,
+    expr::GenericNonlinearExpr,
 )
     op = expr.head
     # TODO(odow): uses private function
@@ -591,10 +619,10 @@ end
 
 # These converts are used in the {add,sub}mul definition for AbstractJuMPScalar.
 
-Base.convert(::Type{<:NonlinearExpr}, x::AbstractVariableRef) = x
+Base.convert(::Type{<:GenericNonlinearExpr}, x::AbstractVariableRef) = x
 
 function Base.convert(
-    ::Type{<:NonlinearExpr},
+    ::Type{<:GenericNonlinearExpr},
     x::GenericAffExpr{C,V},
 ) where {C,V}
     args = Any[]
@@ -602,7 +630,7 @@ function Base.convert(
         if isone(coef)
             push!(args, variable)
         elseif !iszero(coef)
-            push!(args, NonlinearExpr{V}(:*, coef, variable))
+            push!(args, GenericNonlinearExpr{V}(:*, coef, variable))
         end
     end
     if !iszero(x.constant) || isempty(args)
@@ -611,11 +639,11 @@ function Base.convert(
     if length(args) == 1
         return args[1]
     end
-    return NonlinearExpr{V}(:+, args)
+    return GenericNonlinearExpr{V}(:+, args)
 end
 
 function Base.convert(
-    ::Type{<:NonlinearExpr},
+    ::Type{<:GenericNonlinearExpr},
     x::GenericQuadExpr{C,V},
 ) where {C,V}
     args = Any[]
@@ -623,14 +651,14 @@ function Base.convert(
         if isone(coef)
             push!(args, variable)
         elseif !iszero(coef)
-            push!(args, NonlinearExpr{V}(:*, coef, variable))
+            push!(args, GenericNonlinearExpr{V}(:*, coef, variable))
         end
     end
     for (pair, coef) in x.terms
         if isone(coef)
-            push!(args, NonlinearExpr{V}(:*, pair.a, pair.b))
+            push!(args, GenericNonlinearExpr{V}(:*, pair.a, pair.b))
         elseif !iszero(coef)
-            push!(args, NonlinearExpr{V}(:*, coef, pair.a, pair.b))
+            push!(args, GenericNonlinearExpr{V}(:*, coef, pair.a, pair.b))
         end
     end
     if !iszero(x.aff.constant) || isempty(args)
@@ -639,37 +667,37 @@ function Base.convert(
     if length(args) == 1
         return args[1]
     end
-    return NonlinearExpr{V}(:+, args)
+    return GenericNonlinearExpr{V}(:+, args)
 end
 
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
-    ::Type{NonlinearExpr{V}},
+    ::Type{GenericNonlinearExpr{V}},
     ::Type{<:AbstractJuMPScalar},
 ) where {V<:AbstractVariableRef}
-    return NonlinearExpr{V}
+    return GenericNonlinearExpr{V}
 end
 
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
     ::Type{<:AbstractJuMPScalar},
-    ::Type{NonlinearExpr{V}},
+    ::Type{GenericNonlinearExpr{V}},
 ) where {V<:AbstractVariableRef}
-    return NonlinearExpr{V}
+    return GenericNonlinearExpr{V}
 end
 
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
-    ::Type{NonlinearExpr{V}},
-    ::Type{NonlinearExpr{V}},
+    ::Type{GenericNonlinearExpr{V}},
+    ::Type{GenericNonlinearExpr{V}},
 ) where {V<:AbstractVariableRef}
-    return NonlinearExpr{V}
+    return GenericNonlinearExpr{V}
 end
 
 function _MA.promote_operation(
     ::Union{typeof(+),typeof(-),typeof(*)},
-    ::Type{NonlinearExpr{U}},
-    ::Type{NonlinearExpr{V}},
+    ::Type{GenericNonlinearExpr{U}},
+    ::Type{GenericNonlinearExpr{V}},
 ) where {U<:AbstractVariableRef,V<:AbstractVariableRef}
     return error(
         "Unable to promote two different types of nonlinear expression",
@@ -714,7 +742,9 @@ struct UserDefinedFunction
     head::Symbol
 end
 
-(f::UserDefinedFunction)(args...) = NonlinearExpr(f.head, Any[a for a in args])
+function (f::UserDefinedFunction)(args...)
+    return GenericNonlinearExpr(f.head, Any[a for a in args])
+end
 
 """
     add_user_defined_function(

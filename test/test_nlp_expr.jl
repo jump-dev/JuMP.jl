@@ -17,13 +17,13 @@ function test_extension_univariate_operators(
     for f in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
         if f in (:+, :-, :abs2)
             op = getfield(Base, f)
-            @test op(sin(x)) isa NonlinearExpr{VariableRefType}
+            @test op(sin(x)) isa GenericNonlinearExpr{VariableRefType}
         elseif isdefined(Base, f)
             op = getfield(Base, f)
-            @test op(x) isa NonlinearExpr{VariableRefType}
+            @test op(x) isa GenericNonlinearExpr{VariableRefType}
         elseif isdefined(MOI.Nonlinear.SpecialFunctions, f)
             op = getfield(MOI.Nonlinear.SpecialFunctions, f)
-            @test op(x) isa NonlinearExpr{VariableRefType}
+            @test op(x) isa GenericNonlinearExpr{VariableRefType}
         end
     end
     return
@@ -37,15 +37,15 @@ function test_extension_binary_operators(
     @variable(model, x)
     num, aff, quad, nlp = 1.0, 1.0 + x, x^2, sin(x)
     for op in (+, -, *, /), a in (num, x, aff, quad, nlp)
-        @test op(a, nlp) isa NonlinearExpr{VariableRefType}
-        @test op(nlp, a) isa NonlinearExpr{VariableRefType}
+        @test op(a, nlp) isa GenericNonlinearExpr{VariableRefType}
+        @test op(nlp, a) isa GenericNonlinearExpr{VariableRefType}
     end
     for op in (*, /), a in (x, aff)
-        @test op(a, quad) isa NonlinearExpr{VariableRefType}
-        @test op(quad, a) isa NonlinearExpr{VariableRefType}
+        @test op(a, quad) isa GenericNonlinearExpr{VariableRefType}
+        @test op(quad, a) isa GenericNonlinearExpr{VariableRefType}
     end
     for a in (num, x, aff, quad), b in (x, aff, quad)
-        @test /(a, b) isa NonlinearExpr{VariableRefType}
+        @test /(a, b) isa GenericNonlinearExpr{VariableRefType}
     end
     return
 end
@@ -57,7 +57,7 @@ function test_extension_objective(
     model = ModelType()
     @variable(model, x)
     @objective(model, Min, 2.0 * sin(x)^2 + cos(x) / x)
-    @test objective_function(model) isa NonlinearExpr{VariableRefType}
+    @test objective_function(model) isa GenericNonlinearExpr{VariableRefType}
     return
 end
 
@@ -92,9 +92,9 @@ function test_extension_flatten_nary(
 )
     model = ModelType()
     @variable(model, x)
-    expr_plus = NonlinearExpr{VariableRefType}(:+, Any[x])
-    expr_mult = NonlinearExpr{VariableRefType}(:*, Any[x])
-    expr_sin = NonlinearExpr{VariableRefType}(:sin, Any[x])
+    expr_plus = GenericNonlinearExpr{VariableRefType}(:+, Any[x])
+    expr_mult = GenericNonlinearExpr{VariableRefType}(:*, Any[x])
+    expr_sin = GenericNonlinearExpr{VariableRefType}(:sin, Any[x])
     to_string(x) = string(flatten(x))
     @test to_string(+(expr_plus, 1)) == "x + 1.0"
     @test to_string(+(1, expr_plus)) == "1.0 + x"
@@ -125,8 +125,8 @@ function test_extension_zero_one(
     ModelType = Model,
     VariableRefType = VariableRef,
 )
-    @test string(zero(NonlinearExpr{VariableRefType})) == "+(0.0)"
-    @test string(one(NonlinearExpr{VariableRefType})) == "+(1.0)"
+    @test string(zero(GenericNonlinearExpr{VariableRefType})) == "+(0.0)"
+    @test string(one(GenericNonlinearExpr{VariableRefType})) == "+(1.0)"
     return
 end
 
@@ -186,7 +186,7 @@ function test_extension_aff_expr_convert(
 )
     model = ModelType()
     @variable(model, x)
-    _to_string(x) = string(convert(NonlinearExpr{VariableRefType}, x))
+    _to_string(x) = string(convert(GenericNonlinearExpr{VariableRefType}, x))
     @test _to_string(AffExpr(0.0)) == "0.0"
     @test _to_string(AffExpr(1.0)) == "1.0"
     @test _to_string(x + 1) == "x + 1.0"
@@ -201,7 +201,7 @@ function test_extension_quad_expr_convert(
 )
     model = ModelType()
     @variable(model, x)
-    _to_string(x) = string(convert(NonlinearExpr{VariableRefType}, x))
+    _to_string(x) = string(convert(GenericNonlinearExpr{VariableRefType}, x))
     @test _to_string(QuadExpr(AffExpr(0.0))) == "0.0"
     @test _to_string(QuadExpr(AffExpr(1.0))) == "1.0"
     @test _to_string(x^2 + 1) == "(x * x) + 1.0"
@@ -287,7 +287,7 @@ function test_user_defined_function_overload()
     model = Model()
     @variable(model, x)
     f(x::Real) = x^2
-    f(x::AbstractJuMPScalar) = NonlinearExpr{VariableRef}(:f, x)
+    f(x::AbstractJuMPScalar) = NonlinearExpr(:f, x)
     register(model, :f, 1, f; autodiff = true)
     @test string(@expression(model, f(x))) == "f(x)"
     @test string(f(x) + f(x)) == "f(x) + f(x)"
@@ -302,7 +302,7 @@ function test_extension_nonlinear_matrix_algebra(
     model = ModelType()
     @variable(model, X[1:3, 1:3], Symmetric)
     @objective(model, Max, sum(X^4 .- X^3))
-    @test objective_function(model) isa NonlinearExpr{VariableRefType}
+    @test objective_function(model) isa GenericNonlinearExpr{VariableRefType}
     return
 end
 
@@ -320,7 +320,7 @@ function test_extension_recursion_stackoverflow(
     for _ in 1:20_000
         expr = sin(expr)
     end
-    @test @objective(model, Min, expr) isa NonlinearExpr{VariableRefType}
+    @test @objective(model, Min, expr) isa GenericNonlinearExpr{VariableRefType}
     @test string(expr) isa String
     return
 end
@@ -330,7 +330,7 @@ function test_nlparameter_interaction()
     @variable(model, x)
     @NLparameter(model, p == 1)
     e = x + p
-    @test e isa NonlinearExpr
+    @test e isa GenericNonlinearExpr
     @test string(e) == "x + ($p)"
     return
 end
@@ -340,7 +340,7 @@ function test_nlexpression_interaction()
     @variable(model, x)
     @NLexpression(model, expr, sin(x))
     e = x + expr
-    @test e isa NonlinearExpr
+    @test e isa GenericNonlinearExpr
     @test string(e) == "x + ($expr)"
     return
 end
@@ -418,46 +418,49 @@ function test_extension_nl_macro(
     @variable(model, x)
     @test isequal_canonical(
         @expression(model, ifelse(x, 1, 2)),
-        NonlinearExpr(:ifelse, Any[x, 1, 2]),
+        GenericNonlinearExpr(:ifelse, Any[x, 1, 2]),
     )
     @test isequal_canonical(
         @expression(model, x || 1),
-        NonlinearExpr(:||, Any[x, 1]),
+        GenericNonlinearExpr(:||, Any[x, 1]),
     )
     @test isequal_canonical(
         @expression(model, x && 1),
-        NonlinearExpr(:&&, Any[x, 1]),
+        GenericNonlinearExpr(:&&, Any[x, 1]),
     )
     @test isequal_canonical(
         @expression(model, x < 0),
-        NonlinearExpr(:<, Any[x, 0]),
+        GenericNonlinearExpr(:<, Any[x, 0]),
     )
     @test isequal_canonical(
         @expression(model, x > 0),
-        NonlinearExpr(:>, Any[x, 0]),
+        GenericNonlinearExpr(:>, Any[x, 0]),
     )
     @test isequal_canonical(
         @expression(model, x <= 0),
-        NonlinearExpr(:<=, Any[x, 0]),
+        GenericNonlinearExpr(:<=, Any[x, 0]),
     )
     @test isequal_canonical(
         @expression(model, x >= 0),
-        NonlinearExpr(:>=, Any[x, 0]),
+        GenericNonlinearExpr(:>=, Any[x, 0]),
     )
     @test isequal_canonical(
         @expression(model, x == 0),
-        NonlinearExpr(:(==), Any[x, 0]),
+        GenericNonlinearExpr(:(==), Any[x, 0]),
     )
     @test isequal_canonical(
         @expression(model, 0 < x <= 1),
-        NonlinearExpr(
+        GenericNonlinearExpr(
             :&&,
             Any[@expression(model, 0 < x), @expression(model, x <= 1)],
         ),
     )
     @test isequal_canonical(
         @expression(model, ifelse(x > 0, x^2, sin(x))),
-        NonlinearExpr(:ifelse, Any[@expression(model, x > 0), x^2, sin(x)]),
+        GenericNonlinearExpr(
+            :ifelse,
+            Any[@expression(model, x > 0), x^2, sin(x)],
+        ),
     )
     return
 end
@@ -467,7 +470,7 @@ function test_register_univariate()
     @variable(model, x)
     @register(model, f, 1, x -> x^2)
     @test isequal_canonical(@expression(model, f(x)), f(x))
-    @test isequal_canonical(f(x), NonlinearExpr(:f, Any[x]))
+    @test isequal_canonical(f(x), GenericNonlinearExpr(:f, Any[x]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:f, 1) in attrs
     return
@@ -478,7 +481,7 @@ function test_register_univariate_gradient()
     @variable(model, x)
     @register(model, f, 1, x -> x^2, x -> 2 * x)
     @test isequal_canonical(@expression(model, f(x)), f(x))
-    @test isequal_canonical(f(x), NonlinearExpr(:f, Any[x]))
+    @test isequal_canonical(f(x), GenericNonlinearExpr(:f, Any[x]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:f, 1) in attrs
     return
@@ -489,7 +492,7 @@ function test_register_univariate_gradient_hessian()
     @variable(model, x)
     @register(model, f, 1, x -> x^2, x -> 2 * x, x -> 2.0)
     @test isequal_canonical(@expression(model, f(x)), f(x))
-    @test isequal_canonical(f(x), NonlinearExpr(:f, Any[x]))
+    @test isequal_canonical(f(x), GenericNonlinearExpr(:f, Any[x]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:f, 1) in attrs
     return
@@ -501,7 +504,7 @@ function test_register_multivariate_()
     f = (x...) -> sum(x .^ 2)
     @register(model, foo, 2, f)
     @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
-    @test isequal_canonical(foo(x...), NonlinearExpr(:foo, Any[x...]))
+    @test isequal_canonical(foo(x...), GenericNonlinearExpr(:foo, Any[x...]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:foo, 2) in attrs
     return
@@ -514,7 +517,7 @@ function test_register_multivariate_gradient()
     ∇f = (g, x...) -> (g .= 2 .* x)
     @register(model, foo, 2, f, ∇f)
     @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
-    @test isequal_canonical(foo(x...), NonlinearExpr(:foo, Any[x...]))
+    @test isequal_canonical(foo(x...), GenericNonlinearExpr(:foo, Any[x...]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:foo, 2) in attrs
     return
@@ -532,7 +535,7 @@ function test_register_multivariate_gradient_hessian()
     end
     @register(model, foo, 2, f, ∇f, ∇²f)
     @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
-    @test isequal_canonical(foo(x...), NonlinearExpr(:foo, Any[x...]))
+    @test isequal_canonical(foo(x...), GenericNonlinearExpr(:foo, Any[x...]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:foo, 2) in attrs
     return
@@ -559,7 +562,7 @@ function test_expression_no_variable()
             "Unable to create a nonlinear expression because it did not " *
             "contain any JuMP scalars. head = $head, args = $args.",
         ),
-        NonlinearExpr(head, args),
+        GenericNonlinearExpr(head, args),
     )
     return
 end
@@ -621,7 +624,7 @@ end
 function test_nonlinear_expr_owner_model()
     model = Model()
     @variable(model, x)
-    f = NonlinearExpr(:sin, Any[x])
+    f = GenericNonlinearExpr(:sin, Any[x])
     # This shouldn't happen in regular code, but let's test against it to check
     # we get something similar to AffExpr and QuadExpr.
     empty!(f.args)
@@ -642,7 +645,7 @@ function test_show_nonlinear_model()
     @objective(model, Min, exp(x))
     @constraint(model, sin(x) <= 0)
     str = sprint(show, model)
-    @test occursin("NonlinearExpr{", str)
+    @test occursin("GenericNonlinearExpr{", str)
     return
 end
 
