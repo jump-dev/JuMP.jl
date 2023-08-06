@@ -336,17 +336,17 @@ function test_extension_basic_operators_number(
     @test_expression_with_string 4.13 + w "w + 4.13"
     @test_expression_with_string 3.16 - w "-w + 3.16"
     @test_expression_with_string 5.23 * w "5.23 w"
-    @test_expression_with_string 2.94 / w "(2.94 / w)"
+    @test_expression_with_string 2.94 / w "2.94 / w"
     # 1-3 Number--AffExpr
     @test_expression_with_string 1.5 + aff "7.1 x + 4"
     @test_expression_with_string 1.5 - aff "-7.1 x - 1"
     @test_expression_with_string 2 * aff "14.2 x + 5"
-    @test_expression_with_string 2 / aff "(2.0 / 7.1 x + 2.5)"
+    @test_expression_with_string 2 / aff "2.0 / (7.1 x + 2.5)"
     # 1-4 Number--QuadExpr
     @test_expression_with_string 1.5 + q "2.5 y*z + 7.1 x + 4"
     @test_expression_with_string 1.5 - q "-2.5 y*z - 7.1 x - 1"
     @test_expression_with_string 2 * q "5 y*z + 14.2 x + 5"
-    @test_expression_with_string 2 / q "(2.0 / 2.5 y*z + 7.1 x + 2.5)"
+    @test_expression_with_string 2 / q "2.0 / (2.5 y*z + 7.1 x + 2.5)"
     return
 end
 
@@ -377,27 +377,27 @@ function test_extension_basic_operators_variable(
     @test_expression_with_string(x^2, "x²", interrable = false)
     @test_expression_with_string(x^1, "x", interrable = false)
     @test_expression_with_string(x^0, "1", interrable = false)
-    @test_expression_with_string(x^3, "(x ^ 3)", interrable = false)
-    @test_expression_with_string x^(T(15) / T(10)) "(x ^ 1.5)"
+    @test_expression_with_string(x^3, "x ^ 3", interrable = false)
+    @test_expression_with_string x^(T(15) / T(10)) "x ^ 1.5"
     # 2-2 Variable--Variable
     @test_expression_with_string w + x "w + x"
     @test_expression_with_string w - x "w - x"
     @test_expression_with_string w * x "w*x"
     @test_expression_with_string x - x "0"
-    @test_expression_with_string w / x "(w / x)"
+    @test_expression_with_string w / x "w / x"
     @test_expression_with_string y * z - x "y*z - x"
     # 2-3 Variable--AffExpr
     @test_expression_with_string z + aff "z + 7.1 x + 2.5"
     @test_expression_with_string z - aff "z - 7.1 x - 2.5"
     @test_expression_with_string z * aff "7.1 z*x + 2.5 z"
-    @test_expression_with_string z / aff "(z / 7.1 x + 2.5)"
+    @test_expression_with_string z / aff "z / (7.1 x + 2.5)"
     @test_throws MethodError z ≤ aff
     @test_expression_with_string β * x - aff "0 x - 2.5"
     # 2-4 Variable--QuadExpr
     @test_expression_with_string w + q "2.5 y*z + w + 7.1 x + 2.5"
     @test_expression_with_string w - q "-2.5 y*z + w - 7.1 x - 2.5"
-    @test_expression_with_string w * q "(w * 2.5 y*z + 7.1 x + 2.5)"
-    @test_expression_with_string w / q "(w / 2.5 y*z + 7.1 x + 2.5)"
+    @test_expression_with_string w * q "w * (2.5 y*z + 7.1 x + 2.5)"
+    @test_expression_with_string w / q "w / (2.5 y*z + 7.1 x + 2.5)"
     @test transpose(x) === x
     @test conj(x) === x
     return
@@ -446,32 +446,32 @@ function test_extension_basic_operators_affexpr(
     )
     @test_expression_with_string(aff^0, "1", inferrable = false)
     @test_expression_with_string((7.1 * x + 2.5)^0, "1", inferrable = false)
-    @test_expression_with_string(aff^3, "(7.1 x + 2.5 ^ 3)", inferrable = false)
+    @test_expression_with_string(aff^3, "(7.1 x + 2.5) ^ 3", inferrable = false)
     @test_expression_with_string(
         (7.1 * x + 2.5)^3,
-        "(7.1 x + 2.5 ^ 3)",
+        "(7.1 x + 2.5) ^ 3",
         inferrable = false
     )
-    @test_expression_with_string aff^1.5 "(7.1 x + 2.5 ^ 1.5)"
-    @test_expression_with_string (7.1 * x + 2.5)^1.5 "(7.1 x + 2.5 ^ 1.5)"
+    @test_expression_with_string aff^1.5 "(7.1 x + 2.5) ^ 1.5"
+    @test_expression_with_string (7.1 * x + 2.5)^1.5 "(7.1 x + 2.5) ^ 1.5"
     # 3-2 AffExpr--Variable
     @test_expression_with_string aff + z "7.1 x + z + 2.5"
     @test_expression_with_string aff - z "7.1 x - z + 2.5"
     @test_expression_with_string aff * z "7.1 x*z + 2.5 z"
-    @test_expression_with_string aff / z "(7.1 x + 2.5 / z)"
+    @test_expression_with_string aff / z "(7.1 x + 2.5) / z"
     @test_expression_with_string aff - 7.1 * x "0 x + 2.5"
     # 3-3 AffExpr--AffExpr
     @test_expression_with_string aff + aff2 "7.1 x + 1.2 y + 3.7"
     @test_expression_with_string aff - aff2 "7.1 x - 1.2 y + 1.3"
     @test_expression_with_string aff * aff2 "8.52 x*y + 3 y + 8.52 x + 3"
     @test string((x + x) * (x + 3)) == string((x + 3) * (x + x))  # Issue #288
-    @test_expression_with_string aff / aff2 "(7.1 x + 2.5 / 1.2 y + 1.2)"
+    @test_expression_with_string aff / aff2 "(7.1 x + 2.5) / (1.2 y + 1.2)"
     @test_expression_with_string aff - aff "0 x"
     # 4-4 AffExpr--QuadExpr
     @test_expression_with_string aff2 + q "2.5 y*z + 1.2 y + 7.1 x + 3.7"
     @test_expression_with_string aff2 - q "-2.5 y*z + 1.2 y - 7.1 x - 1.3"
-    @test_expression_with_string aff2 * q "(1.2 y + 1.2 * 2.5 y*z + 7.1 x + 2.5)"
-    @test_expression_with_string aff2 / q "(1.2 y + 1.2 / 2.5 y*z + 7.1 x + 2.5)"
+    @test_expression_with_string aff2 * q "(1.2 y + 1.2) * (2.5 y*z + 7.1 x + 2.5)"
+    @test_expression_with_string aff2 / q "(1.2 y + 1.2) / (2.5 y*z + 7.1 x + 2.5)"
     @test transpose(aff) === aff
     @test conj(aff) === aff
     return
@@ -503,18 +503,18 @@ function test_extension_basic_operators_quadexpr(
     # 4-2 QuadExpr--Variable
     @test_expression_with_string q + w "2.5 y*z + 7.1 x + w + 2.5"
     @test_expression_with_string q - w "2.5 y*z + 7.1 x - w + 2.5"
-    @test_expression_with_string q * w "(2.5 y*z + 7.1 x + 2.5 * w)"
-    @test_expression_with_string q / w "(2.5 y*z + 7.1 x + 2.5 / w)"
+    @test_expression_with_string q * w "(2.5 y*z + 7.1 x + 2.5) * w"
+    @test_expression_with_string q / w "(2.5 y*z + 7.1 x + 2.5) / w"
     # 4-3 QuadExpr--AffExpr
     @test_expression_with_string q + aff2 "2.5 y*z + 7.1 x + 1.2 y + 3.7"
     @test_expression_with_string q - aff2 "2.5 y*z + 7.1 x - 1.2 y + 1.3"
-    @test_expression_with_string q * aff2 "(2.5 y*z + 7.1 x + 2.5 * 1.2 y + 1.2)"
-    @test_expression_with_string q / aff2 "(2.5 y*z + 7.1 x + 2.5 / 1.2 y + 1.2)"
+    @test_expression_with_string q * aff2 "(2.5 y*z + 7.1 x + 2.5) * (1.2 y + 1.2)"
+    @test_expression_with_string q / aff2 "(2.5 y*z + 7.1 x + 2.5) / (1.2 y + 1.2)"
     # 4-4 QuadExpr--QuadExpr
     @test_expression_with_string q + q2 "2.5 y*z + 8 x*z + 7.1 x + 1.2 y + 3.7"
     @test_expression_with_string q - q2 "2.5 y*z - 8 x*z + 7.1 x - 1.2 y + 1.3"
-    @test_expression_with_string q * q2 "(2.5 y*z + 7.1 x + 2.5 * 8 x*z + 1.2 y + 1.2)"
-    @test_expression_with_string q / q2 "(2.5 y*z + 7.1 x + 2.5 / 8 x*z + 1.2 y + 1.2)"
+    @test_expression_with_string q * q2 "(2.5 y*z + 7.1 x + 2.5) * (8 x*z + 1.2 y + 1.2)"
+    @test_expression_with_string q / q2 "(2.5 y*z + 7.1 x + 2.5) / (8 x*z + 1.2 y + 1.2)"
     @test transpose(q) === q
     @test conj(q) === q
     return
