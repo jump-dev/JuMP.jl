@@ -6,7 +6,14 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Nonlinear Modeling
+# [Nonlinear Modeling](@id new_nonlinear_interface)
+
+!!! warning
+    This page describes an experimental nonlinear interface to JuMP. The API
+    described below is stable, and it will not break with future 1.X releases of
+    JuMP. However, solver support may be limited, and there may be gaps in
+    functionality compared with [Nonlinear Modeling](@ref). To report a bug, or
+    request a missing feature, please [open an issue](https://github.com/jump-dev/JuMP.jl/issues/new/choose).
 
 JuMP has support for general smooth nonlinear (convex and nonconvex)
 optimization problems. JuMP is able to provide exact, sparse second-order

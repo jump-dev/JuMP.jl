@@ -6,7 +6,7 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Nonlinear Modeling (Legacy interface)
+# Nonlinear Modeling
 
 JuMP has support for general smooth nonlinear (convex and nonconvex)
 optimization problems. JuMP is able to provide exact, sparse second-order
