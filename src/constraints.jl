@@ -294,17 +294,17 @@ julia> @variable(model, x)
 x
 
 julia> @constraint(model, con, x^2 == 1)
-con : x² = 1.0
+con : x² = 1
 
 julia> constraint_by_name(model, "kon")
 
 julia> constraint_by_name(model, "con")
-con : x² = 1.0
+con : x² = 1
 
 julia> constraint_by_name(model, "con", AffExpr, MOI.EqualTo{Float64})
 
 julia> constraint_by_name(model, "con", QuadExpr, MOI.EqualTo{Float64})
-con : x² = 1.0
+con : x² = 1
 ```
 """
 function constraint_by_name end
@@ -381,7 +381,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> @constraint(model, c, 2x <= 1)
-c : 2 x ≤ 1.0
+c : 2 x ≤ 1
 
 julia> delete(model, c)
 
@@ -739,12 +739,12 @@ julia> @variable(model, x)
 x
 
 julia> @constraint(model, con, 2x + 3x <= 2)
-con : 5 x ≤ 2.0
+con : 5 x ≤ 2
 
 julia> set_normalized_coefficient(con, x, 4)
 
 julia> con
-con : 4 x ≤ 2.0
+con : 4 x ≤ 2
 ```
 """
 function set_normalized_coefficient(
@@ -845,12 +845,12 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> @constraint(model, con, 2x + 1 <= 2)
-con : 2 x <= 1.0
+con : 2 x ≤ 1
 
 julia> set_normalized_rhs(con, 4)
 
 julia> con
-con : 2 x <= 4.0
+con : 2 x ≤ 4
 ```
 """
 function set_normalized_rhs(
@@ -937,12 +937,12 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> @constraint(model, con, 0 <= 2x - 1 <= 2)
-con : 2 x ∈ [1.0, 3.0]
+con : 2 x ∈ [1, 3]
 
 julia> add_to_function_constant(con, 4)
 
 julia> con
-con : 2 x ∈ [-3.0, -1.0]
+con : 2 x ∈ [-3, -1]
 ```
 
 For vector constraints, the constant is added to the function:
@@ -1255,16 +1255,16 @@ julia> @variable(model, x >= 0, Bin);
 julia> @constraint(model, 2x <= 1);
 
 julia> all_constraints(model, VariableRef, MOI.GreaterThan{Float64})
-1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex,MathOptInterface.GreaterThan{Float64}},ScalarShape},1}:
- x ≥ 0.0
+1-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.GreaterThan{Float64}}, ScalarShape}}:
+ x ≥ 0
 
 julia> all_constraints(model, VariableRef, MOI.ZeroOne)
-1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex,MathOptInterface.ZeroOne},ScalarShape},1}:
+1-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VariableIndex, MathOptInterface.ZeroOne}, ScalarShape}}:
  x binary
 
 julia> all_constraints(model, AffExpr, MOI.LessThan{Float64})
-1-element Array{ConstraintRef{Model,MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64},MathOptInterface.LessThan{Float64}},ScalarShape},1}:
- 2 x ≤ 1.0
+1-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape}}:
+ 2 x ≤ 1
 ```
 """
 function all_constraints(
@@ -1315,8 +1315,8 @@ julia> @variable(model, x >= 0, Bin);
 julia> @constraint(model, 2x <= 1);
 
 julia> list_of_constraint_types(model)
-3-element Array{Tuple{Type,Type},1}:
- (GenericAffExpr{Float64,VariableRef}, MathOptInterface.LessThan{Float64})
+3-element Vector{Tuple{Type, Type}}:
+ (AffExpr, MathOptInterface.LessThan{Float64})
  (VariableRef, MathOptInterface.GreaterThan{Float64})
  (VariableRef, MathOptInterface.ZeroOne)
 ```
@@ -1401,14 +1401,14 @@ julia> @NLconstraint(model, x^2 <= 1);
 
 julia> all_constraints(model; include_variable_in_set_constraints = true)
 4-element Vector{ConstraintRef}:
- 2 x ≤ 1.0
- x ≥ 0.0
+ 2 x ≤ 1
+ x ≥ 0
  x integer
  x ^ 2.0 - 1.0 ≤ 0
 
 julia> all_constraints(model; include_variable_in_set_constraints = false)
 2-element Vector{ConstraintRef}:
- 2 x ≤ 1.0
+ 2 x ≤ 1
  x ^ 2.0 - 1.0 ≤ 0
 ```
 
@@ -1485,31 +1485,34 @@ new_model (generic function with 1 method)
 
 julia> model_1 = new_model();
 
-julia> relax_with_penalty!(model_1; default = 2.0)
-Dict{ConstraintRef{Model, C, ScalarShape} where C, AffExpr} with 2 entries:
-  c1 : 2 x - _[3] ≤ -1.0 => _[3]
-  c2 : 3 x + _[2] ≥ 0.0  => _[2]
+julia> penalty_map = relax_with_penalty!(model_1; default = 2.0);
+
+julia> penalty_map[model[:c1]]
+_[3]
+
+julia> penalty_map[model[:c2]]
+_[2]
 
 julia> print(model_1)
 Max 2 x - 2 _[2] - 2 _[3] + 1
 Subject to
- c2 : 3 x + _[2] ≥ 0.0
- c1 : 2 x - _[3] ≤ -1.0
- _[2] ≥ 0.0
- _[3] ≥ 0.0
+ c2 : 3 x + _[2] ≥ 0
+ c1 : 2 x - _[3] ≤ -1
+ _[2] ≥ 0
+ _[3] ≥ 0
 
 julia> model_2 = new_model();
 
 julia> relax_with_penalty!(model_2, Dict(model_2[:c2] => 3.0))
 Dict{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.GreaterThan{Float64}}, ScalarShape}, AffExpr} with 1 entry:
-  c2 : 3 x + _[2] ≥ 0.0 => _[2]
+  c2 : 3 x + _[2] ≥ 0 => _[2]
 
 julia> print(model_2)
 Max 2 x - 3 _[2] + 1
 Subject to
- c2 : 3 x + _[2] ≥ 0.0
- c1 : 2 x ≤ -1.0
- _[2] ≥ 0.0
+ c2 : 3 x + _[2] ≥ 0
+ c1 : 2 x ≤ -1
+ _[2] ≥ 0
 ```
 """
 function relax_with_penalty!(

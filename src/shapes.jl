@@ -91,7 +91,7 @@ following code returns the matrix `Symmetric(Matrix[1 2; 2 3])`:
 
 ```jldoctest
 julia> reshape_vector([1, 2, 3], SymmetricMatrixShape(2))
-2×2 LinearAlgebra.Symmetric{Int64,Array{Int64,2}}:
+2×2 LinearAlgebra.Symmetric{Int64, Matrix{Int64}}:
  1  2
  2  3
 ```

@@ -20,16 +20,16 @@ structure than `sa` even if `f(zero(T))` is not zero.
 
 ```jldoctest
 julia> dict = Dict((:a, 2) => 1.0, (:a, 3) => 2.0, (:b, 3) => 3.0)
-Dict{Tuple{Symbol,Int64},Float64} with 3 entries:
+Dict{Tuple{Symbol, Int64}, Float64} with 3 entries:
+  (:a, 3) => 2.0
   (:b, 3) => 3.0
   (:a, 2) => 1.0
-  (:a, 3) => 2.0
 
 julia> array = Containers.SparseAxisArray(dict)
-JuMP.Containers.SparseAxisArray{Float64,2,Tuple{Symbol,Int64}} with 3 entries:
-  [b, 3]  =  3.0
+SparseAxisArray{Float64, 2, Tuple{Symbol, Int64}} with 3 entries:
   [a, 2]  =  1.0
   [a, 3]  =  2.0
+  [b, 3]  =  3.0
 
 julia> array[:b, 3]
 3.0
@@ -43,6 +43,8 @@ end
 function SparseAxisArray(d::Dict{K,T}) where {T,N,K<:NTuple{N,Any}}
     return SparseAxisArray(d, ntuple(n -> Symbol("#$n"), N))
 end
+
+SparseAxisArray(d::Dict, ::Nothing) = SparseAxisArray(d)
 
 Base.length(sa::SparseAxisArray) = length(sa.data)
 

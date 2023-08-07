@@ -255,6 +255,8 @@ Solver name: HiGHS
 ```
 is equivalent to:
 ```jldoctest
+julia> import HiGHS
+
 julia> model = direct_generic_model(Float64, HiGHS.Optimizer())
 A JuMP Model
 Feasibility problem with:
@@ -358,6 +360,8 @@ Solver name: HiGHS
 ```
 is equivalent to:
 ```jldoctest
+julia> import HiGHS
+
 julia> model = direct_model(HiGHS.Optimizer())
 A JuMP Model
 Feasibility problem with:
@@ -665,14 +669,14 @@ julia> remove_bridge(model, MOI.Bridges.Constraint.SOCtoNonConvexQuadBridge)
 julia> add_bridge(
            model,
            MOI.Bridges.Constraint.NumberConversionBridge;
-           coefficient_type = Complex{Float64}
+           coefficient_type = Complex{Float64},
        )
 
 julia> remove_bridge(
-        model,
-        MOI.Bridges.Constraint.NumberConversionBridge;
-        coefficient_type = Complex{Float64}
-    )
+           model,
+           MOI.Bridges.Constraint.NumberConversionBridge;
+           coefficient_type = Complex{Float64},
+       )
 ```
 """
 function remove_bridge(
@@ -869,14 +873,16 @@ julia> @variable(model, x)
 x
 
 julia> @variable(model, x)
-ERROR: An object of name x is already attached to this model. If
-this is intended, consider using the anonymous construction syntax,
-e.g., `x = @variable(model, [1:N], ...)` where the name of the object
-does not appear inside the macro.
+ERROR: An object of name x is already attached to this model. If this
+    is intended, consider using the anonymous construction syntax, e.g.,
+    `x = @variable(model, [1:N], ...)` where the name of the object does
+    not appear inside the macro.
 
-Alternatively, use `unregister(model, :x)` to first unregister the
-existing name from the model. Note that this will not delete the object;
-it will just remove the reference at `model[:x]`.
+    Alternatively, use `unregister(model, :x)` to first unregister
+    the existing name from the model. Note that this will not delete the
+    object; it will just remove the reference at `model[:x]`.
+
+Stacktrace:
 [...]
 
 julia> num_variables(model)
@@ -973,10 +979,9 @@ julia> set_optimize_hook(model, my_hook)
 my_hook (generic function with 1 method)
 
 julia> optimize!(model; test_arg = true)
-Base.Iterators.Pairs{Symbol, Bool, Tuple{Symbol}, NamedTuple{(:test_arg,), Tuple{Bool}}}(:test_arg => 1)
+Base.Pairs{Symbol, Bool, Tuple{Symbol}, NamedTuple{(:test_arg,), Tuple{Bool}}}(:test_arg => 1)
 Calling with `ignore_optimize_hook = true`
 ERROR: NoOptimizer()
-Stacktrace:
 [...]
 ```
 """
@@ -1012,9 +1017,9 @@ function _get_index_keyword_indexing_error()
         1-dimensional DenseAxisArray{VariableRef,1,...} with index sets:
             Dimension 1, Base.OneTo(3)
         And data, a 3-element Vector{VariableRef}:
-        x[1]
-        x[2]
-        x[3]
+         x[1]
+         x[2]
+         x[3]
 
         julia> x[i=2]
         x[2]

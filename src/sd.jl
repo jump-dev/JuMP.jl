@@ -27,7 +27,7 @@ symmetric.
 julia> model = Model();
 
 julia> @variable(model, Q[1:2, 1:2] in SymmetricMatrixSpace())
-2×2 LinearAlgebra.Symmetric{VariableRef,Array{VariableRef,2}}:
+2×2 LinearAlgebra.Symmetric{VariableRef, Matrix{VariableRef}}:
  Q[1,1]  Q[1,2]
  Q[1,2]  Q[2,2]
 ```
@@ -66,8 +66,8 @@ julia> model = Model();
 
 julia> @variable(model, Q[1:2, 1:2] in HermitianMatrixSpace())
 2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
- real(Q[1,1])                               real(Q[1,2]) + (0.0 + 1.0im) imag(Q[1,2])
- real(Q[1,2]) + (0.0 - 1.0im) imag(Q[1,2])  real(Q[2,2])
+ real(Q[1,1])                    real(Q[1,2]) + imag(Q[1,2]) im
+ real(Q[1,2]) - imag(Q[1,2]) im  real(Q[2,2])
 ```
 """
 struct HermitianMatrixSpace end
@@ -100,10 +100,10 @@ julia> b = [1 2
 
 julia> cref = @constraint(model, a >= b, PSDCone())
 [x - 1    2 x - 2;
- 2 x - 2  x - 4  ] ∈ PSDCone()
+ 2 x - 2  x - 4] ∈ PSDCone()
 
 julia> jump_function(constraint_object(cref))
-4-element Array{GenericAffExpr{Float64,VariableRef},1}:
+4-element Vector{AffExpr}:
  x - 1
  2 x - 2
  2 x - 2
@@ -120,10 +120,10 @@ julia> using LinearAlgebra # For Symmetric
 
 julia> cref = @constraint(model, Symmetric(a - b) in PSDCone())
 [x - 1    2 x - 2;
- 2 x - 2  x - 4  ] ∈ PSDCone()
+ 2 x - 2  x - 4] ∈ PSDCone()
 
 julia> jump_function(constraint_object(cref))
-3-element Array{GenericAffExpr{Float64,VariableRef},1}:
+3-element Vector{AffExpr}:
  x - 1
  2 x - 2
  x - 4
@@ -354,8 +354,8 @@ julia> model = Model();
 
 julia> @variable(model, Q[1:2, 1:2] in HermitianMatrixSpace())
 2×2 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
- real(Q[1,1])                               real(Q[1,2]) + (0.0 + 1.0im) imag(Q[1,2])
- real(Q[1,2]) + (0.0 - 1.0im) imag(Q[1,2])  real(Q[2,2])
+ real(Q[1,1])                    real(Q[1,2]) + imag(Q[1,2]) im
+ real(Q[1,2]) - imag(Q[1,2]) im  real(Q[2,2])
 ```
 """
 function build_variable(
@@ -502,26 +502,14 @@ Consider the following example:
 julia> model = Model();
 
 julia> @variable(model, H[1:3, 1:3] in HermitianPSDCone())
-3×3 Matrix{GenericAffExpr{ComplexF64, VariableRef}}:
- real(H[1,1])                                real(H[1,2]) + (0.0 + 1.0im) imag(H[1,2])   real(H[1,3]) + (0.0 + 1.0im) imag(H[1,3])
- real(H[1,2]) + (-0.0 - 1.0im) imag(H[1,2])  real(H[2,2])                                real(H[2,3]) + (0.0 + 1.0im) imag(H[2,3])
- real(H[1,3]) + (-0.0 - 1.0im) imag(H[1,3])  real(H[2,3]) + (-0.0 - 1.0im) imag(H[2,3])  real(H[3,3])
-
- julia> v = all_variables(model)
- 9-element Vector{VariableRef}:
-  real(H[1,1])
-  real(H[1,2])
-  real(H[2,2])
-  real(H[1,3])
-  real(H[2,3])
-  real(H[3,3])
-  imag(H[1,2])
-  imag(H[1,3])
-  imag(H[2,3])
+3×3 LinearAlgebra.Hermitian{GenericAffExpr{ComplexF64, VariableRef}, Matrix{GenericAffExpr{ComplexF64, VariableRef}}}:
+ real(H[1,1])                    …  real(H[1,3]) + imag(H[1,3]) im
+ real(H[1,2]) - imag(H[1,2]) im     real(H[2,3]) + imag(H[2,3]) im
+ real(H[1,3]) - imag(H[1,3]) im     real(H[3,3])
 
 julia> all_constraints(model, Vector{VariableRef}, MOI.HermitianPositiveSemidefiniteConeTriangle)
 1-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.HermitianPositiveSemidefiniteConeTriangle}}}:
- [real(H[1,1]), real(H[1,2]), real(H[2,2]), real(H[1,3]), real(H[2,3]), real(H[3,3]), imag(H[1,2]), imag(H[1,3]), imag(H[2,3])] in MathOptInterface.HermitianPositiveSemidefiniteConeTriangle(3)
+ [real(H[1,1]), real(H[1,2]), real(H[2,2]), real(H[1,3]), real(H[2,3]), real(H[3,3]), imag(H[1,2]), imag(H[1,3]), imag(H[2,3])] ∈ MathOptInterface.HermitianPositiveSemidefiniteConeTriangle(3)
 ```
 We see in the output of the last commands that 9 real variables were created.
 The matrix `H` contrains affine expressions in terms of these 9 variables that

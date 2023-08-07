@@ -337,7 +337,7 @@ The type of container can be controlled by the `container` keyword.
 
 ```jldoctest
 julia> Containers.@container([i = 1:3, j = 1:3], i + j)
-3×3 Array{Int64,2}:
+3×3 Matrix{Int64}:
  2  3  4
  3  4  5
  4  5  6
@@ -351,7 +351,7 @@ julia> x
 2-dimensional DenseAxisArray{Int64,2,...} with index sets:
     Dimension 1, 1:3
     Dimension 2, 1:3
-And data, a 3×3 Array{Int64,2}:
+And data, a 3×3 Matrix{Int64}:
  2  3  4
  3  4  5
  4  5  6
@@ -360,18 +360,18 @@ julia> Containers.@container([i = 2:3, j = 1:3], i + j)
 2-dimensional DenseAxisArray{Int64,2,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, Base.OneTo(3)
-And data, a 2×3 Array{Int64,2}:
+And data, a 2×3 Matrix{Int64}:
  3  4  5
  4  5  6
 
 julia> Containers.@container([i = 1:3, j = 1:3; i <= j], i + j)
-JuMP.Containers.SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 6 entries:
+SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 6 entries:
+  [1, 1]  =  2
   [1, 2]  =  3
+  [1, 3]  =  4
+  [2, 2]  =  4
   [2, 3]  =  5
   [3, 3]  =  6
-  [2, 2]  =  4
-  [1, 1]  =  2
-  [1, 3]  =  4
 ```
 """
 macro container(args...)

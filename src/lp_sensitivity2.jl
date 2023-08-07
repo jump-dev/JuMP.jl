@@ -41,6 +41,8 @@ Note: interval constraints are NOT supported.
 ## Example
 
 ```jldoctest
+julia> import HiGHS
+
 julia> model = Model(HiGHS.Optimizer);
 
 julia> set_silent(model)
