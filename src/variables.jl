@@ -1092,6 +1092,55 @@ function BinaryRef(v::GenericVariableRef)
 end
 
 """
+    ParameterRef(x::GenericVariableRef)
+
+Return a constraint reference to the constraint constraining `x` to be a
+parameter.
+
+Errors if one does not exist.
+
+See also [`is_parameter`](@ref), [`set_parameter`](@ref).
+"""
+function ParameterRef(x::GenericVariableRef)
+    return ParameterRef(owner_model(x), _parameter_index(x), ScalarShape())
+end
+
+function _parameter_index(x::GenericVariableRef)
+    S = MOI.Parameter{value_type(typeof(x))}
+    return MOI.ConstraintIndex{MOI.VariableIndex,S}(index(x).value)
+end
+
+"""
+    is_parameter(x::GenericVariableRef)
+
+Return `true` if `x` is constrained to be a parameter.
+
+See also [`ParameterRef`](@ref), [`set_parameter`](@ref).
+"""
+function is_parameter(x::GenericVariableRef)
+    return _moi_is_parameter(backend(owner_model(x)), x)
+end
+
+function _moi_is_parameter(moi_backend, x::GenericVariableRef)
+    return MOI.is_valid(moi_backend, _parameter_index(x))
+end
+
+"""
+    set_parameter(x::GenericVariableRef, value)
+
+Update the parameter constraint on the variable `x` to `value`.
+
+See also [`ParameterRef`](@ref), [`is_parameter`](@ref).
+"""
+function set_parameter(x::GenericVariableRef, value)
+    model = owner_model(x)
+    model.is_model_dirty = true
+    set = MOI.Parameter(value)
+    MOI.set(backend(model), MOI.ConstraintSet(), _parameter_index(x), set)
+    return
+end
+
+"""
     start_value(v::GenericVariableRef)
 
 Return the start value (MOI attribute `VariablePrimalStart`) of the variable

@@ -344,3 +344,30 @@ end
 function moi_set(set::Semiinteger{T}) where {T}
     return MOI.Semiinteger{T}(set.lower, set.upper)
 end
+
+"""
+    Parameter(value)
+
+A short-cut for the [`MOI.Parameter`](@ref) set.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x in Parameter(2.0))
+x
+
+julia> print(model)
+Feasibility
+Subject to
+ x ∈ MathOptInterface.Parameter{Float64}(2.0)
+```
+"""
+struct Parameter{T} <: AbstractScalarSet
+    value::T
+end
+
+function moi_set(set::Parameter{T}) where {T}
+    return MOI.Parameter{T}(set.value)
+end
