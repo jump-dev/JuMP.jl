@@ -78,10 +78,10 @@
 # [Penopt]
 #     rev = "486f07d3f3a11f12012ea3ada702a3ee55c8fdc5"
 [PolyJuMP]
-    rev = "0832380ae36ec66ebe4cbc9555ba351d67096693"
+    rev = "v0.7.0"
     extension = true
 [SCS]
-    rev = "v1.2.0"
+    rev = "v1.2.1"
 [SDPA]
     rev = "v0.5.0"
 [SDPNAL]
@@ -91,7 +91,7 @@
 [SeDuMi]
     rev = "v0.4.2"
 [SumOfSquares]
-    rev = "44b40b4d533b851a7804b19ec554d62c86b6e9b5"
+    rev = "v0.7.1"
     extension = true
 [Xpress]
     rev = "v0.16.1"
@@ -117,14 +117,14 @@
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "b283cab933501c39195a273c78ddeac236cc2f3f"
+    rev = "v1.1.5"
 [COSMO]
     user = "oxfordcontrol"
-    rev = "c95bf89f111a83f52febf326615a091ad0418f00"
+    rev = "v0.8.8"
     has_html = true
 [DAQP]
     user = "darnstrom"
-    rev = "70623ed816916a0f3c3a51b65b166efae364b98d"
+    rev = "v0.5.0"
 # [EAGO]
 #   user = "PSORLab"
 # [GAMS]
@@ -143,7 +143,7 @@
     rev = "62532341586d447f19c7360715333ba62a42bea9"
 [Loraine]
     user = "kocvara"
-    rev = "be29542b3c829091175b1bf9d038d42d15b56542"
+    rev = "v0.1.2"
 [MadNLP]
     user = "MadNLP"
     rev = "389561354a774441cd5e6b3aa5fffee102ed222e"
@@ -158,7 +158,7 @@
     rev = "443706e34c2619acbe65281c60bbe850ca4a8fac"
 [PATHSolver]
     user = "chkwon"
-    rev = "v1.4.2"
+    rev = "v1.5.0"
 [Plasmo]
     user = "plasmo-dev"
     rev = "37f80fe96781dc647b3a5e0ed26b9eb0a994bc4a"
@@ -170,7 +170,7 @@
     has_html = true
 [SCIP]
     user = "scipopt"
-    rev = "44e0bff587208fb4e0779db440f4104bc0bba2ec"
+    rev = "v0.11.13"
 [SDDP]
     user = "odow"
     rev = "v1.5.0"
