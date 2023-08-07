@@ -1662,4 +1662,34 @@ function test_parse_expression_nonlinearexpr_nested_comparison()
     return
 end
 
+function test_parse_boolean_comparison_fallbacks()
+    model = Model()
+    @variable(model, x)
+    @test @expression(model, ifelse(true && true, x, 0.0)) === x
+    @test @expression(model, ifelse(true || false, x, 0.0)) === x
+    @test @expression(model, ifelse(1 < 2, x, 0.0)) === x
+    @test @expression(model, ifelse(1 <= 2, x, 0.0)) === x
+    @test @expression(model, ifelse(2 > 1, x, 0.0)) === x
+    @test @expression(model, ifelse(2 >= 1, x, 0.0)) === x
+    @test @expression(model, ifelse(2 == 2, x, 0.0)) === x
+    @test @expression(model, ifelse(true && false, x, 0.0)) === 0.0
+    @test @expression(model, ifelse(false || false, x, 0.0)) === 0.0
+    @test @expression(model, ifelse(2 < 1, x, 0.0)) === 0.0
+    @test @expression(model, ifelse(2 <= 1, x, 0.0)) === 0.0
+    @test @expression(model, ifelse(1 > 2, x, 0.0)) === 0.0
+    @test @expression(model, ifelse(1 >= 2, x, 0.0)) === 0.0
+    @test @expression(model, ifelse(1 == 2, x, 0.0)) === 0.0
+    return
+end
+
+function test_get_node_type_comparison()
+    model = Model()
+    @variable(model, x)
+    expr = @expression(model, ifelse(x >= 0, x, 0.0))
+    @NLexpression(model, ref, ifelse(x >= 0, x, 0.0))
+    nlp = nonlinear_model(model)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
 end
