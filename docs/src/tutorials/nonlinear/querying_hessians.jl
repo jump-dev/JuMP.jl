@@ -102,29 +102,54 @@ analytic_hessian([1, 1], 0, [0, 1])
 
 analytic_hessian([1, 1], 1, [0, 0])
 
-#-
+# ## Create a nonlinear model
 
-# ## Initializing the NLPEvaluator
+# JuMP delegates automatic differentiation to the `MOI.Nonlinear` submodule.
+# Therefore, to compute the Hessian of the Lagrangian, we need to create a
+# [`MOI.Nonlinear.Model`](@ref) object:
 
-# JuMP stores all information relating to the nonlinear portions of the model in
-# a [`NLPEvaluator`](@ref) struct:
+rows = Any[]
+nlp = MOI.Nonlinear.Model()
+for (F, S) in list_of_constraint_types(model)
+    if F <: VariableRef
+        continue  # Skip variable bounds
+    end
+    for ci in all_constraints(model, F, S)
+        push!(rows, ci)
+        object = constraint_object(ci)
+        MOI.Nonlinear.add_constraint(nlp, object.func, object.set)
+    end
+end
+MOI.Nonlinear.set_objective(nlp, objective_function(model))
+nlp
 
-d = NLPEvaluator(model)
+# It is important that we save the constraint indices in a vector `rows`, so
+# that we know the order of the constraints in the nonlinear model.
 
-# Before computing anything with the NLPEvaluator, we need to initialize it.
+# Next, we need to convert our model into an [`MOI.Nonlinear.Evaluator`](@ref),
+# specifying an automatic differentiation backend. In this case, we use
+# [`MOI.Nonlinear.SparseReverseMode`](@ref):
+
+evaluator = MOI.Nonlinear.Evaluator(
+    nlp,
+    MOI.Nonlinear.SparseReverseMode(),
+    index.(all_variables(model)),
+)
+
+# Before computing anything with the evaluator, we need to initialize it.
 # Use [`MOI.features_available`](@ref) to see what we can query:
 
-MOI.features_available(d)
+MOI.features_available(evaluator)
 
-# Consult the MOI documentation for specifics. But to obtain the Hessian matrix,
+# Consult the MOI documentation for specifics, but to obtain the Hessian matrix,
 # we need to initialize `:Hess`:
 
-MOI.initialize(d, [:Hess])
+MOI.initialize(evaluator, [:Hess])
 
 # MOI represents the Hessian as a sparse matrix. Get the sparsity pattern as
 # follows:
 
-hessian_sparsity = MOI.hessian_lagrangian_structure(d)
+hessian_sparsity = MOI.hessian_lagrangian_structure(evaluator)
 
 # The sparsity pattern has a few properties of interest:
 # * Each element `(i, j)` indicates a structural non-zero in row `i` and column
@@ -146,8 +171,7 @@ H = SparseArrays.sparse(I, J, V, n, n)
 # Of course, knowing where the zeros are isn't very interesting. We really want
 # to compute the value of the Hessian matrix at a point.
 
-num_g = num_nonlinear_constraints(model)
-MOI.eval_hessian_lagrangian(d, V, ones(n), 1.0, ones(num_g))
+MOI.eval_hessian_lagrangian(evaluator, V, ones(n), 1.0, ones(length(rows)))
 H = SparseArrays.sparse(I, J, V, n, n)
 
 # In practice, we often want to compute the value of the hessian at the optimal
@@ -164,13 +188,14 @@ x = all_variables(model)
 x_optimal = value.(x)
 
 # Next, we need the optimal dual solution associated with the nonlinear
-# constraints:
+# constraints (this is where it is important to record the order of the
+# constraints as we added them to `nlp`):
 
-y_optimal = dual.(all_nonlinear_constraints(model))
+y_optimal = dual.(rows)
 
 # Now we can compute the Hessian at the optimal primal-dual point:
 
-MOI.eval_hessian_lagrangian(d, V, x_optimal, 1.0, y_optimal)
+MOI.eval_hessian_lagrangian(evaluator, V, x_optimal, 1.0, y_optimal)
 H = SparseArrays.sparse(I, J, V, n, n)
 
 # However, this Hessian isn't quite right because it isn't symmetric. We can fix
@@ -192,95 +217,29 @@ end
 
 fill_off_diagonal(H)
 
-# Moreover, this Hessian only accounts for the objective and constraints entered
-# using [`@NLobjective`](@ref) and [`@NLconstraint`](@ref). If we want to take
-# quadratic objectives and constraints written using [`@objective`](@ref) or
-# [`@constraint`](@ref) into account, we'll need to handle them separately.
-
-# !!! tip
-#     If you don't want to do this, you can replace calls to [`@objective`](@ref)
-#     and [`@constraint`](@ref) with [`@NLobjective`](@ref) and
-#     [`@NLconstraint`](@ref).
-
-# ## Hessians from QuadExpr functions
-
-# To compute the hessian from a quadratic expression, let's see how JuMP
-# represents a quadratic constraint:
-
-f = constraint_object(g_1).func
-
-# `f` is a quadratic expression of the form:
-# ```
-# f(x) = Σqᵢⱼ * xᵢ * xⱼ + Σaᵢ xᵢ + c
-# ```
-# So `∇²f(x)` is the matrix formed by `[qᵢⱼ]ᵢⱼ` if `i != j` and `2[qᵢⱼ]ᵢⱼ` if `i = j`.
-
-variables_to_column = Dict(x[i] => i for i in 1:n)
-
-function add_to_hessian(H, f::QuadExpr, μ)
-    for (vars, coef) in f.terms
-        i = variables_to_column[vars.a]
-        j = variables_to_column[vars.b]
-        H[i, j] += μ * coef
-    end
-    return
-end
-
-# If the function `f` is not a `QuadExpr`, do nothing because it is an `AffExpr`
-# or a `VariableRef`. In both cases, the second derivative is zero.
-
-add_to_hessian(H, f::Any, μ) = nothing
-
-# Then we iterate over all constraints in the model and add their Hessian
-# components:
-
-for (F, S) in list_of_constraint_types(model)
-    for cref in all_constraints(model, F, S)
-        f = constraint_object(cref).func
-        add_to_hessian(H, f, dual(cref))
-    end
-end
-
-H
-
-# Finally, we need to take into account the objective function:
-
-add_to_hessian(H, objective_function(model), 1.0)
-
-fill_off_diagonal(H)
-
 # Putting everything together:
 
-function compute_optimal_hessian(model)
-    d = NLPEvaluator(model)
-    MOI.initialize(d, [:Hess])
-    hessian_sparsity = MOI.hessian_lagrangian_structure(d)
+function compute_optimal_hessian(model::Model)
+    rows = Any[]
+    nlp = MOI.Nonlinear.Model()
+    for (F, S) in list_of_constraint_types(model)
+        for ci in all_constraints(model, F, S)
+            push!(rows, ci)
+            object = constraint_object(ci)
+            MOI.Nonlinear.add_constraint(nlp, object.func, object.set)
+        end
+    end
+    MOI.Nonlinear.set_objective(nlp, objective_function(model))
+    x = all_variables(model)
+    backend = MOI.Nonlinear.SparseReverseMode()
+    evaluator = MOI.Nonlinear.Evaluator(nlp, backend, index.(x))
+    MOI.initialize(evaluator, [:Hess])
+    hessian_sparsity = MOI.hessian_lagrangian_structure(evaluator)
     I = [i for (i, _) in hessian_sparsity]
     J = [j for (_, j) in hessian_sparsity]
     V = zeros(length(hessian_sparsity))
-    x = all_variables(model)
-    x_optimal = value.(x)
-    y_optimal = dual.(all_nonlinear_constraints(model))
-    MOI.eval_hessian_lagrangian(d, V, x_optimal, 1.0, y_optimal)
-    n = num_variables(model)
-    H = SparseArrays.sparse(I, J, V, n, n)
-    vmap = Dict(x[i] => i for i in 1:n)
-    add_to_hessian(H, f::Any, μ) = nothing
-    function add_to_hessian(H, f::QuadExpr, μ)
-        for (vars, coef) in f.terms
-            if vars.a != vars.b
-                H[vmap[vars.a], vmap[vars.b]] += μ * coef
-            else
-                H[vmap[vars.a], vmap[vars.b]] += 2 * μ * coef
-            end
-        end
-    end
-    for (F, S) in list_of_constraint_types(model)
-        for cref in all_constraints(model, F, S)
-            add_to_hessian(H, constraint_object(cref).func, dual(cref))
-        end
-    end
-    add_to_hessian(H, objective_function(model), 1.0)
+    MOI.eval_hessian_lagrangian(evaluator, V, value.(x), 1.0, dual.(rows))
+    H = SparseArrays.sparse(I, J, V, length(x), length(x))
     return Matrix(fill_off_diagonal(H))
 end
 
