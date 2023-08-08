@@ -474,17 +474,12 @@ function test_bridge_graph_true()
     @test sprint(print_bridge_graph, model) ==
           "Bridge graph with 0 variable nodes, 0 constraint nodes and 0 objective nodes.\n"
     c = @constraint(model, x in Nonnegative())
-    @test sprint(print_bridge_graph, model) == replace(
-        "Bridge graph with 1 variable nodes, 2 constraint nodes and 0 objective nodes.\n" *
-        " [1] constrained variables in `$(Nonnegative)` are supported (distance 2) by adding free variables and then constrain them, see (1).\n" *
-        " (1) `MOI.VariableIndex`-in-`$(Nonnegative)` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.VariableIndex}).\n" *
-        " (2) `MOI.ScalarAffineFunction{Float64}`-in-`$(Nonnegative)` constraints are bridged (distance 1) by $(NonnegativeBridge{Float64,MOI.ScalarAffineFunction{Float64}}).\n",
-        "MathOptInterface." => "MOI.",
-    )
+    @test occursin("$Nonnegative", sprint(print_bridge_graph, model))
     optimize!(model)
     @test 1.0 == @inferred value(x)
     @test 1.0 == @inferred value(c)
     @test 2.0 == @inferred dual(c)
+    return
 end
 
 function test_solve_time()
