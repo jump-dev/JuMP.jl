@@ -952,9 +952,11 @@ function test_print_model_with_huge_integers()
     model = Model()
     @variable(model, x)
     c = @constraint(model, 1e20 * x == 42)
-    @test sprint(io -> show(io, MIME("text/plain"), c)) == "1.0e20 x = 42"
+    eq = JuMP._math_symbol(MIME("text/plain"), :eq)
+    @test sprint(io -> show(io, MIME("text/plain"), c)) == "1.0e20 x $eq 42"
+    eq = JuMP._math_symbol(MIME("text/latex"), :eq)
     @test sprint(io -> show(io, MIME("text/latex"), c)) ==
-          "\$\$ 1.0e20 x = 42 \$\$"
+          "\$\$ 1.0e20 x $eq 42 \$\$"
     return
 end
 
