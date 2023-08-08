@@ -1487,10 +1487,10 @@ julia> model_1 = new_model();
 
 julia> penalty_map = relax_with_penalty!(model_1; default = 2.0);
 
-julia> penalty_map[model[:c1]]
+julia> penalty_map[model_1[:c1]]
 _[3]
 
-julia> penalty_map[model[:c2]]
+julia> penalty_map[model_1[:c2]]
 _[2]
 
 julia> print(model_1)
