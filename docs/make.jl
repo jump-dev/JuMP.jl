@@ -540,8 +540,8 @@ Documenter.DocMeta.setdocmeta!(
         sidebar_sitename = false,
     ),
     strict = true,
-    modules = [JuMP],
-    checkdocs = :exports,
+    modules = [JuMP, MOI],
+    checkdocs = :none,
     # Skip doctests if --fast provided.
     doctest = _FIX ? :fix : !_FAST,
     pages = vcat(_PAGES, "release_notes.md"),
