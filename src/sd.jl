@@ -507,6 +507,18 @@ julia> @variable(model, H[1:3, 1:3] in HermitianPSDCone())
  real(H[1,2]) - imag(H[1,2]) im     real(H[2,3]) + imag(H[2,3]) im
  real(H[1,3]) - imag(H[1,3]) im     real(H[3,3])
 
+julia> all_variables(model)
+9-element Vector{VariableRef}:
+ real(H[1,1])
+ real(H[1,2])
+ real(H[2,2])
+ real(H[1,3])
+ real(H[2,3])
+ real(H[3,3])
+ imag(H[1,2])
+ imag(H[1,3])
+ imag(H[2,3])
+
 julia> all_constraints(model, Vector{VariableRef}, MOI.HermitianPositiveSemidefiniteConeTriangle)
 1-element Vector{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.VectorOfVariables, MathOptInterface.HermitianPositiveSemidefiniteConeTriangle}}}:
  [real(H[1,1]), real(H[1,2]), real(H[2,2]), real(H[1,3]), real(H[2,3]), real(H[3,3]), imag(H[1,2]), imag(H[1,3]), imag(H[2,3])] ∈ MathOptInterface.HermitianPositiveSemidefiniteConeTriangle(3)
