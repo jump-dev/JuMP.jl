@@ -203,9 +203,9 @@ match `size(data)` in the corresponding dimensions.
 ```jldoctest
 julia> array = Containers.DenseAxisArray([1 2; 3 4], [:a, :b], 2:3)
 2-dimensional DenseAxisArray{Int64,2,...} with index sets:
-    Dimension 1, Symbol[:a, :b]
+    Dimension 1, [:a, :b]
     Dimension 2, 2:3
-And data, a 2×2 Array{Int64,2}:
+And data, a 2×2 Matrix{Int64}:
  1  2
  3  4
 
@@ -242,9 +242,9 @@ julia> array = Containers.DenseAxisArray{Float64}(undef, [:a, :b], 1:2);
 
 julia> fill!(array, 1.0)
 2-dimensional DenseAxisArray{Float64,2,...} with index sets:
-    Dimension 1, Symbol[:a, :b]
+    Dimension 1, [:a, :b]
     Dimension 2, 1:2
-And data, a 2×2 Array{Float64,2}:
+And data, a 2×2 Matrix{Float64}:
  1.0  1.0
  1.0  1.0
 
@@ -256,9 +256,9 @@ julia> array[:a, 2]
 
 julia> array
 2-dimensional DenseAxisArray{Float64,2,...} with index sets:
-    Dimension 1, Symbol[:a, :b]
+    Dimension 1, [:a, :b]
     Dimension 2, 1:2
-And data, a 2×2 Array{Float64,2}:
+And data, a 2×2 Matrix{Float64}:
  1.0  5.0
  1.0  1.0
 ```

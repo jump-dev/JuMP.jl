@@ -18,12 +18,12 @@ of a macro with [`Containers._extract_kw_args`](@ref).
 
 ```jldoctest
 julia> call = :(f(1, a=2))
-:(f(1, a=2))
+:(f(1, a = 2))
 
 julia> JuMP._add_kw_args(call, [:(b=3), :(c=4)])
 
 julia> call
-:(f(1, a=2, $(Expr(:escape, :(b=3))), $(Expr(:escape, :(c=4)))))
+:(f(1, a = 2, \$(Expr(:escape, :(\$(Expr(:kw, :b, 3))))), \$(Expr(:escape, :(\$(Expr(:kw, :c, 4)))))))
 ```
 """
 function _add_kw_args(call, kw_args)
@@ -184,6 +184,8 @@ provide a more convenient syntax:
 ```jldoctest operator_to_set
 julia> JuMP.operator_to_set(::Function, ::Val{:⊰}) = CustomSet(0.0)
 
+julia> MOIU.supports_shift_constant(::Type{<:CustomSet}) = true
+
 julia> MOIU.shift_constant(set::CustomSet, value) = CustomSet(set.value + value)
 
 julia> cref = @constraint(model, x ⊰ 1)
@@ -265,8 +267,8 @@ julia> model = Model();
 
 julia> @variable(model, x[1:2])
 2-element Vector{VariableRef}:
-    x[1]
-    x[2]
+ x[1]
+ x[2]
 
 julia> @constraint(model, x in Nonpositives())
 [x[1], x[2]] ∈ MathOptInterface.Nonpositives(2)
@@ -294,8 +296,8 @@ julia> model = Model();
 
 julia> @variable(model, x[1:2])
 2-element Vector{VariableRef}:
-    x[1]
-    x[2]
+ x[1]
+ x[2]
 
 julia> @constraint(model, x in Zeros())
 [x[1], x[2]] ∈ MathOptInterface.Zeros(2)
@@ -334,10 +336,9 @@ julia> foo(x) = (println("Calling \$(x)"); x)
 foo (generic function with 1 method)
 
 julia> foo.(SparseArrays.sparsevec([1, 2], [1, 2]))
-Calling 0
 Calling 1
 Calling 2
-2-element SparseVector{Int64, Int64} with 2 stored entries:
+2-element SparseArrays.SparseVector{Int64, Int64} with 2 stored entries:
   [1]  =  1
   [2]  =  2
 ```
@@ -1320,11 +1321,11 @@ julia> @constraints(model, begin
 julia> print(model)
 Feasibility
 Subject to
- sum_to_one[1] : y + z[1] = 1.0
- sum_to_one[2] : y + z[2] = 1.0
- sum_to_one[3] : y + z[3] = 1.0
- x ≥ 1.0
- -w + y ≤ 2.0
+ sum_to_one[1] : y + z[1] = 1
+ sum_to_one[2] : y + z[2] = 1
+ sum_to_one[3] : y + z[3] = 1
+ x ≥ 1
+ -w + y ≤ 2
 ```
 """ :(@constraints)
 
@@ -1616,10 +1617,10 @@ julia> @expression(model, shared, sum(i * x[i] for i in 1:5))
 x[1] + 2 x[2] + 3 x[3] + 4 x[4] + 5 x[5]
 
 julia> @constraint(model, shared + y >= 5)
-x[1] + 2 x[2] + 3 x[3] + 4 x[4] + 5 x[5] + y ≥ 5.0
+x[1] + 2 x[2] + 3 x[3] + 4 x[4] + 5 x[5] + y ≥ 5
 
 julia> @constraint(model, shared + z <= 10)
-x[1] + 2 x[2] + 3 x[3] + 4 x[4] + 5 x[5] + z ≤ 10.0
+x[1] + 2 x[2] + 3 x[3] + 4 x[4] + 5 x[5] + z ≤ 10
 ```
 
 The `ref` accepts index sets in the same way as `@variable`, and those indices
@@ -2888,7 +2889,7 @@ end
 Efficiently build a nonlinear expression which can then be inserted in other
 nonlinear constraints and the objective. See also [`@expression`]. For example:
 
-```jldoctest
+```jldoctest api_nlexpression
 julia> model = Model();
 
 julia> @variable(model, x)
@@ -2907,7 +2908,7 @@ julia> @NLobjective(model, Min, my_expr)
 ```
 
 Indexing over sets and anonymous expressions are also supported:
-```jldoctest
+```jldoctest api_nlexpression
 julia> @NLexpression(model, my_expr_1[i=1:3], sin(i * x))
 3-element Vector{NonlinearExpression}:
  subexpression[2]: sin(1.0 * x)

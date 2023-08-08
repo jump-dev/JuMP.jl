@@ -36,7 +36,7 @@ not supporting index names.
 
 ```jldoctest
 julia> Containers.container((i, j) -> i + j, Containers.vectorized_product(Base.OneTo(3), Base.OneTo(3)))
-3×3 Array{Int64,2}:
+3×3 Matrix{Int64}:
  2  3  4
  3  4  5
  4  5  6
@@ -45,7 +45,7 @@ julia> Containers.container((i, j) -> i + j, Containers.vectorized_product(1:3, 
 2-dimensional DenseAxisArray{Int64,2,...} with index sets:
     Dimension 1, 1:3
     Dimension 2, 1:3
-And data, a 3×3 Array{Int64,2}:
+And data, a 3×3 Matrix{Int64}:
  2  3  4
  3  4  5
  4  5  6
@@ -54,17 +54,17 @@ julia> Containers.container((i, j) -> i + j, Containers.vectorized_product(2:3, 
 2-dimensional DenseAxisArray{Int64,2,...} with index sets:
     Dimension 1, 2:3
     Dimension 2, Base.OneTo(3)
-And data, a 2×3 Array{Int64,2}:
+And data, a 2×3 Matrix{Int64}:
  3  4  5
  4  5  6
 
 julia> Containers.container((i, j) -> i + j, Containers.nested(() -> 1:3, i -> i:3, condition = (i, j) -> isodd(i) || isodd(j)))
-SparseAxisArray{Int64,2,Tuple{Int64,Int64}} with 5 entries:
+SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 5 entries:
+  [1, 1]  =  2
   [1, 2]  =  3
+  [1, 3]  =  4
   [2, 3]  =  5
   [3, 3]  =  6
-  [1, 1]  =  2
-  [1, 3]  =  4
 ```
 """
 function container(f::Function, indices, D, names)

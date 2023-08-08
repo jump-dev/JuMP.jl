@@ -454,7 +454,7 @@ function GenericVariableRef{T}(model::GenericModel{T}) where {T}
 end
 
 """
-    GenericVariableRef(c::ConstraintRef)
+    GenericVariableRef{T}(c::ConstraintRef)
 
 Get the variable associated with a `ConstraintRef`, if `c` is a constraint on a
 single variable.
@@ -468,9 +468,9 @@ julia> @variable(model, x >= 0)
 x
 
 julia> c = LowerBoundRef(x)
-x ≥ 0.0
+x ≥ 0
 
-julia> GenericVariableRef(c) == x
+julia> VariableRef(c) == x
 true
 ```
 """
@@ -554,7 +554,7 @@ julia> variable_by_name(model, "z")
 z
 
 julia> @variable(model, u[1:2])
-2-element Array{VariableRef,1}:
+2-element Vector{VariableRef}:
  u[1]
  u[2]
 
@@ -1439,7 +1439,7 @@ Consider the following example:
 julia> model = Model();
 
 julia> @variable(model, x in ComplexPlane())
-real(x) + (0.0 + 1.0im) imag(x)
+real(x) + imag(x) im
 
 julia> all_variables(model)
 2-element Vector{VariableRef}:
@@ -1705,18 +1705,18 @@ julia> undo_relax = relax_integrality(model);
 julia> print(model)
 Min x + y
 Subject to
- x ≥ 0.0
- y ≥ 1.0
- x ≤ 1.0
- y ≤ 10.0
+ x ≥ 0
+ y ≥ 1
+ x ≤ 1
+ y ≤ 10
 
 julia> undo_relax()
 
 julia> print(model)
 Min x + y
 Subject to
- y ≥ 1.0
- y ≤ 10.0
+ y ≥ 1
+ y ≤ 10
  y integer
  x binary
 ```
@@ -1760,16 +1760,16 @@ julia> undo_relax = fix_discrete_variables(start_value, model);
 julia> print(model)
 Min x + y
 Subject to
- x = 1.0
- y = 2.0
+ x = 1
+ y = 2
 
 julia> undo_relax()
 
 julia> print(model)
 Min x + y
 Subject to
- y ≥ 1.0
- y ≤ 10.0
+ y ≥ 1
+ y ≤ 10
  y integer
  x binary
 ```

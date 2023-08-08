@@ -215,7 +215,7 @@ julia> objective_function(model, QuadExpr)
 2 x + 1
 
 julia> typeof(objective_function(model, QuadExpr))
-GenericQuadExpr{Float64,VariableRef}
+QuadExpr (alias for GenericQuadExpr{Float64, GenericVariableRef{Float64}})
 ```
 We see with the last two commands that even if the objective function is affine,
 as it is convertible to a quadratic function, it can be queried as a quadratic
@@ -224,7 +224,7 @@ function and the result is quadratic.
 However, it is not convertible to a variable.
 ```jldoctest objective_function; filter = r"MathOptInterface\\."s
 julia> objective_function(model, VariableRef)
-ERROR: InexactError: convert(MathOptInterface.VariableIndex, MathOptInterface.ScalarAffineFunction{Float64}(MathOptInterface.ScalarAffineTerm{Float64}[MathOptInterface.ScalarAffineTerm{Float64}(2.0, MathOptInterface.VariableIndex(1))], 1.0))
+ERROR: InexactError: convert(MathOptInterface.VariableIndex, 1.0 + 2.0 MOI.VariableIndex(1))
 [...]
 ```
 """

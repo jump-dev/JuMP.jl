@@ -35,6 +35,8 @@ julia> model = Model(optimizer);
 is equivalent to:
 
 ```jldoctest
+julia> import HiGHS
+
 julia> model = Model(HiGHS.Optimizer);
 
 julia> set_attribute(model, "presolve", "off")
@@ -289,7 +291,9 @@ Cannot be called in direct mode.
 """
 function MOIU.reset_optimizer(model::GenericModel)
     error_if_direct_mode(model, :reset_optimizer)
-    MOIU.reset_optimizer(backend(model))
+    if MOI.Utilities.state(backend(model)) == MOI.Utilities.ATTACHED_OPTIMIZER
+        MOIU.reset_optimizer(backend(model))
+    end
     return
 end
 
@@ -752,7 +756,7 @@ julia> @variable(model, x)
 x
 
 julia> @constraint(model, c, 2 * x <= 1)
-c : 2 x ≤ 1.0
+c : 2 x ≤ 1
 
 julia> get_attribute(model, MOI.Name())
 ""
@@ -856,7 +860,7 @@ julia> @variable(model, x)
 x
 
 julia> @constraint(model, c, 2 * x <= 1)
-c : 2 x ≤ 1.0
+c : 2 x ≤ 1
 
 julia> set_attribute(model, MOI.Name(), "model_new")
 

@@ -124,7 +124,7 @@ julia> @variable(model, x)
 x
 
 julia> @constraint(model, cref, x == 2)
-cref : x = 2.0
+cref : x = 2
 
 julia> new_model, reference_map = copy_model(model);
 
@@ -132,7 +132,7 @@ julia> x_new = reference_map[x]
 x
 
 julia> cref_new = reference_map[cref]
-cref : x = 2.0
+cref : x = 2
 ```
 """
 function copy_model(
@@ -228,7 +228,7 @@ julia> @variable(model, x)
 x
 
 julia> @constraint(model, cref, x == 2)
-cref : x = 2.0
+cref : x = 2
 
 julia> new_model = copy(model);
 
@@ -236,7 +236,7 @@ julia> x_new = model[:x]
 x
 
 julia> cref_new = model[:cref]
-cref : x = 2.0
+cref : x = 2
 ```
 """
 function Base.copy(model::AbstractModel)
@@ -284,10 +284,10 @@ julia> @variable(model, x >= 0)
 x
 
 julia> @constraint(model, c1, x >= 2)
-c1 : x ≥ 2.0
+c1 : x ≥ 2
 
 julia> @constraint(model, c2, x <= 1)
-c2 : x ≤ 1.0
+c2 : x ≤ 1
 
 julia> optimize!(model)
 
@@ -299,8 +299,8 @@ julia> if get_attribute(model, MOI.ConflictStatus()) == MOI.CONFLICT_FOUND
        end
 Feasibility
 Subject to
- c1 : x ≥ 2.0
- c2 : x ≤ 1.0
+ c1 : x ≥ 2
+ c2 : x ≤ 1
 ```
 """
 function copy_conflict(model::GenericModel)

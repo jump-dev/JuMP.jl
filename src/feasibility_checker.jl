@@ -45,7 +45,7 @@ julia> model = Model();
 julia> @variable(model, 0.5 <= x <= 1);
 
 julia> primal_feasibility_report(model, Dict(x => 0.2))
-Dict{Any,Float64} with 1 entry:
+Dict{Any, Float64} with 1 entry:
   x ≥ 0.5 => 0.3
 ```
 """
@@ -87,13 +87,13 @@ argument instead of a dictionary as the second argument.
 ```jldoctest
 julia> model = Model();
 
-julia> @variable(model, 0.5 <= x <= 1);
+julia> @variable(model, 0.5 <= x <= 1, start = 1.3);
 
 julia> primal_feasibility_report(model) do v
-           return value(v)
+           return start_value(v)
        end
-Dict{Any,Float64} with 1 entry:
-    x ≥ 0.5 => 0.3
+Dict{Any, Float64} with 1 entry:
+  x ≤ 1 => 0.3
 ```
 """
 function primal_feasibility_report(

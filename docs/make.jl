@@ -520,6 +520,13 @@ _validate_pages()
 #  Build the HTML docs
 # ==============================================================================
 
+Documenter.DocMeta.setdocmeta!(
+    JuMP,
+    :DocTestSetup,
+    :(using JuMP, JuMP.Containers);
+    recursive = true,
+)
+
 @time Documenter.makedocs(
     sitename = "JuMP",
     authors = "The JuMP core developers and contributors",
@@ -533,21 +540,8 @@ _validate_pages()
         sidebar_sitename = false,
     ),
     strict = true,
-    # ==========================================================================
-    # `modules = [JuMP]`, along with `checkdocs = :exports` causes Documenter to
-    # throw an error if exported functions with docstrings are not contained in
-    # the Documentation. However, problematically, we include some MOI docs,
-    # which forces us to include MOI in `modules`, despite the fact that we
-    # don't necessarily want to document every MOI method.
-    #
-    # This is should be fine for now, because MOI doesn't export anything.
-    # However, also problematically, some doctests in MOI are not checked and
-    # are failing. Until they are fixed, we can't enable these options.
-    #
-    # TODO(odow): uncomment when possible.
-    # modules = [JuMP, MOI],
-    # checkdocs = :exports,
-    # ==========================================================================
+    modules = [JuMP, MOI],
+    checkdocs = :none,
     # Skip doctests if --fast provided.
     doctest = _FIX ? :fix : !_FAST,
     pages = vcat(_PAGES, "release_notes.md"),
