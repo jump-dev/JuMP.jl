@@ -355,7 +355,7 @@ A short-cut for the [`MOI.Parameter`](@ref) set.
 ```jldoctest
 julia> model = Model();
 
-julia> @variable(model, x in Parameter(2.0))
+julia> @variable(model, x in Parameter(2))
 x
 
 julia> print(model)

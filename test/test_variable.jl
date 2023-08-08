@@ -1471,4 +1471,20 @@ function test_variable_dimension_mismatch()
     return
 end
 
+function test_parameter()
+    model = Model()
+    @variable(model, x in Parameter(2))
+    p = ParameterRef(x)
+    @test p isa ConstraintRef
+    F, S = MOI.VariableIndex,MOI.Parameter{Float64}
+    @test index(p) == MOI.ConstraintIndex{F,S}(index(x).value)
+    @test is_parameter(x)
+    @test parameter_value(x) == 2.0
+    set_parameter_value(x, 3.4)
+    @test parameter_value(x) == 3.4
+    set_parameter_value(x, Int32(3))
+    @test parameter_value(x) === 3.0
+    return
+end
+
 end  # module TestVariable

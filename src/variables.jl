@@ -1099,15 +1099,16 @@ parameter.
 
 Errors if one does not exist.
 
-See also [`is_parameter`](@ref), [`set_parameter`](@ref).
+See also [`is_parameter`](@ref), [`set_parameter_value`](@ref),
+[`parameter_value`](@ref).
 """
 function ParameterRef(x::GenericVariableRef)
-    return ParameterRef(owner_model(x), _parameter_index(x), ScalarShape())
+    return ConstraintRef(owner_model(x), _parameter_index(x), ScalarShape())
 end
 
 function _parameter_index(x::GenericVariableRef)
-    S = MOI.Parameter{value_type(typeof(x))}
-    return MOI.ConstraintIndex{MOI.VariableIndex,S}(index(x).value)
+    F, S = MOI.VariableIndex, MOI.Parameter{value_type(typeof(x))}
+    return MOI.ConstraintIndex{F,S}(index(x).value)
 end
 
 """
@@ -1115,29 +1116,46 @@ end
 
 Return `true` if `x` is constrained to be a parameter.
 
-See also [`ParameterRef`](@ref), [`set_parameter`](@ref).
+See also [`ParameterRef`](@ref), [`set_parameter_value`](@ref),
+[`parameter_value`](@ref).
 """
 function is_parameter(x::GenericVariableRef)
-    return _moi_is_parameter(backend(owner_model(x)), x)
-end
-
-function _moi_is_parameter(moi_backend, x::GenericVariableRef)
-    return MOI.is_valid(moi_backend, _parameter_index(x))
+    return MOI.is_valid(backend(owner_model(x)), _parameter_index(x))::Bool
 end
 
 """
-    set_parameter(x::GenericVariableRef, value)
+    set_parameter_value(x::GenericVariableRef, value)
 
 Update the parameter constraint on the variable `x` to `value`.
 
-See also [`ParameterRef`](@ref), [`is_parameter`](@ref).
+See also [`ParameterRef`](@ref), [`is_parameter`](@ref),
+[`parameter_value`](@ref).
 """
-function set_parameter(x::GenericVariableRef, value)
+function set_parameter_value(x::GenericVariableRef, value)
+    T = value_type(typeof(x))
     model = owner_model(x)
     model.is_model_dirty = true
-    set = MOI.Parameter(value)
+    set = MOI.Parameter{T}(convert(T, value))
     MOI.set(backend(model), MOI.ConstraintSet(), _parameter_index(x), set)
     return
+end
+
+"""
+    parameter_value(x::GenericVariableRef, value)
+
+Update the parameter constraint on the variable `x` to `value`.
+
+See also [`ParameterRef`](@ref), [`is_parameter`](@ref),
+[`set_parameter_value`](@ref).
+"""
+function parameter_value(x::GenericVariableRef)
+    S = MOI.Parameter{value_type(typeof(x))}
+    set = MOI.get(
+        backend(owner_model(x)),
+        MOI.ConstraintSet(),
+        _parameter_index(x),
+    )::S
+    return set.value
 end
 
 """
@@ -1337,7 +1355,7 @@ function add_variable(
     var_index = _moi_add_constrained_variable(
         backend(model),
         variable.scalar_variable,
-        variable.set,
+        model_convert(model, variable.set),
         name,
         T,
     )
@@ -1440,7 +1458,7 @@ function add_variable(
     var_indices = _moi_add_constrained_variables(
         backend(model),
         variable.scalar_variables,
-        variable.set,
+        model_convert(model, variable.set),
         _vectorize_names(names, variable.shape),
         T,
     )
