@@ -72,7 +72,10 @@ end
 # e.g.   5.3  =>  5.3
 #        1.0  =>  1
 function _string_round(x::Union{Float32,Float64})
-    return isinteger(x) ? string(round(Int, x)) : string(x)
+    if isinteger(x) && typemin(Int) <= x <= typemax(Int)
+        return string(round(Int, x))
+    end
+    return string(x)
 end
 
 _string_round(::typeof(abs), x::Real) = _string_round(abs(x))

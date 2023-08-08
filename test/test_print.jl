@@ -897,4 +897,65 @@ function test_print_complex_string_round()
     return
 end
 
+function test_print_huge_integer_string_round()
+    @test JuMP._string_round(-1 + Float32(typemax(Int32))) == "2147483648"
+    @test JuMP._string_round(-1 + Float32(typemin(Int32))) == "-2147483648"
+    @test JuMP._string_round(-1 + Float64(typemax(Int32))) == "2147483646"
+    @test JuMP._string_round(-1 + Float64(typemin(Int32))) == "-2147483649"
+
+    @test JuMP._string_round(Float32(typemax(Int32))) == "2147483648"
+    @test JuMP._string_round(Float32(typemin(Int32))) == "-2147483648"
+    @test JuMP._string_round(Float64(typemax(Int32))) == "2147483647"
+    @test JuMP._string_round(Float64(typemin(Int32))) == "-2147483648"
+
+    @test JuMP._string_round(1 + Float32(typemax(Int32))) == "2147483648"
+    @test JuMP._string_round(1 + Float32(typemin(Int32))) == "-2147483648"
+    @test JuMP._string_round(1 + Float64(typemax(Int32))) == "2147483648"
+    @test JuMP._string_round(1 + Float64(typemin(Int32))) == "-2147483647"
+
+    @test JuMP._string_round(2 * Float32(typemax(Int32))) == "4294967296"
+    @test JuMP._string_round(2 * Float32(typemin(Int32))) == "-4294967296"
+    @test JuMP._string_round(2 * Float64(typemax(Int32))) == "4294967294"
+    @test JuMP._string_round(2 * Float64(typemin(Int32))) == "-4294967296"
+
+    @test JuMP._string_round(-1 + Float32(typemax(Int64))) == "9.223372e18"
+    @test JuMP._string_round(-1 + Float32(typemin(Int64))) ==
+          "-9223372036854775808"
+    @test JuMP._string_round(-1 + Float64(typemax(Int64))) ==
+          "9.223372036854776e18"
+    @test JuMP._string_round(-1 + Float64(typemin(Int64))) ==
+          "-9223372036854775808"
+
+    @test JuMP._string_round(Float32(typemax(Int64))) == "9.223372e18"
+    @test JuMP._string_round(Float32(typemin(Int64))) == "-9223372036854775808"
+    @test JuMP._string_round(Float64(typemax(Int64))) == "9.223372036854776e18"
+    @test JuMP._string_round(Float64(typemin(Int64))) == "-9223372036854775808"
+
+    @test JuMP._string_round(1 + Float32(typemax(Int64))) == "9.223372e18"
+    @test JuMP._string_round(1 + Float32(typemin(Int64))) ==
+          "-9223372036854775808"
+    @test JuMP._string_round(1 + Float64(typemax(Int64))) ==
+          "9.223372036854776e18"
+    @test JuMP._string_round(1 + Float64(typemin(Int64))) ==
+          "-9223372036854775808"
+
+    @test JuMP._string_round(2 * Float32(typemax(Int64))) == "1.8446744e19"
+    @test JuMP._string_round(2 * Float32(typemin(Int64))) == "-1.8446744e19"
+    @test JuMP._string_round(2 * Float64(typemax(Int64))) ==
+          "1.8446744073709552e19"
+    @test JuMP._string_round(2 * Float64(typemin(Int64))) ==
+          "-1.8446744073709552e19"
+    return
+end
+
+function test_print_model_with_huge_integers()
+    model = Model()
+    @variable(model, x)
+    c = @constraint(model, 1e20 * x == 42)
+    @test sprint(io -> show(io, MIME("text/plain"), c)) == "1.0e20 x = 42"
+    @test sprint(io -> show(io, MIME("text/latex"), c)) ==
+          "\$\$ 1.0e20 x = 42 \$\$"
+    return
+end
+
 end
