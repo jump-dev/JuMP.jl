@@ -1141,9 +1141,9 @@ function set_parameter_value(x::GenericVariableRef, value)
 end
 
 """
-    parameter_value(x::GenericVariableRef, value)
+    parameter_value(x::GenericVariableRef)
 
-Update the parameter constraint on the variable `x` to `value`.
+Return the value of the parameter `x`.
 
 See also [`ParameterRef`](@ref), [`is_parameter`](@ref),
 [`set_parameter_value`](@ref).
