@@ -1476,7 +1476,7 @@ function test_parameter()
     @variable(model, x in Parameter(2))
     p = ParameterRef(x)
     @test p isa ConstraintRef
-    F, S = MOI.VariableIndex,MOI.Parameter{Float64}
+    F, S = MOI.VariableIndex, MOI.Parameter{Float64}
     @test index(p) == MOI.ConstraintIndex{F,S}(index(x).value)
     @test is_parameter(x)
     @test parameter_value(x) == 2.0
