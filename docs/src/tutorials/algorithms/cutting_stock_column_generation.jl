@@ -128,7 +128,7 @@ model
 # ``j=1``, then feasible solutions are:
 # * ``x_{1,1} = 1``, ``x_{13,1} = 1`` and all the rest ``0``, which is 1 roll of
 #   piece \#1 and 1 roll of piece \#13
-# * ``x_{1,20} = 19`` and all the rest ``0``, which is 19 rolls of piece \#20.
+# * ``x_{20,1} = 19`` and all the rest ``0``, which is 19 rolls of piece \#20.
 
 # Cutting patterns like ``x_{1,1} = 1`` and ``x_{2,1} = 1`` are infeasible
 # because the combined length is greater than ``W``.
