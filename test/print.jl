@@ -619,7 +619,11 @@ end
              0.0  1.0]
         @variable(m, X[1:2,1:2], SDP)
         s = @SDconstraint(m, X .>= A)
-        io_test(REPLMode, s, " X[1,1] - 2  X[1,2]     is semidefinite\n X[1,2]      X[2,2] - 1")
+        if VERSION >= v"1.6"
+            io_test(REPLMode, s, " X[1,1] - 2  X[1,2] is semidefinite\n X[1,2]      X[2,2] - 1")
+        else
+            io_test(REPLMode, s, " X[1,1] - 2  X[1,2]     is semidefinite\n X[1,2]      X[2,2] - 1")
+        end
     end
 
     @testset "no method matching mapcontainer_warn(::JuMP.#_getValue, ::JuMP.JuMPArray{JuMP.NonlinearExpression,1,Tuple{UnitRange{Int64}}}) #964" begin

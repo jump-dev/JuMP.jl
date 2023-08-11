@@ -287,18 +287,22 @@ function assert_validmodel(m, macrocode)
 end
 
 function _canonicalize_sense(sns::Symbol)
+    # Note from odow: don't ask me why == needs () and the rest don't. There's a
+    # material parsing difference that changed sometime between Julia 1.0 and
+    # Julia 1.6. This is what is needed for both versions to recognize the
+    # inequalities as Symbols and not as Expr. See JuMP#3439 for details.
     if sns == :(==)
-        return (:(==),false)
-    elseif sns == :(>=) || sns == :(≥)
-        return (:(>=),false)
-    elseif sns == :(<=) || sns == :(≤)
-        return (:(<=),false)
-    elseif sns == :(.==)
-        return (:(==),true)
-    elseif sns == :(.>=) || sns == :(.≥)
-        return (:(>=),true)
-    elseif sns == :(.<=) || sns == :(.≤)
-        return (:(<=),true)
+        return (:(==), false)
+    elseif sns == :>= || sns == :≥
+        return (:>=, false)
+    elseif sns == :<= || sns == :≤
+        return (:<=, false)
+    elseif sns == :.==
+        return (:(==), true)
+    elseif sns == :.>= || sns == :.≥
+        return (:>=, true)
+    elseif sns == :.<= || sns == :.≤
+        return (:<=, true)
     else
         error("Unrecognized sense $sns")
     end
