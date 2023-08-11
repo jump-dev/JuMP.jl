@@ -10,7 +10,7 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
 
 !!! info
     This page describes the legacy nonlinear interface to JuMP. A new,
-    exerimental nonlinear interface is in development. Find out more by reading
+    experimental nonlinear interface is in development. Find out more by reading
     [Nonlinear Modeling](@ref new_nonlinear_interface).
 
 JuMP has support for general smooth nonlinear (convex and nonconvex)
