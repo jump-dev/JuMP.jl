@@ -1355,7 +1355,7 @@ function add_variable(
     var_index = _moi_add_constrained_variable(
         backend(model),
         variable.scalar_variable,
-        model_convert(model, variable.set),
+        variable.set,
         name,
         T,
     )
@@ -1458,7 +1458,7 @@ function add_variable(
     var_indices = _moi_add_constrained_variables(
         backend(model),
         variable.scalar_variables,
-        model_convert(model, variable.set),
+        variable.set,
         _vectorize_names(names, variable.shape),
         T,
     )

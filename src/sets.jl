@@ -371,3 +371,7 @@ end
 function moi_set(set::Parameter{T}) where {T}
     return MOI.Parameter{T}(set.value)
 end
+
+function model_convert(model::AbstractModel, set::Parameter)
+    return Parameter(convert(value_type(typeof(model)), set.value))
+end

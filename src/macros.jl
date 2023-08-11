@@ -2737,7 +2737,11 @@ macro variable(args...)
                 )
             end
         end
-        buildcall = :(build_variable($_error, $scalar_variables, $set))
+        buildcall = :(build_variable(
+            $_error,
+            $scalar_variables,
+            model_convert($model, $set),
+        ))
     end
     new_name_code = if isempty(set_string_name_kw_args)
         Expr(:if, :(set_string_names_on_creation($model)), name_code, "")
