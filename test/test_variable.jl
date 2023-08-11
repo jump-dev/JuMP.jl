@@ -1484,6 +1484,14 @@ function test_parameter()
     @test parameter_value(x) == 3.4
     set_parameter_value(x, Int32(3))
     @test parameter_value(x) === 3.0
+    @variable(model, p)
+    @test_throws(
+        ErrorException(
+            "Cannot create a `ParameterRef` because the variable is not a " *
+            "parameter",
+        ),
+        ParameterRef(p),
+    )
     return
 end
 
