@@ -14,9 +14,12 @@ ReverseDiffSparse = "89212889-6d3f-5f97-b412-7825138f6c9c"
 [compat]
 Compat = "≥ 1.0.0"
 ForwardDiff = "~0.5.0, ~0.6, ~0.7, ~0.8, ~0.9, ~0.10"
-MathProgBase = "~0.6.0, ~0.7"
+Grisu = "1"
+Ipopt = "0.5"
+MathProgBase = "=0.7.7"
 OffsetArrays = "≥ 0.2.13"
 ReverseDiffSparse = "~0.8.0"
+SCS = "0.5"
 julia = "0.7, 1"
 
 [extras]
