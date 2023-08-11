@@ -649,4 +649,20 @@ function test_show_nonlinear_model()
     return
 end
 
+function test_error_both_nl_interfaces()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, log(x) <= 1)
+    @NLconstraint(model, log(x) <= 1)
+    @test_throws(
+        ErrorException(
+            "Cannot optimize a model which contains the features from both " *
+            "the legacy and new nonlinear interfaces. You must use one or " *
+            "the other.",
+        ),
+        optimize!(model),
+    )
+    return
+end
+
 end  # module
