@@ -28,8 +28,9 @@ callbacks:
 Solver-independent callback support is limited to a few solvers. This includes
 [CPLEX](https://github.com/jump-dev/CPLEX.jl),
 [GLPK](https://github.com/jump-dev/GLPK.jl),
-[Gurobi](https://github.com/jump-dev/Gurobi.jl), and
-[Xpress](https://github.com/jump-dev/Xpress.jl).
+[Gurobi](https://github.com/jump-dev/Gurobi.jl),
+[Xpress](https://github.com/jump-dev/Xpress.jl), and
+[SCIP](https://github.com/scipopt/SCIP.jl).
 
 !!! warning
     While JuMP provides a solver-independent way of accessing callbacks, you
