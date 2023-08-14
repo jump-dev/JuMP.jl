@@ -869,3 +869,34 @@ macro register(model, op, args...)
     )
     return Expr(:(=), esc(op), rhs)
 end
+
+function jump_function_type(
+    ::GenericModel{T},
+    ::Type{MOI.VectorNonlinearFunction},
+) where {T}
+    return Vector{GenericNonlinearExpr{GenericVariableRef{T}}}
+end
+
+function jump_function(
+    model::GenericModel{T},
+    f::MOI.VectorNonlinearFunction,
+) where {T}
+    return GenericNonlinearExpr{GenericVariableRef{T}}[
+        jump_function(model, fi) for fi in MOI.Utilities.eachscalar(f)
+    ]
+end
+
+# We use `AbstractJuMPScalar` as a catch-all fallback for any mix of JuMP
+# scalars that have not been dispatched by some other method.
+
+function moi_function_type(::Type{<:Vector{<:AbstractJuMPScalar}})
+    return MOI.VectorNonlinearFunction
+end
+
+function moi_function(f::Vector{<:AbstractJuMPScalar})
+    return MOI.VectorNonlinearFunction(map(moi_function, f))
+end
+
+function MOI.VectorNonlinearFunction(f::Vector{<:AbstractJuMPScalar})
+    return moi_function(f)
+end

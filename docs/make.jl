@@ -5,6 +5,8 @@
 
 import Pkg
 Pkg.pkg"add Documenter#740ba6304c940801eafdc18b069e4609bf3923a6"
+Pkg.pkg"add MathOptInterface#master"
+Pkg.pkg"add PATHSolver#od/nlp-expr"
 
 import Documenter
 import Downloads
@@ -308,6 +310,7 @@ const _PAGES = [
             "tutorials/nonlinear/user_defined_hessians.md",
             "tutorials/nonlinear/nested_problems.md",
             "tutorials/nonlinear/querying_hessians.md",
+            "tutorials/nonlinear/complementarity.md",
         ],
         "Conic programs" => [
             "tutorials/conic/introduction.md",
