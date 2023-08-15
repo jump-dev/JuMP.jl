@@ -129,7 +129,7 @@ function test_vector_error_F_F()
     return
 end
 
-function test_vector_error_F_F()
+function test_vector_error_0_F()
     model = Model()
     @variable(model, x[1:2] >= 0)
     y = [1.2, -1.3]
