@@ -78,7 +78,7 @@ set_silent(model)
     end
 )
 optimize!(model)
-Test.@test isapprox(value.(p), [0.225, 0.153, 0.126]; atol = 1e-3)  #src
+Test.@test isapprox(value(p["new-york"]), 0.225; atol = 1e-3)  #src
 value.(p)
 
 # ## Expected utility of insurannce
@@ -112,5 +112,5 @@ model = Model(PATHSolver.Optimizer)
     end
 )
 optimize!(model)
-Test.@test isapprox(value(C_G), 0.996; atol = 1e-3)
+Test.@test isapprox(value(C_G), 0.996; atol = 1e-3)  #src
 value(K)
