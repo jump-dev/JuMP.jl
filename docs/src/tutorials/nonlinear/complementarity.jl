@@ -6,8 +6,7 @@
 # # Mixed complementarity problems
 
 # This tutorial is a collection of examples of small mixed-complementarity
-# programs. See [Complementarity constraints](@ref) for the definition of a
-# complementarity constraint.
+# programs.
 
 # This tutorial uses the following packages:
 
@@ -15,25 +14,30 @@ using JuMP
 import PATHSolver
 import Test  #src
 
-# ## Vector-valued linear complementarity
+# ## Linear complementarity
+
+# Form a mixed complementarity problem using the perp symbol `⟂` (type
+# `\perp<tab>` in the REPL). See [Complementarity constraints](@ref) for the
+# definition of a complementarity constraint.
 
 M = [0 0 -1 -1; 0 0 1 -2; 1 -1 2 -2; 1 2 -2 4]
 q = [2, 2, -2, -6]
 model = Model(PATHSolver.Optimizer)
+set_silent(model)
 @variable(model, 0 <= x[1:4] <= 10, start = 0)
 @constraint(model, M * x + q ⟂ x)
 optimize!(model)
 Test.@test value.(x) ≈ [2.8, 0.0, 0.8, 1.2]  #src
 value.(x)
 
-# ## Scalar-valued linear complementarity
+# ## Other ways of writing linear complementarity problems
 
 # You do not need to use a single vector of variables, and the complementarity
 # constraints can be given in any order. In addition, you can either use the
-#  perp symbol `⟂` (type `\perp<tab>` in the REPL), or you can use the
-# [`MOI.Complements`](@ref) set.
+# perp symbol, or you can use the [`MOI.Complements`](@ref) set.
 
 model = Model(PATHSolver.Optimizer)
+set_silent(model)
 @variable(model, 0 <= w <= 10, start = 0)
 @variable(model, 0 <= x <= 10, start = 0)
 @variable(model, 0 <= y <= 10, start = 0)
@@ -51,7 +55,7 @@ value.([w, x, y, z])
 # This is example is a reformulation of the transportation problem from Chapter
 # 3.3 of Dantzig, G.B. (1963). _Linear Programming and Extensions_. Princeton
 # University Press, Princeton, New Jersey. It is based on the GAMS model
-# [gamslib_transmcp](https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_transmcp.html).
+# [`gamslib_transmcp`](https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_transmcp.html).
 
 capacity = Dict("seattle" => 350, "san-diego" => 600)
 demand = Dict("new-york" => 325, "chicago" => 300, "topeka" => 275)
@@ -81,7 +85,7 @@ optimize!(model)
 Test.@test isapprox(value(p["new-york"]), 0.225; atol = 1e-3)  #src
 value.(p)
 
-# ## Expected utility of insurannce
+# ## Expected utility of insurance
 
 # This example is taken from a lecture of the course AAE706, given by Thomas F.
 # Rutherford at the University of Wisconsin, Madison. It models the expected
@@ -96,18 +100,19 @@ L = 0.5    # Loss with a bad outcome
 U(C) = C^ρ / ρ
 MU(C) = C^(ρ - 1)
 model = Model(PATHSolver.Optimizer)
+set_silent(model)
 @variable(model, EU, start = 1)   # Expected utilitiy
 @variable(model, EV, start = 1)   # Equivalent variation in income
 @variable(model, C_G, start = 1)  # Consumption on a good day
-@variable(model, C_B, start = 1)  # Consumptio on a bad day
+@variable(model, C_B, start = 1)  # Consumption on a bad day
 @variable(model, K, start = 1)    # Coverage
 @constraints(
     model,
     begin
-        EU - ((1 - pi) * U(C_G) + pi * U(C_B)) ⟂ EU
-        EV - 100 * (((1 - pi) * C_G^ρ + pi * C_B^ρ)^(1 / ρ) - 1) ⟂ EV
-        C_G - (1 - γ * K) ⟂ C_G
-        C_B - (1 - L + (1 - γ) * K) ⟂ C_B
+        (1 - pi) * U(C_G) + pi * U(C_B) - EU ⟂ EU
+        100 * (((1 - pi) * C_G^ρ + pi * C_B^ρ)^(1 / ρ) - 1) - EV ⟂ EV
+        1 - γ * K - C_G ⟂ C_G
+        1 - L + (1 - γ) * K - C_B ⟂ C_B
         γ * ((1 - pi) * MU(C_G) + pi * MU(C_B)) - pi * MU(C_B) ⟂ K
     end
 )
