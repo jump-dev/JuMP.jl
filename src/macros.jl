@@ -474,40 +474,207 @@ function parse_constraint_head(
     return is_vectorized, parse_code, build_call
 end
 
-_ifelse(a, x, y) = ifelse(a, x, y)
-_and(x, y) = x && y
-_or(x, y) = x || y
-_less_than(x, y) = x < y
-_greater_than(x, y) = x > y
-_less_equal(x, y) = x <= y
-_greater_equal(x, y) = x >= y
-_equal_to(x, y) = x == y
+"""
+    nonlinear_ifelse(a, x, y)
+
+A function that falls back to `ifelse(a, x, y)`, but when called with JuMP
+variables or expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> nonlinear_ifelse(true, 1.0, 2.0)
+1.0
+
+julia> nonlinear_ifelse(x, 1.0, 2.0)
+ifelse(x, 1.0, 2.0)
+```
+"""
+nonlinear_ifelse(a, x, y) = ifelse(a, x, y)
+
+"""
+    nonlinear_and(x, y)
+
+A function that falls back to `x && y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> nonlinear_and(true, false)
+false
+
+julia> nonlinear_and(true, x)
+true && x
+```
+"""
+nonlinear_and(x, y) = x && y
+
+"""
+    nonlinear_or(x, y)
+
+A function that falls back to `x || y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> nonlinear_or(true, false)
+true
+
+julia> nonlinear_or(true, x)
+true || x
+```
+"""
+nonlinear_or(x, y) = x || y
+
+"""
+    nonlinear_less_than(x, y)
+
+A function that falls back to `x < y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> nonlinear_less_than(1, 2)
+true
+
+julia> nonlinear_less_than(x, 2)
+x < 2
+```
+"""
+nonlinear_less_than(x, y) = x < y
+
+"""
+    nonlinear_greater_than(x, y)
+
+A function that falls back to `x > y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> nonlinear_greater_than(1, 2)
+false
+
+julia> nonlinear_greater_than(x, 2)
+x > 2
+```
+"""
+nonlinear_greater_than(x, y) = x > y
+
+"""
+    nonlinear_less_equal(x, y)
+
+A function that falls back to `x <= y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> nonlinear_less_equal(2, 2)
+true
+
+julia> nonlinear_less_equal(x, 2)
+x <= 2
+```
+"""
+nonlinear_less_equal(x, y) = x <= y
+
+"""
+    nonlinear_greater_equal(x, y)
+
+A function that falls back to `x >= y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> nonlinear_greater_equal(2, 2)
+true
+
+julia> nonlinear_greater_equal(x, 2)
+x >= 2
+```
+"""
+nonlinear_greater_equal(x, y) = x >= y
+
+"""
+    nonlinear_equal_to(x, y)
+
+A function that falls back to `x == y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> nonlinear_equal_to(2, 2)
+true
+
+julia> nonlinear_equal_to(x, 2)
+x == 2
+```
+"""
+nonlinear_equal_to(x, y) = x == y
 
 function _rewrite_to_jump_logic(x)
     if Meta.isexpr(x, :call)
         op = if x.args[1] == :ifelse
-            return Expr(:call, _ifelse, x.args[2:end]...)
+            return Expr(:call, nonlinear_ifelse, x.args[2:end]...)
         elseif x.args[1] == :<
-            return Expr(:call, _less_than, x.args[2:end]...)
+            return Expr(:call, nonlinear_less_than, x.args[2:end]...)
         elseif x.args[1] == :>
-            return Expr(:call, _greater_than, x.args[2:end]...)
+            return Expr(:call, nonlinear_greater_than, x.args[2:end]...)
         elseif x.args[1] == :<=
-            return Expr(:call, _less_equal, x.args[2:end]...)
+            return Expr(:call, nonlinear_less_equal, x.args[2:end]...)
         elseif x.args[1] == :>=
-            return Expr(:call, _greater_equal, x.args[2:end]...)
+            return Expr(:call, nonlinear_greater_equal, x.args[2:end]...)
         elseif x.args[1] == :(==)
-            return Expr(:call, _equal_to, x.args[2:end]...)
+            return Expr(:call, nonlinear_equal_to, x.args[2:end]...)
         end
     elseif Meta.isexpr(x, :||)
-        return Expr(:call, _or, x.args...)
+        return Expr(:call, nonlinear_or, x.args...)
     elseif Meta.isexpr(x, :&&)
-        return Expr(:call, _and, x.args...)
+        return Expr(:call, nonlinear_and, x.args...)
     elseif Meta.isexpr(x, :comparison)
         lhs = Expr(:call, x.args[2], x.args[1], x.args[3])
         rhs = Expr(:call, x.args[4], x.args[3], x.args[5])
         return Expr(
             :call,
-            _and,
+            nonlinear_and,
             _rewrite_to_jump_logic(lhs),
             _rewrite_to_jump_logic(rhs),
         )
@@ -528,7 +695,7 @@ function _rewrite_expression(expr)
     ret = gensym()
     code = quote
         $parse_aff
-        $ret = $flatten($new_aff)
+        $ret = $flatten!($new_aff)
     end
     return ret, code
 end

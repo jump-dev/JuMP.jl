@@ -5,14 +5,35 @@
 
 # # Mixed complementarity problems
 
-# This tutorial is a collection of examples of small mixed-complementarity
-# programs.
+# This tutorial is a collection of mixed complementarity programs.
 
 # This tutorial uses the following packages:
 
 using JuMP
 import PATHSolver
 import Test  #src
+
+# ## Background
+
+# A mixed complementarity problem has the form:
+# ```math
+# \begin{align}
+#     \;\;\text{s.t.} & F_i(x) \perp x_i & i = 1 \ldots n \\
+#     & l_i \le x_i \le u_i & i = 1 \ldots n.
+# \end{align}
+# ```
+# where the ``\perp`` constraint enforces the following relations:
+#
+#  - If ``l_i < x_i < u_i``, then ``F_i(x) == 0``
+#  - If ``l_i == x_i``, then ``F_i(x) \ge 0``
+#  - If ``x_i == u_i``, then ``F_i(x) \le 0``
+
+# You may have seen a complementarity problem written as
+# ``0 \le F(x) \perp x \ge 0``. This is a special case of a mixed
+# complementarity problem in which ``l_i = 0`` and ``u_i = \infty``.
+
+# Importantly, a mixed complementarity problem does not have an objective, and
+# no other constraint types are present.
 
 # ## Linear complementarity
 

@@ -111,6 +111,203 @@ julia> sin(sin(1.0))
 0.7456241416655579
 ```
 
+## Nonlinear expressions in detail
+
+Nonlinear expressions in JuMP are represented by a [`NonlinearExpr`](@ref)
+object.
+
+### Constructors
+
+Nonlinear expressions can be created using the [`NonlinearExpr`](@ref)
+constructors:
+
+```jldoctest nonlinear_expressions
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> expr = NonlinearExpr(:sin, Any[x])
+sin(x)
+```
+
+or via operator overloading:
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> expr = sin(x)
+sin(x)
+```
+
+### Supported arguments
+
+Nonlinear expressions can contain a mix of numbers, [`AffExpr`](@ref),
+[`QuadExpr`](@ref), and other [`NonlinearExpr`](@ref):
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> aff = x + 1;
+
+julia> quad = x^2 + x;
+
+julia> expr = cos(x) * sin(quad) + aff
+(cos(x) * sin(x² + x)) + (x + 1)
+```
+
+### Supported operators
+
+The list of supported operators may vary between solvers. Given an optimizer,
+query the list of supported operators using
+[`MOI.ListOfSupportedNonlinearOperators`](@ref):
+```jldoctest; filter=[r":.+", r"[0-9]+\-element"]
+julia> import Ipopt
+
+julia> import MathOptInterface as MOI
+
+julia> MOI.get(Ipopt.Optimizer(), MOI.ListOfSupportedNonlinearOperators())
+85-element Vector{Symbol}:
+ :+
+ :-
+ :abs
+ :sqrt
+ :cbrt
+ :abs2
+ :inv
+ :log
+ :log10
+ :log2
+ ⋮
+ :min
+ :max
+ :&&
+ :||
+ :<=
+ :(==)
+ :>=
+ :<
+ :>
+```
+
+In some univariate cases, the operator is defined in [`SpecialFunctions.jl`](https://github.com/JuliaMath/SpecialFunctions.jl).
+To use these functions, you must explicitly import `SpecialFunctions.jl`
+```jldoctest
+julia> import Ipopt
+
+julia> op = MOI.get(Ipopt.Optimizer(), MOI.ListOfSupportedNonlinearOperators());
+
+julia> :erfcx in op
+true
+
+julia> :dawson in op
+true
+
+julia> import SpecialFunctions
+
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @expression(model, SpecialFunctions.erfcx(x))
+erfcx(x)
+
+julia> @expression(model, SpecialFunctions.dawson(x))
+dawson(x)
+```
+
+### Limitations
+
+Some nonlinear expressions cannot be created via operator overloading. For
+example, to minimize the likelihood of bugs in user-code, we have not overloaded
+comparisons such as `<` and `>=` between JuMP objects:
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> x < 1
+ERROR: Cannot evaluate `<` between a variable and a number.
+[...]
+```
+
+Instead, wrap the expression in the [`@expression`](@ref) macro:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> expr = @expression(model, x < 1)
+x < 1
+```
+
+For technical reasons, other operators that are not overloaded include `||`,
+`&&`, and `ifelse`.
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> expr = @expression(model, ifelse(x < -1 || x >= 1, x^2, 0.0))
+ifelse((x < -1) || (x >= 1), x², 0.0)
+```
+
+As an alternative, use the `JuMP.nonlinear_` functions, which fallback to the
+various comparison and logical operators:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> expr = nonlinear_ifelse(
+           nonlinear_or(
+               nonlinear_less_than(x, -1),
+               nonlinear_greater_equal(x, 1)
+           ),
+           x^2,
+           0.0,
+       )
+ifelse((x < -1) || (x >= 1), x², 0.0)
+```
+
+The available functions are:
+
+| JuMP function                     | Julia function |
+| :-------------------------------- | :------------- |
+| [`nonlinear_ifelse`](@ref)        | `ifelse`       |
+| [`nonlinear_and`](@ref)           | `&&`           |
+| [`nonlinear_or`](@ref)            | `\|\|`           |
+| [`nonlinear_greater_than`](@ref)  | `>`            |
+| [`nonlinear_greater_equal`](@ref) | `>=`           |
+| [`nonlinear_less_than`](@ref)     | `<`            |
+| [`nonlinear_less_equal`](@ref)    | `<=`           |
+| [`nonlinear_equal_to`](@ref)      | `==`           |
+
+### Fields
+
+Each [`NonlinearExpr`](@ref) has two fields.
+
+The `.head` field is a `Symbol` that represents the operator being called:
+
+```jldoctest nonlinear_expressions
+julia> expr.head
+:sin
+```
+
+The `.args` field is a `Vector{Any}` containing the arguments to the operator:
+
+```jldoctest nonlinear_expressions
+julia> expr.args
+1-element Vector{Any}:
+ x
+```
+
 ## User-defined functions
 
 In addition to a standard list of univariate and multivariate functions
@@ -130,10 +327,10 @@ using JuMP
 square(x) = x^2
 f(x, y) = (x - 1)^2 + (y - 2)^2
 model = Model();
-@register(model, my_square, 1, square)
-@register(model, my_f, 2, f)
+@register(model, udf_square, 1, square)
+@register(model, udf_f, 2, f)
 @variable(model, x[1:2]);
-@objective(model, Min, my_f(x[1], my_square(x[2])))
+@objective(model, Min, udf_f(x[1], udf_square(x[2])))
 ```
 
 The arguments to [`@register`](@ref) are:
@@ -160,10 +357,12 @@ using JuMP
 square(x) = x^2
 f(x, y) = (x - 1)^2 + (y - 2)^2
 model = Model();
-my_square = add_user_defined_function(model, :my_square, 1, square)
-my_f = add_user_defined_function(model, :my_f, 2, f)
+udf_square = add_user_defined_function(model, :udf_square, 1, square)
+model[:udf_square] = udf_square
+udf_f = add_user_defined_function(model, :udf_f, 2, f)
+model[:udf_f] = udf_f
 @variable(model, x[1:2]);
-@objective(model, Min, my_f(x[1], my_square(x[2])))
+@objective(model, Min, udf_f(x[1], udf_square(x[2])))
 ```
 
 This has two important consequences.
@@ -182,20 +381,55 @@ Stacktrace:
 ```
 and `square` already exists as a Julia function.
 
-Second, you can construct and use [`UserDefinedFunction`](@ref)s outside the
-macros.
+Second, you can obtain a reference to the user-defined function using the
+`model[:key]` syntax:
 
 ```@repl
 using JuMP
 square(x) = x^2
 model = Model();
-@register(model, my_square, 1, square)
-@variable(model, x)
-typeof(my_square)
-x_squared = my_square(x)
-typeof(x_squared)
-my_square_2 = UserDefinedFunction(:my_square)
-my_square_2(x_squared)
+@register(model, udf_square, 1, square)
+udf_square_2 = model[:udf_square]
+```
+
+### Invalid redefinition of constant
+
+A common error encountered is `invalid redefinition of constant`. This occurs
+when the name of the user-defined function is the same as an existing function:
+```jldoctest nonlinear_invalid_redefinition
+julia> using JuMP
+
+julia> model = Model();
+
+julia> f(x) = x^2
+f (generic function with 1 method)
+
+julia> @register(model, f, 1, f)
+ERROR: invalid redefinition of constant f
+[...]
+```
+
+If you evaluate the function without registering it, JuMP will trace the
+function using operator overloading:
+```jldoctest nonlinear_invalid_redefinition
+julia> @variable(model, x);
+
+julia> f(x)
+x²
+```
+
+To force JuMP to treat `f` as a user-defined function and not trace it, register
+the function using [`add_user_defined_function`](@ref) and define a new method
+which manually creates a [`NonlinearExpr`](@ref):
+```jldoctest nonlinear_invalid_redefinition
+julia> _ = add_user_defined_function(model, :f, 1, f)
+UserDefinedFunction{typeof(f)}(:f, f)
+
+julia> f(x::AbstractJuMPScalar) = NonlinearExpr(:f, Any[x])
+f (generic function with 2 methods)
+
+julia> @expression(model, log(f(x)))
+log(f(x))
 ```
 
 ### Register gradients and Hessians
@@ -217,9 +451,9 @@ f(x) = x^2
 ∇f(x) = 2x
 ∇²f(x) = 2
 model = Model();
-@register(model, my_square, 1, f, ∇f, ∇²f)  # Providing ∇²f is optional
+@register(model, udf_f, 1, f, ∇f, ∇²f)  # Providing ∇²f is optional
 @variable(model, x)
-@objective(model, Min, my_square(x))
+@objective(model, Min, udf_f(x))
 ```
 
 #### Multivariate functions
@@ -250,7 +484,7 @@ model = Model();
 ```
 
 You may assume the Hessian matrix `H` is initialized with zeros, and because `H`
-is symmetric, you need only to fill in the non-zero of the lower-triangular
+is symmetric, you need only to fill in the non-zero lower-triangular
 terms. The matrix type passed in as `H` depends on the automatic differentiation
 system, so make sure the first argument to the Hessian function supports an
 `AbstractMatrix` (it may be something other than `Matrix{Float64}`). Moreover,
@@ -277,8 +511,8 @@ using JuMP
 model = Model();
 @variable(model, x[1:5])
 f(x::Vector) = sum(x[i]^i for i in 1:length(x))
-@register(model, my_f, 5, (x...) -> f(collect(x)))
-@objective(model, Min, my_f(x...))
+@register(model, udf_f, 5, (x...) -> f(collect(x)))
+@objective(model, Min, udf_f(x...))
 ```
 
 ### Automatic differentiation
@@ -292,7 +526,7 @@ differentiation of user-defined functions.
     computed derivatives are not subject to approximation error.
 
 JuMP uses [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) to
-perform automatic differentiation; see the ForwardDiff.jl
+perform automatic differentiation of user-defined functions; see the ForwardDiff.jl
 [documentation](https://www.juliadiff.org/ForwardDiff.jl/v0.10.2/user/limitations.html)
 for a description of how to write a function suitable for automatic
 differentiation.

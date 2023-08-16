@@ -95,7 +95,7 @@ function test_extension_flatten_nary(
     expr_plus = GenericNonlinearExpr{VariableRefType}(:+, Any[x])
     expr_mult = GenericNonlinearExpr{VariableRefType}(:*, Any[x])
     expr_sin = GenericNonlinearExpr{VariableRefType}(:sin, Any[x])
-    to_string(x) = string(flatten(x))
+    to_string(x) = string(flatten!(x))
     @test to_string(+(expr_plus, 1)) == "x + 1.0"
     @test to_string(+(1, expr_plus)) == "1.0 + x"
     @test to_string(+(expr_plus, x)) == "x + x"
@@ -138,7 +138,7 @@ function test_extension_latex(ModelType = Model, VariableRefType = VariableRef)
     @test function_string(MIME("text/plain"), sin(x)) == "sin(x)"
     @expression(model, g, ifelse(x > 0, sin(x), x + cos(x)^2))
     @test function_string(MIME("text/latex"), g) ==
-          raw"\textsf{ifelse}\left({\left({x} > {0}\right)}, {\textsf{sin}\left({x}\right)}, {\left({x} + {\left({\textsf{cos}\left({x}\right)} ^ {2.0}\right)}\right)}\right)"
+          raw"\textsf{ifelse}\left({x} > {0}, {\textsf{sin}\left({x}\right)}, {x} + {\left({\textsf{cos}\left({x}\right)} ^ {2.0}\right)}\right)"
     return
 end
 
@@ -476,6 +476,16 @@ function test_register_univariate()
     return
 end
 
+function test_register_eval_non_jump()
+    model = Model()
+    @variable(model, x)
+    @register(model, f, 1, x -> x^2)
+    @test f(2.0) == 4.0
+    @register(model, g, 2, (x, y) -> x^2 - sin(y))
+    @test g(2.0, 3.0) == 4.0 - sin(3.0)
+    return
+end
+
 function test_register_univariate_gradient()
     model = Model()
     @variable(model, x)
@@ -591,7 +601,7 @@ function test_value_expression()
     y = QuadExpr(x + 1)
     @test value(f, my_foo(y)) ≈ (value(f, y) - 1)^2
     @test value(f, my_bar(2.2, x)) ≈ sqrt(2.2 - 1.1)
-    bad_udf = UserDefinedFunction(:bad_udf)
+    bad_udf = UserDefinedFunction(:bad_udf, f)
     @test_throws(
         ErrorException(
             "Unable to evaluate nonlinear operator bad_udf because it is not " *
@@ -635,7 +645,14 @@ end
 function test_operate_shortcut_ma_operate!!_add_mul()
     model = Model()
     @variable(model, x)
-    @expression(model, sum(sin(x) for i in 1:3))
+    @test isequal_canonical(
+        @expression(model, sum(sin(x) for i in 1:3)),
+        NonlinearExpr(:+, Any[sin(x), sin(x), sin(x)]),
+    )
+    @test isequal_canonical(JuMP._MA.add_mul(sin(x), 2, x), sin(x) + 2x)
+    @test isequal_canonical(JuMP._MA.add_mul(sin(x), 2, x, 2), sin(x) + 4x)
+    @test isequal_canonical(JuMP._MA.sub_mul(sin(x), 2, x), sin(x) - 2x)
+    @test isequal_canonical(JuMP._MA.sub_mul(sin(x), 2, x, 2), sin(x) - 4x)
     return
 end
 
@@ -649,10 +666,27 @@ function test_show_nonlinear_model()
     return
 end
 
-function test_error_both_nl_interfaces()
+function test_error_both_nl_interfaces_constraint()
     model = Model()
     @variable(model, x)
     @constraint(model, log(x) <= 1)
+    @NLconstraint(model, log(x) <= 1)
+    @test_throws(
+        ErrorException(
+            "Cannot optimize a model which contains the features from " *
+            "both the legacy (macros beginning with `@NL`) and new " *
+            "(`NonlinearExpr`) nonlinear interfaces. You must use one or " *
+            "the other.",
+        ),
+        optimize!(model),
+    )
+    return
+end
+
+function test_error_both_nl_interfaces_objective()
+    model = Model()
+    @variable(model, x)
+    @objective(model, Max, log(x))
     @NLconstraint(model, log(x) <= 1)
     @test_throws(
         ErrorException(
@@ -714,6 +748,48 @@ function test_VectorNonlinearFunction_objective()
     @objective(model, Min, F)
     @test objective_function_type(model) == Vector{NonlinearExpr}
     @test isequal_canonical(objective_function(model), F)
+    return
+end
+
+function test_operator_overload_complex_error()
+    model = Model()
+    @variable(model, x)
+    f = (1 + 2im) * x
+    @test_throws(
+        ErrorException(
+            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
+            "valued: `($f)::$(typeof(f))`",
+        ),
+        sin(f),
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
+            "valued: `($(1 + 2im))::$(typeof(1 + 2im))`",
+        ),
+        +(sin(x), 1 + 2im),
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
+            "valued: `($(1 + 2im))::$(typeof(1 + 2im))`",
+        ),
+        +(1 + 2im, sin(x)),
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
+            "valued: `($f)::$(typeof(f))`",
+        ),
+        +(f, sin(x)),
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot build `GenericNonlinearExpr` because a term is complex-" *
+            "valued: `($f)::$(typeof(f))`",
+        ),
+        +(sin(x), f),
+    )
     return
 end
 

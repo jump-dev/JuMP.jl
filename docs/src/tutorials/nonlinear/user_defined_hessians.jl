@@ -69,7 +69,7 @@ end
 
 model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2])
-@register(model, f_rosenbrock, 2, rosenbrock, ∇rosenbrock, ∇²rosenbrock)
-@objective(model, Min, f_rosenbrock(x[1], x[2]))
+@register(model, udf_rosenbrock, 2, rosenbrock, ∇rosenbrock, ∇²rosenbrock)
+@objective(model, Min, udf_rosenbrock(x[1], x[2]))
 optimize!(model)
 solution_summary(model; verbose = true)

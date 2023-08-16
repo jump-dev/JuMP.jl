@@ -40,11 +40,13 @@ multiple elements.
 Given a subtype of [`AbstractVariableRef`](@ref), `V`, for `GenericNonlinearExpr{V}`,
 each element must be one of the following:
 
- * A constant value of type `<:Number`
+ * A constant value of type `<:Real`
  * A `V`
- * A [`GenericAffExpr{C,V}`](@ref)
- * A [`GenericQuadExpr{C,V}`](@ref)
+ * A [`GenericAffExpr{T,V}`](@ref)
+ * A [`GenericQuadExpr{T,V}`](@ref)
  * A [`GenericNonlinearExpr{V}`](@ref)
+
+where `T<:Real` and `T == value_type(V)`.
 
 ## Unsupported operators
 
@@ -157,7 +159,9 @@ function function_string(::MIME"text/plain", x::GenericNonlinearExpr)
                     push!(stack, arg.args[i])
                     push!(stack, ", ")
                 end
-                push!(stack, arg.args[1])
+                if length(arg.args) >= 1
+                    push!(stack, arg.args[1])
+                end
             end
         else
             print(io, arg)
@@ -173,11 +177,21 @@ function function_string(::MIME"text/latex", x::GenericNonlinearExpr)
         arg = pop!(stack)
         if arg isa GenericNonlinearExpr
             if arg.head in _PREFIX_OPERATORS && length(arg.args) > 1
-                print(io, "\\left({")
-                push!(stack, "}\\right)")
+                if _needs_parentheses(arg.args[1])
+                    print(io, "\\left({")
+                end
+                if _needs_parentheses(arg.args[end])
+                    push!(stack, "}\\right)")
+                end
                 for i in length(arg.args):-1:2
                     push!(stack, arg.args[i])
+                    if _needs_parentheses(arg.args[i])
+                        push!(stack, "\\left({")
+                    end
                     push!(stack, "} $(arg.head) {")
+                    if _needs_parentheses(arg.args[i-1])
+                        push!(stack, "}\\right)")
+                    end
                 end
                 push!(stack, arg.args[1])
             else
@@ -187,7 +201,9 @@ function function_string(::MIME"text/latex", x::GenericNonlinearExpr)
                     push!(stack, arg.args[i])
                     push!(stack, "}, {")
                 end
-                push!(stack, arg.args[1])
+                if length(arg.args) >= 1
+                    push!(stack, arg.args[1])
+                end
             end
         else
             print(io, arg)
@@ -275,6 +291,25 @@ end
 
 # Univariate operators
 
+_is_real(::Any) = false
+_is_real(::Real) = true
+_is_real(::AbstractVariableRef) = true
+_is_real(::GenericAffExpr{<:Real}) = true
+_is_real(::GenericQuadExpr{<:Real}) = true
+_is_real(::GenericNonlinearExpr) = true
+_is_real(::NonlinearExpression) = true
+_is_real(::NonlinearParameter) = true
+
+function _throw_if_not_real(x)
+    if !_is_real(x)
+        error(
+            "Cannot build `GenericNonlinearExpr` because a term is " *
+            "complex-valued: `($x)::$(typeof(x))`",
+        )
+    end
+    return
+end
+
 for f in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
     op = Meta.quot(f)
     if f == :+
@@ -285,6 +320,7 @@ for f in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
         end
     elseif isdefined(Base, f)
         @eval function Base.$(f)(x::AbstractJuMPScalar)
+            _throw_if_not_real(x)
             return GenericNonlinearExpr{variable_ref_type(x)}($op, x)
         end
     elseif isdefined(MOI.Nonlinear, :SpecialFunctions)
@@ -292,6 +328,7 @@ for f in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
         SF = MOI.Nonlinear.SpecialFunctions
         if isdefined(SF, f)
             @eval function $(SF).$(f)(x::AbstractJuMPScalar)
+                _throw_if_not_real(x)
                 return GenericNonlinearExpr{variable_ref_type(x)}($op, x)
             end
         end
@@ -310,14 +347,20 @@ for f in (:+, :-, :*, :^, :/, :atan)
     op = Meta.quot(f)
     @eval begin
         function Base.$(f)(x::AbstractJuMPScalar, y::_Constant)
+            _throw_if_not_real(x)
+            _throw_if_not_real(y)
             rhs = convert(Float64, _constant_to_number(y))
             return GenericNonlinearExpr{variable_ref_type(x)}($op, x, rhs)
         end
         function Base.$(f)(x::_Constant, y::AbstractJuMPScalar)
+            _throw_if_not_real(x)
+            _throw_if_not_real(y)
             lhs = convert(Float64, _constant_to_number(x))
             return GenericNonlinearExpr{variable_ref_type(y)}($op, lhs, y)
         end
         function Base.$(f)(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
+            _throw_if_not_real(x)
+            _throw_if_not_real(y)
             return GenericNonlinearExpr{variable_ref_type(x)}($op, x, y)
         end
     end
@@ -328,6 +371,7 @@ function _MA.operate!!(
     x::GenericNonlinearExpr,
     y::AbstractJuMPScalar,
 )
+    _throw_if_not_real(x)
     if x.head == :+
         push!(x.args, y)
         return x
@@ -336,10 +380,10 @@ function _MA.operate!!(
 end
 
 """
-    flatten(expr::GenericNonlinearExpr)
+    flatten!(expr::GenericNonlinearExpr)
 
-Flatten a nonlinear expression by lifting nested `+` and `*` nodes into a single
-n-ary operation.
+Flatten a nonlinear expression in-place by lifting nested `+` and `*` nodes into
+a single n-ary operation.
 
 ## Motivation
 
@@ -358,54 +402,86 @@ x
 julia> y = prod(x for i in 1:4)
 ((x²) * x) * x
 
-julia> flatten(y)
+julia> flatten!(y)
 (x²) * x * x
 
-julia> flatten(sin(y))
+julia> flatten!(sin(prod(x for i in 1:4)))
 sin((x²) * x * x)
 ```
 """
-function flatten(expr::GenericNonlinearExpr{V}) where {V}
-    root = GenericNonlinearExpr{V}(expr.head, Any[])
-    nodes_to_visit = Any[(root, arg) for arg in reverse(expr.args)]
-    while !isempty(nodes_to_visit)
-        parent, arg = pop!(nodes_to_visit)
-        if !(arg isa GenericNonlinearExpr)
-            # Not a nonlinear expression, so can use recursion.
-            push!(parent.args, flatten(arg))
-        elseif parent.head in (:+, :*) && arg.head == parent.head
-            # A special case: the arg can be lifted to an n-ary argument of the
-            # parent.
-            for n in reverse(arg.args)
-                push!(nodes_to_visit, (parent, n))
-            end
-        else
-            # The default case for nonlinear expressions. Put the args on the
-            # stack, so that we may walk them later.
-            for n in reverse(arg.args)
-                push!(nodes_to_visit, (arg, n))
-            end
-            empty!(arg.args)
-            push!(parent.args, arg)
+function flatten!(expr::GenericNonlinearExpr{V}) where {V}
+    if !any(Base.Fix1(_needs_flatten, expr), expr.args)
+        return expr
+    end
+    stack = Tuple{GenericNonlinearExpr{V},Int,GenericNonlinearExpr{V}}[]
+    for i in length(expr.args):-1:1
+        if _needs_flatten(expr, expr.args[i])
+            push!(stack, (expr, i, expr.args[i]))
         end
     end
-    return root
+    while !isempty(stack)
+        parent, i, arg = pop!(stack)
+        if parent.head in (:+, :*) && arg.head == parent.head
+            n = length(parent.args)
+            resize!(parent.args, n + length(arg.args) - 1)
+            for j in length(arg.args):-1:1
+                parent_index = j == 1 ? i : n + j - 1
+                if _needs_flatten(parent, arg.args[j])
+                    push!(stack, (parent, parent_index, arg.args[j]))
+                else
+                    parent.args[parent_index] = arg.args[j]
+                end
+            end
+        else
+            parent.args[i] = arg
+            for j in length(arg.args):-1:1
+                if _needs_flatten(arg, arg.args[j])
+                    push!(stack, (arg, j, arg.args[j]))
+                end
+            end
+        end
+    end
+    return expr
 end
 
-flatten(expr) = expr
+flatten!(expr) = expr
 
-function _ifelse(a::AbstractJuMPScalar, x, y)
+_is_expr(::Any, ::Any) = false
+_is_expr(x::GenericNonlinearExpr, op::Symbol) = x.head == op
+
+_needs_flatten(::GenericNonlinearExpr, ::Any) = false
+
+function _needs_flatten(parent::GenericNonlinearExpr, arg::GenericNonlinearExpr)
+    if _is_expr(parent, :+)
+        return _is_expr(arg, :+)
+    elseif _is_expr(parent, :*)
+        return _is_expr(arg, :*)
+    else
+        # Heuristic: we decide to flatten if `parent` is not a + or * operator,
+        # but if one level down there are + or * nodes. This let's us flatten
+        # sin(+(x, +(y, z)) => sin(+(x, y, z)), but not a more complicated
+        # expression like log(sin(+(x, +(y, z))).
+        #
+        # If you have a benchmark that requires modifying this code, consider
+        # instead addinng `flatten!(::Any; force::Bool)` that would allow the
+        # user to override this decision and flatten the entire tree.
+        return any(Base.Fix2(_is_expr, :+), arg.args) ||
+               any(Base.Fix2(_is_expr, :*), arg.args)
+    end
+end
+
+function nonlinear_ifelse(a::AbstractJuMPScalar, x, y)
     return GenericNonlinearExpr{variable_ref_type(a)}(:ifelse, Any[a, x, y])
 end
 
 for (f, op) in (
-    :_and => :&&,
-    :_or => :||,
-    :_less_than => :(<),
-    :_greater_than => :(>),
-    :_less_equal => :(<=),
-    :_greater_equal => :(>=),
-    :_equal_to => :(==),
+    :nonlinear_and => :&&,
+    :nonlinear_or => :||,
+    :nonlinear_less_than => :(<),
+    :nonlinear_greater_than => :(>),
+    :nonlinear_less_equal => :(<=),
+    :nonlinear_greater_equal => :(>=),
+    :nonlinear_equal_to => :(==),
 )
     op = Meta.quot(op)
     @eval begin
@@ -448,24 +524,28 @@ function check_belongs_to_model(
     return
 end
 
-function moi_function(f::GenericNonlinearExpr)
-    ret = MOI.ScalarNonlinearFunction(f.head, Any[])
-    stack = Tuple{MOI.ScalarNonlinearFunction,Any}[]
-    for arg in reverse(f.args)
-        push!(stack, (ret, arg))
+moi_function(x::Number) = x
+
+function moi_function(f::GenericNonlinearExpr{V}) where {V}
+    ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
+    stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
+    for i in length(f.args):-1:1
+        if f.args[i] isa GenericNonlinearExpr{V}
+            push!(stack, (ret, i, f.args[i]))
+        else
+            ret.args[i] = moi_function(f.args[i])
+        end
     end
     while !isempty(stack)
-        parent, arg = pop!(stack)
-        if arg isa GenericNonlinearExpr
-            new_ret = MOI.ScalarNonlinearFunction(arg.head, Any[])
-            push!(parent.args, new_ret)
-            for child in reverse(arg.args)
-                push!(stack, (new_ret, child))
+        parent, i, arg = pop!(stack)
+        child = MOI.ScalarNonlinearFunction(arg.head, similar(arg.args))
+        parent.args[i] = child
+        for j in length(arg.args):-1:1
+            if arg.args[j] isa GenericNonlinearExpr{V}
+                push!(stack, (child, j, arg.args[j]))
+            else
+                child.args[j] = moi_function(arg.args[j])
             end
-        elseif arg isa Number
-            push!(parent.args, arg)
-        else
-            push!(parent.args, moi_function(arg))
         end
     end
     return ret
@@ -709,11 +789,12 @@ function _MA.promote_operation(
 end
 
 """
-    UserDefinedFunction(head::Symbol)
+    UserDefinedFunction(head::Symbol, func::Function)
 
-A struct representing a user-defined function named `head`. This function must
-have already been added to the model using [`add_user_defined_function`](@ref)
-or [`@register`](@ref).
+A struct representing a user-defined function named `head`.
+
+This function must have already been added to the model using
+[`add_user_defined_function`](@ref) or [`@register`](@ref).
 
 ## Example
 
@@ -732,22 +813,29 @@ julia> ∇f(x::Float64) = 2 * x
 julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
-julia> add_user_defined_function(model, :foo, 1, f, ∇f, ∇²f)
-UserDefinedFunction(:foo)
+julia> @register(model, udf_f, 1, f, ∇f, ∇²f)
+UserDefinedFunction{typeof(f)}(:udf_f, f)
 
-julia> bar = UserDefinedFunction(:foo)
-UserDefinedFunction(:foo)
+julia> bar = UserDefinedFunction(:udf_f, f)
+UserDefinedFunction{typeof(f)}(:udf_f, f)
 
 julia> @objective(model, Min, bar(x))
-foo(x)
+udf_f(x)
+
+julia> bar(2.0)
+4.0
 ```
 """
-struct UserDefinedFunction
+struct UserDefinedFunction{F}
     head::Symbol
+    func::F
 end
 
 function (f::UserDefinedFunction)(args...)
-    return GenericNonlinearExpr(f.head, Any[a for a in args])
+    if any(Base.Fix2(isa, AbstractJuMPScalar), args)
+        return GenericNonlinearExpr(f.head, Any[a for a in args])
+    end
+    return f.func(args...)
 end
 
 """
@@ -784,11 +872,14 @@ julia> ∇f(x::Float64) = 2 * x
 julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
-julia> foo = add_user_defined_function(model, :foo, 1, f, ∇f, ∇²f)
-UserDefinedFunction(:foo)
+julia> udf_f = add_user_defined_function(model, :udf_f, 1, f, ∇f, ∇²f)
+UserDefinedFunction{typeof(f)}(:udf_f, f)
 
-julia> @objective(model, Min, foo(x))
-foo(x)
+julia> @objective(model, Min, udf_f(x))
+udf_f(x)
+
+julia> udf_f(2.0)
+4.0
 ```
 """
 function add_user_defined_function(
@@ -810,7 +901,7 @@ function add_user_defined_function(
     # MOI.Nonlinear will automatically check for autodiff and common mistakes
     # and throw a nice informative error.
     MOI.set(model, MOI.UserDefinedFunction(op, dim), args)
-    return UserDefinedFunction(op)
+    return UserDefinedFunction(op, args[1])
 end
 
 """
@@ -836,11 +927,20 @@ julia> ∇f(x::Float64) = 2 * x
 julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
-julia> @register(model, foo, 1, f, ∇f, ∇²f)
-UserDefinedFunction(:foo)
+julia> @register(model, udf_f, 1, f, ∇f, ∇²f)
+UserDefinedFunction{typeof(f)}(:udf_f, f)
 
-julia> @objective(model, Min, foo(x))
-foo(x)
+julia> @objective(model, Min, udf_f(x))
+udf_f(x)
+
+julia> udf_f(2.0)
+4.0
+
+julia> model[:udf_f]
+UserDefinedFunction{typeof(f)}(:udf_f, f)
+
+julia> model[:udf_f](x)
+udf_f(x)
 ```
 
 ## Non-macro version
@@ -849,29 +949,40 @@ This macro is provided as helpful syntax that matches the style of the rest of
 the JuMP macros. However, you may also create user-defined functions outside the
 macros using [`add_user_defined_function`](@ref). For example:
 
-```julia
+```jldoctest
 julia> model = Model();
 
-julia> @register(model, f, 1, x -> x^2)
-UserDefinedFunction(:f)
+julia> f(x) = x^2
+f (generic function with 1 method)
+
+julia> @register(model, udf_f, 1, f)
+UserDefinedFunction{typeof(f)}(:udf_f, f)
 ```
 is equivalent to
-```julia
+```jldoctest
 julia> model = Model();
 
-julia> f = add_user_defined_function(model, :f, 1, x -> x^2)
-UserDefinedFunction(:f)
+julia> f(x) = x^2
+f (generic function with 1 method)
+
+julia> udf_f = model[:udf_f] = add_user_defined_function(model, :udf_f, 1, f)
+UserDefinedFunction{typeof(f)}(:udf_f, f)
 ```
 """
 macro register(model, op, args...)
-    rhs = Expr(
+    code = Expr(
         :call,
         add_user_defined_function,
         esc(model),
         Meta.quot(op),
         esc.(args)...,
     )
-    return Expr(:(=), esc(op), rhs)
+    return _macro_assign_and_return(
+        code,
+        gensym(),
+        op;
+        model_for_registering = esc(model),
+    )
 end
 
 function jump_function_type(
