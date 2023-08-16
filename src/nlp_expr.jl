@@ -894,9 +894,9 @@ function moi_function_type(::Type{<:Vector{<:AbstractJuMPScalar}})
 end
 
 function moi_function(f::Vector{<:AbstractJuMPScalar})
-    return MOI.VectorNonlinearFunction(map(moi_function, f))
+    return MOI.VectorNonlinearFunction(f)
 end
 
 function MOI.VectorNonlinearFunction(f::Vector{<:AbstractJuMPScalar})
-    return moi_function(f)
+    return MOI.VectorNonlinearFunction(map(moi_function, f))
 end
