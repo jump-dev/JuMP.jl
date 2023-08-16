@@ -57,6 +57,19 @@ function test_scalar_error_F_F()
     return
 end
 
+function test_scalar_error_0_F()
+    model = Model()
+    @variable(model, x >= 0)
+    @test_throws_strip(
+        ErrorException(
+            "In `@constraint(model, 0 ⟂ 2x - 1)`: second term must be a " *
+            "variable.",
+        ),
+        @constraint(model, 0 ⟂ 2x - 1)
+    )
+    return
+end
+
 function test_vector_complements()
     model = Model()
     @variable(model, x[1:2] >= 0)
@@ -116,6 +129,20 @@ function test_vector_error_F_F()
     return
 end
 
+function test_vector_error_0_F()
+    model = Model()
+    @variable(model, x[1:2] >= 0)
+    y = [1.2, -1.3]
+    @test_throws_strip(
+        ErrorException(
+            "In `@constraint(model, y ⟂ 2x .- 1)`: second term must " *
+            "be an array of variables.",
+        ),
+        @constraint(model, y ⟂ 2x .- 1)
+    )
+    return
+end
+
 function test_sparse_complements()
     model = Model()
     @variable(model, x[i = 1:3; isodd(i)] >= 0)
@@ -143,6 +170,27 @@ function test_sparse_key_mismatch()
     @variable(model, x[i = 1:3; isodd(i)] >= 0)
     @variable(model, y[i = 3:5; isodd(i)] >= 0)
     @test_throws(ErrorException, @constraint(model, 2x .- 1 ⟂ y))
+    return
+end
+
+function test_F_constant_scalar()
+    model = Model()
+    @variable(model, 0 <= x <= 1)
+    @constraint(model, c, 0 ⟂ x)
+    obj = constraint_object(c)
+    @test obj.func == AffExpr[0, x]
+    @test obj.set == MOI.Complements(2)
+    return
+end
+
+function test_F_constant_vector()
+    model = Model()
+    @variable(model, 0 <= x[1:2] <= 1)
+    F = [1.2, -1.3]
+    @constraint(model, c, F ⟂ x)
+    obj = constraint_object(c)
+    @test obj.func == [F; x]
+    @test obj.set == MOI.Complements(4)
     return
 end
 
