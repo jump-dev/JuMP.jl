@@ -60,9 +60,7 @@ julia> delete(model, con[1])
 
 ## Create a nonlinear expression
 
-Use [`@expression`](@ref) to create nonlinear expression objects. The syntax
-is identical to [`@expression`](@ref), except that the expression can contain
-nonlinear terms.
+Use [`@expression`](@ref) to create nonlinear expression objects:
 
 ```jldoctest nl_expression
 julia> model = Model();

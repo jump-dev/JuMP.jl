@@ -656,12 +656,64 @@ function test_error_both_nl_interfaces()
     @NLconstraint(model, log(x) <= 1)
     @test_throws(
         ErrorException(
-            "Cannot optimize a model which contains the features from both " *
-            "the legacy and new nonlinear interfaces. You must use one or " *
+            "Cannot optimize a model which contains the features from " *
+            "both the legacy (macros beginning with `@NL`) and new " *
+            "(`NonlinearExpr`) nonlinear interfaces. You must use one or " *
             "the other.",
         ),
         optimize!(model),
     )
+    return
+end
+
+function test_VectorNonlinearFunction_moi_function()
+    model = Model()
+    @variable(model, x)
+    F = [sin(x)]
+    @test moi_function_type(typeof(F)) == MOI.VectorNonlinearFunction
+    @test isapprox(
+        moi_function(F),
+        MOI.VectorNonlinearFunction([
+            MOI.ScalarNonlinearFunction(:sin, Any[index(x)]),
+        ]),
+    )
+    @test MOI.VectorNonlinearFunction(F) ≈ moi_function(F)
+    @test jump_function_type(model, MOI.VectorNonlinearFunction) ==
+          Vector{NonlinearExpr}
+    @test isequal_canonical(jump_function(model, moi_function(F)), F)
+    return
+end
+
+function test_VectorNonlinearFunction_moi_function_AbstractJuMPScalar()
+    model = Model()
+    @variable(model, x)
+    F = [sin(x), x]
+    @test F isa Vector{AbstractJuMPScalar}
+    @test moi_function_type(typeof(F)) == MOI.VectorNonlinearFunction
+    @test isapprox(
+        moi_function(F),
+        MOI.VectorNonlinearFunction([
+            MOI.ScalarNonlinearFunction(:sin, Any[index(x)]),
+            MOI.ScalarNonlinearFunction(:+, Any[index(x)]),
+        ]),
+    )
+    @test MOI.VectorNonlinearFunction(F) ≈ moi_function(F)
+    @test jump_function_type(model, MOI.VectorNonlinearFunction) ==
+          Vector{NonlinearExpr}
+    @test isequal_canonical(
+        jump_function(model, moi_function(F)),
+        [sin(x), NonlinearExpr(:+, x)],
+    )
+    return
+end
+
+function test_VectorNonlinearFunction_objective()
+    model = Model()
+    @variable(model, x)
+    F = [sin(x), sqrt(x)]
+    @objective(model, Min, F)
+    @test objective_function_type(model) == Vector{NonlinearExpr}
+    @test isequal_canonical(objective_function(model), F)
     return
 end
 

@@ -418,8 +418,9 @@ function optimize!(
         if _uses_new_nonlinear_interface(model)
             error(
                 "Cannot optimize a model which contains the features from " *
-                "both the legacy and new nonlinear interfaces. You must use " *
-                "one or the other.",
+                "both the legacy (macros beginning with `@NL`) and new " *
+                "(`NonlinearExpr`) nonlinear interfaces. You must use one or " *
+                "the other.",
             )
         end
         evaluator = MOI.Nonlinear.Evaluator(

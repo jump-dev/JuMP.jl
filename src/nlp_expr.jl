@@ -118,16 +118,13 @@ function GenericNonlinearExpr{V}(
     return GenericNonlinearExpr{V}(head, Any[args...])
 end
 
-Base.length(x::GenericNonlinearExpr) = length(x.args)
-Base.getindex(x::GenericNonlinearExpr, i::Int) = x.args[i]
-
 const _PREFIX_OPERATORS =
     (:+, :-, :*, :/, :^, :||, :&&, :>, :<, :(<=), :(>=), :(==))
 
 _needs_parentheses(::Union{Number,AbstractVariableRef}) = false
 _needs_parentheses(::Any) = true
 function _needs_parentheses(x::GenericNonlinearExpr)
-    return x.head in _PREFIX_OPERATORS && length(x) > 1
+    return x.head in _PREFIX_OPERATORS && length(x.args) > 1
 end
 
 function function_string(::MIME"text/plain", x::GenericNonlinearExpr)
@@ -135,15 +132,15 @@ function function_string(::MIME"text/plain", x::GenericNonlinearExpr)
     while !isempty(stack)
         arg = pop!(stack)
         if arg isa GenericNonlinearExpr
-            if arg.head in _PREFIX_OPERATORS && length(arg) > 1
-                if _needs_parentheses(arg[1])
+            if arg.head in _PREFIX_OPERATORS && length(arg.args) > 1
+                if _needs_parentheses(arg.args[1])
                     print(io, "(")
                 end
                 if _needs_parentheses(arg.args[end])
                     push!(stack, ")")
                 end
-                for i in length(arg):-1:2
-                    push!(stack, arg[i])
+                for i in length(arg.args):-1:2
+                    push!(stack, arg.args[i])
                     if _needs_parentheses(arg.args[i])
                         push!(stack, "(")
                     end
@@ -152,15 +149,15 @@ function function_string(::MIME"text/plain", x::GenericNonlinearExpr)
                         push!(stack, ")")
                     end
                 end
-                push!(stack, arg[1])
+                push!(stack, arg.args[1])
             else
                 print(io, arg.head, "(")
                 push!(stack, ")")
-                for i in length(arg):-1:2
-                    push!(stack, arg[i])
+                for i in length(arg.args):-1:2
+                    push!(stack, arg.args[i])
                     push!(stack, ", ")
                 end
-                push!(stack, arg[1])
+                push!(stack, arg.args[1])
             end
         else
             print(io, arg)
@@ -175,22 +172,22 @@ function function_string(::MIME"text/latex", x::GenericNonlinearExpr)
     while !isempty(stack)
         arg = pop!(stack)
         if arg isa GenericNonlinearExpr
-            if arg.head in _PREFIX_OPERATORS && length(arg) > 1
+            if arg.head in _PREFIX_OPERATORS && length(arg.args) > 1
                 print(io, "\\left({")
                 push!(stack, "}\\right)")
-                for i in length(arg):-1:2
-                    push!(stack, arg[i])
+                for i in length(arg.args):-1:2
+                    push!(stack, arg.args[i])
                     push!(stack, "} $(arg.head) {")
                 end
-                push!(stack, arg[1])
+                push!(stack, arg.args[1])
             else
                 print(io, "\\textsf{", arg.head, "}\\left({")
                 push!(stack, "}\\right)")
-                for i in length(arg):-1:2
-                    push!(stack, arg[i])
+                for i in length(arg.args):-1:2
+                    push!(stack, arg.args[i])
                     push!(stack, "}, {")
                 end
-                push!(stack, arg[1])
+                push!(stack, arg.args[1])
             end
         else
             print(io, arg)
@@ -205,8 +202,8 @@ _isequal(x::T, y::T) where {T<:AbstractJuMPScalar} = isequal_canonical(x, y)
 
 function isequal_canonical(x::GenericNonlinearExpr, y::GenericNonlinearExpr)
     return x.head == y.head &&
-           length(x) == length(y) &&
-           all(i -> _isequal(x[i], y[i]), 1:length(x))
+           length(x.args) == length(y.args) &&
+           all(i -> _isequal(x.args[i], y.args[i]), 1:length(x.args))
 end
 
 function MOI.Nonlinear.parse_expression(
@@ -229,9 +226,9 @@ function MOI.Nonlinear.parse_expression(
     return
 end
 
-function _get_node_type(data, x)
+function _get_node_type(data, x::GenericNonlinearExpr)
     id = get(data.operators.univariate_operator_to_id, x.head, nothing)
-    if length(x) == 1 && id !== nothing
+    if length(x.args) == 1 && id !== nothing
         return id, MOI.Nonlinear.NODE_CALL_UNIVARIATE
     end
     id = get(data.operators.multivariate_operator_to_id, x.head, nothing)
@@ -249,12 +246,19 @@ function _get_node_type(data, x)
     return throw(MOI.UnsupportedNonlinearOperator(x.head))
 end
 
-function _parse_without_recursion_inner(stack, data, expr, x, parent)
+function _parse_without_recursion_inner(
+    stack,
+    data,
+    expr,
+    x::GenericNonlinearExpr,
+    parent,
+)
     id, node_type = _get_node_type(data, x)
     push!(expr.nodes, MOI.Nonlinear.Node(node_type, id, parent))
     parent = length(expr.nodes)
-    for i in length(x):-1:1  # Args need to be pushed onto the stack in reverse
-        push!(stack, (parent, x[i]))
+    # Args need to be pushed onto the stack in reverse
+    for i in length(x.args):-1:1
+        push!(stack, (parent, x.args[i]))
     end
     return
 end
@@ -868,4 +872,35 @@ macro register(model, op, args...)
         esc.(args)...,
     )
     return Expr(:(=), esc(op), rhs)
+end
+
+function jump_function_type(
+    ::GenericModel{T},
+    ::Type{MOI.VectorNonlinearFunction},
+) where {T}
+    return Vector{GenericNonlinearExpr{GenericVariableRef{T}}}
+end
+
+function jump_function(
+    model::GenericModel{T},
+    f::MOI.VectorNonlinearFunction,
+) where {T}
+    return GenericNonlinearExpr{GenericVariableRef{T}}[
+        jump_function(model, fi) for fi in MOI.Utilities.eachscalar(f)
+    ]
+end
+
+# We use `AbstractJuMPScalar` as a catch-all fallback for any mix of JuMP
+# scalars that have not been dispatched by some other method.
+
+function moi_function_type(::Type{<:Vector{<:AbstractJuMPScalar}})
+    return MOI.VectorNonlinearFunction
+end
+
+function moi_function(f::Vector{<:AbstractJuMPScalar})
+    return MOI.VectorNonlinearFunction(f)
+end
+
+function MOI.VectorNonlinearFunction(f::Vector{<:AbstractJuMPScalar})
+    return MOI.VectorNonlinearFunction(map(moi_function, f))
 end
