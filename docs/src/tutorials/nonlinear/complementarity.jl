@@ -140,3 +140,75 @@ set_silent(model)
 optimize!(model)
 Test.@test isapprox(value(C_G), 0.996; atol = 1e-3)  #src
 value(K)
+
+# ## Electricity consumption
+
+# This is example is mixed complementarity formulation of example 3.3.1 from
+# D’Aertrycke, G., Ehrenmann, A., Ralph, D., & Smeers, Y. (2017). [Risk trading
+# in capacity equilibrium models](https://doi.org/10.17863/CAM.17552).
+
+# This example models a risk neutral competitive equilibrium between a producer
+# and a consumer of electricity.
+
+# In our example, we assume a producer is looking to invest in a new power
+# plant with capacity ``x`` [MW]. This plant has an annualized capital cost of
+# ``I`` [€/MW] and an operating cost of ``C`` [€/MWh]. There are 8760 hours in a
+# year.
+
+I, C, τ = 90_000, 60, 8_760
+
+# After making the capital investment, there are five possible consumption
+# scenarios, ``\omega``, which occur with probability ``\theta_\omega``. In each
+# scenario , the producer makes ``Y\_ω`` MW of electricity.
+
+θ = [0.2, 0.2, 0.2, 0.2, 0.2]
+
+# There is one consumer in the model, who has a quadratic utility function,
+# ``U(Q_ω) = A_ω Q_ω + \frac{B_ω Q_ω^2}{2}``.
+
+A, B = [300, 350, 400, 450, 500], 1
+
+# We now build and solve the mixed complementarity problem with a few brief
+# comments. The economic justification for the model would require a larger
+# tutorial than the space available here. Consult the [original text](https://doi.org/10.17863/CAM.17552)
+# for details.
+
+model = Model(PATHSolver.Optimizer)
+set_silent(model)
+## Capital investment
+@variable(model, x >= 0, start = 1)
+## Consumption in each scenario
+@variable(model, Q[ω = 1:5] >= 0, start = 1)
+## Production in each scenario
+@variable(model, Y[ω = 1:5] >= 0, start = 1)
+## Electricity price in each scenario
+@variable(model, P[ω = 1:5], start = 1)
+## Capital scarcity margin
+@variable(model, μ[ω = 1:5] >= 0, start = 1)
+## Capital investment must by paid for by expected annualized scarcity margin
+@constraint(model, I - τ * θ' * μ ⟂ x)
+## Producer's costs complement production
+@constraint(model, [ω = 1:5], C - (P[ω] - μ[ω]) ⟂ Y[ω])
+## Consumer's utilitiy complements consumption
+@constraint(model, [ω = 1:5], P[ω] - (A[ω] - B * Q[ω]) ⟂ Q[ω])
+## Production equals consummption
+@constraint(model, [ω = 1:5], Y[ω] - Q[ω] ⟂ P[ω])
+## Capacity constraint
+@constraint(model, [ω = 1:5], x - Y[ω] ⟂ μ[ω])
+optimize!(model)
+solution_summary(model)
+
+# An equilibrium solution is to build 389 MW:
+
+Test.@test isapprox(value(x), 389; atol = 1)  #src
+value(x)
+
+# The production in each scenario is:
+
+Test.@test isapprox(value.(Q), [240, 290, 340, 389, 389]; atol = 1)  #src
+value.(Q)
+
+# The price in each scenario is:
+
+Test.@test isapprox(value.(P), [60, 60, 60, 61, 111]; atol = 1)  #src
+value.(P)
