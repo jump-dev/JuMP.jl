@@ -841,15 +841,15 @@ end
 """
     add_user_defined_function(
         model::Model,
-        op::Symbol,
         dim::Int,
         f::Function,
         [∇f::Function,]
-        [∇²f::Function,]
+        [∇²f::Function];
+        [name::Symbol = Symbol(f),]
     )
 
-Add a user-definend function with `dim` input arguments to `model` and associate
-it with the operator `op`.
+Add a user-defined function with `dim` input arguments to `model` and associate
+it with the operator `name`.
 
 The function `f` evaluates the function. The optional function `∇f` evaluates
 the first derivative, and the optional function `∇²f` evaluates the second
@@ -872,11 +872,11 @@ julia> ∇f(x::Float64) = 2 * x
 julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
-julia> udf_f = add_user_defined_function(model, :udf_f, 1, f, ∇f, ∇²f)
-UserDefinedFunction{typeof(f)}(:udf_f, f)
+julia> udf_f = add_user_defined_function(model, 1, f, ∇f, ∇²f)
+UserDefinedFunction{typeof(f)}(:f, f)
 
 julia> @objective(model, Min, udf_f(x))
-udf_f(x)
+f(x)
 
 julia> udf_f(2.0)
 4.0
@@ -884,24 +884,34 @@ julia> udf_f(2.0)
 """
 function add_user_defined_function(
     model::GenericModel,
-    op::Symbol,
     dim::Int,
-    args::Vararg{Function,N},
+    f::Function,
+    args::Vararg{Function,N};
+    name::Symbol = Symbol(f),
 ) where {N}
-    if !(1 <= N <= 3)
+    nargs = 1 + N
+    if !(1 <= nargs <= 3)
         error(
-            "Unable to register user-defined function $op: invalid number of " *
-            "functions provided. Got $N, but expected 1 (if function only), " *
-            "2 (if function and gradient), or 3 (if function, gradient, and " *
-            "hesssian provided)",
+            "Unable to register user-defined function $name: invalid number " *
+            "of functions provided. Got $nargs, but expected 1 (if function " *
+            "only), 2 (if function and gradient), or 3 (if function, " *
+            "gradient, and hesssian provided)",
         )
     end
     # TODO(odow): we could add other checks here, but we won't for now because
     # down-stream solvers in MOI can add their own checks, and any solver using
     # MOI.Nonlinear will automatically check for autodiff and common mistakes
     # and throw a nice informative error.
-    MOI.set(model, MOI.UserDefinedFunction(op, dim), args)
-    return UserDefinedFunction(op, args[1])
+    MOI.set(model, MOI.UserDefinedFunction(name, dim), tuple(f, args...))
+    return UserDefinedFunction(name, f)
+end
+
+function add_user_defined_function(::GenericModel, ::Int; kwargs...)
+    return error(
+        "Unable to register user-defined function because no functions were " *
+        "provided. Expected 1 (if function only), 2 (if function and " *
+        "gradient), or 3 (if function, gradient, and hesssian provided)",
+    )
 end
 
 """
@@ -965,20 +975,19 @@ julia> model = Model();
 julia> f(x) = x^2
 f (generic function with 1 method)
 
-julia> udf_f = model[:udf_f] = add_user_defined_function(model, :udf_f, 1, f)
+julia> udf_f = model[:udf_f] = add_user_defined_function(model, 1, f; name = :udf_f)
 UserDefinedFunction{typeof(f)}(:udf_f, f)
 ```
 """
 macro register(model, op, args...)
-    code = Expr(
-        :call,
-        add_user_defined_function,
-        esc(model),
-        Meta.quot(op),
-        esc.(args)...,
-    )
     return _macro_assign_and_return(
-        code,
+        quote
+            add_user_defined_function(
+                $(esc(model)),
+                $(esc.(args)...);
+                name = $(Meta.quot(op)),
+            )
+        end,
         gensym(),
         op;
         model_for_registering = esc(model),

@@ -357,9 +357,9 @@ using JuMP
 square(x) = x^2
 f(x, y) = (x - 1)^2 + (y - 2)^2
 model = Model();
-udf_square = add_user_defined_function(model, :udf_square, 1, square)
+udf_square = add_user_defined_function(model, 1, square; name = :udf_square)
 model[:udf_square] = udf_square
-udf_f = add_user_defined_function(model, :udf_f, 2, f)
+udf_f = add_user_defined_function(model, 2, f; name = :udf_f)
 model[:udf_f] = udf_f
 @variable(model, x[1:2]);
 @objective(model, Min, udf_f(x[1], udf_square(x[2])))
@@ -374,7 +374,7 @@ julia> @register(model, square, 1, square)
 ```
 will error because it is equivalent to:
 ```julia
-julia> square = add_user_defined_function(model, :square, 1, square)
+julia> square = add_user_defined_function(model, 1, square; name = :square)
 ERROR: invalid redefinition of constant square
 Stacktrace:
 [...]
@@ -422,7 +422,7 @@ To force JuMP to treat `f` as a user-defined function and not trace it, register
 the function using [`add_user_defined_function`](@ref) and define a new method
 which manually creates a [`NonlinearExpr`](@ref):
 ```jldoctest nonlinear_invalid_redefinition
-julia> _ = add_user_defined_function(model, :f, 1, f)
+julia> _ = add_user_defined_function(model, 1, f; name = :f)
 UserDefinedFunction{typeof(f)}(:f, f)
 
 julia> f(x::AbstractJuMPScalar) = NonlinearExpr(:f, Any[x])

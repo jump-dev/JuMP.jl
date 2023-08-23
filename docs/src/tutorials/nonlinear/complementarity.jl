@@ -18,15 +18,15 @@ import Test  #src
 # A mixed complementarity problem has the form:
 # ```math
 # \begin{align}
-#     \;\;\text{s.t.} & F_i(x) \perp x_i & i = 1 \ldots n \\
-#     & l_i \le x_i \le u_i & i = 1 \ldots n.
+#     F_i(x) \perp x_i & i = 1 \ldots n \\
+#     l_i \le x_i \le u_i & i = 1 \ldots n.
 # \end{align}
 # ```
 # where the ``\perp`` constraint enforces the following relations:
 #
-#  - If ``l_i < x_i < u_i``, then ``F_i(x) == 0``
-#  - If ``l_i == x_i``, then ``F_i(x) \ge 0``
-#  - If ``x_i == u_i``, then ``F_i(x) \le 0``
+#  - If ``l_i < x_i < u_i``, then ``F_i(x) = 0``
+#  - If ``l_i = x_i``, then ``F_i(x) \ge 0``
+#  - If ``x_i = u_i``, then ``F_i(x) \le 0``
 
 # You may have seen a complementarity problem written as
 # ``0 \le F(x) \perp x \ge 0``. This is a special case of a mixed
@@ -38,8 +38,7 @@ import Test  #src
 # ## Linear complementarity
 
 # Form a mixed complementarity problem using the perp symbol `⟂` (type
-# `\perp<tab>` in the REPL). See [Complementarity constraints](@ref) for the
-# definition of a complementarity constraint.
+# `\perp<tab>` in the REPL).
 
 M = [0 0 -1 -1; 0 0 1 -2; 1 -1 2 -2; 1 2 -2 4]
 q = [2, 2, -2, -6]
@@ -54,8 +53,8 @@ value.(x)
 # ## Other ways of writing linear complementarity problems
 
 # You do not need to use a single vector of variables, and the complementarity
-# constraints can be given in any order. In addition, you can either use the
-# perp symbol, or you can use the [`MOI.Complements`](@ref) set.
+# constraints can be given in any order. In addition, you can use the perp
+# symbol, the `complements(F, x)` syntax, or the [`MOI.Complements`](@ref) set.
 
 model = Model(PATHSolver.Optimizer)
 set_silent(model)
@@ -63,8 +62,8 @@ set_silent(model)
 @variable(model, 0 <= x <= 10, start = 0)
 @variable(model, 0 <= y <= 10, start = 0)
 @variable(model, 0 <= z <= 10, start = 0)
-@constraint(model, [y - 2z + 2, x] in MOI.Complements(2))
-@constraint(model, -y - z + 2 ⟂ w)
+@constraint(model, complements(y - 2z + 2, x))
+@constraint(model, [-y - z + 2, w] in MOI.Complements(2))
 @constraint(model, w + 2x - 2y + 4z - 6 ⟂ z)
 @constraint(model, w - x + 2y - 2z - 2 ⟂ y)
 optimize!(model)
@@ -154,46 +153,41 @@ value(K)
 # plant with capacity ``x`` [MW]. This plant has an annualized capital cost of
 # ``I`` [€/MW] and an operating cost of ``C`` [€/MWh]. There are 8760 hours in a
 # year.
-
-I, C, τ = 90_000, 60, 8_760
-
+#
 # After making the capital investment, there are five possible consumption
 # scenarios, ``\omega``, which occur with probability ``\theta_\omega``. In each
-# scenario , the producer makes ``Y\_ω`` MW of electricity.
-
-θ = [0.2, 0.2, 0.2, 0.2, 0.2]
-
+# scenario , the producer makes ``Y_ω`` MW of electricity.
+#
 # There is one consumer in the model, who has a quadratic utility function,
 # ``U(Q_ω) = A_ω Q_ω + \frac{B_ω Q_ω^2}{2}``.
-
-A, B = [300, 350, 400, 450, 500], 1
-
+#
 # We now build and solve the mixed complementarity problem with a few brief
 # comments. The economic justification for the model would require a larger
 # tutorial than the space available here. Consult the [original text](https://doi.org/10.17863/CAM.17552)
 # for details.
 
+I = 90_000                     # Annualized capital cost
+C = 60                         # Operation cost per MWh
+τ = 8_760                      # Hours per year
+θ = [0.2, 0.2, 0.2, 0.2, 0.2]  # Scenario probabilities
+A = [300, 350, 400, 450, 500]  # Utility function coefficients
+B = 1                          # Utility function coefficients
 model = Model(PATHSolver.Optimizer)
 set_silent(model)
-## Capital investment
-@variable(model, x >= 0, start = 1)
-## Consumption in each scenario
-@variable(model, Q[ω = 1:5] >= 0, start = 1)
-## Production in each scenario
-@variable(model, Y[ω = 1:5] >= 0, start = 1)
-## Electricity price in each scenario
-@variable(model, P[ω = 1:5], start = 1)
-## Capital scarcity margin
-@variable(model, μ[ω = 1:5] >= 0, start = 1)
-## Capital investment must by paid for by expected annualized scarcity margin
+@variable(model, x >= 0, start = 1)           # Installed capacity
+@variable(model, Q[ω = 1:5] >= 0, start = 1)  # Consumption
+@variable(model, Y[ω = 1:5] >= 0, start = 1)  # Production
+@variable(model, P[ω = 1:5], start = 1)       # Electricity price
+@variable(model, μ[ω = 1:5] >= 0, start = 1)  # Capital scarcity margin
+## Unit investment cost equals annualized scarcity profit or investment is 0
 @constraint(model, I - τ * θ' * μ ⟂ x)
-## Producer's costs complement production
+## Difference between price and scarcity margin is equal to operation cost
 @constraint(model, [ω = 1:5], C - (P[ω] - μ[ω]) ⟂ Y[ω])
-## Consumer's utilitiy complements consumption
+## Price is equal to consumer's marginal utility
 @constraint(model, [ω = 1:5], P[ω] - (A[ω] - B * Q[ω]) ⟂ Q[ω])
-## Production equals consummption
+## Production is equal to consumption
 @constraint(model, [ω = 1:5], Y[ω] - Q[ω] ⟂ P[ω])
-## Capacity constraint
+## Production does not exceed capacity
 @constraint(model, [ω = 1:5], x - Y[ω] ⟂ μ[ω])
 optimize!(model)
 solution_summary(model)
