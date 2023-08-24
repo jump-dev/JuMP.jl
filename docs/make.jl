@@ -4,7 +4,7 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import Pkg
-Pkg.pkg"add Documenter#740ba6304c940801eafdc18b069e4609bf3923a6"
+Pkg.pkg"add Documenter#e2bd1940ad9a8ad1320252a2fc3b4468b770e3a4"
 
 import Documenter
 import Downloads
@@ -527,6 +527,10 @@ Documenter.DocMeta.setdocmeta!(
     recursive = true,
 )
 
+# Needed to make Documenter think that there is a PDF in the right place when
+# link checking. Inn production we replace this by running the LaTeX build.
+write(joinpath(@__DIR__, "src", "JuMP.pdf"), "")
+
 @time Documenter.makedocs(
     sitename = "JuMP",
     authors = "The JuMP core developers and contributors",
@@ -538,13 +542,18 @@ Documenter.DocMeta.setdocmeta!(
         collapselevel = 1,
         assets = ["assets/extra_styles.css"],
         sidebar_sitename = false,
+        # Do no check for large pages.
+        size_threshold = nothing,
     ),
-    strict = true,
     modules = [JuMP, MOI],
     checkdocs = :none,
     # Skip doctests if --fast provided.
     doctest = _FIX ? :fix : !_FAST,
     pages = vcat(_PAGES, "release_notes.md"),
+    remotes = Dict(
+        dirname(dirname(pathof(MOI))) =>
+            Documenter.Remotes.GitHub("jump-dev", "MathOptInterface.jl"),
+    ),
 )
 
 # ==============================================================================
