@@ -602,7 +602,8 @@ if _PDF
     # includes lots of extraneous LaTeX files.
     cp(
         joinpath(@__DIR__, "latex_build", "JuMP.pdf"),
-        joinpath(@__DIR__, "build", "JuMP.pdf"),
+        joinpath(@__DIR__, "build", "JuMP.pdf");
+        force = true,
     )
 end
 
