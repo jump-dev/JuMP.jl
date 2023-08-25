@@ -2043,9 +2043,9 @@ There are three common mistakes that lead to this.
     ```julia
     foo(x) = x $(sym) 1 ? 0 : 1 - x
     model = Model()
-    @register(model, udf_f, 1, foo)
+    @register(model, op_f, 1, foo)
     @variable(model, x)
-    @expression(model, udf_f(x))
+    @expression(model, op_f(x))
     ```
 
  3. You tried to create a logical nonlinear expression outside a macro, for

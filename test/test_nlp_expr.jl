@@ -469,6 +469,7 @@ function test_register_univariate()
     model = Model()
     @variable(model, x)
     @register(model, f, 1, x -> x^2)
+    @test f isa NonlinearOperator
     @test isequal_canonical(@expression(model, f(x)), f(x))
     @test isequal_canonical(f(x), GenericNonlinearExpr(:f, Any[x]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
@@ -555,7 +556,7 @@ function test_register_errors()
     model = Model()
     @test_throws(
         ErrorException(
-            "Unable to register user-defined function because no functions were " *
+            "Unable to register operator because no functions were " *
             "provided. Expected 1 (if function only), 2 (if function and " *
             "gradient), or 3 (if function, gradient, and hesssian provided)",
         ),
@@ -564,7 +565,7 @@ function test_register_errors()
     f = x -> x^2
     @test_throws(
         ErrorException(
-            "Unable to register user-defined function foo: invalid number of " *
+            "Unable to register operator foo: invalid number of " *
             "functions provided. Got 4, but expected 1 (if function only), " *
             "2 (if function and gradient), or 3 (if function, gradient, and " *
             "hesssian provided)",
@@ -610,7 +611,7 @@ function test_value_expression()
     y = QuadExpr(x + 1)
     @test value(f, my_foo(y)) ≈ (value(f, y) - 1)^2
     @test value(f, my_bar(2.2, x)) ≈ sqrt(2.2 - 1.1)
-    bad_udf = UserDefinedFunction(:bad_udf, f)
+    bad_udf = NonlinearOperator(:bad_udf, f)
     @test_throws(
         ErrorException(
             "Unable to evaluate nonlinear operator bad_udf because it is not " *

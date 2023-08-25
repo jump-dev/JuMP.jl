@@ -513,14 +513,14 @@ function solve_nonlinear_economic_dispatch(
     if silent
         set_silent(model)
     end
-    @register(model, udf_tcf, 1, thermal_cost_function)
+    @register(model, op_tcf, 1, thermal_cost_function)
     N = length(generators)
     @variable(model, generators[i].min <= g[i = 1:N] <= generators[i].max)
     @variable(model, 0 <= w <= scenario.wind)
     @objective(
         model,
         Min,
-        sum(generators[i].variable_cost * udf_tcf(g[i]) for i in 1:N) +
+        sum(generators[i].variable_cost * op_tcf(g[i]) for i in 1:N) +
         wind.variable_cost * w,
     )
     @constraint(model, sum(g[i] for i in 1:N) + sqrt(w) == scenario.demand)

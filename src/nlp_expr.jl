@@ -25,8 +25,8 @@ and the default list of supported multivariate operators is given by:
 
  * [`MOI.Nonlinear.DEFAULT_MULTIVARIATE_OPERATORS`](@ref)
 
-Additional operators can be registered by setting a [`MOI.UserDefinedFunction`](@ref)
-attribute.
+Additional operators can be registered by setting a
+[`MOI.UserDefinedFunction`](@ref) attribute.
 
 See the full list of operators supported by a [`MOI.ModelLike`](@ref) by
 querying [`MOI.ListOfSupportedNonlinearOperators`](@ref).
@@ -234,8 +234,8 @@ function MOI.Nonlinear.parse_expression(
         if arg isa GenericNonlinearExpr
             _parse_without_recursion_inner(stack, data, expr, arg, parent_node)
         else
-            # We can use recursion here, because GenericNonlinearExpr only occur in
-            # other GenericNonlinearExpr.
+            # We can use recursion here, because GenericNonlinearExpr only occur
+            # in other GenericNonlinearExpr.
             MOI.Nonlinear.parse_expression(data, expr, arg, parent_node)
         end
     end
@@ -467,33 +467,6 @@ function _needs_flatten(parent::GenericNonlinearExpr, arg::GenericNonlinearExpr)
         # user to override this decision and flatten the entire tree.
         return any(Base.Fix2(_is_expr, :+), arg.args) ||
                any(Base.Fix2(_is_expr, :*), arg.args)
-    end
-end
-
-function nonlinear_ifelse(a::AbstractJuMPScalar, x, y)
-    return GenericNonlinearExpr{variable_ref_type(a)}(:ifelse, Any[a, x, y])
-end
-
-for (f, op) in (
-    :nonlinear_and => :&&,
-    :nonlinear_or => :||,
-    :nonlinear_less_than => :(<),
-    :nonlinear_greater_than => :(>),
-    :nonlinear_less_equal => :(<=),
-    :nonlinear_greater_equal => :(>=),
-    :nonlinear_equal_to => :(==),
-)
-    op = Meta.quot(op)
-    @eval begin
-        function $(f)(x::AbstractJuMPScalar, y)
-            return GenericNonlinearExpr{variable_ref_type(x)}($op, x, y)
-        end
-        function $(f)(x, y::AbstractJuMPScalar)
-            return GenericNonlinearExpr{variable_ref_type(y)}($op, x, y)
-        end
-        function $(f)(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
-            return GenericNonlinearExpr{variable_ref_type(x)}($op, x, y)
-        end
     end
 end
 
@@ -789,12 +762,19 @@ function _MA.promote_operation(
 end
 
 """
-    UserDefinedFunction(head::Symbol, func::Function)
+    NonlinearOperator(head::Symbol, func::Function)
 
-A struct representing a user-defined function named `head`.
+A callable struct (functor) representing a function named `head`.
 
-This function must have already been added to the model using
-[`add_user_defined_function`](@ref) or [`@register`](@ref).
+When called with [`AbstractJuMPScalar`](@ref)s, the struct returns a
+[`GenericNonlinearExpr`](@ref).
+
+When called with non-JuMP types, the struct returns the evaluation of
+`func(args...)`.
+
+Unless `head` is special-cased by the optimizer, the operator must have already
+been added to the model using [`register_nonlinear_operator`](@ref) or
+[`@register`](@ref).
 
 ## Example
 
@@ -813,25 +793,54 @@ julia> ∇f(x::Float64) = 2 * x
 julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
-julia> @register(model, udf_f, 1, f, ∇f, ∇²f)
-UserDefinedFunction{typeof(f)}(:udf_f, f)
+julia> @register(model, op_f, 1, f, ∇f, ∇²f)
+NonlinearOperator(:op_f, f)
 
-julia> bar = UserDefinedFunction(:udf_f, f)
-UserDefinedFunction{typeof(f)}(:udf_f, f)
+julia> bar = NonlinearOperator(:op_f, f)
+NonlinearOperator(:op_f, f)
 
 julia> @objective(model, Min, bar(x))
-udf_f(x)
+op_f(x)
 
 julia> bar(2.0)
 4.0
 ```
 """
-struct UserDefinedFunction{F}
+struct NonlinearOperator{F}
     head::Symbol
     func::F
 end
 
-function (f::UserDefinedFunction)(args...)
+# Make it so that we don't print the complicated type parameter
+function Base.show(io::IO, f::NonlinearOperator)
+    return print(io, "NonlinearOperator(:$(f.head), $(f.func))")
+end
+
+# Fast overload for unary calls
+
+(f::NonlinearOperator)(x) = f.func(x)
+
+(f::NonlinearOperator)(x::AbstractJuMPScalar) = NonlinearExpr(f.head, Any[x])
+
+# Fast overload for binary calls
+
+(f::NonlinearOperator)(x, y) = f.func(x, y)
+
+function (f::NonlinearOperator)(x::AbstractJuMPScalar, y)
+    return GenericNonlinearExpr(f.head, Any[x, y])
+end
+
+function (f::NonlinearOperator)(x, y::AbstractJuMPScalar)
+    return GenericNonlinearExpr(f.head, Any[x, y])
+end
+
+function (f::NonlinearOperator)(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
+    return GenericNonlinearExpr(f.head, Any[x, y])
+end
+
+# Fallback for more arguments
+function (f::NonlinearOperator)(x, y, z...)
+    args = (x, y, z...)
     if any(Base.Fix2(isa, AbstractJuMPScalar), args)
         return GenericNonlinearExpr(f.head, Any[a for a in args])
     end
@@ -839,7 +848,7 @@ function (f::UserDefinedFunction)(args...)
 end
 
 """
-    add_user_defined_function(
+    register_nonlinear_operator(
         model::Model,
         dim::Int,
         f::Function,
@@ -848,12 +857,15 @@ end
         [name::Symbol = Symbol(f),]
     )
 
-Add a user-defined function with `dim` input arguments to `model` and associate
-it with the operator `name`.
+Register a new nonlinear operator with `dim` input arguments to `model` and
+associate it with the name `name`.
 
-The function `f` evaluates the function. The optional function `∇f` evaluates
-the first derivative, and the optional function `∇²f` evaluates the second
-derivative. `∇²f` may be provided only if `∇f` is also provided.
+The function `f` evaluates the function and must return a scalar.
+
+The optional function `∇f` evaluates the first derivative, and the optional
+function `∇²f` evaluates the second derivative.
+
+`∇²f` may be provided only if `∇f` is also provided.
 
 ## Example
 
@@ -872,17 +884,17 @@ julia> ∇f(x::Float64) = 2 * x
 julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
-julia> udf_f = add_user_defined_function(model, 1, f, ∇f, ∇²f)
-UserDefinedFunction{typeof(f)}(:f, f)
+julia> op_f = register_nonlinear_operator(model, 1, f, ∇f, ∇²f)
+NonlinearOperator(:f, f)
 
-julia> @objective(model, Min, udf_f(x))
+julia> @objective(model, Min, op_f(x))
 f(x)
 
-julia> udf_f(2.0)
+julia> op_f(2.0)
 4.0
 ```
 """
-function add_user_defined_function(
+function register_nonlinear_operator(
     model::GenericModel,
     dim::Int,
     f::Function,
@@ -892,10 +904,10 @@ function add_user_defined_function(
     nargs = 1 + N
     if !(1 <= nargs <= 3)
         error(
-            "Unable to register user-defined function $name: invalid number " *
-            "of functions provided. Got $nargs, but expected 1 (if function " *
-            "only), 2 (if function and gradient), or 3 (if function, " *
-            "gradient, and hesssian provided)",
+            "Unable to register operator $name: invalid number of functions " *
+            "provided. Got $nargs, but expected 1 (if function only), 2 (if " *
+            "function and gradient), or 3 (if function, gradient, and " *
+            "hesssian provided)",
         )
     end
     # TODO(odow): we could add other checks here, but we won't for now because
@@ -903,22 +915,22 @@ function add_user_defined_function(
     # MOI.Nonlinear will automatically check for autodiff and common mistakes
     # and throw a nice informative error.
     MOI.set(model, MOI.UserDefinedFunction(name, dim), tuple(f, args...))
-    return UserDefinedFunction(name, f)
+    return NonlinearOperator(name, f)
 end
 
-function add_user_defined_function(::GenericModel, ::Int; kwargs...)
+function register_nonlinear_operator(::GenericModel, ::Int; kwargs...)
     return error(
-        "Unable to register user-defined function because no functions were " *
-        "provided. Expected 1 (if function only), 2 (if function and " *
-        "gradient), or 3 (if function, gradient, and hesssian provided)",
+        "Unable to register operator because no functions were provided. " *
+        "Expected 1 (if function only), 2 (if function and gradient), or 3 " *
+        "(if function, gradient, and hesssian provided)",
     )
 end
 
 """
-    @register(model, operator, dim, args...)
+    @register(model, operator, dim, f[, ∇f[, ∇²f]])
 
-Register a user-defined function in `model`, and create a new variable
-[`UserDefinedFunction`](@ref) called `operator` in the current scope.
+Register the nonlinear operator `operator` in `model`, and create a new
+[`NonlinearOperator`](@ref) object called `operator` in the current scope.
 
 ## Example
 
@@ -937,27 +949,27 @@ julia> ∇f(x::Float64) = 2 * x
 julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
-julia> @register(model, udf_f, 1, f, ∇f, ∇²f)
-UserDefinedFunction{typeof(f)}(:udf_f, f)
+julia> @register(model, op_f, 1, f, ∇f, ∇²f)
+NonlinearOperator(:op_f, f)
 
-julia> @objective(model, Min, udf_f(x))
-udf_f(x)
+julia> @objective(model, Min, op_f(x))
+op_f(x)
 
-julia> udf_f(2.0)
+julia> op_f(2.0)
 4.0
 
-julia> model[:udf_f]
-UserDefinedFunction{typeof(f)}(:udf_f, f)
+julia> model[:op_f]
+NonlinearOperator(:op_f, f)
 
-julia> model[:udf_f](x)
-udf_f(x)
+julia> model[:op_f](x)
+op_f(x)
 ```
 
 ## Non-macro version
 
 This macro is provided as helpful syntax that matches the style of the rest of
-the JuMP macros. However, you may also create user-defined functions outside the
-macros using [`add_user_defined_function`](@ref). For example:
+the JuMP macros. However, you may also register operators outside the macro
+using [`register_nonlinear_operator`](@ref). For example:
 
 ```jldoctest
 julia> model = Model();
@@ -965,8 +977,8 @@ julia> model = Model();
 julia> f(x) = x^2
 f (generic function with 1 method)
 
-julia> @register(model, udf_f, 1, f)
-UserDefinedFunction{typeof(f)}(:udf_f, f)
+julia> @register(model, op_f, 1, f)
+NonlinearOperator(:op_f, f)
 ```
 is equivalent to
 ```jldoctest
@@ -975,14 +987,14 @@ julia> model = Model();
 julia> f(x) = x^2
 f (generic function with 1 method)
 
-julia> udf_f = model[:udf_f] = add_user_defined_function(model, 1, f; name = :udf_f)
-UserDefinedFunction{typeof(f)}(:udf_f, f)
+julia> op_f = model[:op_f] = register_nonlinear_operator(model, 1, f; name = :op_f)
+NonlinearOperator(:op_f, f)
 ```
 """
 macro register(model, op, args...)
     return _macro_assign_and_return(
         quote
-            add_user_defined_function(
+            register_nonlinear_operator(
                 $(esc(model)),
                 $(esc.(args)...);
                 name = $(Meta.quot(op)),

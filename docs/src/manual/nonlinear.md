@@ -258,18 +258,15 @@ julia> expr = @expression(model, ifelse(x < -1 || x >= 1, x^2, 0.0))
 ifelse((x < -1) || (x >= 1), x², 0.0)
 ```
 
-As an alternative, use the `JuMP.nonlinear_` functions, which fallback to the
+As an alternative, use the `JuMP.op_` functions, which fallback to the
 various comparison and logical operators:
 ```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> expr = nonlinear_ifelse(
-           nonlinear_or(
-               nonlinear_less_than(x, -1),
-               nonlinear_greater_equal(x, 1)
-           ),
+julia> expr = op_ifelse(
+           op_or(op_less_than(x, -1), op_greater_equal(x, 1)),
            x^2,
            0.0,
        )
@@ -280,14 +277,14 @@ The available functions are:
 
 | JuMP function                     | Julia function |
 | :-------------------------------- | :------------- |
-| [`nonlinear_ifelse`](@ref)        | `ifelse`       |
-| [`nonlinear_and`](@ref)           | `&&`           |
-| [`nonlinear_or`](@ref)            | `\|\|`           |
-| [`nonlinear_greater_than`](@ref)  | `>`            |
-| [`nonlinear_greater_equal`](@ref) | `>=`           |
-| [`nonlinear_less_than`](@ref)     | `<`            |
-| [`nonlinear_less_equal`](@ref)    | `<=`           |
-| [`nonlinear_equal_to`](@ref)      | `==`           |
+| [`op_ifelse`](@ref)        | `ifelse`       |
+| [`op_and`](@ref)           | `&&`           |
+| [`op_or`](@ref)            | `\|\|`           |
+| [`op_greater_than`](@ref)  | `>`            |
+| [`op_greater_equal`](@ref) | `>=`           |
+| [`op_less_than`](@ref)     | `<`            |
+| [`op_less_equal`](@ref)    | `<=`           |
+| [`op_equal_to`](@ref)      | `==`           |
 
 ### Fields
 
@@ -327,10 +324,10 @@ using JuMP
 square(x) = x^2
 f(x, y) = (x - 1)^2 + (y - 2)^2
 model = Model();
-@register(model, udf_square, 1, square)
-@register(model, udf_f, 2, f)
+@register(model, op_square, 1, square)
+@register(model, op_f, 2, f)
 @variable(model, x[1:2]);
-@objective(model, Min, udf_f(x[1], udf_square(x[2])))
+@objective(model, Min, op_f(x[1], op_square(x[2])))
 ```
 
 The arguments to [`@register`](@ref) are:
@@ -349,7 +346,7 @@ The arguments to [`@register`](@ref) are:
 ### Registered functions without macros
 
 The [`@register`](@ref) macro is syntactic sugar for the
-[`add_user_defined_function`](@ref) method. Thus, the non-macro version of the
+[`register_nonlinear_operator`](@ref) method. Thus, the non-macro version of the
 preceding example is:
 
 ```@repl
@@ -357,12 +354,12 @@ using JuMP
 square(x) = x^2
 f(x, y) = (x - 1)^2 + (y - 2)^2
 model = Model();
-udf_square = add_user_defined_function(model, 1, square; name = :udf_square)
-model[:udf_square] = udf_square
-udf_f = add_user_defined_function(model, 2, f; name = :udf_f)
-model[:udf_f] = udf_f
+op_square = register_nonlinear_operator(model, 1, square; name = :op_square)
+model[:op_square] = op_square
+op_f = register_nonlinear_operator(model, 2, f; name = :op_f)
+model[:op_f] = op_f
 @variable(model, x[1:2]);
-@objective(model, Min, udf_f(x[1], udf_square(x[2])))
+@objective(model, Min, op_f(x[1], op_square(x[2])))
 ```
 
 This has two important consequences.
@@ -374,7 +371,7 @@ julia> @register(model, square, 1, square)
 ```
 will error because it is equivalent to:
 ```julia
-julia> square = add_user_defined_function(model, 1, square; name = :square)
+julia> square = register_nonlinear_operator(model, 1, square; name = :square)
 ERROR: invalid redefinition of constant square
 Stacktrace:
 [...]
@@ -388,8 +385,8 @@ Second, you can obtain a reference to the user-defined function using the
 using JuMP
 square(x) = x^2
 model = Model();
-@register(model, udf_square, 1, square)
-udf_square_2 = model[:udf_square]
+@register(model, op_square, 1, square)
+op_square_2 = model[:op_square]
 ```
 
 ### Invalid redefinition of constant
@@ -419,11 +416,11 @@ x²
 ```
 
 To force JuMP to treat `f` as a user-defined function and not trace it, register
-the function using [`add_user_defined_function`](@ref) and define a new method
+the function using [`register_nonlinear_operator`](@ref) and define a new method
 which manually creates a [`NonlinearExpr`](@ref):
 ```jldoctest nonlinear_invalid_redefinition
-julia> _ = add_user_defined_function(model, 1, f; name = :f)
-UserDefinedFunction{typeof(f)}(:f, f)
+julia> _ = register_nonlinear_operator(model, 1, f; name = :f)
+NonlinearOperator(:f, f)
 
 julia> f(x::AbstractJuMPScalar) = NonlinearExpr(:f, Any[x])
 f (generic function with 2 methods)
@@ -451,9 +448,9 @@ f(x) = x^2
 ∇f(x) = 2x
 ∇²f(x) = 2
 model = Model();
-@register(model, udf_f, 1, f, ∇f, ∇²f)  # Providing ∇²f is optional
+@register(model, op_f, 1, f, ∇f, ∇²f)  # Providing ∇²f is optional
 @variable(model, x)
-@objective(model, Min, udf_f(x))
+@objective(model, Min, op_f(x))
 ```
 
 #### Multivariate functions
@@ -511,8 +508,8 @@ using JuMP
 model = Model();
 @variable(model, x[1:5])
 f(x::Vector) = sum(x[i]^i for i in 1:length(x))
-@register(model, udf_f, 5, (x...) -> f(collect(x)))
-@objective(model, Min, udf_f(x...))
+@register(model, op_f, 5, (x...) -> f(collect(x)))
+@objective(model, Min, op_f(x...))
 ```
 
 ### Automatic differentiation
