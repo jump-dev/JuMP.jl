@@ -554,14 +554,6 @@ end
 
 function test_register_errors()
     model = Model()
-    @test_throws(
-        ErrorException(
-            "Unable to register operator because no functions were " *
-            "provided. Expected 1 (if function only), 2 (if function and " *
-            "gradient), or 3 (if function, gradient, and hesssian provided)",
-        ),
-        @register(model, foo, 2),
-    )
     f = x -> x^2
     @test_throws(
         ErrorException(
@@ -800,6 +792,18 @@ function test_operator_overload_complex_error()
         ),
         +(sin(x), f),
     )
+    return
+end
+
+function test_redefinition_of_function()
+    model = Model()
+    f(x) = x^2
+    err = try
+        JuMP._catch_redefinition_constant_error(:f, f)
+    catch err
+        err
+    end
+    @test_throws(err, @register(model, f, 1, f))
     return
 end
 

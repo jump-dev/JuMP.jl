@@ -918,12 +918,35 @@ function register_nonlinear_operator(
     return NonlinearOperator(name, f)
 end
 
-function register_nonlinear_operator(::GenericModel, ::Int; kwargs...)
-    return error(
-        "Unable to register operator because no functions were provided. " *
-        "Expected 1 (if function only), 2 (if function and gradient), or 3 " *
-        "(if function, gradient, and hesssian provided)",
-    )
+function _catch_redefinition_constant_error(op::Symbol, f::Function)
+    if op == Symbol(f)
+        error("""
+        Unable to register the nonlinear operator `:$op` with the same name as
+        an existing function.
+
+        For example, this code will error:
+        ```julia
+        model = Model()
+        f(x) = x^2
+        @register(model, f, 1, f)
+        ```
+        because it is equivalent to:
+        ```julia
+        model = Model()
+        f(x) = x^2
+        f = register_nonlinear_operator(model, 1, f; name = :f)
+        ```
+
+        To fix, use a unique name, like `op_$op`:
+        ```julia
+        model = Model()
+        f(x) = x^2
+        @register(model, op_f, 1, f)
+        @expression(model, op_f(x))
+        ```
+        """)
+    end
+    return
 end
 
 """
@@ -991,11 +1014,14 @@ julia> op_f = model[:op_f] = register_nonlinear_operator(model, 1, f; name = :op
 NonlinearOperator(:op_f, f)
 ```
 """
-macro register(model, op, args...)
+macro register(model, op, dim, f, args...)
     return _macro_assign_and_return(
         quote
+            _catch_redefinition_constant_error($(Meta.quot(op)), $(esc(f)))
             register_nonlinear_operator(
                 $(esc(model)),
+                $(esc(dim)),
+                $(esc(f)),
                 $(esc.(args)...);
                 name = $(Meta.quot(op)),
             )

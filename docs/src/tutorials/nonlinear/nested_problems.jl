@@ -215,13 +215,13 @@ model = Model(Ipopt.Optimizer)
 cache = Cache(Float64[], NaN, Float64[])
 @register(
     model,
-    op_V,
+    op_cached_f,
     2,
     (x...) -> cached_f(cache, x...),
     (g, x...) -> cached_∇f(cache, g, x...),
     (H, x...) -> cached_∇²f(cache, H, x...),
 )
-@objective(model, Min, x[1]^2 + x[2]^2 + op_V(x[1], x[2]))
+@objective(model, Min, x[1]^2 + x[2]^2 + op_cached_f(x[1], x[2]))
 optimize!(model)
 solution_summary(model)
 

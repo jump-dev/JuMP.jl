@@ -9,16 +9,16 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
 # [Nonlinear Modeling](@id new_nonlinear_interface)
 
 !!! warning
-    This page describes an experimental nonlinear interface to JuMP. The API
-    described below is stable, and it will not break with future 1.X releases of
-    JuMP. However, solver support may be limited, and there may be gaps in
-    functionality compared with [Nonlinear Modeling](@ref). To report a bug, or
-    request a missing feature, please [open an issue](https://github.com/jump-dev/JuMP.jl/issues/new/choose).
+    This page describes a new nonlinear interface to JuMP. It replaces the
+    legacy `@NL` interface, which is documented at [Nonlinear Modeling](@ref).
+    The API described below is stable, and it will not break with future 1.X
+    releases of JuMP. However, solver support may be limited, and there may be
+    gaps in functionality compared with the legacy interface. To report a bug,
+    or request a missing feature, please [open an issue](https://github.com/jump-dev/JuMP.jl/issues/new/choose).
 
-JuMP has support for general smooth nonlinear (convex and nonconvex)
-optimization problems. JuMP is able to provide exact, sparse second-order
-derivatives to solvers. This information can improve solver accuracy and
-performance.
+JuMP has support for nonlinear (convex and nonconvex) optimization problems.
+JuMP is able to automatically provide exact, sparse second-order derivatives to
+solvers. This information can improve solver accuracy and performance.
 
 ## Set a nonlinear objective
 
@@ -339,9 +339,17 @@ The arguments to [`@register`](@ref) are:
  4. A Julia method which computes the function.
 
 !!! warning
-    User-defined functions cannot be re-registered and will not update if you
-    modify the underlying Julia function. If you want to change a user-defined
-    function between solves, rebuild the model or use a different name.
+    User-defined functions cannot be re-registered or deleted.
+
+You can obtain a reference to the operator using the `model[:key]` syntax:
+
+```@repl
+using JuMP
+square(x) = x^2
+model = Model();
+@register(model, op_square, 1, square)
+op_square_2 = model[:op_square]
+```
 
 ### Registered functions without macros
 
@@ -362,37 +370,9 @@ model[:op_f] = op_f
 @objective(model, Min, op_f(x[1], op_square(x[2])))
 ```
 
-This has two important consequences.
+### Registering with the same name as an existing function
 
-First, you cannot register a user-defined function with the same name as an
-existing function. For example, a call to [`@register`](@ref) like:
-```julia
-julia> @register(model, square, 1, square)
-```
-will error because it is equivalent to:
-```julia
-julia> square = register_nonlinear_operator(model, 1, square; name = :square)
-ERROR: invalid redefinition of constant square
-Stacktrace:
-[...]
-```
-and `square` already exists as a Julia function.
-
-Second, you can obtain a reference to the user-defined function using the
-`model[:key]` syntax:
-
-```@repl
-using JuMP
-square(x) = x^2
-model = Model();
-@register(model, op_square, 1, square)
-op_square_2 = model[:op_square]
-```
-
-### Invalid redefinition of constant
-
-A common error encountered is `invalid redefinition of constant`. This occurs
-when the name of the user-defined function is the same as an existing function:
+A common error encountered is the following:
 ```jldoctest nonlinear_invalid_redefinition
 julia> using JuMP
 
@@ -402,9 +382,15 @@ julia> f(x) = x^2
 f (generic function with 1 method)
 
 julia> @register(model, f, 1, f)
-ERROR: invalid redefinition of constant f
+ERROR: Unable to register the nonlinear operator `:f` with the same name as
+an existing function.
 [...]
 ```
+This error occurs because `@register(model, f, 1, f)` is equivalent to:
+```julia
+julia> f = register_nonlinear_operator(model, 1, f; name = :f)
+```
+but `f` already exists as a Julia function.
 
 If you evaluate the function without registering it, JuMP will trace the
 function using operator overloading:
