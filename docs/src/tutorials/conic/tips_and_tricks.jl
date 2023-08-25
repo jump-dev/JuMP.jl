@@ -338,6 +338,78 @@ set_silent(model)
 optimize!(model)
 value(t), value.(x)
 
+# ## RootDetCone
+
+# The [`MOI.RootDetConeSquare`](@ref) is a cone of the form:
+# ```math
+# K = \{ (t, X) \in \mathbb{R}^{1+d^2} : t \le \det(X)^{\frac{1}{d}} \}
+# ```
+
+model = Model(SCS.Optimizer)
+set_silent(model)
+@variable(model, t)
+@variable(model, X[1:2, 1:2])
+@objective(model, Max, t)
+@constraint(model, [t; vec(X)] in MOI.RootDetConeSquare(2))
+@constraint(model, X .== [2 1; 1 3])
+optimize!(model)
+value(t), sqrt(LinearAlgebra.det(value.(X)))
+
+# If `X` is symmetric, then you can use [`MOI.RootDetConeTriangle`](@ref)
+# instead. This can be more efficient because the solver does not need to add
+# additional constraints to ensure `X` is symmetric.
+
+# When forming the function, use [`triangle_vec`](@ref) to obtain the upper
+# triangle of the matrix as a vector in the order that JuMP requires.
+
+model = Model(SCS.Optimizer)
+set_silent(model)
+@variable(model, t)
+@variable(model, X[1:2, 1:2], Symmetric)
+@objective(model, Max, t)
+@constraint(model, [t; triangle_vec(X)] in MOI.RootDetConeTriangle(2))
+@constraint(model, X .== [2 1; 1 3])
+optimize!(model)
+value(t), sqrt(LinearAlgebra.det(value.(X)))
+
+# ## LogDetCone
+
+# The [`MOI.LogDetConeSquare`](@ref) is a cone of the form:
+# ```math
+# K = \{ (t, u, X) \in \mathbb{R}^{2+d^2} : t \le u \log(\det(X / u)) \}
+# ```
+
+model = Model(SCS.Optimizer)
+set_silent(model)
+@variable(model, t)
+@variable(model, u)
+@variable(model, X[1:2, 1:2])
+@objective(model, Max, t)
+@constraint(model, [t; u; vec(X)] in MOI.LogDetConeSquare(2))
+@constraint(model, X .== [2 1; 1 3])
+@constraint(model, u == 0.5)
+optimize!(model)
+value(t), 0.5 * log(LinearAlgebra.det(value.(X) ./ 0.5))
+
+# If `X` is symmetric, then you can use [`MOI.LogDetConeTriangle`](@ref)
+# instead. This can be more efficient because the solver does not need to add
+# additional constraints to ensure `X` is symmetric.
+
+# When forming the function, use [`triangle_vec`](@ref) to obtain the upper
+# triangle of the matrix as a vector in the order that JuMP requires.
+
+model = Model(SCS.Optimizer)
+set_silent(model)
+@variable(model, t)
+@variable(model, u)
+@variable(model, X[1:2, 1:2], Symmetric)
+@objective(model, Max, t)
+@constraint(model, [t; u; triangle_vec(X)] in MOI.LogDetConeTriangle(2))
+@constraint(model, X .== [2 1; 1 3])
+@constraint(model, u == 0.5)
+optimize!(model)
+value(t), 0.5 * log(LinearAlgebra.det(value.(X) ./ 0.5))
+
 # ## Other Cones and Functions
 
 # For other cones supported by JuMP, check out the

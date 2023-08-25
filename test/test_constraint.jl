@@ -1710,4 +1710,15 @@ function test_eltype_for_constraint_primal_complex_float64()
     return
 end
 
+function test_triangle_vec()
+    model = Model()
+    x = [1 2 3; 4 5 6; 7 8 9]
+    @test triangle_vec(x) == [1, 2, 5, 3, 6, 9]
+    @variable(model, y[1:2, 1:2])
+    @test triangle_vec(y) == [y[1, 1], y[1, 2], y[2, 2]]
+    @variable(model, z[1:2, 1:2], Symmetric)
+    @test triangle_vec(z) == [z[1, 1], z[1, 2], z[2, 2]]
+    return
+end
+
 end

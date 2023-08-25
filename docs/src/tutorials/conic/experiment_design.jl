@@ -211,10 +211,7 @@ set_silent(dOpt)
 @objective(dOpt, Max, t)
 @constraint(dOpt, sum(np) <= n)
 E = V * LinearAlgebra.diagm(0 => np ./ n) * V'
-@constraint(
-    dOpt,
-    [t, 1, (E[i, j] for i in 1:q for j in 1:i)...] in MOI.LogDetConeTriangle(q)
-)
+@constraint(dOpt, [t; 1; triangle_vec(E)] in MOI.LogDetConeTriangle(q))
 optimize!(dOpt)
 objective_value(dOpt)
 #-
