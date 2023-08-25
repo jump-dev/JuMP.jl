@@ -1092,6 +1092,147 @@ function BinaryRef(v::GenericVariableRef)
 end
 
 """
+    ParameterRef(x::GenericVariableRef)
+
+Return a constraint reference to the constraint constraining `x` to be a
+parameter.
+
+See also [`is_parameter`](@ref), [`set_parameter_value`](@ref),
+[`parameter_value`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, p in Parameter(2))
+p
+
+julia> ParameterRef(p)
+p ∈ MathOptInterface.Parameter{Float64}(2.0)
+
+julia> @variable(model, x);
+
+julia> ParameterRef(x)
+ERROR: Cannot create a `ParameterRef` because the variable is not a parameter
+Stacktrace:
+[...]
+```
+"""
+function ParameterRef(x::GenericVariableRef)
+    if !is_parameter(x)
+        error(
+            "Cannot create a `ParameterRef` because the variable is not a " *
+            "parameter",
+        )
+    end
+    return ConstraintRef(owner_model(x), _parameter_index(x), ScalarShape())
+end
+
+function _parameter_index(x::GenericVariableRef)
+    F, S = MOI.VariableIndex, MOI.Parameter{value_type(typeof(x))}
+    return MOI.ConstraintIndex{F,S}(index(x).value)
+end
+
+"""
+    is_parameter(x::GenericVariableRef)::Bool
+
+Return `true` if `x` is constrained to be a parameter.
+
+See also [`ParameterRef`](@ref), [`set_parameter_value`](@ref),
+[`parameter_value`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, p in Parameter(2))
+p
+
+julia> is_parameter(p)
+true
+
+julia> @variable(model, x)
+x
+
+julia> is_parameter(x)
+false
+```
+"""
+function is_parameter(x::GenericVariableRef)
+    return MOI.is_valid(backend(owner_model(x)), _parameter_index(x))::Bool
+end
+
+"""
+    set_parameter_value(x::GenericVariableRef, value)
+
+Update the parameter constraint on the variable `x` to `value`.
+
+See also [`ParameterRef`](@ref), [`is_parameter`](@ref),
+[`parameter_value`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, p in Parameter(2))
+p
+
+julia> parameter_value(p)
+2.0
+
+julia> set_parameter_value(p, 2.5)
+
+julia> parameter_value(p)
+2.5
+```
+"""
+function set_parameter_value(x::GenericVariableRef, value)
+    T = value_type(typeof(x))
+    model = owner_model(x)
+    model.is_model_dirty = true
+    set = MOI.Parameter{T}(convert(T, value))
+    MOI.set(backend(model), MOI.ConstraintSet(), _parameter_index(x), set)
+    return
+end
+
+"""
+    parameter_value(x::GenericVariableRef)
+
+Return the value of the parameter `x`.
+
+See also [`ParameterRef`](@ref), [`is_parameter`](@ref),
+[`set_parameter_value`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, p in Parameter(2))
+p
+
+julia> parameter_value(p)
+2.0
+
+julia> set_parameter_value(p, 2.5)
+
+julia> parameter_value(p)
+2.5
+```
+"""
+function parameter_value(x::GenericVariableRef)
+    set = MOI.get(
+        backend(owner_model(x)),
+        MOI.ConstraintSet(),
+        _parameter_index(x),
+    )::MOI.Parameter{value_type(typeof(x))}
+    return set.value
+end
+
+"""
     start_value(v::GenericVariableRef)
 
 Return the start value (MOI attribute `VariablePrimalStart`) of the variable

@@ -944,6 +944,13 @@ function model_convert(model::AbstractModel, con::VectorConstraint)
     )
 end
 
+function model_convert(model::AbstractModel, x::VariableConstrainedOnCreation)
+    return VariableConstrainedOnCreation(
+        x.scalar_variable,
+        model_convert(model, x.set),
+    )
+end
+
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
 """
@@ -2739,6 +2746,7 @@ macro variable(args...)
         end
         buildcall = :(build_variable($_error, $scalar_variables, $set))
     end
+    buildcall = :(model_convert($model, $buildcall))
     new_name_code = if isempty(set_string_name_kw_args)
         Expr(:if, :(set_string_names_on_creation($model)), name_code, "")
     else
