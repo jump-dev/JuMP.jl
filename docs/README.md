@@ -1,6 +1,6 @@
 # JuMP Documentation README
 
-**The documentation currently requires Julia 1.6 to build.**
+**The documentation currently requires Julia 1.9 to build.**
 
 JuMP's documentation is written with [Documenter.jl](https://github.com/JuliaDocs/Documenter.jl).
 
@@ -23,7 +23,7 @@ $ cd ~/.julia/dev/JuMP
 
 The next step is to setup the `docs` environment.
 ```
-$ julia --project=docs -e 'import Pkg; Pkg.instantiate(); Pkg.develop(Pkg.PackageSpec(path="."))'
+$ julia --project=docs -e 'import Pkg; Pkg.instantiate(); Pkg.develop(Pkg.PackageSpec(path=".")); Pkg.develop("MathOptInterface)'
 ```
 
 Now you're ready to build the documentation.

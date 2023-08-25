@@ -53,19 +53,19 @@
 [GLPK]
     rev = "v1.1.2"
 [Gurobi]
-    rev = "v1.0.1"
+    rev = "v1.0.2"
 [HiGHS]
     rev = "v1.5.2"
 [Ipopt]
-    rev = "v1.4.1"
+    rev = "v1.4.2"
 [KNITRO]
     rev = "4c56de7684c42dd3c83c5fbc515ae1f424eed524"
 [MiniZinc]
-    rev = "ec190bb1b59f5ebc20415bbaa140cab062be9fc0"
+    rev = "v0.3.0"
 [MosekTools]
     rev = "v0.15.0"
 [MultiObjectiveAlgorithms]
-    rev = "v1.0.0"
+    rev = "v1.2.0"
     has_html = true
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
@@ -81,7 +81,7 @@
     rev = "v0.7.0"
     extension = true
 [SCS]
-    rev = "v1.2.1"
+    rev = "v1.3.0"
 [SDPA]
     rev = "v0.5.0"
 [SDPNAL]
@@ -103,7 +103,7 @@
     rev = "32757b2568acfe71257e41ed4122a120717a6460"
 [BilevelJuMP]
     user = "joaquimg"
-    rev = "146a6a93a5fac60faaf68e87c4592f585c79c6e9"
+    rev = "v0.6.2"
     extension = true
 [CDCS]
     user = "oxfordcontrol"
@@ -124,7 +124,7 @@
     has_html = true
 [DAQP]
     user = "darnstrom"
-    rev = "v0.5.0"
+    rev = "v0.5.1"
 # [EAGO]
 #   user = "PSORLab"
 # [GAMS]
@@ -158,7 +158,7 @@
     rev = "443706e34c2619acbe65281c60bbe850ca4a8fac"
 [PATHSolver]
     user = "chkwon"
-    rev = "v1.5.0"
+    rev = "v1.6.1"
 [Plasmo]
     user = "plasmo-dev"
     rev = "37f80fe96781dc647b3a5e0ed26b9eb0a994bc4a"
@@ -173,7 +173,7 @@
     rev = "v0.11.13"
 [SDDP]
     user = "odow"
-    rev = "v1.5.0"
+    rev = "v1.6.1"
     has_html = true
     extension = true
 [Tulip]
