@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Other
 
- - Updated packages used in documenntation (#3444) (#3455)
+ - Updated packages used in documentation (#3444) (#3455)
  - Fixed docstring tests (#3445)
  - Fixed printing change for MathOptInterface (#3446)
  - Fixed typos in documentation (#3448) (#3457)
