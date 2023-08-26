@@ -13,6 +13,7 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
     of quirks and limitations that prompted the development of a new nonlinear
     interface. The new interface is documented at [Nonlinear Modeling](@ref new_nonlinear_interface).
     This legacy interface will remain for all future `v1.X` releases of JuMP.
+    The two nonlinear interfaces cannot be combined.
 
 JuMP has support for general smooth nonlinear (convex and nonconvex)
 optimization problems. JuMP is able to provide exact, sparse second-order

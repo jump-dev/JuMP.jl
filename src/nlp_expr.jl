@@ -177,20 +177,22 @@ function function_string(::MIME"text/latex", x::GenericNonlinearExpr)
         arg = pop!(stack)
         if arg isa GenericNonlinearExpr
             if arg.head in _PREFIX_OPERATORS && length(arg.args) > 1
+                print(io, "{")
+                push!(stack, "}")
                 if _needs_parentheses(arg.args[1])
-                    print(io, "{\\left({")
+                    print(io, "\\left(")
                 end
                 if _needs_parentheses(arg.args[end])
-                    push!(stack, "}\\right)}")
+                    push!(stack, "\\right)")
                 end
                 for i in length(arg.args):-1:2
                     push!(stack, arg.args[i])
                     if _needs_parentheses(arg.args[i])
-                        push!(stack, "\\left({")
+                        push!(stack, "\\left(")
                     end
                     push!(stack, "} $(arg.head) {")
                     if _needs_parentheses(arg.args[i-1])
-                        push!(stack, "}\\right)")
+                        push!(stack, "\\right)")
                     end
                 end
                 push!(stack, arg.args[1])

@@ -72,7 +72,7 @@ value.([w, x, y, z])
 
 # ## Transportation
 
-# This is example is a reformulation of the transportation problem from Chapter
+# This example is a reformulation of the transportation problem from Chapter
 # 3.3 of Dantzig, G.B. (1963). _Linear Programming and Extensions_. Princeton
 # University Press, Princeton, New Jersey. It is based on the GAMS model
 # [`gamslib_transmcp`](https://www.gams.com/latest/gamslib_ml/libhtml/gamslib_transmcp.html).
@@ -142,7 +142,7 @@ value(K)
 
 # ## Electricity consumption
 
-# This is example is mixed complementarity formulation of example 3.3.1 from
+# This example is a mixed complementarity formulation of example 3.3.1 from
 # D’Aertrycke, G., Ehrenmann, A., Ralph, D., & Smeers, Y. (2017). [Risk trading
 # in capacity equilibrium models](https://doi.org/10.17863/CAM.17552).
 

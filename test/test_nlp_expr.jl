@@ -135,12 +135,20 @@ function test_extension_latex(ModelType = Model, VariableRefType = VariableRef)
     @variable(model, x)
     @test function_string(MIME("text/latex"), sin(x)) ==
           raw"\textsf{sin}\left({x}\right)"
-    @test function_string(MIME("text/plain"), sin(x)) == "sin(x)"
+    @test function_string(MIME("text/latex"), sin(x)^x) ==
+          raw"{\textsf{sin}\left({x}\right)} ^ {x}"
+    @test function_string(MIME("text/latex"), sin(x)^(x + 1)) ==
+          raw"{\textsf{sin}\left({x}\right)} ^ {\left(x + 1\right)}"
+    @test function_string(MIME("text/latex"), (x + 1)^x) ==
+          raw"{\left(x + 1\right)} ^ {x}"
+    @test function_string(MIME("text/latex"), (x + 1)^(x + 1)) ==
+          raw"{\left(x + 1\right)} ^ {\left(x + 1\right)}"
+    @test function_string(MIME("text/latex"), (x + 1)^sin(x)) ==
+          raw"{\left(x + 1\right)} ^ {\textsf{sin}\left({x}\right)}"
+
     @expression(model, g, ifelse(x > 0, sin(x), x + cos(x)^2))
     @test function_string(MIME("text/latex"), g) ==
-          raw"\textsf{ifelse}\left({x} > {0}, {\textsf{sin}\left({x}\right)}, {x} + {\left({\textsf{cos}\left({x}\right)} ^ {2.0}\right)}\right)"
-    @test function_string(MIME("text/latex"), (x + 1) / (x + 1)) ==
-          raw"{\left({x + 1}\right)} / {\left({x + 1}\right)}"
+          raw"\textsf{ifelse}\left({{x} > {0}}, {\textsf{sin}\left({x}\right)}, {{x} + {\left({\textsf{cos}\left({x}\right)} ^ {2.0}\right)}}\right)"
     return
 end
 
