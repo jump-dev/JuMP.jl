@@ -7,6 +7,34 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.14.0 (August 27, 2023)
+
+### Added
+
+ - Added [DimensionalData.jl](@ref) extension (#3413)
+ - Added syntactic sugar for the [`MOI.Parameter`](@ref) set (#3443)
+    * [`Parameter`](@ref)
+    * [`ParameterRef`](@ref)
+    * [`is_parameter`](@ref)
+    * [`parameter_value`](@ref)
+    * [`set_parameter_value`](@ref)
+
+### Fixed
+
+ - Fixed `model_convert` for `BridgeableConstraint` (#3437)
+ - Fixed printing models with integer coefficients larger than `typemax(Int)`
+   (#3447)
+ - Fixed support for constant left-hand side functions in a complementarity
+   constraint (#3452)
+
+### Other
+
+ - Updated packages used in documenntation (#3444) (#3455)
+ - Fixed docstring tests (#3445)
+ - Fixed printing change for MathOptInterface (#3446)
+ - Fixed typos in documentation (#3448) (#3457)
+ - Added SCIP to callback documentation (#3449)
+
 ## Version 1.13.0 (July 27, 2023)
 
 ### Added
