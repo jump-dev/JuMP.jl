@@ -18,7 +18,7 @@ import MultiObjectiveAlgorithms as MOA
 
 # ## Bi-objective linear problem
 
-# This is example is taken from Example 6.3 (from Steuer, 1985), page 154 of
+# This example is taken from Example 6.3 (from Steuer, 1985), page 154 of
 # Ehrgott, M. (2005). _Multicriteria Optimization_. Springer, Berlin. The code
 # was adapted from an example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl)
 # by [@xgandibleux](https://github.com/xgandibleux).
@@ -43,7 +43,7 @@ end
 
 # ## Bi-objective linear assignment problem
 
-# This is example is taken from Example 9.38 (from Ulungu and Teghem, 1994),
+# This example is taken from Example 9.38 (from Ulungu and Teghem, 1994),
 # page 255 of Ehrgott, M. (2005). _Multicriteria Optimization_. Springer, Berlin.
 # The code was adapted from an example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl)
 # by [@xgandibleux](https://github.com/xgandibleux).
@@ -71,7 +71,7 @@ end
 
 # ## Bi-objective shortest path problem
 
-# This is example is taken from Exercise 9.5 page 269 of Ehrgott, M. (2005).
+# This example is taken from Exercise 9.5 page 269 of Ehrgott, M. (2005).
 # _Multicriteria Optimization_. Springer, Berlin. The code was adapted from an
 # example in [vOptGeneric](https://github.com/vOptSolver/vOptGeneric.jl) by
 # [@xgandibleux](https://github.com/xgandibleux).
