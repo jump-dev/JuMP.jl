@@ -139,6 +139,8 @@ function test_extension_latex(ModelType = Model, VariableRefType = VariableRef)
     @expression(model, g, ifelse(x > 0, sin(x), x + cos(x)^2))
     @test function_string(MIME("text/latex"), g) ==
           raw"\textsf{ifelse}\left({x} > {0}, {\textsf{sin}\left({x}\right)}, {x} + {\left({\textsf{cos}\left({x}\right)} ^ {2.0}\right)}\right)"
+    @test function_string(MIME("text/latex"), (x + 1) / (x + 1)) ==
+          raw"{\left({x + 1}\right)} / {\left({x + 1}\right)}"
     return
 end
 
@@ -470,6 +472,7 @@ function test_register_univariate()
     @variable(model, x)
     @register(model, f, 1, x -> x^2)
     @test f isa NonlinearOperator
+    @test sprint(show, f) == "NonlinearOperator(:f, $(f.func))"
     @test isequal_canonical(@expression(model, f(x)), f(x))
     @test isequal_canonical(f(x), GenericNonlinearExpr(:f, Any[x]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
@@ -509,7 +512,7 @@ function test_register_univariate_gradient_hessian()
     return
 end
 
-function test_register_multivariate_()
+function test_register_multivariate()
     model = Model()
     @variable(model, x[1:2])
     f = (x...) -> sum(x .^ 2)
@@ -549,6 +552,16 @@ function test_register_multivariate_gradient_hessian()
     @test isequal_canonical(foo(x...), GenericNonlinearExpr(:foo, Any[x...]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:foo, 2) in attrs
+    return
+end
+
+function test_register_multivariate_many_args()
+    model = Model()
+    @variable(model, x[1:10])
+    f = (x...) -> sum(x .^ 2)
+    @register(model, foo, 10, f)
+    @test isequal_canonical(foo(x...), GenericNonlinearExpr(:foo, Any[x...]))
+    @test foo((1:10)...) == 385
     return
 end
 
