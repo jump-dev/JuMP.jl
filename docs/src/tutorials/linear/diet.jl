@@ -5,22 +5,23 @@
 
 # # The diet problem
 
-# This tutorial solves the classic "diet problem," also known as the
-# [Stigler diet](https://en.wikipedia.org/wiki/Stigler_diet).
+# The purpose of this tutorial is to demonstrate how to incorporate DataFrames
+# into a JuMP mdoel. As an example, we use classic [Stigler diet problem](https://en.wikipedia.org/wiki/Stigler_diet).
 
 # ## Required packages
 
 # This tutorial requires the following packages:
 
 using JuMP
+import CSV
 import DataFrames
 import HiGHS
 import Test  #hide
 
 # ## Formulation
 
-# Suppose we wish to cook a nutritionally balanced meal by choosing the quantity
-# of each food ``f`` to eat from a set of foods ``F`` in our kitchen.
+# We wish to cook a nutritionally balanced meal by choosing the quantity of each
+# food ``f`` to eat from a set of foods ``F`` in our kitchen.
 
 # Each food ``f`` has a cost, ``c_f``, as well as a macro-nutrient profile
 # ``a_{m,f}`` for each macro-nutrient ``m \in M``.
@@ -37,7 +38,7 @@ import Test  #hide
 # \begin{aligned}
 # \min & \sum\limits_{f \in F} c_f x_f \\
 # \text{s.t.}\ \ & l_m \le \sum\limits_{f \in F} a_{m,f} x_f \le u_m, && \forall m \in M \\
-# & x_f \ge 0, && \forall f \in F
+# & x_f \ge 0, && \forall f \in F.
 # \end{aligned}
 # ```
 
@@ -46,41 +47,60 @@ import Test  #hide
 
 # ## Data
 
-# First, we need some data for the problem:
+# First, we need some data for the problem. For this tutorial, we'll write CSV
+# files to a temporary directory from Julia. If you have existing files, you
+# could change the filenames to point to them instead.
 
-foods = DataFrames.DataFrame(
-    [
-        "hamburger" 2.49 410 24 26 730
-        "chicken" 2.89 420 32 10 1190
-        "hot dog" 1.50 560 20 32 1800
-        "fries" 1.89 380 4 19 270
-        "macaroni" 2.09 320 12 10 930
-        "pizza" 1.99 320 15 12 820
-        "salad" 2.49 320 31 12 1230
-        "milk" 0.89 100 8 2.5 125
-        "ice cream" 1.59 330 8 10 180
-    ],
-    ["name", "cost", "calories", "protein", "fat", "sodium"],
-)
+dir = mktempdir()
+
+# The first file is a list of foods with their macronutrient profile:
+
+food_csv_filename = joinpath(dir, "diet_foods.csv")
+open(food_csv_filename, "w") do io
+    write(
+        io,
+        """
+        name,cost,calories,protein,fat,sodium
+        hamburger,2.49,410,24,26,730
+        chicken,2.89,420,32,10,1190
+        hot dog,1.50,560,20,32,1800
+        fries,1.89,380,4,19,270
+        macaroni,2.09,320,12,10,930
+        pizza,1.99,320,15,12,820
+        salad,2.49,320,31,12,1230
+        milk,0.89,100,8,2.5,125
+        ice cream,1.59,330,8,10,180
+        """,
+    )
+    return
+end
+foods = CSV.read(food_csv_filename, DataFrames.DataFrame)
 
 # Here, ``F`` is `foods.name` and ``c_f`` is `foods.cost`. (We're also playing
 # a bit loose the term "macro-nutrient" by including calories and sodium.)
 
-# !!! tip
-#     Although we hard-coded the data here, you could also read it in from a
-#     file. See [Getting started with data and plotting](@ref) for details.
-
 # We also need our minimum and maximum limits:
 
-limits = DataFrames.DataFrame(
-    [
-        "calories" 1800 2200
-        "protein" 91 Inf
-        "fat" 0 65
-        "sodium" 0 1779
-    ],
-    ["nutrient", "min", "max"],
-)
+nutrient_csv_filename = joinpath(dir, "diet_nutrient.csv")
+open(nutrient_csv_filename, "w") do io
+    write(
+        io,
+        """
+        nutrient,min,max
+        calories,1800,2200
+        protein,91,
+        fat,0,65
+        sodium,0,1779
+        """,
+    )
+    return
+end
+limits = CSV.read(nutrient_csv_filename, DataFrames.DataFrame)
+
+# Protein is missing data for the maximum. Let's fix that using `coalesce`:
+
+limits.max = coalesce.(limits.max, Inf)
+limits
 
 # ## JuMP formulation
 
@@ -98,7 +118,8 @@ set_silent(model)
 @variable(model, x[foods.name] >= 0)
 
 # To simplify things later on, we store the vector as a new column `x` in the
-# DataFrame `foods`:
+# DataFrame `foods`. Since `x` is a `DenseAxisArray`, we first need to convert
+# it to an `Array`:
 
 foods.x = Array(x)
 
@@ -155,7 +176,7 @@ filter!(row -> row.quantity > 0.0, solution)
 
 dairy_foods = ["milk", "ice cream"]
 is_dairy = map(name -> name in dairy_foods, foods.name)
-@constraint(model, sum(foods[is_dairy, :x]) <= 6)
+dairy_constraint = @constraint(model, sum(foods[is_dairy, :x]) <= 6)
 optimize!(model)
 Test.@test termination_status(model) == INFEASIBLE  #hide
 Test.@test primal_status(model) == NO_SOLUTION      #hide
@@ -163,3 +184,11 @@ solution_summary(model)
 
 # There exists no feasible solution to our problem. Looks like we're stuck
 # eating ice cream for dinner.
+
+# ## Next steps
+
+# * You can delete a constraint using `delete(model, dairy_constraint)`. Can you
+#   add a different constraint to provide a diet with less dairy?
+# * Some food items (like hamburgers) are discrete. You can use `set_integer`
+#   to force a variable to take integer values. What happens to the solution if
+#   you do?
