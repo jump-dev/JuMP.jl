@@ -598,7 +598,7 @@ x > 2
 const op_greater_than = NonlinearOperator(:>, >)
 
 """
-    op_less_equal(x, y)
+    op_less_than_or_equal_to(x, y)
 
 A function that falls back to `x <= y`, but when called with JuMP variables or
 expressions, returns a [`GenericNonlinearExpr`](@ref).
@@ -610,17 +610,17 @@ julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> op_less_equal(2, 2)
+julia> op_less_than_or_equal_to(2, 2)
 true
 
-julia> op_less_equal(x, 2)
+julia> op_less_than_or_equal_to(x, 2)
 x <= 2
 ```
 """
-const op_less_equal = NonlinearOperator(:<=, <=)
+const op_less_than_or_equal_to = NonlinearOperator(:<=, <=)
 
 """
-    op_greater_equal(x, y)
+    op_greater_than_or_equal_to(x, y)
 
 A function that falls back to `x >= y`, but when called with JuMP variables or
 expressions, returns a [`GenericNonlinearExpr`](@ref).
@@ -632,14 +632,14 @@ julia> model = Model();
 
 julia> @variable(model, x);
 
-julia> op_greater_equal(2, 2)
+julia> op_greater_than_or_equal_to(2, 2)
 true
 
-julia> op_greater_equal(x, 2)
+julia> op_greater_than_or_equal_to(x, 2)
 x >= 2
 ```
 """
-const op_greater_equal = NonlinearOperator(:>=, >=)
+const op_greater_than_or_equal_to = NonlinearOperator(:>=, >=)
 
 """
     op_equal_to(x, y)
@@ -672,9 +672,9 @@ function _rewrite_to_jump_logic(x)
         elseif x.args[1] == :>
             return Expr(:call, op_greater_than, x.args[2:end]...)
         elseif x.args[1] == :<=
-            return Expr(:call, op_less_equal, x.args[2:end]...)
+            return Expr(:call, op_less_than_or_equal_to, x.args[2:end]...)
         elseif x.args[1] == :>=
-            return Expr(:call, op_greater_equal, x.args[2:end]...)
+            return Expr(:call, op_greater_than_or_equal_to, x.args[2:end]...)
         elseif x.args[1] == :(==)
             return Expr(:call, op_equal_to, x.args[2:end]...)
         end
