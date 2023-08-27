@@ -359,8 +359,9 @@ value(t), sqrt(LinearAlgebra.det(value.(X)))
 # instead. This can be more efficient because the solver does not need to add
 # additional constraints to ensure `X` is symmetric.
 
-# When forming the function, use [`triangle_vec`](@ref) to obtain the upper
-# triangle of the matrix as a vector in the order that JuMP requires.
+# When forming the function, use [`triangle_vec`](@ref) to obtain the
+# column-wise upper triangle of the matrix as a vector in the order that JuMP
+# requires.
 
 model = Model(SCS.Optimizer)
 set_silent(model)
@@ -395,8 +396,9 @@ value(t), 0.5 * log(LinearAlgebra.det(value.(X) ./ 0.5))
 # instead. This can be more efficient because the solver does not need to add
 # additional constraints to ensure `X` is symmetric.
 
-# When forming the function, use [`triangle_vec`](@ref) to obtain the upper
-# triangle of the matrix as a vector in the order that JuMP requires.
+# When forming the function, use [`triangle_vec`](@ref) to obtain the
+# column-wise upper triangle of the matrix as a vector in the order that JuMP
+# requires.
 
 model = Model(SCS.Optimizer)
 set_silent(model)
