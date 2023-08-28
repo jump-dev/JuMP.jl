@@ -5,9 +5,9 @@
 
 # # Multi-objective knapsack
 
-# This tutorial explains how to create and solve a multi-objective linear
-# program. In addition, it demonstrates how to work with solvers which return
-# multiple solutions.
+# The purpose of this tutorial to to demonstrate how to create and solve a
+# multi-objective linear program. In addition, it demonstrates how to work with
+# solvers which return multiple solutions.
 
 # ## Required packages
 
@@ -19,10 +19,9 @@ import MultiObjectiveAlgorithms as MOA
 import Plots
 import Test  #hide
 
-# [`MultiObjectiveAlgorithms.jl`](https://github.com/jump-dev/MultiObjectiveAlgorithms.jl)
-# is a package which implements a variety of algorithms for solving
-# multi-objective optimization problems. Because it is a long package name, we
-# import it instead as `MOA`.
+# [MultiObjectiveAlgorithms.jl](@ref) is a package which implements a variety of
+# algorithms for solving multi-objective optimization problems. Because it is a
+# long package name, we import it instead as `MOA`.
 
 # ## Formulation
 
@@ -107,13 +106,13 @@ model = Model()
 # ## Solution
 
 # To solve our model, we need an optimizer which supports multi-objective linear
-# programs. One option is to use the [`MultiObjectiveAlgorithms.jl`](https://github.com/jump-dev/MultiObjectiveAlgorithms.jl)
+# programs. One option is to use the [MultiObjectiveAlgorithms.jl](@ref)
 # package.
 
 set_optimizer(model, () -> MOA.Optimizer(HiGHS.Optimizer))
 set_silent(model)
 
-# `MultiObjectiveAlgorithms` supports many different algorithms for solving
+# MultiObjectiveAlgorithms.jl supports many different algorithms for solving
 # multiobjective optimization problems. One option is the epsilon-constraint
 # method:
 
@@ -178,3 +177,9 @@ Plots.scatter!([ideal_point[1]], [ideal_point[2]]; label = "Ideal point")
 # The set of items that are chosen in solution `#7` are:
 
 items_chosen = [i for i in 1:N if value(x[i]; result = 7) > 0.9]
+
+# ## Next steps
+
+# [MultiObjectiveAlgorithms.jl](@ref) implements a number of different
+# algorithms. Try solving the same problem using `MOA.Dichotomy()`. Does it find
+# the same solution?
