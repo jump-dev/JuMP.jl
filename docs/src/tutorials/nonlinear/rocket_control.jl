@@ -7,9 +7,18 @@
 
 # **This tutorial was originally contributed by Iain Dunning.**
 
-# This tutorial shows how to solve a nonlinear rocketry control problem.
-# The problem was drawn from the [COPS3](https://www.mcs.anl.gov/~more/cops/cops3.pdf)
-# benchmark.
+# The purpose of this tutorial is to demonstrate how to setup and solve a
+# nonlinear optimization problem.
+
+# The example is an optimal control problem of a nonlinear rocket.
+
+# This tutorial uses the following packages:
+
+using JuMP
+import Ipopt
+import Plots
+
+# ## Overview
 
 # Our goal is to maximize the final altitude of a vertically launched rocket.
 
@@ -17,180 +26,130 @@
 # mass, fuel consumption rate, gravity, and aerodynamic drag.
 
 # Let us consider the basic description of the model (for the full description,
-# including parameters for the rocket, see the COPS3 PDF)
+# including parameters for the rocket, see [COPS3](https://www.mcs.anl.gov/~more/cops/cops3.pdf)).
 
-# ### Overview
+# There are three state variables in our model:
 
-# We will use a discretized model of time, with a fixed number of time steps,
-# $n$.
+# * Velocity: $x_v(t)$
+# * Altitude: $x_h(t)$
+# * Mass of rocket and remaining fuel, $x_m(t)$
 
-# We will make the time step size $\Delta t$, and thus the final time
-# $t_f = n \cdot \Delta t$, a variable in the problem. To approximate the
-# derivatives in the problem we will use the [trapezoidal rule](https://en.wikipedia.org/wiki/Trapezoidal_rule).
+# and a single control variable:
 
-# ### State and Control
+# * Thrust: $u_t(t)$.
 
-# We will have three state variables:
+# There are three equations that control the dynamics of the rocket:
+
+#  * Rate of ascent: $$\frac{d x_h}{dt} = x_v$$
+#  * Acceleration: $$\frac{d x_v}{dt} = \frac{u_t - D(x_h, x_v)}{x_m} - g(x_h)$$
+#  * Rate of mass loss: $$\frac{d x_m}{dt} = -\frac{u_t}{c}$$
+
+# where drag $D(x_h, x_v)$ is a function of altitude and velocity, gravity
+# $g(x_h)$ is a function of altitude, and $c$ is a constant.
+
+# These forces are defined as:
 #
-# * Velocity, $v$
-# * Altitude, $h$
-# * Mass of rocket and remaining fuel, $m$
-#
-# and a single control variable, thrust $T$.
-
-# Our goal is thus to maximize $h(t_f)$.
-
-# Each of these corresponds to a JuMP variable indexed by the time step.
-
-# ### Dynamics
-
-# We have three equations that control the dynamics of the rocket:
-#
-# Rate of ascent: $$h^\prime = v$$
-# Acceleration: $$v^\prime = \frac{T - D(h,v)}{m} - g(h)$$
-# Rate of mass loss: $$m^\prime = -\frac{T}{c}$$
-#
-# where drag $D(h,v)$ is a function of altitude and velocity, and gravity
-# $g(h)$ is a function of altitude.
-
-# These forces are defined as
-#
-# $$D(h,v) = D_c v^2 exp\left( -h_c \left( \frac{h-h(0)}{h(0)} \right) \right)$$
+# $$D(x_h, x_v) = D_c \cdot x_v^2 \cdot e^{-h_c \left( \frac{x_h-x_h(0)}{x_h(0)} \right)}$$
 # and
-# $$g(h) = g_0 \left( \frac{h(0)}{h} \right)^2$$
-#
-# The three rate equations correspond to JuMP constraints, and for convenience
-# we will represent the forces with nonlinear expressions.
+# $$g(x_h) = g_0 \cdot \left( \frac{x_h(0)}{x_h} \right)^2$$
 
-using JuMP
-import Ipopt
-import Plots
+# We use a discretized model of time, with a fixed number of time steps, $T$.
 
-# Create JuMP model, using Ipopt as the solver
+# Our goal is thus to maximize $x_h(T)$.
 
-rocket = Model(Ipopt.Optimizer)
-set_silent(rocket)
+# ## Data
 
-# ## Constants
+# All parameters in this model have been normalized to be dimensionless, and
+# they are taken from [COPS3](https://www.mcs.anl.gov/~more/cops/cops3.pdf).
 
-# Note that all parameters in the model have been normalized
-# to be dimensionless. See the COPS3 paper for more info.
+h_0 = 1                      # Initial height
+v_0 = 0                      # Initial velocity
+m_0 = 1.0                    # Initial mass
+m_T = 0.6                    # Final mass
+g_0 = 1                      # Gravity at the surface
+h_c = 500                    # Used for drag
+c = 0.5 * sqrt(g_0 * h_0)    # Thrust-to-fuel mass
+D_c = 0.5 * 620 * m_0 / g_0  # Drag scaling
+u_t_max = 3.5 * g_0 * m_0    # Maximum thrust
+T_max = 0.2                  # Number of seconds
+T = 1_000                    # Number of time steps
+Δt = 0.2 / T;                # Time per discretized step
 
-h_0 = 1    # Initial height
-v_0 = 0    # Initial velocity
-m_0 = 1    # Initial mass
-g_0 = 1    # Gravity at the surface
+# ## JuMP formulation
 
-T_c = 3.5  # Used for thrust
-h_c = 500  # Used for drag
-v_c = 620  # Used for drag
-m_c = 0.6  # Fraction of initial mass left at end
+# First, we create a model and choose an optimizer. Since this is a nonlinear
+# program, we need to use a nonlinear solver like Ipopt. We cannot use a linear
+# solver like HiGHS.
 
-c = 0.5 * sqrt(g_0 * h_0)  # Thrust-to-fuel mass
-m_f = m_c * m_0              # Final mass
-D_c = 0.5 * v_c * m_0 / g_0  # Drag scaling
-T_max = T_c * g_0 * m_0        # Maximum thrust
+model = Model(Ipopt.Optimizer)
+set_silent(model)
 
-n = 800    # Time steps
+# Next, we create our state and control variables, which are each indexed by
+# `t`. It is good practice for nonlinear programs to always provide a starting
+# solution for each variable.
 
-# ## Decision variables
+@variable(model, x_v[1:T] >= 0, start = v_0)           # Velocity
+@variable(model, x_h[1:T] >= 0, start = h_0)           # Height
+@variable(model, x_m[1:T] >= m_T, start = m_0)         # Mass
+@variable(model, 0 <= u_t[1:T] <= u_t_max, start = 0); # Thrust
 
-@variables(rocket, begin
-    Δt ≥ 0, (start = 1 / n) # Time step
-    ## State variables
-    v[1:n] ≥ 0            # Velocity
-    h[1:n] ≥ h_0          # Height
-    m_f ≤ m[1:n] ≤ m_0    # Mass
-    ## Control variables
-    0 ≤ T[1:n] ≤ T_max    # Thrust
-end);
+# We implement boundary conditions by fixing variables to values.
 
-# ## Objective
+fix(x_v[1], v_0; force = true)
+fix(x_h[1], h_0; force = true)
+fix(x_m[1], m_0; force = true)
+fix(u_t[T], 0.0; force = true)
 
 # The objective is to maximize altitude at end of time of flight.
 
-@objective(rocket, Max, h[n])
+@objective(model, Max, x_h[T])
 
-# ## Initial conditions
+# Forces are defined as functions:
 
-fix(v[1], v_0; force = true)
-fix(h[1], h_0; force = true)
-fix(m[1], m_0; force = true)
-fix(m[n], m_f; force = true)
+D(x_h, x_v) = D_c * x_v^2 * exp(-h_c * (x_h - h_0) / h_0),
+g(x_h) = g_0 * (h_0 / x_h)^2
 
-# ## Forces
+# The dynamical equations are implemented as constraints.
 
-@expressions(
-    rocket,
-    begin
-        ## Drag(h,v) = Dc v^2 exp( -hc * (h - h0) / h0 )
-        drag[j = 1:n], D_c * (v[j]^2) * exp(-h_c * (h[j] - h_0) / h_0)
-        ## Grav(h)   = go * (h0 / h)^2
-        grav[j = 1:n], g_0 * (h_0 / h[j])^2
-        ## Time of flight
-        t_f, Δt * n
-    end
-);
+ddt(x::Vector, t::Int) = (x[t] - x[t-1]) / Δt
+@constraint(model, [t in 2:T], ddt(x_h, t) == x_v[t-1])
+@constraint(
+    model,
+    [t in 2:T],
+    ddt(x_v, t) == (u_t[t-1] - D(x_h[t-1], x_v[t-1])) / x_m[t-1] - g(x_h[t-1]),
+)
+@constraint(model, [t in 2:T], ddt(x_m, t) == -u_t[t-1] / c);
 
-# ## Dynamics
+# Now we optimize the model and check that we found a solution:
 
-for j in 2:n
-    ## h' = v
-    ## Rectangular integration
-    ## @constraint(rocket, h[j] == h[j - 1] + Δt * v[j - 1])
-    ## Trapezoidal integration
-    @constraint(rocket, h[j] == h[j-1] + 0.5 * Δt * (v[j] + v[j-1]))
-    ## v' = (T-D(h,v))/m - g(h)
-    ## Rectangular integration
-    ## @constraint(
-    ##     rocket,
-    ##     v[j] == v[j - 1] + Δt *((T[j - 1] - drag[j - 1]) / m[j - 1] - grav[j - 1])
-    ## )
-    ## Trapezoidal integration
-    @constraint(
-        rocket,
-        v[j] ==
-        v[j-1] +
-        0.5 *
-        Δt *
-        (
-            (T[j] - drag[j] - m[j] * grav[j]) / m[j] +
-            (T[j-1] - drag[j-1] - m[j-1] * grav[j-1]) / m[j-1]
-        )
-    )
-    ## m' = -T/c
-    ## Rectangular integration
-    ## @constraint(rocket, m[j] == m[j - 1] - Δt * T[j - 1] / c)
-    ## Trapezoidal integration
-    @constraint(rocket, m[j] == m[j-1] - 0.5 * Δt * (T[j] + T[j-1]) / c)
-end
+optimize!(model)
+solution_summary(model)
 
-# Solve for the control and state
-println("Solving...")
-optimize!(rocket)
-solution_summary(rocket)
+# Finally, we plot the solution:
 
-# ## Display results
-
-println("Max height: ", objective_value(rocket))
-
-#-
-
-function my_plot(y, ylabel)
+function plot_trajectory(y; kwargs...)
     return Plots.plot(
-        (1:n) * value.(Δt),
-        value.(y)[:];
+        (1:T) * Δt,
+        value.(y);
         xlabel = "Time (s)",
-        ylabel = ylabel,
+        legend = false,
+        kwargs...,
     )
 end
 
 Plots.plot(
-    my_plot(h, "Altitude"),
-    my_plot(m, "Mass"),
-    my_plot(v, "Velocity"),
-    my_plot(T, "Thrust");
+    plot_trajectory(x_h; ylabel = "Altitude"),
+    plot_trajectory(x_m; ylabel = "Mass"),
+    plot_trajectory(x_v; ylabel = "Velocity"),
+    plot_trajectory(u_t; ylabel = "Thrust");
     layout = (2, 2),
-    legend = false,
-    margin = 1Plots.cm,
 )
+
+# ## Next steps
+
+# * Experiment with different values for the constants. How does the solution
+#   change? In particular, what happens if you change `T_max`?
+# * The dynamical equations use rectangular integration for the right-hand side
+#   terms. Modify the equations to use the [Trapezoidal rule](https://en.wikipedia.org/wiki/Trapezoidal_rule_(differential_equations))
+#   instead. (As an example, `x_v[t-1]` would become
+#   `0.5 * (x_v[t-1] + x_v[t])`.) Is there a difference?
