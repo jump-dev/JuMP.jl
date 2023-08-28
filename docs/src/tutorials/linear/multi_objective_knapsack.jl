@@ -5,7 +5,7 @@
 
 # # Multi-objective knapsack
 
-# The purpose of this tutorial to to demonstrate how to create and solve a
+# The purpose of this tutorial is to demonstrate how to create and solve a
 # multi-objective linear program. In addition, it demonstrates how to work with
 # solvers which return multiple solutions.
 
