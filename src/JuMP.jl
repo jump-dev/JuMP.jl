@@ -172,7 +172,7 @@ GenericModel{BigFloat}
 ```
 """
 function GenericModel{T}(
-    (@nospecialize optimizer_factory) = nothing;
+    @nospecialize(optimizer_factory = nothing);
     add_bridges::Bool = true,
 ) where {T<:Real}
     inner = MOI.Utilities.UniversalFallback(MOI.Utilities.Model{T}())
