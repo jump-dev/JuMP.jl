@@ -305,7 +305,7 @@ julia> expr.args
  x
 ```
 
-## User-defined operators
+## [User-defined operators](@id jump_user_defined_operators)
 
 In addition to a standard list of univariate and multivariate operators
 recognized by the `MOI.Nonlinear` submodule, JuMP supports *user-defined*

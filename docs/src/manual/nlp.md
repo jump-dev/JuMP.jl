@@ -279,7 +279,7 @@ the function is not available in the scope of the nonlinear expression.
 
 !!! warning
     User-defined functions must return a scalar output. For a work-around, see
-    [User-defined functions with vector outputs](@ref).
+    [User-defined operators with vector outputs](@ref).
 
 ### Automatic differentiation
 

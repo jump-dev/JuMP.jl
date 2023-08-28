@@ -21,8 +21,8 @@
 # # User-defined Hessians
 
 # In this tutorial, we explain how to write a user-defined operator (see
-# [User-defined operators](@ref)) with a Hessian matrix explicitly provided by
-# the user.
+# [User-defined operators](@ref jump_user_defined_operators)) with a Hessian
+# matrix explicitly provided by the user.
 #
 # For a more advanced example, see [Nested optimization problems](@ref).
 
