@@ -6,7 +6,7 @@
 # # The diet problem
 
 # The purpose of this tutorial is to demonstrate how to incorporate DataFrames
-# into a JuMP mdoel. As an example, we use classic [Stigler diet problem](https://en.wikipedia.org/wiki/Stigler_diet).
+# into a JuMP model. As an example, we use classic [Stigler diet problem](https://en.wikipedia.org/wiki/Stigler_diet).
 
 # ## Required packages
 
@@ -53,7 +53,7 @@ import Test  #hide
 
 dir = mktempdir()
 
-# The first file is a list of foods with their macronutrient profile:
+# The first file is a list of foods with their macro-nutrient profile:
 
 food_csv_filename = joinpath(dir, "diet_foods.csv")
 open(food_csv_filename, "w") do io
