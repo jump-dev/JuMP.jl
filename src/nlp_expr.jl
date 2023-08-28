@@ -862,12 +862,32 @@ end
 Register a new nonlinear operator with `dim` input arguments to `model` and
 associate it with the name `name`.
 
-The function `f` evaluates the function and must return a scalar.
+The function `f` evaluates the operator and must return a scalar.
 
 The optional function `∇f` evaluates the first derivative, and the optional
 function `∇²f` evaluates the second derivative.
 
 `∇²f` may be provided only if `∇f` is also provided.
+
+## Univariate syntax
+
+If `dim == 1`, then the method signatures of each function must be:
+
+ * `f(::T)::T where {T<:Real}`
+ * `∇f(::T)::T where {T<:Real}`
+ * `∇²f(::T)::T where {T<:Real}`
+
+## Multivariate syntax
+
+If `dim > 1`, then the method signatures of each function must be:
+
+ * `f(x::T...)::T where {T<:Real}`
+ * `∇f(g::AbstractVector{T}, x::T...)::Nothing where {T<:Real}`
+ * `∇²f(H::AbstractMatrix{T}, x::T...)::Nothing where {T<:Real}`
+
+Where the gradient vector `g` and Hessian matrix `H` are filled in-place. For
+the Hessian, you must fill in the non-zero upper-triangular entries only.
+Setting an off-diagonal lower-triangular element may error.
 
 ## Example
 
@@ -954,8 +974,36 @@ end
 """
     @register(model, operator, dim, f[, ∇f[, ∇²f]])
 
-Register the nonlinear operator `operator` in `model`, and create a new
-[`NonlinearOperator`](@ref) object called `operator` in the current scope.
+Register the nonlinear operator `operator` in `model` with `dim` arguments, and
+create a new [`NonlinearOperator`](@ref) object called `operator` in the current
+scope.
+
+The function `f` evaluates the operator and must return a scalar.
+
+The optional function `∇f` evaluates the first derivative, and the optional
+function `∇²f` evaluates the second derivative.
+
+`∇²f` may be provided only if `∇f` is also provided.
+
+## Univariate syntax
+
+If `dim == 1`, then the method signatures of each function must be:
+
+ * `f(::T)::T where {T<:Real}`
+ * `∇f(::T)::T where {T<:Real}`
+ * `∇²f(::T)::T where {T<:Real}`
+
+## Multivariate syntax
+
+If `dim > 1`, then the method signatures of each function must be:
+
+ * `f(x::T...)::T where {T<:Real}`
+ * `∇f(g::AbstractVector{T}, x::T...)::Nothing where {T<:Real}`
+ * `∇²f(H::AbstractMatrix{T}, x::T...)::Nothing where {T<:Real}`
+
+Where the gradient vector `g` and Hessian matrix `H` are filled in-place. For
+the Hessian, you must fill in the non-zero upper-triangular entries only.
+Setting an off-diagonal lower-triangular element may error.
 
 ## Example
 
