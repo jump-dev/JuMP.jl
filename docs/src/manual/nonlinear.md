@@ -266,7 +266,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> expr = op_ifelse(
-           op_or(op_less_than(x, -1), op_greater_than_or_equal_to(x, 1)),
+           op_or(op_strictly_less_than(x, -1), op_greater_than(x, 1)),
            x^2,
            0.0,
        )
@@ -275,16 +275,16 @@ ifelse((x < -1) || (x >= 1), x², 0.0)
 
 The available functions are:
 
-| JuMP function                         | Julia function |
-| :------------------------------------ | :------------- |
-| [`op_ifelse`](@ref)                   | `ifelse`       |
-| [`op_and`](@ref)                      | `&&`           |
-| [`op_or`](@ref)                       | `\|\|`         |
-| [`op_greater_than`](@ref)             | `>`            |
-| [`op_greater_than_or_equal_to`](@ref) | `>=`           |
-| [`op_less_than`](@ref)                | `<`            |
-| [`op_less_than_or_equal_to`](@ref)    | `<=`           |
-| [`op_equal_to`](@ref)                 | `==`           |
+| JuMP function                      | Julia function |
+| :--------------------------------- | :------------- |
+| [`op_ifelse`](@ref)                | `ifelse`       |
+| [`op_and`](@ref)                   | `&&`           |
+| [`op_or`](@ref)                    | `\|\|`         |
+| [`op_greater_than`](@ref)          | `>=`           |
+| [`op_less_than`](@ref)             | `<=`           |
+| [`op_equal_to`](@ref)              | `==`           |
+| [`op_strictly_greater_than`](@ref) | `>`            |
+| [`op_strictly_less_than`](@ref)    | `<`            |
 
 ### Fields
 
