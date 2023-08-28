@@ -2039,7 +2039,7 @@ There are three common mistakes that lead to this.
     @variable(model, x)
     @expression(model, foo(x))
     ```
-    To fix, create a nonlinear model with a user-defined function:
+    To fix, create a nonlinear model with a user-defined operator:
     ```julia
     foo(x) = x $(sym) 1 ? 0 : 1 - x
     model = Model()

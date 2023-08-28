@@ -24,11 +24,12 @@
 # where an *upper* problem uses the results from the optimization of a *lower*
 # subproblem.
 #
-# To model the problem, we define a user-defined function to handle the decomposition
-# of the lower problem inside the upper one. Finally, we show how to improve
-# the performance by using a cache that avoids resolving the lower problem.
+# To model the problem, we define a user-defined operator to handle the
+# decomposition of the lower problem inside the upper one. Finally, we show how
+# to improve the performance by using a cache that avoids resolving the lower
+# problem.
 #
-# For a simpler example of writing a user-defined function,
+# For a simpler example of writing a user-defined operator,
 # see the [User-defined Hessians](@ref) tutorial.
 
 # This tutorial uses the following packages:
@@ -104,7 +105,7 @@ end
 # \end{array}
 # ```
 
-# This looks like a nonlinear optimization problem with a user-defined function
+# This looks like a nonlinear optimization problem with a user-defined operator
 # ``V``! However, because ``V`` solves an optimization problem internally, we
 # can't use automatic differentiation to compute the first and second
 # derivatives. Instead, we can use JuMP's ability to pass callback functions

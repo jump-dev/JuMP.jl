@@ -305,19 +305,19 @@ julia> expr.args
  x
 ```
 
-## User-defined functions
+## User-defined operators
 
-In addition to a standard list of univariate and multivariate functions
+In addition to a standard list of univariate and multivariate operators
 recognized by the `MOI.Nonlinear` submodule, JuMP supports *user-defined*
-Julia functions.
+Julia operators.
 
 !!! warning
-    User-defined functions must return a scalar output. For a work-around, see
-    [User-defined functions with vector outputs](@ref).
+    User-defined operators must return a scalar output. For a work-around, see
+    [User-defined operators with vector outputs](@ref).
 
-### Register a function
+### Register an operator
 
-Register a user-defined function using the [`@register`](@ref) macro:
+Register a user-defined operator using the [`@register`](@ref) macro:
 
 ```@repl
 using JuMP
@@ -333,13 +333,13 @@ model = Model();
 The arguments to [`@register`](@ref) are:
 
  1. The model in which the function is registered.
- 2. A Julia symbol object which serves as the name of the user-defined function
+ 2. A Julia symbol object which serves as the name of the user-defined operator
     in JuMP expressions. This name must not be the same as that of the function.
  3. The number of scalar input arguments that the function takes.
  4. A Julia method which computes the function.
 
 !!! warning
-    User-defined functions cannot be re-registered or deleted.
+    User-defined opterators cannot be re-registered or deleted.
 
 You can obtain a reference to the operator using the `model[:key]` syntax:
 
@@ -351,7 +351,7 @@ model = Model();
 op_square_2 = model[:op_square]
 ```
 
-### Registered functions without macros
+### Registered operators without macros
 
 The [`@register`](@ref) macro is syntactic sugar for the
 [`register_nonlinear_operator`](@ref) method. Thus, the non-macro version of the
@@ -401,7 +401,7 @@ julia> f(x)
 x²
 ```
 
-To force JuMP to treat `f` as a user-defined function and not trace it, register
+To force JuMP to treat `f` as a user-defined operator and not trace it, register
 the function using [`register_nonlinear_operator`](@ref) and define a new method
 which manually creates a [`NonlinearExpr`](@ref):
 ```jldoctest nonlinear_invalid_redefinition
@@ -418,7 +418,7 @@ log(f(x))
 ### Register gradients and Hessians
 
 By default, JuMP will use automatic differentiation to compute the gradient and
-Hessian of user-defined functions. If your function is not amenable to
+Hessian of user-defined operators. If your function is not amenable to
 automatic differentiation, or you can compute analytic derivatives, you may pass
 additional arguments to [`@register`](@ref) to compute the first- and
 second-derivatives.
@@ -475,9 +475,9 @@ you may assume only that `H` supports `size(H)` and `setindex!`. Finally, the
 matrix is treated as dense, so the performance will be poor on functions with
 high-dimensional input.
 
-### User-defined functions with vector inputs
+### User-defined operators with vector inputs
 
-User-defined functions which take vectors as input arguments (for example,
+User-defined operators which take vectors as input arguments (for example,
 `f(x::Vector)`) are *not* supported. Instead, use Julia's splatting syntax to
 create a function with scalar arguments. For example, instead of:
 ```julia
@@ -500,27 +500,27 @@ f(x::Vector) = sum(x[i]^i for i in 1:length(x))
 
 ### Automatic differentiation
 
-JuMP does not support black-box optimization, so all user-defined functions must
+JuMP does not support black-box optimization, so all user-defined operators must
 provide derivatives in some form. Fortunately, JuMP supports automatic
-differentiation of user-defined functions.
+differentiation of user-defined operators.
 
 !!! info
     Automatic differentiation is *not* finite differencing. JuMP's automatically
     computed derivatives are not subject to approximation error.
 
 JuMP uses [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) to
-perform automatic differentiation of user-defined functions; see the ForwardDiff.jl
+perform automatic differentiation of user-defined operators; see the ForwardDiff.jl
 [documentation](https://www.juliadiff.org/ForwardDiff.jl/v0.10.2/user/limitations.html)
 for a description of how to write a function suitable for automatic
 differentiation.
 
-#### Common mistakes when writing a user-defined function
+#### Common mistakes when writing a user-defined operator
 
 !!! warning
     Get an error like `No method matching Float64(::ForwardDiff.Dual)`? Read
     this section, and see the guidelines at [ForwardDiff.jl](https://www.juliadiff.org/ForwardDiff.jl/release-0.10/user/limitations.html).
 
-The most common error is that your user-defined function is not generic with
+The most common error is that your user-defined operator is not generic with
 respect to the number type, that is, don't assume that the input to the function
 is `Float64`.
 ```julia

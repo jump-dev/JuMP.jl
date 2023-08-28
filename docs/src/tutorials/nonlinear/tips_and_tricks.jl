@@ -12,9 +12,9 @@ using JuMP
 import Ipopt
 import Test
 
-# ## User-defined functions with vector outputs
+# ## User-defined operators with vector outputs
 
-# A common situation is to have a user-defined function like the following that
+# A common situation is to have a user-defined operator like the following that
 # returns multiple outputs (we define `function_calls` to keep track of how
 # many times we call this method):
 
@@ -31,7 +31,7 @@ end
 # term might be used in a constraint, and often they share work that is
 # expensive to evaluate.
 
-# This is a problem for JuMP, because it requires user-defined functions to
+# This is a problem for JuMP, because it requires user-defined operators to
 # return a single number. One option is to define two separate functions, the
 # first returning the first argument, and the second returning the second
 # argument.
