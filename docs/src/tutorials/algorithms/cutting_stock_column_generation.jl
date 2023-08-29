@@ -9,7 +9,9 @@
 # in JuMP using column generation. It uses the following packages:
 
 using JuMP
-import GLPK
+import DataFrames
+import HiGHS
+import Plots
 import SparseArrays
 import Test  #src
 
@@ -100,8 +102,9 @@ data = get_data()
 # we satisfy demand exactly.
 
 I = length(data.pieces)
-J = 1000  # Some large number
-model = Model(GLPK.Optimizer)
+J = 1_000  # Some large number
+model = Model(HiGHS.Optimizer)
+set_silent(model)
 @variable(model, x[1:I, 1:J] >= 0, Int)
 @variable(model, y[1:J], Bin)
 @constraint(
@@ -109,14 +112,16 @@ model = Model(GLPK.Optimizer)
     [j in 1:J],
     sum(data.pieces[i].w * x[i, j] for i in 1:I) <= data.W * y[j],
 )
-@constraint(model, [i in 1:I], sum(x[i, j] for j in 1:J) >= data.pieces[i].d)
-@objective(model, Min, sum(y[j] for j in 1:J))
+@constraint(model, [i in 1:I], sum(x[i, :]) >= data.pieces[i].d)
+@objective(model, Min, sum(y))
 model
 
-# Unfortunately, we won't attempt to solve this formulation because it takes a
-# very long time to solve. (Try it and see.)
+# Unfortunately, we cant't solve this formulation because it takes a very long
+# time to solve. (Try removing the time limit.)
 
-## optimize!(model)
+set_time_limit_sec(model, 5.0)
+optimize!(model)
+solution_summary(model)
 
 # However, there is a formulation that solves much faster, and that is to use a
 # column generation scheme.
@@ -188,17 +193,31 @@ model
 
 function solve_pricing(data::Data, π::Vector{Float64})
     I = length(π)
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     set_silent(model)
     @variable(model, y[1:I] >= 0, Int)
     @constraint(model, sum(data.pieces[i].w * y[i] for i in 1:I) <= data.W)
     @objective(model, Max, sum(π[i] * y[i] for i in 1:I))
     optimize!(model)
-    if objective_value(model) > 1
-        return round.(Int, value.(y))
+    if objective_value(model) <= 1
+        return nothing  # Benefit of pattern is less than the cost of a new roll
     end
-    return nothing
+    return SparseArrays.sparse(round.(Int, value.(y)))
 end
+
+# If we solve the pricing problem with an artifical dual vector:
+
+π = [1.0 / i for i in 1:I]
+solve_pricing(data, π)
+
+# the solution is a roll with 1 unit of size 1, 1 unit of size 17, and 3 units
+# of size 20.
+
+# If we solve the pricing problem with a dual vector of zeros, then the benefit
+# of the new pattern is less than the cost of a roll, and so the function
+# returns `nothing`:
+
+solve_pricing(data, zeros(I))
 
 # ## Choosing the initial set of patterns
 
@@ -206,12 +225,13 @@ end
 # cuts as many pieces of size ``i`` as will fit, or the amount demanded,
 # whichever is smaller.
 
-patterns = Vector{Int}[]
-for i in 1:I
-    pattern = zeros(Int, I)
-    pattern[i] = floor(Int, min(data.W / data.pieces[i].w, data.pieces[i].d))
-    push!(patterns, pattern)
-end
+patterns = SparseArrays.SparseVector{Int,Int}[
+    SparseArrays.sparsevec(
+        [i],
+        floor(Int, min(data.W / data.pieces[i].w, data.pieces[i].d)),
+        I,
+    ) for i in 1:I
+]
 P = length(patterns)
 
 # We can visualize the patterns by looking at the sparse matrix of the
@@ -223,7 +243,7 @@ SparseArrays.sparse(hcat(patterns...))
 
 # First, we create our initial linear program:
 
-model = Model(GLPK.Optimizer)
+model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variable(model, x[1:P] >= 0)
 @objective(model, Min, sum(x))
@@ -249,10 +269,9 @@ while true
     ## Update the objective coefficients
     set_objective_coefficient(model, x[end], 1.0)
     ## Update the non-zeros in the coefficient matrix
-    for i in 1:I
-        if new_pattern[i] > 0
-            set_normalized_coefficient(demand[i], x[end], new_pattern[i])
-        end
+    rows, counts = SparseArrays.findnz(new_pattern)
+    for (row, count) in zip(rows, counts)
+        set_normalized_coefficient(demand[row], x[end], count)
     end
 end
 
@@ -264,53 +283,79 @@ SparseArrays.sparse(hcat(patterns...))
 
 # Here's pattern 21:
 
-for i in 1:I
-    if patterns[21][i] > 0
-        println(patterns[21][i], " unit(s) of piece $i")
+patterns[21]
+
+# Here's another way to visualize the patterns:
+
+function cutting_locations(data::Data, pattern::SparseArrays.SparseVector)
+    locations = Float64[]
+    offset = 0.0
+    for (i, c) in zip(SparseArrays.findnz(pattern)...)
+        for _ in 1:c
+            offset += data.pieces[i].w
+            push!(locations, offset)
+        end
     end
+    return locations
 end
+
+plot = Plots.bar(;
+    xlims = (0, length(patterns) + 1),
+    ylims = (0, data.W),
+    xlabel = "Pattern",
+    ylabel = "Roll length",
+)
+for (i, p) in enumerate(patterns)
+    locations = cutting_locations(data, p)
+    Plots.bar!(
+        plot,
+        fill(i, length(locations)),
+        reverse(locations);
+        bar_width = 1.0,
+        label = false,
+    )
+end
+plot
 
 # ## Looking at the solution
 
 # Since we only solved a linear relaxation, some of our columns have fractional
 # solutions. We can create a integer feasible solution by rounding up the orders:
 
-for p in 1:length(x)
-    v = ceil(Int, value(x[p]))
-    if v > 0
-        println(lpad(v, 2), " roll(s) of pattern $p")
-    end
-end
+solution = DataFrames.DataFrame([
+    (pattern = p, rolls = ceil(Int, value(x_p))) for (p, x_p) in enumerate(x)
+])
+filter!(row -> row.rolls > 0, solution)
 
 # This requires 343 rolls:
 
-Test.@test sum(ceil.(Int, value.(x))) == 343  #src
-sum(ceil.(Int, value.(x)))
+Test.@test sum(solution.rolls) == 343  #src
+sum(solution.rolls)
 
 # Alternatively, we can re-introduce the integrality constraints and resolve the
 # problem:
 
 set_integer.(x)
 optimize!(model)
-for p in 1:length(x)
-    v = round(Int, value(x[p]))
-    if v > 0
-        println(lpad(v, 2), " roll(s) of pattern $p, each roll of which makes:")
-        for i in 1:I
-            if patterns[p][i] > 0
-                println("  ", patterns[p][i], " unit(s) of piece $i")
-            end
-        end
-    end
-end
+solution = DataFrames.DataFrame([
+    (pattern = p, rolls = round(Int, value(x_p))) for (p, x_p) in enumerate(x)
+])
+filter!(row -> row.rolls > 0, solution)
 
 # This now requires 334 rolls:
 
-Test.@test sum(ceil.(Int, value.(x))) == 334  #src
-total_rolls = sum(ceil.(Int, value.(x)))
+Test.@test sum(solution.rolls) == 334  #src
+sum(solution.rolls)
 
 # Note that this may not be the global minimum because we are not adding new
 # columns during the solution of the mixed-integer problem `model` (an algorithm
 # known as [branch and price](https://en.wikipedia.org/wiki/Branch_and_price)).
 # Nevertheless, the column generation algorithm typically finds good integer
 # feasible solutions to an otherwise intractable optimization problem.
+
+# ## Next steps
+
+# * Our objective function is to minimize the total number of rolls. What is the
+#   total length of waste? How does that compare to the total demand?
+# * Writing the optimization algorithm is only part of the challenge. Can you
+#   develop a better way to communicate the solution to stakeholders?
