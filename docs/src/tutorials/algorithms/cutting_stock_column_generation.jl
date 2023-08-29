@@ -250,7 +250,7 @@ solution_summary(model)
 
 # For example, the dual of `demand[13]` is:
 
-undo_relax = relax_integrality(model)  # undo_relax is used later
+unset_integer.(x)
 optimize!(model)
 π_13 = dual(demand[13])
 
@@ -360,7 +360,7 @@ sum(ceil.(Int, solution.rolls))
 # Alternatively, we can re-introduce the integrality constraints and resolve the
 # problem:
 
-undo_relax()  # `undo_relax` was the return value from `relax_integrality`
+set_integer.(x)
 optimize!(model)
 solution = DataFrames.DataFrame([
     (pattern = p, rolls = value(x_p)) for (p, x_p) in enumerate(x)
