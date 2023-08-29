@@ -116,7 +116,7 @@ set_silent(model)
 @objective(model, Min, sum(y))
 model
 
-# Unfortunately, we cant't solve this formulation because it takes a very long
+# Unfortunately, we can't solve this formulation because it takes a very long
 # time to solve. (Try removing the time limit.)
 
 set_time_limit_sec(model, 5.0)
@@ -205,7 +205,7 @@ function solve_pricing(data::Data, π::Vector{Float64})
     return SparseArrays.sparse(round.(Int, value.(y)))
 end
 
-# If we solve the pricing problem with an artifical dual vector:
+# If we solve the pricing problem with an artificial dual vector:
 
 π = [1.0 / i for i in 1:I]
 solve_pricing(data, π)
