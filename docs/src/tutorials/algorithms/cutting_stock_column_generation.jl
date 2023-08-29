@@ -5,7 +5,7 @@
 
 # # Column generation
 
-# The purpose of this tutorial is to demonstrate the column genneration
+# The purpose of this tutorial is to demonstrate the column generation
 # algorithm. As an example, it solves the [Cutting stock problem](https://en.wikipedia.org/wiki/Cutting_stock_problem).
 
 # This tutorial uses the following packages:
@@ -225,16 +225,34 @@ end
 
 plot_patterns(data, patterns)
 
-# ## Choosing new columns
+# ## The base problem
 
-# For now we assume that we have our mixed-integer linear program with a subset
-# of the columns. If we have all of the columns that appear in an optimal
-# solution then we are done. Otherwise, how do we choose a new column that leads
-# to an improved solution?
+# Using the initial set of patterns, we can create and optimize our base model:
+
+model = Model(HiGHS.Optimizer)
+set_silent(model)
+@variable(model, x[1:length(patterns)] >= 0, Int)
+@objective(model, Min, sum(x))
+@constraint(model, demand[i in 1:I], patterns[i]' * x >= data.pieces[i].d)
+optimize!(model)
+solution_summary(model)
+
+# This solution requires 421 rolls. This solution is sub-optimmal because the
+# model does not contain the full set of possible patterns.
+
+# How do we find a new column that leads to an improved solution?
+
+# ## Choosing new columns
 
 # Column generation chooses a new column by relaxing the integrality constraint
 # on ``x`` and looking at the dual variable ``\pi_i`` associated with demand
 # constraint ``i``.
+
+# For example, the dual of `demand[13]` is:
+
+undo_relax = relax_integrality(model)  # undo_relax is used later
+optimize!(model)
+π_13 = dual(demand[13])
 
 # Using the economic interpretation of the dual variable, we can say that a one
 # unit increase in demand for piece ``i`` will cost an extra ``\pi_i`` rolls.
@@ -286,19 +304,10 @@ solve_pricing(data, [1.0 / i for i in 1:I])
 
 solve_pricing(data, zeros(I))
 
-# ## Solving the problem
+# ## Iterative algorithm
 
-# Now we're ready to write the column generation algorithm.
-
-# First, we create a linear program using the initial set of patterns:
-
-model = Model(HiGHS.Optimizer)
-set_silent(model)
-@variable(model, x[1:length(patterns)] >= 0)
-@objective(model, Min, sum(x))
-@constraint(model, demand[i in 1:I], patterns[i]' * x >= data.pieces[i].d);
-
-# Then, we run the iterative column generation scheme:
+# Now we can combine our base model with the pricing subproblem in an iterative
+# column generation scheme:
 
 while true
     ## Solve the linear relaxation
@@ -351,7 +360,7 @@ sum(ceil.(Int, solution.rolls))
 # Alternatively, we can re-introduce the integrality constraints and resolve the
 # problem:
 
-set_integer.(x)
+undo_relax()  # `undo_relax` was the return value from `relax_integrality`
 optimize!(model)
 solution = DataFrames.DataFrame([
     (pattern = p, rolls = value(x_p)) for (p, x_p) in enumerate(x)
