@@ -107,17 +107,16 @@ model = Model(HiGHS.Optimizer)
 set_silent(model)
 @variable(model, x[1:I, 1:J] >= 0, Int)
 @variable(model, y[1:J], Bin)
+@objective(model, Min, sum(y))
+@constraint(model, [i in 1:I], sum(x[i, :]) >= data.pieces[i].d)
 @constraint(
     model,
     [j in 1:J],
     sum(data.pieces[i].w * x[i, j] for i in 1:I) <= data.W * y[j],
-)
-@constraint(model, [i in 1:I], sum(x[i, :]) >= data.pieces[i].d)
-@objective(model, Min, sum(y))
-model
+);
 
-# Unfortunately, we can't solve this formulation because it takes a very long
-# time to solve. (Try removing the time limit.)
+# Unfortunately, we can't solve this formulation for realistic instances because
+# it takes a very long time to solve. (Try removing the time limit.)
 
 set_time_limit_sec(model, 5.0)
 optimize!(model)
@@ -129,12 +128,19 @@ solution_summary(model)
 # ## Column generation theory
 
 # The key insight for column generation is to recognize that the ``x`` variables
-# above encode _cutting patterns_. For example, if we look only at the roll
-# ``j=1``, then feasible solutions are:
-# * ``x_{1,1} = 1``, ``x_{13,1} = 1`` and all the rest ``0``, which is 1 roll of
-#   piece \#1 and 1 roll of piece \#13
-# * ``x_{20,1} = 19`` and all the rest ``0``, which is 19 rolls of piece \#20.
+# above encode _cutting patterns_.
 
+# For example, if we look only at the roll ``j=1``, then a feasible solution is:
+#
+#  * ``x_{1,1} = 1`` (1 unit of piece \#1)
+#  * ``x_{13,1} = 1`` (1 unit of piece \#13)
+#  * All other ``x_{i,1} = 0``
+#
+# Another solution is
+#
+#  * ``x_{20,1} = 19`` (19 unit of piece \#20)
+#  * All other ``x_{i,1} = 0``
+#
 # Cutting patterns like ``x_{1,1} = 1`` and ``x_{2,1} = 1`` are infeasible
 # because the combined length is greater than ``W``.
 
@@ -151,14 +157,67 @@ solution_summary(model)
 #          & x_{p} \in \mathbb{Z} & \forall p=1,\ldots,P
 # \end{align}
 # ```
-
+#
 # Unfortunately, there will be a very large number of these patterns, so it is
 # often intractable to enumerate all columns ``p=1,\ldots,P``.
-
+#
 # Column generation is an iterative algorithm that starts with a small set of
 # initial patterns, and then cleverly chooses new columns to add to the main
 # MILP so that we find the optimal solution without having to enumerate every
 # column.
+
+# ## Choosing the initial set of patterns
+
+# For the initial set of patterns, we create a trivial cutting pattern which
+# cuts as many units of piece ``i`` as will fit.
+
+patterns = map(1:I) do i
+    n_pieces = floor(Int, data.W / data.pieces[i].w)
+    return SparseArrays.sparsevec([i], [n_pieces], I)
+end
+
+# We can visualize the patterns as follows:
+
+"""
+    cutting_locations(data::Data, pattern::SparseArrays.SparseVector)
+
+A function which returns a vector of the locations along the roll at which to
+cut in order to produce pattern `pattern`.
+"""
+function cutting_locations(data::Data, pattern::SparseArrays.SparseVector)
+    locations = Float64[]
+    offset = 0.0
+    for (i, c) in zip(SparseArrays.findnz(pattern)...)
+        for _ in 1:c
+            offset += data.pieces[i].w
+            push!(locations, offset)
+        end
+    end
+    return locations
+end
+
+function plot_patterns(data::Data, patterns)
+    plot = Plots.bar(;
+        xlims = (0, length(patterns) + 1),
+        ylims = (0, data.W),
+        xlabel = "Pattern",
+        ylabel = "Roll length",
+    )
+    for (i, p) in enumerate(patterns)
+        locations = cutting_locations(data, p)
+        Plots.bar!(
+            plot,
+            fill(i, length(locations)),
+            reverse(locations);
+            bar_width = 0.6,
+            label = false,
+            color = "#90caf9",
+        )
+    end
+    return plot
+end
+
+plot_patterns(data, patterns)
 
 # ## Choosing new columns
 
@@ -199,19 +258,21 @@ function solve_pricing(data::Data, π::Vector{Float64})
     @constraint(model, sum(data.pieces[i].w * y[i] for i in 1:I) <= data.W)
     @objective(model, Max, sum(π[i] * y[i] for i in 1:I))
     optimize!(model)
-    if objective_value(model) <= 1
-        return nothing  # Benefit of pattern is less than the cost of a new roll
+    number_of_rolls_saved = objective_value(model)
+    if number_of_rolls_saved > 1 + 1e-8
+        ## Benefit of pattern is more than the cost of a new roll plus some
+        ## tolerance
+        return SparseArrays.sparse(round.(Int, value.(y)))
     end
-    return SparseArrays.sparse(round.(Int, value.(y)))
+    return nothing
 end
 
 # If we solve the pricing problem with an artificial dual vector:
 
-π = [1.0 / i for i in 1:I]
-solve_pricing(data, π)
+solve_pricing(data, [1.0 / i for i in 1:I])
 
-# the solution is a roll with 1 unit of size 1, 1 unit of size 17, and 3 units
-# of size 20.
+# the solution is a roll with 1 unit of piece \#1, 1 unit of piece \#17, and 3
+# units of piece \#20.
 
 # If we solve the pricing problem with a dual vector of zeros, then the benefit
 # of the new pattern is less than the cost of a roll, and so the function
@@ -219,36 +280,15 @@ solve_pricing(data, π)
 
 solve_pricing(data, zeros(I))
 
-# ## Choosing the initial set of patterns
-
-# For the initial set of patterns, we create a trivial cutting pattern which
-# cuts as many pieces of size ``i`` as will fit, or the amount demanded,
-# whichever is smaller.
-
-patterns = SparseArrays.SparseVector{Int,Int}[
-    SparseArrays.sparsevec(
-        [i],
-        floor(Int, min(data.W / data.pieces[i].w, data.pieces[i].d)),
-        I,
-    ) for i in 1:I
-]
-P = length(patterns)
-
-# We can visualize the patterns by looking at the sparse matrix of the
-# non-zeros:
-
-SparseArrays.sparse(hcat(patterns...))
-
 # ## Solving the problem
 
 # First, we create our initial linear program:
 
 model = Model(HiGHS.Optimizer)
 set_silent(model)
-@variable(model, x[1:P] >= 0)
+@variable(model, x[1:length(patterns)] >= 0)
 @objective(model, Min, sum(x))
-@constraint(model, demand[i = 1:I], patterns[i]' * x == data.pieces[i].d)
-model
+@constraint(model, demand[i in 1:I], patterns[i]' * x >= data.pieces[i].d);
 
 # Then, we run the iterative column generation scheme:
 
@@ -269,53 +309,18 @@ while true
     ## Update the objective coefficients
     set_objective_coefficient(model, x[end], 1.0)
     ## Update the non-zeros in the coefficient matrix
-    rows, counts = SparseArrays.findnz(new_pattern)
-    for (row, count) in zip(rows, counts)
-        set_normalized_coefficient(demand[row], x[end], count)
+    for (i, count) in zip(SparseArrays.findnz(new_pattern)...)
+        set_normalized_coefficient(demand[i], x[end], count)
     end
 end
 
-# Let's have a look at the patterns now:
-
-SparseArrays.sparse(hcat(patterns...))
-
-# We found over 20 new patterns.
-
-# Here's pattern 21:
+# We found lots of new patterns. Here's pattern 21:
 
 patterns[21]
 
-# Here's another way to visualize the patterns:
+# Let's have a look at the patterns now:
 
-function cutting_locations(data::Data, pattern::SparseArrays.SparseVector)
-    locations = Float64[]
-    offset = 0.0
-    for (i, c) in zip(SparseArrays.findnz(pattern)...)
-        for _ in 1:c
-            offset += data.pieces[i].w
-            push!(locations, offset)
-        end
-    end
-    return locations
-end
-
-plot = Plots.bar(;
-    xlims = (0, length(patterns) + 1),
-    ylims = (0, data.W),
-    xlabel = "Pattern",
-    ylabel = "Roll length",
-)
-for (i, p) in enumerate(patterns)
-    locations = cutting_locations(data, p)
-    Plots.bar!(
-        plot,
-        fill(i, length(locations)),
-        reverse(locations);
-        bar_width = 1.0,
-        label = false,
-    )
-end
-plot
+plot_patterns(data, patterns)
 
 # ## Looking at the solution
 
@@ -327,9 +332,9 @@ solution = DataFrames.DataFrame([
 ])
 filter!(row -> row.rolls > 0, solution)
 
-# This requires 343 rolls:
+# This requires 341 rolls:
 
-Test.@test sum(solution.rolls) == 343  #src
+Test.@test sum(solution.rolls) == 341  #src
 sum(solution.rolls)
 
 # Alternatively, we can re-introduce the integrality constraints and resolve the
