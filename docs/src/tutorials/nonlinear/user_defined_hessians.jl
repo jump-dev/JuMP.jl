@@ -65,11 +65,11 @@ end
 # you may assume only that `H` supports `size(H)` and `setindex!`.
 
 # Now that we have the function, its gradient, and its Hessian, we can construct
-# a JuMP model, register the function, and use it in a macro:
+# a JuMP model, add the operator, and use it in a macro:
 
 model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2])
-@register(model, op_rosenbrock, 2, rosenbrock, ∇rosenbrock, ∇²rosenbrock)
+@operator(model, op_rosenbrock, 2, rosenbrock, ∇rosenbrock, ∇²rosenbrock)
 @objective(model, Min, op_rosenbrock(x[1], x[2]))
 optimize!(model)
 solution_summary(model; verbose = true)

@@ -266,7 +266,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> expr = op_ifelse(
-           op_or(op_strictly_less_than(x, -1), op_greater_than(x, 1)),
+           op_or(op_strictly_less_than(x, -1), op_greater_than_or_equal_to(x, 1)),
            x^2,
            0.0,
        )
@@ -280,8 +280,8 @@ The available functions are:
 | [`op_ifelse`](@ref)                | `ifelse`       |
 | [`op_and`](@ref)                   | `&&`           |
 | [`op_or`](@ref)                    | `\|\|`         |
-| [`op_greater_than`](@ref)          | `>=`           |
-| [`op_less_than`](@ref)             | `<=`           |
+| [`op_greater_than_or_equal_to`](@ref)          | `>=`           |
+| [`op_less_than_or_equal_to`](@ref)             | `<=`           |
 | [`op_equal_to`](@ref)              | `==`           |
 | [`op_strictly_greater_than`](@ref) | `>`            |
 | [`op_strictly_less_than`](@ref)    | `<`            |
@@ -315,31 +315,31 @@ Julia operators.
     User-defined operators must return a scalar output. For a work-around, see
     [User-defined operators with vector outputs](@ref).
 
-### Register an operator
+### Add an operator
 
-Register a user-defined operator using the [`@register`](@ref) macro:
+Add a user-defined operator using the [`@operator`](@ref) macro:
 
 ```@repl
 using JuMP
 square(x) = x^2
 f(x, y) = (x - 1)^2 + (y - 2)^2
 model = Model();
-@register(model, op_square, 1, square)
-@register(model, op_f, 2, f)
+@operator(model, op_square, 1, square)
+@operator(model, op_f, 2, f)
 @variable(model, x[1:2]);
 @objective(model, Min, op_f(x[1], op_square(x[2])))
 ```
 
-The arguments to [`@register`](@ref) are:
+The arguments to [`@operator`](@ref) are:
 
- 1. The model in which the function is registered.
+ 1. The model to which the operator is added.
  2. A Julia symbol object which serves as the name of the user-defined operator
     in JuMP expressions. This name must not be the same as that of the function.
  3. The number of scalar input arguments that the function takes.
  4. A Julia method which computes the function.
 
 !!! warning
-    User-defined operators cannot be re-registered or deleted.
+    User-defined operators cannot be deleted.
 
 You can obtain a reference to the operator using the `model[:key]` syntax:
 
@@ -347,14 +347,14 @@ You can obtain a reference to the operator using the `model[:key]` syntax:
 using JuMP
 square(x) = x^2
 model = Model();
-@register(model, op_square, 1, square)
+@operator(model, op_square, 1, square)
 op_square_2 = model[:op_square]
 ```
 
-### Registered operators without macros
+### Add an operator without macros
 
-The [`@register`](@ref) macro is syntactic sugar for the
-[`register_nonlinear_operator`](@ref) method. Thus, the non-macro version of the
+The [`@operator`](@ref) macro is syntactic sugar for the
+[`add_nonlinear_operator`](@ref) method. Thus, the non-macro version of the
 preceding example is:
 
 ```@repl
@@ -362,15 +362,15 @@ using JuMP
 square(x) = x^2
 f(x, y) = (x - 1)^2 + (y - 2)^2
 model = Model();
-op_square = register_nonlinear_operator(model, 1, square; name = :op_square)
+op_square = add_nonlinear_operator(model, 1, square; name = :op_square)
 model[:op_square] = op_square
-op_f = register_nonlinear_operator(model, 2, f; name = :op_f)
+op_f = add_nonlinear_operator(model, 2, f; name = :op_f)
 model[:op_f] = op_f
 @variable(model, x[1:2]);
 @objective(model, Min, op_f(x[1], op_square(x[2])))
 ```
 
-### Registering with the same name as an existing function
+### Operators with the same name as an existing function
 
 A common error encountered is the following:
 ```jldoctest nonlinear_invalid_redefinition
@@ -381,19 +381,19 @@ julia> model = Model();
 julia> f(x) = x^2
 f (generic function with 1 method)
 
-julia> @register(model, f, 1, f)
-ERROR: Unable to register the nonlinear operator `:f` with the same name as
+julia> @operator(model, f, 1, f)
+ERROR: Unable to add the nonlinear operator `:f` with the same name as
 an existing function.
 [...]
 ```
-This error occurs because `@register(model, f, 1, f)` is equivalent to:
+This error occurs because `@operator(model, f, 1, f)` is equivalent to:
 ```julia
-julia> f = register_nonlinear_operator(model, 1, f; name = :f)
+julia> f = add_nonlinear_operator(model, 1, f; name = :f)
 ```
 but `f` already exists as a Julia function.
 
-If you evaluate the function without registering it, JuMP will trace the
-function using operator overloading:
+If you evaluate the function without adding it as an operator, JuMP will trace
+the function using operator overloading:
 ```jldoctest nonlinear_invalid_redefinition
 julia> @variable(model, x);
 
@@ -401,11 +401,11 @@ julia> f(x)
 x²
 ```
 
-To force JuMP to treat `f` as a user-defined operator and not trace it, register
-the function using [`register_nonlinear_operator`](@ref) and define a new method
+To force JuMP to treat `f` as a user-defined operator and not trace it, add
+the operator using [`add_nonlinear_operator`](@ref) and define a new method
 which manually creates a [`NonlinearExpr`](@ref):
 ```jldoctest nonlinear_invalid_redefinition
-julia> _ = register_nonlinear_operator(model, 1, f; name = :f)
+julia> _ = add_nonlinear_operator(model, 1, f; name = :f)
 NonlinearOperator(:f, f)
 
 julia> f(x::AbstractJuMPScalar) = NonlinearExpr(:f, Any[x])
@@ -415,12 +415,12 @@ julia> @expression(model, log(f(x)))
 log(f(x))
 ```
 
-### Register gradients and Hessians
+### Gradients and Hessians
 
 By default, JuMP will use automatic differentiation to compute the gradient and
 Hessian of user-defined operators. If your function is not amenable to
 automatic differentiation, or you can compute analytic derivatives, you may pass
-additional arguments to [`@register`](@ref) to compute the first- and
+additional arguments to [`@operator`](@ref) to compute the first- and
 second-derivatives.
 
 #### Univariate functions
@@ -434,7 +434,7 @@ f(x) = x^2
 ∇f(x) = 2x
 ∇²f(x) = 2
 model = Model();
-@register(model, op_f, 1, f, ∇f, ∇²f)  # Providing ∇²f is optional
+@operator(model, op_f, 1, f, ∇f, ∇²f)  # Providing ∇²f is optional
 @variable(model, x)
 @objective(model, Min, op_f(x))
 ```
@@ -461,7 +461,7 @@ function ∇²f(H::AbstractMatrix{T}, x::T...) where {T}
     return
 end
 model = Model();
-@register(model, rosenbrock, 2, f, ∇f, ∇²f)  # Providing ∇²f is optional
+@operator(model, rosenbrock, 2, f, ∇f, ∇²f)  # Providing ∇²f is optional
 @variable(model, x[1:2])
 @objective(model, Min, rosenbrock(x[1], x[2]))
 ```
@@ -494,7 +494,7 @@ using JuMP
 model = Model();
 @variable(model, x[1:5])
 f(x::Vector) = sum(x[i]^i for i in 1:length(x))
-@register(model, op_f, 5, (x...) -> f(collect(x)))
+@operator(model, op_f, 5, (x...) -> f(collect(x)))
 @objective(model, Min, op_f(x...))
 ```
 

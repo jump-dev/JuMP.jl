@@ -513,7 +513,7 @@ function solve_nonlinear_economic_dispatch(
     if silent
         set_silent(model)
     end
-    @register(model, op_tcf, 1, thermal_cost_function)
+    @operator(model, op_tcf, 1, thermal_cost_function)
     N = length(generators)
     @variable(model, generators[i].min <= g[i = 1:N] <= generators[i].max)
     @variable(model, 0 <= w <= scenario.wind)

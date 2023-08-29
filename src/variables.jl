@@ -2043,7 +2043,7 @@ There are three common mistakes that lead to this.
     ```julia
     foo(x) = x $(sym) 1 ? 0 : 1 - x
     model = Model()
-    @register(model, op_f, 1, foo)
+    @operator(model, op_f, 1, foo)
     @variable(model, x)
     @expression(model, op_f(x))
     ```

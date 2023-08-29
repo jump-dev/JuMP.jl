@@ -478,7 +478,7 @@ end
 function test_register_univariate()
     model = Model()
     @variable(model, x)
-    @register(model, f, 1, x -> x^2)
+    @operator(model, f, 1, x -> x^2)
     @test f isa NonlinearOperator
     @test sprint(show, f) == "NonlinearOperator(:f, $(f.func))"
     @test isequal_canonical(@expression(model, f(x)), f(x))
@@ -491,9 +491,9 @@ end
 function test_register_eval_non_jump()
     model = Model()
     @variable(model, x)
-    @register(model, f, 1, x -> x^2)
+    @operator(model, f, 1, x -> x^2)
     @test f(2.0) == 4.0
-    @register(model, g, 2, (x, y) -> x^2 - sin(y))
+    @operator(model, g, 2, (x, y) -> x^2 - sin(y))
     @test g(2.0, 3.0) == 4.0 - sin(3.0)
     return
 end
@@ -501,7 +501,7 @@ end
 function test_register_univariate_gradient()
     model = Model()
     @variable(model, x)
-    @register(model, f, 1, x -> x^2, x -> 2 * x)
+    @operator(model, f, 1, x -> x^2, x -> 2 * x)
     @test isequal_canonical(@expression(model, f(x)), f(x))
     @test isequal_canonical(f(x), GenericNonlinearExpr(:f, Any[x]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
@@ -512,7 +512,7 @@ end
 function test_register_univariate_gradient_hessian()
     model = Model()
     @variable(model, x)
-    @register(model, f, 1, x -> x^2, x -> 2 * x, x -> 2.0)
+    @operator(model, f, 1, x -> x^2, x -> 2 * x, x -> 2.0)
     @test isequal_canonical(@expression(model, f(x)), f(x))
     @test isequal_canonical(f(x), GenericNonlinearExpr(:f, Any[x]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
@@ -524,7 +524,7 @@ function test_register_multivariate()
     model = Model()
     @variable(model, x[1:2])
     f = (x...) -> sum(x .^ 2)
-    @register(model, foo, 2, f)
+    @operator(model, foo, 2, f)
     @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
     @test isequal_canonical(foo(x...), GenericNonlinearExpr(:foo, Any[x...]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
@@ -537,7 +537,7 @@ function test_register_multivariate_gradient()
     @variable(model, x[1:2])
     f = (x...) -> sum(x .^ 2)
     ∇f = (g, x...) -> (g .= 2 .* x)
-    @register(model, foo, 2, f, ∇f)
+    @operator(model, foo, 2, f, ∇f)
     @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
     @test isequal_canonical(foo(x...), GenericNonlinearExpr(:foo, Any[x...]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
@@ -555,7 +555,7 @@ function test_register_multivariate_gradient_hessian()
             H[i, i] = 2.0
         end
     end
-    @register(model, foo, 2, f, ∇f, ∇²f)
+    @operator(model, foo, 2, f, ∇f, ∇²f)
     @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
     @test isequal_canonical(foo(x...), GenericNonlinearExpr(:foo, Any[x...]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
@@ -567,7 +567,7 @@ function test_register_multivariate_many_args()
     model = Model()
     @variable(model, x[1:10])
     f = (x...) -> sum(x .^ 2)
-    @register(model, foo, 10, f)
+    @operator(model, foo, 10, f)
     @test isequal_canonical(foo(x...), GenericNonlinearExpr(:foo, Any[x...]))
     @test foo((1:10)...) == 385
     return
@@ -578,12 +578,12 @@ function test_register_errors()
     f = x -> x^2
     @test_throws(
         ErrorException(
-            "Unable to register operator foo: invalid number of " *
+            "Unable to add operator foo: invalid number of " *
             "functions provided. Got 4, but expected 1 (if function only), " *
             "2 (if function and gradient), or 3 (if function, gradient, and " *
             "hesssian provided)",
         ),
-        @register(model, foo, 2, f, f, f, f),
+        @operator(model, foo, 2, f, f, f, f),
     )
     return
 end
@@ -615,8 +615,8 @@ function test_value_expression()
     @test value(f, sin(x^2 + x + 1)) ≈ sin(1.1^2 + 1.1 + 1)
     foo(x) = (x - 1)^2
     bar(x, y) = sqrt(x - y)
-    @register(model, my_foo, 1, foo)
-    @register(model, my_bar, 2, bar)
+    @operator(model, my_foo, 1, foo)
+    @operator(model, my_bar, 2, bar)
     @test value(f, my_foo(x)) ≈ (1.1 - 1)^2
     @test value(f, my_foo(x + 1)) ≈ (1.1 + 1 - 1)^2
     @test value(f, my_foo(x^2 + 1)) ≈ (1.1^2 + 1 - 1)^2
@@ -627,8 +627,8 @@ function test_value_expression()
     bad_udf = NonlinearOperator(:bad_udf, f)
     @test_throws(
         ErrorException(
-            "Unable to evaluate nonlinear operator bad_udf because it is not " *
-            "registered",
+            "Unable to evaluate nonlinear operator bad_udf because it was " *
+            "not added as an operator.",
         ),
         value(f, bad_udf(x)),
     )
@@ -824,7 +824,7 @@ function test_redefinition_of_function()
     catch err
         err
     end
-    @test_throws(err, @register(model, f, 1, f))
+    @test_throws(err, @operator(model, f, 1, f))
     return
 end
 

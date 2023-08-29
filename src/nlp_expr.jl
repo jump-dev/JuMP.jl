@@ -25,11 +25,10 @@ and the default list of supported multivariate operators is given by:
 
  * [`MOI.Nonlinear.DEFAULT_MULTIVARIATE_OPERATORS`](@ref)
 
-Additional operators can be registered by setting a
-[`MOI.UserDefinedFunction`](@ref) attribute.
+Additional operators can be add using [`@operator`](@ref).
 
 See the full list of operators supported by a [`MOI.ModelLike`](@ref) by
-querying [`MOI.ListOfSupportedNonlinearOperators`](@ref).
+querying the [`MOI.ListOfSupportedNonlinearOperators`](@ref) attribute.
 
 ## `args`
 
@@ -636,8 +635,8 @@ function _evaluate_user_defined_function(
     udf = MOI.get(model, MOI.UserDefinedFunction(op, nargs))
     if udf === nothing
         return error(
-            "Unable to evaluate nonlinear operator $op because it is not " *
-            "registered",
+            "Unable to evaluate nonlinear operator $op because it was " *
+            "not added as an operator.",
         )
     end
     args = [_evaluate_expr(registry, f, arg) for arg in expr.args]
@@ -775,8 +774,8 @@ When called with non-JuMP types, the struct returns the evaluation of
 `func(args...)`.
 
 Unless `head` is special-cased by the optimizer, the operator must have already
-been added to the model using [`register_nonlinear_operator`](@ref) or
-[`@register`](@ref).
+been added to the model using [`add_nonlinear_operator`](@ref) or
+[`@operator`](@ref).
 
 ## Example
 
@@ -795,7 +794,7 @@ julia> ∇f(x::Float64) = 2 * x
 julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
-julia> @register(model, op_f, 1, f, ∇f, ∇²f)
+julia> @operator(model, op_f, 1, f, ∇f, ∇²f)
 NonlinearOperator(:op_f, f)
 
 julia> bar = NonlinearOperator(:op_f, f)
@@ -850,7 +849,7 @@ function (f::NonlinearOperator)(x, y, z...)
 end
 
 """
-    register_nonlinear_operator(
+    add_nonlinear_operator(
         model::Model,
         dim::Int,
         f::Function,
@@ -859,7 +858,7 @@ end
         [name::Symbol = Symbol(f),]
     )
 
-Register a new nonlinear operator with `dim` input arguments to `model` and
+Add a new nonlinear operator with `dim` input arguments to `model` and
 associate it with the name `name`.
 
 The function `f` evaluates the operator and must return a scalar.
@@ -906,7 +905,7 @@ julia> ∇f(x::Float64) = 2 * x
 julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
-julia> op_f = register_nonlinear_operator(model, 1, f, ∇f, ∇²f)
+julia> op_f = add_nonlinear_operator(model, 1, f, ∇f, ∇²f)
 NonlinearOperator(:f, f)
 
 julia> @objective(model, Min, op_f(x))
@@ -916,7 +915,7 @@ julia> op_f(2.0)
 4.0
 ```
 """
-function register_nonlinear_operator(
+function add_nonlinear_operator(
     model::GenericModel,
     dim::Int,
     f::Function,
@@ -926,7 +925,7 @@ function register_nonlinear_operator(
     nargs = 1 + N
     if !(1 <= nargs <= 3)
         error(
-            "Unable to register operator $name: invalid number of functions " *
+            "Unable to add operator $name: invalid number of functions " *
             "provided. Got $nargs, but expected 1 (if function only), 2 (if " *
             "function and gradient), or 3 (if function, gradient, and " *
             "hesssian provided)",
@@ -943,27 +942,27 @@ end
 function _catch_redefinition_constant_error(op::Symbol, f::Function)
     if op == Symbol(f)
         error("""
-        Unable to register the nonlinear operator `:$op` with the same name as
+        Unable to add the nonlinear operator `:$op` with the same name as
         an existing function.
 
         For example, this code will error:
         ```julia
         model = Model()
         f(x) = x^2
-        @register(model, f, 1, f)
+        @operator(model, f, 1, f)
         ```
         because it is equivalent to:
         ```julia
         model = Model()
         f(x) = x^2
-        f = register_nonlinear_operator(model, 1, f; name = :f)
+        f = add_nonlinear_operator(model, 1, f; name = :f)
         ```
 
         To fix, use a unique name, like `op_$op`:
         ```julia
         model = Model()
         f(x) = x^2
-        @register(model, op_f, 1, f)
+        @operator(model, op_f, 1, f)
         @expression(model, op_f(x))
         ```
         """)
@@ -972,9 +971,9 @@ function _catch_redefinition_constant_error(op::Symbol, f::Function)
 end
 
 """
-    @register(model, operator, dim, f[, ∇f[, ∇²f]])
+    @operator(model, operator, dim, f[, ∇f[, ∇²f]])
 
-Register the nonlinear operator `operator` in `model` with `dim` arguments, and
+Add the nonlinear operator `operator` in `model` with `dim` arguments, and
 create a new [`NonlinearOperator`](@ref) object called `operator` in the current
 scope.
 
@@ -1022,7 +1021,7 @@ julia> ∇f(x::Float64) = 2 * x
 julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
-julia> @register(model, op_f, 1, f, ∇f, ∇²f)
+julia> @operator(model, op_f, 1, f, ∇f, ∇²f)
 NonlinearOperator(:op_f, f)
 
 julia> @objective(model, Min, op_f(x))
@@ -1041,8 +1040,8 @@ op_f(x)
 ## Non-macro version
 
 This macro is provided as helpful syntax that matches the style of the rest of
-the JuMP macros. However, you may also register operators outside the macro
-using [`register_nonlinear_operator`](@ref). For example:
+the JuMP macros. However, you may also add operators outside the macro
+using [`add_nonlinear_operator`](@ref). For example:
 
 ```jldoctest
 julia> model = Model();
@@ -1050,7 +1049,7 @@ julia> model = Model();
 julia> f(x) = x^2
 f (generic function with 1 method)
 
-julia> @register(model, op_f, 1, f)
+julia> @operator(model, op_f, 1, f)
 NonlinearOperator(:op_f, f)
 ```
 is equivalent to
@@ -1060,15 +1059,15 @@ julia> model = Model();
 julia> f(x) = x^2
 f (generic function with 1 method)
 
-julia> op_f = model[:op_f] = register_nonlinear_operator(model, 1, f; name = :op_f)
+julia> op_f = model[:op_f] = add_nonlinear_operator(model, 1, f; name = :op_f)
 NonlinearOperator(:op_f, f)
 ```
 """
-macro register(model, op, dim, f, args...)
+macro operator(model, op, dim, f, args...)
     return _macro_assign_and_return(
         quote
             _catch_redefinition_constant_error($(Meta.quot(op)), $(esc(f)))
-            register_nonlinear_operator(
+            add_nonlinear_operator(
                 $(esc(model)),
                 $(esc(dim)),
                 $(esc(f)),

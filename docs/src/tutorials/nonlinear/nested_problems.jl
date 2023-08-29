@@ -142,7 +142,7 @@ end
 
 model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2] >= 0)
-@register(model, op_V, 2, V, ∇V, ∇²V)
+@operator(model, op_V, 2, V, ∇V, ∇²V)
 @objective(model, Min, x[1]^2 + x[2]^2 + op_V(x[1], x[2]))
 optimize!(model)
 solution_summary(model)
@@ -214,7 +214,7 @@ end
 model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2] >= 0)
 cache = Cache(Float64[], NaN, Float64[])
-@register(
+@operator(
     model,
     op_cached_f,
     2,
