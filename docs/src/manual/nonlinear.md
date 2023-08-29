@@ -339,7 +339,7 @@ The arguments to [`@register`](@ref) are:
  4. A Julia method which computes the function.
 
 !!! warning
-    User-defined opterators cannot be re-registered or deleted.
+    User-defined operators cannot be re-registered or deleted.
 
 You can obtain a reference to the operator using the `model[:key]` syntax:
 
