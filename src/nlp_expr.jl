@@ -885,8 +885,8 @@ If `dim > 1`, then the method signatures of each function must be:
  * `∇²f(H::AbstractMatrix{T}, x::T...)::Nothing where {T<:Real}`
 
 Where the gradient vector `g` and Hessian matrix `H` are filled in-place. For
-the Hessian, you must fill in the non-zero upper-triangular entries only.
-Setting an off-diagonal lower-triangular element may error.
+the Hessian, you must fill in the non-zero lower-triangular entries only.
+Setting an off-diagonal upper-triangular element may error.
 
 ## Example
 
@@ -1001,8 +1001,8 @@ If `dim > 1`, then the method signatures of each function must be:
  * `∇²f(H::AbstractMatrix{T}, x::T...)::Nothing where {T<:Real}`
 
 Where the gradient vector `g` and Hessian matrix `H` are filled in-place. For
-the Hessian, you must fill in the non-zero upper-triangular entries only.
-Setting an off-diagonal lower-triangular element may error.
+the Hessian, you must fill in the non-zero lower-triangular entries only.
+Setting an off-diagonal upper-triangular element may error.
 
 ## Example
 

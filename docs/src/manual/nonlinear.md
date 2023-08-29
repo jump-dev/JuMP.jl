@@ -353,9 +353,8 @@ op_square_2 = model[:op_square]
 
 ### Add an operator without macros
 
-The [`@operator`](@ref) macro is syntactic sugar for the
-[`add_nonlinear_operator`](@ref) method. Thus, the non-macro version of the
-preceding example is:
+The [`@operator`](@ref) macro is syntactic sugar for [`add_nonlinear_operator`](@ref).
+Thus, the non-macro version of the preceding example is:
 
 ```@repl
 using JuMP
@@ -534,7 +533,7 @@ your function which are `Float64`.
 ```julia
 function bad_f(x...)
     y = zeros(length(x))  # This constructs an array of `Float64`!
-    for i = 1:length(x)
+    for i in 1:length(x)
         y[i] = x[i]^i
     end
     return sum(y)
@@ -542,7 +541,7 @@ end
 
 function good_f(x::T...) where {T<:Real}
     y = zeros(T, length(x))  # Construct an array of type `T` instead!
-    for i = 1:length(x)
+    for i in 1:length(x)
         y[i] = x[i]^i
     end
     return sum(y)
