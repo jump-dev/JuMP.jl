@@ -5,24 +5,28 @@
 
 # # Column generation
 
-# This tutorial describes how to implement the [Cutting stock problem](https://en.wikipedia.org/wiki/Cutting_stock_problem)
-# in JuMP using column generation. It uses the following packages:
+# The purpose of this tutorial is to demonstrate the column generation
+# algorithm. As an example, it solves the [Cutting stock problem](https://en.wikipedia.org/wiki/Cutting_stock_problem).
+
+# This tutorial uses the following packages:
 
 using JuMP
-import GLPK
+import DataFrames
+import HiGHS
+import Plots
 import SparseArrays
 import Test  #src
 
-# ## Mathematical formulation
+# ## Background
 
 # The cutting stock problem is about cutting large rolls of paper into smaller
-# pieces. There is a demand different sizes of pieces to meet, and all large
-# rolls have the same width. The goal is to meet the demand while maximizing the
-# total profit.
+# pieces.
 
 # We denote the set of possible sized pieces that a roll can be cut into by
 # ``i\in 1,\ldots,I``. Each piece ``i`` has a width, ``w_i``, and a demand,
 # ``d_i``. The width of the large roll is ``W``.
+
+# Our objective is to minimize the number of rolls needed to meet all demand.
 
 # Here's the data that we are going to use in this tutorial:
 
@@ -76,11 +80,13 @@ end
 
 data = get_data()
 
+# ## Mathematical formulation
+
 # To formulate the cutting stock problem as a mixed-integer linear program, we
 # assume that there is a set of large rolls ``j=1,\ldots,J`` to use. Then, we
 # introduce two classes of decision variables:
-# * ``x_{ij} \ge 0, \text{integer}, \forall i=1,\ldots,I, j=1,\ldots,J``
-# * ``y_{j} \in \{0, 1\} \forall j=1,\ldots,J.``
+# * ``x_{ij} \ge 0,\; \text{integer}, \; \forall i=1,\ldots,I,\; j=1,\ldots,J``
+# * ``y_{j} \in \{0, 1\},\; \forall j=1,\ldots,J.``
 # ``y_j`` is a binary variable that indicates if we use roll ``j``, and
 # ``x_{ij}`` counts how many pieces of size ``i`` that we cut from roll ``j``.
 
@@ -99,43 +105,54 @@ data = get_data()
 # constraints ensure that we respect the total width of each large roll and that
 # we satisfy demand exactly.
 
+# The JuMP formulation of this model is:
+
 I = length(data.pieces)
-J = 1000  # Some large number
-model = Model(GLPK.Optimizer)
+J = 1_000  # Some large number
+model = Model(HiGHS.Optimizer)
+set_silent(model)
 @variable(model, x[1:I, 1:J] >= 0, Int)
 @variable(model, y[1:J], Bin)
+@objective(model, Min, sum(y))
+@constraint(model, [i in 1:I], sum(x[i, :]) >= data.pieces[i].d)
 @constraint(
     model,
     [j in 1:J],
     sum(data.pieces[i].w * x[i, j] for i in 1:I) <= data.W * y[j],
-)
-@constraint(model, [i in 1:I], sum(x[i, j] for j in 1:J) >= data.pieces[i].d)
-@objective(model, Min, sum(y[j] for j in 1:J))
-model
+);
 
-# Unfortunately, we won't attempt to solve this formulation because it takes a
-# very long time to solve. (Try it and see.)
+# Unfortunately, we can't solve this formulation for realistic instances because
+# it takes a very long time to solve. (Try removing the time limit.)
 
-## optimize!(model)
+set_time_limit_sec(model, 5.0)
+optimize!(model)
+solution_summary(model)
 
 # However, there is a formulation that solves much faster, and that is to use a
 # column generation scheme.
 
 # ## Column generation theory
 
-# The key insight for column generation is to recognize that the ``x`` variables
-# above encode _cutting patterns_. For example, if we look only at the roll
-# ``j=1``, then feasible solutions are:
-# * ``x_{1,1} = 1``, ``x_{13,1} = 1`` and all the rest ``0``, which is 1 roll of
-#   piece \#1 and 1 roll of piece \#13
-# * ``x_{20,1} = 19`` and all the rest ``0``, which is 19 rolls of piece \#20.
+# The key insight for column generation is to recognize that feasible columns
+# in the ``x`` matrix of variables encode _cutting patterns_.
 
+# For example, if we look only at the roll ``j=1``, then a feasible solution is:
+#
+#  * ``x_{1,1} = 1`` (1 unit of piece \#1)
+#  * ``x_{13,1} = 1`` (1 unit of piece \#13)
+#  * All other ``x_{i,1} = 0``
+#
+# Another solution is
+#
+#  * ``x_{20,1} = 19`` (19 unit of piece \#20)
+#  * All other ``x_{i,1} = 0``
+#
 # Cutting patterns like ``x_{1,1} = 1`` and ``x_{2,1} = 1`` are infeasible
 # because the combined length is greater than ``W``.
 
 # Since there are a finite number of ways that we could cut a roll into a
-# valid cutting pattern, we can create a set of all possible cutting patterns
-# ``p = 1,\ldots,P``, with data ``a_{i,p}`` indicating how many pieces of size
+# valid cutting pattern, we could create a set of all possible cutting patterns
+# ``p = 1,\ldots,P``, with data ``a_{i,p}`` indicating how many units of piece
 # ``i`` we cut in pattern ``p``. Then, we can formulate our mixed-integer linear
 # program as:
 # ```math
@@ -146,25 +163,96 @@ model
 #          & x_{p} \in \mathbb{Z} & \forall p=1,\ldots,P
 # \end{align}
 # ```
-
+#
 # Unfortunately, there will be a very large number of these patterns, so it is
 # often intractable to enumerate all columns ``p=1,\ldots,P``.
-
+#
 # Column generation is an iterative algorithm that starts with a small set of
 # initial patterns, and then cleverly chooses new columns to add to the main
 # MILP so that we find the optimal solution without having to enumerate every
 # column.
 
-# ## Choosing new columns
+# ## Choosing the initial set of patterns
 
-# For now we assume that we have our mixed-integer linear program with a subset
-# of the columns. If we have all of the columns that appear in an optimal
-# solution then we are done. Otherwise, how do we choose a new column that leads
-# to an improved solution?
+# For the initial set of patterns, we create a trivial cutting pattern which
+# cuts as many units of piece ``i`` as will fit.
+
+patterns = map(1:I) do i
+    n_pieces = floor(Int, data.W / data.pieces[i].w)
+    return SparseArrays.sparsevec([i], [n_pieces], I)
+end
+
+# We can visualize the patterns as follows:
+
+"""
+    cutting_locations(data::Data, pattern::SparseArrays.SparseVector)
+
+A function which returns a vector of the locations along the roll at which to
+cut in order to produce pattern `pattern`.
+"""
+function cutting_locations(data::Data, pattern::SparseArrays.SparseVector)
+    locations = Float64[]
+    offset = 0.0
+    for (i, c) in zip(SparseArrays.findnz(pattern)...)
+        for _ in 1:c
+            offset += data.pieces[i].w
+            push!(locations, offset)
+        end
+    end
+    return locations
+end
+
+function plot_patterns(data::Data, patterns)
+    plot = Plots.bar(;
+        xlims = (0, length(patterns) + 1),
+        ylims = (0, data.W),
+        xlabel = "Pattern",
+        ylabel = "Roll length",
+    )
+    for (i, p) in enumerate(patterns)
+        locations = cutting_locations(data, p)
+        Plots.bar!(
+            plot,
+            fill(i, length(locations)),
+            reverse(locations);
+            bar_width = 0.6,
+            label = false,
+            color = "#90caf9",
+        )
+    end
+    return plot
+end
+
+plot_patterns(data, patterns)
+
+# ## The base problem
+
+# Using the initial set of patterns, we can create and optimize our base model:
+
+model = Model(HiGHS.Optimizer)
+set_silent(model)
+@variable(model, x[1:length(patterns)] >= 0, Int)
+@objective(model, Min, sum(x))
+@constraint(model, demand[i in 1:I], patterns[i]' * x >= data.pieces[i].d)
+optimize!(model)
+solution_summary(model)
+
+# This solution requires 421 rolls. This solution is sub-optimmal because the
+# model does not contain the full set of possible patterns.
+
+# How do we find a new column that leads to an improved solution?
+
+# ## Choosing new columns
 
 # Column generation chooses a new column by relaxing the integrality constraint
 # on ``x`` and looking at the dual variable ``\pi_i`` associated with demand
 # constraint ``i``.
+
+# For example, the dual of `demand[13]` is:
+
+unset_integer.(x)
+optimize!(model)
+π_13 = dual(demand[13])
 
 # Using the economic interpretation of the dual variable, we can say that a one
 # unit increase in demand for piece ``i`` will cost an extra ``\pi_i`` rolls.
@@ -188,49 +276,38 @@ model
 
 function solve_pricing(data::Data, π::Vector{Float64})
     I = length(π)
-    model = Model(GLPK.Optimizer)
+    model = Model(HiGHS.Optimizer)
     set_silent(model)
     @variable(model, y[1:I] >= 0, Int)
     @constraint(model, sum(data.pieces[i].w * y[i] for i in 1:I) <= data.W)
     @objective(model, Max, sum(π[i] * y[i] for i in 1:I))
     optimize!(model)
-    if objective_value(model) > 1
-        return round.(Int, value.(y))
+    number_of_rolls_saved = objective_value(model)
+    if number_of_rolls_saved > 1 + 1e-8
+        ## Benefit of pattern is more than the cost of a new roll plus some
+        ## tolerance
+        return SparseArrays.sparse(round.(Int, value.(y)))
     end
     return nothing
 end
 
-# ## Choosing the initial set of patterns
+# If we solve the pricing problem with an artificial dual vector:
 
-# For the initial set of patterns, we create a trivial cutting pattern which
-# cuts as many pieces of size ``i`` as will fit, or the amount demanded,
-# whichever is smaller.
+solve_pricing(data, [1.0 / i for i in 1:I])
 
-patterns = Vector{Int}[]
-for i in 1:I
-    pattern = zeros(Int, I)
-    pattern[i] = floor(Int, min(data.W / data.pieces[i].w, data.pieces[i].d))
-    push!(patterns, pattern)
-end
-P = length(patterns)
+# the solution is a roll with 1 unit of piece \#1, 1 unit of piece \#17, and 3
+# units of piece \#20.
 
-# We can visualize the patterns by looking at the sparse matrix of the
-# non-zeros:
+# If we solve the pricing problem with a dual vector of zeros, then the benefit
+# of the new pattern is less than the cost of a roll, and so the function
+# returns `nothing`:
 
-SparseArrays.sparse(hcat(patterns...))
+solve_pricing(data, zeros(I))
 
-# ## Solving the problem
+# ## Iterative algorithm
 
-# First, we create our initial linear program:
-
-model = Model(GLPK.Optimizer)
-set_silent(model)
-@variable(model, x[1:P] >= 0)
-@objective(model, Min, sum(x))
-@constraint(model, demand[i = 1:I], patterns[i]' * x == data.pieces[i].d)
-model
-
-# Then, we run the iterative column generation scheme:
+# Now we can combine our base model with the pricing subproblem in an iterative
+# column generation scheme:
 
 while true
     ## Solve the linear relaxation
@@ -241,76 +318,69 @@ while true
     new_pattern = solve_pricing(data, π)
     ## Stop iterating if there is no new pattern
     if new_pattern === nothing
+        @info "No new patterns, terminating the algorithm."
         break
     end
     push!(patterns, new_pattern)
     ## Create a new column
     push!(x, @variable(model, lower_bound = 0))
-    ## Update the objective coefficients
+    ## Update the objective coefficient of the new column
     set_objective_coefficient(model, x[end], 1.0)
     ## Update the non-zeros in the coefficient matrix
-    for i in 1:I
-        if new_pattern[i] > 0
-            set_normalized_coefficient(demand[i], x[end], new_pattern[i])
-        end
+    for (i, count) in zip(SparseArrays.findnz(new_pattern)...)
+        set_normalized_coefficient(demand[i], x[end], count)
     end
+    println("Found new pattern. Total patterns = $(length(patterns))")
 end
+
+# We found lots of new patterns. Here's pattern 21:
+
+patterns[21]
 
 # Let's have a look at the patterns now:
 
-SparseArrays.sparse(hcat(patterns...))
-
-# We found over 20 new patterns.
-
-# Here's pattern 21:
-
-for i in 1:I
-    if patterns[21][i] > 0
-        println(patterns[21][i], " unit(s) of piece $i")
-    end
-end
+plot_patterns(data, patterns)
 
 # ## Looking at the solution
 
-# Since we only solved a linear relaxation, some of our columns have fractional
-# solutions. We can create a integer feasible solution by rounding up the orders:
+# Let's see how many of each column we need:
 
-for p in 1:length(x)
-    v = ceil(Int, value(x[p]))
-    if v > 0
-        println(lpad(v, 2), " roll(s) of pattern $p")
-    end
-end
+solution = DataFrames.DataFrame([
+    (pattern = p, rolls = value(x_p)) for (p, x_p) in enumerate(x)
+])
+filter!(row -> row.rolls > 0, solution)
 
-# This requires 343 rolls:
+# Since we solved a linear program, some of our columns have fractional
+# solutions. We can create a integer feasible solution by rounding up the
+# orders. This requires 341 rolls:
 
-Test.@test sum(ceil.(Int, value.(x))) == 343  #src
-sum(ceil.(Int, value.(x)))
+Test.@test sum(ceil.(Int, solution.rolls)) == 341  #src
+sum(ceil.(Int, solution.rolls))
 
 # Alternatively, we can re-introduce the integrality constraints and resolve the
 # problem:
 
 set_integer.(x)
 optimize!(model)
-for p in 1:length(x)
-    v = round(Int, value(x[p]))
-    if v > 0
-        println(lpad(v, 2), " roll(s) of pattern $p, each roll of which makes:")
-        for i in 1:I
-            if patterns[p][i] > 0
-                println("  ", patterns[p][i], " unit(s) of piece $i")
-            end
-        end
-    end
-end
+solution = DataFrames.DataFrame([
+    (pattern = p, rolls = value(x_p)) for (p, x_p) in enumerate(x)
+])
+filter!(row -> row.rolls > 0, solution)
 
 # This now requires 334 rolls:
 
-Test.@test sum(ceil.(Int, value.(x))) == 334  #src
-total_rolls = sum(ceil.(Int, value.(x)))
+Test.@test isapprox(sum(solution.rolls), 334; atol = 1e-6)  #src
+sum(solution.rolls)
 
 # Note that this may not be the global minimum because we are not adding new
 # columns during the solution of the mixed-integer problem `model` (an algorithm
 # known as [branch and price](https://en.wikipedia.org/wiki/Branch_and_price)).
 # Nevertheless, the column generation algorithm typically finds good integer
 # feasible solutions to an otherwise intractable optimization problem.
+
+# ## Next steps
+
+# * Our objective function is to minimize the total number of rolls. What is the
+#   total length of waste? How does that compare to the total demand?
+# * Writing the optimization algorithm is only part of the challenge. Can you
+#   develop a better way to communicate the solution to stakeholders?
