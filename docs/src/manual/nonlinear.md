@@ -275,16 +275,16 @@ ifelse((x < -1) || (x >= 1), x², 0.0)
 
 The available functions are:
 
-| JuMP function                      | Julia function |
-| :--------------------------------- | :------------- |
-| [`op_ifelse`](@ref)                | `ifelse`       |
-| [`op_and`](@ref)                   | `&&`           |
-| [`op_or`](@ref)                    | `\|\|`         |
-| [`op_greater_than_or_equal_to`](@ref)          | `>=`           |
-| [`op_less_than_or_equal_to`](@ref)             | `<=`           |
-| [`op_equal_to`](@ref)              | `==`           |
-| [`op_strictly_greater_than`](@ref) | `>`            |
-| [`op_strictly_less_than`](@ref)    | `<`            |
+| JuMP function                         | Julia function |
+| :------------------------------------ | :------------- |
+| [`op_ifelse`](@ref)                   | `ifelse`       |
+| [`op_and`](@ref)                      | `&&`           |
+| [`op_or`](@ref)                       | `\|\|`         |
+| [`op_greater_than_or_equal_to`](@ref) | `>=`           |
+| [`op_less_than_or_equal_to`](@ref)    | `<=`           |
+| [`op_equal_to`](@ref)                 | `==`           |
+| [`op_strictly_greater_than`](@ref)    | `>`            |
+| [`op_strictly_less_than`](@ref)       | `<`            |
 
 ### Fields
 
