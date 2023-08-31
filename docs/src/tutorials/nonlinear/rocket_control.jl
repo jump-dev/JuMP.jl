@@ -106,7 +106,7 @@ fix(u_t[T], 0.0; force = true)
 
 # Forces are defined as functions:
 
-D(x_h, x_v) = D_c * x_v^2 * exp(-h_c * (x_h - h_0) / h_0),
+D(x_h, x_v) = D_c * x_v^2 * exp(-h_c * (x_h - h_0) / h_0)
 g(x_h) = g_0 * (h_0 / x_h)^2
 
 # The dynamical equations are implemented as constraints.
