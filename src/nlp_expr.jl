@@ -368,16 +368,20 @@ for f in (:+, :-, :*, :^, :/, :atan)
 end
 
 function _MA.operate!!(
-    ::typeof(_MA.add_mul),
+    op::_MA.AddSubMul,
     x::GenericNonlinearExpr,
-    y::AbstractJuMPScalar,
-)
+    args::Vararg{Any,N},
+) where {N}
     _throw_if_not_real(x)
     if x.head == :+
-        push!(x.args, y)
+        arg = *(args...)
+        if _MA.add_sub_op(op) != +
+            arg = _MA.add_sub_op(op)(arg)
+        end
+        push!(x.args, arg)
         return x
     end
-    return +(x, y)
+    return _MA.add_sub_op(op)(x, *(args...))
 end
 
 """
