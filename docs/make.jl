@@ -344,10 +344,10 @@ const _PAGES = [
         "manual/objective.md",
         "manual/containers.md",
         "manual/solutions.md",
-        "manual/nlp.md",
         "manual/callbacks.md",
         "manual/complex.md",
         "manual/nonlinear.md",
+        "manual/nlp.md",
     ],
     jump_api_reference,
     "Background Information" =>

@@ -6,12 +6,12 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# Nonlinear Modeling
+# Nonlinear Modeling (Legacy)
 
 !!! warning
     This page describes the legacy nonlinear interface to JuMP. It has a number
     of quirks and limitations that prompted the development of a new nonlinear
-    interface. The new interface is documented at [Nonlinear Modeling](@ref new_nonlinear_interface).
+    interface. The new interface is documented at [Nonlinear Modeling](@ref).
     This legacy interface will remain for all future `v1.X` releases of JuMP.
     The two nonlinear interfaces cannot be combined.
 
