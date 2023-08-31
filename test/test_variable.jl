@@ -1488,7 +1488,7 @@ end
 
 function test_parameter_vector()
     model = Model()
-    @variable(model, x);
+    @variable(model, x)
     @variable(model, p[i = 1:2] in Parameter(i))
     @test parameter_value.(p) == [1.0, 2.0]
     set_parameter_value(p[2], 3.0)
