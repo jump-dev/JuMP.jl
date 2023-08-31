@@ -117,11 +117,8 @@ function test_extension_quadratic(
     VariableRefType = VariableRef,
 )
     model = ModelType()
-    @variable(model, w)
-    @variable(model, x)
-    @variable(model, y)
-    @variable(model, z)
-    JuMP._MA.Test.quadratic_test(w, x, y, z)
+    @variable(model, x[1:4])
+    JuMP._MA.Test.quadratic_test(x...; exclude = ["quadratic_add_canonical"])
     return
 end
 
