@@ -333,6 +333,7 @@ const _PAGES = [
             "tutorials/applications/power_systems.md",
             "tutorials/applications/optimal_power_flow.md",
             "tutorials/applications/web_app.md",
+            "tutorials/applications/two_stage_stochastic.md",
         ],
     ],
     "Manual" => [
