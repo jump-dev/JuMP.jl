@@ -19,6 +19,7 @@ module JuMP
 
 import Base.Meta: isexpr, quot
 import LinearAlgebra
+import MacroTools
 import MathOptInterface as MOI
 import MutableArithmetics
 import OrderedCollections
@@ -1079,6 +1080,7 @@ include("objective.jl")
 include("aff_expr.jl")
 include("quad_expr.jl")
 include("nlp.jl")
+include("nlp_expr.jl")
 include("macros.jl")
 include("optimizer_interface.jl")
 

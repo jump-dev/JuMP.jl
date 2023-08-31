@@ -23,7 +23,7 @@ function example_rosenbrock()
     set_silent(model)
     @variable(model, x)
     @variable(model, y)
-    @NLobjective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
+    @objective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
     optimize!(model)
     Test.@test termination_status(model) == LOCALLY_SOLVED
     Test.@test primal_status(model) == FEASIBLE_POINT
@@ -63,7 +63,7 @@ function example_clnlbeam()
         -0.05 <= x[1:(N+1)] <= 0.05
         u[1:(N+1)]
     end)
-    @NLobjective(
+    @objective(
         model,
         Min,
         sum(
@@ -71,7 +71,7 @@ function example_clnlbeam()
             0.5 * alpha * h * (cos(t[i+1]) + cos(t[i])) for i in 1:N
         ),
     )
-    @NLconstraint(
+    @constraint(
         model,
         [i = 1:N],
         x[i+1] - x[i] - 0.5 * h * (sin(t[i+1]) + sin(t[i])) == 0,
@@ -109,7 +109,7 @@ function example_mle()
     set_silent(model)
     @variable(model, μ, start = 0.0)
     @variable(model, σ >= 0.0, start = 1.0)
-    @NLobjective(
+    @objective(
         model,
         Max,
         n / 2 * log(1 / (2 * π * σ^2)) -
@@ -124,7 +124,7 @@ function example_mle()
     Test.@test value(μ) ≈ Statistics.mean(data) atol = 1e-3
     Test.@test value(σ)^2 ≈ Statistics.var(data) atol = 1e-2
     ## You can even do constrained MLE!
-    @NLconstraint(model, μ == σ^2)
+    @constraint(model, μ == σ^2)
     optimize!(model)
     Test.@test value(μ) ≈ value(σ)^2
     println()

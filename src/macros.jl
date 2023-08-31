@@ -474,6 +474,245 @@ function parse_constraint_head(
     return is_vectorized, parse_code, build_call
 end
 
+"""
+    op_ifelse(a, x, y)
+
+A function that falls back to `ifelse(a, x, y)`, but when called with a JuMP
+variables or expression in the first argument, returns a
+[`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> op_ifelse(true, 1.0, 2.0)
+1.0
+
+julia> op_ifelse(x, 1.0, 2.0)
+ifelse(x, 1.0, 2.0)
+
+julia> op_ifelse(true, x, 2.0)
+x
+```
+"""
+op_ifelse(a, x, y) = ifelse(a, x, y)
+
+# We can't make this a generic `NonlinearOperator` because we only want to
+# intercept `ifelse` if the first argument is an `AbstractJuMPScalar` (if it's a
+# `Bool`, we want to return the correct branch).
+op_ifelse(a::AbstractJuMPScalar, x, y) = NonlinearExpr(:ifelse, Any[a, x, y])
+
+"""
+    op_and(x, y)
+
+A function that falls back to `x & y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> op_and(true, false)
+false
+
+julia> op_and(true, x)
+true && x
+```
+"""
+const op_and = NonlinearOperator(:&&, &)
+# Note that the function is `&` instead of `&&` because `&&` is special lowering
+# syntax and is not a regular Julia function, but the MOI operator is `:&&`.
+
+"""
+    op_or(x, y)
+
+A function that falls back to `x | y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> op_or(true, false)
+true
+
+julia> op_or(true, x)
+true || x
+```
+"""
+const op_or = NonlinearOperator(:||, |)
+# Note that the function is `|` instead of `||` because `||` is special lowering
+# syntax and is not a regular Julia function, but the MOI operator is `:||`.
+
+"""
+    op_strictly_less_than(x, y)
+
+A function that falls back to `x < y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> op_strictly_less_than(1, 2)
+true
+
+julia> op_strictly_less_than(x, 2)
+x < 2
+```
+"""
+const op_strictly_less_than = NonlinearOperator(:<, <)
+
+"""
+    op_strictly_greater_than(x, y)
+
+A function that falls back to `x > y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> op_strictly_greater_than(1, 2)
+false
+
+julia> op_strictly_greater_than(x, 2)
+x > 2
+```
+"""
+const op_strictly_greater_than = NonlinearOperator(:>, >)
+
+"""
+    op_less_than_or_equal_to(x, y)
+
+A function that falls back to `x <= y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> op_less_than_or_equal_to(2, 2)
+true
+
+julia> op_less_than_or_equal_to(x, 2)
+x <= 2
+```
+"""
+const op_less_than_or_equal_to = NonlinearOperator(:<=, <=)
+
+"""
+    op_greater_than_or_equal_to(x, y)
+
+A function that falls back to `x >= y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> op_greater_than_or_equal_to(2, 2)
+true
+
+julia> op_greater_than_or_equal_to(x, 2)
+x >= 2
+```
+"""
+const op_greater_than_or_equal_to = NonlinearOperator(:>=, >=)
+
+"""
+    op_equal_to(x, y)
+
+A function that falls back to `x == y`, but when called with JuMP variables or
+expressions, returns a [`GenericNonlinearExpr`](@ref).
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> op_equal_to(2, 2)
+true
+
+julia> op_equal_to(x, 2)
+x == 2
+```
+"""
+const op_equal_to = NonlinearOperator(:(==), ==)
+
+function _rewrite_to_jump_logic(x)
+    if Meta.isexpr(x, :call)
+        op = if x.args[1] == :ifelse
+            return Expr(:call, op_ifelse, x.args[2:end]...)
+        elseif x.args[1] == :<
+            return Expr(:call, op_strictly_less_than, x.args[2:end]...)
+        elseif x.args[1] == :>
+            return Expr(:call, op_strictly_greater_than, x.args[2:end]...)
+        elseif x.args[1] == :<=
+            return Expr(:call, op_less_than_or_equal_to, x.args[2:end]...)
+        elseif x.args[1] == :>=
+            return Expr(:call, op_greater_than_or_equal_to, x.args[2:end]...)
+        elseif x.args[1] == :(==)
+            return Expr(:call, op_equal_to, x.args[2:end]...)
+        end
+    elseif Meta.isexpr(x, :||)
+        return Expr(:call, op_or, x.args...)
+    elseif Meta.isexpr(x, :&&)
+        return Expr(:call, op_and, x.args...)
+    elseif Meta.isexpr(x, :comparison)
+        lhs = Expr(:call, x.args[2], x.args[1], x.args[3])
+        rhs = Expr(:call, x.args[4], x.args[3], x.args[5])
+        return Expr(
+            :call,
+            op_and,
+            _rewrite_to_jump_logic(lhs),
+            _rewrite_to_jump_logic(rhs),
+        )
+    end
+    return x
+end
+
+"""
+    _rewrite_expression(expr)
+
+A helper function so that we can change how we rewrite expressions in a single
+place and have it cascade to all locations in the JuMP macros that rewrite
+expressions.
+"""
+function _rewrite_expression(expr)
+    new_expr = MacroTools.postwalk(_rewrite_to_jump_logic, expr)
+    new_aff, parse_aff = _MA.rewrite(new_expr; move_factors_into_sums = false)
+    ret = gensym()
+    code = quote
+        $parse_aff
+        $ret = $flatten!($new_aff)
+    end
+    return ret, code
+end
+
 function parse_constraint_head(
     _error::Function,
     ::Val{:comparison},
@@ -501,9 +740,9 @@ function parse_constraint_head(
             "`$ub >= ... >= $lb`.",
         )
     end
-    new_aff, parse_aff = _MA.rewrite(aff)
-    new_lb, parse_lb = _MA.rewrite(lb)
-    new_ub, parse_ub = _MA.rewrite(ub)
+    new_aff, parse_aff = _rewrite_expression(aff)
+    new_lb, parse_lb = _rewrite_expression(lb)
+    new_ub, parse_ub = _rewrite_expression(ub)
     parse_code = quote
         $parse_aff
         $parse_lb
@@ -584,7 +823,7 @@ function parse_constraint_call(
     func,
     set,
 )
-    f, parse_code = _MA.rewrite(func)
+    f, parse_code = _rewrite_expression(func)
     build_call = if vectorized
         :(build_constraint.($_error, _desparsify($f), Ref($(esc(set)))))
     else
@@ -618,7 +857,7 @@ function parse_constraint_call(
     rhs,
 )
     func = vectorized ? :($lhs .- $rhs) : :($lhs - $rhs)
-    f, parse_code = _MA.rewrite(func)
+    f, parse_code = _rewrite_expression(func)
     set = operator_to_set(_error, operator)
     # `_functionize` deals with the pathological case where the `lhs` is a
     # `VariableRef` and the `rhs` is a summation with no terms.
@@ -1590,7 +1829,7 @@ macro objective(model, args...)
     end
     sense, x = args
     sense_expr = _moi_sense(_error, sense)
-    newaff, parsecode = _MA.rewrite(x)
+    newaff, parsecode = _rewrite_expression(x)
     code = quote
         $parsecode
         # Don't leak a `_MA.Zero` if the objective expression is an empty
@@ -1679,11 +1918,12 @@ macro expression(args...)
             "different name for the index.",
         )
     end
-    code = _MA.rewrite_and_return(x)
+    expr_var, build_code = _rewrite_expression(x)
     code = quote
+        $build_code
         # Don't leak a `_MA.Zero` if the expression is an empty summation, or
         # other structure that returns `_MA.Zero()`.
-        _replace_zero($m, $code)
+        _replace_zero($m, $expr_var)
     end
     code =
         Containers.container_code(idxvars, indices, code, requested_container)

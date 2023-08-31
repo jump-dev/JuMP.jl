@@ -124,6 +124,13 @@ end
 
 variable_ref_type(::Type{GenericAffExpr{C,V}}) where {C,V} = V
 
+function owner_model(x::GenericAffExpr)
+    if !isempty(x.terms)
+        return owner_model(first(keys(x.terms)))
+    end
+    return nothing
+end
+
 """
     GenericAffExpr(constant::V, kv::AbstractArray{Pair{K,V}}) where {K,V}
 

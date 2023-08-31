@@ -195,7 +195,7 @@ julia> @variable(model, y)
 y
 
 julia> ex = @expression(model, x^2 + 2 * x * y + y^2 + x + y - 1)
-x² + 2 y*x + y² + x + y - 1
+x² + 2 x*y + y² + x + y - 1
 ```
 
 ### Operator overloading
@@ -326,10 +326,8 @@ julia> coefficient(ex, x)
 
 ## Nonlinear expressions
 
-Nonlinear expressions can be constructed only using the [`@NLexpression`](@ref)
-macro and can be used only in [`@NLobjective`](@ref), [`@NLconstraint`](@ref),
-and other [`@NLexpression`](@ref)s. For more details, see the [Nonlinear
-Modeling](@ref) section.
+Nonlinear expressions in JuMP are represented by a [`NonlinearExpr`](@ref)
+object. See [Nonlinear expressions in detail](@ref) for more details.
 
 ## Initializing arrays
 

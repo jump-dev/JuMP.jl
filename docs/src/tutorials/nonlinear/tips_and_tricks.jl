@@ -12,9 +12,9 @@ using JuMP
 import Ipopt
 import Test
 
-# ## User-defined functions with vector outputs
+# ## User-defined operators with vector outputs
 
-# A common situation is to have a user-defined function like the following that
+# A common situation is to have a user-defined operator like the following that
 # returns multiple outputs (we define `function_calls` to keep track of how
 # many times we call this method):
 
@@ -31,7 +31,7 @@ end
 # term might be used in a constraint, and often they share work that is
 # expensive to evaluate.
 
-# This is a problem for JuMP, because it requires user-defined functions to
+# This is a problem for JuMP, because it requires user-defined operators to
 # return a single number. One option is to define two separate functions, the
 # first returning the first argument, and the second returning the second
 # argument.
@@ -46,10 +46,10 @@ foo_2(x, y) = foo(x, y)[2]
 model = Model(Ipopt.Optimizer)
 set_silent(model)
 @variable(model, x[1:2] >= 0, start = 0.1)
-register(model, :foo_1, 2, foo_1; autodiff = true)
-register(model, :foo_2, 2, foo_2; autodiff = true)
-@NLobjective(model, Max, foo_1(x[1], x[2]))
-@NLconstraint(model, foo_2(x[1], x[2]) <= 2)
+@operator(model, op_foo_1, 2, foo_1)
+@operator(model, op_foo_2, 2, foo_2)
+@objective(model, Max, op_foo_1(x[1], x[2]))
+@constraint(model, op_foo_2(x[1], x[2]) <= 2)
 function_calls = 0
 optimize!(model)
 Test.@test objective_value(model) ≈ √3 atol = 1e-4
@@ -114,10 +114,10 @@ println("function_calls = ", function_calls)
 model = Model(Ipopt.Optimizer)
 set_silent(model)
 @variable(model, x[1:2] >= 0, start = 0.1)
-register(model, :foo_1, 2, memoized_foo[1]; autodiff = true)
-register(model, :foo_2, 2, memoized_foo[2]; autodiff = true)
-@NLobjective(model, Max, foo_1(x[1], x[2]))
-@NLconstraint(model, foo_2(x[1], x[2]) <= 2)
+@operator(model, op_foo_1, 2, memoized_foo[1])
+@operator(model, op_foo_2, 2, memoized_foo[2])
+@objective(model, Max, op_foo_1(x[1], x[2]))
+@constraint(model, op_foo_2(x[1], x[2]) <= 2)
 function_calls = 0
 optimize!(model)
 Test.@test objective_value(model) ≈ √3 atol = 1e-4

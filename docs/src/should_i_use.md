@@ -77,9 +77,9 @@ consider using other packages such as:
 ### Black-box, derivative free, or unconstrained optimization
 
 JuMP does support nonlinear programs with constraints and objectives containing
-user-defined functions. However, the functions must be automatically
+user-defined operators. However, the functions must be automatically
 differentiable, or need to provide explicit derivatives. (See
-[User-defined Functions](@ref) for more information.)
+[User-defined operators](@ref jump_user_defined_operators) for more information.)
 
 If your function is a black-box that is non-differentiable (for example, it is
 the output of a simulation written in C++), JuMP is not the right tool for the

@@ -1601,4 +1601,95 @@ function test_parse_expression_quadexpr_multivariate_sum()
     return
 end
 
+function test_parse_expression_nonlinearexpr_call()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    f = GenericNonlinearExpr(:ifelse, Any[x, 0, y])
+    @NLexpression(model, ref, f)
+    nlp = nonlinear_model(model)
+    expr = :(ifelse($x, 0, $y))
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
+function test_parse_expression_nonlinearexpr_or()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    f = GenericNonlinearExpr(:||, Any[x, y])
+    @NLexpression(model, ref, f)
+    nlp = nonlinear_model(model)
+    expr = :($x || $y)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
+function test_parse_expression_nonlinearexpr_and()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    f = GenericNonlinearExpr(:&&, Any[x, y])
+    @NLexpression(model, ref, f)
+    nlp = nonlinear_model(model)
+    expr = :($x && $y)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
+function test_parse_expression_nonlinearexpr_unsupported()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    f = GenericNonlinearExpr(:foo, Any[x, y])
+    @test_throws(
+        MOI.UnsupportedNonlinearOperator,
+        @NLexpression(model, ref, f),
+    )
+    return
+end
+
+function test_parse_expression_nonlinearexpr_nested_comparison()
+    model = Model()
+    @variable(model, x)
+    @variable(model, y)
+    f = GenericNonlinearExpr(:||, Any[x, y])
+    g = GenericNonlinearExpr(:&&, Any[f, x])
+    @NLexpression(model, ref, g)
+    nlp = nonlinear_model(model)
+    expr = :(($x || $y) && $x)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
+function test_parse_boolean_comparison_fallbacks()
+    model = Model()
+    @variable(model, x)
+    @test @expression(model, ifelse(true && true, x, 0.0)) === x
+    @test @expression(model, ifelse(true || false, x, 0.0)) === x
+    @test @expression(model, ifelse(1 < 2, x, 0.0)) === x
+    @test @expression(model, ifelse(1 <= 2, x, 0.0)) === x
+    @test @expression(model, ifelse(2 > 1, x, 0.0)) === x
+    @test @expression(model, ifelse(2 >= 1, x, 0.0)) === x
+    @test @expression(model, ifelse(2 == 2, x, 0.0)) === x
+    @test @expression(model, ifelse(true && false, x, 0.0)) === 0.0
+    @test @expression(model, ifelse(false || false, x, 0.0)) === 0.0
+    @test @expression(model, ifelse(2 < 1, x, 0.0)) === 0.0
+    @test @expression(model, ifelse(2 <= 1, x, 0.0)) === 0.0
+    @test @expression(model, ifelse(1 > 2, x, 0.0)) === 0.0
+    @test @expression(model, ifelse(1 >= 2, x, 0.0)) === 0.0
+    @test @expression(model, ifelse(1 == 2, x, 0.0)) === 0.0
+    return
+end
+
+function test_get_node_type_comparison()
+    model = Model()
+    @variable(model, x)
+    expr = @expression(model, ifelse(x >= 0, x, 0.0))
+    @NLexpression(model, ref, ifelse(x >= 0, x, 0.0))
+    nlp = nonlinear_model(model)
+    @test MOI.Nonlinear.parse_expression(nlp, expr) == nlp[index(ref)]
+    return
+end
+
 end

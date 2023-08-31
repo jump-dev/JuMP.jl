@@ -308,6 +308,7 @@ const _PAGES = [
             "tutorials/nonlinear/user_defined_hessians.md",
             "tutorials/nonlinear/nested_problems.md",
             "tutorials/nonlinear/querying_hessians.md",
+            "tutorials/nonlinear/complementarity.md",
         ],
         "Conic programs" => [
             "tutorials/conic/introduction.md",
@@ -345,6 +346,7 @@ const _PAGES = [
         "manual/nlp.md",
         "manual/callbacks.md",
         "manual/complex.md",
+        "manual/nonlinear.md",
     ],
     jump_api_reference,
     "Background Information" =>

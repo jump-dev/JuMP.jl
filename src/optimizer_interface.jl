@@ -415,6 +415,14 @@ function optimize!(
     # The nlp_model is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
     if nonlinear_model(model) !== nothing
+        if _uses_new_nonlinear_interface(model)
+            error(
+                "Cannot optimize a model which contains the features from " *
+                "both the legacy (macros beginning with `@NL`) and new " *
+                "(`NonlinearExpr`) nonlinear interfaces. You must use one or " *
+                "the other.",
+            )
+        end
         evaluator = MOI.Nonlinear.Evaluator(
             nonlinear_model(model),
             _differentiation_backend,
@@ -452,6 +460,18 @@ function optimize!(
     end
     model.is_model_dirty = false
     return
+end
+
+function _uses_new_nonlinear_interface(model)
+    if objective_function_type(model) <: GenericNonlinearExpr
+        return true
+    end
+    for (F, S) in list_of_constraint_types(model)
+        if F <: GenericNonlinearExpr
+            return true
+        end
+    end
+    return false
 end
 
 """

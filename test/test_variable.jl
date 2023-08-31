@@ -1118,23 +1118,14 @@ end
 function test_error_messages()
     model = Model()
     @variable(model, x)
-    err = try
-        x >= 1
-    catch err
-        err
-    end
-    function f(s)
-        return ErrorException(
-            replace(replace(err.msg, ">= 1" => "$(s) 1"), "`>=`" => "`$(s)`"),
-        )
-    end
-    @test_throws err 1 >= x
-    @test_throws f("<=") x <= 1
-    @test_throws f("<=") 1 <= x
-    @test_throws f(">") x > 1
-    @test_throws f(">") 1 > x
-    @test_throws f("<") x < 1
-    @test_throws f("<") 1 < x
+    @test_throws JuMP._logic_error_exception(:>=) x >= 1
+    @test_throws JuMP._logic_error_exception(:>=) 1 >= x
+    @test_throws JuMP._logic_error_exception(:<=) x <= 1
+    @test_throws JuMP._logic_error_exception(:<=) 1 <= x
+    @test_throws JuMP._logic_error_exception(:>) x > 1
+    @test_throws JuMP._logic_error_exception(:>) 1 > x
+    @test_throws JuMP._logic_error_exception(:<) x < 1
+    @test_throws JuMP._logic_error_exception(:<) 1 < x
     return
 end
 

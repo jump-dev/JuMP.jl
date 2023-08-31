@@ -24,11 +24,12 @@
 # where an *upper* problem uses the results from the optimization of a *lower*
 # subproblem.
 #
-# To model the problem, we define a user-defined function to handle the decomposition
-# of the lower problem inside the upper one. Finally, we show how to improve
-# the performance by using a cache that avoids resolving the lower problem.
+# To model the problem, we define a user-defined operator to handle the
+# decomposition of the lower problem inside the upper one. Finally, we show how
+# to improve the performance by using a cache that avoids resolving the lower
+# problem.
 #
-# For a simpler example of writing a user-defined function,
+# For a simpler example of writing a user-defined operator,
 # see the [User-defined Hessians](@ref) tutorial.
 
 # This tutorial uses the following packages:
@@ -74,7 +75,7 @@ function solve_lower_level(x...)
     model = Model(Ipopt.Optimizer)
     set_silent(model)
     @variable(model, y[1:2])
-    @NLobjective(
+    @objective(
         model,
         Max,
         x[1]^2 * y[1] + x[2]^2 * y[2] - x[1] * y[1]^4 - 2 * x[2] * y[2]^4,
@@ -104,7 +105,7 @@ end
 # \end{array}
 # ```
 
-# This looks like a nonlinear optimization problem with a user-defined function
+# This looks like a nonlinear optimization problem with a user-defined operator
 # ``V``! However, because ``V`` solves an optimization problem internally, we
 # can't use automatic differentiation to compute the first and second
 # derivatives. Instead, we can use JuMP's ability to pass callback functions
@@ -141,8 +142,8 @@ end
 
 model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2] >= 0)
-register(model, :V, 2, V, ∇V, ∇²V)
-@NLobjective(model, Min, x[1]^2 + x[2]^2 + V(x[1], x[2]))
+@operator(model, op_V, 2, V, ∇V, ∇²V)
+@objective(model, Min, x[1]^2 + x[2]^2 + op_V(x[1], x[2]))
 optimize!(model)
 solution_summary(model)
 
@@ -213,15 +214,15 @@ end
 model = Model(Ipopt.Optimizer)
 @variable(model, x[1:2] >= 0)
 cache = Cache(Float64[], NaN, Float64[])
-register(
+@operator(
     model,
-    :V,
+    op_cached_f,
     2,
     (x...) -> cached_f(cache, x...),
     (g, x...) -> cached_∇f(cache, g, x...),
     (H, x...) -> cached_∇²f(cache, H, x...),
 )
-@NLobjective(model, Min, x[1]^2 + x[2]^2 + V(x[1], x[2]))
+@objective(model, Min, x[1]^2 + x[2]^2 + op_cached_f(x[1], x[2]))
 optimize!(model)
 solution_summary(model)
 

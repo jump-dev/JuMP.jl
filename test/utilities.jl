@@ -17,14 +17,17 @@ macro test_expression(expr)
     end)
 end
 
-macro test_expression_with_string(expr, str)
-    return esc(
-        quote
-            realized_expr = @inferred $expr
-            @test string(realized_expr) == $str
-            @test isequal_canonical(@expression(model, $expr), realized_expr)
-        end,
-    )
+macro test_expression_with_string(expr, str, inferrable = true)
+    code = quote
+        realized_expr = if $inferrable
+            @inferred $expr
+        else
+            $expr
+        end
+        @test string(realized_expr) == $str
+        @test isequal_canonical(@expression(model, $expr), realized_expr)
+    end
+    return esc(code)
 end
 
 function _strip_line_from_error(err::ErrorException)

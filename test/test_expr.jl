@@ -445,4 +445,10 @@ function test_expression_ambiguities()
     return
 end
 
+function test_quadexpr_owner_model()
+    quad = GenericQuadExpr{Int,Int}()
+    @test owner_model(quad) === nothing
+    return
+end
+
 end  # TestExpr
