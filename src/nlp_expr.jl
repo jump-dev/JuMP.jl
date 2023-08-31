@@ -763,7 +763,7 @@ function _MA.promote_operation(
 end
 
 """
-    NonlinearOperator(func::Function, head::Symbol = Symbol(func))
+    NonlinearOperator(func::Function, head::Symbol)
 
 A callable struct (functor) representing a function named `head`.
 
@@ -811,8 +811,6 @@ struct NonlinearOperator{F}
     func::F
     head::Symbol
 end
-
-NonlinearOperator(f::Function) = NonlinearOperator(f, Symbol(f))
 
 # Make it so that we don't print the complicated type parameter
 function Base.show(io::IO, f::NonlinearOperator)

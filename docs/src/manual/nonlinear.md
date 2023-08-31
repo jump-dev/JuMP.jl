@@ -405,7 +405,7 @@ the operator using [`add_nonlinear_operator`](@ref) and define a new method
 which manually creates a [`NonlinearExpr`](@ref):
 ```jldoctest nonlinear_invalid_redefinition
 julia> _ = add_nonlinear_operator(model, 1, f; name = :f)
-NonlinearOperator(:f, f)
+NonlinearOperator(f, :f)
 
 julia> f(x::AbstractJuMPScalar) = NonlinearExpr(:f, Any[x])
 f (generic function with 2 methods)

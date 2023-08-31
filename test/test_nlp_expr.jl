@@ -492,7 +492,7 @@ function test_operator_univariate()
     model = Model()
     @variable(model, x)
     f(x) = x^2
-    op_f = NonlinearOperator(f)
+    op_f = NonlinearOperator(f, :f)
     @test f isa NonlinearOperator
     @test sprint(show, f) == "NonlinearOperator($f, :f)"
     @test isequal_canonical(@expression(model, f(x)), f(x))
