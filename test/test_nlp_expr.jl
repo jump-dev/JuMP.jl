@@ -6,6 +6,7 @@
 module TestNLPExpr
 
 using JuMP
+using LinearAlgebra
 using Test
 
 function test_extension_univariate_operators(
@@ -826,6 +827,16 @@ function test_redefinition_of_function()
     end
     @test_throws(err, @operator(model, f, 1, f))
     return
+end
+
+function test_array()
+    model = Model()
+    @variable(model, x)
+    op_norm = NonlinearOperator(:det, det)
+    @objective(model, Min, op_norm([x]))
+    f = MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}())
+    @test f.head == :norm
+    @test f.args == [[index(x)]]
 end
 
 end  # module

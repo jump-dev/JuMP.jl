@@ -336,10 +336,6 @@ for f in MOI.Nonlinear.DEFAULT_UNIVARIATE_OPERATORS
     end
 end
 
-function LinearAlgebra.det(A::LinearAlgebra.Symmetric{<:AbstractJuMPScalar})
-    return GenericNonlinearExpr{variable_ref_type(eltype(A))}(:det, A)
-end
-
 # Multivariate operators
 
 # The multivariate operators in MOI are +, -, *, ^, /, ifelse, atan
@@ -510,8 +506,8 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
     for i in length(f.args):-1:1
         if f.args[i] isa GenericNonlinearExpr{V}
             push!(stack, (ret, i, f.args[i]))
-        elseif arg.args[i] isa AbstractArray
-            child.args[i] = moi_function.(arg.args[i])
+        elseif f.args[i] isa AbstractArray
+            ret.args[i] = moi_function.(f.args[i])
         else
             ret.args[i] = moi_function(f.args[i])
         end
@@ -827,32 +823,34 @@ function Base.show(io::IO, f::NonlinearOperator)
     return print(io, "NonlinearOperator(:$(f.head), $(f.func))")
 end
 
+const AbstractJuMPScalarOrArray = Union{AbstractJuMPScalar, AbstractArray{<:AbstractJuMPScalar}}
+
 # Fast overload for unary calls
 
 (f::NonlinearOperator)(x) = f.func(x)
 
-(f::NonlinearOperator)(x::AbstractJuMPScalar) = NonlinearExpr(f.head, Any[x])
+(f::NonlinearOperator)(x::AbstractJuMPScalarOrArray) = NonlinearExpr(f.head, Any[x])
 
 # Fast overload for binary calls
 
 (f::NonlinearOperator)(x, y) = f.func(x, y)
 
-function (f::NonlinearOperator)(x::AbstractJuMPScalar, y)
+function (f::NonlinearOperator)(x::AbstractJuMPScalarOrArray, y)
     return GenericNonlinearExpr(f.head, Any[x, y])
 end
 
-function (f::NonlinearOperator)(x, y::AbstractJuMPScalar)
+function (f::NonlinearOperator)(x, y::AbstractJuMPScalarOrArray)
     return GenericNonlinearExpr(f.head, Any[x, y])
 end
 
-function (f::NonlinearOperator)(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
+function (f::NonlinearOperator)(x::AbstractJuMPScalarOrArray, y::AbstractJuMPScalarOrArray)
     return GenericNonlinearExpr(f.head, Any[x, y])
 end
 
 # Fallback for more arguments
 function (f::NonlinearOperator)(x, y, z...)
     args = (x, y, z...)
-    if any(Base.Fix2(isa, AbstractJuMPScalar), args)
+    if any(Base.Fix2(isa, AbstractJuMPScalarOrArray), args)
         return GenericNonlinearExpr(f.head, Any[a for a in args])
     end
     return f.func(args...)
