@@ -1291,3 +1291,92 @@ standard JuMP syntax is that variables constrained on creation calls
 
 Consult the implementation of solver package you are using to see if your solver
 requires `MOI.add_constrained_variables`.
+
+## Parameters
+
+Some solvers have explicit support for parameters, which are constants in the
+model that can be efficiently updated between solves.
+
+JuMP implements parameters by a decision variable constrained on creation to the
+[`Parameter`](@ref) set.
+
+```jldoctest nonlinear_parameters
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, p[i = 1:2] in Parameter(i))
+2-element Vector{VariablerRef}:
+ p[1]
+ p[2]
+```
+
+Create anonymous parameters using the `set` keyword:
+```jldoctest nonlinear_parameters
+julia> anon_parameter = @variable(model, set = Parameter(1.0))
+_[4]
+```
+
+Use [`parameter_value`](@ref) and [`set_parameter_value`](@ref) to query or
+update the value of a parameter.
+
+```jldoctest nonlinear_parameters
+julia> parameter_value.(p)
+2-element Vector{Float64}:
+ 1.0
+ 2.0
+
+julia> set_parameter_value(p[2], 3.0)
+
+julia> parameter_value.(p)
+2-element Vector{Float64}:
+ 1.0
+ 3.0
+```
+
+### Limitations
+
+Parameters are implemented as decision variables belonging to the [`Parameter`](@ref)
+set. If the solver supports the [`MOI.Parameter`](@ref) set, it may decide to
+replace all instances of the parameter variable by the associated constant. If
+the solver does not support parameters, it will add the parameter as a decision
+variable with fixed bounds.
+
+The most important implication of this design is that JuMP treats a parameter
+multiplied by a decision variable as a quadratic expression, even though it is
+equivalent to a linear expression.
+
+```jldoctest nonlinear_parameters
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, p in Parameter(2));
+
+julia> px = @expression(model, p * x)
+
+julia> typeof(px)
+QuadExpr (alias for GenericQuadExpr{Float64, GenericVariableRef{Float64}})
+```
+
+### When to use a parameter
+
+Parameters are most useful when solving nonlinear models in a sequence:
+
+```@repl
+using JuMP, Ipopt
+model = Model(Ipopt.Optimizer);
+set_silent(model)
+@variable(model, x)
+@variable(model, p in Parameter(1.0))
+@objective(model, Min, (x - p)^2)
+optimize!(model)
+value(x)
+set_parameter_value(p, 5.0)
+optimize!(model)
+value(x)
+```
+
+Using parameters can be faster than creating a new model from scratch with
+updated data because JuMP is able to avoid repeating a number of steps in
+processing the model before handing it off to the solver.
