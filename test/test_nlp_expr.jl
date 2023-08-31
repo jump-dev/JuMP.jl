@@ -828,4 +828,15 @@ function test_redefinition_of_function()
     return
 end
 
+function test_linear_algebra_errors()
+    model = Model()
+    @variable(model, x[1:2, 1:2])
+    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.det(x)
+    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.logdet(x)
+    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.norm(x)
+    y = 2.0 .* x[:, 2] .+ 1.0
+    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.norm(y)
+    return
+end
+
 end  # module

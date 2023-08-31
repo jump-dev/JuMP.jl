@@ -1111,3 +1111,18 @@ end
 function MOI.VectorNonlinearFunction(f::Vector{<:AbstractJuMPScalar})
     return MOI.VectorNonlinearFunction(map(moi_function, f))
 end
+
+# LinearAlgebra overloads to throw nicer error messages. These may be changed to
+# return expressions in the future.
+
+function LinearAlgebra.det(::AbstractMatrix{<:AbstractJuMPScalar})
+    return throw(MOI.UnsupportedNonlinearOperator(:det))
+end
+
+function LinearAlgebra.logdet(::AbstractMatrix{<:AbstractJuMPScalar})
+    return throw(MOI.UnsupportedNonlinearOperator(:logdet))
+end
+
+function LinearAlgebra.norm(::AbstractArray{<:AbstractJuMPScalar}, ::Real)
+    return throw(MOI.UnsupportedNonlinearOperator(:norm))
+end
