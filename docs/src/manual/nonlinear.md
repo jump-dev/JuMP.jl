@@ -6,11 +6,11 @@ end
 DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInterface|MOI"]
 ```
 
-# [Nonlinear Modeling](@id new_nonlinear_interface)
+# Nonlinear Modeling
 
 !!! warning
     This page describes a new nonlinear interface to JuMP. It replaces the
-    legacy `@NL` interface, which is documented at [Nonlinear Modeling](@ref).
+    legacy `@NL` interface, which is documented at [Nonlinear Modeling (Legacy)](@ref).
     The API described below is stable, and it will not break with future 1.X
     releases of JuMP. However, solver support may be limited, and there may be
     gaps in functionality compared with the legacy interface. To report a bug,
