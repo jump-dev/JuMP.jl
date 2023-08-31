@@ -376,7 +376,7 @@ function test_extension_basic_operators_variable(
     @test_expression_with_string x * y - 1 "x*y - 1"
     @test_expression_with_string(x^2, "x²", interrable = false)
     @test_expression_with_string(x^1, "x", interrable = false)
-    @test_expression_with_string(x^0, "1", interrable = false)
+    @test x^0 === one(T)
     @test_expression_with_string(x^3, "x ^ 3", interrable = false)
     @test_expression_with_string x^(T(15) / T(10)) "x ^ 1.5"
     # 2-2 Variable--Variable
@@ -444,8 +444,8 @@ function test_extension_basic_operators_affexpr(
         "7.1 x + 2.5",
         inferrable = false
     )
-    @test_expression_with_string(aff^0, "1", inferrable = false)
-    @test_expression_with_string((7.1 * x + 2.5)^0, "1", inferrable = false)
+    @test aff^0 === one(T)
+    @test (7.1 * x + 2.5)^0 === one(T)
     @test_expression_with_string(aff^3, "(7.1 x + 2.5) ^ 3", inferrable = false)
     @test_expression_with_string(
         (7.1 * x + 2.5)^3,
@@ -619,7 +619,7 @@ function test_complex_pow()
     @variable(model, x)
     y = (1.0 + 2.0im) * x
     @test y^0 == (1.0 + 0im)
-    @test y^1 == 0 * y * y + y
+    @test y^1 == y
     @test y^2 == y * y
     @test isequal_canonical(y^3, GenericNonlinearExpr(:^, Any[y, 3]))
     return

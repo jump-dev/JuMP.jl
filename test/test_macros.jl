@@ -704,9 +704,6 @@ function test_Nonliteral_exponents_in_constraint()
     @variable(model, x)
     foo() = 2
     con1 = @build_constraint(x^(foo()) + x^(foo() - 1) + x^(foo() - 2) == 0)
-    # TODO(odow): `con2` fails to build due to a bug in MutableArithmetics. To
-    # fix, we need MutableArithmetics in the current scope.
-    MutableArithmetics = JuMP._MA
     con2 = @build_constraint(
         (x - 1)^(foo()) + (x - 1)^2 + (x - 1)^1 + (x - 1)^0 == 0
     )
@@ -715,7 +712,7 @@ function test_Nonliteral_exponents_in_constraint()
     @test con1.func == x^2 + x
     @test con2.func == 2 * x^2 - 3 * x
     @test con3.func == 9 * x^2
-    @test con4.func == convert(QuadExpr, 3 * x)
+    @test con4.func == 3 * x
     return
 end
 
