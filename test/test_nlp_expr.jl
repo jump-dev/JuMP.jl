@@ -8,6 +8,8 @@ module TestNLPExpr
 using JuMP
 using Test
 
+import LinearAlgebra
+
 function test_extension_univariate_operators(
     ModelType = Model,
     VariableRefType = VariableRef,
