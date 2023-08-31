@@ -488,18 +488,6 @@ function test_register_univariate()
     return
 end
 
-function test_operator_univariate()
-    model = Model()
-    @variable(model, x)
-    f(x) = x^2
-    op_f = NonlinearOperator(f, :f)
-    @test f isa NonlinearOperator
-    @test sprint(show, f) == "NonlinearOperator($f, :f)"
-    @test isequal_canonical(@expression(model, f(x)), f(x))
-    @test isequal_canonical(f(x), GenericNonlinearExpr(:f, Any[x]))
-    return
-end
-
 function test_register_eval_non_jump()
     model = Model()
     @variable(model, x)

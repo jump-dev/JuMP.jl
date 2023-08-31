@@ -814,7 +814,7 @@ end
 
 # Make it so that we don't print the complicated type parameter
 function Base.show(io::IO, f::NonlinearOperator)
-    return print(io, "NonlinearOperator(:$(f.func), $(f.head))")
+    return print(io, "NonlinearOperator($(f.func), :$(f.head))")
 end
 
 # Fast overload for unary calls
