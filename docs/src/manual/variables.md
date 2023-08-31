@@ -1306,7 +1306,7 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> @variable(model, p[i = 1:2] in Parameter(i))
-2-element Vector{VariablerRef}:
+2-element Vector{VariableRef}:
  p[1]
  p[2]
 ```
@@ -1354,6 +1354,7 @@ julia> @variable(model, x);
 julia> @variable(model, p in Parameter(2));
 
 julia> px = @expression(model, p * x)
+p*x
 
 julia> typeof(px)
 QuadExpr (alias for GenericQuadExpr{Float64, GenericVariableRef{Float64}})
