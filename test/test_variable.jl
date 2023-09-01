@@ -1486,4 +1486,23 @@ function test_parameter()
     return
 end
 
+function test_parameter_vector()
+    model = Model()
+    @variable(model, x)
+    @variable(model, p[i = 1:2] in Parameter(i))
+    @test parameter_value.(p) == [1.0, 2.0]
+    set_parameter_value(p[2], 3.0)
+    @test parameter_value.(p) == [1.0, 3.0]
+    return
+end
+
+function test_parameter_anonymous()
+    model = Model()
+    p = @variable(model, set = Parameter(1.5))
+    @test parameter_value(p) == 1.5
+    set_parameter_value(p, 3.0)
+    @test parameter_value(p) == 3.0
+    return
+end
+
 end  # module TestVariable

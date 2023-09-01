@@ -265,6 +265,14 @@ function build_variable(
     return VariableConstrainedOnCreation(variable, moi_set(set))
 end
 
+function build_variable(
+    _error::Function,
+    variables::AbstractArray{<:AbstractVariable},
+    sets::AbstractArray{<:AbstractScalarSet},
+)
+    return build_variable.(_error, variables, sets)
+end
+
 function build_constraint(
     _error::Function,
     func::AbstractJuMPScalar,
