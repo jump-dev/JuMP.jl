@@ -525,7 +525,7 @@ julia> op_and(true, x)
 true && x
 ```
 """
-const op_and = NonlinearOperator(:&&, &)
+const op_and = NonlinearOperator(&, :&&)
 # Note that the function is `&` instead of `&&` because `&&` is special lowering
 # syntax and is not a regular Julia function, but the MOI operator is `:&&`.
 
@@ -549,7 +549,7 @@ julia> op_or(true, x)
 true || x
 ```
 """
-const op_or = NonlinearOperator(:||, |)
+const op_or = NonlinearOperator(|, :||)
 # Note that the function is `|` instead of `||` because `||` is special lowering
 # syntax and is not a regular Julia function, but the MOI operator is `:||`.
 
@@ -573,7 +573,7 @@ julia> op_strictly_less_than(x, 2)
 x < 2
 ```
 """
-const op_strictly_less_than = NonlinearOperator(:<, <)
+const op_strictly_less_than = NonlinearOperator(<, :<)
 
 """
     op_strictly_greater_than(x, y)
@@ -595,7 +595,7 @@ julia> op_strictly_greater_than(x, 2)
 x > 2
 ```
 """
-const op_strictly_greater_than = NonlinearOperator(:>, >)
+const op_strictly_greater_than = NonlinearOperator(>, :>)
 
 """
     op_less_than_or_equal_to(x, y)
@@ -617,7 +617,7 @@ julia> op_less_than_or_equal_to(x, 2)
 x <= 2
 ```
 """
-const op_less_than_or_equal_to = NonlinearOperator(:<=, <=)
+const op_less_than_or_equal_to = NonlinearOperator(<=, :<=)
 
 """
     op_greater_than_or_equal_to(x, y)
@@ -639,7 +639,7 @@ julia> op_greater_than_or_equal_to(x, 2)
 x >= 2
 ```
 """
-const op_greater_than_or_equal_to = NonlinearOperator(:>=, >=)
+const op_greater_than_or_equal_to = NonlinearOperator(>=, :>=)
 
 """
     op_equal_to(x, y)
@@ -661,7 +661,7 @@ julia> op_equal_to(x, 2)
 x == 2
 ```
 """
-const op_equal_to = NonlinearOperator(:(==), ==)
+const op_equal_to = NonlinearOperator(==, :(==))
 
 function _rewrite_to_jump_logic(x)
     if Meta.isexpr(x, :call)

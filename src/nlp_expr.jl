@@ -763,7 +763,7 @@ function _MA.promote_operation(
 end
 
 """
-    NonlinearOperator(head::Symbol, func::Function)
+    NonlinearOperator(func::Function, head::Symbol)
 
 A callable struct (functor) representing a function named `head`.
 
@@ -795,10 +795,10 @@ julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
 julia> @operator(model, op_f, 1, f, ∇f, ∇²f)
-NonlinearOperator(:op_f, f)
+NonlinearOperator(f, :op_f)
 
-julia> bar = NonlinearOperator(:op_f, f)
-NonlinearOperator(:op_f, f)
+julia> bar = NonlinearOperator(f, :op_f)
+NonlinearOperator(f, :op_f)
 
 julia> @objective(model, Min, bar(x))
 op_f(x)
@@ -808,13 +808,13 @@ julia> bar(2.0)
 ```
 """
 struct NonlinearOperator{F}
-    head::Symbol
     func::F
+    head::Symbol
 end
 
 # Make it so that we don't print the complicated type parameter
 function Base.show(io::IO, f::NonlinearOperator)
-    return print(io, "NonlinearOperator(:$(f.head), $(f.func))")
+    return print(io, "NonlinearOperator($(f.func), :$(f.head))")
 end
 
 # Fast overload for unary calls
@@ -906,7 +906,7 @@ julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
 julia> op_f = add_nonlinear_operator(model, 1, f, ∇f, ∇²f)
-NonlinearOperator(:f, f)
+NonlinearOperator(f, :f)
 
 julia> @objective(model, Min, op_f(x))
 f(x)
@@ -936,7 +936,7 @@ function add_nonlinear_operator(
     # MOI.Nonlinear will automatically check for autodiff and common mistakes
     # and throw a nice informative error.
     MOI.set(model, MOI.UserDefinedFunction(name, dim), tuple(f, args...))
-    return NonlinearOperator(name, f)
+    return NonlinearOperator(f, name)
 end
 
 function _catch_redefinition_constant_error(op::Symbol, f::Function)
@@ -1022,7 +1022,7 @@ julia> ∇²f(x::Float64) = 2.0
 ∇²f (generic function with 1 method)
 
 julia> @operator(model, op_f, 1, f, ∇f, ∇²f)
-NonlinearOperator(:op_f, f)
+NonlinearOperator(f, :op_f)
 
 julia> @objective(model, Min, op_f(x))
 op_f(x)
@@ -1031,7 +1031,7 @@ julia> op_f(2.0)
 4.0
 
 julia> model[:op_f]
-NonlinearOperator(:op_f, f)
+NonlinearOperator(f, :op_f)
 
 julia> model[:op_f](x)
 op_f(x)
@@ -1050,7 +1050,7 @@ julia> f(x) = x^2
 f (generic function with 1 method)
 
 julia> @operator(model, op_f, 1, f)
-NonlinearOperator(:op_f, f)
+NonlinearOperator(f, :op_f)
 ```
 is equivalent to
 ```jldoctest
@@ -1060,7 +1060,7 @@ julia> f(x) = x^2
 f (generic function with 1 method)
 
 julia> op_f = model[:op_f] = add_nonlinear_operator(model, 1, f; name = :op_f)
-NonlinearOperator(:op_f, f)
+NonlinearOperator(f, :op_f)
 ```
 """
 macro operator(model, op, dim, f, args...)

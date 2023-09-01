@@ -480,7 +480,7 @@ function test_register_univariate()
     @variable(model, x)
     @operator(model, f, 1, x -> x^2)
     @test f isa NonlinearOperator
-    @test sprint(show, f) == "NonlinearOperator(:f, $(f.func))"
+    @test sprint(show, f) == "NonlinearOperator($(f.func), :f)"
     @test isequal_canonical(@expression(model, f(x)), f(x))
     @test isequal_canonical(f(x), GenericNonlinearExpr(:f, Any[x]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
@@ -624,7 +624,7 @@ function test_value_expression()
     y = QuadExpr(x + 1)
     @test value(f, my_foo(y)) ≈ (value(f, y) - 1)^2
     @test value(f, my_bar(2.2, x)) ≈ sqrt(2.2 - 1.1)
-    bad_udf = NonlinearOperator(:bad_udf, f)
+    bad_udf = NonlinearOperator(f, :bad_udf)
     @test_throws(
         ErrorException(
             "Unable to evaluate nonlinear operator bad_udf because it was " *
