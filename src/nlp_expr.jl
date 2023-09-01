@@ -370,14 +370,14 @@ end
 function _MA.operate!!(
     ::typeof(_MA.add_mul),
     x::GenericNonlinearExpr,
-    y::AbstractJuMPScalar,
-)
+    args::Vararg{Any,N},
+) where {N}
     _throw_if_not_real(x)
     if x.head == :+
-        push!(x.args, y)
+        push!(x.args, *(args...))
         return x
     end
-    return +(x, y)
+    return +(x, *(args...))
 end
 
 """
