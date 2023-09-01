@@ -1119,10 +1119,26 @@ function LinearAlgebra.det(::AbstractMatrix{<:AbstractJuMPScalar})
     return throw(MOI.UnsupportedNonlinearOperator(:det))
 end
 
+function LinearAlgebra.logdet(::AbstractVector{<:AbstractJuMPScalar})
+    return throw(MOI.UnsupportedNonlinearOperator(:logdet))
+end
+
 function LinearAlgebra.logdet(::AbstractMatrix{<:AbstractJuMPScalar})
     return throw(MOI.UnsupportedNonlinearOperator(:logdet))
 end
 
 function LinearAlgebra.norm(::AbstractArray{<:AbstractJuMPScalar}, ::Real)
     return throw(MOI.UnsupportedNonlinearOperator(:norm))
+end
+
+function LinearAlgebra.nullspace(::AbstractVector{<:AbstractJuMPScalar})
+    return throw(MOI.UnsupportedNonlinearOperator(:nullspace))
+end
+
+function LinearAlgebra.nullspace(::AbstractMatrix{<:AbstractJuMPScalar})
+    return throw(MOI.UnsupportedNonlinearOperator(:nullspace))
+end
+
+function LinearAlgebra.qr(::AbstractVector{<:AbstractJuMPScalar})
+    return throw(MOI.UnsupportedNonlinearOperator(:qr))
 end
