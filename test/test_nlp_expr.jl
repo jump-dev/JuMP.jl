@@ -837,11 +837,10 @@ function test_linear_algebra_errors()
     @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.logdet(x)
     @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.norm(x)
     @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.nullspace(x)
+    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.qr(x)
     y = 2.0 .* x[:, 2] .+ 1.0
-    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.logdet(y)
     @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.norm(y)
     @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.nullspace(y)
-    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.qr(y)
     return
 end
 
