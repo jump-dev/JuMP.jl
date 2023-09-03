@@ -118,6 +118,7 @@ function test_extension_quadratic(
 )
     model = ModelType()
     @variable(model, x[1:4])
+    # Test is excluded because of https://github.com/jump-dev/MutableArithmetics.jl/issues/227
     JuMP._MA.Test.quadratic_test(x...; exclude = ["quadratic_add_canonical"])
     return
 end
