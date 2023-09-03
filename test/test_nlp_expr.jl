@@ -745,7 +745,7 @@ function test_VectorNonlinearFunction_moi_function_AbstractJuMPScalar()
     model = Model()
     @variable(model, x)
     F = [sin(x), x]
-    @test F isa Vector{AbstractJuMPScalar}
+    @test F isa Vector{NonlinearExpr}
     @test moi_function_type(typeof(F)) == MOI.VectorNonlinearFunction
     @test isapprox(
         moi_function(F),
@@ -757,10 +757,7 @@ function test_VectorNonlinearFunction_moi_function_AbstractJuMPScalar()
     @test MOI.VectorNonlinearFunction(F) ≈ moi_function(F)
     @test jump_function_type(model, MOI.VectorNonlinearFunction) ==
           Vector{NonlinearExpr}
-    @test isequal_canonical(
-        jump_function(model, moi_function(F)),
-        [sin(x), NonlinearExpr(:+, x)],
-    )
+    @test isequal_canonical(jump_function(model, moi_function(F)), F)
     return
 end
 
