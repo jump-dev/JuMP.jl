@@ -741,10 +741,10 @@ function test_VectorNonlinearFunction_moi_function()
     return
 end
 
-function test_VectorNonlinearFunction_moi_function_AbstractJuMPScalar()
+function test_VectorNonlinearFunction_moi_function_conversionn()
     model = Model()
     @variable(model, x)
-    F = [sin(x), x]
+    F = [sin(x), x, x + 1, x^2]
     @test F isa Vector{NonlinearExpr}
     @test moi_function_type(typeof(F)) == MOI.VectorNonlinearFunction
     @test isapprox(
@@ -752,6 +752,8 @@ function test_VectorNonlinearFunction_moi_function_AbstractJuMPScalar()
         MOI.VectorNonlinearFunction([
             MOI.ScalarNonlinearFunction(:sin, Any[index(x)]),
             MOI.ScalarNonlinearFunction(:+, Any[index(x)]),
+            MOI.ScalarNonlinearFunction(:+, Any[index(x), 1.0]),
+            MOI.ScalarNonlinearFunction(:*, Any[index(x), index(x)]),
         ]),
     )
     @test MOI.VectorNonlinearFunction(F) ≈ moi_function(F)
