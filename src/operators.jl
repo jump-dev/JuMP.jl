@@ -197,24 +197,24 @@ end
 
 function Base.:^(lhs::AbstractVariableRef, rhs::Integer)
     T = value_type(typeof(lhs))
-    if rhs == 2
-        return lhs * lhs
+    if rhs == 0
+        return one(T)
     elseif rhs == 1
-        return convert(GenericQuadExpr{T,variable_ref_type(lhs)}, lhs)
-    elseif rhs == 0
-        return one(GenericQuadExpr{T,variable_ref_type(lhs)})
+        return lhs
+    elseif rhs == 2
+        return lhs * lhs
     else
         return GenericNonlinearExpr(:^, Any[lhs, rhs])
     end
 end
 
 function Base.:^(lhs::GenericAffExpr{T}, rhs::Integer) where {T}
-    if rhs == 2
-        return lhs * lhs
+    if rhs == 0
+        return one(T)
     elseif rhs == 1
-        return convert(GenericQuadExpr{T,variable_ref_type(lhs)}, lhs)
-    elseif rhs == 0
-        return one(GenericQuadExpr{T,variable_ref_type(lhs)})
+        return lhs
+    elseif rhs == 2
+        return lhs * lhs
     else
         return GenericNonlinearExpr(:^, Any[lhs, rhs])
     end
