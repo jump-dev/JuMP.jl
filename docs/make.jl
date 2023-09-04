@@ -4,7 +4,7 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import Pkg
-Pkg.pkg"add Documenter#740ba6304c940801eafdc18b069e4609bf3923a6"
+Pkg.pkg"add Documenter#2fabe9c3bd40b6288c3d86d96c6031728b2d92ad"
 
 import Documenter
 import Downloads
@@ -546,21 +546,17 @@ write(joinpath(@__DIR__, "src", "JuMP.pdf"), "")
         assets = ["assets/extra_styles.css"],
         sidebar_sitename = false,
         # Do no check for large pages.
-        # TODO(odow): re-add for Documenter v1.0
-        # size_threshold = nothing,
+        size_threshold = nothing,
     ),
-    # TODO(odow): remove for Documenter v1.0
-    strict = true,
     modules = [JuMP, MOI],
     checkdocs = :none,
     # Skip doctests if --fast provided.
     doctest = _FIX ? :fix : !_FAST,
     pages = vcat(_PAGES, "release_notes.md"),
-    # TODO(odow): re-add for Documenter v1.0
-    # remotes = Dict(
-    #     dirname(dirname(pathof(MOI))) =>
-    #         Documenter.Remotes.GitHub("jump-dev", "MathOptInterface.jl"),
-    # ),
+    remotes = Dict(
+        dirname(dirname(pathof(MOI))) =>
+            Documenter.Remotes.GitHub("jump-dev", "MathOptInterface.jl"),
+    ),
 )
 
 # ==============================================================================
