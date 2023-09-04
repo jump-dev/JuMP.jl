@@ -17,20 +17,39 @@ at [Nonlinear Modeling](@ref).
 
 ### Breaking
 
-The syntax inside JuMP macros is parsed using a different code path, even for
-linear and quadratic expressions. In all cases, the new code should return
-equivalent expressions, but there are three changes to be aware of when updating:
+Although the new nonlinear interface is a feature addition, there are two
+changes which might be breaking for a small number of users.
 
- - The printed form of the expression may change, for example from `x * y` to
-   `y * x`. This can cause tests which test the `String` representation of a
-   model to fail.
- - Because of the different order of operations, some coefficients may change
-   due to floating point round-off error.
- - Because of the different order of operations, and particularly when working
-   with a JuMP extension, you may encounter a `MethodError` due to a missing or
-   ambiguous method. These errors are due to previously existing bugs that were
-   not triggered by the previous parsing code. If you encouter such an error,
-   please open a GitHub issue.
+ - The syntax inside JuMP macros is parsed using a different code path, even for
+   linear and quadratic expressions. We made this change to unify how we parse
+   linear, quadratic, and nonlinear expressions. In all cases, the new code
+   returns equivalent expressions, but because of the different order of
+   operations, there are three changes to be aware of when updating:
+    - The printed form of the expression may change, for example from `x * y` to
+      `y * x`. This can cause tests which test the `String` representation of a
+      model to fail.
+    - Some coefficients may change slightly due to floating point round-off
+      error.
+    - Particularly when working with a JuMP extension, you may encounter a
+      `MethodError` due to a missing or ambiguous method. These errors are due
+      to previously existing bugs that were not triggered by the previous
+      parsing code. If you encounter such an error, please open a GitHub issue.
+ - The methods for `Base.^(x::VariableRef, n::Integer)` and
+   `Base.^(x::AffExpr, n::Integer)` have changed. Previously, these methods
+   supported only `n = 0, 1, 2` and they always returned a [`QuadExpr`](@ref),
+   even for the case when `n = 0` or `n = 1`. Now:
+     - `x^0` returns `one(T)`, where `T` is the [`value_type`](@ref) of the
+       model (defaults to `Float64`)
+     - `x^1` returns `x`
+     - `x^2` returns a [`QuadExpr`](@ref)
+     - `x^n` where `n > 2` returns a [`NonlinearExpr`](@ref).
+   We made this change to support nonlinear expressions and to align the
+   mathematical definition of the operation with their return type. (Previously,
+   users were surprised that `x^1` returned a [`QuadExpr`](@ref).) As a
+   consequence of this change, the methods are now not type-stable. This means
+   that the compiler cannot prove that `x^2` returns a [`QuadExpr`](@ref). If
+   benchmarking shows that this is a performance problem, you can use the
+   type-stable `x * x` instead of `x^2`.
 
 ### Added
 
@@ -43,6 +62,8 @@ equivalent expressions, but there are three changes to be aware of when updating
  - Fixed uses of `@nospecialize` which cause precompilation failures in Julia
    v1.6.0 and v1.6.1. (#3464)
  - Fixed adding a container of [`Parameter`](@ref) (#3473)
+ - Fixed return type of `x^0` and `x^1` to no longer return `QuadExpr` (see note
+   in `Breaking` section above) (#3474)
 
 ### Other
 
