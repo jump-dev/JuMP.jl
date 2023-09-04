@@ -847,4 +847,12 @@ function test_redefinition_of_function()
     return
 end
 
+function test_moi_function_abstract_jump_scalar()
+    model = Model();
+    @variable(model, x);
+    y = AbstractJuMPScalar[x, sin(x)]
+    @test_throws ErrorException moi_function(y)
+    return
+end
+
 end  # module
