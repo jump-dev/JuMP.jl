@@ -741,7 +741,7 @@ function test_VectorNonlinearFunction_moi_function()
     return
 end
 
-function test_VectorNonlinearFunction_moi_function_conversionn()
+function test_VectorNonlinearFunction_moi_function_conversion()
     model = Model()
     @variable(model, x)
     F = [sin(x), x, x + 1, x^2]
@@ -754,6 +754,26 @@ function test_VectorNonlinearFunction_moi_function_conversionn()
             MOI.ScalarNonlinearFunction(:+, Any[index(x)]),
             MOI.ScalarNonlinearFunction(:+, Any[index(x), 1.0]),
             MOI.ScalarNonlinearFunction(:*, Any[index(x), index(x)]),
+        ]),
+    )
+    @test MOI.VectorNonlinearFunction(F) ≈ moi_function(F)
+    @test jump_function_type(model, MOI.VectorNonlinearFunction) ==
+          Vector{NonlinearExpr}
+    @test isequal_canonical(jump_function(model, moi_function(F)), F)
+    return
+end
+
+function test_VectorNonlinearFunction_moi_function_conversion_variable()
+    model = Model()
+    @variable(model, x)
+    F = [sin(x), x]
+    @test F isa Vector{NonlinearExpr}
+    @test moi_function_type(typeof(F)) == MOI.VectorNonlinearFunction
+    @test isapprox(
+        moi_function(F),
+        MOI.VectorNonlinearFunction([
+            MOI.ScalarNonlinearFunction(:sin, Any[index(x)]),
+            MOI.ScalarNonlinearFunction(:+, Any[index(x)]),
         ]),
     )
     @test MOI.VectorNonlinearFunction(F) ≈ moi_function(F)
