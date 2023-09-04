@@ -7,6 +7,51 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.15.0 (unreleased)
+
+This is a large minor release because it adds an entirely new data structure and
+API path for working with nonlinear programs. The previous nonlinear interface
+remains unchanged and is documented at [Nonlinear Modeling (Legacy)](@ref). The
+new interface is a treated as a non-breaking feature addition and is documented
+at [Nonlinear Modeling](@ref).
+
+### Breaking
+
+The syntax inside JuMP macros is parsed using a different code path, even for
+linear and quadratic expressions. In all cases, the new code should return
+equivalent expressions, but there are three changes to be aware of when updating:
+
+ - The printed form of the expression may change, for example from `x * y` to
+   `y * x`. This can cause tests which test the `String` representation of a
+   model to fail.
+ - Because of the different order of operations, some coefficients may change
+   due to floating point round-off error.
+ - Because of the different order of operations, and particularly when working
+   with a JuMP extension, you may encounter a `MethodError` due to a missing or
+   ambiguous method. These errors are due to previously existing bugs that were
+   not triggered by the previous parsing code. If you encouter such an error,
+   please open a GitHub issue.
+
+### Added
+
+ - Added [`triangle_vec`](@ref) which simplifies adding [`MOI.LogDetConeTriangle`](@ref)
+   and [`MOI.RootDetConeTriangle`](@ref) constraints (#3456)
+ - Added new nonlinear interface (#3106) (#3468) (#3472) (#3475)
+
+### Fixed
+
+ - Fixed uses of `@nospecialize` which cause precompilation failures in Julia
+   v1.6.0 and v1.6.1. (#3464)
+ - Fixed adding a container of [`Parameter`](@ref) (#3473)
+
+### Other
+
+ - Added GAMS to solver documentation (#3357)
+ - Updated various tutorials (#3459) (#3460) (#3462) (#3463) (#3465)
+ - Added [Two-stage stochastic programs](@ref) tutorial (#3466)
+ - Added better error messages for unsupported operations in `LinearAlgebra` (#3476)
+ - Updated to the latest version of Documenter (#3484)
+
 ## Version 1.14.1 (September 2, 2023)
 
 ### Fixed
