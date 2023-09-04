@@ -8,6 +8,8 @@ module TestNLPExpr
 using JuMP
 using Test
 
+import LinearAlgebra
+
 function test_extension_univariate_operators(
     ModelType = Model,
     VariableRefType = VariableRef,
@@ -825,6 +827,20 @@ function test_redefinition_of_function()
         err
     end
     @test_throws(err, @operator(model, f, 1, f))
+    return
+end
+
+function test_linear_algebra_errors()
+    model = Model()
+    @variable(model, x[1:2, 1:2])
+    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.det(x)
+    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.logdet(x)
+    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.norm(x)
+    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.nullspace(x)
+    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.qr(x)
+    y = 2.0 .* x[:, 2] .+ 1.0
+    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.norm(y)
+    @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.nullspace(y)
     return
 end
 
