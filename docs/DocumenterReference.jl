@@ -202,9 +202,9 @@ function _build_api_page(document::Documenter.Document, config::_Config)
     md_page = Markdown.parse(overview_md * join(list_of_docstrings, "\n"))
     filename = "$subdir/$(config.current_module).md"
     document.blueprint.pages[filename] = Documenter.Page(
-        filename, # source, gets ignored because of `EditURL = nothing`.
-        "$(document.user.build)/$filename", # build,
-        "$(document.user.build)/", # workdir,
+        joinpath(document.user.source, filename),
+        joinpath(document.user.build, filename),
+        document.user.build,
         md_page.content,
         Documenter.Globals(),
         convert(MarkdownAST.Node, md_page),
