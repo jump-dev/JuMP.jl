@@ -649,6 +649,27 @@ See also: [`jump_function`](@ref).
 """
 function moi_function end
 
+function moi_function(x::AbstractArray{AbstractJuMPScalar})
+    return error(
+        "Unable to convert array of type `::$(typeof(x))` to an equivalent " *
+        "function in MathOptInterface because the array has the abstract " *
+        "element type `AbstractJuMPScalar`. To fix this error, convert every " *
+        "element in the array to the same concrete element type.\n\n" *
+        """For example, instead of:
+        ```julia
+        model = Model();
+        @variable(model, x);
+        y = AbstractJuMPScalar[x, sin(x)]
+        @objective(model, Min, y)
+        ```
+        do
+        ```julia
+        @objective(model, Min, convert.(NonlinearExpr, y))
+        ```
+        """,
+    )
+end
+
 """
     moi_function_type(::Type{T}) where {T}
 

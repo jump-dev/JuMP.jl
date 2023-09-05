@@ -675,11 +675,25 @@ function _evaluate_expr(
     end
 end
 
-# MutableArithmetics.jl
+# MutableArithmetics.jl and promotion
 
-# These converts are used in the {add,sub}mul definition for AbstractJuMPScalar.
+function Base.promote_rule(
+    ::Type{GenericNonlinearExpr{V}},
+    ::Type{V},
+) where {V<:AbstractVariableRef}
+    return GenericNonlinearExpr{V}
+end
 
-Base.convert(::Type{<:GenericNonlinearExpr}, x::AbstractVariableRef) = x
+function Base.promote_rule(
+    ::Type{GenericNonlinearExpr{V}},
+    ::Type{<:Union{GenericAffExpr{C,V},GenericQuadExpr{C,V}}},
+) where {C,V<:AbstractVariableRef}
+    return GenericNonlinearExpr{V}
+end
+
+function Base.convert(::Type{GenericNonlinearExpr{V}}, x::V) where {V}
+    return GenericNonlinearExpr{V}(:+, Any[x])
+end
 
 function Base.convert(
     ::Type{<:GenericNonlinearExpr},
@@ -1099,14 +1113,11 @@ function jump_function(
     ]
 end
 
-# We use `AbstractJuMPScalar` as a catch-all fallback for any mix of JuMP
-# scalars that have not been dispatched by some other method.
-
-function moi_function_type(::Type{<:Vector{<:AbstractJuMPScalar}})
+function moi_function_type(::Type{<:AbstractVector{<:GenericNonlinearExpr}})
     return MOI.VectorNonlinearFunction
 end
 
-function moi_function(f::Vector{<:AbstractJuMPScalar})
+function moi_function(f::AbstractVector{<:GenericNonlinearExpr})
     return MOI.VectorNonlinearFunction(f)
 end
 
