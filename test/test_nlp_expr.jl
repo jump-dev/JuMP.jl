@@ -9,6 +9,7 @@ using JuMP
 using Test
 
 import LinearAlgebra
+import MutableArithmetics as MA
 
 function test_extension_univariate_operators(
     ModelType = Model,
