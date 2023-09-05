@@ -1119,7 +1119,7 @@ function moi_function(f::AbstractVector{<:GenericNonlinearExpr})
     return MOI.VectorNonlinearFunction(f)
 end
 
-function MOI.VectorNonlinearFunction(f::AbstractVector{<:GenericNonlinearExpr})
+function MOI.VectorNonlinearFunction(f::Vector{<:AbstractJuMPScalar})
     return MOI.VectorNonlinearFunction(map(moi_function, f))
 end
 
