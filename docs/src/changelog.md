@@ -18,7 +18,7 @@ at [Nonlinear Modeling](@ref).
 ### Breaking
 
 Although the new nonlinear interface is a feature addition, there are two
-changes which might be breaking for a small number of users.
+changes which might be breaking for a very small number of users.
 
  - The syntax inside JuMP macros is parsed using a different code path, even for
    linear and quadratic expressions. We made this change to unify how we parse
@@ -34,15 +34,15 @@ changes which might be breaking for a small number of users.
       `MethodError` due to a missing or ambiguous method. These errors are due
       to previously existing bugs that were not triggered by the previous
       parsing code. If you encounter such an error, please open a GitHub issue.
- - The methods for `Base.^(x::VariableRef, n::Integer)` and
-   `Base.^(x::AffExpr, n::Integer)` have changed. Previously, these methods
+ - The methods for `Base.:^(x::VariableRef, n::Integer)` and
+   `Base.:^(x::AffExpr, n::Integer)` have changed. Previously, these methods
    supported only `n = 0, 1, 2` and they always returned a [`QuadExpr`](@ref),
    even for the case when `n = 0` or `n = 1`. Now:
      - `x^0` returns `one(T)`, where `T` is the [`value_type`](@ref) of the
        model (defaults to `Float64`)
      - `x^1` returns `x`
      - `x^2` returns a [`QuadExpr`](@ref)
-     - `x^n` where `n > 2` returns a [`NonlinearExpr`](@ref).
+     - `x^n` where `!(0 <= n <= 2)` returns a [`NonlinearExpr`](@ref).
    We made this change to support nonlinear expressions and to align the
    mathematical definition of the operation with their return type. (Previously,
    users were surprised that `x^1` returned a [`QuadExpr`](@ref).) As a
@@ -55,7 +55,10 @@ changes which might be breaking for a small number of users.
 
  - Added [`triangle_vec`](@ref) which simplifies adding [`MOI.LogDetConeTriangle`](@ref)
    and [`MOI.RootDetConeTriangle`](@ref) constraints (#3456)
- - Added new nonlinear interface (#3106) (#3468) (#3472) (#3475)
+ - Added the new nonlinear interface. This is a very large change. See the
+   documentation at [Nonlinear Modeling](@ref) and the (long) discussion in
+   [JuMP.jl#3106](https://github.com/jump-dev/JuMP.jl/pull/3106). Related PRs
+   are (#3468) (#3472) (#3475) (#3483) (#3487)
 
 ### Fixed
 
