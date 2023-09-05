@@ -9,6 +9,7 @@ using JuMP
 using Test
 
 import LinearAlgebra
+import MutableArithmetics as MA
 
 function test_extension_univariate_operators(
     ModelType = Model,
@@ -841,6 +842,18 @@ function test_linear_algebra_errors()
     y = 2.0 .* x[:, 2] .+ 1.0
     @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.norm(y)
     @test_throws MOI.UnsupportedNonlinearOperator LinearAlgebra.nullspace(y)
+    return
+end
+
+function test_ma_zero_in_operate!!()
+    model = Model()
+    @variable(model, x)
+    y = @expression(model, sum(sin(x) for i in 1:2) + sum(1 for i in 1:0))
+    @test isequal_canonical(y, sin(x) + sin(x))
+    a = sin(x) + sin(x)
+    y = MA.operate!!(MA.add_mul, a, MA.Zero())
+    @test y === a
+    @test isequal_canonical(y, sin(x) + sin(x))
     return
 end
 
