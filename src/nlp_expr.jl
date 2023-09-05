@@ -373,7 +373,9 @@ function _MA.operate!!(
     args::Vararg{Any,N},
 ) where {N}
     _throw_if_not_real(x)
-    if x.head == :+
+    if any(isequal(_MA.Zero()), args)
+        return x
+    elseif x.head == :+
         push!(x.args, *(args...))
         return x
     end
