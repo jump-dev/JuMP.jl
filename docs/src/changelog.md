@@ -58,7 +58,7 @@ changes which might be breaking for a very small number of users.
  - Added the new nonlinear interface. This is a very large change. See the
    documentation at [Nonlinear Modeling](@ref) and the (long) discussion in
    [JuMP.jl#3106](https://github.com/jump-dev/JuMP.jl/pull/3106). Related PRs
-   are (#3468) (#3472) (#3475) (#3483) (#3487)
+   are (#3468) (#3472) (#3475) (#3483) (#3487) (#3488)
 
 ### Fixed
 
