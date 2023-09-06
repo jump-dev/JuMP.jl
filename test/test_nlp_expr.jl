@@ -174,6 +174,22 @@ function test_extension_expression_addmul(
     return
 end
 
+function test_extension_expression_explicit_add_mul(
+    ModelType = Model,
+    VariableRefType = VariableRef,
+)
+    model = ModelType()
+    @variable(model, x)
+    f = sin(x)
+    @test string(MA.operate!!(MA.add_mul, 1, 2, f)) == "1.0 + (2.0 * $f)"
+    @test string(MA.operate!!(MA.add_mul, 1, f, 2)) == "1.0 + ($f * 2.0)"
+    @test string(MA.operate!!(MA.add_mul, 1, f, f)) == "1.0 + ($f * $f)"
+    @test string(MA.operate!!(MA.add_mul, f, 2, f)) == "$f + (2.0 * $f)"
+    @test string(MA.operate!!(MA.add_mul, f, f, 2)) == "$f + ($f * 2.0)"
+    @test string(MA.operate!!(MA.add_mul, f, f, f)) == "$f + ($f * $f)"
+    return
+end
+
 function test_extension_expression_submul(
     ModelType = Model,
     VariableRefType = VariableRef,
