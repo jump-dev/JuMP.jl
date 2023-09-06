@@ -348,3 +348,21 @@ function _MA.sub_mul(
     end
     return _MA.operate!(_MA.sub_mul, expr, x, y, args...)
 end
+
+# The default implementation of `add_mul` falls back to Base.muladd, which ends
+# up rewriting `x + y * z` as `y * z + x`. Intercept some methods, ensuring that
+# we don't cause ambiguities.
+
+for F in (:_Scalar, :AbstractJuMPScalar)
+    @eval begin
+        _MA.add_mul(x::$F, y::GenericNonlinearExpr, z::_Scalar) = x + y * z
+        _MA.add_mul(x::$F, y::_Scalar, z::GenericNonlinearExpr) = x + y * z
+        function _MA.add_mul(
+            x::$F,
+            y::GenericNonlinearExpr,
+            z::GenericNonlinearExpr,
+        )
+            return x + y * z
+        end
+    end
+end
