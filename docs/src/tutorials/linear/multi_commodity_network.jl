@@ -9,19 +9,18 @@
 # the graph is a network instead of a bipartite graph.
 
 # The purpose of this tutorial is to demonstrate a style of modeling that
-# heavily uses tabular DataFrames.
+# uses relational algebra.
 
 # ## Required packages
 
-# This tutorial uses the following packages
+# This tutorial uses the following packages:
 
 using JuMP
 import DataFrames
 import HiGHS
 import SQLite
+import SQLite.DBInterface
 import Test  #src
-
-const DBInterface = SQLite.DBInterface
 
 # ## Formulation
 
@@ -30,7 +29,7 @@ const DBInterface = SQLite.DBInterface
 # graph of supply and demand nodes, the graph can contains a set of nodes,
 # $i \in \mathcal{N}$ , which each have a (potentially zero) supply capacity,
 # $u_{i,p}$, and (potentially zero) a demand, $d_{i,p}$ for each commodity
-# $p\in P$. The nodes are connected by a set of edges $(i, j) \in \mathcal{E}$,
+# $p \in P$. The nodes are connected by a set of edges $(i, j) \in \mathcal{E}$,
 # which have a shipment cost $c^x_{i,j,p}$.
 
 # Our take is to choose an optimal supply for each node $s_{i,p}$, as well as
@@ -39,20 +38,21 @@ const DBInterface = SQLite.DBInterface
 # THe mathematical formulation is:
 # ```math
 # \begin{aligned}
-# \min  && \sum_{(i,j)\in\mathcal{E}, p \in P} c^x_{i,j,p} x_{i,j,p} + \sum_{i\in\mathcal{N}, p \in P} c^s_{i,p} s_{i,p} \\
-# s.t.  && s_{i,p} + \sum_{(j,i)\in\mathcal{E}} x_{j,i,p} - \sum_{(i,j)\in\mathcal{E}} x_{i,j,p} = d_{i,p} && \forall i \in \mathcal{N}, p \in P \\
-#       && x_{i, j, p} \ge 0 && \forall (i,j)\in\mathcal{E}, p \in P
-#       && 0 \le s_{i, p} \le u_{i,j} && \forall i\in\mathcal{N}, p \in P
+# \min  & \sum_{(i,j)\in\mathcal{E}, p \in P} c^x_{i,j,p} x_{i,j,p} + \sum_{i\in\mathcal{N}, p \in P} c^s_{i,p} s_{i,p} \\
+# s.t.  & s_{i,p} + \sum_{(j, i) \in \mathcal{E}} x_{j,i,p} - \sum_{(i,j) \in \mathcal{E}} x_{i,j,p} = d_{i,p} & \forall i \in \mathcal{N}, p \in P \\
+#       & x_{i,j,p} \ge 0           & \forall (i, j) \in \mathcal{E}, p \in P \\
+#       & 0 \le s_{i,p} \le u_{i,j} & \forall i \in \mathcal{N}, p \in P.
 # \end{aligned}
 # ```
-# although the purpose of this tutorial is to demonstrate how the model can be
-# built using relational algebra instead of a direct math-to-code translation of
-# the summations.
+#
+# The purpose of this tutorial is to demonstrate how this model can be built
+# using relational algebra instead of a direct math-to-code translation of the
+# summations.
 
 # ## Data
 
 # For the purpose of this tutorial, the JuMP repository contains an example
-# database called `commodity_nz.sqlite`:
+# database called `commodity_nz.db`:
 
 db = SQLite.DB(joinpath(@__DIR__, "commodity_nz.db"))
 
@@ -68,13 +68,16 @@ function get_table(db, table)
     return DataFrames.DataFrame(query)
 end
 
+# The `shipping` table contains the set of arcs and their costs:
+
 df_shipping = get_table(db, "shipping")
 
-#-
+# The `supply` table contains the supply capacity of each node, as well as the
+# cost:
 
 df_supply = get_table(db, "supply")
 
-#-
+# The `demand` table containns the demand of each node:
 
 df_demand = get_table(db, "demand")
 
@@ -112,18 +115,21 @@ df_supply
 # which says that for each product, the supply, plus the flow into the node, and
 # less the flow out of the node is equal to the demand.
 
-# We can compute an expression for the flow out using `DataFrames.groupby` on
-# the `origin` and `product` columns of the `df_shipping` table:
+# We can compute an expression for the flow out of each node using
+# `DataFrames.groupby` on the `origin` and `product` columns of the
+# `df_shipping` table:
 
-flow_out = DataFrames.DataFrame(
+df_flow_out = DataFrames.DataFrame(
     (node = i.origin, product = i.product, x_flow_out = sum(df.x_flow)) for
     (i, df) in pairs(DataFrames.groupby(df_shipping, [:origin, :product]))
 )
 
-# We can compute an expression for the flow in using `DataFrames.groupby` on
-# the `destination` and `product` columns of the `df_shipping` table:
 
-flow_in = DataFrames.DataFrame(
+# We can compute an expression for the flow into each node using
+# `DataFrames.groupby` on the `destination` and `product` columns of the
+# `df_shipping` table:
+
+df_flow_in = DataFrames.DataFrame(
     (node = i.destination, product = i.product, x_flow_in = sum(df.x_flow))
     for (i, df) in
     pairs(DataFrames.groupby(df_shipping, [:destination, :product]))
@@ -132,7 +138,7 @@ flow_in = DataFrames.DataFrame(
 # We can join the two tables together using `DataFrames.outerjoin`. We need to
 # use `outerjoin` here because there might be missing rows.
 
-df = DataFrames.outerjoin(flow_in, flow_out; on = [:node, :product])
+df = DataFrames.outerjoin(df_flow_in, df_flow_out; on = [:node, :product])
 
 # Next, we need to join the supply column:
 
@@ -150,16 +156,16 @@ df = DataFrames.leftjoin(
     on = [:node => :destination, :product],
 )
 
-# Now we're ready to add our mass balance constraint. Because some rows are
-# missing a `supply` column, we need to use `coalesce` to convert any `missing`
-# into a numeric value:
+# Now we're ready to add our mass balance constraint. Because some rows contain
+# `missing` values, we need to use `coalesce` to convert any `missing` into a
+# numeric value:
 
 @constraint(
     model,
     [r in eachrow(df)],
     coalesce(r.x_supply, 0.0) + coalesce(r.x_flow_in, 0.0) -
     coalesce(r.x_flow_out, 0.0) == coalesce(r.demand, 0.0),
-)
+);
 
 # ## Solution
 
@@ -173,7 +179,7 @@ solution_summary(model)
 # update the solution in the DataFrames:
 
 df_shipping.x_flow = value.(df_shipping.x_flow)
-df_supply.x_supply = value.(df_supply.x_supply)
+df_supply.x_supply = value.(df_supply.x_supply);
 
 # and display the optimal solution for flows:
 
