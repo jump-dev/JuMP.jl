@@ -59,7 +59,6 @@ import HiGHS
 # solver, you can disable bridges by passing `add_bridges = false` to
 # [`Model`](@ref).
 
-
 model = Model(HiGHS.Optimizer; add_bridges = false)
 
 # ### Suggestion 3: use PackageCompiler
