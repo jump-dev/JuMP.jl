@@ -96,6 +96,35 @@ struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
     end
 end
 
+variable_ref_type(::Type{GenericNonlinearExpr}, ::Any) = nothing
+
+function variable_ref_type(::Type{GenericNonlinearExpr}, x::AbstractJuMPScalar)
+    return variable_ref_type(x)
+end
+
+function _has_variable_ref_type(a)
+    return variable_ref_type(GenericNonlinearExpr, a) !== nothing
+end
+
+function _variable_ref_type(head, args)
+    if (i = findfirst(_has_variable_ref_type, args)) !== nothing
+        V = variable_ref_type(GenericNonlinearExpr, args[i])
+        return V::Type{<:AbstractVariableRef}
+    end
+    return error(
+        "Unable to create a nonlinear expression because it did not contain " *
+        "any JuMP scalars. head = `:$head`, args = `$args`.",
+    )
+end
+
+function GenericNonlinearExpr(head::Symbol, args::Vector{Any})
+    return GenericNonlinearExpr{_variable_ref_type(head, args)}(head, args)
+end
+
+function GenericNonlinearExpr(head::Symbol, args::Vararg{Any,N}) where {N}
+    return GenericNonlinearExpr{_variable_ref_type(head, args)}(head, args...)
+end
+
 """
     NonlinearExpr
 
@@ -820,14 +849,8 @@ function Base.show(io::IO, f::NonlinearOperator)
     return print(io, "NonlinearOperator($(f.func), :$(f.head))")
 end
 
-variable_ref_type(::NonlinearOperator, ::Any) = nothing
-
-function variable_ref_type(::NonlinearOperator, x::AbstractJuMPScalar)
-    return variable_ref_type(x)
-end
-
 function (f::NonlinearOperator)(args::Vararg{Any,N}) where {N}
-    types = variable_ref_type.(Ref(f), args)
+    types = variable_ref_type.(GenericNonlinearExpr, args)
     if (i = findfirst(!isnothing, types)) !== nothing
         return GenericNonlinearExpr{types[i]}(f.head, args...)
     end

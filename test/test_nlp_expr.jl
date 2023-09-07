@@ -896,4 +896,34 @@ function test_nonlinear_operator_inferred()
     return
 end
 
+function test_generic_nonlinear_expr_infer_variable_type()
+    model = Model()
+    @variable(model, x)
+    @inferred GenericNonlinearExpr(:sin, x)
+    @inferred GenericNonlinearExpr GenericNonlinearExpr(:sin, Any[x])
+    f = sin(x)
+    @test isequal_canonical(GenericNonlinearExpr(:sin, x), f)
+    @test isequal_canonical(GenericNonlinearExpr(:sin, Any[x]), f)
+    g = @expression(model, 1 <= x)
+    @inferred GenericNonlinearExpr(:<=, 1, x)
+    @inferred GenericNonlinearExpr GenericNonlinearExpr(:<=, Any[1, x])
+    @test isequal_canonical(GenericNonlinearExpr(:<=, 1, x), g)
+    @test isequal_canonical(GenericNonlinearExpr(:<=, Any[1, x]), g)
+    @test_throws(
+        ErrorException(
+            "Unable to create a nonlinear expression because it did not " *
+            "contain any JuMP scalars. head = `:sin`, args = `(1,)`.",
+        ),
+        GenericNonlinearExpr(:sin, 1),
+    )
+    @test_throws(
+        ErrorException(
+            "Unable to create a nonlinear expression because it did not " *
+            "contain any JuMP scalars. head = `:sin`, args = `Any[1]`.",
+        ),
+        GenericNonlinearExpr(:sin, Any[1]),
+    )
+    return
+end
+
 end  # module
