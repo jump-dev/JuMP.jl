@@ -908,7 +908,7 @@ function test_nonlinear_operator_inferred()
     @variable(model, y[1:2, 1:2])
     op_det = NonlinearOperator(LinearAlgebra.det, :det)
     @inferred log(op_det(y))
-    z = rand(2, 2)
+    z = [2.0 1.0; 1.0 2.0]
     @inferred log(op_det(z))
     return
 end

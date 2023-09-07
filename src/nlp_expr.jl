@@ -83,7 +83,7 @@ struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
 
     function GenericNonlinearExpr{V}(
         head::Symbol,
-        args::Vararg{Any}
+        args::Vararg{Any},
     ) where {V<:AbstractVariableRef}
         return new{V}(head, Any[a for a in args])
     end
