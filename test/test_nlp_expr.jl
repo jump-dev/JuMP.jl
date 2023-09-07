@@ -447,46 +447,46 @@ function test_extension_nl_macro(
     @variable(model, x)
     @test isequal_canonical(
         @expression(model, ifelse(x, 1, 2)),
-        GenericNonlinearExpr(:ifelse, Any[x, 1, 2]),
+        GenericNonlinearExpr{VariableRefType}(:ifelse, Any[x, 1, 2]),
     )
     @test isequal_canonical(
         @expression(model, x || 1),
-        GenericNonlinearExpr(:||, Any[x, 1]),
+        GenericNonlinearExpr{VariableRefType}(:||, Any[x, 1]),
     )
     @test isequal_canonical(
         @expression(model, x && 1),
-        GenericNonlinearExpr(:&&, Any[x, 1]),
+        GenericNonlinearExpr{VariableRefType}(:&&, Any[x, 1]),
     )
     @test isequal_canonical(
         @expression(model, x < 0),
-        GenericNonlinearExpr(:<, Any[x, 0]),
+        GenericNonlinearExpr{VariableRefType}(:<, Any[x, 0]),
     )
     @test isequal_canonical(
         @expression(model, x > 0),
-        GenericNonlinearExpr(:>, Any[x, 0]),
+        GenericNonlinearExpr{VariableRefType}(:>, Any[x, 0]),
     )
     @test isequal_canonical(
         @expression(model, x <= 0),
-        GenericNonlinearExpr(:<=, Any[x, 0]),
+        GenericNonlinearExpr{VariableRefType}(:<=, Any[x, 0]),
     )
     @test isequal_canonical(
         @expression(model, x >= 0),
-        GenericNonlinearExpr(:>=, Any[x, 0]),
+        GenericNonlinearExpr{VariableRefType}(:>=, Any[x, 0]),
     )
     @test isequal_canonical(
         @expression(model, x == 0),
-        GenericNonlinearExpr(:(==), Any[x, 0]),
+        GenericNonlinearExpr{VariableRefType}(:(==), Any[x, 0]),
     )
     @test isequal_canonical(
         @expression(model, 0 < x <= 1),
-        GenericNonlinearExpr(
+        GenericNonlinearExpr{VariableRefType}(
             :&&,
             Any[@expression(model, 0 < x), @expression(model, x <= 1)],
         ),
     )
     @test isequal_canonical(
         @expression(model, ifelse(x > 0, x^2, sin(x))),
-        GenericNonlinearExpr(
+        GenericNonlinearExpr{VariableRefType}(
             :ifelse,
             Any[@expression(model, x > 0), x^2, sin(x)],
         ),
@@ -501,7 +501,7 @@ function test_register_univariate()
     @test f isa NonlinearOperator
     @test sprint(show, f) == "NonlinearOperator($(f.func), :f)"
     @test isequal_canonical(@expression(model, f(x)), f(x))
-    @test isequal_canonical(f(x), GenericNonlinearExpr(:f, Any[x]))
+    @test isequal_canonical(f(x), NonlinearExpr(:f, Any[x]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:f, 1) in attrs
     return
@@ -522,7 +522,7 @@ function test_register_univariate_gradient()
     @variable(model, x)
     @operator(model, f, 1, x -> x^2, x -> 2 * x)
     @test isequal_canonical(@expression(model, f(x)), f(x))
-    @test isequal_canonical(f(x), GenericNonlinearExpr(:f, Any[x]))
+    @test isequal_canonical(f(x), NonlinearExpr(:f, Any[x]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:f, 1) in attrs
     return
@@ -533,7 +533,7 @@ function test_register_univariate_gradient_hessian()
     @variable(model, x)
     @operator(model, f, 1, x -> x^2, x -> 2 * x, x -> 2.0)
     @test isequal_canonical(@expression(model, f(x)), f(x))
-    @test isequal_canonical(f(x), GenericNonlinearExpr(:f, Any[x]))
+    @test isequal_canonical(f(x), NonlinearExpr(:f, Any[x]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:f, 1) in attrs
     return
@@ -545,7 +545,7 @@ function test_register_multivariate()
     f = (x...) -> sum(x .^ 2)
     @operator(model, foo, 2, f)
     @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
-    @test isequal_canonical(foo(x...), GenericNonlinearExpr(:foo, Any[x...]))
+    @test isequal_canonical(foo(x...), NonlinearExpr(:foo, Any[x...]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:foo, 2) in attrs
     return
@@ -558,7 +558,7 @@ function test_register_multivariate_gradient()
     ∇f = (g, x...) -> (g .= 2 .* x)
     @operator(model, foo, 2, f, ∇f)
     @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
-    @test isequal_canonical(foo(x...), GenericNonlinearExpr(:foo, Any[x...]))
+    @test isequal_canonical(foo(x...), NonlinearExpr(:foo, Any[x...]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:foo, 2) in attrs
     return
@@ -576,7 +576,7 @@ function test_register_multivariate_gradient_hessian()
     end
     @operator(model, foo, 2, f, ∇f, ∇²f)
     @test isequal_canonical(@expression(model, foo(x...)), foo(x...))
-    @test isequal_canonical(foo(x...), GenericNonlinearExpr(:foo, Any[x...]))
+    @test isequal_canonical(foo(x...), NonlinearExpr(:foo, Any[x...]))
     attrs = MOI.get(model, MOI.ListOfModelAttributesSet())
     @test MOI.UserDefinedFunction(:foo, 2) in attrs
     return
@@ -587,7 +587,7 @@ function test_register_multivariate_many_args()
     @variable(model, x[1:10])
     f = (x...) -> sum(x .^ 2)
     @operator(model, foo, 10, f)
-    @test isequal_canonical(foo(x...), GenericNonlinearExpr(:foo, Any[x...]))
+    @test isequal_canonical(foo(x...), NonlinearExpr(:foo, Any[x...]))
     @test foo((1:10)...) == 385
     return
 end
@@ -603,18 +603,6 @@ function test_register_errors()
             "hesssian provided)",
         ),
         @operator(model, foo, 2, f, f, f, f),
-    )
-    return
-end
-
-function test_expression_no_variable()
-    head, args = :sin, Any[1]
-    @test_throws(
-        ErrorException(
-            "Unable to create a nonlinear expression because it did not " *
-            "contain any JuMP scalars. head = $head, args = $args.",
-        ),
-        GenericNonlinearExpr(head, args),
     )
     return
 end
@@ -676,7 +664,7 @@ end
 function test_nonlinear_expr_owner_model()
     model = Model()
     @variable(model, x)
-    f = GenericNonlinearExpr(:sin, Any[x])
+    f = NonlinearExpr(:sin, Any[x])
     # This shouldn't happen in regular code, but let's test against it to check
     # we get something similar to AffExpr and QuadExpr.
     empty!(f.args)
@@ -899,5 +887,18 @@ function test_ma_zero_in_operate!!()
     @test isequal_canonical(y, sin(x) + sin(x))
     return
 end
+
+function test_nonlinear_operator_vector_args()
+    model = Model()
+    @variable(model, x[1:2, 1:2])
+    op_det = NonlinearOperator(LinearAlgebra.det, :det)
+    @objective(model, Min, log(op_det(x)))
+    @test isequal_canonical(objective_function(model), log(op_det(x)))
+    f = MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}())
+    g = MOI.ScalarNonlinearFunction(:det, Any[index.(x)])
+    @test f ≈ MOI.ScalarNonlinearFunction(:log, Any[g])
+    return
+end
+
 
 end  # module

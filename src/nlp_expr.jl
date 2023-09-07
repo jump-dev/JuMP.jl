@@ -81,15 +81,11 @@ struct GenericNonlinearExpr{V<:AbstractVariableRef} <: AbstractJuMPScalar
     head::Symbol
     args::Vector{Any}
 
-    function GenericNonlinearExpr(head::Symbol, args::Vector{Any})
-        index = findfirst(Base.Fix2(isa, AbstractJuMPScalar), args)
-        if index === nothing
-            error(
-                "Unable to create a nonlinear expression because it did not " *
-                "contain any JuMP scalars. head = $head, args = $args.",
-            )
-        end
-        return new{variable_ref_type(args[index])}(head, args)
+    function GenericNonlinearExpr{V}(
+        head::Symbol,
+        args::Vararg{Any}
+    ) where {V<:AbstractVariableRef}
+        return new{V}(head, Any[a for a in args])
     end
 
     function GenericNonlinearExpr{V}(
@@ -109,15 +105,6 @@ Alias for `GenericNonlinearExpr{VariableRef}`, the specific
 const NonlinearExpr = GenericNonlinearExpr{VariableRef}
 
 variable_ref_type(::GenericNonlinearExpr{V}) where {V} = V
-
-# We include this method so that we can refactor the internal representation of
-# GenericNonlinearExpr without having to rewrite the method overloads.
-function GenericNonlinearExpr{V}(
-    head::Symbol,
-    args...,
-) where {V<:AbstractVariableRef}
-    return GenericNonlinearExpr{V}(head, Any[args...])
-end
 
 const _PREFIX_OPERATORS =
     (:+, :-, :*, :/, :^, :||, :&&, :>, :<, :(<=), :(>=), :(==))
@@ -502,6 +489,8 @@ end
 
 moi_function(x::Number) = x
 
+moi_function(x::AbstractArray) = moi_function.(x)
+
 function moi_function(f::GenericNonlinearExpr{V}) where {V}
     ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
     stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
@@ -527,6 +516,10 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
     return ret
 end
 
+jump_function(::GenericModel{T}, x::Number) where {T} = convert(T, x)
+
+jump_function(model::GenericModel, x::AbstractArray) = jump_function.(model, x)
+
 function jump_function(model::GenericModel, f::MOI.ScalarNonlinearFunction)
     V = variable_ref_type(typeof(model))
     ret = GenericNonlinearExpr{V}(f.head, Any[])
@@ -542,8 +535,6 @@ function jump_function(model::GenericModel, f::MOI.ScalarNonlinearFunction)
             for child in reverse(arg.args)
                 push!(stack, (new_ret, child))
             end
-        elseif arg isa Number
-            push!(parent.args, arg)
         else
             push!(parent.args, jump_function(model, arg))
         end
@@ -833,33 +824,23 @@ function Base.show(io::IO, f::NonlinearOperator)
     return print(io, "NonlinearOperator($(f.func), :$(f.head))")
 end
 
-# Fast overload for unary calls
+variable_ref_type(::NonlinearOperator, ::Any) = nothing
 
-(f::NonlinearOperator)(x) = f.func(x)
-
-(f::NonlinearOperator)(x::AbstractJuMPScalar) = NonlinearExpr(f.head, Any[x])
-
-# Fast overload for binary calls
-
-(f::NonlinearOperator)(x, y) = f.func(x, y)
-
-function (f::NonlinearOperator)(x::AbstractJuMPScalar, y)
-    return GenericNonlinearExpr(f.head, Any[x, y])
+function variable_ref_type(::NonlinearOperator, x::AbstractJuMPScalar)
+    return variable_ref_type(x)
 end
 
-function (f::NonlinearOperator)(x, y::AbstractJuMPScalar)
-    return GenericNonlinearExpr(f.head, Any[x, y])
+function variable_ref_type(
+    ::NonlinearOperator,
+    ::AbstractArray{T},
+) where {T<:AbstractJuMPScalar}
+    return variable_ref_type(T)
 end
 
-function (f::NonlinearOperator)(x::AbstractJuMPScalar, y::AbstractJuMPScalar)
-    return GenericNonlinearExpr(f.head, Any[x, y])
-end
-
-# Fallback for more arguments
-function (f::NonlinearOperator)(x, y, z...)
-    args = (x, y, z...)
-    if any(Base.Fix2(isa, AbstractJuMPScalar), args)
-        return GenericNonlinearExpr(f.head, Any[a for a in args])
+function (f::NonlinearOperator)(args::Vararg{Any,N}) where {N}
+    types = variable_ref_type.(Ref(f), args)
+    if (i = findfirst(!isnothing, types)) !== nothing
+        return GenericNonlinearExpr{types[i]}(f.head, args...)
     end
     return f.func(args...)
 end
