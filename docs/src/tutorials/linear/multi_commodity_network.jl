@@ -109,7 +109,7 @@ df_supply
 
 # Our objective is to minimize the shipping cost plus the supply cost. To
 # compute the flow cost, we need to join the shipping table, which contains
-# `distance_km` with the products table, which conntains `cost_per_km`:
+# `distance_km` with the products table, which contains `cost_per_km`:
 
 df_cost = DataFrames.leftjoin(df_shipping, df_products; on = [:product])
 df_cost.flow_cost = df_cost.cost_per_km .* df_cost.distance_km
