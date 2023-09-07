@@ -31,7 +31,7 @@ import Test  #src
 # $u^s_{i,p}$, and (potentially zero) a demand, $d_{i,p}$ for each commodity
 # $p \in P$. The nodes are connected by a set of edges $(i, j) \in \mathcal{E}$,
 # which have a shipment cost $c^x_{i,j,p}$ and a total flow capacity of
-# $u_^x{i,j}$.
+# $u^x_{i,j}$.
 
 # Our take is to choose an optimal supply for each node $s_{i,p}$, as well as
 # the optimal transshipment $x_{i,j,p}$ that minimizes the total cost.
