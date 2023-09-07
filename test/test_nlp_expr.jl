@@ -900,7 +900,7 @@ function test_nonlinear_operator_vector_args()
     model = Model()
     @variable(model, x[1:2, 1:2])
     op_det = NonlinearOperator(LinearAlgebra.det, :det)
-    @inferred log(op_det(y))
+    @inferred log(op_det(x))
     z = [2.0 1.0; 1.0 2.0]
     @inferred log(op_det(z))
     @objective(model, Min, log(op_det(x)))
