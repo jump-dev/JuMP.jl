@@ -1121,16 +1121,3 @@ end
 function LinearAlgebra.qr(::AbstractMatrix{<:AbstractJuMPScalar})
     return throw(MOI.UnsupportedNonlinearOperator(:qr))
 end
-
-# Add support for AbstractArray arguments in GenericNonlinearExpr
-
-function variable_ref_type(
-    ::NonlinearOperator,
-    ::AbstractArray{T},
-) where {T<:AbstractJuMPScalar}
-    return variable_ref_type(T)
-end
-
-moi_function(x::AbstractArray) = moi_function.(x)
-
-jump_function(model::GenericModel, x::AbstractArray) = jump_function.(model, x)
