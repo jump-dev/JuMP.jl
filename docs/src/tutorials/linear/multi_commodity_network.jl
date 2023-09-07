@@ -28,20 +28,22 @@ import Test  #src
 # [The multi-commodity flow problem](@ref), where instead of having a bipartite
 # graph of supply and demand nodes, the graph can contains a set of nodes,
 # $i \in \mathcal{N}$ , which each have a (potentially zero) supply capacity,
-# $u_{i,p}$, and (potentially zero) a demand, $d_{i,p}$ for each commodity
+# $u^s_{i,p}$, and (potentially zero) a demand, $d_{i,p}$ for each commodity
 # $p \in P$. The nodes are connected by a set of edges $(i, j) \in \mathcal{E}$,
-# which have a shipment cost $c^x_{i,j,p}$.
+# which have a shipment cost $c^x_{i,j,p}$ and a total flow capacity of
+# $u_^x{i,j}$.
 
 # Our take is to choose an optimal supply for each node $s_{i,p}$, as well as
 # the optimal transshipment $x_{i,j,p}$ that minimizes the total cost.
 
-# THe mathematical formulation is:
+# The mathematical formulation is:
 # ```math
 # \begin{aligned}
-# \min  & \sum_{(i,j)\in\mathcal{E}, p \in P} c^x_{i,j,p} x_{i,j,p} + \sum_{i\in\mathcal{N}, p \in P} c^s_{i,p} s_{i,p} \\
-# s.t.  & s_{i,p} + \sum_{(j, i) \in \mathcal{E}} x_{j,i,p} - \sum_{(i,j) \in \mathcal{E}} x_{i,j,p} = d_{i,p} & \forall i \in \mathcal{N}, p \in P \\
-#       & x_{i,j,p} \ge 0           & \forall (i, j) \in \mathcal{E}, p \in P \\
-#       & 0 \le s_{i,p} \le u_{i,j} & \forall i \in \mathcal{N}, p \in P.
+# \min \;\; & \sum_{(i,j)\in\mathcal{E}, p \in P} c^x_{i,j,p} x_{i,j,p} + \sum_{i\in\mathcal{N}, p \in P} c^s_{i,p} s_{i,p} \\
+# s.t. \;\; & s_{i,p} + \sum_{(j, i) \in \mathcal{E}} x_{j,i,p} - \sum_{(i,j) \in \mathcal{E}} x_{i,j,p} = d_{i,p} & \forall i \in \mathcal{N}, p \in P \\
+#           & x_{i,j,p} \ge 0           & \forall (i, j) \in \mathcal{E}, p \in P \\
+#           & \sum_{p \in P} x_{i,j,p} \le u^x_{i,j}           & \forall (i, j) \in \mathcal{E} \\
+#           & 0 \le s_{i,p} \le u^s_{i,p} & \forall i \in \mathcal{N}, p \in P.
 # \end{aligned}
 # ```
 #
@@ -68,16 +70,20 @@ function get_table(db, table)
     return DataFrames.DataFrame(query)
 end
 
-# The `shipping` table contains the set of arcs and their costs:
+# The `shipping` table contains the set of arcs and their distances:
 
 df_shipping = get_table(db, "shipping")
+
+# The `products` table contains the shipping cost per kilometer of each product:
+
+df_products = get_table(db, "products")
 
 # The `supply` table contains the supply capacity of each node, as well as the
 # cost:
 
 df_supply = get_table(db, "supply")
 
-# The `demand` table containns the demand of each node:
+# The `demand` table contains the demand of each node:
 
 df_demand = get_table(db, "demand")
 
@@ -101,15 +107,32 @@ df_supply.x_supply = @variable(model, s[1:size(df_supply, 1)] >= 0)
 set_upper_bound.(df_supply.x_supply, df_supply.capacity)
 df_supply
 
-# Our objective is to mimize shipping cost plus supply cost. We can use linear
-# algebra to compute the inner product between two columns:
+# Our objective is to minimize the shipping cost plus the supply cost. To
+# compute the flow cost, we need to join the shipping table, which contains
+# `distance_km` with the products table, which conntains `cost_per_km`:
+
+df_cost = DataFrames.leftjoin(df_shipping, df_products; on = [:product])
+df_cost.flow_cost = df_cost.cost_per_km .* df_cost.distance_km
+df_cost
+
+# Then we can use linear algebra to compute the inner product between two
+# columns:
 
 @objective(
     model,
     Min,
-    df_shipping.cost' * df_shipping.x_flow +
+    df_cost.flow_cost' * df_shipping.x_flow +
     df_supply.cost' * df_supply.x_supply
 );
+
+# For the flow capacities on each arc, we use `DataFrames.groupby` to partition
+# the flow variables based on `:origin` and `:destination`, and then we
+# constrain their sum to be less than a fixed capacity.
+
+capacity = 30
+for df in DataFrames.groupby(df_shipping, [:origin, :destination])
+    @constraint(model, sum(df.x_flow) <= capacity)
+end
 
 # For each node in the graph, we need to compute a mass balance constraint
 # which says that for each product, the supply, plus the flow into the node, and
@@ -123,7 +146,6 @@ df_flow_out = DataFrames.DataFrame(
     (node = i.origin, product = i.product, x_flow_out = sum(df.x_flow)) for
     (i, df) in pairs(DataFrames.groupby(df_shipping, [:origin, :product]))
 )
-
 
 # We can compute an expression for the flow into each node using
 # `DataFrames.groupby` on the `destination` and `product` columns of the
