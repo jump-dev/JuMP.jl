@@ -848,7 +848,8 @@ function Base.show(io::IO, f::AbstractJuMPScalar)
 end
 
 function Base.show(io::IO, ::MIME"text/latex", f::AbstractJuMPScalar)
-    return print(io, _wrap_in_math_mode(function_string(MIME("text/latex"), f)))
+    str = function_string(MIME("text/latex"), f)
+    return print(io, _wrap_in_inline_math_mode(str))
 end
 
 function Base.show(io::IO, ex::Union{NonlinearExpression,NonlinearParameter})
