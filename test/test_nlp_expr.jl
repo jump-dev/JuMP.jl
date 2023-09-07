@@ -888,28 +888,28 @@ function test_ma_zero_in_operate!!()
     return
 end
 
-function test_nonlinear_operator_vector_args()
-    model = Model()
-    @variable(model, x[1:2, 1:2])
-    op_det = NonlinearOperator(LinearAlgebra.det, :det)
-    @objective(model, Min, log(op_det(x)))
-    @test isequal_canonical(objective_function(model), log(op_det(x)))
-    f = MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}())
-    g = MOI.ScalarNonlinearFunction(:det, Any[index.(x)])
-    @test f ≈ MOI.ScalarNonlinearFunction(:log, Any[g])
-    return
-end
-
 function test_nonlinear_operator_inferred()
     model = Model()
     @variable(model, x)
     @inferred op_less_than_or_equal_to(x, 1)
     @test @inferred(op_less_than_or_equal_to(1, 2)) == true
-    @variable(model, y[1:2, 1:2])
+    return
+end
+
+function test_nonlinear_operator_vector_args()
+    model = Model()
+    @variable(model, x[1:2, 1:2])
     op_det = NonlinearOperator(LinearAlgebra.det, :det)
     @inferred log(op_det(y))
     z = [2.0 1.0; 1.0 2.0]
     @inferred log(op_det(z))
+    @objective(model, Min, log(op_det(x)))
+    @test isequal_canonical(objective_function(model), log(op_det(x)))
+    f = MOI.get(model, MOI.ObjectiveFunction{MOI.ScalarNonlinearFunction}())
+    g = MOI.ScalarNonlinearFunction(:det, Any[index.(x)])
+    h = MOI.ScalarNonlinearFunction(:log, Any[g])
+    @test f ≈ h
+    @test moi_function(log(op_det(x))) ≈ h
     return
 end
 

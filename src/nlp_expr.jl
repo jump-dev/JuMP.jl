@@ -489,8 +489,6 @@ end
 
 moi_function(x::Number) = x
 
-moi_function(x::AbstractArray) = moi_function.(x)
-
 function moi_function(f::GenericNonlinearExpr{V}) where {V}
     ret = MOI.ScalarNonlinearFunction(f.head, similar(f.args))
     stack = Tuple{MOI.ScalarNonlinearFunction,Int,GenericNonlinearExpr{V}}[]
@@ -517,8 +515,6 @@ function moi_function(f::GenericNonlinearExpr{V}) where {V}
 end
 
 jump_function(::GenericModel{T}, x::Number) where {T} = convert(T, x)
-
-jump_function(model::GenericModel, x::AbstractArray) = jump_function.(model, x)
 
 function jump_function(model::GenericModel, f::MOI.ScalarNonlinearFunction)
     V = variable_ref_type(typeof(model))
@@ -830,13 +826,6 @@ function variable_ref_type(::NonlinearOperator, x::AbstractJuMPScalar)
     return variable_ref_type(x)
 end
 
-function variable_ref_type(
-    ::NonlinearOperator,
-    ::AbstractArray{T},
-) where {T<:AbstractJuMPScalar}
-    return variable_ref_type(T)
-end
-
 function (f::NonlinearOperator)(args::Vararg{Any,N}) where {N}
     types = variable_ref_type.(Ref(f), args)
     if (i = findfirst(!isnothing, types)) !== nothing
@@ -1132,3 +1121,16 @@ end
 function LinearAlgebra.qr(::AbstractMatrix{<:AbstractJuMPScalar})
     return throw(MOI.UnsupportedNonlinearOperator(:qr))
 end
+
+# Add support for AbstractArray arguments in GenericNonlinearExpr
+
+function variable_ref_type(
+    ::NonlinearOperator,
+    ::AbstractArray{T},
+) where {T<:AbstractJuMPScalar}
+    return variable_ref_type(T)
+end
+
+moi_function(x::AbstractArray) = moi_function.(x)
+
+jump_function(model::GenericModel, x::AbstractArray) = jump_function.(model, x)
