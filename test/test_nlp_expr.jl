@@ -900,5 +900,17 @@ function test_nonlinear_operator_vector_args()
     return
 end
 
+function test_nonlinear_operator_inferred()
+    model = Model()
+    @variable(model, x)
+    @inferred op_less_than_or_equal_to(x, 1)
+    @test @inferred(op_less_than_or_equal_to(1, 2)) == true
+    @variable(model, y[1:2, 1:2])
+    op_det = NonlinearOperator(LinearAlgebra.det, :det)
+    @inferred log(op_det(y))
+    z = rand(2, 2)
+    @inferred log(op_det(z))
+    return
+end
 
 end  # module
