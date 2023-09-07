@@ -24,15 +24,15 @@
 # almost ready to write your own models, but before you do so there are some
 # important things to be aware of.
 
+using JuMP
+import HiGHS
+
 # ## Read the Julia performance tips
 
 # The first thing to do is read the [Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/index.html)
 # section of the Julia manual. The most important rule is to avoid global
 # variables. This is particularly important if you're learning JuMP after using
 # a language like MATLAB.
-
-using JuMP  # hide
-using HiGHS  # hide
 
 # ## The "time-to-first-solve" issue
 
@@ -58,6 +58,7 @@ using HiGHS  # hide
 # mechanism. If you only use constraints that are natively supported by the
 # solver, you can disable bridges by passing `add_bridges = false` to
 # [`Model`](@ref).
+
 
 model = Model(HiGHS.Optimizer; add_bridges = false)
 
