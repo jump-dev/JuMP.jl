@@ -23,8 +23,11 @@ function _io_test_show(::MIME"text/plain", obj, exp_str)
     return
 end
 
+_math_mode(::Any, s) = string("\$\$ ", s, " \$\$")
+_math_mode(::AbstractJuMPScalar, s) = string("\$ ", s, " \$")
+
 function _io_test_show(::MIME"text/latex", obj, exp_str)
-    @test sprint(show, "text/latex", obj) == string("\$\$ ", exp_str, " \$\$")
+    @test sprint(show, "text/latex", obj) == _math_mode(obj, exp_str)
     return
 end
 
@@ -34,7 +37,7 @@ function _io_test_print(::MIME"text/plain", obj, exp_str)
 end
 
 function _io_test_print(::MIME"text/latex", obj, exp_str)
-    @test sprint(show, "text/latex", obj) == string("\$\$ ", exp_str, " \$\$")
+    @test sprint(show, "text/latex", obj) == _math_mode(obj, exp_str)
     return
 end
 

@@ -290,6 +290,7 @@ const _PAGES = [
             "tutorials/linear/multi_objective_examples.md",
             "tutorials/linear/knapsack.md",
             "tutorials/linear/multi.md",
+            "tutorials/linear/multi_commodity_network.md",
             "tutorials/linear/n-queens.md",
             "tutorials/linear/lp_sensitivity.md",
             "tutorials/linear/network_flows.md",
