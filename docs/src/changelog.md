@@ -7,7 +7,7 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Version 1.15.0 (unreleased)
+## Version 1.15.0 (September 15, 2023)
 
 This is a large minor release because it adds an entirely new data structure and
 API path for working with nonlinear programs. The previous nonlinear interface
@@ -58,7 +58,7 @@ changes which might be breaking for a very small number of users.
  - Added the new nonlinear interface. This is a very large change. See the
    documentation at [Nonlinear Modeling](@ref) and the (long) discussion in
    [JuMP.jl#3106](https://github.com/jump-dev/JuMP.jl/pull/3106). Related PRs
-   are (#3468) (#3472) (#3475) (#3483) (#3487) (#3488)
+   are (#3468) (#3472) (#3475) (#3483) (#3487) (#3488) (#3489)
 
 ### Fixed
 
@@ -71,7 +71,8 @@ changes which might be breaking for a very small number of users.
 ### Other
 
  - Added GAMS to solver documentation (#3357)
- - Updated various tutorials (#3459) (#3460) (#3462) (#3463) (#3465)
+ - Updated various tutorials (#3459) (#3460) (#3462) (#3463) (#3465) (#3490) (#3492)
+ - Added [The network multi-commodity flow problem](@ref) tutorial (#3491)
  - Added [Two-stage stochastic programs](@ref) tutorial (#3466)
  - Added better error messages for unsupported operations in `LinearAlgebra` (#3476)
  - Updated to the latest version of Documenter (#3484)
