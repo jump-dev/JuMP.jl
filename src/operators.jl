@@ -195,20 +195,19 @@ function Base.:/(lhs::GenericAffExpr, rhs::_Constant)
     return map_coefficients(c -> c / rhs, lhs)
 end
 
-function Base.:^(lhs::AbstractVariableRef, rhs::Integer)
-    T = value_type(typeof(lhs))
+function Base.:^(lhs::V, rhs::Integer) where {V<:AbstractVariableRef}
     if rhs == 0
-        return one(T)
+        return one(value_type(V))
     elseif rhs == 1
         return lhs
     elseif rhs == 2
         return lhs * lhs
     else
-        return GenericNonlinearExpr(:^, Any[lhs, rhs])
+        return GenericNonlinearExpr{V}(:^, Any[lhs, rhs])
     end
 end
 
-function Base.:^(lhs::GenericAffExpr{T}, rhs::Integer) where {T}
+function Base.:^(lhs::GenericAffExpr{T,V}, rhs::Integer) where {T,V}
     if rhs == 0
         return one(T)
     elseif rhs == 1
@@ -216,7 +215,7 @@ function Base.:^(lhs::GenericAffExpr{T}, rhs::Integer) where {T}
     elseif rhs == 2
         return lhs * lhs
     else
-        return GenericNonlinearExpr(:^, Any[lhs, rhs])
+        return GenericNonlinearExpr{V}(:^, Any[lhs, rhs])
     end
 end
 

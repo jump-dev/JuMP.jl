@@ -621,7 +621,7 @@ function test_complex_pow()
     @test y^0 == (1.0 + 0im)
     @test y^1 == y
     @test y^2 == y * y
-    @test isequal_canonical(y^3, GenericNonlinearExpr(:^, Any[y, 3]))
+    @test isequal_canonical(y^3, NonlinearExpr(:^, Any[y, 3]))
     return
 end
 
