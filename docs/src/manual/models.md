@@ -291,8 +291,10 @@ julia> time_limit_sec(model)
 
 julia> unset_time_limit_sec(model)
 
-julia> time_limit_sec(model)
-Inf
+julia> limit = time_limit_sec(model)
+
+julia> limit === nothing
+true
 ```
 
 If your time limit is encoded as a `Dates.Period` object, use the following code
