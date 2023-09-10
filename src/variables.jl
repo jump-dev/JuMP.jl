@@ -621,7 +621,7 @@ end
 
 ## Bound setter/getters
 
-# lower bounds
+# MOI.GreaterThan
 
 """
     has_lower_bound(v::GenericVariableRef)
@@ -631,6 +631,17 @@ queried with [`lower_bound`](@ref).
 
 See also [`LowerBoundRef`](@ref), [`lower_bound`](@ref),
 [`set_lower_bound`](@ref), [`delete_lower_bound`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 1.0);
+
+julia> has_lower_bound(x)
+true
+```
 """
 function has_lower_bound(v::GenericVariableRef)
     return _moi_has_lower_bound(backend(owner_model(v)), v)
@@ -656,6 +667,22 @@ bound constraint.
 
 See also [`LowerBoundRef`](@ref), [`has_lower_bound`](@ref),
 [`lower_bound`](@ref), [`delete_lower_bound`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 1.0);
+
+julia> lower_bound(x)
+1.0
+
+julia> set_lower_bound(x, 2.0)
+
+julia> lower_bound(x)
+2.0
+```
 """
 function set_lower_bound(v::GenericVariableRef, lower::Number)
     if !isfinite(lower)
@@ -689,13 +716,28 @@ end
 """
     LowerBoundRef(v::GenericVariableRef)
 
-Return a constraint reference to the lower bound constraint of `v`. Errors if
-one does not exist.
+Return a constraint reference to the lower bound constraint of `v`.
+
+Errors if one does not exist.
 
 See also [`has_lower_bound`](@ref), [`lower_bound`](@ref),
 [`set_lower_bound`](@ref), [`delete_lower_bound`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 1.0);
+
+julia> LowerBoundRef(x)
+x ≥ 1
+```
 """
 function LowerBoundRef(v::GenericVariableRef)
+    if !has_lower_bound(v)
+        error("Variable $(v) does not have a lower bound.")
+    end
     return ConstraintRef(owner_model(v), _lower_bound_index(v), ScalarShape())
 end
 
@@ -706,6 +748,22 @@ Delete the lower bound constraint of a variable.
 
 See also [`LowerBoundRef`](@ref), [`has_lower_bound`](@ref),
 [`lower_bound`](@ref), [`set_lower_bound`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 1.0);
+
+julia> has_lower_bound(x)
+true
+
+julia> delete_lower_bound(x)
+
+julia> has_lower_bound(x)
+false
+```
 """
 function delete_lower_bound(variable_ref::GenericVariableRef)
     delete(owner_model(variable_ref), LowerBoundRef(variable_ref))
@@ -719,16 +777,24 @@ Return the lower bound of a variable. Error if one does not exist.
 
 See also [`LowerBoundRef`](@ref), [`has_lower_bound`](@ref),
 [`set_lower_bound`](@ref), [`delete_lower_bound`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x >= 1.0);
+
+julia> lower_bound(x)
+1.0
+```
 """
 function lower_bound(v::GenericVariableRef{T}) where {T}
-    if !has_lower_bound(v)
-        error("Variable $(v) does not have a lower bound.")
-    end
     set = MOI.get(owner_model(v), MOI.ConstraintSet(), LowerBoundRef(v))
     return set.lower::T
 end
 
-# upper bounds
+# MOI.LessThan
 
 """
     has_upper_bound(v::GenericVariableRef)
@@ -738,6 +804,17 @@ queried with [`upper_bound`](@ref).
 
 See also [`UpperBoundRef`](@ref), [`upper_bound`](@ref),
 [`set_upper_bound`](@ref), [`delete_upper_bound`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x <= 1.0);
+
+julia> has_upper_bound(x)
+true
+```
 """
 function has_upper_bound(v::GenericVariableRef)
     return _moi_has_upper_bound(backend(owner_model(v)), v)
@@ -761,6 +838,22 @@ constraint.
 
 See also [`UpperBoundRef`](@ref), [`has_upper_bound`](@ref),
 [`upper_bound`](@ref), [`delete_upper_bound`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x <= 1.0);
+
+julia> upper_bound(x)
+1.0
+
+julia> set_upper_bound(x, 2.0)
+
+julia> upper_bound(x)
+2.0
+```
 """
 function set_upper_bound(v::GenericVariableRef, upper::Number)
     if !isfinite(upper)
@@ -794,13 +887,28 @@ end
 """
     UpperBoundRef(v::GenericVariableRef)
 
-Return a constraint reference to the upper bound constraint of `v`. Errors if
-one does not exist.
+Return a constraint reference to the upper bound constraint of `v`.
+
+Errors if one does not exist.
 
 See also [`has_upper_bound`](@ref), [`upper_bound`](@ref),
 [`set_upper_bound`](@ref), [`delete_upper_bound`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x <= 1.0);
+
+julia> UpperBoundRef(x)
+x ≤ 1
+```
 """
 function UpperBoundRef(v::GenericVariableRef)
+    if !has_upper_bound(v)
+        error("Variable $(v) does not have an upper bound.")
+    end
     return ConstraintRef(owner_model(v), _upper_bound_index(v), ScalarShape())
 end
 
@@ -809,8 +917,26 @@ end
 
 Delete the upper bound constraint of a variable.
 
+Errors if one does not exist.
+
 See also [`UpperBoundRef`](@ref), [`has_upper_bound`](@ref),
 [`upper_bound`](@ref), [`set_upper_bound`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x <= 1.0);
+
+julia> has_upper_bound(x)
+true
+
+julia> delete_upper_bound(x)
+
+julia> has_upper_bound(x)
+false
+```
 """
 function delete_upper_bound(variable_ref::GenericVariableRef)
     delete(owner_model(variable_ref), UpperBoundRef(variable_ref))
@@ -820,20 +946,30 @@ end
 """
     upper_bound(v::GenericVariableRef)
 
-Return the upper bound of a variable. Error if one does not exist.
+Return the upper bound of a variable.
+
+Error if one does not exist.
 
 See also [`UpperBoundRef`](@ref), [`has_upper_bound`](@ref),
 [`set_upper_bound`](@ref), [`delete_upper_bound`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x <= 1.0);
+
+julia> upper_bound(x)
+1.0
+```
 """
 function upper_bound(v::GenericVariableRef{T}) where {T}
-    if !has_upper_bound(v)
-        error("Variable $(v) does not have an upper bound.")
-    end
     set = MOI.get(owner_model(v), MOI.ConstraintSet(), UpperBoundRef(v))
     return set.upper::T
 end
 
-# fixed value
+# MOI.EqualTo
 
 """
     is_fixed(v::GenericVariableRef)
@@ -842,6 +978,22 @@ Return `true` if `v` is a fixed variable. If `true`, the fixed value can be
 queried with [`fix_value`](@ref).
 
 See also [`FixRef`](@ref), [`fix_value`](@ref), [`fix`](@ref), [`unfix`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> is_fixed(x)
+false
+
+julia> fix(x, 1.0)
+
+julia> is_fixed(x)
+true
+```
 """
 function is_fixed(v::GenericVariableRef)
     return _moi_is_fixed(backend(owner_model(v)), v)
@@ -868,6 +1020,36 @@ after a call to [`unfix`](@ref).
 
 See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix_value`](@ref),
 [`unfix`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> is_fixed(x)
+false
+
+julia> fix(x, 1.0)
+
+julia> is_fixed(x)
+true
+```
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, 0 <= x <= 1);
+
+julia> is_fixed(x)
+false
+
+julia> fix(x, 1.0; force = true)
+
+julia> is_fixed(x)
+true
+```
 """
 function fix(variable::GenericVariableRef, value::Number; force::Bool = false)
     if !isfinite(value)
@@ -917,8 +1099,26 @@ end
 
 Delete the fixing constraint of a variable.
 
+Error if one does not exist.
+
 See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix_value`](@ref),
 [`fix`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x == 1);
+
+julia> is_fixed(x)
+true
+
+julia> unfix(x)
+
+julia> is_fixed(x)
+false
+```
 """
 function unfix(variable_ref::GenericVariableRef)
     delete(owner_model(variable_ref), FixRef(variable_ref))
@@ -928,9 +1128,22 @@ end
 """
     fix_value(v::GenericVariableRef)
 
-Return the value to which a variable is fixed. Error if one does not exist.
+Return the value to which a variable is fixed.
+
+Error if one does not exist.
 
 See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix`](@ref), [`unfix`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x == 1);
+
+julia> fix_value(x)
+1.0
+```
 """
 function fix_value(v::GenericVariableRef{T}) where {T}
     set = MOI.get(owner_model(v), MOI.ConstraintSet(), FixRef(v))
@@ -940,15 +1153,32 @@ end
 """
     FixRef(v::GenericVariableRef)
 
-Return a constraint reference to the constraint fixing the value of `v`. Errors
-if one does not exist.
+Return a constraint reference to the constraint fixing the value of `v`.
+
+Errors if one does not exist.
 
 See also [`is_fixed`](@ref), [`fix_value`](@ref), [`fix`](@ref),
 [`unfix`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x == 1);
+
+julia> FixRef(x)
+x = 1
+```
 """
 function FixRef(v::GenericVariableRef)
+    if !is_fixed(v)
+        error("Variable $(v) does not have fixed bounds.")
+    end
     return ConstraintRef(owner_model(v), _fix_index(v), ScalarShape())
 end
+
+# MOI.Integer
 
 """
     is_integer(v::GenericVariableRef)
@@ -956,6 +1186,22 @@ end
 Return `true` if `v` is constrained to be integer.
 
 See also [`IntegerRef`](@ref), [`set_integer`](@ref), [`unset_integer`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> is_integer(x)
+false
+
+julia> set_integer(x)
+
+julia> is_integer(x)
+true
+```
 """
 function is_integer(v::GenericVariableRef)
     return _moi_is_integer(backend(owner_model(v)), v)
@@ -975,6 +1221,22 @@ end
 Add an integrality constraint on the variable `variable_ref`.
 
 See also [`IntegerRef`](@ref), [`is_integer`](@ref), [`unset_integer`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> is_integer(x)
+false
+
+julia> set_integer(x)
+
+julia> is_integer(x)
+true
+```
 """
 function set_integer(v::GenericVariableRef)
     model = owner_model(v)
@@ -1001,7 +1263,25 @@ end
 
 Remove the integrality constraint on the variable `variable_ref`.
 
+Errors if one does not exist.
+
 See also [`IntegerRef`](@ref), [`is_integer`](@ref), [`set_integer`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, Int);
+
+julia> is_integer(x)
+true
+
+julia> unset_integer(x)
+
+julia> is_integer(x)
+false
+```
 """
 function unset_integer(variable_ref::GenericVariableRef)
     delete(owner_model(variable_ref), IntegerRef(variable_ref))
@@ -1012,13 +1292,30 @@ end
     IntegerRef(v::GenericVariableRef)
 
 Return a constraint reference to the constraint constraining `v` to be integer.
+
 Errors if one does not exist.
 
 See also [`is_integer`](@ref), [`set_integer`](@ref), [`unset_integer`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, Int);
+
+julia> IntegerRef(x)
+x integer
+```
 """
 function IntegerRef(v::GenericVariableRef)
+    if !is_integer(v)
+        error("Variable $v is not integer.")
+    end
     return ConstraintRef(owner_model(v), _integer_index(v), ScalarShape())
 end
+
+# MOI.ZeroOne
 
 """
     is_binary(v::GenericVariableRef)
@@ -1026,6 +1323,17 @@ end
 Return `true` if `v` is constrained to be binary.
 
 See also [`BinaryRef`](@ref), [`set_binary`](@ref), [`unset_binary`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, Bin);
+
+julia> is_binary(x)
+true
+```
 """
 function is_binary(v::GenericVariableRef)
     return _moi_is_binary(backend(owner_model(v)), v)
@@ -1046,6 +1354,22 @@ Add a constraint on the variable `v` that it must take values in the set
 ``\\{0,1\\}``.
 
 See also [`BinaryRef`](@ref), [`is_binary`](@ref), [`unset_binary`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> is_binary(x)
+false
+
+julia> set_binary(x)
+
+julia> is_binary(x)
+true
+```
 """
 function set_binary(v::GenericVariableRef)
     model = owner_model(v)
@@ -1073,6 +1397,22 @@ end
 Remove the binary constraint on the variable `variable_ref`.
 
 See also [`BinaryRef`](@ref), [`is_binary`](@ref), [`set_binary`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, Bin);
+
+julia> is_binary(x)
+true
+
+julia> unset_binary(x)
+
+julia> is_binary(x)
+false
+```
 """
 function unset_binary(variable_ref::GenericVariableRef)
     delete(owner_model(variable_ref), BinaryRef(variable_ref))
@@ -1086,16 +1426,34 @@ Return a constraint reference to the constraint constraining `v` to be binary.
 Errors if one does not exist.
 
 See also [`is_binary`](@ref), [`set_binary`](@ref), [`unset_binary`](@ref).
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x, Bin);
+
+julia> BinaryRef(x)
+x binary
+```
 """
 function BinaryRef(v::GenericVariableRef)
+    if !is_binary(v)
+        error("Variable $v is not binary.")
+    end
     return ConstraintRef(owner_model(v), _binary_index(v), ScalarShape())
 end
+
+# MOI.Parameter
 
 """
     ParameterRef(x::GenericVariableRef)
 
 Return a constraint reference to the constraint constraining `x` to be a
 parameter.
+
+Errors if one does not exist.
 
 See also [`is_parameter`](@ref), [`set_parameter_value`](@ref),
 [`parameter_value`](@ref).
@@ -1114,17 +1472,14 @@ p ∈ MathOptInterface.Parameter{Float64}(2.0)
 julia> @variable(model, x);
 
 julia> ParameterRef(x)
-ERROR: Cannot create a `ParameterRef` because the variable is not a parameter
+ERROR: Variable x is not a parameter.
 Stacktrace:
 [...]
 ```
 """
 function ParameterRef(x::GenericVariableRef)
     if !is_parameter(x)
-        error(
-            "Cannot create a `ParameterRef` because the variable is not a " *
-            "parameter",
-        )
+        error("Variable $x is not a parameter.")
     end
     return ConstraintRef(owner_model(x), _parameter_index(x), ScalarShape())
 end
@@ -1169,6 +1524,8 @@ end
 
 Update the parameter constraint on the variable `x` to `value`.
 
+Errors if `x` is not a parameter.
+
 See also [`ParameterRef`](@ref), [`is_parameter`](@ref),
 [`parameter_value`](@ref).
 
@@ -1190,11 +1547,11 @@ julia> parameter_value(p)
 ```
 """
 function set_parameter_value(x::GenericVariableRef, value)
-    T = value_type(typeof(x))
     model = owner_model(x)
+    T = value_type(typeof(x))
     model.is_model_dirty = true
     set = MOI.Parameter{T}(convert(T, value))
-    MOI.set(backend(model), MOI.ConstraintSet(), _parameter_index(x), set)
+    MOI.set(model, MOI.ConstraintSet(), ParameterRef(x), set)
     return
 end
 
@@ -1202,6 +1559,8 @@ end
     parameter_value(x::GenericVariableRef)
 
 Return the value of the parameter `x`.
+
+Errors if `x` is not a parameter.
 
 See also [`ParameterRef`](@ref), [`is_parameter`](@ref),
 [`set_parameter_value`](@ref).
@@ -1225,12 +1584,14 @@ julia> parameter_value(p)
 """
 function parameter_value(x::GenericVariableRef)
     set = MOI.get(
-        backend(owner_model(x)),
+        owner_model(x),
         MOI.ConstraintSet(),
-        _parameter_index(x),
+        ParameterRef(x),
     )::MOI.Parameter{value_type(typeof(x))}
     return set.value
 end
+
+# MOI.VariablePrimalStart
 
 """
     start_value(v::GenericVariableRef)
