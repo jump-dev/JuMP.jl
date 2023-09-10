@@ -32,11 +32,11 @@
 # ============================= jump-dev packages ============================ #
 
 [AmplNLWriter]
-    rev = "v1.1.0"
+    rev = "v1.2.0"
 [BARON]
-    rev = "v0.8.1"
+    rev = "v0.8.2"
 [Cbc]
-    rev = "v1.1.1"
+    rev = "v1.2.0"
 [Clp]
     rev = "v1.0.3"
 [CPLEX]
@@ -53,9 +53,9 @@
 [GLPK]
     rev = "v1.1.2"
 [Gurobi]
-    rev = "v1.0.2"
+    rev = "v1.0.3"
 [HiGHS]
-    rev = "v1.5.2"
+    rev = "v1.6.0"
 [Ipopt]
     rev = "v1.4.2"
 [KNITRO]
@@ -63,7 +63,7 @@
 [MiniZinc]
     rev = "v0.3.0"
 [MosekTools]
-    rev = "v0.15.0"
+    rev = "v0.15.1"
 [MultiObjectiveAlgorithms]
     rev = "v1.2.0"
     has_html = true
@@ -81,7 +81,7 @@
     rev = "v0.7.0"
     extension = true
 [SCS]
-    rev = "v1.3.0"
+    rev = "v1.3.1"
 [SDPA]
     rev = "v0.5.0"
 [SDPNAL]
@@ -117,7 +117,7 @@
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.5"
+    rev = "v1.1.7"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.8"
@@ -171,10 +171,10 @@
     has_html = true
 [SCIP]
     user = "scipopt"
-    rev = "v0.11.13"
+    rev = "v0.11.14"
 [SDDP]
     user = "odow"
-    rev = "v1.6.1"
+    rev = "v1.6.3"
     has_html = true
     extension = true
 [Tulip]
