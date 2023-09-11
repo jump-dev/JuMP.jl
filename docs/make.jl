@@ -43,13 +43,13 @@ function _link_example(content)
             "<unknown>" => "https://github.com/jump-dev/JuMP.jl/tree/master",
         )
     end
-    title_line = findfirst(r"\n# # .+?\n", content)
+    title_line = findfirst(r"\n# .+?\n", content)
     line = content[title_line]
     new_title = string(
         line,
         "\n",
-        "# _This tutorial was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl)._\n",
-        "# _[Download the source as a `.jl` file]($(edit_url))_.\n",
+        "_This tutorial was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl)._\n",
+        "_[Download the source as a `.jl` file]($(edit_url))_.\n",
     )
     return replace(content, line => new_title)
 end
