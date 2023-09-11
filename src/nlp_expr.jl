@@ -383,19 +383,58 @@ for f in (:+, :-, :*, :^, :/, :atan)
     end
 end
 
+function Base.:+(x::Real, y::GenericNonlinearExpr{V}) where {V}
+    if iszero(x)
+        return y
+    end
+    return GenericNonlinearExpr{V}(:+, Any[convert(Float64, x), y])
+end
+
+_is_zero(::_MA.Zero) = true
+_is_zero(x::Number) = iszero(x)
+_is_zero(::Any) = false
+
 function _MA.operate!!(
     ::typeof(_MA.add_mul),
     x::GenericNonlinearExpr,
     args::Vararg{Any,N},
 ) where {N}
     _throw_if_not_real(x)
-    if any(isequal(_MA.Zero()), args)
+    if any(_is_zero, args)
         return x
     elseif x.head == :+
         push!(x.args, *(args...))
         return x
     end
     return +(x, *(args...))
+end
+
+function _MA.operate(
+    ::typeof(*),
+    x::Real,
+    y::GenericNonlinearExpr{V},
+) where {V}
+    if iszero(x)
+        return zero(value_type(V))
+    elseif isone(x)
+        return y
+    else
+        return x * y
+    end
+end
+
+function _MA.operate(
+    ::typeof(*),
+    x::GenericNonlinearExpr{V},
+    y::Real,
+) where {V}
+    if iszero(y)
+        return zero(value_type(V))
+    elseif isone(y)
+        return x
+    else
+        return x * y
+    end
 end
 
 """

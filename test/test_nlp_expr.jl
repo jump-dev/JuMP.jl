@@ -926,4 +926,18 @@ function test_generic_nonlinear_expr_infer_variable_type()
     return
 end
 
+function test_simplification_of_add_and_mul_with_one_or_zero()
+    p = [1.0 0.0 3.0; 0.0 5.0 0.0]
+    σ = [0.5, 0.75, 0.25]
+    model = Model()
+    @variable(model, x[1:2, 1:3])
+    @expression(model, f[a in 1:2], sum(x[a, b]^σ[b] * p[a, b] for b in 1:3))
+    f2 = [x[1,1]^0.5 + (x[1,3]^0.25 * 3.0), x[2, 2]^0.75 * 5.0]
+    @test isequal_canonical(f, f2)
+    @expression(model, g[a in 1:2], sum(p[a, b] * x[a, b]^σ[b] for b in 1:3))
+    g2 = [x[1,1]^0.5 + (3.0 * x[1,3]^0.25), 5.0 * x[2, 2]^0.75]
+    @test isequal_canonical(g, g2)
+    return
+end
+
 end  # module
