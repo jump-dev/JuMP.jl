@@ -3016,7 +3016,13 @@ macro variable(args...)
             requested_container,
         )
     end
-
+    # Wrap the entire code block in a let statement to make the model act as
+    # a type stable local variable.
+    creation_code = quote
+        let $model = $model
+            $creation_code
+        end
+    end
     if anonvar
         # Anonymous variable, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
