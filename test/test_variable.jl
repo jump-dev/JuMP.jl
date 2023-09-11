@@ -1477,10 +1477,7 @@ function test_parameter()
     @test parameter_value(x) === 3.0
     @variable(model, p)
     @test_throws(
-        ErrorException(
-            "Cannot create a `ParameterRef` because the variable is not a " *
-            "parameter",
-        ),
+        ErrorException("Variable p is not a parameter."),
         ParameterRef(p),
     )
     return
@@ -1502,6 +1499,40 @@ function test_parameter_anonymous()
     @test parameter_value(p) == 1.5
     set_parameter_value(p, 3.0)
     @test parameter_value(p) == 3.0
+    return
+end
+
+function test_missing_variable_constraint_errors()
+    model = Model()
+    @variable(model, x)
+    err = ErrorException("Variable x does not have a lower bound.")
+    @test !has_lower_bound(x)
+    @test_throws err LowerBoundRef(x)
+    @test_throws err lower_bound(x)
+    @test_throws err delete_lower_bound(x)
+    err = ErrorException("Variable x does not have an upper bound.")
+    @test !has_upper_bound(x)
+    @test_throws err UpperBoundRef(x)
+    @test_throws err upper_bound(x)
+    @test_throws err delete_upper_bound(x)
+    err = ErrorException("Variable x does not have fixed bounds.")
+    @test !is_fixed(x)
+    @test_throws err FixRef(x)
+    @test_throws err fix_value(x)
+    @test_throws err unfix(x)
+    err = ErrorException("Variable x is not integer.")
+    @test !is_integer(x)
+    @test_throws err IntegerRef(x)
+    @test_throws err unset_integer(x)
+    err = ErrorException("Variable x is not binary.")
+    @test !is_binary(x)
+    @test_throws err BinaryRef(x)
+    @test_throws err unset_binary(x)
+    err = ErrorException("Variable x is not a parameter.")
+    @test !is_parameter(x)
+    @test_throws err ParameterRef(x)
+    @test_throws err parameter_value(x)
+    @test_throws err set_parameter_value(x, 1.0)
     return
 end
 
