@@ -49,7 +49,7 @@ function _link_example(content)
         line,
         "\n",
         "_This tutorial was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl)._\n",
-        "_[Download the source as a `.jl` file]($(edit_url))_.\n",
+        "_[Download the source as a `.jl` file]($(replace(edit_url, "_" => "\\_")))_.\n",
     )
     return replace(content, line => new_title)
 end
