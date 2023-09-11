@@ -4,7 +4,7 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import Pkg
-Pkg.pkg"add Documenter#2fabe9c3bd40b6288c3d86d96c6031728b2d92ad"
+Pkg.pkg"add Documenter#afeb75d1b2abc7166752c5e00675c8b62ee0bea3"
 
 import Documenter
 import Downloads
