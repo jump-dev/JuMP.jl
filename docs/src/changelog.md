@@ -67,6 +67,9 @@ changes which might be breaking for a very small number of users.
  - Fixed adding a container of [`Parameter`](@ref) (#3473)
  - Fixed return type of `x^0` and `x^1` to no longer return `QuadExpr` (see note
    in `Breaking` section above) (#3474)
+ - Fixed error messages in [`LowerBoundRef`](@ref), [`UpperBoundRef`](@ref),
+   [`FixRef`](@ref), [`IntegerRef`](@ref), [`BinaryRef`](@ref),
+   [`ParameterRef`](@ref) and related functions (#3494)
 
 ### Other
 
@@ -75,7 +78,7 @@ changes which might be breaking for a very small number of users.
  - Added [The network multi-commodity flow problem](@ref) tutorial (#3491)
  - Added [Two-stage stochastic programs](@ref) tutorial (#3466)
  - Added better error messages for unsupported operations in `LinearAlgebra` (#3476)
- - Updated to the latest version of Documenter (#3484)
+ - Updated to the latest version of Documenter (#3484) (#3495)
 
 ## Version 1.14.1 (September 2, 2023)
 
