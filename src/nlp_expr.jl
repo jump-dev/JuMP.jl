@@ -409,11 +409,7 @@ function _MA.operate!!(
     return +(x, *(args...))
 end
 
-function _MA.operate(
-    ::typeof(*),
-    x::Real,
-    y::GenericNonlinearExpr{V},
-) where {V}
+function _MA.operate(::typeof(*), x::Real, y::GenericNonlinearExpr{V}) where {V}
     if iszero(x)
         return zero(value_type(V))
     elseif isone(x)
@@ -423,11 +419,7 @@ function _MA.operate(
     end
 end
 
-function _MA.operate(
-    ::typeof(*),
-    x::GenericNonlinearExpr{V},
-    y::Real,
-) where {V}
+function _MA.operate(::typeof(*), x::GenericNonlinearExpr{V}, y::Real) where {V}
     if iszero(y)
         return zero(value_type(V))
     elseif isone(y)
