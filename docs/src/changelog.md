@@ -58,7 +58,7 @@ changes which might be breaking for a very small number of users.
  - Added the new nonlinear interface. This is a very large change. See the
    documentation at [Nonlinear Modeling](@ref) and the (long) discussion in
    [JuMP.jl#3106](https://github.com/jump-dev/JuMP.jl/pull/3106). Related PRs
-   are (#3468) (#3472) (#3475) (#3483) (#3487) (#3488) (#3489)
+   are (#3468) (#3472) (#3475) (#3483) (#3487) (#3488) (#3489) (#3504)
 
 ### Fixed
 
@@ -75,10 +75,11 @@ changes which might be breaking for a very small number of users.
 
  - Added GAMS to solver documentation (#3357)
  - Updated various tutorials (#3459) (#3460) (#3462) (#3463) (#3465) (#3490) (#3492)
+   (#3503)
  - Added [The network multi-commodity flow problem](@ref) tutorial (#3491)
  - Added [Two-stage stochastic programs](@ref) tutorial (#3466)
  - Added better error messages for unsupported operations in `LinearAlgebra` (#3476)
- - Updated to the latest version of Documenter (#3484) (#3495)
+ - Updated to the latest version of Documenter (#3484) (#3495) (#3497)
 
 ## Version 1.14.1 (September 2, 2023)
 
