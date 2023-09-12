@@ -549,7 +549,7 @@ write(joinpath(@__DIR__, "src", "JuMP.pdf"), "")
         sidebar_sitename = false,
         # Do no check for large pages.
         size_threshold = nothing,
-        example_size_threshold = 0,
+        example_size_threshold = 1,
     ),
     modules = [JuMP, MOI],
     checkdocs = :none,
