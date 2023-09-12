@@ -8,7 +8,8 @@ Most of these issues will require changes to both JuMP and MathOptInterface, and
 are non-trivial in their implementation. They are in no particular order, but
 represent broad themes that we see as areas in which JuMP could be improved.
 
- - Make nonlinear programming a first-class citizen. There have been many issues
+ - **Done [#3106](https://github.com/jump-dev/JuMP.jl/pull/3106)** Make
+   nonlinear programming a first-class citizen. There have been many issues
    and discussions about this: currently nonlinear constraints are handled
    through a `MOI.NLPBlock` and have various limitations and restrictions.
    - [https://github.com/jump-dev/JuMP.jl/issues/1185](https://github.com/jump-dev/JuMP.jl/issues/1185)
