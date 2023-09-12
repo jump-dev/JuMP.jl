@@ -74,7 +74,7 @@ julia> ids
  3
 ````
 
-!!! warn
+!!! warning
     When working with threads, you need to avoid race conditions, in which two
     threads attempt to write to the same variable at the same time. In the above
     example we avoided a race condition by using `ReentrantLock`. See the
