@@ -59,8 +59,8 @@ Test.@test j == 10
 
 # Test that `model` is inferred correctly inside macros, despite being a
 # non-const global.
-model = JuMP.Model()
-JuMP.@variable(model, x[1:0])
+m = JuMP.Model()
+JuMP.@variable(m, x[1:0])
 Test.@test x == JuMP.VariableRef[]
 
 end

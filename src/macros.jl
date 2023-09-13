@@ -1334,7 +1334,13 @@ function _constraint_macro(
 
     creation_code =
         Containers.container_code(idxvars, indices, code, requested_container)
-
+    # Wrap the entire code block in a let statement to make the model act as
+    # a type stable local variable.
+    creation_code = quote
+        let $model = $model
+            $creation_code
+        end
+    end
     if anonvar
         # Anonymous constraint, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
@@ -1939,6 +1945,13 @@ macro expression(args...)
     end
     code =
         Containers.container_code(idxvars, indices, code, requested_container)
+    # Wrap the entire code block in a let statement to make the model act as
+    # a type stable local variable.
+    creation_code = quote
+        let $m = $m
+            $creation_code
+        end
+    end
     # don't do anything with the model, but check that it's valid anyway
     if anonvar
         macro_code = code
