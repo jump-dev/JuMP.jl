@@ -1947,9 +1947,9 @@ macro expression(args...)
         Containers.container_code(idxvars, indices, code, requested_container)
     # Wrap the entire code block in a let statement to make the model act as
     # a type stable local variable.
-    creation_code = quote
+    code = quote
         let $m = $m
-            $creation_code
+            $code
         end
     end
     # don't do anything with the model, but check that it's valid anyway
