@@ -2038,8 +2038,8 @@ end
 # knowing the type of `model`.
 function test_wrap_let_non_symbol_models()
     module_name = @eval module $(gensym())
-        using JuMP, Test
-        data = (; model = Model())
+    using JuMP, Test
+    data = (; model = Model())
     end
     @eval module_name begin
         @variable(data.model, x)
@@ -2051,7 +2051,8 @@ function test_wrap_let_non_symbol_models()
         @constraint(data.model, c[i = 1:2], i * expr[i] <= i)
         @test c isa Vector{<:ConstraintRef}
         @variable(data.model, bad_var[1:0])
-        @test bad_var isa Vector{Any}
+        @test bad_var isa Vector{<:Any}
+        @test !(bad_var isa Vector{VariableRef})  # Cannot prove type
         @expression(data.model, bad_expr[i = 1:0], x + i)
         @test bad_expr isa Vector{Any}
     end
@@ -2062,8 +2063,8 @@ end
 # knowing the type of `model`.
 function test_wrap_let_symbol_models()
     module_name = @eval module $(gensym())
-        using JuMP, Test
-        model = Model()
+    using JuMP, Test
+    model = Model()
     end
     @eval module_name begin
         @variable(model, x)
