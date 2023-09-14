@@ -7,6 +7,82 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.15.0 (September 15, 2023)
+
+This is a large minor release because it adds an entirely new data structure and
+API path for working with nonlinear programs. The previous nonlinear interface
+remains unchanged and is documented at [Nonlinear Modeling (Legacy)](@ref). The
+new interface is a treated as a non-breaking feature addition and is documented
+at [Nonlinear Modeling](@ref).
+
+### Breaking
+
+Although the new nonlinear interface is a feature addition, there are two
+changes which might be breaking for a very small number of users.
+
+ - The syntax inside JuMP macros is parsed using a different code path, even for
+   linear and quadratic expressions. We made this change to unify how we parse
+   linear, quadratic, and nonlinear expressions. In all cases, the new code
+   returns equivalent expressions, but because of the different order of
+   operations, there are three changes to be aware of when updating:
+    - The printed form of the expression may change, for example from `x * y` to
+      `y * x`. This can cause tests which test the `String` representation of a
+      model to fail.
+    - Some coefficients may change slightly due to floating point round-off
+      error.
+    - Particularly when working with a JuMP extension, you may encounter a
+      `MethodError` due to a missing or ambiguous method. These errors are due
+      to previously existing bugs that were not triggered by the previous
+      parsing code. If you encounter such an error, please open a GitHub issue.
+ - The methods for `Base.:^(x::VariableRef, n::Integer)` and
+   `Base.:^(x::AffExpr, n::Integer)` have changed. Previously, these methods
+   supported only `n = 0, 1, 2` and they always returned a [`QuadExpr`](@ref),
+   even for the case when `n = 0` or `n = 1`. Now:
+     - `x^0` returns `one(T)`, where `T` is the [`value_type`](@ref) of the
+       model (defaults to `Float64`)
+     - `x^1` returns `x`
+     - `x^2` returns a [`QuadExpr`](@ref)
+     - `x^n` where `!(0 <= n <= 2)` returns a [`NonlinearExpr`](@ref).
+   We made this change to support nonlinear expressions and to align the
+   mathematical definition of the operation with their return type. (Previously,
+   users were surprised that `x^1` returned a [`QuadExpr`](@ref).) As a
+   consequence of this change, the methods are now not type-stable. This means
+   that the compiler cannot prove that `x^2` returns a [`QuadExpr`](@ref). If
+   benchmarking shows that this is a performance problem, you can use the
+   type-stable `x * x` instead of `x^2`.
+
+### Added
+
+ - Added [`triangle_vec`](@ref) which simplifies adding [`MOI.LogDetConeTriangle`](@ref)
+   and [`MOI.RootDetConeTriangle`](@ref) constraints (#3456)
+ - Added the new nonlinear interface. This is a very large change. See the
+   documentation at [Nonlinear Modeling](@ref) and the (long) discussion in
+   [JuMP.jl#3106](https://github.com/jump-dev/JuMP.jl/pull/3106). Related PRs
+   are (#3468) (#3472) (#3475) (#3483) (#3487) (#3488) (#3489) (#3504) (#3509)
+
+### Fixed
+
+ - Fixed uses of `@nospecialize` which cause precompilation failures in Julia
+   v1.6.0 and v1.6.1. (#3464)
+ - Fixed adding a container of [`Parameter`](@ref) (#3473)
+ - Fixed return type of `x^0` and `x^1` to no longer return `QuadExpr` (see note
+   in `Breaking` section above) (#3474)
+ - Fixed error messages in [`LowerBoundRef`](@ref), [`UpperBoundRef`](@ref),
+   [`FixRef`](@ref), [`IntegerRef`](@ref), [`BinaryRef`](@ref),
+   [`ParameterRef`](@ref) and related functions (#3494)
+ - Fixed type inference of empty containers in JuMP macros (#3500)
+
+### Other
+
+ - Added GAMS to solver documentation (#3357)
+ - Updated various tutorials (#3459) (#3460) (#3462) (#3463) (#3465) (#3490) (#3492)
+   (#3503)
+ - Added [The network multi-commodity flow problem](@ref) tutorial (#3491)
+ - Added [Two-stage stochastic programs](@ref) tutorial (#3466)
+ - Added better error messages for unsupported operations in `LinearAlgebra` (#3476)
+ - Updated to the latest version of Documenter (#3484) (#3495) (#3497)
+ - Updated GitHub action versions (#3507)
+
 ## Version 1.14.1 (September 2, 2023)
 
 ### Fixed
