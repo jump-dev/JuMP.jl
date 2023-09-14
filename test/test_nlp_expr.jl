@@ -937,7 +937,7 @@ function test_add_to_expression!()
             "Instead of `add_to_expression!(expr, args..)`, use " *
             "`expr += *(args...)`.",
         ),
-        test_add_to_expression!(y, 2.0, sin(x)),
+        add_to_expression!(y, 2.0, sin(x)),
     )
     return
 end
