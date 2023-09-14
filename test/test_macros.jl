@@ -2034,4 +2034,52 @@ function test_unsupported_ternary_operator()
     return
 end
 
+# This code needs to be evaluated in a top-level scope to prevent inference from
+# knowing the type of `model`.
+function test_wrap_let_non_symbol_models()
+    module_name = @eval module $(gensym())
+        using JuMP, Test
+        data = (; model = Model())
+    end
+    @eval module_name begin
+        @variable(data.model, x)
+        @test x isa VariableRef
+        @objective(data.model, Min, x^2)
+        @test isequal_canonical(objective_function(data.model), x^2)
+        @expression(data.model, expr[i = 1:2], x + i)
+        @test expr == [x + 1, x + 2]
+        @constraint(data.model, c[i = 1:2], i * expr[i] <= i)
+        @test c isa Vector{<:ConstraintRef}
+        @variable(data.model, bad_var[1:0])
+        @test bad_var isa Vector{Any}
+        @expression(data.model, bad_expr[i = 1:0], x + i)
+        @test bad_expr isa Vector{Any}
+    end
+    return
+end
+
+# This code needs to be evaluated in a top-level scope to prevent inference from
+# knowing the type of `model`.
+function test_wrap_let_symbol_models()
+    module_name = @eval module $(gensym())
+        using JuMP, Test
+        model = Model()
+    end
+    @eval module_name begin
+        @variable(model, x)
+        @test x isa VariableRef
+        @objective(model, Min, x^2)
+        @test isequal_canonical(objective_function(model), x^2)
+        @expression(model, expr[i = 1:2], x + i)
+        @test expr == [x + 1, x + 2]
+        @constraint(model, c[i = 1:2], i * expr[i] <= i)
+        @test c isa Vector{<:ConstraintRef}
+        @variable(model, bad_var[1:0])
+        @test bad_var isa Vector{VariableRef}
+        @expression(model, bad_expr[i = 1:0], x + i)
+        @test bad_expr isa Vector{Any}
+    end
+    return
+end
+
 end  # module

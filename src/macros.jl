@@ -1204,6 +1204,17 @@ end
 
 # TODO: update 3-argument @constraint macro to pass through names like @variable
 
+function _wrap_let(model, code)
+    if Meta.isexpr(model, :escape) && model.args[1] isa Symbol
+        return quote
+            let $model = $model
+                $code
+            end
+        end
+    end
+    return code
+end
+
 """
     _constraint_macro(
         args, macro_name::Symbol, parsefun::Function, source::LineNumberNode
@@ -1331,16 +1342,11 @@ function _constraint_macro(
         $parsecode
         $constraintcall
     end
-
     creation_code =
         Containers.container_code(idxvars, indices, code, requested_container)
     # Wrap the entire code block in a let statement to make the model act as
     # a type stable local variable.
-    creation_code = quote
-        let $model = $model
-            $creation_code
-        end
-    end
+    creation_code = _wrap_let(model, creation_code)
     if anonvar
         # Anonymous constraint, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
@@ -1947,11 +1953,7 @@ macro expression(args...)
         Containers.container_code(idxvars, indices, code, requested_container)
     # Wrap the entire code block in a let statement to make the model act as
     # a type stable local variable.
-    code = quote
-        let $m = $m
-            $code
-        end
-    end
+    code = _wrap_let(m, code)
     # don't do anything with the model, but check that it's valid anyway
     if anonvar
         macro_code = code
@@ -3031,11 +3033,7 @@ macro variable(args...)
     end
     # Wrap the entire code block in a let statement to make the model act as
     # a type stable local variable.
-    creation_code = quote
-        let $model = $model
-            $creation_code
-        end
-    end
+    creation_code = _wrap_let(model, creation_code)
     if anonvar
         # Anonymous variable, no need to register it in the model-level
         # dictionary nor to assign it to a variable in the user scope.
