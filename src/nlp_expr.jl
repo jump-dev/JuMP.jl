@@ -354,13 +354,13 @@ end
 
 # Multivariate operators
 
-# The multivariate operators in MOI are +, -, *, ^, /, ifelse, atan
+# The multivariate operators in MOI are +, -, *, ^, /, ifelse, atan, min, max
 #
 # However, ifelse is a builtin, so we can't add methods to it.
 
 # We need only very generic fallbacks for these, because all other cases are
 # caught with more specific methods.
-for f in (:+, :-, :*, :^, :/, :atan)
+for f in (:+, :-, :*, :^, :/, :atan, :min, :max)
     op = Meta.quot(f)
     @eval begin
         function Base.$(f)(x::AbstractJuMPScalar, y::_Constant)

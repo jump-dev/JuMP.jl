@@ -926,4 +926,20 @@ function test_generic_nonlinear_expr_infer_variable_type()
     return
 end
 
+function test_operator_min()
+    model = Model()
+    @variable(model, x)
+    @test isequal_canonical(min(x, 1), NonlinearExpr(:min, Any[x, 1.0]))
+    @test isequal_canonical(min(1, x, x^2), min(min(1.0, x), x^2))
+    return
+end
+
+function test_operator_max()
+    model = Model()
+    @variable(model, x)
+    @test isequal_canonical(max(x, 1), NonlinearExpr(:max, Any[x, 1.0]))
+    @test isequal_canonical(max(1, x, x^2), max(max(1.0, x), x^2))
+    return
+end
+
 end  # module
