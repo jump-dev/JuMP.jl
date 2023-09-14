@@ -70,6 +70,7 @@ changes which might be breaking for a very small number of users.
  - Fixed error messages in [`LowerBoundRef`](@ref), [`UpperBoundRef`](@ref),
    [`FixRef`](@ref), [`IntegerRef`](@ref), [`BinaryRef`](@ref),
    [`ParameterRef`](@ref) and related functions (#3494)
+ - Fixed type inference of empty containers in JuMP macros (#3500)
 
 ### Other
 
@@ -80,6 +81,7 @@ changes which might be breaking for a very small number of users.
  - Added [Two-stage stochastic programs](@ref) tutorial (#3466)
  - Added better error messages for unsupported operations in `LinearAlgebra` (#3476)
  - Updated to the latest version of Documenter (#3484) (#3495) (#3497)
+ - Updated GitHub action versions (#3507)
 
 ## Version 1.14.1 (September 2, 2023)
 
