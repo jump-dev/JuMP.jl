@@ -926,4 +926,20 @@ function test_generic_nonlinear_expr_infer_variable_type()
     return
 end
 
+function test_add_to_expression!()
+    model = Model()
+    @variable(model, x)
+    y = zero(NonlinearExpr)
+    @test_throws(
+        ErrorException(
+            "`add_to_expression!` is not supported for expressions of type " *
+            "`$(typeof(y))` because they cannot be modified in-place. " *
+            "Instead of `add_to_expression!(expr, args..)`, use " *
+            "`expr += *(args...)`.",
+        ),
+        test_add_to_expression!(y, 2.0, sin(x)),
+    )
+    return
+end
+
 end  # module
