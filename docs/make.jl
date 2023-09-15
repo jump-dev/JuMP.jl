@@ -7,6 +7,7 @@ import Documenter
 import Downloads
 import Literate
 import MathOptInterface
+import Pkg
 import Test
 import TOML
 
