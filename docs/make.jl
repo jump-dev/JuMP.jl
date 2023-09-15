@@ -3,9 +3,6 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import Pkg
-Pkg.pkg"add Documenter#975a0d3bc5aaca33148d76059a65433be2a3df11"
-
 import Documenter
 import Downloads
 import Literate
