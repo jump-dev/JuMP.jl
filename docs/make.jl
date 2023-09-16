@@ -3,13 +3,11 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import Pkg
-Pkg.pkg"add Documenter#2fabe9c3bd40b6288c3d86d96c6031728b2d92ad"
-
 import Documenter
 import Downloads
 import Literate
 import MathOptInterface
+import Pkg
 import Test
 import TOML
 
@@ -555,7 +553,19 @@ write(joinpath(@__DIR__, "src", "JuMP.pdf"), "")
         assets = ["assets/extra_styles.css"],
         sidebar_sitename = false,
         # Do no check for large pages.
-        size_threshold = nothing,
+        size_threshold_ignore = [
+            "changelog.md",
+            "release_notes.md",
+            "api/JuMP.md",
+            "tutorials/getting_started/getting_started_with_data_and_plotting.md",
+            "moi/changelog.md",
+            "moi/release_notes.md",
+            "moi/reference/models.md",
+            "moi/reference/standard_form.md",
+            "moi/submodules/Bridges/list_of_bridges.md",
+            "moi/submodules/Bridges/reference.md",
+            "moi/submodules/Utilities/reference.md",
+        ],
     ),
     modules = [JuMP, MOI],
     checkdocs = :none,
