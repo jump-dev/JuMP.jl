@@ -940,7 +940,7 @@ function test_add_to_expression!()
             expr += *(args...)
             # or
             import MutableArithmetics as MA
-            expr = MA.operate!!(MA.add_mul, expr, args...)
+            expr = MA.add_mul!!(expr, args...)
             ```
             """,
         ),
