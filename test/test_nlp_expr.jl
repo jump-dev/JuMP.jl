@@ -934,7 +934,7 @@ function test_add_to_expression!()
         ErrorException(
             """
             `add_to_expression!` is not supported for expressions of type
-            `$(typeof(f))` because they cannot be modified in-place.
+            `$(typeof(y))` because they cannot be modified in-place.
             Instead of `add_to_expression!(expr, args..)`, use one of the following:
             ```julia
             expr += *(args...)
