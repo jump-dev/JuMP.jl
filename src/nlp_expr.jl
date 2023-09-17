@@ -1147,9 +1147,16 @@ end
 
 function add_to_expression!(f::GenericNonlinearExpr, args...)
     return error(
-        "`add_to_expression!` is not supported for expressions of type " *
-        "`$(typeof(f))` because they cannot be modified in-place. " *
-        "Instead of `add_to_expression!(expr, args..)`, use " *
-        "`expr += *(args...)`.",
+        """
+        `add_to_expression!` is not supported for expressions of type
+        `$(typeof(f))` because they cannot be modified in-place.
+        Instead of `add_to_expression!(expr, args..)`, use one of the following:
+        ```julia
+        expr += *(args...)
+        # or
+        import MutableArithmetics as MA
+        expr = MA.operate!!(MA.add_mul, expr, args...)
+        ```
+        """,
     )
 end
