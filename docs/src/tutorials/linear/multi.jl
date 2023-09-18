@@ -58,9 +58,16 @@ const DBInterface = SQLite.DBInterface
 # ## Data
 
 # For the purpose of this tutorial, the JuMP repository contains an example
-# database called `multi.sqlite`:
+# database called `multi.sqlite`.
 
-db = SQLite.DB(joinpath(@__DIR__, "multi.sqlite"))
+filename = joinpath(@__DIR__, "multi.sqlite");
+
+# To run locally, download [`multi.sqlite`](multi.sqlite) and update `filename`
+# appropriately.
+
+# Load the database using `SQLite.DB`:
+
+db = SQLite.DB(filename)
 
 # A quick way to see the schema of the database is via `SQLite.tables`:
 

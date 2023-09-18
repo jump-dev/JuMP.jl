@@ -170,18 +170,23 @@ solve_knapsack_2(data)
 # to hard-code the data into Julia. A good next step is to separate the data
 # into an external file format; JSON is a common choice.
 
-# The JuMP repository [has a file](https://github.com/jump-dev/JuMP.jl/blob/master/docs/src/tutorials/getting_started/data/knapsack.json)
-# we're going to use for this tutorial. To run this tutorial locally, download
-# the file and then update `data_filename` as appropriate.
-
-# To build this version of the JuMP documentation, we needed to set the
-# filename:
-
-data_filename = joinpath(@__DIR__, "data", "knapsack.json");
-
-# `knapsack.json` has the following contents:
-
-println(read(data_filename, String))
+json_data = """
+{
+    "objects": {
+        "apple": {"profit": 5.0, "weight": 2.0},
+        "banana": {"profit": 3.0, "weight": 8.0},
+        "cherry": {"profit": 2.0, "weight": 4.0},
+        "date": {"profit": 7.0, "weight": 2.0},
+        "eggplant": {"profit": 4.0, "weight": 5.0}
+    },
+    "capacity": 10.0
+}
+"""
+temp_dir = mktempdir()
+knapsack_json_filename = joinpath(temp_dir, "knapsack.json")
+## Instead of writing a new file here you could replace `knapsack_json_filename`
+## with the path to a local file.
+write(knapsack_json_filename, json_data);
 
 # Now let's write a function that reads this file and builds a `KnapsackData`
 # object:
@@ -199,7 +204,7 @@ function read_data(filename)
     )
 end
 
-data = read_data(data_filename)
+data = read_data(knapsack_json_filename)
 
 # ## Add options via if-else
 
@@ -394,8 +399,11 @@ function solve_knapsack_6(
     return solve_knapsack_6(optimizer, read_data(data), config)
 end
 
-solution =
-    solve_knapsack_6(HiGHS.Optimizer, data_filename, BinaryKnapsackConfig())
+solution = solve_knapsack_6(
+    HiGHS.Optimizer,
+    knapsack_json_filename,
+    BinaryKnapsackConfig(),
+)
 
 # ## Create a module
 
@@ -521,7 +529,7 @@ end
 """
     solve_knapsack(
         optimizer,
-        data_filename::String,
+        knapsack_json_filename::String,
         config::_AbstractConfiguration,
     )
 
@@ -531,7 +539,7 @@ Solve the knapsack problem and return the optimal primal solution
 
  * `optimizer` : an object that can be passed to `JuMP.Model` to construct a new
    JuMP model.
- * `data_filename` : the filename of a JSON file containing the data for the
+ * `knapsack_json_filename` : the filename of a JSON file containing the data for the
    problem.
  * `config` : an object to control the type of knapsack model constructed.
    Valid options are:
@@ -565,10 +573,11 @@ solution = solve_knapsack(
 """
 function solve_knapsack(
     optimizer,
-    data_filename::String,
+    knapsack_json_filename::String,
     config::_AbstractConfiguration,
 )
-    return _solve_knapsack(optimizer, _read_data(data_filename), config)
+    data = _read_data(knapsack_json_filename)
+    return _solve_knapsack(optimizer, data, config)
 end
 
 end
@@ -579,7 +588,7 @@ import .KnapsackModel
 
 KnapsackModel.solve_knapsack(
     HiGHS.Optimizer,
-    joinpath(@__DIR__, "data", "knapsack.json"),
+    knapsack_json_filename,
     KnapsackModel.BinaryKnapsackConfig(),
 )
 
@@ -605,7 +614,7 @@ using Test
     @testset "feasible_binary_knapsack" begin
         x = KnapsackModel.solve_knapsack(
             HiGHS.Optimizer,
-            joinpath(@__DIR__, "data", "knapsack.json"),
+            knapsack_json_filename,
             KnapsackModel.BinaryKnapsackConfig(),
         )
         @test isapprox(x["apple"], 1, atol = 1e-5)
@@ -617,7 +626,7 @@ using Test
     @testset "feasible_integer_knapsack" begin
         x = KnapsackModel.solve_knapsack(
             HiGHS.Optimizer,
-            joinpath(@__DIR__, "data", "knapsack.json"),
+            knapsack_json_filename,
             KnapsackModel.IntegerKnapsackConfig(),
         )
         @test isapprox(x["apple"], 0, atol = 1e-5)
@@ -627,10 +636,24 @@ using Test
         @test isapprox(x["eggplant"], 0, atol = 1e-5)
     end
     @testset "infeasible_binary_knapsack" begin
+        dir = mktempdir()
+        infeasible_filename = joinpath(dir, "infeasible.json")
+        write(
+            infeasible_filename,
+            """{
+                "objects": {
+                    "apple": {"profit": 5.0, "weight": 2.0},
+                    "banana": {"profit": 3.0, "weight": 8.0},
+                    "cherry": {"profit": 2.0, "weight": 4.0},
+                    "date": {"profit": 7.0, "weight": 2.0},
+                    "eggplant": {"profit": 4.0, "weight": 5.0}
+                },
+                "capacity": -10.0
+            }""",
+        )
         x = KnapsackModel.solve_knapsack(
             HiGHS.Optimizer,
-            ## This file contains data that makes the problem infeasible.
-            joinpath(@__DIR__, "data", "knapsack_infeasible.json"),
+            infeasible_filename,
             KnapsackModel.BinaryKnapsackConfig(),
         )
         @test x === nothing

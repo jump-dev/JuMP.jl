@@ -237,7 +237,7 @@ set_silent(model)
 optimize!(model)
 solution_summary(model)
 
-# This solution requires 421 rolls. This solution is sub-optimmal because the
+# This solution requires 421 rolls. This solution is sub-optimal because the
 # model does not contain the full set of possible patterns.
 
 # How do we find a new column that leads to an improved solution?

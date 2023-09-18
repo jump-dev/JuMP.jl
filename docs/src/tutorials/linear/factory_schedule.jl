@@ -86,14 +86,14 @@ import Test  #src
 # production and cost levels for each month. For the documentation, the file is
 # located at:
 
-factories_filename = joinpath(@__DIR__, "factory_schedule_factories.txt")
+factories_filename = joinpath(@__DIR__, "factory_schedule_factories.txt");
 
-# and it has the following contents:
+# To run locally, download [`factory_schedule_factories.txt`](factory_schedule_factories.txt)
+# and update `factories_filename` appropriately.
+
+# The file has the following contents:
 
 print(read(factories_filename, String))
-
-# You can reproduce this tutorial locally by saving the contents to a new file
-# and updating `factories_filename` appropriately.
 
 # We use the `CSV` and `DataFrames` packages to read it into Julia:
 
@@ -106,11 +106,10 @@ factory_df = CSV.read(
 
 # The second file contains the demand data by month:
 
-demand_filename = joinpath(@__DIR__, "factory_schedule_demand.txt")
+demand_filename = joinpath(@__DIR__, "factory_schedule_demand.txt");
 
-print(read(demand_filename, String))
-
-#-
+# To run locally, download [`factory_schedule_demand.txt`](factory_schedule_demand.txt)
+# and update `demand_filename` appropriately.
 
 demand_df = CSV.read(
     demand_filename,
