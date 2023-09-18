@@ -399,8 +399,11 @@ function solve_knapsack_6(
     return solve_knapsack_6(optimizer, read_data(data), config)
 end
 
-solution =
-    solve_knapsack_6(HiGHS.Optimizer, knapsack_json_filename, BinaryKnapsackConfig())
+solution = solve_knapsack_6(
+    HiGHS.Optimizer,
+    knapsack_json_filename,
+    BinaryKnapsackConfig(),
+)
 
 # ## Create a module
 
@@ -573,7 +576,8 @@ function solve_knapsack(
     knapsack_json_filename::String,
     config::_AbstractConfiguration,
 )
-    return _solve_knapsack(optimizer, _read_data(knapsack_json_filename), config)
+    data = _read_data(knapsack_json_filename)
+    return _solve_knapsack(optimizer, data, config)
 end
 
 end
