@@ -637,7 +637,7 @@ using Test
     end
     @testset "infeasible_binary_knapsack" begin
         dir = mktempdir()
-        infeasible_filename = joinpath(dir, "innfeasible.json")
+        infeasible_filename = joinpath(dir, "infeasible.json")
         write(
             infeasible_filename,
             """{
