@@ -34,7 +34,11 @@
 # Before we get started, we need this constant to point to where the data files
 # are.
 
-const DATA_DIR = joinpath(@__DIR__, "data")
+import JuMP
+const DATA_DIR = joinpath(
+    dirname(pathof(JuMP)),
+    joinpath("..", "docs", "src", "tutorials", "getting_started", "data"),
+);
 
 # ## Where to get help
 

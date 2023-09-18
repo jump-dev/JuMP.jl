@@ -56,7 +56,14 @@ import Test  #src
 # For the purpose of this tutorial, the JuMP repository contains an example
 # database called `commodity_nz.db`:
 
-db = SQLite.DB(joinpath(@__DIR__, "commodity_nz.db"))
+filename = joinpath(@__DIR__, "commodity_nz.db");
+
+# To run locally, download [`commodity_nz.db`](commodity_nz.db) and update
+# `filename` appropriately.
+
+# Load the database using `SQLite.DB`:
+
+db = SQLite.DB(filename)
 
 # A quick way to see the schema of the database is via `SQLite.tables`:
 
