@@ -55,12 +55,19 @@ julia> call
 ```
 """
 function _add_positional_args(call, args)
-    kw_args = filter(arg -> isexpr(arg, :kw), call.args)
-    filter!(arg -> !isexpr(arg, :kw), call.args)
-    for arg in args
-        push!(call.args, esc(arg))
+    call_args = call.args
+    if Meta.isexpr(call, :.)
+        # call is broadcasted
+        call_args = call.args[2].args
     end
-    append!(call.args, kw_args)
+    # Cache all keyword arguments
+    kw_args = filter(Base.Fix2(Meta.isexpr, :kw), call_args)
+    # Remove keyowrd arguments from the end
+    filter!(!Base.Fix2(Meta.isexpr, :kw), call_args)
+    # Add the new positional arguments
+    append!(call_args, esc.(args))
+    # Re-add the cached keyword arguments back to the end
+    append!(call_args, kw_args)
     return
 end
 
