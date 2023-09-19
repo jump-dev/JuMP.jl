@@ -2126,7 +2126,7 @@ function test_issue_3514()
     @variable(model, x[1:2])
     @constraint(model, b, 2x .<= 1, Issue3514Tag("a"))
     @test name.(b) == ["a[b]", "a[b]"]
-    @constraint(model, c, 2x .>= 1, [Issue3514Tag("d"),Issue3514Tag("e")])
+    @constraint(model, c, 2x .>= 1, [Issue3514Tag("d"), Issue3514Tag("e")])
     @test name.(c) == ["d[c]", "e[c]"]
     return
 end
