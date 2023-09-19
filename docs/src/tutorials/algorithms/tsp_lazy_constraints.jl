@@ -59,7 +59,7 @@ import Plots
 # The objective is to minimize the length of the tour (due to the assumed
 # symmetry, the second sum only contains $i<j$):
 # ```math
-# \text{min\ } \sum_{i \in V}  \sum_{j \in V, i < j} d_{ij} x_{ij}.
+# \text{min } \sum_{i \in V}  \sum_{j \in V, i < j} d_{ij} x_{ij}.
 # ```
 
 # Note that it is also possible to use the following objective function instead:
