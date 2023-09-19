@@ -170,6 +170,18 @@ function test_add_positional_args()
     call = :(f(1; a = 2))
     @test JuMP._add_positional_args(call, [:(MyObject)]) isa Nothing
     @test call == :(f(1, $(Expr(:escape, :MyObject)); a = 2))
+    call = :(f(1))
+    JuMP._add_positional_args(call, [2, 3])
+    @test call == :(f(1, $(esc(2)), $(esc(3))))
+    call = :(f.(1))
+    JuMP._add_positional_args(call, [2, 3])
+    @test call == :(f.(1, $(esc(2)), $(esc(3))))
+    call = :(f(1; a = 4))
+    JuMP._add_positional_args(call, [2, 3])
+    @test call == :(f(1, $(esc(2)), $(esc(3)); a = 4))
+    call = :(f.(1; a = 4))
+    JuMP._add_positional_args(call, [2, 3])
+    @test call == :(f.(1, $(esc(2)), $(esc(3)); a = 4))
     return
 end
 
@@ -2080,6 +2092,42 @@ function test_wrap_let_symbol_models()
         @expression(model, bad_expr[i = 1:0], x + i)
         @test bad_expr isa Vector{Any}
     end
+    return
+end
+
+struct Issue3514Tag
+    name::String
+end
+
+Base.broadcastable(x::Issue3514Tag) = Ref(x)
+
+struct Issue3514Type{S} <: AbstractConstraint
+    name::String
+    f::AffExpr
+    s::S
+end
+
+function JuMP.build_constraint(
+    _error::Function,
+    f::AffExpr,
+    set::MOI.AbstractScalarSet,
+    extra::Issue3514Tag,
+)
+    return Issue3514Type(extra.name, f, set)
+end
+
+function JuMP.add_constraint(model::Model, c::Issue3514Type, name::String)
+    data = ScalarConstraint(c.f, c.s)
+    return add_constraint(model, data, "$(c.name)[$(name)]")
+end
+
+function test_issue_3514()
+    model = Model()
+    @variable(model, x[1:2])
+    @constraint(model, b, 2x .<= 1, Issue3514Tag("a"))
+    @test name.(b) == ["a[b]", "a[b]"]
+    @constraint(model, c, 2x .>= 1, [Issue3514Tag("d"), Issue3514Tag("e")])
+    @test name.(c) == ["d[c]", "e[c]"]
     return
 end
 
