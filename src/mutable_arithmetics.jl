@@ -141,14 +141,14 @@ end
 # `scaling` to convert them back to numbers.
 function _MA.scaling(aff::GenericAffExpr{C}) where {C}
     if !isempty(aff.terms)
-        throw(InexactError("Cannot convert `$aff` to `$C`."))
+        throw(InexactError(Symbol("MutableArithmetics.scaling"), C, aff))
     end
     return _MA.scaling(aff.constant)
 end
 
 function _MA.scaling(quad::GenericQuadExpr{C}) where {C}
     if !isempty(quad.terms)
-        throw(InexactError("Cannot convert `$quad` to `$C`."))
+        throw(InexactError(Symbol("MutableArithmetics.scaling"), C, quad))
     end
     return _MA.scaling(quad.aff)
 end

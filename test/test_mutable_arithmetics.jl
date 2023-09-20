@@ -185,4 +185,12 @@ function test_extension_different_variables(
     return
 end
 
+function test_scaling_errors()
+    model = Model()
+    @variable(model, x)
+    @test_throws InexactError JuMP._MA.scaling(x + 1.0)
+    @test_throws InexactError JuMP._MA.scaling(x^2 + 1.0)
+    return
+end
+
 end
