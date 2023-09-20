@@ -584,7 +584,7 @@ end
 
 function jump_function(model::GenericModel, expr::MOI.Nonlinear.Expression)
     V = variable_ref_type(typeof(model))
-    nlp = nonlinear_model(model)
+    nlp = nonlinear_model(model)::MOI.Nonlinear.Model
     parsed = Vector{Any}(undef, length(expr.nodes))
     adj = MOI.Nonlinear.adjacency_matrix(expr.nodes)
     rowvals = SparseArrays.rowvals(adj)
