@@ -302,7 +302,7 @@ function Base.showerror(io::IO, err::VariableNotOwned)
         @objective(model2, Min, x)  # Errors because x belongs to `model`
         ```
 
-        The most common cause of this error is working with a main problem and a
+        One common cause of this error is working with a main problem and a
         subproblem.
 
         ```julia
