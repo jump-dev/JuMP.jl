@@ -1207,4 +1207,13 @@ function test_bridges_add_remove_coefficient_type()
     return
 end
 
+function test_show_variable_not_owned()
+    model = Model()
+    @variable(model, x)
+    err = VariableNotOwned(x)
+    contents = sprint(showerror, err)
+    @test occursin("## Explanation", contents)
+    return
+end
+
 end  # module TestModels

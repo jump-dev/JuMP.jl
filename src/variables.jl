@@ -283,6 +283,41 @@ struct VariableNotOwned{V<:AbstractVariableRef} <: Exception
     variable::V
 end
 
+function Base.showerror(io::IO, err::VariableNotOwned)
+    return print(
+        io,
+        """
+        $err: the variable $(err.variable) cannot be used in this model because
+        it belongs to a different model.
+
+        ## Explanation
+
+        Each variable belongs to a particular model. You cannot use a variable
+        inside a model to which it does not belong. For example:
+
+        ```julia
+        model = Model()
+        @variable(model, x >= 0)
+        model2 = Model()
+        @objective(model2, Min, x)  # Errors because x belongs to `model`
+        ```
+
+        One common cause of this error is working with a main problem and a
+        subproblem.
+
+        ```julia
+        model = Model()
+        @variable(model, x, Bin)
+        subproblem = Model()
+        @variable(subproblem, 0 <= x <= 1)
+        # The Julia binding `x` now refers to `subproblem[:x]`, not `model[:x]`
+        @objective(model, Min, x)  # Errors because x belongs to `subproblem`
+        # do instead
+        @objective(model, Min, model[:x])
+        ```""",
+    )
+end
+
 """
     check_belongs_to_model(func::AbstractJuMPScalar, model::AbstractModel)
 
