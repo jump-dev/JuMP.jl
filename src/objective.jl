@@ -118,8 +118,9 @@ function set_objective_function(model::GenericModel, func::MOI.AbstractFunction)
     MOI.set(model, attr, func)
     # Nonlinear objectives override regular objectives, so if there was a
     # nonlinear objective set, we must clear it.
-    if nonlinear_model(model) !== nothing
-        MOI.Nonlinear.set_objective(nonlinear_model(model), nothing)
+    nlp = nonlinear_model(model)
+    if nlp !== nothing
+        MOI.Nonlinear.set_objective(nlp, nothing)
     end
     return
 end

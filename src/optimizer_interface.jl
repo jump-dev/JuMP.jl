@@ -414,7 +414,8 @@ function optimize!(
 )
     # The nlp_model is not kept in sync, so re-set it here.
     # TODO: Consider how to handle incremental solves.
-    if nonlinear_model(model) !== nothing
+    nlp = nonlinear_model(model)
+    if nlp !== nothing
         if _uses_new_nonlinear_interface(model)
             error(
                 "Cannot optimize a model which contains the features from " *
@@ -424,7 +425,7 @@ function optimize!(
             )
         end
         evaluator = MOI.Nonlinear.Evaluator(
-            nonlinear_model(model),
+            nlp,
             _differentiation_backend,
             index.(all_variables(model)),
         )

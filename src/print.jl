@@ -399,7 +399,8 @@ function nonlinear_constraint_string(
     mode::MIME,
     c::MOI.Nonlinear.ConstraintIndex,
 )
-    constraint = nonlinear_model(model)[c]
+    nlp = nonlinear_model(model)::MOI.Nonlinear.Model
+    constraint = nlp[c]
     body = nonlinear_expr_string(model, mode, constraint.expression)
     lhs = _set_lhs(constraint.set)
     rhs = _set_rhs(constraint.set)
@@ -442,7 +443,8 @@ function nonlinear_expr_string(
     mode::MIME,
     c::MOI.Nonlinear.Expression,
 )
-    expr = MOI.Nonlinear.convert_to_expr(nonlinear_model(model), c)
+    nlp = nonlinear_model(model)::MOI.Nonlinear.Model
+    expr = MOI.Nonlinear.convert_to_expr(nlp, c)
     # Walk terms, and replace
     #    MOI.VariableIndex => VariableRef
     #    MOI.Nonlinear.ExpressionIndex => _NonlinearExpressionIO
@@ -588,7 +590,7 @@ function function_string(mode::MIME"text/latex", v::AbstractVariableRef)
     # Convert any x[args] to x_{args} so that indices on x print as subscripts.
     m = match(r"^(.*)\[(.+)\]$", var_name)
     if m !== nothing
-        var_name = m[1] * "_{" * m[2] * "}"
+        return string(m[1]::AbstractString, "_{", m[2]::AbstractString, "}")
     end
     return var_name
 end
@@ -655,7 +657,7 @@ function function_string(mode, q::GenericQuadExpr)
 end
 
 function function_string(mode, vector::Vector{<:AbstractJuMPScalar})
-    return "[" * join(function_string.(Ref(mode), vector), ", ") * "]"
+    return string("[", join(function_string.(Ref(mode), vector), ", "), "]")
 end
 
 function function_string(
@@ -702,7 +704,8 @@ function function_string(mode, constraint::AbstractConstraint)
 end
 
 function function_string(mode::MIME, p::NonlinearExpression)
-    expr = nonlinear_model(p.model)[index(p)]
+    nlp = nonlinear_model(p.model)::MOI.Nonlinear.Model
+    expr = nlp[index(p)]
     s = nonlinear_expr_string(p.model, mode, expr)
     return "subexpression[$(p.index)]: " * s
 end

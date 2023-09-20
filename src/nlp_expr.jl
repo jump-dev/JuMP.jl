@@ -577,7 +577,7 @@ end
 moi_function_type(::Type{<:GenericNonlinearExpr}) = MOI.ScalarNonlinearFunction
 
 function constraint_object(c::NonlinearConstraintRef)
-    nlp = nonlinear_model(c.model)
+    nlp = nonlinear_model(c.model)::MOI.Nonlinear.Model
     data = nlp.constraints[index(c)]
     return ScalarConstraint(jump_function(c.model, data.expression), data.set)
 end
