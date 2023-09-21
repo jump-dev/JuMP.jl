@@ -162,9 +162,9 @@ julia> set_nonlinear_objective(model, MIN_SENSE, :(\$(x) + \$(x)^2))
 ```
 """
 function set_nonlinear_objective(model::Model, sense::MOI.OptimizationSense, x)
-    _init_NLP(model)
     set_objective_sense(model, sense)
-    MOI.Nonlinear.set_objective(model.nlp_model, x)
+    nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
+    MOI.Nonlinear.set_objective(nlp, x)
     return
 end
 
@@ -178,7 +178,7 @@ function _nlp_objective_function(model::GenericModel)
     if model.nlp_model === nothing
         return nothing
     end
-    return model.nlp_model.objective
+    return something(model.nlp_model).objective
 end
 
 ###
@@ -213,8 +213,8 @@ end
 Add an anonymous parameter to the model.
 """
 function add_nonlinear_parameter(model::Model, value::Real)
-    _init_NLP(model)
-    p = MOI.Nonlinear.add_parameter(model.nlp_model, Float64(value))
+    nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
+    p = MOI.Nonlinear.add_parameter(nlp, Float64(value))
     return NonlinearParameter(model, p.value)
 end
 
@@ -243,7 +243,8 @@ julia> value(p)
 ```
 """
 function value(p::NonlinearParameter)
-    return p.model.nlp_model[MOI.Nonlinear.ParameterIndex(p.index)]
+    nlp = nonlinear_model(p.model; force = true)::MOI.Nonlinear.Model
+    return nlp[MOI.Nonlinear.ParameterIndex(p.index)]
 end
 
 """
@@ -267,7 +268,8 @@ julia> value(p)
 ```
 """
 function set_value(p::NonlinearParameter, value::Number)
-    p.model.nlp_model[MOI.Nonlinear.ParameterIndex(p.index)] = value
+    nlp = nonlinear_model(p.model; force = true)::MOI.Nonlinear.Model
+    nlp[MOI.Nonlinear.ParameterIndex(p.index)] = value
     return value
 end
 
@@ -328,8 +330,8 @@ subexpression[1]: x + x ^ 2.0
 ```
 """
 function add_nonlinear_expression(model::Model, ex)
-    _init_NLP(model)
-    index = MOI.Nonlinear.add_expression(model.nlp_model, ex)
+    nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
+    index = MOI.Nonlinear.add_expression(nlp, ex)
     return NonlinearExpression(model, index.value)
 end
 
@@ -379,9 +381,10 @@ end
 Evaluate `ex` using `var_value(v)` as the value for each variable `v`.
 """
 function value(var_value::Function, ex::NonlinearExpression)
+    nlp = nonlinear_model(ex.model; force = true)::MOI.Nonlinear.Model
     return MOI.Nonlinear.evaluate(
         _VariableValueMap(ex.model, var_value),
-        ex.model.nlp_model,
+        nlp,
         MOI.Nonlinear.ExpressionIndex(ex.index),
     )
 end
@@ -461,9 +464,9 @@ julia> add_nonlinear_constraint(model, :(\$(x) + \$(x)^2 <= 1))
 ```
 """
 function add_nonlinear_constraint(model::Model, ex::Expr)
-    _init_NLP(model)
+    nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
     f, set = _expr_to_constraint(ex)
-    c = MOI.Nonlinear.add_constraint(model.nlp_model, f, set)
+    c = MOI.Nonlinear.add_constraint(nlp, f, set)
     return ConstraintRef(model, c, ScalarShape())
 end
 
@@ -476,9 +479,9 @@ function is_valid(model::Model, c::NonlinearConstraintRef)
     if model !== c.model
         return false
     end
-    _init_NLP(model)
+    nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
     index = MOI.Nonlinear.ConstraintIndex(c.index.value)
-    return MOI.is_valid(model.nlp_model, index)
+    return MOI.is_valid(nlp, index)
 end
 
 """
@@ -487,9 +490,9 @@ end
 Delete the nonlinear constraint `c` from `model`.
 """
 function delete(model::Model, c::NonlinearConstraintRef)
-    _init_NLP(model)
+    nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
     index = MOI.Nonlinear.ConstraintIndex(c.index.value)
-    MOI.Nonlinear.delete(model.nlp_model, index)
+    MOI.Nonlinear.delete(nlp, index)
     return
 end
 
@@ -544,10 +547,11 @@ Evaluate `c` using `var_value(v)` as the value for each variable `v`.
 """
 function value(var_value::Function, c::NonlinearConstraintRef)
     index = MOI.Nonlinear.ConstraintIndex(c.index.value)
+    nlp = nonlinear_model(c.model; force = true)::MOI.Nonlinear.Model
     return MOI.Nonlinear.evaluate(
         _VariableValueMap(c.model, var_value),
-        c.model.nlp_model,
-        c.model.nlp_model[index].expression,
+        nlp,
+        nlp[index].expression,
     )
 end
 
@@ -712,8 +716,8 @@ function register(
     if autodiff == false
         error("If only the function is provided, must set autodiff=true")
     end
-    _init_NLP(model)
-    MOI.Nonlinear.register_operator(model.nlp_model, op, dimension, f)
+    nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
+    MOI.Nonlinear.register_operator(nlp, op, dimension, f)
     return
 end
 
@@ -796,19 +800,19 @@ function register(
     ∇f::Function;
     autodiff::Bool = false,
 )
-    _init_NLP(model)
+    nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
     if dimension == 1
         if autodiff == false
             error(
                 "Currently must provide 2nd order derivatives of univariate functions. Try setting autodiff=true.",
             )
         end
-        MOI.Nonlinear.register_operator(model.nlp_model, op, dimension, f, ∇f)
+        MOI.Nonlinear.register_operator(nlp, op, dimension, f, ∇f)
     else
         if autodiff == true
             @warn("autodiff = true ignored since gradient is already provided.")
         end
-        MOI.Nonlinear.register_operator(model.nlp_model, op, dimension, f, ∇f)
+        MOI.Nonlinear.register_operator(nlp, op, dimension, f, ∇f)
     end
     return
 end
@@ -869,8 +873,8 @@ function register(
     ∇f::Function,
     ∇²f::Function,
 )
-    _init_NLP(model)
-    MOI.Nonlinear.register_operator(model.nlp_model, op, dimension, f, ∇f, ∇²f)
+    nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
+    MOI.Nonlinear.register_operator(nlp, op, dimension, f, ∇f, ∇²f)
     return
 end
 
@@ -898,9 +902,9 @@ function NLPEvaluator(
     model::Model;
     _differentiation_backend::MOI.Nonlinear.AbstractAutomaticDifferentiation = MOI.Nonlinear.SparseReverseMode(),
 )
-    _init_NLP(model)
+    nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
     return MOI.Nonlinear.Evaluator(
-        model.nlp_model,
+        nlp,
         _differentiation_backend,
         index.(all_variables(model)),
     )

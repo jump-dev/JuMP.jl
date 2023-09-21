@@ -577,14 +577,14 @@ end
 moi_function_type(::Type{<:GenericNonlinearExpr}) = MOI.ScalarNonlinearFunction
 
 function constraint_object(c::NonlinearConstraintRef)
-    nlp = nonlinear_model(c.model)
+    nlp = nonlinear_model(c.model)::MOI.Nonlinear.Model
     data = nlp.constraints[index(c)]
     return ScalarConstraint(jump_function(c.model, data.expression), data.set)
 end
 
 function jump_function(model::GenericModel, expr::MOI.Nonlinear.Expression)
     V = variable_ref_type(typeof(model))
-    nlp = nonlinear_model(model)
+    nlp = nonlinear_model(model)::MOI.Nonlinear.Model
     parsed = Vector{Any}(undef, length(expr.nodes))
     adj = MOI.Nonlinear.adjacency_matrix(expr.nodes)
     rowvals = SparseArrays.rowvals(adj)

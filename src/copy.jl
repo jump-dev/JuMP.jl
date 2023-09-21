@@ -323,11 +323,12 @@ function Base.deepcopy(::GenericModel)
 end
 
 function MOI.copy_to(dest::MOI.ModelLike, src::GenericModel)
-    if nonlinear_model(src) !== nothing
+    nlp = nonlinear_model(src)
+    if nlp !== nothing
         # Re-set the NLP block in-case things have changed since last
         # solve.
         evaluator = MOI.Nonlinear.Evaluator(
-            nonlinear_model(src),
+            nlp,
             MOI.Nonlinear.SparseReverseMode(),
             index.(all_variables(src)),
         )
