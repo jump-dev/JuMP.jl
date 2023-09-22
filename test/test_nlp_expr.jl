@@ -954,6 +954,9 @@ function test_operator_min()
     @variable(model, x)
     @test isequal_canonical(min(x, 1), NonlinearExpr(:min, Any[x, 1.0]))
     @test isequal_canonical(min(1, x, x^2), min(min(1.0, x), x^2))
+    for f in (x, 1.0 * x + 2.0, x^2, sin(x))
+        @test min(f) === f
+    end
     return
 end
 
@@ -962,6 +965,10 @@ function test_operator_max()
     @variable(model, x)
     @test isequal_canonical(max(x, 1), NonlinearExpr(:max, Any[x, 1.0]))
     @test isequal_canonical(max(1, x, x^2), max(max(1.0, x), x^2))
+    for f in (x, 1.0 * x + 2.0, x^2, sin(x))
+        @test max(f) === f
+    end
+
     return
 end
 
