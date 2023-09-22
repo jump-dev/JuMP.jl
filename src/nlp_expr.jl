@@ -383,6 +383,11 @@ for f in (:+, :-, :*, :^, :/, :atan, :min, :max)
     end
 end
 
+# Base has unary methods `min(x::Real) = x` and `max(x::Real) = x`, so I guess
+# we need to replicate them.
+Base.min(x::AbstractJuMPScalar) = x
+Base.max(x::AbstractJuMPScalar) = x
+
 function _MA.operate!!(
     ::typeof(_MA.add_mul),
     x::GenericNonlinearExpr,
