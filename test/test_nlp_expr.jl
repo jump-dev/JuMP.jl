@@ -968,7 +968,6 @@ function test_operator_max()
     for f in (x, 1.0 * x + 2.0, x^2, sin(x))
         @test max(f) === f
     end
-
     return
 end
 
