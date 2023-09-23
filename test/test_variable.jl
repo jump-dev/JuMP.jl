@@ -1537,7 +1537,7 @@ function test_missing_variable_constraint_errors()
 end
 
 function test_parameter_arrays()
-    model = Model();
+    model = Model()
     @variable(model, x1[1:2, 1:2] in Parameter(0.0))
     @test all(is_parameter.(x1))
     @test parameter_value.(x1) == [0.0 0.0; 0.0 0.0]
