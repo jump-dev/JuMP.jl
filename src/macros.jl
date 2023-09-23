@@ -1199,14 +1199,9 @@ end
 
 function model_convert(
     model::AbstractModel,
-    x::AbstractVector{<:VariableConstrainedOnCreation},
+    x::AbstractArray{<:VariableConstrainedOnCreation},
 )
-    return map(x) do xi
-        return VariableConstrainedOnCreation(
-            xi.scalar_variable,
-            model_convert(model, xi.set),
-        )
-    end
+    return model_convert.(model, x)
 end
 
 # TODO: update 3-argument @constraint macro to pass through names like @variable

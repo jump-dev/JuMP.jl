@@ -273,6 +273,14 @@ function build_variable(
     return build_variable.(_error, variables, sets)
 end
 
+function build_variable(
+    _error::Function,
+    variables::AbstractArray{<:AbstractVariable},
+    set::AbstractScalarSet,
+)
+    return build_variable.(_error, variables, Ref(set))
+end
+
 function build_constraint(
     _error::Function,
     func::AbstractJuMPScalar,
