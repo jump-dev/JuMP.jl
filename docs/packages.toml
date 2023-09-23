@@ -61,7 +61,7 @@
 [KNITRO]
     rev = "4c56de7684c42dd3c83c5fbc515ae1f424eed524"
 [MiniZinc]
-    rev = "v0.3.0"
+    rev = "v0.3.2"
 [MosekTools]
     rev = "v0.15.1"
 [MultiObjectiveAlgorithms]
