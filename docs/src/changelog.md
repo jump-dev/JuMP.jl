@@ -11,11 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
- - Fixed support for unary `min` and `max` operators (#3522)
+ - Fixed support for single argument `min` and `max` operators (#3522)
  - Fixed error message for [`add_to_expression!`](@ref) when called with a
    [`GenericNonlinearExpr`](@ref) (#3506)
  - Fixed constraint tags with broadcasted constraints (#3515)
  - Fixed MethodError in `MA.scaling` (#3518)
+ - Fixed support for arrays of [`Parameter`](@ref) variables (#3524)
 
 ### Other
 
