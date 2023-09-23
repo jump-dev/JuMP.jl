@@ -1536,4 +1536,23 @@ function test_missing_variable_constraint_errors()
     return
 end
 
+function test_parameter_arrays()
+    model = Model()
+    @variable(model, x1[1:2, 1:2] in Parameter(0.0))
+    @test all(is_parameter.(x1))
+    @test parameter_value.(x1) == [0.0 0.0; 0.0 0.0]
+    @variable(model, x2[i = 1:2, j = 1:2] in Parameter(i + j))
+    @test all(is_parameter.(x2))
+    @test parameter_value.(x2) == [2.0 3.0; 3.0 4.0]
+    @variable(model, x3[i = 1:2, j = [:A, :B]] in Parameter(i))
+    @test all(is_parameter.(x3))
+    @test parameter_value.(x3) ==
+          Containers.@container([i = 1:2, j = [:A, :B]], 1.0 * i)
+    @variable(model, x4[i = 1:2, j = i:2] in Parameter(i + j))
+    @test all(is_parameter.(x4))
+    @test parameter_value.(x4) ==
+          Containers.@container([i = 1:2, j = i:2], 1.0 * i + j)
+    return
+end
+
 end  # module TestVariable
