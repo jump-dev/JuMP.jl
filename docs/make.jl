@@ -541,6 +541,12 @@ Documenter.DocMeta.setdocmeta!(
 # link checking. Inn production we replace this by running the LaTeX build.
 write(joinpath(@__DIR__, "src", "JuMP.pdf"), "")
 
+# Create remotes for Documenter
+status = sprint(io -> Pkg.status("MathOptInterface"; io = io))
+version = match(r"(v[0-9].[0-9]+.[0-9]+)", status)[1]
+gh_moi = Documenter.Remotes.GitHub("jump-dev", "MathOptInterface.jl")
+remotes = Dict(pkgdir(MOI) => (gh_moi, version))
+
 @time Documenter.makedocs(
     sitename = "JuMP",
     authors = "The JuMP core developers and contributors",
@@ -572,10 +578,7 @@ write(joinpath(@__DIR__, "src", "JuMP.pdf"), "")
     # Skip doctests if --fast provided.
     doctest = _FIX ? :fix : !_FAST,
     pages = vcat(_PAGES, "release_notes.md"),
-    remotes = Dict(
-        dirname(dirname(pathof(MOI))) =>
-            Documenter.Remotes.GitHub("jump-dev", "MathOptInterface.jl"),
-    ),
+    remotes = remotes,
 )
 
 # ==============================================================================
