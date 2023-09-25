@@ -7,6 +7,25 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.15.1 (September 24, 2023)
+
+### Fixed
+
+ - Fixed support for single argument `min` and `max` operators (#3522)
+ - Fixed error message for [`add_to_expression!`](@ref) when called with a
+   [`GenericNonlinearExpr`](@ref) (#3506)
+ - Fixed constraint tags with broadcasted constraints (#3515)
+ - Fixed MethodError in `MA.scaling` (#3518)
+ - Fixed support for arrays of [`Parameter`](@ref) variables (#3524)
+
+### Other
+
+ - Updated to Documenter@1 (#3501)
+ - Fixed links to data in tutorials (#3512)
+ - Fixed typo in TSP tutorial (#3516)
+ - Improved error message for [`VariableNotOwned`](@ref) errors (#3520)
+ - Fixed various JET errors (#3519)
+
 ## Version 1.15.0 (September 15, 2023)
 
 This is a large minor release because it adds an entirely new data structure and
