@@ -200,11 +200,11 @@ julia> model = Model(); @variable(model, x);
 
 julia> function JuMP.parse_constraint_head(
            _error::Function,
-           ::Val{:(:=)},
+           ::Val{:≡},
            lhs,
            rhs,
        )
-           println("Rewriting := as ==")
+           println("Rewriting ≡ as ==")
            new_lhs, parse_code = MutableArithmetics.rewrite(lhs)
            build_code = :(
                build_constraint($(_error), $(new_lhs), MOI.EqualTo($(rhs)))
@@ -212,8 +212,8 @@ julia> function JuMP.parse_constraint_head(
            return false, parse_code, build_code
        end
 
-julia> @constraint(model, x + x := 1.0)
-Rewriting := as ==
+julia> @constraint(model, x + x ≡ 1.0)
+Rewriting ≡ as ==
 2 x = 1
 ```
 

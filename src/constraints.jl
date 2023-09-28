@@ -1542,3 +1542,31 @@ function relax_with_penalty!(
 ) where {T}
     return relax_with_penalty!(model, Dict(); default = default)
 end
+
+
+function parse_constraint_head(
+    error_fn::Function,
+    ::Val{:(:=)},
+    lhs,
+    rhs,
+)
+    new_lhs, parse_code_lhs = _rewrite_expression(lhs)
+    new_rhs, parse_code_rhs = _rewrite_expression(rhs)
+    parse_code = quote
+        $parse_code_lhs
+        $parse_code_rhs
+    end
+    build_code = quote
+        if $new_rhs isa Bool
+            ScalarConstraint($new_lhs, MOI.EqualTo($new_rhs))
+        elseif $new_lhs isa Bool
+            ScalarConstraint($new_rhs, MOI.EqualTo($new_lhs))
+        else
+            ScalarConstraint(
+                op_equal_to($new_lhs, $new_rhs),
+                MOI.EqualTo(true),
+            )
+        end
+    end
+    return false, parse_code, build_code
+end
