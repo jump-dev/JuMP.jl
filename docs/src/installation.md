@@ -126,6 +126,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl)                          |                                                                                  |        | MIT      | (MI)SOCP, (MI)NLP         |
 | [Loraine.jl](https://github.com/kocvara/Loraine.jl)                            |                                                                                  |        | MIT      | LP, SDP                   |
 | [MadNLP.jl](https://github.com/sshin23/MadNLP.jl)                              |                                                                                  |        | MIT      | LP, QP, NLP               |
+| [MiniZinc](https://www.minizinc.org/)                                          | [MiniZinc.jl](https://github.com/jump-dev/MiniZinc.jl)                           | Manual | MPL-2    | CP-SAT                    |
 | [MOSEK](https://www.mosek.com/)                                                | [MosekTools.jl](https://github.com/jump-dev/MosekTools.jl)                       | Manual | Comm.    | (MI)LP, (MI)SOCP, SDP     |
 | [NLopt](https://github.com/stevengj/nlopt)                                     | [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)                                 |        | GPL      | LP, QP, NLP               |
 | [Octeract](https://octeract.gg)                                                | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | Comm.    | (MI)NLP                   |
@@ -154,6 +155,7 @@ Where:
 - NLP = Nonlinear programming
 - SDP = Semidefinite programming
 - (MI)XXX = Mixed-integer equivalent of problem type `XXX`
+- CP-SAT = Constraint programming and Boolean satisfiability
 
 !!! note
     Developed a solver or solver wrapper? This table is open for new
