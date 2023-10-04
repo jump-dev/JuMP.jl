@@ -249,7 +249,7 @@ isapprox(1e-9, 0.0; atol = 1e-8)
 # It's important to note that this issue isn't Julia-specific. It happens in
 # every programming language (try it out in Python).
 
-# ## Vectors, matrices and arrays
+# ## Vectors, matrices, and arrays
 
 # Similar to MATLAB, Julia has native support for vectors, matrices and tensors;
 # all of which are represented by arrays of different dimensions. Vectors are
