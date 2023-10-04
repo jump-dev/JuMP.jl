@@ -626,7 +626,7 @@ end                         #hide
 # the opening `(`. This works for _any_ function, including functions with
 # multiple arguments. For example:
 
-f.([1, 2, 3])
+foo.([1, 2, 3])
 
 # !!! tip
 #     Get a `MethodError` when calling a function that takes a `Vector`,
