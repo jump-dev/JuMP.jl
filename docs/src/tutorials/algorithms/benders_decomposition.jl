@@ -246,27 +246,20 @@ print(lazy_model)
 
 k = 0
 
-"""
-    my_callback(cb_data)
-
-A callback that implements Benders decomposition. Note how similar it is to the
-inner loop of the iterative method.
-"""
 function my_callback(cb_data)
-    global k += 1
-    x_k = callback_value.(cb_data, x)
-    θ_k = callback_value(cb_data, θ)
-    lower_bound = c_1' * x_k + θ_k
-    ret = solve_subproblem(x_k)
-    upper_bound = c_1' * x_k + c_2' * ret.y
-    gap = (upper_bound - lower_bound) / upper_bound
-    print_iteration(k, lower_bound, upper_bound, gap)
-    if gap < ABSOLUTE_OPTIMALITY_GAP
-        println("Terminating with the optimal solution")
+    status = callback_node_status(cb_data, lazy_model)
+    if status != MOI.CALLBACK_NODE_STATUS_INTEGER
+        ## Only add the constraint if `x` is an integer feasible solution
         return
     end
-    cut = @build_constraint(θ >= ret.obj + -ret.π' * A_1 * (x .- x_k))
-    MOI.submit(lazy_model, MOI.LazyConstraint(cb_data), cut)
+    x_k = callback_value.(cb_data, x)
+    θ_k = callback_value(cb_data, θ)
+    ret = solve_subproblem(x_k)
+    if θ_k < (ret.obj - 1e-6)
+        ## Only add the constraint if θ_k violates the constraint
+        cut = @build_constraint(θ >= ret.obj + -ret.π' * A_1 * (x .- x_k))
+        MOI.submit(lazy_model, MOI.LazyConstraint(cb_data), cut)
+    end
     return
 end
 
@@ -275,9 +268,6 @@ set_attribute(lazy_model, MOI.LazyConstraintCallback(), my_callback)
 # Now when we optimize!, our callback is run:
 
 optimize!(lazy_model)
-
-# Note how this problem also takes 4 iterations to converge, but the sequence
-# of bounds is different compared to the iterative method.
 
 # Finally, we can obtain the optimal solution:
 
