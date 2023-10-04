@@ -239,7 +239,7 @@ y_optimal = optimal_ret.y
 lazy_model = Model(GLPK.Optimizer)
 @variable(lazy_model, x[1:dim_x] >= 0, Int)
 @variable(lazy_model, θ >= M)
-@objective(lazy_model, Min, θ)
+@objective(lazy_model, Min, c_1' * x + θ)
 print(lazy_model)
 
 # What differs is that we write a callback function instead of a loop:
@@ -266,7 +266,7 @@ function my_callback(cb_data)
         return
     end
     cut = @build_constraint(θ >= ret.obj + -ret.π' * A_1 * (x .- x_k))
-    MOI.submit(model, MOI.LazyConstraint(cb_data), cut)
+    MOI.submit(lazy_model, MOI.LazyConstraint(cb_data), cut)
     return
 end
 
