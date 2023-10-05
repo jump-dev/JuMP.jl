@@ -253,7 +253,7 @@ function my_callback(cb_data)
     end
     x_k = callback_value.(cb_data, x)
     θ_k = callback_value(cb_data, θ)
-    number_of_subproblem_solves += 1
+    global number_of_subproblem_solves += 1
     ret = solve_subproblem(x_k)
     if θ_k < (ret.obj - 1e-6)
         ## Only add the constraint if θ_k violates the constraint
