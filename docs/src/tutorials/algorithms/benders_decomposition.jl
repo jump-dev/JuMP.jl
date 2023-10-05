@@ -244,8 +244,7 @@ print(lazy_model)
 
 # What differs is that we write a callback function instead of a loop:
 
-k = 0
-
+number_of_subproblem_solves = 0
 function my_callback(cb_data)
     status = callback_node_status(cb_data, lazy_model)
     if status != MOI.CALLBACK_NODE_STATUS_INTEGER
@@ -254,6 +253,7 @@ function my_callback(cb_data)
     end
     x_k = callback_value.(cb_data, x)
     θ_k = callback_value(cb_data, θ)
+    number_of_subproblem_solves += 1
     ret = solve_subproblem(x_k)
     if θ_k < (ret.obj - 1e-6)
         ## Only add the constraint if θ_k violates the constraint
@@ -268,6 +268,13 @@ set_attribute(lazy_model, MOI.LazyConstraintCallback(), my_callback)
 # Now when we optimize!, our callback is run:
 
 optimize!(lazy_model)
+
+# For this model, the callback algorithm required more solves of the subproblem:
+
+number_of_subproblem_solves
+
+# But for larger problem, you cann expect the callback algorithm to be more
+# efficient than the iterative algorithm.
 
 # Finally, we can obtain the optimal solution:
 
