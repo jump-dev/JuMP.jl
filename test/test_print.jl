@@ -503,7 +503,7 @@ function test_extension_printing_scalaraffinefunction_constraints(
     @test sprint(show, "text/latex", linear_ge) == "\$\$ x \\geq 1 \$\$"
     @test sprint(show, "text/latex", linear_eq) == "\$\$ x = 1 \$\$"
     @test sprint(show, "text/latex", linear_range) ==
-          "\$\$ x \\in \\[-1, 1\\] \$\$"
+          "\$\$ x \\in [-1, 1] \$\$"
     @test sprint(show, "text/latex", linear_noname) == "\$\$ x \\leq 1 \$\$"
     return
 end
@@ -960,6 +960,11 @@ function test_print_model_with_huge_integers()
     eq = JuMP._math_symbol(MIME("text/latex"), :eq)
     @test sprint(io -> show(io, MIME("text/latex"), c)) ==
           "\$\$ 1.0e20 x $eq 42 \$\$"
+    return
+end
+
+function test_print_text_latex_interval_set()
+    @test in_set_string(MIME("text/latex"), MOI.Interval(1, 2)) == "\\in [1, 2]"
     return
 end
 
