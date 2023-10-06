@@ -133,6 +133,7 @@ MATLAB
 MOI
 Mosek
 MOSEK
+Octeract
 Pajarito
 Pardiso
 PATHSolver
