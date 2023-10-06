@@ -2131,4 +2131,28 @@ function test_issue_3514()
     return
 end
 
+function test_macro_unicode_sum()
+    model = Model()
+    @variable(model, x[1:2])
+    @test isequal_canonical(@expression(model, ∑(x[i] for i in 1:2)), sum(x))
+    @test isequal_canonical(@expression(model, ∑(x)), sum(x))
+    return
+end
+
+function test_macro_unicode_sigma()
+    model = Model()
+    @variable(model, x[1:2])
+    @test isequal_canonical(@expression(model, Σ(x[i] for i in 1:2)), sum(x))
+    @test isequal_canonical(@expression(model, Σ(x)), sum(x))
+    return
+end
+
+function test_macro_unicode_prod()
+    model = Model()
+    @variable(model, x[1:2])
+    @test isequal_canonical(@expression(model, ∏(x[i] for i in 1:2)), prod(x))
+    @test isequal_canonical(@expression(model, ∏(x)), prod(x))
+    return
+end
+
 end  # module

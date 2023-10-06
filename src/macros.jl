@@ -684,6 +684,12 @@ function _rewrite_to_jump_logic(x)
             return Expr(:call, op_greater_than_or_equal_to, x.args[2:end]...)
         elseif x.args[1] == :(==)
             return Expr(:call, op_equal_to, x.args[2:end]...)
+        elseif x.args[1] == :Σ
+            return Expr(:call, sum, x.args[2:end]...)
+        elseif x.args[1] == :∑
+            return Expr(:call, sum, x.args[2:end]...)
+        elseif x.args[1] == :∏
+            return Expr(:call, prod, x.args[2:end]...)
         end
     elseif Meta.isexpr(x, :||)
         return Expr(:call, op_or, x.args...)
