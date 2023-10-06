@@ -502,8 +502,7 @@ function test_extension_printing_scalaraffinefunction_constraints(
     @test sprint(show, "text/latex", linear_le) == "\$\$ x \\leq 1 \$\$"
     @test sprint(show, "text/latex", linear_ge) == "\$\$ x \\geq 1 \$\$"
     @test sprint(show, "text/latex", linear_eq) == "\$\$ x = 1 \$\$"
-    @test sprint(show, "text/latex", linear_range) ==
-          "\$\$ x \\in [-1, 1] \$\$"
+    @test sprint(show, "text/latex", linear_range) == "\$\$ x \\in [-1, 1] \$\$"
     @test sprint(show, "text/latex", linear_noname) == "\$\$ x \\leq 1 \$\$"
     return
 end
