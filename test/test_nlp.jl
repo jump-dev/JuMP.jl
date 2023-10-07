@@ -1365,7 +1365,7 @@ function test_user_defined_function_checked_error_univariate_other_error()
     return
 end
 
-function test_user_defined_function_checked_error_univariate()
+function test_user_defined_function_checked_error_univariate_autodiff_fail()
     f(x) = (x - 1)^2
     function ∇f(x)
         if x >= 1

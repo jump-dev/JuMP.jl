@@ -1215,7 +1215,7 @@ function test_complex_variable()
     return
 end
 
-function test_complex_variable()
+function test_complex_variable_vector_of_variables()
     model = Model()
     @variable(model, x[1:2] in ComplexPlane())
     @test x[1] isa GenericAffExpr{ComplexF64,VariableRef}
