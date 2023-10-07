@@ -741,7 +741,7 @@ end
 
 function in_set_string(::MIME"text/latex", set::MOI.Interval)
     lower, upper = _string_round(set.lower), _string_round(set.upper)
-    return string("\\in \\[", lower, ", ", upper, "\\]")
+    return string("\\in [", lower, ", ", upper, "]")
 end
 
 function in_set_string(mode::MIME"text/plain", set::MOI.Interval)
