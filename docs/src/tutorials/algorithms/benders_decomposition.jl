@@ -273,7 +273,7 @@ optimize!(lazy_model)
 
 number_of_subproblem_solves
 
-# But for larger problem, you cann expect the callback algorithm to be more
+# But for larger problem, you can expect the callback algorithm to be more
 # efficient than the iterative algorithm.
 
 # Finally, we can obtain the optimal solution:
