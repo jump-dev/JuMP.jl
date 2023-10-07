@@ -119,7 +119,7 @@ function test_complex_vector_constraint()
     @test moi_set(con_obj) == MOI.Zeros(1)
 end
 
-function test_complex_vector_constraint()
+function test_complex_vector_constraint_quadratic()
     model = Model()
     @variable(model, x)
     con_ref = @constraint(model, [(1 + 2im) * x^2 + 1] in MOI.Zeros(1))
