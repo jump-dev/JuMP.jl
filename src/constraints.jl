@@ -1543,6 +1543,20 @@ function relax_with_penalty!(
     return relax_with_penalty!(model, Dict(); default = default)
 end
 
+struct _BooleanEqualTo end
+
+function build_constraint(::Function, lhs, rhs, ::_BooleanEqualTo)
+    return ScalarConstraint(op_equal_to(lhs, rhs), MOI.EqualTo(true))
+end
+
+function build_constraint(::Function, lhs::Bool, rhs, ::_BooleanEqualTo)
+    return ScalarConstraint(rhs, MOI.EqualTo(lhs))
+end
+
+function build_constraint(::Function, lhs, rhs::Bool, ::_BooleanEqualTo)
+    return ScalarConstraint(lhs, MOI.EqualTo(rhs))
+end
+
 function parse_constraint_head(error_fn::Function, ::Val{:(:=)}, lhs, rhs)
     new_lhs, parse_code_lhs = _rewrite_expression(lhs)
     new_rhs, parse_code_rhs = _rewrite_expression(rhs)
@@ -1551,13 +1565,7 @@ function parse_constraint_head(error_fn::Function, ::Val{:(:=)}, lhs, rhs)
         $parse_code_rhs
     end
     build_code = quote
-        if $new_rhs isa Bool
-            ScalarConstraint($new_lhs, MOI.EqualTo($new_rhs))
-        elseif $new_lhs isa Bool
-            ScalarConstraint($new_rhs, MOI.EqualTo($new_lhs))
-        else
-            ScalarConstraint(op_equal_to($new_lhs, $new_rhs), MOI.EqualTo(true))
-        end
+        build_constraint($error_fn, $new_lhs, $new_rhs, _BooleanEqualTo())
     end
     return false, parse_code, build_code
 end
