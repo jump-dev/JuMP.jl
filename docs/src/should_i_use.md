@@ -134,3 +134,13 @@ If you have stochastic input data, consider using a JuMP extension such as:
  * [InfiniteOpt.jl](https://github.com/infiniteopt/InfiniteOpt.jl)
  * [StochasticPrograms.jl](https://github.com/martinbiel/StochasticPrograms.jl)
  * [SDDP.jl](https://github.com/odow/SDDP.jl)
+
+### Polyhedral computations
+
+JuMP does not provide tools for working with the polyhedron formed by the set
+of linear constraints.
+
+Alternatives to consider are:
+
+ * [Polyhedra.jl](https://github.com/JuliaPolyhedra/Polyhedra.jl) (See the [documentation](https://juliapolyhedra.github.io/Polyhedra.jl/v0.7.6/optimization/#Creating-a-polyhedron-from-the-feasible-set-of-a-JuMP-model)
+   to create a polyhedron from a JuMP model.)
