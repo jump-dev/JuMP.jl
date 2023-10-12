@@ -1721,14 +1721,11 @@ function test_triangle_vec()
     return
 end
 
-function test_def_equal_to_operator()
-    model = GenericModel{Bool}()
+function _test_def_equal_to_operator_T(::Type{T}) where {T}
+    model = GenericModel{T}()
     @variable(model, x[1:3])
     # x[1] := x[2]
-    c = @constraint(model, x[1] := x[2])
-    o = constraint_object(c)
-    @test isequal_canonical(o.func, op_equal_to(x[1], x[2]))
-    @test o.set == MOI.EqualTo(true)
+    @test_throws ErrorException @constraint(model, x[1] := x[2])
     # x[1] == x[2] := false
     c = @constraint(model, x[1] == x[2] := false)
     o = constraint_object(c)
@@ -1752,48 +1749,17 @@ function test_def_equal_to_operator()
     @test o.set == MOI.EqualTo(y)
     # y := x[1] || x[2]
     y = true
-    c = @constraint(model, y := x[1] || x[2])
-    o = constraint_object(c)
-    @test isequal_canonical(o.func, op_or(x[1], x[2]))
-    @test o.set == MOI.EqualTo(y)
+    @test_throws ErrorException @constraint(model, y := x[1] || x[2])
     return
 end
 
 function test_def_equal_to_operator_float()
-    model = Model()
-    @variable(model, x[1:3])
-    # x[1] := x[2]
-    c = @constraint(model, x[1] := x[2])
-    o = constraint_object(c)
-    @test isequal_canonical(o.func, op_equal_to(x[1], x[2]))
-    @test o.set == MOI.EqualTo(true)
-    # x[1] == x[2] := false
-    c = @constraint(model, x[1] == x[2] := false)
-    o = constraint_object(c)
-    @test isequal_canonical(o.func, op_equal_to(x[1], x[2]))
-    @test o.set == MOI.EqualTo(false)
-    # x[1] && x[2] := false
-    c = @constraint(model, x[1] && x[2] := false)
-    o = constraint_object(c)
-    @test isequal_canonical(o.func, op_and(x[1], x[2]))
-    @test o.set == MOI.EqualTo(false)
-    # x[1] && x[2] := true
-    c = @constraint(model, x[1] && x[2] := true)
-    o = constraint_object(c)
-    @test isequal_canonical(o.func, op_and(x[1], x[2]))
-    @test o.set == MOI.EqualTo(true)
-    # x[1] || x[2] := y
-    y = true
-    c = @constraint(model, x[1] || x[2] := y)
-    o = constraint_object(c)
-    @test isequal_canonical(o.func, op_or(x[1], x[2]))
-    @test o.set == MOI.EqualTo(true)
-    # y := x[1] || x[2]
-    y = true
-    c = @constraint(model, y := x[1] || x[2])
-    o = constraint_object(c)
-    @test isequal_canonical(o.func, op_or(x[1], x[2]))
-    @test o.set == MOI.EqualTo(true)
+    _test_def_equal_to_operator_T(Float64)
+    return
+end
+
+function test_def_equal_to_operator_bool()
+    _test_def_equal_to_operator_T(Bool)
     return
 end
 
