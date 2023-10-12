@@ -1543,18 +1543,31 @@ function relax_with_penalty!(
     return relax_with_penalty!(model, Dict(); default = default)
 end
 
-struct _BooleanEqualTo end
-
-function build_constraint(::Function, lhs, rhs, ::_BooleanEqualTo)
-    return ScalarConstraint(op_equal_to(lhs, rhs), MOI.EqualTo(true))
+struct _DoNotConvertSet{S} <: MOI.AbstractScalarSet
+    set::S
 end
 
-function build_constraint(::Function, lhs::Bool, rhs, ::_BooleanEqualTo)
-    return ScalarConstraint(rhs, MOI.EqualTo(lhs))
+model_convert(::AbstractModel, set::_DoNotConvertSet) = set
+
+function moi_set(constraint::ScalarConstraint{F,<:_DoNotConvertSet}) where {F}
+    return constraint.set.set
 end
 
-function build_constraint(::Function, lhs, rhs::Bool, ::_BooleanEqualTo)
-    return ScalarConstraint(lhs, MOI.EqualTo(rhs))
+function _build_boolean_equal_to(::Function, lhs, rhs)
+    set = _DoNotConvertSet(MOI.EqualTo(true))
+    return ScalarConstraint(op_equal_to(lhs, rhs), set)
+end
+
+function _build_boolean_equal_to(::Function, lhs::Bool, rhs)
+    return ScalarConstraint(rhs, _DoNotConvertSet(MOI.EqualTo(lhs)))
+end
+
+function _build_boolean_equal_to(::Function, lhs, rhs::Bool)
+    return ScalarConstraint(lhs, _DoNotConvertSet(MOI.EqualTo(rhs)))
+end
+
+function _build_boolean_equal_to(error_fn::Function, lhs::Bool, rhs::Bool)
+    return error_fn("cannot add the trivial constraint `$lhs := $rhs`")
 end
 
 function parse_constraint_head(error_fn::Function, ::Val{:(:=)}, lhs, rhs)
@@ -1564,8 +1577,6 @@ function parse_constraint_head(error_fn::Function, ::Val{:(:=)}, lhs, rhs)
         $parse_code_lhs
         $parse_code_rhs
     end
-    build_code = quote
-        build_constraint($error_fn, $new_lhs, $new_rhs, _BooleanEqualTo())
-    end
+    build_code = :(_build_boolean_equal_to($error_fn, $new_lhs, $new_rhs))
     return false, parse_code, build_code
 end

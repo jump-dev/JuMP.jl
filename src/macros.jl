@@ -1160,10 +1160,6 @@ function model_convert(model::AbstractModel, set::MOI.AbstractScalarSet)
     return set
 end
 
-function model_convert(model::GenericModel{Bool}, set::MOI.EqualTo{Bool})
-    return set
-end
-
 function model_convert(model::AbstractModel, α::Number)
     T = value_type(typeof(model))
     V = variable_ref_type(model)
