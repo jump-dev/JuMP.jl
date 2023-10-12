@@ -1534,3 +1534,50 @@ julia> q = [5, 6]
 julia> @constraint(model, M * y + q ⟂ y)
 [y[1] + 2 y[2] + 5, 3 y[1] + 4 y[2] + 6, y[1], y[2]] ∈ MathOptInterface.Complements(4)
 ```
+
+## Boolean constraints
+
+Add a Boolean constraint (a [`MOI.EqualTo{Bool}`](@ref) set) using the `:=`
+operator with a `Bool` right-hand side term:
+
+```jldoctest
+julia> model = GenericModel{Bool}();
+
+julia> @variable(model, x[1:2]);
+
+julia> @constraint(model, x[1] || x[2] := true)
+x[1] || x[2] = true
+
+julia> @constraint(model, x[1] && x[2] := false)
+x[1] && x[2] = false
+
+julia> model
+A JuMP Model
+Feasibility problem with:
+Variables: 2
+`GenericNonlinearExpr{GenericVariableRef{Bool}}`-in-`MathOptInterface.EqualTo{Bool}`: 2 constraints
+Model mode: AUTOMATIC
+CachingOptimizer state: NO_OPTIMIZER
+Solver name: No optimizer attached.
+Names registered in the model: x
+```
+
+Boolean constraints should not be added using the `==` operator because JuMP
+will rewrite the constraint as `lhs - rhs = 0`, and because constraints like
+`a == b == c` require parentheses to diambiguate between `(a == b) == c` and
+`a == (b == c)`. In constrast, `a == b := c` is equivalent to `(a == b) := c`:
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> rhs = false
+false
+
+julia> @constraint(model, (x[1] == x[2]) == rhs)
+(x[1] == x[2]) - 0.0 = 0
+
+julia> @constraint(model, x[1] == x[2] := rhs)
+x[1] == x[2] = false
+```
