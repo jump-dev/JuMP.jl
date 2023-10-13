@@ -1564,8 +1564,8 @@ Names registered in the model: x
 
 Boolean constraints should not be added using the `==` operator because JuMP
 will rewrite the constraint as `lhs - rhs = 0`, and because constraints like
-`a == b == c` require parentheses to diambiguate between `(a == b) == c` and
-`a == (b == c)`. In constrast, `a == b := c` is equivalent to `(a == b) := c`:
+`a == b == c` require parentheses to disambiguate between `(a == b) == c` and
+`a == (b == c)`. In contrast, `a == b := c` is equivalent to `(a == b) := c`:
 
 ```jldoctest
 julia> model = Model();
