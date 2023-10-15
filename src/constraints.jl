@@ -1542,3 +1542,38 @@ function relax_with_penalty!(
 ) where {T}
     return relax_with_penalty!(model, Dict(); default = default)
 end
+
+struct _DoNotConvertSet{S} <: MOI.AbstractScalarSet
+    set::S
+end
+
+model_convert(::AbstractModel, set::_DoNotConvertSet) = set
+
+moi_set(c::ScalarConstraint{F,<:_DoNotConvertSet}) where {F} = c.set.set
+
+function _build_boolean_equal_to(::Function, lhs::AbstractJuMPScalar, rhs::Bool)
+    return ScalarConstraint(lhs, _DoNotConvertSet(MOI.EqualTo(rhs)))
+end
+
+function _build_boolean_equal_to(error_fn::Function, ::AbstractJuMPScalar, rhs)
+    return error_fn(
+        "cannot add the `:=` constraint. The right-hand side must be a `Bool`",
+    )
+end
+
+function _build_boolean_equal_to(error_fn::Function, lhs, ::Any)
+    return error_fn(
+        "cannot add the `:=` constraint with left-hand side of type `::$(typeof(lhs))`",
+    )
+end
+
+function parse_constraint_head(error_fn::Function, ::Val{:(:=)}, lhs, rhs)
+    new_lhs, parse_code_lhs = _rewrite_expression(lhs)
+    new_rhs, parse_code_rhs = _rewrite_expression(rhs)
+    parse_code = quote
+        $parse_code_lhs
+        $parse_code_rhs
+    end
+    build_code = :(_build_boolean_equal_to($error_fn, $new_lhs, $new_rhs))
+    return false, parse_code, build_code
+end
