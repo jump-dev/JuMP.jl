@@ -127,6 +127,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [Loraine.jl](https://github.com/kocvara/Loraine.jl)                            |                                                                                  |        | MIT      | LP, SDP                   |
 | [MadNLP.jl](https://github.com/sshin23/MadNLP.jl)                              |                                                                                  |        | MIT      | LP, QP, NLP               |
 | [MiniZinc](https://www.minizinc.org/)                                          | [MiniZinc.jl](https://github.com/jump-dev/MiniZinc.jl)                           | Manual | MPL-2    | CP-SAT                    |
+| [Minotaur](https://github.com/coin-or/minotaur)                                | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   | Manual | BSD-like | (MI)NLP                   |
 | [MOSEK](https://www.mosek.com/)                                                | [MosekTools.jl](https://github.com/jump-dev/MosekTools.jl)                       | Manual | Comm.    | (MI)LP, (MI)SOCP, SDP     |
 | [NLopt](https://github.com/stevengj/nlopt)                                     | [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)                                 |        | GPL      | LP, QP, NLP               |
 | [Octeract](https://octeract.gg)                                                | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | Comm.    | (MI)NLP                   |
