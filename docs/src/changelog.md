@@ -7,6 +7,25 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.16.0 (October 24, 2023)
+
+### Added
+
+ - Added `:=` operator for Boolean satisfiability problems (#3530)
+
+### Fixed
+
+ - Fixed `text/latex` printing of [`MOI.Interval`](@ref) sets (#3537)
+ - Fixed tests with duplicate function names (#3539)
+
+### Other
+
+ - Updated documentation list of supported solvers (#3527) (#3529) (#3538)
+   (#3542) (#3545) (#3546)
+ - Updated to Documenter@1.1 (#3528)
+ - Fixed various tutorials (#3534) (#3532)
+ - Fixed `Project.toml` compat bounds for standard libraries (#3544)
+
 ## Version 1.15.1 (September 24, 2023)
 
 ### Fixed
