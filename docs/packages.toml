@@ -51,17 +51,17 @@
 [ECOS]
     rev = "v1.1.1"
 [GLPK]
-    rev = "v1.1.2"
+    rev = "v1.1.3"
 [Gurobi]
-    rev = "v1.0.3"
+    rev = "v1.0.4"
 [HiGHS]
-    rev = "v1.6.0"
+    rev = "v1.7.4"
 [Ipopt]
-    rev = "v1.4.2"
+    rev = "v1.5.0"
 [KNITRO]
     rev = "4c56de7684c42dd3c83c5fbc515ae1f424eed524"
 [MiniZinc]
-    rev = "v0.3.2"
+    rev = "v0.3.4"
 [MosekTools]
     rev = "v0.15.1"
 [MultiObjectiveAlgorithms]
@@ -70,7 +70,7 @@
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
 [ParametricOptInterface]
-    rev = "1721e7b07bd1991238802a438ecb5af566d4b555"
+    rev = "v0.5.1"
     extension = true
 [Pavito]
     rev = "v0.3.7"
@@ -91,7 +91,7 @@
 [SeDuMi]
     rev = "v0.4.2"
 [SumOfSquares]
-    rev = "v0.7.1"
+    rev = "v0.7.3"
     extension = true
 [Xpress]
     rev = "v0.16.1"
@@ -100,7 +100,7 @@
 
 [Alpine]
     user = "lanl-ansi"
-    rev = "32757b2568acfe71257e41ed4122a120717a6460"
+    rev = "v0.5.5"
 [BilevelJuMP]
     user = "joaquimg"
     rev = "v0.6.2"
@@ -113,11 +113,11 @@
     rev = "9700752f849845bc8d8477928baf3df920daadd6"
 [Clarabel]
     user = "oxfordcontrol"
-    rev = "v0.5.1"
+    rev = "v0.6.0"
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.7"
+    rev = "v1.1.11"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.8"
@@ -136,7 +136,7 @@
     has_html = true
 [InfiniteOpt]
     user = "infiniteopt"
-    rev = "v0.5.7"
+    rev = "v0.5.8"
     filename = "docs/jump/README.md"
     extension = true
 [Juniper]
@@ -151,7 +151,7 @@
     has_html = true
 [NEOSServer]
     user = "odow"
-    rev = "v1.0.2"
+    rev = "v1.1.0"
 # [NLopt]                   # Hard-coded in the file docs/src/packages/NLopt.md
 #     user = "JuliaOpt"
 [OSQP]
@@ -162,7 +162,7 @@
     rev = "v1.6.1"
 [Plasmo]
     user = "plasmo-dev"
-    rev = "37f80fe96781dc647b3a5e0ed26b9eb0a994bc4a"
+    rev = "v0.5.4"
     has_html = true
     extension = true
 [ProxSDP]
@@ -174,7 +174,7 @@
     rev = "v0.11.14"
 [SDDP]
     user = "odow"
-    rev = "v1.6.3"
+    rev = "v1.6.6"
     has_html = true
     extension = true
 [Tulip]

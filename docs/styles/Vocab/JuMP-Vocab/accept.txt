@@ -30,6 +30,7 @@ jll|JLL
 [Jj]ulia
 [Mm]ultiline
 [Mm]ulticriteria
+multithreading
 namespace
 orthant
 performant
