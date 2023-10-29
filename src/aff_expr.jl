@@ -809,3 +809,100 @@ moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
 function moi_function_type(::Type{<:Vector{<:GenericAffExpr{T}}}) where {T}
     return MOI.VectorAffineFunction{T}
 end
+
+# start_value(::GenericAffExpr)
+
+function start_value(x::GenericAffExpr)
+    # Unset start values return `nothing`, but we cannot do arithmetic on
+    # `nothing`. So convert any nothings to `missing`, then compute the `value`
+    # and then re-convert back to `nothing` if the result is `missing`.
+    to_missing_start(x) = something(start_value(x), missing)
+    return coalesce(value(to_missing_start, x), nothing)
+end
+
+function set_start_value(x::GenericAffExpr, ::Nothing)
+    set_start_value.(keys(x.terms), nothing)
+    return
+end
+
+function set_start_value(x::GenericAffExpr, value::Number)
+    if isempty(x.terms) && iszero(value)
+        return
+    elseif length(x.terms) != 1
+        error(
+            "Cannot set the start value of $x because it does not contain " *
+            "exactly one variable",
+        )
+    end
+    # a * x + b == value --> x == (value - b) / a
+    new_value = (value - x.constant) / first(values(x.terms))
+    set_start_value(first(keys(x.terms)), new_value)
+    return
+end
+
+function set_start_value(x::GenericAffExpr{T}, value::Number) where {T<:Complex}
+    value_T = convert(T, value)
+    set_start_value(real(x), real(value_T))
+    set_start_value(imag(x), imag(value_T))
+    return
+end
+
+# lower_bound(::GenericAffExpr)
+
+has_lower_bound(x::GenericAffExpr) = all(has_lower_bound, keys(x.terms))
+
+lower_bound(x::GenericAffExpr) = value(lower_bound, x)
+
+delete_lower_bound(x::GenericAffExpr) = delete_lower_bound.(keys(x.terms))
+
+function set_lower_bound(x::GenericAffExpr, value::Number)
+    if isempty(x.terms) && iszero(value)
+        return
+    elseif length(x.terms) != 1
+        error(
+            "Cannot set the lower bound of $x because it does not contain " *
+            "exactly one variable",
+        )
+    end
+    # a * x + b >= value --> x >= (value - b) / a
+    new_value = (value - x.constant) / first(values(x.terms))
+    set_lower_bound(first(keys(x.terms)), new_value)
+    return
+end
+
+function set_lower_bound(x::GenericAffExpr{T}, value::Number) where {T<:Complex}
+    value_T = convert(T, value)
+    set_lower_bound(real(x), real(value_T))
+    set_lower_bound(imag(x), imag(value_T))
+    return
+end
+
+# upper_bound(::GenericAffExpr)
+
+has_upper_bound(x::GenericAffExpr) = all(has_upper_bound, keys(x.terms))
+
+upper_bound(x::GenericAffExpr) = value(upper_bound, x)
+
+delete_upper_bound(x::GenericAffExpr) = delete_upper_bound.(keys(x.terms))
+
+function set_upper_bound(x::GenericAffExpr, value::Number)
+    if isempty(x.terms) && iszero(value)
+        return
+    elseif length(x.terms) != 1
+        error(
+            "Cannot set the upper bound of $x because it does not contain " *
+            "exactly one variable",
+        )
+    end
+    # a * x + b <= value --> x <= (value - b) / a
+    new_value = (value - x.constant) / first(values(x.terms))
+    set_upper_bound(first(keys(x.terms)), new_value)
+    return
+end
+
+function set_upper_bound(x::GenericAffExpr{T}, value::Number) where {T<:Complex}
+    value_T = convert(T, value)
+    set_upper_bound(real(x), real(value_T))
+    set_upper_bound(imag(x), imag(value_T))
+    return
+end

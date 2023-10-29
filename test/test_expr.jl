@@ -451,4 +451,93 @@ function test_quadexpr_owner_model()
     return
 end
 
+function test_aff_expr_complex_lower_bound()
+    model = Model()
+    @variable(model, x in ComplexPlane())
+    @test !has_lower_bound(x)
+    set_lower_bound(x, 1 + 2im)
+    @test has_lower_bound(x)
+    @test lower_bound(x) == 1 + 2im
+    return
+end
+
+function test_aff_expr_complex_upper_bound()
+    model = Model()
+    @variable(model, x in ComplexPlane())
+    @test !has_upper_bound(x)
+    set_upper_bound(x, 3 + 4im)
+    @test has_upper_bound(x)
+    @test upper_bound(x) == 3 + 4im
+    return
+end
+
+function test_aff_expr_complex_start_value()
+    model = Model()
+    @variable(model, x in ComplexPlane())
+    @test start_value(x) === nothing
+    set_start_value(x, 2 + 3im)
+    @test start_value(x) == 2 + 3im
+    return
+end
+
+function test_aff_expr_complex_hermitian_lower_bound()
+    model = Model()
+    @variable(model, x[1:2, 1:2] in HermitianPSDCone())
+    @test !any(has_lower_bound.(x))
+    A = [1 (2 + 3im); (2 - 3im) 4]
+    set_lower_bound.(x, A)
+    @test all(has_lower_bound.(x))
+    @test lower_bound.(x) == A
+    return
+end
+
+function test_aff_expr_complex_hermitian_upper_bound()
+    model = Model()
+    @variable(model, x[1:2, 1:2] in HermitianPSDCone())
+    @test !any(has_upper_bound.(x))
+    A = [1 (2 + 3im); (2 - 3im) 4]
+    set_upper_bound.(x, A)
+    @test all(has_upper_bound.(x))
+    @test upper_bound.(x) == A
+    return
+end
+
+function test_aff_expr_complex_hermitian_start_value()
+    model = Model()
+    @variable(model, x[1:2, 1:2] in HermitianPSDCone())
+    @test !any(has_upper_bound.(x))
+    A = [1 (2 + 3im); (2 - 3im) 4]
+    @test all(start_value.(x) .=== nothing)
+    set_start_value.(x, A)
+    @test start_value.(x) == A
+    return
+end
+
+function test_aff_expr_complex_errors()
+    model = Model()
+    @variable(model, x[1:2, 1:2] in HermitianPSDCone())
+    @test_throws(
+        ErrorException(
+            "Cannot set the lower bound of 0 because it does not contain " *
+            "exactly one variable",
+        ),
+        set_lower_bound(x[1, 1], 1 + 2im),
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot set the upper bound of 0 because it does not contain " *
+            "exactly one variable",
+        ),
+        set_upper_bound(x[1, 1], 1 + 2im),
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot set the start value of 0 because it does not contain " *
+            "exactly one variable",
+        ),
+        set_start_value(x[1, 1], 1 + 2im),
+    )
+    return
+end
+
 end  # TestExpr
