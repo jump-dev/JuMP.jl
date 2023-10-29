@@ -253,6 +253,9 @@ Rewriting my_equal_to to ==
     When parsing a constraint you can recurse into sub-constraint (for example, the
     `{expr}` in `z => {x <= 1}`) by calling [`parse_constraint`](@ref).
 
+To prevent JuMP from promoting the set to the same value type as the model, use
+[`SkipModelConvertScalarSetWrapper`](@ref).
+
 ### Build
 
 To extend the [`@constraint`](@ref) macro at build time, implement a new

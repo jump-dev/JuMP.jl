@@ -1543,16 +1543,47 @@ function relax_with_penalty!(
     return relax_with_penalty!(model, Dict(); default = default)
 end
 
-struct _DoNotConvertSet{S} <: MOI.AbstractScalarSet
+"""
+    SkipModelConvertScalarSetWrapper(set::MOI.AbstractScalarSet)
+
+JuMP uses [`model_convert`](@ref) to automatically promote [`MOI.AbstractScalarSet`](@ref)
+sets to the same [`value_type`](@ref) as the model.
+
+In cases there this is undesirable, wrap the set in `SkipModelConvertScalarSetWrapper`
+to pass the set un-changed to the solver.
+
+## Examples
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, x in MOI.EqualTo(1 // 2))
+x = 0.5
+
+julia> @constraint(model, x in SkipModelConvertScalarSetWrapper(MOI.EqualTo(1 // 2)))
+x = 1//2
+```
+"""
+struct SkipModelConvertScalarSetWrapper{S<:MOI.AbstractScalarSet} <:
+       MOI.AbstractScalarSet
     set::S
 end
 
-model_convert(::AbstractModel, set::_DoNotConvertSet) = set
+model_convert(::AbstractModel, set::SkipModelConvertScalarSetWrapper) = set
 
-moi_set(c::ScalarConstraint{F,<:_DoNotConvertSet}) where {F} = c.set.set
+function moi_set(
+    c::ScalarConstraint{F,<:SkipModelConvertScalarSetWrapper},
+) where {F}
+    return c.set.set
+end
 
 function _build_boolean_equal_to(::Function, lhs::AbstractJuMPScalar, rhs::Bool)
-    return ScalarConstraint(lhs, _DoNotConvertSet(MOI.EqualTo(rhs)))
+    return ScalarConstraint(
+        lhs,
+        SkipModelConvertScalarSetWrapper(MOI.EqualTo(rhs)),
+    )
 end
 
 function _build_boolean_equal_to(error_fn::Function, ::AbstractJuMPScalar, rhs)

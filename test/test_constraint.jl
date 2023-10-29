@@ -1763,4 +1763,13 @@ function test_def_equal_to_operator_bool()
     return
 end
 
+function test_SkipModelConvertScalarSetWrapper()
+    model = Model()
+    @variable(model, x)
+    set = MOI.EqualTo(1 // 2)
+    c1 = @constraint(model, x in set)
+    c2 = @constraint(model, x in SkipModelConvertScalarSetWrapper(set))
+    @test constraint_object(c1).set === MOI.EqualTo(0.5)
+    @test constraint_object(c2).set === MOI.EqualTo(1 // 2)
+    return
 end
