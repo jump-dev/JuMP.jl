@@ -454,112 +454,65 @@ end
 function test_aff_expr_complex_lower_bound()
     model = Model()
     @variable(model, x in ComplexPlane())
-    @test !has_lower_bound(x)
-    set_lower_bound(x, 1 + 2im)
-    @test has_lower_bound(x)
-    @test lower_bound(x) == 1 + 2im
-    return
-end
-
-function test_aff_expr_complex_lower_bound_negative()
-    model = Model()
-    @variable(model, -3 <= x <= 4)
-    y = (1 - 2im) * x
+    y = real(x)
+    @test !has_lower_bound(y)
+    set_lower_bound(y, 1)
     @test has_lower_bound(y)
-    @test lower_bound(y) == -3.0 - 8im
+    @test lower_bound(y) == 1
+    delete_lower_bound(y)
+    @test !has_lower_bound(y)
     return
 end
 
 function test_aff_expr_complex_upper_bound()
     model = Model()
     @variable(model, x in ComplexPlane())
-    @test !has_upper_bound(x)
-    set_upper_bound(x, 3 + 4im)
-    @test has_upper_bound(x)
-    @test upper_bound(x) == 3 + 4im
+    y = real(x)
+    @test !has_upper_bound(y)
+    set_upper_bound(y, 1)
+    @test has_upper_bound(y)
+    @test upper_bound(y) == 1
+    delete_upper_bound(y)
+    @test !has_upper_bound(y)
     return
 end
 
 function test_aff_expr_complex_start_value()
     model = Model()
     @variable(model, x in ComplexPlane())
-    @test start_value(x) === nothing
-    set_start_value(x, 2 + 3im)
-    @test start_value(x) == 2 + 3im
+    y = real(x)
+    @test start_value(y) === nothing
+    set_start_value(y, 1)
+    @test start_value(y) == 1
     return
 end
 
-function test_aff_expr_complex_hermitian_lower_bound()
-    model = Model()
-    @variable(model, x[1:2, 1:2] in HermitianPSDCone())
-    @test !any(has_lower_bound.(x))
-    A = [1 (2+3im); (2-3im) 4]
-    set_lower_bound.(x, A)
-    @test all(has_lower_bound.(x))
-    @test lower_bound.(x) == A
-    return
-end
-
-function test_aff_expr_complex_hermitian_upper_bound()
-    model = Model()
-    @variable(model, x[1:2, 1:2] in HermitianPSDCone())
-    @test !any(has_upper_bound.(x))
-    A = [1 (2+3im); (2-3im) 4]
-    set_upper_bound.(x, A)
-    @test all(has_upper_bound.(x))
-    @test upper_bound.(x) == A
-    return
-end
-
-function test_aff_expr_complex_hermitian_start_value()
-    model = Model()
-    @variable(model, x[1:2, 1:2] in HermitianPSDCone())
-    @test !any(has_upper_bound.(x))
-    A = [1 (2+3im); (2-3im) 4]
-    @test all(start_value.(x) .=== nothing)
-    set_start_value.(x, A)
-    @test start_value.(x) == A
-    return
-end
-
-function test_aff_expr_complex_errors()
+function test_aff_expr_complex_error()
     model = Model()
     @variable(model, x[1:2, 1:2] in HermitianPSDCone())
     @test_throws(
         ErrorException(
-            "Cannot set the lower bound of 0 because it does not contain " *
-            "exactly one variable",
+            "Cannot call $start_value with $(x[1, 1]) because it is not a real-valued affine " *
+            "expression of one variable with a coefficient of `+1`. Use " *
+            "`real(x)` or `imag(x)` to obtain the real and imaginary part and " *
+            "pass that instead.",
         ),
-        set_lower_bound(x[1, 1], 1 + 2im),
+        start_value(x[1, 1]),
     )
     @test_throws(
         ErrorException(
-            "Cannot set the upper bound of 0 because it does not contain " *
-            "exactly one variable",
+            "Cannot call $start_value with $(imag(x[2, 1])) because it is not a real-valued affine " *
+            "expression of one variable with a coefficient of `+1`.",
         ),
-        set_upper_bound(x[1, 1], 1 + 2im),
+        start_value(imag(x[2, 1])),
     )
+    y = AffExpr(0.0)
     @test_throws(
         ErrorException(
-            "Cannot set the start value of 0 because it does not contain " *
-            "exactly one variable",
+            "Cannot call $start_value with $y because it is not a real-valued affine " *
+            "expression of one variable.",
         ),
-        set_start_value(x[1, 1], 1 + 2im),
-    )
-    y = 2 * x[1, 1]
-    @test_throws(
-        ErrorException(
-            "Cannot set the lower bound of `$y` because it does not contain " *
-            "exactly one variable with a coefficient of `+1` or `-1`",
-        ),
-        set_lower_bound(y, 1 + 2im),
-    )
-    @test_throws(
-        ErrorException(
-            "Cannot set the upper bound of `$y` because it does not contain " *
-            "exactly one variable with a coefficient of `+1` or `-1`",
-        ),
-        set_upper_bound(y, 1 + 2im),
+        start_value(y),
     )
     return
 end

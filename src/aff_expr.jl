@@ -810,197 +810,71 @@ function moi_function_type(::Type{<:Vector{<:GenericAffExpr{T}}}) where {T}
     return MOI.VectorAffineFunction{T}
 end
 
+"""
+    _eval_as_variable(f::F, x::GenericAffExpr, args...) where {F}
+
+In many cases, `@variable` can return a `GenericAffExpr` instead of a
+`GenericVariableRef`. This is particularly the case for complex-valued
+expressions. To make common operatons like `lower_bound(x)` work, we should
+forward the method if and only if `x` is convertable to a `GenericVariableRef`.
+"""
+function _eval_as_variable(f::F, x::GenericAffExpr, args...) where {F}
+    if length(x.terms) != 1
+        error(
+            "Cannot call $f with $x because it is not a real-valued affine " *
+            "expression of one variable.",
+        )
+    elseif !isone(first(keys(x.terms)))
+        error(
+            "Cannot call $f with $x because it is not a real-valued affine " *
+            "expression of one variable with a coefficient of `+1`.",
+        )
+    end
+    return f(first(keys(x.terms)), args...)
+end
+
+function _eval_as_variable(
+    f::F,
+    x::GenericAffExpr{T},
+    args...,
+) where {F,T<:Complex}
+    return error(
+        "Cannot call $f with $x because it is not a real-valued affine " *
+        "expression of one variable with a coefficient of `+1`. Use " *
+        "`real(x)` or `imag(x)` to obtain the real and imaginary part and " *
+        "pass that instead.",
+    )
+end
+
 # start_value(::GenericAffExpr)
 
-function start_value(x::GenericAffExpr)
-    # Unset start values return `nothing`, but we cannot do arithmetic on
-    # `nothing`. So convert any nothings to `missing`, then compute the `value`
-    # and then re-convert back to `nothing` if the result is `missing`.
-    to_missing_start(x) = something(start_value(x), missing)
-    return coalesce(value(to_missing_start, x), nothing)
-end
+start_value(x::GenericAffExpr) = _eval_as_variable(start_value, x)
 
-function set_start_value(x::GenericAffExpr, ::Nothing)
-    set_start_value.(keys(x.terms), nothing)
-    return
-end
-
-function set_start_value(x::GenericAffExpr, value::Number)
-    if isempty(x.terms) && x.constant == value
-        return
-    elseif length(x.terms) != 1
-        error(
-            "Cannot set the start value of $x because it does not contain " *
-            "exactly one variable",
-        )
-    end
-    # a * x + b == value --> x == (value - b) / a
-    a = first(values(x.terms))
-    if !isone(abs(a))
-        error(
-            "Cannot set the start value of `$x` because it does not contain " *
-            "exactly one variable with a coefficient of `+1` or `-1`",
-        )
-    end
-    set_start_value(first(keys(x.terms)), (value - x.constant) / a)
-    return
-end
-
-function set_start_value(x::GenericAffExpr{T}, value::Number) where {T<:Complex}
-    value_T = convert(T, value)
-    set_start_value(real(x), real(value_T))
-    set_start_value(imag(x), imag(value_T))
+function set_start_value(x::GenericAffExpr, value)
+    _eval_as_variable(set_start_value, x, value)
     return
 end
 
 # lower_bound(::GenericAffExpr)
 
-function has_lower_bound(x::GenericAffExpr)
-    return all(x.terms) do (k, v)
-        iszero(v) || (v > 0 && has_lower_bound(k)) || (v < 0 && has_upper_bound(k))
-    end
-end
+has_lower_bound(x::GenericAffExpr) = _eval_as_variable(has_lower_bound, x)
 
-function has_lower_bound(x::GenericAffExpr{<:Complex})
-    return has_lower_bound(real(x)) && has_lower_bound(imag(x))
-end
+lower_bound(x::GenericAffExpr) = _eval_as_variable(lower_bound, x)
 
-function lower_bound(x::GenericAffExpr{T}) where {T}
-    y = x.constant
-    for (k, v) in x.terms
-        if v > 0
-            y += v * lower_bound(k)
-        elseif v < 0
-            y += v * upper_bound(k)
-        end
-    end
-    return y
-end
+delete_lower_bound(x::GenericAffExpr) = _eval_as_variable(delete_lower_bound, x)
 
-function lower_bound(x::GenericAffExpr{<:Complex})
-    return lower_bound(real(x)) + lower_bound(imag(x)) * im
-end
-
-function delete_lower_bound(x::GenericAffExpr{T}) where {T}
-    for (k, v) in x.terms
-        if v > 0 && has_lower_bound(k)
-            delete_lower_bound(k)
-        elseif v < 0 && has_upper_bound(k)
-            delete_upper_bound(k)
-        end
-    end
-    return
-end
-
-function delete_lower_bound(x::GenericAffExpr{<:Complex})
-    delete_lower_bound(real(x))
-    delete_lower_bound(imag(x))
-    return
-end
-
-function set_lower_bound(x::GenericAffExpr, value::Number)
-    if isempty(x.terms) && x.constant == value
-        return
-    elseif length(x.terms) != 1
-        error(
-            "Cannot set the lower bound of $x because it does not contain " *
-            "exactly one variable",
-        )
-    end
-    # a * x + b >= value --> x >= (value - b) / a
-    a = first(values(x.terms))
-    if isone(a)
-        set_lower_bound(first(keys(x.terms)), value - x.constant)
-    elseif isone(-a)
-        set_upper_bound(first(keys(x.terms)), x.constant - value)
-    else
-        error(
-            "Cannot set the lower bound of `$x` because it does not contain " *
-            "exactly one variable with a coefficient of `+1` or `-1`",
-        )
-    end
-    return
-end
-
-function set_lower_bound(x::GenericAffExpr{T}, value::Number) where {T<:Complex}
-    value_T = convert(T, value)
-    set_lower_bound(real(x), real(value_T))
-    set_lower_bound(imag(x), imag(value_T))
-    return
+function set_lower_bound(x::GenericAffExpr, value)
+    return _eval_as_variable(set_lower_bound, x, value)
 end
 
 # upper_bound(::GenericAffExpr)
 
-function has_upper_bound(x::GenericAffExpr)
-    return all(x.terms) do (k, v)
-        (v > 0 && has_upper_bound(k)) || (v < 0 && has_lower_bound(k))
-    end
-end
+has_upper_bound(x::GenericAffExpr) = _eval_as_variable(has_upper_bound, x)
 
-function has_upper_bound(x::GenericAffExpr{<:Complex})
-    return has_upper_bound(real(x)) && has_upper_bound(imag(x))
-end
+upper_bound(x::GenericAffExpr) = _eval_as_variable(upper_bound, x)
 
-function upper_bound(x::GenericAffExpr{T}) where {T}
-    y = x.constant
-    for (k, v) in x.terms
-        if v > 0
-            y += v * upper_bound(k)
-        elseif v < 0
-            y += v * lower_bound(k)
-        end
-    end
-    return y
-end
+delete_upper_bound(x::GenericAffExpr) = _eval_as_variable(delete_upper_bound, x)
 
-function upper_bound(x::GenericAffExpr{<:Complex})
-    return upper_bound(real(x)) + upper_bound(imag(x)) * im
-end
-
-function delete_upper_bound(x::GenericAffExpr{T}) where {T}
-    for (k, v) in x.terms
-        if v > 0 && has_upper_bound(k)
-            delete_upper_bound(k)
-        elseif v < 0 && has_lower_bound(k)
-            delete_lower_bound(k)
-        end
-    end
-    return
-end
-
-function delete_upper_bound(x::GenericAffExpr{<:Complex})
-    delete_upper_bound(real(x))
-    delete_upper_bound(imag(x))
-    return
-end
-
-function set_upper_bound(x::GenericAffExpr, value::Number)
-    if isempty(x.terms) && x.constant == value
-        return
-    elseif length(x.terms) != 1
-        error(
-            "Cannot set the upper bound of $x because it does not contain " *
-            "exactly one variable",
-        )
-    end
-    # a * x + b >= value --> x >= (value - b) / a
-    a = first(values(x.terms))
-    if isone(a)
-        set_upper_bound(first(keys(x.terms)), value - x.constant)
-    elseif isone(-a)
-        set_lower_bound(first(keys(x.terms)), x.constant - value)
-    else
-        error(
-            "Cannot set the upper bound of `$x` because it does not contain " *
-            "exactly one variable with a coefficient of `+1` or `-1`",
-        )
-    end
-    return
-end
-
-function set_upper_bound(x::GenericAffExpr{T}, value::Number) where {T<:Complex}
-    value_T = convert(T, value)
-    set_upper_bound(real(x), real(value_T))
-    set_upper_bound(imag(x), imag(value_T))
-    return
+function set_upper_bound(x::GenericAffExpr, value)
+    return _eval_as_variable(set_upper_bound, x, value)
 end
