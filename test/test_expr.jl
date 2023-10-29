@@ -461,6 +461,15 @@ function test_aff_expr_complex_lower_bound()
     return
 end
 
+function test_aff_expr_complex_lower_bound_negative()
+    model = Model()
+    @variable(model, -3 <= x <= 4)
+    y = (1 - 2im) * x
+    @test has_lower_bound(y)
+    @test lower_bound(y) == -3.0 - 8im
+    return
+end
+
 function test_aff_expr_complex_upper_bound()
     model = Model()
     @variable(model, x in ComplexPlane())
@@ -536,6 +545,21 @@ function test_aff_expr_complex_errors()
             "exactly one variable",
         ),
         set_start_value(x[1, 1], 1 + 2im),
+    )
+    y = 2 * x[1, 1]
+    @test_throws(
+        ErrorException(
+            "Cannot set the lower bound of `$y` because it does not contain " *
+            "exactly one variable with a coefficient of `+1` or `-1`",
+        ),
+        set_lower_bound(y, 1 + 2im),
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot set the upper bound of `$y` because it does not contain " *
+            "exactly one variable with a coefficient of `+1` or `-1`",
+        ),
+        set_upper_bound(y, 1 + 2im),
     )
     return
 end
