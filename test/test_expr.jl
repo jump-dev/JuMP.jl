@@ -484,7 +484,7 @@ function test_aff_expr_complex_hermitian_lower_bound()
     model = Model()
     @variable(model, x[1:2, 1:2] in HermitianPSDCone())
     @test !any(has_lower_bound.(x))
-    A = [1 (2 + 3im); (2 - 3im) 4]
+    A = [1 (2+3im); (2-3im) 4]
     set_lower_bound.(x, A)
     @test all(has_lower_bound.(x))
     @test lower_bound.(x) == A
@@ -495,7 +495,7 @@ function test_aff_expr_complex_hermitian_upper_bound()
     model = Model()
     @variable(model, x[1:2, 1:2] in HermitianPSDCone())
     @test !any(has_upper_bound.(x))
-    A = [1 (2 + 3im); (2 - 3im) 4]
+    A = [1 (2+3im); (2-3im) 4]
     set_upper_bound.(x, A)
     @test all(has_upper_bound.(x))
     @test upper_bound.(x) == A
@@ -506,7 +506,7 @@ function test_aff_expr_complex_hermitian_start_value()
     model = Model()
     @variable(model, x[1:2, 1:2] in HermitianPSDCone())
     @test !any(has_upper_bound.(x))
-    A = [1 (2 + 3im); (2 - 3im) 4]
+    A = [1 (2+3im); (2-3im) 4]
     @test all(start_value.(x) .=== nothing)
     set_start_value.(x, A)
     @test start_value.(x) == A
