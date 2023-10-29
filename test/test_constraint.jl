@@ -1773,3 +1773,6 @@ function test_SkipModelConvertScalarSetWrapper()
     @test constraint_object(c2).set === MOI.EqualTo(1 // 2)
     return
 end
+
+end  # module
+
