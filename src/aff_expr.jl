@@ -821,31 +821,18 @@ forward the method if and only if `x` is convertable to a `GenericVariableRef`.
 function _eval_as_variable(f::F, x::GenericAffExpr, args...) where {F}
     if length(x.terms) != 1
         error(
-            "Cannot call $f with $x because it is not a real-valued affine " *
-            "expression of one variable.",
+            "Cannot call $f with $x because it is not an affine expression " *
+            "of one variable.",
         )
     end
     variable, coefficient = first(x.terms)
     if !isone(coefficient)
         error(
-            "Cannot call $f with $x because it is not a real-valued affine " *
-            "expression of one variable with a coefficient of `+1`.",
+            "Cannot call $f with $x because the variable has a coefficient " *
+            "that is different to `+1`.",
         )
     end
     return f(variable, args...)
-end
-
-function _eval_as_variable(
-    f::F,
-    x::GenericAffExpr{T},
-    args...,
-) where {F,T<:Complex}
-    return error(
-        "Cannot call $f with $x because it is not a real-valued affine " *
-        "expression of one variable with a coefficient of `+1`. Use " *
-        "`real(x)` or `imag(x)` to obtain the real and imaginary part and " *
-        "pass that instead.",
-    )
 end
 
 # start_value(::GenericAffExpr)

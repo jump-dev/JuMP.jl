@@ -487,29 +487,31 @@ function test_aff_expr_complex_start_value()
     return
 end
 
-function test_aff_expr_complex_error()
+function test_aff_expr_complex_HermitianPSDCone()
     model = Model()
     @variable(model, x[1:2, 1:2] in HermitianPSDCone())
+    @test start_value(x[1, 1]) === nothing
+    set_lower_bound(x[1, 1], 2.5)
+    @test has_lower_bound(x[1, 1])
+    @test lower_bound(x[1, 1]) == 2.5
     @test_throws(
         ErrorException(
-            "Cannot call $start_value with $(x[1, 1]) because it is not a real-valued affine " *
-            "expression of one variable with a coefficient of `+1`. Use " *
-            "`real(x)` or `imag(x)` to obtain the real and imaginary part and " *
-            "pass that instead.",
+            "Cannot call $start_value with $(x[2, 1]) because it is not an affine " *
+            "expression of one variable.",
         ),
-        start_value(x[1, 1]),
+        start_value(x[2, 1]),
     )
     @test_throws(
         ErrorException(
-            "Cannot call $start_value with $(imag(x[2, 1])) because it is not a real-valued affine " *
-            "expression of one variable with a coefficient of `+1`.",
+            "Cannot call $start_value with $(imag(x[2, 1])) because the " *
+            "variable has a coefficient that is different to `+1`.",
         ),
         start_value(imag(x[2, 1])),
     )
     y = AffExpr(0.0)
     @test_throws(
         ErrorException(
-            "Cannot call $start_value with $y because it is not a real-valued affine " *
+            "Cannot call $start_value with $y because it is not an affine " *
             "expression of one variable.",
         ),
         start_value(y),
