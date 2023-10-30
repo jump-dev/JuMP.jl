@@ -824,13 +824,15 @@ function _eval_as_variable(f::F, x::GenericAffExpr, args...) where {F}
             "Cannot call $f with $x because it is not a real-valued affine " *
             "expression of one variable.",
         )
-    elseif !isone(first(values(x.terms)))
+    end
+    variable, coefficient = first(x.terms)
+    if !isone(coefficient)
         error(
             "Cannot call $f with $x because it is not a real-valued affine " *
             "expression of one variable with a coefficient of `+1`.",
         )
     end
-    return f(first(keys(x.terms)), args...)
+    return f(variable, args...)
 end
 
 function _eval_as_variable(

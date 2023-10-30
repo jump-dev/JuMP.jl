@@ -1214,25 +1214,6 @@ julia> @variable(model, x[1:2, 1:2] in SkewSymmetricMatrixSpace())
     `model`; the remaining elements in `x` are linear transformations of the
     single variable.
 
-Because the returned matrix `x` is `Matrix{AffExpr}`, you cannot use
-variable-related functions on its elements:
-```jldoctest skewsymmetric
-julia> set_lower_bound(x[1, 2], 0.0)
-ERROR: MethodError: no method matching set_lower_bound(::AffExpr, ::Float64)
-[...]
-```
-
-Instead, you can convert an upper-triangular elements to a variable as follows:
-```jldoctest skewsymmetric
-julia> to_variable(x::AffExpr) = first(keys(x.terms))
-to_variable (generic function with 1 method)
-
-julia> to_variable(x[1, 2])
-x[1,2]
-
-julia> set_lower_bound(to_variable(x[1, 2]), 0.0)
-```
-
 ### Example: Hermitian positive semidefinite variables
 
 Declare a matrix of JuMP variables to be Hermitian positive semidefinite using
