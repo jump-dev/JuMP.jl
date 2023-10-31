@@ -451,4 +451,72 @@ function test_quadexpr_owner_model()
     return
 end
 
+function test_aff_expr_complex_lower_bound()
+    model = Model()
+    @variable(model, x in ComplexPlane())
+    y = real(x)
+    @test !has_lower_bound(y)
+    set_lower_bound(y, 1)
+    @test has_lower_bound(y)
+    @test lower_bound(y) == 1
+    delete_lower_bound(y)
+    @test !has_lower_bound(y)
+    return
+end
+
+function test_aff_expr_complex_upper_bound()
+    model = Model()
+    @variable(model, x in ComplexPlane())
+    y = real(x)
+    @test !has_upper_bound(y)
+    set_upper_bound(y, 1)
+    @test has_upper_bound(y)
+    @test upper_bound(y) == 1
+    delete_upper_bound(y)
+    @test !has_upper_bound(y)
+    return
+end
+
+function test_aff_expr_complex_start_value()
+    model = Model()
+    @variable(model, x in ComplexPlane())
+    y = real(x)
+    @test start_value(y) === nothing
+    set_start_value(y, 1)
+    @test start_value(y) == 1
+    return
+end
+
+function test_aff_expr_complex_HermitianPSDCone()
+    model = Model()
+    @variable(model, x[1:2, 1:2] in HermitianPSDCone())
+    @test start_value(x[1, 1]) === nothing
+    set_lower_bound(x[1, 1], 2.5)
+    @test has_lower_bound(x[1, 1])
+    @test lower_bound(x[1, 1]) == 2.5
+    @test_throws(
+        ErrorException(
+            "Cannot call $start_value with $(x[2, 1]) because it is not an affine " *
+            "expression of one variable.",
+        ),
+        start_value(x[2, 1]),
+    )
+    @test_throws(
+        ErrorException(
+            "Cannot call $start_value with $(imag(x[2, 1])) because the " *
+            "variable has a coefficient that is different to `+1`.",
+        ),
+        start_value(imag(x[2, 1])),
+    )
+    y = AffExpr(0.0)
+    @test_throws(
+        ErrorException(
+            "Cannot call $start_value with $y because it is not an affine " *
+            "expression of one variable.",
+        ),
+        start_value(y),
+    )
+    return
+end
+
 end  # TestExpr

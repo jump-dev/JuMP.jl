@@ -809,3 +809,61 @@ moi_function(a::Vector{<:GenericAffExpr}) = MOI.VectorAffineFunction(a)
 function moi_function_type(::Type{<:Vector{<:GenericAffExpr{T}}}) where {T}
     return MOI.VectorAffineFunction{T}
 end
+
+"""
+    _eval_as_variable(f::F, x::GenericAffExpr, args...) where {F}
+
+In many cases, `@variable` can return a `GenericAffExpr` instead of a
+`GenericVariableRef`. This is particularly the case for complex-valued
+expressions. To make common operatons like `lower_bound(x)` work, we should
+forward the method if and only if `x` is convertable to a `GenericVariableRef`.
+"""
+function _eval_as_variable(f::F, x::GenericAffExpr, args...) where {F}
+    if length(x.terms) != 1
+        error(
+            "Cannot call $f with $x because it is not an affine expression " *
+            "of one variable.",
+        )
+    end
+    variable, coefficient = first(x.terms)
+    if !isone(coefficient)
+        error(
+            "Cannot call $f with $x because the variable has a coefficient " *
+            "that is different to `+1`.",
+        )
+    end
+    return f(variable, args...)
+end
+
+# start_value(::GenericAffExpr)
+
+start_value(x::GenericAffExpr) = _eval_as_variable(start_value, x)
+
+function set_start_value(x::GenericAffExpr, value)
+    _eval_as_variable(set_start_value, x, value)
+    return
+end
+
+# lower_bound(::GenericAffExpr)
+
+has_lower_bound(x::GenericAffExpr) = _eval_as_variable(has_lower_bound, x)
+
+lower_bound(x::GenericAffExpr) = _eval_as_variable(lower_bound, x)
+
+delete_lower_bound(x::GenericAffExpr) = _eval_as_variable(delete_lower_bound, x)
+
+function set_lower_bound(x::GenericAffExpr, value)
+    return _eval_as_variable(set_lower_bound, x, value)
+end
+
+# upper_bound(::GenericAffExpr)
+
+has_upper_bound(x::GenericAffExpr) = _eval_as_variable(has_upper_bound, x)
+
+upper_bound(x::GenericAffExpr) = _eval_as_variable(upper_bound, x)
+
+delete_upper_bound(x::GenericAffExpr) = _eval_as_variable(delete_upper_bound, x)
+
+function set_upper_bound(x::GenericAffExpr, value)
+    return _eval_as_variable(set_upper_bound, x, value)
+end
