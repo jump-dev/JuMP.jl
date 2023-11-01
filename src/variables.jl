@@ -224,6 +224,14 @@ variable type associated with the model or expression type `F`.
 """
 variable_ref_type(::F) where {F} = variable_ref_type(F)
 
+function variable_ref_type(::Type{F}) where {F}
+    return error(
+        "Unable to compute the `variable_ref_type` of the type `$F`. If you " *
+        "are developing a JuMP extension, defined a new method for " *
+        "`JuMP.variable_ref_type(::Type{$F})`",
+    )
+end
+
 variable_ref_type(::Type{V}) where {V<:AbstractVariableRef} = V
 
 value_type(::Type{<:AbstractVariableRef}) = Float64
