@@ -1559,7 +1559,7 @@ function test_variable_ref_type_unsupported()
     for F in (Vector{VariableRef}, Vector{Int})
         @test_throws(
             ErrorException(
-                "Unable to compute the `variable_ref_type` of the type $F`. If you " *
+                "Unable to compute the `variable_ref_type` of the type `$F`. If you " *
                 "are developing a JuMP extension, defined a new method for " *
                 "`JuMP.variable_ref_type(::Type{$F}`",
             ),
