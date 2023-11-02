@@ -632,7 +632,7 @@ function test_matrix_abstractscalar_add()
     @test_throws(
         ErrorException(
             "Addition between a Matrix and a JuMP variable is not supported: instead of `A + x`, " *
-            "prefer `A .+ x` for element-wise addition, or if you are modifying the diagonal entries of the matrix " *
+            "do `A .+ x` for element-wise addition, or if you are modifying the diagonal entries of the matrix " *
             "do `A + x * LinearAlgebra.I(n)`, where `n` is the diagonal length.",
         ),
         A + x
@@ -640,7 +640,7 @@ function test_matrix_abstractscalar_add()
     @test_throws(
         ErrorException(
             "Addition between a Matrix and a JuMP variable is not supported: instead of `A + x`, " *
-            "prefer `A .+ x` for element-wise addition, or if you are modifying the diagonal entries of the matrix " *
+            "do `A .+ x` for element-wise addition, or if you are modifying the diagonal entries of the matrix " *
             "do `A + x * LinearAlgebra.I(n)`, where `n` is the diagonal length.",
         ),
         x + A
@@ -648,7 +648,7 @@ function test_matrix_abstractscalar_add()
     @test_throws(
         ErrorException(
             "Subtraction between a Matrix and a JuMP variable is not supported: instead of `A - x`, " *
-            "prefer `A .- x` for element-wise subtraction, or if you are modifying the diagonal entries of the matrix " *
+            "do `A .- x` for element-wise subtraction, or if you are modifying the diagonal entries of the matrix " *
             "do `A - x * LinearAlgebra.I(n)`, where `n` is the diagonal length.",
         ),
         A - x
@@ -656,7 +656,7 @@ function test_matrix_abstractscalar_add()
     @test_throws(
         ErrorException(
             "Subtraction between a Matrix and a JuMP variable is not supported: instead of `A - x`, " *
-            "prefer `A .- x` for element-wise subtraction, or if you are modifying the diagonal entries of the matrix " *
+            "do `A .- x` for element-wise subtraction, or if you are modifying the diagonal entries of the matrix " *
             "do `A - x * LinearAlgebra.I(n)`, where `n` is the diagonal length.",
         ),
         x - A
