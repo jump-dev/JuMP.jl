@@ -460,9 +460,9 @@ function Base.:+(A::AbstractMatrix, x::AbstractJuMPScalar)
     )
 end
 
-Base.:+(x::AbstractJuMPScalar, A::Matrix) = A + x
+Base.:+(x::AbstractJuMPScalar, A::AbstractMatrix) = A + x
 
-function Base.:-(A::Matrix, x::AbstractJuMPScalar)
+function Base.:-(A::AbstractMatrix, x::AbstractJuMPScalar)
     return error(
         "Subtraction between a Matrix and a JuMP variable is not supported: instead of `A - x`, " *
         "do `A .- x` for element-wise subtraction, or if you are modifying the diagonal entries of the matrix " *
@@ -470,4 +470,4 @@ function Base.:-(A::Matrix, x::AbstractJuMPScalar)
     )
 end
 
-Base.:-(x::AbstractJuMPScalar, A::Matrix) = A - x
+Base.:-(x::AbstractJuMPScalar, A::AbstractMatrix) = A - x
