@@ -133,7 +133,7 @@ Alias for `GenericNonlinearExpr{VariableRef}`, the specific
 """
 const NonlinearExpr = GenericNonlinearExpr{VariableRef}
 
-variable_ref_type(::GenericNonlinearExpr{V}) where {V} = V
+variable_ref_type(::Type{GenericNonlinearExpr{V}}) where {V} = V
 
 const _PREFIX_OPERATORS =
     (:+, :-, :*, :/, :^, :||, :&&, :>, :<, :(<=), :(>=), :(==))

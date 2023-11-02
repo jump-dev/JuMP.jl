@@ -971,4 +971,11 @@ function test_operator_max()
     return
 end
 
+function test_variable_ref_type()
+    for V in (GenericVariableRef{Int}, VariableRef)
+        @test variable_ref_type(GenericNonlinearExpr{V}) == V
+    end
+    return
+end
+
 end  # module
