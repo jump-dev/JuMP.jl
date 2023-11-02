@@ -456,7 +456,7 @@ function Base.:+(A::Matrix, x::AbstractJuMPScalar)
     return error(
         "Addition between a Matrix and a JuMP variable is not supported: instead of `A + x`, " *
         "prefer `A .+ x` for element-wise addition, or if you are modifying the diagonal entries of the matrix " *
-        "do `A + x * LinearAlgebra.I(n)`, where `n` is the diagonal length."
+        "do `A + x * LinearAlgebra.I(n)`, where `n` is the diagonal length.",
     )
 end
 
@@ -466,7 +466,7 @@ function Base.:-(A::Matrix, x::AbstractJuMPScalar)
     return error(
         "Subtraction between a Matrix and a JuMP variable is not supported: instead of `A - x`, " *
         "prefer `A .- x` for element-wise subtraction, or if you are modifying the diagonal entries of the matrix " *
-        "do `A - x * LinearAlgebra.I(n)`, where `n` is the diagonal length."
+        "do `A - x * LinearAlgebra.I(n)`, where `n` is the diagonal length.",
     )
 end
 
