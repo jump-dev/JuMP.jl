@@ -629,38 +629,30 @@ function test_matrix_abstractscalar_add()
     model = Model()
     @variable(model, x)
     A = rand(Float64, 2, 2)
-    @test_throws(
-        ErrorException(
-            "Addition between a Matrix and a JuMP variable is not supported: instead of `A + x`, " *
-            "do `A .+ x` for element-wise addition, or if you are modifying the diagonal entries of the matrix " *
-            "do `A + x * LinearAlgebra.I(n)`, where `n` is the diagonal length.",
-        ),
-        A + x
-    ),
-    @test_throws(
-        ErrorException(
-            "Addition between a Matrix and a JuMP variable is not supported: instead of `A + x`, " *
-            "do `A .+ x` for element-wise addition, or if you are modifying the diagonal entries of the matrix " *
-            "do `A + x * LinearAlgebra.I(n)`, where `n` is the diagonal length.",
-        ),
-        x + A
-    ),
-    @test_throws(
-        ErrorException(
-            "Subtraction between a Matrix and a JuMP variable is not supported: instead of `A - x`, " *
-            "do `A .- x` for element-wise subtraction, or if you are modifying the diagonal entries of the matrix " *
-            "do `A - x * LinearAlgebra.I(n)`, where `n` is the diagonal length.",
-        ),
-        A - x
-    ),
-    @test_throws(
-        ErrorException(
-            "Subtraction between a Matrix and a JuMP variable is not supported: instead of `A - x`, " *
-            "do `A .- x` for element-wise subtraction, or if you are modifying the diagonal entries of the matrix " *
-            "do `A - x * LinearAlgebra.I(n)`, where `n` is the diagonal length.",
-        ),
-        x - A
-    ),
+    err_add = ErrorException(
+        "Addition between an array and a JuMP scalar is not supported: " *
+        "instead of `x + y`, do `x .+ y` for element-wise addition.",
+    )
+    @test_throws(err_add, A + x)
+    @test_throws(err_add, x + A)
+    @test_throws(err_add, A' + x)
+    @test_throws(err_add, x + A')
+    @test_throws(err_add, @expression(model, A + x))
+    @test_throws(err_add, @expression(model, x + A))
+    @test_throws(err_add, @expression(model, A' + x))
+    @test_throws(err_add, @expression(model, x + A'))
+    err_sub = ErrorException(
+        "Subtraction between a Matrix and a JuMP scalar is not supported: " *
+        "instead of `x - y`, do `x .- y` for element-wise subtraction.",
+    )
+    @test_throws(err_sub, A - x)
+    @test_throws(err_sub, x - A)
+    @test_throws(err_sub, A' - x)
+    @test_throws(err_sub, x - A')
+    @test_throws(err_sub, @expression(model, A - x))
+    @test_throws(err_sub, @expression(model, x - A))
+    @test_throws(err_sub, @expression(model, A' - x))
+    @test_throws(err_sub, @expression(model, x - A'))
     return
 end
 

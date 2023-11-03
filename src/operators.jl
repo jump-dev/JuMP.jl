@@ -452,22 +452,37 @@ function LinearAlgebra.issymmetric(x::Matrix{T}) where {T<:_JuMPTypes}
     return true
 end
 
-function Base.:+(A::AbstractMatrix, x::AbstractJuMPScalar)
+function _throw_operator_error(::Union{typeof(+),typeof(_MA.add_mul)})
     return error(
-        "Addition between a Matrix and a JuMP variable is not supported: instead of `A + x`, " *
-        "do `A .+ x` for element-wise addition, or if you are modifying the diagonal entries of the matrix " *
-        "do `A + x * LinearAlgebra.I(n)`, where `n` is the diagonal length.",
+        "Addition between an array and a JuMP scalar is not supported: " *
+        "instead of `x + y`, do `x .+ y` for element-wise addition.",
     )
 end
 
-Base.:+(x::AbstractJuMPScalar, A::AbstractMatrix) = A + x
-
-function Base.:-(A::AbstractMatrix, x::AbstractJuMPScalar)
+function _throw_operator_error(::Union{typeof(-),typeof(_MA.sub_mul)})
     return error(
-        "Subtraction between a Matrix and a JuMP variable is not supported: instead of `A - x`, " *
-        "do `A .- x` for element-wise subtraction, or if you are modifying the diagonal entries of the matrix " *
-        "do `A - x * LinearAlgebra.I(n)`, where `n` is the diagonal length.",
+        "Subtraction between a Matrix and a JuMP scalar is not supported: " *
+        "instead of `x - y`, do `x .- y` for element-wise subtraction.",
     )
 end
 
-Base.:-(x::AbstractJuMPScalar, A::AbstractMatrix) = A - x
+Base.:+(::AbstractJuMPScalar, ::AbstractMatrix) = _throw_operator_error(+)
+Base.:+(::AbstractMatrix, ::AbstractJuMPScalar) = _throw_operator_error(+)
+Base.:-(::AbstractJuMPScalar, ::AbstractMatrix) = _throw_operator_error(-)
+Base.:-(::AbstractMatrix, ::AbstractJuMPScalar) = _throw_operator_error(-)
+
+function _MA.operate!!(
+    op::Union{typeof(_MA.add_mul),typeof(_MA.sub_mul)},
+    ::AbstractArray,
+    ::AbstractJuMPScalar,
+)
+    return _throw_operator_error(op)
+end
+
+function _MA.operate!!(
+    op::Union{typeof(_MA.add_mul),typeof(_MA.sub_mul)},
+    ::AbstractJuMPScalar,
+    ::AbstractArray,
+)
+    return _throw_operator_error(op)
+end
