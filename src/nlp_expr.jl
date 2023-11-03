@@ -403,6 +403,14 @@ function _MA.operate!!(
     return +(x, *(args...))
 end
 
+function _MA.operate!!(
+    ::typeof(_MA.add_mul),
+    x::GenericNonlinearExpr,
+    ::AbstractArray,
+)
+    return _throw_operator_error(_MA.add_mul)
+end
+
 """
     flatten!(expr::GenericNonlinearExpr)
 

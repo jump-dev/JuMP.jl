@@ -633,26 +633,28 @@ function test_matrix_abstractscalar_add()
         "Addition between an array and a JuMP scalar is not supported: " *
         "instead of `x + y`, do `x .+ y` for element-wise addition.",
     )
-    @test_throws(err_add, A + x)
-    @test_throws(err_add, x + A)
-    @test_throws(err_add, A' + x)
-    @test_throws(err_add, x + A')
-    @test_throws(err_add, @expression(model, A + x))
-    @test_throws(err_add, @expression(model, x + A))
-    @test_throws(err_add, @expression(model, A' + x))
-    @test_throws(err_add, @expression(model, x + A'))
     err_sub = ErrorException(
         "Subtraction between a Matrix and a JuMP scalar is not supported: " *
         "instead of `x - y`, do `x .- y` for element-wise subtraction.",
     )
-    @test_throws(err_sub, A - x)
-    @test_throws(err_sub, x - A)
-    @test_throws(err_sub, A' - x)
-    @test_throws(err_sub, x - A')
-    @test_throws(err_sub, @expression(model, A - x))
-    @test_throws(err_sub, @expression(model, x - A))
-    @test_throws(err_sub, @expression(model, A' - x))
-    @test_throws(err_sub, @expression(model, x - A'))
+    for y in (x, 1.0 * x, x^2, sin(x))
+        @test_throws(err_add, A + y)
+        @test_throws(err_add, y + A)
+        @test_throws(err_add, A' + y)
+        @test_throws(err_add, y + A')
+        @test_throws(err_add, @expression(model, A + y))
+        @test_throws(err_add, @expression(model, y + A))
+        @test_throws(err_add, @expression(model, A' + y))
+        @test_throws(err_add, @expression(model, y + A'))
+        @test_throws(err_sub, A - y)
+        @test_throws(err_sub, y - A)
+        @test_throws(err_sub, A' - y)
+        @test_throws(err_sub, y - A')
+        @test_throws(err_sub, @expression(model, A - y))
+        @test_throws(err_sub, @expression(model, y - A))
+        @test_throws(err_sub, @expression(model, A' - y))
+        @test_throws(err_sub, @expression(model, y - A'))
+    end
     return
 end
 
