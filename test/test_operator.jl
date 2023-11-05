@@ -628,16 +628,41 @@ end
 function test_matrix_abstractscalar_add()
     model = Model()
     @variable(model, x)
-    A = rand(Float64, 2, 2)
+    A = rand(Float64, 3, 2)
+    B = rand(Float64, 3)
     err_add = ErrorException(
         "Addition between an array and a JuMP scalar is not supported: " *
         "instead of `x + y`, do `x .+ y` for element-wise addition.",
     )
     err_sub = ErrorException(
-        "Subtraction between a Matrix and a JuMP scalar is not supported: " *
+        "Subtraction between an array and a JuMP scalar is not supported: " *
         "instead of `x - y`, do `x .- y` for element-wise subtraction.",
     )
-    for lhs in (A, A'), rhs in (x, 1.0 * x, x^2, sin(x))
+    for lhs in (A, A', B, B'), rhs in (x, 1.0 * x, x^2, sin(x))
+        @test_throws(err_add, lhs + rhs)
+        @test_throws(err_add, rhs + lhs)
+        @test_throws(err_add, @expression(model, lhs + rhs))
+        @test_throws(err_add, @expression(model, rhs + lhs))
+        @test_throws(err_sub, lhs - rhs)
+        @test_throws(err_sub, rhs - lhs)
+        @test_throws(err_sub, @expression(model, lhs - rhs))
+        @test_throws(err_sub, @expression(model, rhs - lhs))
+    end
+    C = rand(Float64, 2, 2)
+    err_add = ErrorException(
+        "Addition between an array and a JuMP scalar is not supported: " *
+        "instead of `x + y`, do `x .+ y` for element-wise addition." *
+        " If you are modifying the diagonal entries of a square matrix, " *
+        "do `x + y * LinearAlgebra.I(n)`, where `n` is the side length.",
+    )
+    err_sub = ErrorException(
+        "Subtraction between an array and a JuMP scalar is not supported: " *
+        "instead of `x - y`, do `x .- y` for element-wise subtraction." *
+        " If you are modifying the diagonal entries of a square matrix, " *
+        "do `x - y * LinearAlgebra.I(n)`, where `n` is the side length.",
+
+    )
+    for lhs in (C, C'), rhs in (x, 1.0 * x, x^2, sin(x))
         @test_throws(err_add, lhs + rhs)
         @test_throws(err_add, rhs + lhs)
         @test_throws(err_add, @expression(model, lhs + rhs))

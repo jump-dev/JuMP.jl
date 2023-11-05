@@ -452,37 +452,53 @@ function LinearAlgebra.issymmetric(x::Matrix{T}) where {T<:_JuMPTypes}
     return true
 end
 
-function _throw_operator_error(::Union{typeof(+),typeof(_MA.add_mul)})
-    return error(
+function _throw_operator_error(
+    ::Union{typeof(+),typeof(_MA.add_mul)},
+    x::AbstractArray,
+)
+    msg =
         "Addition between an array and a JuMP scalar is not supported: " *
-        "instead of `x + y`, do `x .+ y` for element-wise addition.",
-    )
+        "instead of `x + y`, do `x .+ y` for element-wise addition."
+    if ndims(x) == 2 && size(x, 1) == size(x, 2)
+        msg *=
+            " If you are modifying the diagonal entries of a square matrix, " *
+            "do `x + y * LinearAlgebra.I(n)`, where `n` is the side length."
+    end
+    return error(msg)
 end
 
-function _throw_operator_error(::Union{typeof(-),typeof(_MA.sub_mul)})
-    return error(
-        "Subtraction between a Matrix and a JuMP scalar is not supported: " *
-        "instead of `x - y`, do `x .- y` for element-wise subtraction.",
-    )
+function _throw_operator_error(
+    ::Union{typeof(-),typeof(_MA.sub_mul)},
+    x::AbstractArray,
+)
+    msg =
+        "Subtraction between an array and a JuMP scalar is not supported: " *
+        "instead of `x - y`, do `x .- y` for element-wise subtraction."
+    if ndims(x) == 2 && size(x, 1) == size(x, 2)
+        msg *=
+            " If you are modifying the diagonal entries of a square matrix, " *
+            "do `x - y * LinearAlgebra.I(n)`, where `n` is the side length."
+    end
+    return error(msg)
 end
 
-Base.:+(::AbstractJuMPScalar, ::AbstractMatrix) = _throw_operator_error(+)
-Base.:+(::AbstractMatrix, ::AbstractJuMPScalar) = _throw_operator_error(+)
-Base.:-(::AbstractJuMPScalar, ::AbstractMatrix) = _throw_operator_error(-)
-Base.:-(::AbstractMatrix, ::AbstractJuMPScalar) = _throw_operator_error(-)
+Base.:+(::AbstractJuMPScalar, x::AbstractArray) = _throw_operator_error(+, x)
+Base.:+(x::AbstractArray, ::AbstractJuMPScalar) = _throw_operator_error(+, x)
+Base.:-(::AbstractJuMPScalar, x::AbstractArray) = _throw_operator_error(-, x)
+Base.:-(x::AbstractArray, ::AbstractJuMPScalar) = _throw_operator_error(-, x)
 
 function _MA.operate!!(
     op::Union{typeof(_MA.add_mul),typeof(_MA.sub_mul)},
-    ::AbstractArray,
+    x::AbstractArray,
     ::AbstractJuMPScalar,
 )
-    return _throw_operator_error(op)
+    return _throw_operator_error(op, x)
 end
 
 function _MA.operate!!(
     op::Union{typeof(_MA.add_mul),typeof(_MA.sub_mul)},
     ::AbstractJuMPScalar,
-    ::AbstractArray,
+    x::AbstractArray,
 )
-    return _throw_operator_error(op)
+    return _throw_operator_error(op, x)
 end

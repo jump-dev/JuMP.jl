@@ -405,10 +405,10 @@ end
 
 function _MA.operate!!(
     ::typeof(_MA.add_mul),
-    x::GenericNonlinearExpr,
-    ::AbstractArray,
+    ::GenericNonlinearExpr,
+    x::AbstractArray,
 )
-    return _throw_operator_error(_MA.add_mul)
+    return _throw_operator_error(_MA.add_mul, x)
 end
 
 """
