@@ -51,6 +51,7 @@ unexported
 [Uu]ntyped
 
 % JuMP-related vocab
+arithmetics
 [Bb]ilevel
 [Cc]anonicaliz(e|ation|ing)
 [Cc]ombinatorics
@@ -58,6 +59,7 @@ convexification
 DAE(?s)
 [Dd]et
 [Ee]xtremal
+factorable
 functionize
 geomean
 hypergraph
@@ -71,12 +73,14 @@ minimizers
 nl|NL
 [Nn]onconvex
 [Nn]on(posi|nega)tiv(e|es|ity)
+[Nn]onsmooth
 [Oo]ptigraph(?s)
 [Oo]ptinode(?s)
 [Oo]ptiedge(?s)
 overfitting
 parameteriz(ing|ation)
 perp
+priori
 POVM
 [Pp]recompil(ation|(e(?d)))
 [Pp]resolve
@@ -118,6 +122,7 @@ cosmo
 Couenne
 Divio
 Dualization
+EAGO
 [Ee]mbotech
 [Ee]cos
 JSONSchema
@@ -161,6 +166,8 @@ Biegler
 Borchers
 Bukhsh
 Cao
+Chachuat
+Chebyshev
 Cholesky
 Coey
 Dantzig
@@ -204,6 +211,7 @@ Mathieu
 Maurer
 Mehdi
 Michal
+Mitsos
 Mittelman
 Montoison
 Motzkin
@@ -223,6 +231,7 @@ Soodeh
 Steuer
 Stigler
 Stingl
+Stuber
 Sungho
 Taccari
 Tanneau
@@ -231,6 +240,7 @@ Tillmann
 Ulungu
 Vandenberghe
 Vielma
+Wechsung
 Wei
 Wollenberg
 Yankai
