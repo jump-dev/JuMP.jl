@@ -660,7 +660,6 @@ function test_matrix_abstractscalar_add()
         "instead of `x - y`, do `x .- y` for element-wise subtraction." *
         " If you are modifying the diagonal entries of a square matrix, " *
         "do `x - y * LinearAlgebra.I(n)`, where `n` is the side length.",
-
     )
     for lhs in (C, C'), rhs in (x, 1.0 * x, x^2, sin(x))
         @test_throws(err_add, lhs + rhs)
