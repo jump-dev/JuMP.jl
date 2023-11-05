@@ -125,9 +125,9 @@
 [DAQP]
     user = "darnstrom"
     rev = "v0.5.1"
-[EAGO]
-    user = "PSORLab"
-    rev = "v0.8.1"
+# [EAGO]
+#     user = "PSORLab"
+#     rev = "v0.8.1"
 [GAMS]
     user = "GAMS-dev"
     rev = "c5dee9f929e9d2f4433ae09fa92b8d872c9c43e0"
