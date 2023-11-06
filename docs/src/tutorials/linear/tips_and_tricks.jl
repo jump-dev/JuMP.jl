@@ -255,7 +255,7 @@ model = Model();
 @constraint(model, x >= 1 * z)
 
 # When `z = 0` the two constraints are equivalent to `0 <= x <= 0`. When `z = 1`,
-# the two constraints are equivalennt to `1 <= x <= 2`.
+# the two constraints are equivalent to `1 <= x <= 2`.
 
 # ## Semi-integer variables
 
@@ -275,7 +275,7 @@ model = Model();
 @constraint(model, x >= 5 * z)
 
 # When `z = 0` the two constraints are equivalent to `0 <= x <= 0`. When `z = 1`,
-# the two constraints are equivalennt to `5 <= x <= 10`.
+# the two constraints are equivalent to `5 <= x <= 10`.
 
 # ## Special Ordered Sets of Type 1
 
