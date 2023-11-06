@@ -67,7 +67,7 @@ julia> x = @variable(model, set = ComplexPlane())
 _[1] + _[2] im
 ```
 
-## Complex-valued variable bounds
+## Complex-valued variable and start values bounds
 
 Because complex-valued variables lack a total ordering, the definition of a
 variable bound for a complex-valued variable is ambiguous. If you pass a real-
@@ -106,6 +106,26 @@ julia> start_value.(vars)
 2-element Vector{Float64}:
  0.0
  4.0
+```
+
+You can modify the bounds and start values by passing `imag(x)` or `real(x)` to
+the appropriate function:
+
+```jldoctest complex_variables
+julia> set_lower_bound(imag(x), 2)
+
+julia> lower_bound(imag(x))
+2.0
+
+julia> delete_upper_bound(real(x))
+
+julia> has_upper_bound(real(x))
+false
+
+julia> set_start_value(imag(x), 3)
+
+julia> start_value(imag(x))
+3.0
 ```
 
 ## Complex-valued equality constraints
@@ -249,6 +269,51 @@ GenericAffExpr{ComplexF64, VariableRef}
 
 julia> typeof(H[2, 1])
 GenericAffExpr{ComplexF64, VariableRef}
+```
+
+### Start values
+
+When setting the start value, you must be careful to set only the upper triangle
+of real variables, and the upper triangle excluding the diagonal of imaginary
+variables:
+```jldoctest hermitian_psd_cone
+julia> import LinearAlgebra
+
+julia> function set_hermitian_start(
+           H::LinearAlgebra.Hermitian,
+           start::LinearAlgebra.Hermitian,
+       )
+           for j in 1:size(H, 2), i in 1:j
+               set_start_value(real(H[i, j]), real(start[i, j]))
+               if i < j
+                   set_start_value(imag(H[i, j]), imag(start[i, j]))
+               end
+           end
+           return
+       end
+set_hermitian_start (generic function with 1 method)
+
+julia> H0 = LinearAlgebra.Hermitian(
+           [1 (2+3im) (5+6im); (2-3im) 4 (7+8im); (5-6im) (7-8im) 9],
+       )
+3×3 LinearAlgebra.Hermitian{Complex{Int64}, Matrix{Complex{Int64}}}:
+ 1+0im  2+3im  5+6im
+ 2-3im  4+0im  7+8im
+ 5-6im  7-8im  9+0im
+
+julia> set_hermitian_start(H, H0)
+
+julia> start_value.(all_variables(model))
+9-element Vector{Float64}:
+ 1.0
+ 2.0
+ 4.0
+ 5.0
+ 7.0
+ 9.0
+ 3.0
+ 6.0
+ 8.0
 ```
 
 ## Hermitian PSD constraints
