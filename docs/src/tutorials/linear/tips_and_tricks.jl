@@ -237,15 +237,6 @@ M = 100
 
 # ## Semi-continuous variables
 
-# !!! info
-#     This section uses sets from [MathOptInterface](@ref moi_documentation).
-#     By default, JuMP exports the `MOI` symbol as an alias for the
-#     MathOptInterface.jl package. We recommend making this more explicit in
-#     your code by adding the following lines:
-#     ```julia
-#     import MathOptInterface as MOI
-#     ```
-
 # A semi-continuous variable is a continuous variable between bounds $[l,u]$
 # that also can assume the value zero, that is:
 # $$x \in \{0\} \cup [l,u].$$
@@ -255,6 +246,17 @@ M = 100
 model = Model();
 @variable(model, x in Semicontinuous(1.0, 2.0))
 
+# You can also represent a semi-continuous variable using the reformulation:
+
+model = Model();
+@variable(model, x)
+@variable(model, z, Bin)
+@constraint(model, x <= 2 * z)
+@constraint(model, x >= 1 * z)
+
+# When `z = 0` the two constraints are equivalent to `0 <= x <= 0`. When `z = 1`,
+# the two constraints are equivalennt to `1 <= x <= 2`.
+
 # ## Semi-integer variables
 
 # A semi-integer variable is a variable which assumes integer values between
@@ -263,6 +265,17 @@ model = Model();
 
 model = Model();
 @variable(model, x in Semiinteger(5.0, 10.0))
+
+# You can also represent a semi-integer variable using the reformulation:
+
+model = Model();
+@variable(model, x, Int)
+@variable(model, z, Bin)
+@constraint(model, x <= 10 * z)
+@constraint(model, x >= 5 * z)
+
+# When `z = 0` the two constraints are equivalent to `0 <= x <= 0`. When `z = 1`,
+# the two constraints are equivalennt to `5 <= x <= 10`.
 
 # ## Special Ordered Sets of Type 1
 
