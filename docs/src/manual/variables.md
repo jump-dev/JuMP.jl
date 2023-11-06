@@ -640,6 +640,30 @@ julia> set_integer(x)
     in the model, returning a function that can be called to undo the operation
     later on.
 
+## Semi-integer and semi-continuous variables
+
+Semi-continuous variables are constrained to the set
+``x \in \{0\} \cup [l, u]``.
+
+Create a semi-continuous variable using the [`Semicontinuous`](@ref) set:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x in Semicontinuous(1.5, 3.5))
+x
+```
+
+Semi-integer variables  are constrained to the set
+``x \in \{0\} \cup \{l, l+1, \dots, u\}``.
+
+Create a semi-integer variable using the [`Semiinteger`](@ref) set:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x in Semiinteger(1.0, 3.0))
+x
+```
+
 ## Start values
 
 There are two ways to provide a primal starting solution (also called MIP-start
