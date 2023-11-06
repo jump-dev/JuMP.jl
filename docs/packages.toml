@@ -127,7 +127,7 @@
     rev = "v0.5.1"
 [EAGO]
     user = "PSORLab"
-    rev = "v0.8.1"
+    rev = "75b09a9287a3264e2da1e003f0deb8278661c529"
     has_html = true
 [GAMS]
     user = "GAMS-dev"
