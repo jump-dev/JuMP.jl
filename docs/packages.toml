@@ -128,6 +128,7 @@
 [EAGO]
     user = "PSORLab"
     rev = "75b09a9287a3264e2da1e003f0deb8278661c529"
+    filename = "docs/src/jump/README.md"
     has_html = true
 [GAMS]
     user = "GAMS-dev"
