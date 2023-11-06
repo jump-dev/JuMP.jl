@@ -29,7 +29,7 @@ plot = Plots.plot(f, -2:0.01:2; ylims = (-0.5, 4), label = false)
 
 for x_k in -2:0.5:2
     g = x -> f(x_k) + ∇f(x_k) * (x - x_k)
-    Plots.plot!(plot, g, X; color = :gray, label = false)
+    Plots.plot!(plot, g, -2:0.5:2; color = :gray, label = false)
 end
 plot
 
@@ -128,7 +128,7 @@ model = Model()
 f(x) = log(x)
 x̂ = 0.1:0.5:1.6
 plot = Plots.plot(f, 0.1:0.01:1.6; label = false, linewidth = 3)
-Plots.plot!(x̂, f.(x̂), linewidth = 3, color = :red, label = false)
+Plots.plot!(x̂, f.(x̂); linewidth = 3, color = :red, label = false)
 I = [1, 2, 3, 4, 1]
 Plots.plot!(x̂[I], f.(x̂[I]); fill = (0, 0, "#f004"), width = 0, label = false)
 plot
@@ -155,7 +155,7 @@ model = Model()
 f(x) = sin(x)
 plot = Plots.plot(f, 0:0.01:2π; label = false)
 x̂ = range(; start = 0, stop = 2π, length = 7)
-Plots.plot!(x̂, f.(x̂), linewidth = 3, color = :red, label = false)
+Plots.plot!(x̂, f.(x̂); linewidth = 3, color = :red, label = false)
 I = [1, 5, 6, 7, 3, 2, 1]
 Plots.plot!(x̂[I], f.(x̂[I]); fill = (0, 0, "#f004"), width = 0, label = false)
 plot
