@@ -129,7 +129,6 @@
     user = "PSORLab"
     rev = "bea34bd61d686721b25dd2a68fbe64325a56a28e"
     filename = "docs/src/jump/README.md"
-    has_html = true
 [GAMS]
     user = "GAMS-dev"
     rev = "c5dee9f929e9d2f4433ae09fa92b8d872c9c43e0"
