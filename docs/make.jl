@@ -291,6 +291,7 @@ const _PAGES = [
             "tutorials/linear/multi.md",
             "tutorials/linear/multi_commodity_network.md",
             "tutorials/linear/tips_and_tricks.md",
+            "tutorials/linear/piecewise_linear.md",
             "tutorials/linear/facility_location.md",
             "tutorials/linear/finance.md",
             "tutorials/linear/geographic_clustering.md",
