@@ -3,10 +3,10 @@
 # v.2.0. If a copy of the MPL was not distributed with this file, You can       #src
 # obtain one at https://mozilla.org/MPL/2.0/.                                   #src
 
-# # Piecewise linear functions
+# # Approximating nonlinear functions
 
-# The purpose of this tutorial is to explain how to represent piecewise linear
-# functions in a JuMP model.
+# The purpose of this tutorial is to explain how to approximate nonlinear functions
+# with a mixed-integer linear program.
 
 # This tutorial uses the following packages:
 
@@ -146,7 +146,7 @@ model = Model()
 @constraint(model, y == sum(λ[i] * ŷ[i] for i in 1:n))
 @objective(model, Max, y)
 
-# ## Non-convex functions
+# ## Piecewise linear approximation
 
 # If the model is non-convex (or non-concave), then we cannot use an outer
 # approximation, and the inner approximation allows a solution far from the true
