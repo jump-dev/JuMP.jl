@@ -182,16 +182,19 @@ struct RotatedSecondOrderCone <: AbstractVectorSet end
 moi_set(::RotatedSecondOrderCone, dim::Int) = MOI.RotatedSecondOrderCone(dim)
 
 """
-    SOS1
+    SOS1(weights = Real[])
 
-SOS1 (Special Ordered Sets type 1) object than can be used to constrain a
-vector `x` to a set where at most 1 variable can take a non-zero value, all
-others being at 0.
-The `weights`, when specified, induce an ordering of the variables; as such,
-they should be unique values. The *k*th element in the set corresponds to the
-*k*th weight in `weights`. See [here](http://lpsolve.sourceforge.net/5.5/SOS.htm)
-for a description of SOS constraints and their potential uses.
-This is a shortcut for the `MathOptInterface.SOS1` set.
+The SOS1 (Special Ordered Set of Type 1) set constrains a vector `x` to the set
+where at most one variable can take a non-zero value, and all other elements are
+zero.
+
+The `weights` vector, if specified, induces an ordering of the variables; as
+such, it should contain unique values. The `weights` vector must have the same
+number of elements as the vector `x`, and the element `weights[i]` corresponds
+to element `x[i]`. If not provided, the `weights` vector defaults to
+`weights[i] = i`.
+
+This is a shortcut for the [`MOI.SOS1`](@ref) set.
 """
 struct SOS1{T} <: AbstractVectorSet
     weights::Vector{T}
@@ -213,17 +216,20 @@ function moi_set(set::SOS1{T}, dim::Int) where {T}
 end
 
 """
-    SOS2
+    SOS2(weights = Real[])
 
-SOS1 (Special Ordered Sets type 2) object than can be used to constrain a
-vector `x` to a set where at most 2 variables can take a non-zero value, all
-others being at 0. In addition, if two are non-zero these must be consecutive
-in their ordering.
-The `weights` induce an ordering of the variables; as such, they should be unique
-values. The *k*th element in the set corresponds to the *k*th weight in `weights`.
-See [here](http://lpsolve.sourceforge.net/5.5/SOS.htm) for a description of SOS
-constraints and their potential uses.
-This is a shortcut for the `MathOptInterface.SOS2` set.
+The SOS2 (Special Ordered Set of Type 2) set constrains a vector `x` to the set
+where at most two variables can take a non-zero value, and all other elements
+are zero. In addition, the two non-zero values must be consecutive given the
+ordering of the `x` vector induced by `weights`.
+
+The `weights` vector, if specified, induces an ordering of the variables; as
+such, it must contain unique values. The `weights` vector must have the same
+number of elements as the vector `x`, and the element `weights[i]` corresponds
+to element `x[i]`. If not provided, the `weights` vector defaults to
+`weights[i] = i`.
+
+This is a shortcut for the [`MOI.SOS2`](@ref) set.
 """
 struct SOS2{T} <: AbstractVectorSet
     weights::Vector{T}
