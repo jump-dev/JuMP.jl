@@ -179,5 +179,11 @@ model = Model();
     x == sum(λ[i] * x̂[i] for i in 1:n)
     y == sum(λ[i] * ŷ[i] for i in 1:n)
     sum(λ) == 1
-    λ in SOS2()
+    λ in SOS2()  # <-- this is new
 end)
+
+# The feasible region of the linear program is the red line in this plot:
+
+plot = Plots.plot(f, 0:0.01:2π; label = false)
+Plots.plot!(x̂, ŷ; linewidth = 3, color = :red, label = false)
+plot
