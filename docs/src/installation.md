@@ -136,6 +136,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [Pajarito.jl](https://github.com/jump-dev/Pajarito.jl)                         |                                                                                  |        | MPL-2    | (MI)NLP, (MI)SOCP, (MI)SDP |
 | [Pavito.jl](https://github.com/jump-dev/Pavito.jl)                             |                                                                                  |        | MPL-2    | (MI)NLP                   |
 | [Penbmi](http://www.penopt.com/penbmi.html)                                    | [Penopt.jl](https://github.com/jump-dev/Penopt.jl/)                              |        | Comm.    | Bilinear SDP              |
+| [Percival](https://github.com/JuliaSmoothOptimizers/Percival.jl/)              |                                                                                  |        | MPL-2    | NLP                       |
 | [PolyJuMP.KKT](https://github.com/jump-dev/PolyJuMP.jl)                        | [PolyJuMP.jl](https://github.com/jump-dev/PolyJuMP.jl)                           |        | MIT      | NLP                       |
 | [PolyJuMP.QCQP](https://github.com/jump-dev/PolyJuMP.jl)                       | [PolyJuMP.jl](https://github.com/jump-dev/PolyJuMP.jl)                           |        | MIT      | NLP                       |
 | [ProxSDP.jl](https://github.com/mariohsouto/ProxSDP.jl)                        |                                                                                  |        | MIT      | LP, SOCP, SDP             |
