@@ -127,7 +127,7 @@
     rev = "v0.5.1"
 [EAGO]
     user = "PSORLab"
-    rev = "bea34bd61d686721b25dd2a68fbe64325a56a28e"
+    rev = "8bba4cf6d9ef1602b4cfe3ea31b847f21ce25837"
     filename = "docs/src/jump/README.md"
 [GAMS]
     user = "GAMS-dev"
