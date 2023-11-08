@@ -154,7 +154,7 @@
 [Manopt]
     user = "JuliaManifolds"
     rev = "v0.4.42"
-    filename = "Readme.me"
+    filename = "Readme.md"
 [NEOSServer]
     user = "odow"
     rev = "v1.1.0"
