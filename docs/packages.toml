@@ -151,6 +151,9 @@
     user = "MadNLP"
     rev = "389561354a774441cd5e6b3aa5fffee102ed222e"
     has_html = true
+[Manopt]
+    user = "JuliaManifolds"
+    rev = "v0.4.42"
 [NEOSServer]
     user = "odow"
     rev = "v1.1.0"
