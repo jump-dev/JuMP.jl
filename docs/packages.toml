@@ -163,7 +163,7 @@
     rev = "v1.6.1"
 [Percival]
     user = "JuliaSmoothOptimizers"
-    rev = "69842fcd05eaa80cff6cbe4435184ee066fd2826"
+    rev = "fea30951982d15cfa0a846d6528884e5a9046c58"
 [Plasmo]
     user = "plasmo-dev"
     rev = "v0.5.4"
