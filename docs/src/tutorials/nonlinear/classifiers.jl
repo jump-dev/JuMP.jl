@@ -20,13 +20,10 @@
 # This tutorial uses the following packages
 
 using JuMP
-import DataFrames
-import HiGHS
 import Ipopt
 import LinearAlgebra
 import Plots
 import Random
-import SparseArrays
 import Test #src
 
 # ## Data and visualisation
@@ -40,6 +37,7 @@ function generate_test_points(m; random_seed = 1)
 end
 
 # For the sake of the example, let's take ``m = 100``:
+
 P = generate_test_points(100);
 
 # Note that the points are represented row-wise in the generated array.
@@ -64,6 +62,7 @@ plot = Plots.scatter(
 # We can then test how well our classifier reproduces the original labels and the boundary between them.
 
 # Let's make a line to divide the point into two sets by defining a gradient and constant:
+
 w0 = [5, 3]
 g0 = 8
 line(v::AbstractArray; w = w0, g = g0) = LinearAlgebra.dot(w, v) - g
@@ -85,6 +84,7 @@ Plots.plot!(
 )
 
 # Now we label the points relative to which side of the line they are.
+
 P_pos = hcat(filter(v -> line(v) > 0, eachrow(P))...)'
 P_neg = hcat(filter(v -> line(v) < 0, eachrow(P))...)'
 @assert size(P_pos, 1) + size(P_neg, 1) == size(P, 1) #src
@@ -135,6 +135,7 @@ D = LinearAlgebra.Diagonal([ones(size(P_pos, 1)); -ones(size(P_neg, 1))])
 # ```
 
 # We need a value for the positive penalty parameter ``C``:
+
 C = 1e3;
 
 # ## JuMP formulation
@@ -158,6 +159,7 @@ solution_summary(model)
 # ## Results
 
 # We recover the solution values
+
 w_sol, g_sol, y_sol = value.(w), value(g), value.(y)
 println("Minimum slack: ", minimum(y_sol), "\nMaximum slack: ", maximum(y_sol))
 
