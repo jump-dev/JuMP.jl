@@ -46,7 +46,7 @@ P = generate_test_points(100);
 # Let's visualise the points using the `Plots` package:
 
 r = 1.01 * maximum(abs.(P))
-plot1 = Plots.scatter(
+plot = Plots.scatter(
     P[:, 1],
     P[:, 2];
     xlim = (0, r),
@@ -64,8 +64,8 @@ plot1 = Plots.scatter(
 # We can then test how well our classifier reproduces the original labels and the boundary between them.
 
 # Let's make a line to divide the point into two sets by defining a gradient and constant:
-w0 = [5, 3];
-g0 = 8;
+w0 = [5, 3]
+g0 = 8
 line(v::AbstractArray; w = w0, g = g0) = LinearAlgebra.dot(w, v) - g
 line(x::Real; w = w0, g = g0) = -(w[1] * x - g) / w[2];
 
@@ -75,7 +75,7 @@ line(x::Real; w = w0, g = g0) = -(w[1] * x - g) / w[2];
 # Let's add this to the plot:
 
 Plots.plot!(
-    plot1,
+    plot,
     x -> line(x),
     0.0:0.01:2.0;
     seriestype = :line,
@@ -87,24 +87,23 @@ Plots.plot!(
 # Now we label the points relative to which side of the line they are.
 P_pos = hcat(filter(v -> line(v) > 0, eachrow(P))...)'
 P_neg = hcat(filter(v -> line(v) < 0, eachrow(P))...)'
-
 @assert size(P_pos, 1) + size(P_neg, 1) == size(P, 1) #src
-
 Plots.scatter!(
+    plot,
     P_pos[:, 1],
     P_pos[:, 2];
     shape = :cross,
     markercolor = :blue,
     markersize = 8,
-);
+)
 Plots.scatter!(
+    plot,
     P_neg[:, 1],
     P_neg[:, 2];
     shape = :xcross,
     markercolor = :crimson,
     markersize = 8,
-);
-plot1
+)
 
 # The goal is to show we can reconstruct the line from *just* the points and labels.
 
@@ -112,7 +111,7 @@ plot1
 
 # Firstly, we will put the point set back together row-wise as a matrix, with the labelled points group together:
 
-A = [P_pos; P_neg];
+A = [P_pos; P_neg]
 m, n = size(A)
 
 # To keep track of the labels, we'll use a diagonal matrix where entry ``i`` of the diagonal is the
@@ -131,6 +130,7 @@ D = LinearAlgebra.Diagonal([ones(size(P_pos, 1)); -ones(size(P_neg, 1))])
 # \begin{aligned}
 # & \min_{w \in \mathbb{R}^n, \; g \in \mathbb{R}, \; y \in \mathbb{R}^m} & \frac{1}{2} w^T w + C \; \sum_{i=1}^m y_i \\
 # & \text{subject to} & D_{ii}( A_{i :} w - g ) + y_i & \geq 1, & i = 1 \ldots m \\
+# & & y \ge 0.
 # \end{aligned}
 # ```
 
@@ -143,9 +143,8 @@ C = 1e3;
 # solve.
 
 m, n = size(A)
-
 model = Model(Ipopt.Optimizer)
-# set_silent(model)
+set_silent(model)
 @variable(model, w[1:n])
 @variable(model, g)
 @variable(model, y[1:m] >= 0)
@@ -159,9 +158,7 @@ solution_summary(model)
 # ## Results
 
 # We recover the solution values
-w_sol = value.(w)
-g_sol = value(g)
-y_sol = value.(y);
+w_sol, g_sol, y_sol = value.(w), value(g), value.(y)
 println("Minimum slack: ", minimum(y_sol), "\nMaximum slack: ", maximum(y_sol))
 
 # With the solution, we can ask: was the value of the penalty constant "sufficiently large" 
@@ -170,7 +167,7 @@ println("Minimum slack: ", minimum(y_sol), "\nMaximum slack: ", maximum(y_sol))
 # Let's add this to the plot as well and check how we did:
 
 Plots.plot!(
-    plot1,
+    plot,
     x -> line(x; w = w_sol, g = g_sol),
     0.0:0.01:2.0;
     seriestype = :line,
@@ -178,8 +175,7 @@ Plots.plot!(
     linestyle = :dashdotdot,
     lineopacity = 0.9,
     c = :darkblue,
-);
-plot1
+)
 
 # We find that we have recovered the dividing line from just the information of the points
 # and their labels.
