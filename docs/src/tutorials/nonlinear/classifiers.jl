@@ -5,6 +5,9 @@
 
 # # Classifiers
 
+# The purpose of this tutorial is to show how JuMP can be used to easily 
+# formulate classification problems.
+
 # Classification problems deal with constructing functions, called *classifiers*,
 # that can efficiently classify data into two or more distinct sets.
 # A common application is classifying previously unseen data points
@@ -88,8 +91,8 @@ Plots.plot!(
 # numerically useful to have the labels +1 for `P_pos`  and -1 for `P_neg`.
 
 labels = ifelse.(line.(eachrow(P)) .>= 0, 1, -1)
-P_pos = P[labels .== 1, :]
-P_neg = P[labels .== -1, :]
+P_pos = P[labels.==1, :]
+P_neg = P[labels.==-1, :]
 @assert size(P_pos, 1) + size(P_neg, 1) == size(P, 1) #src
 Plots.scatter!(
     plot,
@@ -113,15 +116,15 @@ Plots.scatter!(
 
 # ## Formulation: linear support vector machine
 
-# A classifier known as the linear _support vector machine_ looks for the line
-# function ``L(p) = w^\top p - g`` that satisfies ``L(p) < 0`` for a point ``p``
-# in `S_neg` and ``L(p) > 0`` on `S_pos`.
+# A classifier known as the linear _support vector machine_ looks for the affine
+# function ``L(p) = w^\top p - g`` that satisfies ``L(p) < 0`` for all points ``p``
+# in `P_neg` and ``L(p) > 0`` for all points ``p`` in `P_pos`.
 
 # The linearly constrained quadratic program that implements this is:
 # ```math
 # \begin{aligned}
-# \min_{w \in \mathbb{R}^n, \; g \in \mathbb{R}, \; y \in \mathbb{R}^m} & \frac{1}{2} w^T w + C \; \sum_{i=1}^m y_i \\
-# \text{subject to} & D \cdot (P w - g) + y & \geq \mathbf{1} \\
+# \min_{w \in \mathbb{R}^n, \; g \in \mathbb{R}, \; y \in \mathbb{R}^m} \quad & \frac{1}{2} w^T w + C \; \sum_{i=1}^m y_i \\
+# \text{subject to } \quad & D \cdot (P w - g) + y \geq \mathbf{1} \\
 #                   & y \ge 0.
 # \end{aligned}
 # ```
