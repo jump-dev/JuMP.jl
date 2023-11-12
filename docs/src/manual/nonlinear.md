@@ -305,6 +305,65 @@ julia> expr.args
  x
 ```
 
+## Function tracing
+
+Nonlinear expressions can be constructed using _function tracing_. Function
+tracing is when you call a regular Julia function with JuMP variables as
+arguments and the function builds a nonlinear expression via operator
+overloading. For example:
+
+```@repl
+using JuMP
+model = Model();
+@variable(model, x[1:2]);
+f(x::Vector{VariableRef}) = 2 * sin(x[1]^2) + sqrt(x[2])
+y = f(x)
+typeof(y)
+@objective(model, Max, f(x))
+```
+
+Function tracing supports functions which return vectors or arrays of
+[`NonlinearExpr`](@ref):
+
+```@repl
+using JuMP
+model = Model();
+@variable(model, x[1:2]);
+f(x::Vector{VariableRef}) = sqrt.(x)
+y = f(x)
+typeof(y)
+@constraint(model, f(x) .<= 2)
+@objective(model, Max, sum(f(x)))
+```
+
+Because function tracing uses operator overloading, there are many functions for
+which it will not work. For example:
+
+```jldoctest
+julia> using JuMP
+
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> f(x::Vector{VariableRef}) = x[1] > 1 ? 0 : x[2]
+f (generic function with 1 method)
+
+julia> f(x)
+ERROR: Cannot evaluate `>` between a variable and a number.
+[...]
+```
+
+In these cases, you should define a [User-defined operator](@ref jump_user_defined_operators)
+using the [`@operator`](@ref) macro.
+
+!!! tip
+    If it works, in most cases, you should prefer to use function tracing
+    instead of defining a user-defined operator. One exception is when the
+    function returns a very large expression (for example, it includes a
+    summation over a million elements). In that case, the user-defined operator
+    can be more efficient.
+
 ## [User-defined operators](@id jump_user_defined_operators)
 
 In addition to a standard list of univariate and multivariate operators
