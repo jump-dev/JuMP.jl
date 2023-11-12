@@ -6,14 +6,14 @@
 # # Classifiers
 
 # Classification problems deal with constructing functions, called *classifiers*,
-# that can efficiently classify data into two or more distinct sets. 
+# that can efficiently classify data into two or more distinct sets.
 # A common application is classifying previously unseen data points
 # after training a classifier on known data.
 
-# The theory and models in this tutorial come from 
-# Section 9.4 "Classification Problems" of the book 
-# [*Linear Programming with MATLAB*](https://doi.org/10.1137/1.9780898718775) (2007)
-# by M. C. Ferris, O. L. Mangasarian, and S. J. Wright.
+# The theory and models in this tutorial come from Section 9.4
+# "Classification Problems" of the book
+# [_Linear Programming with MATLAB_](https://doi.org/10.1137/1.9780898718775)
+# (2007), by M. C. Ferris, O. L. Mangasarian, and S. J. Wright.
 
 # ## Required packages
 
@@ -28,8 +28,8 @@ import Test #src
 
 # ## Data and visualisation
 
-# To start, let's generate some points to test with.
-# The argument ``m`` is the number of 2-dimensional points:
+# To start, let's generate some points to test with. The argument ``m`` is the
+# number of 2-dimensional points:
 
 function generate_test_points(m; random_seed = 1)
     rng = Random.MersenneTwister(random_seed)
@@ -40,8 +40,8 @@ end
 
 P = generate_test_points(100);
 
-# Note that the points are represented row-wise in the generated array.
-# Let's visualise the points using the `Plots` package:
+# Note that the points are represented row-wise in the generated array. Let's
+# visualise the points using the `Plots` package:
 
 r = 1.01 * maximum(abs.(P))
 plot = Plots.scatter(
@@ -56,20 +56,21 @@ plot = Plots.scatter(
     legend = false,
 )
 
-# We want to split the points into two distinct sets on either side of a dividing line.
-# We'll then label each point depending on which side of the line it happens to fall.
-# Based on the labels of the point, we'll show how to create a classifier using a JuMP model.
-# We can then test how well our classifier reproduces the original labels and the boundary between them.
+# We want to split the points into two distinct sets on either side of a
+# dividing line. We'll then label each point depending on which side of the line
+# it happens to fall. Based on the labels of the point, we'll show how to create
+# a classifier using a JuMP model. We can then test how well our classifier
+# reproduces the original labels and the boundary between them.
 
-# Let's make a line to divide the point into two sets by defining a gradient and constant:
+# Let's make a line to divide the point into two sets by defining a gradient and
+# constant:
 
-w0 = [5, 3]
-g0 = 8
-line(v::AbstractArray; w = w0, g = g0) = LinearAlgebra.dot(w, v) - g
-line(x::Real; w = w0, g = g0) = -(w[1] * x - g) / w[2];
+w_0, g_0 = [5, 3], 8
+line(v::AbstractArray; w = w_0, g = g_0) = w' * v - g
+line(x::Real; w = w_0, g = g_0) = -(w[1] * x - g) / w[2];
 
-# Julia's multiple dispatch feature allows us to define the vector and single-variable form
-# of the `line` function under the same name.
+# Julia's multiple dispatch feature allows us to define the vector and
+# single-variable form of the `line` function under the same name.
 
 # Let's add this to the plot:
 
@@ -83,10 +84,12 @@ Plots.plot!(
     c = :darkcyan,
 )
 
-# Now we label the points relative to which side of the line they are.
+# Now we label the points relative to which side of the line they are. It is
+# numerically useful to have the labels +1 for `P_pos`  and -1 for `P_neg`.
 
-P_pos = hcat(filter(v -> line(v) > 0, eachrow(P))...)'
-P_neg = hcat(filter(v -> line(v) < 0, eachrow(P))...)'
+labels = ifelse.(line.(eachrow(P)) .>= 0, 1, -1)
+P_pos = P[labels .== 1, :]
+P_neg = P[labels .== -1, :]
 @assert size(P_pos, 1) + size(P_neg, 1) == size(P, 1) #src
 Plots.scatter!(
     plot,
@@ -105,34 +108,24 @@ Plots.scatter!(
     markersize = 8,
 )
 
-# The goal is to show we can reconstruct the line from *just* the points and labels.
+# The goal is to show we can reconstruct the line from *just* the points and
+# the labels.
 
 # ## Formulation: linear support vector machine
 
-# Firstly, we will put the point set back together row-wise as a matrix, with the labelled points group together:
+# A classifier known as the linear _support vector machine_ looks for the line
+# function ``L(p) = w^\top p - g`` that satisfies ``L(p) < 0`` for a point ``p``
+# in `S_neg` and ``L(p) > 0`` on `S_pos`.
 
-A = [P_pos; P_neg]
-m, n = size(A)
-
-# To keep track of the labels, we'll use a diagonal matrix where entry ``i`` of the diagonal is the
-# label for point ``i`` (row ``i`` of the matrix).
-
-D = LinearAlgebra.Diagonal([ones(size(P_pos, 1)); -ones(size(P_neg, 1))])
-
-# It is numerically useful to have the labels +1 for `S_pos`  and -1 for `S_neg`.
-
-# A classifier known as the linear *support vector machine* looks for the line function data
-# ``w`` and ``g`` such that the function ``L(v) = w^T v - g`` satisfies 
-# ``L(p) < 0`` for a point ``p`` in `S_neg` and ``L(p) > 0`` on `S_pos`. 
-# The linearly constrained quadratic program that implements this as follows:
-
+# The linearly constrained quadratic program that implements this is:
 # ```math
 # \begin{aligned}
-# & \min_{w \in \mathbb{R}^n, \; g \in \mathbb{R}, \; y \in \mathbb{R}^m} & \frac{1}{2} w^T w + C \; \sum_{i=1}^m y_i \\
-# & \text{subject to} & D_{ii}( A_{i :} w - g ) + y_i & \geq 1, & i = 1 \ldots m \\
-# & & y \ge 0.
+# \min_{w \in \mathbb{R}^n, \; g \in \mathbb{R}, \; y \in \mathbb{R}^m} & \frac{1}{2} w^T w + C \; \sum_{i=1}^m y_i \\
+# \text{subject to} & D \cdot (P w - g) + y & \geq \mathbf{1} \\
+#                   & y \ge 0.
 # \end{aligned}
 # ```
+# where ``D`` is a diagonal matrix of the labels.
 
 # We need a value for the positive penalty parameter ``C``:
 
@@ -140,17 +133,17 @@ C = 1e3;
 
 # ## JuMP formulation
 
-# Now let's build and the JuMP model. We'll get ``w`` and ``g`` from the optimal solution after the
-# solve.
+# Here is the JuMP model:
 
-m, n = size(A)
+m, n = size(P)
 model = Model(Ipopt.Optimizer)
 set_silent(model)
 @variable(model, w[1:n])
 @variable(model, g)
 @variable(model, y[1:m] >= 0)
-@constraint(model, [i in 1:m], D[i, i] * (A[i, :]' * w - g) + y[i] >= 1)
-@objective(model, Min, 0.5 * w' * w + C * sum(y))
+D = LinearAlgebra.Diagonal(labels)
+@constraint(model, D * (P * w .- g) .+ y .>= 1)
+@objective(model, Min, 1 / 2 * w' * w + C * sum(y))
 optimize!(model)
 Test.@test termination_status(model) == LOCALLY_SOLVED    #src
 Test.@test primal_status(model) == FEASIBLE_POINT  #src
@@ -163,10 +156,12 @@ solution_summary(model)
 w_sol, g_sol, y_sol = value.(w), value(g), value.(y)
 println("Minimum slack: ", minimum(y_sol), "\nMaximum slack: ", maximum(y_sol))
 
-# With the solution, we can ask: was the value of the penalty constant "sufficiently large" 
-# for this data set? This can be judged in part by the range of the slack variables.
+# With the solution, we can ask: was the value of the penalty constant
+# "sufficiently large" for this data set? This can be judged in part by the
+# range of the slack variables. If the slack is too large, then we need to
+# increase the penalty constant.
 
-# Let's add this to the plot as well and check how we did:
+# Let's plot the solution and check how we did:
 
 Plots.plot!(
     plot,
@@ -179,5 +174,5 @@ Plots.plot!(
     c = :darkblue,
 )
 
-# We find that we have recovered the dividing line from just the information of the points
-# and their labels.
+# We find that we have recovered the dividing line from just the information of
+# the points and their labels.
