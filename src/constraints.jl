@@ -119,12 +119,13 @@ function set_dual_start_value(
     },
     value,
 )
+    model = owner_model(con_ref)
     vectorized_value = vectorize(value, dual_shape(con_ref.shape))
     MOI.set(
-        owner_model(con_ref),
+        model,
         MOI.ConstraintDualStart(),
         con_ref,
-        vectorized_value,
+        model_convert(model, vectorized_value),
     )
     return
 end
@@ -174,11 +175,12 @@ function set_start_value(
     },
     value,
 )
+    model = owner_model(con_ref)
     MOI.set(
-        owner_model(con_ref),
+        model,
         MOI.ConstraintPrimalStart(),
         con_ref,
-        vectorize(value, con_ref.shape),
+        model_convert(model, vectorize(value, con_ref.shape)),
     )
     return
 end
