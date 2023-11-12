@@ -12,7 +12,7 @@
 
 # The model comes from Section 4.9 "Applications VII: extremal ellipsoids"
 # of the book *Lectures on Modern Convex Optimization* by
-# [Ben-Tal and Nemirovski (2001)](http://epubs.siam.org/doi/book/10.1137/1.9780898718829).
+# [Ben-Tal and Nemirovski (2001)](https://doi.org/10.1137/1.9780898718829).
 
 # For a related example, see also the [Minimal ellipses](@ref) tutorial.
 

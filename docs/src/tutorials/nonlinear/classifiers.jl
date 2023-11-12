@@ -59,6 +59,10 @@ plot = Plots.scatter(
     legend = false,
 )
 
+# We'll need this for later comparison:
+
+plot_copy = deepcopy(plot);
+
 # We want to split the points into two distinct sets on either side of a
 # dividing line. We'll then label each point depending on which side of the line
 # it happens to fall. Based on the labels of the point, we'll show how to create
@@ -130,33 +134,35 @@ Plots.scatter!(
 # ```
 # where ``D`` is a diagonal matrix of the labels.
 
-# We need a value for the positive penalty parameter ``C``:
+# We need a default value for the positive penalty parameter ``C``:
 
-C = 1e3;
+C_0 = 100.0;
 
 # ## JuMP formulation
 
 # Here is the JuMP model:
 
-m, n = size(P)
-model = Model(Ipopt.Optimizer)
-set_silent(model)
-@variable(model, w[1:n])
-@variable(model, g)
-@variable(model, y[1:m] >= 0)
-D = LinearAlgebra.Diagonal(labels)
-@constraint(model, D * (P * w .- g) .+ y .>= 1)
-@objective(model, Min, 1 / 2 * w' * w + C * sum(y))
-optimize!(model)
-Test.@test termination_status(model) == LOCALLY_SOLVED    #src
-Test.@test primal_status(model) == FEASIBLE_POINT  #src
-solution_summary(model)
+function solve_SVM_classifier(P, labels; optimizer = Ipopt.Optimizer, C = C_0)
+    m, n = size(P)
+    model = Model(optimizer)
+    set_silent(model)
+    @variable(model, w[1:n])
+    @variable(model, g)
+    @variable(model, y[1:m] >= 0)
+    D = LinearAlgebra.Diagonal(labels)
+    @constraint(model, D * (P * w .- g) .+ y .>= 1)
+    @objective(model, Min, 1 / 2 * w' * w + C * sum(y))
+    optimize!(model)
+    return model, value.(w), value(g), value.(y)
+end
 
 # ## Results
 
 # We recover the solution values
 
-w_sol, g_sol, y_sol = value.(w), value(g), value.(y)
+model, w_sol, g_sol, y_sol = solve_SVM_classifier(P, labels)
+Test.@test termination_status(model) == LOCALLY_SOLVED    #src
+Test.@test primal_status(model) == FEASIBLE_POINT  #src
 println("Minimum slack: ", minimum(y_sol), "\nMaximum slack: ", maximum(y_sol))
 
 # With the solution, we can ask: was the value of the penalty constant
@@ -179,3 +185,90 @@ Plots.plot!(
 
 # We find that we have recovered the dividing line from just the information of
 # the points and their labels.
+
+# ## Nonseparable classes of points
+
+# Now, what if the point sets are not cleanly separable by a line
+# (or a hyperplane in higher dimensions)? Does this still work?
+# Let's repeat the above process but this time we will simulate nonseparable
+# classes of points by intermingling a few nearby points across the previously used line.
+
+nearby_indices = (abs.(line.(eachrow(P))) .< 1.1)
+labels_new = ifelse.(nearby_indices, -labels, labels)
+
+P_pos = P[labels_new.==1, :]
+P_neg = P[labels_new.==-1, :]
+@assert size(P_pos, 1) + size(P_neg, 1) == size(P, 1) #src
+Plots.scatter!(
+    plot_copy,
+    P_pos[:, 1],
+    P_pos[:, 2];
+    shape = :cross,
+    markercolor = :blue,
+    markersize = 8,
+)
+Plots.scatter!(
+    plot_copy,
+    P_neg[:, 1],
+    P_neg[:, 2];
+    shape = :xcross,
+    markercolor = :crimson,
+    markersize = 8,
+)
+
+model, w_sol, g_sol, y_sol = solve_SVM_classifier(P, labels_new)
+Test.@test termination_status(model) == LOCALLY_SOLVED    #src
+Test.@test primal_status(model) == FEASIBLE_POINT  #src
+println("Minimum slack: ", minimum(y_sol), "\nMaximum slack: ", maximum(y_sol))
+
+Plots.plot!(
+    plot_copy,
+    x -> line(x; w = w_sol, g = g_sol),
+    0.0:0.01:2.0;
+    seriestype = :line,
+    linewidth = 5,
+    linestyle = :dashdotdot,
+    lineopacity = 0.9,
+    c = :darkblue,
+)
+
+# So it still works as a classifier, with allowance for the nonseparable points.
+#
+# We can find out which points are contributing to the shape of the line by
+# looking at the dual values of the affine constraints and comparing them
+# to the penalty constant ``C``:
+
+affine_cons = all_constraints(model, AffExpr, MOI.GreaterThan{Float64})
+active_cons = findall(isapprox.(dual.(affine_cons), C_0; atol = 0.001))
+
+findall(nearby_indices) ⊆ active_cons
+
+# The last statement tells us that our nonseparable points are actively contributing
+# to how the classifier is defined. The remaining points are of interest and
+# are highlighted:
+
+P_active = P[setdiff(active_cons, findall(nearby_indices)), :]
+
+Plots.scatter!(
+    plot_copy,
+    P_active[:, 1],
+    P_active[:, 2];
+    shape = :hexagon,
+    markercolor = :green,
+    markersize = 8,
+    markeropacity = 0.5,
+)
+
+# ## Advanced: Duality and the kernel method
+
+# Linear SVM techniques are not limited to finding separating hyperplanes
+# in the original space of the dataset. We can first transform the 
+# training data under a nonlinear mapping, apply our method, then 
+# map the hyperplane back into original space.
+
+# ### Checkerboard dataset
+# ![Checkerboard](../../assets/checker/checkerboard.pdf)
+
+# ### Classifier using a sixth degree polynomial kernel
+
+# ![Sine Kernel](../../assets/checker/poly6.pdf)
