@@ -95,7 +95,7 @@ end
 _value_type(::Any, ::Any) = Any
 
 function _value_type(::ConstraintRef{M,<:MOI.ConstraintIndex{F}}) where {M,F}
-    return _value_type(M,F)
+    return _value_type(M, F)
 end
 
 # Returns the value of MOI.ConstraintDualStart in a type-stable way
