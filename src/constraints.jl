@@ -87,22 +87,12 @@ end
 
 function _set_converted(
     attr::MOI.AbstractConstraintAttribute,
-    con_ref::ConstraintRef{
-        <:AbstractModel,
-        <:MOI.ConstraintIndex{
-            F,
-        },
-    },
+    con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
     value,
 ) where {F<:MOI.AbstractFunction}
     model = owner_model(con_ref)
     V = MOI.Utilities.value_type(value_type(typeof(model)), F)
-    MOI.set(
-        model,
-        attr,
-        con_ref,
-        _convert_if_something(V, value),
-    )
+    MOI.set(model, attr, con_ref, _convert_if_something(V, value))
     return
 end
 
