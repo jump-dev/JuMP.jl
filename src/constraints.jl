@@ -85,6 +85,27 @@ function dual_start_value(
     return reshape_vector(_dual_start(con_ref), dual_shape(con_ref.shape))
 end
 
+function _set_converted(
+    attr::MOI.AbstractConstraintAttribute,
+    con_ref::ConstraintRef{
+        <:AbstractModel,
+        <:MOI.ConstraintIndex{
+            F,
+        },
+    },
+    value,
+) where {F<:MOI.AbstractFunction}
+    model = owner_model(con_ref)
+    V = MOI.Utilities.value_type(value_type(typeof(model)), F)
+    MOI.set(
+        model,
+        attr,
+        con_ref,
+        _convert_if_something(V, value),
+    )
+    return
+end
+
 function _value_type(
     ::Type{M},
     ::Type{F},
@@ -119,13 +140,10 @@ function set_dual_start_value(
     },
     value,
 )
-    model = owner_model(con_ref)
-    vectorized_value = vectorize(value, dual_shape(con_ref.shape))
-    MOI.set(
-        model,
+    _set_converted(
         MOI.ConstraintDualStart(),
         con_ref,
-        model_convert(model, vectorized_value),
+        vectorize(value, dual_shape(con_ref.shape)),
     )
     return
 end
@@ -152,7 +170,7 @@ function set_dual_start_value(
     },
     value,
 )
-    MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, value)
+    _set_converted(MOI.ConstraintDualStart(), con_ref, value)
     return
 end
 
@@ -175,12 +193,10 @@ function set_start_value(
     },
     value,
 )
-    model = owner_model(con_ref)
-    MOI.set(
-        model,
+    _set_converted(
         MOI.ConstraintPrimalStart(),
         con_ref,
-        model_convert(model, vectorize(value, con_ref.shape)),
+        vectorize(value, con_ref.shape),
     )
     return
 end
@@ -209,7 +225,7 @@ function set_start_value(
     },
     value,
 )
-    MOI.set(owner_model(con_ref), MOI.ConstraintPrimalStart(), con_ref, value)
+    _set_converted(MOI.ConstraintPrimalStart(), con_ref, value)
     return
 end
 

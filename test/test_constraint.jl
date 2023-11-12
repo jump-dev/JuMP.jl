@@ -912,6 +912,7 @@ function test_dual_start()
     con = @constraint(model, 2x <= 1)
     @test dual_start_value(con) === nothing
     set_dual_start_value(con, 2)
+    @test MOI.get(model, MOI.ConstraintDualStart(), con) isa Float64
     @test dual_start_value(con) == 2.0
     set_dual_start_value(con, nothing)
     @test dual_start_value(con) === nothing
@@ -925,6 +926,9 @@ function test_dual_start_vector()
     @test dual_start_value(con_vec) === nothing
     set_dual_start_value(con_vec, [1.0, 3.0])
     @test dual_start_value(con_vec) == [1.0, 3.0]
+    set_dual_start_value(con_vec, [1, 3])
+    @test MOI.get(model, MOI.ConstraintDualStart(), con_vec) isa Vector{Float64}
+    @test dual_start_value(con_vec) == [1, 3]
     set_dual_start_value(con_vec, nothing)
     @test dual_start_value(con_vec) === nothing
     return
@@ -936,6 +940,7 @@ function test_primal_start()
     con = @constraint(model, 2x <= 1)
     @test start_value(con) === nothing
     set_start_value(con, 2)
+    @test MOI.get(model, MOI.ConstraintPrimalStart(), con) isa Float64
     @test start_value(con) == 2.0
     set_start_value(con, nothing)
     @test start_value(con) === nothing
@@ -949,6 +954,10 @@ function test_primal_start_vector()
     @test start_value(con_vec) === nothing
     set_start_value(con_vec, [1.0, 3.0])
     @test start_value(con_vec) == [1.0, 3.0]
+    set_start_value(con_vec, [1, 3])
+    attr = MOI.ConstraintPrimalStart()
+    @test MOI.get(model, attr, con_vec) isa Vector{Float64}
+    @test start_value(con_vec) == [1, 3]
     set_start_value(con_vec, nothing)
     @test start_value(con_vec) === nothing
     return
