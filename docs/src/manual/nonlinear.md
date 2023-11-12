@@ -362,7 +362,7 @@ using the [`@operator`](@ref) macro.
     instead of defining a user-defined operator. One exception is when the
     function returns a very large expression (for example, it includes a
     summation over a million elements). In that case, the user-defined operator
-    can be more effiicent.
+    can be more efficient.
 
 ## [User-defined operators](@id jump_user_defined_operators)
 
