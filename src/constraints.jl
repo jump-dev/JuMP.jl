@@ -94,6 +94,10 @@ end
 
 _value_type(::Any, ::Any) = Any
 
+function _value_type(::ConstraintRef{M,<:MOI.ConstraintIndex{F}}) where {M,F}
+    return _value_type(M, F)
+end
+
 # Returns the value of MOI.ConstraintDualStart in a type-stable way
 function _dual_start(
     con_ref::ConstraintRef{M,MOI.ConstraintIndex{F,S}},
@@ -124,7 +128,7 @@ function set_dual_start_value(
         owner_model(con_ref),
         MOI.ConstraintDualStart(),
         con_ref,
-        vectorized_value,
+        _convert_if_something(_value_type(con_ref), vectorized_value),
     )
     return
 end
@@ -151,7 +155,8 @@ function set_dual_start_value(
     },
     value,
 )
-    MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, value)
+    v = _convert_if_something(_value_type(con_ref), value)
+    MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, v)
     return
 end
 
@@ -174,11 +179,12 @@ function set_start_value(
     },
     value,
 )
+    vectorized_value = vectorize(value, con_ref.shape)
     MOI.set(
         owner_model(con_ref),
         MOI.ConstraintPrimalStart(),
         con_ref,
-        vectorize(value, con_ref.shape),
+        _convert_if_something(_value_type(con_ref), vectorized_value),
     )
     return
 end
@@ -207,7 +213,8 @@ function set_start_value(
     },
     value,
 )
-    MOI.set(owner_model(con_ref), MOI.ConstraintPrimalStart(), con_ref, value)
+    v = _convert_if_something(_value_type(con_ref), value)
+    MOI.set(owner_model(con_ref), MOI.ConstraintPrimalStart(), con_ref, v)
     return
 end
 
