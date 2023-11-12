@@ -347,6 +347,7 @@ julia> model = Model();
 julia> @variable(model, x[1:2]);
 
 julia> f(x::Vector{VariableRef}) = x[1] > 1 ? 0 : x[2]
+f (generic function with 1 method)
 
 julia> f(x)
 ERROR: Cannot evaluate `>` between a variable and a number.
