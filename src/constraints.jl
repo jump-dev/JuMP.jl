@@ -156,7 +156,7 @@ function set_dual_start_value(
     value,
 )
     v = _convert_if_something(_value_type(con_ref), value)
-    MOI.set(owner_model(model), MOI.ConstraintDualStart(), con_ref, v)
+    MOI.set(owner_model(con_ref), MOI.ConstraintDualStart(), con_ref, v)
     return
 end
 
