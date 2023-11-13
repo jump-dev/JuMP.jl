@@ -23,6 +23,7 @@
 # This tutorial uses the following packages
 
 using JuMP
+import DelimitedFiles
 import Ipopt
 import LinearAlgebra
 import Plots
@@ -69,7 +70,7 @@ plot_copy = deepcopy(plot);
 # a classifier using a JuMP model. We can then test how well our classifier
 # reproduces the original labels and the boundary between them.
 
-# Let's make a line to divide the point into two sets by defining a gradient and
+# Let's make a line to divide the points into two sets by defining a gradient and
 # constant:
 
 w_0, g_0 = [5, 3], 8
@@ -120,14 +121,14 @@ Plots.scatter!(
 
 # ## Formulation: linear support vector machine
 
-# A classifier known as the linear _support vector machine_ looks for the affine
+# A classifier known as the linear _support vector machine_ (SVM) looks for the affine
 # function ``L(p) = w^\top p - g`` that satisfies ``L(p) < 0`` for all points ``p``
 # in `P_neg` and ``L(p) > 0`` for all points ``p`` in `P_pos`.
 
 # The linearly constrained quadratic program that implements this is:
 # ```math
 # \begin{aligned}
-# \min_{w \in \mathbb{R}^n, \; g \in \mathbb{R}, \; y \in \mathbb{R}^m} \quad & \frac{1}{2} w^T w + C \; \sum_{i=1}^m y_i \\
+# \min_{w \in \mathbb{R}^n, \; g \in \mathbb{R}, \; y \in \mathbb{R}^m} \quad & \frac{1}{2} w^\top w + C \; \sum_{i=1}^m y_i \\
 # \text{subject to } \quad & D \cdot (P w - g) + y \geq \mathbf{1} \\
 #                   & y \ge 0.
 # \end{aligned}
@@ -158,7 +159,7 @@ end
 
 # ## Results
 
-# We recover the solution values
+# Let's recover the values that define the classifier by solving the model:
 
 model, w_sol, g_sol, y_sol = solve_SVM_classifier(P, labels)
 Test.@test termination_status(model) == LOCALLY_SOLVED    #src
@@ -221,6 +222,8 @@ Test.@test termination_status(model) == LOCALLY_SOLVED    #src
 Test.@test primal_status(model) == FEASIBLE_POINT  #src
 println("Minimum slack: ", minimum(y_sol), "\nMaximum slack: ", maximum(y_sol))
 
+# 
+
 Plots.plot!(
     plot_copy,
     x -> line(x; w = w_sol, g = g_sol),
@@ -258,17 +261,210 @@ Plots.scatter!(
     markersize = 8,
     markeropacity = 0.5,
 )
-
 # ## Advanced: Duality and the kernel method
 
+# ### The dual program
+
+# The dual of the linear SVM program is also a linearly constrained quadratic program:
+# ```math
+# \begin{aligned}
+# \min_{u \in \mathbb{R}^m} \quad & \frac{1}{2} u^\top D P  P^\top D u - \; \mathbf{1}^\top u \\
+# \text{subject to } \quad & \mathbf{1}^\top D u = 0  \\
+#                   & 0 \leq u \leq C\mathbf{1}.
+# \end{aligned}
+# ```
+# This is the JuMP model:
+function solve_dual_SVM_classifier(
+    P,
+    labels;
+    optimizer = Ipopt.Optimizer,
+    C = C_0,
+)
+    m, n = size(P)
+    model = Model(optimizer)
+    set_silent(model)
+    @variable(model, 0 <= u[1:m] <= C)
+    D = LinearAlgebra.Diagonal(labels)
+    con = @constraint(model, sum(D * u) >= 0)
+    @objective(model, Min, 1 / 2 * u' * D * P * P' * D * u - C * sum(u))
+    optimize!(model)
+    u_sol = value.(u)
+    w_sol = P' * D * u_sol
+    g_sol = dual(con)
+    return model, u_sol, w_sol, g_sol
+end
+
+# We recover the line gradient vector ``w`` through setting ``w = P^\top D u``
+# and the line constant ``g`` as the dual value of the single affine constraint.
+# In many cases it may be simpler to solve the dual form. We can check that this
+# has recovered the classifier:
+
+model_dual, u_d, w_d, g_d = solve_dual_SVM_classifier(P, labels)
+Test.@test termination_status(model_dual) == LOCALLY_SOLVED    #src
+Test.@test primal_status(model_dual) == FEASIBLE_POINT  #src
+Plots.plot!(
+    plot_copy,
+    x -> line(x; w = w_d, g = g_d),
+    0.0:0.01:2.0;
+    seriestype = :line,
+    linewidth = 2,
+    linestyle = :dash,
+    lineopacity = 0.9,
+    c = :red,
+)
+
+# ## The kernel method
+
 # Linear SVM techniques are not limited to finding separating hyperplanes
-# in the original space of the dataset. We can first transform the 
+# in the original space of the dataset. One could first transform the 
 # training data under a nonlinear mapping, apply our method, then 
 # map the hyperplane back into original space.
 
+# The actual data describing the point set is held in a matrix ``P``,
+# but looking at the dual program we see that what actually matters is the
+# [Gram matrix](https://en.wikipedia.org/wiki/Gram_matrix) ``P P^\top``,
+# expressing a pairwise comparison (an inner-product) between each point vector.
+# It follows that any mapping of the point set only needs
+# to be defined at the level of _pairwise_ maps between points.
+# Such maps are known as _kernel functions_
+# ```math
+# k \; : \; \mathbb{R}^n \times \mathbb{R}^n \; \rightarrow \mathbb{R}, \qquad
+# (s, t) \mapsto \left< \Phi(s), \Phi(t) \right>
+# ```
+# where the right-hand side applies some transformation ``\Phi : \mathbb{R}^n \rightarrow \mathbb{R}^{n'}``
+# followed by an inner-product in that image space. In practice, we can avoid having
+#  ``\Phi`` explicitly given but instead define a kernel function directly between pairs of vectors.
+# This move to using a kernel function without knowing the map is called the _kernel method_
+# (or sometimes, the _kernel trick_).
+
+# ### Classifier using a Gaussian kernel
+
+# We will demonstrate the application of a _Gaussian_ or _radial basis function_ kernel
+# ```math
+# k(s, t)  = \exp\left( -\mu \lVert s - t \rVert^2_2 \right)
+# ```
+# for some positive parameter ``\mu``.
+
+k_gauss(s::Vector, t::Vector; μ = 0.5) = exp(-μ * LinearAlgebra.norm(s - t)^2)
+
+# Given a matrix of points expressed row-wise and a kernel, let's return
+# the transformed matrix ``K`` that replaces ``P P^\top``:
+
+function pairwise_transform(kernel_func, P)
+    m, n = size(P)
+    K = zeros(eltype(P), m, m)
+
+    for j in 1:m
+        for i in 1:j
+            K[i, j] = kernel_func(P[i, :], P[j, :])
+        end
+    end
+
+    return LinearAlgebra.Symmetric(K, :U)
+end
+
+K_0 = pairwise_transform(k_gauss, P)
+
+function solve_kernel_SVM_classifier(
+    kernel_func,
+    P,
+    labels;
+    optimizer = Ipopt.Optimizer,
+    C = C_0,
+    kwargs...,
+)
+    m, n = size(P)
+    K = pairwise_transform(kernel_func, P)
+    model = Model(optimizer)
+    set_silent(model)
+    @variable(model, 0 <= u[1:m] <= C)
+    D = LinearAlgebra.Diagonal(labels)
+    con = @constraint(model, sum(D * u) >= 0)
+    @objective(model, Min, 1 / 2 * u' * D * K * D * u - C * sum(u))
+    optimize!(model)
+    u_sol = value.(u)
+    g_sol = dual(con)
+
+    function kernel_classifier(v::Vector)
+        return sum(
+            D[i, i] * u_sol[i] * kernel_func(P[i, :], v; kwargs...) for i in 1:m
+        )
+    end
+
+    return model, u_sol, g_sol, kernel_classifier
+end
+
+# This time, we don't recover the line gradient vector ``w`` directly.
+# Instead, we compute the classifier ``f`` using the dual values and the
+# kernel function:
+#  ```math
+#  f(v) = \sum_{i=1}^m D_{ii} u_i \; k(p_i, v ) - g
+# ```
+# where ``p_i`` is row vector ``i`` of ``P``.
+
 # ### Checkerboard dataset
-# ![Checkerboard](../../assets/checker/checkerboard.pdf)
 
-# ### Classifier using a sixth degree polynomial kernel
+# To demonstrate this nonlinear technique, we'll use the [checkerboard dataset](data/checker/README).
 
-# ![Sine Kernel](../../assets/checker/poly6.pdf)
+checkerboard = DelimitedFiles.readdlm(
+    joinpath(@__DIR__, "data", "checker", "checker.txt"),
+    ' ',
+    Int64,
+)
+labels_checker = ifelse.(checkerboard[:, 1] .== 0, -1, 1)
+B = checkerboard[:, 2:3] ./ 100.0  # rescale to [0,2] x [0,2] square.
+B_pos = B[labels_checker.==1, :]
+B_neg = B[labels_checker.==-1, :]
+@assert size(B_pos, 1) + size(B_neg, 1) == size(B, 1) #src
+r = 1.01 * maximum(abs.(B))
+plot_checkers = Plots.scatter(
+    B_pos[:, 1],
+    B_pos[:, 2];
+    xlim = (0, r),
+    ylim = (0, r),
+    label = nothing,
+    color = :white,
+    shape = :circle,
+    size = (600, 600),
+    legend = false,
+)
+Plots.scatter!(
+    plot_checkers,
+    B_neg[:, 1],
+    B_neg[:, 2];
+    color = :black,
+    shape = :circle,
+    markersize = 2,
+)
+
+# Is the technique capable of generating a distinctly nonlinear surface?
+# The result has a fairly strong dependence on the choice of parameters:
+C_1 = 100_000
+μ_1 = 20
+println("C = ", C_1, ", μ = ", μ_1)
+
+# Let's solve the Gaussian kernel based quadratic problem with these parameters:
+
+model_kernel, u_k, g_k, f_gauss =
+    solve_kernel_SVM_classifier(k_gauss, B, labels_checker; C = C_1, μ = μ_1)
+Test.@test termination_status(model_kernel) == LOCALLY_SOLVED    #src
+Test.@test primal_status(model_kernel) == FEASIBLE_POINT  #src
+
+grid = [[x, y] for x in 0:0.01:2, y in 0:0.01:2]
+grid_pos = grid[f_gauss.(grid).>0]
+
+plot_board = Plots.scatter(
+    plot_checkers,
+    Tuple.(grid_pos);
+    shape = :circle,
+    markersize = 0.5,
+    markeropacity = 0.8,
+    xlim = (0, r),
+    ylim = (0, r),
+    size = (600, 600),
+    legend = false,
+)
+
+# We find that the kernel method can perform well as a nonlinear classifier.
+# Determining a better performing kernel function or choice of parameters is left as
+# a further challenge.
