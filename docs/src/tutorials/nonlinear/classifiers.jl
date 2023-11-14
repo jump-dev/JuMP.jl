@@ -121,8 +121,9 @@ Plots.scatter!(
 
 # ## Formulation: linear support vector machine
 
-# A classifier known as the linear _support vector machine_ (SVM) looks for the affine
-# function ``L(p) = w^\top p - g`` that satisfies ``L(p) < 0`` for all points ``p``
+# A classifier known as the linear [_support vector machine_](https://en.wikipedia.org/wiki/Support_vector_machine)
+# (SVM) looks for the affine function ``L(p) = w^\top p - g`` 
+# that satisfies ``L(p) < 0`` for all points ``p``
 # in `P_neg` and ``L(p) > 0`` for all points ``p`` in `P_pos`.
 
 # The linearly constrained quadratic program that implements this is:
@@ -285,8 +286,8 @@ function solve_dual_SVM_classifier(
     set_silent(model)
     @variable(model, 0 <= u[1:m] <= C)
     D = LinearAlgebra.Diagonal(labels)
-    con = @constraint(model, sum(D * u) >= 0)
-    @objective(model, Min, 1 / 2 * u' * D * P * P' * D * u - C * sum(u))
+    con = @constraint(model, sum(D * u) == 0)
+    @objective(model, Min, 1 / 2 * u' * D * P * P' * D * u - sum(u))
     optimize!(model)
     u_sol = value.(u)
     w_sol = P' * D * u_sol
@@ -363,7 +364,9 @@ function pairwise_transform(kernel_func, P)
     return LinearAlgebra.Symmetric(K, :U)
 end
 
-K_0 = pairwise_transform(k_gauss, P)
+# Now we're ready to define our optimization problem. We need to provide the
+# kernel function to be used in the problem. Note that any extra keyword
+# arguments here (like parameter values) are passed through to the kernel function. 
 
 function solve_kernel_SVM_classifier(
     kernel_func,
@@ -379,8 +382,8 @@ function solve_kernel_SVM_classifier(
     set_silent(model)
     @variable(model, 0 <= u[1:m] <= C)
     D = LinearAlgebra.Diagonal(labels)
-    con = @constraint(model, sum(D * u) >= 0)
-    @objective(model, Min, 1 / 2 * u' * D * K * D * u - C * sum(u))
+    con = @constraint(model, sum(D * u) == 0)
+    @objective(model, Min, 1 / 2 * u' * D * K * D * u - sum(u))
     optimize!(model)
     u_sol = value.(u)
     g_sol = dual(con)
@@ -438,12 +441,13 @@ Plots.scatter!(
 )
 
 # Is the technique capable of generating a distinctly nonlinear surface?
-# The result has a fairly strong dependence on the choice of parameters:
+# Let's solve the Gaussian kernel based quadratic problem with these parameters:
+
 C_1 = 100_000
-μ_1 = 20
+μ_1 = 10
 println("C = ", C_1, ", μ = ", μ_1)
 
-# Let's solve the Gaussian kernel based quadratic problem with these parameters:
+# 
 
 model_kernel, u_k, g_k, f_gauss =
     solve_kernel_SVM_classifier(k_gauss, B, labels_checker; C = C_1, μ = μ_1)
@@ -457,8 +461,7 @@ plot_board = Plots.scatter(
     plot_checkers,
     Tuple.(grid_pos);
     shape = :circle,
-    markersize = 0.5,
-    markeropacity = 0.8,
+    markersize = 0.2,
     xlim = (0, r),
     ylim = (0, r),
     size = (600, 600),
@@ -466,5 +469,10 @@ plot_board = Plots.scatter(
 )
 
 # We find that the kernel method can perform well as a nonlinear classifier.
-# Determining a better performing kernel function or choice of parameters is left as
-# a further challenge.
+# The result has a fairly strong dependence on the choice of parameters,
+# with larger values of ``\mu`` allowing for a more complex boundary while
+# smaller values lead to a smoother boundary for the classifier.
+# Determining a better performing kernel function and choice of parameters is
+# covered by the process of _cross-validation_ with respect to the dataset,
+# where different testing, training and tuning sets are used to validate
+# the best choice of parameters against a statistical measure of error.
