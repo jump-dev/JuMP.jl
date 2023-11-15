@@ -183,10 +183,6 @@ function _fill_standard_form(
     return
 end
 
-function _fill_standard_form(
-    ::GenericModel{T},
-    ::Type{F},
-    ::Any,
-) where {T,F}
+function _fill_standard_form(::GenericModel{T}, ::Type{F}, ::Any) where {T,F}
     return error("Unsupported objective type in `StandardFormMatrix`: $F")
 end

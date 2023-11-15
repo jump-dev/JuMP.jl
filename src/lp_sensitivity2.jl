@@ -329,17 +329,12 @@ See [`StandardFormMatrix`](@ref) instead.
 """
 function _standard_form_matrix(model::GenericModel{T}) where {T}
     matrix = StandardFormMatrix(model)
-    m, n = length(matrix.affine_constraints), length(matrix.variable_to_column)
-    for row in 1:m
-        push!(matrix.I, row)
-        push!(matrix.J, n + row)
-        push!(matrix.V, -one(T))
-    end
+    I = SparseArrays.spdiagm(fill(-one(T), length(matrix.affine_constraints)))
     return (
         columns = matrix.variable_to_column,
-        lower = vcat(matrix.x_l, matrix.b_l),
-        upper = vcat(matrix.x_u, matrix.b_u),
-        A = SparseArrays.sparse(matrix.I, matrix.J, matrix.V, m, m + n),
+        lower = vcat(matrix.x_lower, matrix.b_lower),
+        upper = vcat(matrix.x_upper, matrix.b_upper),
+        A = hcat(matrix.A, I),
         bounds = matrix.variable_constraints,
         constraints = matrix.affine_constraints,
     )

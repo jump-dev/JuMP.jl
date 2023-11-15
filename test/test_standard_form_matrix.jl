@@ -44,14 +44,14 @@ function test_standard_matrix_form_rational()
     @constraint(model, (2 // 3)x + 3y <= 6 // 5)
     @constraint(model, -4y >= 5z + 7 // 8)
     @constraint(model, -1 <= x + y <= 2)
-    @objective(model, Min, (1 // 2) - 2x + (1//3)*z)
+    @objective(model, Min, (1 // 2) - 2x + (1 // 3) * z)
     a = StandardFormMatrix(model)
-    @test Matrix(a.A) == [1 0 0; 0 -4 -5; (2 // 3) 3 0; 1 1 0]
+    @test Matrix(a.A) == [1 0 0; 0 -4 -5; (2//3) 3 0; 1 1 0]
     @test a.b_lower == [5, 7 // 8, -1 // 0, -1]
     @test a.b_upper == [5, 1 // 0, 6 // 5, 2]
     @test a.x_lower == [1, 2, 3]
     @test a.x_upper == [1 // 0, 1//0, 4]
-    @test a.c == [-2, 0, 1//3]
+    @test a.c == [-2, 0, 1 // 3]
     @test a.c_offset == 1 // 2
     @test a.sense == MOI.MIN_SENSE
     return
