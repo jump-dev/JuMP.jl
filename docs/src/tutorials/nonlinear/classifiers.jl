@@ -75,7 +75,7 @@ line(x::Real; w = w_0, g = g_0) = -(w[1] * x - g) / w[2];
 
 # Let's add this to the plot:
 
-Plots.plot!(plot, line, 0.0:0.01:2.0; linewidth = 5)
+Plots.plot!(plot, line; linewidth = 5)
 
 # Now we label the points relative to which side of the line they are. It is
 # numerically useful to have the labels +1 and -1 for the upcoming JuMP
@@ -151,14 +151,7 @@ _, classifier = solve_SVM_classifier(P, labels)
 
 # Let's plot the solution and check how we did:
 
-Plots.plot!(
-    plot,
-    classifier,
-    0.0:0.01:2.0;
-    linewidth = 5,
-    linestyle = :dashdotdot,
-    c = :darkblue,
-)
+Plots.plot!(plot, classifier; linewidth = 5, linestyle = :dashdotdot)
 
 # We find that we have recovered the dividing line from just the information of
 # the points and their labels.
@@ -275,7 +268,6 @@ Plots.plot!(
     0.0:0.01:2.0;
     linewidth = 2,
     linestyle = :dash,
-    c = :red,
 )
 
 # ## The kernel method
