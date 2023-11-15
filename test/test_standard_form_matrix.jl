@@ -50,7 +50,7 @@ function test_standard_matrix_form_rational()
     @test a.b_lower == [5, 7 // 8, -1 // 0, -1]
     @test a.b_upper == [5, 1 // 0, 6 // 5, 2]
     @test a.x_lower == [1, 2, 3]
-    @test a.x_upper == [1 // 0, 1//0, 4]
+    @test a.x_upper == [1 // 0, 1 // 0, 4]
     @test a.c == [-2, 0, 1 // 3]
     @test a.c_offset == 1 // 2
     @test a.sense == MOI.MIN_SENSE
