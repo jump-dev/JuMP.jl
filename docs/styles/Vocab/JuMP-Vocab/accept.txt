@@ -139,7 +139,7 @@ Jax
 JSONSchema
 Knitro
 KNITRO
-Manopt
+[Mm]anopt
 MATLAB
 MOI
 Mosek
