@@ -317,6 +317,7 @@ const _PAGES = [
             "tutorials/nonlinear/nested_problems.md",
             "tutorials/nonlinear/querying_hessians.md",
             "tutorials/nonlinear/complementarity.md",
+            "tutorials/nonlinear/classifiers.md",
         ],
         "Conic programs" => [
             "tutorials/conic/introduction.md",

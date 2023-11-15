@@ -73,6 +73,7 @@ minimizers
 nl|NL
 [Nn]onconvex
 [Nn]on(posi|nega)tiv(e|es|ity)
+[Nn]onseparable
 [Nn]onsmooth
 [Oo]ptigraph(?s)
 [Oo]ptinode(?s)
@@ -205,6 +206,7 @@ Linial
 Luangkesorn
 Lubin
 Madani
+Mangasarian
 Marek
 Markowitz
 Mathieu
