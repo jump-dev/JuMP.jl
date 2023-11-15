@@ -153,7 +153,7 @@
     has_html = true
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.4.42"
+    rev = "c1fc4a5bc8361a20eaa0bcf48aba36fa16089766"
     filename = "Readme.md"
 [NEOSServer]
     user = "odow"
