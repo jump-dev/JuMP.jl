@@ -183,14 +183,7 @@ Plots.scatter!(
     markercolor = ifelse.(labels_new .== 1, :blue, :crimson),
     markersize = 8,
 )
-Plots.plot!(
-    plot,
-    classifier,
-    0.0:0.01:2.0;
-    linewidth = 5,
-    linestyle = :dashdotdot,
-    c = :darkblue,
-)
+Plots.plot!(plot, classifier; linewidth = 5, linestyle = :dashdotdot)
 
 # So our JuMP formulation still produces a classifier, but it mis-classifies
 # some of the nonseparable points.
@@ -213,7 +206,6 @@ Plots.scatter!(
     P_active[:, 1],
     P_active[:, 2];
     shape = :hexagon,
-    markercolor = :green,
     markersize = 8,
     markeropacity = 0.5,
 )
@@ -262,13 +254,7 @@ end
 # We can check that the dual form has recovered a classifier:
 
 classifier = solve_dual_SVM_classifier(P, labels)
-Plots.plot!(
-    plot,
-    classifier,
-    0.0:0.01:2.0;
-    linewidth = 2,
-    linestyle = :dash,
-)
+Plots.plot!(plot, classifier; linewidth = 5, linestyle = :dash)
 
 # ## The kernel method
 
