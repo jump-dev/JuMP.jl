@@ -325,112 +325,24 @@ end
 """
     _standard_form_matrix(model::GenericModel)
 
-Given a problem:
-
-    r_l <= Ax <= r_u
-    c_l <=  x <= c_u
-
-Return the standard form:
-
-           [A -I] [x, y] = 0
-    [c_l, r_l] <= [x, y] <= [c_u, r_u]
-
-`columns` maps the variable references to column indices.
+See [`StandardFormMatrix`](@ref) instead.
 """
 function _standard_form_matrix(model::GenericModel{T}) where {T}
-    columns = Dict(var => i for (i, var) in enumerate(all_variables(model)))
-    n = length(columns)
-    c_l, c_u = fill(typemin(T), n), fill(typemax(T), n)
-    r_l, r_u = T[], T[]
-    I, J, V = Int[], Int[], T[]
-    bound_constraints = ConstraintRef[]
-    affine_constraints = ConstraintRef[]
-    for (F, S) in list_of_constraint_types(model)
-        _fill_standard_form(
-            model,
-            columns,
-            bound_constraints,
-            affine_constraints,
-            F,
-            S,
-            c_l,
-            c_u,
-            r_l,
-            r_u,
-            I,
-            J,
-            V,
-        )
+    matrix = StandardFormMatrix(model)
+    m, n = length(matrix.affine_constraints), length(matrix.variable_to_column)
+    for row in 1:m
+        push!(matrix.I, row)
+        push!(matrix.J, n + row)
+        push!(matrix.V, -one(T))
     end
     return (
-        columns = columns,
-        lower = vcat(c_l, r_l),
-        upper = vcat(c_u, r_u),
-        A = SparseArrays.sparse(I, J, V, length(r_l), n + length(r_l)),
-        bounds = bound_constraints,
-        constraints = affine_constraints,
+        columns = matrix.variable_to_column,
+        lower = vcat(matrix.x_l, matrix.b_l),
+        upper = vcat(matrix.x_u, matrix.b_u),
+        A = SparseArrays.sparse(matrix.I, matrix.J, matrix.V, m, m + n),
+        bounds = matrix.variable_constraints,
+        constraints = matrix.affine_constraints,
     )
-end
-
-function _fill_standard_form(
-    model::GenericModel{T},
-    x::Dict{GenericVariableRef{T},Int},
-    bound_constraints::Vector{ConstraintRef},
-    ::Vector{ConstraintRef},
-    F::Type{GenericVariableRef{T}},
-    S::Type,
-    c_l::Vector{T},
-    c_u::Vector{T},
-    ::Vector{T},
-    ::Vector{T},
-    ::Vector{Int},
-    ::Vector{Int},
-    ::Vector{T},
-) where {T}
-    for c in all_constraints(model, F, S)
-        push!(bound_constraints, c)
-        c_obj = constraint_object(c)
-        i = x[c_obj.func]
-        set = MOI.Interval(c_obj.set)
-        c_l[i] = max(c_l[i], set.lower)
-        c_u[i] = min(c_u[i], set.upper)
-    end
-    return
-end
-
-function _fill_standard_form(
-    model::GenericModel{T},
-    x::Dict{GenericVariableRef{T},Int},
-    ::Vector{ConstraintRef},
-    affine_constraints::Vector{ConstraintRef},
-    F::Type{<:GenericAffExpr},
-    S::Type,
-    ::Vector{T},
-    ::Vector{T},
-    r_l::Vector{T},
-    r_u::Vector{T},
-    I::Vector{Int},
-    J::Vector{Int},
-    V::Vector{T},
-) where {T}
-    for c in all_constraints(model, F, S)
-        push!(affine_constraints, c)
-        c_obj = constraint_object(c)
-        @assert iszero(c_obj.func.constant)
-        row = length(r_l) + 1
-        set = MOI.Interval(c_obj.set)
-        push!(r_l, set.lower)
-        push!(r_u, set.upper)
-        for (var, coef) in c_obj.func.terms
-            push!(I, row)
-            push!(J, x[var])
-            push!(V, coef)
-        end
-        push!(I, row)
-        push!(J, length(x) + row)
-        push!(V, -one(T))
-    end
-    return
 end
 
 _convert_nonbasic_status(::MOI.LessThan) = MOI.NONBASIC_AT_UPPER
