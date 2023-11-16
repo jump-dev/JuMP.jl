@@ -3,7 +3,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-module TestStandardFormMatrix
+module TestLPMatrixData
 
 using JuMP
 using Test
@@ -18,7 +18,7 @@ function test_standard_matrix_form()
     @constraint(model, -4y >= 5z + 7)
     @constraint(model, -1 <= x + y <= 2)
     @objective(model, Max, 1 + 2x)
-    a = StandardFormMatrix(model)
+    a = lp_matrix_data(model)
     @test Matrix(a.A) == [1 0 0; 0 -4 -5; 2 3 0; 1 1 0]
     @test a.b_lower == [5, 7, -Inf, -1]
     @test a.b_upper == [5, Inf, 6, 2]
@@ -28,7 +28,7 @@ function test_standard_matrix_form()
     @test a.c_offset == 1
     @test a.sense == MOI.MAX_SENSE
     @objective(model, Min, y)
-    b = StandardFormMatrix(model)
+    b = lp_matrix_data(model)
     b.sense == MOI.MIN_SENSE
     b.c == [0, 1, 0]
     b.c_offset == 0
@@ -45,7 +45,7 @@ function test_standard_matrix_form_rational()
     @constraint(model, -4y >= 5z + 7 // 8)
     @constraint(model, -1 <= x + y <= 2)
     @objective(model, Min, (1 // 2) - 2x + (1 // 3) * z)
-    a = StandardFormMatrix(model)
+    a = lp_matrix_data(model)
     @test Matrix(a.A) == [1 0 0; 0 -4 -5; (2//3) 3 0; 1 1 0]
     @test a.b_lower == [5, 7 // 8, -1 // 0, -1]
     @test a.b_upper == [5, 1 // 0, 6 // 5, 2]
@@ -59,7 +59,7 @@ end
 
 function test_standard_matrix_form_empty()
     model = Model()
-    a = StandardFormMatrix(model)
+    a = lp_matrix_data(model)
     @test size(a.A) == (0, 0)
     @test isempty(a.b_lower)
     @test isempty(a.b_upper)
@@ -76,9 +76,9 @@ function test_standard_matrix_form_bad_constraint()
     @variable(model, x, Bin)
     @test_throws(
         ErrorException(
-            "Unsupported constraint type in `StandardFormMatrix`: $(VariableRef) -in- $(MOI.ZeroOne)",
+            "Unsupported constraint type in `lp_matrix_data`: $(VariableRef) -in- $(MOI.ZeroOne)",
         ),
-        StandardFormMatrix(model),
+        lp_matrix_data(model),
     )
     return
 end
@@ -89,9 +89,9 @@ function test_standard_matrix_form_bad_objective()
     @objective(model, Min, [2x + 1, 3x])
     @test_throws(
         ErrorException(
-            "Unsupported objective type in `StandardFormMatrix`: $(Vector{AffExpr})",
+            "Unsupported objective type in `lp_matrix_data`: $(Vector{AffExpr})",
         ),
-        StandardFormMatrix(model),
+        lp_matrix_data(model),
     )
     return
 end

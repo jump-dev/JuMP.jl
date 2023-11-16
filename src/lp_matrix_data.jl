@@ -3,7 +3,13 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-struct StandardFormMatrix{T}
+"""
+    LPMatrixData{T}
+
+The struct returned by [`lp_matrix_data`](@ref). See [`lp_matrix_data`](@ref)
+for a description of the public fields.
+"""
+struct LPMatrixData{T}
     A::SparseArrays.SparseMatrixCSC{T,Int}
     b_lower::Vector{T}
     b_upper::Vector{T}
@@ -18,9 +24,10 @@ struct StandardFormMatrix{T}
 end
 
 """
-    StandardFormMatrix(model::GenericModel{T})
+    lp_matrix_data(model::GenericModel{T})
 
-Given a problem in the form:
+Given a JuMP model of a linear program, return a [`LPMatrixData{T}`](@ref)
+struct storing data for an equivalent linear program in the form:
 ```math
 \\begin{aligned}
 \\min & c^\\top x + c_0\\
@@ -28,11 +35,10 @@ Given a problem in the form:
       & x_l \\le x \\le x_u
 \\end{aligned}
 ```
-return a struct storing problem data in matrix form.
 
 ## Fields
 
-The struct returned by [`StandardFormMatrix`](@ref) has the fields:
+The struct returned by [`lp_matrix_data`](@ref) has the fields:
 
  * `A::SparseArrays.SparseMatrixCSC{T,Int}`: the constraint matrix in sparse
    matrix form.
@@ -55,13 +61,13 @@ The struct returned by [`StandardFormMatrix`](@ref) has the fields:
 
 ## Limitations
 
-The models supported by [`StandardFormMatrix`](@ref) are intentionally limited
+The models supported by [`lp_matrix_data`](@ref) are intentionally limited
 to linear programs.
 
 If your model has integrality, use [`relax_integrality`](@ref) to remove integer
-restrictions before calling [`StandardFormMatrix`](@ref).
+restrictions before calling [`lp_matrix_data`](@ref).
 """
-function StandardFormMatrix(model::GenericModel{T}) where {T}
+function lp_matrix_data(model::GenericModel{T}) where {T}
     columns = Dict(var => i for (i, var) in enumerate(all_variables(model)))
     n = length(columns)
     cache = (;
@@ -82,7 +88,7 @@ function StandardFormMatrix(model::GenericModel{T}) where {T}
         _fill_standard_form(model, F, S, cache)
     end
     _fill_standard_form(model, objective_function_type(model), cache)
-    return StandardFormMatrix(
+    return LPMatrixData(
         SparseArrays.sparse(cache.I, cache.J, cache.V, length(cache.b_l), n),
         cache.b_l,
         cache.b_u,
@@ -156,7 +162,7 @@ function _fill_standard_form(
     ::Any,
 ) where {T,F,S}
     return error(
-        "Unsupported constraint type in `StandardFormMatrix`: $F -in- $S",
+        "Unsupported constraint type in `lp_matrix_data`: $F -in- $S",
     )
 end
 
@@ -184,5 +190,5 @@ function _fill_standard_form(
 end
 
 function _fill_standard_form(::GenericModel{T}, ::Type{F}, ::Any) where {T,F}
-    return error("Unsupported objective type in `StandardFormMatrix`: $F")
+    return error("Unsupported objective type in `lp_matrix_data`: $F")
 end

@@ -325,10 +325,10 @@ end
 """
     _standard_form_matrix(model::GenericModel)
 
-See [`StandardFormMatrix`](@ref) instead.
+See [`lp_matrix_data`](@ref) instead.
 """
 function _standard_form_matrix(model::GenericModel{T}) where {T}
-    matrix = StandardFormMatrix(model)
+    matrix = lp_matrix_data(model)
     I = SparseArrays.spdiagm(fill(-one(T), length(matrix.affine_constraints)))
     return (
         columns = matrix.variable_to_column,
