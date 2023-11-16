@@ -151,6 +151,10 @@
     user = "MadNLP"
     rev = "389561354a774441cd5e6b3aa5fffee102ed222e"
     has_html = true
+[Manopt]
+    user = "JuliaManifolds"
+    rev = "c1fc4a5bc8361a20eaa0bcf48aba36fa16089766"
+    filename = "Readme.md"
 [NEOSServer]
     user = "odow"
     rev = "v1.1.0"

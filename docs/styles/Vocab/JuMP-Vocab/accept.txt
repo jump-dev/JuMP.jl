@@ -103,6 +103,7 @@ unregister
 warmstart
 
 % Proper nouns
+Adagrad
 AMPL
 Appveyor
 Artelys
@@ -126,7 +127,8 @@ Dualization
 EAGO
 [Ee]mbotech
 [Ee]cos
-JSONSchema
+Geomstats
+Geoopt
 GLPK
 Gurobi
 GUROBI
@@ -134,8 +136,11 @@ GZip
 Hypatia
 Ipopt
 IPOPT
+Jax
+JSONSchema
 Knitro
 KNITRO
+[Mm]anopt
 MATLAB
 MOI
 Mosek
@@ -150,6 +155,7 @@ Penopt
 Plasmo
 puzzlor
 RAPOSa
+Riemopt
 SDPAFamily
 SDPNAL
 Umfpack
@@ -222,6 +228,7 @@ Nemirovski
 Pacaud
 Peng
 Rebennack
+Riemannian
 [Rr]osenbrock
 Schermer
 Schur
