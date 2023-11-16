@@ -26,7 +26,7 @@ end
 """
     lp_matrix_data(model::GenericModel{T})
 
-Given a JuMP model of a linear program, return a [`LPMatrixData{T}`](@ref)
+Given a JuMP model of a linear program, return an [`LPMatrixData{T}`](@ref)
 struct storing data for an equivalent linear program in the form:
 ```math
 \\begin{aligned}
