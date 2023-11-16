@@ -605,6 +605,41 @@ function _term_string(coef, factor)
     end
 end
 
+"""
+    const TERM_LIMIT_FOR_PRINTING = Ref{Int}(60)
+
+A global constant used to control when terms are omitted when printing
+expressions.
+
+Get and set this value using `TERM_LIMIT_FOR_PRINTING[]`.
+
+```jldoctest
+julia> TERM_LIMIT_FOR_PRINTING[]
+60
+
+julia> TERM_LIMIT_FOR_PRINTING[] = 10
+10
+```
+"""
+const TERM_LIMIT_FOR_PRINTING = Ref{Int}(60)
+
+_terms_omitted(::MIME, n::Int) = "[[...$n terms omitted...]]"
+
+function _terms_omitted(::MIME"text/latex", n::Int)
+    return "[[\\ldots\\text{$n terms omitted}\\ldots]]"
+end
+
+function _terms_to_truncated_string(mode, terms)
+    m = TERM_LIMIT_FOR_PRINTING[]
+    if length(terms) <= m
+        return join(terms)
+    end
+    k_l = iseven(m) ? m + 1 : m + 2
+    k_r = iseven(m) ? m - 1 : m - 2
+    block = _terms_omitted(mode, div(length(terms), 2) - m)
+    return string(join(terms[1:k_l]), block, join(terms[(end-k_r):end]))
+end
+
 # TODO(odow): remove show_constant in JuMP 1.0
 function function_string(mode, a::GenericAffExpr, show_constant = true)
     if length(linear_terms(a)) == 0
@@ -616,7 +651,7 @@ function function_string(mode, a::GenericAffExpr, show_constant = true)
         terms[2*elm] = _term_string(coef, function_string(mode, var))
     end
     terms[1] = terms[1] == " - " ? "-" : ""
-    ret = join(terms)
+    ret = _terms_to_truncated_string(mode, terms)
     if show_constant && !_is_zero_for_printing(a.constant)
         ret = string(
             ret,
@@ -645,7 +680,7 @@ function function_string(mode, q::GenericQuadExpr)
         terms[2*elm] = _term_string(coef, factor)
     end
     terms[1] = terms[1] == " - " ? "-" : ""
-    ret = join(terms)
+    ret = _terms_to_truncated_string(mode, terms)
     aff_str = function_string(mode, q.aff)
     if aff_str == "0"
         return ret
