@@ -631,7 +631,7 @@ end
 
 function _terms_to_truncated_string(mode, terms)
     m = TERM_LIMIT_FOR_PRINTING[]
-    if length(terms) <= m
+    if length(terms) <= 2 * m
         return join(terms)
     end
     k_l = iseven(m) ? m + 1 : m + 2

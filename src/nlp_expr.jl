@@ -191,7 +191,7 @@ function function_string(mime::MIME, x::GenericNonlinearExpr)
                 push!(stack, arg.args[1])
             else
                 print(io, p_textsf, p_open, arg.head, p_close, p_left, p_open)
-                push!(stack, p_right)
+                push!(stack, p_close * p_right)
                 for i in length(arg.args):-1:2
                     push!(stack, arg.args[i])
                     push!(stack, "$p_close, $p_open")
