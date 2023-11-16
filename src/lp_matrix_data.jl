@@ -161,9 +161,7 @@ function _fill_standard_form(
     ::Type{S},
     ::Any,
 ) where {T,F,S}
-    return error(
-        "Unsupported constraint type in `lp_matrix_data`: $F -in- $S",
-    )
+    return error("Unsupported constraint type in `lp_matrix_data`: $F -in- $S")
 end
 
 function _fill_standard_form(
