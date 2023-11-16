@@ -164,7 +164,7 @@ function function_string(mime::MIME, x::GenericNonlinearExpr)
                 end
                 l = ceil(TERM_LIMIT_FOR_PRINTING[] / 2)
                 r = floor(TERM_LIMIT_FOR_PRINTING[] / 2)
-                truncated_indices = (1+l):(length(arg.args) - r)
+                truncated_indices = (1+l):(length(arg.args)-r)
                 for i in length(arg.args):-1:2
                     if i in truncated_indices
                         if i == truncated_indices[end]

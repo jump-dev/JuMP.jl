@@ -981,7 +981,7 @@ end
 function test_printing_truncation()
     model = Model()
     @variable(model, x[1:100])
-    y = @expression(model, sum(sin.(x).*2))
+    y = @expression(model, sum(sin.(x) .* 2))
     @test occursin(
         "(sin(x[97]) * 2.0) + [[...91 terms omitted...]]) + (sin(x[5]) * 2.0)",
         function_string(MIME("text/plain"), y),
