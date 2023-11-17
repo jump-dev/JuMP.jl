@@ -613,7 +613,7 @@ expressions.
 
 Get and set this value using `TERM_LIMIT_FOR_PRINTING[]`.
 
-```jldoctest
+```julia
 julia> TERM_LIMIT_FOR_PRINTING[]
 60
 
