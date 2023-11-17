@@ -162,7 +162,10 @@ function function_string(mime::MIME, x::GenericNonlinearExpr)
                 for i in length(arg.args):-1:1
                     if i in skip_indices
                         if i == skip_indices[end]
-                            push!(stack, _terms_omitted(mime, length(skip_indices)))
+                            push!(
+                                stack,
+                                _terms_omitted(mime, length(skip_indices)),
+                            )
                             push!(stack, " $(arg.head) $p_open")
                         end
                         continue
