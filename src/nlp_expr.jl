@@ -156,39 +156,27 @@ function function_string(mime::MIME, x::GenericNonlinearExpr)
             if arg.head in _PREFIX_OPERATORS && length(arg.args) > 1
                 print(io, p_open)
                 push!(stack, p_close)
-                if _needs_parentheses(arg.args[1])
-                    print(io, p_left)
-                end
-                if _needs_parentheses(arg.args[end])
-                    push!(stack, p_right)
-                end
                 l = ceil(TERM_LIMIT_FOR_PRINTING[] / 2)
                 r = floor(TERM_LIMIT_FOR_PRINTING[] / 2)
-                truncated_indices = (1+l):(length(arg.args)-r)
-                for i in length(arg.args):-1:2
-                    if i in truncated_indices
-                        if i == truncated_indices[end]
-                            push!(
-                                stack,
-                                _terms_omitted(mime, length(truncated_indices)),
-                            )
-                            push!(stack, "$p_close $(arg.head) $p_open")
-                            if _needs_parentheses(arg.args[i-1])
-                                push!(stack, p_right)
-                            end
+                skip_indices = (1+l):(length(arg.args)-r)
+                for i in length(arg.args):-1:1
+                    if i in skip_indices
+                        if i == skip_indices[end]
+                            push!(stack, _terms_omitted(mime, length(skip_indices)))
+                            push!(stack, " $(arg.head) $p_open")
                         end
+                        continue
+                    elseif _needs_parentheses(arg.args[i])
+                        push!(stack, p_right)
+                        push!(stack, arg.args[i])
+                        push!(stack, p_left)
                     else
                         push!(stack, arg.args[i])
-                        if _needs_parentheses(arg.args[i])
-                            push!(stack, p_left)
-                        end
+                    end
+                    if i > 1
                         push!(stack, "$p_close $(arg.head) $p_open")
-                        if _needs_parentheses(arg.args[i-1])
-                            push!(stack, p_right)
-                        end
                     end
                 end
-                push!(stack, arg.args[1])
             else
                 print(io, p_textsf, p_open, arg.head, p_close, p_left, p_open)
                 push!(stack, p_close * p_right)
