@@ -983,11 +983,11 @@ function test_printing_truncation()
     @variable(model, x[1:100])
     y = @expression(model, sum(sin.(x) .* 2))
     @test occursin(
-        "(sin(x[97]) * 2.0) + [[...91 terms omitted...]]) + (sin(x[5]) * 2.0)",
+        "(sin(x[72]) * 2.0) + [[...41 terms omitted...]]) + (sin(x[30]) * 2.0)",
         function_string(MIME("text/plain"), y),
     )
     @test occursin(
-        "{\\left({\\textsf{sin}\\left({x[97]\\right)} * {2.0}\\right)} + {[[\\ldots\\text{91 terms omitted}\\ldots]]\\right)} + {\\left({\\textsf{sin}\\left({x[5]\\right)} * {2.0}\\right)}",
+        "{\\left({\\textsf{sin}\\left({x[72]\\right)} * {2.0}\\right)} + {[[\\ldots\\text{41 terms omitted}\\ldots]]\\right)} + {\\left({\\textsf{sin}\\left({x[30]\\right)} * {2.0}\\right)}",
         function_string(MIME("text/latex"), y),
     )
     return
