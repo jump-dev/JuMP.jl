@@ -53,7 +53,7 @@
 [GLPK]
     rev = "v1.1.3"
 [Gurobi]
-    rev = "v1.2.0"
+    rev = "4f6811250c3ec01b968c65ba58fa79a2f62114d3"
 [HiGHS]
     rev = "v1.7.5"
 [Ipopt]
