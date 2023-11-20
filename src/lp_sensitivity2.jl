@@ -331,7 +331,7 @@ function _standard_form_matrix(model::GenericModel{T}) where {T}
     matrix = lp_matrix_data(model)
     I = SparseArrays.spdiagm(fill(-one(T), length(matrix.affine_constraints)))
     return (
-        columns = matrix.variable_to_column,
+        columns = Dict(x => i for (i, x) in enumerate(matrix.variables)),
         lower = vcat(matrix.x_lower, matrix.b_lower),
         upper = vcat(matrix.x_upper, matrix.b_upper),
         A = hcat(matrix.A, I),

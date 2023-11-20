@@ -18,7 +18,7 @@ struct LPMatrixData{T}
     c::Vector{T}
     c_offset::T
     sense::MOI.OptimizationSense
-    variable_to_column::Dict{GenericVariableRef{T},Int}
+    variables::Vector{GenericVariableRef{T}}
     affine_constraints::Vector{ConstraintRef}
     variable_constraints::Vector{ConstraintRef}
 end
@@ -53,9 +53,8 @@ The struct returned by [`lp_matrix_data`](@ref) has the fields:
  * `c::Vector{T}`: the dense vector of linear objective coefficiennts
  * `c_offset::T`: the constant term in the objective function.
  * `sense::MOI.OptimizationSense`: the objective sense of the model.
- * `variable_to_column::Dict{GenericVariableRef{T},Int}`: a dictionary mapping
-   JuMP [`GenericVariableRef`](@ref) to the 1-indexed column in the matrix
-   representation.
+ * `variables::Vector{GenericVariableRef{T}}`: a vector of [`GenericVariableRef`](@ref),
+   corresponding to order of the columns in the matrix form.
  * `affine_constraints::Vector{ConstraintRef}`: a vector of [`ConstraintRef`](@ref),
    corresponding to the order of rows in the matrix form.
 
@@ -68,7 +67,8 @@ If your model has integrality, use [`relax_integrality`](@ref) to remove integer
 restrictions before calling [`lp_matrix_data`](@ref).
 """
 function lp_matrix_data(model::GenericModel{T}) where {T}
-    columns = Dict(var => i for (i, var) in enumerate(all_variables(model)))
+    variables = all_variables(model)
+    columns = Dict(var => i for (i, var) in enumerate(variables))
     n = length(columns)
     cache = (;
         x_l = fill(typemin(T), n),
@@ -97,7 +97,7 @@ function lp_matrix_data(model::GenericModel{T}) where {T}
         cache.c,
         cache.c_offset[],
         MOI.get(model, MOI.ObjectiveSense()),
-        cache.variable_to_column,
+        variables,
         cache.affine_constraints,
         cache.bound_constraints,
     )
