@@ -556,7 +556,7 @@ f(x::Vector) = sum(x[i]^i for i in 1:length(x))
 @objective(model, Min, op_f(x...))
 ```
 
-If the operator takes several vector inputs, write a function which takes the
+If the operator takes several vector inputs, write a function that takes the
 splatted arguments and reconstructs the required vector inputs:
 ```@repl
 using JuMP
