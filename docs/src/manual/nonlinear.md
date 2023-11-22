@@ -556,6 +556,22 @@ f(x::Vector) = sum(x[i]^i for i in 1:length(x))
 @objective(model, Min, op_f(x...))
 ```
 
+If the operator takes several vector inputs, write a function that takes the
+splatted arguments and reconstructs the required vector inputs:
+```@repl
+using JuMP
+model = Model();
+@variable(model, x[1:2]);
+@variable(model, y[1:2]);
+@variable(model, z);
+f(x::Vector, y::Vector, z) = sum((x[i] * y[i])^z for i in 1:2)
+f(x, y, z)
+f_splat(args...) = f(collect(args[1:2]), collect(args[3:4]), args[5])
+f_splat(x..., y..., z)
+@operator(model, op_f, 5, f_splat)
+@objective(model, Min, op_f(x..., y..., z))
+```
+
 ### Automatic differentiation
 
 JuMP does not support black-box optimization, so all user-defined operators must
