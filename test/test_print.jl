@@ -553,7 +553,7 @@ function test_extension_printing_indicator_constraints(
     @variable(model, y)
     ind_constr = @constraint(model, !x => {y <= 1})
 
-    io_test(MIME("text/plain"), ind_constr, "!x => {y $le 1}")
+    io_test(MIME("text/plain"), ind_constr, "!x --> {y $le 1}")
     # TODO: Test in IJulia mode.
     return
 end

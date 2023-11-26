@@ -88,5 +88,5 @@ function constraint_string(
     end
     con = ScalarConstraint(constraint.func[2], constraint.set.set)
     con_str = constraint_string(print_mode, con)
-    return var_str * " => {" * con_str * "}"
+    return var_str * " --> {" * con_str * "}"
 end
