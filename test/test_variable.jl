@@ -1587,7 +1587,7 @@ function test_bad_bound_types()
     function err2(value, msg, T)
         return ErrorException(
             "Unable to use `$value::$(typeof(value))` as the $msg of a variable. " *
-           "The $msg must be a constant value of type `::$T`. You cannot use " *
+            "The $msg must be a constant value of type `::$T`. You cannot use " *
             "JuMP variables or expressions.",
         )
     end

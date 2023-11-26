@@ -1750,7 +1750,9 @@ function _moi_add_variable(
     return var_ref
 end
 
-function _to_value(::Type{T}, value, msg) where {T}
+_to_value(::Type{T}, value::T, ::String) where {T} = value
+
+function _to_value(::Type{T}, value, msg::String) where {T}
     try
         return convert(T, value)
     catch
@@ -1761,16 +1763,13 @@ function _to_value(::Type{T}, value, msg) where {T}
     end
 end
 
-_to_value(::Type{T}, value::T, ::String) where {T} = value
-
-function _to_value(::Type{T}, value::AbstractJuMPScalar, msg) where {T}
+function _to_value(::Type{T}, value::AbstractJuMPScalar, msg::String) where {T}
     return error(
         "Unable to use `$value::$(typeof(value))` as the $msg of a variable. " *
         "The $msg must be a constant value of type `::$T`. You cannot use " *
         "JuMP variables or expressions.",
     )
 end
-
 
 function _moi_constrain_variable(
     moi_backend::MOI.ModelLike,
