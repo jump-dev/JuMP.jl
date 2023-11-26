@@ -977,13 +977,13 @@ function test_truncated_printing()
         "x_{30} + [[\\ldots\\text{940 terms omitted}\\ldots]] + x_{971}",
         function_string(MIME("text/latex"), y),
     )
-    ret = TERM_LIMIT_FOR_PRINTING[]
-    TERM_LIMIT_FOR_PRINTING[] = 3
+    ret = _TERM_LIMIT_FOR_PRINTING[]
+    _TERM_LIMIT_FOR_PRINTING[] = 3
     @test function_string(MIME("text/plain"), y) ==
           "x[1] + x[2] + [[...997 terms omitted...]] + x[1000]"
     @test function_string(MIME("text/latex"), y) ==
           "x_{1} + x_{2} + [[\\ldots\\text{997 terms omitted}\\ldots]] + x_{1000}"
-    TERM_LIMIT_FOR_PRINTING[] = ret
+    _TERM_LIMIT_FOR_PRINTING[] = ret
     return
 end
 

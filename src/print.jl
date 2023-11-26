@@ -606,22 +606,22 @@ function _term_string(coef, factor)
 end
 
 """
-    const TERM_LIMIT_FOR_PRINTING = Ref{Int}(60)
+    const _TERM_LIMIT_FOR_PRINTING = Ref{Int}(60)
 
 A global constant used to control when terms are omitted when printing
 expressions.
 
-Get and set this value using `TERM_LIMIT_FOR_PRINTING[]`.
+Get and set this value using `_TERM_LIMIT_FOR_PRINTING[]`.
 
 ```julia
-julia> TERM_LIMIT_FOR_PRINTING[]
+julia> _TERM_LIMIT_FOR_PRINTING[]
 60
 
-julia> TERM_LIMIT_FOR_PRINTING[] = 10
+julia> _TERM_LIMIT_FOR_PRINTING[] = 10
 10
 ```
 """
-const TERM_LIMIT_FOR_PRINTING = Ref{Int}(60)
+const _TERM_LIMIT_FOR_PRINTING = Ref{Int}(60)
 
 _terms_omitted(::MIME, n::Int) = "[[...$n terms omitted...]]"
 
@@ -630,7 +630,7 @@ function _terms_omitted(::MIME"text/latex", n::Int)
 end
 
 function _terms_to_truncated_string(mode, terms)
-    m = TERM_LIMIT_FOR_PRINTING[]
+    m = _TERM_LIMIT_FOR_PRINTING[]
     if length(terms) <= 2 * m
         return join(terms)
     end

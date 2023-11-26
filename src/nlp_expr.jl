@@ -156,8 +156,8 @@ function function_string(mime::MIME, x::GenericNonlinearExpr)
             if arg.head in _PREFIX_OPERATORS && length(arg.args) > 1
                 print(io, p_open)
                 push!(stack, p_close)
-                l = ceil(TERM_LIMIT_FOR_PRINTING[] / 2)
-                r = floor(TERM_LIMIT_FOR_PRINTING[] / 2)
+                l = ceil(_TERM_LIMIT_FOR_PRINTING[] / 2)
+                r = floor(_TERM_LIMIT_FOR_PRINTING[] / 2)
                 skip_indices = (1+l):(length(arg.args)-r)
                 for i in length(arg.args):-1:1
                     if i in skip_indices
