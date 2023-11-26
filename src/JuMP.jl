@@ -1059,6 +1059,7 @@ LinearAlgebra.adjoint(scalar::AbstractJuMPScalar) = conj(scalar)
 Base.iterate(x::AbstractJuMPScalar) = (x, true)
 Base.iterate(::AbstractJuMPScalar, state) = nothing
 Base.isempty(::AbstractJuMPScalar) = false
+Base.length(::AbstractJuMPScalar) = 1
 
 # Check if two arrays of AbstractJuMPScalars are equal. Useful for testing.
 function isequal_canonical(

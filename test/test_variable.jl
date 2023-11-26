@@ -1601,4 +1601,11 @@ function test_bad_bound_types()
     return
 end
 
+function test_variable_length()
+    model = Model()
+    @variable(model, x)
+    @test length(x) == 1
+    return
+end
+
 end  # module TestVariable
