@@ -1584,7 +1584,7 @@ function test_bad_bound_types()
         @test_throws err(v, "fixed value", T) @variable(model, x == v)
         @test_throws err(v, "start value", T) @variable(model, x, start = v)
     end
-    function err(value, msg, T)
+    function err2(value, msg, T)
         return ErrorException(
             "Unable to use `$value::$(typeof(value))` as the $msg of a variable. " *
            "The $msg must be a constant value of type `::$T`. You cannot use " *
