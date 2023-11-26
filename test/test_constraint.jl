@@ -1787,7 +1787,7 @@ function test_indicator_error()
     model = Model()
     @variable(model, x[1:2])
     err = ErrorException(
-        "In `@constraint(model, x[1] >= 0 --> {x[2] == 0})`: unable to build indicator constraint with the left-hand side term `(x[1] >= 0)::NonlinearExpr`. The left-hand side must be a binary decision variable.",
+        "In `@constraint(model, x[1] >= 0 --> {x[2] == 0})`: unable to build indicator constraint with the left-hand side term `(x[1] >= 0)::JuMP.NonlinearExpr`. The left-hand side must be a binary decision variable.",
     )
     @test_throws_strip err @constraint(model, x[1] >= 0 --> {x[2] == 0})
     return
