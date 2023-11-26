@@ -1616,4 +1616,14 @@ function test_variable_eltype()
     return
 end
 
+function test_variable_one()
+    model = Model()
+    @variable(model, x)
+    @test Base.one(x) == 1
+    @test Base.one(2 * x) == 1
+    @test Base.oneunit(x) == 1
+    @test Base.oneunit(2 * x) == 1
+    return
+end
+
 end  # module TestVariable

@@ -361,8 +361,14 @@ end
 
 Base.one(v::AbstractVariableRef) = one(typeof(v))
 
+Base.oneunit(v::AbstractVariableRef) = oneunit(typeof(v))
+
 function Base.one(::Type{V}) where {V<:AbstractVariableRef}
     return one(GenericAffExpr{value_type(V),V})
+end
+
+function Base.oneunit(::Type{V}) where {V<:AbstractVariableRef}
+    return oneunit(GenericAffExpr{value_type(V),V})
 end
 
 """

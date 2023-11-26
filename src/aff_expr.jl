@@ -204,7 +204,13 @@ function Base.one(::Type{GenericAffExpr{C,V}}) where {C,V}
     return GenericAffExpr{C,V}(one(C), OrderedDict{V,C}())
 end
 
+function Base.oneunit(::Type{GenericAffExpr{C,V}}) where {C,V}
+    return GenericAffExpr{C,V}(oneunit(C), OrderedDict{V,C}())
+end
+
 Base.one(a::GenericAffExpr) = one(typeof(a))
+
+Base.oneunit(a::GenericAffExpr) = oneunit(typeof(a))
 
 Base.copy(a::GenericAffExpr) = GenericAffExpr(copy(a.constant), copy(a.terms))
 
