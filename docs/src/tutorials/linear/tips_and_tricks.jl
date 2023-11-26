@@ -205,14 +205,14 @@ M = 100
 model = Model();
 @variable(model, x[1:2])
 @variable(model, z, Bin)
-@constraint(model, z => {sum(x) <= 1})
+@constraint(model, z --> {sum(x) <= 1})
 
 # **Example** $x_1 + x_2 \leq 1$ if $z = 0$.
 
 model = Model();
 @variable(model, x[1:2])
 @variable(model, z, Bin)
-@constraint(model, !z => {sum(x) <= 1})
+@constraint(model, !z --> {sum(x) <= 1})
 
 # ### Trick 2
 

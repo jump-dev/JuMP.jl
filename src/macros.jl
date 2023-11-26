@@ -407,6 +407,10 @@ JuMP currently supports the following `expr` objects:
  * `lhs ⟂ rhs`
  * `lhs in rhs`
  * `lhs ∈ rhs`
+ * `z --> {constraint}`
+ * `!z --> {constraint}`
+ * `z <--> {constraint}`
+ * `!z <--> {constraint}`
  * `z => {constraint}`
  * `!z => {constraint}`
 as well as all broadcasted variants.
