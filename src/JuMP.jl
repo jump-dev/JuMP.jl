@@ -1049,6 +1049,9 @@ function owner_model end
 Base.ndims(::Type{<:AbstractJuMPScalar}) = 0
 Base.ndims(::AbstractJuMPScalar) = 0
 
+Base.IteratorEltype(::Type{<:AbstractJuMPScalar}) = Base.HasEltype()
+Base.eltype(::Type{T}) where {T<:AbstractJuMPScalar} = T
+
 # These are required to create symmetric containers of AbstractJuMPScalars.
 LinearAlgebra.symmetric_type(::Type{T}) where {T<:AbstractJuMPScalar} = T
 LinearAlgebra.hermitian_type(::Type{T}) where {T<:AbstractJuMPScalar} = T

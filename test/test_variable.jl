@@ -1608,4 +1608,12 @@ function test_variable_length()
     return
 end
 
+function test_variable_eltype()
+    model = Model()
+    @variable(model, x)
+    @test Base.IteratorEltype(x) == Base.HasEltype()
+    @test Base.eltype(typeof(x)) == typeof(x)
+    return
+end
+
 end  # module TestVariable
