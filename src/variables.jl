@@ -1750,6 +1750,28 @@ function _moi_add_variable(
     return var_ref
 end
 
+function _to_value(::Type{T}, value, msg) where {T}
+    try
+        return convert(T, value)
+    catch
+        error(
+            "Unable to use `$value::$(typeof(value))` as the $msg of a " *
+            "variable because it is not convertable to type `::$T`.",
+        )
+    end
+end
+
+_to_value(::Type{T}, value::T, ::String) where {T} = value
+
+function _to_value(::Type{T}, value::AbstractJuMPScalar, msg) where {T}
+    return error(
+        "Unable to use `$value::$(typeof(value))` as the $msg of a variable. " *
+        "The $msg must be a constant value of type `::$T`. You cannot use " *
+        "JuMP variables or expressions.",
+    )
+end
+
+
 function _moi_constrain_variable(
     moi_backend::MOI.ModelLike,
     index,
@@ -1762,21 +1784,21 @@ function _moi_constrain_variable(
         _moi_add_constraint(
             moi_backend,
             index,
-            MOI.GreaterThan{T}(info.lower_bound),
+            MOI.GreaterThan{T}(_to_value(T, info.lower_bound, "lower bound")),
         )
     end
     if info.has_ub
         _moi_add_constraint(
             moi_backend,
             index,
-            MOI.LessThan{T}(info.upper_bound),
+            MOI.LessThan{T}(_to_value(T, info.upper_bound, "upper bound")),
         )
     end
     if info.has_fix
         _moi_add_constraint(
             moi_backend,
             index,
-            MOI.EqualTo{T}(info.fixed_value),
+            MOI.EqualTo{T}(_to_value(T, info.fixed_value, "fixed value")),
         )
     end
     if info.binary
@@ -1790,7 +1812,7 @@ function _moi_constrain_variable(
             moi_backend,
             MOI.VariablePrimalStart(),
             index,
-            convert(T, info.start),
+            _to_value(T, info.start, "start value"),
         )
     end
 end
