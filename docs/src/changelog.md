@@ -7,6 +7,45 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.17.0 (November 28, 2023)
+
+### Added
+
+ - Added [`start_value`](@ref), [`lower_bound`](@ref), and [`upper_bound`](@ref)
+   support for [`GenericAffExpr`](@ref) that are equivalent to a single
+   [`GenericVariableRef`](@ref) (#3551)
+ - Added [`SkipModelConvertScalarSetWrapper`](@ref) which is useful for
+   extensions looking to avoid [`model_convert`](@ref) (#3552)
+ - Added [`lp_matrix_data`](@ref) (#3573)
+
+### Fixed
+
+ - Fixed [`variable_ref_type`](@ref) for unsupported types (#3556)
+ - Fixed convert type of constraint starting values (#3571)
+ - Fixed various methods to support `AbstractJuMPScalar` with `Distances.jl`
+   (#3583)
+
+### Other
+
+ - Improved error messages for:
+    - Addition and subtraction between a matrix and a scalar (#3557) (#3558)
+    - Variables with non-constant bounds (#3583)
+    - Invalid indicator constraints (#3584)
+ - Added new solvers to the documentation:
+    - [EAGO.jl](@ref) (#3560) (#3561)
+    - [Manopt.jl](@ref) (#3568)
+ - Added new tutorials:
+    - [Approximating nonlinear functions](@ref) (#3563)
+    - [Classifiers](@ref) (#3569)
+ - Improved documentation for:
+    - [`Semicontinuous`](@ref) and [`Semiinteger`](@ref) variables (#3562)
+    - [`SOS1`](@ref) and [`SOS2`](@ref) (#3565)
+    - [`start_value`](@ref) of [`MOI.HermitianPSDCone`](@ref) (#3564)
+    - Function tracing (#3570)
+    - Nonlinear operators with vector arguments (#3577)
+    - Indicator connstraints (#3582)
+ - Updated package compat bounds (#3578)
+
 ## Version 1.16.0 (October 24, 2023)
 
 ### Added
