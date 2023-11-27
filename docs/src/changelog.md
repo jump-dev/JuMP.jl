@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Fixed convert type of constraint starting values (#3571)
  - Fixed various methods to support `AbstractJuMPScalar` with `Distances.jl`
    (#3583)
+ - Fixed `eachindex` for multiple arguments of [`Containers.DenseAxisArray`](@ref)
+   and [`Containers.SparseAxisArray`](@ref) (#3587)
 
 ### Other
 
