@@ -534,7 +534,9 @@ function _broadcast_axes_check(x::NTuple{N}) where {N}
     axes = first(x)
     for i in 2:N
         if x[i][1] != axes[1]
-            throw(DimensionMismatch("DenseAxisArrays have different axes."))
+            error(
+                "Unable to broadcast over DenseAxisArrays with different axes.",
+            )
         end
     end
     return axes
