@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Variables with non-constant bounds (#3583)
     - Invalid indicator constraints (#3584)
  - Added new solvers to the documentation:
-    - [EAGO.jl](@ref) (#3560) (#3561)
+    - `EAGO.jl` (#3560) (#3561)
     - [Manopt.jl](@ref) (#3568)
  - Added new tutorials:
     - [Approximating nonlinear functions](@ref) (#3563)
@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Improved documentation for:
     - [`Semicontinuous`](@ref) and [`Semiinteger`](@ref) variables (#3562)
     - [`SOS1`](@ref) and [`SOS2`](@ref) (#3565)
-    - [`start_value`](@ref) of [`MOI.HermitianPSDCone`](@ref) (#3564)
+    - [`start_value`](@ref) of [`HermitianPSDCone`](@ref) (#3564)
     - Function tracing (#3570)
     - Nonlinear operators with vector arguments (#3577)
     - Indicator connstraints (#3582)
