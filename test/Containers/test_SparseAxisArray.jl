@@ -344,10 +344,13 @@ function test_containers_sparseaxisarray_kwarg_setindex()
 end
 
 function test_multi_arg_eachindex()
-    model = Model()
-    @variable(model, x[2:3], container = SparseAxisArray)
-    @variable(model, y[2:3], container = SparseAxisArray)
-    @variable(model, z[2:4, 1:2], container = SparseAxisArray)
+    Containers.@container(x[i = 2:3], i, container = SparseAxisArray)
+    Containers.@container(y[i = 2:3], i, container = SparseAxisArray)
+    Containers.@container(
+        z[i = 2:4, j = 1:2],
+        i + j,
+        container = SparseAxisArray,
+    )
     @test eachindex(x) == keys(x.data)
     @test eachindex(y) == keys(y.data)
     @test eachindex(z) == keys(z.data)

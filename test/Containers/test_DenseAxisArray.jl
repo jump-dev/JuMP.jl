@@ -863,10 +863,9 @@ function test_sum_dims()
 end
 
 function test_multi_arg_eachindex()
-    model = Model()
-    @variable(model, x[2:3])
-    @variable(model, y[2:3])
-    @variable(model, z[2:4, 1:2])
+    Containers.@container(x[i = 2:3], i)
+    Containers.@container(y[i = 2:3], i)
+    Containers.@container(z[i = 2:4, j = 1:2], i + j)
     @test eachindex(x) == CartesianIndices((2,))
     @test eachindex(y) == CartesianIndices((2,))
     @test eachindex(z) == CartesianIndices((3, 2))
