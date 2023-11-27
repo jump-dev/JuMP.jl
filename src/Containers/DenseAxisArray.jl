@@ -343,7 +343,28 @@ if VERSION >= v"1.9.0-DEV"
     end
 end
 
-Base.eachindex(A::DenseAxisArray) = CartesianIndices(size(A.data))
+Base.eachindex(A::DenseAxisArray) = eachindex(IndexStyle(A), A)
+
+function Base.eachindex(::IndexCartesian, A::DenseAxisArray)
+    return CartesianIndices(size(A.data))
+end
+
+function Base.eachindex(
+    ::IndexCartesian,
+    A::DenseAxisArray,
+    B::DenseAxisArray...,
+)
+    ret = eachindex(A)
+    for b in B
+        if eachindex(b) != ret
+            err = DimensionMismatch(
+                "incompatible dimensions in eachindex. Got $(eachindex.((A, B...)))",
+            )
+            throw(err)
+        end
+    end
+    return ret
+end
 
 # Use recursion over tuples to ensure the return-type of functions like
 # `Base.to_index` are type-stable.
