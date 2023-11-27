@@ -1619,10 +1619,10 @@ end
 function test_variable_one()
     model = Model()
     @variable(model, x)
-    @test Base.one(x) == 1
-    @test Base.one(2 * x) == 1
-    @test Base.oneunit(x) == 1
-    @test Base.oneunit(2 * x) == 1
+    @test one(x) == AffExpr(1.0)
+    @test one(2 * x) == AffExpr(1.0)
+    @test oneunit(x) == AffExpr(1.0)
+    @test oneunit(2 * x) == AffExpr(1.0)
     return
 end
 
