@@ -862,4 +862,17 @@ function test_sum_dims()
     return
 end
 
+function test_multi_arg_eachindex()
+    model = Model()
+    @variable(model, x[2:3])
+    @variable(model, y[2:3])
+    @variable(model, z[2:4, 1:2])
+    @test eachindex(x) == CartesianIndices((2,))
+    @test eachindex(y) == CartesianIndices((2,))
+    @test eachindex(z) == CartesianIndices((3, 2))
+    @test eachindex(x, y) == CartesianIndices((2,))
+    @test_throws DimensionMismatch eachindex(x, z)
+    return
+end
+
 end  # module

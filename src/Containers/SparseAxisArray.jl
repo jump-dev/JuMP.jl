@@ -219,6 +219,23 @@ end
 
 Base.eachindex(d::SparseAxisArray) = keys(d.data)
 
+function Base.eachindex(
+    ::IndexCartesian,
+    A::SparseAxisArray,
+    B::SparseAxisArray...,
+)
+    ret = eachindex(A)
+    for b in B
+        if eachindex(b) != ret
+            err = DimensionMismatch(
+                "incompatible dimensions in eachindex. Got $(eachindex.((A, B...)))",
+            )
+            throw(err)
+        end
+    end
+    return ret
+end
+
 ################
 # Broadcasting #
 ################
