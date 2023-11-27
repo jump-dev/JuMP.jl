@@ -967,4 +967,24 @@ function test_print_text_latex_interval_set()
     return
 end
 
+function test_truncated_printing()
+    model = Model()
+    @variable(model, x[1:1000])
+    y = sum(x)
+    s = function_string(MIME("text/plain"), y)
+    @test occursin("x[30] + [[...940 terms omitted...]] + x[971]", s)
+    @test occursin(
+        "x_{30} + [[\\ldots\\text{940 terms omitted}\\ldots]] + x_{971}",
+        function_string(MIME("text/latex"), y),
+    )
+    ret = JuMP._TERM_LIMIT_FOR_PRINTING[]
+    JuMP._TERM_LIMIT_FOR_PRINTING[] = 3
+    @test function_string(MIME("text/plain"), y) ==
+          "x[1] + x[2] + [[...997 terms omitted...]] + x[1000]"
+    @test function_string(MIME("text/latex"), y) ==
+          "x_{1} + x_{2} + [[\\ldots\\text{997 terms omitted}\\ldots]] + x_{1000}"
+    JuMP._TERM_LIMIT_FOR_PRINTING[] = ret
+    return
+end
+
 end
