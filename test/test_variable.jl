@@ -1601,4 +1601,29 @@ function test_bad_bound_types()
     return
 end
 
+function test_variable_length()
+    model = Model()
+    @variable(model, x)
+    @test length(x) == 1
+    return
+end
+
+function test_variable_eltype()
+    model = Model()
+    @variable(model, x)
+    @test Base.IteratorEltype(x) == Base.HasEltype()
+    @test Base.eltype(typeof(x)) == typeof(x)
+    return
+end
+
+function test_variable_one()
+    model = Model()
+    @variable(model, x)
+    @test one(x) == AffExpr(1.0)
+    @test one(2 * x) == AffExpr(1.0)
+    @test oneunit(x) == AffExpr(1.0)
+    @test oneunit(2 * x) == AffExpr(1.0)
+    return
+end
+
 end  # module TestVariable
