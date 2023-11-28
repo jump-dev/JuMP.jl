@@ -166,6 +166,9 @@
 [PATHSolver]
     user = "chkwon"
     rev = "v1.7.0"
+[Percival]
+    user = "JuliaSmoothOptimizers"
+    rev = "fea30951982d15cfa0a846d6528884e5a9046c58"
 [Plasmo]
     user = "plasmo-dev"
     rev = "v0.5.4"
