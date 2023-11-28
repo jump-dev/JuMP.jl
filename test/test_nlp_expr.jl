@@ -978,4 +978,19 @@ function test_variable_ref_type()
     return
 end
 
+function test_printing_truncation()
+    model = Model()
+    @variable(model, x[1:100])
+    y = @expression(model, sum(sin.(x) .* 2))
+    @test occursin(
+        "(sin(x[72]) * 2.0) + [[...41 terms omitted...]] + (sin(x[30]) * 2.0)",
+        function_string(MIME("text/plain"), y),
+    )
+    @test occursin(
+        "{\\left({\\textsf{sin}\\left({x[72]}\\right)} * {2.0}\\right) + {[[\\ldots\\text{41 terms omitted}\\ldots]]} + {\\left({\\textsf{sin}\\left({x[30]}\\right)} * {2.0}\\right)} + {\\left({\\textsf{sin}\\left({x[29]}\\right)} * {2.0}\\right)} + {\\left({\\textsf{sin}\\left({x[28]}\\right)} * {2.0}\\right)} + {\\left({\\textsf{sin}\\left({x[27]}\\right)} * {2.0}\\right)} + {\\left({\\textsf{sin}\\left({x[26]}\\right)} * {2.0}\\right)}",
+        function_string(MIME("text/latex"), y),
+    )
+    return
+end
+
 end  # module

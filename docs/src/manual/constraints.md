@@ -1366,16 +1366,20 @@ y
 julia> @variable(model, a, Bin)
 a
 
-julia> @constraint(model, a => {x + y <= 1})
-a => {x + y ≤ 1}
+julia> @constraint(model, a --> {x + y <= 1})
+a --> {x + y ≤ 1}
 ```
 
 If the constraint must hold when `a` is zero, add `!` or `¬` before the binary
 variable;
 ```jldoctest indicator
-julia> @constraint(model, !a => {x + y <= 1})
-!a => {x + y ≤ 1}
+julia> @constraint(model, !a --> {x + y <= 1})
+!a --> {x + y ≤ 1}
 ```
+
+!!! warning
+    You cannot use an expression for the left-hand side of an indicator
+    constraint.
 
 ## Semidefinite constraints
 

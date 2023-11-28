@@ -1569,4 +1569,61 @@ function test_variable_ref_type_unsupported()
     return
 end
 
+function test_bad_bound_types()
+    T = Int
+    model = GenericModel{T}()
+    function err(value, msg, T)
+        return ErrorException(
+            "Unable to use `$value::$(typeof(value))` as the $msg of a " *
+            "variable because it is not convertable to type `::$T`.",
+        )
+    end
+    for v in (1.2, "abc", :d)
+        @test_throws err(v, "upper bound", T) @variable(model, x <= v)
+        @test_throws err(v, "lower bound", T) @variable(model, x >= v)
+        @test_throws err(v, "fixed value", T) @variable(model, x == v)
+        @test_throws err(v, "start value", T) @variable(model, x, start = v)
+    end
+    function err2(value, msg, T)
+        return ErrorException(
+            "Unable to use `$value::$(typeof(value))` as the $msg of a variable. " *
+            "The $msg must be a constant value of type `::$T`. You cannot use " *
+            "JuMP variables or expressions.",
+        )
+    end
+    @variable(model, y)
+    for v in (y, T(2) * y, sin(y))
+        @test_throws err2(v, "upper bound", T) @variable(model, x <= v)
+        @test_throws err2(v, "lower bound", T) @variable(model, x >= v)
+        @test_throws err2(v, "fixed value", T) @variable(model, x == v)
+        @test_throws err2(v, "start value", T) @variable(model, x, start = v)
+    end
+    return
+end
+
+function test_variable_length()
+    model = Model()
+    @variable(model, x)
+    @test length(x) == 1
+    return
+end
+
+function test_variable_eltype()
+    model = Model()
+    @variable(model, x)
+    @test Base.IteratorEltype(x) == Base.HasEltype()
+    @test Base.eltype(typeof(x)) == typeof(x)
+    return
+end
+
+function test_variable_one()
+    model = Model()
+    @variable(model, x)
+    @test one(x) == AffExpr(1.0)
+    @test one(2 * x) == AffExpr(1.0)
+    @test oneunit(x) == AffExpr(1.0)
+    @test oneunit(2 * x) == AffExpr(1.0)
+    return
+end
+
 end  # module TestVariable

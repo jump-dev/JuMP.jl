@@ -51,6 +51,7 @@ unexported
 [Uu]ntyped
 
 % JuMP-related vocab
+arithmetics
 [Bb]ilevel
 [Cc]anonicaliz(e|ation|ing)
 [Cc]ombinatorics
@@ -58,6 +59,7 @@ convexification
 DAE(?s)
 [Dd]et
 [Ee]xtremal
+factorable
 functionize
 geomean
 hypergraph
@@ -71,12 +73,15 @@ minimizers
 nl|NL
 [Nn]onconvex
 [Nn]on(posi|nega)tiv(e|es|ity)
+[Nn]onseparable
+[Nn]onsmooth
 [Oo]ptigraph(?s)
 [Oo]ptinode(?s)
 [Oo]ptiedge(?s)
 overfitting
 parameteriz(ing|ation)
 perp
+priori
 POVM
 [Pp]recompil(ation|(e(?d)))
 [Pp]resolve
@@ -98,6 +103,7 @@ unregister
 warmstart
 
 % Proper nouns
+Adagrad
 AMPL
 Appveyor
 Artelys
@@ -118,9 +124,11 @@ cosmo
 Couenne
 Divio
 Dualization
+EAGO
 [Ee]mbotech
 [Ee]cos
-JSONSchema
+Geomstats
+Geoopt
 GLPK
 Gurobi
 GUROBI
@@ -128,8 +136,11 @@ GZip
 Hypatia
 Ipopt
 IPOPT
+Jax
+JSONSchema
 Knitro
 KNITRO
+[Mm]anopt
 MATLAB
 MOI
 Mosek
@@ -144,6 +155,7 @@ Penopt
 Plasmo
 puzzlor
 RAPOSa
+Riemopt
 SDPAFamily
 SDPNAL
 Umfpack
@@ -161,6 +173,8 @@ Biegler
 Borchers
 Bukhsh
 Cao
+Chachuat
+Chebyshev
 Cholesky
 Coey
 Dantzig
@@ -198,12 +212,14 @@ Linial
 Luangkesorn
 Lubin
 Madani
+Mangasarian
 Marek
 Markowitz
 Mathieu
 Maurer
 Mehdi
 Michal
+Mitsos
 Mittelman
 Montoison
 Motzkin
@@ -212,6 +228,7 @@ Nemirovski
 Pacaud
 Peng
 Rebennack
+Riemannian
 [Rr]osenbrock
 Schermer
 Schur
@@ -223,6 +240,7 @@ Soodeh
 Steuer
 Stigler
 Stingl
+Stuber
 Sungho
 Taccari
 Tanneau
@@ -231,6 +249,8 @@ Tillmann
 Ulungu
 Vandenberghe
 Vielma
+Watson, H.A.J.
+Wechsung
 Wei
 Wollenberg
 Yankai

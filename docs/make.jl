@@ -291,6 +291,7 @@ const _PAGES = [
             "tutorials/linear/multi.md",
             "tutorials/linear/multi_commodity_network.md",
             "tutorials/linear/tips_and_tricks.md",
+            "tutorials/linear/piecewise_linear.md",
             "tutorials/linear/facility_location.md",
             "tutorials/linear/finance.md",
             "tutorials/linear/geographic_clustering.md",
@@ -316,6 +317,7 @@ const _PAGES = [
             "tutorials/nonlinear/nested_problems.md",
             "tutorials/nonlinear/querying_hessians.md",
             "tutorials/nonlinear/complementarity.md",
+            "tutorials/nonlinear/classifiers.md",
         ],
         "Conic programs" => [
             "tutorials/conic/introduction.md",

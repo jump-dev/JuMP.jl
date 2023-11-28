@@ -862,4 +862,16 @@ function test_sum_dims()
     return
 end
 
+function test_multi_arg_eachindex()
+    Containers.@container(x[i = 2:3], i)
+    Containers.@container(y[i = 2:3], i)
+    Containers.@container(z[i = 2:4, j = 1:2], i + j)
+    @test eachindex(x) == CartesianIndices((2,))
+    @test eachindex(y) == CartesianIndices((2,))
+    @test eachindex(z) == CartesianIndices((3, 2))
+    @test eachindex(x, y) == CartesianIndices((2,))
+    @test_throws DimensionMismatch eachindex(x, z)
+    return
+end
+
 end  # module

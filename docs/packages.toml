@@ -40,7 +40,7 @@
 [Clp]
     rev = "v1.0.3"
 [CPLEX]
-    rev = "v1.0.0"
+    rev = "v1.0.1"
 [CSDP]
     rev = "3a2e4c7c48af7660a5ba258a4cb6549ab0970366"
 [DiffOpt]
@@ -53,19 +53,19 @@
 [GLPK]
     rev = "v1.1.3"
 [Gurobi]
-    rev = "v1.0.4"
+    rev = "4f6811250c3ec01b968c65ba58fa79a2f62114d3"
 [HiGHS]
-    rev = "v1.7.4"
+    rev = "v1.7.5"
 [Ipopt]
-    rev = "v1.5.0"
+    rev = "v1.5.1"
 [KNITRO]
     rev = "4c56de7684c42dd3c83c5fbc515ae1f424eed524"
 [MiniZinc]
-    rev = "v0.3.4"
+    rev = "v0.3.6"
 [MosekTools]
     rev = "v0.15.1"
 [MultiObjectiveAlgorithms]
-    rev = "v1.2.0"
+    rev = "v1.3.0"
     has_html = true
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
@@ -78,10 +78,10 @@
 # [Penopt]
 #     rev = "486f07d3f3a11f12012ea3ada702a3ee55c8fdc5"
 [PolyJuMP]
-    rev = "6b280429865850cd278f0d74d0a176d53da2980e"
+    rev = "v0.7.1"
     extension = true
 [SCS]
-    rev = "v1.3.1"
+    rev = "v2.0.0"
 [SDPA]
     rev = "v0.5.0"
 [SDPNAL]
@@ -100,7 +100,7 @@
 
 [Alpine]
     user = "lanl-ansi"
-    rev = "v0.5.5"
+    rev = "v0.5.6"
 [BilevelJuMP]
     user = "joaquimg"
     rev = "v0.6.2"
@@ -117,17 +117,18 @@
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.11"
+    rev = "v1.1.12"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.8"
     has_html = true
 [DAQP]
     user = "darnstrom"
-    rev = "v0.5.1"
-# [EAGO]
-#     user = "PSORLab"
-#     rev = "v0.8.1"
+    rev = "v0.5.2"
+[EAGO]
+    user = "PSORLab"
+    rev = "8bba4cf6d9ef1602b4cfe3ea31b847f21ce25837"
+    filename = "docs/src/jump/README.md"
 [GAMS]
     user = "GAMS-dev"
     rev = "c5dee9f929e9d2f4433ae09fa92b8d872c9c43e0"
@@ -150,6 +151,10 @@
     user = "MadNLP"
     rev = "389561354a774441cd5e6b3aa5fffee102ed222e"
     has_html = true
+[Manopt]
+    user = "JuliaManifolds"
+    rev = "v0.4.43"
+    filename = "Readme.md"
 [NEOSServer]
     user = "odow"
     rev = "v1.1.0"

@@ -1049,6 +1049,9 @@ function owner_model end
 Base.ndims(::Type{<:AbstractJuMPScalar}) = 0
 Base.ndims(::AbstractJuMPScalar) = 0
 
+Base.IteratorEltype(::Type{<:AbstractJuMPScalar}) = Base.HasEltype()
+Base.eltype(::Type{T}) where {T<:AbstractJuMPScalar} = T
+
 # These are required to create symmetric containers of AbstractJuMPScalars.
 LinearAlgebra.symmetric_type(::Type{T}) where {T<:AbstractJuMPScalar} = T
 LinearAlgebra.hermitian_type(::Type{T}) where {T<:AbstractJuMPScalar} = T
@@ -1059,6 +1062,7 @@ LinearAlgebra.adjoint(scalar::AbstractJuMPScalar) = conj(scalar)
 Base.iterate(x::AbstractJuMPScalar) = (x, true)
 Base.iterate(::AbstractJuMPScalar, state) = nothing
 Base.isempty(::AbstractJuMPScalar) = false
+Base.length(::AbstractJuMPScalar) = 1
 
 # Check if two arrays of AbstractJuMPScalars are equal. Useful for testing.
 function isequal_canonical(
@@ -1091,6 +1095,7 @@ include("complement.jl")
 include("copy.jl")
 include("feasibility_checker.jl")
 include("file_formats.jl")
+include("lp_matrix_data.jl")
 include("lp_sensitivity2.jl")
 include("indicator.jl")
 include("reified.jl")

@@ -144,79 +144,48 @@ function _needs_parentheses(x::GenericNonlinearExpr)
     return x.head in _PREFIX_OPERATORS && length(x.args) > 1
 end
 
-function function_string(::MIME"text/plain", x::GenericNonlinearExpr)
-    io, stack = IOBuffer(), Any[x]
-    while !isempty(stack)
-        arg = pop!(stack)
-        if arg isa GenericNonlinearExpr
-            if arg.head in _PREFIX_OPERATORS && length(arg.args) > 1
-                if _needs_parentheses(arg.args[1])
-                    print(io, "(")
-                end
-                if _needs_parentheses(arg.args[end])
-                    push!(stack, ")")
-                end
-                for i in length(arg.args):-1:2
-                    push!(stack, arg.args[i])
-                    if _needs_parentheses(arg.args[i])
-                        push!(stack, "(")
-                    end
-                    push!(stack, " $(arg.head) ")
-                    if _needs_parentheses(arg.args[i-1])
-                        push!(stack, ")")
-                    end
-                end
-                push!(stack, arg.args[1])
-            else
-                print(io, arg.head, "(")
-                push!(stack, ")")
-                for i in length(arg.args):-1:2
-                    push!(stack, arg.args[i])
-                    push!(stack, ", ")
-                end
-                if length(arg.args) >= 1
-                    push!(stack, arg.args[1])
-                end
-            end
-        else
-            print(io, arg)
-        end
-    end
-    seekstart(io)
-    return read(io, String)
-end
+_parens(::MIME) = "(", ")", "", "", ""
+_parens(::MIME"text/latex") = "\\left(", "\\right)", "{", "}", "\\textsf"
 
-function function_string(::MIME"text/latex", x::GenericNonlinearExpr)
+function function_string(mime::MIME, x::GenericNonlinearExpr)
+    p_left, p_right, p_open, p_close, p_textsf = _parens(mime)
     io, stack = IOBuffer(), Any[x]
     while !isempty(stack)
         arg = pop!(stack)
         if arg isa GenericNonlinearExpr
             if arg.head in _PREFIX_OPERATORS && length(arg.args) > 1
-                print(io, "{")
-                push!(stack, "}")
-                if _needs_parentheses(arg.args[1])
-                    print(io, "\\left(")
-                end
-                if _needs_parentheses(arg.args[end])
-                    push!(stack, "\\right)")
-                end
-                for i in length(arg.args):-1:2
-                    push!(stack, arg.args[i])
-                    if _needs_parentheses(arg.args[i])
-                        push!(stack, "\\left(")
+                print(io, p_open)
+                push!(stack, p_close)
+                l = ceil(_TERM_LIMIT_FOR_PRINTING[] / 2)
+                r = floor(_TERM_LIMIT_FOR_PRINTING[] / 2)
+                skip_indices = (1+l):(length(arg.args)-r)
+                for i in length(arg.args):-1:1
+                    if i in skip_indices
+                        if i == skip_indices[end]
+                            push!(
+                                stack,
+                                _terms_omitted(mime, length(skip_indices)),
+                            )
+                            push!(stack, " $(arg.head) $p_open")
+                        end
+                        continue
+                    elseif _needs_parentheses(arg.args[i])
+                        push!(stack, p_right)
+                        push!(stack, arg.args[i])
+                        push!(stack, p_left)
+                    else
+                        push!(stack, arg.args[i])
                     end
-                    push!(stack, "} $(arg.head) {")
-                    if _needs_parentheses(arg.args[i-1])
-                        push!(stack, "\\right)")
+                    if i > 1
+                        push!(stack, "$p_close $(arg.head) $p_open")
                     end
                 end
-                push!(stack, arg.args[1])
             else
-                print(io, "\\textsf{", arg.head, "}\\left({")
-                push!(stack, "}\\right)")
+                print(io, p_textsf, p_open, arg.head, p_close, p_left, p_open)
+                push!(stack, p_close * p_right)
                 for i in length(arg.args):-1:2
                     push!(stack, arg.args[i])
-                    push!(stack, "}, {")
+                    push!(stack, "$p_close, $p_open")
                 end
                 if length(arg.args) >= 1
                     push!(stack, arg.args[1])

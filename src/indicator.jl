@@ -16,6 +16,18 @@ function _build_indicator_constraint(
     return VectorConstraint([variable, jump_function(constraint)], set)
 end
 
+function _build_indicator_constraint(
+    _error::Function,
+    lhs::F,
+    ::ScalarConstraint,
+    ::Type{<:MOI.Indicator},
+) where {F}
+    return _error(
+        "unable to build indicator constraint with the left-hand side term " *
+        "`($lhs)::$F`. The left-hand side must be a binary decision variable.",
+    )
+end
+
 function _indicator_variable_set(::Function, variable::Symbol)
     return variable, MOI.Indicator{MOI.ACTIVATE_ON_ONE}
 end
@@ -51,30 +63,19 @@ function parse_constraint_call(
             "Invalid right-hand side `$(rhs)` of indicator constraint. Expected constraint surrounded by `{` and `}`.",
         )
     end
-    rhs_con = rhs.args[1]
-    rhs_vectorized, rhs_parsecode, rhs_buildcall =
-        parse_constraint(_error, rhs_con)
+    rhs_vectorized, rhs_parsecode, rhs_build_call =
+        parse_constraint(_error, rhs.args[1])
     if vectorized != rhs_vectorized
         _error("Inconsistent use of `.` in symbols to indicate vectorization.")
     end
-    if vectorized
-        buildcall = :(
-            _build_indicator_constraint.(
-                $_error,
-                $(esc(variable)),
-                $rhs_buildcall,
-                $S,
-            )
-        )
+    f, lhs_parse_code = _rewrite_expression(variable)
+    push!(rhs_parsecode.args, lhs_parse_code)
+    build_call = if vectorized
+        :(_build_indicator_constraint.($_error, $f, $rhs_build_call, $S))
     else
-        buildcall = :(_build_indicator_constraint(
-            $_error,
-            $(esc(variable)),
-            $rhs_buildcall,
-            $S,
-        ))
+        :(_build_indicator_constraint($_error, $f, $rhs_build_call, $S))
     end
-    return rhs_parsecode, buildcall
+    return rhs_parsecode, build_call
 end
 
 function constraint_string(
@@ -88,5 +89,5 @@ function constraint_string(
     end
     con = ScalarConstraint(constraint.func[2], constraint.set.set)
     con_str = constraint_string(print_mode, con)
-    return var_str * " => {" * con_str * "}"
+    return var_str * " --> {" * con_str * "}"
 end
