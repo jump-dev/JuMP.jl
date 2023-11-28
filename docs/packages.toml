@@ -165,7 +165,7 @@
     rev = "443706e34c2619acbe65281c60bbe850ca4a8fac"
 [PATHSolver]
     user = "chkwon"
-    rev = "v1.6.1"
+    rev = "v1.7.0"
 [Percival]
     user = "JuliaSmoothOptimizers"
     rev = "fea30951982d15cfa0a846d6528884e5a9046c58"
