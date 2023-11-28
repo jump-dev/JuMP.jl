@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - [`start_value`](@ref) of [`HermitianPSDCone`](@ref) (#3564)
     - Function tracing (#3570)
     - Nonlinear operators with vector arguments (#3577)
-    - Indicator connstraints (#3582)
+    - Indicator constraints (#3582)
  - Updated package compat bounds (#3578)
 
 ## Version 1.16.0 (October 24, 2023)
