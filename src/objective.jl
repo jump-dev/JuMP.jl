@@ -263,27 +263,61 @@ function set_objective_coefficient(
     end
     coeff = convert(T, coeff)::T
     obj_fct_type = objective_function_type(model)
-    if obj_fct_type == GenericVariableRef{T}
-        # Promote the objective function to be an affine expression.
-        current_obj = objective_function(model)
-        if index(current_obj) == index(variable)
-            set_objective_function(model, coeff * variable)
-        else
-            set_objective_function(
-                model,
-                add_to_expression!(coeff * variable, current_obj),
-            )
-        end
-    elseif obj_fct_type == GenericAffExpr{T,GenericVariableRef{T}} ||
-           obj_fct_type == GenericQuadExpr{T,GenericVariableRef{T}}
-        MOI.modify(
-            backend(model),
-            MOI.ObjectiveFunction{moi_function_type(obj_fct_type)}(),
-            MOI.ScalarCoefficientChange(index(variable), coeff),
-        )
-    else
-        error("Objective function type not supported: $(obj_fct_type)")
-    end
+    _set_objective_coefficient(model, variable, coeff, obj_fct_type)
     model.is_model_dirty = true
+    return
+end
+
+function _set_objective_coefficient(
+    model::GenericModel{T},
+    variable::GenericVariableRef{T},
+    coeff::T,
+    obj_fct_type::Type{GenericVariableRef{T}},
+) where {T}
+    # Promote the objective function to be an affine expression.
+    current_obj = objective_function(model)
+    if index(current_obj) == index(variable)
+        set_objective_function(model, coeff * variable)
+    else
+        set_objective_function(
+            model,
+            add_to_expression!(coeff * variable, current_obj),
+        )
+    end
+    return
+end
+function _set_objective_coefficient(
+    model::GenericModel{T},
+    variable::GenericVariableRef{T},
+    coeff::T,
+    obj_fct_type::Type{GenericAffExpr{T,GenericVariableRef{T}}},
+) where {T}
+    MOI.modify(
+        backend(model),
+        MOI.ObjectiveFunction{moi_function_type(obj_fct_type)}(),
+        MOI.ScalarCoefficientChange(index(variable), coeff),
+    )
+    return
+end
+function _set_objective_coefficient(
+    model::GenericModel{T},
+    variable::GenericVariableRef{T},
+    coeff::T,
+    obj_fct_type::Type{GenericQuadExpr{T,GenericVariableRef{T}}},
+) where {T}
+    MOI.modify(
+        backend(model),
+        MOI.ObjectiveFunction{moi_function_type(obj_fct_type)}(),
+        MOI.ScalarCoefficientChange(index(variable), coeff),
+    )
+    return
+end
+function _set_objective_coefficient(
+    model::GenericModel{T},
+    variable::GenericVariableRef{T},
+    coeff::T,
+    obj_fct_type,
+) where {T}
+    error("Objective function type not supported: $(obj_fct_type)")
     return
 end
