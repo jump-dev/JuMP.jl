@@ -59,13 +59,13 @@
 [Ipopt]
     rev = "v1.5.1"
 [KNITRO]
-    rev = "4c56de7684c42dd3c83c5fbc515ae1f424eed524"
+    rev = "v0.14.0"
 [MiniZinc]
     rev = "v0.3.6"
 [MosekTools]
     rev = "v0.15.1"
 [MultiObjectiveAlgorithms]
-    rev = "v1.3.0"
+    rev = "v1.3.1"
     has_html = true
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
