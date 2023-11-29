@@ -291,26 +291,11 @@ function _set_objective_coefficient(
     variable::GenericVariableRef{T},
     coeff::T,
     ::Type{F},
-) where {
-    T,
-    F<:Union{
-        GenericAffExpr{T,GenericVariableRef{T}},
-        GenericQuadExpr{T,GenericVariableRef{T}},
-    },
-}
+) where {T,F}
     MOI.modify(
         backend(model),
         MOI.ObjectiveFunction{moi_function_type(F)}(),
         MOI.ScalarCoefficientChange(index(variable), coeff),
     )
     return
-end
-
-function _set_objective_coefficient(
-    ::GenericModel{T},
-    ::GenericVariableRef{T},
-    ::T,
-    ::Type{F},
-) where {T,F}
-    return error("Objective function type not supported: $F")
 end
