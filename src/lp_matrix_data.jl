@@ -142,7 +142,7 @@ function _fill_standard_form(
     ::Type{MOI.Integer},
     cache::Any,
 ) where {T}
-    for c in all_constraints(model, GenericVariableRef{T}, S)
+    for c in all_constraints(model, GenericVariableRef{T}, MOI.Integer)
         c_obj = constraint_object(c)
         push!(cache.integers, cache.variable_to_column[c_obj.func])
     end
@@ -155,7 +155,7 @@ function _fill_standard_form(
     ::Type{MOI.ZeroOne},
     cache::Any,
 ) where {T}
-    for c in all_constraints(model, GenericVariableRef{T}, S)
+    for c in all_constraints(model, GenericVariableRef{T}, MOI.ZeroOne)
         c_obj = constraint_object(c)
         push!(cache.binaries, cache.variable_to_column[c_obj.func])
     end
