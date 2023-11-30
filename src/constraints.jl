@@ -1559,6 +1559,10 @@ sets to the same [`value_type`](@ref) as the model.
 In cases there this is undesirable, wrap the set in `SkipModelConvertScalarSetWrapper`
 to pass the set un-changed to the solver.
 
+!!! warning
+    This struct is intended for use internally by JuMP extensions. You should not
+    need to use it in regular JuMP code.
+
 ## Examples
 
 ```jldoctest
