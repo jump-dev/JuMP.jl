@@ -19,6 +19,8 @@ struct LPMatrixData{T}
     c_offset::T
     sense::MOI.OptimizationSense
     variables::Vector{GenericVariableRef{T}}
+    integers::Vector{Int}
+    binaries::Vector{Int}
     affine_constraints::Vector{ConstraintRef}
     variable_constraints::Vector{ConstraintRef}
 end
@@ -35,6 +37,7 @@ struct storing data for an equivalent linear program in the form:
       & x_l \\le x \\le x_u
 \\end{aligned}
 ```
+where elements in `x` may be continuous, integer, or binary variables.
 
 ## Fields
 
@@ -53,6 +56,10 @@ The struct returned by [`lp_matrix_data`](@ref) has the fields:
  * `c::Vector{T}`: the dense vector of linear objective coefficiennts
  * `c_offset::T`: the constant term in the objective function.
  * `sense::MOI.OptimizationSense`: the objective sense of the model.
+ * `integers::Vector{Int}`: the list of 1-indexed columns that are integer
+   variables.
+ * `binaries::Vector{Int}`: the list of 1-indexed columns that are binary
+   variables.
  * `variables::Vector{GenericVariableRef{T}}`: a vector of [`GenericVariableRef`](@ref),
    corresponding to order of the columns in the matrix form.
  * `affine_constraints::Vector{ConstraintRef}`: a vector of [`ConstraintRef`](@ref),
@@ -62,9 +69,6 @@ The struct returned by [`lp_matrix_data`](@ref) has the fields:
 
 The models supported by [`lp_matrix_data`](@ref) are intentionally limited
 to linear programs.
-
-If your model has integrality, use [`relax_integrality`](@ref) to remove integer
-restrictions before calling [`lp_matrix_data`](@ref).
 """
 function lp_matrix_data(model::GenericModel{T}) where {T}
     variables = all_variables(model)
@@ -80,6 +84,8 @@ function lp_matrix_data(model::GenericModel{T}) where {T}
         I = Int[],
         J = Int[],
         V = T[],
+        integers = Int[],
+        binaries = Int[],
         variable_to_column = columns,
         bound_constraints = ConstraintRef[],
         affine_constraints = ConstraintRef[],
@@ -97,6 +103,8 @@ function lp_matrix_data(model::GenericModel{T}) where {T}
         cache.c,
         cache.c_offset[],
         MOI.get(model, MOI.ObjectiveSense()),
+        sort!(cache.integers),
+        sort!(cache.binaries),
         variables,
         cache.affine_constraints,
         cache.bound_constraints,
@@ -124,6 +132,32 @@ function _fill_standard_form(
         l, u = _bounds(c_obj.set)
         cache.x_l[i] = max(cache.x_l[i], l)
         cache.x_u[i] = min(cache.x_u[i], u)
+    end
+    return
+end
+
+function _fill_standard_form(
+    model::GenericModel{T},
+    ::Type{GenericVariableRef{T}},
+    ::Type{MOI.Integer},
+    cache::Any,
+) where {T}
+    for c in all_constraints(model, GenericVariableRef{T}, S)
+        c_obj = constraint_object(c)
+        push!(cache.integers, cache.variable_to_column[c_obj.func])
+    end
+    return
+end
+
+function _fill_standard_form(
+    model::GenericModel{T},
+    ::Type{GenericVariableRef{T}},
+    ::Type{MOI.ZeroOne},
+    cache::Any,
+) where {T}
+    for c in all_constraints(model, GenericVariableRef{T}, S)
+        c_obj = constraint_object(c)
+        push!(cache.binaries, cache.variable_to_column[c_obj.func])
     end
     return
 end

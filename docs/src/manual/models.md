@@ -447,9 +447,9 @@ matrix form of a linear program.
 ```jldoctest
 julia> begin
            model = Model()
-           @variable(model, x >= 1)
+           @variable(model, x >= 1, Bin)
            @variable(model, 2 <= y)
-           @variable(model, 3 <= z <= 4)
+           @variable(model, 3 <= z <= 4, Int)
            @constraint(model, x == 5)
            @constraint(model, 2x + 3y <= 6)
            @constraint(model, -4y >= 5z + 7)
@@ -461,10 +461,10 @@ julia> data = lp_matrix_data(model);
 
 julia> data.A
 4×3 SparseArrays.SparseMatrixCSC{Float64, Int64} with 7 stored entries:
- 1.0    ⋅     ⋅ 
+ 1.0    ⋅     ⋅
   ⋅   -4.0  -5.0
- 2.0   3.0    ⋅ 
- 1.0   1.0    ⋅ 
+ 2.0   3.0    ⋅
+ 1.0   1.0    ⋅
 
 julia> data.b_lower
 4-element Vector{Float64}:
@@ -503,7 +503,21 @@ julia> data.c_offset
 
 julia> data.sense
 MAX_SENSE::OptimizationSense = 1
+
+julia> data.integers
+1-element Vector{Int}
+ 3
+
+julia> data.binaries
+1-element Vector{Int}
+ 1
 ```
+
+!!! warning
+    [`lp_matrix_data`](@ref) is intentionally limited in the types of problems
+    that it supports and the structure of the matrices it outputs. It is mainly
+    intended as a pedagogical and debugging tool. It should not be used to
+    interface solvers, see [Implementing a solver interface](@ref) instead.
 
 ## Backends
 

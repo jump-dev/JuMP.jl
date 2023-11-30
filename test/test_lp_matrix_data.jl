@@ -10,9 +10,9 @@ using Test
 
 function test_standard_matrix_form()
     model = Model()
-    @variable(model, x >= 1)
+    @variable(model, x >= 1, Bin)
     @variable(model, 2 <= y)
-    @variable(model, 3 <= z <= 4)
+    @variable(model, 3 <= z <= 4, Int)
     @constraint(model, x == 5)
     @constraint(model, 2x + 3y <= 6)
     @constraint(model, -4y >= 5z + 7)
@@ -27,11 +27,17 @@ function test_standard_matrix_form()
     @test a.c == [2, 0, 0]
     @test a.c_offset == 1
     @test a.sense == MOI.MAX_SENSE
+    @test a.integers == [3]
+    @test a.binaries == [1]
     @objective(model, Min, y)
+    unset_binary(x)
+    set_integer(x)
     b = lp_matrix_data(model)
     b.sense == MOI.MIN_SENSE
     b.c == [0, 1, 0]
     b.c_offset == 0
+    @test a.integers == [1, 3]
+    @test a.binaries == Int[]
     return
 end
 
