@@ -36,8 +36,8 @@ function test_standard_matrix_form()
     b.sense == MOI.MIN_SENSE
     b.c == [0, 1, 0]
     b.c_offset == 0
-    @test a.integers == [1, 3]
-    @test a.binaries == Int[]
+    @test b.integers == [1, 3]
+    @test b.binaries == Int[]
     return
 end
 
@@ -79,10 +79,11 @@ end
 
 function test_standard_matrix_form_bad_constraint()
     model = Model()
-    @variable(model, x, Bin)
+    @variable(model, x[1:3])
+    @constraint(model, x in SecondOrderCone())
     @test_throws(
         ErrorException(
-            "Unsupported constraint type in `lp_matrix_data`: $(VariableRef) -in- $(MOI.ZeroOne)",
+            "Unsupported constraint type in `lp_matrix_data`: $(Vector{VariableRef}) -in- $(MOI.SecondOrderCone)",
         ),
         lp_matrix_data(model),
     )
