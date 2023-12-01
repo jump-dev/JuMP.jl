@@ -18,9 +18,9 @@ struct LPMatrixData{T}
     c::Vector{T}
     c_offset::T
     sense::MOI.OptimizationSense
-    variables::Vector{GenericVariableRef{T}}
     integers::Vector{Int}
     binaries::Vector{Int}
+    variables::Vector{GenericVariableRef{T}}
     affine_constraints::Vector{ConstraintRef}
     variable_constraints::Vector{ConstraintRef}
 end
