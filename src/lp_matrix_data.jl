@@ -53,12 +53,12 @@ The struct returned by [`lp_matrix_data`](@ref) has the fields:
    the value of `typemin(T)` is used.
  * `x_upper::Vector{T}`: the dense vector of variable upper bounds. If missing,
    the value of `typemax(T)` is used.
- * `c::Vector{T}`: the dense vector of linear objective coefficiennts
+ * `c::Vector{T}`: the dense vector of linear objective coefficients
  * `c_offset::T`: the constant term in the objective function.
  * `sense::MOI.OptimizationSense`: the objective sense of the model.
- * `integers::Vector{Int}`: the list of 1-indexed columns that are integer
+ * `integers::Vector{Int}`: the list of column indices that are integer
    variables.
- * `binaries::Vector{Int}`: the list of 1-indexed columns that are binary
+ * `binaries::Vector{Int}`: the list of column indices that are binary
    variables.
  * `variables::Vector{GenericVariableRef{T}}`: a vector of [`GenericVariableRef`](@ref),
    corresponding to order of the columns in the matrix form.
