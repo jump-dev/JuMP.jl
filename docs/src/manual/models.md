@@ -505,11 +505,11 @@ julia> data.sense
 MAX_SENSE::OptimizationSense = 1
 
 julia> data.integers
-1-element Vector{Int}
+1-element Vector{Int64}
  3
 
 julia> data.binaries
-1-element Vector{Int}
+1-element Vector{Int64}
  1
 ```
 
