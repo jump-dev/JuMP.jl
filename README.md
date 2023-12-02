@@ -50,7 +50,7 @@ feature requests, etc.
 ## Citing JuMP
 
 If you find JuMP useful in your work, we kindly request that you cite the
-following paper ([preprint](https://arxiv.org/abs/2206.03866)):
+following paper ([journal](https://www.doi.org/10.1007/s12532-023-00239-3), [preprint](https://arxiv.org/abs/2206.03866)):
 
 ```bibtex
 @article{Lubin2023,
