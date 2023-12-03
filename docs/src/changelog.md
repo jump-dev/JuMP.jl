@@ -7,7 +7,7 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Version 1.17.0 (November 30, 2023)
+## Version 1.17.0 (December 4, 2023)
 
 ### Added
 
@@ -15,8 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    support for [`GenericAffExpr`](@ref) that are equivalent to a single
    [`GenericVariableRef`](@ref) (#3551)
  - Added [`SkipModelConvertScalarSetWrapper`](@ref) which is useful for
-   extensions looking to avoid [`model_convert`](@ref) (#3552)
- - Added [`lp_matrix_data`](@ref) (#3573)
+   extensions looking to avoid [`model_convert`](@ref) (#3552) (#3592)
+ - Added [`lp_matrix_data`](@ref) (#3573) (#3591)
 
 ### Fixed
 
@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    prevents large expressions from being accidentally printed to terminal or
    IJulia output (#3575)
  - Fixed a type instability in [`set_objective_coefficient`](@ref) (#3590)
+ - Various fixes to the documentation (#3593) (#3595)
 
 ### Other
 
