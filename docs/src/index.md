@@ -35,7 +35,7 @@ programming.
 
 ## Resources for getting started
 
-There are few ways to get started with JuMP:
+There are a few ways to get started with JuMP:
 
 * Read the [Installation Guide](@ref).
 * Read the introductory tutorials [Getting started with Julia](@ref) and
