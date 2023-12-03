@@ -50,13 +50,15 @@ feature requests, etc.
 ## Citing JuMP
 
 If you find JuMP useful in your work, we kindly request that you cite the
-following paper ([preprint](https://arxiv.org/abs/2206.03866)):
+following paper ([journal](https://www.doi.org/10.1007/s12532-023-00239-3), [preprint](https://arxiv.org/abs/2206.03866)):
 
 ```bibtex
 @article{Lubin2023,
     author = {Miles Lubin and Oscar Dowson and Joaquim {Dias Garcia} and Joey Huchette and Beno{\^i}t Legat and Juan Pablo Vielma},
     title = {{JuMP} 1.0: {R}ecent improvements to a modeling language for mathematical optimization},
     journal = {Mathematical Programming Computation},
+    volume = {15},
+    pages = {581–589},
     year = {2023},
     doi = {10.1007/s12532-023-00239-3}
 }
