@@ -122,3 +122,8 @@ and the [Mozilla FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/) for more
 information. In addition, JuMP is typically used in conjunction with solver
 packages and extensions which have their own licences. Consult their package
 repositories for the specific licenses that apply.
+
+## Bibliography
+
+```@bibliography
+```

@@ -549,6 +549,9 @@ version = match(r"(v[0-9].[0-9]+.[0-9]+)", status)[1]
 gh_moi = Documenter.Remotes.GitHub("jump-dev", "MathOptInterface.jl")
 remotes = Dict(pkgdir(MOI) => (gh_moi, version))
 
+import DocumenterCitations
+bib = DocumenterCitations.CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"))
+
 @time Documenter.makedocs(
     sitename = "JuMP",
     authors = "The JuMP core developers and contributors",
@@ -558,7 +561,7 @@ remotes = Dict(pkgdir(MOI) => (gh_moi, version))
         analytics = "UA-44252521-1",
         mathengine = Documenter.MathJax2(),
         collapselevel = 1,
-        assets = ["assets/extra_styles.css"],
+        assets = ["assets/extra_styles.css", "assets/citations.css"],
         sidebar_sitename = false,
         # Do no check for large pages.
         size_threshold_ignore = [
@@ -581,6 +584,7 @@ remotes = Dict(pkgdir(MOI) => (gh_moi, version))
     doctest = _FIX ? :fix : !_FAST,
     pages = vcat(_PAGES, "release_notes.md"),
     remotes = remotes,
+    plugins = [bib],
 )
 
 # ==============================================================================
@@ -623,6 +627,7 @@ if _PDF
         build = "latex_build",
         pages = _PAGES,
         debug = true,
+        plugins = [bib],
     )
     # Hack for deploying: copy the pdf (and only the PDF) into the HTML build
     # directory! We don't want to copy everything in `latex_build` because it
