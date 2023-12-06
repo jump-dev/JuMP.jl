@@ -361,7 +361,7 @@ const _PAGES = [
     ],
     jump_api_reference,
     "Background Information" => [
-        "background/algebraic_modeling_languages.md"
+        "background/algebraic_modeling_languages.md",
         "background/bibliography.md",
         ],
     "Developer Docs" => [
