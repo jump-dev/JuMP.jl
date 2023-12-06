@@ -4,6 +4,7 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import Documenter
+import DocumenterCitations
 import Downloads
 import Literate
 import MathOptInterface
@@ -549,11 +550,6 @@ version = match(r"(v[0-9].[0-9]+.[0-9]+)", status)[1]
 gh_moi = Documenter.Remotes.GitHub("jump-dev", "MathOptInterface.jl")
 remotes = Dict(pkgdir(MOI) => (gh_moi, version))
 
-import DocumenterCitations
-bib = DocumenterCitations.CitationBibliography(
-    joinpath(@__DIR__, "src", "refs.bib"),
-)
-
 @time Documenter.makedocs(
     sitename = "JuMP",
     authors = "The JuMP core developers and contributors",
@@ -586,7 +582,11 @@ bib = DocumenterCitations.CitationBibliography(
     doctest = _FIX ? :fix : !_FAST,
     pages = vcat(_PAGES, "release_notes.md"),
     remotes = remotes,
-    plugins = [bib],
+    plugins = [
+        DocumenterCitations.CitationBibliography(
+            joinpath(@__DIR__, "src", "refs.bib"),
+        ),
+    ],
 )
 
 # ==============================================================================
@@ -629,7 +629,11 @@ if _PDF
         build = "latex_build",
         pages = _PAGES,
         debug = true,
-        plugins = [bib],
+        plugins = [
+            DocumenterCitations.CitationBibliography(
+                joinpath(@__DIR__, "src", "refs.bib"),
+            ),
+        ],
     )
     # Hack for deploying: copy the pdf (and only the PDF) into the HTML build
     # directory! We don't want to copy everything in `latex_build` because it
