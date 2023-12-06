@@ -345,7 +345,7 @@ example_minimum_distortion()
 # ```
 # where ``J`` is the matrix filled with ones, and ``I`` is the identity matrix.
 #
-# For more details, see [barvinok2002course]
+# For more details, see [barvinok2002course](@cite)
 #
 # Knuth, D. E. (1994), 
 # [_The sandwich theorem_](https://doi.org/10.37236%2F1193), 
