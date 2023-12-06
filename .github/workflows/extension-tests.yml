@@ -13,6 +13,7 @@ jobs:
         include:
           - package: 'Alpine'
           - package: 'BilevelJuMP'
+          - package: 'DisjunctiveProgramming'
           - package: 'InfiniteOpt'
           - package: 'LinearFractional'
           - package: 'Plasmo'
