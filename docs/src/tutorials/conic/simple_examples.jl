@@ -345,11 +345,8 @@ example_minimum_distortion()
 # ```
 # where ``J`` is the matrix filled with ones, and ``I`` is the identity matrix.
 #
-# For more details, see [barvinok2002course](@cite)
-#
-# Knuth, D. E. (1994), 
-# [_The sandwich theorem_](https://doi.org/10.37236%2F1193), 
-# Electronic Journal of Combinatorics, Volume 1, Issue 1, A1.
+# For more details, see [Barvinok2002](@cite), [Knuth1994](@cite)
+# Does this work ? [Barvinok2002,Knuth1994](@cite)
 
 function example_theta_problem()
     model = Model(SCS.Optimizer)
