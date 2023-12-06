@@ -32,7 +32,7 @@ import Test
 # where ``L`` is the weighted graph Laplacian and ``e`` is a vector of ones.
 # For more details, see:
 #
-# Goemans, M. X., & Williamson, D. P. (1995). 
+# Goemans, M. X., & Williamson, D. P. (1995).
 # [_Improved approximation algorithms for maximum cut and satisfiability problems
 # using semidefinite programming._](https://doi.org/10.1145/227683.227684)
 # Journal of the ACM (JACM), 42(6), 1115-1145.
@@ -122,7 +122,7 @@ S, T = solve_max_cut_sdp([0 1 5 0; 1 0 0 9; 5 0 0 2; 0 9 2 0])
 # Given a set of points ``a_1, \ldots, a_m``  in ``\mathbb{R}^n``, allocate them to ``k`` clusters.
 #
 # For more details, see:
-# 
+#
 # Peng, J., & Wei, Y. (2007).
 # [_Approximating k-means-type clustering via semidefinite programming_](https://doi.org/10.1137/050641983).
 # SIAM Journal on Optimization, 18(1), 186-205.
@@ -179,7 +179,7 @@ example_k_means_clustering()
 # \begin{bmatrix}
 #       1   &  ρ_{AB} &  ρ_{AC} \\
 #      ρ_{AB} &  1    &  ρ_{BC}  \\
-#      ρ_{AC} &  ρ_{BC} &  1   
+#      ρ_{AC} &  ρ_{BC} &  1
 # \end{bmatrix} \succeq 0
 # ```
 
@@ -250,7 +250,7 @@ example_correlation_problem()
 # ```math
 #     D[a, b]^2 \leq Q[a, a] + Q[b, b] - 2 Q[a, b] \leq c^2 \; D[a, b]^2
 # ```
-# for all edges ``(a, b)`` in the graph and minimize ``c^2``, 
+# for all edges ``(a, b)`` in the graph and minimize ``c^2``,
 # which gives us the SDP formulation below.
 # Since we may choose any point to be the origin, we fix the first vertex at 0.
 #
@@ -258,8 +258,8 @@ example_correlation_problem()
 #
 # J. Matoušek (2002), [_Lectures on discrete geometry_](https://doi.org/10.1007/978-1-4613-0039-7),
 # Springer, pp. 378-379
-# 
-#  N. Linial (2002), 
+#
+#  N. Linial (2002),
 # _[Finite metric spaces--combinatorics, geometry and algorithms](https://arxiv.org/abs/math/0304466)_,
 # Proceedings of the ICM, Vol. 3, 573-586
 
@@ -318,11 +318,11 @@ example_minimum_distortion()
 # Consider the pentagon graph:
 # ```raw
 #      [5]
-#     /   \    
-#    /     \     
+#     /   \
+#    /     \
 #  [1]     [4]
 #   |       |
-#   |       |  
+#   |       |
 #  [2] --- [3]
 # ```
 # with five vertices and edges. Its Lovász number is known to be precisely
@@ -334,7 +334,7 @@ example_minimum_distortion()
 # matrix with entries ``(i,j)`` and ``(j,i)`` equal to 1, with all other entries 0.
 # Let  ``E`` be the graph's edge set; in this example, ``E`` contains
 # (1,2), (2,3), (3,4), (4,5), (5,1)
-# and their transposes. The Lovász number can be computed from the program 
+# and their transposes. The Lovász number can be computed from the program
 # ```math
 # \begin{align}
 #     \text{max}      & \quad    J • X & \\
@@ -345,8 +345,7 @@ example_minimum_distortion()
 # ```
 # where ``J`` is the matrix filled with ones, and ``I`` is the identity matrix.
 #
-# For more details, see [Barvinok2002](@cite), [Knuth1994](@cite)
-# Does this work ? [Barvinok2002,Knuth1994](@cite)
+# For more details, see [Barvinok2002,Knuth1994](@cite).
 
 function example_theta_problem()
     model = Model(SCS.Optimizer)
@@ -382,7 +381,7 @@ example_theta_problem()
 # Closed-form expressions for the optimal value are available.
 # For more details, see:
 
-# Bertsimas, D., Gupta, V., & Kallus, N. (2018). 
+# Bertsimas, D., Gupta, V., & Kallus, N. (2018).
 # [_Data-driven robust optimization._](https://doi.org/10.1007/s10107-017-1125-8)
 # Mathematical Programming, 167, 235-292.
 

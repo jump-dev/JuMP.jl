@@ -360,8 +360,10 @@ const _PAGES = [
         "manual/nlp.md",
     ],
     jump_api_reference,
-    "Background Information" =>
-        ["background/algebraic_modeling_languages.md"],
+    "Background Information" => [
+        "background/algebraic_modeling_languages.md"
+        "background/bibliography.md",
+        ],
     "Developer Docs" => [
         "Contributing" => "developers/contributing.md",
         "Extensions" => "developers/extensions.md",
@@ -584,7 +586,8 @@ remotes = Dict(pkgdir(MOI) => (gh_moi, version))
     remotes = remotes,
     plugins = [
         DocumenterCitations.CitationBibliography(
-            joinpath(@__DIR__, "src", "refs.bib"),
+            joinpath(@__DIR__, "src", "references.bib");
+            style = :authoryear,
         ),
     ],
 )
@@ -631,7 +634,8 @@ if _PDF
         debug = true,
         plugins = [
             DocumenterCitations.CitationBibliography(
-                joinpath(@__DIR__, "src", "refs.bib"),
+                joinpath(@__DIR__, "src", "references.bib");
+                style = :authoryear,
             ),
         ],
     )
