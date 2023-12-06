@@ -550,7 +550,9 @@ gh_moi = Documenter.Remotes.GitHub("jump-dev", "MathOptInterface.jl")
 remotes = Dict(pkgdir(MOI) => (gh_moi, version))
 
 import DocumenterCitations
-bib = DocumenterCitations.CitationBibliography(joinpath(@__DIR__, "src", "refs.bib"))
+bib = DocumenterCitations.CitationBibliography(
+    joinpath(@__DIR__, "src", "refs.bib"),
+)
 
 @time Documenter.makedocs(
     sitename = "JuMP",
