@@ -46,6 +46,7 @@ import LinearAlgebra
 import Plots
 import SCS
 import Test  #src
+Plots.plotlyjs()
 
 # ## Data
 

@@ -17,6 +17,7 @@
 using JuMP
 import Ipopt
 import Plots
+Plots.plotlyjs()
 
 # ## Overview
 

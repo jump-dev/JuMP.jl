@@ -40,6 +40,7 @@ import MultiObjectiveAlgorithms as MOA
 import Plots
 import Statistics
 import StatsPlots
+Plots.plotlyjs()
 
 # ## Formulation
 

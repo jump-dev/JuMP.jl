@@ -24,6 +24,7 @@ import DataFrames
 import HiGHS
 import StatsPlots
 import Test  #src
+Plots.plotlyjs()
 
 # ## Formulation
 

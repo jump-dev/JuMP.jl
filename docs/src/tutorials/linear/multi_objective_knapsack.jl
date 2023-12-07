@@ -18,6 +18,7 @@ import HiGHS
 import MultiObjectiveAlgorithms as MOA
 import Plots
 import Test  #hide
+Plots.plotlyjs()
 
 # [MultiObjectiveAlgorithms.jl](@ref) is a package which implements a variety of
 # algorithms for solving multi-objective optimization problems. Because it is a

@@ -16,6 +16,7 @@ import HiGHS
 import Plots
 import SparseArrays
 import Test  #src
+Plots.plotlyjs()
 
 # ## Background
 

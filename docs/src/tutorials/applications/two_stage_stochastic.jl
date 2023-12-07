@@ -16,6 +16,7 @@ import HiGHS
 import Plots
 import StatsPlots
 import Statistics
+Plots.plotlyjs()
 
 # ## Background
 

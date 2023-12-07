@@ -29,6 +29,7 @@ import LinearAlgebra
 import Plots
 import Random
 import Test #src
+Plots.plotlyjs()
 
 # ## Data and visualisation
 

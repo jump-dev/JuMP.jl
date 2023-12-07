@@ -52,6 +52,7 @@ import Plots
 import Random
 import SCS
 import Test  #src
+Plots.plotlyjs()
 
 # ## Data
 

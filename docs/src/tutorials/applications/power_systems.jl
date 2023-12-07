@@ -20,6 +20,7 @@ import DataFrames
 import HiGHS
 import Plots
 import StatsPlots
+Plots.plotlyjs()
 
 # ## Economic dispatch
 

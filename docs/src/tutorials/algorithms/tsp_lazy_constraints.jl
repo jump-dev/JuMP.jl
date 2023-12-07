@@ -34,6 +34,7 @@ using JuMP
 import GLPK
 import Random
 import Plots
+Plots.plotlyjs()
 
 # ## [Mathematical Formulation](@id tsp_model)
 

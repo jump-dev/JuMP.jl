@@ -16,6 +16,7 @@ import HiGHS
 import LinearAlgebra
 import Plots
 import Random
+Plots.plotlyjs()
 
 # ## Uncapacitated facility location
 

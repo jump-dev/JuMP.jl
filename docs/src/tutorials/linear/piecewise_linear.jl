@@ -13,6 +13,7 @@
 using JuMP
 import HiGHS
 import Plots
+Plots.plotlyjs()
 
 # ## Minimizing a convex function (outer approximation)
 
