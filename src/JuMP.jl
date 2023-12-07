@@ -17,7 +17,6 @@ For more information, go to https://jump.dev.
 """
 module JuMP
 
-import Base.Meta: isexpr, quot
 import LinearAlgebra
 import MacroTools
 import MathOptInterface as MOI
