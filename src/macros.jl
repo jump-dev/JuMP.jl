@@ -180,11 +180,7 @@ to `name`.
 If `model_for_registering` is given, the generated code assigns the resulting
 object to the model dictionary.
 """
-function _macro_assign_and_return(
-    code,
-    name;
-    model_for_registering = nothing,
-)
+function _macro_assign_and_return(code, name; model_for_registering = nothing)
     variable = gensym()
     q_name = quot(name)
     block = quote end
@@ -205,11 +201,8 @@ function _finalize_and_return(model, code, source, name = nothing)
     if name === nothing
         return _finalize_macro(model, code, source)
     end
-    macro_code = _macro_assign_and_return(
-        code,
-        name;
-        model_for_registering = model,
-    )
+    macro_code =
+        _macro_assign_and_return(code, name; model_for_registering = model)
     return _finalize_macro(model, macro_code, source)
 end
 
@@ -1475,9 +1468,9 @@ function _constraint_macro(
         Containers.container_code(idxvars, indices, code, requested_container),
     )
     if _is_anonymous(c)
-        return _finalize_and_return(esc_m, creation_code, source)
+        return _finalize_and_return(model, creation_code, source)
     end
-    return _finalize_and_return(esc_m, creation_code, source, name)
+    return _finalize_and_return(model, creation_code, source, name)
 end
 
 """
@@ -3032,9 +3025,10 @@ macro NLconstraint(m, x, args...)
         $looped
     end
     if isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
-        return _finalize_and_return(esc_m, creation_code)
+        return _finalize_and_return(esc_m, creation_code, __source__)
     end
-    return _finalize_and_return(esc_m, creation_code, Containers._get_name(c))
+    name = Containers._get_name(c)
+    return _finalize_and_return(esc_m, creation_code, __source__, name)
 end
 
 """
@@ -3275,7 +3269,6 @@ julia> value(y[2])
 ```
 """
 macro NLparameter(model, args...)
-    esc_m = esc(model)
     function _error(str...)
         return _macro_error(:NLparameter, (model, args...), __source__, str...)
     end
@@ -3316,6 +3309,7 @@ macro NLparameter(model, args...)
             "name for the index.",
         )
     end
+    esc_m = esc(model)
     code = quote
         if !isa($(esc(value)), Number)
             $(esc(_error))("Parameter value is not a number.")
