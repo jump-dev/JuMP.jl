@@ -1429,8 +1429,8 @@ function _constraint_macro(
     # Strategy: build up the code for add_constraint, and if needed we will wrap
     # in a function returning `ConstraintRef`s and give it to
     # `Containers.container`.
-    idxvars, indices = Containers.build_ref_sets(_error, c)
-    if pos_args[1] in idxvars
+    index_names, indices = Containers.build_ref_sets(_error, c)
+    if pos_args[1] in index_names
         _error(
             "Index $(pos_args[1]) is the same symbol as the model. Use a " *
             "different name for the index.",
@@ -1444,7 +1444,7 @@ function _constraint_macro(
     else
         :(model_convert($model, $buildcall))
     end
-    name_expr = _name_call(base_name, idxvars)
+    name_expr = _name_call(base_name, index_names)
     new_name_expr = if isempty(set_string_name_kw_args)
         Expr(:if, :(set_string_names_on_creation($model)), name_expr, "")
     else
@@ -1465,7 +1465,7 @@ function _constraint_macro(
     # a type stable local variable.
     creation_code = _wrap_let(
         model,
-        Containers.container_code(idxvars, indices, code, requested_container),
+        Containers.container_code(index_names, indices, code, requested_container),
     )
     if _is_anonymous(c)
         return _finalize_and_return(model, creation_code, source)
@@ -2600,17 +2600,17 @@ macro variable(args...)
     else
         # We now build the code to generate the variables (and possibly the
         # SparseAxisArray to contain them)
-        idxvars, indices = Containers.build_ref_sets(_error, var)
-        if args[1] in idxvars
+        index_names, indices = Containers.build_ref_sets(_error, var)
+        if args[1] in index_names
             _error(
                 "Index $(args[1]) is the same symbol as the model. Use a " *
                 "different name for the index.",
             )
         end
-        name_code = _name_call(base_name, idxvars)
+        name_code = _name_call(base_name, index_names)
         if set !== nothing
             name_code = Containers.container_code(
-                idxvars,
+                index_names,
                 indices,
                 name_code,
                 requested_container,
@@ -2625,14 +2625,14 @@ macro variable(args...)
             scalar_variables = buildcall
         else
             scalar_variables = Containers.container_code(
-                idxvars,
+                index_names,
                 indices,
                 buildcall,
                 requested_container,
             )
-            if any(Base.Fix2(Containers.depends_on, set), idxvars)
+            if any(Base.Fix2(Containers.depends_on, set), index_names)
                 set = Containers.container_code(
-                    idxvars,
+                    index_names,
                     indices,
                     set,
                     requested_container,
@@ -2653,7 +2653,7 @@ macro variable(args...)
         variablecall
     else
         Containers.container_code(
-            idxvars,
+            index_names,
             indices,
             variablecall,
             requested_container,
@@ -2817,8 +2817,7 @@ function _parse_nonlinear_expression_inner(code, x::Expr, operators)
             "`begin...end` blocks are not supported in nonlinear macros. The " *
             "nonlinear expression must be a single statement.",
         )
-    end
-    if isexpr(x, :ref)
+    elseif isexpr(x, :ref)
         return esc(x)
     elseif isexpr(x, :.)
         return esc(x)
@@ -2990,45 +2989,42 @@ macro NLconstraint(m, x, args...)
     function _error(str...)
         return _macro_error(:NLconstraint, (m, x, args...), __source__, str...)
     end
-    esc_m = esc(m)
     if isexpr(x, :block)
         _error("Invalid syntax. Did you mean to use `@NLconstraints`?")
     end
-    # Two formats:
-    # - @NLconstraint(m, a*x <= 5)
-    # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
     extra, kw_args, requested_container = Containers._extract_kw_args(args)
     if length(extra) > 1 || length(kw_args) > 0
         _error("too many arguments.")
     end
-    # Canonicalize the arguments
     c = length(extra) == 1 ? x : gensym()
     con = length(extra) == 1 ? extra[1] : x
-    # Strategy: build up the code for non-macro add_constraint, and if needed
-    # we will wrap in loops to assign to the ConstraintRefs
-    idxvars, indices = Containers.build_ref_sets(_error, c)
-    if m in idxvars
+    index_names, indices = Containers.build_ref_sets(_error, c)
+    if m in index_names
         _error(
             "Index $(m) is the same symbol as the model. Use a different " *
             "name for the index.",
         )
     end
-    parsing_code, expr = _parse_nonlinear_expression(esc_m, con)
-    code = quote
-        $parsing_code
-        add_nonlinear_constraint($esc_m, $expr)
-    end
-    looped =
-        Containers.container_code(idxvars, indices, code, requested_container)
+    esc_model = esc(m)
+    parsing_code, expr = _parse_nonlinear_expression(esc_model, con)
+    looped = Containers.container_code(
+        index_names,
+        indices,
+        quote
+            $parsing_code
+            add_nonlinear_constraint($esc_model, $expr)
+        end,
+        requested_container,
+    )
     creation_code = quote
-        _init_NLP($esc_m)
+        _init_NLP($esc_model)
         $looped
     end
-    if isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
-        return _finalize_and_return(esc_m, creation_code, __source__)
+    if _is_anonymous(c)
+        return _finalize_and_return(esc_model, creation_code, __source__)
     end
     name = Containers._get_name(c)
-    return _finalize_and_return(esc_m, creation_code, __source__, name)
+    return _finalize_and_return(esc_model, creation_code, __source__, name)
 end
 
 """
@@ -3115,38 +3111,35 @@ macro NLexpression(args...)
         _error(
             "To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.",
         )
-    elseif length(args) == 2
-        m, x = args
-        c = gensym()
-    elseif length(args) == 3
-        m, c, x = args
-    end
-    if isexpr(args[2], :block)
+    elseif length(args) > 3 || length(kw_args) > 0
+        _error("To many arguments ($(length(args))).")
+    elseif isexpr(args[2], :block)
         _error("Invalid syntax. Did you mean to use `@NLexpressions`?")
     end
-    if length(args) > 3 || length(kw_args) > 0
-        _error("To many arguments ($(length(args))).")
-    end
-    idxvars, indices = Containers.build_ref_sets(_error, c)
-    if args[1] in idxvars
+    c = length(args) == 2 ? gensym() : args[2]
+    index_names, indices = Containers.build_ref_sets(_error, c)
+    if args[1] in index_names
         _error(
             "Index $(args[1]) is the same symbol as the model. Use a " *
             "different name for the index.",
         )
     end
-    esc_m = esc(m)
-    parsing_code, expr = _parse_nonlinear_expression(esc_m, x)
-    code = quote
-        $parsing_code
-        add_nonlinear_expression($esc_m, $expr)
-    end
-    creation_code =
-        Containers.container_code(idxvars, indices, code, requested_container)
-    if isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
-        return _finalize_and_return(esc_m, creation_code, __source__)
+    model = esc(args[1])
+    parsing_code, expr = _parse_nonlinear_expression(model, args[end])
+    creation_code = Containers.container_code(
+        index_names,
+        indices,
+        quote
+            $parsing_code
+            add_nonlinear_expression($model, $expr)
+        end,
+        requested_container
+    )
+    if _is_anonymous(c)
+        return _finalize_and_return(model, creation_code, __source__)
     end
     name = Containers._get_name(c)
-    return _finalize_and_return(esc_m, creation_code, __source__, name)
+    return _finalize_and_return(model, creation_code, __source__, name)
 end
 
 """
@@ -3280,7 +3273,7 @@ macro NLparameter(model, args...)
         end
     end
     kw_args = filter(kw -> kw.args[1] != :value, kw_args)
-    if !ismissing(value) && length(pos_args) > 0
+    if !ismissing(value) && !isempty(pos_args)
         _error(
             "Invalid syntax: no positional args allowed for anonymous " *
             "parameters.",
@@ -3289,44 +3282,41 @@ macro NLparameter(model, args...)
         _error("Invalid syntax: too many positional arguments.")
     elseif length(kw_args) > 0
         _error("Invalid syntax: unsupported keyword arguments.")
-    elseif ismissing(value) && isexpr(pos_args[1], :block)
+    elseif ismissing(value) && Meta.isexpr(pos_args[1], :block)
         _error("Invalid syntax: did you mean to use `@NLparameters`?")
     elseif ismissing(value)
-        ex = pos_args[1]
-        if !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
+        if !Meta.isexpr(pos_args[1], :call, 3) || epos_args[1]x.args[1] != :(==)
             _error("Invalid syntax: expected syntax of form `param == value`.")
         end
     end
-    param, anon = gensym(), true
+    param = gensym()
     if ismissing(value)
         param, value = pos_args[1].args[2], pos_args[1].args[3]
-        anon = isexpr(param, :vect) || isexpr(param, :vcat)
     end
-    index_vars, index_values = Containers.build_ref_sets(_error, param)
-    if model in index_vars
+    index_names, index_values = Containers.build_ref_sets(_error, param)
+    if model in index_names
         _error(
             "Index $(model) is the same symbol as the model. Use a different " *
             "name for the index.",
         )
     end
-    esc_m = esc(model)
-    code = quote
-        if !isa($(esc(value)), Number)
-            $(esc(_error))("Parameter value is not a number.")
-        end
-        add_nonlinear_parameter($esc_m, $(esc(value)))
-    end
+    esc_model = esc(model)
     creation_code = Containers.container_code(
-        index_vars,
+        index_names,
         index_values,
-        code,
+        quote
+            if !($(esc(value)) isa Number)
+                $(esc(_error))("Parameter value is not a number.")
+            end
+            add_nonlinear_parameter($esc_model, $(esc(value)))
+        end,
         requested_container,
     )
-    if anon
-        return _finalize_and_return(esc_m, creation_code, __source__)
+    if _is_anonymous(param)
+        return _finalize_and_return(esc_model, creation_code, __source__)
     end
     name = Containers._get_name(param)
-    return _finalize_and_return(esc_m, creation_code, __source__, name)
+    return _finalize_and_return(esc_model, creation_code, __source__, name)
 end
 
 """
