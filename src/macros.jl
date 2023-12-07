@@ -3316,7 +3316,9 @@ macro NLparameter(model, args...)
         if !Meta.isexpr(ex, :call) ||
            length(ex.args) != 3 ||
            ex.args[1] != :(==)
-            error_fn("Invalid syntax: expected syntax of form `param == value`.")
+            error_fn(
+                "Invalid syntax: expected syntax of form `param == value`.",
+            )
         end
     end
     param, anon = gensym(), true
