@@ -2131,4 +2131,18 @@ function test_issue_3514()
     return
 end
 
+function test_bad_objective_sense()
+    model = Model()
+    @variable(model, x)
+    @test_macro_throws(
+        ErrorException(
+            "In `@objective(model, :MinMax, x)`: unexpected sense `MinMax`. " *
+            "The sense must be an `::MOI.OptimizatonSense`, or the symbol " *
+            "`:Min` or `:Max`."
+        ),
+        @objective(model, :MinMax, x),
+    )
+    return
+end
+
 end  # module

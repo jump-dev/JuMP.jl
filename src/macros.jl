@@ -1771,30 +1771,24 @@ In the last case, the expression throws an error using the `_error`
 function in case the value is not an `MOI.OptimizationSense`.
 """
 function _moi_sense(_error::Function, sense)
-    if sense == :Min
-        expr = MIN_SENSE
+    expr = if sense == :Min
+        MIN_SENSE
     elseif sense == :Max
-        expr = MAX_SENSE
+        MAX_SENSE
     else
-        # Refers to a variable that holds the sense.
-        # TODO: Better document this behavior
-        expr = esc(sense)
+        esc(sense)
     end
     return :(_throw_error_for_invalid_sense($_error, $expr))
 end
 
 function _throw_error_for_invalid_sense(_error::Function, sense)
     return _error(
-        "Unexpected sense `$value`. The sense must be an",
-        " `MOI.OptimizatonSense`, `Min` or `Max`.",
+        "unexpected sense `$sense`. The sense must be an " *
+        "`::MOI.OptimizatonSense`, or the symbol `:Min` or `:Max`.",
     )
 end
-function _throw_error_for_invalid_sense(
-    _error::Function,
-    sense::MOI.OptimizationSense,
-)
-    return sense
-end
+
+_throw_error_for_invalid_sense(::Function, sense::MOI.OptimizationSense) = sense
 
 """
     _replace_zero(model::M, x) where {M<:AbstractModel}
