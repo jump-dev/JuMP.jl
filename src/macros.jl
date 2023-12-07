@@ -1221,6 +1221,41 @@ function _wrap_let(model, code)
     return code
 end
 
+function _plural_macro_code(model, block, macro_sym)
+    if !Meta.isexpr(block, :block)
+        error(
+            "Invalid syntax for $(macro_sym)s. The second argument must be a " *
+            "`begin end` block. For example:\n" *
+            "```julia\n$(macro_sym)s(model, begin\n    # ... lines here ...\nend)\n```.",
+        )
+    end
+    @assert block.args[1] isa LineNumberNode
+    last_line = block.args[1]
+    code = Expr(:tuple)
+    jump_macro = Expr(:., JuMP, QuoteNode(macro_sym))
+    for arg in block.args
+        if arg isa LineNumberNode
+            last_line = arg
+        elseif Meta.isexpr(arg, :tuple)  # Line with commas.
+            macro_call = Expr(:macrocall, jump_macro, last_line, model)
+            # Because of the precedence of "=", Keyword arguments have to appear
+            # like: `x, (start = 10, lower_bound = 5)`
+            for ex in arg.args
+                if isexpr(ex, :tuple) # embedded tuple
+                    append!(macro_call.args, ex.args)
+                else
+                    push!(macro_call.args, ex)
+                end
+            end
+            push!(code.args, esc(macro_call))
+        else  # Stand-alone symbol or expression.
+            macro_call = Expr(:macrocall, jump_macro, last_line, model, arg)
+            push!(code.args, esc(macro_call))
+        end
+    end
+    return code
+end
+
 """
     _constraint_macro(
         args, macro_name::Symbol, parsefun::Function, source::LineNumberNode
@@ -1445,6 +1480,50 @@ macro constraint(args...)
 end
 
 """
+    @constraints(model, args...)
+
+Adds groups of constraints at once, in the same fashion as the
+[`@constraint`](@ref) macro.
+
+The model must be the first argument, and multiple constraints can be added on
+multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the constraints that were defined.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, w);
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
+julia> @variable(model, z[1:3]);
+
+julia> @constraints(model, begin
+           x >= 1
+           y - w <= 2
+           sum_to_one[i=1:3], z[i] + y == 1
+       end);
+
+julia> print(model)
+Feasibility
+Subject to
+ sum_to_one[1] : y + z[1] = 1
+ sum_to_one[2] : y + z[2] = 1
+ sum_to_one[3] : y + z[3] = 1
+ x ≥ 1
+ -w + y ≤ 2
+```
+"""
+macro constraints(model, block)
+    return _plural_macro_code(model, block, Symbol("@constraint"))
+end
+
+"""
     @build_constraint(constraint_expr)
 
 Constructs a `ScalarConstraint` or `VectorConstraint` using the same
@@ -1491,273 +1570,6 @@ macro build_constraint(constraint_expr)
 
     return code
 end
-
-_add_JuMP_prefix(s::Symbol) = Expr(:., JuMP, :($(QuoteNode(s))))
-
-function _pluralize_macro(mac, sym)
-    error_message =
-        "Invalid syntax for @$mac. The second argument must be a `begin end` " *
-        "block. For example:\n" *
-        "```julia\n@$mac(model, begin\n    # ... lines here ...\nend)\n```."
-    @eval begin
-        macro $mac(m, x)
-            if !(isa(x, Expr) && x.head == :block)
-                # We do a weird string interpolation here so that it gets
-                # interpolated at compile time, not run-time.
-                error($error_message)
-            end
-            @assert isa(x.args[1], LineNumberNode)
-            lastline = x.args[1]
-            code = Expr(:tuple)
-            for it in x.args
-                if isa(it, LineNumberNode)
-                    lastline = it
-                elseif isexpr(it, :tuple) # line with commas
-                    args = []
-                    # Keyword arguments have to appear like:
-                    # x, (start = 10, lower_bound = 5)
-                    # because of the precedence of "=".
-                    for ex in it.args
-                        if isexpr(ex, :tuple) # embedded tuple
-                            append!(args, ex.args)
-                        else
-                            push!(args, ex)
-                        end
-                    end
-                    macro_call = esc(
-                        Expr(
-                            :macrocall,
-                            $(_add_JuMP_prefix(sym)),
-                            lastline,
-                            m,
-                            args...,
-                        ),
-                    )
-                    push!(code.args, macro_call)
-                else # stand-alone symbol or expression
-                    macro_call = esc(
-                        Expr(
-                            :macrocall,
-                            $(_add_JuMP_prefix(sym)),
-                            lastline,
-                            m,
-                            it,
-                        ),
-                    )
-                    push!(code.args, macro_call)
-                end
-            end
-            return code
-        end
-    end
-end
-
-for (mac, sym) in [
-    (:NLparameters, Symbol("@NLparameter")),
-    (:constraints, Symbol("@constraint")),
-    (:NLconstraints, Symbol("@NLconstraint")),
-    (:variables, Symbol("@variable")),
-    (:expressions, Symbol("@expression")),
-    (:NLexpressions, Symbol("@NLexpression")),
-]
-    _pluralize_macro(mac, sym)
-end
-
-# Doc strings for the auto-generated macro pluralizations
-@doc """
-    @constraints(model, args...)
-
-Adds groups of constraints at once, in the same fashion as the
-[`@constraint`](@ref) macro.
-
-The model must be the first argument, and multiple constraints can be added on
-multiple lines wrapped in a `begin ... end` block.
-
-The macro returns a tuple containing the constraints that were defined.
-
-## Example
-
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, w);
-
-julia> @variable(model, x);
-
-julia> @variable(model, y);
-
-julia> @variable(model, z[1:3]);
-
-julia> @constraints(model, begin
-           x >= 1
-           y - w <= 2
-           sum_to_one[i=1:3], z[i] + y == 1
-       end);
-
-julia> print(model)
-Feasibility
-Subject to
- sum_to_one[1] : y + z[1] = 1
- sum_to_one[2] : y + z[2] = 1
- sum_to_one[3] : y + z[3] = 1
- x ≥ 1
- -w + y ≤ 2
-```
-""" :(@constraints)
-
-@doc """
-    @variables(model, args...)
-
-Adds multiple variables to model at once, in the same fashion as the
-[`@variable`](@ref) macro.
-
-The model must be the first argument, and multiple variables can be added on
-multiple lines wrapped in a `begin ... end` block.
-
-The macro returns a tuple containing the variables that were defined.
-
-## Example
-
-```jldoctest
-julia> model = Model();
-
-julia> @variables(model, begin
-           x
-           y[i = 1:2] >= 0, (start = i)
-           z, Bin, (start = 0, base_name = "Z")
-       end)
-(x, VariableRef[y[1], y[2]], Z)
-```
-
-!!! note
-    Keyword arguments must be contained within parentheses (refer to the example
-    above).
-""" :(@variables)
-
-@doc """
-    @expressions(model, args...)
-
-Adds multiple expressions to model at once, in the same fashion as the
-[`@expression`](@ref) macro.
-
-The model must be the first argument, and multiple expressions can be added on
-multiple lines wrapped in a `begin ... end` block.
-
-The macro returns a tuple containing the expressions that were defined.
-
-## Example
-
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, x);
-
-julia> @variable(model, y);
-
-julia> @variable(model, z[1:2]);
-
-julia> a = [4, 5];
-
-julia> @expressions(model, begin
-           my_expr, x^2 + y^2
-           my_expr_1[i = 1:2], a[i] - z[i]
-       end)
-(x² + y², AffExpr[-z[1] + 4, -z[2] + 5])
-```
-""" :(@expressions)
-
-@doc """
-     @NLparameters(model, args...)
-
-Create and return multiple nonlinear parameters attached to model `model`, in
-the same fashion as [`@NLparameter`](@ref) macro.
-
-The model must be the first argument, and multiple parameters can be added on
-multiple lines wrapped in a `begin ... end` block. Distinct parameters need to
-be placed on separate lines as in the following example.
-
-The macro returns a tuple containing the parameters that were defined.
-
-## Example
-
-```jldoctest
-julia> model = Model();
-
-julia> @NLparameters(model, begin
-           x == 10
-           b == 156
-       end);
-
-julia> value(x)
-10.0
-```
- """ :(@NLparameters)
-
-@doc """
-    @NLconstraints(model, args...)
-
-Adds multiple nonlinear constraints to model at once, in the same fashion as
-the [`@NLconstraint`](@ref) macro.
-
-The model must be the first argument, and multiple constraints can be added on
-multiple lines wrapped in a `begin ... end` block.
-
-The macro returns a tuple containing the constraints that were defined.
-
-## Example
-
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, x);
-
-julia> @variable(model, y);
-
-julia> @variable(model, t);
-
-julia> @variable(model, z[1:2]);
-
-julia> a = [4, 5];
-
-julia> @NLconstraints(model, begin
-           t >= sqrt(x^2 + y^2)
-           [i = 1:2], z[i] <= log(a[i])
-       end)
-((t - sqrt(x ^ 2.0 + y ^ 2.0)) - 0.0 ≥ 0, NonlinearConstraintRef{ScalarShape}[(z[1] - log(4.0)) - 0.0 ≤ 0, (z[2] - log(5.0)) - 0.0 ≤ 0])
-```
-""" :(@NLconstraints)
-
-@doc """
-    @NLexpressions(model, args...)
-
-Adds multiple nonlinear expressions to model at once, in the same fashion as the
-[`@NLexpression`](@ref) macro.
-
-The model must be the first argument, and multiple expressions can be added on
-multiple lines wrapped in a `begin ... end` block.
-
-The macro returns a tuple containing the expressions that were defined.
-
-## Example
-
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, x);
-
-julia> @variable(model, y);
-
-julia> @variable(model, z[1:2]);
-
-julia> a = [4, 5];
-
-julia> @NLexpressions(model, begin
-           my_expr, sqrt(x^2 + y^2)
-           my_expr_1[i = 1:2], log(a[i]) - z[i]
-       end)
-(subexpression[1]: sqrt(x ^ 2.0 + y ^ 2.0), NonlinearExpression[subexpression[2]: log(4.0) - z[1], subexpression[3]: log(5.0) - z[2]])
-```
-""" :(@NLexpressions)
 
 """
     _moi_sense(_error::Function, sense)
@@ -1966,6 +1778,41 @@ macro expression(args...)
         )
     end
     return _finalize_macro(m, macro_code, __source__)
+end
+
+"""
+    @expressions(model, args...)
+
+Adds multiple expressions to model at once, in the same fashion as the
+[`@expression`](@ref) macro.
+
+The model must be the first argument, and multiple expressions can be added on
+multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the expressions that were defined.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
+julia> @variable(model, z[1:2]);
+
+julia> a = [4, 5];
+
+julia> @expressions(model, begin
+           my_expr, x^2 + y^2
+           my_expr_1[i = 1:2], a[i] - z[i]
+       end)
+(x² + y², AffExpr[-z[1] + 4, -z[2] + 5])
+```
+"""
+macro expressions(model, block)
+    return _plural_macro_code(model, block, Symbol("@expression"))
 end
 
 _esc_non_constant(x::Number) = x
@@ -3053,6 +2900,38 @@ macro variable(args...)
 end
 
 """
+    @variables(model, args...)
+
+Adds multiple variables to model at once, in the same fashion as the
+[`@variable`](@ref) macro.
+
+The model must be the first argument, and multiple variables can be added on
+multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the variables that were defined.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variables(model, begin
+           x
+           y[i = 1:2] >= 0, (start = i)
+           z, Bin, (start = 0, base_name = "Z")
+       end)
+(x, VariableRef[y[1], y[2]], Z)
+```
+
+!!! note
+    Keyword arguments must be contained within parentheses (refer to the example
+    above).
+"""
+macro variables(model, block)
+    return _plural_macro_code(model, block, Symbol("@variable"))
+end
+
+"""
     @NLobjective(model, sense, expression)
 
 Add a nonlinear objective to `model` with optimization sense `sense`.
@@ -3161,6 +3040,43 @@ macro NLconstraint(m, x, args...)
 end
 
 """
+    @NLconstraints(model, args...)
+
+Adds multiple nonlinear constraints to model at once, in the same fashion as
+the [`@NLconstraint`](@ref) macro.
+
+The model must be the first argument, and multiple constraints can be added on
+multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the constraints that were defined.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
+julia> @variable(model, t);
+
+julia> @variable(model, z[1:2]);
+
+julia> a = [4, 5];
+
+julia> @NLconstraints(model, begin
+           t >= sqrt(x^2 + y^2)
+           [i = 1:2], z[i] <= log(a[i])
+       end)
+((t - sqrt(x ^ 2.0 + y ^ 2.0)) - 0.0 ≥ 0, NonlinearConstraintRef{ScalarShape}[(z[1] - log(4.0)) - 0.0 ≤ 0, (z[2] - log(5.0)) - 0.0 ≤ 0])
+```
+"""
+macro NLconstraints(model, block)
+    return _plural_macro_code(model, block, Symbol("@NLconstraint"))
+end
+
+"""
     @NLexpression(args...)
 
 Efficiently build a nonlinear expression which can then be inserted in other
@@ -3241,6 +3157,41 @@ macro NLexpression(args...)
         )
     end
     return _finalize_macro(esc_m, macro_code, __source__)
+end
+
+"""
+    @NLexpressions(model, args...)
+
+Adds multiple nonlinear expressions to model at once, in the same fashion as the
+[`@NLexpression`](@ref) macro.
+
+The model must be the first argument, and multiple expressions can be added on
+multiple lines wrapped in a `begin ... end` block.
+
+The macro returns a tuple containing the expressions that were defined.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
+julia> @variable(model, z[1:2]);
+
+julia> a = [4, 5];
+
+julia> @NLexpressions(model, begin
+           my_expr, sqrt(x^2 + y^2)
+           my_expr_1[i = 1:2], log(a[i]) - z[i]
+       end)
+(subexpression[1]: sqrt(x ^ 2.0 + y ^ 2.0), NonlinearExpression[subexpression[2]: log(4.0) - z[1], subexpression[3]: log(5.0) - z[2]])
+```
+"""
+macro NLexpressions(model, block)
+    return _plural_macro_code(model, block, Symbol("@NLexpression"))
 end
 
 """
@@ -3388,4 +3339,34 @@ macro NLparameter(model, args...)
         )
     end
     return _finalize_macro(esc_m, macro_code, __source__)
+end
+
+"""
+     @NLparameters(model, args...)
+
+Create and return multiple nonlinear parameters attached to model `model`, in
+the same fashion as [`@NLparameter`](@ref) macro.
+
+The model must be the first argument, and multiple parameters can be added on
+multiple lines wrapped in a `begin ... end` block. Distinct parameters need to
+be placed on separate lines as in the following example.
+
+The macro returns a tuple containing the parameters that were defined.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @NLparameters(model, begin
+           x == 10
+           b == 156
+       end);
+
+julia> value(x)
+10.0
+```
+"""
+macro NLparameters(model, block)
+    return _plural_macro_code(model, block, Symbol("@NLparameter"))
 end
