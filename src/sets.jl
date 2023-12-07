@@ -22,7 +22,7 @@ abstract type AbstractVectorSet end
 
 # Used in `@variable(model, [1:n] in s)`
 function build_variable(
-    _error::Function,
+    error_fn::Function,
     variables::Vector{<:AbstractVariable},
     set::AbstractVectorSet,
 )
@@ -34,16 +34,16 @@ end
 
 # Used in `@constraint(model, func in set)`
 function build_constraint(
-    _error::Function,
+    error_fn::Function,
     func::AbstractVector,
     set::AbstractVectorSet,
 )
-    return build_constraint(_error, func, moi_set(set, length(func)))
+    return build_constraint(error_fn, func, moi_set(set, length(func)))
 end
 
 """
     build_constraint(
-        _error::Function,
+        error_fn::Function,
         f::AbstractVector{<:AbstractJuMPScalar},
         ::Nonnegatives,
         extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
@@ -59,17 +59,17 @@ into
 ```
 """
 function build_constraint(
-    _error::Function,
+    error_fn::Function,
     f::AbstractVector{<:AbstractJuMPScalar},
     ::Nonnegatives,
     extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
 )
-    return build_constraint(_error, f, extra)
+    return build_constraint(error_fn, f, extra)
 end
 
 """
     build_constraint(
-        _error::Function,
+        error_fn::Function,
         f::AbstractVector{<:AbstractJuMPScalar},
         ::Nonpositives,
         extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
@@ -85,13 +85,13 @@ into
 ```
 """
 function build_constraint(
-    _error::Function,
+    error_fn::Function,
     f::AbstractVector{<:AbstractJuMPScalar},
     ::Nonpositives,
     extra::Union{MOI.AbstractVectorSet,AbstractVectorSet},
 )
     new_f = _MA.operate!!(*, -1, f)
-    return build_constraint(_error, new_f, extra)
+    return build_constraint(error_fn, new_f, extra)
 end
 
 # Handle the case `@constraint(model, X >= 0, Set())`.
@@ -264,7 +264,7 @@ See also: [`moi_set`](@ref).
 abstract type AbstractScalarSet end
 
 function build_variable(
-    _error::Function,
+    error_fn::Function,
     variable::AbstractVariable,
     set::AbstractScalarSet,
 )
@@ -272,27 +272,27 @@ function build_variable(
 end
 
 function build_variable(
-    _error::Function,
+    error_fn::Function,
     variables::AbstractArray{<:AbstractVariable},
     sets::AbstractArray{<:AbstractScalarSet},
 )
-    return build_variable.(_error, variables, sets)
+    return build_variable.(error_fn, variables, sets)
 end
 
 function build_variable(
-    _error::Function,
+    error_fn::Function,
     variables::AbstractArray{<:AbstractVariable},
     set::AbstractScalarSet,
 )
-    return build_variable.(_error, variables, Ref(set))
+    return build_variable.(error_fn, variables, Ref(set))
 end
 
 function build_constraint(
-    _error::Function,
+    error_fn::Function,
     func::AbstractJuMPScalar,
     set::AbstractScalarSet,
 )
-    return build_constraint(_error, func, moi_set(set))
+    return build_constraint(error_fn, func, moi_set(set))
 end
 
 """

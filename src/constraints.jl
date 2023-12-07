@@ -496,7 +496,7 @@ In order to automatically add the `CustomBridge` to any model to
 which an `F`-in-`CustomSet` is added, add the following method:
 ```julia
 function JuMP.build_constraint(
-    _error::Function,
+    error_fn::Function,
     func::AbstractJuMPScalar,
     set::CustomSet,
 )

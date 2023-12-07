@@ -62,14 +62,14 @@ struct PowerCone{T}
     exponent::T
 end
 function JuMP.build_constraint(
-    _error::Function,
+    error_fn::Function,
     f,
     set::PowerCone;
     dual = false,
 )
     moi_set =
         dual ? MOI.DualPowerCone(set.exponent) : MOI.PowerCone(set.exponent)
-    return build_constraint(_error, f, moi_set)
+    return build_constraint(error_fn, f, moi_set)
 end
 
 struct MyConstrType end
@@ -77,32 +77,32 @@ struct MyConstrType end
 struct BadPosArg end
 
 function JuMP.build_constraint(
-    _error::Function,
+    error_fn::Function,
     f::GenericAffExpr,
     set::MOI.EqualTo,
     ::Type{MyConstrType};
     d = 0,
 )
     new_set = MOI.LessThan{Float64}(set.value + d)
-    return build_constraint(_error, f, new_set)
+    return build_constraint(error_fn, f, new_set)
 end
 
 struct CustomType end
 
-function JuMP.parse_constraint_head(_error::Function, ::Val{:≔}, lhs, rhs)
-    return false, :(), :(build_constraint($_error, $(esc(lhs)), $(esc(rhs))))
+function JuMP.parse_constraint_head(error_fn::Function, ::Val{:≔}, lhs, rhs)
+    return false, :(), :(build_constraint($error_fn, $(esc(lhs)), $(esc(rhs))))
 end
 
 struct CustomSet <: MOI.AbstractScalarSet end
 
 Base.copy(set::CustomSet) = set
 
-function JuMP.build_constraint(_error::Function, func, ::CustomType)
-    return build_constraint(_error, func, CustomSet())
+function JuMP.build_constraint(error_fn::Function, func, ::CustomType)
+    return build_constraint(error_fn, func, CustomSet())
 end
 
-function JuMP.parse_constraint_call(_error::Function, ::Bool, ::Val{:f}, x)
-    return :(), :(build_constraint($_error, $(esc(x)), $(esc(CustomType()))))
+function JuMP.parse_constraint_call(error_fn::Function, ::Bool, ::Val{:f}, x)
+    return :(), :(build_constraint($error_fn, $(esc(x)), $(esc(CustomType()))))
 end
 
 const MyVariableTuple{S,T,U,V} = Tuple{VariableInfo{S,T,U,V},Int,Int}
@@ -2108,7 +2108,7 @@ struct Issue3514Type{S} <: AbstractConstraint
 end
 
 function JuMP.build_constraint(
-    _error::Function,
+    error_fn::Function,
     f::AffExpr,
     set::MOI.AbstractScalarSet,
     extra::Issue3514Tag,
