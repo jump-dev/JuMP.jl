@@ -22,6 +22,7 @@ using JuMP
 import CSV
 import DataFrames
 import HiGHS
+import Plots
 import StatsPlots
 import Test  #src
 Plots.plotlyjs()
