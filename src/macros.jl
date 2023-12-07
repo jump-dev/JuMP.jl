@@ -1348,41 +1348,6 @@ end
 ### @constraint and @build_constraint
 ###
 
-function _plural_macro_code(model, block, macro_sym)
-    if !Meta.isexpr(block, :block)
-        error(
-            "Invalid syntax for $(macro_sym)s. The second argument must be a " *
-            "`begin end` block. For example:\n" *
-            "```julia\n$(macro_sym)s(model, begin\n    # ... lines here ...\nend)\n```.",
-        )
-    end
-    @assert block.args[1] isa LineNumberNode
-    last_line = block.args[1]
-    code = Expr(:tuple)
-    jump_macro = Expr(:., JuMP, QuoteNode(macro_sym))
-    for arg in block.args
-        if arg isa LineNumberNode
-            last_line = arg
-        elseif Meta.isexpr(arg, :tuple)  # Line with commas.
-            macro_call = Expr(:macrocall, jump_macro, last_line, model)
-            # Because of the precedence of "=", Keyword arguments have to appear
-            # like: `x, (start = 10, lower_bound = 5)`
-            for ex in arg.args
-                if isexpr(ex, :tuple) # embedded tuple
-                    append!(macro_call.args, ex.args)
-                else
-                    push!(macro_call.args, ex)
-                end
-            end
-            push!(code.args, esc(macro_call))
-        else  # Stand-alone symbol or expression.
-            macro_call = Expr(:macrocall, jump_macro, last_line, model, arg)
-            push!(code.args, esc(macro_call))
-        end
-    end
-    return code
-end
-
 """
     _constraint_macro(
         args,
@@ -1510,12 +1475,8 @@ function _constraint_macro(
         Containers.container_code(idxvars, indices, code, requested_container),
     )
     if _is_anonymous(c)
-        # Anonymous constraint, no need to register it in the model-level
-        # dictionary nor to assign it to a variable in the user scope.
         return _finalize_and_return(esc_m, creation_code, source)
     end
-    # We register the constraint reference to its name and
-    # we assign it to a variable in the local scope of this name
     return _finalize_and_return(esc_m, creation_code, source, name)
 end
 
