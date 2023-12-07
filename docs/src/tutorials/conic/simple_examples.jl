@@ -254,14 +254,7 @@ example_correlation_problem()
 # which gives us the SDP formulation below.
 # Since we may choose any point to be the origin, we fix the first vertex at 0.
 #
-# For more details, see:
-#
-# J. Matoušek (2002), [_Lectures on discrete geometry_](https://doi.org/10.1007/978-1-4613-0039-7),
-# Springer, pp. 378-379
-#
-#  N. Linial (2002),
-# _[Finite metric spaces--combinatorics, geometry and algorithms](https://arxiv.org/abs/math/0304466)_,
-# Proceedings of the ICM, Vol. 3, 573-586
+# For more details, see [Matousek2013,Linial2002](@cite).
 
 function example_minimum_distortion()
     model = Model(SCS.Optimizer)
@@ -379,11 +372,7 @@ example_theta_problem()
 
 # This example computes the Value at Risk for a data-driven uncertainty set.
 # Closed-form expressions for the optimal value are available.
-# For more details, see:
-
-# Bertsimas, D., Gupta, V., & Kallus, N. (2018).
-# [_Data-driven robust optimization._](https://doi.org/10.1007/s10107-017-1125-8)
-# Mathematical Programming, 167, 235-292.
+# For more details, see [Bertsimas2018](@cite).
 
 function example_robust_uncertainty_sets()
     R, d, 𝛿, ɛ = 1, 3, 0.05, 0.05
