@@ -1066,7 +1066,6 @@ macro operator(model, op, dim, f, args...)
                 name = $(Meta.quot(op)),
             )
         end,
-        gensym(),
         op;
         model_for_registering = esc(model),
     )
