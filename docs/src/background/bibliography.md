@@ -1,4 +1,4 @@
-## Bibliography
+#
 
 ```@bibliography
 ```

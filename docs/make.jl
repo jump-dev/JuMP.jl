@@ -363,7 +363,7 @@ const _PAGES = [
     "Background Information" => [
         "background/algebraic_modeling_languages.md",
         "background/bibliography.md",
-        ],
+    ],
     "Developer Docs" => [
         "Contributing" => "developers/contributing.md",
         "Extensions" => "developers/extensions.md",
