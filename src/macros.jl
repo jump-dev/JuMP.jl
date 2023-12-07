@@ -1616,22 +1616,17 @@ julia> @build_constraint(2x >= 1)
 ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInterface.GreaterThan{Float64}(1.0))
 ```
 """
-macro build_constraint(constraint_expr)
+macro build_constraint(expr)
     function _error(str...)
-        return _macro_error(
-            :build_constraint,
-            (constraint_expr,),
-            __source__,
-            str...,
-        )
+        return _macro_error(:build_constraint, (expr,), __source__, str...)
     end
-    if isa(constraint_expr, Symbol)
+    if expr isa Symbol
         _error(
-            "Incomplete constraint specification $constraint_expr. " *
+            "Incomplete constraint specification $expr. " *
             "Are you missing a comparison (<=, >=, or ==)?",
         )
     end
-    _, parse_code, build_call = parse_constraint(_error, constraint_expr)
+    _, parse_code, build_call = parse_constraint(_error, expr)
     return quote
         $parse_code
         $build_call
@@ -1718,7 +1713,6 @@ macro objective(model, args...)
         return _macro_error(:objective, (model, args...), __source__, str...)
     end
     if length(args) != 2
-        # Either just an objective sense, or just an expression.
         _error(
             "needs three arguments: model, objective sense (Max or Min) and expression.",
         )
@@ -1810,20 +1804,15 @@ macro expression(input_args...)
     f = length(args) == 2 ? args[2] : args[3]
     expr_var, build_code = _rewrite_expression(f)
     model = esc(args[1])
-    code = quote
-        $build_code
-        # Don't leak a `_MA.Zero` if the expression is an empty summation, or
-        # other structure that returns `_MA.Zero()`.
-        _replace_zero($model, $expr_var)
-    end
-    # Wrap the entire code block in a let statement to make the model act as
-    # a type stable local variable.
     code = _wrap_let(
         model,
         Containers.container_code(
             index_names,
             indices,
-            code,
+            quote
+                $build_code
+                _replace_zero($model, $expr_var)
+            end,
             requested_container,
         ),
     )
@@ -1832,41 +1821,6 @@ macro expression(input_args...)
     end
     name = Containers._get_name(expr_name)
     return _finalize_and_return(model, code, __source__, name)
-end
-
-"""
-    @expressions(model, args...)
-
-Adds multiple expressions to model at once, in the same fashion as the
-[`@expression`](@ref) macro.
-
-The model must be the first argument, and multiple expressions can be added on
-multiple lines wrapped in a `begin ... end` block.
-
-The macro returns a tuple containing the expressions that were defined.
-
-## Example
-
-```jldoctest
-julia> model = Model();
-
-julia> @variable(model, x);
-
-julia> @variable(model, y);
-
-julia> @variable(model, z[1:2]);
-
-julia> a = [4, 5];
-
-julia> @expressions(model, begin
-           my_expr, x^2 + y^2
-           my_expr_1[i = 1:2], a[i] - z[i]
-       end)
-(x² + y², AffExpr[-z[1] + 4, -z[2] + 5])
-```
-"""
-macro expressions(model, block)
-    return _plural_macro_code(model, block, Symbol("@expression"))
 end
 
 """
@@ -2106,7 +2060,7 @@ function build_variable(
 )
     if length(variables) != length(sets)
         return _error(
-            "Dimensions must match. Got a vector of scalar variables with" *
+            "Dimensions must match. Got a vector of scalar variables with " *
             "$(length(variables)) elements and a vector of " *
             "scalar sets with $(length(sets)).",
         )
@@ -2222,7 +2176,6 @@ function parse_variable(
     r_op::Symbol,
     u,
 )
-    # l l_op x r_op u
     set = parse_ternary_variable(
         _error,
         info_expr,
@@ -2246,10 +2199,17 @@ end
         value,
     ) where {S}
 
-Update `infoexr` for a variable expression in the `@variable` macro of the form
+Update `info_exr` for a variable expression in the `@variable` macro of the form
 `variable name S value`.
 """
-function parse_one_operator_variable end
+function parse_one_operator_variable(
+    _error::Function,
+    ::_VariableInfoExpr,
+    ::Val{S},
+    ::Any,
+) where {S}
+    return _error("unsupported operator $S")
+end
 
 function parse_one_operator_variable(
     ::Function,
@@ -2288,15 +2248,6 @@ function parse_one_operator_variable(
 )
     _fix_or_error(_error, info_expr, value)
     return
-end
-
-function parse_one_operator_variable(
-    _error::Function,
-    ::_VariableInfoExpr,
-    ::Val{S},
-    ::Any,
-) where {S}
-    return _error("unsupported operator $S")
 end
 
 function parse_one_operator_variable(
@@ -2352,7 +2303,20 @@ end
 A hook for JuMP extensiosn to intercept the parsing of a `:comparison`
 expression, which has the form `lhs lhs_sense variable rhs_sense rhs`.
 """
-function parse_ternary_variable end
+function parse_ternary_variable(
+    _error::Function,
+    info_expr::_VariableInfoExpr,
+    ::Val{A},
+    lb,
+    ::Val{B},
+    ub,
+) where {A,B}
+    return _error(
+        "unsupported mix of comparison operators `$lb $A ... $B $ub`.\n\n" *
+        "Two-sided variable bounds must of the form `$lb <= ... <= $ub` or " *
+        "`$ub >= ... >= $lb`.",
+    )
+end
 
 function parse_ternary_variable(
     _error::Function,
@@ -2375,34 +2339,9 @@ function parse_ternary_variable(
     ::Union{Val{:>=},Val{:≥},Val{:.>=},Val{:.≥}},
     lower,
 )
-    return parse_ternary_variable(
-        _error,
-        info_expr,
-        Val(:≤),
-        lower,
-        Val(:≤),
-        upper,
-    )
+    parse_ternary_variable(_error, info_expr, Val(:≤), lower, Val(:≤), upper)
+    return
 end
-
-function parse_ternary_variable(
-    _error::Function,
-    info_expr::_VariableInfoExpr,
-    ::Val{A},
-    lb,
-    ::Val{B},
-    ub,
-) where {A,B}
-    return _error(
-        "unsupported mix of comparison operators `$lb $A ... $B $ub`.\n\n" *
-        "Two-sided variable bounds must of the form `$lb <= ... <= $ub` or " *
-        "`$ub >= ... >= $lb`.",
-    )
-end
-
-###
-###
-###
 
 """
     @variable(model, expr, args..., kw_args...)
@@ -2546,13 +2485,12 @@ macro variable(args...)
     # `@variable(model; integer = true)`, since Julia handles kwargs by placing
     # them first(!) in the list of arguments.
     args = _reorder_parameters(args)
-    model = esc(args[1])
     if length(args) >= 2 && isexpr(args[2], :block)
         _error("Invalid syntax. Did you mean to use `@variables`?")
     end
     extra, kw_args, requested_container =
         Containers._extract_kw_args(args[2:end])
-
+    model = esc(args[1])
     # if there is only a single non-keyword argument, this is an anonymous
     # variable spec and the one non-kwarg is the model
     if length(extra) == 0
@@ -2578,7 +2516,6 @@ macro variable(args...)
         end
         anon_singleton = false
     end
-
     info_kw_args = filter(_is_info_keyword, kw_args)
     extra_kw_args = filter(
         kw -> begin
@@ -2595,7 +2532,6 @@ macro variable(args...)
     set_string_name_kw_args =
         filter(kw -> kw.args[1] == :set_string_name, kw_args)
     info_expr = _VariableInfoExpr(; _keywordify.(info_kw_args)...)
-
     # There are four cases to consider:
     # x                                       | type of x | x.head
     # ----------------------------------------+-----------+------------
@@ -2606,11 +2542,10 @@ macro variable(args...)
     # lb <= var <= ub or lb <= var[1:2] <= ub | Expr      | :comparison
     # In the three last cases, we call parse_variable
     explicit_comparison = isexpr(x, :comparison) || isexpr(x, :call)
-    if explicit_comparison
-        var, set = parse_variable(_error, info_expr, x.args...)
+    var, set = if explicit_comparison
+        parse_variable(_error, info_expr, x.args...)
     else
-        var = x
-        set = nothing
+        x, nothing
     end
     is_anonymous = isexpr(var, :vect) || isexpr(var, :vcat) || anon_singleton
     if is_anonymous && explicit_comparison && set === nothing
@@ -2620,10 +2555,10 @@ macro variable(args...)
     end
     # TODO: Should we generate non-empty default names for variables?
     name = Containers._get_name(var)
-    if isempty(base_name_kw_args)
-        base_name = is_anonymous ? "" : string(name)
+    base_name = if isempty(base_name_kw_args)
+        is_anonymous ? "" : string(name)
     else
-        base_name = esc(base_name_kw_args[1].args[2])
+        esc(base_name_kw_args[1].args[2])
     end
     set_kw_args = filter(kw -> kw.args[1] == :set, kw_args)
     if length(set_kw_args) == 1
@@ -2664,13 +2599,12 @@ macro variable(args...)
     if !isempty(variable_type_kw_args)
         push!(extra, esc(variable_type_kw_args[1].args[2]))
     end
-
     info = _constructor_expr(info_expr)
-    if isa(var, Symbol)
-        # Easy case - a single variable
+    if var isa Symbol  # Easy case - a single variable
         name_code = base_name
+    elseif !(var isa Expr)
+        _error("Expected $var to be a variable name")
     else
-        isa(var, Expr) || _error("Expected $var to be a variable name")
         # We now build the code to generate the variables (and possibly the
         # SparseAxisArray to contain them)
         idxvars, indices = Containers.build_ref_sets(_error, var)
@@ -2690,7 +2624,6 @@ macro variable(args...)
             )
         end
     end
-
     # Code to be used to create each variable of the container.
     buildcall = :(build_variable($_error, $info, $(extra...)))
     _add_kw_args(buildcall, extra_kw_args)
