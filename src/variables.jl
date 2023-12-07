@@ -36,12 +36,12 @@ mutable struct _VariableInfoExpr
 end
 
 function _set_lower_bound_or_error(
-    _error::Function,
+    error_fn::Function,
     info::_VariableInfoExpr,
     lower,
 )
     if info.has_lb
-        _error("Cannot specify variable lower_bound twice")
+        error_fn("Cannot specify variable lower_bound twice")
     end
     info.has_lb = true
     info.lower_bound = lower
@@ -49,38 +49,42 @@ function _set_lower_bound_or_error(
 end
 
 function _set_upper_bound_or_error(
-    _error::Function,
+    error_fn::Function,
     info::_VariableInfoExpr,
     upper,
 )
     if info.has_ub
-        _error("Cannot specify variable upper_bound twice")
+        error_fn("Cannot specify variable upper_bound twice")
     end
     info.has_ub = true
     info.upper_bound = upper
     return
 end
 
-function _fix_or_error(_error::Function, info::_VariableInfoExpr, value)
+function _fix_or_error(error_fn::Function, info::_VariableInfoExpr, value)
     if info.has_fix
-        _error("Cannot specify variable fixed value twice")
+        error_fn("Cannot specify variable fixed value twice")
     end
     info.has_fix = true
     info.fixed_value = value
     return
 end
 
-function _set_binary_or_error(_error::Function, info::_VariableInfoExpr)
+function _set_binary_or_error(error_fn::Function, info::_VariableInfoExpr)
     if info.binary
-        _error("'Bin' and 'binary' keyword argument cannot both be specified.")
+        error_fn(
+            "'Bin' and 'binary' keyword argument cannot both be specified.",
+        )
     end
     info.binary = true
     return
 end
 
-function _set_integer_or_error(_error::Function, info::_VariableInfoExpr)
+function _set_integer_or_error(error_fn::Function, info::_VariableInfoExpr)
     if info.integer
-        _error("'Int' and 'integer' keyword argument cannot both be specified.")
+        error_fn(
+            "'Int' and 'integer' keyword argument cannot both be specified.",
+        )
     end
     info.integer = true
     return
@@ -2036,11 +2040,11 @@ struct ComplexVariable{S,T,U,V} <: AbstractVariable
     info::VariableInfo{S,T,U,V}
 end
 
-function build_variable(_error::Function, v::ScalarVariable, ::ComplexPlane)
+function build_variable(error_fn::Function, v::ScalarVariable, ::ComplexPlane)
     if _is_binary(v) || _is_integer(v)
         # We would then need to fix the imaginary value to zero. Let's wait to
         # see if there is need for such complication first.
-        _error(
+        error_fn(
             "Creation of binary or integer complex variable is not supported.",
         )
     end
@@ -2116,11 +2120,11 @@ function add_variable(
 end
 
 function build_variable(
-    _error::Function,
+    error_fn::Function,
     variables::AbstractArray{<:ScalarVariable},
     set::ComplexPlane,
 )
-    return build_variable.(_error, variables, Ref(set))
+    return build_variable.(error_fn, variables, Ref(set))
 end
 
 function add_variable(

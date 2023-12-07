@@ -199,7 +199,7 @@ julia> const MutableArithmetics = JuMP._MA;
 julia> model = Model(); @variable(model, x);
 
 julia> function JuMP.parse_constraint_head(
-           _error::Function,
+           error_fn::Function,
            ::Val{:≔},
            lhs,
            rhs,
@@ -207,7 +207,7 @@ julia> function JuMP.parse_constraint_head(
            println("Rewriting ≔ as ==")
            new_lhs, parse_code = MutableArithmetics.rewrite(lhs)
            build_code = :(
-               build_constraint($(_error), $(new_lhs), MOI.EqualTo($(rhs)))
+               build_constraint($(error_fn), $(new_lhs), MOI.EqualTo($(rhs)))
            )
            return false, parse_code, build_code
        end
@@ -227,7 +227,7 @@ julia> const MutableArithmetics = JuMP._MA;
 julia> model = Model(); @variable(model, x);
 
 julia> function JuMP.parse_constraint_call(
-           _error::Function,
+           error_fn::Function,
            is_vectorized::Bool,
            ::Val{:my_equal_to},
            lhs,
@@ -236,10 +236,10 @@ julia> function JuMP.parse_constraint_call(
            println("Rewriting my_equal_to to ==")
            new_lhs, parse_code = MutableArithmetics.rewrite(lhs)
            build_code = if is_vectorized
-               :(build_constraint($(_error), $(new_lhs), MOI.EqualTo($(rhs)))
+               :(build_constraint($(error_fn), $(new_lhs), MOI.EqualTo($(rhs)))
            )
            else
-               :(build_constraint.($(_error), $(new_lhs), MOI.EqualTo($(rhs))))
+               :(build_constraint.($(error_fn), $(new_lhs), MOI.EqualTo($(rhs))))
            end
            return parse_code, build_code
        end
@@ -281,14 +281,14 @@ julia> model = Model(); @variable(model, x);
 julia> struct MyConstrType end
 
 julia> function JuMP.build_constraint(
-            _error::Function,
+            error_fn::Function,
             f::JuMP.GenericAffExpr,
             set::MOI.EqualTo,
             extra::Type{MyConstrType};
             d = 0,
        )
             new_set = MOI.LessThan(set.value + d)
-            return JuMP.build_constraint(_error, f, new_set)
+            return JuMP.build_constraint(error_fn, f, new_set)
        end
 
 julia> @constraint(model, my_con, x == 0, MyConstrType, d = 2)
@@ -322,7 +322,7 @@ julia> struct MyConstraint{S} <: AbstractConstraint
        end
 
 julia> function JuMP.build_constraint(
-            _error::Function,
+            error_fn::Function,
             f::AffExpr,
             set::MOI.AbstractScalarSet,
             extra::MyTag,

@@ -67,7 +67,12 @@ function _expr_is_splat(expr)
     return false
 end
 
-function _parse_index_sets(_error::Function, index_vars, index_sets, arg::Expr)
+function _parse_index_sets(
+    error_fn::Function,
+    index_vars,
+    index_sets,
+    arg::Expr,
+)
     index_var, index_set = gensym(), esc(arg)
     if isexpr(arg, :kw, 2) || isexpr(arg, :(=), 2)
         # Handle [i=S] and x[i=S]
@@ -77,7 +82,7 @@ function _parse_index_sets(_error::Function, index_vars, index_sets, arg::Expr)
         index_var, index_set = arg.args[2], esc(arg.args[3])
     end
     if index_var in index_vars
-        _error(
+        error_fn(
             "The index $(index_var) appears more than once. The " *
             "index associated with each set must be unique.",
         )
@@ -108,7 +113,7 @@ Takes an `Expr` that specifies the container, e.g.,
  3. `condition`: Expr containing any conditional imposed on indexing, or `:()`
     if none is present
 """
-function _parse_ref_sets(_error::Function, expr::Expr)
+function _parse_ref_sets(error_fn::Function, expr::Expr)
     c = copy(expr)
     index_vars, index_sets, condition = Any[], Any[], :()
     # `:(t[i, j; k])` is a `:ref`, while `:(t[i; j])` is a `:typed_vcat`. In
@@ -120,7 +125,7 @@ function _parse_ref_sets(_error::Function, expr::Expr)
         # An expression like `t[i; k]` or `[i; k]`. The filtering condition is
         # the second argument.
         if length(c.args) > 2
-            _error(
+            error_fn(
                 "Unsupported syntax $c: There can be at most one filtering " *
                 "condition, which is separated from the indices by a single " *
                 "`;`.",
@@ -136,7 +141,7 @@ function _parse_ref_sets(_error::Function, expr::Expr)
         if isexpr(c.args[1], :parameters)
             parameters = popfirst!(c.args)
             if length(parameters.args) != 1
-                _error(
+                error_fn(
                     "Unsupported syntax $c: There can be at most one " *
                     "filtering condition, which is separated from the " *
                     "indices by a single `;`.",
@@ -146,7 +151,7 @@ function _parse_ref_sets(_error::Function, expr::Expr)
         end
     end
     for arg in c.args
-        _parse_index_sets(_error, index_vars, index_sets, arg)
+        _parse_index_sets(error_fn, index_vars, index_sets, arg)
     end
     return index_vars, index_sets, condition
 end
@@ -180,7 +185,7 @@ function _has_dependent_sets(index_vars::Vector{Any}, index_sets::Vector{Any})
 end
 
 """
-    build_ref_sets(_error::Function, expr)
+    build_ref_sets(error_fn::Function, expr)
 
 Helper function for macros to construct container objects.
 
@@ -190,7 +195,7 @@ Helper function for macros to construct container objects.
 
 ## Arguments
 
- * `_error`: a function that takes a `String` and throws an error, potentially
+ * `error_fn`: a function that takes a `String` and throws an error, potentially
    annotating the input string with extra information such as from which macro
    it was thrown from. Use `error` if you do not want a modified error message.
  * `expr`: an `Expr` that specifies the container, e.g.,
@@ -208,10 +213,10 @@ Helper function for macros to construct container objects.
 
 See [`container_code`](@ref) for a worked example.
 """
-function build_ref_sets(_error::Function, expr)
-    index_vars, index_sets, condition = _parse_ref_sets(_error, expr)
+function build_ref_sets(error_fn::Function, expr)
+    index_vars, index_sets, condition = _parse_ref_sets(error_fn, expr)
     if any(_expr_is_splat, index_sets)
-        _error(
+        error_fn(
             "cannot use splatting operator `...` in the definition of an " *
             "index set.",
         )

@@ -277,20 +277,20 @@ function vectorize(matrix::LinearAlgebra.LowerTriangular, ::SquareMatrixShape)
     return [matrix[i, j] for j in 1:n for i in 1:n]
 end
 
-function _square_side(_error::Function, variables::Matrix)
+function _square_side(error_fn::Function, variables::Matrix)
     n, m = size(variables)
     if n != m
-        _error("Symmetric variables must be square. Got size ($n, $m).")
+        error_fn("Symmetric variables must be square. Got size ($n, $m).")
     end
     return n
 end
 
-function _vectorize_variables(_error::Function, matrix::Matrix)
+function _vectorize_variables(error_fn::Function, matrix::Matrix)
     n = LinearAlgebra.checksquare(matrix)
     for j in 1:n
         for i in 1:j
             if matrix[i, j] != matrix[j, i]
-                _error(
+                error_fn(
                     "Non-symmetric bounds, integrality or starting values for symmetric variable.",
                 )
             end
@@ -300,7 +300,7 @@ function _vectorize_variables(_error::Function, matrix::Matrix)
 end
 
 """
-    build_variable(_error::Function, variables, ::SymmetricMatrixSpace)
+    build_variable(error_fn::Function, variables, ::SymmetricMatrixSpace)
 
 Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
 creating variables in `MOI.Reals`, i.e. "free" variables unless they are
@@ -317,22 +317,22 @@ julia> @variable(model, Q[1:2, 1:2], Symmetric)
 ```
 """
 function build_variable(
-    _error::Function,
+    error_fn::Function,
     variables::Matrix{<:AbstractVariable},
     ::SymmetricMatrixSpace,
 )
-    n = _square_side(_error, variables)
+    n = _square_side(error_fn, variables)
     set = MOI.Reals(MOI.dimension(MOI.PositiveSemidefiniteConeTriangle(n)))
     shape = SymmetricMatrixShape(n)
     return VariablesConstrainedOnCreation(
-        _vectorize_variables(_error, variables),
+        _vectorize_variables(error_fn, variables),
         set,
         shape,
     )
 end
 
 """
-    build_variable(_error::Function, variables, ::SkewSymmetricMatrixSpace)
+    build_variable(error_fn::Function, variables, ::SkewSymmetricMatrixSpace)
 
 Return a `VariablesConstrainedOnCreation` of shape [`SkewSymmetricMatrixShape`](@ref)
 creating variables in `MOI.Reals`, i.e. "free" variables unless they are
@@ -349,11 +349,11 @@ julia> @variable(model, Q[1:2, 1:2] in SkewSymmetricMatrixSpace())
 ```
 """
 function build_variable(
-    _error::Function,
+    error_fn::Function,
     variables::Matrix{<:AbstractVariable},
     ::SkewSymmetricMatrixSpace,
 )
-    n = _square_side(_error, variables)
+    n = _square_side(error_fn, variables)
     set = MOI.Reals(div(n^2 - n, 2))
     shape = SkewSymmetricMatrixShape(n)
     return VariablesConstrainedOnCreation(
@@ -364,7 +364,7 @@ function build_variable(
 end
 
 """
-    build_variable(_error::Function, variables, ::HermitianMatrixSpace)
+    build_variable(error_fn::Function, variables, ::HermitianMatrixSpace)
 
 Return a `VariablesConstrainedOnCreation` of shape [`HermitianMatrixShape`](@ref)
 creating variables in `MOI.Reals`, i.e. "free" variables unless they are
@@ -381,24 +381,24 @@ julia> @variable(model, Q[1:2, 1:2] in HermitianMatrixSpace())
 ```
 """
 function build_variable(
-    _error::Function,
+    error_fn::Function,
     variables::Matrix{<:AbstractVariable},
     ::HermitianMatrixSpace,
 )
-    n = _square_side(_error, variables)
+    n = _square_side(error_fn, variables)
     set = MOI.Reals(
         MOI.dimension(MOI.HermitianPositiveSemidefiniteConeTriangle(n)),
     )
     shape = HermitianMatrixShape(n)
     return VariablesConstrainedOnCreation(
-        _vectorize_complex_variables(_error, variables),
+        _vectorize_complex_variables(error_fn, variables),
         set,
         shape,
     )
 end
 
 """
-    build_variable(_error::Function, variables, ::PSDCone)
+    build_variable(error_fn::Function, variables, ::PSDCone)
 
 Return a `VariablesConstrainedOnCreation` of shape [`SymmetricMatrixShape`](@ref)
 constraining the variables to be positive semidefinite.
@@ -414,13 +414,13 @@ julia> @variable(model, Q[1:2, 1:2], PSD)
 ```
 """
 function build_variable(
-    _error::Function,
+    error_fn::Function,
     variables::Matrix{<:AbstractVariable},
     ::PSDCone,
 )
-    n = _square_side(_error, variables)
+    n = _square_side(error_fn, variables)
     set = MOI.PositiveSemidefiniteConeTriangle(n)
-    return build_variable(_error, variables, set)
+    return build_variable(error_fn, variables, set)
 end
 
 function value(
@@ -434,7 +434,7 @@ end
 
 """
     build_constraint(
-        _error::Function,
+        error_fn::Function,
         Q::LinearAlgebra.Symmetric{V, M},
         ::PSDCone,
     ) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
@@ -472,17 +472,21 @@ julia> @constraint(model, Q in PSDCone())
 ```
 """
 function build_constraint(
-    _error::Function,
+    error_fn::Function,
     Q::LinearAlgebra.Symmetric{V,M},
     ::PSDCone,
 ) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
     n = LinearAlgebra.checksquare(Q)
-    return build_constraint(_error, Q, MOI.PositiveSemidefiniteConeTriangle(n))
+    return build_constraint(
+        error_fn,
+        Q,
+        MOI.PositiveSemidefiniteConeTriangle(n),
+    )
 end
 
 """
     build_constraint(
-        _error::Function,
+        error_fn::Function,
         Q::AbstractMatrix{<:AbstractJuMPScalar},
         ::PSDCone,
     )
@@ -502,12 +506,12 @@ julia> @constraint(model, Q in PSDCone())
 ```
 """
 function build_constraint(
-    _error::Function,
+    error_fn::Function,
     Q::AbstractMatrix{<:AbstractJuMPScalar},
     ::PSDCone,
 )
     n = LinearAlgebra.checksquare(Q)
-    return build_constraint(_error, Q, MOI.PositiveSemidefiniteConeSquare(n))
+    return build_constraint(error_fn, Q, MOI.PositiveSemidefiniteConeSquare(n))
 end
 
 """
@@ -599,24 +603,24 @@ function reshape_vector(v::Vector{T}, shape::HermitianMatrixShape) where {T}
     return LinearAlgebra.Hermitian(matrix)
 end
 
-function _vectorize_complex_variables(_error::Function, matrix::Matrix)
+function _vectorize_complex_variables(error_fn::Function, matrix::Matrix)
     if any(_is_binary, matrix) || any(_is_integer, matrix)
         # We would then need to fix the imaginary value to zero. Let's wait to
         # see if there is need for such complication first.
-        _error(
+        error_fn(
             "Binary or integer variables in a Hermitian matrix are not supported.",
         )
     end
     n = LinearAlgebra.checksquare(matrix)
     for j in 1:n
         if !_isreal(matrix[j, j])
-            _error(
+            error_fn(
                 "Non-real bounds or starting values for diagonal of Hermitian variable.",
             )
         end
         for i in 1:j
             if matrix[i, j] != _conj(matrix[j, i])
-                _error(
+                error_fn(
                     "Non-conjugate bounds or starting values for Hermitian variable.",
                 )
             end
@@ -626,15 +630,15 @@ function _vectorize_complex_variables(_error::Function, matrix::Matrix)
 end
 
 function build_variable(
-    _error::Function,
+    error_fn::Function,
     variables::Matrix{<:AbstractVariable},
     ::HermitianPSDCone,
 )
-    n = _square_side(_error, variables)
+    n = _square_side(error_fn, variables)
     set = MOI.HermitianPositiveSemidefiniteConeTriangle(n)
     shape = HermitianMatrixShape(n)
     return VariablesConstrainedOnCreation(
-        _vectorize_complex_variables(_error, variables),
+        _vectorize_complex_variables(error_fn, variables),
         set,
         shape,
     )
@@ -642,7 +646,7 @@ end
 
 """
     build_constraint(
-        _error::Function,
+        error_fn::Function,
         Q::LinearAlgebra.Hermitian{V,M},
         ::HermitianPSDCone,
     ) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
@@ -678,18 +682,22 @@ function build_constraint(
 end
 
 function build_constraint(
-    _error::Function,
+    error_fn::Function,
     Q::AbstractMatrix{<:AbstractJuMPScalar},
     cone::HermitianPSDCone,
 )
-    return _error(
+    return error_fn(
         "Unable to add matrix in HermitianPSDCone because the matrix is " *
         "not a subtype of `LinearAlgebra.Hermitian`. To fix, wrap the matrix " *
         "`H` in `LinearAlgebra.Hermitian(H)`.",
     )
 end
 
-function build_constraint(_error::Function, H::LinearAlgebra.Hermitian, ::Zeros)
+function build_constraint(
+    error_fn::Function,
+    H::LinearAlgebra.Hermitian,
+    ::Zeros,
+)
     n = LinearAlgebra.checksquare(H)
     shape = HermitianMatrixShape(n)
     x = vectorize(H, shape)
@@ -698,7 +706,11 @@ end
 
 reshape_set(s::MOI.Zeros, ::HermitianMatrixShape) = Zeros()
 
-function build_constraint(_error::Function, f::LinearAlgebra.Symmetric, ::Zeros)
+function build_constraint(
+    error_fn::Function,
+    f::LinearAlgebra.Symmetric,
+    ::Zeros,
+)
     n = LinearAlgebra.checksquare(f)
     shape = SymmetricMatrixShape(n)
     x = vectorize(f, shape)
@@ -707,8 +719,8 @@ end
 
 reshape_set(::MOI.Zeros, ::SymmetricMatrixShape) = Zeros()
 
-function build_constraint(_error::Function, ::AbstractMatrix, ::Nonnegatives)
-    return _error(
+function build_constraint(error_fn::Function, ::AbstractMatrix, ::Nonnegatives)
+    return error_fn(
         "Unsupported matrix in vector-valued set. Did you mean to use the " *
         "broadcasting syntax `.>=` instead? Alternatively, perhaps you are " *
         "missing a set argument like `@constraint(model, X >= 0, PSDCone())` " *
@@ -716,8 +728,8 @@ function build_constraint(_error::Function, ::AbstractMatrix, ::Nonnegatives)
     )
 end
 
-function build_constraint(_error::Function, ::AbstractMatrix, ::Nonpositives)
-    return _error(
+function build_constraint(error_fn::Function, ::AbstractMatrix, ::Nonpositives)
+    return error_fn(
         "Unsupported matrix in vector-valued set. Did you mean to use the " *
         "broadcasting syntax `.<=` instead? Alternatively, perhaps you are " *
         "missing a set argument like `@constraint(model, X <= 0, PSDCone())` " *
@@ -725,8 +737,8 @@ function build_constraint(_error::Function, ::AbstractMatrix, ::Nonpositives)
     )
 end
 
-function build_constraint(_error::Function, ::AbstractMatrix, ::Zeros)
-    return _error(
+function build_constraint(error_fn::Function, ::AbstractMatrix, ::Zeros)
+    return error_fn(
         "Unsupported matrix in vector-valued set. Did you mean to use the " *
         "broadcasting syntax `.==` for element-wise equality? Alternatively, " *
         "this syntax is supported in the special case that the matrices are " *
@@ -735,7 +747,7 @@ function build_constraint(_error::Function, ::AbstractMatrix, ::Zeros)
 end
 
 function build_constraint(
-    _error::Function,
+    error_fn::Function,
     Q::LinearAlgebra.Symmetric{V,M},
     set::MOI.AbstractSymmetricMatrixSetTriangle,
 ) where {V<:AbstractJuMPScalar,M<:AbstractMatrix{V}}
@@ -745,7 +757,7 @@ function build_constraint(
 end
 
 function build_constraint(
-    _error::Function,
+    error_fn::Function,
     Q::AbstractMatrix{<:AbstractJuMPScalar},
     set::MOI.AbstractSymmetricMatrixSetSquare,
 )
@@ -755,7 +767,7 @@ function build_constraint(
 end
 
 function build_constraint(
-    _error::Function,
+    error_fn::Function,
     f::AbstractMatrix{<:AbstractJuMPScalar},
     ::Nonnegatives,
     extra::Union{
@@ -764,11 +776,11 @@ function build_constraint(
         PSDCone,
     },
 )
-    return build_constraint(_error, f, extra)
+    return build_constraint(error_fn, f, extra)
 end
 
 function build_constraint(
-    _error::Function,
+    error_fn::Function,
     f::AbstractMatrix{<:AbstractJuMPScalar},
     ::Nonpositives,
     extra::Union{
@@ -778,15 +790,15 @@ function build_constraint(
     },
 )
     new_f = _MA.operate!!(*, -1, f)
-    return build_constraint(_error, new_f, extra)
+    return build_constraint(error_fn, new_f, extra)
 end
 
 function build_variable(
-    _error::Function,
+    error_fn::Function,
     variables::Matrix{<:AbstractVariable},
     set::MOI.AbstractSymmetricMatrixSetTriangle,
 )
-    n = _square_side(_error, variables)
-    x = _vectorize_variables(_error, variables)
+    n = _square_side(error_fn, variables)
+    x = _vectorize_variables(error_fn, variables)
     return VariablesConstrainedOnCreation(x, set, SymmetricMatrixShape(n))
 end
