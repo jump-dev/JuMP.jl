@@ -58,7 +58,7 @@ function parse_constraint_call(
     rhs,
 )
     variable, S = _indicator_variable_set(error_fn, lhs)
-    if !isexpr(rhs, :braces) || length(rhs.args) != 1
+    if !Meta.isexpr(rhs, :braces) || length(rhs.args) != 1
         error_fn(
             "Invalid right-hand side `$(rhs)` of indicator constraint. Expected constraint surrounded by `{` and `}`.",
         )

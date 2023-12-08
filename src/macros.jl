@@ -28,7 +28,7 @@ julia> call
 """
 function _add_kw_args(call, kw_args)
     for kw in kw_args
-        @assert isexpr(kw, :(=))
+        @assert Meta.isexpr(kw, :(=))
         push!(call.args, esc(Expr(:kw, kw.args...)))
     end
 end
@@ -94,7 +94,7 @@ function _finalize_macro(model, code, source::LineNumberNode)
     return Expr(
         :block,
         source,
-        :(_valid_model($model, $(quot(model.args[1])))),
+        :(_valid_model($model, $(Meta.quot(model.args[1])))),
         code,
     )
 end
@@ -136,14 +136,14 @@ function _macro_assign_and_return(
             if model_for_registering !== nothing
                 :(_error_if_cannot_register(
                     $model_for_registering,
-                    $(quot(name)),
+                    $(Meta.quot(name)),
                 ))
             end
         )
         $variable = $code
         $(
             if model_for_registering !== nothing
-                :($model_for_registering[$(quot(name))] = $variable)
+                :($model_for_registering[$(Meta.quot(name))] = $variable)
             end
         )
         # This assignment should be in the scope calling the macro
@@ -1247,7 +1247,7 @@ function _plural_macro_code(model, block, macro_sym)
             # Because of the precedence of "=", Keyword arguments have to appear
             # like: `x, (start = 10, lower_bound = 5)`
             for ex in arg.args
-                if isexpr(ex, :tuple) # embedded tuple
+                if Meta.isexpr(ex, :tuple) # embedded tuple
                     append!(macro_call.args, ex.args)
                 else
                     push!(macro_call.args, ex)
@@ -1311,7 +1311,7 @@ function _constraint_macro(
     model = esc(pos_args[1])
     y = pos_args[2]
     extra = pos_args[3:end]
-    if isexpr(args[2], :block)
+    if Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@$(macro_name)s`?")
     end
     # Determine if a reference/container argument was given by the user
@@ -1324,11 +1324,11 @@ function _constraint_macro(
     # [1:2]                              | Expr      | :vect
     # [i = 1:2, j = 1:2; i + j >= 3]     | Expr      | :vcat
     # a constraint expression            | Expr      | :call or :comparison
-    if isa(y, Symbol) || isexpr(y, (:vect, :vcat, :ref, :typed_vcat))
+    if isa(y, Symbol) || Meta.isexpr(y, (:vect, :vcat, :ref, :typed_vcat))
         length(extra) >= 1 || error_fn("No constraint expression was given.")
         c = y
         x = popfirst!(extra)
-        anonvar = isexpr(y, (:vect, :vcat))
+        anonvar = Meta.isexpr(y, (:vect, :vcat))
     else
         c = gensym()
         x = y
@@ -1747,10 +1747,11 @@ macro expression(args...)
         error_fn("needs at least two arguments.")
     end
     length(kw_args) == 0 || error_fn("unrecognized keyword argument")
-    if isexpr(args[2], :block)
+    if Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@expressions`?")
     end
-    anonvar = isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
+    anonvar =
+        Meta.isexpr(c, :vect) || Meta.isexpr(c, :vcat) || length(args) == 2
     variable = gensym()
 
     idxvars, indices = Containers.build_ref_sets(error_fn, c)
@@ -1822,7 +1823,7 @@ macro expressions(model, block)
 end
 
 _esc_non_constant(x::Number) = x
-_esc_non_constant(x::Expr) = isexpr(x, :quote) ? x : esc(x)
+_esc_non_constant(x::Expr) = Meta.isexpr(x, :quote) ? x : esc(x)
 _esc_non_constant(x) = esc(x)
 
 """
@@ -2328,7 +2329,7 @@ function parse_variable(
 end
 
 function _reorder_parameters(args)
-    if !isexpr(args[1], :parameters)
+    if !Meta.isexpr(args[1], :parameters)
         return args
     end
     args = collect(args)
@@ -2393,7 +2394,7 @@ end
 # current scope, and checked to see if they were Real. To keep the same behavior
 # we do the same here.
 function _assert_constant_comparison(code::Expr, expr::Expr)
-    if isexpr(expr, :comparison)
+    if Meta.isexpr(expr, :comparison)
         lhs, rhs = gensym(), gensym()
         push!(code.args, esc(:($lhs = $(expr.args[1]))))
         push!(code.args, esc(:($rhs = $(expr.args[5]))))
@@ -2405,7 +2406,7 @@ end
 _assert_constant_comparison(::Expr, ::Any) = nothing
 
 function _auto_register_expression(op_var, op, i)
-    q_op = quot(op)
+    q_op = Meta.quot(op)
     return quote
         try
             MOI.Nonlinear.register_operator_if_needed(
@@ -2433,7 +2434,7 @@ end
 function _parse_nonlinear_expression_inner(::Any, x::Symbol, ::Any)
     x = _normalize_unicode(x)
     if x in (:<=, :>=, :(==), :<, :>, :&&, :||)
-        return quot(x)
+        return Meta.quot(x)
     end
     return esc(x)
 end
@@ -2442,33 +2443,36 @@ end
 _parse_nonlinear_expression_inner(::Any, x, ::Any) = x
 
 function _is_generator(x)
-    return isexpr(x, :call) &&
+    return Meta.isexpr(x, :call) &&
            length(x.args) >= 2 &&
-           (isexpr(x.args[end], :generator) || isexpr(x.args[end], :flatten))
+           (
+               Meta.isexpr(x.args[end], :generator) ||
+               Meta.isexpr(x.args[end], :flatten)
+           )
 end
 
 function _parse_nonlinear_expression_inner(code, x::Expr, operators)
-    if isexpr(x, :block)
+    if Meta.isexpr(x, :block)
         error(
             "`begin...end` blocks are not supported in nonlinear macros. The " *
             "nonlinear expression must be a single statement.",
         )
     end
-    if isexpr(x, :ref)
+    if Meta.isexpr(x, :ref)
         return esc(x)
-    elseif isexpr(x, :.)
+    elseif Meta.isexpr(x, :.)
         return esc(x)
     elseif _is_generator(x)
         return _parse_generator_expression(code, x, operators)
-    elseif isexpr(x, Symbol("'"))
+    elseif Meta.isexpr(x, Symbol("'"))
         # Treat the adjoint operator as a special case, because people often
         # use linear algebra in macros.
         return esc(x)
     end
     y = gensym()
-    y_expr = :($y = Expr($(quot(x.head))))
+    y_expr = :($y = Expr($(Meta.quot(x.head))))
     offset = 1
-    if isexpr(x, :call)
+    if Meta.isexpr(x, :call)
         if !(x.args[1] isa Symbol)
             error(
                 "Unsupported function $(x.args[1]). All function calls must " *
@@ -2477,7 +2481,7 @@ function _parse_nonlinear_expression_inner(code, x::Expr, operators)
         end
         op = _normalize_unicode(x.args[1])
         push!(operators, (op, length(x.args) - 1))
-        push!(y_expr.args[2].args, quot(op))
+        push!(y_expr.args[2].args, Meta.quot(op))
         offset += 1
     end
     for i in offset:length(x.args)
@@ -2697,7 +2701,7 @@ macro variable(args...)
     # them first(!) in the list of arguments.
     args = _reorder_parameters(args)
     model = esc(args[1])
-    if length(args) >= 2 && isexpr(args[2], :block)
+    if length(args) >= 2 && Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@variables`?")
     end
     extra, kw_args, requested_container =
@@ -2755,14 +2759,15 @@ macro variable(args...)
     # var in set or var[1:2] in set           | Expr      | :call
     # lb <= var <= ub or lb <= var[1:2] <= ub | Expr      | :comparison
     # In the three last cases, we call parse_variable
-    explicit_comparison = isexpr(x, :comparison) || isexpr(x, :call)
+    explicit_comparison = Meta.isexpr(x, :comparison) || Meta.isexpr(x, :call)
     if explicit_comparison
         var, set = parse_variable(error_fn, infoexpr, x.args...)
     else
         var = x
         set = nothing
     end
-    anonvar = isexpr(var, :vect) || isexpr(var, :vcat) || anon_singleton
+    anonvar =
+        Meta.isexpr(var, :vect) || Meta.isexpr(var, :vcat) || anon_singleton
     if anonvar && explicit_comparison && set === nothing
         error_fn(
             "Cannot use explicit bounds via >=, <= with an anonymous variable",
@@ -3001,7 +3006,7 @@ macro NLconstraint(m, x, args...)
         return _macro_error(:NLconstraint, (m, x, args...), __source__, str...)
     end
     esc_m = esc(m)
-    if isexpr(x, :block)
+    if Meta.isexpr(x, :block)
         error_fn("Invalid syntax. Did you mean to use `@NLconstraints`?")
     end
     # Two formats:
@@ -3034,7 +3039,7 @@ macro NLconstraint(m, x, args...)
         _init_NLP($esc_m)
         $looped
     end
-    if isexpr(c, :vect) || isexpr(c, :vcat) || length(extra) != 1
+    if Meta.isexpr(c, :vect) || Meta.isexpr(c, :vcat) || length(extra) != 1
         macro_code = creation_code
     else
         macro_code = _macro_assign_and_return(
@@ -3133,7 +3138,7 @@ macro NLexpression(args...)
     elseif length(args) == 3
         m, c, x = args
     end
-    if isexpr(args[2], :block)
+    if Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@NLexpressions`?")
     end
     if length(args) > 3 || length(kw_args) > 0
@@ -3154,7 +3159,7 @@ macro NLexpression(args...)
     end
     creation_code =
         Containers.container_code(idxvars, indices, code, requested_container)
-    if isexpr(c, :vect) || isexpr(c, :vcat) || length(args) == 2
+    if Meta.isexpr(c, :vect) || Meta.isexpr(c, :vcat) || length(args) == 2
         macro_code = creation_code
     else
         macro_code = _macro_assign_and_return(
@@ -3304,11 +3309,13 @@ macro NLparameter(model, args...)
         error_fn("Invalid syntax: too many positional arguments.")
     elseif length(kw_args) > 0
         error_fn("Invalid syntax: unsupported keyword arguments.")
-    elseif ismissing(value) && isexpr(pos_args[1], :block)
+    elseif ismissing(value) && Meta.isexpr(pos_args[1], :block)
         error_fn("Invalid syntax: did you mean to use `@NLparameters`?")
     elseif ismissing(value)
         ex = pos_args[1]
-        if !isexpr(ex, :call) || length(ex.args) != 3 || ex.args[1] != :(==)
+        if !Meta.isexpr(ex, :call) ||
+           length(ex.args) != 3 ||
+           ex.args[1] != :(==)
             error_fn(
                 "Invalid syntax: expected syntax of form `param == value`.",
             )
@@ -3317,7 +3324,7 @@ macro NLparameter(model, args...)
     param, anon = gensym(), true
     if ismissing(value)
         param, value = pos_args[1].args[2], pos_args[1].args[3]
-        anon = isexpr(param, :vect) || isexpr(param, :vcat)
+        anon = Meta.isexpr(param, :vect) || Meta.isexpr(param, :vcat)
     end
     index_vars, index_values = Containers.build_ref_sets(error_fn, param)
     if model in index_vars

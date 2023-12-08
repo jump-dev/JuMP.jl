@@ -422,7 +422,7 @@ _normalize_constraint_expr(lhs, rhs::Real) = lhs, Float64(rhs)
 _normalize_constraint_expr(lhs, rhs) = Expr(:call, :-, lhs, rhs), 0.0
 
 function _expr_to_constraint(expr::Expr)
-    if isexpr(expr, :comparison)
+    if Meta.isexpr(expr, :comparison)
         @assert expr.args[2] == expr.args[4]
         @assert expr.args[2] in (:<=, :>=)
         lhs, body, rhs =

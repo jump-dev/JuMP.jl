@@ -6,9 +6,9 @@
 _get_name(c::Union{Symbol,AbstractString}) = c
 
 function _get_name(c::Expr)
-    if isexpr(c, :vcat) || isexpr(c, :vect)
+    if Meta.isexpr(c, :vcat) || Meta.isexpr(c, :vect)
         return Symbol("")  # Anonymous variable
-    elseif isexpr(c, :ref) || isexpr(c, :typed_vcat)
+    elseif Meta.isexpr(c, :ref) || Meta.isexpr(c, :typed_vcat)
         return _get_name(c.args[1])
     end
     return error("Expression $c cannot be used as a name.")
@@ -25,7 +25,7 @@ where `requested_container` is a symbol to be passed to `container_code`.
 function _extract_kw_args(args)
     flat_args, kw_args, requested_container = Any[], Any[], :Auto
     for arg in args
-        if isexpr(arg, :(=))
+        if Meta.isexpr(arg, :(=))
             if arg.args[1] == :container
                 requested_container = arg.args[2]
             else
@@ -45,8 +45,8 @@ If the `index_set` matches the form of `1:N`, then return
 `Base.OneTo(index_set)`.
 """
 function _explicit_oneto(index_set)
-    s = isexpr(index_set, :escape) ? index_set.args[1] : index_set
-    if isexpr(s, :call, 3) && s.args[1] == :(:) && s.args[2] == 1
+    s = Meta.isexpr(index_set, :escape) ? index_set.args[1] : index_set
+    if Meta.isexpr(s, :call, 3) && s.args[1] == :(:) && s.args[2] == 1
         return :(Base.OneTo($index_set))
     else
         return index_set
@@ -59,9 +59,9 @@ end
 Return `true` if `expr` is a `...` expression (or an `esc`'d one).
 """
 function _expr_is_splat(expr)
-    if isexpr(expr, :...)
+    if Meta.isexpr(expr, :...)
         return true
-    elseif isexpr(expr, :escape)
+    elseif Meta.isexpr(expr, :escape)
         return _expr_is_splat(expr.args[1])
     end
     return false
@@ -74,10 +74,11 @@ function _parse_index_sets(
     arg::Expr,
 )
     index_var, index_set = gensym(), esc(arg)
-    if isexpr(arg, :kw, 2) || isexpr(arg, :(=), 2)
+    if Meta.isexpr(arg, :kw, 2) || Meta.isexpr(arg, :(=), 2)
         # Handle [i=S] and x[i=S]
         index_var, index_set = arg.args[1], esc(arg.args[2])
-    elseif isexpr(arg, :call, 3) && (arg.args[1] === :in || arg.args[1] === :∈)
+    elseif Meta.isexpr(arg, :call, 3) &&
+           (arg.args[1] === :in || arg.args[1] === :∈)
         # Handle `i in S` and `i ∈ S`
         index_var, index_set = arg.args[2], esc(arg.args[3])
     end
@@ -118,10 +119,10 @@ function _parse_ref_sets(error_fn::Function, expr::Expr)
     index_vars, index_sets, condition = Any[], Any[], :()
     # `:(t[i, j; k])` is a `:ref`, while `:(t[i; j])` is a `:typed_vcat`. In
     # both cases `:t` is the first argument.
-    if isexpr(c, :typed_vcat) || isexpr(c, :ref)
+    if Meta.isexpr(c, :typed_vcat) || Meta.isexpr(c, :ref)
         popfirst!(c.args)
     end
-    if isexpr(c, :vcat) || isexpr(c, :typed_vcat)
+    if Meta.isexpr(c, :vcat) || Meta.isexpr(c, :typed_vcat)
         # An expression like `t[i; k]` or `[i; k]`. The filtering condition is
         # the second argument.
         if length(c.args) > 2
@@ -135,10 +136,10 @@ function _parse_ref_sets(error_fn::Function, expr::Expr)
         else
             # expr ends in a trailing `;`, but there is no condition
         end
-    elseif isexpr(c, :ref) || isexpr(c, :vect)
+    elseif Meta.isexpr(c, :ref) || Meta.isexpr(c, :vect)
         # An expression like `t[i, j; k]` or `[i, j; k]`. The filtering
         # condition is a `:parameters` expression in the first argument.
-        if isexpr(c.args[1], :parameters)
+        if Meta.isexpr(c.args[1], :parameters)
             parameters = popfirst!(c.args)
             if length(parameters.args) != 1
                 error_fn(
@@ -386,7 +387,7 @@ macro container(args...)
     var, value = args
     index_vars, indices = build_ref_sets(error, var)
     code = container_code(index_vars, indices, esc(value), requested_container)
-    if isexpr(var, :vect) || isexpr(var, :vcat)
+    if Meta.isexpr(var, :vect) || Meta.isexpr(var, :vcat)
         return code
     else
         name = _get_name(var)
