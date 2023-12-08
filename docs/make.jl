@@ -4,6 +4,7 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import Documenter
+import DocumenterCitations
 import Downloads
 import Literate
 import MathOptInterface
@@ -359,8 +360,10 @@ const _PAGES = [
         "manual/nlp.md",
     ],
     jump_api_reference,
-    "Background Information" =>
-        ["background/algebraic_modeling_languages.md"],
+    "Background Information" => [
+        "background/algebraic_modeling_languages.md",
+        "background/bibliography.md",
+    ],
     "Developer Docs" => [
         "Contributing" => "developers/contributing.md",
         "Extensions" => "developers/extensions.md",
@@ -558,7 +561,7 @@ remotes = Dict(pkgdir(MOI) => (gh_moi, version))
         analytics = "UA-44252521-1",
         mathengine = Documenter.MathJax2(),
         collapselevel = 1,
-        assets = ["assets/extra_styles.css"],
+        assets = ["assets/extra_styles.css", "assets/citations.css"],
         sidebar_sitename = false,
         # Do no check for large pages.
         size_threshold_ignore = [
@@ -581,6 +584,12 @@ remotes = Dict(pkgdir(MOI) => (gh_moi, version))
     doctest = _FIX ? :fix : !_FAST,
     pages = vcat(_PAGES, "release_notes.md"),
     remotes = remotes,
+    plugins = [
+        DocumenterCitations.CitationBibliography(
+            joinpath(@__DIR__, "src", "references.bib");
+            style = :authoryear,
+        ),
+    ],
 )
 
 # ==============================================================================
@@ -623,6 +632,12 @@ if _PDF
         build = "latex_build",
         pages = _PAGES,
         debug = true,
+        plugins = [
+            DocumenterCitations.CitationBibliography(
+                joinpath(@__DIR__, "src", "references.bib");
+                style = :authoryear,
+            ),
+        ],
     )
     # Hack for deploying: copy the pdf (and only the PDF) into the HTML build
     # directory! We don't want to copy everything in `latex_build` because it
