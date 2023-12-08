@@ -1175,7 +1175,7 @@ export MOI
 
 # !!! note
 #
-#     The next codeblock is a SnoopPrecompile workflow that gets run when
+#     The next codeblock is a PrecompileTools workflow that gets run when
 #     JuMP.jl is precompiled. Methods that are called here will be cached so
 #     that they do not need to be compiled in every session.
 #
@@ -1188,9 +1188,9 @@ export MOI
 #     time-to-first solve (TTFX), then we likely need to add a new type of
 #     constraint or objective to the precompile model.
 
-import SnoopPrecompile
+import PrecompileTools
 
-SnoopPrecompile.@precompile_all_calls begin
+PrecompileTools.@compile_workload begin
     # Because lots of the work is done by macros, and macros are expanded
     # at lowering time, not much of this would get precompiled without `@eval`
     @eval begin
