@@ -604,7 +604,6 @@ function _name_call(base_name, idxvars)
     return ex
 end
 
-
 _esc_non_constant(x::Number) = x
 _esc_non_constant(x::Expr) = Meta.isexpr(x, :quote) ? x : esc(x)
 _esc_non_constant(x) = esc(x)
@@ -663,8 +662,8 @@ function _wrap_let(model, code)
     return code
 end
 
-include("macros/objective.jl")
-include("macros/expression.jl")
-include("macros/constraint.jl")
-include("macros/variable.jl")
-include("macros/NL.jl")
+include("macros/@objective.jl")
+include("macros/@expression.jl")
+include("macros/@constraint.jl")
+include("macros/@variable.jl")
+include("macros/@NL.jl")
