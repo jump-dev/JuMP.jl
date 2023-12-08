@@ -155,6 +155,23 @@ function test_extension_latex(ModelType = Model, VariableRefType = VariableRef)
     return
 end
 
+function test_extension_latex2(ModelType = Model, VariableRefType = VariableRef)
+    model = ModelType()
+    @variable(model, x[1:2])
+    @test function_string(MIME("text/latex"), sin(x[1])) ==
+          raw"\textsf{sin}\left({x_{1}}\right)"
+    @test function_string(MIME("text/latex"), sin(x[1])^x[2]) ==
+          raw"{\textsf{sin}\left({x_{1}}\right)} ^ {x_{2}}"
+    @expression(
+        model,
+        expr,
+        (x[1] <= x[2]) || (x[1] >= x[2]) && (x[1] == x[1]),
+    )
+    @test function_string(MIME("text/latex"), expr) ==
+          raw"{\left({x_{1}} \le {x_{2}}\right)} \vee {\left({\left({x_{1}} \ge {x_{2}}\right)} \wedge {\left({x_{1}} = {x_{1}}\right)}\right)}"
+    return
+end
+
 function test_extension_expression_addmul(
     ModelType = Model,
     VariableRefType = VariableRef,

@@ -147,12 +147,31 @@ end
 _parens(::MIME) = "(", ")", "", "", ""
 _parens(::MIME"text/latex") = "\\left(", "\\right)", "{", "}", "\\textsf"
 
+_op_to_string(::MIME, op) = op
+
+function _op_to_string(::MIME"text/latex", op::Symbol)
+    if op == :&&
+        return "\\wedge"
+    elseif op == :||
+        return "\\vee"
+    elseif op == :(<=)
+        return "\\le"
+    elseif op == :(>=)
+        return "\\ge"
+    elseif op == :(==)
+        return "="
+    else
+        return string(op)
+    end
+ end
+
 function function_string(mime::MIME, x::GenericNonlinearExpr)
     p_left, p_right, p_open, p_close, p_textsf = _parens(mime)
     io, stack = IOBuffer(), Any[x]
     while !isempty(stack)
         arg = pop!(stack)
         if arg isa GenericNonlinearExpr
+            op = _op_to_string(mime, arg.head)
             if arg.head in _PREFIX_OPERATORS && length(arg.args) > 1
                 print(io, p_open)
                 push!(stack, p_close)
@@ -166,7 +185,7 @@ function function_string(mime::MIME, x::GenericNonlinearExpr)
                                 stack,
                                 _terms_omitted(mime, length(skip_indices)),
                             )
-                            push!(stack, " $(arg.head) $p_open")
+                            push!(stack, " $op $p_open")
                         end
                         continue
                     elseif _needs_parentheses(arg.args[i])
@@ -177,11 +196,11 @@ function function_string(mime::MIME, x::GenericNonlinearExpr)
                         push!(stack, arg.args[i])
                     end
                     if i > 1
-                        push!(stack, "$p_close $(arg.head) $p_open")
+                        push!(stack, "$p_close $op $p_open")
                     end
                 end
             else
-                print(io, p_textsf, p_open, arg.head, p_close, p_left, p_open)
+                print(io, p_textsf, p_open, op, p_close, p_left, p_open)
                 push!(stack, p_close * p_right)
                 for i in length(arg.args):-1:2
                     push!(stack, arg.args[i])
@@ -191,6 +210,8 @@ function function_string(mime::MIME, x::GenericNonlinearExpr)
                     push!(stack, arg.args[1])
                 end
             end
+        elseif arg isa AbstractJuMPScalar
+            print(io, function_string(mime, arg))
         else
             print(io, arg)
         end
