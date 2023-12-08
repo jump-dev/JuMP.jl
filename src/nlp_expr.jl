@@ -147,23 +147,18 @@ end
 _parens(::MIME) = "(", ")", "", "", ""
 _parens(::MIME"text/latex") = "\\left(", "\\right)", "{", "}", "\\textsf"
 
-_op_to_string(::MIME, op) = op
+"""
+    op_string(mime::MIME, x::GenericNonlinearExpr, ::Val{op}) where {op}
 
-function _op_to_string(::MIME"text/latex", op::Symbol)
-    if op == :&&
-        return "\\wedge"
-    elseif op == :||
-        return "\\vee"
-    elseif op == :(<=)
-        return "\\le"
-    elseif op == :(>=)
-        return "\\ge"
-    elseif op == :(==)
-        return "="
-    else
-        return string(op)
-    end
- end
+Return the string that should be printed for the operator `op` when
+[`function_string`](@ref) is called with `mime` and `x`.
+"""
+op_string(::MIME, ::GenericNonlinearExpr, ::Val{op}) where {op} = string(op)
+op_string(::MIME"text/latex", ::GenericNonlinearExpr, ::Val{:&&}) = "\\wedge"
+op_string(::MIME"text/latex", ::GenericNonlinearExpr, ::Val{:||}) = "\\vee"
+op_string(::MIME"text/latex", ::GenericNonlinearExpr, ::Val{:<=}) = "\\le"
+op_string(::MIME"text/latex", ::GenericNonlinearExpr, ::Val{:>=}) = "\\ge"
+op_string(::MIME"text/latex", ::GenericNonlinearExpr, ::Val{:(==)}) = "="
 
 function function_string(mime::MIME, x::GenericNonlinearExpr)
     p_left, p_right, p_open, p_close, p_textsf = _parens(mime)
@@ -171,7 +166,7 @@ function function_string(mime::MIME, x::GenericNonlinearExpr)
     while !isempty(stack)
         arg = pop!(stack)
         if arg isa GenericNonlinearExpr
-            op = _op_to_string(mime, arg.head)
+            op = op_string(mime, arg, Val(arg.head))
             if arg.head in _PREFIX_OPERATORS && length(arg.args) > 1
                 print(io, p_open)
                 push!(stack, p_close)
