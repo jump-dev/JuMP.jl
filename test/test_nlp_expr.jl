@@ -1004,7 +1004,7 @@ function test_printing_truncation()
         function_string(MIME("text/plain"), y),
     )
     @test occursin(
-        "{\\left({\\textsf{sin}\\left({x[72]}\\right)} * {2.0}\\right) + {[[\\ldots\\text{41 terms omitted}\\ldots]]} + {\\left({\\textsf{sin}\\left({x[30]}\\right)} * {2.0}\\right)} + {\\left({\\textsf{sin}\\left({x[29]}\\right)} * {2.0}\\right)} + {\\left({\\textsf{sin}\\left({x[28]}\\right)} * {2.0}\\right)} + {\\left({\\textsf{sin}\\left({x[27]}\\right)} * {2.0}\\right)} + {\\left({\\textsf{sin}\\left({x[26]}\\right)} * {2.0}\\right)}",
+        "{\\left({\\textsf{sin}\\left({x_{72}}\\right)} * {2.0}\\right) + {[[\\ldots\\text{41 terms omitted}\\ldots]]} + {\\left({\\textsf{sin}\\left({x_{30}}\\right)} * {2.0}\\right)}",
         function_string(MIME("text/latex"), y),
     )
     return
