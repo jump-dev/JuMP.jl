@@ -1712,6 +1712,18 @@ function test_expression_not_enough_arguments()
     return
 end
 
+function test_expression_keyword_arguments()
+    model = Model()
+    @variable(model, x)
+    @test_macro_throws(
+        ErrorException(
+            "In `@expression(model, x, foo = 1)`: unrecognized keyword argument",
+        ),
+        @expression(model, x, foo = 1),
+    )
+    return
+end
+
 function test_build_constraint_invalid()
     model = Model()
     @variable(model, x)
