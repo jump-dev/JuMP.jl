@@ -47,25 +47,21 @@ macro objective(model, args...)
     function error_fn(str...)
         return _macro_error(:objective, (model, args...), __source__, str...)
     end
-
-    # We don't overwrite `model` as it is used in `error_fn`
-    esc_model = esc(model)
     if length(args) != 2
-        # Either just an objective sense, or just an expression.
         error_fn(
-            "needs three arguments: model, objective sense (Max or Min) and expression.",
+            "needs three arguments: model, objective sense (Max or Min), and an expression.",
         )
     end
-    sense, x = args
-    sense_expr = _moi_sense(error_fn, sense)
-    newaff, parsecode = _rewrite_expression(x)
+    esc_model = esc(model)
+    sense = _moi_sense(error_fn, args[1])
+    expr, parse_code = _rewrite_expression(args[2])
     code = quote
-        $parsecode
+        $parse_code
         # Don't leak a `_MA.Zero` if the objective expression is an empty
         # summation, or other structure that returns `_MA.Zero()`.
-        $newaff = _replace_zero($esc_model, $newaff)
-        set_objective($esc_model, $sense_expr, $newaff)
-        $newaff
+        $expr = _replace_zero($esc_model, $expr)
+        set_objective($esc_model, $sense, $expr)
+        $expr
     end
     return _finalize_macro(esc_model, code, __source__)
 end
@@ -74,22 +70,22 @@ end
     _moi_sense(error_fn::Function, sense)
 
 Return an expression whose value is an `MOI.OptimizationSense` corresponding
-to `sense`. Sense is either the symbol `:Min` or `:Max`, corresponding
-respectively to `MIN_SENSE` and `MAX_SENSE` or it is another symbol,
-which should be the name of a variable or expression whose value is an
-`MOI.OptimizationSense`.
+to `sense`.
+
+Sense is either the symbol `:Min` or `:Max`, corresponding respectively to
+`MIN_SENSE` and `MAX_SENSE` or it is another expression, which should be the
+name of a variable or expression whose value is an `MOI.OptimizationSense`.
+
 In the last case, the expression throws an error using the `error_fn`
 function in case the value is not an `MOI.OptimizationSense`.
 """
 function _moi_sense(error_fn::Function, sense)
-    expr = if sense == :Min
-        MIN_SENSE
+    if sense == :Min
+        return MIN_SENSE
     elseif sense == :Max
-        MAX_SENSE
-    else
-        esc(sense)
+        return MAX_SENSE
     end
-    return :(_throw_error_for_invalid_sense($error_fn, $expr))
+    return :(_throw_error_for_invalid_sense($error_fn, $(esc(sense))))
 end
 
 function _throw_error_for_invalid_sense(error_fn::Function, sense)

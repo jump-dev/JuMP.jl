@@ -1694,7 +1694,7 @@ function test_objective_not_enough_arguments()
     @test_macro_throws(
         ErrorException(
             "In `@objective(model, Min)`: needs three arguments: model, " *
-            "objective sense (Max or Min) and expression.",
+            "objective sense (Max or Min), and an expression.",
         ),
         @objective(model, Min),
     )
