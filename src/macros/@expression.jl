@@ -78,7 +78,6 @@ macro expression(input_args...)
         # other structure that returns `_MA.Zero()`.
         _replace_zero($model, $expr_var)
     end
-    @show Containers._get_name(name_expr)
     return _finalize_macro(
         model,
         Containers.container_code(index_vars, indices, code, container),
