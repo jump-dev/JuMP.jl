@@ -198,7 +198,7 @@ function _constraint_macro(
 )
     error_fn(str...) = _macro_error(macro_name, input_args, source, str...)
     args, kwargs, container = Containers._extract_kw_args(input_args)
-    if length(args) < 2 &&!isempty(kwargs)
+    if length(args) < 2 && !isempty(kwargs)
         error_fn(
             "No constraint expression detected. If you are trying to " *
             "construct an equality constraint, use `==` instead of `=`.",
