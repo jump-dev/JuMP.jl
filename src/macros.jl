@@ -343,9 +343,12 @@ julia> call
 :(f(1, a = 2, \$(Expr(:escape, :(\$(Expr(:kw, :b, 3))))), \$(Expr(:escape, :(\$(Expr(:kw, :c, 4)))))))
 ```
 """
-function _add_kw_args(call, kw_args)
+function _add_kw_args(call, kw_args; exclude = Symbol[])
     for kw in kw_args
         @assert Meta.isexpr(kw, :(=))
+        if kw.args[1] in exclude
+            continue
+        end
         push!(call.args, esc(Expr(:kw, kw.args...)))
     end
     return
@@ -660,6 +663,15 @@ function _wrap_let(model, code)
         end
     end
     return code
+end
+
+function _get_kwarg_value(kwargs, key::Symbol; default = nothing)
+    for kwarg in kwargs
+        if kwarg.args[1] == key
+            return esc(kwarg.args[2])
+        end
+    end
+    return default
 end
 
 include("macros/@objective.jl")
