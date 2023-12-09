@@ -1717,7 +1717,7 @@ function test_expression_keyword_arguments()
     @variable(model, x)
     @test_macro_throws(
         ErrorException(
-            "In `@expression(model, x, foo = 1)`: unrecognized keyword argument.",
+            "In `@expression(model, x, foo = 1)`: unrecognized keyword argument",
         ),
         @expression(model, x, foo = 1),
     )
