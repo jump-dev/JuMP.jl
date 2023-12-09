@@ -53,7 +53,7 @@ julia> expr = @expression(model, [i in 1:3], i * sum(x[j] for j in 1:3))
 ```
 """
 macro expression(input_args...)
-    error_fn(str...) = _macro_error(:expression, args, __source__, str...)
+    error_fn(str...) = _macro_error(:expression, input_args, __source__, str...)
     args, kw_args, container = Containers._extract_kw_args(input_args)
     if !(2 <= length(args) <= 3)
         error_fn("needs at least two arguments.")
