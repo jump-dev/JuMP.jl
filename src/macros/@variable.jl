@@ -155,7 +155,7 @@ macro variable(args...)
     # if there is only a single non-keyword argument, this is an anonymous
     # variable spec and the one non-kwarg is the model
     if length(extra) == 0
-        x = gensym()
+        x = nothing
         anon_singleton = true
     else
         x = popfirst!(extra)
@@ -220,7 +220,7 @@ macro variable(args...)
     end
     variable = gensym()
     # TODO: Should we generate non-empty default names for variables?
-    name = Containers._get_name(var)
+    name = something(Containers._get_name(var), "")
     if isempty(base_name_kw_args)
         base_name = anonvar ? "" : string(name)
     else
@@ -269,7 +269,7 @@ macro variable(args...)
     end
 
     info = _constructor_expr(info_expr)
-    if isa(var, Symbol)
+    if isa(var, Symbol) || var === nothing
         # Easy case - a single variable
         name_code = base_name
     else
@@ -298,7 +298,7 @@ macro variable(args...)
     buildcall = :(build_variable($error_fn, $info, $(extra...)))
     _add_kw_args(buildcall, extra_kw_args)
     if set !== nothing
-        if isa(var, Symbol)
+        if isa(var, Symbol) || var === nothing
             scalar_variables = buildcall
         else
             scalar_variables = Containers.container_code(
@@ -325,7 +325,7 @@ macro variable(args...)
         Expr(:if, esc(set_string_name_kw_args[1].args[2]), name_code, "")
     end
     variablecall = :(add_variable($model, $buildcall, $new_name_code))
-    if isa(var, Symbol) || set !== nothing
+    if isa(var, Symbol) || var === nothing || set !== nothing
         # The looped code is trivial here since there is a single variable
         creation_code = variablecall
     else
@@ -336,25 +336,13 @@ macro variable(args...)
             requested_container,
         )
     end
-    # Wrap the entire code block in a let statement to make the model act as
-    # a type stable local variable.
-    creation_code = _wrap_let(model, creation_code)
-    if anonvar
-        # Anonymous variable, no need to register it in the model-level
-        # dictionary nor to assign it to a variable in the user scope.
-        # We simply return the variable
-        macro_code = creation_code
-    else
-        # We register the variable reference to its name and
-        # we assign it to a variable in the local scope of this name
-        macro_code = _macro_assign_and_return(
-            creation_code,
-            variable,
-            name;
-            model_for_registering = model,
-        )
-    end
-    return _finalize_macro(model, macro_code, __source__)
+    return _finalize_macro(
+        model,
+        creation_code,
+        __source__;
+        register_name = Containers._get_name(var),
+        wrap_let = true,
+    )
 end
 
 """

@@ -304,7 +304,7 @@ macro NLconstraint(m, x, args...)
         error_fn("too many arguments.")
     end
     # Canonicalize the arguments
-    c = length(extra) == 1 ? x : gensym()
+    c = length(extra) == 1 ? x : nothing
     con = length(extra) == 1 ? extra[1] : x
     # Strategy: build up the code for non-macro add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
@@ -326,17 +326,12 @@ macro NLconstraint(m, x, args...)
         _init_NLP($esc_m)
         $looped
     end
-    if Meta.isexpr(c, :vect) || Meta.isexpr(c, :vcat) || length(extra) != 1
-        macro_code = creation_code
-    else
-        macro_code = _macro_assign_and_return(
-            creation_code,
-            gensym(),
-            Containers._get_name(c);
-            model_for_registering = esc_m,
-        )
-    end
-    return _finalize_macro(esc_m, macro_code, __source__)
+    return _finalize_macro(
+        esc_m,
+        creation_code,
+        __source__;
+        register_name = Containers._get_name(c),
+    )
 end
 
 """
@@ -425,7 +420,7 @@ macro NLexpression(args...)
         )
     elseif length(args) == 2
         m, x = args
-        c = gensym()
+        c = nothing
     elseif length(args) == 3
         m, c, x = args
     end
@@ -450,17 +445,12 @@ macro NLexpression(args...)
     end
     creation_code =
         Containers.container_code(idxvars, indices, code, requested_container)
-    if Meta.isexpr(c, :vect) || Meta.isexpr(c, :vcat) || length(args) == 2
-        macro_code = creation_code
-    else
-        macro_code = _macro_assign_and_return(
-            creation_code,
-            gensym(),
-            Containers._get_name(c);
-            model_for_registering = esc_m,
-        )
-    end
-    return _finalize_macro(esc_m, macro_code, __source__)
+    return _finalize_macro(
+        esc_m,
+        creation_code,
+        __source__;
+        register_name = Containers._get_name(c),
+    )
 end
 
 """
@@ -616,10 +606,9 @@ macro NLparameter(model, args...)
             )
         end
     end
-    param, anon = gensym(), true
+    param = nothing
     if ismissing(value)
         param, value = pos_args[1].args[2], pos_args[1].args[3]
-        anon = Meta.isexpr(param, :vect) || Meta.isexpr(param, :vcat)
     end
     index_vars, index_values = Containers.build_ref_sets(error_fn, param)
     if model in index_vars
@@ -640,17 +629,12 @@ macro NLparameter(model, args...)
         code,
         requested_container,
     )
-    macro_code = if anon
-        creation_code
-    else
-        _macro_assign_and_return(
-            creation_code,
-            gensym(),
-            Containers._get_name(param);
-            model_for_registering = esc_m,
-        )
-    end
-    return _finalize_macro(esc_m, macro_code, __source__)
+    return _finalize_macro(
+        esc_m,
+        creation_code,
+        __source__;
+        register_name = Containers._get_name(param),
+    )
 end
 
 """
