@@ -3,7 +3,8 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-_get_name(c::Union{Symbol,AbstractString,Nothing}) = c
+_get_name(c::Union{Symbol,Nothing}) = c
+_get_name(c) = error("Expression `$c::$(typeof(c))` cannot be used as a name.")
 
 function _get_name(c::Expr)
     if Meta.isexpr(c, :vcat) || Meta.isexpr(c, :vect)
@@ -11,7 +12,7 @@ function _get_name(c::Expr)
     elseif Meta.isexpr(c, :ref) || Meta.isexpr(c, :typed_vcat)
         return _get_name(c.args[1])
     end
-    return error("Expression $c cannot be used as a name.")
+    return error("Expression `$c` cannot be used as a name.")
 end
 
 """
