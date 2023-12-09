@@ -12,7 +12,7 @@ function _get_name(c::Expr)
     elseif Meta.isexpr(c, :ref) || Meta.isexpr(c, :typed_vcat)
         return _get_name(c.args[1])
     end
-    return error("Expression `$c` cannot be used as a name.")
+    return error("Expression $c cannot be used as a name.")
 end
 
 """
