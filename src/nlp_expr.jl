@@ -1055,7 +1055,8 @@ NonlinearOperator(f, :op_f)
 ```
 """
 macro operator(model, op, dim, f, args...)
-    return _macro_assign_and_return(
+    return _finalize_macro(
+        esc(model),
         quote
             _catch_redefinition_constant_error($(Meta.quot(op)), $(esc(f)))
             add_nonlinear_operator(
@@ -1066,9 +1067,9 @@ macro operator(model, op, dim, f, args...)
                 name = $(Meta.quot(op)),
             )
         end,
-        gensym(),
-        op;
-        model_for_registering = esc(model),
+        __source__;
+        register_name = op,
+        wrap_let = true,
     )
 end
 

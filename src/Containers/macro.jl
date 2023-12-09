@@ -3,11 +3,11 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-_get_name(c::Union{Symbol,AbstractString}) = c
+_get_name(c::Union{Symbol,AbstractString,Nothing}) = c
 
 function _get_name(c::Expr)
     if Meta.isexpr(c, :vcat) || Meta.isexpr(c, :vect)
-        return Symbol("")  # Anonymous variable
+        return nothing
     elseif Meta.isexpr(c, :ref) || Meta.isexpr(c, :typed_vcat)
         return _get_name(c.args[1])
     end
@@ -158,7 +158,7 @@ function _parse_ref_sets(error_fn::Function, expr::Expr)
 end
 
 # Catch the case that has no index sets, just a name like `x`.
-_parse_ref_sets(::Function, ::Symbol) = (Any[], Any[], :())
+_parse_ref_sets(::Function, ::Union{Nothing,Symbol}) = (Any[], Any[], :())
 
 depends_on(ex::Expr, s::Symbol) = any(Base.Fix2(depends_on, s), ex.args)
 
@@ -387,10 +387,9 @@ macro container(args...)
     var, value = args
     index_vars, indices = build_ref_sets(error, var)
     code = container_code(index_vars, indices, esc(value), requested_container)
-    if Meta.isexpr(var, :vect) || Meta.isexpr(var, :vcat)
+    name = _get_name(var)
+    if name === nothing
         return code
-    else
-        name = _get_name(var)
-        return :($(esc(name)) = $code)
     end
+    return :($(esc(name)) = $code)
 end

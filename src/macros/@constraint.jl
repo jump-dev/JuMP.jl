@@ -219,17 +219,13 @@ function _constraint_macro(
     # [1:2]                              | Expr      | :vect
     # [i = 1:2, j = 1:2; i + j >= 3]     | Expr      | :vcat
     # a constraint expression            | Expr      | :call or :comparison
-    if isa(y, Symbol) || Meta.isexpr(y, (:vect, :vcat, :ref, :typed_vcat))
+    c, x = if y isa Symbol || Meta.isexpr(y, (:vect, :vcat, :ref, :typed_vcat))
         if length(extra) == 0
             error_fn("No constraint expression was given.")
         end
-        c = y
-        x = popfirst!(extra)
-        is_anonymous = Meta.isexpr(y, (:vect, :vcat))
+        y, popfirst!(extra)
     else
-        c = gensym()
-        x = y
-        is_anonymous = true
+        nothing, y
     end
     if length(extra) > 1
         error_fn("Cannot specify more than 1 additional positional argument.")
@@ -247,7 +243,7 @@ function _constraint_macro(
     base_name = _get_kwarg_value(
         kwargs,
         :base_name;
-        default = is_anonymous ? "" : string(Containers._get_name(c)),
+        default = string(something(Containers._get_name(c), "")),
     )
     set_name_flag = _get_kwarg_value(
         kwargs,
@@ -274,22 +270,13 @@ function _constraint_macro(
             add_constraint($model, build, $name_expr)
         end
     end
-    creation_code =
-        Containers.container_code(index_vars, indices, code, container)
-    # Wrap the entire code block in a let statement to make the model act as
-    # a type stable local variable.
-    creation_code = _wrap_let(model, creation_code)
-    macro_code = if is_anonymous
-        creation_code
-    else
-        _macro_assign_and_return(
-            creation_code,
-            gensym(),
-            Containers._get_name(c);
-            model_for_registering = model,
-        )
-    end
-    return _finalize_macro(model, macro_code, source)
+    return _finalize_macro(
+        model,
+        Containers.container_code(index_vars, indices, code, container),
+        source;
+        register_name = Containers._get_name(c),
+        wrap_let = true,
+    )
 end
 
 """

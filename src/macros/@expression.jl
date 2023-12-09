@@ -62,7 +62,7 @@ macro expression(input_args...)
     elseif Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@expressions`?")
     end
-    name_expr = length(args) == 3 ? args[2] : gensym()
+    name_expr = length(args) == 3 ? args[2] : nothing
     index_vars, indices = Containers.build_ref_sets(error_fn, name_expr)
     if args[1] in index_vars
         error_fn(
@@ -78,21 +78,14 @@ macro expression(input_args...)
         # other structure that returns `_MA.Zero()`.
         _replace_zero($model, $expr_var)
     end
-    code = Containers.container_code(index_vars, indices, code, container)
-    # Wrap the entire code block in a let statement to make the model act as
-    # a type stable local variable.
-    code = _wrap_let(model, code)
-    macro_code = if Meta.isexpr(name_expr, (:vect, :vcat)) || length(args) == 2
-        code
-    else
-        _macro_assign_and_return(
-            code,
-            gensym(),
-            Containers._get_name(name_expr);
-            model_for_registering = model,
-        )
-    end
-    return _finalize_macro(model, macro_code, __source__)
+    @show Containers._get_name(name_expr)
+    return _finalize_macro(
+        model,
+        Containers.container_code(index_vars, indices, code, container),
+        __source__;
+        register_name = Containers._get_name(name_expr),
+        wrap_let = true,
+    )
 end
 
 """
