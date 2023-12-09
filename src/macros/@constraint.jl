@@ -258,8 +258,14 @@ function _constraint_macro(
     code = if is_vectorized
         quote
             $parse_code
-            build = model_convert.($model, $build_call)
-            add_constraint.($model, build, $name_expr)
+            # These broadcast calls need to be nested so that the operators
+            # are fused. Some broadcasted errors result if you put them on
+            # different lines.
+            add_constraint.(
+                $model,
+                model_convert.($model, $build_call),
+                $name_expr,
+            )
         end
     else
         quote
