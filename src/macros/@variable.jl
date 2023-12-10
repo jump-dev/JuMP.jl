@@ -139,62 +139,42 @@ julia> @variable(model, z[i=1:3], set_string_name = false)
  _[9]
 ```
 """
-macro variable(args...)
-    error_fn(str...) = _macro_error(:variable, args, __source__, str...)
+macro variable(input_args...)
+    error_fn(str...) = _macro_error(:variable, input_args, __source__, str...)
     # We need to re-order the parameters here to account for cases like
     # `@variable(model; integer = true)`, since Julia handles kwargs by placing
     # them first(!) in the list of arguments.
-    args = _reorder_parameters(args)
+    args = _reorder_parameters(input_args)
     model = esc(args[1])
     if length(args) >= 2 && Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@variables`?")
     end
-    extra, kw_args, requested_container =
-        Containers._extract_kw_args(args[2:end])
-
+    pos_args, kw_args, container = Containers._extract_kw_args(args[2:end])
     # if there is only a single non-keyword argument, this is an anonymous
     # variable spec and the one non-kwarg is the model
-    if length(extra) == 0
-        x = nothing
-        anon_singleton = true
-    else
-        x = popfirst!(extra)
-        if x == :Int
-            error_fn(
-                "Ambiguous variable name $x detected. To specify an anonymous integer " *
-                "variable, use `@variable(model, integer = true)` instead.",
-            )
-        elseif x == :Bin
-            error_fn(
-                "Ambiguous variable name $x detected. To specify an anonymous binary " *
-                "variable, use `@variable(model, binary = true)` instead.",
-            )
-        elseif x == :PSD
-            error_fn(
-                "Size of anonymous square matrix of positive semidefinite anonymous variables is not specified. To specify size of square matrix " *
-                "use `@variable(model, [1:n, 1:n], PSD)` instead.",
-            )
-        end
-        anon_singleton = false
+    x = isempty(pos_args) ? nothing : popfirst!(pos_args)
+    if x == :Int
+        error_fn(
+            "Ambiguous variable name $x detected. To specify an anonymous " *
+            "integer variable, use `@variable(model, integer = true)` instead.",
+        )
+    elseif x == :Bin
+        error_fn(
+            "Ambiguous variable name $x detected. To specify an anonymous " *
+            "binary variable, use `@variable(model, binary = true)` instead.",
+        )
+    elseif x == :PSD
+        error_fn(
+            "Size of anonymous square matrix of positive semidefinite " *
+            "anonymous variables is not specified. To specify size of square " *
+            "matrix use `@variable(model, [1:n, 1:n], PSD)` instead.",
+        )
     end
-
-    info_kw_args = filter(_is_info_keyword, kw_args)
-    extra_kw_args = filter(
-        kw -> begin
-            kw.args[1] != :base_name &&
-                kw.args[1] != :variable_type &&
-                kw.args[1] != :set &&
-                kw.args[1] != :set_string_name &&
-                !_is_info_keyword(kw)
-        end,
-        kw_args,
-    )
-    base_name_kw_args = filter(kw -> kw.args[1] == :base_name, kw_args)
-    variable_type_kw_args = filter(kw -> kw.args[1] == :variable_type, kw_args)
-    set_string_name_kw_args =
-        filter(kw -> kw.args[1] == :set_string_name, kw_args)
-    info_expr = _VariableInfoExpr(; _keywordify.(info_kw_args)...)
-
+    info_kwargs = [
+        (kw.args[1], _esc_non_constant(kw.args[2])) for
+        kw in kw_args if kw.args[1] in _INFO_KWARGS
+    ]
+    info_expr = _VariableInfoExpr(; info_kwargs...)
     # There are four cases to consider:
     # x                                       | type of x | x.head
     # ----------------------------------------+-----------+------------
@@ -204,141 +184,145 @@ macro variable(args...)
     # var in set or var[1:2] in set           | Expr      | :call
     # lb <= var <= ub or lb <= var[1:2] <= ub | Expr      | :comparison
     # In the three last cases, we call parse_variable
-    explicit_comparison = Meta.isexpr(x, :comparison) || Meta.isexpr(x, :call)
-    if explicit_comparison
+    var, set = x, nothing
+    if Meta.isexpr(x, (:comparison, :call))
         var, set = parse_variable(error_fn, info_expr, x.args...)
-    else
-        var = x
-        set = nothing
+        is_anonymous = Meta.isexpr(var, (:vect, :vcat)) || x === nothing
+        if is_anonymous && set === nothing
+            error_fn(
+                "Cannot use explicit bounds via >=, <= with an anonymous variable",
+            )
+        end
     end
-    anonvar =
-        Meta.isexpr(var, :vect) || Meta.isexpr(var, :vcat) || anon_singleton
-    if anonvar && explicit_comparison && set === nothing
+    # if var === nothing, then the variable is anonymous
+    if !(var isa Symbol || var isa Expr || var === nothing)
+        error_fn("Expected $var to be a variable name")
+    end
+    index_vars, indices = Containers.build_ref_sets(error_fn, var)
+    if args[1] in index_vars
         error_fn(
-            "Cannot use explicit bounds via >=, <= with an anonymous variable",
+            "Index $(args[1]) is the same symbol as the model. Use a " *
+            "different name for the index.",
         )
     end
-    variable = gensym()
-    # TODO: Should we generate non-empty default names for variables?
-    name = something(Containers._get_name(var), "")
-    if isempty(base_name_kw_args)
-        base_name = anonvar ? "" : string(name)
-    else
-        base_name = esc(base_name_kw_args[1].args[2])
-    end
-    set_kw_args = filter(kw -> kw.args[1] == :set, kw_args)
-    if length(set_kw_args) == 1
+    # Handle special keyword arguments
+    # ; set
+    set_kw = _get_kwarg_value(error_fn, kw_args, :set)
+    if set_kw !== nothing
         if set !== nothing
             error_fn(
                 "Cannot use set keyword because the variable is already " *
                 "constrained to `$set`.",
             )
         end
-        set = esc(set_kw_args[1].args[2])
-    elseif length(set_kw_args) > 1
-        error_fn(
-            "`set` keyword argument was given $(length(set_kw_args)) times.",
-        )
+        set = set_kw
     end
-    for (sym, cone) in (
-        :PSD => PSDCone(),
-        :Symmetric => SymmetricMatrixSpace(),
-        :Hermitian => HermitianMatrixSpace(),
+    # ; base_name
+    base_name = _get_kwarg_value(
+        error_fn,
+        kw_args,
+        :base_name;
+        default = string(something(Containers._get_name(var), "")),
     )
-        if any(isequal(sym), extra)
-            if set !== nothing
-                error_fn(
-                    "Cannot pass `$sym` as a positional argument because the " *
-                    "variable is already constrained to `$set`.",
-                )
-            end
-            set = cone
-            filter!(!isequal(sym), extra)
-        end
+    # ; set_string_name
+    set_string_name_kw = _get_kwarg_value(
+        error_fn,
+        kw_args,
+        :set_string_name;
+        default = :(set_string_names_on_creation($model))
+    )
+    # ; variable_type
+    variable_type_kw = _get_kwarg_value(
+        error_fn,
+        kw_args,
+        :variable_type;
+        escape = false,
+    )
+    if variable_type_kw !== nothing
+        push!(pos_args, variable_type_kw)
     end
-    for ex in extra
+    # Handle positional arguments
+    for ex in pos_args
         if ex == :Int
             _set_integer_or_error(error_fn, info_expr)
         elseif ex == :Bin
             _set_binary_or_error(error_fn, info_expr)
-        end
-    end
-    extra = esc.(filter(ex -> !(ex in [:Int, :Bin]), extra))
-    if !isempty(variable_type_kw_args)
-        push!(extra, esc(variable_type_kw_args[1].args[2]))
-    end
-
-    info = _constructor_expr(info_expr)
-    if isa(var, Symbol) || var === nothing
-        # Easy case - a single variable
-        name_code = base_name
-    else
-        isa(var, Expr) || error_fn("Expected $var to be a variable name")
-        # We now build the code to generate the variables (and possibly the
-        # SparseAxisArray to contain them)
-        idxvars, indices = Containers.build_ref_sets(error_fn, var)
-        if args[1] in idxvars
-            error_fn(
-                "Index $(args[1]) is the same symbol as the model. Use a " *
-                "different name for the index.",
-            )
-        end
-        name_code = _name_call(base_name, idxvars)
-        if set !== nothing
-            name_code = Containers.container_code(
-                idxvars,
-                indices,
-                name_code,
-                requested_container,
-            )
-        end
-    end
-
-    # Code to be used to create each variable of the container.
-    buildcall = :(build_variable($error_fn, $info, $(extra...)))
-    _add_kw_args(buildcall, extra_kw_args)
-    if set !== nothing
-        if isa(var, Symbol) || var === nothing
-            scalar_variables = buildcall
-        else
-            scalar_variables = Containers.container_code(
-                idxvars,
-                indices,
-                buildcall,
-                requested_container,
-            )
-            if any(Base.Fix2(Containers.depends_on, set), idxvars)
-                set = Containers.container_code(
-                    idxvars,
-                    indices,
-                    set,
-                    requested_container,
+        elseif ex == :PSD
+            if set !== nothing
+                error_fn(
+                    "Cannot pass `$ex` as a positional argument because the " *
+                    "variable is already constrained to `$set`.",
                 )
             end
+            set = PSDCone()
+        elseif ex == :Symmetric
+            if set !== nothing
+                error_fn(
+                    "Cannot pass `$ex` as a positional argument because the " *
+                    "variable is already constrained to `$set`.",
+                )
+            end
+            set = SymmetricMatrixSpace()
+        elseif ex == :Hermitian
+            if set !== nothing
+                error_fn(
+                    "Cannot pass `$ex` as a positional argument because the " *
+                    "variable is already constrained to `$set`.",
+                )
+            end
+            set = HermitianMatrixSpace()
         end
-        buildcall = :(build_variable($error_fn, $scalar_variables, $set))
     end
-    buildcall = :(model_convert($model, $buildcall))
-    new_name_code = if isempty(set_string_name_kw_args)
-        Expr(:if, :(set_string_names_on_creation($model)), name_code, "")
-    else
-        Expr(:if, esc(set_string_name_kw_args[1].args[2]), name_code, "")
-    end
-    variablecall = :(add_variable($model, $buildcall, $new_name_code))
-    if isa(var, Symbol) || var === nothing || set !== nothing
-        # The looped code is trivial here since there is a single variable
-        creation_code = variablecall
-    else
-        creation_code = Containers.container_code(
-            idxvars,
+    filter!(ex -> !(ex in (:Int, :Bin, :PSD, :Symmetric, :Hermitian)), pos_args)
+    build_code = :(build_variable($error_fn, $(_constructor_expr(info_expr))))
+    _add_positional_args(build_code, pos_args)
+    explicit_kwargs = [:base_name, :variable_type, :set, :set_string_name]
+    _add_kw_args(build_code, kw_args; exclude = [_INFO_KWARGS; explicit_kwargs])
+    name_code = _name_call(base_name, index_vars)
+    # There are a few situations we need to consider:
+    code = if set === nothing ||
+              any(Base.Fix2(Containers.depends_on, set), index_vars)
+        # This is for calls like:
+        #   @variable(model, x)
+        #   @variable(model, x[i in 1:2] >= i)
+        #   @variable(model, x[i in 1:2] in MOI.GreaterThan(i))
+        # We just create and finnalize as usual.
+        if set !== nothing
+            build_code = :(build_variable($error_fn, $build_code, $set))
+        end
+        Containers.container_code(
+            index_vars,
             indices,
-            variablecall,
-            requested_container,
+            quote
+                name = $set_string_name_kw ? $name_code : ""
+                add_variable($model, model_convert($model, $build_code), name)
+            end,
+            container,
         )
+    else
+        @assert set !== nothing
+        # This is for calls like:
+        #   @variable(model, x in MOI.GreaterThan(1.0))
+        #   @variable(model, x[1:2, 1:2] in PSDCone())
+        # We can't containizer the full expression, we need to keep the set
+        # apart
+        build_code = Containers.container_code(
+            index_vars,
+            indices,
+            build_code,
+            container,
+        )
+        name_code =
+            Containers.container_code(index_vars, indices, name_code, container)
+        quote
+            build = build_variable($error_fn, $build_code, $set)
+            name = $set_string_name_kw ? $name_code : ""
+            add_variable($model, model_convert($model, build), name)
+        end
     end
     return _finalize_macro(
         model,
-        creation_code,
+        code,
         __source__;
         register_name = Containers._get_name(var),
         wrap_let = true,
