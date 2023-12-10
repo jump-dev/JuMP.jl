@@ -90,15 +90,7 @@ function _set_integer_or_error(error_fn::Function, info::_VariableInfoExpr)
     return
 end
 
-function _is_info_keyword(kw::Expr)
-    return kw.args[1] in [:lower_bound, :upper_bound, :start, :binary, :integer]
-end
-
-# :(start = 0)     -> (:start, 0)
-# :(start = i + 1) -> (:start, :($(Expr(:escape, :(i + 1)))))
-function _keywordify(kw::Expr)
-    return (kw.args[1], _esc_non_constant(kw.args[2]))
-end
+const _INFO_KWARGS = [:lower_bound, :upper_bound, :start, :binary, :integer]
 
 function _VariableInfoExpr(;
     lower_bound = NaN,

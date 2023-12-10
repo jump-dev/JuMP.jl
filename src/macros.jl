@@ -654,13 +654,31 @@ function _wrap_let(model, code)
     return code
 end
 
-function _get_kwarg_value(kwargs, key::Symbol; default = nothing)
-    for kwarg in kwargs
+function _get_kwarg_value(
+    error_fn,
+    kwargs,
+    key::Symbol;
+    default = nothing,
+    escape::Bool = true,
+)
+    index, count = 0, 0
+    for (i, kwarg) in enumerate(kwargs)
         if kwarg.args[1] == key
-            return esc(kwarg.args[2])
+            count += 1
+            index = i
         end
     end
-    return default
+    if count == 0
+        return default
+    elseif count == 1
+        if escape
+            return esc(kwargs[index].args[2])
+        else
+            return kwargs[index].args[2]
+        end
+    else
+        error_fn("`$key` keyword argument was given $count times.")
+    end
 end
 
 include("macros/@objective.jl")

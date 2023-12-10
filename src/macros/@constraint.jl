@@ -124,11 +124,13 @@ macro constraint(input_args...)
     _add_positional_args(build_call, extra)
     _add_kw_args(build_call, kwargs; exclude = [:base_name, :set_string_name])
     base_name = _get_kwarg_value(
+        error_fn,
         kwargs,
         :base_name;
         default = string(something(Containers._get_name(c), "")),
     )
     set_name_flag = _get_kwarg_value(
+        error_fn,
         kwargs,
         :set_string_name;
         default = :(set_string_names_on_creation($model)),
