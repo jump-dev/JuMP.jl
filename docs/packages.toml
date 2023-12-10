@@ -127,7 +127,7 @@
     rev = "v0.5.2"
 [DisjunctiveProgramming]
     user = "hdavid16"
-    rev = "b71f715ba826fa63677da9590ae41b41ca5024e6"
+    rev = "5d814e9023acf25672977632bc9dc111d68ea8ca"
     filename = "docs/jump/README.md"
     extension = true
 [EAGO]
