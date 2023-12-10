@@ -229,15 +229,11 @@ macro variable(input_args...)
         error_fn,
         kw_args,
         :set_string_name;
-        default = :(set_string_names_on_creation($model))
+        default = :(set_string_names_on_creation($model)),
     )
     # ; variable_type
-    variable_type_kw = _get_kwarg_value(
-        error_fn,
-        kw_args,
-        :variable_type;
-        escape = false,
-    )
+    variable_type_kw =
+        _get_kwarg_value(error_fn, kw_args, :variable_type; escape = false)
     if variable_type_kw !== nothing
         push!(pos_args, variable_type_kw)
     end
@@ -279,17 +275,10 @@ macro variable(input_args...)
     explicit_kwargs = [:base_name, :variable_type, :set, :set_string_name]
     _add_kw_args(build_code, kw_args; exclude = [_INFO_KWARGS; explicit_kwargs])
     name_code = _name_call(base_name, index_vars)
-    # There are a few situations we need to consider:
-    code = if set === nothing ||
-              any(Base.Fix2(Containers.depends_on, set), index_vars)
+    code = if set === nothing
         # This is for calls like:
         #   @variable(model, x)
         #   @variable(model, x[i in 1:2] >= i)
-        #   @variable(model, x[i in 1:2] in MOI.GreaterThan(i))
-        # We just create and finnalize as usual.
-        if set !== nothing
-            build_code = :(build_variable($error_fn, $build_code, $set))
-        end
         Containers.container_code(
             index_vars,
             indices,
@@ -299,21 +288,37 @@ macro variable(input_args...)
             end,
             container,
         )
+    elseif any(Base.Fix2(Containers.depends_on, set), index_vars)
+        # This is for calls in which the set depends on the indices.
+        #   @variable(model, x[i in 1:2] in MOI.GreaterThan(i))
+        Containers.container_code(
+            index_vars,
+            indices,
+            quote
+                build = build_variable($error_fn, $build_code, $set)
+                name = $set_string_name_kw ? $name_code : ""
+                add_variable($model, model_convert($model, build), name)
+            end,
+            container,
+        )
     else
-        @assert set !== nothing
-        # This is for calls like:
+        # This is for calls in which the set does not depend on the indices.
         #   @variable(model, x in MOI.GreaterThan(1.0))
         #   @variable(model, x[1:2, 1:2] in PSDCone())
-        # We can't containizer the full expression, we need to keep the set
-        # apart
+        # We can't containerize the full expression; we need to keep the set
+        # apart.
         build_code = Containers.container_code(
             index_vars,
             indices,
             build_code,
             container,
         )
-        name_code =
-            Containers.container_code(index_vars, indices, name_code, container)
+        name_code = Containers.container_code(
+            index_vars,
+            indices,
+            name_code,
+            container,
+        )
         quote
             build = build_variable($error_fn, $build_code, $set)
             name = $set_string_name_kw ? $name_code : ""

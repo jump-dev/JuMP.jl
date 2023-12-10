@@ -659,7 +659,7 @@ function _get_kwarg_value(
     kwargs,
     key::Symbol;
     default = nothing,
-    escape::Bool = true
+    escape::Bool = true,
 )
     index, count = 0, 0
     for (i, kwarg) in enumerate(kwargs)
