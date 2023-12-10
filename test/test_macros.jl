@@ -471,8 +471,8 @@ function test_extension_constraint_naming(
     @test name(cref) == "c1"
     cref = @constraint(model, c2, x == 0, base_name = "cat")
     @test name(cref) == "cat"
-    crefs = @constraint(model, [1:2], x == 0, base_name = "cat")
-    @test name.(crefs) == ["cat[1]", "cat[2]"]
+    crefs = @constraint(model, [i in 1:2], x == 0, base_name = "cat_$i")
+    @test name.(crefs) == ["cat_1[1]", "cat_2[2]"]
     @test_macro_throws ErrorException @constraint(model, c3[1:2])
     @test_macro_throws ErrorException @constraint(model, "c"[1:2], x == 0)
     return
@@ -1693,8 +1693,7 @@ function test_objective_not_enough_arguments()
     model = Model()
     @test_macro_throws(
         ErrorException(
-            "In `@objective(model, Min)`: needs three arguments: model, " *
-            "objective sense (Max or Min), and an expression.",
+            "In `@objective(model, Min)`: expected 3 positional arguments, got 2.",
         ),
         @objective(model, Min),
     )
@@ -1705,7 +1704,7 @@ function test_expression_not_enough_arguments()
     model = Model()
     @test_macro_throws(
         ErrorException(
-            "In `@expression(model)`: needs at least two arguments.",
+            "In `@expression(model)`: expected 2 or 3 positional arguments, got 1.",
         ),
         @expression(model),
     )
@@ -1717,9 +1716,21 @@ function test_expression_keyword_arguments()
     @variable(model, x)
     @test_macro_throws(
         ErrorException(
-            "In `@expression(model, x, foo = 1)`: unrecognized keyword argument",
+            "In `@expression(model, x, foo = 1)`: unsupported keyword argument `foo`.",
         ),
         @expression(model, x, foo = 1),
+    )
+    return
+end
+
+function test_objective_keyword_arguments()
+    model = Model()
+    @variable(model, x)
+    @test_macro_throws(
+        ErrorException(
+            "In `@objective(model, Min, x, foo = 1)`: unsupported keyword argument `foo`.",
+        ),
+        @objective(model, Min, x, foo = 1),
     )
     return
 end
@@ -2154,6 +2165,16 @@ function test_bad_objective_sense()
         ),
         @objective(model, :MinMax, x),
     )
+    return
+end
+
+function test_expression_container_kwarg()
+    model = Model()
+    @variable(model, x)
+    @expression(model, ex1[i in 1:2], i * x, container = DenseAxisArray)
+    @test ex1 isa Containers.DenseAxisArray
+    @expression(model, ex2[i in 1:2], i * x; container = DenseAxisArray)
+    @test ex2 isa Containers.DenseAxisArray
     return
 end
 

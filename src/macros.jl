@@ -354,6 +354,16 @@ function _add_kw_args(call, kw_args; exclude = Symbol[])
     return
 end
 
+function _add_keyword_args(call::Expr, kwargs::Dict; exclude = Symbol[])
+    for (key, value) in kwargs
+        if key in exclude
+            continue
+        end
+        push!(call.args, esc(Expr(:kw, key, value)))
+    end
+    return
+end
+
 """
     _add_positional_args(call, args)::Nothing
 

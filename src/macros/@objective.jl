@@ -43,18 +43,19 @@ julia> @objective(model, sense, x^2 - 2x + 1)
 x² - 2 x + 1
 ```
 """
-macro objective(model, args...)
-    function error_fn(str...)
-        return _macro_error(:objective, (model, args...), __source__, str...)
+macro objective(input_args...)
+    error_fn(str...) = _macro_error(:objective, input_args, __source__, str...)
+    args, kwargs = Containers.parse_macro_arguments(error_fn, input_args)
+    if length(args) != 3
+        error_fn("expected 3 positional arguments, got $(length(args)).")
+    elseif !isempty(kwargs)
+        for key in keys(kwargs)
+            error_fn("unsupported keyword argument `$key`.")
+        end
     end
-    if length(args) != 2
-        error_fn(
-            "needs three arguments: model, objective sense (Max or Min), and an expression.",
-        )
-    end
-    esc_model = esc(model)
-    sense = _moi_sense(error_fn, args[1])
-    expr, parse_code = _rewrite_expression(args[2])
+    esc_model = esc(args[1])
+    sense = _parse_moi_sense(error_fn, args[2])
+    expr, parse_code = _rewrite_expression(args[3])
     code = quote
         $parse_code
         # Don't leak a `_MA.Zero` if the objective expression is an empty
@@ -66,33 +67,20 @@ macro objective(model, args...)
     return _finalize_macro(esc_model, code, __source__)
 end
 
-"""
-    _moi_sense(error_fn::Function, sense)
-
-Return an expression whose value is an `MOI.OptimizationSense` corresponding
-to `sense`.
-
-Sense is either the symbol `:Min` or `:Max`, corresponding respectively to
-`MIN_SENSE` and `MAX_SENSE` or it is another expression, which should be the
-name of a variable or expression whose value is an `MOI.OptimizationSense`.
-
-In the last case, the expression throws an error using the `error_fn`
-function in case the value is not an `MOI.OptimizationSense`.
-"""
-function _moi_sense(error_fn::Function, sense)
+function _parse_moi_sense(error_fn::Function, sense)
     if sense == :Min
         return MIN_SENSE
     elseif sense == :Max
         return MAX_SENSE
     end
-    return :(_throw_error_for_invalid_sense($error_fn, $(esc(sense))))
+    return :(_moi_sense($error_fn, $(esc(sense))))
 end
 
-function _throw_error_for_invalid_sense(error_fn::Function, sense)
+function _moi_sense(error_fn::Function, sense)
     return error_fn(
         "unexpected sense `$sense`. The sense must be an " *
         "`::MOI.OptimizatonSense`, or the symbol `:Min` or `:Max`.",
     )
 end
 
-_throw_error_for_invalid_sense(::Function, sense::MOI.OptimizationSense) = sense
+_moi_sense(::Function, sense::MOI.OptimizationSense) = sense

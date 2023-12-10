@@ -39,6 +39,48 @@ function _extract_kw_args(args)
     return flat_args, kw_args, requested_container
 end
 
+function _reorder_parameters(args)
+    if !Meta.isexpr(args[1], :parameters)
+        return args
+    end
+    args = collect(args)
+    p = popfirst!(args)
+    for arg in p.args
+        @assert arg.head == :kw
+        push!(args, Expr(:(=), arg.args[1], arg.args[2]))
+    end
+    return args
+end
+
+"""
+    parse_macro_arguments(error_fn::Function, args)
+
+Returns a `Tuple{Vector{Any},Dict{Symbol,Any}}` containing the ordered
+positional arguments and a dictionary mapping the keyword arguments.
+
+This specially handles the distinction of `@foo(key = value)` and
+`@foo(; key = value)` in macros.
+
+Throws an error if mulitple keyword arguments are passed with the same name.
+"""
+function parse_macro_arguments(error_fn::Function, args)
+    pos_args, kw_args = Any[], Dict{Symbol,Any}()
+    for arg in _reorder_parameters(args)
+        if Meta.isexpr(arg, :(=), 2)
+            if haskey(kw_args, arg.args[1])
+                error_fn(
+                    "The keyword argument $(arg.args[1]) has been given " *
+                    "mulitple times",
+                )
+            end
+            kw_args[arg.args[1]] = arg.args[2]
+        else
+            push!(pos_args, arg)
+        end
+    end
+    return pos_args, kw_args
+end
+
 """
     _explicit_oneto(index_set)
 
@@ -381,14 +423,16 @@ SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 6 entries:
   [3, 3]  =  6
 ```
 """
-macro container(args...)
-    args, kw_args, requested_container = _extract_kw_args(args)
+macro container(input_args...)
+    args, kw_args = parse_macro_arguments(error, input_args)
+    container = get(kw_args, :container, :Auto)
     @assert length(args) == 2
-    @assert isempty(kw_args)
-    var, value = args
-    index_vars, indices = build_ref_sets(error, var)
-    code = container_code(index_vars, indices, esc(value), requested_container)
-    name = _get_name(var)
+    for key in keys(kw_args)
+        @assert key == :container
+    end
+    index_vars, indices = build_ref_sets(error, args[1])
+    code = container_code(index_vars, indices, esc(args[2]), container)
+    name = _get_name(args[1])
     if name === nothing
         return code
     end

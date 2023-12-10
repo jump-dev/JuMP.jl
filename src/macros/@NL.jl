@@ -252,7 +252,7 @@ macro NLobjective(model, sense, x)
     function error_fn(str...)
         return _macro_error(:NLobjective, (model, sense, x), __source__, str...)
     end
-    sense_expr = _moi_sense(error_fn, sense)
+    sense_expr = _parse_moi_sense(error_fn, sense)
     esc_model = esc(model)
     parsing_code, expr = _parse_nonlinear_expression(esc_model, x)
     code = quote

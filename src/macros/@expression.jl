@@ -54,13 +54,17 @@ julia> expr = @expression(model, [i in 1:3], i * sum(x[j] for j in 1:3))
 """
 macro expression(input_args...)
     error_fn(str...) = _macro_error(:expression, input_args, __source__, str...)
-    args, kw_args, container = Containers._extract_kw_args(input_args)
+    args, kwargs = Containers.parse_macro_arguments(error_fn, input_args)
     if !(2 <= length(args) <= 3)
-        error_fn("needs at least two arguments.")
-    elseif !isempty(kw_args)
-        error_fn("unrecognized keyword argument")
+        error_fn("expected 2 or 3 positional arguments, got $(length(args)).")
     elseif Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@expressions`?")
+    elseif !isempty(kwargs)
+        for key in keys(kwargs)
+            if key != :container
+                error_fn("unsupported keyword argument `$key`.")
+            end
+        end
     end
     name_expr = length(args) == 3 ? args[2] : nothing
     index_vars, indices = Containers.build_ref_sets(error_fn, name_expr)
@@ -70,14 +74,15 @@ macro expression(input_args...)
             "different name for the index.",
         )
     end
-    expr_var, build_code = _rewrite_expression(args[end])
     model = esc(args[1])
+    expr, build_code = _rewrite_expression(args[end])
     code = quote
         $build_code
         # Don't leak a `_MA.Zero` if the expression is an empty summation, or
         # other structure that returns `_MA.Zero()`.
-        _replace_zero($model, $expr_var)
+        _replace_zero($model, $expr)
     end
+    container = get(kwargs, :container, :Auto)
     return _finalize_macro(
         model,
         Containers.container_code(index_vars, indices, code, container),
