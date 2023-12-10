@@ -78,8 +78,88 @@ enable this syntax by defining extensions of
 `build_constraint(error_fn, func, set, my_arg; kwargs...)`. This produces the
 user syntax: `@constraint(model, ref[...], expr, my_arg, kwargs...)`.
 """
-macro constraint(args...)
-    return _constraint_macro(args, :constraint, parse_constraint, __source__)
+macro constraint(input_args...)
+    error_fn(str...) = _macro_error(:constraint, input_args, __source__, str...)
+    args, kwargs, container = Containers._extract_kw_args(input_args)
+    if length(args) < 2 && !isempty(kwargs)
+        error_fn(
+            "No constraint expression detected. If you are trying to " *
+            "construct an equality constraint, use `==` instead of `=`.",
+        )
+    elseif length(args) < 2
+        error_fn("Not enough arguments")
+    elseif Meta.isexpr(args[2], :block)
+        error_fn("Invalid syntax. Did you mean to use `@constraints`?")
+    end
+    model, y, extra = esc(args[1]), args[2], args[3:end]
+    # Determine if a reference/container argument was given by the user
+    # There are six cases to consider:
+    # y                                  | type of y | y.head
+    # -----------------------------------+-----------+------------
+    # name                               | Symbol    | NA
+    # name[1:2]                          | Expr      | :ref
+    # name[i = 1:2, j = 1:2; i + j >= 3] | Expr      | :typed_vcat
+    # [1:2]                              | Expr      | :vect
+    # [i = 1:2, j = 1:2; i + j >= 3]     | Expr      | :vcat
+    # a constraint expression            | Expr      | :call or :comparison
+    c, x = if y isa Symbol || Meta.isexpr(y, (:vect, :vcat, :ref, :typed_vcat))
+        if length(extra) == 0
+            error_fn("No constraint expression was given.")
+        end
+        y, popfirst!(extra)
+    else
+        nothing, y
+    end
+    if length(extra) > 1
+        error_fn("Cannot specify more than 1 additional positional argument.")
+    end
+    index_vars, indices = Containers.build_ref_sets(error_fn, c)
+    if args[1] in index_vars
+        error_fn(
+            "Index $(args[1]) is the same symbol as the model. Use a " *
+            "different name for the index.",
+        )
+    end
+    is_vectorized, parse_code, build_call = parse_constraint(error_fn, x)
+    _add_positional_args(build_call, extra)
+    _add_kw_args(build_call, kwargs; exclude = [:base_name, :set_string_name])
+    base_name = _get_kwarg_value(
+        kwargs,
+        :base_name;
+        default = string(something(Containers._get_name(c), "")),
+    )
+    set_name_flag = _get_kwarg_value(
+        kwargs,
+        :set_string_name;
+        default = :(set_string_names_on_creation($model)),
+    )
+    name_expr = :($set_name_flag ? $(_name_call(base_name, index_vars)) : "")
+    code = if is_vectorized
+        quote
+            $parse_code
+            # These broadcast calls need to be nested so that the operators
+            # are fused. Some broadcasted errors result if you put them on
+            # different lines.
+            add_constraint.(
+                $model,
+                model_convert.($model, $build_call),
+                $name_expr,
+            )
+        end
+    else
+        quote
+            $parse_code
+            build = model_convert($model, $build_call)
+            add_constraint($model, build, $name_expr)
+        end
+    end
+    return _finalize_macro(
+        model,
+        Containers.container_code(index_vars, indices, code, container),
+        __source__;
+        register_name = Containers._get_name(c),
+        wrap_let = true,
+    )
 end
 
 """
@@ -150,133 +230,11 @@ macro build_constraint(arg)
     function error_fn(str...)
         return _macro_error(:build_constraint, (arg,), __source__, str...)
     end
-    if arg isa Symbol
-        error_fn(
-            "Incomplete constraint specification $arg. " *
-            "Are you missing a comparison (<=, >=, or ==)?",
-        )
-    end
     _, parse_code, build_call = parse_constraint(error_fn, arg)
     return quote
         $parse_code
         $build_call
     end
-end
-
-"""
-    _constraint_macro(
-        args,
-        macro_name::Symbol,
-        parse_fn::Function,
-        source::LineNumberNode,
-    )
-
-Returns the code for the macro `@constraint args...` of syntax
-```julia
-@constraint(model, con, extra_arg, kwargs...)      # single constraint
-@constraint(model, ref, con, extra_arg, kwargs...) # group of constraints
-```
-
-The expression `con` is parsed by `parse_fn` which returns a `build_constraint`
-call code that, when executed, returns an `AbstractConstraint`. The macro
-keyword arguments (except the `container` keyword argument which is used to
-determine the container type) are added to the `build_constraint` call. The
-`extra_arg` is added as terminal positional argument to the `build_constraint`
-call along with any keyword arguments (apart from `container` and `base_name`).
-The returned value of this call is passed to `add_constraint` which returns a
-constraint reference.
-
-`source` is a `LineNumberNode` that should refer to the line that the macro was
-called from in the user's code. One way of generating this is via the hidden
-variable `__source__`.
-"""
-function _constraint_macro(
-    input_args,
-    macro_name::Symbol,
-    parse_fn::Function,
-    source::LineNumberNode,
-)
-    error_fn(str...) = _macro_error(macro_name, input_args, source, str...)
-    args, kwargs, container = Containers._extract_kw_args(input_args)
-    if length(args) < 2 && !isempty(kwargs)
-        error_fn(
-            "No constraint expression detected. If you are trying to " *
-            "construct an equality constraint, use `==` instead of `=`.",
-        )
-    elseif length(args) < 2
-        error_fn("Not enough arguments")
-    elseif Meta.isexpr(args[2], :block)
-        error_fn("Invalid syntax. Did you mean to use `@$(macro_name)s`?")
-    end
-    model, y, extra = esc(args[1]), args[2], args[3:end]
-    # Determine if a reference/container argument was given by the user
-    # There are six cases to consider:
-    # y                                  | type of y | y.head
-    # -----------------------------------+-----------+------------
-    # name                               | Symbol    | NA
-    # name[1:2]                          | Expr      | :ref
-    # name[i = 1:2, j = 1:2; i + j >= 3] | Expr      | :typed_vcat
-    # [1:2]                              | Expr      | :vect
-    # [i = 1:2, j = 1:2; i + j >= 3]     | Expr      | :vcat
-    # a constraint expression            | Expr      | :call or :comparison
-    c, x = if y isa Symbol || Meta.isexpr(y, (:vect, :vcat, :ref, :typed_vcat))
-        if length(extra) == 0
-            error_fn("No constraint expression was given.")
-        end
-        y, popfirst!(extra)
-    else
-        nothing, y
-    end
-    if length(extra) > 1
-        error_fn("Cannot specify more than 1 additional positional argument.")
-    end
-    index_vars, indices = Containers.build_ref_sets(error_fn, c)
-    if args[1] in index_vars
-        error_fn(
-            "Index $(args[1]) is the same symbol as the model. Use a " *
-            "different name for the index.",
-        )
-    end
-    is_vectorized, parse_code, build_call = parse_fn(error_fn, x)
-    _add_positional_args(build_call, extra)
-    _add_kw_args(build_call, kwargs; exclude = [:base_name, :set_string_name])
-    base_name = _get_kwarg_value(
-        kwargs,
-        :base_name;
-        default = string(something(Containers._get_name(c), "")),
-    )
-    set_name_flag = _get_kwarg_value(
-        kwargs,
-        :set_string_name;
-        default = :(set_string_names_on_creation($model)),
-    )
-    name_expr = Expr(:if, set_name_flag, _name_call(base_name, index_vars), "")
-    code = if is_vectorized
-        quote
-            $parse_code
-            # These broadcast calls need to be nested so that the operators
-            # are fused. Some broadcasted errors result if you put them on
-            # different lines.
-            add_constraint.(
-                $model,
-                model_convert.($model, $build_call),
-                $name_expr,
-            )
-        end
-    else
-        quote
-            $parse_code
-            build = model_convert($model, $build_call)
-            add_constraint($model, build, $name_expr)
-        end
-    end
-    return _finalize_macro(
-        model,
-        Containers.container_code(index_vars, indices, code, container),
-        source;
-        register_name = Containers._get_name(c),
-        wrap_let = true,
-    )
 end
 
 """
@@ -318,6 +276,13 @@ The infrastructure behind `parse_constraint` is extendable. See
 """
 function parse_constraint(error_fn::Function, expr::Expr)
     return parse_constraint_head(error_fn, Val(expr.head), expr.args...)
+end
+
+function parse_constraint(error_fn::Function, arg)
+    return error_fn(
+        "Incomplete constraint specification $arg. Are you missing a " *
+        "comparison (<=, >=, or ==)?",
+    )
 end
 
 """
