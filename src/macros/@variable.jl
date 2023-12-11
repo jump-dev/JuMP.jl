@@ -211,7 +211,7 @@ macro variable(input_args...)
         set = set_kw
     end
     # ; base_name
-    default_base_name = string(something(Containers._get_name(var), ""))
+    default_base_name = string(something(Containers.container_name(var), ""))
     base_name = get(kwargs, :base_name, default_base_name)
     if base_name isa Expr
         base_name = esc(base_name)
@@ -329,7 +329,7 @@ macro variable(input_args...)
         model,
         code,
         __source__;
-        register_name = Containers._get_name(var),
+        register_name = Containers.container_name(var),
         wrap_let = true,
     )
 end

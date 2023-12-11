@@ -354,7 +354,7 @@ macro NLconstraint(m, x, args...)
         esc_m,
         creation_code,
         __source__;
-        register_name = Containers._get_name(c),
+        register_name = Containers.container_name(c),
     )
 end
 
@@ -473,7 +473,7 @@ macro NLexpression(args...)
         esc_m,
         creation_code,
         __source__;
-        register_name = Containers._get_name(c),
+        register_name = Containers.container_name(c),
     )
 end
 
@@ -657,7 +657,7 @@ macro NLparameter(model, args...)
         esc_m,
         creation_code,
         __source__;
-        register_name = Containers._get_name(param),
+        register_name = Containers.container_name(param),
     )
 end
 

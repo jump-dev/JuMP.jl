@@ -107,7 +107,7 @@ macro constraint(input_args...)
         kwarg_exclude = [:base_name, :container, :set_string_name],
     )
     # ; base_name
-    default_base_name = string(something(Containers._get_name(c), ""))
+    default_base_name = string(something(Containers.container_name(c), ""))
     base_name = get(kwargs, :base_name, default_base_name)
     if base_name isa Expr
         base_name = esc(base_name)
@@ -148,7 +148,7 @@ macro constraint(input_args...)
         model,
         Containers.container_code(index_vars, indices, code, container),
         __source__;
-        register_name = Containers._get_name(c),
+        register_name = Containers.container_name(c),
         wrap_let = true,
     )
 end

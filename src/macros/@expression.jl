@@ -98,7 +98,7 @@ macro expression(input_args...)
         model,
         Containers.container_code(index_vars, indices, code, container),
         __source__;
-        register_name = Containers._get_name(name_expr),
+        register_name = Containers.container_name(name_expr),
         wrap_let = true,
     )
 end

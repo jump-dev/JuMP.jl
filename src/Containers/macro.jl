@@ -3,16 +3,41 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-_get_name(c::Union{Symbol,Nothing}) = c
-_get_name(c) = error("Expression `$c::$(typeof(c))` cannot be used as a name.")
+"""
+    container_name(x) --> Union{Symbol,Nothing}
 
-function _get_name(c::Expr)
-    if Meta.isexpr(c, :vcat) || Meta.isexpr(c, :vect)
+Return the name of the container given by the expression `x`.
+
+If the container is anonymous, return `nothing`.
+
+## Examples
+
+```jldoctest
+julia> Containers.container_name(:x)
+:x
+
+julia> Containers.container_name(nothing)
+
+julia> Containers.container_name(:(y[i in 1:2]))
+:y
+
+julia> Containers.container_name(:([i in 1:2]))
+```
+"""
+function container_name(x)
+    return error("Expression `$x::$(typeof(x))` cannot be used as a name.")
+end
+
+
+container_name(expr::Union{Symbol,Nothing}) = expr
+
+function container_name(expr::Expr)
+    if Meta.isexpr(expr, (:vcat, :vect))
         return nothing
-    elseif Meta.isexpr(c, :ref) || Meta.isexpr(c, :typed_vcat)
-        return _get_name(c.args[1])
+    elseif Meta.isexpr(expr, (:ref, :typed_vcat))
+        return container_name(expr.args[1])
     end
-    return error("Expression $c cannot be used as a name.")
+    return error("Expression $expr cannot be used as a name.")
 end
 
 function _reorder_parameters(args)
@@ -408,7 +433,7 @@ macro container(input_args...)
     end
     index_vars, indices = build_ref_sets(error, args[1])
     code = container_code(index_vars, indices, esc(args[2]), container)
-    name = _get_name(args[1])
+    name = container_name(args[1])
     if name === nothing
         return code
     end
