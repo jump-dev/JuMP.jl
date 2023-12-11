@@ -354,7 +354,7 @@ julia> call
 :(f(1, $(Expr(:escape, :x)), a = 2))
 ```
 """
-function _add_positional_args(call::Expr, args::Vector{Any})
+function _add_positional_args(call::Expr, args::Vector)
     call_args = call.args
     if Meta.isexpr(call, :.)
         # call is broadcasted
