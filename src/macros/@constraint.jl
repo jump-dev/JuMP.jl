@@ -138,10 +138,11 @@ macro constraint(input_args...)
     # ; set_string_name
     name_expr = _name_call(base_name, index_vars)
     if name_expr != ""
-        # We use args[1] here instead of `model` because `model` is already
-        # escaped.
-        default = Expr(:call, set_string_names_on_creation, args[1])
-        set_string_name = esc(get(kwargs, :set_string_name, default))
+        set_string_name = if haskey(kwargs, :set_string_name)
+            esc(kwargs[:set_string_name])
+        else
+            :(set_string_names_on_creation($model))
+        end
         name_expr = :($set_string_name ? $name_expr : "")
     end
     code = if is_vectorized

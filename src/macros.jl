@@ -323,37 +323,6 @@ function model_convert(
     return model_convert.(model, x)
 end
 
-"""
-    _add_kw_args(call, kw_args)
-
-Add the keyword arguments `kw_args` to the function call expression `call`,
-escaping the expressions. The elements of `kw_args` should be expressions of the
-form `:(key = value)`. The `kw_args` vector can be extracted from the arguments
-of a macro with [`Containers._extract_kw_args`](@ref).
-
-## Example
-
-```jldoctest
-julia> call = :(f(1, a=2))
-:(f(1, a = 2))
-
-julia> JuMP._add_kw_args(call, [:(b=3), :(c=4)])
-
-julia> call
-:(f(1, a = 2, \$(Expr(:escape, :(\$(Expr(:kw, :b, 3))))), \$(Expr(:escape, :(\$(Expr(:kw, :c, 4)))))))
-```
-"""
-function _add_kw_args(call, kw_args; exclude = Symbol[])
-    for kw in kw_args
-        @assert Meta.isexpr(kw, :(=))
-        if kw.args[1] in exclude
-            continue
-        end
-        push!(call.args, esc(Expr(:kw, kw.args...)))
-    end
-    return
-end
-
 function _add_keyword_args(call::Expr, kwargs::Dict; exclude = Symbol[])
     for (key, value) in kwargs
         if key in exclude
@@ -400,19 +369,6 @@ function _add_positional_args(call, args)
     # Re-add the cached keyword arguments back to the end
     append!(call_args, kw_args)
     return
-end
-
-function _reorder_parameters(args)
-    if !Meta.isexpr(args[1], :parameters)
-        return args
-    end
-    args = collect(args)
-    p = popfirst!(args)
-    for arg in p.args
-        @assert arg.head == :kw
-        push!(args, Expr(:(=), arg.args[1], arg.args[2]))
-    end
-    return args
 end
 
 _valid_model(::AbstractModel, ::Any) = nothing
@@ -662,33 +618,6 @@ function _wrap_let(model, code)
         end
     end
     return code
-end
-
-function _get_kwarg_value(
-    error_fn,
-    kwargs,
-    key::Symbol;
-    default = nothing,
-    escape::Bool = true,
-)
-    index, count = 0, 0
-    for (i, kwarg) in enumerate(kwargs)
-        if kwarg.args[1] == key
-            count += 1
-            index = i
-        end
-    end
-    if count == 0
-        return default
-    elseif count == 1
-        if escape
-            return esc(kwargs[index].args[2])
-        else
-            return kwargs[index].args[2]
-        end
-    else
-        error_fn("`$key` keyword argument was given $count times.")
-    end
 end
 
 include("macros/@objective.jl")
