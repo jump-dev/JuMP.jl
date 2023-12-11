@@ -268,7 +268,7 @@ macro variable(input_args...)
     end
     filter!(ex -> !(ex in (:Int, :Bin, :PSD, :Symmetric, :Hermitian)), args)
     build_code = :(build_variable($error_fn, $(_constructor_expr(info_expr))))
-    _add_keyword_args(
+    _add_additional_args(
         build_code,
         args,
         kwargs;
