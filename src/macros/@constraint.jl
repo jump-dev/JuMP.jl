@@ -4,79 +4,59 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 """
-    @constraint(model::GenericModel, expr, kwargs...)
+    @constraint(model, expr, args...; kwargs...)
+    @constraint(model, [index_sets...], expr, args...; kwargs...)
+    @constraint(model, name, expr, args...; kwargs...)
+    @constraint(model, name[index_sets...], expr, args...; kwargs...)
 
 Add a constraint described by the expression `expr`.
 
-    @constraint(model::GenericModel, ref[i=..., j=..., ...], expr, kwargs...)
+The `name` argument is optional. If index sets are passed, a container is built
+and the connstraint may depend on the indices of the index ssets.
 
-Add a group of constraints described by the expression `expr` parametrized by
-`i`, `j`, ...
+The expression `expr` may be one of following forms:
 
-The expression `expr` can either be
+ * `func in set`, constraining the function `func` to belong to the set `set`,
+   which is either a [`MOI.AbstractSet`](@ref) or one of the JuMP shortcuts like
+   [`SecondOrderCone`](@ref) or [`PSDCone`](@ref)
 
-* of the form `func in set` constraining the function `func` to belong to the
-  set `set` which is either a [`MOI.AbstractSet`](@ref)
-  or one of the JuMP shortcuts [`SecondOrderCone`](@ref),
-  [`RotatedSecondOrderCone`](@ref) and [`PSDCone`](@ref), e.g.
-  `@constraint(model, [1, x-1, y-2] in SecondOrderCone())` constrains the norm
-  of `[x-1, y-2]` be less than 1;
+ * `a <op> b`, where `<op>` is one of `==`, `≥`, `>=`, `≤`, `<=`
 
-* of the form `a sign b`, where `sign` is one of `==`, `≥`, `>=`, `≤` and
-  `<=` building the single constraint enforcing the comparison to hold for the
-  expression `a` and `b`, e.g. `@constraint(model, x^2 + y^2 == 1)` constrains
-  `x` and `y` to lie on the unit circle;
+ * `l <= f <= u` or `u >= f >= l`, constraining the expression `f` to lie
+   between `l` and `u`
 
-* of the form `a ≤ b ≤ c` or `a ≥ b ≥ c` (where `≤` and `<=` (resp. `≥` and
-  `>=`) can be used interchangeably) constraining the paired the expression
-  `b` to lie between `a` and `c`;
+ * `f(x) ⟂ x`, which defines a complementarity constraint
 
-* of the forms `@constraint(m, a .sign b)` or
-  `@constraint(m, a .sign b .sign c)` which broadcast the constraint creation to
-  each element of the vectors.
+ * `z --> {expr}`, which defines an indicator constraint that activates
+   when `z` is `1`
 
-The recognized keyword arguments in `kwargs` are the following:
+ * `!z --> {expr}`, which defines an indicator constraint that activates
+ when `z` is `0`
 
-* `base_name`: Sets the name prefix used to generate constraint names. It
-  corresponds to the constraint name for scalar constraints, otherwise, the
-  constraint names are set to `base_name[...]` for each index `...` of the axes
-  `axes`.
+ * `z <--> {expr}`, which defines a reified constraint
 
-* `container`: Specify the container type.
+ * `expr := rhs`, which defines a Boolean equality constraint
 
-* `set_string_name::Bool = true`: control whether to set the
-  [`MOI.ConstraintName`](@ref) attribute. Passing `set_string_name = false` can
-  improve performance.
+Broadcasted comparison operators like `.==` are also supported for the case when
+the left- and right-hand sides of the comparison operator are arrays.
 
-## Note for extending the constraint macro
+JuMP extensions may additionally provide support for constraint expressions
+which are not listed here.
 
-Each constraint will be created using
-`add_constraint(m, build_constraint(error_fn, func, set))` where
+## Keyword arguments
 
-* `error_fn` is an error function showing the constraint call in addition to the
-  error message given as argument,
+ * `base_name`: sets the name prefix used to generate constraint names. It
+   corresponds to the constraint name for scalar constraints, otherwise, the
+   constraint names are set to `base_name[...]` for each index `...`.
 
-* `func` is the expression that is constrained
-* and `set` is the set in which it is constrained to belong.
+ * `container = :Auto`: force the container type by passing `container = Array`,
+  `container = DenseAxisArray`, `container = SparseAxisArray`, or any another
+  container type which is supported by a JuMP extension.
 
-For `expr` of the first type (i.e. `@constraint(m, func in set)`), `func` and
-`set` are passed unchanged to `build_constraint` but for the other types, they
-are determined from the expressions and signs. For instance,
-`@constraint(m, x^2 + y^2 == 1)` is transformed into
-`add_constraint(m, build_constraint(error_fn, x^2 + y^2, MOI.EqualTo(1.0)))`.
+ * `set_string_name::Bool = true`: control whether to set the [`MOI.ConstraintName`](@ref)
+   attribute. Passing `set_string_name = false` can improve performance.
 
-To extend JuMP to accept new constraints of this form, it is necessary to add
-the corresponding methods to `build_constraint`. Note that this will likely mean
-that either `func` or `set` will be some custom type, rather than e.g. a
-`Symbol`, since we will likely want to dispatch on the type of the function or
-set appearing in the constraint.
-
-For extensions that need to create constraints with more information than just
-`func` and `set`, an additional positional argument can be specified to
-`@constraint` that will then be passed on `build_constraint`. Hence, we can
-enable this syntax by defining extensions of
-`build_constraint(error_fn, func, set, my_arg; kwargs...)`. This produces the
-user syntax: `@constraint(model, ref[...], expr, my_arg, kwargs...)`.
+Other keyword arguments may be supported by JuMP extensions.
 """
 macro constraint(input_args...)
     error_fn(str...) = _macro_error(:constraint, input_args, __source__, str...)

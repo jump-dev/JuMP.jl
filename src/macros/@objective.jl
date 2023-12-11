@@ -6,18 +6,17 @@
 """
     @objective(model::GenericModel, sense, func)
 
-Set the objective sense to `sense` and objective function to `func`. The
-objective sense can be either `Min`, `Max`, `MOI.MIN_SENSE`, `MOI.MAX_SENSE` or
-`MOI.FEASIBILITY_SENSE`; see [`MOI.ObjectiveSense`](@ref).
+Set the objective sense to `sense` and objective function to `func`.
 
-In order to set the sense programmatically, i.e., when `sense` is a Julia
-variable whose value is the sense, one of the three `MOI.ObjectiveSense` values
-should be used.
+The objective sense can be either `Min`, `Max`, `MOI.MIN_SENSE`, `MOI.MAX_SENSE`
+or `MOI.FEASIBILITY_SENSE`. In order to set the sense programmatically, that is,
+when `sense` is a variable whose value is the sense, one of the three
+[`MOI.OptimizationSense`](@ref) values must be used.
 
 ## Example
 
-To minimize the value of the variable `x`, do as follows:
-```jldoctest @objective
+Minimize the value of the variable `x`, do:
+```jldoctest
 julia> model = Model();
 
 julia> @variable(model, x)
@@ -27,15 +26,24 @@ julia> @objective(model, Min, x)
 x
 ```
 
-To maximize the value of the affine expression `2x - 1`, do as follows:
-```jldoctest @objective
+Maximize the value of the affine expression `2x - 1`:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
 julia> @objective(model, Max, 2x - 1)
 2 x - 1
 ```
 
-To set a quadratic objective and set the objective sense programmatically, do
-as follows:
-```jldoctest @objective
+Set the objective sense programmatically:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
 julia> sense = MIN_SENSE
 MIN_SENSE::OptimizationSense = 0
 
