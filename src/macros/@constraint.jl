@@ -100,11 +100,11 @@ macro constraint(input_args...)
         )
     end
     is_vectorized, parse_code, build_call = parse_constraint(error_fn, x)
-    _add_positional_args(build_call, extra)
-    _add_keyword_args(
+    _add_additional_args(
         build_call,
+        extra,
         kwargs;
-        exclude = [:base_name, :container, :set_string_name],
+        kwarg_exclude = [:base_name, :container, :set_string_name],
     )
     # ; base_name
     default_base_name = string(something(Containers._get_name(c), ""))
@@ -116,7 +116,7 @@ macro constraint(input_args...)
     # There is no need to escape this one.
     container = get(kwargs, :container, :Auto)
     # ; set_string_name
-    name_expr = _name_call(base_name, index_vars)
+    name_expr = _base_name_with_indices(base_name, index_vars)
     if name_expr != ""
         set_string_name = if haskey(kwargs, :set_string_name)
             esc(kwargs[:set_string_name])
@@ -275,6 +275,60 @@ function parse_constraint(error_fn::Function, arg)
         "comparison (<=, >=, or ==)?",
     )
 end
+
+function _check_vectorized(sense::Symbol)
+    sense_str = string(sense)
+    if startswith(sense_str, '.')
+        return Symbol(sense_str[2:end]), true
+    end
+    return sense, false
+end
+
+"""
+    _desparsify(x)
+
+If `x` is an `AbstractSparseArray`, return the dense equivalent, otherwise just
+return `x`.
+
+This function is used in `_build_constraint`.
+
+## Why is this needed?
+
+When broadcasting `f.(x)` over an `AbstractSparseArray` `x`, Julia first calls
+the equivalent of `f(zero(eltype(x))`. Here's an example:
+
+```jldoctest
+julia> import SparseArrays
+
+julia> foo(x) = (println("Calling \$(x)"); x)
+foo (generic function with 1 method)
+
+julia> foo.(SparseArrays.sparsevec([1, 2], [1, 2]))
+Calling 1
+Calling 2
+2-element SparseArrays.SparseVector{Int64, Int64} with 2 stored entries:
+  [1]  =  1
+  [2]  =  2
+```
+
+However, if `f` is mutating, this can have serious consequences! In our case,
+broadcasting `build_constraint` will add a new `0 = 0` constraint.
+
+Sparse arrays most-often arise when some input data to the constraint is sparse
+(e.g., a constant vector or matrix). Due to promotion and arithmetic, this
+results in a constraint function that is represented by an `AbstractSparseArray`,
+but is actually dense. Thus, we can safely `collect` the matrix into a dense
+array.
+
+If the function is sparse, it's not obvious what to do. What is the "zero"
+element of the result? What does it mean to broadcast `build_constraint` over a
+sparse array adding scalar constraints? This likely means that the user is using
+the wrong data structure. For simplicity, let's also call `collect` into a dense
+array, and wait for complaints.
+"""
+_desparsify(x::SparseArrays.AbstractSparseArray) = collect(x)
+
+_desparsify(x) = x
 
 """
     parse_constraint_head(error_fn::Function, ::Val{head}, args...)
@@ -620,6 +674,22 @@ function parse_constraint_call(
     end
     return parse_code, build_call
 end
+
+function _functionize(v::V) where {V<:AbstractVariableRef}
+    return convert(GenericAffExpr{value_type(V),V}, v)
+end
+
+_functionize(v::AbstractArray{<:AbstractVariableRef}) = _functionize.(v)
+
+function _functionize(
+    v::LinearAlgebra.Symmetric{V},
+) where {V<:AbstractVariableRef}
+    return LinearAlgebra.Symmetric(_functionize(v.data))
+end
+
+_functionize(x) = x
+
+_functionize(::_MA.Zero) = false
 
 """
     parse_constraint_call(

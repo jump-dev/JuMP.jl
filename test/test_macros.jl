@@ -166,22 +166,31 @@ function test_Check_Julia_condition_expression_parsing()
     return
 end
 
-function test_add_positional_args()
+function test_add_additional_args()
     call = :(f(1; a = 2))
-    @test JuMP._add_positional_args(call, [:(MyObject)]) isa Nothing
+    kwargs = Dict{Symbol,Any}()
+    @test JuMP._add_additional_args(call, [:(MyObject)], kwargs) isa Nothing
     @test call == :(f(1, $(Expr(:escape, :MyObject)); a = 2))
     call = :(f(1))
-    JuMP._add_positional_args(call, [2, 3])
+    JuMP._add_additional_args(call, [2, 3], kwargs)
     @test call == :(f(1, $(esc(2)), $(esc(3))))
     call = :(f.(1))
-    JuMP._add_positional_args(call, [2, 3])
+    JuMP._add_additional_args(call, [2, 3], kwargs)
     @test call == :(f.(1, $(esc(2)), $(esc(3))))
     call = :(f(1; a = 4))
-    JuMP._add_positional_args(call, [2, 3])
+    JuMP._add_additional_args(call, [2, 3], kwargs)
     @test call == :(f(1, $(esc(2)), $(esc(3)); a = 4))
     call = :(f.(1; a = 4))
-    JuMP._add_positional_args(call, [2, 3])
+    JuMP._add_additional_args(call, [2, 3], kwargs)
     @test call == :(f.(1, $(esc(2)), $(esc(3)); a = 4))
+    call = :(f.(1, a = 4))
+    kwargs = Dict{Symbol,Any}(:b => 4, :c => false)
+    JuMP._add_additional_args(call, Any[2], kwargs; kwarg_exclude = [:b])
+    @test call == Expr(
+        :.,
+        :f,
+        Expr(:tuple, 1, esc(2), Expr(:kw, :a, 4), esc(Expr(:kw, :c, false))),
+    )
     return
 end
 

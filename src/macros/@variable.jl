@@ -220,7 +220,7 @@ macro variable(input_args...)
     # There is no need to escape this one.
     container = get(kwargs, :container, :Auto)
     # ; set_string_name
-    name_expr = _name_call(base_name, index_vars)
+    name_expr = _base_name_with_indices(base_name, index_vars)
     if name_expr != ""
         set_string_name = if haskey(kwargs, :set_string_name)
             esc(kwargs[:set_string_name])
@@ -268,9 +268,9 @@ macro variable(input_args...)
     end
     filter!(ex -> !(ex in (:Int, :Bin, :PSD, :Symmetric, :Hermitian)), args)
     build_code = :(build_variable($error_fn, $(_constructor_expr(info_expr))))
-    _add_positional_args(build_code, args)
     _add_keyword_args(
         build_code,
+        args,
         kwargs;
         exclude = vcat(
             _INFO_KWARGS,
@@ -366,6 +366,10 @@ macro variables(model, block)
     return _plural_macro_code(model, block, Symbol("@variable"))
 end
 
+_esc_non_constant(x::Number) = x
+_esc_non_constant(x::Expr) = Meta.isexpr(x, :quote) ? x : esc(x)
+_esc_non_constant(x) = esc(x)
+
 """
     parse_variable(error_fn::Function, ::_VariableInfoExpr, args...)
 
@@ -402,6 +406,19 @@ function parse_variable(
     )
     return var, set
 end
+
+"""
+    reverse_sense(::Val{T}) where {T}
+
+Given an (in)equality symbol `T`, return a new `Val` object with the opposite
+(in)equality symbol.
+"""
+function reverse_sense end
+reverse_sense(::Val{:<=}) = Val(:>=)
+reverse_sense(::Val{:≤}) = Val(:≥)
+reverse_sense(::Val{:>=}) = Val(:<=)
+reverse_sense(::Val{:≥}) = Val(:≤)
+reverse_sense(::Val{:(==)}) = Val(:(==))
 
 # If the lhs is a number and not the rhs, we can deduce that the rhs is
 # the variable.
