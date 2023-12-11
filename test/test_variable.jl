@@ -624,7 +624,7 @@ function test_extension_variables_constrained_on_creation_errors(
     @test_macro_throws(
         ErrorException(
             "In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`: " *
-            "`set` keyword argument was given 2 times.",
+            "the keyword argument `set` was given multiple times.",
         ),
         @variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone()),
     )

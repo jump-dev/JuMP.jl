@@ -60,7 +60,7 @@ Other keyword arguments may be supported by JuMP extensions.
 """
 macro constraint(input_args...)
     error_fn(str...) = _macro_error(:constraint, input_args, __source__, str...)
-    args, kwargs, container = Containers._extract_kw_args(input_args)
+    args, kwargs = Containers.parse_macro_arguments(error_fn, input_args)
     if length(args) < 2 && !isempty(kwargs)
         error_fn(
             "No constraint expression detected. If you are trying to " *
@@ -82,13 +82,12 @@ macro constraint(input_args...)
     # [1:2]                              | Expr      | :vect
     # [i = 1:2, j = 1:2; i + j >= 3]     | Expr      | :vcat
     # a constraint expression            | Expr      | :call or :comparison
-    c, x = if y isa Symbol || Meta.isexpr(y, (:vect, :vcat, :ref, :typed_vcat))
+    c, x = nothing, y
+    if y isa Symbol || Meta.isexpr(y, (:vect, :vcat, :ref, :typed_vcat))
         if length(extra) == 0
             error_fn("No constraint expression was given.")
         end
-        y, popfirst!(extra)
-    else
-        nothing, y
+        c, x = y, popfirst!(extra)
     end
     if length(extra) > 1
         error_fn("Cannot specify more than 1 additional positional argument.")
@@ -102,20 +101,30 @@ macro constraint(input_args...)
     end
     is_vectorized, parse_code, build_call = parse_constraint(error_fn, x)
     _add_positional_args(build_call, extra)
-    _add_kw_args(build_call, kwargs; exclude = [:base_name, :set_string_name])
-    base_name = _get_kwarg_value(
-        error_fn,
-        kwargs,
-        :base_name;
-        default = string(something(Containers._get_name(c), "")),
+    _add_keyword_args(
+        build_call,
+        kwargs;
+        exclude = [:base_name, :container, :set_string_name],
     )
-    set_name_flag = _get_kwarg_value(
-        error_fn,
-        kwargs,
-        :set_string_name;
-        default = :(set_string_names_on_creation($model)),
-    )
-    name_expr = :($set_name_flag ? $(_name_call(base_name, index_vars)) : "")
+    # ; base_name
+    default_base_name = string(something(Containers._get_name(c), ""))
+    base_name = get(kwargs, :base_name, default_base_name)
+    if base_name isa Expr
+        base_name = esc(base_name)
+    end
+    # ; container
+    # There is no need to escape this one.
+    container = get(kwargs, :container, :Auto)
+    # ; set_string_name
+    name_expr = _name_call(base_name, index_vars)
+    if name_expr != ""
+        set_string_name = if haskey(kwargs, :set_string_name)
+            esc(kwargs[:set_string_name])
+        else
+            :(set_string_names_on_creation($model))
+        end
+        name_expr = :($set_string_name ? $name_expr : "")
+    end
     code = if is_vectorized
         quote
             $parse_code

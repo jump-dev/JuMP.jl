@@ -141,18 +141,13 @@ julia> @variable(model, z[i=1:3], set_string_name = false)
 """
 macro variable(input_args...)
     error_fn(str...) = _macro_error(:variable, input_args, __source__, str...)
-    # We need to re-order the parameters here to account for cases like
-    # `@variable(model; integer = true)`, since Julia handles kwargs by placing
-    # them first(!) in the list of arguments.
-    args = _reorder_parameters(input_args)
-    model = esc(args[1])
+    args, kwargs = Containers.parse_macro_arguments(error_fn, input_args)
     if length(args) >= 2 && Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@variables`?")
     end
-    pos_args, kw_args, container = Containers._extract_kw_args(args[2:end])
-    # if there is only a single non-keyword argument, this is an anonymous
-    # variable spec and the one non-kwarg is the model
-    x = isempty(pos_args) ? nothing : popfirst!(pos_args)
+    model_sym = popfirst!(args)
+    model = esc(model_sym)
+    x = isempty(args) ? nothing : popfirst!(args)
     if x == :Int
         error_fn(
             "Ambiguous variable name $x detected. To specify an anonymous " *
@@ -170,10 +165,8 @@ macro variable(input_args...)
             "matrix use `@variable(model, [1:n, 1:n], PSD)` instead.",
         )
     end
-    info_kwargs = [
-        (kw.args[1], _esc_non_constant(kw.args[2])) for
-        kw in kw_args if kw.args[1] in _INFO_KWARGS
-    ]
+    info_kwargs =
+        [(k, _esc_non_constant(v)) for (k, v) in kwargs if k in _INFO_KWARGS]
     info_expr = _VariableInfoExpr(; info_kwargs...)
     # There are four cases to consider:
     # x                                       | type of x | x.head
@@ -199,15 +192,15 @@ macro variable(input_args...)
         error_fn("Expected $var to be a variable name")
     end
     index_vars, indices = Containers.build_ref_sets(error_fn, var)
-    if args[1] in index_vars
+    if model_sym in index_vars
         error_fn(
-            "Index $(args[1]) is the same symbol as the model. Use a " *
+            "Index $model_sym is the same symbol as the model. Use a " *
             "different name for the index.",
         )
     end
     # Handle special keyword arguments
     # ; set
-    set_kw = _get_kwarg_value(error_fn, kw_args, :set)
+    set_kw = get(kwargs, :set, nothing)
     if set_kw !== nothing
         if set !== nothing
             error_fn(
@@ -218,27 +211,31 @@ macro variable(input_args...)
         set = set_kw
     end
     # ; base_name
-    base_name = _get_kwarg_value(
-        error_fn,
-        kw_args,
-        :base_name;
-        default = string(something(Containers._get_name(var), "")),
-    )
+    default_base_name = string(something(Containers._get_name(var), ""))
+    base_name = get(kwargs, :base_name, default_base_name)
+    if base_name isa Expr
+        base_name = esc(base_name)
+    end
+    # ; container
+    # There is no need to escape this one.
+    container = get(kwargs, :container, :Auto)
     # ; set_string_name
-    set_string_name_kw = _get_kwarg_value(
-        error_fn,
-        kw_args,
-        :set_string_name;
-        default = :(set_string_names_on_creation($model)),
-    )
+    name_expr = _name_call(base_name, index_vars)
+    if name_expr != ""
+        set_string_name = if haskey(kwargs, :set_string_name)
+            esc(kwargs[:set_string_name])
+        else
+            :(set_string_names_on_creation($model))
+        end
+        name_expr = :($set_string_name ? $name_expr : "")
+    end
     # ; variable_type
-    variable_type_kw =
-        _get_kwarg_value(error_fn, kw_args, :variable_type; escape = false)
+    variable_type_kw = get(kwargs, :variable_type, nothing)
     if variable_type_kw !== nothing
-        push!(pos_args, variable_type_kw)
+        push!(args, variable_type_kw)
     end
     # Handle positional arguments
-    for ex in pos_args
+    for ex in args
         if ex == :Int
             _set_integer_or_error(error_fn, info_expr)
         elseif ex == :Bin
@@ -269,12 +266,17 @@ macro variable(input_args...)
             set = HermitianMatrixSpace()
         end
     end
-    filter!(ex -> !(ex in (:Int, :Bin, :PSD, :Symmetric, :Hermitian)), pos_args)
+    filter!(ex -> !(ex in (:Int, :Bin, :PSD, :Symmetric, :Hermitian)), args)
     build_code = :(build_variable($error_fn, $(_constructor_expr(info_expr))))
-    _add_positional_args(build_code, pos_args)
-    explicit_kwargs = [:base_name, :variable_type, :set, :set_string_name]
-    _add_kw_args(build_code, kw_args; exclude = [_INFO_KWARGS; explicit_kwargs])
-    name_code = _name_call(base_name, index_vars)
+    _add_positional_args(build_code, args)
+    _add_keyword_args(
+        build_code,
+        kwargs;
+        exclude = vcat(
+            _INFO_KWARGS,
+            [:base_name, :container, :variable_type, :set, :set_string_name],
+        ),
+    )
     code = if set === nothing
         # This is for calls like:
         #   @variable(model, x)
@@ -283,8 +285,8 @@ macro variable(input_args...)
             index_vars,
             indices,
             quote
-                name = $set_string_name_kw ? $name_code : ""
-                add_variable($model, model_convert($model, $build_code), name)
+                variable = model_convert($model, $build_code)
+                add_variable($model, variable, $name_expr)
             end,
             container,
         )
@@ -296,8 +298,7 @@ macro variable(input_args...)
             indices,
             quote
                 build = build_variable($error_fn, $build_code, $set)
-                name = $set_string_name_kw ? $name_code : ""
-                add_variable($model, model_convert($model, build), name)
+                add_variable($model, model_convert($model, build), $name_expr)
             end,
             container,
         )
@@ -313,16 +314,15 @@ macro variable(input_args...)
             build_code,
             container,
         )
-        name_code = Containers.container_code(
+        name_expr = Containers.container_code(
             index_vars,
             indices,
-            name_code,
+            name_expr,
             container,
         )
         quote
             build = build_variable($error_fn, $build_code, $set)
-            name = $set_string_name_kw ? $name_code : ""
-            add_variable($model, model_convert($model, build), name)
+            add_variable($model, model_convert($model, build), $name_expr)
         end
     end
     return _finalize_macro(
