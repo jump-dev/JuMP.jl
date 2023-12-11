@@ -69,8 +69,8 @@ function parse_macro_arguments(error_fn::Function, args)
         if Meta.isexpr(arg, :(=), 2)
             if haskey(kw_args, arg.args[1])
                 error_fn(
-                    "The keyword argument $(arg.args[1]) has been given " *
-                    "mulitple times",
+                    "the keyword argument `$(arg.args[1])` was given " *
+                    "multiple times.",
                 )
             end
             kw_args[arg.args[1]] = arg.args[2]
