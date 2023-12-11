@@ -188,10 +188,10 @@ macro variable(input_args...)
         end
     end
     # if var === nothing, then the variable is anonymous
-    if !(var isa Symbol || var isa Expr || var === nothing)
+    if !(var isa Union{Nothing,Symbol,Expr})
         error_fn("Expected $var to be a variable name")
     end
-    index_vars, indices = Containers.build_ref_sets(error_fn, var)
+    name, index_vars, indices = Containers.parse_ref_sets(error_fn, var)
     if model_sym in index_vars
         error_fn(
             "Index $model_sym is the same symbol as the model. Use a " *
@@ -211,8 +211,7 @@ macro variable(input_args...)
         set = set_kw
     end
     # ; base_name
-    default_base_name = string(something(Containers.container_name(var), ""))
-    base_name = get(kwargs, :base_name, default_base_name)
+    base_name = get(kwargs, :base_name, string(something(name, "")))
     if base_name isa Expr
         base_name = esc(base_name)
     end
@@ -329,7 +328,7 @@ macro variable(input_args...)
         model,
         code,
         __source__;
-        register_name = Containers.container_name(var),
+        register_name = name,
         wrap_let = true,
     )
 end

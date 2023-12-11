@@ -3,43 +3,6 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-"""
-    container_name(x) --> Union{Symbol,Nothing}
-
-Return the name of the container given by the expression `x`.
-
-If the container is anonymous, return `nothing`.
-
-## Examples
-
-```jldoctest
-julia> Containers.container_name(:x)
-:x
-
-julia> Containers.container_name(nothing)
-
-julia> Containers.container_name(:(y[i in 1:2]))
-:y
-
-julia> Containers.container_name(:([i in 1:2]))
-```
-"""
-function container_name(x)
-    return error("Expression `$x::$(typeof(x))` cannot be used as a name.")
-end
-
-
-container_name(expr::Union{Symbol,Nothing}) = expr
-
-function container_name(expr::Expr)
-    if Meta.isexpr(expr, (:vcat, :vect))
-        return nothing
-    elseif Meta.isexpr(expr, (:ref, :typed_vcat))
-        return container_name(expr.args[1])
-    end
-    return error("Expression $expr cannot be used as a name.")
-end
-
 function _reorder_parameters(args)
     if !Meta.isexpr(args[1], :parameters)
         return args
@@ -229,8 +192,23 @@ function _has_dependent_sets(index_vars::Vector{Any}, index_sets::Vector{Any})
     return false
 end
 
+function _container_name(error_fn::Function, x)
+    return error_fn("Expression `$x::$(typeof(x))` cannot be used as a name.")
+end
+
+_container_name(::Function, expr::Union{Symbol,Nothing}) = expr
+
+function _container_name(error_fn::Function, expr::Expr)
+    if Meta.isexpr(expr, (:vcat, :vect))
+        return nothing
+    elseif Meta.isexpr(expr, (:ref, :typed_vcat))
+        return _container_name(error_fn, expr.args[1])
+    end
+    return error_fn("Expression $expr cannot be used as a name.")
+end
+
 """
-    build_ref_sets(error_fn::Function, expr)
+    parse_ref_sets(error_fn::Function, expr)
 
 Helper function for macros to construct container objects.
 
@@ -248,15 +226,30 @@ Helper function for macros to construct container objects.
 
 ## Returns
 
- 1. `index_vars`: a `Vector{Any}` of names for the index variables, e.g.,
+ 1. `name`: the name of the container, if given, otherwise `nothing`
+ 2. `index_vars`: a `Vector{Any}` of names for the index variables, e.g.,
     `[:i, gensym(), :k]`. These may also be expressions, like `:((i, j))` from a
     call like `:(x[(i, j) in S])`.
- 2. `indices`: an iterator over the indices, for example,
+ 3. `indices`: an iterator over the indices, for example,
     [`Containers.NestedIterator`](@ref)
 
 ## Example
 
 See [`container_code`](@ref) for a worked example.
+"""
+function parse_ref_sets(
+    error_fn::Function,
+    expr::Union{Nothing,Symbol,Expr},
+)
+    name = _container_name(error_fn, expr)
+    index_vars, indices = build_ref_sets(error_fn, expr)
+    return name, index_vars, indices
+end
+
+"""
+    build_ref_sets(error_fn::Function, expr)
+
+This function is deprecated. Use [`parse_ref_sets`](@ref) instead.
 """
 function build_ref_sets(error_fn::Function, expr)
     index_vars, index_sets, condition = _parse_ref_sets(error_fn, expr)
@@ -297,7 +290,7 @@ end
     )
 
 Used in macros to construct a call to [`container`](@ref). This should be used
-in conjunction with [`build_ref_sets`](@ref).
+in conjunction with [`parse_ref_sets`](@ref).
 
 ## Arguments
 
@@ -319,17 +312,20 @@ in conjunction with [`build_ref_sets`](@ref).
 
 ```jldoctest
 julia> macro foo(ref_sets, code)
-           index_vars, indices = Containers.build_ref_sets(error, ref_sets)
-           return Containers.container_code(
-               index_vars,
-               indices,
-               esc(code),
-               :Auto,
-            )
+           name, index_vars, indices =
+               Containers.parse_ref_sets(error, ref_sets)
+           @assert name !== nothing  # Anonymous container not supported
+           container =
+               Containers.container_code(index_vars, indices, esc(code), :Auto)
+           return quote
+               \$(esc(name)) = \$container
+           end
        end
 @foo (macro with 1 method)
 
-julia> @foo(x[i=1:2, j=["A", "B"]], j^i)
+julia> @foo(x[i=1:2, j=["A", "B"]], j^i);
+
+julia> x
 2-dimensional DenseAxisArray{String,2,...} with index sets:
     Dimension 1, Base.OneTo(2)
     Dimension 2, ["A", "B"]
@@ -431,9 +427,8 @@ macro container(input_args...)
     for key in keys(kw_args)
         @assert key == :container
     end
-    index_vars, indices = build_ref_sets(error, args[1])
+    name, index_vars, indices = parse_ref_sets(error, args[1])
     code = container_code(index_vars, indices, esc(args[2]), container)
-    name = container_name(args[1])
     if name === nothing
         return code
     end

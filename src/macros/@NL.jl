@@ -332,7 +332,7 @@ macro NLconstraint(m, x, args...)
     con = length(extra) == 1 ? extra[1] : x
     # Strategy: build up the code for non-macro add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
-    idxvars, indices = Containers.build_ref_sets(error_fn, c)
+    name, idxvars, indices = Containers.parse_ref_sets(error_fn, c)
     if m in idxvars
         error_fn(
             "Index $(m) is the same symbol as the model. Use a different " *
@@ -354,7 +354,7 @@ macro NLconstraint(m, x, args...)
         esc_m,
         creation_code,
         __source__;
-        register_name = Containers.container_name(c),
+        register_name = name,
     )
 end
 
@@ -454,7 +454,7 @@ macro NLexpression(args...)
     if length(args) > 3 || length(kw_args) > 0
         error_fn("To many arguments ($(length(args))).")
     end
-    idxvars, indices = Containers.build_ref_sets(error_fn, c)
+    name, idxvars, indices = Containers.parse_ref_sets(error_fn, c)
     if args[1] in idxvars
         error_fn(
             "Index $(args[1]) is the same symbol as the model. Use a " *
@@ -473,7 +473,7 @@ macro NLexpression(args...)
         esc_m,
         creation_code,
         __source__;
-        register_name = Containers.container_name(c),
+        register_name = name,
     )
 end
 
@@ -634,7 +634,7 @@ macro NLparameter(model, args...)
     if ismissing(value)
         param, value = pos_args[1].args[2], pos_args[1].args[3]
     end
-    index_vars, index_values = Containers.build_ref_sets(error_fn, param)
+    name, index_vars, index_values = Containers.parse_ref_sets(error_fn, param)
     if model in index_vars
         error_fn(
             "Index $(model) is the same symbol as the model. Use a different " *
@@ -657,7 +657,7 @@ macro NLparameter(model, args...)
         esc_m,
         creation_code,
         __source__;
-        register_name = Containers.container_name(param),
+        register_name = name,
     )
 end
 

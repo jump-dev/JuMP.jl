@@ -78,7 +78,7 @@ macro expression(input_args...)
         end
     end
     name_expr = length(args) == 3 ? args[2] : nothing
-    index_vars, indices = Containers.build_ref_sets(error_fn, name_expr)
+    name, index_vars, indices = Containers.parse_ref_sets(error_fn, name_expr)
     if args[1] in index_vars
         error_fn(
             "Index $(args[1]) is the same symbol as the model. Use a " *
@@ -98,7 +98,7 @@ macro expression(input_args...)
         model,
         Containers.container_code(index_vars, indices, code, container),
         __source__;
-        register_name = Containers.container_name(name_expr),
+        register_name = name,
         wrap_let = true,
     )
 end

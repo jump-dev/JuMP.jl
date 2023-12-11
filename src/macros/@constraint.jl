@@ -92,7 +92,7 @@ macro constraint(input_args...)
     if length(extra) > 1
         error_fn("Cannot specify more than 1 additional positional argument.")
     end
-    index_vars, indices = Containers.build_ref_sets(error_fn, c)
+    name, index_vars, indices = Containers.parse_ref_sets(error_fn, c)
     if args[1] in index_vars
         error_fn(
             "Index $(args[1]) is the same symbol as the model. Use a " *
@@ -107,8 +107,7 @@ macro constraint(input_args...)
         kwarg_exclude = [:base_name, :container, :set_string_name],
     )
     # ; base_name
-    default_base_name = string(something(Containers.container_name(c), ""))
-    base_name = get(kwargs, :base_name, default_base_name)
+    base_name = get(kwargs, :base_name, string(something(name, "")))
     if base_name isa Expr
         base_name = esc(base_name)
     end
@@ -148,7 +147,7 @@ macro constraint(input_args...)
         model,
         Containers.container_code(index_vars, indices, code, container),
         __source__;
-        register_name = Containers.container_name(c),
+        register_name = name,
         wrap_let = true,
     )
 end
