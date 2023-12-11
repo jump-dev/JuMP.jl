@@ -308,12 +308,12 @@ function test_extension_build_constraint_extra_arg_test(
     @test constraint_object(cref).set isa MOI.LessThan{Float64}
     cref = @constraint(model, c1, x == 0, MyConstrType, d = 1)
     @test constraint_object(cref).set == MOI.LessThan{Float64}(1)
-    @test_throws_strip ErrorException @constraint(model, x == 0, BadPosArg)
-    @test_throws_strip(
+    @test_throws_runtime ErrorException @constraint(model, x == 0, BadPosArg)
+    @test_throws_runtime(
         ErrorException,
         @constraint(model, x == 0, BadPosArg, d = 1),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException,
         @constraint(model, x == 0, MyConstrType, BadPosArg),
     )
@@ -343,7 +343,7 @@ function test_extension_custom_function_test(
     con = constraint_object(con_ref)
     @test jump_function(con) == x
     @test moi_set(con) isa CustomSet
-    @test_macro_throws ErrorException @constraint(model, g(x))
+    @test_throws_parsetime ErrorException @constraint(model, g(x))
     return
 end
 
@@ -412,7 +412,7 @@ function test_extension_check_constraint_basics(
     @test c.set == MOI.Interval(T(0), T(1))
     @test_throws ErrorException @constraint(m, x <= t <= y)
     @test_throws ErrorException @constraint(m, 0 <= Dict() <= 1)
-    @test_macro_throws ErrorException @constraint(1 <= x <= 2, foo = :bar)
+    @test_throws_parsetime ErrorException @constraint(1 <= x <= 2, foo = :bar)
     @test isequal_canonical(
         @expression(m, 3x - y - α * (w + 2z) + 5),
         3 * x - y - α * w - T(66) / T(10) * z + 5,
@@ -473,8 +473,8 @@ function test_extension_constraint_naming(
     @test name(cref) == "cat"
     crefs = @constraint(model, [i in 1:2], x == 0, base_name = "cat_$i")
     @test name.(crefs) == ["cat_1[1]", "cat_2[2]"]
-    @test_macro_throws ErrorException @constraint(model, c3[1:2])
-    @test_macro_throws ErrorException @constraint(model, "c"[1:2], x == 0)
+    @test_throws_parsetime ErrorException @constraint(model, c3[1:2])
+    @test_throws_parsetime ErrorException @constraint(model, "c"[1:2], x == 0)
     return
 end
 
@@ -572,7 +572,7 @@ function test_extension_extension_build_constraint_error(
 )
     model = ModelType()
     @variable(model, x)
-    @test_macro_throws ErrorException @build_constraint(2x + 1)
+    @test_throws_parsetime ErrorException @build_constraint(2x + 1)
     return
 end
 
@@ -588,7 +588,7 @@ end
 
 function test_Adding_anonymous_variable_and_specify_required_constraint_on_it()
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(m, Int)`: Ambiguous variable name Int detected." *
             " To specify an anonymous integer variable, use `@variable(model, integer = true)` instead.",
@@ -598,7 +598,7 @@ function test_Adding_anonymous_variable_and_specify_required_constraint_on_it()
     v = @variable(model, integer = true)
     @test name(v) == ""
     @test is_integer(v)
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(m, Bin)`: Ambiguous variable name Bin detected." *
             " To specify an anonymous binary variable, use `@variable(model, binary = true)` instead.",
@@ -608,7 +608,7 @@ function test_Adding_anonymous_variable_and_specify_required_constraint_on_it()
     v = @variable(model, binary = true)
     @test name(v) == ""
     @test is_binary(v)
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(m, PSD)`: Size of anonymous square matrix of positive semidefinite anonymous variables is not specified." *
             " To specify size of square matrix use `@variable(model, [1:n, 1:n], PSD)` instead.",
@@ -791,15 +791,15 @@ end
 
 function test_Plural_failures()
     model = Model()
-    @test_macro_throws MethodError @variables(model)
+    @test_throws_parsetime MethodError @variables(model)
     err = ErrorException(
         "Invalid syntax for @variables. The second argument must be a `begin end` " *
         "block. For example:\n" *
         "```julia\n@variables(model, begin\n    # ... lines here ...\nend)\n```.",
     )
-    @test_macro_throws err @variables(model, x)
-    @test_macro_throws err @variables(model, x >= 0)
-    @test_macro_throws MethodError @variables(model, x >= 0, Bin)
+    @test_throws_parsetime err @variables(model, x)
+    @test_throws_parsetime err @variables(model, x >= 0)
+    @test_throws_parsetime MethodError @variables(model, x >= 0, Bin)
     return
 end
 
@@ -838,7 +838,7 @@ function test_Splatting_error()
     model = Model()
     A = [1 0; 0 1]
     @variable(model, x)
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, y[axes(A)...])`: cannot use splatting operator `...` in the definition of an index set.",
         ),
@@ -847,31 +847,31 @@ function test_Splatting_error()
     f(a, b) = [a, b]
     @variable(model, z[f((1, 2)...)])
     @test length(z) == 2
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@constraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set.",
         ),
         @constraint(model, [axes(A)...], x >= 1)
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@NLconstraint(model, [axes(A)...], x >= 1)`: cannot use splatting operator `...` in the definition of an index set.",
         ),
         @NLconstraint(model, [axes(A)...], x >= 1)
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@expression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set.",
         ),
         @expression(model, [axes(A)...], x)
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@NLexpression(model, [axes(A)...], x)`: cannot use splatting operator `...` in the definition of an index set.",
         ),
         @NLexpression(model, [axes(A)...], x)
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@NLparameter(model, p[axes(A)...] == x)`: cannot use splatting operator `...` in the definition of an index set.",
         ),
@@ -895,7 +895,7 @@ function test_NaN_in_constraints()
     @test_throws ErrorException(
         "Expression contains an invalid NaN constant. This could be produced by `Inf - Inf`.",
     ) @constraint(model, 1 <= x + Inf <= 2)
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@constraint(model, 1 <= x <= NaN)`: Invalid bounds, cannot contain NaN: [1, NaN].",
         ),
@@ -925,7 +925,7 @@ function test_unrecognized_variable_type()
         "extension, you need to implement `build_variable`. Read the " *
         "docstring for more details.",
     )
-    @test_throws_strip err @variable(model, x, 2, variable_type = 1)
+    @test_throws_runtime err @variable(model, x, 2, variable_type = 1)
     return
 end
 
@@ -937,7 +937,7 @@ function test_unrecognized_kwarg()
         "create a JuMP extension, you need to implement " *
         "`build_variable`. Read the docstring for more details.",
     )
-    @test_throws_strip err @variable(model, x, foo = 1)
+    @test_throws_runtime err @variable(model, x, foo = 1)
     return
 end
 
@@ -956,29 +956,29 @@ function test_Model_as_index()
     m = Model()
     @variable(m, x)
     msg = "Index m is the same symbol as the model. Use a different name for the index."
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("In `@variable(m, y[m = 1:2] <= m)`: $(msg)"),
         @variable(m, y[m = 1:2] <= m),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("In `@constraint(m, [m = 1:2], x <= m)`: $(msg)"),
         @constraint(m, [m = 1:2], x <= m),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("In `@expression(m, [m = 1:2], m * x)`: $(msg)"),
         @expression(m, [m = 1:2], m * x),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@NLconstraint(m, [m = 1:2], sqrt(x) <= m)`: $(msg)",
         ),
         @NLconstraint(m, [m = 1:2], sqrt(x) <= m),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("In `@NLexpression(m, [m = 1:2], x)`: $(msg)"),
         @NLexpression(m, [m = 1:2], x),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("In `@NLparameter(m, p[m = 1:2] == m)`: $(msg)"),
         @NLparameter(m, p[m = 1:2] == m),
     )
@@ -1001,7 +1001,7 @@ end
 
 function test_singular_plural_error()
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, begin\n    x\nend)`: " *
             "Invalid syntax. Did you mean to use `@variables`?",
@@ -1011,7 +1011,7 @@ function test_singular_plural_error()
         end),
     )
     @variable(model, x)
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@constraint(model, begin\n    x >= 0\nend)`: " *
             "Invalid syntax. Did you mean to use `@constraints`?",
@@ -1020,7 +1020,7 @@ function test_singular_plural_error()
             x >= 0
         end),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@expression(model, begin\n    x\nend)`: " *
             "Invalid syntax. Did you mean to use `@expressions`?",
@@ -1029,7 +1029,7 @@ function test_singular_plural_error()
             x
         end),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@NLconstraint(model, begin\n    x >= 0\nend)`: " *
             "Invalid syntax. Did you mean to use `@NLconstraints`?",
@@ -1038,7 +1038,7 @@ function test_singular_plural_error()
             x >= 0
         end),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@NLexpression(model, begin\n    x\nend)`: " *
             "Invalid syntax. Did you mean to use `@NLexpressions`?",
@@ -1047,7 +1047,7 @@ function test_singular_plural_error()
             x
         end),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@NLparameter(model, begin\n    x == 1\nend)`: " *
             "Invalid syntax: did you mean to use `@NLparameters`?",
@@ -1091,7 +1091,7 @@ function test_Interval_errors_lhs()
         "two separate constraints, or move all variables into the " *
         "central term.",
     )
-    @test_throws_strip err @constraint(model, x <= x <= 2)
+    @test_throws_runtime err @constraint(model, x <= x <= 2)
     return
 end
 
@@ -1104,7 +1104,7 @@ function test_Interval_errors_rhs()
         "two separate constraints, or move all variables into the " *
         "central term.",
     )
-    @test_throws_strip err @constraint(model, 2 <= x <= x)
+    @test_throws_runtime err @constraint(model, 2 <= x <= x)
     return
 end
 
@@ -1117,7 +1117,7 @@ function test_Interval_errors_lhs_and_rhs()
         "two separate constraints, or move all variables into the " *
         "central term.",
     )
-    @test_throws_strip err @constraint(model, x <= x <= x)
+    @test_throws_runtime err @constraint(model, x <= x <= x)
     return
 end
 
@@ -1164,7 +1164,7 @@ end
 function test_nlparameter_too_many_positional_args()
     msg = "Invalid syntax: too many positional arguments."
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("In `@NLparameter(model, p == 1, Int)`: $(msg)"),
         @NLparameter(model, p == 1, Int),
     )
@@ -1174,7 +1174,7 @@ end
 function test_nlparameter_unsupported_keyword_args()
     msg = "Invalid syntax: unsupported keyword arguments."
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("In `@NLparameter(model, p == 1, bad = false)`: $(msg)"),
         @NLparameter(model, p == 1, bad = false),
     )
@@ -1184,7 +1184,7 @@ end
 function test_nlparameter_invalid_syntax()
     msg = "Invalid syntax: expected syntax of form `param == value`."
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("In `@NLparameter(model, p)`: $(msg)"),
         @NLparameter(model, p),
     )
@@ -1204,7 +1204,7 @@ end
 function test_nlparameter_anonymous_error()
     msg = "Invalid syntax: no positional args allowed for anonymous parameters."
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("In `@NLparameter(model, p, value = 1)`: $(msg)"),
         @NLparameter(model, p, value = 1),
     )
@@ -1214,7 +1214,7 @@ end
 function test_nlparameter_invalid_number()
     msg = "Parameter value is not a number."
     model = Model()
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException("In `@NLparameter(model, p == :a)`: $(msg)"),
         @NLparameter(model, p == :a),
     )
@@ -1252,11 +1252,11 @@ function test_variable_vector_lowerbound()
     ```
     """
     model = Model()
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException("In `@variable(model, x[1:2] >= [1, 2])`: $(msg)"),
         @variable(model, x[1:2] >= [1, 2]),
     )
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException("In `@variable(model, x[1:2] .>= [1, 2])`: $(msg)"),
         @variable(model, x[1:2] .>= [1, 2]),
     )
@@ -1282,11 +1282,11 @@ function test_variable_vector_upperbound()
     ```
     """
     model = Model()
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException("In `@variable(model, x[1:2] <= [1, 2])`: $(msg)"),
         @variable(model, x[1:2] <= [1, 2]),
     )
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException("In `@variable(model, x[1:2] .<= [1, 2])`: $(msg)"),
         @variable(model, x[1:2] .<= [1, 2]),
     )
@@ -1312,11 +1312,11 @@ function test_variable_vector_fixed()
     ```
     """
     model = Model()
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException("In `@variable(model, x[1:2] == [1, 2])`: $(msg)"),
         @variable(model, x[1:2] == [1, 2]),
     )
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException("In `@variable(model, x[1:2] .== [1, 2])`: $(msg)"),
         @variable(model, x[1:2] .== [1, 2]),
     )
@@ -1342,7 +1342,7 @@ function test_variable_vector_start()
     ```
     """
     model = Model()
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException("In `@variable(model, x[1:2], start = [1, 2])`: $(msg)"),
         @variable(model, x[1:2], start = [1, 2]),
     )
@@ -1368,13 +1368,13 @@ function test_variable_vector_interval()
     ```
     """
     model = Model()
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@variable(model, 0 <= x[2:3, 3:4] <= rand(2, 2))`: $(msg)",
         ),
         @variable(model, 0 <= x[2:3, 3:4] <= rand(2, 2)),
     )
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@variable(model, 0 .<= x[2:3, 3:4] .<= rand(2, 2))`: $(msg)",
         ),
@@ -1385,7 +1385,7 @@ end
 
 function test_invalid_name_errors()
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("Expression x.y cannot be used as a name."),
         @variable(model, x.y),
     )
@@ -1394,7 +1394,7 @@ end
 
 function test_invalid_name_errors_denseaxisarray()
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("Expression x.y cannot be used as a name."),
         @variable(model, x.y[2:3, 1:2]),
     )
@@ -1403,7 +1403,7 @@ end
 
 function test_invalid_name_errors_sparseaxisarray()
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("Expression x.y cannot be used as a name."),
         @variable(model, x.y[i = 1:3; isodd(i)]),
     )
@@ -1412,7 +1412,7 @@ end
 
 function test_invalid_variable_syntax()
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, MyInfo(1))`: Invalid syntax: your syntax " *
             "is wrong, but we don't know why. Consult the documentation for " *
@@ -1479,7 +1479,7 @@ function test_parse_constraint_head_error()
         "writing a JuMP extension, implement " *
         "`parse_constraint_head(::Function, ::Val{:braces}, args...)",
     )
-    @test_macro_throws(err, @constraint(model, {x == 0}))
+    @test_throws_parsetime(err, @constraint(model, {x == 0}))
     return
 end
 
@@ -1490,7 +1490,7 @@ function test_parse_constraint_head_inconsistent_vectorize()
         "In `@constraint(model, 1 .<= [x, x] <= 2)`: " *
         "Operators are inconsistently vectorized.",
     )
-    @test_macro_throws(err, @constraint(model, 1 .<= [x, x] <= 2))
+    @test_throws_parsetime(err, @constraint(model, 1 .<= [x, x] <= 2))
     return
 end
 
@@ -1502,7 +1502,7 @@ function test_parse_constraint_head_inconsistent_signs()
         "unsupported mix of comparison operators `1 >= ... <= 2`.\n\n" *
         "Two-sided rows must of the form `1 <= ... <= 2` or `2 >= ... >= 1`.",
     )
-    @test_macro_throws(err, @constraint(model, 1 >= x <= 2))
+    @test_throws_parsetime(err, @constraint(model, 1 >= x <= 2))
     return
 end
 
@@ -1670,7 +1670,7 @@ end
 
 function test_constraint_not_enough_arguments()
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("In `@constraint(model)`: Not enough arguments"),
         @constraint(model),
     )
@@ -1685,13 +1685,13 @@ function test_constraint_no_constraint_expression_detected()
         "If you are trying to construct an equality constraint, use `==` " *
         "instead of `=`.",
     )
-    @test_macro_throws(err, @constraint(model, x = 2))
+    @test_throws_parsetime(err, @constraint(model, x = 2))
     return
 end
 
 function test_objective_not_enough_arguments()
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@objective(model, Min)`: expected 3 positional arguments, got 2.",
         ),
@@ -1702,7 +1702,7 @@ end
 
 function test_expression_not_enough_arguments()
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@expression(model)`: expected 2 or 3 positional arguments, got 1.",
         ),
@@ -1714,7 +1714,7 @@ end
 function test_expression_keyword_arguments()
     model = Model()
     @variable(model, x)
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@expression(model, x, foo = 1)`: unsupported keyword argument `foo`.",
         ),
@@ -1726,7 +1726,7 @@ end
 function test_objective_keyword_arguments()
     model = Model()
     @variable(model, x)
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@objective(model, Min, x, foo = 1)`: unsupported keyword argument `foo`.",
         ),
@@ -1738,7 +1738,7 @@ end
 function test_build_constraint_invalid()
     model = Model()
     @variable(model, x)
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@build_constraint(x)`: Incomplete constraint specification " *
             "x. Are you missing a comparison (<=, >=, or ==)?",
@@ -1763,7 +1763,7 @@ end
 
 function test_variable_unsupported_operator()
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("In `@variable(model, x ⊕ 1)`: unsupported operator ⊕"),
         @variable(model, x ⊕ 1),
     )
@@ -1773,7 +1773,7 @@ end
 function test_constraint_unsupported_operator()
     model = Model()
     @variable(model, x)
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@constraint(model, x ⊕ 1)`: unsupported operator ⊕",
         ),
@@ -1784,7 +1784,7 @@ end
 
 function test_variable_anon_bounds()
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, [1:2] >= 0)`: Cannot use explicit bounds " *
             "via >=, <= with an anonymous variable",
@@ -1820,14 +1820,14 @@ function test_variable_Bool_argument()
         "`{0, 1}` decision variable, use `Bin` instead. For example, " *
         "`@variable(model, x, Bin)` or `@variable(model, x, binary = true)`.",
     )
-    @test_throws_strip(err, @variable(model, x, Bool))
+    @test_throws_runtime(err, @variable(model, x, Bool))
     err = ErrorException(
         "In `@variable(model, x, Bool = true)`: " *
         "Unsupported keyword argument: Bool.\n\nIf you intended to " *
         "create a `{0, 1}` decision variable, use the `binary` keyword " *
         "argument instead: `@variable(model, x, binary = true)`.",
     )
-    @test_throws_strip(err, @variable(model, x, Bool = true))
+    @test_throws_runtime(err, @variable(model, x, Bool = true))
     return
 end
 
@@ -1892,7 +1892,7 @@ function test_nonlinear_generator_bad_init()
     model = Model()
     @variable(model, x)
     expr = :(sum((x for i in 1:1); bad_init = 3))
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("Unsupported nonlinear expression: $expr"),
         @NLexpression(model, sum(x for i in 1:1; bad_init = 3))
     )
@@ -1952,7 +1952,7 @@ function test_matrix_in_vector_set()
     model = Model()
     @variable(model, X[1:2, 1:2])
     A = [1 2; 3 4]
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@constraint(model, X >= A)`: " *
             "Unsupported matrix in vector-valued set. Did you mean to use the " *
@@ -1962,7 +1962,7 @@ function test_matrix_in_vector_set()
         ),
         @constraint(model, X >= A),
     )
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@constraint(model, X <= A)`: " *
             "Unsupported matrix in vector-valued set. Did you mean to use the " *
@@ -1972,7 +1972,7 @@ function test_matrix_in_vector_set()
         ),
         @constraint(model, X <= A),
     )
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@constraint(model, X == A)`: " *
             "Unsupported matrix in vector-valued set. Did you mean to use the " *
@@ -1995,7 +1995,7 @@ end
 
 function test_unsupported_operator_errors()
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, x > 0)`: " *
             "unsupported operator `>`.\n\n" *
@@ -2009,7 +2009,7 @@ function test_unsupported_operator_errors()
         ),
         @variable(model, x > 0),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, x < 0)`: " *
             "unsupported operator `<`.\n\n" *
@@ -2024,7 +2024,7 @@ function test_unsupported_operator_errors()
         @variable(model, x < 0),
     )
     @variable(model, x)
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@constraint(model, x > 0)`: " *
             "unsupported operator `>`.\n\n" *
@@ -2038,7 +2038,7 @@ function test_unsupported_operator_errors()
         ),
         @constraint(model, x > 0),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@constraint(model, x < 0)`: " *
             "unsupported operator `<`.\n\n" *
@@ -2057,7 +2057,7 @@ end
 
 function test_unsupported_ternary_operator()
     model = Model()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, 1 < x < 2)`: " *
             "unsupported mix of comparison operators `1 < ... < 2`.\n\n" *
@@ -2157,7 +2157,7 @@ end
 function test_bad_objective_sense()
     model = Model()
     @variable(model, x)
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@objective(model, :MinMax, x)`: unexpected sense `MinMax`. " *
             "The sense must be an `::MOI.OptimizatonSense`, or the symbol " *

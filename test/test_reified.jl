@@ -56,7 +56,7 @@ function test_reified_inconsistent()
     @variable(model, x)
     @variable(model, z, Bin)
     expr = :(z <--> {x .== 1})
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@constraint(model, $expr)`: " *
             "vectorized constraints cannot be used with reification.",
@@ -71,7 +71,7 @@ function test_reified_no_curly_bracket()
     @variable(model, x)
     @variable(model, z, Bin)
     expr = :(z <--> x == 1)
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@constraint(model, $expr)`: " *
             "Invalid right-hand side `x == 1` of reified constraint. " *
