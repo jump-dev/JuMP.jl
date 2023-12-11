@@ -33,17 +33,25 @@ end
 function _strip_line_from_error(err::ErrorException)
     return ErrorException(replace(err.msg, r"^At.+\:[0-9]+\: `@" => "In `@"))
 end
+
 _strip_line_from_error(err::LoadError) = _strip_line_from_error(err.error)
+
 _strip_line_from_error(err) = err
 
-# Test that the macro call `m` throws an error exception during pre-compilation
-macro test_macro_throws(errortype, m)
-    # See https://discourse.julialang.org/t/test-throws-with-macros-after-pr-23533/5878
-    quote
+"""
+    @test_throws_parsetime(error_type, expression)
+
+Test that the macro call `expression` throws an `error_type` exception during
+the parsing of the macro.
+
+See https://discourse.julialang.org/t/test-throws-with-macros-after-pr-23533
+"""
+macro test_throws_parsetime(error_type, expression)
+    return quote
         @test_throws(
-            $(esc(_strip_line_from_error(errortype))),
+            $(esc(_strip_line_from_error(error_type))),
             try
-                @eval $m
+                @eval $expression
             catch err
                 throw(_strip_line_from_error(err))
             end
@@ -51,13 +59,18 @@ macro test_macro_throws(errortype, m)
     end
 end
 
-# Test that the macro call `m` throws an error exception during _runtime_.
-macro test_throws_strip(errortype, m)
-    quote
+"""
+    @test_throws_runtime(error_type, expression)
+
+Test that the macro call `expression` throws an `error_type` exception during
+_runtime_.
+"""
+macro test_throws_runtime(error_type, expression)
+    return quote
         @test_throws(
-            $(esc(_strip_line_from_error(errortype))),
+            $(esc(_strip_line_from_error(error_type))),
             try
-                $(esc(m))
+                $(esc(expression))
             catch err
                 throw(_strip_line_from_error(err))
             end

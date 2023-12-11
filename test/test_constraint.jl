@@ -122,7 +122,7 @@ function test_extension_AffExpr_vectorized_constraints(
         "Unexpected vector in scalar constraint. The left- and right-hand " *
         "sides of the constraint must have the same dimension.",
     )
-    @test_throws_strip err @constraint(model, [x, 2x] in MOI.EqualTo(1.0))
+    @test_throws_runtime err @constraint(model, [x, 2x] in MOI.EqualTo(1.0))
     VT = typeof([x, 2x])
     err = ErrorException(
         "Operation `sub_mul` between `$VT` and `$Int` is not " *
@@ -139,7 +139,7 @@ function test_extension_AffExpr_vectorized_constraints(
     )
     a = 1
     @test_throws err @constraint(model, a == [x, 2x])
-    @test_macro_throws ErrorException begin
+    @test_throws_parsetime ErrorException begin
         @constraint(model, [x == 1 - x, 2x == 3])
     end
     cref = @constraint(model, [x, 2x] .== [1 - x, 3])
@@ -164,7 +164,7 @@ function test_extension_AffExpr_vectorized_interval_constraints(
         "operators `l .<= f(x) .<= u` instead?",
     )
     b = T[5, 6]
-    @test_throws_strip err @constraint(model, b <= x <= b)
+    @test_throws_runtime err @constraint(model, b <= x <= b)
     cref = @constraint(model, b .<= x .<= b)
     c = constraint_object.(cref)
     for i in 1:2
@@ -367,7 +367,7 @@ function test_extension_syntax_error_constraint(
         "add the constraint because we don't recognize $([3, x]) as a " *
         "valid JuMP function.",
     )
-    @test_throws_strip err @constraint(model, [3, x] in SecondOrderCone())
+    @test_throws_runtime err @constraint(model, [3, x] in SecondOrderCone())
     return
 end
 
@@ -404,23 +404,23 @@ function test_extension_indicator_constraint(
     err = ErrorException(
         "In `@constraint(model, !(a, b) => {x <= 1})`: Invalid binary variable expression `!(a, b)` for indicator constraint.",
     )
-    @test_macro_throws err @constraint(model, !(a, b) => {x <= 1})
+    @test_throws_parsetime err @constraint(model, !(a, b) => {x <= 1})
     err = ErrorException(
         "In `@constraint(model, a => x)`: Invalid right-hand side `x` of indicator constraint. Expected constraint surrounded by `{` and `}`.",
     )
-    @test_macro_throws err @constraint(model, a => x)
+    @test_throws_parsetime err @constraint(model, a => x)
     err = ErrorException(
         "In `@constraint(model, a => x <= 1)`: Invalid right-hand side `x <= 1` of indicator constraint. Expected constraint surrounded by `{` and `}`.",
     )
-    @test_macro_throws err @constraint(model, a => x <= 1)
+    @test_throws_parsetime err @constraint(model, a => x <= 1)
     err = ErrorException(
         "In `@constraint(model, a => {x <= 1, x >= 0})`: Invalid right-hand side `{x <= 1, x >= 0}` of indicator constraint. Expected constraint surrounded by `{` and `}`.",
     )
-    @test_macro_throws err @constraint(model, a => {x <= 1, x >= 0})
+    @test_throws_parsetime err @constraint(model, a => {x <= 1, x >= 0})
     err = ErrorException(
         "In `@constraint(model, [a, b] .=> {x + y <= 1})`: Inconsistent use of `.` in symbols to indicate vectorization.",
     )
-    @test_macro_throws err @constraint(model, [a, b] .=> {x + y <= 1})
+    @test_throws_parsetime err @constraint(model, [a, b] .=> {x + y <= 1})
     return
 end
 
@@ -593,7 +593,7 @@ function test_extension_SDP_errors(
         "arguments.\n\nIf you're trying to create a JuMP extension, you " *
         "need to implement `build_constraint` to accomodate these arguments.",
     )
-    @test_throws_strip(
+    @test_throws_runtime(
         err,
         @constraint(
             model,
@@ -674,7 +674,7 @@ function test_extension_PSD_constraint_errors(
         " instead of `MathOptInterface.PositiveSemidefiniteConeTriangle(2)`," *
         " use `JuMP.PSDCone()`.",
     )
-    @test_throws_strip(
+    @test_throws_runtime(
         err,
         @constraint(model, X in MOI.PositiveSemidefiniteConeTriangle(2))
     )
@@ -694,7 +694,7 @@ function test_extension_matrix_constraint_errors(
     )
     # Note: this should apply to any MOI.AbstractVectorSet. We just pick
     # SecondOrderCone for convenience.
-    @test_throws_strip(err, @constraint(model, X in MOI.SecondOrderCone(4)))
+    @test_throws_runtime(err, @constraint(model, X in MOI.SecondOrderCone(4)))
     return
 end
 
@@ -704,7 +704,7 @@ function test_extension_nonsensical_SDP_constraint(
 )
     T = value_type(ModelType)
     m = ModelType()
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@variable(m, unequal[1:5, 1:6], PSD)`: Symmetric variables must be square. Got size (5, 6).",
         ),
@@ -721,21 +721,21 @@ function test_extension_nonsensical_SDP_constraint(
             "for symmetric variable.",
         )
     end
-    @test_throws_strip(
+    @test_throws_runtime(
         _ErrorException("@variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], PSD)"),
         @variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], PSD),
     )
-    @test_throws_strip(
+    @test_throws_runtime(
         _ErrorException("@variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], PSD)"),
         @variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], PSD),
     )
-    @test_throws_strip(
+    @test_throws_runtime(
         _ErrorException(
             "@variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], Symmetric)",
         ),
         @variable(m, foo[i = 1:2, j = 1:2] >= Y[i, j], Symmetric),
     )
-    @test_throws_strip(
+    @test_throws_runtime(
         _ErrorException(
             "@variable(m, foo[i = 1:2, j = 1:2] <= Y[i, j], Symmetric)",
         ),
@@ -1507,7 +1507,7 @@ function test_extension_HermitianPSDCone_errors(
         "need to implement `build_constraint` to accomodate these arguments.",
     )
     H = LinearAlgebra.Hermitian([x 1im; -1im -y])
-    @test_throws_strip(
+    @test_throws_runtime(
         err,
         @constraint(model, H in HermitianPSDCone(), unknown_kw = 1),
     )
@@ -1789,7 +1789,7 @@ function test_indicator_error()
     err = ErrorException(
         "In `@constraint(model, x[1] >= 0 --> {x[2] == 0})`: unable to build indicator constraint with the left-hand side term `(x[1] >= 0)::JuMP.NonlinearExpr`. The left-hand side must be a binary decision variable.",
     )
-    @test_throws_strip err @constraint(model, x[1] >= 0 --> {x[2] == 0})
+    @test_throws_runtime err @constraint(model, x[1] >= 0 --> {x[2] == 0})
     return
 end
 

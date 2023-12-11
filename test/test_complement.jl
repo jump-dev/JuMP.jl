@@ -34,7 +34,7 @@ end
 function test_scalar_error_x_F()
     model = Model()
     @variable(model, x >= 0)
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@constraint(model, x ⟂ 2x - 1)`: second term must be a " *
             "variable.",
@@ -47,7 +47,7 @@ end
 function test_scalar_error_F_F()
     model = Model()
     @variable(model, x >= 0)
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@constraint(model, x + 1 ⟂ 2x - 1)`: second term must " *
             "be a variable.",
@@ -60,7 +60,7 @@ end
 function test_scalar_error_0_F()
     model = Model()
     @variable(model, x >= 0)
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@constraint(model, 0 ⟂ 2x - 1)`: second term must be a " *
             "variable.",
@@ -94,7 +94,7 @@ end
 function test_vector_error_length_mismatch()
     model = Model()
     @variable(model, x[1:2] >= 0)
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@constraint(model, x ⟂ [x[1]])`: size of mapping does " *
             "not match size of variables: (2,) != (1,).",
@@ -107,7 +107,7 @@ end
 function test_vector_error_x_F()
     model = Model()
     @variable(model, x[1:2] >= 0)
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@constraint(model, x ⟂ 2x .- 1)`: second term must be an " *
             "array of variables.",
@@ -119,7 +119,7 @@ end
 function test_vector_error_F_F()
     model = Model()
     @variable(model, x[1:2] >= 0)
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@constraint(model, x .+ 1 ⟂ 2x .- 1)`: second term must " *
             "be an array of variables.",
@@ -133,7 +133,7 @@ function test_vector_error_0_F()
     model = Model()
     @variable(model, x[1:2] >= 0)
     y = [1.2, -1.3]
-    @test_throws_strip(
+    @test_throws_runtime(
         ErrorException(
             "In `@constraint(model, y ⟂ 2x .- 1)`: second term must " *
             "be an array of variables.",

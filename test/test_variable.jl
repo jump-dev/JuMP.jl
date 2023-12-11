@@ -155,8 +155,8 @@ function test_extension_variable_interval(
     _has_bounds(bothb3, 0.0, 1.0)
     @variable(model, 1 ≥ bothb4 ≥ 0)
     _has_bounds(bothb4, 0.0, 1.0)
-    @test_macro_throws ErrorException @variable(model, 1 ≥ bothb5 ≤ 0)
-    @test_macro_throws ErrorException @variable(model, 1 ≤ bothb6 ≥ 0)
+    @test_throws_parsetime ErrorException @variable(model, 1 ≥ bothb5 ≤ 0)
+    @test_throws_parsetime ErrorException @variable(model, 1 ≤ bothb6 ≥ 0)
     return
 end
 
@@ -597,7 +597,7 @@ function test_extension_variables_constrained_on_creation_errors(
     VariableRefType = VariableRef,
 )
     model = ModelType()
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, x[1:2] in SecondOrderCone(), set = PSDCone())`: " *
             "Cannot use set keyword because the variable is already " *
@@ -605,7 +605,7 @@ function test_extension_variables_constrained_on_creation_errors(
         ),
         @variable(model, x[1:2] in SecondOrderCone(), set = PSDCone()),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, x[1:2] in SecondOrderCone(), PSD)`: " *
             "Cannot pass `PSD` as a positional argument because the variable " *
@@ -613,7 +613,7 @@ function test_extension_variables_constrained_on_creation_errors(
         ),
         @variable(model, x[1:2] in SecondOrderCone(), PSD),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, x[1:2, 1:2], PSD, Symmetric)`: " *
             "Cannot pass `Symmetric` as a positional argument because the " *
@@ -621,7 +621,7 @@ function test_extension_variables_constrained_on_creation_errors(
         ),
         @variable(model, x[1:2, 1:2], PSD, Symmetric),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException(
             "In `@variable(model, x[1:2], set = SecondOrderCone(), set = PSDCone())`: " *
             "the keyword argument `set` was given multiple times.",

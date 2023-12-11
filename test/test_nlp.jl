@@ -399,11 +399,11 @@ end
 function test_parse_unsupported_generator()
     model = Model()
     @variable(model, x[1:2])
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("Unsupported generator `:min`"),
         @NLexpression(model, min(x[i] for i in 1:2)),
     )
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException("Unsupported generator `:max`"),
         @NLexpression(model, max(x[i] for i in 1:2)),
     )
@@ -482,7 +482,7 @@ function test_error_on_begin_end()
         "`begin...end` blocks are not supported in nonlinear macros. The " *
         "nonlinear expression must be a single statement.",
     )
-    @test_macro_throws(err, @NLobjective(model, Max, begin
+    @test_throws_parsetime(err, @NLobjective(model, Max, begin
         sin(x) + 1
     end))
     return
@@ -498,7 +498,7 @@ end
 function test_error_on_getfield_in_expression()
     model = Model()
     @variable(model, x[1:2])
-    @test_macro_throws(
+    @test_throws_parsetime(
         ErrorException,
         @NLexpression(model, sum(foo.bar(i) * x[i] for i in 1:2))
     )
