@@ -165,9 +165,8 @@ macro variable(input_args...)
             "matrix use `@variable(model, [1:n, 1:n], PSD)` instead.",
         )
     end
-    info_kwargs = [
-        (k, _esc_non_constant(v)) for (k, v) in kwargs if k in _INFO_KWARGS
-    ]
+    info_kwargs =
+        [(k, _esc_non_constant(v)) for (k, v) in kwargs if k in _INFO_KWARGS]
     info_expr = _VariableInfoExpr(; info_kwargs...)
     # There are four cases to consider:
     # x                                       | type of x | x.head
@@ -315,8 +314,12 @@ macro variable(input_args...)
             build_code,
             container,
         )
-        name_expr =
-            Containers.container_code(index_vars, indices, name_expr, container)
+        name_expr = Containers.container_code(
+            index_vars,
+            indices,
+            name_expr,
+            container,
+        )
         quote
             build = build_variable($error_fn, $build_code, $set)
             add_variable($model, model_convert($model, build), $name_expr)
