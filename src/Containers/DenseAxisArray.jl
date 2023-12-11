@@ -720,9 +720,7 @@ struct DenseAxisArrayView{T,N,D,A} <: AbstractArray{T,N}
     end
 end
 
-function Base.view(A::Containers.DenseAxisArray, args...)
-    return DenseAxisArrayView(A, args...)
-end
+Base.view(A::DenseAxisArray, args...) = DenseAxisArrayView(A, args...)
 
 Base.size(x::DenseAxisArrayView) = length.(axes(x))
 
