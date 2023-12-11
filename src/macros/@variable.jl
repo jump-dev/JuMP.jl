@@ -140,7 +140,7 @@ julia> @variable(model, z[i=1:3], set_string_name = false)
 ```
 """
 macro variable(input_args...)
-    error_fn(str...) = _macro_error(:variable, input_args, __source__, str...)
+    error_fn = Containers.build_error_fn(:variable, input_args, __source__)
     args, kwargs = Containers.parse_macro_arguments(error_fn, input_args)
     if length(args) >= 2 && Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@variables`?")
@@ -191,13 +191,11 @@ macro variable(input_args...)
     if !(var isa Union{Nothing,Symbol,Expr})
         error_fn("Expected $var to be a variable name")
     end
-    name, index_vars, indices = Containers.parse_ref_sets(error_fn, var)
-    if model_sym in index_vars
-        error_fn(
-            "Index $model_sym is the same symbol as the model. Use a " *
-            "different name for the index.",
-        )
-    end
+    name, index_vars, indices = Containers.parse_ref_sets(
+        error_fn,
+        var;
+        invalid_index_variables = [model_sym],
+    )
     # Handle special keyword arguments
     # ; set
     set_kw = get(kwargs, :set, nothing)
@@ -215,9 +213,6 @@ macro variable(input_args...)
     if base_name isa Expr
         base_name = esc(base_name)
     end
-    # ; container
-    # There is no need to escape this one.
-    container = get(kwargs, :container, :Auto)
     # ; set_string_name
     name_expr = _base_name_with_indices(base_name, index_vars)
     if name_expr != ""
@@ -267,7 +262,7 @@ macro variable(input_args...)
     end
     filter!(ex -> !(ex in (:Int, :Bin, :PSD, :Symmetric, :Hermitian)), args)
     build_code = :(build_variable($error_fn, $(_constructor_expr(info_expr))))
-    _add_additional_args(
+    Containers.add_additional_args(
         build_code,
         args,
         kwargs;
@@ -287,7 +282,7 @@ macro variable(input_args...)
                 variable = model_convert($model, $build_code)
                 add_variable($model, variable, $name_expr)
             end,
-            container,
+            kwargs,
         )
     elseif any(Base.Fix2(Containers.depends_on, set), index_vars)
         # This is for calls in which the set depends on the indices.
@@ -299,7 +294,7 @@ macro variable(input_args...)
                 build = build_variable($error_fn, $build_code, $set)
                 add_variable($model, model_convert($model, build), $name_expr)
             end,
-            container,
+            kwargs,
         )
     else
         # This is for calls in which the set does not depend on the indices.
@@ -311,13 +306,13 @@ macro variable(input_args...)
             index_vars,
             indices,
             build_code,
-            container,
+            kwargs,
         )
         name_expr = Containers.container_code(
             index_vars,
             indices,
             name_expr,
-            container,
+            kwargs,
         )
         quote
             build = build_variable($error_fn, $build_code, $set)

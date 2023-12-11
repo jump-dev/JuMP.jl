@@ -231,4 +231,32 @@ function test__MyContainer2()
     return
 end
 
+function test_add_additional_args()
+    call = :(f(1; a = 2))
+    kwargs = Dict{Symbol,Any}()
+    @test Containers.add_additional_args(call, [:(foo)], kwargs) === nothing
+    @test call == :(f(1, $(Expr(:escape, :foo)); a = 2))
+    call = :(f(1))
+    Containers.add_additional_args(call, [2, 3], kwargs)
+    @test call == :(f(1, $(esc(2)), $(esc(3))))
+    call = :(f.(1))
+    Containers.add_additional_args(call, [2, 3], kwargs)
+    @test call == :(f.(1, $(esc(2)), $(esc(3))))
+    call = :(f(1; a = 4))
+    Containers.add_additional_args(call, [2, 3], kwargs)
+    @test call == :(f(1, $(esc(2)), $(esc(3)); a = 4))
+    call = :(f.(1; a = 4))
+    Containers.add_additional_args(call, [2, 3], kwargs)
+    @test call == :(f.(1, $(esc(2)), $(esc(3)); a = 4))
+    call = :(f.(1, a = 4))
+    kwargs = Dict{Symbol,Any}(:b => 4, :c => false)
+    Containers.add_additional_args(call, Any[2], kwargs; kwarg_exclude = [:b])
+    @test call == Expr(
+        :.,
+        :f,
+        Expr(:tuple, 1, esc(2), Expr(:kw, :a, 4), esc(Expr(:kw, :c, false))),
+    )
+    return
+end
+
 end  # module

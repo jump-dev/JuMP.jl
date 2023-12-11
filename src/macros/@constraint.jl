@@ -59,7 +59,7 @@ which are not listed here.
 Other keyword arguments may be supported by JuMP extensions.
 """
 macro constraint(input_args...)
-    error_fn(str...) = _macro_error(:constraint, input_args, __source__, str...)
+    error_fn = Containers.build_error_fn(:constraint, input_args, __source__)
     args, kwargs = Containers.parse_macro_arguments(error_fn, input_args)
     if length(args) < 2 && !isempty(kwargs)
         error_fn(
@@ -92,15 +92,13 @@ macro constraint(input_args...)
     if length(extra) > 1
         error_fn("Cannot specify more than 1 additional positional argument.")
     end
-    name, index_vars, indices = Containers.parse_ref_sets(error_fn, c)
-    if args[1] in index_vars
-        error_fn(
-            "Index $(args[1]) is the same symbol as the model. Use a " *
-            "different name for the index.",
-        )
-    end
+    name, index_vars, indices = Containers.parse_ref_sets(
+        error_fn,
+        c;
+        invalid_index_variables = [args[1]],
+    )
     is_vectorized, parse_code, build_call = parse_constraint(error_fn, x)
-    _add_additional_args(
+    Containers.add_additional_args(
         build_call,
         extra,
         kwargs;
@@ -111,9 +109,6 @@ macro constraint(input_args...)
     if base_name isa Expr
         base_name = esc(base_name)
     end
-    # ; container
-    # There is no need to escape this one.
-    container = get(kwargs, :container, :Auto)
     # ; set_string_name
     name_expr = _base_name_with_indices(base_name, index_vars)
     if name_expr != ""
@@ -145,7 +140,7 @@ macro constraint(input_args...)
     end
     return _finalize_macro(
         model,
-        Containers.container_code(index_vars, indices, code, container),
+        Containers.container_code(index_vars, indices, code, kwargs),
         __source__;
         register_name = name,
         wrap_let = true,
@@ -217,9 +212,7 @@ ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInt
 ```
 """
 macro build_constraint(arg)
-    function error_fn(str...)
-        return _macro_error(:build_constraint, (arg,), __source__, str...)
-    end
+    error_fn = Containers.build_error_fn(:build_constraint, (arg,), __source__)
     _, parse_code, build_call = parse_constraint(error_fn, arg)
     return quote
         $parse_code

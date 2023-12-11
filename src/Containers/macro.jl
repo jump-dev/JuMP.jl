@@ -17,7 +17,12 @@ function _reorder_parameters(args)
 end
 
 """
-    parse_macro_arguments(error_fn::Function, args)
+    parse_macro_arguments(
+        error_fn::Function,
+        args;
+        valid_kwargs::Union{Nothing,Vector{Symbol}} = nothing,
+        num_positional_args::Union{Nothing,Int,UnitRange{Int}} = nothing,
+    )
 
 Returns a `Tuple{Vector{Any},Dict{Symbol,Any}}` containing the ordered
 positional arguments and a dictionary mapping the keyword arguments.
@@ -25,24 +30,52 @@ positional arguments and a dictionary mapping the keyword arguments.
 This specially handles the distinction of `@foo(key = value)` and
 `@foo(; key = value)` in macros.
 
-Throws an error if mulitple keyword arguments are passed with the same name.
+An error is thrown if multiple keyword arguments are passed with the same key.
+
+If `valid_kwargs` is a `Vector{Symbol}`, an error is thrown if a keyword is not
+in `valid_kwargs`.
+
+If `num_positional_args` is not nothing, an error is thrown if the number of
+positional arguments is not in `num_positional_args`.
 """
-function parse_macro_arguments(error_fn::Function, args)
-    pos_args, kw_args = Any[], Dict{Symbol,Any}()
+function parse_macro_arguments(
+    error_fn::Function,
+    args;
+    valid_kwargs::Union{Nothing,Vector{Symbol}} = nothing,
+    num_positional_args::Union{Nothing,Int,UnitRange{Int}} = nothing,
+)
+    pos_args, kwargs = Any[], Dict{Symbol,Any}()
     for arg in _reorder_parameters(args)
         if Meta.isexpr(arg, :(=), 2)
-            if haskey(kw_args, arg.args[1])
+            if haskey(kwargs, arg.args[1])
                 error_fn(
                     "the keyword argument `$(arg.args[1])` was given " *
                     "multiple times.",
                 )
+            elseif valid_kwargs !== nothing && !(arg.args[1] in valid_kwargs)
+                error_fn("unsupported keyword argument `$(arg.args[1])`.")
             end
-            kw_args[arg.args[1]] = arg.args[2]
+            kwargs[arg.args[1]] = arg.args[2]
         else
             push!(pos_args, arg)
         end
     end
-    return pos_args, kw_args
+    if num_positional_args isa Int
+        n = length(pos_args)
+        if n != num_positional_args
+            error_fn(
+                "expected $num_positional_args positional arguments, got $n.",
+            )
+        end
+    elseif num_positional_args isa UnitRange{Int}
+        if !(length(pos_args) in num_positional_args)
+            a, b = num_positional_args.start, num_positional_args.stop
+            error_fn(
+                "expected $a to $b positional arguments, got $(length(pos_args)).",
+            )
+        end
+    end
+    return pos_args, kwargs
 end
 
 """
@@ -208,7 +241,11 @@ function _container_name(error_fn::Function, expr::Expr)
 end
 
 """
-    parse_ref_sets(error_fn::Function, expr)
+    parse_ref_sets(
+        error_fn::Function,
+        expr;
+        invalid_index_variables::Vector{Symbol} = Symbol[],
+    )
 
 Helper function for macros to construct container objects.
 
@@ -237,10 +274,46 @@ Helper function for macros to construct container objects.
 
 See [`container_code`](@ref) for a worked example.
 """
-function parse_ref_sets(error_fn::Function, expr::Union{Nothing,Symbol,Expr})
+function parse_ref_sets(
+    error_fn::Function,
+    expr::Union{Nothing,Symbol,Expr};
+    invalid_index_variables::Vector = Symbol[],
+)
     name = _container_name(error_fn, expr)
     index_vars, indices = build_ref_sets(error_fn, expr)
+    for name in invalid_index_variables
+        if name in index_vars
+            error_fn(
+                "the index name `$name` conflicts with another variable in " *
+                "this scope. Use a different name for the index.",
+            )
+        end
+    end
     return name, index_vars, indices
+end
+
+# This method is needed because Julia v1.10 prints LineNumberNode in the string
+# representation of an expression.
+function _strip_LineNumberNode(x::Expr)
+    if Meta.isexpr(x, :block)
+        return Expr(:block, filter(!Base.Fix2(isa, LineNumberNode), x.args)...)
+    end
+    return x
+end
+
+_strip_LineNumberNode(x) = x
+
+"""
+    build_error_fn(macro_name, args, source)
+
+Return a function that can be used in place of `Base.error`, but which
+additionally prints the macro from which it was called.
+"""
+function build_error_fn(macro_name, args, source)
+    str_args = join(_strip_LineNumberNode.(args), ", ")
+    msg = "At $(source.file):$(source.line): `@$macro_name($str_args)`: "
+    error_fn(str...) = error(msg, str...)
+    return error_fn
 end
 
 """
@@ -279,11 +352,52 @@ function build_ref_sets(error_fn::Function, expr)
 end
 
 """
+    add_additional_args(
+        call::Expr,
+        args::Vector,
+        kwargs::Dict{Symbol,Any};
+        kwarg_exclude::Vector{Symbol} = Symbol[],
+    )
+
+Add the positional arguments `args` to the function call expression `call`,
+escaping each argument expression.
+
+This function is able to incorporate additional positional arguments to `call`s
+that already have keyword arguments.
+"""
+function add_additional_args(
+    call::Expr,
+    args::Vector,
+    kwargs::Dict{Symbol,Any};
+    kwarg_exclude::Vector{Symbol} = Symbol[],
+)
+    call_args = call.args
+    if Meta.isexpr(call, :.)
+        # call is broadcasted
+        call_args = call.args[2].args
+    end
+    # Cache all keyword arguments
+    kw_args = filter(Base.Fix2(Meta.isexpr, :kw), call_args)
+    # Remove keyowrd arguments from the end
+    filter!(!Base.Fix2(Meta.isexpr, :kw), call_args)
+    # Add the new positional arguments
+    append!(call_args, esc.(args))
+    # Re-add the cached keyword arguments back to the end
+    append!(call_args, kw_args)
+    for (key, value) in kwargs
+        if !(key in kwarg_exclude)
+            push!(call_args, esc(Expr(:kw, key, value)))
+        end
+    end
+    return
+end
+
+"""
     container_code(
         index_vars::Vector{Any},
         indices::Expr,
         code,
-        requested_container::Union{Symbol,Expr},
+        requested_container::Union{Symbol,Expr,Dict{Symbol,Any}},
     )
 
 Used in macros to construct a call to [`container`](@ref). This should be used
@@ -300,7 +414,8 @@ in conjunction with [`parse_ref_sets`](@ref).
  * `requested_container`: passed to the third argument of [`container`](@ref).
    For built-in JuMP types, choose one of `:Array`, `:DenseAxisArray`,
    `:SparseAxisArray`, or `:Auto`. For a user-defined container, this expression
-   must evaluate to the correct type.
+   must evaluate to the correct type. You may also pass the `kwargs` dictionary
+   from [`parse_macro_arguments`](@ref).
 
 !!! warning
     In most cases, you should `esc(code)` before passing it to `container_code`.
@@ -358,6 +473,16 @@ function container_code(
         esc(requested_container)
     end
     return Expr(:call, container, f, indices, container_type, index_vars)
+end
+
+function container_code(
+    index_vars::Vector{Any},
+    indices::Expr,
+    code,
+    kwargs::Dict{Symbol,Any},
+)
+    container = get(kwargs, :container, :Auto)
+    return container_code(index_vars, indices, code, container)
 end
 
 """
@@ -418,14 +543,14 @@ SparseAxisArray{Int64, 2, Tuple{Int64, Int64}} with 6 entries:
 ```
 """
 macro container(input_args...)
-    args, kw_args = parse_macro_arguments(error, input_args)
-    container = get(kw_args, :container, :Auto)
-    @assert length(args) == 2
-    for key in keys(kw_args)
-        @assert key == :container
-    end
+    args, kwargs = parse_macro_arguments(
+        error,
+        input_args;
+        num_positional_args = 2,
+        valid_kwargs = [:container],
+    )
     name, index_vars, indices = parse_ref_sets(error, args[1])
-    code = container_code(index_vars, indices, esc(args[2]), container)
+    code = container_code(index_vars, indices, esc(args[2]), kwargs)
     if name === nothing
         return code
     end

@@ -52,15 +52,13 @@ x² - 2 x + 1
 ```
 """
 macro objective(input_args...)
-    error_fn(str...) = _macro_error(:objective, input_args, __source__, str...)
-    args, kwargs = Containers.parse_macro_arguments(error_fn, input_args)
-    if length(args) != 3
-        error_fn("expected 3 positional arguments, got $(length(args)).")
-    elseif !isempty(kwargs)
-        for key in keys(kwargs)
-            error_fn("unsupported keyword argument `$key`.")
-        end
-    end
+    error_fn = Containers.build_error_fn(:objective, input_args, __source__)
+    args, kwargs = Containers.parse_macro_arguments(
+        error_fn,
+        input_args;
+        num_positional_args = 3,
+        valid_kwargs = Symbol[],
+    )
     esc_model = esc(args[1])
     sense = _parse_moi_sense(error_fn, args[2])
     expr, parse_code = _rewrite_expression(args[3])

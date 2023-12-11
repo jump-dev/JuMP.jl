@@ -323,47 +323,6 @@ function model_convert(
     return model_convert.(model, x)
 end
 
-"""
-    _add_additional_args(
-        call::Expr,
-        args::Vector,
-        kwargs::Dict{Symbol,Any};
-        kwarg_exclude::Vector{Symbol} = Symbol[],
-    )
-
-Add the positional arguments `args` to the function call expression `call`,
-escaping each argument expression.
-
-This function is able to incorporate additional positional arguments to `call`s
-that already have keyword arguments.
-"""
-function _add_additional_args(
-    call::Expr,
-    args::Vector,
-    kwargs::Dict{Symbol,Any};
-    kwarg_exclude::Vector{Symbol} = Symbol[],
-)
-    call_args = call.args
-    if Meta.isexpr(call, :.)
-        # call is broadcasted
-        call_args = call.args[2].args
-    end
-    # Cache all keyword arguments
-    kw_args = filter(Base.Fix2(Meta.isexpr, :kw), call_args)
-    # Remove keyowrd arguments from the end
-    filter!(!Base.Fix2(Meta.isexpr, :kw), call_args)
-    # Add the new positional arguments
-    append!(call_args, esc.(args))
-    # Re-add the cached keyword arguments back to the end
-    append!(call_args, kw_args)
-    for (key, value) in kwargs
-        if !(key in kwarg_exclude)
-            push!(call_args, esc(Expr(:kw, key, value)))
-        end
-    end
-    return
-end
-
 _valid_model(::AbstractModel, ::Any) = nothing
 
 function _valid_model(m::M, name) where {M}
@@ -433,25 +392,6 @@ function _error_if_cannot_register(model::AbstractModel, name::Symbol)
         )
     end
     return
-end
-
-# This method is needed because Julia v1.10 prints LineNumberNode in the string
-# representation of an expression.
-function _strip_LineNumberNode(x::Expr)
-    if Meta.isexpr(x, :block)
-        return Expr(:block, filter(!Base.Fix2(isa, LineNumberNode), x.args)...)
-    end
-    return x
-end
-
-_strip_LineNumberNode(x) = x
-
-function _macro_error(macro_name, args, source, str...)
-    str_args = join(_strip_LineNumberNode.(args), ", ")
-    return error(
-        "At $(source.file):$(source.line): `@$macro_name($str_args)`: ",
-        str...,
-    )
 end
 
 function _base_name_with_indices(base_name, index_vars::Vector)

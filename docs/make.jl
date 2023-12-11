@@ -245,9 +245,13 @@ jump_api_reference = DocumenterReference.automatic_reference_documentation(;
             "Containers.nested" => DocumenterReference.DOCTYPE_FUNCTION,
             "Containers.vectorized_product" =>
                 DocumenterReference.DOCTYPE_FUNCTION,
+            "Containers.build_error_fn" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
             "Containers.parse_macro_arguments" =>
                 DocumenterReference.DOCTYPE_FUNCTION,
             "Containers.parse_ref_sets" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
+            "Containers.add_additional_args" =>
                 DocumenterReference.DOCTYPE_FUNCTION,
             "Containers.container_code" =>
                 DocumenterReference.DOCTYPE_FUNCTION,
