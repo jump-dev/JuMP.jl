@@ -334,13 +334,13 @@ function _add_keyword_args(call::Expr, kwargs::Dict; exclude = Symbol[])
 end
 
 """
-    _add_positional_args(call, args)::Nothing
+    _add_positional_args(call::Expr, args::Vector{Any})::Nothing
 
 Add the positional arguments `args` to the function call expression `call`,
-escaping each argument expression. The elements of `args` should be ones that
-were extracted via [`Containers._extract_kw_args`](@ref) and had appropriate
-arguments filtered out (e.g., the model argument). This is able to incorporate
-additional positional arguments to `call`s that already have keyword arguments.
+escaping each argument expression.
+
+This function is able to incorporate additional positional arguments to `call`s
+that already have keyword arguments.
 
 ## Example
 
@@ -354,7 +354,7 @@ julia> call
 :(f(1, $(Expr(:escape, :x)), a = 2))
 ```
 """
-function _add_positional_args(call, args)
+function _add_positional_args(call::Expr, args::Vector{Any})
     call_args = call.args
     if Meta.isexpr(call, :.)
         # call is broadcasted

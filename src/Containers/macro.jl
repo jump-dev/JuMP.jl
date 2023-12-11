@@ -15,30 +15,6 @@ function _get_name(c::Expr)
     return error("Expression $c cannot be used as a name.")
 end
 
-"""
-    _extract_kw_args(args)
-
-Process the arguments to a macro, separating out the keyword arguments.
-
-Return a tuple of (flat_arguments, keyword arguments, and requested_container),
-where `requested_container` is a symbol to be passed to `container_code`.
-"""
-function _extract_kw_args(args)
-    flat_args, kw_args, requested_container = Any[], Any[], :Auto
-    for arg in args
-        if Meta.isexpr(arg, :(=))
-            if arg.args[1] == :container
-                requested_container = arg.args[2]
-            else
-                push!(kw_args, arg)
-            end
-        else
-            push!(flat_args, arg)
-        end
-    end
-    return flat_args, kw_args, requested_container
-end
-
 function _reorder_parameters(args)
     if !Meta.isexpr(args[1], :parameters)
         return args
