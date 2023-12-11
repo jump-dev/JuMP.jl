@@ -400,7 +400,11 @@ function _finalize_macro(
 )
     @assert Meta.isexpr(model, :escape)
     if wrap_let && model.args[1] isa Symbol
-        code = :(let $model = $model; $code end)
+        code = quote
+            let $model = $model
+                $code
+            end
+        end
     end
     if register_name !== nothing
         sym_name = Meta.quot(register_name)

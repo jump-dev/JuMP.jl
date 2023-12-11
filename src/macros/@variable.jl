@@ -272,7 +272,7 @@ macro variable(input_args...)
         build_code,
         args,
         kwargs;
-        exclude = vcat(
+        kwarg_exclude = vcat(
             _INFO_KWARGS,
             [:base_name, :container, :variable_type, :set, :set_string_name],
         ),
