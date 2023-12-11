@@ -225,7 +225,7 @@ function build_ref_sets(error_fn::Function, expr)
     end
     if !_has_dependent_sets(index_vars, index_sets) && condition == :()
         # Convert any 1:N to Base.OneTo(N)
-        new_index_sets = Containers._explicit_oneto.(index_sets)
+        new_index_sets = _explicit_oneto.(index_sets)
         indices = :(Containers.vectorized_product($(new_index_sets...)))
         return index_vars, indices
     end
@@ -309,11 +309,11 @@ function container_code(
     # This switch handles the four "built-in" JuMP container types, with a
     # generic fallback for user-defined types.
     container_type = if requested_container == :Auto
-        Containers.AutoContainerType
+        AutoContainerType
     elseif requested_container == :DenseAxisArray
-        Containers.DenseAxisArray
+        DenseAxisArray
     elseif requested_container == :SparseAxisArray
-        Containers.SparseAxisArray
+        SparseAxisArray
     elseif requested_container == :Array
         Array
     else

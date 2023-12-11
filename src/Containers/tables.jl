@@ -61,7 +61,7 @@ function rowtable(
             "Invalid number of column names provided: Got $got, expected $want.",
         )
     end
-    elements = [(args..., f(x[i])) for (i, args) in Containers._rows(x)]
+    elements = [(args..., f(x[i])) for (i, args) in _rows(x)]
     return NamedTuple{tuple(header...)}.(elements)
 end
 
