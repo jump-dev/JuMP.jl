@@ -1395,7 +1395,9 @@ end
 function test_invalid_name_errors()
     model = Model()
     @test_throws_parsetime(
-        ErrorException("Expression x.y cannot be used as a name."),
+        ErrorException(
+            "In `@variable(model, x.y)`: Expression x.y cannot be used as a name.",
+        ),
         @variable(model, x.y),
     )
     return
@@ -1404,7 +1406,9 @@ end
 function test_invalid_name_errors_denseaxisarray()
     model = Model()
     @test_throws_parsetime(
-        ErrorException("Expression x.y cannot be used as a name."),
+        ErrorException(
+            "In `@variable(model, x.y[2:3, 1:2])`: Expression x.y cannot be used as a name.",
+        ),
         @variable(model, x.y[2:3, 1:2]),
     )
     return
@@ -1413,7 +1417,9 @@ end
 function test_invalid_name_errors_sparseaxisarray()
     model = Model()
     @test_throws_parsetime(
-        ErrorException("Expression x.y cannot be used as a name."),
+        ErrorException(
+            "In `@variable(model, x.y[i = 1:3; isodd(i)])`: Expression x.y cannot be used as a name.",
+        ),
         @variable(model, x.y[i = 1:3; isodd(i)]),
     )
     return

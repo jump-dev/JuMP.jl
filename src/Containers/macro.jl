@@ -237,10 +237,7 @@ Helper function for macros to construct container objects.
 
 See [`container_code`](@ref) for a worked example.
 """
-function parse_ref_sets(
-    error_fn::Function,
-    expr::Union{Nothing,Symbol,Expr},
-)
+function parse_ref_sets(error_fn::Function, expr::Union{Nothing,Symbol,Expr})
     name = _container_name(error_fn, expr)
     index_vars, indices = build_ref_sets(error_fn, expr)
     return name, index_vars, indices
