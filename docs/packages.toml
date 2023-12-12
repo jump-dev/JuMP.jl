@@ -125,6 +125,11 @@
 [DAQP]
     user = "darnstrom"
     rev = "v0.5.2"
+[DisjunctiveProgramming]
+    user = "hdavid16"
+    rev = "6a4d0ac4a7484e52b1dbff9cee310a73d2d23e81"
+    filename = "docs/jump/README.md"
+    extension = true
 [EAGO]
     user = "PSORLab"
     rev = "8bba4cf6d9ef1602b4cfe3ea31b847f21ce25837"
