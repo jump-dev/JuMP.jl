@@ -4,7 +4,7 @@
 #  file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 function _reorder_parameters(args)
-    if !Meta.isexpr(args[1], :parameters)
+    if isempty(args) || !Meta.isexpr(args[1], :parameters)
         return args
     end
     args = collect(args)

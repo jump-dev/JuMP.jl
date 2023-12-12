@@ -231,6 +231,13 @@ function test__MyContainer2()
     return
 end
 
+function test_parse_macro_arguments()
+    args, kwargs = Containers.parse_macro_arguments(())
+    @test args == ()
+    @test isempty(kwargs)
+    return
+end
+
 function test_add_additional_args()
     call = :(f(1; a = 2))
     kwargs = Dict{Symbol,Any}()
