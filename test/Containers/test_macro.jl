@@ -232,7 +232,7 @@ function test__MyContainer2()
 end
 
 function test_parse_macro_arguments()
-    args, kwargs = Containers.parse_macro_arguments(())
+    args, kwargs = Containers.parse_macro_arguments(error, ())
     @test args == ()
     @test isempty(kwargs)
     return

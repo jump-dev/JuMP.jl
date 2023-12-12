@@ -394,21 +394,6 @@ function _error_if_cannot_register(model::AbstractModel, name::Symbol)
     return
 end
 
-function _base_name_with_indices(base_name, index_vars::Vector)
-    if isempty(index_vars) || base_name == ""
-        return base_name
-    end
-    expr = Expr(:call, :string, base_name, "[")
-    for index in index_vars
-        # Converting the arguments to strings before concatenating is faster:
-        # https://github.com/JuliaLang/julia/issues/29550.
-        push!(expr.args, :(string($(esc(index)))))
-        push!(expr.args, ",")
-    end
-    expr.args[end] = "]"
-    return expr
-end
-
 """
     _replace_zero(model::M, x) where {M<:AbstractModel}
 

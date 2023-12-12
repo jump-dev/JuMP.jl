@@ -251,6 +251,8 @@ jump_api_reference = DocumenterReference.automatic_reference_documentation(;
                 DocumenterReference.DOCTYPE_FUNCTION,
             "Containers.parse_ref_sets" =>
                 DocumenterReference.DOCTYPE_FUNCTION,
+            "Containers.name_with_index_expr" =>
+                DocumenterReference.DOCTYPE_FUNCTION,
             "Containers.add_additional_args" =>
                 DocumenterReference.DOCTYPE_FUNCTION,
             "Containers.container_code" =>

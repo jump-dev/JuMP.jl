@@ -393,6 +393,52 @@ function add_additional_args(
 end
 
 """
+    name_with_index_expr(
+        name::Union{Symbol,Nothing},
+        index_vars::Vector,
+        kwargs::Dict{Symbol,Any},
+    )
+
+Returns an expression for the name of a container element, where `name` and
+`index_vars` are the values returned by [`parse_ref_sets`](@ref) and `kwargs`
+is the dictionary returned by [`parse_macro_arguments`](@ref).
+
+This assumes that the key in `kwargs` used to over-ride the name choice is
+`:base_name`.
+
+## Examples
+
+```jldoctest
+julia> Containers.name_with_index_expr(:x, [:i, :j], Dict{Symbol,Any}())
+:(string("x", "[", string(\$(Expr(:escape, :i))), ",", string(\$(Expr(:escape, :j))), "]"))
+
+julia> Containers.name_with_index_expr(nothing, [:i, :j], Dict{Symbol,Any}())
+""
+
+julia> Containers.name_with_index_expr(:y, [:i, :j], Dict{Symbol,Any}(:base_name => "y"))
+:(string("y", "[", string(\$(Expr(:escape, :i))), ",", string(\$(Expr(:escape, :j))), "]"))
+```
+"""
+function name_with_index_expr(name, index_vars::Vector, kwargs)
+    base_name = get(kwargs, :base_name, string(something(name, "")))
+    if base_name isa Expr
+        base_name = esc(base_name)
+    end
+    if isempty(index_vars) || base_name == ""
+        return base_name
+    end
+    expr = Expr(:call, :string, base_name, "[")
+    for index in index_vars
+        # Converting the arguments to strings before concatenating is faster:
+        # https://github.com/JuliaLang/julia/issues/29550.
+        push!(expr.args, :(string($(esc(index)))))
+        push!(expr.args, ",")
+    end
+    expr.args[end] = "]"
+    return expr
+end
+
+"""
     container_code(
         index_vars::Vector{Any},
         indices::Expr,

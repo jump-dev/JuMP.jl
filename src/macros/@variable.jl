@@ -208,13 +208,8 @@ macro variable(input_args...)
         end
         set = set_kw
     end
-    # ; base_name
-    base_name = get(kwargs, :base_name, string(something(name, "")))
-    if base_name isa Expr
-        base_name = esc(base_name)
-    end
     # ; set_string_name
-    name_expr = _base_name_with_indices(base_name, index_vars)
+    name_expr = Containers.name_with_index_expr(name, index_vars, kwargs)
     if name_expr != ""
         set_string_name = if haskey(kwargs, :set_string_name)
             esc(kwargs[:set_string_name])
