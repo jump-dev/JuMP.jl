@@ -32,7 +32,7 @@
 # by John T. Betts.
 
 # !!! info
-#     The JuMP extension [InfiniteOpt.jl](/packages/InfiniteOpt) can also be
+#     The JuMP extension [InfiniteOpt.jl](../../../packages/InfiniteOpt) can also be
 #     used to model and solve optimal control problems.
 
 # !!! tip
