@@ -393,7 +393,7 @@ function add_additional_args(
 end
 
 """
-    name_with_index_expr(
+    build_name_expr(
         name::Union{Symbol,Nothing},
         index_vars::Vector,
         kwargs::Dict{Symbol,Any},
@@ -409,17 +409,21 @@ This assumes that the key in `kwargs` used to over-ride the name choice is
 ## Examples
 
 ```jldoctest
-julia> Containers.name_with_index_expr(:x, [:i, :j], Dict{Symbol,Any}())
+julia> Containers.build_name_expr(:x, [:i, :j], Dict{Symbol,Any}())
 :(string("x", "[", string(\$(Expr(:escape, :i))), ",", string(\$(Expr(:escape, :j))), "]"))
 
-julia> Containers.name_with_index_expr(nothing, [:i, :j], Dict{Symbol,Any}())
+julia> Containers.build_name_expr(nothing, [:i, :j], Dict{Symbol,Any}())
 ""
 
-julia> Containers.name_with_index_expr(:y, [:i, :j], Dict{Symbol,Any}(:base_name => "y"))
+julia> Containers.build_name_expr(:y, [:i, :j], Dict{Symbol,Any}(:base_name => "y"))
 :(string("y", "[", string(\$(Expr(:escape, :i))), ",", string(\$(Expr(:escape, :j))), "]"))
 ```
 """
-function name_with_index_expr(name, index_vars::Vector, kwargs)
+function build_name_expr(
+    name::Union{Symbol,Nothing},
+    index_vars::Vector,
+    kwargs::Dict{Symbol,Any},
+)
     base_name = get(kwargs, :base_name, string(something(name, "")))
     if base_name isa Expr
         base_name = esc(base_name)

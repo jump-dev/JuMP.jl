@@ -60,14 +60,16 @@ Other keyword arguments may be supported by JuMP extensions.
 """
 macro constraint(input_args...)
     error_fn = Containers.build_error_fn(:constraint, input_args, __source__)
-    args, kwargs = Containers.parse_macro_arguments(error_fn, input_args)
+    args, kwargs = Containers.parse_macro_arguments(
+        error_fn,
+        input_args;
+        num_positional_args = 2:4,
+    )
     if length(args) < 2 && !isempty(kwargs)
         error_fn(
             "No constraint expression detected. If you are trying to " *
             "construct an equality constraint, use `==` instead of `=`.",
         )
-    elseif length(args) < 2
-        error_fn("Not enough arguments")
     elseif Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@constraints`?")
     end
@@ -105,7 +107,7 @@ macro constraint(input_args...)
         kwarg_exclude = [:base_name, :container, :set_string_name],
     )
     # ; set_string_name
-    name_expr = Containers.name_with_index_expr(name, index_vars, kwargs)
+    name_expr = Containers.build_name_expr(name, index_vars, kwargs)
     if name_expr != ""
         set_string_name = if haskey(kwargs, :set_string_name)
             esc(kwargs[:set_string_name])
