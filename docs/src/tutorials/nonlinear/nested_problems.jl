@@ -33,7 +33,7 @@
 # see the [User-defined Hessians](@ref) tutorial.
 
 # !!! info
-#     The JuMP extension [BilevelJuMP.jl](@ref) can also be used to model and
+#     The JuMP extension [BilevelJuMP.jl](./../packages/BilevelJuMP) can also be used to model and
 #     solve bilevel optimization problems.
 
 # This tutorial uses the following packages:
