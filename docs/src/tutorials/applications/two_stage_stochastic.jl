@@ -8,6 +8,12 @@
 # The purpose of this tutorial is to demonstrate how to model and solve a
 # two-stage stochastic program.
 
+# !!! info
+#     The JuMP extension [InfiniteOpt.jl](../../packages/InfiniteOpt.md) can also be
+#     used to model and solve two-stage stochastic programs.
+#     The JuMP extension [SDDP.jl](../../packages/SDDP.md) can be
+#     used to model and solve multi-stage stochastic programs.
+
 # This tutorial uses the following packages
 
 using JuMP
