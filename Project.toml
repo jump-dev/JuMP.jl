@@ -21,15 +21,15 @@ JuMPDimensionalDataExt = "DimensionalData"
 
 [compat]
 DimensionalData = "0.24"
-LinearAlgebra = "1.6"
+LinearAlgebra = "<0.0.1, 1.6"
 MacroTools = "0.5"
 MathOptInterface = "1.19"
 MutableArithmetics = "1.1"
 OrderedCollections = "1"
-Printf = "1.6"
+Printf = "<0.0.1, 1.6"
 PrecompileTools = "1"
-SparseArrays = "1.6"
-Test = "1.6"
+SparseArrays = "<0.0.1, 1.6"
+Test = "<0.0.1, 1.6"
 julia = "1.6"
 
 [extras]
