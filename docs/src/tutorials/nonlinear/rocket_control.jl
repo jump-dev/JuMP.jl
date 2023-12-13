@@ -12,6 +12,10 @@
 
 # The example is an optimal control problem of a nonlinear rocket.
 
+# !!! info
+#     The JuMP extension [InfiniteOpt.jl](../../packages/InfiniteOpt.md) can also be
+#     used to model and solve optimal control problems.
+
 # This tutorial uses the following packages:
 
 using JuMP

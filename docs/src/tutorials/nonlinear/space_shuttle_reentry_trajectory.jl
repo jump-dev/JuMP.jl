@@ -31,6 +31,10 @@
 # ["Practical Methods for Optimal Control and Estimation Using Nonlinear Programming"](https://epubs.siam.org/doi/book/10.1137/1.9780898718577),
 # by John T. Betts.
 
+# !!! info
+#     The JuMP extension [InfiniteOpt.jl](../../packages/InfiniteOpt.md) can also be
+#     used to model and solve optimal control problems.
+
 # !!! tip
 #     This tutorial is a more-complicated version of the [Rocket Control](@ref) example.
 #     If you are new to solving nonlinear programs in JuMP, you may want to start there instead.
