@@ -1658,7 +1658,9 @@ end
 function test_constraint_not_enough_arguments()
     model = Model()
     @test_throws_parsetime(
-        ErrorException("In `@constraint(model)`: expected 2 to 4 positional arguments, got 1."),
+        ErrorException(
+            "In `@constraint(model)`: expected 2 to 4 positional arguments, got 1.",
+        ),
         @constraint(model),
     )
     return
