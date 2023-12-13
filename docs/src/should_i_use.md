@@ -95,21 +95,6 @@ Alternatives to consider are:
  * [Optimization.jl](https://github.com/SciML/Optimization.jl)
  * [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)
 
-### Optimal control problems
-
-JuMP supports formulating optimal control problems as large nonlinear programs
-(see, for example, [Optimal control for a Space Shuttle reentry trajectory](@ref)).
-However, the nonlinear interface has a number of limitations (for example, the
-need to write out the dynamics in algebraic form) that mean JuMP might not be
-the right tool for the job.
-
-Alternatives to consider are:
-
- * [CasADi [MATLAB/Python]](https://web.casadi.org),
-   [CasADi.jl](https://github.com/ichatzinikolaidis/CasADi.jl)
- * [InfiniteOpt.jl](https://github.com/infiniteopt/InfiniteOpt.jl)
- * [pyomo.DAE [Python]](https://pyomo.readthedocs.io/en/stable/modeling_extensions/dae.html)
-
 ### Disciplined convex programming
 
 JuMP does not support [disciplined convex programming (DCP)](https://dcp.stanford.edu).
