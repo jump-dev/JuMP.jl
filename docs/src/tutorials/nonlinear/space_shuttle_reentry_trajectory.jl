@@ -27,9 +27,7 @@
 # This tutorial demonstrates how to compute a reentry trajectory for the
 # [Space Shuttle](https://en.wikipedia.org/wiki/Space_Shuttle),
 # by formulating and solving a nonlinear programming problem.
-# The problem was drawn from Chapter 6 of
-# ["Practical Methods for Optimal Control and Estimation Using Nonlinear Programming"](https://epubs.siam.org/doi/book/10.1137/1.9780898718577),
-# by John T. Betts.
+# The problem was drawn from Chapter 6 of [Betts2010](@cite).
 
 # !!! info
 #     The JuMP extension [InfiniteOpt.jl](../../packages/InfiniteOpt.md) can also be
