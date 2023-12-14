@@ -425,13 +425,10 @@ function build_name_expr(
     kwargs::Dict{Symbol,Any},
 )
     base_name = get(kwargs, :base_name, string(something(name, "")))
-    if base_name isa Expr
-        base_name = esc(base_name)
-    end
     if isempty(index_vars) || base_name == ""
-        return base_name
+        return esc(base_name)
     end
-    expr = Expr(:call, :string, base_name, "[")
+    expr = Expr(:call, :string, esc(base_name), "[")
     for index in index_vars
         # Converting the arguments to strings before concatenating is faster:
         # https://github.com/JuliaLang/julia/issues/29550.

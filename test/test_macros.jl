@@ -2167,4 +2167,22 @@ function test_expression_container_kwarg()
     return
 end
 
+function test_base_name_escape()
+    model = Model()
+    x = @variable(model)
+    @test name(x) == ""
+    x = @variable(model, [1:2])
+    @test name.(x) == ["", ""]
+    x = @variable(model, base_name = "x")
+    @test name(x) == "x"
+    x = @variable(model, [1:2], base_name = "x")
+    @test name.(x) == ["x[1]", "x[2]"]
+    y = "abc"
+    x = @variable(model, base_name = y)
+    @test name(x) == "abc"
+    x = @variable(model, [1:2], base_name = y)
+    @test name.(x) == ["abc[1]", "abc[2]"]
+    return
+end
+
 end  # module
