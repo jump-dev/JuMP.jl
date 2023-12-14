@@ -64,27 +64,22 @@ julia> expr = @expression(model, [i in 1:3], i * sum(x[j] for j in 1:3))
 ```
 """
 macro expression(input_args...)
-    error_fn(str...) = _macro_error(:expression, input_args, __source__, str...)
-    args, kwargs = Containers.parse_macro_arguments(error_fn, input_args)
-    if !(2 <= length(args) <= 3)
-        error_fn("expected 2 or 3 positional arguments, got $(length(args)).")
-    elseif Meta.isexpr(args[2], :block)
+    error_fn = Containers.build_error_fn(:expression, input_args, __source__)
+    args, kwargs = Containers.parse_macro_arguments(
+        error_fn,
+        input_args;
+        num_positional_args = 2:3,
+        valid_kwargs = [:container],
+    )
+    if Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@expressions`?")
-    elseif !isempty(kwargs)
-        for key in keys(kwargs)
-            if key != :container
-                error_fn("unsupported keyword argument `$key`.")
-            end
-        end
     end
     name_expr = length(args) == 3 ? args[2] : nothing
-    index_vars, indices = Containers.build_ref_sets(error_fn, name_expr)
-    if args[1] in index_vars
-        error_fn(
-            "Index $(args[1]) is the same symbol as the model. Use a " *
-            "different name for the index.",
-        )
-    end
+    name, index_vars, indices = Containers.parse_ref_sets(
+        error_fn,
+        name_expr;
+        invalid_index_variables = [args[1]],
+    )
     model = esc(args[1])
     expr, build_code = _rewrite_expression(args[end])
     code = quote
@@ -93,12 +88,11 @@ macro expression(input_args...)
         # other structure that returns `_MA.Zero()`.
         _replace_zero($model, $expr)
     end
-    container = get(kwargs, :container, :Auto)
     return _finalize_macro(
         model,
-        Containers.container_code(index_vars, indices, code, container),
+        Containers.container_code(index_vars, indices, code, kwargs),
         __source__;
-        register_name = Containers._get_name(name_expr),
+        register_name = name,
         wrap_let = true,
     )
 end

@@ -273,9 +273,8 @@ Subject to
 ```
 """
 macro NLobjective(model, sense, x)
-    function error_fn(str...)
-        return _macro_error(:NLobjective, (model, sense, x), __source__, str...)
-    end
+    error_fn =
+        Containers.build_error_fn(:NLobjective, (model, sense, x), __source__)
     sense_expr = _parse_moi_sense(error_fn, sense)
     esc_model = esc(model)
     parsing_code, expr = _parse_nonlinear_expression(esc_model, x)
@@ -313,9 +312,8 @@ julia> @NLconstraint(model, [i = 1:3], sin(i * x) <= 1 / i)
 ```
 """
 macro NLconstraint(m, x, args...)
-    function error_fn(str...)
-        return _macro_error(:NLconstraint, (m, x, args...), __source__, str...)
-    end
+    error_fn =
+        Containers.build_error_fn(:NLconstraint, (m, x, args...), __source__)
     esc_m = esc(m)
     if Meta.isexpr(x, :block)
         error_fn("Invalid syntax. Did you mean to use `@NLconstraints`?")
@@ -332,13 +330,8 @@ macro NLconstraint(m, x, args...)
     con = length(extra) == 1 ? extra[1] : x
     # Strategy: build up the code for non-macro add_constraint, and if needed
     # we will wrap in loops to assign to the ConstraintRefs
-    idxvars, indices = Containers.build_ref_sets(error_fn, c)
-    if m in idxvars
-        error_fn(
-            "Index $(m) is the same symbol as the model. Use a different " *
-            "name for the index.",
-        )
-    end
+    name, idxvars, indices =
+        Containers.parse_ref_sets(error_fn, c; invalid_index_variables = [m])
     parsing_code, expr = _parse_nonlinear_expression(esc_m, con)
     code = quote
         $parsing_code
@@ -354,7 +347,7 @@ macro NLconstraint(m, x, args...)
         esc_m,
         creation_code,
         __source__;
-        register_name = Containers._get_name(c),
+        register_name = name,
     )
 end
 
@@ -436,7 +429,7 @@ subexpression[5]: log(1.0 + (exp(subexpression[2]) + exp(subexpression[3])))
 ```
 """
 macro NLexpression(args...)
-    error_fn(str...) = _macro_error(:NLexpression, args, __source__, str...)
+    error_fn = Containers.build_error_fn(:NLexpression, args, __source__)
     args, kw_args, requested_container = _extract_kw_args(args)
     if length(args) <= 1
         error_fn(
@@ -454,13 +447,12 @@ macro NLexpression(args...)
     if length(args) > 3 || length(kw_args) > 0
         error_fn("To many arguments ($(length(args))).")
     end
-    idxvars, indices = Containers.build_ref_sets(error_fn, c)
-    if args[1] in idxvars
-        error_fn(
-            "Index $(args[1]) is the same symbol as the model. Use a " *
-            "different name for the index.",
-        )
-    end
+    name, idxvars, indices = Containers.parse_ref_sets(error_fn, c)
+    name, idxvars, indices = Containers.parse_ref_sets(
+        error_fn,
+        c;
+        invalid_index_variables = [args[1]],
+    )
     esc_m = esc(m)
     parsing_code, expr = _parse_nonlinear_expression(esc_m, x)
     code = quote
@@ -473,7 +465,7 @@ macro NLexpression(args...)
         esc_m,
         creation_code,
         __source__;
-        register_name = Containers._get_name(c),
+        register_name = name,
     )
 end
 
@@ -598,9 +590,8 @@ julia> value(y[2])
 """
 macro NLparameter(model, args...)
     esc_m = esc(model)
-    function error_fn(str...)
-        return _macro_error(:NLparameter, (model, args...), __source__, str...)
-    end
+    error_fn =
+        Containers.build_error_fn(:NLparameter, (model, args...), __source__)
     pos_args, kw_args, requested_container = _extract_kw_args(args)
     value = missing
     for arg in kw_args
@@ -634,13 +625,11 @@ macro NLparameter(model, args...)
     if ismissing(value)
         param, value = pos_args[1].args[2], pos_args[1].args[3]
     end
-    index_vars, index_values = Containers.build_ref_sets(error_fn, param)
-    if model in index_vars
-        error_fn(
-            "Index $(model) is the same symbol as the model. Use a different " *
-            "name for the index.",
-        )
-    end
+    name, index_vars, index_values = Containers.parse_ref_sets(
+        error_fn,
+        param;
+        invalid_index_variables = [model],
+    )
     code = quote
         if !isa($(esc(value)), Number)
             $(esc(error_fn))("Parameter value is not a number.")
@@ -657,7 +646,7 @@ macro NLparameter(model, args...)
         esc_m,
         creation_code,
         __source__;
-        register_name = Containers._get_name(param),
+        register_name = name,
     )
 end
 

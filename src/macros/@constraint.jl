@@ -59,7 +59,7 @@ which are not listed here.
 Other keyword arguments may be supported by JuMP extensions.
 """
 macro constraint(input_args...)
-    error_fn(str...) = _macro_error(:constraint, input_args, __source__, str...)
+    error_fn = Containers.build_error_fn(:constraint, input_args, __source__)
     args, kwargs = Containers.parse_macro_arguments(error_fn, input_args)
     if length(args) < 2 && !isempty(kwargs)
         error_fn(
@@ -67,7 +67,7 @@ macro constraint(input_args...)
             "construct an equality constraint, use `==` instead of `=`.",
         )
     elseif length(args) < 2
-        error_fn("Not enough arguments")
+        error_fn("expected 2 to 4 positional arguments, got $(length(args)).")
     elseif Meta.isexpr(args[2], :block)
         error_fn("Invalid syntax. Did you mean to use `@constraints`?")
     end
@@ -92,31 +92,20 @@ macro constraint(input_args...)
     if length(extra) > 1
         error_fn("Cannot specify more than 1 additional positional argument.")
     end
-    index_vars, indices = Containers.build_ref_sets(error_fn, c)
-    if args[1] in index_vars
-        error_fn(
-            "Index $(args[1]) is the same symbol as the model. Use a " *
-            "different name for the index.",
-        )
-    end
+    name, index_vars, indices = Containers.parse_ref_sets(
+        error_fn,
+        c;
+        invalid_index_variables = [args[1]],
+    )
     is_vectorized, parse_code, build_call = parse_constraint(error_fn, x)
-    _add_additional_args(
+    Containers.add_additional_args(
         build_call,
         extra,
         kwargs;
         kwarg_exclude = [:base_name, :container, :set_string_name],
     )
-    # ; base_name
-    default_base_name = string(something(Containers._get_name(c), ""))
-    base_name = get(kwargs, :base_name, default_base_name)
-    if base_name isa Expr
-        base_name = esc(base_name)
-    end
-    # ; container
-    # There is no need to escape this one.
-    container = get(kwargs, :container, :Auto)
     # ; set_string_name
-    name_expr = _base_name_with_indices(base_name, index_vars)
+    name_expr = Containers.build_name_expr(name, index_vars, kwargs)
     if name_expr != ""
         set_string_name = if haskey(kwargs, :set_string_name)
             esc(kwargs[:set_string_name])
@@ -146,9 +135,9 @@ macro constraint(input_args...)
     end
     return _finalize_macro(
         model,
-        Containers.container_code(index_vars, indices, code, container),
+        Containers.container_code(index_vars, indices, code, kwargs),
         __source__;
-        register_name = Containers._get_name(c),
+        register_name = name,
         wrap_let = true,
     )
 end
@@ -218,9 +207,7 @@ ScalarConstraint{AffExpr, MathOptInterface.GreaterThan{Float64}}(2 x, MathOptInt
 ```
 """
 macro build_constraint(arg)
-    function error_fn(str...)
-        return _macro_error(:build_constraint, (arg,), __source__, str...)
-    end
+    error_fn = Containers.build_error_fn(:build_constraint, (arg,), __source__)
     _, parse_code, build_call = parse_constraint(error_fn, arg)
     return quote
         $parse_code

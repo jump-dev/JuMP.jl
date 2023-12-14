@@ -166,34 +166,6 @@ function test_Check_Julia_condition_expression_parsing()
     return
 end
 
-function test_add_additional_args()
-    call = :(f(1; a = 2))
-    kwargs = Dict{Symbol,Any}()
-    @test JuMP._add_additional_args(call, [:(MyObject)], kwargs) isa Nothing
-    @test call == :(f(1, $(Expr(:escape, :MyObject)); a = 2))
-    call = :(f(1))
-    JuMP._add_additional_args(call, [2, 3], kwargs)
-    @test call == :(f(1, $(esc(2)), $(esc(3))))
-    call = :(f.(1))
-    JuMP._add_additional_args(call, [2, 3], kwargs)
-    @test call == :(f.(1, $(esc(2)), $(esc(3))))
-    call = :(f(1; a = 4))
-    JuMP._add_additional_args(call, [2, 3], kwargs)
-    @test call == :(f(1, $(esc(2)), $(esc(3)); a = 4))
-    call = :(f.(1; a = 4))
-    JuMP._add_additional_args(call, [2, 3], kwargs)
-    @test call == :(f.(1, $(esc(2)), $(esc(3)); a = 4))
-    call = :(f.(1, a = 4))
-    kwargs = Dict{Symbol,Any}(:b => 4, :c => false)
-    JuMP._add_additional_args(call, Any[2], kwargs; kwarg_exclude = [:b])
-    @test call == Expr(
-        :.,
-        :f,
-        Expr(:tuple, 1, esc(2), Expr(:kw, :a, 4), esc(Expr(:kw, :c, false))),
-    )
-    return
-end
-
 function test_MutableArithmetics_Zero_Issue_2187()
     model = Model()
     c = @constraint(model, sum(1 for _ in 1:0) == sum(1 for _ in 1:0))
@@ -964,7 +936,7 @@ end
 function test_Model_as_index()
     m = Model()
     @variable(m, x)
-    msg = "Index m is the same symbol as the model. Use a different name for the index."
+    msg = "the index name `m` conflicts with another variable in this scope. Use a different name for the index."
     @test_throws_parsetime(
         ErrorException("In `@variable(m, y[m = 1:2] <= m)`: $(msg)"),
         @variable(m, y[m = 1:2] <= m),
@@ -1395,7 +1367,9 @@ end
 function test_invalid_name_errors()
     model = Model()
     @test_throws_parsetime(
-        ErrorException("Expression x.y cannot be used as a name."),
+        ErrorException(
+            "In `@variable(model, x.y)`: Expression x.y cannot be used as a name.",
+        ),
         @variable(model, x.y),
     )
     return
@@ -1404,7 +1378,9 @@ end
 function test_invalid_name_errors_denseaxisarray()
     model = Model()
     @test_throws_parsetime(
-        ErrorException("Expression x.y cannot be used as a name."),
+        ErrorException(
+            "In `@variable(model, x.y[2:3, 1:2])`: Expression x.y cannot be used as a name.",
+        ),
         @variable(model, x.y[2:3, 1:2]),
     )
     return
@@ -1413,7 +1389,9 @@ end
 function test_invalid_name_errors_sparseaxisarray()
     model = Model()
     @test_throws_parsetime(
-        ErrorException("Expression x.y cannot be used as a name."),
+        ErrorException(
+            "In `@variable(model, x.y[i = 1:3; isodd(i)])`: Expression x.y cannot be used as a name.",
+        ),
         @variable(model, x.y[i = 1:3; isodd(i)]),
     )
     return
@@ -1680,7 +1658,9 @@ end
 function test_constraint_not_enough_arguments()
     model = Model()
     @test_throws_parsetime(
-        ErrorException("In `@constraint(model)`: Not enough arguments"),
+        ErrorException(
+            "In `@constraint(model)`: expected 2 to 4 positional arguments, got 1.",
+        ),
         @constraint(model),
     )
     return
@@ -1713,7 +1693,7 @@ function test_expression_not_enough_arguments()
     model = Model()
     @test_throws_parsetime(
         ErrorException(
-            "In `@expression(model)`: expected 2 or 3 positional arguments, got 1.",
+            "In `@expression(model)`: expected 2 to 3 positional arguments, got 1.",
         ),
         @expression(model),
     )
