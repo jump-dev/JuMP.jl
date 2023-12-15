@@ -606,3 +606,25 @@ macro container(input_args...)
     end
     return :($(esc(name)) = $code)
 end
+
+"""
+    _extract_kw_args(args)
+
+!!! warning
+    This function is deprecated. Use [`parse_macro_arguments`](@ref) instead.
+"""
+function _extract_kw_args(args)
+    flat_args, kw_args, requested_container = Any[], Any[], :Auto
+    for arg in args
+        if Meta.isexpr(arg, :(=))
+            if arg.args[1] == :container
+                requested_container = arg.args[2]
+            else
+                push!(kw_args, arg)
+            end
+        else
+            push!(flat_args, arg)
+        end
+    end
+    return flat_args, kw_args, requested_container
+end
