@@ -425,7 +425,7 @@ function build_name_expr(
     kwargs::Dict{Symbol,Any},
 )
     base_name = get(kwargs, :base_name, string(something(name, "")))
-    if base_name isa Expr
+    if !(base_name isa String)
         base_name = esc(base_name)
     end
     if isempty(index_vars) || base_name == ""
