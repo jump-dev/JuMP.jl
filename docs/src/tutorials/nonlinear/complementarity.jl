@@ -142,9 +142,8 @@ value(K)
 
 # ## Electricity consumption
 
-# This example is a mixed complementarity formulation of example 3.3.1 from
-# D’Aertrycke, G., Ehrenmann, A., Ralph, D., & Smeers, Y. (2017). [Risk trading
-# in capacity equilibrium models](https://doi.org/10.17863/CAM.17552).
+# This example is a mixed complementarity formulation of Example 3.3.1 from
+# [DAertrycke2017](@cite).
 
 # This example models a risk neutral competitive equilibrium between a producer
 # and a consumer of electricity.
@@ -163,8 +162,8 @@ value(K)
 #
 # We now build and solve the mixed complementarity problem with a few brief
 # comments. The economic justification for the model would require a larger
-# tutorial than the space available here. Consult the [original text](https://doi.org/10.17863/CAM.17552)
-# for details.
+# tutorial than the space available here. Consult [DAertrycke2017](@cite) for
+# details.
 
 I = 90_000                     # Annualized capital cost
 C = 60                         # Operation cost per MWh

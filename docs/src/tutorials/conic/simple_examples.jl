@@ -30,12 +30,7 @@ import Test
 #                  \qquad X \succeq 0
 # ```
 # where ``L`` is the weighted graph Laplacian and ``e`` is a vector of ones.
-# For more details, see:
-#
-# Goemans, M. X., & Williamson, D. P. (1995).
-# [_Improved approximation algorithms for maximum cut and satisfiability problems
-# using semidefinite programming._](https://doi.org/10.1145/227683.227684)
-# Journal of the ACM (JACM), 42(6), 1115-1145.
+# For more details, see [Goemans1995](@cite).
 
 """
     svd_cholesky(X::AbstractMatrix, rtol)
@@ -121,11 +116,7 @@ S, T = solve_max_cut_sdp([0 1 5 0; 1 0 0 9; 5 0 0 2; 0 9 2 0])
 
 # Given a set of points ``a_1, \ldots, a_m``  in ``\mathbb{R}^n``, allocate them to ``k`` clusters.
 #
-# For more details, see:
-#
-# Peng, J., & Wei, Y. (2007).
-# [_Approximating k-means-type clustering via semidefinite programming_](https://doi.org/10.1137/050641983).
-# SIAM Journal on Optimization, 18(1), 186-205.
+# For more details, see [Peng2007](@cite).
 
 function example_k_means_clustering()
     a = [[2.0, 2.0], [2.5, 2.1], [7.0, 7.0], [2.2, 2.3], [6.8, 7.0], [7.2, 7.5]]

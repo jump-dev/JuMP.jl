@@ -49,18 +49,20 @@ import Test #src
 # following question: what is the most cost-effective operation of electricity
 # generators while meeting constraints on the safe limits of network components?
 
-# We'll use the 9-_node_ network test case `case9mod` to explore this problem.
+# We'll use the 9-_node_ network test case [`case9mod`](https://www.maths.ed.ac.uk/optenergy/LocalOpt/9busnetwork.html)
+# to explore this problem.
+
 # The graph of the network, shown here, has three nodes (or _buses_) each for
 # the different purposes of generation ``G`` (nodes 1, 2, and 3), trans-shipment
 # (nodes 4, 6, and 8), and demand ``D`` (nodes 5, 7, and 9).
 
 # ![Nine Nodes](../../assets/case9mod.png)
 
-# This example is a modified version of the [MATPOWER](https://matpower.org/)
+# This example is a modified version of the [MATPOWER](https://matpower.org/) ([Zimmerman2011](@cite))
 # test case `case9` ([archive](https://github.com/MATPOWER/matpower/tree/master/data))
-# created by Bukhsh et al. (2013) for their test case archive of
+# created by [Bukhsh2013](@cite) for their test case archive of
 # optimal power flow problems with local optima. This test case is also
-# extensively evaluated in Krasko and Rebennack (2017).
+# extensively evaluated in [Krasko2017](@cite).
 
 # Here *bus* and network *node* are taken as analogous terms, as are *branch*
 # and transmission *line*.
@@ -301,7 +303,7 @@ DataFrames.DataFrame(;
 # The Ipopt solver uses an interior-point algorithm. It has local optimality
 # guarantees, but is unable to certify whether the solution is globally optimal.
 # The solution we found is indeed globally optimal. The work to verify this has
-# been done in Bukhsh et al. (2013) and Krasko and Rebennack (2017), and
+# been done in [Bukhsh2013](@cite) and [Krasko2017](@cite), and
 # different solvers (such as Gurobi, SCIP and GLOMIQO) are also able to verify
 # this.
 
@@ -436,35 +438,8 @@ DataFrames.DataFrame(;
     AngleDeg = round.(rad2deg.(angle.(value.(V))); digits = 2),
 )
 
-# For further information on exploiting sparsity see Jabr (2012).
+# For further information on exploiting sparsity see [Jabr2012](@cite).
 
 # This relaxation has the advantage that we can work directly with complex
 # voltages to extend the formulation, strengthen the relaxation and gain
 # additional approximate information about the voltage variables.
-
-# ## References and further resources
-
-# **Bukhsh**, W. A., Grothey, A., McKinnon, K. I., & Trodden, P. A.
-# [_Local solutions of the optimal power flow problem._](https://doi.org/10.1109/TPWRS.2013.2274577)
-# IEEE Transactions on Power Systems, 28(4), 4780-4788 (2013).
-
-# **Jabr**, R. A.
-# [_Exploiting sparsity in SDP relaxations of the OPF problem._](https://doi.org/10.1109/TPWRS.2011.2170772)
-# IEEE Transactions on Power Systems, 27(2), 1138-1139 (2011).
-
-# **Krasko**, V., & S. **Rebennack**.
-# [_Chapter 15: Global Optimization: Optimal Power Flow Problem._](https://doi.org/10.1137/1.9781611974683.ch15)
-# In Advances and Trends in Optimization with Engineering Applications, 187—205. MOS-SIAM Series on Optimization.
-# Society for Industrial and Applied Mathematics, 2017.
-
-# [**Test case `case9mod`**](https://www.maths.ed.ac.uk/optenergy/LocalOpt/9busnetwork.html):
-# from the
-# [Test Case Archive of Optimal Power Flow (OPF) Problems with Local Optima](https://www.maths.ed.ac.uk/optenergy/LocalOpt/).
-
-# R. D. Zimmerman, C. E. Murillo-Sanchez, & R. J. Thomas,
-# [_MATPOWER: Steady-State Operations, Planning and Analysis Tools for Power Systems
-# Research and Education,_](https://doi.org/10.1109/TPWRS.2010.2051168)
-# IEEE Transactions on Power Systems, 26(1), 12-19 (2011).
-
-# **MATPOWER data format**:
-# [MATPOWER manual](https://matpower.org/docs/MATPOWER-manual.pdf); see especially Appendix B "Data File Format" and Table B-3.

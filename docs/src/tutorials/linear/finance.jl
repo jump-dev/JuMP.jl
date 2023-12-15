@@ -26,8 +26,8 @@
 # decisions. Many computational finance problems can be solved efficiently using
 # modern optimization techniques.
 #
-# In this tutorial we will discuss two such examples taken from the book
-# [Optimization Methods in Finance](https://doi.org/10.1017/9781107297340).
+# In this tutorial we will discuss two such examples taken from
+# [Cornuejols2018](@cite).
 
 # This tutorial uses the following packages
 using JuMP

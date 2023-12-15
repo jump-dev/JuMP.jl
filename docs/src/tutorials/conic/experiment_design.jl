@@ -23,8 +23,7 @@
 # **This tutorial was originally contributed by Arpit Bhatia and Chris Coey.**
 
 # This tutorial covers experiment design examples (D-optimal, A-optimal, and
-# E-optimal) from section 7.5 of the book [Convex Optimization](https://doi.org/10.1017/CBO9780511804441)
-# by Boyd and Vandenberghe.
+# E-optimal) from section 7.5 of [Boyd2004](@cite).
 
 # The tutorial uses the following packages
 using JuMP

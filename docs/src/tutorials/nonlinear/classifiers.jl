@@ -13,10 +13,7 @@
 # application is classifying previously unseen data points after training a
 # classifier on known data.
 
-# The theory and models in this tutorial come from Section 9.4
-# "Classification Problems" of the book
-# [_Linear Programming with MATLAB_](https://doi.org/10.1137/1.9780898718775)
-# (2007), by M. C. Ferris, O. L. Mangasarian, and S. J. Wright.
+# The theory and models in this tutorial come from Section 9.4 of [Ferris2007](@cite).
 
 # ## Required packages
 
