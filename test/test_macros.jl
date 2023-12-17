@@ -2185,4 +2185,17 @@ function test_base_name_escape()
     return
 end
 
+function test_constraint_broadcast_in_set()
+    model = Model()
+    @variable(model, x[1:2])
+    sets = [MOI.GreaterThan(1.0), MOI.GreaterThan(2.0)]
+    c = @constraint(model, 1.0 * x .∈ sets)
+    @test constraint_object(c[1]).set == MOI.GreaterThan(1.0)
+    @test constraint_object(c[2]).set == MOI.GreaterThan(2.0)
+    c = @constraint(model, 1.0 * x .∈ MOI.ZeroOne())
+    @test constraint_object(c[1]).set == MOI.ZeroOne()
+    @test constraint_object(c[2]).set == MOI.ZeroOne()
+    return
+end
+
 end  # module
