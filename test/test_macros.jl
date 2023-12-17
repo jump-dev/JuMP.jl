@@ -2167,6 +2167,17 @@ function test_expression_container_kwarg()
     return
 end
 
+function test_variable_not_a_variable_name()
+    model = Model()
+    @test_throws_parsetime(
+        ErrorException(
+            "In `@variable(model, x)`: Expected x to be a variable name",
+        ),
+        @variable(model, "x"),
+    )
+    return
+end
+
 function test_base_name_escape()
     model = Model()
     x = @variable(model)
