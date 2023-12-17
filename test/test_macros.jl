@@ -2178,6 +2178,20 @@ function test_variable_not_a_variable_name()
     return
 end
 
+function test_variable_set_and_hermitian_matrix_space()
+    model = Model()
+    set = esc(:(HermitianMatrixSpace()))
+    @test_throws_parsetime(
+        ErrorException(
+            "In `@variable(model, x[1:3, 1:3] in HermitianMatrixSpace(), Hermitian)`: " *
+            "Cannot pass `Hermitian` as a positional argument because the " *
+            "variable is already constrained to `$set`."
+        ),
+        @variable(model, x[1:3, 1:3] in HermitianMatrixSpace(), Hermitian),
+    )
+    return
+end
+
 function test_base_name_escape()
     model = Model()
     x = @variable(model)
