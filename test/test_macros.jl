@@ -2185,7 +2185,7 @@ function test_variable_set_and_hermitian_matrix_space()
         ErrorException(
             "In `@variable(model, x[1:3, 1:3] in HermitianMatrixSpace(), Hermitian)`: " *
             "Cannot pass `Hermitian` as a positional argument because the " *
-            "variable is already constrained to `$set`."
+            "variable is already constrained to `$set`.",
         ),
         @variable(model, x[1:3, 1:3] in HermitianMatrixSpace(), Hermitian),
     )
