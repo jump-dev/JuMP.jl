@@ -655,7 +655,7 @@ function parse_constraint_call(
 )
     f, parse_code = _rewrite_expression(func)
     build_call = if vectorized
-        :(build_constraint.($error_fn, _desparsify($f), Ref($(esc(set)))))
+        :(build_constraint.($error_fn, _desparsify($f), $(esc(set))))
     else
         :(build_constraint($error_fn, $f, $(esc(set))))
     end
