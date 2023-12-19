@@ -223,30 +223,6 @@ function _parse_generator_expression(code, x, operators)
     return y
 end
 
-"""
-    _extract_kw_args(args)
-
-Process the arguments to a macro, separating out the keyword arguments.
-
-Return a tuple of (flat_arguments, keyword arguments, and requested_container),
-where `requested_container` is a symbol to be passed to `container_code`.
-"""
-function _extract_kw_args(args)
-    flat_args, kw_args, requested_container = Any[], Any[], :Auto
-    for arg in args
-        if Meta.isexpr(arg, :(=))
-            if arg.args[1] == :container
-                requested_container = arg.args[2]
-            else
-                push!(kw_args, arg)
-            end
-        else
-            push!(flat_args, arg)
-        end
-    end
-    return flat_args, kw_args, requested_container
-end
-
 ###
 ### @NLobjective(s)
 ###
@@ -321,7 +297,7 @@ macro NLconstraint(m, x, args...)
     # Two formats:
     # - @NLconstraint(m, a*x <= 5)
     # - @NLconstraint(m, myref[a=1:5], sin(x^a) <= 5)
-    extra, kw_args, requested_container = _extract_kw_args(args)
+    extra, kw_args, requested_container = Containers._extract_kw_args(args)
     if length(extra) > 1 || length(kw_args) > 0
         error_fn("too many arguments.")
     end
@@ -430,7 +406,7 @@ subexpression[5]: log(1.0 + (exp(subexpression[2]) + exp(subexpression[3])))
 """
 macro NLexpression(args...)
     error_fn = Containers.build_error_fn(:NLexpression, args, __source__)
-    args, kw_args, requested_container = _extract_kw_args(args)
+    args, kw_args, requested_container = Containers._extract_kw_args(args)
     if length(args) <= 1
         error_fn(
             "To few arguments ($(length(args))); must pass the model and nonlinear expression as arguments.",
@@ -592,7 +568,7 @@ macro NLparameter(model, args...)
     esc_m = esc(model)
     error_fn =
         Containers.build_error_fn(:NLparameter, (model, args...), __source__)
-    pos_args, kw_args, requested_container = _extract_kw_args(args)
+    pos_args, kw_args, requested_container = Containers._extract_kw_args(args)
     value = missing
     for arg in kw_args
         if arg.args[1] == :value
