@@ -7,6 +7,30 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.18.0 (December 20, 2023)
+
+### Added
+
+ - This release includes a large refactoring of the macro code that closes a
+   roadmap item (#3629)
+   Contributing pull requests include (#3600), (#3603), (#3606), (#3607),
+   (#3610), (#3611), (#3612), (#3613), (#3614), (#3615), (#3617), (#3618),
+   (#3619), (#3620), (#3621), (#3631), (#3632), (#3633)
+
+### Fixed
+
+ - Fixed error for unsupported objective sense (#3601)
+ - Fixed `text/latex` printing of [`GenericNonlinearExpr`](@ref) (#3609)
+ - Fixed compat bounds of `stdlib` packages (#3626)
+
+### Other
+
+ - Added `DisjunctiveProgramming`to `extension-tests` (#3597)
+ - Added `DisjunctiveProgramming`to docs (#3598)
+ - Added DocumenterCitations to the docs (#3596), (#3630)
+ - Migrate from SnoopPrecompile to PrecompileTools (#3608)
+ - Minor documentation updates (#3623), (#3628)
+
 ## Version 1.17.0 (December 4, 2023)
 
 ### Added
