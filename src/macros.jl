@@ -231,7 +231,7 @@ A helper function so that we can change how we rewrite expressions in a single
 place and have it cascade to all locations in the JuMP macros that rewrite
 expressions.
 """
-function _rewrite_expression(expr)
+function _rewrite_expression(expr::Expr)
     new_expr = MacroTools.postwalk(_rewrite_to_jump_logic, expr)
     new_aff, parse_aff = _MA.rewrite(new_expr; move_factors_into_sums = false)
     ret = gensym()
@@ -240,6 +240,17 @@ function _rewrite_expression(expr)
         $ret = $flatten!($new_aff)
     end
     return ret, code
+end
+
+"""
+    _rewrite_expression(expr)
+
+If `expr` is not an `Expr`, then rewriting it won't do anything. We just need to
+copy if it is mutable so that future operations do not modify the user's data.
+"""
+function _rewrite_expression(expr)
+    ret = gensym()
+    return ret, :($ret = $_MA.copy_if_mutable($(esc(expr))))
 end
 
 """

@@ -2223,4 +2223,15 @@ function test_constraint_broadcast_in_set()
     return
 end
 
+function test_macro_modify_user_data()
+    model = Model()
+    @variable(model, x)
+    @expression(model, e, x + 5)
+    @constraint(model, -10 <= e <= 10)
+    @test isequal_canonical(e, x + 5)
+    @constraint(model, e in MOI.LessThan(1.0))
+    @test isequal_canonical(e, x + 5)
+    return
+end
+
 end  # module
