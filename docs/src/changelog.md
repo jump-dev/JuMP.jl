@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Fixed error for unsupported objective sense (#3601)
  - Fixed `text/latex` printing of [`GenericNonlinearExpr`](@ref) (#3609)
  - Fixed compat bounds of `stdlib` packages (#3626)
+ - Fixed a bug that can accidentally modify the user's expressions in a macro (#3639)
 
 ### Other
 
