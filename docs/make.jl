@@ -566,7 +566,7 @@ remotes = Dict(pkgdir(MOI) => (gh_moi, version))
     format = Documenter.HTML(;
         # See https://github.com/JuliaDocs/Documenter.jl/issues/868
         prettyurls = get(ENV, "CI", nothing) == "true",
-        analytics = "UA-44252521-1",
+        analytics = "G-0RZ8X3D3D0",
         mathengine = Documenter.MathJax2(),
         collapselevel = 1,
         assets = ["assets/extra_styles.css", "assets/citations.css"],
