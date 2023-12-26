@@ -110,7 +110,7 @@ Use [`Containers.rowtable`](@ref) to convert the `Array` into a
 
 ```jldoctest containers_array
 julia> table = Containers.rowtable(x; header = [:I, :J, :value])
-6-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Int64, Tuple{Int64, Int64}}}}:
+6-element Vector{@NamedTuple{I::Int64, J::Int64, value::Tuple{Int64, Int64}}}:
  (I = 1, J = 1, value = (1, 1))
  (I = 2, J = 1, value = (2, 1))
  (I = 1, J = 2, value = (1, 2))
@@ -235,7 +235,7 @@ Use [`Containers.rowtable`](@ref) to convert the `DenseAxisArray` into a
 
 ```jldoctest containers_dense
 julia> table = Containers.rowtable(x; header = [:I, :J, :value])
-4-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Symbol, Tuple{Int64, Symbol}}}}:
+4-element Vector{@NamedTuple{I::Int64, J::Symbol, value::Tuple{Int64, Symbol}}}:
  (I = 1, J = :A, value = (1, :A))
  (I = 2, J = :A, value = (2, :A))
  (I = 1, J = :B, value = (1, :B))
@@ -344,7 +344,7 @@ Use [`Containers.rowtable`](@ref) to convert the `SparseAxisArray` into a
 
 ```jldoctest containers_sparse
 julia> table = Containers.rowtable(x; header = [:I, :J, :value])
-4-element Vector{NamedTuple{(:I, :J, :value), Tuple{Int64, Symbol, Tuple{Int64, Symbol}}}}:
+4-element Vector{@NamedTuple{I::Int64, J::Symbol, value::Tuple{Int64, Symbol}}}:
  (I = 2, J = :A, value = (2, :A))
  (I = 2, J = :B, value = (2, :B))
  (I = 3, J = :A, value = (3, :A))
