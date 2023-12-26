@@ -114,6 +114,28 @@ model = Model();
 
 # This reformulation does not work for ``t \le \max\{x, y\}``.
 
+# ## Modulo
+
+# To model ``y = x % n``, where ``n`` is a constant modulus, we use the
+# relationship ``x = n \cdot z + y``, where ``z \in \mathbb{Z}_+`` is the number
+# of times that ``n`` can be divided by ``x`` and ``y`` is the remainder.
+
+n = 4
+model = Model();
+@variable(model, x >= 0, Int)
+@variable(model, 0 <= y <= n - 1, Int)
+@variable(model, z >= 0, Int)
+@constraint(model, x == n * z + y)
+
+# The modulo reformulation is often useful for subdividing a time increment into
+# units of time like hours and days:
+
+model = Model();
+@variable(model, t >= 0, Int)
+@variable(model, 0 <= hours <= 23, Int)
+@variable(model, days >= 0, Int)
+@constraint(model, t == 24 * days + hours)
+
 # ## Boolean operators
 
 # Binary variables can be used to construct logical operators. Here are some
