@@ -1015,7 +1015,7 @@ function test_convert_vector_aff_expr()
     @variable(model, x)
     @test [sin(x), x] isa Vector{NonlinearExpr}
     @test [sin(x), x + 1] isa Vector{NonlinearExpr}
-    @test [sin(x), AffExpr(x)] isa Vector{NonlinearExpr}
+    @test [sin(x), convert(AffExpr, x)] isa Vector{NonlinearExpr}
     return
 end
 
