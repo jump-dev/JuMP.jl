@@ -233,8 +233,8 @@ function test_extension_aff_expr_convert(
     model = ModelType()
     @variable(model, x)
     _to_string(x) = string(convert(GenericNonlinearExpr{VariableRefType}, x))
-    @test _to_string(AffExpr(0.0)) == "0.0"
-    @test _to_string(AffExpr(1.0)) == "1.0"
+    @test _to_string(AffExpr(0.0)) == "+(0.0)"
+    @test _to_string(AffExpr(1.0)) == "+(1.0)"
     @test _to_string(x + 1) == "x + 1.0"
     @test _to_string(2x + 1) == "(2.0 * x) + 1.0"
     @test _to_string(2x) == "2.0 * x"
@@ -248,8 +248,8 @@ function test_extension_quad_expr_convert(
     model = ModelType()
     @variable(model, x)
     _to_string(x) = string(convert(GenericNonlinearExpr{VariableRefType}, x))
-    @test _to_string(QuadExpr(AffExpr(0.0))) == "0.0"
-    @test _to_string(QuadExpr(AffExpr(1.0))) == "1.0"
+    @test _to_string(QuadExpr(AffExpr(0.0))) == "+(0.0)"
+    @test _to_string(QuadExpr(AffExpr(1.0))) == "+(1.0)"
     @test _to_string(x^2 + 1) == "(x * x) + 1.0"
     @test _to_string(2x^2 + 1) == "(2.0 * x * x) + 1.0"
     @test _to_string(2x^2) == "2.0 * x * x"
@@ -1007,6 +1007,15 @@ function test_printing_truncation()
         "{\\left({\\textsf{sin}\\left({x_{72}}\\right)} * {2.0}\\right) + {[[\\ldots\\text{41 terms omitted}\\ldots]]} + {\\left({\\textsf{sin}\\left({x_{30}}\\right)} * {2.0}\\right)}",
         function_string(MIME("text/latex"), y),
     )
+    return
+end
+
+function test_convert_vector_aff_expr()
+    model = Model()
+    @variable(model, x)
+    @test [sin(x), x] isa Vector{NonlinearExpr}
+    @test [sin(x), x + 1] isa Vector{NonlinearExpr}
+    @test [sin(x), AffExpr(x)] isa Vector{NonlinearExpr}
     return
 end
 

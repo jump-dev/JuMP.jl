@@ -724,7 +724,7 @@ function Base.convert(
     if !iszero(x.constant) || isempty(args)
         push!(args, x.constant)
     end
-    if length(args) == 1
+    if length(args) == 1 && args[1] isa GenericNonlinearExpr{V}
         return args[1]
     end
     return GenericNonlinearExpr{V}(:+, args)
@@ -752,7 +752,7 @@ function Base.convert(
     if !iszero(x.aff.constant) || isempty(args)
         push!(args, x.aff.constant)
     end
-    if length(args) == 1
+    if length(args) == 1 && args[1] isa GenericNonlinearExpr{V}
         return args[1]
     end
     return GenericNonlinearExpr{V}(:+, args)
