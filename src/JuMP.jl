@@ -979,7 +979,7 @@ julia> set_optimize_hook(model, my_hook)
 my_hook (generic function with 1 method)
 
 julia> optimize!(model; test_arg = true)
-Base.Pairs{Symbol, Bool, Tuple{Symbol}, NamedTuple{(:test_arg,), Tuple{Bool}}}(:test_arg => 1)
+Base.Pairs{Symbol, Bool, Tuple{Symbol}, @NamedTuple{test_arg::Bool}}(:test_arg => 1)
 Calling with `ignore_optimize_hook = true`
 ERROR: NoOptimizer()
 [...]
