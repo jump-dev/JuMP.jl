@@ -116,7 +116,7 @@ model = Model();
 
 # ## Modulo
 
-# To model ``y = x % n``, where ``n`` is a constant modulus, we use the
+# To model ``y = x \text{ mod } n``, where ``n`` is a constant modulus, we use the
 # relationship ``x = n \cdot z + y``, where ``z \in \mathbb{Z}_+`` is the number
 # of times that ``n`` can be divided by ``x`` and ``y`` is the remainder.
 
