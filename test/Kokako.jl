@@ -131,8 +131,10 @@ end
 function include_modules_to_test(dir::String, files::Vector{String})
     modules = Pair{String,Module}[]
     for file in files
-        @info "Loading $file"
-        push!(modules, file => Base.include(Main, joinpath(dir, file)))
+        if isfile(joinpath(dir, file))
+            @info "Loading $file"
+            push!(modules, file => Base.include(Main, joinpath(dir, file)))
+        end
     end
     return modules
 end
