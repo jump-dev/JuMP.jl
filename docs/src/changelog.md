@@ -7,7 +7,7 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Version 1.18.0 (December 21, 2023)
+## Version 1.18.0 (December 28, 2023)
 
 ### Added
 
@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Fixed `text/latex` printing of [`GenericNonlinearExpr`](@ref) (#3609)
  - Fixed compat bounds of `stdlib` packages (#3626)
  - Fixed a bug that can accidentally modify the user's expressions in a macro (#3639)
+ - Fixed a bug converting `AffExpr` to [`GenericNonlinearExpr`](@ref) (#3642)
 
 ### Other
 
@@ -30,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Added `DisjunctiveProgramming`to docs (#3598)
  - Added DocumenterCitations to the docs (#3596), (#3630)
  - Migrate from SnoopPrecompile to PrecompileTools (#3608)
- - Minor documentation updates (#3623), (#3628)
+ - Minor documentation updates (#3623), (#3628), (#3640), (#3643)
 
 ## Version 1.17.0 (December 4, 2023)
 
