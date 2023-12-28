@@ -8,6 +8,21 @@ Most of these issues will require changes to both JuMP and MathOptInterface, and
 are non-trivial in their implementation. They are in no particular order, but
 represent broad themes that we see as areas in which JuMP could be improved.
 
+ - Support nonlinear expressions with vector-valued inputs and outputs. There
+   are a few related components:
+    - Representing terms like `log(det(X))` as necessary for `Convex.jl`
+    - Automatic differentiation of terms with vector inputs and outputs
+    - User-defined functions with vector--as opposed to scalar--inputs, which is
+      particularly useful for optimal control problems
+    - User-defined functions with vector outputs, avoiding the need for
+      [User-defined operators with vector outputs](@ref)
+ - Add support for modeling with SI units. The [UnitJuMP.jl](https://github.com/trulsf/UnitJuMP.jl)
+   extension is a good proof of concept for what this would look like. We want
+   to make units a first-class concept in JuMP. See [#1350](https://github.com/jump-dev/JuMP.jl/issues/1350)
+   for more details.
+
+## Completed
+
  - **Done [#3106](https://github.com/jump-dev/JuMP.jl/pull/3106)** Make
    nonlinear programming a first-class citizen. There have been many issues
    and discussions about this: currently nonlinear constraints are handled
