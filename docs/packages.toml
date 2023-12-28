@@ -191,6 +191,9 @@
     rev = "v1.6.6"
     has_html = true
     extension = true
+[SDPLR]
+    user = "blegat"
+    rev = "7fffb0ad5f8948852a54a53de96d566d325025de"
 [Tulip]
     user = "ds4dm"
     rev = "069cdda082dfde31ef7ee935c96e833a3b96b33c"
