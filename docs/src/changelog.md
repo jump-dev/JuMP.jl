@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Added `DisjunctiveProgramming`to docs (#3598)
  - Added DocumenterCitations to the docs (#3596), (#3630)
  - Migrate from SnoopPrecompile to PrecompileTools (#3608)
- - Minor documentation updates (#3623), (#3628), (#3640), (#3643)
+ - Minor documentation updates (#3623), (#3628), (#3635), (#3640), (#3643)
 
 ## Version 1.17.0 (December 4, 2023)
 
