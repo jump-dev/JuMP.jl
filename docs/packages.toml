@@ -84,6 +84,8 @@
     rev = "v2.0.0"
 [SDPA]
     rev = "v0.5.0"
+[SDPLR]
+    rev = "29552b8da0982d61fe286f73d11f766cfb7361d6"
 [SDPNAL]
     rev = "00a3fa19f4e1235587948113b0b681da17f4dab5"
 [SDPT3]
@@ -191,9 +193,6 @@
     rev = "v1.6.6"
     has_html = true
     extension = true
-[SDPLR]
-    user = "blegat"
-    rev = "7fffb0ad5f8948852a54a53de96d566d325025de"
 [Tulip]
     user = "ds4dm"
     rev = "069cdda082dfde31ef7ee935c96e833a3b96b33c"
