@@ -2211,6 +2211,14 @@ function test_base_name_escape()
     return
 end
 
+function test_container_escape()
+    model = Model()
+    a = Containers.DenseAxisArray
+    x = @variable(model, [1:2], container = a)
+    @test x isa Containers.DenseAxisArray{VariableRef}
+    return
+end
+
 function test_constraint_broadcast_in_set()
     model = Model()
     @variable(model, x[1:2])
