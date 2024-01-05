@@ -206,7 +206,7 @@ macro variable(input_args...)
                 "constrained to `$set`.",
             )
         end
-        set = set_kw
+        set = esc(set_kw)
     end
     # ; set_string_name
     name_expr = Containers.build_name_expr(name, index_vars, kwargs)

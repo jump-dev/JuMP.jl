@@ -898,15 +898,16 @@ end
 
 function test_unrecognized_variable_type()
     model = Model()
+    a = 1
     err = ErrorException(
-        "In `@variable(model, x, 2, variable_type = 1)`: " *
+        "In `@variable(model, x, 2, variable_type = a)`: " *
         "Unrecognized positional arguments: (2, 1). (You may have " *
         "passed it as a positional argument, or as a keyword value to " *
         "`variable_type`.)\n\nIf you're trying to create a JuMP " *
         "extension, you need to implement `build_variable`. Read the " *
         "docstring for more details.",
     )
-    @test_throws_runtime err @variable(model, x, 2, variable_type = 1)
+    @test_throws_runtime err @variable(model, x, 2, variable_type = a)
     return
 end
 
@@ -2231,6 +2232,17 @@ function test_macro_modify_user_data()
     @test isequal_canonical(e, x + 5)
     @constraint(model, e in MOI.LessThan(1.0))
     @test isequal_canonical(e, x + 5)
+    return
+end
+
+function test_escaping_of_set_kwarg()
+    model = Model()
+    bound = 5.0
+    x = @variable(model, set = MOI.GreaterThan(bound))
+    @test lower_bound(x) == bound
+    set = MOI.LessThan(1.0)
+    y = @variable(model, set = set)
+    @test upper_bound(y) == 1.0
     return
 end
 
