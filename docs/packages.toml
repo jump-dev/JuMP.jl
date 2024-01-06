@@ -57,7 +57,7 @@
 [HiGHS]
     rev = "v1.7.5"
 [Ipopt]
-    rev = "v1.5.1"
+    rev = "v1.6.0"
 [KNITRO]
     rev = "v0.14.1"
 [MiniZinc]
