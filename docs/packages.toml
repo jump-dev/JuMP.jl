@@ -53,11 +53,11 @@
 [GLPK]
     rev = "v1.1.3"
 [Gurobi]
-    rev = "4f6811250c3ec01b968c65ba58fa79a2f62114d3"
+    rev = "v1.2.1"
 [HiGHS]
     rev = "v1.7.5"
 [Ipopt]
-    rev = "v1.5.1"
+    rev = "v1.6.0"
 [KNITRO]
     rev = "v0.14.1"
 [MiniZinc]
@@ -65,7 +65,7 @@
 [MosekTools]
     rev = "v0.15.1"
 [MultiObjectiveAlgorithms]
-    rev = "v1.3.1"
+    rev = "v1.3.2"
     has_html = true
 [Pajarito]
     rev = "4c7efa915bdc900b51d1c8290dc771403b11230a"
