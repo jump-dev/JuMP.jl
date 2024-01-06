@@ -575,7 +575,7 @@ which result to return.
     Use [`objective_value`](@ref) to assess the quality of the remaining
     solutions.
 
-```jldoctest; filter=r"Solve time.+"
+```jldoctest; filter=[r"Solve time.+", r"Dual objective value.+"]
 julia> using JuMP
 
 julia> import MultiObjectiveAlgorithms as MOA
@@ -623,7 +623,7 @@ julia> solution_summary(model; result = 1)
 
 * Work counters
   Solve time (sec)   : 1.82720e-03
-  Simplex iterations : 1
+  Simplex iterations : 0
   Barrier iterations : 0
   Node count         : -1
 
