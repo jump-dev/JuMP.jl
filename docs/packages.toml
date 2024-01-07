@@ -85,7 +85,7 @@
 [SDPA]
     rev = "v0.5.0"
 [SDPLR]
-    rev = "29552b8da0982d61fe286f73d11f766cfb7361d6"
+    rev = "v0.1.0"
 [SDPNAL]
     rev = "00a3fa19f4e1235587948113b0b681da17f4dab5"
 [SDPT3]
