@@ -2254,4 +2254,70 @@ function test_escaping_of_set_kwarg()
     return
 end
 
+function test_error_parsing_reference_sets()
+    model = Model()
+    @variable(model, a)
+    @test_throws_runtime(
+        ErrorException(
+            "In `@variable(model, b[1:a])`: unexpected error parsing reference set: 1:a",
+        ),
+        @variable(model, b[1:a]),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            "In `@variable(model, b[1:2, 1:a])`: unexpected error parsing reference set: 1:a",
+        ),
+        @variable(model, b[1:2, 1:a]),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            "In `@variable(model, b[i = 1:a, 1:i])`: unexpected error parsing reference set: 1:a",
+        ),
+        @variable(model, b[i = 1:a, 1:i]),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            "In `@variable(model, b[i = 1:2, a:i])`: unexpected error parsing reference set: a:i",
+        ),
+        @variable(model, b[i = 1:2, a:i]),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            "In `@variable(model, b[i = 1:2; i < a])`: unexpected error parsing condition: i < a",
+        ),
+        @variable(model, b[i = 1:2; i < a]),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            "In `@expression(model, b[1:a], a + 1)`: unexpected error parsing reference set: 1:a",
+        ),
+        @expression(model, b[1:a], a + 1),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            "In `@expression(model, b[1:2, 1:a], a + 1)`: unexpected error parsing reference set: 1:a",
+        ),
+        @expression(model, b[1:2, 1:a], a + 1),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            "In `@expression(model, b[i = 1:a, 1:i], a + 1)`: unexpected error parsing reference set: 1:a",
+        ),
+        @expression(model, b[i = 1:a, 1:i], a + 1),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            "In `@expression(model, b[i = 1:2, a:i], a + 1)`: unexpected error parsing reference set: a:i",
+        ),
+        @expression(model, b[i = 1:2, a:i], a + 1),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            "In `@expression(model, b[i = 1:2; i < a], a + 1)`: unexpected error parsing condition: i < a",
+        ),
+        @expression(model, b[i = 1:2; i < a], a + 1),
+    )
+    return
+end
+
 end  # module

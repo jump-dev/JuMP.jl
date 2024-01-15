@@ -79,12 +79,22 @@ function parse_macro_arguments(
 end
 
 """
-    _explicit_oneto(index_set)
+    _explicit_oneto(error_fn, index_set)
 
 If the `index_set` matches the form of `1:N`, then return
 `Base.OneTo(index_set)`.
 """
-function _explicit_oneto(index_set)
+function _explicit_oneto(error_fn, index_set)
+    index_set = quote
+        try
+            $index_set
+        catch
+            $error_fn(
+                "unexpected error parsing reference set: ",
+                $(Meta.quot(_drop_esc(index_set))),
+            )
+        end
+    end
     s = Meta.isexpr(index_set, :escape) ? index_set.args[1] : index_set
     if Meta.isexpr(s, :call, 3) && s.args[1] == :(:) && s.args[2] == 1
         return :(Base.OneTo($index_set))
@@ -316,6 +326,10 @@ function build_error_fn(macro_name, args, source)
     return error_fn
 end
 
+_drop_esc(x) = x
+_drop_esc(x::AbstractArray) = _drop_esc.(x)
+_drop_esc(x::Expr) = Meta.isexpr(x, :escape) ? x.args[1] : x
+
 """
     build_ref_sets(error_fn::Function, expr)
 
@@ -331,7 +345,7 @@ function build_ref_sets(error_fn::Function, expr)
     end
     if !_has_dependent_sets(index_vars, index_sets) && condition == :()
         # Convert any 1:N to Base.OneTo(N)
-        new_index_sets = _explicit_oneto.(index_sets)
+        new_index_sets = _explicit_oneto.(error_fn, index_sets)
         indices = :(Containers.vectorized_product($(new_index_sets...)))
         return index_vars, indices
     end
@@ -340,11 +354,29 @@ function build_ref_sets(error_fn::Function, expr)
     for i in 1:length(index_vars)
         push!(
             indices.args,
-            :(($(esc_index_vars[1:(i-1)]...),) -> $(index_sets[i])),
+            quote
+                ($(esc_index_vars[1:(i-1)]...),) -> try
+                    $(index_sets[i])
+                catch
+                    $error_fn(
+                        "unexpected error parsing reference set: ",
+                        $(Meta.quot(_drop_esc(index_sets[i]))),
+                    )
+                end
+            end,
         )
     end
     if condition != :()
-        f = :(($(esc_index_vars...),) -> $(esc(condition)))
+        f = quote
+            ($(esc_index_vars...),) -> try
+                $(esc(condition))
+            catch
+                $error_fn(
+                    "unexpected error parsing condition: ",
+                    $(Meta.quot(condition)),
+                )
+            end
+        end
         args = indices.args[2:end]
         indices = :(Containers.nested($(args...); condition = $f))
     end
