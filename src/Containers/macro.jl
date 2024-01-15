@@ -85,6 +85,7 @@ If the `index_set` matches the form of `1:N`, then return
 `Base.OneTo(index_set)`.
 """
 function _explicit_oneto(error_fn, index_set)
+    s = Meta.isexpr(index_set, :escape) ? index_set.args[1] : index_set
     index_set = quote
         try
             $index_set
@@ -95,7 +96,6 @@ function _explicit_oneto(error_fn, index_set)
             )
         end
     end
-    s = Meta.isexpr(index_set, :escape) ? index_set.args[1] : index_set
     if Meta.isexpr(s, :call, 3) && s.args[1] == :(:) && s.args[2] == 1
         return :(Base.OneTo($index_set))
     else
