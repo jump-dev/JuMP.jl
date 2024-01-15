@@ -2317,6 +2317,18 @@ function test_error_parsing_reference_sets()
         ),
         @expression(model, b[i = 1:2; i < a], a + 1),
     )
+    @test_throws_runtime(
+        ErrorException(
+            "In `@constraint(model, b[i = 1:a], a <= 1)`: unexpected error parsing reference set: 1:a",
+        ),
+        @constraint(model, b[i = 1:a], a <= 1),
+    )
+    @test_throws_runtime(
+        ErrorException(
+            "In `@constraint(model, b[i = 1:2; i < a], a <= 1)`: unexpected error parsing condition: i < a",
+        ),
+        @constraint(model, b[i = 1:2; i < a], a <= 1),
+    )
     return
 end
 
