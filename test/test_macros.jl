@@ -2332,4 +2332,30 @@ function test_error_parsing_reference_sets()
     return
 end
 
+function test_op_and_short_circuit()
+    model = Model()
+    @test @expression(model, false && error()) == false
+    data = Dict(2 => 1)
+    @expression(
+        model,
+        expr,
+        sum(1 for p in [1, 2] if p in keys(data) && data[p] == 1),
+    )
+    @test expr == 1
+    return
+end
+
+function test_op_or_short_circuit()
+    model = Model()
+    @test @expression(model, true || error()) == true
+    data = Dict(2 => 1)
+    @expression(
+        model,
+        expr,
+        sum(1 for p in [1, 2] if !(p in keys(data)) || data[p] == 2),
+    )
+    @test expr == 1
+    return
+end
+
 end  # module
