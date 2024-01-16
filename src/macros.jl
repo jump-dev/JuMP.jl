@@ -208,9 +208,27 @@ function _rewrite_to_jump_logic(x)
             return Expr(:call, op_equal_to, x.args[2:end]...)
         end
     elseif Meta.isexpr(x, :||)
-        return Expr(:call, op_or, x.args...)
+        # Take special care to ensure short-circuiting behavior of operator is
+        # retained. We don't want to evaluate the second argument if the first
+        # is `true`.
+        @assert length(x.args) == 2
+        return Expr(
+            :if,
+            Expr(:call, ===, x.args[1], true),
+            true,
+            Expr(:call, op_or, x.args[1], x.args[2]),
+        )
     elseif Meta.isexpr(x, :&&)
-        return Expr(:call, op_and, x.args...)
+        # Take special care to ensure short-circuiting behavior of operator is
+        # retained. We don't want to evaluate the second argument if the first
+        # is `false`.
+        @assert length(x.args) == 2
+        return Expr(
+            :if,
+            Expr(:call, ===, x.args[1], false),
+            false,
+            Expr(:call, op_and, x.args[1], x.args[2]),
+        )
     elseif Meta.isexpr(x, :comparison)
         lhs = Expr(:call, x.args[2], x.args[1], x.args[3])
         rhs = Expr(:call, x.args[4], x.args[3], x.args[5])
