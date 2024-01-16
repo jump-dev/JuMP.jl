@@ -326,9 +326,7 @@ function build_error_fn(macro_name, args, source)
     return error_fn
 end
 
-_drop_esc(x) = x
-_drop_esc(x::AbstractArray) = _drop_esc.(x)
-_drop_esc(x::Expr) = Meta.isexpr(x, :escape) ? x.args[1] : x
+_drop_esc(x) = Meta.isexpr(x, :escape) ? x.args[1] : x
 
 """
     build_ref_sets(error_fn::Function, expr)
