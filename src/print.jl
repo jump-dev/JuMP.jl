@@ -144,6 +144,8 @@ function _math_symbol(::MIME"text/plain", name::Symbol)
         return Sys.iswindows() ? ">=" : "≥"
     elseif name == :eq
         return Sys.iswindows() ? "==" : "="
+    elseif name == :(!=)
+        return Sys.iswindows() ? "!=" : "≠"
     elseif name == :sq
         return "²"
     else
@@ -160,6 +162,8 @@ function _math_symbol(::MIME"text/latex", name::Symbol)
         return "\\geq"
     elseif name == :eq
         return "="
+    elseif name == :(!=)
+        return "\\neq"
     else
         @assert name == :sq
         return "^2"

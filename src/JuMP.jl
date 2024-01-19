@@ -1103,6 +1103,7 @@ include("operators.jl")
 include("sd.jl")
 include("sets.jl")
 include("solution_summary.jl")
+include("inequality.jl")
 
 # print.jl must come last, because it uses types defined in earlier files.
 include("print.jl")

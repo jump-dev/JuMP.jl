@@ -1731,7 +1731,7 @@ function test_build_constraint_invalid()
     @test_throws_parsetime(
         ErrorException(
             "In `@build_constraint(x)`: Incomplete constraint specification " *
-            "x. Are you missing a comparison (<=, >=, or ==)?",
+            "x. Are you missing a comparison (<=, >=, == or !=)?",
         ),
         @build_constraint(x),
     )

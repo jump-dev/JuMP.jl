@@ -20,7 +20,7 @@ The expression `expr` may be one of following forms:
    which is either a [`MOI.AbstractSet`](@ref) or one of the JuMP shortcuts like
    [`SecondOrderCone`](@ref) or [`PSDCone`](@ref)
 
- * `a <op> b`, where `<op>` is one of `==`, `≥`, `>=`, `≤`, `<=`
+ * `a <op> b`, where `<op>` is one of `==`, `!=`, `≥`, `>=`, `≤`, `<=`
 
  * `l <= f <= u` or `u >= f >= l`, constraining the expression `f` to lie
    between `l` and `u`
@@ -233,6 +233,7 @@ The entry-point for all constraint-related parsing.
 JuMP currently supports the following `expr` objects:
  * `lhs <= rhs`
  * `lhs == rhs`
+ * `lhs != rhs`
  * `lhs >= rhs`
  * `l <= body <= u`
  * `u >= body >= l`
@@ -259,7 +260,7 @@ end
 function parse_constraint(error_fn::Function, arg)
     return error_fn(
         "Incomplete constraint specification $arg. Are you missing a " *
-        "comparison (<=, >=, or ==)?",
+        "comparison (<=, >=, == or !=)?",
     )
 end
 
@@ -591,7 +592,7 @@ julia> @constraint(model, A * x == b)
 """
 struct Zeros end
 
-operator_to_set(::Function, ::Val{:(==)}) = Zeros()
+operator_to_set(::Function, ::Union{Val{:(==)},Val{:(!=)}}) = Zeros()
 
 """
     parse_constraint_call(
