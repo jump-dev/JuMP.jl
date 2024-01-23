@@ -731,13 +731,19 @@ function add_constraint(
 end
 
 """
-    set_normalized_coefficient(con_ref::ConstraintRef, variable::GenericVariableRef, value)
+    set_normalized_coefficient(
+        constraint::ConstraintRef,
+        variable::GenericVariableRef,
+        value,
+    )
 
 Set the coefficient of `variable` in the constraint `constraint` to `value`.
 
 Note that prior to this step, JuMP will aggregate multiple terms containing the
 same variable. For example, given a constraint `2x + 3x <= 2`,
 `set_normalized_coefficient(con, x, 4)` will create the constraint `4x <= 2`.
+
+## Example
 
 ```jldoctest; filter=r"≤|<="
 julia> model = Model();
@@ -787,6 +793,8 @@ maps the row to a new coefficient.
 Note that prior to this step, during constraint creation, JuMP will aggregate
 multiple terms containing the same variable.
 
+## Example
+
 ```jldoctest; filter=r"≤|<="
 julia> model = Model();
 
@@ -818,11 +826,30 @@ function set_normalized_coefficients(
 end
 
 """
-    normalized_coefficient(con_ref::ConstraintRef, variable::GenericVariableRef)
+    normalized_coefficient(
+        constraint::ConstraintRef,
+        variable::GenericVariableRef,
+    )
 
 Return the coefficient associated with `variable` in `constraint` after JuMP has
-normalized the constraint into its standard form. See also
-[`set_normalized_coefficient`](@ref).
+normalized the constraint into its standard form.
+
+See also [`set_normalized_coefficient`](@ref).
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, con, 2x + 3x <= 2)
+con : 5 x ≤ 2
+
+julia> normalized_coefficient(con, x)
+5.0
+```
 """
 function normalized_coefficient(
     con_ref::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
@@ -936,7 +963,7 @@ function normalized_coefficient(
 end
 
 """
-    set_normalized_rhs(con_ref::ConstraintRef, value)
+    set_normalized_rhs(constraint::ConstraintRef, value)
 
 Set the right-hand side term of `constraint` to `value`.
 
@@ -944,6 +971,8 @@ Note that prior to this step, JuMP will aggregate all constant terms onto the
 right-hand side of the constraint. For example, given a constraint `2x + 1 <=
 2`, `set_normalized_rhs(con, 4)` will create the constraint `2x <= 4`, not `2x +
 1 <= 4`.
+
+## Example
 
 ```jldoctest; filter=r"≤|<="
 julia> model = Model();
@@ -977,10 +1006,26 @@ function set_normalized_rhs(
 end
 
 """
-    normalized_rhs(con_ref::ConstraintRef)
+    normalized_rhs(constraint::ConstraintRef)
 
-Return the right-hand side term of `con_ref` after JuMP has converted the
-constraint into its normalized form. See also [`set_normalized_rhs`](@ref).
+Return the right-hand side term of `constraint` after JuMP has converted the
+constraint into its normalized form.
+
+See also [`set_normalized_rhs`](@ref).
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, con, 2x + 1 <= 2)
+con : 2 x ≤ 1
+
+julia> normalized_rhs(con)
+1.0
+```
 """
 function normalized_rhs(
     con_ref::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
@@ -1027,16 +1072,17 @@ end
 """
     add_to_function_constant(constraint::ConstraintRef, value)
 
-Add `value` to the function constant term.
+Add `value` to the function constant term of `constraint`.
 
-Note that for scalar constraints, JuMP will aggregate all constant terms onto the
-right-hand side of the constraint so instead of modifying the function, the set
-will be translated by `-value`. For example, given a constraint `2x <=
+Note that for scalar constraints, JuMP will aggregate all constant terms onto
+the right-hand side of the constraint so instead of modifying the function, the
+set will be translated by `-value`. For example, given a constraint `2x <=
 3`, `add_to_function_constant(c, 4)` will modify it to `2x <= -1`.
 
 ## Example
 
 For scalar constraints, the set is translated by `-value`:
+
 ```jldoctest; filter=r"≤|<="
 julia> model = Model();
 
@@ -1052,6 +1098,7 @@ con : 2 x ∈ [-3, -1]
 ```
 
 For vector constraints, the constant is added to the function:
+
 ```jldoctest; filter=r"≤|<="
 julia> model = Model();
 
@@ -1067,7 +1114,6 @@ julia> add_to_function_constant(con, [1, 2, 2])
 julia> con
 con : [x + y + 1, x + 2, y + 2] ∈ MathOptInterface.SecondOrderCone(3)
 ```
-
 """
 function add_to_function_constant(
     constraint::ConstraintRef{<:AbstractModel},
