@@ -222,7 +222,9 @@ function test_set_objective_coefficient_quadratic()
     @variable(model, x[1:2])
     @objective(model, Min, x[1]^2 + x[1] * x[2] + x[1] + 2)
     set_objective_coefficient(model, x[1], x[1], 2)
-    set_objective_coefficient(model, x[2], x[1], 3)
+    # TODO(odow): test modifying x[2], x[1] once MathOptInterface.jl#2408 is
+    # released.
+    set_objective_coefficient(model, x[1], x[2], 3)
     @test isequal_canonical(
         objective_function(model),
         2 * x[1]^2 + 3 * x[1] * x[2] + x[1] + 2,

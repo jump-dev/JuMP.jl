@@ -336,12 +336,19 @@ Note: this function will throw an error if a nonlinear objective is set.
 ## Example
 
 ```jldoctest
-model = Model();
-@variable(model, x[1:2])
-@objective(model, Min, x[1]^2 + x[1] * x[2])
-set_objective_coefficient(model, x[1], x[1], 2)
-set_objective_coefficient(model, x[2], x[1], 3)
-objective_function(model)
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> @objective(model, Min, x[1]^2 + x[1] * x[2])
+x[1]² + x[1]*x[2]
+
+julia> set_objective_coefficient(model, x[1], x[1], 2)
+
+julia> set_objective_coefficient(model, x[1], x[2], 3)
+
+julia> objective_function(model)
+2 x[1]² + 3 x[1]*x[2]
 ```
 """
 function set_objective_coefficient(
