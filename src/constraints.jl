@@ -871,8 +871,10 @@ con : 4 x[1]² + 5 x[1]*x[2] + x[2] ≤ 2
 """
 function set_normalized_coefficient(
     constraint::ConstraintRef{<:AbstractModel,CI},
-    variable_1::AbstractVariableRef,
-    variable_2::AbstractVariableRef,
+    # TODO(odow): these are untyped becasue `constraints.jl` is loaded before
+    #             variables.jl
+    variable_1,
+    variable_2,
     value::Real,
 ) where {T,CI<:MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{T}}}
     new_value = convert(T, value)
@@ -924,8 +926,10 @@ julia> normalized_coefficient(con, x[1], x[2])
 """
 function normalized_coefficient(
     connstraint::ConstraintRef{<:AbstractModel,CI},
-    variable_1::AbstractVariableRef,
-    variable_2::AbstractVariableRef,
+    # TODO(odow): these are untyped becasue `constraints.jl` is loaded before
+    #             variables.jl
+    variable_1,
+    variable_2,
 ) where {T,CI<:MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{T}}}
     con = constraint_object(connstraint)
     return coefficient(con.func, variable_1, variable_2)
