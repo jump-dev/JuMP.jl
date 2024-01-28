@@ -793,8 +793,7 @@ con : 2 x ∈ [-4, -2]
 
 ### Scalar constraints
 
-To modify the coefficients for a linear term (modifying the coefficient of a
-quadratic term is not supported) in a constraint, use
+To modify the coefficients for a linear term in a constraint, use
 [`set_normalized_coefficient`](@ref). To query the current coefficient, use
 [`normalized_coefficient`](@ref).
 ```jldoctest
@@ -812,6 +811,29 @@ con : 2 x[1] ≤ 1
 
 julia> normalized_coefficient(con, x[2])
 0.0
+```
+
+To modify quadratic terms, pass two variables:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> @constraint(model, con, x[1]^2 + x[1] * x[2] <= 1)
+con : x[1]² + x[1]*x[2] ≤ 1
+
+julia> set_normalized_coefficient(con, x[1], x[1], 2)
+
+julia> set_normalized_coefficient(con, x[1], x[2], 3)
+
+julia> con
+con : 2 x[1]² + 3 x[1]*x[2] ≤ 1
+
+julia> normalized_coefficient(con, x[1], x[1])
+2.0
+
+julia> normalized_coefficient(con, x[1], x[2])
+3.0
 ```
 
 !!! warning

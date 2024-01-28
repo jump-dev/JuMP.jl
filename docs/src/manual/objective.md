@@ -177,9 +177,25 @@ julia> objective_function(model)
 3 x
 ```
 
-!!! info
-    There is no way to modify the coefficient of a quadratic term. Set a new
-    objective instead.
+Use [`set_objective_coefficient`](@ref) with two variables to modify a quadratic
+objective coefficient:
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
+julia> @objective(model, Min, x^2 + x * y)
+x² + x*y
+
+julia> set_objective_coefficient(model, x, x, 2)
+
+julia> set_objective_coefficient(model, x, y, 3)
+
+julia> objective_function(model)
+2 x² + 3 x*y
+```
 
 ## Modify the objective sense
 
