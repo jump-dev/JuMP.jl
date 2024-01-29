@@ -2431,6 +2431,225 @@ function _relax_or_fix_integrality(
     return unrelax
 end
 
+"""
+    set_normalized_coefficient(
+        constraint::ConstraintRef,
+        variable::GenericVariableRef,
+        value,
+    )
+
+Set the coefficient of `variable` in the constraint `constraint` to `value`.
+
+Note that prior to this step, JuMP will aggregate multiple terms containing the
+same variable. For example, given a constraint `2x + 3x <= 2`,
+`set_normalized_coefficient(con, x, 4)` will create the constraint `4x <= 2`.
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, con, 2x + 3x <= 2)
+con : 5 x ≤ 2
+
+julia> set_normalized_coefficient(con, x, 4)
+
+julia> con
+con : 4 x ≤ 2
+```
+"""
+function set_normalized_coefficient(
+    con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    variable::AbstractVariableRef,
+    value::Number,
+) where {T,F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}}}
+    model = owner_model(con_ref)
+    MOI.modify(
+        backend(model),
+        index(con_ref),
+        MOI.ScalarCoefficientChange(index(variable), convert(T, value)),
+    )
+    model.is_model_dirty = true
+    return
+end
+
+"""
+    set_normalized_coefficients(
+        con_ref::ConstraintRef,
+        variable::AbstractVariableRef,
+        new_coefficients::Vector{Tuple{Int64,T}},
+    )
+
+Set the coefficients of `variable` in the constraint `con_ref` to
+`new_coefficients`, where each element in `new_coefficients` is a tuple which
+maps the row to a new coefficient.
+
+Note that prior to this step, during constraint creation, JuMP will aggregate
+multiple terms containing the same variable.
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
+con : [5 x, 4 x] ∈ MathOptInterface.Nonnegatives(2)
+
+julia> set_normalized_coefficients(con, x, [(1, 2.0), (2, 5.0)])
+
+julia> con
+con : [2 x, 5 x] ∈ MathOptInterface.Nonnegatives(2)
+```
+"""
+function set_normalized_coefficients(
+    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    variable::AbstractVariableRef,
+    new_coefficients::Vector{Tuple{Int64,T}},
+) where {T,F<:Union{MOI.VectorAffineFunction{T},MOI.VectorQuadraticFunction{T}}}
+    model = owner_model(constraint)
+    MOI.modify(
+        backend(model),
+        index(constraint),
+        MOI.MultirowChange(index(variable), new_coefficients),
+    )
+    model.is_model_dirty = true
+    return
+end
+
+"""
+    set_normalized_coefficient(
+        constraint::ConstraintRef,
+        variable_1:GenericVariableRef,
+        variable_2:GenericVariableRef,
+        value::Number,
+    )
+
+Set the quadratic coefficient associated with `variable_1` and `variable_2` in
+the constraint `constraint` to `value`.
+
+Note that prior to this step, JuMP will aggregate multiple terms containing the
+same variable. For example, given a constraint `2x^2 + 3x^2 <= 2`,
+`set_normalized_coefficient(con, x, x, 4)` will create the constraint `4x^2 <= 2`.
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> @constraint(model, con, 2x[1]^2 + 3 * x[1] * x[2] + x[2] <= 2)
+con : 2 x[1]² + 3 x[1]*x[2] + x[2] ≤ 2
+
+julia> set_normalized_coefficient(con, x[1], x[1], 4)
+
+julia> set_normalized_coefficient(con, x[1], x[2], 5)
+
+julia> con
+con : 4 x[1]² + 5 x[1]*x[2] + x[2] ≤ 2
+```
+"""
+function set_normalized_coefficient(
+    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    variable_1::AbstractVariableRef,
+    variable_2::AbstractVariableRef,
+    value::Number,
+) where {T,F<:MOI.ScalarQuadraticFunction{T}}
+    new_value = convert(T, value)
+    if variable_1 == variable_2
+        new_value *= T(2)
+    end
+    model = owner_model(constraint)
+    MOI.modify(
+        backend(model),
+        index(constraint),
+        MOI.ScalarQuadraticCoefficientChange(
+            index(variable_1),
+            index(variable_2),
+            new_value,
+        ),
+    )
+    model.is_model_dirty = true
+    return
+end
+
+"""
+    normalized_coefficient(
+        constraint::ConstraintRef,
+        variable::GenericVariableRef,
+    )
+
+Return the coefficient associated with `variable` in `constraint` after JuMP has
+normalized the constraint into its standard form.
+
+See also [`set_normalized_coefficient`](@ref).
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @constraint(model, con, 2x + 3x <= 2)
+con : 5 x ≤ 2
+
+julia> normalized_coefficient(con, x)
+5.0
+```
+"""
+function normalized_coefficient(
+    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    variable::AbstractVariableRef,
+) where {F<:Union{MOI.ScalarAffineFunction,MOI.ScalarQuadraticFunction}}
+    return coefficient(constraint_object(constraint).func, variable)
+end
+
+"""
+    normalized_coefficient(
+        constraint::ConstraintRef,
+        variable_1::GenericVariableRef,
+        variable_2::GenericVariableRef,
+    )
+
+Return the quadratic coefficient associated with `variable_1` and `variable_2`
+in `constraint` after JuMP has normalized the constraint into its standard form.
+
+See also [`set_normalized_coefficient`](@ref).
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> @constraint(model, con, 2x[1]^2 + 3 * x[1] * x[2] + x[2] <= 2)
+con : 2 x[1]² + 3 x[1]*x[2] + x[2] ≤ 2
+
+julia> normalized_coefficient(con, x[1], x[1])
+2.0
+
+julia> normalized_coefficient(con, x[1], x[2])
+3.0
+```
+"""
+function normalized_coefficient(
+    constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    variable_1::AbstractVariableRef,
+    variable_2::AbstractVariableRef,
+) where {F<:MOI.ScalarQuadraticFunction}
+    con = constraint_object(constraint)
+    return coefficient(con.func, variable_1, variable_2)
+end
+
 ###
 ### Error messages for common incorrect usages
 ###
