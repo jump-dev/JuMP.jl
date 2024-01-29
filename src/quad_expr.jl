@@ -252,10 +252,6 @@ function _map_quad(
     return GenericQuadExpr(aff, terms)
 end
 
-function _affine_coefficient(f::GenericQuadExpr{C,V}, variable::V) where {C,V}
-    return _affine_coefficient(f.aff, variable)
-end
-
 """
     constant(aff::GenericQuadExpr{C, V})::C
 

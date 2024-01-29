@@ -852,15 +852,10 @@ julia> normalized_coefficient(con, x)
 ```
 """
 function normalized_coefficient(
-    con_ref::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
+    con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
     variable,
-) where {
-    S,
-    T,
-    F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
-}
-    con = constraint_object(con_ref)
-    return _affine_coefficient(con.func, variable)
+) where {F<:Union{MOI.ScalarAffineFunction,MOI.ScalarQuadraticFunction}}
+    return coefficient(constraint_object(con_ref).func, variable)
 end
 
 """
