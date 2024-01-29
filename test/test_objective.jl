@@ -217,4 +217,71 @@ function test_extension_objective_vector_quadratic_function(
     return
 end
 
+function test_set_objective_coefficient_quadratic()
+    model = Model()
+    @variable(model, x[1:2])
+    @objective(model, Min, x[1]^2 + x[1] * x[2] + x[1] + 2)
+    set_objective_coefficient(model, x[1], x[1], 2)
+    set_objective_coefficient(model, x[1], x[2], 3)
+    @test isequal_canonical(
+        objective_function(model),
+        2 * x[1]^2 + 3 * x[1] * x[2] + x[1] + 2,
+    )
+    set_objective_coefficient(model, x[2], x[1], 4)
+    @test isequal_canonical(
+        objective_function(model),
+        2 * x[1]^2 + 4 * x[1] * x[2] + x[1] + 2,
+    )
+    return
+end
+
+function test_set_objective_coefficient_quadratic_error()
+    model = Model()
+    @variable(model, x[1:2])
+    @NLobjective(model, Min, x[1] * x[2])
+    @test_throws(
+        ErrorException("A nonlinear objective is already set in the model"),
+        set_objective_coefficient(model, x[1], x[1], 2),
+    )
+    return
+end
+
+function test_set_objective_coefficient_quadratic_affine_original()
+    model = Model()
+    @variable(model, x[1:2])
+    @objective(model, Min, x[1] + 2)
+    set_objective_coefficient(model, x[1], x[1], 2)
+    set_objective_coefficient(model, x[2], x[1], 3)
+    @test isequal_canonical(
+        objective_function(model),
+        2 * x[1]^2 + 3 * x[1] * x[2] + x[1] + 2,
+    )
+    return
+end
+
+function test_set_objective_coefficient_quadratic_variable_original()
+    model = Model()
+    @variable(model, x[1:2])
+    @objective(model, Min, x[1])
+    set_objective_coefficient(model, x[1], x[1], 2)
+    set_objective_coefficient(model, x[2], x[1], 3)
+    @test isequal_canonical(
+        objective_function(model),
+        2 * x[1]^2 + 3 * x[1] * x[2] + x[1],
+    )
+    return
+end
+
+function test_set_objective_coefficient_quadratic_nothing_set()
+    model = Model()
+    @variable(model, x[1:2])
+    set_objective_coefficient(model, x[1], x[1], 2)
+    set_objective_coefficient(model, x[2], x[1], 3)
+    @test isequal_canonical(
+        objective_function(model),
+        2 * x[1]^2 + 3 * x[1] * x[2],
+    )
+    return
+end
+
 end  # module

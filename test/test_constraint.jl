@@ -1793,4 +1793,17 @@ function test_indicator_error()
     return
 end
 
+function test_set_normalized_coefficient_quadratic()
+    model = Model()
+    @variable(model, x[1:2])
+    @constraint(model, con, 2x[1]^2 + 3 * x[1] * x[2] + x[2] <= 2)
+    @test normalized_coefficient(con, x[1], x[1]) == 2.0
+    @test normalized_coefficient(con, x[1], x[2]) == 3.0
+    set_normalized_coefficient(con, x[1], x[1], 4)
+    set_normalized_coefficient(con, x[1], x[2], 5)
+    @test normalized_coefficient(con, x[1], x[1]) == 4.0
+    @test normalized_coefficient(con, x[1], x[2]) == 5.0
+    return
+end
+
 end  # module

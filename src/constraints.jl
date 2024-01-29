@@ -859,6 +859,105 @@ function normalized_coefficient(
 end
 
 """
+    set_normalized_coefficient(
+        constraint::ConstraintRef,
+        variable_1:GenericVariableRef,
+        variable_2:GenericVariableRef,
+        value,
+    )
+
+Set the quadratic coefficient associated with `variable_1` and `variable_2` in
+the constraint `constraint` to `value`.
+
+Note that prior to this step, JuMP will aggregate multiple terms containing the
+same variable. For example, given a constraint `2x^2 + 3x^2 <= 2`,
+`set_normalized_coefficient(con, x, x, 4)` will create the constraint `4x^2 <= 2`.
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> @constraint(model, con, 2x[1]^2 + 3 * x[1] * x[2] + x[2] <= 2)
+con : 2 x[1]² + 3 x[1]*x[2] + x[2] ≤ 2
+
+julia> set_normalized_coefficient(con, x[1], x[1], 4)
+
+julia> set_normalized_coefficient(con, x[1], x[2], 5)
+
+julia> con
+con : 4 x[1]² + 5 x[1]*x[2] + x[2] ≤ 2
+```
+"""
+function set_normalized_coefficient(
+    constraint::ConstraintRef{<:AbstractModel,CI},
+    # TODO(odow): these are untyped becasue `constraints.jl` is loaded before
+    #             variables.jl
+    variable_1,
+    variable_2,
+    value::Real,
+) where {T,CI<:MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{T}}}
+    new_value = convert(T, value)
+    if variable_1 == variable_2
+        new_value *= T(2)
+    end
+    model = owner_model(constraint)
+    MOI.modify(
+        backend(model),
+        index(constraint),
+        MOI.ScalarQuadraticCoefficientChange(
+            index(variable_1),
+            index(variable_2),
+            new_value,
+        ),
+    )
+    model.is_model_dirty = true
+    return
+end
+
+"""
+    normalized_coefficient(
+        constraint::ConstraintRef,
+        variable_1::GenericVariableRef,
+        variable_2::GenericVariableRef,
+    )
+
+Return the quadratic coefficient associated with `variable_1` and `variable_2`
+in `constraint` after JuMP has normalized the constraint into its standard form.
+
+See also [`set_normalized_coefficient`](@ref).
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> @constraint(model, con, 2x[1]^2 + 3 * x[1] * x[2] + x[2] <= 2)
+con : 2 x[1]² + 3 x[1]*x[2] + x[2] ≤ 2
+
+julia> normalized_coefficient(con, x[1], x[1])
+2.0
+
+julia> normalized_coefficient(con, x[1], x[2])
+3.0
+```
+"""
+function normalized_coefficient(
+    connstraint::ConstraintRef{<:AbstractModel,CI},
+    # TODO(odow): these are untyped becasue `constraints.jl` is loaded before
+    #             variables.jl
+    variable_1,
+    variable_2,
+) where {T,CI<:MOI.ConstraintIndex{MOI.ScalarQuadraticFunction{T}}}
+    con = constraint_object(connstraint)
+    return coefficient(con.func, variable_1, variable_2)
+end
+
+"""
     set_normalized_rhs(constraint::ConstraintRef, value)
 
 Set the right-hand side term of `constraint` to `value`.
