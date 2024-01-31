@@ -55,7 +55,7 @@
 [Gurobi]
     rev = "v1.2.1"
 [HiGHS]
-    rev = "v1.8.0"
+    rev = "953274644913c2beaaca596fbcb248cf9b5dc5b8"
 [Hypatia]
     rev = "v0.7.4"
     has_html = true
