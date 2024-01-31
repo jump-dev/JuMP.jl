@@ -7,6 +7,25 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.19.0 (February 1, 2024)
+
+### Added
+
+ - Added support for modifying quadratic coefficients (#3658)
+
+### Fixed
+
+ - Fixed short circuiting of `&&` and `||` in macros (#3655)
+
+### Other
+
+ - Added SDPLR to list of solvers (#3644)
+ - Added new roadmap items (#3645)
+ - Fixed vale.sh version (#3650)
+ - Improve error messages in macros (#3653)
+ - Refactoring of `set_normalized_coefficient` (#3660) (#3661)
+ - Update `docs/packages.toml` (#3662)
+
 ## Version 1.18.1 (January 6, 2024)
 
 ### Fixed
