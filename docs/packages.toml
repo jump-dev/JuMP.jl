@@ -55,13 +55,16 @@
 [Gurobi]
     rev = "v1.2.1"
 [HiGHS]
-    rev = "v1.7.5"
+    rev = "953274644913c2beaaca596fbcb248cf9b5dc5b8"
+[Hypatia]
+    rev = "v0.7.4"
+    has_html = true
 [Ipopt]
     rev = "v1.6.0"
 [KNITRO]
     rev = "v0.14.1"
 [MiniZinc]
-    rev = "v0.3.6"
+    rev = "v0.3.7"
 [MosekTools]
     rev = "v0.15.1"
 [MultiObjectiveAlgorithms]
@@ -73,7 +76,7 @@
     rev = "v0.7.0"
     extension = true
 [Pavito]
-    rev = "v0.3.7"
+    rev = "v0.3.8"
 # Penopt.jl isn't a registered package yet
 # [Penopt]
 #     rev = "486f07d3f3a11f12012ea3ada702a3ee55c8fdc5"
@@ -119,7 +122,7 @@
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.13"
+    rev = "v1.1.14"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.8"
@@ -139,10 +142,6 @@
 [GAMS]
     user = "GAMS-dev"
     rev = "c5dee9f929e9d2f4433ae09fa92b8d872c9c43e0"
-[Hypatia]
-    user = "chriscoey"
-    rev = "v0.7.3"
-    has_html = true
 [InfiniteOpt]
     user = "infiniteopt"
     rev = "v0.5.8"
@@ -150,7 +149,7 @@
     extension = true
 [Juniper]
     user = "lanl-ansi"
-    rev = "62532341586d447f19c7360715333ba62a42bea9"
+    rev = "v0.9.2"
 [Loraine]
     user = "kocvara"
     rev = "v0.1.2"
@@ -160,7 +159,7 @@
     has_html = true
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.4.44"
+    rev = "v0.4.51"
     filename = "Readme.md"
 [NEOSServer]
     user = "odow"
@@ -172,7 +171,7 @@
     rev = "443706e34c2619acbe65281c60bbe850ca4a8fac"
 [PATHSolver]
     user = "chkwon"
-    rev = "v1.7.1"
+    rev = "v1.7.2"
 [Percival]
     user = "JuliaSmoothOptimizers"
     rev = "0448763a5f8aa9d43a5ad684309c839f70d10fbf"
