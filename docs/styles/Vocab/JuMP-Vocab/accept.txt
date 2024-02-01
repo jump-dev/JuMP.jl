@@ -227,6 +227,7 @@ Nemhauser
 Nemirovski
 Pacaud
 Peng
+pkofod
 Rebennack
 Riemannian
 [Rr]osenbrock
