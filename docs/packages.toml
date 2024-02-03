@@ -160,10 +160,9 @@
     rev = "v1.1.0"
 # [NLopt]                   # Hard-coded in the file docs/src/packages/NLopt.md
 #     user = "JuliaOpt"
-# TODO: needs fixes to the README
-# [Optim]
-#     user = "JuliaNLSolvers"
-#     rev = "v1.9.1"
+[Optim]
+    user = "JuliaNLSolvers"
+    rev = "7665d5a624a35167ce7024f5559ca174b01cc6f4"
 [OSQP]
     user = "osqp"
     rev = "443706e34c2619acbe65281c60bbe850ca4a8fac"
