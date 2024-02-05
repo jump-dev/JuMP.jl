@@ -1233,7 +1233,13 @@ function test_caching_mps_model()
     model = Model(MOI.FileFormats.MPS.Model)
     @test occursin("unknown", sprint(show, model))
     @variable(model, x >= 0)
-    @test_throws MethodError optimize!(model)
+    @test_throws(
+        ErrorException(
+            "Cannot call `optimize!` because the provided optimizer is not " *
+            "a subtype of `MOI.AbstractOptimizer`.",
+        ),
+        optimize!(model),
+    )
     return
 end
 

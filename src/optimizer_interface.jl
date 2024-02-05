@@ -444,6 +444,12 @@ function optimize!(
     if mode(model) != DIRECT && MOIU.state(backend(model)) == MOIU.NO_OPTIMIZER
         throw(NoOptimizer())
     end
+    if !(unsafe_backend(model) isa MOI.AbstractOptimizer)
+        error(
+            "Cannot call `optimize!` because the provided optimizer is not " *
+            "a subtype of `MOI.AbstractOptimizer`.",
+        )
+    end
     try
         MOI.optimize!(backend(model))
     catch err
