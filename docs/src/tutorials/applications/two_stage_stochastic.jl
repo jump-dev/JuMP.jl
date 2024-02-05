@@ -86,6 +86,8 @@ set_silent(model)
 @expression(model, z[ω in Ω], 5y[ω] - 0.1 * (x - y[ω]))
 @objective(model, Max, -2x + sum(P[ω] * z[ω] for ω in Ω))
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
+@assert primal_status(model) == FEASIBLE_POINT
 solution_summary(model)
 
 # The optimal number of pies to make is:
@@ -158,6 +160,8 @@ function CVaR(Z::Vector{Float64}, P::Vector{Float64}; γ::Float64)
     @constraint(model, [i in 1:N], z[i] >= ξ - Z[i])
     @objective(model, Max, ξ - 1 / γ * sum(P[i] * z[i] for i in 1:N))
     optimize!(model)
+    @assert termination_status(model) == OPTIMAL
+    @assert primal_status(model) == FEASIBLE_POINT
     return objective_value(model)
 end
 
@@ -216,6 +220,8 @@ set_silent(model)
 @constraint(model, [ω in Ω], z[ω] >= ξ - Z[ω])
 @objective(model, Max, -2x + ξ - 1 / γ * sum(P[ω] * z[ω] for ω in Ω))
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
+@assert primal_status(model) == FEASIBLE_POINT
 
 # When ``\gamma = 0.4``, the optimal number of pies to bake is:
 

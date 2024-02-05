@@ -41,7 +41,7 @@ import DataFrames
 import Ipopt
 import LinearAlgebra
 import SparseArrays
-import Test #src
+import Test
 
 # ## Initial formulation
 
@@ -137,6 +137,8 @@ println("Objective value (basic lower bound) : $basic_lower_bound")
 
 @constraint(model, sum(P_G) >= sum(P_Demand))
 optimize!(model)
+@assert termination_status(model) == LOCALLY_SOLVED
+@assert primal_status(model) == FEASIBLE_POINT
 better_lower_bound = round(objective_value(model); digits = 2)
 println("Objective value (better lower bound): $better_lower_bound")
 
@@ -280,6 +282,8 @@ P_G = real(S_G)
 # We're finally ready to solve our nonlinear AC-OPF problem:
 
 optimize!(model)
+@assert termination_status(model) == LOCALLY_SOLVED
+@assert primal_status(model) == FEASIBLE_POINT
 Test.@test isapprox(objective_value(model), 3087.84; atol = 1e-2)  #src
 solution_summary(model)
 
@@ -419,8 +423,8 @@ optimize!(model)
 #-
 
 sdp_relaxation_lower_bound = round(objective_value(model); digits = 2)
-Test.@test termination_status(model) in (OPTIMAL, ALMOST_OPTIMAL)           #src
-Test.@test primal_status(model) in (FEASIBLE_POINT, NEARLY_FEASIBLE_POINT)  #src
+Test.@test termination_status(model) in (OPTIMAL, ALMOST_OPTIMAL)
+Test.@test primal_status(model) in (FEASIBLE_POINT, NEARLY_FEASIBLE_POINT)
 Test.@test isapprox(sdp_relaxation_lower_bound, 2753.04; rtol = 1e-3)     #src
 println(
     "Objective value (W & V relax. lower bound): $sdp_relaxation_lower_bound",
