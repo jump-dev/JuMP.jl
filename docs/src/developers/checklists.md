@@ -23,6 +23,8 @@ done in the same commit, or separately. The last commit should have the message
        READMEs do not break the JuMP docs in arbitrary commits, and to ensure
        that the versions are compatible with the latest JuMP and
        MathOptInterface releases.
+ - [ ] Check compat of `DimensionalData` in `Project.toml`
+ - [ ] Check compat of `MacroTools` in `Project.toml`
  - [ ] Update `docs/src/changelog.md`
  - [ ] Run https://github.com/jump-dev/JuMP.jl/actions/workflows/extension-tests.yml
        using a `workflow_dispatch` trigger to check for any changes in JuMP that
