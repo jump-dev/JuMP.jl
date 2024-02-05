@@ -146,6 +146,7 @@ MOI
 Mosek
 MOSEK
 Octeract
+Optim
 Pajarito
 Pardiso
 PATHSolver

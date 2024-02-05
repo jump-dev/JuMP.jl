@@ -132,6 +132,7 @@ The link in the `Solver` column is the corresponding Julia package.
 | [MOSEK](https://www.mosek.com/)                                                | [MosekTools.jl](https://github.com/jump-dev/MosekTools.jl)                       | Manual | Comm.    | (MI)LP, (MI)SOCP, SDP     |
 | [NLopt](https://github.com/stevengj/nlopt)                                     | [NLopt.jl](https://github.com/JuliaOpt/NLopt.jl)                                 |        | GPL      | LP, QP, NLP               |
 | [Octeract](https://octeract.gg)                                                | [AmplNLWriter.jl](https://github.com/jump-dev/AmplNLWriter.jl)                   |        | Comm.    | (MI)NLP                   |
+| [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl/)                        |                                                                                  |        | MIT      | NLP                       |
 | [OSQP](https://osqp.org/)                                                      | [OSQP.jl](https://github.com/oxfordcontrol/OSQP.jl)                              |        | Apache   | LP, QP                    |
 | [PATH](http://pages.cs.wisc.edu/~ferris/path.html)                             | [PATHSolver.jl](https://github.com/chkwon/PATHSolver.jl)                         |        | MIT      | MCP                       |
 | [Pajarito.jl](https://github.com/jump-dev/Pajarito.jl)                         |                                                                                  |        | MPL-2    | (MI)NLP, (MI)SOCP, (MI)SDP |
