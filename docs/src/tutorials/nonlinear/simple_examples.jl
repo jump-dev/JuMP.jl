@@ -87,8 +87,8 @@ function example_clnlbeam()
     primal_status      = $(primal_status(model))
     objective_value    = $(objective_value(model))
     """)
-    Test.@test termination_status(model) == LOCALLY_SOLVED  #src
-    Test.@test primal_status(model) == FEASIBLE_POINT  #src
+    Test.@test termination_status(model) == LOCALLY_SOLVED
+    Test.@test primal_status(model) == FEASIBLE_POINT
     Test.@test objective_value(model) ≈ 350.0  #src
     return
 end
@@ -116,6 +116,8 @@ function example_mle()
         sum((data[i] - μ)^2 for i in 1:n) / (2 * σ^2)
     )
     optimize!(model)
+    @assert termination_status(model) == LOCALLY_SOLVED
+    @assert primal_status(model) == FEASIBLE_POINT
     println("μ             = ", value(μ))
     println("mean(data)    = ", Statistics.mean(data))
     println("σ^2           = ", value(σ)^2)
@@ -126,6 +128,8 @@ function example_mle()
     ## You can even do constrained MLE!
     @constraint(model, μ == σ^2)
     optimize!(model)
+    @assert termination_status(model) == LOCALLY_SOLVED
+    @assert primal_status(model) == FEASIBLE_POINT
     Test.@test value(μ) ≈ value(σ)^2
     println()
     println("With constraint μ == σ^2:")
@@ -153,12 +157,12 @@ function example_qcp()
     @constraint(model, x * x + y * y - z * z <= 0)
     @constraint(model, x * x - y * z <= 0)
     optimize!(model)
+    Test.@test termination_status(model) == LOCALLY_SOLVED
+    Test.@test primal_status(model) == FEASIBLE_POINT
     print(model)
     println("Objective value: ", objective_value(model))
     println("x = ", value(x))
     println("y = ", value(y))
-    Test.@test termination_status(model) == LOCALLY_SOLVED
-    Test.@test primal_status(model) == FEASIBLE_POINT
     Test.@test objective_value(model) ≈ 0.32699 atol = 1e-5
     Test.@test value(x) ≈ 0.32699 atol = 1e-5
     Test.@test value(y) ≈ 0.25707 atol = 1e-5

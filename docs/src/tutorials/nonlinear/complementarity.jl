@@ -47,6 +47,8 @@ set_silent(model)
 @variable(model, 0 <= x[1:4] <= 10, start = 0)
 @constraint(model, M * x + q ⟂ x)
 optimize!(model)
+@assert termination_status(model) == LOCALLY_SOLVED
+@assert primal_status(model) == FEASIBLE_POINT
 Test.@test value.(x) ≈ [2.8, 0.0, 0.8, 1.2]  #src
 value.(x)
 
@@ -67,6 +69,8 @@ set_silent(model)
 @constraint(model, w + 2x - 2y + 4z - 6 ⟂ z)
 @constraint(model, w - x + 2y - 2z - 2 ⟂ y)
 optimize!(model)
+@assert termination_status(model) == LOCALLY_SOLVED
+@assert primal_status(model) == FEASIBLE_POINT
 Test.@test value.([w, x, y, z]) ≈ [2.8, 0.0, 0.8, 1.2]  #src
 value.([w, x, y, z])
 
@@ -102,6 +106,8 @@ set_silent(model)
     end
 )
 optimize!(model)
+@assert termination_status(model) == LOCALLY_SOLVED
+@assert primal_status(model) == FEASIBLE_POINT
 Test.@test isapprox(value(p["new-york"]), 0.225; atol = 1e-3)  #src
 value.(p)
 
@@ -137,6 +143,8 @@ set_silent(model)
     end
 )
 optimize!(model)
+@assert termination_status(model) == LOCALLY_SOLVED
+@assert primal_status(model) == FEASIBLE_POINT
 Test.@test isapprox(value(C_G), 0.996; atol = 1e-3)  #src
 value(K)
 
@@ -189,6 +197,8 @@ set_silent(model)
 ## Production does not exceed capacity
 @constraint(model, [ω = 1:5], x - Y[ω] ⟂ μ[ω])
 optimize!(model)
+@assert termination_status(model) == LOCALLY_SOLVED
+@assert primal_status(model) == FEASIBLE_POINT
 solution_summary(model)
 
 # An equilibrium solution is to build 389 MW:

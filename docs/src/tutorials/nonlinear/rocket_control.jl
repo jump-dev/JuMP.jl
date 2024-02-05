@@ -127,6 +127,8 @@ ddt(x::Vector, t::Int) = (x[t] - x[t-1]) / Δt
 # Now we optimize the model and check that we found a solution:
 
 optimize!(model)
+@assert termination_status(model) == LOCALLY_SOLVED
+@assert primal_status(model) == FEASIBLE_POINT
 solution_summary(model)
 
 # Finally, we plot the solution:

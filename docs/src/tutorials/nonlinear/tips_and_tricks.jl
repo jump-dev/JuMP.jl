@@ -52,6 +52,8 @@ set_silent(model)
 @constraint(model, op_foo_2(x[1], x[2]) <= 2)
 function_calls = 0
 optimize!(model)
+@assert termination_status(model) == LOCALLY_SOLVED
+@assert primal_status(model) == FEASIBLE_POINT
 Test.@test objective_value(model) ≈ √3 atol = 1e-4
 Test.@test value.(x) ≈ [1.0, 1.0] atol = 1e-4
 println("Naive approach: function calls = $(function_calls)")
@@ -120,6 +122,8 @@ set_silent(model)
 @constraint(model, op_foo_2(x[1], x[2]) <= 2)
 function_calls = 0
 optimize!(model)
+@assert termination_status(model) == LOCALLY_SOLVED
+@assert primal_status(model) == FEASIBLE_POINT
 Test.@test objective_value(model) ≈ √3 atol = 1e-4
 Test.@test value.(x) ≈ [1.0, 1.0] atol = 1e-4
 println("Memoized approach: function_calls = $(function_calls)")
