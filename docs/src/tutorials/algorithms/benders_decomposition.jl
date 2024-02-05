@@ -166,7 +166,7 @@ function solve_subproblem(x)
     optimize!(model)
     @assert termination_status(model) == OPTIMAL
     @assert primal_status(model) == FEASIBLE_POINT
-    @assert dual_solution(model) == FEASIBLE_POINT
+    @assert dual_status(model) == FEASIBLE_POINT
     return (obj = objective_value(model), y = value.(y), π = dual.(con))
 end
 
@@ -333,7 +333,7 @@ function solve_subproblem(model, x)
     optimize!(model)
     @assert termination_status(model) == OPTIMAL
     @assert primal_status(model) == FEASIBLE_POINT
-    @assert dual_solution(model) == FEASIBLE_POINT
+    @assert dual_status(model) == FEASIBLE_POINT
     return (
         obj = objective_value(model),
         y = value.(model[:y]),

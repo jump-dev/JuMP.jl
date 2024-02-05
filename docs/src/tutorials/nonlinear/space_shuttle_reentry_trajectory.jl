@@ -306,7 +306,6 @@ optimize!(model)  # Solve for the control and state
 @assert termination_status(model) == LOCALLY_SOLVED
 @assert primal_status(model) == FEASIBLE_POINT
 
-
 ## Show final cross-range of the solution
 println(
     "Final latitude θ = ",
