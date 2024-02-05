@@ -1236,7 +1236,8 @@ function test_caching_mps_model()
     @test_throws(
         ErrorException(
             "Cannot call `optimize!` because the provided optimizer is not " *
-            "a subtype of `MOI.AbstractOptimizer`.",
+            "a subtype of `MOI.AbstractOptimizer`.\n\nThe optimizer is:\n\n" *
+            "A Mathematical Programming System (MPS) model\n",
         ),
         optimize!(model),
     )
