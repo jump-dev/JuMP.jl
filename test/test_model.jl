@@ -1216,4 +1216,25 @@ function test_show_variable_not_owned()
     return
 end
 
+function test_direct_mps_model()
+    model = direct_model(MOI.FileFormats.MPS.Model())
+    @test occursin("unknown", sprint(show, model))
+    @variable(model, x >= 0)
+    io = IOBuffer()
+    write(io, backend(model))
+    seekstart(io)
+    data = String(take!(io))
+    @test startswith(data, "NAME")
+    @test endswith(data, "ENDATA")
+    return
+end
+
+function test_caching_mps_model()
+    model = Model(MOI.FileFormats.MPS.Model)
+    @test occursin("unknown", sprint(show, model))
+    @variable(model, x >= 0)
+    @test_throws MethodError optimize!(model)
+    return
+end
+
 end  # module TestModels

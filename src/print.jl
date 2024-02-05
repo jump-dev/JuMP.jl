@@ -273,7 +273,12 @@ function show_backend_summary(io::IO, model::GenericModel)
         println(io, "CachingOptimizer state: ", MOIU.state(backend(model)))
     end
     # The last print shouldn't have a new line
-    print(io, "Solver name: ", solver_name(model))
+    name = try
+        solver_name(model)
+    catch
+        "unknown"
+    end
+    print(io, "Solver name: ", name)
     return
 end
 

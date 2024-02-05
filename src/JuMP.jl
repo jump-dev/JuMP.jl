@@ -84,7 +84,7 @@ value_type(::Type{<:AbstractModel}) = Float64
 mutable struct GenericModel{T<:Real} <: AbstractModel
     # In MANUAL and AUTOMATIC modes, CachingOptimizer.
     # In DIRECT mode, will hold an AbstractOptimizer.
-    moi_backend::MOI.AbstractOptimizer
+    moi_backend::MOI.ModelLike
     # List of shapes of constraints that are not `ScalarShape` or `VectorShape`.
     shapes::Dict{MOI.ConstraintIndex,AbstractShape}
     # List of bridges to add in addition to the ones added in
