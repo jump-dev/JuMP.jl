@@ -1225,7 +1225,7 @@ function test_direct_mps_model()
     seekstart(io)
     data = String(take!(io))
     @test startswith(data, "NAME")
-    @test endswith(data, "ENDATA")
+    @test endswith(data, "ENDATA\n")
     return
 end
 

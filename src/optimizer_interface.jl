@@ -449,7 +449,8 @@ function optimize!(
         error(
             "Cannot call `optimize!` because the provided optimizer is not " *
             "a subtype of `MOI.AbstractOptimizer`.\n\nThe optimizer is:\n\n" *
-            sprint(show, optimizer) * "\n",
+            sprint(show, optimizer) *
+            "\n",
         )
     end
     try
