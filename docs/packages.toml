@@ -162,7 +162,7 @@
 #     user = "JuliaOpt"
 [Optim]
     user = "JuliaNLSolvers"
-    rev = "7665d5a624a35167ce7024f5559ca174b01cc6f4"
+    rev = "v1.9.2"
 [OSQP]
     user = "osqp"
     rev = "443706e34c2619acbe65281c60bbe850ca4a8fac"
