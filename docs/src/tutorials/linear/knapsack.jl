@@ -96,6 +96,8 @@ print(model)
 # We can now solve the optimization problem and inspect the results.
 
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
+@assert primal_status(model) == FEASIBLE_POINT
 solution_summary(model)
 
 # The items chosen are

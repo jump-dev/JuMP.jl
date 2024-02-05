@@ -198,6 +198,12 @@ dual_status(model)
 # Now we know that our solver found an optimal solution, and that it has a
 # primal and a dual solution to query.
 
+# It is good practice in your code to include statements like this so that an
+# error will be thrown if the solver did not find an optimal solution:
+
+@assert termination_status(model) == OPTIMAL
+@assert primal_status(model) == FEASIBLE_POINT
+
 # Query the objective value using [`objective_value`](@ref):
 
 objective_value(model)
@@ -506,4 +512,6 @@ c = [1, 3, 5, 2]
 @constraint(vector_model, A * x .== b)
 @objective(vector_model, Min, c' * x)
 optimize!(vector_model)
+@assert termination_status(vector_model) == OPTIMAL
+@assert primal_status(vector_model) == FEASIBLE_POINT
 objective_value(vector_model)

@@ -16,7 +16,7 @@ using JuMP
 import CSV
 import DataFrames
 import HiGHS
-import Test  #hide
+import Test
 
 # ## Formulation
 
@@ -145,7 +145,8 @@ print(model)
 # Let's optimize and take a look at the solution:
 
 optimize!(model)
-Test.@test primal_status(model) == FEASIBLE_POINT        #hide
+@assert termination_status(model) == OPTIMAL
+@assert primal_status(model) == FEASIBLE_POINT
 Test.@test objective_value(model) ≈ 11.8288 atol = 1e-4  #hide
 solution_summary(model)
 
@@ -178,8 +179,8 @@ dairy_foods = ["milk", "ice cream"]
 is_dairy = map(name -> name in dairy_foods, foods.name)
 dairy_constraint = @constraint(model, sum(foods[is_dairy, :x]) <= 6)
 optimize!(model)
-Test.@test termination_status(model) == INFEASIBLE  #hide
-Test.@test primal_status(model) == NO_SOLUTION      #hide
+Test.@test termination_status(model) == INFEASIBLE
+Test.@test primal_status(model) == NO_SOLUTION
 solution_summary(model)
 
 # There exists no feasible solution to our problem. Looks like we're stuck

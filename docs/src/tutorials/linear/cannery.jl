@@ -21,19 +21,19 @@
 using JuMP
 import HiGHS
 import JSON
-import Test  #src
+import Test
 
 # ## Formulation
 
-# The cannery problem assumes we are optimizing the shipment of cases of 
+# The cannery problem assumes we are optimizing the shipment of cases of
 # cans from production plants ``p \in P`` to markets ``m \in M``.
 
 # Each production plant ``p`` has a capacity ``c_p``, and each market ``m``
-# has a demand ``d_m``. The shipping cost per case of cans from plant ``p`` 
+# has a demand ``d_m``. The shipping cost per case of cans from plant ``p``
 # to market ``m`` is ``d_{p,m}``.
 
 # We wish to find the distribution plan ``x_{p,m}``, the number of cases of cans
-# to ship from plant ``p`` to market ``m``, for ``p \in P`` and ``m \in M``  
+# to ship from plant ``p`` to market ``m``, for ``p \in P`` and ``m \in M``
 # that minimizes the shipping costs. We can formulate our problem as the
 # following linear program:
 # ```math
@@ -121,10 +121,9 @@ solution_summary(model)
 
 # What's the optimal shipment?
 
+Test.@test termination_status(model) == OPTIMAL
+Test.@test primal_status(model) == FEASIBLE_POINT
+Test.@test objective_value(model) == 1_680.0           #src
 for p in P, m in M
     println(p, " => ", m, ": ", value(x[p, m]))
 end
-
-Test.@test termination_status(model) == OPTIMAL    #src
-Test.@test primal_status(model) == FEASIBLE_POINT  #src
-Test.@test objective_value(model) == 1_680.0           #src

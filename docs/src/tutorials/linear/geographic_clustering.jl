@@ -151,6 +151,8 @@ end
 # We can then call `optimize!` and review the results.
 
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
+@assert primal_status(model) == FEASIBLE_POINT
 
 # ### Reviewing the Results
 

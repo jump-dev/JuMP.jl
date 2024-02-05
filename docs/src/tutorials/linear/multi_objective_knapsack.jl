@@ -121,6 +121,7 @@ set_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
 # Let's solve the problem and see the solution
 
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
 solution_summary(model)
 
 # There are 9 solutions available. We can also use [`result_count`](@ref) to see
@@ -134,6 +135,10 @@ result_count(model)
 # [`solution_summary`](@ref), [`value`](@ref), and [`objective_value`](@ref):
 
 solution_summary(model; result = 5)
+
+#-
+
+@assert primal_status(model; result = 5) == FEASIBLE_POINT
 
 #-
 

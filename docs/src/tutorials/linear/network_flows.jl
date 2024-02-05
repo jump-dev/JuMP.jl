@@ -79,6 +79,8 @@ set_silent(shortest_path)
 @constraint(shortest_path, [i = 1:n], sum(x[i, :]) - sum(x[:, i]) == b[i],)
 @objective(shortest_path, Min, sum(G .* x))
 optimize!(shortest_path)
+@assert termination_status(shortest_path) == OPTIMAL
+@assert primal_status(shortest_path) == FEASIBLE_POINT
 objective_value(shortest_path)
 #-
 value.(x)
@@ -123,6 +125,8 @@ set_silent(assignment)
 @constraint(assignment, [j = 1:n], sum(y[j, :]) == 1)
 @objective(assignment, Max, sum(G .* y))
 optimize!(assignment)
+@assert termination_status(assignment) == OPTIMAL
+@assert primal_status(assignment) == FEASIBLE_POINT
 objective_value(assignment)
 #-
 value.(y)
@@ -163,6 +167,8 @@ max_flow = Model(HiGHS.Optimizer)
 @constraint(max_flow, [i = 1:n; i != 1 && i != 8], sum(f[i, :]) == sum(f[:, i]))
 @objective(max_flow, Max, sum(f[1, :]))
 optimize!(max_flow)
+@assert termination_status(max_flow) == OPTIMAL
+@assert primal_status(max_flow) == FEASIBLE_POINT
 objective_value(max_flow)
 #-
 value.(f)

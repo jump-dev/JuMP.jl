@@ -55,6 +55,8 @@ model = Model(HiGHS.Optimizer)
 @objective(model, Max, sum(profit[i] * x[i] for i in 1:N))
 @constraint(model, sum(weight[i] * x[i] for i in 1:N) <= capacity)
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
+@assert primal_status(model) == FEASIBLE_POINT
 value.(x)
 
 # The benefits of this approach are:
@@ -87,6 +89,8 @@ function solve_knapsack_1(profit::Vector, weight::Vector, capacity::Real)
     @objective(model, Max, sum(profit[i] * x[i] for i in 1:N))
     @constraint(model, sum(weight[i] * x[i] for i in 1:N) <= capacity)
     optimize!(model)
+    @assert termination_status(model) == OPTIMAL
+    @assert primal_status(model) == FEASIBLE_POINT
     return value.(x)
 end
 
@@ -159,6 +163,8 @@ function solve_knapsack_2(data::KnapsackData)
         sum(v.weight * x[k] for (k, v) in data.objects) <= data.capacity,
     )
     optimize!(model)
+    @assert termination_status(model) == OPTIMAL
+    @assert primal_status(model) == FEASIBLE_POINT
     return value.(x)
 end
 
@@ -230,6 +236,8 @@ function solve_knapsack_3(data::KnapsackData; binary_knapsack::Bool)
         sum(v.weight * x[k] for (k, v) in data.objects) <= data.capacity,
     )
     optimize!(model)
+    @assert termination_status(model) == OPTIMAL
+    @assert primal_status(model) == FEASIBLE_POINT
     return value.(x)
 end
 
@@ -272,6 +280,8 @@ function solve_knapsack_4(data::KnapsackData, config::AbstractConfiguration)
         sum(v.weight * x[k] for (k, v) in data.objects) <= data.capacity,
     )
     optimize!(model)
+    @assert termination_status(model) == OPTIMAL
+    @assert primal_status(model) == FEASIBLE_POINT
     return value.(x)
 end
 
@@ -359,6 +369,8 @@ function solve_knapsack_5(data::KnapsackData, config::AbstractConfiguration)
     add_knapsack_constraints(model, data, config)
     add_knapsack_objective(model, data, config)
     optimize!(model)
+    @assert termination_status(model) == OPTIMAL
+    @assert primal_status(model) == FEASIBLE_POINT
     return value.(model[:x])
 end
 
@@ -386,6 +398,9 @@ function solve_knapsack_6(
     optimize!(model)
     if termination_status(model) != OPTIMAL
         @warn("Model not solved to optimality")
+        return nothing
+    elseif primal_status(model) != FEASIBLE_POINT
+        @warn("No feasible point to return")
         return nothing
     end
     return value.(model[:x])
@@ -521,6 +536,9 @@ function _solve_knapsack(
     JuMP.optimize!(model)
     if JuMP.termination_status(model) != JuMP.OPTIMAL
         @warn("Model not solved to optimality")
+        return nothing
+    elseif JuMP.primal_status(model) != JuMP.FEASIBLE_POINT
+        @warn("No feasible point to return")
         return nothing
     end
     return JuMP.value.(model[:x])

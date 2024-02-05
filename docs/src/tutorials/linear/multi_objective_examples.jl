@@ -32,11 +32,13 @@ set_silent(model)
 set_optimizer(model, () -> MOA.Optimizer(HiGHS.Optimizer))
 set_attribute(model, MOA.Algorithm(), MOA.Lexicographic())
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
 solution_summary(model)
 
 #-
 
 for i in 1:result_count(model)
+    @assert primal_status(model; result = i) == FEASIBLE_POINT
     print(i, ": z = ", round.(Int, objective_value(model; result = i)), " | ")
     println("x = ", value.([x1, x2]; result = i))
 end
@@ -60,11 +62,13 @@ set_silent(model)
 set_optimizer(model, () -> MOA.Optimizer(HiGHS.Optimizer))
 set_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
 solution_summary(model)
 
 #-
 
 for i in 1:result_count(model)
+    @assert primal_status(model; result = i) == FEASIBLE_POINT
     print(i, ": z = ", round.(Int, objective_value(model; result = i)), " | ")
     println("x = ", round.(Int, value.(x; result = i)))
 end
@@ -104,11 +108,13 @@ set_silent(model)
 set_optimizer(model, () -> MOA.Optimizer(HiGHS.Optimizer))
 set_attribute(model, MOA.Algorithm(), MOA.EpsilonConstraint())
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
 solution_summary(model)
 
 #-
 
 for i in 1:result_count(model)
+    @assert primal_status(model; result = i) == FEASIBLE_POINT
     print(i, ": z = ", round.(Int, objective_value(model; result = i)), " | ")
     X = round.(Int, value.(x; result = i))
     print("Path:")

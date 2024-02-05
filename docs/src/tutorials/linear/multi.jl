@@ -24,7 +24,7 @@ import DataFrames
 import HiGHS
 import SQLite
 import Tables
-import Test  #src
+import Test
 
 const DBInterface = SQLite.DBInterface
 
@@ -177,8 +177,8 @@ end
 # Finally, we can optimize the model:
 
 optimize!(model)
-Test.@test termination_status(model) == OPTIMAL     #src
-Test.@test primal_status(model) == FEASIBLE_POINT   #src
+Test.@test termination_status(model) == OPTIMAL
+Test.@test primal_status(model) == FEASIBLE_POINT
 Test.@test objective_value(model) == 225_700.0      #src
 solution_summary(model)
 

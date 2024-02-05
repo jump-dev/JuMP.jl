@@ -58,6 +58,8 @@ print(model)
 # If we optimize this model, we obtain a [`dual_status`](@ref) of [`NO_SOLUTION`](@ref):
 
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
+@assert primal_status(model) == FEASIBLE_POINT
 dual_status(model)
 
 # This is because HiGHS cannot compute the duals of a mixed-integer program. We
@@ -73,6 +75,8 @@ print(model)
 # dual:
 
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
+@assert primal_status(model) == FEASIBLE_POINT
 dual_status(model)
 
 # and a marginal price of electricity of \$100/MWh:
@@ -94,6 +98,8 @@ print(model)
 # the [`fix_discrete_variables`](@ref) function:
 
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
+@assert primal_status(model) == FEASIBLE_POINT
 dual_status(model)
 
 #-
@@ -113,6 +119,8 @@ print(model)
 #-
 
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
+@assert primal_status(model) == FEASIBLE_POINT
 dual_status(model)
 
 #-
