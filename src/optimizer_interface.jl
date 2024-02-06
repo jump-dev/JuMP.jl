@@ -594,7 +594,7 @@ end
 Return `true` if the model has an optimal primal solution associated with result
 index `result`.
 
-If `dual`, additionally check that a feasible dual solution is available.
+If `dual`, additionally check that an optimal dual solution is available.
 
 If `allow_local`, the [`termination_status`](@ref) may be [`OPTIMAL`](@ref) (the
 solver found a global optimum) or [`LOCALLY_SOLVED`](@ref) (the solver found a
