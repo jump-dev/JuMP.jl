@@ -36,7 +36,7 @@ Subject to
 
 Use [`has_optimal_solution`](@ref) to check if the solver found an optimal
 solution:
-```julia solutions
+```jldoctest solutions
 julia> has_optimal_solution(model)
 true
 ```
@@ -44,14 +44,14 @@ true
 By default [`has_optimal_solution`](@ref) returns `true` for both global and
 local optima. Pass `allow_local = false` to check if the solver found a globally
 optimal solution:
-```julia solutions
+```jldoctest solutions
 julia> has_optimal_solution(model; allow_local = false)
 true
 ```
 
 Pass `dual = true` to check if the solver found an optimal dual solution in
 addition to an optimal primal solution:
-```solutions
+```jldoctest solutions
 julia> has_optimal_solution(model; dual = true)
 true
 ```

@@ -178,7 +178,8 @@ optimize!(model)
 #     Julia has a convention that functions which mutate their arguments should
 #     end in `!`. A common example is `push!`.
 
-# Now let's see what information we can query about the solution.
+# Now let's see what information we can query about the solution,
+# starting with [`has_optimal_solution`](@ref):
 
 has_optimal_solution(model)
 
