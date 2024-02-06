@@ -217,7 +217,7 @@ function solve_economic_dispatch_inplace(
             wind.variable_cost * w,
         )
         optimize!(model)
-        @assert has_optimal_solution(sudoku)
+        @assert has_optimal_solution(model)
         push!(obj_out, objective_value(model))
         push!(w_out, value(w))
         push!(g1_out, value(g[1]))

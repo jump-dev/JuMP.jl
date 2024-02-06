@@ -180,6 +180,11 @@ optimize!(model)
 
 # Now let's see what information we can query about the solution.
 
+has_optimal_solution(model)
+
+# We can get more information about the solution by querying the three types of
+# statuses.
+
 # [`termination_status`](@ref) tells us why the solver stopped:
 
 termination_status(model)
@@ -198,11 +203,6 @@ dual_status(model)
 # Now we know that our solver found an optimal solution, and that it has a
 # primal and a dual solution to query.
 
-# It is good practice in your code to include statements like this so that an
-# error will be thrown if the solver did not find an optimal solution:
-
-@assert has_optimal_solution(model)
-
 # Query the objective value using [`objective_value`](@ref):
 
 objective_value(model)
@@ -216,6 +216,17 @@ value(y)
 
 shadow_price(c1)
 shadow_price(c2)
+
+# !!! warning
+#     You should always check whether the solver found a solution before calling
+#     solution functions like [`value`](@ref) or [`objective_value`](@ref). A
+#     common workflow is:
+#     ```julia
+#     optimize!(model)
+#     if !has_optimal_solution(model)
+#         error("Solver did not find an optimal solution")
+#     end
+#     ```
 
 # That's it for our simple model. In the rest of this tutorial, we expand on
 # some of the basic JuMP operations.

@@ -295,11 +295,37 @@ And data, a 2-element Vector{Float64}:
 
 ## Recommended workflow
 
-The recommended workflow for solving a model and querying the solution is
-something like the following:
+You should always check whether the solver found a solution before calling
+solution functions like [`value`](@ref) or [`objective_value`](@ref).
+
+A simple approach is to use [`has_optimal_solution`](@ref):
+
 ```jldoctest solutions
-julia> begin
-           if termination_status(model) == OPTIMAL
+julia> function solve_and_print_solution(model)
+           optimize!(model)
+           if !has_optimal_solution(model; dual = true)
+               error("The model was not solved correctly.")
+           end
+           println("Solution is optimal")
+           println("  objective value = ", objective_value(model))
+           println("  primal solution: x = ", value(x))
+           println("  dual solution: c1 = ", dual(c1))
+           return
+       end
+solve_and_print_solution (generic function with 1 method)
+
+julia> solve_and_print_solution(model)
+Solution is optimal
+  objective value = -205.14285714285714
+  primal solution: x = 15.428571428571429
+  dual solution: c1 = 1.7142857142857142
+```
+
+You can also use a more advanced workflow that deals with a broader range of
+statues:
+```jldoctest solutions
+julia> function solve_and_print_solution(model)
+           if termination_status(model) in (OPTIMAL, LOCALLY_SOLVED)
                println("Solution is optimal")
            elseif termination_status(model) == TIME_LIMIT && has_values(model)
                println("Solution is suboptimal due to a time limit, but a primal solution is available")
@@ -312,8 +338,14 @@ julia> begin
            end
            if dual_status(model) == FEASIBLE_POINT
                println("  dual solution: c1 = ", dual(c1))
+           else
+               println("  dual solution: NO SOLUTION")
            end
+           return
        end
+solve_and_print_solution (generic function with 1 method)
+
+julia> solve_and_print_solution(model)
 Solution is optimal
   objective value = -205.14285714285714
   primal solution: x = 15.428571428571429

@@ -525,11 +525,8 @@ function _solve_knapsack(
     _add_knapsack_constraints(model, data, config)
     _add_knapsack_objective(model, data, config)
     JuMP.optimize!(model)
-    if JuMP.termination_status(model) != JuMP.OPTIMAL
+    if !JuMP.has_optimal_solution(model)
         @warn("Model not solved to optimality")
-        return nothing
-    elseif JuMP.primal_status(model) != JuMP.FEASIBLE_POINT
-        @warn("No feasible point to return")
         return nothing
     end
     return JuMP.value.(model[:x])
