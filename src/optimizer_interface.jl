@@ -587,6 +587,7 @@ end
         model::Model;
         dual::Bool = false,
         allow_local::Bool = true,
+        allow_almost::Bool = false,
         result::Int = 1,
     )
 
@@ -602,6 +603,11 @@ obtained, which may be the global optimum, but the solver could not prove so).
 If `allow_local = false`, then this function returns `true` only if the
 [`termination_status`](@ref) is [`OPTIMAL`](@ref).
 
+If `allow_almost = true`, then the [`termination_status`](@ref) may additionally
+be [`ALMOST_OPTIMAL`](@ref) or [`ALMOST_LOCALLY_SOLVED`](@ref) (if `allow_local`),
+and the [`primal_status`](@ref) and [`dual_status`](@ref) may additionally be
+[`NEARLY_FEASIBLE_POINT`](@ref).
+
 If this function returns `false`, use [`termination_status`](@ref),
 [`result_count`](@ref), [`primal_status`](@ref) and [`dual_status`](@ref) to
 understand what solutions are available (if any).
@@ -610,13 +616,24 @@ function has_optimal_solution(
     model::GenericModel;
     dual::Bool = false,
     allow_local::Bool = true,
+    allow_almost::Bool = false,
     result::Int = 1,
 )
     status = termination_status(model)
-    ret = status == OPTIMAL || (allow_local && status == LOCALLY_SOLVED)
-    ret &= primal_status(model; result) == FEASIBLE_POINT
+    ret =
+        (status == OPTIMAL) ||
+        (allow_local && (status == LOCALLY_SOLVED)) ||
+        (allow_almost && (status == ALMOST_OPTIMAL)) ||
+        (allow_almost && allow_local && (status == ALMOST_LOCALLY_SOLVED))
+    primal = primal_status(model; result)
+    ret &=
+        (primal == FEASIBLE_POINT) ||
+        (allow_almost && (primal == NEARLY_FEASIBLE_POINT))
     if dual
-        ret &= dual_status(model; result) == FEASIBLE_POINT
+        dual_stat = dual_status(model; result)
+        ret &=
+            (dual_stat == FEASIBLE_POINT) ||
+            (allow_almost && (dual_stat == NEARLY_FEASIBLE_POINT))
     end
     return ret
 end
