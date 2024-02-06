@@ -584,7 +584,7 @@ end
 
 """
     has_optimal_solution(
-        model::Model;
+        model::GenericModel;
         dual::Bool = false,
         allow_local::Bool = true,
         allow_almost::Bool = false,
@@ -597,8 +597,9 @@ index `result`.
 If `dual`, additionally check that a feasible dual solution is available.
 
 If `allow_local`, the [`termination_status`](@ref) may be [`OPTIMAL`](@ref) (the
-global optimum is obtained) or [`LOCALLY_SOLVED`](@ref) (a local optimum is
-obtained, which may be the global optimum, but the solver could not prove so).
+solver found a global optimum) or [`LOCALLY_SOLVED`](@ref) (the solver found a
+local optimum, which may also be the global optimum, but the solver could not
+prove so).
 
 If `allow_local = false`, then this function returns `true` only if the
 [`termination_status`](@ref) is [`OPTIMAL`](@ref).
