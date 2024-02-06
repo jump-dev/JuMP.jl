@@ -583,6 +583,45 @@ function dual_status(model::GenericModel; result::Int = 1)
 end
 
 """
+    has_optimal_solution(
+        model::Model;
+        dual::Bool = false,
+        allow_local::Bool = true,
+        result::Int = 1,
+    )
+
+Return `true` if the model has an optimal primal solution associated with result
+index `result`.
+
+If `dual`, additionally check that a feasible dual solution is available.
+
+If `allow_local`, the [`termination_status`](@ref) may be [`OPTIMAL`](@ref) (the
+global optimum is obtained) or [`LOCALLY_SOLVED`](@ref) (a local optimum is
+obtained, which may be the global optimum, but the solver could not prove so).
+
+If `allow_local = false`, then this function returns `true` only if the
+[`termination_status`](@ref) is [`OPTIMAL`](@ref).
+
+If this function returns `false`, use [`termination_status`](@ref),
+[`result_count`](@ref), [`primal_status`](@ref) and [`dual_status`](@ref) to
+understand what solutions are available (if any).
+"""
+function has_optimal_solution(
+    model::GenericModel;
+    dual::Bool = false,
+    allow_local::Bool = true,
+    result::Int = 1,
+)
+    status = termination_status(model)
+    ret = status == OPTIMAL || (allow_local && status == LOCALLY_SOLVED)
+    ret &= primal_status(model; result) == FEASIBLE_POINT
+    if dual
+        ret &= dual_status(model; result) == FEASIBLE_POINT
+    end
+    return ret
+end
+
+"""
     solve_time(model::GenericModel)
 
 If available, returns the solve time reported by the solver.

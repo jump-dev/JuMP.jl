@@ -265,8 +265,7 @@ function example_minimum_distortion()
     fix(Q[1, 1], 0)
     @objective(model, Min, c²)
     optimize!(model)
-    Test.@test termination_status(model) == OPTIMAL
-    Test.@test primal_status(model) == FEASIBLE_POINT
+    Test.@test has_optimal_solution(model)
     Test.@test objective_value(model) ≈ 4 / 3 atol = 1e-4
     ## Recover the minimal distorted embedding:
     X = [zeros(3) sqrt(value.(Q)[2:end, 2:end])]
@@ -350,8 +349,7 @@ function example_theta_problem()
     J = ones(Int, 5, 5)
     @objective(model, Max, LinearAlgebra.dot(J, X))
     optimize!(model)
-    Test.@test termination_status(model) == OPTIMAL
-    Test.@test primal_status(model) == FEASIBLE_POINT
+    Test.@test has_optimal_solution(model)
     Test.@test objective_value(model) ≈ sqrt(5) rtol = 1e-4
     println("The Lovász number is: $(objective_value(model))")
     return

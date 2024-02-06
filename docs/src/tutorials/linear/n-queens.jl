@@ -66,8 +66,7 @@ end
 # a feasible solution:
 
 optimize!(model)
-@assert termination_status(model) == OPTIMAL
-@assert primal_status(model) == FEASIBLE_POINT
+@assert has_optimal_solution(model)
 
 # We can now review the solution that our model found:
 

@@ -39,8 +39,7 @@ model = Model(HiGHS.Optimizer)
 @constraint(model, c2, 7x + 12y >= 120)
 @constraint(model, c3, x + y <= 20)
 optimize!(model)
-@assert termination_status(model) == OPTIMAL
-@assert primal_status(model) == FEASIBLE_POINT
+@assert has_optimal_solution(model)
 solution_summary(model; verbose = true)
 
 # Can you identify:

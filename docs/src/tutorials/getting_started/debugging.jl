@@ -346,7 +346,7 @@ set_silent(model)
 # for variables with large positive or negative values in the optimal solution.
 
 optimize!(model)
-@assert termination_status(model) == OPTIMAL
+@assert has_optimal_solution(model)
 for var in all_variables(model)
     if var == objective
         continue

@@ -130,8 +130,7 @@ set_silent(model)
 # Solve the uncapacitated facility location problem with HiGHS
 
 optimize!(model)
-@assert termination_status(model) == OPTIMAL
-@assert primal_status(model) == FEASIBLE_POINT
+@assert has_optimal_solution(model)
 println("Optimal value: ", objective_value(model))
 
 # ### Visualizing the solution
@@ -258,8 +257,7 @@ set_silent(model)
 # Solve the problem
 
 optimize!(model)
-@assert termination_status(model) == OPTIMAL
-@assert primal_status(model) == FEASIBLE_POINT
+@assert has_optimal_solution(model)
 println("Optimal value: ", objective_value(model))
 
 # ### Visualizing the solution

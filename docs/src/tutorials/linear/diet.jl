@@ -145,8 +145,7 @@ print(model)
 # Let's optimize and take a look at the solution:
 
 optimize!(model)
-@assert termination_status(model) == OPTIMAL
-@assert primal_status(model) == FEASIBLE_POINT
+@assert has_optimal_solution(model)
 Test.@test objective_value(model) ≈ 11.8288 atol = 1e-4  #hide
 solution_summary(model)
 
@@ -179,6 +178,7 @@ dairy_foods = ["milk", "ice cream"]
 is_dairy = map(name -> name in dairy_foods, foods.name)
 dairy_constraint = @constraint(model, sum(foods[is_dairy, :x]) <= 6)
 optimize!(model)
+Test.@test !has_optimal_solution(model)
 Test.@test termination_status(model) == INFEASIBLE
 Test.@test primal_status(model) == NO_SOLUTION
 solution_summary(model)

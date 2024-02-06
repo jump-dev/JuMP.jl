@@ -134,8 +134,7 @@ end
 
 # solve problem
 optimize!(sudoku)
-@assert termination_status(sudoku) == OPTIMAL
-@assert primal_status(sudoku) == FEASIBLE_POINT
+@assert has_optimal_solution(sudoku)
 
 # Extract the values of x
 x_val = value.(x);
@@ -204,8 +203,7 @@ for i in 1:9, j in 1:9
 end
 
 optimize!(model)
-@assert termination_status(model) == OPTIMAL
-@assert primal_status(model) == FEASIBLE_POINT
+@assert has_optimal_solution(model)
 
 # Display the solution
 

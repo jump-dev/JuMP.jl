@@ -177,8 +177,7 @@ end
 # Finally, we can optimize the model:
 
 optimize!(model)
-Test.@test termination_status(model) == OPTIMAL
-Test.@test primal_status(model) == FEASIBLE_POINT
+Test.@test has_optimal_solution(model)
 Test.@test objective_value(model) == 225_700.0      #src
 solution_summary(model)
 

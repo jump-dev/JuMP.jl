@@ -72,6 +72,5 @@ model = Model(Ipopt.Optimizer)
 @operator(model, op_rosenbrock, 2, rosenbrock, ∇rosenbrock, ∇²rosenbrock)
 @objective(model, Min, op_rosenbrock(x[1], x[2]))
 optimize!(model)
-@assert termination_status(model) == LOCALLY_SOLVED
-@assert primal_status(model) == FEASIBLE_POINT
+@assert has_optimal_solution(model)
 solution_summary(model; verbose = true)

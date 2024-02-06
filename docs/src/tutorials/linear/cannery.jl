@@ -121,8 +121,7 @@ solution_summary(model)
 
 # What's the optimal shipment?
 
-Test.@test termination_status(model) == OPTIMAL
-Test.@test primal_status(model) == FEASIBLE_POINT
+Test.@test has_optimal_solution(model)
 Test.@test objective_value(model) == 1_680.0           #src
 for p in P, m in M
     println(p, " => ", m, ": ", value(x[p, m]))

@@ -366,8 +366,7 @@ solution_summary(model)
 
 # Just to be sure, check that the solver found an optimal solution:
 
-@assert termination_status(model) == OPTIMAL
-@assert primal_status(model) == FEASIBLE_POINT
+@assert has_optimal_solution(model)
 
 # ### Solution
 

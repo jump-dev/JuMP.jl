@@ -52,8 +52,7 @@ function outer_approximate_x_squared(x̄)
     @objective(model, Min, y)
     @constraint(model, x == x̄)  # <-- a trivial constraint just for testing.
     optimize!(model)
-    @assert termination_status(model) == OPTIMAL
-    @assert primal_status(model) == FEASIBLE_POINT
+    @assert has_optimal_solution(model)
     return value(y)
 end
 
@@ -104,8 +103,7 @@ function outer_approximate_log(x̄)
     @objective(model, Max, y)
     @constraint(model, x == x̄)  # <-- a trivial constraint just for testing.
     optimize!(model)
-    @assert termination_status(model) == OPTIMAL
-    @assert primal_status(model) == FEASIBLE_POINT
+    @assert has_optimal_solution(model)
     return value(y)
 end
 
@@ -171,8 +169,7 @@ function inner_approximate_x_squared(x̄)
     @objective(model, Min, y)
     @constraint(model, x == x̄)  # <-- a trivial constraint just for testing.
     optimize!(model)
-    @assert termination_status(model) == OPTIMAL
-    @assert primal_status(model) == FEASIBLE_POINT
+    @assert has_optimal_solution(model)
     return value(y)
 end
 
@@ -215,8 +212,7 @@ function inner_approximate_log(x̄)
     @objective(model, Max, y)
     @constraint(model, x == x̄)  # <-- a trivial constraint just for testing.
     optimize!(model)
-    @assert termination_status(model) == OPTIMAL
-    @assert primal_status(model) == FEASIBLE_POINT
+    @assert has_optimal_solution(model)
     return value(y)
 end
 
@@ -270,8 +266,7 @@ function piecewise_linear_sin(x̄)
     end)
     @constraint(model, x == x̄)  # <-- a trivial constraint just for testing.
     optimize!(model)
-    @assert termination_status(model) == OPTIMAL
-    @assert primal_status(model) == FEASIBLE_POINT
+    @assert has_optimal_solution(model)
     return value(y)
 end
 

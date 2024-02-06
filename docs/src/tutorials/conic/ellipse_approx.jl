@@ -110,8 +110,7 @@ m, n = size(S)
 @constraint(model, [t; vec(Z)] in MOI.RootDetConeSquare(n))
 @objective(model, Max, t)
 optimize!(model)
-Test.@test termination_status(model) == OPTIMAL    #src
-Test.@test primal_status(model) == FEASIBLE_POINT  #src
+Test.@test has_optimal_solution(model)
 solution_summary(model)
 
 # ## Results

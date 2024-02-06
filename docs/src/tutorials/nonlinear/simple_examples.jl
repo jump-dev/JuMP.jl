@@ -25,8 +25,7 @@ function example_rosenbrock()
     @variable(model, y)
     @objective(model, Min, (1 - x)^2 + 100 * (y - x^2)^2)
     optimize!(model)
-    Test.@test termination_status(model) == LOCALLY_SOLVED
-    Test.@test primal_status(model) == FEASIBLE_POINT
+    Test.@test has_optimal_solution(model)
     Test.@test objective_value(model) ≈ 0.0 atol = 1e-10
     Test.@test value(x) ≈ 1.0
     Test.@test value(y) ≈ 1.0
@@ -87,8 +86,7 @@ function example_clnlbeam()
     primal_status      = $(primal_status(model))
     objective_value    = $(objective_value(model))
     """)
-    Test.@test termination_status(model) == LOCALLY_SOLVED
-    Test.@test primal_status(model) == FEASIBLE_POINT
+    Test.@test has_optimal_solution(model)
     Test.@test objective_value(model) ≈ 350.0  #src
     return
 end
@@ -116,8 +114,7 @@ function example_mle()
         sum((data[i] - μ)^2 for i in 1:n) / (2 * σ^2)
     )
     optimize!(model)
-    @assert termination_status(model) == LOCALLY_SOLVED
-    @assert primal_status(model) == FEASIBLE_POINT
+    @assert has_optimal_solution(model)
     println("μ             = ", value(μ))
     println("mean(data)    = ", Statistics.mean(data))
     println("σ^2           = ", value(σ)^2)
@@ -128,8 +125,7 @@ function example_mle()
     ## You can even do constrained MLE!
     @constraint(model, μ == σ^2)
     optimize!(model)
-    @assert termination_status(model) == LOCALLY_SOLVED
-    @assert primal_status(model) == FEASIBLE_POINT
+    @assert has_optimal_solution(model)
     Test.@test value(μ) ≈ value(σ)^2
     println()
     println("With constraint μ == σ^2:")
@@ -157,8 +153,7 @@ function example_qcp()
     @constraint(model, x * x + y * y - z * z <= 0)
     @constraint(model, x * x - y * z <= 0)
     optimize!(model)
-    Test.@test termination_status(model) == LOCALLY_SOLVED
-    Test.@test primal_status(model) == FEASIBLE_POINT
+    Test.@test has_optimal_solution(model)
     print(model)
     println("Objective value: ", objective_value(model))
     println("x = ", value(x))

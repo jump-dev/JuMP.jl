@@ -142,6 +142,10 @@ solution_summary(model; result = 5)
 
 #-
 
+@assert has_optimal_solution(model; result = 5)
+
+#-
+
 objective_value(model; result = 5)
 
 # Note that because we set a vector of two objective functions, the objective

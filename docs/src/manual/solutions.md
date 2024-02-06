@@ -32,6 +32,34 @@ Subject to
  y[b] ≤ 1
 ```
 
+## Check if optimal solution exists
+
+Use [`has_optimal_solution`](@ref) to check if the solver found an optimal
+solution:
+```julia solutions
+julia> has_optimal_solution(model)
+true
+```
+
+By default [`has_optimal_solution`](@ref) returns `true` for both global and
+local optima. Pass `allow_local = false` to check if the solver found a globally
+optimal solution:
+```julia solutions
+julia> has_optimal_solution(model; allow_local = false)
+true
+```
+
+Pass `dual = true` to check if the solver found an optimal dual solution in
+addition to an optimal primal solution:
+```solutions
+julia> has_optimal_solution(model; dual = true)
+true
+```
+
+If this function returns `false`, use the functions mentioned below like
+[`solution_summary`](@ref), [`termination_status`](@ref), [`primal_status`](@ref),
+and [`dual_status`](@ref) to understand what solution (if any) the solver found.
+
 ## Solutions summary
 
 [`solution_summary`](@ref) can be used for checking the summary of the

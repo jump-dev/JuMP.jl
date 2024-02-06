@@ -92,8 +92,7 @@ end)
 )
 
 optimize!(financing)
-@assert termination_status(financing) == OPTIMAL
-@assert primal_status(financing) == FEASIBLE_POINT
+@assert has_optimal_solution(financing)
 objective_value(financing)
 
 # ## Combinatorial auctions
@@ -138,8 +137,7 @@ for i in 1:6
     @constraint(auction, sum(y[j] for j in 1:6 if i in bid_items[j]) <= 1)
 end
 optimize!(auction)
-@assert termination_status(auction) == OPTIMAL
-@assert primal_status(auction) == FEASIBLE_POINT
+@assert has_optimal_solution(auction)
 objective_value(auction)
 
 #-

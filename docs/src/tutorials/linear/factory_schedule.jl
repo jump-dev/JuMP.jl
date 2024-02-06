@@ -186,8 +186,7 @@ function solve_factory_scheduling(
         )
     )
     optimize!(model)
-    @assert termination_status(model) == OPTIMAL
-    @assert primal_status(model) == FEASIBLE_POINT
+    @assert has_optimal_solution(model)
     schedules = Dict{Symbol,Vector{Float64}}(
         Symbol(f) => value.(production[:, f]) for f in factories
     )

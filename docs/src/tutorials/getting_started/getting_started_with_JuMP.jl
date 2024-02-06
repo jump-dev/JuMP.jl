@@ -201,8 +201,7 @@ dual_status(model)
 # It is good practice in your code to include statements like this so that an
 # error will be thrown if the solver did not find an optimal solution:
 
-@assert termination_status(model) == OPTIMAL
-@assert primal_status(model) == FEASIBLE_POINT
+@assert has_optimal_solution(model)
 
 # Query the objective value using [`objective_value`](@ref):
 
@@ -275,7 +274,7 @@ function solve_infeasible()
     @constraint(model, x + y >= 3)
     @objective(model, Max, x + 2y)
     optimize!(model)
-    if termination_status(model) != OPTIMAL
+    if !has_optimal_solution(model)
         @warn("The model was not solved correctly.")
         return
     end
@@ -512,6 +511,5 @@ c = [1, 3, 5, 2]
 @constraint(vector_model, A * x .== b)
 @objective(vector_model, Min, c' * x)
 optimize!(vector_model)
-@assert termination_status(vector_model) == OPTIMAL
-@assert primal_status(vector_model) == FEASIBLE_POINT
+@assert has_optimal_solution(vector_model)
 objective_value(vector_model)

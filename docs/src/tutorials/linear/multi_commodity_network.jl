@@ -201,8 +201,7 @@ df = DataFrames.leftjoin(
 # Finally, we can optimize the model:
 
 optimize!(model)
-Test.@test termination_status(model) == OPTIMAL
-Test.@test primal_status(model) == FEASIBLE_POINT
+Test.@test has_optimal_solution(model)
 solution_summary(model)
 
 # update the solution in the DataFrames:

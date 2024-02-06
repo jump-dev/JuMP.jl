@@ -158,8 +158,7 @@ set_silent(model)
 @constraint(model, sum(x) <= 1000)
 @constraint(model, r' * x >= 50)
 optimize!(model)
-@assert termination_status(model) == LOCALLY_SOLVED
-@assert primal_status(model) == FEASIBLE_POINT
+@assert has_optimal_solution(model)
 solution_summary(model)
 
 # The optimal allocation of our assets is:
