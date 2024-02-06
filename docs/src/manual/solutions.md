@@ -32,7 +32,7 @@ Subject to
  y[b] ≤ 1
 ```
 
-## Check if optimal solution exists
+## Check if an optimal solution exists
 
 Use [`has_optimal_solution`](@ref) to check if the solver found an optimal
 solution:
@@ -41,7 +41,7 @@ julia> has_optimal_solution(model)
 true
 ```
 
-By default [`has_optimal_solution`](@ref) returns `true` for both global and
+By default, [`has_optimal_solution`](@ref) returns `true` for both global and
 local optima. Pass `allow_local = false` to check if the solver found a globally
 optimal solution:
 ```jldoctest solutions
@@ -322,7 +322,7 @@ Solution is optimal
 ```
 
 You can also use a more advanced workflow that deals with a broader range of
-statues:
+statuses:
 ```jldoctest solutions
 julia> function solve_and_print_solution(model)
            if termination_status(model) in (OPTIMAL, LOCALLY_SOLVED)
