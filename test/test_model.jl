@@ -1244,4 +1244,73 @@ function test_caching_mps_model()
     return
 end
 
+function test_has_optimal_solution()
+    mock = MOI.Utilities.MockOptimizer(MOI.Utilities.Model{Float64}())
+    model = direct_model(mock)
+    for term in [
+        MOI.OPTIMAL,
+        MOI.LOCALLY_SOLVED,
+        MOI.ALMOST_OPTIMAL,
+        MOI.ALMOST_LOCALLY_SOLVED,
+        MOI.TIME_LIMIT,
+    ]
+        _global = term == MOI.OPTIMAL
+        has_local = _global || (term == MOI.LOCALLY_SOLVED)
+        _almost_global = _global || (term == MOI.ALMOST_OPTIMAL)
+        _almost_local =
+            has_local || _almost_global || (term == MOI.ALMOST_LOCALLY_SOLVED)
+        for primal in
+            [MOI.FEASIBLE_POINT, MOI.NEARLY_FEASIBLE_POINT, MOI.NO_SOLUTION]
+            _primal = primal == MOI.FEASIBLE_POINT
+            _almost_primal = _primal || primal == MOI.NEARLY_FEASIBLE_POINT
+            for dual in
+                [MOI.FEASIBLE_POINT, MOI.NEARLY_FEASIBLE_POINT, MOI.NO_SOLUTION]
+                _dual = dual == MOI.FEASIBLE_POINT
+                _almost_dual = _dual || dual == MOI.NEARLY_FEASIBLE_POINT
+                MOI.set(mock, MOI.TerminationStatus(), term)
+                MOI.set(mock, MOI.PrimalStatus(), primal)
+                MOI.set(mock, MOI.DualStatus(), dual)
+                @test has_optimal_solution(model) == (has_local && _primal)
+                @test has_optimal_solution(model; dual = true) ==
+                      (has_local && _primal && _dual)
+                @test has_optimal_solution(model; allow_local = false) ==
+                      (_global && _primal)
+                @test has_optimal_solution(
+                    model;
+                    dual = true,
+                    allow_local = false,
+                ) == (_global && _primal && _dual)
+                @test has_optimal_solution(model; allow_almost = true) ==
+                      (_almost_local && _almost_primal)
+                @test has_optimal_solution(
+                    model;
+                    dual = true,
+                    allow_almost = true,
+                ) == (_almost_local && _almost_primal && _almost_dual)
+                @test has_optimal_solution(
+                    model;
+                    allow_local = false,
+                    allow_almost = true,
+                ) == (_almost_global && _almost_primal)
+                @test has_optimal_solution(
+                    model;
+                    dual = true,
+                    allow_local = false,
+                    allow_almost = true,
+                ) == (_almost_global && _almost_primal && _almost_dual)
+                MOI.set(mock, MOI.ResultCount(), 3)
+                MOI.set(mock, MOI.PrimalStatus(3), primal)
+                MOI.set(mock, MOI.DualStatus(3), dual)
+                @test !has_optimal_solution(model; result = 2)
+                @test !has_optimal_solution(model; dual = true, result = 2)
+                @test has_optimal_solution(model; result = 3) ==
+                      (has_local && _primal)
+                @test has_optimal_solution(model; dual = true, result = 3) ==
+                      (has_local && _primal && _dual)
+            end
+        end
+    end
+    return
+end
+
 end  # module TestModels

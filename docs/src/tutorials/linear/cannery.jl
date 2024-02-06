@@ -122,7 +122,7 @@ solution_summary(model)
 # What's the optimal shipment?
 
 Test.@test has_optimal_solution(model)
-Test.@test objective_value(model) == 1_680.0           #src
+Test.@test isapprox(objective_value(model), 1_680.0, atol = 1e-6)  #src
 for p in P, m in M
     println(p, " => ", m, ": ", value(x[p, m]))
 end
