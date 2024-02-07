@@ -296,8 +296,8 @@ Solution is optimal
 
 Due to differences in how solvers cache solutions internally, modifying a model
 after calling [`optimize!`](@ref) will reset the model into the
-`MOI.OPTIMIZE_NOT_CALLED` state. If you then attempt to query solution
-information, an `OptimizeNotCalled` error will be thrown.
+[`OPTIMIZE_NOT_CALLED`](@ref) state. If you then attempt to query solution
+information, an [`OptimizeNotCalled`](@ref) error will be thrown.
 
 If you are iteratively querying solution information and modifying a model,
 query all the results first, then modify the problem.
@@ -353,7 +353,7 @@ OPTIMIZE_NOT_CALLED::TerminationStatusCode = 0
 
 If you know that your particular solver supports querying solution information
 after modifications, you can use [`direct_model`](@ref) to bypass the
-`MOI.OPTIMIZE_NOT_CALLED` state:
+[`OPTIMIZE_NOT_CALLED`](@ref) state:
 ```jldoctest
 julia> model = direct_model(HiGHS.Optimizer());
 
@@ -405,7 +405,7 @@ coefficient (c.f., [`normalized_rhs`](@ref)) can change without violating primal
 or dual feasibility of the basic solution.
 
 Note that not all solvers compute the basis, and for sensitivity analysis, the
-solver interface must implement `MOI.ConstraintBasisStatus`.
+solver interface must implement [`MOI.ConstraintBasisStatus`](@ref).
 
 !!! tip
     Read the [Sensitivity analysis of a linear program](@ref) for more
