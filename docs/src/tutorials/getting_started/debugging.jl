@@ -68,11 +68,12 @@ import HiGHS
 # of [`termination_status`](@ref)es.
 
 # For example, if the solver found a solution, but experienced numerical
-# imprecision, it may return a status such as `ALMOST_OPTIMAL` or
-# `ALMOST_LOCALLY_SOLVED` indicating that the problem was solved to a relaxed
-# set of tolerances. Alternatively, the solver may return a problematic status
-# such as `NUMERICAL_ERROR`, `SLOW_PROGRESS`, or `OTHER_ERROR`, indicating that
-# it could not find a solution to the problem.
+# imprecision, it may return a status such as [`ALMOST_OPTIMAL`](@ref) or
+# [`ALMOST_LOCALLY_SOLVED`](@ref) indicating that the problem was solved to a
+# relaxed set of tolerances. Alternatively, the solver may return a problematic
+# status such as [`NUMERICAL_ERROR`](@ref), [`SLOW_PROGRESS`](@ref), or
+# [`OTHER_ERROR`](@ref), indicating that it could not find a solution to the
+# problem.
 
 # Most solvers can experience numerical imprecision because they use
 # [floating-point arithmetic](https://en.wikipedia.org/wiki/Floating-point_arithmetic)
@@ -123,7 +124,7 @@ import HiGHS
 
 # Incorrect results can be hard to detect and debug, because the solver gives no
 # hints that there is a problem. Indeed, the [`termination_status`](@ref) will
-# likely be `OPTIMAL` and a solution will be available.
+# likely be [`OPTIMAL`](@ref) and a solution will be available.
 
 # ### Common sources
 
@@ -172,19 +173,19 @@ set_silent(model)
 
 # because the bound says that `x >= 0`, but we can rewrite the constraint to be
 # `x <= -1/2`. When the problem is infeasible, JuMP may return one of a number
-# of statuses. The most common is `INFEASIBLE`:
+# of statuses. The most common is [`INFEASIBLE`](@ref):
 
 optimize!(model)
 termination_status(model)
 
-# Depending on the solver, you may also receive `INFEASIBLE_OR_UNBOUNDED` or
-# `LOCALLY_INFEASIBLE`.
+# Depending on the solver, you may also receive [`INFEASIBLE_OR_UNBOUNDED`](@ref)
+# or [`LOCALLY_INFEASIBLE`](@ref).
 
-# A termination status of `INFEASIBLE_OR_UNBOUNDED` means that the solver could
-# not prove if the solver was infeasible or unbounded, only that the model does
-# not have a finite feasible optimal solution.
+# A termination status of [`INFEASIBLE_OR_UNBOUNDED`](@ref) means that the
+# solver could not prove if the solver was infeasible or unbounded, only that
+# the model does not have a finite feasible optimal solution.
 
-# Nonlinear optimizers such as Ipopt may return the status `LOCALLY_INFEASIBLE`.
+# Nonlinear optimizers such as Ipopt may return the status [`LOCALLY_INFEASIBLE`](@ref).
 # This does not mean that the solver _proved_ no feasible solution exists, only
 # that it could not find one. If you know a primal feasible point, try providing
 # it as a starting point using [`set_start_value`](@ref) and re-optimize.
@@ -295,13 +296,13 @@ set_silent(model)
 # gets better as `x` increases.
 
 # When the problem is unbounded, JuMP may return one of a number of statuses.
-# The most common is `DUAL_INFEASIBLE`:
+# The most common is [`DUAL_INFEASIBLE`](@ref):
 
 optimize!(model)
 termination_status(model)
 
-# Depending on the solver, you may also receive `INFEASIBLE_OR_UNBOUNDED` or
-# an error code like `NORM_LIMIT`.
+# Depending on the solver, you may also receive [`INFEASIBLE_OR_UNBOUNDED`](@ref)
+# or an error code like [`NORM_LIMIT`](@ref).
 
 # ### Common sources
 

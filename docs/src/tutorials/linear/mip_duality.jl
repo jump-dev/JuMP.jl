@@ -55,7 +55,7 @@ print(model)
 
 # ## Manually fix the variables
 
-# If we optimize this model, we obtain a [`dual_status`](@ref) of `NO_SOLUTION`:
+# If we optimize this model, we obtain a [`dual_status`](@ref) of [`NO_SOLUTION`](@ref):
 
 optimize!(model)
 dual_status(model)
@@ -69,7 +69,8 @@ fix.(dispatch, discrete_values; force = true)
 unset_binary.(dispatch)
 print(model)
 
-# Now if we re-solve the problem, we obtain a `FEASIBLE_POINT` for the dual:
+# Now if we re-solve the problem, we obtain a [`FEASIBLE_POINT`](@ref) for the
+# dual:
 
 optimize!(model)
 dual_status(model)
