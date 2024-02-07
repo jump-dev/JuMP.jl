@@ -420,8 +420,8 @@ optimize!(model)
 
 #-
 
-sdp_relaxation_lower_bound = round(objective_value(model); digits = 2)
 Test.@test has_optimal_solution(model; allow_almost = true)
+sdp_relaxation_lower_bound = round(objective_value(model); digits = 2)
 Test.@test isapprox(sdp_relaxation_lower_bound, 2753.04; rtol = 1e-3)     #src
 println(
     "Objective value (W & V relax. lower bound): $sdp_relaxation_lower_bound",

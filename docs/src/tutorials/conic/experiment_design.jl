@@ -141,6 +141,7 @@ for i in 1:q
 end
 @objective(aOpt, Min, sum(u))
 optimize!(aOpt)
+@assert has_optimal_solution(aOpt)
 objective_value(aOpt)
 
 #-
@@ -182,6 +183,7 @@ set_silent(eOpt)
 @constraint(eOpt, sum(np) <= n)
 @objective(eOpt, Max, t)
 optimize!(eOpt)
+@assert has_optimal_solution(eOpt)
 objective_value(eOpt)
 #-
 value.(np)
@@ -212,6 +214,7 @@ set_silent(dOpt)
 E = V * LinearAlgebra.diagm(0 => np ./ n) * V'
 @constraint(dOpt, [t; 1; triangle_vec(E)] in MOI.LogDetConeTriangle(q))
 optimize!(dOpt)
+@assert has_optimal_solution(dOpt)
 objective_value(dOpt)
 #-
 value.(np)

@@ -98,6 +98,7 @@ set_silent(model)
 @constraint(model, [t; x] in SecondOrderCone())
 @objective(model, Min, t)
 optimize!(model)
+@assert has_optimal_solution(model)
 value(t), value.(x)
 
 # ## Rotated Second-Order Cone
@@ -120,6 +121,7 @@ set_silent(model)
 @constraint(model, [t; 0.5; residuals] in RotatedSecondOrderCone())
 @objective(model, Min, t)
 optimize!(model)
+@assert has_optimal_solution(model)
 value(θ), value(t)
 
 # ## Exponential Cone
@@ -142,6 +144,7 @@ set_silent(model)
 @objective(model, Min, z)
 @constraint(model, [x, 1, z] in MOI.ExponentialCone())
 optimize!(model)
+@assert has_optimal_solution(model)
 value(z), exp(1.5)
 
 # ### Logarithm
@@ -155,6 +158,7 @@ set_silent(model)
 @objective(model, Max, x)
 @constraint(model, [x, 1, z] in MOI.ExponentialCone())
 optimize!(model)
+@assert has_optimal_solution(model)
 value(x), log(1.5)
 
 # ### Log-sum-exp
@@ -216,6 +220,7 @@ set_silent(model)
 @constraint(model, A * x .<= b)
 @constraint(model, [i = 1:n], [t[i], x[i], 1] in MOI.ExponentialCone())
 optimize!(model)
+@assert has_optimal_solution(model)
 objective_value(model)
 
 # The [`MOI.ExponentialCone`](@ref) has a dual, the [`MOI.DualExponentialCone`](@ref),
@@ -234,6 +239,7 @@ set_silent(model)
 @constraint(model, A * x .<= b)
 @constraint(model, [t; ones(n); x] in MOI.RelativeEntropyCone(2n + 1))
 optimize!(model)
+@assert has_optimal_solution(model)
 objective_value(model)
 
 # ## PowerCone
@@ -255,6 +261,7 @@ set_silent(model)
 @constraint(model, [t, 1, x] in MOI.PowerCone(1 / 3))
 @objective(model, Min, t)
 optimize!(model)
+@assert has_optimal_solution(model)
 value(t), value(x)
 
 # The [`MOI.PowerCone`](@ref) has a dual, the [`MOI.DualPowerCone`](@ref),
@@ -277,6 +284,7 @@ function p_norm(x::Vector, p)
     @constraint(model, sum(r) == t)
     @objective(model, Min, t)
     optimize!(model)
+    @assert has_optimal_solution(model)
     return value(t)
 end
 
@@ -320,6 +328,7 @@ set_silent(model)
 @objective(model, Min, t)
 @constraint(model, t .* I - A in PSDCone())
 optimize!(model)
+@assert has_optimal_solution(model)
 objective_value(model)
 
 # ## GeometricMeanCone
@@ -353,6 +362,7 @@ set_silent(model)
 @constraint(model, [t; vec(X)] in MOI.RootDetConeSquare(2))
 @constraint(model, X .== [2 1; 1 3])
 optimize!(model)
+@assert has_optimal_solution(model)
 value(t), sqrt(LinearAlgebra.det(value.(X)))
 
 # If `X` is symmetric, then you can use [`MOI.RootDetConeTriangle`](@ref)
@@ -390,6 +400,7 @@ set_silent(model)
 @constraint(model, X .== [2 1; 1 3])
 @constraint(model, u == 0.5)
 optimize!(model)
+@assert has_optimal_solution(model)
 value(t), 0.5 * log(LinearAlgebra.det(value.(X) ./ 0.5))
 
 # If `X` is symmetric, then you can use [`MOI.LogDetConeTriangle`](@ref)
@@ -410,6 +421,7 @@ set_silent(model)
 @constraint(model, X .== [2 1; 1 3])
 @constraint(model, u == 0.5)
 optimize!(model)
+@assert has_optimal_solution(model)
 value(t), 0.5 * log(LinearAlgebra.det(value.(X) ./ 0.5))
 
 # ## Other Cones and Functions

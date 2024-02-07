@@ -98,6 +98,7 @@ E = [@variable(model, [1:d, 1:d] in HermitianPSDCone()) for i in 1:N]
 # Now we optimize:
 
 optimize!(model)
+@assert has_optimal_solution(model)
 solution_summary(model)
 
 # The probability of guessing correctly is:
@@ -140,6 +141,7 @@ push!(E, E_N)
 # Then we can check that we get the same solution:
 
 optimize!(model)
+@assert has_optimal_solution(model)
 solution_summary(model)
 
 #-

@@ -138,6 +138,9 @@ julia> function algebraic_knapsack(c, w, b)
            @objective(model, Max, sum(c[i] * x[i] for i = 1:n))
            @constraint(model, sum(w[i] * x[i] for i = 1:n) <= b)
            optimize!(model)
+           if termination_status(model) != OPTIMAL
+               error("Not solved correctly")
+           end
            return value.(x)
        end
 algebraic_knapsack (generic function with 1 method)
@@ -179,6 +182,9 @@ julia> function nonalgebraic_knapsack(c, w, b)
            con = build_constraint(error, lhs, MOI.LessThan(b))
            add_constraint(model, con)
            optimize!(model)
+           if termination_status(model) != OPTIMAL
+               error("Not solved correctly")
+           end
            return value.(x)
        end
 nonalgebraic_knapsack (generic function with 1 method)
@@ -219,6 +225,9 @@ julia> function mathoptinterface_knapsack(optimizer, c, w, b)
                MOI.LessThan(b),
            )
            MOI.optimize!(model)
+           if MOI.get(model, MOI.TerminationStatus()) != MOI.OPTIMAL
+               error("Not solved correctly")
+           end
            return MOI.get.(model, MOI.VariablePrimal(), x)
        end
 mathoptinterface_knapsack (generic function with 1 method)
@@ -257,6 +266,9 @@ julia> function highs_knapsack(c, w, b)
                w,
            )
            Highs_run(model)
+           if Highs_getModelStatus(model) != kHighsModelStatusOptimal
+               error("Not solved correctly")
+           end
            x = fill(NaN, 2)
            Highs_getSolution(model, x, C_NULL, C_NULL, C_NULL)
            Highs_destroy(model)

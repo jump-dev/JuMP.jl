@@ -195,11 +195,12 @@ X, y = generate_dataset(n, p; shift = 10.0);
 model = build_logit_model(X, y, λ)
 set_optimizer(model, SCS.Optimizer)
 set_silent(model)
-JuMP.optimize!(model)
+optimize!(model)
+@assert has_optimal_solution(model)
 
 #-
 
-θ♯ = JuMP.value.(model[:θ])
+θ♯ = value.(model[:θ])
 
 # It appears that the speed of convergence is not that impacted by the correlation
 # of the dataset, nor by the penalty $\lambda$.
@@ -237,11 +238,12 @@ count_nonzero(v::Vector; tol = 1e-6) = sum(abs.(v) .>= tol)
 sparse_model = build_sparse_logit_model(X, y, λ)
 set_optimizer(sparse_model, SCS.Optimizer)
 set_silent(sparse_model)
-JuMP.optimize!(sparse_model)
+optimize!(sparse_model)
+@assert has_optimal_solution(sparse_model)
 
 #-
 
-θ♯ = JuMP.value.(sparse_model[:θ])
+θ♯ = value.(sparse_model[:θ])
 println(
     "Number of non-zero components: ",
     count_nonzero(θ♯),
