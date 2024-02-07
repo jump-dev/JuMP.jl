@@ -626,11 +626,13 @@ function has_optimal_solution(
         (allow_local && (status == LOCALLY_SOLVED)) ||
         (allow_almost && (status == ALMOST_OPTIMAL)) ||
         (allow_almost && allow_local && (status == ALMOST_LOCALLY_SOLVED))
-    primal = primal_status(model; result)
-    ret &=
-        (primal == FEASIBLE_POINT) ||
-        (allow_almost && (primal == NEARLY_FEASIBLE_POINT))
-    if dual
+    if ret
+        primal = primal_status(model; result)
+        ret &=
+            (primal == FEASIBLE_POINT) ||
+            (allow_almost && (primal == NEARLY_FEASIBLE_POINT))
+    end
+    if ret && dual
         dual_stat = dual_status(model; result)
         ret &=
             (dual_stat == FEASIBLE_POINT) ||
