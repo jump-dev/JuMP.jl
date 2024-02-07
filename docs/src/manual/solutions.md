@@ -103,18 +103,18 @@ OPTIMAL::TerminationStatusCode = 1
 The [`MOI.TerminationStatusCode`](@ref) enum describes the full list of statuses
 that could be returned.
 
-Common return values include `OPTIMAL`, `LOCALLY_SOLVED`, `INFEASIBLE`,
-`DUAL_INFEASIBLE`, and `TIME_LIMIT`.
+Common return values include [`OPTIMAL`](@ref), [`LOCALLY_SOLVED`](@ref),
+[`INFEASIBLE`](@ref), [`DUAL_INFEASIBLE`](@ref), and [`TIME_LIMIT`](@ref).
 
 !!! info
-    A return status of `OPTIMAL` means the solver found (and proved) a
-    globally optimal solution. A return status of `LOCALLY_SOLVED` means the
-    solver found a locally optimal solution (which may also be globally
+    A return status of [`OPTIMAL`](@ref) means the solver found (and proved) a
+    globally optimal solution. A return status of [`LOCALLY_SOLVED`](@ref) means
+    the solver found a locally optimal solution (which may also be globally
     optimal, but it could not prove so).
 
 !!! warning
-    A return status of `DUAL_INFEASIBLE` does not guarantee that the primal
-    is unbounded. When the dual is infeasible, the primal is unbounded if
+    A return status of [`DUAL_INFEASIBLE`](@ref) does not guarantee that the
+    primal is unbounded. When the dual is infeasible, the primal is unbounded if
     there exists a feasible primal solution.
 
 Use [`raw_status`](@ref) to get a solver-specific string explaining why the
@@ -134,7 +134,7 @@ describing the status of the primal solution.
 julia> primal_status(model)
 FEASIBLE_POINT::ResultStatusCode = 1
 ```
-Other common returns are `NO_SOLUTION`, and `INFEASIBILITY_CERTIFICATE`.
+Other common returns are [`NO_SOLUTION`](@ref), and [`INFEASIBILITY_CERTIFICATE`](@ref).
 The first means that the solver doesn't have a solution to return, and the
 second means that the primal solution is a certificate of dual infeasibility (a
 primal unbounded ray).
@@ -207,7 +207,7 @@ describing the status of the dual solution.
 julia> dual_status(model)
 FEASIBLE_POINT::ResultStatusCode = 1
 ```
-Other common returns are `NO_SOLUTION`, and `INFEASIBILITY_CERTIFICATE`.
+Other common returns are [`NO_SOLUTION`](@ref), and [`INFEASIBILITY_CERTIFICATE`](@ref).
 The first means that the solver doesn't have a solution to return, and the
 second means that the dual solution is a certificate of primal infeasibility (a
 dual unbounded ray).
@@ -569,11 +569,11 @@ all take an additional keyword argument `result` which can be used to specify
 which result to return.
 
 !!! warning
-    Even if [`termination_status`](@ref) is `OPTIMAL`, some of the returned
-    solutions may be suboptimal. However, if the solver found at least one
-    optimal solution, then `result = 1` will always return an optimal solution.
-    Use [`objective_value`](@ref) to assess the quality of the remaining
-    solutions.
+    Even if [`termination_status`](@ref) is [`OPTIMAL`](@ref), some of the
+    returned solutions may be suboptimal. However, if the solver found at least
+    one optimal solution, then `result = 1` will always return an optimal
+    solution. Use [`objective_value`](@ref) to assess the quality of the
+    remaining solutions.
 
 ```jldoctest; filter=[r"Solve time.+", r"Dual objective value.+"]
 julia> using JuMP
@@ -700,8 +700,8 @@ julia> primal_feasibility_report(model; atol = 0.0)
 Dict{Any, Float64}()
 ```
 Calling [`primal_feasibility_report`](@ref) without the `point` argument is
-useful when [`primal_status`](@ref) is `FEASIBLE_POINT` or `NEARLY_FEASIBLE_POINT`,
-and you want to assess the solution quality.
+useful when [`primal_status`](@ref) is [`FEASIBLE_POINT`](@ref) or
+[`NEARLY_FEASIBLE_POINT`](@ref), and you want to assess the solution quality.
 
 !!! warning
     To apply [`primal_feasibility_report`](@ref) to infeasible models, you must
