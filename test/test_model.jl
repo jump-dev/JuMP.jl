@@ -1216,4 +1216,32 @@ function test_show_variable_not_owned()
     return
 end
 
+function test_direct_mps_model()
+    model = direct_model(MOI.FileFormats.MPS.Model())
+    @test occursin("unknown", sprint(show, model))
+    @variable(model, x >= 0)
+    io = IOBuffer()
+    write(io, backend(model))
+    seekstart(io)
+    data = String(take!(io))
+    @test startswith(data, "NAME")
+    @test endswith(data, "ENDATA\n")
+    return
+end
+
+function test_caching_mps_model()
+    model = Model(MOI.FileFormats.MPS.Model)
+    @test occursin("unknown", sprint(show, model))
+    @variable(model, x >= 0)
+    @test_throws(
+        ErrorException(
+            "Cannot call `optimize!` because the provided optimizer is not " *
+            "a subtype of `MOI.AbstractOptimizer`.\n\nThe optimizer is:\n\n" *
+            "A Mathematical Programming System (MPS) model\n",
+        ),
+        optimize!(model),
+    )
+    return
+end
+
 end  # module TestModels
