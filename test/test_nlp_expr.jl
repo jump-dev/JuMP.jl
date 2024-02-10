@@ -1019,4 +1019,20 @@ function test_convert_vector_aff_expr()
     return
 end
 
+function test_convert_float_nonlinear_expr()
+    model = Model()
+    @variable(model, x)
+    @test [0.0, x, sin(x)] isa Vector{NonlinearExpr}
+    @test [0.0, sin(x), x] isa Vector{NonlinearExpr}
+    @test [x, 0.0, sin(x)] isa Vector{NonlinearExpr}
+    @test [x, sin(x), 0.0] isa Vector{NonlinearExpr}
+    @test [sin(x), 0.0, x] isa Vector{NonlinearExpr}
+    @test [sin(x), x, 0.0] isa Vector{NonlinearExpr}
+    @test isequal_canonical(
+        convert(NonlinearExpr, 2),
+        NonlinearExpr(:+, Any[2]),
+    )
+    return
+end
+
 end  # module

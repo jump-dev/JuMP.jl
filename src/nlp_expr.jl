@@ -700,12 +700,23 @@ end
 
 function Base.promote_rule(
     ::Type{GenericNonlinearExpr{V}},
+    ::Type{<:Number},
+) where {V<:AbstractVariableRef}
+    return GenericNonlinearExpr{V}
+end
+
+function Base.promote_rule(
+    ::Type{GenericNonlinearExpr{V}},
     ::Type{<:Union{GenericAffExpr{C,V},GenericQuadExpr{C,V}}},
 ) where {C,V<:AbstractVariableRef}
     return GenericNonlinearExpr{V}
 end
 
 function Base.convert(::Type{GenericNonlinearExpr{V}}, x::V) where {V}
+    return GenericNonlinearExpr{V}(:+, Any[x])
+end
+
+function Base.convert(::Type{GenericNonlinearExpr{V}}, x::Number) where {V}
     return GenericNonlinearExpr{V}(:+, Any[x])
 end
 
