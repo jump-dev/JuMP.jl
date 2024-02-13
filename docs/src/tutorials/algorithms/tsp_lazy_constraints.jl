@@ -199,7 +199,7 @@ subtour(x::AbstractMatrix{VariableRef}) = subtour(value.(x))
 
 iterative_model = build_tsp_model(d, n)
 optimize!(iterative_model)
-@assert has_optimal_solution(iterative_model)
+@assert is_solved_and_feasible(iterative_model)
 time_iterated = solve_time(iterative_model)
 cycle = subtour(iterative_model[:x])
 while 1 < length(cycle) < n
@@ -210,7 +210,7 @@ while 1 < length(cycle) < n
         sum(iterative_model[:x][i, j] for (i, j) in S) <= length(cycle) - 1,
     )
     optimize!(iterative_model)
-    @assert has_optimal_solution(iterative_model)
+    @assert is_solved_and_feasible(iterative_model)
     global time_iterated += solve_time(iterative_model)
     global cycle = subtour(iterative_model[:x])
 end
@@ -264,7 +264,7 @@ set_attribute(
     subtour_elimination_callback,
 )
 optimize!(lazy_model)
-@assert has_optimal_solution(lazy_model)
+@assert is_solved_and_feasible(lazy_model)
 objective_value(lazy_model)
 
 # This finds the same optimal tour:

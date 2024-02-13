@@ -179,9 +179,9 @@ optimize!(model)
 #     end in `!`. A common example is `push!`.
 
 # Now let's see what information we can query about the solution,
-# starting with [`has_optimal_solution`](@ref):
+# starting with [`is_solved_and_feasible`](@ref):
 
-has_optimal_solution(model)
+is_solved_and_feasible(model)
 
 # We can get more information about the solution by querying the three types of
 # statuses.
@@ -224,7 +224,7 @@ shadow_price(c2)
 #     common workflow is:
 #     ```julia
 #     optimize!(model)
-#     if !has_optimal_solution(model)
+#     if !is_solved_and_feasible(model)
 #         error("Solver did not find an optimal solution")
 #     end
 #     ```
@@ -286,7 +286,7 @@ function solve_infeasible()
     @constraint(model, x + y >= 3)
     @objective(model, Max, x + 2y)
     optimize!(model)
-    if !has_optimal_solution(model)
+    if !is_solved_and_feasible(model)
         @warn("The model was not solved correctly.")
         return
     end
@@ -523,5 +523,5 @@ c = [1, 3, 5, 2]
 @constraint(vector_model, A * x .== b)
 @objective(vector_model, Min, c' * x)
 optimize!(vector_model)
-@assert has_optimal_solution(vector_model)
+@assert is_solved_and_feasible(vector_model)
 objective_value(vector_model)

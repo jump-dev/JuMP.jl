@@ -130,7 +130,7 @@ set_silent(model)
 # Solve the uncapacitated facility location problem with HiGHS
 
 optimize!(model)
-@assert has_optimal_solution(model)
+@assert is_solved_and_feasible(model)
 println("Optimal value: ", objective_value(model))
 
 # ### Visualizing the solution
@@ -257,7 +257,7 @@ set_silent(model)
 # Solve the problem
 
 optimize!(model)
-@assert has_optimal_solution(model)
+@assert is_solved_and_feasible(model)
 println("Optimal value: ", objective_value(model))
 
 # ### Visualizing the solution

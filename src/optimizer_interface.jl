@@ -583,20 +583,16 @@ function dual_status(model::GenericModel; result::Int = 1)
 end
 
 """
-    has_optimal_solution(
+    is_solved_and_feasible(
         model::GenericModel;
-        dual::Bool = false,
         allow_local::Bool = true,
         allow_almost::Bool = false,
+        dual::Bool = false,
         result::Int = 1,
     )
 
-Return `true` if the model has an optimal primal solution associated with result
-index `result`.
-
-If `dual`, additionally check that an optimal dual solution is available.
-
-If `allow_local`, the [`termination_status`](@ref) may be [`OPTIMAL`](@ref) (the
+Return `true` if the model has a feasible primal solution associated with result
+index `result` and the [`termination_status`](@ref) is [`OPTIMAL`](@ref) (the
 solver found a global optimum) or [`LOCALLY_SOLVED`](@ref) (the solver found a
 local optimum, which may also be the global optimum, but the solver could not
 prove so).
@@ -609,11 +605,13 @@ be [`ALMOST_OPTIMAL`](@ref) or [`ALMOST_LOCALLY_SOLVED`](@ref) (if `allow_local`
 and the [`primal_status`](@ref) and [`dual_status`](@ref) may additionally be
 [`NEARLY_FEASIBLE_POINT`](@ref).
 
+If `dual`, additionally check that an optimal dual solution is available.
+
 If this function returns `false`, use [`termination_status`](@ref),
 [`result_count`](@ref), [`primal_status`](@ref) and [`dual_status`](@ref) to
 understand what solutions are available (if any).
 """
-function has_optimal_solution(
+function is_solved_and_feasible(
     model::GenericModel;
     dual::Bool = false,
     allow_local::Bool = true,

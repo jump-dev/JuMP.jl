@@ -34,25 +34,25 @@ Subject to
 
 ## Check if an optimal solution exists
 
-Use [`has_optimal_solution`](@ref) to check if the solver found an optimal
+Use [`is_solved_and_feasible`](@ref) to check if the solver found an optimal
 solution:
 ```jldoctest solutions
-julia> has_optimal_solution(model)
+julia> is_solved_and_feasible(model)
 true
 ```
 
-By default, [`has_optimal_solution`](@ref) returns `true` for both global and
+By default, [`is_solved_and_feasible`](@ref) returns `true` for both global and
 local optima. Pass `allow_local = false` to check if the solver found a globally
 optimal solution:
 ```jldoctest solutions
-julia> has_optimal_solution(model; allow_local = false)
+julia> is_solved_and_feasible(model; allow_local = false)
 true
 ```
 
 Pass `dual = true` to check if the solver found an optimal dual solution in
 addition to an optimal primal solution:
 ```jldoctest solutions
-julia> has_optimal_solution(model; dual = true)
+julia> is_solved_and_feasible(model; dual = true)
 true
 ```
 
@@ -298,12 +298,12 @@ And data, a 2-element Vector{Float64}:
 You should always check whether the solver found a solution before calling
 solution functions like [`value`](@ref) or [`objective_value`](@ref).
 
-A simple approach is to use [`has_optimal_solution`](@ref):
+A simple approach is to use [`is_solved_and_feasible`](@ref):
 
 ```jldoctest solutions
 julia> function solve_and_print_solution(model)
            optimize!(model)
-           if !has_optimal_solution(model; dual = true)
+           if !is_solved_and_feasible(model; dual = true)
                error("The model was not solved correctly.")
            end
            println("Solution is optimal")

@@ -120,7 +120,7 @@ function solve_transportation_problem(data::Containers.DenseAxisArray)
     @constraint(model, [o in O], sum(x[o, :]) <= data[o, "SUPPLY"])
     @constraint(model, [d in D], sum(x[:, d]) == data["DEMAND", d])
     optimize!(model)
-    @assert has_optimal_solution(model)
+    @assert is_solved_and_feasible(model)
     ## Pretty print the solution in the format of the input
     print("    ", join(lpad.(D, 7, ' ')))
     for o in O

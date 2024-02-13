@@ -110,7 +110,7 @@ m, n = size(S)
 @constraint(model, [t; vec(Z)] in MOI.RootDetConeSquare(n))
 @objective(model, Max, t)
 optimize!(model)
-Test.@test has_optimal_solution(model)
+Test.@test is_solved_and_feasible(model)
 solution_summary(model)
 
 # ## Results
@@ -210,7 +210,7 @@ f = [1 - S[i, :]' * Z * S[i, :] + 2 * S[i, :]' * z - s for i in 1:m]
 ## The former @objective(model, Max, t)
 @objective(model, Max, 1 * t + 0)
 optimize!(model)
-Test.@test has_optimal_solution(model)
+Test.@test is_solved_and_feasible(model)
 Test.@test isapprox(D, value.(Z); atol = 1e-6)  #src
 solve_time_1 = solve_time(model)
 
@@ -233,7 +233,7 @@ print_active_bridges(model)
 
 remove_bridge(model, MOI.Bridges.Constraint.GeoMeanToPowerBridge)
 optimize!(model)
-Test.@test has_optimal_solution(model)
+Test.@test is_solved_and_feasible(model)
 
 # This time, the solve took:
 

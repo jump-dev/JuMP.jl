@@ -303,7 +303,7 @@ end
 
 set_silent(model)  # Hide solver's verbose output
 optimize!(model)  # Solve for the control and state
-@assert has_optimal_solution(model)
+@assert is_solved_and_feasible(model)
 
 ## Show final cross-range of the solution
 println(

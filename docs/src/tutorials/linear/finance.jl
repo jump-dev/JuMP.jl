@@ -92,7 +92,7 @@ end)
 )
 
 optimize!(financing)
-@assert has_optimal_solution(financing)
+@assert is_solved_and_feasible(financing)
 objective_value(financing)
 
 # ## Combinatorial auctions
@@ -137,7 +137,7 @@ for i in 1:6
     @constraint(auction, sum(y[j] for j in 1:6 if i in bid_items[j]) <= 1)
 end
 optimize!(auction)
-@assert has_optimal_solution(auction)
+@assert is_solved_and_feasible(auction)
 objective_value(auction)
 
 #-

@@ -64,7 +64,7 @@ function solve_max_cut_sdp(weights)
     @objective(model, Max, 0.25 * LinearAlgebra.dot(L, X))
     @constraint(model, LinearAlgebra.diag(X) .== 1)
     optimize!(model)
-    @assert has_optimal_solution(model)
+    @assert is_solved_and_feasible(model)
     V = svd_cholesky(value(X))
     Random.seed!(N)
     r = rand(N)
@@ -134,7 +134,7 @@ function example_k_means_clustering()
     @constraint(model, [i = 1:m], sum(Z[i, :]) .== 1)
     @constraint(model, LinearAlgebra.tr(Z) == num_clusters)
     optimize!(model)
-    @assert has_optimal_solution(model)
+    @assert is_solved_and_feasible(model)
     Z_val = value.(Z)
     current_cluster, visited = 0, Set{Int}()
     solution = [1, 1, 2, 1, 2, 2]  #src
@@ -187,12 +187,12 @@ function example_correlation_problem()
     @constraint(model, 0.4 <= ρ["B", "C"] <= 0.5)
     @objective(model, Max, ρ["A", "C"])
     optimize!(model)
-    @assert has_optimal_solution(model)
+    @assert is_solved_and_feasible(model)
     println("An upper bound for ρ_AC is $(value(ρ["A", "C"]))")
     Test.@test value(ρ["A", "C"]) ≈ 0.87195 atol = 1e-4  #src
     @objective(model, Min, ρ["A", "C"])
     optimize!(model)
-    @assert has_optimal_solution(model)
+    @assert is_solved_and_feasible(model)
     println("A lower bound for ρ_AC is $(value(ρ["A", "C"]))")
     Test.@test value(ρ["A", "C"]) ≈ -0.978 atol = 1e-3  #src
     return
@@ -269,7 +269,7 @@ function example_minimum_distortion()
     fix(Q[1, 1], 0)
     @objective(model, Min, c²)
     optimize!(model)
-    Test.@test has_optimal_solution(model)
+    Test.@test is_solved_and_feasible(model)
     Test.@test objective_value(model) ≈ 4 / 3 atol = 1e-4
     ## Recover the minimal distorted embedding:
     X = [zeros(3) sqrt(value.(Q)[2:end, 2:end])]
@@ -353,7 +353,7 @@ function example_theta_problem()
     J = ones(Int, 5, 5)
     @objective(model, Max, LinearAlgebra.dot(J, X))
     optimize!(model)
-    Test.@test has_optimal_solution(model)
+    Test.@test is_solved_and_feasible(model)
     Test.@test objective_value(model) ≈ sqrt(5) rtol = 1e-4
     println("The Lovász number is: $(objective_value(model))")
     return
@@ -384,7 +384,7 @@ function example_robust_uncertainty_sets()
     @constraint(model, [((1-ɛ)/ɛ) (u - μ)'; (u-μ) Σ] >= 0, PSDCone())
     @objective(model, Max, c' * u)
     optimize!(model)
-    @assert has_optimal_solution(model)
+    @assert is_solved_and_feasible(model)
     exact =
         μhat' * c +
         Γ1(𝛿 / 2, N) * LinearAlgebra.norm(c) +

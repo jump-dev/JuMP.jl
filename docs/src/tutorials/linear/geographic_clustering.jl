@@ -151,7 +151,7 @@ end
 # We can then call `optimize!` and review the results.
 
 optimize!(model)
-@assert has_optimal_solution(model)
+@assert is_solved_and_feasible(model)
 
 # ### Reviewing the Results
 

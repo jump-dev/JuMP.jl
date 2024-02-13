@@ -67,7 +67,7 @@ model = Model(SCS.Optimizer)
 @constraint(model, sum(x) <= 1)
 @objective(model, Max, sum(i * x[i] for i in 1:3))
 optimize!(model)
-@assert has_optimal_solution(model)
+@assert is_solved_and_feasible(model)
 
 # By looking at the log, we can see that SCS took 75 iterations to find the optimal
 # solution. Now we set the optimal solution as our starting point:

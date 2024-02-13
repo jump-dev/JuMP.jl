@@ -215,7 +215,7 @@ my_lock = Threads.ReentrantLock()
 Threads.@threads for i in 1:10
     set_lower_bound(x, i)
     optimize!(model)
-    @assert has_optimal_solution(model)
+    @assert is_solved_and_feasible(model)
     Threads.lock(my_lock) do
         push!(solutions, i => objective_value(model))
     end
@@ -252,7 +252,7 @@ julia> Threads.@threads for i in 1:10
            @objective(model, Min, x)
            set_lower_bound(x, i)
            optimize!(model)
-           @assert has_optimal_solution(sudoku)
+           @assert is_solved_and_feasible(sudoku)
            Threads.lock(my_lock) do
                push!(solutions, i => objective_value(model))
            end
@@ -297,7 +297,7 @@ julia> Distributed.@everywhere begin
                @objective(model, Min, x)
                set_lower_bound(x, i)
                optimize!(model)
-               @assert has_optimal_solution(sudoku)
+               @assert is_solved_and_feasible(sudoku)
                return objective_value(model)
            end
        end

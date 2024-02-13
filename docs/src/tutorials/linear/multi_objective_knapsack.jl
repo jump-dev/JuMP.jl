@@ -142,7 +142,7 @@ solution_summary(model; result = 5)
 
 #-
 
-@assert has_optimal_solution(model; result = 5)
+@assert is_solved_and_feasible(model; result = 5)
 
 #-
 
