@@ -309,7 +309,6 @@ julia> function solve_and_print_solution(model)
                error(
                    """
                    The model was not solved correctly:
-
                    termination_status : $(termination_status(model))
                    primal_status      : $(primal_status(model))
                    dual_status        : $(dual_status(model))
