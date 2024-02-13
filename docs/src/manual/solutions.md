@@ -298,13 +298,24 @@ And data, a 2-element Vector{Float64}:
 You should always check whether the solver found a solution before calling
 solution functions like [`value`](@ref) or [`objective_value`](@ref).
 
-A simple approach is to use [`is_solved_and_feasible`](@ref):
+A simple approach for small scripts and notebooks is to use
+[`is_solved_and_feasible`](@ref):
 
 ```jldoctest solutions
 julia> function solve_and_print_solution(model)
            optimize!(model)
            if !is_solved_and_feasible(model; dual = true)
-               error("The model was not solved correctly.")
+               term = termination_status(model)
+               error(
+                   """
+                   The model was not solved correctly:
+
+                   termination_status : $(termination_status(model))
+                   primal_status      : $(primal_status(model))
+                   dual_status        : $(dual_status(model))
+                   raw_status         : $(raw_status(model))
+                   """,
+               )
            end
            println("Solution is optimal")
            println("  objective value = ", objective_value(model))
@@ -321,25 +332,60 @@ Solution is optimal
   dual solution: c1 = 1.7142857142857142
 ```
 
-You can also use a more advanced workflow that deals with a broader range of
-statuses:
+For code like libraries that should be more robust to the range of possible
+termination and result statuses, do some variation of the following:
 ```jldoctest solutions
 julia> function solve_and_print_solution(model)
-           if termination_status(model) in (OPTIMAL, LOCALLY_SOLVED)
+           status = termination_status(model)
+           if status in (OPTIMAL, LOCALLY_SOLVED)
                println("Solution is optimal")
-           elseif termination_status(model) == TIME_LIMIT && has_values(model)
-               println("Solution is suboptimal due to a time limit, but a primal solution is available")
+           elseif status in (ALMOST_OPTIMAL, ALMOST_LOCALLY_SOLVED)
+               println("Solution is optimal to a relaxed tolerance")
+           elseif status == TIME_LIMIT
+               println(
+                   "Solver stopped due to a time limit. If a solution is available, " *
+                   "it may be suboptimal."
+               )
+           elseif status in (
+               ITERATION_LIMIT, NODE_LIMIT, SOLUTION_LIMIT, MEMORY_LIMIT,
+               OBJECTIVE_LIMIT, NORM_LIMIT, OTHER_LIMIT,
+           )
+               println(
+                   "Solver stopped due to a limit. If a solution is available, it " *
+                   "may be suboptimal."
+               )
+           elseif status in (INFEASIBLE, LOCALLY_INFEASIBLE)
+               println("The problem is primal infeasible")
+           elseif status == DUAL_INFEASIBLE
+               println(
+                   "The problem is dual infeasible. If a primal feasible solution " *
+                   "exists, the problem is unbounded. To check, set the objective " *
+                   "to `@objective(model, Min, 0)` and re-solve. If the problem is " *
+                   "feasible, the primal is unbounded. If the problem is " *
+                   "infeasible, both the primal and dual are infeasible.",
+               )
+           elseif status == INFEASIBLE_OR_UNBOUNDED
+               println(
+                   "The model is either infeasible or unbounded. Set the objective " *
+                   "to `@objective(model, Min, 0)` and re-solve to disambiguate. If " *
+                   "the problem was infeasible, it will still be infeasible. If the " *
+                   "problem was unbounded, it will now have a finite optimal solution.",
+               )
            else
-               error("The model was not solved correctly.")
+               println(
+                   "The model was not solved correctly. The termination status is $status",
+               )
            end
-           println("  objective value = ", objective_value(model))
-           if primal_status(model) == FEASIBLE_POINT
+           if primal_status(model) in (FEASIBLE_POINT, NEARLY_FEASIBLE_POINT)
+               println("  objective value = ", objective_value(model))
                println("  primal solution: x = ", value(x))
+           elseif primal_status(model) == INFEASIBILITY_CERTIFICATE
+               println("  primal certificate: x = ", value(x))
            end
-           if dual_status(model) == FEASIBLE_POINT
+           if dual_status(model) in (FEASIBLE_POINT, NEARLY_FEASIBLE_POINT)
                println("  dual solution: c1 = ", dual(c1))
-           else
-               println("  dual solution: NO SOLUTION")
+           elseif dual_status(model) == INFEASIBILITY_CERTIFICATE
+               println("  dual certificate: c1 = ", dual(c1))
            end
            return
        end
