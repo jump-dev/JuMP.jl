@@ -55,6 +55,7 @@ model = Model(HiGHS.Optimizer)
 @objective(model, Max, sum(profit[i] * x[i] for i in 1:N))
 @constraint(model, sum(weight[i] * x[i] for i in 1:N) <= capacity)
 optimize!(model)
+@assert is_solved_and_feasible(model)
 value.(x)
 
 # The benefits of this approach are:
@@ -87,6 +88,7 @@ function solve_knapsack_1(profit::Vector, weight::Vector, capacity::Real)
     @objective(model, Max, sum(profit[i] * x[i] for i in 1:N))
     @constraint(model, sum(weight[i] * x[i] for i in 1:N) <= capacity)
     optimize!(model)
+    @assert is_solved_and_feasible(model)
     return value.(x)
 end
 
@@ -159,6 +161,7 @@ function solve_knapsack_2(data::KnapsackData)
         sum(v.weight * x[k] for (k, v) in data.objects) <= data.capacity,
     )
     optimize!(model)
+    @assert is_solved_and_feasible(model)
     return value.(x)
 end
 
@@ -230,6 +233,7 @@ function solve_knapsack_3(data::KnapsackData; binary_knapsack::Bool)
         sum(v.weight * x[k] for (k, v) in data.objects) <= data.capacity,
     )
     optimize!(model)
+    @assert is_solved_and_feasible(model)
     return value.(x)
 end
 
@@ -272,6 +276,7 @@ function solve_knapsack_4(data::KnapsackData, config::AbstractConfiguration)
         sum(v.weight * x[k] for (k, v) in data.objects) <= data.capacity,
     )
     optimize!(model)
+    @assert is_solved_and_feasible(model)
     return value.(x)
 end
 
@@ -359,6 +364,7 @@ function solve_knapsack_5(data::KnapsackData, config::AbstractConfiguration)
     add_knapsack_constraints(model, data, config)
     add_knapsack_objective(model, data, config)
     optimize!(model)
+    @assert is_solved_and_feasible(model)
     return value.(model[:x])
 end
 
@@ -384,7 +390,7 @@ function solve_knapsack_6(
     add_knapsack_constraints(model, data, config)
     add_knapsack_objective(model, data, config)
     optimize!(model)
-    if termination_status(model) != OPTIMAL
+    if !is_solved_and_feasible(model)
         @warn("Model not solved to optimality")
         return nothing
     end
@@ -519,7 +525,7 @@ function _solve_knapsack(
     _add_knapsack_constraints(model, data, config)
     _add_knapsack_objective(model, data, config)
     JuMP.optimize!(model)
-    if JuMP.termination_status(model) != JuMP.OPTIMAL
+    if !JuMP.is_solved_and_feasible(model)
         @warn("Model not solved to optimality")
         return nothing
     end

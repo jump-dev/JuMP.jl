@@ -20,7 +20,7 @@ import DataFrames
 import HiGHS
 import SQLite
 import SQLite.DBInterface
-import Test  #src
+import Test
 
 # ## Formulation
 
@@ -201,8 +201,7 @@ df = DataFrames.leftjoin(
 # Finally, we can optimize the model:
 
 optimize!(model)
-Test.@test termination_status(model) == OPTIMAL     #src
-Test.@test primal_status(model) == FEASIBLE_POINT   #src
+Test.@test is_solved_and_feasible(model)
 solution_summary(model)
 
 # update the solution in the DataFrames:

@@ -57,7 +57,7 @@ function endpoint_solve(params::Dict{String,Any})
         "primal_status" => primal_status(model),
     )
     ## Only include the `x` key if it has a value.
-    if has_values(model)
+    if primal_status(model) == FEASIBLE_POINT
         ret["x"] = value(x)
     end
     return ret

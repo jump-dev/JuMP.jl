@@ -66,6 +66,7 @@ end
 # a feasible solution:
 
 optimize!(model)
+@assert is_solved_and_feasible(model)
 
 # We can now review the solution that our model found:
 

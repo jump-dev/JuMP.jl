@@ -583,6 +583,63 @@ function dual_status(model::GenericModel; result::Int = 1)
 end
 
 """
+    is_solved_and_feasible(
+        model::GenericModel;
+        allow_local::Bool = true,
+        allow_almost::Bool = false,
+        dual::Bool = false,
+        result::Int = 1,
+    )
+
+Return `true` if the model has a feasible primal solution associated with result
+index `result` and the [`termination_status`](@ref) is [`OPTIMAL`](@ref) (the
+solver found a global optimum) or [`LOCALLY_SOLVED`](@ref) (the solver found a
+local optimum, which may also be the global optimum, but the solver could not
+prove so).
+
+If `allow_local = false`, then this function returns `true` only if the
+[`termination_status`](@ref) is [`OPTIMAL`](@ref).
+
+If `allow_almost = true`, then the [`termination_status`](@ref) may additionally
+be [`ALMOST_OPTIMAL`](@ref) or [`ALMOST_LOCALLY_SOLVED`](@ref) (if `allow_local`),
+and the [`primal_status`](@ref) and [`dual_status`](@ref) may additionally be
+[`NEARLY_FEASIBLE_POINT`](@ref).
+
+If `dual`, additionally check that an optimal dual solution is available.
+
+If this function returns `false`, use [`termination_status`](@ref),
+[`result_count`](@ref), [`primal_status`](@ref) and [`dual_status`](@ref) to
+understand what solutions are available (if any).
+"""
+function is_solved_and_feasible(
+    model::GenericModel;
+    dual::Bool = false,
+    allow_local::Bool = true,
+    allow_almost::Bool = false,
+    result::Int = 1,
+)
+    status = termination_status(model)
+    ret =
+        (status == OPTIMAL) ||
+        (allow_local && (status == LOCALLY_SOLVED)) ||
+        (allow_almost && (status == ALMOST_OPTIMAL)) ||
+        (allow_almost && allow_local && (status == ALMOST_LOCALLY_SOLVED))
+    if ret
+        primal = primal_status(model; result)
+        ret &=
+            (primal == FEASIBLE_POINT) ||
+            (allow_almost && (primal == NEARLY_FEASIBLE_POINT))
+    end
+    if ret && dual
+        dual_stat = dual_status(model; result)
+        ret &=
+            (dual_stat == FEASIBLE_POINT) ||
+            (allow_almost && (dual_stat == NEARLY_FEASIBLE_POINT))
+    end
+    return ret
+end
+
+"""
     solve_time(model::GenericModel)
 
 If available, returns the solve time reported by the solver.

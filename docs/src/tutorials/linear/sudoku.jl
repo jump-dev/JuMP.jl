@@ -134,6 +134,7 @@ end
 
 # solve problem
 optimize!(sudoku)
+@assert is_solved_and_feasible(sudoku)
 
 # Extract the values of x
 x_val = value.(x);
@@ -202,6 +203,7 @@ for i in 1:9, j in 1:9
 end
 
 optimize!(model)
+@assert is_solved_and_feasible(model)
 
 # Display the solution
 

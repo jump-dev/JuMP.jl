@@ -235,6 +235,7 @@ set_silent(model)
 @objective(model, Min, sum(x))
 @constraint(model, demand[i in 1:I], patterns[i]' * x >= data.pieces[i].d)
 optimize!(model)
+@assert is_solved_and_feasible(model)
 solution_summary(model)
 
 # This solution requires 421 rolls. This solution is sub-optimal because the
@@ -252,6 +253,7 @@ solution_summary(model)
 
 unset_integer.(x)
 optimize!(model)
+@assert is_solved_and_feasible(model; dual = true)
 π_13 = dual(demand[13])
 
 # Using the economic interpretation of the dual variable, we can say that a one
@@ -282,6 +284,7 @@ function solve_pricing(data::Data, π::Vector{Float64})
     @constraint(model, sum(data.pieces[i].w * y[i] for i in 1:I) <= data.W)
     @objective(model, Max, sum(π[i] * y[i] for i in 1:I))
     optimize!(model)
+    @assert is_solved_and_feasible(model)
     number_of_rolls_saved = objective_value(model)
     if number_of_rolls_saved > 1 + 1e-8
         ## Benefit of pattern is more than the cost of a new roll plus some
@@ -312,6 +315,7 @@ solve_pricing(data, zeros(I))
 while true
     ## Solve the linear relaxation
     optimize!(model)
+    @assert is_solved_and_feasible(model; dual = true)
     ## Obtain a new dual vector
     π = dual.(demand)
     ## Solve the pricing problem
@@ -362,6 +366,7 @@ sum(ceil.(Int, solution.rolls))
 
 set_integer.(x)
 optimize!(model)
+@assert is_solved_and_feasible(model)
 solution = DataFrames.DataFrame([
     (pattern = p, rolls = value(x_p)) for (p, x_p) in enumerate(x)
 ])

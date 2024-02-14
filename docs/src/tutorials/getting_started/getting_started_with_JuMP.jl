@@ -178,7 +178,13 @@ optimize!(model)
 #     Julia has a convention that functions which mutate their arguments should
 #     end in `!`. A common example is `push!`.
 
-# Now let's see what information we can query about the solution.
+# Now let's see what information we can query about the solution,
+# starting with [`is_solved_and_feasible`](@ref):
+
+is_solved_and_feasible(model)
+
+# We can get more information about the solution by querying the three types of
+# statuses.
 
 # [`termination_status`](@ref) tells us why the solver stopped:
 
@@ -211,6 +217,17 @@ value(y)
 
 shadow_price(c1)
 shadow_price(c2)
+
+# !!! warning
+#     You should always check whether the solver found a solution before calling
+#     solution functions like [`value`](@ref) or [`objective_value`](@ref). A
+#     common workflow is:
+#     ```julia
+#     optimize!(model)
+#     if !is_solved_and_feasible(model)
+#         error("Solver did not find an optimal solution")
+#     end
+#     ```
 
 # That's it for our simple model. In the rest of this tutorial, we expand on
 # some of the basic JuMP operations.
@@ -269,7 +286,7 @@ function solve_infeasible()
     @constraint(model, x + y >= 3)
     @objective(model, Max, x + 2y)
     optimize!(model)
-    if termination_status(model) != OPTIMAL
+    if !is_solved_and_feasible(model)
         @warn("The model was not solved correctly.")
         return
     end
@@ -506,4 +523,5 @@ c = [1, 3, 5, 2]
 @constraint(vector_model, A * x .== b)
 @objective(vector_model, Min, c' * x)
 optimize!(vector_model)
+@assert is_solved_and_feasible(vector_model)
 objective_value(vector_model)

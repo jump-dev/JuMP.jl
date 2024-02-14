@@ -364,6 +364,10 @@ optimize!(model)
 
 solution_summary(model)
 
+# Just to be sure, check that the solver found an optimal solution:
+
+@assert is_solved_and_feasible(model)
+
 # ### Solution
 
 # Let's  have a look at the solution in more detail:

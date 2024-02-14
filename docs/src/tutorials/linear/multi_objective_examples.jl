@@ -37,6 +37,7 @@ solution_summary(model)
 #-
 
 for i in 1:result_count(model)
+    @assert is_solved_and_feasible(model; result = i)
     print(i, ": z = ", round.(Int, objective_value(model; result = i)), " | ")
     println("x = ", value.([x1, x2]; result = i))
 end
@@ -65,6 +66,7 @@ solution_summary(model)
 #-
 
 for i in 1:result_count(model)
+    @assert is_solved_and_feasible(model; result = i)
     print(i, ": z = ", round.(Int, objective_value(model; result = i)), " | ")
     println("x = ", round.(Int, value.(x; result = i)))
 end
@@ -109,6 +111,7 @@ solution_summary(model)
 #-
 
 for i in 1:result_count(model)
+    @assert is_solved_and_feasible(model; result = i)
     print(i, ": z = ", round.(Int, objective_value(model; result = i)), " | ")
     X = round.(Int, value.(x; result = i))
     print("Path:")

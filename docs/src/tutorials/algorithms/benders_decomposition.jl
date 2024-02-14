@@ -164,7 +164,7 @@ function solve_subproblem(x)
     con = @constraint(model, A_2 * y .<= b - A_1 * x)
     @objective(model, Min, c_2' * y)
     optimize!(model)
-    @assert termination_status(model) == OPTIMAL
+    @assert is_solved_and_feasible(model; dual = true)
     return (obj = objective_value(model), y = value.(y), π = dual.(con))
 end
 
@@ -194,6 +194,7 @@ ABSOLUTE_OPTIMALITY_GAP = 1e-6
 println("Iteration  Lower Bound  Upper Bound          Gap")
 for k in 1:MAXIMUM_ITERATIONS
     optimize!(model)
+    @assert is_solved_and_feasible(model)
     lower_bound = objective_value(model)
     x_k = value.(x)
     ret = solve_subproblem(x_k)
@@ -211,6 +212,7 @@ end
 # Finally, we can obtain the optimal solution
 
 optimize!(model)
+@assert is_solved_and_feasible(model)
 Test.@test value.(x) == [0.0, 1.0]  #src
 x_optimal = value.(x)
 
@@ -268,6 +270,7 @@ set_attribute(lazy_model, MOI.LazyConstraintCallback(), my_callback)
 # Now when we optimize!, our callback is run:
 
 optimize!(lazy_model)
+@assert is_solved_and_feasible(lazy_model)
 
 # For this model, the callback algorithm required more solves of the subproblem:
 
@@ -323,7 +326,7 @@ print(subproblem)
 function solve_subproblem(model, x)
     fix.(model[:x_copy], x)
     optimize!(model)
-    @assert termination_status(model) == OPTIMAL
+    @assert is_solved_and_feasible(model; dual = true)
     return (
         obj = objective_value(model),
         y = value.(model[:y]),
@@ -341,6 +344,7 @@ end
 println("Iteration  Lower Bound  Upper Bound          Gap")
 for k in 1:MAXIMUM_ITERATIONS
     optimize!(model)
+    @assert is_solved_and_feasible(model)
     lower_bound = objective_value(model)
     x_k = value.(x)
     ret = solve_subproblem(subproblem, x_k)
@@ -358,6 +362,7 @@ end
 # Finally, we can obtain the optimal solution:
 
 optimize!(model)
+@assert is_solved_and_feasible(model)
 Test.@test value.(x) == [0.0, 1.0]  #src
 x_optimal = value.(x)
 

@@ -29,6 +29,7 @@ set_silent(model)
 @variable(model, 1 <= x[1:4] <= 4, Int)
 @constraint(model, x in MOI.AllDifferent(4))
 optimize!(model)
+@assert is_solved_and_feasible(model)
 value.(x)
 
 # ## BinPacking
@@ -44,6 +45,7 @@ set_silent(model)
 @variable(model, 1 <= x[1:length(weights)] <= number_of_bins, Int)
 @constraint(model, x in MOI.BinPacking(capacity, weights))
 optimize!(model)
+@assert is_solved_and_feasible(model)
 value.(x)
 
 # Here, the value of `x[i]` is the bin that item `i` was placed into.
@@ -59,6 +61,7 @@ set_silent(model)
 @variable(model, x[1:4], Int)
 @constraint(model, x in MOI.Circuit(4))
 optimize!(model)
+@assert is_solved_and_feasible(model)
 
 # Let's see what tour was found, starting at node number `1`:
 y = round.(Int, value.(x))
@@ -112,6 +115,7 @@ n = 1
 # Let's check that we found a valid solution:
 
 optimize!(model)
+@assert is_solved_and_feasible(model)
 value.(x)
 
 # ## CountBelongs
@@ -130,6 +134,7 @@ set_silent(model)
 set = Set([2, 3])
 @constraint(model, [n; x] in MOI.CountBelongs(1 + length(x), set))
 optimize!(model)
+@assert is_solved_and_feasible(model)
 value(n), value.(x)
 
 # ## CountDistinct
@@ -144,6 +149,7 @@ set_silent(model)
 @objective(model, Max, sum(x))
 @constraint(model, [n; x] in MOI.CountDistinct(1 + length(x)))
 optimize!(model)
+@assert is_solved_and_feasible(model)
 value(n), value.(x)
 
 # ## CountGreaterThan
@@ -163,6 +169,7 @@ set_silent(model)
 @objective(model, Max, sum(x))
 @constraint(model, [n; y; x] in MOI.CountGreaterThan(1 + 1 + length(x)))
 optimize!(model)
+@assert is_solved_and_feasible(model)
 value(n), value(y), value.(x)
 
 # Here `n` is strictly greater than the count, and there is no limit on how
@@ -187,4 +194,5 @@ set_silent(model)
 @variable(model, x[i = 1:3], Int)
 @constraint(model, x in MOI.Table(table))
 optimize!(model)
+@assert is_solved_and_feasible(model)
 value.(x)

@@ -25,7 +25,7 @@ import Ipopt
 import LinearAlgebra
 import Plots
 import Random
-import Test #src
+import Test
 
 # ## Data and visualisation
 
@@ -127,8 +127,7 @@ function solve_SVM_classifier(P::Matrix, labels::Vector; C::Float64 = C_0)
     D = LinearAlgebra.Diagonal(labels)
     @constraint(model, D * (P * w .- g) .+ y .>= 1)
     optimize!(model)
-    Test.@test termination_status(model) == LOCALLY_SOLVED  #src
-    Test.@test primal_status(model) == FEASIBLE_POINT  #src
+    Test.@test is_solved_and_feasible(model)
     slack = extrema(value.(y))
     println("Minimum slack: ", slack[1], "\nMaximum slack: ", slack[2])
     classifier(x) = line(x; w = value.(w), g = value(g))
@@ -234,8 +233,7 @@ function solve_dual_SVM_classifier(P::Matrix, labels::Vector; C::Float64 = C_0)
     @objective(model, Min, 1 / 2 * u' * D * P * P' * D * u - sum(u))
     @constraint(model, con, sum(D * u) == 0)
     optimize!(model)
-    Test.@test termination_status(model) == LOCALLY_SOLVED  #src
-    Test.@test primal_status(model) == FEASIBLE_POINT  #src
+    Test.@test is_solved_and_feasible(model)
     w = P' * D * value.(u)
     g = dual(con)
     classifier(x) = line(x; w = w, g = g)
@@ -322,8 +320,7 @@ function solve_kernel_SVM_classifier(
     con = @constraint(model, sum(D * u) == 0)
     @objective(model, Min, 1 / 2 * u' * D * K * D * u - sum(u))
     optimize!(model)
-    Test.@test termination_status(model) == LOCALLY_SOLVED  #src
-    Test.@test primal_status(model) == FEASIBLE_POINT  #src
+    Test.@test is_solved_and_feasible(model)
     u_sol, g_sol = value.(u), dual(con)
     function classifier(v::Vector)
         return sum(

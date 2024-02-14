@@ -158,6 +158,7 @@ set_silent(model)
 @constraint(model, sum(x) <= 1000)
 @constraint(model, r' * x >= 50)
 optimize!(model)
+@assert is_solved_and_feasible(model)
 solution_summary(model)
 
 # The optimal allocation of our assets is:
@@ -209,6 +210,7 @@ set_optimizer_attribute(model, MOA.SolutionLimit(), 50)
 ## a single objective sense `Min`, and negate any `Max` objectives:
 @objective(model, Min, [variance, -expected_return])
 optimize!(model)
+@assert termination_status(model) == OPTIMAL
 solution_summary(model)
 
 # The algorithm found 50 different solutions. Let's plot them to see how they

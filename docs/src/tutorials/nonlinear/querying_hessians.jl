@@ -71,6 +71,7 @@ set_silent(model)
 @constraint(model, g_2, (x[1] + x[2])^2 <= 2)
 @objective(model, Min, (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2)
 optimize!(model)
+@assert is_solved_and_feasible(model)
 
 # ## The analytic solution
 

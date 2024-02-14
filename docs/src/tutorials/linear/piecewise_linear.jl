@@ -52,6 +52,7 @@ function outer_approximate_x_squared(x̄)
     @objective(model, Min, y)
     @constraint(model, x == x̄)  # <-- a trivial constraint just for testing.
     optimize!(model)
+    @assert is_solved_and_feasible(model)
     return value(y)
 end
 
@@ -102,6 +103,7 @@ function outer_approximate_log(x̄)
     @objective(model, Max, y)
     @constraint(model, x == x̄)  # <-- a trivial constraint just for testing.
     optimize!(model)
+    @assert is_solved_and_feasible(model)
     return value(y)
 end
 
@@ -167,6 +169,7 @@ function inner_approximate_x_squared(x̄)
     @objective(model, Min, y)
     @constraint(model, x == x̄)  # <-- a trivial constraint just for testing.
     optimize!(model)
+    @assert is_solved_and_feasible(model)
     return value(y)
 end
 
@@ -209,6 +212,7 @@ function inner_approximate_log(x̄)
     @objective(model, Max, y)
     @constraint(model, x == x̄)  # <-- a trivial constraint just for testing.
     optimize!(model)
+    @assert is_solved_and_feasible(model)
     return value(y)
 end
 
@@ -262,6 +266,7 @@ function piecewise_linear_sin(x̄)
     end)
     @constraint(model, x == x̄)  # <-- a trivial constraint just for testing.
     optimize!(model)
+    @assert is_solved_and_feasible(model)
     return value(y)
 end
 

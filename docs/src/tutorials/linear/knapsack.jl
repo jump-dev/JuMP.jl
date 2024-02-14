@@ -96,6 +96,7 @@ print(model)
 # We can now solve the optimization problem and inspect the results.
 
 optimize!(model)
+@assert is_solved_and_feasible(model)
 solution_summary(model)
 
 # The items chosen are
@@ -124,8 +125,7 @@ function solve_knapsack_problem(;
     @objective(model, Max, profit' * x)
     @constraint(model, weight' * x <= capacity)
     optimize!(model)
-    @assert termination_status(model) == OPTIMAL
-    @assert primal_status(model) == FEASIBLE_POINT
+    @assert is_solved_and_feasible(model)
     println("Objective is: ", objective_value(model))
     println("Solution is:")
     for i in 1:n

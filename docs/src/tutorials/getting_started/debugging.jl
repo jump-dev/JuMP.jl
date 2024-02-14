@@ -346,6 +346,7 @@ set_silent(model)
 # for variables with large positive or negative values in the optimal solution.
 
 optimize!(model)
+@assert is_solved_and_feasible(model)
 for var in all_variables(model)
     if var == objective
         continue
