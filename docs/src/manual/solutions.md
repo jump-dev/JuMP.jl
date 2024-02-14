@@ -305,7 +305,6 @@ A simple approach for small scripts and notebooks is to use
 julia> function solve_and_print_solution(model)
            optimize!(model)
            if !is_solved_and_feasible(model; dual = true)
-               term = termination_status(model)
                error(
                    """
                    The model was not solved correctly:
