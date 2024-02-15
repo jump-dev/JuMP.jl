@@ -7,7 +7,6 @@ JuMP is a domain-specific modeling language for [mathematical optimization](http
 embedded in [Julia](https://julialang.org/). You can find out more about us by
 visiting [jump.dev](https://jump.dev).
 
-
 |         | Latest release      | Development version        |
 | :------ | :------------------ | :------------------------- |
 | Tagged version | [![version](https://juliahub.com/docs/General/JuMP/stable/version.svg)](https://juliahub.com/ui/Packages/General/JuMP) [![deps](https://juliahub.com/docs/JuMP/deps.svg)](https://juliahub.com/ui/Packages/JuMP/DmXqY?t=2) | |
