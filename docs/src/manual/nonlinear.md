@@ -58,6 +58,56 @@ Delete a nonlinear constraint using [`delete`](@ref):
 julia> delete(model, con[1])
 ```
 
+## Add a parameter
+
+Some solvers have explicit support for parameters, which are constants in the
+model that can be efficiently updated between solves.
+
+JuMP implements parameters by a decision variable constrained on creation to the
+[`Parameter`](@ref) set.
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, p[i = 1:2] in Parameter(i))
+2-element Vector{VariableRef}:
+ p[1]
+ p[2]
+
+julia> parameter_value(p[1])
+1.0
+
+julia> set_parameter_value(p[1], 3.5)
+
+julia> @objective(model, Max, log(p[1] * x + p[2]))
+log(p[1]*x + p[2])
+```
+
+See [Parameters](@ref variables_parameters) for more information on how to
+create and manage parameters.
+
+Parameters are most useful when solving nonlinear models in a sequence:
+
+```@repl
+using JuMP, Ipopt
+model = Model(Ipopt.Optimizer);
+set_silent(model)
+@variable(model, x)
+@variable(model, p in Parameter(1.0))
+@objective(model, Min, (x - p)^2)
+optimize!(model)
+value(x)
+set_parameter_value(p, 5.0)
+optimize!(model)
+value(x)
+```
+
+Using parameters can be faster than creating a new model from scratch with
+updated data because JuMP is able to avoid repeating a number of steps in
+processing the model before handing it off to the solver.
+
 ## Create a nonlinear expression
 
 Use [`@expression`](@ref) to create nonlinear expression objects:

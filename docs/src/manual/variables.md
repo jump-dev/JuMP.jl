@@ -1297,7 +1297,7 @@ standard JuMP syntax is that variables constrained on creation calls
 Consult the implementation of solver package you are using to see if your solver
 requires `MOI.add_constrained_variables`.
 
-## Parameters
+## [Parameters](@id variables_parameters)
 
 Some solvers have explicit support for parameters, which are constants in the
 model that can be efficiently updated between solves.
