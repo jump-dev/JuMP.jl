@@ -7,6 +7,23 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.20.0 (February 15, 2024)
+
+### Added
+
+ - Added [`is_solved_and_feasible`](@ref) (#3668)
+ - Added support for `MOI.ModelLike` as the optimizer (#3667)
+
+### Fixed
+
+ - Fixed compat of DimensionalData (#3666)
+ - Fixed `convert(::Type{NonlinearExpr}, ::Number)`(#3672)
+
+### Other
+
+ - Added `Optim` to list of solvers (#3624)
+ - Improved linking within documentation (#3669)
+
 ## Version 1.19.0 (February 1, 2024)
 
 ### Added
