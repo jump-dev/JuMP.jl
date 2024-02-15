@@ -5,7 +5,7 @@
 
 # # Basis matrices
 
-# This tutorial explains how to query basis of a linear program.
+# This tutorial explains how to query the basis of a linear program.
 
 # ## Setup
 
@@ -36,7 +36,7 @@ A = [1 5 3 4 6; 0 1 3 5 6]
 
 b = [14, 7]
 
-# We can create an optimize the problem in the standard form:
+# We can create and optimize the problem in the standard form:
 
 n = size(A, 2)
 model = Model(HiGHS.Optimizer)
@@ -59,7 +59,7 @@ get_attribute(x[1], MOI.VariableBasisStatus())
 
 get_attribute.(x, MOI.VariableBasisStatus())
 
-# The values are either [`MOI.NONBASIC_AT_LOWER`](@ref) or [`MOI.BASIC`](@ref).
+# For this problem, the values are either [`MOI.NONBASIC_AT_LOWER`](@ref) or [`MOI.BASIC`](@ref).
 # All of the [`MOI.NONBASIC_AT_LOWER`](@ref) variables have a value at their
 # lower bound. The [`MOI.BASIC`](@ref) variables correspond to the columns of
 # the optimal basis.
@@ -105,7 +105,7 @@ v_basis = Dict(
     xi in all_variables(model)
 )
 
-# Despite the model having three constraints, there are only two basis
+# Despite the model having three constraints, there are only two basic
 # variables. Since the basis matrix must be square, where is the other basic
 # variable?
 
