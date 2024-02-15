@@ -30,7 +30,6 @@ done in the same commit, or separately. The last commit should have the message
        using a `workflow_dispatch` trigger to check for any changes in JuMP that
        broke extensions.
  - [ ] Change the version number in `Project.toml`
- - [ ] Update the links in README.md
  - [ ] The commit messages in this PR do not contain `[ci skip]`
 
 ## The release
