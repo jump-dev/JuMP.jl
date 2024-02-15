@@ -2,33 +2,20 @@
 ---
 
 [![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org)
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://jump.dev/JuMP.jl/stable/)
-[![In Development](https://img.shields.io/badge/docs-dev-blue.svg)](https://jump.dev/JuMP.jl/dev/)
 
 JuMP is a domain-specific modeling language for [mathematical optimization](https://en.wikipedia.org/wiki/Mathematical_optimization)
 embedded in [Julia](https://julialang.org/). You can find out more about us by
 visiting [jump.dev](https://jump.dev).
 
-**Latest Release**: [![version](https://juliahub.com/docs/General/JuMP/stable/version.svg)](https://juliahub.com/ui/Packages/General/JuMP) (`release-1.0` branch):
-  * Installation via the Julia package manager:
-    * `import Pkg; Pkg.add("JuMP")`
-  * Get help:
-    * Read the [Documentation](https://jump.dev/JuMP.jl/stable/): [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://jump.dev/JuMP.jl/stable/)
-    * Ask a question on the [Community forum](https://jump.dev/forum)
-  * Testing status:
-    * Github Actions: [![Build Status](https://github.com/jump-dev/JuMP.jl/workflows/CI/badge.svg?branch=release-1.0)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI)
-  * [![deps](https://juliahub.com/docs/JuMP/deps.svg)](https://juliahub.com/ui/Packages/JuMP/DmXqY?t=2)
-
-**Development version** (`master` branch):
-  * Installation via the Julia package manager:
-    * `import Pkg; Pkg.add(Pkg.PackageSpec(name="JuMP", rev="master"))`
-  * Get help:
-    * Read the [Documentation](https://jump.dev/JuMP.jl/dev/): [![In Development](https://img.shields.io/badge/docs-dev-blue.svg)](https://jump.dev/JuMP.jl/dev/)
-    * Join the [Developer chatroom](https://jump.dev/chatroom)
-    * Read the [NEWS](https://github.com/jump-dev/JuMP.jl/tree/master/NEWS.md)
-  * Testing status:
-    * Github Actions: [![Build Status](https://github.com/jump-dev/JuMP.jl/workflows/CI/badge.svg?branch=master)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI)
-    * Test coverage: [![codecov](https://codecov.io/gh/jump-dev/JuMP.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/jump-dev/JuMP.jl)
+|         | Latest release      | Development version        |
+| :------ | :------------------ | :------------------------- |
+| Tagged version | [![version](https://juliahub.com/docs/General/JuMP/stable/version.svg)](https://juliahub.com/ui/Packages/General/JuMP) [![deps](https://juliahub.com/docs/JuMP/deps.svg)](https://juliahub.com/ui/Packages/JuMP/DmXqY?t=2) | |
+| Install | `import Pkg; Pkg.add("JuMP")` | `import Pkg; Pkg.pkg"add JuMP#master"` |
+| Documentation | [![stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://jump.dev/JuMP.jl/stable/) | [![dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://jump.dev/JuMP.jl/dev/) |
+| Get help | Ask a question on the [Community forum](https://jump.dev/forum) | Join the [Developer chatroom](https://jump.dev/chatroom) |
+| Source code  | [release-1.0](https://github.com/jump-dev/JuMP.jl/tree/release-1.0) | [master](https://github.com/jump-dev/JuMP.jl/tree/master) |
+| Testing status | [![Build Status](https://github.com/jump-dev/JuMP.jl/workflows/CI/badge.svg?branch=release-1.0)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI) | [![Build Status](https://github.com/jump-dev/JuMP.jl/workflows/CI/badge.svg?branch=master)](https://github.com/jump-dev/JuMP.jl/actions?query=workflow%3ACI) |
+| Coverage | [![codecov](https://codecov.io/gh/jump-dev/JuMP.jl/branch/release-1.0/graph/badge.svg)](https://codecov.io/gh/jump-dev/JuMP.jl) | [![codecov](https://codecov.io/gh/jump-dev/JuMP.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/jump-dev/JuMP.jl) |
 
 ## Need help?
 
