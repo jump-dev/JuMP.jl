@@ -2358,4 +2358,19 @@ function test_op_or_short_circuit()
     return
 end
 
+function test_sparseaxisarray_constraint_zeros()
+    A = [[1, 2, 10], [2, 3, 30]]
+    model = Model()
+    @variable(model, x[i in 1:2, j in A[i]])
+    @test_throws_runtime(
+        ErrorException,
+        @constraint(model, x[1, :] == 0),
+    )
+    @test_throws_runtime(
+        ErrorException,
+        @constraint(model, x[1, :] in SecondOrderCone()),
+    )
+    return
+end
+
 end  # module
