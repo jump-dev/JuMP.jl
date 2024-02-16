@@ -2378,7 +2378,7 @@ function test_sparseaxisarray_constraint_zeros()
         @constraint(model, x[1, :] in SOS1()),
     )
     @test_throws_runtime(
-        ErrorException("In @constraint(model, x[1, :] in SOS2())`: $msg"),
+        ErrorException("In `@constraint(model, x[1, :] in SOS2())`: $msg"),
         @constraint(model, x[1, :] in SOS2()),
     )
     return
