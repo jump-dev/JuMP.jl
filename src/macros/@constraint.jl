@@ -847,49 +847,51 @@ function build_constraint(
     return VectorConstraint(x, set)
 end
 
+function _build_sparse_axis_array_error_msg()
+    return """
+    Building a constraint in which the function is a `Containers.SparseAxisArray`.
+
+    ## Work-around
+
+    Convert `x` into a vector by explicitly providing an ordered list of
+    indices. For example, instead of:
+
+    ```julia
+    A = [[1, 2, 10], [2, 3, 30]]
+    model = Model()
+    @variable(model, x[i in 1:2, j in A[i]])
+    @constraint(model, x[1, :] in SecondOrderCone())
+    ```
+
+    do:
+
+    ```julia
+    A = [[1, 2, 10], [2, 3, 30]]
+    model = Model()
+    @variable(model, x[i in 1:2, j in A[i]])
+    y = [x[1, j] for j in A[1]]::Vector{VariableRef}
+    @constraint(model, y in SecondOrderCone())
+    ```
+
+    ## Explanation for breaking change in JuMP v1.21
+
+    Prior to JuMP v1.20, this constraint would have been allowed. It is now
+    an error because of the high risk of incorrect usage.
+
+    The backend data structure of a `Containers.SparseAxisArray` is a
+    `Dict`. JuMP used to create the constraint with
+    `[x[k] for k in eachindex(x)]`, however, the iteration order of
+    `eachindex` is undefined. This can silently cause incorrect models to be
+    built if the set of the constraint depends on the order of the elements.
+    """
+end
+
 function build_constraint(
     error_fn::Function,
     ::Containers.SparseAxisArray{<:Union{Number,AbstractJuMPScalar},1},
     ::MOI.AbstractVectorSet,
 )
-    return error_fn(
-        """
-        Building a constraint in which the function is a `Containers.SparseAxisArray`.
-
-        ## Work-around
-
-        Convert `x` into a vector by explicitly providing an ordered list of
-        indices. For example, instead of:
-
-        ```julia
-        A = [[1, 2, 10], [2, 3, 30]]
-        model = Model()
-        @variable(model, x[i in 1:2, j in A[i]])
-        @constraint(model, x[1, :] in SecondOrderCone())
-        ```
-
-        do:
-
-        ```julia
-        A = [[1, 2, 10], [2, 3, 30]]
-        model = Model()
-        @variable(model, x[i in 1:2, j in A[i]])
-        y = [x[1, j] for j in A[1]]::Vector{VariableRef}
-        @constraint(model, y in SecondOrderCone())
-        ```
-
-        ## Explanation for breaking change in JuMP v1.21
-
-        Prior to JuMP v1.20, this constraint would have been allowed. It is now
-        an error because of the high risk of incorrect usage.
-
-        The backend data structure of a `Containers.SparseAxisArray` is a
-        `Dict`. JuMP used to create the constraint with
-        `[x[k] for k in eachindex(x)]`, however, the iteration order of
-        `eachindex` is undefined. This can silently cause incorrect models to be
-        built if the set of the constraint depends on the order of the elements.
-        """
-    )
+    return error_fn(_build_sparse_axis_array_error_msg())
 end
 
 function build_constraint(
@@ -1007,4 +1009,20 @@ function build_constraint(
         x,
         MOI.SOS2{value_type(variable_ref_type(T))}(set.weights),
     )
+end
+
+function build_constraint(
+    error_fn::Function,
+    ::Containers.SparseAxisArray{<:Union{Number,AbstractJuMPScalar},1},
+    ::MOI.SOS1,
+)
+    return error_fn(_build_sparse_axis_array_error_msg())
+end
+
+function build_constraint(
+    error_fn::Function,
+    ::Containers.SparseAxisArray{<:Union{Number,AbstractJuMPScalar},1},
+    ::MOI.SOS2,
+)
+    return error_fn(_build_sparse_axis_array_error_msg())
 end

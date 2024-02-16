@@ -2362,13 +2362,24 @@ function test_sparseaxisarray_constraint_zeros()
     A = [[1, 2, 10], [2, 3, 30]]
     model = Model()
     @variable(model, x[i in 1:2, j in A[i]])
+    msg = JuMP._build_sparse_axis_array_error_msg()
     @test_throws_runtime(
-        ErrorException,
+        ErrorException("In `@constraint(model, x[1, :] == 0)`: $msg"),
         @constraint(model, x[1, :] == 0),
     )
     @test_throws_runtime(
-        ErrorException,
+        ErrorException(
+            "In `@constraint(model, x[1, :] in SecondOrderCone())`: $msg",
+        ),
         @constraint(model, x[1, :] in SecondOrderCone()),
+    )
+    @test_throws_runtime(
+        ErrorException("In `@constraint(model, x[1, :] in SOS1())`: $msg"),
+        @constraint(model, x[1, :] in SOS1()),
+    )
+    @test_throws_runtime(
+        ErrorException("In @constraint(model, x[1, :] in SOS2())`: $msg"),
+        @constraint(model, x[1, :] in SOS2()),
     )
     return
 end
