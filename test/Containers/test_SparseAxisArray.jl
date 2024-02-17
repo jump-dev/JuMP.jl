@@ -14,6 +14,7 @@ using JuMP.Containers
 using Test
 
 import LinearAlgebra
+import OrderedCollections
 
 function _util_sparse_test(d, sum_d, d2, d3, dsqr, d_bads)
     sqr(x) = x^2
@@ -51,7 +52,9 @@ function _util_sparse_test(d, sum_d, d2, d3, dsqr, d_bads)
 end
 
 function test_1_dimensional()
-    d = @inferred SparseAxisArray(Dict((:a,) => 1, (:b,) => 2))
+    d = @inferred SparseAxisArray(
+        OrderedCollections.OrderedDict((:a,) => 1, (:b,) => 2),
+    )
     @test sprint(summary, d) == """
 $(SparseAxisArray{Int,1,Tuple{Symbol}}) with 2 entries"""
     @test sprint(show, "text/plain", d) == """
@@ -83,7 +86,9 @@ $(SparseAxisArray{Int,1,Tuple{Symbol}}) with 2 entries:
 end
 
 function test_2_dimensional()
-    d = @inferred SparseAxisArray(Dict((:a, 'u') => 2.0, (:b, 'v') => 0.5))
+    d = @inferred SparseAxisArray(
+        OrderedCollections.OrderedDict((:a, 'u') => 2.0, (:b, 'v') => 0.5),
+    )
     @test d isa SparseAxisArray{Float64,2,Tuple{Symbol,Char}}
     @test_throws BoundsError(d, (:a,)) d[:a]
     @test sprint(summary, d) == """

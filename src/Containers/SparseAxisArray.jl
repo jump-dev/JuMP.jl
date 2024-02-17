@@ -48,7 +48,9 @@ function SparseAxisArray(
     d::AbstractDict{K,T},
     names::NTuple{N,Symbol},
 ) where {T,N,K<:NTuple{N,Any}}
-    od = convert(OrderedCollections.OrderedDict{K,T}, d)
+    # convert(OrderedCollections.OrderedDict{K,T}, d) is deprecated, so use an
+    # iterator to get all key-value pairs.
+    od = OrderedCollections.OrderedDict{K,T}(k => v for (k, v) in d)
     return SparseAxisArray(od, names)
 end
 

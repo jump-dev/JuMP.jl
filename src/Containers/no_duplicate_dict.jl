@@ -15,7 +15,7 @@ struct NoDuplicateDict{K,V} <: AbstractDict{K,V}
     dict::OrderedCollections.OrderedDict{K,V}
 
     function NoDuplicateDict{K,V}() where {K,V}
-        new{K,V}(OrderedCollections.OrderedDict{K,V}())
+        return new{K,V}(OrderedCollections.OrderedDict{K,V}())
     end
 end
 
