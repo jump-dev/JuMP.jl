@@ -111,11 +111,11 @@ v_basis = Dict(
 
 # The answer is that solvers will reformulate inequality constraints:
 # ```math
-# l \le A x \le u
+# A x \le b
 # ```
 # into the system:
 # ```math
-# A x - Is = 0, \quad l \le s \le u
+# A x + Is = b
 # ```
 # Thus, for every inequality constraint there is a slack variable `s`.
 
@@ -128,3 +128,73 @@ c_basis = Dict(
 )
 
 # Thus, the basis is formed by `x`, `y`, and the slack associated with `c3`.
+
+# A simple way to get the `A` matrix of an unstructured linear program is with
+# [`lp_matrix_data`](@ref):
+
+matrix = lp_matrix_data(model)
+matrix.A
+
+# You can check the permutation of the rows and columns using
+
+matrix.variables
+
+# and
+
+matrix.affine_constraints
+
+# We can construct the slack column associated with `c3` as:
+
+s_column = zeros(size(matrix.A, 1))
+s_column[3] = 1.0
+
+# The full basis matrix is therefore:
+
+B = hcat(matrix.A[:, [1, 2]], s_column)
+
+# [`lp_matrix_data`](@ref) returns separate vectors for the lower and upper row
+# bounds. Convert to a single right-hand side vector by taking the finite
+# elements:
+
+b = ifelse.(isfinite.(matrix.b_lower), matrix.b_lower, matrix.b_upper)
+
+# Solving the Basis system as before yields:
+
+B \ b
+
+# which is the value of `x`, `y`, and the slack associated with `c3`.
+
+# ## Identifying degenerate variables
+
+# Another common task is identifying degenerate variables. A degenerate variable
+# is a basic variable that has an optimal value at its lower or upper bound.
+
+# Here is a function that computes whether a variable is degenerate:
+
+function is_degenerate(x)
+    if get_attribute(x, MOI.VariableBasisStatus()) == MOI.BASIC
+        return (has_lower_bound(x) && ≈(value(x), lower_bound(x))) ||
+               (has_upper_bound(x) && ≈(value(x), upper_bound(x)))
+    end
+    return false
+end
+
+# A simple example of a linear program with a degenerate solution is:
+
+A, b, c = [1 1; 0 1], [1, 1], [1, 1]
+model = Model(HiGHS.Optimizer);
+set_silent(model)
+@variable(model, x[1:2] >= 0)
+@objective(model, Min, c' * x)
+@constraint(model, A * x == b)
+optimize!(model)
+degenerate_variables = filter(is_degenerate, all_variables(model))
+
+# The solution is degenerate because:
+
+value(x[1])
+
+# and
+
+get_attribute(x[1], MOI.VariableBasisStatus())
+
