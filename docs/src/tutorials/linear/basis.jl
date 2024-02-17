@@ -197,4 +197,3 @@ value(x[1])
 # and
 
 get_attribute(x[1], MOI.VariableBasisStatus())
-
