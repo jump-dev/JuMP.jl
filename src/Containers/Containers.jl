@@ -17,7 +17,7 @@ necessarily integers.
 """
 module Containers
 
-import Base.Meta.isexpr
+import OrderedCollections
 
 # Arbitrary typed indices. Linear indexing not supported.
 struct IndexAnyCartesian <: Base.IndexStyle end

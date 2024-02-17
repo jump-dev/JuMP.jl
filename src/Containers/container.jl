@@ -142,13 +142,21 @@ function container(
     end
     # Same as `map` but does not allocate the resulting vector.
     mappings = Base.Generator(I -> I => f(I...), indices)
-    # Same as `Dict(mapping)` but it will error if two indices are the same.
+    # Same as `OrderedCollections.OrderedDict(mapping)`, but it will error if
+    # two indices are the same.
     data = NoDuplicateDict(mappings)
     return _sparseaxisarray(data.dict, f, indices, names)
 end
 
 # The NoDuplicateDict was able to infer the element type.
-_sparseaxisarray(dict::Dict, ::Any, ::Any, names) = SparseAxisArray(dict, names)
+function _sparseaxisarray(
+    dict::OrderedCollections.OrderedDict,
+    ::Any,
+    ::Any,
+    names,
+)
+    return SparseAxisArray(dict, names)
+end
 
 # @default_eltype succeeded and inferred a tuple of the appropriate size!
 # Use `return_types` to get the value type of the dictionary.
@@ -159,13 +167,13 @@ function _container_dict(
 ) where {N}
     ret = Base.return_types(f, K)
     V = length(ret) == 1 ? first(ret) : Any
-    return Dict{K,V}()
+    return OrderedCollections.OrderedDict{K,V}()
 end
 
 # @default_eltype bailed and returned Any. Use an NTuple of Any of the
 # appropriate size intead.
 function _container_dict(::Any, ::Any, K::Type{<:NTuple{N,Any}}) where {N}
-    return Dict{K,Any}()
+    return OrderedCollections.OrderedDict{K,Any}()
 end
 
 # @default_eltype bailed and returned Union{}. Use an NTuple of Any of the
@@ -176,7 +184,7 @@ function _container_dict(
     ::Function,
     K::Type{<:NTuple{N,Any}},
 ) where {N}
-    return Dict{K,Any}()
+    return OrderedCollections.OrderedDict{K,Any}()
 end
 
 # Calling `@default_eltye` on `x` isn't sufficient, because the iterator may
@@ -189,7 +197,7 @@ _default_eltype(x) = Base.@default_eltype x
 # best-guess attempt, collect all of the keys excluding the conditional
 # statement (these must be defined, because the conditional applies to the
 # lowest-level of the index loops), then get the eltype of the result.
-function _sparseaxisarray(dict::Dict{Any,Any}, f, indices, names)
+function _sparseaxisarray(dict::AbstractDict{Any,Any}, f, indices, names)
     @assert isempty(dict)
     d = _container_dict(_default_eltype(indices), f, _eltype_or_any(indices))
     return SparseAxisArray(d, names)

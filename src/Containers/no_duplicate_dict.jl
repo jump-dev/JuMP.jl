@@ -5,31 +5,39 @@
 
 """
     struct NoDuplicateDict{K, V} <: AbstractDict{K, V}
-        dict::Dict{K, V}
+        dict::OrderedCollections.OrderedDict{K, V}
     end
 
-Same as `Dict{K, V}` but errors if constructed from an iterator with duplicate
-keys.
+Same as `OrderedCollections.OrderedDict{K, V}` but errors if constructed from an
+iterator with duplicate keys.
 """
 struct NoDuplicateDict{K,V} <: AbstractDict{K,V}
-    dict::Dict{K,V}
-    NoDuplicateDict{K,V}() where {K,V} = new{K,V}(Dict{K,V}())
+    dict::OrderedCollections.OrderedDict{K,V}
+
+    function NoDuplicateDict{K,V}() where {K,V}
+        new{K,V}(OrderedCollections.OrderedDict{K,V}())
+    end
 end
 
-# Implementation of the `AbstractDict` API.
 function Base.empty(::NoDuplicateDict, ::Type{K}, ::Type{V}) where {K,V}
     return NoDuplicateDict{K,V}()
 end
+
 Base.iterate(d::NoDuplicateDict, args...) = iterate(d.dict, args...)
+
 Base.length(d::NoDuplicateDict) = length(d.dict)
+
 Base.haskey(dict::NoDuplicateDict, key) = haskey(dict.dict, key)
+
 Base.getindex(dict::NoDuplicateDict, key) = getindex(dict.dict, key)
+
 function Base.setindex!(dict::NoDuplicateDict, value, key)
     if haskey(dict, key)
         error("Repeated index ", key, ". Index sets must have unique elements.")
     end
     return setindex!(dict.dict, value, key)
 end
+
 function NoDuplicateDict{K,V}(it) where {K,V}
     dict = NoDuplicateDict{K,V}()
     for (k, v) in it
@@ -37,6 +45,7 @@ function NoDuplicateDict{K,V}(it) where {K,V}
     end
     return dict
 end
+
 function NoDuplicateDict(it)
     return Base.dict_with_eltype((K, V) -> NoDuplicateDict{K,V}, it, eltype(it))
 end

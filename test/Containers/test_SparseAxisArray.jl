@@ -13,6 +13,8 @@ module TestContainersSparseAxisArray
 using JuMP.Containers
 using Test
 
+import LinearAlgebra
+
 function _util_sparse_test(d, sum_d, d2, d3, dsqr, d_bads)
     sqr(x) = x^2
     # map
@@ -356,6 +358,21 @@ function test_multi_arg_eachindex()
     @test eachindex(z) == keys(z.data)
     @test eachindex(x, y) == eachindex(x)
     @test_throws DimensionMismatch eachindex(x, z)
+    return
+end
+
+function test_sparseaxisarray_order()
+    A = [[1, 2, 10], [2, 3, 30]]
+    Containers.@container(
+        x[i in 1:2, j in A[i]],
+        i + j,
+        container = SparseAxisArray,
+    )
+    Containers.@container(x1[j in A[1]], 1 + j, container = SparseAxisArray)
+    Containers.@container(x2[j in A[2]], 2 + j, container = SparseAxisArray)
+    @test x[1, :] == x1
+    @test x[2, :] == x2
+    @test LinearAlgebra.dot(x[1, :], 1:3) == 41
     return
 end
 
