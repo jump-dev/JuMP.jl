@@ -197,7 +197,12 @@ _default_eltype(x) = Base.@default_eltype x
 # best-guess attempt, collect all of the keys excluding the conditional
 # statement (these must be defined, because the conditional applies to the
 # lowest-level of the index loops), then get the eltype of the result.
-function _sparseaxisarray(dict::AbstractDict{Any,Any}, f, indices, names)
+function _sparseaxisarray(
+    dict::OrderedCollections.OrderedDict{Any,Any},
+    f,
+    indices,
+    names,
+)
     @assert isempty(dict)
     d = _container_dict(_default_eltype(indices), f, _eltype_or_any(indices))
     return SparseAxisArray(d, names)
