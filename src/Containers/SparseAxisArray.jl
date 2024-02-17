@@ -54,11 +54,12 @@ function SparseAxisArray(
     return SparseAxisArray(od, names)
 end
 
-function SparseAxisArray(d::AbstractDict{K,T}) where {T,N,K<:NTuple{N,Any}}
+function SparseAxisArray(
+    d::AbstractDict{K,T},
+    ::Nothing = nothing,
+) where {T,N,K<:NTuple{N,Any}}
     return SparseAxisArray(d, ntuple(n -> Symbol("#$n"), N))
 end
-
-SparseAxisArray(d::AbstractDict, ::Nothing) = SparseAxisArray(d)
 
 Base.length(sa::SparseAxisArray) = length(sa.data)
 
