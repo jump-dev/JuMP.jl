@@ -30,7 +30,7 @@ OrderedDict{Tuple{Symbol, Int64}, Float64} with 3 entries:
   (:b, 3) => 3.0
 
 julia> array = Containers.SparseAxisArray(dict)
-JuMP.Containers.SparseAxisArray{Float64, 2, Tuple{Symbol, Int64}} with 3 entries:
+SparseAxisArray{Float64, 2, Tuple{Symbol, Int64}} with 3 entries:
   [a, 2]  =  1.0
   [a, 3]  =  2.0
   [b, 3]  =  3.0
