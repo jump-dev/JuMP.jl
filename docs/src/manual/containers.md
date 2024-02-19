@@ -331,11 +331,11 @@ julia> for key in eachindex(y)
 ```
 
 !!! warning
-    In contrast to `Base.Array`s, which iterate in column-major order, that is,
-    by varying indices from left to right, `SparseAxisArray` iterates in
-    row-major order, that is, by varying the indices from right to left. As an
+    If you use a macro to construct a `SparseAxisArray`, then the iteration
+    order is row-major, that is, indices are varied from right to left. As an
     example, when iterating over `x` above, the `j` index is iterated, keeping
-    `i` constant.
+    `i` constant. This order is in contrast to `Base.Array`s, which iterate in
+    column-major order, that is, by varying indices from left to right.
 
 ### Broadcasting
 
