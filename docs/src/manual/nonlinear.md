@@ -641,7 +641,8 @@ JuMP uses [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) to
 compute derivatives.
 
 ForwardDiff has a number of limitations that you should be aware of when
-writing user-defined operators.
+writing user-defined operators. The rest of this section provides debugging
+advice and explains some common mistakes.
 
 !!! warning
     Get an error like `No method matching Float64(::ForwardDiff.Dual)`? Read
@@ -653,77 +654,33 @@ If you add an operator that does not support ForwardDiff, a long error message
 will be printed. You can review the stacktrace for more information, but it can
 often be hard to understand why and where your function is failing.
 
-It may be helpful to debug the operator outside of JuMP as follows:
-```julia
-import ForwardDiff
+It may be helpful to debug the operator outside of JuMP as follows.
 
-# If the input dimension is 1
-x = 1.0
-my_operator(a) = a^2
-ForwardDiff.derivative(my_operator, x)
+If the operator is univariate, do:
+```jldoctest
+julia> import ForwardDiff
 
-# If the input dimension is more than 1
-x = [1.0, 2.0]
-my_operator(a, b) = a^2 + b^2
-ForwardDiff.gradient(x -> my_operator(x...), x)
+julia> my_operator(a) = a^2
+my_operator (generic function with 3 methods)
+
+julia> ForwardDiff.derivative(my_operator, 1.0)
+2.0
 ```
 
-Some common mistakes are given below.
+If the operator is multivariate, do:
+```jldoctest
+julia> import ForwardDiff
 
-#### Operator does not accept splatted input
+julia> my_operator(a, b) = a^2 + b^2
+my_operator (generic function with 3 methods)
 
-The operator takes `f(x::Vector)` as input, instead of the splatted `f(x...)`.
-
-For example, instead of:
-```julia
-my_operator(x::Vector) = sum(x[i]^2 for i in eachindex(x))
+julia> ForwardDiff.gradient(x -> my_operator(x...), [1.0, 2.0])
+2-element Vector{Float64}:
+ 2.0
+ 4.0
 ```
-use:
-```julia
-my_operator(x...) = sum(x[i]^2 for i in eachindex(x))
-```
-
-#### Operator assumes `Float64` as input
-
-The operator assumes `Float64` will be passed as input, but it must work for any
-generic `Real` type.
-
-For example, instead of:
-```julia
-my_operator(x::Float64...) = sum(x[i]^2 for i in eachindex(x))
-end
-```
-use:
-```julia
-my_operator(x::Real...) = sum(x[i]^2 for i in eachindex(x))
-```
-
-#### Operator allocates `Float64` storage
-
-The operator allocates temporary storage using `zeros(3)` or similar. This
-defaults to `Float64`, so use `zeros(T, 3)` instead.
-
-For example, instead of:
-```julia
-function my_operator(x::Real...)
-    # This line is problematic. zeros(n) is short for zeros(Float64, n)
-    y = zeros(length(x))
-    for i in eachindex(x)
-        y[i] = x[i]^2
-    end
-    return sum(y)
-end
-```
-use:
-```julia
-function my_operator(x::T...) where {T<:Real}
-    y = zeros(T, length(x))
-    for i in eachindex(x)
-        y[i] = x[i]^2
-    end
-    return sum(y)
-end
-```
+Note that even though the operator takes the splatted arguments,
+`ForwardDiff.gradient` requires a vector as input.
 
 #### Operator calls something unsupported by ForwardDiff
 
@@ -734,6 +691,102 @@ which an overload has not been defined, a `MethodError` will be thrown.
 For example, your operator cannot call external C functions, or be the optimal
 objective value of a JuMP model.
 
+```jldoctest
+julia> import ForwardDiff
+
+julia> my_operator_bad(x) = @ccall sqrt(x::Cdouble)::Cdouble
+
+julia> ForwardDiff.derivative(my_operator_bad, 1.0)
+ERROR: MethodError: no method matching Float64(::ForwardDiff.Dual{ForwardDiff.Tag{typeof(my_operator_bad), Float64}, Float64, 1})
+[...]
+```
+
 Unfortunately, the list of calls supported by ForwardDiff is too large to
 enumerate what is an isn't allowed, so the best advice is to try and see if it
 works.
+
+#### Operator does not accept splatted input
+
+The operator takes `f(x::Vector)` as input, instead of the splatted `f(x...)`.
+
+```jldoctest
+julia> import ForwardDiff
+
+julia> my_operator_bad(x::Vector) = sum(x[i]^2 for i in eachindex(x))
+my_operator_bad (generic function with 1 method)
+
+julia> my_operator_good(x...) = sum(x[i]^2 for i in eachindex(x))
+my_operator_good (generic function with 1 method)
+
+julia> ForwardDiff.gradient(x -> my_operator_bad(x...), [1.0, 2.0])
+ERROR: MethodError: no method matching my_operator_bad(::ForwardDiff.Dual{ForwardDiff.Tag{…}, Float64, 2}, ::ForwardDiff.Dual{ForwardDiff.Tag{…}, Float64, 2})
+Stacktrace:
+[...]
+
+julia> ForwardDiff.gradient(x -> my_operator_good(x...), [1.0, 2.0])
+2-element Vector{Float64}:
+ 2.0
+ 4.0
+```
+
+#### Operator assumes `Float64` as input
+
+The operator assumes `Float64` will be passed as input, but it must work for any
+generic `Real` type.
+
+```jldoctest
+julia> import ForwardDiff
+
+julia> my_operator_bad(x::Float64...) = sum(x[i]^2 for i in eachindex(x))
+my_operator_bad (generic function with 1 method)
+
+julia> my_operator_good(x::Real...) = sum(x[i]^2 for i in eachindex(x))
+my_operator_good (generic function with 1 method)
+
+julia> ForwardDiff.gradient(x -> my_operator_bad(x...), [1.0, 2.0])
+ERROR: MethodError: no method matching my_operator_bad(::ForwardDiff.Dual{ForwardDiff.Tag{…}, Float64, 2}, ::ForwardDiff.Dual{ForwardDiff.Tag{…}, Float64, 2})
+Stacktrace:
+[...]
+
+julia> ForwardDiff.gradient(x -> my_operator_good(x...), [1.0, 2.0])
+2-element Vector{Float64}:
+ 2.0
+ 4.0
+```
+
+#### Operator allocates `Float64` storage
+
+The operator allocates temporary storage using `zeros(3)` or similar. This
+defaults to `Float64`, so use `zeros(T, 3)` instead.
+
+```julia
+julia> import ForwardDiff
+
+julia> function my_operator_bad(x::Real...)
+           # This line is problematic. zeros(n) is short for zeros(Float64, n)
+           y = zeros(length(x))
+           for i in eachindex(x)
+               y[i] = x[i]^2
+           end
+           return sum(y)
+       end
+my_operator_bad (generic function with 1 method)
+
+julia> function my_operator_good(x::T...) where {T<:Real}
+           y = zeros(T, length(x))
+           for i in eachindex(x)
+               y[i] = x[i]^2
+           end
+           return sum(y)
+       end
+my_operator_good (generic function with 1 method)
+
+julia> ForwardDiff.gradient(x -> my_operator_bad(x...), [1.0, 2.0])
+ERROR: MethodError: no method matching Float64(::ForwardDiff.Dual{ForwardDiff.Tag{var"#1#2", Float64}, Float64, 2})
+[...]
+
+julia> ForwardDiff.gradient(x -> my_operator_good(x...), [1.0, 2.0])
+2-element Vector{Float64}:
+ 2.0
+ 4.0
+```
