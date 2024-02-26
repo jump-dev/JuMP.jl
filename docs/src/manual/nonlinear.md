@@ -661,7 +661,7 @@ If the operator is univariate, do:
 julia> import ForwardDiff
 
 julia> my_operator(a) = a^2
-my_operator (generic function with 3 methods)
+my_operator (generic function with 1 method)
 
 julia> ForwardDiff.derivative(my_operator, 1.0)
 2.0
@@ -672,7 +672,7 @@ If the operator is multivariate, do:
 julia> import ForwardDiff
 
 julia> my_operator(a, b) = a^2 + b^2
-my_operator (generic function with 3 methods)
+my_operator (generic function with 1 method)
 
 julia> ForwardDiff.gradient(x -> my_operator(x...), [1.0, 2.0])
 2-element Vector{Float64}:
@@ -695,6 +695,7 @@ objective value of a JuMP model.
 julia> import ForwardDiff
 
 julia> my_operator_bad(x) = @ccall sqrt(x::Cdouble)::Cdouble
+my_operator_bad (generic function with 1 method)
 
 julia> ForwardDiff.derivative(my_operator_bad, 1.0)
 ERROR: MethodError: no method matching Float64(::ForwardDiff.Dual{ForwardDiff.Tag{typeof(my_operator_bad), Float64}, Float64, 1})
@@ -719,8 +720,7 @@ julia> my_operator_good(x...) = sum(x[i]^2 for i in eachindex(x))
 my_operator_good (generic function with 1 method)
 
 julia> ForwardDiff.gradient(x -> my_operator_bad(x...), [1.0, 2.0])
-ERROR: MethodError: no method matching my_operator_bad(::ForwardDiff.Dual{ForwardDiff.Tag{…}, Float64, 2}, ::ForwardDiff.Dual{ForwardDiff.Tag{…}, Float64, 2})
-Stacktrace:
+ERROR: MethodError: no method matching my_operator_bad(::ForwardDiff.Dual{ForwardDiff.Tag{var"#5#6", Float64}, Float64, 2}, ::ForwardDiff.Dual{ForwardDiff.Tag{var"#5#6", Float64}, Float64, 2})
 [...]
 
 julia> ForwardDiff.gradient(x -> my_operator_good(x...), [1.0, 2.0])
@@ -744,8 +744,7 @@ julia> my_operator_good(x::Real...) = sum(x[i]^2 for i in eachindex(x))
 my_operator_good (generic function with 1 method)
 
 julia> ForwardDiff.gradient(x -> my_operator_bad(x...), [1.0, 2.0])
-ERROR: MethodError: no method matching my_operator_bad(::ForwardDiff.Dual{ForwardDiff.Tag{…}, Float64, 2}, ::ForwardDiff.Dual{ForwardDiff.Tag{…}, Float64, 2})
-Stacktrace:
+ERROR: MethodError: no method matching my_operator_bad(::ForwardDiff.Dual{ForwardDiff.Tag{var"#5#6", Float64}, Float64, 2}, ::ForwardDiff.Dual{ForwardDiff.Tag{var"#5#6", Float64}, Float64, 2})
 [...]
 
 julia> ForwardDiff.gradient(x -> my_operator_good(x...), [1.0, 2.0])
