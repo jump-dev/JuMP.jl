@@ -417,8 +417,12 @@ using the [`@operator`](@ref) macro.
 ## [User-defined operators](@id jump_user_defined_operators)
 
 In addition to a standard list of univariate and multivariate operators
-recognized by the `MOI.Nonlinear` submodule, JuMP supports *user-defined*
-Julia operators.
+recognized by the `MOI.Nonlinear` submodule, JuMP supports user-defined
+operators.
+
+Unless [Gradients and Hessians](@ref) are explicitly provided, user-defined
+operators must support automatic differentiation. If you encounter an error
+adding the operator, see [Common mistakes when writing a user-defined operator](@ref).
 
 !!! warning
     User-defined operators must return a scalar output. For a work-around, see
@@ -622,53 +626,114 @@ f_splat(x..., y..., z)
 @objective(model, Min, op_f(x..., y..., z))
 ```
 
-### Automatic differentiation
+### Common mistakes when writing a user-defined operator
 
-JuMP does not support black-box optimization, so all user-defined operators must
-provide derivatives in some form. Fortunately, JuMP supports automatic
-differentiation of user-defined operators.
+When nonlinear expressions are provided algebraically (either via direct input
+into the macros or via [Function tracing](@ref)), JuMP computes first- and
+second-order derivatives using sparse reverse-mode automatic differentiation.
+For details, see [ReverseAD](@ref).
 
-!!! info
-    Automatic differentiation is *not* finite differencing. JuMP's automatically
-    computed derivatives are not subject to approximation error.
+However, because [ReverseAD](@ref) requires the algebraic expression as input,
+JuMP cannot use [ReverseAD](@ref) to differentiate user-defined operators.
 
+Instead, unless you provide your own derivatives with [Gradients and Hessians](@ref),
 JuMP uses [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) to
-perform automatic differentiation of user-defined operators; see the ForwardDiff.jl
-[documentation](https://www.juliadiff.org/ForwardDiff.jl/v0.10.2/user/limitations.html)
-for a description of how to write a function suitable for automatic
-differentiation.
+compute derivatives.
 
-#### Common mistakes when writing a user-defined operator
+ForwardDiff has a number of limitations that you should be aware of when
+writing user-defined operators.
 
 !!! warning
     Get an error like `No method matching Float64(::ForwardDiff.Dual)`? Read
-    this section, and see the guidelines at [ForwardDiff.jl](https://www.juliadiff.org/ForwardDiff.jl/release-0.10/user/limitations.html).
+    this section.
 
-The most common error is that your user-defined operator is not generic with
-respect to the number type, that is, don't assume that the input to the function
-is `Float64`.
+#### Debugging
+
+If you add an operator that does not support ForwardDiff, a long error message
+will be printed. You can review the stacktrace for more information, but it can
+often be hard to understand why and where your function is failing.
+
+It may be helpful to debug the operator outside of JuMP as follows:
 ```julia
-f(x::Float64) = 2 * x  # This will not work.
-f(x::Real)    = 2 * x  # This is good.
-f(x)          = 2 * x  # This is also good.
+import ForwardDiff
+
+# If the input dimension is 1
+x = 1.0
+my_operator(a) = a^2
+ForwardDiff.derivative(my_operator, x)
+
+# If the input dimension is more than 1
+x = [1.0, 2.0]
+my_operator(a, b) = a^2 + b^2
+ForwardDiff.gradient(x -> my_operator(x...), x)
 ```
 
-Another reason you may encounter this error is if you create arrays inside
-your function which are `Float64`.
+Some common mistakes are given below.
+
+#### Operator does not accept splatted input
+
+The operator takes `f(x::Vector)` as input, instead of the splatted `f(x...)`.
+
+For example, instead of:
 ```julia
-function bad_f(x...)
-    y = zeros(length(x))  # This constructs an array of `Float64`!
-    for i in 1:length(x)
-        y[i] = x[i]^i
+my_operator(x::Vector) = sum(x[i]^2 for i in eachindex(x))
+```
+use:
+```julia
+my_operator(x...) = sum(x[i]^2 for i in eachindex(x))
+```
+
+#### Operator assumes `Float64` as input
+
+The operator assumes `Float64` will be passed as input, but it must work for any
+generic `Real` type.
+
+For example, instead of:
+```julia
+my_operator(x::Float64...) = sum(x[i]^2 for i in eachindex(x))
+end
+```
+use:
+```julia
+my_operator(x::Real...) = sum(x[i]^2 for i in eachindex(x))
+```
+
+#### Operator allocates `Float64` storage
+
+The operator allocates temporary storage using `zeros(3)` or similar. This
+defaults to `Float64`, so use `zeros(T, 3)` instead.
+
+For example, instead of:
+```julia
+function my_operator(x::Real...)
+    # This line is problematic. zeros(n) is short for zeros(Float64, n)
+    y = zeros(length(x))
+    for i in eachindex(x)
+        y[i] = x[i]^2
     end
     return sum(y)
 end
-
-function good_f(x::T...) where {T<:Real}
-    y = zeros(T, length(x))  # Construct an array of type `T` instead!
-    for i in 1:length(x)
-        y[i] = x[i]^i
+```
+use:
+```julia
+function my_operator(x::T...) where {T<:Real}
+    y = zeros(T, length(x))
+    for i in eachindex(x)
+        y[i] = x[i]^2
     end
     return sum(y)
 end
 ```
+
+#### Operator calls something unsupported by ForwardDiff
+
+ForwardDiff works by overloading many Julia functions for a special type
+`ForwardDiff.Dual <: Real`. If your operator attempts to call a function for
+which an overload has not been defined, a `MethodError` will be thrown.
+
+For example, your operator cannot call external C functions, or be the optimal
+objective value of a JuMP model.
+
+Unfortunately, the list of calls supported by ForwardDiff is too large to
+enumerate what is an isn't allowed, so the best advice is to try and see if it
+works.
