@@ -39,7 +39,7 @@ preprint
 README
 recurse
 reimplemented
-Stacktrace
+[Ss]tacktrace
 subexpression(?s)
 subgraph(?s)
 subtyping
