@@ -161,6 +161,14 @@ julia> sin(sin(1.0))
 0.7456241416655579
 ```
 
+## Automatic differentiation
+
+JuMP computes first- and second-order derivatives using sparse reverse-mode
+automatic differentiation. For details, see [ReverseAD](@ref).
+
+For a tutorial on how to construct and query the derivatives, see
+[Querying hessians](@ref)
+
 ## Nonlinear expressions in detail
 
 Nonlinear expressions in JuMP are represented by a [`NonlinearExpr`](@ref)
@@ -407,22 +415,12 @@ ERROR: Cannot evaluate `>` between a variable and a number.
 In these cases, you should define a [User-defined operator](@ref jump_user_defined_operators)
 using the [`@operator`](@ref) macro.
 
-!!! tip
-    If it works, in most cases, you should prefer to use function tracing
-    instead of defining a user-defined operator. One exception is when the
-    function returns a very large expression (for example, it includes a
-    summation over a million elements). In that case, the user-defined operator
-    can be more efficient.
-
 ## [User-defined operators](@id jump_user_defined_operators)
 
 In addition to a standard list of univariate and multivariate operators
 recognized by the `MOI.Nonlinear` submodule, JuMP supports user-defined
-operators.
-
-Unless [Gradients and Hessians](@ref) are explicitly provided, user-defined
-operators must support automatic differentiation. If you encounter an error
-adding the operator, see [Common mistakes when writing a user-defined operator](@ref).
+operators, which let you represent nonlinear functions that cannot (or should
+not) be traced.
 
 !!! warning
     User-defined operators must return a scalar output. For a work-around, see
@@ -463,6 +461,29 @@ model = Model();
 @operator(model, op_square, 1, square)
 op_square_2 = model[:op_square]
 ```
+
+## Automatic differentiation
+
+JuMP computes first- and second-order derivatives of expressions using
+[ReverseAD](@ref), which implements sparse reverse-mode automatic
+differentiation. However, because [ReverseAD](@ref) requires the algebraic
+expression as input, JuMP cannot use [ReverseAD](@ref) to differentiate
+user-defined operators.
+
+Instead, unless [Gradients and Hessians](@ref) are explicitly provided,
+user-defined operators must support automatic differentiation by
+[ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl).
+
+The use of FowardDiff.jl has two important implications:
+
+ 1. ForwardDiff.jl supports only a limited subset of Julia. If you encounter an
+    error adding the operator, see [Common mistakes when writing a user-defined operator](@ref).
+ 2. Differentiating operators with many arguments is slow. In general, you
+    should try to keep the number of arguments to less than 100, and ideally, to
+    less than 10.
+
+Because of the use of ForwardDiff, in most cases, you should prefer to use
+function tracing instead of defining a user-defined operator.
 
 ### Add an operator without macros
 
@@ -628,21 +649,13 @@ f_splat(x..., y..., z)
 
 ### Common mistakes when writing a user-defined operator
 
-When nonlinear expressions are provided algebraically (either via direct input
-into the macros or via [Function tracing](@ref)), JuMP computes first- and
-second-order derivatives using sparse reverse-mode automatic differentiation.
-For details, see [ReverseAD](@ref).
-
-However, because [ReverseAD](@ref) requires the algebraic expression as input,
-JuMP cannot use [ReverseAD](@ref) to differentiate user-defined operators.
-
-Instead, unless you provide your own derivatives with [Gradients and Hessians](@ref),
 JuMP uses [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl) to
-compute derivatives.
+compute the first-order derivatives of user-defined operators. ForwardDiff has a
+number of limitations that you should be aware of when writing user-defined
+operators.
 
-ForwardDiff has a number of limitations that you should be aware of when
-writing user-defined operators. The rest of this section provides debugging
-advice and explains some common mistakes.
+The rest of this section provides debugging advice and explains some common
+mistakes.
 
 !!! warning
     Get an error like `No method matching Float64(::ForwardDiff.Dual)`? Read
