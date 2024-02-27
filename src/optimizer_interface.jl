@@ -1283,3 +1283,48 @@ function _get_start_values(
     end
     return
 end
+
+"""
+    get_backend_attribute(model::GenericModel, attr::MOI.AbstractModelAttribute)
+"""
+function get_backend_attribute(
+    model::GenericModel,
+    attr::MOI.AbstractModelAttribute,
+)
+    return _get_backend_attribute(backend(model), attr)
+end
+
+function get_backend_attribute(
+    x::GenericVariableRef,
+    attr::MOI.AbstractVariableAttribute,
+)
+    model = owner_model(x)
+    return _get_backend_attribute(backend(model), attr, index(x))
+end
+
+function get_backend_attribute(
+    c::ConstraintRef,
+    attr::MOI.AbstractConstraintAttribute,
+)
+    model = owner_model(c)
+    return _get_backend_attribute(backend(model), attr, index(c))
+end
+
+function _get_backend_attribute(model::MOI.ModelLike, attr, args...)
+    return MOI.get(model, attr, args...)
+end
+
+function _get_backend_attribute(
+    model::MOI.Utilities.CachingOptimizer,
+    attr,
+    args...,
+)
+    if MOI.Utilities.state(model) == MOI.Utilities.EMPTY_OPTIMIZER
+        MOI.Utilities.attach_optimizer(model)
+    end
+    if MOI.Utilities.state(model) != MOI.Utilities.ATTACHED_OPTIMIZER
+        error("Cannot get backend attribute because no optimizer is attached")
+    end
+    new_attr = MOI.Utilities.AttributeFromOptimizer(attr)
+    return MOI.get(model, new_attr, args...)
+end

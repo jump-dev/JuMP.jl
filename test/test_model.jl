@@ -1313,4 +1313,81 @@ function test_is_solved_and_feasible()
     return
 end
 
+struct ModelAttribute3684 <: MOI.AbstractModelAttribute end
+
+MOI.get(::MOI.Utilities.MockOptimizer, ::ModelAttribute3684) = "m3684"
+
+struct VariableAttribute3684 <: MOI.AbstractVariableAttribute end
+
+function MOI.get(
+    ::MOI.Utilities.MockOptimizer,
+    ::VariableAttribute3684,
+    x::MOI.VariableIndex,
+)
+    return "x3684-$(x.value)"
+end
+
+struct ConstraintAttribute3684 <: MOI.AbstractConstraintAttribute end
+
+function MOI.get(
+    ::MOI.Utilities.MockOptimizer,
+    ::ConstraintAttribute3684,
+    c::MOI.ConstraintIndex,
+)
+    return "c3684-$(c.value)"
+end
+
+function test_get_backend_attribute_caching_optimizer()
+    mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+    model = Model(() -> MOIU.MockOptimizer(mock))
+    @variable(model, x)
+    @constraint(model, c, x <= 1)
+    attr = ModelAttribute3684()
+    @test get_attribute(model, attr) === nothing
+    @test get_backend_attribute(model, attr) == "m3684"
+    attr = VariableAttribute3684()
+    @test get_attribute(x, attr) === nothing
+    @test startswith(get_backend_attribute(x, attr), "x3684-")
+    attr = ConstraintAttribute3684()
+    @test get_attribute(c, attr) === nothing
+    @test startswith(get_backend_attribute(c, attr), "c3684-")
+    return
+end
+
+function test_get_backend_attribute_direct()
+    mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+    model = direct_model(MOIU.MockOptimizer(mock))
+    @variable(model, x)
+    @constraint(model, c, x <= 1)
+    attr = ModelAttribute3684()
+    @test get_attribute(model, attr) === "m3684"
+    @test get_backend_attribute(model, attr) == "m3684"
+    attr = VariableAttribute3684()
+    @test startswith(get_attribute(x, attr), "x3684-")
+    @test startswith(get_backend_attribute(x, attr), "x3684-")
+    attr = ConstraintAttribute3684()
+    @test startswith(get_attribute(c, attr), "c3684-")
+    @test startswith(get_backend_attribute(c, attr), "c3684-")
+    return
+end
+
+function test_get_backend_attribute_no_optimizer()
+    model = Model()
+    @variable(model, x)
+    @constraint(model, c, x <= 1)
+    attr = ModelAttribute3684()
+    @test get_attribute(model, attr) === nothing
+    err = ErrorException(
+        "Cannot get backend attribute because no optimizer is attached",
+    )
+    @test_throws err get_backend_attribute(model, attr)
+    attr = VariableAttribute3684()
+    @test get_attribute(x, attr) === nothing
+    @test_throws err get_backend_attribute(x, attr)
+    attr = ConstraintAttribute3684()
+    @test get_attribute(c, attr) === nothing
+    @test_throws err get_backend_attribute(c, attr)
+    return
+end
+
 end  # module TestModels
