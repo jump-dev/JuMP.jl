@@ -371,10 +371,11 @@ function _print_latex(io::IO, model::AbstractModel)
     if !isempty(constraints)
         print(io, "\\text{Subject to} \\quad")
         m = div(_CONSTRAINT_LIMIT_FOR_PRINTING[], 2)
-        skip_start, skip_stop = m + 1, length(constraints) - m
-        n = skip_stop - skip_start
+        skip_start = _CONSTRAINT_LIMIT_FOR_PRINTING[] - m + 1
+        skip_stop = length(constraints) - m
+        n = skip_stop - skip_start + 1
         for (i, constraint) in enumerate(constraints)
-            if i <= skip_start || skip_stop <= i
+            if i < skip_start || skip_stop < i
                 println(io, " & ", constraint, "\\\\")
             end
             if n > 0 && i == skip_start

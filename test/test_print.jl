@@ -1014,4 +1014,51 @@ function test_skipping_constraints()
     return
 end
 
+function test_skipping_constraints_latex()
+    model = Model()
+    @variable(model, 0 <= x[1:100] <= 10, Int)
+    N = num_constraints(model; count_variable_in_set_constraints = true)
+    @test N == 300
+    str = sprint(print, latex_formulation(model))
+    for i in 1:100
+        output = constraint_string(
+            MIME("text/latex"),
+            LowerBoundRef(x[i]);
+            in_math_mode = true,
+        )
+        @test occursin(output, str) == (i <= 50)
+    end
+    @test occursin("[[\\ldots\\text{200 constraints skipped}\\ldots]]", str)
+    for i in 1:100
+        output = constraint_string(
+            MIME("text/latex"),
+            IntegerRef(x[i]);
+            in_math_mode = true,
+        )
+        @test occursin(output, str) == (i >= 51)
+    end
+    ret = JuMP._CONSTRAINT_LIMIT_FOR_PRINTING[]
+    JuMP._CONSTRAINT_LIMIT_FOR_PRINTING[] = 3
+    str = sprint(print, latex_formulation(model))
+    for i in 1:100
+        output = constraint_string(
+            MIME("text/latex"),
+            LowerBoundRef(x[i]);
+            in_math_mode = true,
+        )
+        @test occursin(output, str) == (i <= 2)
+    end
+    @test occursin("[[\\ldots\\text{297 constraints skipped}\\ldots]]", str)
+    for i in 1:100
+        output = constraint_string(
+            MIME("text/latex"),
+            IntegerRef(x[i]);
+            in_math_mode = true,
+        )
+        @test occursin(output, str) == (i >= 100)
+    end
+    JuMP._CONSTRAINT_LIMIT_FOR_PRINTING[] = ret
+    return
+end
+
 end  # TestPrint
