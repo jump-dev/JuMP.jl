@@ -1372,6 +1372,16 @@ function test_get_backend_attribute_caching_optimizer()
     return
 end
 
+function test_set_backend_attribute_caching_optimizer()
+    mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
+    model = Model(() -> MOIU.MockOptimizer(mock))
+    # Call sett first, to check that we attach the CachingOptimizer
+    unsafe_set_backend_attribute(model, MOI.Name(), "foo")
+    @test get_attribute(model, MOI.Name()) == ""
+    @test unsafe_get_backend_attribute(model, MOI.Name()) == "foo"
+    return
+end
+
 function test_get_backend_attribute_direct()
     mock = MOIU.UniversalFallback(MOIU.Model{Float64}())
     model = direct_model(MOIU.MockOptimizer(mock))
