@@ -987,4 +987,31 @@ function test_truncated_printing()
     return
 end
 
+function test_skipping_constraints()
+    model = Model()
+    @variable(model, 0 <= x[1:100] <= 10, Int)
+    N = num_constraints(model; count_variable_in_set_constraints = true)
+    @test N == 300
+    str = sprint(print, model)
+    for i in 1:100
+        @test occursin(sprint(print, LowerBoundRef(x[i])), str) == (i <= 50)
+    end
+    @test occursin("[[...200 constraints skipped...]]", str)
+    for i in 1:100
+        @test occursin(sprint(print, IntegerRef(x[i])), str) == (i >= 51)
+    end
+    ret = JuMP._CONSTRAINT_LIMIT_FOR_PRINTING[]
+    JuMP._CONSTRAINT_LIMIT_FOR_PRINTING[] = 3
+    str = sprint(print, model)
+    for i in 1:100
+        @test occursin(sprint(print, LowerBoundRef(x[i])), str) == (i <= 2)
+    end
+    @test occursin("[[...297 constraints skipped...]]", str)
+    for i in 1:100
+        @test occursin(sprint(print, IntegerRef(x[i])), str) == (i >= 100)
+    end
+    JuMP._CONSTRAINT_LIMIT_FOR_PRINTING[] = ret
+    return
 end
+
+end  # TestPrint
