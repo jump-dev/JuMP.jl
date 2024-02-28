@@ -1342,15 +1342,33 @@ function test_get_backend_attribute_caching_optimizer()
     model = Model(() -> MOIU.MockOptimizer(mock))
     @variable(model, x)
     @constraint(model, c, x <= 1)
+    # ModelAttribute
     attr = ModelAttribute3684()
     @test get_attribute(model, attr) === nothing
-    @test get_backend_attribute(model, attr) == "m3684"
+    @test unsafe_get_backend_attribute(model, attr) == "m3684"
+    @test get_attribute(model, MOI.Name()) == ""
+    @test unsafe_get_backend_attribute(model, MOI.Name()) == ""
+    unsafe_set_backend_attribute(model, MOI.Name(), "foo")
+    @test get_attribute(model, MOI.Name()) == ""
+    @test unsafe_get_backend_attribute(model, MOI.Name()) == "foo"
+    # VariableAttribute
     attr = VariableAttribute3684()
     @test get_attribute(x, attr) === nothing
-    @test startswith(get_backend_attribute(x, attr), "x3684-")
+    @test startswith(unsafe_get_backend_attribute(x, attr), "x3684-")
+    @test get_attribute(x, MOI.VariableName()) == "x"
+    @test unsafe_get_backend_attribute(x, MOI.VariableName()) == "x"
+    unsafe_set_backend_attribute(x, MOI.VariableName(), "foo")
+    @test get_attribute(x, MOI.VariableName()) == "x"
+    @test unsafe_get_backend_attribute(x, MOI.VariableName()) == "foo"
+    # ConnstraintAttribute
     attr = ConstraintAttribute3684()
     @test get_attribute(c, attr) === nothing
-    @test startswith(get_backend_attribute(c, attr), "c3684-")
+    @test startswith(unsafe_get_backend_attribute(c, attr), "c3684-")
+    @test get_attribute(c, MOI.ConstraintName()) == "c"
+    @test unsafe_get_backend_attribute(c, MOI.ConstraintName()) == "c"
+    unsafe_set_backend_attribute(c, MOI.ConstraintName(), "foo")
+    @test get_attribute(c, MOI.ConstraintName()) == "c"
+    @test unsafe_get_backend_attribute(c, MOI.ConstraintName()) == "foo"
     return
 end
 
@@ -1359,15 +1377,33 @@ function test_get_backend_attribute_direct()
     model = direct_model(MOIU.MockOptimizer(mock))
     @variable(model, x)
     @constraint(model, c, x <= 1)
+    # ModelAttribute
     attr = ModelAttribute3684()
     @test get_attribute(model, attr) === "m3684"
-    @test get_backend_attribute(model, attr) == "m3684"
+    @test unsafe_get_backend_attribute(model, attr) == "m3684"
+    @test get_attribute(model, MOI.Name()) == ""
+    @test unsafe_get_backend_attribute(model, MOI.Name()) == ""
+    unsafe_set_backend_attribute(model, MOI.Name(), "foo")
+    @test get_attribute(model, MOI.Name()) == "foo"
+    @test unsafe_get_backend_attribute(model, MOI.Name()) == "foo"
+    # VariableAttribute
     attr = VariableAttribute3684()
     @test startswith(get_attribute(x, attr), "x3684-")
-    @test startswith(get_backend_attribute(x, attr), "x3684-")
+    @test startswith(unsafe_get_backend_attribute(x, attr), "x3684-")
+    @test get_attribute(x, MOI.VariableName()) == "x"
+    @test unsafe_get_backend_attribute(x, MOI.VariableName()) == "x"
+    unsafe_set_backend_attribute(x, MOI.VariableName(), "foo")
+    @test get_attribute(x, MOI.VariableName()) == "foo"
+    @test unsafe_get_backend_attribute(x, MOI.VariableName()) == "foo"
+    # ConnstraintAttribute
     attr = ConstraintAttribute3684()
     @test startswith(get_attribute(c, attr), "c3684-")
-    @test startswith(get_backend_attribute(c, attr), "c3684-")
+    @test startswith(unsafe_get_backend_attribute(c, attr), "c3684-")
+    @test get_attribute(c, MOI.ConstraintName()) == "c"
+    @test unsafe_get_backend_attribute(c, MOI.ConstraintName()) == "c"
+    unsafe_set_backend_attribute(c, MOI.ConstraintName(), "foo")
+    @test get_attribute(c, MOI.ConstraintName()) == "foo"
+    @test unsafe_get_backend_attribute(c, MOI.ConstraintName()) == "foo"
     return
 end
 
@@ -1375,18 +1411,21 @@ function test_get_backend_attribute_no_optimizer()
     model = Model()
     @variable(model, x)
     @constraint(model, c, x <= 1)
-    attr = ModelAttribute3684()
-    @test get_attribute(model, attr) === nothing
-    err = ErrorException(
+    get_err = ErrorException(
         "Cannot get backend attribute because no optimizer is attached",
     )
-    @test_throws err get_backend_attribute(model, attr)
+    set_err = ErrorException(
+        "Cannot set backend attribute because no optimizer is attached",
+    )
+    attr = ModelAttribute3684()
+    @test_throws get_err unsafe_get_backend_attribute(model, attr)
+    @test_throws set_err unsafe_set_backend_attribute(model, attr, "a")
     attr = VariableAttribute3684()
-    @test get_attribute(x, attr) === nothing
-    @test_throws err get_backend_attribute(x, attr)
+    @test_throws get_err unsafe_get_backend_attribute(x, attr)
+    @test_throws set_err unsafe_set_backend_attribute(x, attr, "a")
     attr = ConstraintAttribute3684()
-    @test get_attribute(c, attr) === nothing
-    @test_throws err get_backend_attribute(c, attr)
+    @test_throws get_err unsafe_get_backend_attribute(c, attr)
+    @test_throws set_err unsafe_set_backend_attribute(c, attr, "a")
     return
 end
 

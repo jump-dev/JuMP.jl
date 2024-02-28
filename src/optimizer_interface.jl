@@ -1285,36 +1285,58 @@ function _get_start_values(
 end
 
 """
-    get_backend_attribute(model::GenericModel, attr::MOI.AbstractModelAttribute)
+    unsafe_get_backend_attribute(
+        model::GenericModel,
+        attr::Union{MOI.AbstractModelAttribute,MOI.AbstractOptimizerAttribute},
+    )
+    unsafe_get_backend_attribute(
+        x::GenericVariableRef,
+        attr::MOI.AbstractVariableAttribute,
+    )
+    unsafe_get_backend_attribute(
+        c::ConstraintRef,
+        attr::MOI.AbstractConstraintAttribute,
+    )
+
+Get the attribute `attr` directly from the [`unsafe_backend`](@ref) of the
+associated model, skipping safety checks, such as whether the model was
+previously solved.
+
+## Unsafe behavior
+
+This method is unsafe because its behavior depends on the implementation of the
+backend solver.
+
+Where possible, use [`get_attribute`](@ref) instead.
 """
-function get_backend_attribute(
+function unsafe_get_backend_attribute(
     model::GenericModel,
-    attr::MOI.AbstractModelAttribute,
+    attr::Union{MOI.AbstractModelAttribute,MOI.AbstractOptimizerAttribute},
 )
-    return _get_backend_attribute(backend(model), attr)
+    return _unsafe_get_backend_attribute(backend(model), attr)
 end
 
-function get_backend_attribute(
+function unsafe_get_backend_attribute(
     x::GenericVariableRef,
     attr::MOI.AbstractVariableAttribute,
 )
-    model = owner_model(x)
-    return _get_backend_attribute(backend(model), attr, index(x))
+    b = backend(owner_model(x))
+    return _unsafe_get_backend_attribute(b, attr, index(x))
 end
 
-function get_backend_attribute(
+function unsafe_get_backend_attribute(
     c::ConstraintRef,
     attr::MOI.AbstractConstraintAttribute,
 )
-    model = owner_model(c)
-    return _get_backend_attribute(backend(model), attr, index(c))
+    b = backend(owner_model(c))
+    return _unsafe_get_backend_attribute(b, attr, index(c))
 end
 
-function _get_backend_attribute(model::MOI.ModelLike, attr, args...)
-    return MOI.get(model, attr, args...)
+function _unsafe_get_backend_attribute(model::MOI.ModelLike, args...)
+    return MOI.get(model, args...)
 end
 
-function _get_backend_attribute(
+function _unsafe_get_backend_attribute(
     model::MOI.Utilities.CachingOptimizer,
     attr,
     args...,
@@ -1325,6 +1347,78 @@ function _get_backend_attribute(
     if MOI.Utilities.state(model) != MOI.Utilities.ATTACHED_OPTIMIZER
         error("Cannot get backend attribute because no optimizer is attached")
     end
-    new_attr = MOI.Utilities.AttributeFromOptimizer(attr)
-    return MOI.get(model, new_attr, args...)
+    return MOI.get(model, MOI.Utilities.AttributeFromOptimizer(attr), args...)
+end
+
+"""
+    unsafe_set_backend_attribute(
+        model::GenericModel,
+        attr::Union{MOI.AbstractModelAttribute,MOI.AbstractOptimizerAttribute},
+        value,
+    )
+    unsafe_set_backend_attribute(
+        x::GenericVariableRef,
+        attr::MOI.AbstractVariableAttribute,
+        value,
+    )
+    unsafe_set_backend_attribute(
+        c::ConstraintRef,
+        attr::MOI.AbstractConstraintAttribute,
+        value,
+    )
+
+Set the attribute `attr` of the [`unsafe_backend`](@ref) of the associated model
+to `value`, skipping safety checks, such as whether the model was previously
+solved.
+
+## Unsafe behavior
+
+This method is unsafe because its behavior depends on the implementation of the
+backend solver. In addition, the attribute is not cached, and so subsequent
+modifications to the model may silently discard the set value of the attribute.
+
+Where possible, use [`set_attribute`](@ref) instead.
+"""
+function unsafe_set_backend_attribute(
+    model::GenericModel,
+    attr::Union{MOI.AbstractModelAttribute,MOI.AbstractOptimizerAttribute},
+    value,
+)
+    return _unsafe_set_backend_attribute(backend(model), attr, value)
+end
+
+function unsafe_set_backend_attribute(
+    x::GenericVariableRef,
+    attr::MOI.AbstractVariableAttribute,
+    value,
+)
+    b = backend(owner_model(x))
+    return _unsafe_set_backend_attribute(b, attr, index(x), value)
+end
+
+function unsafe_set_backend_attribute(
+    c::ConstraintRef,
+    attr::MOI.AbstractConstraintAttribute,
+    value,
+)
+    b = backend(owner_model(c))
+    return _unsafe_set_backend_attribute(b, attr, index(c), value)
+end
+
+function _unsafe_set_backend_attribute(model::MOI.ModelLike, args...)
+    return MOI.set(model, args...)
+end
+
+function _unsafe_set_backend_attribute(
+    model::MOI.Utilities.CachingOptimizer,
+    attr,
+    args...,
+)
+    if MOI.Utilities.state(model) == MOI.Utilities.EMPTY_OPTIMIZER
+        MOI.Utilities.attach_optimizer(model)
+    end
+    if MOI.Utilities.state(model) != MOI.Utilities.ATTACHED_OPTIMIZER
+        error("Cannot set backend attribute because no optimizer is attached")
+    end
+    return MOI.set(model, MOI.Utilities.AttributeFromOptimizer(attr), args...)
 end
