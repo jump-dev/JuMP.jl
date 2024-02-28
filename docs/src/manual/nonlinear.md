@@ -420,7 +420,7 @@ using the [`@operator`](@ref) macro.
 In addition to a standard list of univariate and multivariate operators
 recognized by the `MOI.Nonlinear` submodule, JuMP supports user-defined
 operators, which let you represent nonlinear functions that cannot (or should
-not) be traced.
+not) be traced, for example, because they rely on non-Julia subroutines.
 
 !!! warning
     User-defined operators must return a scalar output. For a work-around, see
@@ -462,7 +462,7 @@ model = Model();
 op_square_2 = model[:op_square]
 ```
 
-## Automatic differentiation
+### Automatic differentiation
 
 JuMP computes first- and second-order derivatives of expressions using
 [ReverseAD](@ref), which implements sparse reverse-mode automatic
