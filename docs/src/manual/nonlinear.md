@@ -167,7 +167,7 @@ JuMP computes first- and second-order derivatives using sparse reverse-mode
 automatic differentiation. For details, see [ReverseAD](@ref).
 
 For a tutorial on how to construct and query the derivatives, see
-[Querying hessians](@ref)
+[Computing Hessians](@ref)
 
 ## Nonlinear expressions in detail
 
