@@ -1055,7 +1055,11 @@ Base.eltype(::Type{T}) where {T<:AbstractJuMPScalar} = T
 LinearAlgebra.symmetric_type(::Type{T}) where {T<:AbstractJuMPScalar} = T
 LinearAlgebra.hermitian_type(::Type{T}) where {T<:AbstractJuMPScalar} = T
 LinearAlgebra.symmetric(scalar::AbstractJuMPScalar, ::Symbol) = scalar
-LinearAlgebra.hermitian(scalar::AbstractJuMPScalar, ::Symbol) = adjoint(scalar)
+
+function LinearAlgebra.hermitian(x::F, ::Symbol) where {F<:AbstractJuMPScalar}
+    return convert(F, real(x))
+end
+
 LinearAlgebra.adjoint(scalar::AbstractJuMPScalar) = conj(scalar)
 
 Base.iterate(x::AbstractJuMPScalar) = (x, true)
