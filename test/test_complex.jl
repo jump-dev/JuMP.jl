@@ -310,4 +310,17 @@ function test_hermitian_generic_number_type()
     return
 end
 
+function test_hermitian_jump_scalar()
+    model = Model()
+    @variable(model, x[1:2, 1:2] in HermitianPSDCone())
+    Y = im * x.data
+    Z = [0 real(x[1, 2])*im-imag(x[1, 2]); -real(x[1, 2])*im-imag(x[1, 2]) 0]
+    @test !isequal_canonical(Y, Z)
+    @test isequal_canonical(
+        LinearAlgebra.Hermitian(Y),
+        LinearAlgebra.Hermitian(Z),
+    )
+    return
+end
+
 end  # TestComplexNumberSupport
