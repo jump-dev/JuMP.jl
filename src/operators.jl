@@ -502,3 +502,30 @@ function _MA.operate!!(
 )
     return _throw_operator_error(op, x)
 end
+
+_mult_upper(α, A) = parent(α * LinearAlgebra.UpperTriangular(parent(A)))
+_mult_lower(α, A) = parent(α * LinearAlgebra.LowerTriangular(parent(A)))
+
+function Base.:*(
+    x::Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+    A::LinearAlgebra.Hermitian,
+)
+    c = LinearAlgebra.sym_uplo(A.uplo)
+    B = c == :U ? _mult_upper(x, A) : _mult_lower(x, A)
+    return LinearAlgebra.Hermitian(B, c)
+end
+
+function Base.:*(
+    A::LinearAlgebra.Hermitian,
+    x::Union{
+        GenericVariableRef{<:Real},
+        GenericAffExpr{<:Real},
+        GenericQuadExpr{<:Real},
+    },
+)
+    return x * A
+end
