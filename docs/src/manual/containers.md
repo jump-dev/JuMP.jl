@@ -315,12 +315,27 @@ JuMP.Containers.SparseAxisArray{Tuple{Int64, Symbol}, 1, Tuple{Int64}} with 2 en
 
 Use `eachindex` to loop over the elements:
 ```jldoctest containers_sparse
+julia> for key in eachindex(x)
+           println(x[key])
+       end
+(2, :A)
+(2, :B)
+(3, :A)
+(3, :B)
+
 julia> for key in eachindex(y)
            println(y[key])
        end
 (2, :B)
 (3, :B)
 ```
+
+!!! warning
+    If you use a macro to construct a `SparseAxisArray`, then the iteration
+    order is row-major, that is, indices are varied from right to left. As an
+    example, when iterating over `x` above, the `j` index is iterated, keeping
+    `i` constant. This order is in contrast to `Base.Array`s, which iterate in
+    column-major order, that is, by varying indices from left to right.
 
 ### Broadcasting
 

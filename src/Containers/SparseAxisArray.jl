@@ -5,25 +5,29 @@
 
 """
     struct SparseAxisArray{T,N,K<:NTuple{N, Any}} <: AbstractArray{T,N}
-        data::Dict{K,T}
+        data::OrderedCollections.OrderedDict{K,T}
     end
 
 `N`-dimensional array with elements of type `T` where only a subset of the
 entries are defined. The entries with indices `idx = (i1, i2, ..., iN)` in
-`keys(data)` has value `data[idx]`. Note that as opposed to
-`SparseArrays.AbstractSparseArray`, the missing entries are not assumed to be
-`zero(T)`, they are simply not part of the array. This means that the result of
-`map(f, sa::SparseAxisArray)` or `f.(sa::SparseAxisArray)` has the same sparsity
-structure than `sa` even if `f(zero(T))` is not zero.
+`keys(data)` has value `data[idx]`.
+
+Note that, as opposed to `SparseArrays.AbstractSparseArray`, the missing entries
+are not assumed to be `zero(T)`, they are simply not part of the array. This
+means that the result of `map(f, sa::SparseAxisArray)` or
+`f.(sa::SparseAxisArray)` has the same sparsity structure as `sa`, even if
+`f(zero(T))` is not zero.
 
 ## Example
 
 ```jldoctest
-julia> dict = Dict((:a, 2) => 1.0, (:a, 3) => 2.0, (:b, 3) => 3.0)
-Dict{Tuple{Symbol, Int64}, Float64} with 3 entries:
+julia> using OrderedCollections: OrderedDict
+
+julia> dict = OrderedDict((:a, 2) => 1.0, (:a, 3) => 2.0, (:b, 3) => 3.0)
+OrderedDict{Tuple{Symbol, Int64}, Float64} with 3 entries:
+  (:a, 2) => 1.0
   (:a, 3) => 2.0
   (:b, 3) => 3.0
-  (:a, 2) => 1.0
 
 julia> array = Containers.SparseAxisArray(dict)
 SparseAxisArray{Float64, 2, Tuple{Symbol, Int64}} with 3 entries:
@@ -36,15 +40,26 @@ julia> array[:b, 3]
 ```
 """
 struct SparseAxisArray{T,N,K<:NTuple{N,Any}} <: AbstractArray{T,N}
-    data::Dict{K,T}
+    data::OrderedCollections.OrderedDict{K,T}
     names::NTuple{N,Symbol}
 end
 
-function SparseAxisArray(d::Dict{K,T}) where {T,N,K<:NTuple{N,Any}}
-    return SparseAxisArray(d, ntuple(n -> Symbol("#$n"), N))
+function SparseAxisArray(
+    d::AbstractDict{K,T},
+    names::NTuple{N,Symbol},
+) where {T,N,K<:NTuple{N,Any}}
+    # convert(OrderedCollections.OrderedDict{K,T}, d) is deprecated, so use an
+    # iterator to get all key-value pairs.
+    od = OrderedCollections.OrderedDict{K,T}(k => v for (k, v) in d)
+    return SparseAxisArray(od, names)
 end
 
-SparseAxisArray(d::Dict, ::Nothing) = SparseAxisArray(d)
+function SparseAxisArray(
+    d::AbstractDict{K,T},
+    ::Nothing = nothing,
+) where {T,N,K<:NTuple{N,Any}}
+    return SparseAxisArray(d, ntuple(n -> Symbol("#$n"), N))
+end
 
 Base.length(sa::SparseAxisArray) = length(sa.data)
 
@@ -71,7 +86,7 @@ function Base.similar(
     ::Type{T},
     length::Integer = 0,
 ) where {S,T,N,K}
-    d = Dict{K,T}()
+    d = OrderedCollections.OrderedDict{K,T}()
     if !iszero(length)
         sizehint!(d, length)
     end
@@ -165,7 +180,7 @@ function Base.getindex(
     end
     K2 = _sliced_key_type(K, args...)
     if K2 !== nothing
-        new_data = Dict{K2,T}(
+        new_data = OrderedCollections.OrderedDict{K2,T}(
             _sliced_key(k, args) => v for (k, v) in d.data if _filter(k, args)
         )
         names = _sliced_key_name(K, d.names, args...)
@@ -293,12 +308,16 @@ end
 function Base.copy(
     bc::Base.Broadcast.Broadcasted{BroadcastStyle{N,K}},
 ) where {N,K}
-    dict = Dict(index => _getindex(bc, index) for index in _indices(bc.args...))
-    if isempty(dict) && dict isa Dict{Any,Any}
+    dict = OrderedCollections.OrderedDict(
+        index => _getindex(bc, index) for index in _indices(bc.args...)
+    )
+    if isempty(dict) && dict isa OrderedCollections.OrderedDict{Any,Any}
         # If `dict` is empty (e.g., because there are no indices), then
-        # inference will produce a `Dict{Any,Any}`, and we won't have enough
-        # type information to call SparseAxisArray(dict). As a work-around, we
-        # explicitly construct the type of the resulting SparseAxisArray.
+        # inference will produce a `OrderedCollections.OrderedDict{Any,Any}`,
+        # and we won't have enough type information to call
+        # `SparseAxisArray(dict)`. As a work-around, we explicitly construct the
+        # type of the resulting SparseAxisArray.
+        #
         # For more, see JuMP issue #2867.
         return SparseAxisArray{Any,N,K}(dict, ntuple(n -> Symbol("#$n"), N))
     end
@@ -448,7 +467,6 @@ function Base.show(io::IOContext, x::SparseAxisArray)
         (i, (key, value)) in enumerate(x.data) if
         i < half_screen_rows || i > length(x) - half_screen_rows
     ]
-    sort!(key_strings; by = x -> x[1])
     pad = maximum(length(x[1]) for x in key_strings)
     for (i, (key, value)) in enumerate(key_strings)
         print(io, "  [", rpad(key, pad), "]  =  ", value)

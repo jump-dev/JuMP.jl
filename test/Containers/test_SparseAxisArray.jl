@@ -13,6 +13,9 @@ module TestContainersSparseAxisArray
 using JuMP.Containers
 using Test
 
+import LinearAlgebra
+import OrderedCollections
+
 function _util_sparse_test(d, sum_d, d2, d3, dsqr, d_bads)
     sqr(x) = x^2
     # map
@@ -49,7 +52,9 @@ function _util_sparse_test(d, sum_d, d2, d3, dsqr, d_bads)
 end
 
 function test_1_dimensional()
-    d = @inferred SparseAxisArray(Dict((:a,) => 1, (:b,) => 2))
+    d = @inferred SparseAxisArray(
+        OrderedCollections.OrderedDict((:a,) => 1, (:b,) => 2),
+    )
     @test sprint(summary, d) == """
 $(SparseAxisArray{Int,1,Tuple{Symbol}}) with 2 entries"""
     @test sprint(show, "text/plain", d) == """
@@ -81,7 +86,9 @@ $(SparseAxisArray{Int,1,Tuple{Symbol}}) with 2 entries:
 end
 
 function test_2_dimensional()
-    d = @inferred SparseAxisArray(Dict((:a, 'u') => 2.0, (:b, 'v') => 0.5))
+    d = @inferred SparseAxisArray(
+        OrderedCollections.OrderedDict((:a, 'u') => 2.0, (:b, 'v') => 0.5),
+    )
     @test d isa SparseAxisArray{Float64,2,Tuple{Symbol,Char}}
     @test_throws BoundsError(d, (:a,)) d[:a]
     @test sprint(summary, d) == """
@@ -356,6 +363,21 @@ function test_multi_arg_eachindex()
     @test eachindex(z) == keys(z.data)
     @test eachindex(x, y) == eachindex(x)
     @test_throws DimensionMismatch eachindex(x, z)
+    return
+end
+
+function test_sparseaxisarray_order()
+    A = [[1, 2, 10], [2, 3, 30]]
+    Containers.@container(
+        x[i in 1:2, j in A[i]],
+        i + j,
+        container = SparseAxisArray,
+    )
+    Containers.@container(x1[j in A[1]], 1 + j, container = SparseAxisArray)
+    Containers.@container(x2[j in A[2]], 2 + j, container = SparseAxisArray)
+    @test x[1, :] == x1
+    @test x[2, :] == x2
+    @test LinearAlgebra.dot(x[1, :], 1:3) == 41
     return
 end
 

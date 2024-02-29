@@ -35,14 +35,14 @@ julia> @variable(model, x[i=1:2, j=i:2] >= 0, start = i+j);
 
 julia> Containers.rowtable(start_value, x; header = [:i, :j, :start])
 3-element Vector{@NamedTuple{i::Int64, j::Int64, start::Float64}}:
- (i = 1, j = 2, start = 3.0)
  (i = 1, j = 1, start = 2.0)
+ (i = 1, j = 2, start = 3.0)
  (i = 2, j = 2, start = 4.0)
 
 julia> Containers.rowtable(x)
 3-element Vector{@NamedTuple{x1::Int64, x2::Int64, y::VariableRef}}:
- (x1 = 1, x2 = 2, y = x[1,2])
  (x1 = 1, x2 = 1, y = x[1,1])
+ (x1 = 1, x2 = 2, y = x[1,2])
  (x1 = 2, x2 = 2, y = x[2,2])
 ```
 """
