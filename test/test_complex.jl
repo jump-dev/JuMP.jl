@@ -292,4 +292,13 @@ function test_HermitianPSDCone_general_matrix_error()
     return
 end
 
+function test_complex_generic_number_type()
+    for T in (Float32, Float64, Rational{BitInt}, BigFloat)
+        model = GenericModel{T}()
+        @variable(model, x in ComplexPlane())
+        @test x isa GenericAffExpr{T,GenericVariableRef{T}}
+    end
+    return
 end
+
+end  # TestComplexNumberSupport
