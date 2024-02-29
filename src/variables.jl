@@ -2104,10 +2104,10 @@ function add_variable(
     real_part = add_variable(model, _real(var), _real(name))
     imag_part = add_variable(model, _imag(var), _imag(name))
     # Efficiently build `real_part + imag_part * im`
-    return GenericAffExpr{ComplexF64,GenericVariableRef{T}}(
-        zero(ComplexF64),
-        real_part => one(ComplexF64),
-        imag_part => convert(ComplexF64, im),
+    return GenericAffExpr{Complex{T},GenericVariableRef{T}}(
+        zero(Complex{T}),
+        real_part => one(Complex{T}),
+        imag_part => convert(Complex{T}, im),
     )
 end
 
