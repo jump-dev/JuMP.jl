@@ -305,7 +305,7 @@ function test_hermitian_generic_number_type()
     for T in (Float32, Float64, Rational{BigInt}, BigFloat)
         model = GenericModel{T}()
         @variable(model, x[1:2, 1:2], Hermitian)
-        @test x[1,1] isa GenericAffExpr{Complex{T},GenericVariableRef{T}}
+        @test x[1, 1] isa GenericAffExpr{Complex{T},GenericVariableRef{T}}
     end
     return
 end
