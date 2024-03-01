@@ -324,15 +324,15 @@ function test_hermitian_jump_scalar()
 end
 
 function test_mul_real_hermitian()
-    A = [1 1+1im; 1-1im 2]
+    A = [1+1im 1+1im; 1-2im 3+1im]
     model = Model()
     @variable(model, x)
     for s in (:L, :U), f in (x, x + 1, x^2)
         B = LinearAlgebra.Hermitian(A, s)
         @test f * B isa LinearAlgebra.Hermitian
-        @test isequal_canonical(f * B, LinearAlgebra.Hermitian(f * A))
+        @test isequal_canonical(f * B, LinearAlgebra.Hermitian(f * A, s))
         @test B * f isa LinearAlgebra.Hermitian
-        @test isequal_canonical(B * f, LinearAlgebra.Hermitian(A * f))
+        @test isequal_canonical(B * f, LinearAlgebra.Hermitian(A * f, s))
     end
     return
 end
