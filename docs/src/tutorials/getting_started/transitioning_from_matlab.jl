@@ -92,7 +92,7 @@ m[2]
 # arrays are rather slow. This is not a problem in Julia: a vector of matrices
 # is almost as fast as a 3-dimensional array.
 
-# ## Constraints
+# ## [Constraints](@id matlab_constraints)
 
 # As in the case of variables, in most cases there is a direct translation
 # between the packages:
