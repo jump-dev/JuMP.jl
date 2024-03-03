@@ -209,16 +209,29 @@ m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
 # To finish this tutorial, we show a complete example of the same optimization
 # problem being solved with JuMP, YALMIP, and CVX. It is an SDP computing a
 # simple lower bound on the random robustness of entanglement using the partial
-# transposition criterion. The code is complete apart from the function that does
-# partial transposition. With JuMP we use the function `partialtranspose` from
-# [Convex.jl](https://jump.dev/Convex.jl/stable/). With both YALMIP and CVX we
-# use the function `PartialTranspose` from [QETLAB](https://github.com/nathanieljohnston/QETLAB).
+# transposition criterion.
+
+# The code is complete, apart from the function that does partial transposition.
+# With both YALMIP and CVX we use the function `PartialTranspose` from
+# [QETLAB](https://github.com/nathanieljohnston/QETLAB). With JuMP, we could use
+# the function `Convex.partialtranspose` from [Convex.jl](https://jump.dev/Convex.jl/stable/),
+# but we reproduce it here for simplicity:
+
+function partial_transpose(x::AbstractMatrix, sys::Int, dims::Vector)
+    @assert size(x, 1) == size(x, 2) == prod(dims)
+    @assert 1 <= sys <= length(dims)
+    n = length(dims)
+    s = n - sys + 1
+    p = collect(1:2n)
+    p[s], p[n + s] = n + s, s
+    r = reshape(x, (reverse(dims)..., reverse(dims)...))
+    return reshape(permutedims(r, p), size(x))
+end
 
 # ### JuMP
 
 using JuMP
-import Convex
-import SCS
+import Clarabel
 import LinearAlgebra
 
 function random_state_pure(d)
@@ -228,12 +241,16 @@ function random_state_pure(d)
 end
 
 function robustness_jump(d)
+    rho = random_state_pure(d^2)
+    id = LinearAlgebra.I(d^2)
+    rhoT = partial_transpose(rho, 1,[d ,d])
     model = Model()
     @variable(model, λ)
-    rho = random_state_pure(d^2)
-    id = LinearAlgebra.Hermitian(LinearAlgebra.I(d^2))
-    rhoT = LinearAlgebra.Hermitian(Convex.partialtranspose(rho, 1,[d ,d]))
-    PPT = @constraint(model, rhoT + λ * id in HermitianPSDCone())
+    @constraint(
+        model,
+        PPT,
+        LinearAlgebra.Hermitian(rhoT + λ * id) in HermitianPSDCone(),
+    )
     @objective(model, Min, λ)
     set_optimizer(model, Clarabel.Optimizer)
     set_attribute(model, "verbose", true)
@@ -242,15 +259,18 @@ function robustness_jump(d)
         WT = dual(PPT)
         return value(λ), LinearAlgebra.dot(WT, rhoT)
     else
-        return "Something went wrong: " * raw_status(model)
+        return "Something went wrong: $(raw_status(model))"
     end
 end
+
+robustness_jump(3)
 
 # ### YALMIP
 
 # ```matlab
 # function robustness_yalmip(d)
 #     rho = random_state_pure(d^2);
+#     # PartialTranspose from https://github.com/nathanieljohnston/QETLAB
 #     rhoT = PartialTranspose(rho, 1, [d d]);
 #     lambda = sdpvar;
 #     constraints = [(rhoT + lambda*eye(d^2) >= 0):'PPT'];
@@ -277,6 +297,7 @@ end
 # ```matlab
 # function robustness_cvx(d)
 #     rho = random_state_pure(d^2);
+#     # PartialTranspose from https://github.com/nathanieljohnston/QETLAB
 #     rhoT = PartialTranspose(rho, 1, [d d]);
 #     cvx_begin
 #         variable lambda
