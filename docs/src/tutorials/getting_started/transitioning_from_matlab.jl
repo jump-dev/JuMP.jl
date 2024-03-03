@@ -20,7 +20,7 @@
 
 # # Transitioning from MATLAB
 
-# [YALMIP](https://yalmip.github.io/) are [CVX](https://cvxr.com/cvx/) two
+# [YALMIP](https://yalmip.github.io/) and [CVX](https://cvxr.com/cvx/) are two
 # packages for mathematical optimization in [MATLAB®](https://mathworks.com/products/matlab.html).
 # They are independently developed and are in no way affiliated with JuMP.
 
@@ -42,20 +42,20 @@ import JuMP
 # prefixing everything you use from JuMP with `JuMP.`. In this tutorial we use
 # the former.
 
-# ## Starting a problem
+# ## Models
 
-# YALMIP and CVX have a single, implicit optimization problem you build by
+# YALMIP and CVX have a single, implicit optimization model that you build by
 # defining variables and constraints.
 
-# JuMP, we create an explicit model first, and then when you declare variables,
-# constraints, or the objective function, you specify to which model they are
-# being added.
+# In JuMP, we create an explicit model first, and then, when you declare
+# variables, constraints, or the objective function, you specify to which model
+# they are being added.
 
-# Models are created with the command:
+# Create a new JuMP model with the command:
 
 model = Model()
 
-# ## Declaring variables
+# ## Variables
 
 # In most cases there is a direct translation between variable declarations.
 # The following table shows some common examples:
@@ -69,7 +69,7 @@ model = Model()
 # | `@variable(model, m[1:d, 1:d], Symmetric)`        | `m = sdpvar(d)`                         | `variable m(d,d) symmetric` |
 # | `@variable(model, m[1:d, 1:d], Hermitian)`        | `m = sdpvar(d,d,'hermitian','complex')` | `variable m(d,d) hermitian` |
 
-# A more interesting case is when you want to declare for example `n` real
+# A more interesting case is when you want to declare, for example, `n` real
 # symmetric matrices. Both YALMIP and CVX allow you to put the matrices as the
 # slices of a 3-dimensional array, via the commands `m = sdpvar(d, d, n)` and
 # `variable m(d, d, n) symmetric`, respectively. With JuMP this is not possible.
@@ -79,12 +79,20 @@ model = Model()
 d, n = 3, 2
 m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
 
+#-
+
+m[1]
+
+#-
+
+m[2]
+
 # The analogous construct in MATLAB would be a cell array containing the
 # optimization variables, which every discerning programmer avoids as cell
 # arrays are rather slow. This is not a problem in Julia: a vector of matrices
 # is almost as fast as a 3-dimensional array.
 
-# ## Declaring constraints
+# ## Constraints
 
 # As in the case of variables, in most cases there is a direct translation
 # between the packages:
@@ -93,8 +101,8 @@ m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
 # | :------------------------------------------------------- | :------------------- | :--------------------------------------- |
 # | `@constraint(model, v == c)`                             | `v == c`             | `v == c`                                 |
 # | `@constraint(model, v >= 0)`                             | `v >= 0`             | `v >= 0`                                 |
-# | `@constraint(model, m in PSDCone())`                     | `m >= 0`             | `m == semidefinite(length(m))`           |
-# | `@constraint(model, m in HermitianPSDCone())`            | `m >= 0`             | `m == hermitian_semidefinite(length(m))` |
+# | `@constraint(model, m >= 0, PSDCone())`                  | `m >= 0`             | `m == semidefinite(length(m))`           |
+# | `@constraint(model, m >= 0, HermitianPSDCone())`         | `m >= 0`             | `m == hermitian_semidefinite(length(m))` |
 # | `@constraint(model, [t; v] in SecondOrderCone())`        | `cone(v, t)`         | `{v, t} == lorentz(length(v))`           |
 # | `@constraint(model, [x, y, z] in MOI.ExponentialCone())` | `expcone([x, y, z])` | `{x, y, z} == exponential(1)`            |
 
@@ -106,28 +114,31 @@ m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
 # the imaginary part of the diagonal (in the complex case). Both YALMIP and CVX
 # are also smart enough to do this and the syntax is always just `m == c`.
 
-# Experienced YALMIP users will probably be relieved to see that `>=` is only
-# ever used to make a vector nonnegative, never to make a matrix positive
-# semidefinite, as this ambiguity is reliable source of bugs.
+# Experienced YALMIP users will probably be relieved to see that you must pass
+# `PSDCone()` or `HermitianPSDCone()` to make a matrix positive semidefinite, as
+# the `>=` ambiguity in YALMIP is common source of bugs.
 
 # Like CVX, but unlike YALMIP, JuMP can also constrain variables upon creation:
 
-# | JuMP                                                 | CVX                                    |
-# | :--------------------------------------------------- | :------------------------------------- |
-# | `@variable(model, v[1:d] >= 0)`                      | `variable v(d) nonnegative`            |
-# | `@variable(model, m[1:d,1:d] in PSDCone())`          | `variable m(d,d) semidefinite`         |
-# | `@variable(model, m[1:d,1:d] in HermitianPSDCone())` | `variable m(d,d) complex semidefinite` |
+# | JuMP                                                  | CVX                                    |
+# | :---------------------------------------------------- | :------------------------------------- |
+# | `@variable(model, v[1:d] >= 0)`                       | `variable v(d) nonnegative`            |
+# | `@variable(model, m[1:d, 1:d] in PSDCone())`          | `variable m(d,d) semidefinite`         |
+# | `@variable(model, m[1:d, 1:d] in HermitianPSDCone())` | `variable m(d,d) complex semidefinite` |
 
 # ## Setting the objective
 
 # Like CVX, but unlike YALMIP, JuMP has a specific command for setting an
-# objective function: `@objective(model, Min, obj)`. Here `obj` is any
-# expression you want to optimize, and `Min` is an objective sense (the other
-# possibility is `Max`).
+# objective function:
+
+@objective(model, Min, sum(m[1][i, i] for i in 1:3))
+
+# Here the third argument is any expression you want to optimize, and `Min` is
+# an objective sense (the other possibility is `Max`).
 
 # ## Setting solver and options
 
-#  In order to set an optimizer with JuMP you can use at any point the command
+#  In order to set an optimizer with JuMP, do:
 
 import Clarabel
 set_optimizer(model, Clarabel.Optimizer)
@@ -136,10 +147,10 @@ set_optimizer(model, Clarabel.Optimizer)
 # for other choices.
 
 # To configure the solver options you use the command:
+
 set_attribute(model, "verbose", true)
 
-# after you set the optimizer, where as an example we set the option `verbose`
-# to `true`.
+# where `verbose` is an option specific to Clarabel.
 
 # A crucial difference is that with JuMP you must explicitly choose a solver
 # before optimizing. Both YALMIP and CVX allow you to leave it empty and will
@@ -148,8 +159,12 @@ set_attribute(model, "verbose", true)
 # ## Optimizing
 
 # Like YALMIP, but unlike CVX, with JuMP you need to explicitly start the
-# optimization, with the command `optimize!(model)`. The exclamation mark here
-# is a Julia-ism that means the function is modifying its argument, `model`.
+# optimization, with the command:
+
+optimize!(model)
+
+# The exclamation mark here is a Julia-ism that means the function is modifying
+# its argument, `model`.
 
 # ## Querying solution status
 
@@ -157,9 +172,13 @@ set_attribute(model, "verbose", true)
 # see what solution (if any) the solver found.
 
 # Like YALMIP and CVX, JuMP provides a solver-independent way to check it, via
-# the command `is_solved_and_feasible(model)`, that returns a Boolean. If it's
-# false, you should investigate with [`termination_status`](@ref), [`primal_status`](@ref),
-# and [`raw_status`](@ref), See [Solutions](@ref jump_solutions) for more details.
+# the command:
+
+is_solved_and_feasible(model)
+
+# If the return value is `false`, you should investigate with [`termination_status`](@ref),
+# [`primal_status`](@ref), and [`raw_status`](@ref), See [Solutions](@ref jump_solutions)
+# for more details on how to query and interpret solution statuses.
 
 # ## Extracting variables
 
@@ -167,22 +186,26 @@ set_attribute(model, "verbose", true)
 # of your variables after optimization is done, with the function call `value(x)`
 # to obtain the value of variable `x`.
 
+value.(m[1][1, 1])
+
 # A subtlety is that, unlike YALMIP, the function `value` is only defined for
 # scalars. For vectors and matrices you need to use Julia broadcasting:
 # `value.(v)`.
 
+value.(m[1])
+
 # There is also a specialized function for extracting the value of the objective,
 # `objective_value(model)`, which is useful if your objective doesn't have a
 # convenient expression.
+
+objective_value(model)
 
 # ## Dual variables
 
 # Like YALMIP and CVX, JuMP allows you to recover the dual variables. In order
 # to do that, the simplest method is to name the constraint you're interested in,
 # for example, `@constraint(model, bob, sum(v) == 1)` and then, after the
-# optimzation is done, call `dual(bob)`.
-
-# See [Duals of variable bounds](@ref) for more.
+# optimzation is done, call `dual(bob)`. See [Duality](@ref) for more details.
 
 # ## Reformulating problems
 
@@ -199,15 +222,15 @@ set_attribute(model, "verbose", true)
 # JuMP does no such thing: it only reformulates objectives into objectives, and
 # constraints into constraints, and is fairly conservative at that. As a result,
 # you might need to do some reformulations manually, for which a good guide is
-# available [here](@ref conic_tips_and_tricks).
+# the [Tips and tricks](@ref conic_tips_and_tricks) tutorial.
 
 # ## Vectorization
 
-# In MATLAB it is absolutely essential to "vectorize" your code to obtain
-# acceptable performance. This is because MATLAB is a very slow interpreted
-# language, which sends your commands to extremely fast libraries. When you
-# "vectorize" your code you're minimizing the MATLAB part of the work and sending
-# it to the libraries instead.
+# In MATLAB, it is absolutely essential to "vectorize" your code to obtain
+# acceptable performance. This is because MATLAB is a slow interpreted
+# language, which sends your commands to fast libraries. When you "vectorize"
+# your code you are minimizing the MATLAB part of the work and sending it to the
+# fast libraries instead.
 
 # There's no such duality with Julia.
 
@@ -221,10 +244,13 @@ set_attribute(model, "verbose", true)
 #    constraints = [constraints, v(i) >= 0];
 # end
 # ```
-# performance will be horrible.
+# performance will be poor.
 
 # With Julia, on the other hand, there is hardly any difference between
-# `@constraint(model, v >= 0)` and
+# ```julia
+# @constraint(model, v >= 0)
+# ```
+#  and
 # ```julia
 # for i in 1:n
 #     @constraint(model, v[i] >= 0)
@@ -256,6 +282,8 @@ function partial_transpose(x::AbstractMatrix, sys::Int, dims::Vector)
 end
 
 # ### JuMP
+
+# The JuMP code to solve this problem is:
 
 using JuMP
 import Clarabel
@@ -294,6 +322,8 @@ robustness_jump(3)
 
 # ### YALMIP
 
+# The corresponding YALMIP code is:
+
 # ```matlab
 # function robustness_yalmip(d)
 #     rho = random_state_pure(d^2);
@@ -320,6 +350,8 @@ robustness_jump(3)
 # ```
 
 # ### CVX
+
+# The corresponding CVX code is:
 
 # ```matlab
 # function robustness_cvx(d)
