@@ -516,7 +516,9 @@ function Base.:*(
 )
     c = LinearAlgebra.sym_uplo(A.uplo)
     B = c == :U ? _mult_upper(x, A) : _mult_lower(x, A)
-    return LinearAlgebra.Hermitian(B, c)
+    # Intermediate conversion to `Matrix` is needed to work around
+    # https://github.com/JuliaLang/julia/issues/52895
+    return LinearAlgebra.Hermitian(Matrix(LinearAlgebra.Hermitian(B, c)), c)
 end
 
 function Base.:*(

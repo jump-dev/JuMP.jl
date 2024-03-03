@@ -333,6 +333,7 @@ function test_mul_real_hermitian()
         @test isequal_canonical(f * B, LinearAlgebra.Hermitian(f * A, s))
         @test B * f isa LinearAlgebra.Hermitian
         @test isequal_canonical(B * f, LinearAlgebra.Hermitian(A * f, s))
+        @test isequal_canonical(f * B + f * B, (2 * f) * B)
     end
     return
 end
