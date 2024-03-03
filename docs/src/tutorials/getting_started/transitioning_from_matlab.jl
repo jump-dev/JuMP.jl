@@ -25,7 +25,7 @@
 # They are independently developed and are in no way affiliated with JuMP.
 
 # The purpose of this tutorial is to help new users to JuMP who have previously
-# used YALMIP or CVX by comparing and constrasting their different features.
+# used YALMIP or CVX by comparing and contrasting their different features.
 
 # ## Namespaces
 
@@ -87,7 +87,7 @@ m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
 # ## Declaring constraints
 
 # As in the case of variables, in most cases there is a direct translation
-# between the syntaxes:
+# between the packages:
 
 # | JuMP                                                     | YALMIP               | CVX                                      |
 # | :------------------------------------------------------- | :------------------- | :--------------------------------------- |
@@ -270,7 +270,7 @@ end
 function robustness_jump(d)
     rho = random_state_pure(d^2)
     id = LinearAlgebra.I(d^2)
-    rhoT = partial_transpose(rho, 1, [d ,d])
+    rhoT = partial_transpose(rho, 1, [d, d])
     model = Model()
     @variable(model, λ)
     @constraint(

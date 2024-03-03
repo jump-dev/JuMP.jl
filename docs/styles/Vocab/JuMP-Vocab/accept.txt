@@ -49,6 +49,7 @@ TODO
 transpiled
 unexported
 [Uu]ntyped
+vectorize
 
 % JuMP-related vocab
 arithmetics
