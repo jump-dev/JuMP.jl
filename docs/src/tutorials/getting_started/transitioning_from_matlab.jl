@@ -20,8 +20,12 @@
 
 # # Transitioning from MATLAB
 
-# The purpose of this tutorial is to explain the similarities and differences of
-# JuMP and [YALMIP](https://yalmip.github.io/) or [CVX](https://cvxr.com/cvx/).
+# [YALMIP](https://yalmip.github.io/) are [CVX](https://cvxr.com/cvx/) two
+# packages for mathematical optimization in [MATLAB®](https://mathworks.com/products/matlab.html).
+# They are independently developed and are in no way affiliated with JuMP.
+
+# The purpose of this tutorial is to help new users to JuMP who have previously
+# used YALMIP or CVX by comparing and constrasting their different features.
 
 # ## Namespaces
 
@@ -40,15 +44,16 @@ import JuMP
 
 # ## Starting a problem
 
-# With YALMIP and CVX you have a single, implicit optimization problem you're
-# working on. With JuMP you have to create one explicitly, and when you
-# declare variables, constraints, or the objective function you have to
-# specify to which problem they belong. You create a problem with the command:
+# YALMIP and CVX have a single, implicit optimization problem you build by
+# defining variables and constraints.
+
+# JuMP, we create an explicit model first, and then when you declare variables,
+# constraints, or the objective function, you specify to which model they are
+# being added.
+
+# Models are created with the command:
 
 model = Model()
-
-# You can optionally also set the optimizer and options as an argument to the
-# function `Model()`, but we'll do this later.
 
 # ## Declaring variables
 
@@ -123,16 +128,22 @@ m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
 # ## Setting solver and options
 
 #  In order to set an optimizer with JuMP you can use at any point the command
-# `set_optimizer(model, Clarabel.Optimizer)`, where "Clarabel" is an example
-# solver. See the list of [Supported solvers](@ref) for more.
 
-# To configure the solver options you use the command `set_attribute(model,
-# "verbose", true)` after you set the optimizer, where as an example we were
-# setting the option verbose to true.
-#
-# A crucial difference is that with JuMP you always have to explicitly choose a
-# solver before optimizing. Both YALMIP and CVX allow you to leave it empty and
-# will try to guess an appropriate solver for the problem.
+import Clarabel
+set_optimizer(model, Clarabel.Optimizer)
+
+# where "Clarabel" is an example solver. See the list of [Supported solvers](@ref)
+# for other choices.
+
+# To configure the solver options you use the command:
+set_attribute(model, "verbose", true)
+
+# after you set the optimizer, where as an example we set the option `verbose`
+# to `true`.
+
+# A crucial difference is that with JuMP you must explicitly choose a solver
+# before optimizing. Both YALMIP and CVX allow you to leave it empty and will
+# try to guess an appropriate solver for the problem.
 
 # ## Optimizing
 
@@ -142,27 +153,33 @@ m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
 
 # ## Querying solution status
 
-# After the optimization is done, it's sensible to test for the solution status.
+# After the optimization is done, you should check for the solution status to
+# see what solution (if any) the solver found.
+
 # Like YALMIP and CVX, JuMP provides a solver-independent way to check it, via
 # the command `is_solved_and_feasible(model)`, that returns a Boolean. If it's
-# false, you should either look at the status returned by the solver with the
-# command `raw_status(model)`, or re-run the optimization with `verbose` set to
-# `true` to get more detail.
+# false, you should investigate with [`termination_status`](@ref), [`primal_status`](@ref),
+# and [`raw_status`](@ref), See [Solutions](@ref jump_solutions) for more details.
+
 # ## Extracting variables
 
 # Like YALMIP, but unlike CVX, with JuMP you need to explicitly ask for the value
 # of your variables after optimization is done, with the function call `value(x)`
-# to obtain the value of variable `x`. A subtlety is that unlike YALMIP the
-# function `value` is only defined for scalars, so for vectors and matrices you
-# need to use Julia broadcasting: `value.(v)`. There's also a specialized function
-# for extracting the value of the objective, `objective_value(model)`, which is
-# useful if your objective doesn't have a convenient expression.
+# to obtain the value of variable `x`.
+
+# A subtlety is that, unlike YALMIP, the function `value` is only defined for
+# scalars. For vectors and matrices you need to use Julia broadcasting:
+# `value.(v)`.
+
+# There is also a specialized function for extracting the value of the objective,
+# `objective_value(model)`, which is useful if your objective doesn't have a
+# convenient expression.
 
 # ## Dual variables
 
 # Like YALMIP and CVX, JuMP allows you to recover the dual variables. In order
 # to do that, the simplest method is to name the constraint you're interested in,
-# for example, `bob = @constraint(model, sum(v) == 1)` and then, after the
+# for example, `@constraint(model, bob, sum(v) == 1)` and then, after the
 # optimzation is done, call `dual(bob)`.
 
 # See [Duals of variable bounds](@ref) for more.
@@ -170,14 +187,19 @@ m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
 # ## Reformulating problems
 
 # Perhaps the biggest difference between JuMP and YALMIP and CVX is how far the
-# modeller is willing to go in reformulating the problems you give to it. CVX is
-# happy to reformulate anything it can, even using approximations if your solver
-# cannot handle the problem. YALMIP will only do exact reformulations, but is
-# still fairly adventurous, being willing to reformulate a nonlinear objective
-# in terms of conic constraints, for example. JuMP does no such thing: it only
-# reformulates objectives into objectives, and constraints into constraints, and
-# is fairly conservative at that. As a result, you might need to do some
-# reformulations manually, for which a good guide is available [here](@ref conic_tips_and_tricks).
+# package is willing to go in reformulating the problems you give to it.
+
+# CVX is happy to reformulate anything it can, even using approximations if your
+# solver cannot handle the problem.
+
+# YALMIP will only do exact reformulations, but is still fairly adventurous,
+# for example, being willing to reformulate a nonlinear objective in terms of
+# conic constraints.
+
+# JuMP does no such thing: it only reformulates objectives into objectives, and
+# constraints into constraints, and is fairly conservative at that. As a result,
+# you might need to do some reformulations manually, for which a good guide is
+# available [here](@ref conic_tips_and_tricks).
 
 # ## Vectorization
 
@@ -185,9 +207,12 @@ m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
 # acceptable performance. This is because MATLAB is a very slow interpreted
 # language, which sends your commands to extremely fast libraries. When you
 # "vectorize" your code you're minimizing the MATLAB part of the work and sending
-# it to the libraries instead. There's no such duality with Julia. Everything you
-# write and most libraries you use will compile down to LLVM, so "vectorization"
-# has no effect.
+# it to the libraries instead.
+
+# There's no such duality with Julia.
+
+# Everything you write and most libraries you use will compile down to LLVM, so
+# "vectorization" has no effect.
 
 # For example, if you are writing a linear program in MATLAB and instead of the
 # usual `constraints = [v >= 0]` you write:
@@ -196,8 +221,10 @@ m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
 #    constraints = [constraints, v(i) >= 0];
 # end
 # ```
-# performance will be horrible. With Julia, on the other hand, there's hardly
-# any difference between `@constraint(model, v >= 0)` and
+# performance will be horrible.
+
+# With Julia, on the other hand, there is hardly any difference between
+# `@constraint(model, v >= 0)` and
 # ```julia
 # for i in 1:n
 #     @constraint(model, v[i] >= 0)
@@ -207,9 +234,9 @@ m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
 # ## Rosetta stone
 
 # To finish this tutorial, we show a complete example of the same optimization
-# problem being solved with JuMP, YALMIP, and CVX. It is an SDP computing a
-# simple lower bound on the random robustness of entanglement using the partial
-# transposition criterion.
+# problem being solved with JuMP, YALMIP, and CVX. It is a semidefinite program
+# that computes a lower bound on the random robustness of entanglement using the
+# partial transposition criterion.
 
 # The code is complete, apart from the function that does partial transposition.
 # With both YALMIP and CVX we use the function `PartialTranspose` from
@@ -223,7 +250,7 @@ function partial_transpose(x::AbstractMatrix, sys::Int, dims::Vector)
     n = length(dims)
     s = n - sys + 1
     p = collect(1:2n)
-    p[s], p[n + s] = n + s, s
+    p[s], p[n+s] = n + s, s
     r = reshape(x, (reverse(dims)..., reverse(dims)...))
     return reshape(permutedims(r, p), size(x))
 end
@@ -243,7 +270,7 @@ end
 function robustness_jump(d)
     rho = random_state_pure(d^2)
     id = LinearAlgebra.I(d^2)
-    rhoT = partial_transpose(rho, 1,[d ,d])
+    rhoT = partial_transpose(rho, 1, [d ,d])
     model = Model()
     @variable(model, λ)
     @constraint(
