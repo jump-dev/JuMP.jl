@@ -66,10 +66,14 @@ model = Model()
 
 # A more interesting case is when you want to declare for example `n` real
 # symmetric matrices. Both YALMIP and CVX allow you to put the matrices as the
-# slices of a 3-dimensional array, via the commands `m = sdpvar(d,d,n)` and
-# `variable m(d,d,n) symmetric`, respectively. With JuMP this is not possible.
+# slices of a 3-dimensional array, via the commands `m = sdpvar(d, d, n)` and
+# `variable m(d, d, n) symmetric`, respectively. With JuMP this is not possible.
 # Instead, to achieve the same result one needs to declare a vector of `n`
-# matrices: `m = [@variable(model, [1:d,1:d], Symmetric) for i=1:n]`.
+# matrices:
+
+d, n = 3, 2
+m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
+
 # The analogous construct in MATLAB would be a cell array containing the
 # optimization variables, which every discerning programmer avoids as cell
 # arrays are rather slow. This is not a problem in Julia: a vector of matrices
@@ -119,7 +123,7 @@ model = Model()
 # ## Setting solver and options
 
 #  In order to set an optimizer with JuMP you can use at any point the command
-# `set_optimizer(model, Hypatia.Optimizer)`, where "Hypatia" is an example
+# `set_optimizer(model, Clarabel.Optimizer)`, where "Clarabel" is an example
 # solver. See the list of [Supported solvers](@ref) for more.
 
 # To configure the solver options you use the command `set_attribute(model,
@@ -139,9 +143,9 @@ model = Model()
 # ## Querying solution status
 
 # After the optimization is done, it's sensible to test for the solution status.
-# Like YALMIP and CVX, JuMP provides a solver-independent way to check it, via 
+# Like YALMIP and CVX, JuMP provides a solver-independent way to check it, via
 # the command `is_solved_and_feasible(model)`, that returns a Boolean. If it's
-# false, you should either look at the status returned by the solver with the 
+# false, you should either look at the status returned by the solver with the
 # command `raw_status(model)`, or re-run the optimization with `verbose` set to
 # `true` to get more detail.
 # ## Extracting variables
@@ -175,11 +179,6 @@ model = Model()
 # is fairly conservative at that. As a result, you might need to do some
 # reformulations manually, for which a good guide is available [here](@ref conic_tips_and_tricks).
 
-# An interesting possibility that JuMP offers is turning off reformulations
-# altogether, which will reduce latency if they're in fact not needed, or
-# produce an error if they are. To do that, set your optimizer with the option
-# `add_bridges = false`, as for example, in `set_optimizer(model, Hypatia.Optimizer, add_bridges=false)`
-
 # ## Vectorization
 
 # In MATLAB it is absolutely essential to "vectorize" your code to obtain
@@ -199,10 +198,11 @@ model = Model()
 # ```
 # performance will be horrible. With Julia, on the other hand, there's hardly
 # any difference between `@constraint(model, v >= 0)` and
-
-for i in 1:n
-    @constraint(model, v[i] >= 0)
-end
+# ```julia
+# for i in 1:n
+#     @constraint(model, v[i] >= 0)
+# end
+# ```
 
 # ## Rosetta stone
 
@@ -218,11 +218,11 @@ end
 
 using JuMP
 import Convex
-import Hypatia
+import SCS
 import LinearAlgebra
 
 function random_state_pure(d)
-    x = randn(ComplexF64, d)
+    x = randn(Complex{Float64}, d)
     y = x * x'
     return LinearAlgebra.Hermitian(y / LinearAlgebra.tr(y))
 end
@@ -230,19 +230,19 @@ end
 function robustness_jump(d)
     model = Model()
     @variable(model, λ)
-    ρ = random_state_pure(d^2)
-	id = LinearAlgebra.Hermitian(LinearAlgebra.I(d^2))
-	ρT = LinearAlgebra.Hermitian(Convex.partialtranspose(ρ, 1,[d ,d]))
-    PPT = @constraint(model, ρT + λ * id in HermitianPSDCone())
+    rho = random_state_pure(d^2)
+    id = LinearAlgebra.Hermitian(LinearAlgebra.I(d^2))
+    rhoT = LinearAlgebra.Hermitian(Convex.partialtranspose(rho, 1,[d ,d]))
+    PPT = @constraint(model, rhoT + λ * id in HermitianPSDCone())
     @objective(model, Min, λ)
-    set_optimizer(model, Hypatia.Optimizer; add_bridges = false)
+    set_optimizer(model, Clarabel.Optimizer)
     set_attribute(model, "verbose", true)
     optimize!(model)
     if is_solved_and_feasible(model)
         WT = dual(PPT)
-        return value(λ), LinearAlgebra.dot(WT, ρT)
+        return value(λ), LinearAlgebra.dot(WT, rhoT)
     else
-        return "Something went wrong: "*raw_status(model)
+        return "Something went wrong: " * raw_status(model)
     end
 end
 
@@ -259,12 +259,12 @@ end
 #     if sol.problem == 0
 #         WT = dual(constraints('PPT'));
 #         value(lambda)
-#         real(WT(:).'*rhoT(:))
+#         real(WT(:).' * rhoT(:))
 #     else
 #         display(['Something went wrong: ', sol.info])
 #     end
 # end
-# 
+#
 # function rho = random_state_pure(d)
 #     x = randn(d, 1) + 1i * randn(d, 1);
 #     y = x * x';
@@ -281,17 +281,17 @@ end
 #     cvx_begin
 #         variable lambda
 #         dual variable WT
-#         WT : rhoT + lambda*eye(d^2) == hermitian_semidefinite(d^2)
+#         WT : rhoT + lambda * eye(d^2) == hermitian_semidefinite(d^2)
 #         minimise lambda
 #     cvx_end
-#     if strcmp(cvx_status,'Solved')
+#     if strcmp(cvx_status, 'Solved')
 #         lambda
-#         real(WT(:)'*rhoT(:))
+#         real(WT(:)' * rhoT(:))
 #     else
 #         display('Something went wrong.')
 #     end
 # end
-# 
+#
 # function rho = random_state_pure(d)
 #     x = randn(d, 1) + 1i * randn(d, 1);
 #     y = x * x';
