@@ -136,6 +136,14 @@ model = Model()
 # optimization, with the command `optimize!(model)`. The exclamation mark here
 # is a Julia-ism that means the function is modifying its argument, `model`.
 
+# ## Querying solution status
+
+# After the optimization is done, it's sensible to test for the solution status.
+# Like YALMIP and CVX, JuMP provides a solver-independent way to check it, via 
+# the command `is_solved_and_feasible(model)`, that returns a Boolean. If it's
+# false, you should either look at the status returned by the solver with the 
+# command `raw_status(model)`, or re-run the optimization with `verbose` set to
+# `true` to get more detail.
 # ## Extracting variables
 
 # Like YALMIP, but unlike CVX, with JuMP you need to explicitly ask for the value
@@ -230,41 +238,43 @@ function robustness_jump(d)
     set_optimizer(model, Hypatia.Optimizer; add_bridges = false)
     set_attribute(model, "verbose", true)
     optimize!(model)
-	WT = dual(PPT)
-	return value(λ), LinearAlgebra.dot(WT, ρT)
+    if is_solved_and_feasible(model)
+        WT = dual(PPT)
+        return value(λ), LinearAlgebra.dot(WT, ρT)
+    else
+        return "Something went wrong: "*raw_status(model)
+    end
 end
 
 # ### YALMIP
 
 # ```matlab
-# function rho = random_state_pure(d)
-#     x = randn(d, 1) + 1i * randn(d, 1);
-#     y = x * x';
-#     rho = y / trace(y);
-# end
-
 # function robustness_yalmip(d)
 #     rho = random_state_pure(d^2);
 #     rhoT = PartialTranspose(rho, 1, [d d]);
 #     lambda = sdpvar;
 #     constraints = [(rhoT + lambda*eye(d^2) >= 0):'PPT'];
 #     ops = sdpsettings(sdpsettings, 'verbose', 1, 'solver', 'sedumi');
-#     optimize(constraints, lambda, ops);
-#     WT = dual(constraints('PPT'));
-#     value(lambda)
-#     real(WT(:).'*rhoT(:))
+#     sol = optimize(constraints, lambda, ops);
+#     if sol.problem == 0
+#         WT = dual(constraints('PPT'));
+#         value(lambda)
+#         real(WT(:).'*rhoT(:))
+#     else
+#         display(['Something went wrong: ', sol.info])
+#     end
+# end
+# 
+# function rho = random_state_pure(d)
+#     x = randn(d, 1) + 1i * randn(d, 1);
+#     y = x * x';
+#     rho = y / trace(y);
 # end
 # ```
 
 # ### CVX
 
 # ```matlab
-# function rho = random_state_pure(d)
-#     x = randn(d, 1) + 1i * randn(d, 1);
-#     y = x * x';
-#     rho = y / trace(y);
-# end
-
 # function robustness_cvx(d)
 #     rho = random_state_pure(d^2);
 #     rhoT = PartialTranspose(rho, 1, [d d]);
@@ -274,7 +284,17 @@ end
 #         WT : rhoT + lambda*eye(d^2) == hermitian_semidefinite(d^2)
 #         minimise lambda
 #     cvx_end
-#     lambda
-#     real(WT(:)'*rhoT(:))
+#     if strcmp(cvx_status,'Solved')
+#         lambda
+#         real(WT(:)'*rhoT(:))
+#     else
+#         display('Something went wrong.')
+#     end
+# end
+# 
+# function rho = random_state_pure(d)
+#     x = randn(d, 1) + 1i * randn(d, 1);
+#     y = x * x';
+#     rho = y / trace(y);
 # end
 # ```
