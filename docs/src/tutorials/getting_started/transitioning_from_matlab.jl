@@ -60,14 +60,14 @@ model = Model()
 # In most cases there is a direct translation between variable declarations.
 # The following table shows some common examples:
 
-# |                          | JuMP                                              | YALMIP                                  | CVX                         |
-# | ------------------------ | ------------------------------------------------- | --------------------------------------- | --------------------------- |
-# | real variable            | `@variable(model, x)`                             | `x = sdpvar`                            | `variable x`                |
-# | real vector              | `@variable(model, v[1:d])`                        | `v = sdpvar(d, 1)`                      | `variable v(d)`             |
-# | real matrix              | `@variable(model, m[1:d, 1:d])`                   | `m = sdpvar(d,d,'full')`                | `variable m(d, d)`          |
-# | complex matrix           | `@variable(model, m[1:d, 1:d] in ComplexPlane())` | `m = sdpvar(d,d,'full','complex')`      | `variable m(d,d) complex`   |
-# | real symmetric matrix    | `@variable(model, m[1:d, 1:d], Symmetric)`        | `m = sdpvar(d)`                         | `variable m(d,d) symmetric` |
-# | complex Hermitian matrix | `@variable(model, m[1:d, 1:d], Hermitian)`        | `m = sdpvar(d,d,'hermitian','complex')` | `variable m(d,d) hermitian` |
+# | JuMP                                              | YALMIP                                  | CVX                         |
+# | :------------------------------------------------ | :-------------------------------------- | :-------------------------- |
+# | `@variable(model, x)`                             | `x = sdpvar`                            | `variable x`                |
+# | `@variable(model, v[1:d])`                        | `v = sdpvar(d, 1)`                      | `variable v(d)`             |
+# | `@variable(model, m[1:d, 1:d])`                   | `m = sdpvar(d,d,'full')`                | `variable m(d, d)`          |
+# | `@variable(model, m[1:d, 1:d] in ComplexPlane())` | `m = sdpvar(d,d,'full','complex')`      | `variable m(d,d) complex`   |
+# | `@variable(model, m[1:d, 1:d], Symmetric)`        | `m = sdpvar(d)`                         | `variable m(d,d) symmetric` |
+# | `@variable(model, m[1:d, 1:d], Hermitian)`        | `m = sdpvar(d,d,'hermitian','complex')` | `variable m(d,d) hermitian` |
 
 # A more interesting case is when you want to declare for example `n` real
 # symmetric matrices. Both YALMIP and CVX allow you to put the matrices as the
@@ -89,14 +89,14 @@ m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
 # As in the case of variables, in most cases there is a direct translation
 # between the syntaxes:
 
-# |                     | JuMP                                                     | YALMIP               | CVX                                      |
-# | ------------------- | -------------------------------------------------------- | -------------------- | ---------------------------------------- |
-# | equality constraint | `@constraint(model, v == c)`                             | `v == c`             | `v == c`                                 |
-# | nonnegative cone    | `@constraint(model, v >= 0)`                             | `v >= 0`             | `v >= 0`                                 |
-# | real PSD cone       | `@constraint(model, m in PSDCone())`                     | `m >= 0`             | `m == semidefinite(length(m))`           |
-# | complex PSD cone    | `@constraint(model, m in HermitianPSDCone())`            | `m >= 0`             | `m == hermitian_semidefinite(length(m))` |
-# | second order cone   | `@constraint(model, [t; v] in SecondOrderCone())`        | `cone(v, t)`         | `{v, t} == lorentz(length(v))`           |
-# | exponential cone    | `@constraint(model, [x, y, z] in MOI.ExponentialCone())` | `expcone([x, y, z])` | `{x, y, z} == exponential(1)`            |
+# | JuMP                                                     | YALMIP               | CVX                                      |
+# | :------------------------------------------------------- | :------------------- | :--------------------------------------- |
+# | `@constraint(model, v == c)`                             | `v == c`             | `v == c`                                 |
+# | `@constraint(model, v >= 0)`                             | `v >= 0`             | `v >= 0`                                 |
+# | `@constraint(model, m in PSDCone())`                     | `m >= 0`             | `m == semidefinite(length(m))`           |
+# | `@constraint(model, m in HermitianPSDCone())`            | `m >= 0`             | `m == hermitian_semidefinite(length(m))` |
+# | `@constraint(model, [t; v] in SecondOrderCone())`        | `cone(v, t)`         | `{v, t} == lorentz(length(v))`           |
+# | `@constraint(model, [x, y, z] in MOI.ExponentialCone())` | `expcone([x, y, z])` | `{x, y, z} == exponential(1)`            |
 
 # A subtlety appears when declaring equality constraints for matrices. In
 # general, JuMP uses `@constraint(model, m .== c)`, with the dot meaning
@@ -112,11 +112,11 @@ m = [@variable(model, [1:d, 1:d], Symmetric) for _ in 1:n]
 
 # Like CVX, but unlike YALMIP, JuMP can also constrain variables upon creation:
 
-# |                    | JuMP                                                 | CVX                                    |
-# | ------------------ | ---------------------------------------------------- | -------------------------------------- |
-# | nonnegative vector | `@variable(model, v[1:d] >= 0)`                      | `variable v(d) nonnegative`            |
-# | real PSD matrix    | `@variable(model, m[1:d,1:d] in PSDCone())`          | `variable m(d,d) semidefinite`         |
-# | complex PSD matrix | `@variable(model, m[1:d,1:d] in HermitianPSDCone())` | `variable m(d,d) complex semidefinite` |
+# | JuMP                                                 | CVX                                    |
+# | :--------------------------------------------------- | :------------------------------------- |
+# | `@variable(model, v[1:d] >= 0)`                      | `variable v(d) nonnegative`            |
+# | `@variable(model, m[1:d,1:d] in PSDCone())`          | `variable m(d,d) semidefinite`         |
+# | `@variable(model, m[1:d,1:d] in HermitianPSDCone())` | `variable m(d,d) complex semidefinite` |
 
 # ## Setting the objective
 
