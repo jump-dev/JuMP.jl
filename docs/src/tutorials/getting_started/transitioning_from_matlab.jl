@@ -63,11 +63,28 @@ model = Model()
 # | JuMP                                              | YALMIP                                  | CVX                         |
 # | :------------------------------------------------ | :-------------------------------------- | :-------------------------- |
 # | `@variable(model, x)`                             | `x = sdpvar`                            | `variable x`                |
+# | `@variable(model, x, Int)`                        | `x = intvar`                            | `variable x integer`        |
+# | `@variable(model, x, Bin)`                        | `x = binvar`                            | `variable x binary`         |
 # | `@variable(model, v[1:d])`                        | `v = sdpvar(d, 1)`                      | `variable v(d)`             |
 # | `@variable(model, m[1:d, 1:d])`                   | `m = sdpvar(d,d,'full')`                | `variable m(d, d)`          |
 # | `@variable(model, m[1:d, 1:d] in ComplexPlane())` | `m = sdpvar(d,d,'full','complex')`      | `variable m(d,d) complex`   |
 # | `@variable(model, m[1:d, 1:d], Symmetric)`        | `m = sdpvar(d)`                         | `variable m(d,d) symmetric` |
 # | `@variable(model, m[1:d, 1:d], Hermitian)`        | `m = sdpvar(d,d,'hermitian','complex')` | `variable m(d,d) hermitian` |
+
+# Like CVX, but unlike YALMIP, JuMP can also constrain variables upon creation:
+
+# | JuMP                                                  | CVX                                    |
+# | :---------------------------------------------------- | :------------------------------------- |
+# | `@variable(model, v[1:d] >= 0)`                       | `variable v(d) nonnegative`            |
+# | `@variable(model, m[1:d, 1:d], PSD)`                  | `variable m(d,d) semidefinite`         |
+# | `@variable(model, m[1:d, 1:d] in PSDCone())`          | `variable m(d,d) semidefinite`         |
+# | `@variable(model, m[1:d, 1:d] in HermitianPSDCone())` | `variable m(d,d) complex semidefinite` |
+
+# JuMP can additionally set variable bounds, which may be handled more
+# efficiently by a solver than an equivalent linear constraint. For example:
+
+@variable(model, -1 <= x[i in 1:3] <= i)
+upper_bound.(x)
 
 # A more interesting case is when you want to declare, for example, `n` real
 # symmetric matrices. Both YALMIP and CVX allow you to put the matrices as the
@@ -117,14 +134,6 @@ m[2]
 # Experienced YALMIP users will probably be relieved to see that you must pass
 # `PSDCone()` or `HermitianPSDCone()` to make a matrix positive semidefinite, as
 # the `>=` ambiguity in YALMIP is common source of bugs.
-
-# Like CVX, but unlike YALMIP, JuMP can also constrain variables upon creation:
-
-# | JuMP                                                  | CVX                                    |
-# | :---------------------------------------------------- | :------------------------------------- |
-# | `@variable(model, v[1:d] >= 0)`                       | `variable v(d) nonnegative`            |
-# | `@variable(model, m[1:d, 1:d] in PSDCone())`          | `variable m(d,d) semidefinite`         |
-# | `@variable(model, m[1:d, 1:d] in HermitianPSDCone())` | `variable m(d,d) complex semidefinite` |
 
 # ## Setting the objective
 
