@@ -323,4 +323,19 @@ function test_hermitian_jump_scalar()
     return
 end
 
+function test_mul_real_hermitian()
+    A = [1+1im 1+1im; 1-2im 3+1im]
+    model = Model()
+    @variable(model, x)
+    for s in (:L, :U), f in (x, x + 1, x^2)
+        B = LinearAlgebra.Hermitian(A, s)
+        @test f * B isa LinearAlgebra.Hermitian
+        @test isequal_canonical(f * B, LinearAlgebra.Hermitian(f * A, s))
+        @test B * f isa LinearAlgebra.Hermitian
+        @test isequal_canonical(B * f, LinearAlgebra.Hermitian(A * f, s))
+        @test isequal_canonical(f * B + f * B, (2 * f) * B)
+    end
+    return
+end
+
 end  # TestComplexNumberSupport
