@@ -270,6 +270,19 @@ objective_value(model)
 # end
 # ```
 
+# ## Primal versus dual form
+
+# When you translate some optimization problems from YALMIP or CVX to JuMP, you 
+# might be surprised to see it get much faster or much slower, even if you're 
+# using exactly the same solver. The most likely reason is that YALMIP will
+# always interpret the problem as the dual form, whereas CVX and JuMP will try to
+# interpret the problem in the form most appropriate to the solver. If the 
+# problem is more naturally formulated in the primal form it is likely that
+# YALMIP's performance will suffer, or if JuMP gets it wrong, its performance will
+# suffer. It might be worth trying both primal and dual forms if you're having
+# trouble, which can be done automatically with the package [Dualization.jl](@ref).
+#
+# For an in-depth explanation of this issue, see the [Dualization](@ref) tutorial.
 # ## Rosetta stone
 
 # In this section, we show a complete example of the same optimization problem
