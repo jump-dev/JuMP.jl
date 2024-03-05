@@ -188,7 +188,20 @@ model = Model();
 # Suppose that we have two constraints $a^\top x \leq b$ and
 # $c^\top x \leq d$, and we want at least one to hold.
 
-# ### Trick
+# ### Trick 1
+
+# Use an [indicator constraint](@ref tips_indicator_constraint).
+
+# **Example** Either $x_1 \leq 1$ or $x_2 \leq 2$.
+
+model = Model();
+@variable(model, x[1:2])
+@variable(model, y[1:2], Bin)
+@constraint(model, y[1] --> {x[1] <= 1})
+@constraint(model, y[2] --> {x[2] <= 2})
+@constraint(model, sum(y) == 1)  # Exactly one branch must be true
+
+# ### Trick 2
 
 # Introduce a "big-M" multiplied by a binary variable to relax one of
 # the constraints.
@@ -197,10 +210,11 @@ model = Model();
 
 model = Model();
 @variable(model, x[1:2])
-@variable(model, y, Bin)
+@variable(model, y[1:2], Bin)
 M = 100
-@constraint(model, x[1] <= 1 + M * y)
-@constraint(model, x[2] <= 2 + M * (1 - y))
+@constraint(model, x[1] <= 1 + M * y[1])
+@constraint(model, x[2] <= 2 + M * y[2])
+@constraint(model, sum(y) == 1)
 
 # !!! warning
 #     If `M` is too small, the solution may be suboptimal. If `M` is too big,
@@ -208,7 +222,7 @@ M = 100
 #     choose an `M` that is just right. Gurobi has a [good documentation section](https://www.gurobi.com/documentation/9.1/refman/dealing_with_big_m_constra.html)
 #     on this topic.
 
-# ## Indicator constraints
+# ## [Indicator constraints](@id tips_indicator_constraint)
 
 # ### Problem
 
