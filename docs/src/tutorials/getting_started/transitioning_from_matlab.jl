@@ -27,7 +27,7 @@
 # The purpose of this tutorial is to help new users to JuMP who have previously
 # used YALMIP or CVX by comparing and contrasting their different features.
 
-# !!!tip
+# !!! tip
 #    If you have not used Julia before, read the [Getting started with Julia](@ref)
 #    tutorial.
 
