@@ -27,6 +27,10 @@
 # The purpose of this tutorial is to help new users to JuMP who have previously
 # used YALMIP or CVX by comparing and contrasting their different features.
 
+# !!!tip
+#    If you have not used Julia before, read the [Getting started with Julia](@ref)
+#    tutorial.
+
 # ## Namespaces
 
 # Julia has namespaces, which MATLAB lacks. Therefore one needs to either use
@@ -268,9 +272,9 @@ objective_value(model)
 
 # ## Rosetta stone
 
-# To finish this tutorial, we show a complete example of the same optimization
-# problem being solved with JuMP, YALMIP, and CVX. It is a semidefinite program
-# that computes a lower bound on the random robustness of entanglement using the
+# In this section, we show a complete example of the same optimization problem
+# being solved with JuMP, YALMIP, and CVX. It is a semidefinite program that
+# computes a lower bound on the random robustness of entanglement using the
 # partial transposition criterion.
 
 # The code is complete, apart from the function that does partial transposition.
@@ -306,15 +310,11 @@ end
 
 function robustness_jump(d)
     rho = random_state_pure(d^2)
-    id = LinearAlgebra.I(d^2)
-    rhoT = partial_transpose(rho, 1, [d, d])
+    id = LinearAlgebra.Hermitian(LinearAlgebra.I(d^2))
+    rhoT = LinearAlgebra.Hermitian(partial_transpose(rho, 1, [d, d]))
     model = Model()
     @variable(model, λ)
-    @constraint(
-        model,
-        PPT,
-        LinearAlgebra.Hermitian(rhoT + λ * id) in HermitianPSDCone(),
-    )
+    @constraint(model, PPT, rhoT + λ * id in HermitianPSDCone())
     @objective(model, Min, λ)
     set_optimizer(model, Clarabel.Optimizer)
     set_attribute(model, "verbose", true)
