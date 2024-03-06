@@ -234,26 +234,28 @@ M = 100
 
 # ### Trick 1
 
-# Some solvers have native support for indicator constraints.
+# Some solvers have native support for indicator constraints. In addition, if
+# the variables involved have finite domains, then JuMP can automatically
+# reformulate an indicator into a mixed-integer program.
 
 # **Example** $x_1 + x_2 \leq 1$ if $z = 1$.
 
 model = Model();
-@variable(model, x[1:2])
+@variable(model, 0 <= x[1:2] <= 10)
 @variable(model, z, Bin)
 @constraint(model, z --> {sum(x) <= 1})
 
 # **Example** $x_1 + x_2 \leq 1$ if $z = 0$.
 
 model = Model();
-@variable(model, x[1:2])
+@variable(model, 0 <= x[1:2] <= 10)
 @variable(model, z, Bin)
 @constraint(model, !z --> {sum(x) <= 1})
 
 # ### Trick 2
 
-# If the solver doesn't support indicator constraints, you an use the big-M
-# trick.
+# If the solver doesn't support indicator constraints and the variables do not
+# have a finite domain, you an use the big-M trick.
 
 # **Example** $x_1 + x_2 \leq 1$ if $z = 1$.
 
