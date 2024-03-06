@@ -28,8 +28,8 @@
 # used YALMIP or CVX by comparing and contrasting their different features.
 
 # !!! tip
-#    If you have not used Julia before, read the [Getting started with Julia](@ref)
-#    tutorial.
+#     If you have not used Julia before, read the [Getting started with Julia](@ref)
+#     tutorial.
 
 # ## Namespaces
 
@@ -144,7 +144,7 @@ m[2]
 # Like CVX, but unlike YALMIP, JuMP has a specific command for setting an
 # objective function:
 
-@objective(model, Min, sum(m[1][i, i] for i in 1:3))
+@objective(model, Min, sum(i * x[i] for i in 1:3))
 
 # Here the third argument is any expression you want to optimize, and `Min` is
 # an objective sense (the other possibility is `Max`).
