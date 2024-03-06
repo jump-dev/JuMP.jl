@@ -290,7 +290,9 @@ const _PAGES = [
             "tutorials/getting_started/debugging.md",
             "tutorials/getting_started/design_patterns_for_larger_models.md",
             "tutorials/getting_started/performance_tips.md",
-            "tutorials/getting_started/transitioning_from_matlab.md",
+        ],
+        "Transitioning" => [
+            "tutorials/transitioning/transitioning_from_matlab.md",
         ],
         "Linear programs" => [
             "tutorials/linear/introduction.md",

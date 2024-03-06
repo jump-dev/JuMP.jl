@@ -270,13 +270,58 @@ objective_value(model)
 # end
 # ```
 
+# ## Symmetric and Hermitian matrices
+
+# Julia has specialized support for symmetric and Hermitian matrices in the
+# `LinearAlgebra` package:
+
+import LinearAlgebra
+
+# If you have a matrix that is numerically symmetric:
+
+x = [1 2; 2 3]
+
+#-
+
+LinearAlgebra.issymmetric(x)
+
+# then you can wrap it in a `LinearAlgebra.Symmetric` matrix to tell Julia's
+# type system that the matrix is symmetric.
+
+LinearAlgebra.Symmetric(x)
+
+# Using a `Symmetric` matrix lets Julia and JuMP use more efficient algorithms
+# when they are working with symmetric matrices.
+
+# If you have a matrix that is nearly but not exactly symmetric:
+
+x = [1.0 2.0; 2.001 3.0]
+LinearAlgebra.issymmetric(x)
+
+# then you could, as you might do in MATLAB, make it numerically symmetric as
+# follows:
+
+x_sym = 0.5 * (x + x')
+
+# In Julia, you can explicitly choose whether to use the lower or upper triangle
+# of the matrix:
+
+x_sym = LinearAlgebra.Symmetric(x, :L)
+
+#-
+
+x_sym = LinearAlgebra.Symmetric(x, :U)
+
+# The same applies for Hermitian matrices, using `LinearAlgebra.Hermitian` and
+# `LinearAlgebra.ishermitian`.
+
 # ## Primal versus dual form
 
-# When you translate some optimization problems from YALMIP or CVX to JuMP, you 
-# might be surprised to see it get much faster or much slower, even if you're 
+# When you translate some optimization problems from YALMIP or CVX to JuMP, you
+# might be surprised to see it get much faster or much slower, even if you're
 # using exactly the same solver. The most likely reason is that YALMIP will
 # always interpret the problem as the dual form, whereas CVX and JuMP will try to
-# interpret the problem in the form most appropriate to the solver. If the 
+# interpret the problem in the form most appropriate to the solver. If the
 # problem is more naturally formulated in the primal form it is likely that
 # YALMIP's performance will suffer, or if JuMP gets it wrong, its performance will
 # suffer. It might be worth trying both primal and dual forms if you're having
@@ -334,7 +379,7 @@ function robustness_jump(d)
     optimize!(model)
     if is_solved_and_feasible(model)
         WT = dual(PPT)
-        return value(λ), LinearAlgebra.dot(WT, rhoT)
+        return value(λ), real(LinearAlgebra.dot(WT, rhoT))
     else
         return "Something went wrong: $(raw_status(model))"
     end
