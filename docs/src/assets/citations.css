@@ -9,7 +9,7 @@
 .citation ul {
  padding: 0 0 2.25em 0;
  margin: 0;
- list-style: none;}
+ list-style: none !important;}
 .citation ul li {
  text-indent: -2.25em;
  margin: 0.33em 0.5em 0.5em 2.25em;}
