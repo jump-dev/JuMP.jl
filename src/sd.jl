@@ -774,6 +774,7 @@ function build_constraint(
         MOI.AbstractSymmetricMatrixSetTriangle,
         MOI.AbstractSymmetricMatrixSetSquare,
         PSDCone,
+        HermitianPSDCone,
     },
 )
     return build_constraint(error_fn, f, extra)
@@ -787,6 +788,7 @@ function build_constraint(
         MOI.AbstractSymmetricMatrixSetTriangle,
         MOI.AbstractSymmetricMatrixSetSquare,
         PSDCone,
+        HermitianPSDCone,
     },
 )
     new_f = _MA.operate!!(*, -1, f)
