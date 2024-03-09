@@ -674,6 +674,12 @@ function _functionize(
     return LinearAlgebra.Symmetric(_functionize(v.data))
 end
 
+function _functionize(
+    v::LinearAlgebra.Hermitian{V},
+) where {V<:AbstractVariableRef}
+    return LinearAlgebra.Hermitian(_functionize(v.data))
+end
+
 _functionize(x) = x
 
 _functionize(::_MA.Zero) = false
