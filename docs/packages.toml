@@ -157,6 +157,9 @@
     user = "MadNLP"
     rev = "389561354a774441cd5e6b3aa5fffee102ed222e"
     has_html = true
+[MAiNGO]
+    user = "MAiNGO-github"
+    rev  = "b6ea68189558558e44195c1f87c00d9f5038cf0d"
 [Manopt]
     user = "JuliaManifolds"
     rev = "v0.4.51"
