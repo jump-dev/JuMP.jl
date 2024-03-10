@@ -20,7 +20,7 @@ DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 JuMPDimensionalDataExt = "DimensionalData"
 
 [compat]
-DimensionalData = "0.24, 0.25"
+DimensionalData = "0.24, 0.25, 0.26"
 LinearAlgebra = "<0.0.1, 1.6"
 MacroTools = "0.5"
 MathOptInterface = "1.25.2"
