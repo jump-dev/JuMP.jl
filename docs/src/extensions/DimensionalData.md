@@ -41,13 +41,16 @@ julia> @variable(
            x[i = 2:4, j = ["a", "b"]] >= i,
            container = DimensionalData.DimArray,
        )
-3×2 DimArray{VariableRef,2} with dimensions:
-  Dim{:i} Sampled{Int64} 2:4 ForwardOrdered Regular Points,
-  Dim{:j} Categorical{String} String["a", "b"] ForwardOrdered
-    "a"     "b"
- 2  x[2,a]  x[2,b]
- 3  x[3,a]  x[3,b]
- 4  x[4,a]  x[4,b]
+╭─────────────────────────────╮
+│ 3×2 DimArray{VariableRef,2} │
+├─────────────────────────────┴─────────────────── dims ┐
+  ↓ i Sampled{Int64} 2:4 ForwardOrdered Regular Points,
+  → j Categorical{String} ["a", "b"] ForwardOrdered
+└───────────────────────────────────────────────────────┘
+ ↓ →  "a"     "b"
+ 2    x[2,a]  x[2,b]
+ 3    x[3,a]  x[3,b]
+ 4    x[4,a]  x[4,b]
 ```
 
 Here `x` is a `DimensionalData.Dim` array object, so indexing uses the
@@ -69,8 +72,11 @@ julia> @expression(
            sum(x[At(i), At(j)] for i in 2:4),
            container = DimensionalData.DimArray,
        )
-2-element DimArray{AffExpr,1} with dimensions:
-  Dim{:j} Categorical{String} String["a", "b"] ForwardOrdered
+╭───────────────────────────────╮
+│ 2-element DimArray{AffExpr,1} │
+├───────────────────────────────┴───────────── dims ┐
+  ↓ j Categorical{String} ["a", "b"] ForwardOrdered
+└───────────────────────────────────────────────────┘
  "a"  x[2,a] + x[3,a] + x[4,a]
  "b"  x[2,b] + x[3,b] + x[4,b]
 ```
@@ -82,8 +88,11 @@ julia> @constraint(
            expr[At(j)] <= 1,
            container = DimensionalData.DimArray,
        )
-2-element DimArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape},1} with dimensions:
-  Dim{:j} Categorical{String} String["a", "b"] ForwardOrdered
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ 2-element DimArray{ConstraintRef{Model, MathOptInterface.ConstraintIndex{MathOptInterface.ScalarAffineFunction{Float64}, MathOptInterface.LessThan{Float64}}, ScalarShape},1} │
+├──────────────────────────────────────────────────────────────────────── dims ┤
+  ↓ j Categorical{String} ["a", "b"] ForwardOrdered
+└──────────────────────────────────────────────────────────────────────────────┘
  "a"  x[2,a] + x[3,a] + x[4,a] ≤ 1
  "b"  x[2,b] + x[3,b] + x[4,b] ≤ 1
 ```
