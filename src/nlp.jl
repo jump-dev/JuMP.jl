@@ -14,6 +14,10 @@ otherwise return `nothing`.
 
 If `force`, always return a [`MOI.Nonlinear.Model`](@ref), and if one does not
 exist for the model, create an empty one.
+
+!!! warning
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
 function nonlinear_model(model::GenericModel; force::Bool = false)
     if force
@@ -146,6 +150,10 @@ optimization sense `sense`.
 This function is most useful if the expression `expr` is generated
 programmatically, and you cannot use [`@NLobjective`](@ref).
 
+!!! warning
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
+
 ## Notes
 
  * You must interpolate the variables directly into the expression `expr`.
@@ -211,6 +219,10 @@ end
     add_nonlinear_parameter(model::Model, value::Real)
 
 Add an anonymous parameter to the model.
+
+!!! warning
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
 function add_nonlinear_parameter(model::Model, value::Real)
     nlp = nonlinear_model(model; force = true)::MOI.Nonlinear.Model
@@ -314,6 +326,10 @@ Add a nonlinear expression `expr` to `model`.
 This function is most useful if the expression `expr` is generated
 programmatically, and you cannot use [`@NLexpression`](@ref).
 
+!!! warning
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
+
 ## Notes
 
  * You must interpolate the variables directly into the expression `expr`.
@@ -340,8 +356,6 @@ end
 
 Return the value of the `NonlinearExpression` `ex` associated with result index
 `result` of the most-recent solution returned by the solver.
-
-Replaces `getvalue` for most use cases.
 
 See also: [`result_count`](@ref).
 """
@@ -448,6 +462,10 @@ Add a nonlinear constraint described by the Julia expression `ex` to `model`.
 This function is most useful if the expression `ex` is generated
 programmatically, and you cannot use [`@NLconstraint`](@ref).
 
+!!! warning
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
+
 ## Notes
 
  * You must interpolate the variables directly into the expression `expr`.
@@ -500,6 +518,14 @@ end
     num_nonlinear_constraints(model::GenericModel)
 
 Returns the number of nonlinear constraints associated with the `model`.
+
+!!! warning
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
+
+This function counts only the constraints added with [`@NLconstraint`](@ref) and
+[`add_nonlinear_constraint`](@ref). It does not count [`GenericNonlinearExpr`](@ref)
+constraints.
 """
 function num_nonlinear_constraints(model::GenericModel)
     nlp_model = nonlinear_model(model)
@@ -514,6 +540,14 @@ end
 
 Return a vector of all nonlinear constraint references in the model in the
 order they were added to the model.
+
+!!! warning
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
+
+This function returns only the constraints added with [`@NLconstraint`](@ref) and
+[`add_nonlinear_constraint`](@ref). It does not return [`GenericNonlinearExpr`](@ref)
+constraints.
 """
 function all_nonlinear_constraints(model::GenericModel)
     nlp_model = nonlinear_model(model)
@@ -582,6 +616,10 @@ end
     nonlinear_dual_start_value(model::Model)
 
 Return the current value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref).
+
+!!! warning
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
 function nonlinear_dual_start_value(model::Model)
     return MOI.get(model, MOI.NLPBlockDualStart())
@@ -594,6 +632,10 @@ end
     )
 
 Set the value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref).
+
+!!! warning
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
 
 The start vector corresponds to the Lagrangian duals of the nonlinear
 constraints, in the order given by [`all_nonlinear_constraints`](@ref). That is, you
@@ -666,6 +708,10 @@ Register the user-defined function `f` that takes `dimension` arguments in
 The function `f` must support all subtypes of `Real` as arguments. Do not assume
 that the inputs are `Float64`.
 
+!!! warning
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
+
 ## Notes
 
  * For this method, you must explicitly set `autodiff = true`, because no
@@ -736,6 +782,10 @@ Register the user-defined function `f` that takes `dimension` arguments in
 
 The functions `f`and `∇f` must support all subtypes of `Real` as arguments. Do
 not assume that the inputs are `Float64`.
+
+!!! warning
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
 
 ## Notes
 
@@ -833,6 +883,10 @@ hessian function `∇²f`.
 
 `∇f` and `∇²f` must return numbers corresponding to the first- and second-order
 derivatives of the function `f` respectively.
+
+!!! warning
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
 
 ## Notes
 

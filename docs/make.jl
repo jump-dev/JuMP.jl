@@ -211,6 +211,31 @@ pushfirst!(_LIST_OF_EXTENSIONS, "Introduction" => "extensions/introduction.md")
 
 include(joinpath(@__DIR__, "DocumenterReference.jl"))
 
+function sort_by_api_fn((key, type))
+    deprecated_methods = [
+        :add_nonlinear_constraint,
+        :add_nonlinear_expression,
+        :add_nnonlinear_parameter,
+        :all_nonlinear_constraints,
+        :get_optimizer_attribute,
+        :nonlinear_constraint_string,
+        :nonlinear_dual_start_value,
+        :nonlinear_expr_string,
+        :nonlinear_model,
+        :num_nonlinear_constraints,
+        :register,
+        :set_nonlinear_dual_start_value,
+        :set_nonlinear_objective,
+        :set_optimizer_attribute,
+        :set_value,
+        :NonlinearConstraintIndex,
+        :NonlinearConstraintRef,
+        :NonlinearExpression,
+        :NonlinearParameter,
+    ]
+    return startswith("$key", "@NL") || ret in deprecated_methods
+end
+
 jump_api_reference = DocumenterReference.automatic_reference_documentation(;
     root = joinpath(@__DIR__, "src"),
     subdirectory = "api",
@@ -265,6 +290,7 @@ jump_api_reference = DocumenterReference.automatic_reference_documentation(;
                 DocumenterReference.DOCTYPE_STRUCT,
         ],
     ],
+    sort_by = sort_by_api_fn
 )
 
 # ==============================================================================
