@@ -233,7 +233,7 @@ function sort_by_api_fn((key, type))
         :NonlinearExpression,
         :NonlinearParameter,
     ]
-    return startswith("$key", "@NL") || ret in deprecated_methods
+    return startswith("$key", "@NL") || key in deprecated_methods
 end
 
 jump_api_reference = DocumenterReference.automatic_reference_documentation(;
