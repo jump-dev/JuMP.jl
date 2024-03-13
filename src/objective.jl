@@ -7,14 +7,35 @@
 # An algebraic modeling language for Julia
 # See https://github.com/jump-dev/JuMP.jl
 #############################################################################
-# This file contains objective-related functions
 
 """
     relative_gap(model::GenericModel)
 
 Return the final relative optimality gap after a call to `optimize!(model)`.
-Exact value depends upon implementation of MathOptInterface.RelativeGap()
-by the particular solver used for optimization.
+
+Exact value depends upon implementation of [`MOI.RelativeGap`](@ref) by the
+particular solver used for optimization.
+
+This function is equivalent to querying the [`MOI.RelativeGap`](@ref) attribute.
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x >= 1, Int);
+
+julia> @objective(model, Min, 2 * x + 1);
+
+julia> optimize!(model)
+
+julia> relative_gap(model)
+0.0
+```
 """
 function relative_gap(model::GenericModel{T})::T where {T}
     return MOI.get(model, MOI.RelativeGap())
@@ -31,6 +52,27 @@ vector-valued objectives, it returns a `Vector{Float64}`.
 
 In the case of a vector-valued objective, this returns the _ideal point_, that
 is, the point obtained if each objective was optimized independently.
+
+This function is equivalent to querying the [`MOI.ObjectiveBound`](@ref) attribute.
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x >= 1, Int);
+
+julia> @objective(model, Min, 2 * x + 1);
+
+julia> optimize!(model)
+
+julia> objective_bound(model)
+3.0
+```
 """
 function objective_bound(model::GenericModel{T})::Union{T,Vector{T}} where {T}
     return MOI.get(model, MOI.ObjectiveBound())
@@ -45,7 +87,33 @@ most-recent solution returned by the solver.
 For scalar-valued objectives, this function returns a `Float64`. For
 vector-valued objectives, it returns a `Vector{Float64}`.
 
+This function is equivalent to querying the [`MOI.ObjectiveValue`](@ref) attribute.
+
 See also: [`result_count`](@ref).
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x >= 1);
+
+julia> @objective(model, Min, 2 * x + 1);
+
+julia> optimize!(model)
+
+julia> objective_value(model)
+3.0
+
+julia> objective_value(model; result = 2)
+ERROR: Result index of attribute MathOptInterface.ObjectiveValue(2) out of bounds. There are currently 1 solution(s) in the model.
+Stacktrace:
+[...]
+```
 """
 function objective_value(
     model::GenericModel{T};
@@ -63,7 +131,34 @@ index `result` of the most-recent solution returned by the solver.
 Throws `MOI.UnsupportedAttribute{MOI.DualObjectiveValue}` if the solver does
 not support this attribute.
 
+This function is equivalent to querying the [`MOI.DualObjectiveValue`](@ref)
+attribute.
+
 See also: [`result_count`](@ref).
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = Model(HiGHS.Optimizer);
+
+julia> set_silent(model)
+
+julia> @variable(model, x >= 1);
+
+julia> @objective(model, Min, 2 * x + 1);
+
+julia> optimize!(model)
+
+julia> dual_objective_value(model)
+3.0
+
+julia> dual_objective_value(model; result = 2)
+ERROR: Result index of attribute MathOptInterface.DualObjectiveValue(2) out of bounds. There are currently 1 solution(s) in the model.
+Stacktrace:
+[...]
+```
 """
 function dual_objective_value(
     model::GenericModel{T};
@@ -76,6 +171,25 @@ end
     objective_sense(model::GenericModel)::MOI.OptimizationSense
 
 Return the objective sense.
+
+This function is equivalent to querying the [`MOI.ObjectiveSense`](@ref) attribute.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> objective_sense(model)
+FEASIBILITY_SENSE::OptimizationSense = 2
+
+julia> @variable(model, x);
+
+julia> @objective(model, Max, x)
+x
+
+julia> objective_sense(model)
+MAX_SENSE::OptimizationSense = 1
+```
 """
 function objective_sense(model::GenericModel)
     return MOI.get(model, MOI.ObjectiveSense())::MOI.OptimizationSense
@@ -84,10 +198,26 @@ end
 """
     set_objective_sense(model::GenericModel, sense::MOI.OptimizationSense)
 
-Sets the objective sense of the model to the given sense. See
-[`set_objective_function`](@ref) to set the objective function. These are
-low-level functions; the recommended way to set the objective is with the
-[`@objective`](@ref) macro.
+Sets the objective sense of the model to the given sense.
+
+See [`set_objective_function`](@ref) to set the objective function.
+
+These are low-level functions; the recommended way to set the objective is with
+the [`@objective`](@ref) macro.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> objective_sense(model)
+FEASIBILITY_SENSE::OptimizationSense = 2
+
+julia> set_objective_sense(model, MOI.MAX_SENSE)
+
+julia> objective_sense(model)
+MAX_SENSE::OptimizationSense = 1
+```
 """
 function set_objective_sense(model::GenericModel, sense::MOI.OptimizationSense)
     return MOI.set(model, MOI.ObjectiveSense(), sense)
@@ -99,10 +229,30 @@ end
     set_objective_function(model::GenericModel, func::Real)
     set_objective_function(model::GenericModel, func::Vector{<:AbstractJuMPScalar})
 
-Sets the objective function of the model to the given function. See
-[`set_objective_sense`](@ref) to set the objective sense. These are low-level
-functions; the recommended way to set the objective is with the
-[`@objective`](@ref) macro.
+Sets the objective function of the model to the given function.
+
+See [`set_objective_sense`](@ref) to set the objective sense.
+
+These are low-level functions; the recommended way to set the objective is with
+the [`@objective`](@ref) macro.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @objective(model, Min, x);
+
+julia> objective_function(model)
+x
+
+julia> set_objective_function(model, 2 * x + 1)
+
+julia> objective_function(model)
+2 x + 1
+```
 """
 function set_objective_function end
 
@@ -180,6 +330,22 @@ end
     objective_function_type(model::GenericModel)::AbstractJuMPScalar
 
 Return the type of the objective function.
+
+This function is equivalent to querying the [`MOI.ObjectiveFunctionType`](@ref)
+attribute.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @objective(model, Min, 2 * x + 1);
+
+julia> objective_function_type(model)
+AffExpr (alias for GenericAffExpr{Float64, GenericVariableRef{Float64}})
+```
 """
 function objective_function_type(model::GenericModel)
     return jump_function_type(
@@ -191,12 +357,15 @@ end
 """
     objective_function(
         model::GenericModel,
-        T::Type = objective_function_type(model),
-    )
+        ::Type{F} = objective_function_type(model),
+    ) where {F}
 
-Return an object of type `T` representing the objective function.
+Return an object of type `F` representing the objective function.
 
-Error if the objective is not convertible to type `T`.
+Errors if the objective is not convertible to type `F`.
+
+This function is equivalent to querying the [`MOI.ObjectiveFunction{F}`](@ref)
+attribute.
 
 ## Example
 
@@ -218,11 +387,13 @@ julia> objective_function(model, QuadExpr)
 julia> typeof(objective_function(model, QuadExpr))
 QuadExpr (alias for GenericQuadExpr{Float64, GenericVariableRef{Float64}})
 ```
+
 We see with the last two commands that even if the objective function is affine,
 as it is convertible to a quadratic function, it can be queried as a quadratic
 function and the result is quadratic.
 
-However, it is not convertible to a variable.
+However, it is not convertible to a variable:
+
 ```jldoctest objective_function; filter = r"MathOptInterface\\."s
 julia> objective_function(model, VariableRef)
 ERROR: InexactError: convert(MathOptInterface.VariableIndex, 1.0 + 2.0 MOI.VariableIndex(1))
