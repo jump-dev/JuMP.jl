@@ -199,6 +199,10 @@ end
 A struct to represent a nonlinear parameter.
 
 Create a parameter using [`@NLparameter`](@ref).
+
+!!! compat
+    This type is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
 struct NonlinearParameter <: AbstractJuMPScalar
     model::Model
@@ -264,6 +268,10 @@ end
 
 Store the value `v` in the nonlinear parameter `p`.
 
+!!! compat
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
+
 ## Example
 
 ```jldoctest
@@ -295,6 +303,10 @@ end
 A struct to represent a nonlinear expression.
 
 Create an expression using [`@NLexpression`](@ref).
+
+!!! compat
+    This type is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
 struct NonlinearExpression <: AbstractJuMPScalar
     model::Model
@@ -415,6 +427,10 @@ const NonlinearConstraintIndex = MOI.Nonlinear.ConstraintIndex
 
 """
     NonlinearConstraintRef
+
+!!! compat
+    This type is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
 const NonlinearConstraintRef =
     ConstraintRef{Model,MOI.Nonlinear.ConstraintIndex}
