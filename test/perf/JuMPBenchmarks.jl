@@ -523,7 +523,7 @@ Run a script to benchmark various aspects of JuMP.
 
 Pass `-r N` to run each benchmark function `N` times.
 
-### Examples
+### Example
 
 ```
 \$ julia test/perf/JuMPBenchmarks.jl -r 2
@@ -537,7 +537,7 @@ instead.
  * If `--compare` is not given, save a new benchmark dataset to `file`.
  * If `--compare`, compare aginst the data in `file`.
 
-### Examples
+### Example
 
 ```
 \$ julia test/perf/JuMPBenchmarks.jl -f my_benchmark_run
@@ -552,7 +552,7 @@ start Julia at the command line. This uses the Project.toml located at
 `/docs/src/Project.toml`, which assumes you have dev'd JuMP to it as
 appropriate.
 
-### Examples
+### Example
 
 ```
 \$ julia test/perf/JuMPBenchmarks.jl -j /Users/oscar/julia1.6
