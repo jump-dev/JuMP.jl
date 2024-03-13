@@ -15,7 +15,7 @@ otherwise return `nothing`.
 If `force`, always return a [`MOI.Nonlinear.Model`](@ref), and if one does not
 exist for the model, create an empty one.
 
-!!! warning
+!!! compat
     This function is part of the legacy nonlinear interface. Consider using the
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
@@ -150,7 +150,7 @@ optimization sense `sense`.
 This function is most useful if the expression `expr` is generated
 programmatically, and you cannot use [`@NLobjective`](@ref).
 
-!!! warning
+!!! compat
     This function is part of the legacy nonlinear interface. Consider using the
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 
@@ -220,7 +220,7 @@ end
 
 Add an anonymous parameter to the model.
 
-!!! warning
+!!! compat
     This function is part of the legacy nonlinear interface. Consider using the
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
@@ -326,7 +326,7 @@ Add a nonlinear expression `expr` to `model`.
 This function is most useful if the expression `expr` is generated
 programmatically, and you cannot use [`@NLexpression`](@ref).
 
-!!! warning
+!!! compat
     This function is part of the legacy nonlinear interface. Consider using the
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 
@@ -462,7 +462,7 @@ Add a nonlinear constraint described by the Julia expression `ex` to `model`.
 This function is most useful if the expression `ex` is generated
 programmatically, and you cannot use [`@NLconstraint`](@ref).
 
-!!! warning
+!!! compat
     This function is part of the legacy nonlinear interface. Consider using the
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 
@@ -519,7 +519,7 @@ end
 
 Returns the number of nonlinear constraints associated with the `model`.
 
-!!! warning
+!!! compat
     This function is part of the legacy nonlinear interface. Consider using the
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 
@@ -541,7 +541,7 @@ end
 Return a vector of all nonlinear constraint references in the model in the
 order they were added to the model.
 
-!!! warning
+!!! compat
     This function is part of the legacy nonlinear interface. Consider using the
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 
@@ -617,7 +617,7 @@ end
 
 Return the current value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref).
 
-!!! warning
+!!! compat
     This function is part of the legacy nonlinear interface. Consider using the
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
@@ -633,7 +633,7 @@ end
 
 Set the value of the MOI attribute [`MOI.NLPBlockDualStart`](@ref).
 
-!!! warning
+!!! compat
     This function is part of the legacy nonlinear interface. Consider using the
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 
@@ -708,7 +708,7 @@ Register the user-defined function `f` that takes `dimension` arguments in
 The function `f` must support all subtypes of `Real` as arguments. Do not assume
 that the inputs are `Float64`.
 
-!!! warning
+!!! compat
     This function is part of the legacy nonlinear interface. Consider using the
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 
@@ -783,7 +783,7 @@ Register the user-defined function `f` that takes `dimension` arguments in
 The functions `f`and `∇f` must support all subtypes of `Real` as arguments. Do
 not assume that the inputs are `Float64`.
 
-!!! warning
+!!! compat
     This function is part of the legacy nonlinear interface. Consider using the
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 
@@ -884,7 +884,7 @@ hessian function `∇²f`.
 `∇f` and `∇²f` must return numbers corresponding to the first- and second-order
 derivatives of the function `f` respectively.
 
-!!! warning
+!!! compat
     This function is part of the legacy nonlinear interface. Consider using the
     new nonlinear interface documented in [Nonlinear Modeling](@ref).
 
