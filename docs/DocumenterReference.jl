@@ -131,8 +131,8 @@ end
 function _iterate_over_symbols(f, config)
     current_module = config.current_module
     modules = get(config.modules, config.current_module, Any[])
-    key_types = sort(_exported_symbols(current_module); by = config.sort_by)
-    for (key, type) in vcat(key_types, modules)
+    key_types = vcat(_exported_symbols(current_module), modules)
+    for (key, type) in sort!(key_types; by = config.sort_by)
         if key isa Symbol
             doc = Base.Docs.doc(Base.Docs.Binding(current_module, key))
             if occursin("No documentation found.", string(doc))
