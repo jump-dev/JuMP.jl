@@ -561,7 +561,7 @@ Returns the reference of the variable with name attribute `name` or `Nothing` if
 no variable has this name attribute. Throws an error if several variables have
 `name` as their name attribute.
 
-## Examples
+## Example
 
 ```jldoctest objective_function; filter = r"Stacktrace:.*"s
 julia> model = Model();
@@ -677,7 +677,7 @@ queried with [`lower_bound`](@ref).
 See also [`LowerBoundRef`](@ref), [`lower_bound`](@ref),
 [`set_lower_bound`](@ref), [`delete_lower_bound`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -713,7 +713,7 @@ bound constraint.
 See also [`LowerBoundRef`](@ref), [`has_lower_bound`](@ref),
 [`lower_bound`](@ref), [`delete_lower_bound`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -768,7 +768,7 @@ Errors if one does not exist.
 See also [`has_lower_bound`](@ref), [`lower_bound`](@ref),
 [`set_lower_bound`](@ref), [`delete_lower_bound`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -794,7 +794,7 @@ Delete the lower bound constraint of a variable.
 See also [`LowerBoundRef`](@ref), [`has_lower_bound`](@ref),
 [`lower_bound`](@ref), [`set_lower_bound`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -823,7 +823,7 @@ Return the lower bound of a variable. Error if one does not exist.
 See also [`LowerBoundRef`](@ref), [`has_lower_bound`](@ref),
 [`set_lower_bound`](@ref), [`delete_lower_bound`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -850,7 +850,7 @@ queried with [`upper_bound`](@ref).
 See also [`UpperBoundRef`](@ref), [`upper_bound`](@ref),
 [`set_upper_bound`](@ref), [`delete_upper_bound`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -884,7 +884,7 @@ constraint.
 See also [`UpperBoundRef`](@ref), [`has_upper_bound`](@ref),
 [`upper_bound`](@ref), [`delete_upper_bound`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -939,7 +939,7 @@ Errors if one does not exist.
 See also [`has_upper_bound`](@ref), [`upper_bound`](@ref),
 [`set_upper_bound`](@ref), [`delete_upper_bound`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -967,7 +967,7 @@ Errors if one does not exist.
 See also [`UpperBoundRef`](@ref), [`has_upper_bound`](@ref),
 [`upper_bound`](@ref), [`set_upper_bound`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -998,7 +998,7 @@ Error if one does not exist.
 See also [`UpperBoundRef`](@ref), [`has_upper_bound`](@ref),
 [`set_upper_bound`](@ref), [`delete_upper_bound`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1024,7 +1024,7 @@ queried with [`fix_value`](@ref).
 
 See also [`FixRef`](@ref), [`fix_value`](@ref), [`fix`](@ref), [`unfix`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1066,7 +1066,7 @@ after a call to [`unfix`](@ref).
 See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix_value`](@ref),
 [`unfix`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1149,7 +1149,7 @@ Error if one does not exist.
 See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix_value`](@ref),
 [`fix`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1179,7 +1179,7 @@ Error if one does not exist.
 
 See also [`FixRef`](@ref), [`is_fixed`](@ref), [`fix`](@ref), [`unfix`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1205,7 +1205,7 @@ Errors if one does not exist.
 See also [`is_fixed`](@ref), [`fix_value`](@ref), [`fix`](@ref),
 [`unfix`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1232,7 +1232,7 @@ Return `true` if `v` is constrained to be integer.
 
 See also [`IntegerRef`](@ref), [`set_integer`](@ref), [`unset_integer`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1267,7 +1267,7 @@ Add an integrality constraint on the variable `variable_ref`.
 
 See also [`IntegerRef`](@ref), [`is_integer`](@ref), [`unset_integer`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1312,7 +1312,7 @@ Errors if one does not exist.
 
 See also [`IntegerRef`](@ref), [`is_integer`](@ref), [`set_integer`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1342,7 +1342,7 @@ Errors if one does not exist.
 
 See also [`is_integer`](@ref), [`set_integer`](@ref), [`unset_integer`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1369,7 +1369,7 @@ Return `true` if `v` is constrained to be binary.
 
 See also [`BinaryRef`](@ref), [`set_binary`](@ref), [`unset_binary`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1400,7 +1400,7 @@ Add a constraint on the variable `v` that it must take values in the set
 
 See also [`BinaryRef`](@ref), [`is_binary`](@ref), [`unset_binary`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1443,7 +1443,7 @@ Remove the binary constraint on the variable `variable_ref`.
 
 See also [`BinaryRef`](@ref), [`is_binary`](@ref), [`set_binary`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1472,7 +1472,7 @@ Errors if one does not exist.
 
 See also [`is_binary`](@ref), [`set_binary`](@ref), [`unset_binary`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1503,7 +1503,7 @@ Errors if one does not exist.
 See also [`is_parameter`](@ref), [`set_parameter_value`](@ref),
 [`parameter_value`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1542,7 +1542,7 @@ Return `true` if `x` is constrained to be a parameter.
 See also [`ParameterRef`](@ref), [`set_parameter_value`](@ref),
 [`parameter_value`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1574,7 +1574,7 @@ Errors if `x` is not a parameter.
 See also [`ParameterRef`](@ref), [`is_parameter`](@ref),
 [`parameter_value`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -1610,7 +1610,7 @@ Errors if `x` is not a parameter.
 See also [`ParameterRef`](@ref), [`is_parameter`](@ref),
 [`set_parameter_value`](@ref).
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();

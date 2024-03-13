@@ -581,7 +581,7 @@ Optional: add a slightly longer paragraph describing the function.
 
  - List any notes that the user should be aware of
 
-## Examples
+## Example
 
 ```jldoctest
 julia> 1 + 1

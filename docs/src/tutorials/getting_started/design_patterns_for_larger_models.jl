@@ -559,7 +559,7 @@ Solve the knapsack problem and return the optimal primal solution
  * Otherwise, `nothing`, indicating that the problem does not have an optimal
    solution.
 
-## Examples
+## Example
 
 ```julia
 solution = solve_knapsack(

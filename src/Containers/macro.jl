@@ -436,7 +436,7 @@ is the dictionary returned by [`parse_macro_arguments`](@ref).
 This assumes that the key in `kwargs` used to over-ride the name choice is
 `:base_name`.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> Containers.build_name_expr(:x, [:i, :j], Dict{Symbol,Any}())

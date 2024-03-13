@@ -1476,7 +1476,7 @@ to pass the set un-changed to the solver.
     This struct is intended for use internally by JuMP extensions. You should not
     need to use it in regular JuMP code.
 
-## Examples
+## Example
 
 ```jldoctest
 julia> model = Model();
