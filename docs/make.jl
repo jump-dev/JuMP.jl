@@ -290,7 +290,7 @@ jump_api_reference = DocumenterReference.automatic_reference_documentation(;
                 DocumenterReference.DOCTYPE_STRUCT,
         ],
     ],
-    sort_by = sort_by_api_fn
+    sort_by = sort_by_api_fn,
 )
 
 # ==============================================================================
