@@ -15,9 +15,11 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [weakdeps]
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 
 [extensions]
 JuMPDimensionalDataExt = "DimensionalData"
+JuMPEnzymeExt = "Enzyme"
 
 [compat]
 DimensionalData = "0.24, 0.25, 0.26.2"
