@@ -88,7 +88,7 @@ function _automatic_reference_documentation(
     root::String,
     subdirectory::String,
     modules::Dict{Module,<:Vector},
-    sory_by::Function,
+    sort_by::Function,
 )
     push!(CONFIG, _Config(current_module, root, subdirectory, modules, sort_by))
     return "$subdirectory/$current_module.md"
