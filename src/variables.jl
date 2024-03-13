@@ -7,6 +7,17 @@
     num_variables(model::GenericModel)::Int64
 
 Returns number of variables in `model`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> num_variables(model)
+2
+```
 """
 function num_variables(model::GenericModel)::Int64
     return MOI.get(model, MOI.NumberOfVariables())
@@ -449,6 +460,27 @@ Solvers may implement methods for deleting multiple variables that are
 more efficient than repeatedly calling the single variable delete method.
 
 See also: [`unregister`](@ref)
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> delete(model, x)
+
+julia> unregister(model, :x)
+
+julia> print(model)
+Feasibility
+Subject to
+
+julia> model[:x]
+ERROR: KeyError: key :x not found
+Stacktrace:
+[...]
+```
 """
 function delete(
     model::GenericModel,
@@ -469,6 +501,22 @@ end
     is_valid(model::GenericModel, variable_ref::GenericVariableRef)
 
 Return `true` if `variable` refers to a valid variable in `model`.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> is_valid(model, x)
+true
+
+julia> model_2 = Model();
+
+julia> is_valid(model_2, x)
+false
+```
 """
 function is_valid(model::GenericModel, variable_ref::GenericVariableRef)
     return model === owner_model(variable_ref) &&
@@ -490,6 +538,17 @@ end
     index(v::GenericVariableRef)::MOI.VariableIndex
 
 Return the index of the variable that corresponds to `v` in the MOI backend.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> index(x)
+MOI.VariableIndex(1)
+```
 """
 index(v::GenericVariableRef) = v.index
 
@@ -532,6 +591,20 @@ end
     name(v::GenericVariableRef)::String
 
 Get a variable's name attribute.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2])
+2-element Vector{VariableRef}:
+ x[1]
+ x[2]
+
+julia> name(x[1])
+"x[1]"
+```
 """
 function name(v::GenericVariableRef)
     model = owner_model(v)
@@ -545,6 +618,23 @@ end
     set_name(v::GenericVariableRef, s::AbstractString)
 
 Set a variable's name attribute.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> set_name(x, "x_foo")
+
+julia> x
+x_foo
+
+julia> name(x)
+"x_foo"
+```
 """
 function set_name(v::GenericVariableRef, s::String)
     MOI.set(owner_model(v), MOI.VariableName(), v, s)
