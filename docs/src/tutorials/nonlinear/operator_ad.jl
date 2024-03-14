@@ -44,6 +44,9 @@ f(x::T...) where {T} = (1 - x[1])^2 + 100 * (x[2] - x[1]^2)^2
 # Here's the value at a random point:
 
 x = rand(2)
+
+#-
+
 f(x...)
 
 # ## Analytic derivative
@@ -156,7 +159,7 @@ Test.@test ≈(analytic_H, fdiff_H)
 # ### JuMP example
 
 # The code for computing the gradient and Hessian using ForwardDiff can be
-# re-used for many operators. Thus, it is helpful to enscapsulate it into the
+# re-used for many operators. Thus, it is helpful to encapsulate it into the
 # function:
 
 """
@@ -268,7 +271,7 @@ Test.@test ≈(analytic_H, enzyme_H)
 # ### JuMP example
 
 # The code for computing the gradient and Hessian using Enzyme can be re-used
-# for many operators. Thus, it is helpful to enscapsulate it into the function:
+# for many operators. Thus, it is helpful to encapsulate it into the function:
 
 """
     enzyme_operator(f::Function) -> Tuple{Function,Function}
