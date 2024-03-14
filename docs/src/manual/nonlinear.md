@@ -8,14 +8,6 @@ DocTestFilters = [r"≤|<=", r"≥|>=", r" == | = ", r" ∈ | in ", r"MathOptInt
 
 # Nonlinear Modeling
 
-!!! warning
-    This page describes a new nonlinear interface to JuMP. It replaces the
-    legacy `@NL` interface, which is documented at [Nonlinear Modeling (Legacy)](@ref).
-    The API described below is stable, and it will not break with future 1.X
-    releases of JuMP. However, solver support may be limited, and there may be
-    gaps in functionality compared with the legacy interface. To report a bug,
-    or request a missing feature, please [open an issue](https://github.com/jump-dev/JuMP.jl/issues/new/choose).
-
 JuMP has support for nonlinear (convex and nonconvex) optimization problems.
 JuMP is able to automatically provide exact, sparse second-order derivatives to
 solvers. This information can improve solver accuracy and performance.
