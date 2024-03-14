@@ -551,10 +551,15 @@ log(f(x))
 ### Gradients and Hessians
 
 By default, JuMP will use automatic differentiation to compute the gradient and
-Hessian of user-defined operators. If your function is not amenable to
-automatic differentiation, or you can compute analytic derivatives, you may pass
-additional arguments to [`@operator`](@ref) to compute the first- and
+Hessian of user-defined operators. If your function is not amenable to the
+default automatic differentiation, or you can compute analytic derivatives, you
+may pass additional arguments to [`@operator`](@ref) to compute the first- and
 second-derivatives.
+
+!!! tip
+    The tutorial [Automatic differentiation of user-defined operators](@ref)
+    has examples of how to use third-party Julia packages to compute automatic
+    derivatives.
 
 #### Univariate functions
 

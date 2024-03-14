@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Oscar Dowson and contributors                               #src
+# Copyright (c) 2024 Oscar Dowson and contributors                               #src
 #                                                                                #src
 # Permission is hereby granted, free of charge, to any person obtaining a copy   #src
 # of this software and associated documentation files (the "Software"), to deal  #src
@@ -22,6 +22,12 @@
 
 # The purpose of this tutorial is to demonstrate how to apply automatic
 # differentiation to [User-defined operators](@ref jump_user_defined_operators).
+
+# !!! tip
+#     This tutorial is for advanced users. As an alternative, consider using
+#     [Function tracing](@ref) instead of creating an operator, and if an
+#     operator is necessary, consider using the default of `@operator(model, op_f, N, f)`
+#     instead of passing explicit [Gradients and Hessians](@ref).
 
 # This tutorial uses the following packages:
 
@@ -305,9 +311,3 @@ function enzyme_rosenbrock()
 end
 
 enzyme_rosenbrock()
-
-# ## Relative performance
-
-@time analytic_rosenbrock()
-@time fdiff_rosenbrock()
-@time enzyme_rosenbrock()
