@@ -204,7 +204,7 @@ fdiff_rosenbrock()
 
 # ### Pros and cons
 
-# The main benefit of Enyzme is that it can produce fast derivatives for
+# The main benefit of Enzyme is that it can produce fast derivatives for
 # functions with many input arguments.
 
 # The main downsides are that it may throw unusual errors if your code uses an
