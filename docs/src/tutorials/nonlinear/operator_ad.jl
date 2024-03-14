@@ -163,12 +163,12 @@ Test.@test ≈(analytic_H, fdiff_H)
 # function:
 
 """
-    fdiff_operator(f::Function) -> Tuple{Function,Function}
+    fdiff_derivatives(f::Function) -> Tuple{Function,Function}
 
 Return a tuple of functions that evalute the gradient and Hessian of `f` using
 ForwardDiff.jl.
 """
-function fdiff_operator(f::Function)
+function fdiff_derivatives(f::Function)
     function ∇f(g::AbstractVector{T}, x::Vararg{T,N}) where {T,N}
         ForwardDiff.gradient!(g, y -> f(y...), collect(x))
         return
@@ -183,14 +183,13 @@ function fdiff_operator(f::Function)
     return ∇f, ∇²f
 end
 
-# Here's an example using `fdiff_operator`:
+# Here's an example using `fdiff_derivatives`:
 
 function fdiff_rosenbrock()
     model = Model(Ipopt.Optimizer)
     set_silent(model)
     @variable(model, x[1:2])
-    fdiff_grad, fdiff_hess = fdiff_operator(f)
-    @operator(model, op_rosenbrock, 2, f, fdiff_grad, fdiff_hess)
+    @operator(model, op_rosenbrock, 2, f, fdiff_derivatives(f)...)
     @objective(model, Min, op_rosenbrock(x[1], x[2]))
     optimize!(model)
     Test.@test is_solved_and_feasible(model)
@@ -274,12 +273,12 @@ Test.@test ≈(analytic_H, enzyme_H)
 # for many operators. Thus, it is helpful to encapsulate it into the function:
 
 """
-    enzyme_operator(f::Function) -> Tuple{Function,Function}
+    enzyme_derivatives(f::Function) -> Tuple{Function,Function}
 
 Return a tuple of functions that evalute the gradient and Hessian of `f` using
 Enzyme.jl.
 """
-function enzyme_operator(f::Function)
+function enzyme_derivatives(f::Function)
     function ∇f(g::AbstractVector{T}, x::Vararg{T,N}) where {T,N}
         g .= Enzyme.autodiff(Enzyme.Reverse, f, Enzyme.Active.(x)...)[1]
         return
@@ -299,14 +298,13 @@ function enzyme_operator(f::Function)
     return ∇f, ∇²f
 end
 
-# Here's an example using `enzyme_operator`:
+# Here's an example using `enzyme_derivatives`:
 
 function enzyme_rosenbrock()
     model = Model(Ipopt.Optimizer)
     set_silent(model)
     @variable(model, x[1:2])
-    enzyme_grad, enzyme_hess = enzyme_operator(f)
-    @operator(model, op_rosenbrock, 2, f, enzyme_grad, enzyme_hess)
+    @operator(model, op_rosenbrock, 2, f, enzyme_derivatives(f)...)
     @objective(model, Min, op_rosenbrock(x[1], x[2]))
     optimize!(model)
     Test.@test is_solved_and_feasible(model)
