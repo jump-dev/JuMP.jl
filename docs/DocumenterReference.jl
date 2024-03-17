@@ -24,6 +24,7 @@ struct _Config
     root::String
     subdirectory::String
     modules::Dict{Module,<:Vector}
+    sort_by::Function
 end
 
 const CONFIG = _Config[]
@@ -37,6 +38,7 @@ Documenter.Selectors.order(::Type{APIBuilder}) = 0.0
         root::String,
         subdirectory::String,
         modules::Dict{Module,Vector{Pair{String,DocType}}},
+        sort_by::Function = identity,
     )
 
 Automatically creates the API reference documentation for `current_module` and
@@ -61,6 +63,7 @@ function automatic_reference_documentation(;
     root::String,
     subdirectory::String,
     modules::Vector,
+    sort_by::Function = identity,
 )
     _to_extras(m::Module) = m => Any[]
     _to_extras(m::Pair) = m
@@ -73,6 +76,7 @@ function automatic_reference_documentation(;
             root,
             subdirectory,
             modules = _modules,
+            sort_by,
         )
         push!(list_of_pages, "$current_module" => pages)
     end
@@ -84,8 +88,9 @@ function _automatic_reference_documentation(
     root::String,
     subdirectory::String,
     modules::Dict{Module,<:Vector},
+    sort_by::Function,
 )
-    push!(CONFIG, _Config(current_module, root, subdirectory, modules))
+    push!(CONFIG, _Config(current_module, root, subdirectory, modules, sort_by))
     return "$subdirectory/$current_module.md"
 end
 
@@ -126,7 +131,8 @@ end
 function _iterate_over_symbols(f, config)
     current_module = config.current_module
     modules = get(config.modules, config.current_module, Any[])
-    for (key, type) in vcat(_exported_symbols(current_module), modules)
+    key_types = vcat(_exported_symbols(current_module), modules)
+    for (key, type) in sort!(key_types; by = config.sort_by)
         if key isa Symbol
             doc = Base.Docs.doc(Base.Docs.Binding(current_module, key))
             if occursin("No documentation found.", string(doc))

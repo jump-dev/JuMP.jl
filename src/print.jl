@@ -398,6 +398,10 @@ _set_lhs(::Any) = nothing
 
 Return a string representation of the nonlinear constraint `c` belonging to
 `model`, given the `mode`.
+
+!!! compat
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
 function nonlinear_constraint_string(
     model::GenericModel,
@@ -442,6 +446,10 @@ end
 
 Return a string representation of the nonlinear expression `c` belonging to
 `model`, given the `mode`.
+
+!!! compat
+    This function is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref).
 """
 function nonlinear_expr_string(
     model::GenericModel,

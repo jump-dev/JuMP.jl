@@ -233,6 +233,11 @@ end
 Add a nonlinear objective to `model` with optimization sense `sense`.
 `sense` must be `Max` or `Min`.
 
+!!! compat
+    This macro is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref). In most
+    cases, you can replace `@NLobjective` with [`@objective`](@ref).
+
 ## Example
 
 ```jldoctest
@@ -269,7 +274,14 @@ end
     @NLconstraint(model::GenericModel, expr)
 
 Add a constraint described by the nonlinear expression `expr`. See also
-[`@constraint`](@ref). For example:
+[`@constraint`](@ref).
+
+!!! compat
+    This macro is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref). In most
+    cases, you can replace `@NLconstraint` with [`@constraint`](@ref).
+
+## Example
 
 ```jldoctest
 julia> model = Model();
@@ -338,6 +350,11 @@ multiple lines wrapped in a `begin ... end` block.
 
 The macro returns a tuple containing the constraints that were defined.
 
+!!! compat
+    This macro is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref). In most
+    cases, you can replace `@NLconstraints` with [`@constraints`](@ref).
+
 ## Example
 
 ```jldoctest
@@ -372,7 +389,14 @@ end
     @NLexpression(args...)
 
 Efficiently build a nonlinear expression which can then be inserted in other
-nonlinear constraints and the objective. See also [`@expression`]. For example:
+nonlinear constraints and the objective. See also [`@expression`].
+
+!!! compat
+    This macro is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref). In most
+    cases, you can replace `@NLexpression` with [`@expression`](@ref).
+
+## Example
 
 ```jldoctest api_nlexpression
 julia> model = Model();
@@ -455,6 +479,11 @@ The model must be the first argument, and multiple expressions can be added on
 multiple lines wrapped in a `begin ... end` block.
 
 The macro returns a tuple containing the expressions that were defined.
+
+!!! compat
+    This macro is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref). In most
+    cases, you can replace `@NLexpressions` with [`@expressions`](@ref).
 
 ## Example
 
@@ -549,6 +578,12 @@ Create and return an anonymous collection of nonlinear parameters attached to
 the model `model` with initial value set to `value_expr` (may depend on index
 sets). Uses the same syntax for specifying index sets as [`@variable`](@ref).
 
+!!! compat
+    This macro is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref). In most
+    cases, you can replace a call like `@NLparameter(model, p == value)` with
+    `@variable(model, p in Parameter(value))`.
+
 ## Example
 
 ```jldoctest
@@ -637,6 +672,22 @@ multiple lines wrapped in a `begin ... end` block. Distinct parameters need to
 be placed on separate lines as in the following example.
 
 The macro returns a tuple containing the parameters that were defined.
+
+!!! compat
+    This macro is part of the legacy nonlinear interface. Consider using the
+    new nonlinear interface documented in [Nonlinear Modeling](@ref). In most
+    cases, you can replace a call like
+    ```julia
+    @NLparameters(model, begin
+        p == value
+    end)
+    ```
+    with
+    ```julia
+    @variables(model, begin
+        p in Parameter(value)
+    end)
+    ```
 
 ## Example
 
