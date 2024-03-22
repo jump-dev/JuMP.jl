@@ -2525,7 +2525,7 @@ end
     set_normalized_coefficient(
         constraint::ConstraintRef,
         variable::GenericVariableRef,
-        value,
+        value::Number,
     )
 
 Set the coefficient of `variable` in the constraint `constraint` to `value`.
@@ -2550,6 +2550,8 @@ julia> set_normalized_coefficient(con, x, 4)
 julia> con
 con : 4 x ≤ 2
 ```
+
+See also [`set_normalized_coefficients`](@ref).
 """
 function set_normalized_coefficient(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
@@ -2561,6 +2563,58 @@ function set_normalized_coefficient(
         backend(model),
         index(con_ref),
         MOI.ScalarCoefficientChange(index(variable), convert(T, value)),
+    )
+    model.is_model_dirty = true
+    return
+end
+
+"""
+    set_normalized_coefficients(
+        constraints::AbstractVector{<:ConstraintRef},
+        variables::AbstractVector{<:GenericVariableRef},
+        values::AbstractVector{<:Number},
+    )
+
+Set multiple coefficient of `variables` in the constraints `constraints` to `values`.
+
+Note that prior to this step, JuMP will aggregate multiple terms containing the
+same variable. For example, given a constraint `2x + 3x <= 2`,
+`set_normalized_coefficients(con, [x], [4])` will create the constraint `4x <= 2`.
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @variable(model, y)
+y
+
+julia> @constraint(model, con, 2x + 3x + 4y <= 2)
+con : 5 x + 4 y ≤ 2
+
+julia> set_normalized_coefficients(con, [x, y], [6, 7])
+
+julia> con
+con : 6 x + 7 y ≤ 2
+```
+
+See also [`set_normalized_coefficients`](@ref).
+"""
+function set_normalized_coefficients(
+    con_ref::AbstractVector{
+        <:ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    },
+    variables::AbstractVector{<:AbstractVariableRef},
+    values::AbstractVector{<:Number},
+) where {T,F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}}}
+    model = owner_model(first(con_ref))
+    MOI.modify(
+        backend(model),
+        index.(con_ref),
+        MOI.ScalarCoefficientChange.(index.(variables), convert.(T, values)),
     )
     model.is_model_dirty = true
     return
@@ -2596,6 +2650,8 @@ julia> set_normalized_coefficients(con, x, [(1, 2.0), (2, 5.0)])
 julia> con
 con : [2 x, 5 x] ∈ MathOptInterface.Nonnegatives(2)
 ```
+
+See also [`set_normalized_coefficient`](@ref).
 """
 function set_normalized_coefficients(
     constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
@@ -2644,6 +2700,8 @@ julia> set_normalized_coefficient(con, x[1], x[2], 5)
 julia> con
 con : 4 x[1]² + 5 x[1]*x[2] + x[2] ≤ 2
 ```
+
+See also [`set_normalized_coefficients`](@ref).
 """
 function set_normalized_coefficient(
     constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
@@ -2663,6 +2721,67 @@ function set_normalized_coefficient(
             index(variable_1),
             index(variable_2),
             new_value,
+        ),
+    )
+    model.is_model_dirty = true
+    return
+end
+
+"""
+    set_normalized_coefficients(
+        constraints::AbstractVector{<:ConstraintRef},
+        variables_1:AbstractVector{<:GenericVariableRef},
+        variables_2:AbstractVector{<:GenericVariableRef},
+        values::AbstractVector{<:Number},
+    )
+
+Set multiple quadratic coefficients associated with `variables_1` and `variables_2` in
+the constraints `constraints` to `values`.
+
+Note that prior to this step, JuMP will aggregate multiple terms containing the
+same variable. For example, given a constraint `2x^2 + 3x^2 <= 2`,
+`set_normalized_coefficients(con, [x], [x], [4])` will create the constraint `4x^2 <= 2`.
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> @constraint(model, con, 2x[1]^2 + 3 * x[1] * x[2] + x[2] <= 2)
+con : 2 x[1]² + 3 x[1]*x[2] + x[2] ≤ 2
+
+julia> set_normalized_coefficient(con, [x[1], x[1]], [x[1], x[2]], [4, 5])
+
+julia> con
+con : 4 x[1]² + 5 x[1]*x[2] + x[2] ≤ 2
+```
+
+See also [`set_normalized_coefficients`](@ref).
+"""
+function set_normalized_coefficients(
+    constraints::AbstractVector{
+        <:ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    },
+    variables_1::AbstractVector{<:AbstractVariableRef},
+    variables_2::AbstractVector{<:AbstractVariableRef},
+    values::AbstractVector{<:Number},
+) where {T,F<:MOI.ScalarQuadraticFunction{T}}
+    new_values = convert.(T, values)
+    for i in eachindex(variables_1)
+        if variables_1[i] == variables_2[i]
+            new_values[i] *= T(2)
+        end
+    end
+    model = owner_model(first(constraints))
+    MOI.modify(
+        backend(model),
+        index.(constraint),
+        MOI.ScalarQuadraticCoefficientChanges.(
+            index.(variables_1),
+            index.(variables_2),
+            new_values,
         ),
     )
     model.is_model_dirty = true

@@ -980,7 +980,29 @@ function test_change_coefficient()
     return
 end
 
-function test_change_coefficients()
+function test_change_coefficient_batch()
+    model = Model()
+    x = @variable(model)
+    y = @variable(model)
+    con_ref = @constraint(model, 2 * x + 3 * y == -1)
+    @test normalized_coefficient(con_ref, x) == 2.0
+    @test normalized_coefficient(con_ref, y) == 3.0
+    set_normalized_coefficient(con_ref, [x, y], [1.0, 4.0])
+    @test normalized_coefficient(con_ref, x) == 1.0
+    @test normalized_coefficient(con_ref, y) == 4.0
+    set_normalized_coefficient(con_ref, [x, y], [3, 4])  # Check type promotion.
+    @test normalized_coefficient(con_ref, x) == 3.0
+    @test normalized_coefficient(con_ref, y) == 4.0
+    quad_con = @constraint(model, x^2 == 0)
+    @test normalized_coefficient(quad_con, x) == 0.0
+    set_normalized_coefficient(quad_con, [x, y], [2, 7])
+    @test normalized_coefficient(quad_con, x) == 2.0
+    @test normalized_coefficient(quad_con, y) == 7.0
+    @test isequal_canonical(constraint_object(quad_con).func, x^2 + 2x + 7y)
+    return
+end
+
+function test_change_coefficients_vector_function()
     model = Model()
     @variable(model, x)
     @constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
@@ -1801,6 +1823,18 @@ function test_set_normalized_coefficient_quadratic()
     @test normalized_coefficient(con, x[1], x[2]) == 3.0
     set_normalized_coefficient(con, x[1], x[1], 4)
     set_normalized_coefficient(con, x[1], x[2], 5)
+    @test normalized_coefficient(con, x[1], x[1]) == 4.0
+    @test normalized_coefficient(con, x[1], x[2]) == 5.0
+    return
+end
+
+function test_set_normalized_coefficient_quadratic_batch()
+    model = Model()
+    @variable(model, x[1:2])
+    @constraint(model, con, 2x[1]^2 + 3 * x[1] * x[2] + x[2] <= 2)
+    @test normalized_coefficient(con, x[1], x[1]) == 2.0
+    @test normalized_coefficient(con, x[1], x[2]) == 3.0
+    set_normalized_coefficient(con, [x[1], x[1]], [x[1], x[2]], [4, 5])
     @test normalized_coefficient(con, x[1], x[1]) == 4.0
     @test normalized_coefficient(con, x[1], x[2]) == 5.0
     return
