@@ -609,9 +609,9 @@ julia> set_objective_coefficient(model, x[1], x[2], 3)
 
 julia> objective_function(model)
 2 x[1]² + 3 x[1]*x[2]
+```
 
 See also [`set_objective_coefficients`](@ref).
-```
 """
 function set_objective_coefficient(
     model::GenericModel{T},
@@ -691,9 +691,9 @@ julia> set_objective_coefficient(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
 
 julia> objective_function(model)
 2 x[1]² + 3 x[1]*x[2]
+```
 
 See also [`set_objective_coefficient`](@ref).
-```
 """
 function set_objective_coefficients(
     model::GenericModel{T},
