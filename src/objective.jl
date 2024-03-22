@@ -685,7 +685,7 @@ julia> @variable(model, x[1:2]);
 julia> @objective(model, Min, x[1]^2 + x[1] * x[2])
 x[1]² + x[1]*x[2]
 
-julia> set_objective_coefficient(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
+julia> set_objective_coefficients(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
 
 julia> objective_function(model)
 2 x[1]² + 3 x[1]*x[2]

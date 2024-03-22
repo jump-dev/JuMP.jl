@@ -2595,7 +2595,7 @@ y
 julia> @constraint(model, con, 2x + 3x + 4y <= 2)
 con : 5 x + 4 y ≤ 2
 
-julia> set_normalized_coefficients(con, [x, y], [6, 7])
+julia> set_normalized_coefficients([con, con], [x, y], [6, 7])
 
 julia> con
 con : 6 x + 7 y ≤ 2
@@ -2752,7 +2752,7 @@ julia> @variable(model, x[1:2]);
 julia> @constraint(model, con, 2x[1]^2 + 3 * x[1] * x[2] + x[2] <= 2)
 con : 2 x[1]² + 3 x[1]*x[2] + x[2] ≤ 2
 
-julia> set_normalized_coefficient(con, [x[1], x[1]], [x[1], x[2]], [4, 5])
+julia> set_normalized_coefficient([con, con], [x[1], x[1]], [x[1], x[2]], [4, 5])
 
 julia> con
 con : 4 x[1]² + 5 x[1]*x[2] + x[2] ≤ 2
