@@ -532,6 +532,13 @@ function set_objective_coefficients(
     if _nlp_objective_function(model) !== nothing
         error("A nonlinear objective is already set in the model")
     end
+    if length(variables) != length(coeffs)
+        throw(
+            DimensionMismatch(
+                "The number of variables and coefficients must match",
+            ),
+        )
+    end
     coeffs_t = convert.(T, coeffs)::AbstractVector{T}
     F = objective_function_type(model)
     _set_objective_coefficients(model, variables, coeffs_t, F)
@@ -701,6 +708,13 @@ function set_objective_coefficients(
 ) where {T}
     if _nlp_objective_function(model) !== nothing
         error("A nonlinear objective is already set in the model")
+    end
+    if !(length(variables_1) == length(variables_2) == length(coeffs))
+        throw(
+            DimensionMismatch(
+                "The number of variables and coefficients must match",
+            ),
+        )
     end
     coeffs_t = convert.(T, coeffs)::AbstractVector{<:T}
     F = moi_function_type(objective_function_type(model))

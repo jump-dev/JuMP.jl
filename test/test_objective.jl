@@ -72,6 +72,19 @@ function test_objective_coef_update_linear_objective_batch_error()
     return
 end
 
+function test_objective_coef_update_linear_objective_batch_dimension_error()
+    model = Model()
+    @variable(model, x[1:2])
+    @objective(model, Min, x[1] * x[2])
+    @test_throws(
+        DimensionMismatch(
+            "The number of variables and coefficients must match",
+        ),
+        set_objective_coefficients(model, [x[1], x[2]], [2]),
+    )
+    return
+end
+
 function test_objective_coef_batch_update_linear_objective_changes()
     model = Model()
     @variable(model, x)
@@ -321,6 +334,19 @@ function test_set_objective_coefficient_quadratic_batch_error()
     @test_throws(
         ErrorException("A nonlinear objective is already set in the model"),
         set_objective_coefficients(model, [x[1]], [x[1]], [2]),
+    )
+    return
+end
+
+function test_set_objective_coefficient_quadratic_batch_dimension_error()
+    model = Model()
+    @variable(model, x[1:2])
+    @objective(model, Min, x[1] * x[2])
+    @test_throws(
+        DimensionMismatch(
+            "The number of variables and coefficients must match",
+        ),
+        set_objective_coefficients(model, [x[1]], [x[1]], [2, 3]),
     )
     return
 end
