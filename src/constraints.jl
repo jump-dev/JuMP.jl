@@ -731,7 +731,7 @@ function add_constraint(
 end
 
 """
-    set_normalized_rhs(constraint::ConstraintRef, value)
+    set_normalized_rhs(constraint::ConstraintRef, value::Number)
 
 Set the right-hand side term of `constraint` to `value`.
 
@@ -758,7 +758,7 @@ con : 2 x ≤ 4
 """
 function set_normalized_rhs(
     con_ref::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
-    value,
+    value::Number,
 ) where {
     T,
     S<:Union{MOI.LessThan{T},MOI.GreaterThan{T},MOI.EqualTo{T}},
@@ -769,6 +769,25 @@ function set_normalized_rhs(
         MOI.ConstraintSet(),
         con_ref,
         S(convert(T, value)),
+    )
+    return
+end
+
+function set_normalized_rhs(
+    constraints::AbstractVector{
+        <:ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
+    },
+    values::AbstractVector{<:Number},
+) where {
+    T,
+    S<:Union{MOI.LessThan{T},MOI.GreaterThan{T},MOI.EqualTo{T}},
+    F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
+}
+    MOI.set(
+        owner_model(first(constraints)),
+        MOI.ConstraintSet(),
+        constraints,
+        S.(convert.(T, values)),
     )
     return
 end

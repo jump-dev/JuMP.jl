@@ -1030,6 +1030,29 @@ function test_change_rhs()
     return
 end
 
+function test_change_rhs_batch()
+    model = Model()
+    x = @variable(model)
+    con_ref1 = @constraint(model, 2 * x <= 1)
+    con_ref2 = @constraint(model, 3 * x <= 2)
+    @test normalized_rhs(con_ref1) == 1.0
+    @test normalized_rhs(con_ref2) == 2.0
+    set_normalized_rhs([con_ref1, con_ref2], [3.0, 4.0])
+    @test normalized_rhs(con_ref1) == 3.0
+    @test normalized_rhs(con_ref2) == 4.0
+    con_ref1 = @constraint(model, 2 * x - 1 == 1)
+    con_ref2 = @constraint(model, 2 * x - 1 == 2)
+    @test normalized_rhs(con_ref1) == 2.0
+    @test normalized_rhs(con_ref2) == 3.0
+    set_normalized_rhs([con_ref1, con_ref2], [3.0, 4.0])
+    @test normalized_rhs(con_ref1) == 3.0
+    @test normalized_rhs(con_ref2) == 4.0
+    con_ref1 = @constraint(model, 0 <= 2 * x)
+    con_ref2 = @constraint(model, 2 * x <= 1)
+    @test_throws MethodError set_normalized_rhs([con_ref1, con_ref2], [3, 3])
+    return
+end
+
 function test_add_to_function_constant_scalar()
     model = Model()
     x = @variable(model)
