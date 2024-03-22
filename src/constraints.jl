@@ -784,9 +784,9 @@ function set_normalized_rhs(
     F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
 }
     MOI.set(
-        owner_model(first(constraints)),
+        backend(owner_model(first(constraints))),
         MOI.ConstraintSet(),
-        constraints,
+        index.(constraints),
         S.(convert.(T, values)),
     )
     return

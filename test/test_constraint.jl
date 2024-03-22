@@ -987,15 +987,15 @@ function test_change_coefficient_batch()
     con_ref = @constraint(model, 2 * x + 3 * y == -1)
     @test normalized_coefficient(con_ref, x) == 2.0
     @test normalized_coefficient(con_ref, y) == 3.0
-    set_normalized_coefficient(con_ref, [x, y], [1.0, 4.0])
+    set_normalized_coefficients(con_ref, [x, y], [1.0, 4.0])
     @test normalized_coefficient(con_ref, x) == 1.0
     @test normalized_coefficient(con_ref, y) == 4.0
-    set_normalized_coefficient(con_ref, [x, y], [3, 4])  # Check type promotion.
+    set_normalized_coefficients(con_ref, [x, y], [3, 4])  # Check type promotion.
     @test normalized_coefficient(con_ref, x) == 3.0
     @test normalized_coefficient(con_ref, y) == 4.0
     quad_con = @constraint(model, x^2 == 0)
     @test normalized_coefficient(quad_con, x) == 0.0
-    set_normalized_coefficient(quad_con, [x, y], [2, 7])
+    set_normalized_coefficients(quad_con, [x, y], [2, 7])
     @test normalized_coefficient(quad_con, x) == 2.0
     @test normalized_coefficient(quad_con, y) == 7.0
     @test isequal_canonical(constraint_object(quad_con).func, x^2 + 2x + 7y)
