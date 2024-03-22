@@ -2604,17 +2604,24 @@ con : 6 x + 7 y ≤ 2
 See also [`set_normalized_coefficients`](@ref).
 """
 function set_normalized_coefficients(
-    con_ref::AbstractVector{
+    constraints::AbstractVector{
         <:ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
     },
     variables::AbstractVector{<:AbstractVariableRef},
-    values::AbstractVector{<:Number},
+    coeffs::AbstractVector{<:Number},
 ) where {T,F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}}}
-    model = owner_model(first(con_ref))
+    if !(length(constraints) == length(variables) == length(coeffs))
+        throw(
+            DimensionMismatch(
+                "The number of constraints, variables and coefficients must match",
+            ),
+        )
+    end
+    model = owner_model(first(constraints))
     MOI.modify(
         backend(model),
-        index.(con_ref),
-        MOI.ScalarCoefficientChange.(index.(variables), convert.(T, values)),
+        index.(constraints),
+        MOI.ScalarCoefficientChange.(index.(variables), convert.(T, coeffs)),
     )
     model.is_model_dirty = true
     return
@@ -2766,12 +2773,24 @@ function set_normalized_coefficients(
     },
     variables_1::AbstractVector{<:AbstractVariableRef},
     variables_2::AbstractVector{<:AbstractVariableRef},
-    values::AbstractVector{<:Number},
+    coeffs::AbstractVector{<:Number},
 ) where {T,F<:MOI.ScalarQuadraticFunction{T}}
-    new_values = convert.(T, values)
+    if !(
+        length(constraints) ==
+        length(variables_1) ==
+        length(variables_2) ==
+        length(coeffs)
+    )
+        throw(
+            DimensionMismatch(
+                "The number of constraints, variables and coefficients must match",
+            ),
+        )
+    end
+    new_coeffs = convert.(T, coeffs)
     for i in eachindex(variables_1)
         if variables_1[i] == variables_2[i]
-            new_values[i] *= T(2)
+            new_coeffs[i] *= T(2)
         end
     end
     model = owner_model(first(constraints))
@@ -2781,7 +2800,7 @@ function set_normalized_coefficients(
         MOI.ScalarQuadraticCoefficientChange.(
             index.(variables_1),
             index.(variables_2),
-            new_values,
+            new_coeffs,
         ),
     )
     model.is_model_dirty = true
