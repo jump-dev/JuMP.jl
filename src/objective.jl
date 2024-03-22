@@ -551,7 +551,7 @@ function _set_objective_coefficients(
         set_objective_function(model, coeffs[] * variables[])
     else
         position = findfirst(x -> index(x) == current_obj_index, variables)
-        if positions === nothing
+        if position === nothing
             set_objective_function(
                 model,
                 add_to_expression!(
@@ -566,7 +566,7 @@ function _set_objective_coefficients(
     return
 end
 
-function _set_objective_coefficient(
+function _set_objective_coefficients(
     model::GenericModel{T},
     variables::AbstractVector{<:GenericVariableRef{T}},
     coeffs::AbstractVector{<:T},
@@ -737,8 +737,10 @@ function _set_objective_coefficients(
     coeffs::AbstractVector{<:T},
     ::Type{MOI.ScalarQuadraticFunction{T}},
 ) where {T}
-    if variable_1 == variable_2
-        coeff *= T(2)
+    for i in eachindex(variables_1)
+        if variables_1[i] == variables_2[i]
+            coeffs[i] *= T(2)
+        end
     end
     MOI.modify(
         backend(model),

@@ -2777,8 +2777,8 @@ function set_normalized_coefficients(
     model = owner_model(first(constraints))
     MOI.modify(
         backend(model),
-        index.(constraint),
-        MOI.ScalarQuadraticCoefficientChanges.(
+        index.(constraints),
+        MOI.ScalarQuadraticCoefficientChange.(
             index.(variables_1),
             index.(variables_2),
             new_values,

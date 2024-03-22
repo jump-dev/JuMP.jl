@@ -55,13 +55,13 @@ function test_objective_coef_batch_update_linear_objective_changes()
     @variable(model, x)
     @variable(model, y)
     @objective(model, Max, x)
-    set_objective_coefficient(model, [x, y], [4.0, 5.0])
+    set_objective_coefficients(model, [x, y], [4.0, 5.0])
     @test isequal_canonical(objective_function(model), 4x + 5y)
     @objective(model, Max, x + y)
-    set_objective_coefficient(model, [x, y], [4.0, 5.0])
+    set_objective_coefficients(model, [x, y], [4.0, 5.0])
     @test isequal_canonical(objective_function(model), 4x + 5y)
     @objective(model, Min, x)
-    set_objective_coefficient(model, [y], [2.0])
+    set_objective_coefficients(model, [y], [2.0])
     @test isequal_canonical(objective_function(model), x + 2.0 * y)
     return
 end
@@ -80,7 +80,7 @@ function test_objective_coef_update_quadratic_objective_batch_changes()
     @variable(model, x)
     @variable(model, y)
     @objective(model, Max, x^2 + x + y)
-    set_objective_coefficient(model, [x, y], [4.0, 5.0])
+    set_objective_coefficients(model, [x, y], [4.0, 5.0])
     @test isequal_canonical(objective_function(model), x^2 + 4x + 5y)
     return
 end
@@ -265,12 +265,12 @@ function test_set_objective_coefficient_quadratic_batch()
     model = Model()
     @variable(model, x[1:2])
     @objective(model, Min, x[1]^2 + x[1] * x[2] + x[1] + 2)
-    set_objective_coefficient(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
+    set_objective_coefficients(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
     @test isequal_canonical(
         objective_function(model),
         2 * x[1]^2 + 3 * x[1] * x[2] + x[1] + 2,
     )
-    set_objective_coefficient(model, [x[2]], [x[1]], [4])
+    set_objective_coefficients(model, [x[2]], [x[1]], [4])
     @test isequal_canonical(
         objective_function(model),
         2 * x[1]^2 + 4 * x[1] * x[2] + x[1] + 2,
@@ -295,7 +295,7 @@ function test_set_objective_coefficient_quadratic_batch_error()
     @NLobjective(model, Min, x[1] * x[2])
     @test_throws(
         ErrorException("A nonlinear objective is already set in the model"),
-        set_objective_coefficient(model, [x[1]], [x[1]], [2]),
+        set_objective_coefficients(model, [x[1]], [x[1]], [2]),
     )
     return
 end
@@ -317,7 +317,7 @@ function test_set_objective_coefficient_quadratic_batch_affine_original()
     model = Model()
     @variable(model, x[1:2])
     @objective(model, Min, x[1] + 2)
-    set_objective_coefficient(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
+    set_objective_coefficients(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
     @test isequal_canonical(
         objective_function(model),
         2 * x[1]^2 + 3 * x[1] * x[2] + x[1] + 2,
@@ -342,7 +342,7 @@ function test_set_objective_coefficient_quadratic_batch_variable_original()
     model = Model()
     @variable(model, x[1:2])
     @objective(model, Min, x[1])
-    set_objective_coefficient(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
+    set_objective_coefficients(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
     @test isequal_canonical(
         objective_function(model),
         2 * x[1]^2 + 3 * x[1] * x[2] + x[1],
@@ -365,7 +365,7 @@ end
 function test_set_objective_coefficient_quadratic_batch_nothing_set()
     model = Model()
     @variable(model, x[1:2])
-    set_objective_coefficient(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
+    set_objective_coefficients(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
     @test isequal_canonical(
         objective_function(model),
         2 * x[1]^2 + 3 * x[1] * x[2],
