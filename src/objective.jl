@@ -667,9 +667,9 @@ end
 """
     set_objective_coefficients(
         model::GenericModel{T},
-        variables_1::GenericVariableRef{T},
-        variables_2::GenericVariableRef{T},
-        coefficients::Real,
+        variables_1::AbstractVector{<GenericVariableRef{T}},
+        variables_2::AbstractVector{<GenericVariableRef{T}},
+        coefficients::AbstractVector{<Real},
     ) where {T}
 
 Set multiple quadratic objective coefficients associated with `variables_1` and
