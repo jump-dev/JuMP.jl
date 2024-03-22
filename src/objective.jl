@@ -443,6 +443,8 @@ julia> set_objective_coefficient(model, x, 3)
 julia> objective_function(model)
 3 x + 1
 ```
+
+See also [`set_objective_coefficients`](@ref).
 """
 function set_objective_coefficient(
     model::GenericModel{T},
@@ -492,10 +494,97 @@ function _set_objective_coefficient(
 end
 
 """
+    set_objective_coefficients(
+        model::GenericModel,
+        variables::Vector{<:GenericVariableRef},
+        coefficients::Vector{<:Real},
+    )
+
+Set multiple linear objective coefficients associated with `variables` to `coefficients`, in a single call.
+
+Note: this function will throw an error if a nonlinear objective is set.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @variable(model, y);
+
+julia> @objective(model, Min, 3x + 2y + 1)
+3 x + 2 y + 1
+
+julia> set_objective_coefficients(model, [x, y], [5, 4])
+
+julia> objective_function(model)
+5 x + 4 y + 1
+```
+
+See also [`set_objective_coefficient`](@ref).
+"""
+function set_objective_coefficients(
+    model::GenericModel{T},
+    variables::AbstractVector{<:GenericVariableRef{T}},
+    coeffs::AbstractVector{<:Real},
+) where {T}
+    if _nlp_objective_function(model) !== nothing
+        error("A nonlinear objective is already set in the model")
+    end
+    coeffs_t = convert.(T, coeffs)::AbstractVector{T}
+    F = objective_function_type(model)
+    _set_objective_coefficients(model, variables, coeffs_t, F)
+    model.is_model_dirty = true
+    return
+end
+
+function _set_objective_coefficients(
+    model::GenericModel{T},
+    variables::AbstractVector{<:GenericVariableRef{T}},
+    coeffs::AbstractVector{<:T},
+    ::Type{GenericVariableRef{T}},
+) where {T}
+    current_obj = objective_function(model)
+    current_obj_index = index(current_obj)
+    if length(variables) == 1 && current_obj_index == index(variables[])
+        set_objective_function(model, coeffs[] * variables[])
+    else
+        position = findfirst(x -> index(x) == current_obj_index, variables)
+        if positions === nothing
+            set_objective_function(
+                model,
+                add_to_expression!(
+                    LinearAlgebra.dot(coeffs, variables),
+                    current_obj,
+                ),
+            )
+        else
+            set_objective_function(model, LinearAlgebra.dot(coeffs, variables))
+        end
+    end
+    return
+end
+
+function _set_objective_coefficient(
+    model::GenericModel{T},
+    variables::AbstractVector{<:GenericVariableRef{T}},
+    coeffs::AbstractVector{<:T},
+    ::Type{F},
+) where {T,F}
+    MOI.modify(
+        backend(model),
+        MOI.ObjectiveFunction{moi_function_type(F)}(),
+        MOI.ScalarCoefficientChange.(index.(variables), coeffs),
+    )
+    return
+end
+
+"""
     set_objective_coefficient(
         model::GenericModel{T},
         variable_1::GenericVariableRef{T},
-        variable_1::GenericVariableRef{T},
+        variable_2::GenericVariableRef{T},
         coefficient::Real,
     ) where {T}
 
@@ -520,6 +609,8 @@ julia> set_objective_coefficient(model, x[1], x[2], 3)
 
 julia> objective_function(model)
 2 x[1]² + 3 x[1]*x[2]
+
+See also [`set_objective_coefficients`](@ref).
 ```
 """
 function set_objective_coefficient(
@@ -568,6 +659,94 @@ function _set_objective_coefficient(
             index(variable_1),
             index(variable_2),
             coeff,
+        ),
+    )
+    return
+end
+
+"""
+    set_objective_coefficients(
+        model::GenericModel{T},
+        variables_1::GenericVariableRef{T},
+        variables_2::GenericVariableRef{T},
+        coefficients::Real,
+    ) where {T}
+
+Set multiple quadratic objective coefficients associated with `variables_1` and
+`variables_2` to `coefficients`, in a single call.
+
+Note: this function will throw an error if a nonlinear objective is set.
+
+## Example
+
+```jldoctest
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> @objective(model, Min, x[1]^2 + x[1] * x[2])
+x[1]² + x[1]*x[2]
+
+julia> set_objective_coefficient(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
+
+julia> objective_function(model)
+2 x[1]² + 3 x[1]*x[2]
+
+See also [`set_objective_coefficient`](@ref).
+```
+"""
+function set_objective_coefficients(
+    model::GenericModel{T},
+    variables_1::AbstractVector{<:GenericVariableRef{T}},
+    variables_2::AbstractVector{<:GenericVariableRef{T}},
+    coeffs::AbstractVector{<:Real},
+) where {T}
+    if _nlp_objective_function(model) !== nothing
+        error("A nonlinear objective is already set in the model")
+    end
+    coeffs_t = convert.(T, coeffs)::AbstractVector{<:T}
+    F = moi_function_type(objective_function_type(model))
+    _set_objective_coefficients(model, variables_1, variables_2, coeffs_t, F)
+    model.is_model_dirty = true
+    return
+end
+
+function _set_objective_coefficients(
+    model::GenericModel{T},
+    variables_1::AbstractVector{<:GenericVariableRef{T}},
+    variables_2::AbstractVector{<:GenericVariableRef{T}},
+    coeffs::AbstractVector{<:T},
+    ::Type{F},
+) where {T,F}
+    current_obj = objective_function(model)
+    new_obj = add_to_expression!(
+        sum(
+            coeffs[i] * variables_1[i] * variables_2[i] for
+            i in eachindex(coeffs)
+        ),
+        current_obj,
+    )
+    set_objective_function(model, new_obj)
+    return
+end
+
+function _set_objective_coefficients(
+    model::GenericModel{T},
+    variables_1::AbstractVector{<:GenericVariableRef{T}},
+    variables_2::AbstractVector{<:GenericVariableRef{T}},
+    coeffs::AbstractVector{<:T},
+    ::Type{MOI.ScalarQuadraticFunction{T}},
+) where {T}
+    if variable_1 == variable_2
+        coeff *= T(2)
+    end
+    MOI.modify(
+        backend(model),
+        MOI.ObjectiveFunction{MOI.ScalarQuadraticFunction{T}}(),
+        MOI.ScalarQuadraticCoefficientChange.(
+            index.(variables_1),
+            index.(variables_2),
+            coeffs,
         ),
     )
     return
