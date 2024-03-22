@@ -50,6 +50,28 @@ function test_objective_coef_update_linear_objective_changes()
     return
 end
 
+function test_objective_coef_update_linear_objective_error()
+    model = Model()
+    @variable(model, x[1:2])
+    @NLobjective(model, Min, x[1] * x[2])
+    @test_throws(
+        ErrorException("A nonlinear objective is already set in the model"),
+        set_objective_coefficient(model, x[1], 2),
+    )
+    return
+end
+
+function test_objective_coef_update_linear_objective_batch_error()
+    model = Model()
+    @variable(model, x[1:2])
+    @NLobjective(model, Min, x[1] * x[2])
+    @test_throws(
+        ErrorException("A nonlinear objective is already set in the model"),
+        set_objective_coefficients(model, [x[1], x[2]], [2, 3]),
+    )
+    return
+end
+
 function test_objective_coef_batch_update_linear_objective_changes()
     model = Model()
     @variable(model, x)
@@ -61,8 +83,11 @@ function test_objective_coef_batch_update_linear_objective_changes()
     set_objective_coefficients(model, [x, y], [4.0, 5.0])
     @test isequal_canonical(objective_function(model), 4x + 5y)
     @objective(model, Min, x)
+    set_objective_coefficients(model, [x], [2.0])
+    @test isequal_canonical(objective_function(model), 2x)
+    @objective(model, Min, x)
     set_objective_coefficients(model, [y], [2.0])
-    @test isequal_canonical(objective_function(model), x + 2.0 * y)
+    @test isequal_canonical(objective_function(model), x + 2y)
     return
 end
 

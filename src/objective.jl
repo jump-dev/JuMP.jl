@@ -547,9 +547,7 @@ function _set_objective_coefficients(
 ) where {T}
     current_obj = objective_function(model)
     current_obj_index = index(current_obj)
-    if length(variables) == 1 && current_obj_index == index(variables[])
-        set_objective_function(model, coeffs[] * variables[])
-    else
+    if length(variables) > 0
         position = findfirst(x -> index(x) == current_obj_index, variables)
         if position === nothing
             set_objective_function(
