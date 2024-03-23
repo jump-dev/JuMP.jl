@@ -2653,8 +2653,6 @@ julia> set_normalized_coefficients(con, x, [(1, 2.0), (2, 5.0)])
 julia> con
 con : [2 x, 5 x] ∈ MathOptInterface.Nonnegatives(2)
 ```
-
-See also [`set_normalized_coefficient`](@ref).
 """
 function set_normalized_coefficients(
     constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
