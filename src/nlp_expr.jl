@@ -957,7 +957,7 @@ function add_nonlinear_operator(
     return NonlinearOperator(f, name)
 end
 
-function _catch_redefinition_constant_error(op::Symbol, f::Function)
+function _catch_redefinition_constant_error(op::Symbol, f::Function, args...)
     if op == Symbol(f)
         error("""
         Unable to add the nonlinear operator `:$op` with the same name as

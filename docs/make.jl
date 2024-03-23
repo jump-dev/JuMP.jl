@@ -356,6 +356,7 @@ const _PAGES = [
             "tutorials/nonlinear/querying_hessians.md",
             "tutorials/nonlinear/complementarity.md",
             "tutorials/nonlinear/classifiers.md",
+            "tutorials/nonlinear/operator_ad.md",
         ],
         "Conic programs" => [
             "tutorials/conic/introduction.md",
