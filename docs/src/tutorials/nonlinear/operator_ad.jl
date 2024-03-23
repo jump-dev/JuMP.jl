@@ -111,6 +111,11 @@ analytic_rosenbrock()
 # Instead of analytic functions, you can use [ForwardDiff.jl](https://github.com/JuliaDiff/ForwardDiff.jl)
 # to compute derivatives.
 
+# !!! info
+#     If you do not specify a gradient or Hessian, JuMP will use ForwardDiff.jl
+#     to compute derivatives by default. We provide this section as a worked
+#     example of what is going on under the hood.
+
 # ### Pros and cons
 
 # The main benefit of ForwardDiff is that it is simple, robust, and works with a
@@ -213,7 +218,8 @@ fdiff_rosenbrock()
 # !!! warning
 #     The JuMP developers cannot help you debug error messages related to
 #     Enzyme. If the operator works, it works. If not, we suggest you try a
-#     different automatic differentiation library.
+#     different automatic differentiation library. See [juliadiff.org](https://juliadiff.org/)
+#     for details.
 
 # ### Gradient
 
@@ -238,17 +244,18 @@ Test.@test ≈(analytic_g, enzyme_g)
 # differentiation.
 
 # The code to implement the Hessian in Enzyme is complicated, so we will not
-# explain it in detail; see the [Enzyme documentation](https://enzymead.github.io/Enzyme.jl/v0.11.19/generated/autodiff/#Vector-forward-over-reverse).
+# explain it in detail; see the [Enzyme documentation](https://enzymead.github.io/Enzyme.jl/v0.11.20/generated/autodiff/#Vector-forward-over-reverse).
 
 function enzyme_∇²f(H::AbstractMatrix{T}, x::Vararg{T,N}) where {T,N}
     ## direction(i) returns a tuple with a `1` in the `i`'th entry and `0`
     ## otherwise
     direction(i) = ntuple(j -> Enzyme.Active(T(i == j)), N)
+    ## As the inner function, compute the gradient using Reverse mode
+    ∇f_deferred(x...) = Enzyme.autodiff_deferred(Enzyme.Reverse, f, x...)[1]
+    ## For the outer autodiff, use Forward mode.
     hess = Enzyme.autodiff(
-        ## For the outer autodiff, use Forward mode.
         Enzyme.Forward,
-        ## As the inner function, compute the gradient using Reverse mode
-        (x...) -> Enzyme.autodiff_deferred(Enzyme.Reverse, f, x...)[1],
+        ∇f_deferred,
         ## Compute multiple evaluations of Forward mode, each time using `x` but
         ## initializing with a different direction.
         Enzyme.BatchDuplicated.(Enzyme.Active.(x), ntuple(direction, N))...,
@@ -285,9 +292,10 @@ function enzyme_derivatives(f::Function)
     end
     function ∇²f(H::AbstractMatrix{T}, x::Vararg{T,N}) where {T,N}
         direction(i) = ntuple(j -> Enzyme.Active(T(i == j)), N)
+        ∇f_deferred(x...) = Enzyme.autodiff_deferred(Enzyme.Reverse, f, x...)[1]
         hess = Enzyme.autodiff(
             Enzyme.Forward,
-            (x...) -> Enzyme.autodiff_deferred(Enzyme.Reverse, f, x...)[1],
+            ∇f_deferred,
             Enzyme.BatchDuplicated.(Enzyme.Active.(x), ntuple(direction, N))...,
         )[1]
         for j in 1:N, i in 1:j
