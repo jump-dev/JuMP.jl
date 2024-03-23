@@ -223,7 +223,7 @@ fdiff_rosenbrock()
 
 # ### Gradient
 
-# The gradient can be computed using `ForwardDiff.autodiff` with the
+# The gradient can be computed using `Enzyme.autodiff` with the
 # `Enzyme.Reverse` mode. We need to wrap `x` in `Enzyme.Active` to indicate that
 # we want to compute the derivatives with respect to these arguments.
 
