@@ -443,8 +443,6 @@ julia> set_objective_coefficient(model, x, 3)
 julia> objective_function(model)
 3 x + 1
 ```
-
-See also [`set_objective_coefficients`](@ref).
 """
 function set_objective_coefficient(
     model::GenericModel{T},
@@ -494,7 +492,7 @@ function _set_objective_coefficient(
 end
 
 """
-    set_objective_coefficients(
+    set_objective_coefficient(
         model::GenericModel,
         variables::Vector{<:GenericVariableRef},
         coefficients::Vector{<:Real},
@@ -516,15 +514,13 @@ julia> @variable(model, y);
 julia> @objective(model, Min, 3x + 2y + 1)
 3 x + 2 y + 1
 
-julia> set_objective_coefficients(model, [x, y], [5, 4])
+julia> set_objective_coefficient(model, [x, y], [5, 4])
 
 julia> objective_function(model)
 5 x + 4 y + 1
 ```
-
-See also [`set_objective_coefficient`](@ref).
 """
-function set_objective_coefficients(
+function set_objective_coefficient(
     model::GenericModel{T},
     variables::AbstractVector{<:GenericVariableRef{T}},
     coeffs::AbstractVector{<:Real},
@@ -541,12 +537,12 @@ function set_objective_coefficients(
     end
     coeffs_t = convert.(T, coeffs)::AbstractVector{T}
     F = objective_function_type(model)
-    _set_objective_coefficients(model, variables, coeffs_t, F)
+    _set_objective_coefficient(model, variables, coeffs_t, F)
     model.is_model_dirty = true
     return
 end
 
-function _set_objective_coefficients(
+function _set_objective_coefficient(
     model::GenericModel{T},
     variables::AbstractVector{<:GenericVariableRef{T}},
     coeffs::AbstractVector{<:T},
@@ -571,7 +567,7 @@ function _set_objective_coefficients(
     return
 end
 
-function _set_objective_coefficients(
+function _set_objective_coefficient(
     model::GenericModel{T},
     variables::AbstractVector{<:GenericVariableRef{T}},
     coeffs::AbstractVector{<:T},
@@ -615,8 +611,6 @@ julia> set_objective_coefficient(model, x[1], x[2], 3)
 julia> objective_function(model)
 2 x[1]² + 3 x[1]*x[2]
 ```
-
-See also [`set_objective_coefficients`](@ref).
 """
 function set_objective_coefficient(
     model::GenericModel{T},
@@ -670,7 +664,7 @@ function _set_objective_coefficient(
 end
 
 """
-    set_objective_coefficients(
+    set_objective_coefficient(
         model::GenericModel{T},
         variables_1::AbstractVector{<GenericVariableRef{T}},
         variables_2::AbstractVector{<GenericVariableRef{T}},
@@ -692,15 +686,13 @@ julia> @variable(model, x[1:2]);
 julia> @objective(model, Min, x[1]^2 + x[1] * x[2])
 x[1]² + x[1]*x[2]
 
-julia> set_objective_coefficients(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
+julia> set_objective_coefficient(model, [x[1], x[1]], [x[1], x[2]], [2, 3])
 
 julia> objective_function(model)
 2 x[1]² + 3 x[1]*x[2]
 ```
-
-See also [`set_objective_coefficient`](@ref).
 """
-function set_objective_coefficients(
+function set_objective_coefficient(
     model::GenericModel{T},
     variables_1::AbstractVector{<:GenericVariableRef{T}},
     variables_2::AbstractVector{<:GenericVariableRef{T}},
@@ -718,12 +710,12 @@ function set_objective_coefficients(
     end
     coeffs_t = convert.(T, coeffs)::AbstractVector{<:T}
     F = moi_function_type(objective_function_type(model))
-    _set_objective_coefficients(model, variables_1, variables_2, coeffs_t, F)
+    _set_objective_coefficient(model, variables_1, variables_2, coeffs_t, F)
     model.is_model_dirty = true
     return
 end
 
-function _set_objective_coefficients(
+function _set_objective_coefficient(
     model::GenericModel{T},
     variables_1::AbstractVector{<:GenericVariableRef{T}},
     variables_2::AbstractVector{<:GenericVariableRef{T}},
@@ -742,7 +734,7 @@ function _set_objective_coefficients(
     return
 end
 
-function _set_objective_coefficients(
+function _set_objective_coefficient(
     model::GenericModel{T},
     variables_1::AbstractVector{<:GenericVariableRef{T}},
     variables_2::AbstractVector{<:GenericVariableRef{T}},

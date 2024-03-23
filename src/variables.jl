@@ -2550,8 +2550,6 @@ julia> set_normalized_coefficient(con, x, 4)
 julia> con
 con : 4 x ≤ 2
 ```
-
-See also [`set_normalized_coefficients`](@ref).
 """
 function set_normalized_coefficient(
     con_ref::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
@@ -2569,7 +2567,7 @@ function set_normalized_coefficient(
 end
 
 """
-    set_normalized_coefficients(
+    set_normalized_coefficient(
         constraints::AbstractVector{<:ConstraintRef},
         variables::AbstractVector{<:GenericVariableRef},
         values::AbstractVector{<:Number},
@@ -2579,7 +2577,7 @@ Set multiple coefficient of `variables` in the constraints `constraints` to `val
 
 Note that prior to this step, JuMP will aggregate multiple terms containing the
 same variable. For example, given a constraint `2x + 3x <= 2`,
-`set_normalized_coefficients(con, [x], [4])` will create the constraint `4x <= 2`.
+`set_normalized_coefficient(con, [x], [4])` will create the constraint `4x <= 2`.
 
 ## Example
 
@@ -2595,15 +2593,13 @@ y
 julia> @constraint(model, con, 2x + 3x + 4y <= 2)
 con : 5 x + 4 y ≤ 2
 
-julia> set_normalized_coefficients([con, con], [x, y], [6, 7])
+julia> set_normalized_coefficient([con, con], [x, y], [6, 7])
 
 julia> con
 con : 6 x + 7 y ≤ 2
 ```
-
-See also [`set_normalized_coefficients`](@ref).
 """
-function set_normalized_coefficients(
+function set_normalized_coefficient(
     constraints::AbstractVector{
         <:ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
     },
@@ -2707,8 +2703,6 @@ julia> set_normalized_coefficient(con, x[1], x[2], 5)
 julia> con
 con : 4 x[1]² + 5 x[1]*x[2] + x[2] ≤ 2
 ```
-
-See also [`set_normalized_coefficients`](@ref).
 """
 function set_normalized_coefficient(
     constraint::ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
@@ -2735,7 +2729,7 @@ function set_normalized_coefficient(
 end
 
 """
-    set_normalized_coefficients(
+    set_normalized_coefficient(
         constraints::AbstractVector{<:ConstraintRef},
         variables_1:AbstractVector{<:GenericVariableRef},
         variables_2:AbstractVector{<:GenericVariableRef},
@@ -2747,7 +2741,7 @@ the constraints `constraints` to `values`.
 
 Note that prior to this step, JuMP will aggregate multiple terms containing the
 same variable. For example, given a constraint `2x^2 + 3x^2 <= 2`,
-`set_normalized_coefficients(con, [x], [x], [4])` will create the constraint `4x^2 <= 2`.
+`set_normalized_coefficient(con, [x], [x], [4])` will create the constraint `4x^2 <= 2`.
 
 ## Example
 
@@ -2759,15 +2753,13 @@ julia> @variable(model, x[1:2]);
 julia> @constraint(model, con, 2x[1]^2 + 3 * x[1] * x[2] + x[2] <= 2)
 con : 2 x[1]² + 3 x[1]*x[2] + x[2] ≤ 2
 
-julia> set_normalized_coefficients([con, con], [x[1], x[1]], [x[1], x[2]], [4, 5])
+julia> set_normalized_coefficient([con, con], [x[1], x[1]], [x[1], x[2]], [4, 5])
 
 julia> con
 con : 4 x[1]² + 5 x[1]*x[2] + x[2] ≤ 2
 ```
-
-See also [`set_normalized_coefficients`](@ref).
 """
-function set_normalized_coefficients(
+function set_normalized_coefficient(
     constraints::AbstractVector{
         <:ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
     },
