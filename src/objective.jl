@@ -702,13 +702,16 @@ end
 
 function _set_objective_coefficient(
     model::GenericModel{T},
-    variables_1::AbstractVector{<:GenericVariableRef{T}},
-    variables_2::AbstractVector{<:GenericVariableRef{T}},
+    variables_1::AbstractVector{<:V},
+    variables_2::AbstractVector{<:V},
     coeffs::AbstractVector{<:T},
     ::Type{F},
-) where {T,F}
-    new_obj = @expression(model, sum(coeffs .* variables_1 .* variables_2))
+) where {T,F,V<:GenericVariableRef{T}}
+    new_obj = GenericQuadExpr{T,V}()
     add_to_expression!(new_obj, objective_function(model))
+    for (c, x, y) in zip(coeffs, variables_1, variables_2)
+        add_to_expression!(new_obj, c, x, y)
+    end
     set_objective_function(model, new_obj)
     return
 end
