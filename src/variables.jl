@@ -2573,7 +2573,8 @@ end
         values::AbstractVector{<:Number},
     )
 
-Set multiple coefficient of `variables` in the constraints `constraints` to `values`.
+Set multiple coefficient of `variables` in the constraints `constraints` to
+`values`.
 
 Note that prior to this step, JuMP will aggregate multiple terms containing the
 same variable. For example, given a constraint `2x + 3x <= 2`,
@@ -2607,11 +2608,8 @@ function set_normalized_coefficient(
     coeffs::AbstractVector{<:Number},
 ) where {T,F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}}}
     if !(length(constraints) == length(variables) == length(coeffs))
-        throw(
-            DimensionMismatch(
-                "The number of constraints, variables and coefficients must match",
-            ),
-        )
+        msg = "The number of constraints, variables and coefficients must match"
+        throw(DimensionMismatch(msg))
     end
     model = owner_model(first(constraints))
     MOI.modify(
@@ -2734,12 +2732,13 @@ end
         values::AbstractVector{<:Number},
     )
 
-Set multiple quadratic coefficients associated with `variables_1` and `variables_2` in
-the constraints `constraints` to `values`.
+Set multiple quadratic coefficients associated with `variables_1` and
+`variables_2` in the constraints `constraints` to `values`.
 
 Note that prior to this step, JuMP will aggregate multiple terms containing the
 same variable. For example, given a constraint `2x^2 + 3x^2 <= 2`,
-`set_normalized_coefficient(con, [x], [x], [4])` will create the constraint `4x^2 <= 2`.
+`set_normalized_coefficient(con, [x], [x], [4])` will create the constraint
+`4x^2 <= 2`.
 
 ## Example
 
@@ -2765,21 +2764,18 @@ function set_normalized_coefficient(
     variables_2::AbstractVector{<:AbstractVariableRef},
     coeffs::AbstractVector{<:Number},
 ) where {T,F<:MOI.ScalarQuadraticFunction{T}}
-    if !(
+    dimension_match =
         length(constraints) ==
         length(variables_1) ==
         length(variables_2) ==
         length(coeffs)
-    )
-        throw(
-            DimensionMismatch(
-                "The number of constraints, variables and coefficients must match",
-            ),
-        )
+    if !dimension_match
+        msg = "The number of constraints, variables and coefficients must match"
+        throw(DimensionMismatch(msg))
     end
     new_coeffs = convert.(T, coeffs)
-    for i in eachindex(variables_1)
-        if variables_1[i] == variables_2[i]
+    for (i, x, y) in zip(eachindex(new_coeffs), variables_1, variables_2)
+        if x == y
             new_coeffs[i] *= T(2)
         end
     end

@@ -498,7 +498,8 @@ end
         coefficients::Vector{<:Real},
     )
 
-Set multiple linear objective coefficients associated with `variables` to `coefficients`, in a single call.
+Set multiple linear objective coefficients associated with `variables` to
+`coefficients`, in a single call.
 
 Note: this function will throw an error if a nonlinear objective is set.
 
@@ -527,17 +528,12 @@ function set_objective_coefficient(
 ) where {T}
     if _nlp_objective_function(model) !== nothing
         error("A nonlinear objective is already set in the model")
+    elseif length(variables) != length(coeffs)
+        msg = "The number of variables and coefficients must match"
+        throw(DimensionMismatch(msg))
     end
-    if length(variables) != length(coeffs)
-        throw(
-            DimensionMismatch(
-                "The number of variables and coefficients must match",
-            ),
-        )
-    end
-    coeffs_t = convert.(T, coeffs)::AbstractVector{T}
     F = objective_function_type(model)
-    _set_objective_coefficient(model, variables, coeffs_t, F)
+    _set_objective_coefficient(model, variables, convert.(T, coeffs), F)
     model.is_model_dirty = true
     return
 end
@@ -548,22 +544,15 @@ function _set_objective_coefficient(
     coeffs::AbstractVector{<:T},
     ::Type{GenericVariableRef{T}},
 ) where {T}
-    current_obj = objective_function(model)
-    current_obj_index = index(current_obj)
-    if length(variables) > 0
-        position = findfirst(x -> index(x) == current_obj_index, variables)
-        if position === nothing
-            set_objective_function(
-                model,
-                add_to_expression!(
-                    LinearAlgebra.dot(coeffs, variables),
-                    current_obj,
-                ),
-            )
-        else
-            set_objective_function(model, LinearAlgebra.dot(coeffs, variables))
-        end
+    if length(variables) == 0
+        return
     end
+    new_objective = coeffs' * variables
+    current_obj = objective_function(model)::GenericVariableRef{T}
+    if !(current_obj in variables)
+        add_to_expression!(new_objective, current_obj)
+    end
+    set_objective_function(model, new_objective)
     return
 end
 
@@ -700,13 +689,9 @@ function set_objective_coefficient(
 ) where {T}
     if _nlp_objective_function(model) !== nothing
         error("A nonlinear objective is already set in the model")
-    end
-    if !(length(variables_1) == length(variables_2) == length(coeffs))
-        throw(
-            DimensionMismatch(
-                "The number of variables and coefficients must match",
-            ),
-        )
+    elseif !(length(variables_1) == length(variables_2) == length(coeffs))
+        msg = "The number of variables and coefficients must match"
+        throw(DimensionMismatch(msg))
     end
     coeffs_t = convert.(T, coeffs)::AbstractVector{<:T}
     F = moi_function_type(objective_function_type(model))
@@ -722,14 +707,8 @@ function _set_objective_coefficient(
     coeffs::AbstractVector{<:T},
     ::Type{F},
 ) where {T,F}
-    current_obj = objective_function(model)
-    new_obj = add_to_expression!(
-        sum(
-            coeffs[i] * variables_1[i] * variables_2[i] for
-            i in eachindex(coeffs)
-        ),
-        current_obj,
-    )
+    new_obj = @expression(model, sum(coeffs .* variables_1 .* variables_2))
+    add_to_expression!(new_obj, objective_function(model))
     set_objective_function(model, new_obj)
     return
 end
@@ -741,8 +720,8 @@ function _set_objective_coefficient(
     coeffs::AbstractVector{<:T},
     ::Type{MOI.ScalarQuadraticFunction{T}},
 ) where {T}
-    for i in eachindex(variables_1)
-        if variables_1[i] == variables_2[i]
+    for (i, x, y) in zip(eachindex(coeffs), variables_1, variables_2)
+        if x == y
             coeffs[i] *= T(2)
         end
     end
