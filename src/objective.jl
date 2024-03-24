@@ -544,10 +544,7 @@ function _set_objective_coefficient(
     coeffs::AbstractVector{<:T},
     ::Type{GenericVariableRef{T}},
 ) where {T}
-    if length(variables) == 0
-        return
-    end
-    new_objective = coeffs' * variables
+    new_objective = LinearAlgebra.dot(coeffs, variables)
     current_obj = objective_function(model)::GenericVariableRef{T}
     if !(current_obj in variables)
         add_to_expression!(new_objective, current_obj)
