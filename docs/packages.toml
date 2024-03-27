@@ -32,15 +32,15 @@
 # ============================= jump-dev packages ============================ #
 
 [AmplNLWriter]
-    rev = "v1.2.0"
+    rev = "v1.2.1"
 [BARON]
-    rev = "v0.8.2"
+    rev = "v0.8.3"
 [Cbc]
     rev = "v1.2.0"
 [Clp]
     rev = "v1.0.3"
 [CPLEX]
-    rev = "v1.0.2"
+    rev = "v1.0.3"
 [CSDP]
     rev = "3a2e4c7c48af7660a5ba258a4cb6549ab0970366"
 [DiffOpt]
@@ -49,22 +49,22 @@
 [Dualization]
     rev = "v0.5.8"
 [ECOS]
-    rev = "v1.1.1"
+    rev = "v1.1.2"
 [GLPK]
     rev = "v1.1.3"
 [Gurobi]
-    rev = "v1.2.1"
+    rev = "v1.2.3"
 [HiGHS]
-    rev = "953274644913c2beaaca596fbcb248cf9b5dc5b8"
+    rev = "v1.9.0"
 [Hypatia]
-    rev = "v0.7.4"
+    rev = "v0.8.0"
     has_html = true
 [Ipopt]
-    rev = "v1.6.0"
+    rev = "v1.6.2"
 [KNITRO]
-    rev = "v0.14.1"
+    rev = "v0.14.2"
 [MiniZinc]
-    rev = "v0.3.7"
+    rev = "v0.3.8"
 [MosekTools]
     rev = "v0.15.1"
 [MultiObjectiveAlgorithms]
@@ -81,12 +81,12 @@
 # [Penopt]
 #     rev = "486f07d3f3a11f12012ea3ada702a3ee55c8fdc5"
 [PolyJuMP]
-    rev = "v0.7.1"
+    rev = "v0.7.3"
     extension = true
 [SCS]
     rev = "v2.0.0"
 [SDPA]
-    rev = "v0.5.0"
+    rev = "v0.5.1"
 [SDPLR]
     rev = "v0.1.0"
 [SDPNAL]
@@ -115,14 +115,14 @@
     rev = "6d165e8e8f59b14e36e99c8efb19f0e775bbd292"
 [CDDLib]
     user = "JuliaPolyhedra"
-    rev = "9700752f849845bc8d8477928baf3df920daadd6"
+    rev = "v0.9.3"
 [Clarabel]
     user = "oxfordcontrol"
-    rev = "v0.6.0"
+    rev = "v0.7.1"
     has_html = true
 [COPT]
     user = "COPT-Public"
-    rev = "v1.1.14"
+    rev = "v1.1.15"
 [COSMO]
     user = "oxfordcontrol"
     rev = "v0.8.8"
@@ -141,7 +141,7 @@
     filename = "docs/src/jump/README.md"
 [GAMS]
     user = "GAMS-dev"
-    rev = "c5dee9f929e9d2f4433ae09fa92b8d872c9c43e0"
+    rev = "e00a845d42653adf5d26c7cef1ef84fb990c91c7"
 [InfiniteOpt]
     user = "infiniteopt"
     rev = "v0.5.8"
@@ -162,7 +162,7 @@
     rev  = "b6ea68189558558e44195c1f87c00d9f5038cf0d"
 [Manopt]
     user = "JuliaManifolds"
-    rev = "v0.4.51"
+    rev = "v0.4.58"
     filename = "Readme.md"
 [NEOSServer]
     user = "odow"
@@ -195,7 +195,7 @@
     rev = "v0.11.14"
 [SDDP]
     user = "odow"
-    rev = "v1.6.6"
+    rev = "v1.6.7"
     has_html = true
     extension = true
 [Tulip]
