@@ -731,7 +731,7 @@ function add_constraint(
 end
 
 """
-    set_normalized_rhs(constraint::ConstraintRef, value)
+    set_normalized_rhs(constraint::ConstraintRef, value::Number)
 
 Set the right-hand side term of `constraint` to `value`.
 
@@ -758,7 +758,7 @@ con : 2 x ≤ 4
 """
 function set_normalized_rhs(
     con_ref::ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
-    value,
+    value::Number,
 ) where {
     T,
     S<:Union{MOI.LessThan{T},MOI.GreaterThan{T},MOI.EqualTo{T}},
@@ -769,6 +769,60 @@ function set_normalized_rhs(
         MOI.ConstraintSet(),
         con_ref,
         S(convert(T, value)),
+    )
+    return
+end
+
+"""
+    set_normalized_rhs(
+        constraints::AbstractVector{<:ConstraintRef},
+        values::AbstractVector{<:Number}
+    )
+
+Set the right-hand side terms of all `constraints` to `values`.
+
+Note that prior to this step, JuMP will aggregate all constant terms onto the
+right-hand side of the constraint. For example, given a constraint `2x + 1 <=
+2`, `set_normalized_rhs([con], [4])` will create the constraint `2x <= 4`, not `2x +
+1 <= 4`.
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x);
+
+julia> @constraint(model, con1, 2x + 1 <= 2)
+con1 : 2 x ≤ 1
+
+julia> @constraint(model, con2, 3x + 2 <= 4)
+con2 : 3 x ≤ 2
+
+julia> set_normalized_rhs([con1, con2], [4, 5])
+
+julia> con1
+con1 : 2 x ≤ 4
+
+julia> con2
+con2 : 3 x ≤ 5
+```
+"""
+function set_normalized_rhs(
+    constraints::AbstractVector{
+        <:ConstraintRef{<:AbstractModel,MOI.ConstraintIndex{F,S}},
+    },
+    values::AbstractVector{<:Number},
+) where {
+    T,
+    S<:Union{MOI.LessThan{T},MOI.GreaterThan{T},MOI.EqualTo{T}},
+    F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}},
+}
+    MOI.set(
+        backend(owner_model(first(constraints))),
+        MOI.ConstraintSet(),
+        index.(constraints),
+        S.(convert.(T, values)),
     )
     return
 end
