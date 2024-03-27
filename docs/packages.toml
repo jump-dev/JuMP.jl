@@ -141,7 +141,7 @@
     filename = "docs/src/jump/README.md"
 [GAMS]
     user = "GAMS-dev"
-    rev = "v0.5.1"
+    rev = "e00a845d42653adf5d26c7cef1ef84fb990c91c7"
 [InfiniteOpt]
     user = "infiniteopt"
     rev = "v0.5.8"
