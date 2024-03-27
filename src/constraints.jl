@@ -794,10 +794,10 @@ julia> model = Model();
 julia> @variable(model, x);
 
 julia> @constraint(model, con1, 2x + 1 <= 2)
-con : 2 x ≤ 1
+con1 : 2 x ≤ 1
 
 julia> @constraint(model, con2, 3x + 2 <= 4)
-con : 3 x ≤ 2
+con2 : 3 x ≤ 2
 
 julia> set_normalized_rhs([con1, con2], [4, 5])
 
