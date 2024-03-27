@@ -7,6 +7,33 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.21.0 (March 28, 2024)
+
+### Added
+
+ - Added support for matrix inequality constraints with the [`HermitianPSDCone`](@ref)
+   (#3705)
+
+### Fixed
+
+ - Changed [`Containers.SparseAxisArray`](@ref) to use an `OrderedDict` as the
+   backing data structure. Iterating over the elements in a `SparseAxisArray`
+   now iterates in the order that the elements were created. Previously, the
+   order was undefined behavior. (#3681)
+ - Fixed complex variables for non-Float64 coefficient types (#3691)
+ - Fixed `LinearAlgebra.hermitan(::AbstractJuMPScalar)` (#3693)
+ - Fixed multiplying real scalar by Hermitian matrix (#3695)
+
+### Other
+
+ - Documentation improvements (#3679) (#3683) (#3702) (#3703) (#3706) (#3696)
+   (#3708) (#3709) (#3711)
+ - Added new tutorials:
+   - [Basis matrices](@ref) (#3675)
+   - [Transitioning from MATLAB](@ref) (#3698)
+   - [Automatic differentiation of user-defined operators](@ref) (#3713)
+ - Updated versions and compat bounds (#3687) (#3707) (#3717)
+
 ## Version 1.20.0 (February 15, 2024)
 
 ### Added
