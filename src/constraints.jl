@@ -805,7 +805,7 @@ julia> con1
 con1 : 2 x ≤ 4
 
 julia> con2
-con1 : 3 x ≤ 5
+con2 : 3 x ≤ 5
 ```
 """
 function set_normalized_rhs(
