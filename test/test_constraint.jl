@@ -980,7 +980,35 @@ function test_change_coefficient()
     return
 end
 
-function test_change_coefficients()
+function test_change_coefficient_batch()
+    model = Model()
+    x = @variable(model)
+    y = @variable(model)
+    con_ref = @constraint(model, 2 * x + 3 * y == -1)
+    @test normalized_coefficient(con_ref, x) == 2.0
+    @test normalized_coefficient(con_ref, y) == 3.0
+    set_normalized_coefficient([con_ref, con_ref], [x, y], [1.0, 4.0])
+    @test normalized_coefficient(con_ref, x) == 1.0
+    @test normalized_coefficient(con_ref, y) == 4.0
+    set_normalized_coefficient([con_ref, con_ref], [x, y], [3, 4])  # Check type promotion.
+    @test normalized_coefficient(con_ref, x) == 3.0
+    @test normalized_coefficient(con_ref, y) == 4.0
+    quad_con = @constraint(model, x^2 == 0)
+    @test normalized_coefficient(quad_con, x) == 0.0
+    set_normalized_coefficient([quad_con, quad_con], [x, y], [2, 7])
+    @test normalized_coefficient(quad_con, x) == 2.0
+    @test normalized_coefficient(quad_con, y) == 7.0
+    @test isequal_canonical(constraint_object(quad_con).func, x^2 + 2x + 7y)
+    @test_throws(
+        DimensionMismatch(
+            "The number of constraints (1), variables (2) and coefficients (2) must match",
+        ),
+        set_normalized_coefficient([con_ref], [x, y], [4, 5]),
+    )
+    return
+end
+
+function test_change_coefficients_vector_function()
     model = Model()
     @variable(model, x)
     @constraint(model, con, [2x + 3x, 4x] in MOI.Nonnegatives(2))
@@ -1005,6 +1033,29 @@ function test_change_rhs()
     @test normalized_rhs(con_ref) == 3.0
     con_ref = @constraint(model, 0 <= 2 * x <= 1)
     @test_throws MethodError set_normalized_rhs(con_ref, 3)
+    return
+end
+
+function test_change_rhs_batch()
+    model = Model()
+    x = @variable(model)
+    con_ref1 = @constraint(model, 2 * x <= 1)
+    con_ref2 = @constraint(model, 3 * x <= 2)
+    @test normalized_rhs(con_ref1) == 1.0
+    @test normalized_rhs(con_ref2) == 2.0
+    set_normalized_rhs([con_ref1, con_ref2], [3.0, 4.0])
+    @test normalized_rhs(con_ref1) == 3.0
+    @test normalized_rhs(con_ref2) == 4.0
+    con_ref1 = @constraint(model, 2 * x - 1 == 1)
+    con_ref2 = @constraint(model, 2 * x - 1 == 2)
+    @test normalized_rhs(con_ref1) == 2.0
+    @test normalized_rhs(con_ref2) == 3.0
+    set_normalized_rhs([con_ref1, con_ref2], [3.0, 4.0])
+    @test normalized_rhs(con_ref1) == 3.0
+    @test normalized_rhs(con_ref2) == 4.0
+    con_ref1 = @constraint(model, 0 >= 2 * x)
+    con_ref2 = @constraint(model, 2 * x <= 1)
+    @test_throws MethodError set_normalized_rhs([con_ref1, con_ref2], [3, 3])
     return
 end
 
@@ -1803,6 +1854,24 @@ function test_set_normalized_coefficient_quadratic()
     set_normalized_coefficient(con, x[1], x[2], 5)
     @test normalized_coefficient(con, x[1], x[1]) == 4.0
     @test normalized_coefficient(con, x[1], x[2]) == 5.0
+    return
+end
+
+function test_set_normalized_coefficient_quadratic_batch()
+    model = Model()
+    @variable(model, x[1:2])
+    @constraint(model, con, 2x[1]^2 + 3 * x[1] * x[2] + x[2] <= 2)
+    @test normalized_coefficient(con, x[1], x[1]) == 2.0
+    @test normalized_coefficient(con, x[1], x[2]) == 3.0
+    set_normalized_coefficient([con, con], [x[1], x[1]], [x[1], x[2]], [4, 5])
+    @test normalized_coefficient(con, x[1], x[1]) == 4.0
+    @test normalized_coefficient(con, x[1], x[2]) == 5.0
+    @test_throws(
+        DimensionMismatch(
+            "The number of constraints (1), variables (2, 2) and coefficients (2) must match",
+        ),
+        set_normalized_coefficient([con], [x[1], x[1]], [x[1], x[2]], [4, 5]),
+    )
     return
 end
 

@@ -2525,7 +2525,7 @@ end
     set_normalized_coefficient(
         constraint::ConstraintRef,
         variable::GenericVariableRef,
-        value,
+        value::Number,
     )
 
 Set the coefficient of `variable` in the constraint `constraint` to `value`.
@@ -2561,6 +2561,62 @@ function set_normalized_coefficient(
         backend(model),
         index(con_ref),
         MOI.ScalarCoefficientChange(index(variable), convert(T, value)),
+    )
+    model.is_model_dirty = true
+    return
+end
+
+"""
+    set_normalized_coefficient(
+        constraints::AbstractVector{<:ConstraintRef},
+        variables::AbstractVector{<:GenericVariableRef},
+        values::AbstractVector{<:Number},
+    )
+
+Set multiple coefficient of `variables` in the constraints `constraints` to
+`values`.
+
+Note that prior to this step, JuMP will aggregate multiple terms containing the
+same variable. For example, given a constraint `2x + 3x <= 2`,
+`set_normalized_coefficient(con, [x], [4])` will create the constraint `4x <= 2`.
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x)
+x
+
+julia> @variable(model, y)
+y
+
+julia> @constraint(model, con, 2x + 3x + 4y <= 2)
+con : 5 x + 4 y ≤ 2
+
+julia> set_normalized_coefficient([con, con], [x, y], [6, 7])
+
+julia> con
+con : 6 x + 7 y ≤ 2
+```
+"""
+function set_normalized_coefficient(
+    constraints::AbstractVector{
+        <:ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    },
+    variables::AbstractVector{<:AbstractVariableRef},
+    coeffs::AbstractVector{<:Number},
+) where {T,F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}}}
+    c, n, m = length(constraints), length(variables), length(coeffs)
+    if !(c == n == m)
+        msg = "The number of constraints ($c), variables ($n) and coefficients ($m) must match"
+        throw(DimensionMismatch(msg))
+    end
+    model = owner_model(first(constraints))
+    MOI.modify(
+        backend(model),
+        index.(constraints),
+        MOI.ScalarCoefficientChange.(index.(variables), convert.(T, coeffs)),
     )
     model.is_model_dirty = true
     return
@@ -2663,6 +2719,72 @@ function set_normalized_coefficient(
             index(variable_1),
             index(variable_2),
             new_value,
+        ),
+    )
+    model.is_model_dirty = true
+    return
+end
+
+"""
+    set_normalized_coefficient(
+        constraints::AbstractVector{<:ConstraintRef},
+        variables_1:AbstractVector{<:GenericVariableRef},
+        variables_2:AbstractVector{<:GenericVariableRef},
+        values::AbstractVector{<:Number},
+    )
+
+Set multiple quadratic coefficients associated with `variables_1` and
+`variables_2` in the constraints `constraints` to `values`.
+
+Note that prior to this step, JuMP will aggregate multiple terms containing the
+same variable. For example, given a constraint `2x^2 + 3x^2 <= 2`,
+`set_normalized_coefficient(con, [x], [x], [4])` will create the constraint
+`4x^2 <= 2`.
+
+## Example
+
+```jldoctest; filter=r"≤|<="
+julia> model = Model();
+
+julia> @variable(model, x[1:2]);
+
+julia> @constraint(model, con, 2x[1]^2 + 3 * x[1] * x[2] + x[2] <= 2)
+con : 2 x[1]² + 3 x[1]*x[2] + x[2] ≤ 2
+
+julia> set_normalized_coefficient([con, con], [x[1], x[1]], [x[1], x[2]], [4, 5])
+
+julia> con
+con : 4 x[1]² + 5 x[1]*x[2] + x[2] ≤ 2
+```
+"""
+function set_normalized_coefficient(
+    constraints::AbstractVector{
+        <:ConstraintRef{<:AbstractModel,<:MOI.ConstraintIndex{F}},
+    },
+    variables_1::AbstractVector{<:AbstractVariableRef},
+    variables_2::AbstractVector{<:AbstractVariableRef},
+    coeffs::AbstractVector{<:Number},
+) where {T,F<:MOI.ScalarQuadraticFunction{T}}
+    c, m = length(constraints), length(coeffs)
+    n1, n2 = length(variables_1), length(variables_1)
+    if !(c == n1 == n2 == m)
+        msg = "The number of constraints ($c), variables ($n1, $n2) and coefficients ($m) must match"
+        throw(DimensionMismatch(msg))
+    end
+    new_coeffs = convert.(T, coeffs)
+    for (i, x, y) in zip(eachindex(new_coeffs), variables_1, variables_2)
+        if x == y
+            new_coeffs[i] *= T(2)
+        end
+    end
+    model = owner_model(first(constraints))
+    MOI.modify(
+        backend(model),
+        index.(constraints),
+        MOI.ScalarQuadraticCoefficientChange.(
+            index.(variables_1),
+            index.(variables_2),
+            new_coeffs,
         ),
     )
     model.is_model_dirty = true
