@@ -1001,7 +1001,7 @@ function test_change_coefficient_batch()
     @test isequal_canonical(constraint_object(quad_con).func, x^2 + 2x + 7y)
     @test_throws(
         DimensionMismatch(
-            "The number of constraints, variables and coefficients must match",
+            "The number of constraints (1), variables (2) and coefficients (2) must match",
         ),
         set_normalized_coefficient([con_ref], [x, y], [4, 5]),
     )
@@ -1868,7 +1868,7 @@ function test_set_normalized_coefficient_quadratic_batch()
     @test normalized_coefficient(con, x[1], x[2]) == 5.0
     @test_throws(
         DimensionMismatch(
-            "The number of constraints, variables and coefficients must match",
+            "The number of constraints (1), variables (2, 2) and coefficients (2) must match",
         ),
         set_normalized_coefficient([con], [x[1], x[1]], [x[1], x[2]], [4, 5]),
     )

@@ -450,7 +450,10 @@ function set_objective_coefficient(
     coeff::Real,
 ) where {T}
     if _nlp_objective_function(model) !== nothing
-        error("A nonlinear objective is already set in the model")
+        error(
+            "A nonlinear objective created by the legacy `@NLobjective` is " *
+            "set in the model. This does not support modification.",
+        )
     end
     coeff_t = convert(T, coeff)::T
     F = objective_function_type(model)
@@ -527,9 +530,14 @@ function set_objective_coefficient(
     coeffs::AbstractVector{<:Real},
 ) where {T}
     if _nlp_objective_function(model) !== nothing
-        error("A nonlinear objective is already set in the model")
-    elseif length(variables) != length(coeffs)
-        msg = "The number of variables and coefficients must match"
+        error(
+            "A nonlinear objective created by the legacy `@NLobjective` is " *
+            "set in the model. This does not support modification.",
+        )
+    end
+    n, m = length(variables), length(coeffs)
+    if !(n == m)
+        msg = "The number of variables ($n) and coefficients ($m) must match"
         throw(DimensionMismatch(msg))
     end
     F = objective_function_type(model)
@@ -605,7 +613,10 @@ function set_objective_coefficient(
     coeff::Real,
 ) where {T}
     if _nlp_objective_function(model) !== nothing
-        error("A nonlinear objective is already set in the model")
+        error(
+            "A nonlinear objective created by the legacy `@NLobjective` is " *
+            "set in the model. This does not support modification.",
+        )
     end
     coeff_t = convert(T, coeff)::T
     F = moi_function_type(objective_function_type(model))
@@ -685,12 +696,17 @@ function set_objective_coefficient(
     coeffs::AbstractVector{<:Real},
 ) where {T}
     if _nlp_objective_function(model) !== nothing
-        error("A nonlinear objective is already set in the model")
-    elseif !(length(variables_1) == length(variables_2) == length(coeffs))
-        msg = "The number of variables and coefficients must match"
+        error(
+            "A nonlinear objective created by the legacy `@NLobjective` is " *
+            "set in the model. This does not support modification.",
+        )
+    end
+    n1, n2, m = length(variables_1), length(variables_2), length(coeffs)
+    if !(n1 == n2 == m)
+        msg = "The number of variables ($n1, $n2) and coefficients ($m) must match"
         throw(DimensionMismatch(msg))
     end
-    coeffs_t = convert.(T, coeffs)::AbstractVector{<:T}
+    coeffs_t = convert.(T, coeffs)
     F = moi_function_type(objective_function_type(model))
     _set_objective_coefficient(model, variables_1, variables_2, coeffs_t, F)
     model.is_model_dirty = true

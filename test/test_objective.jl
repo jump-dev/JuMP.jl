@@ -55,7 +55,10 @@ function test_objective_coef_update_linear_objective_error()
     @variable(model, x[1:2])
     @NLobjective(model, Min, x[1] * x[2])
     @test_throws(
-        ErrorException("A nonlinear objective is already set in the model"),
+        ErrorException(
+            "A nonlinear objective created by the legacy `@NLobjective` is " *
+            "set in the model. This does not support modification.",
+        ),
         set_objective_coefficient(model, x[1], 2),
     )
     return
@@ -66,7 +69,10 @@ function test_objective_coef_update_linear_objective_batch_error()
     @variable(model, x[1:2])
     @NLobjective(model, Min, x[1] * x[2])
     @test_throws(
-        ErrorException("A nonlinear objective is already set in the model"),
+        ErrorException(
+            "A nonlinear objective created by the legacy `@NLobjective` is " *
+            "set in the model. This does not support modification.",
+        ),
         set_objective_coefficient(model, [x[1], x[2]], [2, 3]),
     )
     return
@@ -78,7 +84,7 @@ function test_objective_coef_update_linear_objective_batch_dimension_error()
     @objective(model, Min, x[1] * x[2])
     @test_throws(
         DimensionMismatch(
-            "The number of variables and coefficients must match",
+            "The number of variables (2) and coefficients (1) must match",
         ),
         set_objective_coefficient(model, [x[1], x[2]], [2]),
     )
@@ -321,7 +327,10 @@ function test_set_objective_coefficient_quadratic_error()
     @variable(model, x[1:2])
     @NLobjective(model, Min, x[1] * x[2])
     @test_throws(
-        ErrorException("A nonlinear objective is already set in the model"),
+        ErrorException(
+            "A nonlinear objective created by the legacy `@NLobjective` is " *
+            "set in the model. This does not support modification.",
+        ),
         set_objective_coefficient(model, x[1], x[1], 2),
     )
     return
@@ -332,7 +341,10 @@ function test_set_objective_coefficient_quadratic_batch_error()
     @variable(model, x[1:2])
     @NLobjective(model, Min, x[1] * x[2])
     @test_throws(
-        ErrorException("A nonlinear objective is already set in the model"),
+        ErrorException(
+            "A nonlinear objective created by the legacy `@NLobjective` is " *
+            "set in the model. This does not support modification.",
+        ),
         set_objective_coefficient(model, [x[1]], [x[1]], [2]),
     )
     return
@@ -344,7 +356,7 @@ function test_set_objective_coefficient_quadratic_batch_dimension_error()
     @objective(model, Min, x[1] * x[2])
     @test_throws(
         DimensionMismatch(
-            "The number of variables and coefficients must match",
+            "The number of variables (1, 1) and coefficients (2) must match",
         ),
         set_objective_coefficient(model, [x[1]], [x[1]], [2, 3]),
     )

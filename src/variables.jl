@@ -2607,8 +2607,9 @@ function set_normalized_coefficient(
     variables::AbstractVector{<:AbstractVariableRef},
     coeffs::AbstractVector{<:Number},
 ) where {T,F<:Union{MOI.ScalarAffineFunction{T},MOI.ScalarQuadraticFunction{T}}}
-    if !(length(constraints) == length(variables) == length(coeffs))
-        msg = "The number of constraints, variables and coefficients must match"
+    c, n, m = length(constraints), length(variables), length(coeffs)
+    if !(c == n == m)
+        msg = "The number of constraints ($c), variables ($n) and coefficients ($m) must match"
         throw(DimensionMismatch(msg))
     end
     model = owner_model(first(constraints))
@@ -2764,13 +2765,10 @@ function set_normalized_coefficient(
     variables_2::AbstractVector{<:AbstractVariableRef},
     coeffs::AbstractVector{<:Number},
 ) where {T,F<:MOI.ScalarQuadraticFunction{T}}
-    dimension_match =
-        length(constraints) ==
-        length(variables_1) ==
-        length(variables_2) ==
-        length(coeffs)
-    if !dimension_match
-        msg = "The number of constraints, variables and coefficients must match"
+    c, m = length(constraints), length(coeffs)
+    n1, n2 = length(variables_1), length(variables_1)
+    if !(c == n1 == n2 == m)
+        msg = "The number of constraints ($c), variables ($n1, $n2) and coefficients ($m) must match"
         throw(DimensionMismatch(msg))
     end
     new_coeffs = convert.(T, coeffs)
