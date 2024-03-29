@@ -283,6 +283,24 @@ function show_backend_summary(io::IO, model::GenericModel)
 end
 
 """
+    const _CONSTRAINT_LIMIT_FOR_PRINTING = Ref{Int}(100)
+
+A global constant used to control when constraints are omitted when printing
+the model.
+
+Get and set this value using `_CONSTRAINT_LIMIT_FOR_PRINTING[]`.
+
+```julia
+julia> _CONSTRAINT_LIMIT_FOR_PRINTING[]
+100
+
+julia> _CONSTRAINT_LIMIT_FOR_PRINTING[] = 10
+10
+```
+"""
+const _CONSTRAINT_LIMIT_FOR_PRINTING = Ref{Int}(100)
+
+"""
     _print_model(io::IO, model::AbstractModel)
 
 Print a plain-text formulation of `model` to `io`.
@@ -303,8 +321,18 @@ function _print_model(io::IO, model::AbstractModel)
         println(io, "Feasibility")
     end
     println(io, "Subject to")
-    for constraint in constraints_string(mode, model)
-        println(io, " ", replace(constraint, '\n' => "\n "))
+    constraints = constraints_string(mode, model)
+    m = div(_CONSTRAINT_LIMIT_FOR_PRINTING[], 2)
+    skip_start = _CONSTRAINT_LIMIT_FOR_PRINTING[] - m + 1
+    skip_stop = length(constraints) - m
+    n = skip_stop - skip_start + 1
+    for (i, constraint) in enumerate(constraints)
+        if i < skip_start || skip_stop < i
+            println(io, " ", replace(constraint, '\n' => "\n "))
+        end
+        if n > 0 && i == skip_start
+            println(io, "[[...$n constraints skipped...]]")
+        end
     end
     nl_subexpressions = _nl_subexpression_string(mode, model)
     if !isempty(nl_subexpressions)
@@ -342,8 +370,20 @@ function _print_latex(io::IO, model::AbstractModel)
     constraints = constraints_string(mode, model)
     if !isempty(constraints)
         print(io, "\\text{Subject to} \\quad")
-        for constraint in constraints
-            println(io, " & ", constraint, "\\\\")
+        m = div(_CONSTRAINT_LIMIT_FOR_PRINTING[], 2)
+        skip_start = _CONSTRAINT_LIMIT_FOR_PRINTING[] - m + 1
+        skip_stop = length(constraints) - m
+        n = skip_stop - skip_start + 1
+        for (i, constraint) in enumerate(constraints)
+            if i < skip_start || skip_stop < i
+                println(io, " & ", constraint, "\\\\")
+            end
+            if n > 0 && i == skip_start
+                println(
+                    io,
+                    " & [[\\ldots\\text{$n constraints skipped}\\ldots]] \\\\",
+                )
+            end
         end
     end
     nl_subexpressions = _nl_subexpression_string(mode, model)
