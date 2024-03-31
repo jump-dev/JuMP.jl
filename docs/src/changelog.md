@@ -7,6 +7,40 @@ CurrentModule = JuMP
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Version 1.21.0 (March 31, 2024)
+
+### Added
+
+ - Added support for matrix inequality constraints with the [`HermitianPSDCone`](@ref)
+   (#3705)
+ - Added batched modification methods for [`set_normalized_rhs`](@ref),
+   [`set_objective_coefficient`](@ref) and [`set_normalized_coefficient`](@ref).
+   Using these methods can be more efficient for some solvers (#3716)
+ - Added the private constant `_CONSTRAINT_LIMIT_FOR_PRINTING`, which controls
+   how many constraints are printed to the screen during `print(model)`. The
+   main purpose of this is to prevent large quantities of text being printed
+   when `print(model)` is accidentally called on a large model. (#3686)
+
+### Fixed
+
+ - Changed [`Containers.SparseAxisArray`](@ref) to use an `OrderedDict` as the
+   backing data structure. Iterating over the elements in a `SparseAxisArray`
+   now iterates in the order that the elements were created. Previously, the
+   order was undefined behavior. (#3681)
+ - Fixed complex variables for non-Float64 coefficient types (#3691)
+ - Fixed `LinearAlgebra.hermitan(::AbstractJuMPScalar)` (#3693)
+ - Fixed multiplying real scalar by Hermitian matrix (#3695)
+
+### Other
+
+ - Documentation improvements (#3679) (#3683) (#3702) (#3703) (#3706) (#3696)
+   (#3708) (#3709) (#3711)
+ - Added new tutorials:
+   - [Basis matrices](@ref) (#3675)
+   - [Transitioning from MATLAB](@ref) (#3698)
+   - [Automatic differentiation of user-defined operators](@ref) (#3713)
+ - Updated versions and compat bounds (#3687) (#3707) (#3717)
+
 ## Version 1.20.0 (February 15, 2024)
 
 ### Added
