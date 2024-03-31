@@ -393,8 +393,12 @@ model depends on which operating mode JuMP is in (see [`mode`](@ref)).
  * If JuMP is in `MANUAL` or `AUTOMATIC` mode, the backend is a
    `MOI.Utilities.CachingOptimizer`.
 
-**This function should only be used by advanced users looking to access
-low-level MathOptInterface or solver-specific functionality.**
+Use [`index`](@ref) to get the index of a variable or constraint in the backend
+model.
+
+!!! warning
+    This function should only be used by advanced users looking to access
+    low-level MathOptInterface or solver-specific functionality.
 
 ## Notes
 
@@ -405,6 +409,25 @@ the innermost optimizer, see [`unsafe_backend`](@ref). Alternatively, use
 [`direct_model`](@ref) to create a JuMP model in `DIRECT` mode.
 
 See also: [`unsafe_backend`](@ref).
+
+## Example
+
+```jldoctest
+julia> import HiGHS
+
+julia> model = direct_model(HiGHS.Optimizer());
+
+julia> set_silent(model)
+
+julia> @variable(model, x >= 0)
+x
+
+julia> highs = backend(model)
+A HiGHS model with 1 columns and 0 rows.
+
+julia> index(x)
+MOI.VariableIndex(1)
+```
 """
 backend(model::GenericModel) = model.moi_backend
 
@@ -418,6 +441,9 @@ low-level solver-specific functionality. It has a high-risk of incorrect usage.
 We strongly suggest you use the alternative suggested below.**
 
 See also: [`backend`](@ref).
+
+To obtain the index of a variable or constraint in the unsafe backend, use
+[`optimizer_index`](@ref).
 
 ## Unsafe behavior
 
@@ -482,6 +508,9 @@ julia> MOI.Utilities.attach_optimizer(model)
 
 julia> highs = unsafe_backend(model)
 A HiGHS model with 1 columns and 0 rows.
+
+julia> optimizer_index(x)
+MOI.VariableIndex(1)
 ```
 
 Use:
@@ -498,6 +527,9 @@ x
 
 julia> highs = backend(model)  # No need to call `attach_optimizer`.
 A HiGHS model with 1 columns and 0 rows.
+
+julia> index(x)
+MOI.VariableIndex(1)
 ```
 """
 unsafe_backend(model::GenericModel) = unsafe_backend(backend(model))
