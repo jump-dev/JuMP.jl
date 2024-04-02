@@ -209,7 +209,7 @@ model = Model();
 # **Example** Either $x_1 \leq 1$ or $x_2 \leq 2$.
 
 model = Model();
-@variable(model, 0 <= x[1:2] <= 10)
+@variable(model, x[1:2] <= 10)
 @variable(model, y[1:2], Bin)
 M = 100
 @constraint(model, x[1] <= 1 + M * y[1])
@@ -255,12 +255,12 @@ model = Model();
 # ### Trick 2
 
 # If the solver doesn't support indicator constraints and the variables do not
-# have a finite domain, you an use the big-M trick.
+# have a finite domain, you can use the big-M trick.
 
 # **Example** $x_1 + x_2 \leq 1$ if $z = 1$.
 
 model = Model();
-@variable(model, 0 <= x[1:2] <= 10)
+@variable(model, x[1:2] <= 10)
 @variable(model, z, Bin)
 M = 100
 @constraint(model, sum(x) <= 1 + M * (1 - z))
@@ -268,7 +268,7 @@ M = 100
 # **Example** $x_1 + x_2 \leq 1$ if $z = 0$.
 
 model = Model();
-@variable(model, 0 <= x[1:2] <= 10)
+@variable(model, x[1:2] <= 10)
 @variable(model, z, Bin)
 M = 100
 @constraint(model, sum(x) <= 1 + M * z)
