@@ -255,7 +255,7 @@ model = Model();
 # ### Trick 2
 
 # If the solver doesn't support indicator constraints and the variables do not
-# have a finite domain, you an use the big-M trick.
+# have a finite domain, you can use the big-M trick.
 
 # **Example** $x_1 + x_2 \leq 1$ if $z = 1$.
 
