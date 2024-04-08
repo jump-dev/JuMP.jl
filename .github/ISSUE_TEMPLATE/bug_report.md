@@ -4,7 +4,7 @@ about: Help us track down bugs in JuMP
 
 ---
 
-Welcome to JuMP!
+Welcome.
 
 Please read the following before posting a new bug report:
 
@@ -14,4 +14,4 @@ Please read the following before posting a new bug report:
 
 - If you are reasonably confident your issue is a bug in JuMP, this is the right place. Be sure to include as much relevant information as possible, including a minimal reproducible example. See https://help.github.com/articles/basic-writing-and-formatting-syntax/ for background on how to format text and code on GitHub issues.
 
-Thanks for contributing to JuMP!
+Thanks for contributing to JuMP.

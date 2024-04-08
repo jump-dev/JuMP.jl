@@ -34,7 +34,7 @@ jobs:
           path: ${{ github.workspace }}/latex-debug-logs      
       - uses: errata-ai/vale-action@reviewdog
         with:
-          version: 3.0.5
+          version: 3.3.1
           files: all
           fail_on_error: true
           filter_mode: nofilter
